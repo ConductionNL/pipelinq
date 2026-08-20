@@ -1,13 +1,13 @@
 /*
  * SPDX-FileCopyrightText: 2026 Pipelinq Contributors
- * SPDX-License-Identifier: AGPL-3.0-or-later
+ * SPDX-License-Identifier: EUPL-1.2
  *
  * Documentation screenshot capture suite — pipelinq.
  *
  * This spec is *not* a regression test. It drives the Pipelinq UI
  * through every flow documented under
- * `docs/tutorials/{user,admin}/*.md` and writes a fresh PNG into
- * `docs/static/screenshots/tutorials/<track>/<file>.png` for each
+ * `docs/user-guide/{user,admin}/*.md` and writes a fresh PNG into
+ * `docs/static/screenshots/user-guide/<track>/<file>.png` for each
  * step the markdown references.
  *
  * Run manually whenever the UI changes and tutorial screenshots need
@@ -42,21 +42,37 @@ import { test, expect, type Page } from '@playwright/test'
 import * as path from 'path'
 import * as fs from 'fs'
 
-const SHOT_ROOT = path.resolve(__dirname, '..', '..', 'docs', 'static', 'screenshots', 'tutorials')
+const SHOT_ROOT = path.resolve(
+	__dirname,
+	'..',
+	'..',
+	'docs',
+	'static',
+	'screenshots',
+	'user-guide',
+)
 const APP = '/apps/pipelinq'
 
 /**
  * Save a screenshot under
- * `docs/static/screenshots/tutorials/<track>/<file>`.
+ * `docs/static/screenshots/user-guide/<track>/<file>`.
  * Lives under `static/` so Docusaurus copies the PNG into the build
  * root — markdown image refs use `/screenshots/...` (root-absolute).
  */
-async function shoot(page: Page, track: 'user' | 'admin', file: string): Promise<void> {
+async function shoot(
+	page: Page,
+	track: 'user' | 'admin',
+	file: string,
+): Promise<void> {
 	const dir = path.join(SHOT_ROOT, track)
 	if (!fs.existsSync(dir)) {
 		fs.mkdirSync(dir, { recursive: true })
 	}
-	await page.screenshot({ path: path.join(dir, file), fullPage: false, type: 'png' })
+	await page.screenshot({
+		path: path.join(dir, file),
+		fullPage: false,
+		type: 'png',
+	})
 }
 
 /**
@@ -67,7 +83,9 @@ async function shoot(page: Page, track: 'user' | 'admin', file: string): Promise
 async function dismissOverlays(page: Page): Promise<void> {
 	const wizard = page.locator('#firstrunwizard')
 	if (await wizard.isVisible().catch(() => false)) {
-		const close = wizard.getByRole('button', { name: /close|got it|finish|skip/i }).first()
+		const close = wizard
+			.getByRole('button', { name: /close|got it|finish|skip/i })
+			.first()
 		if (await close.isVisible().catch(() => false)) {
 			await close.click().catch(() => {})
 		} else {
@@ -76,7 +94,12 @@ async function dismissOverlays(page: Page): Promise<void> {
 		await wizard.waitFor({ state: 'hidden', timeout: 4000 }).catch(() => {})
 	}
 	const stray = page.locator('[role="dialog"]:not(#firstrunwizard)')
-	if (await stray.first().isVisible().catch(() => false)) {
+	if (
+		await stray
+			.first()
+			.isVisible()
+			.catch(() => false)
+	) {
 		await page.keyboard.press('Escape').catch(() => {})
 		await page.waitForTimeout(300)
 	}
@@ -93,8 +116,12 @@ async function go(page: Page, route: string): Promise<void> {
 		const tail = route.startsWith('/') ? route : `/${route}`
 		url = `${APP}${tail}`
 	}
-	await page.goto(url).catch(() => { /* tolerate a 404 — caller decides */ })
-	await page.waitForLoadState('networkidle').catch(() => { /* idle never fires on some pages */ })
+	await page.goto(url).catch(() => {
+		/* tolerate a 404 — caller decides */
+	})
+	await page.waitForLoadState('domcontentloaded').catch(() => {
+		/* tolerate a navigation that never settles */
+	})
 	await dismissOverlays(page)
 	await page.waitForTimeout(900)
 }
@@ -104,14 +131,20 @@ async function go(page: Page, route: string): Promise<void> {
  * present, screenshot it, and close it again. Returns whether the
  * dialog appeared.
  */
-async function captureCreateDialog(page: Page, track: 'user' | 'admin', file: string): Promise<boolean> {
+async function captureCreateDialog(
+	page: Page,
+	track: 'user' | 'admin',
+	file: string,
+): Promise<boolean> {
 	const addBtn = page.getByRole('button', { name: /Add Item/i }).first()
 	if (!(await addBtn.isVisible().catch(() => false))) {
 		return false
 	}
 	await addBtn.click().catch(() => {})
 	const dialog = page.locator('[role="dialog"]:not(#firstrunwizard)').first()
-	await dialog.waitFor({ state: 'visible', timeout: 5000 }).catch(() => { /* no dialog */ })
+	await dialog.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {
+		/* no dialog */
+	})
 	await page.waitForTimeout(400)
 	await shoot(page, track, file)
 	const cancel = dialog.getByRole('button', { name: /Cancel/i }).first()
@@ -131,12 +164,12 @@ test.beforeEach(async ({ page }) => {
 })
 
 // ---------------------------------------------------------------------------
-// USER TRACK — see docs/tutorials/user/
+// USER TRACK — see docs/user-guide/user/
 // ---------------------------------------------------------------------------
 
 test.describe('docs: user track', () => {
 	test('U1 first launch — overview', async ({ page }) => {
-		// docs/tutorials/user/01-first-launch.md
+		// docs/user-guide/user/01-first-launch.md
 		await go(page, '')
 		await shoot(page, 'user', '01-first-launch.png')
 		await shoot(page, 'user', '01-navigation.png')
@@ -145,7 +178,7 @@ test.describe('docs: user track', () => {
 	})
 
 	test('U2 add a new client', async ({ page }) => {
-		// docs/tutorials/user/02-add-client.md
+		// docs/user-guide/user/02-add-client.md
 		await go(page, '/clients')
 		await shoot(page, 'user', '02-add-client-button.png')
 		const had = await captureCreateDialog(page, 'user', '02-type-picker.png')
@@ -159,7 +192,7 @@ test.describe('docs: user track', () => {
 	})
 
 	test('U3 link a contact person to an organisation', async ({ page }) => {
-		// docs/tutorials/user/03-link-contact-person.md — needs both a
+		// docs/user-guide/user/03-link-contact-person.md — needs both a
 		// person and an org as clients; lists stand in until seed lands.
 		await go(page, '/clients')
 		await shoot(page, 'user', '03-org-detail.png')
@@ -172,7 +205,7 @@ test.describe('docs: user track', () => {
 	})
 
 	test('U4 move a lead through the pipeline', async ({ page }) => {
-		// docs/tutorials/user/04-move-lead.md — drag-and-drop needs lead
+		// docs/user-guide/user/04-move-lead.md — drag-and-drop needs lead
 		// cards on the board; capture pipeline + leads list as stand-ins.
 		await go(page, '/pipeline')
 		await shoot(page, 'user', '04-pipeline-view.png')
@@ -185,7 +218,7 @@ test.describe('docs: user track', () => {
 	})
 
 	test('U5 log a contact moment', async ({ page }) => {
-		// docs/tutorials/user/05-log-contact-moment.md
+		// docs/user-guide/user/05-log-contact-moment.md
 		await go(page, '/contactmomenten')
 		await shoot(page, 'user', '05-add-button.png')
 		const had = await captureCreateDialog(page, 'user', '05-form.png')
@@ -197,7 +230,7 @@ test.describe('docs: user track', () => {
 	})
 
 	test('U6 capture a request from My Work', async ({ page }) => {
-		// docs/tutorials/user/06-capture-request.md
+		// docs/user-guide/user/06-capture-request.md
 		await go(page, '/my-work')
 		await shoot(page, 'user', '06-mywork.png')
 		await go(page, '/requests')
@@ -210,12 +243,12 @@ test.describe('docs: user track', () => {
 	})
 
 	test('U7 sync with Nextcloud Contacts', async ({ page }) => {
-		// docs/tutorials/user/07-sync-contacts.md — settings live under
+		// docs/user-guide/user/07-sync-contacts.md — settings live under
 		// /index.php/settings/user/pipelinq (personal settings panel) or
 		// the admin settings page. Capture the admin page as stand-in
 		// for the per-user surface until that route is wired in dev.
 		await page.goto('/index.php/settings/admin/pipelinq')
-		await page.waitForLoadState('networkidle').catch(() => {})
+		await page.waitForLoadState('domcontentloaded').catch(() => {})
 		await dismissOverlays(page)
 		await page.waitForTimeout(900)
 		await shoot(page, 'user', '07-settings.png')
@@ -224,7 +257,7 @@ test.describe('docs: user track', () => {
 	})
 
 	test('U8 resolve a duplicate-detection warning', async ({ page }) => {
-		// docs/tutorials/user/08-resolve-duplicate.md — needs two near-
+		// docs/user-guide/user/08-resolve-duplicate.md — needs two near-
 		// duplicate clients; capture the Clients list + add dialog as
 		// stand-in (the warning banner only fires on a likely match).
 		await go(page, '/clients')
@@ -236,7 +269,7 @@ test.describe('docs: user track', () => {
 	})
 
 	test('U9 client 360° view', async ({ page }) => {
-		// docs/tutorials/user/09-client-360-view.md — needs a client
+		// docs/user-guide/user/09-client-360-view.md — needs a client
 		// detail page; capture the Clients list as stand-in.
 		await go(page, '/clients')
 		await shoot(page, 'user', '09-klantbeeld.png')
@@ -244,7 +277,7 @@ test.describe('docs: user track', () => {
 	})
 
 	test('U10 schedule and handle a callback', async ({ page }) => {
-		// docs/tutorials/user/10-callbacks.md — callbacks are tasks with
+		// docs/user-guide/user/10-callbacks.md — callbacks are tasks with
 		// type=Callback; capture the Tasks list + add-dialog as stand-in.
 		await go(page, '/tasks')
 		await shoot(page, 'user', '10-schedule.png')
@@ -257,7 +290,7 @@ test.describe('docs: user track', () => {
 	})
 
 	test('U11 register a complaint', async ({ page }) => {
-		// docs/tutorials/user/11-register-complaint.md
+		// docs/user-guide/user/11-register-complaint.md
 		await go(page, '/complaints')
 		await shoot(page, 'user', '11-intake.png')
 		const had = await captureCreateDialog(page, 'user', '11-form.png')
@@ -269,26 +302,37 @@ test.describe('docs: user track', () => {
 	})
 
 	test('U12 dashboard', async ({ page }) => {
-		// docs/tutorials/user/12-dashboard.md
+		// docs/user-guide/user/12-dashboard.md
 		await go(page, '')
 		await shoot(page, 'user', '12-dashboard.png')
 		await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
 		await page.waitForTimeout(300)
 		await shoot(page, 'user', '12-widgets.png')
 	})
+
+	test('U13 point of sale', async ({ page }) => {
+		// docs/user-guide/user/13-point-of-sale.md
+		await go(page, '/pos')
+		await dismissOverlays(page)
+		await page.waitForTimeout(600)
+		await shoot(page, 'user', '13-pos-list.png')
+		await go(page, '/pos/new')
+		await page.waitForTimeout(600)
+		await shoot(page, 'user', '13-pos-new.png')
+	})
 })
 
 // ---------------------------------------------------------------------------
-// ADMIN TRACK — see docs/tutorials/admin/
+// ADMIN TRACK — see docs/user-guide/admin/
 // ---------------------------------------------------------------------------
 
 test.describe('docs: admin track', () => {
 	test('A1 configure pipeline stages', async ({ page }) => {
-		// docs/tutorials/admin/01-pipeline-stages.md — pipelines live on
+		// docs/user-guide/admin/01-pipeline-stages.md — pipelines live on
 		// the admin settings page (Pipelines section) and on the in-app
 		// /pipelines route. Capture both.
 		await page.goto('/index.php/settings/admin/pipelinq')
-		await page.waitForLoadState('networkidle').catch(() => {})
+		await page.waitForLoadState('domcontentloaded').catch(() => {})
 		await dismissOverlays(page)
 		await page.waitForTimeout(900)
 		await shoot(page, 'admin', '01-admin-settings.png')
@@ -297,22 +341,24 @@ test.describe('docs: admin track', () => {
 	})
 
 	test('A2 configure request types', async ({ page }) => {
-		// docs/tutorials/admin/02-request-types.md
+		// docs/user-guide/admin/02-request-types.md
 		await page.goto('/index.php/settings/admin/pipelinq')
-		await page.waitForLoadState('networkidle').catch(() => {})
+		await page.waitForLoadState('domcontentloaded').catch(() => {})
 		await dismissOverlays(page)
 		await page.waitForTimeout(900)
 		await shoot(page, 'admin', '02-request-types.png')
 	})
 
 	test('A3 manage user / group permissions', async ({ page }) => {
-		// docs/tutorials/admin/03-permissions.md — Agent Profiles
+		// docs/user-guide/admin/03-permissions.md — Agent Profiles
 		// section on the admin page.
 		await page.goto('/index.php/settings/admin/pipelinq')
-		await page.waitForLoadState('networkidle').catch(() => {})
+		await page.waitForLoadState('domcontentloaded').catch(() => {})
 		await dismissOverlays(page)
 		await page.waitForTimeout(900)
-		const profiles = page.getByRole('heading', { name: /Agent Profiles/i }).first()
+		const profiles = page
+			.getByRole('heading', { name: /Agent Profiles/i })
+			.first()
 		if (await profiles.isVisible().catch(() => false)) {
 			await profiles.scrollIntoViewIfNeeded().catch(() => {})
 			await page.waitForTimeout(300)
@@ -322,9 +368,9 @@ test.describe('docs: admin track', () => {
 	})
 
 	test('A4 configure CRM workflows and automation', async ({ page }) => {
-		// docs/tutorials/admin/04-configure-automation.md
+		// docs/user-guide/admin/04-configure-automation.md
 		await page.goto('/index.php/settings/admin/pipelinq')
-		await page.waitForLoadState('networkidle').catch(() => {})
+		await page.waitForLoadState('domcontentloaded').catch(() => {})
 		await dismissOverlays(page)
 		await page.waitForTimeout(900)
 		await shoot(page, 'admin', '04-admin-settings.png')
@@ -337,9 +383,9 @@ test.describe('docs: admin track', () => {
 	})
 
 	test('A5 connect contacts and calendar sync', async ({ page }) => {
-		// docs/tutorials/admin/05-configure-sync.md
+		// docs/user-guide/admin/05-configure-sync.md
 		await page.goto('/index.php/settings/admin/pipelinq')
-		await page.waitForLoadState('networkidle').catch(() => {})
+		await page.waitForLoadState('domcontentloaded').catch(() => {})
 		await dismissOverlays(page)
 		await page.waitForTimeout(900)
 		await shoot(page, 'admin', '05-admin-settings.png')
@@ -348,15 +394,17 @@ test.describe('docs: admin track', () => {
 	})
 
 	test('A6 manage Pipelinq settings', async ({ page }) => {
-		// docs/tutorials/admin/06-admin-settings.md
+		// docs/user-guide/admin/06-admin-settings.md
 		await page.goto('/index.php/settings/admin/pipelinq')
-		await page.waitForLoadState('networkidle').catch(() => {})
+		await page.waitForLoadState('domcontentloaded').catch(() => {})
 		await dismissOverlays(page)
 		await page.waitForTimeout(900)
 		await page.evaluate(() => window.scrollTo(0, 0))
 		await page.waitForTimeout(200)
 		await shoot(page, 'admin', '06-overview.png')
-		const reg = page.getByRole('heading', { name: /Register Configuration/i }).first()
+		const reg = page
+			.getByRole('heading', { name: /Register Configuration/i })
+			.first()
 		if (await reg.isVisible().catch(() => false)) {
 			await reg.scrollIntoViewIfNeeded().catch(() => {})
 			await page.waitForTimeout(300)

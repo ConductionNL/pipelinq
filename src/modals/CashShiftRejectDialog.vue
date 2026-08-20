@@ -4,31 +4,42 @@
 -->
 <template>
 	<NcDialog
-		:name="t('pipelinq', 'Kasverschil afwijzen')"
+		:name="t('pipelinq', 'Reject cash difference')"
 		:open="true"
 		size="normal"
 		@closing="$emit('close')">
 		<div class="cash-shift-reject">
-			<p>{{ t('pipelinq', 'Dit wijst het kasverschil af en heropent de shift voor een hertelling. Voer een reden in.') }}</p>
+			<p>
+				{{
+					t(
+						'pipelinq',
+						'This rejects the cash difference and reopens the shift for a recount. Enter a reason.',
+					)
+				}}
+			</p>
 			<NcTextArea
-				:value.sync="reason"
-				:label="t('pipelinq', 'Reden afwijzing')"
+				v-model="reason"
+				:label="t('pipelinq', 'Rejection reason')"
 				:error="showError"
-				:helper-text="showError ? t('pipelinq', 'Vul een reden in voor de afwijzing') : ''" />
+				:helperText="
+					showError
+						? t('pipelinq', 'Enter a reason for the rejection')
+						: ''
+				" />
 		</div>
 		<template #actions>
 			<NcButton @click="$emit('close')">
-				{{ t('pipelinq', 'Annuleren') }}
+				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
-			<NcButton type="error" :disabled="submitting" @click="submit">
-				{{ t('pipelinq', 'Afwijzen') }}
+			<NcButton variant="error" :disabled="submitting" @click="submit">
+				{{ t('pipelinq', 'Reject') }}
 			</NcButton>
 		</template>
 	</NcDialog>
 </template>
 
 <script>
-import { NcDialog, NcButton, NcTextArea } from '@nextcloud/vue'
+import { NcButton, NcDialog, NcTextArea } from '@nextcloud/vue'
 
 export default {
 	name: 'CashShiftRejectDialog',
@@ -37,12 +48,14 @@ export default {
 		NcButton,
 		NcTextArea,
 	},
+
 	props: {
 		submitting: {
 			type: Boolean,
 			default: false,
 		},
 	},
+
 	emits: ['close', 'confirm'],
 	data() {
 		return {
@@ -50,6 +63,7 @@ export default {
 			showError: false,
 		}
 	},
+
 	methods: {
 		/**
 		 * Validate and emit the rejection reason.

@@ -8,7 +8,13 @@
 			<NcButton @click="goBack">
 				{{ t('pipelinq', 'Back to list') }}
 			</NcButton>
-			<h2>{{ isEdit ? t('pipelinq', 'Edit refund') : t('pipelinq', 'New refund') }}</h2>
+			<h2>
+				{{
+					isEdit
+						? t('pipelinq', 'Edit refund')
+						: t('pipelinq', 'New refund')
+				}}
+			</h2>
 		</div>
 
 		<NcLoadingIcon v-if="loading" :size="32" />
@@ -16,45 +22,45 @@
 		<template v-else>
 			<div class="pos-refund-form__fields">
 				<NcSelect
-					:value="selectedTransaction"
+					:modelValue="selectedTransaction"
 					:options="transactionOptions"
-					:input-label="t('pipelinq', 'Original transaction')"
+					:inputLabel="t('pipelinq', 'Original transaction')"
 					:placeholder="t('pipelinq', 'Choose a transaction…')"
 					label="label"
 					:clearable="false"
 					:disabled="lockedTransaction"
-					@input="onTransactionSelect" />
+					@update:modelValue="onTransactionSelect" />
 				<NcSelect
-					:value="selectedReason"
+					:modelValue="selectedReason"
 					:options="reasonOptions"
-					:input-label="t('pipelinq', 'Refund reason')"
+					:inputLabel="t('pipelinq', 'Refund reason')"
 					:placeholder="t('pipelinq', 'Choose a reason…')"
 					label="label"
 					:clearable="false"
-					@input="onReasonSelect" />
+					@update:modelValue="onReasonSelect" />
 				<NcTextField
-					:value.sync="refund.notes"
+					v-model="refund.notes"
 					:label="t('pipelinq', 'Notes')" />
 			</div>
 
 			<div v-if="originalLines.length" class="pos-refund-form__select-all">
-				<NcButton type="secondary" @click="selectAll">
-					{{ t('pipelinq', 'Alle items teruggeven') }}
+				<NcButton variant="secondary" @click="selectAll">
+					{{ t('pipelinq', 'Return all items') }}
 				</NcButton>
 			</div>
 
 			<table v-if="originalLines.length" class="pos-refund-form__lines">
 				<thead>
 					<tr>
-						<th />
-						<th>{{ t('pipelinq', 'Description') }}</th>
-						<th>{{ t('pipelinq', 'Original qty') }}</th>
-						<th>{{ t('pipelinq', 'Unit price') }}</th>
-						<th>{{ t('pipelinq', 'Returned qty') }}</th>
-						<th>{{ t('pipelinq', 'Reason') }}</th>
-						<th>{{ t('pipelinq', 'Restock') }}</th>
-						<th>{{ t('pipelinq', 'Refund total') }}</th>
-						<th />
+						<th scope="col" />
+						<th scope="col">{{ t('pipelinq', 'Description') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Original qty') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Unit price') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Returned qty') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Reason') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Restock') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Refund total') }}</th>
+						<th scope="col" />
 					</tr>
 				</thead>
 				<tbody>
@@ -62,7 +68,7 @@
 						v-for="(candidate, index) in candidates"
 						:key="candidate.originalLine"
 						:line="candidate"
-						:original-line="originalLineFor(candidate.originalLine)"
+						:originalLine="originalLineFor(candidate.originalLine)"
 						:reasons="activeReasons"
 						@update:line="updateCandidate(index, $event)"
 						@remove="removeCandidate(index)" />
@@ -70,13 +76,18 @@
 			</table>
 
 			<p v-else class="pos-refund-form__empty">
-				{{ t('pipelinq', 'Select an original transaction to choose items to refund.') }}
+				{{
+					t(
+						'pipelinq',
+						'Select an original transaction to choose items to refund.',
+					)
+				}}
 			</p>
 
 			<PosRefundTotalsPanel :lines="selectedLines" />
 
 			<div class="pos-refund-form__actions">
-				<NcButton type="primary" :disabled="saving" @click="save">
+				<NcButton variant="primary" :disabled="saving" @click="save">
 					{{ t('pipelinq', 'Save') }}
 				</NcButton>
 			</div>
@@ -85,12 +96,12 @@
 </template>
 
 <script>
-import { NcButton, NcTextField, NcSelect, NcLoadingIcon } from '@nextcloud/vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
+import { NcButton, NcLoadingIcon, NcSelect, NcTextField } from '@nextcloud/vue'
 import PosRefundLineRow from '../../components/pos/PosRefundLineRow.vue'
 import PosRefundTotalsPanel from '../../components/pos/PosRefundTotalsPanel.vue'
-import { useObjectStore } from '../../store/modules/object.js'
 import { refundLineAmounts } from '../../services/posTotals.js'
+import { useObjectStore } from '../../store/modules/object.js'
 
 export default {
 	name: 'PosRefundForm',
@@ -102,15 +113,23 @@ export default {
 		PosRefundLineRow,
 		PosRefundTotalsPanel,
 	},
+
 	props: {
 		posRefundId: {
 			type: String,
 			default: null,
 		},
 	},
+
 	data() {
 		return {
-			refund: { status: 'pending', notes: '', originalTransaction: null, refundReason: null },
+			refund: {
+				status: 'pending',
+				notes: '',
+				originalTransaction: null,
+				refundReason: null,
+			},
+
 			transactions: [],
 			originalLines: [],
 			reasons: [],
@@ -119,10 +138,12 @@ export default {
 			saving: false,
 		}
 	},
+
 	computed: {
 		objectStore() {
 			return useObjectStore()
 		},
+
 		/**
 		 * The refund id from the prop or route (edit mode).
 		 *
@@ -131,6 +152,7 @@ export default {
 		refundId() {
 			return this.posRefundId || this.$route.params.id || null
 		},
+
 		/**
 		 * The transaction id passed when creating from a transaction.
 		 *
@@ -139,6 +161,7 @@ export default {
 		routeTransactionId() {
 			return this.$route.params.transactionId || null
 		},
+
 		/**
 		 * Whether this is an edit of an existing refund.
 		 *
@@ -147,6 +170,7 @@ export default {
 		isEdit() {
 			return !!this.refundId
 		},
+
 		/**
 		 * Whether the original transaction is locked (created from a transaction).
 		 *
@@ -155,6 +179,7 @@ export default {
 		lockedTransaction() {
 			return !!this.routeTransactionId || this.isEdit
 		},
+
 		/**
 		 * Transaction picker options (only refundable: confirmed / settled).
 		 *
@@ -162,50 +187,66 @@ export default {
 		 */
 		transactionOptions() {
 			return this.transactions
-				.filter(tx => ['confirmed', 'settled'].includes(tx.status))
-				.map(tx => ({ id: tx.id, label: tx.reference || tx.id }))
+				.filter((tx) => ['confirmed', 'settled'].includes(tx.status))
+				.map((tx) => ({ id: tx.id, label: tx.reference || tx.id }))
 		},
+
 		/**
 		 * The selected transaction option.
 		 *
 		 * @return {object|null} The option.
 		 */
 		selectedTransaction() {
-			return this.transactionOptions.find(o => o.id === this.refund.originalTransaction) || null
+			return (
+				this.transactionOptions.find(
+					(o) => o.id === this.refund.originalTransaction,
+				) || null
+			)
 		},
+
 		/**
 		 * Active refundReason objects for the pickers.
 		 *
 		 * @return {Array<object>} The reasons.
 		 */
 		activeReasons() {
-			return this.reasons.filter(r => r.isActive !== false)
+			return this.reasons.filter((r) => r.isActive !== false)
 		},
+
 		/**
 		 * Overall reason picker options.
 		 *
 		 * @return {Array<object>} The options.
 		 */
 		reasonOptions() {
-			return this.activeReasons.map(r => ({ id: r.id, label: r.label || r.code }))
+			return this.activeReasons.map((r) => ({
+				id: r.id,
+				label: r.label || r.code,
+			}))
 		},
+
 		/**
 		 * The selected overall reason option.
 		 *
 		 * @return {object|null} The option.
 		 */
 		selectedReason() {
-			return this.reasonOptions.find(o => o.id === this.refund.refundReason) || null
+			return (
+				this.reasonOptions.find((o) => o.id === this.refund.refundReason)
+				|| null
+			)
 		},
+
 		/**
 		 * Candidate lines that are selected for the refund (for the totals panel).
 		 *
 		 * @return {Array<object>} The selected lines with computed amounts.
 		 */
 		selectedLines() {
-			return this.candidates.filter(c => c.selected)
+			return this.candidates.filter((c) => c.selected)
 		},
 	},
+
 	async mounted() {
 		this.loading = true
 		try {
@@ -221,29 +262,38 @@ export default {
 			this.loading = false
 		}
 	},
+
 	methods: {
 		/**
 		 * Load candidate transactions for the picker.
 		 */
 		async loadTransactions() {
 			try {
-				await this.objectStore.fetchCollection('posTransaction', { _limit: 500 })
-				this.transactions = this.objectStore.getCollection('posTransaction')?.results || []
+				await this.objectStore.fetchCollection('posTransaction', {
+					_limit: 500,
+				})
+				this.transactions =
+					this.objectStore.getCollection('posTransaction')?.results || []
 			} catch {
 				this.transactions = []
 			}
 		},
+
 		/**
 		 * Load the refund reasons.
 		 */
 		async loadReasons() {
 			try {
-				await this.objectStore.fetchCollection('refundReason', { _limit: 100 })
-				this.reasons = this.objectStore.getCollection('refundReason')?.results || []
+				await this.objectStore.fetchCollection('refundReason', {
+					_limit: 100,
+				})
+				this.reasons =
+					this.objectStore.getCollection('refundReason')?.results || []
 			} catch {
 				this.reasons = []
 			}
 		},
+
 		/**
 		 * Load an existing refund and its lines (edit mode).
 		 */
@@ -252,12 +302,16 @@ export default {
 			this.refund = { ...r }
 			await this.loadOriginalLines(this.refund.originalTransaction)
 
-			await this.objectStore.fetchCollection('posRefundLine', { refund: this.refundId, _limit: 500 })
-			const existing = (this.objectStore.getCollection('posRefundLine')?.results || [])
-				.filter(l => l.refund === this.refundId)
+			await this.objectStore.fetchCollection('posRefundLine', {
+				refund: this.refundId,
+				_limit: 500,
+			})
+			const existing = (
+				this.objectStore.getCollection('posRefundLine')?.results || []
+			).filter((l) => l.refund === this.refundId)
 
-			this.candidates = this.originalLines.map(original => {
-				const match = existing.find(e => e.originalLine === original.id)
+			this.candidates = this.originalLines.map((original) => {
+				const match = existing.find((e) => e.originalLine === original.id)
 				if (match) {
 					return {
 						id: match.id,
@@ -274,6 +328,7 @@ export default {
 				return this.blankCandidate(original)
 			})
 		},
+
 		/**
 		 * Load the original transaction's lines and build candidate rows.
 		 *
@@ -285,12 +340,18 @@ export default {
 				this.candidates = []
 				return
 			}
-			await this.objectStore.fetchCollection('posTransactionLine', { transaction: transactionId, _limit: 500 })
-			this.originalLines = (this.objectStore.getCollection('posTransactionLine')?.results || [])
-				.filter(l => l.transaction === transactionId)
+			await this.objectStore.fetchCollection('posTransactionLine', {
+				transaction: transactionId,
+				_limit: 500,
+			})
+			this.originalLines = (
+				this.objectStore.getCollection('posTransactionLine')?.results || []
+			)
+				.filter((l) => l.transaction === transactionId)
 				.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
-			this.candidates = this.originalLines.map(o => this.blankCandidate(o))
+			this.candidates = this.originalLines.map((o) => this.blankCandidate(o))
 		},
+
 		/**
 		 * Build a blank (unselected) candidate for an original line.
 		 *
@@ -309,6 +370,7 @@ export default {
 				valid: true,
 			}
 		},
+
 		/**
 		 * Resolve the original line object for a candidate.
 		 *
@@ -316,8 +378,9 @@ export default {
 		 * @return {object} The original line.
 		 */
 		originalLineFor(id) {
-			return this.originalLines.find(o => o.id === id) || {}
+			return this.originalLines.find((o) => o.id === id) || {}
 		},
+
 		/**
 		 * Replace a candidate after an edit.
 		 *
@@ -326,8 +389,9 @@ export default {
 		 */
 		updateCandidate(index, line) {
 			const current = this.candidates[index]
-			this.$set(this.candidates, index, { ...current, ...line })
+			this.candidates[index] = { ...current, ...line }
 		},
+
 		/**
 		 * Remove (deselect) a candidate.
 		 *
@@ -335,13 +399,14 @@ export default {
 		 */
 		removeCandidate(index) {
 			const current = this.candidates[index]
-			this.$set(this.candidates, index, { ...current, selected: false })
+			this.candidates[index] = { ...current, selected: false }
 		},
+
 		/**
 		 * Select all lines with full original quantity.
 		 */
 		selectAll() {
-			this.candidates = this.candidates.map(c => {
+			this.candidates = this.candidates.map((c) => {
 				const original = this.originalLineFor(c.originalLine)
 				const amounts = refundLineAmounts(original, original.quantity)
 				return {
@@ -355,6 +420,7 @@ export default {
 				}
 			})
 		},
+
 		/**
 		 * Apply a transaction selection.
 		 *
@@ -362,21 +428,27 @@ export default {
 		 */
 		async onTransactionSelect(option) {
 			this.refund.originalTransaction = option ? option.id : null
-			const tx = this.transactions.find(t => t.id === this.refund.originalTransaction)
+			const tx = this.transactions.find(
+				(t) => t.id === this.refund.originalTransaction,
+			)
 			if (tx) {
-				this.refund.paymentMethod = tx.paymentMethod || this.refund.paymentMethod
-				this.refund.paymentReference = tx.paymentReference || this.refund.paymentReference
+				this.refund.paymentMethod =
+					tx.paymentMethod || this.refund.paymentMethod
+				this.refund.paymentReference =
+					tx.paymentReference || this.refund.paymentReference
 			}
 			await this.loadOriginalLines(this.refund.originalTransaction)
 		},
+
 		/**
 		 * Apply an overall reason selection.
 		 *
 		 * @param {object|null} option The chosen reason.
 		 */
 		onReasonSelect(option) {
-			this.$set(this.refund, 'refundReason', option ? option.id : null)
+			this.refund.refundReason = option ? option.id : null
 		},
+
 		/**
 		 * Persist the refund header and its selected lines.
 		 *
@@ -384,17 +456,22 @@ export default {
 		 * editable header + line selections only.
 		 */
 		async save() {
-			const selected = this.candidates.filter(c => c.selected)
+			const selected = this.candidates.filter((c) => c.selected)
 			if (selected.length === 0) {
-				showError(t('pipelinq', 'Selecteer ten minste één artikel om terug te geven'))
+				showError(t('pipelinq', 'Select at least one item to return'))
 				return
 			}
 			if (!this.refund.originalTransaction) {
-				showError(t('pipelinq', 'Originele kassabon is verplicht'))
+				showError(t('pipelinq', 'Original receipt is required'))
 				return
 			}
-			if (selected.some(c => c.valid === false)) {
-				showError(t('pipelinq', 'Geretourneerd aantal mag niet groter zijn dan het originele aantal'))
+			if (selected.some((c) => c.valid === false)) {
+				showError(
+					t(
+						'pipelinq',
+						'Returned quantity may not exceed the original quantity',
+					),
+				)
 				return
 			}
 
@@ -403,9 +480,14 @@ export default {
 				const header = {
 					...this.refund,
 					status: this.refund.status || 'pending',
-					cashier: this.refund.cashier || (window.OC?.getCurrentUser?.()?.uid ?? ''),
+					cashier:
+						this.refund.cashier
+						|| (window.OC?.getCurrentUser?.()?.uid ?? ''),
 				}
-				const savedRefund = await this.objectStore.saveObject('posRefund', header)
+				const savedRefund = await this.objectStore.saveObject(
+					'posRefund',
+					header,
+				)
 				if (!savedRefund) {
 					showError(t('pipelinq', 'Failed to save refund.'))
 					return
@@ -414,12 +496,17 @@ export default {
 
 				for (const candidate of selected) {
 					const original = this.originalLineFor(candidate.originalLine)
-					const amounts = refundLineAmounts(original, candidate.returnedQuantity)
+					const amounts = refundLineAmounts(
+						original,
+						candidate.returnedQuantity,
+					)
 					const payload = {
 						refund: refundId,
 						originalLine: candidate.originalLine,
 						returnedQuantity: Number(candidate.returnedQuantity) || 0,
-						returnReason: candidate.returnReason || this.refund.refundReason,
+						returnReason:
+							candidate.returnReason || this.refund.refundReason,
+
 						restock: candidate.restock ?? true,
 						taxAmount: amounts.taxAmount,
 						lineTotal: amounts.lineTotal,
@@ -431,13 +518,17 @@ export default {
 				}
 
 				showSuccess(t('pipelinq', 'Refund saved.'))
-				this.$router.push({ name: 'PosRefundDetail', params: { id: refundId } })
+				this.$router.push({
+					name: 'PosRefundDetail',
+					params: { id: refundId },
+				})
 			} catch (e) {
 				showError(t('pipelinq', 'Failed to save refund.'))
 			} finally {
 				this.saving = false
 			}
 		},
+
 		/**
 		 * Return to the refund list.
 		 */

@@ -1,357 +1,511 @@
 {
-    "components": {
-        "registers": {
-            "pipelinq": {
-                "schemas": [
-                    "channelProvider",
-                    "messageTemplate",
-                    "messagingConsentRecord",
-                    "messageSendBudget",
-                    "message",
-                    "conversation"
-                ]
-            }
-        },
-        "schemas": {
-            "channelProvider": {
-                "slug": "channelProvider",
-                "title": "Channel Provider",
-                "icon": "RouterWireless",
-                "version": "1.0.0",
-                "summary": "WhatsApp or SMS provider credentials and routing priority.",
-                "description": "ChannelProvider holds credentials, the webhook signing secret, the E.164 sender number and the failover priority for a single tenant-owned WhatsApp or SMS sender. The kind field distinguishes Meta Cloud API direct senders (whatsapp-cloud-api) from BSP-mediated senders (whatsapp-bsp) and from SMS senders (sms). priority orders failover within the same kind. credentials is encrypted at rest by OpenRegister.",
-                "@type": "schema:DigitalDocument",
-                "required": ["kind", "vendor", "displayName"],
-                "properties": {
-                    "kind": {
-                        "type": "string",
-                        "enum": ["whatsapp-cloud-api", "whatsapp-bsp", "sms"],
-                        "description": "Provider kind controlling adapter dispatch."
-                    },
-                    "vendor": {
-                        "type": "string",
-                        "enum": ["meta", "twilio", "messagebird", "cm-com", "360dialog", "vonage"],
-                        "description": "Concrete vendor implementation."
-                    },
-                    "displayName": {
-                        "type": "string",
-                        "description": "Tenant-visible label.",
-                        "maxLength": 255
-                    },
-                    "credentials": {
-                        "type": "object",
-                        "description": "Vendor-specific credential bag. Encrypted at rest."
-                    },
-                    "phoneNumber": {
-                        "type": "string",
-                        "description": "E.164 sender phone number or account identifier."
-                    },
-                    "webhookSecret": {
-                        "type": "string",
-                        "description": "Shared HMAC secret used to verify inbound webhooks."
-                    },
-                    "active": {
-                        "type": "boolean",
-                        "default": true,
-                        "description": "Whether the provider participates in send routing."
-                    },
-                    "sandbox": {
-                        "type": "boolean",
-                        "default": false,
-                        "description": "Whether the provider is a sandbox / test account."
-                    },
-                    "priority": {
-                        "type": "integer",
-                        "default": 10,
-                        "description": "Failover priority within the same kind; lower wins."
-                    }
-                }
-            },
-            "messageTemplate": {
-                "slug": "messageTemplate",
-                "title": "Message Template",
-                "icon": "MessageTextOutline",
-                "version": "1.0.0",
-                "summary": "Provider-side message template (WhatsApp HSM) with approval lifecycle.",
-                "description": "MessageTemplate is the local mirror of an HSM template registered with a Channel Provider (Meta / BSP). status tracks the provider's approval state; lastSyncedAt records the last successful sync. body is the template text with {{1}}..{{N}} placeholders.",
-                "@type": "schema:CreativeWork",
-                "required": ["providerId", "externalId", "language"],
-                "properties": {
-                    "providerId": {
-                        "type": "string",
-                        "description": "FK to channelProvider (UUID)."
-                    },
-                    "externalId": {
-                        "type": "string",
-                        "description": "Template name as registered with the provider."
-                    },
-                    "language": {
-                        "type": "string",
-                        "description": "ISO-639-1 language code (e.g. nl, en).",
-                        "default": "nl"
-                    },
-                    "category": {
-                        "type": "string",
-                        "enum": ["marketing", "utility", "authentication"],
-                        "description": "Meta-defined template category."
-                    },
-                    "status": {
-                        "type": "string",
-                        "enum": ["pending", "approved", "rejected", "disabled"],
-                        "default": "pending",
-                        "description": "Provider approval status."
-                    },
-                    "body": {
-                        "type": "string",
-                        "description": "Template body with {{N}} placeholders."
-                    },
-                    "header": {
-                        "type": "string",
-                        "description": "Optional template header text."
-                    },
-                    "buttons": {
-                        "type": "array",
-                        "description": "Optional quick-reply or call-to-action buttons.",
-                        "items": {"type": "object"}
-                    },
-                    "lastSyncedAt": {
-                        "type": "string",
-                        "format": "date-time",
-                        "description": "ISO 8601 of the last successful provider sync."
-                    }
-                }
-            },
-            "messagingConsentRecord": {
-                "slug": "messagingConsentRecord",
-                "title": "Messaging Consent Record",
-                "icon": "ShieldAccountOutline",
-                "version": "1.0.0",
-                "summary": "Per-contact, per-channel consent state for WhatsApp / SMS (immutable audit history).",
-                "description": "MessagingConsentRecord captures every opt-in / opt-out event for a contact on a messaging channel. Records are append-only: a new row is written on each state transition; never overwrite history. ConsentService.canSend(...) picks the most recent record for the (contactId, channel) pair as the effective state. Distinct from the marketing consentRecord schema (which only models email).",
-                "@type": "schema:Permit",
-                "required": ["contactId", "channel", "state"],
-                "properties": {
-                    "contactId": {
-                        "type": "string",
-                        "description": "FK to client-management Contact (UUID)."
-                    },
-                    "channel": {
-                        "type": "string",
-                        "enum": ["whatsapp", "sms"],
-                        "description": "Messaging channel the consent applies to."
-                    },
-                    "state": {
-                        "type": "string",
-                        "enum": ["opted-in", "opted-out", "unknown"],
-                        "description": "Effective consent state at the recordedAt instant."
-                    },
-                    "source": {
-                        "type": "string",
-                        "enum": ["webform", "chat-reply", "import", "admin-override", "keyword-stop"],
-                        "description": "How the consent state was captured."
-                    },
-                    "recordedAt": {
-                        "type": "string",
-                        "format": "date-time",
-                        "description": "ISO 8601 instant the consent state took effect."
-                    },
-                    "evidence": {
-                        "type": "string",
-                        "description": "Free-text evidence for the audit trail (e.g. quoted inbound body)."
-                    },
-                    "legalBasis": {
-                        "type": "string",
-                        "enum": ["consent", "contract", "legitimate-interest"],
-                        "description": "GDPR Art. 6 lawful basis used at capture."
-                    }
-                }
-            },
-            "messageSendBudget": {
-                "slug": "messageSendBudget",
-                "title": "Message Send Budget",
-                "icon": "CashCheck",
-                "version": "1.0.0",
-                "summary": "Per-tenant, per-provider send cap with hard-stop or alert-only enforcement.",
-                "description": "MessageSendBudget governs how many messages and how much cost a tenant may spend through a single provider in one period. hardStop=true blocks further sends once the cap is reached; hardStop=false only alerts (once per period). currentPeriodMessages and currentPeriodCostEur are advanced by BudgetService on each successful send; BudgetPeriodResetJob rolls them on periodResetAt.",
-                "@type": "schema:MonetaryAmount",
-                "required": ["tenantId", "providerId", "period"],
-                "properties": {
-                    "tenantId": {
-                        "type": "string",
-                        "description": "Tenant identifier (typically the NC instance id)."
-                    },
-                    "providerId": {
-                        "type": "string",
-                        "description": "FK to channelProvider (UUID)."
-                    },
-                    "period": {
-                        "type": "string",
-                        "enum": ["monthly", "weekly", "daily"],
-                        "default": "monthly",
-                        "description": "Budget reset cadence."
-                    },
-                    "maxMessages": {
-                        "type": "integer",
-                        "description": "Cap on messages per period (0 = no cap).",
-                        "default": 0
-                    },
-                    "maxCostEur": {
-                        "type": "number",
-                        "description": "Cap on cost in EUR per period (0 = no cap).",
-                        "default": 0
-                    },
-                    "alertThresholdPct": {
-                        "type": "number",
-                        "description": "Fraction (0..1) of the cap that triggers a soft-alert.",
-                        "default": 0.8
-                    },
-                    "hardStop": {
-                        "type": "boolean",
-                        "default": false,
-                        "description": "When true, refuse sends past the cap; when false, alert only."
-                    },
-                    "currentPeriodMessages": {
-                        "type": "integer",
-                        "default": 0,
-                        "description": "Messages already sent in the current period."
-                    },
-                    "currentPeriodCostEur": {
-                        "type": "number",
-                        "default": 0,
-                        "description": "Total EUR cost already accrued in the current period."
-                    },
-                    "periodResetAt": {
-                        "type": "string",
-                        "format": "date-time",
-                        "description": "ISO 8601 instant the current period ends and counters reset."
-                    },
-                    "alertedAtPeriodStart": {
-                        "type": "string",
-                        "format": "date-time",
-                        "description": "Set when the one-per-period soft-alert has fired; cleared on reset."
-                    }
-                }
-            },
-            "message": {
-                "slug": "message",
-                "title": "Message",
-                "icon": "MessageOutline",
-                "version": "1.0.0",
-                "summary": "A single message exchanged on a conversation (email, web-form, whatsapp, sms).",
-                "description": "Message is the omnichannel exchange record: one row per inbound or outbound message persisted across all supported channels. The whatsapp-sms-channel-adapter change extends it with providerId, externalMessageId, templateId, costEur, deliveryStatus and windowExpiresAt. channel.enum is extended to include whatsapp and sms.",
-                "@type": "schema:Message",
-                "required": ["channel", "direction"],
-                "properties": {
-                    "conversationId": {
-                        "type": "string",
-                        "description": "FK to conversation (UUID)."
-                    },
-                    "contactId": {
-                        "type": "string",
-                        "description": "FK to client-management Contact (UUID)."
-                    },
-                    "channel": {
-                        "type": "string",
-                        "enum": ["email", "web-form", "chat", "whatsapp", "sms"],
-                        "description": "Channel the message was exchanged on."
-                    },
-                    "direction": {
-                        "type": "string",
-                        "enum": ["inbound", "outbound"],
-                        "description": "Whether the message was received or sent."
-                    },
-                    "body": {
-                        "type": "string",
-                        "description": "Plain-text body of the message."
-                    },
-                    "providerId": {
-                        "type": "string",
-                        "description": "FK to channelProvider that handled this message."
-                    },
-                    "externalMessageId": {
-                        "type": "string",
-                        "description": "Provider-side message id (Meta wamid, Twilio SID, etc.)."
-                    },
-                    "templateId": {
-                        "type": "string",
-                        "description": "FK to messageTemplate (UUID) when sent as a template."
-                    },
-                    "templateParameters": {
-                        "type": "array",
-                        "description": "Positional template parameters as sent to the provider.",
-                        "items": {"type": "string"}
-                    },
-                    "costEur": {
-                        "type": "number",
-                        "description": "Captured cost in EUR (may be estimated; see metadata.costEstimated)."
-                    },
-                    "deliveryStatus": {
-                        "type": "string",
-                        "enum": ["queued", "sent", "delivered", "read", "failed", "expired"],
-                        "default": "queued",
-                        "description": "Provider-side delivery state."
-                    },
-                    "windowExpiresAt": {
-                        "type": "string",
-                        "format": "date-time",
-                        "description": "WhatsApp 24-hour customer-service window expiry derived from the most recent inbound."
-                    },
-                    "metadata": {
-                        "type": "object",
-                        "description": "Provider-specific extras (cost currency, ecb rate, media, antivirus, estimation flag)."
-                    },
-                    "sentAt": {
-                        "type": "string",
-                        "format": "date-time",
-                        "description": "ISO 8601 instant the message was sent or received."
-                    }
-                }
-            },
-            "conversation": {
-                "slug": "conversation",
-                "title": "Conversation",
-                "icon": "ForumOutline",
-                "version": "1.0.0",
-                "summary": "A threaded omnichannel exchange between an agent and a contact on a single channel.",
-                "description": "Conversation groups messages for one contact on one channel (per the channel-threading invariant in design.md). The KCC queue routes new conversations; agents handle them until completedAt is set.",
-                "@type": "schema:Conversation",
-                "required": ["channel"],
-                "properties": {
-                    "contactId": {
-                        "type": "string",
-                        "description": "FK to client-management Contact (UUID)."
-                    },
-                    "channel": {
-                        "type": "string",
-                        "enum": ["email", "web-form", "chat", "whatsapp", "sms"],
-                        "description": "Primary channel of this conversation."
-                    },
-                    "providerId": {
-                        "type": "string",
-                        "description": "FK to channelProvider that owns this conversation."
-                    },
-                    "status": {
-                        "type": "string",
-                        "enum": ["open", "assigned", "closed"],
-                        "default": "open",
-                        "description": "Lifecycle status."
-                    },
-                    "assignedTo": {
-                        "type": "string",
-                        "description": "Nextcloud user id of the assigned agent."
-                    },
-                    "lastInboundAt": {
-                        "type": "string",
-                        "format": "date-time",
-                        "description": "ISO 8601 of the last inbound message (drives session window)."
-                    },
-                    "windowExpiresAt": {
-                        "type": "string",
-                        "format": "date-time",
-                        "description": "WhatsApp 24h window expiry mirrored on the conversation for fast queries."
-                    }
-                }
-            }
+  "components": {
+    "registers": {
+      "pipelinq": {
+        "schemas": [
+          "channelProvider",
+          "messageTemplate",
+          "messagingConsentRecord",
+          "messageSendBudget",
+          "message",
+          "conversation"
+        ]
+      }
+    },
+    "schemas": {
+      "channelProvider": {
+        "slug": "channelProvider",
+        "title": "Channel Provider",
+        "icon": "RouterWireless",
+        "version": "1.0.0",
+        "summary": "WhatsApp or SMS provider credentials and routing priority.",
+        "description": "ChannelProvider holds credentials, the webhook signing secret, the E.164 sender number and the failover priority for a single tenant-owned WhatsApp or SMS sender. The kind field distinguishes Meta Cloud API direct senders (whatsapp-cloud-api) from BSP-mediated senders (whatsapp-bsp) and from SMS senders (sms). priority orders failover within the same kind. credentials is encrypted at rest by OpenRegister.",
+        "x-schema-org": "schema:DigitalDocument",
+        "required": [
+          "kind",
+          "vendor",
+          "displayName"
+        ],
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "whatsapp-cloud-api",
+              "whatsapp-bsp",
+              "sms"
+            ],
+            "description": "Provider kind controlling adapter dispatch.",
+            "title": "Kind"
+          },
+          "vendor": {
+            "type": "string",
+            "enum": [
+              "meta",
+              "twilio",
+              "messagebird",
+              "cm-com",
+              "360dialog",
+              "vonage"
+            ],
+            "description": "Concrete vendor implementation.",
+            "title": "Vendor"
+          },
+          "displayName": {
+            "type": "string",
+            "description": "Tenant-visible label.",
+            "maxLength": 255,
+            "title": "Display Name"
+          },
+          "credentials": {
+            "type": "object",
+            "description": "DEPRECATED. Vendor credentials now live exclusively on the OpenConnector source addressed by sourceId (routed via OpenRegister's MessageDispatchProvider leaf, which never handles a vendor credential). Retained for backward compatibility only; the admin messaging settings surface does not write it and links out to the OpenConnector source as the credential home.",
+            "title": "Credentials"
+          },
+          "sourceId": {
+            "type": "string",
+            "description": "OpenConnector source slug that transports this provider (e.g. messagebird-sms, cmcom-sms, twilio-sms, whatsapp-cloud-api, whatsapp-bsp). Credentials and base URL live on that source; this row carries routing metadata only.",
+            "title": "Source ID"
+          },
+          "phoneNumber": {
+            "type": "string",
+            "description": "E.164 sender phone number or account identifier.",
+            "title": "Phone Number"
+          },
+          "webhookSecret": {
+            "type": "string",
+            "description": "Shared HMAC secret used to verify inbound webhooks.",
+            "title": "Webhook Secret"
+          },
+          "active": {
+            "type": "boolean",
+            "default": true,
+            "description": "Whether the provider participates in send routing.",
+            "title": "Active"
+          },
+          "sandbox": {
+            "type": "boolean",
+            "default": false,
+            "description": "Whether the provider is a sandbox / test account.",
+            "title": "Sandbox"
+          },
+          "priority": {
+            "type": "integer",
+            "default": 10,
+            "description": "Failover priority within the same kind; lower wins.",
+            "title": "Priority"
+          }
         }
+      },
+      "messageTemplate": {
+        "slug": "messageTemplate",
+        "title": "Message Template",
+        "icon": "MessageTextOutline",
+        "version": "1.0.0",
+        "summary": "Provider-side message template (WhatsApp HSM) with approval lifecycle.",
+        "description": "MessageTemplate is the local mirror of an HSM template registered with a Channel Provider (Meta / BSP). status tracks the provider's approval state; lastSyncedAt records the last successful sync. body is the template text with {{1}}..{{N}} placeholders.",
+        "x-schema-org": "schema:CreativeWork",
+        "required": [
+          "providerId",
+          "externalId",
+          "language"
+        ],
+        "properties": {
+          "providerId": {
+            "type": "string",
+            "description": "FK to channelProvider (UUID).",
+            "title": "Provider ID"
+          },
+          "externalId": {
+            "type": "string",
+            "description": "Template name as registered with the provider.",
+            "title": "External ID"
+          },
+          "language": {
+            "type": "string",
+            "description": "ISO-639-1 language code (e.g. nl, en).",
+            "default": "nl",
+            "title": "Language"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "marketing",
+              "utility",
+              "authentication"
+            ],
+            "description": "Meta-defined template category.",
+            "title": "Category"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "approved",
+              "rejected",
+              "disabled"
+            ],
+            "default": "pending",
+            "description": "Provider approval status.",
+            "title": "Status"
+          },
+          "body": {
+            "type": "string",
+            "description": "Template body with {{N}} placeholders.",
+            "title": "Body"
+          },
+          "header": {
+            "type": "string",
+            "description": "Optional template header text.",
+            "title": "Header"
+          },
+          "buttons": {
+            "type": "array",
+            "description": "Optional quick-reply or call-to-action buttons.",
+            "items": {
+              "type": "object"
+            },
+            "title": "Buttons"
+          },
+          "lastSyncedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO 8601 of the last successful provider sync.",
+            "title": "Last Synced At"
+          }
+        }
+      },
+      "messagingConsentRecord": {
+        "slug": "messagingConsentRecord",
+        "title": "Messaging Consent Record",
+        "icon": "ShieldAccountOutline",
+        "version": "1.0.0",
+        "summary": "Per-contact, per-channel consent state for WhatsApp / SMS (immutable audit history).",
+        "description": "MessagingConsentRecord captures every opt-in / opt-out event for a contact on a messaging channel. Records are append-only: a new row is written on each state transition; never overwrite history. ConsentService.canSend(...) picks the most recent record for the (contactId, channel) pair as the effective state. Distinct from the marketing consentRecord schema (which only models email).",
+        "x-schema-org": "schema:Permit",
+        "required": [
+          "contactId",
+          "channel",
+          "state"
+        ],
+        "properties": {
+          "contactId": {
+            "type": "string",
+            "description": "FK to client-management Contact (UUID).",
+            "title": "Contact ID"
+          },
+          "channel": {
+            "type": "string",
+            "enum": [
+              "whatsapp",
+              "sms"
+            ],
+            "description": "Messaging channel the consent applies to.",
+            "title": "Channel"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "opted-in",
+              "opted-out",
+              "unknown"
+            ],
+            "description": "Effective consent state at the recordedAt instant.",
+            "title": "State"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "webform",
+              "chat-reply",
+              "import",
+              "admin-override",
+              "keyword-stop"
+            ],
+            "description": "How the consent state was captured.",
+            "title": "Source"
+          },
+          "recordedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO 8601 instant the consent state took effect.",
+            "title": "Recorded At"
+          },
+          "evidence": {
+            "type": "string",
+            "description": "Free-text evidence for the audit trail (e.g. quoted inbound body).",
+            "title": "Evidence"
+          },
+          "legalBasis": {
+            "type": "string",
+            "enum": [
+              "consent",
+              "contract",
+              "legitimate-interest"
+            ],
+            "description": "GDPR Art. 6 lawful basis used at capture.",
+            "title": "Legal Basis"
+          }
+        }
+      },
+      "messageSendBudget": {
+        "slug": "messageSendBudget",
+        "title": "Message Send Budget",
+        "icon": "CashCheck",
+        "version": "1.0.0",
+        "summary": "Per-tenant, per-provider send cap with hard-stop or alert-only enforcement.",
+        "description": "MessageSendBudget governs how many messages and how much cost a tenant may spend through a single provider in one period. hardStop=true blocks further sends once the cap is reached; hardStop=false only alerts (once per period). currentPeriodMessages and currentPeriodCostEur are advanced by BudgetService on each successful send; BudgetPeriodResetJob rolls them on periodResetAt.",
+        "x-schema-org": "schema:MonetaryAmount",
+        "required": [
+          "tenantId",
+          "providerId",
+          "period"
+        ],
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "description": "Tenant identifier (typically the NC instance id).",
+            "title": "Tenant ID"
+          },
+          "providerId": {
+            "type": "string",
+            "description": "FK to channelProvider (UUID).",
+            "title": "Provider ID"
+          },
+          "period": {
+            "type": "string",
+            "enum": [
+              "monthly",
+              "weekly",
+              "daily"
+            ],
+            "default": "monthly",
+            "description": "Budget reset cadence.",
+            "title": "Period"
+          },
+          "maxMessages": {
+            "type": "integer",
+            "description": "Cap on messages per period (0 = no cap).",
+            "default": 0,
+            "title": "Max Messages"
+          },
+          "maxCostEur": {
+            "type": "number",
+            "description": "Cap on cost in EUR per period (0 = no cap).",
+            "default": 0,
+            "title": "Max Cost Eur"
+          },
+          "alertThresholdPct": {
+            "type": "number",
+            "description": "Fraction (0..1) of the cap that triggers a soft-alert.",
+            "default": 0.8,
+            "title": "Alert Threshold Pct"
+          },
+          "hardStop": {
+            "type": "boolean",
+            "default": false,
+            "description": "When true, refuse sends past the cap; when false, alert only.",
+            "title": "Hard Stop"
+          },
+          "currentPeriodMessages": {
+            "type": "integer",
+            "default": 0,
+            "description": "Messages already sent in the current period.",
+            "title": "Current Period Messages"
+          },
+          "currentPeriodCostEur": {
+            "type": "number",
+            "default": 0,
+            "description": "Total EUR cost already accrued in the current period.",
+            "title": "Current Period Cost Eur"
+          },
+          "periodResetAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO 8601 instant the current period ends and counters reset.",
+            "title": "Period Reset At"
+          },
+          "alertedAtPeriodStart": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Set when the one-per-period soft-alert has fired; cleared on reset.",
+            "title": "Alerted At Period Start"
+          }
+        }
+      },
+      "message": {
+        "x-schema-org": "schema:Message",
+        "slug": "message",
+        "title": "Message",
+        "icon": "MessageOutline",
+        "version": "1.0.0",
+        "summary": "A single message exchanged on a conversation (email, web-form, whatsapp, sms).",
+        "description": "Message is the omnichannel exchange record: one row per inbound or outbound message persisted across all supported channels. The whatsapp-sms-channel-adapter change extends it with providerId, externalMessageId, templateId, costEur, deliveryStatus and windowExpiresAt. channel.enum is extended to include whatsapp and sms.",
+        "required": [
+          "channel",
+          "direction"
+        ],
+        "properties": {
+          "conversationId": {
+            "type": "string",
+            "description": "FK to conversation (UUID).",
+            "title": "Conversation ID"
+          },
+          "contactId": {
+            "type": "string",
+            "description": "FK to client-management Contact (UUID).",
+            "title": "Contact ID"
+          },
+          "channel": {
+            "type": "string",
+            "enum": [
+              "email",
+              "web-form",
+              "chat",
+              "whatsapp",
+              "sms"
+            ],
+            "description": "Channel the message was exchanged on.",
+            "title": "Channel"
+          },
+          "direction": {
+            "type": "string",
+            "enum": [
+              "inbound",
+              "outbound"
+            ],
+            "description": "Whether the message was received or sent.",
+            "title": "Direction"
+          },
+          "body": {
+            "type": "string",
+            "description": "Plain-text body of the message.",
+            "title": "Body"
+          },
+          "providerId": {
+            "type": "string",
+            "description": "FK to channelProvider that handled this message.",
+            "title": "Provider ID"
+          },
+          "externalMessageId": {
+            "type": "string",
+            "description": "Provider-side message id (Meta wamid, Twilio SID, etc.).",
+            "title": "External Message ID"
+          },
+          "templateId": {
+            "type": "string",
+            "description": "FK to messageTemplate (UUID) when sent as a template.",
+            "title": "Template ID"
+          },
+          "templateParameters": {
+            "type": "array",
+            "description": "Positional template parameters as sent to the provider.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Template Parameters"
+          },
+          "costEur": {
+            "type": "number",
+            "description": "Captured cost in EUR (may be estimated; see metadata.costEstimated).",
+            "title": "Cost Eur"
+          },
+          "deliveryStatus": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "sent",
+              "delivered",
+              "read",
+              "failed",
+              "expired"
+            ],
+            "default": "queued",
+            "description": "Provider-side delivery state.",
+            "title": "Delivery Status"
+          },
+          "windowExpiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "WhatsApp 24-hour customer-service window expiry derived from the most recent inbound.",
+            "title": "Window Expires At"
+          },
+          "metadata": {
+            "type": "object",
+            "description": "Provider-specific extras (cost currency, ecb rate, media, antivirus, estimation flag).",
+            "title": "Metadata"
+          },
+          "sentAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO 8601 instant the message was sent or received.",
+            "title": "Sent At"
+          }
+        }
+      },
+      "conversation": {
+        "x-schema-org": "schema:Conversation",
+        "slug": "conversation",
+        "title": "Conversation",
+        "icon": "ForumOutline",
+        "version": "1.0.0",
+        "summary": "A threaded omnichannel exchange between an agent and a contact on a single channel.",
+        "description": "Conversation groups messages for one contact on one channel (per the channel-threading invariant in design.md). The KCC queue routes new conversations; agents handle them until completedAt is set.",
+        "required": [
+          "channel"
+        ],
+        "properties": {
+          "contactId": {
+            "type": "string",
+            "description": "FK to client-management Contact (UUID).",
+            "title": "Contact ID"
+          },
+          "channel": {
+            "type": "string",
+            "enum": [
+              "email",
+              "web-form",
+              "chat",
+              "whatsapp",
+              "sms"
+            ],
+            "description": "Primary channel of this conversation.",
+            "title": "Channel"
+          },
+          "providerId": {
+            "type": "string",
+            "description": "FK to channelProvider that owns this conversation.",
+            "title": "Provider ID"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "open",
+              "assigned",
+              "closed"
+            ],
+            "default": "open",
+            "description": "Lifecycle status.",
+            "title": "Status"
+          },
+          "assignedTo": {
+            "type": "string",
+            "description": "Nextcloud user id of the assigned agent.",
+            "title": "Assigned To"
+          },
+          "lastInboundAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO 8601 of the last inbound message (drives session window).",
+            "title": "Last Inbound At"
+          },
+          "windowExpiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "WhatsApp 24h window expiry mirrored on the conversation for fast queries.",
+            "title": "Window Expires At"
+          }
+        }
+      }
     }
+  }
 }

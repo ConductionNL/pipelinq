@@ -3,7 +3,8 @@
   "info": {
     "title": "Pipelinq CRM Register",
     "description": "Client Relationship Management register for the Pipelinq Nextcloud app. Manages clients, contacts, leads, requests, and pipelines.",
-    "version": "1.1.0"
+    "version": "1.3.0",
+    "x-changelog": "1.3.0: Loyalty vocabulary completed. Schema slug klantLoyaltyAccount->customerLoyaltyAccount (@type KlantLoyaltyAccount->CustomerLoyaltyAccount), and the last two Dutch property keys in the loyalty fragment: loyaltyProgramme.merk->brand, loyaltyProgramme.valuta->currency, giftCard.valuta->currency. Both keys are added to RenameDutchColumns so existing rows move with the declaration. The oc_appconfig key klantLoyaltyAccount_schema deliberately does NOT move: it is derived from the slug, so it is pinned in SettingsLoadService::SCHEMA_CONFIG_KEYS rather than left to follow the rename. 1.2.2: Re-authored 2 Dutch schema-level titles to English (klantLoyaltyAccount \"Klant Loyalty Account\"->\"Customer Loyalty Account\", nrcAbonnement \"NRC Abonnement\"->\"NRC Subscription\"); Dutch labels now live in l10n/nl.json + nl.js. VNG Klantinteracties and Kassakoppeling schema titles kept as-is (formal standard / established domain terms). No property titles, keys, enums, or other fields changed. 1.2.1: Re-authored 38 Dutch schema property titles to English (contact.geheimhouding plus the bsnValidatie, brpLookupVerzoek, brpPersoon, bsnAuditRecord, and optOutVlag schemas); Dutch labels now live in l10n/nl.json + nl.js. No property keys, enums, or other fields changed."
   },
   "x-openregister": {
     "type": "application",
@@ -57,13 +58,34 @@
     },
     "schemas": {
       "client": {
+        "x-schema-org": "schema:Organization",
+        "configuration": {
+          "implements": [
+            "https://openregister.app/ns#Customer",
+            "https://schema.org/Organization"
+          ],
+          "x-openregister-mcp": {
+            "enabled": true,
+            "tools": {
+              "search": {
+                "description": "Search clients (people or organizations) in the CRM by name, email, industry, or type. Returns RBAC-scoped client summaries, newest first.",
+                "scope": "read",
+                "readOnlyHint": true
+              },
+              "get": {
+                "description": "Get a single client by id, including its full CRM profile (contact details, industry, address, notes).",
+                "scope": "read",
+                "readOnlyHint": true
+              }
+            }
+          }
+        },
         "slug": "client",
         "title": "Client",
         "icon": "AccountGroup",
-        "version": "1.0.0",
+        "version": "1.1.0",
         "summary": "A client (person or organization) in the CRM",
         "description": "Represents a client entity — either a natural person or an organization. Mapped to Schema.org Person/Organization and vCard (RFC 6350) field conventions. Clients are the primary relationship entity in Pipelinq.",
-        "@type": "schema:Person",
         "linkedTypes": [
           "flow",
           "time-tracker",
@@ -81,7 +103,8 @@
             "type": "string",
             "description": "Full name of the person or organization (schema:name / vCard FN)",
             "maxLength": 255,
-            "minLength": 1
+            "minLength": 1,
+            "title": "Name"
           },
           "type": {
             "type": "string",
@@ -97,22 +120,26 @@
           "email": {
             "type": "string",
             "description": "Primary email address (schema:email / vCard EMAIL)",
-            "format": "email"
+            "format": "email",
+            "title": "Email Address"
           },
           "phone": {
             "type": "string",
-            "description": "Primary phone number (schema:telephone / vCard TEL)"
+            "description": "Primary phone number (schema:telephone / vCard TEL)",
+            "title": "Phone Number"
           },
           "address": {
             "type": "string",
             "description": "Postal address (schema:address)",
-            "visible": false
+            "visible": false,
+            "title": "Address"
           },
           "website": {
             "type": "string",
             "description": "Website URL (schema:url)",
             "format": "uri",
-            "visible": false
+            "visible": false,
+            "title": "Website"
           },
           "industry": {
             "type": "string",
@@ -123,16 +150,19 @@
           "notes": {
             "type": "string",
             "description": "Free-text notes about the client (schema:description)",
-            "visible": false
+            "visible": false,
+            "title": "Notes"
           },
           "contactsUid": {
             "type": "string",
             "description": "Nextcloud Contacts UID linking this client to a vCard in the user's addressbook",
-            "visible": false
+            "visible": false,
+            "title": "Contacts UID"
           }
         }
       },
       "contact": {
+        "x-schema-org": "schema:Person",
         "slug": "contact",
         "x-openregister-notifications": {
           "newContact": {
@@ -162,7 +192,6 @@
         "version": "1.0.0",
         "summary": "A contact person linked to a client",
         "description": "Represents a contact person associated with a client organization. Properties align with vCard (RFC 6350) field conventions.",
-        "@type": "schema:ContactPoint",
         "linkedTypes": [
           "email",
           "calendar"
@@ -175,16 +204,19 @@
             "type": "string",
             "description": "Full name of the contact person (vCard FN)",
             "maxLength": 255,
-            "minLength": 1
+            "minLength": 1,
+            "title": "Name"
           },
           "email": {
             "type": "string",
             "description": "Email address (vCard EMAIL)",
-            "format": "email"
+            "format": "email",
+            "title": "Email Address"
           },
           "phone": {
             "type": "string",
-            "description": "Phone number (vCard TEL)"
+            "description": "Phone number (vCard TEL)",
+            "title": "Phone Number"
           },
           "role": {
             "type": "string",
@@ -195,12 +227,15 @@
           "client": {
             "type": "string",
             "description": "UUID reference to the parent client object",
-            "format": "uuid"
+            "format": "uuid",
+            "$ref": "client",
+            "title": "Client"
           },
           "contactsUid": {
             "type": "string",
             "description": "Nextcloud Contacts UID linking this contact to a vCard in the user's addressbook",
-            "visible": false
+            "visible": false,
+            "title": "Contacts UID"
           },
           "marketingConsent": {
             "type": "boolean",
@@ -223,22 +258,24 @@
             "title": "BSN verified",
             "facetable": true
           },
-          "brpPersoonId": {
+          "brpPersonId": {
             "type": "string",
             "description": "UUID-referentie naar meest recente geldige BrpPersoon. Null na retentie-expiratie. Niet exposable in standaard export-templates.",
             "format": "uuid",
-            "visible": false
+            "visible": false,
+            "title": "BRP Person ID"
           },
-          "geheimhouding": {
+          "secrecy": {
             "type": "boolean",
             "description": "Afgeleid uit OptOutVlag (geheimhouding-gemeente / geheimhouding-brp). Wanneer true: adresgegevens worden afgeschermd in standaard-views — alleen via expliciete \"toon adres onder verantwoording\" zichtbaar (met extra audit-entry).",
             "default": false,
-            "title": "Geheimhouding",
+            "title": "Confidentiality",
             "facetable": true
           }
         }
       },
       "lead": {
+        "x-schema-org": "schema:Demand",
         "slug": "lead",
         "x-openregister-notifications": {
           "newLead": {
@@ -315,10 +352,9 @@
         },
         "title": "Lead",
         "icon": "TrendingUp",
-        "version": "1.1.0",
+        "version": "1.3.1",
         "summary": "A sales lead or business opportunity",
         "description": "Represents a sales lead — a potential deal or business opportunity linked to a client. Tracks value, probability, pipeline stage, and lifecycle status. Mapped to Schema.org Demand.",
-        "@type": "schema:Demand",
         "linkedTypes": [
           "deck",
           "flow",
@@ -337,17 +373,26 @@
             "source": "email",
             "notes": "From: {{senderName}} <{{sender}}>\nReceived: {{date}}\nMail: {{mailRef}}\n\n{{preview}}"
           },
-          "x-openregister-relations": [
-            {
-              "type": "deck",
-              "via": "openregister_deck_links",
-              "onCardMovedToWonStack": {
-                "action": "set-field",
-                "field": "status",
-                "value": "won"
+          "x-openregister-mcp": {
+            "enabled": true,
+            "tools": {
+              "search": {
+                "description": "Search sales leads/opportunities, optionally filtered by lifecycle status, pipeline stage, or associated client. Returns RBAC-scoped lead summaries, newest first, including the declarative qualificationScore, weightedValue, and recency-decayed winProbability calculated fields.",
+                "scope": "read",
+                "filters": [
+                  "status",
+                  "stage",
+                  "client"
+                ],
+                "readOnlyHint": true
+              },
+              "get": {
+                "description": "Get a single lead by id, including the declarative qualificationScore, weightedValue, and recency-decayed winProbability calculated fields materialised by OpenRegister.",
+                "scope": "read",
+                "readOnlyHint": true
               }
             }
-          ],
+          },
           "x-openregister-lifecycle": {
             "field": "status",
             "initial": "open",
@@ -586,29 +631,101 @@
                   }
                 ]
               }
+            },
+            "winProbability": {
+              "type": "integer",
+              "materialise": false,
+              "description": "Recency-decayed win probability (0-100): the lead's stage-denormalised `probability`, decayed by inactivity (full <=14d, 80% <=30d, 50% <=60d, else 25%). materialise:false so a stalling deal cools on read with no write. Single-object (ADR-031): reads @self.updated + the lead's own probability only.",
+              "expression": {
+                "if": [
+                  { "gt": [ { "dateDiff": { "from": { "prop": "@self.updated" }, "to": "now", "unit": "days" } }, 60 ] },
+                  { "/": [ { "*": [ { "prop": "probability" }, 25 ] }, 100 ] },
+                  { "if": [
+                    { "gt": [ { "dateDiff": { "from": { "prop": "@self.updated" }, "to": "now", "unit": "days" } }, 30 ] },
+                    { "/": [ { "*": [ { "prop": "probability" }, 5 ] }, 10 ] },
+                    { "if": [
+                      { "gt": [ { "dateDiff": { "from": { "prop": "@self.updated" }, "to": "now", "unit": "days" } }, 14 ] },
+                      { "/": [ { "*": [ { "prop": "probability" }, 8 ] }, 10 ] },
+                      { "prop": "probability" }
+                    ] }
+                  ] }
+                ]
+              }
             }
           }
         },
         "required": [
           "title"
         ],
+        "authorization": {
+          "create": [
+            "public",
+            "authenticated"
+          ],
+          "read": [
+            "authenticated"
+          ],
+          "update": [
+            "authenticated"
+          ],
+          "delete": [
+            "authenticated"
+          ]
+        },
         "properties": {
           "title": {
             "type": "string",
             "description": "Lead title / opportunity name (schema:name)",
             "maxLength": 255,
             "minLength": 1,
-            "translatable": true
+            "translatable": true,
+            "title": "Lead Title"
+          },
+          "contactName": {
+            "type": "string",
+            "description": "Name of the person submitting the lead (used for anonymous website intake, before a contact object exists)",
+            "maxLength": 255,
+            "title": "Contact Name"
+          },
+          "contactEmail": {
+            "type": "string",
+            "description": "Email address of the person submitting the lead (anonymous website intake)",
+            "format": "email",
+            "maxLength": 255,
+            "title": "Contact Email"
+          },
+          "contactPhone": {
+            "type": "string",
+            "description": "Phone number of the person submitting the lead (anonymous website intake)",
+            "maxLength": 64,
+            "title": "Contact Phone"
+          },
+          "organisation": {
+            "type": "string",
+            "description": "Organisation the submitter represents (anonymous website intake)",
+            "maxLength": 255,
+            "title": "Organisation",
+            "facetable": true
+          },
+          "message": {
+            "type": "string",
+            "description": "Free-text enquiry message from the submitter (anonymous website intake)",
+            "title": "Message"
           },
           "client": {
             "type": "string",
             "description": "UUID reference to the associated client",
-            "format": "uuid"
+            "format": "uuid",
+            "$ref": "client",
+            "title": "Client"
           },
           "contact": {
             "type": "string",
             "description": "UUID reference to the associated contact person",
-            "format": "uuid"
+            "format": "uuid",
+            "$ref": "contact",
+            "x-relation-filter": { "client": "@object.client" },
+            "title": "Contact"
           },
           "source": {
             "type": "string",
@@ -619,19 +736,22 @@
           "value": {
             "type": "number",
             "description": "Estimated deal value in euros (schema:price)",
-            "default": 0
+            "default": 0,
+            "title": "Lead Value"
           },
           "probability": {
             "type": "integer",
             "description": "Estimated win probability as percentage (0-100)",
             "minimum": 0,
             "maximum": 100,
-            "visible": false
+            "visible": false,
+            "title": "Win Probability"
           },
           "expectedCloseDate": {
             "type": "string",
             "description": "Expected close date for the opportunity",
-            "format": "date"
+            "format": "date",
+            "title": "Expected Close Date"
           },
           "assignee": {
             "type": "string",
@@ -656,7 +776,9 @@
             "type": "string",
             "description": "UUID reference to the pipeline this lead is tracked in",
             "format": "uuid",
-            "visible": false
+            "$ref": "pipeline",
+            "visible": false,
+            "title": "Pipeline"
           },
           "stage": {
             "type": "string",
@@ -667,12 +789,14 @@
           "stageOrder": {
             "type": "integer",
             "description": "Numeric position of the current stage in the pipeline",
-            "visible": false
+            "visible": false,
+            "title": "Stage Order"
           },
           "notes": {
             "type": "string",
             "description": "Free-text notes about the lead",
-            "visible": false
+            "visible": false,
+            "title": "Notes"
           },
           "status": {
             "type": "string",
@@ -686,402 +810,39 @@
             "title": "Status",
             "facetable": true
           },
+          "decisions": {
+            "type": "array",
+            "title": "Decisions",
+            "description": "Governance decisions raised for this deal (e.g. approval to close above a threshold). References decidesk Decision objects (ADR-066 cross-app relation); Decidesk owns the making and eIDAS signing. Link an existing decision or create one in Decidesk from the lead.",
+            "items": {
+              "type": "string",
+              "format": "uuid",
+              "x-external-register": "decidesk"
+            },
+            "referenceType": "decision",
+            "x-allow-create": true
+          },
           "description": {
             "type": "string",
             "description": "Free-text description of the opportunity (used by the qualification-score calculation: presence is worth +5 points)",
             "visible": false,
-            "translatable": true
+            "translatable": true,
+            "title": "Description"
           },
           "stageEnteredAt": {
             "type": "string",
             "description": "Timestamp the lead entered its current pipeline stage. Set by the stage-change writer; the aging calculation diffs this against now. When unset, aging falls back to @self.created.",
             "format": "date-time",
-            "visible": false
+            "visible": false,
+            "title": "Stage Entered At"
           },
           "qualificationScore": {
             "type": "integer",
             "description": "Backend-computed qualification score (0-100). Materialised by the x-openregister-calculations.qualificationScore annotation on every save — never written by service code. Resolves the lead-management spec 'frontend vs backend qualification score' open question in favour of a backend calculation.",
             "minimum": 0,
             "maximum": 100,
-            "facetable": true
-          }
-        }
-      },
-      "request": {
-        "slug": "request",
-        "x-openregister-notifications": {
-          "requestCompleted": {
-            "trigger": {
-              "type": "transition",
-              "action": "complete"
-            },
-            "enabled": true,
-            "channels": [
-              "nc-notification"
-            ],
-            "recipients": [
-              {
-                "kind": "field",
-                "field": "assignee"
-              }
-            ],
-            "subject": {
-              "nl": "Verzoek afgehandeld: {{title}}",
-              "en": "Request completed: {{title}}"
-            }
-          }
-        },
-        "title": "Request",
-        "icon": "FileDocumentOutline",
-        "version": "1.1.0",
-        "summary": "A service request (verzoek) — the pre-state of a case",
-        "description": "Represents a client service request that may be converted to a case in Procest. Tracks status lifecycle, priority, assignment, and optional pipeline placement.",
-        "@type": "schema:Demand",
-        "linkedTypes": [
-          "deck",
-          "flow",
-          "time-tracker",
-          "xwiki",
-          "email",
-          "calendar",
-          "forms"
-        ],
-        "configuration": {
-          "x-openregister-relations": [
-            {
-              "type": "deck",
-              "via": "openregister_deck_links",
-              "onCardMovedToWonStack": {
-                "action": "set-field",
-                "field": "status",
-                "value": "completed"
-              }
-            }
-          ],
-          "x-openregister-lifecycle": {
-            "field": "status",
-            "initial": "new",
-            "final": [
-              "completed",
-              "rejected",
-              "converted"
-            ],
-            "transitions": {
-              "start": {
-                "from": [
-                  "new"
-                ],
-                "to": "in_progress",
-                "description": "Pick up the request for handling. Authorization: the assignee or a member of the sales group.",
-                "authorization": [
-                  "sales"
-                ]
-              },
-              "complete": {
-                "from": [
-                  "in_progress"
-                ],
-                "to": "completed",
-                "description": "Resolve the request successfully. Authorization: the assignee (enforced by OpenRegister per-object owner RBAC; no extra group gate)."
-              },
-              "reject": {
-                "from": [
-                  "new",
-                  "in_progress"
-                ],
-                "to": "rejected",
-                "description": "Reject the request. Authorization: the assignee or a member of the sales group.",
-                "authorization": [
-                  "sales"
-                ]
-              },
-              "convert": {
-                "from": [
-                  "in_progress"
-                ],
-                "to": "converted",
-                "description": "Convert the request into a case (Procest). Authorization: the assignee (enforced by OpenRegister per-object owner RBAC; no extra group gate)."
-              }
-            }
-          }
-        },
-        "required": [
-          "title"
-        ],
-        "properties": {
-          "title": {
-            "type": "string",
-            "description": "Request title",
-            "maxLength": 255,
-            "minLength": 1
-          },
-          "description": {
-            "type": "string",
-            "description": "Detailed description of the request",
-            "visible": false
-          },
-          "client": {
-            "type": "string",
-            "description": "UUID reference to the associated client",
-            "format": "uuid"
-          },
-          "contact": {
-            "type": "string",
-            "description": "UUID reference to the associated contact person",
-            "format": "uuid"
-          },
-          "status": {
-            "type": "string",
-            "description": "Current status in the request lifecycle",
-            "enum": [
-              "new",
-              "in_progress",
-              "completed",
-              "rejected",
-              "converted"
-            ],
-            "default": "new",
-            "title": "Status",
-            "facetable": true
-          },
-          "priority": {
-            "type": "string",
-            "description": "Request priority level",
-            "enum": [
-              "low",
-              "normal",
-              "high",
-              "urgent"
-            ],
-            "default": "normal",
-            "title": "Priority",
-            "facetable": true
-          },
-          "assignee": {
-            "type": "string",
-            "description": "Nextcloud user UID of the assigned handler",
-            "title": "Assignee",
-            "facetable": true
-          },
-          "requestedAt": {
-            "type": "string",
-            "description": "Date and time the request was submitted",
-            "format": "date-time"
-          },
-          "category": {
-            "type": "string",
-            "description": "Request category for classification",
-            "title": "Category",
-            "facetable": true
-          },
-          "pipeline": {
-            "type": "string",
-            "description": "UUID reference to the pipeline this request is tracked in",
-            "format": "uuid",
-            "visible": false
-          },
-          "stage": {
-            "type": "string",
-            "description": "Current pipeline stage name",
-            "title": "Stage",
-            "facetable": true
-          },
-          "stageOrder": {
-            "type": "integer",
-            "description": "Numeric position of the current stage in the pipeline",
-            "visible": false
-          },
-          "channel": {
-            "type": "string",
-            "description": "Intake channel for the request (e.g., phone, email, website)",
-            "title": "Channel",
-            "facetable": true
-          },
-          "queue": {
-            "type": "string",
-            "description": "UUID reference to the queue this request is assigned to",
-            "format": "uuid",
-            "title": "Queue",
-            "facetable": true
-          },
-          "caseReference": {
-            "type": "string",
-            "description": "UUID reference to the converted Procest case",
-            "format": "uuid",
-            "visible": false
-          }
-        }
-      },
-      "complaint": {
-        "slug": "complaint",
-        "x-openregister-notifications": {
-          "complaintResolved": {
-            "trigger": {
-              "type": "transition",
-              "action": "resolve"
-            },
-            "enabled": true,
-            "channels": [
-              "nc-notification"
-            ],
-            "recipients": [
-              {
-                "kind": "field",
-                "field": "assignedTo"
-              }
-            ],
-            "subject": {
-              "nl": "Klacht opgelost: {{title}}",
-              "en": "Complaint resolved: {{title}}"
-            }
-          }
-        },
-        "title": "Complaint",
-        "icon": "AlertCircleOutline",
-        "version": "1.0.0",
-        "summary": "A customer complaint registered for tracking and resolution",
-        "description": "Represents a customer complaint linked to a client and optionally a contact person. Tracks status lifecycle, priority, category, SLA deadline, and resolution. Mapped to Schema.org ComplainAction.",
-        "@type": "schema:ComplainAction",
-        "configuration": {
-          "x-openregister-lifecycle": {
-            "field": "status",
-            "initial": "new",
-            "final": [
-              "resolved",
-              "rejected"
-            ],
-            "transitions": {
-              "start": {
-                "from": [
-                  "new"
-                ],
-                "to": "in_progress",
-                "description": "Begin handling the complaint. Authorization: the assignee or a member of the sales group.",
-                "authorization": [
-                  "sales"
-                ]
-              },
-              "resolve": {
-                "from": [
-                  "in_progress"
-                ],
-                "to": "resolved",
-                "description": "Resolve the complaint to the customer's satisfaction. Authorization: the assignee (enforced by OpenRegister per-object owner RBAC; no extra group gate)."
-              },
-              "reject": {
-                "from": [
-                  "new",
-                  "in_progress"
-                ],
-                "to": "rejected",
-                "description": "Reject the complaint as unfounded or out of scope. Authorization: the assignee or a member of the sales group.",
-                "authorization": [
-                  "sales"
-                ]
-              }
-            }
-          }
-        },
-        "required": [
-          "title",
-          "category"
-        ],
-        "properties": {
-          "title": {
-            "type": "string",
-            "description": "Complaint title or subject",
-            "maxLength": 255,
-            "minLength": 1
-          },
-          "description": {
-            "type": "string",
-            "description": "Detailed description of the complaint",
-            "visible": false
-          },
-          "category": {
-            "type": "string",
-            "description": "Complaint category for classification",
-            "enum": [
-              "service",
-              "product",
-              "communication",
-              "billing",
-              "other"
-            ],
-            "title": "Category",
-            "facetable": true
-          },
-          "priority": {
-            "type": "string",
-            "description": "Complaint priority level",
-            "enum": [
-              "low",
-              "normal",
-              "high",
-              "urgent"
-            ],
-            "default": "normal",
-            "title": "Priority",
-            "facetable": true
-          },
-          "status": {
-            "type": "string",
-            "description": "Current status in the complaint lifecycle",
-            "enum": [
-              "new",
-              "in_progress",
-              "resolved",
-              "rejected"
-            ],
-            "default": "new",
-            "title": "Status",
-            "facetable": true
-          },
-          "channel": {
-            "type": "string",
-            "description": "Channel through which the complaint was received",
-            "enum": [
-              "phone",
-              "email",
-              "web",
-              "counter",
-              "letter",
-              "other"
-            ],
-            "title": "Channel",
-            "facetable": true
-          },
-          "client": {
-            "type": "string",
-            "description": "UUID reference to the associated client",
-            "format": "uuid"
-          },
-          "contact": {
-            "type": "string",
-            "description": "UUID reference to the associated contact person",
-            "format": "uuid"
-          },
-          "assignedTo": {
-            "type": "string",
-            "description": "Nextcloud user UID of the assigned handler",
-            "title": "Assigned to",
-            "facetable": true
-          },
-          "slaDeadline": {
-            "type": "string",
-            "description": "SLA deadline for complaint resolution, calculated from category config",
-            "format": "date-time"
-          },
-          "resolvedAt": {
-            "type": "string",
-            "description": "Date and time the complaint was resolved or rejected",
-            "format": "date-time",
-            "visible": false
-          },
-          "resolution": {
-            "type": "string",
-            "description": "Explanation of how the complaint was resolved or why it was rejected",
-            "visible": false
+            "facetable": true,
+            "title": "Qualification Score"
           }
         }
       },
@@ -1089,10 +850,13 @@
         "slug": "pipeline",
         "title": "Pipeline",
         "icon": "Pipe",
-        "version": "3.0.0",
+        "version": "3.1.0",
         "summary": "A thin CRM pipeline config mapping stage rules onto a Deck board",
         "description": "Represents a CRM pipeline configuration — maps pipeline stages to a Deck board and its stacks, preserving CRM-specific semantics (probability, won/closed/default flags) that Deck itself does not model. Board mechanics (columns, cards, drag-and-drop) are provided by the OpenRegister deck leaf. Mapped to Schema.org ItemList.",
-        "@type": "schema:ItemList",
+        "x-schema-org": "schema:ItemList",
+        "configuration": {
+          "x-openregister-shareable": true
+        },
         "required": [
           "title",
           "stages"
@@ -1102,15 +866,18 @@
             "type": "string",
             "description": "Pipeline name (e.g., 'Sales Pipeline', 'Service Pipeline')",
             "maxLength": 255,
-            "minLength": 1
+            "minLength": 1,
+            "title": "Pipeline Name"
           },
           "description": {
             "type": "string",
-            "description": "Description of the pipeline's purpose"
+            "description": "Description of the pipeline's purpose",
+            "title": "Description"
           },
           "deckBoardId": {
             "type": "integer",
-            "description": "NC Deck board ID that this pipeline is realised as"
+            "description": "NC Deck board ID that this pipeline is realised as",
+            "title": "Deck Board ID"
           },
           "stages": {
             "type": "array",
@@ -1124,55 +891,86 @@
               "properties": {
                 "name": {
                   "type": "string",
-                  "description": "Stage name (e.g., 'Prospecting', 'Qualification')"
+                  "description": "Stage name (e.g., 'Prospecting', 'Qualification')",
+                  "title": "Name"
                 },
                 "order": {
                   "type": "integer",
-                  "description": "Display order of the stage (1-based)"
+                  "description": "Display order of the stage (1-based)",
+                  "title": "Order"
                 },
                 "deckStackId": {
                   "type": "integer",
-                  "description": "NC Deck stack ID that this stage is mapped to"
+                  "description": "NC Deck stack ID that this stage is mapped to",
+                  "title": "Deck Stack ID"
                 },
                 "probability": {
                   "type": "integer",
                   "description": "Default win probability percentage for this stage (0-100)",
                   "minimum": 0,
-                  "maximum": 100
+                  "maximum": 100,
+                  "title": "Probability"
                 },
                 "isClosed": {
                   "type": "boolean",
                   "description": "Whether this stage represents a closed/terminal state",
-                  "default": false
+                  "default": false,
+                  "title": "Is Closed"
                 },
                 "isWon": {
                   "type": "boolean",
                   "description": "Whether this closed stage represents a won/successful outcome. Only valid when isClosed is true.",
-                  "default": false
+                  "default": false,
+                  "title": "Is Won"
                 },
                 "isDefault": {
                   "type": "boolean",
                   "description": "Whether this is the default entry stage for new leads/requests in this pipeline",
-                  "default": false
+                  "default": false,
+                  "title": "Default Pipeline"
                 }
               }
-            }
+            },
+            "title": "Stages"
           },
           "isDefault": {
             "type": "boolean",
             "description": "Whether this is the default pipeline for its entity type",
-            "default": false
+            "default": false,
+            "title": "Default Pipeline"
           }
         }
       },
       "product": {
+        "x-schema-org": "schema:Product",
+        "configuration": {
+          "x-openregister-mcp": {
+            "enabled": true,
+            "tools": {
+              "search": {
+                "description": "Search the product/service catalogue by name, SKU, category or status. Read this BEFORE adding a line to an offer: a line needs a real product id and its list unitPrice, and there is no other way to discover either. Returns RBAC-scoped products.",
+                "scope": "read",
+                "filters": [
+                  "category",
+                  "status",
+                  "type"
+                ],
+                "readOnlyHint": true
+              },
+              "get": {
+                "description": "Get a single product by id, including its list unitPrice, unit and tax class.",
+                "scope": "read",
+                "readOnlyHint": true
+              }
+            }
+          }
+        },
         "slug": "product",
         "title": "Product",
         "icon": "Package",
         "version": "1.0.0",
         "summary": "A product or service that the organization sells",
         "description": "Represents a product or service in the CRM catalog. Linked to leads via LeadProduct line items for accurate pipeline valuation. Mapped to Schema.org Product.",
-        "@type": "schema:Product",
         "required": [
           "name",
           "unitPrice",
@@ -1183,33 +981,39 @@
             "type": "string",
             "description": "Product or service name (schema:name)",
             "maxLength": 255,
-            "minLength": 1
+            "minLength": 1,
+            "title": "Product Name"
           },
           "description": {
             "type": "string",
             "description": "Detailed product description (schema:description)",
-            "visible": false
+            "visible": false,
+            "title": "Description"
           },
           "sku": {
             "type": "string",
             "description": "Stock keeping unit or product code (schema:sku)",
-            "maxLength": 100
+            "maxLength": 100,
+            "title": "SKU"
           },
           "unitPrice": {
             "type": "number",
             "description": "Default selling price per unit in EUR (schema:price)",
-            "minimum": 0
+            "minimum": 0,
+            "title": "Unit Price"
           },
           "cost": {
             "type": "number",
             "description": "Cost to the organization per unit (for margin calculation)",
             "minimum": 0,
-            "visible": false
+            "visible": false,
+            "title": "Unit Cost"
           },
           "category": {
             "type": "string",
             "description": "UUID reference to a ProductCategory object",
             "format": "uuid",
+            "$ref": "productCategory",
             "title": "Category",
             "facetable": true
           },
@@ -1238,7 +1042,8 @@
           "unit": {
             "type": "string",
             "description": "Unit of measure (e.g., each, hour, license, month)",
-            "visible": false
+            "visible": false,
+            "title": "Unit of Measure"
           },
           "taxRate": {
             "type": "number",
@@ -1246,16 +1051,17 @@
             "minimum": 0,
             "maximum": 100,
             "default": 21,
-            "visible": false
+            "visible": false,
+            "title": "Tax Rate"
           },
-          "btwClass": {
+          "vatClass": {
             "type": "string",
             "description": "Dutch BTW class. Governs receipt printing and invoice BTW labels and drives taxRate: hoog (21%), laag (9%), nul (0%), vrijgesteld (exempt, 0%).",
             "enum": [
-              "hoog",
-              "laag",
-              "nul",
-              "vrijgesteld"
+              "high",
+              "low",
+              "zero",
+              "exempt"
             ],
             "title": "BTW Class",
             "facetable": true
@@ -1263,13 +1069,15 @@
           "barcode": {
             "type": "string",
             "description": "EAN-13 / UPC-A barcode for scanner lookup (schema:gtin)",
-            "maxLength": 64
+            "maxLength": 64,
+            "title": "Barcode"
           },
           "duration": {
             "type": "integer",
             "description": "Service duration in minutes (behandelingen, afspraken). Relevant when type=service.",
             "minimum": 0,
-            "visible": false
+            "visible": false,
+            "title": "Service Duration"
           },
           "variants": {
             "type": "array",
@@ -1281,26 +1089,31 @@
                 "sku": {
                   "type": "string",
                   "description": "Variant stock keeping unit (unique within the product)",
-                  "maxLength": 100
+                  "maxLength": 100,
+                  "title": "SKU"
                 },
                 "name": {
                   "type": "string",
                   "description": "Human-readable variant label",
-                  "maxLength": 255
+                  "maxLength": 255,
+                  "title": "Product Name"
                 },
                 "attributes": {
                   "type": "object",
-                  "description": "Attribute key to value map (e.g. {\"maat\": \"S\", \"kleur\": \"Wit\"})"
+                  "description": "Attribute key to value map (e.g. {\"maat\": \"S\", \"kleur\": \"Wit\"})",
+                  "title": "Attributes"
                 },
                 "unitPrice": {
                   "type": "number",
                   "description": "Per-variant selling price in EUR. Defaults to the parent product unitPrice.",
-                  "minimum": 0
+                  "minimum": 0,
+                  "title": "Unit Price"
                 },
                 "barcode": {
                   "type": "string",
                   "description": "Per-variant EAN/UPC barcode",
-                  "maxLength": 64
+                  "maxLength": 64,
+                  "title": "Barcode"
                 },
                 "status": {
                   "type": "string",
@@ -1309,10 +1122,12 @@
                     "active",
                     "inactive"
                   ],
-                  "default": "active"
+                  "default": "active",
+                  "title": "Status"
                 }
               }
-            }
+            },
+            "title": "Variants"
           },
           "modifierGroups": {
             "type": "array",
@@ -1324,29 +1139,34 @@
                 "name": {
                   "type": "string",
                   "description": "Modifier group name",
-                  "maxLength": 255
+                  "maxLength": 255,
+                  "title": "Product Name"
                 },
                 "required": {
                   "type": "boolean",
                   "description": "Whether the customer must choose at least one option",
-                  "default": false
+                  "default": false,
+                  "title": "Required"
                 },
                 "multiSelect": {
                   "type": "boolean",
                   "description": "Whether multiple options may be selected",
-                  "default": false
+                  "default": false,
+                  "title": "Multi Select"
                 },
                 "min": {
                   "type": "integer",
                   "description": "Minimum number of options to select",
                   "minimum": 0,
-                  "default": 0
+                  "default": 0,
+                  "title": "Min"
                 },
                 "max": {
                   "type": "integer",
                   "description": "Maximum number of options to select",
                   "minimum": 0,
-                  "default": 1
+                  "default": 1,
+                  "title": "Max"
                 },
                 "options": {
                   "type": "array",
@@ -1357,18 +1177,22 @@
                       "name": {
                         "type": "string",
                         "description": "Option name",
-                        "maxLength": 255
+                        "maxLength": 255,
+                        "title": "Product Name"
                       },
                       "priceAdjustment": {
                         "type": "number",
                         "description": "Amount added to (or subtracted from) the line price in EUR",
-                        "default": 0
+                        "default": 0,
+                        "title": "Price Adjustment"
                       }
                     }
-                  }
+                  },
+                  "title": "Options"
                 }
               }
-            }
+            },
+            "title": "Modifier Groups"
           },
           "priceTiers": {
             "type": "array",
@@ -1380,26 +1204,31 @@
                 "minQuantity": {
                   "type": "integer",
                   "description": "Minimum ordered quantity for this tier to apply",
-                  "minimum": 1
+                  "minimum": 1,
+                  "title": "Min Quantity"
                 },
                 "unitPrice": {
                   "type": "number",
                   "description": "Per-unit price in EUR when the tier applies",
-                  "minimum": 0
+                  "minimum": 0,
+                  "title": "Unit Price"
                 },
                 "label": {
                   "type": "string",
                   "description": "Human-readable tier label",
-                  "maxLength": 255
+                  "maxLength": 255,
+                  "title": "Label"
                 }
               }
-            }
+            },
+            "title": "Price Tiers"
           },
           "image": {
             "type": "string",
             "description": "URL to product image",
             "format": "uri",
-            "visible": false
+            "visible": false,
+            "title": "Product Image"
           }
         }
       },
@@ -1410,7 +1239,7 @@
         "version": "1.0.0",
         "summary": "A category for grouping products",
         "description": "Represents a product category for hierarchical grouping. Categories can have parent categories for tree structures. Mapped to Schema.org DefinedTermSet.",
-        "@type": "schema:DefinedTermSet",
+        "x-schema-org": "schema:DefinedTermSet",
         "required": [
           "name"
         ],
@@ -1419,24 +1248,29 @@
             "type": "string",
             "description": "Category name (schema:name)",
             "maxLength": 255,
-            "minLength": 1
+            "minLength": 1,
+            "title": "Category Name"
           },
           "description": {
             "type": "string",
             "description": "Category description",
-            "visible": false
+            "visible": false,
+            "title": "Description"
           },
           "parent": {
             "type": "string",
             "description": "UUID reference to parent category (for hierarchy)",
             "format": "uuid",
-            "visible": false
+            "$ref": "productCategory",
+            "visible": false,
+            "title": "Parent Category"
           },
           "order": {
             "type": "integer",
             "description": "Display order within the same parent level",
             "default": 0,
-            "visible": false
+            "visible": false,
+            "title": "Display Order"
           }
         }
       },
@@ -1444,10 +1278,55 @@
         "slug": "leadProduct",
         "title": "Lead Product",
         "icon": "CartOutline",
-        "version": "1.0.0",
+        "version": "1.1.0",
         "summary": "A line item linking a product to a lead",
         "description": "Represents a product line item on a lead — an instance of a product with deal-specific quantity, pricing, and discount. The total is computed as quantity * unitPrice * (1 - discount/100). Mapped to Schema.org Offer.",
-        "@type": "schema:Offer",
+        "x-schema-org": "schema:Offer",
+        "configuration": {
+          "x-openregister-calculations": {
+            "total": {
+              "type": "number",
+              "materialise": true,
+              "expression": {
+                "round": [
+                  {
+                    "if": [
+                      { "eq": [{ "prop": "discountType" }, "amount"] },
+                      { "-": [{ "*": [{ "prop": "quantity" }, { "prop": "unitPrice" }] }, { "coalesce": [{ "prop": "discount" }, 0] }] },
+                      { "*": [{ "*": [{ "prop": "quantity" }, { "prop": "unitPrice" }] }, { "-": [1, { "/": [{ "coalesce": [{ "prop": "discount" }, 0] }, 100] }] }] }
+                    ]
+                  },
+                  2
+                ]
+              }
+            }
+          },
+          "x-openregister-mcp": {
+            "enabled": true,
+            "tools": {
+              "create": {
+                "description": "Add a priced line to a lead — one product with its quantity, unit price and optional discount. This is how an offer/quotation is built: create the lead first (pipelinq_createLead), then add one line per product. Do NOT send `total`: it is calculated by OpenRegister as quantity * unitPrice minus the discount (percent or amount, per discountType), so a supplied value would be overwritten and any figure quoted from it would be wrong.",
+                "scope": "create",
+                "destructiveHint": false,
+                "idempotentHint": false
+              },
+              "search": {
+                "description": "List the priced lines on a lead — the body of an offer/quotation. Filter by `lead` to get one offer's lines. Each line carries the materialised `total`.",
+                "scope": "read",
+                "filters": [
+                  "lead",
+                  "product"
+                ],
+                "readOnlyHint": true
+              },
+              "get": {
+                "description": "Get a single offer line by id, including its materialised `total`.",
+                "scope": "read",
+                "readOnlyHint": true
+              }
+            }
+          }
+        },
         "required": [
           "lead",
           "product",
@@ -1457,312 +1336,94 @@
         "properties": {
           "lead": {
             "type": "string",
-            "description": "UUID reference to the parent Lead",
-            "format": "uuid"
+            "format": "uuid",
+            "$ref": "lead",
+            "description": "The deal this line belongs to.",
+            "title": "Lead"
           },
           "product": {
             "type": "string",
-            "description": "UUID reference to the Product",
-            "format": "uuid"
+            "format": "uuid",
+            "$ref": "product",
+            "x-allow-create": true,
+            "x-fill-from": {
+              "unitPrice": "unitPrice",
+              "unit": "unit"
+            },
+            "description": "Pick a product, or type a new name to create one. Its price and unit pre-fill the line.",
+            "title": "Product"
           },
           "quantity": {
             "type": "number",
             "description": "Number of units",
             "minimum": 0.01,
-            "default": 1
+            "default": 1,
+            "title": "Quantity"
           },
           "unitPrice": {
             "type": "number",
-            "description": "Price per unit (pre-populated from Product.unitPrice, can be overridden)",
-            "minimum": 0
+            "description": "Price per unit (pre-filled from the Product, can be overridden)",
+            "minimum": 0,
+            "title": "Unit Price"
+          },
+          "unit": {
+            "type": "string",
+            "description": "Unit of measure for this line (e.g. hours, pieces, m2). Pre-filled from the product.",
+            "title": "Unit"
           },
           "discount": {
             "type": "number",
-            "description": "Discount percentage (0-100)",
+            "description": "Discount value — a percentage (0–100) or a flat amount, per Discount type.",
             "minimum": 0,
-            "maximum": 100,
             "default": 0,
-            "visible": false
+            "title": "Discount"
+          },
+          "discountType": {
+            "type": "string",
+            "enum": [
+              "percent",
+              "amount"
+            ],
+            "default": "percent",
+            "description": "Whether Discount is a percentage of the line, or a flat amount off it.",
+            "title": "Discount type"
           },
           "total": {
             "type": "number",
-            "description": "Computed total: quantity * unitPrice * (1 - discount/100)",
-            "minimum": 0
+            "description": "Line total, computed from quantity, unit price and discount.",
+            "minimum": 0,
+            "visible": false,
+            "readOnly": true,
+            "title": "Line Total"
           },
           "notes": {
             "type": "string",
             "description": "Line item notes (e.g., annual license, setup fee)",
-            "visible": false
+            "visible": false,
+            "title": "Notes"
           }
-        }
-      },
-      "contactmoment": {
-        "slug": "contactmoment",
-        "title": "Contactmoment",
-        "icon": "PhoneMessage",
-        "version": "1.0.0",
-        "summary": "A registered contact moment (interaction) with a client",
-        "description": "Represents a single interaction with a client across any channel (phone, email, counter, chat, social media, letter). Mapped to Schema.org CommunicateAction and VNG Klantinteracties Contactmoment.",
-        "@type": "schema:CommunicateAction",
-        "configuration": {
-          "x-openregister-archival": {
-            "retention": {
-              "default": "P2Y",
-              "rules": [
+        },
+        "x-openregister-calculations": {
+          "total": {
+            "type": "number",
+            "materialise": true,
+            "expression": {
+              "round": [
                 {
-                  "condition": "outcome == 'afgehandeld'",
-                  "retention": "P2Y",
-                  "reason": "Resolved client contact moments (callback logs, counter/phone interactions) retained 2 years as the operational client-interaction record (VNG Klantinteracties), then disposed per ADR-024. DPO sign-off pending (task 4.1)."
+                  "if": [
+                    { "eq": [ { "prop": "discountType" }, "amount" ] },
+                    { "-": [ { "*": [ { "prop": "quantity" }, { "prop": "unitPrice" } ] }, { "coalesce": [ { "prop": "discount" }, 0 ] } ] },
+                    { "*": [ { "*": [ { "prop": "quantity" }, { "prop": "unitPrice" } ] }, { "-": [ 1, { "/": [ { "coalesce": [ { "prop": "discount" }, 0 ] }, 100 ] } ] } ] }
+                  ]
                 },
-                {
-                  "condition": "outcome == 'doorverbonden'",
-                  "retention": "P1Y",
-                  "reason": "Transferred (doorverbonden) contact moments are short-lived routing records; 1-year retention before disposition. DPO sign-off pending."
-                }
+                2
               ]
             }
-          }
-        },
-        "required": [
-          "subject",
-          "channel"
-        ],
-        "properties": {
-          "subject": {
-            "type": "string",
-            "description": "Subject of the contact moment (schema:about / Contactmoment.onderwerp)",
-            "maxLength": 255,
-            "minLength": 1
-          },
-          "summary": {
-            "type": "string",
-            "description": "Summary or notes of the interaction (schema:description / Contactmoment.tekst)"
-          },
-          "channel": {
-            "type": "string",
-            "description": "Communication channel used (schema:instrument / Contactmoment.kanaal)",
-            "enum": [
-              "telefoon",
-              "email",
-              "balie",
-              "chat",
-              "social",
-              "brief"
-            ],
-            "title": "Channel",
-            "facetable": true
-          },
-          "outcome": {
-            "type": "string",
-            "description": "Result of the interaction (schema:result / Contactmoment.resultaat)",
-            "enum": [
-              "afgehandeld",
-              "doorverbonden",
-              "terugbelverzoek",
-              "vervolgactie",
-              "opgelost",
-              "doorverwezen"
-            ],
-            "title": "Outcome",
-            "facetable": true
-          },
-          "client": {
-            "type": "string",
-            "description": "UUID reference to the associated client (schema:recipient / KlantContactmoment)",
-            "format": "uuid"
-          },
-          "request": {
-            "type": "string",
-            "description": "UUID reference to the associated request (schema:object / ObjectContactmoment)",
-            "format": "uuid"
-          },
-          "agent": {
-            "type": "string",
-            "description": "Nextcloud user UID of the agent who handled the interaction (schema:agent / Contactmoment.medewerker)",
-            "title": "Agent",
-            "facetable": true
-          },
-          "contactedAt": {
-            "type": "string",
-            "description": "Date and time of the interaction (schema:startTime / Contactmoment.registratiedatum)",
-            "format": "date-time"
-          },
-          "duration": {
-            "type": "string",
-            "description": "Duration of the interaction in ISO 8601 format (schema:duration / Contactmoment.gespreksduur)",
-            "visible": false
-          },
-          "channelMetadata": {
-            "type": "object",
-            "description": "Channel-specific metadata (e.g., call direction, email thread ID, counter location)",
-            "visible": false
-          },
-          "notes": {
-            "type": "string",
-            "description": "Additional internal notes (schema:text / Contactmoment.notitie)",
-            "visible": false
-          }
-        },
-        "x-openregister-notifications": {
-          "incomingCall": {
-            "trigger": {
-              "type": "created",
-              "filter": {
-                "field": "channel",
-                "operator": "equals",
-                "value": "telefoon"
-              }
-            },
-            "enabled": true,
-            "originApp": "pipelinq",
-            "channels": [
-              "nc-notification",
-              "web-push"
-            ],
-            "recipients": [
-              {
-                "kind": "field",
-                "field": "agent"
-              },
-              {
-                "kind": "groups",
-                "groups": [
-                  "sales"
-                ]
-              }
-            ],
-            "subject": {
-              "nl": "Inkomende oproep van {{client}}",
-              "en": "Incoming call from {{client}}"
-            },
-            "message": {
-              "nl": "{{client}} is een contact in Pipelinq. Openen in Nextcloud?",
-              "en": "{{client}} is a contact in Pipelinq. Open it in Nextcloud?"
-            },
-            "actions": [
-              {
-                "label": {
-                  "nl": "Klant openen",
-                  "en": "Open client"
-                },
-                "primary": true,
-                "target": {
-                  "kind": "object-detail",
-                  "object": {
-                    "kind": "relation",
-                    "field": "client"
-                  }
-                }
-              }
-            ]
-          },
-          "incomingEmail": {
-            "trigger": {
-              "type": "created",
-              "filter": {
-                "field": "channel",
-                "operator": "equals",
-                "value": "email"
-              }
-            },
-            "enabled": true,
-            "originApp": "pipelinq",
-            "channels": [
-              "nc-notification",
-              "web-push"
-            ],
-            "recipients": [
-              {
-                "kind": "field",
-                "field": "agent"
-              },
-              {
-                "kind": "groups",
-                "groups": [
-                  "sales"
-                ]
-              }
-            ],
-            "subject": {
-              "nl": "Inkomende e-mail van {{client}}",
-              "en": "Incoming email from {{client}}"
-            },
-            "message": {
-              "nl": "{{client}} is een contact in Pipelinq. E-mail openen in Nextcloud?",
-              "en": "{{client}} is a contact in Pipelinq. Open the email in Nextcloud?"
-            },
-            "actions": [
-              {
-                "label": {
-                  "nl": "Klant openen",
-                  "en": "Open client"
-                },
-                "primary": true,
-                "target": {
-                  "kind": "object-detail",
-                  "object": {
-                    "kind": "relation",
-                    "field": "client"
-                  }
-                }
-              }
-            ]
-          },
-          "incomingChat": {
-            "trigger": {
-              "type": "created",
-              "filter": {
-                "field": "channel",
-                "operator": "equals",
-                "value": "chat"
-              }
-            },
-            "enabled": true,
-            "originApp": "pipelinq",
-            "channels": [
-              "nc-notification",
-              "web-push"
-            ],
-            "recipients": [
-              {
-                "kind": "field",
-                "field": "agent"
-              },
-              {
-                "kind": "groups",
-                "groups": [
-                  "sales"
-                ]
-              }
-            ],
-            "subject": {
-              "nl": "Inkomend chatbericht van {{client}}",
-              "en": "Incoming chat from {{client}}"
-            },
-            "message": {
-              "nl": "{{client}} is een contact in Pipelinq. Gesprek openen in Nextcloud?",
-              "en": "{{client}} is a contact in Pipelinq. Open the conversation in Nextcloud?"
-            },
-            "actions": [
-              {
-                "label": {
-                  "nl": "Klant openen",
-                  "en": "Open client"
-                },
-                "primary": true,
-                "target": {
-                  "kind": "object-detail",
-                  "object": {
-                    "kind": "relation",
-                    "field": "client"
-                  }
-                }
-              }
-            ]
           }
         }
       },
       "task": {
+        "x-schema-org": "schema:Action",
         "slug": "task",
         "x-openregister-notifications": {
           "taskCompleted": {
@@ -1811,7 +1472,6 @@
         "version": "1.1.0",
         "summary": "A callback request or follow-up task (terugbelverzoek / opvolgtaak / informatievraag)",
         "description": "Represents an internal task — a callback request (terugbelverzoek), follow-up task (opvolgtaak), or information request (informatievraag) assigned to a user or department. Maps to VNG InterneTaak and Schema.org Action.",
-        "@type": "schema:Action",
         "configuration": {
           "x-openregister-lifecycle": {
             "field": "status",
@@ -1822,27 +1482,27 @@
                 "from": [
                   "open"
                 ],
-                "to": "in_behandeling",
+                "to": "in_progress",
                 "description": "Pick up the task: caller becomes the assignee."
               },
               "complete": {
                 "from": [
-                  "in_behandeling"
+                  "in_progress"
                 ],
-                "to": "afgerond",
+                "to": "completed",
                 "description": "Mark the task as completed."
               },
               "expire": {
                 "from": [
-                  "in_behandeling"
+                  "in_progress"
                 ],
-                "to": "verlopen",
+                "to": "expired",
                 "description": "Mark the task as expired (deadline passed)."
               },
               "reopen": {
                 "from": [
-                  "afgerond",
-                  "verlopen"
+                  "completed",
+                  "expired"
                 ],
                 "to": "open",
                 "description": "Re-open a closed or expired task."
@@ -1854,12 +1514,12 @@
               "default": "P2Y",
               "rules": [
                 {
-                  "condition": "status == 'afgerond'",
+                  "condition": "status == 'completed'",
                   "retention": "P2Y",
                   "reason": "Completed task history (incl. callback requests / terugbelverzoeken) retained 2 years as operational record, then disposed per ADR-024. DPO sign-off pending (task 4.1)."
                 },
                 {
-                  "condition": "status == 'verlopen'",
+                  "condition": "status == 'expired'",
                   "retention": "P1Y",
                   "reason": "Expired (never-actioned) tasks carry little record value; 1-year retention for audit, then disposed. DPO sign-off pending."
                 }
@@ -1876,9 +1536,9 @@
             "type": "string",
             "description": "Task type — terugbelverzoek (callback), opvolgtaak (follow-up), or informatievraag (information request)",
             "enum": [
-              "terugbelverzoek",
-              "opvolgtaak",
-              "informatievraag"
+              "callbackRequest",
+              "followUpTask",
+              "informationRequest"
             ],
             "title": "Type",
             "facetable": true
@@ -1888,22 +1548,24 @@
             "description": "Task subject line (VNG gevraagdeHandeling / schema:name)",
             "maxLength": 255,
             "minLength": 1,
-            "translatable": true
+            "translatable": true,
+            "title": "Subject"
           },
           "description": {
             "type": "string",
             "description": "Detailed task description (VNG toelichting / schema:description)",
             "visible": false,
-            "translatable": true
+            "translatable": true,
+            "title": "Description"
           },
           "status": {
             "type": "string",
             "description": "Task lifecycle status (VNG status)",
             "enum": [
               "open",
-              "in_behandeling",
-              "afgerond",
-              "verlopen"
+              "in_progress",
+              "completed",
+              "expired"
             ],
             "default": "open",
             "title": "Status",
@@ -1913,9 +1575,9 @@
             "type": "string",
             "description": "Task priority level",
             "enum": [
-              "laag",
-              "normaal",
-              "hoog"
+              "low",
+              "normal",
+              "high"
             ],
             "default": "normaal",
             "title": "Priority",
@@ -1924,7 +1586,8 @@
           "deadline": {
             "type": "string",
             "description": "Task deadline date and time",
-            "format": "date-time"
+            "format": "date-time",
+            "title": "Deadline"
           },
           "assigneeUserId": {
             "type": "string",
@@ -1941,25 +1604,33 @@
           "clientId": {
             "type": "string",
             "description": "UUID reference to the associated client",
-            "format": "uuid"
+            "format": "uuid",
+            "$ref": "client",
+            "title": "Client"
           },
           "requestId": {
             "type": "string",
-            "description": "UUID reference to the associated request",
-            "format": "uuid"
+            "description": "UUID reference to the associated request. Requests were folded into the `ticket` supertype by 99-unify-ticket-supertype, so this resolves to a ticket; the property keeps its stored name because renaming it would be a data migration.",
+            "format": "uuid",
+            "$ref": "ticket",
+            "x-relation-filter": { "client": "@object.clientId" },
+            "title": "Request"
           },
           "contactMomentSummary": {
             "type": "string",
             "description": "Summary text from the originating contact moment",
-            "visible": false
+            "visible": false,
+            "title": "Contact Moment Summary"
           },
           "callbackPhoneNumber": {
             "type": "string",
-            "description": "Override phone number for callback (may differ from client's primary phone)"
+            "description": "Override phone number for callback (may differ from client's primary phone)",
+            "title": "Callback Phone Number"
           },
           "preferredTimeSlot": {
             "type": "string",
-            "description": "Citizen's preferred callback time window (e.g., 'Dinsdag 14:00 - 16:00')"
+            "description": "Citizen's preferred callback time window (e.g., 'Dinsdag 14:00 - 16:00')",
+            "title": "Preferred Time Slot"
           },
           "createdBy": {
             "type": "string",
@@ -1971,12 +1642,14 @@
             "type": "string",
             "description": "Timestamp when the task was completed",
             "format": "date-time",
-            "visible": false
+            "visible": false,
+            "title": "Completed At"
           },
           "resultText": {
             "type": "string",
             "description": "Completion summary text",
-            "visible": false
+            "visible": false,
+            "title": "Result"
           },
           "attempts": {
             "type": "array",
@@ -1986,17 +1659,24 @@
               "properties": {
                 "timestamp": {
                   "type": "string",
-                  "format": "date-time"
+                  "format": "date-time",
+                  "title": "Timestamp",
+                  "description": "Timestamp for this record."
                 },
                 "result": {
-                  "type": "string"
+                  "type": "string",
+                  "title": "Result",
+                  "description": "Result for this record."
                 },
                 "notes": {
-                  "type": "string"
+                  "type": "string",
+                  "title": "Notes",
+                  "description": "Optional free-text notes for this record."
                 }
               }
             },
-            "visible": false
+            "visible": false,
+            "title": "Callback Attempts"
           }
         }
       },
@@ -2007,7 +1687,7 @@
         "version": "1.0.0",
         "summary": "A typed bidirectional relationship between two contacts or clients",
         "description": "Represents a relationship between two entities (contacts and/or clients) with a typed, bidirectional link. Inverse relationships are auto-created. Mapped to Schema.org Person.knows.",
-        "@type": "schema:Relationship",
+        "x-schema-org": "schema:Relationship",
         "required": [
           "fromContact",
           "toContact",
@@ -2018,12 +1698,16 @@
           "fromContact": {
             "type": "string",
             "description": "UUID reference to the source contact or client",
-            "format": "uuid"
+            "format": "uuid",
+            "$ref": "contact",
+            "title": "From"
           },
           "toContact": {
             "type": "string",
             "description": "UUID reference to the target contact or client",
-            "format": "uuid"
+            "format": "uuid",
+            "$ref": "contact",
+            "title": "To"
           },
           "fromType": {
             "type": "string",
@@ -2032,7 +1716,8 @@
               "contact",
               "client"
             ],
-            "default": "contact"
+            "default": "contact",
+            "title": "From Entity Type"
           },
           "toType": {
             "type": "string",
@@ -2041,7 +1726,8 @@
               "contact",
               "client"
             ],
-            "default": "contact"
+            "default": "contact",
+            "title": "To Entity Type"
           },
           "type": {
             "type": "string",
@@ -2051,7 +1737,8 @@
           },
           "inverseType": {
             "type": "string",
-            "description": "The inverse relationship type identifier"
+            "description": "The inverse relationship type identifier",
+            "title": "Inverse Type"
           },
           "category": {
             "type": "string",
@@ -2062,19 +1749,22 @@
           "notes": {
             "type": "string",
             "description": "Optional free text context for this relationship",
-            "visible": false
+            "visible": false,
+            "title": "Notes"
           },
           "startDate": {
             "type": "string",
             "description": "Date when the relationship started",
             "format": "date",
-            "visible": false
+            "visible": false,
+            "title": "Start Date"
           },
           "endDate": {
             "type": "string",
             "description": "Date when the relationship ended (null = active)",
             "format": "date",
-            "visible": false
+            "visible": false,
+            "title": "End Date"
           },
           "strength": {
             "type": "string",
@@ -2085,7 +1775,8 @@
               "weak"
             ],
             "default": "medium",
-            "visible": false
+            "visible": false,
+            "title": "Relationship Strength"
           }
         }
       },
@@ -2096,7 +1787,7 @@
         "version": "1.0.0",
         "summary": "A priority queue for organizing work items",
         "description": "Represents a named queue for organizing requests with priority-based ordering. Used for workload distribution and skill-based routing in KCC/service desk scenarios. Mapped to Schema.org ItemList.",
-        "@type": "schema:ItemList",
+        "x-schema-org": "schema:ItemList",
         "required": [
           "title"
         ],
@@ -2105,12 +1796,14 @@
             "type": "string",
             "description": "Queue name (e.g., 'Algemene Zaken', 'Vergunningen')",
             "maxLength": 255,
-            "minLength": 1
+            "minLength": 1,
+            "title": "Title"
           },
           "description": {
             "type": "string",
             "description": "Description of the queue's purpose",
-            "visible": false
+            "visible": false,
+            "title": "Description"
           },
           "categories": {
             "type": "array",
@@ -2118,7 +1811,8 @@
             "items": {
               "type": "string"
             },
-            "default": []
+            "default": [],
+            "title": "Categories"
           },
           "isActive": {
             "type": "boolean",
@@ -2130,13 +1824,15 @@
           "maxCapacity": {
             "type": "integer",
             "description": "Maximum number of items allowed in the queue (null = unlimited)",
-            "minimum": 1
+            "minimum": 1,
+            "title": "Max Capacity"
           },
           "sortOrder": {
             "type": "integer",
             "description": "Display order of the queue in the list",
             "default": 0,
-            "visible": false
+            "visible": false,
+            "title": "Sort Order"
           },
           "assignedAgents": {
             "type": "array",
@@ -2144,7 +1840,8 @@
             "items": {
               "type": "string"
             },
-            "default": []
+            "default": [],
+            "title": "Assigned Agents"
           }
         }
       },
@@ -2155,7 +1852,7 @@
         "version": "1.0.0",
         "summary": "A skill or expertise area for routing",
         "description": "Represents a defined skill or area of expertise that can be assigned to agents. Skills are matched against request categories for routing suggestions. Mapped to Schema.org DefinedTerm.",
-        "@type": "schema:DefinedTerm",
+        "x-schema-org": "schema:DefinedTerm",
         "required": [
           "title"
         ],
@@ -2164,12 +1861,14 @@
             "type": "string",
             "description": "Skill name (e.g., 'Vergunningen', 'WMO / Zorg')",
             "maxLength": 255,
-            "minLength": 1
+            "minLength": 1,
+            "title": "Title"
           },
           "description": {
             "type": "string",
             "description": "Description of the skill",
-            "visible": false
+            "visible": false,
+            "title": "Description"
           },
           "categories": {
             "type": "array",
@@ -2177,7 +1876,8 @@
             "items": {
               "type": "string"
             },
-            "default": []
+            "default": [],
+            "title": "Categories"
           },
           "isActive": {
             "type": "boolean",
@@ -2195,7 +1895,7 @@
         "version": "1.0.0",
         "summary": "Agent skill profile for routing",
         "description": "Links a Nextcloud user to their assigned skills and routing configuration. Used for skill-based routing suggestions and workload management.",
-        "@type": "schema:Person",
+        "x-schema-org": "schema:Person",
         "required": [
           "userId"
         ],
@@ -2215,13 +1915,15 @@
               "type": "string",
               "format": "uuid"
             },
-            "default": []
+            "default": [],
+            "title": "Skills"
           },
           "maxConcurrent": {
             "type": "integer",
             "description": "Maximum number of concurrent open items for this agent",
             "default": 10,
-            "minimum": 1
+            "minimum": 1,
+            "title": "Max Concurrent Items"
           },
           "isAvailable": {
             "type": "boolean",
@@ -2239,7 +1941,7 @@
         "version": "1.0.0",
         "summary": "A point-of-sale transaction (kassabon) with lifecycle, totals and tax breakdown",
         "description": "Represents a POS cart / receipt from open (draft) through payment (confirmed -> settled) or cancellation (refunded). The taxBreakdown array captures tax per BTW rate so receipts can show 9% and 21% lines separately. Totals are server-computed by PosTransactionService and must never be trusted from the client. Mapped to Schema.org Order.",
-        "@type": "schema:Order",
+        "x-schema-org": "schema:Order",
         "configuration": {
           "x-openregister-lifecycle": {
             "field": "status",
@@ -2333,12 +2035,16 @@
           "client": {
             "type": "string",
             "description": "Optional UUID reference to a client object for account sales",
-            "format": "uuid"
+            "format": "uuid",
+            "$ref": "client",
+            "title": "Client"
           },
           "customer": {
             "type": "string",
             "description": "Optional UUID reference to a pipelinq contact attached to this transaction (POS customer link). When tenderType is 'onAccount' this field is required and enforced server-side by PosCustomerLinkService.",
             "format": "uuid",
+            "$ref": "contact",
+            "x-relation-filter": { "client": "@object.client" },
             "title": "Customer",
             "facetable": true
           },
@@ -2370,7 +2076,8 @@
               "failed"
             ],
             "default": "pending",
-            "visible": false
+            "visible": false,
+            "title": "Consent Sync Status"
           },
           "terminalId": {
             "type": "string",
@@ -2397,27 +2104,31 @@
             "type": "number",
             "description": "Sum of line totals excl. tax, after line-level discounts (server-computed)",
             "minimum": 0,
-            "default": 0
+            "default": 0,
+            "title": "Subtotal"
           },
           "discountTotal": {
             "type": "number",
             "description": "Aggregate discount amount across all lines (server-computed)",
             "minimum": 0,
-            "default": 0
+            "default": 0,
+            "title": "Discount Total"
           },
           "taxBreakdown": {
             "type": "array",
             "description": "Per-rate tax summary, e.g. [{ rate: 21, base: 100.00, tax: 21.00 }] (server-computed)",
             "items": {
               "type": "object"
-            }
+            },
+            "title": "Tax Breakdown"
           },
           "invoiceBreakdown": {
             "type": "array",
             "description": "Per-rate GL posting breakdown for shillinq, e.g. [{ rate: 21, base: 100.00, tax: 21.00, description: \"Standard VAT (21%)\" }] (server-computed). Shillinq posts one GL line per rate.",
             "items": {
               "type": "object"
-            }
+            },
+            "title": "Invoice Breakdown"
           },
           "priceMode": {
             "type": "string",
@@ -2433,58 +2144,68 @@
             "type": "number",
             "description": "Aggregate tax amount, sum of taxBreakdown[*].tax (server-computed)",
             "minimum": 0,
-            "default": 0
+            "default": 0,
+            "title": "Total Tax"
           },
           "total": {
             "type": "number",
             "description": "Grand total incl. tax, subtotal + totalTax (server-computed)",
             "minimum": 0,
-            "default": 0
+            "default": 0,
+            "title": "Grand Total"
           },
           "notes": {
             "type": "string",
             "description": "Optional cashier notes on the transaction",
-            "visible": false
+            "visible": false,
+            "title": "Notes"
           },
           "parkedAt": {
             "type": "string",
             "description": "ISO 8601 timestamp when transaction was parked",
             "format": "date-time",
-            "visible": false
+            "visible": false,
+            "title": "Parked At"
           },
           "confirmedAt": {
             "type": "string",
             "description": "ISO 8601 timestamp of confirmation",
             "format": "date-time",
-            "visible": false
+            "visible": false,
+            "title": "Confirmed At"
           },
           "settledAt": {
             "type": "string",
             "description": "ISO 8601 timestamp of settlement",
             "format": "date-time",
-            "visible": false
+            "visible": false,
+            "title": "Settled At"
           },
           "refundedAt": {
             "type": "string",
             "description": "ISO 8601 timestamp of refund / void",
             "format": "date-time",
-            "visible": false
+            "visible": false,
+            "title": "Refunded At"
           },
           "refundReason": {
             "type": "string",
             "description": "Reason code / description for refund or void",
-            "visible": false
+            "visible": false,
+            "title": "Refund Reason"
           },
           "cloudEventId": {
             "type": "string",
             "description": "CloudEvents id of the emitted confirmation event",
-            "visible": false
+            "visible": false,
+            "title": "Cloud Event ID"
           },
           "invoiceNumber": {
             "type": "string",
             "description": "Server-allocated legal invoice number (e.g. 2026-000042) assigned once when a receipt is issued for a transaction >= EUR 100. Never accepted from the client; allocated race-safe by InvoiceSequenceService.",
             "maxLength": 32,
-            "visible": false
+            "visible": false,
+            "title": "Invoice Number"
           },
           "paymentProvider": {
             "type": "string",
@@ -2498,7 +2219,8 @@
             "type": "string",
             "description": "External payment session id from the provider (e.g. Mollie order id, Stripe PaymentIntent id, CCV transaction id)",
             "maxLength": 128,
-            "visible": false
+            "visible": false,
+            "title": "Payment Session ID"
           },
           "paymentStatus": {
             "type": "string",
@@ -2526,7 +2248,8 @@
             "type": "string",
             "description": "Idempotency key — last processed provider webhook event id, prevents duplicate settlement updates",
             "maxLength": 128,
-            "visible": false
+            "visible": false,
+            "title": "Payment Webhook Event ID"
           }
         }
       },
@@ -2537,7 +2260,7 @@
         "version": "1.0.0",
         "summary": "A single sellable line item on a POS transaction",
         "description": "One sellable item on a posTransaction. Quantity supports fractions for weight/volume items. taxAmount and lineTotal are computed on save by PosTransactionService and must never be trusted from the client. Mapped to Schema.org OrderItem.",
-        "@type": "schema:OrderItem",
+        "x-schema-org": "schema:OrderItem",
         "required": [
           "transaction",
           "description",
@@ -2548,65 +2271,78 @@
           "transaction": {
             "type": "string",
             "description": "UUID reference to the parent posTransaction",
-            "format": "uuid"
+            "format": "uuid",
+            "$ref": "posTransaction",
+            "title": "Transaction"
           },
           "product": {
             "type": "string",
             "description": "Optional UUID reference to a product object from the catalog",
-            "format": "uuid"
+            "format": "uuid",
+            "$ref": "product",
+            "title": "Product"
           },
           "description": {
             "type": "string",
             "description": "Line description -- pre-filled from product.name, or free-text",
             "maxLength": 255,
-            "minLength": 1
+            "minLength": 1,
+            "title": "Description"
           },
           "quantity": {
             "type": "number",
             "description": "Number of units (supports fractions for weight/volume items)",
             "minimum": 0.001,
-            "default": 1
+            "default": 1,
+            "title": "Quantity"
           },
           "unitPrice": {
             "type": "number",
             "description": "Price per unit in EUR (pre-filled from product.unitPrice)",
-            "minimum": 0
+            "minimum": 0,
+            "title": "Unit Price"
           },
           "discount": {
             "type": "number",
             "description": "Discount percentage 0-100",
             "minimum": 0,
             "maximum": 100,
-            "default": 0
+            "default": 0,
+            "title": "Discount"
           },
           "taxRate": {
             "type": "number",
             "description": "BTW rate percentage. Default 21 (Dutch standard rate). Common values: 0, 9, 21",
             "minimum": 0,
             "maximum": 100,
-            "default": 21
+            "default": 21,
+            "title": "Tax Rate"
           },
           "taxAmount": {
             "type": "number",
             "description": "Computed: (quantity * unitPrice * (1 - discount/100)) * taxRate/100",
             "minimum": 0,
-            "default": 0
+            "default": 0,
+            "title": "Tax Amount"
           },
           "lineTotal": {
             "type": "number",
             "description": "Computed: (quantity * unitPrice * (1 - discount/100)) + taxAmount",
             "minimum": 0,
-            "default": 0
+            "default": 0,
+            "title": "Line Total"
           },
           "sortOrder": {
             "type": "integer",
             "description": "Display order of the line within the transaction",
-            "default": 0
+            "default": 0,
+            "title": "Sort Order"
           },
           "notes": {
             "type": "string",
             "description": "Optional line-level notes, e.g. inclusief montage",
-            "visible": false
+            "visible": false,
+            "title": "Notes"
           }
         }
       },
@@ -2617,7 +2353,7 @@
         "version": "1.0.0",
         "summary": "A configurable reason code for a POS refund / return",
         "description": "Lookup / enumeration of standard refund reasons (damaged, unwanted, wrong item, expired, cashier error, other). Managers can mark reasons active/inactive to control which appear in refund forms. Mapped to Schema.org DefinedTerm.",
-        "@type": "schema:DefinedTerm",
+        "x-schema-org": "schema:DefinedTerm",
         "required": [
           "code",
           "label"
@@ -2639,7 +2375,8 @@
           "description": {
             "type": "string",
             "description": "Help text shown in the refund form",
-            "maxLength": 255
+            "maxLength": 255,
+            "title": "Description"
           },
           "isActive": {
             "type": "boolean",
@@ -2651,7 +2388,8 @@
           "icon": {
             "type": "string",
             "description": "Optional icon identifier for the reason",
-            "maxLength": 64
+            "maxLength": 64,
+            "title": "Icon"
           }
         }
       },
@@ -2662,7 +2400,7 @@
         "version": "1.0.0",
         "summary": "A refund / return document for a previously settled or confirmed POS transaction",
         "description": "Represents a full or partial refund against a posTransaction. refundAmount and totalTax are server-computed by PosRefundService from the refund lines and the original transaction's persisted, server-authoritative tax data; client-supplied amounts are never trusted. Lifecycle: pending -> completed (manager confirm) or pending -> rejected. Completed and rejected refunds are immutable. Mapped to Schema.org Order (type=refund).",
-        "@type": "schema:Order",
+        "x-schema-org": "schema:Order",
         "configuration": {
           "x-openregister-lifecycle": {
             "field": "status",
@@ -2715,6 +2453,7 @@
             "type": "string",
             "description": "UUID reference to the original posTransaction being refunded",
             "format": "uuid",
+            "$ref": "posTransaction",
             "title": "Original transaction"
           },
           "cashier": {
@@ -2752,43 +2491,51 @@
           "paymentReference": {
             "type": "string",
             "description": "Transaction id from the original payment, used for tender reversal reference",
-            "maxLength": 128
+            "maxLength": 128,
+            "title": "Payment Reference"
           },
           "refundAmount": {
             "type": "number",
             "description": "Total refund amount excl. tax (server-computed from refund lines)",
             "minimum": 0,
-            "default": 0
+            "default": 0,
+            "title": "Refund Amount"
           },
           "totalTax": {
             "type": "number",
             "description": "Aggregate tax being refunded (server-computed from refund lines)",
             "minimum": 0,
-            "default": 0
+            "default": 0,
+            "title": "Total Tax"
           },
           "notes": {
             "type": "string",
-            "description": "Cashier notes on the return"
+            "description": "Cashier notes on the return",
+            "title": "Notes"
           },
           "confirmedAt": {
             "type": "string",
             "format": "date-time",
-            "description": "ISO 8601 timestamp of completion"
+            "description": "ISO 8601 timestamp of completion",
+            "title": "Confirmed At"
           },
           "rejectedAt": {
             "type": "string",
             "format": "date-time",
-            "description": "ISO 8601 timestamp of rejection"
+            "description": "ISO 8601 timestamp of rejection",
+            "title": "Rejected At"
           },
           "rejectionReason": {
             "type": "string",
             "description": "Text reason if the refund was rejected",
-            "maxLength": 255
+            "maxLength": 255,
+            "title": "Rejection Reason"
           },
           "cloudEventId": {
             "type": "string",
             "description": "CloudEvents id of the emitted refund reversal event",
-            "maxLength": 64
+            "maxLength": 64,
+            "title": "Cloud Event ID"
           }
         }
       },
@@ -2799,7 +2546,7 @@
         "version": "1.0.0",
         "summary": "One returnable item on a posRefund, linked to the original transaction line",
         "description": "A single returned item on a posRefund. taxAmount and lineTotal are server-computed proportionally from the original posTransactionLine and the returned quantity; client-supplied amounts are never trusted. restock controls whether a stock back-in event is emitted to Shillinq on completion. Mapped to Schema.org OrderItem (type=refund-line).",
-        "@type": "schema:OrderItem",
+        "x-schema-org": "schema:OrderItem",
         "required": [
           "refund",
           "originalLine",
@@ -2810,18 +2557,23 @@
           "refund": {
             "type": "string",
             "description": "UUID reference to the parent posRefund",
-            "format": "uuid"
+            "format": "uuid",
+            "$ref": "posRefund",
+            "title": "Refund"
           },
           "originalLine": {
             "type": "string",
             "description": "UUID reference to the original posTransactionLine being refunded",
-            "format": "uuid"
+            "format": "uuid",
+            "$ref": "posTransactionLine",
+            "title": "Original Line"
           },
           "returnedQuantity": {
             "type": "number",
             "description": "Number of units being refunded (supports fractions)",
             "minimum": 0.001,
-            "default": 1
+            "default": 1,
+            "title": "Returned Quantity"
           },
           "returnReason": {
             "type": "string",
@@ -2838,17 +2590,20 @@
             "type": "number",
             "description": "Computed: (returnedQty / originalQty) * original line taxAmount",
             "minimum": 0,
-            "default": 0
+            "default": 0,
+            "title": "Tax Amount"
           },
           "lineTotal": {
             "type": "number",
             "description": "Computed: (returnedQty / originalQty) * original line total",
             "minimum": 0,
-            "default": 0
+            "default": 0,
+            "title": "Line Total"
           },
           "notes": {
             "type": "string",
-            "description": "Line-specific return notes, e.g. dent on back corner"
+            "description": "Line-specific return notes, e.g. dent on back corner",
+            "title": "Notes"
           }
         }
       },
@@ -2859,7 +2614,7 @@
         "version": "1.0.0",
         "summary": "A named set of POS terminal permissions assignable to staff members",
         "description": "Defines a permission matrix (canVoid, maxDiscountPercent, canRefund, canNoSale) that can be assigned to one or many posStaff records. The role drives action gates on the POS terminal: any operator whose active session resolves to a role without the relevant flag is blocked from the protected action. Mapped to Schema.org Role.",
-        "@type": "schema:Role",
+        "x-schema-org": "schema:Role",
         "required": [
           "name"
         ],
@@ -2875,7 +2630,8 @@
           "description": {
             "type": "string",
             "description": "Optional description of the role's purpose and scope",
-            "maxLength": 512
+            "maxLength": 512,
+            "title": "Description"
           },
           "canVoid": {
             "type": "boolean",
@@ -2912,7 +2668,7 @@
         "version": "1.0.0",
         "summary": "A POS terminal operator with a PIN, role assignment and active/inactive flag",
         "description": "Represents a POS operator. PIN is stored as a bcrypt hash and NEVER returned by any API. failedPinAttempts and lockedUntil implement the 5-attempt / 15-minute lockout. userId is an optional link to a Nextcloud account; not every operator needs an NC user. Mapped to Schema.org Person (POS operator role).",
-        "@type": "schema:Person",
+        "x-schema-org": "schema:Person",
         "required": [
           "displayName",
           "posRole"
@@ -2943,7 +2699,8 @@
             "type": "string",
             "description": "Bcrypt hash of the 4-6 digit PIN. Write-only: never returned by any API response.",
             "maxLength": 255,
-            "writeOnly": true
+            "writeOnly": true,
+            "title": "PIN Hash"
           },
           "isActive": {
             "type": "boolean",
@@ -2956,17 +2713,20 @@
             "type": "integer",
             "description": "Consecutive failed PIN attempts (reset on success; lockout at 5)",
             "minimum": 0,
-            "default": 0
+            "default": 0,
+            "title": "Failed PIN Attempts"
           },
           "lockedUntil": {
             "type": "string",
             "format": "date-time",
-            "description": "ISO 8601 timestamp until which PIN login is blocked after 5 failed attempts"
+            "description": "ISO 8601 timestamp until which PIN login is blocked after 5 failed attempts",
+            "title": "Locked Until"
           },
           "lastLoginAt": {
             "type": "string",
             "format": "date-time",
-            "description": "ISO 8601 timestamp of the most recent successful PIN login"
+            "description": "ISO 8601 timestamp of the most recent successful PIN login",
+            "title": "Last Login At"
           }
         }
       },
@@ -2977,7 +2737,7 @@
         "version": "1.0.0",
         "summary": "A customizable POS receipt template (header/footer/company/layout)",
         "description": "Configures how a POS receipt is rendered: company header/footer, layout width and whether the legal-invoice (BTW) variant applies. The body is a safe placeholder template ({{ placeholder }} tokens only -- no expression evaluation), so a malicious template cannot execute code or trigger SSRF.",
-        "@type": "schema:CreativeWork",
+        "x-schema-org": "schema:CreativeWork",
         "required": [
           "name"
         ],
@@ -2993,28 +2753,33 @@
           "description": {
             "type": "string",
             "description": "Optional template description",
-            "maxLength": 512
+            "maxLength": 512,
+            "title": "Description"
           },
           "body": {
             "type": "string",
-            "description": "Receipt body template using {{ placeholder }} tokens only (no expression evaluation). Optional -- when empty a built-in default layout is used."
+            "description": "Receipt body template using {{ placeholder }} tokens only (no expression evaluation). Optional -- when empty a built-in default layout is used.",
+            "title": "Receipt Body"
           },
           "layoutWidth": {
             "type": "integer",
             "description": "Thermal printer line width in characters",
             "minimum": 20,
             "maximum": 120,
-            "default": 42
+            "default": 42,
+            "title": "Layout Width"
           },
           "companyLogoUrl": {
             "type": "string",
             "description": "Optional URL to a company logo for the receipt header",
-            "maxLength": 512
+            "maxLength": 512,
+            "title": "Company Logo URL"
           },
           "isInvoiceMode": {
             "type": "boolean",
             "description": "When true, always render the legal-invoice (BTW breakdown + compliance footer) variant. Transactions >= EUR 100 render as an invoice regardless of this flag.",
-            "default": false
+            "default": false,
+            "title": "Invoice Mode"
           },
           "status": {
             "type": "string",
@@ -3032,7 +2797,9 @@
             "type": "string",
             "description": "Optional UUID of the owning organization for multi-tenant isolation",
             "format": "uuid",
-            "visible": false
+            "x-external-register": "openregister",
+            "visible": false,
+            "title": "Organization ID"
           }
         }
       },
@@ -3043,7 +2810,7 @@
         "version": "1.0.0",
         "summary": "An append-only audit entry for a printed or emailed POS receipt",
         "description": "Immutable audit trail of every receipt print and email action for compliance. Entries are append-only and never updated after creation. Mapped to Schema.org Action.",
-        "@type": "schema:Action",
+        "x-schema-org": "schema:Action",
         "required": [
           "transaction",
           "action",
@@ -3054,12 +2821,15 @@
             "type": "string",
             "description": "UUID reference to the posTransaction the receipt was issued for",
             "format": "uuid",
-            "facetable": true
+            "$ref": "posTransaction",
+            "facetable": true,
+            "title": "Transaction"
           },
           "template": {
             "type": "string",
             "description": "UUID reference to the receiptTemplate used (may be empty for the default layout)",
-            "facetable": true
+            "facetable": true,
+            "title": "Template"
           },
           "action": {
             "type": "string",
@@ -3074,28 +2844,33 @@
           "printerDevice": {
             "type": "string",
             "description": "Configured printer IP:port or device name (for print actions)",
-            "maxLength": 128
+            "maxLength": 128,
+            "title": "Printer Device"
           },
           "emailRecipient": {
             "type": "string",
             "description": "Recipient email address (for email actions)",
-            "maxLength": 255
+            "maxLength": 255,
+            "title": "Email Recipient"
           },
           "actor": {
             "type": "string",
             "description": "Nextcloud user UID of the user who performed the action",
             "maxLength": 255,
-            "facetable": true
+            "facetable": true,
+            "title": "Actor"
           },
           "renderedContent": {
             "type": "string",
-            "description": "The rendered receipt content captured for audit"
+            "description": "The rendered receipt content captured for audit",
+            "title": "Rendered Content"
           },
           "invoiceNumber": {
             "type": "string",
             "description": "Server-issued legal invoice number recorded with this action (empty for non-invoice receipts). Used to prove a number on a transaction was server-issued, not client-forged.",
             "maxLength": 32,
-            "facetable": true
+            "facetable": true,
+            "title": "Invoice Number"
           },
           "status": {
             "type": "string",
@@ -3112,12 +2887,14 @@
           "errorMessage": {
             "type": "string",
             "description": "Human-readable error detail when status is failed",
-            "maxLength": 512
+            "maxLength": 512,
+            "title": "Error Message"
           },
           "printedAt": {
             "type": "string",
             "description": "ISO 8601 timestamp of the action",
-            "format": "date-time"
+            "format": "date-time",
+            "title": "Printed At"
           }
         }
       },
@@ -3128,7 +2905,7 @@
         "version": "1.0.0",
         "summary": "Configuration record for a POS payment provider (Mollie, CCV, Adyen, Stripe)",
         "description": "Per-provider configuration record for the pluggable POS payment adapter. Encrypted credential fields (apiKey, apiSecret, webhookSecret) are stored encrypted in IAppConfig; this object only mirrors metadata + masked indicators for the admin UI. Mapped to Schema.org PaymentService.",
-        "@type": "schema:PaymentService",
+        "x-schema-org": "schema:PaymentService",
         "required": [
           "name",
           "displayName",
@@ -3183,17 +2960,20 @@
           "apiKey": {
             "type": "string",
             "description": "Provider API key or secret — encrypted. Masked as ***SET*** in API responses.",
-            "visible": false
+            "visible": false,
+            "title": "API Key"
           },
           "apiSecret": {
             "type": "string",
             "description": "Additional secret for providers that require signing (e.g. CCV) — encrypted. Masked in responses.",
-            "visible": false
+            "visible": false,
+            "title": "API Secret"
           },
           "webhookSecret": {
             "type": "string",
             "description": "Webhook signature verification key from the provider — encrypted. Masked in responses.",
-            "visible": false
+            "visible": false,
+            "title": "Webhook Secret"
           },
           "testMode": {
             "type": "boolean",
@@ -3203,87 +2983,91 @@
           },
           "config": {
             "type": "object",
-            "description": "Provider-specific nested config — e.g. { terminalId: \"kassa-01\", merchantAccount: \"...\" }"
+            "description": "Provider-specific nested config — e.g. { terminalId: \"kassa-01\", merchantAccount: \"...\" }",
+            "title": "Provider Config"
           },
           "lastTestedAt": {
             "type": "string",
             "description": "ISO 8601 timestamp of the last connection test",
             "format": "date-time",
-            "visible": false
+            "visible": false,
+            "title": "Last Tested At"
           },
           "testResult": {
             "type": "object",
-            "description": "Result of the last connection test: { status: ok|error, message: \"...\" }"
+            "description": "Result of the last connection test: { status: ok|error, message: \"...\" }",
+            "title": "Test Result"
           }
         }
       },
       "bsnValidatie": {
         "slug": "bsnValidatie",
-        "title": "BSN-validatie",
+        "title": "BSN Validation",
         "icon": "ShieldCheck",
         "version": "1.0.0",
         "summary": "Resultaat van een 11-proef BSN-validatie",
         "description": "Onveranderlijk resultaat van een 11-proef controle (RvIG-algoritme). Wordt aangemaakt bij elke validatie-poging (server-side audit). BSN wordt gemaskeerd opgeslagen (***XXXX*) — raw BSN gaat NOOIT in een bsnValidatie-object.",
         "required": [
-          "ingevoerdBsn",
-          "isFormeelGeldig",
-          "validatieTijdstip",
-          "geinitieerdDoor"
+          "enteredBsn",
+          "isFormalValid",
+          "validationMoment",
+          "initiatedBy"
         ],
         "properties": {
-          "ingevoerdBsn": {
+          "enteredBsn": {
             "type": "string",
             "description": "Gemaskeerd BSN — pattern ***XXXX* (eerste 3 + laatste 1 vervangen door ***). Raw 9-cijferig BSN wordt NIET opgeslagen.",
             "maxLength": 16,
-            "title": "BSN (gemaskeerd)"
+            "title": "BSN (masked)"
           },
-          "isFormeelGeldig": {
+          "isFormalValid": {
             "type": "boolean",
             "description": "Resultaat van 11-proef (true = pass, false = fail)",
-            "title": "Formeel geldig",
+            "title": "Formally valid",
             "facetable": true
           },
-          "elfproefScore": {
+          "elevenTestScore": {
             "type": "integer",
             "description": "Intermediaire score (sum mod 11) voor debugging. 0 = geldig.",
-            "title": "11-proef score"
+            "title": "Eleven-test score"
           },
-          "validatieTijdstip": {
+          "validationMoment": {
             "type": "string",
             "description": "ISO 8601 timestamp van validatie (UTC)",
             "format": "date-time",
-            "title": "Validatietijdstip"
+            "title": "Validation timestamp"
           },
-          "geinitieerdDoor": {
+          "initiatedBy": {
             "type": "string",
             "description": "Nextcloud user UID die de validatie initieerde",
             "maxLength": 128,
-            "title": "Geinitieerd door"
+            "title": "Initiated by"
           },
           "context": {
             "type": "string",
             "description": "Waar de validatie gebeurde: contact-aanmaken, avg-request, vog-screening, brp-lookup",
             "enum": [
-              "contact-aanmaken",
+              "create-contact",
               "avg-request",
               "vog-screening",
               "brp-lookup",
-              "overig"
+              "other"
             ],
             "title": "Context",
             "facetable": true
           },
-          "verzoekId": {
+          "requestId": {
             "type": "string",
             "description": "UUID van gekoppeld Pipelinq verzoek (request, complaint) indien van toepassing",
             "format": "uuid",
-            "visible": false
+            "visible": false,
+            "title": "Request ID"
           }
         }
       },
       "brpLookupVerzoek": {
         "slug": "brpLookupVerzoek",
-        "title": "BRP Lookup Verzoek",
+        "title": "BRP Lookup Request",
         "icon": "AccountSearch",
         "version": "1.0.0",
         "summary": "Een aangevraagde BRP-lookup met doelbinding (persistent voor audit)",
@@ -3291,10 +3075,10 @@
         "required": [
           "bsnHash",
           "verzoekreden",
-          "doelbinding",
-          "grondslag",
-          "aangevraagdDoor",
-          "verzoekTijdstip",
+          "purposeBinding",
+          "basis",
+          "requestedBy",
+          "requestMoment",
           "responseStatus"
         ],
         "properties": {
@@ -3308,122 +3092,130 @@
             "type": "string",
             "description": "Standaard- of vrij tekstveld: AVG-artikel, VOG, overig",
             "maxLength": 500,
-            "title": "Verzoekreden",
+            "title": "Request reason",
             "facetable": true
           },
-          "doelbinding": {
+          "purposeBinding": {
             "type": "string",
             "description": "Wettelijke grondslag (AVG art. 6, Wet BRP art. 3.3 lid 1, etc.)",
             "maxLength": 500,
-            "title": "Doelbinding"
+            "title": "Purpose binding"
           },
-          "grondslag": {
+          "basis": {
             "type": "string",
             "description": "Publieke taak, rechtsplicht, gerechtvaardigd belang, etc.",
             "maxLength": 200,
-            "title": "Grondslag",
+            "title": "Legal basis",
             "facetable": true
           },
-          "aangevraagdDoor": {
+          "requestedBy": {
             "type": "string",
             "description": "Nextcloud user UID van behandelaar",
             "maxLength": 128,
-            "title": "Aangevraagd door"
+            "title": "Requested by"
           },
-          "aangevraagdNamens": {
+          "requestedOnBehalfOf": {
             "type": "string",
             "description": "Afdeling / rol (behandelaar-burgerzaken, behandelaar-avg)",
             "maxLength": 200,
-            "title": "Aangevraagd namens"
+            "title": "Requested on behalf of"
           },
-          "verzoekTijdstip": {
+          "requestMoment": {
             "type": "string",
             "description": "ISO 8601 wanneer lookup werd aangevraagd",
             "format": "date-time",
-            "title": "Verzoektijdstip"
+            "title": "Request timestamp"
           },
-          "gekoppeldVerzoek": {
+          "linkedRequest": {
             "type": "string",
             "description": "UUID-referentie naar Pipelinq verzoek (request, complaint, etc.)",
             "format": "uuid",
-            "visible": false
+            "visible": false,
+            "title": "Linked Request"
           },
           "gekoppeldContact": {
             "type": "string",
             "description": "UUID-referentie naar Pipelinq Contact",
             "format": "uuid",
-            "visible": false
+            "visible": false,
+            "title": "Linked Contact"
           },
           "responseStatus": {
             "type": "string",
             "description": "Resultaat van de lookup-poging",
             "enum": [
-              "geslaagd",
-              "niet-gevonden",
-              "fout",
-              "geweigerd-onbevoegd",
+              "succeeded",
+              "not-found",
+              "error",
+              "refused-unauthorised",
               "timeout"
             ],
             "title": "Response status",
             "facetable": true
           },
-          "responseTijdstip": {
+          "responseMoment": {
             "type": "string",
             "description": "ISO 8601 wanneer HaalCentraal antwoordde",
             "format": "date-time",
-            "visible": false
+            "visible": false,
+            "title": "Response Timestamp"
           },
-          "responseDuurMs": {
+          "responseDurationMs": {
             "type": "integer",
             "description": "Response time in milliseconds",
-            "visible": false
+            "visible": false,
+            "title": "Response Duration Ms"
           },
           "haalcentraalCorrelationId": {
             "type": "string",
             "description": "Tracking ID van HaalCentraal voor support / trace",
             "maxLength": 128,
-            "visible": false
+            "visible": false,
+            "title": "Haalcentraal Correlation ID"
           },
-          "responseBevatGeheimhouding": {
+          "responseContainsSecrecy": {
             "type": "boolean",
             "description": "Indicatie dat response indicatieGeheim=1 bevatte",
             "default": false,
-            "visible": false
+            "visible": false,
+            "title": "Response Contains Confidentiality Flag"
           },
           "responseInCache": {
             "type": "boolean",
             "description": "True als deze lookup van cache kwam",
             "default": false,
-            "facetable": true
+            "facetable": true,
+            "title": "Response In Cache"
           },
-          "cacheVerlooptOp": {
+          "cacheExpiresOn": {
             "type": "string",
             "description": "ISO 8601 wanneer gecachte response verloopt",
             "format": "date-time",
-            "visible": false
+            "visible": false,
+            "title": "Cache Expires At"
           }
         }
       },
       "brpPersoon": {
         "slug": "brpPersoon",
-        "title": "BRP Persoon",
+        "title": "BRP Person",
         "icon": "AccountBox",
         "version": "1.0.0",
         "summary": "Genormaliseerde response uit HaalCentraal — versleuteld at-rest met TTL",
         "description": "Persoonsgegevens uit HaalCentraal BRP, genormaliseerd. Gekoppeld aan Contact. Versleuteld at-rest (Nextcloud native encryption). retentieTot stuurt het BrpRetentionJob — record wordt automatisch verwijderd na ingestelde periode (default 7 dagen na verzoek-afsluiting).",
         "required": [
           "bsnHash",
-          "voornamen",
-          "geslachtsnaam",
-          "geboortedatum",
-          "geslacht",
-          "verblijfplaats",
-          "indicatieGeheim",
-          "opgehaaldOp",
-          "bronsysteem",
-          "lookupVerzoekId",
+          "givenNames",
+          "surname",
+          "dateOfBirth",
+          "gender",
+          "residence",
+          "indicationSecret",
+          "fetchedOn",
+          "sourceSystem",
+          "lookupRequestId",
           "gekoppeldContact",
-          "retentieTot"
+          "retentionTo"
         ],
         "properties": {
           "bsnHash": {
@@ -3432,65 +3224,71 @@
             "maxLength": 64,
             "title": "BSN-hash"
           },
-          "voornamen": {
+          "givenNames": {
             "type": "string",
             "description": "Voornamen (schema:givenName)",
             "maxLength": 200,
-            "title": "Voornamen"
+            "title": "Given Names"
           },
-          "voorletters": {
+          "initials": {
             "type": "string",
             "description": "Afgekorte voornamen (schema:givenName initials)",
-            "maxLength": 32
+            "maxLength": 32,
+            "title": "Initials"
           },
-          "voorvoegsel": {
+          "namePrefix": {
             "type": "string",
             "description": "Voorvoegsel: vd, de, van, van der, etc.",
-            "maxLength": 32
+            "maxLength": 32,
+            "title": "Name Prefix"
           },
-          "geslachtsnaam": {
+          "surname": {
             "type": "string",
             "description": "Achternaam (schema:familyName)",
             "maxLength": 200,
-            "title": "Geslachtsnaam"
+            "title": "Family Name"
           },
-          "adellijkeTitel": {
+          "nobiliaryTitle": {
             "type": "string",
             "description": "Baron, Gravin, etc.",
-            "maxLength": 64
+            "maxLength": 64,
+            "title": "Noble Title"
           },
-          "geboortedatum": {
+          "dateOfBirth": {
             "type": "string",
             "description": "Geboortedatum (YYYY-MM-DD)",
             "format": "date",
-            "title": "Geboortedatum"
+            "title": "Date of Birth"
           },
-          "geboorteplaats": {
+          "birthPlace": {
             "type": "string",
             "description": "Plaats van geboorte",
-            "maxLength": 200
+            "maxLength": 200,
+            "title": "Birth Place"
           },
-          "geboorteland": {
+          "birthCountry": {
             "type": "string",
             "description": "Landcode (ISO 3166-1 alpha-2)",
-            "maxLength": 2
+            "maxLength": 2,
+            "title": "Birth Country"
           },
-          "geslacht": {
+          "gender": {
             "type": "string",
             "description": "schema:gender — man, vrouw, onbekend",
             "enum": [
-              "man",
-              "vrouw",
-              "onbekend"
+              "male",
+              "female",
+              "unknown"
             ],
-            "title": "Geslacht",
+            "title": "Gender",
             "facetable": true
           },
-          "verblijfplaats": {
+          "residence": {
             "type": "object",
-            "description": "Adresgegevens (straat, huisnummer, postcode, woonplaats, land)"
+            "description": "Adresgegevens (straat, huisnummer, postcode, woonplaats, land)",
+            "title": "Residence Address"
           },
-          "indicatieGeheim": {
+          "indicationSecret": {
             "type": "string",
             "description": "Geheimhouding-indicatie uit BRP — \"0\" (geen), \"1\" (geheimhouding gemeente)",
             "enum": [
@@ -3498,43 +3296,45 @@
               "1"
             ],
             "default": "0",
-            "title": "Indicatie geheim",
+            "title": "Confidentiality Indicator",
             "facetable": true
           },
-          "opgehaaldOp": {
+          "fetchedOn": {
             "type": "string",
             "description": "ISO 8601 wanneer dit Persoon-record van HaalCentraal kwam",
             "format": "date-time",
-            "title": "Opgehaald op"
+            "title": "Retrieved At"
           },
-          "bronsysteem": {
+          "sourceSystem": {
             "type": "string",
             "description": "Bronsysteem-aanduiding (HaalCentraal-BRP-v2.0)",
             "maxLength": 64,
             "default": "HaalCentraal-BRP-v2.0",
-            "title": "Bronsysteem"
+            "title": "Source System"
           },
-          "lookupVerzoekId": {
+          "lookupRequestId": {
             "type": "string",
             "description": "UUID-referentie naar BrpLookupVerzoek",
-            "format": "uuid"
+            "format": "uuid",
+            "title": "Lookup Request ID"
           },
           "gekoppeldContact": {
             "type": "string",
             "description": "UUID van Pipelinq Contact",
-            "format": "uuid"
+            "format": "uuid",
+            "title": "Linked Contact"
           },
-          "retentieTot": {
+          "retentionTo": {
             "type": "string",
             "description": "ISO 8601 datum/tijd tot hoelang dit record mag bestaan. BrpRetentionJob verwijdert records waar retentieTot < now.",
             "format": "date-time",
-            "title": "Retentie tot"
+            "title": "Retention Until"
           }
         }
       },
       "bsnAuditRecord": {
         "slug": "bsnAuditRecord",
-        "title": "BSN Audit-record",
+        "title": "BSN Audit Record",
         "icon": "FileDocumentMultiple",
         "version": "1.0.0",
         "summary": "Onveranderlijke audit-regel voor BSN-bevragingen (5 jaar bewaard per RvIG)",
@@ -3543,27 +3343,27 @@
           "x-openregister-immutable": true
         },
         "required": [
-          "actie",
+          "action",
           "bsnHash",
           "actor",
-          "tijdstip",
-          "uitkomst",
-          "bewaartot"
+          "moment",
+          "outcome",
+          "retainUntil"
         ],
         "properties": {
-          "actie": {
+          "action": {
             "type": "string",
             "description": "Type actie",
             "enum": [
-              "brp-lookup-uitgevoerd",
-              "brp-lookup-mislukt",
-              "brp-lookup-geweigerd",
+              "brp-lookup-executed",
+              "brp-lookup-failed",
+              "brp-lookup-refused",
               "brp-cache-invalidated",
-              "brp-adres-onthuld",
-              "brp-retentie-uitgevoerd",
-              "brp-rtbf-gepseudonimiseerd"
+              "brp-address-revealed",
+              "brp-retention-executed",
+              "brp-rtbf-pseudonymised"
             ],
-            "title": "Actie",
+            "title": "Action",
             "facetable": true
           },
           "bsnHash": {
@@ -3579,87 +3379,96 @@
             "title": "Actor",
             "facetable": true
           },
-          "actorRol": {
+          "actorRole": {
             "type": "string",
             "description": "Rol of groep van actor (behandelaar-burgerzaken, behandelaar-avg, beheerder)",
             "maxLength": 128,
-            "facetable": true
+            "facetable": true,
+            "title": "Actor Role"
           },
-          "tijdstip": {
+          "moment": {
             "type": "string",
             "description": "ISO 8601 timestamp van actie",
             "format": "date-time",
-            "title": "Tijdstip"
+            "title": "Timestamp"
           },
           "verzoekreden": {
             "type": "string",
             "description": "Gekopieerd uit BrpLookupVerzoek",
-            "maxLength": 500
+            "maxLength": 500,
+            "title": "Request Reason"
           },
-          "doelbinding": {
+          "purposeBinding": {
             "type": "string",
             "description": "Gekopieerd uit BrpLookupVerzoek",
-            "maxLength": 500
+            "maxLength": 500,
+            "title": "Purpose Binding"
           },
-          "uitkomst": {
+          "outcome": {
             "type": "string",
             "description": "Uitkomst van de bevraging",
             "enum": [
-              "geslaagd",
-              "niet-gevonden",
-              "fout",
-              "geweigerd-onbevoegd",
+              "succeeded",
+              "not-found",
+              "error",
+              "refused-unauthorised",
               "cache-invalidated",
-              "adres-onthuld",
-              "gepseudonimiseerd"
+              "address-revealed",
+              "pseudonymised"
             ],
-            "title": "Uitkomst",
+            "title": "Outcome",
             "facetable": true
           },
           "responseCode": {
             "type": "integer",
-            "description": "HTTP status code van HaalCentraal (200, 404, 403, 503)"
+            "description": "HTTP status code van HaalCentraal (200, 404, 403, 503)",
+            "title": "HTTP Response Code"
           },
-          "ipAdres": {
+          "ipAddress": {
             "type": "string",
             "description": "Requester IP, geanonimiseerd (laatste octet vervangen door 0)",
             "maxLength": 64,
-            "visible": false
+            "visible": false,
+            "title": "IP Address"
           },
           "userAgent": {
             "type": "string",
             "description": "Pipelinq/<version> (Nextcloud)",
             "maxLength": 200,
-            "visible": false
+            "visible": false,
+            "title": "User Agent"
           },
           "haalcentraalCorrelationId": {
             "type": "string",
             "description": "Correlation ID van HaalCentraal",
-            "maxLength": 128
+            "maxLength": 128,
+            "title": "HaalCentraal Correlation ID"
           },
-          "gekoppeldVerzoek": {
+          "linkedRequest": {
             "type": "string",
             "description": "UUID-referentie naar Pipelinq verzoek",
             "format": "uuid",
-            "visible": false
+            "visible": false,
+            "title": "Linked Request"
           },
           "vogScreening": {
             "type": "boolean",
             "description": "True als dit voor VOG-screening was (extra Justis-vlag)",
             "default": false,
-            "facetable": true
+            "facetable": true,
+            "title": "VOG Screening"
           },
-          "bewaartot": {
+          "retainUntil": {
             "type": "string",
             "description": "ISO 8601 tot hoelang dit record bewaard moet blijven (default now + 5 jaar)",
             "format": "date-time",
-            "title": "Bewaartot"
+            "title": "Retention Until"
           }
         }
       },
       "optOutVlag": {
         "slug": "optOutVlag",
-        "title": "Opt-out / Geheimhouding-vlag",
+        "title": "Opt-out / Confidentiality Flag",
         "icon": "EyeOff",
         "version": "1.0.0",
         "summary": "Per BSN bekende opt-out of geheimhouding (BRP of lokaal)",
@@ -3667,8 +3476,8 @@
         "required": [
           "bsnHash",
           "type",
-          "bron",
-          "ingangsdatum"
+          "source",
+          "effectiveDate"
         ],
         "properties": {
           "bsnHash": {
@@ -3688,45 +3497,49 @@
             "title": "Type",
             "facetable": true
           },
-          "bron": {
+          "source": {
             "type": "string",
             "description": "BRP (automatisch uit response) of lokaal (handmatig opgevoerd)",
             "enum": [
               "BRP",
-              "lokaal"
+              "local"
             ],
-            "title": "Bron",
+            "title": "Source",
             "facetable": true
           },
-          "ingangsdatum": {
+          "effectiveDate": {
             "type": "string",
             "description": "ISO 8601 date wanneer opt-out van kracht werd",
             "format": "date",
-            "title": "Ingangsdatum"
+            "title": "Effective Date"
           },
-          "einddatum": {
+          "endDate": {
             "type": "string",
             "description": "ISO 8601 date wanneer opt-out afloopt (null = onbeperkt)",
-            "format": "date"
+            "format": "date",
+            "title": "End Date"
           },
-          "beperkt": {
+          "limited": {
             "type": "array",
             "description": "Array van restricties: commerciele-derden, kerkgenootschappen, derdeportalen",
             "items": {
               "type": "string"
-            }
+            },
+            "title": "Restrictions"
           },
-          "lokaalOpgevoerdDoor": {
+          "localEnteredBy": {
             "type": "string",
             "description": "Nextcloud user UID van wie de opt-out lokaal registreerde",
             "maxLength": 128,
-            "visible": false
+            "visible": false,
+            "title": "Registered By"
           },
-          "notitie": {
+          "note": {
             "type": "string",
             "description": "Vrije toelichting (bijv. \"verzoek burger per formulier X\")",
             "maxLength": 1000,
-            "visible": false
+            "visible": false,
+            "title": "Note"
           }
         }
       }
@@ -3750,7 +3563,12 @@
     },
     "objects": [
       {
-        "@self": { "register": "pipelinq", "schema": "posTransaction", "slug": "txn-2026-0001", "id": "2c46f6e5-ee99-4dea-97ea-19d7efbf3e33" },
+        "@self": {
+          "register": "pipelinq",
+          "schema": "posTransaction",
+          "slug": "txn-2026-0001",
+          "id": "2c46f6e5-ee99-4dea-97ea-19d7efbf3e33"
+        },
         "reference": "TXN-2026-0001",
         "cashier": "admin",
         "terminalId": "kassa-01",
@@ -3795,7 +3613,12 @@
         "notes": "Mollie iDEAL betaling -- koffie, broodje en notitieboek"
       },
       {
-        "@self": { "register": "pipelinq", "schema": "posTransaction", "slug": "txn-2026-0002", "id": "635e3bb9-d4d1-463d-96c7-4bc0b20baa64" },
+        "@self": {
+          "register": "pipelinq",
+          "schema": "posTransaction",
+          "slug": "txn-2026-0002",
+          "id": "635e3bb9-d4d1-463d-96c7-4bc0b20baa64"
+        },
         "reference": "TXN-2026-0002",
         "cashier": "jan.smit",
         "terminalId": "kassa-02",
@@ -3809,7 +3632,12 @@
         "paymentStatus": "pending"
       },
       {
-        "@self": { "register": "pipelinq", "schema": "posTransaction", "slug": "txn-2026-0003", "id": "f838244c-2939-44c1-aa23-549dea3682bc" },
+        "@self": {
+          "register": "pipelinq",
+          "schema": "posTransaction",
+          "slug": "txn-2026-0003",
+          "id": "f838244c-2939-44c1-aa23-549dea3682bc"
+        },
         "reference": "TXN-2026-0003",
         "cashier": "emma.bakker",
         "terminalId": "kassa-01",
@@ -3864,7 +3692,12 @@
         "notes": "CCV PIN-terminal betaling -- factuur gevraagd (gemengd 0%/9%/21%)"
       },
       {
-        "@self": { "register": "pipelinq", "schema": "posTransaction", "slug": "txn-2026-0004", "id": "da250c00-0537-4839-a546-429fe21c37ef" },
+        "@self": {
+          "register": "pipelinq",
+          "schema": "posTransaction",
+          "slug": "txn-2026-0004",
+          "id": "da250c00-0537-4839-a546-429fe21c37ef"
+        },
         "reference": "TXN-2026-0004",
         "cashier": "jan.smit",
         "terminalId": "kassa-03",
@@ -3895,7 +3728,12 @@
         "notes": "Klant even weg -- terugkomen (prijzen incl. BTW)"
       },
       {
-        "@self": { "register": "pipelinq", "schema": "posTransaction", "slug": "txn-2026-0005", "id": "abb458c8-dc02-43a1-b37f-b142b6b94484" },
+        "@self": {
+          "register": "pipelinq",
+          "schema": "posTransaction",
+          "slug": "txn-2026-0005",
+          "id": "abb458c8-dc02-43a1-b37f-b142b6b94484"
+        },
         "reference": "TXN-2026-0005",
         "cashier": "admin",
         "terminalId": "kassa-01",
@@ -3941,7 +3779,12 @@
         "refundReason": "Artikel beschadigd bij levering -- retour verwerkt"
       },
       {
-        "@self": { "register": "pipelinq", "schema": "posTransactionLine", "slug": "txnline-0001-koffie", "id": "d517eb58-0fb9-499f-b020-0be7e0b87ad9" },
+        "@self": {
+          "register": "pipelinq",
+          "schema": "posTransactionLine",
+          "slug": "txnline-0001-koffie",
+          "id": "d517eb58-0fb9-499f-b020-0be7e0b87ad9"
+        },
         "transaction": "2c46f6e5-ee99-4dea-97ea-19d7efbf3e33",
         "description": "Americano koffie",
         "quantity": 2,
@@ -3953,7 +3796,12 @@
         "sortOrder": 1
       },
       {
-        "@self": { "register": "pipelinq", "schema": "posTransactionLine", "slug": "txnline-0001-broodje", "id": "bef900ff-6641-41b4-b9dd-b3d5e994d09e" },
+        "@self": {
+          "register": "pipelinq",
+          "schema": "posTransactionLine",
+          "slug": "txnline-0001-broodje",
+          "id": "bef900ff-6641-41b4-b9dd-b3d5e994d09e"
+        },
         "transaction": "2c46f6e5-ee99-4dea-97ea-19d7efbf3e33",
         "description": "Broodje kaas",
         "quantity": 3,
@@ -3965,7 +3813,12 @@
         "sortOrder": 2
       },
       {
-        "@self": { "register": "pipelinq", "schema": "posTransactionLine", "slug": "txnline-0001-notitieboek", "id": "1f9fa333-492f-4983-a4db-b97d970dc3f3" },
+        "@self": {
+          "register": "pipelinq",
+          "schema": "posTransactionLine",
+          "slug": "txnline-0001-notitieboek",
+          "id": "1f9fa333-492f-4983-a4db-b97d970dc3f3"
+        },
         "transaction": "2c46f6e5-ee99-4dea-97ea-19d7efbf3e33",
         "description": "Notitieboek A5 gelinieerd",
         "quantity": 1,
@@ -3977,7 +3830,12 @@
         "sortOrder": 3
       },
       {
-        "@self": { "register": "pipelinq", "schema": "posTransactionLine", "slug": "txnline-0003-sleeve", "id": "eda509f6-8297-4de7-b142-5d7415a72f28" },
+        "@self": {
+          "register": "pipelinq",
+          "schema": "posTransactionLine",
+          "slug": "txnline-0003-sleeve",
+          "id": "eda509f6-8297-4de7-b142-5d7415a72f28"
+        },
         "transaction": "f838244c-2939-44c1-aa23-549dea3682bc",
         "description": "Laptoptas 15,6 inch zwart",
         "quantity": 1,
@@ -3989,7 +3847,12 @@
         "sortOrder": 1
       },
       {
-        "@self": { "register": "pipelinq", "schema": "posTransactionLine", "slug": "txnline-0003-hub", "id": "09eb0355-e7a2-4464-8e2a-db5624f49ab3" },
+        "@self": {
+          "register": "pipelinq",
+          "schema": "posTransactionLine",
+          "slug": "txnline-0003-hub",
+          "id": "09eb0355-e7a2-4464-8e2a-db5624f49ab3"
+        },
         "transaction": "f838244c-2939-44c1-aa23-549dea3682bc",
         "description": "USB-C hub 7-poorts",
         "quantity": 1,
@@ -4001,7 +3864,12 @@
         "sortOrder": 2
       },
       {
-        "@self": { "register": "pipelinq", "schema": "posTransactionLine", "slug": "txnline-0003-koffiebonen", "id": "58cd1434-e7be-432d-9a10-c6b55966d2a5" },
+        "@self": {
+          "register": "pipelinq",
+          "schema": "posTransactionLine",
+          "slug": "txnline-0003-koffiebonen",
+          "id": "58cd1434-e7be-432d-9a10-c6b55966d2a5"
+        },
         "transaction": "f838244c-2939-44c1-aa23-549dea3682bc",
         "description": "Koffiebonen 250g (espresso)",
         "quantity": 1,
@@ -4013,7 +3881,12 @@
         "sortOrder": 3
       },
       {
-        "@self": { "register": "pipelinq", "schema": "posTransactionLine", "slug": "txnline-0003-cadeaubon", "id": "a2c207a4-bbd7-46e5-88b8-5b2ebc46325d" },
+        "@self": {
+          "register": "pipelinq",
+          "schema": "posTransactionLine",
+          "slug": "txnline-0003-cadeaubon",
+          "id": "a2c207a4-bbd7-46e5-88b8-5b2ebc46325d"
+        },
         "transaction": "f838244c-2939-44c1-aa23-549dea3682bc",
         "description": "Cadeaubon (waardebon)",
         "quantity": 1,
@@ -4026,7 +3899,12 @@
         "notes": "Vrijgesteld -- waardebon, geen BTW"
       },
       {
-        "@self": { "register": "pipelinq", "schema": "posTransactionLine", "slug": "txnline-0005-laptop", "id": "ca693b38-040a-462d-bd00-f6931e4772e7" },
+        "@self": {
+          "register": "pipelinq",
+          "schema": "posTransactionLine",
+          "slug": "txnline-0005-laptop",
+          "id": "ca693b38-040a-462d-bd00-f6931e4772e7"
+        },
         "transaction": "abb458c8-dc02-43a1-b37f-b142b6b94484",
         "description": "Laptop 14 inch (refurbished)",
         "quantity": 1,
@@ -4039,7 +3917,12 @@
         "notes": "Serienummer: NB-4821-X"
       },
       {
-        "@self": { "register": "pipelinq", "schema": "posTransactionLine", "slug": "txnline-0005-laptophoes", "id": "b3c1f6bc-823c-495f-8acc-646ec7973c48" },
+        "@self": {
+          "register": "pipelinq",
+          "schema": "posTransactionLine",
+          "slug": "txnline-0005-laptophoes",
+          "id": "b3c1f6bc-823c-495f-8acc-646ec7973c48"
+        },
         "transaction": "abb458c8-dc02-43a1-b37f-b142b6b94484",
         "description": "Laptophoes vilt 14 inch",
         "quantity": 1,
@@ -4065,7 +3948,7 @@
         "status": "active",
         "unit": "stuk",
         "taxRate": 9,
-        "btwClass": "laag",
+        "vatClass": "low",
         "modifierGroups": [
           {
             "name": "Melksoort",
@@ -4126,7 +4009,7 @@
         "status": "active",
         "unit": "stuk",
         "taxRate": 21,
-        "btwClass": "hoog",
+        "vatClass": "high",
         "variants": [
           {
             "sku": "TSH-S-WIT",
@@ -4211,7 +4094,7 @@
         "status": "active",
         "unit": "pak",
         "taxRate": 21,
-        "btwClass": "hoog",
+        "vatClass": "high",
         "priceTiers": [
           {
             "minQuantity": 1,
@@ -4244,7 +4127,7 @@
         "status": "active",
         "unit": "behandeling",
         "taxRate": 21,
-        "btwClass": "hoog",
+        "vatClass": "high",
         "duration": 60,
         "modifierGroups": [
           {
@@ -4284,7 +4167,7 @@
         "status": "active",
         "unit": "uur",
         "taxRate": 0,
-        "btwClass": "vrijgesteld",
+        "vatClass": "exempt",
         "duration": 60,
         "priceTiers": [
           {
@@ -4319,7 +4202,7 @@
         "status": "active",
         "unit": "fles",
         "taxRate": 21,
-        "btwClass": "hoog"
+        "vatClass": "high"
       },
       {
         "@self": {
@@ -4336,7 +4219,7 @@
         "status": "active",
         "unit": "pot",
         "taxRate": 21,
-        "btwClass": "hoog",
+        "vatClass": "high",
         "variants": [
           {
             "sku": "HAR-GEL-002-75",
@@ -4385,7 +4268,7 @@
         "status": "active",
         "unit": "flesje",
         "taxRate": 21,
-        "btwClass": "hoog",
+        "vatClass": "high",
         "variants": [
           {
             "sku": "NAG-LAK-001-RED",
@@ -4434,7 +4317,7 @@
         "status": "active",
         "unit": "tube",
         "taxRate": 9,
-        "btwClass": "laag"
+        "vatClass": "low"
       },
       {
         "@self": {
@@ -4451,7 +4334,7 @@
         "status": "active",
         "unit": "stuk",
         "taxRate": 21,
-        "btwClass": "hoog"
+        "vatClass": "high"
       },
       {
         "@self": {
@@ -4520,7 +4403,12 @@
         "isActive": true
       },
       {
-        "@self": { "register": "pipelinq", "schema": "posRefund", "slug": "ref-2026-0001", "id": "85877d34-126d-4fc4-b9cd-dc6e17a36c50" },
+        "@self": {
+          "register": "pipelinq",
+          "schema": "posRefund",
+          "slug": "ref-2026-0001",
+          "id": "85877d34-126d-4fc4-b9cd-dc6e17a36c50"
+        },
         "reference": "RET-2026-0001",
         "originalTransaction": "2c46f6e5-ee99-4dea-97ea-19d7efbf3e33",
         "cashier": "admin",
@@ -4534,7 +4422,12 @@
         "notes": "Klant zei dat kopje beschadigd was"
       },
       {
-        "@self": { "register": "pipelinq", "schema": "posRefund", "slug": "ref-2026-0002", "id": "72094134-5bbd-443a-a0c2-fc738e1032bf" },
+        "@self": {
+          "register": "pipelinq",
+          "schema": "posRefund",
+          "slug": "ref-2026-0002",
+          "id": "72094134-5bbd-443a-a0c2-fc738e1032bf"
+        },
         "reference": "RET-2026-0002",
         "originalTransaction": "f838244c-2939-44c1-aa23-549dea3682bc",
         "cashier": "emma.bakker",
@@ -4547,7 +4440,12 @@
         "notes": "Klant wil USB-C hub niet — vervanging besteld"
       },
       {
-        "@self": { "register": "pipelinq", "schema": "posRefund", "slug": "ref-2026-0003", "id": "05eca375-47da-4542-8775-1327c8213305" },
+        "@self": {
+          "register": "pipelinq",
+          "schema": "posRefund",
+          "slug": "ref-2026-0003",
+          "id": "05eca375-47da-4542-8775-1327c8213305"
+        },
         "reference": "RET-2026-0003",
         "originalTransaction": "abb458c8-dc02-43a1-b37f-b142b6b94484",
         "cashier": "admin",
@@ -4561,7 +4459,12 @@
         "notes": "Laptop volledig retour na verzendschade. Klant is tevreden met volledige terugbetaling."
       },
       {
-        "@self": { "register": "pipelinq", "schema": "posRefund", "slug": "ref-2026-0004", "id": "adfbbd1e-407f-4374-8eff-c5f0589bf280" },
+        "@self": {
+          "register": "pipelinq",
+          "schema": "posRefund",
+          "slug": "ref-2026-0004",
+          "id": "adfbbd1e-407f-4374-8eff-c5f0589bf280"
+        },
         "reference": "RET-2026-0004",
         "originalTransaction": "f838244c-2939-44c1-aa23-549dea3682bc",
         "cashier": "jan.smit",
@@ -4574,7 +4477,11 @@
         "rejectionReason": "Retourperiode verstreken (product gekocht 45 dagen geleden)"
       },
       {
-        "@self": { "register": "pipelinq", "schema": "posRefundLine", "slug": "refline-0001-koffie" },
+        "@self": {
+          "register": "pipelinq",
+          "schema": "posRefundLine",
+          "slug": "refline-0001-koffie"
+        },
         "refund": "85877d34-126d-4fc4-b9cd-dc6e17a36c50",
         "originalLine": "d517eb58-0fb9-499f-b020-0be7e0b87ad9",
         "returnedQuantity": 1,
@@ -4585,7 +4492,11 @@
         "notes": "Kopje had scheurtje in handvat"
       },
       {
-        "@self": { "register": "pipelinq", "schema": "posRefundLine", "slug": "refline-0002-hub" },
+        "@self": {
+          "register": "pipelinq",
+          "schema": "posRefundLine",
+          "slug": "refline-0002-hub"
+        },
         "refund": "72094134-5bbd-443a-a0c2-fc738e1032bf",
         "originalLine": "09eb0355-e7a2-4464-8e2a-db5624f49ab3",
         "returnedQuantity": 1,
@@ -4596,7 +4507,11 @@
         "notes": "Klant had 5-poorts hub nodig, niet 7-poorts"
       },
       {
-        "@self": { "register": "pipelinq", "schema": "posRefundLine", "slug": "refline-0003-laptop" },
+        "@self": {
+          "register": "pipelinq",
+          "schema": "posRefundLine",
+          "slug": "refline-0003-laptop"
+        },
         "refund": "05eca375-47da-4542-8775-1327c8213305",
         "originalLine": "ca693b38-040a-462d-bd00-f6931e4772e7",
         "returnedQuantity": 1,
@@ -4607,7 +4522,11 @@
         "notes": "Verzendschade — groot gat in scherm"
       },
       {
-        "@self": { "register": "pipelinq", "schema": "posRefundLine", "slug": "refline-0004-sleeve" },
+        "@self": {
+          "register": "pipelinq",
+          "schema": "posRefundLine",
+          "slug": "refline-0004-sleeve"
+        },
         "refund": "adfbbd1e-407f-4374-8eff-c5f0589bf280",
         "originalLine": "eda509f6-8297-4de7-b142-5d7415a72f28",
         "returnedQuantity": 1,
@@ -4618,7 +4537,11 @@
         "notes": "Nooit gebruikt; kleur past niet"
       },
       {
-        "@self": { "register": "pipelinq", "schema": "posRefundLine", "slug": "refline-0005-broodje-partial" },
+        "@self": {
+          "register": "pipelinq",
+          "schema": "posRefundLine",
+          "slug": "refline-0005-broodje-partial"
+        },
         "refund": "72094134-5bbd-443a-a0c2-fc738e1032bf",
         "originalLine": "bef900ff-6641-41b4-b9dd-b3d5e994d09e",
         "returnedQuantity": 1,
@@ -4629,7 +4552,12 @@
         "notes": "Een broodje te veel gegeven op kassamachine"
       },
       {
-        "@self": { "register": "pipelinq", "schema": "posRole", "slug": "pos-role-kassamedewerker", "id": "9e1c2a01-1111-4aaa-9111-1234deadbeef" },
+        "@self": {
+          "register": "pipelinq",
+          "schema": "posRole",
+          "slug": "pos-role-kassamedewerker",
+          "id": "9e1c2a01-1111-4aaa-9111-1234deadbeef"
+        },
         "name": "Kassamedewerker",
         "description": "Standaard kassamedewerker zonder speciale bevoegdheden",
         "canVoid": false,
@@ -4638,7 +4566,12 @@
         "canNoSale": false
       },
       {
-        "@self": { "register": "pipelinq", "schema": "posRole", "slug": "pos-role-supervisor", "id": "9e1c2a01-2222-4aaa-9222-2345cafebabe" },
+        "@self": {
+          "register": "pipelinq",
+          "schema": "posRole",
+          "slug": "pos-role-supervisor",
+          "id": "9e1c2a01-2222-4aaa-9222-2345cafebabe"
+        },
         "name": "Supervisor",
         "description": "Kassasupervisor met beperkte kortings- en retourbevoegdheid",
         "canVoid": false,
@@ -4647,7 +4580,12 @@
         "canNoSale": true
       },
       {
-        "@self": { "register": "pipelinq", "schema": "posRole", "slug": "pos-role-manager", "id": "9e1c2a01-3333-4aaa-9333-3456f00dbabe" },
+        "@self": {
+          "register": "pipelinq",
+          "schema": "posRole",
+          "slug": "pos-role-manager",
+          "id": "9e1c2a01-3333-4aaa-9333-3456f00dbabe"
+        },
         "name": "Manager",
         "description": "Filiaalmanager met volledige kassabevoegdheden",
         "canVoid": true,
@@ -4656,7 +4594,11 @@
         "canNoSale": true
       },
       {
-        "@self": { "register": "pipelinq", "schema": "posStaff", "slug": "pos-staff-anna-de-vries" },
+        "@self": {
+          "register": "pipelinq",
+          "schema": "posStaff",
+          "slug": "pos-staff-anna-de-vries"
+        },
         "displayName": "Anna de Vries",
         "userId": "",
         "posRole": "9e1c2a01-1111-4aaa-9111-1234deadbeef",
@@ -4665,7 +4607,11 @@
         "failedPinAttempts": 0
       },
       {
-        "@self": { "register": "pipelinq", "schema": "posStaff", "slug": "pos-staff-bob-janssen" },
+        "@self": {
+          "register": "pipelinq",
+          "schema": "posStaff",
+          "slug": "pos-staff-bob-janssen"
+        },
         "displayName": "Bob Janssen",
         "userId": "",
         "posRole": "9e1c2a01-1111-4aaa-9111-1234deadbeef",
@@ -4674,7 +4620,11 @@
         "failedPinAttempts": 0
       },
       {
-        "@self": { "register": "pipelinq", "schema": "posStaff", "slug": "pos-staff-carla-peters" },
+        "@self": {
+          "register": "pipelinq",
+          "schema": "posStaff",
+          "slug": "pos-staff-carla-peters"
+        },
         "displayName": "Carla Peters",
         "userId": "",
         "posRole": "9e1c2a01-2222-4aaa-9222-2345cafebabe",
@@ -4683,7 +4633,11 @@
         "failedPinAttempts": 0
       },
       {
-        "@self": { "register": "pipelinq", "schema": "posStaff", "slug": "pos-staff-david-visser" },
+        "@self": {
+          "register": "pipelinq",
+          "schema": "posStaff",
+          "slug": "pos-staff-david-visser"
+        },
         "displayName": "David Visser",
         "userId": "",
         "posRole": "9e1c2a01-3333-4aaa-9333-3456f00dbabe",
@@ -4692,7 +4646,11 @@
         "failedPinAttempts": 0
       },
       {
-        "@self": { "register": "pipelinq", "schema": "posStaff", "slug": "pos-staff-emma-bakker" },
+        "@self": {
+          "register": "pipelinq",
+          "schema": "posStaff",
+          "slug": "pos-staff-emma-bakker"
+        },
         "displayName": "Emma Bakker",
         "userId": "",
         "posRole": "9e1c2a01-1111-4aaa-9111-1234deadbeef",
@@ -4709,7 +4667,7 @@
         "subject": "Vraag over parkeervergunning",
         "channel": "telefoon",
         "agent": "uid:agent.bakker",
-        "outcome": "opgelost",
+        "outcome": "resolved",
         "contactedAt": "2026-04-14T09:15:00Z",
         "duration": "PT4M30S",
         "channelMetadata": {
@@ -4725,7 +4683,7 @@
         "subject": "Status aanvraag omgevingsvergunning",
         "channel": "email",
         "agent": "uid:agent.jansen",
-        "outcome": "opgelost",
+        "outcome": "resolved",
         "contactedAt": "2026-04-14T10:30:00Z",
         "duration": "PT2M00S",
         "channelMetadata": {
@@ -4741,7 +4699,7 @@
         "subject": "Afvalophaal gemist op Keizersgracht",
         "channel": "balie",
         "agent": "uid:agent.de_vries",
-        "outcome": "doorverwezen",
+        "outcome": "referred",
         "contactedAt": "2026-04-14T11:00:00Z",
         "duration": "PT8M15S",
         "channelMetadata": {
@@ -4757,7 +4715,7 @@
         "subject": "Klacht over wegenonderhoud Lijnbaansgracht",
         "channel": "chat",
         "agent": "uid:agent.bakker",
-        "outcome": "opgelost",
+        "outcome": "resolved",
         "contactedAt": "2026-04-14T13:45:00Z",
         "duration": "PT6M00S",
         "channelMetadata": {
@@ -4773,7 +4731,7 @@
         "subject": "Vraag over bijstandsuitkering",
         "channel": "telefoon",
         "agent": "uid:agent.jansen",
-        "outcome": "opgelost",
+        "outcome": "resolved",
         "contactedAt": "2026-04-15T14:20:00Z",
         "duration": "PT9M45S",
         "channelMetadata": {
@@ -4870,6 +4828,60 @@
       {
         "@self": {
           "register": "pipelinq",
+          "schema": "lead",
+          "slug": "lead-gemeente-voorbeeld-kcc-portaal"
+        },
+        "title": "Gemeente Voorbeeld – KCC portaal",
+        "source": "referral",
+        "value": 45000,
+        "probability": 70,
+        "expectedCloseDate": "2026-09-30",
+        "priority": "high",
+        "stage": "Gekwalificeerd",
+        "stageOrder": 3,
+        "status": "open",
+        "client": "994174bf-3e92-4bec-aea2-701b7131201f",
+        "notes": "Win-probability seed (hot band): recently touched, so winProbability reads the full stage probability on a fresh import. klantbeeld-360-activation: linked to client-gemeente-voorbeeld so the customer 360 summary shows this lead's pipeline value."
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "lead",
+          "slug": "lead-meridiaan-advies-data-governance-retainer"
+        },
+        "title": "Meridiaan Advies – data-governance retainer",
+        "source": "partner",
+        "value": 18000,
+        "probability": 50,
+        "expectedCloseDate": "2026-10-15",
+        "priority": "normal",
+        "stage": "Voorstel",
+        "stageOrder": 4,
+        "status": "open",
+        "client": "5c9f4a52-ed0e-4519-b8d8-b2e1ef1d2554",
+        "notes": "Win-probability seed (warm band): a stalled deal — winProbability decays toward the 80%/50% bands as this seed ages past 14/30 days untouched. klantbeeld-360-activation: linked to client-meridiaan-advies-bv so the customer 360 summary shows this lead's pipeline value."
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "lead",
+          "slug": "lead-zonnereizen-boekingsplatform"
+        },
+        "title": "Zonnereizen – boekingsplatform",
+        "source": "cold-call",
+        "value": 9000,
+        "probability": 40,
+        "expectedCloseDate": "2026-11-30",
+        "priority": "low",
+        "stage": "Nieuw",
+        "stageOrder": 1,
+        "status": "open",
+        "client": "8f3a99c8-ab44-4dce-b99d-4a695927c5bb",
+        "notes": "Win-probability seed (cold band): long untouched — winProbability decays to the 25% band once this seed ages past 60 days untouched. klantbeeld-360-activation: linked to client-zonnereizen so the customer 360 summary shows this lead's pipeline value."
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
           "schema": "client",
           "slug": "client-entity-notes-demo",
           "id": "a1c4e2b3-4d5f-4e8a-9b6c-7d8e9f0a1b2c"
@@ -4891,7 +4903,7 @@
         "subject": "Vraag over status vergunningsaanvraag",
         "summary": "Mevrouw Bakker belde in over de status van haar omgevingsvergunning. Verwachte afhandeling binnen 3 werkdagen toegezegd.",
         "channel": "telefoon",
-        "outcome": "afgehandeld",
+        "outcome": "handled",
         "agent": "mvanderberg",
         "client": "a1c4e2b3-4d5f-4e8a-9b6c-7d8e9f0a1b2c",
         "contactedAt": "2026-04-14T09:12:00Z",
@@ -4910,7 +4922,7 @@
         "subject": "Klacht over aanslagbiljet gemeentelijke belasting",
         "summary": "De heer Jansen stuurde een e-mail met bezwaar tegen het aanslagbiljet. Doorverwezen naar de afdeling Belastingen.",
         "channel": "email",
-        "outcome": "doorverbonden",
+        "outcome": "transferred",
         "agent": "sdejong",
         "client": "a1c4e2b3-4d5f-4e8a-9b6c-7d8e9f0a1b2c",
         "contactedAt": "2026-04-11T14:30:00Z",
@@ -4928,7 +4940,7 @@
         "subject": "Baliebezoek — aanvraag parkeervergunning",
         "summary": "Meneer Ahmed Hassan bezocht de balie voor een parkeervergunning bewonerszone C. Aanvraagformulier ingevuld en ingediend.",
         "channel": "balie",
-        "outcome": "afgehandeld",
+        "outcome": "handled",
         "agent": "lvanhouten",
         "client": "a1c4e2b3-4d5f-4e8a-9b6c-7d8e9f0a1b2c",
         "contactedAt": "2026-04-10T10:45:00Z",
@@ -4945,7 +4957,7 @@
         "subject": "Chatgesprek — informatie over WMO-aanvraag",
         "summary": "Mevrouw Pieterse vroeg via de chat naar de benodigde documenten voor een WMO-aanvraag. Documentenlijst per e-mail verstuurd.",
         "channel": "chat",
-        "outcome": "afgehandeld",
+        "outcome": "handled",
         "agent": "kbosma",
         "client": "a1c4e2b3-4d5f-4e8a-9b6c-7d8e9f0a1b2c",
         "contactedAt": "2026-04-09T11:20:00Z",
@@ -4962,7 +4974,7 @@
         "subject": "Brief — bezwaar bestemmingsplan",
         "summary": "De stichting Groen Amsterdam diende een formeel bezwaarschrift in per brief tegen het herziene bestemmingsplan Noord. Ontvangst bevestigd.",
         "channel": "brief",
-        "outcome": "vervolgactie",
+        "outcome": "followUpAction",
         "agent": "mvanderberg",
         "client": "a1c4e2b3-4d5f-4e8a-9b6c-7d8e9f0a1b2c",
         "contactedAt": "2026-04-07T08:00:00Z",
@@ -5013,13 +5025,13 @@
         "name": "OpenRegister Implementatie",
         "description": "Volledige implementatie van OpenRegister inclusief configuratie, migratie en acceptatietest",
         "sku": "ORI-001",
-        "unitPrice": 12500.00,
-        "cost": 8000.00,
+        "unitPrice": 12500.0,
+        "cost": 8000.0,
         "type": "service",
         "status": "active",
         "unit": "project",
         "taxRate": 21,
-        "btwClass": "hoog",
+        "vatClass": "high",
         "category": "c8d9e7f1-2a3b-4c5d-8e9f-1a2b3c4d5e60"
       },
       {
@@ -5032,13 +5044,13 @@
         "name": "Training Beheerders",
         "description": "Tweedaagse training voor systeembeheerders en functioneel beheerders van Nextcloud-omgevingen",
         "sku": "TRN-002",
-        "unitPrice": 1850.00,
-        "cost": 950.00,
+        "unitPrice": 1850.0,
+        "cost": 950.0,
         "type": "service",
         "status": "active",
         "unit": "dag",
         "taxRate": 21,
-        "btwClass": "hoog",
+        "vatClass": "high",
         "category": "c8d9e7f1-2a3b-4c5d-8e9f-1a2b3c4d5e61"
       },
       {
@@ -5051,13 +5063,13 @@
         "name": "Support Pakket Basis",
         "description": "Maandelijks SLA-contract met 8x5 ondersteuning en maximaal 4 uur responstijd bij storingen",
         "sku": "SUP-003",
-        "unitPrice": 450.00,
-        "cost": 200.00,
+        "unitPrice": 450.0,
+        "cost": 200.0,
         "type": "service",
         "status": "active",
         "unit": "maand",
         "taxRate": 21,
-        "btwClass": "hoog",
+        "vatClass": "high",
         "category": "c8d9e7f1-2a3b-4c5d-8e9f-1a2b3c4d5e62"
       },
       {
@@ -5070,13 +5082,13 @@
         "name": "Pipelinq Licentie",
         "description": "Jaarlijkse gebruikerslicentie voor Pipelinq CRM inclusief updates en basishulp",
         "sku": "LIC-004",
-        "unitPrice": 240.00,
-        "cost": 80.00,
+        "unitPrice": 240.0,
+        "cost": 80.0,
         "type": "service",
         "status": "active",
         "unit": "gebruiker/jaar",
         "taxRate": 21,
-        "btwClass": "hoog",
+        "vatClass": "high",
         "category": "c8d9e7f1-2a3b-4c5d-8e9f-1a2b3c4d5e62"
       },
       {
@@ -5089,9 +5101,9 @@
         "lead": "b5a0d3f1-9c2e-4a1b-8d6f-3e7c9f1a2b40",
         "product": "d0e1f2a3-4b5c-4d6e-8f9a-2b3c4d5e6f70",
         "quantity": 1,
-        "unitPrice": 12500.00,
+        "unitPrice": 12500.0,
         "discount": 0,
-        "total": 12500.00,
+        "total": 12500.0,
         "notes": "Inclusief datamigratie vanuit legacy zaaksysteem"
       },
       {
@@ -5104,9 +5116,9 @@
         "lead": "b5a0d3f1-9c2e-4a1b-8d6f-3e7c9f1a2b40",
         "product": "d0e1f2a3-4b5c-4d6e-8f9a-2b3c4d5e6f71",
         "quantity": 2,
-        "unitPrice": 1850.00,
+        "unitPrice": 1850.0,
         "discount": 10,
-        "total": 3330.00,
+        "total": 3330.0,
         "notes": "2 trainingsdagen voor team burgerzaken en KCC"
       },
       {
@@ -5119,9 +5131,9 @@
         "lead": "b5a0d3f1-9c2e-4a1b-8d6f-3e7c9f1a2b41",
         "product": "d0e1f2a3-4b5c-4d6e-8f9a-2b3c4d5e6f73",
         "quantity": 25,
-        "unitPrice": 240.00,
+        "unitPrice": 240.0,
         "discount": 15,
-        "total": 5100.00,
+        "total": 5100.0,
         "notes": "25 gebruikerslicenties, jaarcontract met volumekorting"
       },
       {
@@ -5134,13 +5146,18 @@
         "lead": "b5a0d3f1-9c2e-4a1b-8d6f-3e7c9f1a2b41",
         "product": "d0e1f2a3-4b5c-4d6e-8f9a-2b3c4d5e6f72",
         "quantity": 12,
-        "unitPrice": 450.00,
+        "unitPrice": 450.0,
         "discount": 0,
-        "total": 5400.00,
+        "total": 5400.0,
         "notes": "12 maanden SLA Basis, ingangsdatum bij go-live"
       },
       {
-        "@self": { "register": "pipelinq", "schema": "paymentProvider", "slug": "provider-mollie", "id": "9a4b1c20-6d3e-4f8a-9b2c-5e7f1a2b3c41" },
+        "@self": {
+          "register": "pipelinq",
+          "schema": "paymentProvider",
+          "slug": "provider-mollie",
+          "id": "9a4b1c20-6d3e-4f8a-9b2c-5e7f1a2b3c41"
+        },
         "name": "mollie",
         "displayName": "Mollie",
         "type": "online",
@@ -5152,7 +5169,12 @@
         "testResult": null
       },
       {
-        "@self": { "register": "pipelinq", "schema": "paymentProvider", "slug": "provider-ccv", "id": "9a4b1c20-6d3e-4f8a-9b2c-5e7f1a2b3c42" },
+        "@self": {
+          "register": "pipelinq",
+          "schema": "paymentProvider",
+          "slug": "provider-ccv",
+          "id": "9a4b1c20-6d3e-4f8a-9b2c-5e7f1a2b3c42"
+        },
         "name": "ccv",
         "displayName": "CCV",
         "type": "terminal",
@@ -5162,11 +5184,18 @@
         "apiSecret": "{{ENCRYPTED: test_dummy_secret}}",
         "webhookSecret": "{{ENCRYPTED: test_signature_key}}",
         "testMode": true,
-        "config": { "terminalId": "kassa-01" },
+        "config": {
+          "terminalId": "kassa-01"
+        },
         "testResult": null
       },
       {
-        "@self": { "register": "pipelinq", "schema": "paymentProvider", "slug": "provider-adyen", "id": "9a4b1c20-6d3e-4f8a-9b2c-5e7f1a2b3c43" },
+        "@self": {
+          "register": "pipelinq",
+          "schema": "paymentProvider",
+          "slug": "provider-adyen",
+          "id": "9a4b1c20-6d3e-4f8a-9b2c-5e7f1a2b3c43"
+        },
         "name": "adyen",
         "displayName": "Adyen",
         "type": "terminal",
@@ -5178,7 +5207,12 @@
         "testResult": null
       },
       {
-        "@self": { "register": "pipelinq", "schema": "paymentProvider", "slug": "provider-stripe", "id": "9a4b1c20-6d3e-4f8a-9b2c-5e7f1a2b3c44" },
+        "@self": {
+          "register": "pipelinq",
+          "schema": "paymentProvider",
+          "slug": "provider-stripe",
+          "id": "9a4b1c20-6d3e-4f8a-9b2c-5e7f1a2b3c44"
+        },
         "name": "stripe",
         "displayName": "Stripe",
         "type": "online",
@@ -5191,49 +5225,64 @@
         "testResult": null
       },
       {
-        "@self": { "register": "pipelinq", "schema": "brpLookupVerzoek", "slug": "brp-lookup-seed-success", "id": "b7c1e9d2-3a4b-4c5d-9e6f-7a8b9c0d1e21" },
+        "@self": {
+          "register": "pipelinq",
+          "schema": "brpLookupVerzoek",
+          "slug": "brp-lookup-seed-success",
+          "id": "b7c1e9d2-3a4b-4c5d-9e6f-7a8b9c0d1e21"
+        },
         "bsnHash": "63b1f7b8a8aa1c8ac9d7e4f2b6c5a3d9e2f1c4b7a8d3e6f0c1b2a5d8e9f0c1b2",
         "verzoekreden": "Behandeling AVG-inzageverzoek art. 15",
-        "doelbinding": "Publieke taak — Wet BRP art. 3.3",
-        "grondslag": "Publieke taak (AVG art. 6 lid 1 sub e)",
-        "aangevraagdDoor": "demo:m.devries",
-        "aangevraagdNamens": "behandelaar-burgerzaken",
-        "verzoekTijdstip": "2026-08-14T09:23:45+00:00",
-        "responseStatus": "geslaagd",
-        "responseTijdstip": "2026-08-14T09:23:46+00:00",
-        "responseDuurMs": 412,
+        "purposeBinding": "Publieke taak — Wet BRP art. 3.3",
+        "basis": "Publieke taak (AVG art. 6 lid 1 sub e)",
+        "requestedBy": "demo:m.devries",
+        "requestedOnBehalfOf": "behandelaar-burgerzaken",
+        "requestMoment": "2026-08-14T09:23:45+00:00",
+        "responseStatus": "succeeded",
+        "responseMoment": "2026-08-14T09:23:46+00:00",
+        "responseDurationMs": 412,
         "haalcentraalCorrelationId": "hc-corr-7f3a9b2e",
-        "responseBevatGeheimhouding": false,
+        "responseContainsSecrecy": false,
         "responseInCache": false,
-        "cacheVerlooptOp": "2026-08-15T09:23:46+00:00"
+        "cacheExpiresOn": "2026-08-15T09:23:46+00:00"
       },
       {
-        "@self": { "register": "pipelinq", "schema": "brpLookupVerzoek", "slug": "brp-lookup-seed-notfound", "id": "b7c1e9d2-3a4b-4c5d-9e6f-7a8b9c0d1e22" },
+        "@self": {
+          "register": "pipelinq",
+          "schema": "brpLookupVerzoek",
+          "slug": "brp-lookup-seed-notfound",
+          "id": "b7c1e9d2-3a4b-4c5d-9e6f-7a8b9c0d1e22"
+        },
         "bsnHash": "12abf7b8a8aa1c8ac9d7e4f2b6c5a3d9e2f1c4b7a8d3e6f0c1b2a5d8e9f0c188",
         "verzoekreden": "Reguliere verzoekbehandeling",
-        "doelbinding": "Publieke taak — Wet BRP art. 3.3",
-        "grondslag": "Publieke taak (AVG art. 6 lid 1 sub e)",
-        "aangevraagdDoor": "demo:j.smith",
-        "aangevraagdNamens": "behandelaar-burgerzaken",
-        "verzoekTijdstip": "2026-08-14T10:15:22+00:00",
-        "responseStatus": "niet-gevonden",
-        "responseTijdstip": "2026-08-14T10:15:23+00:00",
-        "responseDuurMs": 305,
+        "purposeBinding": "Publieke taak — Wet BRP art. 3.3",
+        "basis": "Publieke taak (AVG art. 6 lid 1 sub e)",
+        "requestedBy": "demo:j.smith",
+        "requestedOnBehalfOf": "behandelaar-burgerzaken",
+        "requestMoment": "2026-08-14T10:15:22+00:00",
+        "responseStatus": "not-found",
+        "responseMoment": "2026-08-14T10:15:23+00:00",
+        "responseDurationMs": 305,
         "haalcentraalCorrelationId": "hc-corr-9e2b4c1f",
         "responseInCache": false
       },
       {
-        "@self": { "register": "pipelinq", "schema": "brpPersoon", "slug": "brp-persoon-seed-mvr-berg", "id": "c7c1e9d2-3a4b-4c5d-9e6f-7a8b9c0d1e31" },
+        "@self": {
+          "register": "pipelinq",
+          "schema": "brpPersoon",
+          "slug": "brp-persoon-seed-mvr-berg",
+          "id": "c7c1e9d2-3a4b-4c5d-9e6f-7a8b9c0d1e31"
+        },
         "bsnHash": "63b1f7b8a8aa1c8ac9d7e4f2b6c5a3d9e2f1c4b7a8d3e6f0c1b2a5d8e9f0c1b2",
-        "voornamen": "Maria Wilhelmina",
-        "voorletters": "M.W.",
-        "voorvoegsel": "van der",
-        "geslachtsnaam": "Berg",
-        "geboortedatum": "1978-03-22",
-        "geboorteplaats": "Utrecht",
-        "geboorteland": "NL",
-        "geslacht": "vrouw",
-        "verblijfplaats": {
+        "givenNames": "Maria Wilhelmina",
+        "initials": "M.W.",
+        "namePrefix": "van der",
+        "surname": "Berg",
+        "dateOfBirth": "1978-03-22",
+        "birthPlace": "Utrecht",
+        "birthCountry": "NL",
+        "gender": "female",
+        "residence": {
           "straat": "Lange Voorhout",
           "huisnummer": 14,
           "huisletter": "H",
@@ -5241,107 +5290,360 @@
           "woonplaats": "'s-Gravenhage",
           "land": "Nederland"
         },
-        "indicatieGeheim": "0",
-        "opgehaaldOp": "2026-08-14T09:23:46+00:00",
-        "bronsysteem": "HaalCentraal-BRP-v2.0",
-        "lookupVerzoekId": "b7c1e9d2-3a4b-4c5d-9e6f-7a8b9c0d1e21",
+        "indicationSecret": "0",
+        "fetchedOn": "2026-08-14T09:23:46+00:00",
+        "sourceSystem": "HaalCentraal-BRP-v2.0",
+        "lookupRequestId": "b7c1e9d2-3a4b-4c5d-9e6f-7a8b9c0d1e21",
         "gekoppeldContact": "00000000-0000-0000-0000-000000000000",
-        "retentieTot": "2026-08-21T09:23:46+00:00"
+        "retentionTo": "2026-08-21T09:23:46+00:00"
       },
       {
-        "@self": { "register": "pipelinq", "schema": "bsnAuditRecord", "slug": "bsn-audit-seed-success", "id": "d7c1e9d2-3a4b-4c5d-9e6f-7a8b9c0d1e41" },
-        "actie": "brp-lookup-uitgevoerd",
+        "@self": {
+          "register": "pipelinq",
+          "schema": "bsnAuditRecord",
+          "slug": "bsn-audit-seed-success",
+          "id": "d7c1e9d2-3a4b-4c5d-9e6f-7a8b9c0d1e41"
+        },
+        "action": "brp-lookup-executed",
         "bsnHash": "63b1f7b8a8aa1c8ac9d7e4f2b6c5a3d9e2f1c4b7a8d3e6f0c1b2a5d8e9f0c1b2",
         "actor": "demo:m.devries",
-        "actorRol": "behandelaar-burgerzaken",
-        "tijdstip": "2026-08-14T09:23:46+00:00",
+        "actorRole": "behandelaar-burgerzaken",
+        "moment": "2026-08-14T09:23:46+00:00",
         "verzoekreden": "Behandeling AVG-inzageverzoek art. 15",
-        "doelbinding": "Publieke taak — Wet BRP art. 3.3",
-        "uitkomst": "geslaagd",
+        "purposeBinding": "Publieke taak — Wet BRP art. 3.3",
+        "outcome": "succeeded",
         "responseCode": 200,
-        "ipAdres": "10.42.18.0",
+        "ipAddress": "10.42.18.0",
         "userAgent": "Pipelinq/pipelinq (Nextcloud)",
         "haalcentraalCorrelationId": "hc-corr-7f3a9b2e",
         "vogScreening": false,
-        "bewaartot": "2031-08-14T09:23:46+00:00"
+        "retainUntil": "2031-08-14T09:23:46+00:00"
       },
       {
-        "@self": { "register": "pipelinq", "schema": "bsnAuditRecord", "slug": "bsn-audit-seed-notfound", "id": "d7c1e9d2-3a4b-4c5d-9e6f-7a8b9c0d1e42" },
-        "actie": "brp-lookup-uitgevoerd",
+        "@self": {
+          "register": "pipelinq",
+          "schema": "bsnAuditRecord",
+          "slug": "bsn-audit-seed-notfound",
+          "id": "d7c1e9d2-3a4b-4c5d-9e6f-7a8b9c0d1e42"
+        },
+        "action": "brp-lookup-executed",
         "bsnHash": "12abf7b8a8aa1c8ac9d7e4f2b6c5a3d9e2f1c4b7a8d3e6f0c1b2a5d8e9f0c188",
         "actor": "demo:j.smith",
-        "actorRol": "behandelaar-burgerzaken",
-        "tijdstip": "2026-08-14T10:15:23+00:00",
+        "actorRole": "behandelaar-burgerzaken",
+        "moment": "2026-08-14T10:15:23+00:00",
         "verzoekreden": "Reguliere verzoekbehandeling",
-        "doelbinding": "Publieke taak — Wet BRP art. 3.3",
-        "uitkomst": "niet-gevonden",
+        "purposeBinding": "Publieke taak — Wet BRP art. 3.3",
+        "outcome": "not-found",
         "responseCode": 404,
         "haalcentraalCorrelationId": "hc-corr-9e2b4c1f",
         "vogScreening": false,
-        "bewaartot": "2031-08-14T10:15:23+00:00"
+        "retainUntil": "2031-08-14T10:15:23+00:00"
       },
       {
-        "@self": { "register": "pipelinq", "schema": "optOutVlag", "slug": "opt-out-seed-geheim-gemeente", "id": "e7c1e9d2-3a4b-4c5d-9e6f-7a8b9c0d1e51" },
+        "@self": {
+          "register": "pipelinq",
+          "schema": "optOutVlag",
+          "slug": "opt-out-seed-geheim-gemeente",
+          "id": "e7c1e9d2-3a4b-4c5d-9e6f-7a8b9c0d1e51"
+        },
         "bsnHash": "abcdef7b8a8aa1c8ac9d7e4f2b6c5a3d9e2f1c4b7a8d3e6f0c1b2a5d8e9f0c1e",
         "type": "geheimhouding-gemeente",
-        "bron": "BRP",
-        "ingangsdatum": "2024-11-01",
-        "beperkt": ["commerciele-derden", "kerkgenootschappen", "derdeportalen"]
+        "source": "BRP",
+        "effectiveDate": "2024-11-01",
+        "limited": [
+          "commerciele-derden",
+          "kerkgenootschappen",
+          "derdeportalen"
+        ]
       },
-
-      { "@self": { "register": "pipelinq", "schema": "queue", "slug": "queue-algemene-zaken", "id": "f1a2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c01" },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "queue",
+          "slug": "queue-algemene-zaken",
+          "id": "f1a2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c01"
+        },
         "title": "Algemene Zaken",
         "description": "Diverse gemeentelijke vragen en informatieverzoeken",
         "isActive": true,
         "maxCapacity": null,
-        "sortOrder": 1 },
-
-      { "@self": { "register": "pipelinq", "schema": "queue", "slug": "queue-vergunningen", "id": "f1a2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c02" },
+        "sortOrder": 1
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "queue",
+          "slug": "queue-vergunningen",
+          "id": "f1a2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c02"
+        },
         "title": "Vergunningen",
         "description": "Aanvragen en meldingen omgevingsvergunning",
         "isActive": true,
         "maxCapacity": 50,
-        "sortOrder": 2 },
-
-      { "@self": { "register": "pipelinq", "schema": "queue", "slug": "queue-wmo-zorg", "id": "f1a2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c03" },
+        "sortOrder": 2
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "queue",
+          "slug": "queue-wmo-zorg",
+          "id": "f1a2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c03"
+        },
         "title": "WMO / Zorg",
         "description": "Wmo-aanvragen, hulpmiddelenvragen en zorgondersteuning",
         "isActive": true,
         "maxCapacity": 30,
-        "sortOrder": 3 },
-
-      { "@self": { "register": "pipelinq", "schema": "agentProfile", "slug": "agent-jan-de-vries", "id": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c11" },
+        "sortOrder": 3
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "agentProfile",
+          "slug": "agent-jan-de-vries",
+          "id": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c11"
+        },
         "userId": "jan.devries",
         "maxConcurrent": 3,
-        "isAvailable": true },
-
-      { "@self": { "register": "pipelinq", "schema": "agentProfile", "slug": "agent-fatima-el-amrani", "id": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c12" },
+        "isAvailable": true
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "agentProfile",
+          "slug": "agent-fatima-el-amrani",
+          "id": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c12"
+        },
         "userId": "fatima.elamrani",
         "maxConcurrent": 2,
-        "isAvailable": false },
-
-      { "@self": { "register": "pipelinq", "schema": "agentProfile", "slug": "agent-pieter-bakker", "id": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c13" },
+        "isAvailable": false
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "agentProfile",
+          "slug": "agent-pieter-bakker",
+          "id": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c13"
+        },
         "userId": "pieter.bakker",
         "maxConcurrent": 4,
-        "isAvailable": true },
-
-      { "@self": { "register": "pipelinq", "schema": "skill", "slug": "skill-vergunningen", "id": "b1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c21" },
+        "isAvailable": true
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "skill",
+          "slug": "skill-vergunningen",
+          "id": "b1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c21"
+        },
         "title": "Vergunningen",
         "description": "Behandeling van omgevingsvergunningen en meldingen op basis van de Wabo",
-        "categories": ["vergunningen", "omgeving"],
-        "isActive": true },
-
-      { "@self": { "register": "pipelinq", "schema": "skill", "slug": "skill-wmo-zorg", "id": "b1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c22" },
+        "categories": [
+          "vergunningen",
+          "omgeving"
+        ],
+        "isActive": true
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "skill",
+          "slug": "skill-wmo-zorg",
+          "id": "b1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c22"
+        },
         "title": "WMO / Zorg",
         "description": "Begeleiding bij Wmo-aanvragen, hulpmiddelen en zorgvragen",
-        "categories": ["wmo", "zorg", "hulpmiddelen"],
-        "isActive": true },
-
-      { "@self": { "register": "pipelinq", "schema": "skill", "slug": "skill-algemene-dienstverlening", "id": "b1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c23" },
+        "categories": [
+          "wmo",
+          "zorg",
+          "hulpmiddelen"
+        ],
+        "isActive": true
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "skill",
+          "slug": "skill-algemene-dienstverlening",
+          "id": "b1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c23"
+        },
         "title": "Algemene Dienstverlening",
         "description": "Brede gemeentelijke dienstverlening voor eerste lijn vragen",
-        "categories": ["algemeen", "informatie"],
-        "isActive": true }
+        "categories": [
+          "algemeen",
+          "informatie"
+        ],
+        "isActive": true
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "client",
+          "slug": "client-gemeente-voorbeeld",
+          "id": "994174bf-3e92-4bec-aea2-701b7131201f"
+        },
+        "_note": "klantbeeld-360-activation seed: municipality archetype — see design.md Seed Data. Client for lead-gemeente-voorbeeld-kcc-portaal + 4 open tickets (request/complaint/2x contactmoment) below, so the customer-360 summary is verifiable on a fresh install (open-ticket count 4, SLA breached 1, one queue, pipeline value from the lead).",
+        "name": "Gemeente Voorbeeld",
+        "type": "organization",
+        "contactsUid": "seed-gemeente-voorbeeld-001",
+        "email": "kcc@gemeente-voorbeeld.nl",
+        "phone": "0800-1234500",
+        "address": "Raadhuisplein 1, 1234 AB Voorbeeldstad",
+        "industry": "Lokale overheid",
+        "notes": "Seed client for klantbeeld-360-activation (municipality archetype)."
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "client",
+          "slug": "client-meridiaan-advies-bv",
+          "id": "5c9f4a52-ed0e-4519-b8d8-b2e1ef1d2554"
+        },
+        "_note": "klantbeeld-360-activation seed: consultancy archetype — see design.md Seed Data. Client for lead-meridiaan-advies-data-governance-retainer + 1 open request ticket (slaDeadline near-future, at-risk on import) below.",
+        "name": "Meridiaan Advies B.V.",
+        "type": "organization",
+        "contactsUid": "seed-meridiaan-advies-001",
+        "email": "info@meridiaan-advies.nl",
+        "phone": "020-5551234",
+        "address": "Zuidas 88, 1082 MS Amsterdam",
+        "industry": "Consultancy",
+        "notes": "Seed client for klantbeeld-360-activation (consultancy archetype)."
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "client",
+          "slug": "client-zonnereizen",
+          "id": "8f3a99c8-ab44-4dce-b99d-4a695927c5bb"
+        },
+        "_note": "klantbeeld-360-activation seed: travel agency archetype — see design.md Seed Data. Client for lead-zonnereizen-boekingsplatform + 2 open contactmoment tickets below (SLA breached 0, open-ticket count 2).",
+        "name": "Zonnereizen",
+        "type": "organization",
+        "contactsUid": "seed-zonnereizen-001",
+        "email": "klantenservice@zonnereizen.nl",
+        "phone": "030-7778899",
+        "address": "Reiskade 12, 3511 ZZ Utrecht",
+        "industry": "Reisbranche",
+        "notes": "Seed client for klantbeeld-360-activation (travel agency archetype)."
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "ticket",
+          "slug": "ticket-gv-verzoek-parkeervergunning",
+          "id": "8530d325-eecb-4904-be61-5fc94094d571"
+        },
+        "ticketType": "request",
+        "title": "Aanvraag parkeervergunning bedrijventerrein",
+        "description": "Verzoek om een parkeervergunning voor het bedrijventerrein aan de Industrieweg.",
+        "client": "994174bf-3e92-4bec-aea2-701b7131201f",
+        "status": "new",
+        "priority": "normal",
+        "channel": "web",
+        "occurredAt": "2026-07-10T09:00:00+02:00",
+        "category": "vergunningen",
+        "queue": "f1a2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c02"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "ticket",
+          "slug": "ticket-gv-klacht-openbare-ruimte",
+          "id": "43a318c6-933e-4eb1-b9d7-9f602e2798e2"
+        },
+        "ticketType": "complaint",
+        "title": "Klacht over afhandeling melding openbare ruimte",
+        "description": "Klant klaagt over de trage afhandeling van een eerdere melding kapotte lantaarnpaal.",
+        "client": "994174bf-3e92-4bec-aea2-701b7131201f",
+        "status": "in_progress",
+        "priority": "high",
+        "channel": "phone",
+        "occurredAt": "2026-06-25T11:00:00+02:00",
+        "complaintCategory": "service",
+        "slaDeadline": "2026-07-01T17:00:00+02:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "ticket",
+          "slug": "ticket-gv-contactmoment-telefoon-1",
+          "id": "152f695c-2541-4d7c-a1f0-845c63da5e73"
+        },
+        "ticketType": "interaction",
+        "title": "Vraag over openingstijden balie",
+        "description": "Inwoner belt met een vraag over de openingstijden van de publieksbalie.",
+        "client": "994174bf-3e92-4bec-aea2-701b7131201f",
+        "status": "new",
+        "channel": "telefoon",
+        "occurredAt": "2026-07-09T13:30:00+02:00",
+        "outcome": "handled"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "ticket",
+          "slug": "ticket-gv-contactmoment-balie-1",
+          "id": "3f2317f0-f62d-45c2-abe4-544beb5cbe76"
+        },
+        "ticketType": "interaction",
+        "title": "Informatie afgifte reisdocument",
+        "description": "Inwoner aan de balie geïnformeerd over de afgifte van een nieuw reisdocument.",
+        "client": "994174bf-3e92-4bec-aea2-701b7131201f",
+        "status": "new",
+        "channel": "balie",
+        "occurredAt": "2026-07-11T10:15:00+02:00",
+        "outcome": "handled"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "ticket",
+          "slug": "ticket-ma-verzoek-retainer-uitbreiding",
+          "id": "bc897780-2a4c-45cc-8b22-c25e53eadd85"
+        },
+        "_note": "slaDeadline is a fixed instant chosen to fall within the 24h at-risk window on/around the klantbeeld-360-activation seed date (2026-07-12); like the lead-scoring win-probability seed's decay bands, this is a known static-seed limitation — the ticket transitions from at-risk to breached as the install ages past this timestamp. Re-seed (or bump the date) to keep the at-risk demo fresh.",
+        "ticketType": "request",
+        "title": "Uitbreiding data-governance retainer scope",
+        "description": "Verzoek om de bestaande retainer uit te breiden met een extra kwartaal aan advieswerk.",
+        "client": "5c9f4a52-ed0e-4519-b8d8-b2e1ef1d2554",
+        "status": "new",
+        "priority": "normal",
+        "channel": "email",
+        "occurredAt": "2026-07-11T15:00:00+02:00",
+        "category": "sales",
+        "slaDeadline": "2026-07-13T12:00:00+02:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "ticket",
+          "slug": "ticket-zr-contactmoment-boeking-vraag",
+          "id": "50ad65e1-e45e-45e7-94a8-90cf2f36c810"
+        },
+        "ticketType": "interaction",
+        "title": "Vraag over bagagevoorwaarden boeking",
+        "description": "Klant belt met een vraag over de bagagevoorwaarden van een lopende boeking.",
+        "client": "8f3a99c8-ab44-4dce-b99d-4a695927c5bb",
+        "status": "new",
+        "channel": "telefoon",
+        "occurredAt": "2026-07-08T16:00:00+02:00",
+        "outcome": "handled"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "ticket",
+          "slug": "ticket-zr-contactmoment-annulering",
+          "id": "ffc8a9e1-9282-48db-b586-9a1daa7dd1f1"
+        },
+        "ticketType": "interaction",
+        "title": "Verzoek annulering reis wegens ziekte",
+        "description": "Klant vraagt naar de annuleringsvoorwaarden voor een geboekte reis wegens ziekte.",
+        "client": "8f3a99c8-ab44-4dce-b99d-4a695927c5bb",
+        "status": "in_progress",
+        "channel": "email",
+        "occurredAt": "2026-07-10T08:45:00+02:00",
+        "outcome": "followUpAction"
+      }
     ]
   }
 }

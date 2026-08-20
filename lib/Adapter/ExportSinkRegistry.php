@@ -36,67 +36,62 @@ use InvalidArgumentException;
  *
  * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-008
  */
-class ExportSinkRegistry
-{
+class ExportSinkRegistry {
 
-    /**
-     * Map of destination type slug to its adapter.
-     *
-     * @var array<string, ExportSinkInterface>
-     */
-    private array $sinks = [];
+	/**
+	 * Map of destination type slug to its adapter.
+	 *
+	 * @var array<string, ExportSinkInterface>
+	 */
+	private array $sinks = [];
 
-    /**
-     * Constructor.
-     *
-     * @param iterable<ExportSinkInterface> $sinks The available sink adapters.
-     */
-    public function __construct(iterable $sinks=[])
-    {
-        foreach ($sinks as $sink) {
-            $this->register(sink: $sink);
-        }
-    }//end __construct()
+	/**
+	 * Constructor.
+	 *
+	 * @param iterable<ExportSinkInterface> $sinks The available sink adapters.
+	 */
+	public function __construct(iterable $sinks = []) {
+		foreach ($sinks as $sink) {
+			$this->register(sink: $sink);
+		}
+	}//end __construct()
 
-    /**
-     * Register (or replace) a sink adapter by its type.
-     *
-     * @param ExportSinkInterface $sink The adapter.
-     *
-     * @return void
-     */
-    public function register(ExportSinkInterface $sink): void
-    {
-        $this->sinks[$sink->getType()] = $sink;
-    }//end register()
+	/**
+	 * Register (or replace) a sink adapter by its type.
+	 *
+	 * @param ExportSinkInterface $sink The adapter.
+	 *
+	 * @return void
+	 */
+	public function register(ExportSinkInterface $sink): void {
+		$this->sinks[$sink->getType()] = $sink;
+	}//end register()
 
-    /**
-     * Whether an adapter is registered for the given type.
-     *
-     * @param string $type The destination type slug.
-     *
-     * @return bool True when supported.
-     */
-    public function supports(string $type): bool
-    {
-        return isset($this->sinks[$type]);
-    }//end supports()
+	/**
+	 * Whether an adapter is registered for the given type.
+	 *
+	 * @param string $type The destination type slug.
+	 *
+	 * @return bool True when supported.
+	 */
+	public function supports(string $type): bool {
+		return isset($this->sinks[$type]);
+	}//end supports()
 
-    /**
-     * Resolve the adapter for a destination type.
-     *
-     * @param string $type The destination type slug.
-     *
-     * @return ExportSinkInterface The adapter.
-     *
-     * @throws \InvalidArgumentException When no adapter handles the type.
-     */
-    public function get(string $type): ExportSinkInterface
-    {
-        if (isset($this->sinks[$type]) === false) {
-            throw new InvalidArgumentException("No export sink adapter registered for type '{$type}'.");
-        }
+	/**
+	 * Resolve the adapter for a destination type.
+	 *
+	 * @param string $type The destination type slug.
+	 *
+	 * @return ExportSinkInterface The adapter.
+	 *
+	 * @throws \InvalidArgumentException When no adapter handles the type.
+	 */
+	public function get(string $type): ExportSinkInterface {
+		if (isset($this->sinks[$type]) === false) {
+			throw new InvalidArgumentException("No export sink adapter registered for type '{$type}'.");
+		}
 
-        return $this->sinks[$type];
-    }//end get()
+		return $this->sinks[$type];
+	}//end get()
 }//end class

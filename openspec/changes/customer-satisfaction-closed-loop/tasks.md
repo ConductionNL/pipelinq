@@ -102,9 +102,9 @@
   - **acceptance_criteria**:
     - Sent / responded / response-rate per survey, channel, period; suppressed + failed shown separately, excluded from denominator
 
-- [ ] 5.3 SatisfactionAggregationService + klantbeeld-360 panel
-  - **spec_ref**: `specs/klantbeeld-360/spec.md#requirement-per-client-satisfaction-panel`
-  - **files**: `lib/Service/SatisfactionAggregationService.php`, klantbeeld-360 client view component
+- [ ] 5.3 SatisfactionAggregationService + customer-360 panel
+  - **spec_ref**: `specs/customer-360/spec.md#requirement-per-client-satisfaction-panel`
+  - **files**: `lib/Service/SatisfactionAggregationService.php`, customer-360 client view component
   - **acceptance_criteria**:
     - Per-client NPS, average rating, count, 90-day trend, latest 3 verbatims
     - Empty state when the client has no responses
@@ -129,5 +129,5 @@
   - **files**: `tests/unit/`, `tests/e2e/`, `tests/integration/`
   - **acceptance_criteria**:
     - PHPUnit for dispatch/follow-up/aggregation services; Vitest for new store getters
-    - Playwright UI coverage for settings UI, analytics block, klantbeeld panel, public-form opt-out; API assertions in Newman (not Playwright)
+    - Playwright UI coverage for settings UI, analytics block, customer-360 panel, public-form opt-out; API assertions in Newman (not Playwright)
     - `composer check:strict` green; 14 hydra gates pass; i18n English keys + nl catalog complete

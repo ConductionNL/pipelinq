@@ -6,6 +6,10 @@ return [
     'routes' => [
         ['name' => 'settings#index', 'url' => '/api/settings', 'verb' => 'GET'],
         ['name' => 'settings#create', 'url' => '/api/settings', 'verb' => 'POST'],
+        // Canonical ADR-066 write verb (OpenRegister AppHost dialect). POST above
+        // stays as the legacy alias for the existing frontend callers. Declared
+        // here in the settings block, BEFORE the SPA/wildcard catch-alls (ADR-016).
+        ['name' => 'settings#update', 'url' => '/api/settings', 'verb' => 'PUT'],
         ['name' => 'settings#reimport', 'url' => '/api/settings/reimport', 'verb' => 'POST'],
         // First-time setup wizard (ADR-042)
         ['name' => 'setup#status',     'url' => '/api/setup/status',            'verb' => 'GET'],
@@ -80,14 +84,15 @@ return [
         // uses the Forms app's own public links; in-app authoring/management
         // routes are retired.
         // Rapportage / reporting — specific routes before wildcard catch-all.
-        // Klantbeeld 360 — cross-module analytics summary (must precede any wildcard `{slug}` routes).
-        ['name' => 'analytics#summary', 'url' => '/api/analytics/summary', 'verb' => 'GET'],
         // Dashboard analytics & Navi (openspec/changes/dashboard).
         ['name' => 'analytics#overview', 'url' => '/api/analytics/overview', 'verb' => 'GET'],
         ['name' => 'analytics#trends',   'url' => '/api/analytics/trends',   'verb' => 'GET'],
         ['name' => 'analytics#funnels',  'url' => '/api/analytics/funnels',  'verb' => 'GET'],
         // Commercial dashboard KPI overview (openspec/changes/commercial-dashboard).
         ['name' => 'analytics#commercial', 'url' => '/api/analytics/commercial', 'verb' => 'GET'],
+        // My-work worklist — canonical server-side union of the current user's
+        // leads + requests (replaces the MyWorkWidget/MyWork client-side union).
+        ['name' => 'worklist#mine', 'url' => '/api/worklist/mine', 'verb' => 'GET'],
         ['name' => 'navi#query',         'url' => '/api/navi/query',         'verb' => 'POST'],
         // SLA engine — attainment dashboard endpoint (sla-engine-and-escalation / REQ-006).
         ['name' => 'slaAttainment#attainment', 'url' => '/api/sla/attainment', 'verb' => 'GET'],
@@ -102,6 +107,9 @@ return [
         ['name' => 'reporting#exportCsv',   'url' => '/api/rapportage/export',   'verb' => 'GET'],
         // Lead-management analytics endpoint (REQ-LM-006). Non-admin accessible.
         ['name' => 'rapportage#getPipelineStats', 'url' => '/api/rapportage/pipeline-stats', 'verb' => 'GET'],
+        // Customer 360 consolidated summary (klantbeeld-360-activation) — cross-ticketType/status
+        // aggregation the declarative layer can't express; per-object read guard on the client in the body.
+        ['name' => 'customer360#summary', 'url' => '/api/customer-360/summary', 'verb' => 'GET'],
         // Surveys migrated to the OpenRegister forms leaf (NC Forms app) —
         // see openspec/changes/migrate-forms-to-forms-leaf.
 
@@ -391,6 +399,7 @@ return [
         ['name' => 'loyalty#initiateRedemption',      'url' => '/api/loyalty/redemption/initiate/{accountId}/{optionId}',   'verb' => 'POST'],
         ['name' => 'loyalty#lookupRedemptionCode',    'url' => '/api/loyalty/redemption/{code}/validate',                   'verb' => 'POST'],
         ['name' => 'loyalty#useRedemptionCode',       'url' => '/api/loyalty/redemption/{code}/use',                        'verb' => 'POST'],
+        ['name' => 'loyalty#issueGiftCard',     'url' => '/api/loyalty/gift-card/issue',                 'verb' => 'POST'],
         ['name' => 'loyalty#lookupGiftCard',    'url' => '/api/loyalty/gift-card/validate',              'verb' => 'POST'],
         ['name' => 'loyalty#redeemGiftCard',    'url' => '/api/loyalty/gift-card/redeem',                'verb' => 'POST'],
         ['name' => 'loyalty#activateGiftCard',  'url' => '/api/loyalty/gift-card/activate/{giftCardId}', 'verb' => 'POST'],
@@ -399,8 +408,8 @@ return [
         ['name' => 'loyaltyReporting#liability',          'url' => '/api/loyalty/reporting/{programmeId}/liability',     'verb' => 'GET'],
         ['name' => 'loyaltyReporting#tierDistribution',   'url' => '/api/loyalty/reporting/{programmeId}/tiers',         'verb' => 'GET'],
         ['name' => 'loyaltyReporting#expiryForecast',     'url' => '/api/loyalty/reporting/{programmeId}/expiry-forecast', 'verb' => 'GET'],
-        ['name' => 'loyaltyGdpr#export',                  'url' => '/api/loyalty/gdpr/{klantId}/export',                 'verb' => 'GET'],
-        ['name' => 'loyaltyGdpr#delete',                  'url' => '/api/loyalty/gdpr/{klantId}',                        'verb' => 'DELETE'],
+        // loyaltyGdpr#* routes retired (ADR-047 Phase-3): loyalty GDPR export/erase
+        // is subsumed by OpenRegister's cross-register DSAR erase; LoyaltyGdprController removed.
 
         // CRM workflow automation has been migrated to the OpenRegister
         // flow leaf (NC Flow / n8n) per migrate-automation-to-flow-leaf;
@@ -412,6 +421,12 @@ return [
         ['name' => 'blastWebhook#sendgrid', 'url' => '/api/blast-webhooks/sendgrid', 'verb' => 'POST'],
         ['name' => 'blastWebhook#ses',      'url' => '/api/blast-webhooks/ses',      'verb' => 'POST'],
         ['name' => 'blastWebhook#twilio',   'url' => '/api/blast-webhooks/twilio',   'verb' => 'POST'],
+
+        // First-party marketing-email open/click tracking (HMAC-signed
+        // tokens, PublicPage, fail-closed) — marketing-email-open-click-tracking.
+        // camelCase slug matches BlastTrackingController class name.
+        ['name' => 'blastTracking#open',  'url' => '/api/blast/track/open/{token}',  'verb' => 'GET'],
+        ['name' => 'blastTracking#click', 'url' => '/api/blast/track/click/{token}', 'verb' => 'GET'],
 
         // Appointment booking — deposit payment webhook (signature-verified, PublicPage)
         // appointment-booking-08-deposit-payment / REQ-APT-010.
@@ -428,6 +443,27 @@ return [
         // any wildcard catch-alls (ADR-016).
         ['name' => 'messagingWebhook#whatsapp', 'url' => '/api/messaging-webhooks/whatsapp/{providerId}', 'verb' => 'POST'],
         ['name' => 'messagingWebhook#sms',      'url' => '/api/messaging-webhooks/sms/{providerId}',      'verb' => 'POST'],
+        // Outbound agent messaging (outbound-messaging-provider-wiring):
+        // server-side send + composer preflight + consent recording +
+        // admin-gated zero-cost provider connectivity test.
+        ['name' => 'messaging#send',         'url' => '/api/messaging/send',                    'verb' => 'POST'],
+        ['name' => 'messaging#preflight',    'url' => '/api/messaging/preflight/{contactId}',   'verb' => 'GET'],
+        ['name' => 'messaging#consent',      'url' => '/api/messaging/consent',                 'verb' => 'POST'],
+        ['name' => 'messaging#testProvider', 'url' => '/api/messaging/providers/{id}/test',     'verb' => 'POST'],
+        // Semantic object handoff emit (ADR-051 / semantic-handoff-emit):
+        // request -> ns#Case, active contract -> ns#Invoice. Kind-addressed via
+        // OpenRegister's handoff engine; actions hide when no app implements the kind.
+        ['name' => 'semanticHandoff#requestAvailability',    'url' => '/api/handoff/request/{id}/availability',       'verb' => 'GET'],
+        ['name' => 'semanticHandoff#convertRequestToCase',   'url' => '/api/handoff/request/{id}/convert-to-case',    'verb' => 'POST'],
+        ['name' => 'semanticHandoff#contractAvailability',   'url' => '/api/handoff/contract/{id}/availability',      'verb' => 'GET'],
+        ['name' => 'semanticHandoff#sendContractToInvoicing','url' => '/api/handoff/contract/{id}/send-to-invoicing', 'verb' => 'POST'],
+
+        // Shillinq time-intake billing handoff — real emit side of the
+        // time-approval-workflow delegation (time-billing-handoff-emit).
+        // Manager-gated; the deep-link (shillinq_app_url) stays the fallback
+        // when unavailable.
+        ['name' => 'billingHandoff#availability', 'url' => '/api/billing/handoff/{clientId}/availability', 'verb' => 'GET'],
+        ['name' => 'billingHandoff#trigger',      'url' => '/api/billing/handoff/{clientId}',              'verb' => 'POST'],
         // Berichtenbox bridge (burgerportaal-mijnoverheid-bridge).
         // Logius webhooks for read-receipt + inbound replies — HMAC-SHA256
         // signature-verified (REQ-RECEIPT-005 / REQ-INBOUND-006).
@@ -464,7 +500,6 @@ return [
 
         // BRP / BSN — Haalcentraal Personen integration (bsn-validatie-en-brp-lookup).
         // Specific routes precede any wildcard {slug} routes (ADR-016).
-        ['name' => 'brp#validate',         'url' => '/api/brp/validate',                  'verb' => 'POST'],
         ['name' => 'brp#lookup',           'url' => '/api/brp/lookup',                    'verb' => 'POST'],
         ['name' => 'brp#revealAddress',    'url' => '/api/brp/contact/{id}/reveal-address', 'verb' => 'POST'],
         ['name' => 'brp#optOutCreate',     'url' => '/api/brp/opt-out',                   'verb' => 'POST'],
@@ -486,73 +521,21 @@ return [
         ['name' => 'xWiki#page',   'url' => '/api/xwiki/page/{wiki}/{page}',        'verb' => 'GET', 'requirements' => ['page' => '.+']],
         ['name' => 'xWiki#status', 'url' => '/api/xwiki/status',                    'verb' => 'GET'],
 
-        // AVG (GDPR data-subject request) workflow.
-        // avgVerzoek / termijnEvent / bewijsItem / exportBundle / weigering / redactieActie
-        // CRUD is handled by OpenRegister's generic object API; these are the
-        // server-authoritative lifecycle actions (camelCase slug matches the controller).
-        // Collection (static) routes precede the {id} wildcard routes.
-        ['name' => 'avgVerzoek#index',   'url' => '/api/avg-verzoeken', 'verb' => 'GET'],
-        ['name' => 'avgVerzoek#create',  'url' => '/api/avg-verzoeken', 'verb' => 'POST'],
-        ['name' => 'avgVerzoek#show',    'url' => '/api/avg-verzoeken/{id}', 'verb' => 'GET'],
-        ['name' => 'avgVerzoek#update',  'url' => '/api/avg-verzoeken/{id}', 'verb' => 'PATCH'],
-        ['name' => 'avgVerzoek#destroy', 'url' => '/api/avg-verzoeken/{id}', 'verb' => 'DELETE'],
-        ['name' => 'avgVerzoek#flagDpia', 'url' => '/api/avg-verzoeken/{id}/dpia-flag', 'verb' => 'POST'],
-        ['name' => 'avgVerzoek#extend',  'url' => '/api/avg-verzoeken/{id}/extend', 'verb' => 'POST'],
-        ['name' => 'avgVerzoek#archive', 'url' => '/api/avg-verzoeken/{id}/archive', 'verb' => 'POST'],
+        // AVG / DSAR (GDPR data-subject request) — the entire app-side workflow
+        // (avgVerzoek#*, avgEvidence#*, avgRedaction#*, avgDenial#*, avgBundle#*)
+        // and the MDM right-of-deletion workflow (mdmAvgWorkflow#*) were removed
+        // by consume-or-dsar (ADR-047 Phase 3). DSAR is owned by OpenRegister's
+        // case engine (/apps/openregister/avg + /api/gdpr/*); pipelinq registers
+        // as an evidence source (PipelinqEvidenceSourceProvider) and deep-links
+        // handlers into OR's AVG surface. Existing avgVerzoek objects are
+        // migrated to OR dataSubjectRequest cases by MigrateAvgVerzoekenToOrDsar.
 
-        // AVG evidence collection.
-        ['name' => 'avgEvidence#collect', 'url' => '/api/avg-verzoeken/{id}/collect-evidence', 'verb' => 'POST'],
-        ['name' => 'avgEvidence#status',  'url' => '/api/avg-verzoeken/{id}/evidence-status', 'verb' => 'GET'],
-        ['name' => 'avgEvidence#items',   'url' => '/api/avg-verzoeken/{id}/bewijs-items', 'verb' => 'GET'],
-
-        // AVG redaction.
-        ['name' => 'avgRedaction#redact',  'url' => '/api/avg-verzoeken/{id}/redact', 'verb' => 'POST'],
-        ['name' => 'avgRedaction#summary', 'url' => '/api/avg-verzoeken/{id}/redaction-summary', 'verb' => 'GET'],
-        ['name' => 'avgRedaction#approve', 'url' => '/api/avg-verzoeken/{id}/approve-redactions', 'verb' => 'POST'],
-
-        // AVG denial (Weigering).
-        ['name' => 'avgDenial#deny',     'url' => '/api/avg-verzoeken/{id}/deny', 'verb' => 'POST'],
-        ['name' => 'avgDenial#show',     'url' => '/api/avg-verzoeken/{id}/weigering', 'verb' => 'GET'],
-        ['name' => 'avgDenial#finalize', 'url' => '/api/avg-verzoeken/{id}/finalize-denial', 'verb' => 'POST'],
-
-        // AVG export bundles + AP escalation. The public secure-download route
-        // precedes the authenticated {bundleId} metadata route.
-        ['name' => 'avgBundle#generate', 'url' => '/api/avg-verzoeken/{id}/generate-bundle', 'verb' => 'POST'],
-        ['name' => 'avgBundle#escalate', 'url' => '/api/avg-verzoeken/{id}/ap-escalate', 'verb' => 'POST'],
-        ['name' => 'avgBundle#download', 'url' => '/api/export-bundles/{bundleId}/download', 'verb' => 'GET'],
-        ['name' => 'avgBundle#show',     'url' => '/api/export-bundles/{bundleId}', 'verb' => 'GET'],
-
-        // Master Data Management — read-API (downstream apps; session/bearer auth).
-        // Static /api/mdm/master MUST precede the /{id} wildcard (ADR-016).
-        ['name' => 'mdmApi#queryByNaturalKey', 'url' => '/api/mdm/master', 'verb' => 'GET'],
-        ['name' => 'mdmApi#show',              'url' => '/api/mdm/master/{id}', 'verb' => 'GET'],
-
-        // MDM — Master Entity steward views + data-quality dashboard.
-        ['name' => 'mdmMasterEntity#index',     'url' => '/api/mdm/entities', 'verb' => 'GET'],
-        ['name' => 'mdmMasterEntity#dashboard', 'url' => '/api/mdm/dashboard', 'verb' => 'GET'],
-        ['name' => 'mdmMasterEntity#show',      'url' => '/api/mdm/entities/{id}', 'verb' => 'GET'],
-
-        // MDM — merge tooling (preview/candidates authed; execute/reverse admin).
-        ['name' => 'mdmMerge#candidates', 'url' => '/api/mdm/duplicates/{entityType}', 'verb' => 'GET'],
-        ['name' => 'mdmMerge#preview',    'url' => '/api/mdm/merge/preview', 'verb' => 'POST'],
-        ['name' => 'mdmMerge#execute',    'url' => '/api/mdm/merge/execute', 'verb' => 'POST'],
-        ['name' => 'mdmMerge#reverse',    'url' => '/api/mdm/merge/{mergeOperationId}/reverse', 'verb' => 'POST'],
-
-        // MDM — trust configuration (list authed; mutate admin).
-        ['name' => 'mdmTrustConfig#index',   'url' => '/api/mdm/trust-config', 'verb' => 'GET'],
-        ['name' => 'mdmTrustConfig#save',    'url' => '/api/mdm/trust-config', 'verb' => 'POST'],
-        ['name' => 'mdmTrustConfig#save',    'url' => '/api/mdm/trust-config/{id}', 'verb' => 'PUT', 'postfix' => 'update'],
-        ['name' => 'mdmTrustConfig#destroy', 'url' => '/api/mdm/trust-config/{id}', 'verb' => 'DELETE'],
-
-        // MDM — sync queue administration (list authed; retry admin).
-        ['name' => 'mdmSyncQueue#index', 'url' => '/api/mdm/sync-queue', 'verb' => 'GET'],
-        ['name' => 'mdmSyncQueue#retry', 'url' => '/api/mdm/sync-queue/{itemId}/retry', 'verb' => 'POST'],
-
-        // MDM — AVG right-of-deletion workflow (admin only).
-        ['name' => 'mdmAvgWorkflow#candidates',        'url' => '/api/mdm/avg-workflow/candidates', 'verb' => 'GET'],
-        ['name' => 'mdmAvgWorkflow#initiate',          'url' => '/api/mdm/avg-workflow/initiate', 'verb' => 'POST'],
-        ['name' => 'mdmAvgWorkflow#approve',           'url' => '/api/mdm/avg-workflow/approve', 'verb' => 'POST'],
-        ['name' => 'mdmAvgWorkflow#confirmHardDelete', 'url' => '/api/mdm/avg-workflow/{masterEntityId}/hard-delete', 'verb' => 'POST'],
+        // Master Data Management — the app-side read-API (`/api/mdm/master*`,
+        // MdmApiController) was removed by retire-mdm-sync-queue (ADR-022 /
+        // ADR-045 #D): downstream apps read master entities directly from
+        // OpenRegister's `/api/objects` surface, and MDM steward views, merge
+        // tooling, trust-config CRUD and the sync queue are all hosted by
+        // OpenRegister.
 
         // Contract & renewal tracking (contract-renewal-tracking) — app-logic only
         // (numbering, guarded transitions, recurring-revenue metrics). Plain CRUD

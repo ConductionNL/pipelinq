@@ -39,50 +39,48 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/task-background-jobs/tasks.md#task-4
  */
-class ScheduledTaskJob extends TimedJob
-{
-    /**
-     * Constructor.
-     *
-     * @param ITimeFactory         $time                 Time factory (required by TimedJob).
-     * @param ScheduledTaskService $scheduledTaskService The scheduled task service.
-     * @param LoggerInterface      $logger               Logger.
-     */
-    public function __construct(
-        ITimeFactory $time,
-        private ScheduledTaskService $scheduledTaskService,
-        private LoggerInterface $logger,
-    ) {
-        parent::__construct(time: $time);
+class ScheduledTaskJob extends TimedJob {
+	/**
+	 * Constructor.
+	 *
+	 * @param ITimeFactory $time Time factory (required by TimedJob).
+	 * @param ScheduledTaskService $scheduledTaskService The scheduled task service.
+	 * @param LoggerInterface $logger Logger.
+	 */
+	public function __construct(
+		ITimeFactory $time,
+		private ScheduledTaskService $scheduledTaskService,
+		private LoggerInterface $logger,
+	) {
+		parent::__construct(time: $time);
 
-        // Run every 5 minutes (300 seconds).
-        $this->setInterval(seconds: 300);
-        $this->setTimeSensitivity(sensitivity: self::TIME_SENSITIVE);
-    }//end __construct()
+		// Run every 5 minutes (300 seconds).
+		$this->setInterval(seconds: 300);
+		$this->setTimeSensitivity(sensitivity: self::TIME_SENSITIVE);
+	}//end __construct()
 
-    /**
-     * Execute the background job.
-     *
-     * Delegates all processing to ScheduledTaskService::processScheduledTasks().
-     * Catches every Throwable so the job queue remains healthy.
-     *
-     * @param mixed $argument The job argument (unused; required by TimedJob).
-     *
-     * @return void
-     *
-     * @spec openspec/changes/task-background-jobs/tasks.md#task-4
-     *
-     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
-     */
-    protected function run($argument): void
-    {
-        try {
-            $this->scheduledTaskService->processScheduledTasks();
-        } catch (\Throwable $e) {
-            $this->logger->error(
-                'ScheduledTaskJob failed',
-                ['exception' => $e]
-            );
-        }
-    }//end run()
+	/**
+	 * Execute the background job.
+	 *
+	 * Delegates all processing to ScheduledTaskService::processScheduledTasks().
+	 * Catches every Throwable so the job queue remains healthy.
+	 *
+	 * @param mixed $argument The job argument (unused; required by TimedJob).
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/task-background-jobs/tasks.md#task-4
+	 *
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+	 */
+	protected function run($argument): void {
+		try {
+			$this->scheduledTaskService->processScheduledTasks();
+		} catch (\Throwable $e) {
+			$this->logger->error(
+				'ScheduledTaskJob failed',
+				['exception' => $e]
+			);
+		}
+	}//end run()
 }//end class

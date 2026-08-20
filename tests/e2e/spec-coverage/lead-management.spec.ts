@@ -1,6 +1,6 @@
 /*
  * SPDX-FileCopyrightText: 2026 Pipelinq Contributors
- * SPDX-License-Identifier: AGPL-3.0-or-later
+ * SPDX-License-Identifier: EUPL-1.2
  *
  * Gate-19 e2e coverage for openspec/specs/lead-management/spec.md
  * UI-observable scenarios: leads page, navigation.
@@ -9,31 +9,40 @@
 
 import { test, expect } from '@playwright/test'
 
+import { revealNavEntry } from '../helpers/pipelinq'
+
 // @e2e openspec/specs/lead-management/spec.md#add-tags-to-a-lead
 test('leads page accessible from navigation', async ({ page }) => {
 	await page.goto('/apps/pipelinq/')
-	const nav = page.locator('#app-navigation-vue')
-	await expect(nav.getByText('Leads')).toBeVisible({ timeout: 10000 })
-	await nav.getByText('Leads').click()
+	// Relocated under the "Sales" group — see src/menu-layout.json#relocations.
+	const link = await revealNavEntry(page, 'Leads')
+	await expect(link).toBeVisible({ timeout: 10000 })
+	await link.click()
 	await expect(page).toHaveURL(/leads/)
 })
 
 // @e2e openspec/specs/lead-management/spec.md#display-qualification-score-on-lead-list-and-detail
 test('leads list page renders without error', async ({ page }) => {
 	await page.goto('/apps/pipelinq/leads')
-	await expect(page.locator('body')).not.toContainText('Internal Server Error', { timeout: 10000 })
+	await expect(page.locator('body')).not.toContainText('Internal Server Error', {
+		timeout: 10000,
+	})
 })
 
 // @e2e openspec/specs/lead-management/spec.md#add-product-line-item-to-a-lead
 test('leads page main content accessible', async ({ page }) => {
 	await page.goto('/apps/pipelinq/leads')
-	await expect(page.locator('#app-content, .app-content, main').first()).toBeVisible({ timeout: 10000 })
+	await expect(
+		page.locator('#app-content, .app-content, main').first(),
+	).toBeVisible({ timeout: 10000 })
 })
 
 // @e2e openspec/specs/lead-management/spec.md#pipeline-value-summary-by-stage
 test('leads dashboard KPI tile reflects pipeline value', async ({ page }) => {
 	await page.goto('/apps/pipelinq/')
-	await expect(page.getByText(/Pipeline V/i).first()).toBeVisible({ timeout: 10000 })
+	await expect(page.getByText(/Pipeline V/i).first()).toBeVisible({
+		timeout: 10000,
+	})
 })
 
 /*

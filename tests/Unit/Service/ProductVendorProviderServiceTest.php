@@ -30,233 +30,215 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Service\ProductVendorProviderService;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
  * A fake OpenRegister ObjectService returning a canned result set.
+ *
+ * Extends the ObjectService stub so it satisfies the `ObjectServiceInterface`
+ * type-hint ProductVendorProviderService now declares (ADR-084).
  */
-class FakePvmObjectService
-{
-    /**
-     * Result rows returned by findAll().
-     *
-     * @var array<int, array<string,mixed>>
-     */
-    public array $rows = [];
+class FakePvmObjectService extends ObjectService {
+	/**
+	 * Result rows returned by findAll().
+	 *
+	 * @var array<int, array<string,mixed>>
+	 */
+	public array $rows = [];
 
-    /**
-     * Whether findAll should throw to simulate an OR failure.
-     *
-     * @var bool
-     */
-    public bool $throw = false;
+	/**
+	 * Whether findAll should throw to simulate an OR failure.
+	 *
+	 * @var bool
+	 */
+	public bool $throw = false;
 
-    /**
-     * Return the canned rows (ignores filters — the test controls the dataset).
-     *
-     * @param int                  $limit    Ignored.
-     * @param int                  $offset   Ignored.
-     * @param array<string,mixed>  $filters  Ignored.
-     * @param array<string,mixed>  $sort     Ignored.
-     * @param string               $search   Ignored.
-     * @param string               $register Ignored.
-     * @param string               $schema   Ignored.
-     *
-     * @return array<int, array<string,mixed>>
-     */
-    public function findAll(
-        int $limit = 100,
-        int $offset = 0,
-        array $filters = [],
-        array $sort = [],
-        string $search = '',
-        string $register = '',
-        string $schema = ''
-    ): array {
-        if ($this->throw === true) {
-            throw new \RuntimeException('object service unavailable');
-        }
+	/**
+	 * Return the canned rows (ignores filters — the test controls the dataset).
+	 *
+	 * Mirrors OR's real ObjectService::findAll(array $config).
+	 *
+	 * @param array<string,mixed> $config Ignored (config with `filters`, `limit`, `offset`).
+	 * @param boolean $_rbac Unused.
+	 * @param boolean $_multitenancy Unused.
+	 *
+	 * @return array<int, array<string,mixed>>
+	 *
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) Parent signature.
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) Parent signature.
+	 */
+	public function findAll(array $config = [], bool $_rbac = true, bool $_multitenancy = true): array {
+		if ($this->throw === true) {
+			throw new \RuntimeException('object service unavailable');
+		}
 
-        return $this->rows;
-    }//end findAll()
+		return $this->rows;
+	}//end findAll()
 }//end class
 
 /**
  * Test suite for ProductVendorProviderService.
  */
-class ProductVendorProviderServiceTest extends TestCase
-{
-    /**
-     * Build a service wired to a fake ObjectService and a configurable app-config.
-     *
-     * @param FakePvmObjectService $os         The fake object service.
-     * @param array<string,string> $configVals App-config key => value overrides.
-     *
-     * @return ProductVendorProviderService
-     */
-    private function makeService(FakePvmObjectService $os, array $configVals = []): ProductVendorProviderService
-    {
-        $defaults = [
-            'register'                      => 'reg-1',
-            'product_schema'                => 'prod-schema',
-            'supplier_schema'               => 'supp-schema',
-            'product_vendor_cost_consumers' => '',
-        ];
-        $vals = array_merge($defaults, $configVals);
+class ProductVendorProviderServiceTest extends TestCase {
+	/**
+	 * Build a service wired to a fake ObjectService and a configurable app-config.
+	 *
+	 * @param FakePvmObjectService $os The fake object service.
+	 * @param array<string,string> $configVals App-config key => value overrides.
+	 *
+	 * @return ProductVendorProviderService
+	 */
+	private function makeService(FakePvmObjectService $os, array $configVals = []): ProductVendorProviderService {
+		$defaults = [
+			'register' => 'reg-1',
+			'product_schema' => 'prod-schema',
+			'supplier_schema' => 'supp-schema',
+			'product_vendor_cost_consumers' => '',
+		];
+		$vals = array_merge($defaults, $configVals);
 
-        $appConfig = $this->createMock(IAppConfig::class);
-        $appConfig->method('getValueString')->willReturnCallback(
-            static function (string $app, string $key, string $default = '') use ($vals): string {
-                return $vals[$key] ?? $default;
-            }
-        );
+		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig->method('getValueString')->willReturnCallback(
+			static function (string $app, string $key, string $default = '') use ($vals): string {
+				return $vals[$key] ?? $default;
+			}
+		);
 
-        $container = $this->createMock(ContainerInterface::class);
-        $container->method('get')->willReturn($os);
+		return new ProductVendorProviderService(
+			appConfig: $appConfig,
+			logger: $this->createMock(LoggerInterface::class),
+			objectService: $os,
+		);
+	}//end makeService()
 
-        return new ProductVendorProviderService(
-            $appConfig,
-            $container,
-            $this->createMock(LoggerInterface::class),
-        );
-    }//end makeService()
+	/**
+	 * getProduct() strips the CRM-private cost field for an unauthorised consumer.
+	 *
+	 * @return void
+	 */
+	public function testGetProductMasksCostForUnauthorisedConsumer(): void {
+		$os = new FakePvmObjectService();
+		$os->rows = [['productId' => 'p-1', 'name' => 'Widget', 'unitPrice' => 10.0, 'cost' => 4.0]];
 
-    /**
-     * getProduct() strips the CRM-private cost field for an unauthorised consumer.
-     *
-     * @return void
-     */
-    public function testGetProductMasksCostForUnauthorisedConsumer(): void
-    {
-        $os       = new FakePvmObjectService();
-        $os->rows = [['productId' => 'p-1', 'name' => 'Widget', 'unitPrice' => 10.0, 'cost' => 4.0]];
+		$service = $this->makeService($os);
+		$result = $service->getProduct('p-1', 'shillinq', false);
 
-        $service = $this->makeService($os);
-        $result  = $service->getProduct('p-1', 'shillinq', false);
+		$this->assertIsArray($result);
+		$this->assertArrayNotHasKey('cost', $result, 'cost must be masked for unauthorised consumers');
+		$this->assertSame(10.0, $result['unitPrice']);
+		$this->assertSame('Widget', $result['name']);
+	}//end testGetProductMasksCostForUnauthorisedConsumer()
 
-        $this->assertIsArray($result);
-        $this->assertArrayNotHasKey('cost', $result, 'cost must be masked for unauthorised consumers');
-        $this->assertSame(10.0, $result['unitPrice']);
-        $this->assertSame('Widget', $result['name']);
-    }//end testGetProductMasksCostForUnauthorisedConsumer()
+	/**
+	 * getProduct() returns cost when the boolean authorised flag is set.
+	 *
+	 * @return void
+	 */
+	public function testGetProductReturnsCostForAuthorisedFlag(): void {
+		$os = new FakePvmObjectService();
+		$os->rows = [['productId' => 'p-1', 'name' => 'Widget', 'cost' => 4.0]];
 
-    /**
-     * getProduct() returns cost when the boolean authorised flag is set.
-     *
-     * @return void
-     */
-    public function testGetProductReturnsCostForAuthorisedFlag(): void
-    {
-        $os       = new FakePvmObjectService();
-        $os->rows = [['productId' => 'p-1', 'name' => 'Widget', 'cost' => 4.0]];
+		$service = $this->makeService($os);
+		$result = $service->getProduct('p-1', 'shillinq', true);
 
-        $service = $this->makeService($os);
-        $result  = $service->getProduct('p-1', 'shillinq', true);
+		$this->assertIsArray($result);
+		$this->assertArrayHasKey('cost', $result);
+		$this->assertSame(4.0, $result['cost']);
+	}//end testGetProductReturnsCostForAuthorisedFlag()
 
-        $this->assertIsArray($result);
-        $this->assertArrayHasKey('cost', $result);
-        $this->assertSame(4.0, $result['cost']);
-    }//end testGetProductReturnsCostForAuthorisedFlag()
+	/**
+	 * getProduct() returns cost when the consumer slug is in the config allowlist.
+	 *
+	 * @return void
+	 */
+	public function testGetProductReturnsCostForAllowlistedConsumer(): void {
+		$os = new FakePvmObjectService();
+		$os->rows = [['productId' => 'p-1', 'cost' => 4.0]];
 
-    /**
-     * getProduct() returns cost when the consumer slug is in the config allowlist.
-     *
-     * @return void
-     */
-    public function testGetProductReturnsCostForAllowlistedConsumer(): void
-    {
-        $os       = new FakePvmObjectService();
-        $os->rows = [['productId' => 'p-1', 'cost' => 4.0]];
+		$service = $this->makeService($os, ['product_vendor_cost_consumers' => 'foo, shillinq, bar']);
+		$result = $service->getProduct('p-1', 'shillinq', false);
 
-        $service = $this->makeService($os, ['product_vendor_cost_consumers' => 'foo, shillinq, bar']);
-        $result  = $service->getProduct('p-1', 'shillinq', false);
+		$this->assertIsArray($result);
+		$this->assertArrayHasKey('cost', $result);
+	}//end testGetProductReturnsCostForAllowlistedConsumer()
 
-        $this->assertIsArray($result);
-        $this->assertArrayHasKey('cost', $result);
-    }//end testGetProductReturnsCostForAllowlistedConsumer()
+	/**
+	 * getProduct() returns null (graceful degradation) when the product is absent.
+	 *
+	 * @return void
+	 */
+	public function testGetProductReturnsNullWhenNotFound(): void {
+		$os = new FakePvmObjectService();
+		$os->rows = [];
 
-    /**
-     * getProduct() returns null (graceful degradation) when the product is absent.
-     *
-     * @return void
-     */
-    public function testGetProductReturnsNullWhenNotFound(): void
-    {
-        $os       = new FakePvmObjectService();
-        $os->rows = [];
+		$service = $this->makeService($os);
+		$this->assertNull($service->getProduct('missing', 'shillinq', false));
+	}//end testGetProductReturnsNullWhenNotFound()
 
-        $service = $this->makeService($os);
-        $this->assertNull($service->getProduct('missing', 'shillinq', false));
-    }//end testGetProductReturnsNullWhenNotFound()
+	/**
+	 * getProduct() returns null when the register/schema config is unset.
+	 *
+	 * @return void
+	 */
+	public function testGetProductReturnsNullWhenUnconfigured(): void {
+		$os = new FakePvmObjectService();
+		$os->rows = [['productId' => 'p-1']];
 
-    /**
-     * getProduct() returns null when the register/schema config is unset.
-     *
-     * @return void
-     */
-    public function testGetProductReturnsNullWhenUnconfigured(): void
-    {
-        $os       = new FakePvmObjectService();
-        $os->rows = [['productId' => 'p-1']];
+		$service = $this->makeService($os, ['register' => '', 'product_schema' => '']);
+		$this->assertNull($service->getProduct('p-1', 'shillinq', false));
+	}//end testGetProductReturnsNullWhenUnconfigured()
 
-        $service = $this->makeService($os, ['register' => '', 'product_schema' => '']);
-        $this->assertNull($service->getProduct('p-1', 'shillinq', false));
-    }//end testGetProductReturnsNullWhenUnconfigured()
+	/**
+	 * A thrown ObjectService failure degrades gracefully to null.
+	 *
+	 * @return void
+	 */
+	public function testGetProductReturnsNullOnObjectServiceFailure(): void {
+		$os = new FakePvmObjectService();
+		$os->throw = true;
 
-    /**
-     * A thrown ObjectService failure degrades gracefully to null.
-     *
-     * @return void
-     */
-    public function testGetProductReturnsNullOnObjectServiceFailure(): void
-    {
-        $os        = new FakePvmObjectService();
-        $os->throw = true;
+		$service = $this->makeService($os);
+		$this->assertNull($service->getProduct('p-1', 'shillinq', false));
+	}//end testGetProductReturnsNullOnObjectServiceFailure()
 
-        $service = $this->makeService($os);
-        $this->assertNull($service->getProduct('p-1', 'shillinq', false));
-    }//end testGetProductReturnsNullOnObjectServiceFailure()
+	/**
+	 * resolveSupplier() returns the commercial profile unchanged.
+	 *
+	 * @return void
+	 */
+	public function testResolveSupplierReturnsProfile(): void {
+		$os = new FakePvmObjectService();
+		$os->rows = [
+			[
+				'contactsUid' => 'uid-1',
+				'displayName' => 'Acme Supplies',
+				'category' => 'hardware',
+				'leadTimeDays' => 5,
+			],
+		];
 
-    /**
-     * resolveSupplier() returns the commercial profile unchanged.
-     *
-     * @return void
-     */
-    public function testResolveSupplierReturnsProfile(): void
-    {
-        $os       = new FakePvmObjectService();
-        $os->rows = [
-            [
-                'contactsUid' => 'uid-1',
-                'displayName' => 'Acme Supplies',
-                'category'    => 'hardware',
-                'leadTimeDays' => 5,
-            ],
-        ];
+		$service = $this->makeService($os);
+		$result = $service->resolveSupplier('uid-1', 'shillinq');
 
-        $service = $this->makeService($os);
-        $result  = $service->resolveSupplier('uid-1', 'shillinq');
+		$this->assertIsArray($result);
+		$this->assertSame('Acme Supplies', $result['displayName']);
+		$this->assertSame(5, $result['leadTimeDays']);
+	}//end testResolveSupplierReturnsProfile()
 
-        $this->assertIsArray($result);
-        $this->assertSame('Acme Supplies', $result['displayName']);
-        $this->assertSame(5, $result['leadTimeDays']);
-    }//end testResolveSupplierReturnsProfile()
+	/**
+	 * resolveSupplier() returns null when the supplier is absent.
+	 *
+	 * @return void
+	 */
+	public function testResolveSupplierReturnsNullWhenNotFound(): void {
+		$os = new FakePvmObjectService();
+		$os->rows = [];
 
-    /**
-     * resolveSupplier() returns null when the supplier is absent.
-     *
-     * @return void
-     */
-    public function testResolveSupplierReturnsNullWhenNotFound(): void
-    {
-        $os       = new FakePvmObjectService();
-        $os->rows = [];
-
-        $service = $this->makeService($os);
-        $this->assertNull($service->resolveSupplier('missing', 'shillinq'));
-    }//end testResolveSupplierReturnsNullWhenNotFound()
+		$service = $this->makeService($os);
+		$this->assertNull($service->resolveSupplier('missing', 'shillinq'));
+	}//end testResolveSupplierReturnsNullWhenNotFound()
 }//end class

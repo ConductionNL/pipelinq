@@ -1,0 +1,107 @@
+{
+	"info": {
+		"name": "Pipelinq — Semantic Handoff Emit (semantic-handoff-emit)",
+		"description": "API contract ring for the ADR-051 emit endpoints. On a bare instance (no ns#Case / ns#Invoice implementer installed) the availability endpoints report available:false and the POST actions refuse cleanly with a 409 — the hidden-without-implementer + clean-refusal contract. Requires {{baseUrl}} + basic-auth {{ncUser}}/{{ncPass}} and a seeded {{requestId}} (in_progress) + {{contractId}} (active).",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "basic",
+		"basic": [
+			{ "key": "username", "value": "{{ncUser}}", "type": "string" },
+			{ "key": "password", "value": "{{ncPass}}", "type": "string" }
+		]
+	},
+	"item": [
+		{
+			"name": "Request availability reports the convert gate",
+			"request": {
+				"method": "GET",
+				"header": [
+					{ "key": "OCS-APIRequest", "value": "true" },
+					{ "key": "Accept", "value": "application/json" }
+				],
+				"url": {
+					"raw": "{{baseUrl}}/apps/pipelinq/api/handoff/request/{{requestId}}/availability",
+					"host": ["{{baseUrl}}"],
+					"path": ["apps", "pipelinq", "api", "handoff", "request", "{{requestId}}", "availability"]
+				}
+			},
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"pm.test('200 OK', () => pm.response.to.have.status(200));",
+							"const b = pm.response.json();",
+							"pm.test('carries available + canConvert', () => { pm.expect(b).to.have.property('available'); pm.expect(b).to.have.property('canConvert'); });"
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "Convert refuses cleanly without an ns#Case implementer",
+			"request": {
+				"method": "POST",
+				"header": [
+					{ "key": "OCS-APIRequest", "value": "true" },
+					{ "key": "Content-Type", "value": "application/json" }
+				],
+				"url": {
+					"raw": "{{baseUrl}}/apps/pipelinq/api/handoff/request/{{requestId}}/convert-to-case",
+					"host": ["{{baseUrl}}"],
+					"path": ["apps", "pipelinq", "api", "handoff", "request", "{{requestId}}", "convert-to-case"]
+				}
+			},
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"const b = pm.response.json();",
+							"pm.test('clean refusal, never a 500', () => pm.expect(pm.response.code).to.not.equal(500));",
+							"pm.test('a known outcome status', () => pm.expect(['not-available','invalid-status','converted','handoff-failed']).to.include(b.status));"
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "Contract send-to-invoicing refuses cleanly without an ns#Invoice implementer",
+			"request": {
+				"method": "POST",
+				"header": [
+					{ "key": "OCS-APIRequest", "value": "true" },
+					{ "key": "Content-Type", "value": "application/json" }
+				],
+				"url": {
+					"raw": "{{baseUrl}}/apps/pipelinq/api/handoff/contract/{{contractId}}/send-to-invoicing",
+					"host": ["{{baseUrl}}"],
+					"path": ["apps", "pipelinq", "api", "handoff", "contract", "{{contractId}}", "send-to-invoicing"]
+				}
+			},
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"const b = pm.response.json();",
+							"pm.test('clean refusal, never a 500', () => pm.expect(pm.response.code).to.not.equal(500));",
+							"pm.test('a known outcome status', () => pm.expect(['not-available','invalid-status','sent','handoff-failed']).to.include(b.status));"
+						]
+					}
+				}
+			]
+		}
+	],
+	"variable": [
+		{ "key": "baseUrl", "value": "http://localhost:8080" },
+		{ "key": "ncUser", "value": "admin" },
+		{ "key": "ncPass", "value": "admin" },
+		{ "key": "requestId", "value": "" },
+		{ "key": "contractId", "value": "" }
+	]
+}

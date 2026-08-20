@@ -16,8 +16,8 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-26
- * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-27
+ * @spec openspec/specs/contacts-sync/spec.md
+ * @spec openspec/specs/contacts-sync/spec.md
  */
 
 declare(strict_types=1);
@@ -25,6 +25,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\ContactSyncService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -37,198 +38,219 @@ use Psr\Log\LoggerInterface;
 /**
  * Controller for contact synchronization.
  */
-class ContactSyncController extends Controller
-{
-    /**
-     * Constructor.
-     *
-     * @param IRequest           $request            The request.
-     * @param ContactSyncService $contactSyncService The contact sync service.
-     * @param IUserSession       $userSession        The user session.
-     * @param IL10N              $l10n               The localization service.
-     * @param LoggerInterface    $logger             The logger.
-     */
-    public function __construct(
-        IRequest $request,
-        private ContactSyncService $contactSyncService,
-        private IUserSession $userSession,
-        private IL10N $l10n,
-        private LoggerInterface $logger,
-    ) {
-        parent::__construct(appName: Application::APP_ID, request: $request);
-    }//end __construct()
+class ContactSyncController extends Controller {
+	/**
+	 * Constructor.
+	 *
+	 * @param IRequest $request The request.
+	 * @param ContactSyncService $contactSyncService The contact sync service.
+	 * @param IUserSession $userSession The user session.
+	 * @param ObjectOwnerAccessPolicy $policy Per-object owner access policy.
+	 * @param IL10N $l10n The localization service.
+	 * @param LoggerInterface $logger The logger.
+	 */
+	public function __construct(
+		IRequest $request,
+		private ContactSyncService $contactSyncService,
+		private IUserSession $userSession,
+		private ObjectOwnerAccessPolicy $policy,
+		private IL10N $l10n,
+		private LoggerInterface $logger,
+	) {
+		parent::__construct(appName: Application::APP_ID, request: $request);
+	}//end __construct()
 
-    /**
-     * Search Nextcloud addressbooks for contacts.
-     *
-     * @return JSONResponse The search results.
-     *
-     * @NoAdminRequired
-     *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-26
-     */
-    public function search(): JSONResponse
-    {
-        $user = $this->userSession->getUser();
-        if ($user === null) {
-            return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
-        }
+	/**
+	 * Search Nextcloud addressbooks for contacts.
+	 *
+	 * @return JSONResponse The search results.
+	 *
+	 * @NoAdminRequired
+	 *
+	 * @spec openspec/specs/contacts-sync/spec.md
+	 */
+	public function search(): JSONResponse {
+		$user = $this->userSession->getUser();
+		if ($user === null) {
+			return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
+		}
 
-        $query = $this->request->getParam('q', '');
-        if (trim($query) === '') {
-            return new JSONResponse(['results' => []]);
-        }
+		// Contact sync reaches address books and external directories — a CRM
+		// capability, not an any-authenticated-user one. Admins bypass.
+		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
+			return new JSONResponse(['error' => $this->l10n->t('Forbidden')], Http::STATUS_FORBIDDEN);
+		}
 
-        try {
-            $results = $this->contactSyncService->searchContacts($query);
-            return new JSONResponse(['results' => $results]);
-        } catch (\Exception $e) {
-            $this->logger->error('ContactSyncController::search failed', ['exception' => $e]);
-            return new JSONResponse(
-                    ['error' => $this->l10n->t('An unexpected error occurred')],
-                    500
-                    );
-        }
-    }//end search()
+		$query = $this->request->getParam('q', '');
+		if (trim($query) === '') {
+			return new JSONResponse(['results' => []]);
+		}
 
-    /**
-     * Import a Nextcloud contact into Pipelinq.
-     *
-     * @return JSONResponse The import result.
-     *
-     * @NoAdminRequired
-     *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-26
-     */
-    public function import(): JSONResponse
-    {
-        $user = $this->userSession->getUser();
-        if ($user === null) {
-            return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
-        }
+		try {
+			$results = $this->contactSyncService->searchContacts($query);
+			return new JSONResponse(['results' => $results]);
+		} catch (\Exception $e) {
+			$this->logger->error('ContactSyncController::search failed', ['exception' => $e]);
+			return new JSONResponse(
+				['error' => $this->l10n->t('An unexpected error occurred')],
+				500
+			);
+		}
+	}//end search()
 
-        $uid            = $this->request->getParam('uid', '');
-        $addressBookKey = $this->request->getParam('addressBookKey', '');
-        $type           = $this->request->getParam('type', 'client');
-        $clientId       = $this->request->getParam('clientId');
+	/**
+	 * Import a Nextcloud contact into Pipelinq.
+	 *
+	 * @return JSONResponse The import result.
+	 *
+	 * @NoAdminRequired
+	 *
+	 * @spec openspec/specs/contacts-sync/spec.md
+	 */
+	public function import(): JSONResponse {
+		$user = $this->userSession->getUser();
+		if ($user === null) {
+			return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
+		}
 
-        if ($uid === '') {
-            return new JSONResponse(['error' => $this->l10n->t('Missing uid parameter')], 400);
-        }
+		// Contact sync reaches address books and external directories — a CRM
+		// capability, not an any-authenticated-user one. Admins bypass.
+		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
+			return new JSONResponse(['error' => $this->l10n->t('Forbidden')], Http::STATUS_FORBIDDEN);
+		}
 
-        try {
-            $created = $this->contactSyncService->importContact(
-                uid: $uid,
-                addressBookKey: $addressBookKey,
-                type: $type,
-                clientId: $clientId
-            );
-            return new JSONResponse(
-                    [
-                        'success' => true,
-                        'object'  => $created,
-                    ]
-                    );
-        } catch (\Exception $e) {
-            $this->logger->error('ContactSyncController::import failed', ['exception' => $e]);
-            return new JSONResponse(
-                    ['error' => $this->l10n->t('An unexpected error occurred')],
-                    500
-                    );
-        }//end try
-    }//end import()
+		$uid = $this->request->getParam('uid', '');
+		$addressBookKey = $this->request->getParam('addressBookKey', '');
+		$type = $this->request->getParam('type', 'client');
+		$clientId = $this->request->getParam('clientId');
 
-    /**
-     * Contact-FIRST create of a client/contact: provision the authoritative
-     * Nextcloud contact from the form fields, then save the object with the
-     * required `contactsUid`. Returns 201 with the created object.
-     *
-     * This is the create path the bespoke ClientForm + the generic add flow post
-     * to, so a client is always backed by a real NC contact and the required
-     * `contactsUid` is never missing (client-contact unification).
-     *
-     * @return JSONResponse The created object (201) or an error.
-     *
-     * @NoAdminRequired
-     *
-     * @spec openspec/changes/pipelinq-unify-client-contact/specs/unify-client-contact/spec.md#REQ-PUCC-003
-     */
-    public function create(): JSONResponse
-    {
-        $user = $this->userSession->getUser();
-        if ($user === null) {
-            return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
-        }
+		if ($uid === '') {
+			return new JSONResponse(['error' => $this->l10n->t('Missing uid parameter')], 400);
+		}
 
-        $objectType = $this->request->getParam('objectType', 'client');
-        $object     = $this->request->getParam('object', []);
+		try {
+			$created = $this->contactSyncService->importContact(
+				uid: $uid,
+				addressBookKey: $addressBookKey,
+				type: $type,
+				clientId: $clientId
+			);
+			return new JSONResponse(
+				[
+					'success' => true,
+					'object' => $created,
+				]
+			);
+		} catch (\Exception $e) {
+			$this->logger->error('ContactSyncController::import failed', ['exception' => $e]);
+			return new JSONResponse(
+				['error' => $this->l10n->t('An unexpected error occurred')],
+				500
+			);
+		}//end try
+	}//end import()
 
-        if (in_array($objectType, ['client', 'contact'], true) === false) {
-            return new JSONResponse(['error' => $this->l10n->t('Invalid objectType -- must be client or contact')], 400);
-        }
+	/**
+	 * Contact-FIRST create of a client/contact: provision the authoritative
+	 * Nextcloud contact from the form fields, then save the object with the
+	 * required `contactsUid`. Returns 201 with the created object.
+	 *
+	 * This is the create path the bespoke ClientForm + the generic add flow post
+	 * to, so a client is always backed by a real NC contact and the required
+	 * `contactsUid` is never missing (client-contact unification).
+	 *
+	 * @return JSONResponse The created object (201) or an error.
+	 *
+	 * @NoAdminRequired
+	 *
+	 * @spec openspec/specs/unify-client-contact/spec.md
+	 */
+	public function create(): JSONResponse {
+		$user = $this->userSession->getUser();
+		if ($user === null) {
+			return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
+		}
 
-        if (is_array($object) === false || trim((string) ($object['name'] ?? '')) === '') {
-            return new JSONResponse(['error' => $this->l10n->t('Name is required')], 400);
-        }
+		// Contact sync reaches address books and external directories — a CRM
+		// capability, not an any-authenticated-user one. Admins bypass.
+		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
+			return new JSONResponse(['error' => $this->l10n->t('Forbidden')], Http::STATUS_FORBIDDEN);
+		}
 
-        try {
-            $created = $this->contactSyncService->createWithContact(
-                objectType: $objectType,
-                form: $object
-            );
-            return new JSONResponse(['success' => true, 'object' => $created], Http::STATUS_CREATED);
-        } catch (\RuntimeException $e) {
-            return new JSONResponse(['error' => $e->getMessage()], 400);
-        } catch (\Exception $e) {
-            $this->logger->error('ContactSyncController::create failed', ['exception' => $e]);
-            return new JSONResponse(['error' => $this->l10n->t('An unexpected error occurred')], 500);
-        }
-    }//end create()
+		$objectType = $this->request->getParam('objectType', 'client');
+		$object = $this->request->getParam('object', []);
 
-    /**
-     * Sync a Pipelinq object to Nextcloud Contacts (write-back).
-     *
-     * @return JSONResponse The sync result.
-     *
-     * @NoAdminRequired
-     *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-27
-     */
-    public function writeBack(): JSONResponse
-    {
-        $user = $this->userSession->getUser();
-        if ($user === null) {
-            return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
-        }
+		if (in_array($objectType, ['client', 'contact'], true) === false) {
+			return new JSONResponse(['error' => $this->l10n->t('Invalid objectType -- must be client or contact')], 400);
+		}
 
-        $objectType = $this->request->getParam('objectType', '');
-        $objectId   = $this->request->getParam('objectId', '');
+		if (is_array($object) === false || trim((string)($object['name'] ?? '')) === '') {
+			return new JSONResponse(['error' => $this->l10n->t('Name is required')], 400);
+		}
 
-        if ($objectType === '' || $objectId === '') {
-            return new JSONResponse(['error' => $this->l10n->t('Missing objectType or objectId')], 400);
-        }
+		try {
+			$created = $this->contactSyncService->createWithContact(
+				objectType: $objectType,
+				form: $object
+			);
+			return new JSONResponse(['success' => true, 'object' => $created], Http::STATUS_CREATED);
+		} catch (\RuntimeException $e) {
+			return new JSONResponse(['error' => $e->getMessage()], 400);
+		} catch (\Exception $e) {
+			$this->logger->error('ContactSyncController::create failed', ['exception' => $e]);
+			return new JSONResponse(['error' => $this->l10n->t('An unexpected error occurred')], 500);
+		}
+	}//end create()
 
-        if (in_array($objectType, ['client', 'contact'], true) === false) {
-            return new JSONResponse(['error' => $this->l10n->t('Invalid objectType -- must be client or contact')], 400);
-        }
+	/**
+	 * Sync a Pipelinq object to Nextcloud Contacts (write-back).
+	 *
+	 * @return JSONResponse The sync result.
+	 *
+	 * @NoAdminRequired
+	 *
+	 * @spec openspec/specs/contacts-sync/spec.md
+	 */
+	public function writeBack(): JSONResponse {
+		$user = $this->userSession->getUser();
+		if ($user === null) {
+			return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
+		}
 
-        try {
-            $contactsUid = $this->contactSyncService->syncToContacts(
-                objectType: $objectType,
-                objectId: $objectId
-            );
-            return new JSONResponse(
-                    [
-                        'success'     => true,
-                        'contactsUid' => $contactsUid,
-                    ]
-                    );
-        } catch (\Exception $e) {
-            $this->logger->error('ContactSyncController::writeBack failed', ['exception' => $e]);
-            return new JSONResponse(
-                    ['error' => $this->l10n->t('An unexpected error occurred')],
-                    500
-                    );
-        }
-    }//end writeBack()
+		// Contact sync reaches address books and external directories — a CRM
+		// capability, not an any-authenticated-user one. Admins bypass.
+		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
+			return new JSONResponse(['error' => $this->l10n->t('Forbidden')], Http::STATUS_FORBIDDEN);
+		}
+
+		$objectType = $this->request->getParam('objectType', '');
+		$objectId = $this->request->getParam('objectId', '');
+
+		if ($objectType === '' || $objectId === '') {
+			return new JSONResponse(['error' => $this->l10n->t('Missing objectType or objectId')], 400);
+		}
+
+		if (in_array($objectType, ['client', 'contact'], true) === false) {
+			return new JSONResponse(['error' => $this->l10n->t('Invalid objectType -- must be client or contact')], 400);
+		}
+
+		try {
+			$contactsUid = $this->contactSyncService->syncToContacts(
+				objectType: $objectType,
+				objectId: $objectId
+			);
+			return new JSONResponse(
+				[
+					'success' => true,
+					'contactsUid' => $contactsUid,
+				]
+			);
+		} catch (\Exception $e) {
+			$this->logger->error('ContactSyncController::writeBack failed', ['exception' => $e]);
+			return new JSONResponse(
+				['error' => $this->l10n->t('An unexpected error occurred')],
+				500
+			);
+		}
+	}//end writeBack()
 }//end class

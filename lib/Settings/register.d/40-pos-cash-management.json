@@ -1,440 +1,525 @@
 {
-    "components": {
-        "registers": {
-            "pipelinq": {
-                "schemas": [
-                    "client",
-                    "contact",
-                    "lead",
-                    "request",
-                    "complaint",
-                    "pipeline",
-                    "product",
-                    "productCategory",
-                    "leadProduct",
-                    "contactmoment",
-                    "task",
-                    "kennisartikel",
-                    "kenniscategorie",
-                    "kennisfeedback",
-                    "relationship",
-                    "queue",
-                    "skill",
-                    "agentProfile",
-                    "posTransaction",
-                    "posTransactionLine",
-                    "receiptTemplate",
-                    "receiptPrintLog",
-                    "refundReason",
-                    "posRefund",
-                    "posRefundLine",
-                    "cashShift",
-                    "cashDrop",
-                    "cashCount",
-                    "cashDiff"
-                ]
-            }
-        },
-        "schemas": {
-            "cashShift": {
-                "slug": "cashShift",
-                "title": "Cash Shift",
-                "icon": "CashRegister",
-                "version": "1.0.0",
-                "summary": "A POS cash drawer shift from open (declared float) to reconciled close",
-                "description": "Represents a single cash drawer's shift period. The opening float is declared by the operator at the start; mid-shift drops reduce the expected cash; a blind physical count is recorded at close and reconciled against the server-derived expected amount. Status flows open -> closed (count recorded) -> reconciled (variance approved). floatAt, closedAt and the operator are server-authoritative. Mapped to Schema.org Action.",
-                "@type": "schema:Action",
-                "required": [
-                    "operator",
-                    "floatAmount",
-                    "floatAt",
-                    "status"
-                ],
-                "properties": {
-                    "reference": {
-                        "type": "string",
-                        "description": "Human-readable shift reference, e.g. SHIFT-2026-0521-01",
-                        "maxLength": 64,
-                        "facetable": true
-                    },
-                    "drawer": {
-                        "type": "string",
-                        "description": "Drawer / register identifier, e.g. kassa-01",
-                        "maxLength": 64,
-                        "facetable": true
-                    },
-                    "operator": {
-                        "type": "string",
-                        "description": "Nextcloud user UID of the cashier who opened the shift (server-set from the session)",
-                        "maxLength": 255,
-                        "facetable": true
-                    },
-                    "managedBy": {
-                        "type": "string",
-                        "description": "Nextcloud user UID of the manager who reviews the close",
-                        "maxLength": 255,
-                        "facetable": true
-                    },
-                    "currency": {
-                        "type": "string",
-                        "description": "ISO 4217 currency code for the drawer",
-                        "default": "EUR",
-                        "maxLength": 3
-                    },
-                    "floatAmount": {
-                        "type": "number",
-                        "description": "Declared opening float in the drawer currency",
-                        "minimum": 0
-                    },
-                    "floatAt": {
-                        "type": "string",
-                        "format": "date-time",
-                        "description": "ISO 8601 timestamp when the float was declared (server-set on open)"
-                    },
-                    "status": {
-                        "type": "string",
-                        "description": "Shift status",
-                        "enum": [
-                            "open",
-                            "closed",
-                            "reconciled"
-                        ],
-                        "default": "open",
-                        "title": "Status",
-                        "facetable": true
-                    },
-                    "closedAt": {
-                        "type": "string",
-                        "format": "date-time",
-                        "description": "ISO 8601 timestamp when the shift was closed (count recorded, server-set)"
-                    },
-                    "reconciliationStatus": {
-                        "type": "string",
-                        "description": "Variance reconciliation outcome",
-                        "enum": [
-                            "pending",
-                            "approved",
-                            "rejected"
-                        ],
-                        "default": "pending",
-                        "facetable": true
-                    },
-                    "notes": {
-                        "type": "string",
-                        "description": "Free-text shift notes, e.g. opening remarks",
-                        "maxLength": 2000
-                    }
-                }
-            },
-            "cashDrop": {
-                "slug": "cashDrop",
-                "title": "Cash Drop",
-                "icon": "CashMinus",
-                "version": "1.0.0",
-                "summary": "An append-only record of a mid-shift cash removal from the drawer",
-                "description": "Records a mid-shift removal of cash from the drawer (e.g. deposit with a manager, bank run, security removal). Append-only: a drop is never updated after creation, forming an immutable audit trail of cash that left the drawer during the shift. The drop amount and timestamp are server-authoritative. Mapped to Schema.org MoneyTransfer.",
-                "@type": "schema:MoneyTransfer",
-                "required": [
-                    "shift",
-                    "amount",
-                    "droppedAt",
-                    "droppedBy"
-                ],
-                "properties": {
-                    "shift": {
-                        "type": "string",
-                        "format": "uuid",
-                        "description": "UUID reference to the parent cashShift",
-                        "facetable": true
-                    },
-                    "amount": {
-                        "type": "number",
-                        "description": "Drop amount in the drawer currency",
-                        "minimum": 0.01
-                    },
-                    "reason": {
-                        "type": "string",
-                        "description": "Reason code or description, e.g. manager-deposit, bank-run, security-removal",
-                        "maxLength": 128,
-                        "facetable": true
-                    },
-                    "droppedAt": {
-                        "type": "string",
-                        "format": "date-time",
-                        "description": "ISO 8601 timestamp of the drop (server-set)"
-                    },
-                    "droppedBy": {
-                        "type": "string",
-                        "description": "Nextcloud user UID of who performed the drop (server-set from the session)",
-                        "maxLength": 255,
-                        "facetable": true
-                    }
-                }
-            },
-            "cashCount": {
-                "slug": "cashCount",
-                "title": "Cash Count",
-                "icon": "Counter",
-                "version": "1.0.0",
-                "summary": "An append-only physical cash count recorded at shift close (blind count)",
-                "description": "Records a physical count of cash in the drawer at a point in time, normally at shift close. The count is entered blind (without prior knowledge of the expected amount). Append-only: a count is never updated after creation; a rejected count is superseded by a fresh count, preserving the full recount history. The counted amount and timestamp are server-authoritative. Mapped to Schema.org Action.",
-                "@type": "schema:Action",
-                "required": [
-                    "shift",
-                    "amount",
-                    "countedAt",
-                    "countedBy"
-                ],
-                "properties": {
-                    "shift": {
-                        "type": "string",
-                        "format": "uuid",
-                        "description": "UUID reference to the parent cashShift",
-                        "facetable": true
-                    },
-                    "amount": {
-                        "type": "number",
-                        "description": "Total cash amount counted, in the drawer currency",
-                        "minimum": 0
-                    },
-                    "countedAt": {
-                        "type": "string",
-                        "format": "date-time",
-                        "description": "ISO 8601 timestamp of the count (server-set)"
-                    },
-                    "countedBy": {
-                        "type": "string",
-                        "description": "Nextcloud user UID of the counter (server-set from the session)",
-                        "maxLength": 255,
-                        "facetable": true
-                    },
-                    "notes": {
-                        "type": "string",
-                        "description": "Counter notes, e.g. includes foreign currency",
-                        "maxLength": 2000
-                    },
-                    "denominationBreakdown": {
-                        "type": "array",
-                        "description": "Optional breakdown by denomination, e.g. [{denomination: EUR_50, quantity: 2, subtotal: 100.00}]",
-                        "items": {
-                            "type": "object"
-                        }
-                    }
-                }
-            },
-            "cashDiff": {
-                "slug": "cashDiff",
-                "title": "Cash Diff",
-                "icon": "ScaleBalance",
-                "version": "1.0.0",
-                "summary": "A server-computed cash variance report reconciling a shift's count against expected cash",
-                "description": "Variance report computed by CashShiftService at shift close. Compares the server-derived expected cash (float + confirmed sales - drops) against the actual counted amount. expectedAmount, actualAmount, diffAmount, diffPercentage and withinTolerance are all server-computed and never trusted from the client. Lifecycle: pending -> approved (manager confirm, emits the CloudEvent) or pending -> rejected (manager reopens the shift). Mapped to Schema.org Action.",
-                "@type": "schema:Action",
-                "required": [
-                    "shift",
-                    "count",
-                    "expectedAmount",
-                    "actualAmount",
-                    "status"
-                ],
-                "properties": {
-                    "shift": {
-                        "type": "string",
-                        "format": "uuid",
-                        "description": "UUID reference to the parent cashShift",
-                        "facetable": true
-                    },
-                    "count": {
-                        "type": "string",
-                        "format": "uuid",
-                        "description": "UUID reference to the cashCount this diff reconciles",
-                        "facetable": true
-                    },
-                    "expectedAmount": {
-                        "type": "number",
-                        "description": "Server-computed expected cash: floatAmount + salesTotal - dropsTotal"
-                    },
-                    "actualAmount": {
-                        "type": "number",
-                        "description": "Actual cash from the count"
-                    },
-                    "diffAmount": {
-                        "type": "number",
-                        "description": "Server-computed actualAmount - expectedAmount (negative = shortage, positive = overage)"
-                    },
-                    "diffPercentage": {
-                        "type": "number",
-                        "description": "Server-computed (diffAmount / expectedAmount) * 100; null when expectedAmount is 0"
-                    },
-                    "tolerancePercentage": {
-                        "type": "number",
-                        "description": "Tolerance threshold for auto-approval",
-                        "default": 2
-                    },
-                    "withinTolerance": {
-                        "type": "boolean",
-                        "description": "True when |diffPercentage| <= tolerancePercentage",
-                        "facetable": true
-                    },
-                    "status": {
-                        "type": "string",
-                        "description": "Reconciliation status",
-                        "enum": [
-                            "pending",
-                            "approved",
-                            "rejected"
-                        ],
-                        "default": "pending",
-                        "title": "Status",
-                        "facetable": true
-                    },
-                    "approvedBy": {
-                        "type": "string",
-                        "description": "Nextcloud user UID of the approver (server-set from the session)",
-                        "maxLength": 255,
-                        "facetable": true
-                    },
-                    "approvedAt": {
-                        "type": "string",
-                        "format": "date-time",
-                        "description": "ISO 8601 timestamp of approval (server-set)"
-                    },
-                    "rejectionReason": {
-                        "type": "string",
-                        "description": "Reason supplied by the manager when rejecting the variance",
-                        "maxLength": 2000
-                    },
-                    "cloudEventId": {
-                        "type": "string",
-                        "description": "CloudEvents id of the emitted pipelinq.CashDiff.confirmed event",
-                        "maxLength": 64
-                    }
-                }
-            }
-        },
-        "objects": [
-            {
-                "@self": { "register": "pipelinq", "schema": "cashShift", "slug": "shift-2026-0520-01" },
-                "reference": "SHIFT-2026-0520-01",
-                "drawer": "kassa-01",
-                "operator": "admin",
-                "managedBy": "admin",
-                "currency": "EUR",
-                "floatAmount": 100.00,
-                "floatAt": "2026-05-20T06:00:00+02:00",
-                "status": "reconciled",
-                "closedAt": "2026-05-20T21:00:00+02:00",
-                "reconciliationStatus": "approved",
-                "notes": "Openingsfloat geverifieerd door de manager."
-            },
-            {
-                "@self": { "register": "pipelinq", "schema": "cashShift", "slug": "shift-2026-0521-01" },
-                "reference": "SHIFT-2026-0521-01",
-                "drawer": "kassa-02",
-                "operator": "admin",
-                "currency": "EUR",
-                "floatAmount": 75.00,
-                "floatAt": "2026-05-21T06:00:00+02:00",
-                "status": "open",
-                "notes": "Openingsfloat geverifieerd door de manager."
-            },
-            {
-                "@self": { "register": "pipelinq", "schema": "cashShift", "slug": "shift-2026-0521-02" },
-                "reference": "SHIFT-2026-0521-02",
-                "drawer": "kassa-01",
-                "operator": "admin",
-                "currency": "EUR",
-                "floatAmount": 100.00,
-                "floatAt": "2026-05-21T14:00:00+02:00",
-                "status": "closed",
-                "closedAt": "2026-05-21T22:00:00+02:00",
-                "reconciliationStatus": "pending"
-            },
-            {
-                "@self": { "register": "pipelinq", "schema": "cashDrop", "slug": "drop-2026-0520-01" },
-                "shift": "@ref:shift-2026-0520-01",
-                "amount": 250.00,
-                "reason": "manager-deposit",
-                "droppedAt": "2026-05-20T13:00:00+02:00",
-                "droppedBy": "admin"
-            },
-            {
-                "@self": { "register": "pipelinq", "schema": "cashDrop", "slug": "drop-2026-0521-01" },
-                "shift": "@ref:shift-2026-0521-01",
-                "amount": 150.00,
-                "reason": "bank-run",
-                "droppedAt": "2026-05-21T11:00:00+02:00",
-                "droppedBy": "admin"
-            },
-            {
-                "@self": { "register": "pipelinq", "schema": "cashDrop", "slug": "drop-2026-0521-02" },
-                "shift": "@ref:shift-2026-0521-01",
-                "amount": 200.00,
-                "reason": "security-removal",
-                "droppedAt": "2026-05-21T18:00:00+02:00",
-                "droppedBy": "admin"
-            },
-            {
-                "@self": { "register": "pipelinq", "schema": "cashCount", "slug": "count-2026-0520-01" },
-                "shift": "@ref:shift-2026-0520-01",
-                "amount": 487.50,
-                "countedAt": "2026-05-20T21:00:00+02:00",
-                "countedBy": "admin",
-                "notes": "Blind count uitgevoerd door de manager."
-            },
-            {
-                "@self": { "register": "pipelinq", "schema": "cashCount", "slug": "count-2026-0521-02" },
-                "shift": "@ref:shift-2026-0521-02",
-                "amount": 623.25,
-                "countedAt": "2026-05-21T22:30:00+02:00",
-                "countedBy": "admin"
-            },
-            {
-                "@self": { "register": "pipelinq", "schema": "cashCount", "slug": "count-2026-0521-01" },
-                "shift": "@ref:shift-2026-0521-01",
-                "amount": 318.00,
-                "countedAt": "2026-05-21T22:45:00+02:00",
-                "countedBy": "admin",
-                "notes": "Blind count; afwijking buiten tolerantie gemeld voor onderzoek."
-            },
-            {
-                "@self": { "register": "pipelinq", "schema": "cashDiff", "slug": "diff-2026-0520-01" },
-                "shift": "@ref:shift-2026-0520-01",
-                "count": "@ref:count-2026-0520-01",
-                "expectedAmount": 487.25,
-                "actualAmount": 487.50,
-                "diffAmount": 0.25,
-                "diffPercentage": 0.05,
-                "tolerancePercentage": 2.0,
-                "withinTolerance": true,
-                "status": "approved",
-                "approvedBy": "admin",
-                "approvedAt": "2026-05-20T21:15:00+02:00"
-            },
-            {
-                "@self": { "register": "pipelinq", "schema": "cashDiff", "slug": "diff-2026-0521-02" },
-                "shift": "@ref:shift-2026-0521-02",
-                "count": "@ref:count-2026-0521-02",
-                "expectedAmount": 620.00,
-                "actualAmount": 623.25,
-                "diffAmount": 3.25,
-                "diffPercentage": 0.52,
-                "tolerancePercentage": 2.0,
-                "withinTolerance": true,
-                "status": "pending"
-            },
-            {
-                "@self": { "register": "pipelinq", "schema": "cashDiff", "slug": "diff-2026-0521-01" },
-                "shift": "@ref:shift-2026-0521-01",
-                "count": "@ref:count-2026-0521-01",
-                "expectedAmount": 300.00,
-                "actualAmount": 318.00,
-                "diffAmount": 18.00,
-                "diffPercentage": 6.00,
-                "tolerancePercentage": 2.0,
-                "withinTolerance": false,
-                "status": "pending"
-            }
+  "components": {
+    "registers": {
+      "pipelinq": {
+        "schemas": [
+          "client",
+          "contact",
+          "lead",
+          "request",
+          "complaint",
+          "pipeline",
+          "product",
+          "productCategory",
+          "leadProduct",
+          "contactmoment",
+          "task",
+          "kennisartikel",
+          "kenniscategorie",
+          "kennisfeedback",
+          "relationship",
+          "queue",
+          "skill",
+          "agentProfile",
+          "posTransaction",
+          "posTransactionLine",
+          "receiptTemplate",
+          "receiptPrintLog",
+          "refundReason",
+          "posRefund",
+          "posRefundLine",
+          "cashShift",
+          "cashDrop",
+          "cashCount",
+          "cashDiff"
         ]
-    }
+      }
+    },
+    "schemas": {
+      "cashShift": {
+        "slug": "cashShift",
+        "title": "Cash Shift",
+        "icon": "CashRegister",
+        "version": "1.0.0",
+        "summary": "A POS cash drawer shift from open (declared float) to reconciled close",
+        "description": "Represents a single cash drawer's shift period. The opening float is declared by the operator at the start; mid-shift drops reduce the expected cash; a blind physical count is recorded at close and reconciled against the server-derived expected amount. Status flows open -> closed (count recorded) -> reconciled (variance approved). floatAt, closedAt and the operator are server-authoritative. Mapped to Schema.org Action.",
+        "x-schema-org": "schema:Action",
+        "required": [
+          "operator",
+          "floatAmount",
+          "floatAt",
+          "status"
+        ],
+        "properties": {
+          "reference": {
+            "type": "string",
+            "description": "Human-readable shift reference, e.g. SHIFT-2026-0521-01",
+            "maxLength": 64,
+            "facetable": true,
+            "title": "Reference"
+          },
+          "drawer": {
+            "type": "string",
+            "description": "Drawer / register identifier, e.g. kassa-01",
+            "maxLength": 64,
+            "facetable": true,
+            "title": "Drawer"
+          },
+          "operator": {
+            "type": "string",
+            "description": "Nextcloud user UID of the cashier who opened the shift (server-set from the session)",
+            "maxLength": 255,
+            "facetable": true,
+            "title": "Operator"
+          },
+          "managedBy": {
+            "type": "string",
+            "description": "Nextcloud user UID of the manager who reviews the close",
+            "maxLength": 255,
+            "facetable": true,
+            "title": "Managed By"
+          },
+          "currency": {
+            "type": "string",
+            "description": "ISO 4217 currency code for the drawer",
+            "default": "EUR",
+            "maxLength": 3,
+            "title": "Currency"
+          },
+          "floatAmount": {
+            "type": "number",
+            "description": "Declared opening float in the drawer currency",
+            "minimum": 0,
+            "title": "Float Amount"
+          },
+          "floatAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO 8601 timestamp when the float was declared (server-set on open)",
+            "title": "Float At"
+          },
+          "status": {
+            "type": "string",
+            "description": "Shift status",
+            "enum": [
+              "open",
+              "closed",
+              "reconciled"
+            ],
+            "default": "open",
+            "title": "Status",
+            "facetable": true
+          },
+          "closedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO 8601 timestamp when the shift was closed (count recorded, server-set)",
+            "title": "Closed At"
+          },
+          "reconciliationStatus": {
+            "type": "string",
+            "description": "Variance reconciliation outcome",
+            "enum": [
+              "pending",
+              "approved",
+              "rejected"
+            ],
+            "default": "pending",
+            "facetable": true,
+            "title": "Reconciliation Status"
+          },
+          "notes": {
+            "type": "string",
+            "description": "Free-text shift notes, e.g. opening remarks",
+            "maxLength": 2000,
+            "title": "Notes"
+          }
+        }
+      },
+      "cashDrop": {
+        "slug": "cashDrop",
+        "title": "Cash Drop",
+        "icon": "CashMinus",
+        "version": "1.0.0",
+        "summary": "An append-only record of a mid-shift cash removal from the drawer",
+        "description": "Records a mid-shift removal of cash from the drawer (e.g. deposit with a manager, bank run, security removal). Append-only: a drop is never updated after creation, forming an immutable audit trail of cash that left the drawer during the shift. The drop amount and timestamp are server-authoritative. Mapped to Schema.org MoneyTransfer.",
+        "x-schema-org": "schema:MoneyTransfer",
+        "required": [
+          "shift",
+          "amount",
+          "droppedAt",
+          "droppedBy"
+        ],
+        "properties": {
+          "shift": {
+            "type": "string",
+            "format": "uuid",
+            "$ref": "cashShift",
+            "description": "UUID reference to the parent cashShift",
+            "facetable": true,
+            "title": "Shift"
+          },
+          "amount": {
+            "type": "number",
+            "description": "Drop amount in the drawer currency",
+            "minimum": 0.01,
+            "title": "Amount"
+          },
+          "reason": {
+            "type": "string",
+            "description": "Reason code or description, e.g. manager-deposit, bank-run, security-removal",
+            "maxLength": 128,
+            "facetable": true,
+            "title": "Reason"
+          },
+          "droppedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO 8601 timestamp of the drop (server-set)",
+            "title": "Dropped At"
+          },
+          "droppedBy": {
+            "type": "string",
+            "description": "Nextcloud user UID of who performed the drop (server-set from the session)",
+            "maxLength": 255,
+            "facetable": true,
+            "title": "Dropped By"
+          }
+        }
+      },
+      "cashCount": {
+        "slug": "cashCount",
+        "title": "Cash Count",
+        "icon": "Counter",
+        "version": "1.0.0",
+        "summary": "An append-only physical cash count recorded at shift close (blind count)",
+        "description": "Records a physical count of cash in the drawer at a point in time, normally at shift close. The count is entered blind (without prior knowledge of the expected amount). Append-only: a count is never updated after creation; a rejected count is superseded by a fresh count, preserving the full recount history. The counted amount and timestamp are server-authoritative. Mapped to Schema.org Action.",
+        "x-schema-org": "schema:Action",
+        "required": [
+          "shift",
+          "amount",
+          "countedAt",
+          "countedBy"
+        ],
+        "properties": {
+          "shift": {
+            "type": "string",
+            "format": "uuid",
+            "$ref": "cashShift",
+            "description": "UUID reference to the parent cashShift",
+            "facetable": true,
+            "title": "Shift"
+          },
+          "amount": {
+            "type": "number",
+            "description": "Total cash amount counted, in the drawer currency",
+            "minimum": 0,
+            "title": "Amount"
+          },
+          "countedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO 8601 timestamp of the count (server-set)",
+            "title": "Counted At"
+          },
+          "countedBy": {
+            "type": "string",
+            "description": "Nextcloud user UID of the counter (server-set from the session)",
+            "maxLength": 255,
+            "facetable": true,
+            "title": "Counted By"
+          },
+          "notes": {
+            "type": "string",
+            "description": "Counter notes, e.g. includes foreign currency",
+            "maxLength": 2000,
+            "title": "Notes"
+          },
+          "denominationBreakdown": {
+            "type": "array",
+            "description": "Optional breakdown by denomination, e.g. [{denomination: EUR_50, quantity: 2, subtotal: 100.00}]",
+            "items": {
+              "type": "object"
+            },
+            "title": "Denomination Breakdown"
+          }
+        }
+      },
+      "cashDiff": {
+        "slug": "cashDiff",
+        "title": "Cash Diff",
+        "icon": "ScaleBalance",
+        "version": "1.0.0",
+        "summary": "A server-computed cash variance report reconciling a shift's count against expected cash",
+        "description": "Variance report computed by CashShiftService at shift close. Compares the server-derived expected cash (float + confirmed sales - drops) against the actual counted amount. expectedAmount, actualAmount, diffAmount, diffPercentage and withinTolerance are all server-computed and never trusted from the client. Lifecycle: pending -> approved (manager confirm, emits the CloudEvent) or pending -> rejected (manager reopens the shift). Mapped to Schema.org Action.",
+        "x-schema-org": "schema:Action",
+        "required": [
+          "shift",
+          "count",
+          "expectedAmount",
+          "actualAmount",
+          "status"
+        ],
+        "properties": {
+          "shift": {
+            "type": "string",
+            "format": "uuid",
+            "$ref": "cashShift",
+            "description": "UUID reference to the parent cashShift",
+            "facetable": true,
+            "title": "Shift"
+          },
+          "count": {
+            "type": "string",
+            "format": "uuid",
+            "$ref": "cashCount",
+            "description": "UUID reference to the cashCount this diff reconciles",
+            "facetable": true,
+            "title": "Count"
+          },
+          "expectedAmount": {
+            "type": "number",
+            "description": "Server-computed expected cash: floatAmount + salesTotal - dropsTotal",
+            "title": "Expected Amount"
+          },
+          "actualAmount": {
+            "type": "number",
+            "description": "Actual cash from the count",
+            "title": "Actual Amount"
+          },
+          "diffAmount": {
+            "type": "number",
+            "description": "Server-computed actualAmount - expectedAmount (negative = shortage, positive = overage)",
+            "title": "Diff Amount"
+          },
+          "diffPercentage": {
+            "type": "number",
+            "description": "Server-computed (diffAmount / expectedAmount) * 100; null when expectedAmount is 0",
+            "title": "Diff Percentage"
+          },
+          "tolerancePercentage": {
+            "type": "number",
+            "description": "Tolerance threshold for auto-approval",
+            "default": 2,
+            "title": "Tolerance Percentage"
+          },
+          "withinTolerance": {
+            "type": "boolean",
+            "description": "True when |diffPercentage| <= tolerancePercentage",
+            "facetable": true,
+            "title": "Within Tolerance"
+          },
+          "status": {
+            "type": "string",
+            "description": "Reconciliation status",
+            "enum": [
+              "pending",
+              "approved",
+              "rejected"
+            ],
+            "default": "pending",
+            "title": "Status",
+            "facetable": true
+          },
+          "approvedBy": {
+            "type": "string",
+            "description": "Nextcloud user UID of the approver (server-set from the session)",
+            "maxLength": 255,
+            "facetable": true,
+            "title": "Approved By"
+          },
+          "approvedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO 8601 timestamp of approval (server-set)",
+            "title": "Approved At"
+          },
+          "rejectionReason": {
+            "type": "string",
+            "description": "Reason supplied by the manager when rejecting the variance",
+            "maxLength": 2000,
+            "title": "Rejection Reason"
+          },
+          "cloudEventId": {
+            "type": "string",
+            "description": "CloudEvents id of the emitted pipelinq.CashDiff.confirmed event",
+            "maxLength": 64,
+            "title": "Cloud Event ID"
+          }
+        }
+      }
+    },
+    "objects": [
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "cashShift",
+          "slug": "shift-2026-0520-01"
+        },
+        "reference": "SHIFT-2026-0520-01",
+        "drawer": "kassa-01",
+        "operator": "admin",
+        "managedBy": "admin",
+        "currency": "EUR",
+        "floatAmount": 100.0,
+        "floatAt": "2026-05-20T06:00:00+02:00",
+        "status": "reconciled",
+        "closedAt": "2026-05-20T21:00:00+02:00",
+        "reconciliationStatus": "approved",
+        "notes": "Openingsfloat geverifieerd door de manager."
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "cashShift",
+          "slug": "shift-2026-0521-01"
+        },
+        "reference": "SHIFT-2026-0521-01",
+        "drawer": "kassa-02",
+        "operator": "admin",
+        "currency": "EUR",
+        "floatAmount": 75.0,
+        "floatAt": "2026-05-21T06:00:00+02:00",
+        "status": "open",
+        "notes": "Openingsfloat geverifieerd door de manager."
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "cashShift",
+          "slug": "shift-2026-0521-02"
+        },
+        "reference": "SHIFT-2026-0521-02",
+        "drawer": "kassa-01",
+        "operator": "admin",
+        "currency": "EUR",
+        "floatAmount": 100.0,
+        "floatAt": "2026-05-21T14:00:00+02:00",
+        "status": "closed",
+        "closedAt": "2026-05-21T22:00:00+02:00",
+        "reconciliationStatus": "pending"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "cashDrop",
+          "slug": "drop-2026-0520-01"
+        },
+        "shift": "@ref:shift-2026-0520-01",
+        "amount": 250.0,
+        "reason": "manager-deposit",
+        "droppedAt": "2026-05-20T13:00:00+02:00",
+        "droppedBy": "admin"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "cashDrop",
+          "slug": "drop-2026-0521-01"
+        },
+        "shift": "@ref:shift-2026-0521-01",
+        "amount": 150.0,
+        "reason": "bank-run",
+        "droppedAt": "2026-05-21T11:00:00+02:00",
+        "droppedBy": "admin"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "cashDrop",
+          "slug": "drop-2026-0521-02"
+        },
+        "shift": "@ref:shift-2026-0521-01",
+        "amount": 200.0,
+        "reason": "security-removal",
+        "droppedAt": "2026-05-21T18:00:00+02:00",
+        "droppedBy": "admin"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "cashCount",
+          "slug": "count-2026-0520-01"
+        },
+        "shift": "@ref:shift-2026-0520-01",
+        "amount": 487.5,
+        "countedAt": "2026-05-20T21:00:00+02:00",
+        "countedBy": "admin",
+        "notes": "Blind count uitgevoerd door de manager."
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "cashCount",
+          "slug": "count-2026-0521-02"
+        },
+        "shift": "@ref:shift-2026-0521-02",
+        "amount": 623.25,
+        "countedAt": "2026-05-21T22:30:00+02:00",
+        "countedBy": "admin"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "cashCount",
+          "slug": "count-2026-0521-01"
+        },
+        "shift": "@ref:shift-2026-0521-01",
+        "amount": 318.0,
+        "countedAt": "2026-05-21T22:45:00+02:00",
+        "countedBy": "admin",
+        "notes": "Blind count; afwijking buiten tolerantie gemeld voor onderzoek."
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "cashDiff",
+          "slug": "diff-2026-0520-01"
+        },
+        "shift": "@ref:shift-2026-0520-01",
+        "count": "@ref:count-2026-0520-01",
+        "expectedAmount": 487.25,
+        "actualAmount": 487.5,
+        "diffAmount": 0.25,
+        "diffPercentage": 0.05,
+        "tolerancePercentage": 2.0,
+        "withinTolerance": true,
+        "status": "approved",
+        "approvedBy": "admin",
+        "approvedAt": "2026-05-20T21:15:00+02:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "cashDiff",
+          "slug": "diff-2026-0521-02"
+        },
+        "shift": "@ref:shift-2026-0521-02",
+        "count": "@ref:count-2026-0521-02",
+        "expectedAmount": 620.0,
+        "actualAmount": 623.25,
+        "diffAmount": 3.25,
+        "diffPercentage": 0.52,
+        "tolerancePercentage": 2.0,
+        "withinTolerance": true,
+        "status": "pending"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "cashDiff",
+          "slug": "diff-2026-0521-01"
+        },
+        "shift": "@ref:shift-2026-0521-01",
+        "count": "@ref:count-2026-0521-01",
+        "expectedAmount": 300.0,
+        "actualAmount": 318.0,
+        "diffAmount": 18.0,
+        "diffPercentage": 6.0,
+        "tolerancePercentage": 2.0,
+        "withinTolerance": false,
+        "status": "pending"
+      }
+    ]
+  }
 }

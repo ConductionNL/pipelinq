@@ -20,8 +20,8 @@
 
 <script>
 import { CnChartWidget } from '@conduction/nextcloud-vue'
-import { getAnalyticsTrend } from '../../../services/dashboardData.js'
 import { formatEur, formatEurCompact } from '../../../services/commercialFormat.js'
+import { getAnalyticsTrend } from '../../../services/dashboardData.js'
 import analyticsPeriodMixin from './analyticsPeriodMixin.js'
 import dashboardRefreshMixin from './dashboardRefreshMixin.js'
 
@@ -29,13 +29,14 @@ import dashboardRefreshMixin from './dashboardRefreshMixin.js'
  * Horizontal bar: top customers by revenue (won-deal + POS) in the
  * selected period. Title comes from the widget chrome.
  *
- * @spec openspec/changes/commercial-dashboard/specs/commercial-dashboard/spec.md
+ * @spec openspec/specs/commercial-dashboard/spec.md
  */
 export default {
 	name: 'TopCustomersChartWidget',
 	components: {
 		CnChartWidget,
 	},
+
 	mixins: [analyticsPeriodMixin, dashboardRefreshMixin],
 	data() {
 		return {
@@ -43,38 +44,46 @@ export default {
 			trend: { series: [] },
 		}
 	},
+
 	computed: {
 		/** @return {boolean} Whether there is nothing to plot. */
 		isEmpty() {
 			return (this.trend?.series || []).length === 0
 		},
+
 		/** @return {Array<string>} Customer names. */
 		chartLabels() {
-			return (this.trend?.series || []).map(pt => pt.date)
+			return (this.trend?.series || []).map((pt) => pt.date)
 		},
+
 		/** @return {Array<object>} Single revenue series. */
 		chartSeries() {
-			const values = (this.trend?.series || []).map(pt => pt.value)
+			const values = (this.trend?.series || []).map((pt) => pt.value)
 			return [{ name: this.t('pipelinq', 'Revenue'), data: values }]
 		},
+
 		/** @return {object} Horizontal bar options with euro axis. */
 		chartOptions() {
 			return {
 				plotOptions: { bar: { horizontal: true, borderRadius: 4 } },
 				dataLabels: { enabled: false },
-				xaxis: { labels: { formatter: value => formatEurCompact(value) } },
-				tooltip: { y: { formatter: value => formatEur(value, 2) } },
+				xaxis: { labels: { formatter: (value) => formatEurCompact(value) } },
+				tooltip: { y: { formatter: (value) => formatEur(value, 2) } },
 			}
 		},
 	},
+
 	methods: {
 		/**
-		 * @spec openspec/changes/commercial-dashboard/specs/commercial-dashboard/spec.md
+		 * @spec openspec/specs/commercial-dashboard/spec.md
 		 */
 		async load() {
 			this.error = null
 			try {
-				this.trend = await getAnalyticsTrend('top-customers', this.period) || { series: [] }
+				this.trend = (await getAnalyticsTrend(
+					'top-customers',
+					this.period,
+				)) || { series: [] }
 			} catch (err) {
 				console.error('TopCustomersChartWidget fetch error:', err)
 				this.error = this.t('pipelinq', 'Could not load analytics data.')

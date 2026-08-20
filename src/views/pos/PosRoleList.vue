@@ -10,30 +10,35 @@
 	<div>
 		<CnIndexPage
 			:title="t('pipelinq', 'POS roles')"
-			:description="t('pipelinq', 'Permission matrix for cashiers, supervisors and managers')"
+			:description="
+				t(
+					'pipelinq',
+					'Permission matrix for cashiers, supervisors and managers',
+				)
+			"
 			:schema="schema"
 			:objects="objects"
 			:pagination="pagination"
 			:loading="loading"
 			:refreshing="refreshing"
-			:sort-key="sortKey"
-			:sort-order="sortOrder"
+			:sortKey="sortKey"
+			:sortOrder="sortOrder"
 			:selectable="true"
-			:include-columns="visibleColumns"
-			:empty-title="t('pipelinq', 'No POS roles defined yet')"
-			:empty-action-label="t('pipelinq', 'New role')"
+			:includeColumns="visibleColumns"
+			:emptyTitle="t('pipelinq', 'No POS roles defined yet')"
+			:emptyActionLabel="t('pipelinq', 'New role')"
 			@add="createNew"
-			@empty-action="createNew"
+			@emptyAction="createNew"
 			@refresh="onRefresh"
 			@sort="onSort"
 			@view="openRole"
-			@page-changed="onPageChange" />
+			@pageChanged="onPageChange" />
 	</div>
 </template>
 
 <script>
-import { inject } from 'vue'
 import { CnIndexPage, useListView } from '@conduction/nextcloud-vue'
+import { inject } from 'vue'
 import { useObjectStore } from '../../store/modules/object.js'
 
 export default {
@@ -44,16 +49,25 @@ export default {
 		const objectStore = useObjectStore()
 		return useListView('posRole', { sidebarState, objectStore })
 	},
+
 	data() {
 		return {
 			refreshing: false,
 		}
 	},
+
 	computed: {
 		visibleColumns() {
-			return ['name', 'canVoid', 'maxDiscountPercent', 'canRefund', 'canNoSale']
+			return [
+				'name',
+				'canVoid',
+				'maxDiscountPercent',
+				'canRefund',
+				'canNoSale',
+			]
 		},
 	},
+
 	methods: {
 		/**
 		 * Refresh handler for the Actions-menu Refresh item. Drives the
@@ -69,11 +83,29 @@ export default {
 				this.refreshing = false
 			}
 		},
+
+		/**
+		 * Ask the host to open this role for editing.
+		 *
+		 * POS roles are admin master-data, so this list now lives on the Nextcloud
+		 * admin page (nav-ia-cleanup), which is its own webpack entry with no
+		 * vue-router. It therefore emits instead of routing to a detail page, and
+		 * PosRoleManager opens the form in a dialog.
+		 *
+		 * @param {object} row The role row.
+		 * @spec openspec/changes/nav-ia-cleanup/specs/nav-ia-cleanup/spec.md#requirement-admin-configuration-lives-on-the-admin-page
+		 */
 		openRole(row) {
-			this.$router.push({ name: 'PosRoleDetail', params: { id: row.id } })
+			this.$emit('edit', row.id)
 		},
+
+		/**
+		 * Ask the host to open an empty form.
+		 *
+		 * @spec openspec/changes/nav-ia-cleanup/specs/nav-ia-cleanup/spec.md#requirement-admin-configuration-lives-on-the-admin-page
+		 */
 		createNew() {
-			this.$router.push({ name: 'PosRoleNew' })
+			this.$emit('create')
 		},
 	},
 }

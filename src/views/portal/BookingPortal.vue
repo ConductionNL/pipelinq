@@ -4,18 +4,19 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 -->
 <template>
 	<div class="booking-portal">
-		<a class="booking-skip-link" href="#booking-form">{{ t('pipelinq', 'Skip to booking form') }}</a>
+		<a class="booking-skip-link" href="#booking-form">{{
+			t('pipelinq', 'Skip to booking form')
+		}}</a>
 
-		<div v-if="loadingService"
+		<div
+			v-if="loadingService"
 			class="booking-state"
 			role="status"
 			aria-live="polite">
 			{{ t('pipelinq', 'Loading…') }}
 		</div>
 
-		<p v-else-if="loadError"
-			class="booking-error"
-			role="alert">
+		<p v-else-if="loadError" class="booking-error" role="alert">
 			{{ loadError }}
 		</p>
 
@@ -44,42 +45,60 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 					{{ t('pipelinq', 'Choose a date') }}
 				</h2>
 				<label class="booking-field" for="booking-date">
-					<span class="booking-field-label">{{ t('pipelinq', 'Date') }}</span>
-					<input id="booking-date"
+					<span class="booking-field-label">{{
+						t('pipelinq', 'Date')
+					}}</span>
+					<input
+						id="booking-date"
 						v-model="selectedDate"
 						type="date"
 						:min="minDate"
 						:max="maxDate"
 						class="booking-input"
-						@change="onDateChange">
+						@change="onDateChange" />
 				</label>
-				<p class="booking-hint" :class="{ 'booking-hint--enabled': availableDates.length }">
+				<p
+					class="booking-hint"
+					:class="{ 'booking-hint--enabled': availableDates.length }">
 					{{ availableDatesHint }}
 				</p>
 			</section>
 
 			<!-- Slot picker -->
-			<section v-if="selectedDate"
+			<section
+				v-if="selectedDate"
 				class="booking-section"
 				aria-labelledby="booking-slot-heading">
 				<h2 id="booking-slot-heading">
 					{{ t('pipelinq', 'Choose a time') }}
 				</h2>
-				<div v-if="loadingSlots"
+				<div
+					v-if="loadingSlots"
 					class="booking-state"
 					role="status"
 					aria-live="polite">
 					{{ t('pipelinq', 'Loading available times…') }}
 				</div>
 				<p v-else-if="!slots.length" class="booking-hint" role="status">
-					{{ t('pipelinq', 'No available times on this date. Please choose another date.') }}
+					{{
+						t(
+							'pipelinq',
+							'No available times on this date. Please choose another date.',
+						)
+					}}
 				</p>
 				<ul v-else class="booking-slots" role="list">
 					<li v-for="slot in slots" :key="slot.startAt">
-						<button type="button"
+						<button
+							type="button"
 							class="booking-slot"
-							:class="{ 'booking-slot--selected': selectedSlot === slot.startAt }"
-							:aria-pressed="selectedSlot === slot.startAt ? 'true' : 'false'"
+							:class="{
+								'booking-slot--selected':
+									selectedSlot === slot.startAt,
+							}"
+							:aria-pressed="
+								selectedSlot === slot.startAt ? 'true' : 'false'
+							"
 							@click="selectSlot(slot)">
 							{{ formatTime(slot.startAt) }}
 						</button>
@@ -88,7 +107,8 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 			</section>
 
 			<!-- Booking form -->
-			<section v-if="selectedSlot"
+			<section
+				v-if="selectedSlot"
 				id="booking-form"
 				class="booking-section"
 				aria-labelledby="booking-form-heading">
@@ -98,68 +118,94 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 				<form novalidate @submit.prevent="onSubmit">
 					<label class="booking-field" for="booking-name">
 						<span class="booking-field-label">
-							{{ t('pipelinq', 'Name') }} <span aria-hidden="true">*</span>
+							{{ t('pipelinq', 'Name') }}
+							<span aria-hidden="true">*</span>
 						</span>
-						<input id="booking-name"
+						<input
+							id="booking-name"
 							v-model.trim="form.name"
 							type="text"
 							autocomplete="name"
 							required
 							:aria-invalid="fieldErrors.name ? 'true' : 'false'"
-							:aria-describedby="fieldErrors.name ? 'booking-name-error' : null"
-							class="booking-input">
-						<span v-if="fieldErrors.name"
+							:aria-describedby="
+								fieldErrors.name ? 'booking-name-error' : null
+							"
+							class="booking-input" />
+						<span
+							v-if="fieldErrors.name"
 							id="booking-name-error"
 							class="booking-field-error"
-							role="alert">{{ fieldErrors.name }}</span>
+							role="alert"
+							>{{ fieldErrors.name }}</span
+						>
 					</label>
 
 					<label class="booking-field" for="booking-email">
 						<span class="booking-field-label">
-							{{ t('pipelinq', 'Email address') }} <span aria-hidden="true">*</span>
+							{{ t('pipelinq', 'Email address') }}
+							<span aria-hidden="true">*</span>
 						</span>
-						<input id="booking-email"
+						<input
+							id="booking-email"
 							v-model.trim="form.email"
 							type="email"
 							autocomplete="email"
 							required
 							:aria-invalid="fieldErrors.email ? 'true' : 'false'"
-							:aria-describedby="fieldErrors.email ? 'booking-email-error' : null"
-							class="booking-input">
-						<span v-if="fieldErrors.email"
+							:aria-describedby="
+								fieldErrors.email ? 'booking-email-error' : null
+							"
+							class="booking-input" />
+						<span
+							v-if="fieldErrors.email"
 							id="booking-email-error"
 							class="booking-field-error"
-							role="alert">{{ fieldErrors.email }}</span>
+							role="alert"
+							>{{ fieldErrors.email }}</span
+						>
 					</label>
 
 					<label class="booking-field" for="booking-phone">
-						<span class="booking-field-label">{{ t('pipelinq', 'Phone number') }}</span>
-						<input id="booking-phone"
+						<span class="booking-field-label">{{
+							t('pipelinq', 'Phone number')
+						}}</span>
+						<input
+							id="booking-phone"
 							v-model.trim="form.phone"
 							type="tel"
 							autocomplete="tel"
-							class="booking-input">
+							class="booking-input" />
 					</label>
 
 					<label class="booking-field" for="booking-notes">
-						<span class="booking-field-label">{{ t('pipelinq', 'Notes') }}</span>
-						<textarea id="booking-notes"
+						<span class="booking-field-label">{{
+							t('pipelinq', 'Notes')
+						}}</span>
+						<textarea
+							id="booking-notes"
 							v-model.trim="form.notes"
 							rows="3"
 							class="booking-input booking-textarea" />
 					</label>
 
-					<p v-if="submitError"
+					<p
+						v-if="submitError"
 						class="booking-error"
 						role="alert"
 						aria-live="assertive">
 						{{ submitError }}
 					</p>
 
-					<button type="submit"
+					<button
+						type="submit"
 						class="booking-button-primary"
 						:disabled="submitting">
-						{{ submitting ? t('pipelinq', 'Booking…') : t('pipelinq', 'Confirm booking') }}
+						{{
+							submitting
+								? t('pipelinq', 'Booking…')
+								: t('pipelinq', 'Confirm booking')
+						}}
 					</button>
 				</form>
 			</section>
@@ -173,8 +219,8 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 
 <script>
 import {
-	fetchServiceBySlug,
 	fetchAvailability,
+	fetchServiceBySlug,
 	submitBooking,
 } from '../../services/bookingPortalApi.js'
 
@@ -198,11 +244,13 @@ export default {
 				phone: '',
 				notes: '',
 			},
+
 			fieldErrors: {},
 			submitting: false,
 			submitError: '',
 		}
 	},
+
 	computed: {
 		/**
 		 * The service slug from the route.
@@ -210,8 +258,11 @@ export default {
 		 * @return {string} The slug.
 		 */
 		serviceSlug() {
-			return this.$route && this.$route.params ? this.$route.params.serviceSlug : ''
+			return this.$route && this.$route.params
+				? this.$route.params.serviceSlug
+				: ''
 		},
+
 		/**
 		 * Today's date as an ISO YYYY-MM-DD string (picker minimum).
 		 *
@@ -220,6 +271,7 @@ export default {
 		minDate() {
 			return new Date().toISOString().slice(0, 10)
 		},
+
 		/**
 		 * The furthest bookable date (90 days out).
 		 *
@@ -230,6 +282,7 @@ export default {
 			d.setDate(d.getDate() + 90)
 			return d.toISOString().slice(0, 10)
 		},
+
 		/**
 		 * Whether the service carries a non-zero price.
 		 *
@@ -238,6 +291,7 @@ export default {
 		hasPrice() {
 			return this.service && Number(this.service.price) > 0
 		},
+
 		/**
 		 * The formatted price label.
 		 *
@@ -247,11 +301,15 @@ export default {
 			const cur = (this.service && this.service.currency) || 'EUR'
 			const amount = Number(this.service ? this.service.price : 0)
 			try {
-				return new Intl.NumberFormat(undefined, { style: 'currency', currency: cur }).format(amount)
+				return new Intl.NumberFormat(undefined, {
+					style: 'currency',
+					currency: cur,
+				}).format(amount)
 			} catch (e) {
 				return amount + ' ' + cur
 			}
 		},
+
 		/**
 		 * The formatted duration label.
 		 *
@@ -261,6 +319,7 @@ export default {
 			const mins = Number((this.service && this.service.durationMinutes) || 0)
 			return this.n('pipelinq', '%n minute', '%n minutes', mins)
 		},
+
 		/**
 		 * Hint text describing available dates.
 		 *
@@ -270,17 +329,23 @@ export default {
 			if (!this.availableDates.length) {
 				return this.t('pipelinq', 'Pick a date to see available times.')
 			}
-			return this.t('pipelinq', 'Dates without available times cannot be booked.')
+			return this.t(
+				'pipelinq',
+				'Dates without available times cannot be booked.',
+			)
 		},
 	},
+
 	watch: {
 		serviceSlug() {
 			this.loadService()
 		},
 	},
+
 	mounted() {
 		this.loadService()
 	},
+
 	methods: {
 		/**
 		 * Load the service by slug.
@@ -297,6 +362,7 @@ export default {
 				this.loadingService = false
 			}
 		},
+
 		/**
 		 * Handle a date change: load available slots.
 		 */
@@ -308,8 +374,14 @@ export default {
 			}
 			this.loadingSlots = true
 			try {
-				this.slots = await fetchAvailability(this.service.id, this.selectedDate)
-				if (this.slots.length && !this.availableDates.includes(this.selectedDate)) {
+				this.slots = await fetchAvailability(
+					this.service.id,
+					this.selectedDate,
+				)
+				if (
+					this.slots.length
+					&& !this.availableDates.includes(this.selectedDate)
+				) {
 					this.availableDates.push(this.selectedDate)
 				}
 			} catch (e) {
@@ -319,6 +391,7 @@ export default {
 				this.loadingSlots = false
 			}
 		},
+
 		/**
 		 * Select a slot.
 		 *
@@ -328,6 +401,7 @@ export default {
 			this.selectedSlot = slot.startAt
 			this.submitError = ''
 		},
+
 		/**
 		 * Format an ISO timestamp as a local HH:MM time.
 		 *
@@ -339,8 +413,12 @@ export default {
 			if (Number.isNaN(d.getTime())) {
 				return iso
 			}
-			return d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
+			return d.toLocaleTimeString(undefined, {
+				hour: '2-digit',
+				minute: '2-digit',
+			})
 		},
+
 		/**
 		 * Validate the booking form.
 		 *
@@ -354,11 +432,15 @@ export default {
 			if (!this.form.email) {
 				errors.email = this.t('pipelinq', 'Please enter your email address.')
 			} else if (!EMAIL_RE.test(this.form.email)) {
-				errors.email = this.t('pipelinq', 'Please enter a valid email address.')
+				errors.email = this.t(
+					'pipelinq',
+					'Please enter a valid email address.',
+				)
 			}
 			this.fieldErrors = errors
 			return Object.keys(errors).length === 0
 		},
+
 		/**
 		 * Submit the booking.
 		 */
@@ -389,6 +471,7 @@ export default {
 				this.submitting = false
 			}
 		},
+
 		/**
 		 * Map an error to a friendly, non-technical message (never a stack trace).
 		 *
@@ -396,15 +479,22 @@ export default {
 		 * @return {string} The user-facing message.
 		 */
 		friendlyError(e) {
-			const status = e && e.response ? e.response.status : (e && e.status)
+			const status = e && e.response ? e.response.status : e && e.status
 			if (status === 409) {
-				return this.t('pipelinq', 'That time was just taken. Please choose another slot.')
+				return this.t(
+					'pipelinq',
+					'That time was just taken. Please choose another slot.',
+				)
 			}
 			if (status === 404) {
 				return this.t('pipelinq', 'This service could not be found.')
 			}
-			const apiMessage = e && e.response && e.response.data ? e.response.data.message : null
-			return apiMessage || this.t('pipelinq', 'Something went wrong. Please try again.')
+			const apiMessage =
+				e && e.response && e.response.data ? e.response.data.message : null
+			return (
+				apiMessage
+				|| this.t('pipelinq', 'Something went wrong. Please try again.')
+			)
 		},
 	},
 }

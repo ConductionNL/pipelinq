@@ -24,350 +24,411 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-008
+ * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#REQ-BIE-008
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Export;
 
-use RuntimeException;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Adapter\ExportSinkRegistry;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 
 /**
  * Destination upload with path resolution, retries and manifest building.
  *
- * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-008
+ * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#REQ-BIE-008
  */
-class ExportUploadService extends AbstractExportService
-{
-    /**
-     * Backoff delays (seconds) between the 5 upload attempts.
-     *
-     * @var array<int, int>
-     */
-    public const BACKOFF_SECONDS = [1, 2, 4, 8, 16];
+class ExportUploadService extends AbstractExportService {
+	/**
+	 * Backoff delays (seconds) between the 5 upload attempts.
+	 *
+	 * @var array<int, int>
+	 */
+	public const BACKOFF_SECONDS = [1, 2, 4, 8, 16];
 
-    /**
-     * Constructor.
-     *
-     * @param ContainerInterface $container The DI container.
-     * @param IAppConfig         $appConfig The app config.
-     * @param ExportSinkRegistry $sinks     The sink adapter registry.
-     * @param LoggerInterface    $logger    The logger.
-     */
-    public function __construct(
-        ContainerInterface $container,
-        IAppConfig $appConfig,
-        private ExportSinkRegistry $sinks,
-        private LoggerInterface $logger,
-    ) {
-        parent::__construct(container: $container, appConfig: $appConfig);
-    }//end __construct()
+	/**
+	 * OpenConnector's own OpenRegister register slug. Source objects
+	 * (formerly served by the now-removed `SourceService`) live here, not
+	 * in pipelinq's own `register` app-config register.
+	 *
+	 * @var string
+	 */
+	private const OPENCONNECTOR_REGISTER_SLUG = 'openconnector';
 
-    /**
-     * Whether the upload sleeps between retries.
-     *
-     * Disabled in tests (and test runs) so retry behaviour can be asserted
-     * without real wall-clock delays.
-     *
-     * @var boolean
-     */
-    private bool $sleepBetweenRetries = true;
+	/**
+	 * OpenConnector's Source schema slug within {@see OPENCONNECTOR_REGISTER_SLUG}.
+	 *
+	 * @var string
+	 */
+	private const OPENCONNECTOR_SOURCE_SCHEMA_SLUG = 'source';
 
-    /**
-     * Toggle the inter-retry sleep (tests set this false).
-     *
-     * @param bool $sleep Whether to sleep between retries.
-     *
-     * @return void
-     *
-     * @SuppressWarnings(PHPMD.BooleanArgumentFlag) — a single on/off test seam.
-     */
-    public function setSleepBetweenRetries(bool $sleep): void
-    {
-        $this->sleepBetweenRetries = $sleep;
-    }//end setSleepBetweenRetries()
+	/**
+	 * Legacy write-only credential fields still present on some Source
+	 * objects (`configuration.authentication.credentialRef`-based sources
+	 * resolve their secret through OpenConnector's own credential broker at
+	 * call time and are not extractable here — ADR-005).
+	 *
+	 * @var array<int, string>
+	 */
+	private const OPENCONNECTOR_LEGACY_SECRET_FIELDS = ['apikey', 'secret', 'password', 'jwt'];
 
-    /**
-     * Upload a set of formatted files to a destination.
-     *
-     * @param array<string, mixed>             $destination The destination configuration.
-     * @param array<int, array<string, mixed>> $files       The file descriptors from ExportDataService.
-     * @param array<string, mixed>             $context     Path-template substitutions (run_id, timestamp, partition).
-     *
-     * @return array<string, mixed> UploadResult: status (all_succeeded|partial|all_failed),
-     *                              manifest, byte_count, file_count, destination_ack, error_message.
-     *
-     * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-008
-     */
-    public function uploadFiles(array $destination, array $files, array $context=[]): array
-    {
-        $type = (string) ($destination['type'] ?? '');
-        if ($this->sinks->supports(type: $type) === false) {
-            return $this->failAll(files: $files, error: "Unsupported destination type '{$type}'.");
-        }
+	/**
+	 * Constructor.
+	 *
+	 * @param ContainerInterface $container The DI container.
+	 * @param IAppConfig $appConfig The app config.
+	 * @param ObjectServiceInterface $objectService The published OpenRegister contract.
+	 * @param ExportSinkRegistry $sinks The sink adapter registry.
+	 * @param LoggerInterface $logger The logger.
+	 */
+	public function __construct(
+		ContainerInterface $container,
+		IAppConfig $appConfig,
+		ObjectServiceInterface $objectService,
+		private ExportSinkRegistry $sinks,
+		private LoggerInterface $logger,
+	) {
+		parent::__construct(
+			container: $container,
+			appConfig: $appConfig,
+			objectService: $objectService
+		);
+	}//end __construct()
 
-        $sink        = $this->sinks->get(type: $type);
-        $credentials = $this->resolveCredentials(destination: $destination);
+	/**
+	 * Whether the upload sleeps between retries.
+	 *
+	 * Disabled in tests (and test runs) so retry behaviour can be asserted
+	 * without real wall-clock delays.
+	 *
+	 * @var boolean
+	 */
+	private bool $sleepBetweenRetries = true;
 
-        $manifest  = [];
-        $byteCount = 0;
-        $lastAck   = null;
-        $failures  = [];
-        $succeeded = 0;
+	/**
+	 * Toggle the inter-retry sleep (tests set this false).
+	 *
+	 * @param bool $sleep Whether to sleep between retries.
+	 *
+	 * @return void
+	 *
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) — a single on/off test seam.
+	 *
+	 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#REQ-BIE-008
+	 */
+	public function setSleepBetweenRetries(bool $sleep): void {
+		$this->sleepBetweenRetries = $sleep;
+	}//end setSleepBetweenRetries()
 
-        foreach ($files as $file) {
-            $remotePath = $this->resolvePath(destination: $destination, file: $file, context: $context);
-            $entry      = [
-                'path'             => $remotePath,
-                'size_bytes'       => (int) ($file['size_bytes'] ?? 0),
-                'rows_in_file'     => (int) ($file['rows'] ?? 0),
-                'sha256'           => (string) ($file['sha256'] ?? ''),
-                'compression_used' => (string) ($file['compression_used'] ?? 'none'),
-            ];
+	/**
+	 * Upload a set of formatted files to a destination.
+	 *
+	 * @param array<string, mixed> $destination The destination configuration.
+	 * @param array<int, array<string, mixed>> $files The file descriptors from ExportDataService.
+	 * @param array<string, mixed> $context Path-template substitutions (run_id, timestamp, partition).
+	 *
+	 * @return array<string, mixed> UploadResult: status (all_succeeded|partial|all_failed),
+	 *                              manifest, byte_count, file_count, destination_ack, error_message.
+	 *
+	 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#REQ-BIE-008
+	 */
+	public function uploadFiles(array $destination, array $files, array $context = []): array {
+		$type = (string)($destination['type'] ?? '');
+		if ($this->sinks->supports(type: $type) === false) {
+			return $this->failAll(files: $files, error: "Unsupported destination type '{$type}'.");
+		}
 
-            try {
-                $ack = $this->uploadWithRetry(
-                    sink: $sink,
-                    credentials: $credentials,
-                    destination: $destination,
-                    remotePath: $remotePath,
-                    contents: (string) ($file['contents'] ?? '')
-                );
+		$sink = $this->sinks->get(type: $type);
+		$credentials = $this->resolveCredentials(destination: $destination);
 
-                $entry['upload_status']   = 'success';
-                $entry['destination_ack'] = $ack;
-                $byteCount += $entry['size_bytes'];
-                $lastAck    = $ack;
-                $succeeded++;
-            } catch (\Throwable $e) {
-                $entry['upload_status'] = 'failed';
-                $entry['error']         = $e->getMessage();
-                $failures[] = $remotePath.': '.$e->getMessage();
-            }//end try
+		$manifest = [];
+		$byteCount = 0;
+		$lastAck = null;
+		$failures = [];
+		$succeeded = 0;
 
-            $manifest[] = $entry;
-        }//end foreach
+		foreach ($files as $file) {
+			$remotePath = $this->resolvePath(destination: $destination, file: $file, context: $context);
+			$entry = [
+				'path' => $remotePath,
+				'size_bytes' => (int)($file['size_bytes'] ?? 0),
+				'rows_in_file' => (int)($file['rows'] ?? 0),
+				'sha256' => (string)($file['sha256'] ?? ''),
+				'compression_used' => (string)($file['compression_used'] ?? 'none'),
+			];
 
-        return $this->buildResult(
-            manifest: $manifest,
-            total: count($files),
-            succeeded: $succeeded,
-            failures: $failures,
-            byteCount: $byteCount,
-            lastAck: $lastAck
-        );
-    }//end uploadFiles()
+			try {
+				$ack = $this->uploadWithRetry(
+					sink: $sink,
+					credentials: $credentials,
+					destination: $destination,
+					remotePath: $remotePath,
+					contents: (string)($file['contents'] ?? '')
+				);
 
-    /**
-     * Attempt one upload with exponential backoff (5 attempts).
-     *
-     * @param object               $sink        The sink adapter.
-     * @param array<string, mixed> $credentials The resolved credentials.
-     * @param array<string, mixed> $destination The destination configuration.
-     * @param string               $remotePath  The resolved remote path.
-     * @param string               $contents    The file bytes.
-     *
-     * @return string The destination acknowledgement.
-     *
-     * @throws \RuntimeException When all attempts fail.
-     *
-     * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-008-02
-     */
-    private function uploadWithRetry(
-        object $sink,
-        array $credentials,
-        array $destination,
-        string $remotePath,
-        string $contents
-    ): string {
-        $attempts  = count(self::BACKOFF_SECONDS);
-        $lastError = 'unknown error';
+				$entry['upload_status'] = 'success';
+				$entry['destination_ack'] = $ack;
+				$byteCount += $entry['size_bytes'];
+				$lastAck = $ack;
+				$succeeded++;
+			} catch (\Throwable $e) {
+				$entry['upload_status'] = 'failed';
+				$entry['error'] = $e->getMessage();
+				$failures[] = $remotePath . ': ' . $e->getMessage();
+			}//end try
 
-        for ($attempt = 0; $attempt < $attempts; $attempt++) {
-            try {
-                return $sink->upload($credentials, $destination, $remotePath, $contents);
-            } catch (\Throwable $e) {
-                $lastError = $e->getMessage();
-                $this->logger->warning(
-                    'Pipelinq: export upload attempt failed',
-                    ['path' => $remotePath, 'attempt' => ($attempt + 1), 'error' => $lastError]
-                );
+			$manifest[] = $entry;
+		}//end foreach
 
-                $isLast = ($attempt === ($attempts - 1));
-                if ($isLast === false && $this->sleepBetweenRetries === true) {
-                    sleep(self::BACKOFF_SECONDS[$attempt]);
-                }
-            }//end try
-        }//end for
+		return $this->buildResult(
+			manifest: $manifest,
+			total: count($files),
+			succeeded: $succeeded,
+			failures: $failures,
+			byteCount: $byteCount,
+			lastAck: $lastAck
+		);
+	}//end uploadFiles()
 
-        throw new RuntimeException("Upload failed after {$attempts} attempts: {$lastError}");
-    }//end uploadWithRetry()
+	/**
+	 * Attempt one upload with exponential backoff (5 attempts).
+	 *
+	 * @param object $sink The sink adapter.
+	 * @param array<string, mixed> $credentials The resolved credentials.
+	 * @param array<string, mixed> $destination The destination configuration.
+	 * @param string $remotePath The resolved remote path.
+	 * @param string $contents The file bytes.
+	 *
+	 * @return string The destination acknowledgement.
+	 *
+	 * @throws \RuntimeException When all attempts fail.
+	 *
+	 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#REQ-BIE-008
+	 */
+	private function uploadWithRetry(
+		object $sink,
+		array $credentials,
+		array $destination,
+		string $remotePath,
+		string $contents,
+	): string {
+		$attempts = count(self::BACKOFF_SECONDS);
+		$lastError = 'unknown error';
 
-    /**
-     * Resolve the remote path for a file from the path template + naming pattern.
-     *
-     * Substitutes {schema}, {partition}, {run_id}, {timestamp} placeholders.
-     *
-     * @param array<string, mixed> $destination The destination configuration.
-     * @param array<string, mixed> $file        The file descriptor.
-     * @param array<string, mixed> $context     The substitution context.
-     *
-     * @return string The resolved remote path.
-     *
-     * @spec openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-008-01
-     */
-    public function resolvePath(array $destination, array $file, array $context): string
-    {
-        $schema    = (string) ($file['schema'] ?? 'data');
-        $runId     = (string) ($context['run_id'] ?? '');
-        $timestamp = (string) ($context['timestamp'] ?? gmdate('Ymd\THis\Z'));
-        $partition = (string) ($context['partition'] ?? '');
+		for ($attempt = 0; $attempt < $attempts; $attempt++) {
+			try {
+				return $sink->upload($credentials, $destination, $remotePath, $contents);
+			} catch (\Throwable $e) {
+				$lastError = $e->getMessage();
+				$this->logger->warning(
+					'Pipelinq: export upload attempt failed',
+					['path' => $remotePath, 'attempt' => ($attempt + 1), 'error' => $lastError]
+				);
 
-        $replacements = [
-            '{schema}'    => $schema,
-            '{partition}' => $partition,
-            '{run_id}'    => $runId,
-            '{timestamp}' => $timestamp,
-        ];
+				$isLast = ($attempt === ($attempts - 1));
+				if ($isLast === false && $this->sleepBetweenRetries === true) {
+					sleep(self::BACKOFF_SECONDS[$attempt]);
+				}
+			}//end try
+		}//end for
 
-        $template = (string) ($destination['pathTemplate'] ?? '');
-        $base     = strtr($template, $replacements);
+		throw new RuntimeException("Upload failed after {$attempts} attempts: {$lastError}");
+	}//end uploadWithRetry()
 
-        $naming = (string) ($destination['namingConvention'] ?? '');
-        if ($naming === '') {
-            $naming = '{schema}_{run_id}_{timestamp}';
-        }
+	/**
+	 * Resolve the remote path for a file from the path template + naming pattern.
+	 *
+	 * Substitutes {schema}, {partition}, {run_id}, {timestamp} placeholders.
+	 *
+	 * @param array<string, mixed> $destination The destination configuration.
+	 * @param array<string, mixed> $file The file descriptor.
+	 * @param array<string, mixed> $context The substitution context.
+	 *
+	 * @return string The resolved remote path.
+	 *
+	 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#REQ-BIE-008
+	 */
+	public function resolvePath(array $destination, array $file, array $context): string {
+		$schema = (string)($file['schema'] ?? 'data');
+		$runId = (string)($context['run_id'] ?? '');
+		$timestamp = (string)($context['timestamp'] ?? gmdate('Ymd\THis\Z'));
+		$partition = (string)($context['partition'] ?? '');
 
-        $filename = strtr($naming, $replacements);
+		$replacements = [
+			'{schema}' => $schema,
+			'{partition}' => $partition,
+			'{run_id}' => $runId,
+			'{timestamp}' => $timestamp,
+		];
 
-        // Collapse a double slash from a trailing-slash template + filename.
-        return rtrim($base, '/').'/'.ltrim($filename, '/');
-    }//end resolvePath()
+		$template = (string)($destination['pathTemplate'] ?? '');
+		$base = strtr($template, $replacements);
 
-    /**
-     * Resolve credentials for the destination's OpenConnector source.
-     *
-     * Never returns the credentials to a client — they are consumed only inside
-     * the sink adapter. When OC is unavailable an empty map is returned and the
-     * upload fails closed.
-     *
-     * @param array<string, mixed> $destination The destination configuration.
-     *
-     * @return array<string, mixed> The resolved credentials (empty when unavailable).
-     */
-    private function resolveCredentials(array $destination): array
-    {
-        $sourceId = (string) ($destination['connectorSourceId'] ?? '');
-        if ($sourceId === '') {
-            return [];
-        }
+		$naming = (string)($destination['namingConvention'] ?? '');
+		if ($naming === '') {
+			$naming = '{schema}_{run_id}_{timestamp}';
+		}
 
-        try {
-            $sourceService = $this->container->get('OCA\OpenConnector\Service\SourceService');
-        } catch (\Throwable $e) {
-            return [];
-        }
+		$filename = strtr($naming, $replacements);
 
-        try {
-            if (method_exists($sourceService, 'getCredentials') === true) {
-                $credentials = $sourceService->getCredentials($sourceId);
-                if (is_array($credentials) === true) {
-                    return $credentials;
-                }
+		// Collapse a double slash from a trailing-slash template + filename.
+		return rtrim($base, '/') . '/' . ltrim($filename, '/');
+	}//end resolvePath()
 
-                return [];
-            }
+	/**
+	 * Resolve credentials for the destination's OpenConnector source.
+	 *
+	 * `OCA\OpenConnector\Service\SourceService` — the class this used to
+	 * resolve credentials through — no longer exists; Source objects moved
+	 * onto OpenRegister's generic object API (register `openconnector`,
+	 * schema `source`). A RENDERED read strips every write-only secret field
+	 * unconditionally (admins included); only `_render: false` survives that
+	 * boundary — the same raw re-read OpenConnector's own CallService /
+	 * RawSourceResolver use internally (ocon#242). `_rbac`/`_multitenancy`
+	 * stay true, so this is access-neutral, not a widened read.
+	 *
+	 * Never returns the credentials to a client — they are consumed only inside
+	 * the sink adapter. When OC is unavailable an empty map is returned and the
+	 * upload fails closed.
+	 *
+	 * @param array<string, mixed> $destination The destination configuration.
+	 *
+	 * @return array<string, mixed> The resolved credentials (empty when unavailable).
+	 *
+	 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#REQ-BIE-010
+	 */
+	private function resolveCredentials(array $destination): array {
+		$sourceId = (string)($destination['connectorSourceId'] ?? '');
+		if ($sourceId === '') {
+			return [];
+		}
 
-            if (method_exists($sourceService, 'find') === true) {
-                $source = $sourceService->find($sourceId);
-                return $this->toArray(object: $source);
-            }
-        } catch (\Throwable $e) {
-            $this->logger->warning(
-                'Pipelinq: failed to resolve export credentials',
-                ['sourceId' => $sourceId, 'error' => $e->getMessage()]
-            );
-        }//end try
+		try {
+			$source = $this->getObjectService()->find(
+				id: $sourceId,
+				register: self::OPENCONNECTOR_REGISTER_SLUG,
+				schema: self::OPENCONNECTOR_SOURCE_SCHEMA_SLUG,
+				_rbac: true,
+				_multitenancy: true,
+				_render: false,
+			);
+		} catch (\Throwable $e) {
+			$this->logger->warning(
+				'Pipelinq: failed to resolve export credentials',
+				['sourceId' => $sourceId, 'error' => $e->getMessage()]
+			);
+			return [];
+		}
 
-        return [];
-    }//end resolveCredentials()
+		if ($source === null) {
+			return [];
+		}
 
-    /**
-     * Build the UploadResult envelope from per-file outcomes.
-     *
-     * @param array<int, array<string, mixed>> $manifest  The per-file manifest.
-     * @param int                              $total     Total files attempted.
-     * @param int                              $succeeded Count of successful uploads.
-     * @param array<int, string>               $failures  The failure descriptions.
-     * @param int                              $byteCount Total bytes uploaded.
-     * @param string|null                      $lastAck   The last successful ack.
-     *
-     * @return array<string, mixed> The UploadResult.
-     */
-    private function buildResult(
-        array $manifest,
-        int $total,
-        int $succeeded,
-        array $failures,
-        int $byteCount,
-        ?string $lastAck
-    ): array {
-        $status = 'partial';
-        if ($total === 0 || $succeeded === $total) {
-            $status = 'all_succeeded';
-        }
+		return $this->extractSourceCredentials(source: $this->toArray(object: $source));
+	}//end resolveCredentials()
 
-        if ($total > 0 && $succeeded === 0) {
-            $status = 'all_failed';
-        }
+	/**
+	 * Extract the legacy write-only credential fields (and any non-secret
+	 * broker authentication config) from a raw OpenConnector Source.
+	 *
+	 * @param array<string, mixed> $source The raw (unrendered) Source object.
+	 *
+	 * @return array<string, mixed> The extracted credentials.
+	 *
+	 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#REQ-BIE-010
+	 */
+	private function extractSourceCredentials(array $source): array {
+		$credentials = [];
+		foreach (self::OPENCONNECTOR_LEGACY_SECRET_FIELDS as $field) {
+			$value = $source[$field] ?? null;
+			if (is_string($value) === true && $value !== '') {
+				$credentials[$field] = $value;
+			}
+		}
 
-        $error = null;
-        if ($failures !== []) {
-            $error = implode('; ', $failures);
-        }
+		$authentication = $source['configuration']['authentication'] ?? null;
+		if (is_array($authentication) === true && $authentication !== []) {
+			$credentials['authentication'] = $authentication;
+		}
 
-        return [
-            'status'          => $status,
-            'manifest'        => $manifest,
-            'file_count'      => $succeeded,
-            'byte_count'      => $byteCount,
-            'destination_ack' => $lastAck,
-            'error_message'   => $error,
-        ];
-    }//end buildResult()
+		return $credentials;
+	}//end extractSourceCredentials()
 
-    /**
-     * Build an all-failed result without attempting any upload.
-     *
-     * @param array<int, array<string, mixed>> $files The file descriptors.
-     * @param string                           $error The reason.
-     *
-     * @return array<string, mixed> The all-failed UploadResult.
-     */
-    private function failAll(array $files, string $error): array
-    {
-        $manifest = [];
-        foreach ($files as $file) {
-            $manifest[] = [
-                'path'          => (string) ($file['schema'] ?? ''),
-                'size_bytes'    => (int) ($file['size_bytes'] ?? 0),
-                'upload_status' => 'failed',
-                'error'         => $error,
-            ];
-        }
+	/**
+	 * Build the UploadResult envelope from per-file outcomes.
+	 *
+	 * @param array<int, array<string, mixed>> $manifest The per-file manifest.
+	 * @param int $total Total files attempted.
+	 * @param int $succeeded Count of successful uploads.
+	 * @param array<int, string> $failures The failure descriptions.
+	 * @param int $byteCount Total bytes uploaded.
+	 * @param string|null $lastAck The last successful ack.
+	 *
+	 * @return array<string, mixed> The UploadResult.
+	 */
+	private function buildResult(
+		array $manifest,
+		int $total,
+		int $succeeded,
+		array $failures,
+		int $byteCount,
+		?string $lastAck,
+	): array {
+		$status = 'partial';
+		if ($total === 0 || $succeeded === $total) {
+			$status = 'all_succeeded';
+		}
 
-        return [
-            'status'          => 'all_failed',
-            'manifest'        => $manifest,
-            'file_count'      => 0,
-            'byte_count'      => 0,
-            'destination_ack' => null,
-            'error_message'   => $error,
-        ];
-    }//end failAll()
+		if ($total > 0 && $succeeded === 0) {
+			$status = 'all_failed';
+		}
+
+		$error = null;
+		if ($failures !== []) {
+			$error = implode('; ', $failures);
+		}
+
+		return [
+			'status' => $status,
+			'manifest' => $manifest,
+			'file_count' => $succeeded,
+			'byte_count' => $byteCount,
+			'destination_ack' => $lastAck,
+			'error_message' => $error,
+		];
+	}//end buildResult()
+
+	/**
+	 * Build an all-failed result without attempting any upload.
+	 *
+	 * @param array<int, array<string, mixed>> $files The file descriptors.
+	 * @param string $error The reason.
+	 *
+	 * @return array<string, mixed> The all-failed UploadResult.
+	 */
+	private function failAll(array $files, string $error): array {
+		$manifest = [];
+		foreach ($files as $file) {
+			$manifest[] = [
+				'path' => (string)($file['schema'] ?? ''),
+				'size_bytes' => (int)($file['size_bytes'] ?? 0),
+				'upload_status' => 'failed',
+				'error' => $error,
+			];
+		}
+
+		return [
+			'status' => 'all_failed',
+			'manifest' => $manifest,
+			'file_count' => 0,
+			'byte_count' => 0,
+			'destination_ack' => null,
+			'error_message' => $error,
+		];
+	}//end failAll()
 }//end class

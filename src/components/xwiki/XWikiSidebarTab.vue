@@ -7,7 +7,9 @@
   -->
 <template>
 	<div class="xwiki-sidebar-tab">
-		<div v-if="store.available === false && store.status !== null" class="xwiki-sidebar-tab__unavailable">
+		<div
+			v-if="store.available === false && store.status !== null"
+			class="xwiki-sidebar-tab__unavailable">
 			{{ t('pipelinq', 'xWiki integration unavailable') }}
 		</div>
 		<template v-else>
@@ -37,7 +39,11 @@
 						v-for="s in store.spaces"
 						:key="s"
 						class="xwiki-sidebar-tab__space"
-						@click="browseSpace(s)">
+						role="button"
+						tabindex="0"
+						@click="browseSpace(s)"
+						@keydown.enter.prevent="browseSpace(s)"
+						@keydown.space.prevent="browseSpace(s)">
 						{{ s }}
 					</li>
 					<li v-if="!store.spaces.length" class="xwiki-sidebar-tab__empty">
@@ -51,8 +57,9 @@
 						v-model="searchTerm"
 						type="search"
 						class="xwiki-sidebar-tab__search-input"
+						:aria-label="t('pipelinq', 'Search knowledge base')"
 						:placeholder="t('pipelinq', 'Search knowledge base')"
-						@input="onSearchInput">
+						@input="onSearchInput" />
 				</div>
 				<NcLoadingIcon v-if="store.loading" />
 				<XWikiArticleList
@@ -66,9 +73,9 @@
 
 <script>
 import { NcLoadingIcon } from '@nextcloud/vue'
-import { useXwikiStore } from '../../store/modules/xwiki.js'
 import XWikiArticleList from './XWikiArticleList.vue'
 import XWikiArticleViewer from './XWikiArticleViewer.vue'
+import { useXwikiStore } from '../../store/modules/xwiki.js'
 
 export default {
 	name: 'XWikiSidebarTab',
@@ -78,22 +85,27 @@ export default {
 			type: String,
 			default: '',
 		},
+
 		tags: {
 			type: Array,
 			default: () => [],
 		},
+
 		contextQuery: {
 			type: String,
 			default: '',
 		},
+
 		limit: {
 			type: Number,
 			default: 10,
 		},
 	},
+
 	setup() {
 		return { store: useXwikiStore() }
 	},
+
 	data() {
 		return {
 			mode: 'search',
@@ -103,10 +115,12 @@ export default {
 			debounceHandle: null,
 		}
 	},
+
 	async mounted() {
 		await this.store.checkStatus()
 		await this.refresh()
 	},
+
 	methods: {
 		async refresh() {
 			await this.store.search({
@@ -116,18 +130,22 @@ export default {
 				limit: this.limit,
 			})
 		},
+
 		setMode(mode) {
 			this.mode = mode
 		},
+
 		onSearchInput() {
 			if (this.debounceHandle) clearTimeout(this.debounceHandle)
 			this.debounceHandle = setTimeout(() => {
 				this.refresh()
 			}, 300)
 		},
+
 		async browseSpace(space) {
 			await this.store.getPages(space, { limit: this.limit })
 		},
+
 		openArticle(article) {
 			this.selectedPage = article.id || article.title
 			this.selectedWiki = article.wiki || 'xwiki'

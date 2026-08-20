@@ -26,189 +26,189 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Service\Aggregation\AggregationQuery;
+use OCA\OpenRegister\Service\Aggregation\AggregationRunner;
 
 /**
  * Fake aggregation runner backed by an in-memory row list.
+ *
+ * Extends the AggregationRunner stub: the POS services now take an INJECTED
+ * `AggregationRunner` (ADR-084) rather than resolving one through a container,
+ * so a duck-typed double is a different type wearing the same method name and
+ * fails the constructor type-hint. `runAdhocByRef()` below already carries the
+ * parent's exact signature, so this is purely additive.
  */
-class FakeAggregationRunner
-{
-    /**
-     * @var array<int, array<string, mixed>> The rows to aggregate over.
-     */
-    private array $rows;
+class FakeAggregationRunner extends AggregationRunner {
+	/**
+	 * @var array<int, array<string, mixed>> The rows to aggregate over.
+	 */
+	private array $rows;
 
-    /**
-     * Constructor.
-     *
-     * @param array<int, array<string, mixed>> $rows The rows.
-     */
-    public function __construct(array $rows)
-    {
-        $this->rows = $rows;
-    }//end __construct()
+	/**
+	 * Constructor.
+	 *
+	 * @param array<int, array<string, mixed>> $rows The rows.
+	 */
+	public function __construct(array $rows) {
+		$this->rows = $rows;
+	}//end __construct()
 
-    /**
-     * Run an ad-hoc aggregation over the in-memory rows.
-     *
-     * @param string           $registerRef The register ref (ignored by the fake).
-     * @param string           $schemaRef   The schema ref (ignored by the fake).
-     * @param AggregationQuery $query       The query.
-     *
-     * @return array<string, mixed> The result envelope (mirrors the real shape).
-     */
-    public function runAdhocByRef(string $registerRef, string $schemaRef, AggregationQuery $query): array
-    {
-        $matched = array_values(
-            array_filter($this->rows, fn(array $row): bool => $this->matches(row: $row, filter: $query->filter))
-        );
+	/**
+	 * Run an ad-hoc aggregation over the in-memory rows.
+	 *
+	 * @param string $registerRef The register ref (ignored by the fake).
+	 * @param string $schemaRef The schema ref (ignored by the fake).
+	 * @param AggregationQuery $query The query.
+	 *
+	 * @return array<string, mixed> The result envelope (mirrors the real shape).
+	 */
+	public function runAdhocByRef(string $registerRef, string $schemaRef, AggregationQuery $query): array {
+		$matched = array_values(
+			array_filter($this->rows, fn (array $row): bool => $this->matches(row: $row, filter: $query->filter))
+		);
 
-        $groupField = $query->getGroupByField();
-        if ($groupField !== null) {
-            $buckets = [];
-            foreach ($matched as $row) {
-                $key = $row[$groupField] ?? null;
-                if ($key === null) {
-                    $bk = '__NULL__';
-                } else {
-                    $bk = (string) $key;
-                }
+		$groupField = $query->getGroupByField();
+		if ($groupField !== null) {
+			$buckets = [];
+			foreach ($matched as $row) {
+				$key = $row[$groupField] ?? null;
+				if ($key === null) {
+					$bk = '__NULL__';
+				} else {
+					$bk = (string)$key;
+				}
 
-                $buckets[$bk]['key']    = $key;
-                $buckets[$bk]['rows'][] = $row;
-            }
+				$buckets[$bk]['key'] = $key;
+				$buckets[$bk]['rows'][] = $row;
+			}
 
-            $groups = [];
-            foreach ($buckets as $bucket) {
-                $groups[] = [
-                    'key'   => $bucket['key'],
-                    'value' => $this->metric(rows: $bucket['rows'], metric: $query->metric, field: $query->field),
-                ];
-            }
+			$groups = [];
+			foreach ($buckets as $bucket) {
+				$groups[] = [
+					'key' => $bucket['key'],
+					'value' => $this->metric(rows: $bucket['rows'], metric: $query->metric, field: $query->field),
+				];
+			}
 
-            return ['groups' => $groups, 'backend' => 'fake', 'cached' => false];
-        }//end if
+			return ['groups' => $groups, 'backend' => 'fake', 'cached' => false];
+		}//end if
 
-        return [
-            'value'   => $this->metric(rows: $matched, metric: $query->metric, field: $query->field),
-            'backend' => 'fake',
-            'cached'  => false,
-        ];
-    }//end runAdhocByRef()
+		return [
+			'value' => $this->metric(rows: $matched, metric: $query->metric, field: $query->field),
+			'backend' => 'fake',
+			'cached' => false,
+		];
+	}//end runAdhocByRef()
 
-    /**
-     * Compute a scalar metric over rows.
-     *
-     * @param array<int, array<string, mixed>> $rows   The rows.
-     * @param string                           $metric count|sum.
-     * @param string|null                      $field  The metric field.
-     *
-     * @return int|float|null The metric value (null sum over an empty/numeric-free set).
-     */
-    private function metric(array $rows, string $metric, ?string $field): int|float|null
-    {
-        if ($metric === 'count') {
-            return count($rows);
-        }
+	/**
+	 * Compute a scalar metric over rows.
+	 *
+	 * @param array<int, array<string, mixed>> $rows The rows.
+	 * @param string $metric count|sum.
+	 * @param string|null $field The metric field.
+	 *
+	 * @return int|float|null The metric value (null sum over an empty/numeric-free set).
+	 */
+	private function metric(array $rows, string $metric, ?string $field): int|float|null {
+		if ($metric === 'count') {
+			return count($rows);
+		}
 
-        // sum.
-        $acc   = null;
-        $count = 0;
-        foreach ($rows as $row) {
-            $value = $row[$field] ?? null;
-            if (is_numeric($value) === false) {
-                continue;
-            }
+		// sum.
+		$acc = null;
+		$count = 0;
+		foreach ($rows as $row) {
+			$value = $row[$field] ?? null;
+			if (is_numeric($value) === false) {
+				continue;
+			}
 
-            $count++;
-            $acc = ((float) ($acc ?? 0.0) + (float) $value);
-        }
+			$count++;
+			$acc = ((float)($acc ?? 0.0) + (float)$value);
+		}
 
-        if ($count === 0) {
-            return null;
-        }
+		if ($count === 0) {
+			return null;
+		}
 
-        return $acc;
-    }//end metric()
+		return $acc;
+	}//end metric()
 
-    /**
-     * Apply the filter map to a row.
-     *
-     * @param array<string, mixed> $row    The row.
-     * @param array<string, mixed> $filter The filter map.
-     *
-     * @return bool Whether the row matches.
-     */
-    private function matches(array $row, array $filter): bool
-    {
-        foreach ($filter as $field => $criterion) {
-            $value = $row[$field] ?? null;
-            if (is_array($criterion) === false) {
-                if ((string) $value !== (string) $criterion) {
-                    return false;
-                }
+	/**
+	 * Apply the filter map to a row.
+	 *
+	 * @param array<string, mixed> $row The row.
+	 * @param array<string, mixed> $filter The filter map.
+	 *
+	 * @return bool Whether the row matches.
+	 */
+	private function matches(array $row, array $filter): bool {
+		foreach ($filter as $field => $criterion) {
+			$value = $row[$field] ?? null;
+			if (is_array($criterion) === false) {
+				if ((string)$value !== (string)$criterion) {
+					return false;
+				}
 
-                continue;
-            }
+				continue;
+			}
 
-            foreach ($criterion as $op => $operand) {
-                if ($this->checkOp(value: $value, op: (string) $op, operand: $operand) === false) {
-                    return false;
-                }
-            }
-        }
+			foreach ($criterion as $op => $operand) {
+				if ($this->checkOn(value: $value, op: (string)$op, operand: $operand) === false) {
+					return false;
+				}
+			}
+		}
 
-        return true;
-    }//end matches()
+		return true;
+	}//end matches()
 
-    /**
-     * Apply a single operator.
-     *
-     * @param mixed  $value   The row value.
-     * @param string $op      in|gte|lte.
-     * @param mixed  $operand The operand.
-     *
-     * @return bool Whether the operator is satisfied.
-     */
-    private function checkOp(mixed $value, string $op, mixed $operand): bool
-    {
-        if ($op === 'in') {
-            return is_array($operand) === true && in_array($value, $operand, true);
-        }
+	/**
+	 * Apply a single operator.
+	 *
+	 * @param mixed $value The row value.
+	 * @param string $op in|gte|lte.
+	 * @param mixed $operand The operand.
+	 *
+	 * @return bool Whether the operator is satisfied.
+	 */
+	private function checkOn(mixed $value, string $op, mixed $operand): bool {
+		if ($op === 'in') {
+			return is_array($operand) === true && in_array($value, $operand, true);
+		}
 
-        if ($value === null) {
-            return false;
-        }
+		if ($value === null) {
+			return false;
+		}
 
-        // Date-like operands compare as integer timestamps, mirroring both the
-        // CashShift PHP path (strtotime) and OpenRegister's native date-range
-        // semantics. Non-date scalars fall back to string comparison.
-        $lhs = $this->normalise(value: $value);
-        $rhs = $this->normalise(value: $operand);
+		// Date-like operands compare as integer timestamps, mirroring both the
+		// CashShift PHP path (strtotime) and OpenRegister's native date-range
+		// semantics. Non-date scalars fall back to string comparison.
+		$lhs = $this->normalise(value: $value);
+		$rhs = $this->normalise(value: $operand);
 
-        return match ($op) {
-            'gte'   => $lhs >= $rhs,
-            'lte'   => $lhs <= $rhs,
-            default => true,
-        };
-    }//end checkOp()
+		return match ($op) {
+			'gte' => $lhs >= $rhs,
+			'lte' => $lhs <= $rhs,
+			default => true,
+		};
+	}//end checkOp()
 
-    /**
-     * Normalise a value for ordered comparison: date-like strings become
-     * integer timestamps, everything else stays a string.
-     *
-     * @param mixed $value The value.
-     *
-     * @return int|string The comparable form.
-     */
-    private function normalise(mixed $value): int|string
-    {
-        if (is_string($value) === true && preg_match('/^\d{4}-\d{2}-\d{2}/', $value) === 1) {
-            $ts = strtotime($value);
-            if ($ts !== false) {
-                return $ts;
-            }
-        }
+	/**
+	 * Normalise a value for ordered comparison: date-like strings become
+	 * integer timestamps, everything else stays a string.
+	 *
+	 * @param mixed $value The value.
+	 *
+	 * @return int|string The comparable form.
+	 */
+	private function normalise(mixed $value): int|string {
+		if (is_string($value) === true && preg_match('/^\d{4}-\d{2}-\d{2}/', $value) === 1) {
+			$ts = strtotime($value);
+			if ($ts !== false) {
+				return $ts;
+			}
+		}
 
-        return (string) $value;
-    }//end normalise()
+		return (string)$value;
+	}//end normalise()
 }//end class

@@ -1,156 +1,550 @@
 {
-    "components": {
-        "registers": {
-            "pipelinq-portal": {
-                "slug": "pipelinq-portal",
-                "title": "Pipelinq Portal",
-                "version": "1.0.0",
-                "description": "Separate auth-domain register for the customer self-service portal (ADR-005). Holds portal accounts, sessions, delegations, audit events and tenant configuration. Strictly isolated from Nextcloud users and from the main pipelinq register.",
-                "published": false,
-                "schemas": [
-                    "portalAccount",
-                    "portalSession",
-                    "portalDelegation",
-                    "portalAuditEvent",
-                    "portalTenantConfig"
-                ],
-                "tablePrefix": "pq_portal_",
-                "folder": "Pipelinq Portal"
-            }
-        },
-        "schemas": {
-            "portalAccount": {
-                "slug": "portalAccount",
-                "title": "Portal Account",
-                "version": "1.0.0",
-                "summary": "A customer self-service portal credential record (pipelinq-owned sync state for the linked contact).",
-                "description": "Identity-bearing credential for the customer portal. The customer's real identity is the linked contact entity; this record only carries portal-session credential state (password hash, MFA secret, status). Never stores plaintext secrets.",
-                "@type": "Thing",
-                "required": ["email", "tenantId", "accountType", "status"],
-                "properties": {
-                    "email": {"type": "string", "format": "email", "description": "Login email (lowercased)."},
-                    "pendingEmail": {"type": "string", "description": "Email awaiting verification before it replaces email."},
-                    "tenantId": {"type": "string", "description": "Owning tenant id; every query is scoped to this."},
-                    "displayName": {"type": "string"},
-                    "phone": {"type": "string"},
-                    "locale": {"type": "string", "default": "nl"},
-                    "accountType": {"type": "string", "enum": ["b2b", "b2c"], "default": "b2c"},
-                    "jobTitle": {"type": "string", "description": "B2B job title."},
-                    "linkedContactId": {"type": "string", "description": "UUID of the canonical contact in the pipelinq register."},
-                    "linkedOrganisationId": {"type": "string", "description": "UUID of the linked client/organisation (B2B)."},
-                    "linkedNextcloudUserId": {"type": "string", "description": "Always null; no SSO short-circuit (REQ-001)."},
-                    "passwordHash": {"type": "string", "description": "argon2id hash via IHasher; never returned in API responses."},
-                    "mfaSecret": {"type": "string", "description": "IEncrypter-encrypted TOTP secret; never returned."},
-                    "mfaEnabled": {"type": "boolean", "default": false},
-                    "status": {"type": "string", "enum": ["active", "pending-verification", "closed"], "default": "active"},
-                    "failedLoginAttempts": {"type": "integer", "default": 0},
-                    "lockedUntil": {"type": "string", "format": "date-time"},
-                    "passwordResetTokenHash": {"type": "string"},
-                    "passwordResetExpiresAt": {"type": "string", "format": "date-time"},
-                    "emailVerifyTokenHash": {"type": "string"},
-                    "emailVerifyExpiresAt": {"type": "string", "format": "date-time"},
-                    "closeTokenHash": {"type": "string"},
-                    "closeExpiresAt": {"type": "string", "format": "date-time"},
-                    "acceptedTermsVersion": {"type": "string"},
-                    "acceptedPrivacyVersion": {"type": "string"},
-                    "lastLoginAt": {"type": "string", "format": "date-time"}
-                }
+  "components": {
+    "registers": {
+      "pipelinq-portal": {
+        "slug": "pipelinq-portal",
+        "title": "Pipelinq Portal",
+        "version": "1.0.0",
+        "description": "Separate auth-domain register for the customer self-service portal (ADR-005). Holds portal accounts, sessions, delegations, audit events and tenant configuration. Strictly isolated from Nextcloud users and from the main pipelinq register.",
+        "published": false,
+        "schemas": [
+          "portalAccount",
+          "portalSession",
+          "portalDelegation",
+          "portalAuditEvent",
+          "portalTenantConfig"
+        ],
+        "tablePrefix": "pq_portal_",
+        "folder": "Pipelinq Portal"
+      }
+    },
+    "schemas": {
+      "portalAccount": {
+        "slug": "portalAccount",
+        "title": "Portal Account",
+        "version": "1.0.0",
+        "summary": "A customer self-service portal credential record (pipelinq-owned sync state for the linked contact).",
+        "description": "Identity-bearing credential for the customer portal. The customer's real identity is the linked contact entity; this record only carries portal-session credential state (password hash, MFA secret, status). Never stores plaintext secrets.",
+        "@type": "Thing",
+        "required": [
+          "email",
+          "tenantId",
+          "accountType",
+          "status"
+        ],
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "Login email (lowercased).",
+            "title": "Email"
+          },
+          "pendingEmail": {
+            "type": "string",
+            "description": "Email awaiting verification before it replaces email.",
+            "title": "Pending Email"
+          },
+          "tenantId": {
+            "type": "string",
+            "description": "Owning tenant id; every query is scoped to this.",
+            "title": "Tenant ID"
+          },
+          "displayName": {
+            "type": "string",
+            "title": "Display Name",
+            "description": "Display Name for this record."
+          },
+          "phone": {
+            "type": "string",
+            "title": "Phone",
+            "description": "Phone number for this record."
+          },
+          "locale": {
+            "type": "string",
+            "default": "nl",
+            "title": "Locale",
+            "description": "Locale for this record."
+          },
+          "accountType": {
+            "type": "string",
+            "enum": [
+              "b2b",
+              "b2c"
+            ],
+            "default": "b2c",
+            "title": "Account Type",
+            "description": "Count of account type."
+          },
+          "jobTitle": {
+            "type": "string",
+            "description": "B2B job title.",
+            "title": "Job Title"
+          },
+          "linkedContactId": {
+            "type": "string",
+            "description": "UUID of the canonical contact in the pipelinq register.",
+            "title": "Linked Contact ID"
+          },
+          "linkedOrganisationId": {
+            "type": "string",
+            "description": "UUID of the linked client/organisation (B2B).",
+            "title": "Linked Organisation ID"
+          },
+          "linkedNextcloudUserId": {
+            "type": "string",
+            "description": "Always null; no SSO short-circuit (REQ-001).",
+            "title": "Linked Nextcloud User ID"
+          },
+          "passwordHash": {
+            "type": "string",
+            "description": "argon2id hash via IHasher; never returned in API responses.",
+            "title": "Password Hash"
+          },
+          "mfaSecret": {
+            "type": "string",
+            "description": "IEncrypter-encrypted TOTP secret; never returned.",
+            "title": "Mfa Secret"
+          },
+          "mfaEnabled": {
+            "type": "boolean",
+            "default": false,
+            "title": "Mfa Enabled",
+            "description": "Mfa Enabled for this record."
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "pending-verification",
+              "closed"
+            ],
+            "default": "active",
+            "title": "Status",
+            "description": "Current lifecycle status of this record."
+          },
+          "failedLoginAttempts": {
+            "type": "integer",
+            "default": 0,
+            "title": "Failed Login Attempts",
+            "description": "Failed Login Attempts for this record."
+          },
+          "lockedUntil": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Locked Until",
+            "description": "Locked Until for this record."
+          },
+          "passwordResetTokenHash": {
+            "type": "string",
+            "title": "Password Reset Token Hash",
+            "description": "Password Reset Token Hash for this record."
+          },
+          "passwordResetExpiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Password Reset Expires At",
+            "description": "Timestamp when password reset expires occurred."
+          },
+          "emailVerifyTokenHash": {
+            "type": "string",
+            "title": "Email Verify Token Hash",
+            "description": "Email address for this record."
+          },
+          "emailVerifyExpiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Email Verify Expires At",
+            "description": "Timestamp when email verify expires occurred."
+          },
+          "closeTokenHash": {
+            "type": "string",
+            "title": "Close Token Hash",
+            "description": "Close Token Hash for this record."
+          },
+          "closeExpiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Close Expires At",
+            "description": "Timestamp when close expires occurred."
+          },
+          "acceptedTermsVersion": {
+            "type": "string",
+            "title": "Accepted Terms Version",
+            "description": "Accepted Terms Version for this record."
+          },
+          "acceptedPrivacyVersion": {
+            "type": "string",
+            "title": "Accepted Privacy Version",
+            "description": "Accepted Privacy Version for this record."
+          },
+          "lastLoginAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Last Login At",
+            "description": "Timestamp when last login occurred."
+          }
+        }
+      },
+      "portalSession": {
+        "slug": "portalSession",
+        "title": "Portal Session",
+        "version": "1.0.0",
+        "summary": "An authenticated portal session bound to a portal account.",
+        "description": "Holds the SHA-256 hash of the session token (never the plaintext), expiry, and revocation state. Tokens are 256-bit random values shown once at login.",
+        "@type": "Thing",
+        "required": [
+          "accountId",
+          "tenantId",
+          "tokenHash",
+          "expiresAt"
+        ],
+        "properties": {
+          "accountId": {
+            "type": "string",
+            "title": "Account ID",
+            "description": "Unique identifier for the associated account."
+          },
+          "tenantId": {
+            "type": "string",
+            "title": "Tenant ID",
+            "description": "Unique identifier for the associated tenant."
+          },
+          "tokenHash": {
+            "type": "string",
+            "description": "SHA-256 hash of the session token.",
+            "title": "Token Hash"
+          },
+          "ipHash": {
+            "type": "string",
+            "title": "IP Hash",
+            "description": "IP Hash for this record."
+          },
+          "userAgentHash": {
+            "type": "string",
+            "title": "User Agent Hash",
+            "description": "User Agent Hash for this record."
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expires At",
+            "description": "Timestamp when expires occurred."
+          },
+          "revoked": {
+            "type": "boolean",
+            "default": false,
+            "title": "Revoked",
+            "description": "Revoked for this record."
+          },
+          "revokedAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Revoked At",
+            "description": "Timestamp when revoked occurred."
+          },
+          "revokedReason": {
+            "type": "string",
+            "title": "Revoked Reason",
+            "description": "Revoked Reason for this record."
+          },
+          "mfaPending": {
+            "type": "boolean",
+            "default": false,
+            "description": "True for a half-open session awaiting MFA verification.",
+            "title": "Mfa Pending"
+          }
+        }
+      },
+      "portalDelegation": {
+        "slug": "portalDelegation",
+        "title": "Portal Delegation",
+        "version": "1.0.0",
+        "summary": "A B2B scope grant from one portal account to another.",
+        "description": "Grants a colleague account a subset of scopes (view-invoices, view-contracts, submit-requests) over the granter's organisation data, time-bounded and revocable.",
+        "@type": "Thing",
+        "required": [
+          "granterAccountId",
+          "tenantId",
+          "scopes"
+        ],
+        "properties": {
+          "granterAccountId": {
+            "type": "string",
+            "title": "Granter Account ID",
+            "description": "Unique identifier for the associated granter account."
+          },
+          "granteeAccountId": {
+            "type": "string",
+            "title": "Grantee Account ID",
+            "description": "Unique identifier for the associated grantee account."
+          },
+          "granteeEmail": {
+            "type": "string",
+            "format": "email",
+            "title": "Grantee Email",
+            "description": "Email address for this record."
+          },
+          "tenantId": {
+            "type": "string",
+            "title": "Tenant ID",
+            "description": "Unique identifier for the associated tenant."
+          },
+          "scopes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "view-invoices",
+                "view-contracts",
+                "submit-requests"
+              ]
             },
-            "portalSession": {
-                "slug": "portalSession",
-                "title": "Portal Session",
-                "version": "1.0.0",
-                "summary": "An authenticated portal session bound to a portal account.",
-                "description": "Holds the SHA-256 hash of the session token (never the plaintext), expiry, and revocation state. Tokens are 256-bit random values shown once at login.",
-                "@type": "Thing",
-                "required": ["accountId", "tenantId", "tokenHash", "expiresAt"],
-                "properties": {
-                    "accountId": {"type": "string"},
-                    "tenantId": {"type": "string"},
-                    "tokenHash": {"type": "string", "description": "SHA-256 hash of the session token."},
-                    "ipHash": {"type": "string"},
-                    "userAgentHash": {"type": "string"},
-                    "expiresAt": {"type": "string", "format": "date-time"},
-                    "revoked": {"type": "boolean", "default": false},
-                    "revokedAt": {"type": "string", "format": "date-time"},
-                    "revokedReason": {"type": "string"},
-                    "mfaPending": {"type": "boolean", "default": false, "description": "True for a half-open session awaiting MFA verification."}
-                }
+            "title": "Scopes",
+            "description": "Scopes for this record."
+          },
+          "validFrom": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Valid From",
+            "description": "Valid From for this record."
+          },
+          "validUntil": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Valid Until",
+            "description": "Valid Until for this record."
+          },
+          "revokedAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Revoked At",
+            "description": "Timestamp when revoked occurred."
+          }
+        }
+      },
+      "portalAuditEvent": {
+        "slug": "portalAuditEvent",
+        "title": "Portal Audit Event",
+        "version": "1.0.0",
+        "summary": "An append-only audit record of a sensitive portal action.",
+        "description": "Immutable once written (no updates, no deletes). Supports AVG Art. 15 export and DPO compliance audits.",
+        "@type": "Thing",
+        "required": [
+          "tenantId",
+          "eventType",
+          "outcome",
+          "occurredAt"
+        ],
+        "properties": {
+          "accountId": {
+            "type": "string",
+            "title": "Account ID",
+            "description": "Unique identifier for the associated account."
+          },
+          "tenantId": {
+            "type": "string",
+            "title": "Tenant ID",
+            "description": "Unique identifier for the associated tenant."
+          },
+          "eventType": {
+            "type": "string",
+            "title": "Event Type",
+            "description": "Event Type for this record."
+          },
+          "outcome": {
+            "type": "string",
+            "enum": [
+              "success",
+              "denied",
+              "error",
+              "pending-verification"
+            ],
+            "title": "Outcome",
+            "description": "Outcome for this record."
+          },
+          "targetObjectType": {
+            "type": "string",
+            "title": "Target Object Type",
+            "description": "Target Object Type for this record."
+          },
+          "targetObjectId": {
+            "type": "string",
+            "title": "Target Object ID",
+            "description": "Unique identifier for the associated target object."
+          },
+          "details": {
+            "type": "object",
+            "title": "Details",
+            "description": "Details for this record."
+          },
+          "ipHash": {
+            "type": "string",
+            "title": "IP Hash",
+            "description": "IP Hash for this record."
+          },
+          "userAgentHash": {
+            "type": "string",
+            "title": "User Agent Hash",
+            "description": "User Agent Hash for this record."
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Occurred At",
+            "description": "Timestamp when occurred occurred."
+          }
+        }
+      },
+      "portalTenantConfig": {
+        "slug": "portalTenantConfig",
+        "title": "Portal Tenant Config",
+        "version": "1.0.0",
+        "summary": "Branding, feature toggles and widget config for a portal tenant.",
+        "description": "Public-readable branding plus admin-managed feature/security toggles. Brand colours are contrast-validated (WCAG 2.2 AA) before persistence.",
+        "@type": "Thing",
+        "required": [
+          "tenantId",
+          "displayName"
+        ],
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "title": "Tenant ID",
+            "description": "Unique identifier for the associated tenant."
+          },
+          "displayName": {
+            "type": "string",
+            "title": "Display Name",
+            "description": "Display Name for this record."
+          },
+          "logoFileId": {
+            "type": "string",
+            "title": "Logo File ID",
+            "description": "Unique identifier for the associated logo file."
+          },
+          "faviconFileId": {
+            "type": "string",
+            "title": "Favicon File ID",
+            "description": "Unique identifier for the associated favicon file."
+          },
+          "brandPrimaryColor": {
+            "type": "string",
+            "default": "#21468B",
+            "title": "Brand Primary Color",
+            "description": "Brand Primary Color for this record."
+          },
+          "brandSecondaryColor": {
+            "type": "string",
+            "default": "#FFFFFF",
+            "title": "Brand Secondary Color",
+            "description": "Brand Secondary Color for this record."
+          },
+          "brandBackgroundColor": {
+            "type": "string",
+            "default": "#FFFFFF",
+            "title": "Brand Background Color",
+            "description": "Brand Background Color for this record."
+          },
+          "customDomain": {
+            "type": "string",
+            "title": "Custom Domain",
+            "description": "Custom Domain for this record."
+          },
+          "subdomain": {
+            "type": "string",
+            "title": "Subdomain",
+            "description": "Subdomain for this record."
+          },
+          "enabledFeatures": {
+            "type": "array",
+            "items": {
+              "type": "string"
             },
-            "portalDelegation": {
-                "slug": "portalDelegation",
-                "title": "Portal Delegation",
-                "version": "1.0.0",
-                "summary": "A B2B scope grant from one portal account to another.",
-                "description": "Grants a colleague account a subset of scopes (view-invoices, view-contracts, submit-requests) over the granter's organisation data, time-bounded and revocable.",
-                "@type": "Thing",
-                "required": ["granterAccountId", "tenantId", "scopes"],
-                "properties": {
-                    "granterAccountId": {"type": "string"},
-                    "granteeAccountId": {"type": "string"},
-                    "granteeEmail": {"type": "string", "format": "email"},
-                    "tenantId": {"type": "string"},
-                    "scopes": {"type": "array", "items": {"type": "string", "enum": ["view-invoices", "view-contracts", "submit-requests"]}},
-                    "validFrom": {"type": "string", "format": "date-time"},
-                    "validUntil": {"type": "string", "format": "date-time"},
-                    "revokedAt": {"type": "string", "format": "date-time"}
-                }
+            "default": [
+              "invoices",
+              "contracts",
+              "orders",
+              "requests",
+              "documents",
+              "profile"
+            ],
+            "title": "Enabled Features",
+            "description": "Enabled Features for this record."
+          },
+          "b2bEnabled": {
+            "type": "boolean",
+            "default": true,
+            "title": "B2b Enabled",
+            "description": "B2b Enabled for this record."
+          },
+          "b2cEnabled": {
+            "type": "boolean",
+            "default": true,
+            "title": "B2c Enabled",
+            "description": "B2c Enabled for this record."
+          },
+          "mfaEnforced": {
+            "type": "boolean",
+            "default": false,
+            "title": "Mfa Enforced",
+            "description": "Mfa Enforced for this record."
+          },
+          "selfSignupAllowed": {
+            "type": "boolean",
+            "default": false,
+            "title": "Self Signup Allowed",
+            "description": "Self Signup Allowed for this record."
+          },
+          "widgetEmbedAllowed": {
+            "type": "boolean",
+            "default": false,
+            "title": "Widget Embed Allowed",
+            "description": "Widget Embed Allowed for this record."
+          },
+          "widgetAllowedOrigins": {
+            "type": "array",
+            "items": {
+              "type": "string"
             },
-            "portalAuditEvent": {
-                "slug": "portalAuditEvent",
-                "title": "Portal Audit Event",
-                "version": "1.0.0",
-                "summary": "An append-only audit record of a sensitive portal action.",
-                "description": "Immutable once written (no updates, no deletes). Supports AVG Art. 15 export and DPO compliance audits.",
-                "@type": "Thing",
-                "required": ["tenantId", "eventType", "outcome", "occurredAt"],
-                "properties": {
-                    "accountId": {"type": "string"},
-                    "tenantId": {"type": "string"},
-                    "eventType": {"type": "string"},
-                    "outcome": {"type": "string", "enum": ["success", "denied", "error", "pending-verification"]},
-                    "targetObjectType": {"type": "string"},
-                    "targetObjectId": {"type": "string"},
-                    "details": {"type": "object"},
-                    "ipHash": {"type": "string"},
-                    "userAgentHash": {"type": "string"},
-                    "occurredAt": {"type": "string", "format": "date-time"}
-                }
-            },
-            "portalTenantConfig": {
-                "slug": "portalTenantConfig",
-                "title": "Portal Tenant Config",
-                "version": "1.0.0",
-                "summary": "Branding, feature toggles and widget config for a portal tenant.",
-                "description": "Public-readable branding plus admin-managed feature/security toggles. Brand colours are contrast-validated (WCAG 2.2 AA) before persistence.",
-                "@type": "Thing",
-                "required": ["tenantId", "displayName"],
-                "properties": {
-                    "tenantId": {"type": "string"},
-                    "displayName": {"type": "string"},
-                    "logoFileId": {"type": "string"},
-                    "faviconFileId": {"type": "string"},
-                    "brandPrimaryColor": {"type": "string", "default": "#21468B"},
-                    "brandSecondaryColor": {"type": "string", "default": "#FFFFFF"},
-                    "brandBackgroundColor": {"type": "string", "default": "#FFFFFF"},
-                    "customDomain": {"type": "string"},
-                    "subdomain": {"type": "string"},
-                    "enabledFeatures": {"type": "array", "items": {"type": "string"}, "default": ["invoices", "contracts", "orders", "requests", "documents", "profile"]},
-                    "b2bEnabled": {"type": "boolean", "default": true},
-                    "b2cEnabled": {"type": "boolean", "default": true},
-                    "mfaEnforced": {"type": "boolean", "default": false},
-                    "selfSignupAllowed": {"type": "boolean", "default": false},
-                    "widgetEmbedAllowed": {"type": "boolean", "default": false},
-                    "widgetAllowedOrigins": {"type": "array", "items": {"type": "string"}, "default": []},
-                    "exposeAssigneeName": {"type": "boolean", "default": false},
-                    "sessionTtlHours": {"type": "integer", "default": 8},
-                    "supportEmail": {"type": "string"},
-                    "supportPhone": {"type": "string"},
-                    "termsVersion": {"type": "string"},
-                    "privacyVersion": {"type": "string"}
-                }
-            }
-        },
-        "objects": []
-    }
+            "default": [],
+            "title": "Widget Allowed Origins",
+            "description": "Widget Allowed Origins for this record."
+          },
+          "exposeAssigneeName": {
+            "type": "boolean",
+            "default": false,
+            "title": "Expose Assignee Name",
+            "description": "Expose Assignee Name for this record."
+          },
+          "sessionTtlHours": {
+            "type": "integer",
+            "default": 8,
+            "title": "Session Ttl Hours",
+            "description": "Session Ttl Hours for this record."
+          },
+          "supportEmail": {
+            "type": "string",
+            "title": "Support Email",
+            "description": "Email address for this record."
+          },
+          "supportPhone": {
+            "type": "string",
+            "title": "Support Phone",
+            "description": "Phone number for this record."
+          },
+          "termsVersion": {
+            "type": "string",
+            "title": "Terms Version",
+            "description": "Terms Version for this record."
+          },
+          "privacyVersion": {
+            "type": "string",
+            "title": "Privacy Version",
+            "description": "Privacy Version for this record."
+          }
+        }
+      }
+    },
+    "objects": []
+  }
 }

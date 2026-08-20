@@ -1,191 +1,204 @@
 {
-	"components": {
-		"registers": {
-			"pipelinq": {
-				"schemas": [
-					"timeEntry"
-				]
-			}
-		},
-		"schemas": {
-			"timeEntry": {
-				"slug": "timeEntry",
-				"title": "Time Entry",
-				"icon": "ClockOutline",
-				"version": "1.1.0",
-				"summary": "An approved billable hour record dispatched to Shillinq's Work-In-Progress ledger.",
-				"description": "Time entries record billable or non-billable work hours against a client, lead, or project. On approval (status: approved) the entry is dispatched, one-way, to Shillinq's billable WIP balance via OpenRegister's WebhookService. wipSyncStatus and wipSyncedAt record the outcome of that integration. This schema is defined here so the WIP integration can stand alone; capture (timer/grid) is owned by OpenRegister's time-tracker leaf per ADR-022 and remains backwards-compatible (the leaf's link tables are unaffected).",
-				"@type": "schema:Action",
-				"linkedTypes": [
-					"flow",
-					"time-tracker"
-				],
-				"required": [
-					"title",
-					"hours",
-					"date"
-				],
-				"properties": {
-					"title": {
-						"type": "string",
-						"description": "Short human-readable label for the time entry.",
-						"maxLength": 255,
-						"minLength": 1
-					},
-					"description": {
-						"type": "string",
-						"description": "Free-text description of the work performed."
-					},
-					"hours": {
-						"type": "number",
-						"minimum": 0,
-						"description": "Hours worked (decimal). Cast to float on dispatch."
-					},
-					"date": {
-						"type": "string",
-						"format": "date",
-						"description": "ISO 8601 date the work was performed."
-					},
-					"status": {
-						"type": "string",
-						"enum": [
-							"draft",
-							"submitted",
-							"pending_approval",
-							"approved",
-							"rejected"
-						],
-						"default": "draft",
-						"description": "Time entry lifecycle status. Approval triggers WIP dispatch."
-					},
-					"billingCategory": {
-						"type": "string",
-						"description": "UUID or slug of the billing category (e.g. declarabel, wbso, dba, intern)."
-					},
-					"client": {
-						"type": "string",
-						"description": "UUID of the related client."
-					},
-					"lead": {
-						"type": "string",
-						"description": "UUID of the related lead, if any."
-					},
-					"project": {
-						"type": "string",
-						"description": "UUID of the related project, if any."
-					},
-					"approvedBy": {
-						"type": "string",
-						"description": "User UID of the approver."
-					},
-					"approvedAt": {
-						"type": "string",
-						"format": "date-time",
-						"description": "ISO 8601 UTC timestamp of the approval transition."
-					},
-					"wipSyncStatus": {
-						"type": "string",
-						"enum": [
-							"pending",
-							"synced",
-							"failed"
-						],
-						"description": "Shillinq WIP sync state. Null for entries approved before the WIP integration was deployed."
-					},
-					"wipSyncedAt": {
-						"type": "string",
-						"format": "date-time",
-						"description": "ISO 8601 UTC timestamp of the last successful WIP sync delivery."
-					}
-				}
-			}
-		},
-		"objects": [
-			{
-				"@self": {
-					"register": "pipelinq",
-					"schema": "timeEntry",
-					"slug": "time-entry-wip-synced-1"
-				},
-				"title": "Adviesgesprek intake De Vries BV",
-				"description": "Initieel adviesgesprek over digitaliseringsproject; scope en planning besproken met directie.",
-				"hours": 2.5,
-				"date": "2026-05-15",
-				"status": "approved",
-				"billingCategory": "billing-category-declarabel",
-				"approvedBy": "admin",
-				"approvedAt": "2026-05-15T16:00:00Z",
-				"wipSyncStatus": "synced",
-				"wipSyncedAt": "2026-05-15T16:05:23Z"
-			},
-			{
-				"@self": {
-					"register": "pipelinq",
-					"schema": "timeEntry",
-					"slug": "time-entry-wip-synced-2"
-				},
-				"title": "Technische implementatie OpenRegister module",
-				"description": "Configuratie en integratietest van de OpenRegister koppeling op de klantomgeving van Bakker & Partners.",
-				"hours": 4.0,
-				"date": "2026-05-16",
-				"status": "approved",
-				"billingCategory": "billing-category-declarabel",
-				"approvedBy": "admin",
-				"approvedAt": "2026-05-16T09:30:00Z",
-				"wipSyncStatus": "synced",
-				"wipSyncedAt": "2026-05-16T09:42:10Z"
-			},
-			{
-				"@self": {
-					"register": "pipelinq",
-					"schema": "timeEntry",
-					"slug": "time-entry-wip-synced-3"
-				},
-				"title": "Onderzoek algoritmisch routeren vergunningaanvragen",
-				"description": "Haalbaarheidsonderzoek automatische categorisering van vergunningaanvragen via machine learning; bevindingen gedocumenteerd.",
-				"hours": 6.0,
-				"date": "2026-05-17",
-				"status": "approved",
-				"billingCategory": "billing-category-wbso",
-				"approvedBy": "admin",
-				"approvedAt": "2026-05-17T14:00:00Z",
-				"wipSyncStatus": "synced",
-				"wipSyncedAt": "2026-05-17T14:20:05Z"
-			},
-			{
-				"@self": {
-					"register": "pipelinq",
-					"schema": "timeEntry",
-					"slug": "time-entry-wip-pending-1"
-				},
-				"title": "Projectopstartgesprek subsidieportaal GroenNet",
-				"description": "Kickoff meeting gehouden; klantvereisten voor het subsidieportaal geinventariseerd en vastgelegd.",
-				"hours": 1.5,
-				"date": "2026-05-20",
-				"status": "approved",
-				"billingCategory": "billing-category-declarabel",
-				"approvedBy": "admin",
-				"approvedAt": "2026-05-20T11:00:00Z",
-				"wipSyncStatus": "pending",
-				"wipSyncedAt": null
-			},
-			{
-				"@self": {
-					"register": "pipelinq",
-					"schema": "timeEntry",
-					"slug": "time-entry-wip-failed-1"
-				},
-				"title": "ZZP-advies supply chain optimalisatie",
-				"description": "Advies inzake koppeling transport-managementsysteem met klantportaal; oplossingsrichting gedefinieerd.",
-				"hours": 3.0,
-				"date": "2026-05-19",
-				"status": "approved",
-				"billingCategory": "billing-category-dba",
-				"approvedBy": "admin",
-				"approvedAt": "2026-05-19T10:00:00Z",
-				"wipSyncStatus": "failed",
-				"wipSyncedAt": null
-			}
-		]
-	}
+  "components": {
+    "registers": {
+      "pipelinq": {
+        "schemas": [
+          "timeEntry"
+        ]
+      }
+    },
+    "schemas": {
+      "timeEntry": {
+        "slug": "timeEntry",
+        "title": "Time Entry",
+        "icon": "ClockOutline",
+        "version": "1.1.0",
+        "summary": "An approved billable hour record dispatched to Shillinq's Work-In-Progress ledger.",
+        "description": "Time entries record billable or non-billable work hours against a client, lead, or project. On approval (status: approved) the entry is dispatched, one-way, to Shillinq's billable WIP balance via OpenRegister's WebhookService. wipSyncStatus and wipSyncedAt record the outcome of that integration. This schema is defined here so the WIP integration can stand alone; capture (timer/grid) is owned by OpenRegister's time-tracker leaf per ADR-022 and remains backwards-compatible (the leaf's link tables are unaffected).",
+        "x-schema-org": "schema:Action",
+        "linkedTypes": [
+          "flow",
+          "time-tracker"
+        ],
+        "required": [
+          "title",
+          "hours",
+          "date"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Short human-readable label for the time entry.",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Title"
+          },
+          "description": {
+            "type": "string",
+            "description": "Free-text description of the work performed.",
+            "title": "Description"
+          },
+          "hours": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Hours worked (decimal). Cast to float on dispatch.",
+            "title": "Hours"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "description": "ISO 8601 date the work was performed.",
+            "title": "Date"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "submitted",
+              "pending_approval",
+              "approved",
+              "rejected"
+            ],
+            "default": "draft",
+            "description": "Time entry lifecycle status. Approval triggers WIP dispatch.",
+            "title": "Status"
+          },
+          "billingCategory": {
+            "type": "string",
+            "description": "UUID or slug of the billing category (e.g. declarabel, wbso, dba, intern).",
+            "title": "Billing Category"
+          },
+          "client": {
+            "type": "string",
+            "description": "UUID of the related client.",
+            "title": "Client"
+          },
+          "lead": {
+            "type": "string",
+            "description": "UUID of the related lead, if any.",
+            "title": "Lead"
+          },
+          "project": {
+            "type": "string",
+            "description": "UUID of the related project, if any.",
+            "title": "Project"
+          },
+          "approvedBy": {
+            "type": "string",
+            "description": "User UID of the approver.",
+            "title": "Approved By"
+          },
+          "approvedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO 8601 UTC timestamp of the approval transition.",
+            "title": "Approved At"
+          },
+          "wipSyncStatus": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "synced",
+              "failed"
+            ],
+            "description": "Shillinq WIP sync state. Null for entries approved before the WIP integration was deployed.",
+            "title": "Wip Sync Status"
+          },
+          "wipSyncedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO 8601 UTC timestamp of the last successful WIP sync delivery.",
+            "title": "Wip Synced At"
+          }
+        }
+      }
+    },
+    "objects": [
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "timeEntry",
+          "slug": "time-entry-wip-synced-1"
+        },
+        "title": "Adviesgesprek intake De Vries BV",
+        "description": "Initieel adviesgesprek over digitaliseringsproject; scope en planning besproken met directie.",
+        "hours": 2.5,
+        "date": "2026-05-15",
+        "status": "approved",
+        "billingCategory": "billing-category-declarabel",
+        "approvedBy": "admin",
+        "approvedAt": "2026-05-15T16:00:00Z",
+        "wipSyncStatus": "synced",
+        "wipSyncedAt": "2026-05-15T16:05:23Z"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "timeEntry",
+          "slug": "time-entry-wip-synced-2"
+        },
+        "title": "Technische implementatie OpenRegister module",
+        "description": "Configuratie en integratietest van de OpenRegister koppeling op de klantomgeving van Bakker & Partners.",
+        "hours": 4.0,
+        "date": "2026-05-16",
+        "status": "approved",
+        "billingCategory": "billing-category-declarabel",
+        "approvedBy": "admin",
+        "approvedAt": "2026-05-16T09:30:00Z",
+        "wipSyncStatus": "synced",
+        "wipSyncedAt": "2026-05-16T09:42:10Z"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "timeEntry",
+          "slug": "time-entry-wip-synced-3"
+        },
+        "title": "Onderzoek algoritmisch routeren vergunningaanvragen",
+        "description": "Haalbaarheidsonderzoek automatische categorisering van vergunningaanvragen via machine learning; bevindingen gedocumenteerd.",
+        "hours": 6.0,
+        "date": "2026-05-17",
+        "status": "approved",
+        "billingCategory": "billing-category-wbso",
+        "approvedBy": "admin",
+        "approvedAt": "2026-05-17T14:00:00Z",
+        "wipSyncStatus": "synced",
+        "wipSyncedAt": "2026-05-17T14:20:05Z"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "timeEntry",
+          "slug": "time-entry-wip-pending-1"
+        },
+        "title": "Projectopstartgesprek subsidieportaal GroenNet",
+        "description": "Kickoff meeting gehouden; klantvereisten voor het subsidieportaal geinventariseerd en vastgelegd.",
+        "hours": 1.5,
+        "date": "2026-05-20",
+        "status": "approved",
+        "billingCategory": "billing-category-declarabel",
+        "approvedBy": "admin",
+        "approvedAt": "2026-05-20T11:00:00Z",
+        "wipSyncStatus": "pending",
+        "wipSyncedAt": null
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "timeEntry",
+          "slug": "time-entry-wip-failed-1"
+        },
+        "title": "ZZP-advies supply chain optimalisatie",
+        "description": "Advies inzake koppeling transport-managementsysteem met klantportaal; oplossingsrichting gedefinieerd.",
+        "hours": 3.0,
+        "date": "2026-05-19",
+        "status": "approved",
+        "billingCategory": "billing-category-dba",
+        "approvedBy": "admin",
+        "approvedAt": "2026-05-19T10:00:00Z",
+        "wipSyncStatus": "failed",
+        "wipSyncedAt": null
+      }
+    ]
+  }
 }

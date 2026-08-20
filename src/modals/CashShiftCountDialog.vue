@@ -4,36 +4,43 @@
 -->
 <template>
 	<NcDialog
-		:name="t('pipelinq', 'Shift afsluiten en tellen')"
+		:name="t('pipelinq', 'Close and count shift')"
 		:open="true"
 		size="normal"
 		@closing="$emit('close')">
 		<div class="cash-shift-count">
-			<p>{{ t('pipelinq', 'Tel het contante geld in de lade en voer het totaal in. Er worden geen verwachte bedragen getoond (blind tellen).') }}</p>
+			<p>
+				{{
+					t(
+						'pipelinq',
+						'Count the cash in the drawer and enter the total. No expected amounts are shown (blind counting).',
+					)
+				}}
+			</p>
 			<NcTextField
-				:value.sync="amount"
+				v-model="amount"
 				type="number"
-				:label="t('pipelinq', 'Geteld bedrag')"
+				:label="t('pipelinq', 'Counted amount')"
 				placeholder="€ 0.00"
 				:error="showError"
-				:helper-text="showError ? t('pipelinq', 'Voer een geldig bedrag in') : ''" />
-			<NcTextArea
-				:value.sync="notes"
-				:label="t('pipelinq', 'Notities (optioneel)')" />
+				:helperText="
+					showError ? t('pipelinq', 'Enter a valid amount') : ''
+				" />
+			<NcTextArea v-model="notes" :label="t('pipelinq', 'Notes (optional)')" />
 		</div>
 		<template #actions>
 			<NcButton @click="$emit('close')">
-				{{ t('pipelinq', 'Annuleren') }}
+				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
-			<NcButton type="primary" :disabled="submitting" @click="submit">
-				{{ t('pipelinq', 'Afsluiten en tellen') }}
+			<NcButton variant="primary" :disabled="submitting" @click="submit">
+				{{ t('pipelinq', 'Close and count') }}
 			</NcButton>
 		</template>
 	</NcDialog>
 </template>
 
 <script>
-import { NcDialog, NcButton, NcTextField, NcTextArea } from '@nextcloud/vue'
+import { NcButton, NcDialog, NcTextArea, NcTextField } from '@nextcloud/vue'
 
 export default {
 	name: 'CashShiftCountDialog',
@@ -43,12 +50,14 @@ export default {
 		NcTextField,
 		NcTextArea,
 	},
+
 	props: {
 		submitting: {
 			type: Boolean,
 			default: false,
 		},
 	},
+
 	emits: ['close', 'confirm'],
 	data() {
 		return {
@@ -57,6 +66,7 @@ export default {
 			showError: false,
 		}
 	},
+
 	methods: {
 		/**
 		 * Validate the counted amount and emit the count payload.

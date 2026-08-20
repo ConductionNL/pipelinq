@@ -13,18 +13,27 @@
 <template>
 	<div class="payment-method-selector">
 		<NcSelect
-			:value="selection"
+			:modelValue="selection"
 			:options="combinedOptions"
-			:input-label="t('pipelinq', 'Betaalmethode')"
+			:inputLabel="t('pipelinq', 'Payment method')"
 			label="label"
 			:reduce="(o) => o.value"
 			:loading="loading"
-			@input="onSelect" />
-		<p v-if="selection && providerOf(selection) === 'mollie'" class="payment-method-selector__hint">
-			{{ t('pipelinq', 'Klant wordt doorgestuurd naar Mollie om de iDEAL/Bancontact betaling af te ronden.') }}
+			@update:modelValue="onSelect" />
+		<p
+			v-if="selection && providerOf(selection) === 'mollie'"
+			class="payment-method-selector__hint">
+			{{
+				t(
+					'pipelinq',
+					'Customer is redirected to Mollie to complete the iDEAL/Bancontact payment.',
+				)
+			}}
 		</p>
-		<p v-if="selection && providerOf(selection) === 'ccv'" class="payment-method-selector__hint">
-			{{ t('pipelinq', 'Klant betaalt op de CCV PIN-terminal.') }}
+		<p
+			v-if="selection && providerOf(selection) === 'ccv'"
+			class="payment-method-selector__hint">
+			{{ t('pipelinq', 'Customer pays at the CCV PIN terminal.') }}
 		</p>
 	</div>
 </template>
@@ -44,68 +53,101 @@ export default {
 	components: { NcSelect },
 	props: {
 		// Selected value, format: provider:method (e.g. "mollie:ideal", "cash").
-		value: {
+		//
+		// ⚠️ This was `value` + `$emit('input')` — the Vue 2 v-model contract.
+		// Its only consumer (PosTransactionForm) binds it with `v-model`, and in
+		// Vue 3 `v-model` means `modelValue` + `update:modelValue`, so BOTH
+		// halves went dead: the prop stayed at its `''` default (the dropdown
+		// never showed the chosen method) and the parent's `paymentSelection`
+		// never updated. Neither half errors — and the separate `change` emit
+		// still fired, so checkout would limp along looking almost right.
+		modelValue: {
 			type: String,
 			default: '',
 		},
+
 		// Only show option when a client is selected.
 		clientSelected: {
 			type: Boolean,
 			default: false,
 		},
 	},
+
+	// Declared explicitly so Vue 3 does not also fall these through onto the
+	// root element as attributes, and so the v-model contract is self-evident.
+	emits: ['update:modelValue', 'change'],
 	data() {
 		return {
 			providers: [],
 			loading: true,
 		}
 	},
+
 	computed: {
+		/**
+		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-008
+		 */
 		selection() {
-			return this.value || null
+			return this.modelValue || null
 		},
+
+		/**
+		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-008
+		 */
 		combinedOptions() {
-			const opts = STATIC_OPTIONS
-				.filter((o) => o.value !== 'account' || this.clientSelected)
-				.map((o) => ({ ...o, label: t('pipelinq', o.label) }))
+			const opts = STATIC_OPTIONS.filter(
+				(o) => o.value !== 'account' || this.clientSelected,
+			).map((o) => ({ ...o, label: t('pipelinq', o.label) }))
 			for (const p of this.activeProviders) {
 				if (p.name === 'mollie') {
 					opts.push({
 						value: 'mollie:ideal',
-						label: t('pipelinq', '{name} — iDEAL', { name: p.displayName }),
+						label: t('pipelinq', '{name} — iDEAL', {
+							name: p.displayName,
+						}),
 						provider: 'mollie',
 						method: 'ideal',
 					})
 					opts.push({
 						value: 'mollie:bancontact',
-						label: t('pipelinq', '{name} — Bancontact', { name: p.displayName }),
+						label: t('pipelinq', '{name} — Bancontact', {
+							name: p.displayName,
+						}),
 						provider: 'mollie',
 						method: 'bancontact',
 					})
 					opts.push({
 						value: 'mollie:creditcard',
-						label: t('pipelinq', '{name} — Creditcard', { name: p.displayName }),
+						label: t('pipelinq', '{name} — Credit card', {
+							name: p.displayName,
+						}),
 						provider: 'mollie',
 						method: 'creditcard',
 					})
 				} else if (p.name === 'ccv') {
 					opts.push({
 						value: 'ccv:card',
-						label: t('pipelinq', '{name} (PIN-terminal)', { name: p.displayName }),
+						label: t('pipelinq', '{name} (PIN-terminal)', {
+							name: p.displayName,
+						}),
 						provider: 'ccv',
 						method: 'card',
 					})
 				} else if (p.name === 'adyen') {
 					opts.push({
 						value: 'adyen:card',
-						label: t('pipelinq', '{name} — Card', { name: p.displayName }),
+						label: t('pipelinq', '{name} — Card', {
+							name: p.displayName,
+						}),
 						provider: 'adyen',
 						method: 'card',
 					})
 				} else if (p.name === 'stripe') {
 					opts.push({
 						value: 'stripe:card',
-						label: t('pipelinq', '{name} — Card / Wallet', { name: p.displayName }),
+						label: t('pipelinq', '{name} — Card / Wallet', {
+							name: p.displayName,
+						}),
 						provider: 'stripe',
 						method: 'card',
 					})
@@ -113,10 +155,12 @@ export default {
 			}
 			return opts
 		},
+
 		activeProviders() {
 			return this.providers.filter((p) => p.isActive)
 		},
 	},
+
 	async mounted() {
 		try {
 			this.providers = await listProviders()
@@ -127,22 +171,28 @@ export default {
 			this.loading = false
 		}
 	},
+
 	methods: {
 		providerOf(combined) {
 			if (!combined) return ''
 			const idx = combined.indexOf(':')
 			return idx === -1 ? combined : combined.slice(0, idx)
 		},
+
 		methodOf(combined) {
 			if (!combined) return ''
 			const idx = combined.indexOf(':')
 			return idx === -1 ? combined : combined.slice(idx + 1)
 		},
+
+		/**
+		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-008
+		 */
 		onSelect(value) {
-			const combined = (value && typeof value === 'object') ? value.value : value
+			const combined = value && typeof value === 'object' ? value.value : value
 			const providerName = this.providerOf(combined)
 			const paymentMethod = this.methodOf(combined)
-			this.$emit('input', combined)
+			this.$emit('update:modelValue', combined)
 			this.$emit('change', { providerName, paymentMethod, combined })
 		},
 	},
@@ -156,6 +206,7 @@ export default {
 	gap: 8px;
 	margin-bottom: 12px;
 }
+
 .payment-method-selector__hint {
 	font-size: 0.9em;
 	color: var(--color-text-maxcontrast);

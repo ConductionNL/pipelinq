@@ -9,59 +9,53 @@ Maintains a single authoritative golden record per master entity by resolving co
 ## Requirements
 ### Requirement: REQ-MDM-001 — Golden Record per Master Entity
 
-The system MUST maintain a single authoritative golden record per Master Entity, with attribute values determined by configured trust-tiers, not by recency.
+The system MUST maintain a single authoritative golden record per Master Entity, materialised by
+**OpenRegister's `SurvivorshipRecomputeListener` on save** from the `x-openregister-survivorship`
+annotation — not by an app-side survivorship service. The app MUST NOT ship an in-process
+pick-winner / recompute loop (`MasterEntityService` is deleted). Consumers that need the golden
+record (the AVG workflow, the downstream read API, the CRM-mirror sync) MUST read it straight off the
+OR-materialised `masterEntity` object via the retained `MdmObjectRepository` read helpers
+(`findMasterEntity`, `findMasterEntities`, `linkedSourceRecords`), which go through the OpenRegister
+`ObjectService` (RBAC + multitenancy).
 
 **Feature tier**: MVP
-**Handoff**: Covered by `contacts-sync` ContactSyncService for contact golden-record reconciliation; account/product/vendor golden-record fields remain on the existing schemas in `pipelinq_register.json`.
+**Handoff**: Consumes OpenRegister `mdm-survivorship` (materialise-on-save). App-side `MasterEntityService` + `SourceRecordChangedListener` are deleted.
 
-#### Scenario: Conflict resolution by trust-tier
+#### Scenario: App-side survivorship engine is deleted
 
-- GIVEN a Master Entity for account "Voorbeeld B.V." with source records from `pipelinq-crm` (phone "020-1234567", trustTier bronze) and `shillinq-debiteuren` (phone "030-7654321", trustTier silver)
-- WHEN `MasterEntityService::recomputeGoldenRecord()` is called
-- THEN `goldenRecord.phone = "030-7654321"` with `attributeProvenance.phone.sourceSystem = "shillinq-debiteuren"`, `trustTier = silver`
-- AND the CRM phone value remains visible in the source-record for audit
-- AND a sync-queue-item is created to notify downstream apps of the change
+- WHEN the pipelinq `lib/` tree is inspected after this change
+- THEN `MasterEntityService` and `SourceRecordChangedListener` MUST NOT exist, and no class MUST reference them
+- AND golden-record consumers MUST read the OR-materialised object via `MdmObjectRepository`, not via an app-side recompute
 
-#### Scenario: Gold-tier always wins
+`@e2e exclude` backend deletion — verified by a repo-wide grep returning no reference to `MasterEntityService` / `SourceRecordChangedListener` and by the PHPUnit suite; survivorship materialisation is owned + e2e-tested by OpenRegister.
 
-- GIVEN a Master Entity account with phone: `kvk-api` (gold), `shillinq-debiteuren` (silver), `pipelinq-crm` (bronze)
-- WHEN all three sources have different phone values
-- THEN the KvK value (gold tier) MUST be selected for the golden record, regardless of which was updated most recently
-- AND the rationale is logged to `attributeProvenance.phone`
+#### Scenario: Golden-record reads go through the OR-materialised object
 
-#### Scenario: Silver tier when gold unavailable
+- GIVEN a Master Entity whose `goldenRecord` OpenRegister materialised on its last save
+- WHEN a retained consumer resolves it via `MdmObjectRepository::findMasterEntity`
+- THEN the returned `goldenRecord` + `attributeProvenance` MUST be the OR-materialised values (the app computes nothing)
 
-- GIVEN a Master Entity account where the gold-tier source (KvK) has not provided an address
-- AND silver-tier source (Shillinq) has provided "Bedrijfsplein 10, 5678 XY Utrecht"
-- AND bronze-tier source (CRM) has provided "Bedrijfsplein 10, 5678 Utrecht" (incomplete)
-- WHEN recomputation runs
-- THEN `goldenRecord.billingAddress = "Bedrijfsplein 10, 5678 XY Utrecht"` (silver value)
-- AND `attributeProvenance.billingAddress.trustTier = silver`
-
----
+`@e2e exclude` backend read-path — asserted by the AVG + listener + read-API unit tests over the in-memory repository; the materialisation itself is OpenRegister's.
 
 ### Requirement: REQ-MDM-002 — Deterministic Duplicate Detection on Natural Keys
 
-The system MUST detect deterministic duplicates by declaring exact-match rules on the natural keys (KvK number, email, …) in the `masterEntity` schema's `x-openregister-dedup` annotation and delegating detection to OpenRegister's `DuplicateDetectionService::findDuplicates()`. The app MUST NOT run a hand-rolled natural-key comparison loop. The app MUST adapt OR's `{objectA, objectB, score, matchedOn[]}` result into the existing duplicate-candidate DTO, classifying a pair whose `matchedOn` includes a natural key as `linkageMethod = deterministic-key`, `linkageConfidence = 1.0`. The app MUST retain (app-side, not OR) the auto-merge eligibility decision, which depends on the trust-tier rule's `manualOverrideAllowed`.
+The system MUST detect duplicates via **OpenRegister's nested-path `duplicate-detection`** driven by
+the `masterEntity` `x-openregister-dedup` matchRules on `goldenRecord.*` paths — not via an app-side
+detector. The app-side `DuplicateDetectionService` + `StringSimilarity` MUST be deleted, and the
+flattened `matchName` / `matchEmail` / `matchKvkNumber` / `matchPhone` projection fields (and the
+maintenance that populated them) MUST be removed from the schema, because OpenRegister traverses the
+nested dot-paths directly.
 
 **Feature tier**: MVP
-**Handoff**: Consumes OpenRegister `mdm-foundation`. Auto-merge gate + DTO adaptation stay in pipelinq.
+**Handoff**: Consumes OpenRegister `duplicate-detection` (nested paths).
 
-#### Scenario: Two entities with same KvK
+#### Scenario: App-side dedup engine and match projections are gone
 
-- GIVEN two Master Entities with masterId A and B, both carrying KvK number "12345678"
-- WHEN the duplicate detector runs
-- THEN OpenRegister's `findDuplicates()` returns the pair (matched on the flattened `matchKvkNumber` field)
-- AND the app emits a duplicate-candidate DTO with `linkageMethod = deterministic-key`, `linkageConfidence = 1.0`
-- AND the candidate appears in the stewardship queue for data-steward approval
-- OR is auto-merged if `manualOverrideAllowed = false` for KvK conflicts in trust-configuration
+- WHEN the pipelinq `lib/` tree and the `masterEntity` schema configuration are inspected
+- THEN `DuplicateDetectionService` and `StringSimilarity` MUST NOT exist
+- AND the schema MUST NOT declare `matchName`, `matchEmail`, `matchKvkNumber` or `matchPhone`
 
-#### Scenario: Hand-rolled deterministic loop is removed
-
-- WHEN the duplicate-detection service source is inspected
-- THEN it MUST NOT contain the imperative deterministic natural-key comparison loop (detection is delegated to OpenRegister)
-
----
+`@e2e exclude` backend deletion + schema assertion — verified by grep + JSON parse; duplicate detection is owned + e2e-tested by OpenRegister.
 
 ### Requirement: REQ-MDM-003 — Probabilistic Duplicate Detection on Fuzzy Match
 
@@ -69,6 +63,8 @@ The system MUST support probabilistic duplicate detection via the `normalized` a
 
 **Feature tier**: MVP
 **Handoff**: Primary path is OpenRegister `findDuplicates()`; Jaro-Winkler/TF-IDF retained only as the OR-unavailable fallback.
+
+`@e2e exclude` all three scenarios describe OpenRegister's detector, not a pipelinq surface. Matching is executed by OR from the `x-openregister-dedup` annotation on the `masterEntity` schema (`lib/Settings/register.d/90-master-data-management.json`: matchRules on `goldenRecord.kvkNumber` (exact, 0.4), `goldenRecord.email` (exact, 0.3), `goldenRecord.name` (normalized 0.2 + levenshtein 0.1), `threshold: 0.7`). Pipelinq ships no detector and no stewardship-queue screen: `DuplicateDetectionService` and `StringSimilarity` return no match under `lib/`, and `src/manifest.d/90-master-data-management.json` declares `"menu": []` / `"pages": []`, so a browser has nothing to drive. NOTE — the third scenario's in-process Jaro-Winkler/TF-IDF fallback was NOT retained (the spec makes it a MAY); there is no app-side code path left to exercise. Candidate generation, the threshold cut-off and the stewardship queue are owned + e2e-tested by OpenRegister.
 
 #### Scenario: Name similarity fuzzy match
 
@@ -93,130 +89,114 @@ The system MUST support probabilistic duplicate detection via the `normalized` a
 
 ### Requirement: REQ-MDM-004 — Merge Tooling with Preview and Reversibility
 
-A merge MUST be reversible within a configurable window (default 30 days) and MUST show a preview of all downstream impacts before commit.
+The system MUST rely on **OpenRegister's `mdm-merge` engine** for preview, atomic execution,
+reversal and the `mergeOperation` audit log (declared via `x-openregister-merge`); the app-side
+`MergeService` MUST be deleted. Downstream propagation after a merge or reversal MUST be driven by
+**subscribing to OpenRegister's `ObjectsMergedEvent`**, not by an app-side merge call: the
+`ObjectsMergedSyncListener` MUST enqueue one downstream sync item per target system with
+`changeType = merge` (or `reverse-merge` when `isReversal()` is true), carrying the survivor's
+OR-materialised golden record. Propagation MUST be an event subscription, never an RPC into
+OpenRegister internals (ADR-041).
 
 **Feature tier**: MVP
-**Handoff**: Deferred — tracked for a future change; existing OpenRegister soft-delete + audit trail provides the storage primitives.
+**Handoff**: Consumes OpenRegister `mdm-merge` + `ObjectsMergedEvent`. App-side `MergeService` is deleted.
 
-#### Scenario: Merge preview shows downstream impact
+#### Scenario: Merge event enqueues downstream sync per system
 
-- GIVEN a data steward merging two account-master-entities A and B, both with open invoices in Shillinq and both linked to projects in Procest
-- WHEN `MergeService::previewMerge(A, B)` is called
-- THEN a preview JSON response includes post-merge golden record, downstream sync impact, and reversal window
-- AND the wizard displays this preview to the steward for confirmation
+- GIVEN OpenRegister fires `ObjectsMergedEvent` (survivor uuid, merged-from uuids, mergeOperationId, isReversal=false) after a merge
+- WHEN `ObjectsMergedSyncListener` handles it
+- THEN it MUST enqueue one sync-queue item per downstream system with `changeType = merge`, the survivor as `masterEntity`, and the survivor's golden record in the payload
 
-#### Scenario: Merge execution creates snapshot
+`@e2e exclude` backend event fan-out — asserted by `ObjectsMergedSyncListenerTest` over the in-memory repository; the merge UI is owned + e2e-tested by OpenRegister.
 
-- GIVEN the steward confirms the merge
-- WHEN `MergeService::executeMerge(A, B)` runs
-- THEN a `merge-operation` record is created with `preMergeSnapshot` containing goldenRecords, attributeProvenances, and status for both A and B
-- AND all source-records linked to A are relinked to B
-- AND Entity A is marked `status = merged-into-other`, `mergedIntoMasterId = B`
-- AND Entity B.mergedFrom is updated with A
-- AND sync-queue-items are created for Shillinq and Procest
-- AND an audit trail entry is written
+#### Scenario: Reversal event uses reverse-merge change type
 
-#### Scenario: Merge reversal within 30 days
+- GIVEN `ObjectsMergedEvent` with `isReversal() = true`
+- WHEN the listener handles it
+- THEN each enqueued sync item MUST use `changeType = reverse-merge`
 
-- GIVEN a merge performed 15 days ago, still marked `reversible = true`
-- WHEN a steward clicks "Reverse merge"
-- THEN `MergeService::reverseMerge()` restores all entities and source-record linkages from `preMergeSnapshot`
-- AND reverse-merge sync-queue-items are created for downstream apps
-- AND the merge-operation is marked `reversedAt`, `reversedBy`
-
-#### Scenario: Merge reversal blocked after 30 days
-
-- GIVEN a merge 31 days old
-- WHEN a steward tries to reverse it
-- THEN the system returns error "Reversal window has expired"
-- AND `reversible = false` on the merge-operation
-- AND no reversal is permitted
-
----
+`@e2e exclude` backend event fan-out — asserted by the listener unit test.
 
 ### Requirement: REQ-MDM-005 — Per-Attribute Trust-Tier Configuration
 
-The system MUST allow data stewards to configure trust-tiers per (entityType, attribute, source), with effective date and rationale.
+The system MUST express per-`(entityType, attribute, sourceSystem)` trust tiers as rows in
+**OpenRegister's `trust-configuration` register**, resolved by OR's `TrustTierResolver` — not via an
+app-side `TrustConfigurationService`, which MUST be deleted. The pipelinq register file MUST NOT
+declare a local `trustConfiguration` schema or seed rows. pipelinq MUST seed its three account trust
+rows into OpenRegister's register with an idempotent `IRepairStep` (`SeedTrustConfigurationRows`)
+that writes through `ObjectService` (RBAC + multitenancy), matches each row on its natural key before
+writing, and no-ops when OpenRegister is not installed.
 
 **Feature tier**: MVP
-**Handoff**: Deferred — partial coverage via existing admin-settings; full trust-configuration schema deferred.
+**Handoff**: Consumes OpenRegister `mdm-survivorship` `trust-configuration` register + `TrustTierResolver`.
 
-#### Scenario: KvK activated as gold for addresses
+#### Scenario: Trust rows are seeded into OpenRegister idempotently
 
-- GIVEN a new `trust-configuration` entry with entityType=account, attribute=billingAddress, sourceSystem=kvk-api, trustTier=gold, effectiveFrom=2026-06-01
-- WHEN after June 1, 2026 a KvK update arrives for account "Voorbeeld B.V." with new address "Bedrijfsplein 99"
-- THEN the KvK address wins over a stale shillinq-debiteuren address (previously silver)
-- AND `attributeProvenance.billingAddress` is updated with `sourceSystem=kvk-api`, `trustTier=gold`, `lastUpdated=<now>`
-- AND sync-queue-items propagate the new address to downstream apps
+- GIVEN OpenRegister is installed and the pipelinq trust rows are not yet present
+- WHEN `SeedTrustConfigurationRows` runs
+- THEN it MUST write the three account rows into OpenRegister's `trust-configuration` register via `ObjectService`
+- AND a second run MUST write nothing (each row matched on `(entityType, attribute, sourceSystem)`)
 
-#### Scenario: Freshness decay after inactivity
+`@e2e exclude` backend Repair step — asserted by `SeedTrustConfigurationRowsTest` with a recording ObjectService; tier resolution is owned + e2e-tested by OpenRegister.
 
-- GIVEN a trust-configuration for attribute email with sourceSystem=pipelinq-crm, trustTier=gold, freshnessDecayDays=180
-- WHEN 181 days have passed since the source-record's lastChange
-- THEN on next recomputation, the tier is automatically lowered to silver
-- AND another source's email (if available) may now win even if it was bronze before
+#### Scenario: Local trust schema and service are removed
 
----
+- WHEN the pipelinq register file and `lib/` tree are inspected
+- THEN there MUST be no `trustConfiguration` schema declaration, no `trustConfiguration` in the `pipelinq` `schemas[]`, no local trust seed rows, and no `TrustConfigurationService` class
+
+`@e2e exclude` backend deletion + schema assertion — verified by grep + JSON parse.
 
 ### Requirement: REQ-MDM-006 — Downstream Sync Queue with Retries and Confirmation
 
-The system MUST queue changes to downstream apps via sync-queue-items, with automatic exponential-backoff retries and confirmation callbacks.
+Downstream synchronization MUST be fulfilled entirely by OpenRegister's `WebhookService`: `ObjectsMergedSyncListener` dispatches merge/reversal payloads directly via `WebhookService::dispatchEvent` at event time, and queueing, per-target delivery logging, failure capture, and retry scheduling (`WebhookRetryJob`, `next_retry_at`) are OpenRegister's responsibility. Pipelinq MUST NOT persist queue rows, run drain jobs, or record acknowledgment references: `SyncQueueService`, `MdmSyncQueueProcessorJob`, `MdmOpenRegisterSyncJob`, `MdmHardDeleteConfirmationJob`, and the `syncQueueItem` schema are removed. This SUPERSEDES the earlier retention of the app-side queue — the retained store recorded only synthetic acknowledgments (`dispatchEvent` returns void) and duplicated OR's retry semantics. The listener MUST resolve `WebhookService` lazily and degrade to a logged no-op when OpenRegister is absent. Delivery confirmation is an OR webhook-log outcome, never an app-side ack row.
 
 **Feature tier**: MVP
-**Handoff**: Covered by existing openconnector + `queue-management` capability for cross-app delivery.
+**Handoff**: Queueing, delivery, and retries — OpenRegister `WebhookService` + `WebhookRetryJob`.
 
-#### Scenario: Sync queue item created on merge
+#### Scenario: Merge dispatches directly through OR
 
-- GIVEN a successful merge in MDM
-- WHEN `MergeService::executeMerge()` completes
-- THEN a sync-queue-item is created for each downstream app (Shillinq, Procest) with status=queued and a payload containing merged-from/merged-into IDs and golden-record snapshot
+- GIVEN a merge or reversal fires `ObjectsMergedEvent`
+- WHEN `ObjectsMergedSyncListener` handles the event
+- THEN it MUST call `WebhookService::dispatchEvent` with the sync envelope (targetSystem, changeType, masterEntity, payload)
+- AND no `syncQueueItem` object MUST be created anywhere
 
-#### Scenario: Exponential backoff on delivery failure
+`@e2e exclude` in-process event fan-out with no rendered surface — the trigger is OpenRegister's `ObjectsMergedEvent` (fired inside OR's merge engine, which pipelinq hosts no UI for) and the assertion is about the argument handed to `WebhookService::dispatchEvent` plus the ABSENCE of a `syncQueueItem` row; neither is observable in a browser. Asserted by tests/Unit/Listener/ObjectsMergedSyncListenerTest.php (testMergeEventDispatchesDownstreamSync — five per-target envelopes with `changeType = merge`, the survivor's golden record, and `assertArrayNotHasKey('syncQueueItem', …)`; testReversalEventUsesReverseMergeChangeType).
 
-- GIVEN a sync-queue-item with targetSystem=shillinq, status=queued
-- WHEN the sync-queue worker attempts delivery and openconnector returns HTTP 500
-- THEN attemptCount is incremented and nextRetryAt is set with exponential backoff (1m, 5m, 30m, 2h, 12h, 24h)
-- AND status remains `queued` until max attempts are exhausted
-- AND when the 7-day retry budget is exhausted, status becomes `dead-letter` and an admin is notified
+#### Scenario: Retry is OR's job
 
-#### Scenario: Confirmation callback from target
+- GIVEN a downstream delivery that fails
+- WHEN OR's `WebhookRetryJob` next runs
+- THEN the retry MUST be driven by OR's webhook log (`next_retry_at`), with zero pipelinq retry code involved
 
-- GIVEN a sync-queue-item in sending status
-- WHEN openconnector successfully delivers to Shillinq and Shillinq returns HTTP 201 with acknowledgmentReference="SHQ-2026-12345"
-- THEN status = acknowledged, acknowledgedAt = now, acknowledgmentReference = "SHQ-2026-12345"
-- AND the sync-queue dashboard shows "acknowledged" status
+`@e2e exclude` a cron path inside another app — the retry is OpenRegister's `WebhookRetryJob` reading OR's own webhook log, which a browser session can neither schedule nor read. The pipelinq half of the claim ("zero pipelinq retry code involved") is a code-absence assertion: `MdmSyncQueueProcessorJob`, `MdmOpenRegisterSyncJob`, `MdmHardDeleteConfirmationJob` and `SyncQueueService` have no class definition anywhere under `lib/` — the names survive only in retirement comments — and `lib/BackgroundJob/` contains no MDM job at all.
 
----
+#### Scenario: OR absent
+
+- GIVEN a deployment without OpenRegister
+- WHEN a merge event fires
+- THEN the listener MUST log and skip dispatch without throwing
+
+`@e2e exclude` backend dispatch path — asserted by the listener unit test (WebhookService dispatch mock + no-queue assertion); no UI surface exists.
 
 ### Requirement: REQ-MDM-007 — Data-Quality-Score per Master Entity
 
-Each Master Entity MUST have a `dataQualityScore` (0-1). The generic field-quality dimensions (completeness, format, freshness) MUST be declared on the `masterEntity` schema via the OpenRegister `x-openregister-quality` annotation so OpenRegister materialises `qualityScore` and `qualityStatus` on save; the app MUST NOT re-implement those dimensions imperatively. The app MUST retain the cross-source agreement (conflict) term — which depends on the linked source records and is not expressible as a single-object OR rule — and MUST blend OpenRegister's materialised `qualityScore` with the agreement term into `dataQualityScore`. `MasterEntityService` MUST materialise `lastSourceUpdate` (the most recent provenance `lastUpdated`) so OpenRegister's freshness rule has a single date field to decay.
+The system MUST expose the per-object data-quality score from **OpenRegister's materialised
+`qualityScore`** (from `x-openregister-quality`); the app-side `DataQualityScorer` and its
+cross-source agreement **blend** MUST be deleted. The downstream read API MUST source the public
+`dataQualityScore` field from OR's `qualityScore`, and `dataQualityScore` MUST no longer be a
+required `masterEntity` property (nothing app-side populates it).
 
 **Feature tier**: MVP
-**Handoff**: Consumes OpenRegister `mdm-foundation` for completeness/format/freshness; agreement + trust weighting stay in pipelinq.
+**Handoff**: Consumes OpenRegister `mdm-quality-api` (`qualityScore` materialised on save).
 
-#### Scenario: Quality annotation is declared and materialises on save
+#### Scenario: Quality scorer is deleted and the read API uses OR's qualityScore
 
-- WHEN the pipelinq register is (re-)imported and a Master Entity is saved
-- THEN the `masterEntity` schema configuration MUST contain `x-openregister-quality`
-- AND OpenRegister MUST materialise `qualityScore` and `qualityStatus` onto the saved object
+- WHEN the pipelinq `lib/` tree is inspected and the read API projects a Master Entity
+- THEN `DataQualityScorer` MUST NOT exist
+- AND the read API's `dataQualityScore` MUST be sourced from the object's OR-materialised `qualityScore`
+- AND `dataQualityScore` MUST NOT appear in `masterEntity.required`
 
-#### Scenario: Freshness has a materialised date field
-
-- WHEN `MasterEntityService` recomputes a golden record
-- THEN it MUST materialise `lastSourceUpdate` as the most recent `attributeProvenance[*].lastUpdated`
-
-#### Scenario: Agreement term stays app-side and is blended
-
-- GIVEN two non-withdrawn source records that disagree on an attribute
-- WHEN the data-quality score is recomputed
-- THEN the app MUST compute the agreement (1 − conflicting/total) term itself
-- AND `dataQualityScore` MUST combine OpenRegister's materialised `qualityScore` with the agreement term
-
-#### Scenario: Imperative completeness/freshness scoring is removed
-
-- WHEN the data-quality scorer source is inspected
-- THEN it MUST NOT contain imperative completeness or freshness formulas (delegated to OpenRegister)
+`@e2e exclude` backend deletion + projection — verified by grep, the read-API unit path, and JSON parse; quality materialisation is owned + e2e-tested by OpenRegister.
 
 ### Requirement: REQ-MDM-008 — Audit Trail per Merge and Gold-Record Mutation
 
@@ -224,6 +204,8 @@ The system MUST log an audit trail for every merge and every gold-record attribu
 
 **Feature tier**: MVP
 **Handoff**: Covered by OpenRegister built-in audit-trail field on every schema instance (10-year retention is platform-default).
+
+`@e2e exclude` cross-app surface owned by OpenRegister — the audit trail is OR's platform-level per-object log, written by OR's merge engine and by the `x-openregister-survivorship` recompute on save, and rendered in OpenRegister's own object history. Both scenarios also depend on acts a browser cannot perform against pipelinq: performing a merge (OR hosts the merge wizard; pipelinq's `MergeService` is deleted and `src/manifest.d/90-master-data-management.json` declares `"menu": []` / `"pages": []`, so the app exposes no MDM screen at all) and a trust-tier recomputation on a source-record update (materialised by OR's `SurvivorshipRecomputeListener`, not by pipelinq — no `MasterEntityService` or `SourceRecordChangedListener` class exists under `lib/`, the former surviving only in re-homing comments in `lib/Service/Mdm/MdmObjectRepository.php`). Retention is a platform default, not app behaviour.
 
 #### Scenario: Merge audit log
 
@@ -245,6 +227,8 @@ The system MUST correctly execute AVG right-of-deletion: Master Entity soft-dele
 
 **Feature tier**: MVP
 **Handoff**: Covered by existing `avg-verzoeken-workflow` change (separate openspec change in this repo).
+
+`@e2e exclude` the app-side AVG / right-of-deletion workflow no longer exists in pipelinq, so there is no surface to drive: `consume-or-dsar` (ADR-047 Phase 3) removed every `avgVerzoek#*` / `avgEvidence#*` / `avgRedaction#*` / `avgDenial#*` / `avgBundle#*` and `mdmAvgWorkflow#*` route (see the block comment in `appinfo/routes.php`, which registers none of them), and `AVGWorkflowService` — named by the second scenario as `AVGWorkflowService::approveAndExecuteRightOfDeletion()` — returns no match anywhere under `lib/` or `src/`. DSAR is executed by OpenRegister's case engine (`/apps/openregister/avg`, `/api/gdpr/*`) and covered by OR's own suite; pipelinq only contributes evidence (`PipelinqEvidenceSourceProvider`, asserted by tests/Unit/Service/PipelinqEvidenceSourceProviderTest.php) and a one-time migration of legacy `avgVerzoek` objects into OR `dataSubjectRequest` cases (`lib/Repair/MigrateAvgVerzoekenToOrDsar.php`, asserted by tests/Unit/Repair/MigrateAvgVerzoekenToOrDsarTest.php: testMapsFullVerzoek, testErasureIsNotFiledAsAccess, testIdempotentRerun). The third scenario ("an auditor reviews the trail 1 year later") is additionally not a same-session observation.
 
 #### Scenario: Initiate right-of-deletion
 
@@ -277,46 +261,40 @@ The system MUST correctly execute AVG right-of-deletion: Master Entity soft-dele
 
 ### Requirement: REQ-MDM-010 — Read-API for Downstream Apps
 
-The system MUST publish a read-API allowing downstream apps to retrieve golden records by masterId, aliasId, or natural key.
+Downstream apps MUST consume master-entity data directly from OpenRegister's object surface (`/apps/openregister/api/objects`, RBAC + multitenancy scoped) — pipelinq MUST NOT expose a read-API wrapper. `MdmApiController` and its `mdmApi#queryByNaturalKey` / `mdmApi#show` routes are removed. This SUPERSEDES the earlier read-projection requirement: the projection duplicated OR object reads (ADR-022; redundant-controller rule), and the `dataQualityScore` it projected is already materialised on the OR object as `qualityScore`. `MdmObjectRepository` remains only for pipelinq-internal reads.
 
 **Feature tier**: MVP
-**Handoff**: Covered by existing OpenRegister REST API which already exposes `contact`/`account`/`product`/`vendor` schema instances with natural-key filtering.
+**Handoff**: Downstream reads — OpenRegister object API directly.
 
-#### Scenario: Query by KvK number
+#### Scenario: No pipelinq read-API routes remain
 
-- GIVEN Procest needs to link a project to a stakeholder organization via KvK "12345678"
-- WHEN Procest calls `GET /api/mdm/master?type=account&kvk=12345678`
-- THEN the system returns a JSON document with masterId, entityType, goldenRecord, dataQualityScore and attributeProvenance
-- AND Procest stores the masterId on its project record
+- GIVEN the pipelinq codebase after this change
+- WHEN routes are enumerated
+- THEN no `/api/mdm/master` or `/api/mdm/master/{id}` route MUST exist
 
-#### Scenario: Query by masterId
+#### Scenario: Downstream resolves via OR
 
-- GIVEN Procest already has masterId "550e8400-..." stored from a prior link
-- WHEN Procest calls `GET /api/mdm/master/550e8400-...`
-- THEN the current golden record is returned
-- AND if a merge occurred since the earlier query, the masterId in the response is the new merged-into ID, and the prior masterId appears in `aliases`
+- GIVEN a downstream caller needing a master entity by natural key
+- WHEN it queries OpenRegister's object API with the masterEntity schema filter
+- THEN it MUST receive the golden record including the OR-materialised `qualityScore`, without any pipelinq endpoint in the path
 
-#### Scenario: Query by alias (pre-merge ID)
-
-- GIVEN Procest has an old reference to masterId "old-id-abc" which was merged
-- WHEN Procest calls `GET /api/mdm/master/old-id-abc`
-- THEN the system recognizes this as an alias in the new master-entity, and returns the current golden record plus a note indicating the masterId was merged
-
----
+`@e2e exclude` machine-to-machine read path — asserted in Newman against the OR object API; no pipelinq UI surface.
 
 ### Requirement: REQ-MDM-011 — Sync Golden Record to OpenRegister
 
-The system MUST keep the OpenRegister schema instances (contact, account, product, vendor) synchronized with the golden records, marking them with masterEntityRef.
+The system MUST keep the OpenRegister schema instances (contact, account, product, vendor) synchronized with the golden records, marking them with `masterEntityRef` — invoked from the merge/mutation event path (`ObjectsMergedSyncListener` → `OpenRegisterSyncService::syncMasterToRegister`) instead of a polling background job. `MdmOpenRegisterSyncJob` is removed; no periodic sweep re-reads masters. If evidence during apply shows OR-side stewardship (ADR-045 #D) already maintains these projections, `OpenRegisterSyncService` is deleted instead — either disposition leaves zero app-side queue or polling infrastructure.
 
 **Feature tier**: MVP
-**Handoff**: Covered by `pipelinq-or-adoption` and `openregister-integration` capabilities; existing schemas remain the system of record.
+**Handoff**: Event-driven sync; storage remains OpenRegister schemas as system of record.
 
-#### Scenario: Golden record reflects in OR schema
+#### Scenario: Golden record reflects in OR schema on the event path
 
-- GIVEN a change to Master Entity account's goldenRecord (phone updated)
-- WHEN the sync-to-OR job runs
-- THEN the corresponding OpenRegister `account` object is updated with the new phone value
-- AND `masterEntityRef = <masterId>` is set on the OR object
+- GIVEN a change to a Master Entity account's goldenRecord (phone updated)
+- WHEN the merge/mutation event is handled
+- THEN the corresponding OpenRegister `account` object MUST be updated with the new phone value and `masterEntityRef = <masterId>`
+- AND no background polling job MUST be involved
+
+`@e2e exclude` in-process event path with no rendered surface — the trigger is OpenRegister's `ObjectsMergedEvent` and the assertion is about the STORED shape of the projected OR object (`masterEntityRef`, `isMasterRecord`, the copied golden-record field). Pipelinq hosts no MDM screen that renders a master entity or its projection (`src/manifest.d/90-master-data-management.json` declares `"menu": []` / `"pages": []`), so a browser cannot reach either end of it. Asserted by tests/Unit/Listener/ObjectsMergedSyncListenerTest.php (testMergeEventProjectsGoldenRecord — one canonical `contact` object written with `masterEntityRef = survivor` and `isMasterRecord = true`; testOrAbsentDegradesGracefully proves the projection runs off the event, not off a poller).
 
 #### Scenario: Pre-merge OR records marked as merged
 
@@ -324,7 +302,7 @@ The system MUST keep the OpenRegister schema instances (contact, account, produc
 - WHEN the first OR object is marked as `isMasterRecord = false`
 - THEN queries against the OpenRegister catalog still resolve correctly via masterEntityRef
 
----
+`@e2e exclude` backend sync path — asserted by OpenRegisterSyncService/listener unit tests; steward UI lives in OR.
 
 ### Requirement: REQ-MDM-012 — Conflict-Resolution Wizard for Data Stewards
 
@@ -332,6 +310,8 @@ The system MUST provide a wizard for data stewards to resolve attribute conflict
 
 **Feature tier**: MVP
 **Handoff**: Deferred — UI wizard tracked for a future change once the trust-configuration schema lands.
+
+`@e2e exclude` the wizard both scenarios drive does not exist in this app and by REQ-MDM-013 must not: `MdmConflictResolutionModal` and `MdmMergeWizardModal` return no match under `src/`, `src/registry.js` registers neither, and `src/manifest.d/90-master-data-management.json` declares `"menu": []` / `"pages": []` — there is no route, nav entry or control a browser could open. The steward conflict-resolution surface is hosted by OpenRegister (`mdm-conflict-resolution-ui`) against the `x-openregister-survivorship` annotation, and the persistent rule the second scenario creates is a row in OR's `trust-configuration` register, seeded by `lib/Repair/SeedTrustConfigurationRows.php` (asserted by tests/Unit/Repair/SeedTrustConfigurationRowsTest.php: testSeedsThreeRows, testSecondRunIsIdempotent, testNoOpWhenOpenRegisterMissing).
 
 #### Scenario: Resolve VAT number conflict
 
@@ -349,4 +329,75 @@ The system MUST provide a wizard for data stewards to resolve attribute conflict
 - THEN the attribute value for this entity is resolved to the shillinq value
 - AND a trust-configuration entry is created with entityType=account, attribute=vatNumber, sourceSystem=shillinq-debiteuren, trustTier=gold
 - AND all other Master Entities are queued for recomputation with the new rule
+
+### Requirement: REQ-MDM-013 — MDM Steward UI Deep-Linked to OpenRegister
+
+The system MUST NOT host its own Master Data Management steward views. The app-local MDM views
+(`MdmMasterEntityListView`, `MdmDuplicateCandidatesDashboard`, `MdmSyncQueueAdmin`), in-body
+sections (`MdmDataQualitySection`, `MdmGoldenRecordSection`) and modals
+(`MdmConflictResolutionModal`, `MdmMergeWizardModal`) MUST be removed, together with their
+`src/registry.js` imports + registrations and their `manifest.d` pages and nav entries. In their
+place the app MUST expose exactly ONE navigation entry that deep-links to OpenRegister's
+Data-Quality surface (`/index.php/apps/openregister/#/quality`), where the steward selects the
+pipelinq register and `masterEntity` schema in OpenRegister's own register/schema selector. No
+app-local MDM dashboard, list, merge wizard or conflict-resolution modal may remain.
+
+**Feature tier**: MVP
+**Handoff**: Consumes OpenRegister `mdm-quality-api`, `mdm-survivorship`, `mdm-merge`, `duplicate-detection`, `mdm-conflict-resolution-ui` (steward views hosted by OR). Backend deletion is retired to the sibling backend link.
+
+#### Scenario: App-local MDM views are removed
+
+- WHEN the pipelinq `src/` tree is inspected after this change
+- THEN none of `MdmMasterEntityListView`, `MdmDuplicateCandidatesDashboard`, `MdmSyncQueueAdmin`, `MdmDataQualitySection`, `MdmGoldenRecordSection`, `MdmConflictResolutionModal` or `MdmMergeWizardModal` MUST exist as a file or be imported / registered in `src/registry.js`
+- AND the production build MUST resolve with no unresolved import from those deletions
+
+`@e2e exclude` structural deletion — verified by a repo-wide grep for the seven component names + the `/mdm/` routes returning nothing under `src/`, and by a passing `npm run build`.
+
+#### Scenario: A single deep-link nav entry replaces the three MDM entries
+
+- WHEN `src/manifest.d/90-master-data-management.json` is inspected
+- THEN it MUST declare no app-hosted MDM page and exactly one `href` nav entry labelled "Data quality"
+- AND that entry's `href` MUST target OpenRegister's Data-Quality surface (`/index.php/apps/openregister/#/quality`), not an app-local route
+
+`@e2e exclude` structural manifest assertion — verified by parsing the manifest fragment (one `href` menu entry, empty `pages`) in the build/lint step; the live steward surface it links to lives in OpenRegister's own e2e suite.
+
+#### Scenario: Steward scopes the OR surface to pipelinq/masterEntity
+
+- GIVEN the "Data quality" nav entry opens OpenRegister's Data-Quality index
+- WHEN the steward selects the pipelinq register and the `masterEntity` schema in OpenRegister's in-page register/schema selector
+- THEN OpenRegister's Data-Quality view MUST show the pipelinq `masterEntity` quality distribution and lowest-quality objects (query params are not required, because OpenRegister scopes via the selector, not the URL)
+
+`@e2e exclude` cross-app surface owned by OpenRegister — the register/schema selection + quality rendering are covered by OpenRegister's `mdm-frontend` e2e suite; pipelinq only contributes the deep-link entry point.
+
+### Requirement: REQ-MDM-014 — One-Time Drain of In-Flight Queue Rows
+
+A repair step MUST drain pre-existing non-terminal `syncQueueItem` rows exactly once: dispatch each through `WebhookService::dispatchEvent` with the original sync envelope, mark it terminal (`drained`), skip already-terminal rows on re-run, and log a drained/skipped summary. Rows whose hand-off fails MUST remain non-terminal and be reported; removal of the `syncQueueItem` schema MUST be gated on a clean drain. The repair step MUST NOT delete rows.
+
+**Feature tier**: MVP
+
+#### Scenario: Pending rows are drained once
+
+- GIVEN three `syncQueueItem` rows with status pending and one already delivered
+- WHEN the repair step runs
+- THEN exactly three dispatches MUST go through `WebhookService::dispatchEvent`
+- AND all three rows MUST be marked `drained`; the delivered row is skipped
+
+`@e2e exclude` a one-shot `IRepairStep` (`lib/Repair/DrainMdmSyncQueue.php`), which runs during `occ upgrade` / app enable and is neither triggerable nor observable from a browser session — and its subject, the legacy `syncQueueItem` rows, is a retired schema no pipelinq screen has ever rendered. Asserted by tests/Unit/Repair/DrainMdmSyncQueueTest.php (testPendingRowsDrainedOnceDeliveredSkipped — exactly three `WebhookService::dispatchEvent` calls, the delivered row skipped, all three marked `drained`).
+
+#### Scenario: Idempotent re-run
+
+- GIVEN a completed drain
+- WHEN the repair step runs again
+- THEN zero dispatches MUST occur and the summary MUST report all rows skipped
+
+`@e2e exclude` same one-shot `IRepairStep` path as above — re-running a repair step and counting its dispatches has no browser surface, and the "summary" is `IOutput` text written to the `occ` console. Asserted by tests/Unit/Repair/DrainMdmSyncQueueTest.php (testIdempotentRerun; testEmptyQueueNoOp covers the no-rows case).
+
+#### Scenario: Failed hand-off blocks schema removal
+
+- GIVEN a row whose dispatch throws
+- WHEN the drain completes
+- THEN the row MUST remain non-terminal and be listed in the repair output
+- AND the `syncQueueItem` schema MUST NOT be removed until a clean drain is achieved
+
+`@e2e exclude` a fault-injection path on a one-shot `IRepairStep` — the scenario requires a dispatch that THROWS, which cannot be provoked from a browser, and its outcome (the row left non-terminal plus a line in the `occ` repair output) is not rendered anywhere. Asserted by tests/Unit/Repair/DrainMdmSyncQueueTest.php (testFailedHandOffStaysPending; testOrAbsentLeavesRowsInPlace covers the OpenRegister-absent variant).
 

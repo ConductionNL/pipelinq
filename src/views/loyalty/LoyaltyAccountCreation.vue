@@ -5,17 +5,24 @@
 <template>
 	<div class="loyalty-enrollment">
 		<h2>{{ t('pipelinq', 'Loyalty enrollment') }}</h2>
-		<p>{{ t('pipelinq', 'Enroll a customer in a loyalty programme. Customer opt-in is mandatory under AVG/GDPR.') }}</p>
+		<p>
+			{{
+				t(
+					'pipelinq',
+					'Enroll a customer in a loyalty programme. Customer opt-in is mandatory under AVG/GDPR.',
+				)
+			}}
+		</p>
 
 		<form @submit.prevent="enroll">
 			<NcTextField
-				v-model="klantId"
-				:label="t('pipelinq', 'Customer (klantId / contact UID)')"
+				v-model="customerId"
+				:label="t('pipelinq', 'Customer (customerId / contact UID)')"
 				required />
 
 			<NcSelect
 				v-model="selectedProgramme"
-				:input-label="t('pipelinq', 'Programme')"
+				:inputLabel="t('pipelinq', 'Programme')"
 				:options="programmeOptions"
 				label="label"
 				:clearable="false" />
@@ -25,13 +32,19 @@
 				:label="t('pipelinq', 'Terms version accepted')" />
 
 			<label class="loyalty-enrollment__opt-in">
-				<NcCheckboxRadioSwitch :checked.sync="optInAccepted">
-					{{ t('pipelinq', 'I agree to store my loyalty data and contact me with offers') }}
+				<NcCheckboxRadioSwitch v-model="optInAccepted">
+					{{
+						t(
+							'pipelinq',
+							'I agree to store my loyalty data and contact me with offers',
+						)
+					}}
 				</NcCheckboxRadioSwitch>
 			</label>
 
 			<p class="loyalty-enrollment__terms">
-				<a v-if="termsUrl"
+				<a
+					v-if="termsUrl"
 					:href="termsUrl"
 					target="_blank"
 					rel="noopener noreferrer">
@@ -39,33 +52,44 @@
 				</a>
 			</p>
 
-			<NcButton type="primary" native-type="submit" :disabled="!canSubmit">
+			<NcButton variant="primary" type="submit" :disabled="!canSubmit">
 				{{ t('pipelinq', 'Create loyalty account') }}
 			</NcButton>
 		</form>
 
 		<NcNoteCard v-if="result" type="success">
-			{{ t('pipelinq', 'Account created: {accountId}', { accountId: resultId }) }}
+			{{
+				t('pipelinq', 'Account created: {accountId}', {
+					accountId: resultId,
+				})
+			}}
 		</NcNoteCard>
 	</div>
 </template>
 
 <script>
+import axios from '@nextcloud/axios'
+import { showError } from '@nextcloud/dialogs'
+import { generateUrl } from '@nextcloud/router'
 import NcButton from '@nextcloud/vue/components/NcButton'
 import NcCheckboxRadioSwitch from '@nextcloud/vue/components/NcCheckboxRadioSwitch'
 import NcNoteCard from '@nextcloud/vue/components/NcNoteCard'
 import NcSelect from '@nextcloud/vue/components/NcSelect'
 import NcTextField from '@nextcloud/vue/components/NcTextField'
-import axios from '@nextcloud/axios'
-import { generateUrl } from '@nextcloud/router'
-import { showError } from '@nextcloud/dialogs'
 
 export default {
 	name: 'LoyaltyAccountCreation',
-	components: { NcButton, NcCheckboxRadioSwitch, NcNoteCard, NcSelect, NcTextField },
+	components: {
+		NcButton,
+		NcCheckboxRadioSwitch,
+		NcNoteCard,
+		NcSelect,
+		NcTextField,
+	},
+
 	data() {
 		return {
-			klantId: '',
+			customerId: '',
 			selectedProgramme: null,
 			programmes: [],
 			optInAccepted: false,
@@ -73,42 +97,72 @@ export default {
 			result: null,
 		}
 	},
+
 	computed: {
+		/**
+		 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-010
+		 */
 		programmeOptions() {
-			return this.programmes.map(p => ({ id: p.id, label: p.naam || p.id, termsUrl: p.termsUrl }))
+			return this.programmes.map((p) => ({
+				id: p.id,
+				label: p.name || p.id,
+				termsUrl: p.termsUrl,
+			}))
 		},
+
 		termsUrl() {
 			return this.selectedProgramme && this.selectedProgramme.termsUrl
 		},
+
+		/**
+		 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-010
+		 */
 		canSubmit() {
-			return this.optInAccepted && this.klantId && this.selectedProgramme
+			return this.optInAccepted && this.customerId && this.selectedProgramme
 		},
+
 		resultId() {
 			if (!this.result) {
 				return ''
 			}
-			return (this.result['@self'] && this.result['@self'].id) || this.result.accountId || ''
+			return (
+				(this.result['@self'] && this.result['@self'].id)
+				|| this.result.accountId
+				|| ''
+			)
 		},
 	},
+
 	mounted() {
 		this.loadProgrammes()
 	},
+
 	methods: {
+		/**
+		 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-010
+		 */
 		async loadProgrammes() {
 			try {
 				const response = await axios.get(
-					generateUrl('/apps/openregister/api/objects/pipelinq/loyaltyProgramme?_limit=200'),
+					generateUrl(
+						'/apps/openregister/api/objects/pipelinq/loyaltyProgramme?_limit=200',
+					),
 				)
-				const list = (response.data && (response.data.results || response.data)) || []
-				this.programmes = list.map(p => ({
+				const list =
+					(response.data && (response.data.results || response.data)) || []
+				this.programmes = list.map((p) => ({
 					id: p['@self']?.id || p.id || p.programmeId,
-					naam: p.naam,
+					name: p.name,
 					termsUrl: p.termsUrl,
 				}))
 			} catch (error) {
 				showError(this.t('pipelinq', 'Failed to load programmes'))
 			}
 		},
+
+		/**
+		 * @spec openspec/changes/loyalty-program/specs.md#REQ-LOY-010
+		 */
 		async enroll() {
 			if (!this.canSubmit) {
 				return
@@ -117,19 +171,21 @@ export default {
 			try {
 				// Create the account via OR /objects, with opt-in fields set.
 				const payload = {
-					klantId: this.klantId,
+					customerId: this.customerId,
 					programmeId: this.selectedProgramme.id,
 					currentBalance: 0,
 					lifetimePoints: 0,
-					status: 'actief',
+					status: 'active',
 					optInAccepted: true,
 					optInTimestamp: new Date().toISOString(),
 					optInTermsVersion: this.termsVersion,
-					aangemaaktOp: new Date().toISOString(),
+					createdOn: new Date().toISOString(),
 					lastActivityDate: new Date().toISOString(),
 				}
 				const response = await axios.post(
-					generateUrl('/apps/openregister/api/objects/pipelinq/klantLoyaltyAccount'),
+					generateUrl(
+						'/apps/openregister/api/objects/pipelinq/customerLoyaltyAccount',
+					),
 					payload,
 				)
 				this.result = response.data
@@ -146,10 +202,12 @@ export default {
 	padding: 1rem;
 	max-width: 640px;
 }
+
 .loyalty-enrollment__opt-in {
 	display: block;
 	margin: 1rem 0;
 }
+
 .loyalty-enrollment__terms {
 	font-size: 0.85rem;
 }

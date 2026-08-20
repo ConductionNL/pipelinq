@@ -28,6 +28,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\AttributionService;
 use OCA\Pipelinq\Service\BlastService;
 use OCP\AppFramework\Controller;
@@ -46,277 +47,330 @@ use OCP\IUserSession;
  *
  * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/tasks.md#blastcontroller-task-2.6-of-giant
  */
-class BlastController extends Controller
-{
-    /**
-     * Constructor.
-     *
-     * @param IRequest           $request            The request.
-     * @param BlastService       $blastService       Blast orchestration service.
-     * @param AttributionService $attributionService Attribution roll-up service (member 04).
-     * @param IUserSession       $userSession        Current user session.
-     */
-    public function __construct(
-        IRequest $request,
-        private readonly BlastService $blastService,
-        private readonly AttributionService $attributionService,
-        private readonly IUserSession $userSession,
-    ) {
-        parent::__construct(appName: Application::APP_ID, request: $request);
-    }//end __construct()
+class BlastController extends Controller {
+	/**
+	 * Constructor.
+	 *
+	 * @param IRequest $request The request.
+	 * @param BlastService $blastService Blast orchestration service.
+	 * @param AttributionService $attributionService Attribution roll-up service (member 04).
+	 * @param IUserSession $userSession Current user session.
+	 * @param ObjectOwnerAccessPolicy $policy Per-object owner access policy.
+	 */
+	public function __construct(
+		IRequest $request,
+		private readonly BlastService $blastService,
+		private readonly AttributionService $attributionService,
+		private readonly IUserSession $userSession,
+		private readonly ObjectOwnerAccessPolicy $policy,
+	) {
+		parent::__construct(appName: Application::APP_ID, request: $request);
+	}//end __construct()
 
-    /**
-     * GET /api/blasts — paginated list, optionally filtered by status.
-     *
-     * @param string|null $status Status filter (draft/scheduled/sending/sent/...).
-     * @param int         $page   1-based page number.
-     * @param int         $limit  Page size.
-     *
-     * @return JSONResponse `{data[], pagination}`.
-     *
-     * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/specs/marketing-api/spec.md#api-endpoints-crud-and-query
-     */
-    #[NoAdminRequired]
-    public function index(?string $status=null, int $page=1, int $limit=20): JSONResponse
-    {
-        if ($this->requireUser() === null) {
-            return $this->unauthorized();
-        }
+	/**
+	 * GET /api/blasts — paginated list, optionally filtered by status.
+	 *
+	 * @param string|null $status Status filter (draft/scheduled/sending/sent/...).
+	 * @param int $page 1-based page number.
+	 * @param int $limit Page size.
+	 *
+	 * @return JSONResponse `{data[], pagination}`.
+	 *
+	 * @spec openspec/specs/marketing-api/spec.md
+	 */
+	#[NoAdminRequired]
+	public function index(?string $status = null, int $page = 1, int $limit = 20): JSONResponse {
+		$uid = $this->requireUser();
+		if ($uid === null) {
+			return $this->unauthorized();
+		}
 
-        $envelope = $this->blastService->listBlasts(status: $status, page: $page, limit: $limit);
-        return new JSONResponse($envelope);
-    }//end index()
+		// Authentication is not authorization. Blasts reach customer contact
+		// data and send on the organisation's behalf — a CRM capability.
+		// Admins bypass via the policy.
+		if ($this->policy->isPrivileged(uid: $uid) === false) {
+			return $this->forbidden();
+		}
 
-    /**
-     * POST /api/blasts — create a draft Blast.
-     *
-     * @return JSONResponse 201 with the new Blast, 400 on invalid input.
-     *
-     * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/specs/marketing-api/spec.md#api-endpoints-crud-and-query
-     */
-    #[NoAdminRequired]
-    public function create(): JSONResponse
-    {
-        $user = $this->requireUser();
-        if ($user === null) {
-            return $this->unauthorized();
-        }
+		$envelope = $this->blastService->listBlasts(status: $status, page: $page, limit: $limit);
+		return new JSONResponse($envelope);
+	}//end index()
 
-        $payload = $this->collectBlastBody();
-        $result  = $this->blastService->createDraftBlast(payload: $payload, createdByUid: $user);
-        return $this->renderCreate(result: $result);
-    }//end create()
+	/**
+	 * POST /api/blasts — create a draft Blast.
+	 *
+	 * @return JSONResponse 201 with the new Blast, 400 on invalid input.
+	 *
+	 * @spec openspec/specs/marketing-api/spec.md
+	 */
+	#[NoAdminRequired]
+	public function create(): JSONResponse {
+		$user = $this->requireUser();
+		if ($user === null) {
+			return $this->unauthorized();
+		}
 
-    /**
-     * GET /api/blasts/:id — fetch one Blast.
-     *
-     * @param string $id Blast UUID or slug.
-     *
-     * @return JSONResponse 200 with the Blast or 404 generic.
-     *
-     * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/specs/marketing-api/spec.md#api-endpoints-crud-and-query
-     */
-    #[NoAdminRequired]
-    public function show(string $id): JSONResponse
-    {
-        if ($this->requireUser() === null) {
-            return $this->unauthorized();
-        }
+		$payload = $this->collectBlastBody();
+		$result = $this->blastService->createDraftBlast(payload: $payload, createdByUid: $user);
+		return $this->renderCreate(result: $result);
+	}//end create()
 
-        $blast = $this->blastService->getBlastById(blastId: $id);
-        if ($blast === null) {
-            return $this->notFound();
-        }
+	/**
+	 * GET /api/blasts/:id — fetch one Blast.
+	 *
+	 * @param string $id Blast UUID or slug.
+	 *
+	 * @return JSONResponse 200 with the Blast or 404 generic.
+	 *
+	 * @spec openspec/specs/marketing-api/spec.md
+	 */
+	#[NoAdminRequired]
+	public function show(string $id): JSONResponse {
+		$uid = $this->requireUser();
+		if ($uid === null) {
+			return $this->unauthorized();
+		}
 
-        return new JSONResponse($blast);
-    }//end show()
+		// Authentication is not authorization. Blasts reach customer contact
+		// data and send on the organisation's behalf — a CRM capability.
+		// Admins bypass via the policy.
+		if ($this->policy->isPrivileged(uid: $uid) === false) {
+			return $this->forbidden();
+		}
 
-    /**
-     * PATCH /api/blasts/:id — rename a Blast (name field only).
-     *
-     * @param string $id Blast UUID or slug.
-     *
-     * @return JSONResponse 200 with the patched Blast, 400/404 on failure.
-     *
-     * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/specs/marketing-api/spec.md#api-endpoints-crud-and-query
-     */
-    #[NoAdminRequired]
-    public function update(string $id): JSONResponse
-    {
-        if ($this->requireUser() === null) {
-            return $this->unauthorized();
-        }
+		$blast = $this->blastService->getBlastById(blastId: $id);
+		if ($blast === null) {
+			return $this->notFound();
+		}
 
-        $name = trim((string) $this->request->getParam('name', ''));
-        if ($name === '') {
-            return new JSONResponse(['error' => 'Invalid name'], Http::STATUS_BAD_REQUEST);
-        }
+		return new JSONResponse($blast);
+	}//end show()
 
-        $blast = $this->blastService->patchBlastName(blastId: $id, name: $name);
-        if ($blast === null) {
-            return $this->notFound();
-        }
+	/**
+	 * PATCH /api/blasts/:id — rename a Blast (name field only).
+	 *
+	 * @param string $id Blast UUID or slug.
+	 *
+	 * @return JSONResponse 200 with the patched Blast, 400/404 on failure.
+	 *
+	 * @spec openspec/specs/marketing-api/spec.md
+	 */
+	#[NoAdminRequired]
+	public function update(string $id): JSONResponse {
+		$uid = $this->requireUser();
+		if ($uid === null) {
+			return $this->unauthorized();
+		}
 
-        return new JSONResponse($blast);
-    }//end update()
+		// Authentication is not authorization. Blasts reach customer contact
+		// data and send on the organisation's behalf — a CRM capability.
+		// Admins bypass via the policy.
+		if ($this->policy->isPrivileged(uid: $uid) === false) {
+			return $this->forbidden();
+		}
 
-    /**
-     * POST /api/blasts/:id/send — queue + transition the Blast.
-     *
-     * @param string $id Blast UUID or slug.
-     *
-     * @return JSONResponse 200 with the send-summary envelope.
-     *
-     * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/specs/marketing-api/spec.md#api-endpoints-crud-and-query
-     */
-    #[NoAdminRequired]
-    public function send(string $id): JSONResponse
-    {
-        if ($this->requireUser() === null) {
-            return $this->unauthorized();
-        }
+		$name = trim((string)$this->request->getParam('name', ''));
+		if ($name === '') {
+			return new JSONResponse(['error' => 'Invalid name'], Http::STATUS_BAD_REQUEST);
+		}
 
-        $summary = $this->blastService->sendBlast(blastId: $id);
-        return new JSONResponse($summary);
-    }//end send()
+		$blast = $this->blastService->patchBlastName(blastId: $id, name: $name);
+		if ($blast === null) {
+			return $this->notFound();
+		}
 
-    /**
-     * POST /api/blasts/:id/cancel — abort a queued/scheduled Blast.
-     *
-     * @param string $id Blast UUID or slug.
-     *
-     * @return JSONResponse 200 with the cancel summary.
-     *
-     * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/specs/marketing-api/spec.md#api-endpoints-crud-and-query
-     */
-    #[NoAdminRequired]
-    public function cancel(string $id): JSONResponse
-    {
-        if ($this->requireUser() === null) {
-            return $this->unauthorized();
-        }
+		return new JSONResponse($blast);
+	}//end update()
 
-        $summary = $this->blastService->cancelBlast(blastId: $id);
-        return new JSONResponse($summary);
-    }//end cancel()
+	/**
+	 * POST /api/blasts/:id/send — queue + transition the Blast.
+	 *
+	 * @param string $id Blast UUID or slug.
+	 *
+	 * @return JSONResponse 200 with the send-summary envelope.
+	 *
+	 * @spec openspec/specs/marketing-api/spec.md
+	 */
+	#[NoAdminRequired]
+	public function send(string $id): JSONResponse {
+		$uid = $this->requireUser();
+		if ($uid === null) {
+			return $this->unauthorized();
+		}
 
-    /**
-     * GET /api/blasts/:id/deliveries — paginated BlastDelivery rows.
-     *
-     * @param string $id    Blast UUID or slug.
-     * @param int    $page  1-based page number.
-     * @param int    $limit Page size.
-     *
-     * @return JSONResponse `{data[], pagination}` scoped to the supplied Blast.
-     *
-     * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/specs/marketing-api/spec.md#api-endpoints-crud-and-query
-     */
-    #[NoAdminRequired]
-    public function deliveries(string $id, int $page=1, int $limit=20): JSONResponse
-    {
-        if ($this->requireUser() === null) {
-            return $this->unauthorized();
-        }
+		// Authentication is not authorization. Blasts reach customer contact
+		// data and send on the organisation's behalf — a CRM capability.
+		// Admins bypass via the policy.
+		if ($this->policy->isPrivileged(uid: $uid) === false) {
+			return $this->forbidden();
+		}
 
-        $envelope = $this->blastService->listDeliveriesForBlast(blastId: $id, page: $page, limit: $limit);
-        return new JSONResponse($envelope);
-    }//end deliveries()
+		$summary = $this->blastService->sendBlast(blastId: $id);
+		return new JSONResponse($summary);
+	}//end send()
 
-    /**
-     * GET /api/blasts/:id/attribution — attributed deal count + summed
-     * value (EUR) for one Blast, surfaced by the Performance Dashboard
-     * Attribution tab (member 08).
-     *
-     * @param string $id Blast UUID or slug.
-     *
-     * @return JSONResponse 200 with `{blastId, dealCount, attributedValue, currency}`, 404 on unknown Blast.
-     *
-     * @spec openspec/changes/marketing-segmentation-and-blast-08-performance-dashboard/tasks.md#performancedashboard-vue-task-3-4-of-giant
-     */
-    #[NoAdminRequired]
-    public function attribution(string $id): JSONResponse
-    {
-        if ($this->requireUser() === null) {
-            return $this->unauthorized();
-        }
+	/**
+	 * POST /api/blasts/:id/cancel — abort a queued/scheduled Blast.
+	 *
+	 * @param string $id Blast UUID or slug.
+	 *
+	 * @return JSONResponse 200 with the cancel summary.
+	 *
+	 * @spec openspec/specs/marketing-api/spec.md
+	 */
+	#[NoAdminRequired]
+	public function cancel(string $id): JSONResponse {
+		$uid = $this->requireUser();
+		if ($uid === null) {
+			return $this->unauthorized();
+		}
 
-        $blast = $this->blastService->getBlastById(blastId: $id);
-        if ($blast === null) {
-            return $this->notFound();
-        }
+		// Authentication is not authorization. Blasts reach customer contact
+		// data and send on the organisation's behalf — a CRM capability.
+		// Admins bypass via the policy.
+		if ($this->policy->isPrivileged(uid: $uid) === false) {
+			return $this->forbidden();
+		}
 
-        $summary = $this->attributionService->getBlastAttributionSummary(blastId: $id);
-        return new JSONResponse($summary);
-    }//end attribution()
+		$summary = $this->blastService->cancelBlast(blastId: $id);
+		return new JSONResponse($summary);
+	}//end cancel()
 
-    /**
-     * Return the authenticated user id, or null when unauthenticated.
-     *
-     * @return string|null UID or null.
-     */
-    private function requireUser(): ?string
-    {
-        $user = $this->userSession->getUser();
-        if ($user === null) {
-            return null;
-        }
+	/**
+	 * GET /api/blasts/:id/deliveries — paginated BlastDelivery rows.
+	 *
+	 * @param string $id Blast UUID or slug.
+	 * @param int $page 1-based page number.
+	 * @param int $limit Page size.
+	 *
+	 * @return JSONResponse `{data[], pagination}` scoped to the supplied Blast.
+	 *
+	 * @spec openspec/specs/marketing-api/spec.md
+	 */
+	#[NoAdminRequired]
+	public function deliveries(string $id, int $page = 1, int $limit = 20): JSONResponse {
+		$uid = $this->requireUser();
+		if ($uid === null) {
+			return $this->unauthorized();
+		}
 
-        return $user->getUID();
-    }//end requireUser()
+		// Authentication is not authorization. Blasts reach customer contact
+		// data and send on the organisation's behalf — a CRM capability.
+		// Admins bypass via the policy.
+		if ($this->policy->isPrivileged(uid: $uid) === false) {
+			return $this->forbidden();
+		}
 
-    /**
-     * Collect a sanitised draft-blast body from the request.
-     *
-     * Any frontend-supplied `createdBy` is dropped here — it's only set
-     * server-side from the IUserSession UID (ADR-005).
-     *
-     * @return array<string, mixed> Sanitised payload.
-     */
-    private function collectBlastBody(): array
-    {
-        return [
-            'name'              => (string) $this->request->getParam('name', ''),
-            'segmentId'         => (string) $this->request->getParam('segmentId', ''),
-            'templateId'        => (string) $this->request->getParam('templateId', ''),
-            'channel'           => (string) $this->request->getParam('channel', ''),
-            'connectorSourceId' => (string) $this->request->getParam('connectorSourceId', ''),
-            'scheduledFor'      => (string) $this->request->getParam('scheduledFor', ''),
-        ];
-    }//end collectBlastBody()
+		$envelope = $this->blastService->listDeliveriesForBlast(blastId: $id, page: $page, limit: $limit);
+		return new JSONResponse($envelope);
+	}//end deliveries()
 
-    /**
-     * Render the create result as a JSONResponse with the right status.
-     *
-     * @param array{blast?: array<string, mixed>, error?: string} $result Service result.
-     *
-     * @return JSONResponse
-     */
-    private function renderCreate(array $result): JSONResponse
-    {
-        if (isset($result['error']) === true) {
-            return new JSONResponse(['error' => $result['error']], Http::STATUS_BAD_REQUEST);
-        }
+	/**
+	 * GET /api/blasts/:id/attribution — attributed deal count + summed
+	 * value (EUR) for one Blast, surfaced by the Performance Dashboard
+	 * Attribution tab (member 08).
+	 *
+	 * @param string $id Blast UUID or slug.
+	 *
+	 * @return JSONResponse 200 with `{blastId, dealCount, attributedValue, currency}`, 404 on unknown Blast.
+	 *
+	 * @spec openspec/changes/marketing-segmentation-and-blast-08-performance-dashboard/tasks.md#performancedashboard-vue-task-3-4-of-giant
+	 */
+	#[NoAdminRequired]
+	public function attribution(string $id): JSONResponse {
+		$uid = $this->requireUser();
+		if ($uid === null) {
+			return $this->unauthorized();
+		}
 
-        return new JSONResponse($result['blast'] ?? null, Http::STATUS_CREATED);
-    }//end renderCreate()
+		// Authentication is not authorization. Blasts reach customer contact
+		// data and send on the organisation's behalf — a CRM capability.
+		// Admins bypass via the policy.
+		if ($this->policy->isPrivileged(uid: $uid) === false) {
+			return $this->forbidden();
+		}
 
-    /**
-     * Generic 401 response.
-     *
-     * @return JSONResponse
-     */
-    private function unauthorized(): JSONResponse
-    {
-        return new JSONResponse(['error' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
-    }//end unauthorized()
+		$blast = $this->blastService->getBlastById(blastId: $id);
+		if ($blast === null) {
+			return $this->notFound();
+		}
 
-    /**
-     * Generic 404 response.
-     *
-     * @return JSONResponse
-     */
-    private function notFound(): JSONResponse
-    {
-        return new JSONResponse(['error' => 'Not found'], Http::STATUS_NOT_FOUND);
-    }//end notFound()
+		$summary = $this->attributionService->getBlastAttributionSummary(blastId: $id);
+		return new JSONResponse($summary);
+	}//end attribution()
+
+	/**
+	 * Return the authenticated user id, or null when unauthenticated.
+	 *
+	 * @return string|null UID or null.
+	 */
+	private function requireUser(): ?string {
+		$user = $this->userSession->getUser();
+		if ($user === null) {
+			return null;
+		}
+
+		return $user->getUID();
+	}//end requireUser()
+
+	/**
+	 * Deny a caller who is authenticated but not a CRM user.
+	 *
+	 * @return JSONResponse The 403 response.
+	 */
+	private function forbidden(): JSONResponse {
+		return new JSONResponse(['error' => 'Forbidden'], Http::STATUS_FORBIDDEN);
+	}//end forbidden()
+
+	/**
+	 * Collect a sanitised draft-blast body from the request.
+	 *
+	 * Any frontend-supplied `createdBy` is dropped here — it's only set
+	 * server-side from the IUserSession UID (ADR-005).
+	 *
+	 * @return array<string, mixed> Sanitised payload.
+	 */
+	private function collectBlastBody(): array {
+		return [
+			'name' => (string)$this->request->getParam('name', ''),
+			'segmentId' => (string)$this->request->getParam('segmentId', ''),
+			'templateId' => (string)$this->request->getParam('templateId', ''),
+			'channel' => (string)$this->request->getParam('channel', ''),
+			'connectorSourceId' => (string)$this->request->getParam('connectorSourceId', ''),
+			'scheduledFor' => (string)$this->request->getParam('scheduledFor', ''),
+		];
+	}//end collectBlastBody()
+
+	/**
+	 * Render the create result as a JSONResponse with the right status.
+	 *
+	 * @param array{blast?: array<string, mixed>, error?: string} $result Service result.
+	 *
+	 * @return JSONResponse
+	 */
+	private function renderCreate(array $result): JSONResponse {
+		if (isset($result['error']) === true) {
+			return new JSONResponse(['error' => $result['error']], Http::STATUS_BAD_REQUEST);
+		}
+
+		return new JSONResponse($result['blast'] ?? null, Http::STATUS_CREATED);
+	}//end renderCreate()
+
+	/**
+	 * Generic 401 response.
+	 *
+	 * @return JSONResponse
+	 */
+	private function unauthorized(): JSONResponse {
+		return new JSONResponse(['error' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
+	}//end unauthorized()
+
+	/**
+	 * Generic 404 response.
+	 *
+	 * @return JSONResponse
+	 */
+	private function notFound(): JSONResponse {
+		return new JSONResponse(['error' => 'Not found'], Http::STATUS_NOT_FOUND);
+	}//end notFound()
 }//end class

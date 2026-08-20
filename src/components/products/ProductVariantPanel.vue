@@ -7,13 +7,13 @@
 			<table class="viewTable">
 				<thead>
 					<tr>
-						<th>{{ t('pipelinq', 'SKU') }}</th>
-						<th>{{ t('pipelinq', 'Name') }}</th>
-						<th>{{ t('pipelinq', 'Attributes') }}</th>
-						<th>{{ t('pipelinq', 'Price') }}</th>
-						<th>{{ t('pipelinq', 'Barcode') }}</th>
-						<th>{{ t('pipelinq', 'Status') }}</th>
-						<th class="product-variant-panel__actions-col" />
+						<th scope="col">{{ t('pipelinq', 'SKU') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Name') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Attributes') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Price') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Barcode') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Status') }}</th>
+						<th scope="col" class="product-variant-panel__actions-col" />
 					</tr>
 				</thead>
 				<tbody>
@@ -21,24 +21,35 @@
 						v-for="(variant, index) in variants"
 						:key="index"
 						class="viewTableRow"
-						:class="{ 'product-variant-panel__row--highlight': variant.sku === highlightSku }">
+						:class="{
+							'product-variant-panel__row--highlight':
+								variant.sku === highlightSku,
+						}">
 						<td>{{ variant.sku }}</td>
 						<td>{{ variant.name || '-' }}</td>
 						<td>{{ attributesLabel(variant.attributes) }}</td>
 						<td>{{ formatCurrency(variant.unitPrice) }}</td>
 						<td>{{ variant.barcode || '-' }}</td>
 						<td>
-							<span class="status-badge" :class="'status--' + (variant.status || 'active')">
+							<span
+								class="status-badge"
+								:class="'status--' + (variant.status || 'active')">
 								{{ variant.status || 'active' }}
 							</span>
 						</td>
 						<td class="product-variant-panel__actions-col">
-							<NcButton type="tertiary" :aria-label="t('pipelinq', 'Edit variant')" @click="openEdit(index)">
+							<NcButton
+								variant="tertiary"
+								:aria-label="t('pipelinq', 'Edit variant')"
+								@click="openEdit(index)">
 								<template #icon>
 									<Pencil :size="20" />
 								</template>
 							</NcButton>
-							<NcButton type="tertiary" :aria-label="t('pipelinq', 'Remove variant')" @click="removeVariant(index)">
+							<NcButton
+								variant="tertiary"
+								:aria-label="t('pipelinq', 'Remove variant')"
+								@click="removeVariant(index)">
 								<template #icon>
 									<Delete :size="20" />
 								</template>
@@ -56,7 +67,7 @@
 				</template>
 				{{ t('pipelinq', 'Add variant') }}
 			</NcButton>
-			<NcButton type="primary" :disabled="saving" @click="save">
+			<NcButton variant="primary" :disabled="saving" @click="save">
 				{{ t('pipelinq', 'Save variants') }}
 			</NcButton>
 		</div>
@@ -64,22 +75,22 @@
 		<ProductVariantDialog
 			v-if="dialogOpen"
 			:variant="editingVariant"
-			:default-price="product.unitPrice || 0"
-			:existing-skus="variantSkus"
+			:defaultPrice="product.unitPrice || 0"
+			:existingSkus="variantSkus"
 			@close="dialogOpen = false"
 			@save="onDialogSave" />
 	</div>
 </template>
 
 <script>
-import { NcButton } from '@nextcloud/vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
-import Plus from 'vue-material-design-icons/Plus.vue'
-import Pencil from 'vue-material-design-icons/Pencil.vue'
+import { NcButton } from '@nextcloud/vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
+import Pencil from 'vue-material-design-icons/Pencil.vue'
+import Plus from 'vue-material-design-icons/Plus.vue'
 import ProductVariantDialog from '../../modals/ProductVariantDialog.vue'
-import { useObjectStore } from '../../store/modules/object.js'
 import { formatCurrency as formatLocaleCurrency } from '../../services/localeUtils.js'
+import { useObjectStore } from '../../store/modules/object.js'
 
 export default {
 	name: 'ProductVariantPanel',
@@ -90,16 +101,19 @@ export default {
 		Delete,
 		ProductVariantDialog,
 	},
+
 	props: {
 		product: {
 			type: Object,
 			required: true,
 		},
+
 		highlightSku: {
 			type: String,
 			default: '',
 		},
 	},
+
 	emits: ['saved'],
 	data() {
 		return {
@@ -109,17 +123,23 @@ export default {
 			saving: false,
 		}
 	},
+
 	computed: {
 		objectStore() {
 			return useObjectStore()
 		},
+
 		editingVariant() {
-			return this.editingIndex !== null ? this.variants[this.editingIndex] : null
+			return this.editingIndex !== null
+				? this.variants[this.editingIndex]
+				: null
 		},
+
 		variantSkus() {
-			return this.variants.map(v => v.sku)
+			return this.variants.map((v) => v.sku)
 		},
 	},
+
 	watch: {
 		product: {
 			immediate: true,
@@ -128,13 +148,16 @@ export default {
 			},
 		},
 	},
+
 	methods: {
 		/**
 		 * Deep-clone the product's variants into editable state.
 		 */
 		loadVariants() {
-			const raw = Array.isArray(this.product.variants) ? this.product.variants : []
-			this.variants = raw.map(v => ({
+			const raw = Array.isArray(this.product.variants)
+				? this.product.variants
+				: []
+			this.variants = raw.map((v) => ({
 				sku: v.sku || '',
 				name: v.name || '',
 				attributes: { ...(v.attributes || {}) },
@@ -143,6 +166,7 @@ export default {
 				status: v.status || 'active',
 			}))
 		},
+
 		/**
 		 * Render an attributes map as a compact label.
 		 *
@@ -156,6 +180,7 @@ export default {
 			const parts = Object.entries(attributes).map(([k, v]) => `${k}: ${v}`)
 			return parts.length > 0 ? parts.join(', ') : '-'
 		},
+
 		/**
 		 * Format a currency value.
 		 *
@@ -168,6 +193,7 @@ export default {
 			}
 			return formatLocaleCurrency(value)
 		},
+
 		/**
 		 * Open the add-variant dialog.
 		 */
@@ -175,6 +201,7 @@ export default {
 			this.editingIndex = null
 			this.dialogOpen = true
 		},
+
 		/**
 		 * Open the edit-variant dialog for a row.
 		 *
@@ -184,6 +211,7 @@ export default {
 			this.editingIndex = index
 			this.dialogOpen = true
 		},
+
 		/**
 		 * Apply a saved variant from the dialog (SKU uniqueness already enforced).
 		 *
@@ -198,6 +226,7 @@ export default {
 			this.dialogOpen = false
 			this.editingIndex = null
 		},
+
 		/**
 		 * Remove a variant row.
 		 *
@@ -206,6 +235,7 @@ export default {
 		removeVariant(index) {
 			this.variants.splice(index, 1)
 		},
+
 		/**
 		 * Persist the variants to the product.
 		 */

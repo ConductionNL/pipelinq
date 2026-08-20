@@ -101,6 +101,7 @@ KPI rows.
   charts render
 
 #### Scenario: date range is a compact pills control
+@e2e exclude regressed out of the implementation, tracked as pipelinq#816: dateRange.control="pills" was added by f941057c and removed the next day by 166a4fcb, a commit about POS/Booking/MDM detail pages. Measured today: `grep -c '"control"' src/manifest.json` = 0, with `grep -c '"dateRange"'` = 2 as the positive control. There is no pills row for a test to assert. Re-tag when #816 is decided — either the key is restored, or this scenario is amended.
 
 - **GIVEN** the Commercial overview
 - **WHEN** the date-range header renders

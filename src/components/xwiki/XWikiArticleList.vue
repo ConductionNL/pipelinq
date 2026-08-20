@@ -13,13 +13,23 @@
 				v-for="article in articles"
 				:key="article.id || article.title"
 				class="xwiki-article-list__item"
-				@click="$emit('select', article)">
+				role="button"
+				tabindex="0"
+				@click="$emit('select', article)"
+				@keydown.enter.prevent="$emit('select', article)"
+				@keydown.space.prevent="$emit('select', article)">
 				<div class="xwiki-article-list__title">
 					{{ article.title }}
 				</div>
 				<div class="xwiki-article-list__meta">
-					<span v-if="article.space" class="xwiki-article-list__space">{{ article.space }}</span>
-					<span v-if="article.modified" class="xwiki-article-list__modified">{{ formatDate(article.modified) }}</span>
+					<span v-if="article.space" class="xwiki-article-list__space">{{
+						article.space
+					}}</span>
+					<span
+						v-if="article.modified"
+						class="xwiki-article-list__modified"
+						>{{ formatDate(article.modified) }}</span
+					>
 				</div>
 			</li>
 		</ul>
@@ -38,6 +48,7 @@ export default {
 			required: true,
 		},
 	},
+
 	emits: ['select'],
 	methods: {
 		formatDate(iso) {

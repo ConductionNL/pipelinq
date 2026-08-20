@@ -6,7 +6,7 @@
 			</NcButton>
 			<h2>{{ queue ? queue.title : t('pipelinq', 'Queue') }}</h2>
 			<div v-if="queue" class="queue-detail__actions">
-				<NcButton type="primary" :disabled="!nextItem" @click="pickNext">
+				<NcButton variant="primary" :disabled="!nextItem" @click="pickNext">
 					{{ t('pipelinq', 'Pick next') }}
 				</NcButton>
 			</div>
@@ -19,15 +19,28 @@
 			<div class="queue-detail__meta">
 				<span class="meta-stat">
 					{{ items.length }} {{ t('pipelinq', 'items') }}
-					<template v-if="queue.maxCapacity"> / {{ queue.maxCapacity }}</template>
+					<template v-if="queue.maxCapacity">
+						/ {{ queue.maxCapacity }}</template
+					>
 				</span>
-				<span class="meta-stat">{{ agentCount }} {{ t('pipelinq', 'agents') }}</span>
-				<span v-if="queue.isActive === false" class="inactive-badge">{{ t('pipelinq', 'Inactive') }}</span>
+				<span class="meta-stat"
+					>{{ agentCount }} {{ t('pipelinq', 'agents') }}</span
+				>
+				<span v-if="queue.isActive === false" class="inactive-badge">{{
+					t('pipelinq', 'Inactive')
+				}}</span>
 			</div>
 
 			<!-- Category tags -->
-			<div v-if="queue.categories && queue.categories.length" class="queue-detail__categories">
-				<span v-for="cat in queue.categories" :key="cat" class="category-tag">{{ cat }}</span>
+			<div
+				v-if="queue.categories && queue.categories.length"
+				class="queue-detail__categories">
+				<span
+					v-for="cat in queue.categories"
+					:key="cat"
+					class="category-tag"
+					>{{ cat }}</span
+				>
 			</div>
 
 			<!-- Items -->
@@ -41,6 +54,7 @@
 					:key="item.id"
 					class="queue-item"
 					:class="{ 'queue-item--selected': selectedIds.has(item.id) }"
+					role="button"
 					tabindex="0"
 					@click.exact="openItem(item)"
 					@click.ctrl="toggleSelect(item.id)"
@@ -62,10 +76,18 @@
 							{{ item.title }}
 						</div>
 						<div class="queue-item__meta">
-							<span v-if="item.category" class="meta-tag">{{ item.category }}</span>
-							<span class="meta-waiting">{{ getWaitingTime(item.requestedAt || item.dateCreated) }}</span>
-							<span v-if="item.assignee" class="meta-assignee">{{ item.assignee }}</span>
-							<span v-else class="meta-unassigned">{{ t('pipelinq', 'Unassigned') }}</span>
+							<span v-if="item.category" class="meta-tag">{{
+								item.category
+							}}</span>
+							<span class="meta-waiting">{{
+								getWaitingTime(item.occurredAt || item.dateCreated)
+							}}</span>
+							<span v-if="item.assignee" class="meta-assignee">{{
+								item.assignee
+							}}</span>
+							<span v-else class="meta-unassigned">{{
+								t('pipelinq', 'Unassigned')
+							}}</span>
 						</div>
 					</div>
 					<div class="queue-item__actions" @click.stop>
@@ -82,7 +104,11 @@
 			<!-- Bulk actions -->
 			<div v-if="selectedIds.size > 0" class="queue-detail__bulk">
 				<NcButton @click="bulkAssignToMe">
-					{{ t('pipelinq', 'Assign {count} to me', { count: selectedIds.size }) }}
+					{{
+						t('pipelinq', 'Assign {count} to me', {
+							count: selectedIds.size,
+						})
+					}}
 				</NcButton>
 				<NcButton @click="selectedIds.clear()">
 					{{ t('pipelinq', 'Clear selection') }}
@@ -94,10 +120,10 @@
 
 <script>
 import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
-import { useQueuesStore } from '../../store/modules/queues.js'
+import { getWaitingTime, prioritySortComparator } from '../../services/queueUtils.js'
+import { getPriorityColor, getPriorityLabel } from '../../services/requestStatus.js'
 import { useObjectStore } from '../../store/modules/object.js'
-import { prioritySortComparator, getWaitingTime } from '../../services/queueUtils.js'
-import { getPriorityLabel, getPriorityColor } from '../../services/requestStatus.js'
+import { useQueuesStore } from '../../store/modules/queues.js'
 
 export default {
 	name: 'QueueDetail',
@@ -105,17 +131,20 @@ export default {
 		NcButton,
 		NcLoadingIcon,
 	},
+
 	props: {
 		queueId: {
 			type: String,
 			required: true,
 		},
 	},
+
 	data() {
 		return {
 			selectedIds: new Set(),
 		}
 	},
+
 	computed: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-queues-ui/tasks.md#task-12
@@ -123,42 +152,49 @@ export default {
 		queuesStore() {
 			return useQueuesStore()
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-queues-ui/tasks.md#task-8
 		 */
 		objectStore() {
 			return useObjectStore()
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-queues-ui/tasks.md#task-5
 		 */
 		loading() {
 			return this.queuesStore.loading
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-queues-ui/tasks.md#task-11
 		 */
 		queue() {
 			return this.queuesStore.currentQueue
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-queues-ui/tasks.md#task-4
 		 */
 		items() {
 			return this.queuesStore.queueItems
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-queues-ui/tasks.md#task-13
 		 */
 		sortedItems() {
 			return [...this.items].sort(prioritySortComparator)
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-queues-ui/tasks.md#task-7
 		 */
 		nextItem() {
-			return this.sortedItems.find(item => !item.assignee) || null
+			return this.sortedItems.find((item) => !item.assignee) || null
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-queues-ui/tasks.md#task-1
 		 */
@@ -166,6 +202,7 @@ export default {
 			return (this.queue?.assignedAgents || []).length
 		},
 	},
+
 	/**
 	 * @spec openspec/changes/reverse-2026-05-26-fe-queues-ui/tasks.md#task-6
 	 */
@@ -173,6 +210,7 @@ export default {
 		await this.queuesStore.fetchQueue(this.queueId)
 		await this.queuesStore.fetchQueueItems(this.queueId)
 	},
+
 	methods: {
 		getPriorityLabel,
 		getPriorityColor,
@@ -183,7 +221,9 @@ export default {
 		 * @spec openspec/changes/reverse-2026-05-26-fe-queues-ui/tasks.md#task-9
 		 */
 		openItem(item) {
-			this.$router.push({ name: 'RequestDetail', params: { id: item.id } })
+			// Queue items are `ticket` rows (unify-ticket-supertype); the
+			// unified detail page reads the row's own ticketType.
+			this.$router.push({ name: 'TicketDetail', params: { id: item.id } })
 		},
 
 		/**
@@ -203,8 +243,11 @@ export default {
 		 * @spec openspec/changes/reverse-2026-05-26-fe-queues-ui/tasks.md#task-2
 		 */
 		async assignToMe(item) {
-			await this.objectStore.saveObject('request', {
+			// Queue items are request-tickets: the former `request` schema is now the
+			// `ticket` supertype discriminated by ticketType (unify-ticket-supertype).
+			await this.objectStore.saveObject('ticket', {
 				...item,
+				ticketType: item.ticketType || 'request',
 				assignee: OC.currentUser,
 			})
 			await this.queuesStore.fetchQueueItems(this.queueId)
@@ -223,11 +266,14 @@ export default {
 		 */
 		async bulkAssignToMe() {
 			const promises = this.sortedItems
-				.filter(item => this.selectedIds.has(item.id))
-				.map(item => this.objectStore.saveObject('request', {
-					...item,
-					assignee: OC.currentUser,
-				}))
+				.filter((item) => this.selectedIds.has(item.id))
+				.map((item) =>
+					this.objectStore.saveObject('ticket', {
+						...item,
+						ticketType: item.ticketType || 'request',
+						assignee: OC.currentUser,
+					}),
+				)
 
 			await Promise.all(promises)
 			this.selectedIds.clear()
@@ -403,5 +449,11 @@ export default {
 	background: var(--color-main-background);
 	border-top: 1px solid var(--color-border);
 	margin-top: 16px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.queue-item {
+		transition: none;
+	}
 }
 </style>

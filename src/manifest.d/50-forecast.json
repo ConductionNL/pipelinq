@@ -3,7 +3,7 @@
 		{
 			"id": "Forecast",
 			"label": "Forecast",
-			"icon": "icon-category-monitoring",
+			"icon": "ChartTimelineVariant",
 			"route": "Forecast",
 			"order": 95
 		}

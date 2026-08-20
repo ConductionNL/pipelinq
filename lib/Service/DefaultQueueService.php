@@ -16,8 +16,8 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-6
- * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-7
+ * @spec openspec/specs/skill-routing/spec.md
+ * @spec openspec/specs/queue-management/spec.md
  */
 
 declare(strict_types=1);
@@ -26,216 +26,212 @@ namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Service for creating default queues and skills.
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-7
+ * @spec openspec/specs/queue-management/spec.md
  */
-class DefaultQueueService
-{
-    /**
-     * Default queue definitions.
-     *
-     * @var array<int, array<string, mixed>>
-     */
-    private const DEFAULT_QUEUES = [
-        [
-            'title'       => 'Algemeen',
-            'description' => 'General intake queue for unclassified requests',
-            'categories'  => [],
-            'isActive'    => true,
-            'sortOrder'   => 0,
-        ],
-        [
-            'title'       => 'Vergunningen',
-            'description' => 'Queue for permit-related requests',
-            'categories'  => ['vergunningen'],
-            'isActive'    => true,
-            'sortOrder'   => 1,
-        ],
-        [
-            'title'       => 'Klachten',
-            'description' => 'Queue for complaints',
-            'categories'  => ['klachten'],
-            'isActive'    => true,
-            'sortOrder'   => 2,
-        ],
-    ];
+class DefaultQueueService {
+	/**
+	 * Default queue definitions.
+	 *
+	 * @var array<int, array<string, mixed>>
+	 */
+	private const DEFAULT_QUEUES = [
+		[
+			'title' => 'Algemeen',
+			'description' => 'General intake queue for unclassified requests',
+			'categories' => [],
+			'isActive' => true,
+			'sortOrder' => 0,
+		],
+		[
+			'title' => 'Vergunningen',
+			'description' => 'Queue for permit-related requests',
+			'categories' => ['vergunningen'],
+			'isActive' => true,
+			'sortOrder' => 1,
+		],
+		[
+			'title' => 'Klachten',
+			'description' => 'Queue for complaints',
+			'categories' => ['klachten'],
+			'isActive' => true,
+			'sortOrder' => 2,
+		],
+	];
 
-    /**
-     * Default skill definitions.
-     *
-     * @var array<int, array<string, mixed>>
-     */
-    private const DEFAULT_SKILLS = [
-        [
-            'title'       => 'Algemene Dienstverlening',
-            'description' => 'General public service',
-            'categories'  => ['algemeen'],
-            'isActive'    => true,
-        ],
-        [
-            'title'       => 'Vergunningen',
-            'description' => 'Permits and environmental law',
-            'categories'  => ['vergunningen', 'omgevingsrecht'],
-            'isActive'    => true,
-        ],
-        [
-            'title'       => 'Belastingen',
-            'description' => 'Municipal taxes',
-            'categories'  => ['belastingen'],
-            'isActive'    => true,
-        ],
-        [
-            'title'       => 'WMO / Zorg',
-            'description' => 'Social support and care',
-            'categories'  => ['wmo', 'zorg'],
-            'isActive'    => true,
-        ],
-        [
-            'title'       => 'Klachten',
-            'description' => 'Complaint handling',
-            'categories'  => ['klachten'],
-            'isActive'    => true,
-        ],
-    ];
+	/**
+	 * Default skill definitions.
+	 *
+	 * @var array<int, array<string, mixed>>
+	 */
+	private const DEFAULT_SKILLS = [
+		[
+			'title' => 'Algemene Dienstverlening',
+			'description' => 'General public service',
+			'categories' => ['algemeen'],
+			'isActive' => true,
+		],
+		[
+			'title' => 'Vergunningen',
+			'description' => 'Permits and environmental law',
+			'categories' => ['vergunningen', 'omgevingsrecht'],
+			'isActive' => true,
+		],
+		[
+			'title' => 'Belastingen',
+			'description' => 'Municipal taxes',
+			'categories' => ['belastingen'],
+			'isActive' => true,
+		],
+		[
+			'title' => 'WMO / Zorg',
+			'description' => 'Social support and care',
+			'categories' => ['wmo', 'zorg'],
+			'isActive' => true,
+		],
+		[
+			'title' => 'Klachten',
+			'description' => 'Complaint handling',
+			'categories' => ['klachten'],
+			'isActive' => true,
+		],
+	];
 
-    /**
-     * Constructor.
-     *
-     * @param IAppConfig              $appConfig        The app config.
-     * @param ContainerInterface      $container        The container.
-     * @param LoggerInterface         $logger           The logger.
-     * @param RegisterResolverService $registerResolver The register resolver.
-     */
-    public function __construct(
-        private IAppConfig $appConfig,
-        private ContainerInterface $container,
-        private LoggerInterface $logger,
-        private RegisterResolverService $registerResolver,
-    ) {
-    }//end __construct()
+	/**
+	 * Constructor.
+	 *
+	 * @param IAppConfig $appConfig The app config.
+	 * @param LoggerInterface $logger The logger.
+	 * @param RegisterResolverService $registerResolver The register resolver.
+	 * @param ObjectServiceInterface $objectService OpenRegister's published object service.
+	 */
+	public function __construct(
+		private IAppConfig $appConfig,
+		private LoggerInterface $logger,
+		private RegisterResolverService $registerResolver,
+		private readonly ObjectServiceInterface $objectService,
+	) {
+	}//end __construct()
 
-    /**
-     * Create default queues if none exist.
-     *
-     * @return void
-     *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-7
-     */
-    public function createDefaultQueues(): void
-    {
-        $registerId    = $this->registerResolver->resolve('queue');
-        $queueSchemaId = $this->appConfig->getValueString(Application::APP_ID, 'queue_schema', '');
+	/**
+	 * Create default queues if none exist.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/queue-management/spec.md
+	 */
+	public function createDefaultQueues(): void {
+		$registerId = $this->registerResolver->resolve('queue');
+		$queueSchemaId = $this->appConfig->getValueString(Application::APP_ID, 'queue_schema', '');
 
-        if ($registerId === '' || $queueSchemaId === '') {
-            $this->logger->warning(
-                'Pipelinq: Cannot create default queues -- register or queue schema not configured'
-            );
-            return;
-        }
+		if ($registerId === '' || $queueSchemaId === '') {
+			$this->logger->warning(
+				'Pipelinq: Cannot create default queues -- register or queue schema not configured'
+			);
+			return;
+		}
 
-        try {
-            $objectService = $this->getObjectService();
+		try {
+			$objectService = $this->getObjectService();
 
-            $existing = $objectService->findAll(
-                [
-                    'filters' => [
-                        'register' => $registerId,
-                        'schema'   => $queueSchemaId,
-                    ],
-                    'limit'   => 1,
-                ]
-            );
+			$existing = $objectService->findAll(
+				[
+					'filters' => [
+						'register' => $registerId,
+						'schema' => $queueSchemaId,
+					],
+					'limit' => 1,
+				]
+			);
 
-            if (empty($existing) === false) {
-                $this->logger->info('Pipelinq: Default queues already exist, skipping creation');
-                return;
-            }
+			if (empty($existing) === false) {
+				$this->logger->info('Pipelinq: Default queues already exist, skipping creation');
+				return;
+			}
 
-            foreach (self::DEFAULT_QUEUES as $queueData) {
-                $objectService->saveObject(
-                    $queueData,
-                    [],
-                    $registerId,
-                    $queueSchemaId,
-                    null
-                );
-                $this->logger->info("Pipelinq: Created default queue '{$queueData['title']}'");
-            }
-        } catch (\Exception $e) {
-            $this->logger->error(
-                'Pipelinq: Failed to create default queues',
-                ['exception' => $e->getMessage()]
-            );
-        }//end try
-    }//end createDefaultQueues()
+			foreach (self::DEFAULT_QUEUES as $queueData) {
+				$objectService->saveObject(
+					$queueData,
+					[],
+					$registerId,
+					$queueSchemaId,
+					null
+				);
+				$this->logger->info("Pipelinq: Created default queue '{$queueData['title']}'");
+			}
+		} catch (\Exception $e) {
+			$this->logger->error(
+				'Pipelinq: Failed to create default queues',
+				['exception' => $e->getMessage()]
+			);
+		}//end try
+	}//end createDefaultQueues()
 
-    /**
-     * Create default skills if none exist.
-     *
-     * @return void
-     *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-6
-     */
-    public function createDefaultSkills(): void
-    {
-        $registerId    = $this->registerResolver->resolve('queue');
-        $skillSchemaId = $this->appConfig->getValueString(Application::APP_ID, 'skill_schema', '');
+	/**
+	 * Create default skills if none exist.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/skill-routing/spec.md
+	 */
+	public function createDefaultSkills(): void {
+		$registerId = $this->registerResolver->resolve('queue');
+		$skillSchemaId = $this->appConfig->getValueString(Application::APP_ID, 'skill_schema', '');
 
-        if ($registerId === '' || $skillSchemaId === '') {
-            $this->logger->warning(
-                'Pipelinq: Cannot create default skills -- register or skill schema not configured'
-            );
-            return;
-        }
+		if ($registerId === '' || $skillSchemaId === '') {
+			$this->logger->warning(
+				'Pipelinq: Cannot create default skills -- register or skill schema not configured'
+			);
+			return;
+		}
 
-        try {
-            $objectService = $this->getObjectService();
+		try {
+			$objectService = $this->getObjectService();
 
-            $existing = $objectService->findAll(
-                [
-                    'filters' => [
-                        'register' => $registerId,
-                        'schema'   => $skillSchemaId,
-                    ],
-                    'limit'   => 1,
-                ]
-            );
+			$existing = $objectService->findAll(
+				[
+					'filters' => [
+						'register' => $registerId,
+						'schema' => $skillSchemaId,
+					],
+					'limit' => 1,
+				]
+			);
 
-            if (empty($existing) === false) {
-                $this->logger->info('Pipelinq: Default skills already exist, skipping creation');
-                return;
-            }
+			if (empty($existing) === false) {
+				$this->logger->info('Pipelinq: Default skills already exist, skipping creation');
+				return;
+			}
 
-            foreach (self::DEFAULT_SKILLS as $skillData) {
-                $objectService->saveObject(
-                    $skillData,
-                    [],
-                    $registerId,
-                    $skillSchemaId,
-                    null
-                );
-                $this->logger->info("Pipelinq: Created default skill '{$skillData['title']}'");
-            }
-        } catch (\Exception $e) {
-            $this->logger->error(
-                'Pipelinq: Failed to create default skills',
-                ['exception' => $e->getMessage()]
-            );
-        }//end try
-    }//end createDefaultSkills()
+			foreach (self::DEFAULT_SKILLS as $skillData) {
+				$objectService->saveObject(
+					$skillData,
+					[],
+					$registerId,
+					$skillSchemaId,
+					null
+				);
+				$this->logger->info("Pipelinq: Created default skill '{$skillData['title']}'");
+			}
+		} catch (\Exception $e) {
+			$this->logger->error(
+				'Pipelinq: Failed to create default skills',
+				['exception' => $e->getMessage()]
+			);
+		}//end try
+	}//end createDefaultSkills()
 
-    /**
-     * Get the OpenRegister ObjectService via the container.
-     *
-     * @return object The object service.
-     */
-    private function getObjectService(): object
-    {
-        return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-    }//end getObjectService()
+	/**
+	 * Get the OpenRegister ObjectService via the container.
+	 *
+	 * @return object The object service.
+	 */
+	private function getObjectService(): object {
+		return $this->objectService;
+	}//end getObjectService()
 }//end class

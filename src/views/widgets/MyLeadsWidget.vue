@@ -1,51 +1,57 @@
+<!-- SPDX-License-Identifier: EUPL-1.2 -->
+<!-- SPDX-FileCopyrightText: 2026 Conduction B.V. -->
 <template>
-	<NcDashboardWidget :items="items"
+	<CnDataTable
+		:rows="items"
+		:columns="columns"
 		:loading="loading"
-		:item-menu="itemMenu"
-		@show="onShow">
-		<template #empty-content>
-			<NcEmptyContent :title="t('pipelinq', 'No leads assigned to you')">
-				<template #icon>
-					<AccountCheck />
-				</template>
-			</NcEmptyContent>
+		hideHeader
+		borderless
+		:emptyText="t('pipelinq', 'No leads assigned to you')"
+		@rowClick="onShow">
+		<template #footer>
+			<a
+				class="cn-data-table__view-all"
+				role="button"
+				tabindex="0"
+				@click.prevent="onViewAll"
+				@keydown.enter.prevent="onViewAll"
+				@keydown.space.prevent="onViewAll">
+				{{ t('pipelinq', 'View all') }} →
+			</a>
 		</template>
-	</NcDashboardWidget>
+	</CnDataTable>
 </template>
 
 <script>
-import { NcDashboardWidget, NcEmptyContent } from '@nextcloud/vue'
+import { CnDataTable } from '@conduction/nextcloud-vue'
 import { generateUrl } from '@nextcloud/router'
-import AccountCheck from 'vue-material-design-icons/AccountCheck.vue'
-import { initializeStores } from '../../store/store.js'
 import { formatDate } from '../../services/localeUtils.js'
+import { initializeStores } from '../../store/store.js'
 import { toText } from '../../utils/widgetText.js'
+import { LIST_COLUMNS, navigateTo } from './listTable.js'
 
 export default {
 	name: 'MyLeadsWidget',
 	components: {
-		NcDashboardWidget,
-		NcEmptyContent,
-		AccountCheck,
+		CnDataTable,
 	},
+
 	props: {
 		title: {
 			type: String,
 			required: true,
 		},
 	},
+
 	data() {
 		return {
 			loading: false,
 			leads: [],
-			itemMenu: {
-				show: {
-					text: t('pipelinq', 'View lead'),
-					icon: 'icon-confirm',
-				},
-			},
+			columns: LIST_COLUMNS,
 		}
 	},
+
 	computed: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-45
@@ -53,8 +59,11 @@ export default {
 		items() {
 			const now = new Date()
 			return this.leads.map((lead) => {
-				const isOverdue = lead.expectedCloseDate && new Date(lead.expectedCloseDate) < now
-				const priorityLabel = lead.priority ? t('pipelinq', lead.priority) : ''
+				const isOverdue =
+					lead.expectedCloseDate && new Date(lead.expectedCloseDate) < now
+				const priorityLabel = lead.priority
+					? t('pipelinq', lead.priority)
+					: ''
 				const dueStr = lead.expectedCloseDate
 					? formatDate(lead.expectedCloseDate)
 					: ''
@@ -72,17 +81,31 @@ export default {
 			})
 		},
 	},
+
 	async mounted() {
 		await this.fetchData()
 	},
+
 	methods: {
 		/**
-		 * @param item
+		 * Navigate to the clicked lead in the same tab.
+		 *
+		 * @param {object} item The clicked row (a shaped lead item).
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-46
 		 */
 		onShow(item) {
-			window.location.href = generateUrl('/apps/pipelinq/leads/' + item.id)
+			navigateTo(generateUrl('/apps/pipelinq/leads/' + item.id))
 		},
+
+		/**
+		 * Navigate to the full leads list.
+		 *
+		 * @return {void}
+		 */
+		onViewAll() {
+			navigateTo(generateUrl('/apps/pipelinq/leads'))
+		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-43
 		 */
@@ -104,10 +127,11 @@ export default {
 				this.loading = false
 			}
 		},
+
 		/**
-		 * @param config
-		 * @param type
-		 * @param params
+		 * @param {object} config The object-type registry (register/schema per type).
+		 * @param {string} type The object type to fetch.
+		 * @param {object} params Query parameters.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-44
 		 */
 		async fetchRaw(config, type, params = {}) {
@@ -120,8 +144,13 @@ export default {
 				queryParams.set(key, value)
 			}
 
-			const url = generateUrl('/apps/openregister/api/objects/' + typeConfig.register + '/' + typeConfig.schema
-				+ (queryParams.toString() ? '?' + queryParams.toString() : ''))
+			const url = generateUrl(
+				'/apps/openregister/api/objects/'
+					+ typeConfig.register
+					+ '/'
+					+ typeConfig.schema
+					+ (queryParams.toString() ? '?' + queryParams.toString() : ''),
+			)
 
 			const response = await fetch(url, {
 				headers: {

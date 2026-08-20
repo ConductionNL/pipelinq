@@ -15,14 +15,16 @@
   customer page never crashes on a relation lookup — REQ-KB360-006).
 
   @spec openspec/changes/appointment-booking-11-admin-ui/tasks.md
-  @spec openspec/changes/appointment-booking-11-admin-ui/specs/appointment-booking/spec.md#REQ-APT-014
+  @spec openspec/specs/appointment-booking/spec.md
 -->
 <template>
 	<CnDetailCard :title="t('pipelinq', 'Bookings')">
 		<div v-if="loading" class="bookings-card__state">
 			<NcLoadingIcon :size="24" />
 		</div>
-		<div v-else-if="error" class="bookings-card__state bookings-card__state--error">
+		<div
+			v-else-if="error"
+			class="bookings-card__state bookings-card__state--error">
 			<p>{{ error }}</p>
 		</div>
 		<div v-else-if="!sortedBookings.length" class="bookings-card__state">
@@ -32,10 +34,10 @@
 			<table class="viewTable">
 				<thead>
 					<tr>
-						<th>{{ t('pipelinq', 'Date / time') }}</th>
-						<th>{{ t('pipelinq', 'Service') }}</th>
-						<th>{{ t('pipelinq', 'Resource') }}</th>
-						<th>{{ t('pipelinq', 'Status') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Date / time') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Service') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Resource') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Status') }}</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -48,7 +50,9 @@
 						<td>{{ serviceLabel(row) }}</td>
 						<td>{{ resourceLabel(row) }}</td>
 						<td>
-							<span class="status-badge" :class="`status-badge--${row.status}`">
+							<span
+								class="status-badge"
+								:class="`status-badge--${row.status}`">
 								{{ statusLabel(row.status) }}
 							</span>
 						</td>
@@ -60,8 +64,8 @@
 </template>
 
 <script>
-import { NcLoadingIcon } from '@nextcloud/vue'
 import { CnDetailCard } from '@conduction/nextcloud-vue'
+import { NcLoadingIcon } from '@nextcloud/vue'
 import { useObjectStore } from '../../store/modules/object.js'
 
 const STATUS_LABELS = {
@@ -80,6 +84,7 @@ export default {
 	props: {
 		customerId: { type: String, required: true },
 	},
+
 	data() {
 		return {
 			loading: false,
@@ -89,10 +94,12 @@ export default {
 			resourceLookup: {},
 		}
 	},
+
 	computed: {
 		objectStore() {
 			return useObjectStore()
 		},
+
 		/**
 		 * Future-first sort: upcoming bookings (startAt > now) first in
 		 * ascending order, then past bookings in descending order so the
@@ -117,6 +124,7 @@ export default {
 			return [...future, ...past]
 		},
 	},
+
 	watch: {
 		customerId: {
 			immediate: true,
@@ -127,6 +135,7 @@ export default {
 			},
 		},
 	},
+
 	methods: {
 		/**
 		 * Fetch bookings for the customer and prime the service / resource
@@ -148,50 +157,80 @@ export default {
 				await this.primeLabels()
 			} catch {
 				this.bookings = []
-				this.error = t('pipelinq', 'Failed to load bookings for this customer.')
+				this.error = t(
+					'pipelinq',
+					'Failed to load bookings for this customer.',
+				)
 			} finally {
 				this.loading = false
 			}
 		},
+
+		/**
+		 * @spec openspec/changes/appointment-booking-11-admin-ui/tasks.md
+		 */
 		async primeLabels() {
-			const serviceIds = [...new Set(this.bookings.map(b => b.serviceId).filter(Boolean))]
-			const resourceIds = [...new Set(
-				this.bookings.flatMap(b => (b.resourceAssignments || []).map(a => a?.resourceId).filter(Boolean)),
-			)]
+			const serviceIds = [
+				...new Set(this.bookings.map((b) => b.serviceId).filter(Boolean)),
+			]
+			const resourceIds = [
+				...new Set(
+					this.bookings.flatMap((b) =>
+						(b.resourceAssignments || [])
+							.map((a) => a?.resourceId)
+							.filter(Boolean),
+					),
+				),
+			]
 			for (const id of serviceIds) {
 				if (this.serviceLookup[id]) continue
 				try {
 					const svc = await this.objectStore.fetchObject('service', id)
 					if (svc?.name) {
-						this.serviceLookup = { ...this.serviceLookup, [id]: svc.name }
+						this.serviceLookup = {
+							...this.serviceLookup,
+							[id]: svc.name,
+						}
 					}
-				} catch { /* tolerated */ }
+				} catch {
+					/* tolerated */
+				}
 			}
 			for (const id of resourceIds) {
 				if (this.resourceLookup[id]) continue
 				try {
 					const r = await this.objectStore.fetchObject('resource', id)
 					if (r?.name) {
-						this.resourceLookup = { ...this.resourceLookup, [id]: r.name }
+						this.resourceLookup = {
+							...this.resourceLookup,
+							[id]: r.name,
+						}
 					}
-				} catch { /* tolerated */ }
+				} catch {
+					/* tolerated */
+				}
 			}
 		},
+
 		open(row) {
 			this.$router.push({ name: 'BookingDetail', params: { id: row.id } })
 		},
+
 		serviceLabel(row) {
 			return this.serviceLookup[row.serviceId] || row.serviceId || '-'
 		},
+
 		resourceLabel(row) {
 			const first = (row.resourceAssignments || [])[0]
 			const id = first?.resourceId
 			if (!id) return '-'
 			return this.resourceLookup[id] || id
 		},
+
 		statusLabel(status) {
 			return t('pipelinq', STATUS_LABELS[status] || status || '-')
 		},
+
 		formatDateTime(iso) {
 			if (!iso) return '-'
 			try {
@@ -210,9 +249,11 @@ export default {
 	text-align: center;
 	color: var(--color-text-maxcontrast);
 }
+
 .bookings-card__state--error {
 	color: var(--color-error);
 }
+
 .viewTableContainer {
 	background: var(--color-main-background);
 	border-radius: var(--border-radius);
@@ -220,27 +261,34 @@ export default {
 	box-shadow: 0 2px 4px var(--color-box-shadow);
 	border: 1px solid var(--color-border);
 }
+
 .viewTable {
 	width: 100%;
 	border-collapse: collapse;
 }
-.viewTable th, .viewTable td {
+
+.viewTable th,
+.viewTable td {
 	padding: 12px;
 	text-align: left;
 	border-bottom: 1px solid var(--color-border);
 }
+
 .viewTable th {
 	background-color: var(--color-background-dark);
 	font-weight: 500;
 	color: var(--color-text-maxcontrast);
 }
+
 .viewTableRow {
 	cursor: pointer;
 	transition: background-color 0.2s ease;
 }
+
 .viewTableRow:hover {
 	background: var(--color-background-hover);
 }
+
 .status-badge {
 	display: inline-block;
 	padding: 2px 8px;
@@ -249,27 +297,38 @@ export default {
 	font-weight: 600;
 	white-space: nowrap;
 }
+
 .status-badge--confirmed {
 	background: var(--color-success);
 	color: white;
 }
+
 .status-badge--completed {
 	background: var(--color-primary-element-light);
 	color: var(--color-primary-element-text);
 }
+
 .status-badge--no-show {
 	background: var(--color-error);
 	color: white;
 }
+
 .status-badge--pending-deposit {
 	background: var(--color-warning);
 	color: black;
 }
+
 .status-badge--cancelled-by-customer,
 .status-badge--cancelled-by-business,
 .status-badge--rescheduled {
 	background: var(--color-background-dark);
 	color: var(--color-text-maxcontrast);
 	text-decoration: line-through;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.viewTableRow {
+		transition: none;
+	}
 }
 </style>

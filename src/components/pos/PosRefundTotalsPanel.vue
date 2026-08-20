@@ -9,7 +9,7 @@
 			<span>{{ formatEur(totals.refundAmount) }}</span>
 		</div>
 		<div class="pos-refund-totals__row pos-refund-totals__row--tax">
-			<span>{{ t('pipelinq', 'BTW') }}</span>
+			<span>{{ t('pipelinq', 'VAT') }}</span>
 			<span>{{ formatEur(totals.totalTax) }}</span>
 		</div>
 		<div class="pos-refund-totals__row pos-refund-totals__row--total">
@@ -30,6 +30,7 @@ export default {
 			default: () => [],
 		},
 	},
+
 	computed: {
 		/**
 		 * Real-time refund totals. The same proportional formula runs
@@ -42,6 +43,7 @@ export default {
 			return computeRefundTotals(this.lines)
 		},
 	},
+
 	methods: {
 		formatEur,
 	},

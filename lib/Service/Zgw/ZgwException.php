@@ -38,6 +38,5 @@ use RuntimeException;
 /**
  * Base class for ZGW API bridge errors.
  */
-class ZgwException extends RuntimeException
-{
+class ZgwException extends RuntimeException {
 }//end class

@@ -4,7 +4,9 @@
  * Pipelinq MessageBirdSmsClient.
  *
  * MessageBird SMS provider implementation (now Bird.com). Delegates
- * actual HTTP transport to openconnector's SourceService.
+ * actual HTTP transport to OpenRegister's `MessageDispatchProvider` leaf
+ * (via {@see MessageDispatchTrait}), which routes through openconnector's
+ * `messagebird-sms` source. `SourceService` no longer exists in OpenConnector.
  *
  * @category Service
  * @package  OCA\Pipelinq\Service\Provider
@@ -36,98 +38,94 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#3.2
  */
-class MessageBirdSmsClient implements SmsProviderClientInterface
-{
-    use MessageDispatchTrait;
+class MessageBirdSmsClient implements SmsProviderClientInterface {
+	use MessageDispatchTrait;
 
-    /**
-     * MessageBird messages send path, relative to the source base URL.
-     *
-     * @var string
-     */
-    private const SEND_PATH = 'messages';
+	/**
+	 * MessageBird messages send path, relative to the source base URL.
+	 *
+	 * @var string
+	 */
+	private const SEND_PATH = 'messages';
 
-    /**
-     * Constructor.
-     *
-     * @param ContainerInterface   $container     DI container.
-     * @param LoggerInterface      $logger        Logger.
-     * @param array<string, mixed> $credentials   Decoded credentials.
-     * @param string               $fromNumber    Sender E.164.
-     * @param string               $webhookSecret Shared HMAC secret.
-     * @param string|null          $sourceId      openconnector source id.
-     *
-     * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#3.2
-     */
-    public function __construct(
-        private ContainerInterface $container,
-        private LoggerInterface $logger,
-        private array $credentials,
-        private string $fromNumber,
-        private string $webhookSecret,
-        private ?string $sourceId=null,
-    ) {
-    }//end __construct()
+	/**
+	 * Constructor.
+	 *
+	 * @param ContainerInterface $container DI container.
+	 * @param LoggerInterface $logger Logger.
+	 * @param array<string, mixed> $credentials Decoded credentials.
+	 * @param string $fromNumber Sender E.164.
+	 * @param string $webhookSecret Shared HMAC secret.
+	 * @param string|null $sourceId openconnector source id.
+	 *
+	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#3.2
+	 */
+	public function __construct(
+		private ContainerInterface $container,
+		private LoggerInterface $logger,
+		private array $credentials,
+		private string $fromNumber,
+		private string $webhookSecret,
+		private ?string $sourceId = null,
+	) {
+	}//end __construct()
 
-    /**
-     * Send a single SMS via MessageBird.
-     *
-     * @param string $toNumber Recipient E.164.
-     * @param string $body     Plain-text body.
-     *
-     * @return array{externalMessageId: string, vendor: string} Provider id.
-     *
-     * @throws TransientSmsProviderException On 5xx / network.
-     * @throws PermanentSmsProviderException On 4xx / config.
-     *
-     * @spec openspec/changes/archive/2026-06-21-pipelinq-messaging-via-or-leaf/tasks.md#1.2
-     */
-    public function send(string $toNumber, string $body): array
-    {
-        $payload = [
-            'originator' => $this->fromNumber,
-            'recipients' => [$toNumber],
-            'body'       => $body,
-        ];
+	/**
+	 * Send a single SMS via MessageBird.
+	 *
+	 * @param string $toNumber Recipient E.164.
+	 * @param string $body Plain-text body.
+	 *
+	 * @return array{externalMessageId: string, vendor: string} Provider id.
+	 *
+	 * @throws TransientSmsProviderException On 5xx / network.
+	 * @throws PermanentSmsProviderException On 4xx / config.
+	 *
+	 * @spec openspec/changes/archive/2026-06-21-pipelinq-messaging-via-or-leaf/tasks.md#1.2
+	 */
+	public function send(string $toNumber, string $body): array {
+		$payload = [
+			'originator' => $this->fromNumber,
+			'recipients' => [$toNumber],
+			'body' => $body,
+		];
 
-        $result = $this->dispatchViaLeaf(
-            source: (string) ($this->sourceId ?? ''),
-            body: $payload,
-            path: self::SEND_PATH,
-        );
-        $id     = (string) ($result['id'] ?? ($result['externalMessageId'] ?? ''));
+		$result = $this->dispatchViaLeaf(
+			source: (string)($this->sourceId ?? ''),
+			body: $payload,
+			path: self::SEND_PATH,
+		);
+		$id = (string)($result['id'] ?? ($result['externalMessageId'] ?? ''));
 
-        return [
-            'externalMessageId' => $id,
-            'vendor'            => $this->getVendor(),
-        ];
-    }//end send()
+		return [
+			'externalMessageId' => $id,
+			'vendor' => $this->getVendor(),
+		];
+	}//end send()
 
-    /**
-     * Verify the messagebird-signature header against the raw body.
-     *
-     * @param string $rawBody   Raw body.
-     * @param string $signature Header.
-     *
-     * @return bool True when authentic.
-     */
-    public function verifySignature(string $rawBody, string $signature): bool
-    {
-        if ($this->webhookSecret === '' || $signature === '') {
-            return false;
-        }
+	/**
+	 * Verify the messagebird-signature header against the raw body.
+	 *
+	 * @param string $rawBody Raw body.
+	 * @param string $signature Header.
+	 *
+	 * @return bool True when authentic.
+	 */
+	public function verifySignature(string $rawBody, string $signature): bool {
+		if ($this->webhookSecret === '' || $signature === '') {
+			return false;
+		}
 
-        $expected = hash_hmac('sha256', $rawBody, $this->webhookSecret);
-        return hash_equals($expected, $signature);
-    }//end verifySignature()
+		$expected = hash_hmac('sha256', $rawBody, $this->webhookSecret);
+		return hash_equals($expected, $signature);
+	}//end verifySignature()
 
-    /**
-     * Vendor key.
-     *
-     * @return string `messagebird`.
-     */
-    public function getVendor(): string
-    {
-        return 'messagebird';
-    }//end getVendor()
+	/**
+	 * Vendor key.
+	 *
+	 * @return string `messagebird`.
+	 */
+	public function getVendor(): string {
+		return 'messagebird';
+	}//end getVendor()
 }//end class

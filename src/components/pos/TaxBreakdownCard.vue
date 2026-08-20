@@ -9,15 +9,15 @@
 		</div>
 
 		<section class="tax-breakdown__section">
-			<h4>{{ t('pipelinq', 'Belastingaangifte') }}</h4>
+			<h4>{{ t('pipelinq', 'Tax return') }}</h4>
 			<table class="tax-breakdown__table">
 				<thead>
 					<tr>
-						<th>{{ t('pipelinq', 'Rate') }}</th>
-						<th class="num">
+						<th scope="col">{{ t('pipelinq', 'Rate') }}</th>
+						<th scope="col" class="num">
 							{{ t('pipelinq', 'Base') }}
 						</th>
-						<th class="num">
+						<th scope="col" class="num">
 							{{ t('pipelinq', 'VAT') }}
 						</th>
 					</tr>
@@ -34,7 +34,7 @@
 					</tr>
 					<tr v-if="taxBreakdown.length === 0">
 						<td colspan="3" class="empty">
-							{{ t('pipelinq', 'Geen artikelen') }}
+							{{ t('pipelinq', 'No items') }}
 						</td>
 					</tr>
 				</tbody>
@@ -42,18 +42,18 @@
 		</section>
 
 		<section v-if="invoiceBreakdown.length > 0" class="tax-breakdown__section">
-			<h4>{{ t('pipelinq', 'Factuurverdeling') }}</h4>
+			<h4>{{ t('pipelinq', 'Invoice split') }}</h4>
 			<table class="tax-breakdown__table">
 				<thead>
 					<tr>
-						<th>{{ t('pipelinq', 'Rate') }}</th>
-						<th class="num">
+						<th scope="col">{{ t('pipelinq', 'Rate') }}</th>
+						<th scope="col" class="num">
 							{{ t('pipelinq', 'Base') }}
 						</th>
-						<th class="num">
+						<th scope="col" class="num">
 							{{ t('pipelinq', 'VAT') }}
 						</th>
-						<th>{{ t('pipelinq', 'Description') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Description') }}</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -84,6 +84,7 @@ export default {
 			default: () => ({}),
 		},
 	},
+
 	computed: {
 		/**
 		 * Persisted per-rate tax summary rows, sorted by rate ascending.
@@ -91,8 +92,11 @@ export default {
 		 * @return {Array<object>} The tax breakdown rows.
 		 */
 		taxBreakdown() {
-			return [...(this.transaction.taxBreakdown || [])].sort((a, b) => a.rate - b.rate)
+			return [...(this.transaction.taxBreakdown || [])].sort(
+				(a, b) => a.rate - b.rate,
+			)
 		},
+
 		/**
 		 * Per-rate GL posting rows. Falls back to deriving descriptions from the
 		 * tax breakdown for legacy records that predate the invoice breakdown.
@@ -104,11 +108,12 @@ export default {
 			if (Array.isArray(rows) && rows.length > 0) {
 				return [...rows].sort((a, b) => a.rate - b.rate)
 			}
-			return this.taxBreakdown.map(row => ({
+			return this.taxBreakdown.map((row) => ({
 				...row,
 				description: rateDescription(row.rate),
 			}))
 		},
+
 		/**
 		 * Whether prices are tax-inclusive.
 		 *
@@ -117,6 +122,7 @@ export default {
 		isInclusive() {
 			return this.transaction.priceMode === 'incl'
 		},
+
 		/**
 		 * Price mode label for the card header.
 		 *
@@ -124,10 +130,11 @@ export default {
 		 */
 		priceModeLabel() {
 			return this.isInclusive
-				? t('pipelinq', 'Prijzen incl. BTW')
-				: t('pipelinq', 'Prijzen excl. BTW')
+				? t('pipelinq', 'Prices incl. VAT')
+				: t('pipelinq', 'Prices excl. VAT')
 		},
 	},
+
 	methods: {
 		formatEur,
 	},

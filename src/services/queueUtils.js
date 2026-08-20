@@ -24,9 +24,10 @@ export function prioritySortComparator(a, b) {
 	const pb = PRIORITY_ORDER[b.priority] ?? 2
 	if (pa !== pb) return pa - pb
 
-	// Oldest first (ascending date)
-	const dateA = a.requestedAt || a.dateCreated || ''
-	const dateB = b.requestedAt || b.dateCreated || ''
+	// Oldest first (ascending date). `occurredAt` replaced `requestedAt` when the
+	// request schema was folded into the ticket supertype (unify-ticket-supertype).
+	const dateA = a.occurredAt || a.dateCreated || ''
+	const dateB = b.occurredAt || b.dateCreated || ''
 	if (dateA && dateB) return new Date(dateA).getTime() - new Date(dateB).getTime()
 	if (dateA) return -1
 	if (dateB) return 1
@@ -49,7 +50,7 @@ export function isAtCapacity(queue, currentCount) {
 /**
  * Calculate the waiting time label for an item.
  *
- * @param {string} dateStr ISO date string (requestedAt or dateCreated)
+ * @param {string} dateStr ISO date string (occurredAt or dateCreated)
  * @return {string} Human-readable waiting time (e.g., "waiting 3 days")
  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-35
  */
@@ -80,7 +81,7 @@ export function getOldestWaitingTime(items) {
 	if (!items || items.length === 0) return '-'
 	let oldest = null
 	for (const item of items) {
-		const date = item.requestedAt || item.dateCreated
+		const date = item.occurredAt || item.dateCreated
 		if (!date) continue
 		if (!oldest || new Date(date) < new Date(oldest)) {
 			oldest = date
@@ -101,25 +102,29 @@ export function getOldestWaitingTime(items) {
 export function findMatchingAgents(category, skills, agentProfiles) {
 	if (!category) {
 		// No category: return all available agents
-		return agentProfiles.filter(p => p.isAvailable !== false)
+		return agentProfiles.filter((p) => p.isAvailable !== false)
 	}
 
 	const lowerCategory = category.toLowerCase()
 
 	// Find skills that cover this category
 	const matchingSkillIds = skills
-		.filter(s => s.isActive !== false && (s.categories || []).some(
-			c => c.toLowerCase() === lowerCategory,
-		))
-		.map(s => s.id)
+		.filter(
+			(s) =>
+				s.isActive !== false
+				&& (s.categories || []).some(
+					(c) => c.toLowerCase() === lowerCategory,
+				),
+		)
+		.map((s) => s.id)
 
 	if (matchingSkillIds.length === 0) return []
 
 	// Find agents with those skills
-	return agentProfiles.filter(p => {
+	return agentProfiles.filter((p) => {
 		if (p.isAvailable === false) return false
 		const agentSkills = p.skills || []
-		return agentSkills.some(skillId => matchingSkillIds.includes(skillId))
+		return agentSkills.some((skillId) => matchingSkillIds.includes(skillId))
 	})
 }
 

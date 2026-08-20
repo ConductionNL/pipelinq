@@ -45,6 +45,7 @@ use OCA\Pipelinq\Service\Zgw\ZgwApiClient;
 use OCA\Pipelinq\Service\Zgw\ZgwRegisterAccess;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\Attribute\AnonRateLimit;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\Attribute\PublicPage;
 use OCP\AppFramework\Http\JSONResponse;
@@ -54,153 +55,153 @@ use Psr\Log\LoggerInterface;
 /**
  * Public NRC callback controller.
  */
-class ZgwNotificationController extends Controller
-{
-    /**
-     * Constructor.
-     *
-     * @param IRequest                $request   Request.
-     * @param ZgwRegisterAccess       $registers Register facade (NrcAbonnement lookup).
-     * @param ZgwApiClient            $api       For vault-ref resolution on callbackAuth.
-     * @param NrcNotificationListener $listener  Per-kanaal dispatcher.
-     * @param LoggerInterface         $logger    PSR-3 logger.
-     */
-    public function __construct(
-        IRequest $request,
-        private ZgwRegisterAccess $registers,
-        private ZgwApiClient $api,
-        private NrcNotificationListener $listener,
-        private LoggerInterface $logger,
-    ) {
-        parent::__construct(appName: Application::APP_ID, request: $request);
-    }//end __construct()
+class ZgwNotificationController extends Controller {
+	/**
+	 * Constructor.
+	 *
+	 * @param IRequest $request Request.
+	 * @param ZgwRegisterAccess $registers Register facade (NrcAbonnement lookup).
+	 * @param ZgwApiClient $api For vault-ref resolution on callbackAuth.
+	 * @param NrcNotificationListener $listener Per-kanaal dispatcher.
+	 * @param LoggerInterface $logger PSR-3 logger.
+	 */
+	public function __construct(
+		IRequest $request,
+		private ZgwRegisterAccess $registers,
+		private ZgwApiClient $api,
+		private NrcNotificationListener $listener,
+		private LoggerInterface $logger,
+	) {
+		parent::__construct(appName: Application::APP_ID, request: $request);
+	}//end __construct()
 
-    /**
-     * POST /api/zgw/notificaties/inbox — NRC callback ingest.
-     *
-     * @return JSONResponse 202 on success, 401 on bad bearer, 400 on bad body.
-     */
-    #[PublicPage]
-    #[NoCSRFRequired]
-    public function inbox(): JSONResponse
-    {
-        // Webhook authenticity is enforced by the per-abonnement bearer match
-        // below. The endpoint is #[PublicPage] because NRC cannot present a
-        // Nextcloud session cookie; bearer mismatch maps to HTTP 422
-        // (the BlastWebhookController/AppointmentPaymentWebhookController
-        // convention) instead of 401 to signal "webhook signature failure"
-        // without overloading session-auth semantics.
-        $authHeader = (string) $this->request->getHeader('Authorization');
-        $token      = self::extractBearer(headerValue: $authHeader);
-        if ($token === '') {
-            return new JSONResponse(
-                ['error' => 'Missing bearer token'],
-                Http::STATUS_UNPROCESSABLE_ENTITY
-            );
-        }
+	/**
+	 * POST /api/zgw/notificaties/inbox — NRC callback ingest.
+	 *
+	 * ZGW notification receiver (Notificaties API). The publisher fans out to
+	 * every subscriber and retries on failure, so bursts are the norm and the
+	 * rate-limit ceiling is generous.
+	 *
+	 * @return JSONResponse 202 on success, 401 on bad bearer, 400 on bad body.
+	 */
+	#[PublicPage]
+	#[NoCSRFRequired]
+	#[AnonRateLimit(limit: 300, period: 60)]
+	public function inbox(): JSONResponse {
+		// Webhook authenticity is enforced by the per-abonnement bearer match
+		// below. The endpoint is #[PublicPage] because NRC cannot present a
+		// Nextcloud session cookie; bearer mismatch maps to HTTP 422
+		// (the BlastWebhookController/AppointmentPaymentWebhookController
+		// convention) instead of 401 to signal "webhook signature failure"
+		// without overloading session-auth semantics.
+		$authHeader = (string)$this->request->getHeader('Authorization');
+		$token = self::extractBearer(headerValue: $authHeader);
+		if ($token === '') {
+			return new JSONResponse(
+				['error' => 'Missing bearer token'],
+				Http::STATUS_UNPROCESSABLE_ENTITY
+			);
+		}
 
-        $abonnement = $this->resolveAbonnementByBearer(token: $token);
-        if ($abonnement === null) {
-            $this->logger->warning(
-                'ZGW NRC: inbox received with unknown bearer',
-                ['ip' => $this->request->getRemoteAddress()]
-            );
-            return new JSONResponse(
-                ['error' => 'Unknown bearer token'],
-                Http::STATUS_UNPROCESSABLE_ENTITY
-            );
-        }
+		$abonnement = $this->resolveAbonnementByBearer(token: $token);
+		if ($abonnement === null) {
+			$this->logger->warning(
+				'ZGW NRC: inbox received with unknown bearer',
+				['ip' => $this->request->getRemoteAddress()]
+			);
+			return new JSONResponse(
+				['error' => 'Unknown bearer token'],
+				Http::STATUS_UNPROCESSABLE_ENTITY
+			);
+		}
 
-        $payload = json_decode($this->readRawBody(), true);
-        if (is_array($payload) === false) {
-            return new JSONResponse(
-                ['error' => 'Invalid JSON payload'],
-                Http::STATUS_BAD_REQUEST
-            );
-        }
+		$payload = json_decode($this->readRawBody(), true);
+		if (is_array($payload) === false) {
+			return new JSONResponse(
+				['error' => 'Invalid JSON payload'],
+				Http::STATUS_BAD_REQUEST
+			);
+		}
 
-        // The actual dispatch happens synchronously but the controller
-        // returns 202 to NRC immediately — listener errors do not propagate.
-        $this->listener->dispatch($abonnement, $payload);
+		// The actual dispatch happens synchronously but the controller
+		// returns 202 to NRC immediately — listener errors do not propagate.
+		$this->listener->dispatch($abonnement, $payload);
 
-        return new JSONResponse(
-            ['status' => 'accepted'],
-            Http::STATUS_ACCEPTED
-        );
-    }//end inbox()
+		return new JSONResponse(
+			['status' => 'accepted'],
+			Http::STATUS_ACCEPTED
+		);
+	}//end inbox()
 
-    /**
-     * Walk all active NrcAbonnement records and return the one whose
-     * callbackAuth (either a literal token or a vault reference) matches.
-     *
-     * Comparison is constant-time (`hash_equals`) over the resolved token
-     * value; no token leaks via logs.
-     *
-     * @param string $token Inbound bearer token.
-     *
-     * @return array<string, mixed>|null Matching abonnement, or null.
-     */
-    private function resolveAbonnementByBearer(string $token): ?array
-    {
-        $rows = $this->registers->findAll(ZgwRegisterAccess::SCHEMA_ABONN, ['actief' => true]);
-        foreach ($rows as $row) {
-            if ((bool) ($row['actief'] ?? false) === false) {
-                continue;
-            }
+	/**
+	 * Walk all active NrcAbonnement records and return the one whose
+	 * callbackAuth (either a literal token or a vault reference) matches.
+	 *
+	 * Comparison is constant-time (`hash_equals`) over the resolved token
+	 * value; no token leaks via logs.
+	 *
+	 * @param string $token Inbound bearer token.
+	 *
+	 * @return array<string, mixed>|null Matching abonnement, or null.
+	 */
+	private function resolveAbonnementByBearer(string $token): ?array {
+		$rows = $this->registers->findAll(ZgwRegisterAccess::SCHEMA_ABONN, ['active' => true]);
+		foreach ($rows as $row) {
+			if ((bool)($row['active'] ?? false) === false) {
+				continue;
+			}
 
-            $stored = (string) ($row['callbackAuth'] ?? '');
-            if ($stored === '') {
-                continue;
-            }
+			$stored = (string)($row['callbackAuth'] ?? '');
+			if ($stored === '') {
+				continue;
+			}
 
-            $resolved = $this->api->resolveClientSecret($stored);
-            if ($resolved === '') {
-                $resolved = $stored;
-            }
+			$resolved = $this->api->resolveClientSecret($stored);
+			if ($resolved === '') {
+				$resolved = $stored;
+			}
 
-            if (hash_equals($resolved, $token) === true) {
-                return $row;
-            }
-        }
+			if (hash_equals($resolved, $token) === true) {
+				return $row;
+			}
+		}
 
-        return null;
-    }//end resolveAbonnementByBearer()
+		return null;
+	}//end resolveAbonnementByBearer()
 
-    /**
-     * Strip the "Bearer " prefix from an Authorization header value.
-     *
-     * @param string $headerValue Authorization header value.
-     *
-     * @return string Bare token or empty string.
-     */
-    private static function extractBearer(string $headerValue): string
-    {
-        if ($headerValue === '') {
-            return '';
-        }
+	/**
+	 * Strip the "Bearer " prefix from an Authorization header value.
+	 *
+	 * @param string $headerValue Authorization header value.
+	 *
+	 * @return string Bare token or empty string.
+	 */
+	private static function extractBearer(string $headerValue): string {
+		if ($headerValue === '') {
+			return '';
+		}
 
-        if (stripos($headerValue, 'Bearer ') === 0) {
-            return trim(substr($headerValue, 7));
-        }
+		if (stripos($headerValue, 'Bearer ') === 0) {
+			return trim(substr($headerValue, 7));
+		}
 
-        return '';
-    }//end extractBearer()
+		return '';
+	}//end extractBearer()
 
-    /**
-     * Read the raw request body.
-     *
-     * Protected so unit tests can subclass and inject a fixture without
-     * touching `php://input`.
-     *
-     * @return string Body contents (possibly empty).
-     */
-    protected function readRawBody(): string
-    {
-        $body = file_get_contents('php://input');
-        if ($body !== false) {
-            return $body;
-        }
+	/**
+	 * Read the raw request body.
+	 *
+	 * Protected so unit tests can subclass and inject a fixture without
+	 * touching `php://input`.
+	 *
+	 * @return string Body contents (possibly empty).
+	 */
+	protected function readRawBody(): string {
+		$body = file_get_contents('php://input');
+		if ($body !== false) {
+			return $body;
+		}
 
-        return '';
-    }//end readRawBody()
+		return '';
+	}//end readRawBody()
 }//end class

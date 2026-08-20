@@ -1,151 +1,151 @@
 {
-	"components": {
-		"schemas": {
-			"client": {
-				"required": [
-					"name",
-					"type",
-					"contactsUid"
-				],
-				"properties": {
-					"contactsUid": {
-						"type": "string",
-						"title": "Contacts UID",
-						"description": "REQUIRED foreign key to the Nextcloud addressbook contact that is the authoritative identity for this client. Resolved/created via ContactVcardService; never minted locally.",
-						"maxLength": 255,
-						"facetable": true
-					},
-					"name": {
-						"type": "string",
-						"title": "Name",
-						"description": "Denormalised read-only mirror of the NC contact name (vCard FN). The Nextcloud Contact is authoritative; refreshed on every sync by ContactVcardService. Edit identity in the addressbook.",
-						"maxLength": 255,
-						"minLength": 1,
-						"readOnly": true,
-						"x-pipelinq-denormalised": true
-					},
-					"email": {
-						"type": "string",
-						"title": "Email",
-						"description": "Denormalised read-only mirror of the NC contact email (vCard EMAIL). The Nextcloud Contact is authoritative.",
-						"format": "email",
-						"readOnly": true,
-						"x-pipelinq-denormalised": true
-					},
-					"phone": {
-						"type": "string",
-						"title": "Phone",
-						"description": "Denormalised read-only mirror of the NC contact phone (vCard TEL). The Nextcloud Contact is authoritative.",
-						"readOnly": true,
-						"x-pipelinq-denormalised": true
-					},
-					"address": {
-						"type": "string",
-						"title": "Address",
-						"description": "Denormalised read-only mirror of the NC contact postal address. The Nextcloud Contact is authoritative.",
-						"visible": false,
-						"readOnly": true,
-						"x-pipelinq-denormalised": true
-					},
-					"website": {
-						"type": "string",
-						"title": "Website",
-						"description": "Denormalised read-only mirror of the NC contact website (vCard URL). The Nextcloud Contact is authoritative.",
-						"format": "uri",
-						"visible": false,
-						"readOnly": true,
-						"x-pipelinq-denormalised": true
-					},
-					"lifecycleStage": {
-						"type": "string",
-						"title": "Lifecycle stage",
-						"description": "CRM relationship lifecycle stage of this account.",
-						"enum": [
-							"lead",
-							"prospect",
-							"customer",
-							"churned",
-							"dormant"
-						],
-						"default": "lead",
-						"facetable": true
-					},
-					"segment": {
-						"type": "string",
-						"title": "Segment",
-						"description": "Account segment / tier for sales prioritisation (e.g. SMB, enterprise, public-sector).",
-						"facetable": true
-					},
-					"accountOwner": {
-						"type": "string",
-						"title": "Account owner",
-						"description": "Nextcloud user UID of the account owner / responsible sales agent.",
-						"facetable": true
-					},
-					"accountStatus": {
-						"type": "string",
-						"title": "Account status",
-						"description": "Lifecycle status of the CRM relationship/account record (distinct from the contact identity).",
-						"enum": [
-							"active",
-							"inactive",
-							"blocked"
-						],
-						"default": "active",
-						"facetable": true
-					}
-				}
-			},
-			"contact": {
-				"required": [
-					"name",
-					"contactsUid"
-				],
-				"properties": {
-					"contactsUid": {
-						"type": "string",
-						"title": "Contacts UID",
-						"description": "REQUIRED foreign key to the Nextcloud addressbook contact that is the authoritative identity for this contact person. Resolved/created via ContactVcardService; never minted locally.",
-						"maxLength": 255,
-						"facetable": true
-					},
-					"name": {
-						"type": "string",
-						"title": "Name",
-						"description": "Denormalised read-only mirror of the NC contact name (vCard FN). The Nextcloud Contact is authoritative; refreshed on every sync by ContactVcardService. Edit identity in the addressbook.",
-						"maxLength": 255,
-						"minLength": 1,
-						"readOnly": true,
-						"x-pipelinq-denormalised": true
-					},
-					"email": {
-						"type": "string",
-						"title": "Email",
-						"description": "Denormalised read-only mirror of the NC contact email (vCard EMAIL). The Nextcloud Contact is authoritative.",
-						"format": "email",
-						"readOnly": true,
-						"x-pipelinq-denormalised": true
-					},
-					"phone": {
-						"type": "string",
-						"title": "Phone",
-						"description": "Denormalised read-only mirror of the NC contact phone (vCard TEL). The Nextcloud Contact is authoritative.",
-						"readOnly": true,
-						"x-pipelinq-denormalised": true
-					}
-				}
-			},
-			"contactmoment": {
-				"properties": {
-					"contactsUid": {
-						"type": "string",
-						"title": "Contacts UID",
-						"description": "Canonical foreign key to the Nextcloud addressbook contact (vCard UID) that this interaction was with — the party of the contact moment. Set by the migration from the linked client's contactsUid and on new interactions from the chosen party. Works for any addressbook party (client account or contact person).",
-						"maxLength": 255,
-						"facetable": true
-					}
-				}
-			}
-		}
-	}
+  "components": {
+    "schemas": {
+      "client": {
+        "required": [
+          "name",
+          "type",
+          "contactsUid"
+        ],
+        "properties": {
+          "contactsUid": {
+            "type": "string",
+            "title": "Contacts UID",
+            "description": "REQUIRED foreign key to the Nextcloud addressbook contact that is the authoritative identity for this client. Resolved/created via ContactVcardService; never minted locally.",
+            "maxLength": 255,
+            "facetable": true
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Denormalised read-only mirror of the NC contact name (vCard FN). The Nextcloud Contact is authoritative; refreshed on every sync by ContactVcardService. Edit identity in the addressbook.",
+            "maxLength": 255,
+            "minLength": 1,
+            "readOnly": true,
+            "x-pipelinq-denormalised": true
+          },
+          "email": {
+            "type": "string",
+            "title": "Email",
+            "description": "Denormalised read-only mirror of the NC contact email (vCard EMAIL). The Nextcloud Contact is authoritative.",
+            "format": "email",
+            "readOnly": true,
+            "x-pipelinq-denormalised": true
+          },
+          "phone": {
+            "type": "string",
+            "title": "Phone",
+            "description": "Denormalised read-only mirror of the NC contact phone (vCard TEL). The Nextcloud Contact is authoritative.",
+            "readOnly": true,
+            "x-pipelinq-denormalised": true
+          },
+          "address": {
+            "type": "string",
+            "title": "Address",
+            "description": "Denormalised read-only mirror of the NC contact postal address. The Nextcloud Contact is authoritative.",
+            "visible": true,
+            "readOnly": true,
+            "x-pipelinq-denormalised": true
+          },
+          "website": {
+            "type": "string",
+            "title": "Website",
+            "description": "Denormalised read-only mirror of the NC contact website (vCard URL). The Nextcloud Contact is authoritative.",
+            "format": "uri",
+            "visible": true,
+            "readOnly": true,
+            "x-pipelinq-denormalised": true
+          },
+          "lifecycleStage": {
+            "type": "string",
+            "title": "Lifecycle stage",
+            "description": "CRM relationship lifecycle stage of this account.",
+            "enum": [
+              "lead",
+              "prospect",
+              "customer",
+              "churned",
+              "dormant"
+            ],
+            "default": "lead",
+            "facetable": true
+          },
+          "segment": {
+            "type": "string",
+            "title": "Segment",
+            "description": "Account segment / tier for sales prioritisation (e.g. SMB, enterprise, public-sector).",
+            "facetable": true
+          },
+          "accountOwner": {
+            "type": "string",
+            "title": "Account owner",
+            "description": "Nextcloud user UID of the account owner / responsible sales agent.",
+            "facetable": true
+          },
+          "accountStatus": {
+            "type": "string",
+            "title": "Account status",
+            "description": "Lifecycle status of the CRM relationship/account record (distinct from the contact identity).",
+            "enum": [
+              "active",
+              "inactive",
+              "blocked"
+            ],
+            "default": "active",
+            "facetable": true
+          }
+        }
+      },
+      "contact": {
+        "required": [
+          "name",
+          "contactsUid"
+        ],
+        "properties": {
+          "contactsUid": {
+            "type": "string",
+            "title": "Contacts UID",
+            "description": "REQUIRED foreign key to the Nextcloud addressbook contact that is the authoritative identity for this contact person. Resolved/created via ContactVcardService; never minted locally.",
+            "maxLength": 255,
+            "facetable": true
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Denormalised read-only mirror of the NC contact name (vCard FN). The Nextcloud Contact is authoritative; refreshed on every sync by ContactVcardService. Edit identity in the addressbook.",
+            "maxLength": 255,
+            "minLength": 1,
+            "readOnly": true,
+            "x-pipelinq-denormalised": true
+          },
+          "email": {
+            "type": "string",
+            "title": "Email",
+            "description": "Denormalised read-only mirror of the NC contact email (vCard EMAIL). The Nextcloud Contact is authoritative.",
+            "format": "email",
+            "readOnly": true,
+            "x-pipelinq-denormalised": true
+          },
+          "phone": {
+            "type": "string",
+            "title": "Phone",
+            "description": "Denormalised read-only mirror of the NC contact phone (vCard TEL). The Nextcloud Contact is authoritative.",
+            "readOnly": true,
+            "x-pipelinq-denormalised": true
+          }
+        }
+      },
+      "ticket": {
+        "properties": {
+          "contactsUid": {
+            "type": "string",
+            "title": "Contacts UID",
+            "description": "Canonical foreign key to the Nextcloud addressbook contact (vCard UID) that this interaction was with — the party of the contact moment. Set by the migration from the linked client's contactsUid and on new interactions from the chosen party. Works for any addressbook party (client account or contact person).",
+            "maxLength": 255,
+            "facetable": true
+          }
+        }
+      }
+    }
+  }
 }

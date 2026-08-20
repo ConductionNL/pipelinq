@@ -23,16 +23,17 @@ export default {
 		 * date-range header.
 		 *
 		 * @return {string} week | month | quarter | year.
-		 * @spec openspec/changes/decompose-unified-analytics/specs/dashboard/spec.md#REQ-DASH-010
+		 * @spec openspec/specs/dashboard/spec.md
 		 */
 		period() {
 			// Vue 2.7 hands options-API injects either as the raw ref or
 			// already unwrapped (CnChartWidget re-reads it in setup() for
 			// the same reason) — support both shapes.
 			const injected = this.cnDashboardDateRange
-			const range = (injected && typeof injected === 'object' && 'value' in injected)
-				? injected.value
-				: injected
+			const range =
+				injected && typeof injected === 'object' && 'value' in injected
+					? injected.value
+					: injected
 			return rangeToPeriod(range || null)
 		},
 	},

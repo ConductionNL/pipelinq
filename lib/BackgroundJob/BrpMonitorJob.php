@@ -25,6 +25,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\BackgroundJob;
 
+use DateTime;
 use DateTimeImmutable;
 use DateTimeZone;
 use OCA\Pipelinq\AppInfo\Application;
@@ -33,236 +34,294 @@ use OCP\BackgroundJob\TimedJob;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
 use OCP\Notification\IManager as INotificationManager;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * BRP availability + SLA monitor.
  *
  * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-010
  */
-class BrpMonitorJob extends TimedJob
-{
-    /**
-     * Default interval (24h).
-     */
-    private const DEFAULT_INTERVAL_SECONDS = 86400;
+class BrpMonitorJob extends TimedJob {
+	/**
+	 * Default interval (24h).
+	 */
+	private const DEFAULT_INTERVAL_SECONDS = 86400;
 
-    /**
-     * Default error-rate alert threshold (10% of attempts).
-     */
-    private const ERROR_RATE_ALERT_THRESHOLD = 0.10;
+	/**
+	 * Default error-rate alert threshold (10% of attempts).
+	 */
+	private const ERROR_RATE_ALERT_THRESHOLD = 0.10;
 
-    /**
-     * Constructor.
-     *
-     * @param ITimeFactory         $time                Time factory.
-     * @param IAppConfig           $appConfig           App config.
-     * @param ContainerInterface   $container           DI (OR lookup).
-     * @param IGroupManager        $groupManager        Group manager.
-     * @param INotificationManager $notificationManager NC notifications.
-     * @param LoggerInterface      $logger              Logger.
-     */
-    public function __construct(
-        ITimeFactory $time,
-        private IAppConfig $appConfig,
-        private ContainerInterface $container,
-        private IGroupManager $groupManager,
-        private INotificationManager $notificationManager,
-        private LoggerInterface $logger,
-    ) {
-        parent::__construct(time: $time);
-        $this->setInterval(
-            seconds: $this->appConfig->getValueInt(
-                Application::APP_ID,
-                'brp.monitor_interval_seconds',
-                self::DEFAULT_INTERVAL_SECONDS
-            )
-        );
-    }//end __construct()
+	/**
+	 * Constructor.
+	 *
+	 * @param ITimeFactory $time Time factory.
+	 * @param IAppConfig $appConfig App config.
+	 * @param IGroupManager $groupManager Group manager.
+	 * @param INotificationManager $notificationManager NC notifications.
+	 * @param LoggerInterface $logger Logger.
+	 * @param ObjectServiceInterface $objectService OpenRegister's published object service.
+	 */
+	public function __construct(
+		ITimeFactory $time,
+		private IAppConfig $appConfig,
+		private IGroupManager $groupManager,
+		private INotificationManager $notificationManager,
+		private LoggerInterface $logger,
+		private readonly ObjectServiceInterface $objectService,
+	) {
+		parent::__construct(time: $time);
+		$this->setInterval(
+			seconds: $this->appConfig->getValueInt(
+				Application::APP_ID,
+				'brp.monitor_interval_seconds',
+				self::DEFAULT_INTERVAL_SECONDS
+			)
+		);
+	}//end __construct()
 
-    /**
-     * Aggregate the last 24h of BSN audit records.
-     *
-     * @param mixed $argument Unused.
-     *
-     * @return void
-     */
-    protected function run(mixed $argument): void
-    {
-        try {
-            $register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-            $schema   = $this->appConfig->getValueString(Application::APP_ID, 'bsnAuditRecord_schema', '');
-            if ($register === '' || $schema === '') {
-                $this->logger->info('BRP monitor: audit schema not configured; skipping');
-                return;
-            }
+	/**
+	 * Aggregate the last 24h of BSN audit records.
+	 *
+	 * @param mixed $argument Unused.
+	 *
+	 * @return void
+	 *
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) $argument is required by TimedJob::run().
+	 *
+	 * @spec openspec/changes/bsn-validatie-en-brp-lookup/specs.md#REQ-BSN-010
+	 */
+	protected function run(mixed $argument): void {
+		try {
+			$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+			$schema = $this->appConfig->getValueString(Application::APP_ID, 'bsnAuditRecord_schema', '');
+			if ($register === '' || $schema === '') {
+				$this->logger->info('BRP monitor: audit schema not configured; skipping');
+				return;
+			}
 
-            $now    = new DateTimeImmutable('now', new DateTimeZone('UTC'));
-            $window = $now->modify('-24 hours');
+			$now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
+			$window = $now->modify('-24 hours');
 
-            $records = $this->container->get('OCA\OpenRegister\Service\ObjectService')->findAll(
-                filters: ['actie' => 'brp-lookup-uitgevoerd'],
-                register: $register,
-                schema: $schema,
-            );
+			$records = $this->objectService->findAll(
+				config: [
+					'filters' => [
+						'action' => 'brp-lookup-executed',
+						'register' => $register,
+						'schema' => $schema,
+					],
+				]
+			);
 
-            $total     = 0;
-            $errors    = 0;
-            $hits      = 0;
-            $cacheHits = 0;
-            $durations = [];
-            foreach (($records ?? []) as $rec) {
-                if (is_array($rec) === true) {
-                    $arr = $rec;
-                } else if (method_exists($rec, 'jsonSerialize') === true) {
-                    $arr = (array) $rec->jsonSerialize();
-                } else {
-                    $arr = [];
-                }
+			// The findAll() contract returns a non-nullable array, so the `?? []`
+		// that used to sit here was dead code (reported by phpstan).
+		$audit = $this->aggregateAuditRecords(records: $records, window: $window);
+			$total = $audit['total'];
+			$errors = $audit['errors'];
+			$hits = $audit['hits'];
 
-                $tijdstip = (string) ($arr['tijdstip'] ?? '');
-                if ($tijdstip === '') {
-                    continue;
-                }
+			// Cache-hit ratio is sourced from brpLookupVerzoek.responseInCache (more accurate).
+			$requestSchema = $this->appConfig->getValueString(Application::APP_ID, 'brpLookupVerzoek_schema', '');
+			$request = $this->aggregateVerzoeken(
+				register: $register,
+				requestSchema: $requestSchema,
+				window: $window
+			);
+			$totalRequest = $request['totalVerzoek'];
+			$cacheHits = $request['cacheHits'];
+			$durations = $request['durations'];
 
-                try {
-                    $ts = new DateTimeImmutable($tijdstip);
-                } catch (Throwable $e) {
-                    continue;
-                }
+			$errorRate = 0.0;
+			if ($total > 0) {
+				$errorRate = round($errors / $total, 4);
+			}
 
-                if ($ts < $window) {
-                    continue;
-                }
+			$cacheHitRatio = 0.0;
+			if ($totalRequest > 0) {
+				$cacheHitRatio = round($cacheHits / $totalRequest, 4);
+			}
 
-                $total++;
-                $uitkomst = (string) ($arr['uitkomst'] ?? '');
-                if ($uitkomst === 'fout' || $uitkomst === 'timeout') {
-                    $errors++;
-                }
+			$avgResponseMs = 0;
+			if (count($durations) > 0) {
+				$avgResponseMs = (int)round(array_sum($durations) / count($durations));
+			}
 
-                if ($uitkomst === 'geslaagd') {
-                    $hits++;
-                }
-            }//end foreach
+			$report = [
+				'windowStart' => $window->format(DATE_ATOM),
+				'windowEnd' => $now->format(DATE_ATOM),
+				'totalLookups' => $total,
+				'successfulLookups' => $hits,
+				'errorCount' => $errors,
+				'errorRate' => $errorRate,
+				'cacheHits' => $cacheHits,
+				'cacheHitRatio' => $cacheHitRatio,
+				'avgResponseMs' => $avgResponseMs,
+				'generatedAt' => $now->format(DATE_ATOM),
+			];
 
-            // Cache-hit ratio is sourced from brpLookupVerzoek.responseInCache (more accurate).
-            $verzoekSchema = $this->appConfig->getValueString(Application::APP_ID, 'brpLookupVerzoek_schema', '');
-            $totalVerzoek  = 0;
-            if ($verzoekSchema !== '') {
-                $verzoeken = $this->container->get('OCA\OpenRegister\Service\ObjectService')->findAll(
-                    filters: [],
-                    register: $register,
-                    schema: $verzoekSchema,
-                );
-                foreach (($verzoeken ?? []) as $rec) {
-                    if (is_array($rec) === true) {
-                        $arr = $rec;
-                    } else if (method_exists($rec, 'jsonSerialize') === true) {
-                        $arr = (array) $rec->jsonSerialize();
-                    } else {
-                        $arr = [];
-                    }
+			$this->appConfig->setValueString(
+				Application::APP_ID,
+				'brp.monitor_report',
+				json_encode($report, JSON_THROW_ON_ERROR)
+			);
 
-                    $tijdstip = (string) ($arr['verzoekTijdstip'] ?? '');
-                    try {
-                        $ts = new DateTimeImmutable($tijdstip);
-                    } catch (Throwable $e) {
-                        continue;
-                    }
+			if ($report['errorRate'] >= self::ERROR_RATE_ALERT_THRESHOLD && $total > 0) {
+				$this->notifyAdmins(report: $report);
+			}
+		} catch (Throwable $e) {
+			$this->logger->error('BRP monitor job failed', ['error' => $e->getMessage()]);
+		}//end try
+	}//end run()
 
-                    if ($ts < $window) {
-                        continue;
-                    }
+	/**
+	 * Coerce an OpenRegister record (array or entity) to a plain array.
+	 *
+	 * @param mixed $rec Record from ObjectService::findAll().
+	 *
+	 * @return array<string, mixed> Array representation (empty when unusable).
+	 */
+	private function recordToArray(mixed $rec): array {
+		if (is_array($rec) === true) {
+			return $rec;
+		}
 
-                    $totalVerzoek++;
-                    if (($arr['responseInCache'] ?? false) === true) {
-                        $cacheHits++;
-                    }
+		if (method_exists($rec, 'jsonSerialize') === true) {
+			return (array)$rec->jsonSerialize();
+		}
 
-                    if (isset($arr['responseDuurMs']) === true) {
-                        $durations[] = (int) $arr['responseDuurMs'];
-                    }
-                }//end foreach
-            }//end if
+		return [];
+	}//end recordToArray()
 
-            $errorRate = 0.0;
-            if ($total > 0) {
-                $errorRate = round($errors / $total, 4);
-            }
+	/**
+	 * Aggregate audit records inside the rolling window.
+	 *
+	 * @param iterable<mixed> $records BSN audit records.
+	 * @param DateTimeImmutable $window Lower time bound (inclusive).
+	 *
+	 * @return array{total: int, errors: int, hits: int}
+	 */
+	private function aggregateAuditRecords(iterable $records, DateTimeImmutable $window): array {
+		$total = 0;
+		$errors = 0;
+		$hits = 0;
+		foreach ($records as $rec) {
+			$arr = $this->recordToArray(rec: $rec);
+			$moment = (string)($arr['moment'] ?? '');
+			if ($moment === '') {
+				continue;
+			}
 
-            $cacheHitRatio = 0.0;
-            if ($totalVerzoek > 0) {
-                $cacheHitRatio = round($cacheHits / $totalVerzoek, 4);
-            }
+			try {
+				$timestamp = new DateTimeImmutable($moment);
+			} catch (Throwable $e) {
+				continue;
+			}
 
-            $avgResponseMs = 0;
-            if (count($durations) > 0) {
-                $avgResponseMs = (int) round(array_sum($durations) / count($durations));
-            }
+			if ($timestamp < $window) {
+				continue;
+			}
 
-            $report = [
-                'windowStart'       => $window->format(DATE_ATOM),
-                'windowEnd'         => $now->format(DATE_ATOM),
-                'totalLookups'      => $total,
-                'successfulLookups' => $hits,
-                'errorCount'        => $errors,
-                'errorRate'         => $errorRate,
-                'cacheHits'         => $cacheHits,
-                'cacheHitRatio'     => $cacheHitRatio,
-                'avgResponseMs'     => $avgResponseMs,
-                'generatedAt'       => $now->format(DATE_ATOM),
-            ];
+			$total++;
+			$outcome = (string)($arr['outcome'] ?? '');
+			if ($outcome === 'error' || $outcome === 'timeout') {
+				$errors++;
+			}
 
-            $this->appConfig->setValueString(
-                Application::APP_ID,
-                'brp.monitor_report',
-                json_encode($report, JSON_THROW_ON_ERROR)
-            );
+			if ($outcome === 'succeeded') {
+				$hits++;
+			}
+		}//end foreach
 
-            if ($report['errorRate'] >= self::ERROR_RATE_ALERT_THRESHOLD && $total > 0) {
-                $this->notifyAdmins(report: $report);
-            }
-        } catch (Throwable $e) {
-            $this->logger->error('BRP monitor job failed', ['error' => $e->getMessage()]);
-        }//end try
-    }//end run()
+		return ['total' => $total, 'errors' => $errors, 'hits' => $hits];
+	}//end aggregateAuditRecords()
 
-    /**
-     * Send an admin notification when the error rate breaches the alert threshold.
-     *
-     * @param array<string,mixed> $report Aggregated monitor report.
-     *
-     * @return void
-     */
-    private function notifyAdmins(array $report): void
-    {
-        $admins = $this->groupManager->get('admin');
-        if ($admins === null) {
-            return;
-        }
+	/**
+	 * Aggregate brpLookupVerzoek records for cache-hit ratio and durations.
+	 *
+	 * @param string $register Register slug.
+	 * @param string $requestSchema brpLookupVerzoek schema slug (empty = skip).
+	 * @param DateTimeImmutable $window Lower time bound (inclusive).
+	 *
+	 * @return array{totalVerzoek: int, cacheHits: int, durations: array<int, int>}
+	 */
+	private function aggregateVerzoeken(string $register, string $requestSchema, DateTimeImmutable $window): array {
+		if ($requestSchema === '') {
+			return ['totalVerzoek' => 0, 'cacheHits' => 0, 'durations' => []];
+		}
 
-        foreach ($admins->getUsers() as $admin) {
-            try {
-                $n = $this->notificationManager->createNotification();
-                $n->setApp(Application::APP_ID)
-                    ->setUser($admin->getUID())
-                    ->setObject('brp-monitor', 'error-rate')
-                    ->setSubject(
-                          'brp_error_rate',
-                          [
-                              'errorRate'    => (string) $report['errorRate'],
-                              'totalLookups' => (string) $report['totalLookups'],
-                              'errorCount'   => (string) $report['errorCount'],
-                          ]
-                          )
-                    ->setDateTime(new \DateTime());
-                $this->notificationManager->notify($n);
-            } catch (Throwable $e) {
-                $this->logger->warning('BRP monitor notify failed', ['admin' => $admin->getUID(), 'error' => $e->getMessage()]);
-            }
-        }
-    }//end notifyAdmins()
+		$totalRequest = 0;
+		$cacheHits = 0;
+		$durations = [];
+		$verzoeken = $this->objectService->findAll(
+			config: [
+				'filters' => [
+					'register' => $register,
+					'schema' => $requestSchema,
+				],
+			]
+		);
+		// The findAll() contract returns a non-nullable array, so the `?? []`
+		// that used to sit here was dead code (reported by phpstan).
+		foreach ($verzoeken as $rec) {
+			$arr = $this->recordToArray(rec: $rec);
+			$moment = (string)($arr['requestMoment'] ?? '');
+			try {
+				$timestamp = new DateTimeImmutable($moment);
+			} catch (Throwable $e) {
+				continue;
+			}
+
+			if ($timestamp < $window) {
+				continue;
+			}
+
+			$totalRequest++;
+			if (($arr['responseInCache'] ?? false) === true) {
+				$cacheHits++;
+			}
+
+			if (isset($arr['responseDurationMs']) === true) {
+				$durations[] = (int)$arr['responseDurationMs'];
+			}
+		}//end foreach
+
+		return ['totalVerzoek' => $totalRequest, 'cacheHits' => $cacheHits, 'durations' => $durations];
+	}//end aggregateVerzoeken()
+
+	/**
+	 * Send an admin notification when the error rate breaches the alert threshold.
+	 *
+	 * @param array<string,mixed> $report Aggregated monitor report.
+	 *
+	 * @return void
+	 */
+	private function notifyAdmins(array $report): void {
+		$admins = $this->groupManager->get('admin');
+		if ($admins === null) {
+			return;
+		}
+
+		foreach ($admins->getUsers() as $admin) {
+			try {
+				$n = $this->notificationManager->createNotification();
+				$n->setApp(Application::APP_ID)
+					->setUser($admin->getUID())
+					->setObject('brp-monitor', 'error-rate')
+					->setSubject(
+						'brp_error_rate',
+						[
+							'errorRate' => (string)$report['errorRate'],
+							'totalLookups' => (string)$report['totalLookups'],
+							'errorCount' => (string)$report['errorCount'],
+						]
+					)
+					->setDateTime(new DateTime());
+				$this->notificationManager->notify($n);
+			} catch (Throwable $e) {
+				$this->logger->warning('BRP monitor notify failed', ['admin' => $admin->getUID(), 'error' => $e->getMessage()]);
+			}
+		}
+	}//end notifyAdmins()
 }//end class

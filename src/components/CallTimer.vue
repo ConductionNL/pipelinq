@@ -4,21 +4,13 @@
 			{{ formattedTime }}
 		</div>
 		<div class="call-timer__controls">
-			<NcButton
-				v-if="!running"
-				type="primary"
-				@click="start">
+			<NcButton v-if="!running" variant="primary" @click="start">
 				{{ t('pipelinq', 'Start') }}
 			</NcButton>
-			<NcButton
-				v-if="running"
-				type="error"
-				@click="stop">
+			<NcButton v-if="running" variant="error" @click="stop">
 				{{ t('pipelinq', 'Stop') }}
 			</NcButton>
-			<NcButton
-				type="tertiary"
-				@click="reset">
+			<NcButton variant="tertiary" @click="reset">
 				{{ t('pipelinq', 'Reset') }}
 			</NcButton>
 		</div>
@@ -38,6 +30,7 @@ export default {
 			interval: null,
 		}
 	},
+
 	computed: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-callback-ui/tasks.md#task-1
@@ -47,6 +40,7 @@ export default {
 			const s = this.seconds % 60
 			return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-callback-ui/tasks.md#task-2
 		 */
@@ -56,9 +50,11 @@ export default {
 			return `PT${m}M${s}S`
 		},
 	},
-	beforeDestroy() {
+
+	beforeUnmount() {
 		clearInterval(this.interval)
 	},
+
 	methods: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-callback-ui/tasks.md#task-4
@@ -71,6 +67,7 @@ export default {
 				this.$emit('tick', this.isoDuration)
 			}, 1000)
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-callback-ui/tasks.md#task-5
 		 */
@@ -79,6 +76,7 @@ export default {
 			clearInterval(this.interval)
 			this.$emit('stopped', this.isoDuration)
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-callback-ui/tasks.md#task-3
 		 */
@@ -92,9 +90,26 @@ export default {
 </script>
 
 <style scoped>
-.call-timer { display: flex; align-items: center; gap: 12px; padding: 8px 12px; border: 1px solid var(--color-border); border-radius: var(--border-radius-large); background: var(--color-background-dark); }
+.call-timer {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 8px 12px;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius-large);
+	background: var(--color-background-dark);
+}
 
-.call-timer__display { font-family: monospace; font-size: 1.5em; font-weight: 700; min-width: 80px; text-align: center; }
+.call-timer__display {
+	font-family: monospace;
+	font-size: 1.5em;
+	font-weight: 700;
+	min-width: 80px;
+	text-align: center;
+}
 
-.call-timer__controls { display: flex; gap: 4px; }
+.call-timer__controls {
+	display: flex;
+	gap: 4px;
+}
 </style>

@@ -1,191 +1,204 @@
 {
-	"components": {
-		"registers": {
-			"pipelinq": {
-				"schemas": [
-					"expense"
-				]
-			}
-		},
-		"schemas": {
-			"expense": {
-				"slug": "expense",
-				"title": "Expense",
-				"icon": "Receipt",
-				"version": "1.0.0",
-				"summary": "An approved or pending expense submission with optional Shillinq AP sync state.",
-				"description": "Captured expense (declaratie / onkostenbon) submitted in pipelinq. When status transitions to 'approved' the expense is dispatched as an AP voucher to Shillinq through OpenRegister's WebhookService; apSyncStatus and apSyncedAt record the outcome of that one-way integration (REQ-AP-001).",
-				"@type": "Invoice",
-				"required": [
-					"title",
-					"amount"
-				],
-				"properties": {
-					"title": {
-						"type": "string",
-						"description": "Short title for the expense (schema:name).",
-						"maxLength": 255,
-						"minLength": 1
-					},
-					"description": {
-						"type": "string",
-						"description": "Free-text description of the expense.",
-						"maxLength": 2000
-					},
-					"amount": {
-						"type": "number",
-						"description": "Expense amount in the configured currency."
-					},
-					"currency": {
-						"type": "string",
-						"description": "ISO 4217 currency code.",
-						"default": "EUR",
-						"maxLength": 3,
-						"minLength": 3
-					},
-					"category": {
-						"type": "string",
-						"description": "Expense category (e.g. accommodation, travel, supplies, meals, software)."
-					},
-					"client": {
-						"type": "string",
-						"description": "UUID of the related client (pipelinq client schema)."
-					},
-					"project": {
-						"type": "string",
-						"description": "UUID of the related project for billable pass-through cost routing."
-					},
-					"billable": {
-						"type": "boolean",
-						"description": "Whether this expense is billable to the linked project/client.",
-						"default": false
-					},
-					"status": {
-						"type": "string",
-						"description": "Expense workflow status.",
-						"enum": [
-							"draft",
-							"submitted",
-							"approved",
-							"rejected"
-						],
-						"default": "draft"
-					},
-					"approvedBy": {
-						"type": "string",
-						"description": "User ID of the approver."
-					},
-					"approvedAt": {
-						"type": "string",
-						"description": "ISO 8601 UTC timestamp of approval.",
-						"format": "date-time"
-					},
-					"apSyncStatus": {
-						"type": "string",
-						"description": "Shillinq AP sync state for this expense (null until the first approval event). REQ-AP-001.",
-						"enum": [
-							"pending",
-							"synced",
-							"failed"
-						]
-					},
-					"apSyncedAt": {
-						"type": "string",
-						"description": "ISO 8601 UTC timestamp of the last successful Shillinq AP dispatch. REQ-AP-001.",
-						"format": "date-time"
-					}
-				}
-			}
-		},
-		"objects": [
-			{
-				"@self": {
-					"register": "pipelinq",
-					"schema": "expense",
-					"slug": "expense-ap-synced-1"
-				},
-				"title": "Hotelaccommodatie Amsterdam",
-				"description": "Verblijf Hotel de l'Europa, Amsterdam",
-				"amount": 185.50,
-				"currency": "EUR",
-				"category": "accommodation",
-				"billable": false,
-				"status": "approved",
-				"approvedBy": "admin",
-				"approvedAt": "2026-05-15T14:30:00Z",
-				"apSyncStatus": "synced",
-				"apSyncedAt": "2026-05-15T14:35:00Z"
-			},
-			{
-				"@self": {
-					"register": "pipelinq",
-					"schema": "expense",
-					"slug": "expense-ap-synced-2"
-				},
-				"title": "Reiskosten client bezoek",
-				"description": "Treinkaartje Amsterdam–Rotterdam, client project",
-				"amount": 45.00,
-				"currency": "EUR",
-				"category": "travel",
-				"billable": true,
-				"status": "approved",
-				"approvedBy": "admin",
-				"approvedAt": "2026-05-14T09:00:00Z",
-				"apSyncStatus": "synced",
-				"apSyncedAt": "2026-05-14T09:05:00Z"
-			},
-			{
-				"@self": {
-					"register": "pipelinq",
-					"schema": "expense",
-					"slug": "expense-ap-pending-1"
-				},
-				"title": "Kantoorbenodigdheden",
-				"description": "Printpapier en pennen, kantoor Amsterdam",
-				"amount": 32.95,
-				"currency": "EUR",
-				"category": "supplies",
-				"billable": false,
-				"status": "approved",
-				"approvedBy": "admin",
-				"approvedAt": "2026-05-20T16:45:00Z",
-				"apSyncStatus": "pending"
-			},
-			{
-				"@self": {
-					"register": "pipelinq",
-					"schema": "expense",
-					"slug": "expense-ap-failed-1"
-				},
-				"title": "Catering vergadering",
-				"description": "Koffie en thee, team meeting 2026-05-10",
-				"amount": 78.30,
-				"currency": "EUR",
-				"category": "meals",
-				"billable": false,
-				"status": "approved",
-				"approvedBy": "admin",
-				"approvedAt": "2026-05-10T11:20:00Z",
-				"apSyncStatus": "failed"
-			},
-			{
-				"@self": {
-					"register": "pipelinq",
-					"schema": "expense",
-					"slug": "expense-ap-synced-3"
-				},
-				"title": "Software licentie (jaarlijks)",
-				"description": "Adobe Creative Suite jaarlicentie, project Digitalisering",
-				"amount": 595.00,
-				"currency": "EUR",
-				"category": "software",
-				"billable": true,
-				"status": "approved",
-				"approvedBy": "admin",
-				"approvedAt": "2026-05-01T10:00:00Z",
-				"apSyncStatus": "synced",
-				"apSyncedAt": "2026-05-01T10:05:00Z"
-			}
-		]
-	}
+  "components": {
+    "registers": {
+      "pipelinq": {
+        "schemas": [
+          "expense"
+        ]
+      }
+    },
+    "schemas": {
+      "expense": {
+        "x-schema-org": "schema:Invoice",
+        "slug": "expense",
+        "title": "Expense",
+        "icon": "Receipt",
+        "version": "1.0.0",
+        "summary": "An approved or pending expense submission with optional Shillinq AP sync state.",
+        "description": "Captured expense (declaratie / onkostenbon) submitted in pipelinq. When status transitions to 'approved' the expense is dispatched as an AP voucher to Shillinq through OpenRegister's WebhookService; apSyncStatus and apSyncedAt record the outcome of that one-way integration (REQ-AP-001).",
+        "required": [
+          "title",
+          "amount"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Short title for the expense (schema:name).",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Title"
+          },
+          "description": {
+            "type": "string",
+            "description": "Free-text description of the expense.",
+            "maxLength": 2000,
+            "title": "Description"
+          },
+          "amount": {
+            "type": "number",
+            "description": "Expense amount in the configured currency.",
+            "title": "Amount"
+          },
+          "currency": {
+            "type": "string",
+            "description": "ISO 4217 currency code.",
+            "default": "EUR",
+            "maxLength": 3,
+            "minLength": 3,
+            "title": "Currency"
+          },
+          "category": {
+            "type": "string",
+            "description": "Expense category (e.g. accommodation, travel, supplies, meals, software).",
+            "title": "Category"
+          },
+          "client": {
+            "type": "string",
+            "description": "UUID of the related client (pipelinq client schema).",
+            "title": "Client"
+          },
+          "project": {
+            "type": "string",
+            "description": "UUID of the related project for billable pass-through cost routing.",
+            "title": "Project"
+          },
+          "billable": {
+            "type": "boolean",
+            "description": "Whether this expense is billable to the linked project/client.",
+            "default": false,
+            "title": "Billable"
+          },
+          "status": {
+            "type": "string",
+            "description": "Expense workflow status.",
+            "enum": [
+              "draft",
+              "submitted",
+              "approved",
+              "rejected"
+            ],
+            "default": "draft",
+            "title": "Status"
+          },
+          "approvedBy": {
+            "type": "string",
+            "description": "User ID of the approver.",
+            "title": "Approved By"
+          },
+          "approvedAt": {
+            "type": "string",
+            "description": "ISO 8601 UTC timestamp of approval.",
+            "format": "date-time",
+            "title": "Approved At"
+          },
+          "apSyncStatus": {
+            "type": "string",
+            "description": "Shillinq AP sync state for this expense (null until the first approval event). REQ-AP-001.",
+            "enum": [
+              "pending",
+              "synced",
+              "failed"
+            ],
+            "title": "Ap Sync Status"
+          },
+          "apSyncedAt": {
+            "type": "string",
+            "description": "ISO 8601 UTC timestamp of the last successful Shillinq AP dispatch. REQ-AP-001.",
+            "format": "date-time",
+            "title": "Ap Synced At"
+          }
+        }
+      }
+    },
+    "objects": [
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "expense",
+          "slug": "expense-ap-synced-1"
+        },
+        "title": "Hotelaccommodatie Amsterdam",
+        "description": "Verblijf Hotel de l'Europa, Amsterdam",
+        "amount": 185.5,
+        "currency": "EUR",
+        "category": "accommodation",
+        "billable": false,
+        "status": "approved",
+        "approvedBy": "admin",
+        "approvedAt": "2026-05-15T14:30:00Z",
+        "apSyncStatus": "synced",
+        "apSyncedAt": "2026-05-15T14:35:00Z"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "expense",
+          "slug": "expense-ap-synced-2"
+        },
+        "title": "Reiskosten client bezoek",
+        "description": "Treinkaartje Amsterdam–Rotterdam, client project",
+        "amount": 45.0,
+        "currency": "EUR",
+        "category": "travel",
+        "billable": true,
+        "status": "approved",
+        "approvedBy": "admin",
+        "approvedAt": "2026-05-14T09:00:00Z",
+        "apSyncStatus": "synced",
+        "apSyncedAt": "2026-05-14T09:05:00Z"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "expense",
+          "slug": "expense-ap-pending-1"
+        },
+        "title": "Kantoorbenodigdheden",
+        "description": "Printpapier en pennen, kantoor Amsterdam",
+        "amount": 32.95,
+        "currency": "EUR",
+        "category": "supplies",
+        "billable": false,
+        "status": "approved",
+        "approvedBy": "admin",
+        "approvedAt": "2026-05-20T16:45:00Z",
+        "apSyncStatus": "pending"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "expense",
+          "slug": "expense-ap-failed-1"
+        },
+        "title": "Catering vergadering",
+        "description": "Koffie en thee, team meeting 2026-05-10",
+        "amount": 78.3,
+        "currency": "EUR",
+        "category": "meals",
+        "billable": false,
+        "status": "approved",
+        "approvedBy": "admin",
+        "approvedAt": "2026-05-10T11:20:00Z",
+        "apSyncStatus": "failed"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "expense",
+          "slug": "expense-ap-synced-3"
+        },
+        "title": "Software licentie (jaarlijks)",
+        "description": "Adobe Creative Suite jaarlicentie, project Digitalisering",
+        "amount": 595.0,
+        "currency": "EUR",
+        "category": "software",
+        "billable": true,
+        "status": "approved",
+        "approvedBy": "admin",
+        "approvedAt": "2026-05-01T10:00:00Z",
+        "apSyncStatus": "synced",
+        "apSyncedAt": "2026-05-01T10:05:00Z"
+      }
+    ]
+  }
 }

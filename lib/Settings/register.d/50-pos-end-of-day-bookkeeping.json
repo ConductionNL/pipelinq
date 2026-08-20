@@ -1,267 +1,342 @@
 {
-    "components": {
-        "registers": {
-            "pipelinq": {
-                "schemas": [
-                    "client",
-                    "contact",
-                    "lead",
-                    "request",
-                    "complaint",
-                    "pipeline",
-                    "product",
-                    "productCategory",
-                    "leadProduct",
-                    "contactmoment",
-                    "task",
-                    "kennisartikel",
-                    "kenniscategorie",
-                    "kennisfeedback",
-                    "relationship",
-                    "queue",
-                    "skill",
-                    "agentProfile",
-                    "posTransaction",
-                    "posTransactionLine",
-                    "receiptTemplate",
-                    "receiptPrintLog",
-                    "refundReason",
-                    "posRefund",
-                    "posRefundLine",
-                    "cashShift",
-                    "cashDrop",
-                    "cashCount",
-                    "cashDiff",
-                    "posZReport"
-                ]
-            }
-        },
-        "schemas": {
-            "posZReport": {
-                "slug": "posZReport",
-                "title": "POS Z-Report",
-                "icon": "FileChart",
-                "version": "1.0.0",
-                "summary": "Daily POS end-of-day settlement, aggregating confirmed transactions per terminal",
-                "description": "Represents a daily Z-report (end-of-day settlement) for a POS terminal. Aggregates all confirmed/settled posTransaction objects for a given reportDate (and optional terminalId), computing per-rate tax breakdown, payment-method breakdown and gross/net totals server-authoritative — client-supplied figures are never trusted. Lifecycle: draft -> ready -> submitted -> posted -> reconciled, with a failed branch for retried submissions. Mapped to Schema.org Invoice.",
-                "@type": "schema:Invoice",
-                "required": [
-                    "reference",
-                    "reportDate",
-                    "createdAt",
-                    "status"
-                ],
-                "properties": {
-                    "reference": {
-                        "type": "string",
-                        "description": "Human-readable Z-report reference, e.g. Z-2026-05-20-KAS01 (date + terminal)",
-                        "maxLength": 64,
-                        "facetable": true
-                    },
-                    "reportDate": {
-                        "type": "string",
-                        "format": "date",
-                        "description": "Settlement date (not creation date) in YYYY-MM-DD",
-                        "facetable": true
-                    },
-                    "terminalId": {
-                        "type": "string",
-                        "description": "POS terminal / register identifier (e.g. kassa-01); null when the report spans all terminals",
-                        "maxLength": 64,
-                        "facetable": true
-                    },
-                    "store": {
-                        "type": "string",
-                        "format": "uuid",
-                        "description": "Optional reference to a store/location entity (future use)"
-                    },
-                    "transactionIds": {
-                        "type": "array",
-                        "description": "UUIDs of aggregated posTransaction objects (audit trail)",
-                        "items": { "type": "string" }
-                    },
-                    "transactionCount": {
-                        "type": "integer",
-                        "description": "Number of transactions aggregated",
-                        "default": 0,
-                        "minimum": 0
-                    },
-                    "subtotal": {
-                        "type": "number",
-                        "description": "Sum of transaction subtotals excluding tax",
-                        "default": 0
-                    },
-                    "discountTotal": {
-                        "type": "number",
-                        "description": "Aggregate discount across all transactions",
-                        "default": 0
-                    },
-                    "taxBreakdown": {
-                        "type": "array",
-                        "description": "Per-rate tax summary, e.g. [{rate:21, base:200.00, tax:42.00}]",
-                        "items": { "type": "object" }
-                    },
-                    "totalTax": {
-                        "type": "number",
-                        "description": "Aggregate tax (sum of taxBreakdown[*].tax)",
-                        "default": 0
-                    },
-                    "total": {
-                        "type": "number",
-                        "description": "Grand total including tax",
-                        "default": 0
-                    },
-                    "paymentMethodBreakdown": {
-                        "type": "array",
-                        "description": "Per-payment-method totals, e.g. [{method:cash, amount:300.00}]",
-                        "items": { "type": "object" }
-                    },
-                    "createdAt": {
-                        "type": "string",
-                        "format": "date-time",
-                        "description": "ISO 8601 timestamp when the Z-report was generated (server-set)"
-                    },
-                    "settledAt": {
-                        "type": "string",
-                        "format": "date-time",
-                        "description": "ISO 8601 timestamp when the transactions were settled"
-                    },
-                    "status": {
-                        "type": "string",
-                        "description": "Lifecycle status",
-                        "enum": [
-                            "draft",
-                            "ready",
-                            "submitted",
-                            "posted",
-                            "failed",
-                            "reconciled"
-                        ],
-                        "default": "draft",
-                        "title": "Status",
-                        "facetable": true
-                    },
-                    "bookkeepingStatus": {
-                        "type": "string",
-                        "description": "Projection of the shillinq journal-entry outcome for this POS day. pending = raise queued / shillinq unreachable; raised = shillinq accepted and returned a journal id; failed = the registry raise exhausted its retries. The GL chart, the VAT posting and the journal itself live in shillinq (cross-app contract #3); this is only a read-only status mirror so operators can see whether the day is booked.",
-                        "enum": [
-                            "pending",
-                            "raised",
-                            "failed"
-                        ],
-                        "default": "pending",
-                        "title": "Bookkeeping status",
-                        "facetable": true
-                    },
-                    "shillinqJournalEntryId": {
-                        "type": "string",
-                        "description": "JournalEntry id returned by shillinq once the registry-mediated shillinq.JournalEntry.raise is accepted. Empty while pending or failed.",
-                        "maxLength": 64,
-                        "facetable": true
-                    },
-                    "bookkeepingAttempts": {
-                        "type": "integer",
-                        "description": "Number of shillinq.JournalEntry.raise dispatch attempts (incremented per raise; drives the max-attempts terminal-failed cut-off).",
-                        "default": 0,
-                        "minimum": 0
-                    },
-                    "notes": {
-                        "type": "string",
-                        "description": "Optional notes (e.g. overage adjustment)",
-                        "maxLength": 2000
-                    }
-                }
-            }
-        },
-        "objects": [
-            {
-                "@self": { "register": "pipelinq", "schema": "posZReport", "slug": "zrep-2026-05-20-kas01" },
-                "reference": "Z-2026-05-20-KAS01",
-                "reportDate": "2026-05-20",
-                "terminalId": "kassa-01",
-                "transactionCount": 42,
-                "subtotal": 450.00,
-                "discountTotal": 15.00,
-                "taxBreakdown": [
-                    { "rate": 9,  "base": 50.00,  "tax": 4.50 },
-                    { "rate": 21, "base": 385.00, "tax": 80.85 }
-                ],
-                "totalTax": 85.35,
-                "total": 535.35,
-                "paymentMethodBreakdown": [
-                    { "method": "cash", "amount": 300.00 },
-                    { "method": "card", "amount": 235.35 }
-                ],
-                "createdAt": "2026-05-20T23:59:00+02:00",
-                "settledAt": "2026-05-20T23:59:00+02:00",
-                "status": "posted",
-                "bookkeepingStatus": "raised",
-                "shillinqJournalEntryId": "je-shillinq-2026-05-20-001",
-                "notes": "Normale werkdag — journaalpost geboekt in shillinq"
-            },
-            {
-                "@self": { "register": "pipelinq", "schema": "posZReport", "slug": "zrep-2026-05-21-kas01" },
-                "reference": "Z-2026-05-21-KAS01",
-                "reportDate": "2026-05-21",
-                "terminalId": "kassa-01",
-                "transactionCount": 38,
-                "subtotal": 380.00,
-                "discountTotal": 10.00,
-                "taxBreakdown": [
-                    { "rate": 9,  "base": 40.00,  "tax": 3.60 },
-                    { "rate": 21, "base": 330.00, "tax": 69.30 }
-                ],
-                "totalTax": 72.90,
-                "total": 452.90,
-                "paymentMethodBreakdown": [
-                    { "method": "cash", "amount": 250.00 },
-                    { "method": "card", "amount": 202.90 }
-                ],
-                "createdAt": "2026-05-21T23:59:00+02:00",
-                "settledAt": "2026-05-21T23:59:00+02:00",
-                "status": "submitted",
-                "bookkeepingStatus": "pending",
-                "notes": "Journaalpost raise in de wachtrij naar shillinq"
-            },
-            {
-                "@self": { "register": "pipelinq", "schema": "posZReport", "slug": "zrep-2026-05-22-kas02" },
-                "reference": "Z-2026-05-22-KAS02",
-                "reportDate": "2026-05-22",
-                "terminalId": "kassa-02",
-                "transactionCount": 25,
-                "subtotal": 200.00,
-                "discountTotal": 5.00,
-                "taxBreakdown": [
-                    { "rate": 21, "base": 195.00, "tax": 40.95 }
-                ],
-                "totalTax": 40.95,
-                "total": 240.95,
-                "paymentMethodBreakdown": [
-                    { "method": "card", "amount": 240.95 }
-                ],
-                "createdAt": "2026-05-22T23:59:00+02:00",
-                "settledAt": "2026-05-22T23:59:00+02:00",
-                "status": "failed",
-                "bookkeepingStatus": "failed",
-                "notes": "Journaalpost raise gefaald — shillinq onbereikbaar"
-            },
-            {
-                "@self": { "register": "pipelinq", "schema": "posZReport", "slug": "zrep-2026-05-23-kas01" },
-                "reference": "Z-2026-05-23-KAS01",
-                "reportDate": "2026-05-23",
-                "terminalId": "kassa-01",
-                "transactionCount": 0,
-                "subtotal": 0,
-                "discountTotal": 0,
-                "taxBreakdown": [],
-                "totalTax": 0,
-                "total": 0,
-                "paymentMethodBreakdown": [],
-                "createdAt": "2026-05-23T23:59:00+02:00",
-                "status": "draft",
-                "bookkeepingStatus": "pending",
-                "notes": "Winkel gesloten"
-            }
+  "components": {
+    "registers": {
+      "pipelinq": {
+        "schemas": [
+          "client",
+          "contact",
+          "lead",
+          "request",
+          "complaint",
+          "pipeline",
+          "product",
+          "productCategory",
+          "leadProduct",
+          "contactmoment",
+          "task",
+          "kennisartikel",
+          "kenniscategorie",
+          "kennisfeedback",
+          "relationship",
+          "queue",
+          "skill",
+          "agentProfile",
+          "posTransaction",
+          "posTransactionLine",
+          "receiptTemplate",
+          "receiptPrintLog",
+          "refundReason",
+          "posRefund",
+          "posRefundLine",
+          "cashShift",
+          "cashDrop",
+          "cashCount",
+          "cashDiff",
+          "posZReport"
         ]
-    }
+      }
+    },
+    "schemas": {
+      "posZReport": {
+        "slug": "posZReport",
+        "title": "POS Z-Report",
+        "icon": "FileChart",
+        "version": "1.0.0",
+        "summary": "Daily POS end-of-day settlement, aggregating confirmed transactions per terminal",
+        "description": "Represents a daily Z-report (end-of-day settlement) for a POS terminal. Aggregates all confirmed/settled posTransaction objects for a given reportDate (and optional terminalId), computing per-rate tax breakdown, payment-method breakdown and gross/net totals server-authoritative — client-supplied figures are never trusted. Lifecycle: draft -> ready -> submitted -> posted -> reconciled, with a failed branch for retried submissions. Mapped to Schema.org Invoice.",
+        "x-schema-org": "schema:Invoice",
+        "required": [
+          "reference",
+          "reportDate",
+          "createdAt",
+          "status"
+        ],
+        "properties": {
+          "reference": {
+            "type": "string",
+            "description": "Human-readable Z-report reference, e.g. Z-2026-05-20-KAS01 (date + terminal)",
+            "maxLength": 64,
+            "facetable": true,
+            "title": "Reference"
+          },
+          "reportDate": {
+            "type": "string",
+            "format": "date",
+            "description": "Settlement date (not creation date) in YYYY-MM-DD",
+            "facetable": true,
+            "title": "Report Date"
+          },
+          "terminalId": {
+            "type": "string",
+            "description": "POS terminal / register identifier (e.g. kassa-01); null when the report spans all terminals",
+            "maxLength": 64,
+            "facetable": true,
+            "title": "Terminal ID"
+          },
+          "store": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Optional reference to a store/location entity (future use)",
+            "x-external-register": "openregister",
+            "title": "Store"
+          },
+          "transactionIds": {
+            "type": "array",
+            "description": "UUIDs of aggregated posTransaction objects (audit trail)",
+            "items": {
+              "type": "string"
+            },
+            "title": "Transaction Ids"
+          },
+          "transactionCount": {
+            "type": "integer",
+            "description": "Number of transactions aggregated",
+            "default": 0,
+            "minimum": 0,
+            "title": "Transaction Count"
+          },
+          "subtotal": {
+            "type": "number",
+            "description": "Sum of transaction subtotals excluding tax",
+            "default": 0,
+            "title": "Subtotal"
+          },
+          "discountTotal": {
+            "type": "number",
+            "description": "Aggregate discount across all transactions",
+            "default": 0,
+            "title": "Discount Total"
+          },
+          "taxBreakdown": {
+            "type": "array",
+            "description": "Per-rate tax summary, e.g. [{rate:21, base:200.00, tax:42.00}]",
+            "items": {
+              "type": "object"
+            },
+            "title": "Tax Breakdown"
+          },
+          "totalTax": {
+            "type": "number",
+            "description": "Aggregate tax (sum of taxBreakdown[*].tax)",
+            "default": 0,
+            "title": "Total Tax"
+          },
+          "total": {
+            "type": "number",
+            "description": "Grand total including tax",
+            "default": 0,
+            "title": "Total"
+          },
+          "paymentMethodBreakdown": {
+            "type": "array",
+            "description": "Per-payment-method totals, e.g. [{method:cash, amount:300.00}]",
+            "items": {
+              "type": "object"
+            },
+            "title": "Payment Method Breakdown"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO 8601 timestamp when the Z-report was generated (server-set)",
+            "title": "Created At"
+          },
+          "settledAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO 8601 timestamp when the transactions were settled",
+            "title": "Settled At"
+          },
+          "status": {
+            "type": "string",
+            "description": "Lifecycle status",
+            "enum": [
+              "draft",
+              "ready",
+              "submitted",
+              "posted",
+              "failed",
+              "reconciled"
+            ],
+            "default": "draft",
+            "title": "Status",
+            "facetable": true
+          },
+          "bookkeepingStatus": {
+            "type": "string",
+            "description": "Projection of the shillinq journal-entry outcome for this POS day. pending = raise queued / shillinq unreachable; raised = shillinq accepted and returned a journal id; failed = the registry raise exhausted its retries. The GL chart, the VAT posting and the journal itself live in shillinq (cross-app contract #3); this is only a read-only status mirror so operators can see whether the day is booked.",
+            "enum": [
+              "pending",
+              "raised",
+              "failed"
+            ],
+            "default": "pending",
+            "title": "Bookkeeping status",
+            "facetable": true
+          },
+          "shillinqJournalEntryId": {
+            "type": "string",
+            "description": "JournalEntry id returned by shillinq once the registry-mediated shillinq.JournalEntry.raise is accepted. Empty while pending or failed.",
+            "maxLength": 64,
+            "facetable": true,
+            "title": "Shillinq Journal Entry ID"
+          },
+          "bookkeepingAttempts": {
+            "type": "integer",
+            "description": "Number of shillinq.JournalEntry.raise dispatch attempts (incremented per raise; drives the max-attempts terminal-failed cut-off).",
+            "default": 0,
+            "minimum": 0,
+            "title": "Bookkeeping Attempts"
+          },
+          "notes": {
+            "type": "string",
+            "description": "Optional notes (e.g. overage adjustment)",
+            "maxLength": 2000,
+            "title": "Notes"
+          }
+        }
+      }
+    },
+    "objects": [
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "posZReport",
+          "slug": "zrep-2026-05-20-kas01"
+        },
+        "reference": "Z-2026-05-20-KAS01",
+        "reportDate": "2026-05-20",
+        "terminalId": "kassa-01",
+        "transactionCount": 42,
+        "subtotal": 450.0,
+        "discountTotal": 15.0,
+        "taxBreakdown": [
+          {
+            "rate": 9,
+            "base": 50.0,
+            "tax": 4.5
+          },
+          {
+            "rate": 21,
+            "base": 385.0,
+            "tax": 80.85
+          }
+        ],
+        "totalTax": 85.35,
+        "total": 535.35,
+        "paymentMethodBreakdown": [
+          {
+            "method": "cash",
+            "amount": 300.0
+          },
+          {
+            "method": "card",
+            "amount": 235.35
+          }
+        ],
+        "createdAt": "2026-05-20T23:59:00+02:00",
+        "settledAt": "2026-05-20T23:59:00+02:00",
+        "status": "posted",
+        "bookkeepingStatus": "raised",
+        "shillinqJournalEntryId": "je-shillinq-2026-05-20-001",
+        "notes": "Normale werkdag — journaalpost geboekt in shillinq"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "posZReport",
+          "slug": "zrep-2026-05-21-kas01"
+        },
+        "reference": "Z-2026-05-21-KAS01",
+        "reportDate": "2026-05-21",
+        "terminalId": "kassa-01",
+        "transactionCount": 38,
+        "subtotal": 380.0,
+        "discountTotal": 10.0,
+        "taxBreakdown": [
+          {
+            "rate": 9,
+            "base": 40.0,
+            "tax": 3.6
+          },
+          {
+            "rate": 21,
+            "base": 330.0,
+            "tax": 69.3
+          }
+        ],
+        "totalTax": 72.9,
+        "total": 452.9,
+        "paymentMethodBreakdown": [
+          {
+            "method": "cash",
+            "amount": 250.0
+          },
+          {
+            "method": "card",
+            "amount": 202.9
+          }
+        ],
+        "createdAt": "2026-05-21T23:59:00+02:00",
+        "settledAt": "2026-05-21T23:59:00+02:00",
+        "status": "submitted",
+        "bookkeepingStatus": "pending",
+        "notes": "Journaalpost raise in de wachtrij naar shillinq"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "posZReport",
+          "slug": "zrep-2026-05-22-kas02"
+        },
+        "reference": "Z-2026-05-22-KAS02",
+        "reportDate": "2026-05-22",
+        "terminalId": "kassa-02",
+        "transactionCount": 25,
+        "subtotal": 200.0,
+        "discountTotal": 5.0,
+        "taxBreakdown": [
+          {
+            "rate": 21,
+            "base": 195.0,
+            "tax": 40.95
+          }
+        ],
+        "totalTax": 40.95,
+        "total": 240.95,
+        "paymentMethodBreakdown": [
+          {
+            "method": "card",
+            "amount": 240.95
+          }
+        ],
+        "createdAt": "2026-05-22T23:59:00+02:00",
+        "settledAt": "2026-05-22T23:59:00+02:00",
+        "status": "failed",
+        "bookkeepingStatus": "failed",
+        "notes": "Journaalpost raise gefaald — shillinq onbereikbaar"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "posZReport",
+          "slug": "zrep-2026-05-23-kas01"
+        },
+        "reference": "Z-2026-05-23-KAS01",
+        "reportDate": "2026-05-23",
+        "terminalId": "kassa-01",
+        "transactionCount": 0,
+        "subtotal": 0,
+        "discountTotal": 0,
+        "taxBreakdown": [],
+        "totalTax": 0,
+        "total": 0,
+        "paymentMethodBreakdown": [],
+        "createdAt": "2026-05-23T23:59:00+02:00",
+        "status": "draft",
+        "bookkeepingStatus": "pending",
+        "notes": "Winkel gesloten"
+      }
+    ]
+  }
 }

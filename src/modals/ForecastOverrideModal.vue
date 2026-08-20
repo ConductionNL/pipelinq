@@ -10,10 +10,15 @@
 		@closing="$emit('close')">
 		<div class="forecast-override">
 			<p class="forecast-override__context">
-				{{ t('pipelinq', 'Overriding {category} for {owner}', { category: categoryLabel, owner: ownerId }) }}
+				{{
+					t('pipelinq', 'Overriding {category} for {owner}', {
+						category: categoryLabel,
+						owner: ownerId,
+					})
+				}}
 			</p>
 			<NcTextField
-				:value.sync="amount"
+				v-model="amount"
 				type="number"
 				:label="t('pipelinq', 'Override amount')"
 				:placeholder="t('pipelinq', 'Override amount')" />
@@ -22,7 +27,11 @@
 				:label="t('pipelinq', 'Reason for override')"
 				:placeholder="t('pipelinq', 'Why are you adjusting this number?')"
 				:error="showError"
-				:helper-text="showError ? t('pipelinq', 'Please enter at least 5 characters.') : ''"
+				:helperText="
+					showError
+						? t('pipelinq', 'Please enter at least 5 characters.')
+						: ''
+				"
 				rows="3" />
 			<p v-if="errorMessage" class="forecast-override__error">
 				{{ errorMessage }}
@@ -32,7 +41,7 @@
 			<NcButton @click="$emit('close')">
 				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
-			<NcButton type="primary" :disabled="!valid || saving" @click="save">
+			<NcButton variant="primary" :disabled="!valid || saving" @click="save">
 				{{ t('pipelinq', 'Save') }}
 			</NcButton>
 		</template>
@@ -53,6 +62,7 @@ export default {
 		category: { type: String, default: 'commit' },
 		currentAmount: { type: Number, default: 0 },
 	},
+
 	emits: ['close', 'saved'],
 	data() {
 		return {
@@ -63,19 +73,23 @@ export default {
 			errorMessage: '',
 		}
 	},
+
 	computed: {
 		categoryLabel() {
 			return this.category === 'best_case'
 				? t('pipelinq', 'Best-case')
 				: t('pipelinq', 'Commit')
 		},
+
 		valid() {
 			return this.reason.trim().length >= 5 && Number(this.amount) >= 0
 		},
+
 		showError() {
 			return this.touched && this.reason.trim().length < 5
 		},
 	},
+
 	methods: {
 		async save() {
 			this.touched = true
@@ -96,7 +110,8 @@ export default {
 				this.$emit('saved', created)
 				this.$emit('close')
 			} catch (error) {
-				this.errorMessage = error?.response?.data?.error
+				this.errorMessage =
+					error?.response?.data?.error
 					|| t('pipelinq', 'Could not save the override.')
 			} finally {
 				this.saving = false

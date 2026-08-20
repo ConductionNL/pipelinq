@@ -21,9 +21,21 @@
 	<div class="navi-widget">
 		<div class="navi-widget__history" aria-live="polite">
 			<div v-if="messages.length === 0" class="navi-widget__welcome">
-				<p>{{ t('pipelinq', 'Ask Navi a question about your leads, requests or pipeline.') }}</p>
+				<p>
+					{{
+						t(
+							'pipelinq',
+							'Ask Navi a question about your leads, requests or pipeline.',
+						)
+					}}
+				</p>
 				<p class="navi-widget__hint">
-					{{ t('pipelinq', 'Try: "How many leads are open?" or "Show requests by category".') }}
+					{{
+						t(
+							'pipelinq',
+							'Try: "How many leads are open?" or "Show requests by category".',
+						)
+					}}
 				</p>
 			</div>
 			<div
@@ -44,7 +56,7 @@
 							:type="resolveChartType(msg.chartData)"
 							:labels="msg.chartData.labels || []"
 							:series="resolveSeries(msg.chartData)"
-							:title="''"
+							title=""
 							class="navi-widget__chart" />
 						<CnDataTable
 							v-else-if="msg.resultType === 'table' && msg.tableData"
@@ -53,12 +65,18 @@
 							borderless
 							class="navi-widget__table" />
 						<div
-							v-if="msg.suggestedFollowUps && msg.suggestedFollowUps.length"
+							v-if="
+								msg.suggestedFollowUps
+								&& msg.suggestedFollowUps.length
+							"
 							class="navi-widget__suggestions">
 							<NcButton
-								v-for="(s, sIdx) in msg.suggestedFollowUps.slice(0, 3)"
+								v-for="(s, sIdx) in msg.suggestedFollowUps.slice(
+									0,
+									3,
+								)"
 								:key="sIdx"
-								type="secondary"
+								variant="secondary"
 								@click="selectSuggestion(s)">
 								{{ s }}
 							</NcButton>
@@ -75,13 +93,15 @@
 		</div>
 		<form class="navi-widget__form" @submit.prevent="submitQuery">
 			<NcTextField
-				:value.sync="query"
+				v-model="query"
 				:label="t('pipelinq', 'Ask Navi a question')"
-				:placeholder="t('pipelinq', 'e.g. Hoeveel leads zijn er deze maand gewonnen?')"
+				:placeholder="
+					t('pipelinq', 'e.g. How many leads were won this month?')
+				"
 				class="navi-widget__input" />
 			<NcButton
-				type="primary"
-				native-type="submit"
+				variant="primary"
+				type="submit"
 				:disabled="loading || !query.trim()">
 				{{ t('pipelinq', 'Send') }}
 			</NcButton>
@@ -90,16 +110,16 @@
 </template>
 
 <script>
+import { CnChartWidget, CnDataTable } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcTextField } from '@nextcloud/vue'
-import { CnChartWidget, CnDataTable } from '@conduction/nextcloud-vue'
 
 /**
  * NaviAnalyticsWidget — conversational analytics chat panel.
  *
- * @spec openspec/changes/dashboard/specs/dashboard/spec.md#REQ-DASH-001
- * @spec openspec/changes/dashboard/specs/dashboard/spec.md#REQ-DASH-003
+ * @spec openspec/specs/dashboard/spec.md
+ * @spec openspec/specs/dashboard/spec.md
  */
 export default {
 	name: 'NaviAnalyticsWidget',
@@ -109,6 +129,7 @@ export default {
 		CnChartWidget,
 		CnDataTable,
 	},
+
 	data() {
 		return {
 			query: '',
@@ -118,12 +139,13 @@ export default {
 			error: null,
 		}
 	},
+
 	methods: {
 		/**
 		 * Post the current query to /api/navi/query and append the response
 		 * to the conversation history.
 		 *
-		 * @spec openspec/changes/dashboard/specs/dashboard/spec.md#REQ-DASH-001
+		 * @spec openspec/specs/dashboard/spec.md
 		 */
 		async submitQuery() {
 			const text = this.query.trim()
@@ -153,21 +175,26 @@ export default {
 				})
 			} catch (err) {
 				console.error('NaviAnalyticsWidget submit error:', err)
-				this.error = this.t('pipelinq', 'Navi could not answer that question. Please try again.')
+				this.error = this.t(
+					'pipelinq',
+					'Navi could not answer that question. Please try again.',
+				)
 			} finally {
 				this.loading = false
 			}
 		},
+
 		/**
 		 * Pre-fill the input with a suggestion and submit immediately.
 		 *
 		 * @param {string} suggestion - The follow-up text to send.
-		 * @spec openspec/changes/dashboard/specs/dashboard/spec.md#REQ-DASH-003
+		 * @spec openspec/specs/dashboard/spec.md
 		 */
 		selectSuggestion(suggestion) {
 			this.query = suggestion
 			this.submitQuery()
 		},
+
 		/**
 		 * Normalise the chart type to one accepted by CnChartWidget.
 		 *
@@ -181,6 +208,7 @@ export default {
 			}
 			return 'bar'
 		},
+
 		/**
 		 * Coerce the backend "series" payload into CnChartWidget's series array.
 		 *
@@ -189,10 +217,13 @@ export default {
 		 */
 		resolveSeries(chartData) {
 			if (Array.isArray(chartData?.series)) {
-				return chartData.series.map(s => Array.isArray(s) ? s : (s?.data || []))
+				return chartData.series.map((s) =>
+					Array.isArray(s) ? s : s?.data || [],
+				)
 			}
 			return []
 		},
+
 		/**
 		 * Build a CnDataTable-compatible columns spec from the backend payload.
 		 *
@@ -203,8 +234,12 @@ export default {
 			if (!Array.isArray(tableData?.columns)) {
 				return []
 			}
-			return tableData.columns.map((col, idx) => ({ key: 'col' + idx, label: col }))
+			return tableData.columns.map((col, idx) => ({
+				key: 'col' + idx,
+				label: col,
+			}))
 		},
+
 		/**
 		 * Build CnDataTable-compatible row objects keyed by `col{idx}`.
 		 *

@@ -5,12 +5,42 @@
 import { translate as t } from '@nextcloud/l10n'
 
 /**
+ * Logical entity types that were folded into the unified `ticket` schema by
+ * unify-ticket-supertype. They survive as `ticketType` discriminator values —
+ * and as `schemaSlug` values inside stored pipeline `propertyMappings` — so
+ * anything that turns a logical slug into an OpenRegister object type must
+ * route through resolveObjectType().
+ */
+const TICKET_SUBTYPES = ['request', 'complaint', 'interaction']
+
+/**
+ * Map a logical entity slug onto the OpenRegister object type it now lives in.
+ *
+ * The former `request` / `complaint` / `contactmoment` schemas are one `ticket`
+ * schema discriminated by `ticketType`; every other slug maps to itself.
+ *
+ * @param {string} schemaSlug Logical slug ('lead', 'request', 'ticket', …).
+ * @return {{objectType: string, ticketType: (string|null)}} Registered object
+ *   type plus the `ticketType` filter/field to narrow it, or null when the type
+ *   needs no discriminator.
+ * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-unified-tickets-workspace
+ */
+export function resolveObjectType(schemaSlug) {
+	if (TICKET_SUBTYPES.includes(schemaSlug)) {
+		return { objectType: 'ticket', ticketType: schemaSlug }
+	}
+	return { objectType: schemaSlug, ticketType: null }
+}
+
+/**
  * @param item
  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-30
  */
 export function getDaysAge(item) {
 	if (!item._dateModified) return 0
-	return Math.floor((Date.now() - new Date(item._dateModified).getTime()) / 86400000)
+	return Math.floor(
+		(Date.now() - new Date(item._dateModified).getTime()) / 86400000,
+	)
 }
 
 /**
@@ -20,7 +50,7 @@ export function getDaysAge(item) {
  *
  * @param {object|null} config Pipelinq settings config (settingsStore.config).
  * @return {number}
- * @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-002
+ * @spec openspec/specs/lead-management/spec.md
  */
 export function getStaleThreshold(config) {
 	const raw = config && config.lead_stale_threshold_days
@@ -50,12 +80,12 @@ export function isStale(item, entityType, threshold = 14) {
  * @param {object} lead The lead object.
  * @param {Array<{name:string,isClosed?:boolean}>} stages Pipeline stages.
  * @return {boolean}
- * @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-004
+ * @spec openspec/specs/lead-management/spec.md
  */
 export function isLeadOverdue(lead, stages = []) {
 	if (!lead || !lead.expectedCloseDate) return false
 	if (lead.status === 'won' || lead.status === 'lost') return false
-	const currentStage = stages.find(s => s.name === lead.stage)
+	const currentStage = stages.find((s) => s.name === lead.stage)
 	if (currentStage && currentStage.isClosed) return false
 	return new Date(lead.expectedCloseDate) < new Date()
 }
@@ -66,7 +96,7 @@ export function isLeadOverdue(lead, stages = []) {
  * @param {object} lead The lead object.
  * @param {Array<{name:string,isClosed?:boolean}>} stages Pipeline stages.
  * @return {number}
- * @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-004
+ * @spec openspec/specs/lead-management/spec.md
  */
 export function getOverdueDays(lead, stages = []) {
 	if (!isLeadOverdue(lead, stages)) return 0

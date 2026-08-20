@@ -1,6 +1,6 @@
 /*
  * SPDX-FileCopyrightText: 2026 Pipelinq Contributors
- * SPDX-License-Identifier: AGPL-3.0-or-later
+ * SPDX-License-Identifier: EUPL-1.2
  *
  * Gate-19 e2e coverage for openspec/specs/my-work/spec.md
  * UI-observable scenarios: page loads, navigation, empty state.
@@ -8,6 +8,8 @@
  */
 
 import { test, expect } from '@playwright/test'
+
+import { assertAppShellServed, revealNavEntry } from '../helpers/pipelinq'
 
 // @e2e openspec/specs/my-work/spec.md#empty-workload
 test('my work page renders with empty state', async ({ page }) => {
@@ -19,9 +21,11 @@ test('my work page renders with empty state', async ({ page }) => {
 // @e2e openspec/specs/my-work/spec.md#view-assigned-leads-and-requests
 test('my work page accessible from navigation', async ({ page }) => {
 	await page.goto('/apps/pipelinq/')
-	const nav = page.locator('#app-navigation-vue')
-	await expect(nav.getByText('My Work')).toBeVisible({ timeout: 10000 })
-	await nav.getByText('My Work').click()
+	// Relocated under the "Customer Support" (KccWerkplek) group — see
+	// src/menu-layout.json#relocations.
+	const link = await revealNavEntry(page, 'My Work')
+	await expect(link).toBeVisible({ timeout: 10000 })
+	await link.click()
 	await expect(page).toHaveURL(/my-work/)
 })
 
@@ -29,32 +33,47 @@ test('my work page accessible from navigation', async ({ page }) => {
 test('my work page loads without error', async ({ page }) => {
 	await page.goto('/apps/pipelinq/my-work')
 	await page.waitForTimeout(1000)
-	await expect(page.locator('body')).not.toContainText('Internal Server Error', { timeout: 10000 })
+	await expect(page.locator('body')).not.toContainText('Internal Server Error', {
+		timeout: 10000,
+	})
 })
 
 // @e2e openspec/specs/my-work/spec.md#quick-action-buttons-displayed
 test('my work page main content renders', async ({ page }) => {
 	await page.goto('/apps/pipelinq/my-work')
-	await expect(page.locator('#app-content, .app-content, main').first()).toBeVisible({ timeout: 10000 })
+	await expect(
+		page.locator('#app-content, .app-content, main').first(),
+	).toBeVisible({ timeout: 10000 })
 })
 
 // @e2e openspec/specs/my-work/spec.md#manual-refresh
 test('my work page renders without uncaught errors', async ({ page }) => {
 	await page.goto('/apps/pipelinq/my-work')
-	await page.waitForLoadState('networkidle').catch(() => {})
-	await expect(page.locator('body')).not.toContainText('Uncaught Error', { timeout: 10000 })
+	await page.waitForLoadState('domcontentloaded').catch(() => {})
+	await expect(page.locator('body')).not.toContainText('Uncaught Error', {
+		timeout: 10000,
+	})
 })
 
 // @e2e openspec/specs/my-work/spec.md#display-personal-kpi-tiles
 test('my work navigation entry in sidebar', async ({ page }) => {
 	await page.goto('/apps/pipelinq/')
-	await expect(page.getByText('My Work').first()).toBeVisible({ timeout: 10000 })
+	// Scope to the app sidebar: an unscoped getByText('My Work') would also
+	// match the widget heading in the page body, so it could pass while the nav
+	// entry is missing.
+	await expect(await revealNavEntry(page, 'My Work')).toBeVisible({
+		timeout: 10000,
+	})
 })
 
 // @e2e openspec/specs/my-work/spec.md#view-assigned-leads--requests-and-tasks (V1)
 test('my work page loads for V1 expanded view', async ({ page }) => {
-	await page.goto('/apps/pipelinq/my-work')
-	await expect(page.locator('body')).not.toContainText('not installed', { timeout: 10000 })
+	const response = await page.goto('/apps/pipelinq/my-work')
+	// Was `not.toContainText('not installed')`, which is a false positive: the
+	// app legitimately renders "<X> … is not installed or enabled" banners for
+	// optional siblings (Deck, Forms, Time manager, OpenConnector). Assert the
+	// real failure mode instead — see assertAppShellServed.
+	await assertAppShellServed(page, response)
 })
 
 /*

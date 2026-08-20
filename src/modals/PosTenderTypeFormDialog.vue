@@ -9,7 +9,11 @@
   -->
 <template>
 	<NcDialog
-		:name="isNew ? t('pipelinq', 'New tender type') : t('pipelinq', 'Edit tender type')"
+		:name="
+			isNew
+				? t('pipelinq', 'New tender type')
+				: t('pipelinq', 'Edit tender type')
+		"
 		:open="true"
 		size="normal"
 		@closing="$emit('close')">
@@ -24,7 +28,14 @@
 				:disabled="!isNew"
 				:label="t('pipelinq', 'Code')"
 				:placeholder="t('pipelinq', 'CASH, CARD, VOUCHER, ...')"
-				:helper-text="!isNew ? t('pipelinq', 'Code is immutable after creation') : t('pipelinq', 'Machine-readable identifier (uppercase letters)')"
+				:helperText="
+					!isNew
+						? t('pipelinq', 'Code is immutable after creation')
+						: t(
+								'pipelinq',
+								'Machine-readable identifier (uppercase letters)',
+							)
+				"
 				required />
 			<NcTextField
 				v-model="form.description"
@@ -32,16 +43,25 @@
 			<NcTextField
 				v-model="form.glAccount"
 				:label="t('pipelinq', 'GL account')"
-				:placeholder="t('pipelinq', 'e.g. 1100 (kas), 1200 (bank), 2100 (debiteuren)')"
+				:placeholder="
+					t('pipelinq', 'e.g. 1100 (kas), 1200 (bank), 2100 (debiteuren)')
+				"
 				required />
 			<NcCheckboxRadioSwitch v-model="form.requiresReference" type="switch">
-				{{ t('pipelinq', 'Requires external reference (card auth, voucher serial)') }}
+				{{
+					t(
+						'pipelinq',
+						'Requires external reference (card auth, voucher serial)',
+					)
+				}}
 			</NcCheckboxRadioSwitch>
 			<NcCheckboxRadioSwitch v-model="form.requiresPin" type="switch">
 				{{ t('pipelinq', 'Requires PIN entry on terminal') }}
 			</NcCheckboxRadioSwitch>
 			<NcCheckboxRadioSwitch v-model="form.allowsChange" type="switch">
-				{{ t('pipelinq', 'Allows change calculation on overpayment (CASH)') }}
+				{{
+					t('pipelinq', 'Allows change calculation on overpayment (CASH)')
+				}}
 			</NcCheckboxRadioSwitch>
 			<NcCheckboxRadioSwitch v-model="form.isActive" type="switch">
 				{{ t('pipelinq', 'Active') }}
@@ -59,7 +79,7 @@
 				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
 			<NcButton
-				type="primary"
+				variant="primary"
 				:disabled="saving || !canSave"
 				@click="submit">
 				{{ saving ? t('pipelinq', 'Saving…') : t('pipelinq', 'Save') }}
@@ -70,9 +90,14 @@
 
 <script>
 import axios from '@nextcloud/axios'
-import { generateUrl } from '@nextcloud/router'
 import { showError, showSuccess } from '@nextcloud/dialogs'
-import { NcButton, NcCheckboxRadioSwitch, NcDialog, NcTextField } from '@nextcloud/vue'
+import { generateUrl } from '@nextcloud/router'
+import {
+	NcButton,
+	NcCheckboxRadioSwitch,
+	NcDialog,
+	NcTextField,
+} from '@nextcloud/vue'
 
 export default {
 	name: 'PosTenderTypeFormDialog',
@@ -82,12 +107,14 @@ export default {
 		NcDialog,
 		NcTextField,
 	},
+
 	props: {
 		tenderType: {
 			type: Object,
 			default: null,
 		},
 	},
+
 	emits: ['close', 'saved'],
 	data() {
 		return {
@@ -96,16 +123,17 @@ export default {
 			errorMessage: '',
 		}
 	},
+
 	computed: {
 		isNew() {
 			return !this.tenderType || !this.idOf(this.tenderType)
 		},
+
 		canSave() {
-			return !!this.form.name
-				&& !!this.form.code
-				&& !!this.form.glAccount
+			return !!this.form.name && !!this.form.code && !!this.form.glAccount
 		},
 	},
+
 	methods: {
 		initialForm() {
 			const src = this.tenderType || {}
@@ -121,6 +149,7 @@ export default {
 				sortOrder: Number(src.sortOrder || 0),
 			}
 		},
+
 		async submit() {
 			this.saving = true
 			this.errorMessage = ''
@@ -130,20 +159,28 @@ export default {
 					? generateUrl('/apps/pipelinq/api/pos/tender-types')
 					: generateUrl('/apps/pipelinq/api/pos/tender-types/{id}', { id })
 				const method = this.isNew ? 'post' : 'put'
-				const payload = { ...this.form, code: (this.form.code || '').toUpperCase() }
+				const payload = {
+					...this.form,
+					code: (this.form.code || '').toUpperCase(),
+				}
 				await axios[method](url, payload)
-				showSuccess(this.isNew
-					? t('pipelinq', 'Tender type created')
-					: t('pipelinq', 'Tender type updated'))
+				showSuccess(
+					this.isNew
+						? t('pipelinq', 'Tender type created')
+						: t('pipelinq', 'Tender type updated'),
+				)
 				this.$emit('saved')
 			} catch (error) {
-				const msg = error?.response?.data?.error || t('pipelinq', 'Failed to save tender type')
+				const msg =
+					error?.response?.data?.error
+					|| t('pipelinq', 'Failed to save tender type')
 				this.errorMessage = msg
 				showError(msg)
 			} finally {
 				this.saving = false
 			}
 		},
+
 		idOf(type) {
 			if (type?.['@self']?.id) {
 				return type['@self'].id

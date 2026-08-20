@@ -16,7 +16,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-34
+ * @spec openspec/specs/prospect-discovery/spec.md#requirement-prospect-to-lead-conversion
  */
 
 declare(strict_types=1);
@@ -24,6 +24,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\ProspectDiscoveryService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -36,102 +37,111 @@ use Psr\Log\LoggerInterface;
 /**
  * Controller for prospect discovery.
  */
-class ProspectController extends Controller
-{
-    /**
-     * Constructor.
-     *
-     * @param IRequest                 $request          The request.
-     * @param ProspectDiscoveryService $discoveryService The discovery service.
-     * @param IUserSession             $userSession      The user session.
-     * @param IL10N                    $l10n             The localization service.
-     * @param LoggerInterface          $logger           The logger.
-     */
-    public function __construct(
-        IRequest $request,
-        private ProspectDiscoveryService $discoveryService,
-        private IUserSession $userSession,
-        private IL10N $l10n,
-        private LoggerInterface $logger,
-    ) {
-        parent::__construct(appName: Application::APP_ID, request: $request);
-    }//end __construct()
+class ProspectController extends Controller {
+	/**
+	 * Constructor.
+	 *
+	 * @param IRequest $request The request.
+	 * @param ProspectDiscoveryService $discoveryService The discovery service.
+	 * @param IUserSession $userSession The user session.
+	 * @param IL10N $l10n The localization service.
+	 * @param LoggerInterface $logger The logger.
+	 * @param ObjectOwnerAccessPolicy $policy Per-object owner access policy.
+	 */
+	public function __construct(
+		IRequest $request,
+		private ProspectDiscoveryService $discoveryService,
+		private IUserSession $userSession,
+		private IL10N $l10n,
+		private LoggerInterface $logger,
+		private ObjectOwnerAccessPolicy $policy,
+	) {
+		parent::__construct(appName: Application::APP_ID, request: $request);
+	}//end __construct()
 
-    /**
-     * Get prospect results based on configured ICP.
-     *
-     * @return JSONResponse The prospect results.
-     *
-     * @NoAdminRequired
-     * @spec            openspec/changes/reverse-2026-05-26-be-prospect/tasks.md#task-1
-     */
-    public function index(): JSONResponse
-    {
-        $user = $this->userSession->getUser();
-        if ($user === null) {
-            return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
-        }
+	/**
+	 * Get prospect results based on configured ICP.
+	 *
+	 * @return JSONResponse The prospect results.
+	 *
+	 * @NoAdminRequired
+	 * @spec            openspec/changes/reverse-2026-05-26-be-prospect/tasks.md#task-1
+	 */
+	public function index(): JSONResponse {
+		$user = $this->userSession->getUser();
+		if ($user === null) {
+			return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
+		}
 
-        $refresh = $this->request->getParam(key: 'refresh', default: 'false') === 'true';
+		// Prospects and leads are customer data. Admins bypass.
+		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
+			return new JSONResponse(['error' => $this->l10n->t('Forbidden')], Http::STATUS_FORBIDDEN);
+		}
 
-        try {
-            $result = $this->discoveryService->discover(refresh: $refresh);
+		$refresh = $this->request->getParam(key: 'refresh', default: 'false') === 'true';
 
-            if (isset($result['error']) === true) {
-                return new JSONResponse(data: $result, statusCode: 400);
-            }
+		try {
+			$result = $this->discoveryService->discover(refresh: $refresh);
 
-            return new JSONResponse(data: $result);
-        } catch (\Exception $e) {
-            return new JSONResponse(
-                data: [
-                    'error'   => 'api_unavailable',
-                    'message' => $this->l10n->t('Prospect discovery service is currently unavailable.'),
-                ],
-                statusCode: 503
-            );
-        }//end try
-    }//end index()
+			if (isset($result['error']) === true) {
+				return new JSONResponse(data: $result, statusCode: 400);
+			}
 
-    /**
-     * Create a Client + Lead from a prospect result.
-     *
-     * @return JSONResponse The created client and lead.
-     *
-     * @NoAdminRequired
-     *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-34
-     */
-    public function createLead(): JSONResponse
-    {
-        $user = $this->userSession->getUser();
-        if ($user === null) {
-            return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
-        }
+			return new JSONResponse(data: $result);
+		} catch (\Exception $e) {
+			return new JSONResponse(
+				data: [
+					'error' => 'api_unavailable',
+					'message' => $this->l10n->t('Prospect discovery service is currently unavailable.'),
+				],
+				statusCode: 503
+			);
+		}//end try
+	}//end index()
 
-        $data = $this->request->getParams();
+	/**
+	 * Create a Client + Lead from a prospect result.
+	 *
+	 * @return JSONResponse The created client and lead.
+	 *
+	 * @NoAdminRequired
+	 *
+	 * @spec openspec/specs/prospect-discovery/spec.md#requirement-prospect-to-lead-conversion
+	 */
+	public function createLead(): JSONResponse {
+		$user = $this->userSession->getUser();
+		if ($user === null) {
+			return new JSONResponse(['error' => $this->l10n->t('Authentication required')], Http::STATUS_UNAUTHORIZED);
+		}
 
-        if (isset($data['tradeName']) === false || $data['tradeName'] === '') {
-            return new JSONResponse(
-                data: ['error' => $this->l10n->t('Trade name is required')],
-                statusCode: 400
-            );
-        }
+		// Prospects and leads are customer data. Admins bypass.
+		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
+			return new JSONResponse(['error' => $this->l10n->t('Forbidden')], Http::STATUS_FORBIDDEN);
+		}
 
-        try {
-            $result = $this->discoveryService->createLeadFromProspect(prospectData: $data);
+		$data = $this->request->getParams();
 
-            if (isset($result['error']) === true) {
-                return new JSONResponse(data: $result, statusCode: 400);
-            }
+		if (isset($data['tradeName']) === false || $data['tradeName'] === '') {
+			return new JSONResponse(
+				data: ['error' => $this->l10n->t('Trade name is required')],
+				statusCode: 400
+			);
+		}
 
-            return new JSONResponse(data: $result, statusCode: 201);
-        } catch (\Exception $e) {
-            $this->logger->error('ProspectController::createLead failed', ['exception' => $e]);
-            return new JSONResponse(
-                data: ['error' => $this->l10n->t('Operation failed')],
-                statusCode: 500
-            );
-        }//end try
-    }//end createLead()
+		try {
+			$result = $this->discoveryService->createLeadFromProspect(prospectData: $data);
+
+			if (isset($result['error']) === true) {
+				return new JSONResponse(data: $result, statusCode: 400);
+			}
+
+			return new JSONResponse(data: $result, statusCode: 201);
+		} catch (\Exception $e) {
+			$this->logger->error('ProspectController::createLead failed', ['exception' => $e]);
+			return new JSONResponse(
+				data: ['error' => $this->l10n->t('Operation failed')],
+				statusCode: 500
+			);
+		}//end try
+	}//end createLead()
 }//end class

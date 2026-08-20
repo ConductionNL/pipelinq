@@ -2,7 +2,7 @@
 	<div class="queue-list">
 		<div class="queue-list__header">
 			<h2>{{ t('pipelinq', 'Queues') }}</h2>
-			<NcButton type="primary" @click="showCreateDialog = true">
+			<NcButton variant="primary" @click="showCreateDialog = true">
 				{{ t('pipelinq', 'Add queue') }}
 			</NcButton>
 		</div>
@@ -19,12 +19,15 @@
 				:key="queue.id"
 				class="queue-card"
 				:class="{ 'queue-card--inactive': queue.isActive === false }"
+				role="button"
 				tabindex="0"
 				@click="openQueue(queue)"
 				@keydown.enter="openQueue(queue)">
 				<div class="queue-card__header">
 					<span class="queue-card__title">{{ queue.title }}</span>
-					<span v-if="queue.isActive === false" class="queue-card__badge queue-card__badge--inactive">
+					<span
+						v-if="queue.isActive === false"
+						class="queue-card__badge queue-card__badge--inactive">
 						{{ t('pipelinq', 'Inactive') }}
 					</span>
 				</div>
@@ -38,10 +41,14 @@
 					</div>
 					<div class="stat">
 						<span class="stat__value">{{ getAgentCount(queue) }}</span>
-						<span class="stat__label">{{ t('pipelinq', 'agents') }}</span>
+						<span class="stat__label">{{
+							t('pipelinq', 'agents')
+						}}</span>
 					</div>
 				</div>
-				<div v-if="queue.categories && queue.categories.length" class="queue-card__categories">
+				<div
+					v-if="queue.categories && queue.categories.length"
+					class="queue-card__categories">
 					<span
 						v-for="cat in queue.categories"
 						:key="cat"
@@ -52,59 +59,34 @@
 			</div>
 		</div>
 
-		<!-- Create Dialog -->
-		<NcDialog
+		<!-- Create Dialog — own file per ADR-004 (modal-isolation). -->
+		<QueueCreateDialog
 			v-if="showCreateDialog"
-			:name="t('pipelinq', 'Create queue')"
-			@closing="resetCreateForm">
-			<div class="create-form">
-				<label>{{ t('pipelinq', 'Title') }}</label>
-				<input v-model="newQueue.title" type="text" :placeholder="t('pipelinq', 'Queue name...')">
-
-				<label>{{ t('pipelinq', 'Description') }}</label>
-				<textarea v-model="newQueue.description" :placeholder="t('pipelinq', 'Optional description...')" />
-
-				<label>{{ t('pipelinq', 'Categories (comma-separated)') }}</label>
-				<input v-model="newQueue.categoriesInput" type="text" :placeholder="t('pipelinq', 'e.g. vergunningen, omgevingsrecht')">
-
-				<label>{{ t('pipelinq', 'Max capacity (empty = unlimited)') }}</label>
-				<input v-model.number="newQueue.maxCapacity" type="number" min="1">
-			</div>
-			<template #actions>
-				<NcButton @click="resetCreateForm">
-					{{ t('pipelinq', 'Cancel') }}
-				</NcButton>
-				<NcButton type="primary" :disabled="!newQueue.title" @click="createQueue">
-					{{ t('pipelinq', 'Create') }}
-				</NcButton>
-			</template>
-		</NcDialog>
+			@close="resetCreateForm"
+			@create="createQueue" />
 	</div>
 </template>
 
 <script>
-import { NcButton, NcDialog, NcLoadingIcon } from '@nextcloud/vue'
+import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
+import QueueCreateDialog from '../../dialogs/QueueCreateDialog.vue'
 import { useQueuesStore } from '../../store/modules/queues.js'
 
 export default {
 	name: 'QueueList',
 	components: {
 		NcButton,
-		NcDialog,
 		NcLoadingIcon,
+		QueueCreateDialog,
 	},
+
 	data() {
 		return {
 			showCreateDialog: false,
-			newQueue: {
-				title: '',
-				description: '',
-				categoriesInput: '',
-				maxCapacity: null,
-			},
 			itemCounts: {},
 		}
 	},
+
 	computed: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-queues-ui/tasks.md#task-19
@@ -112,28 +94,35 @@ export default {
 		queuesStore() {
 			return useQueuesStore()
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-queues-ui/tasks.md#task-16
 		 */
 		loading() {
 			return this.queuesStore.loading
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-queues-ui/tasks.md#task-18
 		 */
 		queues() {
 			return this.queuesStore.queues
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-queues-ui/tasks.md#task-21
 		 */
 		sortedQueues() {
-			return [...this.queues].sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
+			return [...this.queues].sort(
+				(a, b) => (a.sortOrder || 0) - (b.sortOrder || 0),
+			)
 		},
 	},
+
 	mounted() {
 		this.queuesStore.fetchQueues()
 	},
+
 	methods: {
 		/**
 		 * @param queue
@@ -142,29 +131,36 @@ export default {
 		openQueue(queue) {
 			this.$router.push({ name: 'QueueDetail', params: { id: queue.id } })
 		},
+
 		getItemCount(queue) {
 			return this.itemCounts[queue.id] || 0
 		},
+
 		getAgentCount(queue) {
 			return (queue.assignedAgents || []).length
 		},
+
 		/**
+		 * @param {object} newQueue Raw form fields emitted by QueueCreateDialog.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-queues-ui/tasks.md#task-15
 		 */
-		async createQueue() {
-			const categories = this.newQueue.categoriesInput
-				? this.newQueue.categoriesInput.split(',').map(c => c.trim()).filter(Boolean)
+		async createQueue(newQueue) {
+			const categories = newQueue.categoriesInput
+				? newQueue.categoriesInput
+						.split(',')
+						.map((c) => c.trim())
+						.filter(Boolean)
 				: []
 
 			const data = {
-				title: this.newQueue.title,
-				description: this.newQueue.description || undefined,
+				title: newQueue.title,
+				description: newQueue.description || undefined,
 				categories,
 				isActive: true,
 			}
 
-			if (this.newQueue.maxCapacity) {
-				data.maxCapacity = this.newQueue.maxCapacity
+			if (newQueue.maxCapacity) {
+				data.maxCapacity = newQueue.maxCapacity
 			}
 
 			const result = await this.queuesStore.saveQueue(data)
@@ -172,17 +168,15 @@ export default {
 				this.resetCreateForm()
 			}
 		},
+
 		/**
+		 * Close the create dialog. `v-if` unmounts QueueCreateDialog, which owns
+		 * the form state, so closing is what clears the fields.
+		 *
 		 * @spec openspec/changes/reverse-2026-05-26-fe-queues-ui/tasks.md#task-20
 		 */
 		resetCreateForm() {
 			this.showCreateDialog = false
-			this.newQueue = {
-				title: '',
-				description: '',
-				categoriesInput: '',
-				maxCapacity: null,
-			}
 		},
 	},
 }
@@ -285,29 +279,9 @@ export default {
 	color: var(--color-primary-element-light-text);
 }
 
-.create-form {
-	display: flex;
-	flex-direction: column;
-	gap: 8px;
-	padding: 8px 0;
-}
-
-.create-form label {
-	font-weight: 600;
-	font-size: 13px;
-	margin-top: 4px;
-}
-
-.create-form input,
-.create-form textarea {
-	width: 100%;
-	padding: 8px;
-	border: 1px solid var(--color-border);
-	border-radius: var(--border-radius);
-}
-
-.create-form textarea {
-	min-height: 60px;
-	resize: vertical;
+@media (prefers-reduced-motion: reduce) {
+	.queue-card {
+		transition: none;
+	}
 }
 </style>

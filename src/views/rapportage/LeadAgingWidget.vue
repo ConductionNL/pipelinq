@@ -3,13 +3,18 @@
 <!--
   Aging distribution donut chart — 4 buckets keyed by _dateModified.
 
-  @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-006
+  @spec openspec/specs/lead-management/spec.md
 -->
 <template>
 	<NcEmptyContent
 		v-if="!hasData"
 		:name="t('pipelinq', 'No aging data')"
-		:description="t('pipelinq', 'There are no open leads to distribute into aging buckets.')" />
+		:description="
+			t(
+				'pipelinq',
+				'There are no open leads to distribute into aging buckets.',
+			)
+		" />
 
 	<CnChartWidget
 		v-else
@@ -32,21 +37,28 @@ export default {
 			default: () => [],
 		},
 	},
+
 	computed: {
 		buckets() {
 			return Array.isArray(this.data) ? this.data : []
 		},
+
 		labels() {
-			return this.buckets.map(b => {
-				const total = b.totalValue > 0 ? ` (EUR ${b.totalValue.toLocaleString('nl-NL')})` : ''
+			return this.buckets.map((b) => {
+				const total =
+					b.totalValue > 0
+						? ` (EUR ${b.totalValue.toLocaleString('nl-NL')})`
+						: ''
 				return `${b.bucket}: ${b.count}${total}`
 			})
 		},
+
 		series() {
-			return this.buckets.map(b => b.count || 0)
+			return this.buckets.map((b) => b.count || 0)
 		},
+
 		hasData() {
-			return this.buckets.some(b => (b.count || 0) > 0)
+			return this.buckets.some((b) => (b.count || 0) > 0)
 		},
 	},
 }

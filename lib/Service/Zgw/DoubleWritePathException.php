@@ -34,18 +34,17 @@ namespace OCA\Pipelinq\Service\Zgw;
 /**
  * Both StUF and ZGW write paths are active for the same gemeente.
  */
-class DoubleWritePathException extends ZgwException
-{
-    /**
-     * Constructor.
-     *
-     * @param string             $message                Human-readable error message.
-     * @param array<int, string> $conflictingEndpointIds List of ZgwEndpoint + StufEndpoint ids involved.
-     */
-    public function __construct(
-        string $message,
-        public readonly array $conflictingEndpointIds=[],
-    ) {
-        parent::__construct(message: $message);
-    }//end __construct()
+class DoubleWritePathException extends ZgwException {
+	/**
+	 * Constructor.
+	 *
+	 * @param string $message Human-readable error message.
+	 * @param array<int, string> $conflictEndpointIds List of ZgwEndpoint + StufEndpoint ids involved.
+	 */
+	public function __construct(
+		string $message,
+		public readonly array $conflictEndpointIds = [],
+	) {
+		parent::__construct(message: $message);
+	}//end __construct()
 }//end class

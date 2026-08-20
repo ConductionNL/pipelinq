@@ -103,6 +103,8 @@ page MUST apply a declarative default multi-key sort by `type` then `name`.
 
 #### Scenario: BillingCategories renders with swatch and type-then-name sort
 
+@e2e exclude the `/billing-categories` page no longer exists to render — `src/menu-layout.json#_removalsNote` records that nav-ia-cleanup dropped the "Reports & Compliance" group "and its sole child 'Billing categories' … only the nav entry and its three pages go", and `src/manifest.json` accordingly declares no BillingCategories page. The surviving `billingCategory` surface is the "Hours by billing category" widget on the Operational dashboard, asserted end-to-end by `tests/e2e/spec-coverage/billing-categories.spec.ts`.
+
 - GIVEN the user opens the Pipelinq app
 - WHEN they navigate to the BillingCategories route `/billing-categories`
 - THEN the page MUST render a table of `billingCategory` objects whose `name`
@@ -110,25 +112,6 @@ page MUST apply a declarative default multi-key sort by `type` then `name`.
 - AND a DBA badge column MUST be present
 - AND rows MUST default-sort by `type` ascending then `name` ascending
 - AND no `BillingCategoryList.vue` host component MUST be required
-
-### Requirement: Analytics MUST render from a declarative type:dashboard page driven by an endpoint and a period filter
-
-The system MUST render the Analytics surface from a declarative
-`type:"dashboard"` manifest page. The page MUST expose a `pageFilters` period
-select and four `stat` widgets whose `source` is the
-`GET /api/analytics/summary` endpoint, each reading its KPI at a JSON dot-path
-and passing `params:{ period:"@page.period" }`. Changing the period MUST
-re-query all four KPIs. No `AnalyticsDashboard.vue` host component MUST be
-required.
-
-#### Scenario: Analytics KPIs populate from the endpoint and re-query on period change
-
-- GIVEN the user opens the Pipelinq app
-- WHEN they navigate to the Analytics route `/analytics`
-- THEN the page MUST render four KPI tiles (Open Pipeline Value, Open Requests,
-  Contactmomenten, Active Leads) populated from `GET /api/analytics/summary`
-- AND selecting a different period in the header filter MUST re-query the
-  endpoint with the new `period` and update every KPI
 
 ### Requirement: The Client 360 detail MUST render from a declarative type:detail page with in-body sections
 

@@ -1,0 +1,149 @@
+{
+	"info": {
+		"name": "Pipelinq — Outbound Messaging (outbound-messaging-provider-wiring)",
+		"description": "API contract ring for the outbound messaging send surface (REQ-OM-004/005/002). Runs over the mock-mode provider pipeline. Requires {{baseUrl}} + basic-auth {{ncUser}}/{{ncPass}} and a seeded contact id {{contactId}} + provider id {{providerId}}. Asserts outcome-envelope shapes, the consent-missing refusal path and the unauthorized-before-dispatch guard.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "basic",
+		"basic": [
+			{ "key": "username", "value": "{{ncUser}}", "type": "string" },
+			{ "key": "password", "value": "{{ncPass}}", "type": "string" }
+		]
+	},
+	"item": [
+		{
+			"name": "Preflight returns composer gating facts",
+			"request": {
+				"method": "GET",
+				"header": [
+					{ "key": "OCS-APIRequest", "value": "true" },
+					{ "key": "Accept", "value": "application/json" }
+				],
+				"url": {
+					"raw": "{{baseUrl}}/apps/pipelinq/api/messaging/preflight/{{contactId}}",
+					"host": ["{{baseUrl}}"],
+					"path": ["apps", "pipelinq", "api", "messaging", "preflight", "{{contactId}}"]
+				}
+			},
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"pm.test('200 OK', () => pm.response.to.have.status(200));",
+							"const b = pm.response.json();",
+							"pm.test('carries channels', () => pm.expect(b).to.have.property('channels'));",
+							"pm.test('carries consent state', () => pm.expect(b).to.have.property('consent'));",
+							"pm.test('carries whatsappSessionOpen', () => pm.expect(b).to.have.property('whatsappSessionOpen'));"
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "Send SMS returns a sanitised outcome envelope",
+			"request": {
+				"method": "POST",
+				"header": [
+					{ "key": "OCS-APIRequest", "value": "true" },
+					{ "key": "Content-Type", "value": "application/json" }
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"contactId\": \"{{contactId}}\",\n  \"channel\": \"sms\",\n  \"body\": \"Newman contract-ring SMS\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/apps/pipelinq/api/messaging/send",
+					"host": ["{{baseUrl}}"],
+					"path": ["apps", "pipelinq", "api", "messaging", "send"]
+				}
+			},
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"const b = pm.response.json();",
+							"pm.test('envelope carries a status', () => pm.expect(b).to.have.property('status'));",
+							"pm.test('no raw vendor error leaks', () => pm.expect(b).to.not.have.property('error'));",
+							"pm.test('status is a known outcome', () => pm.expect(['sent','consent-missing','budget-exceeded','template-required','template-invalid','no-provider','failed']).to.include(b.status));"
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "Business-initiated WhatsApp without opt-in is refused (consent-missing)",
+			"request": {
+				"method": "POST",
+				"header": [
+					{ "key": "OCS-APIRequest", "value": "true" },
+					{ "key": "Content-Type", "value": "application/json" }
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"contactId\": \"{{contactId}}\",\n  \"channel\": \"whatsapp\",\n  \"templateId\": \"{{unknownTemplateId}}\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/apps/pipelinq/api/messaging/send",
+					"host": ["{{baseUrl}}"],
+					"path": ["apps", "pipelinq", "api", "messaging", "send"]
+				}
+			},
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"const b = pm.response.json();",
+							"pm.test('refused as a business outcome (422)', () => pm.expect(pm.response.code).to.be.oneOf([422]));",
+							"pm.test('no dispatch — a refusal status', () => pm.expect(['consent-missing','template-invalid','template-required','no-provider']).to.include(b.status));"
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "Consent recording requires evidence + legal basis",
+			"request": {
+				"method": "POST",
+				"header": [
+					{ "key": "OCS-APIRequest", "value": "true" },
+					{ "key": "Content-Type", "value": "application/json" }
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"contactId\": \"{{contactId}}\",\n  \"channel\": \"whatsapp\",\n  \"action\": \"opt-in\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/apps/pipelinq/api/messaging/consent",
+					"host": ["{{baseUrl}}"],
+					"path": ["apps", "pipelinq", "api", "messaging", "consent"]
+				}
+			},
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"pm.test('400 without evidence/legal basis', () => pm.response.to.have.status(400));"
+						]
+					}
+				}
+			]
+		}
+	],
+	"variable": [
+		{ "key": "baseUrl", "value": "http://localhost:8080" },
+		{ "key": "ncUser", "value": "admin" },
+		{ "key": "ncPass", "value": "admin" },
+		{ "key": "contactId", "value": "" },
+		{ "key": "providerId", "value": "" },
+		{ "key": "unknownTemplateId", "value": "no-such-template" }
+	]
+}

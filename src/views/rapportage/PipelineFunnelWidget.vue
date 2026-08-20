@@ -3,7 +3,7 @@
 <!--
   Pipeline value per stage — bar chart with two series (total + weighted).
 
-  @spec openspec/changes/lead-management/specs/lead-management/spec.md#REQ-LM-006
+  @spec openspec/specs/lead-management/spec.md
 -->
 <template>
 	<div class="pipeline-funnel-widget">
@@ -12,16 +12,23 @@
 				v-model="selectedPipeline"
 				:options="pipelineOptions"
 				:clearable="true"
-				:input-label="t('pipelinq', 'Pipeline')"
+				:inputLabel="t('pipelinq', 'Pipeline')"
 				label="label"
-				track-by="value"
-				@input="$emit('pipeline-change', selectedPipeline ? selectedPipeline.value : null)" />
+				trackBy="value"
+				@update:modelValue="
+					$emit(
+						'pipeline-change',
+						selectedPipeline ? selectedPipeline.value : null,
+					)
+				" />
 		</div>
 
 		<NcEmptyContent
 			v-if="!filteredData.length"
 			:name="t('pipelinq', 'No pipeline data')"
-			:description="t('pipelinq', 'There are no leads in this pipeline yet.')" />
+			:description="
+				t('pipelinq', 'There are no leads in this pipeline yet.')
+			" />
 
 		<CnChartWidget
 			v-else
@@ -34,7 +41,7 @@
 
 <script>
 import { CnChartWidget } from '@conduction/nextcloud-vue'
-import { NcSelect, NcEmptyContent } from '@nextcloud/vue'
+import { NcEmptyContent, NcSelect } from '@nextcloud/vue'
 
 export default {
 	name: 'PipelineFunnelWidget',
@@ -44,33 +51,42 @@ export default {
 			type: Array,
 			default: () => [],
 		},
+
 		pipelineOptions: {
 			type: Array,
 			default: () => [],
 		},
 	},
+
 	emits: ['pipeline-change'],
 	data() {
 		return {
 			selectedPipeline: null,
 		}
 	},
+
 	computed: {
 		filteredData() {
 			return Array.isArray(this.data) ? this.data : []
 		},
+
 		categories() {
-			return this.filteredData.map(row => row.stage)
+			return this.filteredData.map((row) => row.stage)
 		},
+
 		series() {
 			return [
 				{
 					name: t('pipelinq', 'Total value'),
-					data: this.filteredData.map(row => Math.round(row.totalValue || 0)),
+					data: this.filteredData.map((row) =>
+						Math.round(row.totalValue || 0),
+					),
 				},
 				{
 					name: t('pipelinq', 'Weighted value'),
-					data: this.filteredData.map(row => Math.round(row.weightedValue || 0)),
+					data: this.filteredData.map((row) =>
+						Math.round(row.weightedValue || 0),
+					),
 				},
 			]
 		},

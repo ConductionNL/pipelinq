@@ -16,7 +16,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-35
+ * @spec openspec/specs/prospect-discovery/spec.md#requirement-ideal-customer-profile-configuration
  */
 
 declare(strict_types=1);
@@ -36,112 +36,105 @@ use RuntimeException;
 /**
  * Controller for prospect ICP settings (admin only).
  */
-class ProspectSettingsController extends Controller
-{
+class ProspectSettingsController extends Controller {
 
-    /**
-     * The OpenRegister object service.
-     *
-     * @var \OCA\OpenRegister\Service\ObjectService|null The OpenRegister object service.
-     */
-    private ?\OCA\OpenRegister\Service\ObjectService $objectService = null;
+	/**
+	 * The OpenRegister object service.
+	 *
+	 * @var \OCA\OpenRegister\Contract\ObjectServiceInterface|null The OpenRegister object service.
+	 */
+	private ?\OCA\OpenRegister\Contract\ObjectServiceInterface $objectService = null;
 
-    /**
-     * Constructor.
-     *
-     * @param IRequest           $request    The request.
-     * @param ContainerInterface $container  The container.
-     * @param IAppManager        $appManager The app manager.
-     * @param IcpConfigService   $icpConfig  The ICP config service.
-     */
-    public function __construct(
-        IRequest $request,
-        private readonly ContainerInterface $container,
-        private readonly IAppManager $appManager,
-        private IcpConfigService $icpConfig,
-    ) {
-        parent::__construct(appName: Application::APP_ID, request: $request);
-    }//end __construct()
+	/**
+	 * Constructor.
+	 *
+	 * @param IRequest $request The request.
+	 * @param ContainerInterface $container The container.
+	 * @param IAppManager $appManager The app manager.
+	 * @param IcpConfigService $icpConfig The ICP config service.
+	 */
+	public function __construct(
+		IRequest $request,
+		private readonly ContainerInterface $container,
+		private readonly IAppManager $appManager,
+		private IcpConfigService $icpConfig,
+	) {
+		parent::__construct(appName: Application::APP_ID, request: $request);
+	}//end __construct()
 
-    /**
-     * Attempts to retrieve the OpenRegister service from the container.
-     *
-     * @return \OCA\OpenRegister\Service\ObjectService|null The OpenRegister service if available, null otherwise.
-     * @throws \RuntimeException If the service is not available.
-     * @spec   openspec/changes/reverse-2026-05-26-be-settings/tasks.md#task-4
-     */
-    public function getObjectService(): ?\OCA\OpenRegister\Service\ObjectService
-    {
-        if (in_array(needle: 'openregister', haystack: $this->appManager->getInstalledApps()) === true) {
-            $this->objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-            return $this->objectService;
-        }
+	/**
+	 * Attempts to retrieve the OpenRegister service from the container.
+	 *
+	 * @return \OCA\OpenRegister\Contract\ObjectServiceInterface|null The OpenRegister service if available, null otherwise.
+	 * @throws \RuntimeException If the service is not available.
+	 * @spec   openspec/changes/reverse-2026-05-26-be-settings/tasks.md#task-4
+	 */
+	public function getObjectService(): ?\OCA\OpenRegister\Contract\ObjectServiceInterface {
+		if (in_array(needle: 'openregister', haystack: $this->appManager->getInstalledApps()) === true) {
+			$this->objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
+			return $this->objectService;
+		}
 
-        throw new RuntimeException('OpenRegister service is not available.');
+		throw new RuntimeException('OpenRegister service is not available.');
+	}//end getObjectService()
 
-    }//end getObjectService()
+	/**
+	 * Attempts to retrieve the Configuration service from the container.
+	 *
+	 * @return \OCA\OpenRegister\Service\ConfigurationService|null The Configuration service if available, null otherwise.
+	 * @throws \RuntimeException If the service is not available.
+	 * @spec   openspec/changes/reverse-2026-05-26-be-settings/tasks.md#task-3
+	 */
+	public function getConfigurationService(): ?\OCA\OpenRegister\Service\ConfigurationService {
+		if (in_array(needle: 'openregister', haystack: $this->appManager->getInstalledApps()) === true) {
+			$configurationService = $this->container->get('OCA\OpenRegister\Service\ConfigurationService');
+			return $configurationService;
+		}
 
-    /**
-     * Attempts to retrieve the Configuration service from the container.
-     *
-     * @return \OCA\OpenRegister\Service\ConfigurationService|null The Configuration service if available, null otherwise.
-     * @throws \RuntimeException If the service is not available.
-     * @spec   openspec/changes/reverse-2026-05-26-be-settings/tasks.md#task-3
-     */
-    public function getConfigurationService(): ?\OCA\OpenRegister\Service\ConfigurationService
-    {
-        if (in_array(needle: 'openregister', haystack: $this->appManager->getInstalledApps()) === true) {
-            $configurationService = $this->container->get('OCA\OpenRegister\Service\ConfigurationService');
-            return $configurationService;
-        }
+		throw new RuntimeException('Configuration service is not available.');
+	}//end getConfigurationService()
 
-        throw new RuntimeException('Configuration service is not available.');
+	/**
+	 * Get current ICP configuration.
+	 *
+	 * Admin-only endpoint (requires admin settings permission).
+	 *
+	 * @return JSONResponse The ICP settings.
+	 *
+	 * @spec openspec/specs/prospect-discovery/spec.md#requirement-ideal-customer-profile-configuration
+	 */
+	#[AuthorizedAdminSetting(Application::APP_ID)]
+	public function index(): JSONResponse {
+		return new JSONResponse(data: $this->icpConfig->getSettings());
+	}//end index()
 
-    }//end getConfigurationService()
+	/**
+	 * Save ICP configuration.
+	 *
+	 * Admin-only endpoint (requires admin settings permission).
+	 *
+	 * @return JSONResponse The save result.
+	 *
+	 * @spec openspec/specs/prospect-discovery/spec.md#requirement-ideal-customer-profile-configuration
+	 */
+	#[AuthorizedAdminSetting(Application::APP_ID)]
+	public function update(): JSONResponse {
+		$data = $this->request->getParams();
 
-    /**
-     * Get current ICP configuration.
-     *
-     * Admin-only endpoint (requires admin settings permission).
-     *
-     * @return JSONResponse The ICP settings.
-     *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-35
-     */
-    #[AuthorizedAdminSetting(Application::APP_ID)]
-    public function index(): JSONResponse
-    {
-        return new JSONResponse(data: $this->icpConfig->getSettings());
-    }//end index()
+		try {
+			$icpHash = $this->icpConfig->saveSettings(data: $data);
 
-    /**
-     * Save ICP configuration.
-     *
-     * Admin-only endpoint (requires admin settings permission).
-     *
-     * @return JSONResponse The save result.
-     *
-     * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-35
-     */
-    #[AuthorizedAdminSetting(Application::APP_ID)]
-    public function update(): JSONResponse
-    {
-        $data = $this->request->getParams();
-
-        try {
-            $icpHash = $this->icpConfig->saveSettings(data: $data);
-
-            return new JSONResponse(
-                data: [
-                    'status'  => 'saved',
-                    'icpHash' => $icpHash,
-                ]
-            );
-        } catch (\Exception $e) {
-            return new JSONResponse(
-                data: ['error' => $e->getMessage()],
-                statusCode: 500
-            );
-        }//end try
-    }//end update()
+			return new JSONResponse(
+				data: [
+					'status' => 'saved',
+					'icpHash' => $icpHash,
+				]
+			);
+		} catch (\Exception $e) {
+			return new JSONResponse(
+				data: ['error' => $e->getMessage()],
+				statusCode: 500
+			);
+		}//end try
+	}//end update()
 }//end class

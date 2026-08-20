@@ -35,6 +35,5 @@ use Exception;
  *
  * @spec openspec/changes/pos-split-tender/specs.md#REQ-PST-001
  */
-class TenderTypeNotFoundException extends Exception
-{
+class TenderTypeNotFoundException extends Exception {
 }//end class

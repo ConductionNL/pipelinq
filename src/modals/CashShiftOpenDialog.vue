@@ -4,40 +4,38 @@
 -->
 <template>
 	<NcDialog
-		:name="t('pipelinq', 'Shift openen')"
+		:name="t('pipelinq', 'Open shift')"
 		:open="true"
 		size="normal"
 		@closing="$emit('close')">
 		<div class="cash-shift-open">
+			<NcTextField v-model="drawer" :label="t('pipelinq', 'Drawer')" />
 			<NcTextField
-				:value.sync="drawer"
-				:label="t('pipelinq', 'Lade')" />
-			<NcTextField
-				:value.sync="floatAmount"
+				v-model="floatAmount"
 				type="number"
-				:label="t('pipelinq', 'Openingsbedrag (€)')"
+				:label="t('pipelinq', 'Opening amount (€)')"
 				:error="showError"
-				:helper-text="showError ? t('pipelinq', 'Openingsbedrag verplicht') : ''" />
+				:helperText="
+					showError ? t('pipelinq', 'Opening amount required') : ''
+				" />
 			<NcTextField
-				:value.sync="reference"
-				:label="t('pipelinq', 'Referentie (optioneel)')" />
-			<NcTextArea
-				:value.sync="notes"
-				:label="t('pipelinq', 'Notities (optioneel)')" />
+				v-model="reference"
+				:label="t('pipelinq', 'Reference (optional)')" />
+			<NcTextArea v-model="notes" :label="t('pipelinq', 'Notes (optional)')" />
 		</div>
 		<template #actions>
 			<NcButton @click="$emit('close')">
-				{{ t('pipelinq', 'Annuleren') }}
+				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
-			<NcButton type="primary" :disabled="submitting" @click="submit">
-				{{ t('pipelinq', 'Shift openen') }}
+			<NcButton variant="primary" :disabled="submitting" @click="submit">
+				{{ t('pipelinq', 'Open shift') }}
 			</NcButton>
 		</template>
 	</NcDialog>
 </template>
 
 <script>
-import { NcDialog, NcButton, NcTextField, NcTextArea } from '@nextcloud/vue'
+import { NcButton, NcDialog, NcTextArea, NcTextField } from '@nextcloud/vue'
 
 export default {
 	name: 'CashShiftOpenDialog',
@@ -47,12 +45,14 @@ export default {
 		NcTextField,
 		NcTextArea,
 	},
+
 	props: {
 		submitting: {
 			type: Boolean,
 			default: false,
 		},
 	},
+
 	emits: ['close', 'confirm'],
 	data() {
 		return {
@@ -63,6 +63,7 @@ export default {
 			showError: false,
 		}
 	},
+
 	methods: {
 		/**
 		 * Validate the float amount and emit the open payload.

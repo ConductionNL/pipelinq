@@ -33,18 +33,18 @@
 		v-else
 		:title="resourceData.name || t('pipelinq', 'Resource')"
 		:subtitle="t('pipelinq', 'Resource')"
-		:back-route="{ name: 'Resources' }"
-		:back-label="t('pipelinq', 'Back to list')"
+		:backRoute="{ name: 'Resources' }"
+		:backLabel="t('pipelinq', 'Back to list')"
 		:loading="loading"
 		:sidebar="{ enabled: !isNew && !loading }"
-		object-type="pipelinq_resource"
-		:object-id="resourceId"
-		:sidebar-props="sidebarProps">
+		objectType="pipelinq_resource"
+		:objectId="resourceId"
+		:sidebarProps="sidebarProps">
 		<template #actions>
-			<NcButton type="primary" @click="editing = true">
+			<NcButton variant="primary" @click="editing = true">
 				{{ t('pipelinq', 'Edit') }}
 			</NcButton>
-			<NcButton type="error" @click="showDelete = true">
+			<NcButton variant="error" @click="showDelete = true">
 				{{ t('pipelinq', 'Delete') }}
 			</NcButton>
 		</template>
@@ -65,7 +65,11 @@
 				</div>
 				<div class="info-field">
 					<label>{{ t('pipelinq', 'Bookable') }}</label>
-					<span>{{ resourceData.bookable ? t('pipelinq', 'Yes') : t('pipelinq', 'No') }}</span>
+					<span>{{
+						resourceData.bookable
+							? t('pipelinq', 'Yes')
+							: t('pipelinq', 'No')
+					}}</span>
 				</div>
 				<div class="info-field">
 					<label>{{ t('pipelinq', 'Max concurrent') }}</label>
@@ -94,9 +98,9 @@
 				<table class="viewTable">
 					<thead>
 						<tr>
-							<th>{{ t('pipelinq', 'Day') }}</th>
-							<th>{{ t('pipelinq', 'Open') }}</th>
-							<th>{{ t('pipelinq', 'Close') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Day') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Open') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Close') }}</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -118,9 +122,9 @@
 				<table class="viewTable">
 					<thead>
 						<tr>
-							<th>{{ t('pipelinq', 'Start') }}</th>
-							<th>{{ t('pipelinq', 'End') }}</th>
-							<th>{{ t('pipelinq', 'Label') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Start') }}</th>
+							<th scope="col">{{ t('pipelinq', 'End') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Label') }}</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -143,11 +147,16 @@
 </template>
 
 <script>
-import { NcButton } from '@nextcloud/vue'
+import {
+	CnDetailCard,
+	CnDetailPage,
+	useObjectSubscription,
+} from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
-import { CnDetailPage, CnDetailCard } from '@conduction/nextcloud-vue'
-import ResourceForm from './ResourceForm.vue'
+import { NcButton } from '@nextcloud/vue'
+import { computed } from 'vue'
 import DeleteResourceDialog from '../../dialogs/DeleteResourceDialog.vue'
+import ResourceForm from './ResourceForm.vue'
 import { useObjectStore } from '../../store/modules/object.js'
 
 export default {
@@ -159,42 +168,83 @@ export default {
 		ResourceForm,
 		DeleteResourceDialog,
 	},
+
 	props: {
 		id: { type: String, default: null },
 	},
+
+	/**
+	 * Live updates for the viewed resource (or-object-{uuid} via the
+	 * nc-vue liveUpdatesPlugin, default-on since beta.212). Events are
+	 * refetch hints — the plugin re-runs fetchObject('resource', id)
+	 * into the same store cache resourceData renders from. Re-scopes on
+	 * id change, releases on unmount, skips the create archetype.
+	 *
+	 * @param {object} props Component props
+	 * @return {object} Empty — the subscription is side-effect only
+	 * @spec openspec/specs/realtime-updates-ui/spec.md
+	 */
+	setup(props) {
+		const objectStore = useObjectStore()
+		const liveObjectId = computed(() =>
+			props.id && props.id !== 'new' ? props.id : null,
+		)
+		useObjectSubscription(objectStore, 'resource', liveObjectId, {
+			enabled: computed(() =>
+				Boolean(
+					liveObjectId.value && objectStore.objectTypeRegistry?.resource,
+				),
+			),
+		})
+		return {}
+	},
+
 	data() {
 		return {
 			editing: false,
 			showDelete: false,
 		}
 	},
+
 	computed: {
 		objectStore() {
 			return useObjectStore()
 		},
+
 		resourceId() {
 			return this.id || null
 		},
+
 		isNew() {
 			return !this.resourceId || this.resourceId === 'new'
 		},
+
 		loading() {
 			return this.objectStore.loading?.resource || false
 		},
+
 		resourceData() {
 			if (this.isNew) return {}
 			return this.objectStore.getObject('resource', this.resourceId) || {}
 		},
+
 		workingHours() {
-			return Array.isArray(this.resourceData.workingHours) ? this.resourceData.workingHours : []
+			return Array.isArray(this.resourceData.workingHours)
+				? this.resourceData.workingHours
+				: []
 		},
+
 		vacations() {
-			return Array.isArray(this.resourceData.vacations) ? this.resourceData.vacations : []
+			return Array.isArray(this.resourceData.vacations)
+				? this.resourceData.vacations
+				: []
 		},
+
 		skillsLabel() {
 			const skills = this.resourceData.skills || []
 			return skills.length ? skills.join(', ') : '-'
 		},
+
 		sidebarProps() {
 			const cfg = this.objectStore.objectTypeRegistry?.resource || {}
 			return {
@@ -205,28 +255,36 @@ export default {
 			}
 		},
 	},
+
 	async mounted() {
 		if (!this.isNew) {
 			await this.objectStore.fetchObject('resource', this.resourceId)
 		}
 	},
+
 	methods: {
 		async onFormSave(formData) {
 			const saved = await this.objectStore.saveObject('resource', formData)
 			if (!saved) {
 				const error = this.objectStore.getError?.('resource')
-				showError(error?.message || t('pipelinq', 'Failed to save resource.'))
+				showError(
+					error?.message || t('pipelinq', 'Failed to save resource.'),
+				)
 				return
 			}
 			showSuccess(t('pipelinq', 'Resource saved.'))
 			await this.invalidateAvailability(saved.id || formData.id)
 			if (this.isNew) {
-				this.$router.push({ name: 'ResourceDetail', params: { id: saved.id } })
+				this.$router.push({
+					name: 'ResourceDetail',
+					params: { id: saved.id },
+				})
 			} else {
 				await this.objectStore.fetchObject('resource', this.resourceId)
 				this.editing = false
 			}
 		},
+
 		onFormCancel() {
 			if (this.isNew) {
 				this.$router.push({ name: 'Resources' })
@@ -234,16 +292,23 @@ export default {
 				this.editing = false
 			}
 		},
+
 		async confirmDelete() {
 			this.showDelete = false
-			const ok = await this.objectStore.deleteObject('resource', this.resourceId)
+			const ok = await this.objectStore.deleteObject(
+				'resource',
+				this.resourceId,
+			)
 			if (ok) {
 				this.$router.push({ name: 'Resources' })
 			} else {
 				const error = this.objectStore.getError?.('resource')
-				showError(error?.message || t('pipelinq', 'Failed to delete resource.'))
+				showError(
+					error?.message || t('pipelinq', 'Failed to delete resource.'),
+				)
 			}
 		},
+
 		/**
 		 * Best-effort invalidation of this resource's availability cache rows.
 		 *
@@ -253,13 +318,19 @@ export default {
 		async invalidateAvailability(resourceId) {
 			if (!resourceId) return
 			try {
-				const cached = await this.objectStore.fetchCollection('availabilityCache', {
-					resourceId,
-					_limit: 200,
-				})
-				for (const row of (cached || [])) {
+				const cached = await this.objectStore.fetchCollection(
+					'availabilityCache',
+					{
+						resourceId,
+						_limit: 200,
+					},
+				)
+				for (const row of cached || []) {
 					try {
-						await this.objectStore.deleteObject('availabilityCache', row.id)
+						await this.objectStore.deleteObject(
+							'availabilityCache',
+							row.id,
+						)
 					} catch {
 						// per-row failure tolerated
 					}
@@ -280,14 +351,17 @@ export default {
 	margin-bottom: 20px;
 	padding: 20px 20px 0;
 }
+
 .info-grid {
 	display: grid;
 	grid-template-columns: 1fr 1fr;
 	gap: 16px;
 }
+
 .info-field {
 	margin-bottom: 8px;
 }
+
 .info-field label {
 	display: block;
 	font-weight: bold;
@@ -295,6 +369,7 @@ export default {
 	color: var(--color-text-maxcontrast);
 	font-size: 13px;
 }
+
 .viewTableContainer {
 	background: var(--color-main-background);
 	border-radius: var(--border-radius);
@@ -302,20 +377,25 @@ export default {
 	box-shadow: 0 2px 4px var(--color-box-shadow);
 	border: 1px solid var(--color-border);
 }
+
 .viewTable {
 	width: 100%;
 	border-collapse: collapse;
 }
-.viewTable th, .viewTable td {
+
+.viewTable th,
+.viewTable td {
 	padding: 12px;
 	text-align: left;
 	border-bottom: 1px solid var(--color-border);
 }
+
 .viewTable th {
 	background-color: var(--color-background-dark);
 	font-weight: 500;
 	color: var(--color-text-maxcontrast);
 }
+
 .section-empty {
 	text-align: center;
 	color: var(--color-text-maxcontrast);

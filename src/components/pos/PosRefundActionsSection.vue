@@ -24,17 +24,19 @@
 		<NcLoadingIcon v-if="loading" :size="24" />
 		<template v-else>
 			<section v-if="hasActions" class="pos-refund-section__actions">
-				<NcButton v-if="canConfirm"
-					type="primary"
+				<NcButton
+					v-if="canConfirm"
+					variant="primary"
 					:disabled="busy"
 					@click="confirm">
-					{{ t('pipelinq', 'Bevestigen') }}
+					{{ t('pipelinq', 'Confirm') }}
 				</NcButton>
-				<NcButton v-if="canReject"
-					type="error"
+				<NcButton
+					v-if="canReject"
+					variant="error"
 					:disabled="busy"
 					@click="showReject = true">
-					{{ t('pipelinq', 'Afwijzen') }}
+					{{ t('pipelinq', 'Reject') }}
 				</NcButton>
 			</section>
 
@@ -42,16 +44,16 @@
 				<table class="pos-refund-section__lines">
 					<thead>
 						<tr>
-							<th>{{ t('pipelinq', 'Description') }}</th>
-							<th class="num">
+							<th scope="col">{{ t('pipelinq', 'Description') }}</th>
+							<th scope="col" class="num">
 								{{ t('pipelinq', 'Original qty') }}
 							</th>
-							<th class="num">
+							<th scope="col" class="num">
 								{{ t('pipelinq', 'Returned qty') }}
 							</th>
-							<th>{{ t('pipelinq', 'Reason') }}</th>
-							<th>{{ t('pipelinq', 'Restock') }}</th>
-							<th class="num">
+							<th scope="col">{{ t('pipelinq', 'Reason') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Restock') }}</th>
+							<th scope="col" class="num">
 								{{ t('pipelinq', 'Refund total') }}
 							</th>
 						</tr>
@@ -66,7 +68,13 @@
 								{{ row.returnedQuantity }}
 							</td>
 							<td>{{ reasonLabel(row.returnReason) }}</td>
-							<td>{{ row.restock ? t('pipelinq', 'Yes') : t('pipelinq', 'No') }}</td>
+							<td>
+								{{
+									row.restock
+										? t('pipelinq', 'Yes')
+										: t('pipelinq', 'No')
+								}}
+							</td>
 							<td class="num">
 								{{ formatEur(row.lineTotal) }}
 							</td>
@@ -94,14 +102,14 @@
 </template>
 
 <script>
-import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
+import { CnDetailCard } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
-import { CnDetailCard } from '@conduction/nextcloud-vue'
-import PosRefundTotalsPanel from './PosRefundTotalsPanel.vue'
+import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
 import PosRefundRejectDialog from '../../modals/PosRefundRejectDialog.vue'
-import { useObjectStore } from '../../store/modules/object.js'
+import PosRefundTotalsPanel from './PosRefundTotalsPanel.vue'
 import { formatEur } from '../../services/posTotals.js'
+import { useObjectStore } from '../../store/modules/object.js'
 
 export default {
 	name: 'PosRefundActionsSection',
@@ -112,9 +120,11 @@ export default {
 		PosRefundTotalsPanel,
 		PosRefundRejectDialog,
 	},
+
 	inject: {
 		cnSectionContext: { default: null },
 	},
+
 	props: {
 		/** The refund id (token-resolved from @objectId by CnBodySections). */
 		refundId: {
@@ -122,6 +132,7 @@ export default {
 			default: '',
 		},
 	},
+
 	data() {
 		return {
 			refund: {},
@@ -133,22 +144,27 @@ export default {
 			showReject: false,
 		}
 	},
+
 	computed: {
 		objectStore() {
 			return useObjectStore()
 		},
+
 		/** The resolved refund id — prop wins, else the injected section context. */
 		resolvedId() {
 			if (this.refundId) {
 				return this.refundId
 			}
 			const ctx = this.cnSectionContext
-			const bag = (ctx && typeof ctx === 'object' && 'value' in ctx) ? ctx.value : ctx
+			const bag =
+				ctx && typeof ctx === 'object' && 'value' in ctx ? ctx.value : ctx
 			return (bag && bag.objectId) || ''
 		},
+
 		status() {
 			return this.refund.status || 'pending'
 		},
+
 		/**
 		 * Whether the current user is treated as a manager in the UI. Server-side
 		 * authorization is authoritative; this only hides the buttons for clearly
@@ -157,25 +173,32 @@ export default {
 		 * @return {boolean} Whether to show manager-only actions.
 		 */
 		isManager() {
-			return typeof window.OC?.isUserAdmin === 'function' ? window.OC.isUserAdmin() : false
+			return typeof window.OC?.isUserAdmin === 'function'
+				? window.OC.isUserAdmin()
+				: false
 		},
+
 		canConfirm() {
 			return this.status === 'pending' && this.isManager
 		},
+
 		canReject() {
 			return this.status === 'pending' && this.isManager
 		},
+
 		hasActions() {
 			return this.canConfirm || this.canReject
 		},
+
 		/**
 		 * Display rows joining each refund line with its original transaction line.
 		 *
 		 * @return {Array<object>} The rows.
 		 */
 		lineRows() {
-			return this.lines.map(line => {
-				const original = this.originalLines.find(o => o.id === line.originalLine) || {}
+			return this.lines.map((line) => {
+				const original =
+					this.originalLines.find((o) => o.id === line.originalLine) || {}
 				return {
 					id: line.id,
 					description: original.description || '-',
@@ -189,6 +212,7 @@ export default {
 			})
 		},
 	},
+
 	watch: {
 		resolvedId: {
 			immediate: true,
@@ -197,6 +221,7 @@ export default {
 			},
 		},
 	},
+
 	methods: {
 		formatEur,
 		/**
@@ -206,9 +231,10 @@ export default {
 		 * @return {string} The label.
 		 */
 		reasonLabel(id) {
-			const reason = this.reasons.find(r => r.id === id)
-			return reason ? (reason.label || reason.code) : (id || '-')
+			const reason = this.reasons.find((r) => r.id === id)
+			return reason ? reason.label || reason.code : id || '-'
 		},
+
 		/**
 		 * Load the refund, its lines, the original transaction lines and reasons.
 		 */
@@ -218,28 +244,50 @@ export default {
 			}
 			this.loading = true
 			try {
-				this.refund = await this.objectStore.fetchObject('posRefund', this.resolvedId) || {}
+				this.refund =
+					(await this.objectStore.fetchObject(
+						'posRefund',
+						this.resolvedId,
+					)) || {}
 
-				await this.objectStore.fetchCollection('posRefundLine', { refund: this.resolvedId, _limit: 500 })
-				this.lines = (this.objectStore.getCollection('posRefundLine')?.results || [])
-					.filter(l => l.refund === this.resolvedId)
+				await this.objectStore.fetchCollection('posRefundLine', {
+					refund: this.resolvedId,
+					_limit: 500,
+				})
+				this.lines = (
+					this.objectStore.getCollection('posRefundLine')?.results || []
+				).filter((l) => l.refund === this.resolvedId)
 
-				await this.objectStore.fetchCollection('refundReason', { _limit: 100 })
-				this.reasons = this.objectStore.getCollection('refundReason')?.results || []
+				await this.objectStore.fetchCollection('refundReason', {
+					_limit: 100,
+				})
+				this.reasons =
+					this.objectStore.getCollection('refundReason')?.results || []
 
 				if (this.refund.originalTransaction) {
-					await this.objectStore.fetchCollection('posTransactionLine', { transaction: this.refund.originalTransaction, _limit: 500 })
-					this.originalLines = (this.objectStore.getCollection('posTransactionLine')?.results || [])
-						.filter(l => l.transaction === this.refund.originalTransaction)
+					await this.objectStore.fetchCollection('posTransactionLine', {
+						transaction: this.refund.originalTransaction,
+						_limit: 500,
+					})
+					this.originalLines = (
+						this.objectStore.getCollection('posTransactionLine')?.results
+						|| []
+					).filter(
+						(l) => l.transaction === this.refund.originalTransaction,
+					)
 				} else {
 					this.originalLines = []
 				}
 			} catch (err) {
-				showError(err?.response?.data?.error || t('pipelinq', 'Could not load refund.'))
+				showError(
+					err?.response?.data?.error
+						|| t('pipelinq', 'Could not load refund.'),
+				)
 			} finally {
 				this.loading = false
 			}
 		},
+
 		/**
 		 * Call a lifecycle action endpoint and reload.
 		 *
@@ -252,7 +300,9 @@ export default {
 			this.busy = true
 			try {
 				const response = await fetch(
-					generateUrl(`/apps/pipelinq/api/pos-refunds/${this.resolvedId}/${action}`),
+					generateUrl(
+						`/apps/pipelinq/api/pos-refunds/${this.resolvedId}/${action}`,
+					),
 					{
 						method: 'POST',
 						headers: {
@@ -278,16 +328,22 @@ export default {
 				this.busy = false
 			}
 		},
+
 		confirm() {
 			this.lifecycle('confirm', {}, t('pipelinq', 'Refund completed.'))
 		},
+
 		/**
 		 * Reject the refund with a reason.
 		 *
 		 * @param {string} reason The rejection reason.
 		 */
 		async reject(reason) {
-			const ok = await this.lifecycle('reject', { reason }, t('pipelinq', 'Refund rejected.'))
+			const ok = await this.lifecycle(
+				'reject',
+				{ reason },
+				t('pipelinq', 'Refund rejected.'),
+			)
 			if (ok) {
 				this.showReject = false
 			}
@@ -302,16 +358,19 @@ export default {
 	flex-direction: column;
 	gap: 16px;
 }
+
 .pos-refund-section__actions {
 	display: flex;
 	flex-wrap: wrap;
 	gap: 8px;
 }
+
 .pos-refund-section__lines {
 	width: 100%;
 	border-collapse: collapse;
 	margin-bottom: 12px;
 }
+
 .pos-refund-section__lines th {
 	text-align: left;
 	font-size: 12px;
@@ -319,13 +378,16 @@ export default {
 	padding: 6px 8px;
 	border-bottom: 1px solid var(--color-border);
 }
+
 .pos-refund-section__lines td {
 	padding: 6px 8px;
 	border-bottom: 1px solid var(--color-border);
 }
+
 .num {
 	text-align: right;
 }
+
 .empty {
 	text-align: center;
 	color: var(--color-text-maxcontrast);

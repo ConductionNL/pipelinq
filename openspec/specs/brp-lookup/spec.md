@@ -1,5 +1,7 @@
 # brp-lookup Specification
 
+**OpenSpec changes**: [vng-klantinteracties-leaf](../../changes/archive/2026-07-12-vng-klantinteracties-leaf/) _(archived 2026-07-12 — consumes this capability's 11-proef + `brpPersoon.bsnHash` flow for the AVG hash-only handling of VNG `partijIdentificator` BSNs; no requirement of this spec changes)_
+
 ## Purpose
 TBD - created by archiving change pipelinq-brp-via-or-leaf. Update Purpose after archive.
 ## Requirements
@@ -15,26 +17,31 @@ When the OR leaf is not usable — it responds 503 with `details.cause` (`openco
 **Feature tier**: V1 (BSN-verified contact enrichment)
 
 #### Scenario: BRP lookup uses the OR leaf with audit metadata when it is available
+@e2e exclude AVG-sensitive server transport: HaalCentraalClientTest::testLookupUsesOpenRegisterLeafWithMeta traps both legacy transports, asserts the OR URL was hit, that the legacy leg was NOT, and the full audit envelope (_correlationId, _responseDurationMs, _responseStatus). Driving a real BSN through a browser is not permissible and the transport choice is not observable in the UI.
 
 - **WHEN** the OpenRegister `brp-haalcentraal` source is enabled and a BRP lookup runs after the elfproef passes
 - **THEN** `HaalCentraalClient` calls `GET /apps/openregister/api/integrations/brp/person?bsn=…` (internal, OCS-APIREQUEST, allow_local_address), maps the raw `results[0]` through `normalisePerson()`, attaches `meta.correlationId`/`meta.durationMs`/`meta.status` as the audit metadata, and does NOT call the direct HaalCentraal endpoint
 
 #### Scenario: BRP audit record is identical across the OR and legacy transports
+@e2e exclude server-side audit mapping: the OR leg and the null-correlation case are asserted by HaalCentraalClientTest::testLookupUsesOpenRegisterLeafWithMeta / ::testLookupOpenRegisterLeafNullCorrelationId. NOT asserted anywhere: cross-transport equality of the audit record for the same upstream data — that is a genuine PHPUnit gap, not an e2e gap.
 
 - **WHEN** a BRP lookup succeeds via either the OR leaf or the legacy direct path with the same correlation id, duration and status
 - **THEN** the persisted `brpLookupVerzoek` record carries the same `haalcentraalCorrelationId`, `responseDuurMs` and `responseStatus`, and a null correlation id is recorded as an absent field on both paths
 
 #### Scenario: BRP lookup falls back to the legacy path when the OR source is dormant
+@e2e exclude server transport fallback: HaalCentraalClientTest::testLookupFallsBackToLegacyWhenLeafUnavailable proves the legacy leg is ENTERED (503 unconfigured-OAuth contract). NOT asserted: a configured OAuth2+mTLS call. Unwritten PHPUnit case, not an e2e gap.
 
 - **WHEN** the OpenRegister `brp-haalcentraal` source returns a 503 (`details.cause` = `openconnector-source-missing`) or OpenRegister is absent
 - **THEN** `HaalCentraalClient` falls back to the existing OAuth2 + mTLS direct HaalCentraal path with the configured `brp.*` credentials and certificate, derives the correlation id + duration + status from the direct response, and the audit record is unchanged from before the re-point
 
 #### Scenario: OR-200 with no person is treated as not-found without a legacy call
+@e2e exclude server transport branch: HaalCentraalClientTest::testLookupOpenRegisterLeafEmptyResultsIsNotFound asserts the 200-empty result is not-found and that no legacy call follows. A browser sees "not found" either way.
 
 - **WHEN** the OR leaf returns HTTP 200 with an empty `results` array
 - **THEN** `HaalCentraalClient::lookupPersoon` returns null (not-found) and does NOT fall through to the legacy direct path
 
 #### Scenario: the raw BSN is never logged on either the OR or the fallback path
+@e2e exclude log-content assertion with no UI surface: HaalCentraalClientTest::testRawBsnNeverLoggedOnOpenRegisterPath and ::testRawBsnNeverLoggedOnFallbackPath record debug/info/warning/error and assert the BSN appears in no message and in no json_encode($context). Playwright cannot read the server log.
 
 - **WHEN** a BRP lookup runs through the OR-first path or falls back to the legacy path
 - **THEN** only the masked BSN appears in any log message or context, the BSN is passed to the OR leaf in the query string only (the leaf places it in the upstream request body and never logs it), and no raw BSN is written to the log on either leg

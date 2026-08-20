@@ -6,13 +6,18 @@
 			<textarea
 				v-model="newMessage"
 				:placeholder="t('pipelinq', 'Add a note...')"
+				:aria-label="t('pipelinq', 'New note')"
 				class="entity-notes__textarea"
 				rows="3" />
 			<NcButton
-				type="primary"
+				variant="primary"
 				:disabled="submitting || newMessage.trim() === ''"
 				@click="addNote">
-				{{ submitting ? t('pipelinq', 'Saving...') : t('pipelinq', 'Add note') }}
+				{{
+					submitting
+						? t('pipelinq', 'Saving...')
+						: t('pipelinq', 'Add note')
+				}}
 			</NcButton>
 		</div>
 
@@ -23,16 +28,15 @@
 		</div>
 
 		<div v-else class="entity-notes__list">
-			<div
-				v-for="note in notes"
-				:key="note.id"
-				class="entity-notes__item">
+			<div v-for="note in notes" :key="note.id" class="entity-notes__item">
 				<div class="entity-notes__item-header">
 					<span class="entity-notes__author">{{ note.authorName }}</span>
-					<span class="entity-notes__time">{{ formatTime(note.timestamp) }}</span>
+					<span class="entity-notes__time">{{
+						formatTime(note.timestamp)
+					}}</span>
 					<NcButton
 						v-if="note.isOwn"
-						type="tertiary"
+						variant="tertiary"
 						class="entity-notes__delete"
 						@click="deleteNote(note.id)">
 						{{ t('pipelinq', 'Delete') }}
@@ -47,8 +51,8 @@
 </template>
 
 <script>
-import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
 import { generateUrl } from '@nextcloud/router'
+import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
 
 export default {
 	name: 'EntityNotes',
@@ -56,16 +60,19 @@ export default {
 		NcButton,
 		NcLoadingIcon,
 	},
+
 	props: {
 		objectType: {
 			type: String,
 			required: true,
 		},
+
 		objectId: {
 			type: String,
 			required: true,
 		},
 	},
+
 	data() {
 		return {
 			notes: [],
@@ -74,6 +81,7 @@ export default {
 			submitting: false,
 		}
 	},
+
 	watch: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-timeline-notes-ui/tasks.md#task-14
@@ -82,9 +90,11 @@ export default {
 			this.fetchNotes()
 		},
 	},
+
 	mounted() {
 		this.fetchNotes()
 	},
+
 	methods: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-timeline-notes-ui/tasks.md#task-12
@@ -93,7 +103,9 @@ export default {
 			this.loading = true
 			try {
 				const response = await fetch(
-					generateUrl(`/apps/pipelinq/api/notes/${this.objectType}/${this.objectId}`),
+					generateUrl(
+						`/apps/pipelinq/api/notes/${this.objectType}/${this.objectId}`,
+					),
 					{
 						headers: {
 							'Content-Type': 'application/json',
@@ -120,7 +132,9 @@ export default {
 			this.submitting = true
 			try {
 				const response = await fetch(
-					generateUrl(`/apps/pipelinq/api/notes/${this.objectType}/${this.objectId}`),
+					generateUrl(
+						`/apps/pipelinq/api/notes/${this.objectType}/${this.objectId}`,
+					),
 					{
 						method: 'POST',
 						headers: {
@@ -275,6 +289,6 @@ export default {
 	margin: 0;
 	font-size: 14px;
 	white-space: pre-wrap;
-	word-break: break-word;
+	overflow-wrap: break-word;
 }
 </style>

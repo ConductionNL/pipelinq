@@ -18,7 +18,7 @@
  * @return {number} The projected attainment.
  */
 export function projectedAttainment(closedWon, commit, bestCase) {
-	return Number(closedWon || 0) + Number(commit || 0) + (0.5 * Number(bestCase || 0))
+	return Number(closedWon || 0) + Number(commit || 0) + 0.5 * Number(bestCase || 0)
 }
 
 /**
@@ -42,7 +42,13 @@ export function gapToQuota(quota, projected) {
  * @param {number} [daysThreshold] The days-remaining threshold.
  * @return {boolean} True when at risk.
  */
-export function isAtRisk(projected, quota, daysRemaining, percentThreshold = 90, daysThreshold = 30) {
+export function isAtRisk(
+	projected,
+	quota,
+	daysRemaining,
+	percentThreshold = 90,
+	daysThreshold = 30,
+) {
 	if (!quota || quota <= 0) {
 		return false
 	}

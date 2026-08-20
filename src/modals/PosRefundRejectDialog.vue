@@ -9,26 +9,37 @@
 		size="normal"
 		@closing="$emit('close')">
 		<div class="pos-refund-reject">
-			<p>{{ t('pipelinq', 'This will reject the refund. Enter a reason for the rejection.') }}</p>
+			<p>
+				{{
+					t(
+						'pipelinq',
+						'This will reject the refund. Enter a reason for the rejection.',
+					)
+				}}
+			</p>
 			<NcTextArea
-				:value.sync="reason"
+				v-model="reason"
 				:label="t('pipelinq', 'Rejection reason')"
 				:error="showError"
-				:helper-text="showError ? t('pipelinq', 'Vul een reden in voor de afwijzing') : ''" />
+				:helperText="
+					showError
+						? t('pipelinq', 'Enter a reason for the rejection')
+						: ''
+				" />
 		</div>
 		<template #actions>
 			<NcButton @click="$emit('close')">
 				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
-			<NcButton type="error" :disabled="submitting" @click="submit">
-				{{ t('pipelinq', 'Afwijzen') }}
+			<NcButton variant="error" :disabled="submitting" @click="submit">
+				{{ t('pipelinq', 'Reject') }}
 			</NcButton>
 		</template>
 	</NcDialog>
 </template>
 
 <script>
-import { NcDialog, NcButton, NcTextArea } from '@nextcloud/vue'
+import { NcButton, NcDialog, NcTextArea } from '@nextcloud/vue'
 
 export default {
 	name: 'PosRefundRejectDialog',
@@ -37,12 +48,14 @@ export default {
 		NcButton,
 		NcTextArea,
 	},
+
 	props: {
 		submitting: {
 			type: Boolean,
 			default: false,
 		},
 	},
+
 	emits: ['close', 'confirm'],
 	data() {
 		return {
@@ -50,6 +63,7 @@ export default {
 			showError: false,
 		}
 	},
+
 	methods: {
 		/**
 		 * Validate and emit the rejection reason.

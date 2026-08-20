@@ -1,6 +1,6 @@
 <template>
 	<div class="dashboard-header-actions">
-		<NcButton type="primary" @click="showLeadDialog = true">
+		<NcButton variant="primary" @click="showLeadDialog = true">
 			<template #icon>
 				<Plus :size="20" />
 			</template>
@@ -18,9 +18,7 @@
 			</template>
 			{{ t('pipelinq', 'New Client') }}
 		</NcButton>
-		<NcButton
-			:aria-label="t('pipelinq', 'Refresh dashboard')"
-			@click="refresh">
+		<NcButton :aria-label="t('pipelinq', 'Refresh dashboard')" @click="refresh">
 			<template #icon>
 				<Refresh :size="20" :class="{ 'icon-spinning': refreshing }" />
 			</template>
@@ -47,18 +45,18 @@
 import { NcButton } from '@nextcloud/vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import Refresh from 'vue-material-design-icons/Refresh.vue'
-import LeadCreateDialog from '../leads/LeadCreateDialog.vue'
-import RequestCreateDialog from '../requests/RequestCreateDialog.vue'
-import ClientCreateDialog from '../clients/ClientCreateDialog.vue'
+import ClientCreateDialog from '../../dialogs/ClientCreateDialog.vue'
+import LeadCreateDialog from '../../dialogs/LeadCreateDialog.vue'
+import RequestCreateDialog from '../../dialogs/RequestCreateDialog.vue'
 import {
-	refreshDashboardData,
-	getLeads,
-	getRequests,
-	getPipelines,
-	getComplaints,
 	getClients,
+	getComplaints,
+	getLeads,
 	getMyLeads,
 	getMyRequests,
+	getPipelines,
+	getRequests,
+	refreshDashboardData,
 } from '../../services/dashboardData.js'
 
 export default {
@@ -71,6 +69,7 @@ export default {
 		RequestCreateDialog,
 		ClientCreateDialog,
 	},
+
 	data() {
 		return {
 			showLeadDialog: false,
@@ -79,6 +78,7 @@ export default {
 			refreshing: false,
 		}
 	},
+
 	methods: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-dashboard-ui/tasks.md#task-4
@@ -104,6 +104,7 @@ export default {
 				this.refreshing = false
 			}
 		},
+
 		/**
 		 * @param leadId
 		 * @spec openspec/changes/reverse-2026-05-26-fe-dashboard-ui/tasks.md#task-2
@@ -112,14 +113,18 @@ export default {
 			this.showLeadDialog = false
 			this.$router.push({ name: 'LeadDetail', params: { id: leadId } })
 		},
+
 		/**
 		 * @param requestId
 		 * @spec openspec/changes/reverse-2026-05-26-fe-dashboard-ui/tasks.md#task-3
 		 */
 		onRequestCreated(requestId) {
 			this.showRequestDialog = false
-			this.$router.push({ name: 'RequestDetail', params: { id: requestId } })
+			// A request is a `ticket` with ticketType=request
+			// (unify-ticket-supertype) — open the unified detail page.
+			this.$router.push({ name: 'TicketDetail', params: { id: requestId } })
 		},
+
 		/**
 		 * @param clientId
 		 * @spec openspec/changes/reverse-2026-05-26-fe-dashboard-ui/tasks.md#task-1
@@ -144,7 +149,17 @@ export default {
 }
 
 @keyframes spin {
-	from { transform: rotate(0deg); }
-	to { transform: rotate(360deg); }
+	from {
+		transform: rotate(0deg);
+	}
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.icon-spinning {
+		animation: none;
+	}
 }
 </style>

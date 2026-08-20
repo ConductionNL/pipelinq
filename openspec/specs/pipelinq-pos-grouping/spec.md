@@ -31,6 +31,8 @@ The system SHALL present a single top-level `menuItem` `PointOfSale` (label "Poi
 
 ### Requirement: REQ-PPOS-002 — The system SHALL place product master data under a "Catalog" group, separate from the POS runtime group
 
+@e2e exclude SUPERSEDED BY THE 2026-07 nav-ia-cleanup — reported, not worked around. There is no "Catalog" group: `src/menu-layout.json#relocations` moves `Products` to `Dashboard` (Sales), and no manifest declares a `Catalog` menu entry. The `ProductBarcodeSearch` page was DELETED rather than regrouped — src/manifest.json:1085 records the decision in `_searchNote`: "The dedicated 'Barcode lookup' page is gone (nav-ia-cleanup): this index's search already matches on barcode, so scanning into the search box resolves the product here — one surface instead of two for the same question." No page id `ProductBarcodeSearch` and no route `/products-barcode` exists, so neither scenario has a surface a browser could reach. The surviving half — that `/products` still resolves after the regroup — IS asserted by tests/e2e/spec-coverage/pipelinq-pos-grouping.spec.ts ("every regrouped POS and product route still resolves by deep link"), and barcode-by-search is asserted by tests/e2e/spec-coverage/barcode-lookup.spec.ts. This requirement needs rewriting against the shipped IA.
+
 The system SHALL present a top-level `menuItem` `Catalog` (label "Catalog") whose `children[]`
 contain `Products` and `ProductBarcodeSearch` (Barcode lookup), and SHALL NOT nest `Products`
 under the "Point of Sale" group, because products are master data rather than till runtime.
@@ -51,6 +53,8 @@ under the "Point of Sale" group, because products are master data rather than ti
 - **AND** clicking "Barcode lookup" MUST navigate to `/products-barcode`
 
 ### Requirement: REQ-PPOS-003 — The system SHALL move POS staff and role configuration into the Settings foldout
+
+@e2e exclude SUPERSEDED BY THE 2026-07 nav-ia-cleanup — reported, not worked around. `src/menu-layout.json#settingsSection` promotes exactly three entries into the gear foldout (Pipelines, SettingsIntegrationsCaption, ExportJobs) and `sections` is empty; `PosStaffList` and `PosRoleList` are in neither. Its `_adminSettingsNote` states the reason: genuinely-admin configuration "no longer lives in the app nav at all — not even in the gear foldout", and names POS medewerkers and POS rollen among the surfaces moved to the Nextcloud admin page (/settings/admin/pipelinq, lib/Settings/AdminSettings.php → src/views/settings/Settings.vue), adding "their in-app pages and nav entries are gone". No manifest declares a page with id `PosStaffList`/`PosRoleList` or a route `/pos/staff`//pos/roles`, so both scenarios name a foldout entry and a route that do not exist. This requirement needs rewriting against the shipped IA.
 
 The system SHALL render `PosStaffList` (POS medewerkers) and `PosRoleList` (POS rollen) with
 `section: "settings"` so they appear inside the navigation gear foldout, and SHALL NOT render them
@@ -85,6 +89,8 @@ changed; this regroup is strictly a `menu[]` restructuring.
 - **AND** no page id, route string, component, or `config.schema` MUST have changed
 
 #### Scenario: pages[] is byte-for-byte equivalent
+
+@e2e exclude this compares the manifest BEFORE and AFTER the change — a property of two git revisions of `src/manifest.json`, not of anything the running app renders. No browser can hold two versions of a file. The behavioural consequence that matters, "every affected route still resolves", is asserted end to end by tests/e2e/spec-coverage/pipelinq-pos-grouping.spec.ts ("every regrouped POS and product route still resolves by deep link").
 
 - **GIVEN** the manifest before and after this change
 - **WHEN** the `pages[]` arrays are compared

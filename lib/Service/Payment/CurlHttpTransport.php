@@ -38,91 +38,112 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001
  */
-class CurlHttpTransport implements HttpTransport
-{
-    /**
-     * Request timeout in seconds.
-     *
-     * @var int
-     */
-    private const TIMEOUT = 5;
+class CurlHttpTransport implements HttpTransport {
+	/**
+	 * Request timeout in seconds.
+	 *
+	 * @var int
+	 */
+	private const TIMEOUT = 5;
 
-    /**
-     * Constructor.
-     *
-     * @param LoggerInterface $logger The logger.
-     */
-    public function __construct(private LoggerInterface $logger)
-    {
-    }//end __construct()
+	/**
+	 * Constructor.
+	 *
+	 * @param LoggerInterface $logger The logger.
+	 */
+	public function __construct(
+		private LoggerInterface $logger,
+	) {
+	}//end __construct()
 
-    /**
-     * Execute an HTTP request.
-     *
-     * @param string                $method  The HTTP method.
-     * @param string                $url     The URL.
-     * @param array<string, string> $headers The headers.
-     * @param string|null           $body    The raw body.
-     *
-     * @return array{status: int, body: array<string, mixed>, raw: string}
-     *
-     * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001
-     */
-    public function request(string $method, string $url, array $headers=[], ?string $body=null): array
-    {
-        if (function_exists('curl_init') === false) {
-            $this->logger->warning('Pipelinq POS payment: cURL not available');
-            return [
-                'status' => 0,
-                'body'   => [],
-                'raw'    => '',
-            ];
-        }
+	/**
+	 * Execute an HTTP request.
+	 *
+	 * @param string $method The HTTP method.
+	 * @param string $url The URL.
+	 * @param array<string, string> $headers The headers.
+	 * @param string|null $body The raw body.
+	 *
+	 * @return array{status: int, body: array<string, mixed>, raw: string}
+	 *
+	 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-001
+	 */
+	public function request(string $method, string $url, array $headers = [], ?string $body = null): array {
+		// Tripwire. The adapters are handed AbstractPaymentAdapter::BROKER_MANAGED_SECRET
+		// in place of a real PSP key; BrokerHttpTransport strips the resulting auth header
+		// and the broker injects the real secret. If that placeholder ever reaches THIS
+		// transport, the call has been routed around the broker — sending it would put a
+		// meaningless bearer token on the wire and, worse, mean somebody has reintroduced
+		// a direct, app-authenticated PSP call. Fail loudly rather than send it.
+		foreach ($headers as $value) {
+			if (is_string($value) === true
+				&& str_contains($value, AbstractPaymentAdapter::BROKER_MANAGED_SECRET) === true
+			) {
+				$this->logger->error(
+					'Pipelinq POS payment: refusing to send a PSP request directly — it carries the '
+					. 'broker-managed placeholder, which means it bypassed the credential broker.'
+				);
+				return [
+					'status' => 0,
+					'body' => [],
+					'raw' => '',
+				];
+			}
+		}
 
-        $handle = curl_init($url);
-        if ($handle === false) {
-            return [
-                'status' => 0,
-                'body'   => [],
-                'raw'    => '',
-            ];
-        }
+		if (function_exists('curl_init') === false) {
+			$this->logger->warning('Pipelinq POS payment: cURL not available');
+			return [
+				'status' => 0,
+				'body' => [],
+				'raw' => '',
+			];
+		}
 
-        $headerList = [];
-        foreach ($headers as $name => $value) {
-            $headerList[] = $name.': '.$value;
-        }
+		$handle = curl_init($url);
+		if ($handle === false) {
+			return [
+				'status' => 0,
+				'body' => [],
+				'raw' => '',
+			];
+		}
 
-        curl_setopt($handle, CURLOPT_CUSTOMREQUEST, $method);
-        curl_setopt($handle, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($handle, CURLOPT_TIMEOUT, self::TIMEOUT);
-        curl_setopt($handle, CURLOPT_CONNECTTIMEOUT, self::TIMEOUT);
-        curl_setopt($handle, CURLOPT_HTTPHEADER, $headerList);
-        if ($body !== null) {
-            curl_setopt($handle, CURLOPT_POSTFIELDS, $body);
-        }
+		$headerList = [];
+		foreach ($headers as $name => $value) {
+			$headerList[] = $name . ': ' . $value;
+		}
 
-        $raw     = curl_exec($handle);
-        $status  = (int) curl_getinfo($handle, CURLINFO_HTTP_CODE);
-        $rawText = '';
-        if (is_string($raw) === true) {
-            $rawText = $raw;
-        }
+		curl_setopt($handle, CURLOPT_CUSTOMREQUEST, $method);
+		curl_setopt($handle, CURLOPT_RETURNTRANSFER, true);
+		curl_setopt($handle, CURLOPT_TIMEOUT, self::TIMEOUT);
+		curl_setopt($handle, CURLOPT_CONNECTTIMEOUT, self::TIMEOUT);
+		curl_setopt($handle, CURLOPT_HTTPHEADER, $headerList);
+		if ($body !== null) {
+			curl_setopt($handle, CURLOPT_POSTFIELDS, $body);
+		}
 
-        curl_close($handle);
+		$raw = curl_exec($handle);
+		$status = (int)curl_getinfo($handle, CURLINFO_HTTP_CODE);
+		$rawText = '';
+		if (is_string($raw) === true) {
+			$rawText = $raw;
+		}
 
-        $decoded = [];
-        if ($rawText !== '') {
-            $maybe = json_decode($rawText, true);
-            if (is_array($maybe) === true) {
-                $decoded = $maybe;
-            }
-        }
+		curl_close($handle);
 
-        return [
-            'status' => $status,
-            'body'   => $decoded,
-            'raw'    => $rawText,
-        ];
-    }//end request()
+		$decoded = [];
+		if ($rawText !== '') {
+			$maybe = json_decode($rawText, true);
+			if (is_array($maybe) === true) {
+				$decoded = $maybe;
+			}
+		}
+
+		return [
+			'status' => $status,
+			'body' => $decoded,
+			'raw' => $rawText,
+		];
+	}//end request()
 }//end class

@@ -29,7 +29,10 @@
 						{{ destination }}
 					</li>
 					<li v-if="downloadUrl">
-						<a :href="downloadUrl" :download="downloadName" rel="noopener">
+						<a
+							:href="downloadUrl"
+							:download="downloadName"
+							rel="noopener">
 							{{ t('pipelinq', 'Download sample file') }}
 						</a>
 					</li>
@@ -48,10 +51,10 @@
 			</NcNoteCard>
 		</div>
 		<template #actions>
-			<NcButton :disabled="busy" type="tertiary" @click="rerun">
+			<NcButton :disabled="busy" variant="tertiary" @click="rerun">
 				{{ t('pipelinq', 'Run again') }}
 			</NcButton>
-			<NcButton type="primary" @click="$emit('close')">
+			<NcButton variant="primary" @click="$emit('close')">
 				{{ t('pipelinq', 'Close') }}
 			</NcButton>
 		</template>
@@ -70,20 +73,24 @@ export default {
 		NcLoadingIcon,
 		NcNoteCard,
 	},
+
 	props: {
 		jobId: {
 			type: String,
 			required: true,
 		},
+
 		initialResult: {
 			type: Object,
 			default: null,
 		},
+
 		autoRun: {
 			type: Boolean,
 			default: true,
 		},
 	},
+
 	emits: ['close', 'completed'],
 	data() {
 		return {
@@ -91,6 +98,7 @@ export default {
 			result: this.initialResult,
 		}
 	},
+
 	computed: {
 		/**
 		 * Sample row count surfaced from the test run result envelope.
@@ -112,6 +120,7 @@ export default {
 			}
 			return 0
 		},
+
 		/**
 		 * Errors collected from the test run result.
 		 *
@@ -124,6 +133,7 @@ export default {
 			const list = this.result.errors || []
 			return Array.isArray(list) ? list : [String(list)]
 		},
+
 		/**
 		 * Optional sample-file download URL surfaced from the result envelope.
 		 *
@@ -135,6 +145,7 @@ export default {
 			}
 			return this.result.download_url || this.result.downloadUrl || null
 		},
+
 		/**
 		 * Filename hint for the sample download (server-provided or derived).
 		 *
@@ -144,8 +155,11 @@ export default {
 			if (this.result === null) {
 				return 'export-test-sample'
 			}
-			return this.result.filename || this.result.fileName || 'export-test-sample'
+			return (
+				this.result.filename || this.result.fileName || 'export-test-sample'
+			)
 		},
+
 		/**
 		 * The format reported in the result, for context.
 		 *
@@ -157,6 +171,7 @@ export default {
 			}
 			return this.result.format || null
 		},
+
 		/**
 		 * The destination type or name reported in the result, for context.
 		 *
@@ -169,11 +184,13 @@ export default {
 			return this.result.destination || this.result.destinationType || null
 		},
 	},
+
 	mounted() {
 		if (this.autoRun && this.result === null) {
 			this.rerun()
 		}
 	},
+
 	methods: {
 		/**
 		 * Execute the test run and update local result.
@@ -184,7 +201,10 @@ export default {
 				const data = await exportApi.testRun(this.jobId)
 				this.result = data || { success: false, errors: ['No response'] }
 			} catch (e) {
-				this.result = { success: false, errors: [e.message || 'Test run failed'] }
+				this.result = {
+					success: false,
+					errors: [e.message || 'Test run failed'],
+				}
 			} finally {
 				this.busy = false
 				this.$emit('completed', this.result)

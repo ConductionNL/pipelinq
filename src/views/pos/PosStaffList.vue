@@ -8,9 +8,11 @@
   -->
 <template>
 	<div class="pos-staff-list">
+		<!-- No heading of its own: the host NcSettingsSection (PosStaffManager, on
+		     the admin page) already names this surface, and a second "POS staff"
+		     title would just repeat it. -->
 		<div class="pos-staff-list__header">
-			<h2>{{ t('pipelinq', 'POS staff') }}</h2>
-			<NcButton type="primary" @click="createNew">
+			<NcButton variant="primary" @click="createNew">
 				{{ t('pipelinq', 'New staff member') }}
 			</NcButton>
 		</div>
@@ -24,18 +26,24 @@
 			<table v-if="staff.length" class="pos-staff-list__table">
 				<thead>
 					<tr>
-						<th>{{ t('pipelinq', 'Display name') }}</th>
-						<th>{{ t('pipelinq', 'Role') }}</th>
-						<th>{{ t('pipelinq', 'Active') }}</th>
-						<th>{{ t('pipelinq', 'Last login') }}</th>
-						<th />
+						<th scope="col">{{ t('pipelinq', 'Display name') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Role') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Active') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Last login') }}</th>
+						<th scope="col" />
 					</tr>
 				</thead>
 				<tbody>
 					<tr v-for="row in staff" :key="row.id">
 						<td>{{ row.displayName }}</td>
 						<td>{{ roleName(row.posRole) }}</td>
-						<td>{{ row.isActive === false ? t('pipelinq', 'No') : t('pipelinq', 'Yes') }}</td>
+						<td>
+							{{
+								row.isActive === false
+									? t('pipelinq', 'No')
+									: t('pipelinq', 'Yes')
+							}}
+						</td>
 						<td>{{ row.lastLoginAt || '—' }}</td>
 						<td>
 							<NcButton @click="edit(row)">
@@ -68,9 +76,11 @@ export default {
 			errorMessage: '',
 		}
 	},
+
 	async mounted() {
 		await Promise.all([this.loadStaff(), this.loadRoles()])
 	},
+
 	methods: {
 		async loadStaff() {
 			this.loading = true
@@ -80,11 +90,14 @@ export default {
 				const response = await axios.get(url)
 				this.staff = response?.data?.staff || []
 			} catch (error) {
-				this.errorMessage = error?.response?.data?.error || t('pipelinq', 'Failed to load staff')
+				this.errorMessage =
+					error?.response?.data?.error
+					|| t('pipelinq', 'Failed to load staff')
 			} finally {
 				this.loading = false
 			}
 		},
+
 		async loadRoles() {
 			try {
 				const url = generateUrl('/apps/pipelinq/api/pos/roles')
@@ -94,15 +107,34 @@ export default {
 				this.roles = []
 			}
 		},
+
 		roleName(id) {
 			const role = this.roles.find((r) => r.id === id)
 			return role?.name || id || '—'
 		},
+
+		/**
+		 * Ask the host to open this row for editing.
+		 *
+		 * POS staff is admin master-data, so this list now lives on the Nextcloud
+		 * admin page (nav-ia-cleanup), which is its own webpack entry with no
+		 * vue-router. It therefore emits instead of routing to a detail page, and
+		 * PosStaffManager opens the form in a dialog.
+		 *
+		 * @param {object} row The staff row.
+		 * @spec openspec/changes/nav-ia-cleanup/specs/nav-ia-cleanup/spec.md#requirement-admin-configuration-lives-on-the-admin-page
+		 */
 		edit(row) {
-			this.$router.push({ name: 'PosStaffDetail', params: { id: row.id } })
+			this.$emit('edit', row.id)
 		},
+
+		/**
+		 * Ask the host to open an empty form.
+		 *
+		 * @spec openspec/changes/nav-ia-cleanup/specs/nav-ia-cleanup/spec.md#requirement-admin-configuration-lives-on-the-admin-page
+		 */
 		createNew() {
-			this.$router.push({ name: 'PosStaffNew' })
+			this.$emit('create')
 		},
 	},
 }

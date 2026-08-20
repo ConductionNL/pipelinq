@@ -39,145 +39,232 @@ use Psr\Log\LoggerInterface;
  * missing query / service failure) and that error envelopes are static
  * strings, never `getMessage()` of the underlying exception.
  */
-class NaviControllerTest extends TestCase
-{
-    /**
-     * Mock request.
-     *
-     * @var IRequest&MockObject
-     */
-    private IRequest $request;
+class NaviControllerTest extends TestCase {
+	/**
+	 * An identifier of the shape the controller itself mints.
+	 *
+	 * @var string
+	 */
+	private const VALID_CONVERSATION_ID = '0123456789abcdef0123456789abcdef';
 
-    /**
-     * Mock service.
-     *
-     * @var NaviService&MockObject
-     */
-    private NaviService $service;
+	/**
+	 * Mock request.
+	 *
+	 * @var IRequest&MockObject
+	 */
+	private IRequest $request;
 
-    /**
-     * Mock user session.
-     *
-     * @var IUserSession&MockObject
-     */
-    private IUserSession $userSession;
+	/**
+	 * Mock service.
+	 *
+	 * @var NaviService&MockObject
+	 */
+	private NaviService $service;
 
-    /**
-     * Mock logger.
-     *
-     * @var LoggerInterface&MockObject
-     */
-    private LoggerInterface $logger;
+	/**
+	 * Mock user session.
+	 *
+	 * @var IUserSession&MockObject
+	 */
+	private IUserSession $userSession;
 
-    /**
-     * Set up the test fixtures.
-     *
-     * @return void
-     */
-    protected function setUp(): void
-    {
-        $this->request     = $this->createMock(IRequest::class);
-        $this->service     = $this->createMock(NaviService::class);
-        $this->userSession = $this->createMock(IUserSession::class);
-        $this->logger      = $this->createMock(LoggerInterface::class);
-    }
+	/**
+	 * Mock logger.
+	 *
+	 * @var LoggerInterface&MockObject
+	 */
+	private LoggerInterface $logger;
 
-    /**
-     * Successful query returns 200 with the service envelope echoed.
-     *
-     * @return void
-     */
-    public function testQueryReturnsOkOnSuccess(): void
-    {
-        $user = $this->createMock(IUser::class);
-        $user->method('getUID')->willReturn('alice');
-        $this->userSession->method('getUser')->willReturn($user);
+	/**
+	 * Set up the test fixtures.
+	 *
+	 * @return void
+	 */
+	protected function setUp(): void {
+		$this->request = $this->createMock(IRequest::class);
+		$this->service = $this->createMock(NaviService::class);
+		$this->userSession = $this->createMock(IUserSession::class);
+		$this->logger = $this->createMock(LoggerInterface::class);
+	}
 
-        $this->request->method('getParam')->willReturnMap([
-            ['query', '', 'How many leads are open?'],
-            ['conversationId', '', 'conv-1'],
-        ]);
+	/**
+	 * A well-formed conversation identifier is accepted: it is handed to the
+	 * service so the turn joins that conversation, and echoed in the payload.
+	 *
+	 * @return void
+	 */
+	public function testQueryReturnsOkOnSuccess(): void {
+		$user = $this->createMock(IUser::class);
+		$user->method('getUID')->willReturn('alice');
+		$this->userSession->method('getUser')->willReturn($user);
 
-        $this->service->expects($this->once())
-            ->method('processQuery')
-            ->with('How many leads are open?', 'alice')
-            ->willReturn([
-                'query'              => 'How many leads are open?',
-                'resultType'         => 'text',
-                'textResponse'       => 'Found 3 records.',
-                'suggestedFollowUps' => ['Trend?'],
-            ]);
+		$this->request->method('getParam')->willReturnMap([
+			['query', '', 'How many leads are open?'],
+			['conversationId', '', self::VALID_CONVERSATION_ID],
+		]);
 
-        $controller = new NaviController($this->request, $this->service, $this->userSession, $this->logger);
-        $response   = $controller->query();
+		$this->service->expects($this->once())
+			->method('processQuery')
+			->with('How many leads are open?', 'alice', self::VALID_CONVERSATION_ID)
+			->willReturn([
+				'query' => 'How many leads are open?',
+				'resultType' => 'text',
+				'textResponse' => 'Found 3 records.',
+				'suggestedFollowUps' => ['Trend?'],
+			]);
 
-        $this->assertSame(Http::STATUS_OK, $response->getStatus());
-        $payload = $response->getData();
-        $this->assertSame('text', $payload['resultType']);
-        $this->assertSame('conv-1', $payload['conversationId']);
-    }
+		$controller = new NaviController($this->request, $this->service, $this->userSession, $this->logger);
+		$response = $controller->query();
 
-    /**
-     * Missing query parameter yields 400.
-     *
-     * @return void
-     */
-    public function testQueryReturnsBadRequestOnMissingQuery(): void
-    {
-        $user = $this->createMock(IUser::class);
-        $user->method('getUID')->willReturn('alice');
-        $this->userSession->method('getUser')->willReturn($user);
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$payload = $response->getData();
+		$this->assertSame('text', $payload['resultType']);
+		$this->assertSame(self::VALID_CONVERSATION_ID, $payload['conversationId']);
+	}
 
-        $this->request->method('getParam')->willReturn('');
+	/**
+	 * A first turn sends no identifier, so the controller mints one: the
+	 * payload carries a usable identifier rather than null, and the service is
+	 * given the same value so the turn is recorded under it.
+	 *
+	 * @return void
+	 */
+	public function testQueryMintsConversationIdWhenClientSendsNone(): void {
+		$user = $this->createMock(IUser::class);
+		$user->method('getUID')->willReturn('alice');
+		$this->userSession->method('getUser')->willReturn($user);
 
-        $controller = new NaviController($this->request, $this->service, $this->userSession, $this->logger);
-        $response   = $controller->query();
+		$this->request->method('getParam')->willReturnMap([
+			['query', '', 'How many leads are open?'],
+			['conversationId', '', ''],
+		]);
 
-        $this->assertSame(Http::STATUS_BAD_REQUEST, $response->getStatus());
-        $this->assertSame('Missing query', $response->getData()['message']);
-    }
+		$seen = null;
+		$this->service->expects($this->once())
+			->method('processQuery')
+			->willReturnCallback(
+				static function (string $query, string $userId, ?string $conversationId = null) use (&$seen): array {
+					$seen = $conversationId;
+					return [
+						'query' => $query,
+						'resultType' => 'text',
+						'textResponse' => 'Found 3 records.',
+						'suggestedFollowUps' => [],
+					];
+				}
+			);
 
-    /**
-     * Unauthenticated request returns 401 with a static message.
-     *
-     * @return void
-     */
-    public function testQueryReturnsUnauthorizedWithoutSession(): void
-    {
-        $this->userSession->method('getUser')->willReturn(null);
+		$controller = new NaviController($this->request, $this->service, $this->userSession, $this->logger);
+		$payload = $controller->query()->getData();
 
-        $controller = new NaviController($this->request, $this->service, $this->userSession, $this->logger);
-        $response   = $controller->query();
+		$this->assertNotNull($payload['conversationId']);
+		$this->assertMatchesRegularExpression(
+			NaviController::CONVERSATION_ID_PATTERN,
+			$payload['conversationId']
+		);
+		$this->assertSame($payload['conversationId'], $seen, 'the minted id must reach the service');
+	}
 
-        $this->assertSame(Http::STATUS_UNAUTHORIZED, $response->getStatus());
-        $this->assertSame('Unauthorized', $response->getData()['message']);
-    }
+	/**
+	 * A client-supplied identifier that does not match the minted shape is
+	 * treated as absent. It must never be handed on as part of a store key, so
+	 * a fresh identifier is minted and the caller's string is discarded.
+	 *
+	 * @return void
+	 */
+	public function testQueryRejectsMalformedConversationId(): void {
+		$user = $this->createMock(IUser::class);
+		$user->method('getUID')->willReturn('alice');
+		$this->userSession->method('getUser')->willReturn($user);
 
-    /**
-     * NaviService throwing returns a 500 with a static envelope, never the
-     * `getMessage()` of the underlying exception.
-     *
-     * @return void
-     */
-    public function testQueryReturnsServerErrorOnServiceFailure(): void
-    {
-        $user = $this->createMock(IUser::class);
-        $user->method('getUID')->willReturn('alice');
-        $this->userSession->method('getUser')->willReturn($user);
+		$hostile = '../../etc/passwd';
+		$this->request->method('getParam')->willReturnMap([
+			['query', '', 'How many leads are open?'],
+			['conversationId', '', $hostile],
+		]);
 
-        $this->request->method('getParam')->willReturnMap([
-            ['query', '', 'How many leads?'],
-            ['conversationId', '', ''],
-        ]);
+		$seen = null;
+		$this->service->method('processQuery')->willReturnCallback(
+			static function (string $query, string $userId, ?string $conversationId = null) use (&$seen): array {
+				$seen = $conversationId;
+				return [
+					'query' => $query,
+					'resultType' => 'text',
+					'textResponse' => 'Found 3 records.',
+					'suggestedFollowUps' => [],
+				];
+			}
+		);
 
-        $this->service->method('processQuery')->willThrowException(new \RuntimeException('boom'));
+		$controller = new NaviController($this->request, $this->service, $this->userSession, $this->logger);
+		$payload = $controller->query()->getData();
 
-        $controller = new NaviController($this->request, $this->service, $this->userSession, $this->logger);
-        $response   = $controller->query();
+		$this->assertNotSame($hostile, $seen);
+		$this->assertNotSame($hostile, $payload['conversationId']);
+		$this->assertMatchesRegularExpression(
+			NaviController::CONVERSATION_ID_PATTERN,
+			$payload['conversationId']
+		);
+	}
 
-        $this->assertSame(Http::STATUS_INTERNAL_SERVER_ERROR, $response->getStatus());
-        $payload = $response->getData();
-        $this->assertSame('Navi unavailable', $payload['message']);
-        $this->assertStringNotContainsString('boom', $payload['message']);
-    }
+	/**
+	 * Missing query parameter yields 400.
+	 *
+	 * @return void
+	 */
+	public function testQueryReturnsBadRequestOnMissingQuery(): void {
+		$user = $this->createMock(IUser::class);
+		$user->method('getUID')->willReturn('alice');
+		$this->userSession->method('getUser')->willReturn($user);
+
+		$this->request->method('getParam')->willReturn('');
+
+		$controller = new NaviController($this->request, $this->service, $this->userSession, $this->logger);
+		$response = $controller->query();
+
+		$this->assertSame(Http::STATUS_BAD_REQUEST, $response->getStatus());
+		$this->assertSame('Missing query', $response->getData()['message']);
+	}
+
+	/**
+	 * Unauthenticated request returns 401 with a static message.
+	 *
+	 * @return void
+	 */
+	public function testQueryReturnsUnauthorizedWithoutSession(): void {
+		$this->userSession->method('getUser')->willReturn(null);
+
+		$controller = new NaviController($this->request, $this->service, $this->userSession, $this->logger);
+		$response = $controller->query();
+
+		$this->assertSame(Http::STATUS_UNAUTHORIZED, $response->getStatus());
+		$this->assertSame('Unauthorized', $response->getData()['message']);
+	}
+
+	/**
+	 * NaviService throwing returns a 500 with a static envelope, never the
+	 * `getMessage()` of the underlying exception.
+	 *
+	 * @return void
+	 */
+	public function testQueryReturnsServerErrorOnServiceFailure(): void {
+		$user = $this->createMock(IUser::class);
+		$user->method('getUID')->willReturn('alice');
+		$this->userSession->method('getUser')->willReturn($user);
+
+		$this->request->method('getParam')->willReturnMap([
+			['query', '', 'How many leads?'],
+			['conversationId', '', ''],
+		]);
+
+		$this->service->method('processQuery')->willThrowException(new \RuntimeException('boom'));
+
+		$controller = new NaviController($this->request, $this->service, $this->userSession, $this->logger);
+		$response = $controller->query();
+
+		$this->assertSame(Http::STATUS_INTERNAL_SERVER_ERROR, $response->getStatus());
+		$payload = $response->getData();
+		$this->assertSame('Navi unavailable', $payload['message']);
+		$this->assertStringNotContainsString('boom', $payload['message']);
+	}
 }

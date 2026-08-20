@@ -48,7 +48,7 @@ Pipelinq is a Nextcloud CRM and customer interaction app for municipal KCC (Klan
 | Pipeline Insights | Stage revenue summaries, stale lead detection, aging indicators | Planned | TEC 4.1, 4.2 | [pipeline-insights.md](pipeline-insights.md) |
 | Contactmomenten | Core CRUD and lifecycle for registered client interaction records | Planned | GEMMA Callcenter; VNG Klantinteracties | [contactmomenten.md](contactmomenten.md) |
 | Contactmomenten Rapportage | Management dashboards and KPI reporting on contact moments | Planned | GEMMA Callcenter; TEC 4.1–4.2 | [contactmomenten-rapportage.md](contactmomenten-rapportage.md) |
-| Klantbeeld 360 | Unified 360-degree citizen/client profile view | Planned | GEMMA CRM; TEC 1.4 | [klantbeeld-360.md](klantbeeld-360.md) |
+| Customer 360 | Unified 360-degree citizen/client profile view | Planned | GEMMA CRM; TEC 1.4 | [customer-360.md](customer-360.md) |
 | Kennisbank | Searchable knowledge base for KCC agents with article lifecycle | Planned | GEMMA Callcenter; TEC 3.5 | [kennisbank.md](kennisbank.md) |
 | Terugbel- & Taakbeheer | Callback requests and follow-up task assignment with deadline tracking | Planned | GEMMA Callcenter; TEC 3.2–3.3 | [terugbel-taakbeheer.md](terugbel-taakbeheer.md) |
 | Queue Management | Priority queues and skill-based routing for requests and leads | Planned | GEMMA Klantgeleiding; TEC 3.2 | [queue-management.md](queue-management.md) |
@@ -59,6 +59,7 @@ Pipelinq is a Nextcloud CRM and customer interaction app for municipal KCC (Klan
 | Email & Calendar Sync | Sync emails and calendar events to CRM entities | Planned | TEC 5.1; vCard RFC 6350 | [email-calendar-sync.md](email-calendar-sync.md) |
 | Public Intake Forms | Public-facing intake forms for citizen self-service | Planned | GEMMA Klantgeleiding; TEC 3.6 | [public-intake-forms.md](public-intake-forms.md) |
 | Product Catalog Quoting | Quotation generation from product catalog line items | Planned | TEC 1.8 | [product-catalog-quoting.md](product-catalog-quoting.md) |
+| CRM MCP Tool Surface | Agent-addressable CRM tools (clients, leads, forecast, create-lead, log-contactmoment) for the Nextcloud Hub Assistant | Implemented | Model Context Protocol; OpenRegister `IMcpToolProvider` | [crm-mcp-tool-surface.md](crm-mcp-tool-surface.md) |
 
 ## Feature Groups
 
@@ -95,7 +96,7 @@ Features required for Dutch municipal KCC-werkplek deployments. Demand validated
 | Queue Management | Government CRM/KCC tooling | [queue-management.md](queue-management.md) |
 | Klachtenregistratie | 141 tenders, 637 requirements | [klachtenregistratie.md](klachtenregistratie.md) |
 | Kennisbank | 51/52 KCC tenders | [kennisbank.md](kennisbank.md) |
-| Klantbeeld 360 | KCC citizen profile | [klantbeeld-360.md](klantbeeld-360.md) |
+| Customer 360 | KCC citizen profile | [customer-360.md](customer-360.md) |
 | KCC Werkplek | Municipal KCC | [kcc-werkplek.md](kcc-werkplek.md) |
 | Omnichannel Registration | Channel-aware logging | [omnichannel-registratie.md](omnichannel-registratie.md) |
 
@@ -119,6 +120,7 @@ Advanced features for larger deployments.
 | Email & Calendar Sync | [email-calendar-sync.md](email-calendar-sync.md) |
 | Public Intake Forms | [public-intake-forms.md](public-intake-forms.md) |
 | Product Catalog Quoting | [product-catalog-quoting.md](product-catalog-quoting.md) |
+| CRM MCP Tool Surface | [crm-mcp-tool-surface.md](crm-mcp-tool-surface.md) |
 
 ### Infrastructure
 
@@ -155,7 +157,7 @@ contact-relationship-mapping → contact-relationship-mapping.md
 omnichannel-registratie → omnichannel-registratie.md
 contactmomenten         → contactmomenten.md
 contactmomenten-rapportage → contactmomenten-rapportage.md
-klantbeeld-360          → klantbeeld-360.md
+customer-360            → customer-360.md
 kennisbank              → kennisbank.md
 knowledge-base          → kennisbank.md
 terugbel-taakbeheer     → terugbel-taakbeheer.md
@@ -172,4 +174,5 @@ register-i18n           → register-i18n.md
 openregister-integration → openregister-integration.md
 admin-settings          → admin-settings.md
 prometheus-metrics      → prometheus-metrics.md
+crm-mcp-tool-surface    → crm-mcp-tool-surface.md
 ```

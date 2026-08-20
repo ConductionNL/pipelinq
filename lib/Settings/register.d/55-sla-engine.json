@@ -1,479 +1,535 @@
 {
-    "components": {
-        "registers": {
-            "sla": {
-                "slug": "sla",
-                "title": "Pipelinq SLA",
-                "version": "1.0.0",
-                "description": "Service Level Agreement engine register: SLA policies (per-tier, per-applies-to) and immutable breach-event audit records. Tracks per-object SLA targets, escalation chains, holiday-aware deadlines and pause/resume timer state.",
-                "published": false,
-                "schemas": [
-                    "slaPolicy",
-                    "slaBreachEvent"
-                ],
-                "tablePrefix": "pq_sla_",
-                "folder": "Pipelinq SLA"
-            }
-        },
-        "schemas": {
-            "slaPolicy": {
-                "slug": "slaPolicy",
-                "title": "SLA Policy",
-                "icon": "ClockAlertOutline",
-                "version": "1.0.0",
-                "summary": "A Service Level Agreement policy: tier-scoped response/resolution targets and escalation chain.",
-                "description": "Defines SLA targets (acknowledgement, first-response, resolution) and escalation chain for one or more tracked object types. Resolved at object-creation time and snapshot onto the object via slaStatus (policy immutability per object).",
-                "@type": "Thing",
-                "required": [
-                    "name",
-                    "appliesTo",
-                    "customerTier",
-                    "targets"
-                ],
-                "properties": {
-                    "name": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 255,
-                        "description": "Human-readable policy name (e.g. 'Standaard request-SLA', 'Goud-tier klant-SLA')."
-                    },
-                    "description": {
-                        "type": "string",
-                        "description": "Long-form policy description."
-                    },
-                    "appliesTo": {
-                        "type": "string",
-                        "enum": [
-                            "request",
-                            "klacht",
-                            "callback",
-                            "return",
-                            "*"
-                        ],
-                        "description": "Scope: tracked object type this policy applies to. '*' = catch-all baseline."
-                    },
-                    "customerTier": {
-                        "type": "string",
-                        "enum": [
-                            "bronze",
-                            "silver",
-                            "gold",
-                            "platinum",
-                            "*"
-                        ],
-                        "default": "*",
-                        "description": "Tier match: bronze, silver, gold, platinum, or '*' (any tier)."
-                    },
-                    "customerScope": {
-                        "type": "object",
-                        "description": "Optional per-customer override. Null = all customers within tier.",
-                        "properties": {
-                            "organisationIds": {
-                                "type": "array",
-                                "items": {
-                                    "type": "string"
-                                }
-                            },
-                            "contractIds": {
-                                "type": "array",
-                                "items": {
-                                    "type": "string"
-                                }
-                            }
-                        }
-                    },
-                    "targets": {
-                        "type": "array",
-                        "minItems": 1,
-                        "description": "Array of target objects (acknowledgement / firstResponse / resolution / callback).",
-                        "items": {
-                            "type": "object",
-                            "required": [
-                                "kind",
-                                "duration",
-                                "calendar"
-                            ],
-                            "properties": {
-                                "kind": {
-                                    "type": "string",
-                                    "enum": [
-                                        "acknowledgement",
-                                        "firstResponse",
-                                        "resolution",
-                                        "callback"
-                                    ]
-                                },
-                                "duration": {
-                                    "type": "string",
-                                    "description": "ISO 8601 duration: PT4H, P1D, P3W, etc."
-                                },
-                                "calendar": {
-                                    "type": "string",
-                                    "enum": [
-                                        "24x7",
-                                        "business-hours",
-                                        "extended-business-hours"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "escalationChain": {
-                        "type": "array",
-                        "description": "Array of escalation steps. Empty = no escalation.",
-                        "items": {
-                            "type": "object",
-                            "required": [
-                                "triggerAt",
-                                "notify",
-                                "channel"
-                            ],
-                            "properties": {
-                                "triggerAt": {
-                                    "type": "number",
-                                    "description": "Percentage of target consumed: 0.8 = 80%, 1.0 = exactly, 1.5 = 50% over."
-                                },
-                                "notify": {
-                                    "type": "string",
-                                    "enum": [
-                                        "assignee",
-                                        "team-lead",
-                                        "manager",
-                                        "director",
-                                        "customer",
-                                        "webhook"
-                                    ]
-                                },
-                                "channel": {
-                                    "type": "string",
-                                    "enum": [
-                                        "email",
-                                        "nextcloud-notification",
-                                        "whatsapp",
-                                        "sms",
-                                        "webhook"
-                                    ]
-                                },
-                                "webhookUrl": {
-                                    "type": "string",
-                                    "description": "Optional per-step webhook URL (when channel=webhook)."
-                                }
-                            }
-                        }
-                    },
-                    "pauseConditions": {
-                        "type": "array",
-                        "description": "Status values that pause the timer (e.g. ['awaiting-customer', 'on-hold']).",
-                        "items": {
-                            "type": "string"
-                        }
-                    },
-                    "holidayCalendar": {
-                        "type": "string",
-                        "default": "nl-feestdagen-rijksoverheid",
-                        "description": "Holiday calendar name, or comma-separated list for composite."
-                    },
-                    "priority": {
-                        "type": "integer",
-                        "default": 100,
-                        "description": "Tie-breaker (lower wins). Default 100."
-                    },
-                    "active": {
-                        "type": "boolean",
-                        "default": true
-                    },
-                    "validFrom": {
-                        "type": "string",
-                        "format": "date-time"
-                    },
-                    "validUntil": {
-                        "type": "string",
-                        "format": "date-time"
-                    },
-                    "justification": {
-                        "type": "string",
-                        "description": "Required reason for policy creation or edit (audit field, REQ-009)."
-                    },
-                    "status": {
-                        "type": "string",
-                        "enum": [
-                            "draft",
-                            "published",
-                            "archived"
-                        ],
-                        "default": "published"
-                    }
+  "components": {
+    "registers": {
+      "sla": {
+        "slug": "sla",
+        "title": "Pipelinq SLA",
+        "version": "1.0.0",
+        "description": "Service Level Agreement engine register: SLA policies (per-tier, per-applies-to) and immutable breach-event audit records. Tracks per-object SLA targets, escalation chains, holiday-aware deadlines and pause/resume timer state.",
+        "published": false,
+        "schemas": [
+          "slaPolicy",
+          "slaBreachEvent"
+        ],
+        "tablePrefix": "pq_sla_",
+        "folder": "Pipelinq SLA"
+      }
+    },
+    "schemas": {
+      "slaPolicy": {
+        "slug": "slaPolicy",
+        "title": "SLA Policy",
+        "icon": "ClockAlertOutline",
+        "version": "1.0.0",
+        "summary": "A Service Level Agreement policy: tier-scoped response/resolution targets and escalation chain.",
+        "description": "Defines SLA targets (acknowledgement, first-response, resolution) and escalation chain for one or more tracked object types. Resolved at object-creation time and snapshot onto the object via slaStatus (policy immutability per object).",
+        "@type": "Thing",
+        "required": [
+          "name",
+          "appliesTo",
+          "customerTier",
+          "targets"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255,
+            "description": "Human-readable policy name (e.g. 'Standaard request-SLA', 'Goud-tier klant-SLA').",
+            "title": "Name"
+          },
+          "description": {
+            "type": "string",
+            "description": "Long-form policy description.",
+            "title": "Description"
+          },
+          "appliesTo": {
+            "type": "string",
+            "enum": [
+              "request",
+              "complaint",
+              "callback",
+              "return",
+              "*"
+            ],
+            "description": "Scope: tracked object type this policy applies to. '*' = catch-all baseline.",
+            "title": "Applies To"
+          },
+          "customerTier": {
+            "type": "string",
+            "enum": [
+              "bronze",
+              "silver",
+              "gold",
+              "platinum",
+              "*"
+            ],
+            "default": "*",
+            "description": "Tier match: bronze, silver, gold, platinum, or '*' (any tier).",
+            "title": "Customer Tier"
+          },
+          "customerScope": {
+            "type": "object",
+            "description": "Optional per-customer override. Null = all customers within tier.",
+            "properties": {
+              "organisationIds": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "title": "Organisation Ids",
+                "description": "Organisation Ids for this record."
+              },
+              "contractIds": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "title": "Contract Ids",
+                "description": "Contract Ids for this record."
+              }
+            },
+            "title": "Customer Scope"
+          },
+          "targets": {
+            "type": "array",
+            "minItems": 1,
+            "description": "Array of target objects (acknowledgement / firstResponse / resolution / callback).",
+            "items": {
+              "type": "object",
+              "required": [
+                "kind",
+                "duration",
+                "calendar"
+              ],
+              "properties": {
+                "kind": {
+                  "type": "string",
+                  "enum": [
+                    "acknowledgement",
+                    "firstResponse",
+                    "resolution",
+                    "callback"
+                  ],
+                  "title": "Kind",
+                  "description": "Kind for this record."
+                },
+                "duration": {
+                  "type": "string",
+                  "description": "ISO 8601 duration: PT4H, P1D, P3W, etc.",
+                  "title": "Duration"
+                },
+                "calendar": {
+                  "type": "string",
+                  "enum": [
+                    "24x7",
+                    "business-hours",
+                    "extended-business-hours"
+                  ],
+                  "title": "Calendar",
+                  "description": "Calendar for this record."
                 }
+              }
             },
-            "slaBreachEvent": {
-                "slug": "slaBreachEvent",
-                "title": "SLA Breach Event",
-                "icon": "AlertOctagonOutline",
-                "version": "1.0.0",
-                "summary": "Immutable audit record of an SLA escalation firing.",
-                "description": "One record per escalation step firing against a tracked object. Records actor, channel, consumed percentage and acknowledgement state. Append-only by convention.",
-                "@type": "Thing",
-                "required": [
-                    "policyId",
-                    "targetObjectType",
-                    "targetObjectId",
-                    "targetKind",
-                    "breachedAt",
-                    "escalationLevel"
-                ],
-                "properties": {
-                    "policyId": {
-                        "type": "string",
-                        "description": "UUID of the sla_policy that triggered."
-                    },
-                    "targetObjectType": {
-                        "type": "string",
-                        "description": "Type of tracked object: request, klacht, callback, return, etc."
-                    },
-                    "targetObjectId": {
-                        "type": "string",
-                        "description": "UUID of the tracked object."
-                    },
-                    "targetKind": {
-                        "type": "string",
-                        "enum": [
-                            "acknowledgement",
-                            "firstResponse",
-                            "resolution",
-                            "callback"
-                        ]
-                    },
-                    "breachedAt": {
-                        "type": "string",
-                        "format": "date-time",
-                        "description": "Timestamp the threshold was crossed (true crossing time, not detection time)."
-                    },
-                    "consumedPercentage": {
-                        "type": "number",
-                        "description": "Consumption at firing: 1.0 = exactly at deadline, 1.5 = 50% over."
-                    },
-                    "escalationLevel": {
-                        "type": "integer",
-                        "minimum": 1,
-                        "description": "Which step in the escalation chain (1-indexed). Prevents duplicate fires."
-                    },
-                    "notifiedActors": {
-                        "type": "array",
-                        "description": "User IDs / external addresses notified, or 'failed:<channel>' placeholders.",
-                        "items": {
-                            "type": "string"
-                        }
-                    },
-                    "channel": {
-                        "type": "string",
-                        "description": "Delivery channel actually used."
-                    },
-                    "acknowledged": {
-                        "type": "boolean",
-                        "default": false
-                    },
-                    "acknowledgedAt": {
-                        "type": "string",
-                        "format": "date-time"
-                    },
-                    "acknowledgedBy": {
-                        "type": "string"
-                    },
-                    "resolvedAt": {
-                        "type": "string",
-                        "format": "date-time",
-                        "description": "When the underlying object reached its target state."
-                    }
+            "title": "Targets"
+          },
+          "escalationChain": {
+            "type": "array",
+            "description": "Array of escalation steps. Empty = no escalation.",
+            "items": {
+              "type": "object",
+              "required": [
+                "triggerAt",
+                "notify",
+                "channel"
+              ],
+              "properties": {
+                "triggerAt": {
+                  "type": "number",
+                  "description": "Percentage of target consumed: 0.8 = 80%, 1.0 = exactly, 1.5 = 50% over.",
+                  "title": "Trigger At"
+                },
+                "notify": {
+                  "type": "string",
+                  "enum": [
+                    "assignee",
+                    "team-lead",
+                    "manager",
+                    "director",
+                    "customer",
+                    "webhook"
+                  ],
+                  "title": "Notify",
+                  "description": "Notify for this record."
+                },
+                "channel": {
+                  "type": "string",
+                  "enum": [
+                    "email",
+                    "nextcloud-notification",
+                    "whatsapp",
+                    "sms",
+                    "webhook"
+                  ],
+                  "title": "Channel",
+                  "description": "Channel for this record."
+                },
+                "webhookUrl": {
+                  "type": "string",
+                  "description": "Optional per-step webhook URL (when channel=webhook).",
+                  "title": "Webhook URL"
+                },
+                "templateId": {
+                  "type": "string",
+                  "description": "Optional approved messageTemplate UUID used for a whatsapp escalation to a customer. Required when channel=whatsapp and no open 24h session window exists (business-initiated, template-gated per Meta policy); ignored for other channels.",
+                  "title": "Template ID"
                 }
-            }
+              }
+            },
+            "title": "Escalation Chain"
+          },
+          "pauseConditions": {
+            "type": "array",
+            "description": "Status values that pause the timer (e.g. ['awaiting-customer', 'on-hold']).",
+            "items": {
+              "type": "string"
+            },
+            "title": "Pause Conditions"
+          },
+          "holidayCalendar": {
+            "type": "string",
+            "default": "nl-feestdagen-rijksoverheid",
+            "description": "Holiday calendar name, or comma-separated list for composite.",
+            "title": "Holiday Calendar"
+          },
+          "priority": {
+            "type": "integer",
+            "default": 100,
+            "description": "Tie-breaker (lower wins). Default 100.",
+            "title": "Priority"
+          },
+          "active": {
+            "type": "boolean",
+            "default": true,
+            "title": "Active",
+            "description": "Active for this record."
+          },
+          "validFrom": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Valid From",
+            "description": "Valid From for this record."
+          },
+          "validUntil": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Valid Until",
+            "description": "Valid Until for this record."
+          },
+          "justification": {
+            "type": "string",
+            "description": "Required reason for policy creation or edit (audit field, REQ-009).",
+            "title": "Justification"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "published",
+              "archived"
+            ],
+            "default": "published",
+            "title": "Status",
+            "description": "Current lifecycle status of this record."
+          }
+        }
+      },
+      "slaBreachEvent": {
+        "slug": "slaBreachEvent",
+        "title": "SLA Breach Event",
+        "icon": "AlertOctagonOutline",
+        "version": "1.0.0",
+        "summary": "Immutable audit record of an SLA escalation firing.",
+        "description": "One record per escalation step firing against a tracked object. Records actor, channel, consumed percentage and acknowledgement state. Append-only by convention.",
+        "@type": "Thing",
+        "required": [
+          "policyId",
+          "targetObjectType",
+          "targetObjectId",
+          "targetKind",
+          "breachedAt",
+          "escalationLevel"
+        ],
+        "properties": {
+          "policyId": {
+            "type": "string",
+            "description": "UUID of the sla_policy that triggered.",
+            "title": "Policy ID"
+          },
+          "targetObjectType": {
+            "type": "string",
+            "description": "Type of tracked object: request, klacht, callback, return, etc.",
+            "title": "Target Object Type"
+          },
+          "targetObjectId": {
+            "type": "string",
+            "description": "UUID of the tracked object.",
+            "title": "Target Object ID"
+          },
+          "targetKind": {
+            "type": "string",
+            "enum": [
+              "acknowledgement",
+              "firstResponse",
+              "resolution",
+              "callback"
+            ],
+            "title": "Target Kind",
+            "description": "Target Kind for this record."
+          },
+          "breachedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp the threshold was crossed (true crossing time, not detection time).",
+            "title": "Breached At"
+          },
+          "consumedPercentage": {
+            "type": "number",
+            "description": "Consumption at firing: 1.0 = exactly at deadline, 1.5 = 50% over.",
+            "title": "Consumed Percentage"
+          },
+          "escalationLevel": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Which step in the escalation chain (1-indexed). Prevents duplicate fires.",
+            "title": "Escalation Level"
+          },
+          "notifiedActors": {
+            "type": "array",
+            "description": "User IDs / contact identifiers notified, or a marker from the audit vocabulary: sent (actor identifier), consent-missing:<channel>, template-missing:<channel>, unsupported:<channel>:<role>, deferred:<channel>:<role>, failed:<channel>, unresolved:<role>.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Notified Actors"
+          },
+          "channel": {
+            "type": "string",
+            "description": "Delivery channel actually used.",
+            "title": "Channel"
+          },
+          "acknowledged": {
+            "type": "boolean",
+            "default": false,
+            "title": "Acknowledged",
+            "description": "Acknowledged for this record."
+          },
+          "acknowledgedAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Acknowledged At",
+            "description": "Timestamp when acknowledged occurred."
+          },
+          "acknowledgedBy": {
+            "type": "string",
+            "title": "Acknowledged By",
+            "description": "Acknowledged By for this record."
+          },
+          "resolvedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the underlying object reached its target state.",
+            "title": "Resolved At"
+          }
+        }
+      }
+    },
+    "objects": [
+      {
+        "@self": {
+          "register": "sla",
+          "schema": "slaPolicy",
+          "slug": "standaard-request-sla"
         },
-        "objects": [
-            {
-                "@self": {
-                    "register": "sla",
-                    "schema": "slaPolicy",
-                    "slug": "standaard-request-sla"
-                },
-                "name": "Standaard request-SLA",
-                "description": "Baseline SLA voor inkomende requests. Bedrijfsuren, NL feestdagen, geen escalatie naar klant.",
-                "appliesTo": "request",
-                "customerTier": "*",
-                "targets": [
-                    {
-                        "kind": "acknowledgement",
-                        "duration": "PT4H",
-                        "calendar": "business-hours"
-                    },
-                    {
-                        "kind": "resolution",
-                        "duration": "P3W",
-                        "calendar": "business-hours"
-                    }
-                ],
-                "escalationChain": [
-                    {
-                        "triggerAt": 0.8,
-                        "notify": "assignee",
-                        "channel": "nextcloud-notification"
-                    },
-                    {
-                        "triggerAt": 1.0,
-                        "notify": "team-lead",
-                        "channel": "email"
-                    }
-                ],
-                "pauseConditions": [
-                    "awaiting-customer",
-                    "on-hold"
-                ],
-                "holidayCalendar": "nl-feestdagen-rijksoverheid",
-                "priority": 100,
-                "active": true,
-                "justification": "Initiele baseline voor alle requests (seed data).",
-                "status": "published"
-            },
-            {
-                "@self": {
-                    "register": "sla",
-                    "schema": "slaPolicy",
-                    "slug": "goud-tier-request-sla"
-                },
-                "name": "Goud-tier klant-SLA",
-                "description": "Strakkere targets voor goud-tier klanten met 24x7-acknowledgement.",
-                "appliesTo": "request",
-                "customerTier": "gold",
-                "targets": [
-                    {
-                        "kind": "acknowledgement",
-                        "duration": "PT1H",
-                        "calendar": "24x7"
-                    },
-                    {
-                        "kind": "firstResponse",
-                        "duration": "PT4H",
-                        "calendar": "24x7"
-                    },
-                    {
-                        "kind": "resolution",
-                        "duration": "P1W",
-                        "calendar": "business-hours"
-                    }
-                ],
-                "escalationChain": [
-                    {
-                        "triggerAt": 0.8,
-                        "notify": "assignee",
-                        "channel": "nextcloud-notification"
-                    },
-                    {
-                        "triggerAt": 1.0,
-                        "notify": "manager",
-                        "channel": "email"
-                    },
-                    {
-                        "triggerAt": 1.5,
-                        "notify": "director",
-                        "channel": "email"
-                    }
-                ],
-                "pauseConditions": [
-                    "awaiting-customer"
-                ],
-                "holidayCalendar": "nl-feestdagen-rijksoverheid",
-                "priority": 10,
-                "active": true,
-                "justification": "Goud-tier contractueel commitment (seed data).",
-                "status": "published"
-            },
-            {
-                "@self": {
-                    "register": "sla",
-                    "schema": "slaPolicy",
-                    "slug": "avg-datalek-klacht-sla"
-                },
-                "name": "AVG datalek-klacht SLA",
-                "description": "AVG Art. 33 72-uurs meldplicht voor datalek-klachten. 24x7 strikte deadline.",
-                "appliesTo": "klacht",
-                "customerTier": "*",
-                "targets": [
-                    {
-                        "kind": "acknowledgement",
-                        "duration": "PT1H",
-                        "calendar": "24x7"
-                    },
-                    {
-                        "kind": "resolution",
-                        "duration": "PT72H",
-                        "calendar": "24x7"
-                    }
-                ],
-                "escalationChain": [
-                    {
-                        "triggerAt": 0.5,
-                        "notify": "manager",
-                        "channel": "email"
-                    },
-                    {
-                        "triggerAt": 0.8,
-                        "notify": "director",
-                        "channel": "email"
-                    },
-                    {
-                        "triggerAt": 1.0,
-                        "notify": "director",
-                        "channel": "nextcloud-notification"
-                    }
-                ],
-                "pauseConditions": [],
-                "holidayCalendar": "none",
-                "priority": 5,
-                "active": true,
-                "justification": "AVG Art. 33 wettelijke meldplicht (seed data).",
-                "status": "published"
-            },
-            {
-                "@self": {
-                    "register": "sla",
-                    "schema": "slaPolicy",
-                    "slug": "callback-default-sla"
-                },
-                "name": "Standaard callback-SLA",
-                "description": "Terugbel-verzoeken: 2 bedrijfsuren acknowledgement, 1 bedrijfsdag resolution.",
-                "appliesTo": "callback",
-                "customerTier": "*",
-                "targets": [
-                    {
-                        "kind": "acknowledgement",
-                        "duration": "PT2H",
-                        "calendar": "business-hours"
-                    },
-                    {
-                        "kind": "callback",
-                        "duration": "P1D",
-                        "calendar": "business-hours"
-                    }
-                ],
-                "escalationChain": [
-                    {
-                        "triggerAt": 0.8,
-                        "notify": "assignee",
-                        "channel": "nextcloud-notification"
-                    },
-                    {
-                        "triggerAt": 1.0,
-                        "notify": "team-lead",
-                        "channel": "email"
-                    }
-                ],
-                "pauseConditions": [
-                    "awaiting-customer"
-                ],
-                "holidayCalendar": "nl-feestdagen-rijksoverheid",
-                "priority": 100,
-                "active": true,
-                "justification": "Baseline voor terugbel-verzoeken (seed data).",
-                "status": "published"
-            }
-        ]
-    }
+        "name": "Standaard request-SLA",
+        "description": "Baseline SLA voor inkomende requests. Bedrijfsuren, NL feestdagen, geen escalatie naar klant.",
+        "appliesTo": "request",
+        "customerTier": "*",
+        "targets": [
+          {
+            "kind": "acknowledgement",
+            "duration": "PT4H",
+            "calendar": "business-hours"
+          },
+          {
+            "kind": "resolution",
+            "duration": "P3W",
+            "calendar": "business-hours"
+          }
+        ],
+        "escalationChain": [
+          {
+            "triggerAt": 0.8,
+            "notify": "assignee",
+            "channel": "nextcloud-notification"
+          },
+          {
+            "triggerAt": 1.0,
+            "notify": "team-lead",
+            "channel": "email"
+          }
+        ],
+        "pauseConditions": [
+          "awaiting-customer",
+          "on-hold"
+        ],
+        "holidayCalendar": "nl-feestdagen-rijksoverheid",
+        "priority": 100,
+        "active": true,
+        "justification": "Initiele baseline voor alle requests (seed data).",
+        "status": "published"
+      },
+      {
+        "@self": {
+          "register": "sla",
+          "schema": "slaPolicy",
+          "slug": "goud-tier-request-sla"
+        },
+        "name": "Goud-tier klant-SLA",
+        "description": "Strakkere targets voor goud-tier klanten met 24x7-acknowledgement.",
+        "appliesTo": "request",
+        "customerTier": "gold",
+        "targets": [
+          {
+            "kind": "acknowledgement",
+            "duration": "PT1H",
+            "calendar": "24x7"
+          },
+          {
+            "kind": "firstResponse",
+            "duration": "PT4H",
+            "calendar": "24x7"
+          },
+          {
+            "kind": "resolution",
+            "duration": "P1W",
+            "calendar": "business-hours"
+          }
+        ],
+        "escalationChain": [
+          {
+            "triggerAt": 0.8,
+            "notify": "assignee",
+            "channel": "nextcloud-notification"
+          },
+          {
+            "triggerAt": 1.0,
+            "notify": "manager",
+            "channel": "email"
+          },
+          {
+            "triggerAt": 1.5,
+            "notify": "director",
+            "channel": "email"
+          }
+        ],
+        "pauseConditions": [
+          "awaiting-customer"
+        ],
+        "holidayCalendar": "nl-feestdagen-rijksoverheid",
+        "priority": 10,
+        "active": true,
+        "justification": "Goud-tier contractueel commitment (seed data).",
+        "status": "published"
+      },
+      {
+        "@self": {
+          "register": "sla",
+          "schema": "slaPolicy",
+          "slug": "avg-datalek-klacht-sla"
+        },
+        "name": "AVG datalek-klacht SLA",
+        "description": "AVG Art. 33 72-uurs meldplicht voor datalek-klachten. 24x7 strikte deadline.",
+        "appliesTo": "complaint",
+        "customerTier": "*",
+        "targets": [
+          {
+            "kind": "acknowledgement",
+            "duration": "PT1H",
+            "calendar": "24x7"
+          },
+          {
+            "kind": "resolution",
+            "duration": "PT72H",
+            "calendar": "24x7"
+          }
+        ],
+        "escalationChain": [
+          {
+            "triggerAt": 0.5,
+            "notify": "manager",
+            "channel": "email"
+          },
+          {
+            "triggerAt": 0.8,
+            "notify": "director",
+            "channel": "email"
+          },
+          {
+            "triggerAt": 1.0,
+            "notify": "director",
+            "channel": "nextcloud-notification"
+          }
+        ],
+        "pauseConditions": [],
+        "holidayCalendar": "none",
+        "priority": 5,
+        "active": true,
+        "justification": "AVG Art. 33 wettelijke meldplicht (seed data).",
+        "status": "published"
+      },
+      {
+        "@self": {
+          "register": "sla",
+          "schema": "slaPolicy",
+          "slug": "callback-default-sla"
+        },
+        "name": "Standaard callback-SLA",
+        "description": "Terugbel-verzoeken: 2 bedrijfsuren acknowledgement, 1 bedrijfsdag resolution.",
+        "appliesTo": "callback",
+        "customerTier": "*",
+        "targets": [
+          {
+            "kind": "acknowledgement",
+            "duration": "PT2H",
+            "calendar": "business-hours"
+          },
+          {
+            "kind": "callback",
+            "duration": "P1D",
+            "calendar": "business-hours"
+          }
+        ],
+        "escalationChain": [
+          {
+            "triggerAt": 0.8,
+            "notify": "assignee",
+            "channel": "nextcloud-notification"
+          },
+          {
+            "triggerAt": 1.0,
+            "notify": "team-lead",
+            "channel": "email"
+          }
+        ],
+        "pauseConditions": [
+          "awaiting-customer"
+        ],
+        "holidayCalendar": "nl-feestdagen-rijksoverheid",
+        "priority": 100,
+        "active": true,
+        "justification": "Baseline voor terugbel-verzoeken (seed data).",
+        "status": "published"
+      }
+    ]
+  }
 }

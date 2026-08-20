@@ -16,7 +16,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/retrofit-2026-05-24-annotate-pipelinq/tasks.md#task-35
+ * @spec openspec/specs/prospect-discovery/spec.md#requirement-ideal-customer-profile-configuration
  */
 
 declare(strict_types=1);
@@ -26,232 +26,220 @@ namespace OCA\Pipelinq\Service;
 /**
  * Service for reading/writing ICP settings via IAppConfig.
  */
-class IcpConfigService
-{
-    /**
-     * ICP config keys for hash calculation.
-     *
-     * @var array<string>
-     */
-    private const ICP_KEYS = [
-        'icp_sbi_codes',
-        'icp_employee_count_min',
-        'icp_employee_count_max',
-        'icp_provinces',
-        'icp_cities',
-        'icp_legal_forms',
-        'icp_exclude_inactive',
-        'icp_keywords',
-        'icp_kvk_api_key',
-        'icp_opencorporates_enabled',
-    ];
+class IcpConfigService {
+	/**
+	 * ICP config keys for hash calculation.
+	 *
+	 * @var array<string>
+	 */
+	private const ICP_KEYS = [
+		'icp_sbi_codes',
+		'icp_employee_count_min',
+		'icp_employee_count_max',
+		'icp_provinces',
+		'icp_cities',
+		'icp_legal_forms',
+		'icp_exclude_inactive',
+		'icp_keywords',
+		'icp_kvk_api_key',
+		'icp_opencorporates_enabled',
+	];
 
-    /**
-     * Mapping of data keys to JSON array config keys.
-     *
-     * @var array<string, string>
-     */
-    private const JSON_ARRAY_FIELDS = [
-        'sbiCodes'   => 'icp_sbi_codes',
-        'provinces'  => 'icp_provinces',
-        'cities'     => 'icp_cities',
-        'legalForms' => 'icp_legal_forms',
-        'keywords'   => 'icp_keywords',
-    ];
+	/**
+	 * Mapping of data keys to JSON array config keys.
+	 *
+	 * @var array<string, string>
+	 */
+	private const JSON_ARRAY_FIELDS = [
+		'sbiCodes' => 'icp_sbi_codes',
+		'provinces' => 'icp_provinces',
+		'cities' => 'icp_cities',
+		'legalForms' => 'icp_legal_forms',
+		'keywords' => 'icp_keywords',
+	];
 
-    /**
-     * Constructor.
-     *
-     * @param IcpConfigReader $reader The config reader.
-     */
-    public function __construct(
-        private IcpConfigReader $reader,
-    ) {
-    }//end __construct()
+	/**
+	 * Constructor.
+	 *
+	 * @param IcpConfigReader $reader The config reader.
+	 */
+	public function __construct(
+		private IcpConfigReader $reader,
+	) {
+	}//end __construct()
 
-    /**
-     * Get all ICP settings.
-     *
-     * @return array The ICP configuration.
-     * @spec   openspec/changes/reverse-2026-05-26-be-prospect/tasks.md#task-9
-     */
-    public function getSettings(): array
-    {
-        $kvkApiKey = $this->reader->getString(key: 'icp_kvk_api_key');
+	/**
+	 * Get all ICP settings.
+	 *
+	 * @return array The ICP configuration.
+	 * @spec   openspec/changes/reverse-2026-05-26-be-prospect/tasks.md#task-9
+	 */
+	public function getSettings(): array {
+		$kvkApiKey = $this->reader->getString(key: 'icp_kvk_api_key');
 
-        return [
-            'sbiCodes'              => $this->reader->getJsonArray(key: 'icp_sbi_codes'),
-            'employeeCountMin'      => $this->reader->getInt(key: 'icp_employee_count_min'),
-            'employeeCountMax'      => $this->reader->getInt(key: 'icp_employee_count_max'),
-            'provinces'             => $this->reader->getJsonArray(key: 'icp_provinces'),
-            'cities'                => $this->reader->getJsonArray(key: 'icp_cities'),
-            'legalForms'            => $this->reader->getJsonArray(key: 'icp_legal_forms'),
-            'excludeInactive'       => $this->reader->isBoolTrue(key: 'icp_exclude_inactive'),
-            'keywords'              => $this->reader->getJsonArray(key: 'icp_keywords'),
-            'kvkApiKey'             => $this->maskApiKey(apiKey: $kvkApiKey),
-            'openCorporatesEnabled' => $this->reader->isBoolTrue(
-                key: 'icp_opencorporates_enabled',
-                default: 'false'
-            ),
-        ];
-    }//end getSettings()
+		return [
+			'sbiCodes' => $this->reader->getJsonArray(key: 'icp_sbi_codes'),
+			'employeeCountMin' => $this->reader->getInt(key: 'icp_employee_count_min'),
+			'employeeCountMax' => $this->reader->getInt(key: 'icp_employee_count_max'),
+			'provinces' => $this->reader->getJsonArray(key: 'icp_provinces'),
+			'cities' => $this->reader->getJsonArray(key: 'icp_cities'),
+			'legalForms' => $this->reader->getJsonArray(key: 'icp_legal_forms'),
+			'excludeInactive' => $this->reader->isBoolTrue(key: 'icp_exclude_inactive'),
+			'keywords' => $this->reader->getJsonArray(key: 'icp_keywords'),
+			'kvkApiKey' => $this->maskApiKey(apiKey: $kvkApiKey),
+			'openCorporatesEnabled' => $this->reader->isBoolTrue(
+				key: 'icp_opencorporates_enabled',
+				default: 'false'
+			),
+		];
+	}//end getSettings()
 
-    /**
-     * Save ICP settings.
-     *
-     * @param array $data The ICP data to save.
-     *
-     * @return string The ICP hash.
-     * @spec   openspec/changes/reverse-2026-05-26-be-prospect/tasks.md#task-11
-     */
-    public function saveSettings(array $data): string
-    {
-        $this->saveJsonArrayFields(data: $data);
-        $this->saveIntegerFields(data: $data);
-        $this->saveBooleanFields(data: $data);
-        $this->saveApiKeyField(data: $data);
+	/**
+	 * Save ICP settings.
+	 *
+	 * @param array $data The ICP data to save.
+	 *
+	 * @return string The ICP hash.
+	 * @spec   openspec/changes/reverse-2026-05-26-be-prospect/tasks.md#task-11
+	 */
+	public function saveSettings(array $data): string {
+		$this->saveJsonArrayFields(data: $data);
+		$this->saveIntegerFields(data: $data);
+		$this->saveBooleanFields(data: $data);
+		$this->saveApiKeyField(data: $data);
 
-        return $this->getIcpHash();
-    }//end saveSettings()
+		return $this->getIcpHash();
+	}//end saveSettings()
 
-    /**
-     * Check if ICP is configured.
-     *
-     * @return bool True if at least one ICP criterion is set.
-     * @spec   openspec/changes/reverse-2026-05-26-be-prospect/tasks.md#task-10
-     */
-    public function isConfigured(): bool
-    {
-        $sbiCodes = $this->reader->getJsonArray(key: 'icp_sbi_codes');
+	/**
+	 * Check if ICP is configured.
+	 *
+	 * @return bool True if at least one ICP criterion is set.
+	 * @spec   openspec/changes/reverse-2026-05-26-be-prospect/tasks.md#task-10
+	 */
+	public function isConfigured(): bool {
+		$sbiCodes = $this->reader->getJsonArray(key: 'icp_sbi_codes');
 
-        return count($sbiCodes) > 0;
-    }//end isConfigured()
+		return count($sbiCodes) > 0;
+	}//end isConfigured()
 
-    /**
-     * Get the raw KVK API key.
-     *
-     * @return string The API key.
-     */
-    public function getKvkApiKey(): string
-    {
-        return $this->reader->getString(key: 'icp_kvk_api_key');
-    }//end getKvkApiKey()
+	/**
+	 * Get the raw KVK API key.
+	 *
+	 * @return string The API key.
+	 */
+	public function getKvkApiKey(): string {
+		return $this->reader->getString(key: 'icp_kvk_api_key');
+	}//end getKvkApiKey()
 
-    /**
-     * Get ICP criteria for scoring.
-     *
-     * @return array The raw ICP criteria.
-     * @spec   openspec/changes/reverse-2026-05-26-be-prospect/tasks.md#task-7
-     */
-    public function getCriteria(): array
-    {
-        return [
-            'sbiCodes'         => $this->reader->getJsonArray(key: 'icp_sbi_codes'),
-            'employeeCountMin' => $this->reader->getInt(key: 'icp_employee_count_min'),
-            'employeeCountMax' => $this->reader->getInt(key: 'icp_employee_count_max'),
-            'provinces'        => $this->reader->getJsonArray(key: 'icp_provinces'),
-            'legalForms'       => $this->reader->getJsonArray(key: 'icp_legal_forms'),
-            'excludeInactive'  => $this->reader->isBoolTrue(key: 'icp_exclude_inactive'),
-        ];
-    }//end getCriteria()
+	/**
+	 * Get ICP criteria for scoring.
+	 *
+	 * @return array The raw ICP criteria.
+	 * @spec   openspec/changes/reverse-2026-05-26-be-prospect/tasks.md#task-7
+	 */
+	public function getCriteria(): array {
+		return [
+			'sbiCodes' => $this->reader->getJsonArray(key: 'icp_sbi_codes'),
+			'employeeCountMin' => $this->reader->getInt(key: 'icp_employee_count_min'),
+			'employeeCountMax' => $this->reader->getInt(key: 'icp_employee_count_max'),
+			'provinces' => $this->reader->getJsonArray(key: 'icp_provinces'),
+			'legalForms' => $this->reader->getJsonArray(key: 'icp_legal_forms'),
+			'excludeInactive' => $this->reader->isBoolTrue(key: 'icp_exclude_inactive'),
+		];
+	}//end getCriteria()
 
-    /**
-     * Get the ICP hash for cache invalidation.
-     *
-     * @return string The hash of current ICP settings.
-     * @spec   openspec/changes/reverse-2026-05-26-be-prospect/tasks.md#task-8
-     */
-    public function getIcpHash(): string
-    {
-        $values = [];
-        foreach (self::ICP_KEYS as $key) {
-            $values[$key] = $this->reader->getString(key: $key);
-        }
+	/**
+	 * Get the ICP hash for cache invalidation.
+	 *
+	 * @return string The hash of current ICP settings.
+	 * @spec   openspec/changes/reverse-2026-05-26-be-prospect/tasks.md#task-8
+	 */
+	public function getIcpHash(): string {
+		$values = [];
+		foreach (self::ICP_KEYS as $key) {
+			$values[$key] = $this->reader->getString(key: $key);
+		}
 
-        return substr(md5(string: json_encode(value: $values)), offset: 0, length: 8);
-    }//end getIcpHash()
+		return substr(md5(string: json_encode(value: $values)), offset: 0, length: 8);
+	}//end getIcpHash()
 
-    /**
-     * Save JSON array fields from the data.
-     *
-     * @param array $data The ICP data.
-     *
-     * @return void
-     */
-    private function saveJsonArrayFields(array $data): void
-    {
-        foreach (self::JSON_ARRAY_FIELDS as $dataKey => $configKey) {
-            if (isset($data[$dataKey]) === true) {
-                $this->reader->setJsonArray(key: $configKey, value: $data[$dataKey]);
-            }
-        }
-    }//end saveJsonArrayFields()
+	/**
+	 * Save JSON array fields from the data.
+	 *
+	 * @param array $data The ICP data.
+	 *
+	 * @return void
+	 */
+	private function saveJsonArrayFields(array $data): void {
+		foreach (self::JSON_ARRAY_FIELDS as $dataKey => $configKey) {
+			if (isset($data[$dataKey]) === true) {
+				$this->reader->setJsonArray(key: $configKey, value: $data[$dataKey]);
+			}
+		}
+	}//end saveJsonArrayFields()
 
-    /**
-     * Save integer fields from the data.
-     *
-     * @param array $data The ICP data.
-     *
-     * @return void
-     */
-    private function saveIntegerFields(array $data): void
-    {
-        if (isset($data['employeeCountMin']) === true) {
-            $this->reader->setInt(key: 'icp_employee_count_min', value: $data['employeeCountMin']);
-        }
+	/**
+	 * Save integer fields from the data.
+	 *
+	 * @param array $data The ICP data.
+	 *
+	 * @return void
+	 */
+	private function saveIntegerFields(array $data): void {
+		if (isset($data['employeeCountMin']) === true) {
+			$this->reader->setInt(key: 'icp_employee_count_min', value: $data['employeeCountMin']);
+		}
 
-        if (isset($data['employeeCountMax']) === true) {
-            $this->reader->setInt(key: 'icp_employee_count_max', value: $data['employeeCountMax']);
-        }
-    }//end saveIntegerFields()
+		if (isset($data['employeeCountMax']) === true) {
+			$this->reader->setInt(key: 'icp_employee_count_max', value: $data['employeeCountMax']);
+		}
+	}//end saveIntegerFields()
 
-    /**
-     * Save boolean fields from the data.
-     *
-     * @param array $data The ICP data.
-     *
-     * @return void
-     */
-    private function saveBooleanFields(array $data): void
-    {
-        if (isset($data['excludeInactive']) === true) {
-            $this->reader->setBool(key: 'icp_exclude_inactive', value: $data['excludeInactive']);
-        }
+	/**
+	 * Save boolean fields from the data.
+	 *
+	 * @param array $data The ICP data.
+	 *
+	 * @return void
+	 */
+	private function saveBooleanFields(array $data): void {
+		if (isset($data['excludeInactive']) === true) {
+			$this->reader->setBool(key: 'icp_exclude_inactive', value: $data['excludeInactive']);
+		}
 
-        if (isset($data['openCorporatesEnabled']) === true) {
-            $this->reader->setBool(key: 'icp_opencorporates_enabled', value: $data['openCorporatesEnabled']);
-        }
-    }//end saveBooleanFields()
+		if (isset($data['openCorporatesEnabled']) === true) {
+			$this->reader->setBool(key: 'icp_opencorporates_enabled', value: $data['openCorporatesEnabled']);
+		}
+	}//end saveBooleanFields()
 
-    /**
-     * Save the API key field if provided and not masked.
-     *
-     * @param array $data The ICP data.
-     *
-     * @return void
-     */
-    private function saveApiKeyField(array $data): void
-    {
-        if (isset($data['kvkApiKey']) === true && $data['kvkApiKey'] !== '***configured***') {
-            // Store the KVK API key as sensitive so it is excluded from
-            // occ config:list output and Nextcloud support archives (issue #599).
-            $this->reader->setSensitiveString(key: 'icp_kvk_api_key', value: (string) $data['kvkApiKey']);
-        }
-    }//end saveApiKeyField()
+	/**
+	 * Save the API key field if provided and not masked.
+	 *
+	 * @param array $data The ICP data.
+	 *
+	 * @return void
+	 */
+	private function saveApiKeyField(array $data): void {
+		if (isset($data['kvkApiKey']) === true && $data['kvkApiKey'] !== '***configured***') {
+			// Store the KVK API key as sensitive so it is excluded from
+			// occ config:list output and Nextcloud support archives (issue #599).
+			$this->reader->setSensitiveString(key: 'icp_kvk_api_key', value: (string)$data['kvkApiKey']);
+		}
+	}//end saveApiKeyField()
 
-    /**
-     * Mask an API key for display.
-     *
-     * @param string $apiKey The raw API key.
-     *
-     * @return string The masked key or empty string.
-     */
-    private function maskApiKey(string $apiKey): string
-    {
-        if ($apiKey !== '') {
-            return '***configured***';
-        }
+	/**
+	 * Mask an API key for display.
+	 *
+	 * @param string $apiKey The raw API key.
+	 *
+	 * @return string The masked key or empty string.
+	 */
+	private function maskApiKey(string $apiKey): string {
+		if ($apiKey !== '') {
+			return '***configured***';
+		}
 
-        return '';
-    }//end maskApiKey()
+		return '';
+	}//end maskApiKey()
 }//end class

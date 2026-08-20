@@ -35,58 +35,44 @@ use OCA\Pipelinq\Service\Cti\Result\CtiWebhookResult;
  *
  * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-1.1
  */
-interface CtiAdapterInterface
-{
-    /**
-     * Identifier of this platform (callvoip|ringcentral|asterisk|other).
-     *
-     * @return string Platform identifier.
-     */
-    public function getPlatform(): string;
+interface CtiAdapterInterface {
+	/**
+	 * Identifier of this platform (callvoip|ringcentral|asterisk|other).
+	 *
+	 * @return string Platform identifier.
+	 */
+	public function getPlatform(): string;
 
-    /**
-     * Parse and normalise an inbound webhook payload.
-     *
-     * @param array<string,mixed> $payload Raw decoded webhook body.
-     *
-     * @return CtiWebhookResult Normalised event.
-     */
-    public function handleInboundWebhook(array $payload): CtiWebhookResult;
+	/**
+	 * Parse and normalise an inbound webhook payload.
+	 *
+	 * @param array<string,mixed> $payload Raw decoded webhook body.
+	 *
+	 * @return CtiWebhookResult Normalised event.
+	 */
+	public function handleInboundWebhook(array $payload): CtiWebhookResult;
 
-    /**
-     * Originate an outbound call.
-     *
-     * @param string $extension    The agent's telephony extension that should ring.
-     * @param string $targetNumber Destination phone number (E.164 preferred).
-     * @param string $callerId     Caller-ID to present on the outbound call.
-     *
-     * @return CtiCallResult Outcome including the new external call id.
-     */
-    public function originateCall(string $extension, string $targetNumber, string $callerId): CtiCallResult;
+	/**
+	 * Originate an outbound call.
+	 *
+	 * @param string $extension The agent's telephony extension that should ring.
+	 * @param string $targetNumber Destination phone number (E.164 preferred).
+	 * @param string $callerId Caller-ID to present on the outbound call.
+	 *
+	 * @return CtiCallResult Outcome including the new external call id.
+	 */
+	public function originateCall(string $extension, string $targetNumber, string $callerId): CtiCallResult;
 
-    /**
-     * Subscribe to presence updates for the given user / extension.
-     *
-     * No-op when the platform does not expose a subscribe endpoint; the implementation
-     * may instead rely on inbound presence webhooks.
-     *
-     * @param string $userId    NC user UID.
-     * @param string $extension Agent extension.
-     *
-     * @return void
-     */
-    public function subscribeToPresence(string $userId, string $extension): void;
-
-    /**
-     * Verify a webhook payload signature.
-     *
-     * The $signature is whatever the platform supplies: an HMAC-SHA256 hex digest,
-     * an OAuth bearer token, or a shared-secret query parameter.
-     *
-     * @param string $payload   Raw request body as received.
-     * @param string $signature Signature/token to validate.
-     *
-     * @return bool True when the signature is valid.
-     */
-    public function verifyWebhookSignature(string $payload, string $signature): bool;
+	/**
+	 * Verify a webhook payload signature.
+	 *
+	 * The $signature is whatever the platform supplies: an HMAC-SHA256 hex digest,
+	 * an OAuth bearer token, or a shared-secret query parameter.
+	 *
+	 * @param string $payload Raw request body as received.
+	 * @param string $signature Signature/token to validate.
+	 *
+	 * @return bool True when the signature is valid.
+	 */
+	public function verifyWebhookSignature(string $payload, string $signature): bool;
 }//end interface

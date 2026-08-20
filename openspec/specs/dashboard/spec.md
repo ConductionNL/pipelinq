@@ -256,7 +256,7 @@ The dashboard layout MUST support user customization through the `CnDashboardPag
 
 ### Requirement: Nextcloud Dashboard Widget API Integration
 
-Pipelinq MUST register dashboard widgets with the Nextcloud Dashboard API (`OCP\Dashboard\IWidget`) so they appear in the platform-level dashboard and in MyDash.
+Pipelinq MUST register dashboard widgets with the Nextcloud Dashboard API (`OCP\Dashboard\IWidget`) so they appear in the platform-level dashboard and in LaunchPad.
 
 #### Scenario: Registered Nextcloud dashboard widgets
 @e2e exclude PHP OCP\Dashboard\IWidget registration
@@ -483,6 +483,8 @@ The Navi API MUST enforce Nextcloud authentication and MUST NOT expose data outs
 
 #### Scenario: Query scoped to user's data
 
+@e2e exclude proving isolation needs TWO Nextcloud users with disjoint OpenRegister ACLs; `tests/e2e/global-setup.ts` provisions a single account (ADMIN_USER, default `admin`) and the suite has no way to create a second. The reachable half — the endpoint refusing a caller with no session — is asserted end-to-end by the sibling scenario `unauthenticated-request-rejected` in `tests/e2e/spec-coverage/dashboard.spec.ts` (test "POST /api/navi/query is rejected with 401 and leaks nothing") and at unit level by `tests/Unit/Controller/NaviControllerTest.php::testQueryReturnsUnauthorizedWithoutSession`.
+
 - GIVEN the user is authenticated
 - WHEN NaviService dispatches OpenRegister queries
 - THEN all `ObjectService` calls MUST use the standard multi-tenancy context
@@ -673,6 +675,29 @@ The existing default dashboard layout MUST be extended to include the three new 
 - AND all widgets MUST have `type: 'custom'` with matching `#widget-{id}` slot templates
 
 ---
+
+### Requirement: No Permanently-Null Default Widgets
+
+The default Operational dashboard SHALL NOT include a widget whose data source is known-empty for every install. The Satisfaction KPI (`SatisfactionKpiWidget`, widget id `satisfaction`) SHALL be removed from the default Operational dashboard definition (widget def, layout slot, and template mapping) until the `customer-satisfaction-closed-loop` change re-sources CSAT data — that change owns restoration; this requirement only removes the dead tile. The vacated grid space SHALL be reflowed so the layout has no hole, and a manifest note SHALL record the restoration owner. No placeholder or "coming soon" tile SHALL replace it.
+
+**Feature tier**: MVP
+
+#### Scenario: Operational dashboard renders no empty satisfaction tile
+
+- GIVEN a functioning install with normal CRM activity
+- WHEN the Operational dashboard loads
+- THEN no Customer Satisfaction widget MUST be present
+- AND every rendered KPI widget MUST be backed by a live data source
+
+#### Scenario: Restoration ownership recorded
+
+- WHEN `src/manifest.json` is inspected
+- THEN a note MUST record that the satisfaction widget returns via `customer-satisfaction-closed-loop`
+
+#### Scenario: Layout reflows without a hole
+
+- WHEN the Operational dashboard renders after removal
+- THEN the KPI row MUST show no empty grid slot where the widget was
 
 ## REMOVED Requirements
 

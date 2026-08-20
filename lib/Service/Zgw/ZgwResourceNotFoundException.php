@@ -33,15 +33,15 @@ namespace OCA\Pipelinq\Service\Zgw;
 /**
  * ZGW resource (zaak / besluit / informatieobject / rol) not found.
  */
-class ZgwResourceNotFoundException extends ZgwException
-{
-    /**
-     * Constructor.
-     *
-     * @param string $url The resource URL that returned 404.
-     */
-    public function __construct(public readonly string $url)
-    {
-        parent::__construct(message: sprintf('ZGW: resource not found at URL "%s"', $url));
-    }//end __construct()
+class ZgwResourceNotFoundException extends ZgwException {
+	/**
+	 * Constructor.
+	 *
+	 * @param string $url The resource URL that returned 404.
+	 */
+	public function __construct(
+		public readonly string $url,
+	) {
+		parent::__construct(message: sprintf('ZGW: resource not found at URL "%s"', $url));
+	}//end __construct()
 }//end class

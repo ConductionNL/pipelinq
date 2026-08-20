@@ -24,13 +24,14 @@ import dashboardRefreshMixin from './dashboardRefreshMixin.js'
  * Bar chart: request counts grouped by category for the selected period.
  * Title is rendered by the dashboard widget chrome, not in the body.
  *
- * @spec openspec/changes/decompose-unified-analytics/specs/dashboard/spec.md#REQ-DASH-010
+ * @spec openspec/specs/dashboard/spec.md
  */
 export default {
 	name: 'RequestsByCategoryChartWidget',
 	components: {
 		CnChartWidget,
 	},
+
 	mixins: [analyticsPeriodMixin, dashboardRefreshMixin],
 	data() {
 		return {
@@ -38,29 +39,35 @@ export default {
 			trend: { series: [] },
 		}
 	},
+
 	computed: {
 		/**
-		 * @spec openspec/changes/decompose-unified-analytics/specs/dashboard/spec.md#REQ-DASH-010
+		 * @spec openspec/specs/dashboard/spec.md
 		 */
 		chartLabels() {
-			return (this.trend?.series || []).map(pt => pt.date)
+			return (this.trend?.series || []).map((pt) => pt.date)
 		},
+
 		/**
-		 * @spec openspec/changes/decompose-unified-analytics/specs/dashboard/spec.md#REQ-DASH-010
+		 * @spec openspec/specs/dashboard/spec.md
 		 */
 		chartSeries() {
-			const values = (this.trend?.series || []).map(pt => pt.value)
+			const values = (this.trend?.series || []).map((pt) => pt.value)
 			return [{ name: this.t('pipelinq', 'Requests'), data: values }]
 		},
 	},
+
 	methods: {
 		/**
-		 * @spec openspec/changes/decompose-unified-analytics/specs/dashboard/spec.md#REQ-DASH-010
+		 * @spec openspec/specs/dashboard/spec.md
 		 */
 		async load() {
 			this.error = null
 			try {
-				this.trend = await getAnalyticsTrend('requests-by-category', this.period) || { series: [] }
+				this.trend = (await getAnalyticsTrend(
+					'requests-by-category',
+					this.period,
+				)) || { series: [] }
 			} catch (err) {
 				console.error('RequestsByCategoryChartWidget fetch error:', err)
 				this.error = this.t('pipelinq', 'Could not load analytics data.')

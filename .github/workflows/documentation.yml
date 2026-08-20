@@ -8,6 +8,6 @@ on:
 
 jobs:
   deploy:
-    uses: Conduction/.github/.github/workflows/documentation.yml@main
+    uses: ConductionNL/.github/.github/workflows/documentation.yml@main
     with:
       cname: pipelinq.conduction.nl

@@ -1,39 +1,46 @@
 <template>
 	<div class="start-request-widget">
 		<div v-if="!success" class="widget-form">
-			<NcTextField :value.sync="form.title"
+			<NcTextField
+				v-model="form.title"
 				:label="t('pipelinq', 'Title')"
 				:placeholder="t('pipelinq', 'Request title (required)')"
 				:error="submitted && !form.title"
 				@keyup.enter="onSubmit" />
 
-			<ClientAutocomplete :value="selectedClient"
+			<ClientAutocomplete
+				:value="selectedClient"
 				:placeholder="t('pipelinq', 'Search client...')"
 				:label="t('pipelinq', 'Client')"
 				@input="onClientSelected" />
 
-			<NcSelect v-model="form.category"
+			<NcSelect
+				v-model="form.category"
 				:options="categoryOptions"
-				:input-label="t('pipelinq', 'Category')"
+				:inputLabel="t('pipelinq', 'Category')"
 				:placeholder="t('pipelinq', 'Category')"
-				input-id="request-category" />
+				inputId="request-category" />
 
-			<NcSelect v-model="form.priority"
+			<NcSelect
+				v-model="form.priority"
 				:options="priorityOptions"
-				:input-label="t('pipelinq', 'Priority')"
+				:inputLabel="t('pipelinq', 'Priority')"
 				:placeholder="t('pipelinq', 'Priority')"
-				input-id="request-priority" />
+				inputId="request-priority" />
 
-			<NcSelect v-model="form.channel"
+			<NcSelect
+				v-model="form.channel"
 				:options="channelOptions"
-				:input-label="t('pipelinq', 'Channel')"
+				:inputLabel="t('pipelinq', 'Channel')"
 				:placeholder="t('pipelinq', 'Channel')"
-				input-id="request-channel" />
+				inputId="request-channel" />
 
-			<NcButton type="primary"
-				:disabled="submitting"
-				@click="onSubmit">
-				{{ submitting ? t('pipelinq', 'Creating...') : t('pipelinq', 'Create request') }}
+			<NcButton variant="primary" :disabled="submitting" @click="onSubmit">
+				{{
+					submitting
+						? t('pipelinq', 'Creating...')
+						: t('pipelinq', 'Create request')
+				}}
 			</NcButton>
 		</div>
 
@@ -42,7 +49,7 @@
 				{{ t('pipelinq', 'Request created!') }}
 				<a :href="successLink">{{ t('pipelinq', 'View request') }}</a>
 			</NcNoteCard>
-			<NcButton type="secondary" @click="resetForm">
+			<NcButton variant="secondary" @click="resetForm">
 				{{ t('pipelinq', 'Create another') }}
 			</NcButton>
 		</div>
@@ -51,7 +58,7 @@
 			<h4>{{ t('pipelinq', 'Recent requests') }}</h4>
 			<ul>
 				<li v-for="req in recentRequests" :key="req.id">
-					<a :href="generateUrl('/apps/pipelinq/requests/' + req.id)">
+					<a :href="generateUrl('/apps/pipelinq/tickets/' + req.id)">
 						{{ toText(req.title) || t('pipelinq', 'Untitled') }}
 					</a>
 					<span class="recent-status">{{ req.status }}</span>
@@ -62,8 +69,8 @@
 </template>
 
 <script>
-import { NcTextField, NcButton, NcSelect, NcNoteCard } from '@nextcloud/vue'
 import { generateUrl } from '@nextcloud/router'
+import { NcButton, NcNoteCard, NcSelect, NcTextField } from '@nextcloud/vue'
 import ClientAutocomplete from '../../components/widgets/ClientAutocomplete.vue'
 import { initializeStores } from '../../store/store.js'
 import { toText } from '../../utils/widgetText.js'
@@ -77,12 +84,14 @@ export default {
 		NcNoteCard,
 		ClientAutocomplete,
 	},
+
 	props: {
 		title: {
 			type: String,
 			required: true,
 		},
 	},
+
 	data() {
 		return {
 			config: null,
@@ -92,6 +101,7 @@ export default {
 				priority: 'normal',
 				channel: null,
 			},
+
 			selectedClient: null,
 			submitted: false,
 			submitting: false,
@@ -104,12 +114,14 @@ export default {
 				t('pipelinq', 'Billing'),
 				t('pipelinq', 'Support'),
 			],
+
 			priorityOptions: [
 				{ id: 'low', label: t('pipelinq', 'Low') },
 				{ id: 'normal', label: t('pipelinq', 'Normal') },
 				{ id: 'high', label: t('pipelinq', 'High') },
 				{ id: 'urgent', label: t('pipelinq', 'Urgent') },
 			],
+
 			channelOptions: [
 				{ id: 'phone', label: t('pipelinq', 'Phone') },
 				{ id: 'email', label: t('pipelinq', 'Email') },
@@ -118,6 +130,7 @@ export default {
 			],
 		}
 	},
+
 	/**
 	 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-53
 	 */
@@ -130,6 +143,7 @@ export default {
 			console.error('StartRequestWidget init error:', err)
 		}
 	},
+
 	methods: {
 		generateUrl,
 		toText,
@@ -140,6 +154,7 @@ export default {
 		onClientSelected(client) {
 			this.selectedClient = client
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-55
 		 */
@@ -148,39 +163,50 @@ export default {
 			if (!this.form.title) {
 				return
 			}
-			if (!this.config?.request) {
-				console.error('Request schema not configured')
+			// A request is a `ticket` with ticketType 'request'; `requestedAt` became
+			// `occurredAt` (unify-ticket-supertype).
+			if (!this.config?.ticket) {
+				console.error('Ticket schema not configured')
 				return
 			}
 
 			this.submitting = true
 			try {
-				const typeConfig = this.config.request
+				const typeConfig = this.config.ticket
 				const body = {
+					ticketType: 'request',
 					title: this.form.title,
 					status: 'new',
-					priority: typeof this.form.priority === 'object'
-						? this.form.priority.id
-						: (this.form.priority || 'normal'),
-					requestedAt: new Date().toISOString(),
+					priority:
+						typeof this.form.priority === 'object'
+							? this.form.priority.id
+							: this.form.priority || 'normal',
+
+					occurredAt: new Date().toISOString(),
 				}
 
 				if (this.selectedClient) {
 					body.client = this.selectedClient.id
 				}
 				if (this.form.category) {
-					body.category = typeof this.form.category === 'object'
-						? this.form.category.id || this.form.category.label
-						: this.form.category
+					body.category =
+						typeof this.form.category === 'object'
+							? this.form.category.id || this.form.category.label
+							: this.form.category
 				}
 				if (this.form.channel) {
-					body.channel = typeof this.form.channel === 'object'
-						? this.form.channel.id
-						: this.form.channel
+					body.channel =
+						typeof this.form.channel === 'object'
+							? this.form.channel.id
+							: this.form.channel
 				}
 
-				const url = generateUrl('/apps/openregister/api/objects/'
-					+ typeConfig.register + '/' + typeConfig.schema)
+				const url = generateUrl(
+					'/apps/openregister/api/objects/'
+						+ typeConfig.register
+						+ '/'
+						+ typeConfig.schema,
+				)
 
 				const response = await fetch(url, {
 					method: 'POST',
@@ -195,7 +221,7 @@ export default {
 				if (!response.ok) throw new Error('Failed to create request')
 				const created = await response.json()
 				const id = created.id || created.uuid
-				this.successLink = generateUrl('/apps/pipelinq/requests/' + id)
+				this.successLink = generateUrl('/apps/pipelinq/tickets/' + id)
 				this.success = true
 			} catch (err) {
 				console.error('StartRequestWidget create error:', err)
@@ -203,28 +229,46 @@ export default {
 				this.submitting = false
 			}
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-56
 		 */
 		resetForm() {
-			this.form = { title: '', category: null, priority: 'normal', channel: null }
+			this.form = {
+				title: '',
+				category: null,
+				priority: 'normal',
+				channel: null,
+			}
 			this.selectedClient = null
 			this.submitted = false
 			this.success = false
 			this.successLink = ''
 			this.fetchRecentRequests()
 		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-52
 		 */
 		async fetchRecentRequests() {
-			if (!this.config?.request) return
+			if (!this.config?.ticket) return
 			try {
-				const typeConfig = this.config.request
-				const params = new URLSearchParams({ _limit: '3', _order: 'desc' })
-				const url = generateUrl('/apps/openregister/api/objects/'
-					+ typeConfig.register + '/' + typeConfig.schema
-					+ '?' + params.toString())
+				// Narrow the shared `ticket` supertype to request-tickets so complaints
+				// and contactmomenten don't show up as "recent requests".
+				const typeConfig = this.config.ticket
+				const params = new URLSearchParams({
+					ticketType: 'request',
+					_limit: '3',
+					_order: 'desc',
+				})
+				const url = generateUrl(
+					'/apps/openregister/api/objects/'
+						+ typeConfig.register
+						+ '/'
+						+ typeConfig.schema
+						+ '?'
+						+ params.toString(),
+				)
 
 				const response = await fetch(url, {
 					headers: {

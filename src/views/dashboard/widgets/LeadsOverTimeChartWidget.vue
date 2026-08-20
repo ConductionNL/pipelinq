@@ -24,13 +24,14 @@ import dashboardRefreshMixin from './dashboardRefreshMixin.js'
  * Line chart: lead count over time for the selected period. Title is
  * rendered by the dashboard widget chrome, not in the body.
  *
- * @spec openspec/changes/decompose-unified-analytics/specs/dashboard/spec.md#REQ-DASH-010
+ * @spec openspec/specs/dashboard/spec.md
  */
 export default {
 	name: 'LeadsOverTimeChartWidget',
 	components: {
 		CnChartWidget,
 	},
+
 	mixins: [analyticsPeriodMixin, dashboardRefreshMixin],
 	data() {
 		return {
@@ -38,29 +39,34 @@ export default {
 			trend: { series: [] },
 		}
 	},
+
 	computed: {
 		/**
-		 * @spec openspec/changes/decompose-unified-analytics/specs/dashboard/spec.md#REQ-DASH-010
+		 * @spec openspec/specs/dashboard/spec.md
 		 */
 		chartLabels() {
-			return (this.trend?.series || []).map(pt => pt.date)
+			return (this.trend?.series || []).map((pt) => pt.date)
 		},
+
 		/**
-		 * @spec openspec/changes/decompose-unified-analytics/specs/dashboard/spec.md#REQ-DASH-010
+		 * @spec openspec/specs/dashboard/spec.md
 		 */
 		chartSeries() {
-			const values = (this.trend?.series || []).map(pt => pt.value)
+			const values = (this.trend?.series || []).map((pt) => pt.value)
 			return [{ name: this.t('pipelinq', 'Leads'), data: values }]
 		},
 	},
+
 	methods: {
 		/**
-		 * @spec openspec/changes/decompose-unified-analytics/specs/dashboard/spec.md#REQ-DASH-010
+		 * @spec openspec/specs/dashboard/spec.md
 		 */
 		async load() {
 			this.error = null
 			try {
-				this.trend = await getAnalyticsTrend('leads', this.period) || { series: [] }
+				this.trend = (await getAnalyticsTrend('leads', this.period)) || {
+					series: [],
+				}
 			} catch (err) {
 				console.error('LeadsOverTimeChartWidget fetch error:', err)
 				this.error = this.t('pipelinq', 'Could not load analytics data.')

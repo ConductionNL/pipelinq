@@ -28,6 +28,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\SegmentService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -41,209 +42,237 @@ use OCP\IUserSession;
  *
  * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/tasks.md#segmentcontroller-task-2.7-of-giant
  */
-class SegmentController extends Controller
-{
-    /**
-     * Constructor.
-     *
-     * @param IRequest       $request        The request.
-     * @param SegmentService $segmentService Segment service (member 02).
-     * @param IUserSession   $userSession    Current user session.
-     */
-    public function __construct(
-        IRequest $request,
-        private readonly SegmentService $segmentService,
-        private readonly IUserSession $userSession,
-    ) {
-        parent::__construct(appName: Application::APP_ID, request: $request);
-    }//end __construct()
+class SegmentController extends Controller {
+	/**
+	 * Constructor.
+	 *
+	 * @param IRequest $request The request.
+	 * @param SegmentService $segmentService Segment service (member 02).
+	 * @param IUserSession $userSession Current user session.
+	 * @param ObjectOwnerAccessPolicy $policy Per-object owner access policy.
+	 */
+	public function __construct(
+		IRequest $request,
+		private readonly SegmentService $segmentService,
+		private readonly IUserSession $userSession,
+		private readonly ObjectOwnerAccessPolicy $policy,
+	) {
+		parent::__construct(appName: Application::APP_ID, request: $request);
+	}//end __construct()
 
-    /**
-     * GET /api/segments — paginated list.
-     *
-     * @param int $page  1-based page number.
-     * @param int $limit Page size.
-     *
-     * @return JSONResponse `{data[], pagination}`.
-     *
-     * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/specs/marketing-api/spec.md#api-endpoints-crud-and-query
-     */
-    #[NoAdminRequired]
-    public function index(int $page=1, int $limit=20): JSONResponse
-    {
-        if ($this->requireUser() === null) {
-            return $this->unauthorized();
-        }
+	/**
+	 * GET /api/segments — paginated list.
+	 *
+	 * @param int $page 1-based page number.
+	 * @param int $limit Page size.
+	 *
+	 * @return JSONResponse `{data[], pagination}`.
+	 *
+	 * @spec openspec/specs/marketing-api/spec.md
+	 */
+	#[NoAdminRequired]
+	public function index(int $page = 1, int $limit = 20): JSONResponse {
+		$uid = $this->requireUser();
+		if ($uid === null) {
+			return $this->unauthorized();
+		}
 
-        $envelope = $this->segmentService->listSegments(page: $page, limit: $limit);
-        return new JSONResponse($envelope);
-    }//end index()
+		// Authentication is not authorization. A segment is a saved query over
+		// the customer base; listing or evaluating one exposes who is in it.
+		if ($this->policy->isPrivileged(uid: $uid) === false) {
+			return $this->forbidden();
+		}
 
-    /**
-     * POST /api/segments — create a Segment after rule-tree validation.
-     *
-     * @return JSONResponse 201 with segment+estimatedSize, 400 on invalid input.
-     *
-     * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/specs/marketing-api/spec.md#segment-create-validates-rule-tree
-     */
-    #[NoAdminRequired]
-    public function create(): JSONResponse
-    {
-        $user = $this->requireUser();
-        if ($user === null) {
-            return $this->unauthorized();
-        }
+		$envelope = $this->segmentService->listSegments(page: $page, limit: $limit);
+		return new JSONResponse($envelope);
+	}//end index()
 
-        $payload = $this->collectSegmentBody();
-        $result  = $this->segmentService->createSegment(payload: $payload, createdByUid: $user);
-        return $this->renderCreate(result: $result);
-    }//end create()
+	/**
+	 * POST /api/segments — create a Segment after rule-tree validation.
+	 *
+	 * @return JSONResponse 201 with segment+estimatedSize, 400 on invalid input.
+	 *
+	 * @spec openspec/specs/marketing-api/spec.md
+	 */
+	#[NoAdminRequired]
+	public function create(): JSONResponse {
+		$user = $this->requireUser();
+		if ($user === null) {
+			return $this->unauthorized();
+		}
 
-    /**
-     * GET /api/segments/:id — fetch with estimatedSize.
-     *
-     * @param string $id Segment UUID or slug.
-     *
-     * @return JSONResponse 200 with Segment+estimatedSize or 404 generic.
-     *
-     * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/specs/marketing-api/spec.md#api-endpoints-crud-and-query
-     */
-    #[NoAdminRequired]
-    public function show(string $id): JSONResponse
-    {
-        if ($this->requireUser() === null) {
-            return $this->unauthorized();
-        }
+		$payload = $this->collectSegmentBody();
+		$result = $this->segmentService->createSegment(payload: $payload, createdByUid: $user);
+		return $this->renderCreate(result: $result);
+	}//end create()
 
-        $segment = $this->segmentService->getSegmentById(segmentId: $id);
-        if ($segment === null) {
-            return $this->notFound();
-        }
+	/**
+	 * GET /api/segments/:id — fetch with estimatedSize.
+	 *
+	 * @param string $id Segment UUID or slug.
+	 *
+	 * @return JSONResponse 200 with Segment+estimatedSize or 404 generic.
+	 *
+	 * @spec openspec/specs/marketing-api/spec.md
+	 */
+	#[NoAdminRequired]
+	public function show(string $id): JSONResponse {
+		$uid = $this->requireUser();
+		if ($uid === null) {
+			return $this->unauthorized();
+		}
 
-        $segment['estimatedSize'] = $this->segmentService->estimateSize(segmentId: $id);
-        return new JSONResponse($segment);
-    }//end show()
+		// Authentication is not authorization. A segment is a saved query over
+		// the customer base; listing or evaluating one exposes who is in it.
+		if ($this->policy->isPrivileged(uid: $uid) === false) {
+			return $this->forbidden();
+		}
 
-    /**
-     * GET /api/segments/:id/members — preview matching recipients.
-     *
-     * @param string $id    Segment UUID or slug.
-     * @param int    $limit Cap (clamped server-side to 500).
-     *
-     * @return JSONResponse `{members[]}` projected for the blast engine.
-     *
-     * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/specs/marketing-api/spec.md#api-endpoints-crud-and-query
-     */
-    #[NoAdminRequired]
-    public function members(string $id, int $limit=50): JSONResponse
-    {
-        if ($this->requireUser() === null) {
-            return $this->unauthorized();
-        }
+		$segment = $this->segmentService->getSegmentById(segmentId: $id);
+		if ($segment === null) {
+			return $this->notFound();
+		}
 
-        $rows = $this->segmentService->previewSegmentMembers(segmentId: $id, limit: $limit);
-        return new JSONResponse(['members' => $rows]);
-    }//end members()
+		$segment['estimatedSize'] = $this->segmentService->estimateSize(segmentId: $id);
+		return new JSONResponse($segment);
+	}//end show()
 
-    /**
-     * POST /api/segments/:id/size — recompute + persist estimatedSize.
-     *
-     * @param string $id Segment UUID or slug.
-     *
-     * @return JSONResponse `{estimatedSize}`.
-     *
-     * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/specs/marketing-api/spec.md#api-endpoints-crud-and-query
-     */
-    #[NoAdminRequired]
-    public function refreshSize(string $id): JSONResponse
-    {
-        if ($this->requireUser() === null) {
-            return $this->unauthorized();
-        }
+	/**
+	 * GET /api/segments/:id/members — preview matching recipients.
+	 *
+	 * @param string $id Segment UUID or slug.
+	 * @param int $limit Cap (clamped server-side to 500).
+	 *
+	 * @return JSONResponse `{members[]}` projected for the blast engine.
+	 *
+	 * @spec openspec/specs/marketing-api/spec.md
+	 */
+	#[NoAdminRequired]
+	public function members(string $id, int $limit = 50): JSONResponse {
+		$uid = $this->requireUser();
+		if ($uid === null) {
+			return $this->unauthorized();
+		}
 
-        $size = $this->segmentService->refreshSegmentSize(segmentId: $id);
-        return new JSONResponse(['estimatedSize' => $size]);
-    }//end refreshSize()
+		// Authentication is not authorization. A segment is a saved query over
+		// the customer base; listing or evaluating one exposes who is in it.
+		if ($this->policy->isPrivileged(uid: $uid) === false) {
+			return $this->forbidden();
+		}
 
-    /**
-     * Resolve the authenticated user id.
-     *
-     * @return string|null UID or null.
-     */
-    private function requireUser(): ?string
-    {
-        $user = $this->userSession->getUser();
-        if ($user === null) {
-            return null;
-        }
+		$rows = $this->segmentService->previewSegmentMembers(segmentId: $id, limit: $limit);
+		return new JSONResponse(['members' => $rows]);
+	}//end members()
 
-        return $user->getUID();
-    }//end requireUser()
+	/**
+	 * POST /api/segments/:id/size — recompute + persist estimatedSize.
+	 *
+	 * @param string $id Segment UUID or slug.
+	 *
+	 * @return JSONResponse `{estimatedSize}`.
+	 *
+	 * @spec openspec/specs/marketing-api/spec.md
+	 */
+	#[NoAdminRequired]
+	public function refreshSize(string $id): JSONResponse {
+		$uid = $this->requireUser();
+		if ($uid === null) {
+			return $this->unauthorized();
+		}
 
-    /**
-     * Collect a sanitised Segment create body.
-     *
-     * Any client-supplied `createdBy` is dropped. `rules` is accepted
-     * either as a JSON object/array body or as a JSON-encoded string —
-     * the service-level validator rejects non-array shapes either way.
-     *
-     * @return array<string, mixed> Sanitised payload.
-     */
-    private function collectSegmentBody(): array
-    {
-        $rules = $this->request->getParam('rules');
-        if (is_string($rules) === true) {
-            $decoded = json_decode($rules, true);
-            if (is_array($decoded) === true) {
-                $rules = $decoded;
-            }
-        }
+		// Authentication is not authorization. A segment is a saved query over
+		// the customer base; listing or evaluating one exposes who is in it.
+		if ($this->policy->isPrivileged(uid: $uid) === false) {
+			return $this->forbidden();
+		}
 
-        return [
-            'name'        => (string) $this->request->getParam('name', ''),
-            'description' => (string) $this->request->getParam('description', ''),
-            'entityType'  => (string) $this->request->getParam('entityType', ''),
-            'rules'       => $rules,
-        ];
-    }//end collectSegmentBody()
+		$size = $this->segmentService->refreshSegmentSize(segmentId: $id);
+		return new JSONResponse(['estimatedSize' => $size]);
+	}//end refreshSize()
 
-    /**
-     * Render the create result.
-     *
-     * @param array{segment?: array<string, mixed>, error?: string, estimatedSize?: int} $result Service result.
-     *
-     * @return JSONResponse
-     */
-    private function renderCreate(array $result): JSONResponse
-    {
-        if (isset($result['error']) === true) {
-            return new JSONResponse(['error' => $result['error']], Http::STATUS_BAD_REQUEST);
-        }
+	/**
+	 * Resolve the authenticated user id.
+	 *
+	 * @return string|null UID or null.
+	 */
+	private function requireUser(): ?string {
+		$user = $this->userSession->getUser();
+		if ($user === null) {
+			return null;
+		}
 
-        $payload = [
-            'segment'       => ($result['segment'] ?? null),
-            'estimatedSize' => (int) ($result['estimatedSize'] ?? 0),
-        ];
-        return new JSONResponse($payload, Http::STATUS_CREATED);
-    }//end renderCreate()
+		return $user->getUID();
+	}//end requireUser()
 
-    /**
-     * Generic 401 response.
-     *
-     * @return JSONResponse
-     */
-    private function unauthorized(): JSONResponse
-    {
-        return new JSONResponse(['error' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
-    }//end unauthorized()
+	/**
+	 * Deny a caller who is authenticated but not a CRM user.
+	 *
+	 * @return JSONResponse The 403 response.
+	 */
+	private function forbidden(): JSONResponse {
+		return new JSONResponse(['error' => 'Forbidden'], Http::STATUS_FORBIDDEN);
+	}//end forbidden()
 
-    /**
-     * Generic 404 response.
-     *
-     * @return JSONResponse
-     */
-    private function notFound(): JSONResponse
-    {
-        return new JSONResponse(['error' => 'Not found'], Http::STATUS_NOT_FOUND);
-    }//end notFound()
+	/**
+	 * Collect a sanitised Segment create body.
+	 *
+	 * Any client-supplied `createdBy` is dropped. `rules` is accepted
+	 * either as a JSON object/array body or as a JSON-encoded string —
+	 * the service-level validator rejects non-array shapes either way.
+	 *
+	 * @return array<string, mixed> Sanitised payload.
+	 */
+	private function collectSegmentBody(): array {
+		$rules = $this->request->getParam('rules');
+		if (is_string($rules) === true) {
+			$decoded = json_decode($rules, true);
+			if (is_array($decoded) === true) {
+				$rules = $decoded;
+			}
+		}
+
+		return [
+			'name' => (string)$this->request->getParam('name', ''),
+			'description' => (string)$this->request->getParam('description', ''),
+			'entityType' => (string)$this->request->getParam('entityType', ''),
+			'rules' => $rules,
+		];
+	}//end collectSegmentBody()
+
+	/**
+	 * Render the create result.
+	 *
+	 * @param array{segment?: array<string, mixed>, error?: string, estimatedSize?: int} $result Service result.
+	 *
+	 * @return JSONResponse
+	 */
+	private function renderCreate(array $result): JSONResponse {
+		if (isset($result['error']) === true) {
+			return new JSONResponse(['error' => $result['error']], Http::STATUS_BAD_REQUEST);
+		}
+
+		$payload = [
+			'segment' => ($result['segment'] ?? null),
+			'estimatedSize' => (int)($result['estimatedSize'] ?? 0),
+		];
+		return new JSONResponse($payload, Http::STATUS_CREATED);
+	}//end renderCreate()
+
+	/**
+	 * Generic 401 response.
+	 *
+	 * @return JSONResponse
+	 */
+	private function unauthorized(): JSONResponse {
+		return new JSONResponse(['error' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
+	}//end unauthorized()
+
+	/**
+	 * Generic 404 response.
+	 *
+	 * @return JSONResponse
+	 */
+	private function notFound(): JSONResponse {
+		return new JSONResponse(['error' => 'Not found'], Http::STATUS_NOT_FOUND);
+	}//end notFound()
 }//end class

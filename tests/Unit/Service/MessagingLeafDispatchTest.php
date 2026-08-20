@@ -46,300 +46,286 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/pipelinq-messaging-via-or-leaf/tasks.md#4.1
  */
-class MessagingLeafDispatchTest extends TestCase
-{
-    /**
-     * The shared dispatch-leaf stub.
-     *
-     * @var MessageDispatchProvider
-     */
-    private MessageDispatchProvider $leaf;
+class MessagingLeafDispatchTest extends TestCase {
+	/**
+	 * The shared dispatch-leaf stub.
+	 *
+	 * @var MessageDispatchProvider
+	 */
+	private MessageDispatchProvider $leaf;
 
-    /**
-     * A container that resolves the leaf class to the stub.
-     *
-     * @var ContainerInterface
-     */
-    private ContainerInterface $container;
+	/**
+	 * A container that resolves the leaf class to the stub.
+	 *
+	 * @var ContainerInterface
+	 */
+	private ContainerInterface $container;
 
-    /**
-     * Logger mock.
-     *
-     * @var LoggerInterface
-     */
-    private LoggerInterface $logger;
+	/**
+	 * Logger mock.
+	 *
+	 * @var LoggerInterface
+	 */
+	private LoggerInterface $logger;
 
-    /**
-     * Build a leaf stub + a container wired to it.
-     *
-     * @return void
-     */
-    protected function setUp(): void
-    {
-        parent::setUp();
-        $this->leaf      = new MessageDispatchProvider();
-        $this->logger    = $this->createMock(LoggerInterface::class);
-        $this->container = $this->createMock(ContainerInterface::class);
-        $this->container->method('get')->willReturnCallback(
-            function (string $id): object {
-                if ($id === MessageDispatchProvider::class) {
-                    return $this->leaf;
-                }
+	/**
+	 * Build a leaf stub + a container wired to it.
+	 *
+	 * @return void
+	 */
+	protected function setUp(): void {
+		parent::setUp();
+		$this->leaf = new MessageDispatchProvider();
+		$this->logger = $this->createMock(LoggerInterface::class);
+		$this->container = $this->createMock(ContainerInterface::class);
+		$this->container->method('get')->willReturnCallback(
+			function (string $id): object {
+				if ($id === MessageDispatchProvider::class) {
+					return $this->leaf;
+				}
 
-                throw new \RuntimeException('not found: '.$id);
-            }
-        );
-    }//end setUp()
+				throw new \RuntimeException('not found: ' . $id);
+			}
+		);
+	}//end setUp()
 
-    /**
-     * Twilio send routes through the leaf with the right source/body/path,
-     * and reads the sid from the leaf response.
-     *
-     * @return void
-     */
-    public function testTwilioSendRoutesThroughLeaf(): void
-    {
-        $this->leaf->nextResult = [
-            'status'   => 'sent',
-            'source'   => 'twilio-sms',
-            'response' => ['sid' => 'SM123'],
-        ];
+	/**
+	 * Twilio send routes through the leaf with the right source/body/path,
+	 * and reads the sid from the leaf response.
+	 *
+	 * @return void
+	 */
+	public function testTwilioSendRoutesThroughLeaf(): void {
+		$this->leaf->nextResult = [
+			'status' => 'sent',
+			'source' => 'twilio-sms',
+			'response' => ['sid' => 'SM123'],
+		];
 
-        $client = new TwilioSmsClient(
-            container: $this->container,
-            logger: $this->logger,
-            credentials: [],
-            fromNumber: '+31600000000',
-            webhookSecret: 's',
-            sourceId: 'twilio-sms',
-        );
+		$client = new TwilioSmsClient(
+			container: $this->container,
+			logger: $this->logger,
+			credentials: [],
+			fromNumber: '+31600000000',
+			webhookSecret: 's',
+			sourceId: 'twilio-sms',
+		);
 
-        $result = $client->send(toNumber: '+31611111111', body: 'hi');
+		$result = $client->send(toNumber: '+31611111111', body: 'hi');
 
-        $this->assertSame('SM123', $result['externalMessageId']);
-        $this->assertSame('twilio', $result['vendor']);
-        $this->assertCount(1, $this->leaf->calls);
-        $call = $this->leaf->calls[0];
-        $this->assertSame('twilio-sms', $call['source']);
-        $this->assertSame('Messages.json', $call['path']);
-        $this->assertSame('+31600000000', $call['body']['From']);
-        $this->assertSame('+31611111111', $call['body']['To']);
-        $this->assertSame('hi', $call['body']['Body']);
-    }//end testTwilioSendRoutesThroughLeaf()
+		$this->assertSame('SM123', $result['externalMessageId']);
+		$this->assertSame('twilio', $result['vendor']);
+		$this->assertCount(1, $this->leaf->calls);
+		$call = $this->leaf->calls[0];
+		$this->assertSame('twilio-sms', $call['source']);
+		$this->assertSame('Messages.json', $call['path']);
+		$this->assertSame('+31600000000', $call['body']['From']);
+		$this->assertSame('+31611111111', $call['body']['To']);
+		$this->assertSame('hi', $call['body']['Body']);
+	}//end testTwilioSendRoutesThroughLeaf()
 
-    /**
-     * MessageBird send routes through the leaf and reads the id.
-     *
-     * @return void
-     */
-    public function testMessageBirdSendRoutesThroughLeaf(): void
-    {
-        $this->leaf->nextResult = [
-            'status'   => 'sent',
-            'response' => ['id' => 'mb-9'],
-        ];
+	/**
+	 * MessageBird send routes through the leaf and reads the id.
+	 *
+	 * @return void
+	 */
+	public function testMessageBirdSendRoutesThroughLeaf(): void {
+		$this->leaf->nextResult = [
+			'status' => 'sent',
+			'response' => ['id' => 'mb-9'],
+		];
 
-        $client = new MessageBirdSmsClient(
-            container: $this->container,
-            logger: $this->logger,
-            credentials: [],
-            fromNumber: 'Sender',
-            webhookSecret: 's',
-            sourceId: 'messagebird-sms',
-        );
+		$client = new MessageBirdSmsClient(
+			container: $this->container,
+			logger: $this->logger,
+			credentials: [],
+			fromNumber: 'Sender',
+			webhookSecret: 's',
+			sourceId: 'messagebird-sms',
+		);
 
-        $result = $client->send(toNumber: '+31611111111', body: 'hi');
+		$result = $client->send(toNumber: '+31611111111', body: 'hi');
 
-        $this->assertSame('mb-9', $result['externalMessageId']);
-        $this->assertSame('messagebird-sms', $this->leaf->calls[0]['source']);
-        $this->assertSame('messages', $this->leaf->calls[0]['path']);
-        $this->assertSame(['+31611111111'], $this->leaf->calls[0]['body']['recipients']);
-    }//end testMessageBirdSendRoutesThroughLeaf()
+		$this->assertSame('mb-9', $result['externalMessageId']);
+		$this->assertSame('messagebird-sms', $this->leaf->calls[0]['source']);
+		$this->assertSame('messages', $this->leaf->calls[0]['path']);
+		$this->assertSame(['+31611111111'], $this->leaf->calls[0]['body']['recipients']);
+	}//end testMessageBirdSendRoutesThroughLeaf()
 
-    /**
-     * CM.com send routes through the leaf and reads the messageId.
-     *
-     * @return void
-     */
-    public function testCmComSendRoutesThroughLeaf(): void
-    {
-        $this->leaf->nextResult = [
-            'status'   => 'sent',
-            'response' => ['messageId' => 'cm-7'],
-        ];
+	/**
+	 * CM.com send routes through the leaf and reads the messageId.
+	 *
+	 * @return void
+	 */
+	public function testCmComSendRoutesThroughLeaf(): void {
+		$this->leaf->nextResult = [
+			'status' => 'sent',
+			'response' => ['messageId' => 'cm-7'],
+		];
 
-        $client = new CmComSmsClient(
-            container: $this->container,
-            logger: $this->logger,
-            credentials: [],
-            fromNumber: 'Acct',
-            webhookSecret: 's',
-            sourceId: 'cmcom-sms',
-        );
+		$client = new CmComSmsClient(
+			container: $this->container,
+			logger: $this->logger,
+			credentials: [],
+			fromNumber: 'Acct',
+			webhookSecret: 's',
+			sourceId: 'cmcom-sms',
+		);
 
-        $result = $client->send(toNumber: '+31611111111', body: 'hi');
+		$result = $client->send(toNumber: '+31611111111', body: 'hi');
 
-        $this->assertSame('cm-7', $result['externalMessageId']);
-        $this->assertSame('cmcom-sms', $this->leaf->calls[0]['source']);
-        $this->assertSame('messages', $this->leaf->calls[0]['path']);
-    }//end testCmComSendRoutesThroughLeaf()
+		$this->assertSame('cm-7', $result['externalMessageId']);
+		$this->assertSame('cmcom-sms', $this->leaf->calls[0]['source']);
+		$this->assertSame('messages', $this->leaf->calls[0]['path']);
+	}//end testCmComSendRoutesThroughLeaf()
 
-    /**
-     * WhatsApp template send routes through the leaf and extracts the wamid.
-     *
-     * @return void
-     */
-    public function testWhatsAppTemplateRoutesThroughLeaf(): void
-    {
-        $this->leaf->nextResult = [
-            'status'   => 'sent',
-            'response' => ['messages' => [['id' => 'wamid.ABC']]],
-        ];
+	/**
+	 * WhatsApp template send routes through the leaf and extracts the wamid.
+	 *
+	 * @return void
+	 */
+	public function testWhatsAppTemplateRoutesThroughLeaf(): void {
+		$this->leaf->nextResult = [
+			'status' => 'sent',
+			'response' => ['messages' => [['id' => 'wamid.ABC']]],
+		];
 
-        $client = new WhatsAppProviderClient($this->container, $this->logger);
+		$client = new WhatsAppProviderClient($this->container, $this->logger);
 
-        $result = $client->sendTemplate(
-            channelProvider: ['sourceId' => 'whatsapp-cloud-api', 'vendor' => 'meta'],
-            phoneNumber: '+31611111111',
-            templateName: 'welcome',
-            language: 'nl',
-            parameters: ['Jan'],
-        );
+		$result = $client->sendTemplate(
+			channelProvider: ['sourceId' => 'whatsapp-cloud-api', 'vendor' => 'meta'],
+			phoneNumber: '+31611111111',
+			templateName: 'welcome',
+			language: 'nl',
+			parameters: ['Jan'],
+		);
 
-        $this->assertSame('wamid.ABC', $result['externalMessageId']);
-        $this->assertSame('whatsapp-cloud-api', $this->leaf->calls[0]['source']);
-        $this->assertSame('messages', $this->leaf->calls[0]['path']);
-        $this->assertSame('whatsapp', $this->leaf->calls[0]['body']['messaging_product']);
-        $this->assertSame('template', $this->leaf->calls[0]['body']['type']);
-    }//end testWhatsAppTemplateRoutesThroughLeaf()
+		$this->assertSame('wamid.ABC', $result['externalMessageId']);
+		$this->assertSame('whatsapp-cloud-api', $this->leaf->calls[0]['source']);
+		$this->assertSame('messages', $this->leaf->calls[0]['path']);
+		$this->assertSame('whatsapp', $this->leaf->calls[0]['body']['messaging_product']);
+		$this->assertSame('template', $this->leaf->calls[0]['body']['type']);
+	}//end testWhatsAppTemplateRoutesThroughLeaf()
 
-    /**
-     * A source-missing degrade maps to a permanent error (no failover).
-     *
-     * @return void
-     */
-    public function testSourceMissingDegradeIsPermanent(): void
-    {
-        $this->leaf->nextResult = ['unavailable' => true, 'cause' => 'openconnector-source-missing'];
+	/**
+	 * A source-missing degrade maps to a permanent error (no failover).
+	 *
+	 * @return void
+	 */
+	public function testSourceMissingDegradeIsPermanent(): void {
+		$this->leaf->nextResult = ['unavailable' => true, 'cause' => 'openconnector-source-missing'];
 
-        $client = $this->makeTwilio();
+		$client = $this->makeTwilio();
 
-        $this->expectException(PermanentSmsProviderException::class);
-        $client->send(toNumber: '+31611111111', body: 'hi');
-    }//end testSourceMissingDegradeIsPermanent()
+		$this->expectException(PermanentSmsProviderException::class);
+		$client->send(toNumber: '+31611111111', body: 'hi');
+	}//end testSourceMissingDegradeIsPermanent()
 
-    /**
-     * A provider-auth degrade maps to a permanent error (no failover).
-     *
-     * @return void
-     */
-    public function testProviderAuthDegradeIsPermanent(): void
-    {
-        $this->leaf->nextResult = ['unavailable' => true, 'cause' => 'provider-auth'];
+	/**
+	 * A provider-auth degrade maps to a permanent error (no failover).
+	 *
+	 * @return void
+	 */
+	public function testProviderAuthDegradeIsPermanent(): void {
+		$this->leaf->nextResult = ['unavailable' => true, 'cause' => 'provider-auth'];
 
-        $this->expectException(PermanentSmsProviderException::class);
-        $this->makeTwilio()->send(toNumber: '+31611111111', body: 'hi');
-    }//end testProviderAuthDegradeIsPermanent()
+		$this->expectException(PermanentSmsProviderException::class);
+		$this->makeTwilio()->send(toNumber: '+31611111111', body: 'hi');
+	}//end testProviderAuthDegradeIsPermanent()
 
-    /**
-     * An upstream-down degrade maps to a transient error (failover).
-     *
-     * @return void
-     */
-    public function testUpstreamDownDegradeIsTransient(): void
-    {
-        $this->leaf->nextResult = ['unavailable' => true, 'cause' => 'upstream-service-down'];
+	/**
+	 * An upstream-down degrade maps to a transient error (failover).
+	 *
+	 * @return void
+	 */
+	public function testUpstreamDownDegradeIsTransient(): void {
+		$this->leaf->nextResult = ['unavailable' => true, 'cause' => 'upstream-service-down'];
 
-        $this->expectException(TransientSmsProviderException::class);
-        $this->makeTwilio()->send(toNumber: '+31611111111', body: 'hi');
-    }//end testUpstreamDownDegradeIsTransient()
+		$this->expectException(TransientSmsProviderException::class);
+		$this->makeTwilio()->send(toNumber: '+31611111111', body: 'hi');
+	}//end testUpstreamDownDegradeIsTransient()
 
-    /**
-     * An openconnector-down degrade maps to a transient error (failover).
-     *
-     * @return void
-     */
-    public function testOpenConnectorDownDegradeIsTransient(): void
-    {
-        $this->leaf->nextResult = ['unavailable' => true, 'cause' => 'openconnector-down'];
+	/**
+	 * An openconnector-down degrade maps to a transient error (failover).
+	 *
+	 * @return void
+	 */
+	public function testOpenConnectorDownDegradeIsTransient(): void {
+		$this->leaf->nextResult = ['unavailable' => true, 'cause' => 'openconnector-down'];
 
-        $this->expectException(TransientSmsProviderException::class);
-        $this->makeTwilio()->send(toNumber: '+31611111111', body: 'hi');
-    }//end testOpenConnectorDownDegradeIsTransient()
+		$this->expectException(TransientSmsProviderException::class);
+		$this->makeTwilio()->send(toNumber: '+31611111111', body: 'hi');
+	}//end testOpenConnectorDownDegradeIsTransient()
 
-    /**
-     * An unknown degrade cause maps to a transient error (safe failover).
-     *
-     * @return void
-     */
-    public function testUnknownCauseDegradeIsTransient(): void
-    {
-        $this->leaf->nextResult = ['unavailable' => true, 'cause' => 'something-new'];
+	/**
+	 * An unknown degrade cause maps to a transient error (safe failover).
+	 *
+	 * @return void
+	 */
+	public function testUnknownCauseDegradeIsTransient(): void {
+		$this->leaf->nextResult = ['unavailable' => true, 'cause' => 'something-new'];
 
-        $this->expectException(TransientSmsProviderException::class);
-        $this->makeTwilio()->send(toNumber: '+31611111111', body: 'hi');
-    }//end testUnknownCauseDegradeIsTransient()
+		$this->expectException(TransientSmsProviderException::class);
+		$this->makeTwilio()->send(toNumber: '+31611111111', body: 'hi');
+	}//end testUnknownCauseDegradeIsTransient()
 
-    /**
-     * When the leaf is not resolvable (container miss / not deployed) the
-     * client raises the same permanent error as today's missing-transport
-     * guard, so the failover loop is unchanged.
-     *
-     * @return void
-     */
-    public function testLeafAbsentIsPermanent(): void
-    {
-        $container = $this->createMock(ContainerInterface::class);
-        $container->method('get')->willThrowException(new \RuntimeException('no leaf'));
+	/**
+	 * When the leaf is not resolvable (container miss / not deployed) the
+	 * client raises the same permanent error as today's missing-transport
+	 * guard, so the failover loop is unchanged.
+	 *
+	 * @return void
+	 */
+	public function testLeafAbsentIsPermanent(): void {
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')->willThrowException(new \RuntimeException('no leaf'));
 
-        $client = new TwilioSmsClient(
-            container: $container,
-            logger: $this->logger,
-            credentials: [],
-            fromNumber: '+31600000000',
-            webhookSecret: 's',
-            sourceId: 'twilio-sms',
-        );
+		$client = new TwilioSmsClient(
+			container: $container,
+			logger: $this->logger,
+			credentials: [],
+			fromNumber: '+31600000000',
+			webhookSecret: 's',
+			sourceId: 'twilio-sms',
+		);
 
-        $this->expectException(PermanentSmsProviderException::class);
-        $client->send(toNumber: '+31611111111', body: 'hi');
-    }//end testLeafAbsentIsPermanent()
+		$this->expectException(PermanentSmsProviderException::class);
+		$client->send(toNumber: '+31611111111', body: 'hi');
+	}//end testLeafAbsentIsPermanent()
 
-    /**
-     * An unconfigured source slug raises a permanent error before any leaf
-     * call (no failover, matching today's "source not configured").
-     *
-     * @return void
-     */
-    public function testEmptySourceIsPermanent(): void
-    {
-        $client = new TwilioSmsClient(
-            container: $this->container,
-            logger: $this->logger,
-            credentials: [],
-            fromNumber: '+31600000000',
-            webhookSecret: 's',
-            sourceId: null,
-        );
+	/**
+	 * An unconfigured source slug raises a permanent error before any leaf
+	 * call (no failover, matching today's "source not configured").
+	 *
+	 * @return void
+	 */
+	public function testEmptySourceIsPermanent(): void {
+		$client = new TwilioSmsClient(
+			container: $this->container,
+			logger: $this->logger,
+			credentials: [],
+			fromNumber: '+31600000000',
+			webhookSecret: 's',
+			sourceId: null,
+		);
 
-        $this->expectException(PermanentSmsProviderException::class);
-        $client->send(toNumber: '+31611111111', body: 'hi');
-    }//end testEmptySourceIsPermanent()
+		$this->expectException(PermanentSmsProviderException::class);
+		$client->send(toNumber: '+31611111111', body: 'hi');
+	}//end testEmptySourceIsPermanent()
 
-    /**
-     * Build a Twilio client wired to the shared container + leaf.
-     *
-     * @return TwilioSmsClient
-     */
-    private function makeTwilio(): TwilioSmsClient
-    {
-        return new TwilioSmsClient(
-            container: $this->container,
-            logger: $this->logger,
-            credentials: [],
-            fromNumber: '+31600000000',
-            webhookSecret: 's',
-            sourceId: 'twilio-sms',
-        );
-    }//end makeTwilio()
+	/**
+	 * Build a Twilio client wired to the shared container + leaf.
+	 *
+	 * @return TwilioSmsClient
+	 */
+	private function makeTwilio(): TwilioSmsClient {
+		return new TwilioSmsClient(
+			container: $this->container,
+			logger: $this->logger,
+			credentials: [],
+			fromNumber: '+31600000000',
+			webhookSecret: 's',
+			sourceId: 'twilio-sms',
+		);
+	}//end makeTwilio()
 }//end class

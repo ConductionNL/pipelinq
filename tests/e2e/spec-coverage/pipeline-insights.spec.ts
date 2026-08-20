@@ -1,6 +1,6 @@
 /*
  * SPDX-FileCopyrightText: 2026 Pipelinq Contributors
- * SPDX-License-Identifier: AGPL-3.0-or-later
+ * SPDX-License-Identifier: EUPL-1.2
  *
  * Gate-19 e2e coverage for openspec/specs/pipeline-insights/spec.md
  * UI-observable scenarios: pipeline page renders, KPI tile visible.
@@ -12,25 +12,33 @@ import { test, expect } from '@playwright/test'
 // @e2e openspec/specs/pipeline-insights/spec.md#pipeline-value-kpi-widget
 test('pipeline value KPI tile visible on dashboard', async ({ page }) => {
 	await page.goto('/apps/pipelinq/')
-	await expect(page.getByText(/Pipeline V/i).first()).toBeVisible({ timeout: 10000 })
+	await expect(page.getByText(/Pipeline V/i).first()).toBeVisible({
+		timeout: 10000,
+	})
 })
 
 // @e2e openspec/specs/pipeline-insights/spec.md#empty-pipeline-analytics
 test('pipeline page renders without error', async ({ page }) => {
 	await page.goto('/apps/pipelinq/pipeline')
-	await expect(page.locator('body')).not.toContainText('Internal Server Error', { timeout: 10000 })
+	await expect(page.locator('body')).not.toContainText('Internal Server Error', {
+		timeout: 10000,
+	})
 })
 
 // @e2e openspec/specs/pipeline-insights/spec.md#stage-header-shows-total-value
 test('pipeline page main content accessible', async ({ page }) => {
 	await page.goto('/apps/pipelinq/pipeline')
-	await expect(page.locator('#app-content, .app-content, main').first()).toBeVisible({ timeout: 10000 })
+	await expect(
+		page.locator('#app-content, .app-content, main').first(),
+	).toBeVisible({ timeout: 10000 })
 })
 
 // @e2e openspec/specs/pipeline-insights/spec.md#overdue-highlighting-in-my-work
 test('my work page loads for overdue highlighting', async ({ page }) => {
 	await page.goto('/apps/pipelinq/my-work')
-	await expect(page.locator('body')).not.toContainText('Internal Server Error', { timeout: 10000 })
+	await expect(page.locator('body')).not.toContainText('Internal Server Error', {
+		timeout: 10000,
+	})
 })
 
 /*

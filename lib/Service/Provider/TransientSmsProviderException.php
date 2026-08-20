@@ -32,6 +32,5 @@ use RuntimeException;
  *
  * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#3.3
  */
-class TransientSmsProviderException extends RuntimeException
-{
+class TransientSmsProviderException extends RuntimeException {
 }//end class

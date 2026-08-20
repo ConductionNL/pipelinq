@@ -4,7 +4,7 @@
  * Deals Overview dashboard widget.
  *
  * Shows open leads with title, client name, value, and stage
- * in the Nextcloud Dashboard and MyDash.
+ * in the Nextcloud Dashboard and LaunchPad.
  *
  * @category Dashboard
  * @package  OCA\Pipelinq\Dashboard
@@ -28,88 +28,76 @@ use OCP\Util;
 /**
  * Deals Overview widget for the Nextcloud Dashboard.
  */
-class DealsOverviewWidget implements IWidget
-{
-    /**
-     * Constructor.
-     *
-     * @param IL10N $l10n Localisation service
-     */
-    public function __construct(
-        private IL10N $l10n,
-    ) {
+class DealsOverviewWidget implements IWidget {
+	/**
+	 * Constructor.
+	 *
+	 * @param IL10N $l10n Localisation service
+	 */
+	public function __construct(
+		private IL10N $l10n,
+	) {
 
-    }//end __construct()
+	}//end __construct()
 
-    /**
-     * Get the unique widget identifier.
-     *
-     * @return string The widget ID
-     */
-    public function getId(): string
-    {
-        return 'pipelinq_deals_overview_widget';
+	/**
+	 * Get the unique widget identifier.
+	 *
+	 * @return string The widget ID
+	 */
+	public function getId(): string {
+		return 'pipelinq_deals_overview_widget';
+	}//end getId()
 
-    }//end getId()
+	/**
+	 * Get the translated widget title.
+	 *
+	 * @return string The widget title
+	 */
+	public function getTitle(): string {
+		return $this->l10n->t('Deals overview');
+	}//end getTitle()
 
-    /**
-     * Get the translated widget title.
-     *
-     * @return string The widget title
-     */
-    public function getTitle(): string
-    {
-        return $this->l10n->t('Deals overview');
+	/**
+	 * Get the display order of this widget.
+	 *
+	 * @return int The sort order
+	 */
+	public function getOrder(): int {
+		return 10;
+	}//end getOrder()
 
-    }//end getTitle()
+	/**
+	 * Get the CSS class for the widget icon.
+	 *
+	 * @return string The icon CSS class
+	 */
+	public function getIconClass(): string {
+		return 'icon-pipelinq-widget';
+	}//end getIconClass()
 
-    /**
-     * Get the display order of this widget.
-     *
-     * @return int The sort order
-     */
-    public function getOrder(): int
-    {
-        return 10;
+	/**
+	 * Get the URL for the widget header link.
+	 *
+	 * @return string|null The URL or null if none
+	 */
+	public function getUrl(): ?string {
+		return null;
+	}//end getUrl()
 
-    }//end getOrder()
+	/**
+	 * Load the widget scripts and styles.
+	 *
+	 * @return void
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) — Nextcloud Util API is static by design
+	 */
+	public function load(): void {
+		// Shared vendor chunks emitted by webpack splitChunks (see webpack.config.js).
+		Util::addScript(Application::APP_ID, Application::APP_ID . '-shared-vendor');
+		Util::addScript(Application::APP_ID, Application::APP_ID . '-shared-nc-vue');
+		Util::addScript(Application::APP_ID, Application::APP_ID . '-dealsOverviewWidget');
+		Util::addStyle(Application::APP_ID, 'dashboardWidgets');
 
-    /**
-     * Get the CSS class for the widget icon.
-     *
-     * @return string The icon CSS class
-     */
-    public function getIconClass(): string
-    {
-        return 'icon-pipelinq-widget';
-
-    }//end getIconClass()
-
-    /**
-     * Get the URL for the widget header link.
-     *
-     * @return string|null The URL or null if none
-     */
-    public function getUrl(): ?string
-    {
-        return null;
-
-    }//end getUrl()
-
-    /**
-     * Load the widget scripts and styles.
-     *
-     * @return void
-     *
-     * @SuppressWarnings(PHPMD.StaticAccess) — Nextcloud Util API is static by design
-     */
-    public function load(): void
-    {
-        // Shared vendor chunks emitted by webpack splitChunks (see webpack.config.js).
-        Util::addScript(Application::APP_ID, Application::APP_ID.'-shared-vendor');
-        Util::addScript(Application::APP_ID, Application::APP_ID.'-shared-nc-vue');
-        Util::addScript(Application::APP_ID, Application::APP_ID.'-dealsOverviewWidget');
-        Util::addStyle(Application::APP_ID, 'dashboardWidgets');
-
-    }//end load()
+	}//end load()
 }//end class

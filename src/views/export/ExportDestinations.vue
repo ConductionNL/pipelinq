@@ -6,25 +6,33 @@
 	<div>
 		<CnIndexPage
 			:title="t('pipelinq', 'Export destinations')"
-			:description="t('pipelinq', 'Data-warehouse and object-storage targets for BI exports')"
+			:description="
+				t(
+					'pipelinq',
+					'Data-warehouse and object-storage targets for BI exports',
+				)
+			"
 			:schema="schema"
 			:objects="objects"
 			:pagination="pagination"
 			:loading="loading"
 			:refreshing="refreshing"
-			:sort-key="sortKey"
-			:sort-order="sortOrder"
-			:include-columns="visibleColumns"
-			:empty-title="t('pipelinq', 'No destinations yet')"
-			:empty-action-label="t('pipelinq', 'New destination')"
+			:sortKey="sortKey"
+			:sortOrder="sortOrder"
+			:includeColumns="visibleColumns"
+			:emptyTitle="t('pipelinq', 'No destinations yet')"
+			:emptyActionLabel="t('pipelinq', 'New destination')"
 			@add="createNew"
-			@empty-action="createNew"
+			@emptyAction="createNew"
 			@refresh="onRefresh"
 			@sort="onSort"
 			@view="openDestination"
-			@page-changed="onPageChange">
+			@pageChanged="onPageChange">
 			<template #row-actions="{ row }">
-				<NcButton type="tertiary" :disabled="busyId === row.id" @click.stop="testConnection(row)">
+				<NcButton
+					variant="tertiary"
+					:disabled="busyId === row.id"
+					@click.stop="testConnection(row)">
 					{{ t('pipelinq', 'Test connection') }}
 				</NcButton>
 			</template>
@@ -33,12 +41,12 @@
 </template>
 
 <script>
-import { inject } from 'vue'
-import { NcButton } from '@nextcloud/vue'
-import { showError, showSuccess } from '@nextcloud/dialogs'
 import { CnIndexPage, useListView } from '@conduction/nextcloud-vue'
-import { useObjectStore } from '../../store/modules/object.js'
+import { showError, showSuccess } from '@nextcloud/dialogs'
+import { NcButton } from '@nextcloud/vue'
+import { inject } from 'vue'
 import { exportApi } from '../../services/exportApi.js'
+import { useObjectStore } from '../../store/modules/object.js'
 
 export default {
 	name: 'ExportDestinations',
@@ -46,17 +54,20 @@ export default {
 		CnIndexPage,
 		NcButton,
 	},
+
 	setup() {
 		const sidebarState = inject('sidebarState', null)
 		const objectStore = useObjectStore()
 		return useListView('exportDestination', { sidebarState, objectStore })
 	},
+
 	data() {
 		return {
 			busyId: null,
 			refreshing: false,
 		}
 	},
+
 	computed: {
 		/**
 		 * Columns shown on the list, in order.
@@ -64,9 +75,16 @@ export default {
 		 * @return {Array<string>} The column keys.
 		 */
 		visibleColumns() {
-			return ['name', 'type', 'connectorSourceId', 'validationStatus', 'lastValidatedAt']
+			return [
+				'name',
+				'type',
+				'connectorSourceId',
+				'validationStatus',
+				'lastValidatedAt',
+			]
 		},
 	},
+
 	methods: {
 		/**
 		 * Refresh handler for the Actions-menu Refresh item. Drives the
@@ -82,20 +100,26 @@ export default {
 				this.refreshing = false
 			}
 		},
+
 		/**
 		 * Navigate to a destination's edit form.
 		 *
 		 * @param {object} row The clicked row.
 		 */
 		openDestination(row) {
-			this.$router.push({ name: 'ExportDestinationDetail', params: { id: row.id } })
+			this.$router.push({
+				name: 'ExportDestinationDetail',
+				params: { id: row.id },
+			})
 		},
+
 		/**
 		 * Start a new destination.
 		 */
 		createNew() {
 			this.$router.push({ name: 'ExportDestinationNew' })
 		},
+
 		/**
 		 * Test connectivity to a destination.
 		 *

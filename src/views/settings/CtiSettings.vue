@@ -10,12 +10,27 @@
 <template>
 	<NcSettingsSection
 		:name="t('pipelinq', 'CTI integration')"
-		:description="t('pipelinq', 'Configure the telephony platform that powers screen-pop and click-to-dial.')">
-		<form class="cti-settings" @submit.prevent="save">
+		:description="
+			t(
+				'pipelinq',
+				'Configure the telephony platform that powers screen-pop and click-to-dial.',
+			)
+		">
+		<!--
+		  - `data-testid` on the FORM, not the section: NcSettingsSection's own
+		  - classes come from a CSS module in @nextcloud/vue 9, so there is no
+		  - stable selector for the section wrapper. This gives the CTI controls a
+		  - handle that survives a component major — the sibling CtiEventLog
+		  - already does the same with `cti-event-log-table`. It matters here
+		  - because the pipelinq admin page renders TWO "Test connection" buttons
+		  - (this one and XWiki's), and an unscoped match would let this whole
+		  - section disappear while the assertion stayed green on XWiki's button.
+		  -->
+		<form class="cti-settings" data-testid="cti-settings" @submit.prevent="save">
 			<NcSelect
 				v-model="config.platform"
 				:options="platformOptions"
-				:input-label="t('pipelinq', 'Platform')"
+				:inputLabel="t('pipelinq', 'Platform')"
 				label="label"
 				:reduce="(o) => o.value" />
 			<NcTextField
@@ -25,7 +40,7 @@
 			<NcSelect
 				v-model="config.auth_method"
 				:options="authMethodOptions"
-				:input-label="t('pipelinq', 'Auth method')"
+				:inputLabel="t('pipelinq', 'Auth method')"
 				label="label"
 				:reduce="(o) => o.value" />
 			<NcTextField
@@ -46,9 +61,7 @@
 				v-model="config.default_country_code"
 				:label="t('pipelinq', 'Default country code (ISO-3166)')"
 				placeholder="NL" />
-			<NcCheckboxRadioSwitch
-				v-model="config.screen_pop_enabled"
-				type="switch">
+			<NcCheckboxRadioSwitch v-model="config.screen_pop_enabled" type="switch">
 				{{ t('pipelinq', 'Enable inbound screen-pop') }}
 			</NcCheckboxRadioSwitch>
 			<NcCheckboxRadioSwitch
@@ -57,10 +70,14 @@
 				{{ t('pipelinq', 'Enable outbound click-to-dial') }}
 			</NcCheckboxRadioSwitch>
 			<div class="cti-settings__actions">
-				<NcButton type="secondary" :disabled="testing" @click="test">
-					{{ testing ? t('pipelinq', 'Testing…') : t('pipelinq', 'Test connection') }}
+				<NcButton variant="secondary" :disabled="testing" @click="test">
+					{{
+						testing
+							? t('pipelinq', 'Testing…')
+							: t('pipelinq', 'Test connection')
+					}}
 				</NcButton>
-				<NcButton type="primary" :disabled="saving" @click="save">
+				<NcButton variant="primary" :disabled="saving" @click="save">
 					{{ saving ? t('pipelinq', 'Saving…') : t('pipelinq', 'Save') }}
 				</NcButton>
 			</div>
@@ -72,13 +89,26 @@
 </template>
 
 <script>
-import { NcButton, NcCheckboxRadioSwitch, NcSelect, NcSettingsSection, NcTextField } from '@nextcloud/vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
+import {
+	NcButton,
+	NcCheckboxRadioSwitch,
+	NcSelect,
+	NcSettingsSection,
+	NcTextField,
+} from '@nextcloud/vue'
 import { getConfig, testConnection, updateConfig } from '../../services/ctiApi.js'
 
 export default {
 	name: 'CtiSettings',
-	components: { NcButton, NcCheckboxRadioSwitch, NcSelect, NcSettingsSection, NcTextField },
+	components: {
+		NcButton,
+		NcCheckboxRadioSwitch,
+		NcSelect,
+		NcSettingsSection,
+		NcTextField,
+	},
+
 	data() {
 		return {
 			config: {
@@ -92,11 +122,13 @@ export default {
 				default_outbound_caller_id: '',
 				default_country_code: 'NL',
 			},
+
 			saving: false,
 			testing: false,
 			status: '',
 		}
 	},
+
 	computed: {
 		platformOptions() {
 			return [
@@ -106,23 +138,33 @@ export default {
 				{ value: 'other', label: t('pipelinq', 'Other') },
 			]
 		},
+
 		authMethodOptions() {
 			return [
 				{ value: 'basic', label: 'Basic' },
 				{ value: 'oauth', label: 'OAuth 2.0' },
 				{ value: 'api_key', label: 'API key' },
-				{ value: 'webhook-secret', label: t('pipelinq', 'Webhook shared secret') },
+				{
+					value: 'webhook-secret',
+					label: t('pipelinq', 'Webhook shared secret'),
+				},
 			]
 		},
 	},
+
 	async mounted() {
 		try {
 			const config = await getConfig()
 			this.config = { ...this.config, ...(config || {}) }
 		} catch (e) {
-			showError(t('pipelinq', 'Failed to load CTI config: {error}', { error: e.message || 'network error' }))
+			showError(
+				t('pipelinq', 'Failed to load CTI config: {error}', {
+					error: e.message || 'network error',
+				}),
+			)
 		}
 	},
+
 	methods: {
 		async save() {
 			this.saving = true
@@ -131,23 +173,34 @@ export default {
 				this.config = { ...this.config, ...saved }
 				showSuccess(t('pipelinq', 'CTI configuration saved.'))
 			} catch (e) {
-				showError(t('pipelinq', 'Failed to save CTI config: {error}', { error: e.message || 'network error' }))
+				showError(
+					t('pipelinq', 'Failed to save CTI config: {error}', {
+						error: e.message || 'network error',
+					}),
+				)
 			} finally {
 				this.saving = false
 			}
 		},
+
 		async test() {
 			this.testing = true
 			this.status = ''
 			try {
 				const result = await testConnection()
 				if (result.ok) {
-					this.status = t('pipelinq', 'Connection OK ({platform})', { platform: result.platform })
+					this.status = t('pipelinq', 'Connection OK ({platform})', {
+						platform: result.platform,
+					})
 				} else {
-					this.status = t('pipelinq', 'Connection failed: {message}', { message: result.message })
+					this.status = t('pipelinq', 'Connection failed: {message}', {
+						message: result.message,
+					})
 				}
 			} catch (e) {
-				this.status = t('pipelinq', 'Connection test errored: {error}', { error: e.message || 'unknown' })
+				this.status = t('pipelinq', 'Connection test errored: {error}', {
+					error: e.message || 'unknown',
+				})
 			} finally {
 				this.testing = false
 			}
@@ -163,11 +216,13 @@ export default {
 	gap: 12px;
 	max-width: 720px;
 }
+
 .cti-settings__actions {
 	display: flex;
 	gap: 12px;
 	justify-content: flex-end;
 }
+
 .cti-settings__status {
 	margin-top: 8px;
 	font-style: italic;

@@ -4,6 +4,8 @@ status: done
 
 # Omnichannel Registratie Specification
 
+**OpenSpec changes**: [vng-klantinteracties-leaf](../../changes/archive/2026-07-12-vng-klantinteracties-leaf/) _(archived 2026-07-12 — realises this capability's VNG Klantinteracties `Contactmoment`/`Kanaal` mapping over the canonical `ticket` schema; see [vng-klantinteracties-leaf](../vng-klantinteracties-leaf/spec.md) for the VNG ↔ canonical contract + AVG BSN policy)_
+
 ## Purpose
 
 @e2e exclude draft/partial spec — channel-specific metadata form adaptations not yet built as separate UI surface; covered by contactmomenten UI tests
@@ -20,7 +22,6 @@ The contactmoment entity is extended with a flexible metadata structure per chan
 - **Core fields** (all channels): timestamp, agent, client reference, zaak reference, subject, summary, outcome
 - **Channel envelope**: channel type + channel-specific metadata object
 - **Channel metadata examples**: call duration (telefoon), email thread ID (e-mail), ticket number (balie), chat transcript link (chat)
-
 ## Requirements
 
 ---
@@ -435,6 +436,31 @@ The system MUST provide search and filter capabilities for contactmomenten.
 
 ---
 
+### Requirement: Outbound messages registered as contactmomenten
+
+Every successful outbound WhatsApp or SMS send (agent composer or SLA escalation) MUST automatically produce a `contactmoment` with the unified core structure (timestamp, acting agent or `system:sla-engine`, client/contact reference, subject, summary) and the channel envelope: WhatsApp stored as `channel: "chat"` with `metadata: {platform: "whatsapp", direction: "outbound", messageId, conversationId}` (consistent with the existing chat-channel convention), SMS stored under a new `channel: "sms"` enum value with the same metadata shape. The `contactmoment.channel` enum (`lib/Settings/pipelinq_register.json`, currently `telefoon|email|balie|chat|social|brief`) MUST be extended with `sms`, channel statistics and rapportage channel labels MUST include the new value, and existing contactmomenten MUST be unaffected (additive enum change imported via the ADR-037 Repair step).
+
+**Feature tier**: V1
+
+#### Scenario: Outbound WhatsApp appears in the client's contactmoment timeline
+
+- **GIVEN** an agent sends a WhatsApp message from a client detail page
+- **WHEN** the send succeeds
+- **THEN** a `contactmoment` MUST exist with `channel: "chat"`, `metadata.platform: "whatsapp"`, `metadata.direction: "outbound"`, and the client reference
+- AND it MUST appear in the client's contactmomenten list without manual registration
+
+#### Scenario: SMS channel value is reportable
+
+- **GIVEN** outbound SMS contactmomenten exist
+- **WHEN** channel statistics (rapportage) are computed
+- **THEN** the `sms` channel MUST appear as its own bucket alongside the existing channels
+
+#### Scenario: Additive enum migration is safe
+
+- **GIVEN** an instance with existing contactmomenten
+- **WHEN** the register fragment with the extended enum is re-imported via the Repair step
+- **THEN** all existing rows MUST remain valid and readable and no other `contactmoment` property MUST change
+
 ## Appendix
 
 ### Current Implementation Status
@@ -483,4 +509,4 @@ The system MUST provide search and filter capabilities for contactmomenten.
 - **Resolved:** Contactmoment is a separate entity from request, with explicit schema definition.
 - **Resolved:** Channel configuration extends existing SystemTag infrastructure.
 - **Resolved:** Integration with existing ActivityService and NotificationService is specified.
-- **Dependency:** Requires `kcc-werkplek` and `klantbeeld-360` specs for full KCC workflow context. Procest integration for zaak linking is optional (gracefully degrades when not installed).
+- **Dependency:** Requires `kcc-werkplek` and `customer-360` specs for full KCC workflow context. Procest integration for zaak linking is optional (gracefully degrades when not installed).

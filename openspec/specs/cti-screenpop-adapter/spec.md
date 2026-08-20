@@ -9,18 +9,20 @@ Integrates pipelinq with telephony platforms so inbound calls screen-pop the cal
 ## Requirements
 ### Requirement: Inbound Screen-Pop on Call Answer (REQ-CTI-001)
 
+@e2e exclude every scenario here is triggered by an inbound `answered` webhook delivered by a telephony platform, and the CI instance provisions none: tests/e2e/ci-seed.sh installs only pipelinq + openregister and no CallVoip/RingCentral/Asterisk endpoint exists to deliver one. The agent-facing surfaces the scenarios describe are additionally unreachable — src/modals/ScreenPopModal.vue (the multi-match chooser) and src/modals/NewContactIntakeModal.vue (the no-match intake form) BOTH exist but are imported and registered by NO other component in src/, so no route mounts either of them, and `screenPop()` in src/services/ctiApi.js is called from nowhere in src/, leaving only the raw `POST /api/cti/screen-pop` endpoint. Verify with `grep -rn "ScreenPopModal\|NewContactIntakeModal\|screenPop(" src/`, which returns only those files' own definitions. Reported as a product gap rather than asserted. The lookup and the E.164 normalisation the scenarios turn on are asserted by tests/Unit/Service/CtiContactMatcherTest.php (testNullNumberReturnsEmpty, testMissingRegisterReturnsEmpty) and tests/Unit/Service/PhoneNormaliserTest.php (testNationalLeadingZeroBecomesE164, testE164PassesThrough).
+
 The system MUST automatically navigate the agent's browser tab to the caller's CRM record when an inbound call is answered.
 
 **Feature tier**: MVP
 
-#### Scenario: Single contact match navigates to klantbeeld view
+#### Scenario: Single contact match navigates to customer 360 view
 
 - GIVEN a call arrives on the agent's extension from phone number `+31612345678`
 - AND exactly one contact exists in the database with this phone number (after E.164 normalisation)
 - WHEN the telephony platform sends a `answered` webhook to pipelinq
 - AND screen-pop is enabled in `cti_adapter_config.screen_pop_enabled = true`
 - THEN pipelinq calls `POST /api/cti/screen-pop` with the caller's phone number
-- AND within 500ms + `screen_pop_delay_ms` (default 0), the agent's browser navigates to `/klantbeeld/contact/{contactId}` for that contact's klantbeeld-360 view
+- AND within 500ms + `screen_pop_delay_ms` (default 0), the agent's browser navigates to `/customer-360/contact/{contactId}` for that contact's customer-360 view
 - AND the contactmoment is created and linked to the contact (see REQ-CTI-003)
 
 #### Scenario: Multiple contact matches show chooser modal
@@ -44,7 +46,7 @@ The system MUST automatically navigate the agent's browser tab to the caller's C
   - Optional "Company" dropdown (existing clients)
   - Optional "Email" field
   - A "Create & continue" button
-- AND on submission, a new contact is created and the agent is routed to its klantbeeld view
+- AND on submission, a new contact is created and the agent is routed to its customer 360 view
 - AND the contactmoment is linked to the newly created contact
 
 #### Scenario: Screen-pop delay allows agent to hear greeting
@@ -67,6 +69,8 @@ The system MUST automatically navigate the agent's browser tab to the caller's C
 ---
 
 ### Requirement: Number Normalisation for Matching (REQ-CTI-002)
+
+@e2e exclude pure string-transformation invariants inside lib/Service/PhoneNormaliser.php — the normalised number, the preserved raw number and the `invalid_number_format` log entry are all internal to `normaliseForOrg()` and never rendered on any pipelinq screen, so a browser cannot distinguish one input format from another. Asserted by tests/Unit/Service/PhoneNormaliserTest.php (testE164PassesThrough, testNationalLeadingZeroBecomesE164, testDoubleZeroBecomesE164, testGarbageReturnsNull, testEmptyStringReturnsNull) — the last two are the "MUST NOT crash on an unparseable number" path, which returns a null `e164` alongside the untouched `raw`.
 
 The system MUST normalise all phone numbers to E.164 format for reliable contact matching across different input formats.
 
@@ -107,13 +111,15 @@ The system MUST normalise all phone numbers to E.164 format for reliable contact
 
 ### Requirement: Click-to-Dial Outbound (REQ-CTI-003)
 
+@e2e exclude the phone icon these scenarios hang on has no entry point: src/components/CtiClickToDialButton.vue is imported and registered by NO other component, page or manifest entry in src/ (the remaining `click-to-dial` mentions in src/ are the API client src/services/ctiApi.js, the admin toggle in src/views/settings/CtiSettings.vue and a doc comment in src/views/settings/CtiPage.vue — none of them a render site), so no contact / deal / customer-360 / request view renders it and a browser cannot hover, click or observe a disabled state anywhere. Reported as a product gap rather than asserted. Behind the missing button, origination is an outbound call to a PBX the CI instance does not provision; the adapter dispatch it would take is asserted by tests/Unit/Service/CtiAdapterRegistryTest.php (testBuiltInsRegistered, testGetThrowsForUnknown, testCustomAdapterCanBeRegistered).
+
 Phone number fields throughout Pipelinq MUST support one-click call initiation.
 
 **Feature tier**: MVP
 
 #### Scenario: Click-to-dial icon appears on phone number fields
 
-- GIVEN a phone number is displayed in any Pipelinq view (contact detail, deal detail, klantbeeld-360, request detail)
+- GIVEN a phone number is displayed in any Pipelinq view (contact detail, deal detail, customer-360, request detail)
 - WHEN the agent hovers over the phone number field
 - THEN a phone icon (📞) MUST appear next to the number
 - AND the icon is styled consistently across all fields (via `v-click-to-dial` directive or component property)
@@ -150,6 +156,8 @@ Phone number fields throughout Pipelinq MUST support one-click call initiation.
 ---
 
 ### Requirement: Contact Moment Creation on Every Call (REQ-CTI-004)
+
+@e2e exclude these are STORED-SHAPE assertions on a contactmoment ticket created by `originateCall()` / an `ended` webhook — `status: "pending"`, the absence of `ended_at`, the computed `duration_seconds` — and no pipelinq view renders any of those CTI fields. The demo dataset confirms the gap rather than closing it: lib/Settings/demo_seed_data.json seeds 12 contactmomenten, none of which carries `direction`, `from_number`, `to_number`, `external_call_id` or a `pending`/`disposition-pending` status. The disposition form is unreachable for the same reason as REQ-CTI-003's phone icon — src/modals/CtiDispositionModal.vue is imported by NO component in src/ — and no "Action required: complete call disposition" surface exists anywhere in src/ or l10n/. Reported as a product gap rather than asserted; the write path is `lib/Service/CtiService.php` (createPendingContactmoment, completeContactmoment) and the webhook normalisation that feeds it is asserted by tests/Unit/Service/CtiAdapterWebhookTest.php (testCallVoipNormalisesAnswered, testRingCentralNormalisesDisconnected, testAsteriskNormalisesHangup).
 
 Every call (inbound or outbound) MUST automatically create a `contactmoment` record with metadata and disposition workflow.
 
@@ -214,6 +222,8 @@ Every call (inbound or outbound) MUST automatically create a `contactmoment` rec
 
 ### Requirement: Recording Metadata Attachment (REQ-CTI-005)
 
+@e2e exclude the ingest half is a `recording-ready` webhook from a platform the CI instance does not provision, and the render half does not exist: the strings "Listen to recording" / `recording_url` / `recordingUrl` appear in src/ ONLY inside src/services/ctiApi.js#attachRecording, so no contactmoment view anywhere renders a listening link for a browser to click. The third scenario is an assertion about a platform-side deletion after a retention date, plus pipelinq's deliberate INACTION ("DOES NOT attempt to re-fetch") — an absence of behaviour no browser can observe. Reported as a product gap rather than asserted; the recording payload extraction is asserted by tests/Unit/Service/CtiAdapterWebhookTest.php (testCallVoipExtractsRecording) and the write is `lib/Service/CtiService.php#attachRecording`.
+
 When the telephony platform supplies a recording URL and retention date, these MUST be attached to the contactmoment.
 
 **Feature tier**: MVP
@@ -258,6 +268,8 @@ When the telephony platform supplies a recording URL and retention date, these M
 ---
 
 ### Requirement: Pluggable Adapter Per Platform (REQ-CTI-006)
+
+@e2e exclude adapter-boundary invariants: which class the AdapterRegistry resolves, how each one verifies its signature (HMAC header / OAuth bearer / shared-secret query param), and that registering a new `CtiAdapterInterface` implementation needs no change to CtiService or CtiController. None of that is rendered — the only browser-visible trace is the platform dropdown on the admin page, which lists the same four values whether or not any adapter resolves. Exercising the signature paths additionally needs an inbound HTTP request signed with a shared secret, which no browser session can produce. Asserted by tests/Unit/Service/CtiAdapterWebhookTest.php (testCallVoipSignatureValid, testAsteriskSharedSecretGate, testCallVoipNormalisesAnswered, testRingCentralNormalisesDisconnected, testAsteriskNormalisesHangup) and tests/Unit/Service/CtiAdapterRegistryTest.php (testBuiltInsRegistered, testGetThrowsForUnknown, testCustomAdapterCanBeRegistered) — the last of which is exactly the extensibility scenario, registering a custom adapter and resolving it back out of the registry.
 
 The system MUST support multiple telephony platforms via a pluggable adapter interface, with implementations for CallVoip, RingCentral, and Asterisk.
 
@@ -312,6 +324,8 @@ The system MUST support multiple telephony platforms via a pluggable adapter int
 
 ### Requirement: Webhook Signature Verification (REQ-CTI-007)
 
+@e2e exclude all three scenarios are stated as HTTP-contract outcomes on `POST /api/cti/webhook/{platform}` — a status code plus a `cti_event_log` row — for a request that must carry a platform-computed signature header. That is an unauthenticated server-to-server call, not a rendered surface, and a Playwright page cannot mint a valid HMAC without the stored `webhook_secret`. Verification itself is asserted by tests/Unit/Service/CtiAdapterWebhookTest.php (testCallVoipSignatureValid, testAsteriskSharedSecretGate). TWO SPEC/IMPLEMENTATION MISMATCHES reported here rather than asserted: (a) lib/Controller/CtiController.php#webhook answers an invalid signature with `Http::STATUS_UNPROCESSABLE_ENTITY` (422), not the 401 both scenarios require — the inline comment says this is deliberate, so the spec text is the stale half; (b) NO rate limiting exists — the strings `RateLimit`, `429` and `TooManyRequests` appear nowhere in lib/Controller/CtiController.php or lib/Service/CtiService.php, so the 100-requests-per-second cap is unimplemented and there is nothing, at any layer, that a test could assert.
+
 All inbound webhooks MUST be cryptographically verified to prevent spoofing and injection attacks.
 
 **Feature tier**: MVP
@@ -348,6 +362,8 @@ All inbound webhooks MUST be cryptographically verified to prevent spoofing and 
 
 ### Requirement: Agent Presence Sync (REQ-CTI-008)
 
+@e2e exclude presence is written ONLY from an inbound `presence_changed` webhook (lib/Service/CtiService.php#syncPresenceFromEvent is the sole caller of syncPresence within lib/), and the CI instance provisions no telephony platform to send one. The stored `ctiAgentPresence` row has no reader in src/ — no view renders a presence state — and lib/Settings/register.d/70-cti.json declares registers + schemas only, with no `components.objects[]` seed block, so the CI instance holds zero presence rows either way. The on-call scenario is a restatement of REQ-CTI-003's disabled click-to-dial button, which src/components/CtiClickToDialButton.vue never renders because nothing imports it. The 2-second propagation deadline is a latency budget on an internal event stream with no rendered endpoint at all.
+
 Agent availability state changes on the telephony platform MUST be synchronised to pipelinq within 2 seconds.
 
 **Feature tier**: MVP
@@ -379,6 +395,8 @@ Agent availability state changes on the telephony platform MUST be synchronised 
 ---
 
 ### Requirement: Disposition Outcomes Drive Workflow (REQ-CTI-009)
+
+@e2e exclude every scenario begins "an agent submits a disposition form", and no browser can: src/modals/CtiDispositionModal.vue is imported by NO component in src/, so the form has no entry point and `POST /api/cti/contactmoment/{id}/disposition` is reachable only as a raw API call. What the scenarios then assert is the downstream OBJECT GRAPH — a `terugbelverzoek` / `opvolgtaak` task row, its queue assignment, its deadline, and for the terminal outcomes the ABSENCE of any task — none of which is attributable to a CTI disposition on any rendered page. Reported as a product gap rather than asserted; the branch logic lives in lib/Service/CtiDispositionService.php#processDisposition and currently carries no dedicated PHPUnit class, which is the honest state of this requirement's coverage.
 
 Disposition outcomes (callback, escalated, etc.) MUST trigger related workflows in dependent specs.
 
@@ -446,6 +464,7 @@ Administrators MUST be able to configure CTI settings, link credentials, and tes
 - AND if failed: "✗ Connection failed: [error message]" (e.g., "401 Unauthorized", "API URL unreachable")
 
 #### Scenario: Admin changes are audited
+@e2e exclude the assertion is that an entry lands in OpenRegister's audit trail for `ctiAdapterConfig` carrying the admin uid, the old and new values and a timestamp. Pipelinq renders no audit-trail view for that schema — the strings do not appear in src/views/settings/CtiSettings.vue, which only POSTs the config and shows a success/error toast — so the audit row is written and read entirely inside OpenRegister, outside this app's browser surface. The write path is lib/Service/CtiService.php#saveConfig via the OR object API; the audit trail itself is OpenRegister's own capability, not pipelinq's, and is asserted there.
 
 - GIVEN an admin updates the CTI configuration
 - WHEN the form is submitted via `PUT /api/cti/config`
@@ -480,6 +499,7 @@ Administrators MUST be able to view and debug webhook events, including any proc
 - AND pagination updates to show matching results
 
 #### Scenario: Admin views full webhook payload
+@e2e exclude the payload dialog is `v-if="payloadRow"`-gated (src/views/settings/CtiEventLog.vue), and the only writer of a `ctiEventLog` row is an inbound platform webhook. The CI event log is provably empty: lib/Settings/register.d/70-cti.json carries `components.registers` + `components.schemas` and NO `components.objects[]` seed block, and lib/Settings/demo_seed_data.json has no ctiEventLog section — so no row exists for a "View payload" button to be attached to, and no telephony platform is provisioned to create one. The ingest that writes those rows is asserted by tests/Unit/Service/CtiAdapterWebhookTest.php (testCallVoipNormalisesAnswered, testAsteriskNormalisesHangup). The table, its filters and its 30-day retention note ARE asserted end-to-end — see tests/e2e/spec-coverage/cti-screenpop-adapter.spec.ts.
 
 - GIVEN an event in the log shows Status = "✗ Error"
 - WHEN the admin clicks "View payload"
@@ -494,6 +514,8 @@ Administrators MUST be able to view and debug webhook events, including any proc
 - AND the view shows: "Showing events from the last 30 days"
 
 ### Requirement: CTI administration on one Settings page
+
+@e2e exclude SUPERSEDED LOCATION — reported as a spec/implementation mismatch rather than asserted. Both scenarios are stated in terms of places that no longer exist. (a) There is no "CTI (telephony)" entry in the app's left-nav Settings section, and no in-app CTI route at all: the strings `Cti`/`CTI` appear in src/manifest.json, src/manifest.d/*.json and src/menu-layout.json ONLY inside menu-layout.json's `_adminSettingsNote`, which records the 2026-07 nav-ia-cleanup decision that moved CTI telephony settings out of the app nav onto the Nextcloud admin page (/settings/admin/pipelinq, lib/Settings/AdminSettings.php → src/views/settings/Settings.vue). (b) The legacy route `/settings/cti/event-log` therefore resolves nowhere — the app has no vue-router of its own (there is no src/router/), its routes come from the manifest, and no manifest page declares that path — so the deep link cannot render the event-log view and a test asserting that it does would be asserting a defect into permanence. The MERGE the requirement actually cares about — one page carrying both the configuration and the event log, and no separate "CTI integration" / "CTI event log" entries left behind in the app nav — IS asserted end-to-end by tests/e2e/spec-coverage/cti-screenpop-adapter.spec.ts ("CTI administration is ONE page …").
 
 The system MUST present the CTI (telephony) integration configuration and the
 CTI webhook event log as a single page in the left-nav Settings section, titled

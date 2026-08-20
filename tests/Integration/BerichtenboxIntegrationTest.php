@@ -40,84 +40,79 @@ use Psr\Log\LoggerInterface;
 /**
  * BBK 1.7 conformance integration tests.
  */
-class BerichtenboxIntegrationTest extends TestCase
-{
-    /**
-     * Build a LogiusConnector for shape-validation testing.
-     *
-     * @return LogiusConnector
-     */
-    private function buildConnector(): LogiusConnector
-    {
-        return new LogiusConnector(
-            $this->createMock(IClientService::class),
-            $this->createMock(IAppConfig::class),
-            $this->createMock(LoggerInterface::class)
-        );
-    }//end buildConnector()
+class BerichtenboxIntegrationTest extends TestCase {
+	/**
+	 * Build a LogiusConnector for shape-validation testing.
+	 *
+	 * @return LogiusConnector
+	 */
+	private function buildConnector(): LogiusConnector {
+		return new LogiusConnector($this->createMock(IClientService::class),
+			$this->createMock(IAppConfig::class),
+			$this->createMock(LoggerInterface::class)
+		);
+	}//end buildConnector()
 
-    /**
-     * A canonical outbound payload conforms to BBK 1.7 — UUIDv4 message id,
-     * subject ≤200, XHTML-strict body, MIME-whitelisted attachments under 25MB.
-     *
-     * @return void
-     */
-    public function testBbk17OutboundConformance(): void
-    {
-        $connector = $this->buildConnector();
-        $messageId = $connector->newUuidV4();
-        $payload = [
-            'uuid'       => $messageId,
-            'subject'    => 'Uw paspoort is gereed - zaak Z-2026-0042',
-            'body'       => '<p>Geachte burger,</p><p>Uw paspoortaanvraag is afgehandeld.</p>',
-            'attachments' => [
-                ['filename' => 'besluit.pdf', 'mime' => 'application/pdf', 'sizeBytes' => (1024 * 1024)],
-                ['filename' => 'kaart.png', 'mime' => 'image/png', 'sizeBytes' => 12000],
-            ],
-        ];
+	/**
+	 * A canonical outbound payload conforms to BBK 1.7 — UUIDv4 message id,
+	 * subject ≤200, XHTML-strict body, MIME-whitelisted attachments under 25MB.
+	 *
+	 * @return void
+	 */
+	public function testBbk17OutboundConformance(): void {
+		$connector = $this->buildConnector();
+		$messageId = $connector->newUuidV4();
+		$payload = [
+			'uuid' => $messageId,
+			'subject' => 'Uw paspoort is gereed - zaak Z-2026-0042',
+			'body' => '<p>Geachte burger,</p><p>Uw paspoortaanvraag is afgehandeld.</p>',
+			'attachments' => [
+				['filename' => 'besluit.pdf', 'mime' => 'application/pdf', 'sizeBytes' => (1024 * 1024)],
+				['filename' => 'kaart.png', 'mime' => 'image/png', 'sizeBytes' => 12000],
+			],
+		];
 
-        $connector->validateOutboundPayload($payload);
+		$connector->validateOutboundPayload($payload);
 
-        // Message id is UUIDv4.
-        $this->assertMatchesRegularExpression(
-            '/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i',
-            $messageId
-        );
+		// Message id is UUIDv4.
+		$this->assertMatchesRegularExpression(
+			'/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i',
+			$messageId
+		);
 
-        // Subject is ≤200 chars.
-        $this->assertLessThanOrEqual(LogiusConnector::MAX_SUBJECT_CHARS, mb_strlen($payload['subject']));
+		// Subject is ≤200 chars.
+		$this->assertLessThanOrEqual(LogiusConnector::MAX_SUBJECT_CHARS, mb_strlen($payload['subject']));
 
-        // Body parses as XHTML strict.
-        $previous = libxml_use_internal_errors(true);
-        $doc = new \DOMDocument();
-        $wrapped = '<?xml version="1.0" encoding="UTF-8"?><root>'.$payload['body'].'</root>';
-        $this->assertTrue($doc->loadXML($wrapped));
-        libxml_clear_errors();
-        libxml_use_internal_errors($previous);
+		// Body parses as XHTML strict.
+		$previous = libxml_use_internal_errors(true);
+		$doc = new \DOMDocument();
+		$wrapped = '<?xml version="1.0" encoding="UTF-8"?><root>' . $payload['body'] . '</root>';
+		$this->assertTrue($doc->loadXML($wrapped));
+		libxml_clear_errors();
+		libxml_use_internal_errors($previous);
 
-        // Attachments are MIME-whitelisted, size aggregate ≤25 MB.
-        $total = 0;
-        foreach ($payload['attachments'] as $att) {
-            $this->assertContains($att['mime'], LogiusConnector::ALLOWED_MIME);
-            $total += $att['sizeBytes'];
-        }
-        $this->assertLessThanOrEqual(LogiusConnector::MAX_ATTACHMENT_BYTES, $total);
-    }//end testBbk17OutboundConformance()
+		// Attachments are MIME-whitelisted, size aggregate ≤25 MB.
+		$total = 0;
+		foreach ($payload['attachments'] as $att) {
+			$this->assertContains($att['mime'], LogiusConnector::ALLOWED_MIME);
+			$total += $att['sizeBytes'];
+		}
+		$this->assertLessThanOrEqual(LogiusConnector::MAX_ATTACHMENT_BYTES, $total);
+	}//end testBbk17OutboundConformance()
 
-    /**
-     * Signing with the dev-fallback path is deterministic for the same
-     * body (regression guard against accidental randomness leaking into
-     * the signature shape).
-     *
-     * @return void
-     */
-    public function testSignatureIsDeterministicWithoutPkiKey(): void
-    {
-        $connector = $this->buildConnector();
-        $a = $connector->signRequest(['k' => 'v', 'n' => 1], '', '');
-        $b = $connector->signRequest(['k' => 'v', 'n' => 1], '', '');
-        $this->assertSame($a, $b);
-        // Base64 SHA-256 → 44 chars.
-        $this->assertSame(44, strlen($a));
-    }//end testSignatureIsDeterministicWithoutPkiKey()
+	/**
+	 * Signing with the dev-fallback path is deterministic for the same
+	 * body (regression guard against accidental randomness leaking into
+	 * the signature shape).
+	 *
+	 * @return void
+	 */
+	public function testSignatureIsDeterministicWithoutPkiKey(): void {
+		$connector = $this->buildConnector();
+		$a = $connector->signRequest(['k' => 'v', 'n' => 1], '', '');
+		$b = $connector->signRequest(['k' => 'v', 'n' => 1], '', '');
+		$this->assertSame($a, $b);
+		// Base64 SHA-256 → 44 chars.
+		$this->assertSame(44, strlen($a));
+	}//end testSignatureIsDeterministicWithoutPkiKey()
 }//end class
