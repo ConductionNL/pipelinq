@@ -591,6 +591,6 @@ export default {
 .messaging-conversation__body {
 	margin: 0;
 	white-space: pre-wrap;
-	word-break: break-word;
+	overflow-wrap: break-word;
 }
 </style>
