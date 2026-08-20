@@ -618,7 +618,7 @@ class ActivityTimelineService {
 				'calendarLink' => ['linkedEntityType' => 'contact', 'linkedEntityId' => $entityId],
 			],
 			default => [],
-		};//end match
+		};// End match.
 	}//end resolveEntityQueryParams()
 
 	/**
