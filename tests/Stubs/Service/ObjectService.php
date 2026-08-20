@@ -432,6 +432,42 @@ if (class_exists(ObjectService::class) === false) {
 		}//end updateObject()
 
 		/**
+		 * Merge a partial update onto an existing object.
+		 *
+		 * Added to the published contract in hydra-gates v1.8.1. v1.8.0 shipped
+		 * the interface WITHOUT it, so this stub satisfied the contract by
+		 * accident; taking v1.8.1 turns that into a load-time fatal —
+		 *
+		 *   Class OCA\OpenRegister\Service\ObjectService contains 1 abstract
+		 *   method and must therefore be declared abstract
+		 *
+		 * — which kills the whole suite before a test runs, exactly as this
+		 * file's header warns. `updateObject()` REPLACES; this is the merging
+		 * path, and it is on the contract so callers stop reimplementing
+		 * read-merge-write or silently erasing the fields they did not send.
+		 *
+		 * @param array<string, mixed> $data           Fields to merge onto the stored object.
+		 * @param string|int|null      $register       Register the object belongs to.
+		 * @param string|int|null      $schema         Schema the object belongs to.
+		 * @param bool                 $_rbac          Whether to apply RBAC.
+		 * @param bool                 $_multitenancy  Whether to apply multitenancy.
+		 * @param IUser|null           $currentUser    Acting user.
+		 *
+		 * @return ObjectEntityInterface
+		 */
+		public function patchObject(
+			string $objectId,
+			array $data,
+			string|int|null $register = null,
+			string|int|null $schema = null,
+			bool $_rbac = true,
+			bool $_multitenancy = true,
+			?IUser $currentUser = null,
+		): ObjectEntityInterface {
+			throw new LogicException(self::NOT_CONFIGURED);
+		}//end patchObject()
+
+		/**
 		 * Return the objects this object uses.
 		 *
 		 * @param string               $objectId      The object id.
