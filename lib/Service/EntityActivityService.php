@@ -32,7 +32,6 @@ use InvalidArgumentException;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
-use RuntimeException;
 use Throwable;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
@@ -592,8 +591,6 @@ class EntityActivityService {
 	 * Resolve the OpenRegister `ObjectService` through the DI container.
 	 *
 	 * @return object The ObjectService instance.
-	 *
-	 * @throws RuntimeException When OpenRegister is not installed.
 	 */
 	private function getObjectService(): object {
 		// Injected (ADR-083): a property read throws nothing, so the old

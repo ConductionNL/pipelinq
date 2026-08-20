@@ -330,8 +330,6 @@ class BsnAuditService {
 	 * Get the OR ObjectService (lazy resolution — OR may not be available at boot).
 	 *
 	 * @return object The OR ObjectService.
-	 *
-	 * @throws RuntimeException If OR is unavailable.
 	 */
 	private function getObjectService(): object {
 		// Injected (ADR-083): a property read throws nothing, so the old
