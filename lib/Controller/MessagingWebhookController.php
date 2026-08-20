@@ -76,6 +76,9 @@ class MessagingWebhookController extends Controller {
 	/**
 	 * POST /api/messaging-webhooks/whatsapp/{providerId}.
 	 *
+	 * The AnonRateLimit below sizes inbound message + delivery-status webhooks.
+	 * A conversation burst is normal traffic here, not abuse.
+	 *
 	 * @param string $providerId channelProvider UUID.
 	 *
 	 * @return JSONResponse Outcome.

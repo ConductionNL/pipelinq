@@ -119,6 +119,12 @@ class BlastTrackingController extends Controller {
 	 * open only when the token verifies — fail closed on the *record*, not
 	 * the response, and never raises a 500.
 	 *
+	 * The open pixel deliberately does NOT register a rejected token: it always
+	 * answers with the same 1x1 GIF whatever the token, precisely so a mail
+	 * client never renders a broken image. There is no failure branch to hang
+	 * a counter on, and inventing one would leak the very signal the uniform
+	 * response exists to hide. The AnonRateLimit below is the control here.
+	 *
 	 * @param string $token The signed open token.
 	 *
 	 * The open pixel deliberately does NOT register a rejected token: it always

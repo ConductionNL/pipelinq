@@ -85,6 +85,9 @@ class CtiController extends Controller {
 	 * The route is PublicPage (the platform cannot CSRF-token sign);
 	 * authenticity is enforced by the adapter's signature verification.
 	 *
+	 * The AnonRateLimit below sizes telephony platform events — one per call
+	 * state change, so a busy contact centre generates these steadily.
+	 *
 	 * @param string $platform Platform identifier from the URL.
 	 *
 	 * @return JSONResponse Acknowledgement.
