@@ -257,7 +257,10 @@ class ExpenseApprovalListener implements IEventListener, DeferredObjectWork {
 	 * @return object The OR entity.
 	 */
 	private function resolveEntity(ObjectCreatedEvent|ObjectUpdatedEvent $event): object {
-		if ($event instanceof ObjectUpdatedEvent && method_exists($event, 'getNewObject') === true) {
+		// The instanceof already settles it: ObjectUpdatedEvent declares
+		// getNewObject() on both `main` and `development`, so the
+		// method_exists() conjunct this replaces could never be false.
+		if ($event instanceof ObjectUpdatedEvent) {
 			return $event->getNewObject();
 		}
 

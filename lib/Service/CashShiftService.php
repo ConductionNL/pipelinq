@@ -46,7 +46,6 @@ use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\EventDispatcher\Event;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
-use RuntimeException;
 use OCA\OpenRegister\Service\WebhookService;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\Aggregation\AggregationRunner;
@@ -804,8 +803,6 @@ class CashShiftService {
 	 * Get the OpenRegister ObjectService.
 	 *
 	 * @return object The object service.
-	 *
-	 * @throws RuntimeException If OpenRegister is not available.
 	 */
 	private function getObjectService(): object {
 		// Injected (ADR-083): a property read throws nothing, so the old

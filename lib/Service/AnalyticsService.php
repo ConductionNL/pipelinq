@@ -246,8 +246,6 @@ class AnalyticsService {
 	 * Resolve the OpenRegister ObjectService via DI container.
 	 *
 	 * @return object The ObjectService instance.
-	 *
-	 * @throws RuntimeException When OpenRegister is not available.
 	 */
 	private function getObjectService(): object {
 		// Injected (ADR-083): a property read throws nothing, so the old

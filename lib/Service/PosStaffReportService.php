@@ -351,8 +351,6 @@ class PosStaffReportService {
 	 * Get the OpenRegister ObjectService.
 	 *
 	 * @return object The object service.
-	 *
-	 * @throws RuntimeException If OpenRegister is not available.
 	 */
 	private function getObjectService(): object {
 		// Injected (ADR-083): a property read throws nothing, so the old

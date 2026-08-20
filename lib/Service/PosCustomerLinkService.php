@@ -44,7 +44,6 @@ use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
-use RuntimeException;
 use Throwable;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
@@ -771,8 +770,6 @@ class PosCustomerLinkService {
 	 * Resolve the OR ObjectService from the container.
 	 *
 	 * @return object The OR ObjectService.
-	 *
-	 * @throws RuntimeException When OR is unavailable.
 	 */
 	private function getObjectService(): object {
 		// Injected (ADR-083): a property read throws nothing, so the old
