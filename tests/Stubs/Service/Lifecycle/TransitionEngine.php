@@ -36,10 +36,14 @@ class TransitionEngine {
 	 *
 	 * Checked against the real declaration at
 	 * openregister `origin/development`,
-	 * `lib/Service/Lifecycle/TransitionEngine.php:246`:
-	 *   `public function transition(string $objectId, string $action): ObjectEntity`
-	 * (its docblock at :235 reads "@return ObjectEntity The saved object after
-	 * the transition.")
+	 * `lib/Service/Lifecycle/TransitionEngine.php:257`:
+	 *   `public function transition(string $objectId, string $action, array $data = []): ObjectEntity`
+	 *
+	 * The third parameter arrived upstream on 2026-08-21 in openregister
+	 * `113f0520`. CI installs openregister from `development` at run time, so
+	 * the contract moves under this repo WITHOUT a commit here — the note
+	 * below about the two run modes disagreeing applies to parameters exactly
+	 * as it did to the return type.
 	 *
 	 * This stub previously declared `: mixed`. That is WIDER than the real
 	 * class, and a wider stub is blind exactly where the bug lives: a test
@@ -56,10 +60,11 @@ class TransitionEngine {
 	 *
 	 * @param string $objectId Object id/uuid/slug.
 	 * @param string $action Transition action name.
+	 * @param array  $data Declared transition inputs (ignored by this stub).
 	 *
 	 * @return ObjectEntity The saved object after the transition.
 	 */
-	public function transition(string $objectId, string $action): ObjectEntity {
+	public function transition(string $objectId, string $action, array $data = []): ObjectEntity {
 		return new ObjectEntity();
 	}//end transition()
 }//end class
