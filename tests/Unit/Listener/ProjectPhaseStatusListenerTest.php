@@ -37,6 +37,15 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
+// The ADR-078 deferral doubles live in the Tests namespace, which has no PSR-4
+// mapping, and PHPUnit only auto-loads files whose name ends in `Test.php`. Load
+// them from the test that uses them — the convention the rest of this suite
+// follows — so they resolve under every bootstrap (tests/bootstrap.php,
+// bootstrap-unit.php, bootstrap-bare.php) instead of only the one that happens
+// to list them.
+require_once __DIR__ . '/RecordingDeferralService.php';
+require_once __DIR__ . '/DeferredJobDrain.php';
+
 /**
  * In-memory ObjectService capturing saves and serving a parent project on find().
  */
