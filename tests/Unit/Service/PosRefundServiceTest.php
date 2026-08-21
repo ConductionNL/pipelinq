@@ -242,8 +242,22 @@ class FakeRefundTransitionEngine extends TransitionEngine {
 
 	/**
 	 * Mirrors the real declaration, checked against openregister
-	 * `origin/development`, `lib/Service/Lifecycle/TransitionEngine.php:246`:
-	 *   `public function transition(string $objectId, string $action): ObjectEntity`
+	 * `origin/development`, `lib/Service/Lifecycle/TransitionEngine.php:257`:
+	 *   `public function transition(string $objectId, string $action, array $data = []): ObjectEntity`
+	 *
+	 * The third parameter arrived upstream on 2026-08-21 in openregister
+	 * `113f0520` ("accept declared transition inputs"). CI installs
+	 * openregister from `development` at run time, so the contract moved under
+	 * this repo without a commit here: the last green run was 11:24, the
+	 * contract landed at 13:40, and every PHPUnit leg then died with
+	 *   Declaration of …FakeRefundTransitionEngine::transition(…) must be
+	 *   compatible with …
+	 * before test 1, printing no tally — the same shape this docblock already
+	 * describes for the earlier `: array` mismatch.
+	 *
+	 * `$data` is accepted and ignored: nothing in these tests exercises
+	 * declared inputs, and pretending to honour them would assert behaviour
+	 * this double does not have.
 	 *
 	 * This double previously returned `array`. Against the local stub, which
 	 * declared the weaker `: mixed`, that was a legal covariant override — so
@@ -259,7 +273,7 @@ class FakeRefundTransitionEngine extends TransitionEngine {
 	 *
 	 * @return ObjectEntity The saved object after the transition.
 	 */
-	public function transition(string $objectId, string $action): ObjectEntity {
+	public function transition(string $objectId, string $action, array $data = []): ObjectEntity {
 		$refund = $this->objects->store['posRefund_schema'][$objectId] ?? null;
 		if ($refund === null) {
 			throw new \RuntimeException(sprintf('Object "%s" not found.', $objectId));
