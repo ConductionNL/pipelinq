@@ -167,13 +167,12 @@ if (file_exists(__DIR__ . '/Unit/Service/Portal/FakeMainRegisterReader.php') ===
 	require_once __DIR__ . '/Unit/Service/Portal/FakeMainRegisterReader.php';
 }
 
-// ADR-078 deferral test helpers — same reason as the portal doubles above:
-// the Tests namespace has no PSR-4 mapping, and PHPUnit only auto-loads files
-// whose name ends in `Test.php`.
-if (file_exists(__DIR__ . '/Unit/Listener/RecordingDeferralService.php') === true) {
-	require_once __DIR__ . '/Unit/Listener/RecordingDeferralService.php';
-}
-
-if (file_exists(__DIR__ . '/Unit/Listener/DeferredJobDrain.php') === true) {
-	require_once __DIR__ . '/Unit/Listener/DeferredJobDrain.php';
-}
+// NOTE: the ADR-078 deferral doubles (Unit/Listener/RecordingDeferralService.php,
+// Unit/Listener/DeferredJobDrain.php) are deliberately NOT listed here. They used
+// to be, and because this is only ONE of three bootstraps (bootstrap-unit.php and
+// bootstrap-bare.php are the others) the unit suite — which runs on
+// bootstrap-unit.php — could not see them, erroring 21 listener tests with
+// "Class RecordingDeferralService not found". Each test that needs them now
+// require_once's them itself, which is what the rest of this suite already does
+// for its doubles and is the only form that survives a bootstrap it was not
+// told about. Do not re-add per-bootstrap helper lists here.
