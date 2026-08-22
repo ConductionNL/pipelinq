@@ -1579,7 +1579,7 @@
               "normal",
               "high"
             ],
-            "default": "normaal",
+            "default": "normal",
             "title": "Priority",
             "facetable": true
           },
