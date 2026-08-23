@@ -16,7 +16,7 @@ on:
 
 jobs:
   quality:
-    uses: Conduction/.github/.github/workflows/quality.yml@main
+    uses: ConductionNL/.github/.github/workflows/quality.yml@main
     with:
       app-name: pipelinq
       # Strict static-analysis gate suite (composer check:strict equivalent).
