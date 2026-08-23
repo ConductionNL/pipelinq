@@ -429,7 +429,12 @@ jobs:
       # Measured on this tree before enabling: PASSES, 357 of 371 tracked
       # frontend files in scope (docs/ and l10n/ excluded via .prettierignore /
       # .gitignore, which prettier 3 also reads).
-      frontend-checks: '["check:manifest", "check:vue-demi", "test:l10n", "format"]'
+      # `check:schema-l10n` is a RATCHET, not a gate. Every string inside a form
+      # comes from the schema and is a key in THIS app's catalogue; an absent key
+      # renders the English source inside an otherwise translated form, silently.
+      # The fleet had 30,459 such strings, so this records the current count and
+      # fails only when it GROWS — burning it down stays an ordinary PR.
+      frontend-checks: '["check:manifest", "check:vue-demi", "test:l10n", "format", "check:schema-l10n"]'
 
       # ── Coverage ratchet ─────────────────────────────────────────────────
       # `enable-coverage-guard` defaults to FALSE, which is why both
