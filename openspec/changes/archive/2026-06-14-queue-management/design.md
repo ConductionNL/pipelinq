@@ -1,5 +1,5 @@
 # Design: queue-management
-<!-- status: pr-created | pr: https://codeberg.org/Conduction/pipelinq/pulls/242 -->
+<!-- status: pr-created | pr: Codeberg PR #242 (pre-migration, not migrated to GitHub) -->
 
 ## Architecture Overview
 
