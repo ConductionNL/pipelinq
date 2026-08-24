@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
   "spec_slug": "pipelinq-manifest-i18n-tenant",
-  "repo": "https://codeberg.org/Conduction/pipelinq",
+  "repo": "https://github.com/ConductionNL/pipelinq",
   "issue": 147,
   "cycles": [
     {
