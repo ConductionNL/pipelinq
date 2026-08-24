@@ -132,6 +132,53 @@ async function expandCollapsedAncestors(link: Locator): Promise<void> {
 }
 
 /**
+ * Locate a sidebar LEAF entry by its MANIFEST PAGE ID and make it reachable.
+ *
+ * Prefer this over {@link revealNavEntry} in any spec that is not specifically
+ * about the visible wording. The label variant matches translated text, so it
+ * asserts the Dutch build on a Dutch instance and the English build on an
+ * English one — measured live: this instance renders `nl`, where the Products
+ * entry reads "Producten" and the dashboard refresh control's only accessible
+ * name is "Dashboard vernieuwen". A spec keyed on labels therefore passes or
+ * fails on the runner's locale, which is not what it claims to test.
+ *
+ * `CnAppRoot` stamps every entry with `data-testid="cn-nav-entry-<pageId>"`,
+ * where `<pageId>` is the id from `src/manifest.json` — untranslated by
+ * construction, and the same string the router and the manifest already agree
+ * on.
+ *
+ * Reachability, not paint: since the 2026-07 IA revision most leaves sit inside
+ * a collapsed group, so this expands ancestors exactly as the label variant
+ * does. Measured on this build: 37 entries in the DOM, 11 visible at load.
+ *
+ * @param page   The page under test.
+ * @param pageId The manifest page id (e.g. `Clients`, `OperationalDashboard`).
+ * @return The entry's anchor locator, revealed where possible.
+ */
+export async function revealNavEntryByTestId(
+	page: Page,
+	pageId: string,
+): Promise<Locator> {
+	const entry = page
+		.locator(`#app-navigation-vue [data-testid="cn-nav-entry-${pageId}"]`)
+		.first()
+	await entry.waitFor({ state: 'attached', timeout: 10000 })
+	// The testid may sit on the <li> or on the anchor itself depending on the
+	// entry's shape (a group caption carries a button as well as a link), so
+	// resolve to the anchor without assuming which.
+	const link = entry.locator('xpath=descendant-or-self::a[1]').first()
+	await link.waitFor({ state: 'attached', timeout: 10000 })
+	if (!(await link.isVisible().catch(() => false))) {
+		await expandCollapsedAncestors(link)
+		if (!(await link.isVisible().catch(() => false))) {
+			await openSettingsFoldout(page)
+			await link.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {})
+		}
+	}
+	return link
+}
+
+/**
  * Locate a sidebar LEAF entry by exact label and make it reachable, returning
  * the (now visible) locator.
  *
