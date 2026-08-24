@@ -29,7 +29,7 @@
  *
  * @version GIT: <git-id>
  *
- * @link https://codeberg.org/Conduction/pipelinq
+ * @link https://github.com/ConductionNL/pipelinq
  */
 
 declare(strict_types=1);
