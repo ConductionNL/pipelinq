@@ -109,6 +109,17 @@ final class MigrateAvgVerzoekenToOrDsarTest extends TestCase {
 		$this->savedCases = [];
 		$this->markedSources = [];
 
+		// runAsSystem MUST invoke its callable. A bare createMock() stubs it to
+		// return null without running anything, so the migration's whole body
+		// would silently not execute and every assertion would fail against an
+		// empty store — a fake that does not model the contract makes a correct
+		// change look broken, exactly as one that over-models it hides a real
+		// defect. The production step needs the system identity because an
+		// upgrade has no session and OpenRegister refuses 'Anonymous' writes.
+		$this->objectService->method('runAsSystem')->willReturnCallback(
+			static fn (callable $operation) => $operation()
+		);
+
 		$this->appConfig->method('getValueString')->willReturnCallback(
 			static fn (string $app, string $key, string $default = ''): string => self::IDS[$key] ?? $default
 		);
