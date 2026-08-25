@@ -39,7 +39,7 @@ namespace OCA\Pipelinq\Repair\Support;
  * the step skips, and so never attempts the write that would fail — which is
  * why this survived so long in so many apps.
  *
- * @spec openspec/specs/repair-steps/spec.md
+ * @spec openspec/specs/admin-settings/spec.md
  */
 trait RunsUnderSystemIdentity {
 	/**
@@ -56,7 +56,7 @@ trait RunsUnderSystemIdentity {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/specs/repair-steps/spec.md
+	 * @spec openspec/specs/admin-settings/spec.md
 	 */
 	private function withSystemIdentity(?object $objectService, callable $work): void {
 		if ($objectService !== null && method_exists($objectService, 'runAsSystem') === true) {
