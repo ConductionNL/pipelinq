@@ -317,7 +317,14 @@ test('ZReports renders from a type:"index" manifest page, badge column and all',
 
 	// The manifest `title` is the page heading; the library's declarative index
 	// host is what paints it — no host-app list component is involved.
-	await expectDeclarativeIndex(page, 'Boekhoudkundige Afhandeling')
+	//
+	// Asserted as it RENDERS, not as the manifest spells it. Since
+	// @conduction/nextcloud-vue 2.12 (#734) the library routes manifest page
+	// chrome through the host translate function, so `title` is a translation
+	// key. l10n/en.json maps "Boekhoudkundige Afhandeling" -> "Bookkeeping
+	// settlement" and this suite runs in English, so that is the heading on
+	// screen. The Dutch source only rendered while the title went untranslated.
+	await expectDeclarativeIndex(page, 'Bookkeeping settlement')
 
 	// The manifest `config.columns[]`, addressed by the labels the manifest
 	// declares (`reportDate` → "Datum", `createdAt` → "Aangemaakt"); the

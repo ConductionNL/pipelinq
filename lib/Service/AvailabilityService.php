@@ -34,7 +34,6 @@ use OCP\IAppConfig;
 use OCP\ICache;
 use OCP\ICacheFactory;
 use Psr\Log\LoggerInterface;
-use RuntimeException;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
@@ -1092,8 +1091,6 @@ class AvailabilityService {
 	 * Resolve the OpenRegister ObjectService via the DI container.
 	 *
 	 * @return object The ObjectService instance.
-	 *
-	 * @throws RuntimeException If OpenRegister is not available.
 	 */
 	private function getObjectService(): object {
 		// Injected (ADR-083): a property read throws nothing, so the old

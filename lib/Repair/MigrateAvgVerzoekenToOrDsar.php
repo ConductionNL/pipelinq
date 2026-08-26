@@ -43,6 +43,7 @@ namespace OCA\Pipelinq\Repair;
 use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Repair\Support\RunsUnderSystemIdentity;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
 use OCP\IUser;
@@ -58,6 +59,8 @@ use Psr\Log\LoggerInterface;
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class MigrateAvgVerzoekenToOrDsar implements IRepairStep {
+	use RunsUnderSystemIdentity;
+
 	/**
 	 * OR's data-subject-requests register slug.
 	 *
@@ -288,6 +291,38 @@ class MigrateAvgVerzoekenToOrDsar implements IRepairStep {
 			return;
 		}
 
+		// Under a system identity: an upgrade has no session, and OpenRegister
+		// refuses the write for 'Anonymous'. Without it this migration moves
+		// nothing and says so only in a warning, which does not fail an upgrade.
+		$this->withSystemIdentity(
+			objectService: $objectService,
+			work: function () use ($objectService, $registerId, $requestSchema, $output): void {
+				$this->runInner(
+					objectService: $objectService,
+					registerId: $registerId,
+					requestSchema: $requestSchema,
+					output: $output,
+				);
+			}
+		);
+	}//end run()
+
+	/**
+	 * The migration itself.
+	 *
+	 * @param object $objectService OpenRegister's ObjectService.
+	 * @param string $registerId The register id.
+	 * @param string $requestSchema The avgVerzoek schema id.
+	 * @param IOutput $output Progress reporting.
+	 *
+	 * @return void
+	 */
+	private function runInner(
+		object $objectService,
+		string $registerId,
+		string $requestSchema,
+		IOutput $output,
+	): void {
 		try {
 			// System read: an RBAC-filtered read as 'Anonymous' sees nothing, so
 			// the migration would silently report "no avgVerzoek objects present"
@@ -329,7 +364,7 @@ class MigrateAvgVerzoekenToOrDsar implements IRepairStep {
 		}//end foreach
 
 		$this->report(output: $output, counts: $counts, total: count($verzoeken));
-	}//end run()
+	}//end runInner()
 
 	/**
 	 * Emit the run summary plus the two conditional warnings.

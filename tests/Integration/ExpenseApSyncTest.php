@@ -58,6 +58,12 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
+// Same reason as the listener unit tests: the deferral doubles live in the Tests
+// namespace (no PSR-4 mapping) and are not `*Test.php`, so load them here rather
+// than relying on a particular bootstrap listing them.
+require_once __DIR__ . '/../Unit/Listener/RecordingDeferralService.php';
+require_once __DIR__ . '/../Unit/Listener/DeferredJobDrain.php';
+
 /**
  * Fake ObjectService capturing saveObject() calls.
  */

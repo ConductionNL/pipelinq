@@ -6,7 +6,7 @@
  * openspec/changes/pipelinq-expense-to-shillinq-ap/specs.md
  *
  * UI-observable scenarios for the Shillinq AP integration:
- *  - Admin settings page renders the Integraties section and the
+ *  - Admin settings page renders the Shillinq integration section and the
  *    `shillinq_ap_webhook_url` text field (REQ-AP-004 / Scenario 12).
  *  - The expense list page reaches its empty/loaded state through the
  *    `/apps/pipelinq/#/expenses` route (REQ-AP-005 — column header is
@@ -20,30 +20,36 @@
  * and integration tests; here we only assert the UI surfaces render.
  */
 
-import { test, expect } from '@playwright/test'
+import { expect, test } from '@playwright/test'
 
 // @e2e openspec/changes/pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-004
-test('admin settings page renders the Integraties section with the Shillinq AP webhook field', async ({
+test('admin settings page renders the Shillinq integration section', async ({
 	page,
 }) => {
 	await page.goto('/settings/admin/pipelinq')
 	await expect(page.locator('body')).not.toContainText('Internal Server Error', {
 		timeout: 15000,
 	})
-	// The Integraties section is a NcSettingsSection; its name is read as text.
-	// We assert one of the labels associated with REQ-AP-004 is present on the page.
-	const sectionTextLocator = page.locator('body')
-	const hasIntegraties = await sectionTextLocator
-		.getByText('Integraties', { exact: false })
-		.first()
-		.isVisible({ timeout: 5000 })
-		.catch(() => false)
-	const hasShillinqLabel = await sectionTextLocator
-		.getByText('Shillinq', { exact: false })
-		.first()
-		.isVisible({ timeout: 5000 })
-		.catch(() => false)
-	expect(hasIntegraties || hasShillinqLabel).toBe(true)
+
+	// The section is an NcSettingsSection rendered by the Vue bundle, so it is
+	// NOT in the server-rendered HTML — it appears only once the bundle has
+	// mounted. Wait for it with a real assertion.
+	//
+	// This previously raced two `.isVisible({ timeout: 5000 })` probes and
+	// OR-ed them, each with `.catch(() => false)`. That turned "the bundle has
+	// not mounted yet" into "the section is not present" — the two states are
+	// indistinguishable in the result, so a slow mount failed the test with a
+	// message claiming the field was missing. It passed on the push run and
+	// failed on the pull_request run of the SAME commit (4dee1b31), which is
+	// the signature of a timing race rather than a missing surface.
+	//
+	// Matching on 'Shillinq' rather than 'Integraties': the source string is
+	// English ('Shillinq Integration'), and 'Integraties' exists only as its
+	// Dutch translation. Asserting the translated label made the test depend on
+	// the browser's locale for no benefit.
+	await expect(page.getByText('Shillinq', { exact: false }).first()).toBeVisible({
+		timeout: 30000,
+	})
 })
 
 /*

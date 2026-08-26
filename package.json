@@ -9,6 +9,7 @@
   "scripts": {
     "prebuild": "node scripts/check-vue-demi.js",
     "build": "NODE_ENV=production webpack --config webpack.config.js --progress",
+    "check:schema-l10n": "node scripts/check-schema-l10n.js",
     "check:vue-demi": "node scripts/check-vue-demi.js",
     "dev": "NODE_ENV=development webpack --config webpack.config.js --progress",
     "watch": "NODE_ENV=development webpack --config webpack.config.js --progress --watch",
@@ -59,7 +60,7 @@
   },
   "devDependencies": {
     "@babel/core": "^8.0.1",
-    "@babel/preset-env": "^7.29.5",
+    "@babel/preset-env": "^8.0.2",
     "@cyclonedx/cyclonedx-npm": "^6.0.0",
     "@nextcloud/browserslist-config": "^3.0.1",
     "@nextcloud/eslint-config": "^9.0.1",

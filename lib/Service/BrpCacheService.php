@@ -276,8 +276,6 @@ class BrpCacheService {
 	 * Lazy OR ObjectService.
 	 *
 	 * @return object
-	 *
-	 * @throws RuntimeException When OR is unavailable.
 	 */
 	private function getObjectService(): object {
 		// Injected (ADR-083): a property read throws nothing, so the old

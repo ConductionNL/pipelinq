@@ -876,7 +876,9 @@ class EmailMatchService {
 		}//end try
 
 		$sentAt = null;
-		if (isset($row['sent_at']) === true && $row['sent_at'] !== null) {
+		// `isset()` is already false for null — the `!== null` conjunct this
+		// replaces was unreachable.
+		if (isset($row['sent_at']) === true) {
 			$sentAt = date('c', (int)$row['sent_at']);
 		}
 

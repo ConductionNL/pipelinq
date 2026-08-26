@@ -46,7 +46,6 @@ use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
-use RuntimeException;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
@@ -622,8 +621,6 @@ class KassakoppelingAuditService {
 	 * Resolve the OR ObjectService through the container.
 	 *
 	 * @return object The object service.
-	 *
-	 * @throws RuntimeException When OR is not available.
 	 */
 	private function getObjectService(): object {
 		// Injected (ADR-083): a property read throws nothing, so the old

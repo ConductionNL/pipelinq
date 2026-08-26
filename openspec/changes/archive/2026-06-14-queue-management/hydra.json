@@ -2,7 +2,7 @@
   "spec_slug": "queue-management",
   "title": "Queue Management Specification",
   "app": "pipelinq",
-  "repo": "https://codeberg.org/Conduction/pipelinq",
+  "repo": "https://github.com/ConductionNL/pipelinq",
   "depends_on": [],
   "issue": null,
   "schema_version": 2,
