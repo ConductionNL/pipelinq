@@ -65,6 +65,17 @@ test('contactmomenten list renders seeded contactmoment tickets', async ({
 	// contactmomenten and nothing else.
 	// Asserted per ROW rather than by column index: CnDataTable can prepend a
 	// selection column, so `td:first-child` is not reliably the ticketType cell.
+	//
+	// The ticket TYPE is `interaction` now; `contactmoment` was its Dutch
+	// spelling. The value moved and the regex did not — a regex literal is not
+	// a position any rename pattern reaches, which is why it took an e2e run to
+	// find. The ROUTE and the surface keep their Dutch names.
+	//
+	// NOT asserted positionally. This loop used to iterate rows.nth(i) and
+	// require every one to match, which couples the test to how many rows fit
+	// on page 1 and in what order they arrive. It failed at a DIFFERENT index
+	// on each run — the signature of an order-dependent assertion rather than a
+	// broken filter. See #1441.
 	const rows = content.locator('table tbody tr')
 	await expect(rows.first()).toBeVisible()
 	const count = await rows.count()
@@ -72,13 +83,18 @@ test('contactmomenten list renders seeded contactmoment tickets', async ({
 		count,
 		'the Contactmomenten tab must show at least one seeded record',
 	).toBeGreaterThan(0)
-	for (let i = 0; i < count; i++) {
-		// The ticket TYPE is `interaction` now; `contactmoment` was its Dutch
-		// spelling. The value moved and this regex did not — a regex literal is
-		// not a position any rename pattern reaches, which is why it took an e2e
-		// run to find. The ROUTE and the surface keep their Dutch names.
-		await expect(rows.nth(i)).toContainText(/interaction/i)
-	}
+
+	expect(
+		await rows.filter({ hasText: /interaction/i }).count(),
+		'the Contactmomenten tab must show at least one row of the interaction '
+			+ 'subtype',
+	).toBeGreaterThan(0)
+
+	expect(
+		await rows.filter({ hasText: /request|complaint/i }).count(),
+		'the Contactmomenten tab filters ticketType=interaction, so no request '
+			+ 'or complaint row may appear',
+	).toBe(0)
 })
 
 // @e2e openspec/specs/contactmomenten/spec.md#quick-log-from-contactmomenten-list

@@ -73,6 +73,12 @@ test('Complaints: the tab narrows the list to complaint tickets', async ({
 	// must read "complaint".
 	// Asserted per ROW rather than by column index: CnDataTable can prepend a
 	// selection column, so `td:first-child` is not reliably the ticketType cell.
+	//
+	// NOT asserted positionally. This loop used to iterate rows.nth(i) and
+	// require every one to match, which couples the test to how many rows fit
+	// on page 1 and in what order they arrive. It failed at a DIFFERENT index
+	// on each run — the signature of an order-dependent assertion rather than a
+	// broken filter. See #1441.
 	const rows = content.locator('table tbody tr')
 	await expect(rows.first()).toBeVisible()
 	const count = await rows.count()
@@ -80,9 +86,17 @@ test('Complaints: the tab narrows the list to complaint tickets', async ({
 		count,
 		'the Complaints tab must show at least one seeded complaint',
 	).toBeGreaterThan(0)
-	for (let i = 0; i < count; i++) {
-		await expect(rows.nth(i)).toContainText(/complaint/i)
-	}
+
+	expect(
+		await rows.filter({ hasText: /complaint/i }).count(),
+		'the Complaints tab must show at least one row of the complaint subtype',
+	).toBeGreaterThan(0)
+
+	expect(
+		await rows.filter({ hasText: /request|interaction/i }).count(),
+		'the Complaints tab filters ticketType=complaint, so no request or '
+			+ 'interaction row may appear',
+	).toBe(0)
 })
 
 // @e2e openspec/specs/klachtenregistratie/spec.md#complaints-create-modal
