@@ -62,14 +62,23 @@ test.describe('xWiki Integration', () => {
 		const firstRow = page.getByRole('row').nth(1)
 		if (await firstRow.isVisible().catch(() => false)) {
 			await firstRow.click()
-			await page
-				.locator('#content-vue')
-				.waitFor({ state: 'visible', timeout: 10000 })
-				.catch(() => {})
+
+			// Wait for the DETAIL route, not merely for #content-vue to be
+			// visible. The index already satisfies that locator, so the old
+			// wait returned immediately and the poll below started while the
+			// app was still on the list — burning its budget on the wrong page.
+			await page.waitForURL(/#\/clients\/[^/]+/, { timeout: 15000 }).catch(() => {})
 
 			// The sidebar tab is rendered with label "Knowledge base"
 			// (XWikiSidebarTab) — distinct from the leaf-flavoured
 			// "Knowledge" tab (CnXwikiTab).
+			//
+			// The tab is injected by the integration registry once the detail
+			// page resolves its widgets, which is a second round-trip after
+			// navigation. At 10s this raced under CI load: the spec failed on
+			// the first attempt and passed on retry across several unrelated
+			// PRs, which is the signature of a budget that is too tight rather
+			// than of a missing surface.
 			const tab = page.getByRole('tab', { name: /Knowledge base/i }).first()
 			const fallback = page.getByText('Knowledge base').first()
 			await expect
@@ -81,7 +90,7 @@ test.describe('xWiki Integration', () => {
 						)
 					},
 					{
-						timeout: 10000,
+						timeout: 30000,
 						message: 'Knowledge base sidebar tab should render',
 					},
 				)
