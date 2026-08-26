@@ -84,17 +84,22 @@ test('contactmomenten list renders seeded contactmoment tickets', async ({
 		'the Contactmomenten tab must show at least one seeded record',
 	).toBeGreaterThan(0)
 
-	expect(
-		await rows.filter({ hasText: /interaction/i }).count(),
+	// `expect(locator)` rather than `expect(await locator.count())`: the former
+	// RETRIES until the timeout, the latter takes a single snapshot. Clicking
+	// the tab starts a fetch, so a snapshot taken before it lands measures the
+	// unfiltered list — which is exactly how the first version of this fix
+	// failed, reading 14 request/complaint rows and then passing on retry.
+	await expect(
+		rows.filter({ hasText: /interaction/i }).first(),
 		'the Contactmomenten tab must show at least one row of the interaction '
 			+ 'subtype',
-	).toBeGreaterThan(0)
+	).toBeVisible({ timeout: 15000 })
 
-	expect(
-		await rows.filter({ hasText: /request|complaint/i }).count(),
+	await expect(
+		rows.filter({ hasText: /request|complaint/i }),
 		'the Contactmomenten tab filters ticketType=interaction, so no request '
 			+ 'or complaint row may appear',
-	).toBe(0)
+	).toHaveCount(0, { timeout: 15000 })
 })
 
 // @e2e openspec/specs/contactmomenten/spec.md#quick-log-from-contactmomenten-list

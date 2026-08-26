@@ -87,16 +87,20 @@ test('Complaints: the tab narrows the list to complaint tickets', async ({
 		'the Complaints tab must show at least one seeded complaint',
 	).toBeGreaterThan(0)
 
-	expect(
-		await rows.filter({ hasText: /complaint/i }).count(),
+	// `expect(locator)` rather than `expect(await locator.count())`: the former
+	// RETRIES until the timeout, the latter takes a single snapshot. Clicking
+	// the tab starts a fetch, so a snapshot taken before it lands measures the
+	// unfiltered list.
+	await expect(
+		rows.filter({ hasText: /complaint/i }).first(),
 		'the Complaints tab must show at least one row of the complaint subtype',
-	).toBeGreaterThan(0)
+	).toBeVisible({ timeout: 15000 })
 
-	expect(
-		await rows.filter({ hasText: /request|interaction/i }).count(),
+	await expect(
+		rows.filter({ hasText: /request|interaction/i }),
 		'the Complaints tab filters ticketType=complaint, so no request or '
 			+ 'interaction row may appear',
-	).toBe(0)
+	).toHaveCount(0, { timeout: 15000 })
 })
 
 // @e2e openspec/specs/klachtenregistratie/spec.md#complaints-create-modal

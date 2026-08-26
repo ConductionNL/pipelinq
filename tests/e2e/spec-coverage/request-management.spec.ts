@@ -73,16 +73,20 @@ test('requests list renders the seeded request tickets', async ({ page }) => {
 		'the Tickets tab must show at least one seeded request',
 	).toBeGreaterThan(0)
 
-	expect(
-		await rows.filter({ hasText: /request/i }).count(),
+	// `expect(locator)` rather than `expect(await locator.count())`: the former
+	// RETRIES until the timeout, the latter takes a single snapshot. Clicking
+	// the tab starts a fetch, so a snapshot taken before it lands measures the
+	// unfiltered list.
+	await expect(
+		rows.filter({ hasText: /request/i }).first(),
 		'the Tickets tab must show at least one row of the request subtype',
-	).toBeGreaterThan(0)
+	).toBeVisible({ timeout: 15000 })
 
-	expect(
-		await rows.filter({ hasText: /complaint|interaction/i }).count(),
+	await expect(
+		rows.filter({ hasText: /complaint|interaction/i }),
 		'the Tickets tab filters ticketType=request, so no complaint or '
 			+ 'interaction row may appear',
-	).toBe(0)
+	).toHaveCount(0, { timeout: 15000 })
 })
 
 // @e2e openspec/specs/request-management/spec.md#create-a-minimal-request
