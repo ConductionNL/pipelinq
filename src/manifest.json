@@ -14,11 +14,11 @@
 		"version": 1,
 		"completionConfigKey": "setup_completed_version",
 		"steps": [
-			{ "id": "welcome", "type": "info", "title": "Welcome to Pipelinq", "body": "A few quick choices to get your CRM, pipeline and service desk ready. Only the reporting currency is required — everything else is optional and can be changed later in the admin settings." },
+			{ "id": "welcome", "type": "info", "title": "Welcome to Pipelinq", "body": "A few quick choices to get your CRM, pipeline and service desk ready. Only the reporting currency is required. Everything else is optional and can be changed later in the admin settings." },
 			{ "id": "currency", "type": "choice", "title": "Reporting currency", "required": true, "configKey": "currency", "body": "Used to format revenue, forecast and pipeline amounts across dashboards and reports.", "options": [ { "value": "EUR", "label": "Euro (EUR)" }, { "value": "USD", "label": "US Dollar (USD)" }, { "value": "GBP", "label": "Pound Sterling (GBP)" }, { "value": "CHF", "label": "Swiss Franc (CHF)" } ] },
 			{ "id": "provision", "type": "run-action", "title": "Provision data", "action": "provision-register", "body": "Create the Pipelinq OpenRegister register and schemas, plus the default sales pipeline and stages, service queues, agent skills, lead sources and request channels. This normally runs automatically on install; run it here if OpenRegister was enabled after Pipelinq, or to repair a partial install. It is safe to run more than once." },
-			{ "id": "demo-data", "type": "run-action", "title": "Demo data (optional)", "action": "seed-demo-data", "body": "Seed a small linked demo dataset — clients, leads, requests and contactmomenten — so lists, dashboards and the 360° client view show a working product right away. Optional and safe to run more than once; every object is marked [Demo] and can be removed later with `occ pipelinq:demo:seed --remove`. Skip this on a production install." },
-			{ "id": "organisation", "type": "config-fields", "title": "Organisation", "body": "Your organisation details, printed on POS receipts and shown on reports. Optional — leave blank to skip.", "schema": { "type": "object", "properties": { "receipt_company_name": { "type": "string", "title": "Organisation name" }, "receipt_company_vat": { "type": "string", "title": "VAT number" }, "receipt_company_kvk": { "type": "string", "title": "Chamber of Commerce (KvK) number" } } } },
+			{ "id": "demo-data", "type": "run-action", "title": "Demo data (optional)", "action": "seed-demo-data", "body": "Seed a small linked demo dataset of clients, leads, requests and contactmomenten, so lists, dashboards and the 360° client view show a working product right away. Optional and safe to run more than once; every object is marked [Demo] and can be removed later with `occ pipelinq:demo:seed --remove`. Skip this on a production install." },
+			{ "id": "organisation", "type": "config-fields", "title": "Organisation", "body": "Your organisation details, printed on POS receipts and shown on reports. Optional: leave blank to skip.", "schema": { "type": "object", "properties": { "receipt_company_name": { "type": "string", "title": "Organisation name" }, "receipt_company_vat": { "type": "string", "title": "VAT number" }, "receipt_company_kvk": { "type": "string", "title": "Chamber of Commerce (KvK) number" } } } },
 			{ "id": "integrations", "type": "config-fields", "title": "Integrations", "body": "Optional connections to other Conduction apps. Set the Shillinq base URL to surface recurring-revenue metrics and route billing/ledger entries; set the XWiki URL to embed the knowledge base. Leave blank to disable.", "schema": { "type": "object", "properties": { "shillinq_app_url": { "type": "string", "title": "Shillinq base URL" }, "xwiki_direct_url": { "type": "string", "title": "XWiki base URL" } } } },
 			{ "id": "done", "type": "summary", "title": "All set", "healthCheck": true, "body": "Pipelinq is ready. Head to the Dashboard or Leads to get started." }
 		]
@@ -34,17 +34,17 @@
 				"trigger": "first-visit",
 				"minAppVersion": "1.0.0",
 				"steps": [
-					{ "id": "welcome", "placement": "center", "sinceVersion": "1.0.0", "title": "Welcome to Pipelinq", "body": "Let's walk the core sales journey together — from a product to a billed contract. You'll create each record yourself, in your own workspace.", "target": { "kind": "page", "ref": "Products" }, "advanceOn": { "type": "manual" } },
+					{ "id": "welcome", "placement": "center", "sinceVersion": "1.0.0", "title": "Welcome to Pipelinq", "body": "Let's walk the core sales journey together, from a product to a billed contract. You'll create each record yourself, in your own workspace.", "target": { "kind": "page", "ref": "Products" }, "advanceOn": { "type": "manual" } },
 					{ "id": "go-products", "sinceVersion": "1.0.0", "placement": "right", "body": "First, your catalogue. Open Products from the menu.", "task": "Click Products in the menu", "target": { "kind": "nav-item", "ref": "Products" }, "advanceOn": { "type": "route-match", "route": "Products" } },
-					{ "id": "create-product", "sinceVersion": "1.0.0", "placement": "bottom", "allowManualNext": true, "body": "Add the product or service you sell — we'll put it on the quotation later.", "task": "Click New and save a product", "target": { "kind": "element", "ref": "index-add" }, "advanceOn": { "type": "object-created", "register": "pipelinq", "schema": "product", "capture": { "productId": ":id" } } },
+					{ "id": "create-product", "sinceVersion": "1.0.0", "placement": "bottom", "allowManualNext": true, "body": "Add the product or service you sell. We'll put it on the quotation later.", "task": "Click New and save a product", "target": { "kind": "element", "ref": "index-add" }, "advanceOn": { "type": "object-created", "register": "pipelinq", "schema": "product", "capture": { "productId": ":id" } } },
 					{ "id": "go-contacts", "sinceVersion": "1.0.0", "placement": "right", "body": "Now the customer. Open Contacts.", "task": "Click Contacts in the menu", "target": { "kind": "nav-item", "ref": "Contacts" }, "advanceOn": { "type": "route-match", "route": "Contacts" } },
 					{ "id": "create-contact", "sinceVersion": "1.0.0", "placement": "bottom", "allowManualNext": true, "body": "Add the person or organisation you're selling to.", "task": "Click New and save a contact", "target": { "kind": "element", "ref": "index-add" }, "advanceOn": { "type": "object-created", "register": "pipelinq", "schema": "contact", "capture": { "contactId": ":id" } } },
 					{ "id": "go-leads", "sinceVersion": "1.0.0", "placement": "right", "body": "A lead is a sales opportunity. Open Leads.", "task": "Click Leads in the menu", "target": { "kind": "nav-item", "ref": "Leads" }, "advanceOn": { "type": "route-match", "route": "Leads" } },
 					{ "id": "create-lead", "sinceVersion": "1.0.0", "placement": "bottom", "allowManualNext": true, "body": "Create a lead for this opportunity and link the contact you just made.", "task": "Click New and save a lead", "target": { "kind": "element", "ref": "index-add" }, "advanceOn": { "type": "object-created", "register": "pipelinq", "schema": "lead", "capture": { "leadId": ":id" } } },
 					{ "id": "move-pipeline", "sinceVersion": "1.0.0", "placement": "bottom", "allowManualNext": true, "body": "The pipeline shows every lead by stage. Drag your lead forward as it progresses.", "task": "Open the Pipeline and move your lead to the next stage", "target": { "kind": "element", "ref": "pipeline-board" }, "advanceOn": { "type": "manual" } },
-					{ "id": "create-quote", "sinceVersion": "1.0.0", "placement": "right", "allowManualNext": true, "body": "Quote the lead. In Pipelinq a signable quotation IS the contract — one record, no duplication.", "task": "Open Contracts and create a quotation", "target": { "kind": "nav-item", "ref": "Contracts" }, "advanceOn": { "type": "object-created", "register": "pipelinq", "schema": "contract", "capture": { "contractId": ":id" } } },
-					{ "id": "quote-is-contract", "sinceVersion": "1.0.0", "placement": "center", "title": "Your quote is the contract", "body": "Once the customer signs the quotation it becomes the contract automatically — the same record carries the agreed lines, price and signature.", "target": { "kind": "page", "ref": "Contracts" }, "advanceOn": { "type": "manual" } },
-					{ "id": "send-to-shillinq", "sinceVersion": "1.0.0", "placement": "center", "title": "Send it for billing", "body": "Finally, hand the signed contract to Shillinq for invoicing and ledger posting — that closes the loop from product to paid.", "task": "Continue in Shillinq to invoice this contract", "target": { "kind": "page", "ref": "Contracts" }, "advanceOn": { "type": "manual" }, "handoff": { "app": "Shillinq", "url": "/index.php/apps/shillinq/" } }
+					{ "id": "create-quote", "sinceVersion": "1.0.0", "placement": "right", "allowManualNext": true, "body": "Quote the lead. In Pipelinq a signable quotation IS the contract: one record, no duplication.", "task": "Open Contracts and create a quotation", "target": { "kind": "nav-item", "ref": "Contracts" }, "advanceOn": { "type": "object-created", "register": "pipelinq", "schema": "contract", "capture": { "contractId": ":id" } } },
+					{ "id": "quote-is-contract", "sinceVersion": "1.0.0", "placement": "center", "title": "Your quote is the contract", "body": "Once the customer signs the quotation it becomes the contract automatically. The same record carries the agreed lines, price and signature.", "target": { "kind": "page", "ref": "Contracts" }, "advanceOn": { "type": "manual" } },
+					{ "id": "send-to-shillinq", "sinceVersion": "1.0.0", "placement": "center", "title": "Send it for billing", "body": "Finally, hand the signed contract to Shillinq for invoicing and ledger posting. That closes the loop from product to paid.", "task": "Continue in Shillinq to invoice this contract", "target": { "kind": "page", "ref": "Contracts" }, "advanceOn": { "type": "manual" }, "handoff": { "app": "Shillinq", "url": "/index.php/apps/shillinq/" } }
 				]
 			}
 		]
@@ -491,7 +491,7 @@
 						"rowRoute": "TicketDetail",
 						"allowCreate": true,
 						"addLabel": "Nieuw verzoek",
-						"emptyText": "No open requests yet — add one to get started."
+						"emptyText": "No open requests yet. Add one to get started."
 					} },
 					{ "id": "client-quick-contacts", "type": "object-list", "title": "Contacts", "icon": "AccountGroup", "content": {
 						"register": "pipelinq", "schema": "contact",
@@ -506,7 +506,7 @@
 						"rowRoute": "ContactDetail",
 						"allowCreate": true,
 						"addLabel": "Contactpersoon toevoegen",
-						"emptyText": "No contact persons yet — add one to get started."
+						"emptyText": "No contact persons yet. Add one to get started."
 					} }
 				],
 				"layout": [
@@ -956,7 +956,7 @@
 							],
 							"allowEdit": true,
 							"limit": 25,
-							"emptyText": "No products quoted on this deal yet — add a line to build the quote."
+							"emptyText": "No products quoted on this deal yet. Add a line to build the quote."
 						}
 					},
 					{ "id": "lead-notes", "type": "integration", "integrationId": "notes", "title": "Notes", "icon": "NoteTextOutline" },
@@ -1310,7 +1310,7 @@
 							],
 							"limit": 25,
 							"allowCreate": false,
-							"emptyText": "No returned lines — refund lines are computed from the original transaction, not added by hand."
+							"emptyText": "No returned lines. Refund lines are computed from the original transaction, not added by hand."
 						}
 					}
 				],
