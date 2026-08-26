@@ -16,7 +16,7 @@
 			"title": "Customer Support",
 			"actionsComponent": "WerkplekHeaderActions",
 			"config": {
-				"description": "Handle requests and tasks, log interactions, and find answers — all in one place.",
+				"description": "Handle requests and tasks, log interactions, and find answers, all in one place.",
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"showRefresh": true,
 				"widgets": [
