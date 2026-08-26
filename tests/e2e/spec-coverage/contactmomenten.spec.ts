@@ -65,6 +65,17 @@ test('contactmomenten list renders seeded contactmoment tickets', async ({
 	// contactmomenten and nothing else.
 	// Asserted per ROW rather than by column index: CnDataTable can prepend a
 	// selection column, so `td:first-child` is not reliably the ticketType cell.
+	//
+	// The ticket TYPE is `interaction` now; `contactmoment` was its Dutch
+	// spelling. The value moved and the regex did not — a regex literal is not
+	// a position any rename pattern reaches, which is why it took an e2e run to
+	// find. The ROUTE and the surface keep their Dutch names.
+	//
+	// NOT asserted positionally. This loop used to iterate rows.nth(i) and
+	// require every one to match, which couples the test to how many rows fit
+	// on page 1 and in what order they arrive. It failed at a DIFFERENT index
+	// on each run — the signature of an order-dependent assertion rather than a
+	// broken filter. See #1441.
 	const rows = content.locator('table tbody tr')
 	await expect(rows.first()).toBeVisible()
 	const count = await rows.count()
@@ -72,13 +83,23 @@ test('contactmomenten list renders seeded contactmoment tickets', async ({
 		count,
 		'the Contactmomenten tab must show at least one seeded record',
 	).toBeGreaterThan(0)
-	for (let i = 0; i < count; i++) {
-		// The ticket TYPE is `interaction` now; `contactmoment` was its Dutch
-		// spelling. The value moved and this regex did not — a regex literal is
-		// not a position any rename pattern reaches, which is why it took an e2e
-		// run to find. The ROUTE and the surface keep their Dutch names.
-		await expect(rows.nth(i)).toContainText(/interaction/i)
-	}
+
+	// `expect(locator)` rather than `expect(await locator.count())`: the former
+	// RETRIES until the timeout, the latter takes a single snapshot. Clicking
+	// the tab starts a fetch, so a snapshot taken before it lands measures the
+	// unfiltered list — which is exactly how the first version of this fix
+	// failed, reading 14 request/complaint rows and then passing on retry.
+	await expect(
+		rows.filter({ hasText: /interaction/i }).first(),
+		'the Contactmomenten tab must show at least one row of the interaction '
+			+ 'subtype',
+	).toBeVisible({ timeout: 15000 })
+
+	await expect(
+		rows.filter({ hasText: /request|complaint/i }),
+		'the Contactmomenten tab filters ticketType=interaction, so no request '
+			+ 'or complaint row may appear',
+	).toHaveCount(0, { timeout: 15000 })
 })
 
 // @e2e openspec/specs/contactmomenten/spec.md#quick-log-from-contactmomenten-list
