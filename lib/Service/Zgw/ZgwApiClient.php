@@ -322,10 +322,9 @@ class ZgwApiClient {
 	 * @return array{0:int, 1:string} Tuple of [status, body].
 	 */
 	private function extractErrorContext(Throwable $error): array {
-		$status = 0;
-		if (method_exists($error, 'getCode') === true) {
-			$status = (int)$error->getCode();
-		}
+		// `getCode()` is declared on Throwable, so the method_exists() probe
+		// this replaces could never be false.
+		$status = (int)$error->getCode();
 
 		$body = '';
 		if (method_exists($error, 'getResponse') === true) {

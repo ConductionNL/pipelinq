@@ -36,7 +36,6 @@ use OCP\EventDispatcher\Event;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use ReflectionClass;
-use RuntimeException;
 use OCA\OpenRegister\Service\WebhookService;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\Lifecycle\TransitionEngine;
@@ -779,8 +778,6 @@ class PosRefundService {
 	 * Get the OpenRegister ObjectService.
 	 *
 	 * @return object The object service.
-	 *
-	 * @throws RuntimeException If OpenRegister is not available.
 	 *
 	 * @spec openspec/changes/pos-refund-return/tasks.md#2.1
 	 */

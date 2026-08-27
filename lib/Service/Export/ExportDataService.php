@@ -396,7 +396,9 @@ class ExportDataService extends AbstractExportService {
 			}
 		}
 
-		return array_values($filtered);
+		// `$filtered` is only appended to with `[]=`, so it is already a list —
+		// the array_values() this replaces was a no-op.
+		return $filtered;
 	}//end applyRowFilter()
 
 	/**

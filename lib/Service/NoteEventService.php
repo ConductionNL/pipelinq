@@ -76,9 +76,9 @@ class NoteEventService {
 				return;
 			}
 
-			if (in_array($entityType, ['lead', 'request', 'client', 'contact'], true) === false) {
-				return;
-			}
+			// The `in_array()` guard that stood here listed exactly the four
+			// values self::TYPE_MAP can yield, and the null case is already
+			// returned above — so it could never reject anything.
 
 			$entityData = $this->fetchEntityData(
 				entityType: $entityType,

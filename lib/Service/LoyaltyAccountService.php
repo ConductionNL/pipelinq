@@ -435,8 +435,6 @@ class LoyaltyAccountService {
 	 * Get the OpenRegister ObjectService.
 	 *
 	 * @return object The object service.
-	 *
-	 * @throws RuntimeException When OR is unavailable.
 	 */
 	private function getObjectService(): object {
 		// Injected (ADR-083): a property read throws nothing, so the old

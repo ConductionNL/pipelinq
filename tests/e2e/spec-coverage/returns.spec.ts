@@ -55,8 +55,15 @@ test('Returns: the create entry point is reachable from the Actions menu', async
 	// other index in this app, which shows it as a primary button. If that is
 	// decided to be wrong, the fix is `showAdd: true` in the manifest and this
 	// test should go back to asserting `cn-cta-primary`.
+	// The label is asserted as it RENDERS, not as the manifest spells it.
+	// @conduction/nextcloud-vue 2.12 (#734) routes manifest-authored page
+	// chrome through the host translate function, so a headerActions label is
+	// now a translation key rather than literal output. This app's l10n/en.json
+	// maps "Nieuwe retour" -> "New refund", and the e2e suite runs in English,
+	// so the rendered label is the English one. Asserting the Dutch source here
+	// would pass only while the string was NOT being translated.
 	await openActionsOverflow(page)
-	await expect(page.getByText('Nieuwe retour').first()).toBeVisible({
+	await expect(page.getByText('New refund').first()).toBeVisible({
 		timeout: 10000,
 	})
 })

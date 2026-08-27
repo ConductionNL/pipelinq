@@ -51,6 +51,20 @@ test('requests list renders the seeded request tickets', async ({ page }) => {
 
 	// Asserted per ROW rather than by column index: CnDataTable can prepend a
 	// selection column, so `td:first-child` is not reliably the ticketType cell.
+	//
+	// NOT asserted positionally. This loop used to be
+	//
+	//     for (let i = 0; i < count; i++)
+	//         await expect(rows.nth(i)).toContainText(/request/i)
+	//
+	// which couples the test to how many rows fit on page 1 and in what order
+	// they arrive. It failed at nth(10) on one run and nth(4) on another — a
+	// moving index is the signature of an order-dependent assertion, not of the
+	// filter being broken. See #1441.
+	//
+	// The requirement is that the tab narrows to the request subtype, which is
+	// two claims: the list is non-empty AND it excludes the other subtypes.
+	// Both are checked below without depending on row order.
 	const rows = content.locator('table tbody tr')
 	await expect(rows.first()).toBeVisible()
 	const count = await rows.count()
@@ -58,9 +72,21 @@ test('requests list renders the seeded request tickets', async ({ page }) => {
 		count,
 		'the Tickets tab must show at least one seeded request',
 	).toBeGreaterThan(0)
-	for (let i = 0; i < count; i++) {
-		await expect(rows.nth(i)).toContainText(/request/i)
-	}
+
+	// `expect(locator)` rather than `expect(await locator.count())`: the former
+	// RETRIES until the timeout, the latter takes a single snapshot. Clicking
+	// the tab starts a fetch, so a snapshot taken before it lands measures the
+	// unfiltered list.
+	await expect(
+		rows.filter({ hasText: /request/i }).first(),
+		'the Tickets tab must show at least one row of the request subtype',
+	).toBeVisible({ timeout: 15000 })
+
+	await expect(
+		rows.filter({ hasText: /complaint|interaction/i }),
+		'the Tickets tab filters ticketType=request, so no complaint or '
+			+ 'interaction row may appear',
+	).toHaveCount(0, { timeout: 15000 })
 })
 
 // @e2e openspec/specs/request-management/spec.md#create-a-minimal-request

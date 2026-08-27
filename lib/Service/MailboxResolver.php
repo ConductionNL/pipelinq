@@ -220,8 +220,6 @@ class MailboxResolver {
 	 * Get OR ObjectService.
 	 *
 	 * @return \OCA\OpenRegister\Contract\ObjectServiceInterface
-	 *
-	 * @throws RuntimeException If OR not available.
 	 */
 	private function getObjectService(): \OCA\OpenRegister\Contract\ObjectServiceInterface {
 		// Injected (ADR-083): a property read throws nothing, so the old

@@ -32,7 +32,6 @@ use Exception;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
-use RuntimeException;
 use Throwable;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
@@ -279,8 +278,6 @@ class Customer360SummaryService {
 	 * Resolve the OpenRegister ObjectService lazily.
 	 *
 	 * @return \OCA\OpenRegister\Contract\ObjectServiceInterface The OpenRegister object service.
-	 *
-	 * @throws RuntimeException If OpenRegister is not available.
 	 */
 	private function getObjectService(): \OCA\OpenRegister\Contract\ObjectServiceInterface {
 		// Injected (ADR-083): a property read throws nothing, so the old
