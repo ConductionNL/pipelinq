@@ -34,7 +34,7 @@
 				"trigger": "first-visit",
 				"minAppVersion": "1.0.0",
 				"steps": [
-					{ "id": "welcome", "placement": "center", "sinceVersion": "1.0.0", "title": "Welcome to Pipelinq", "body": "Let's walk the core sales journey together, from a product to a billed contract. You'll create each record yourself, in your own workspace.", "target": { "kind": "page", "ref": "Products" }, "advanceOn": { "type": "manual" } },
+					{ "id": "welcome", "placement": "center", "sinceVersion": "1.0.0", "title": "Welcome to Pipelinq", "body": "Let's walk the core sales journey together, from a product to a billed contract. You'll create each record yourself, in your own workspace.", "target": { "kind": "page", "ref": "Dashboard" }, "advanceOn": { "type": "manual" } },
 					{ "id": "go-products", "sinceVersion": "1.0.0", "placement": "right", "body": "First, your catalogue. Open Products from the menu.", "task": "Click Products in the menu", "target": { "kind": "nav-item", "ref": "Products" }, "advanceOn": { "type": "route-match", "route": "Products" } },
 					{ "id": "create-product", "sinceVersion": "1.0.0", "placement": "bottom", "allowManualNext": true, "body": "Add the product or service you sell. We'll put it on the quotation later.", "task": "Click New and save a product", "target": { "kind": "element", "ref": "index-add" }, "advanceOn": { "type": "object-created", "register": "pipelinq", "schema": "product", "capture": { "productId": ":id" } } },
 					{ "id": "go-contacts", "sinceVersion": "1.0.0", "placement": "right", "body": "Now the customer. Open Contacts.", "task": "Click Contacts in the menu", "target": { "kind": "nav-item", "ref": "Contacts" }, "advanceOn": { "type": "route-match", "route": "Contacts" } },
