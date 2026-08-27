@@ -50,7 +50,6 @@ use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
-use RuntimeException;
 use Throwable;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
@@ -834,8 +833,6 @@ class BrpController extends Controller {
 	 * Lazy OR ObjectService.
 	 *
 	 * @return object
-	 *
-	 * @throws \RuntimeException When OR is unavailable.
 	 */
 	private function getObjectService(): object {
 		// Injected (ADR-083): a property read throws nothing, so the old

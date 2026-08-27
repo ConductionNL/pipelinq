@@ -12,7 +12,7 @@
         "slug": "timeEntry",
         "title": "Time Entry",
         "icon": "ClockOutline",
-        "version": "1.1.0",
+        "version": "1.2.0",
         "summary": "An approved billable hour record dispatched to Shillinq's Work-In-Progress ledger.",
         "description": "Time entries record billable or non-billable work hours against a client, lead, or project. On approval (status: approved) the entry is dispatched, one-way, to Shillinq's billable WIP balance via OpenRegister's WebhookService. wipSyncStatus and wipSyncedAt record the outcome of that integration. This schema is defined here so the WIP integration can stand alone; capture (timer/grid) is owned by OpenRegister's time-tracker leaf per ADR-022 and remains backwards-compatible (the leaf's link tables are unaffected).",
         "x-schema-org": "schema:Action",
@@ -109,6 +109,17 @@
             "format": "date-time",
             "description": "ISO 8601 UTC timestamp of the last successful WIP sync delivery.",
             "title": "Wip Synced At"
+          },
+          "user": {
+            "type": "string",
+            "description": "Nextcloud user UID (or imported identity) who performed the work. Distinct from approvedBy; required for per-person hour reporting and for migrated worklogs booked on behalf of others.",
+            "title": "User"
+          },
+          "metadata": {
+            "type": "object",
+            "default": {},
+            "description": "Declared catch-all for source-system fields and provenance keys (e.g. tempoWorklogId, jiraIssueKey, migratedAt). Declared explicitly so magic-table storage persists it.",
+            "title": "Metadata"
           }
         }
       }

@@ -130,10 +130,13 @@ class SystemTagCrudService {
 	 * @spec   openspec/changes/reverse-2026-05-26-be-tags/tasks.md#task-1
 	 */
 	public function assignTag(string $objectType, int $tagId): void {
+		// ISystemTagObjectMapper declares `list<string>|string`, so the int is
+		// cast rather than passed through — it only worked before because the
+		// query builder coerced it on the way to SQL.
 		$this->tagMapper->assignTags(
 			objId: $objectType,
 			objectType: $objectType,
-			tagIds: [$tagId]
+			tagIds: [(string)$tagId]
 		);
 	}//end assignTag()
 
@@ -147,10 +150,11 @@ class SystemTagCrudService {
 	 * @spec   openspec/changes/reverse-2026-05-26-be-tags/tasks.md#task-6
 	 */
 	public function unassignAndCleanup(string $objectType, int $tagId): void {
+		// Same `list<string>` contract as assignTag() above.
 		$this->tagMapper->unassignTags(
 			objId: $objectType,
 			objectType: $objectType,
-			tagIds: [$tagId]
+			tagIds: [(string)$tagId]
 		);
 
 		$stillUsed = $this->isTagUsedByOtherTypes(

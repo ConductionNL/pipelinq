@@ -62,7 +62,9 @@ class ContactDataBuilder {
 			'contactsUid' => $uid,
 		];
 
-		$data = array_filter($data, fn ($v) => $v !== '' && $v !== null);
+		// Every value in `$data` is a string, so the `!== null` conjunct this
+		// replaces could never be false.
+		$data = array_filter($data, fn ($v) => $v !== '');
 		$data['name'] = $name;
 		$data['type'] = $clientType;
 
@@ -95,7 +97,8 @@ class ContactDataBuilder {
 			$data['client'] = $clientId;
 		}
 
-		$data = array_filter($data, fn ($v) => $v !== '' && $v !== null);
+		// Same as above: all values are strings, so `!== null` was unreachable.
+		$data = array_filter($data, fn ($v) => $v !== '');
 		$data['name'] = $name;
 
 		return $data;

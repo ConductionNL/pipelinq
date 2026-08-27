@@ -222,8 +222,6 @@ class MainRegisterReader {
 	 * Get the OpenRegister ObjectService.
 	 *
 	 * @return object The object service.
-	 *
-	 * @throws RuntimeException When OpenRegister is unavailable.
 	 */
 	private function objectService(): object {
 		// Injected (ADR-083): a property read throws nothing, so the old

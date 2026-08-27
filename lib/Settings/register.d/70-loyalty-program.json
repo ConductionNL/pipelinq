@@ -109,7 +109,7 @@
               "paused",
               "ended"
             ],
-            "default": "concept",
+            "default": "draft",
             "description": "Programme lifecycle status.",
             "title": "Status"
           },
@@ -402,7 +402,7 @@
               "blocked",
               "deactivated"
             ],
-            "default": "actief",
+            "default": "active",
             "description": "Account status. Geblokkerd accounts do not earn points (REQ-LOY-002-05).",
             "title": "Status"
           },

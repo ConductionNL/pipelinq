@@ -33,7 +33,6 @@ namespace OCA\Pipelinq\Service;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
-use RuntimeException;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
@@ -466,7 +465,6 @@ class RapportageService {
 	 * Resolve the OpenRegister ObjectService from the container.
 	 *
 	 * @return object
-	 * @throws RuntimeException When OpenRegister is unavailable.
 	 */
 	private function getObjectService(): object {
 		// Injected (ADR-083): a property read throws nothing, so the old

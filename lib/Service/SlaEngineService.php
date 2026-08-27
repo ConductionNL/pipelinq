@@ -402,7 +402,9 @@ class SlaEngineService {
 	 * @spec openspec/specs/sla-engine-and-escalation/spec.md
 	 */
 	public function pauseTimer(array $slaStatus, DateTimeInterface $now): array {
-		if (isset($slaStatus['pausedAt']) === true && $slaStatus['pausedAt'] !== null) {
+		// `isset()` is already false for null — the `!== null` conjunct this
+		// replaces was unreachable.
+		if (isset($slaStatus['pausedAt']) === true) {
 			return $slaStatus;
 		}
 

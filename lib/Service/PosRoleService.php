@@ -31,7 +31,6 @@ use OCP\AppFramework\OCS\OCSForbiddenException;
 use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
-use RuntimeException;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
@@ -281,8 +280,6 @@ class PosRoleService {
 	 * Get the OpenRegister ObjectService.
 	 *
 	 * @return object The object service.
-	 *
-	 * @throws RuntimeException If OpenRegister is not available.
 	 *
 	 * @spec openspec/changes/pos-staff-pin-permissions/tasks.md#2.1
 	 */

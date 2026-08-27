@@ -38,7 +38,6 @@ use OCP\IL10N;
 use OCP\IURLGenerator;
 use OCP\Mail\IMailer;
 use Psr\Log\LoggerInterface;
-use RuntimeException;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
@@ -851,8 +850,6 @@ class AppointmentEmailService {
 	 * Resolve the OpenRegister ObjectService via the DI container.
 	 *
 	 * @return object The ObjectService instance.
-	 *
-	 * @throws RuntimeException If OpenRegister is unavailable.
 	 */
 	private function getObjectService(): object {
 		// Injected (ADR-083): a property read throws nothing, so the old
