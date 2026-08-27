@@ -451,7 +451,7 @@ jobs:
       # renders the English source inside an otherwise translated form, silently.
       # The fleet had 30,459 such strings, so this records the current count and
       # fails only when it GROWS — burning it down stays an ordinary PR.
-      frontend-checks: '["check:manifest", "check:vue-demi", "test:l10n", "format", "check:schema-l10n"]'
+      frontend-checks: '["check:manifest", "check:vue-demi", "test:l10n", "format", "check:schema-l10n", "check:l10n-js"]'
 
       # ── Coverage ratchet ─────────────────────────────────────────────────
       # `enable-coverage-guard` defaults to FALSE, which is why both
