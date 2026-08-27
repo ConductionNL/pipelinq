@@ -26,7 +26,9 @@
     "check:manifest": "node scripts/check-manifest.js",
     "format": "prettier --check \"**/*.{js,ts,vue,css,scss}\"",
     "format:fix": "prettier --write \"**/*.{js,ts,vue,css,scss}\"",
-    "prepare": "git config core.hooksPath .githooks || true"
+    "prepare": "git config core.hooksPath .githooks || true",
+    "l10n:build": "node scripts/build-l10n-js.js",
+    "check:l10n-js": "node scripts/build-l10n-js.js --check"
   },
   "browserslist": [
     "extends @nextcloud/browserslist-config"
@@ -50,7 +52,7 @@
     "node-polyfill-webpack-plugin": "^4.1.0",
     "path-browserify": "^1.0.1",
     "pinia": "^2.1.7",
-    "vue": "^3.5.13",
+    "vue": "^3.5.41",
     "vue-material-design-icons": "^5.3.0",
     "vue-router": "^4.6.4",
     "vuedraggable": "^4.1.0"
@@ -80,7 +82,7 @@
     "eslint-config-prettier": "^10.1.8",
     "postcss-html": "^2.0.0",
     "prettier": "^3.9.6",
-    "sass": "^1.99.0",
+    "sass": "^1.103.1",
     "sass-loader": "^17.0.0",
     "style-loader": "~4.0.0",
     "stylelint": "^17.14.1",
@@ -89,11 +91,11 @@
     "stylelint-config-recommended-vue": "^2.0.0",
     "terser-webpack-plugin": "^5.6.0",
     "typescript": "^5.9.3",
-    "vitest": "^3.2.7",
+    "vitest": "^4.1.11",
     "vue-eslint-parser": "^10.3.0",
     "vue-loader": "^17.4.2",
     "webpack": "^5.94.0",
-    "webpack-cli": "^6.0.1"
+    "webpack-cli": "^7.2.2"
   },
   "prettier": "@nextcloud/prettier-config"
 }
