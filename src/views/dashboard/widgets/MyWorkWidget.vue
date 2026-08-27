@@ -19,7 +19,7 @@
 		:loadingText="t('pipelinq', 'Loading…')"
 		hideHeader
 		borderless
-		:emptyText="t('pipelinq', 'No items assigned to you')"
+		:emptyText="emptyText"
 		:rowClass="rowClass"
 		@rowClick="openItem">
 		<template #column-entityType="{ row }">
@@ -92,6 +92,26 @@ export default {
 		}
 	},
 
+	computed: {
+		/**
+		 * The table's empty text.
+		 *
+		 * CnDataTable has no error state, so an empty `rows` after a failed
+		 * fetch would render "No items assigned to you" — a sentence asserting
+		 * that the user has nothing to do, when in fact nothing was read. The
+		 * wording is the only place that distinction can live here.
+		 *
+		 * @return {string} Empty-state text.
+		 */
+		emptyText() {
+			if (this.error) {
+				return this.t('pipelinq', 'Could not load your items')
+			}
+
+			return this.t('pipelinq', 'No items assigned to you')
+		},
+	},
+
 	methods: {
 		formatDate,
 		/**
@@ -131,8 +151,6 @@ export default {
 				const data = await response.json()
 				this.items = Array.isArray(data.items) ? data.items : []
 				this.total = Number(data.total) || this.items.length
-			} catch (err) {
-				console.error('MyWorkWidget fetch error:', err)
 			} finally {
 				this.loaded = true
 			}
