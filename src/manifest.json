@@ -1960,7 +1960,8 @@
 			"type": "flow-detail",
 			"title": "Flow",
 			"config": { "app": "pipelinq" },
-			"_note": "The shared CnFlowDetail canvas over the same single engine. Controls render in the NC app sidebar so the canvas keeps full width."
+			"sidebarComponent": "FlowDetailSidebar",
+			"_note": "The shared CnFlowDetail canvas over the same single engine. Controls render in the NC app sidebar (sidebarComponent) so the canvas keeps full width; canvas and sidebar share useFlowStore. The _note claimed this before the field existed, so #/flows/new -- and every #/flows/:id -- rendered a bare canvas with no way to name, describe, trigger or step-edit the flow. Mirrors procest/src/manifest.json:FlowDetail."
 		}
 	]
 }
