@@ -3554,7 +3554,10 @@ OC.L10N.register(
         "%n hours ago": "%n uur geleden",
         "Reverse payment": "Betaling storneren",
         "Flows": "Flows",
-        "Flow": "Flow"
+        "Flow": "Flow",
+        "Could not load requests": "Kon verzoeken niet laden",
+        "Could not load your items": "Kon uw items niet laden",
+        "Could not load complaints": "Kon klachten niet laden"
     },
     "nplurals=2; plural=(n != 1);"
 )

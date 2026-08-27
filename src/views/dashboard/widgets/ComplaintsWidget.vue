@@ -1,5 +1,8 @@
 <template>
-	<ComplaintsOverviewWidget :complaints="complaints" :loading="loading" />
+	<ComplaintsOverviewWidget
+		:complaints="complaints"
+		:loading="loading"
+		:error="error" />
 </template>
 
 <script>
@@ -28,8 +31,6 @@ export default {
 		async load() {
 			try {
 				this.complaints = await getComplaints()
-			} catch (err) {
-				console.error('ComplaintsWidget fetch error:', err)
 			} finally {
 				this.loading = false
 			}

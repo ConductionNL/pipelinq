@@ -430,17 +430,7 @@
       "count": 3
     }
   },
-  "src/views/dashboard/widgets/ComplaintsWidget.vue": {
-    "no-console": {
-      "count": 1
-    }
-  },
   "src/views/dashboard/widgets/LeadsOverTimeChartWidget.vue": {
-    "no-console": {
-      "count": 1
-    }
-  },
-  "src/views/dashboard/widgets/MyWorkWidget.vue": {
     "no-console": {
       "count": 1
     }
@@ -450,27 +440,7 @@
       "count": 1
     }
   },
-  "src/views/dashboard/widgets/OpenLeadsKpiWidget.vue": {
-    "no-console": {
-      "count": 1
-    }
-  },
-  "src/views/dashboard/widgets/OpenRequestsKpiWidget.vue": {
-    "no-console": {
-      "count": 1
-    }
-  },
-  "src/views/dashboard/widgets/OverdueKpiWidget.vue": {
-    "no-console": {
-      "count": 1
-    }
-  },
   "src/views/dashboard/widgets/PipelineByStageChartWidget.vue": {
-    "no-console": {
-      "count": 1
-    }
-  },
-  "src/views/dashboard/widgets/PipelineValueKpiWidget.vue": {
     "no-console": {
       "count": 1
     }
@@ -481,11 +451,6 @@
     }
   },
   "src/views/dashboard/widgets/RequestsByCategoryChartWidget.vue": {
-    "no-console": {
-      "count": 1
-    }
-  },
-  "src/views/dashboard/widgets/RequestsByStatusWidget.vue": {
     "no-console": {
       "count": 1
     }
@@ -507,6 +472,11 @@
   },
   "src/views/dashboard/widgets/XWikiDashboardWidget.vue": {
     "@typescript-eslint/no-unused-vars": {
+      "count": 1
+    }
+  },
+  "src/views/dashboard/widgets/dashboardRefreshMixin.js": {
+    "no-console": {
       "count": 1
     }
   },

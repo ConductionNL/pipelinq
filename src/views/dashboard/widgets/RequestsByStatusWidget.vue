@@ -3,6 +3,9 @@
 		<div v-if="!loaded" class="chart-empty">
 			{{ t('pipelinq', 'Loading…') }}
 		</div>
+		<div v-else-if="error" class="chart-empty">
+			{{ t('pipelinq', 'Could not load requests') }}
+		</div>
 		<div v-else-if="rows.length === 0" class="chart-empty">
 			{{ t('pipelinq', 'No requests yet') }}
 		</div>
@@ -65,8 +68,6 @@ export default {
 		async load() {
 			try {
 				this.requests = await getRequests()
-			} catch (err) {
-				console.error('RequestsByStatusWidget fetch error:', err)
 			} finally {
 				this.loaded = true
 			}
