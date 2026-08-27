@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { expect, test } from '@playwright/test'
 
 /**
  * E2E coverage for the xwiki-integration change.
@@ -61,15 +61,23 @@ test.describe('xWiki Integration', () => {
 		// only be asserted on a detail page).
 		const firstRow = page.getByRole('row').nth(1)
 		if (await firstRow.isVisible().catch(() => false)) {
-			await firstRow.click()
+			// Click the NAME cell, not the row. The row's FIRST cell holds the
+			// select checkbox, and Playwright's row click targets the row's
+			// centre — which can land on that cell and merely select the row.
+			// Measured from the failure snapshot on development: the page was
+			// still the Clients index, heading and table intact, with no
+			// detail route ever entered.
+			await firstRow.getByRole('cell').nth(1).click()
 
-			// Wait for the DETAIL route, not merely for #content-vue to be
-			// visible. The index already satisfies that locator, so the old
-			// wait returned immediately and the poll below started while the
-			// app was still on the list — burning its budget on the wrong page.
-			await page
-				.waitForURL(/#\/clients\/[^/]+/, { timeout: 15000 })
-				.catch(() => {})
+			// This MUST reach the detail route, and the failure MUST be loud.
+			// The previous `.catch(() => {})` swallowed the timeout, so when
+			// navigation did not happen the test carried on against the index
+			// — where `#content-vue` is also visible, so the "unconditional"
+			// assertion below passed, and the tab poll then failed with
+			// "the Knowledge base tab should render". That message sent every
+			// reader looking at the xWiki integration for a bug that was
+			// really a click landing on a checkbox.
+			await expect(page).toHaveURL(/#\/clients\/[^/]+/, { timeout: 15000 })
 
 			// First: the detail page actually resolved. This is the claim in
 			// this test's own name — "not a blank/404 shell" — and it holds
