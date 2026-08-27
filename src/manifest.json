@@ -270,6 +270,14 @@
 			"route": "FeaturesRoadmap",
 			"section": "footer",
 			"order": 230
+		},
+		{
+			"id": "FlowsMenu",
+			"label": "Flows",
+			"icon": "Sitemap",
+			"route": "Flows",
+			"section": "settings",
+			"order": 96
 		}
 	],
 	"pages": [
@@ -1936,6 +1944,22 @@
 				"register": "pipelinq",
 				"schema": "exportRun"
 			}
+		},
+		{
+			"id": "Flows",
+			"route": "/flows",
+			"type": "flows",
+			"title": "Flows",
+			"config": { "app": "pipelinq" },
+			"_note": "ADR-110 Decision 4: a flow is app-specific, so the authoring surface lives here rather than behind a deep link to another app's list. Rendered by the shared CnFlowsPage page type over OpenRegister's one native flow store (ADR-065), scoped to this app."
+		},
+		{
+			"id": "FlowDetail",
+			"route": "/flows/:id",
+			"type": "flow-detail",
+			"title": "Flow",
+			"config": { "app": "pipelinq" },
+			"_note": "The shared CnFlowDetail canvas over the same single engine. Controls render in the NC app sidebar so the canvas keeps full width."
 		}
 	]
 }
