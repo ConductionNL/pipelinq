@@ -3552,7 +3552,10 @@ OC.L10N.register(
         "Fixed value": "Fixed value",
         "Signed contract & amendments": "Signed contract & amendments",
         "Opnieuw indienen bij Shillinq": "Opnieuw indienen bij Shillinq",
-        "Opnieuw indienen bij Shillinq? Dit triggert een POST met dezelfde idempotency key.": "Opnieuw indienen bij Shillinq? Dit triggert een POST met dezelfde idempotency key."
+        "Opnieuw indienen bij Shillinq? Dit triggert een POST met dezelfde idempotency key.": "Opnieuw indienen bij Shillinq? Dit triggert een POST met dezelfde idempotency key.",
+        "Could not load requests": "Could not load requests",
+        "Could not load your items": "Could not load your items",
+        "Could not load complaints": "Could not load complaints"
     },
     "nplurals=2; plural=(n != 1);"
 )
