@@ -3552,7 +3552,9 @@ OC.L10N.register(
         "%n contacts in this segment are missing {channel} consent. Choose how to proceed.": "Van %n contacten in dit segment ontbreekt toestemming voor {channel}. Kies hoe je verdergaat.",
         "%n minutes ago": "%n minuten geleden",
         "%n hours ago": "%n uur geleden",
-        "Reverse payment": "Betaling storneren"
+        "Reverse payment": "Betaling storneren",
+        "Flows": "Flows",
+        "Flow": "Flow"
     },
     "nplurals=2; plural=(n != 1);"
 )
