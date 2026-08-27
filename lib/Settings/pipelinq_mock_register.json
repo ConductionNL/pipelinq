@@ -15239,7 +15239,7 @@
         "label": "Voorbeeld Label 1",
         "description": "Voorbeeld Description 1",
         "isActive": true,
-        "icon": "Voorbeeld Icon 1"
+        "icon": "ViewDashboardOutline"
       },
       {
         "@self": {
@@ -15251,7 +15251,7 @@
         "label": "Voorbeeld Label 2",
         "description": "Voorbeeld Description 2",
         "isActive": true,
-        "icon": "Voorbeeld Icon 2"
+        "icon": "BookOpenVariantOutline"
       },
       {
         "@self": {
@@ -15263,7 +15263,7 @@
         "label": "Voorbeeld Label 3",
         "description": "Voorbeeld Description 3",
         "isActive": true,
-        "icon": "Voorbeeld Icon 3"
+        "icon": "MapMarkerPath"
       },
       {
         "@self": {
