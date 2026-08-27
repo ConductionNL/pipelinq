@@ -215,7 +215,7 @@ function routesFromManifest(manifest) {
 async function loadPersistedOverrides(manifest) {
 	try {
 		const { data } = await axios.get(
-			generateUrl('/apps/openbuild/api/app-overrides/pipelinq'),
+			generateUrl('/apps/buildiq/api/app-overrides/pipelinq'),
 			{ timeout: 8000 },
 		)
 		if (

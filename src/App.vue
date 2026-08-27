@@ -200,7 +200,7 @@ export default {
 		 */
 		async persistManifestDelta(delta) {
 			await axios.put(
-				generateUrl('/apps/openbuild/api/app-overrides/pipelinq'),
+				generateUrl('/apps/buildiq/api/app-overrides/pipelinq'),
 				delta,
 			)
 		},
