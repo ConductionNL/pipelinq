@@ -102,6 +102,7 @@ export default {
 		 * wording is the only place that distinction can live here.
 		 *
 		 * @return {string} Empty-state text.
+		 * @spec openspec/specs/dashboard/spec.md#requirement-my-work-widget
 		 */
 		emptyText() {
 			if (this.error) {
