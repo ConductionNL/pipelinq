@@ -3400,7 +3400,10 @@
         "XML (canonical Belastingdienst format)": "XML (canonical Belastingdienst format)",
         "Yet to verify": "Yet to verify",
         "Zero (0%)": "Zero (0%)",
-        "Could not load connector sources. You can still create the blast and set a source later.": "Could not load connector sources. You can still create the blast and set a source later."
+        "Could not load connector sources. You can still create the blast and set a source later.": "Could not load connector sources. You can still create the blast and set a source later.",
+        "Could not load complaints": "Could not load complaints",
+        "Could not load requests": "Could not load requests",
+        "Could not load your items": "Could not load your items"
     },
     "plurals": null
 }

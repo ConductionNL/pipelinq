@@ -3356,7 +3356,10 @@
         "from cache": "van cache",
         "{label} copied.": "{label} gekopieerd.",
         "{name} — Credit card": "{name} — Creditcard",
-        "Could not load connector sources. You can still create the blast and set a source later.": "Kon connectorbronnen niet laden. U kunt de blast nog steeds aanmaken en later een bron instellen."
+        "Could not load connector sources. You can still create the blast and set a source later.": "Kon connectorbronnen niet laden. U kunt de blast nog steeds aanmaken en later een bron instellen.",
+        "Could not load requests": "Kon verzoeken niet laden",
+        "Could not load your items": "Kon uw items niet laden",
+        "Could not load complaints": "Kon klachten niet laden"
     },
     "plurals": null
 }
