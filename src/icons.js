@@ -123,6 +123,7 @@ import Server from 'vue-material-design-icons/Server.vue'
 import ShieldAccountOutline from 'vue-material-design-icons/ShieldAccountOutline.vue'
 import ShieldCheck from 'vue-material-design-icons/ShieldCheck.vue'
 import ShieldCheckOutline from 'vue-material-design-icons/ShieldCheckOutline.vue'
+import Sitemap from 'vue-material-design-icons/Sitemap.vue'
 import SourceBranch from 'vue-material-design-icons/SourceBranch.vue'
 import SourceMerge from 'vue-material-design-icons/SourceMerge.vue'
 import Star from 'vue-material-design-icons/Star.vue'
@@ -252,6 +253,7 @@ export default {
 	ShieldAccountOutline,
 	ShieldCheck,
 	ShieldCheckOutline,
+	Sitemap,
 	SourceBranch,
 	SourceMerge,
 	Star,
