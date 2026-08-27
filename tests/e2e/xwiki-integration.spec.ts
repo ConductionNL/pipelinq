@@ -81,6 +81,33 @@ test.describe('xWiki Integration', () => {
 		await expect(page).toHaveURL(/#\/clients\/[^/]+/, { timeout: 15000 })
 		await expect(page.locator('#content-vue')).toBeVisible({ timeout: 15000 })
 
+		// OPEN THE SIDEBAR. The tab lives inside it, and it mounts CLOSED:
+		// CnDetailPage declares `sidebarOpen: { type: Boolean, default: false }`
+		// — "Defaults to closed so the detail content fills the page; the user
+		// opens it on demand via the header sidebar-toggle".
+		//
+		// So reaching the detail page was necessary but not sufficient. The poll
+		// below was still waiting on an element inside a shut container, where
+		// neither the tab NOR the unavailable notice can become visible — which
+		// is why widening the assertion to accept "reports itself unavailable"
+		// did not help, and why declaring the tab in the manifest did not
+		// either. The failure was never about xWiki being reachable.
+		//
+		// Measured on a seeded instance (pipelinq 0.3.1, client detail page):
+		// `.app-sidebar__toggle` present, zero `[role=tab]` nodes anywhere;
+		// after clicking it the sidebar mounts and renders its manifest-declared
+		// tab ("History", with audit rows). This PR declares "Knowledge base"
+		// into that same `sidebar.tabs` array, so it surfaces the same way.
+		//
+		// NcAppSidebar renders this toggle itself when closed, so it is the
+		// affordance a real user would use. Tolerated rather than asserted: if a
+		// future default opens the sidebar for us there is no toggle to click,
+		// and the assertions below still hold.
+		const sidebarToggle = page.locator('.app-sidebar__toggle').first()
+		if (await sidebarToggle.isVisible().catch(() => false)) {
+			await sidebarToggle.click()
+		}
+
 		// Then the tab, with the same tolerance the dashboard test above uses:
 		// the compose stack does not always have xWiki on 8088, and the proxy is
 		// built to degrade gracefully when it is unreachable.
