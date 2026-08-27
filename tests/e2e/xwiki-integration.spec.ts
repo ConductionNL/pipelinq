@@ -67,7 +67,9 @@ test.describe('xWiki Integration', () => {
 			// visible. The index already satisfies that locator, so the old
 			// wait returned immediately and the poll below started while the
 			// app was still on the list — burning its budget on the wrong page.
-			await page.waitForURL(/#\/clients\/[^/]+/, { timeout: 15000 }).catch(() => {})
+			await page
+				.waitForURL(/#\/clients\/[^/]+/, { timeout: 15000 })
+				.catch(() => {})
 
 			// The sidebar tab is rendered with label "Knowledge base"
 			// (XWikiSidebarTab) — distinct from the leaf-flavoured
