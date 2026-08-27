@@ -3552,7 +3552,10 @@ OC.L10N.register(
         "Fixed value": "Fixed value",
         "Signed contract & amendments": "Signed contract & amendments",
         "Opnieuw indienen bij Shillinq": "Opnieuw indienen bij Shillinq",
-        "Opnieuw indienen bij Shillinq? Dit triggert een POST met dezelfde idempotency key.": "Opnieuw indienen bij Shillinq? Dit triggert een POST met dezelfde idempotency key."
+        "Opnieuw indienen bij Shillinq? Dit triggert een POST met dezelfde idempotency key.": "Opnieuw indienen bij Shillinq? Dit triggert een POST met dezelfde idempotency key.",
+        "Where the automation lives": "Where the automation lives",
+        "Flows are what happens without anyone clicking: a reminder before a deadline passes, a confirmation sent on submission. This is where you read and edit them — nothing to build now.": "Flows are what happens without anyone clicking: a reminder before a deadline passes, a confirmation sent on submission. This is where you read and edit them — nothing to build now.",
+        "Open Flows in the menu": "Open Flows in the menu"
     },
     "nplurals=2; plural=(n != 1);"
 )

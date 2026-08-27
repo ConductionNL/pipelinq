@@ -3554,7 +3554,10 @@ OC.L10N.register(
         "%n hours ago": "%n uur geleden",
         "Reverse payment": "Betaling storneren",
         "Flows": "Flows",
-        "Flow": "Flow"
+        "Flow": "Flow",
+        "Where the automation lives": "Waar de automatisering zit",
+        "Flows are what happens without anyone clicking: a reminder before a deadline passes, a confirmation sent on submission. This is where you read and edit them — nothing to build now.": "Flows zijn wat er gebeurt zonder dat iemand klikt: een herinnering voordat een termijn verstrijkt, een bevestiging bij indiening. Hier lees en bewerk je ze — je hoeft nu niets te bouwen.",
+        "Open Flows in the menu": "Open Flows in het menu"
     },
     "nplurals=2; plural=(n != 1);"
 )
