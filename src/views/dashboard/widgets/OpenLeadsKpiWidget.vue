@@ -2,6 +2,8 @@
 	<CnStatsBlock
 		:title="t('pipelinq', 'Open Leads')"
 		:count="count"
+		:loading="loading"
+		:error="error"
 		:countLabel="t('pipelinq', 'leads')"
 		:icon="TrendingUp"
 		variant="primary"
@@ -38,16 +40,12 @@ export default {
 		 * @spec openspec/changes/reverse-2026-05-26-fe-dashboard-ui/tasks.md#task-13
 		 */
 		async load() {
-			try {
-				const [leads, pipelines] = await Promise.all([
-					getLeads(),
-					getPipelines(),
-				])
-				const closed = getClosedStageNames(pipelines)
-				this.count = leads.filter((l) => !closed.has(l.stage)).length
-			} catch (err) {
-				console.error('OpenLeadsKpiWidget fetch error:', err)
-			}
+			const [leads, pipelines] = await Promise.all([
+				getLeads(),
+				getPipelines(),
+			])
+			const closed = getClosedStageNames(pipelines)
+			this.count = leads.filter((l) => !closed.has(l.stage)).length
 		},
 	},
 }

@@ -2,6 +2,8 @@
 	<CnStatsBlock
 		:title="t('pipelinq', 'Pipeline Value')"
 		:count="count"
+		:loading="loading"
+		:error="error"
 		countLabel="EUR"
 		:icon="CurrencyEur"
 		variant="success"
@@ -38,18 +40,14 @@ export default {
 		 * @spec openspec/changes/reverse-2026-05-26-fe-dashboard-ui/tasks.md#task-16
 		 */
 		async load() {
-			try {
-				const [leads, pipelines] = await Promise.all([
-					getLeads(),
-					getPipelines(),
-				])
-				const closed = getClosedStageNames(pipelines)
-				this.count = leads
-					.filter((l) => !closed.has(l.stage))
-					.reduce((sum, l) => sum + (Number(l.value) || 0), 0)
-			} catch (err) {
-				console.error('PipelineValueKpiWidget fetch error:', err)
-			}
+			const [leads, pipelines] = await Promise.all([
+				getLeads(),
+				getPipelines(),
+			])
+			const closed = getClosedStageNames(pipelines)
+			this.count = leads
+				.filter((l) => !closed.has(l.stage))
+				.reduce((sum, l) => sum + (Number(l.value) || 0), 0)
 		},
 	},
 }
