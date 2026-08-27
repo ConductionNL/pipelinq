@@ -16,6 +16,9 @@
 		<div v-if="loading" class="widget-loading">
 			{{ t('pipelinq', 'Loading...') }}
 		</div>
+		<div v-else-if="error" class="widget-empty">
+			{{ t('pipelinq', 'Could not load complaints') }}
+		</div>
 		<div v-else-if="totalOpen === 0" class="widget-empty">
 			{{ t('pipelinq', 'No open complaints') }}
 		</div>
@@ -54,6 +57,25 @@ export default {
 		loading: {
 			type: Boolean,
 			default: false,
+		},
+
+		/**
+		 * The fetch failure, if any.
+		 *
+		 * Without it an empty `complaints` after a failed read rendered "No
+		 * open complaints" — a reassuring statement about a list that was
+		 * never read.
+		 *
+		 * Typed `[Object, String]` rather than including Boolean: the only
+		 * caller passes the caught Error (or null) from `dashboardRefreshMixin`.
+		 * Adding Boolean would also collide with
+		 * `vue/prefer-prop-type-boolean-first`, whose required ordering makes
+		 * Vue cast an empty value to `true` — so `error=""` would read as a
+		 * failure.
+		 */
+		error: {
+			type: [Object, String],
+			default: null,
 		},
 	},
 

@@ -665,7 +665,8 @@
 					"enabled": true,
 					"showMetadata": true,
 					"tabs": [
-						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
+						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] },
+						{ "id": "knowledgeBase", "label": "Knowledge base", "icon": "BookOpenVariantOutline", "widgets": [ { "type": "XWikiSidebarTab" } ] }
 					]
 				}
 			}

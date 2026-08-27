@@ -3555,7 +3555,10 @@ OC.L10N.register(
         "Opnieuw indienen bij Shillinq? Dit triggert een POST met dezelfde idempotency key.": "Opnieuw indienen bij Shillinq? Dit triggert een POST met dezelfde idempotency key.",
         "Where the automation lives": "Where the automation lives",
         "Flows are what happens without anyone clicking: a reminder before a deadline passes, a confirmation sent on submission. This is where you read and edit them. Nothing to build now.": "Flows are what happens without anyone clicking: a reminder before a deadline passes, a confirmation sent on submission. This is where you read and edit them. Nothing to build now.",
-        "Open Flows in the menu": "Open Flows in the menu"
+        "Open Flows in the menu": "Open Flows in the menu",
+        "Could not load requests": "Could not load requests",
+        "Could not load your items": "Could not load your items",
+        "Could not load complaints": "Could not load complaints"
     },
     "nplurals=2; plural=(n != 1);"
 )
