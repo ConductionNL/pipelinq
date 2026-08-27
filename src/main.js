@@ -197,11 +197,11 @@ function routesFromManifest(manifest) {
 }
 
 /**
- * Load the persisted OpenBuild app-override delta and merge it over the
+ * Load the persisted buildiq app-override delta and merge it over the
  * build-time manifest (ADR-041 round-trip: App.vue's persistManifestDelta PUTs
  * edits to this store; this loader brings them back at boot). The GET returns
  * the LAYERED delta (shared admin delta ⊕ the calling user's own delta), or
- * `{}` when no override exists. Fail-soft: any error — OpenBuild not
+ * `{}` when no override exists. Fail-soft: any error, buildiq not
  * installed, endpoint unreachable, malformed delta — falls back to the
  * build-time manifest, so an override can never prevent the app from booting.
  *
@@ -209,13 +209,13 @@ function routesFromManifest(manifest) {
  * @return {Promise<object>} The manifest with persisted overrides applied.
  *
  * @spec exclude Bug fix closing the ADR-041 persist/load round-trip; the
- *               delta contract is owned by openbuild's
+ *               delta contract is owned by buildiq's
  *               layered-versioned-app-deltas specs.
  */
 async function loadPersistedOverrides(manifest) {
 	try {
 		const { data } = await axios.get(
-			generateUrl('/apps/openbuild/api/app-overrides/pipelinq'),
+			generateUrl('/apps/buildiq/api/app-overrides/pipelinq'),
 			{ timeout: 8000 },
 		)
 		if (
