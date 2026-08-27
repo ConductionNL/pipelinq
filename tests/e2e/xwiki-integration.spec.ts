@@ -71,29 +71,48 @@ test.describe('xWiki Integration', () => {
 				.waitForURL(/#\/clients\/[^/]+/, { timeout: 15000 })
 				.catch(() => {})
 
-			// The sidebar tab is rendered with label "Knowledge base"
-			// (XWikiSidebarTab) — distinct from the leaf-flavoured
-			// "Knowledge" tab (CnXwikiTab).
+			// First: the detail page actually resolved. This is the claim in
+			// this test's own name — "not a blank/404 shell" — and it holds
+			// whether or not xWiki is reachable, so it is asserted
+			// unconditionally and is what stops the softer check below from
+			// passing over a broken page.
+			await expect(page.locator('#content-vue')).toBeVisible({
+				timeout: 15000,
+			})
+
+			// Then the tab, with the SAME tolerance the dashboard test above
+			// uses, and for the reason this file's header already gives: the
+			// compose stack does not always have xWiki running on 8088, and the
+			// proxy is built to degrade gracefully when it is unreachable.
 			//
-			// The tab is injected by the integration registry once the detail
-			// page resolves its widgets, which is a second round-trip after
-			// navigation. At 10s this raced under CI load: the spec failed on
-			// the first attempt and passed on retry across several unrelated
-			// PRs, which is the signature of a budget that is too tight rather
-			// than of a missing surface.
+			// The header says both tests use the "renders OR reports
+			// unavailable" shape. Only the dashboard one did; this one demanded
+			// a live xWiki, and went red whenever there wasn't one. Measured on
+			// development: passed on the first attempt of run 33034938378, then
+			// failed BOTH attempts of run 33041699146 with no code change
+			// between them. A 30s budget did not help, because the tab is
+			// absent rather than slow.
+			//
+			// The sidebar tab is labelled "Knowledge base" (XWikiSidebarTab) —
+			// distinct from the leaf-flavoured "Knowledge" tab (CnXwikiTab).
 			const tab = page.getByRole('tab', { name: /Knowledge base/i }).first()
 			const fallback = page.getByText('Knowledge base').first()
+			const unavailable = page
+				.getByText('xWiki integration unavailable', { exact: false })
+				.first()
 			await expect
 				.poll(
 					async () => {
 						return (
 							(await tab.isVisible().catch(() => false))
 							|| (await fallback.isVisible().catch(() => false))
+							|| (await unavailable.isVisible().catch(() => false))
 						)
 					},
 					{
 						timeout: 30000,
-						message: 'Knowledge base sidebar tab should render',
+						message:
+							'the Knowledge base tab should render, or the integration should report itself unavailable',
 					},
 				)
 				.toBe(true)
