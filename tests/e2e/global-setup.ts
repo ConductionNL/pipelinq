@@ -164,7 +164,10 @@ async function globalSetup(config: FullConfig): Promise<void> {
 	await page.evaluate(() => {
 		try {
 			for (let v = 0; v <= 20; v++) {
-				window.localStorage.setItem(`cn-setup-wizard-dismissed:pipelinq:${v}`, '1')
+				window.localStorage.setItem(
+					`cn-setup-wizard-dismissed:pipelinq:${v}`,
+					'1',
+				)
 			}
 		} catch (e) {
 			/* storage blocked in this context */
