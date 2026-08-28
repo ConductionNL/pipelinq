@@ -205,9 +205,27 @@ test.describe('First-time setup contract', () => {
 	}) => {
 		await openApp(page)
 
-		// Precondition: unset, so the flip below is caused by this test.
+		// ESTABLISH the precondition, do not inherit it. This test asserts a
+		// FLIP from not-done to done, which only means anything from a known
+		// starting point — and the starting point is no longer empty: the
+		// ADR-111 `demo-data` setup step seeds an organisation, so on a CI
+		// instance where demo data ran, `receipt_company_name` is already set
+		// and `organisation.done` is already true.
+		//
+		// Reading the baseline off whatever the instance happens to hold made
+		// this test's verdict depend on which other specs ran first. Clearing
+		// the keys here costs one request and makes the flip attributable to
+		// this test alone.
+		await api(page, 'POST', `${APP}/api/setup/config`, {
+			receipt_company_name: '',
+			receipt_company_vat: '',
+			receipt_company_kvk: '',
+		})
 		const before = await api(page, 'GET', `${APP}/api/setup/status`)
-		expect(before.json?.steps?.organisation?.done).toBe(false)
+		expect(
+			before.json?.steps?.organisation?.done,
+			'clearing receipt_company_name did not reset the organisation step, so the flip asserted below would prove nothing',
+		).toBe(false)
 
 		try {
 			const saved = await api(page, 'POST', `${APP}/api/setup/config`, {
