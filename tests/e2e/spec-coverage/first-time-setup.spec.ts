@@ -206,8 +206,28 @@ test.describe('First-time setup contract', () => {
 		await openApp(page)
 
 		// Precondition: unset, so the flip below is caused by this test.
+		//
+		// ESTABLISHED, not asserted. This used to read the status and require
+		// `done === false`, which silently depended on nothing else having set
+		// an organisation name first. Since the demo-data step began seeding on
+		// install, `receipt_company_name` is populated before this spec runs and
+		// the precondition failed — the test reported a product defect when the
+		// only thing wrong was an inherited fixture.
+		//
+		// Clearing first is the same call the `finally` below already makes, so
+		// the mechanism is proven in this file. The assertion that follows the
+		// clear is what keeps this honest: if the reset does not take, this
+		// still fails loudly rather than testing a flip that already happened.
+		await api(page, 'POST', `${APP}/api/setup/config`, {
+			receipt_company_name: '',
+			receipt_company_vat: '',
+			receipt_company_kvk: '',
+		})
 		const before = await api(page, 'GET', `${APP}/api/setup/status`)
-		expect(before.json?.steps?.organisation?.done).toBe(false)
+		expect(
+			before.json?.steps?.organisation?.done,
+			'could not clear the organisation step, so the flip below would prove nothing',
+		).toBe(false)
 
 		try {
 			const saved = await api(page, 'POST', `${APP}/api/setup/config`, {
