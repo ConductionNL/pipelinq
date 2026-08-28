@@ -250,17 +250,35 @@ test.describe('First-time setup contract', () => {
 			// Still not gating: completion is unchanged by an optional step.
 			expect(after.json?.completed).toBe(true)
 		} finally {
-			// Leave the instance exactly as found — other specs share it.
+			// Leave the instance as ci-seed left it — which is NOT empty.
+			//
+			// This block used to clear the name, described as "leave the
+			// instance exactly as found". It was the opposite of that.
+			// ci-seed.sh step 3b sets `receipt_company_name` precisely so that
+			// no optional step is outstanding, and says why in its own error
+			// message: "An unmet optional step makes CnAppRoot cover the shell
+			// with the wizard in every fresh browser context."
+			//
+			// So clearing it here handed that modal mask to every spec that
+			// ran afterwards. In the run this test last failed in,
+			// dashboard.spec.ts was flaky three ways — renders the page,
+			// renders the KPI and chart widgets, offers the quick-create
+			// actions — which is exactly what a modal over the shell produces.
+			//
+			// The literal is the value ci-seed.sh writes. There is no GET for
+			// the setup config (only /status, which returns booleans), so the
+			// original cannot be read back and restored dynamically; if the
+			// seed's value changes, change it here too.
 			await api(page, 'POST', `${APP}/api/setup/config`, {
-				receipt_company_name: '',
+				receipt_company_name: 'CI Test Organisation',
 				receipt_company_vat: '',
 				receipt_company_kvk: '',
 			})
 			const restored = await api(page, 'GET', `${APP}/api/setup/status`)
 			expect(
 				restored.json?.steps?.organisation?.done,
-				'cleanup failed to reset the organisation step',
-			).toBe(false)
+				'cleanup must leave the organisation step DONE, as ci-seed did',
+			).toBe(true)
 		}
 	})
 
