@@ -205,9 +205,17 @@ test.describe('First-time setup contract', () => {
 	}) => {
 		await openApp(page)
 
-		// Precondition: unset, so the flip below is caused by this test.
+		// ESTABLISH the precondition; do not inherit it. ci-seed.sh step 3b
+		// sets `receipt_company_name` (#1480), so this step arrives DONE and
+		// asserting `false` on arrival is asserting the seed, not this test.
+		await api(page, 'POST', `${APP}/api/setup/config`, {
+			receipt_company_name: '',
+		})
 		const before = await api(page, 'GET', `${APP}/api/setup/status`)
-		expect(before.json?.steps?.organisation?.done).toBe(false)
+		expect(
+			before.json?.steps?.organisation?.done,
+			'precondition: the organisation step must start undone',
+		).toBe(false)
 
 		try {
 			const saved = await api(page, 'POST', `${APP}/api/setup/config`, {
@@ -230,17 +238,30 @@ test.describe('First-time setup contract', () => {
 			// Still not gating: completion is unchanged by an optional step.
 			expect(after.json?.completed).toBe(true)
 		} finally {
-			// Leave the instance exactly as found — other specs share it.
+			// Leave the instance as ci-seed left it — NOT empty.
+			//
+			// This used to clear the name, which looked like "leave no trace"
+			// and was the opposite: ci-seed.sh step 3b sets it precisely so no
+			// optional step is outstanding, because CnAppRoot opens the
+			// non-gating wizard when one is, covering the shell with a modal
+			// mask in every fresh browser context. Clearing it here handed
+			// every later spec that mask — dashboard.spec.ts was flaky in the
+			// same run this test failed in.
+			//
+			// The literal is the value ci-seed.sh writes. There is no GET for
+			// the setup config (only /status, which returns booleans), so it
+			// cannot be read back and restored dynamically; if the seed's value
+			// changes, change it here too.
 			await api(page, 'POST', `${APP}/api/setup/config`, {
-				receipt_company_name: '',
+				receipt_company_name: 'CI Test Organisation',
 				receipt_company_vat: '',
 				receipt_company_kvk: '',
 			})
 			const restored = await api(page, 'GET', `${APP}/api/setup/status`)
 			expect(
 				restored.json?.steps?.organisation?.done,
-				'cleanup failed to reset the organisation step',
-			).toBe(false)
+				'cleanup must leave the organisation step DONE, as ci-seed did',
+			).toBe(true)
 		}
 	})
 
