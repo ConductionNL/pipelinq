@@ -110,8 +110,7 @@ test.describe('First-time setup contract', () => {
 		}
 
 		// The optional steps reflect their OWN state rather than the app's:
-		// provision and demo-data were done by ci-seed, organisation was not —
-		// and completion is true regardless, which is the whole scenario.
+		// provision, demo-data and organisation are all satisfied by ci-seed.
 		expect(
 			res.json.steps.provision.done,
 			'ci-seed reimported the register',
@@ -120,10 +119,21 @@ test.describe('First-time setup contract', () => {
 			res.json.steps['demo-data'].done,
 			'ci-seed recorded the demo-data decision',
 		).toBe(true)
+		// `organisation` used to be false here, and this spec asserted that to
+		// show completion did not depend on it. ci-seed.sh step 3b now sets
+		// `receipt_company_name` deliberately (#1480): CnAppRoot opens the
+		// non-gating wizard when ANY optional step is outstanding, so leaving
+		// this one undone covered the shell with a modal mask in every fresh
+		// browser context. The seed had to close it.
+		//
+		// ⚠️ This test therefore no longer witnesses "completed is true DESPITE
+		// an outstanding optional step" — with every step done, that reading is
+		// vacuous here. The property is real and still worth covering; it needs
+		// a test that OWNS the config it depends on rather than reading CI's.
 		expect(
 			res.json.steps.organisation.done,
-			'no organisation name is configured in CI',
-		).toBe(false)
+			'ci-seed sets receipt_company_name in step 3b',
+		).toBe(true)
 		expect(res.json.completed).toBe(true)
 	})
 
