@@ -146,6 +146,31 @@ async function globalSetup(config: FullConfig): Promise<void> {
 		)
 	}
 
+	// Stand the non-gating setup wizard down for every spec.
+	//
+	// CnAppRoot opens it whenever the server reports an OPTIONAL setup step
+	// as outstanding, and pipelinq declares five actionable ones (currency,
+	// provision, demo-data, organisation, integrations). It renders over the
+	// shell, so a click on anything behind it does not fail fast — it waits
+	// out the full timeout. That surfaces as scattered 'did not mount' and
+	// 'not reachable' failures across unrelated specs rather than one cause.
+	//
+	// Seeded here so it lands in the persisted storageState every spec
+	// reuses, rather than being dismissed reactively per test, which races
+	// the dialog's enter transition. The key is versioned
+	// (`cn-setup-wizard-dismissed:<appId>:<setup.version>`), so a range is
+	// seeded: bumping manifest.setup.version must not silently re-open the
+	// wizard across the whole suite.
+	await page.evaluate(() => {
+		try {
+			for (let v = 0; v <= 20; v++) {
+				window.localStorage.setItem(`cn-setup-wizard-dismissed:pipelinq:${v}`, '1')
+			}
+		} catch (e) {
+			/* storage blocked in this context */
+		}
+	})
+
 	await context.storageState({ path: STORAGE_STATE })
 	await assertAppBoots(page)
 	await browser.close()
