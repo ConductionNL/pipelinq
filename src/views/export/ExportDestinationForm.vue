@@ -7,7 +7,7 @@
 		:title="
 			isEdit
 				? t('pipelinq', 'Edit destination')
-				: t('pipelinq', 'New destination')
+				: t('pipelinq', 'New export destination')
 		"
 		:loading="loading"
 		@back="goBack">
