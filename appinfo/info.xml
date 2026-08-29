@@ -71,21 +71,15 @@ Vrij en open source onder de AGPL-licentie.
 
     <screenshot>https://raw.githubusercontent.com/ConductionNL/pipelinq/main/img/app-store.svg</screenshot>
 
+    <!--
+        info.xsd declares <dependencies> as an ordered <xs:sequence>: php,
+        database, command, lib, owncloud, nextcloud, architecture, backend.
+        <php> therefore has to precede <nextcloud>, not follow it.
+    -->
     <dependencies>
-        <nextcloud min-version="28" max-version="34"/>
         <php min-version="8.3"/>
+        <nextcloud min-version="28" max-version="34"/>
     </dependencies>
-
-    <repair-steps>
-        <post-migration>
-            <step>OCA\Pipelinq\Repair\InitializeSettings</step>
-            <step>OCA\Pipelinq\Repair\NormaliseCtiPhoneNumbers</step>
-            <step>OCA\Pipelinq\Repair\InitSlaStatus</step>
-            <step>OCA\Pipelinq\Repair\IngestProductVendorMaster</step>
-            <step>OCA\Pipelinq\Repair\MigratePosBookkeepingToShillinq</step>
-            <step>OCA\Pipelinq\Repair\UnifyClientContactIdentity</step>
-        </post-migration>
-    </repair-steps>
 
     <background-jobs>
         <job>OCA\Pipelinq\BackgroundJob\TaskExpiryJob</job>
@@ -128,24 +122,31 @@ Vrij en open source onder de AGPL-licentie.
         <job>OCA\Pipelinq\BackgroundJob\RenewalWindowJob</job>
     </background-jobs>
 
-    <navigations>
-        <navigation>
-            <id>pipelinq</id>
-            <name>Pipelinq</name>
-            <route>pipelinq.dashboard.page</route>
-            <icon>app.svg</icon>
-        </navigation>
-    </navigations>
+    <!--
+        Ordered by info.xsd's root <xs:sequence>: … dependencies,
+        background-jobs, repair-steps, two-factor-providers, commands, settings,
+        … The steps themselves are unchanged; only their position relative to
+        <background-jobs> is, because a sequence rejects a valid element that
+        arrives out of turn.
+    -->
+    <repair-steps>
+        <post-migration>
+            <step>OCA\Pipelinq\Repair\InitializeSettings</step>
+            <step>OCA\Pipelinq\Repair\NormaliseCtiPhoneNumbers</step>
+            <step>OCA\Pipelinq\Repair\InitSlaStatus</step>
+            <step>OCA\Pipelinq\Repair\IngestProductVendorMaster</step>
+            <step>OCA\Pipelinq\Repair\MigratePosBookkeepingToShillinq</step>
+            <step>OCA\Pipelinq\Repair\UnifyClientContactIdentity</step>
+        </post-migration>
+    </repair-steps>
 
     <settings>
         <admin>OCA\Pipelinq\Settings\AdminSettings</admin>
         <admin-section>OCA\Pipelinq\Sections\SettingsSection</admin-section>
     </settings>
 
+    <!-- info.xsd's activity type is a sequence too: settings, filters, providers. -->
     <activity>
-        <providers>
-            <provider>OCA\Pipelinq\Activity\Provider</provider>
-        </providers>
         <settings>
             <setting>OCA\Pipelinq\Activity\Setting\AssignmentSetting</setting>
             <setting>OCA\Pipelinq\Activity\Setting\StageStatusSetting</setting>
@@ -155,9 +156,18 @@ Vrij en open source onder de AGPL-licentie.
         <filters>
             <filter>OCA\Pipelinq\Activity\Filter</filter>
         </filters>
+        <providers>
+            <provider>OCA\Pipelinq\Activity\Provider</provider>
+        </providers>
     </activity>
 
-    <notification>
-        <service>OCA\Pipelinq\Notification\Notifier</service>
-    </notification>
+    <navigations>
+        <navigation>
+            <id>pipelinq</id>
+            <name>Pipelinq</name>
+            <route>pipelinq.dashboard.page</route>
+            <icon>app.svg</icon>
+        </navigation>
+    </navigations>
+
 </info>

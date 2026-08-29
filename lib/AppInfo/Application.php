@@ -25,6 +25,7 @@ use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCA\OpenRegister\Event\SchemaUpdatedEvent;
 use OCA\Pipelinq\Event\TimeEntryApprovedEvent;
+use OCA\Pipelinq\Notification\Notifier;
 use OCA\Pipelinq\Adapter\AzureDataLakeExportAdapter;
 use OCA\Pipelinq\Adapter\BigQueryExportAdapter;
 use OCA\Pipelinq\Adapter\ExportSinkRegistry;
@@ -112,6 +113,13 @@ class Application extends App implements IBootstrap
         // fully-built halves — see registerAppHost() for why the Settings /
         // Preferences / repair plumbing stays bespoke.
         $this->registerAppHost(context: $context);
+
+        // Moved here from appinfo/info.xml's <notification> block, which is not
+        // in the appstore info.xsd at all — the file could never validate while
+        // it was there. Deleting the block on its own would have been a silent
+        // feature loss: nothing else registered this notifier, so notifications
+        // would have stopped being delivered without a single error anywhere.
+        $context->registerNotifierService(Notifier::class);
 
         $context->registerEventListener(
             event: ObjectCreatedEvent::class,
