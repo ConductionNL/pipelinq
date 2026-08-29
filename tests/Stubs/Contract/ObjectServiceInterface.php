@@ -464,6 +464,38 @@ interface ObjectServiceInterface {
 	): ObjectEntityInterface;
 
 	/**
+	 * Merge a partial update onto an existing object.
+	 *
+	 * Added to the published contract in hydra-gates v1.8.1. `updateObject()`
+	 * REPLACES — a caller that sent one key erased every field it omitted — so
+	 * the merging path is published here to stop consumers reimplementing
+	 * read-merge-write, or taking the erasing path by mistake.
+	 *
+	 * Mirrored into this stub so the two definitions cannot drift: a stub that
+	 * declares a narrower surface than the real interface is a different type
+	 * wearing the same name.
+	 *
+	 * @param string          $objectId       Object id or UUID.
+	 * @param array           $data           Fields to merge onto the stored object.
+	 * @param string|int|null $register       Register id, UUID or slug.
+	 * @param string|int|null $schema         Schema id, UUID or slug.
+	 * @param bool            $_rbac          Whether to apply RBAC.
+	 * @param bool            $_multitenancy  Whether to apply multitenancy.
+	 * @param ?IUser          $currentUser    Acting user.
+	 *
+	 * @return ObjectEntityInterface
+	 */
+	public function patchObject(
+		string $objectId,
+		array $data,
+		string|int|null $register=null,
+		string|int|null $schema=null,
+		bool $_rbac=true,
+		bool $_multitenancy=true,
+		?IUser $currentUser=null
+	): ObjectEntityInterface;
+
+	/**
 	 * The objects this object refers to.
 	 *
 	 * @param string $objectId      The object UUID.

@@ -334,7 +334,9 @@ class PointsLedgerService {
 			static fn (array $a, array $b): int => strcmp((string)($a['timestamp'] ?? ''), (string)($b['timestamp'] ?? ''))
 		);
 
-		return array_values($filtered);
+		// `$filtered` is a list and usort() reindexes in place — the
+		// array_values() this replaces was a no-op.
+		return $filtered;
 	}//end getLedgerHistory()
 
 	/**

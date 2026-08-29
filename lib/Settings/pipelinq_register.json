@@ -3,8 +3,8 @@
   "info": {
     "title": "Pipelinq CRM Register",
     "description": "Client Relationship Management register for the Pipelinq Nextcloud app. Manages clients, contacts, leads, requests, and pipelines.",
-    "version": "1.3.0",
-    "x-changelog": "1.3.0: Loyalty vocabulary completed. Schema slug klantLoyaltyAccount->customerLoyaltyAccount (@type KlantLoyaltyAccount->CustomerLoyaltyAccount), and the last two Dutch property keys in the loyalty fragment: loyaltyProgramme.merk->brand, loyaltyProgramme.valuta->currency, giftCard.valuta->currency. Both keys are added to RenameDutchColumns so existing rows move with the declaration. The oc_appconfig key klantLoyaltyAccount_schema deliberately does NOT move: it is derived from the slug, so it is pinned in SettingsLoadService::SCHEMA_CONFIG_KEYS rather than left to follow the rename. 1.2.2: Re-authored 2 Dutch schema-level titles to English (klantLoyaltyAccount \"Klant Loyalty Account\"->\"Customer Loyalty Account\", nrcAbonnement \"NRC Abonnement\"->\"NRC Subscription\"); Dutch labels now live in l10n/nl.json + nl.js. VNG Klantinteracties and Kassakoppeling schema titles kept as-is (formal standard / established domain terms). No property titles, keys, enums, or other fields changed. 1.2.1: Re-authored 38 Dutch schema property titles to English (contact.geheimhouding plus the bsnValidatie, brpLookupVerzoek, brpPersoon, bsnAuditRecord, and optOutVlag schemas); Dutch labels now live in l10n/nl.json + nl.js. No property keys, enums, or other fields changed."
+    "version": "1.4.0",
+    "x-changelog": "1.4.0: timeEntry gains user (Nextcloud uid / imported identity performing the work — distinct from approvedBy, needed for per-person hour reporting and migrated worklogs) and metadata (declared object catch-all for source-system provenance such as tempoWorklogId/jiraIssueKey/migratedAt — declared explicitly because magic-table storage drops undeclared properties). timeEntry schema version 1.1.0->1.2.0. 1.3.0: Loyalty vocabulary completed. Schema slug klantLoyaltyAccount->customerLoyaltyAccount (@type KlantLoyaltyAccount->CustomerLoyaltyAccount), and the last two Dutch property keys in the loyalty fragment: loyaltyProgramme.merk->brand, loyaltyProgramme.valuta->currency, giftCard.valuta->currency. Both keys are added to RenameDutchColumns so existing rows move with the declaration. The oc_appconfig key klantLoyaltyAccount_schema deliberately does NOT move: it is derived from the slug, so it is pinned in SettingsLoadService::SCHEMA_CONFIG_KEYS rather than left to follow the rename. 1.2.2: Re-authored 2 Dutch schema-level titles to English (klantLoyaltyAccount \"Klant Loyalty Account\"->\"Customer Loyalty Account\", nrcAbonnement \"NRC Abonnement\"->\"NRC Subscription\"); Dutch labels now live in l10n/nl.json + nl.js. VNG Klantinteracties and Kassakoppeling schema titles kept as-is (formal standard / established domain terms). No property titles, keys, enums, or other fields changed. 1.2.1: Re-authored 38 Dutch schema property titles to English (contact.geheimhouding plus the bsnValidatie, brpLookupVerzoek, brpPersoon, bsnAuditRecord, and optOutVlag schemas); Dutch labels now live in l10n/nl.json + nl.js. No property keys, enums, or other fields changed."
   },
   "x-openregister": {
     "type": "application",
@@ -943,6 +943,28 @@
       },
       "product": {
         "x-schema-org": "schema:Product",
+        "configuration": {
+          "x-openregister-mcp": {
+            "enabled": true,
+            "tools": {
+              "search": {
+                "description": "Search the product/service catalogue by name, SKU, category or status. Read this BEFORE adding a line to an offer: a line needs a real product id and its list unitPrice, and there is no other way to discover either. Returns RBAC-scoped products.",
+                "scope": "read",
+                "filters": [
+                  "category",
+                  "status",
+                  "type"
+                ],
+                "readOnlyHint": true
+              },
+              "get": {
+                "description": "Get a single product by id, including its list unitPrice, unit and tax class.",
+                "scope": "read",
+                "readOnlyHint": true
+              }
+            }
+          }
+        },
         "slug": "product",
         "title": "Product",
         "icon": "Package",
@@ -1260,6 +1282,51 @@
         "summary": "A line item linking a product to a lead",
         "description": "Represents a product line item on a lead — an instance of a product with deal-specific quantity, pricing, and discount. The total is computed as quantity * unitPrice * (1 - discount/100). Mapped to Schema.org Offer.",
         "x-schema-org": "schema:Offer",
+        "configuration": {
+          "x-openregister-calculations": {
+            "total": {
+              "type": "number",
+              "materialise": true,
+              "expression": {
+                "round": [
+                  {
+                    "if": [
+                      { "eq": [{ "prop": "discountType" }, "amount"] },
+                      { "-": [{ "*": [{ "prop": "quantity" }, { "prop": "unitPrice" }] }, { "coalesce": [{ "prop": "discount" }, 0] }] },
+                      { "*": [{ "*": [{ "prop": "quantity" }, { "prop": "unitPrice" }] }, { "-": [1, { "/": [{ "coalesce": [{ "prop": "discount" }, 0] }, 100] }] }] }
+                    ]
+                  },
+                  2
+                ]
+              }
+            }
+          },
+          "x-openregister-mcp": {
+            "enabled": true,
+            "tools": {
+              "create": {
+                "description": "Add a priced line to a lead — one product with its quantity, unit price and optional discount. This is how an offer/quotation is built: create the lead first (pipelinq_createLead), then add one line per product. Do NOT send `total`: it is calculated by OpenRegister as quantity * unitPrice minus the discount (percent or amount, per discountType), so a supplied value would be overwritten and any figure quoted from it would be wrong.",
+                "scope": "create",
+                "destructiveHint": false,
+                "idempotentHint": false
+              },
+              "search": {
+                "description": "List the priced lines on a lead — the body of an offer/quotation. Filter by `lead` to get one offer's lines. Each line carries the materialised `total`.",
+                "scope": "read",
+                "filters": [
+                  "lead",
+                  "product"
+                ],
+                "readOnlyHint": true
+              },
+              "get": {
+                "description": "Get a single offer line by id, including its materialised `total`.",
+                "scope": "read",
+                "readOnlyHint": true
+              }
+            }
+          }
+        },
         "required": [
           "lead",
           "product",
@@ -1512,7 +1579,7 @@
               "normal",
               "high"
             ],
-            "default": "normaal",
+            "default": "normal",
             "title": "Priority",
             "facetable": true
           },

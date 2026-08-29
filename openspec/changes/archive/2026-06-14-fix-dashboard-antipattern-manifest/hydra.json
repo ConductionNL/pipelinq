@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
   "spec_slug": "fix-dashboard-antipattern-manifest",
-  "repo": "https://codeberg.org/Conduction/pipelinq",
+  "repo": "https://github.com/ConductionNL/pipelinq",
   "issue": 126,
   "cycles": [
     {

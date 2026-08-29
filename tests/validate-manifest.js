@@ -28,11 +28,23 @@ const REPO_ROOT = path.resolve(__dirname, '..')
 
 const MANIFEST_PATH = path.join(REPO_ROOT, 'src', 'manifest.json')
 
+// THE INSTALLED SCHEMA WINS OVER THE VENDORED COPY.
+//
+// It used to be the other way round, and that ordering is a drift machine: the
+// vendored copy shadows the one the shipped runtime actually enforces, so the
+// check keeps passing against a snapshot of the rules while the rules move.
+// Measured here — the vendored copy sat at 2.12.0 and rejected `type: "flow"`,
+// which the installed package's schema (2.26.0) accepts and the runtime
+// registers. The manifest was right and the check was reading an older grammar.
+//
+// A manifest has to satisfy the schema its own dependency ships. The vendored
+// copy stays as a fallback for a tree with no node_modules — a fresh checkout,
+// a CI leg that skips install — but it no longer gets to overrule what is
+// installed.
 const SCHEMA_CANDIDATES = [
 	process.env.APP_MANIFEST_SCHEMA,
 	// src/manifest.json is a v2 manifest — validate against the canonical v2
 	// schema (vendored; includes the setup block + metric cacheTtl).
-	path.join(REPO_ROOT, 'tests', 'schemas', 'app-manifest-v2.schema.json'),
 	path.join(
 		REPO_ROOT,
 		'node_modules',
@@ -42,6 +54,7 @@ const SCHEMA_CANDIDATES = [
 		'schemas',
 		'app-manifest-v2.schema.json',
 	),
+	path.join(REPO_ROOT, 'tests', 'schemas', 'app-manifest-v2.schema.json'),
 	path.join(
 		REPO_ROOT,
 		'..',

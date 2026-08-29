@@ -59,6 +59,8 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/changes/pipelinq-bookkeeping-to-shillinq/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-005
  */
 class MigratePosBookkeepingToShillinq implements IRepairStep {
+	use \OCA\Pipelinq\Repair\Support\RunsUnderSystemIdentity;
+
 	/**
 	 * Schema slug of the retired outbound journal-entry record (read-only source).
 	 *
@@ -131,6 +133,27 @@ class MigratePosBookkeepingToShillinq implements IRepairStep {
 			return;
 		}
 
+		// Under a system identity: an upgrade has no session, and OpenRegister
+		// refuses the write for 'Anonymous'. Without it this migration moves
+		// nothing and says so only in a warning, which does not fail an upgrade.
+		$this->withSystemIdentity(
+			objectService: $objectService,
+			work: function () use ($objectService, $register, $output): void {
+				$this->runInner(objectService: $objectService, register: $register, output: $output);
+			}
+		);
+	}//end run()
+
+	/**
+	 * The migration itself.
+	 *
+	 * @param object $objectService OpenRegister's ObjectService.
+	 * @param string $register The register slug.
+	 * @param IOutput $output Progress reporting.
+	 *
+	 * @return void
+	 */
+	private function runInner(object $objectService, string $register, IOutput $output): void {
 		$outbounds = $this->readAll(objectService: $objectService, register: $register, schema: self::OUTBOUND_SCHEMA);
 		if ($outbounds === []) {
 			$output->info('POS bookkeeping migration: no outbound journal records to migrate.');
@@ -172,7 +195,7 @@ class MigratePosBookkeepingToShillinq implements IRepairStep {
 			'POS bookkeeping migration completed',
 			['raised' => $raised, 'projected' => $projected, 'pending' => $pending]
 		);
-	}//end run()
+	}//end runInner()
 
 	/**
 	 * Migrate a single outbound record onto the Z-report projection / registry.

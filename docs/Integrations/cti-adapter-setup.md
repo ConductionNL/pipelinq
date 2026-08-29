@@ -15,7 +15,7 @@ Custom platforms can be added by registering a class that implements
 ## Spec
 
 - OpenSpec change: `openspec/changes/cti-screenpop-adapter/`
-- Issue: [#175](https://codeberg.org/Conduction/pipelinq/issues/175)
+- Issue: Codeberg issue #175 (pre-migration, not migrated to GitHub)
 
 ## High-level flow
 

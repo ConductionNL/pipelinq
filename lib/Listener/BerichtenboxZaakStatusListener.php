@@ -188,7 +188,10 @@ class BerichtenboxZaakStatusListener implements IEventListener {
 			'zaak_schema',
 			''
 		);
-		return ($schemaId === $caseSchema && $caseSchema !== '');
+		// `$schemaId === $caseSchema` already excludes the empty case: $schemaId
+		// is a non-empty-string here, so the `$caseSchema !== ''` conjunct this
+		// replaces could never be false.
+		return ($schemaId === $caseSchema);
 	}//end isZaakUpdate()
 
 	/**

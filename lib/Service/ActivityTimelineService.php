@@ -97,8 +97,6 @@ class ActivityTimelineService {
 	 * Get the OpenRegister ObjectService.
 	 *
 	 * @return object The OpenRegister ObjectService instance.
-	 *
-	 * @throws \RuntimeException If OpenRegister is not available.
 	 */
 	private function getObjectService(): object {
 		// Injected (ADR-083): a property read throws nothing, so the old
@@ -618,7 +616,7 @@ class ActivityTimelineService {
 				'calendarLink' => ['linkedEntityType' => 'contact', 'linkedEntityId' => $entityId],
 			],
 			default => [],
-		};//end match
+		};// End match.
 	}//end resolveEntityQueryParams()
 
 	/**

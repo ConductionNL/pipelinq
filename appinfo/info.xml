@@ -52,25 +52,25 @@ Vrij en open source onder de EUPL-1.2-licentie.
 
 **Ondersteuning:** Voor ondersteuning, neem contact op via support@conduction.nl. Voor een Service Level Agreement (SLA), neem contact op via sales@conduction.nl.
     ]]></description>
-    <version>0.6.0</version>
+    <version>0.4.3-unstable.20260829120952</version>
     <licence>EUPL-1.2</licence>
     <author mail="info@conduction.nl" homepage="https://www.conduction.nl/">Conduction</author>
     <namespace>Pipelinq</namespace>
     <documentation>
-        <user>https://codeberg.org/Conduction/pipelinq</user>
-        <admin>https://codeberg.org/Conduction/pipelinq</admin>
-        <developer>https://codeberg.org/Conduction/pipelinq</developer>
+        <user>https://github.com/ConductionNL/pipelinq</user>
+        <admin>https://github.com/ConductionNL/pipelinq</admin>
+        <developer>https://github.com/ConductionNL/pipelinq</developer>
     </documentation>
     <category>organization</category>
     <category>tools</category>
     <category>workflow</category>
-    <website>https://codeberg.org/Conduction/pipelinq</website>
-    <bugs>https://codeberg.org/Conduction/pipelinq/issues</bugs>
-    <repository>https://codeberg.org/Conduction/pipelinq</repository>
+    <website>https://github.com/ConductionNL/pipelinq</website>
+    <bugs>https://github.com/ConductionNL/pipelinq/issues</bugs>
+    <repository>https://github.com/ConductionNL/pipelinq</repository>
 
-    <screenshot>https://codeberg.org/Conduction/pipelinq/raw/branch/main/img/screenshot-dashboard.png</screenshot>
-    <screenshot>https://codeberg.org/Conduction/pipelinq/raw/branch/main/img/screenshot-pipeline.png</screenshot>
-    <screenshot>https://codeberg.org/Conduction/pipelinq/raw/branch/main/img/screenshot-clients.png</screenshot>
+    <screenshot>https://raw.githubusercontent.com/ConductionNL/pipelinq/development/img/screenshot-dashboard.png</screenshot>
+    <screenshot>https://raw.githubusercontent.com/ConductionNL/pipelinq/development/img/screenshot-pipeline.png</screenshot>
+    <screenshot>https://raw.githubusercontent.com/ConductionNL/pipelinq/development/img/screenshot-clients.png</screenshot>
 
     <dependencies>
         <php min-version="8.3"/>

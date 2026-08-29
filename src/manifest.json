@@ -1,6 +1,6 @@
 {
 	"$schema": "https://raw.githubusercontent.com/ConductionNL/nextcloud-vue/main/src/schemas/app-manifest-v2.schema.json",
-	"version": "1.0.0",
+	"version": "1.1.0",
 	"dependencies": [
 		"openregister",
 		{ "id": "openconnector", "required": false, "name": "OpenConnector" },
@@ -14,11 +14,11 @@
 		"version": 1,
 		"completionConfigKey": "setup_completed_version",
 		"steps": [
-			{ "id": "welcome", "type": "info", "title": "Welcome to Pipelinq", "body": "A few quick choices to get your CRM, pipeline and service desk ready. Only the reporting currency is required — everything else is optional and can be changed later in the admin settings." },
+			{ "id": "welcome", "type": "info", "title": "Welcome to Pipelinq", "body": "A few quick choices to get your CRM, pipeline and service desk ready. Only the reporting currency is required. Everything else is optional and can be changed later in the admin settings." },
+			{ "id": "demo-data", "type": "run-action", "title": "Demo data (optional)", "action": "seed-demo-data", "body": "Seed a small linked demo dataset of clients, leads, requests and contactmomenten, so lists, dashboards and the 360° client view show a working product right away. Optional and safe to run more than once; every object is marked [Demo] and can be removed later with `occ pipelinq:demo:seed --remove`. Skip this on a production install." },
 			{ "id": "currency", "type": "choice", "title": "Reporting currency", "required": true, "configKey": "currency", "body": "Used to format revenue, forecast and pipeline amounts across dashboards and reports.", "options": [ { "value": "EUR", "label": "Euro (EUR)" }, { "value": "USD", "label": "US Dollar (USD)" }, { "value": "GBP", "label": "Pound Sterling (GBP)" }, { "value": "CHF", "label": "Swiss Franc (CHF)" } ] },
 			{ "id": "provision", "type": "run-action", "title": "Provision data", "action": "provision-register", "body": "Create the Pipelinq OpenRegister register and schemas, plus the default sales pipeline and stages, service queues, agent skills, lead sources and request channels. This normally runs automatically on install; run it here if OpenRegister was enabled after Pipelinq, or to repair a partial install. It is safe to run more than once." },
-			{ "id": "demo-data", "type": "run-action", "title": "Demo data (optional)", "action": "seed-demo-data", "body": "Seed a small linked demo dataset — clients, leads, requests and contactmomenten — so lists, dashboards and the 360° client view show a working product right away. Optional and safe to run more than once; every object is marked [Demo] and can be removed later with `occ pipelinq:demo:seed --remove`. Skip this on a production install." },
-			{ "id": "organisation", "type": "config-fields", "title": "Organisation", "body": "Your organisation details, printed on POS receipts and shown on reports. Optional — leave blank to skip.", "schema": { "type": "object", "properties": { "receipt_company_name": { "type": "string", "title": "Organisation name" }, "receipt_company_vat": { "type": "string", "title": "VAT number" }, "receipt_company_kvk": { "type": "string", "title": "Chamber of Commerce (KvK) number" } } } },
+			{ "id": "organisation", "type": "config-fields", "title": "Organisation", "body": "Your organisation details, printed on POS receipts and shown on reports. Optional: leave blank to skip.", "schema": { "type": "object", "properties": { "receipt_company_name": { "type": "string", "title": "Organisation name" }, "receipt_company_vat": { "type": "string", "title": "VAT number" }, "receipt_company_kvk": { "type": "string", "title": "Chamber of Commerce (KvK) number" } } } },
 			{ "id": "integrations", "type": "config-fields", "title": "Integrations", "body": "Optional connections to other Conduction apps. Set the Shillinq base URL to surface recurring-revenue metrics and route billing/ledger entries; set the XWiki URL to embed the knowledge base. Leave blank to disable.", "schema": { "type": "object", "properties": { "shillinq_app_url": { "type": "string", "title": "Shillinq base URL" }, "xwiki_direct_url": { "type": "string", "title": "XWiki base URL" } } } },
 			{ "id": "done", "type": "summary", "title": "All set", "healthCheck": true, "body": "Pipelinq is ready. Head to the Dashboard or Leads to get started." }
 		]
@@ -34,17 +34,18 @@
 				"trigger": "first-visit",
 				"minAppVersion": "1.0.0",
 				"steps": [
-					{ "id": "welcome", "placement": "center", "sinceVersion": "1.0.0", "title": "Welcome to Pipelinq", "body": "Let's walk the core sales journey together — from a product to a billed contract. You'll create each record yourself, in your own workspace.", "target": { "kind": "page", "ref": "Products" }, "advanceOn": { "type": "manual" } },
+					{ "id": "welcome", "placement": "center", "sinceVersion": "1.0.0", "title": "Welcome to Pipelinq", "body": "Let's walk the core sales journey together, from a product to a billed contract. You'll create each record yourself, in your own workspace.", "target": { "kind": "page", "ref": "Dashboard" }, "advanceOn": { "type": "manual" } },
 					{ "id": "go-products", "sinceVersion": "1.0.0", "placement": "right", "body": "First, your catalogue. Open Products from the menu.", "task": "Click Products in the menu", "target": { "kind": "nav-item", "ref": "Products" }, "advanceOn": { "type": "route-match", "route": "Products" } },
-					{ "id": "create-product", "sinceVersion": "1.0.0", "placement": "bottom", "allowManualNext": true, "body": "Add the product or service you sell — we'll put it on the quotation later.", "task": "Click New and save a product", "target": { "kind": "element", "ref": "index-add" }, "advanceOn": { "type": "object-created", "register": "pipelinq", "schema": "product", "capture": { "productId": ":id" } } },
+					{ "id": "create-product", "sinceVersion": "1.0.0", "placement": "bottom", "allowManualNext": true, "body": "Add the product or service you sell. We'll put it on the quotation later.", "task": "Click New and save a product", "target": { "kind": "element", "ref": "index-add" }, "advanceOn": { "type": "object-created", "register": "pipelinq", "schema": "product", "capture": { "productId": ":id" } } },
 					{ "id": "go-contacts", "sinceVersion": "1.0.0", "placement": "right", "body": "Now the customer. Open Contacts.", "task": "Click Contacts in the menu", "target": { "kind": "nav-item", "ref": "Contacts" }, "advanceOn": { "type": "route-match", "route": "Contacts" } },
 					{ "id": "create-contact", "sinceVersion": "1.0.0", "placement": "bottom", "allowManualNext": true, "body": "Add the person or organisation you're selling to.", "task": "Click New and save a contact", "target": { "kind": "element", "ref": "index-add" }, "advanceOn": { "type": "object-created", "register": "pipelinq", "schema": "contact", "capture": { "contactId": ":id" } } },
 					{ "id": "go-leads", "sinceVersion": "1.0.0", "placement": "right", "body": "A lead is a sales opportunity. Open Leads.", "task": "Click Leads in the menu", "target": { "kind": "nav-item", "ref": "Leads" }, "advanceOn": { "type": "route-match", "route": "Leads" } },
 					{ "id": "create-lead", "sinceVersion": "1.0.0", "placement": "bottom", "allowManualNext": true, "body": "Create a lead for this opportunity and link the contact you just made.", "task": "Click New and save a lead", "target": { "kind": "element", "ref": "index-add" }, "advanceOn": { "type": "object-created", "register": "pipelinq", "schema": "lead", "capture": { "leadId": ":id" } } },
 					{ "id": "move-pipeline", "sinceVersion": "1.0.0", "placement": "bottom", "allowManualNext": true, "body": "The pipeline shows every lead by stage. Drag your lead forward as it progresses.", "task": "Open the Pipeline and move your lead to the next stage", "target": { "kind": "element", "ref": "pipeline-board" }, "advanceOn": { "type": "manual" } },
-					{ "id": "create-quote", "sinceVersion": "1.0.0", "placement": "right", "allowManualNext": true, "body": "Quote the lead. In Pipelinq a signable quotation IS the contract — one record, no duplication.", "task": "Open Contracts and create a quotation", "target": { "kind": "nav-item", "ref": "Contracts" }, "advanceOn": { "type": "object-created", "register": "pipelinq", "schema": "contract", "capture": { "contractId": ":id" } } },
-					{ "id": "quote-is-contract", "sinceVersion": "1.0.0", "placement": "center", "title": "Your quote is the contract", "body": "Once the customer signs the quotation it becomes the contract automatically — the same record carries the agreed lines, price and signature.", "target": { "kind": "page", "ref": "Contracts" }, "advanceOn": { "type": "manual" } },
-					{ "id": "send-to-shillinq", "sinceVersion": "1.0.0", "placement": "center", "title": "Send it for billing", "body": "Finally, hand the signed contract to Shillinq for invoicing and ledger posting — that closes the loop from product to paid.", "task": "Continue in Shillinq to invoice this contract", "target": { "kind": "page", "ref": "Contracts" }, "advanceOn": { "type": "manual" }, "handoff": { "app": "Shillinq", "url": "/index.php/apps/shillinq/" } }
+					{ "id": "create-quote", "sinceVersion": "1.0.0", "placement": "right", "allowManualNext": true, "body": "Quote the lead. In Pipelinq a signable quotation IS the contract: one record, no duplication.", "task": "Open Contracts and create a quotation", "target": { "kind": "nav-item", "ref": "Contracts" }, "advanceOn": { "type": "object-created", "register": "pipelinq", "schema": "contract", "capture": { "contractId": ":id" } } },
+					{ "id": "quote-is-contract", "sinceVersion": "1.0.0", "placement": "center", "title": "Your quote is the contract", "body": "Once the customer signs the quotation it becomes the contract automatically. The same record carries the agreed lines, price and signature.", "target": { "kind": "page", "ref": "Contracts" }, "advanceOn": { "type": "manual" } },
+					{ "id": "send-to-shillinq", "sinceVersion": "1.0.0", "placement": "center", "title": "Send it for billing", "body": "Finally, hand the signed contract to Shillinq for invoicing and ledger posting. That closes the loop from product to paid.", "task": "Continue in Shillinq to invoice this contract", "target": { "kind": "page", "ref": "Contracts" }, "advanceOn": { "type": "manual" }, "handoff": { "app": "Shillinq", "url": "/index.php/apps/shillinq/" } },
+					{ "id": "see-flows", "sinceVersion": "1.1.0", "placement": "right", "optional": true, "allowManualNext": true, "title": "Where the automation lives", "body": "Flows are what happens without anyone clicking: a reminder before a deadline passes, a confirmation sent on submission. This is where you read and edit them. Nothing to build now.", "task": "Open Flows in the menu", "target": {"kind": "nav-item", "ref": "Flows"}, "advanceOn": {"type": "route-match", "route": "Flows"} }
 				]
 			}
 		]
@@ -270,6 +271,14 @@
 			"route": "FeaturesRoadmap",
 			"section": "footer",
 			"order": 230
+		},
+		{
+			"id": "FlowsMenu",
+			"label": "Flows",
+			"icon": "Sitemap",
+			"route": "Flows",
+			"section": "settings",
+			"order": 96
 		}
 	],
 	"pages": [
@@ -491,7 +500,7 @@
 						"rowRoute": "TicketDetail",
 						"allowCreate": true,
 						"addLabel": "Nieuw verzoek",
-						"emptyText": "No open requests yet — add one to get started."
+						"emptyText": "No open requests yet. Add one to get started."
 					} },
 					{ "id": "client-quick-contacts", "type": "object-list", "title": "Contacts", "icon": "AccountGroup", "content": {
 						"register": "pipelinq", "schema": "contact",
@@ -506,7 +515,7 @@
 						"rowRoute": "ContactDetail",
 						"allowCreate": true,
 						"addLabel": "Contactpersoon toevoegen",
-						"emptyText": "No contact persons yet — add one to get started."
+						"emptyText": "No contact persons yet. Add one to get started."
 					} }
 				],
 				"layout": [
@@ -656,7 +665,8 @@
 					"enabled": true,
 					"showMetadata": true,
 					"tabs": [
-						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
+						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] },
+						{ "id": "knowledgeBase", "label": "Knowledge base", "icon": "BookOpenVariantOutline", "widgets": [ { "type": "XWikiSidebarTab" } ] }
 					]
 				}
 			}
@@ -926,8 +936,8 @@
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"_note": "Opportunity/deal archetype. The main body surfaces what a salesperson looks at every visit — the deal fields (value, probability, stage, expected close), the related graph (client, contact, pipeline) and the comms leaves (Email / Files / Meetings — a deal is actively worked over correspondence). ADR-062 rev3: the data widget is field-split into Deal (title/value/probability/expectedClose/priority/status) and Qualification (source/stage/stageOrder/qualificationScore/assignee/description/notes); the two KPIs render as INDIVIDUAL single-entry stats-block widgets stacked top-right (design review 2026-07-09: one KPI per widget cell so grid spacing stays controllable), @objectId-scoped; deal-value sum carries its unit in countLabel (entries have no currency formatting). A full-width object-list of the deal's line items (leadProduct, FK 'lead', allowCreate ON so a line pre-links the deal) shows what is being quoted. lifecycleActions drives the OR-authoritative pipeline status (open -> won/lost). Generic Deck/Flow/Time/Knowledge/Forms leaves dropped from the sidebar per the audit-only rule.",
 				"widgets": [
-					{ "id": "lead-deal", "type": "data", "title": "Deal", "icon": "HandshakeOutline", "content": { "columns": 2, "include": ["title", "value", "probability", "winProbability", "expectedCloseDate", "priority", "status"] } },
-					{ "id": "lead-qualification", "type": "data", "title": "Qualification", "icon": "FilterVariant", "content": { "columns": 2, "include": ["source", "stage", "stageOrder", "stageEnteredAt", "qualificationScore", "assignee", "description", "notes"] } },
+					{ "id": "lead-deal", "type": "data", "title": "Deal", "icon": "HandshakeOutline", "content": { "columns": 2, "include": ["title", "value", "probability", "winProbability", "expectedCloseDate", "priority", "status"], "overrides": { "status": { "editable": false } } } },
+					{ "id": "lead-qualification", "type": "data", "title": "Qualification", "icon": "FilterVariant", "content": { "columns": 2, "include": ["source", "stage", "stageOrder", "stageEnteredAt", "qualificationScore", "assignee", "description", "notes"], "overrides": { "stageEnteredAt": { "editable": false } } } },
 					{ "id": "lead-related", "type": "related", "title": "Related", "icon": "LinkVariant" },
 					{ "id": "lead-kpi-value", "type": "stats-block", "title": "Deal value", "icon": "Cash", "content": { "entries": [
 						{ "title": "Deal value", "countLabel": "EUR", "register": "pipelinq", "schema": "lead", "metric": "sum", "field": "value", "filter": { "id": "@objectId" } }
@@ -956,7 +966,7 @@
 							],
 							"allowEdit": true,
 							"limit": 25,
-							"emptyText": "No products quoted on this deal yet — add a line to build the quote."
+							"emptyText": "No products quoted on this deal yet. Add a line to build the quote."
 						}
 					},
 					{ "id": "lead-notes", "type": "integration", "integrationId": "notes", "title": "Notes", "icon": "NoteTextOutline" },
@@ -1310,7 +1320,7 @@
 							],
 							"limit": 25,
 							"allowCreate": false,
-							"emptyText": "No returned lines — refund lines are computed from the original transaction, not added by hand."
+							"emptyText": "No returned lines. Refund lines are computed from the original transaction, not added by hand."
 						}
 					}
 				],
@@ -1936,6 +1946,23 @@
 				"register": "pipelinq",
 				"schema": "exportRun"
 			}
+		},
+		{
+			"id": "Flows",
+			"route": "/flows",
+			"type": "index",
+			"title": "Flows",
+			"config": { "entitySource": "flows", "app": "pipelinq" },
+			"_note": "ADR-110 Decision 4: a flow is app-specific, so the authoring surface lives here rather than behind a deep link to another app's list. An ordinary index over the named `flows` source (config.entitySource) rather than the deprecated `flows` page type, reading OpenRegister's one native flow store (ADR-065), scoped to this app by config.app."
+		},
+		{
+			"id": "FlowDetail",
+			"route": "/flows/:id",
+			"type": "flow",
+			"title": "Flow",
+			"config": { "app": "pipelinq" },
+			"sidebarComponent": "FlowDetailSidebar",
+			"_note": "The shared CnFlowDetail canvas over the same single engine. Controls render in the NC app sidebar (sidebarComponent) so the canvas keeps full width; canvas and sidebar share useFlowStore. The _note claimed this before the field existed, so #/flows/new -- and every #/flows/:id -- rendered a bare canvas with no way to name, describe, trigger or step-edit the flow. Mirrors procest/src/manifest.json:FlowDetail."
 		}
 	]
 }

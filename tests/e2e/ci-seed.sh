@@ -184,6 +184,31 @@ if [ "$POST_CODE" != "200" ]; then
 	exit 1
 fi
 
+# ── 3b. Complete the remaining OPTIONAL steps ────────────────────────────────
+# 🔴 SEEDING THE DEMO DATA IS NOT ENOUGH, and the comment above overstated it.
+#
+# CnAppRoot opens the non-gating wizard when ANY optional step that is not
+# `info` or `summary` is reported outstanding — not just demo-data. Steps 1-3
+# clear `provision`, `currency` and `demo-data`, and leave `organisation`
+# behind: SetupController marks it done only once `receipt_company_name` is
+# set, and nothing here ever set it.
+#
+# So the wizard could still auto-open as a modal mask in every fresh browser
+# context, which is precisely the failure mode this script's own header
+# describes. It went unnoticed because most specs never click behind the
+# overlay; one that opens a row and then reads its sidebar does.
+#
+# `integrations` needs nothing: SetupController reports it done when neither
+# shillinq nor integriq is installed, which is the CI stack. It is deliberately
+# NOT forced here — setting `xwiki_direct_url` would point the xWiki
+# integration at a host that does not exist and break the specs that assert on
+# its degraded state.
+post_json "${APP_BASE}/api/setup/config" '{"receipt_company_name":"CI Test Organisation"}'
+if [ "$POST_CODE" != "200" ]; then
+	echo "::error::Could not complete the organisation setup step (HTTP ${POST_CODE}). An unmet optional step makes CnAppRoot cover the shell with the wizard in every fresh browser context."
+	exit 1
+fi
+
 # ── 4. Verify the register and schemas actually exist ────────────────────────
 # The import reporting success is not the same as the register existing —
 # verify against OpenRegister directly.
@@ -281,11 +306,42 @@ if status.get('completed') is not True:
 if not ok:
     sys.exit(1)
 
-# Deliberately NOT an error: an unmet OPTIONAL step is the normal state of a
-# fresh install (nobody has typed an organisation name), and since
-# nextcloud-vue 2.1.0-vue3.17 the server's `completed` flag suppresses the
-# optional wizard regardless. Failing on it would have meant seeding cosmetic
-# data purely to satisfy this gate, which tests nothing.
+# 🔴 NOW AN ERROR. This block used to end with:
+#
+#     Deliberately NOT an error: ... since nextcloud-vue 2.1.0-vue3.17 the
+#     server's `completed` flag suppresses the optional wizard regardless.
+#
+# That is no longer true, and the library says so in its own words.
+# `CnAppRoot.optionalSetupPending` reads:
+#
+#     `completed` is still honoured as a NEGATIVE signal (a server saying
+#     "unfinished" is believed outright); it just no longer overrides a step
+#     the server explicitly reported as not done.
+#
+# So `completed: true` no longer suppresses anything, and an optional step the
+# server reports `done: false` auto-opens the wizard as a modal mask in every
+# fresh browser context. `organisation` was exactly that — SetupController
+# marks it done only once `receipt_company_name` is set, and nothing set it —
+# which is why step 3b above now does.
+#
+# `info` and `summary` are excluded here for the same reason the library
+# excludes them: the server has nothing to persist for them, so they report
+# done:false forever and can never be cleared by anyone.
+blocking = [
+    s['id'] for s in steps
+    if s.get('required') is not True
+    and s.get('type') not in ('info', 'summary')
+    and not done(s['id'])
+]
+if blocking:
+    print(f'::error::optional setup steps are still unmet: {blocking}.')
+    print('::error::CnAppRoot auto-opens CnSetupWizard as a modal mask whenever an optional')
+    print('::error::step that is not info/summary is reported not-done — in EVERY fresh')
+    print('::error::browser context. Most specs never notice, because they do not click')
+    print('::error::behind the overlay; one that opens a row and reads its sidebar does.')
+    print('::error::Complete the step above in this script rather than muting this check.')
+    sys.exit(1)
+
 print('[ci-seed] first-time setup OK — the shell will render and no wizard will cover it')
 PY
 }

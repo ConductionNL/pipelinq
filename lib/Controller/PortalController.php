@@ -177,6 +177,10 @@ class PortalController extends Controller {
 	 *
 	 * Body: `customerName`, `email`, `phone`, `serviceId`, `startAt`, optional `notes`.
 	 *
+	 * The AnonRateLimit below is deliberately tight: a booking consumes a real
+	 * slot, so an unbounded caller can exhaust availability for everyone else
+	 * without ever authenticating.
+	 *
 	 * @return JSONResponse The booking confirmation (200) or 400 on invalid input.
 	 *
 	 * @NoCSRFRequired

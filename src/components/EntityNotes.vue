@@ -289,6 +289,6 @@ export default {
 	margin: 0;
 	font-size: 14px;
 	white-space: pre-wrap;
-	word-break: break-word;
+	overflow-wrap: break-word;
 }
 </style>

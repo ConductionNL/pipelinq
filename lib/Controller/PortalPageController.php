@@ -79,6 +79,10 @@ class PortalPageController extends Controller {
 	 * Render the portal SPA shell for any non-API sub-path (hash routing means
 	 * every deep link still resolves to the same shell).
 	 *
+	 * The AnonRateLimit below is generous, like index(): these two serve the
+	 * portal's own HTML shell, and a tight ceiling here would break an ordinary
+	 * browsing session rather than an attack.
+	 *
 	 * @param string $path The matched sub-path (unused; the hash-routed SPA
 	 *                     resolves the deep link client-side).
 	 *

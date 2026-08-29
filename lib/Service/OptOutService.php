@@ -283,8 +283,6 @@ class OptOutService {
 	 * Lazy OR ObjectService lookup.
 	 *
 	 * @return object
-	 *
-	 * @throws RuntimeException When OR is not available.
 	 */
 	private function getObjectService(): object {
 		// Injected (ADR-083): a property read throws nothing, so the old

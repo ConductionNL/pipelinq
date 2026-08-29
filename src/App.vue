@@ -192,15 +192,19 @@ export default {
 	methods: {
 		/**
 		 * Persist an in-app manifest edit (ADR-041). Called by CnAppRoot's editor
-		 * on Save with the minimal delta; PUTs it to OpenBuild's app-override
+		 * on Save with the minimal delta; PUTs it to buildiq's app-override
 		 * store so the edit survives reload (loaded back in main.js bootstrap).
 		 *
 		 * @param {object} delta The minimal manifest delta from the editor.
 		 * @return {Promise<void>}
+		 *
+		 * @spec exclude Bug fix pointing the PUT at buildiq's current app id; the
+		 *               delta contract is owned by buildiq's
+		 *               layered-versioned-app-deltas specs.
 		 */
 		async persistManifestDelta(delta) {
 			await axios.put(
-				generateUrl('/apps/openbuild/api/app-overrides/pipelinq'),
+				generateUrl('/apps/buildiq/api/app-overrides/pipelinq'),
 				delta,
 			)
 		},

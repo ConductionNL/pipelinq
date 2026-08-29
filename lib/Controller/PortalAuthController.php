@@ -166,6 +166,10 @@ class PortalAuthController extends PortalApiController {
 	/**
 	 * Begin a password reset (uniform response — no account enumeration).
 	 *
+	 * The AnonRateLimit below is deliberately tight: this one sends mail to an
+	 * address the caller supplies, so an unbounded caller can use it to
+	 * mail-bomb a third party.
+	 *
 	 * @return JSONResponse The uniform acknowledgement.
 	 *
 	 * @NoAdminRequired
@@ -189,6 +193,10 @@ class PortalAuthController extends PortalApiController {
 
 	/**
 	 * Complete a password reset with a token + new password.
+	 *
+	 * The AnonRateLimit below is deliberately tight: the token is the only
+	 * thing standing between a caller and an account takeover, so the ceiling
+	 * bounds how fast one can be guessed.
 	 *
 	 * @return JSONResponse The result.
 	 *
@@ -250,6 +258,10 @@ class PortalAuthController extends PortalApiController {
 
 	/**
 	 * Verify a TOTP code to activate MFA on the account.
+	 *
+	 * The AnonRateLimit below is the tightest in this controller: a TOTP code
+	 * is six digits, so the whole keyspace is a million guesses. Without a
+	 * ceiling that is minutes of work.
 	 *
 	 * @return JSONResponse The result.
 	 *

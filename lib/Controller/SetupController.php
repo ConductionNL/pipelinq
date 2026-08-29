@@ -33,6 +33,7 @@ use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\DemoSeedService;
 use OCA\Pipelinq\Service\SettingsService;
 use OCA\Pipelinq\Settings\AdminSettings;
+use OCA\Pipelinq\Support\FleetAppId;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -144,7 +145,11 @@ class SetupController extends Controller {
 		$shillinqUrl = $this->config(key: 'shillinq_app_url');
 		$xwikiUrl = $this->config(key: 'xwiki_direct_url');
 		$hasShillinq = $this->appManager->isInstalled('shillinq');
-		$hasXwiki = $this->appManager->isInstalled('openconnector');
+		// Resolved through FleetAppId: the app is `integriq` on development and
+		// `openconnector` on beta/main, and asking for the wrong name reports
+		// "not installed" rather than erroring — which would silently mark the
+		// integrations step done when the app is in fact present.
+		$hasXwiki = FleetAppId::isInstalled($this->appManager, 'integriq');
 		$integrationsDone = ($shillinqUrl !== '' || $xwikiUrl !== '' || ($hasShillinq === false && $hasXwiki === false));
 
 		if ($currencyDone === true) {
