@@ -3,8 +3,8 @@
   "info": {
     "title": "Pipelinq CRM Register",
     "description": "Client Relationship Management register for the Pipelinq Nextcloud app. Manages clients, contacts, leads, requests, and pipelines.",
-    "version": "1.4.0",
-    "x-changelog": "1.4.0: timeEntry gains user (Nextcloud uid / imported identity performing the work — distinct from approvedBy, needed for per-person hour reporting and migrated worklogs) and metadata (declared object catch-all for source-system provenance such as tempoWorklogId/jiraIssueKey/migratedAt — declared explicitly because magic-table storage drops undeclared properties). timeEntry schema version 1.1.0->1.2.0. 1.3.0: Loyalty vocabulary completed. Schema slug klantLoyaltyAccount->customerLoyaltyAccount (@type KlantLoyaltyAccount->CustomerLoyaltyAccount), and the last two Dutch property keys in the loyalty fragment: loyaltyProgramme.merk->brand, loyaltyProgramme.valuta->currency, giftCard.valuta->currency. Both keys are added to RenameDutchColumns so existing rows move with the declaration. The oc_appconfig key klantLoyaltyAccount_schema deliberately does NOT move: it is derived from the slug, so it is pinned in SettingsLoadService::SCHEMA_CONFIG_KEYS rather than left to follow the rename. 1.2.2: Re-authored 2 Dutch schema-level titles to English (klantLoyaltyAccount \"Klant Loyalty Account\"->\"Customer Loyalty Account\", nrcAbonnement \"NRC Abonnement\"->\"NRC Subscription\"); Dutch labels now live in l10n/nl.json + nl.js. VNG Klantinteracties and Kassakoppeling schema titles kept as-is (formal standard / established domain terms). No property titles, keys, enums, or other fields changed. 1.2.1: Re-authored 38 Dutch schema property titles to English (contact.geheimhouding plus the bsnValidatie, brpLookupVerzoek, brpPersoon, bsnAuditRecord, and optOutVlag schemas); Dutch labels now live in l10n/nl.json + nl.js. No property keys, enums, or other fields changed."
+    "version": "1.5.0",
+    "x-changelog": "1.5.0: pipeline gains propertyMappings — which object types the pipeline boards and which property supplies the stage column. The pipeline editor already wrote this array and PipelineBoard/PipelineManager already read it, but the schema never declared it, so magic-table storage dropped every mapping a user configured: the board resolved no object types and the create forms, filtering on the retired entityType field, offered no pipeline at all. A pipeline declaring no mappings is unscoped, not inapplicable. pipeline schema version 3.1.0->3.2.0. 1.4.0: timeEntry gains user (Nextcloud uid / imported identity performing the work — distinct from approvedBy, needed for per-person hour reporting and migrated worklogs) and metadata (declared object catch-all for source-system provenance such as tempoWorklogId/jiraIssueKey/migratedAt — declared explicitly because magic-table storage drops undeclared properties). timeEntry schema version 1.1.0->1.2.0. 1.3.0: Loyalty vocabulary completed. Schema slug klantLoyaltyAccount->customerLoyaltyAccount (@type KlantLoyaltyAccount->CustomerLoyaltyAccount), and the last two Dutch property keys in the loyalty fragment: loyaltyProgramme.merk->brand, loyaltyProgramme.valuta->currency, giftCard.valuta->currency. Both keys are added to RenameDutchColumns so existing rows move with the declaration. The oc_appconfig key klantLoyaltyAccount_schema deliberately does NOT move: it is derived from the slug, so it is pinned in SettingsLoadService::SCHEMA_CONFIG_KEYS rather than left to follow the rename. 1.2.2: Re-authored 2 Dutch schema-level titles to English (klantLoyaltyAccount \"Klant Loyalty Account\"->\"Customer Loyalty Account\", nrcAbonnement \"NRC Abonnement\"->\"NRC Subscription\"); Dutch labels now live in l10n/nl.json + nl.js. VNG Klantinteracties and Kassakoppeling schema titles kept as-is (formal standard / established domain terms). No property titles, keys, enums, or other fields changed. 1.2.1: Re-authored 38 Dutch schema property titles to English (contact.geheimhouding plus the bsnValidatie, brpLookupVerzoek, brpPersoon, bsnAuditRecord, and optOutVlag schemas); Dutch labels now live in l10n/nl.json + nl.js. No property keys, enums, or other fields changed."
   },
   "x-openregister": {
     "type": "application",
@@ -850,7 +850,7 @@
         "slug": "pipeline",
         "title": "Pipeline",
         "icon": "Pipe",
-        "version": "3.1.0",
+        "version": "3.2.0",
         "summary": "A thin CRM pipeline config mapping stage rules onto a Deck board",
         "description": "Represents a CRM pipeline configuration — maps pipeline stages to a Deck board and its stacks, preserving CRM-specific semantics (probability, won/closed/default flags) that Deck itself does not model. Board mechanics (columns, cards, drag-and-drop) are provided by the OpenRegister deck leaf. Mapped to Schema.org ItemList.",
         "x-schema-org": "schema:ItemList",
@@ -878,6 +878,38 @@
             "type": "integer",
             "description": "NC Deck board ID that this pipeline is realised as",
             "title": "Deck Board ID"
+          },
+          "propertyMappings": {
+            "type": "array",
+            "description": "Which object types this pipeline boards, and which property of each supplies the stage column. A pipeline that declares none is unscoped and offered for every entity type. Supersedes the retired `entityType` field.",
+            "items": {
+              "type": "object",
+              "required": [
+                "schemaSlug",
+                "columnProperty"
+              ],
+              "properties": {
+                "schemaSlug": {
+                  "type": "string",
+                  "description": "Logical entity slug boarded here ('lead', 'request', …). Ticket subtypes resolve onto the unified `ticket` schema via resolveObjectType().",
+                  "title": "Schema slug"
+                },
+                "columnProperty": {
+                  "type": "string",
+                  "description": "Object property whose value names the stage column (normally 'stage').",
+                  "title": "Column property"
+                },
+                "totalsProperty": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "description": "Optional numeric property summed per column for a stage total (e.g. 'value').",
+                  "title": "Totals property"
+                }
+              }
+            },
+            "title": "Property mappings"
           },
           "stages": {
             "type": "array",
