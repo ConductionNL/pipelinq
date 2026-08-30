@@ -1,0 +1,7 @@
+{
+  "schema_version": 2,
+  "spec_slug": "marketing-segmentation-and-blast-11-quality-verification",
+  "app": "pipelinq",
+  "kind": "code",
+  "depends_on": ["marketing-segmentation-and-blast-10-docs"]
+}

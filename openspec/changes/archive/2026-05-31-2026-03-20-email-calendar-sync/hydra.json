@@ -1,0 +1,8 @@
+{
+  "spec_slug": "2026-03-20-email-calendar-sync",
+  "title": "Proposal: email-calendar-sync",
+  "app": "pipelinq",
+  "repo": "https://github.com/ConductionNL/pipelinq",
+  "depends_on": [],
+  "issue": null
+}

@@ -1,0 +1,1210 @@
+{
+  "components": {
+    "registers": {
+      "pipelinq": {
+        "schemas": [
+          "service",
+          "resource",
+          "booking",
+          "walkInTicket",
+          "availabilityCache"
+        ]
+      }
+    },
+    "schemas": {
+      "service": {
+        "x-schema-org": "schema:Service",
+        "slug": "service",
+        "title": "Service",
+        "icon": "Tag",
+        "version": "1.0.0",
+        "summary": "A bookable service offered by the business (haircut, oil change, consultation).",
+        "description": "Defines a bookable service with duration, pricing, skill/resource requirements, multi-step composition, and booking policies (online bookability, deposit, cancellation rules). Consumed by availability and booking services. REQ-APT-001.",
+        "required": [
+          "name",
+          "durationMinutes",
+          "status"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Display name of the service (e.g. Knipbeurt, APK keuring).",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "description": {
+            "type": "string",
+            "description": "Customer-facing description shown in the booking portal.",
+            "maxLength": 4000,
+            "title": "Description"
+          },
+          "durationMinutes": {
+            "type": "integer",
+            "description": "Total duration of the service in minutes (sum of multiStep durations + any internal gaps when set).",
+            "minimum": 1,
+            "maximum": 1440,
+            "title": "Duration Minutes"
+          },
+          "bufferBeforeMinutes": {
+            "type": "integer",
+            "description": "Minutes the resource is unavailable BEFORE the booking begins (preparation time).",
+            "default": 0,
+            "minimum": 0,
+            "maximum": 240,
+            "title": "Buffer Before Minutes"
+          },
+          "bufferAfterMinutes": {
+            "type": "integer",
+            "description": "Minutes the resource is unavailable AFTER the booking ends (cleanup time).",
+            "default": 0,
+            "minimum": 0,
+            "maximum": 240,
+            "title": "Buffer After Minutes"
+          },
+          "price": {
+            "type": "number",
+            "description": "Price quoted in the configured currency (incl. or excl. VAT per tenant policy).",
+            "minimum": 0,
+            "title": "Price"
+          },
+          "currency": {
+            "type": "string",
+            "description": "ISO 4217 currency code.",
+            "default": "EUR",
+            "maxLength": 3,
+            "minLength": 3,
+            "title": "Currency"
+          },
+          "requiredSkills": {
+            "type": "array",
+            "description": "Skill slugs a Resource MUST hold to perform this service.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Required Skills"
+          },
+          "requiredResourceTypes": {
+            "type": "array",
+            "description": "Resource types that participate in this service (staff / room / equipment).",
+            "items": {
+              "type": "string",
+              "enum": [
+                "staff",
+                "room",
+                "equipment"
+              ]
+            },
+            "title": "Required Resource Types"
+          },
+          "multiStep": {
+            "type": "array",
+            "description": "Sequence of steps for composite services (e.g. colour application + processing gap + cut). Empty for single-step services.",
+            "items": {
+              "type": "object",
+              "required": [
+                "durationMinutes"
+              ],
+              "properties": {
+                "durationMinutes": {
+                  "type": "integer",
+                  "description": "Step duration in minutes.",
+                  "minimum": 0,
+                  "title": "Duration Minutes"
+                },
+                "skillRequired": {
+                  "type": "string",
+                  "description": "Skill slug required for this step (optional).",
+                  "title": "Skill Required"
+                },
+                "resourceType": {
+                  "type": "string",
+                  "description": "Resource type that performs this step.",
+                  "enum": [
+                    "staff",
+                    "room",
+                    "equipment"
+                  ],
+                  "title": "Resource Type"
+                },
+                "allowGap": {
+                  "type": "boolean",
+                  "description": "When true, the resource is free during this step (e.g. hair-colour processing — chair is occupied, stylist is not).",
+                  "default": false,
+                  "title": "Allow Gap"
+                }
+              }
+            },
+            "title": "Multi Step"
+          },
+          "bookableOnline": {
+            "type": "boolean",
+            "description": "When true the service appears in the customer self-service portal.",
+            "default": true,
+            "title": "Bookable Online"
+          },
+          "requiresDeposit": {
+            "type": "boolean",
+            "description": "When true a customer MUST pay depositAmount before the booking is confirmed.",
+            "default": false,
+            "title": "Requires Deposit"
+          },
+          "depositAmount": {
+            "type": "number",
+            "description": "Deposit amount in the configured currency (only meaningful when requiresDeposit is true).",
+            "minimum": 0,
+            "title": "Deposit Amount"
+          },
+          "noShowFee": {
+            "type": "number",
+            "description": "Amount charged when the booking ends in no-show status.",
+            "default": 0,
+            "minimum": 0,
+            "title": "No Show Fee"
+          },
+          "cancellationPolicy": {
+            "type": "string",
+            "description": "Cancellation policy: free / charge-deposit / always-charge.",
+            "enum": [
+              "free",
+              "charge-deposit",
+              "always-charge"
+            ],
+            "default": "free",
+            "title": "Cancellation Policy"
+          },
+          "cancellationHoursBefore": {
+            "type": "integer",
+            "description": "Hours before startAt within which cancellation triggers the charge policy.",
+            "default": 24,
+            "minimum": 0,
+            "maximum": 720,
+            "title": "Cancellation Hours Before"
+          },
+          "status": {
+            "type": "string",
+            "description": "Lifecycle state of the service offering.",
+            "enum": [
+              "draft",
+              "active",
+              "archived"
+            ],
+            "default": "active",
+            "title": "Status"
+          }
+        }
+      },
+      "resource": {
+        "slug": "resource",
+        "title": "Resource",
+        "icon": "AccountTie",
+        "version": "1.0.0",
+        "summary": "A bookable resource (staff member, treatment room, or piece of equipment).",
+        "description": "Represents anything a Service can be booked against — a stylist, mechanic, room or machine. Carries working hours, vacations, skills, and optional calendar sync. REQ-APT-002.",
+        "@type": "Thing",
+        "required": [
+          "name",
+          "type",
+          "status"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Display name of the resource (e.g. Sarah, Behandelkamer A).",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "type": {
+            "type": "string",
+            "description": "Resource category.",
+            "enum": [
+              "staff",
+              "room",
+              "equipment"
+            ],
+            "title": "Type"
+          },
+          "skills": {
+            "type": "array",
+            "description": "Skill slugs this resource holds (only meaningful for staff).",
+            "items": {
+              "type": "string"
+            },
+            "title": "Skills"
+          },
+          "workingHours": {
+            "type": "array",
+            "description": "Weekly working hours per weekday. Days not listed are unavailable.",
+            "items": {
+              "type": "object",
+              "required": [
+                "day",
+                "openTime",
+                "closeTime"
+              ],
+              "properties": {
+                "day": {
+                  "type": "string",
+                  "enum": [
+                    "monday",
+                    "tuesday",
+                    "wednesday",
+                    "thursday",
+                    "friday",
+                    "saturday",
+                    "sunday"
+                  ],
+                  "title": "Day",
+                  "description": "Day for this record."
+                },
+                "openTime": {
+                  "type": "string",
+                  "description": "Local opening time in HH:MM (24h).",
+                  "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+                  "title": "Open Time"
+                },
+                "closeTime": {
+                  "type": "string",
+                  "description": "Local closing time in HH:MM (24h).",
+                  "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+                  "title": "Close Time"
+                }
+              }
+            },
+            "title": "Working Hours"
+          },
+          "vacations": {
+            "type": "array",
+            "description": "Vacation / unavailability windows (inclusive date ranges).",
+            "items": {
+              "type": "object",
+              "required": [
+                "startDate",
+                "endDate"
+              ],
+              "properties": {
+                "startDate": {
+                  "type": "string",
+                  "format": "date",
+                  "description": "First date of unavailability (inclusive).",
+                  "title": "Start Date"
+                },
+                "endDate": {
+                  "type": "string",
+                  "format": "date",
+                  "description": "Last date of unavailability (inclusive).",
+                  "title": "End Date"
+                },
+                "label": {
+                  "type": "string",
+                  "description": "Optional human-readable reason (zomervakantie, cursus, etc.).",
+                  "title": "Label"
+                }
+              }
+            },
+            "title": "Vacations"
+          },
+          "calendarSyncId": {
+            "type": "string",
+            "description": "Optional UUID of a calendarLink record for two-way calendar synchronisation (member 10).",
+            "title": "Calendar Sync ID"
+          },
+          "bookable": {
+            "type": "boolean",
+            "description": "When false the resource is hidden from availability search even within working hours.",
+            "default": true,
+            "title": "Bookable"
+          },
+          "userId": {
+            "type": "string",
+            "description": "Optional Nextcloud user id for staff resources (for self-management of working hours).",
+            "title": "User ID"
+          },
+          "maxConcurrent": {
+            "type": "integer",
+            "description": "Maximum simultaneous bookings (rooms with multiple chairs / equipment pools). Default 1.",
+            "default": 1,
+            "minimum": 1,
+            "maximum": 50,
+            "title": "Max Concurrent"
+          },
+          "status": {
+            "type": "string",
+            "description": "Lifecycle state of the resource.",
+            "enum": [
+              "active",
+              "inactive",
+              "archived"
+            ],
+            "default": "active",
+            "title": "Status"
+          }
+        }
+      },
+      "booking": {
+        "x-schema-org": "schema:Reservation",
+        "slug": "booking",
+        "title": "Booking",
+        "icon": "CalendarCheck",
+        "version": "1.0.0",
+        "summary": "A scheduled appointment for a customer against one or more resources.",
+        "description": "Owns the lifecycle of a single customer appointment: customer link, service, resource assignments, time window, status (pending-deposit / confirmed / completed / no-show / cancelled-by-customer / cancelled-by-business / rescheduled), audit history, and payment hooks.",
+        "configuration": {
+          "x-openregister-lifecycle": {
+            "field": "status",
+            "initial": "confirmed",
+            "terminal": [
+              "completed",
+              "no-show",
+              "cancelled-by-customer",
+              "cancelled-by-business",
+              "rescheduled"
+            ],
+            "transitions": {
+              "confirm": {
+                "from": [
+                  "pending-deposit"
+                ],
+                "to": "confirmed",
+                "description": "Confirm a pending-deposit booking once the deposit clears."
+              },
+              "complete": {
+                "from": [
+                  "confirmed"
+                ],
+                "to": "completed",
+                "description": "Mark a confirmed booking as completed. Terminal."
+              },
+              "noShow": {
+                "from": [
+                  "confirmed"
+                ],
+                "to": "no-show",
+                "description": "Mark a confirmed booking as a no-show. Terminal."
+              },
+              "cancelByCustomer": {
+                "from": [
+                  "pending-deposit",
+                  "confirmed"
+                ],
+                "to": "cancelled-by-customer",
+                "description": "Customer cancels the booking. Terminal."
+              },
+              "cancelByBusiness": {
+                "from": [
+                  "pending-deposit",
+                  "confirmed"
+                ],
+                "to": "cancelled-by-business",
+                "description": "Business cancels the booking. Terminal."
+              },
+              "reschedule": {
+                "from": [
+                  "pending-deposit",
+                  "confirmed"
+                ],
+                "to": "rescheduled",
+                "description": "Reschedule the booking (the new slot lives in its own row). Terminal."
+              }
+            }
+          }
+        },
+        "required": [
+          "customerId",
+          "serviceId",
+          "startAt",
+          "endAt",
+          "status"
+        ],
+        "properties": {
+          "customerId": {
+            "type": "string",
+            "description": "UUID of the contact (Nextcloud addressbook entity) the booking is for.",
+            "title": "Customer ID"
+          },
+          "serviceId": {
+            "type": "string",
+            "description": "UUID of the Service being booked.",
+            "title": "Service ID"
+          },
+          "resourceAssignments": {
+            "type": "array",
+            "description": "Per-step resource assignments. For single-step services exactly one entry; for multiStep services one entry per non-gap step.",
+            "items": {
+              "type": "object",
+              "required": [
+                "resourceId",
+                "startAt",
+                "endAt"
+              ],
+              "properties": {
+                "stepIndex": {
+                  "type": "integer",
+                  "description": "Zero-based index into Service.multiStep (0 for single-step services).",
+                  "minimum": 0,
+                  "title": "Step Index"
+                },
+                "resourceId": {
+                  "type": "string",
+                  "description": "UUID of the Resource performing this step.",
+                  "title": "Resource ID"
+                },
+                "startAt": {
+                  "type": "string",
+                  "format": "date-time",
+                  "description": "Step start (ISO 8601, includes timezone).",
+                  "title": "Start At"
+                },
+                "endAt": {
+                  "type": "string",
+                  "format": "date-time",
+                  "description": "Step end (ISO 8601, includes timezone).",
+                  "title": "End At"
+                }
+              }
+            },
+            "title": "Resource Assignments"
+          },
+          "startAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Overall booking start (first step start). Includes timezone.",
+            "title": "Start At"
+          },
+          "endAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Overall booking end (last step end + bufferAfterMinutes is added by the engine, not stored).",
+            "title": "End At"
+          },
+          "status": {
+            "type": "string",
+            "description": "Lifecycle status of the booking.",
+            "enum": [
+              "pending-deposit",
+              "confirmed",
+              "completed",
+              "no-show",
+              "cancelled-by-customer",
+              "cancelled-by-business",
+              "rescheduled"
+            ],
+            "default": "confirmed",
+            "title": "Status"
+          },
+          "statusHistory": {
+            "type": "array",
+            "description": "Append-only history of status transitions for audit (member 04 lifecycle).",
+            "items": {
+              "type": "object",
+              "required": [
+                "status",
+                "changedAt"
+              ],
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "description": "Status after the transition.",
+                  "title": "Status"
+                },
+                "changedAt": {
+                  "type": "string",
+                  "format": "date-time",
+                  "title": "Changed At",
+                  "description": "Timestamp when changed occurred."
+                },
+                "changedBy": {
+                  "type": "string",
+                  "description": "User / customer / system id that performed the transition.",
+                  "title": "Changed By"
+                },
+                "reason": {
+                  "type": "string",
+                  "description": "Optional human-readable reason.",
+                  "title": "Reason"
+                }
+              }
+            },
+            "title": "Status History"
+          },
+          "notes": {
+            "type": "string",
+            "description": "Customer-facing booking notes (e.g. allergies, vehicle plate).",
+            "maxLength": 4000,
+            "title": "Notes"
+          },
+          "internalNotes": {
+            "type": "string",
+            "description": "Staff-only notes; never returned to the customer portal.",
+            "maxLength": 4000,
+            "title": "Internal Notes"
+          },
+          "source": {
+            "type": "string",
+            "description": "Where the booking originated.",
+            "enum": [
+              "portal",
+              "admin",
+              "phone",
+              "walk-in",
+              "import"
+            ],
+            "default": "portal",
+            "title": "Source"
+          },
+          "confirmationSentAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp of the confirmation email send (member 07).",
+            "title": "Confirmation Sent At"
+          },
+          "reminderSentAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp of the reminder email send (member 07).",
+            "title": "Reminder Sent At"
+          },
+          "depositPaidAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp the deposit cleared (member 08).",
+            "title": "Deposit Paid At"
+          },
+          "depositAmount": {
+            "type": "number",
+            "description": "Deposit amount captured at booking time (denormalised from Service.depositAmount).",
+            "minimum": 0,
+            "title": "Deposit Amount"
+          },
+          "noShowFeeChargedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp the no-show fee was charged (member 08).",
+            "title": "No Show Fee Charged At"
+          },
+          "cancellationReason": {
+            "type": "string",
+            "description": "Free-text reason supplied at cancellation.",
+            "maxLength": 1000,
+            "title": "Cancellation Reason"
+          },
+          "cancelledAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Cancelled At",
+            "description": "Timestamp when cancelled occurred."
+          },
+          "cancelledBy": {
+            "type": "string",
+            "description": "Identifier of the actor that cancelled the booking (customer email, user id, or 'system').",
+            "title": "Cancelled By"
+          },
+          "previousBookingId": {
+            "type": "string",
+            "description": "UUID of the prior booking when this booking is a reschedule.",
+            "title": "Previous Booking ID"
+          }
+        }
+      },
+      "walkInTicket": {
+        "slug": "walkInTicket",
+        "title": "Walk-In Ticket",
+        "icon": "AccountClock",
+        "version": "1.0.0",
+        "summary": "A queued walk-in customer awaiting service (no pre-booked slot).",
+        "description": "Pen-and-paper queue replacement for shops that take walk-ins (kappers, garages). Tracks arrival time, ETA, the resource assigned at the call moment, and outcome. Consumed by the walk-in queue view (member 09).",
+        "@type": "Reservation",
+        "configuration": {
+          "x-openregister-lifecycle": {
+            "field": "status",
+            "initial": "waiting",
+            "terminal": [
+              "served",
+              "abandoned"
+            ],
+            "transitions": {
+              "call": {
+                "from": [
+                  "waiting"
+                ],
+                "to": "called",
+                "description": "Call the waiting ticket to the counter."
+              },
+              "serve": {
+                "from": [
+                  "called"
+                ],
+                "to": "served",
+                "description": "Mark the called ticket as served."
+              },
+              "abandonFromWaiting": {
+                "from": [
+                  "waiting"
+                ],
+                "to": "abandoned",
+                "description": "The customer left the queue before being called."
+              },
+              "abandonFromCalled": {
+                "from": [
+                  "called"
+                ],
+                "to": "abandoned",
+                "description": "The customer did not show up when called."
+              }
+            }
+          }
+        },
+        "required": [
+          "displayName",
+          "arrivedAt",
+          "status"
+        ],
+        "properties": {
+          "customerId": {
+            "type": "string",
+            "description": "Optional UUID of the linked contact (omitted when the customer is anonymous).",
+            "title": "Customer ID"
+          },
+          "displayName": {
+            "type": "string",
+            "description": "Name to call out at the counter (always required, even for anonymous walk-ins).",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Display Name"
+          },
+          "phone": {
+            "type": "string",
+            "description": "Optional callback number (E.164 preferred).",
+            "maxLength": 32,
+            "title": "Phone"
+          },
+          "serviceId": {
+            "type": "string",
+            "description": "Optional UUID of the requested Service.",
+            "title": "Service ID"
+          },
+          "arrivedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp the customer joined the queue.",
+            "title": "Arrived At"
+          },
+          "estimatedReadyAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Live ETA recomputed as the queue moves.",
+            "title": "Estimated Ready At"
+          },
+          "status": {
+            "type": "string",
+            "description": "Queue position state.",
+            "enum": [
+              "waiting",
+              "called",
+              "served",
+              "abandoned"
+            ],
+            "default": "waiting",
+            "title": "Status"
+          },
+          "assignedResourceId": {
+            "type": "string",
+            "description": "UUID of the resource that took the ticket (set when status flips to called).",
+            "title": "Assigned Resource ID"
+          },
+          "actualServedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp the customer actually started being served.",
+            "title": "Actual Served At"
+          }
+        }
+      },
+      "availabilityCache": {
+        "slug": "availabilityCache",
+        "title": "Availability Cache",
+        "icon": "DatabaseClock",
+        "version": "1.0.0",
+        "summary": "Internal precomputed free-slots cache per resource per date (read-only, regeneratable).",
+        "description": "Read-only optimisation produced by the availability service (member 02). NEVER hand-edited — the slot computation is the source of truth. Materialised so the portal can answer day-grid queries in sub-second time without recomputing per request. REQ-APT-016.",
+        "@type": "Thing",
+        "x-openregister": {
+          "internal": true,
+          "userQueryable": false
+        },
+        "required": [
+          "resourceId",
+          "date",
+          "generatedAt"
+        ],
+        "properties": {
+          "resourceId": {
+            "type": "string",
+            "description": "UUID of the Resource whose availability is cached.",
+            "title": "Resource ID"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "description": "Local date (YYYY-MM-DD) the cached blocks cover.",
+            "title": "Date"
+          },
+          "freeBlocks": {
+            "type": "array",
+            "description": "Contiguous free-time blocks for the day, in local time, sorted by startTime ascending.",
+            "items": {
+              "type": "object",
+              "required": [
+                "startTime",
+                "endTime",
+                "durationMinutes"
+              ],
+              "properties": {
+                "startTime": {
+                  "type": "string",
+                  "description": "Block start in HH:MM (local).",
+                  "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+                  "title": "Start Time"
+                },
+                "endTime": {
+                  "type": "string",
+                  "description": "Block end in HH:MM (local).",
+                  "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$",
+                  "title": "End Time"
+                },
+                "durationMinutes": {
+                  "type": "integer",
+                  "description": "Length of the block in minutes.",
+                  "minimum": 0,
+                  "title": "Duration Minutes"
+                },
+                "bookable": {
+                  "type": "boolean",
+                  "description": "Whether the block is bookable (false = within working hours but blocked by buffer / vacation overlay).",
+                  "default": true,
+                  "title": "Bookable"
+                }
+              }
+            },
+            "title": "Free Blocks"
+          },
+          "generatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp this cache row was computed.",
+            "title": "Generated At"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp after which the row MUST be regenerated.",
+            "title": "Expires At"
+          }
+        }
+      }
+    },
+    "objects": [
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "service",
+          "slug": "service-haircut-simple"
+        },
+        "name": "Knipbeurt",
+        "description": "Standaard knipbeurt — wassen, knippen, kort fohnen.",
+        "durationMinutes": 30,
+        "bufferBeforeMinutes": 0,
+        "bufferAfterMinutes": 5,
+        "price": 27.5,
+        "currency": "EUR",
+        "requiredSkills": [],
+        "requiredResourceTypes": [
+          "staff"
+        ],
+        "multiStep": [],
+        "bookableOnline": true,
+        "requiresDeposit": false,
+        "depositAmount": 0,
+        "noShowFee": 10.0,
+        "cancellationPolicy": "free",
+        "cancellationHoursBefore": 24,
+        "status": "active"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "service",
+          "slug": "service-color-and-cut"
+        },
+        "name": "Kleur & Knippen",
+        "description": "Complete kleurbehandeling met knippen — kleur aanbrengen, intrekken, uitspoelen en knippen.",
+        "durationMinutes": 120,
+        "bufferBeforeMinutes": 0,
+        "bufferAfterMinutes": 10,
+        "price": 95.0,
+        "currency": "EUR",
+        "requiredSkills": [
+          "color-certified"
+        ],
+        "requiredResourceTypes": [
+          "staff",
+          "room"
+        ],
+        "multiStep": [
+          {
+            "durationMinutes": 45,
+            "skillRequired": "color-certified",
+            "resourceType": "staff",
+            "allowGap": false
+          },
+          {
+            "durationMinutes": 30,
+            "resourceType": "room",
+            "allowGap": true
+          },
+          {
+            "durationMinutes": 45,
+            "resourceType": "staff",
+            "allowGap": false
+          }
+        ],
+        "bookableOnline": true,
+        "requiresDeposit": true,
+        "depositAmount": 20.0,
+        "noShowFee": 25.0,
+        "cancellationPolicy": "charge-deposit",
+        "cancellationHoursBefore": 48,
+        "status": "active"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "service",
+          "slug": "service-oil-change-standard"
+        },
+        "name": "Olieverversing",
+        "description": "Standaard olieverversing inclusief filterwissel en vloeistofcheck.",
+        "durationMinutes": 45,
+        "bufferBeforeMinutes": 5,
+        "bufferAfterMinutes": 10,
+        "price": 79.0,
+        "currency": "EUR",
+        "requiredSkills": [
+          "monteur-apk"
+        ],
+        "requiredResourceTypes": [
+          "staff",
+          "equipment"
+        ],
+        "multiStep": [],
+        "bookableOnline": true,
+        "requiresDeposit": false,
+        "depositAmount": 0,
+        "noShowFee": 25.0,
+        "cancellationPolicy": "always-charge",
+        "cancellationHoursBefore": 24,
+        "status": "active"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "service",
+          "slug": "service-consultation-tax"
+        },
+        "name": "Belastingadvies gesprek",
+        "description": "Vrijblijvend kennismakingsgesprek met de belastingadviseur (geen kosten).",
+        "durationMinutes": 45,
+        "bufferBeforeMinutes": 0,
+        "bufferAfterMinutes": 15,
+        "price": 0,
+        "currency": "EUR",
+        "requiredSkills": [],
+        "requiredResourceTypes": [
+          "staff"
+        ],
+        "multiStep": [],
+        "bookableOnline": true,
+        "requiresDeposit": false,
+        "depositAmount": 0,
+        "noShowFee": 0,
+        "cancellationPolicy": "free",
+        "cancellationHoursBefore": 12,
+        "status": "active"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "resource",
+          "slug": "resource-sarah-stylist"
+        },
+        "name": "Sarah",
+        "type": "staff",
+        "skills": [
+          "color-certified",
+          "knippen"
+        ],
+        "workingHours": [
+          {
+            "day": "tuesday",
+            "openTime": "09:00",
+            "closeTime": "17:30"
+          },
+          {
+            "day": "wednesday",
+            "openTime": "09:00",
+            "closeTime": "17:30"
+          },
+          {
+            "day": "thursday",
+            "openTime": "09:00",
+            "closeTime": "20:00"
+          },
+          {
+            "day": "friday",
+            "openTime": "09:00",
+            "closeTime": "17:30"
+          },
+          {
+            "day": "saturday",
+            "openTime": "09:00",
+            "closeTime": "15:00"
+          }
+        ],
+        "vacations": [
+          {
+            "startDate": "2026-07-13",
+            "endDate": "2026-07-27",
+            "label": "Zomervakantie"
+          }
+        ],
+        "bookable": true,
+        "maxConcurrent": 1,
+        "status": "active"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "resource",
+          "slug": "resource-jan-mechanic"
+        },
+        "name": "Jan",
+        "type": "staff",
+        "skills": [
+          "monteur-apk",
+          "monteur-elektro"
+        ],
+        "workingHours": [
+          {
+            "day": "monday",
+            "openTime": "08:00",
+            "closeTime": "17:00"
+          },
+          {
+            "day": "tuesday",
+            "openTime": "08:00",
+            "closeTime": "17:00"
+          },
+          {
+            "day": "wednesday",
+            "openTime": "08:00",
+            "closeTime": "17:00"
+          },
+          {
+            "day": "thursday",
+            "openTime": "08:00",
+            "closeTime": "17:00"
+          },
+          {
+            "day": "friday",
+            "openTime": "08:00",
+            "closeTime": "16:00"
+          }
+        ],
+        "vacations": [],
+        "bookable": true,
+        "maxConcurrent": 1,
+        "status": "active"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "resource",
+          "slug": "resource-treatment-room-a"
+        },
+        "name": "Behandelkamer A",
+        "type": "room",
+        "skills": [],
+        "workingHours": [
+          {
+            "day": "monday",
+            "openTime": "09:00",
+            "closeTime": "18:00"
+          },
+          {
+            "day": "tuesday",
+            "openTime": "09:00",
+            "closeTime": "18:00"
+          },
+          {
+            "day": "wednesday",
+            "openTime": "09:00",
+            "closeTime": "18:00"
+          },
+          {
+            "day": "thursday",
+            "openTime": "09:00",
+            "closeTime": "20:00"
+          },
+          {
+            "day": "friday",
+            "openTime": "09:00",
+            "closeTime": "18:00"
+          },
+          {
+            "day": "saturday",
+            "openTime": "09:00",
+            "closeTime": "15:00"
+          }
+        ],
+        "vacations": [],
+        "bookable": true,
+        "maxConcurrent": 1,
+        "status": "active"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "resource",
+          "slug": "resource-workshop-bay-1"
+        },
+        "name": "Werkplaats brug 1",
+        "type": "equipment",
+        "skills": [],
+        "workingHours": [
+          {
+            "day": "monday",
+            "openTime": "08:00",
+            "closeTime": "17:00"
+          },
+          {
+            "day": "tuesday",
+            "openTime": "08:00",
+            "closeTime": "17:00"
+          },
+          {
+            "day": "wednesday",
+            "openTime": "08:00",
+            "closeTime": "17:00"
+          },
+          {
+            "day": "thursday",
+            "openTime": "08:00",
+            "closeTime": "17:00"
+          },
+          {
+            "day": "friday",
+            "openTime": "08:00",
+            "closeTime": "16:00"
+          }
+        ],
+        "vacations": [],
+        "bookable": true,
+        "maxConcurrent": 1,
+        "status": "active"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "booking",
+          "slug": "booking-001-completed"
+        },
+        "customerId": "00000000-0000-0000-0000-000000000001",
+        "serviceId": "service-haircut-simple",
+        "resourceAssignments": [
+          {
+            "stepIndex": 0,
+            "resourceId": "resource-sarah-stylist",
+            "startAt": "2026-05-12T10:00:00+02:00",
+            "endAt": "2026-05-12T10:30:00+02:00"
+          }
+        ],
+        "startAt": "2026-05-12T10:00:00+02:00",
+        "endAt": "2026-05-12T10:30:00+02:00",
+        "status": "completed",
+        "statusHistory": [
+          {
+            "status": "confirmed",
+            "changedAt": "2026-05-10T14:22:00+02:00",
+            "changedBy": "portal",
+            "reason": "Booking created via portal"
+          },
+          {
+            "status": "completed",
+            "changedAt": "2026-05-12T10:31:00+02:00",
+            "changedBy": "admin:sarah",
+            "reason": "Knipbeurt afgerond"
+          }
+        ],
+        "notes": "Graag iets korter dan vorige keer.",
+        "internalNotes": "",
+        "source": "portal",
+        "confirmationSentAt": "2026-05-10T14:22:30+02:00",
+        "reminderSentAt": "2026-05-11T10:00:00+02:00",
+        "depositAmount": 0
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "booking",
+          "slug": "booking-002-confirmed"
+        },
+        "customerId": "00000000-0000-0000-0000-000000000002",
+        "serviceId": "service-color-and-cut",
+        "resourceAssignments": [
+          {
+            "stepIndex": 0,
+            "resourceId": "resource-sarah-stylist",
+            "startAt": "2026-06-15T13:00:00+02:00",
+            "endAt": "2026-06-15T13:45:00+02:00"
+          },
+          {
+            "stepIndex": 1,
+            "resourceId": "resource-treatment-room-a",
+            "startAt": "2026-06-15T13:45:00+02:00",
+            "endAt": "2026-06-15T14:15:00+02:00"
+          },
+          {
+            "stepIndex": 2,
+            "resourceId": "resource-sarah-stylist",
+            "startAt": "2026-06-15T14:15:00+02:00",
+            "endAt": "2026-06-15T15:00:00+02:00"
+          }
+        ],
+        "startAt": "2026-06-15T13:00:00+02:00",
+        "endAt": "2026-06-15T15:00:00+02:00",
+        "status": "confirmed",
+        "statusHistory": [
+          {
+            "status": "pending-deposit",
+            "changedAt": "2026-06-01T09:14:00+02:00",
+            "changedBy": "portal",
+            "reason": "Booking created — awaiting deposit"
+          },
+          {
+            "status": "confirmed",
+            "changedAt": "2026-06-01T09:17:00+02:00",
+            "changedBy": "system",
+            "reason": "Deposit cleared"
+          }
+        ],
+        "notes": "Lichtblond, geen ammonia indien mogelijk.",
+        "internalNotes": "Allergie voor PPD genoteerd in profiel.",
+        "source": "portal",
+        "confirmationSentAt": "2026-06-01T09:17:30+02:00",
+        "depositPaidAt": "2026-06-01T09:16:42+02:00",
+        "depositAmount": 20.0
+      }
+    ]
+  }
+}

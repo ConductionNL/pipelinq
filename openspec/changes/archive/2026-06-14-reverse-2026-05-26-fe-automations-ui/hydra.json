@@ -1,0 +1,63 @@
+{
+  "schema_version": 2,
+  "spec_slug": "reverse-2026-05-26-fe-automations-ui",
+  "repo": "https://github.com/ConductionNL/pipelinq",
+  "issue": 158,
+  "cycles": [
+    {
+      "cycle": 1,
+      "trigger": "orchestrator",
+      "started_at": "2026-06-03T18:49:12Z",
+      "ended_at": null,
+      "outcome": "in-flight",
+      "outcome_reason": null,
+      "pattern_tags": [],
+      "stages": [
+        {
+          "stage": "applier",
+          "persona": "Axel Pli\u00e9r",
+          "model": "sonnet",
+          "container": "hydra-applier",
+          "started_at": "2026-06-03T18:48:53Z",
+          "ended_at": "2026-06-03T18:49:07Z",
+          "exit_code": 1,
+          "turns_used": 0,
+          "turns_budget": 20,
+          "checks_run": [
+            "hydra.json-consumer"
+          ],
+          "checks_skipped": [],
+          "findings": [
+            {
+              "id": "applier-fail",
+              "severity": "CRITICAL",
+              "gate": "applier",
+              "rule": "applier returned fail verdict",
+              "status": "open",
+              "note": "Applier blocking items should be captured in hydra.json pipeline.applier.blocking[] by the container itself. See logs/pipeline-*/applier.jsonl for detail.",
+              "autofixable": false
+            }
+          ],
+          "decisions": [],
+          "verdict": "fail",
+          "duration_seconds": 14
+        }
+      ]
+    }
+  ],
+  "totals": {
+    "runs": 1,
+    "turns_used": 0,
+    "cost_usd": 0.0,
+    "duration_seconds": 14,
+    "cycles": 1,
+    "by_stage": {
+      "applier": {
+        "runs": 1,
+        "turns_used": 0,
+        "cost_usd": 0.0,
+        "duration_seconds": 14
+      }
+    }
+  }
+}

@@ -1,16 +1,37 @@
+# Pipelinq — Conduction PHPStan config.
+#
+# The shared base is the single source of truth. Everything here is either the
+# app's own tracked debt or an ignore naming a symbol that exists in no other
+# fleet app. Anything you are tempted to add that another app would also need
+# belongs in the base, not here.
+includes:
+    - vendor/conduction/hydra-gates/quality-config/phpstan-base.neon
+    # Per-app tracked lint debt (auto-generated via `phpstan --generate-baseline`).
+    - phpstan-baseline.neon
+
 parameters:
-    level: 5
-    paths:
-        - lib
-    bootstrapFiles:
-        - vendor/autoload.php
-    excludePaths:
-        - vendor
+    # App-specific only. The base already sets level, paths, bootstrapFiles,
+    # excludePaths, scanDirectories and every fleet-wide ignore.
     scanDirectories:
-        - vendor/nextcloud/ocp
-    reportUnmatchedIgnoredErrors: false
+        # Declaration-only stubs for OpenRegister/Talk contracts (soft runtime
+        # dependencies, resolved only when those apps are installed). Scanned —
+        # never analysed, never autoloaded at runtime (PSR-4 maps only
+        # OCA\Pipelinq\ -> lib/); the real classes win whenever OpenRegister is
+        # enabled.
+        #
+        # These 34 stub files were already in the repo and already covered every
+        # unresolved class, but this line was missing, so phpstan never read them.
+        # phpstan REFUSES to ignoreErrors the "extends/implements unknown class"
+        # category ("cannot be ignored, use excludePaths instead"), so the contract
+        # has to be resolvable — there is no suppression route for these.
+        - tests/Stubs
+
     ignoreErrors:
-        # Nextcloud internal classes that PHPStan might not recognize
-        - '#Call to an undefined method OC::#'
-        - '#Class OC not found#'
-        - '#Access to static property \$server on an unknown class OC#'
+        # ObjectService is not on the analysis path, so PHPStan cannot verify its named
+        # parameters. These three are real — they are how OpenRegister sanctions a
+        # system-context (CLI / repair-step) read+write, where there is no session and
+        # RBAC would otherwise fail closed. See Repair\NormaliseTicketTitle.
+        - '#Unknown parameter \$(_rbac|_multitenancy|currentUser) in call to method OCA\\OpenRegister\\Service\\ObjectService::#'
+        # RemoveRetiredAvgJobs unregisters deleted job classes by bare class name;
+        # the deleted classes are no longer class-string<IJob> for static analysis (ADR-047 Phase-3)
+        - '#Parameter \#1 \$job of method OCP\\BackgroundJob\\IJobList::remove\(\) expects#'

@@ -1,0 +1,58 @@
+{
+  "spec_slug": "time-approval-workflow",
+  "title": "Time Approval Workflow (submit/approve/lock)",
+  "app": "pipelinq",
+  "repo": "https://github.com/ConductionNL/pipelinq",
+  "depends_on": [
+    "time-entry-core"
+  ],
+  "issue": null,
+  "schema_version": 2,
+  "cycles": [
+    {
+      "cycle": 1,
+      "trigger": "orchestrator",
+      "started_at": "2026-06-05T19:53:51Z",
+      "ended_at": "2026-06-05T19:53:59Z",
+      "outcome": "done",
+      "outcome_reason": "pipeline complete \u2014 reviews passed and applier passed (if run)",
+      "pattern_tags": [],
+      "stages": [
+        {
+          "stage": "applier",
+          "persona": "Axel Pli\u00e9r",
+          "model": "sonnet",
+          "container": "hydra-applier",
+          "started_at": "2026-06-05T19:52:37Z",
+          "ended_at": "2026-06-05T19:53:47Z",
+          "exit_code": 0,
+          "turns_used": 11,
+          "turns_budget": 20,
+          "checks_run": [
+            "hydra.json-consumer"
+          ],
+          "checks_skipped": [],
+          "findings": [],
+          "decisions": [],
+          "verdict": "pass",
+          "duration_seconds": 70
+        }
+      ]
+    }
+  ],
+  "totals": {
+    "runs": 1,
+    "turns_used": 11,
+    "cost_usd": 0.0,
+    "duration_seconds": 70,
+    "cycles": 1,
+    "by_stage": {
+      "applier": {
+        "runs": 1,
+        "turns_used": 11,
+        "cost_usd": 0.0,
+        "duration_seconds": 70
+      }
+    }
+  }
+}

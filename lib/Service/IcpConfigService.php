@@ -8,319 +8,238 @@
  * @category Service
  * @package  OCA\Pipelinq\Service
  *
- * @author    Conduction Development Team <dev@conductio.nl>
+ * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
  * @version GIT: <git_id>
  *
  * @link https://pipelinq.nl
+ *
+ * @spec openspec/specs/prospect-discovery/spec.md#requirement-ideal-customer-profile-configuration
  */
 
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\Pipelinq\AppInfo\Application;
-use OCP\IAppConfig;
-
 /**
  * Service for reading/writing ICP settings via IAppConfig.
  */
-class IcpConfigService
-{
-    /**
-     * ICP config keys.
-     *
-     * @var array<string>
-     */
-    private const ICP_KEYS = [
-        'icp_sbi_codes',
-        'icp_employee_count_min',
-        'icp_employee_count_max',
-        'icp_provinces',
-        'icp_cities',
-        'icp_legal_forms',
-        'icp_exclude_inactive',
-        'icp_keywords',
-        'icp_kvk_api_key',
-        'icp_opencorporates_enabled',
-    ];
+class IcpConfigService {
+	/**
+	 * ICP config keys for hash calculation.
+	 *
+	 * @var array<string>
+	 */
+	private const ICP_KEYS = [
+		'icp_sbi_codes',
+		'icp_employee_count_min',
+		'icp_employee_count_max',
+		'icp_provinces',
+		'icp_cities',
+		'icp_legal_forms',
+		'icp_exclude_inactive',
+		'icp_keywords',
+		'icp_kvk_api_key',
+		'icp_opencorporates_enabled',
+	];
 
-    /**
-     * Constructor.
-     *
-     * @param IAppConfig $appConfig The app config service.
-     */
-    public function __construct(
-        private IAppConfig $appConfig,
-    ) {
-    }//end __construct()
+	/**
+	 * Mapping of data keys to JSON array config keys.
+	 *
+	 * @var array<string, string>
+	 */
+	private const JSON_ARRAY_FIELDS = [
+		'sbiCodes' => 'icp_sbi_codes',
+		'provinces' => 'icp_provinces',
+		'cities' => 'icp_cities',
+		'legalForms' => 'icp_legal_forms',
+		'keywords' => 'icp_keywords',
+	];
 
-    /**
-     * Get all ICP settings.
-     *
-     * @return array The ICP configuration.
-     */
-    public function getSettings(): array
-    {
-        $kvkApiKey = $this->appConfig->getValueString(
-            app: Application::APP_ID,
-            key: 'icp_kvk_api_key',
-            default: ''
-        );
+	/**
+	 * Constructor.
+	 *
+	 * @param IcpConfigReader $reader The config reader.
+	 */
+	public function __construct(
+		private IcpConfigReader $reader,
+	) {
+	}//end __construct()
 
-        return [
-            'sbiCodes'              => $this->getJsonArray(key: 'icp_sbi_codes'),
-            'employeeCountMin'      => (int) $this->appConfig->getValueString(
-                app: Application::APP_ID,
-                key: 'icp_employee_count_min',
-                default: '0'
-            ),
-            'employeeCountMax'      => (int) $this->appConfig->getValueString(
-                app: Application::APP_ID,
-                key: 'icp_employee_count_max',
-                default: '0'
-            ),
-            'provinces'             => $this->getJsonArray(key: 'icp_provinces'),
-            'cities'                => $this->getJsonArray(key: 'icp_cities'),
-            'legalForms'            => $this->getJsonArray(key: 'icp_legal_forms'),
-            'excludeInactive'       => $this->appConfig->getValueString(
-                app: Application::APP_ID,
-                key: 'icp_exclude_inactive',
-                default: 'true'
-            ) === 'true',
-            'keywords'              => $this->getJsonArray(key: 'icp_keywords'),
-            'kvkApiKey'             => $this->maskApiKey(apiKey: $kvkApiKey),
-            'openCorporatesEnabled' => $this->appConfig->getValueString(
-                app: Application::APP_ID,
-                key: 'icp_opencorporates_enabled',
-                default: 'false'
-            ) === 'true',
-        ];
-    }//end getSettings()
+	/**
+	 * Get all ICP settings.
+	 *
+	 * @return array The ICP configuration.
+	 * @spec   openspec/changes/reverse-2026-05-26-be-prospect/tasks.md#task-9
+	 */
+	public function getSettings(): array {
+		$kvkApiKey = $this->reader->getString(key: 'icp_kvk_api_key');
 
-    /**
-     * Save ICP settings.
-     *
-     * @param array $data The ICP data to save.
-     *
-     * @return string The ICP hash.
-     */
-    public function saveSettings(array $data): string
-    {
-        if (isset($data['sbiCodes']) === true) {
-            $this->setJsonArray(key: 'icp_sbi_codes', value: $data['sbiCodes']);
-        }
+		return [
+			'sbiCodes' => $this->reader->getJsonArray(key: 'icp_sbi_codes'),
+			'employeeCountMin' => $this->reader->getInt(key: 'icp_employee_count_min'),
+			'employeeCountMax' => $this->reader->getInt(key: 'icp_employee_count_max'),
+			'provinces' => $this->reader->getJsonArray(key: 'icp_provinces'),
+			'cities' => $this->reader->getJsonArray(key: 'icp_cities'),
+			'legalForms' => $this->reader->getJsonArray(key: 'icp_legal_forms'),
+			'excludeInactive' => $this->reader->isBoolTrue(key: 'icp_exclude_inactive'),
+			'keywords' => $this->reader->getJsonArray(key: 'icp_keywords'),
+			'kvkApiKey' => $this->maskApiKey(apiKey: $kvkApiKey),
+			'openCorporatesEnabled' => $this->reader->isBoolTrue(
+				key: 'icp_opencorporates_enabled',
+				default: 'false'
+			),
+		];
+	}//end getSettings()
 
-        if (isset($data['employeeCountMin']) === true) {
-            $this->appConfig->setValueString(
-                app: Application::APP_ID,
-                key: 'icp_employee_count_min',
-                value: (string) (int) $data['employeeCountMin']
-            );
-        }
+	/**
+	 * Save ICP settings.
+	 *
+	 * @param array $data The ICP data to save.
+	 *
+	 * @return string The ICP hash.
+	 * @spec   openspec/changes/reverse-2026-05-26-be-prospect/tasks.md#task-11
+	 */
+	public function saveSettings(array $data): string {
+		$this->saveJsonArrayFields(data: $data);
+		$this->saveIntegerFields(data: $data);
+		$this->saveBooleanFields(data: $data);
+		$this->saveApiKeyField(data: $data);
 
-        if (isset($data['employeeCountMax']) === true) {
-            $this->appConfig->setValueString(
-                app: Application::APP_ID,
-                key: 'icp_employee_count_max',
-                value: (string) (int) $data['employeeCountMax']
-            );
-        }
+		return $this->getIcpHash();
+	}//end saveSettings()
 
-        if (isset($data['provinces']) === true) {
-            $this->setJsonArray(key: 'icp_provinces', value: $data['provinces']);
-        }
+	/**
+	 * Check if ICP is configured.
+	 *
+	 * @return bool True if at least one ICP criterion is set.
+	 * @spec   openspec/changes/reverse-2026-05-26-be-prospect/tasks.md#task-10
+	 */
+	public function isConfigured(): bool {
+		$sbiCodes = $this->reader->getJsonArray(key: 'icp_sbi_codes');
 
-        if (isset($data['cities']) === true) {
-            $this->setJsonArray(key: 'icp_cities', value: $data['cities']);
-        }
+		return count($sbiCodes) > 0;
+	}//end isConfigured()
 
-        if (isset($data['legalForms']) === true) {
-            $this->setJsonArray(key: 'icp_legal_forms', value: $data['legalForms']);
-        }
+	/**
+	 * Get the raw KVK API key.
+	 *
+	 * @return string The API key.
+	 */
+	public function getKvkApiKey(): string {
+		return $this->reader->getString(key: 'icp_kvk_api_key');
+	}//end getKvkApiKey()
 
-        if (isset($data['excludeInactive']) === true) {
-            $this->appConfig->setValueString(
-                app: Application::APP_ID,
-                key: 'icp_exclude_inactive',
-                value: $this->boolToString(value: $data['excludeInactive'])
-            );
-        }
+	/**
+	 * Get ICP criteria for scoring.
+	 *
+	 * @return array The raw ICP criteria.
+	 * @spec   openspec/changes/reverse-2026-05-26-be-prospect/tasks.md#task-7
+	 */
+	public function getCriteria(): array {
+		return [
+			'sbiCodes' => $this->reader->getJsonArray(key: 'icp_sbi_codes'),
+			'employeeCountMin' => $this->reader->getInt(key: 'icp_employee_count_min'),
+			'employeeCountMax' => $this->reader->getInt(key: 'icp_employee_count_max'),
+			'provinces' => $this->reader->getJsonArray(key: 'icp_provinces'),
+			'legalForms' => $this->reader->getJsonArray(key: 'icp_legal_forms'),
+			'excludeInactive' => $this->reader->isBoolTrue(key: 'icp_exclude_inactive'),
+		];
+	}//end getCriteria()
 
-        if (isset($data['keywords']) === true) {
-            $this->setJsonArray(key: 'icp_keywords', value: $data['keywords']);
-        }
+	/**
+	 * Get the ICP hash for cache invalidation.
+	 *
+	 * @return string The hash of current ICP settings.
+	 * @spec   openspec/changes/reverse-2026-05-26-be-prospect/tasks.md#task-8
+	 */
+	public function getIcpHash(): string {
+		$values = [];
+		foreach (self::ICP_KEYS as $key) {
+			$values[$key] = $this->reader->getString(key: $key);
+		}
 
-        if (isset($data['kvkApiKey']) === true && $data['kvkApiKey'] !== '***configured***') {
-            $this->appConfig->setValueString(
-                app: Application::APP_ID,
-                key: 'icp_kvk_api_key',
-                value: (string) $data['kvkApiKey']
-            );
-        }
+		return substr(md5(string: json_encode(value: $values)), offset: 0, length: 8);
+	}//end getIcpHash()
 
-        if (isset($data['openCorporatesEnabled']) === true) {
-            $this->appConfig->setValueString(
-                app: Application::APP_ID,
-                key: 'icp_opencorporates_enabled',
-                value: $this->boolToString(value: $data['openCorporatesEnabled'])
-            );
-        }
+	/**
+	 * Save JSON array fields from the data.
+	 *
+	 * @param array $data The ICP data.
+	 *
+	 * @return void
+	 */
+	private function saveJsonArrayFields(array $data): void {
+		foreach (self::JSON_ARRAY_FIELDS as $dataKey => $configKey) {
+			if (isset($data[$dataKey]) === true) {
+				$this->reader->setJsonArray(key: $configKey, value: $data[$dataKey]);
+			}
+		}
+	}//end saveJsonArrayFields()
 
-        return $this->getIcpHash();
-    }//end saveSettings()
+	/**
+	 * Save integer fields from the data.
+	 *
+	 * @param array $data The ICP data.
+	 *
+	 * @return void
+	 */
+	private function saveIntegerFields(array $data): void {
+		if (isset($data['employeeCountMin']) === true) {
+			$this->reader->setInt(key: 'icp_employee_count_min', value: $data['employeeCountMin']);
+		}
 
-    /**
-     * Check if ICP is configured.
-     *
-     * @return bool True if at least one ICP criterion is set.
-     */
-    public function isConfigured(): bool
-    {
-        $sbiCodes = $this->getJsonArray(key: 'icp_sbi_codes');
+		if (isset($data['employeeCountMax']) === true) {
+			$this->reader->setInt(key: 'icp_employee_count_max', value: $data['employeeCountMax']);
+		}
+	}//end saveIntegerFields()
 
-        return count($sbiCodes) > 0;
-    }//end isConfigured()
+	/**
+	 * Save boolean fields from the data.
+	 *
+	 * @param array $data The ICP data.
+	 *
+	 * @return void
+	 */
+	private function saveBooleanFields(array $data): void {
+		if (isset($data['excludeInactive']) === true) {
+			$this->reader->setBool(key: 'icp_exclude_inactive', value: $data['excludeInactive']);
+		}
 
-    /**
-     * Get the raw KVK API key.
-     *
-     * @return string The API key.
-     */
-    public function getKvkApiKey(): string
-    {
-        return $this->appConfig->getValueString(
-            app: Application::APP_ID,
-            key: 'icp_kvk_api_key',
-            default: ''
-        );
-    }//end getKvkApiKey()
+		if (isset($data['openCorporatesEnabled']) === true) {
+			$this->reader->setBool(key: 'icp_opencorporates_enabled', value: $data['openCorporatesEnabled']);
+		}
+	}//end saveBooleanFields()
 
-    /**
-     * Get ICP criteria for scoring.
-     *
-     * @return array The raw ICP criteria.
-     */
-    public function getCriteria(): array
-    {
-        return [
-            'sbiCodes'         => $this->getJsonArray(key: 'icp_sbi_codes'),
-            'employeeCountMin' => (int) $this->appConfig->getValueString(
-                app: Application::APP_ID,
-                key: 'icp_employee_count_min',
-                default: '0'
-            ),
-            'employeeCountMax' => (int) $this->appConfig->getValueString(
-                app: Application::APP_ID,
-                key: 'icp_employee_count_max',
-                default: '0'
-            ),
-            'provinces'        => $this->getJsonArray(key: 'icp_provinces'),
-            'legalForms'       => $this->getJsonArray(key: 'icp_legal_forms'),
-            'excludeInactive'  => $this->appConfig->getValueString(
-                app: Application::APP_ID,
-                key: 'icp_exclude_inactive',
-                default: 'true'
-            ) === 'true',
-        ];
-    }//end getCriteria()
+	/**
+	 * Save the API key field if provided and not masked.
+	 *
+	 * @param array $data The ICP data.
+	 *
+	 * @return void
+	 */
+	private function saveApiKeyField(array $data): void {
+		if (isset($data['kvkApiKey']) === true && $data['kvkApiKey'] !== '***configured***') {
+			// Store the KVK API key as sensitive so it is excluded from
+			// occ config:list output and Nextcloud support archives (issue #599).
+			$this->reader->setSensitiveString(key: 'icp_kvk_api_key', value: (string)$data['kvkApiKey']);
+		}
+	}//end saveApiKeyField()
 
-    /**
-     * Get the ICP hash for cache invalidation.
-     *
-     * @return string The hash of current ICP settings.
-     */
-    public function getIcpHash(): string
-    {
-        $values = [];
-        foreach (self::ICP_KEYS as $key) {
-            $values[$key] = $this->appConfig->getValueString(
-                app: Application::APP_ID,
-                key: $key,
-                default: ''
-            );
-        }
+	/**
+	 * Mask an API key for display.
+	 *
+	 * @param string $apiKey The raw API key.
+	 *
+	 * @return string The masked key or empty string.
+	 */
+	private function maskApiKey(string $apiKey): string {
+		if ($apiKey !== '') {
+			return '***configured***';
+		}
 
-        return substr(md5(string: json_encode(value: $values)), offset: 0, length: 8);
-    }//end getIcpHash()
-
-    /**
-     * Get a JSON array from app config.
-     *
-     * @param string $key The config key.
-     *
-     * @return array The decoded array.
-     */
-    private function getJsonArray(string $key): array
-    {
-        $value = $this->appConfig->getValueString(
-            app: Application::APP_ID,
-            key: $key,
-            default: '[]'
-        );
-
-        $decoded = json_decode(json: $value, associative: true);
-
-        if (is_array(value: $decoded) === true) {
-            return $decoded;
-        }
-
-        return [];
-    }//end getJsonArray()
-
-    /**
-     * Set a JSON array in app config.
-     *
-     * @param string $key   The config key.
-     * @param mixed  $value The array to encode and store.
-     *
-     * @return void
-     */
-    private function setJsonArray(string $key, mixed $value): void
-    {
-        $arrayValue = [];
-        if (is_array(value: $value) === true) {
-            $arrayValue = $value;
-        }
-
-        $this->appConfig->setValueString(
-            app: Application::APP_ID,
-            key: $key,
-            value: json_encode(value: $arrayValue)
-        );
-    }//end setJsonArray()
-
-    /**
-     * Convert a boolean to a string value.
-     *
-     * @param mixed $value The boolean value.
-     *
-     * @return string The string 'true' or 'false'.
-     */
-    private function boolToString(mixed $value): string
-    {
-        if ($value === true) {
-            return 'true';
-        }
-
-        return 'false';
-    }//end boolToString()
-
-    /**
-     * Mask an API key for display.
-     *
-     * @param string $apiKey The raw API key.
-     *
-     * @return string The masked key or empty string.
-     */
-    private function maskApiKey(string $apiKey): string
-    {
-        if ($apiKey !== '') {
-            return '***configured***';
-        }
-
-        return '';
-    }//end maskApiKey()
+		return '';
+	}//end maskApiKey()
 }//end class

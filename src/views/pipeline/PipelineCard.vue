@@ -1,10 +1,45 @@
+<!-- SPDX-License-Identifier: EUPL-1.2 -->
+<!-- Copyright (C) 2026 Conduction B.V. -->
+
 <template>
 	<div
 		class="pipeline-card"
 		:class="{ 'pipeline-card--overdue': isOverdue }"
 		draggable="true"
+		role="button"
+		tabindex="0"
 		@dragstart="onDragStart"
-		@click="$emit('open', item)">
+		@click="$emit('open', item)"
+		@keydown.enter.prevent="$emit('open', item)"
+		@keydown.space.prevent="$emit('open', item)">
+		<!-- Quick actions menu (top-right) — kept off the keyboard tab-order
+		     for the card itself; CnRowActions handles its own focus.        -->
+		<div class="pipeline-card__menu" @click.stop>
+			<NcActions
+				:forceMenu="true"
+				:inline="0"
+				:aria-label="t('pipelinq', 'Card actions')">
+				<NcActionButton @click="openMoveMenu">
+					<template #icon>
+						<ArrowRightThick :size="18" />
+					</template>
+					{{ t('pipelinq', 'Move to stage') }}
+				</NcActionButton>
+				<NcActionButton @click="openAssignMenu">
+					<template #icon>
+						<AccountPlus :size="18" />
+					</template>
+					{{ t('pipelinq', 'Assign') }}
+				</NcActionButton>
+				<NcActionButton @click="openPriorityMenu">
+					<template #icon>
+						<Flag :size="18" />
+					</template>
+					{{ t('pipelinq', 'Priority') }}
+				</NcActionButton>
+			</NcActions>
+		</div>
+
 		<!-- Compact single-row layout: badge → title → meta → age -->
 		<div class="pipeline-card__row">
 			<span class="entity-badge" :class="'badge--' + entityType">
@@ -13,45 +48,91 @@
 			<span class="pipeline-card__title">
 				{{ item.title }}
 			</span>
-			<span v-if="item.priority && item.priority !== 'normal'" class="priority-indicator" :class="'priority--' + item.priority" />
+			<span
+				v-if="item.priority && item.priority !== 'normal'"
+				class="priority-indicator"
+				:class="'priority--' + item.priority"
+				:title="getPriorityLabel(item.priority)" />
 			<span v-if="item.value" class="card-meta">
-				{{ Number(item.value).toLocaleString('nl-NL') }}
+				{{ formatNumber(item.value) }}
 			</span>
 			<span v-if="item.assignee" class="card-assignee">
 				{{ item.assignee }}
 			</span>
 			<span v-if="daysAge > 0" class="aging-badge" :class="agingClass">
-				{{ agingLabel }}
+				{{ agingLabel }} {{ t('pipelinq', 'in stage') }}
 			</span>
-			<span v-if="item.expectedCloseDate" class="card-date" :class="{ 'card-date--overdue': isOverdue }">
+			<span
+				v-if="isStaleItem"
+				class="stale-badge"
+				:title="
+					t('pipelinq', 'No activity for over {days} days', {
+						days: staleThreshold,
+					})
+				">
+				{{ daysAge }}d {{ t('pipelinq', 'stale') }}
+			</span>
+			<span
+				v-if="item.expectedCloseDate"
+				class="card-date"
+				:class="{ 'card-date--overdue': isOverdue }">
+				<ClockAlert v-if="isOverdue" :size="14" class="card-date__icon" />
 				{{ formatDate(item.expectedCloseDate) }}
 			</span>
 		</div>
-		<!-- Quick actions row (click.stop prevents card navigation) -->
-		<div class="pipeline-card__actions" @click.stop>
-			<NcSelect
-				v-model="selectedStage"
-				:options="stageOptions"
-				:clearable="false"
-				:placeholder="t('pipelinq', 'Stage')"
-				class="quick-select"
-				@input="onStageChange" />
-			<NcSelect
-				v-model="selectedAssignee"
-				:options="userOptions"
-				:clearable="true"
-				:placeholder="t('pipelinq', 'Assign')"
-				class="quick-select"
-				@input="onAssignChange" />
-		</div>
+
+		<!-- Sub-menus rendered as dialogs when activated; each lives in its own
+		     file under src/dialogs/ per ADR-004 (modal-isolation). -->
+		<StagePickerDialog
+			v-if="moveMenuOpen"
+			:stages="stages"
+			@close="moveMenuOpen = false"
+			@select="onPickStage" />
+
+		<AssigneePickerDialog
+			v-if="assignMenuOpen"
+			:options="userOptions"
+			:assignee="pickedAssignee"
+			@close="assignMenuOpen = false"
+			@select="onPickAssignee" />
+
+		<PriorityPickerDialog
+			v-if="priorityMenuOpen"
+			:options="priorityOptions"
+			:current="item.priority"
+			@close="priorityMenuOpen = false"
+			@select="onPickPriority" />
 	</div>
 </template>
 
 <script>
-import { NcSelect } from '@nextcloud/vue'
-import { getPriorityLabel, getPriorityColor, getStatusLabel } from '../../services/requestStatus.js'
-import { getDaysAge, isStale, getAgingClass, formatAge } from '../../services/pipelineUtils.js'
+import { showError, showSuccess } from '@nextcloud/dialogs'
+import { NcActionButton, NcActions } from '@nextcloud/vue'
+import AccountPlus from 'vue-material-design-icons/AccountPlus.vue'
+import ArrowRightThick from 'vue-material-design-icons/ArrowRightThick.vue'
+import ClockAlert from 'vue-material-design-icons/ClockAlert.vue'
+import Flag from 'vue-material-design-icons/Flag.vue'
+import AssigneePickerDialog from '../../dialogs/AssigneePickerDialog.vue'
+import PriorityPickerDialog from '../../dialogs/PriorityPickerDialog.vue'
+import StagePickerDialog from '../../dialogs/StagePickerDialog.vue'
+import {
+	formatDate as formatLocaleDate,
+	formatNumber,
+} from '../../services/localeUtils.js'
+import {
+	formatAge,
+	getAgingClass,
+	getDaysAge,
+	getStaleThreshold,
+	resolveObjectType,
+} from '../../services/pipelineUtils.js'
+import {
+	getPriorityColor,
+	getPriorityLabel,
+	getStatusLabel,
+} from '../../services/requestStatus.js'
 import { useObjectStore } from '../../store/modules/object.js'
+import { useSettingsStore } from '../../store/modules/settings.js'
 
 // Module-level user cache shared across all PipelineCard instances
 let usersCache = null
@@ -59,93 +140,225 @@ let usersCache = null
 export default {
 	name: 'PipelineCard',
 	components: {
-		NcSelect,
+		NcActions,
+		NcActionButton,
+		StagePickerDialog,
+		AssigneePickerDialog,
+		PriorityPickerDialog,
+		ArrowRightThick,
+		AccountPlus,
+		Flag,
+		ClockAlert,
 	},
+
 	props: {
 		item: {
 			type: Object,
 			required: true,
 		},
+
 		entityType: {
 			type: String,
 			default: 'lead',
 		},
+
 		stages: {
 			type: Array,
 			default: () => [],
 		},
+
 		columnProperty: {
 			type: String,
 			default: 'stage',
 		},
 	},
+
 	data() {
 		return {
 			users: [],
 			selectedStage: null,
 			selectedAssignee: null,
+			moveMenuOpen: false,
+			assignMenuOpen: false,
+			priorityMenuOpen: false,
+			pickedAssignee: null,
 		}
 	},
+
 	computed: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-42
+		 */
 		objectStore() {
 			return useObjectStore()
 		},
+
+		/**
+		 * The registered OpenRegister object type behind this card's *logical*
+		 * `entityType`, plus the `ticketType` discriminator when that logical type
+		 * is one of the three subtypes folded into the `ticket` supertype
+		 * (unify-ticket-supertype). `entityType` stays logical so the badge, the
+		 * overdue rule and the board's routing keep working unchanged.
+		 *
+		 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-unified-tickets-workspace
+		 */
+		resolvedType() {
+			return resolveObjectType(this.entityType)
+		},
+
+		/**
+		 * Pinia settings store — holds the stale-threshold configuration
+		 * surfaced through the existing settings endpoint.
+		 *
+		 * @spec openspec/specs/lead-management/spec.md
+		 */
+		settingsStore() {
+			return useSettingsStore()
+		},
+
+		/**
+		 * Resolved stale threshold (days) from settings; defaults to 14 if
+		 * the store hasn't been initialised yet.
+		 *
+		 * @spec openspec/specs/lead-management/spec.md
+		 */
+		staleThreshold() {
+			return getStaleThreshold(this.settingsStore.config)
+		},
+
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-36
+		 */
 		currentColumnValue() {
 			return this.item[this.columnProperty] || ''
 		},
+
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-40
+		 * @spec openspec/specs/lead-management/spec.md
+		 */
 		isOverdue() {
 			if (this.entityType === 'lead') {
 				if (!this.item.expectedCloseDate) return false
+				if (this.item.status === 'won' || this.item.status === 'lost')
+					return false
+				// Cards in stages flagged isClosed never show overdue
+				const currentStage = this.stages.find(
+					(s) => s.name === this.item.stage,
+				)
+				if (currentStage && currentStage.isClosed) return false
 				return new Date(this.item.expectedCloseDate) < new Date()
 			}
 			if (this.entityType === 'request') {
-				if (!this.item.requestedAt) return false
-				const daysSince = Math.floor((Date.now() - new Date(this.item.requestedAt).getTime()) / 86400000)
+				// `requestedAt` became `occurredAt` on the ticket supertype.
+				if (!this.item.occurredAt) return false
+				const daysSince = Math.floor(
+					(Date.now() - new Date(this.item.occurredAt).getTime())
+						/ 86400000,
+				)
 				return daysSince > 30
 			}
 			return false
 		},
+
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-37
+		 */
 		daysAge() {
 			return getDaysAge(this.item)
 		},
+
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-34
+		 */
 		agingClass() {
 			return getAgingClass(this.daysAge)
 		},
+
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-35
+		 */
 		agingLabel() {
 			return formatAge(this.daysAge)
 		},
+
+		/**
+		 * Stale = no activity for `staleThreshold` days. Driven by the
+		 * settings store, not a hardcoded constant.
+		 *
+		 * @spec openspec/specs/lead-management/spec.md
+		 */
 		isStaleItem() {
-			return isStale(this.item, this.entityType)
+			if (this.entityType !== 'lead') return false
+			return this.daysAge >= this.staleThreshold
 		},
+
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-46
+		 */
 		stageOptions() {
-			return this.stages.map(s => s.name)
+			return this.stages.map((s) => s.name)
 		},
+
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-47
+		 */
 		userOptions() {
 			return this.users
 		},
+
+		/**
+		 * Priority levels exposed in the quick action menu.
+		 *
+		 * @spec openspec/specs/lead-management/spec.md
+		 */
+		priorityOptions() {
+			return [
+				{ value: 'low', label: t('pipelinq', 'Low') },
+				{ value: 'normal', label: t('pipelinq', 'Normal') },
+				{ value: 'high', label: t('pipelinq', 'High') },
+				{ value: 'urgent', label: t('pipelinq', 'Urgent') },
+			]
+		},
 	},
+
 	watch: {
 		currentColumnValue: {
 			immediate: true,
+			/**
+			 * @param val
+			 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-39
+			 */
 			handler(val) {
 				this.selectedStage = val || null
 			},
 		},
+
 		'item.assignee': {
 			immediate: true,
+			/**
+			 * @param val
+			 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-39
+			 */
 			handler(val) {
 				this.selectedAssignee = val || null
 			},
 		},
 	},
+
 	async mounted() {
 		await this.loadUsers()
 	},
+
 	methods: {
+		formatNumber,
 		getPriorityLabel,
 		getPriorityColor,
 		getStatusLabel,
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-41
+		 */
 		async loadUsers() {
 			if (usersCache) {
 				this.users = usersCache
@@ -168,36 +381,154 @@ export default {
 			}
 		},
 
+		/**
+		 * Copy the card's item into a save payload: drop the board-only `_` keys
+		 * and re-assert the `ticketType` discriminator when this card is a ticket
+		 * subtype, so a PUT can never strip it (unify-ticket-supertype).
+		 *
+		 * @return {object} Payload for objectStore.saveObject().
+		 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
+		 */
+		buildSavePayload() {
+			const updated = { ...this.item }
+			delete updated._entityType
+			delete updated._schemaSlug
+			if (this.resolvedType.ticketType && !updated.ticketType) {
+				updated.ticketType = this.resolvedType.ticketType
+			}
+			return updated
+		},
+
+		/**
+		 * @param newStage
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-45
+		 */
 		async onStageChange(newStage) {
 			if (!newStage || newStage === this.currentColumnValue) return
 			try {
-				const updated = { ...this.item }
-				delete updated._entityType
-				delete updated._schemaSlug
+				const updated = this.buildSavePayload()
 				updated[this.columnProperty] = newStage
-				await this.objectStore.saveObject(this.entityType, updated)
+				const targetStage = this.stages.find((s) => s.name === newStage)
+				if (
+					targetStage
+					&& typeof targetStage.order === 'number'
+					&& this.columnProperty === 'stage'
+				) {
+					updated.stageOrder = targetStage.order
+				}
+				await this.objectStore.saveObject(
+					this.resolvedType.objectType,
+					updated,
+				)
+				showSuccess(
+					t('pipelinq', 'Lead moved to {stage}', { stage: newStage }),
+				)
 				this.$emit('refresh')
-			} catch {
-				// Revert on failure
+			} catch (e) {
 				this.selectedStage = this.currentColumnValue
+				showError(t('pipelinq', 'Failed to move lead. Please try again.'))
 			}
 		},
 
+		/**
+		 * @param newAssignee
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-43
+		 */
 		async onAssignChange(newAssignee) {
 			if (newAssignee === this.item.assignee) return
 			try {
-				const updated = { ...this.item }
-				delete updated._entityType
-				delete updated._schemaSlug
+				const updated = this.buildSavePayload()
 				updated.assignee = newAssignee || ''
-				await this.objectStore.saveObject(this.entityType, updated)
+				await this.objectStore.saveObject(
+					this.resolvedType.objectType,
+					updated,
+				)
+				showSuccess(t('pipelinq', 'Assignee updated'))
 				this.$emit('refresh')
-			} catch {
-				// Revert on failure
+			} catch (e) {
 				this.selectedAssignee = this.item.assignee
+				showError(t('pipelinq', 'Failed to update assignee.'))
 			}
 		},
 
+		/**
+		 * Open the move-to-stage dialog.
+		 *
+		 * @spec openspec/specs/lead-management/spec.md
+		 */
+		openMoveMenu() {
+			this.moveMenuOpen = true
+		},
+
+		/**
+		 * Open the assignee picker dialog.
+		 *
+		 * @spec openspec/specs/lead-management/spec.md
+		 */
+		openAssignMenu() {
+			this.pickedAssignee = this.item.assignee || null
+			this.assignMenuOpen = true
+		},
+
+		/**
+		 * Open the priority picker dialog.
+		 *
+		 * @spec openspec/specs/lead-management/spec.md
+		 */
+		openPriorityMenu() {
+			this.priorityMenuOpen = true
+		},
+
+		/**
+		 * Handle stage selection from the move dialog.
+		 *
+		 * @param {object} stage The selected stage.
+		 * @spec openspec/specs/lead-management/spec.md
+		 */
+		async onPickStage(stage) {
+			this.moveMenuOpen = false
+			await this.onStageChange(stage.name)
+		},
+
+		/**
+		 * Handle assignee selection from the assign dialog.
+		 *
+		 * @param {string|null} uid The selected user id.
+		 * @spec openspec/specs/lead-management/spec.md
+		 */
+		async onPickAssignee(uid) {
+			this.assignMenuOpen = false
+			await this.onAssignChange(uid)
+		},
+
+		/**
+		 * Handle priority selection from the priority dialog. Wraps store
+		 * writes in try/catch with user-visible feedback per REQ-LM-001.
+		 *
+		 * @param {string} priority The chosen priority.
+		 * @spec openspec/specs/lead-management/spec.md
+		 */
+		async onPickPriority(priority) {
+			this.priorityMenuOpen = false
+			if (priority === this.item.priority) return
+			try {
+				const updated = this.buildSavePayload()
+				updated.priority = priority
+				await this.objectStore.saveObject(
+					this.resolvedType.objectType,
+					updated,
+				)
+				showSuccess(t('pipelinq', 'Priority updated'))
+				this.$emit('refresh')
+			} catch (e) {
+				showError(t('pipelinq', 'Failed to update priority.'))
+			}
+		},
+
+		/**
+		 * @param e
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-44
+		 */
 		onDragStart(e) {
 			const data = {
 				id: this.item.id,
@@ -208,13 +539,12 @@ export default {
 			e.dataTransfer.effectAllowed = 'move'
 		},
 
+		/**
+		 * @param dateStr
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-38
+		 */
 		formatDate(dateStr) {
-			if (!dateStr) return ''
-			try {
-				return new Date(dateStr).toLocaleDateString('nl-NL', { month: 'short', day: 'numeric' })
-			} catch {
-				return dateStr
-			}
+			return formatLocaleDate(dateStr)
 		},
 	},
 }
@@ -222,6 +552,7 @@ export default {
 
 <style scoped>
 .pipeline-card {
+	position: relative;
 	background: var(--color-main-background);
 	border-radius: var(--border-radius);
 	padding: 8px;
@@ -237,7 +568,28 @@ export default {
 	border-left: 3px solid var(--color-error);
 }
 
-/* Compact flex-row: badge → title → meta → age/date */
+.pipeline-card__menu {
+	position: absolute;
+	top: 4px;
+	right: 4px;
+	z-index: 2;
+}
+
+.stale-badge {
+	font-size: 10px;
+	font-weight: 600;
+	padding: 0 5px;
+	border-radius: 3px;
+	flex-shrink: 0;
+	background: var(--color-warning, #f59e0b);
+	color: var(--color-primary-text, #fff);
+}
+
+.card-date__icon {
+	margin-right: 2px;
+	vertical-align: middle;
+}
+
 .pipeline-card__row {
 	display: flex;
 	align-items: center;
@@ -343,7 +695,6 @@ export default {
 	font-weight: 600;
 }
 
-/* Quick actions row */
 .pipeline-card__actions {
 	display: flex;
 	gap: 4px;
@@ -372,5 +723,11 @@ export default {
 
 .quick-select :deep(.vs__selected) {
 	font-size: 11px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.pipeline-card {
+		transition: none;
+	}
 }
 </style>

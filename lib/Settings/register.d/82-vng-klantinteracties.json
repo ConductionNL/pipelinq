@@ -1,0 +1,256 @@
+{
+  "components": {
+    "registers": {
+      "pipelinq": {
+        "schemas": [
+          "vngActor",
+          "vngKlantinteractieBinding"
+        ]
+      }
+    },
+    "schemas": {
+      "vngActor": {
+        "slug": "vngActor",
+        "title": "VNG Actor Bridge",
+        "icon": "CardAccountDetails",
+        "version": "1.0.0",
+        "summary": "Maps a VNG Klantinteracties actor UUID to a Nextcloud userId so actor references resolve to an assignee.",
+        "description": "The VNG Klantinteracties API (OpenKlant 2.x) identifies the party that handled or is assigned a klantcontact/internetaak via an `actor` UUID with an `actorType` (medewerker/geautomatiseerdeActor/organisatorischeEenheid). Pipelinq assigns work to a Nextcloud userId (`ticket.assignee` / `task.assigneeUserId`). This schema is the declarative bridge row between the two identity spaces; resolution is a single OpenRegister object read keyed on `actorUuid`, no service class. Config only (vng-klantinteracties-leaf D1/D4).",
+        "x-schema-org": "schema:Role",
+        "required": [
+          "actorUuid",
+          "actorType",
+          "nextcloudUserId",
+          "name"
+        ],
+        "properties": {
+          "actorUuid": {
+            "type": "string",
+            "description": "VNG actor UUID as referenced by the OpenConnector Klantinteracties endpoints.",
+            "maxLength": 64,
+            "facetable": true,
+            "title": "Actor UUID"
+          },
+          "actorType": {
+            "type": "string",
+            "enum": [
+              "medewerker",
+              "geautomatiseerdeActor",
+              "organisatorischeEenheid"
+            ],
+            "description": "VNG actor kind: medewerker (employee), geautomatiseerdeActor (automated/system actor) or organisatorischeEenheid (organisational unit).",
+            "facetable": true,
+            "title": "Actor Type"
+          },
+          "nextcloudUserId": {
+            "type": "string",
+            "description": "Nextcloud userId this actor resolves to; written onto ticket.assignee / task.assigneeUserId.",
+            "maxLength": 128,
+            "facetable": true,
+            "title": "Nextcloud User ID"
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable display name of the actor.",
+            "maxLength": 200,
+            "title": "Naam"
+          },
+          "actief": {
+            "type": "boolean",
+            "default": true,
+            "description": "Whether this actor bridge row is currently active and resolvable.",
+            "facetable": true,
+            "title": "Actief"
+          }
+        }
+      },
+      "vngKlantinteractieBinding": {
+        "slug": "vngKlantinteractieBinding",
+        "title": "VNG Klantinteracties Binding",
+        "icon": "Link",
+        "version": "1.0.0",
+        "summary": "Wires the pipelinq VNG leaf to the OpenConnector vng-klantinteracties-adapter Endpoint/Mapping/Rule slugs.",
+        "description": "Declarative binding config referencing the OpenConnector `vng-klantinteracties-adapter` change's frozen Endpoint and Rule slugs verbatim (as-built; see vng-klantinteracties-leaf design.md and its 'Slug corrections' note for the drift versus this leaf's original design assumptions). One Endpoint object per HTTP method exists on the adapter side (its `endpoint.method` property is single-valued, not a comma-list), so list/create/update/patch are separate slug fields here. No pipelinq PHP reads this schema directly today; it documents and freezes the cross-repo wiring for the gateway and for future pipelinq-side tooling.",
+        "x-schema-org": "schema:SoftwareApplication",
+        "required": [
+          "customerContactsListEndpoint",
+          "partiesListEndpoint",
+          "createCustomerContactEndpoint",
+          "avgBsnPolicyRule",
+          "referenceNumberRule"
+        ],
+        "properties": {
+          "customerContactsListEndpoint": {
+            "type": "string",
+            "description": "OpenConnector Endpoint slug for GET klantcontacten (adapter as-built: vng-klantcontacten-list).",
+            "maxLength": 128,
+            "title": "Klantcontacten List Endpoint"
+          },
+          "customerContactsCreateEndpoint": {
+            "type": "string",
+            "description": "OpenConnector Endpoint slug for POST klantcontacten (adapter as-built: vng-klantcontacten-create).",
+            "maxLength": 128,
+            "title": "Klantcontacten Create Endpoint"
+          },
+          "customerContactsUpdateEndpoint": {
+            "type": "string",
+            "description": "OpenConnector Endpoint slug for PUT klantcontacten (adapter as-built: vng-klantcontacten-update).",
+            "maxLength": 128,
+            "title": "Klantcontacten Update Endpoint"
+          },
+          "customerContactsPatchEndpoint": {
+            "type": "string",
+            "description": "OpenConnector Endpoint slug for PATCH klantcontacten (adapter as-built: vng-klantcontacten-patch).",
+            "maxLength": 128,
+            "title": "Klantcontacten Patch Endpoint"
+          },
+          "partiesListEndpoint": {
+            "type": "string",
+            "description": "OpenConnector Endpoint slug for GET partijen (adapter as-built: vng-partijen-list).",
+            "maxLength": 128,
+            "title": "Partijen List Endpoint"
+          },
+          "partiesCreateEndpoint": {
+            "type": "string",
+            "description": "OpenConnector Endpoint slug for POST partijen (adapter as-built: vng-partijen-create).",
+            "maxLength": 128,
+            "title": "Partijen Create Endpoint"
+          },
+          "involvedPartiesListEndpoint": {
+            "type": "string",
+            "description": "OpenConnector Endpoint slug for GET betrokkenen (adapter as-built: vng-betrokkenen-list).",
+            "maxLength": 128,
+            "title": "Betrokkenen List Endpoint"
+          },
+          "involvedPartiesCreateEndpoint": {
+            "type": "string",
+            "description": "OpenConnector Endpoint slug for POST betrokkenen (adapter as-built: vng-betrokkenen-create).",
+            "maxLength": 128,
+            "title": "Betrokkenen Create Endpoint"
+          },
+          "digitaleadressenListEndpoint": {
+            "type": "string",
+            "description": "OpenConnector Endpoint slug for GET digitaleadressen (adapter as-built: vng-digitaleadressen-list).",
+            "maxLength": 128,
+            "title": "Digitaleadressen List Endpoint"
+          },
+          "digitaleadressenCreateEndpoint": {
+            "type": "string",
+            "description": "OpenConnector Endpoint slug for POST digitaleadressen (adapter as-built: vng-digitaleadressen-create).",
+            "maxLength": 128,
+            "title": "Digitaleadressen Create Endpoint"
+          },
+          "createCustomerContactEndpoint": {
+            "type": "string",
+            "description": "OpenConnector Endpoint slug for the composite POST maak-klantcontact (adapter as-built: vng-maak-klantcontact).",
+            "maxLength": 128,
+            "title": "Maak Klantcontact Endpoint"
+          },
+          "createCustomerContactCompositeRule": {
+            "type": "string",
+            "description": "OpenConnector Rule slug that fans out the composite maak-klantcontact write (adapter as-built: vng-maak-klantcontact-composite).",
+            "maxLength": 128,
+            "title": "Maak Klantcontact Composite Rule"
+          },
+          "avgBsnPolicyRule": {
+            "type": "string",
+            "description": "OpenConnector Rule slug enforcing inbound AVG BSN hashing (before-timing; adapter as-built: vng-avg-bsn-policy). See vng-klantinteracties-leaf AVG BSN policy requirement.",
+            "maxLength": 128,
+            "title": "AVG BSN Policy Rule"
+          },
+          "avgBsnPolicyOutboundGuardRule": {
+            "type": "string",
+            "description": "OpenConnector Rule slug guarding outbound responses against raw-BSN reconstruction (after-timing; adapter as-built: vng-avg-bsn-policy-outbound-guard). Not in this leaf's original design — the adapter split AVG BSN handling into two Rule objects because its `rule.timing` property is single-valued.",
+            "maxLength": 128,
+            "title": "AVG BSN Policy Outbound Guard Rule"
+          },
+          "selfUrlHalRule": {
+            "type": "string",
+            "description": "OpenConnector Rule slug adding self-URL/HAL links to responses (adapter as-built: vng-selfurl-hal).",
+            "maxLength": 128,
+            "title": "Self URL HAL Rule"
+          },
+          "referenceNumberRule": {
+            "type": "string",
+            "description": "OpenConnector Rule slug generating the scheme-overridable UUIDv4 referentienummer (adapter as-built: vng-referentienummer).",
+            "maxLength": 128,
+            "title": "Referentienummer Rule"
+          },
+          "actief": {
+            "type": "boolean",
+            "default": true,
+            "description": "Whether this binding is the active VNG Klantinteracties wiring.",
+            "facetable": true,
+            "title": "Actief"
+          }
+        }
+      }
+    },
+    "objects": [
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "vngActor",
+          "slug": "actor-medewerker-kcc-annelies",
+          "id": "e5a1c0d0-vnga-4001-a001-00000000ac01"
+        },
+        "actorUuid": "00000000-0000-0000-0000-00000000ac01",
+        "actorType": "medewerker",
+        "nextcloudUserId": "annelies",
+        "name": "Annelies de Wit (KCC)",
+        "actief": true
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "vngActor",
+          "slug": "actor-systeem-pipelinq",
+          "id": "e5a1c0d0-vnga-4001-a001-00000000ac02"
+        },
+        "actorUuid": "00000000-0000-0000-0000-00000000ac02",
+        "actorType": "geautomatiseerdeActor",
+        "nextcloudUserId": "pipelinq",
+        "name": "Pipelinq systeemactor",
+        "actief": true
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "vngActor",
+          "slug": "actor-eenheid-vth",
+          "id": "e5a1c0d0-vnga-4001-a001-00000000ac03"
+        },
+        "actorUuid": "00000000-0000-0000-0000-00000000ac03",
+        "actorType": "organisatorischeEenheid",
+        "nextcloudUserId": "team-vth",
+        "name": "Afdeling VTH",
+        "actief": true
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "vngKlantinteractieBinding",
+          "slug": "binding-default",
+          "id": "e5a1c0d0-vngb-4001-a001-000000000001"
+        },
+        "customerContactsListEndpoint": "vng-klantcontacten-list",
+        "customerContactsCreateEndpoint": "vng-klantcontacten-create",
+        "customerContactsUpdateEndpoint": "vng-klantcontacten-update",
+        "customerContactsPatchEndpoint": "vng-klantcontacten-patch",
+        "partiesListEndpoint": "vng-partijen-list",
+        "partiesCreateEndpoint": "vng-partijen-create",
+        "involvedPartiesListEndpoint": "vng-betrokkenen-list",
+        "involvedPartiesCreateEndpoint": "vng-betrokkenen-create",
+        "digitaleadressenListEndpoint": "vng-digitaleadressen-list",
+        "digitaleadressenCreateEndpoint": "vng-digitaleadressen-create",
+        "createCustomerContactEndpoint": "vng-maak-klantcontact",
+        "createCustomerContactCompositeRule": "vng-maak-klantcontact-composite",
+        "avgBsnPolicyRule": "vng-avg-bsn-policy",
+        "avgBsnPolicyOutboundGuardRule": "vng-avg-bsn-policy-outbound-guard",
+        "selfUrlHalRule": "vng-selfurl-hal",
+        "referenceNumberRule": "vng-referentienummer",
+        "actief": true
+      }
+    ]
+  }
+}

@@ -1,0 +1,407 @@
+# Contactmomenten Specification
+
+**OpenSpec changes**: [vng-klantinteracties-leaf](../../changes/archive/2026-07-12-vng-klantinteracties-leaf/) _(archived 2026-07-12 — maps VNG `klantcontact` onto the `contactmoment` subtype of the unified `ticket` schema; see [vng-klantinteracties-leaf](../vng-klantinteracties-leaf/spec.md) for the VNG ↔ canonical contract)_
+
+## Purpose
+
+Contactmomenten (contact moments) provide the core CRUD, list/detail views, quick-log form, and client/request integration for logging every client interaction. This capability sits between `omnichannel-registratie` (channel-aware form adaptation) and `contactmomenten-rapportage` (reporting/KPIs), providing the foundational entity and UI layer that both depend on.
+
+**Standards**: VNG Klantinteracties (`Contactmoment`, `KlantContactmoment`, `ObjectContactmoment`), Schema.org (`CommunicateAction`)
+**Feature tier**: MVP (core CRUD, views, navigation), V1 (client timeline integration)
+
+## Data Model
+
+### Contactmoment Entity
+
+| Property | Type | Schema.org | VNG Mapping | Required | Default |
+|----------|------|------------|-------------|----------|---------|
+| `subject` | string | `schema:about` | Contactmoment.onderwerp | Yes | -- |
+| `summary` | string | `schema:description` | Contactmoment.tekst | No | -- |
+| `channel` | enum: telefoon, email, balie, chat, social, brief | `schema:instrument` | Contactmoment.kanaal | Yes | -- |
+| `outcome` | enum: afgehandeld, doorverbonden, terugbelverzoek, vervolgactie | `schema:result` | Contactmoment.resultaat | No | -- |
+| `client` | reference (UUID) | `schema:recipient` | KlantContactmoment -> Klant | No | -- |
+| `request` | reference (UUID) | `schema:object` | ObjectContactmoment -> Verzoek | No | -- |
+| `agent` | string (Nextcloud user UID) | `schema:agent` | Contactmoment.medewerker | Auto | current user |
+| `contactedAt` | datetime | `schema:startTime` | Contactmoment.registratiedatum | Auto | current timestamp |
+| `duration` | string (ISO 8601 duration) | `schema:duration` | Contactmoment.gespreksduur | No | -- |
+| `channelMetadata` | object | -- | -- | No | `{}` |
+| `notes` | string | `schema:text` | Contactmoment.notitie | No | -- |
+## Requirements
+
+---
+
+### Requirement: Contactmoment Entity Schema
+
+The system MUST define a Contactmoment entity in the OpenRegister `pipelinq` register with the properties defined in the Data Model above, with `@type` set to `schema:CommunicateAction`.
+
+**Feature tier**: MVP
+
+#### Scenario: Contactmoment schema exists in register
+@e2e exclude PHP repair step; covered by PHPUnit
+
+- **WHEN** the Pipelinq app is installed or updated
+- **THEN** the `pipelinq` register MUST contain a `contactmoment` schema
+- AND the schema MUST have `@type` set to `schema:CommunicateAction`
+- AND all required properties (`subject`, `channel`) MUST be defined with validation rules
+
+#### Scenario: Contactmoment validates required fields
+@e2e exclude server validation; covered by PHPUnit
+
+- **WHEN** a contactmoment is created without a `subject` or `channel`
+- **THEN** OpenRegister MUST reject the object with a validation error
+- AND the error MUST indicate which required fields are missing
+
+---
+
+### Requirement: Contactmoment Creation
+
+The system MUST allow creating contactmomenten via the OpenRegister API. The `agent` and `contactedAt` fields MUST be auto-populated.
+
+**Feature tier**: MVP
+
+#### Scenario: Create a contactmoment with minimal fields
+
+- **WHEN** a user creates a contactmoment with subject "Vraag over vergunning" and channel "telefoon"
+- **THEN** the system MUST create an OpenRegister object in the `pipelinq` register with the `contactmoment` schema
+- AND `agent` MUST be set to the current Nextcloud user UID
+- AND `contactedAt` MUST be set to the current timestamp
+- AND `channelMetadata` MUST default to `{}`
+
+#### Scenario: Create a contactmoment linked to a client and request
+@e2e exclude requires client and request seed data
+
+- **WHEN** a user creates a contactmoment with subject "Status update bouwvergunning", channel "email", client UUID "abc-123", and request UUID "def-456"
+- **THEN** the contactmoment MUST store both reference UUIDs
+- AND the contactmoment MUST appear in both the client's and the request's linked contactmomenten
+
+#### Scenario: Create a contactmoment with channel metadata
+@e2e exclude requires form interaction and data
+
+- **WHEN** a user creates a contactmoment with channel "telefoon" and channelMetadata `{"gespreksduur": "PT4M23S", "richting": "inkomend"}`
+- **THEN** the channelMetadata object MUST be stored as-is on the contactmoment
+- AND the `duration` field MUST accept ISO 8601 duration format
+
+---
+
+### Requirement: Contactmoment Update and Deletion
+
+The system MUST allow updating and deleting contactmomenten. Only the creating agent or an admin MUST be able to delete.
+
+**Feature tier**: MVP
+
+#### Scenario: Update a contactmoment summary
+@e2e exclude requires existing contactmoment record
+
+- **WHEN** a user updates an existing contactmoment to add summary "Burger vraagt naar status bouwvergunning, doorverwezen naar afdeling VTH"
+- **THEN** the summary field MUST be updated on the OpenRegister object
+- AND the modification timestamp MUST be updated
+
+#### Scenario: Delete a contactmoment
+@e2e exclude requires existing record
+
+- **WHEN** the agent who created a contactmoment deletes it
+- **THEN** the contactmoment MUST be removed from OpenRegister
+- AND it MUST no longer appear in client timelines, request views, or the contactmomenten list
+
+#### Scenario: Non-creator cannot delete
+@e2e exclude RBAC; covered by PHPUnit
+
+- **WHEN** a user who is not the creating agent and not an admin attempts to delete a contactmoment
+- **THEN** the system MUST reject the deletion with a permission error
+
+---
+
+### Requirement: Contactmomenten List View
+
+The system MUST provide a list view at `/contactmomenten` showing all contactmomenten with search, filter, sort, and pagination.
+
+**Feature tier**: MVP
+
+#### Scenario: Display contactmomenten list
+
+- **WHEN** a user navigates to `/contactmomenten`
+- **THEN** the system MUST display a table of contactmomenten with columns: subject, channel, client name, agent, contactedAt, outcome
+- AND results MUST be sorted by `contactedAt` descending (most recent first) by default
+- AND the list MUST show 20 items per page with pagination controls
+
+#### Scenario: Search contactmomenten
+@e2e exclude requires existing data
+
+- **WHEN** a user enters "vergunning" in the search field
+- **THEN** the system MUST filter contactmomenten where `subject` or `summary` contains "vergunning"
+- AND results MUST update as the user types (debounced at 300ms)
+
+#### Scenario: Filter by channel
+@e2e exclude requires data with multiple channels
+
+- **WHEN** a user selects filter channel "telefoon"
+- **THEN** only contactmomenten with `channel: "telefoon"` MUST be displayed
+- AND the filter MUST support multiple channel selection
+
+#### Scenario: Filter by date range
+@e2e exclude requires data with dates
+
+- **WHEN** a user selects a date range from "2024-01-01" to "2024-01-31"
+- **THEN** only contactmomenten with `contactedAt` within that range MUST be displayed
+
+#### Scenario: Filter by agent
+@e2e exclude requires data with multiple agents
+
+- **WHEN** a user selects filter agent "sales1"
+- **THEN** only contactmomenten where `agent` is "sales1" MUST be displayed
+
+---
+
+### Requirement: Contactmoment Detail View
+
+The system MUST provide a detail view for individual contactmomenten showing all fields and linked entities.
+
+**Feature tier**: MVP
+
+#### Scenario: Display contactmoment details
+@e2e exclude requires existing record
+
+- **WHEN** a user clicks on a contactmoment in the list view
+- **THEN** the system MUST navigate to the contactmoment detail view
+- AND the view MUST display: subject, summary, channel (with icon), outcome, agent (with avatar), contactedAt (formatted), duration, notes, and channelMetadata
+- AND if a client is linked, the client name MUST be shown as a clickable link to the client detail view
+- AND if a request is linked, the request title MUST be shown as a clickable link to the request detail view
+
+#### Scenario: Edit contactmoment from detail view
+@e2e exclude requires existing record
+
+- **WHEN** a user clicks "Edit" on the contactmoment detail view
+- **THEN** the view MUST switch to edit mode with all fields editable
+- AND the user MUST be able to save or cancel the edit
+
+---
+
+### Requirement: Quick-Log Form
+
+The system MUST provide a reusable quick-log form component for creating contactmomenten with optional pre-filled context.
+
+**Feature tier**: MVP
+
+#### Scenario: Quick-log from contactmomenten list
+
+- **WHEN** a user clicks "Nieuw contactmoment" on the contactmomenten list view
+- **THEN** the quick-log form MUST open with no pre-filled fields
+- AND the form MUST show: subject (required), channel (required), client (optional, with search), request (optional, with search), summary, outcome, notes
+
+#### Scenario: Quick-log from client detail
+@e2e exclude requires existing client
+
+- **WHEN** a user clicks "Log contactmoment" on a client detail view for client "Jan de Vries"
+- **THEN** the quick-log form MUST open with the client field pre-filled with "Jan de Vries" (UUID)
+- AND the user MUST be able to change the pre-filled client if needed
+
+#### Scenario: Quick-log from request detail
+@e2e exclude requires existing request
+
+- **WHEN** a user clicks "Log contactmoment" on a request detail view for request "Bouwvergunning aanvraag" linked to client "Gemeente Utrecht"
+- **THEN** the quick-log form MUST open with both the request and client fields pre-filled
+- AND the user MUST be able to change the pre-filled values if needed
+
+#### Scenario: Quick-log saves and refreshes context
+@e2e exclude requires existing entity
+
+- **WHEN** a user submits the quick-log form from a client detail view
+- **THEN** the contactmoment MUST be created in OpenRegister
+- AND the client detail timeline MUST refresh to show the new contactmoment
+- AND a success toast notification MUST be displayed
+
+---
+
+### Requirement: Contactmomenten Pinia Store
+
+The system MUST provide a Pinia store that handles all contactmoment CRUD operations via the OpenRegister API. Uses `createObjectStore` from `@conduction/nextcloud-vue` with the `contactmoment` object type registered in `initializeStores()`.
+
+**Feature tier**: MVP
+
+#### Scenario: Store fetches contactmomenten list
+@e2e exclude Pinia store unit test; covered by Jest
+
+- **WHEN** the contactmomenten list view mounts
+- **THEN** the store MUST call the OpenRegister API with the `pipelinq` register and `contactmoment` schema
+- AND the store MUST support pagination parameters (page, limit)
+- AND the store MUST support filter parameters (channel, agent, dateFrom, dateTo, search)
+
+#### Scenario: Store creates a contactmoment
+@e2e exclude Pinia store unit test; covered by Jest
+
+- **WHEN** the quick-log form is submitted
+- **THEN** the store MUST POST to the OpenRegister API to create the object
+- AND on success, the store MUST add the new contactmoment to the local state
+- AND on failure, the store MUST surface the error message to the form
+
+#### Scenario: Store fetches contactmomenten for a specific client
+@e2e exclude Pinia store unit test; covered by Jest
+
+- **WHEN** the client detail view requests contactmomenten for client UUID "abc-123"
+- **THEN** the store MUST query OpenRegister with filter `client=abc-123`
+- AND the results MUST be available as a computed property filtered by client ID
+
+---
+
+### Requirement: Navigation Integration
+
+The system MUST add "Contactmomenten" as a top-level navigation item in the Pipelinq sidebar.
+
+**Feature tier**: MVP
+
+#### Scenario: Navigation item present
+
+- **WHEN** a user opens Pipelinq
+- **THEN** the sidebar MUST show "Contactmomenten" as a navigation item with a phone/message icon
+- AND clicking it MUST navigate to `/contactmomenten`
+
+#### Scenario: Navigation item shows count badge
+
+- **WHEN** there are unresolved contactmomenten (no outcome set) assigned to the current user today
+- **THEN** the navigation item MUST display a count badge with the number of unresolved items
+
+---
+
+### Requirement: ContactmomentService Backend
+
+The system MUST provide a `ContactmomentService` PHP service that handles permission-checked deletion of contactmomenten.
+
+**Feature tier**: MVP
+
+#### Scenario: Delete by creating agent
+@e2e exclude RBAC; covered by PHPUnit
+
+- **WHEN** the agent who created a contactmoment requests deletion
+- **THEN** the service MUST delete the contactmoment from OpenRegister
+- AND return success
+
+#### Scenario: Delete by admin
+@e2e exclude RBAC; covered by PHPUnit
+
+- **WHEN** an admin user requests deletion of any contactmoment
+- **THEN** the service MUST delete the contactmoment regardless of agent
+- AND return success
+
+#### Scenario: Delete by non-creator non-admin rejected
+@e2e exclude RBAC; covered by PHPUnit
+
+- **WHEN** a user who is not the creating agent and not an admin requests deletion
+- **THEN** the service MUST throw an exception with HTTP 403
+- AND the contactmoment MUST NOT be deleted
+
+---
+
+### Requirement: ContactmomentController API
+
+The system MUST provide a `ContactmomentController` with a delete endpoint at `DELETE /api/contactmomenten/{id}`.
+
+**Feature tier**: MVP
+
+#### Scenario: Delete endpoint returns 200 on success
+@e2e exclude API contract; covered by Newman
+
+- **WHEN** an authorized user calls `DELETE /api/contactmomenten/{id}`
+- **THEN** the controller MUST return HTTP 200 with `{ "success": true }`
+
+#### Scenario: Delete endpoint returns 403 on unauthorized
+@e2e exclude API auth; covered by Newman
+
+- **WHEN** a non-authorized user calls `DELETE /api/contactmomenten/{id}`
+- **THEN** the controller MUST return HTTP 403 with error message
+
+### Requirement: Contact communications and sync — documented operations
+
+The contact linkage, contactmoment service and email sync implemented in this app MUST provide the operations enumerated in this change's tasks.md (for example `getLinkedContactsUids`, `getObjectService`, `buildEmailLinkData`, `extractDomain`, `getLastSyncTime`, `getSyncAccounts`). Each listed method realises an observable part of contact linkage, contactmoment service and email sync and MUST behave as implemented in the current codebase.
+
+**Feature tier**: V1
+
+#### Scenario: Documented operations are available
+
+@e2e exclude backend service/controller method contract; covered by PHPUnit
+
+- GIVEN the backend service/controller is loaded
+- WHEN a caller invokes one of the documented operations for contact linkage, contactmoment service and email sync
+- THEN the operation MUST execute and return a result consistent with the current implementation
+
+---
+
+### Requirement: Contact communications and sync — results derived from current CRM state
+
+Operations for contact linkage, contactmoment service and email sync MUST read their inputs from the relevant CRM entities/configuration and compute results from that live state (no hard-coded or stubbed responses). Derivations such as formatting, aggregation, filtering and validation MUST reflect the data present at call time.
+
+**Feature tier**: V1
+
+#### Scenario: Results reflect live state
+
+@e2e exclude component/store method contract; page surface covered by real-UI spec-coverage tests + Vitest unit tests
+
+- GIVEN CRM data backing contact linkage, contactmoment service and email sync
+- WHEN a documented operation runs
+- THEN its output MUST be derived from that data
+- AND it MUST change when the underlying data changes
+
+---
+
+### Requirement: Contact communications and sync — defensive handling of absent or invalid input
+
+Operations for contact linkage, contactmoment service and email sync MUST tolerate missing, empty, or malformed input without throwing unhandled errors — returning empty or default results, or surfacing a validation outcome as implemented, rather than crashing the surrounding flow.
+
+**Feature tier**: V1
+
+#### Scenario: Missing input does not crash the flow
+
+@e2e exclude component/store method contract; page surface covered by real-UI spec-coverage tests + Vitest unit tests
+
+- GIVEN an operation for contact linkage, contactmoment service and email sync is called with absent or invalid input
+- WHEN it executes
+- THEN it MUST return a safe default or a validation result
+- AND it MUST NOT raise an unhandled exception
+
+### Requirement: Contact 360 UI — documented operations
+
+The contact detail, relationships and quick-log screens implemented in this app MUST provide the operations enumerated in this change's tasks.md (for example `doSearch`, `importContact`, `onSearch`, `closeDialog`, `confirmRemove`, `editRelationship`). Each listed method realises an observable part of contact detail, relationships and quick-log screens and MUST behave as implemented in the current codebase.
+
+**Feature tier**: V1
+
+#### Scenario: Documented operations are available
+
+@e2e exclude component/store method contract; page surface covered by real-UI spec-coverage tests + Vitest unit tests
+
+- GIVEN the frontend component/store is loaded
+- WHEN a caller invokes one of the documented operations for contact detail, relationships and quick-log screens
+- THEN the operation MUST execute and return a result consistent with the current implementation
+
+---
+
+### Requirement: Contact 360 UI — results derived from current CRM state
+
+Operations for contact detail, relationships and quick-log screens MUST read their inputs from the relevant CRM entities/configuration and compute results from that live state (no hard-coded or stubbed responses). Derivations such as formatting, aggregation, filtering and validation MUST reflect the data present at call time.
+
+**Feature tier**: V1
+
+#### Scenario: Results reflect live state
+
+@e2e exclude component/store method contract; page surface covered by real-UI spec-coverage tests + Vitest unit tests
+
+- GIVEN CRM data backing contact detail, relationships and quick-log screens
+- WHEN a documented operation runs
+- THEN its output MUST be derived from that data
+- AND it MUST change when the underlying data changes
+
+---
+
+### Requirement: Contact 360 UI — defensive handling of absent or invalid input
+
+Operations for contact detail, relationships and quick-log screens MUST tolerate missing, empty, or malformed input without throwing unhandled errors — returning empty or default results, or surfacing a validation outcome as implemented, rather than crashing the surrounding flow.
+
+**Feature tier**: V1
+
+#### Scenario: Missing input does not crash the flow
+
+@e2e exclude component/store method contract; page surface covered by real-UI spec-coverage tests + Vitest unit tests
+
+- GIVEN an operation for contact detail, relationships and quick-log screens is called with absent or invalid input
+- WHEN it executes
+- THEN it MUST return a safe default or a validation result
+- AND it MUST NOT raise an unhandled exception
+

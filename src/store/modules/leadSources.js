@@ -1,12 +1,18 @@
+import { generateUrl } from '@nextcloud/router'
 import { defineStore } from 'pinia'
 
-const API_BASE = '/apps/pipelinq/api/settings/lead-sources'
+const API_BASE = generateUrl('/apps/pipelinq/api/settings/lead-sources')
 
-const headers = () => ({
-	'Content-Type': 'application/json',
-	requesttoken: OC.requestToken,
-	'OCS-APIREQUEST': 'true',
-})
+/**
+ *
+ */
+function headers() {
+	return {
+		'Content-Type': 'application/json',
+		requesttoken: OC.requestToken,
+		'OCS-APIREQUEST': 'true',
+	}
+}
 
 export const useLeadSourcesStore = defineStore('leadSources', {
 	state: () => ({
@@ -18,12 +24,20 @@ export const useLeadSourcesStore = defineStore('leadSources', {
 		sourceNames: (state) => state.tags.map((t) => t.name),
 	},
 	actions: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-29
+		 */
 		async fetchSources() {
 			this.loading = true
 			this.error = null
 
 			try {
 				const response = await fetch(API_BASE, { headers: headers() })
+				if (!response.ok) {
+					throw new Error(
+						`Failed to fetch lead sources (${response.status})`,
+					)
+				}
 				const data = await response.json()
 				this.tags = data.tags || []
 			} catch (error) {
@@ -34,6 +48,10 @@ export const useLeadSourcesStore = defineStore('leadSources', {
 			}
 		},
 
+		/**
+		 * @param name
+		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-28
+		 */
 		async addSource(name) {
 			try {
 				const response = await fetch(API_BASE, {
@@ -41,6 +59,9 @@ export const useLeadSourcesStore = defineStore('leadSources', {
 					headers: headers(),
 					body: JSON.stringify({ name }),
 				})
+				if (!response.ok) {
+					throw new Error(`Failed to add source (${response.status})`)
+				}
 				const data = await response.json()
 
 				if (!data.success) {
@@ -55,12 +76,19 @@ export const useLeadSourcesStore = defineStore('leadSources', {
 			}
 		},
 
+		/**
+		 * @param id
+		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-30
+		 */
 		async removeSource(id) {
 			try {
 				const response = await fetch(`${API_BASE}/${id}`, {
 					method: 'DELETE',
 					headers: headers(),
 				})
+				if (!response.ok) {
+					throw new Error(`Failed to remove source (${response.status})`)
+				}
 				const data = await response.json()
 
 				if (!data.success) {
@@ -74,6 +102,11 @@ export const useLeadSourcesStore = defineStore('leadSources', {
 			}
 		},
 
+		/**
+		 * @param id
+		 * @param name
+		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-31
+		 */
 		async renameSource(id, name) {
 			try {
 				const response = await fetch(`${API_BASE}/${id}`, {
@@ -81,6 +114,9 @@ export const useLeadSourcesStore = defineStore('leadSources', {
 					headers: headers(),
 					body: JSON.stringify({ name }),
 				})
+				if (!response.ok) {
+					throw new Error(`Failed to rename source (${response.status})`)
+				}
 				const data = await response.json()
 
 				if (!data.success) {

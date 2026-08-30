@@ -1,0 +1,1352 @@
+{
+  "components": {
+    "registers": {
+      "pipelinq": {
+        "schemas": [
+          "segment",
+          "campaignTemplate",
+          "blast",
+          "blastDelivery",
+          "consentRecord",
+          "attributionLink"
+        ]
+      }
+    },
+    "schemas": {
+      "segment": {
+        "slug": "segment",
+        "title": "Segment",
+        "icon": "AccountMultipleOutline",
+        "version": "1.0.0",
+        "summary": "A stored rule-based query that selects Contacts or Customers for marketing blasts.",
+        "description": "A Segment is a saved query, not a materialised list. The rule tree (AND/OR with leaf {field, operator, value}) is evaluated by SegmentService against the entityType ('contact' or 'customer'). estimatedSize is a cached preview count refreshed on save. See ADR-000 and the marketing-segmentation-and-blast chain (member 02 owns the evaluator).",
+        "x-schema-org": "schema:DefinedTerm",
+        "required": [
+          "name",
+          "rules",
+          "entityType"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Display name of the segment.",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "description": {
+            "type": "string",
+            "description": "Free-text description of the segment's purpose.",
+            "title": "Description"
+          },
+          "rules": {
+            "type": "object",
+            "description": "Rule tree as JSON: {type:'AND'|'OR', children:[...]} where each child is either another node or a leaf {field, operator, value}. Stored as a query; never materialised.",
+            "title": "Rules"
+          },
+          "entityType": {
+            "type": "string",
+            "enum": [
+              "contact",
+              "customer"
+            ],
+            "description": "Which entity collection the rules are evaluated against.",
+            "title": "Entity Type"
+          },
+          "estimatedSize": {
+            "type": "integer",
+            "description": "Cached count of matching entities, refreshed on save.",
+            "default": 0,
+            "title": "Estimated Size"
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "Nextcloud user id that created the segment.",
+            "title": "Created By"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Creation timestamp (UTC).",
+            "title": "Created At"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Last update timestamp (UTC).",
+            "title": "Updated At"
+          }
+        }
+      },
+      "campaignTemplate": {
+        "slug": "campaignTemplate",
+        "title": "Campaign Template",
+        "icon": "EmailEditOutline",
+        "version": "1.0.0",
+        "summary": "A reusable email or SMS template with variable substitution markers and compliance-required tokens.",
+        "description": "CampaignTemplate stores the channel-specific body (HTML + text for email, plain text for SMS), sender identity, and the variable list. Email templates MUST embed {{unsubscribe_link}} and a physical-address footer; SMS templates have no footer requirement. See marketing-segmentation-and-blast member 03 (compliance) for enforcement.",
+        "x-schema-org": "schema:CreativeWork",
+        "required": [
+          "name",
+          "channel"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Display name of the template.",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "channel": {
+            "type": "string",
+            "enum": [
+              "email",
+              "sms"
+            ],
+            "description": "Delivery channel.",
+            "title": "Channel"
+          },
+          "subject": {
+            "type": "string",
+            "description": "Email subject line (ignored for SMS).",
+            "title": "Subject"
+          },
+          "bodyHtml": {
+            "type": "string",
+            "description": "HTML body for email channels (with {{variable}} placeholders).",
+            "title": "Body HTML"
+          },
+          "bodyText": {
+            "type": "string",
+            "description": "Plain-text body (email fallback or SMS body).",
+            "title": "Body Text"
+          },
+          "senderName": {
+            "type": "string",
+            "description": "From-name used on outbound.",
+            "title": "Sender Name"
+          },
+          "senderEmail": {
+            "type": "string",
+            "format": "email",
+            "description": "From-address for email (ignored for SMS).",
+            "title": "Sender Email"
+          },
+          "replyTo": {
+            "type": "string",
+            "format": "email",
+            "description": "Reply-To address for email.",
+            "title": "Reply To"
+          },
+          "footerOverride": {
+            "type": "string",
+            "description": "Optional override of the default compliance footer (physical address + unsubscribe block).",
+            "title": "Footer Override"
+          },
+          "variables": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Declared variable names referenced in subject/body (e.g. ['first_name','unsubscribe_link']).",
+            "title": "Variables"
+          },
+          "language": {
+            "type": "string",
+            "default": "nl",
+            "description": "Default language code for rendering (e.g. 'nl', 'en').",
+            "title": "Language"
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "Nextcloud user id that created the template.",
+            "title": "Created By"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Timestamp when created occurred."
+          }
+        }
+      },
+      "blast": {
+        "slug": "blast",
+        "title": "Blast",
+        "icon": "BullhornOutline",
+        "version": "1.0.0",
+        "summary": "One outbound campaign execution against a Segment using a CampaignTemplate, with optional A/B variant pairing.",
+        "description": "A Blast is one campaign send. It binds a Segment (audience) to a CampaignTemplate (content) for a single channel, with optional scheduling, A/B split, and rolling delivery totals. abVariantOf links a child variant to its parent A blast; abSplitPercent on the parent records the audience split (0-100). totals is an aggregated counter map updated by BlastDelivery state changes (member 04). See ADR-000.",
+        "x-schema-org": "schema:CommunicateAction",
+        "required": [
+          "name",
+          "segmentId",
+          "templateId",
+          "channel"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Display name of the blast.",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "segmentId": {
+            "type": "string",
+            "description": "FK (UUID) to Segment.",
+            "title": "Segment ID"
+          },
+          "templateId": {
+            "type": "string",
+            "description": "FK (UUID) to CampaignTemplate.",
+            "title": "Template ID"
+          },
+          "channel": {
+            "type": "string",
+            "enum": [
+              "email",
+              "sms"
+            ],
+            "description": "Delivery channel (must match template channel).",
+            "title": "Channel"
+          },
+          "scheduledFor": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the blast should start (null = immediate).",
+            "title": "Scheduled For"
+          },
+          "sentAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the blast was actually dispatched.",
+            "title": "Sent At"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "scheduled",
+              "sending",
+              "sent",
+              "paused",
+              "failed",
+              "cancelled"
+            ],
+            "default": "draft",
+            "description": "Lifecycle status.",
+            "title": "Status"
+          },
+          "abVariantOf": {
+            "type": "string",
+            "description": "UUID of the parent Blast if this is variant B; null on parent (variant A).",
+            "title": "AB Variant Of"
+          },
+          "abSplitPercent": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100,
+            "description": "Audience percentage receiving variant A on the parent (variant B receives 100 - abSplitPercent).",
+            "title": "AB Split Percent"
+          },
+          "totals": {
+            "type": "object",
+            "description": "Aggregated counters: {queued, sent, delivered, bounced, opened, clicked, unsubscribed, complained}.",
+            "properties": {
+              "queued": {
+                "type": "integer",
+                "default": 0,
+                "title": "Queued",
+                "description": "Queued for this record."
+              },
+              "sent": {
+                "type": "integer",
+                "default": 0,
+                "title": "Sent",
+                "description": "Sent for this record."
+              },
+              "delivered": {
+                "type": "integer",
+                "default": 0,
+                "title": "Delivered",
+                "description": "Delivered for this record."
+              },
+              "bounced": {
+                "type": "integer",
+                "default": 0,
+                "title": "Bounced",
+                "description": "Bounced for this record."
+              },
+              "opened": {
+                "type": "integer",
+                "default": 0,
+                "title": "Opened",
+                "description": "Opened for this record."
+              },
+              "clicked": {
+                "type": "integer",
+                "default": 0,
+                "title": "Clicked",
+                "description": "Clicked for this record."
+              },
+              "unsubscribed": {
+                "type": "integer",
+                "default": 0,
+                "title": "Unsubscribed",
+                "description": "Unsubscribed for this record."
+              },
+              "complained": {
+                "type": "integer",
+                "default": 0,
+                "title": "Complained",
+                "description": "Complained for this record."
+              }
+            },
+            "title": "Totals"
+          },
+          "connectorSourceId": {
+            "type": "string",
+            "description": "Optional OpenConnector source UUID used to dispatch this blast (email/SMS provider).",
+            "title": "Connector Source ID"
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "Nextcloud user id that created the blast.",
+            "title": "Created By"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Timestamp when created occurred."
+          }
+        }
+      },
+      "blastDelivery": {
+        "slug": "blastDelivery",
+        "title": "Blast Delivery",
+        "icon": "EmailFastOutline",
+        "version": "1.0.0",
+        "summary": "One row per (Blast, recipient) — tracks per-recipient delivery, open, click, bounce, and unsubscribe events.",
+        "description": "BlastDelivery is the per-recipient telemetry record for a Blast. status transitions queued → sent → delivered → opened/clicked/bounced/unsubscribed; providerId is the upstream provider's message id (e.g. SendGrid 'sg-...') used for webhook correlation. clickedUrls collects every URL the recipient clicked with utm parameters preserved. firstClickAt records the earliest click. See marketing-segmentation-and-blast member 05 (webhook ingest) and member 04 (totals roll-up).",
+        "x-schema-org": "schema:DeliveryEvent",
+        "required": [
+          "blastId",
+          "status"
+        ],
+        "properties": {
+          "blastId": {
+            "type": "string",
+            "description": "FK (UUID) to Blast.",
+            "title": "Blast ID"
+          },
+          "contactId": {
+            "type": "string",
+            "description": "FK to Contact (UUID) — recipient identity.",
+            "title": "Contact ID"
+          },
+          "email": {
+            "type": "string",
+            "description": "Resolved recipient email at send time (snapshot; may differ from contact's current email).",
+            "title": "Email"
+          },
+          "phone": {
+            "type": "string",
+            "description": "Resolved recipient phone at send time (SMS).",
+            "title": "Phone"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "sent",
+              "delivered",
+              "opened",
+              "clicked",
+              "bounced",
+              "unsubscribed",
+              "complained",
+              "failed"
+            ],
+            "default": "queued",
+            "description": "Latest delivery state.",
+            "title": "Status"
+          },
+          "sentAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the provider accepted the message.",
+            "title": "Sent At"
+          },
+          "providerId": {
+            "type": "string",
+            "description": "Provider-side message identifier (e.g. SendGrid 'sg-abc123xyz...') used for webhook lookups.",
+            "title": "Provider ID"
+          },
+          "openedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "First open timestamp.",
+            "title": "Opened At"
+          },
+          "firstClickAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "First click timestamp.",
+            "title": "First Click At"
+          },
+          "clickedUrls": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uri"
+            },
+            "description": "URLs the recipient clicked (with utm_campaign / utm_source preserved).",
+            "title": "Clicked Urls"
+          },
+          "bouncedAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Bounced At",
+            "description": "Timestamp when bounced occurred."
+          },
+          "bounceType": {
+            "type": "string",
+            "enum": [
+              "soft",
+              "hard"
+            ],
+            "description": "Bounce classification used by ConsentRecord soft-bounce counter.",
+            "title": "Bounce Type"
+          },
+          "unsubscribedAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Unsubscribed At",
+            "description": "Timestamp when unsubscribed occurred."
+          }
+        }
+      },
+      "consentRecord": {
+        "slug": "consentRecord",
+        "title": "Consent Record",
+        "icon": "ShieldCheckOutline",
+        "version": "1.0.0",
+        "summary": "Per-contact-per-channel marketing consent (GDPR Art. 6 lawful basis + withdrawal state).",
+        "description": "ConsentRecord is the source of truth for whether a Contact may be sent marketing on a given channel. lawfulBasis records the GDPR Art. 6 basis used at capture (consent | legitimate-interest | contract); consentSource describes the capture mechanism (web-form, double-opt-in, import, etc.). withdrawnAt + withdrawnReason close the consent. softBounceCount counts consecutive soft bounces (5 triggers automatic withdrawal — member 03 owns the rule). One record per (contactId, channel).",
+        "x-schema-org": "schema:Permit",
+        "required": [
+          "contactId",
+          "channel",
+          "lawfulBasis"
+        ],
+        "properties": {
+          "contactId": {
+            "type": "string",
+            "description": "FK to Contact (UUID).",
+            "title": "Contact ID"
+          },
+          "channel": {
+            "type": "string",
+            "enum": [
+              "email",
+              "sms"
+            ],
+            "description": "Channel the consent applies to.",
+            "title": "Channel"
+          },
+          "lawfulBasis": {
+            "type": "string",
+            "enum": [
+              "consent",
+              "legitimate-interest",
+              "contract"
+            ],
+            "description": "GDPR Art. 6 lawful basis at capture.",
+            "title": "Lawful Basis"
+          },
+          "consentSource": {
+            "type": "string",
+            "description": "Capture mechanism (e.g. 'web-form-newsletter', 'double-opt-in-2026-q2', 'import-legacy', 'sales-call-2026-03-04').",
+            "title": "Consent Source"
+          },
+          "consentedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When consent was captured.",
+            "title": "Consented At"
+          },
+          "withdrawnAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When consent was withdrawn (null = still active).",
+            "title": "Withdrawn At"
+          },
+          "withdrawnReason": {
+            "type": "string",
+            "enum": [
+              "user-unsubscribed",
+              "bounce-hard",
+              "bounce-soft-x5",
+              "admin-removed",
+              "complaint"
+            ],
+            "description": "Why consent ended.",
+            "title": "Withdrawn Reason"
+          },
+          "softBounceCount": {
+            "type": "integer",
+            "default": 0,
+            "description": "Consecutive soft-bounce counter; resets on successful delivery, 5 triggers automatic withdrawal.",
+            "title": "Soft Bounce Count"
+          }
+        }
+      },
+      "attributionLink": {
+        "slug": "attributionLink",
+        "title": "Attribution Link",
+        "icon": "ChartTimelineVariantShimmer",
+        "version": "1.0.0",
+        "summary": "Revenue attribution: a click on a Blast that preceded a closed-won Deal.",
+        "description": "AttributionLink ties one BlastDelivery first-click event to a closed-won Deal (lead with stage='closed-won' in Pipelinq). Created by the attribution job when a deal closes within the attribution window after the blast click. attributedValue is the EUR value attributed to the blast (typically the deal value, but may be weighted by the model in member 04).",
+        "x-schema-org": "schema:InteractAction",
+        "required": [
+          "blastId",
+          "contactId",
+          "dealId"
+        ],
+        "properties": {
+          "blastId": {
+            "type": "string",
+            "description": "FK to Blast (UUID).",
+            "title": "Blast ID"
+          },
+          "contactId": {
+            "type": "string",
+            "description": "FK to Contact (UUID).",
+            "title": "Contact ID"
+          },
+          "dealId": {
+            "type": "string",
+            "description": "FK to Lead (UUID) — the closed-won deal being attributed.",
+            "title": "Deal ID"
+          },
+          "firstClickAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp of the click that initiated the attribution chain.",
+            "title": "First Click At"
+          },
+          "closedWonAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp the deal moved to closed-won.",
+            "title": "Closed Won At"
+          },
+          "attributedValue": {
+            "type": "number",
+            "description": "EUR value attributed to the blast.",
+            "title": "Attributed Value"
+          },
+          "currency": {
+            "type": "string",
+            "default": "EUR",
+            "description": "ISO 4217 currency code (EUR for the seed data).",
+            "title": "Currency"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "Timestamp when created occurred."
+          }
+        }
+      }
+    },
+    "objects": [
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "segment",
+          "slug": "segment-gemeente-contact-blast"
+        },
+        "name": "Gemeente Contact Blast",
+        "description": "Contactpersonen bij Nederlandse gemeenten met sector 'overheid' — gebruikt voor de Q4 Gemeente Outreach blasts (A/B).",
+        "entityType": "contact",
+        "rules": {
+          "type": "AND",
+          "children": [
+            {
+              "field": "sector",
+              "operator": "equals",
+              "value": "overheid"
+            },
+            {
+              "field": "country",
+              "operator": "equals",
+              "value": "NL"
+            },
+            {
+              "type": "OR",
+              "children": [
+                {
+                  "field": "organisationType",
+                  "operator": "equals",
+                  "value": "gemeente"
+                },
+                {
+                  "field": "organisationType",
+                  "operator": "equals",
+                  "value": "provincie"
+                }
+              ]
+            }
+          ]
+        },
+        "estimatedSize": 248,
+        "createdBy": "admin",
+        "createdAt": "2026-09-15T08:30:00+00:00",
+        "updatedAt": "2026-10-02T14:12:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "segment",
+          "slug": "segment-enterprise-high-value"
+        },
+        "name": "Enterprise High-Value",
+        "description": "Klanten met een jaarcontract > EUR 50.000 én > 250 medewerkers — doelgroep voor account-based retention.",
+        "entityType": "customer",
+        "rules": {
+          "type": "AND",
+          "children": [
+            {
+              "field": "annualContractValue",
+              "operator": "greaterThan",
+              "value": 50000
+            },
+            {
+              "field": "employeeCount",
+              "operator": "greaterThan",
+              "value": 250
+            },
+            {
+              "field": "lifecycleStage",
+              "operator": "in",
+              "value": [
+                "customer",
+                "renewal"
+              ]
+            }
+          ]
+        },
+        "estimatedSize": 37,
+        "createdBy": "admin",
+        "createdAt": "2026-09-18T09:45:00+00:00",
+        "updatedAt": "2026-10-12T11:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "segment",
+          "slug": "segment-inactive-leads"
+        },
+        "name": "Inactive Leads",
+        "description": "Leads zonder contactmoment in de afgelopen 90 dagen die nog geen 'closed' status hebben — voor de win-back campagne.",
+        "entityType": "contact",
+        "rules": {
+          "type": "AND",
+          "children": [
+            {
+              "field": "leadStage",
+              "operator": "notIn",
+              "value": [
+                "closed-won",
+                "closed-lost"
+              ]
+            },
+            {
+              "field": "lastContactMoment",
+              "operator": "before",
+              "value": "2026-07-09"
+            },
+            {
+              "type": "OR",
+              "children": [
+                {
+                  "field": "leadScore",
+                  "operator": "greaterThan",
+                  "value": 40
+                },
+                {
+                  "field": "source",
+                  "operator": "equals",
+                  "value": "web-form"
+                }
+              ]
+            }
+          ]
+        },
+        "estimatedSize": 412,
+        "createdBy": "marketing@example.com",
+        "createdAt": "2026-09-22T13:20:00+00:00",
+        "updatedAt": "2026-10-07T16:48:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "segment",
+          "slug": "segment-retention-newsletter"
+        },
+        "name": "Retention Newsletter",
+        "description": "Bestaande klanten die zich hebben ingeschreven voor de maandelijkse productnieuwsbrief.",
+        "entityType": "customer",
+        "rules": {
+          "type": "AND",
+          "children": [
+            {
+              "field": "newsletterOptIn",
+              "operator": "equals",
+              "value": true
+            },
+            {
+              "field": "lifecycleStage",
+              "operator": "equals",
+              "value": "customer"
+            },
+            {
+              "field": "churnRisk",
+              "operator": "lessThan",
+              "value": 0.5
+            }
+          ]
+        },
+        "estimatedSize": 1342,
+        "createdBy": "marketing@example.com",
+        "createdAt": "2026-09-25T10:00:00+00:00",
+        "updatedAt": "2026-10-15T09:30:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "segment",
+          "slug": "segment-technical-leads"
+        },
+        "name": "Technical Leads",
+        "description": "Contacten met een technische rol (CTO/architect/developer) bij prospect-organisaties — doelgroep voor de developer-onboarding serie.",
+        "entityType": "contact",
+        "rules": {
+          "type": "OR",
+          "children": [
+            {
+              "type": "AND",
+              "children": [
+                {
+                  "field": "jobTitle",
+                  "operator": "contains",
+                  "value": "CTO"
+                },
+                {
+                  "field": "lifecycleStage",
+                  "operator": "equals",
+                  "value": "prospect"
+                }
+              ]
+            },
+            {
+              "type": "AND",
+              "children": [
+                {
+                  "field": "jobTitle",
+                  "operator": "containsAny",
+                  "value": [
+                    "architect",
+                    "developer",
+                    "engineer"
+                  ]
+                },
+                {
+                  "field": "leadScore",
+                  "operator": "greaterThan",
+                  "value": 25
+                }
+              ]
+            }
+          ]
+        },
+        "estimatedSize": 186,
+        "createdBy": "marketing@example.com",
+        "createdAt": "2026-09-28T12:15:00+00:00",
+        "updatedAt": "2026-10-18T08:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "campaignTemplate",
+          "slug": "template-q4-product-launch"
+        },
+        "name": "Q4 Product Launch",
+        "channel": "email",
+        "subject": "Nieuw in Q4: {{product_name}} — zo werkt het voor {{organisation_name}}",
+        "bodyHtml": "<!doctype html><html lang=\"nl\"><body><p>Beste {{first_name}},</p><p>Vandaag introduceren we <strong>{{product_name}}</strong>. We hebben deze release ontworpen met klanten zoals {{organisation_name}} in gedachten.</p><p><a href=\"https://pipelinq.example.nl/q4-launch?utm_campaign=blast-q4-launch&utm_source=pipelinq-blast\">Bekijk de demo</a></p><hr><p style=\"font-size:12px;color:#666\">Conduction B.V. &middot; Nieuwezijds Voorburgwal 282, 1012 RT Amsterdam, Nederland<br>Geen interesse meer? <a href=\"{{unsubscribe_link}}\">Uitschrijven</a></p></body></html>",
+        "bodyText": "Beste {{first_name}},\n\nVandaag introduceren we {{product_name}}. We hebben deze release ontworpen met klanten zoals {{organisation_name}} in gedachten.\n\nDemo: https://pipelinq.example.nl/q4-launch?utm_campaign=blast-q4-launch&utm_source=pipelinq-blast\n\n---\nConduction B.V., Nieuwezijds Voorburgwal 282, 1012 RT Amsterdam, Nederland\nUitschrijven: {{unsubscribe_link}}",
+        "senderName": "Conduction Pipelinq",
+        "senderEmail": "marketing@pipelinq.example.nl",
+        "replyTo": "support@pipelinq.example.nl",
+        "variables": [
+          "first_name",
+          "organisation_name",
+          "product_name",
+          "unsubscribe_link"
+        ],
+        "language": "nl",
+        "createdBy": "marketing@example.com",
+        "createdAt": "2026-09-20T10:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "campaignTemplate",
+          "slug": "template-renewal-reminder"
+        },
+        "name": "Renewal Reminder",
+        "channel": "email",
+        "subject": "Uw {{product_name}} contract loopt af op {{renewal_date}}",
+        "bodyHtml": "<!doctype html><html lang=\"nl\"><body><p>Beste {{first_name}},</p><p>Uw contract voor <strong>{{product_name}}</strong> loopt af op <strong>{{renewal_date}}</strong>. We willen u graag helpen met een soepele verlenging.</p><p><a href=\"https://pipelinq.example.nl/renewal/{{contract_id}}?utm_campaign=blast-renewal&utm_source=pipelinq-blast\">Bekijk uw verlengingsopties</a></p><hr><p style=\"font-size:12px;color:#666\">Conduction B.V. &middot; Nieuwezijds Voorburgwal 282, 1012 RT Amsterdam, Nederland<br><a href=\"{{unsubscribe_link}}\">Uitschrijven uit deze communicatie</a></p></body></html>",
+        "bodyText": "Beste {{first_name}},\n\nUw contract voor {{product_name}} loopt af op {{renewal_date}}. We willen u graag helpen met een soepele verlenging.\n\nVerlengingsopties: https://pipelinq.example.nl/renewal/{{contract_id}}?utm_campaign=blast-renewal&utm_source=pipelinq-blast\n\n---\nConduction B.V., Nieuwezijds Voorburgwal 282, 1012 RT Amsterdam, Nederland\nUitschrijven: {{unsubscribe_link}}",
+        "senderName": "Conduction Account Team",
+        "senderEmail": "renewals@pipelinq.example.nl",
+        "replyTo": "renewals@pipelinq.example.nl",
+        "variables": [
+          "first_name",
+          "product_name",
+          "renewal_date",
+          "contract_id",
+          "unsubscribe_link"
+        ],
+        "language": "nl",
+        "createdBy": "renewals@example.com",
+        "createdAt": "2026-09-21T11:30:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "campaignTemplate",
+          "slug": "template-appointment-confirmation-sms"
+        },
+        "name": "Appointment Confirmation",
+        "channel": "sms",
+        "subject": "",
+        "bodyHtml": "",
+        "bodyText": "Hallo {{first_name}}, uw afspraak bij Pipelinq is bevestigd op {{appointment_date}} om {{appointment_time}}. Reageer met STOP om af te melden.",
+        "senderName": "Pipelinq",
+        "senderEmail": "",
+        "replyTo": "",
+        "variables": [
+          "first_name",
+          "appointment_date",
+          "appointment_time"
+        ],
+        "language": "nl",
+        "createdBy": "service@example.com",
+        "createdAt": "2026-09-22T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "blast",
+          "slug": "blast-q4-gemeente-outreach-a"
+        },
+        "name": "Q4 Gemeente Outreach - Variant A",
+        "segmentId": "segment-gemeente-contact-blast",
+        "templateId": "template-q4-product-launch",
+        "channel": "email",
+        "scheduledFor": "2026-10-15T08:00:00+00:00",
+        "sentAt": "2026-10-15T08:02:18+00:00",
+        "status": "sent",
+        "abVariantOf": null,
+        "abSplitPercent": 50,
+        "totals": {
+          "queued": 0,
+          "sent": 124,
+          "delivered": 119,
+          "bounced": 3,
+          "opened": 71,
+          "clicked": 28,
+          "unsubscribed": 2,
+          "complained": 0
+        },
+        "connectorSourceId": "openconnector-sendgrid-prod",
+        "createdBy": "marketing@example.com",
+        "createdAt": "2026-10-10T15:30:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "blast",
+          "slug": "blast-q4-gemeente-outreach-b"
+        },
+        "name": "Q4 Gemeente Outreach - Variant B",
+        "segmentId": "segment-gemeente-contact-blast",
+        "templateId": "template-q4-product-launch",
+        "channel": "email",
+        "scheduledFor": "2026-10-15T08:00:00+00:00",
+        "sentAt": "2026-10-15T08:02:35+00:00",
+        "status": "sent",
+        "abVariantOf": "blast-q4-gemeente-outreach-a",
+        "abSplitPercent": 50,
+        "totals": {
+          "queued": 0,
+          "sent": 124,
+          "delivered": 121,
+          "bounced": 2,
+          "opened": 82,
+          "clicked": 34,
+          "unsubscribed": 1,
+          "complained": 0
+        },
+        "connectorSourceId": "openconnector-sendgrid-prod",
+        "createdBy": "marketing@example.com",
+        "createdAt": "2026-10-10T15:32:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "blastDelivery",
+          "slug": "delivery-q4-gem-001"
+        },
+        "blastId": "blast-q4-gemeente-outreach-a",
+        "contactId": "contact-gemeente-amsterdam-jansen",
+        "email": "p.jansen@amsterdam.nl",
+        "status": "delivered",
+        "sentAt": "2026-10-15T08:02:18+00:00",
+        "providerId": "sg-abc123xyz001",
+        "openedAt": "2026-10-15T09:14:32+00:00",
+        "firstClickAt": "2026-10-15T09:15:08+00:00",
+        "clickedUrls": [
+          "https://pipelinq.example.nl/q4-launch?utm_campaign=blast-q4-launch&utm_source=pipelinq-blast"
+        ]
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "blastDelivery",
+          "slug": "delivery-q4-gem-002"
+        },
+        "blastId": "blast-q4-gemeente-outreach-a",
+        "contactId": "contact-gemeente-rotterdam-devries",
+        "email": "m.devries@rotterdam.nl",
+        "status": "delivered",
+        "sentAt": "2026-10-15T08:02:19+00:00",
+        "providerId": "sg-abc123xyz002",
+        "openedAt": "2026-10-15T10:02:11+00:00",
+        "firstClickAt": "2026-10-15T10:03:48+00:00",
+        "clickedUrls": [
+          "https://pipelinq.example.nl/q4-launch?utm_campaign=blast-q4-launch&utm_source=pipelinq-blast"
+        ]
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "blastDelivery",
+          "slug": "delivery-q4-gem-003"
+        },
+        "blastId": "blast-q4-gemeente-outreach-a",
+        "contactId": "contact-gemeente-utrecht-bakker",
+        "email": "s.bakker@utrecht.nl",
+        "status": "delivered",
+        "sentAt": "2026-10-15T08:02:20+00:00",
+        "providerId": "sg-abc123xyz003",
+        "openedAt": "2026-10-15T11:32:00+00:00",
+        "firstClickAt": null,
+        "clickedUrls": []
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "blastDelivery",
+          "slug": "delivery-q4-gem-004"
+        },
+        "blastId": "blast-q4-gemeente-outreach-a",
+        "contactId": "contact-gemeente-eindhoven-mulder",
+        "email": "j.mulder@eindhoven.nl",
+        "status": "delivered",
+        "sentAt": "2026-10-15T08:02:21+00:00",
+        "providerId": "sg-abc123xyz004",
+        "openedAt": "2026-10-16T07:18:55+00:00",
+        "firstClickAt": "2026-10-16T07:20:30+00:00",
+        "clickedUrls": [
+          "https://pipelinq.example.nl/q4-launch?utm_campaign=blast-q4-launch&utm_source=pipelinq-blast"
+        ]
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "blastDelivery",
+          "slug": "delivery-q4-gem-005"
+        },
+        "blastId": "blast-q4-gemeente-outreach-a",
+        "contactId": "contact-gemeente-groningen-visser",
+        "email": "h.visser@groningen.nl",
+        "status": "bounced",
+        "sentAt": "2026-10-15T08:02:22+00:00",
+        "providerId": "sg-abc123xyz005",
+        "bouncedAt": "2026-10-15T08:02:38+00:00",
+        "bounceType": "hard"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "blastDelivery",
+          "slug": "delivery-q4-gem-006"
+        },
+        "blastId": "blast-q4-gemeente-outreach-a",
+        "contactId": "contact-gemeente-tilburg-smit",
+        "email": "k.smit@tilburg.nl",
+        "status": "bounced",
+        "sentAt": "2026-10-15T08:02:23+00:00",
+        "providerId": "sg-abc123xyz006",
+        "bouncedAt": "2026-10-15T08:02:41+00:00",
+        "bounceType": "soft"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "blastDelivery",
+          "slug": "delivery-q4-gem-007"
+        },
+        "blastId": "blast-q4-gemeente-outreach-a",
+        "contactId": "contact-gemeente-almere-hendriks",
+        "email": "l.hendriks@almere.nl",
+        "status": "bounced",
+        "sentAt": "2026-10-15T08:02:24+00:00",
+        "providerId": "sg-abc123xyz007",
+        "bouncedAt": "2026-10-15T08:02:44+00:00",
+        "bounceType": "hard"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "blastDelivery",
+          "slug": "delivery-q4-gem-008"
+        },
+        "blastId": "blast-q4-gemeente-outreach-a",
+        "contactId": "contact-gemeente-haarlem-vandenberg",
+        "email": "r.vandenberg@haarlem.nl",
+        "status": "unsubscribed",
+        "sentAt": "2026-10-15T08:02:25+00:00",
+        "providerId": "sg-abc123xyz008",
+        "openedAt": "2026-10-15T12:01:00+00:00",
+        "unsubscribedAt": "2026-10-15T12:03:14+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "blastDelivery",
+          "slug": "delivery-q4-gem-009"
+        },
+        "blastId": "blast-q4-gemeente-outreach-a",
+        "contactId": "contact-gemeente-arnhem-jacobs",
+        "email": "t.jacobs@arnhem.nl",
+        "status": "unsubscribed",
+        "sentAt": "2026-10-15T08:02:26+00:00",
+        "providerId": "sg-abc123xyz009",
+        "openedAt": "2026-10-15T13:42:08+00:00",
+        "unsubscribedAt": "2026-10-15T13:45:50+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "blastDelivery",
+          "slug": "delivery-q4-gem-010"
+        },
+        "blastId": "blast-q4-gemeente-outreach-a",
+        "contactId": "contact-gemeente-nijmegen-vandermeer",
+        "email": "e.vandermeer@nijmegen.nl",
+        "status": "queued"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "blastDelivery",
+          "slug": "delivery-q4-gem-011"
+        },
+        "blastId": "blast-q4-gemeente-outreach-a",
+        "contactId": "contact-gemeente-zwolle-prins",
+        "email": "n.prins@zwolle.nl",
+        "status": "queued"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "blastDelivery",
+          "slug": "delivery-q4-gem-012"
+        },
+        "blastId": "blast-q4-gemeente-outreach-a",
+        "contactId": "contact-gemeente-leiden-koster",
+        "email": "y.koster@leiden.nl",
+        "status": "queued"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "blastDelivery",
+          "slug": "delivery-q4-gem-013"
+        },
+        "blastId": "blast-q4-gemeente-outreach-a",
+        "contactId": "contact-gemeente-delft-meijer",
+        "email": "f.meijer@delft.nl",
+        "status": "queued"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "blastDelivery",
+          "slug": "delivery-q4-gem-014"
+        },
+        "blastId": "blast-q4-gemeente-outreach-a",
+        "contactId": "contact-gemeente-breda-dejong",
+        "email": "w.dejong@breda.nl",
+        "status": "queued"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "blastDelivery",
+          "slug": "delivery-q4-gem-015"
+        },
+        "blastId": "blast-q4-gemeente-outreach-a",
+        "contactId": "contact-gemeente-leeuwarden-postma",
+        "email": "g.postma@leeuwarden.nl",
+        "status": "queued"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "blastDelivery",
+          "slug": "delivery-q4-gem-016"
+        },
+        "blastId": "blast-q4-gemeente-outreach-a",
+        "contactId": "contact-gemeente-maastricht-willems",
+        "email": "d.willems@maastricht.nl",
+        "status": "queued"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "blastDelivery",
+          "slug": "delivery-q4-gem-017"
+        },
+        "blastId": "blast-q4-gemeente-outreach-a",
+        "contactId": "contact-gemeente-apeldoorn-vos",
+        "email": "b.vos@apeldoorn.nl",
+        "status": "queued"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "blastDelivery",
+          "slug": "delivery-q4-gem-018"
+        },
+        "blastId": "blast-q4-gemeente-outreach-a",
+        "contactId": "contact-gemeente-enschede-bos",
+        "email": "i.bos@enschede.nl",
+        "status": "queued"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "blastDelivery",
+          "slug": "delivery-q4-gem-019"
+        },
+        "blastId": "blast-q4-gemeente-outreach-a",
+        "contactId": "contact-gemeente-amersfoort-peters",
+        "email": "u.peters@amersfoort.nl",
+        "status": "queued"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "blastDelivery",
+          "slug": "delivery-q4-gem-020"
+        },
+        "blastId": "blast-q4-gemeente-outreach-a",
+        "contactId": "contact-gemeente-haarlemmermeer-schouten",
+        "email": "o.schouten@haarlemmermeer.nl",
+        "status": "queued"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "consentRecord",
+          "slug": "consent-001-active-form"
+        },
+        "contactId": "contact-gemeente-amsterdam-jansen",
+        "channel": "email",
+        "lawfulBasis": "consent",
+        "consentSource": "web-form-newsletter-2026-q2",
+        "consentedAt": "2026-04-12T10:18:00+00:00",
+        "softBounceCount": 0
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "consentRecord",
+          "slug": "consent-002-active-doi"
+        },
+        "contactId": "contact-gemeente-rotterdam-devries",
+        "channel": "email",
+        "lawfulBasis": "consent",
+        "consentSource": "double-opt-in-2026-q3",
+        "consentedAt": "2026-07-22T14:05:00+00:00",
+        "softBounceCount": 0
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "consentRecord",
+          "slug": "consent-003-active-legit-interest"
+        },
+        "contactId": "contact-gemeente-utrecht-bakker",
+        "channel": "email",
+        "lawfulBasis": "legitimate-interest",
+        "consentSource": "existing-customer-2026",
+        "consentedAt": "2026-01-15T09:00:00+00:00",
+        "softBounceCount": 1
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "consentRecord",
+          "slug": "consent-004-active-contract"
+        },
+        "contactId": "contact-gemeente-eindhoven-mulder",
+        "channel": "email",
+        "lawfulBasis": "contract",
+        "consentSource": "contract-clause-renewals",
+        "consentedAt": "2026-02-01T08:30:00+00:00",
+        "softBounceCount": 0
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "consentRecord",
+          "slug": "consent-005-withdrawn-unsubscribe"
+        },
+        "contactId": "contact-gemeente-haarlem-vandenberg",
+        "channel": "email",
+        "lawfulBasis": "consent",
+        "consentSource": "web-form-newsletter-2026-q2",
+        "consentedAt": "2026-04-12T11:00:00+00:00",
+        "withdrawnAt": "2026-10-15T12:03:14+00:00",
+        "withdrawnReason": "user-unsubscribed",
+        "softBounceCount": 0
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "consentRecord",
+          "slug": "consent-006-withdrawn-unsubscribe-2"
+        },
+        "contactId": "contact-gemeente-arnhem-jacobs",
+        "channel": "email",
+        "lawfulBasis": "consent",
+        "consentSource": "double-opt-in-2026-q3",
+        "consentedAt": "2026-07-22T14:50:00+00:00",
+        "withdrawnAt": "2026-10-15T13:45:50+00:00",
+        "withdrawnReason": "user-unsubscribed",
+        "softBounceCount": 0
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "consentRecord",
+          "slug": "consent-007-withdrawn-bounce-hard"
+        },
+        "contactId": "contact-gemeente-groningen-visser",
+        "channel": "email",
+        "lawfulBasis": "consent",
+        "consentSource": "import-legacy-2025",
+        "consentedAt": "2025-11-08T09:00:00+00:00",
+        "withdrawnAt": "2026-10-15T08:02:38+00:00",
+        "withdrawnReason": "bounce-hard",
+        "softBounceCount": 0
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "consentRecord",
+          "slug": "consent-008-withdrawn-bounce-hard-2"
+        },
+        "contactId": "contact-gemeente-almere-hendriks",
+        "channel": "email",
+        "lawfulBasis": "consent",
+        "consentSource": "web-form-newsletter-2026-q2",
+        "consentedAt": "2026-04-12T11:30:00+00:00",
+        "withdrawnAt": "2026-10-15T08:02:44+00:00",
+        "withdrawnReason": "bounce-hard",
+        "softBounceCount": 0
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "consentRecord",
+          "slug": "consent-009-withdrawn-bounce-soft-x5"
+        },
+        "contactId": "contact-gemeente-tilburg-smit",
+        "channel": "email",
+        "lawfulBasis": "consent",
+        "consentSource": "web-form-newsletter-2026-q1",
+        "consentedAt": "2026-02-19T10:00:00+00:00",
+        "withdrawnAt": "2026-10-15T08:02:41+00:00",
+        "withdrawnReason": "bounce-soft-x5",
+        "softBounceCount": 5
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "consentRecord",
+          "slug": "consent-010-active-sms"
+        },
+        "contactId": "contact-gemeente-amsterdam-jansen",
+        "channel": "sms",
+        "lawfulBasis": "consent",
+        "consentSource": "sales-call-confirm-2026-09",
+        "consentedAt": "2026-09-14T13:20:00+00:00",
+        "softBounceCount": 0
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "attributionLink",
+          "slug": "attribution-001-amsterdam-q4"
+        },
+        "blastId": "blast-q4-gemeente-outreach-a",
+        "contactId": "contact-gemeente-amsterdam-jansen",
+        "dealId": "lead-gemeente-amsterdam-q4-licence",
+        "firstClickAt": "2026-10-15T09:15:08+00:00",
+        "closedWonAt": "2026-11-02T16:22:00+00:00",
+        "attributedValue": 28500.0,
+        "currency": "EUR",
+        "createdAt": "2026-11-02T16:25:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "attributionLink",
+          "slug": "attribution-002-rotterdam-q4"
+        },
+        "blastId": "blast-q4-gemeente-outreach-b",
+        "contactId": "contact-gemeente-rotterdam-devries",
+        "dealId": "lead-gemeente-rotterdam-q4-pilot",
+        "firstClickAt": "2026-10-15T10:03:48+00:00",
+        "closedWonAt": "2026-11-10T11:05:00+00:00",
+        "attributedValue": 14750.0,
+        "currency": "EUR",
+        "createdAt": "2026-11-10T11:08:00+00:00"
+      }
+    ]
+  }
+}

@@ -1,0 +1,25 @@
+# Tasks
+
+Reverse-spec annotation of 21 method(s) for queue management screens. Each task = one method annotated against the `queue-management` capability (observed behavior).
+
+- [x] task-1: queue-management — `src/views/queues/QueueDetail.vue::agentCount` (reverse-spec annotation)
+- [x] task-2: queue-management — `src/views/queues/QueueDetail.vue::assignToMe` (reverse-spec annotation)
+- [x] task-3: queue-management — `src/views/queues/QueueDetail.vue::bulkAssignToMe` (reverse-spec annotation)
+- [x] task-4: queue-management — `src/views/queues/QueueDetail.vue::items` (reverse-spec annotation)
+- [x] task-5: queue-management — `src/views/queues/QueueDetail.vue::loading` (reverse-spec annotation)
+- [x] task-6: queue-management — `src/views/queues/QueueDetail.vue::mounted` (reverse-spec annotation)
+- [x] task-7: queue-management — `src/views/queues/QueueDetail.vue::nextItem` (reverse-spec annotation)
+- [x] task-8: queue-management — `src/views/queues/QueueDetail.vue::objectStore` (reverse-spec annotation)
+- [x] task-9: queue-management — `src/views/queues/QueueDetail.vue::openItem` (reverse-spec annotation)
+- [x] task-10: queue-management — `src/views/queues/QueueDetail.vue::pickNext` (reverse-spec annotation)
+- [x] task-11: queue-management — `src/views/queues/QueueDetail.vue::queue` (reverse-spec annotation)
+- [x] task-12: queue-management — `src/views/queues/QueueDetail.vue::queuesStore` (reverse-spec annotation)
+- [x] task-13: queue-management — `src/views/queues/QueueDetail.vue::sortedItems` (reverse-spec annotation)
+- [x] task-14: queue-management — `src/views/queues/QueueDetail.vue::toggleSelect` (reverse-spec annotation)
+- [x] task-15: queue-management — `src/views/queues/QueueList.vue::createQueue` (reverse-spec annotation)
+- [x] task-16: queue-management — `src/views/queues/QueueList.vue::loading` (reverse-spec annotation)
+- [x] task-17: queue-management — `src/views/queues/QueueList.vue::openQueue` (reverse-spec annotation)
+- [x] task-18: queue-management — `src/views/queues/QueueList.vue::queues` (reverse-spec annotation)
+- [x] task-19: queue-management — `src/views/queues/QueueList.vue::queuesStore` (reverse-spec annotation)
+- [x] task-20: queue-management — `src/views/queues/QueueList.vue::resetCreateForm` (reverse-spec annotation)
+- [x] task-21: queue-management — `src/views/queues/QueueList.vue::sortedQueues` (reverse-spec annotation)

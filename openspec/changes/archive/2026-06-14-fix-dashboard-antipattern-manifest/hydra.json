@@ -1,0 +1,154 @@
+{
+  "schema_version": 2,
+  "spec_slug": "fix-dashboard-antipattern-manifest",
+  "repo": "https://github.com/ConductionNL/pipelinq",
+  "issue": 126,
+  "cycles": [
+    {
+      "cycle": 1,
+      "trigger": "orchestrator",
+      "started_at": "2026-06-02T14:04:04Z",
+      "ended_at": "2026-06-02T15:53:59Z",
+      "outcome": "done",
+      "outcome_reason": "pipeline complete \u2014 reviews passed and applier passed (if run)",
+      "pattern_tags": [],
+      "stages": [
+        {
+          "stage": "applier",
+          "persona": "Axel Pli\u00e9r",
+          "model": "sonnet",
+          "container": "hydra-applier",
+          "started_at": "2026-06-02T14:03:22Z",
+          "ended_at": "2026-06-02T14:03:49Z",
+          "exit_code": 1,
+          "turns_used": 0,
+          "turns_budget": 20,
+          "checks_run": [
+            "hydra.json-consumer"
+          ],
+          "checks_skipped": [],
+          "findings": [
+            {
+              "id": "applier-fail",
+              "severity": "CRITICAL",
+              "gate": "applier",
+              "rule": "applier returned fail verdict",
+              "status": "open",
+              "note": "Applier blocking items should be captured in hydra.json pipeline.applier.blocking[] by the container itself. See logs/pipeline-*/applier.jsonl for detail.",
+              "autofixable": false
+            }
+          ],
+          "decisions": [],
+          "verdict": "fail",
+          "duration_seconds": 27
+        },
+        {
+          "stage": "applier",
+          "persona": "Axel Pli\u00e9r",
+          "model": "sonnet",
+          "container": "hydra-applier",
+          "started_at": "2026-06-02T15:08:52Z",
+          "ended_at": "2026-06-02T15:11:12Z",
+          "exit_code": 0,
+          "turns_used": 16,
+          "turns_budget": 20,
+          "checks_run": [
+            "hydra.json-consumer"
+          ],
+          "checks_skipped": [],
+          "findings": [],
+          "decisions": [],
+          "verdict": "pass",
+          "duration_seconds": 140
+        },
+        {
+          "stage": "applier",
+          "persona": "Axel Pli\u00e9r",
+          "model": "sonnet",
+          "container": "hydra-applier",
+          "started_at": "2026-06-02T15:51:50Z",
+          "ended_at": "2026-06-02T15:53:36Z",
+          "exit_code": 0,
+          "turns_used": 11,
+          "turns_budget": 20,
+          "checks_run": [
+            "hydra.json-consumer"
+          ],
+          "checks_skipped": [],
+          "findings": [],
+          "decisions": [],
+          "verdict": "pass",
+          "duration_seconds": 106
+        }
+      ]
+    },
+    {
+      "cycle": 2,
+      "trigger": "retry:queued",
+      "started_at": "2026-06-02T18:03:20Z",
+      "ended_at": "2026-06-02T18:39:43Z",
+      "outcome": "done",
+      "outcome_reason": "pipeline complete \u2014 reviews passed and applier passed (if run)",
+      "pattern_tags": [],
+      "stages": [
+        {
+          "stage": "fix",
+          "persona": "Al Gorithm",
+          "model": "sonnet",
+          "container": "hydra-builder",
+          "started_at": "2026-06-02T18:03:58Z",
+          "ended_at": "2026-06-02T18:24:31Z",
+          "exit_code": 0,
+          "turns_used": 127,
+          "turns_budget": 40,
+          "checks_run": [],
+          "checks_skipped": [],
+          "findings": [],
+          "decisions": [],
+          "verdict": "pass",
+          "duration_seconds": 1233
+        },
+        {
+          "stage": "applier",
+          "persona": "Axel Pli\u00e9r",
+          "model": "sonnet",
+          "container": "hydra-applier",
+          "started_at": "2026-06-02T18:37:12Z",
+          "ended_at": "2026-06-02T18:38:59Z",
+          "exit_code": 0,
+          "turns_used": 14,
+          "turns_budget": 20,
+          "checks_run": [
+            "hydra.json-consumer"
+          ],
+          "checks_skipped": [],
+          "findings": [],
+          "decisions": [],
+          "verdict": "pass",
+          "duration_seconds": 107
+        }
+      ]
+    }
+  ],
+  "totals": {
+    "runs": 5,
+    "turns_used": 168,
+    "cost_usd": 0.0,
+    "duration_seconds": 1613,
+    "cycles": 2,
+    "by_stage": {
+      "applier": {
+        "runs": 4,
+        "turns_used": 41,
+        "cost_usd": 0.0,
+        "duration_seconds": 380
+      },
+      "fix": {
+        "runs": 1,
+        "turns_used": 127,
+        "cost_usd": 0.0,
+        "duration_seconds": 1233
+      }
+    }
+  }
+}

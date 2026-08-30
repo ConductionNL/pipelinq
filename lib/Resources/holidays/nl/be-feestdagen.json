@@ -1,0 +1,20 @@
+{
+    "name": "Belgische feestdagen",
+    "locale": "be",
+    "rules": [
+        {"date": "01-01", "name": "Nieuwjaar", "recurring": true},
+        {"date": "05-01", "name": "Dag van de Arbeid", "recurring": true},
+        {"date": "07-21", "name": "Nationale Feestdag", "recurring": true},
+        {"date": "08-15", "name": "OLV Hemelvaart", "recurring": true},
+        {"date": "11-01", "name": "Allerheiligen", "recurring": true},
+        {"date": "11-11", "name": "Wapenstilstand", "recurring": true},
+        {"date": "12-25", "name": "Kerstmis", "recurring": true}
+    ],
+    "computed": [
+        {"name": "Pasen", "easterOffset": 0},
+        {"name": "Paasmaandag", "easterOffset": 1},
+        {"name": "OH Hemelvaart", "easterOffset": 39},
+        {"name": "Pinksteren", "easterOffset": 49},
+        {"name": "Pinkstermaandag", "easterOffset": 50}
+    ]
+}

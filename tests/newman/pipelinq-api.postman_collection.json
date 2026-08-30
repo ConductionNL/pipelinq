@@ -1,0 +1,891 @@
+{
+  "info": {
+    "name": "Pipelinq API Tests",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Newman API tests for Pipelinq Nextcloud app"
+  },
+  "auth": {
+    "type": "basic",
+    "basic": [
+      { "key": "username", "value": "{{username}}", "type": "string" },
+      { "key": "password", "value": "{{password}}", "type": "string" }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// EVERY REQUEST IN THIS COLLECTION STATES ITS OWN IDENTITY. NONE",
+          "// INHERITS ONE.",
+          "//",
+          "// Newman keeps ONE cookie jar per host. Nextcloud hands out a session",
+          "// cookie on the first request, and — MEASURED on NC 32.0.13, in both",
+          "// directions, on a freshly installed instance — once that cookie is in",
+          "// the jar, an explicit `Authorization: Basic` header for a DIFFERENT",
+          "// user is ignored: the request runs as whoever the session belongs to.",
+          "//",
+          "//   jar present  + Basic <non-admin> -> /ocs/v2.php/cloud/user says 'admin'",
+          "//   jar cleared  + Basic <non-admin> -> /ocs/v2.php/cloud/user says the non-admin",
+          "//",
+          "// That is not a theoretical hazard here. 'PUT /rapportage/sla — non-admin",
+          "// → 403' carried a request-level basic-auth block naming variables that",
+          "// nothing defined, so it authenticated nobody, fell through to the",
+          "// admin session in the jar, and returned HTTP 200 — the test asserting",
+          "// that a non-admin is REFUSED was, in fact, performing the admin write.",
+          "//",
+          "// ⚠️ Do not 'simplify' this away by trusting the per-request auth block.",
+          "// Curl does NOT reproduce the failure (its jar never captures the NC",
+          "// session cookie in the first place), so a curl-based check of this",
+          "// behaviour reports the safe answer for the wrong reason.",
+          "const jar = pm.cookies.jar();",
+          "jar.clear(pm.variables.replaceIn('{{baseUrl}}'), function (err) {",
+          "  if (err) { console.error('Could not clear the cookie jar: ' + err); }",
+          "});"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" },
+    { "key": "username", "value": "admin" },
+    { "key": "password", "value": "admin" },
+    {
+      "key": "nonAdminUsername",
+      "value": "",
+      "description": "Supplied by tests/newman/ci-seed.sh via the generated ci.postman_environment.json. Deliberately EMPTY here rather than absent: an undefined Postman variable is sent as the literal '{{nonAdminUsername}}', which authenticates nobody and lets Nextcloud fall back to the cookie jar's admin session — the exact failure the 'Rapportage (Reporting)' identity check now catches."
+    },
+    {
+      "key": "nonAdminPassword",
+      "value": "",
+      "description": "Supplied by tests/newman/ci-seed.sh. See nonAdminUsername."
+    }
+  ],
+  "item": [
+    {
+      "name": "Caller identity",
+      "description": "Newman keeps ONE cookie jar per host, so 'who is this request from' is not a property of the request — it is a property of whatever authenticated last. Every folder below that asserts an authorization outcome first asks the server who it thinks is calling, and asserts the answer. This folder pins the admin end of that; 'Rapportage (Reporting)' pins the non-admin end.",
+      "item": [
+        {
+          "name": "GET /ocs/v2.php/cloud/user — the admin chain runs as {{username}}",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/ocs/v2.php/cloud/user?format=json",
+            "header": [
+              { "key": "OCS-APIRequest", "value": "true" },
+              { "key": "Accept", "value": "application/json" }
+            ]
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('The server reports the caller as {{username}}', function () {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json.ocs.data.id).to.eql(pm.variables.replaceIn('{{username}}'));",
+                  "});",
+                  "pm.test('The caller is in the admin group', function () {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json.ocs.data.groups).to.include('admin');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Health Check",
+      "item": [
+        {
+          "name": "GET /health",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/index.php/apps/pipelinq/api/health"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Response has status field', function () {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json.status).to.eql('ok');",
+                  "});",
+                  "pm.test('Response has version', function () {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json.version).to.be.a('string');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Settings",
+      "item": [
+        {
+          "name": "GET /settings",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/index.php/apps/pipelinq/api/settings",
+            "header": [
+              { "key": "OCS-APIREQUEST", "value": "true" }
+            ]
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Response has config', function () {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json.config).to.be.an('object');",
+                  "});",
+                  "pm.test('Config has register key', function () {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json.config).to.have.property('register');",
+                  "});",
+                  "// Captured so the update below can write back the value this",
+                  "// deployment actually uses. The request used to POST a literal",
+                  "// {\"register\":\"1\"} and it SUCCEEDED: it repointed the app at",
+                  "// register 1 for the rest of the run and for every collection",
+                  "// Newman ran after it, because the shared workflow runs all",
+                  "// collections in one pass against one instance.",
+                  "pm.collectionVariables.set('registerId', String(pm.response.json().config.register));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /settings (update)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/index.php/apps/pipelinq/api/settings",
+            "header": [
+              { "key": "OCS-APIREQUEST", "value": "true" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"register\": \"{{registerId}}\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Response has success', function () {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json.success).to.eql(true);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /settings — the update round-trips, it does not repoint the app",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/index.php/apps/pipelinq/api/settings",
+            "header": [
+              { "key": "OCS-APIREQUEST", "value": "true" }
+            ]
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "// The `success: true` above is the controller's word for it. This",
+                  "// reads the value back. It is also the regression guard for the",
+                  "// destructive literal that used to sit in the request body: the",
+                  "// register is the pointer every CRM endpoint resolves its data",
+                  "// through, and writing the wrong one degrades the rest of the run",
+                  "// into assertions against an unrelated register.",
+                  "pm.test('Register still points where GET /settings first reported', function () {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(String(json.config.register)).to.eql(pm.collectionVariables.get('registerId'));",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Lead Sources",
+      "description": "The URL here was /api/lead-sources. There is no such route — appinfo/routes.php registers leadSource#index at /api/settings/lead-sources. The wrong path did not 404: pipelinq's SPA catch-all (dashboard#page /{path}) answered HTTP 200 with text/html, so 'Status code is 200' PASSED and only the JSON assertion failed, with a parse error that pointed at the response body rather than at the URL.",
+      "item": [
+        {
+          "name": "GET /settings/lead-sources",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/index.php/apps/pipelinq/api/settings/lead-sources",
+            "header": [
+              { "key": "OCS-APIREQUEST", "value": "true" }
+            ]
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Response has tags array', function () {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json.tags).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Request Channels",
+      "description": "Same defect as 'Lead Sources': the route is requestChannel#index at /api/settings/request-channels, and the old /api/request-channels path was absorbed by the SPA catch-all as a 200 text/html page.",
+      "item": [
+        {
+          "name": "GET /settings/request-channels",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/index.php/apps/pipelinq/api/settings/request-channels",
+            "header": [
+              { "key": "OCS-APIREQUEST", "value": "true" }
+            ]
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Response has tags array', function () {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json.tags).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Prospects",
+      "item": [
+        {
+          "name": "GET /prospects",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/index.php/apps/pipelinq/api/prospects",
+            "header": [
+              { "key": "OCS-APIREQUEST", "value": "true" }
+            ]
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 or 400', function () {",
+                  "  pm.expect(pm.response.code).to.be.oneOf([200, 400]);",
+                  "});",
+                  "pm.test('Response is JSON', function () {",
+                  "  pm.response.to.be.json;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Prospect Settings",
+      "item": [
+        {
+          "name": "GET /prospect-settings",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/index.php/apps/pipelinq/api/prospect-settings",
+            "header": [
+              { "key": "OCS-APIREQUEST", "value": "true" }
+            ]
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Response has sbiCodes', function () {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('sbiCodes');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Metrics",
+      "item": [
+        {
+          "name": "GET /metrics",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/index.php/apps/pipelinq/api/metrics"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Response contains pipelinq_info', function () {",
+                  "  pm.expect(pm.response.text()).to.include('pipelinq_info');",
+                  "});",
+                  "pm.test('Content-Type is text/plain', function () {",
+                  "  pm.expect(pm.response.headers.get('Content-Type')).to.include('text/plain');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Notes",
+      "item": [
+        {
+          "name": "GET /notes (invalid type returns 400)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/index.php/apps/pipelinq/api/notes/invalid_type/123",
+            "header": [
+              { "key": "OCS-APIREQUEST", "value": "true" }
+            ]
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "User Settings",
+      "item": [
+        {
+          "name": "GET /settings/user",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/index.php/apps/pipelinq/api/settings/user",
+            "header": [
+              { "key": "OCS-APIREQUEST", "value": "true" }
+            ]
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Response has notification settings', function () {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('notify_assignments');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Rapportage (Reporting)",
+      "item": [
+        {
+          "name": "GET /rapportage/kpis — happy path",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/index.php/apps/pipelinq/api/rapportage/kpis?from=2026-04-01&to=2026-04-30",
+            "header": [
+              { "key": "OCS-APIREQUEST", "value": "true" }
+            ]
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Response has KPI fields', function () {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('total');",
+                  "  pm.expect(json).to.have.property('fcrRate');",
+                  "  pm.expect(json).to.have.property('avgHandlingTime');",
+                  "  pm.expect(json).to.have.property('slaCompliance');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /rapportage/kpis — invalid date → 400",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/index.php/apps/pipelinq/api/rapportage/kpis?from=not-a-date&to=also-not",
+            "header": [
+              { "key": "OCS-APIREQUEST", "value": "true" }
+            ]
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test('Response has message field', function () {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('message');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /rapportage/channels — happy path",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/index.php/apps/pipelinq/api/rapportage/channels?from=2026-04-01&to=2026-04-30",
+            "header": [
+              { "key": "OCS-APIREQUEST", "value": "true" }
+            ]
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Response has distribution and trend fields', function () {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('distribution');",
+                  "  pm.expect(json).to.have.property('trend');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /rapportage/agents — happy path",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/index.php/apps/pipelinq/api/rapportage/agents?from=2026-04-01&to=2026-04-30",
+            "header": [
+              { "key": "OCS-APIREQUEST", "value": "true" }
+            ]
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Response has agents field', function () {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('agents');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /rapportage/sla — happy path",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/index.php/apps/pipelinq/api/rapportage/sla",
+            "header": [
+              { "key": "OCS-APIREQUEST", "value": "true" }
+            ]
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Response has targets field', function () {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json).to.have.property('targets');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /ocs/v2.php/cloud/user — the next request really is a non-admin",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/ocs/v2.php/cloud/user?format=json",
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "{{nonAdminUsername}}", "type": "string" },
+                { "key": "password", "value": "{{nonAdminPassword}}", "type": "string" }
+              ]
+            },
+            "header": [
+              { "key": "OCS-APIRequest", "value": "true" },
+              { "key": "Accept", "value": "application/json" }
+            ]
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// WITHOUT THIS THE 403 BELOW WAS A LIE. {{nonAdminUsername}} and",
+                  "// {{nonAdminPassword}} were referenced by the next request and",
+                  "// defined by nothing — not by the collection, not by the shared",
+                  "// workflow's fallback --env-vars. Postman then sent an",
+                  "// Authorization header that authenticates nobody, Nextcloud fell",
+                  "// back to the session cookie Newman's jar had picked up from the",
+                  "// preceding ADMIN requests, and the call ran as the admin.",
+                  "// Measured on a fresh NC32: HTTP 200. The test named 'non-admin",
+                  "// is refused' performed, successfully, the admin write it exists",
+                  "// to prove is refused.",
+                  "//",
+                  "// A status code cannot tell you who asked. Ask the server.",
+                  "pm.test('Status code is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('The server reports the caller as {{nonAdminUsername}}', function () {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json.ocs.data.id).to.eql(pm.variables.replaceIn('{{nonAdminUsername}}'));",
+                  "});",
+                  "pm.test('That caller is NOT in the admin group', function () {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json.ocs.data.groups).to.not.include('admin');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "PUT /rapportage/sla — non-admin → 403",
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/index.php/apps/pipelinq/api/rapportage/sla",
+            "auth": {
+              "type": "basic",
+              "basic": [
+                { "key": "username", "value": "{{nonAdminUsername}}", "type": "string" },
+                { "key": "password", "value": "{{nonAdminPassword}}", "type": "string" }
+              ]
+            },
+            "header": [
+              { "key": "OCS-APIREQUEST", "value": "true" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"targets\": {\"telefoon\": {\"target_percent\": \"95\"}}}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 403 for non-admin', function () {",
+                  "  pm.response.to.have.status(403);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Setup Wizard (ADR-042)",
+      "item": [
+        {
+          "name": "GET /ocs/v2.php/cloud/user — back on the admin identity",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/ocs/v2.php/cloud/user?format=json",
+            "header": [
+              { "key": "OCS-APIRequest", "value": "true" },
+              { "key": "Accept", "value": "application/json" }
+            ]
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// The preceding folder deliberately authenticated as a non-admin,",
+                  "// and Newman's cookie jar is per-host, not per-request: whatever",
+                  "// authenticated last owns the session. POST /setup/action/... below",
+                  "// writes, so re-assert the identity rather than assuming the",
+                  "// collection-level basic auth took the session back.",
+                  "pm.test('Status code is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('The server reports the caller as {{username}} again', function () {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json.ocs.data.id).to.eql(pm.variables.replaceIn('{{username}}'));",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /setup/status",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/index.php/apps/pipelinq/api/setup/status",
+            "header": [
+              { "key": "OCS-APIREQUEST", "value": "true" }
+            ]
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Reports per-step status', function () {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json.steps).to.be.an('object');",
+                  "  pm.expect(json.version).to.be.a('number');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /setup/action/seed-demo-data (optional demo seed, idempotent)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/index.php/apps/pipelinq/api/setup/action/seed-demo-data",
+            "header": [
+              { "key": "OCS-APIREQUEST", "value": "true" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Seed reports success with a message', function () {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json.success).to.eql(true);",
+                  "  pm.expect(json.message).to.be.a('string');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /setup/action/unknown → 404",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/index.php/apps/pipelinq/api/setup/action/does-not-exist",
+            "header": [
+              { "key": "OCS-APIREQUEST", "value": "true" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Unknown action returns 404', function () {",
+                  "  pm.response.to.have.status(404);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "MDM read-API retired (retire-mdm-sync-queue)",
+      "item": [
+        {
+          "name": "GET /api/mdm/master serves no JSON read-API (route removed)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/index.php/apps/pipelinq/api/mdm/master?kvk=12345678",
+            "header": [
+              { "key": "OCS-APIREQUEST", "value": "true" }
+            ]
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// The MdmApiController + its routes were removed; the SPA",
+                  "// catch-all (dashboard#page /{path}) now serves this path, so",
+                  "// there is no JSON master-entity read-API. A JSON body with a",
+                  "// golden record would mean the wrapper still exists.",
+                  "pm.test('No JSON MDM read-API response is served', function () {",
+                  "  var ct = pm.response.headers.get('Content-Type') || '';",
+                  "  if (ct.indexOf('application/json') !== -1) {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.not.have.property('goldenRecord');",
+                  "    pm.expect(json).to.not.have.property('masterId');",
+                  "  } else {",
+                  "    pm.expect(ct).to.include('text/html');",
+                  "  }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /api/mdm/master/{id} serves no JSON read-API (route removed)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/index.php/apps/pipelinq/api/mdm/master/550e8400-e29b-41d4-a716-446655440002",
+            "header": [
+              { "key": "OCS-APIREQUEST", "value": "true" }
+            ]
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('No JSON master-by-id read-API response is served', function () {",
+                  "  var ct = pm.response.headers.get('Content-Type') || '';",
+                  "  if (ct.indexOf('application/json') !== -1) {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json).to.not.have.property('goldenRecord');",
+                  "  } else {",
+                  "    pm.expect(ct).to.include('text/html');",
+                  "  }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

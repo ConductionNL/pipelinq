@@ -5,7 +5,9 @@
  * for the pipeline view-backed board system.
  */
 
-const API_BASE = '/apps/openregister/api'
+import { generateUrl } from '@nextcloud/router'
+
+const API_BASE = generateUrl('/apps/openregister/api')
 
 /**
  * Build standard request headers for Nextcloud API calls.
@@ -24,6 +26,7 @@ function headers() {
  * Fetch all available views from OpenRegister.
  *
  * @return {Promise<Array>} The list of views.
+ * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-60
  */
 export async function getViews() {
 	const response = await fetch(`${API_BASE}/views`, {
@@ -42,6 +45,7 @@ export async function getViews() {
  *
  * @param {string} id The view UUID.
  * @return {Promise<object>} The view object.
+ * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-59
  */
 export async function getView(id) {
 	const response = await fetch(`${API_BASE}/views/${id}`, {
@@ -59,6 +63,7 @@ export async function getView(id) {
  *
  * @param {string} schemaId The schema UUID.
  * @return {Promise<object>} The schema object including properties.
+ * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-58
  */
 export async function getSchemaProperties(schemaId) {
 	const response = await fetch(`${API_BASE}/schemas/${schemaId}`, {

@@ -3,19 +3,19 @@
 		<!-- Title -->
 		<div class="form-group">
 			<NcTextField
-				:value="form.title"
+				:modelValue="form.title"
 				:label="t('pipelinq', 'Title')"
 				:error="!!errors.title"
-				:helper-text="errors.title"
-				@update:value="v => form.title = v" />
+				:helperText="errors.title"
+				@update:modelValue="(v) => (form.title = v)" />
 		</div>
 
 		<!-- Description -->
 		<div class="form-group">
 			<NcTextField
-				:value="form.description"
+				:modelValue="form.description"
 				:label="t('pipelinq', 'Description')"
-				@update:value="v => form.description = v" />
+				@update:modelValue="(v) => (form.description = v)" />
 		</div>
 
 		<!-- Status + Priority row -->
@@ -25,6 +25,7 @@
 				<NcSelect
 					v-model="form.status"
 					:options="availableStatuses"
+					:aria-label-combobox="t('pipelinq', 'Status')"
 					:clearable="false"
 					:placeholder="t('pipelinq', 'Status')" />
 			</div>
@@ -33,6 +34,7 @@
 				<NcSelect
 					v-model="form.priority"
 					:options="priorityOptions"
+					:aria-label-combobox="t('pipelinq', 'Priority')"
 					:clearable="false"
 					:placeholder="t('pipelinq', 'Priority')" />
 			</div>
@@ -45,24 +47,25 @@
 				<NcSelect
 					v-model="form.channel"
 					:options="channelOptions"
+					:aria-label-combobox="t('pipelinq', 'Channel')"
 					:clearable="true"
 					:placeholder="t('pipelinq', 'Select channel')" />
 			</div>
 			<div class="form-group">
 				<NcTextField
-					:value="form.category"
+					:modelValue="form.category"
 					:label="t('pipelinq', 'Category')"
-					@update:value="v => form.category = v" />
+					@update:modelValue="(v) => (form.category = v)" />
 			</div>
 		</div>
 
 		<!-- Requested at -->
 		<div class="form-group">
-			<NcTextField
-				:value="form.requestedAt || ''"
+			<NcDateTimePickerNative
+				:modelValue="occurredAtDate"
 				:label="t('pipelinq', 'Requested at')"
 				type="date"
-				@update:value="v => form.requestedAt = v || null" />
+				@update:modelValue="occurredAtDate = $event" />
 		</div>
 
 		<!-- Client -->
@@ -71,9 +74,10 @@
 			<NcSelect
 				v-model="form.client"
 				:options="clientOptions"
+				:aria-label-combobox="t('pipelinq', 'Client')"
 				:clearable="true"
 				label="label"
-				:reduce="o => o.value"
+				:reduce="(o) => o.value"
 				:placeholder="t('pipelinq', 'Select client')" />
 		</div>
 
@@ -84,29 +88,35 @@
 				<NcSelect
 					v-model="form.pipeline"
 					:options="pipelineOptions"
+					:aria-label-combobox="t('pipelinq', 'Pipeline')"
 					:clearable="true"
 					label="label"
-					:reduce="o => o.value"
+					:reduce="(o) => o.value"
 					:placeholder="t('pipelinq', 'Select pipeline')"
-					@input="onPipelineChange" />
+					@update:modelValue="onPipelineChange" />
 			</div>
 			<div class="form-group">
 				<label>{{ t('pipelinq', 'Stage') }}</label>
 				<NcSelect
 					v-model="form.stage"
 					:options="stageOptions"
+					:aria-label-combobox="t('pipelinq', 'Stage')"
 					:clearable="true"
 					:disabled="!form.pipeline"
-					:placeholder="form.pipeline ? t('pipelinq', 'Select stage') : t('pipelinq', 'Select pipeline first')" />
+					:placeholder="
+						form.pipeline
+							? t('pipelinq', 'Select stage')
+							: t('pipelinq', 'Select pipeline first')
+					" />
 			</div>
 		</div>
 
 		<!-- Actions -->
-		<div class="form-actions">
-			<NcButton type="tertiary" @click="$emit('cancel')">
+		<div v-if="showActions" class="form-actions">
+			<NcButton variant="tertiary" @click="$emit('cancel')">
 				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
-			<NcButton type="primary" :disabled="!isValid" @click="onSave">
+			<NcButton variant="primary" :disabled="!isValid" @click="onSave">
 				{{ isEdit ? t('pipelinq', 'Save') : t('pipelinq', 'Create') }}
 			</NcButton>
 		</div>
@@ -114,28 +124,48 @@
 </template>
 
 <script>
-import { NcButton, NcSelect, NcTextField } from '@nextcloud/vue'
+import {
+	NcButton,
+	NcDateTimePickerNative,
+	NcSelect,
+	NcTextField,
+} from '@nextcloud/vue'
+import { toDateInputString, toDateObject } from '../../services/localeUtils.js'
+import { getAllowedTransitions } from '../../services/requestStatus.js'
 import { useObjectStore } from '../../store/modules/object.js'
 import { useRequestChannelsStore } from '../../store/modules/requestChannels.js'
-import { getAllowedTransitions } from '../../services/requestStatus.js'
 
 export default {
 	name: 'RequestForm',
 	components: {
 		NcButton,
+		NcDateTimePickerNative,
 		NcSelect,
 		NcTextField,
 	},
+
 	props: {
 		request: {
 			type: Object,
 			default: null,
 		},
+
 		preLinkedClient: {
 			type: String,
 			default: null,
 		},
+
+		/**
+		 * Render the built-in Cancel / Save buttons. Set to `false` when the
+		 * host supplies its own action buttons (e.g. a parent NcDialog driving
+		 * the form via a ref + the `update:valid` event).
+		 */
+		showActions: {
+			type: Boolean,
+			default: true,
+		},
 	},
+
 	data() {
 		return {
 			form: {
@@ -145,65 +175,140 @@ export default {
 				priority: 'normal',
 				channel: null,
 				category: '',
-				requestedAt: null,
+				occurredAt: null,
 				client: null,
 				pipeline: null,
 				stage: null,
 			},
+
 			priorityOptions: ['low', 'normal', 'high', 'urgent'],
 		}
 	},
+
 	computed: {
+		/**
+		 * Bridge the stored `occurredAt` string (formerly `requestedAt`, renamed by
+		 * unify-ticket-supertype) to NcDateTimePickerNative, which works with Date
+		 * objects. The user-facing label stays "Requested at".
+		 *
+		 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
+		 */
+		occurredAtDate: {
+			/**
+			 * @return {Date|null} The stored `occurredAt` as a Date.
+			 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
+			 */
+			get() {
+				return toDateObject(this.form.occurredAt)
+			},
+
+			/**
+			 * @param {Date|null} date The picked date.
+			 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
+			 */
+			set(date) {
+				this.form.occurredAt = toDateInputString(date)
+			},
+		},
+
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-44
+		 */
 		objectStore() {
 			return useObjectStore()
 		},
+
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-49
+		 */
 		requestChannelsStore() {
 			return useRequestChannelsStore()
 		},
+
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-39
+		 */
 		channelOptions() {
 			return this.requestChannelsStore.channelNames
 		},
+
 		isEdit() {
 			return !!this.request?.id
 		},
+
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-38
+		 */
 		availableStatuses() {
 			if (!this.isEdit) return ['new']
 			const current = this.request.status || 'new'
 			return [current, ...getAllowedTransitions(current)]
 		},
+
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-48
+		 */
 		pipelines() {
 			return this.objectStore.collections.pipeline || []
 		},
+
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-50
+		 */
 		requestPipelines() {
-			return this.pipelines.filter(p =>
-				p.entityType === 'request' || p.entityType === 'both',
+			return this.pipelines.filter(
+				(p) => p.entityType === 'request' || p.entityType === 'both',
 			)
 		},
+
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-47
+		 */
 		pipelineOptions() {
-			return this.requestPipelines.map(p => ({
+			return this.requestPipelines.map((p) => ({
 				value: p.id,
 				label: p.title,
 			}))
 		},
+
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-51
+		 */
 		selectedPipeline() {
 			if (!this.form.pipeline) return null
-			return this.pipelines.find(p => p.id === this.form.pipeline) || null
+			return this.pipelines.find((p) => p.id === this.form.pipeline) || null
 		},
+
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-52
+		 */
 		stageOptions() {
 			if (!this.selectedPipeline?.stages) return []
 			return [...this.selectedPipeline.stages]
 				.sort((a, b) => a.order - b.order)
-				.map(s => s.name)
+				.map((s) => s.name)
 		},
+
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-41
+		 */
 		clients() {
 			return this.objectStore.collections.client || []
 		},
+
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-40
+		 */
 		clientOptions() {
-			return this.clients.map(c => ({
+			return this.clients.map((c) => ({
 				value: c.id,
 				label: c.name || c.id,
 			}))
 		},
+
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-43
+		 */
 		errors() {
 			const errors = {}
 			if (!this.form.title || !this.form.title.trim()) {
@@ -211,10 +316,26 @@ export default {
 			}
 			return errors
 		},
+
 		isValid() {
 			return Object.keys(this.errors).length === 0 && this.form.title?.trim()
 		},
 	},
+
+	watch: {
+		// Surface validity so a host (e.g. a parent NcDialog) can enable or
+		// disable its own submit button.
+		isValid: {
+			immediate: true,
+			handler(val) {
+				this.$emit('update:valid', !!val)
+			},
+		},
+	},
+
+	/**
+	 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-42
+	 */
 	async created() {
 		await Promise.all([
 			this.objectStore.fetchCollection('pipeline', { _limit: 100 }),
@@ -231,7 +352,7 @@ export default {
 				priority: this.request.priority || 'normal',
 				channel: this.request.channel || null,
 				category: this.request.category || '',
-				requestedAt: this.request.requestedAt || null,
+				occurredAt: this.request.occurredAt || null,
 				client: this.request.client || null,
 				pipeline: this.request.pipeline || null,
 				stage: this.request.stage || null,
@@ -243,34 +364,50 @@ export default {
 			this.autoAssignDefaultPipeline()
 		}
 	},
+
 	methods: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-37
+		 */
 		autoAssignDefaultPipeline() {
-			const defaultPipeline = this.requestPipelines.find(p => p.isDefault)
+			const defaultPipeline = this.requestPipelines.find((p) => p.isDefault)
 			if (defaultPipeline) {
 				this.form.pipeline = defaultPipeline.id
-				const stages = [...(defaultPipeline.stages || [])].sort((a, b) => a.order - b.order)
-				const firstOpen = stages.find(s => !s.isClosed)
+				const stages = [...(defaultPipeline.stages || [])].sort(
+					(a, b) => a.order - b.order,
+				)
+				const firstOpen = stages.find((s) => !s.isClosed)
 				if (firstOpen) {
 					this.form.stage = firstOpen.name
 				}
 			}
 		},
+
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-45
+		 */
 		onPipelineChange() {
 			this.form.stage = null
 			if (this.selectedPipeline) {
-				const stages = [...(this.selectedPipeline.stages || [])].sort((a, b) => a.order - b.order)
-				const firstOpen = stages.find(s => !s.isClosed)
+				const stages = [...(this.selectedPipeline.stages || [])].sort(
+					(a, b) => a.order - b.order,
+				)
+				const firstOpen = stages.find((s) => !s.isClosed)
 				if (firstOpen) {
 					this.form.stage = firstOpen.name
 				}
 			}
 		},
+
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-46
+		 */
 		onSave() {
 			if (!this.isValid) return
 
 			const data = { ...this.form }
 			if (!data.channel) delete data.channel
-			if (!data.requestedAt) delete data.requestedAt
+			if (!data.occurredAt) delete data.occurredAt
 			if (!data.client) delete data.client
 			if (!data.pipeline) delete data.pipeline
 			if (!data.stage) delete data.stage

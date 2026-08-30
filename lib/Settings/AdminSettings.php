@@ -8,13 +8,15 @@
  * @category Settings
  * @package  OCA\Pipelinq\Settings
  *
- * @author    Conduction Development Team <dev@conductio.nl>
+ * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
  * @version GIT: <git_id>
  *
  * @link https://pipelinq.nl
+ *
+ * @spec openspec/specs/admin-settings/spec.md
  */
 
 declare(strict_types=1);
@@ -25,62 +27,85 @@ use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\SettingsService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Http\TemplateResponse;
-use OCP\Settings\ISettings;
+use OCP\AppFramework\Services\IInitialState;
+use OCP\Settings\IDelegatedSettings;
 
 /**
  * Admin settings for Pipelinq.
+ *
+ * Implements IDelegatedSettings so #[AuthorizedAdminSetting(AdminSettings::class)]
+ * can scope the controllers that mutate Pipelinq configuration (SetupController).
  */
-class AdminSettings implements ISettings
-{
-    /**
-     * Constructor.
-     *
-     * @param SettingsService $settingsService The settings service.
-     * @param IAppManager     $appManager      The app manager.
-     */
-    public function __construct(
-        private SettingsService $settingsService,
-        private IAppManager $appManager,
-    ) {
-    }//end __construct()
+class AdminSettings implements IDelegatedSettings {
+	/**
+	 * Constructor.
+	 *
+	 * @param SettingsService $settingsService The settings service.
+	 * @param IAppManager $appManager The app manager.
+	 * @param IInitialState $initialState The initial state service.
+	 */
+	public function __construct(
+		private SettingsService $settingsService,
+		private IAppManager $appManager,
+		private IInitialState $initialState,
+	) {
+	}//end __construct()
 
-    /**
-     * Get the admin settings form.
-     *
-     * @return TemplateResponse The settings form template.
-     */
-    public function getForm(): TemplateResponse
-    {
-        $config  = $this->settingsService->getSettings();
-        $version = $this->appManager->getAppVersion(appId: Application::APP_ID);
+	/**
+	 * Get the admin settings form.
+	 *
+	 * @return TemplateResponse The settings form template.
+	 *
+	 * @spec openspec/specs/admin-settings/spec.md
+	 */
+	public function getForm(): TemplateResponse {
+		$config = $this->settingsService->getSettings();
+		$version = $this->appManager->getAppVersion(appId: Application::APP_ID);
 
-        return new TemplateResponse(
-                Application::APP_ID,
-                'settings/admin',
-                [
-                    'config'  => json_encode($config),
-                    'version' => $version,
-                ]
-                );
-    }//end getForm()
+		$this->initialState->provideInitialState('version', $version);
 
-    /**
-     * Get the settings section ID.
-     *
-     * @return string The section ID.
-     */
-    public function getSection(): string
-    {
-        return 'pipelinq';
-    }//end getSection()
+		return new TemplateResponse(
+			Application::APP_ID,
+			'settings/admin',
+			[
+				'config' => json_encode($config),
+			]
+		);
+	}//end getForm()
 
-    /**
-     * Get the settings priority.
-     *
-     * @return int The priority.
-     */
-    public function getPriority(): int
-    {
-        return 10;
-    }//end getPriority()
+	/**
+	 * Get the settings section ID.
+	 *
+	 * @return string The section ID.
+	 */
+	public function getSection(): string {
+		return 'pipelinq';
+	}//end getSection()
+
+	/**
+	 * Get the settings priority.
+	 *
+	 * @return int The priority.
+	 */
+	public function getPriority(): int {
+		return 10;
+	}//end getPriority()
+
+	/**
+	 * Human-readable name of the delegated settings section.
+	 *
+	 * @return string|null The section name, or null to use the section default.
+	 */
+	public function getName(): ?string {
+		return null;
+	}//end getName()
+
+	/**
+	 * App config keys an authorized (delegated) admin may manage.
+	 *
+	 * @return array<string,string[]> Map of appId to allowed config keys.
+	 */
+	public function getAuthorizedAppConfig(): array {
+		return [];
+	}//end getAuthorizedAppConfig()
 }//end class

@@ -1,0 +1,10 @@
+{
+  "spec_slug": "time-entry-mobile",
+  "title": "Time Entry Mobile (offline timer + sync)",
+  "app": "pipelinq",
+  "repo": "https://github.com/ConductionNL/pipelinq",
+  "depends_on": [
+    "time-entry-core"
+  ],
+  "issue": null
+}

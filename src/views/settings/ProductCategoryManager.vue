@@ -1,15 +1,16 @@
 <template>
-	<div class="category-manager">
-		<div class="category-manager__header">
-			<h3>{{ t('pipelinq', 'Product Categories') }}</h3>
-			<NcButton type="secondary" @click="startAdding">
+	<CnSettingsSection :name="t('pipelinq', 'Product Categories')">
+		<template #actions>
+			<NcButton variant="secondary" @click="startAdding">
 				{{ t('pipelinq', '+ Add Category') }}
 			</NcButton>
-		</div>
+		</template>
 
 		<NcLoadingIcon v-if="loading" :size="24" />
 
-		<div v-else-if="categories.length === 0 && !adding" class="category-manager__empty">
+		<div
+			v-else-if="categories.length === 0 && !adding"
+			class="category-manager__empty">
 			<p>{{ t('pipelinq', 'No product categories configured yet.') }}</p>
 		</div>
 
@@ -26,14 +27,19 @@
 							v-model="editForm.name"
 							class="category-item__input"
 							:placeholder="t('pipelinq', 'Category name')"
+							:aria-label="t('pipelinq', 'Category name')"
 							@keyup.enter="saveEdit(cat.id)"
-							@keyup.escape="cancelEdit">
+							@keyup.escape="cancelEdit" />
 						<input
 							v-model="editForm.description"
 							class="category-item__input category-item__input--desc"
-							:placeholder="t('pipelinq', 'Description (optional)')">
+							:placeholder="t('pipelinq', 'Description (optional)')"
+							:aria-label="t('pipelinq', 'Category description')" />
 						<div class="category-item__actions">
-							<NcButton type="primary" :disabled="!editForm.name.trim()" @click="saveEdit(cat.id)">
+							<NcButton
+								variant="primary"
+								:disabled="!editForm.name.trim()"
+								@click="saveEdit(cat.id)">
 								{{ t('pipelinq', 'Save') }}
 							</NcButton>
 							<NcButton @click="cancelEdit">
@@ -45,13 +51,15 @@
 				<template v-else>
 					<div class="category-item__content">
 						<span class="category-item__name">{{ cat.name }}</span>
-						<span v-if="cat.description" class="category-item__desc">{{ cat.description }}</span>
+						<span v-if="cat.description" class="category-item__desc">{{
+							cat.description
+						}}</span>
 					</div>
 					<div class="category-item__buttons">
-						<NcButton type="tertiary" @click="startEditing(cat)">
+						<NcButton variant="tertiary" @click="startEditing(cat)">
 							{{ t('pipelinq', 'Edit') }}
 						</NcButton>
-						<NcButton type="tertiary" @click="confirmRemove(cat)">
+						<NcButton variant="tertiary" @click="confirmRemove(cat)">
 							{{ t('pipelinq', 'Remove') }}
 						</NcButton>
 					</div>
@@ -66,14 +74,19 @@
 						v-model="addForm.name"
 						class="category-item__input"
 						:placeholder="t('pipelinq', 'Category name')"
+						:aria-label="t('pipelinq', 'New category name')"
 						@keyup.enter="saveNew"
-						@keyup.escape="cancelAdding">
+						@keyup.escape="cancelAdding" />
 					<input
 						v-model="addForm.description"
 						class="category-item__input category-item__input--desc"
-						:placeholder="t('pipelinq', 'Description (optional)')">
+						:placeholder="t('pipelinq', 'Description (optional)')"
+						:aria-label="t('pipelinq', 'New category description')" />
 					<div class="category-item__actions">
-						<NcButton type="primary" :disabled="!addForm.name.trim()" @click="saveNew">
+						<NcButton
+							variant="primary"
+							:disabled="!addForm.name.trim()"
+							@click="saveNew">
 							{{ t('pipelinq', 'Add') }}
 						</NcButton>
 						<NcButton @click="cancelAdding">
@@ -87,20 +100,23 @@
 		<NcNoteCard v-if="error" type="error">
 			{{ error }}
 		</NcNoteCard>
-	</div>
+	</CnSettingsSection>
 </template>
 
 <script>
+import { CnSettingsSection } from '@conduction/nextcloud-vue'
 import { NcButton, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
 import { useObjectStore } from '../../store/modules/object.js'
 
 export default {
 	name: 'ProductCategoryManager',
 	components: {
+		CnSettingsSection,
 		NcButton,
 		NcLoadingIcon,
 		NcNoteCard,
 	},
+
 	data() {
 		return {
 			categories: [],
@@ -112,10 +128,18 @@ export default {
 			error: null,
 		}
 	},
+
 	computed: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-59
+		 */
 		objectStore() {
 			return useObjectStore()
 		},
+
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-62
+		 */
 		sortedCategories() {
 			return [...this.categories].sort((a, b) => {
 				const orderA = a.order ?? 999
@@ -125,14 +149,22 @@ export default {
 			})
 		},
 	},
+
 	async mounted() {
 		await this.fetchCategories()
 	},
+
 	methods: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-58
+		 */
 		async fetchCategories() {
 			this.loading = true
 			try {
-				const results = await this.objectStore.fetchCollection('productCategory', { _limit: 100 })
+				const results = await this.objectStore.fetchCollection(
+					'productCategory',
+					{ _limit: 100 },
+				)
 				this.categories = results || []
 			} catch {
 				this.categories = []
@@ -140,6 +172,10 @@ export default {
 				this.loading = false
 			}
 		},
+
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-63
+		 */
 		startAdding() {
 			this.adding = true
 			this.addForm = { name: '', description: '' }
@@ -148,11 +184,19 @@ export default {
 				this.$refs.addInput?.focus()
 			})
 		},
+
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-55
+		 */
 		cancelAdding() {
 			this.adding = false
 			this.addForm = { name: '', description: '' }
 			this.error = null
 		},
+
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-61
+		 */
 		async saveNew() {
 			const name = this.addForm.name.trim()
 			if (!name) return
@@ -171,6 +215,11 @@ export default {
 				this.error = e.message || t('pipelinq', 'Failed to create category')
 			}
 		},
+
+		/**
+		 * @param cat
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-64
+		 */
 		startEditing(cat) {
 			this.editingId = cat.id
 			this.editForm = {
@@ -182,11 +231,20 @@ export default {
 				this.$refs.editInput?.[0]?.focus()
 			})
 		},
+
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-56
+		 */
 		cancelEdit() {
 			this.editingId = null
 			this.editForm = { name: '', description: '' }
 			this.error = null
 		},
+
+		/**
+		 * @param id
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-60
+		 */
 		async saveEdit(id) {
 			const name = this.editForm.name.trim()
 			if (!name) return
@@ -205,14 +263,24 @@ export default {
 				this.error = e.message || t('pipelinq', 'Failed to update category')
 			}
 		},
+
+		/**
+		 * @param cat
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-57
+		 */
 		async confirmRemove(cat) {
-			const message = t('pipelinq', 'Are you sure you want to remove "{name}"?', { name: cat.name })
+			const message = t(
+				'pipelinq',
+				'Are you sure you want to remove "{name}"?',
+				{ name: cat.name },
+			)
 			if (confirm(message)) {
 				try {
 					await this.objectStore.deleteObject('productCategory', cat.id)
 					await this.fetchCategories()
 				} catch (e) {
-					this.error = e.message || t('pipelinq', 'Failed to remove category')
+					this.error =
+						e.message || t('pipelinq', 'Failed to remove category')
 				}
 			}
 		},
@@ -221,21 +289,6 @@ export default {
 </script>
 
 <style scoped>
-.category-manager {
-	margin-bottom: 24px;
-}
-
-.category-manager__header {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	margin-bottom: 12px;
-}
-
-.category-manager__header h3 {
-	margin: 0;
-}
-
 .category-manager__empty {
 	color: var(--color-text-maxcontrast);
 	padding: 8px 0;

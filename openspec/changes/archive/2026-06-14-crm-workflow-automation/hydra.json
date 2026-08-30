@@ -1,0 +1,8 @@
+{
+  "spec_slug": "crm-workflow-automation",
+  "title": "Crm Workflow Automation",
+  "app": "pipelinq",
+  "repo": "https://github.com/ConductionNL/pipelinq",
+  "depends_on": [],
+  "issue": null
+}

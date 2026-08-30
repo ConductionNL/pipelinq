@@ -1,83 +1,36 @@
 <?xml version="1.0"?>
-<ruleset name="Pipelinq Nextcloud Rules"
+<ruleset name="pipelinq"
     xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0
-                        http://pmd.sourceforge.net/ruleset_xml_schema.xsd">
+    xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 http://pmd.sourceforge.net/ruleset_xml_schema.xsd">
+    <description>pipelinq — Conduction PHPMD ruleset (single source: conduction/hydra-gates).</description>
 
-    <description>
-        PHPMD ruleset for Pipelinq, based on the Conduction/OpenRegister standard.
-    </description>
+    <rule ref="vendor/conduction/hydra-gates/quality-config/phpmd.xml">
+        <exclude name="StaticAccess"/>
+    </rule>
 
-    <!-- Clean Code Rules -->
-    <rule ref="rulesets/cleancode.xml/IfStatementAssignment"/>
-    <rule ref="rulesets/cleancode.xml/DuplicatedArrayKey"/>
-    <rule ref="rulesets/cleancode.xml/MissingImport"/>
-    <rule ref="rulesets/cleancode.xml/UndefinedVariable"/>
-    <rule ref="rulesets/cleancode.xml/ErrorControlOperator"/>
+    <!-- StaticAccess: one exception, and only one.
 
-    <!-- Code Size Rules -->
-    <rule ref="rulesets/codesize.xml/CyclomaticComplexity">
+         `\OCA\Pipelinq\Support\FleetAppId` is a pure resolver over a constant
+         map: given an IAppManager and a canonical app name, it returns whichever
+         id the instance actually registered. It holds no state and no
+         collaborators — it takes the only thing it needs as an argument — so
+         there is nothing here that could be injected. Making it a service would
+         add DI wiring around a lookup table.
+
+         It also exists to be DELETED. It bridges the window where `development`
+         carries the new fleet app ids and `beta`/`main` still carry the old
+         ones; once those agree, every call site becomes a plain string again and
+         the class goes away.
+
+         This uses the rule's OWN `exceptions` property — its designed
+         configuration surface — rather than an @SuppressWarnings annotation or a
+         baseline entry. The rule stays fully active for every other class, and
+         the exception is one named class, visible in config, with the reason
+         attached. -->
+    <rule ref="rulesets/cleancode.xml/StaticAccess">
         <properties>
-            <property name="reportLevel" value="15" />
+            <property name="exceptions" value="\OCA\Pipelinq\Support\FleetAppId"/>
         </properties>
     </rule>
-    <rule ref="rulesets/codesize.xml/NPathComplexity">
-        <properties>
-            <property name="minimum" value="5000" />
-        </properties>
-    </rule>
-    <rule ref="rulesets/codesize.xml/ExcessiveMethodLength">
-        <properties>
-            <property name="minimum" value="200" />
-        </properties>
-    </rule>
-    <rule ref="rulesets/codesize.xml/ExcessiveClassLength">
-        <properties>
-            <property name="minimum" value="1500" />
-        </properties>
-    </rule>
-    <rule ref="rulesets/codesize.xml/ExcessiveParameterList"/>
-    <rule ref="rulesets/codesize.xml/ExcessivePublicCount"/>
-    <rule ref="rulesets/codesize.xml/TooManyFields"/>
-    <rule ref="rulesets/codesize.xml/TooManyMethods"/>
-    <rule ref="rulesets/codesize.xml/TooManyPublicMethods"/>
-    <rule ref="rulesets/codesize.xml/ExcessiveClassComplexity"/>
-
-    <!-- Controversial Rules -->
-    <rule ref="rulesets/controversial.xml/Superglobals"/>
-    <rule ref="rulesets/controversial.xml/CamelCaseClassName"/>
-    <rule ref="rulesets/controversial.xml/CamelCasePropertyName"/>
-    <rule ref="rulesets/controversial.xml/CamelCaseMethodName"/>
-
-    <!-- Design Rules -->
-    <rule ref="rulesets/design.xml/ExitExpression"/>
-    <rule ref="rulesets/design.xml/EvalExpression"/>
-    <rule ref="rulesets/design.xml/GotoStatement"/>
-    <rule ref="rulesets/design.xml/NumberOfChildren"/>
-    <rule ref="rulesets/design.xml/DepthOfInheritance"/>
-    <rule ref="rulesets/design.xml/CouplingBetweenObjects"/>
-    <rule ref="rulesets/design.xml/DevelopmentCodeFragment"/>
-    <rule ref="rulesets/design.xml/EmptyCatchBlock"/>
-    <rule ref="rulesets/design.xml/CountInLoopExpression"/>
-
-    <!-- Naming Rules -->
-    <rule ref="rulesets/naming.xml/LongClassName"/>
-    <rule ref="rulesets/naming.xml/ShortClassName"/>
-    <rule ref="rulesets/naming.xml/ShortVariable">
-        <properties>
-            <property name="minimum" value="3" />
-            <property name="exceptions" value="id,db,qb,op,ui,io,gc,tz,pk,fk,to,ch,a,b,l,v,c,t,r,f,n,k,e" />
-        </properties>
-    </rule>
-    <rule ref="rulesets/naming.xml/LongVariable"/>
-    <rule ref="rulesets/naming.xml/ShortMethodName"/>
-    <rule ref="rulesets/naming.xml/ConstructorWithNameAsEnclosingClass"/>
-    <rule ref="rulesets/naming.xml/ConstantNamingConventions"/>
-    <rule ref="rulesets/naming.xml/BooleanGetMethodName"/>
-
-    <!-- Unused Code Rules -->
-    <rule ref="rulesets/unusedcode.xml/UnusedPrivateField"/>
-    <rule ref="rulesets/unusedcode.xml/UnusedLocalVariable"/>
-    <rule ref="rulesets/unusedcode.xml/UnusedPrivateMethod"/>
 </ruleset>

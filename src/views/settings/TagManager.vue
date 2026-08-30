@@ -1,11 +1,10 @@
 <template>
-	<div class="tag-manager">
-		<div class="tag-manager__header">
-			<h3>{{ title }}</h3>
-			<NcButton type="secondary" @click="startAdding">
+	<CnSettingsSection :name="title">
+		<template #actions>
+			<NcButton variant="secondary" @click="startAdding">
 				{{ addLabel }}
 			</NcButton>
-		</div>
+		</template>
 
 		<NcLoadingIcon v-if="loading" :size="24" />
 
@@ -14,34 +13,43 @@
 		</div>
 
 		<div v-else class="tag-manager__list">
-			<div v-for="tag in tags"
+			<div
+				v-for="tag in tags"
 				:key="tag.id"
 				class="tag-chip"
 				:class="{ 'tag-chip--editing': editingId === tag.id }">
 				<template v-if="editingId === tag.id">
-					<input ref="editInput"
+					<input
+						ref="editInput"
 						v-model="editName"
 						class="tag-chip__input"
+						:aria-label="
+							t('pipelinq', 'Rename tag {name}', { name: tag.name })
+						"
 						@keyup.enter="saveRename(tag.id)"
-						@keyup.escape="cancelEdit">
-					<button class="tag-chip__action tag-chip__action--save"
+						@keyup.escape="cancelEdit" />
+					<button
+						class="tag-chip__action tag-chip__action--save"
 						:title="t('pipelinq', 'Save')"
 						@click="saveRename(tag.id)">
 						&#10003;
 					</button>
-					<button class="tag-chip__action tag-chip__action--cancel"
+					<button
+						class="tag-chip__action tag-chip__action--cancel"
 						:title="t('pipelinq', 'Cancel')"
 						@click="cancelEdit">
 						&#10005;
 					</button>
 				</template>
 				<template v-else>
-					<span class="tag-chip__label"
+					<span
+						class="tag-chip__label"
 						:title="t('pipelinq', 'Double-click to rename')"
 						@dblclick="startEditing(tag)">
 						{{ tag.name }}
 					</span>
-					<button class="tag-chip__remove"
+					<button
+						class="tag-chip__remove"
 						:title="t('pipelinq', 'Remove')"
 						@click="confirmRemove(tag)">
 						&times;
@@ -51,18 +59,22 @@
 
 			<!-- Inline add form -->
 			<div v-if="adding" class="tag-chip tag-chip--adding">
-				<input ref="addInput"
+				<input
+					ref="addInput"
 					v-model="newName"
 					class="tag-chip__input"
 					:placeholder="addPlaceholder"
+					:aria-label="addPlaceholder"
 					@keyup.enter="saveNew"
-					@keyup.escape="cancelAdding">
-				<button class="tag-chip__action tag-chip__action--save"
+					@keyup.escape="cancelAdding" />
+				<button
+					class="tag-chip__action tag-chip__action--save"
 					:title="t('pipelinq', 'Add')"
 					@click="saveNew">
 					&#10003;
 				</button>
-				<button class="tag-chip__action tag-chip__action--cancel"
+				<button
+					class="tag-chip__action tag-chip__action--cancel"
 					:title="t('pipelinq', 'Cancel')"
 					@click="cancelAdding">
 					&#10005;
@@ -73,45 +85,64 @@
 		<NcNoteCard v-if="error" type="error">
 			{{ error }}
 		</NcNoteCard>
-	</div>
+	</CnSettingsSection>
 </template>
 
 <script>
+import { CnSettingsSection } from '@conduction/nextcloud-vue'
 import { NcButton, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
 
 export default {
 	name: 'TagManager',
 	components: {
+		CnSettingsSection,
 		NcButton,
 		NcLoadingIcon,
 		NcNoteCard,
 	},
+
 	props: {
 		title: {
 			type: String,
 			required: true,
 		},
+
 		tags: {
 			type: Array,
 			default: () => [],
 		},
+
 		loading: {
 			type: Boolean,
 			default: false,
 		},
+
 		addLabel: {
 			type: String,
-			default() { return t('pipelinq', '+ Add') },
+			/**
+			 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-91
+			 */
+			default() {
+				return t('pipelinq', '+ Add')
+			},
 		},
+
 		addPlaceholder: {
 			type: String,
-			default() { return t('pipelinq', 'Enter name...') },
+			/**
+			 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-91
+			 */
+			default() {
+				return t('pipelinq', 'Enter name...')
+			},
 		},
+
 		usageCheck: {
 			type: Function,
 			default: null,
 		},
 	},
+
 	data() {
 		return {
 			adding: false,
@@ -121,7 +152,11 @@ export default {
 			error: null,
 		}
 	},
+
 	methods: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-94
+		 */
 		startAdding() {
 			this.adding = true
 			this.newName = ''
@@ -130,24 +165,52 @@ export default {
 				this.$refs.addInput?.focus()
 			})
 		},
+
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-88
+		 */
 		cancelAdding() {
 			this.adding = false
 			this.newName = ''
 			this.error = null
 		},
+
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-92
+		 */
 		async saveNew() {
 			const name = this.newName.trim()
 			if (!name) return
 
+			// Check for duplicate names.
+			const duplicate = this.tags.some(
+				(tag) => tag.name.toLowerCase() === name.toLowerCase(),
+			)
+			if (duplicate) {
+				this.error = t(
+					'pipelinq',
+					'An item with the name "{name}" already exists.',
+					{ name },
+				)
+				return
+			}
+
 			this.error = null
 			try {
-				await this.$emit('add', name)
+				// $emit returns the vm, not the handler's promise, so we invoke the
+				// listener directly to await the action and catch any rejection.
+				await this.$attrs.onAdd?.(name)
 				this.adding = false
 				this.newName = ''
 			} catch (e) {
 				this.error = e.message
 			}
 		},
+
+		/**
+		 * @param tag
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-95
+		 */
 		startEditing(tag) {
 			this.editingId = tag.id
 			this.editName = tag.name
@@ -156,32 +219,70 @@ export default {
 				this.$refs.editInput?.[0]?.focus()
 			})
 		},
+
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-89
+		 */
 		cancelEdit() {
 			this.editingId = null
 			this.editName = ''
 			this.error = null
 		},
+
+		/**
+		 * @param id
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-93
+		 */
 		async saveRename(id) {
 			const name = this.editName.trim()
 			if (!name) return
 
+			// Check for duplicate names (excluding the item being renamed).
+			const duplicate = this.tags.some(
+				(tag) =>
+					tag.id !== id && tag.name.toLowerCase() === name.toLowerCase(),
+			)
+			if (duplicate) {
+				this.error = t(
+					'pipelinq',
+					'An item with the name "{name}" already exists.',
+					{ name },
+				)
+				return
+			}
+
 			this.error = null
 			try {
-				await this.$emit('rename', id, name)
+				// $emit returns the vm, not the handler's promise, so we invoke the
+				// listener directly to await the action and catch any rejection.
+				await this.$attrs.onRename?.(id, name)
 				this.editingId = null
 				this.editName = ''
 			} catch (e) {
 				this.error = e.message
 			}
 		},
+
+		/**
+		 * @param tag
+		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-90
+		 */
 		async confirmRemove(tag) {
-			let message = t('pipelinq', 'Are you sure you want to remove "{name}"?', { name: tag.name })
+			let message = t(
+				'pipelinq',
+				'Are you sure you want to remove "{name}"?',
+				{ name: tag.name },
+			)
 
 			if (this.usageCheck) {
 				try {
 					const count = await this.usageCheck(tag.name)
 					if (count > 0) {
-						message = t('pipelinq', '{count} items currently use "{name}". They will retain their value, but it will no longer be available for new items.', { count, name: tag.name })
+						message = t(
+							'pipelinq',
+							'{count} items currently use "{name}". They will retain their value, but it will no longer be available for new items.',
+							{ count, name: tag.name },
+						)
 					}
 				} catch (e) {
 					// Non-blocking — proceed with generic message
@@ -197,21 +298,6 @@ export default {
 </script>
 
 <style scoped>
-.tag-manager {
-	margin-bottom: 24px;
-}
-
-.tag-manager__header {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	margin-bottom: 12px;
-}
-
-.tag-manager__header h3 {
-	margin: 0;
-}
-
 .tag-manager__empty {
 	color: var(--color-text-maxcontrast);
 	padding: 8px 0;

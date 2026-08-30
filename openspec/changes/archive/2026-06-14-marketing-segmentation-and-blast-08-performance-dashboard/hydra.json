@@ -1,0 +1,7 @@
+{
+  "schema_version": 2,
+  "spec_slug": "marketing-segmentation-and-blast-08-performance-dashboard",
+  "app": "pipelinq",
+  "kind": "code",
+  "depends_on": ["marketing-segmentation-and-blast-07-segment-blast-views"]
+}

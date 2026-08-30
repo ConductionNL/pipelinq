@@ -1,0 +1,103 @@
+{
+  "components": {
+    "schemas": {
+      "ticket": {
+        "properties": {
+          "slaStatus": {
+            "type": "object",
+            "description": "SLA tracking snapshot (managed by SlaEngineService — do not edit manually). unify-ticket-supertype: this used to overlay `request` AND `complaint` with an identical block; both are now `ticketType` subtypes of the unified `ticket` schema, so the two overlays collapse into this one.",
+            "properties": {
+              "policyId": {
+                "type": "string",
+                "description": "UUID of the resolved sla_policy.",
+                "title": "Policy ID"
+              },
+              "startedAt": {
+                "type": "string",
+                "format": "date-time",
+                "title": "Started At",
+                "description": "Timestamp when started occurred."
+              },
+              "pausedAt": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Set when timer is paused (null when running).",
+                "title": "Paused At"
+              },
+              "totalPausedMs": {
+                "type": "integer",
+                "default": 0,
+                "title": "Total Paused Ms",
+                "description": "Total total paused ms for this record."
+              },
+              "targets": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "type": "string",
+                      "title": "Kind",
+                      "description": "Kind for this record."
+                    },
+                    "dueAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "title": "Due At",
+                      "description": "Timestamp when due occurred."
+                    },
+                    "consumedPercentage": {
+                      "type": "number",
+                      "title": "Consumed Percentage",
+                      "description": "Consumed Percentage expressed as a percentage value."
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "on-track",
+                        "at-risk",
+                        "breached",
+                        "met"
+                      ],
+                      "title": "Status",
+                      "description": "Current lifecycle status of this record."
+                    },
+                    "withAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "title": "Met At",
+                      "description": "Timestamp when met occurred."
+                    },
+                    "breachEventIds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "Breach Event Ids",
+                      "description": "Breach Event Ids for this record."
+                    }
+                  }
+                },
+                "title": "Targets",
+                "description": "Targets for this record."
+              },
+              "currentEscalationLevel": {
+                "type": "integer",
+                "default": 0,
+                "title": "Current Escalation Level",
+                "description": "Current Escalation Level for this record."
+              },
+              "lastEvaluatedAt": {
+                "type": "string",
+                "format": "date-time",
+                "title": "Last Evaluated At",
+                "description": "Timestamp when last evaluated occurred."
+              }
+            },
+            "title": "SLA Status"
+          }
+        }
+      }
+    }
+  }
+}

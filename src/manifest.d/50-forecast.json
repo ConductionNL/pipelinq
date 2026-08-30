@@ -1,0 +1,31 @@
+{
+	"menu": [
+		{
+			"id": "Forecast",
+			"label": "Forecast",
+			"icon": "ChartTimelineVariant",
+			"route": "Forecast",
+			"order": 95
+		}
+	],
+	"pages": [
+		{
+			"id": "Forecast",
+			"_note": "KEPT CUSTOM (pipelinq-dashboards-declarative). The forecast roll-up is not expressible as a declarative type:dashboard today. (1) Its primary scope key, periodId (e.g. 'Q2-2026'), is DERIVED CLIENT-SIDE from the current fiscal quarter and is mandatory on GET /api/forecast/snapshots (400 without it) — pageFilters only emit static option values, not a computed 'current quarter', so no token can supply it. (2) There is NO summary endpoint: the snapshots endpoint returns a PAGINATED rows array and the four KPIs (Quota / Closed Won / Committed / Gap-to-close) are summed over rows client-side, with Gap = max(0, quota - projected) where 'projected' comes from forecastMath.js — a derived computation a single endpoint/aggregation stat source cannot produce. (3) The surface is built around bespoke side-effecting actions a stat grid + section cannot host declaratively: the per-owner Override modal (POST /api/forecast/overrides), the at-risk warning, the stacked closed/committed progress bar, and the CSV export link. Missing primitives: (a) a pageFilter value derived from 'now' (current period/quarter token) and (b) a derived/ratio stat source (or a server summary endpoint aggregating the whole matched set, incl. the projected math). Until those exist the view stays custom and nothing is dropped.",
+			"route": "/forecast",
+			"type": "custom",
+			"title": "Forecast",
+			"component": "ForecastDashboardView",
+			"config": { "register": "pipelinq", "schema": "forecastSnapshot" }
+		},
+		{
+			"id": "ForecastTrend",
+			"_note": "KEPT CUSTOM (pipelinq-dashboards-declarative). A rep-scoped TIME-SERIES analysis, not a KPI dashboard: it draws a multi-line commit/best-case/pipeline trend as inline SVG polylines over the rep's historical snapshots plus a week-over-week 'moved into/out of commit' delta and a forecast-accuracy leaderboard. It carries no headline KPI cards to map to stat widgets, and the trend/delta/accuracy visualisations are bespoke SVG/tables with no declarative chart-widget representation (the period is again the client-derived current quarter, and the owner is a free-text rep filter, not a static pageFilter option). Missing primitive: a multi-series time-series chart widget fed from a host endpoint + a current-period token. Kept custom; no data dropped.",
+			"route": "/forecast/trend",
+			"type": "custom",
+			"title": "Forecast trend",
+			"component": "ForecastTrendView",
+			"config": { "register": "pipelinq", "schema": "forecastSnapshot" }
+		}
+	]
+}

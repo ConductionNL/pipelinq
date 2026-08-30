@@ -6,9 +6,7 @@
     <name lang="nl">Pipelinq</name>
     <summary lang="en">CRM with client management, lead pipelines, and request intake</summary>
     <summary lang="nl">CRM met klantbeheer, lead-pipelines en verzoekintake</summary>
-    <description lang="en"><![CDATA[> ⚠️ **Active development — not for production use yet.** This app is under active development. Although it may carry a stable release status, **please do not use it in production environments before 17 June 2026.** See the [app page on conduction.nl](https://conduction.nl/apps/pipelinq) for release planning and what this app does.
-
-Pipelinq is a lightweight CRM for Nextcloud. Manage clients, track leads through visual pipelines, handle incoming requests, and keep a complete history of every interaction — all without leaving your Nextcloud workspace.
+    <description lang="en"><![CDATA[Pipelinq is a lightweight CRM for Nextcloud. Manage clients, track leads through visual pipelines, handle incoming requests, and keep a complete history of every interaction — all without leaving your Nextcloud workspace.
 
 **Key Features**
 
@@ -19,19 +17,19 @@ Pipelinq is a lightweight CRM for Nextcloud. Manage clients, track leads through
 - **Contact moments** — Log calls, emails, visits, and other interactions with clients
 - **My Work queue** — Personal overview of your assigned leads, requests, and follow-ups
 - **Nextcloud Contacts sync** — Two-way sync with the native Contacts app via CardDAV
-- **Duplicate detection** — Automatic warnings when creating clients with matching names or emails
-- **Import and export** — Bulk operations with CSV and vCard support
+- **Duplicate detection** — Provided via OpenRegister master-data management, flagging clients with matching names or emails
+- **Import and export** — vCard contact import and export via Nextcloud Contacts, plus scheduled CSV data exports
 - **Activity and notifications** — Stay updated on assignments, stage changes, and new notes
 
-Pairs naturally with [Procest](https://apps.nextcloud.com/apps/procest) — hand off requests to case management when they're ready.
+Pairs naturally with [Procest](https://apps.nextcloud.com/apps/procest) for case management. A direct request-to-case handoff bridge is in development (openspec change `semantic-handoff-emit`).
 
 **Requires:** [OpenRegister](https://apps.nextcloud.com/apps/openregister) (install from the [Nextcloud App Store](https://apps.nextcloud.com/apps/openregister)).
 
-Free and open source under the AGPL license.
-    ]]></description>
-    <description lang="nl"><![CDATA[> ⚠️ **In actieve ontwikkeling — nog niet voor productiegebruik.** Deze app is volop in ontwikkeling. Hoewel de app een stabiele release-status kan hebben, **gebruik deze nog niet in productieomgevingen vóór 17 juni 2026.** Zie de [app-pagina op conduction.nl](https://conduction.nl/apps/pipelinq) voor release-planning en het doel van deze app.
+Free and open source under the EUPL-1.2 license.
 
-Pipelinq is een lichtgewicht CRM voor Nextcloud. Beheer klanten, volg leads door visuele pipelines, handel binnenkomende verzoeken af en houd een complete historie bij van elke interactie — allemaal zonder je Nextcloud-werkplek te verlaten.
+**Support:** For support, contact support@conduction.nl. For a Service Level Agreement (SLA), contact sales@conduction.nl.
+    ]]></description>
+    <description lang="nl"><![CDATA[Pipelinq is een lichtgewicht CRM voor Nextcloud. Beheer klanten, volg leads door visuele pipelines, handel binnenkomende verzoeken af en houd een complete historie bij van elke interactie — allemaal zonder je Nextcloud-werkplek te verlaten.
 
 **Belangrijkste functies**
 
@@ -42,18 +40,20 @@ Pipelinq is een lichtgewicht CRM voor Nextcloud. Beheer klanten, volg leads door
 - **Contactmomenten** — Log telefoongesprekken, e-mails, bezoeken en andere interacties met klanten
 - **Mijn Werk** — Persoonlijk overzicht van je toegewezen leads, verzoeken en opvolgingen
 - **Nextcloud Contacten sync** — Tweerichtingssynchronisatie met de native Contacten-app via CardDAV
-- **Duplicaatdetectie** — Automatische waarschuwingen bij het aanmaken van klanten met overeenkomende namen of e-mails
-- **Importeren en exporteren** — Bulkbewerkingen met CSV- en vCard-ondersteuning
+- **Duplicaatdetectie** — Geleverd via OpenRegister master-data management, dat klanten met overeenkomende namen of e-mails signaleert
+- **Importeren en exporteren** — vCard-contactimport en -export via Nextcloud Contacten, plus geplande CSV-data-exports
 - **Activiteit en notificaties** — Blijf op de hoogte van toewijzingen, fasewijzigingen en nieuwe notities
 
-Sluit naadloos aan op [Procest](https://apps.nextcloud.com/apps/procest) — draag verzoeken over naar zaakafhandeling wanneer ze klaar zijn.
+Sluit naadloos aan op [Procest](https://apps.nextcloud.com/apps/procest) voor zaakafhandeling. Een directe verzoek-naar-zaak-overdracht is in ontwikkeling (openspec-wijziging `semantic-handoff-emit`).
 
 **Vereist:** [OpenRegister](https://apps.nextcloud.com/apps/openregister) (installeer via de [Nextcloud App Store](https://apps.nextcloud.com/apps/openregister)).
 
-Vrij en open source onder de AGPL-licentie.
+Vrij en open source onder de EUPL-1.2-licentie.
+
+**Ondersteuning:** Voor ondersteuning, neem contact op via support@conduction.nl. Voor een Service Level Agreement (SLA), neem contact op via sales@conduction.nl.
     ]]></description>
-    <version>0.1.16</version>
-    <licence>agpl</licence>
+    <version>0.4.4-unstable.20260829195223</version>
+    <licence>EUPL-1.2</licence>
     <author mail="info@conduction.nl" homepage="https://www.conduction.nl/">Conduction</author>
     <namespace>Pipelinq</namespace>
     <documentation>
@@ -65,31 +65,166 @@ Vrij en open source onder de AGPL-licentie.
     <category>tools</category>
     <category>workflow</category>
     <website>https://github.com/ConductionNL/pipelinq</website>
-    <discussion>https://github.com/ConductionNL/pipelinq/discussions</discussion>
     <bugs>https://github.com/ConductionNL/pipelinq/issues</bugs>
     <repository>https://github.com/ConductionNL/pipelinq</repository>
 
-    <screenshot>https://raw.githubusercontent.com/ConductionNL/pipelinq/main/img/app-store.svg</screenshot>
+    <screenshot>https://raw.githubusercontent.com/ConductionNL/pipelinq/development/img/screenshot-dashboard.png</screenshot>
+    <screenshot>https://raw.githubusercontent.com/ConductionNL/pipelinq/development/img/screenshot-pipeline.png</screenshot>
+    <screenshot>https://raw.githubusercontent.com/ConductionNL/pipelinq/development/img/screenshot-clients.png</screenshot>
 
     <dependencies>
-        <!--
-            Nextcloud floor raised from 28 to 32 so the app may require PHP 8.3.
-            Fleet wide product directive: standardise on Nextcloud 32.
-            Rationale (openconnector issue 1172): an app must never advertise a
-            Nextcloud floor lower than the highest floor of any app it depends on,
-            or the App Store offers the app on releases where the dependency
-            refuses to install. openregister on development declares a Nextcloud
-            floor of 32. The max-version above is unchanged by this commit.
-        -->
-        <nextcloud min-version="32" max-version="33"/>
         <php min-version="8.3"/>
+        <!--
+        min-version is 32, NOT 28, because the OpenRegister dependency noted below is
+        HARD (src/manifest.json lists "openregister" as a required dependency; the
+        optional ones there carry "required": false), and OpenRegister cannot run
+        below Nextcloud 32: its lib/ContextChat/ContentProvider.php declares
+        `class ContentProvider implements IContentProvider` against
+        OCP\ContextChat\IContentProvider, and that interface first ships in core at
+        32.0.0 — verified absent at v29.0.0 / v30.0.0 / v31.0.0 and present at
+        v32.0.0. Because the reference is in the CLASS HEADER it is fatal at
+        autoload, not lazily degradable. All Pipelinq data is OpenRegister objects,
+        so on NC 28-31 this app cannot function. Declaring 28 advertised a range
+        this app cannot deliver. Same defect as openconnector#1173.
+
+        NOTE: OpenRegister's own appinfo/info.xml still declares min-version="28"
+        (canonical origin/development and origin/main, checked 2026-08-08). That
+        declaration is itself too low for the reason above; it is tracked in
+        OpenRegister, and this app does not depend on that value — the floor here
+        rests on the interface fact, not on OpenRegister's declaration.
+        -->
+        <nextcloud min-version="32" max-version="34"/>
+        <!-- App dependency (not expressible in app-info.xsd): OpenRegister
+             (all Pipelinq data — clients, contacts, leads, requests, contracts,
+             contactmomenten — is stored as OpenRegister registers/schemas; see
+             lib/Settings/pipelinq_register.json and the post-migration repair
+             steps below). Deck is used as the leaf board provider for the
+             pipeline-stage kanban (see the "deck" linkedType entries in
+             pipelinq_register.json); OpenConnector is an optional soft
+             dependency (checked via IAppManager::isInstalled(), used for the
+             webhook queue and Shillinq handoff). -->
     </dependencies>
+
+    <background-jobs>
+        <job>OCA\Pipelinq\BackgroundJob\QueueOverflowJob</job>
+        <job>OCA\Pipelinq\BackgroundJob\ScheduledTaskJob</job>
+        <job>OCA\Pipelinq\BackgroundJob\CallbackOverdueJob</job>
+        <job>OCA\Pipelinq\BackgroundJob\PortalCleanupJob</job>
+        <job>OCA\Pipelinq\BackgroundJob\ExportSchedulerJob</job>
+        <job>OCA\Pipelinq\BackgroundJob\ExportWorkerJob</job>
+        <job>OCA\Pipelinq\BackgroundJob\ForecastSnapshotJob</job>
+        <job>OCA\Pipelinq\BackgroundJob\PointsExpiryBatchJob</job>
+        <job>OCA\Pipelinq\BackgroundJob\TierDowngradeJob</job>
+        <job>OCA\Pipelinq\BackgroundJob\CtiEventLogCleanupJob</job>
+        <job>OCA\Pipelinq\BackgroundJob\BlastSendJob</job>
+        <job>OCA\Pipelinq\BackgroundJob\ReminderDispatchJob</job>
+        <job>OCA\Pipelinq\BackgroundJob\AvailabilityCacheRefreshJob</job>
+        <job>OCA\Pipelinq\BackgroundJob\AppointmentDepositTimeoutJob</job>
+        <job>OCA\Pipelinq\BackgroundJob\GenerateZReportJob</job>
+        <job>OCA\Pipelinq\BackgroundJob\PosRetryBackoffJob</job>
+        <job>OCA\Pipelinq\BackgroundJob\TenderPostedRetryJob</job>
+        <job>OCA\Pipelinq\BackgroundJob\EmailMatchJob</job>
+        <job>OCA\Pipelinq\BackgroundJob\BrpHealthCheckJob</job>
+        <job>OCA\Pipelinq\BackgroundJob\BrpMonitorJob</job>
+        <job>OCA\Pipelinq\BackgroundJob\BrpRetentionJob</job>
+        <job>OCA\Pipelinq\BackgroundJob\TemplateApprovalSyncJob</job>
+        <job>OCA\Pipelinq\BackgroundJob\BudgetPeriodResetJob</job>
+        <job>OCA\Pipelinq\BackgroundJob\CostReconciliationJob</job>
+        <job>OCA\Pipelinq\BackgroundJob\WebhookProcessorJob</job>
+        <job>OCA\Pipelinq\BackgroundJob\DispatchQueuedMessagesJob</job>
+        <job>OCA\Pipelinq\BackgroundJob\FallbackEmailJob</job>
+        <job>OCA\Pipelinq\BackgroundJob\SlaDeadlineSweepJob</job>
+        <job>OCA\Pipelinq\BackgroundJob\RenewalWindowJob</job>
+        <job>OCA\Pipelinq\BackgroundJob\BillingHandoffRetryJob</job>
+    </background-jobs>
 
     <repair-steps>
         <post-migration>
+            <!--
+                BEFORE InitializeSettings, which imports the register. OpenRegister
+                matches an existing schema by (application, slug) and CREATES a new one
+                when that misses, so renaming a slug in the shipped fragment does not
+                rename anything — it orphans the old schema and every object already
+                written against it, silently. Renaming the row first means the import
+                updates the schema in place and keeps its id, and its shard table.
+            -->
+            <step>OCA\Pipelinq\Repair\RenameLoyaltyAccountSchemaSlug</step>
             <step>OCA\Pipelinq\Repair\InitializeSettings</step>
+            <!--
+                After InitializeSettings imports the register: the schema edit
+                changes the DECLARATION, but every row already written still
+                holds the Dutch string, and a filter on the new value returns
+                null rather than an error.
+            -->
+            <step>OCA\Pipelinq\Repair\RenameDutchPipelinqValues</step>
+            <step>OCA\Pipelinq\Repair\NormaliseCtiPhoneNumbers</step>
+            <step>OCA\Pipelinq\Repair\NormaliseTicketTitle</step>
+            <step>OCA\Pipelinq\Repair\InitSlaStatus</step>
+            <step>OCA\Pipelinq\Repair\IngestProductVendorMaster</step>
+            <step>OCA\Pipelinq\Repair\MigratePosBookkeepingToShillinq</step>
+            <step>OCA\Pipelinq\Repair\UnifyClientContactIdentity</step>
+            <step>OCA\Pipelinq\Repair\SeedTrustConfigurationRows</step>
+            <step>OCA\Pipelinq\Repair\RemoveRetiredAvgJobs</step>
+            <step>OCA\Pipelinq\Repair\DrainMdmSyncQueue</step>
+            <step>OCA\Pipelinq\Repair\MigrateAvgVerzoekenToOrDsar</step>
+            <step>OCA\Pipelinq\Repair\RemoveLegacyPspKeys</step>
+            <!--
+                Must run AFTER the register sync that adds the English columns.
+                Covers pipelinq, pipelinq-portal AND sla: the renamed properties
+                are spread across all three, and a step that migrated only some
+                would leave the rest silently reading null.
+            -->
+            <step>OCA\Pipelinq\Repair\RenameDutchColumns</step>
         </post-migration>
+        <!--
+            FRESH INSTALL. Nextcloud does NOT run post-migration on a first install:
+            `Installer::installAppLastSteps()` guards both the pre-migration and
+            post-migration blocks with `if ($previousVersion !== '')`, and only
+            `repair-steps/install` runs unconditionally afterwards. Until this block
+            existed a brand-new Pipelinq install ran NONE of the steps above, so
+            InitializeSettings never fired and the pipelinq register and schemas were
+            never imported. The step is annotated
+            `@spec openspec/specs/openregister-integration/spec.md#requirement-auto-configuration-on-install-repair-step`
+            — the spec said "on install"; the wiring never fired on install.
+
+            Only baseline-CREATING steps belong here. Everything else above operates
+            on data a fresh install does not have: the Normalise*/Unify*/Drain*/
+            InitSlaStatus steps rewrite existing rows, the Migrate*/Remove* steps are
+            one-way migrations, and IngestProductVendorMaster consumes a shillinq
+            export that a new instance has never received.
+        -->
+        <install>
+            <step>OCA\Pipelinq\Repair\InitializeSettings</step>
+            <!--
+                After InitializeSettings imports the register: the schema edit
+                changes the DECLARATION, but every row already written still
+                holds the Dutch string, and a filter on the new value returns
+                null rather than an error.
+            -->
+            <step>OCA\Pipelinq\Repair\RenameDutchPipelinqValues</step>
+            <step>OCA\Pipelinq\Repair\SeedTrustConfigurationRows</step>
+        </install>
     </repair-steps>
+
+    <settings>
+        <admin>OCA\Pipelinq\Settings\AdminSettings</admin>
+        <admin-section>OCA\Pipelinq\Sections\SettingsSection</admin-section>
+    </settings>
+
+    <activity>
+        <settings>
+            <setting>OCA\Pipelinq\Activity\Setting\AssignmentSetting</setting>
+            <setting>OCA\Pipelinq\Activity\Setting\StageStatusSetting</setting>
+            <setting>OCA\Pipelinq\Activity\Setting\NoteSetting</setting>
+            <setting>OCA\Pipelinq\Activity\Setting\DealSetting</setting>
+        </settings>
+        <filters>
+            <filter>OCA\Pipelinq\Activity\Filter</filter>
+        </filters>
+        <providers>
+            <provider>OCA\Pipelinq\Activity\Provider</provider>
+        </providers>
+    </activity>
 
     <navigations>
         <navigation>
@@ -99,27 +234,4 @@ Vrij en open source onder de AGPL-licentie.
             <icon>app.svg</icon>
         </navigation>
     </navigations>
-
-    <settings>
-        <admin>OCA\Pipelinq\Settings\AdminSettings</admin>
-        <admin-section>OCA\Pipelinq\Sections\SettingsSection</admin-section>
-    </settings>
-
-    <activity>
-        <providers>
-            <provider>OCA\Pipelinq\Activity\Provider</provider>
-        </providers>
-        <settings>
-            <setting>OCA\Pipelinq\Activity\Setting\AssignmentSetting</setting>
-            <setting>OCA\Pipelinq\Activity\Setting\StageStatusSetting</setting>
-            <setting>OCA\Pipelinq\Activity\Setting\NoteSetting</setting>
-        </settings>
-        <filters>
-            <filter>OCA\Pipelinq\Activity\Filter</filter>
-        </filters>
-    </activity>
-
-    <notification>
-        <service>OCA\Pipelinq\Notification\Notifier</service>
-    </notification>
 </info>

@@ -1,0 +1,198 @@
+{
+	"menu": [
+		{
+			"id": "BookingsGroup",
+			"label": "Appointments",
+			"icon": "CalendarClockOutline",
+			"order": 150,
+			"children": [
+				{
+					"id": "Services",
+					"label": "Services",
+					"icon": "ViewGridOutline",
+					"route": "Services"
+				},
+				{
+					"id": "Resources",
+					"label": "Resources",
+					"icon": "SourceBranch",
+					"route": "Resources"
+				},
+				{
+					"id": "Bookings",
+					"label": "Bookings",
+					"icon": "Calendar",
+					"route": "Bookings"
+				}
+			]
+		}
+	],
+	"pages": [
+		{
+			"id": "Services",
+			"_note": "Service catalogue as a declarative type:index page (pipelinq-views-to-declarative-r2). price→EUR currency, durationMinutes→duration format, status→badge, bookableOnline→boolean. 'New service' navigates to the bespoke ServiceDetail create form (id:'new'); row open navigates to ServiceDetail. ServiceDetail stays custom (multiStep sub-table editor + policy cards + cache-invalidation hook).",
+			"route": "/services",
+			"type": "index",
+			"title": "Services",
+			"config": {
+				"register": "pipelinq",
+				"schema": "service",
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"showAdd": false,
+				"showFormDialog": false,
+				"showViewAction": false,
+				"showEditAction": false,
+				"showCopyAction": false,
+				"showDeleteAction": false,
+				"showMassImport": false,
+				"showMassExport": false,
+				"showMassCopy": false,
+				"showMassDelete": false,
+				"columns": [
+					"name",
+					{ "key": "durationMinutes", "label": "Duration", "format": { "style": "duration", "unit": "minutes" } },
+					{ "key": "price", "label": "Price", "format": { "style": "currency", "currency": "EUR", "decimals": 2 } },
+					{ "key": "bookableOnline", "label": "Online", "type": "boolean" },
+					{ "key": "status", "label": "Status", "widget": "badge", "widgetProps": { "colorMap": { "active": "success", "draft": "default", "archived": "default" } } }
+				],
+				"headerActions": [
+					{ "id": "create", "label": "New service", "icon": "Plus", "handler": "navigate", "route": "ServiceDetail", "params": { "id": "new" } }
+				],
+				"actions": [
+					{ "id": "view", "label": "View", "icon": "Eye", "handler": "navigate", "route": "ServiceDetail" }
+				]
+			}
+		},
+		{
+			"id": "ServiceDetail",
+			"route": "/services/:id",
+			"type": "custom",
+			"title": "Service",
+			"component": "ServiceDetailView",
+			"_note": "Uses CnDetailPage/CnDetailCard, but a type:detail page cannot carry the SIDE EFFECT this one owes: every save calls invalidateAvailability, because changing a service's duration or required skills invalidates the cached booking-availability windows computed from it. Stale windows would offer slots that can no longer be honoured. It also derives display-only labels (formatDuration, formatCurrency, requiredSkillsLabel) that are not schema properties.",
+			"config": {
+				"register": "pipelinq",
+				"schema": "service"
+			}
+		},
+		{
+			"id": "Resources",
+			"_note": "Resource catalogue (staff/room/equipment) as a declarative type:index page (pipelinq-views-to-declarative-r2): the literal navigate params primitive now expresses 'New resource' → ResourceDetail id:'new'. type→badge, bookable→boolean, status→badge. ResourceDetail stays custom (workingHours grid + vacation list + cache invalidation).",
+			"route": "/resources",
+			"type": "index",
+			"title": "Resources",
+			"config": {
+				"register": "pipelinq",
+				"schema": "resource",
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"showAdd": false,
+				"showFormDialog": false,
+				"showViewAction": false,
+				"showEditAction": false,
+				"showCopyAction": false,
+				"showDeleteAction": false,
+				"showMassImport": false,
+				"showMassExport": false,
+				"showMassCopy": false,
+				"showMassDelete": false,
+				"columns": [
+					"name",
+					{ "key": "type", "label": "Type", "widget": "badge", "widgetProps": { "colorMap": { "staff": "primary", "room": "default", "equipment": "default" } } },
+					{ "key": "bookable", "label": "Bookable", "type": "boolean" },
+					{ "key": "status", "label": "Status", "widget": "badge", "widgetProps": { "colorMap": { "active": "success", "inactive": "default", "archived": "default" } } }
+				],
+				"headerActions": [
+					{ "id": "create", "label": "New resource", "icon": "Plus", "handler": "navigate", "route": "ResourceDetail", "params": { "id": "new" } }
+				],
+				"actions": [
+					{ "id": "view", "label": "View", "icon": "Eye", "handler": "navigate", "route": "ResourceDetail" }
+				]
+			}
+		},
+		{
+			"id": "ResourceDetail",
+			"route": "/resources/:id",
+			"type": "custom",
+			"title": "Resource",
+			"component": "ResourceDetailView",
+			"_note": "Same reason as ServiceDetail: a type:detail page cannot own the post-save invalidateAvailability side effect, and a resource's skills or working hours changing must expire the cached availability windows or the booking flow will offer slots this resource can no longer serve. It additionally holds a live useObjectSubscription so a concurrently edited resource updates in place, which declarative detail pages do not do.",
+			"config": {
+				"register": "pipelinq",
+				"schema": "resource"
+			}
+		},
+		{
+			"id": "Bookings",
+			"_note": "Customer appointment ledger as a declarative type:index page (pipelinq-views-to-declarative-r1). View-only — admins create bookings through the public portal flow, never from this list — so the row click is the only action and navigates to the bespoke BookingDetail (reschedule/cancel/act), which stays custom.",
+			"route": "/bookings",
+			"type": "index",
+			"title": "Bookings",
+			"config": {
+				"register": "pipelinq",
+				"schema": "booking",
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"showAdd": false,
+				"showFormDialog": false,
+				"showViewAction": false,
+				"showEditAction": false,
+				"showCopyAction": false,
+				"showDeleteAction": false,
+				"showMassImport": false,
+				"showMassExport": false,
+				"showMassCopy": false,
+				"showMassDelete": false,
+				"rowClickToView": false,
+				"columns": [
+					"customerId",
+					"serviceId",
+					{ "key": "startAt", "label": "Datum/tijd", "format": "date-time" },
+					{ "key": "status", "label": "Status", "widget": "badge", "widgetProps": { "colorMap": { "confirmed": "success", "completed": "primary", "no-show": "error", "pending-deposit": "warning", "cancelled-by-customer": "default", "cancelled-by-business": "default", "rescheduled": "default" } } },
+					"source"
+				],
+				"actions": [
+					{ "id": "view", "label": "Open", "icon": "Eye", "handler": "navigate", "route": "BookingDetail" }
+				]
+			}
+		},
+		{
+			"id": "BookingDetail",
+			"_note": "Booking record as a declarative type:detail page (pipelinq-pos-mdm-detail-declarative). The booking's flat identity fields (status / source / startAt / endAt / depositAmount / notes / …) auto-render in the body via CnObjectDataWidget. Everything the auto-body + relatedCollections cannot express lives in one kind:'section' bodyWidget (BookingDetailSection, after-data): the six TIME-WINDOW-gated admin actions, the inline notes/internalNotes editor, the resourceAssignments + statusHistory ARRAY-on-object tables (with cross-schema resource id->name resolution), the computed Timeline, and the Service/Customer name resolution. KEPT-AS-NOTE: lifecycleActions is NOT wired even though booking HAS an x-openregister-lifecycle — the real transitions POST to bespoke /api/bookings/{id}/{action} endpoints in BookingService with side-effects (confirmation/reminder emails, no-show fees) and TIME-WINDOW gating, and Reschedule CREATES A NEW booking UUID and navigates to it; OR's /transition would only flip status and bypass those side-effects. So the actions stay inside the section. Missing primitive: a declarative action that POSTs to a host-app endpoint (not OR /transition) with time-window gating + a 'returns a new object id, navigate to it' reload mode.",
+			"route": "/bookings/:id",
+			"type": "detail",
+			"title": "Booking",
+			"config": {
+				"register": "pipelinq",
+				"schema": "booking",
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"_note": "Booking archetype (bespoke-detail-pages). An appointment booking is a scheduled service slot, so the body opens with a deposit KPI stat then the booking fields (status, source, startAt/endAt, customerId, serviceId, depositAmount, confirmation/reminder timestamps, cancellationReason) 8-wide and the related graph (service, resource, customer, previousBookingId reschedule chain) 4-wide, with Documents full-width for any signed intake / deposit receipt. IMPORTANT: no calendar body widget or tab — although a booking is time-bound, the booking schema declares NO calendar linkedType, and per the hard rule comms/scheduling leaves only appear when the schema declares them; the real schedule + the six TIME-WINDOW-gated admin actions, the resourceAssignments/statusHistory arrays-on-object and the computed Timeline all stay in the PRESERVED BookingDetailSection bodyWidget (after-data), whose note explains why lifecycleActions cannot be wired (bespoke endpoints, side-effects, reschedule mints a new UUID).",
+				"widgets": [
+					{ "id": "booking-deposit", "type": "stat", "title": "Deposit", "icon": "Cash", "content": { "label": "Deposit", "format": "currency", "source": { "register": "pipelinq", "schema": "booking", "metric": "sum", "field": "depositAmount", "filter": { "id": "@objectId" } } } },
+					{ "id": "booking-data", "type": "data", "title": "Booking", "icon": "Calendar", "content": { "columns": 2, "include": ["status", "source", "startAt", "endAt", "customerId", "serviceId", "depositAmount", "confirmationSentAt", "reminderSentAt", "cancellationReason", "notes"], "overrides": { "status": { "editable": false }, "startAt": { "editable": false }, "endAt": { "editable": false }, "confirmationSentAt": { "editable": false }, "reminderSentAt": { "editable": false } } } },
+					{ "id": "booking-related", "type": "related", "title": "Related", "icon": "LinkVariant" },
+					{ "id": "booking-files", "type": "integration", "integrationId": "files", "title": "Documents", "icon": "FolderOutline" }
+				],
+				"layout": [
+					{ "id": "1", "widgetId": "booking-deposit", "gridX": 0, "gridY": 0, "gridWidth": 12, "gridHeight": 2 },
+					{ "id": "2", "widgetId": "booking-data",    "gridX": 0, "gridY": 2, "gridWidth": 8, "gridHeight": 4 },
+					{ "id": "3", "widgetId": "booking-related", "gridX": 8, "gridY": 2, "gridWidth": 4, "gridHeight": 4 },
+					{ "id": "4", "widgetId": "booking-files",   "gridX": 0, "gridY": 6, "gridWidth": 12, "gridHeight": 3 }
+				],
+				"bodyWidgets": [
+					{
+						"id": "booking-detail",
+						"component": "BookingDetailSection",
+						"placement": "after-data",
+						"props": { "bookingId": "@objectId" }
+					}
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true,
+					"tabs": [
+						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
+					]
+				}
+			}
+		}
+	]
+}

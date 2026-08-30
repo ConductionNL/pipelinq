@@ -8,7 +8,7 @@
  * @category Controller
  * @package  OCA\Pipelinq\Controller
  *
- * @author    Conduction Development Team <dev@conductio.nl>
+ * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2024 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
@@ -29,28 +29,26 @@ use OCP\IRequest;
 /**
  * Controller for the Pipelinq dashboard.
  */
-class DashboardController extends Controller
-{
-    /**
-     * Constructor.
-     *
-     * @param IRequest $request The request.
-     */
-    public function __construct(IRequest $request)
-    {
-        parent::__construct(appName: Application::APP_ID, request: $request);
-    }//end __construct()
+class DashboardController extends Controller {
+	/**
+	 * Constructor.
+	 *
+	 * @param IRequest $request The request.
+	 */
+	public function __construct(IRequest $request) {
+		parent::__construct(appName: Application::APP_ID, request: $request);
+	}//end __construct()
 
-    /**
-     * Render the main dashboard page.
-     *
-     * @return TemplateResponse The template response.
-     *
-     * @NoAdminRequired
-     * @NoCSRFRequired
-     */
-    public function page(): TemplateResponse
-    {
-        return new TemplateResponse(Application::APP_ID, 'index');
-    }//end page()
+	/**
+	 * Render the main dashboard page.
+	 *
+	 * @return TemplateResponse The template response.
+	 *
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 * @spec            openspec/changes/reverse-2026-05-26-be-dashboard-pipeline/tasks.md#task-1
+	 */
+	public function page(): TemplateResponse {
+		return new TemplateResponse(Application::APP_ID, 'index');
+	}//end page()
 }//end class

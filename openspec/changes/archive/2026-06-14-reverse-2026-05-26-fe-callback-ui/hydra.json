@@ -1,0 +1,96 @@
+{
+  "schema_version": 2,
+  "spec_slug": "reverse-2026-05-26-fe-callback-ui",
+  "repo": "https://github.com/ConductionNL/pipelinq",
+  "issue": 159,
+  "cycles": [
+    {
+      "cycle": 1,
+      "trigger": "build:queued",
+      "started_at": "2026-06-03T14:21:19Z",
+      "ended_at": null,
+      "outcome": "in-flight",
+      "outcome_reason": null,
+      "pattern_tags": [
+        "browser-test-nc-setup-failed"
+      ],
+      "stages": [
+        {
+          "stage": "build",
+          "persona": "Al Gorithm",
+          "model": "sonnet",
+          "container": "hydra-builder",
+          "started_at": "2026-06-03T13:31:27Z",
+          "ended_at": "2026-06-03T14:21:11Z",
+          "exit_code": 0,
+          "turns_used": 192,
+          "turns_budget": 200,
+          "checks_run": [],
+          "checks_skipped": [
+            "composer check:strict (phpcs) \u2014 Rule 0b",
+            "composer test:unit (phpunit) \u2014 Rule 0b"
+          ],
+          "findings": [
+            {
+              "id": "build-rule-0b-skipped",
+              "severity": "CRITICAL",
+              "gate": "rule-0b",
+              "rule": "builder did not invoke mandatory pre-push gate (composer check:strict, phpunit)",
+              "status": "open",
+              "note": "Rule 0b in images/builder/CLAUDE.md requires composer check:strict + phpunit before push. No invocations found in transcript \u2014 the pipeline will likely catch pre-review-quality failures downstream.",
+              "autofixable": false
+            }
+          ],
+          "decisions": [],
+          "verdict": "pass",
+          "duration_seconds": 2984
+        },
+        {
+          "stage": "build",
+          "persona": "Al Gorithm",
+          "model": "sonnet",
+          "container": "hydra-builder",
+          "started_at": "2026-06-03T15:12:51Z",
+          "ended_at": "2026-06-03T16:13:12Z",
+          "exit_code": 0,
+          "turns_used": 142,
+          "turns_budget": 200,
+          "checks_run": [],
+          "checks_skipped": [
+            "composer check:strict (phpcs) \u2014 Rule 0b",
+            "composer test:unit (phpunit) \u2014 Rule 0b"
+          ],
+          "findings": [
+            {
+              "id": "build-rule-0b-skipped",
+              "severity": "CRITICAL",
+              "gate": "rule-0b",
+              "rule": "builder did not invoke mandatory pre-push gate (composer check:strict, phpunit)",
+              "status": "open",
+              "note": "Rule 0b in images/builder/CLAUDE.md requires composer check:strict + phpunit before push. No invocations found in transcript \u2014 the pipeline will likely catch pre-review-quality failures downstream.",
+              "autofixable": false
+            }
+          ],
+          "decisions": [],
+          "verdict": "pass",
+          "duration_seconds": 3621
+        }
+      ]
+    }
+  ],
+  "totals": {
+    "runs": 2,
+    "turns_used": 334,
+    "cost_usd": 0.0,
+    "duration_seconds": 6605,
+    "cycles": 1,
+    "by_stage": {
+      "build": {
+        "runs": 2,
+        "turns_used": 334,
+        "cost_usd": 0.0,
+        "duration_seconds": 6605
+      }
+    }
+  }
+}

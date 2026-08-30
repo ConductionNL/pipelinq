@@ -1,0 +1,8 @@
+{
+  "spec_slug": "pos-kassakoppeling-audit",
+  "title": "POS Kassakoppeling-compliant Audit Log",
+  "app": "pipelinq",
+  "repo": "https://github.com/ConductionNL/pipelinq",
+  "depends_on": [],
+  "issue": null
+}

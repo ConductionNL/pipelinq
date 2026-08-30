@@ -1,0 +1,14 @@
+{
+  "spec": "openspec/changes/pipelinq-manifest-i18n-tenant",
+  "verified": [
+    {"task": "8.1", "file": "openspec/manifest.yaml", "ok": true, "note": "tier:3, dependencies:[openregister], all required consumes entries present"},
+    {"task": "8.2", "file": "openspec/manifest.yaml", "ok": true, "note": "openregister.min-version: 1.0.2 (includes contacts-actions)"},
+    {"task": "8.3", "file": "openspec/manifest.yaml", "ok": true, "note": "pipelinq.role: object-store-exemplar declared"},
+    {"task": "8.4", "file": null, "ok": null, "note": "PENDING: Hydra manifest schema not yet shipped — explicitly conditional"},
+    {"task": "9.1", "file": "src/store/modules/object.js", "ok": true, "note": "useTenantContext dependency explicitly declared in JSDoc + commented-out factory option"},
+    {"task": "9.2", "file": "lib/Settings/pipelinq_register.json", "ok": true, "note": "translatable:true added to kennisartikel title/body/summary, lead title/description, task subject/description"},
+    {"task": "9.3", "file": "lib/Service/ScheduledTaskService.php", "ok": true, "note": "applyAcceptLanguage() forwards Accept-Language to OR LanguageService; wired in CallbackController and SchedulesController"}
+  ],
+  "stubs": [],
+  "missing_routes": []
+}

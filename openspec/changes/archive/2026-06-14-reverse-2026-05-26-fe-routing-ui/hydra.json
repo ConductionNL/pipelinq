@@ -1,0 +1,86 @@
+{
+  "schema_version": 2,
+  "spec_slug": "reverse-2026-05-26-fe-routing-ui",
+  "repo": "https://github.com/ConductionNL/pipelinq",
+  "issue": 51,
+  "cycles": [
+    {
+      "cycle": 1,
+      "trigger": "build:queued",
+      "started_at": "2026-06-01T08:34:49Z",
+      "ended_at": "2026-06-02T14:14:50Z",
+      "outcome": "done",
+      "outcome_reason": "pipeline complete \u2014 reviews passed and applier passed (if run)",
+      "pattern_tags": [],
+      "stages": [
+        {
+          "stage": "build",
+          "persona": "Al Gorithm",
+          "model": "sonnet",
+          "container": "hydra-builder",
+          "started_at": "2026-06-01T08:00:45Z",
+          "ended_at": "2026-06-01T08:34:46Z",
+          "exit_code": 1,
+          "turns_used": 0,
+          "turns_budget": 40,
+          "checks_run": [],
+          "checks_skipped": [],
+          "findings": [
+            {
+              "id": "build-failed",
+              "severity": "CRITICAL",
+              "gate": "builder",
+              "rule": "builder container exited non-zero",
+              "status": "open",
+              "note": "Builder container failed to complete. See logs/pipeline-*/builder-build.jsonl for detail.",
+              "autofixable": false
+            }
+          ],
+          "decisions": [],
+          "verdict": "fail",
+          "duration_seconds": 2041
+        },
+        {
+          "stage": "applier",
+          "persona": "Axel Pli\u00e9r",
+          "model": "sonnet",
+          "container": "hydra-applier",
+          "started_at": "2026-06-02T14:11:35Z",
+          "ended_at": "2026-06-02T14:14:28Z",
+          "exit_code": 0,
+          "turns_used": 27,
+          "turns_budget": 20,
+          "checks_run": [
+            "hydra.json-consumer"
+          ],
+          "checks_skipped": [],
+          "findings": [],
+          "decisions": [],
+          "verdict": "pass",
+          "duration_seconds": 173
+        }
+      ]
+    }
+  ],
+  "totals": {
+    "runs": 2,
+    "turns_used": 27,
+    "cost_usd": 0.0,
+    "duration_seconds": 2214,
+    "cycles": 1,
+    "by_stage": {
+      "build": {
+        "runs": 1,
+        "turns_used": 0,
+        "cost_usd": 0.0,
+        "duration_seconds": 2041
+      },
+      "applier": {
+        "runs": 1,
+        "turns_used": 27,
+        "cost_usd": 0.0,
+        "duration_seconds": 173
+      }
+    }
+  }
+}
