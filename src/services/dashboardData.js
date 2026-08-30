@@ -12,6 +12,7 @@
 // (5 min). Call `invalidateDashboardData()` to force a refetch (used
 // by the "Refresh" header action).
 
+import { subscribe } from '@nextcloud/event-bus'
 import { generateUrl } from '@nextcloud/router'
 import { reactive } from 'vue'
 import { initializeStores } from '../store/store.js'
@@ -300,6 +301,16 @@ export function refreshDashboardData() {
 	cache.clear()
 	refreshSignal.token++
 }
+
+// The library's declarative surfaces announce a refresh by emitting
+// `cn:page:refresh` on the event bus — CnDashboardPage's own Refresh button,
+// and CnActionButtons after an `open-form` create. Nothing here listened, so a
+// declarative refresh bumped an event into the void while this module kept
+// serving its 5-minute cache: a button that looks like it worked and refreshes
+// nothing. Subscribing once at module load keeps the two paths equivalent.
+subscribe('cn:page:refresh', () => {
+	refreshDashboardData()
+})
 
 /**
  * Compute the set of stage names that mark a pipeline as closed.

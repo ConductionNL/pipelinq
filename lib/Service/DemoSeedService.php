@@ -660,13 +660,14 @@ class DemoSeedService {
 	}//end withProvisionedIdentity()
 
 	/**
-	 * Wire clientKey / requestKey references onto the payload as uuids.
+	 * Wire clientKey / contactKey / pipelineKey / requestKey references onto
+	 * the payload as uuids.
 	 *
 	 * On a ticket the parent-request link is `parentTicket` (the legacy
 	 * contactmoment field was `request`).
 	 *
 	 * @param array<string, mixed> $data Definition data.
-	 * @param array<string, mixed> $definition Full definition (may carry clientKey/requestKey).
+	 * @param array<string, mixed> $definition Full definition (may carry clientKey/contactKey/pipelineKey/requestKey).
 	 * @param array<string, string> $uuids Already-seeded uuid map (section:key => uuid).
 	 * @param string|null $ticketType Ticket subtype, or null for own-schema sections.
 	 *
@@ -683,6 +684,24 @@ class DemoSeedService {
 				// Writing the wrong key is silent — the object saves, the FK is
 				// simply absent — so the map is explicit rather than assumed.
 				$data[($definition['clientField'] ?? 'client')] = $clientUuid;
+			}
+		}
+
+		if (isset($definition['contactKey']) === true) {
+			$contactUuid = $uuids['contacts:' . $definition['contactKey']] ?? null;
+			if ($contactUuid !== null) {
+				$data['contact'] = $contactUuid;
+			}
+		}
+
+		// Without this a seeded lead / ticket carries a `stage` name but no
+		// `pipeline`, so it belongs to no board and every stage column counts
+		// zero — the demo data cannot demonstrate the pipeline it was written
+		// for. `pipelines` is seeded before `leads`, so the uuid is available.
+		if (isset($definition['pipelineKey']) === true) {
+			$pipelineUuid = $uuids['pipelines:' . $definition['pipelineKey']] ?? null;
+			if ($pipelineUuid !== null) {
+				$data['pipeline'] = $pipelineUuid;
 			}
 		}
 

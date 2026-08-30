@@ -33,7 +33,54 @@ export function resolveObjectType(schemaSlug) {
 }
 
 /**
- * @param item
+ * The logical entity slugs a pipeline applies to.
+ *
+ * A pipeline declares this through `propertyMappings[].schemaSlug`. The older
+ * `entityType` field ('lead' | 'request' | 'both') is still read as a fallback
+ * for pipelines stored before the mapping shape landed.
+ *
+ * @param {object} pipeline The stored pipeline object.
+ * @return {Array<string>|null} The slugs it applies to, or null when it
+ *   declares NEITHER shape — meaning "unscoped", not "applies to nothing".
+ * @spec openspec/specs/lead-management/spec.md
+ */
+export function pipelineEntitySlugs(pipeline) {
+	if (!pipeline) return null
+	const mappings = pipeline.propertyMappings
+	if (Array.isArray(mappings) && mappings.length > 0) {
+		const slugs = mappings.map((m) => m && m.schemaSlug).filter(Boolean)
+		if (slugs.length > 0) return slugs
+	}
+	if (pipeline.entityType === 'both') return ['lead', 'request']
+	if (pipeline.entityType) return [pipeline.entityType]
+	return null
+}
+
+/**
+ * Whether a pipeline can be chosen for `slug`.
+ *
+ * A pipeline that declares no scope at all is applicable to everything. That
+ * default is load-bearing rather than lenient: filtering an undeclared pipeline
+ * OUT is what emptied the pipeline dropdown on the lead and request forms, so
+ * every pipeline in the system — including the seeded demo ones — was
+ * unselectable and no default could be auto-assigned.
+ *
+ * @param {object} pipeline The stored pipeline object.
+ * @param {string} slug The logical entity slug ('lead', 'request', …).
+ * @return {boolean}
+ * @spec openspec/specs/lead-management/spec.md
+ */
+export function pipelineAppliesTo(pipeline, slug) {
+	const slugs = pipelineEntitySlugs(pipeline)
+	if (slugs === null) return true
+	return slugs.includes(slug)
+}
+
+/**
+ * Days since an item was last modified (0 when it carries no timestamp).
+ *
+ * @param {object} item The object, carrying `_dateModified`.
+ * @return {number} Whole days elapsed.
  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-30
  */
 export function getDaysAge(item) {
@@ -62,9 +109,12 @@ export function getStaleThreshold(config) {
 }
 
 /**
- * @param item
- * @param entityType
+ * Whether a lead has gone untouched past the stale threshold. Only leads age.
+ *
+ * @param {object} item The object, carrying `_dateModified`.
+ * @param {string} entityType The logical entity slug; anything but 'lead' is never stale.
  * @param {number} [threshold] Optional explicit threshold (days); defaults to 14.
+ * @return {boolean} True when the lead is stale.
  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-31
  */
 export function isStale(item, entityType, threshold = 14) {
@@ -107,7 +157,10 @@ export function getOverdueDays(lead, stages = []) {
 }
 
 /**
- * @param days
+ * CSS modifier for an age, escalating at one and two weeks.
+ *
+ * @param {number} days Whole days elapsed.
+ * @return {string} The modifier class, or '' below the first threshold.
  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-29
  */
 export function getAgingClass(days) {
@@ -117,7 +170,10 @@ export function getAgingClass(days) {
 }
 
 /**
- * @param days
+ * Compact age label for a list cell ('Today', '1d', '12d').
+ *
+ * @param {number} days Whole days elapsed.
+ * @return {string} The display label.
  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-28
  */
 export function formatAge(days) {
