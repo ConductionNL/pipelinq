@@ -1,0 +1,4 @@
+{
+	"pako": "License is (MIT AND Zlib) — both are approved open-source licenses on the default allowlist; transitive dep via webpack/babel toolchain; compound AND expression not parsed by checker",
+	"sha.js": "License is (MIT AND BSD-3-Clause) — both are approved open-source licenses on the default allowlist; transitive dep via webpack/babel toolchain; compound AND expression not parsed by checker"
+}

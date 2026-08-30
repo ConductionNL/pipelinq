@@ -1,0 +1,97 @@
+{
+  "change": "callback-management",
+  "repo": "ConductionNL/pipelinq",
+  "tracking_issue": 143,
+  "parent_issue": 66,
+  "tasks": [
+    {
+      "id": "1.1",
+      "title": "Create CallbackService",
+      "spec_ref": "specs/callback-management/spec.md#Requirement: Callback Service",
+      "acceptance_criteria": [
+        "addAttempt appends to attempts array",
+        "isAttemptThresholdReached returns true at 3+ attempts",
+        "validateClaim checks IGroupManager membership",
+        "validateStatusTransition enforces allowed transitions"
+      ],
+      "github_issue": 153,
+      "files_likely_affected": ["lib/Service/CallbackService.php"],
+      "status": "todo"
+    },
+    {
+      "id": "1.2",
+      "title": "Update task schema in register",
+      "spec_ref": "specs/callback-management/spec.md#Requirement: Register Schema Update for Callbacks",
+      "acceptance_criteria": [
+        "Task schema includes callbackPhoneNumber, preferredTimeSlot, attempts, completedAt, resultText"
+      ],
+      "github_issue": 155,
+      "files_likely_affected": ["lib/Settings/pipelinq_register.json"],
+      "status": "todo"
+    },
+    {
+      "id": "2.1",
+      "title": "Create CallbackController",
+      "spec_ref": "specs/callback-management/spec.md#Requirement: Callback Controller API",
+      "acceptance_criteria": [
+        "POST /api/callbacks/{id}/attempts logs attempt",
+        "POST /api/callbacks/{id}/claim claims task",
+        "POST /api/callbacks/{id}/complete marks afgerond",
+        "POST /api/callbacks/{id}/reassign updates assignment"
+      ],
+      "github_issue": 162,
+      "files_likely_affected": ["lib/Controller/CallbackController.php", "appinfo/routes.php"],
+      "status": "todo"
+    },
+    {
+      "id": "3.1",
+      "title": "Create CallbackOverdueJob",
+      "spec_ref": "specs/callback-management/spec.md#Requirement: Callback Overdue Check Job",
+      "acceptance_criteria": [
+        "Runs every 15 minutes",
+        "Detects overdue terugbelverzoek tasks",
+        "Sends notification via NotificationService",
+        "Skips already-notified within 24h"
+      ],
+      "github_issue": 163,
+      "files_likely_affected": ["lib/BackgroundJob/CallbackOverdueJob.php", "appinfo/info.xml"],
+      "status": "todo"
+    },
+    {
+      "id": "4.1",
+      "title": "Unit tests for CallbackService",
+      "spec_ref": "specs/callback-management/spec.md#Requirement: Callback Service",
+      "acceptance_criteria": ["Tests for addAttempt, isAttemptThresholdReached, validateClaim, validateStatusTransition"],
+      "github_issue": 167,
+      "files_likely_affected": ["tests/Unit/Service/CallbackServiceTest.php"],
+      "status": "todo"
+    },
+    {
+      "id": "4.2",
+      "title": "Unit tests for CallbackController",
+      "spec_ref": "specs/callback-management/spec.md#Requirement: Callback Controller API",
+      "acceptance_criteria": ["Tests for attempt, claim, complete, reassign endpoints"],
+      "github_issue": 168,
+      "files_likely_affected": ["tests/Unit/Controller/CallbackControllerTest.php"],
+      "status": "todo"
+    },
+    {
+      "id": "4.3",
+      "title": "Unit tests for CallbackOverdueJob",
+      "spec_ref": "specs/callback-management/spec.md#Requirement: Callback Overdue Check Job",
+      "acceptance_criteria": ["Tests for run method, skip-already-notified logic"],
+      "github_issue": 169,
+      "files_likely_affected": ["tests/Unit/BackgroundJob/CallbackOverdueJobTest.php"],
+      "status": "todo"
+    },
+    {
+      "id": "5.1",
+      "title": "Add i18n translations for callbacks",
+      "spec_ref": "specs/callback-management/spec.md",
+      "acceptance_criteria": ["English and Dutch translations added", "All strings use t() function"],
+      "github_issue": 170,
+      "files_likely_affected": ["l10n/en.json", "l10n/nl.json"],
+      "status": "todo"
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "schema_version": 2,
+  "spec_slug": "appointment-booking-06-portal-frontend",
+  "app": "pipelinq",
+  "kind": "code",
+  "depends_on": ["appointment-booking-05-portal-controller"]
+}

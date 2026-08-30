@@ -1,0 +1,8 @@
+{
+  "spec_slug": "avg-verzoeken-workflow",
+  "title": "AVG-verzoeken (Article 15/16/17/18/20 GDPR) workflow",
+  "app": "pipelinq",
+  "repo": "https://github.com/ConductionNL/pipelinq",
+  "depends_on": [],
+  "issue": null
+}

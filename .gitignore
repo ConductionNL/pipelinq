@@ -1,6 +1,62 @@
-/node_modules/
-/js/
+# IDE
+/.idea/
+/*.iml
+*.Identifier
+
+# Dependencies
 /vendor/
+/vendor-bin/*/vendor/
+/node_modules/
+
+# Build artifacts
+/js/
+
+# Documentation
+/docs/node_modules/
+/docs/build/
+/docs/.docusaurus/
 /docusaurus/node_modules/
 /docusaurus/build/
 /docusaurus/.docusaurus/
+
+# Testing & Quality
+/.php-cs-fixer.cache
+/tests/.phpunit.cache
+/.phpunit.cache/
+.phpunit.cache/
+.phpunit.result.cache
+/coverage/
+/coverage-frontend/
+/phpmetrics/
+/quality-reports/
+/phpqa/
+
+# Newman — tests/newman/ci-seed.sh GENERATES the Postman environment the
+# Integration Tests job consumes, because its values (the OpenRegister register
+# id, the seeded contact/request/contract object ids) are per-instance and a
+# committed file full of placeholders is indistinguishable from a seeded one
+# right up until the assertions fail.
+/tests/newman/ci.postman_environment.json
+
+# Playwright — the CI config (tests/e2e/playwright.config.ts) writes its HTML
+# report and per-test output to the APP ROOT, because that is where the shared
+# workflow's upload step looks. Neither belongs in the repo.
+/playwright-report/
+/test-results/
+
+# Nextcloud
+/custom_apps/
+/config/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Claude Code
+.claude/worktrees/
+
+# Agent/test scratch and tool caches — generated, never source.
+# Added by the 2026-08-25 fleet hygiene sweep (ADR-100 Decision 2).
+.stale/
+/.e2e-state/
+.phpunit.cache

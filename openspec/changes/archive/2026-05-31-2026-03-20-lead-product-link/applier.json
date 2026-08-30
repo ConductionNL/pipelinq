@@ -1,0 +1,17 @@
+{
+  "ran": true,
+  "pass": false,
+  "blocking": [
+    {
+      "file": "src/components/LeadProducts.vue",
+      "severity": "warning",
+      "note": "Juan's code review verdict is FAIL \u2014 npm run lint could not be attested (EACCES / eslint not in node_modules); retry cycle with working npm environment required before merge"
+    }
+  ],
+  "turns": 7,
+  "cost_usd": 0.3009,
+  "cost_eur": 0.2768,
+  "pr": 632,
+  "commit": "622d98b",
+  "timestamp": "2026-05-28T11:39:20.854070+00:00"
+}

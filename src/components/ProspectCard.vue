@@ -1,5 +1,9 @@
 <template>
-	<div class="prospect-card" tabindex="0" @keyup.enter="$emit('create-lead', prospect)">
+	<div
+		class="prospect-card"
+		:data-testid="`prospect-card-${prospect.kvkNumber}`"
+		tabindex="0"
+		@keyup.enter="$emit('create-lead', prospect)">
 		<div class="prospect-card__header">
 			<span class="prospect-card__name">{{ prospect.tradeName }}</span>
 			<span class="prospect-card__score" :class="scoreClass">
@@ -16,9 +20,18 @@
 				<span class="detail-label">{{ t('pipelinq', 'Employees') }}</span>
 				<span>{{ prospect.employeeCount }}</span>
 			</div>
-			<div v-if="prospect.address && prospect.address.city" class="prospect-card__detail">
+			<div
+				v-if="prospect.address && prospect.address.city"
+				class="prospect-card__detail">
 				<span class="detail-label">{{ t('pipelinq', 'Location') }}</span>
-				<span>{{ prospect.address.city }}{{ prospect.address.province ? ', ' + prospect.address.province : '' }}</span>
+				<span
+					>{{ prospect.address.city
+					}}{{
+						prospect.address.province
+							? ', ' + prospect.address.province
+							: ''
+					}}</span
+				>
 			</div>
 			<div class="prospect-card__detail">
 				<span class="detail-label">{{ t('pipelinq', 'KVK') }}</span>
@@ -28,7 +41,10 @@
 
 		<div class="prospect-card__footer">
 			<span class="prospect-card__source">{{ prospect.source }}</span>
-			<NcButton type="primary" @click="$emit('create-lead', prospect)">
+			<NcButton
+				variant="primary"
+				data-testid="prospect-create-lead"
+				@click="$emit('create-lead', prospect)">
 				{{ t('pipelinq', 'Create Lead') }}
 			</NcButton>
 		</div>
@@ -43,14 +59,19 @@ export default {
 	components: {
 		NcButton,
 	},
+
 	props: {
 		prospect: {
 			type: Object,
 			required: true,
 		},
 	},
+
 	emits: ['create-lead'],
 	computed: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-prospect-ui/tasks.md#task-1
+		 */
 		scoreClass() {
 			const score = this.prospect.fitScore || 0
 			if (score > 70) return 'score--high'

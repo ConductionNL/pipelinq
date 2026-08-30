@@ -1,0 +1,7 @@
+{
+  "schema_version": 2,
+  "spec_slug": "appointment-booking-04-booking-service",
+  "app": "pipelinq",
+  "kind": "code",
+  "depends_on": ["appointment-booking-03-skill-routing-eligibility"]
+}

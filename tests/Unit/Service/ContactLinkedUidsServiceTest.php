@@ -1,0 +1,57 @@
+<?php
+
+/**
+ * Unit tests for ContactLinkedUidsService.
+ *
+ * @category Test
+ * @package  OCA\Pipelinq\Tests\Unit\Service
+ *
+ * @author    Conduction Development Team <info@conduction.nl>
+ * @copyright 2024 Conduction B.V.
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ *
+ * @version GIT: <git-id>
+ *
+ * @link https://pipelinq.nl
+ */
+
+declare(strict_types=1);
+
+namespace OCA\Pipelinq\Tests\Unit\Service;
+
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Pipelinq\Service\ContactLinkedUidsService;
+use OCP\IAppConfig;
+use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
+
+/**
+ * Tests for ContactLinkedUidsService.
+ */
+class ContactLinkedUidsServiceTest extends TestCase {
+	/**
+	 * Test getLinkedContactsUids handles missing schema gracefully.
+	 *
+	 * @return void
+	 */
+	public function testGetLinkedUidsHandlesMissingSchema(): void {
+		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig->method('getValueString')->willReturn('');
+
+		// An in-test anonymous class no longer satisfies the contract
+		// (ADR-084): the service now type-hints ObjectServiceInterface, and a
+		// bare `new class { … }` is rejected at construction. Mock the
+		// interface so every signature comes from the contract itself.
+		$objectService = $this->createMock(ObjectServiceInterface::class);
+		$objectService->method('findAll')->willReturn([]);
+
+		$logger = $this->createMock(LoggerInterface::class);
+
+		$service = new ContactLinkedUidsService($appConfig, $logger,
+			objectService: $objectService,
+		);
+
+		// With empty register/schema, should return empty.
+		$this->assertSame([], $service->getLinkedContactsUids());
+	}//end testGetLinkedUidsHandlesMissingSchema()
+}//end class

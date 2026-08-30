@@ -30,101 +30,102 @@ use PHPUnit\Framework\TestCase;
 /**
  * Tests for SettingsController.
  */
-class SettingsControllerTest extends TestCase
-{
+class SettingsControllerTest extends TestCase {
 
-    /**
-     * The controller under test.
-     *
-     * @var SettingsController
-     */
-    private SettingsController $controller;
+	/**
+	 * The controller under test.
+	 *
+	 * @var SettingsController
+	 */
+	private SettingsController $controller;
 
-    /**
-     * Mock IRequest.
-     *
-     * @var IRequest&MockObject
-     */
-    private IRequest&MockObject $request;
+	/**
+	 * Mock IRequest.
+	 *
+	 * @var IRequest&MockObject
+	 */
+	private IRequest&MockObject $request;
 
-    /**
-     * Mock SettingsService.
-     *
-     * @var SettingsService&MockObject
-     */
-    private SettingsService&MockObject $settingsService;
+	/**
+	 * Mock SettingsService.
+	 *
+	 * @var SettingsService&MockObject
+	 */
+	private SettingsService&MockObject $settingsService;
 
-    /**
-     * Mock IUserSession.
-     *
-     * @var IUserSession&MockObject
-     */
-    private IUserSession&MockObject $userSession;
+	/**
+	 * Mock IUserSession.
+	 *
+	 * @var IUserSession&MockObject
+	 */
+	private IUserSession&MockObject $userSession;
 
-    /**
-     * Set up test fixtures.
-     *
-     * @return void
-     */
-    protected function setUp(): void
-    {
-        parent::setUp();
+	/**
+	 * Set up test fixtures.
+	 *
+	 * @return void
+	 */
+	protected function setUp(): void {
+		parent::setUp();
 
-        $this->request         = $this->createMock(IRequest::class);
-        $this->settingsService = $this->createMock(SettingsService::class);
-        $this->userSession     = $this->createMock(IUserSession::class);
+		$this->request = $this->createMock(IRequest::class);
+		$this->settingsService = $this->createMock(SettingsService::class);
+		$this->userSession = $this->createMock(IUserSession::class);
 
-        $this->controller = new SettingsController(
-            request: $this->request,
-            settingsService: $this->settingsService,
-            userSession: $this->userSession,
-        );
+		$this->controller = new SettingsController(
+			request: $this->request,
+			settingsService: $this->settingsService,
+			userSession: $this->userSession,
+			container: $this->createMock(ContainerInterface::class),
+			appManager: $this->createMock(IAppManager::class),
+			groupManager: $this->createMock(IGroupManager::class),
+			l10n: $this->createMock(IL10N::class),
+			logger: $this->createMock(LoggerInterface::class),
+		);
 
-    }//end setUp()
+	}//end setUp()
 
-    /**
-     * Test that index() returns a JSONResponse with success and config keys.
-     *
-     * @return void
-     */
-    public function testIndexReturnsJsonResponseWithExpectedKeys(): void
-    {
-        $this->settingsService->expects($this->once())
-            ->method('getSettings')
-            ->willReturn(['openRegisterUrl' => 'http://localhost']);
+	/**
+	 * Test that index() returns a JSONResponse with success and config keys.
+	 *
+	 * @return void
+	 */
+	public function testIndexReturnsJsonResponseWithExpectedKeys(): void {
+		$this->settingsService->expects($this->once())
+			->method('getSettings')
+			->willReturn(['openRegisterUrl' => 'http://localhost']);
 
-        $result = $this->controller->index();
+		$result = $this->controller->index();
 
-        self::assertInstanceOf(JSONResponse::class, $result);
-        self::assertTrue($result->getData()['success']);
-        self::assertArrayHasKey('config', $result->getData());
+		self::assertInstanceOf(JSONResponse::class, $result);
+		self::assertTrue($result->getData()['success']);
+		self::assertArrayHasKey('config', $result->getData());
 
-    }//end testIndexReturnsJsonResponseWithExpectedKeys()
+	}//end testIndexReturnsJsonResponseWithExpectedKeys()
 
-    /**
-     * Test that create() calls updateSettings with request params and returns success.
-     *
-     * @return void
-     */
-    public function testCreateCallsUpdateSettingsAndReturnsSuccess(): void
-    {
-        $params = ['openRegisterUrl' => 'http://new-url'];
+	/**
+	 * Test that create() calls updateSettings with request params and returns success.
+	 *
+	 * @return void
+	 */
+	public function testCreateCallsUpdateSettingsAndReturnsSuccess(): void {
+		$params = ['openRegisterUrl' => 'http://new-url'];
 
-        $this->request->expects($this->once())
-            ->method('getParams')
-            ->willReturn($params);
+		$this->request->expects($this->once())
+			->method('getParams')
+			->willReturn($params);
 
-        $this->settingsService->expects($this->once())
-            ->method('updateSettings')
-            ->with($params)
-            ->willReturn($params);
+		$this->settingsService->expects($this->once())
+			->method('updateSettings')
+			->with($params)
+			->willReturn($params);
 
-        $result = $this->controller->create();
+		$result = $this->controller->create();
 
-        self::assertInstanceOf(JSONResponse::class, $result);
-        self::assertTrue($result->getData()['success']);
-        self::assertArrayHasKey('config', $result->getData());
+		self::assertInstanceOf(JSONResponse::class, $result);
+		self::assertTrue($result->getData()['success']);
+		self::assertArrayHasKey('config', $result->getData());
 
-    }//end testCreateCallsUpdateSettingsAndReturnsSuccess()
+	}//end testCreateCallsUpdateSettingsAndReturnsSuccess()
 
 }//end class

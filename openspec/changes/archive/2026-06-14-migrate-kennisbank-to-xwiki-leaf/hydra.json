@@ -1,0 +1,65 @@
+{
+  "schema_version": 2,
+  "spec_slug": "migrate-kennisbank-to-xwiki-leaf",
+  "repo": "https://github.com/ConductionNL/pipelinq",
+  "issue": 562,
+  "cycles": [
+    {
+      "cycle": 1,
+      "trigger": "orchestrator",
+      "started_at": "2026-05-27T17:20:06Z",
+      "ended_at": "2026-05-27T17:20:29Z",
+      "outcome": "needs-input",
+      "outcome_reason": "builder container exited non-zero",
+      "pattern_tags": [],
+      "stages": [
+        {
+          "stage": "build",
+          "persona": "Al Gorithm",
+          "model": "sonnet",
+          "container": "hydra-builder",
+          "started_at": "2026-05-27T17:03:19Z",
+          "ended_at": "2026-05-27T17:19:46Z",
+          "exit_code": 1,
+          "turns_used": 0,
+          "turns_budget": 40,
+          "checks_run": [],
+          "checks_skipped": [],
+          "findings": [
+            {
+              "id": "build-failed",
+              "severity": "CRITICAL",
+              "gate": "builder",
+              "rule": "builder container exited non-zero",
+              "status": "open",
+              "note": "Builder container failed to complete. See logs/pipeline-*/builder-build.jsonl for detail.",
+              "autofixable": false
+            }
+          ],
+          "decisions": [],
+          "verdict": "fail",
+          "rule_0b_final": {
+            "failures": [],
+            "failure_count": 0
+          },
+          "duration_seconds": 987
+        }
+      ]
+    }
+  ],
+  "totals": {
+    "runs": 1,
+    "turns_used": 0,
+    "cost_usd": 0.0,
+    "duration_seconds": 987,
+    "cycles": 1,
+    "by_stage": {
+      "build": {
+        "runs": 1,
+        "turns_used": 0,
+        "cost_usd": 0.0,
+        "duration_seconds": 987
+      }
+    }
+  }
+}

@@ -49,6 +49,7 @@ const VALID_PRIORITIES = ['low', 'normal', 'high', 'urgent']
  *
  * @param {string} currentStatus
  * @return {string[]}
+ * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-39
  */
 export function getAllowedTransitions(currentStatus) {
 	return STATUS_TRANSITIONS[currentStatus] || []
@@ -60,6 +61,7 @@ export function getAllowedTransitions(currentStatus) {
  * @param {string} from Current status
  * @param {string} to Target status
  * @return {boolean}
+ * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-46
  */
 export function isValidTransition(from, to) {
 	if (from === to) return true
@@ -71,6 +73,7 @@ export function isValidTransition(from, to) {
  *
  * @param {string} status
  * @return {boolean}
+ * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-44
  */
 export function isTerminalStatus(status) {
 	return getAllowedTransitions(status).length === 0
@@ -81,6 +84,7 @@ export function isTerminalStatus(status) {
  *
  * @param {string} status
  * @return {string}
+ * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-43
  */
 export function getStatusLabel(status) {
 	return STATUS_LABELS[status] || status
@@ -91,6 +95,7 @@ export function getStatusLabel(status) {
  *
  * @param {string} status
  * @return {string}
+ * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-42
  */
 export function getStatusColor(status) {
 	return STATUS_COLORS[status] || '#999'
@@ -101,6 +106,7 @@ export function getStatusColor(status) {
  *
  * @param {string} priority
  * @return {string}
+ * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-41
  */
 export function getPriorityLabel(priority) {
 	return PRIORITY_LABELS[priority] || priority
@@ -111,6 +117,7 @@ export function getPriorityLabel(priority) {
  *
  * @param {string} priority
  * @return {string}
+ * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-40
  */
 export function getPriorityColor(priority) {
 	return PRIORITY_COLORS[priority] || 'var(--color-text-maxcontrast)'
@@ -121,16 +128,17 @@ export function getPriorityColor(priority) {
  *
  * @param {string} priority
  * @return {boolean}
+ * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-45
  */
 export function isValidPriority(priority) {
 	return VALID_PRIORITIES.includes(priority)
 }
 
 export {
-	STATUS_TRANSITIONS,
-	STATUS_LABELS,
-	STATUS_COLORS,
-	PRIORITY_LABELS,
 	PRIORITY_COLORS,
+	PRIORITY_LABELS,
+	STATUS_COLORS,
+	STATUS_LABELS,
+	STATUS_TRANSITIONS,
 	VALID_PRIORITIES,
 }

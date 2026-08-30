@@ -1,0 +1,307 @@
+{
+	"menu": [
+		{
+			"id": "KccWerkplek",
+			"label": "Customer Support",
+			"icon": "AccountStarOutline",
+			"route": "KccWerkplek",
+			"order": 1
+		}
+	],
+	"pages": [
+		{
+			"id": "KccWerkplek",
+			"route": "/werkplek",
+			"type": "dashboard",
+			"title": "Customer Support",
+			"actionsComponent": "WerkplekHeaderActions",
+			"config": {
+				"description": "Handle requests and tasks, log interactions, and find answers, all in one place.",
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"showRefresh": true,
+				"widgets": [
+					{
+						"id": "queue-filter",
+						"type": "custom",
+						"title": "Queues"
+					},
+					{
+						"id": "requests",
+						"type": "object-list",
+						"title": "Requests",
+						"content": {
+							"register": "pipelinq",
+							"schema": "ticket",
+							"filter": {
+								"ticketType": "request",
+								"assignee": "@me",
+								"status": "new",
+								"queue": "@workspace.selectedQueue?"
+							},
+							"sort": {
+								"field": "occurredAt",
+								"dir": "desc"
+							},
+							"limit": 12,
+							"rowRoute": "TicketDetail",
+							"columns": [
+								{
+									"key": "title",
+									"label": "Request"
+								},
+								{
+									"key": "channel",
+									"label": "Channel"
+								},
+								{
+									"key": "priority",
+									"label": "Priority"
+								}
+							]
+						}
+					},
+					{
+						"id": "tasks",
+						"type": "object-list",
+						"title": "Tasks",
+						"content": {
+							"register": "pipelinq",
+							"schema": "task",
+							"filter": {
+								"assigneeUserId": "@me",
+								"status": "open"
+							},
+							"sort": {
+								"field": "deadline",
+								"dir": "asc"
+							},
+							"limit": 12,
+							"columns": [
+								{
+									"key": "subject",
+									"label": "Task"
+								},
+								{
+									"key": "type",
+									"label": "Type"
+								},
+								{
+									"key": "deadline",
+									"label": "Deadline"
+								}
+							]
+						}
+					},
+					{
+						"id": "interaction",
+						"type": "interaction-form",
+						"title": "Active interaction",
+						"content": {
+							"register": "pipelinq",
+							"schema": "ticket",
+							"clientSchema": "client",
+							"clientField": "client",
+							"clientLabelField": "name",
+							"summaryField": "description",
+							"channelField": "channel",
+							"outcomeField": "outcome",
+							"contactedAtField": "occurredAt",
+							"channels": [
+								{
+									"value": "telefoon",
+									"label": "Phone"
+								},
+								{
+									"value": "email",
+									"label": "Email"
+								},
+								{
+									"value": "balie",
+									"label": "Counter"
+								},
+								{
+									"value": "chat",
+									"label": "Chat"
+								},
+								{
+									"value": "social",
+									"label": "Social media"
+								},
+								{
+									"value": "brief",
+									"label": "Letter"
+								}
+							],
+							"outcomes": [
+								{
+									"value": "opgelost",
+									"label": "Resolved"
+								},
+								{
+									"value": "doorverwezen",
+									"label": "Forwarded"
+								},
+								{
+									"value": "terugbelverzoek",
+									"label": "Call back"
+								},
+								{
+									"value": "doorverbonden",
+									"label": "Transferred"
+								},
+								{
+									"value": "vervolgactie",
+									"label": "Follow-up"
+								}
+							],
+							"defaults": {
+								"ticketType": "interaction"
+							},
+							"subjectField": "title"
+						}
+					},
+					{
+						"id": "knowledge",
+						"type": "kb-search",
+						"title": "Knowledge base",
+						"content": {
+							"endpoint": "/apps/openregister/api/integrations/xwiki/search",
+							"queryParam": "q",
+							"bindTo": "activeSummary",
+							"minChars": 3,
+							"limit": 8
+						}
+					},
+					{
+						"id": "client-cases",
+						"type": "object-list",
+						"title": "Client requests",
+						"content": {
+							"register": "pipelinq",
+							"schema": "ticket",
+							"filter": {
+								"ticketType": "request",
+								"client": "@workspace.selectedClient"
+							},
+							"sort": {
+								"field": "occurredAt",
+								"dir": "desc"
+							},
+							"limit": 8,
+							"prompt": "Select a client in the interaction panel to see their open requests.",
+							"rowRoute": "TicketDetail",
+							"columns": [
+								{
+									"key": "title",
+									"label": "Request"
+								},
+								{
+									"key": "status",
+									"label": "Status"
+								},
+								{
+									"key": "priority",
+									"label": "Priority"
+								}
+							]
+						}
+					},
+					{
+						"id": "client-contacts",
+						"type": "object-list",
+						"title": "Recent contact moments",
+						"content": {
+							"register": "pipelinq",
+							"schema": "ticket",
+							"filter": {
+								"ticketType": "interaction",
+								"client": "@workspace.selectedClient"
+							},
+							"sort": {
+								"field": "occurredAt",
+								"dir": "desc"
+							},
+							"limit": 8,
+							"prompt": "Select a client to see their recent contact moments.",
+							"columns": [
+								{
+									"key": "title",
+									"label": "Subject"
+								},
+								{
+									"key": "channel",
+									"label": "Channel"
+								},
+								{
+									"key": "outcome",
+									"label": "Outcome"
+								}
+							]
+						}
+					}
+				],
+				"layout": [
+					{
+						"id": "wq",
+						"widgetId": "queue-filter",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 3,
+						"gridHeight": 4
+					},
+					{
+						"id": "wr",
+						"widgetId": "requests",
+						"gridX": 3,
+						"gridY": 0,
+						"gridWidth": 5,
+						"gridHeight": 4
+					},
+					{
+						"id": "wi",
+						"widgetId": "interaction",
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 8
+					},
+					{
+						"id": "wt",
+						"widgetId": "tasks",
+						"gridX": 0,
+						"gridY": 4,
+						"gridWidth": 8,
+						"gridHeight": 4
+					},
+					{
+						"id": "wk",
+						"widgetId": "knowledge",
+						"gridX": 8,
+						"gridY": 8,
+						"gridWidth": 4,
+						"gridHeight": 6
+					},
+					{
+						"id": "wc",
+						"widgetId": "client-cases",
+						"gridX": 0,
+						"gridY": 8,
+						"gridWidth": 4,
+						"gridHeight": 6
+					},
+					{
+						"id": "wm",
+						"widgetId": "client-contacts",
+						"gridX": 4,
+						"gridY": 8,
+						"gridWidth": 4,
+						"gridHeight": 6
+					}
+				]
+			},
+			"slots": {
+				"widget-queue-filter": "WerkplekQueueFilter"
+			}
+		}
+	]
+}

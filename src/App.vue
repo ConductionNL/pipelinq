@@ -1,71 +1,140 @@
+<!-- SPDX-License-Identifier: EUPL-1.2 -->
+<!-- Copyright (C) 2026 Conduction B.V. -->
+
+<!--
+ Pipelinq app shell. Mounts CnAppRoot with the bundled manifest and the v2
+ kind-tagged registry prop (ADR-036); provides `objectSidebarState` so detail
+ pages drive a single host-rendered CnObjectSidebar via the #sidebar slot.
+ App.vue renders no CnIndexSidebar itself — CnAppRoot auto-hoists CnIndexPage's
+ sidebar, so rendering one here too caused a double sidebar on index pages.
+
+ @spec openspec/changes/pipelinq-manifest-v1/tasks.md
+-->
 <template>
-	<NcContent app-name="pipelinq">
-		<template v-if="storesReady">
-			<MainMenu @open-settings="showSettingsDialog = true" />
-			<NcAppContent>
-				<router-view />
-			</NcAppContent>
-			<CnIndexSidebar
-				v-if="sidebarState.active"
-				:schema="sidebarState.schema"
-				:visible-columns="sidebarState.visibleColumns"
-				:search-value="sidebarState.searchValue"
-				:active-filters="sidebarState.activeFilters"
-				:facet-data="sidebarState.facetData"
-				:open="sidebarState.open"
-				@update:open="sidebarState.open = $event"
-				@search="onSidebarSearch"
-				@columns-change="onSidebarColumnsChange"
-				@filter-change="onSidebarFilterChange" />
-			<PipelineSidebar
-				v-if="pipelineSidebarState.active && !sidebarState.active"
-				:pipeline="pipelineSidebarState.pipeline"
-				:open="pipelineSidebarState.open"
-				@update:open="pipelineSidebarState.open = $event"
-				@save="onPipelineSidebarSave" />
-			<UserSettings :open.sync="showSettingsDialog" />
+	<CnAppRoot
+		:aiCompanion="true"
+		:manifest="manifest"
+		:registry="registry"
+		:cellWidgets="cellWidgets"
+		:pageTypes="pageTypes"
+		appId="pipelinq"
+		:translate="translateForApp"
+		:permissions="permissions"
+		:persistManifestDelta="persistManifestDelta"
+		:requiresApps="[]">
+		<template #sidebar>
+			<!--
+				Host-rendered CnObjectSidebar. Detail pages declare their tabs in
+				config.sidebar.tabs by component name; sidebarComponents resolves
+				those names to the library's integration leaves. Passing `tabs` with
+				:use-registry=false puts it in open-enum mode (manifest is the single
+				source of truth, avoids the registry-vs-tabs warning).
+			-->
+			<CnObjectSidebar
+				v-if="objectSidebarState.active"
+				:title="objectSidebarState.title"
+				:subtitle="objectSidebarState.subtitle"
+				:objectType="objectSidebarState.objectType"
+				:objectId="objectSidebarState.objectId"
+				:register="objectSidebarState.register"
+				:schema="objectSidebarState.schema"
+				:hiddenTabs="objectSidebarState.hiddenTabs"
+				:tabs="objectSidebarState.tabs"
+				:customComponents="sidebarComponents"
+				:useRegistry="false"
+				:open="objectSidebarState.open"
+				@update:open="objectSidebarState.open = $event" />
 		</template>
-		<NcAppContent v-else>
-			<div style="display: flex; justify-content: center; align-items: center; height: 100%;">
-				<NcLoadingIcon :size="64" />
-			</div>
-		</NcAppContent>
-	</NcContent>
+	</CnAppRoot>
 </template>
 
 <script>
-import Vue from 'vue'
-import { NcContent, NcAppContent, NcLoadingIcon } from '@nextcloud/vue'
-import { CnIndexSidebar } from '@conduction/nextcloud-vue'
-import MainMenu from './navigation/MainMenu.vue'
-import UserSettings from './views/settings/UserSettings.vue'
-import PipelineSidebar from './views/pipeline/PipelineSidebar.vue'
-import { initializeStores } from './store/store.js'
+import {
+	builtinIntegrations,
+	CnAppRoot,
+	CnObjectSidebar,
+} from '@conduction/nextcloud-vue'
+import axios from '@nextcloud/axios'
+import { translate as ncT } from '@nextcloud/l10n'
+import { generateUrl } from '@nextcloud/router'
+import { reactive } from 'vue'
+import LeadCloseDateCell from './views/leads/cells/LeadCloseDateCell.vue'
+import LeadProbabilityCell from './views/leads/cells/LeadProbabilityCell.vue'
 
 export default {
 	name: 'App',
+
 	components: {
-		NcContent,
-		NcAppContent,
-		NcLoadingIcon,
-		CnIndexSidebar,
-		MainMenu,
-		UserSettings,
-		PipelineSidebar,
+		CnAppRoot,
+		CnObjectSidebar,
 	},
 
+	/**
+	 * @spec openspec/changes/reverse-2026-05-26-fe-app-shell/tasks.md#task-3
+	 */
 	provide() {
 		return {
+			// Channel for CnDetailPage → host-rendered CnObjectSidebar.
+			// `reactive()` (Vue 3's replacement for `Vue.observable`) makes the
+			// plain object reactive, so injected consumers track its mutations.
+			objectSidebarState: this.objectSidebarState,
+			// Legacy channel — kept so bespoke index views (CnIndexPage
+			// wrappers) continue to inject it.
 			sidebarState: this.sidebarState,
-			pipelineSidebarState: this.pipelineSidebarState,
 		}
+	},
+
+	props: {
+		/**
+		 * Manifest object — passed from main.js bootstrap. CnAppRoot reads
+		 * `manifest.dependencies` for the dependency-check phase and
+		 * `manifest.menu` for the default CnAppNav.
+		 */
+		manifest: {
+			type: Object,
+			required: true,
+		},
+
+		/**
+		 * V2 component registry (ADR-036) — maps string keys from
+		 * `manifest.pages[].component` to `{ kind, component }` entries.
+		 * Page components use `kind: "page"`; dashboard widget/header
+		 * overrides use `kind: "widget"`. Passed through to CnAppRoot for
+		 * v2 renderer resolution. See nextcloud-vue#458 and openregister#1988.
+		 */
+		registry: {
+			type: Object,
+			default: () => ({}),
+		},
+
+		/**
+		 * Page-type registry — `{ index, detail, dashboard, settings, ... }`.
+		 * Wired through to descendant `CnPageRenderer` instances via
+		 * provide/inject.
+		 */
+		pageTypes: {
+			type: Object,
+			default: null,
+		},
 	},
 
 	data() {
 		return {
-			storesReady: false,
-			showSettingsDialog: false,
-			sidebarState: Vue.observable({
+			objectSidebarState: reactive({
+				active: false,
+				open: true,
+				objectType: '',
+				objectId: '',
+				title: '',
+				subtitle: '',
+				register: '',
+				schema: '',
+				hiddenTabs: [],
+				tabs: undefined,
+			}),
+
+			// Legacy channel for bespoke index views.
+			sidebarState: reactive({
 				active: false,
 				open: true,
 				schema: null,
@@ -77,42 +146,80 @@ export default {
 				onColumnsChange: null,
 				onFilterChange: null,
 			}),
-			pipelineSidebarState: Vue.observable({
-				active: false,
-				open: true,
-				pipeline: null,
-				onSave: null,
-			}),
 		}
 	},
 
-	async created() {
-		await initializeStores()
-		this.storesReady = true
+	computed: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-app-shell/tasks.md#task-2
+		 */
+		permissions() {
+			return window.OC?.currentUser?.permissions ?? []
+		},
+
+		/**
+		 * Cell-widget registry for CnAppRoot, keyed by the `widget` id a
+		 * manifest column references (ADR-036).
+		 *
+		 * @return {Record<string, object>}
+		 * @spec openspec/specs/customer-360/spec.md
+		 * @spec openspec/specs/lead-scoring-win-probability/spec.md#requirement-win-probability-is-surfaced-on-the-pipeline-list-and-deal-detail
+		 */
+		cellWidgets() {
+			return {
+				'lead-close-date': LeadCloseDateCell,
+				'lead-probability': LeadProbabilityCell,
+			}
+		},
+
+		/**
+		 * Component registry for the host CnObjectSidebar, keyed by component
+		 * name. Maps the library's integration tab/widget leaves so manifest
+		 * `sidebar.tabs[].component` strings resolve.
+		 *
+		 * @return {Record<string, object>}
+		 */
+		sidebarComponents() {
+			const map = {}
+			for (const i of builtinIntegrations) {
+				if (i.tab && i.tab.name) map[i.tab.name] = i.tab
+				if (i.widget && i.widget.name) map[i.widget.name] = i.widget
+			}
+			return map
+		},
 	},
 
 	methods: {
-		onSidebarSearch(value) {
-			this.sidebarState.searchValue = value
-			if (typeof this.sidebarState.onSearch === 'function') {
-				this.sidebarState.onSearch(value)
-			}
+		/**
+		 * Persist an in-app manifest edit (ADR-041). Called by CnAppRoot's editor
+		 * on Save with the minimal delta; PUTs it to buildiq's app-override
+		 * store so the edit survives reload (loaded back in main.js bootstrap).
+		 *
+		 * @param {object} delta The minimal manifest delta from the editor.
+		 * @return {Promise<void>}
+		 *
+		 * @spec exclude Bug fix pointing the PUT at buildiq's current app id; the
+		 *               delta contract is owned by buildiq's
+		 *               layered-versioned-app-deltas specs.
+		 */
+		async persistManifestDelta(delta) {
+			await axios.put(
+				generateUrl('/apps/buildiq/api/app-overrides/pipelinq'),
+				delta,
+			)
 		},
-		onSidebarColumnsChange(columns) {
-			this.sidebarState.visibleColumns = columns
-			if (typeof this.sidebarState.onColumnsChange === 'function') {
-				this.sidebarState.onColumnsChange(columns)
-			}
-		},
-		onSidebarFilterChange(filter) {
-			if (typeof this.sidebarState.onFilterChange === 'function') {
-				this.sidebarState.onFilterChange(filter)
-			}
-		},
-		onPipelineSidebarSave(pipelineData) {
-			if (typeof this.pipelineSidebarState.onSave === 'function') {
-				this.pipelineSidebarState.onSave(pipelineData)
-			}
+
+		/**
+		 * Translate function passed down to CnAppRoot / CnAppNav /
+		 * CnPageRenderer. Closes over the Nextcloud `translate` import
+		 * so the lib never has to know our app id.
+		 *
+		 * @param {string} key Translation key.
+		 * @return {string} Translated string (or the key on miss).
+		 * @spec openspec/changes/reverse-2026-05-26-fe-app-shell/tasks.md#task-4
+		 */
+		translateForApp(key) {
+			return ncT('pipelinq', key)
 		},
 	},
 }

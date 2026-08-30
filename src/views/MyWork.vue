@@ -5,29 +5,31 @@
 			<div class="my-work__title-row">
 				<h2>{{ t('pipelinq', 'My Work') }}</h2>
 				<span v-if="totalCount > 0" class="my-work__counts">
-					{{ t('pipelinq', 'Leads') }} ({{ leadCount }}) · {{ t('pipelinq', 'Requests') }} ({{ requestCount }}) — {{ totalCount }} {{ t('pipelinq', 'items total') }}
+					{{ t('pipelinq', 'Leads') }} ({{ leadCount }}) ·
+					{{ t('pipelinq', 'Requests') }} ({{ requestCount }}) —
+					{{ totalCount }} {{ t('pipelinq', 'items total') }}
 				</span>
 			</div>
 			<div class="my-work__controls">
 				<div class="filter-buttons">
 					<NcButton
-						:type="filter === 'all' ? 'primary' : 'secondary'"
+						:variant="filter === 'all' ? 'primary' : 'secondary'"
 						@click="filter = 'all'">
 						{{ t('pipelinq', 'All') }}
 					</NcButton>
 					<NcButton
-						:type="filter === 'lead' ? 'primary' : 'secondary'"
+						:variant="filter === 'lead' ? 'primary' : 'secondary'"
 						@click="filter = 'lead'">
 						{{ t('pipelinq', 'Leads') }}
 					</NcButton>
 					<NcButton
-						:type="filter === 'request' ? 'primary' : 'secondary'"
+						:variant="filter === 'request' ? 'primary' : 'secondary'"
 						@click="filter = 'request'">
 						{{ t('pipelinq', 'Requests') }}
 					</NcButton>
 				</div>
 				<label class="show-completed-toggle">
-					<input v-model="showCompleted" type="checkbox">
+					<input v-model="showCompleted" type="checkbox" />
 					{{ t('pipelinq', 'Show completed') }}
 				</label>
 			</div>
@@ -47,13 +49,14 @@
 		</div>
 
 		<div v-else class="my-work__groups">
-			<div
-				v-for="group in visibleGroups"
-				:key="group.key"
-				class="work-group">
-				<div class="work-group__header" :class="'work-group__header--' + group.key">
+			<div v-for="group in visibleGroups" :key="group.key" class="work-group">
+				<div
+					class="work-group__header"
+					:class="'work-group__header--' + group.key">
 					{{ group.label }}
-					<span class="group-count" :class="{ 'group-count--overdue': group.key === 'overdue' }">
+					<span
+						class="group-count"
+						:class="{ 'group-count--overdue': group.key === 'overdue' }">
 						{{ group.items.length }}
 					</span>
 				</div>
@@ -62,12 +65,18 @@
 						v-for="item in group.items"
 						:key="item.id"
 						class="work-card"
-						:class="{ 'work-card--overdue': item.isOverdue, 'work-card--completed': item.isClosed }"
+						:class="{
+							'work-card--overdue': item.isOverdue,
+							'work-card--completed': item.isClosed,
+						}"
+						role="button"
 						tabindex="0"
 						@click="openItem(item)"
 						@keydown.enter="openItem(item)">
 						<div class="work-card__top">
-							<span class="entity-badge" :class="'badge--' + item.entityType">
+							<span
+								class="entity-badge"
+								:class="'badge--' + item.entityType">
 								{{ item.entityType === 'lead' ? 'LEAD' : 'REQ' }}
 							</span>
 							<span
@@ -84,15 +93,26 @@
 							</span>
 						</div>
 						<div class="work-card__meta">
-							<span v-if="item.stageOrStatus" class="meta-stage">{{ item.stageOrStatus }}</span>
-							<span v-if="item.pipelineName" class="meta-pipeline">{{ item.pipelineName }}</span>
-							<span v-if="item.entityType === 'lead' && item.value" class="meta-value">
-								EUR {{ Number(item.value).toLocaleString('nl-NL') }}
+							<span v-if="item.stageOrStatus" class="meta-stage">{{
+								item.stageOrStatus
+							}}</span>
+							<span v-if="item.pipelineName" class="meta-pipeline">{{
+								item.pipelineName
+							}}</span>
+							<span
+								v-if="item.entityType === 'lead' && item.value"
+								class="meta-value">
+								EUR {{ formatNumber(item.value) }}
 							</span>
 						</div>
 						<div class="work-card__footer">
 							<span v-if="item.isOverdue" class="overdue-text">
-								{{ item.overdueDays }} {{ item.overdueDays === 1 ? t('pipelinq', 'day overdue') : t('pipelinq', 'days overdue') }}
+								{{ item.overdueDays }}
+								{{
+									item.overdueDays === 1
+										? t('pipelinq', 'day overdue')
+										: t('pipelinq', 'days overdue')
+								}}
 							</span>
 							<span v-else-if="item.isDueToday" class="due-today-text">
 								{{ t('pipelinq', 'Due today') }}
@@ -112,23 +132,31 @@
 </template>
 
 <script>
+import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
-import { useObjectStore } from '../store/modules/object.js'
-import {
-	getStatusLabel,
-	getPriorityLabel,
-	getPriorityColor,
-} from '../services/requestStatus.js'
+import { formatDateFull, formatNumber } from '../services/localeUtils.js'
 import { isStale } from '../services/pipelineUtils.js'
+import {
+	getPriorityColor,
+	getPriorityLabel,
+	getStatusLabel,
+} from '../services/requestStatus.js'
+import { useObjectStore } from '../store/modules/object.js'
 
 const PRIORITY_ORDER = { urgent: 0, high: 1, normal: 2, low: 3 }
 
+/**
+ *
+ */
 function startOfToday() {
 	const d = new Date()
 	d.setHours(0, 0, 0, 0)
 	return d
 }
 
+/**
+ *
+ */
 function endOfWeek() {
 	const d = startOfToday()
 	const day = d.getDay()
@@ -138,6 +166,11 @@ function endOfWeek() {
 	return d
 }
 
+/**
+ *
+ * @param date1
+ * @param date2
+ */
 function daysBetween(date1, date2) {
 	const diff = date2.getTime() - date1.getTime()
 	return Math.floor(diff / (1000 * 60 * 60 * 24))
@@ -149,6 +182,7 @@ export default {
 		NcButton,
 		NcLoadingIcon,
 	},
+
 	data() {
 		return {
 			loading: false,
@@ -160,14 +194,25 @@ export default {
 			pipelines: [],
 		}
 	},
+
 	computed: {
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-mywork-ui/tasks.md#task-12
+		 */
 		objectStore() {
 			return useObjectStore()
 		},
+
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-mywork-ui/tasks.md#task-4
+		 */
 		currentUser() {
 			return OC.currentUser
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-mywork-ui/tasks.md#task-2
+		 */
 		closedStageNames() {
 			const names = new Set()
 			for (const p of this.pipelines) {
@@ -180,6 +225,9 @@ export default {
 			return names
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-mywork-ui/tasks.md#task-14
+		 */
 		pipelineMap() {
 			const map = {}
 			for (const p of this.pipelines) {
@@ -188,6 +236,9 @@ export default {
 			return map
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-mywork-ui/tasks.md#task-1
+		 */
 		allItems() {
 			const now = startOfToday()
 			const weekEnd = endOfWeek()
@@ -198,16 +249,23 @@ export default {
 				const isClosed = this.closedStageNames.has(l.stage)
 				if (!this.showCompleted && isClosed) continue
 
-				const due = l.expectedCloseDate ? new Date(l.expectedCloseDate) : null
+				const due = l.expectedCloseDate
+					? new Date(l.expectedCloseDate)
+					: null
 				const isOverdue = due ? due < now : false
-				const isDueToday = due ? (due >= now && due < new Date(now.getTime() + 24 * 60 * 60 * 1000)) : false
+				const isDueToday = due
+					? due >= now
+						&& due < new Date(now.getTime() + 24 * 60 * 60 * 1000)
+					: false
 
 				items.push({
 					id: l.id,
 					entityType: 'lead',
 					title: l.title || '-',
 					stageOrStatus: l.stage || '-',
-					pipelineName: l.pipeline ? (this.pipelineMap[l.pipeline] || '') : '',
+					pipelineName: l.pipeline
+						? this.pipelineMap[l.pipeline] || ''
+						: '',
 					priority: l.priority || 'normal',
 					value: l.value,
 					dueDate: l.expectedCloseDate,
@@ -222,10 +280,12 @@ export default {
 			}
 
 			for (const r of this.myRequests) {
-				const isTerminal = ['completed', 'rejected', 'converted'].includes(r.status)
+				const isTerminal = ['completed', 'rejected', 'converted'].includes(
+					r.status,
+				)
 				if (!this.showCompleted && isTerminal) continue
 
-				const due = r.requestedAt ? new Date(r.requestedAt) : null
+				const due = r.occurredAt ? new Date(r.occurredAt) : null
 				const isOverdue = !isTerminal && due ? due < thirtyDaysAgo : false
 				const overdueDays = isOverdue ? daysBetween(due, now) : 0
 
@@ -234,10 +294,12 @@ export default {
 					entityType: 'request',
 					title: r.title || '-',
 					stageOrStatus: getStatusLabel(r.status),
-					pipelineName: r.pipeline ? (this.pipelineMap[r.pipeline] || '') : '',
+					pipelineName: r.pipeline
+						? this.pipelineMap[r.pipeline] || ''
+						: '',
 					priority: r.priority || 'normal',
 					value: null,
-					dueDate: r.requestedAt,
+					dueDate: r.occurredAt,
 					isOverdue,
 					isDueToday: false,
 					overdueDays,
@@ -251,21 +313,39 @@ export default {
 			return items
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-mywork-ui/tasks.md#task-8
+		 */
 		filteredItems() {
 			if (this.filter === 'all') return this.allItems
-			return this.allItems.filter(i => i.entityType === this.filter)
+			return this.allItems.filter((i) => i.entityType === this.filter)
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-mywork-ui/tasks.md#task-11
+		 */
 		leadCount() {
-			return this.filteredItems.filter(i => i.entityType === 'lead').length
+			return this.filteredItems.filter((i) => i.entityType === 'lead').length
 		},
+
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-mywork-ui/tasks.md#task-15
+		 */
 		requestCount() {
-			return this.filteredItems.filter(i => i.entityType === 'request').length
+			return this.filteredItems.filter((i) => i.entityType === 'request')
+				.length
 		},
+
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-mywork-ui/tasks.md#task-16
+		 */
 		totalCount() {
 			return this.filteredItems.length
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-mywork-ui/tasks.md#task-10
+		 */
 		groupedItems() {
 			const groups = {
 				overdue: [],
@@ -292,6 +372,9 @@ export default {
 			return groups
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-mywork-ui/tasks.md#task-17
+		 */
 		visibleGroups() {
 			const defs = [
 				{ key: 'overdue', label: t('pipelinq', 'Overdue') },
@@ -300,23 +383,38 @@ export default {
 				{ key: 'no-due-date', label: t('pipelinq', 'No Due Date') },
 			]
 			return defs
-				.map(d => ({ ...d, items: this.groupedItems[d.key] || [] }))
-				.filter(d => d.items.length > 0)
+				.map((d) => ({ ...d, items: this.groupedItems[d.key] || [] }))
+				.filter((d) => d.items.length > 0)
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-mywork-ui/tasks.md#task-5
+		 */
 		emptyMessage() {
-			if (this.filter === 'lead') return t('pipelinq', 'No leads assigned to you')
-			if (this.filter === 'request') return t('pipelinq', 'No requests assigned to you')
+			if (this.filter === 'lead')
+				return t('pipelinq', 'No leads assigned to you')
+			if (this.filter === 'request')
+				return t('pipelinq', 'No requests assigned to you')
 			return t('pipelinq', 'No items assigned to you')
 		},
 	},
+
 	mounted() {
 		this.fetchAll()
 	},
+
 	methods: {
+		formatNumber,
 		getPriorityLabel,
 		getPriorityColor,
 
+		/**
+		 * @param due
+		 * @param now
+		 * @param weekEnd
+		 * @param isClosed
+		 * @spec openspec/changes/reverse-2026-05-26-fe-mywork-ui/tasks.md#task-3
+		 */
 		computeGroup(due, now, weekEnd, isClosed) {
 			if (!due) return 'no-due-date'
 			if (isClosed) return 'no-due-date'
@@ -325,6 +423,9 @@ export default {
 			return 'upcoming'
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-mywork-ui/tasks.md#task-6
+		 */
 		async fetchAll() {
 			this.loading = true
 			this.error = null
@@ -335,32 +436,52 @@ export default {
 
 				if (config.lead && this.currentUser) {
 					promises.push(
-						this.fetchRaw('lead', { assignee: this.currentUser, _limit: 200 })
-							.then(items => { this.myLeads = items }),
+						this.fetchRaw('lead', {
+							assignee: this.currentUser,
+							_limit: 200,
+						}).then((items) => {
+							this.myLeads = items
+						}),
 					)
 				}
-				if (config.request && this.currentUser) {
+				// A request is a `ticket` narrowed by ticketType (unify-ticket-supertype).
+				// Without the filter, complaints and contactmomenten would leak into
+				// "my requests". Held in local state, never read from the shared
+				// collections.ticket bucket.
+				if (config.ticket && this.currentUser) {
 					promises.push(
-						this.fetchRaw('request', { assignee: this.currentUser, _limit: 200 })
-							.then(items => { this.myRequests = items }),
+						this.fetchRaw('ticket', {
+							ticketType: 'request',
+							assignee: this.currentUser,
+							_limit: 200,
+						}).then((items) => {
+							this.myRequests = items
+						}),
 					)
 				}
 				if (config.pipeline) {
 					promises.push(
-						this.fetchRaw('pipeline', { _limit: 100 })
-							.then(items => { this.pipelines = items }),
+						this.fetchRaw('pipeline', { _limit: 100 }).then((items) => {
+							this.pipelines = items
+						}),
 					)
 				}
 
 				await Promise.all(promises)
 			} catch (err) {
-				this.error = err.message || t('pipelinq', 'Failed to load work items')
+				this.error =
+					err.message || t('pipelinq', 'Failed to load work items')
 				console.error('MyWork fetch error:', err)
 			} finally {
 				this.loading = false
 			}
 		},
 
+		/**
+		 * @param type
+		 * @param params
+		 * @spec openspec/changes/reverse-2026-05-26-fe-mywork-ui/tasks.md#task-7
+		 */
 		async fetchRaw(type, params = {}) {
 			const config = this.objectStore.objectTypeRegistry[type]
 			if (!config) return []
@@ -371,8 +492,10 @@ export default {
 				queryParams.set(key, value)
 			}
 
-			const url = `/apps/openregister/api/objects/${config.register}/${config.schema}`
-				+ (queryParams.toString() ? '?' + queryParams.toString() : '')
+			const url = generateUrl(
+				`/apps/openregister/api/objects/${config.register}/${config.schema}`
+					+ (queryParams.toString() ? '?' + queryParams.toString() : ''),
+			)
 
 			const response = await fetch(url, {
 				headers: {
@@ -387,20 +510,31 @@ export default {
 			return data.results || data || []
 		},
 
+		/**
+		 * @param dateStr
+		 * @spec openspec/changes/reverse-2026-05-26-fe-mywork-ui/tasks.md#task-9
+		 */
 		formatDate(dateStr) {
 			if (!dateStr) return ''
 			try {
-				return new Date(dateStr).toLocaleDateString('nl-NL', { month: 'short', day: 'numeric', year: 'numeric' })
+				return formatDateFull(dateStr)
 			} catch {
 				return dateStr
 			}
 		},
 
+		/**
+		 * @param item
+		 * @spec openspec/changes/reverse-2026-05-26-fe-mywork-ui/tasks.md#task-13
+		 */
 		openItem(item) {
 			if (item.entityType === 'lead') {
 				this.$router.push({ name: 'LeadDetail', params: { id: item.id } })
 			} else {
-				this.$router.push({ name: 'RequestDetail', params: { id: item.id } })
+				// Requests are `ticket` rows narrowed by ticketType
+				// (unify-ticket-supertype) — every non-lead work item opens on
+				// the unified TicketDetail page, which reads its own ticketType.
+				this.$router.push({ name: 'TicketDetail', params: { id: item.id } })
 			}
 		},
 	},
@@ -499,7 +633,7 @@ export default {
 	border-radius: 10px;
 	font-size: 12px;
 	font-weight: 700;
-	background: var(--color-background-darker, rgba(0,0,0,0.07));
+	background: var(--color-background-darker, rgba(0, 0, 0, 0.07));
 	color: var(--color-text-maxcontrast);
 	margin-left: 6px;
 }
@@ -631,5 +765,11 @@ export default {
 	border: 1px solid #fdba74;
 	margin-left: 6px;
 	vertical-align: middle;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.work-card {
+		transition: none;
+	}
 }
 </style>

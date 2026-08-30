@@ -1,0 +1,74 @@
+{
+	"menu": [
+		{
+			"id": "Projects",
+			"label": "Projecten",
+			"icon": "Domain",
+			"route": "Projects",
+			"order": 55
+		}
+	],
+	"pages": [
+		{
+			"id": "Projects",
+			"_note": "Project/WBS list as a declarative type:index page (pipelinq-views-to-declarative-r2): budgetAmount→EUR currency, billable→boolean indicator, status + ledgerSyncStatus→badges. 'Nieuw project' navigates to ProjectDetail id:'new'; row open navigates to ProjectDetail (stays custom — parallel cross-schema phases/tasks/activities + WBS tree). DROPPED the per-cell overdue end-date red highlight: it was a conditional cell text colour (endDate red+bold when past due and not finalised), and no declarative primitive expresses conditional cell colouring (cell `format` is value-shape only; `rowClass` is a Function prop with no manifest binding). endDate renders as a plain date column.",
+			"route": "/projects",
+			"type": "index",
+			"title": "Projecten",
+			"config": {
+				"register": "pipelinq",
+				"schema": "project",
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"showAdd": false,
+				"showFormDialog": false,
+				"showViewAction": false,
+				"showEditAction": false,
+				"showCopyAction": false,
+				"showDeleteAction": false,
+				"showMassImport": false,
+				"showMassExport": false,
+				"showMassCopy": false,
+				"showMassDelete": false,
+				"columns": [
+					"name",
+					"client",
+					{ "key": "status", "label": "Status", "widget": "badge", "widgetProps": { "colorMap": { "open": "primary", "in_progress": "warning", "on_hold": "default", "completed": "success", "cancelled": "error" } } },
+					{ "key": "ledgerSyncStatus", "label": "Ledger", "widget": "badge", "widgetProps": { "colorMap": { "synced": "success", "pending": "warning", "failed": "error" } } },
+					{ "key": "billable", "label": "Factureerbaar", "type": "boolean" },
+					{ "key": "budgetAmount", "label": "Budget", "format": { "style": "currency", "currency": "EUR", "decimals": 0 } },
+					{ "key": "endDate", "label": "Einddatum", "format": "date" }
+				],
+				"headerActions": [
+					{ "id": "create", "label": "Nieuw project", "icon": "Plus", "handler": "navigate", "route": "ProjectDetail", "params": { "id": "new" } }
+				],
+				"actions": [
+					{ "id": "view", "label": "Open", "icon": "Eye", "handler": "navigate", "route": "ProjectDetail" }
+				]
+			}
+		},
+		{
+			"id": "ProjectDetail",
+			"route": "/projects/:id",
+			"type": "custom",
+			"title": "Project",
+			"component": "ProjectDetail",
+			"_note": "Renders through CnDetailPage/CnDetailCard already, but a type:detail page describes ONE object and this hosts three nested editable child entities — phase, task and activity — each with its own CnFormDialog and save handler (onPhaseSaved / onTaskSaved / onActivitySaved) writing back into the WBS tree. It also resolves the client name across registers and probes ledger webhook status. Decomposing it would need a declarative primitive for child-entity create/edit within a parent detail, which the lib does not have.",
+			"config": {
+				"register": "pipelinq",
+				"schema": "project"
+			}
+		},
+		{
+			"id": "ProjectActivities",
+			"route": "/projects/:id/activities",
+			"type": "custom",
+			"title": "Tijdregistraties",
+			"component": "ProjectActivityList",
+			"_note": "A type:index page lists stored fields; this page's whole purpose is DERIVED values it must compute client-side — minutesToHours, formatDuration, resolveBillable and a totals rollup that sums billable vs non-billable time across the project's activities. None of those exist as properties on the activity schema, so there is nothing for a declarative column to bind to.",
+			"config": {
+				"register": "pipelinq",
+				"schema": "projectActivity"
+			}
+		}
+	]
+}

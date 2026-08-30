@@ -10,14 +10,16 @@
 
 <p align="center">
   <a href="https://github.com/ConductionNL/pipelinq/releases"><img src="https://img.shields.io/github/v/release/ConductionNL/pipelinq" alt="Latest release"></a>
-  <a href="https://github.com/ConductionNL/pipelinq/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-blue" alt="License"></a>
+  <a href="https://github.com/ConductionNL/pipelinq/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-EUPL--1.2-blue" alt="License"></a>
   <a href="https://github.com/ConductionNL/pipelinq/actions"><img src="https://img.shields.io/github/actions/workflow/status/ConductionNL/pipelinq/code-quality.yml?label=quality" alt="Code quality"></a>
-  <a href="https://pipelinq.app"><img src="https://img.shields.io/badge/docs-pipelinq.app-green" alt="Documentation"></a>
+  <a href="https://pipelinq.conduction.nl"><img src="https://img.shields.io/badge/docs-pipelinq.conduction.nl-green" alt="Documentation"></a>
 </p>
 
 ---
 
 Pipelinq brings CRM capabilities natively into Nextcloud. Track clients and organizations, manage leads through visual kanban pipelines, capture service requests before they become formal cases, and log every interaction — without leaving your Nextcloud workspace.
+
+📚 **[Step-by-step tutorials](https://pipelinq.conduction.nl/docs/category/tutorials)** — user + admin walkthroughs with screenshots, kept in sync with the live UI via the [journeydoc](https://github.com/ConductionNL/hydra/blob/development/openspec/architecture/adr-030-journeydoc-pattern.md) capture spec defined in hydra.
 
 It pairs naturally with [Procest](https://github.com/ConductionNL/procest) to form a complete intake-to-resolution workflow: Pipelinq handles the customer-facing side, Procest handles the internal case processing.
 
@@ -43,7 +45,7 @@ It pairs naturally with [Procest](https://github.com/ConductionNL/procest) to fo
 ### Client Management
 - **Persons & Organizations** — Full CRUD with contact details, notes, and complete interaction history
 - **Contact Persons** — Link individuals to organizations with roles (sales manager, project lead, etc.)
-- **Duplicate Detection** — Automatic warnings when creating clients with matching names or email addresses
+- **Duplicate Detection** — Provided via [OpenRegister](https://github.com/ConductionNL/openregister) master-data management, which flags clients with matching names or email addresses
 - **Nextcloud Contacts Sync** — Two-way sync with the native Contacts app via CardDAV
 
 ### Lead Pipeline
@@ -53,7 +55,7 @@ It pairs naturally with [Procest](https://github.com/ConductionNL/procest) to fo
 
 ### Request Intake
 - **Verzoeken** — Capture incoming service requests before they're handed to formal case management
-- **Request-to-Case Bridge** — Hand off requests directly to [Procest](https://github.com/ConductionNL/procest) when ready
+- **Request-to-Case Bridge** *(in development)* — A kind-addressed handoff to the `ns#Case` implementer (e.g. [Procest](https://github.com/ConductionNL/procest)) is being built in openspec change `semantic-handoff-emit`; until it ships, requests stay in Pipelinq
 - **Status Tracking** — Follow requests through intake statuses with activity timeline
 
 ### Work Management
@@ -61,8 +63,35 @@ It pairs naturally with [Procest](https://github.com/ConductionNL/procest) to fo
 - **Activity Feed** — Real-time updates on assignments, stage changes, new notes, and interactions
 - **Contact Moments** — Log calls, emails, visits, and other client interactions with timestamps
 
+### Messaging Channels (WhatsApp + SMS)
+- **WhatsApp** — Meta Cloud API direct + BSP fallback (Twilio, 360dialog); HSM template send with
+  parameter validation; 24-hour customer-service window enforcement; inbound media downloaded,
+  virus-scanned and stored alongside the conversation in Nextcloud Files
+- **SMS** — Multi-provider abstraction (Twilio, MessageBird, CM.com, Vonage) with priority-based
+  failover, caller-pinned provider hints, and a shared HMAC webhook surface
+- **Compliance** — Append-only `messagingConsentRecord` audit log; automatic STOP / STOPALL /
+  UITSCHRIJVEN opt-out detection; GDPR Art. 17 erasure cascade
+- **Budgets** — Per-tenant, per-provider message + EUR caps with hard-stop or soft-alert; cost
+  capture from provider webhooks (Twilio) with ECB EUR conversion and static-price-table fallback
+  (Meta)
+
+### Point of Sale (BTW engine)
+- **Per-item BTW rate** — Each line carries its own Dutch VAT rate; the rate is pre-filled from the
+  product's `btwClass` and may be overridden per line
+- **Per-rate breakdown** — Receipts and the detail view show tax grouped by rate (e.g. "9% BTW: €X",
+  "21% BTW: €Y"); totals are recomputed server-side and never trusted from the client
+- **Inclusive / exclusive pricing** — A transaction's `priceMode` controls whether entered prices
+  already contain BTW (`incl`) or have it added on top (`excl`); the net base is the same either way
+- **GL invoice breakdown** — An `invoiceBreakdown` array (with Dutch descriptions) plus a
+  `GET /api/pos-transactions/tax-report` endpoint give shillinq a per-rate split for GL posting
+
+> **Dutch BTW rates** — `0%` zero-rated/exempt items (vouchers, certain exports), `9%` reduced rate
+> (food, beverages, books), `21%` standard rate (most goods and services). Set a product's
+> `taxRate` / `btwClass` in the catalog so it pre-fills onto POS lines; an unknown class
+> fails closed to the 21% standard rate so BTW is never silently dropped to zero.
+
 ### Integrations
-- **Unified Search** — Deep links for clients, leads, and requests in Nextcloud's global search
+- **Unified Search** — Clients, leads, and requests appear in Nextcloud's global search via [OpenRegister](https://github.com/ConductionNL/openregister) (`lib/Search/ObjectsProvider.php`), which provides search centrally for all OpenRegister-backed apps
 - **Activity Stream** — Nextcloud activity integration for assignments and status changes
 - **Notifications** — Native Nextcloud notifications for new assignments and important updates
 
@@ -163,12 +192,27 @@ npm run build      # Production build
 composer phpcs          # Check coding standards
 composer cs:fix         # Auto-fix issues
 composer phpmd          # Mess detection
+composer psalm          # Static analysis (Psalm)
+composer phpstan        # Static analysis (PHPStan, level 5)
 composer phpmetrics     # HTML metrics report
+composer check:strict   # Run the full strict gate suite (all of the above + phpunit)
 
 # Frontend
 npm run lint            # ESLint
 npm run stylelint       # CSS linting
 ```
+
+The strict gate suite (PHPCS, PHPMD, Psalm, PHPStan, PHPUnit) runs on **every
+pull request** through the shared `ConductionNL/.github` quality workflow, and a
+**weekly cron** (`code-quality.yml`, Mondays 06:00 UTC) re-runs it against
+`development` to catch drift between PRs.
+
+The one-off legacy quality cleanup (PHPCS/PHPMD/PHPStan burn-down split out of
+`pipelinq-legacy-quality-cleanup` per ADR-032) is **complete**: PHPCS and PHPMD
+are clean with no legacy-debt suppression sections, and PHPStan runs clean at
+level 5. The remaining `phpstan-baseline.neon` entries are intentional,
+documented tracked debt (unread forward-compat DI stubs and one nextcloud/ocp
+stub false-positive) — see the file header and issue #496 before regenerating.
 
 ## Tech Stack
 
@@ -179,7 +223,7 @@ npm run stylelint       # CSS linting
 | Backend | PHP 8.1+, Nextcloud App Framework |
 | Data | OpenRegister (PostgreSQL JSON objects) |
 | UX | @conduction/nextcloud-vue, vue-draggable |
-| Quality | PHPCS, PHPMD, phpmetrics, ESLint, Stylelint |
+| Quality | PHPCS, PHPMD, Psalm, PHPStan, phpmetrics, ESLint, Stylelint |
 
 ## Documentation
 
@@ -206,10 +250,26 @@ Full documentation is available at **[pipelinq.app](https://pipelinq.app)**
 - **[OpenRegister](https://github.com/ConductionNL/openregister)** — Object storage layer (required dependency)
 - **[OpenCatalogi](https://github.com/ConductionNL/opencatalogi)** — Application catalogue
 
+## Support
+
+For support, contact us at [support@conduction.nl](mailto:support@conduction.nl).
+
+For a Service Level Agreement (SLA), contact [sales@conduction.nl](mailto:sales@conduction.nl).
+
 ## License
 
-AGPL-3.0-or-later
+This project is licensed under the [EUPL-1.2](LICENSE).
 
+### Dependency license policy
+
+All dependencies (PHP and JavaScript) are automatically checked against an approved license allowlist during CI. The following SPDX license families are approved for use in dependencies:
+
+- **Permissive:** MIT, ISC, BSD-2-Clause, BSD-3-Clause, 0BSD, Apache-2.0, Unlicense, CC0-1.0, CC-BY-3.0, CC-BY-4.0, Zlib, BlueOak-1.0.0, Artistic-2.0, BSL-1.0
+- **Copyleft (EUPL-compatible):** LGPL-2.0/2.1/3.0, GPL-2.0/3.0, AGPL-3.0, EUPL-1.1/1.2, MPL-2.0
+- **Font licenses:** OFL-1.0, OFL-1.1
+
+Dependencies with licenses not on this list will fail CI unless explicitly approved in `.license-overrides.json` with a documented justification.
 ## Authors
 
 Built by [Conduction](https://conduction.nl) — open-source software for Dutch government and public sector organizations.
+

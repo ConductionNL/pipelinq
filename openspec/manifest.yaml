@@ -1,0 +1,83 @@
+# pipelinq — OpenSpec coordination manifest
+#
+# Declarative home for the shared specs pipelinq consumes (ADR-024 / Hydra
+# `adopt-app-manifest`). This is the OpenSpec *coordination* manifest — it
+# records cross-app dependencies, consumed shared capabilities, the minimum
+# OpenRegister version, and pipelinq's exemplar role. It is distinct from the
+# nc-vue *runtime* manifest at `src/manifest.json` (which declares routes,
+# navigation, and page types for the front-end shell).
+#
+# See:
+#   - hydra/openspec/changes/adopt-app-manifest/      (fleet-wide adoption)
+#   - hydra/openspec/architecture/adr-024-app-manifest.md
+#   - openspec/changes/archive/2026-05-18-pipelinq-adopt-or-abstractions-split/design.md
+#     (Decision 7 — src/store/modules/object.js is the createObjectStore exemplar)
+
+app: pipelinq
+
+# Tier 3 — frontend exemplar. pipelinq is the reference implementation for the
+# nc-vue createObjectStore pattern (Decision 7 of the OR-abstractions split).
+tier: 3
+
+# Cross-app install-time dependencies. pipelinq is hard-coupled to OpenRegister
+# for its data layer (registers, schemas, objects, RBAC, audit trail).
+#
+# shillinq is a SOFT (delegation) dependency, not install-time: pipelinq hands
+# the timesheet submit -> approve -> reject -> lock -> edit-request -> invoice
+# lifecycle to shillinq (hydra ADR-022 — no parallel mechanism for a fleet
+# capability owned elsewhere; the time-tracker leaf explicitly excludes approval
+# + invoicing). pipelinq does NOT require shillinq to be installed to function;
+# it only deep-links to shillinq's billing/approval surface when present. See the
+# `time-approval-workflow` change and the `consumes` note below.
+dependencies:
+  - openregister
+
+# Shared specs pipelinq consumes. Each entry is the canonical capability name as
+# owned by its home repo (OpenRegister or nextcloud-vue). Declaring `consumes`
+# here is the deliverable — it records intent and lets Hydra coordination trace
+# which apps depend on each shared capability, independent of runtime adoption.
+consumes:
+  # OpenRegister — SHIPPED (in OR main specs; consumed at runtime today)
+  - contacts-actions                   # OR: Contacts integration provider (archived 2026-05-01)
+  - integration-time-tracker           # OR: time-tracker leaf — TimeProvider + TimeTrackerLinks{Controller,Service,Mapper} (PHP) + nc-vue CnTimeTrackerTab/CnTimeTrackerCard (referenceType `time-tracker`, requiredApp `timemanager`). Consumed at runtime via linkedTypes glue + manifest placement.
+  # OpenRegister — declared intent; capability is an active OR change not yet
+  # promoted to OR's main specs, so runtime adoption is pending it shipping.
+  - register-resolver-service          # OR: request-scoped register/schema id resolution (active change)
+  - pluggable-integration-registry     # OR: integration registry (active change)
+  - i18n-source-of-truth               # OR: translatable-field source of truth (active change)
+  - i18n-api-language-negotiation      # OR: Accept-Language negotiation (active change)
+  # nextcloud-vue — declared intent; runtime adoption pending the named change
+  - multi-tenancy-context              # nc-vue: useTenantContext composable (active change)
+  # shillinq — DELEGATED capability (time-approval-workflow change). pipelinq
+  # captures hours via the time-tracker leaf and links them to its objects via OR
+  # integration link tables; shillinq OWNS the approval-before-billing + invoicing
+  # lifecycle and reads those hours (via OR links or the WIP-sync integration).
+  # The invoice surface is shillinq's `invoice-from-time-and-expense` spec
+  # ("invoice generation from approved time entries"); approval gates billing and
+  # lives with billing in shillinq. The real emit shipped
+  # (time-billing-handoff-emit, consuming shillinq's time-expense-invoice-intake
+  # change, `POST /apps/shillinq/api/billing/time-intake`): approved, un-billed
+  # time entries are batched per client + period and posted same-instance,
+  # idempotently, behind an off-by-default flag
+  # (`shillinq_time_intake_enabled`). The deep-link from pipelinq's manifest to
+  # shillinq's billing surface (src/manifest.json) remains the fallback when
+  # shillinq is absent/disabled or the flag is off.
+  - invoice-from-time-and-expense      # shillinq: approval-before-billing + invoicing lifecycle owner (delegated, not built here)
+  - time-expense-invoice-intake        # shillinq: POST /apps/shillinq/api/billing/time-intake — consumed by time-billing-handoff-emit
+
+# Minimum OpenRegister version. Pinned to the OR release that ships the
+# `contacts-actions` integration provider (archived to OR main specs
+# 2026-05-01; first contained in the v1.0.2 tag). register-resolver-service
+# and the i18n capabilities are still active OR changes (not yet promoted to
+# OR main specs / a tagged release), so they are declared in `consumes` as
+# forward intent rather than gating this pin. Bump this pin once those
+# capabilities ship in a tagged OR release.
+openregister:
+  min-version: "1.0.2"
+
+# Exemplar role. pipelinq's src/store/modules/object.js is the fleet reference
+# implementation of the nc-vue createObjectStore pattern. Hydra coordination
+# recognises this app as the object-store reference so future audits cite this
+# declaration instead of re-investigating.
+pipelinq:
+  role: object-store-exemplar

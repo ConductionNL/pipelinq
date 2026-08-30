@@ -1,0 +1,19 @@
+# OpenConnector source template for xWiki
+#
+# Import this template into OpenConnector to create the xwiki source used by the
+# integration-xwiki leaf. After importing, set the authorizationHeader or
+# credentials fields to match your xWiki instance.
+#
+# Leaf key:   xwiki
+# NC app dep: openconnector
+
+name: xwiki
+description: "xWiki knowledge platform source for the OpenRegister xwiki leaf"
+location: "http://localhost:8088"
+type: json
+auth:
+  method: basic
+  username: ""
+  password: ""
+headers:
+  Accept: "application/json"

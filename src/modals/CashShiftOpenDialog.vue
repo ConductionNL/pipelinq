@@ -1,0 +1,95 @@
+<!--
+  - SPDX-License-Identifier: EUPL-1.2
+  - SPDX-FileCopyrightText: 2024 Conduction B.V.
+-->
+<template>
+	<NcDialog
+		:name="t('pipelinq', 'Open shift')"
+		:open="true"
+		size="normal"
+		@closing="$emit('close')">
+		<div class="cash-shift-open">
+			<NcTextField v-model="drawer" :label="t('pipelinq', 'Drawer')" />
+			<NcTextField
+				v-model="floatAmount"
+				type="number"
+				:label="t('pipelinq', 'Opening amount (€)')"
+				:error="showError"
+				:helperText="
+					showError ? t('pipelinq', 'Opening amount required') : ''
+				" />
+			<NcTextField
+				v-model="reference"
+				:label="t('pipelinq', 'Reference (optional)')" />
+			<NcTextArea v-model="notes" :label="t('pipelinq', 'Notes (optional)')" />
+		</div>
+		<template #actions>
+			<NcButton @click="$emit('close')">
+				{{ t('pipelinq', 'Cancel') }}
+			</NcButton>
+			<NcButton variant="primary" :disabled="submitting" @click="submit">
+				{{ t('pipelinq', 'Open shift') }}
+			</NcButton>
+		</template>
+	</NcDialog>
+</template>
+
+<script>
+import { NcButton, NcDialog, NcTextArea, NcTextField } from '@nextcloud/vue'
+
+export default {
+	name: 'CashShiftOpenDialog',
+	components: {
+		NcDialog,
+		NcButton,
+		NcTextField,
+		NcTextArea,
+	},
+
+	props: {
+		submitting: {
+			type: Boolean,
+			default: false,
+		},
+	},
+
+	emits: ['close', 'confirm'],
+	data() {
+		return {
+			drawer: '',
+			floatAmount: '',
+			reference: '',
+			notes: '',
+			showError: false,
+		}
+	},
+
+	methods: {
+		/**
+		 * Validate the float amount and emit the open payload.
+		 */
+		submit() {
+			const amount = parseFloat(this.floatAmount)
+			if (this.floatAmount === '' || Number.isNaN(amount) || amount < 0) {
+				this.showError = true
+				return
+			}
+			this.$emit('confirm', {
+				drawer: this.drawer.trim(),
+				floatAmount: amount,
+				reference: this.reference.trim(),
+				notes: this.notes.trim(),
+			})
+		},
+	},
+}
+</script>
+
+<style scoped>
+.cash-shift-open {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	padding: 8px 0;
+}
+</style>

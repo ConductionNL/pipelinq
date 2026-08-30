@@ -1,0 +1,67 @@
+{
+  "schema_version": 2,
+  "spec_slug": "reverse-2026-05-26-be-settings",
+  "repo": "https://github.com/ConductionNL/pipelinq",
+  "issue": 137,
+  "cycles": [
+    {
+      "cycle": 1,
+      "trigger": "build:queued",
+      "started_at": "2026-06-04T15:29:08Z",
+      "ended_at": null,
+      "outcome": "in-flight",
+      "outcome_reason": null,
+      "pattern_tags": [
+        "browser-test-nc-setup-failed"
+      ],
+      "stages": [
+        {
+          "stage": "build",
+          "persona": "Al Gorithm",
+          "model": "sonnet",
+          "container": "hydra-builder",
+          "started_at": "2026-06-04T15:16:46Z",
+          "ended_at": "2026-06-04T15:29:05Z",
+          "exit_code": 0,
+          "turns_used": 130,
+          "turns_budget": 200,
+          "checks_run": [
+            "composer check:strict (phpcs)"
+          ],
+          "checks_skipped": [
+            "composer test:unit (phpunit) \u2014 Rule 0b"
+          ],
+          "findings": [
+            {
+              "id": "build-rule-0b-skipped",
+              "severity": "CRITICAL",
+              "gate": "rule-0b",
+              "rule": "builder did not invoke mandatory pre-push gate (phpunit)",
+              "status": "open",
+              "note": "Rule 0b in images/builder/CLAUDE.md requires composer check:strict + phpunit before push. No invocations found in transcript \u2014 the pipeline will likely catch pre-review-quality failures downstream.",
+              "autofixable": false
+            }
+          ],
+          "decisions": [],
+          "verdict": "pass",
+          "duration_seconds": 739
+        }
+      ]
+    }
+  ],
+  "totals": {
+    "runs": 1,
+    "turns_used": 130,
+    "cost_usd": 0.0,
+    "duration_seconds": 739,
+    "cycles": 1,
+    "by_stage": {
+      "build": {
+        "runs": 1,
+        "turns_used": 130,
+        "cost_usd": 0.0,
+        "duration_seconds": 739
+      }
+    }
+  }
+}

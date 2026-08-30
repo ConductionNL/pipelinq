@@ -59,6 +59,56 @@
                 <referencedClass name="OCP\Http\Client\IClientService"/>
                 <referencedClass name="OCP\Notification\IManager"/>
                 <referencedClass name="OCP\Share\IManager"/>
+                <!-- OpenRegister cross-app classes (loaded dynamically) -->
+                <referencedClass name="OCA\OpenRegister\Db\ObjectEntity"/>
+                <referencedClass name="OCA\OpenRegister\Db\RegisterMapper"/>
+                <referencedClass name="OCA\OpenRegister\Db\SchemaMapper"/>
+                <referencedClass name="OCA\OpenRegister\Event\DeepLinkRegistrationEvent"/>
+                <referencedClass name="OCA\OpenRegister\Event\ObjectCreatingEvent"/>
+                <referencedClass name="OCA\OpenRegister\Event\ObjectCreatedEvent"/>
+                <referencedClass name="OCA\OpenRegister\Event\ObjectUpdatingEvent"/>
+                <referencedClass name="OCA\OpenRegister\Event\ObjectUpdatedEvent"/>
+                <referencedClass name="OCA\OpenRegister\Event\ObjectDeletedEvent"/>
+                <referencedClass name="OCA\OpenRegister\Service\ObjectService"/>
+                <referencedClass name="OCA\OpenRegister\Service\ConfigurationService"/>
+                <referencedClass name="OCA\OpenRegister\Service\RegisterService"/>
+                <referencedClass name="OCA\OpenRegister\Service\FileService"/>
+                <referencedClass name="OCA\OpenRegister\Service\CalendarEventService"/>
+                <referencedClass name="OCA\OpenRegister\Mcp\IMcpToolProvider"/>
+                <!-- ADR-078 actor-forwarded deferral contract (gate-61). The seven
+                     converted post-event listeners hand their work to
+                     DeferredObjectListenerJob through ListenerDeferralService instead
+                     of running it inside the user's write; all three types live in
+                     OpenRegister and resolve at runtime, exactly like ObjectService. -->
+                <referencedClass name="OCA\OpenRegister\Service\Deferral\ListenerDeferralService"/>
+                <referencedClass name="OCA\OpenRegister\Service\Deferral\DeferredListenerContext"/>
+                <referencedClass name="OCA\OpenRegister\Service\OrganisationService"/>
+                <referencedClass name="OCA\OpenRegister\BackgroundJob\ActorForwardedJob"/>
+                <!-- OpenRegister AVG/DSAR integration seams (ADR-047 Phase-3) -->
+                <referencedClass name="OCA\OpenRegister\Service\Gdpr\Identity\IdentityVerifyProvider"/>
+                <referencedClass name="OCA\OpenRegister\Service\Gdpr\Identity\IdentityVerifyResult"/>
+                <referencedClass name="OCA\OpenRegister\Service\Gdpr\Identity\IdentityVerifyRegistry"/>
+                <referencedClass name="OCA\OpenRegister\Service\Gdpr\Regulator\RegulatorEscalateProvider"/>
+                <referencedClass name="OCA\OpenRegister\Service\Gdpr\Regulator\RegulatorEscalateResult"/>
+                <referencedClass name="OCA\OpenRegister\Service\Gdpr\Regulator\RegulatorEscalateRegistry"/>
+                <!-- Additional OCP infrastructure types used across the fleet -->
+                <referencedClass name="OCP\AppFramework\Bootstrap\IBootContext"/>
+                <referencedClass name="OCP\AppFramework\Bootstrap\IRegistrationContext"/>
+                <referencedClass name="OCP\AppFramework\Db\DoesNotExistException"/>
+                <referencedClass name="OCP\DB\Exception"/>
+                <referencedClass name="OCP\IGroup"/>
+                <referencedClass name="OCP\IUser"/>
+                <referencedClass name="OCP\Migration\IRepairStep"/>
+                <!-- Nextcloud server internals -->
+                <referencedClass name="OC"/>
+                <referencedClass name="OC_App"/>
+                <referencedClass name="OC\App\AppStore\Fetcher\AppFetcher"/>
+                <!-- OCP types not yet present in the nextcloud/ocp Composer stub at this version -->
+                <referencedClass name="OCP\ICache"/>
+                <referencedClass name="OCP\AppFramework\PublicShareController"/>
+                <!-- GuzzleHttp (loaded via composer at runtime) -->
+                <referencedClass name="GuzzleHttp\Client"/>
+                <referencedClass name="GuzzleHttp\Exception\GuzzleException"/>
             </errorLevel>
         </UndefinedClass>
         <UndefinedMagicMethod errorLevel="suppress"/>
@@ -89,8 +139,20 @@
         <EmptyArrayAccess errorLevel="suppress"/>
         <ImplementedReturnTypeMismatch errorLevel="suppress"/>
         <InvalidMethodCall errorLevel="suppress"/>
+        <UndefinedInterfaceMethod errorLevel="suppress"/>
+        <MissingTemplateParam errorLevel="suppress"/>
     </issueHandlers>
     <extraFiles>
         <directory name="vendor/nextcloud/ocp" />
+        <!-- Declaration-only stubs for OpenRegister/Talk contracts (soft runtime
+             dependencies). Scanned, never analysed, never autoloaded at runtime
+             (PSR-4 maps only OCA\Pipelinq\ -> lib/); the real classes win whenever
+             OpenRegister is enabled. Same "share the contract" pattern as hermiq
+             and nldesign (2e0eab2).
+
+             The stubs were already in the repo and already covered every
+             UndefinedClass psalm reported — this line was simply missing, so psalm
+             never read them. phpstan.neon had the same omission. -->
+        <directory name="tests/Stubs" />
     </extraFiles>
 </psalm>

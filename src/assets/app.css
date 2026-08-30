@@ -1,0 +1,109 @@
+/**
+ * Global (unscoped) styles for Pipelinq.
+ *
+ * Styles that must be unscoped (e.g. overriding library components) belong here
+ * instead of in Vue <style> blocks. The ESLint rule vue/enforce-style-attribute
+ * enforces that all <style> blocks in .vue files use the `scoped` attribute.
+ */
+
+/* Fix KPI card centering inside CnDashboardPage widget wrappers.
+   Overrides library scoped styles. */
+.cn-widget-wrapper__content {
+	display: flex !important;
+	align-items: center !important;
+	padding: 16px !important;
+}
+
+/* Center the NcEmptyContent when OpenRegister is not installed. */
+.open-register-missing {
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	min-height: 100% !important;
+}
+
+/* ---------------------------------------------------------------------
+ * Customer portal: global AA helpers.
+ * Lives here (not in PortalApp.vue's scoped block) so the helpers reach
+ * router-view children. Maps to REQ-009 (WCAG 2.2 AA).
+ * --------------------------------------------------------------------- */
+
+/* Skip-link for keyboard users; hidden until focused (WCAG 2.4.1). */
+.portal-skip-link {
+	position: absolute;
+	left: -10000px;
+	top: auto;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+}
+
+.portal-skip-link:focus {
+	position: static;
+	width: auto;
+	height: auto;
+	background: #fff;
+	color: var(--portal-brand-primary, #21468b);
+	padding: 0.5rem 1rem;
+	border: 2px solid var(--portal-brand-primary, #21468b);
+	display: inline-block;
+	margin-bottom: 1rem;
+}
+
+/* Visually-hidden text for screen-reader-only captions/labels. */
+.portal-visually-hidden {
+	position: absolute !important;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
+	border: 0;
+	padding: 0;
+	margin: -1px;
+}
+
+/* Tab bar (PortalDashboard.vue) — uses native button + role=tab + roving
+ * tabindex. The active tab gets the primary brand colour. */
+.portal-tabs {
+	display: flex;
+	gap: 0.5rem;
+	border-bottom: 1px solid var(--color-border, #ddd);
+	margin-bottom: 1rem;
+}
+
+.portal-tabs [role='tab'] {
+	background: none;
+	border: none;
+	padding: 0.5rem 1rem;
+	cursor: pointer;
+	color: var(--color-main-text, #222);
+	border-bottom: 3px solid transparent;
+}
+
+.portal-tabs [role='tab'][aria-selected='true'],
+.portal-tabs .portal-tab-active {
+	border-bottom-color: var(--portal-brand-primary, #21468b);
+	font-weight: 600;
+}
+
+/* Always-visible focus indicator on portal interactive elements. The
+ * portal-app focus-visible rule in PortalApp.vue only reaches the parent
+ * shell; this rule covers the router-view children. */
+.portal-tabs [role='tab']:focus-visible,
+.portal-button-primary:focus-visible,
+.portal-button-danger:focus-visible,
+.portal-button-link:focus-visible {
+	outline: 2px solid var(--portal-brand-primary, #21468b);
+	outline-offset: 2px;
+}
+
+/* The Administration main-menu entry uses the generic `icon-settings` gear.
+ * Unlike the `icon-category-*` icons the other entries use, it ships without
+ * Nextcloud's theme-adaptive invert filter, so it renders pure black on the
+ * dark navigation instead of matching the rest. Apply the same filter the
+ * category icons use so the gear stays the right color (and still adapts to
+ * light themes). */
+.app-navigation .icon-settings {
+	filter: var(--background-invert-if-dark);
+}

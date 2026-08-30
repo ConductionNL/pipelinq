@@ -1,0 +1,24 @@
+{
+	"menu": [
+		{
+			"id": "Prospects",
+			"label": "Prospects",
+			"icon": "AccountSearchOutline",
+			"route": "Prospects",
+			"order": 45
+		}
+	],
+	"pages": [
+		{
+			"id": "Prospects",
+			"route": "/prospects",
+			"type": "custom",
+			"title": "Prospects",
+			"component": "ProspectsView",
+			"_note": "No declarative type fits: the page owns client-side sort state (setSort/sortedProspects/sortIndicator) and score colour-banding (scoreClass), and its row action convertToLead creates a DIFFERENT entity from the one listed. A type:index page renders manifest-declared columns over one register/schema; this list is served by useProspectStore against a custom enrichment API (KvK/OpenCorporates), so it has no register/schema to declare.",
+			"config": {
+				"_note": "Full-page expansion of ProspectWidget; lib gap: no declarative type for a scored-prospect list with external-source (KvK/OpenCorporates) enrichment. Data comes from useProspectStore (custom API), not an OpenRegister register/schema — so no config.register/schema."
+			}
+		}
+	]
+}

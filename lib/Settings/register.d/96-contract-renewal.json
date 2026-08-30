@@ -1,0 +1,303 @@
+{
+  "components": {
+    "schemas": {
+      "contract": {
+        "slug": "contract",
+        "title": "Contract",
+        "icon": "Domain",
+        "summary": "Recurring-revenue contract with renewal lifecycle",
+        "description": "A recurring or one-off contract between the organization and a client. Drives MRR/ARR, renewal-window detection, renewal-lead automation and churn metrics. References an existing client object (identity is never duplicated). Field names contractNumber/startDate/endDate/value/status are read by the customer-portal contract reader without mapping.",
+        "@type": "object",
+        "type": "object",
+        "x-openregister-handoff": [
+          {
+            "id": "send-to-invoicing",
+            "targetSemanticType": "https://openregister.app/ns#Invoice",
+            "trigger": "manual",
+            "whenUnavailable": "hide",
+            "mapping": {
+              "counterparty": { "semanticRef": "clientRef" },
+              "currency": { "from": "currency", "default": "EUR" },
+              "totalAmount": { "from": "valuePerInterval" },
+              "source": { "template": "pipelinq:contract:{{contractNumber}}" },
+              "lines": { "from": "lineItems" },
+              "dueDate": { "from": "endDate" }
+            }
+          }
+        ],
+        "configuration": {
+          "implements": [
+            "https://openregister.app/ns#Contract"
+          ],
+          "x-openregister-lifecycle": {
+            "field": "status",
+            "initial": "draft",
+            "terminal": [
+              "renewed",
+              "churned",
+              "cancelled"
+            ],
+            "transitions": {
+              "activate": {
+                "from": [
+                  "draft",
+                  "expiring"
+                ],
+                "to": "active",
+                "description": "Activate a draft contract (or pull an expiring one back to active after a renewal)."
+              },
+              "backToDraft": {
+                "from": [
+                  "active",
+                  "expiring"
+                ],
+                "to": "draft",
+                "description": "Return a contract to draft for correction."
+              },
+              "enterRenewalWindow": {
+                "from": [
+                  "draft",
+                  "active"
+                ],
+                "to": "expiring",
+                "description": "Renewal engine marks the contract as approaching its end date (engine-only; ContractService also requires byEngine)."
+              },
+              "renew": {
+                "from": [
+                  "draft",
+                  "active",
+                  "expiring"
+                ],
+                "to": "renewed",
+                "description": "Close the contract as renewed (ContractService also requires a won renewal lead). Terminal."
+              },
+              "churn": {
+                "from": [
+                  "draft",
+                  "active",
+                  "expiring"
+                ],
+                "to": "churned",
+                "description": "Close the contract as churned (lost on renewal). Terminal."
+              },
+              "cancel": {
+                "from": [
+                  "draft",
+                  "active",
+                  "expiring"
+                ],
+                "to": "cancelled",
+                "description": "Cancel the contract (ContractService also requires a cancellationReason). Terminal."
+              }
+            }
+          }
+        },
+        "x-openregister-notifications": {
+          "contractExpiring": {
+            "trigger": {
+              "type": "transition",
+              "field": "status",
+              "to": "expiring"
+            },
+            "enabled": true,
+            "channels": [
+              "nc-notification"
+            ],
+            "recipients": [
+              {
+                "kind": "field",
+                "field": "ownerId"
+              }
+            ],
+            "subject": {
+              "nl": "Contract verloopt binnenkort: {{title}}",
+              "en": "Contract approaching renewal: {{title}}"
+            },
+            "message": {
+              "nl": "Het contract {{contractNumber}} ({{title}}) nadert het einde van de looptijd. Beoordeel de verlenging.",
+              "en": "Contract {{contractNumber}} ({{title}}) is approaching its end date. Review the renewal."
+            }
+          }
+        },
+        "required": [
+          "title",
+          "clientRef",
+          "billingInterval",
+          "valuePerInterval",
+          "startDate"
+        ],
+        "properties": {
+          "contractNumber": {
+            "type": "string",
+            "description": "Auto-generated unique contract number (C-{year}-{seq}). Read by customer-portal.",
+            "title": "Contract Number"
+          },
+          "clientRef": {
+            "type": "string",
+            "description": "UUID reference to the existing client object. Client identity is never duplicated into the contract.",
+            "format": "uuid",
+            "$ref": "client",
+            "title": "Client Ref"
+          },
+          "title": {
+            "type": "string",
+            "description": "Human-readable contract title, e.g. 'Support & maintenance'.",
+            "title": "Title"
+          },
+          "lineItems": {
+            "type": "array",
+            "description": "Contract line items referencing the existing product/service catalog.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "productRef": {
+                  "type": "string",
+                  "description": "UUID reference to a product/service in the catalog.",
+                  "title": "Product Ref"
+                },
+                "description": {
+                  "type": "string",
+                  "title": "Description",
+                  "description": "Detailed description of this record."
+                },
+                "quantity": {
+                  "type": "number",
+                  "default": 1,
+                  "minimum": 0,
+                  "title": "Quantity",
+                  "description": "Quantity for this record."
+                },
+                "unitValue": {
+                  "type": "number",
+                  "minimum": 0,
+                  "title": "Unit Value",
+                  "description": "Unit Value for this record."
+                }
+              }
+            },
+            "title": "Line Items"
+          },
+          "billingInterval": {
+            "type": "string",
+            "description": "Billing cadence used to normalize MRR.",
+            "enum": [
+              "monthly",
+              "quarterly",
+              "annual",
+              "one-off"
+            ],
+            "default": "monthly",
+            "title": "Billing Interval"
+          },
+          "valuePerInterval": {
+            "type": "number",
+            "description": "Recurring value per billing interval in the contract currency.",
+            "minimum": 0,
+            "title": "Value Per Interval"
+          },
+          "value": {
+            "type": "number",
+            "description": "Alias of valuePerInterval for the customer-portal contract reader (kept in sync on save).",
+            "title": "Value"
+          },
+          "currency": {
+            "type": "string",
+            "default": "EUR",
+            "title": "Currency",
+            "description": "Currency for this record."
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date",
+            "description": "Contract start date.",
+            "title": "Start Date"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date",
+            "description": "Contract end date. Recommended even for indefinite contracts so the renewal engine can act.",
+            "title": "End Date"
+          },
+          "autoRenew": {
+            "type": "boolean",
+            "default": false,
+            "description": "Whether the contract renews automatically unless cancelled by the notice deadline.",
+            "title": "Auto Renew"
+          },
+          "noticePeriodDays": {
+            "type": "integer",
+            "default": 0,
+            "minimum": 0,
+            "description": "Notice period in days before endDate; widens the renewal window.",
+            "title": "Notice Period Days"
+          },
+          "status": {
+            "type": "string",
+            "description": "Lifecycle status. 'expiring' is set only by the renewal engine; terminal states reject further transitions.",
+            "enum": [
+              "draft",
+              "active",
+              "expiring",
+              "renewed",
+              "churned",
+              "cancelled"
+            ],
+            "default": "draft",
+            "title": "Status"
+          },
+          "ownerId": {
+            "type": "string",
+            "description": "Owning account-manager user ID; defaults to the client's owner.",
+            "title": "Owner ID"
+          },
+          "renewalLeadRef": {
+            "type": "string",
+            "description": "UUID of the renewal lead created when the contract enters its renewal window.",
+            "format": "uuid",
+            "$ref": "lead",
+            "title": "Renewal Lead Ref"
+          },
+          "predecessorContractRef": {
+            "type": "string",
+            "description": "UUID of the contract this one succeeds (set on a drafted successor).",
+            "format": "uuid",
+            "$ref": "contract",
+            "title": "Predecessor Contract Ref"
+          },
+          "invoiceReference": {
+            "type": "string",
+            "description": "Provenance link to the invoice object created by the ns#Invoice handoff (Send to invoicing). Target object UUID in the implementing app's register; the app-level provenance additionally lives in the OpenRegister handoff relations.",
+            "title": "Invoice Reference"
+          },
+          "cancellationReason": {
+            "type": "string",
+            "description": "Required when transitioning to 'cancelled'.",
+            "title": "Cancellation Reason"
+          },
+          "renewalLeadOutcome": {
+            "type": "string",
+            "description": "Reconciliation marker for the renewal lead: 'won' or 'lost'.",
+            "enum": [
+              "",
+              "won",
+              "lost"
+            ],
+            "default": "",
+            "title": "Renewal Lead Outcome"
+          },
+          "noticeReminderSent": {
+            "type": "boolean",
+            "default": false,
+            "description": "Idempotency marker: the notice-deadline My Work entry has been created.",
+            "title": "Notice Reminder Sent"
+          },
+          "notes": {
+            "type": "string",
+            "title": "Notes",
+            "description": "Optional free-text notes for this record."
+          }
+        }
+      }
+    }
+  }
+}

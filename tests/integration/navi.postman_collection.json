@@ -1,0 +1,120 @@
+{
+  "info": {
+    "name": "Pipelinq Navi API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Newman integration tests for the Pipelinq Navi conversational analytics endpoint (openspec/changes/dashboard, REQ-DASH-001 / REQ-DASH-002)."
+  },
+  "auth": {
+    "type": "basic",
+    "basic": [
+      { "key": "username", "value": "{{username}}", "type": "string" },
+      { "key": "password", "value": "{{password}}", "type": "string" }
+    ]
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "" },
+    { "key": "username", "value": "" },
+    { "key": "password", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "POST /api/navi/query — happy path",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "OCS-APIRequest", "value": "true" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"query\": \"How many leads are open?\"}"
+        },
+        "url": "{{baseUrl}}/index.php/apps/pipelinq/api/navi/query"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+              "pm.test('Body has resultType', function () {",
+              "  var json = pm.response.json();",
+              "  pm.expect(json.resultType).to.be.a('string');",
+              "});",
+              "pm.test('Body echoes query', function () {",
+              "  var json = pm.response.json();",
+              "  pm.expect(json.query).to.eql('How many leads are open?');",
+              "});",
+              "pm.test('Body has suggestedFollowUps array', function () {",
+              "  var json = pm.response.json();",
+              "  pm.expect(json.suggestedFollowUps).to.be.an('array');",
+              "});",
+              "pm.test('Server mints a conversationId when the client sends none', function () {",
+              "  var json = pm.response.json();",
+              "  pm.expect(json.conversationId).to.match(/^[0-9a-f]{32}$/);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "POST /api/navi/query — missing query field",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "OCS-APIRequest", "value": "true" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"conversationId\": \"newman-1\"}"
+        },
+        "url": "{{baseUrl}}/index.php/apps/pipelinq/api/navi/query"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 400', function () { pm.response.to.have.status(400); });",
+              "pm.test('Body contains static error message', function () {",
+              "  var json = pm.response.json();",
+              "  pm.expect(json.message).to.eql('Missing query');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "POST /api/navi/query — unauthenticated",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "OCS-APIRequest", "value": "true" }
+        ],
+        "auth": { "type": "noauth" },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"query\": \"How many leads are open?\"}"
+        },
+        "url": "{{baseUrl}}/index.php/apps/pipelinq/api/navi/query"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status code is 401', function () { pm.response.to.have.status(401); });"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

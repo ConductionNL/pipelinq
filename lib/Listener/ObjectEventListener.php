@@ -29,35 +29,38 @@ use OCP\EventDispatcher\IEventListener;
 
 /**
  * Listener for OpenRegister object create/update events.
+ *
+ * @implements IEventListener<Event>
+ *
+ * @spec openspec/changes/reverse-2026-05-26-be-events/tasks.md#task-2
  */
-class ObjectEventListener implements IEventListener
-{
-    /**
-     * Constructor.
-     *
-     * @param ObjectEventHandlerService $handlerService The event handler service.
-     */
-    public function __construct(
-        private ObjectEventHandlerService $handlerService,
-    ) {
-    }//end __construct()
+class ObjectEventListener implements IEventListener {
+	/**
+	 * Constructor.
+	 *
+	 * @param ObjectEventHandlerService $handlerService The event handler service.
+	 */
+	public function __construct(
+		private ObjectEventHandlerService $handlerService,
+	) {
+	}//end __construct()
 
-    /**
-     * Handle an incoming event.
-     *
-     * @param Event $event The event to handle.
-     *
-     * @return void
-     */
-    public function handle(Event $event): void
-    {
-        if ($event instanceof ObjectCreatedEvent) {
-            $this->handlerService->handleCreated(objectEntity: $event->getObject());
-        } else if ($event instanceof ObjectUpdatedEvent) {
-            $this->handlerService->handleUpdated(
-                newObject: $event->getNewObject(),
-                oldObject: $event->getOldObject()
-            );
-        }
-    }//end handle()
+	/**
+	 * Handle an incoming event.
+	 *
+	 * @param Event $event The event to handle.
+	 *
+	 * @return void
+	 * @spec   openspec/changes/reverse-2026-05-26-be-events/tasks.md#task-2
+	 */
+	public function handle(Event $event): void {
+		if ($event instanceof ObjectCreatedEvent) {
+			$this->handlerService->handleCreated(objectEntity: $event->getObject());
+		} elseif ($event instanceof ObjectUpdatedEvent) {
+			$this->handlerService->handleUpdated(
+				newObject: $event->getNewObject(),
+				oldObject: $event->getOldObject()
+			);
+		}
+	}//end handle()
 }//end class

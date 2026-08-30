@@ -1,0 +1,121 @@
+{
+  "components": {
+    "registers": {
+      "pipelinq": {}
+    },
+    "schemas": {
+      "product": {
+        "properties": {
+          "productId": {
+            "type": "string",
+            "title": "Product ID",
+            "description": "Canonical stable UUID key for cross-app references. Defaults to and equals the OpenRegister object UUID. shillinq stock-keeping and the integration registry use this as the FK — never change it after first write.",
+            "maxLength": 64,
+            "visible": false,
+            "facetable": true
+          },
+          "gtin": {
+            "type": "string",
+            "title": "GTIN",
+            "description": "Global Trade Item Number (GS1). Supply-side master attribute, distinct from the POS barcode scan field. Format: GTIN-8, GTIN-12 (UPC), GTIN-13 (EAN), or GTIN-14.",
+            "maxLength": 14,
+            "visible": false
+          },
+          "manufacturer": {
+            "type": "string",
+            "title": "Manufacturer",
+            "description": "Maker or brand owner of this product (schema:manufacturer). Authoritative supply-side attribute.",
+            "maxLength": 255,
+            "visible": false
+          },
+          "unitOfMeasure": {
+            "type": "string",
+            "title": "Unit of measure",
+            "description": "Canonical unit for stock-keeping (e.g. each, kg, litre, box, m2). shillinq lot/batch valuation and FIFO/AVG calculations key off this field.",
+            "maxLength": 50,
+            "visible": false
+          },
+          "weight": {
+            "type": "number",
+            "title": "Weight (kg)",
+            "description": "Gross weight per unit of measure, in kilograms. Used for logistics and freight cost estimation.",
+            "minimum": 0,
+            "visible": false
+          },
+          "dimensions": {
+            "type": "object",
+            "title": "Dimensions",
+            "description": "Physical dimensions per unit. Used for warehousing slot allocation and freight calculations.",
+            "properties": {
+              "length": {
+                "type": "number",
+                "title": "Length",
+                "minimum": 0,
+                "description": "Length for this record."
+              },
+              "width": {
+                "type": "number",
+                "title": "Width",
+                "minimum": 0,
+                "description": "Width for this record."
+              },
+              "height": {
+                "type": "number",
+                "title": "Height",
+                "minimum": 0,
+                "description": "Height for this record."
+              },
+              "unit": {
+                "type": "string",
+                "title": "Unit",
+                "description": "Unit for the three dimensions.",
+                "enum": [
+                  "mm",
+                  "cm",
+                  "m"
+                ],
+                "default": "cm"
+              }
+            },
+            "visible": false
+          },
+          "hazardClass": {
+            "type": "string",
+            "title": "Hazard class",
+            "description": "ADR/UN dangerous-goods classification code (e.g. '3', '8', '9'). Required for hazardous-goods warehousing compliance.",
+            "maxLength": 20,
+            "visible": false
+          },
+          "stockTracked": {
+            "type": "boolean",
+            "title": "Stock tracked",
+            "description": "Whether shillinq should maintain stock records for this product. Set false for services and downloadable goods that need no physical inventory.",
+            "default": true,
+            "visible": false
+          },
+          "vendor": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Vendor",
+            "description": "The vendor/supplier this product is procured from. Cross-app reference resolved by the canonical role type https://openregister.app/ns#Vendor (ADR-048) — sourced from shillinq's Payee (accounts-payable vendor) master when installed; otherwise the field is unfillable, since the supplying app is optional. Uses the precise ns#Vendor role rather than the broad schema.org/Organization so it targets the AP vendor, not any organisation.",
+            "referenceSemanticType": "https://openregister.app/ns#Vendor",
+            "referenceSemanticApp": "shillinq",
+            "visible": true
+          },
+          "consumableBy": {
+            "type": "array",
+            "title": "Consumable by",
+            "description": "App slugs permitted to read this product's master data through the integration registry. Default [\"shillinq\"]. The registry provider enforces this list.",
+            "items": {
+              "type": "string"
+            },
+            "default": [
+              "shillinq"
+            ],
+            "visible": false
+          }
+        }
+      }
+    }
+  }
+}

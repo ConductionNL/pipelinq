@@ -1,0 +1,6 @@
+schema: spec-driven
+name: public-intake-forms
+status: proposed
+created: 2026-03-20
+specs:
+  - specs/public-intake-forms/spec.md

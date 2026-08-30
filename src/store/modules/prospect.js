@@ -1,3 +1,4 @@
+import { generateUrl } from '@nextcloud/router'
 /**
  * Prospect store — fetches prospect discovery data from the Pipelinq API.
  */
@@ -14,12 +15,18 @@ export const useProspectStore = defineStore('prospect', {
 		error: null,
 	}),
 	actions: {
+		/**
+		 * @param refresh
+		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-33
+		 */
 		async fetchProspects(refresh = false) {
 			this.loading = true
 			this.error = null
 
 			try {
-				const url = `/apps/pipelinq/api/prospects${refresh ? '?refresh=true' : ''}`
+				const url = generateUrl(
+					`/apps/pipelinq/api/prospects${refresh ? '?refresh=true' : ''}`,
+				)
 				const response = await fetch(url, {
 					headers: {
 						'Content-Type': 'application/json',
@@ -31,7 +38,8 @@ export const useProspectStore = defineStore('prospect', {
 				const data = await response.json()
 
 				if (!response.ok) {
-					this.error = data.message || data.error || 'Failed to fetch prospects'
+					this.error =
+						data.message || data.error || 'Failed to fetch prospects'
 					return null
 				}
 
@@ -50,17 +58,24 @@ export const useProspectStore = defineStore('prospect', {
 			}
 		},
 
+		/**
+		 * @param prospectData
+		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-32
+		 */
 		async createLeadFromProspect(prospectData) {
 			try {
-				const response = await fetch('/apps/pipelinq/api/prospects/create-lead', {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-						requesttoken: OC.requestToken,
-						'OCS-APIREQUEST': 'true',
+				const response = await fetch(
+					generateUrl('/apps/pipelinq/api/prospects/create-lead'),
+					{
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+							requesttoken: OC.requestToken,
+							'OCS-APIREQUEST': 'true',
+						},
+						body: JSON.stringify(prospectData),
 					},
-					body: JSON.stringify(prospectData),
-				})
+				)
 
 				const data = await response.json()
 

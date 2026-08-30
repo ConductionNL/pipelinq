@@ -1,0 +1,10 @@
+{
+  "spec_slug": "time-approval-workflow",
+  "title": "Time Approval Workflow (submit/approve/lock)",
+  "app": "pipelinq",
+  "repo": "https://github.com/ConductionNL/pipelinq",
+  "depends_on": [
+    "time-entry-core"
+  ],
+  "issue": null
+}
