@@ -22,7 +22,7 @@
 		:permissions="permissions"
 		:persistManifestDelta="persistManifestDelta"
 		:requiresApps="[]">
-		<template #sidebar>
+		<template #sidebar="{ pageSidebarComponent }">
 			<!--
 				Host-rendered CnObjectSidebar. Detail pages declare their tabs in
 				config.sidebar.tabs by component name; sidebarComponents resolves
@@ -44,6 +44,10 @@
 				:useRegistry="false"
 				:open="objectSidebarState.open"
 				@update:open="objectSidebarState.open = $event" />
+			<!-- The manifest page's own sidebar (pages[].sidebarComponent). Passed in
+			     as a slot prop because filling this slot suppresses CnAppRoot's
+			     fallback, which is what hid the flow sidebar. -->
+			<component :is="pageSidebarComponent" v-if="pageSidebarComponent" />
 		</template>
 	</CnAppRoot>
 </template>
