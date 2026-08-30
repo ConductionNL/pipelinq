@@ -101,26 +101,27 @@ test('ExportDestinationForm: /export/destinations/new mounts src/views/export/Ex
 
 	const detail = content(page).locator('[data-testid="cn-detail-page"]').first()
 	await expect(detail).toBeVisible({ timeout: 15000 })
-	// ⚠️ THE HEADING IS THE MANIFEST'S TITLE, NOT THE COMPONENT'S `:title` PROP.
-	// This literal was WRONG in the first version of this file and CI caught it:
-	// `33 × locator resolved to <h2 class="cn-detail-page__title">New export
-	// destination</h2>` while the component binds
-	// `:title="isEdit ? 'Edit destination' : 'New destination'"`.
+	// ⚠️ THIS HEADING'S SOURCE HAS CHANGED — read before editing the literal.
 	//
-	// The rule, as measured across the five export pages in run 31472541017:
-	// when the custom page component's SINGLE ROOT is `<CnDetailPage>`, the
-	// manifest page's `title` reaches CnDetailPage's `title` prop (fallthrough
-	// attribute onto a single root component) and the component's own binding
-	// does not win. When the root is a plain `<div>` wrapping the library
-	// component — ExportDestinations, ExportRuns, CashShiftList — the manifest
-	// title lands on that inert `<div>` and the component's prop is what
-	// renders. Both halves of that rule are confirmed by passing tests here and
-	// in visual-coverage-spa-pages.spec.ts.
+	// This file used to record the opposite rule: that a manifest page `title`
+	// reaches CnDetailPage as a fallthrough attribute on a single-root
+	// component and beats the component's own `:title`. Run 33253937930
+	// measured the reverse — `33 × locator resolved to <h2
+	// class="cn-detail-page__title">New destination</h2>`, i.e. the
+	// COMPONENT's binding is what renders — so `src/manifest.json` (page
+	// `ExportDestinationNew`) is no longer the string the user sees here.
 	//
-	// So `src/manifest.json` (page `ExportDestinationNew`) is the source of
-	// truth for this string, and the component's own 'New destination' /
-	// 'Edit destination' literals are dead strings that never reach a screen —
-	// reported, not worked around.
+	// Nothing else in the suite can see that flip: this was the only page
+	// whose manifest title and component literal disagreed. The
+	// `/kassakoppeling/audit/:id` case looks like a counter-example but is
+	// not — its own comment says it asserts the COMPONENT's fallback, which
+	// merely happens to equal the manifest title.
+	//
+	// The component now says 'New export destination' too, so both layers
+	// agree and the heading is right whichever one wins. That does mean this
+	// assertion no longer discriminates between them: if you need to know
+	// which layer renders, make them disagree deliberately rather than
+	// reading this test's result as an answer.
 	await expect(detail.locator('.cn-detail-page__title')).toHaveText(
 		'New export destination',
 	)

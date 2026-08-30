@@ -157,6 +157,11 @@ import ExportJobFormView from './views/export/ExportJobForm.vue'
 import ExportJobsView from './views/export/ExportJobs.vue'
 import ExportRunDetailView from './views/export/ExportRunDetail.vue'
 import ExportRunsView from './views/export/ExportRuns.vue'
+// --- Flows (ADR-110 Decision 4). The list and the canvas are the shared
+//     `flows` / `flow-detail` manifest page types; only the SIDEBAR is an
+//     app component, because CnFlowSidebar has to mount in the NC app
+//     sidebar for the canvas to keep full width. ---
+import FlowDetailSidebar from './views/flows/FlowDetailSidebar.vue'
 // --- Forecast roll-up (lib gap: no forecast/quota/override page type). ---
 import ForecastDashboardView from './views/forecast/ForecastDashboard.vue'
 import ForecastTrendView from './views/forecast/ForecastTrend.vue'
@@ -868,6 +873,17 @@ const registry = {
 	//     are removed from pipelinq. OR hosts them, driven by the masterEntity
 	//     x-openregister-survivorship / x-openregister-merge annotations; a
 	//     single "Data quality" nav entry deep-links to OR's surface. ---
+
+	// --- Flows (ADR-110 Decision 4). ---
+	// The shared CnFlowIndexPage / CnFlowDetail surfaces over OpenRegister's
+	// native flow store, scoped `app: "pipelinq"` so this app sees only its
+	// own. Only the SIDEBAR is an app component; the list and the canvas are
+	// the shared `flows` / `flow-detail` manifest page types.
+	FlowDetailSidebar: {
+		kind: 'page',
+		component: FlowDetailSidebar,
+		_note: 'CnFlowSidebar in the NC app sidebar; shares useFlowStore with the canvas.',
+	},
 
 	// Contact-aware create for the generic Add button on the Clients index page.
 	createClientContactAware: {

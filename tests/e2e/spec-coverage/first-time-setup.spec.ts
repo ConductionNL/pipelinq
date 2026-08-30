@@ -109,9 +109,9 @@ test.describe('First-time setup contract', () => {
 			).toBe('boolean')
 		}
 
-		// The optional steps reflect their OWN state rather than the app's:
-		// provision and demo-data were done by ci-seed, organisation was not —
-		// and completion is true regardless, which is the whole scenario.
+		// The optional steps reflect their OWN state rather than the app's,
+		// and completion is true regardless — which is the whole scenario:
+		// only currency gates completion.
 		expect(
 			res.json.steps.provision.done,
 			'ci-seed reimported the register',
@@ -120,11 +120,26 @@ test.describe('First-time setup contract', () => {
 			res.json.steps['demo-data'].done,
 			'ci-seed recorded the demo-data decision',
 		).toBe(true)
+		// `organisation.done` is deliberately NOT pinned to a value.
+		//
+		// It used to assert `false` on the stated grounds that "no organisation
+		// name is configured in CI". ADR-111 demo-data generation (#1480) now
+		// seeds one, so the flag flipped to true and this went red — while the
+		// behaviour under test never changed.
+		//
+		// Pinning it either way re-creates the same brittleness in the other
+		// direction: the next change to what ci-seed provisions would break it
+		// again. What this scenario actually claims is that an OPTIONAL step
+		// does not gate completion, whichever way it happens to land, and that
+		// is what is asserted now.
 		expect(
-			res.json.steps.organisation.done,
-			'no organisation name is configured in CI',
-		).toBe(false)
-		expect(res.json.completed).toBe(true)
+			typeof res.json.steps.organisation.done,
+			'the organisation step reports a boolean either way',
+		).toBe('boolean')
+		expect(
+			res.json.completed,
+			'completion is gated by currency alone, never by an optional step',
+		).toBe(true)
 	})
 
 	/*
@@ -191,8 +206,28 @@ test.describe('First-time setup contract', () => {
 		await openApp(page)
 
 		// Precondition: unset, so the flip below is caused by this test.
+		//
+		// ESTABLISHED, not asserted. This used to read the status and require
+		// `done === false`, which silently depended on nothing else having set
+		// an organisation name first. Since the demo-data step began seeding on
+		// install, `receipt_company_name` is populated before this spec runs and
+		// the precondition failed — the test reported a product defect when the
+		// only thing wrong was an inherited fixture.
+		//
+		// Clearing first is the same call the `finally` below already makes, so
+		// the mechanism is proven in this file. The assertion that follows the
+		// clear is what keeps this honest: if the reset does not take, this
+		// still fails loudly rather than testing a flip that already happened.
+		await api(page, 'POST', `${APP}/api/setup/config`, {
+			receipt_company_name: '',
+			receipt_company_vat: '',
+			receipt_company_kvk: '',
+		})
 		const before = await api(page, 'GET', `${APP}/api/setup/status`)
-		expect(before.json?.steps?.organisation?.done).toBe(false)
+		expect(
+			before.json?.steps?.organisation?.done,
+			'could not clear the organisation step, so the flip below would prove nothing',
+		).toBe(false)
 
 		try {
 			const saved = await api(page, 'POST', `${APP}/api/setup/config`, {
@@ -215,17 +250,35 @@ test.describe('First-time setup contract', () => {
 			// Still not gating: completion is unchanged by an optional step.
 			expect(after.json?.completed).toBe(true)
 		} finally {
-			// Leave the instance exactly as found — other specs share it.
+			// Leave the instance as ci-seed left it — which is NOT empty.
+			//
+			// This block used to clear the name, described as "leave the
+			// instance exactly as found". It was the opposite of that.
+			// ci-seed.sh step 3b sets `receipt_company_name` precisely so that
+			// no optional step is outstanding, and says why in its own error
+			// message: "An unmet optional step makes CnAppRoot cover the shell
+			// with the wizard in every fresh browser context."
+			//
+			// So clearing it here handed that modal mask to every spec that
+			// ran afterwards. In the run this test last failed in,
+			// dashboard.spec.ts was flaky three ways — renders the page,
+			// renders the KPI and chart widgets, offers the quick-create
+			// actions — which is exactly what a modal over the shell produces.
+			//
+			// The literal is the value ci-seed.sh writes. There is no GET for
+			// the setup config (only /status, which returns booleans), so the
+			// original cannot be read back and restored dynamically; if the
+			// seed's value changes, change it here too.
 			await api(page, 'POST', `${APP}/api/setup/config`, {
-				receipt_company_name: '',
+				receipt_company_name: 'CI Test Organisation',
 				receipt_company_vat: '',
 				receipt_company_kvk: '',
 			})
 			const restored = await api(page, 'GET', `${APP}/api/setup/status`)
 			expect(
 				restored.json?.steps?.organisation?.done,
-				'cleanup failed to reset the organisation step',
-			).toBe(false)
+				'cleanup must leave the organisation step DONE, as ci-seed did',
+			).toBe(true)
 		}
 	})
 

@@ -21,6 +21,18 @@ Connection MUST be tested before saving.
 
 **Files**: `lib/Service/Export/ExportDestinationService.php`
 
+@e2e exclude carried forward unchanged from the archived
+`bi-export-and-data-warehouse-sink` change (2026-06-14), not touched by
+`export-destination-credentials-fix` — page-level coverage already exists in
+`tests/e2e/spec-coverage/bi-export.spec.ts` ("export destinations list page
+renders", "export destination form page renders for new destination"), and
+the server-side validation/type-enforcement behaviour is asserted in
+`ExportDestinationServiceTest`. The existing Playwright annotations still
+point at the archived change's path (`openspec/changes/bi-export-and-
+data-warehouse-sink/specs.md`); reconciling them to this newly-synced
+canonical spec path is separate spec-hygiene follow-up work, not a
+credentials-resolution change.
+
 #### Scenario: Create destination with OpenConnector credentials
 
 - **GIVEN** an admin opens the "Export Destinations" page
@@ -52,6 +64,15 @@ Files MUST be uploaded to the destination using OpenConnector credentials.
 Upload failures SHALL retry with exponential backoff.
 
 **Files**: `lib/Service/Export/ExportUploadService.php`
+
+@e2e exclude carried forward unchanged from the archived
+`bi-export-and-data-warehouse-sink` change (2026-06-14), not touched by
+`export-destination-credentials-fix` — upload retry/backoff and manifest
+behaviour is asserted in `ExportUploadServiceTest`
+(`testSuccessfulUpload`/`testExponentialBackoffRetrySucceeds`/
+`testPartialUpload`); the archived spec (REQ-BIE-008) already carried the
+identical exclusion for the same reason. No browser-observable surface
+exists for retry timing.
 
 #### Scenario: Successful file upload
 
