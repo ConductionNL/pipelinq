@@ -189,7 +189,7 @@ export default {
 		contact: {
 			immediate: true,
 			/**
-			 * @param val
+			 * @param {object} val The incoming value.
 			 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-42
 			 */
 			handler(val) {
@@ -200,7 +200,7 @@ export default {
 		},
 
 		/**
-		 * @param val
+		 * @param {string} val Identifier of the newly selected client.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-50
 		 */
 		selectedClient(val) {

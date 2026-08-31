@@ -186,6 +186,7 @@ export default {
 		},
 
 		/**
+		 * @param {string} value The payment method the user picked.
 		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-008
 		 */
 		onSelect(value) {

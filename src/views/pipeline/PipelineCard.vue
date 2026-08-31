@@ -328,7 +328,7 @@ export default {
 		currentColumnValue: {
 			immediate: true,
 			/**
-			 * @param val
+			 * @param {object} val The incoming value.
 			 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-39
 			 */
 			handler(val) {
@@ -339,7 +339,7 @@ export default {
 		'item.assignee': {
 			immediate: true,
 			/**
-			 * @param val
+			 * @param {object} val The incoming value.
 			 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-39
 			 */
 			handler(val) {

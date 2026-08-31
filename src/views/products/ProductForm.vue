@@ -285,7 +285,7 @@ export default {
 		product: {
 			immediate: true,
 			/**
-			 * @param val
+			 * @param {object} val The incoming value.
 			 * @spec openspec/changes/reverse-2026-05-26-fe-products-ui/tasks.md#task-16
 			 */
 			handler(val) {

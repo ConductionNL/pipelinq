@@ -218,7 +218,7 @@ export default {
 		client: {
 			immediate: true,
 			/**
-			 * @param val
+			 * @param {object} val The incoming value.
 			 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-26
 			 */
 			handler(val) {

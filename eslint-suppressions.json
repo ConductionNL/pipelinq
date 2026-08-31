@@ -33,9 +33,6 @@
   "src/components/EntityNotes.vue": {
     "@nextcloud/l10n-enforce-ellipsis": {
       "count": 2
-    },
-    "jsdoc/require-param-type": {
-      "count": 2
     }
   },
   "src/components/LeadProducts.vue": {
@@ -53,11 +50,6 @@
   },
   "src/components/ProspectCard.vue": {
     "vue/custom-event-name-casing": {
-      "count": 2
-    }
-  },
-  "src/components/ProspectWidget.vue": {
-    "jsdoc/require-param-type": {
       "count": 2
     }
   },
@@ -84,16 +76,6 @@
       "count": 1
     },
     "@typescript-eslint/no-unused-vars": {
-      "count": 2
-    }
-  },
-  "src/components/admin/QueueSettings.vue": {
-    "jsdoc/require-param-type": {
-      "count": 2
-    }
-  },
-  "src/components/admin/SkillSettings.vue": {
-    "jsdoc/require-param-type": {
       "count": 2
     }
   },
@@ -179,9 +161,6 @@
     "@nextcloud/l10n-enforce-ellipsis": {
       "count": 1
     },
-    "jsdoc/require-param-type": {
-      "count": 2
-    },
     "no-console": {
       "count": 2
     }
@@ -209,16 +188,8 @@
       "count": 1
     }
   },
-  "src/dialogs/ClientCreateDialog.vue": {
-    "jsdoc/require-param-type": {
-      "count": 1
-    }
-  },
   "src/dialogs/ContactImportDialog.vue": {
     "@nextcloud/l10n-enforce-ellipsis": {
-      "count": 2
-    },
-    "jsdoc/require-param-type": {
       "count": 2
     }
   },
@@ -230,11 +201,6 @@
       "count": 1
     }
   },
-  "src/dialogs/LeadCreateDialog.vue": {
-    "jsdoc/require-param-type": {
-      "count": 1
-    }
-  },
   "src/dialogs/PipelineFormDialog.vue": {
     "eqeqeq": {
       "count": 1
@@ -243,11 +209,6 @@
   "src/dialogs/QueueCreateDialog.vue": {
     "@nextcloud/l10n-enforce-ellipsis": {
       "count": 2
-    }
-  },
-  "src/dialogs/RequestCreateDialog.vue": {
-    "jsdoc/require-param-type": {
-      "count": 1
     }
   },
   "src/main.js": {
@@ -364,17 +325,9 @@
       "count": 2
     }
   },
-  "src/views/clients/ClientForm.vue": {
-    "jsdoc/require-param-type": {
-      "count": 1
-    }
-  },
   "src/views/contacts/ContactForm.vue": {
     "@nextcloud/l10n-enforce-ellipsis": {
       "count": 1
-    },
-    "jsdoc/require-param-type": {
-      "count": 2
     }
   },
   "src/views/contracts/ContractInvoicingSection.vue": {
@@ -503,9 +456,6 @@
   "src/views/pipeline/PipelineCard.vue": {
     "@typescript-eslint/no-unused-vars": {
       "count": 3
-    },
-    "jsdoc/require-param-type": {
-      "count": 2
     }
   },
   "src/views/portal/BookingConfirmationPage.vue": {
@@ -541,23 +491,10 @@
   "src/views/pos/PosTransactionForm.vue": {
     "@typescript-eslint/no-unused-vars": {
       "count": 2
-    },
-    "jsdoc/require-param-type": {
-      "count": 2
-    }
-  },
-  "src/views/products/ProductForm.vue": {
-    "jsdoc/require-param-type": {
-      "count": 1
     }
   },
   "src/views/projects/ProjectDetail.vue": {
     "@nextcloud/l10n-enforce-ellipsis": {
-      "count": 1
-    }
-  },
-  "src/views/queues/QueueList.vue": {
-    "jsdoc/require-param-type": {
       "count": 1
     }
   },
@@ -594,11 +531,6 @@
       "count": 1
     }
   },
-  "src/views/settings/ProductCategoryManager.vue": {
-    "jsdoc/require-param-type": {
-      "count": 3
-    }
-  },
   "src/views/settings/ProspectSettings.vue": {
     "@nextcloud/l10n-enforce-ellipsis": {
       "count": 1
@@ -621,9 +553,6 @@
     },
     "@typescript-eslint/no-unused-vars": {
       "count": 1
-    },
-    "jsdoc/require-param-type": {
-      "count": 3
     }
   },
   "src/views/sync/SyncSettings.vue": {
@@ -638,9 +567,6 @@
   },
   "src/views/widgets/CreateLeadWidget.vue": {
     "@nextcloud/l10n-enforce-ellipsis": {
-      "count": 2
-    },
-    "jsdoc/require-param-type": {
       "count": 2
     },
     "no-console": {
@@ -673,9 +599,6 @@
   "src/views/widgets/StartRequestWidget.vue": {
     "@nextcloud/l10n-enforce-ellipsis": {
       "count": 2
-    },
-    "jsdoc/require-param-type": {
-      "count": 1
     },
     "no-console": {
       "count": 4

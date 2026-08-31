@@ -210,7 +210,7 @@ export default {
 		},
 
 		/**
-		 * @param tag
+		 * @param {object} tag The tag to edit.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-95
 		 */
 		startEditing(tag) {
@@ -232,7 +232,7 @@ export default {
 		},
 
 		/**
-		 * @param id
+		 * @param {string} id Identifier of the tag being renamed.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-93
 		 */
 		async saveRename(id) {
@@ -266,7 +266,7 @@ export default {
 		},
 
 		/**
-		 * @param tag
+		 * @param {object} tag The tag the user asked to remove.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-90
 		 */
 		async confirmRemove(tag) {

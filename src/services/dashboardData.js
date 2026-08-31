@@ -94,7 +94,7 @@ async function fetchRaw(type, params = {}) {
  * without an explicit refresh.
  *
  * @param {string} key - Unique cache key (e.g. 'lead', 'lead:mine').
- * @param {Function} fetcher - Promise-returning fetcher invoked on miss.
+ * @param {(function(): Promise<Array>)} fetcher - Promise-returning fetcher invoked on miss.
  * @return {Promise<Array>} The cached or freshly fetched data.
  */
 function cached(key, fetcher) {

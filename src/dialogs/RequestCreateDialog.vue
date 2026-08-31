@@ -65,7 +65,7 @@ export default {
 		},
 
 		/**
-		 * @param formData
+		 * @param {object} formData The raw create-form fields.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-2
 		 */
 		async onSave(formData) {

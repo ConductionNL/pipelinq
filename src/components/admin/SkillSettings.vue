@@ -133,7 +133,7 @@ export default {
 
 	methods: {
 		/**
-		 * @param skill
+		 * @param {object} skill The skill to edit.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-29
 		 */
 		startEdit(skill) {
@@ -182,7 +182,7 @@ export default {
 		},
 
 		/**
-		 * @param skill
+		 * @param {object} skill The skill to delete.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-24
 		 */
 		async deleteSkill(skill) {

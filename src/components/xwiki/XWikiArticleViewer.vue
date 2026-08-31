@@ -3,8 +3,12 @@
   - SPDX-FileCopyrightText: 2026 Conduction B.V.
   -
   - XWikiArticleViewer — inline HTML viewer. Fetches the page via the xwiki
-  - store, displays sanitised content via v-html. Provides "Open in xWiki" and
-  - back button.
+  - store and renders it through v-html. Provides "Open in xWiki" and a back
+  - button.
+  -
+  - The markup is remote: it comes from whatever xWiki instance the admin
+  - configured, over which this app has no control, and nothing sanitises it
+  - server-side. It is run through DOMPurify here before it reaches v-html.
   -->
 <template>
 	<div class="xwiki-article-viewer">
@@ -30,15 +34,14 @@
 				{{ store.currentArticle.title }}
 			</h3>
 			<!-- eslint-disable-next-line vue/no-v-html -->
-			<div
-				class="xwiki-article-viewer__content"
-				v-html="store.currentArticle.content" />
+			<div class="xwiki-article-viewer__content" v-html="sanitisedContent" />
 		</div>
 	</div>
 </template>
 
 <script>
 import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
+import DOMPurify from 'dompurify'
 import { useXwikiStore } from '../../store/modules/xwiki.js'
 
 export default {
@@ -59,6 +62,18 @@ export default {
 	emits: ['back'],
 	setup() {
 		return { store: useXwikiStore() }
+	},
+
+	computed: {
+		/**
+		 * The article body, sanitised before it reaches v-html.
+		 *
+		 * @return {string} Safe HTML, or '' when no article is loaded.
+		 */
+		sanitisedContent() {
+			const raw = this.store.currentArticle?.content
+			return raw ? DOMPurify.sanitize(raw) : ''
+		},
 	},
 
 	watch: {

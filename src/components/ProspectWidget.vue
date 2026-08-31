@@ -146,7 +146,7 @@ export default {
 		},
 
 		/**
-		 * @param prospect
+		 * @param {object} prospect The prospect to raise a lead for.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-5
 		 */
 		async onCreateLead(prospect) {
@@ -169,7 +169,7 @@ export default {
 		},
 
 		/**
-		 * @param dateStr
+		 * @param {string} dateStr The stored date.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-4
 		 */
 		formatTime(dateStr) {
