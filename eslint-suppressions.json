@@ -325,11 +325,6 @@
       "count": 2
     }
   },
-  "src/views/contacts/ContactForm.vue": {
-    "@nextcloud/l10n-enforce-ellipsis": {
-      "count": 1
-    }
-  },
   "src/views/contracts/ContractInvoicingSection.vue": {
     "@typescript-eslint/no-unused-vars": {
       "count": 2
