@@ -69,7 +69,7 @@
 		</div>
 
 		<!-- Client -->
-		<div class="form-group">
+		<div class="form-group" data-testid="request-form-client">
 			<label>{{ t('pipelinq', 'Client') }}</label>
 			<NcSelect
 				v-model="form.client"
@@ -83,7 +83,7 @@
 
 		<!-- Pipeline + Stage row -->
 		<div class="form-row">
-			<div class="form-group">
+			<div class="form-group" data-testid="request-form-pipeline">
 				<label>{{ t('pipelinq', 'Pipeline') }}</label>
 				<NcSelect
 					v-model="form.pipeline"
@@ -95,7 +95,7 @@
 					:placeholder="t('pipelinq', 'Select pipeline')"
 					@update:modelValue="onPipelineChange" />
 			</div>
-			<div class="form-group">
+			<div class="form-group" data-testid="request-form-stage">
 				<label>{{ t('pipelinq', 'Stage') }}</label>
 				<NcSelect
 					v-model="form.stage"
@@ -131,6 +131,7 @@ import {
 	NcTextField,
 } from '@nextcloud/vue'
 import { toDateInputString, toDateObject } from '../../services/localeUtils.js'
+import { pipelineAppliesTo } from '../../services/pipelineUtils.js'
 import { getAllowedTransitions } from '../../services/requestStatus.js'
 import { useObjectStore } from '../../store/modules/object.js'
 import { useRequestChannelsStore } from '../../store/modules/requestChannels.js'
@@ -165,6 +166,8 @@ export default {
 			default: true,
 		},
 	},
+
+	emits: ['cancel', 'save', 'update:valid'],
 
 	data() {
 		return {
@@ -256,9 +259,7 @@ export default {
 		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-50
 		 */
 		requestPipelines() {
-			return this.pipelines.filter(
-				(p) => p.entityType === 'request' || p.entityType === 'both',
-			)
+			return this.pipelines.filter((p) => pipelineAppliesTo(p, 'request'))
 		},
 
 		/**

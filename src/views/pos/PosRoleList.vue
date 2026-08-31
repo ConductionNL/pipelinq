@@ -44,6 +44,8 @@ import { useObjectStore } from '../../store/modules/object.js'
 export default {
 	name: 'PosRoleList',
 	components: { CnIndexPage },
+	emits: ['create', 'edit'],
+
 	setup() {
 		const sidebarState = inject('sidebarState', null)
 		const objectStore = useObjectStore()

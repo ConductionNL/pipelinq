@@ -125,6 +125,7 @@ export default {
 
 		/**
 		 * Validate inputs and emit the confirm event with the selected range and format.
+		 *
 		 * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#5.1
 		 */
 		submit() {

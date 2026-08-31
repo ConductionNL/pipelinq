@@ -85,6 +85,8 @@ export default {
 		},
 	},
 
+	emits: ['retry', 'updated'],
+
 	data() {
 		return {
 			busy: false,

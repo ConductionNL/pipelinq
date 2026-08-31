@@ -3,7 +3,6 @@
 <!-- @spec openspec/changes/kcc-werkplek/tasks.md#task-3.3 -->
 <template>
 	<CnFormDialog
-		ref="dialog"
 		:dialogTitle="t('pipelinq', 'New task')"
 		:fields="fields"
 		:confirmLabel="t('pipelinq', 'Create')"

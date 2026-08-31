@@ -106,7 +106,7 @@ export default {
 		},
 
 		/**
-		 * @param leadId
+		 * @param {string} leadId Identifier of the created lead.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-dashboard-ui/tasks.md#task-2
 		 */
 		onLeadCreated(leadId) {
@@ -115,7 +115,7 @@ export default {
 		},
 
 		/**
-		 * @param requestId
+		 * @param {string} requestId Identifier of the created request.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-dashboard-ui/tasks.md#task-3
 		 */
 		onRequestCreated(requestId) {
@@ -126,7 +126,7 @@ export default {
 		},
 
 		/**
-		 * @param clientId
+		 * @param {string} clientId Identifier of the created client.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-dashboard-ui/tasks.md#task-1
 		 */
 		onClientCreated(clientId) {

@@ -358,6 +358,8 @@ export default {
 		},
 
 		/**
+		 * @param {object} provider The payment provider being configured.
+		 * @param {object} option The credential field that changed.
 		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
 		 */
 		onCredentialChange(provider, option) {
@@ -378,6 +380,7 @@ export default {
 		},
 
 		/**
+		 * @param {object} provider The payment provider to save.
 		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
 		 */
 		async onSave(provider) {
@@ -418,6 +421,7 @@ export default {
 		},
 
 		/**
+		 * @param {object} provider The payment provider to probe.
 		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-007
 		 */
 		async onTest(provider) {

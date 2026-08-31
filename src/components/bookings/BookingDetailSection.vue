@@ -252,7 +252,7 @@ export default {
 	},
 
 	props: {
-		/** The booking id (token-resolved from @objectId by CnBodySections). */
+		/** The booking id (token-resolved from `@objectId` by CnBodySections). */
 		bookingId: {
 			type: String,
 			default: '',

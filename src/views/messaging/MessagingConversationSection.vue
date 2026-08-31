@@ -293,6 +293,7 @@ export default {
 
 	methods: {
 		/**
+		 * @param {string} status The conversation status.
 		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
 		 */
 		conversationStatusLabel(status) {
@@ -311,6 +312,7 @@ export default {
 		},
 
 		/**
+		 * @param {string} status The delivery status.
 		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
 		 */
 		deliveryStatusClass(status) {
@@ -333,6 +335,7 @@ export default {
 		},
 
 		/**
+		 * @param {string} state The consent state.
 		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
 		 */
 		consentClass(state) {

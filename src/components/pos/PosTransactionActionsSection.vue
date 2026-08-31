@@ -165,7 +165,7 @@ export default {
 	},
 
 	props: {
-		/** The transaction id (token-resolved from @objectId by CnBodySections). */
+		/** The transaction id (token-resolved from `@objectId` by CnBodySections). */
 		transactionId: {
 			type: String,
 			default: '',

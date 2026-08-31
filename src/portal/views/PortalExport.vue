@@ -71,6 +71,7 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 </template>
 
 <script>
+import { generateUrl } from '@nextcloud/router'
 import { portalApi } from '../portalApi.js'
 
 export default {
@@ -80,13 +81,19 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * Ask the backend for an AVG data export and surface its download link.
+		 *
+		 * @return {Promise<void>}
+		 * @spec exclude Deprecated-global swap only (OC.generateUrl -> @nextcloud/router);
+		 *   openspec/specs/customer-portal specifies the origin gate, not the export
+		 *   request, so there is no requirement to point at.
+		 */
 		async requestExport() {
 			this.error = ''
 			try {
 				const result = await portalApi.requestExport()
-				this.exportLink = OC.generateUrl(
-					'/apps/pipelinq' + result.downloadUrl,
-				)
+				this.exportLink = generateUrl('/apps/pipelinq' + result.downloadUrl)
 			} catch (e) {
 				this.error =
 					e.message || t('pipelinq', 'Could not request the export.')

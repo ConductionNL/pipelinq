@@ -24,7 +24,6 @@
 		</div>
 		<CnFormDialog
 			v-if="showProjectForm"
-			ref="projectForm"
 			:dialogTitle="
 				isNew ? t('pipelinq', 'New project') : t('pipelinq', 'Edit project')
 			"
@@ -239,7 +238,6 @@
 		<!-- Fase dialog -->
 		<CnFormDialog
 			v-if="showPhaseDialog"
-			ref="phaseDialog"
 			:dialogTitle="t('pipelinq', 'Add phase')"
 			:fields="phaseFields"
 			:initialData="phaseInitial"
@@ -252,7 +250,6 @@
 		<!-- Taak dialog -->
 		<CnFormDialog
 			v-if="showTaskDialog"
-			ref="taskDialog"
 			:dialogTitle="t('pipelinq', 'Add task')"
 			:fields="taskFields"
 			:initialData="taskInitial"
@@ -265,7 +262,6 @@
 		<!-- Tijdregistratie dialog -->
 		<CnFormDialog
 			v-if="showActivityDialog"
-			ref="activityDialog"
 			:dialogTitle="t('pipelinq', 'Time entry')"
 			:fields="activityFields"
 			:initialData="activityInitial"
@@ -801,6 +797,7 @@ export default {
 		},
 
 		/**
+		 * @param {object} formData The saved project.
 		 * @spec openspec/specs/realtime-updates-ui/spec.md
 		 */
 		async onProjectSaved(formData) {
@@ -887,6 +884,7 @@ export default {
 		},
 
 		/**
+		 * @param {object} formData The saved phase.
 		 * @spec openspec/specs/realtime-updates-ui/spec.md
 		 */
 		async onPhaseSaved(formData) {
@@ -917,6 +915,7 @@ export default {
 		},
 
 		/**
+		 * @param {object} formData The saved task.
 		 * @spec openspec/specs/realtime-updates-ui/spec.md
 		 */
 		async onTaskSaved(formData) {
@@ -948,6 +947,7 @@ export default {
 		},
 
 		/**
+		 * @param {object} formData The saved activity.
 		 * @spec openspec/specs/realtime-updates-ui/spec.md
 		 */
 		async onActivitySaved(formData) {
@@ -994,6 +994,7 @@ export default {
 		},
 
 		/**
+		 * @param {string} status The stored status value.
 		 * @spec openspec/specs/realtime-updates-ui/spec.md
 		 */
 		statusLabel(status) {

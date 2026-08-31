@@ -69,9 +69,9 @@ export default {
 	},
 
 	props: {
-		/** Relative period token (today / week / month), from @workspace.period. */
+		/** Relative period token (today / week / month), from `@workspace`.period. */
 		period: { type: String, default: 'month' },
-		/** Trend granularity (daily / weekly), from @workspace.granularity. */
+		/** Trend granularity (daily / weekly), from `@workspace`.granularity. */
 		granularity: { type: String, default: 'daily' },
 	},
 
