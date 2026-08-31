@@ -111,7 +111,6 @@ export default {
 				this.queues = Array.isArray(data.queues) ? data.queues : []
 				this.queueCounts = data.queueCounts || {}
 			} catch (e) {
-				// eslint-disable-next-line no-console
 				console.warn('[WerkplekQueueFilter] queue fetch failed', e)
 				this.queues = []
 			} finally {

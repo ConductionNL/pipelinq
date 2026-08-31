@@ -305,7 +305,7 @@ export default {
 					style: 'currency',
 					currency: cur,
 				}).format(amount)
-			} catch (e) {
+			} catch {
 				return amount + ' ' + cur
 			}
 		},

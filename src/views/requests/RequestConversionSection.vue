@@ -167,7 +167,7 @@ export default {
 					canConvert: !!data.canConvert,
 					caseReference: data.caseReference || '',
 				}
-			} catch (e) {
+			} catch {
 				this.availability = { ...DEFAULT_AVAILABILITY }
 			} finally {
 				this.loading = false
@@ -238,7 +238,7 @@ export default {
 			try {
 				await navigator.clipboard.writeText(this.caseReference)
 				showSuccess(t('pipelinq', 'Case reference copied.'))
-			} catch (e) {
+			} catch {
 				showError(t('pipelinq', 'Could not copy the case reference.'))
 			}
 		},

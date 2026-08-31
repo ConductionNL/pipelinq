@@ -57,7 +57,7 @@ export default {
 			if (isNaN(d.getTime())) return iso
 			try {
 				return d.toLocaleDateString()
-			} catch (e) {
+			} catch {
 				return iso
 			}
 		},

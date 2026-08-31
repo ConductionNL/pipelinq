@@ -368,7 +368,7 @@ export default {
 				const data = await response.json()
 				this.entries = Array.isArray(data.entries) ? data.entries : []
 				this.page = 1
-			} catch (e) {
+			} catch {
 				showError(t('pipelinq', 'Could not load audit log.'))
 				this.entries = []
 			} finally {
@@ -429,7 +429,7 @@ export default {
 					minute: '2-digit',
 					second: '2-digit',
 				})
-			} catch (e) {
+			} catch {
 				return value
 			}
 		},
@@ -447,7 +447,7 @@ export default {
 					style: 'currency',
 					currency: 'EUR',
 				}).format(value)
-			} catch (e) {
+			} catch {
 				return `€ ${value.toFixed(2)}`
 			}
 		},
@@ -556,7 +556,7 @@ export default {
 				showSuccess(t('pipelinq', 'Belastingdienst export downloaded.'))
 				this.showExport = false
 				await this.refresh()
-			} catch (e) {
+			} catch {
 				showError(t('pipelinq', 'Belastingdienst export failed.'))
 			} finally {
 				this.exporting = false

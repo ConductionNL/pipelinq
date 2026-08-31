@@ -194,7 +194,7 @@ export default {
 		async onOpenCamera() {
 			try {
 				await this.startCamera()
-			} catch (e) {
+			} catch {
 				this.$emit('camera-error')
 			}
 		},

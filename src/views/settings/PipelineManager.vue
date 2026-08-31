@@ -263,7 +263,7 @@ export default {
 			try {
 				const count = await this.countAffectedItems(pipeline.id)
 				this.deleteAffectedCount = count
-			} catch (e) {
+			} catch {
 				// Non-blocking — show dialog even if count fails
 			}
 

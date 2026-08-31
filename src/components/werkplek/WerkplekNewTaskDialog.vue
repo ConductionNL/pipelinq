@@ -186,7 +186,6 @@ export default {
 				} catch {
 					/* no-op */
 				}
-				// eslint-disable-next-line no-console
 				console.warn('[WerkplekNewTaskDialog] save failed', e)
 			}
 		},

@@ -364,7 +364,7 @@ export default {
 				this.receiptTemplates = rows.filter(
 					(tpl) => (tpl.status || 'active') === 'active',
 				)
-			} catch (e) {
+			} catch {
 				this.receiptTemplates = []
 			}
 		},
@@ -428,7 +428,7 @@ export default {
 				showSuccess(successMessage)
 				await this.load()
 				return true
-			} catch (e) {
+			} catch {
 				showError(t('pipelinq', 'Action failed.'))
 				return false
 			} finally {

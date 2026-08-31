@@ -164,7 +164,7 @@ export default {
 	async mounted() {
 		try {
 			this.providers = await listProviders()
-		} catch (e) {
+		} catch {
 			// Non-admin user — endpoint returns 403; fall back to static options.
 			this.providers = []
 		} finally {

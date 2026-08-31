@@ -44,7 +44,7 @@
 
 			<div v-if="lookupState === 'loading'" class="brp-panel__status">
 				<NcLoadingIcon />
-				<span>{{ t('pipelinq', 'Retrieve from BRP...') }}</span>
+				<span>{{ t('pipelinq', 'Retrieve from BRP…') }}</span>
 			</div>
 			<div
 				v-else-if="lookupState === 'error'"

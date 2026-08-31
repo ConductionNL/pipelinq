@@ -174,7 +174,7 @@ export default {
 				const url = generateUrl('/apps/pipelinq/api/pos/roles')
 				const response = await axios.get(url)
 				this.roles = response?.data?.roles || []
-			} catch (error) {
+			} catch {
 				this.roles = []
 			}
 		},

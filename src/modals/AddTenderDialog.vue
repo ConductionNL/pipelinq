@@ -51,7 +51,7 @@
 				v-if="requiresReference"
 				v-model="reference"
 				:label="t('pipelinq', 'Reference')"
-				:placeholder="t('pipelinq', 'Card auth code, voucher serial, ...')"
+				:placeholder="t('pipelinq', 'Card auth code, voucher serial, …')"
 				required />
 
 			<div

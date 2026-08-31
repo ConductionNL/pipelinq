@@ -71,7 +71,7 @@ export default {
 				const result = await portalApi.extendSession()
 				setToken(getToken(), result.expiresAt)
 				this.visible = false
-			} catch (e) {
+			} catch {
 				this.expire()
 			}
 		},
@@ -79,7 +79,7 @@ export default {
 		async logout() {
 			try {
 				await portalApi.logout()
-			} catch (e) {
+			} catch {
 				// best-effort
 			}
 			this.expire()

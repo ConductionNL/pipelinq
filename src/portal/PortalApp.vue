@@ -67,14 +67,14 @@ export default {
 		try {
 			this.branding = await portalApi.tenantConfig()
 			this.applyBranding()
-		} catch (e) {
+		} catch {
 			// Branding is best-effort; the portal still works with defaults.
 		}
 		if (this.authenticated) {
 			try {
 				const profile = await portalApi.profile()
 				this.isB2b = profile.accountType === 'b2b'
-			} catch (e) {
+			} catch {
 				// ignore
 			}
 		}
@@ -100,7 +100,7 @@ export default {
 		async logout() {
 			try {
 				await portalApi.logout()
-			} catch (e) {
+			} catch {
 				// best-effort
 			}
 			clearToken()

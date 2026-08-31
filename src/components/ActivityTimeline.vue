@@ -225,7 +225,7 @@ export default {
 				this.page = data.page || page
 				this.pages = data.pages || 1
 				this.total = data.total || 0
-			} catch (error) {
+			} catch {
 				showError(this.t('pipelinq', 'Failed to load activities'))
 			} finally {
 				this.loading = false

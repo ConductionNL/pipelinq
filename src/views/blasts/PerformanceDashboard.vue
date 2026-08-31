@@ -434,7 +434,7 @@ export default {
 					}
 				}
 				this.segments = map
-			} catch (_e) {
+			} catch {
 				this.segments = {}
 			}
 		},
@@ -469,7 +469,7 @@ export default {
 							attributedValue: data.attributedValue || 0,
 						})
 					}
-				} catch (_e) {
+				} catch {
 					// Skip; keep loop alive.
 				}
 			}

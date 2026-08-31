@@ -343,7 +343,7 @@ export default {
 				showSuccess(successMessage)
 				await this.load()
 				return true
-			} catch (e) {
+			} catch {
 				showError(t('pipelinq', 'Action failed.'))
 				return false
 			} finally {

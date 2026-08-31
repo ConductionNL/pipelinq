@@ -59,7 +59,7 @@ export default {
 			 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-9
 			 */
 			default() {
-				return t('pipelinq', 'Search client...')
+				return t('pipelinq', 'Search client…')
 			},
 		},
 

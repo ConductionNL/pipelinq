@@ -252,7 +252,7 @@ export default {
 				} else {
 					showError(t('pipelinq', 'Failed to save variants'))
 				}
-			} catch (e) {
+			} catch {
 				showError(t('pipelinq', 'Failed to save variants'))
 			} finally {
 				this.saving = false

@@ -154,7 +154,7 @@ export default {
 				} else {
 					await this.refresh()
 				}
-			} catch (e) {
+			} catch {
 				showError(t('pipelinq', 'Failed to open shift.'))
 			} finally {
 				this.opening = false

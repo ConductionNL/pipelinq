@@ -260,7 +260,7 @@ export default {
 				} else {
 					showError(t('pipelinq', 'Failed to save modifier groups'))
 				}
-			} catch (e) {
+			} catch {
 				showError(t('pipelinq', 'Failed to save modifier groups'))
 			} finally {
 				this.saving = false

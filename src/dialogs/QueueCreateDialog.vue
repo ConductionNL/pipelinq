@@ -17,7 +17,7 @@
 				id="queue-new-title"
 				v-model="newQueue.title"
 				type="text"
-				:placeholder="t('pipelinq', 'Queue name...')" />
+				:placeholder="t('pipelinq', 'Queue name…')" />
 
 			<label for="queue-new-description">{{
 				t('pipelinq', 'Description')
@@ -25,7 +25,7 @@
 			<textarea
 				id="queue-new-description"
 				v-model="newQueue.description"
-				:placeholder="t('pipelinq', 'Optional description...')" />
+				:placeholder="t('pipelinq', 'Optional description…')" />
 
 			<label for="queue-new-categories">{{
 				t('pipelinq', 'Categories (comma-separated)')

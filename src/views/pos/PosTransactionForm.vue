@@ -682,7 +682,7 @@ export default {
 								+ '/confirm',
 						),
 					)
-				} catch (confirmError) {
+				} catch {
 					showError(
 						t(
 							'pipelinq',
@@ -701,7 +701,7 @@ export default {
 					name: 'PosTransactionDetail',
 					params: { id: txId },
 				})
-			} catch (e) {
+			} catch {
 				showError(t('pipelinq', 'Failed to save transaction.'))
 			} finally {
 				this.saving = false

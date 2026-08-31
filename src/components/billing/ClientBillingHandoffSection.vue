@@ -266,7 +266,7 @@ export default {
 				this.availability = await getBillingHandoffAvailability(
 					this.resolvedId,
 				)
-			} catch (e) {
+			} catch {
 				this.availability = { ...DEFAULT_AVAILABILITY }
 			} finally {
 				this.loading = false

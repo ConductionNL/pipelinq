@@ -27,7 +27,7 @@
 					</template>
 					{{
 						reimporting
-							? t('pipelinq', 'Importing...')
+							? t('pipelinq', 'Importing…')
 							: t('pipelinq', 'Re-import configuration')
 					}}
 				</NcButton>
@@ -93,7 +93,7 @@
 			:tags="leadSourceTags"
 			:loading="leadSourcesLoading"
 			:addLabel="t('pipelinq', '+ Add Source')"
-			:addPlaceholder="t('pipelinq', 'Enter source name...')"
+			:addPlaceholder="t('pipelinq', 'Enter source name…')"
 			:usageCheck="checkLeadSourceUsage"
 			@add="addLeadSource"
 			@remove="removeLeadSource"
@@ -106,7 +106,7 @@
 			:tags="requestChannelTags"
 			:loading="requestChannelsLoading"
 			:addLabel="t('pipelinq', '+ Add Channel')"
-			:addPlaceholder="t('pipelinq', 'Enter channel name...')"
+			:addPlaceholder="t('pipelinq', 'Enter channel name…')"
 			:usageCheck="checkRequestChannelUsage"
 			@add="addRequestChannel"
 			@remove="removeRequestChannel"
@@ -418,7 +418,7 @@ import { useRequestChannelsStore } from '../../store/modules/requestChannels.js'
 import { useSettingsStore } from '../../store/modules/settings.js'
 
 export default {
-	name: 'Settings',
+	name: 'PipelinqAdminSettings',
 	components: {
 		MessagingSettings,
 		CtiPage,
@@ -542,7 +542,7 @@ export default {
 			}
 			try {
 				return new URL(url).protocol !== 'https:'
-			} catch (e) {
+			} catch {
 				return true
 			}
 		},
@@ -560,7 +560,7 @@ export default {
 			}
 			try {
 				return new URL(url).protocol !== 'https:'
-			} catch (e) {
+			} catch {
 				return true
 			}
 		},
@@ -578,7 +578,7 @@ export default {
 			}
 			try {
 				return new URL(url).protocol !== 'https:'
-			} catch (e) {
+			} catch {
 				return true
 			}
 		},

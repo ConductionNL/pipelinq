@@ -135,7 +135,7 @@ export default {
 					showError(this.t('pipelinq', 'Connection failed'))
 				}
 				await this.refresh()
-			} catch (e) {
+			} catch {
 				showError(this.t('pipelinq', 'Connection test failed'))
 			} finally {
 				this.busyId = null

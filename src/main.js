@@ -80,7 +80,6 @@ try {
 	registerTranslations()
 } catch (e) {
 	// Non-fatal — lib translations fall back to English source.
-	// eslint-disable-next-line no-console
 	console.warn(
 		'[pipelinq] registerTranslations failed; falling back to English',
 		e,

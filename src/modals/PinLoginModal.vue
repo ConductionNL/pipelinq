@@ -147,7 +147,7 @@ export default {
 				const url = generateUrl('/apps/pipelinq/api/pos/staff')
 				const response = await axios.get(url)
 				this.staff = response?.data?.staff || []
-			} catch (error) {
+			} catch {
 				// Non-admin users may not list staff; fall back to a manual id field.
 				this.staff = []
 			} finally {

@@ -522,7 +522,7 @@ export default {
 					name: 'PosRefundDetail',
 					params: { id: refundId },
 				})
-			} catch (e) {
+			} catch {
 				showError(t('pipelinq', 'Failed to save refund.'))
 			} finally {
 				this.saving = false

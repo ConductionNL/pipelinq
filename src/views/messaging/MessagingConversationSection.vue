@@ -369,7 +369,7 @@ export default {
 					this.entityId,
 				)
 				this.resolvedClientId = (contact && contact.client) || ''
-			} catch (e) {
+			} catch {
 				this.resolvedClientId = ''
 			}
 		},
@@ -388,7 +388,7 @@ export default {
 				if (this.linkedContacts.length > 0) {
 					this.selectedContactId = this.linkedContacts[0].id
 				}
-			} catch (e) {
+			} catch {
 				this.linkedContacts = []
 			} finally {
 				this.loadingContacts = false
@@ -415,7 +415,7 @@ export default {
 					const bt = b.sentAt ? new Date(b.sentAt).getTime() : 0
 					return bt - at
 				})
-			} catch (e) {
+			} catch {
 				this.messages = []
 			} finally {
 				this.loading = false
@@ -436,7 +436,7 @@ export default {
 						contactId: this.effectiveContactId,
 						_limit: 50,
 					})) || []
-			} catch (e) {
+			} catch {
 				this.conversations = []
 			}
 		},
@@ -457,7 +457,7 @@ export default {
 					),
 				)
 				this.preflight = data
-			} catch (e) {
+			} catch {
 				this.preflight = null
 			}
 		},
