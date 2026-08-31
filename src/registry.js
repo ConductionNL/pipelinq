@@ -891,18 +891,21 @@ const registry = {
 	LeadCreateDialog: {
 		kind: 'modal',
 		component: LeadCreateDialog,
+		propsSchema: null,
 		_note: "New Lead. Target of the Sales/Operational dashboards' new-lead header action.",
 	},
 
 	RequestCreateDialog: {
 		kind: 'modal',
 		component: RequestCreateDialog,
+		propsSchema: null,
 		_note: 'New Request (ticketType=request). Target of the Customer Support new-request header action.',
 	},
 
 	ClientCreateDialog: {
 		kind: 'modal',
 		component: ClientCreateDialog,
+		propsSchema: null,
 		_note: 'New Client, contact-first via POST /api/contacts-sync/create.',
 	},
 
