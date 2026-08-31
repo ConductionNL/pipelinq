@@ -900,10 +900,7 @@
                   "title": "Column property"
                 },
                 "totalsProperty": {
-                  "type": [
-                    "string",
-                    "null"
-                  ],
+                  "type": "string",
                   "description": "Optional numeric property summed per column for a stage total (e.g. 'value').",
                   "title": "Totals property"
                 }
