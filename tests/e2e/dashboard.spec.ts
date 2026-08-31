@@ -84,17 +84,26 @@ test.describe('Sales dashboard', () => {
 	})
 
 	test('the quick-create actions are offered', async ({ page }) => {
-		// These three come from the manifest's action list, not from the i18n
+		// These come from the manifest's action list, not from the i18n
 		// catalogue — they render in English even on this `nl` instance, which
 		// is why they are safe to assert by name. The refresh control beside
 		// them is NOT: its accessible name is translated
 		// ("Dashboard vernieuwen"), so it is asserted by role and count below.
-		for (const name of ['New Lead', 'New Request', 'New Client']) {
+		for (const name of ['New Lead', 'New Client']) {
 			await expect(
 				page.getByRole('button', { name, exact: true }).first(),
 				`the ${name} quick-create action must be offered`,
 			).toBeVisible({ timeout: 15000 })
 		}
+
+		// New Request is NOT here. Raising a request is customer-support work,
+		// and it now lives on that page instead. The three buttons used to be
+		// hardcoded together in one actionsComponent, so every dashboard naming
+		// that component got all three whether or not they belonged.
+		await expect(
+			page.getByRole('button', { name: 'New Request', exact: true }),
+			'New Request belongs on Customer Support, not on the sales dashboard',
+		).toHaveCount(0)
 	})
 
 	test('each KPI widget links into a filtered view', async ({ page }) => {

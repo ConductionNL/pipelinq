@@ -58,6 +58,7 @@ export default {
 		 * @param {string} route The detail route name.
 		 * @param {string} id The created object's id.
 		 * @return {void}
+		 * @spec openspec/specs/lead-management/spec.md#requirement-linked-party-selection-on-the-create-form
 		 */
 		goToDetail(route, id) {
 			this.$emit('close')

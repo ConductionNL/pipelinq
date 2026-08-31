@@ -329,6 +329,7 @@ export default {
 		 * contacts whose client is the empty string.
 		 *
 		 * @return {{client: (string|null)}}
+		 * @spec openspec/specs/lead-management/spec.md#requirement-linked-party-selection-on-the-create-form
 		 */
 		contactFilters() {
 			return { client: this.form.client }
@@ -428,6 +429,7 @@ export default {
 		 *
 		 * @param {string} value The chosen client uuid, or '' when cleared.
 		 * @return {void}
+		 * @spec openspec/specs/lead-management/spec.md#requirement-linked-party-selection-on-the-create-form
 		 */
 		onClientChange(value) {
 			const next = value || null
@@ -444,6 +446,7 @@ export default {
 		 * directly.
 		 *
 		 * @return {Promise<object|null>} The created client, or null if cancelled.
+		 * @spec openspec/specs/lead-management/spec.md#requirement-linked-party-selection-on-the-create-form
 		 */
 		createClient() {
 			return new Promise((resolve) => {
@@ -458,6 +461,7 @@ export default {
 		 *
 		 * @param {string} term The name typed into the picker.
 		 * @return {Promise<object|null>} The created contact, or null if cancelled.
+		 * @spec openspec/specs/lead-management/spec.md#requirement-linked-party-selection-on-the-create-form
 		 */
 		createContact(term) {
 			this.pendingName = term || ''
@@ -472,6 +476,7 @@ export default {
 		 *
 		 * @param {object|null} created The created object, or null when cancelled.
 		 * @return {void}
+		 * @spec openspec/specs/lead-management/spec.md#requirement-linked-party-selection-on-the-create-form
 		 */
 		settleCreate(created) {
 			const resolve = this.resolveCreate
@@ -483,6 +488,7 @@ export default {
 		/**
 		 * @param {string} id The created client's uuid (ClientCreateDialog emits an id).
 		 * @return {void}
+		 * @spec openspec/specs/lead-management/spec.md#requirement-linked-party-selection-on-the-create-form
 		 */
 		onClientCreated(id) {
 			this.clientDialogOpen = false
@@ -490,7 +496,10 @@ export default {
 			this.settleCreate(id ? { id } : null)
 		},
 
-		/** @return {void} */
+		/**
+		 * @return {void}
+		 * @spec openspec/specs/lead-management/spec.md#requirement-linked-party-selection-on-the-create-form
+		 */
 		closeClientDialog() {
 			this.clientDialogOpen = false
 			this.settleCreate(null)
@@ -499,13 +508,17 @@ export default {
 		/**
 		 * @param {object} contact The created contact object.
 		 * @return {void}
+		 * @spec openspec/specs/lead-management/spec.md#requirement-linked-party-selection-on-the-create-form
 		 */
 		onContactCreated(contact) {
 			this.contactDialogOpen = false
 			this.settleCreate(contact || null)
 		},
 
-		/** @return {void} */
+		/**
+		 * @return {void}
+		 * @spec openspec/specs/lead-management/spec.md#requirement-linked-party-selection-on-the-create-form
+		 */
 		closeContactDialog() {
 			this.contactDialogOpen = false
 			this.settleCreate(null)
