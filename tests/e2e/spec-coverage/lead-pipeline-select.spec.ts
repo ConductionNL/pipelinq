@@ -53,7 +53,10 @@ test('the New Lead form offers a pipeline rather than an empty list', async ({
 	// A default pipeline is auto-assigned when one is marked default, so the
 	// field usually arrives already filled. Either way the list behind it must
 	// not be empty — that emptiness IS the regression.
-	await pipelineField.locator('input[role="combobox"], .vs__search').first().click()
+	await pipelineField
+		.locator('input[role="combobox"], .vs__search')
+		.first()
+		.click()
 
 	const options = page.locator('.vs__dropdown-menu li')
 	await expect(
