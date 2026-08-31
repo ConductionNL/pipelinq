@@ -31,6 +31,15 @@
  * Idempotent: a lead that already has both references is skipped, so a re-run
  * is a no-op.
  *
+ * @category Repair
+ * @package  OCA\Pipelinq\Repair
+ *
+ * @author    Conduction <info@conduction.nl>
+ * @copyright 2026 Conduction B.V.
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ *
+ * @link https://pipelinq.nl
+ *
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  *

@@ -12,6 +12,15 @@
  * history across two ids with nothing linking them. Matching first is therefore
  * the behaviour, not an optimisation.
  *
+ * @category Service
+ * @package  OCA\Pipelinq\Service
+ *
+ * @author    Conduction <info@conduction.nl>
+ * @copyright 2026 Conduction B.V.
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ *
+ * @link https://pipelinq.nl
+ *
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  *

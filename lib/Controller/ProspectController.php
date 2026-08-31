@@ -16,7 +16,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/specs/prospect-discovery/spec.md#requirement-prospect-to-lead-conversion
+ * @spec openspec/specs/prospect-discovery/spec.md#requirement-prospect-to-client-conversion
  */
 
 declare(strict_types=1);
