@@ -34,7 +34,7 @@
     "extends @nextcloud/browserslist-config"
   ],
   "dependencies": {
-    "@conduction/nextcloud-vue": "^2.24.3",
+    "@conduction/nextcloud-vue": "^2.27.1",
     "@nextcloud/axios": "~2.5.2",
     "@nextcloud/capabilities": "^1.2.1",
     "@nextcloud/dialogs": "^7.4.1",
@@ -49,7 +49,7 @@
     "dompurify": "^3.4.14",
     "gridstack": "^12.6.0",
     "marked": "^18.0.9",
-    "node-polyfill-webpack-plugin": "4.0.0",
+    "node-polyfill-webpack-plugin": "4.1.0",
     "path-browserify": "^1.0.1",
     "pinia": "^2.1.7",
     "vue": "^3.5.42",
@@ -80,7 +80,7 @@
     "esbuild": "^0.28.2",
     "eslint": "^10.9.1",
     "eslint-config-prettier": "^10.1.8",
-    "postcss-html": "^1.0.0",
+    "postcss-html": "^2.0.0",
     "prettier": "^3.9.6",
     "sass": "^1.103.1",
     "sass-loader": "^17.0.0",

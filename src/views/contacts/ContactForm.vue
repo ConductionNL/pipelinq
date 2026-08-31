@@ -40,22 +40,28 @@
 				" />
 		</div>
 
-		<div class="form-group">
-			<label for="contact-client">{{ t('pipelinq', 'Client') }} *</label>
-			<NcSelect
-				v-model="selectedClient"
+		<div class="form-group" data-testid="contact-form-client">
+			<CnResourceSelect
+				register="pipelinq"
+				schema="client"
+				labelField="name"
 				inputId="contact-client"
-				:aria-label-combobox="t('pipelinq', 'Client')"
-				:options="clientOptions"
-				:placeholder="t('pipelinq', 'Search for a client...')"
-				label="name"
-				:reduce="(c) => c.id"
-				@search="searchClients"
-				@update:modelValue="validateField('client')" />
+				:modelValue="selectedClient || ''"
+				:inputLabel="t('pipelinq', 'Client')"
+				:placeholder="t('pipelinq', 'Select or create a client')"
+				:preload="true"
+				:allowCreate="!preSelectedClient"
+				:createHandler="createClient"
+				@update:modelValue="onClientSelected" />
 			<p v-if="errors.client" class="field-error">
 				{{ errors.client }}
 			</p>
 		</div>
+
+		<ClientCreateDialog
+			v-if="clientDialogOpen"
+			@created="onClientCreated"
+			@close="closeClientDialog" />
 
 		<div class="form-row">
 			<div class="form-group">
@@ -115,7 +121,9 @@
 </template>
 
 <script>
-import { NcButton, NcSelect, NcTextField } from '@nextcloud/vue'
+import { CnResourceSelect } from '@conduction/nextcloud-vue'
+import { NcButton, NcTextField } from '@nextcloud/vue'
+import ClientCreateDialog from '../../dialogs/ClientCreateDialog.vue'
 import { useObjectStore } from '../../store/modules/object.js'
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -124,9 +132,10 @@ const PHONE_REGEX = /^[+]?[\d\s\-().]{7,20}$/
 export default {
 	name: 'ContactForm',
 	components: {
+		ClientCreateDialog,
+		CnResourceSelect,
 		NcButton,
 		NcTextField,
-		NcSelect,
 	},
 
 	props: {
@@ -161,7 +170,11 @@ export default {
 			},
 
 			selectedClient: null,
-			clientOptions: [],
+
+			// Inline-create plumbing: the picker hands control to the full
+			// client dialog and resumes with whatever it resolves.
+			clientDialogOpen: false,
+			resolveCreate: null,
 			searchTimeout: null,
 		}
 	},
@@ -211,11 +224,10 @@ export default {
 	/**
 	 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-45
 	 */
-	async mounted() {
-		await this.loadInitialClients()
+	mounted() {
 		if (this.preSelectedClient) {
 			this.selectedClient = this.preSelectedClient
-			await this.ensureClientInOptions(this.preSelectedClient)
+			this.form.client = this.preSelectedClient
 		}
 	},
 
@@ -233,71 +245,57 @@ export default {
 				phone: data.phone || '',
 			}
 			this.selectedClient = data.client || null
-			if (data.client) {
-				this.ensureClientInOptions(data.client)
-			}
 			this.errors = { name: '', client: '', email: '', phone: '' }
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-44
+		 * Keep the form and the picker in step, and re-validate.
+		 *
+		 * @param {string} value The chosen client uuid, or '' when cleared.
+		 * @return {void}
+		 * @spec openspec/specs/lead-management/spec.md#requirement-linked-party-selection-on-the-create-form
 		 */
-		async loadInitialClients() {
-			const clients = await this.objectStore.fetchCollection('client', {
-				_limit: 50,
+		onClientSelected(value) {
+			this.selectedClient = value || null
+			this.validateField('client')
+		},
+
+		/**
+		 * CnResourceSelect create hook. `client` marks `contactsUid` REQUIRED
+		 * and it is minted server-side, so the typed name opens the full create
+		 * dialog rather than being saved on its own.
+		 *
+		 * @return {Promise<object|null>} The created client, or null if cancelled.
+		 * @spec openspec/specs/lead-management/spec.md#requirement-linked-party-selection-on-the-create-form
+		 */
+		createClient() {
+			return new Promise((resolve) => {
+				this.resolveCreate = resolve
+				this.clientDialogOpen = true
 			})
-			this.clientOptions = (clients || []).map((c) => ({
-				id: c.id,
-				name: c.name || c.id,
-			}))
 		},
 
 		/**
-		 * @param {string} clientId Identifier of a client that must appear in the options, even when it is outside the current search results.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-41
+		 * @param {string} id The created client's uuid.
+		 * @return {void}
+		 * @spec openspec/specs/lead-management/spec.md#requirement-linked-party-selection-on-the-create-form
 		 */
-		async ensureClientInOptions(clientId) {
-			if (!this.clientOptions.find((c) => c.id === clientId)) {
-				try {
-					const client = await this.objectStore.fetchObject(
-						'client',
-						clientId,
-					)
-					if (client) {
-						this.clientOptions.push({
-							id: client.id,
-							name: client.name || client.id,
-						})
-					}
-				} catch {
-					// Client not found
-				}
-			}
+		onClientCreated(id) {
+			this.clientDialogOpen = false
+			const resolve = this.resolveCreate
+			this.resolveCreate = null
+			if (resolve) resolve(id ? { id } : null)
 		},
 
 		/**
-		 * @param {string} query The search term typed by the user.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-49
+		 * @return {void}
+		 * @spec openspec/specs/lead-management/spec.md#requirement-linked-party-selection-on-the-create-form
 		 */
-		searchClients(query) {
-			clearTimeout(this.searchTimeout)
-			this.searchTimeout = setTimeout(async () => {
-				if (query.length > 0) {
-					const results = await this.objectStore.fetchCollection(
-						'client',
-						{
-							_search: query,
-							_limit: 20,
-						},
-					)
-					this.clientOptions = (results || []).map((c) => ({
-						id: c.id,
-						name: c.name || c.id,
-					}))
-				} else {
-					await this.loadInitialClients()
-				}
-			}, 300)
+		closeClientDialog() {
+			this.clientDialogOpen = false
+			const resolve = this.resolveCreate
+			this.resolveCreate = null
+			if (resolve) resolve(null)
 		},
 
 		/**

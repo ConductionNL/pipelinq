@@ -19,6 +19,16 @@
 				"description": "Handle requests and tasks, log interactions, and find answers, all in one place.",
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"showRefresh": true,
+				"headerActions": [
+					{
+						"id": "new-request",
+						"label": "New Request",
+						"type": "open-modal",
+						"target": "RequestCreateDialog",
+						"variant": "primary",
+						"icon": "Plus"
+					}
+				],
 				"widgets": [
 					{
 						"id": "queue-filter",

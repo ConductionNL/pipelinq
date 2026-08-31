@@ -174,11 +174,26 @@ test('dashboard quick action buttons visible', async ({ page }) => {
 		page.getByRole('button', { name: /New Lead/i }).first(),
 	).toBeVisible({ timeout: 15000 })
 	await expect(
-		page.getByRole('button', { name: /New Request/i }).first(),
-	).toBeVisible()
-	await expect(
 		page.getByRole('button', { name: /New Client/i }).first(),
 	).toBeVisible()
+
+	// New Request moved to Customer Support: raising a request is
+	// customer-support work, not sales. The buttons used to be hardcoded
+	// together in one actionsComponent, so both dashboards naming it got all
+	// three regardless of whether they belonged.
+	await expect(
+		page.getByRole('button', { name: /New Request/i }),
+		'New Request belongs on Customer Support, not on the sales dashboard',
+	).toHaveCount(0)
+})
+
+// @e2e openspec/specs/dashboard/spec.md#quick-action-buttons-in-header
+test('the request quick action lives on Customer Support', async ({ page }) => {
+	await page.goto('/apps/pipelinq/#/werkplek')
+	await expect(
+		page.getByRole('button', { name: /New Request/i }).first(),
+		'Customer Support must offer New Request',
+	).toBeVisible({ timeout: 15000 })
 })
 
 // @e2e openspec/specs/dashboard/spec.md#default-grid-layout-on-first-load

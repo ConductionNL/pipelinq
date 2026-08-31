@@ -101,6 +101,43 @@ The system MUST support creating, reading, updating, and deleting lead records. 
 
 ---
 
+### Requirement: Linked party selection on the create form [MVP]
+
+The lead and request create forms MUST let a user pick the client and the contact person without leaving the form.
+
+The client field MUST offer existing clients without requiring a search term, and MUST offer to create a new client when the typed name matches none. Creating MUST open the full client create form rather than saving the typed name alone: the `client` schema marks `contactsUid` REQUIRED and that identity is provisioned server-side from the Nextcloud addressbook, so a name on its own cannot satisfy the schema.
+
+The contact field MUST be scoped to the selected client, and MUST be unavailable until a client is selected. Changing the client MUST clear a contact that no longer belongs under it.
+
+#### Scenario 1: Browse clients without typing
+
+- GIVEN the New Lead form
+- WHEN the user opens the client field
+- THEN existing clients MUST be listed without a search term being entered
+
+#### Scenario 2: Create a client the system does not have
+
+- GIVEN the client field
+- WHEN the user types a name matching no existing client
+- THEN the form MUST offer to create a client with that name
+- AND choosing it MUST open the full client create form, seeded with the typed name
+- AND on save the new client MUST be selected on the lead form
+- AND cancelling MUST leave the previous selection untouched
+
+#### Scenario 3: Contact is scoped to the client
+
+- GIVEN the New Lead form with no client selected
+- THEN the contact field MUST be disabled and MUST say a client is needed first
+- WHEN a client is selected
+- THEN the contact field MUST become available
+- AND it MUST offer only contacts belonging to that client
+- AND selecting a different client MUST clear a contact that belonged to the previous one
+
+#### Scenario 4: The same behaviour on requests
+
+- GIVEN the New Request form
+- THEN the client and contact fields MUST behave as above
+
 ### Requirement: Lead Validation [MVP]
 
 The system MUST enforce validation rules on lead properties to maintain data integrity.

@@ -87,6 +87,9 @@ export default {
 
 		autoRun: {
 			type: Boolean,
+			// Opening a test-run modal means wanting the run; a caller opts OUT to
+			// inspect first.
+			// eslint-disable-next-line vue/no-boolean-default
 			default: true,
 		},
 	},

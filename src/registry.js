@@ -86,6 +86,30 @@ import SlaAttainmentBreakdownSection from './components/sla/SlaAttainmentBreakdo
 import XWikiArticleViewer from './components/xwiki/XWikiArticleViewer.vue'
 import XWikiSidebarTabComponent from './components/xwiki/XWikiSidebarTab.vue'
 import XWikiWidgetComponent from './components/xwiki/XWikiWidget.vue'
+// --- AVG (GDPR data-subject request) workflow removed by consume-or-dsar
+//     (ADR-047 Phase 3): the data-subject request workflow is owned by
+//     OpenRegister's case engine; pipelinq deep-links handlers into OR's AVG
+//     surface (/apps/openregister/avg) instead of embedding its own
+//     dashboard/detail/intake pages. No local AVG view components remain. ---
+// --- Master Data Management (MDM) steward surfaces are no longer hosted in
+//     pipelinq (ADR-045 #D). OpenRegister now owns the survivorship / dedup /
+//     merge / data-quality surface, driven by the x-openregister-survivorship
+//     and x-openregister-merge annotations on the masterEntity schema. The
+//     app-local MDM views/sections/modals were removed and a single "Data
+//     quality" nav entry deep-links to OR's Data-Quality surface instead
+//     (see src/manifest.d/90-master-data-management.json). ---
+// --- Contact-aware create overrides (kind:"create-override"). The
+//     client/contact schemas mark `contactsUid` REQUIRED, so a plain
+//     objectStore.saveObject() 400s. These handlers post the create-form to
+//     POST /api/contacts-sync/create (provisions the NC addressbook contact +
+//     fills the FK) and return the created object — the same path the bespoke
+//     ClientCreateDialog uses. CnPageRenderer resolves a manifest
+//     `config.createOverride` string to one of these and forwards it to
+//     CnIndexPage's createOverride prop, so the GENERIC Add button on the
+//     declarative Clients/Contacts index pages is contact-aware too. ---
+import ClientCreateDialog from './dialogs/ClientCreateDialog.vue'
+import LeadCreateDialog from './dialogs/LeadCreateDialog.vue'
+import RequestCreateDialog from './dialogs/RequestCreateDialog.vue'
 // --- BRP Monitor (bsn-validatie-en-brp-lookup): admin tile + detailed report
 //     view aggregating the BrpMonitorJob output (lookups / cache-hits / errors /
 //     avg response time) and the mTLS client-certificate expiry countdown. ---
@@ -109,7 +133,6 @@ import ContractInvoicingSection from './views/contracts/ContractInvoicingSection
 // --- Dashboard (manifest-driven type:"dashboard") — header actions and
 //     per-widget slot components. The page itself is rendered by
 //     CnDashboardPage from `config.widgets[]` + `config.layout[]`. ---
-import DashboardHeaderActions from './views/dashboard/DashboardHeaderActions.vue'
 import ComplaintsWidget from './views/dashboard/widgets/ComplaintsWidget.vue'
 import LeadsOverTimeChartWidget from './views/dashboard/widgets/LeadsOverTimeChartWidget.vue'
 import MyWorkWidget from './views/dashboard/widgets/MyWorkWidget.vue'
@@ -234,27 +257,6 @@ import WerkplekHeaderActions from './views/werkplek/widgets/WerkplekHeaderAction
 //     widgets remain: the queue filter (pipelinq-specific /state endpoint) and
 //     the header agent-availability toggle. ---
 import WerkplekQueueFilter from './views/werkplek/widgets/WerkplekQueueFilter.vue'
-// --- AVG (GDPR data-subject request) workflow removed by consume-or-dsar
-//     (ADR-047 Phase 3): the data-subject request workflow is owned by
-//     OpenRegister's case engine; pipelinq deep-links handlers into OR's AVG
-//     surface (/apps/openregister/avg) instead of embedding its own
-//     dashboard/detail/intake pages. No local AVG view components remain. ---
-// --- Master Data Management (MDM) steward surfaces are no longer hosted in
-//     pipelinq (ADR-045 #D). OpenRegister now owns the survivorship / dedup /
-//     merge / data-quality surface, driven by the x-openregister-survivorship
-//     and x-openregister-merge annotations on the masterEntity schema. The
-//     app-local MDM views/sections/modals were removed and a single "Data
-//     quality" nav entry deep-links to OR's Data-Quality surface instead
-//     (see src/manifest.d/90-master-data-management.json). ---
-// --- Contact-aware create overrides (kind:"create-override"). The
-//     client/contact schemas mark `contactsUid` REQUIRED, so a plain
-//     objectStore.saveObject() 400s. These handlers post the create-form to
-//     POST /api/contacts-sync/create (provisions the NC addressbook contact +
-//     fills the FK) and return the created object — the same path the bespoke
-//     ClientCreateDialog uses. CnPageRenderer resolves a manifest
-//     `config.createOverride` string to one of these and forwards it to
-//     CnIndexPage's createOverride prop, so the GENERIC Add button on the
-//     declarative Clients/Contacts index pages is contact-aware too. ---
 import { createWithContact } from './services/contactSyncApi.js'
 
 // --- Features & Roadmap page (lib's CnFeaturesAndRoadmapView wrapper). ---
@@ -337,12 +339,6 @@ const registry = {
 	//     isClosed stages) that the declarative `stats-block` +
 	//     `dataSource` shorthand can't express, so they ship as small
 	//     custom widget components instead. ---
-	DashboardHeaderActions: {
-		kind: 'widget',
-		component: DashboardHeaderActions,
-		...HEADER_ACTIONS_META,
-		_note: 'Dashboard header buttons (New Lead / Request / Client + Refresh) wired as the Dashboard page actionsComponent.',
-	},
 	OpenLeadsKpiWidget: {
 		kind: 'widget',
 		component: OpenLeadsKpiWidget,
@@ -883,6 +879,34 @@ const registry = {
 		kind: 'page',
 		component: FlowDetailSidebar,
 		_note: 'CnFlowSidebar in the NC app sidebar; shares useFlowStore with the canvas.',
+	},
+
+	// --- Create modals (kind:"modal"), opened by a manifest header action's
+	//     type:"open-modal" + target. These keep the BESPOKE create forms —
+	//     a client picker that can create a client inline, and a contact
+	//     picker scoped to it — which the generic schema-driven open-form
+	//     dialog cannot express. Placement stays declarative; only the form
+	//     body is app-owned. CnAppRoot mounts these and forwards `close`, so
+	//     each dialog routes to its own detail page on success. ---
+	LeadCreateDialog: {
+		kind: 'modal',
+		component: LeadCreateDialog,
+		propsSchema: null,
+		_note: "New Lead. Target of the Sales/Operational dashboards' new-lead header action.",
+	},
+
+	RequestCreateDialog: {
+		kind: 'modal',
+		component: RequestCreateDialog,
+		propsSchema: null,
+		_note: 'New Request (ticketType=request). Target of the Customer Support new-request header action.',
+	},
+
+	ClientCreateDialog: {
+		kind: 'modal',
+		component: ClientCreateDialog,
+		propsSchema: null,
+		_note: 'New Client, contact-first via POST /api/contacts-sync/create.',
 	},
 
 	// Contact-aware create for the generic Add button on the Clients index page.
