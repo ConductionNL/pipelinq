@@ -62,9 +62,6 @@
     }
   },
   "src/components/RoutingSuggestionPanel.vue": {
-    "jsdoc/require-param-type": {
-      "count": 3
-    },
     "no-console": {
       "count": 2
     }
@@ -80,11 +77,6 @@
   "src/components/SegmentRuleNode.vue": {
     "vue/custom-event-name-casing": {
       "count": 6
-    }
-  },
-  "src/components/admin/AgentProfileSettings.vue": {
-    "jsdoc/require-param-type": {
-      "count": 5
     }
   },
   "src/components/admin/ForecastSettings.vue": {
@@ -246,9 +238,6 @@
   "src/dialogs/PipelineFormDialog.vue": {
     "eqeqeq": {
       "count": 1
-    },
-    "jsdoc/require-param-type": {
-      "count": 4
     }
   },
   "src/dialogs/QueueCreateDialog.vue": {
@@ -391,11 +380,6 @@
   "src/views/contracts/ContractInvoicingSection.vue": {
     "@typescript-eslint/no-unused-vars": {
       "count": 2
-    }
-  },
-  "src/views/dashboard/DashboardHeaderActions.vue": {
-    "jsdoc/require-param-type": {
-      "count": 3
     }
   },
   "src/views/dashboard/widgets/LeadsOverTimeChartWidget.vue": {
@@ -570,11 +554,6 @@
   "src/views/projects/ProjectDetail.vue": {
     "@nextcloud/l10n-enforce-ellipsis": {
       "count": 1
-    }
-  },
-  "src/views/queues/QueueDetail.vue": {
-    "jsdoc/require-param-type": {
-      "count": 3
     }
   },
   "src/views/queues/QueueList.vue": {

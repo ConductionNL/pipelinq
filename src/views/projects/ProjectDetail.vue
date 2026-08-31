@@ -797,6 +797,7 @@ export default {
 		},
 
 		/**
+		 * @param {object} formData The saved project.
 		 * @spec openspec/specs/realtime-updates-ui/spec.md
 		 */
 		async onProjectSaved(formData) {
@@ -883,6 +884,7 @@ export default {
 		},
 
 		/**
+		 * @param {object} formData The saved phase.
 		 * @spec openspec/specs/realtime-updates-ui/spec.md
 		 */
 		async onPhaseSaved(formData) {
@@ -913,6 +915,7 @@ export default {
 		},
 
 		/**
+		 * @param {object} formData The saved task.
 		 * @spec openspec/specs/realtime-updates-ui/spec.md
 		 */
 		async onTaskSaved(formData) {
@@ -944,6 +947,7 @@ export default {
 		},
 
 		/**
+		 * @param {object} formData The saved activity.
 		 * @spec openspec/specs/realtime-updates-ui/spec.md
 		 */
 		async onActivitySaved(formData) {
@@ -990,6 +994,7 @@ export default {
 		},
 
 		/**
+		 * @param {string} status The stored status value.
 		 * @spec openspec/specs/realtime-updates-ui/spec.md
 		 */
 		statusLabel(status) {

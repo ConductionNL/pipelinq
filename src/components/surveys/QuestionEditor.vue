@@ -135,6 +135,9 @@ export default {
 		},
 
 		/**
+		 * @param {number} i Index of the question.
+		 * @param {number} oi Index of the option within that question.
+		 * @param {string} v The new option value.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-forms-surveys-ui/tasks.md#task-3
 		 */
 		setOpt(i, oi, v) {
