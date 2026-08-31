@@ -52,6 +52,7 @@ import ChartLine from 'vue-material-design-icons/ChartLine.vue'
 import ChartTimelineVariant from 'vue-material-design-icons/ChartTimelineVariant.vue'
 import ChartTimelineVariantShimmer from 'vue-material-design-icons/ChartTimelineVariantShimmer.vue'
 import Check from 'vue-material-design-icons/Check.vue'
+import CheckboxMarkedCircleOutline from 'vue-material-design-icons/CheckboxMarkedCircleOutline.vue'
 import CheckboxMarkedOutline from 'vue-material-design-icons/CheckboxMarkedOutline.vue'
 import CheckCircle from 'vue-material-design-icons/CheckCircle.vue'
 import ClipboardAccountOutline from 'vue-material-design-icons/ClipboardAccountOutline.vue'
@@ -78,6 +79,7 @@ import EmailOutline from 'vue-material-design-icons/EmailOutline.vue'
 import Export from 'vue-material-design-icons/Export.vue'
 import Eye from 'vue-material-design-icons/Eye.vue'
 import EyeOff from 'vue-material-design-icons/EyeOff.vue'
+import EyeOutline from 'vue-material-design-icons/EyeOutline.vue'
 import FileChart from 'vue-material-design-icons/FileChart.vue'
 import FileDocument from 'vue-material-design-icons/FileDocument.vue'
 import FileDocumentCheck from 'vue-material-design-icons/FileDocumentCheck.vue'
@@ -114,6 +116,7 @@ import PhoneMessage from 'vue-material-design-icons/PhoneMessage.vue'
 import Pipe from 'vue-material-design-icons/Pipe.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import Receipt from 'vue-material-design-icons/Receipt.vue'
+import ReceiptOutline from 'vue-material-design-icons/ReceiptOutline.vue'
 import ReceiptText from 'vue-material-design-icons/ReceiptText.vue'
 import Repeat from 'vue-material-design-icons/Repeat.vue'
 import RouterWireless from 'vue-material-design-icons/RouterWireless.vue'
@@ -183,6 +186,7 @@ export default {
 	ChartTimelineVariantShimmer,
 	Check,
 	CheckCircle,
+	CheckboxMarkedCircleOutline,
 	CheckboxMarkedOutline,
 	ClipboardAccountOutline,
 	ClipboardCheck,
@@ -208,6 +212,7 @@ export default {
 	Export,
 	Eye,
 	EyeOff,
+	EyeOutline,
 	FileChart,
 	FileDocument,
 	FileDocumentCheck,
@@ -244,6 +249,7 @@ export default {
 	Pipe,
 	Plus,
 	Receipt,
+	ReceiptOutline,
 	ReceiptText,
 	Repeat,
 	RouterWireless,

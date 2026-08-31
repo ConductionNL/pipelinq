@@ -4,7 +4,7 @@
       "contract": {
         "slug": "contract",
         "title": "Contract",
-        "icon": "Domain",
+        "icon": "FileSign",
         "summary": "Recurring-revenue contract with renewal lifecycle",
         "description": "A recurring or one-off contract between the organization and a client. Drives MRR/ARR, renewal-window detection, renewal-lead automation and churn metrics. References an existing client object (identity is never duplicated). Field names contractNumber/startDate/endDate/value/status are read by the customer-portal contract reader without mapping.",
         "@type": "object",

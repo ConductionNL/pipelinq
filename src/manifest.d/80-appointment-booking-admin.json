@@ -59,7 +59,7 @@
 					{ "id": "create", "label": "New service", "icon": "Plus", "handler": "navigate", "route": "ServiceDetail", "params": { "id": "new" } }
 				],
 				"actions": [
-					{ "id": "view", "label": "View", "icon": "Eye", "handler": "navigate", "route": "ServiceDetail" }
+					{ "id": "view", "label": "View", "icon": "EyeOutline", "handler": "navigate", "route": "ServiceDetail" }
 				]
 			}
 		},
@@ -105,7 +105,7 @@
 					{ "id": "create", "label": "New resource", "icon": "Plus", "handler": "navigate", "route": "ResourceDetail", "params": { "id": "new" } }
 				],
 				"actions": [
-					{ "id": "view", "label": "View", "icon": "Eye", "handler": "navigate", "route": "ResourceDetail" }
+					{ "id": "view", "label": "View", "icon": "EyeOutline", "handler": "navigate", "route": "ResourceDetail" }
 				]
 			}
 		},
