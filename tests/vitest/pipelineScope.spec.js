@@ -25,7 +25,10 @@ describe('pipelineEntitySlugs', () => {
 	it('reads the slugs from propertyMappings', () => {
 		expect(
 			pipelineEntitySlugs({
-				propertyMappings: [{ schemaSlug: 'lead' }, { schemaSlug: 'request' }],
+				propertyMappings: [
+					{ schemaSlug: 'lead' },
+					{ schemaSlug: 'request' },
+				],
 			}),
 		).toEqual(['lead', 'request'])
 	})
