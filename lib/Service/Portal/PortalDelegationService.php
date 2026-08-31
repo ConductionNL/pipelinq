@@ -33,6 +33,11 @@ use OCP\AppFramework\Utility\ITimeFactory;
 
 /**
  * Manages B2B portal delegations.
+ *
+ * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+ *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+ *   sessions, tokens, delegation, documents, invoices, orders, exports and
+ *   audit are all unspecified
  */
 class PortalDelegationService {
 	/**
@@ -82,6 +87,10 @@ class PortalDelegationService {
 	 * @return array<string, mixed> The created delegation.
 	 *
 	 * @throws PortalException On invalid scopes or a self-grant.
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function grant(
 		string $granterAccountId,
@@ -154,6 +163,10 @@ class PortalDelegationService {
 	 * @return void
 	 *
 	 * @throws PortalException When the delegation is not the granter's.
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function revoke(string $delegationId, string $granterAccountId, string $tenantId): void {
 		$delegation = $this->repository->find(self::SCHEMA, $delegationId);
@@ -185,6 +198,10 @@ class PortalDelegationService {
 	 * @param string $granterAccountId The granter id.
 	 *
 	 * @return array<int, array<string, mixed>> The delegations.
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function listGrantedBy(string $granterAccountId): array {
 		return $this->repository->findAll(self::SCHEMA, ['granterAccountId' => $granterAccountId]);
@@ -197,6 +214,10 @@ class PortalDelegationService {
 	 * @param string $granteeAccountId The grantee id.
 	 *
 	 * @return array<int, array{grantorAccountId: string, scopes: array<int, string>}>
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function getActiveScopes(string $granteeAccountId): array {
 		$delegations = $this->repository->findAll(self::SCHEMA, ['granteeAccountId' => $granteeAccountId]);

@@ -31,6 +31,9 @@ namespace OCA\Pipelinq\Service\Zgw;
 
 /**
  * Besluittype omschrijving not found in ZTC catalogus.
+ *
+ * @spec exclude exception type: carries a failure mode, not a behaviour a requirement
+ *   can specify
  */
 class BesluittypeNotInCatalogusException extends ZgwException {
 	/**

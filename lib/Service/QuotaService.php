@@ -34,6 +34,9 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  *
  * Quotas are sales_quota objects in the pipelinq register. The hierarchy check
  * (sum of rep quotas vs team quota) is advisory only — it never blocks a save.
+ *
+ * @spec exclude infrastructure utility with no feature requirement of its own; it is
+ *   exercised through the features that call it
  */
 class QuotaService {
 	/**
@@ -121,6 +124,8 @@ class QuotaService {
 	 * @param string $level The hierarchy level.
 	 *
 	 * @return float|null The quota amount, or null when unset.
+	 * @spec exclude infrastructure utility with no feature requirement of its own; it is
+	 *   exercised through the features that call it
 	 */
 	public function getQuotaAmount(string $ownerId, string $periodId, string $level): ?float {
 		$quota = $this->getQuota(ownerId: $ownerId, periodId: $periodId, level: $level);
@@ -216,6 +221,8 @@ class QuotaService {
 	 * Resolve the at-risk attainment threshold (percent).
 	 *
 	 * @return int The percent threshold.
+	 * @spec exclude infrastructure utility with no feature requirement of its own; it is
+	 *   exercised through the features that call it
 	 */
 	public function getAtRiskPercent(): int {
 		$value = $this->appConfig->getValueInt(Application::APP_ID, self::AT_RISK_PERCENT_KEY, self::AT_RISK_PERCENT_DEFAULT);
@@ -230,6 +237,8 @@ class QuotaService {
 	 * Resolve the at-risk days-remaining threshold.
 	 *
 	 * @return int The days threshold.
+	 * @spec exclude infrastructure utility with no feature requirement of its own; it is
+	 *   exercised through the features that call it
 	 */
 	public function getAtRiskDays(): int {
 		$value = $this->appConfig->getValueInt(Application::APP_ID, self::AT_RISK_DAYS_KEY, self::AT_RISK_DAYS_DEFAULT);

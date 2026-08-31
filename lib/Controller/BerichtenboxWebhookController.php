@@ -47,6 +47,8 @@ use Throwable;
 
 /**
  * Inbound webhook controller for Logius Berichtenbox events.
+ *
+ * @spec openspec/specs/portal-contribution/spec.md
  */
 class BerichtenboxWebhookController extends Controller {
 	/**
@@ -81,6 +83,8 @@ class BerichtenboxWebhookController extends Controller {
 	 *
 	 * @return JSONResponse 200 on success; 422 on signature failure;
 	 *                      400 on malformed payload.
+	 *
+	 * @spec openspec/specs/portal-contribution/spec.md
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]

@@ -35,6 +35,9 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  * Reads immutable forecast_snapshot and forecast_override objects and exposes
  * the override-applied roll-up plus accuracy scoring. All math is
  * server-authoritative; callers never supply amounts.
+ *
+ * @spec exclude forecast has no owning requirement. pipeline-insights defers its config
+ *   scenario to admin-settings, which never grew one
  */
 class ForecastService {
 	/**

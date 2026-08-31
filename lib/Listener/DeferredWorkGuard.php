@@ -46,6 +46,8 @@ namespace OCA\Pipelinq\Listener;
  * is not guaranteed to reach the same instance; and the process context is torn
  * down per request / per cron job, so nothing leaks between them. `leave()` is
  * always called from a `finally`.
+ *
+ * @spec openspec/specs/event-listener-work-placement/spec.md#requirement-deferred-post-event-work-runs-in-one-actor-forwarded-job
  */
 final class DeferredWorkGuard {
 
@@ -63,6 +65,7 @@ final class DeferredWorkGuard {
 	 * @param string $uuid The uuid of the object being written.
 	 *
 	 * @return string The guard key.
+	 * @spec openspec/specs/event-listener-work-placement/spec.md#requirement-deferred-post-event-work-runs-in-one-actor-forwarded-job
 	 */
 	public static function key(string $handler, string $uuid): string {
 		return $handler . '|' . $uuid;
@@ -75,6 +78,8 @@ final class DeferredWorkGuard {
 	 *
 	 * @return bool True when the caller claimed it and MUST call leave();
 	 *              false when the work is already running on this stack.
+	 *
+	 * @spec openspec/specs/event-listener-work-placement/spec.md#requirement-deferred-post-event-work-runs-in-one-actor-forwarded-job
 	 */
 	public static function enter(string $key): bool {
 		if (isset(self::$inFlight[$key]) === true) {
@@ -91,6 +96,7 @@ final class DeferredWorkGuard {
 	 * @param string $key The guard key.
 	 *
 	 * @return void
+	 * @spec openspec/specs/event-listener-work-placement/spec.md#requirement-deferred-post-event-work-runs-in-one-actor-forwarded-job
 	 */
 	public static function leave(string $key): void {
 		unset(self::$inFlight[$key]);
@@ -102,6 +108,7 @@ final class DeferredWorkGuard {
 	 * @param string $key The guard key.
 	 *
 	 * @return bool True when the deferred work for this pair is running.
+	 * @spec openspec/specs/event-listener-work-placement/spec.md#requirement-deferred-post-event-work-runs-in-one-actor-forwarded-job
 	 */
 	public static function isRunning(string $key): bool {
 		return isset(self::$inFlight[$key]);
@@ -111,6 +118,7 @@ final class DeferredWorkGuard {
 	 * Drop every claim. Tests only — a leaked key would make later tests lie.
 	 *
 	 * @return void
+	 * @spec openspec/specs/event-listener-work-placement/spec.md#requirement-deferred-post-event-work-runs-in-one-actor-forwarded-job
 	 */
 	public static function reset(): void {
 		self::$inFlight = [];

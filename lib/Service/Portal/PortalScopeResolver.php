@@ -31,6 +31,11 @@ namespace OCA\Pipelinq\Service\Portal;
 
 /**
  * Resolves the per-account, per-scope read boundary.
+ *
+ * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+ *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+ *   sessions, tokens, delegation, documents, invoices, orders, exports and
+ *   audit are all unspecified
  */
 class PortalScopeResolver {
 	/**
@@ -67,6 +72,11 @@ class PortalScopeResolver {
 	 *   ownClientIds: array<int, string>,
 	 *   delegated: array<int, array{from: string, contactIds: array<int, string>, clientIds: array<int, string>}>
 	 * }
+	 *
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function resolve(array $account, string $scope): array {
 		$ownContactIds = $this->idList(value: ($account['linkedContactId'] ?? null));
@@ -114,6 +124,11 @@ class PortalScopeResolver {
 	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) The own-vs-delegated-vs-not
 	 *  decision compares the object's contact/client against each scope bucket;
 	 *  the checks are flat and load-bearing for the IDOR boundary.
+	 *
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function classify(array $resolved, ?string $contactId, ?string $clientId): string|null|false {
 		if (($contactId !== null && in_array($contactId, $resolved['ownContactIds'], true) === true)

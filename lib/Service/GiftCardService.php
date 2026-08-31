@@ -413,6 +413,8 @@ class GiftCardService {
 	 * @param string $giftCardId The card UUID.
 	 *
 	 * @return array<string, mixed>|null
+	 * @spec exclude loyalty has no spec at all; the change that specified it was archived
+	 *   and nothing inherited it
 	 */
 	public function getCard(string $giftCardId): ?array {
 		[$register, $schema] = $this->config(schemaKey: 'giftCard_schema');

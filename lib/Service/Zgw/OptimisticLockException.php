@@ -36,6 +36,9 @@ namespace OCA\Pipelinq\Service\Zgw;
 
 /**
  * Optimistic-concurrency (HTTP 412) error.
+ *
+ * @spec exclude exception type: carries a failure mode, not a behaviour a requirement
+ *   can specify
  */
 class OptimisticLockException extends ZgwException {
 	/**

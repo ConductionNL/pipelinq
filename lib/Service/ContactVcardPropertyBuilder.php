@@ -29,6 +29,8 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Service for building vCard properties from Pipelinq object data.
+ *
+ * @spec openspec/specs/contacts-sync/spec.md#requirement-write-back-sync-mvp
  */
 class ContactVcardPropertyBuilder {
 	/**

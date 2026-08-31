@@ -36,6 +36,11 @@ use OCP\Security\ISecureRandom;
 
 /**
  * TOTP MFA helper for portal accounts.
+ *
+ * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+ *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+ *   sessions, tokens, delegation, documents, invoices, orders, exports and
+ *   audit are all unspecified
  */
 class PortalMfaService {
 	/**
@@ -84,6 +89,10 @@ class PortalMfaService {
 	 * Generate a new base32 TOTP secret (160 bits).
 	 *
 	 * @return string The base32-encoded secret.
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function generateSecret(): string {
 		$raw = $this->secureRandom->generate(20, ISecureRandom::CHAR_ALPHANUMERIC);
@@ -114,6 +123,10 @@ class PortalMfaService {
 	 * @param string $issuer The issuer name shown in the authenticator.
 	 *
 	 * @return string The otpauth URI.
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function provisioningUri(string $secret, string $accountLabel, string $issuer): string {
 		$label = rawurlencode($issuer) . ':' . rawurlencode($accountLabel);
@@ -133,6 +146,10 @@ class PortalMfaService {
 	 * @param string $secret The base32 secret.
 	 *
 	 * @return string The ciphertext.
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function encryptSecret(string $secret): string {
 		return $this->crypto->encrypt($secret);
@@ -148,6 +165,10 @@ class PortalMfaService {
 	 * @param string|null $code The presented code.
 	 *
 	 * @return bool True when the code is valid for the current time window.
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function verifyCode(?string $encryptedSecret, ?string $code): bool {
 		if ($encryptedSecret === null || $encryptedSecret === '' || $code === null) {

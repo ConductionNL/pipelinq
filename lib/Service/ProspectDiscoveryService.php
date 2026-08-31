@@ -27,6 +27,8 @@ use Psr\Log\LoggerInterface;
 
 /**
  * Orchestrator for prospect discovery.
+ *
+ * @spec openspec/specs/prospect-discovery/spec.md#requirement-ideal-customer-profile-configuration
  */
 class ProspectDiscoveryService {
 	/**

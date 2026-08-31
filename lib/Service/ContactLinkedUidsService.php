@@ -28,6 +28,8 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Service for finding already-linked contact UIDs.
+ *
+ * @spec openspec/specs/contacts-sync/spec.md#requirement-write-back-sync-mvp
  */
 class ContactLinkedUidsService {
 	/**

@@ -210,6 +210,7 @@ class LogBerichtenboxAdapter implements BerichtenboxAdapterInterface {
 	 * @inheritDoc
 	 *
 	 * @return bool Always true for the log-only adapter.
+	 * @spec openspec/specs/portal-contribution/spec.md
 	 */
 	public function isDormant(): bool {
 		return true;

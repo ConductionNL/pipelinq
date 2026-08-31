@@ -39,6 +39,8 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  * Stateless points-rule evaluator.
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) rule/condition/formula evaluation is inherently branchy; split across small focused methods
+ * @spec exclude loyalty has no spec at all; the change that specified it was archived
+ *   and nothing inherited it
  */
 class PointsRuleEngine {
 	/**
@@ -98,6 +100,8 @@ class PointsRuleEngine {
 	 * @param array<int, array<string, mixed>> $rules Output of evaluateRules.
 	 *
 	 * @return array<string, mixed>|null
+	 * @spec exclude loyalty has no spec at all; the change that specified it was archived
+	 *   and nothing inherited it
 	 */
 	public function getHighestPriorityRule(array $rules): ?array {
 		return $rules[0] ?? null;

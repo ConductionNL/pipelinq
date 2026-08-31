@@ -43,6 +43,7 @@ interface DeferredObjectWork {
 	 * @param array<string, mixed> $entry The entry captured at dispatch time.
 	 *
 	 * @return void
+	 * @spec openspec/specs/event-listener-work-placement/spec.md#requirement-deferred-post-event-work-runs-in-one-actor-forwarded-job
 	 */
 	public function runDeferredWork(array $entry): void;
 }//end interface

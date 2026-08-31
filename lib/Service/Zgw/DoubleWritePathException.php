@@ -33,6 +33,9 @@ namespace OCA\Pipelinq\Service\Zgw;
 
 /**
  * Both StUF and ZGW write paths are active for the same gemeente.
+ *
+ * @spec exclude exception type: carries a failure mode, not a behaviour a requirement
+ *   can specify
  */
 class DoubleWritePathException extends ZgwException {
 	/**

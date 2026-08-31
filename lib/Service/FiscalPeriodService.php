@@ -32,6 +32,9 @@ use DateTimeInterface;
  *
  * Period ids have the form "Q<n>-<year>" (e.g. Q2-2026). All computation is
  * pure and deterministic for a supplied reference date so it is unit-testable.
+ *
+ * @spec exclude infrastructure utility with no feature requirement of its own; it is
+ *   exercised through the features that call it
  */
 class FiscalPeriodService {
 	/**
@@ -57,6 +60,8 @@ class FiscalPeriodService {
 	 * @param DateTimeInterface|null $now The reference time (defaults to now).
 	 *
 	 * @return string The current period id.
+	 * @spec exclude infrastructure utility with no feature requirement of its own; it is
+	 *   exercised through the features that call it
 	 */
 	public function currentPeriodId(?DateTimeInterface $now = null): string {
 		return $this->periodIdFor(date: $now ?? new DateTimeImmutable());

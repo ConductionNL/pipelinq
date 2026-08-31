@@ -30,6 +30,8 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Service for importing Nextcloud contacts into Pipelinq objects.
+ *
+ * @spec openspec/specs/contacts-sync/spec.md#requirement-write-back-sync-mvp
  */
 class ContactImportService {
 	/**

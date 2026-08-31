@@ -57,7 +57,7 @@ async function openQuickLog(page: Page) {
 	return client
 }
 
-// @e2e openspec/specs/lead-management/spec.md#requirement-linked-party-selection-on-the-create-form
+// @e2e openspec/specs/lead-management/spec.md#requirement-linked-party-selection-on-the-create-form-mvp
 test('the quick-log contact picker unlocks once a client is set', async ({
 	page,
 }) => {
@@ -81,7 +81,7 @@ test('the quick-log contact picker unlocks once a client is set', async ({
 	).toBeVisible({ timeout: 10000 })
 })
 
-// @e2e openspec/specs/lead-management/spec.md#requirement-linked-party-selection-on-the-create-form
+// @e2e openspec/specs/lead-management/spec.md#requirement-linked-party-selection-on-the-create-form-mvp
 test('the quick-log client picker searches the server and can create', async ({
 	page,
 }) => {

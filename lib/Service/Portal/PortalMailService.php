@@ -34,6 +34,11 @@ use Psr\Log\LoggerInterface;
 
 /**
  * Sends portal transactional emails.
+ *
+ * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+ *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+ *   sessions, tokens, delegation, documents, invoices, orders, exports and
+ *   audit are all unspecified
  */
 class PortalMailService {
 	/**
@@ -62,6 +67,10 @@ class PortalMailService {
 	 * @param string $intro The localised intro line.
 	 *
 	 * @return bool True when the message was accepted for delivery.
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function sendTokenLink(
 		string $recipient,
@@ -84,6 +93,10 @@ class PortalMailService {
 	 * @param string $body The localised plain-text body.
 	 *
 	 * @return bool True when accepted for delivery.
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function send(string $recipient, string $subject, string $body): bool {
 		if ($this->mailer->validateMailAddress($recipient) === false) {

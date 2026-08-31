@@ -32,6 +32,9 @@ namespace OCA\Pipelinq\Service\Zgw;
 
 /**
  * Zaaktype omschrijving not found in ZTC catalogus.
+ *
+ * @spec exclude exception type: carries a failure mode, not a behaviour a requirement
+ *   can specify
  */
 class ZaaktypeNotInCatalogusException extends ZgwException {
 	/**

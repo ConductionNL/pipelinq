@@ -54,6 +54,8 @@ use Psr\Log\LoggerInterface;
 
 /**
  * Public NRC callback controller.
+ *
+ * @spec openspec/specs/vng-klantinteracties-leaf/spec.md
  */
 class ZgwNotificationController extends Controller {
 	/**
@@ -83,6 +85,7 @@ class ZgwNotificationController extends Controller {
 	 * rate-limit ceiling is generous.
 	 *
 	 * @return JSONResponse 202 on success, 401 on bad bearer, 400 on bad body.
+	 * @spec openspec/specs/vng-klantinteracties-leaf/spec.md
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]

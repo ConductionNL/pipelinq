@@ -25,6 +25,8 @@ namespace OCA\Pipelinq\Service;
 
 /**
  * Service for reading/writing ICP settings via IAppConfig.
+ *
+ * @spec openspec/specs/prospect-discovery/spec.md#requirement-ideal-customer-profile-configuration
  */
 class IcpConfigService {
 	/**
@@ -127,6 +129,7 @@ class IcpConfigService {
 	 * Get the raw KVK API key.
 	 *
 	 * @return string The API key.
+	 * @spec openspec/specs/prospect-discovery/spec.md#requirement-ideal-customer-profile-configuration
 	 */
 	public function getKvkApiKey(): string {
 		return $this->reader->getString(key: 'icp_kvk_api_key');

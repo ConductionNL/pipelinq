@@ -75,6 +75,9 @@ class TenderPostedEvent extends Event {
 	 * The CloudEvents id (stable per emission; persisted on the tender for idempotency).
 	 *
 	 * @return string The event id.
+	 * @spec exclude split tender has no owning spec: the class already cites
+	 *   openspec/changes/pos-split-tender, which is ARCHIVED, so that reference
+	 *   resolves to nothing
 	 */
 	public function getEventId(): string {
 		return $this->eventId;
@@ -84,6 +87,9 @@ class TenderPostedEvent extends Event {
 	 * The tender object UUID.
 	 *
 	 * @return string The tender UUID.
+	 * @spec exclude split tender has no owning spec: the class already cites
+	 *   openspec/changes/pos-split-tender, which is ARCHIVED, so that reference
+	 *   resolves to nothing
 	 */
 	public function getTenderUuid(): string {
 		return $this->tenderUuid;
@@ -93,6 +99,9 @@ class TenderPostedEvent extends Event {
 	 * The parent transaction UUID.
 	 *
 	 * @return string The transaction UUID.
+	 * @spec exclude split tender has no owning spec: the class already cites
+	 *   openspec/changes/pos-split-tender, which is ARCHIVED, so that reference
+	 *   resolves to nothing
 	 */
 	public function getTransactionUuid(): string {
 		return $this->transactionUuid;
@@ -102,6 +111,9 @@ class TenderPostedEvent extends Event {
 	 * The human-readable transaction reference (e.g. TXN-2026-0001).
 	 *
 	 * @return string The reference.
+	 * @spec exclude split tender has no owning spec: the class already cites
+	 *   openspec/changes/pos-split-tender, which is ARCHIVED, so that reference
+	 *   resolves to nothing
 	 */
 	public function getTransactionReference(): string {
 		return $this->transactionReference;
@@ -111,6 +123,9 @@ class TenderPostedEvent extends Event {
 	 * The tender type code (CASH / CARD / VOUCHER / ...).
 	 *
 	 * @return string The code.
+	 * @spec exclude split tender has no owning spec: the class already cites
+	 *   openspec/changes/pos-split-tender, which is ARCHIVED, so that reference
+	 *   resolves to nothing
 	 */
 	public function getTenderTypeCode(): string {
 		return $this->tenderTypeCode;
@@ -120,6 +135,9 @@ class TenderPostedEvent extends Event {
 	 * The tendered amount in EUR.
 	 *
 	 * @return float The amount.
+	 * @spec exclude split tender has no owning spec: the class already cites
+	 *   openspec/changes/pos-split-tender, which is ARCHIVED, so that reference
+	 *   resolves to nothing
 	 */
 	public function getAmount(): float {
 		return $this->amount;
@@ -129,6 +147,9 @@ class TenderPostedEvent extends Event {
 	 * The GL account this tender posts to.
 	 *
 	 * @return string The GL account.
+	 * @spec exclude split tender has no owning spec: the class already cites
+	 *   openspec/changes/pos-split-tender, which is ARCHIVED, so that reference
+	 *   resolves to nothing
 	 */
 	public function getGlAccount(): string {
 		return $this->glAccount;
@@ -138,6 +159,9 @@ class TenderPostedEvent extends Event {
 	 * The ISO 8601 UTC emission timestamp.
 	 *
 	 * @return string The timestamp.
+	 * @spec exclude split tender has no owning spec: the class already cites
+	 *   openspec/changes/pos-split-tender, which is ARCHIVED, so that reference
+	 *   resolves to nothing
 	 */
 	public function getEmittedAt(): string {
 		return $this->emittedAt;
@@ -147,6 +171,9 @@ class TenderPostedEvent extends Event {
 	 * CloudEvents-shaped payload for the `nl.pipelinq.pos.tender.posted` event.
 	 *
 	 * @return array<string, mixed> The CloudEvents envelope.
+	 * @spec exclude split tender has no owning spec: the class already cites
+	 *   openspec/changes/pos-split-tender, which is ARCHIVED, so that reference
+	 *   resolves to nothing
 	 */
 	public function toCloudEvent(): array {
 		return [

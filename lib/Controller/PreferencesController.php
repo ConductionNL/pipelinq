@@ -34,6 +34,8 @@ use OCP\IUserSession;
 
 /**
  * Per-user preferences controller.
+ *
+ * @spec openspec/specs/admin-settings/spec.md#REQ-AS-011
  */
 class PreferencesController extends Controller {
 	/**

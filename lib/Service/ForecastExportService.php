@@ -36,6 +36,9 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  * override-applied commit so a board reviewer can trace the roll-up. Child
  * resolution reuses {@see ForecastService::computeRollUp()} so override
  * application is consistent with the live view.
+ *
+ * @spec exclude forecast has no owning requirement. pipeline-insights defers its config
+ *   scenario to admin-settings, which never grew one
  */
 class ForecastExportService {
 	/**

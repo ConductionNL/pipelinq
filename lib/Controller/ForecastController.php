@@ -47,6 +47,9 @@ use Psr\Log\LoggerInterface;
  * services. Every action requires an authenticated user; per-action scope is
  * enforced through {@see ForecastAccessPolicy} and denied requests are logged
  * and answered with 403 (no stack traces leak to the client).
+ *
+ * @spec exclude forecast has no owning requirement. pipeline-insights defers its config
+ *   scenario to admin-settings, which never grew one
  */
 class ForecastController extends Controller {
 	/**

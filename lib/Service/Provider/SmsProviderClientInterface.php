@@ -45,6 +45,8 @@ interface SmsProviderClientInterface {
 	 *
 	 * @return array{externalMessageId: string, vendor: string} Provider
 	 *                                                          message id and the vendor key that produced it.
+	 *
+	 * @spec openspec/specs/outbound-messaging/spec.md#REQ-OM-004
 	 */
 	public function send(string $toNumber, string $body): array;
 
@@ -55,6 +57,7 @@ interface SmsProviderClientInterface {
 	 * @param string $signature Signature header value (provider-specific).
 	 *
 	 * @return bool True when the signature matches the configured secret.
+	 * @spec openspec/specs/outbound-messaging/spec.md#REQ-OM-004
 	 */
 	public function verifySignature(string $rawBody, string $signature): bool;
 
@@ -62,6 +65,7 @@ interface SmsProviderClientInterface {
 	 * The vendor key for this client (twilio, messagebird, cm-com, ...).
 	 *
 	 * @return string Vendor key.
+	 * @spec openspec/specs/outbound-messaging/spec.md#REQ-OM-004
 	 */
 	public function getVendor(): string;
 }//end interface

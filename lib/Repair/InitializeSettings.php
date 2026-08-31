@@ -33,6 +33,8 @@ use Psr\Log\LoggerInterface;
 
 /**
  * Repair step for initializing Pipelinq settings.
+ *
+ * @spec openspec/specs/repair-steps/spec.md
  */
 class InitializeSettings implements IRepairStep {
 	/**
@@ -53,6 +55,7 @@ class InitializeSettings implements IRepairStep {
 	 * Get the name of this repair step.
 	 *
 	 * @return string The repair step name.
+	 * @spec openspec/specs/repair-steps/spec.md
 	 */
 	public function getName(): string {
 		return 'Initialize Pipelinq register and schemas via ConfigurationService';

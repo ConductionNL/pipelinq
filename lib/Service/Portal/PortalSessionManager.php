@@ -33,6 +33,11 @@ use OCP\AppFramework\Utility\ITimeFactory;
 
 /**
  * Manages portal session tokens.
+ *
+ * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+ *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+ *   sessions, tokens, delegation, documents, invoices, orders, exports and
+ *   audit are all unspecified
  */
 class PortalSessionManager {
 	/**
@@ -77,6 +82,10 @@ class PortalSessionManager {
 	 * @return array{token: string, session: array<string, mixed>} The session material.
 	 *
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $mfaPending is a half-open marker.
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function createSession(
 		string $accountId,
@@ -119,6 +128,10 @@ class PortalSessionManager {
 	 * @param string $tenantId The resolved tenant id.
 	 *
 	 * @return array<string, mixed>|null The valid session, or null.
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function validateSession(?string $token, string $tenantId): ?array {
 		if ($token === null || $token === '') {
@@ -168,6 +181,10 @@ class PortalSessionManager {
 	 * @param int $ttlHours New TTL in hours from now.
 	 *
 	 * @return array<string, mixed>|null The updated session, or null when absent.
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function extendSession(string $sessionId, int $ttlHours = self::DEFAULT_TTL_HOURS): ?array {
 		$session = $this->repository->find(self::SCHEMA, $sessionId);
@@ -193,6 +210,10 @@ class PortalSessionManager {
 	 * @return array<string, mixed> The updated session.
 	 *
 	 * @throws PortalException When the session is absent or revoked.
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function extendSessionOrThrow(string $sessionId, int $ttlHours = self::DEFAULT_TTL_HOURS): array {
 		$updated = $this->extendSession(sessionId: $sessionId, ttlHours: $ttlHours);
@@ -214,6 +235,10 @@ class PortalSessionManager {
 	 * @param string $reason The revocation reason.
 	 *
 	 * @return void
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function revokeSession(string $sessionId, string $reason): void {
 		$session = $this->repository->find(self::SCHEMA, $sessionId);
@@ -234,6 +259,10 @@ class PortalSessionManager {
 	 * @param string $reason The revocation reason.
 	 *
 	 * @return int The number of sessions revoked.
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function revokeAllForAccount(string $accountId, string $reason): int {
 		$sessions = $this->repository->findAll(self::SCHEMA, ['accountId' => $accountId]);

@@ -68,6 +68,8 @@ use Throwable;
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Bridges the SLA engine,
  *  schema map, OR ObjectService, deferral service, app-config and logger — an
  *  irreducible set of collaborators for the update-time SLA lifecycle.
+ *
+ * @spec openspec/specs/sla-engine-and-escalation/spec.md#requirement-attainment-reporting
  */
 class SlaObjectUpdatedListener implements IEventListener, DeferredObjectWork {
 

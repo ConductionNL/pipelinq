@@ -36,6 +36,8 @@ use Psr\Log\LoggerInterface;
 
 /**
  * Controller for lead source management.
+ *
+ * @spec openspec/specs/lead-management/spec.md#requirement-lead-crud-mvp
  */
 class LeadSourceController extends Controller {
 	private const OBJECT_TYPE = 'pipelinq_lead_source';

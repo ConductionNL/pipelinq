@@ -53,7 +53,7 @@ function pickerInput(dialog: ReturnType<Page['locator']>, testid: string) {
 	return dialog.locator(`[data-testid="${testid}"] input`).first()
 }
 
-// @e2e openspec/specs/lead-management/spec.md#requirement-linked-party-selection-on-the-create-form
+// @e2e openspec/specs/lead-management/spec.md#requirement-linked-party-selection-on-the-create-form-mvp
 test('the request client picker can be browsed and can create', async ({ page }) => {
 	const dialog = await openNewRequestDialog(page)
 	const input = pickerInput(dialog, 'request-form-client')
@@ -71,7 +71,7 @@ test('the request client picker can be browsed and can create', async ({ page })
 	).toBeVisible({ timeout: 10000 })
 })
 
-// @e2e openspec/specs/lead-management/spec.md#requirement-linked-party-selection-on-the-create-form
+// @e2e openspec/specs/lead-management/spec.md#requirement-linked-party-selection-on-the-create-form-mvp
 test('the request contact picker unlocks and scopes to the chosen client', async ({
 	page,
 }) => {

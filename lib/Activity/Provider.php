@@ -32,6 +32,8 @@ use OCP\L10N\IFactory;
 
 /**
  * Activity provider for parsing Pipelinq events.
+ *
+ * @spec openspec/specs/activity-stream-publishing/spec.md#requirement-activity-stream-publishing-uses-the-nextcloud-first-party-activity-api
  */
 class Provider implements IProvider {
 	/**

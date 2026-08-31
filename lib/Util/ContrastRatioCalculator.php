@@ -34,6 +34,9 @@ use InvalidArgumentException;
  * @SuppressWarnings(PHPMD.ShortVariable) The single-letter names (r/g/b channels,
  *  l1/l2 luminances, rl/gl/bl linearised channels) are the canonical WCAG/sRGB
  *  formula symbols; longer names would obscure the maths.
+ *
+ * @spec exclude infrastructure utility with no feature requirement of its own; it is
+ *   exercised through the features that call it
  */
 class ContrastRatioCalculator {
 	/**
@@ -52,6 +55,8 @@ class ContrastRatioCalculator {
 	 * @return float The contrast ratio (1.0 .. 21.0), rounded to 2 decimals.
 	 *
 	 * @throws \InvalidArgumentException When a colour is not a valid hex string.
+	 * @spec exclude infrastructure utility with no feature requirement of its own; it is
+	 *   exercised through the features that call it
 	 */
 	public function calculate(string $color1, string $color2): float {
 		$l1 = $this->relativeLuminance(hex: $color1);
@@ -69,6 +74,8 @@ class ContrastRatioCalculator {
 	 * @param float $ratio The contrast ratio.
 	 *
 	 * @return bool True when ratio >= 4.5.
+	 * @spec exclude infrastructure utility with no feature requirement of its own; it is
+	 *   exercised through the features that call it
 	 */
 	public function meetsAaStandard(float $ratio): bool {
 		return $ratio >= self::AA_MINIMUM;
@@ -81,6 +88,8 @@ class ContrastRatioCalculator {
 	 * @param string $color2 The second hex colour.
 	 *
 	 * @return bool True when their contrast ratio meets AA.
+	 * @spec exclude infrastructure utility with no feature requirement of its own; it is
+	 *   exercised through the features that call it
 	 */
 	public function colorsMeetAa(string $color1, string $color2): bool {
 		return $this->meetsAaStandard(ratio: $this->calculate(color1: $color1, color2: $color2));

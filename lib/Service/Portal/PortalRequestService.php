@@ -45,6 +45,11 @@ use Psr\Log\LoggerInterface;
  *  request surface (list + detail + submit + reply + their per-customer scoping,
  *  validation and presentation helpers); splitting it would scatter a single
  *  concern across classes without reducing real complexity.
+ *
+ * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+ *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+ *   sessions, tokens, delegation, documents, invoices, orders, exports and
+ *   audit are all unspecified
  */
 class PortalRequestService {
 	/**
@@ -104,6 +109,10 @@ class PortalRequestService {
 	 * @param int $perPage The page size.
 	 *
 	 * @return array{total: int, page: int, perPage: int, items: array<int, array<string, mixed>>}
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function getForAccount(array $account, int $page = 1, int $perPage = 10): array {
 		$page = max(1, $page);
@@ -142,6 +151,10 @@ class PortalRequestService {
 	 * @param bool $exposeAssigneeName Whether the tenant exposes assignees.
 	 *
 	 * @return array<string, mixed>|null The detail, or null.
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function getDetailForAccount(array $account, string $requestId, bool $exposeAssigneeName): ?array {
 		$request = $this->reader->find(self::SCHEMA, $requestId);
@@ -170,6 +183,10 @@ class PortalRequestService {
 	 * @return array<string, mixed> The created request summary + ETA.
 	 *
 	 * @throws PortalException On validation / rate-limit failure.
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function submit(
 		array $account,
@@ -247,6 +264,10 @@ class PortalRequestService {
 	 * @return array<string, mixed> The updated request detail.
 	 *
 	 * @throws PortalException When the request is not visible or message empty.
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function addReply(array $account, string $tenantId, string $requestId, string $message): array {
 		$message = trim($message);

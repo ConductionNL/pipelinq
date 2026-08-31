@@ -30,6 +30,9 @@ namespace OCA\Pipelinq\Service\Cti\Result;
  * - action=navigate: a single match was found; the frontend routes to the contact view.
  * - action=chooser : multiple matches; the frontend opens the chooser modal.
  * - action=intake  : no match; the frontend opens the new-contact intake form.
+ *
+ * @spec exclude value object returned by the CTI adapters; the behaviour is specified on
+ *   the adapter, not on the carrier
  */
 final class ScreenPopResult {
 	public const ACTION_NAVIGATE = 'navigate';
@@ -56,6 +59,8 @@ final class ScreenPopResult {
 	 * Convert to an array suitable for a JSONResponse.
 	 *
 	 * @return array<string,mixed>
+	 * @spec exclude value object returned by the CTI adapters; the behaviour is specified on
+	 *   the adapter, not on the carrier
 	 */
 	public function toArray(): array {
 		return [
