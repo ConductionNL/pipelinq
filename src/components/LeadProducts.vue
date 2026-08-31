@@ -123,9 +123,7 @@
 						},
 					)
 				}}
-				<NcButton
-					variant="tertiary"
-					@click="$emit('syncValue', grandTotal)">
+				<NcButton variant="tertiary" @click="$emit('syncValue', grandTotal)">
 					{{ t('pipelinq', 'Use calculated value') }}
 				</NcButton>
 			</div>

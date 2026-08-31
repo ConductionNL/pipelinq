@@ -359,6 +359,8 @@ export default {
 		 * Set the leaf's field; reset operator to a sensible default for the type.
 		 *
 		 * @param {object} option NcSelect option (`{value, label, type}`).
+		 *
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-segment-builder-ui-composes-rule-trees
 		 */
 		onFieldChange(option) {
 			const value = option?.value || ''
@@ -373,6 +375,8 @@ export default {
 		 * Update the leaf's operator.
 		 *
 		 * @param {object} option NcSelect option (`{value, label}`).
+		 *
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-segment-builder-ui-composes-rule-trees
 		 */
 		onOperatorChange(option) {
 			this.emitChange({ ...this.node, operator: option?.value || 'eq' })

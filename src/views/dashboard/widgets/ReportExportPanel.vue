@@ -196,6 +196,8 @@ export default {
 		 * for the parent / app-wide event bus.
 		 *
 		 * @param {{format: string, ids: Array<string>}} payload - Dialog payload.
+		 *
+		 * @spec openspec/specs/dashboard/spec.md
 		 */
 		onExportConfirm(payload) {
 			this.$emit('exportConfirmed', {
