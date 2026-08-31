@@ -231,7 +231,7 @@ export default {
 
 	methods: {
 		/**
-		 * @param data
+		 * @param {object} data The contact to load into the form.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-29
 		 */
 		populateForm(data) {
@@ -249,7 +249,7 @@ export default {
 		},
 
 		/**
-		 * @param field
+		 * @param {string} field Name of the field to validate.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-31
 		 */
 		validateField(field) {

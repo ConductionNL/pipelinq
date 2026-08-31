@@ -402,7 +402,7 @@ export default {
 		},
 
 		/**
-		 * @param newStage
+		 * @param {string} newStage The stage the card was moved to.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-45
 		 */
 		async onStageChange(newStage) {
@@ -433,7 +433,7 @@ export default {
 		},
 
 		/**
-		 * @param newAssignee
+		 * @param {string} newAssignee Nextcloud uid of the new assignee.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-43
 		 */
 		async onAssignChange(newAssignee) {
@@ -528,7 +528,7 @@ export default {
 		},
 
 		/**
-		 * @param e
+		 * @param {object} e The dragstart event.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-44
 		 */
 		onDragStart(e) {
@@ -542,7 +542,7 @@ export default {
 		},
 
 		/**
-		 * @param dateStr
+		 * @param {string} dateStr The stored date.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-38
 		 */
 		formatDate(dateStr) {

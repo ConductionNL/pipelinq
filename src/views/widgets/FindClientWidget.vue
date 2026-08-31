@@ -288,8 +288,8 @@ export default {
 		},
 
 		/**
-		 * @param type
-		 * @param params
+		 * @param {string} type The registered object-type slug.
+		 * @param {string} params Query parameters.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-39
 		 */
 		async fetchRaw(type, params = {}) {
@@ -324,7 +324,7 @@ export default {
 		},
 
 		/**
-		 * @param client
+		 * @param {object} client The client to open.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-42
 		 */
 		viewClient(client) {
@@ -332,7 +332,7 @@ export default {
 		},
 
 		/**
-		 * @param client
+		 * @param {object} client The client to raise a request for.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-37
 		 */
 		createRequestForClient(client) {
@@ -342,7 +342,7 @@ export default {
 		},
 
 		/**
-		 * @param client
+		 * @param {object} client The client to raise a lead for.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-36
 		 */
 		createLeadForClient(client) {
@@ -352,7 +352,7 @@ export default {
 		},
 
 		/**
-		 * @param client
+		 * @param {object} client The client whose email to copy.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-34
 		 */
 		async copyEmail(client) {

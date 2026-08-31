@@ -2,9 +2,6 @@
   "src/components/ActivityTimeline.vue": {
     "@typescript-eslint/no-unused-vars": {
       "count": 1
-    },
-    "jsdoc/require-param-type": {
-      "count": 6
     }
   },
   "src/components/BrpContactPanel.vue": {
@@ -26,18 +23,10 @@
   "src/components/ContactRelationships.vue": {
     "@nextcloud/l10n-enforce-ellipsis": {
       "count": 3
-    },
-    "jsdoc/require-param-type": {
-      "count": 8
     }
   },
   "src/components/ContactmomentQuickLog.vue": {
     "@nextcloud/l10n-enforce-ellipsis": {
-      "count": 1
-    }
-  },
-  "src/components/EmailTimeline.vue": {
-    "jsdoc/require-param-type": {
       "count": 1
     }
   },
@@ -49,25 +38,12 @@
       "count": 2
     }
   },
-  "src/components/LeadContactRoles.vue": {
-    "jsdoc/require-param-type": {
-      "count": 5
-    }
-  },
   "src/components/LeadProducts.vue": {
     "@nextcloud/l10n-enforce-ellipsis": {
       "count": 2
     },
-    "jsdoc/require-param-type": {
-      "count": 7
-    },
     "vue/custom-event-name-casing": {
       "count": 4
-    }
-  },
-  "src/components/ProductRevenue.vue": {
-    "jsdoc/require-param-type": {
-      "count": 1
     }
   },
   "src/components/ProjectWbsTree.vue": {
@@ -200,11 +176,6 @@
   "src/components/sla/SlaAttainmentBreakdownSection.vue": {
     "@typescript-eslint/no-unused-vars": {
       "count": 1
-    }
-  },
-  "src/components/surveys/QuestionEditor.vue": {
-    "jsdoc/require-param-type": {
-      "count": 5
     }
   },
   "src/components/sync/SyncSettingsSection.vue": {
@@ -406,7 +377,7 @@
   },
   "src/views/clients/ClientForm.vue": {
     "jsdoc/require-param-type": {
-      "count": 3
+      "count": 1
     }
   },
   "src/views/contacts/ContactForm.vue": {
@@ -414,7 +385,7 @@
       "count": 1
     },
     "jsdoc/require-param-type": {
-      "count": 6
+      "count": 2
     }
   },
   "src/views/contracts/ContractInvoicingSection.vue": {
@@ -550,7 +521,7 @@
       "count": 3
     },
     "jsdoc/require-param-type": {
-      "count": 6
+      "count": 2
     }
   },
   "src/views/portal/BookingConfirmationPage.vue": {
@@ -593,7 +564,7 @@
   },
   "src/views/products/ProductForm.vue": {
     "jsdoc/require-param-type": {
-      "count": 3
+      "count": 1
     }
   },
   "src/views/projects/ProjectDetail.vue": {
@@ -642,9 +613,6 @@
   "src/views/settings/PipelineManager.vue": {
     "@typescript-eslint/no-unused-vars": {
       "count": 1
-    },
-    "jsdoc/require-param-type": {
-      "count": 7
     }
   },
   "src/views/settings/ProductCategoryManager.vue": {
@@ -708,9 +676,6 @@
   "src/views/widgets/FindClientWidget.vue": {
     "@nextcloud/l10n-enforce-ellipsis": {
       "count": 2
-    },
-    "jsdoc/require-param-type": {
-      "count": 6
     },
     "no-console": {
       "count": 4

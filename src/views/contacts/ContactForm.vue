@@ -221,7 +221,7 @@ export default {
 
 	methods: {
 		/**
-		 * @param data
+		 * @param {object} data The contact to load into the form.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-48
 		 */
 		populateForm(data) {
@@ -253,7 +253,7 @@ export default {
 		},
 
 		/**
-		 * @param clientId
+		 * @param {string} clientId Identifier of a client that must appear in the options, even when it is outside the current search results.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-41
 		 */
 		async ensureClientInOptions(clientId) {
@@ -276,7 +276,7 @@ export default {
 		},
 
 		/**
-		 * @param query
+		 * @param {string} query The search term typed by the user.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-49
 		 */
 		searchClients(query) {
@@ -301,7 +301,7 @@ export default {
 		},
 
 		/**
-		 * @param field
+		 * @param {string} field Name of the field to validate.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-52
 		 */
 		validateField(field) {
