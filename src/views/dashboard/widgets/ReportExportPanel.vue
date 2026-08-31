@@ -106,7 +106,7 @@ export default {
 		CnMassExportDialog,
 	},
 
-	emits: ['export-confirmed'],
+	emits: ['exportConfirmed'],
 
 	data() {
 		return {
@@ -198,7 +198,7 @@ export default {
 		 * @param {{format: string, ids: Array<string>}} payload - Dialog payload.
 		 */
 		onExportConfirm(payload) {
-			this.$emit('export-confirmed', {
+			this.$emit('exportConfirmed', {
 				entityType: this.entityType,
 				period: this.period,
 				format: payload?.format,

@@ -104,7 +104,7 @@ import { usePosSessionStore } from '../store/modules/posSessionStore.js'
 export default {
 	name: 'PinLoginModal',
 	components: { NcButton, NcDialog, NcSelect, NcTextField },
-	emits: ['close', 'login-success'],
+	emits: ['close', 'loginSuccess'],
 	data() {
 		return {
 			staff: [],
@@ -195,7 +195,7 @@ export default {
 				}
 				const store = usePosSessionStore()
 				store.openSession(session)
-				this.$emit('login-success', session)
+				this.$emit('loginSuccess', session)
 				this.$emit('close')
 			} catch (error) {
 				const status = error?.response?.status

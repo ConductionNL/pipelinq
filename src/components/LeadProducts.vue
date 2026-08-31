@@ -125,7 +125,7 @@
 				}}
 				<NcButton
 					variant="tertiary"
-					@click="$emit('sync-value', grandTotal)">
+					@click="$emit('syncValue', grandTotal)">
 					{{ t('pipelinq', 'Use calculated value') }}
 				</NcButton>
 			</div>
@@ -240,7 +240,7 @@ export default {
 		},
 	},
 
-	emits: ['value-changed', 'sync-value'],
+	emits: ['valueChanged', 'syncValue'],
 	data() {
 		return {
 			lineItems: [],
@@ -374,7 +374,7 @@ export default {
 				this.showAddDialog = false
 				this.resetAddForm()
 				await this.fetchData()
-				this.$emit('value-changed', this.grandTotal)
+				this.$emit('valueChanged', this.grandTotal)
 			} catch (e) {
 				showError(e.message || t('pipelinq', 'Failed to add product'))
 			}
@@ -396,7 +396,7 @@ export default {
 					total,
 				})
 				item.total = total
-				this.$emit('value-changed', this.grandTotal)
+				this.$emit('valueChanged', this.grandTotal)
 			} catch (e) {
 				showError(e.message || t('pipelinq', 'Failed to update line item'))
 			}
@@ -424,7 +424,7 @@ export default {
 			try {
 				await this.objectStore.deleteObject('leadProduct', item.id)
 				await this.fetchData()
-				this.$emit('value-changed', this.grandTotal)
+				this.$emit('valueChanged', this.grandTotal)
 			} catch (e) {
 				showError(e.message || t('pipelinq', 'Failed to remove line item'))
 			}

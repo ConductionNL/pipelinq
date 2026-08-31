@@ -30,7 +30,7 @@
 				:placeholder="t('pipelinq', 'Search contacts…')"
 				label="name"
 				:reduce="(opt) => opt.id"
-				@search="(term) => $emit('search-contacts', term)" />
+				@search="(term) => $emit('searchContacts', term)" />
 		</div>
 		<div class="form-group">
 			<label for="add-contact-role-type">{{ t('pipelinq', 'Role') }} *</label>
@@ -74,7 +74,7 @@ export default {
 		roleOptions: { type: Array, default: () => [] },
 	},
 
-	emits: ['submit', 'cancel', 'search-contacts'],
+	emits: ['submit', 'cancel', 'searchContacts'],
 	data() {
 		return {
 			form: { toContact: null, type: null, notes: '' },

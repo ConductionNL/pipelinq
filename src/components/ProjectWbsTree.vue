@@ -19,7 +19,7 @@
 	<div class="wbs-tree">
 		<div v-if="phases.length === 0" class="wbs-empty">
 			<p>{{ t('pipelinq', 'There are no phases for this project yet.') }}</p>
-			<NcButton @click="$emit('add-phase')">
+			<NcButton @click="$emit('addPhase')">
 				{{ t('pipelinq', 'Add phase') }}
 			</NcButton>
 		</div>
@@ -101,12 +101,12 @@
 					</span>
 					<NcButton
 						variant="tertiary"
-						@click="$emit('add-activity', { phase, task })">
+						@click="$emit('addActivity', { phase, task })">
 						{{ t('pipelinq', 'Time entry') }}
 					</NcButton>
 				</div>
 				<div class="wbs-phase__actions">
-					<NcButton @click="$emit('add-task', { phase })">
+					<NcButton @click="$emit('addTask', { phase })">
 						{{ t('pipelinq', 'Add task') }}
 					</NcButton>
 				</div>
@@ -114,7 +114,7 @@
 		</div>
 
 		<div v-if="phases.length > 0" class="wbs-tree__actions">
-			<NcButton @click="$emit('add-phase')">
+			<NcButton @click="$emit('addPhase')">
 				{{ t('pipelinq', 'Add phase') }}
 			</NcButton>
 		</div>
@@ -156,7 +156,7 @@ export default {
 		},
 	},
 
-	emits: ['add-phase', 'add-task', 'add-activity'],
+	emits: ['addPhase', 'addTask', 'addActivity'],
 	data() {
 		return {
 			openPhases: {},

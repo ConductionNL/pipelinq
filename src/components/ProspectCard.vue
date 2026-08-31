@@ -3,7 +3,7 @@
 		class="prospect-card"
 		:data-testid="`prospect-card-${prospect.kvkNumber}`"
 		tabindex="0"
-		@keyup.enter="$emit('create-lead', prospect)">
+		@keyup.enter="$emit('createLead', prospect)">
 		<div class="prospect-card__header">
 			<span class="prospect-card__name">{{ prospect.tradeName }}</span>
 			<span class="prospect-card__score" :class="scoreClass">
@@ -44,7 +44,7 @@
 			<NcButton
 				variant="primary"
 				data-testid="prospect-create-lead"
-				@click="$emit('create-lead', prospect)">
+				@click="$emit('createLead', prospect)">
 				{{ t('pipelinq', 'Create Lead') }}
 			</NcButton>
 		</div>
@@ -67,7 +67,7 @@ export default {
 		},
 	},
 
-	emits: ['create-lead'],
+	emits: ['createLead'],
 	computed: {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-prospect-ui/tasks.md#task-1

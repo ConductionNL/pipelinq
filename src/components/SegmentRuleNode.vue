@@ -31,7 +31,7 @@
 				:path="childPath(index)"
 				@update:node="updateChild(index, $event)"
 				@remove="removeChild(index)"
-				@validateLeaf="$emit('validate-leaf')" />
+				@validateLeaf="$emit('validateLeaf')" />
 
 			<div class="rule-node__group-actions">
 				<NcButton variant="secondary" @click="addCondition">
@@ -77,7 +77,7 @@
 					class="rule-node__value"
 					:aria-label="t('pipelinq', 'Rule value')"
 					@input="onValueInput($event.target.value)"
-					@blur="$emit('validate-leaf')" />
+					@blur="$emit('validateLeaf')" />
 				<input
 					v-else-if="valueInputType === 'date'"
 					:value="node.value"
@@ -85,7 +85,7 @@
 					class="rule-node__value"
 					:aria-label="t('pipelinq', 'Rule value')"
 					@input="onValueInput($event.target.value)"
-					@blur="$emit('validate-leaf')" />
+					@blur="$emit('validateLeaf')" />
 				<input
 					v-else
 					:value="node.value"
@@ -93,7 +93,7 @@
 					class="rule-node__value"
 					:aria-label="t('pipelinq', 'Rule value')"
 					@input="onValueInput($event.target.value)"
-					@blur="$emit('validate-leaf')" />
+					@blur="$emit('validateLeaf')" />
 			</div>
 			<NcButton
 				variant="tertiary"
@@ -181,7 +181,7 @@ export default {
 		},
 	},
 
-	emits: ['update:node', 'remove', 'validate-leaf'],
+	emits: ['update:node', 'remove', 'validateLeaf'],
 	computed: {
 		/**
 		 * Whether this node is an AND/OR group (versus a leaf predicate).
@@ -366,7 +366,7 @@ export default {
 				OPERATORS_BY_TYPE[option?.type || 'string']
 				|| OPERATORS_BY_TYPE.string
 			this.emitChange({ ...this.node, field: value, operator: list[0].value })
-			this.$emit('validate-leaf')
+			this.$emit('validateLeaf')
 		},
 
 		/**
@@ -376,7 +376,7 @@ export default {
 		 */
 		onOperatorChange(option) {
 			this.emitChange({ ...this.node, operator: option?.value || 'eq' })
-			this.$emit('validate-leaf')
+			this.$emit('validateLeaf')
 		},
 
 		/**

@@ -132,7 +132,7 @@ export default {
 		},
 	},
 
-	emits: ['camera-error', 'scan'],
+	emits: ['cameraError', 'scan'],
 	setup(props, { emit }) {
 		const { supported, scanning, videoEl, startCamera, stopCamera } =
 			useBarcodeScanner((barcode) => {
@@ -197,7 +197,7 @@ export default {
 			try {
 				await this.startCamera()
 			} catch {
-				this.$emit('camera-error')
+				this.$emit('cameraError')
 			}
 		},
 
