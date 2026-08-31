@@ -208,6 +208,8 @@ export default {
 	methods: {
 		/**
 		 * Load the destination for editing.
+		 *
+		 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#requirement-destination-configuration-and-validation-req-bie-001
 		 */
 		async load() {
 			this.loading = true
@@ -228,6 +230,8 @@ export default {
 
 		/**
 		 * Persist the destination via the shared object store.
+		 *
+		 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#requirement-destination-configuration-and-validation-req-bie-001
 		 */
 		async save() {
 			this.busy = true
@@ -248,6 +252,8 @@ export default {
 
 		/**
 		 * Test connectivity to the (saved) destination.
+		 *
+		 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#requirement-destination-configuration-and-validation-req-bie-001
 		 */
 		async testConnection() {
 			this.busy = true

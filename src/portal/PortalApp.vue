@@ -63,6 +63,10 @@ export default {
 		},
 	},
 
+	/**
+	 * @spec exclude loads best-effort tenant branding; no requirement governs portal
+	 *   branding, and the portal renders with defaults when it fails
+	 */
 	async mounted() {
 		try {
 			this.branding = await portalApi.tenantConfig()
@@ -97,6 +101,11 @@ export default {
 			}
 		},
 
+		/**
+		 * @spec exclude portal session handling has no owning requirement. customer-portal
+		 *   specifies only the origin allow-list, portal-contribution only
+		 *   audience contribution
+		 */
 		async logout() {
 			try {
 				await portalApi.logout()

@@ -352,6 +352,8 @@ export default {
 
 		/**
 		 * Load the active receipt templates for the print/email modal pickers.
+		 *
+		 * @spec openspec/specs/pos-receipt-engine/spec.md#REQ-PRE-003
 		 */
 		async loadReceiptTemplates() {
 			try {
@@ -402,6 +404,7 @@ export default {
 		 * @param {object} body The optional request body.
 		 * @param {string} successMessage The success toast.
 		 * @return {Promise<boolean>} Whether the action succeeded.
+		 * @spec openspec/specs/pos-lifecycle-guard-adoption/spec.md#REQ-PLG-001
 		 */
 		async lifecycle(action, body, successMessage) {
 			this.busy = true

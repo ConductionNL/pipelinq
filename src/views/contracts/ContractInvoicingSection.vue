@@ -137,6 +137,8 @@ export default {
 	methods: {
 		/**
 		 * Fetch the current send-to-invoicing availability for this contract.
+		 *
+		 * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-contract-to-invoicing-handoff-emit
 		 */
 		async loadAvailability() {
 			if (!this.resolvedId) {

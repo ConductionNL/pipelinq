@@ -246,6 +246,8 @@ export default {
 
 		/**
 		 * Persist the modifier groups to the product.
+		 *
+		 * @spec openspec/specs/pos-product-catalogue/spec.md#REQ-PPC-002
 		 */
 		async save() {
 			this.saving = true

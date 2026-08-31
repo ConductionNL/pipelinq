@@ -263,6 +263,7 @@ export default {
 		 * Fetch the open queue (waiting + called) from OpenRegister.
 		 *
 		 * @return {Promise<void>} Resolves when fetch completes.
+		 * @spec openspec/specs/appointment-booking/spec.md#REQ-APT-012
 		 */
 		async fetchTickets() {
 			if (this.busyTicketId) return

@@ -142,6 +142,10 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * @spec exclude forecast snapshots have no owning requirement, see
+		 *   ForecastSettings::load for the same gap
+		 */
 		async loadTrend() {
 			if (!this.ownerId) {
 				this.series = []

@@ -163,6 +163,10 @@ export default {
 
 		/**
 		 * Fire the search request.
+		 *
+		 * @spec exclude the pos-customer-link change that specified the lookup modal is
+		 *   archived; no current spec mentions attaching a customer to a till
+		 *   transaction
 		 */
 		async runSearch() {
 			const needle = (this.query || '').trim()

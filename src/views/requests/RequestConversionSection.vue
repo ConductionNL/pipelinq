@@ -147,6 +147,8 @@ export default {
 	methods: {
 		/**
 		 * Fetch the current conversion availability for this request.
+		 *
+		 * @spec openspec/specs/request-management/spec.md#requirement-request-to-case-conversion-v1
 		 */
 		async loadAvailability() {
 			if (!this.resolvedId) {

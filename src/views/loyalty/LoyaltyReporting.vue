@@ -222,6 +222,10 @@ export default {
 			}
 		},
 
+		/**
+		 * @spec exclude the loyalty-program change is archived and no spec inherited
+		 *   loyalty; there is no loyalty spec at all
+		 */
 		async loadKpis() {
 			if (!this.selectedProgramme) {
 				return

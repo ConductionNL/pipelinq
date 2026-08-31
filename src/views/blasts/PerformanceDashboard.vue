@@ -420,6 +420,7 @@ export default {
 		 * Segment column. Failure is non-fatal: rows fall back to '—'.
 		 *
 		 * @return {Promise<void>}
+		 * @spec openspec/specs/marketing-analytics/spec.md#requirement-overview-metrics-table
 		 */
 		async fetchSegments() {
 			try {
@@ -445,6 +446,7 @@ export default {
 		 * the Attribution tab table.
 		 *
 		 * @return {Promise<void>}
+		 * @spec openspec/specs/marketing-analytics/spec.md#requirement-attribution-dashboard-sums-revenue-per-blast
 		 */
 		async fetchAttributionRows() {
 			const rows = []

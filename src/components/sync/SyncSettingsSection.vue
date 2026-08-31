@@ -178,6 +178,8 @@ export default {
 	methods: {
 		/**
 		 * Load the persisted matching settings + last-run status.
+		 *
+		 * @spec openspec/specs/email-calendar-sync/spec.md#requirement-email-sync-must-be-configurable-per-user
 		 */
 		async load() {
 			this.loading = true
@@ -229,6 +231,8 @@ export default {
 
 		/**
 		 * Persist the form.
+		 *
+		 * @spec openspec/specs/email-calendar-sync/spec.md#requirement-email-sync-must-be-configurable-per-user
 		 */
 		async save() {
 			this.saving = true
@@ -269,6 +273,8 @@ export default {
 
 		/**
 		 * Run the matcher once for the current user.
+		 *
+		 * @spec openspec/specs/email-calendar-sync/spec.md#requirement-sync-must-be-near-real-time-and-handle-conflicts
 		 */
 		async trigger() {
 			this.triggering = true

@@ -146,6 +146,7 @@ export function createHidBufferReducer(options = {}) {
  *
  * @param {(function(string): void)} onScan Callback invoked with a validated barcode string.
  * @return {object} Reactive state + camera controls.
+ * @spec openspec/specs/pos-barcode-scan/spec.md#REQ-PBS-001
  */
 export function useBarcodeScanner(onScan) {
 	const supported = ref(

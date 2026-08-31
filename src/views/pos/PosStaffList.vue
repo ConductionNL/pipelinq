@@ -100,6 +100,9 @@ export default {
 			}
 		},
 
+		/**
+		 * @spec exclude POS roles have no owning requirement, see PinLoginModal::loadStaff
+		 */
 		async loadRoles() {
 			try {
 				const url = generateUrl('/apps/pipelinq/api/pos/roles')

@@ -250,6 +250,10 @@ export default {
 			}
 		},
 
+		/**
+		 * @spec exclude the split-tender change that specified tender types is archived and
+		 *   no spec inherited it; 'tender' appears in no current spec
+		 */
 		async loadTenderTypes() {
 			try {
 				const url = generateUrl(

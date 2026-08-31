@@ -142,6 +142,9 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * @spec openspec/specs/sla-engine-and-escalation/spec.md#requirement-attainment-reporting
+		 */
 		async fetchAttainment() {
 			this.loading = true
 			this.error = null

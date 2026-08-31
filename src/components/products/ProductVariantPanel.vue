@@ -238,6 +238,8 @@ export default {
 
 		/**
 		 * Persist the variants to the product.
+		 *
+		 * @spec openspec/specs/pos-product-catalogue/spec.md#REQ-PPC-001
 		 */
 		async save() {
 			this.saving = true

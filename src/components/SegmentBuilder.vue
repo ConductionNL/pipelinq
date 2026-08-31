@@ -141,6 +141,8 @@ export default {
 		 *
 		 * @param {object} node The node to clone.
 		 * @return {object} A structural copy.
+		 * @spec exclude structural deep-clone helper with no behaviour of its own. The rule
+		 *   tree it copies is specified, the copying is not
 		 */
 		cloneTree(node) {
 			if (!node || typeof node !== 'object') {
@@ -213,6 +215,8 @@ export default {
 		 * Perform the size estimate by posting the current rules to the
 		 * segment-size endpoint. The endpoint accepts an inline rule payload
 		 * so the segment does not need to be persisted yet.
+		 *
+		 * @spec openspec/specs/marketing-ui/spec.md#scenario-live-size-estimate-shown
 		 */
 		async runEstimate() {
 			try {
