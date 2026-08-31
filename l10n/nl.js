@@ -3564,7 +3564,11 @@ OC.L10N.register(
         "Logical entity slug boarded here ('lead', 'request', …). Ticket subtypes resolve onto the unified `ticket` schema via resolveObjectType().": "Logische entiteitsslug die hier op het bord staat ('lead', 'request', …). Ticketsubtypes worden via resolveObjectType() herleid naar het samengevoegde `ticket`-schema.",
         "Object property whose value names the stage column (normally 'stage').": "Objecteigenschap waarvan de waarde de fasekolom benoemt (normaal 'stage').",
         "Optional numeric property summed per column for a stage total (e.g. 'value').": "Optionele numerieke eigenschap die per kolom wordt opgeteld tot een fasetotaal (bijvoorbeeld 'value').",
-        "Which object types this pipeline boards, and which property of each supplies the stage column. A pipeline that declares none is unscoped and offered for every entity type. Supersedes the retired `entityType` field.": "Welke objecttypen deze pipeline op het bord zet, en welke eigenschap van elk de fasekolom levert. Een pipeline die er geen declareert is ongebonden en wordt voor elk entiteitstype aangeboden. Vervangt het vervallen veld `entityType`."
+        "Which object types this pipeline boards, and which property of each supplies the stage column. A pipeline that declares none is unscoped and offered for every entity type. Supersedes the retired `entityType` field.": "Welke objecttypen deze pipeline op het bord zet, en welke eigenschap van elk de fasekolom levert. Een pipeline die er geen declareert is ongebonden en wordt voor elk entiteitstype aangeboden. Vervangt het vervallen veld `entityType`.",
+        "Select or create a client": "Selecteer of maak een klant",
+        "Select or create a contact": "Selecteer of maak een contactpersoon",
+        "Select a client first": "Selecteer eerst een klant",
+        "Failed to create contact.": "Aanmaken van contactpersoon is mislukt."
     },
     "nplurals=2; plural=(n != 1);"
 )
