@@ -5,6 +5,7 @@
 		"openregister",
 		{ "id": "openconnector", "required": false, "name": "OpenConnector" },
 		{ "id": "deck", "required": false, "name": "Deck" },
+		{ "id": "dossiq", "required": false, "name": "DossiQ" },
 		{ "id": "workflowengine", "required": false, "name": "Workflow engine" },
 		{ "id": "timemanager", "required": false, "name": "Time manager" },
 		{ "id": "forms", "required": false, "name": "Forms" }
@@ -134,7 +135,7 @@
 		},
 		{
 			"id": "Tickets",
-			"label": "Tickets",
+			"label": "All tickets",
 			"icon": "FileOutline",
 			"route": "Tickets",
 			"order": 50
@@ -707,7 +708,7 @@
 			"id": "Tickets",
 			"route": "/tickets",
 			"type": "index",
-			"title": "Tickets",
+			"title": "All tickets",
 			"_note": "Unified ticket workspace (unify-ticket-supertype). One index over the ticket schema replacing the former Requests/Complaints/Contactmomenten pages; a ticketType quickFilter tab strip narrows to each subtype. Type-specific columns (complaintCategory, outcome) are omitted from the shared table — they surface on the detail page.",
 			"config": {
 				"register": "pipelinq",

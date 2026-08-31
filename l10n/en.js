@@ -3568,7 +3568,8 @@ OC.L10N.register(
         "Added {name} as a client": "Added {name} as a client",
         "Could not add this prospect as a client": "Could not add this prospect as a client",
         "Pipeline is required": "Pipeline is required",
-        "Unknown company": "Unknown company"
+        "Unknown company": "Unknown company",
+        "All tickets": "All tickets"
     },
     "nplurals=2; plural=(n != 1);"
 )
