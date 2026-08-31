@@ -28,6 +28,8 @@ use OCP\IAppConfig;
 
 /**
  * Low-level reader/writer for ICP config values.
+ *
+ * @spec openspec/specs/prospect-discovery/spec.md#requirement-ideal-customer-profile-configuration
  */
 class IcpConfigReader {
 	/**
@@ -140,6 +142,7 @@ class IcpConfigReader {
 	 * @param string $default The default string ('true' or 'false').
 	 *
 	 * @return bool The boolean value.
+	 * @spec openspec/specs/prospect-discovery/spec.md#requirement-ideal-customer-profile-configuration
 	 */
 	public function isBoolTrue(string $key, string $default = 'true'): bool {
 		return $this->getString(key: $key, default: $default) === 'true';
@@ -169,6 +172,7 @@ class IcpConfigReader {
 	 * @param string $key The config key.
 	 *
 	 * @return int The integer value.
+	 * @spec openspec/specs/prospect-discovery/spec.md#requirement-ideal-customer-profile-configuration
 	 */
 	public function getInt(string $key): int {
 		return (int)$this->getString(key: $key, default: '0');
@@ -181,6 +185,7 @@ class IcpConfigReader {
 	 * @param mixed $value The integer value.
 	 *
 	 * @return void
+	 * @spec openspec/specs/prospect-discovery/spec.md#requirement-ideal-customer-profile-configuration
 	 */
 	public function setInt(string $key, mixed $value): void {
 		$this->setString(key: $key, value: (string)(int)$value);

@@ -41,6 +41,11 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Wires the minimal collaborator
  *  set (OR container, app config, logger) a repository legitimately needs.
+ *
+ * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+ *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+ *   sessions, tokens, delegation, documents, invoices, orders, exports and
+ *   audit are all unspecified
  */
 class PortalObjectRepository {
 	/**
@@ -71,6 +76,10 @@ class PortalObjectRepository {
 	 * @return string The register id.
 	 *
 	 * @throws RuntimeException If no register is configured.
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function registerId(): string {
 		$register = $this->appConfig->getValueString(Application::APP_ID, self::PORTAL_REGISTER_KEY, '');
@@ -93,6 +102,10 @@ class PortalObjectRepository {
 	 * @return string The schema id.
 	 *
 	 * @throws RuntimeException If the schema is not configured.
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function schemaId(string $schemaSlug): string {
 		$schema = $this->appConfig->getValueString(Application::APP_ID, $schemaSlug . '_schema', '');
@@ -114,6 +127,10 @@ class PortalObjectRepository {
 	 * @param string $id The object id/uuid.
 	 *
 	 * @return array<string, mixed>|null The object as an array, or null.
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function find(string $schemaSlug, string $id): ?array {
 		if ($id === '') {
@@ -148,6 +165,10 @@ class PortalObjectRepository {
 	 * @param array<string, mixed> $filters Extra equality filters (field => value).
 	 *
 	 * @return array<int, array<string, mixed>> The matching objects as arrays.
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function findAll(string $schemaSlug, array $filters = []): array {
 		$base = [
@@ -182,6 +203,10 @@ class PortalObjectRepository {
 	 * @param array<string, mixed> $filters Equality filters.
 	 *
 	 * @return array<string, mixed>|null The first match, or null.
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function findOneBy(string $schemaSlug, array $filters): ?array {
 		$matches = $this->findAll(schemaSlug: $schemaSlug, filters: $filters);
@@ -198,6 +223,10 @@ class PortalObjectRepository {
 	 * @return array<string, mixed> The saved object as an array.
 	 *
 	 * @throws RuntimeException If persistence fails.
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function save(string $schemaSlug, array $data, ?string $id = null): array {
 		// Never trust a client-derived self envelope.
@@ -228,6 +257,10 @@ class PortalObjectRepository {
 	 * @param array<string, mixed> $object The object array.
 	 *
 	 * @return string|null The id, or null when absent.
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function idOf(array $object): ?string {
 		if (isset($object['@self']) === true && is_array($object['@self']) === true) {

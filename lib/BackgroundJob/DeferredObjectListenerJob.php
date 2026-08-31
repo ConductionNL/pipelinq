@@ -65,6 +65,8 @@ use Throwable;
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The class exists precisely to
  *  fan one job out to the app's converted listeners; naming them is the point.
+ *
+ * @spec openspec/specs/event-listener-work-placement/spec.md#requirement-deferred-post-event-work-runs-in-one-actor-forwarded-job
  */
 class DeferredObjectListenerJob extends ActorForwardedJob {
 

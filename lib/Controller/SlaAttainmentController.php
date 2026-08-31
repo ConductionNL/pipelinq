@@ -46,6 +46,8 @@ use Throwable;
  * All authenticated users may view org-level KPIs (REQ-006). Per-team
  * scoping is honoured by the underlying ObjectService row-level RBAC
  * (out of controller scope).
+ *
+ * @spec openspec/specs/sla-engine-and-escalation/spec.md#requirement-attainment-reporting
  */
 class SlaAttainmentController extends Controller {
 	/**

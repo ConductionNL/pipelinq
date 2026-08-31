@@ -37,6 +37,8 @@ use Psr\Log\LoggerInterface;
 
 /**
  * Controller for contact synchronization.
+ *
+ * @spec openspec/specs/contacts-sync/spec.md#requirement-write-back-sync-mvp
  */
 class ContactSyncController extends Controller {
 	/**

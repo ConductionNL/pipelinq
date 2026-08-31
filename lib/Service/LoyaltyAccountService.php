@@ -111,6 +111,8 @@ class LoyaltyAccountService {
 	 * @param string $accountId The account UUID.
 	 *
 	 * @return array<string, mixed>|null The account, or null when not found.
+	 * @spec exclude loyalty has no spec at all; the change that specified it was archived
+	 *   and nothing inherited it
 	 */
 	public function getAccount(string $accountId): ?array {
 		[$register, $schema] = $this->config();
@@ -256,6 +258,8 @@ class LoyaltyAccountService {
 	 * @param string $lastActivityDate ISO-8601 timestamp of the activity.
 	 *
 	 * @return array<string, mixed>|null The updated account, or null.
+	 * @spec exclude loyalty has no spec at all; the change that specified it was archived
+	 *   and nothing inherited it
 	 */
 	public function updateBalances(
 		string $accountId,

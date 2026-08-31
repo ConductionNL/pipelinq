@@ -47,6 +47,7 @@ use Throwable;
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)   Bridges OR + SLA engine constants for breach-event/tracked-object aggregation
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Attainment aggregation is inherently branchy; split into small focused methods
+ * @spec openspec/specs/sla-engine-and-escalation/spec.md#requirement-attainment-reporting
  */
 class SlaAttainmentService {
 	public const VALID_BUCKETS = ['day', 'week', 'month', 'quarter'];

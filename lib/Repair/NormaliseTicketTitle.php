@@ -103,6 +103,7 @@ class NormaliseTicketTitle implements IRepairStep {
 	 * Get the repair step name.
 	 *
 	 * @return string Name.
+	 * @spec openspec/specs/repair-steps/spec.md
 	 */
 	public function getName(): string {
 		return 'Normalise ticket titles stored as translation maps into plain strings';

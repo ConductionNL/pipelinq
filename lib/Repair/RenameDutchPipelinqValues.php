@@ -42,6 +42,8 @@ use Psr\Log\LoggerInterface;
 
 /**
  * Migrates stored Dutch enum values to their English spelling.
+ *
+ * @spec openspec/specs/repair-steps/spec.md
  */
 class RenameDutchPipelinqValues implements IRepairStep {
 
@@ -157,6 +159,7 @@ class RenameDutchPipelinqValues implements IRepairStep {
 	 * Step name shown by `occ maintenance:repair`.
 	 *
 	 * @return string
+	 * @spec openspec/specs/repair-steps/spec.md
 	 */
 	public function getName(): string {
 		return 'Translate stored Dutch Pipelinq enum values';
@@ -187,6 +190,7 @@ class RenameDutchPipelinqValues implements IRepairStep {
 	 * @param IOutput $output Repair output.
 	 *
 	 * @return void
+	 * @spec openspec/specs/repair-steps/spec.md
 	 */
 	public function run(IOutput $output): void {
 		$tables = $this->shardTables();

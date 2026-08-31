@@ -50,6 +50,8 @@ use Throwable;
 
 /**
  * Removes the retired, app-held PSP keys from app config.
+ *
+ * @spec openspec/specs/repair-steps/spec.md
  */
 class RemoveLegacyPspKeys implements IRepairStep {
 	/**
@@ -68,6 +70,7 @@ class RemoveLegacyPspKeys implements IRepairStep {
 	 * Get the name of this repair step.
 	 *
 	 * @return string
+	 * @spec openspec/specs/repair-steps/spec.md
 	 */
 	public function getName(): string {
 		return 'Remove the legacy app-held PSP API keys (they live in the credential broker now)';

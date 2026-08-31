@@ -25,6 +25,9 @@ namespace OCA\Pipelinq\Service\Cti\Result;
 
 /**
  * Outcome of an outbound click-to-dial originate request.
+ *
+ * @spec exclude value object returned by the CTI adapters; the behaviour is specified on
+ *   the adapter, not on the carrier
  */
 final class CtiCallResult {
 	/**

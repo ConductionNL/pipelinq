@@ -25,6 +25,8 @@ namespace OCA\Pipelinq\Service;
 
 /**
  * Service for building import data arrays from Nextcloud contact data.
+ *
+ * @spec openspec/specs/contacts-sync/spec.md#requirement-write-back-sync-mvp
  */
 class ContactDataBuilder {
 	/**

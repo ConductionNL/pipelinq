@@ -60,6 +60,7 @@ class RingCentralAdapter implements CtiAdapterInterface, PresenceSubscribingInte
 	 * {@inheritDoc}
 	 *
 	 * @return string The platform identifier.
+	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-inbound-screen-pop-on-call-answer-req-cti-001
 	 */
 	public function getPlatform(): string {
 		return 'ringcentral';
@@ -259,6 +260,7 @@ class RingCentralAdapter implements CtiAdapterInterface, PresenceSubscribingInte
 	 * @param string $extension The extension to subscribe.
 	 *
 	 * @return void
+	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-inbound-screen-pop-on-call-answer-req-cti-001
 	 */
 	public function subscribeToPresence(string $userId, string $extension): void {
 		$baseUrl = $this->appConfig->getValueString(Application::APP_ID, 'cti_ringcentral_api_base_url', '');
@@ -308,6 +310,7 @@ class RingCentralAdapter implements CtiAdapterInterface, PresenceSubscribingInte
 	 * @param string $signature The signature/validation token to verify.
 	 *
 	 * @return bool True when the signature is valid.
+	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-inbound-screen-pop-on-call-answer-req-cti-001
 	 */
 	public function verifyWebhookSignature(string $payload, string $signature): bool {
 		$expected = $this->appConfig->getValueString(Application::APP_ID, 'cti_ringcentral_webhook_token', '');

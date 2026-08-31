@@ -78,6 +78,7 @@ class MailboxResolver {
 	 * @return array{mailboxAvailable: bool, optedOut: bool, expiresAt: string, resolvedAt: string, bsnHash: string, source: string}
 	 *
 	 * @throws RuntimeException On configuration error.
+	 * @spec openspec/specs/outbound-messaging/spec.md#REQ-OM-004
 	 */
 	public function resolve(string $bsn, string $tenantId): array {
 		$bsnHash = $this->encryption->hashBsn($bsn, $tenantId);

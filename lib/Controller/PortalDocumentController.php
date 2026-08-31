@@ -47,6 +47,11 @@ use Throwable;
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Wires the signing service, the
  *  access re-check facade, the account store and the audit log a secure proxy needs.
+ *
+ * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+ *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+ *   sessions, tokens, delegation, documents, invoices, orders, exports and
+ *   audit are all unspecified
  */
 class PortalDocumentController extends PortalApiController {
 	/**
@@ -93,6 +98,10 @@ class PortalDocumentController extends PortalApiController {
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
 	 * @PublicPage
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	#[AnonRateLimit(limit: 20, period: 60)]
 	public function sign(): JSONResponse {

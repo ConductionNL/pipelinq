@@ -32,6 +32,9 @@ namespace OCA\Pipelinq\Service\Zgw;
 
 /**
  * ZGW resource (zaak / besluit / informatieobject / rol) not found.
+ *
+ * @spec exclude exception type: carries a failure mode, not a behaviour a requirement
+ *   can specify
  */
 class ZgwResourceNotFoundException extends ZgwException {
 	/**

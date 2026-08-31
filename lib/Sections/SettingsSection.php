@@ -27,6 +27,8 @@ use OCP\Settings\IIconSection;
 
 /**
  * Admin settings section for Pipelinq.
+ *
+ * @spec openspec/specs/admin-settings/spec.md#REQ-AS-011
  */
 class SettingsSection implements IIconSection {
 	/**
@@ -45,6 +47,7 @@ class SettingsSection implements IIconSection {
 	 * Get the section ID.
 	 *
 	 * @return string The section ID.
+	 * @spec openspec/specs/admin-settings/spec.md#REQ-AS-011
 	 */
 	public function getID(): string {
 		return 'pipelinq';
@@ -54,6 +57,7 @@ class SettingsSection implements IIconSection {
 	 * Get the section name.
 	 *
 	 * @return string The section name.
+	 * @spec openspec/specs/admin-settings/spec.md#REQ-AS-011
 	 */
 	public function getName(): string {
 		return $this->l->t('Pipelinq');
@@ -63,6 +67,7 @@ class SettingsSection implements IIconSection {
 	 * Get the section priority.
 	 *
 	 * @return int The section priority.
+	 * @spec openspec/specs/admin-settings/spec.md#REQ-AS-011
 	 */
 	public function getPriority(): int {
 		return 76;
@@ -72,6 +77,7 @@ class SettingsSection implements IIconSection {
 	 * Get the section icon URL.
 	 *
 	 * @return string The icon URL.
+	 * @spec openspec/specs/admin-settings/spec.md#REQ-AS-011
 	 */
 	public function getIcon(): string {
 		return $this->urlGenerator->imagePath(appName: 'pipelinq', file: 'app-dark.svg');

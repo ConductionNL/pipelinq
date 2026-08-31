@@ -179,6 +179,7 @@ class CtiService {
 	 * @param string|null $orgId Reserved for multi-tenant pipelinq.
 	 *
 	 * @return ScreenPopResult The screen-pop result for the frontend.
+	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-inbound-screen-pop-on-call-answer-req-cti-001
 	 */
 	public function initiateScreenPop(string $fromNumber, ?string $orgId = null): ScreenPopResult {
 		$normalised = $this->phoneNormaliser->normaliseForOrg($fromNumber, $orgId);
@@ -411,6 +412,7 @@ class CtiService {
 	 * @param string|null $platform Reporting platform.
 	 *
 	 * @return void
+	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-inbound-screen-pop-on-call-answer-req-cti-001
 	 */
 	public function syncPresence(string $userId, string $presenceState, ?string $extension = null, ?string $platform = null): void {
 		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
@@ -463,6 +465,7 @@ class CtiService {
 	 * Active CTI platform from configuration.
 	 *
 	 * @return string Platform identifier (empty when not configured).
+	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-inbound-screen-pop-on-call-answer-req-cti-001
 	 */
 	public function activePlatform(): string {
 		$config = $this->loadConfig();
@@ -473,6 +476,7 @@ class CtiService {
 	 * Read the CTI singleton config.
 	 *
 	 * @return array<string,mixed>
+	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-inbound-screen-pop-on-call-answer-req-cti-001
 	 */
 	public function loadConfig(): array {
 		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
@@ -512,6 +516,7 @@ class CtiService {
 	 * @param array<string,mixed> $config The config payload.
 	 *
 	 * @return array<string,mixed>
+	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-inbound-screen-pop-on-call-answer-req-cti-001
 	 */
 	public function saveConfig(array $config): array {
 		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
@@ -552,6 +557,7 @@ class CtiService {
 	 * Test connectivity against the configured platform.
 	 *
 	 * @return array{ok: bool, platform: string, message: string}
+	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-inbound-screen-pop-on-call-answer-req-cti-001
 	 */
 	public function testConnection(): array {
 		$platform = $this->activePlatform();
@@ -587,6 +593,7 @@ class CtiService {
 	 * @param int $offset Page offset.
 	 *
 	 * @return array<int,array<string,mixed>>
+	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-inbound-screen-pop-on-call-answer-req-cti-001
 	 */
 	public function listEventLog(array $filters = [], int $limit = 50, int $offset = 0): array {
 		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');

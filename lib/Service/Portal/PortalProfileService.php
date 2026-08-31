@@ -35,6 +35,11 @@ use OCP\IL10N;
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Aggregates the profile-update
  *  collaborators (repository, tokens, mail, audit, l10n).
+ *
+ * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+ *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+ *   sessions, tokens, delegation, documents, invoices, orders, exports and
+ *   audit are all unspecified
  */
 class PortalProfileService {
 	/**
@@ -82,6 +87,10 @@ class PortalProfileService {
 	 * @param array<string, mixed> $account The account record.
 	 *
 	 * @return array<string, mixed> The safe profile.
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function present(array $account): array {
 		return [
@@ -151,6 +160,10 @@ class PortalProfileService {
 	 * @param string $tenantId The tenant id.
 	 *
 	 * @return bool True when the email was verified and applied.
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function verifyEmail(string $token, string $tenantId): bool {
 		$account = $this->repository->findOneBy(

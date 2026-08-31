@@ -43,6 +43,9 @@ use OCP\IRequest;
  *
  * Every action is gated with #[AuthorizedAdminSetting]; values persist via
  * IAppConfig and take effect immediately for subsequent operations.
+ *
+ * @spec exclude forecast has no owning requirement. pipeline-insights defers its config
+ *   scenario to admin-settings, which never grew one
  */
 class ForecastSettingsController extends Controller {
 	/**

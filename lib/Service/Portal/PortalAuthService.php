@@ -39,6 +39,11 @@ use OCP\Security\IHasher;
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Aggregates the auth collaborators
  *  (repository, hasher, session manager, MFA, audit, tenant, time) a login flow
  *  legitimately needs.
+ *
+ * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+ *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+ *   sessions, tokens, delegation, documents, invoices, orders, exports and
+ *   audit are all unspecified
  */
 class PortalAuthService {
 	/**
@@ -90,6 +95,10 @@ class PortalAuthService {
 	 * @param string $password The plaintext password.
 	 *
 	 * @return string The password hash.
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function hashPassword(string $password): string {
 		return $this->hasher->hash($password);
@@ -113,6 +122,10 @@ class PortalAuthService {
 	 * @return array{status: string, mfaRequired: bool, accountId: string, token?: string, sessionId?: string}
 	 *
 	 * @throws PortalException On any authentication failure (safe, audited).
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function login(
 		string $email,

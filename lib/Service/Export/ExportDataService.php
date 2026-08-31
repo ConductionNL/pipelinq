@@ -98,6 +98,7 @@ class ExportDataService extends AbstractExportService {
 	 * @param string $slug The pipelinq schema slug.
 	 *
 	 * @return string|null The schema config key, or null when unknown.
+	 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#requirement-destination-configuration-and-validation-req-bie-001
 	 */
 	public function schemaKeyForSlug(string $slug): ?string {
 		$slug = trim($slug);
@@ -114,6 +115,7 @@ class ExportDataService extends AbstractExportService {
 	 * @param string $slug The schema slug.
 	 *
 	 * @return bool True when the schema resolves to a configured schema id.
+	 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#requirement-destination-configuration-and-validation-req-bie-001
 	 */
 	public function schemaExists(string $slug): bool {
 		$key = $this->schemaKeyForSlug(slug: $slug);
@@ -518,6 +520,7 @@ class ExportDataService extends AbstractExportService {
 	 * @param string $watermarkColumn The watermark column.
 	 *
 	 * @return string|null The max watermark, or null when no rows carry it.
+	 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#requirement-destination-configuration-and-validation-req-bie-001
 	 */
 	public function maxWatermark(array $rows, string $watermarkColumn): ?string {
 		$max = null;
@@ -620,6 +623,7 @@ class ExportDataService extends AbstractExportService {
 	 * @param array<int, array<string, mixed>> $rows The rows.
 	 *
 	 * @return array<string, string> The column => type map.
+	 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#requirement-destination-configuration-and-validation-req-bie-001
 	 */
 	public function columnDefinitions(array $rows): array {
 		$columns = $this->collectColumns(rows: $rows);

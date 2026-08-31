@@ -40,6 +40,7 @@ interface ExportSinkInterface {
 	 * The destination type slug this adapter handles (e.g. 's3').
 	 *
 	 * @return string The destination type.
+	 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#requirement-destination-configuration-and-validation-req-bie-001
 	 */
 	public function getType(): string;
 
@@ -53,6 +54,7 @@ interface ExportSinkInterface {
 	 * @param array<string, mixed> $destination The destination configuration.
 	 *
 	 * @return bool True when the destination is reachable and writable.
+	 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#requirement-destination-configuration-and-validation-req-bie-001
 	 */
 	public function testConnection(array $credentials, array $destination): bool;
 
@@ -67,6 +69,7 @@ interface ExportSinkInterface {
 	 * @return string A destination acknowledgement (ETag, load-job id, query id, ...).
 	 *
 	 * @throws \RuntimeException When the upload fails after the adapter's own attempt.
+	 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#requirement-destination-configuration-and-validation-req-bie-001
 	 */
 	public function upload(array $credentials, array $destination, string $remotePath, string $contents): string;
 }//end interface

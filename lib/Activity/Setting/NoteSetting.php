@@ -26,6 +26,8 @@ use OCP\IL10N;
 
 /**
  * Activity setting for note events.
+ *
+ * @spec openspec/specs/notifications-activity/spec.md#requirement-per-category-notification-preferences-v1
  */
 class NoteSetting extends ActivitySettings {
 	/**
@@ -42,6 +44,7 @@ class NoteSetting extends ActivitySettings {
 	 * Get the identifier for this setting.
 	 *
 	 * @return string The setting identifier.
+	 * @spec openspec/specs/notifications-activity/spec.md#requirement-per-category-notification-preferences-v1
 	 */
 	public function getIdentifier(): string {
 		return 'pipelinq_notes';
@@ -51,6 +54,7 @@ class NoteSetting extends ActivitySettings {
 	 * Get the name for this setting.
 	 *
 	 * @return string The setting name.
+	 * @spec openspec/specs/notifications-activity/spec.md#requirement-per-category-notification-preferences-v1
 	 */
 	public function getName(): string {
 		return $this->l->t('Notes & comments');
@@ -60,6 +64,7 @@ class NoteSetting extends ActivitySettings {
 	 * Get the group identifier for this setting.
 	 *
 	 * @return string The group identifier.
+	 * @spec openspec/specs/notifications-activity/spec.md#requirement-per-category-notification-preferences-v1
 	 */
 	public function getGroupIdentifier(): string {
 		return 'pipelinq';
@@ -69,6 +74,7 @@ class NoteSetting extends ActivitySettings {
 	 * Get the group name for this setting.
 	 *
 	 * @return string The group name.
+	 * @spec openspec/specs/notifications-activity/spec.md#requirement-per-category-notification-preferences-v1
 	 */
 	public function getGroupName(): string {
 		return $this->l->t('Pipelinq');
@@ -78,6 +84,7 @@ class NoteSetting extends ActivitySettings {
 	 * Get the priority for this setting.
 	 *
 	 * @return int The priority.
+	 * @spec openspec/specs/notifications-activity/spec.md#requirement-per-category-notification-preferences-v1
 	 */
 	public function getPriority(): int {
 		return 52;
@@ -87,6 +94,7 @@ class NoteSetting extends ActivitySettings {
 	 * Whether the user can change the stream setting.
 	 *
 	 * @return bool True if changeable.
+	 * @spec openspec/specs/notifications-activity/spec.md#requirement-per-category-notification-preferences-v1
 	 */
 	public function canChangeStream(): bool {
 		return true;
@@ -96,6 +104,7 @@ class NoteSetting extends ActivitySettings {
 	 * Whether the stream is enabled by default.
 	 *
 	 * @return bool True if enabled by default.
+	 * @spec openspec/specs/notifications-activity/spec.md#requirement-per-category-notification-preferences-v1
 	 */
 	public function isDefaultEnabledStream(): bool {
 		return true;
@@ -105,6 +114,7 @@ class NoteSetting extends ActivitySettings {
 	 * Whether the user can change the mail setting.
 	 *
 	 * @return bool True if changeable.
+	 * @spec openspec/specs/notifications-activity/spec.md#requirement-per-category-notification-preferences-v1
 	 */
 	public function canChangeMail(): bool {
 		return true;
@@ -114,6 +124,7 @@ class NoteSetting extends ActivitySettings {
 	 * Whether mail is enabled by default.
 	 *
 	 * @return bool True if enabled by default.
+	 * @spec openspec/specs/notifications-activity/spec.md#requirement-per-category-notification-preferences-v1
 	 */
 	public function isDefaultEnabledMail(): bool {
 		return false;

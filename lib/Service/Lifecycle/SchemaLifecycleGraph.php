@@ -86,6 +86,7 @@ final class SchemaLifecycleGraph {
 	 * @param string $schemaSlug The schema slug (e.g. 'walkInTicket').
 	 *
 	 * @return array<string, array<int, string>> Adjacency map; empty when undeclared/unreadable.
+	 * @spec openspec/specs/pos-lifecycle-guard-adoption/spec.md#REQ-PLG-001
 	 */
 	public function adjacencyFor(string $schemaSlug): array {
 		$lifecycle = $this->lifecycleFor(schemaSlug: $schemaSlug);
@@ -108,6 +109,7 @@ final class SchemaLifecycleGraph {
 	 * @param string $schemaSlug The schema slug.
 	 *
 	 * @return array<string, array<int, string>> Adjacency map keyed by every declared state.
+	 * @spec openspec/specs/pos-lifecycle-guard-adoption/spec.md#REQ-PLG-001
 	 */
 	public function fullAdjacencyFor(string $schemaSlug): array {
 		$lifecycle = $this->lifecycleFor(schemaSlug: $schemaSlug);

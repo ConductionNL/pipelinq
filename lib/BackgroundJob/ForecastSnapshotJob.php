@@ -41,6 +41,9 @@ use Psr\Log\LoggerInterface;
  * configured generation day (default Monday) at or after the configured hour
  * (default 06:00) in the org timezone, generating at most one snapshot set per
  * day per period.
+ *
+ * @spec exclude forecast has no owning requirement. pipeline-insights defers its config
+ *   scenario to admin-settings, which never grew one
  */
 class ForecastSnapshotJob extends TimedJob {
 	/**

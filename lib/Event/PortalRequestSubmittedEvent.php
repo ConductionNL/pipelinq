@@ -30,6 +30,11 @@ use OCP\EventDispatcher\Event;
 
 /**
  * Fired when a portal-submitted request is created.
+ *
+ * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+ *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+ *   sessions, tokens, delegation, documents, invoices, orders, exports and
+ *   audit are all unspecified
  */
 class PortalRequestSubmittedEvent extends Event {
 	/**
@@ -49,6 +54,10 @@ class PortalRequestSubmittedEvent extends Event {
 	 * The created request id.
 	 *
 	 * @return string The request id.
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function getRequestId(): string {
 		return $this->requestId;
@@ -58,6 +67,10 @@ class PortalRequestSubmittedEvent extends Event {
 	 * The tenant id.
 	 *
 	 * @return string The tenant id.
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function getTenantId(): string {
 		return $this->tenantId;

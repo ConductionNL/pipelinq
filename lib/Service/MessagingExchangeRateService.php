@@ -108,6 +108,7 @@ class MessagingExchangeRateService {
 	 * @param string $currency ISO 4217 currency code.
 	 *
 	 * @return float|null Rate or null.
+	 * @spec openspec/specs/outbound-messaging/spec.md#REQ-OM-004
 	 */
 	public function getRate(string $currency): ?float {
 		$currency = strtoupper(trim($currency));

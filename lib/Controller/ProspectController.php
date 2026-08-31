@@ -36,6 +36,8 @@ use Psr\Log\LoggerInterface;
 
 /**
  * Controller for prospect discovery.
+ *
+ * @spec openspec/specs/prospect-discovery/spec.md#requirement-ideal-customer-profile-configuration
  */
 class ProspectController extends Controller {
 	/**

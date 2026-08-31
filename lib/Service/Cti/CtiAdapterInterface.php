@@ -40,6 +40,7 @@ interface CtiAdapterInterface {
 	 * Identifier of this platform (callvoip|ringcentral|asterisk|other).
 	 *
 	 * @return string Platform identifier.
+	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-inbound-screen-pop-on-call-answer-req-cti-001
 	 */
 	public function getPlatform(): string;
 
@@ -49,6 +50,7 @@ interface CtiAdapterInterface {
 	 * @param array<string,mixed> $payload Raw decoded webhook body.
 	 *
 	 * @return CtiWebhookResult Normalised event.
+	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-inbound-screen-pop-on-call-answer-req-cti-001
 	 */
 	public function handleInboundWebhook(array $payload): CtiWebhookResult;
 
@@ -60,6 +62,7 @@ interface CtiAdapterInterface {
 	 * @param string $callerId Caller-ID to present on the outbound call.
 	 *
 	 * @return CtiCallResult Outcome including the new external call id.
+	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-inbound-screen-pop-on-call-answer-req-cti-001
 	 */
 	public function originateCall(string $extension, string $targetNumber, string $callerId): CtiCallResult;
 
@@ -73,6 +76,7 @@ interface CtiAdapterInterface {
 	 * @param string $signature Signature/token to validate.
 	 *
 	 * @return bool True when the signature is valid.
+	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-inbound-screen-pop-on-call-answer-req-cti-001
 	 */
 	public function verifyWebhookSignature(string $payload, string $signature): bool;
 }//end interface

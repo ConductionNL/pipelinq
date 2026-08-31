@@ -27,6 +27,9 @@ use Psr\Log\LoggerInterface;
 
 /**
  * Service for resolving schema IDs to entity types.
+ *
+ * @spec exclude infrastructure utility with no feature requirement of its own; it is
+ *   exercised through the features that call it
  */
 class SchemaMapService {
 	/**
