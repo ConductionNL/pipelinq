@@ -58,7 +58,7 @@
     "vuedraggable": "^4.1.0"
   },
   "overrides": {
-    "@nextcloud/axios": "~2.5.2"
+    "@nextcloud/axios": "$@nextcloud/axios"
   },
   "devDependencies": {
     "@babel/core": "^7.22.9",
