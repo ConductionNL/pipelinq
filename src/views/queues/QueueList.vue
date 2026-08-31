@@ -260,7 +260,7 @@ export default {
 .stat__label {
 	font-size: 12px;
 	color: var(--color-text-maxcontrast);
-	margin-left: 4px;
+	margin-inline-start: 4px;
 }
 
 .queue-card__categories {

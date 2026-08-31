@@ -402,8 +402,8 @@ export default {
 
 <style scoped>
 .rule-node {
-	border-left: 2px solid var(--color-border);
-	padding-left: 8px;
+	border-inline-start: 2px solid var(--color-border);
+	padding-inline-start: 8px;
 	margin: 6px 0;
 }
 

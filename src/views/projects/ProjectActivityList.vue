@@ -355,11 +355,11 @@ export default {
 .activity-table td {
 	padding: 8px 10px;
 	border-bottom: 1px solid var(--color-border-dark);
-	text-align: left;
+	text-align: start;
 }
 
 .activity-table .numeric {
-	text-align: right;
+	text-align: end;
 	font-variant-numeric: tabular-nums;
 }
 
@@ -369,7 +369,7 @@ export default {
 }
 
 .totals-label {
-	text-align: right;
+	text-align: end;
 }
 
 .billable-dot {
@@ -377,7 +377,7 @@ export default {
 	width: 8px;
 	height: 8px;
 	border-radius: 50%;
-	margin-right: 6px;
+	margin-inline-end: 6px;
 	vertical-align: middle;
 }
 

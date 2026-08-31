@@ -407,7 +407,7 @@ export default {
 
 .forecast-table th,
 .forecast-table td {
-	text-align: left;
+	text-align: start;
 	padding: 8px 12px;
 	border-bottom: 1px solid var(--color-border);
 }
@@ -418,7 +418,7 @@ export default {
 }
 
 .forecast-table__badge {
-	margin-left: 6px;
+	margin-inline-start: 6px;
 	font-size: 0.8em;
 	color: var(--color-error);
 	cursor: help;

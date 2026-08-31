@@ -642,7 +642,7 @@ export default {
 }
 
 .kassakoppeling-audit-list__table th {
-	text-align: left;
+	text-align: start;
 	padding: 8px 12px;
 	border-bottom: 1px solid var(--color-border);
 	font-size: 12px;
@@ -664,7 +664,7 @@ export default {
 }
 
 .num {
-	text-align: right;
+	text-align: end;
 }
 
 .kassakoppeling-audit-list__table .chevron-col {

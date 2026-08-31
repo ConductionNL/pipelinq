@@ -297,7 +297,7 @@ export default {
 }
 
 .queue-detail__actions {
-	margin-left: auto;
+	margin-inline-start: auto;
 }
 
 .queue-detail__meta {

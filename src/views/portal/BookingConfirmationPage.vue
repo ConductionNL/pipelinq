@@ -287,7 +287,7 @@ export default {
 
 .booking-summary-row dd {
 	margin: 0;
-	text-align: right;
+	text-align: end;
 }
 
 .booking-actions {

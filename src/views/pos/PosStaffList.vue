@@ -167,7 +167,7 @@ export default {
 .pos-staff-list__table th,
 .pos-staff-list__table td {
 	padding: 8px;
-	text-align: left;
+	text-align: start;
 	border-bottom: 1px solid var(--color-border);
 }
 

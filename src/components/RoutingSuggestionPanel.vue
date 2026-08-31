@@ -259,7 +259,7 @@ export default {
 }
 
 .agent-workload {
-	margin-left: 8px;
+	margin-inline-start: 8px;
 	font-size: 12px;
 	color: var(--color-text-maxcontrast);
 }

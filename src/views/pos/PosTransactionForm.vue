@@ -845,7 +845,7 @@ export default {
 }
 
 .pos-form__lines th {
-	text-align: left;
+	text-align: start;
 	font-size: 12px;
 	color: var(--color-text-maxcontrast);
 	padding: 4px 8px;

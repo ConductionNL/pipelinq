@@ -280,7 +280,7 @@ export default {
 }
 
 .entity-notes__delete {
-	margin-left: auto;
+	margin-inline-start: auto;
 }
 
 .entity-notes__message {

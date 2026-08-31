@@ -229,7 +229,7 @@ export default {
 
 <style scoped>
 .pos-line-row__total {
-	text-align: right;
+	text-align: end;
 	font-weight: 600;
 	white-space: nowrap;
 }

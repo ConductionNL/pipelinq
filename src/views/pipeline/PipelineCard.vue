@@ -567,13 +567,13 @@ export default {
 }
 
 .pipeline-card--overdue {
-	border-left: 3px solid var(--color-error);
+	border-inline-start: 3px solid var(--color-error);
 }
 
 .pipeline-card__menu {
 	position: absolute;
 	top: 4px;
-	right: 4px;
+	inset-inline-end: 4px;
 	z-index: 2;
 }
 
@@ -588,7 +588,7 @@ export default {
 }
 
 .card-date__icon {
-	margin-right: 2px;
+	margin-inline-end: 2px;
 	vertical-align: middle;
 }
 

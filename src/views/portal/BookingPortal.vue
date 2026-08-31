@@ -511,7 +511,7 @@ export default {
 
 .booking-skip-link {
 	position: absolute;
-	left: -999px;
+	inset-inline-start: -999px;
 }
 
 .booking-skip-link:focus {

@@ -358,7 +358,7 @@ export default {
 .z-report-section__table td {
 	padding: 6px 8px;
 	border-bottom: 1px solid var(--color-border);
-	text-align: left;
+	text-align: start;
 }
 
 .z-report-section__table th {

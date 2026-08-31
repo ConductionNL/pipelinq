@@ -278,7 +278,7 @@ export default {
 	border-radius: 8px;
 	background: var(--color-background-darker);
 	color: var(--color-text-maxcontrast);
-	margin-left: 6px;
+	margin-inline-start: 6px;
 }
 
 .queue-meta {

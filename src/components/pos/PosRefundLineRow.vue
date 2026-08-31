@@ -236,14 +236,14 @@ export default {
 }
 
 .pos-refund-row__total {
-	text-align: right;
+	text-align: end;
 	font-weight: 600;
 	white-space: nowrap;
 }
 
 .pos-refund-row__num {
 	max-width: 90px;
-	text-align: right;
+	text-align: end;
 }
 
 .pos-refund-row__reason {

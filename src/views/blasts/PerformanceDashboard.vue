@@ -812,7 +812,7 @@ export default {
 .performance-dashboard__table th,
 .performance-dashboard__table td {
 	padding: 8px 12px;
-	text-align: left;
+	text-align: start;
 	border-bottom: 1px solid var(--color-border);
 }
 
@@ -824,11 +824,11 @@ export default {
 }
 
 .performance-dashboard__num {
-	text-align: right;
+	text-align: end;
 }
 
 .performance-dashboard__sort-indicator {
-	margin-left: 4px;
+	margin-inline-start: 4px;
 	color: var(--color-primary-element);
 }
 

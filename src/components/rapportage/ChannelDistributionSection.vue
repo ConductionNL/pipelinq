@@ -188,7 +188,7 @@ export default {
 
 .channel-distribution__count {
 	width: 120px;
-	text-align: right;
+	text-align: end;
 	font-size: 0.85em;
 	color: var(--color-text-lighter);
 }
