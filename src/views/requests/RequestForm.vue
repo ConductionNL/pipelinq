@@ -69,7 +69,7 @@
 		</div>
 
 		<!-- Client -->
-		<div class="form-group">
+		<div class="form-group" data-testid="request-form-client">
 			<label>{{ t('pipelinq', 'Client') }}</label>
 			<NcSelect
 				v-model="form.client"
@@ -83,7 +83,7 @@
 
 		<!-- Pipeline + Stage row -->
 		<div class="form-row">
-			<div class="form-group">
+			<div class="form-group" data-testid="request-form-pipeline">
 				<label>{{ t('pipelinq', 'Pipeline') }}</label>
 				<NcSelect
 					v-model="form.pipeline"
@@ -95,7 +95,7 @@
 					:placeholder="t('pipelinq', 'Select pipeline')"
 					@update:modelValue="onPipelineChange" />
 			</div>
-			<div class="form-group">
+			<div class="form-group" data-testid="request-form-stage">
 				<label>{{ t('pipelinq', 'Stage') }}</label>
 				<NcSelect
 					v-model="form.stage"
