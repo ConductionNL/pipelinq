@@ -3565,7 +3565,12 @@ OC.L10N.register(
         "Select strength…": "Selecteer sterkte…",
         "Select type…": "Selecteer type…",
         "Card auth code, voucher serial, …": "Autorisatiecode kaart, bonnummer, …",
-        "CASH, CARD, VOUCHER, …": "CASH, CARD, VOUCHER, …"
+        "CASH, CARD, VOUCHER, …": "CASH, CARD, VOUCHER, …",
+        "Add as client": "Toevoegen als klant",
+        "Added {name} as a client": "{name} toegevoegd als klant",
+        "Could not add this prospect as a client": "Kon deze prospect niet als klant toevoegen",
+        "Pipeline is required": "Pipeline is verplicht",
+        "Unknown company": "Onbekend bedrijf"
     },
     "nplurals=2; plural=(n != 1);"
 )

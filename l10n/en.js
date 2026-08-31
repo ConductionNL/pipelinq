@@ -3563,7 +3563,12 @@ OC.L10N.register(
         "Select strength…": "Select strength…",
         "Select type…": "Select type…",
         "Card auth code, voucher serial, …": "Card auth code, voucher serial, …",
-        "CASH, CARD, VOUCHER, …": "CASH, CARD, VOUCHER, …"
+        "CASH, CARD, VOUCHER, …": "CASH, CARD, VOUCHER, …",
+        "Add as client": "Add as client",
+        "Added {name} as a client": "Added {name} as a client",
+        "Could not add this prospect as a client": "Could not add this prospect as a client",
+        "Pipeline is required": "Pipeline is required",
+        "Unknown company": "Unknown company"
     },
     "nplurals=2; plural=(n != 1);"
 )

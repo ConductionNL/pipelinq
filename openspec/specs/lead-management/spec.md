@@ -41,12 +41,16 @@ See [ARCHITECTURE.md](../../../docs/ARCHITECTURE.md) for the full Lead entity de
 ## Requirements
 ### Requirement: Lead CRUD [MVP]
 
-The system MUST support creating, reading, updating, and deleting lead records. Each lead MUST have a `title`. All leads are stored as OpenRegister objects in the `pipelinq` register using the `lead` schema.
+The system MUST support creating, reading, updating, and deleting lead records. Each lead MUST have a `title`, a `pipeline` and a `client`. All leads are stored as OpenRegister objects in the `pipelinq` register using the `lead` schema.
+
+A lead does not exist on its own: it is always work being done on a pipeline, for a client. `contact` stays optional because not every deal has a named person yet, and products are optional and many, carried as `leadProduct` lines rather than on the lead itself.
+
+`pipeline` and `client` are enforced by the schema, not only by the form. OpenRegister validates `required` on EVERY save, so a lead that predates the constraint cannot be edited until it has both — which is why the constraint ships together with the backfill that supplies them.
 
 #### Scenario 1: Create a minimal lead
 
 - GIVEN a user with CRM access
-- WHEN they submit a new lead form with title "Website redesign project"
+- WHEN they submit a new lead form with title "Website redesign project", a pipeline and a client
 - THEN the system MUST create an OpenRegister object with `@type` set to `schema:Demand`
 - AND the lead MUST have `priority` defaulted to `normal`
 - AND if a default pipeline exists, the lead MUST be placed on the first non-closed stage of that pipeline
