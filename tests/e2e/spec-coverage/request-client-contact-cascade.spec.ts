@@ -35,6 +35,19 @@ async function openNewRequestDialog(page: Page) {
 	return dialog
 }
 
+// Customer Support is a heavy page: a queue filter, two object lists, the
+// interaction form, a knowledge-base search and a client-cases list all load
+// before the header action is usable. Reaching it, opening the dialog and then
+// driving two debounced pickers does not reliably fit the default 30s.
+//
+// This applies to EVERY test in the file, not one of them. The first run
+// flaked on the cascade test and a repeat run flaked on the other — same
+// ceiling, different victim — so widening only the one that happened to fail
+// would have just moved the flake.
+test.beforeEach(() => {
+	test.slow()
+})
+
 /** The search input inside one of the form's pickers. */
 function pickerInput(dialog: ReturnType<Page['locator']>, testid: string) {
 	return dialog.locator(`[data-testid="${testid}"] input`).first()
