@@ -145,7 +145,7 @@ export async function fetchUserGroups() {
 	try {
 		const response = await fetch(
 			'/ocs/v2.php/cloud/users/'
-				+ encodeURIComponent(OC.currentUser)
+				+ encodeURIComponent(window.OC?.getCurrentUser?.()?.uid)
 				+ '/groups',
 			{
 				headers: {

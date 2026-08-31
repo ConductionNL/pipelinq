@@ -156,7 +156,7 @@ export default {
 		},
 
 		/**
-		 * @param noteId
+		 * @param {string} noteId Identifier of the note to delete.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-timeline-notes-ui/tasks.md#task-11
 		 */
 		async deleteNote(noteId) {
@@ -181,7 +181,7 @@ export default {
 		},
 
 		/**
-		 * @param timestamp
+		 * @param {string} timestamp The stored timestamp.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-timeline-notes-ui/tasks.md#task-13
 		 */
 		formatTime(timestamp) {

@@ -370,6 +370,8 @@ export default {
 		},
 	},
 
+	emits: ['cancel', 'save'],
+
 	data() {
 		return {
 			form: {
@@ -515,7 +517,7 @@ export default {
 		},
 
 		/**
-		 * @param index
+		 * @param {number} index Index of the property mapping to remove.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-39
 		 */
 		removeMapping(index) {
@@ -541,7 +543,7 @@ export default {
 		},
 
 		/**
-		 * @param index
+		 * @param {number} index Index of the stage to remove.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-40
 		 */
 		removeStage(index) {
@@ -554,8 +556,8 @@ export default {
 		},
 
 		/**
-		 * @param stage
-		 * @param direction
+		 * @param {object} stage The stage to move.
+		 * @param {number} direction -1 to move earlier, 1 to move later.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-36
 		 */
 		moveStage(stage, direction) {

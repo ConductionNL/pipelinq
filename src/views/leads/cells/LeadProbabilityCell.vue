@@ -42,7 +42,7 @@ export default {
 		/**
 		 * Raw cell value (0..100).
 		 *
-		 * @type {*}
+		 * @type {(number|string|null)}
 		 */
 		value: {
 			type: [Number, String],

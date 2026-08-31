@@ -64,7 +64,7 @@ const VALID_CHANNELS = ['phone', 'email', 'web', 'counter', 'letter', 'other']
 /**
  * Get allowed target statuses for a given current status.
  *
- * @param {string} currentStatus
+ * @param {string} currentStatus The status the record is in now.
  * @return {string[]}
  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-1
  */
@@ -88,7 +88,7 @@ export function isValidTransition(from, to) {
 /**
  * Check if a status is terminal (no further transitions allowed).
  *
- * @param {string} status
+ * @param {string} status The status to test.
  * @return {boolean}
  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-10
  */
@@ -99,7 +99,7 @@ export function isTerminalStatus(status) {
 /**
  * Check if a transition requires resolution text.
  *
- * @param {string} targetStatus
+ * @param {string} targetStatus The status being transitioned to.
  * @return {boolean}
  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-13
  */
@@ -110,7 +110,7 @@ export function requiresResolution(targetStatus) {
 /**
  * Get human-readable label for a status.
  *
- * @param {string} status
+ * @param {string} status The stored status value.
  * @return {string}
  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-9
  */
@@ -121,7 +121,7 @@ export function getStatusLabel(status) {
 /**
  * Get color for a status.
  *
- * @param {string} status
+ * @param {string} status The stored status value.
  * @return {string}
  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-8
  */
@@ -132,7 +132,7 @@ export function getStatusColor(status) {
 /**
  * Get human-readable label for a priority.
  *
- * @param {string} priority
+ * @param {string} priority The stored priority value.
  * @return {string}
  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-5
  */
@@ -143,7 +143,7 @@ export function getPriorityLabel(priority) {
 /**
  * Get color for a priority.
  *
- * @param {string} priority
+ * @param {string} priority The stored priority value.
  * @return {string}
  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-4
  */
@@ -154,7 +154,7 @@ export function getPriorityColor(priority) {
 /**
  * Get human-readable label for a category.
  *
- * @param {string} category
+ * @param {string} category The stored category value.
  * @return {string}
  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-2
  */
@@ -165,7 +165,7 @@ export function getCategoryLabel(category) {
 /**
  * Get human-readable label for a channel.
  *
- * @param {string} channel
+ * @param {string} channel The stored channel value.
  * @return {string}
  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-3
  */
@@ -176,7 +176,7 @@ export function getChannelLabel(channel) {
 /**
  * Check if a priority value is valid.
  *
- * @param {string} priority
+ * @param {string} priority The priority value to test.
  * @return {boolean}
  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-11
  */
@@ -218,7 +218,7 @@ export function getSlaIndicator(slaDeadline, status) {
 /**
  * Get the CSS color for an SLA indicator status.
  *
- * @param {'met'|'on_track'|'approaching'|'overdue'|null} indicator
+ * @param {'met'|'on_track'|'approaching'|'overdue'|null} indicator The SLA indicator, or null when the record has no SLA.
  * @return {string}
  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-6
  */

@@ -68,6 +68,8 @@ import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
 export default {
 	name: 'PosStaffList',
 	components: { NcButton, NcLoadingIcon },
+	emits: ['create', 'edit'],
+
 	data() {
 		return {
 			staff: [],

@@ -77,12 +77,14 @@ export default {
 	},
 
 	props: {
-		/** The contract id (token-resolved from @objectId by CnBodySections). */
+		/** The contract id (token-resolved from `@objectId` by CnBodySections). */
 		contractId: {
 			type: String,
 			default: '',
 		},
 	},
+
+	emits: ['sent'],
 
 	data() {
 		return {
@@ -163,6 +165,7 @@ export default {
 
 		/**
 		 * Send the active contract to the invoicing handoff endpoint.
+		 *
 		 * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-contract-to-invoicing-handoff-emit
 		 */
 		async sendToInvoicing() {
@@ -217,6 +220,7 @@ export default {
 
 		/**
 		 * Copy the invoice reference UUID to the clipboard.
+		 *
 		 * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-contract-to-invoicing-handoff-emit
 		 */
 		async copyReference() {

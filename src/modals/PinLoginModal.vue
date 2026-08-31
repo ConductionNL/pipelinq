@@ -28,7 +28,6 @@
 				label="label"
 				:disabled="loading || submitting" />
 			<NcTextField
-				ref="pinField"
 				v-model="pin"
 				:label="t('pipelinq', 'PIN')"
 				type="password"

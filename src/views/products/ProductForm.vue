@@ -213,6 +213,8 @@ export default {
 		},
 	},
 
+	emits: ['cancel', 'save'],
+
 	data() {
 		return {
 			form: {
@@ -283,7 +285,7 @@ export default {
 		product: {
 			immediate: true,
 			/**
-			 * @param val
+			 * @param {object} val The incoming value.
 			 * @spec openspec/changes/reverse-2026-05-26-fe-products-ui/tasks.md#task-16
 			 */
 			handler(val) {
@@ -300,7 +302,7 @@ export default {
 
 	methods: {
 		/**
-		 * @param data
+		 * @param {object} data The contact to load into the form.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-products-ui/tasks.md#task-20
 		 */
 		populateForm(data) {
@@ -329,6 +331,7 @@ export default {
 
 		/**
 		 * Sync taxRate from the selected BTW class (server re-derives on lookup).
+		 *
 		 * @spec openspec/changes/reverse-2026-05-26-fe-products-ui/tasks.md#task-18
 		 */
 		onBtwClassChange() {
@@ -341,7 +344,7 @@ export default {
 		},
 
 		/**
-		 * @param field
+		 * @param {string} field Name of the field to validate.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-products-ui/tasks.md#task-22
 		 */
 		validateField(field) {

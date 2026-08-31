@@ -114,6 +114,8 @@ export default {
 		id: { type: String, default: '' },
 	},
 
+	emits: ['done'],
+
 	data() {
 		return {
 			form: {

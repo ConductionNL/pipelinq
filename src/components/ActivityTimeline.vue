@@ -181,7 +181,7 @@ export default {
 		},
 
 		/**
-		 * @param value
+		 * @param {string} value The activity type to filter on.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-timeline-notes-ui/tasks.md#task-7
 		 */
 		setFilter(value) {
@@ -193,7 +193,7 @@ export default {
 		},
 
 		/**
-		 * @param page
+		 * @param {string} page The 1-based page to load.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-timeline-notes-ui/tasks.md#task-1
 		 */
 		async fetchPage(page) {
@@ -242,7 +242,7 @@ export default {
 		},
 
 		/**
-		 * @param item
+		 * @param {object} item The activity entry.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-timeline-notes-ui/tasks.md#task-4
 		 */
 		iconFor(item) {
@@ -272,7 +272,7 @@ export default {
 		},
 
 		/**
-		 * @param type
+		 * @param {string} type The activity type.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-timeline-notes-ui/tasks.md#task-9
 		 */
 		typeLabel(type) {
@@ -293,7 +293,7 @@ export default {
 		},
 
 		/**
-		 * @param text
+		 * @param {string} text The text to shorten.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-timeline-notes-ui/tasks.md#task-8
 		 */
 		truncate(text) {
@@ -303,7 +303,7 @@ export default {
 		},
 
 		/**
-		 * @param dateStr
+		 * @param {string} dateStr The stored date.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-timeline-notes-ui/tasks.md#task-3
 		 */
 		formatDate(dateStr) {

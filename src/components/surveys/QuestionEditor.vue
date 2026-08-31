@@ -73,6 +73,8 @@ function uuid() {
 export default {
 	name: 'QuestionEditor',
 	props: { value: { type: Array, default: () => [] } },
+	emits: ['input'],
+
 	computed: {
 		questions() {
 			return this.value || []
@@ -81,7 +83,7 @@ export default {
 
 	methods: {
 		/**
-		 * @param arr
+		 * @param {string} arr The updated question list to emit upward.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-forms-surveys-ui/tasks.md#task-3
 		 */
 		emit(arr) {
@@ -106,7 +108,7 @@ export default {
 		},
 
 		/**
-		 * @param i
+		 * @param {string} i Index of the question to remove.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-forms-surveys-ui/tasks.md#task-4
 		 */
 		remove(i) {
@@ -133,6 +135,9 @@ export default {
 		},
 
 		/**
+		 * @param {number} i Index of the question.
+		 * @param {number} oi Index of the option within that question.
+		 * @param {string} v The new option value.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-forms-surveys-ui/tasks.md#task-3
 		 */
 		setOpt(i, oi, v) {
@@ -144,7 +149,7 @@ export default {
 		},
 
 		/**
-		 * @param i
+		 * @param {string} i Index of the question to add an option to.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-forms-surveys-ui/tasks.md#task-2
 		 */
 		addOpt(i) {
@@ -154,8 +159,8 @@ export default {
 		},
 
 		/**
-		 * @param i
-		 * @param oi
+		 * @param {string} i Index of the question.
+		 * @param {string} oi Index of the option to remove.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-forms-surveys-ui/tasks.md#task-5
 		 */
 		rmOpt(i, oi) {

@@ -141,7 +141,7 @@ export default {
 
 	methods: {
 		/**
-		 * @param client
+		 * @param {object} client The client the user picked.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-23
 		 */
 		onClientSelected(client) {
@@ -185,7 +185,7 @@ export default {
 		},
 
 		/**
-		 * @param pipeline
+		 * @param {object} pipeline The pipeline whose first open stage to take.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-21
 		 */
 		getFirstStage(pipeline) {
