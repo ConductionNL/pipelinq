@@ -167,6 +167,8 @@ export default {
 		},
 	},
 
+	emits: ['cancel', 'save', 'update:valid'],
+
 	data() {
 		return {
 			form: {
@@ -216,7 +218,7 @@ export default {
 		client: {
 			immediate: true,
 			/**
-			 * @param val
+			 * @param {object} val The incoming value.
 			 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-26
 			 */
 			handler(val) {
@@ -229,7 +231,7 @@ export default {
 
 	methods: {
 		/**
-		 * @param data
+		 * @param {object} data The contact to load into the form.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-29
 		 */
 		populateForm(data) {
@@ -247,7 +249,7 @@ export default {
 		},
 
 		/**
-		 * @param field
+		 * @param {string} field Name of the field to validate.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-31
 		 */
 		validateField(field) {

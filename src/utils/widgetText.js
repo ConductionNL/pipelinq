@@ -13,7 +13,7 @@
  * recursing for nested values, and return '' when nothing usable is found so
  * callers can apply their own default.
  *
- * @param {*} value the raw property value.
+ * @param {(string|number|object|Array|null|undefined)} value the raw property value.
  * @return {string} a display string ('' when nothing usable is found).
  */
 export function toText(value) {

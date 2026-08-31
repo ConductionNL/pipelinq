@@ -58,14 +58,14 @@ export default {
 
 	methods: {
 		/**
-		 * Trigger the form's own validate-then-emit flow; @save fires onSave.
+		 * Trigger the form's own validate-then-emit flow; `@save` fires onSave.
 		 */
 		submit() {
 			this.$refs.form.onSave()
 		},
 
 		/**
-		 * @param formData
+		 * @param {object} formData The raw create-form fields.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-24
 		 */
 		async onSave(formData) {

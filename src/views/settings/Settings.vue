@@ -703,7 +703,10 @@ export default {
 		},
 
 		/**
-		 * @param configuration
+		 * Persist the app configuration.
+		 *
+		 * @param {object} configuration The full settings payload to save.
+		 * @return {Promise<void>}
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-86
 		 */
 		async save(configuration) {
@@ -719,7 +722,7 @@ export default {
 		},
 
 		/**
-		 * @param name
+		 * @param {string} name The lead source to add.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-67
 		 */
 		async addLeadSource(name) {
@@ -727,7 +730,7 @@ export default {
 		},
 
 		/**
-		 * @param id
+		 * @param {string} id Identifier of the lead source to remove.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-79
 		 */
 		async removeLeadSource(id) {
@@ -735,8 +738,8 @@ export default {
 		},
 
 		/**
-		 * @param id
-		 * @param name
+		 * @param {string} id Identifier of the lead source.
+		 * @param {string} name The new name.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-81
 		 */
 		async renameLeadSource(id, name) {
@@ -744,7 +747,7 @@ export default {
 		},
 
 		/**
-		 * @param name
+		 * @param {string} name The request channel to add.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-68
 		 */
 		async addRequestChannel(name) {
@@ -752,7 +755,7 @@ export default {
 		},
 
 		/**
-		 * @param id
+		 * @param {string} id Identifier of the request channel to remove.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-80
 		 */
 		async removeRequestChannel(id) {
@@ -760,8 +763,8 @@ export default {
 		},
 
 		/**
-		 * @param id
-		 * @param name
+		 * @param {string} id Identifier of the request channel.
+		 * @param {string} name The new name.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-82
 		 */
 		async renameRequestChannel(id, name) {
@@ -769,7 +772,7 @@ export default {
 		},
 
 		/**
-		 * @param sourceName
+		 * @param {string} sourceName The lead source to count references for.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-69
 		 */
 		async checkLeadSourceUsage(sourceName) {
@@ -777,7 +780,7 @@ export default {
 		},
 
 		/**
-		 * @param channelName
+		 * @param {string} channelName The request channel to count references for.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-70
 		 */
 		async checkRequestChannelUsage(channelName) {
@@ -987,9 +990,12 @@ export default {
 		},
 
 		/**
-		 * @param type
-		 * @param field
-		 * @param value
+		 * Count objects of `type` whose `field` equals `value`, used to warn
+		 * before deleting a value something still references.
+		 *
+		 * @param {string} type The registered object-type slug.
+		 * @param {string} field The property to match on.
+		 * @param {string} value The value to match.
 		 * @param {object} [extraFilters] Additional query filters, e.g. the
 		 *   `ticketType` discriminator needed to narrow the `ticket` supertype
 		 *   down to one of its subtypes (unify-ticket-supertype).

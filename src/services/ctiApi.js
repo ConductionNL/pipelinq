@@ -10,8 +10,11 @@ import { generateUrl } from '@nextcloud/router'
 const base = (path) => generateUrl('/apps/pipelinq' + path)
 
 /**
+ * Resolve the caller behind an incoming number so the agent's screen can pop
+ * the matching client or contact.
  *
- * @param fromNumber
+ * @param {string} fromNumber The caller's number, as reported by the PBX.
+ * @return {Promise<object>} The match result from CtiController.
  */
 export async function screenPop(fromNumber) {
 	const { data } = await axios.post(base('/api/cti/screen-pop'), { fromNumber })
@@ -19,9 +22,11 @@ export async function screenPop(fromNumber) {
 }
 
 /**
+ * Ask the PBX to place a call from the agent's extension to a number.
  *
- * @param targetNumber
- * @param extension
+ * @param {string} targetNumber The number to dial.
+ * @param {string} extension The agent's own extension to originate from.
+ * @return {Promise<object>} The dial result from CtiController.
  */
 export async function clickToDial(targetNumber, extension) {
 	const { data } = await axios.post(base('/api/cti/click-to-dial'), {
@@ -32,12 +37,14 @@ export async function clickToDial(targetNumber, extension) {
 }
 
 /**
+ * Record how a call ended against its contactmoment.
  *
- * @param contactmomentId
- * @param root0
- * @param root0.subject
- * @param root0.outcome
- * @param root0.notes
+ * @param {string} contactmomentId The contactmoment the call belongs to.
+ * @param {object} disposition The wrap-up the agent entered.
+ * @param {string} disposition.subject Short subject line for the interaction.
+ * @param {string} disposition.outcome Outcome code (resolved, transferred, …).
+ * @param {string} disposition.notes Free-text notes.
+ * @return {Promise<object>} The saved disposition.
  */
 export async function submitDisposition(
 	contactmomentId,
@@ -55,10 +62,13 @@ export async function submitDisposition(
 }
 
 /**
+ * Link a call recording to its contactmoment.
  *
- * @param contactmomentId
- * @param recordingUrl
- * @param expiresAt
+ * @param {string} contactmomentId The contactmoment to attach to.
+ * @param {string} recordingUrl Location of the recording in the PBX.
+ * @param {string} expiresAt ISO-8601 instant the recording is purged, so the
+ *   retention rule travels with the link rather than being assumed.
+ * @return {Promise<object>} The saved attachment.
  */
 export async function attachRecording(contactmomentId, recordingUrl, expiresAt) {
 	const { data } = await axios.post(
@@ -73,7 +83,9 @@ export async function attachRecording(contactmomentId, recordingUrl, expiresAt) 
 }
 
 /**
+ * Read the CTI adapter configuration.
  *
+ * @return {Promise<object>} The stored configuration.
  */
 export async function getConfig() {
 	const { data } = await axios.get(base('/api/cti/config'))
@@ -81,8 +93,10 @@ export async function getConfig() {
 }
 
 /**
+ * Replace the CTI adapter configuration.
  *
- * @param config
+ * @param {object} config The full configuration to store.
+ * @return {Promise<object>} The stored configuration.
  */
 export async function updateConfig(config) {
 	const { data } = await axios.put(base('/api/cti/config'), config)
@@ -90,7 +104,9 @@ export async function updateConfig(config) {
 }
 
 /**
+ * Probe the configured PBX and report whether it answers.
  *
+ * @return {Promise<object>} The probe result.
  */
 export async function testConnection() {
 	const { data } = await axios.get(base('/api/cti/test-connection'))
@@ -98,8 +114,10 @@ export async function testConnection() {
 }
 
 /**
+ * Read the CTI event log.
  *
- * @param filters
+ * @param {object} [filters] Query filters forwarded as request params.
+ * @return {Promise<object>} The matching log entries.
  */
 export async function getEventLog(filters = {}) {
 	const { data } = await axios.get(base('/api/cti/event-log'), { params: filters })

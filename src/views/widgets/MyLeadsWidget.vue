@@ -115,9 +115,9 @@ export default {
 				const { objectStore } = await initializeStores()
 				const config = objectStore.objectTypeRegistry
 
-				if (config.lead && OC.currentUser) {
+				if (config.lead && window.OC?.getCurrentUser?.()?.uid) {
 					this.leads = await this.fetchRaw(config, 'lead', {
-						assignee: OC.currentUser,
+						assignee: window.OC?.getCurrentUser?.()?.uid,
 						_limit: 20,
 					})
 				}

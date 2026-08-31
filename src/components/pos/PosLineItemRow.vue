@@ -108,6 +108,8 @@ export default {
 		},
 	},
 
+	emits: ['remove', 'update:line'],
+
 	data() {
 		return {
 			local: {

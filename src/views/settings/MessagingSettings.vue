@@ -662,6 +662,7 @@ export default {
 
 	methods: {
 		/**
+		 * @param {string} kind The provider kind.
 		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.1
 		 */
 		kindLabel(kind) {
@@ -683,6 +684,7 @@ export default {
 		},
 
 		/**
+		 * @param {string} status The template status.
 		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.1
 		 */
 		templateStatusClass(status) {
@@ -692,6 +694,7 @@ export default {
 		},
 
 		/**
+		 * @param {string} providerId Identifier of the messaging provider.
 		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.1
 		 */
 		providerDisplayName(providerId) {
@@ -700,6 +703,7 @@ export default {
 		},
 
 		/**
+		 * @param {string} value The stored date.
 		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.1
 		 */
 		formatDate(value) {
@@ -726,6 +730,7 @@ export default {
 		},
 
 		/**
+		 * @param {object} provider The provider whose webhook URL to copy.
 		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.1
 		 */
 		async copyWebhookUrl(provider) {
@@ -762,6 +767,7 @@ export default {
 		},
 
 		/**
+		 * @param {object} provider The provider to edit.
 		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.1
 		 */
 		editProvider(provider) {
@@ -840,6 +846,7 @@ export default {
 		},
 
 		/**
+		 * @param {object} provider The provider to probe.
 		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.1
 		 */
 		async testProviderConnection(provider) {
@@ -924,6 +931,7 @@ export default {
 		},
 
 		/**
+		 * @param {object} budget The budget to persist.
 		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.1
 		 */
 		async saveBudget(budget) {

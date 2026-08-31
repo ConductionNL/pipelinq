@@ -78,7 +78,7 @@
 		</div>
 
 		<!-- Client -->
-		<div class="form-group">
+		<div class="form-group" data-testid="lead-form-client">
 			<label>{{ t('pipelinq', 'Client') }}</label>
 			<NcSelect
 				v-model="form.client"
@@ -92,7 +92,7 @@
 
 		<!-- Pipeline + Stage row -->
 		<div class="form-row">
-			<div class="form-group">
+			<div class="form-group" data-testid="lead-form-pipeline">
 				<label>{{ t('pipelinq', 'Pipeline') }}</label>
 				<NcSelect
 					v-model="form.pipeline"
@@ -104,7 +104,7 @@
 					:placeholder="t('pipelinq', 'Select pipeline')"
 					@update:modelValue="onPipelineChange" />
 			</div>
-			<div class="form-group">
+			<div class="form-group" data-testid="lead-form-stage">
 				<label>{{ t('pipelinq', 'Stage') }}</label>
 				<NcSelect
 					v-model="form.stage"
@@ -140,6 +140,7 @@ import {
 	NcTextField,
 } from '@nextcloud/vue'
 import { toDateInputString, toDateObject } from '../../services/localeUtils.js'
+import { pipelineAppliesTo } from '../../services/pipelineUtils.js'
 import { useLeadSourcesStore } from '../../store/modules/leadSources.js'
 import { useObjectStore } from '../../store/modules/object.js'
 
@@ -168,6 +169,8 @@ export default {
 			default: true,
 		},
 	},
+
+	emits: ['cancel', 'save', 'update:valid'],
 
 	data() {
 		return {
@@ -239,9 +242,7 @@ export default {
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-46
 		 */
 		leadPipelines() {
-			return this.pipelines.filter(
-				(p) => p.entityType === 'lead' || p.entityType === 'both',
-			)
+			return this.pipelines.filter((p) => pipelineAppliesTo(p, 'lead'))
 		},
 
 		/**

@@ -78,9 +78,9 @@ export default {
 	},
 
 	props: {
-		/** Time bucket (day / week / month / quarter), from @workspace.bucket. */
+		/** Time bucket (day / week / month / quarter), from `@workspace`.bucket. */
 		bucket: { type: String, default: 'month' },
-		/** Grouping dimension (policy / tier / team / target / customer), from @workspace.groupBy. */
+		/** Grouping dimension (policy / tier / team / target / customer), from `@workspace`.groupBy. */
 		groupBy: { type: String, default: 'policy' },
 	},
 

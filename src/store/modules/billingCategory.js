@@ -48,7 +48,7 @@ export const useBillingCategoryStore = defineStore('billingCategory', {
 		 * Look up a category by id, slug or uuid.
 		 *
 		 * @param {object} state The store state.
-		 * @return {Function} (key) => category|undefined
+		 * @return {(function(string): (object|undefined))} Looks a category up by key.
 		 */
 		getCategoryById: (state) => (key) =>
 			state.categories.find(

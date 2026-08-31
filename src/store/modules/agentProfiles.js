@@ -39,7 +39,7 @@ export const useAgentProfilesStore = defineStore('agentProfiles', {
 		},
 
 		/**
-		 * @param data
+		 * @param {object} data The agent profile to persist; an `id` makes it an update.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-5
 		 */
 		async saveProfile(data) {
@@ -62,7 +62,7 @@ export const useAgentProfilesStore = defineStore('agentProfiles', {
 		},
 
 		/**
-		 * @param id
+		 * @param {string} id Identifier of the agent profile to delete.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-2
 		 */
 		async deleteProfile(id) {
