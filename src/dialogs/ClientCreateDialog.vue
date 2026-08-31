@@ -69,6 +69,7 @@ export default {
 
 		/**
 		 * Trigger the form's own validate-then-emit flow; `@save` fires onSave.
+		 *
 		 * @spec openspec/specs/unify-client-contact/spec.md
 		 */
 		submit() {

@@ -39,6 +39,14 @@ export default {
 	props: {
 		targetNumber: { type: String, required: true },
 		extension: { type: String, default: '' },
+		/**
+		 * Whether the button may place a call.
+		 *
+		 * Defaults ON deliberately: this is an opt-OUT flag, and naming it
+		 * `disabled` would collide with the native attribute on the NcButton
+		 * it renders.
+		 */
+		// eslint-disable-next-line vue/no-boolean-default
 		enabled: { type: Boolean, default: true },
 	},
 

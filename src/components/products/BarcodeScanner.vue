@@ -112,6 +112,9 @@ export default {
 		/** Autofocus the HID input on mount so a keyboard-wedge scanner types into it. */
 		autofocus: {
 			type: Boolean,
+			// A keyboard-wedge scanner types into whatever holds focus, so this
+			// input must claim it by default or the first scan of a session is lost.
+			// eslint-disable-next-line vue/no-boolean-default
 			default: true,
 		},
 
