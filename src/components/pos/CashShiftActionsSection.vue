@@ -148,7 +148,7 @@ export default {
 	},
 
 	props: {
-		/** The shift id (token-resolved from @objectId by CnBodySections). */
+		/** The shift id (token-resolved from `@objectId` by CnBodySections). */
 		shiftId: {
 			type: String,
 			default: '',

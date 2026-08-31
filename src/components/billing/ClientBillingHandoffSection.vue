@@ -116,7 +116,7 @@ export default {
 	},
 
 	props: {
-		/** The client id (token-resolved from @objectId by CnBodySections). */
+		/** The client id (token-resolved from `@objectId` by CnBodySections). */
 		clientId: {
 			type: String,
 			default: '',
@@ -275,6 +275,7 @@ export default {
 
 		/**
 		 * Send the selected period's approved, un-billed entries to billing.
+		 *
 		 * @spec openspec/specs/time-approval-workflow/spec.md
 		 */
 		async send() {

@@ -781,6 +781,7 @@ export default {
 
 		/**
 		 * Clear the selected customer (REQ-PCL-002 Scenario 3).
+		 *
 		 * @spec openspec/changes/pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-008
 		 */
 		async clearCustomer() {

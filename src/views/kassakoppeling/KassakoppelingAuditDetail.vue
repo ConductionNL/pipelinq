@@ -346,6 +346,7 @@ export default {
 	methods: {
 		/**
 		 * Fetch the entry from the API.
+		 *
 		 * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#6.1
 		 */
 		async load() {
@@ -381,6 +382,7 @@ export default {
 
 		/**
 		 * Trigger a server-side re-verification of the signature + chain hash.
+		 *
 		 * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#6.1
 		 */
 		async verify() {

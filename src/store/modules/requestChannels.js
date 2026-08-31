@@ -49,7 +49,9 @@ export const useRequestChannelsStore = defineStore('requestChannels', {
 		},
 
 		/**
-		 * @param name
+		 * Create a request channel.
+		 *
+		 * @param {string} name The channel name to add.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-39
 		 */
 		async addChannel(name) {
@@ -77,7 +79,7 @@ export const useRequestChannelsStore = defineStore('requestChannels', {
 		},
 
 		/**
-		 * @param id
+		 * @param {string} id Identifier of the request channel.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-41
 		 */
 		async removeChannel(id) {
@@ -103,8 +105,8 @@ export const useRequestChannelsStore = defineStore('requestChannels', {
 		},
 
 		/**
-		 * @param id
-		 * @param name
+		 * @param {string} id Identifier of the request channel.
+		 * @param {string} name The new name.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-42
 		 */
 		async renameChannel(id, name) {

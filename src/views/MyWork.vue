@@ -167,9 +167,11 @@ function endOfWeek() {
 }
 
 /**
+ * Whole days from `date1` to `date2` (negative when date2 is earlier).
  *
- * @param date1
- * @param date2
+ * @param {Date} date1 The earlier date.
+ * @param {Date} date2 The later date.
+ * @return {number} Whole days elapsed.
  */
 function daysBetween(date1, date2) {
 	const diff = date2.getTime() - date1.getTime()
@@ -409,10 +411,14 @@ export default {
 		getPriorityColor,
 
 		/**
-		 * @param due
-		 * @param now
-		 * @param weekEnd
-		 * @param isClosed
+		 * Bucket an item into the My Work grouping by its due date.
+		 *
+		 * @param {string|null} due The item's due date, or null when it has none.
+		 * @param {Date} now The current instant.
+		 * @param {Date} weekEnd End of the current week, the "this week" boundary.
+		 * @param {boolean} isClosed Whether the item is already closed; a closed
+		 *   item never lands in an overdue bucket.
+		 * @return {string} The group key.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-mywork-ui/tasks.md#task-3
 		 */
 		computeGroup(due, now, weekEnd, isClosed) {
@@ -478,8 +484,12 @@ export default {
 		},
 
 		/**
-		 * @param type
-		 * @param params
+		 * Fetch a registered object type straight from OpenRegister.
+		 *
+		 * @param {string} type The registered object-type slug.
+		 * @param {object} [params] Query parameters.
+		 * @return {Promise<Array>} The matching records, or [] when the type is
+		 *   not registered on this instance.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-mywork-ui/tasks.md#task-7
 		 */
 		async fetchRaw(type, params = {}) {
@@ -511,7 +521,11 @@ export default {
 		},
 
 		/**
-		 * @param dateStr
+		 * Format a stored date for display, falling back to the raw value when
+		 * it cannot be parsed.
+		 *
+		 * @param {string} dateStr The stored date.
+		 * @return {string} The display string.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-mywork-ui/tasks.md#task-9
 		 */
 		formatDate(dateStr) {
@@ -524,7 +538,10 @@ export default {
 		},
 
 		/**
-		 * @param item
+		 * Navigate to the detail page for a My Work row.
+		 *
+		 * @param {object} item The row, carrying its entityType and id.
+		 * @return {void}
 		 * @spec openspec/changes/reverse-2026-05-26-fe-mywork-ui/tasks.md#task-13
 		 */
 		openItem(item) {

@@ -40,7 +40,7 @@ export const useQueuesStore = defineStore('queues', {
 		},
 
 		/**
-		 * @param id
+		 * @param {string} id Identifier of the queue.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-35
 		 */
 		async fetchQueue(id) {
@@ -61,7 +61,7 @@ export const useQueuesStore = defineStore('queues', {
 		},
 
 		/**
-		 * @param data
+		 * @param {object} data The queue to persist; an `id` makes it an update.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-38
 		 */
 		async saveQueue(data) {
@@ -84,7 +84,7 @@ export const useQueuesStore = defineStore('queues', {
 		},
 
 		/**
-		 * @param id
+		 * @param {string} id Identifier of the queue.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-34
 		 */
 		async deleteQueue(id) {
@@ -107,7 +107,7 @@ export const useQueuesStore = defineStore('queues', {
 		},
 
 		/**
-		 * @param queueId
+		 * @param {string} queueId Identifier of the queue whose items to load.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-36
 		 */
 		async fetchQueueItems(queueId) {

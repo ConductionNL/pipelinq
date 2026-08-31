@@ -331,6 +331,7 @@ export default {
 
 		/**
 		 * Sync taxRate from the selected BTW class (server re-derives on lookup).
+		 *
 		 * @spec openspec/changes/reverse-2026-05-26-fe-products-ui/tasks.md#task-18
 		 */
 		onBtwClassChange() {
