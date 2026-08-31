@@ -157,6 +157,17 @@ Vrij en open source onder de EUPL-1.2-licentie.
                 null rather than an error.
             -->
             <step>OCA\Pipelinq\Repair\RenameDutchPipelinqValues</step>
+            <!--
+                Also after InitializeSettings, and it has to be: `lead.pipeline`
+                and `lead.client` became REQUIRED in register 1.6.0, and
+                OpenRegister validates required on EVERY save, not only on
+                create. An un-backfilled lead is therefore not merely
+                incomplete: it cannot be edited at all, returning
+                "The required property (client) is missing" on a record the
+                user never touched. This step supplies those two fields, which
+                is itself a valid save, so running after the import is safe.
+            -->
+            <step>OCA\Pipelinq\Repair\BackfillLeadRelations</step>
             <step>OCA\Pipelinq\Repair\NormaliseCtiPhoneNumbers</step>
             <step>OCA\Pipelinq\Repair\NormaliseTicketTitle</step>
             <step>OCA\Pipelinq\Repair\InitSlaStatus</step>

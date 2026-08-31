@@ -73,7 +73,6 @@ return [
 
         // Prospect discovery
         ['name' => 'prospect#index', 'url' => '/api/prospects', 'verb' => 'GET'],
-        ['name' => 'prospect#createLead', 'url' => '/api/prospects/create-lead', 'verb' => 'POST'],
 
         // Prospect settings (admin only; camelCase slug matches ProspectSettingsController class name)
         ['name' => 'prospectSettings#index', 'url' => '/api/prospect-settings', 'verb' => 'GET'],

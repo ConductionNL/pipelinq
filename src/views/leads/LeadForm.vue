@@ -87,11 +87,14 @@
 					schema="client"
 					labelField="name"
 					:modelValue="form.client || ''"
-					:inputLabel="t('pipelinq', 'Client')"
+					:inputLabel="t('pipelinq', 'Client') + ' *'"
 					:placeholder="t('pipelinq', 'Select or create a client')"
 					:preload="true"
 					:createHandler="createClient"
 					@update:modelValue="onClientChange" />
+				<p v-if="errors.client" class="field-error" role="alert">
+					{{ errors.client }}
+				</p>
 			</div>
 			<div class="form-group" data-testid="lead-form-contact">
 				<CnResourceSelect
@@ -127,7 +130,7 @@
 		<!-- Pipeline + Stage row -->
 		<div class="form-row">
 			<div class="form-group" data-testid="lead-form-pipeline">
-				<label>{{ t('pipelinq', 'Pipeline') }}</label>
+				<label>{{ t('pipelinq', 'Pipeline') }} *</label>
 				<NcSelect
 					v-model="form.pipeline"
 					:options="pipelineOptions"
@@ -137,6 +140,9 @@
 					:reduce="(o) => o.value"
 					:placeholder="t('pipelinq', 'Select pipeline')"
 					@update:modelValue="onPipelineChange" />
+				<p v-if="errors.pipeline" class="field-error" role="alert">
+					{{ errors.pipeline }}
+				</p>
 			</div>
 			<div class="form-group" data-testid="lead-form-stage">
 				<label>{{ t('pipelinq', 'Stage') }}</label>
@@ -342,6 +348,19 @@ export default {
 					'Probability must be between 0 and 100',
 				)
 			}
+
+			// A lead belongs to a pipeline and to a client; the schema requires
+			// both. Catching it here means the user sees which field is missing,
+			// instead of OpenRegister rejecting the whole save with
+			// "The required property (client) is missing".
+			if (!this.form.pipeline) {
+				errors.pipeline = t('pipelinq', 'Pipeline is required')
+			}
+
+			if (!this.form.client) {
+				errors.client = t('pipelinq', 'Client is required')
+			}
+
 			return errors
 		},
 
@@ -476,6 +495,12 @@ export default {
 
 .form-row .form-group {
 	flex: 1;
+}
+
+.field-error {
+	color: var(--color-error);
+	font-size: 12px;
+	margin-top: 4px;
 }
 
 .form-actions {

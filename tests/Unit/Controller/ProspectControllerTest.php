@@ -28,7 +28,6 @@ use OCP\IRequest;
 use OCP\IUser;
 use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
-use Psr\Log\LoggerInterface;
 
 /**
  * Tests for ProspectController.
@@ -74,7 +73,6 @@ class ProspectControllerTest extends TestCase {
 			$this->discoveryService,
 			$userSession,
 			$l10n,
-			$this->createMock(LoggerInterface::class),
 			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
 		);
 	}//end setUp()
@@ -127,36 +125,4 @@ class ProspectControllerTest extends TestCase {
 
 		$this->assertSame(503, $response->getStatus());
 	}//end testIndexReturns503OnException()
-
-	/**
-	 * Test createLead returns 400 without trade name.
-	 *
-	 * @return void
-	 */
-	public function testCreateLeadReturns400WithoutTradeName(): void {
-		$this->request->method('getParams')->willReturn([]);
-
-		$response = $this->controller->createLead();
-
-		$this->assertSame(400, $response->getStatus());
-	}//end testCreateLeadReturns400WithoutTradeName()
-
-	/**
-	 * Test createLead returns 201 on success.
-	 *
-	 * @return void
-	 */
-	public function testCreateLeadReturns201OnSuccess(): void {
-		$this->request->method('getParams')->willReturn([
-			'tradeName' => 'Test BV',
-		]);
-		$this->discoveryService->method('createLeadFromProspect')->willReturn([
-			'clientData' => ['name' => 'Test BV'],
-			'leadData' => ['title' => 'Test BV'],
-		]);
-
-		$response = $this->controller->createLead();
-
-		$this->assertSame(201, $response->getStatus());
-	}//end testCreateLeadReturns201OnSuccess()
 }//end class

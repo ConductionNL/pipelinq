@@ -100,9 +100,10 @@
 					<td>
 						<NcButton
 							variant="tertiary"
-							:disabled="convertingKvk === p.kvkNumber"
-							@click="convertToLead(p)">
-							{{ t('pipelinq', 'Convert to lead') }}
+							:disabled="addingKvk === p.kvkNumber"
+							:data-testid="`prospect-add-${p.kvkNumber}`"
+							@click="addAsClient(p)">
+							{{ t('pipelinq', 'Add as client') }}
 						</NcButton>
 					</td>
 				</tr>
@@ -117,10 +118,12 @@
 // action, backed by the shared prospect Pinia store.
 //
 // @spec openspec/changes/refactor-pipelinq-ia-alignment/tasks.md#task-20
+import { showError, showSuccess } from '@nextcloud/dialogs'
 import { NcButton, NcEmptyContent, NcLoadingIcon } from '@nextcloud/vue'
 import AlertCircle from 'vue-material-design-icons/AlertCircle.vue'
 import Magnify from 'vue-material-design-icons/Magnify.vue'
 import Refresh from 'vue-material-design-icons/Refresh.vue'
+import { createWithContact } from '../../services/contactSyncApi.js'
 import { useProspectStore } from '../../store/modules/prospect.js'
 
 export default {
@@ -148,7 +151,7 @@ export default {
 		return {
 			sortKey: 'fitScore',
 			sortAsc: false,
-			convertingKvk: null,
+			addingKvk: null,
 		}
 	},
 
@@ -235,12 +238,46 @@ export default {
 		 * @return {Promise<void>}
 		 * @spec openspec/changes/refactor-pipelinq-ia-alignment/tasks.md#task-20
 		 */
-		async convertToLead(prospect) {
-			this.convertingKvk = prospect.kvkNumber
+		async addAsClient(prospect) {
+			this.addingKvk = prospect.kvkNumber
 			try {
-				await this.prospectStore.createLeadFromProspect(prospect)
+				const city = prospect.address?.city ?? ''
+				const street = prospect.address?.street ?? ''
+				const created = await createWithContact('client', {
+					name: prospect.tradeName || t('pipelinq', 'Unknown company'),
+					type: 'organization',
+					address: [street, city].filter(Boolean).join(', '),
+					notes: [
+						prospect.kvkNumber ? `KVK: ${prospect.kvkNumber}` : '',
+						prospect.sbiDescription || '',
+					]
+						.filter(Boolean)
+						.join(' | '),
+				})
+
+				if (created?.id) {
+					showSuccess(
+						t('pipelinq', 'Added {name} as a client', {
+							name: prospect.tradeName,
+						}),
+					)
+					// Drop it from the list: it is a client now, and the
+					// discovery query already excludes existing clients by name,
+					// so leaving it would offer to add the same company twice.
+					this.prospectStore.removeProspect(prospect.kvkNumber)
+				} else {
+					showError(
+						t('pipelinq', 'Could not add this prospect as a client'),
+					)
+				}
+			} catch (error) {
+				console.error('Adding a prospect as a client failed', error)
+				showError(
+					error?.response?.data?.error
+						|| t('pipelinq', 'Could not add this prospect as a client'),
+				)
 			} finally {
-				this.convertingKvk = null
+				this.addingKvk = null
 			}
 		},
 	},

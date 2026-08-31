@@ -259,9 +259,17 @@ for (const [target, users] of cites) {
 		continue
 	}
 	const hit = hits[0]
+	// Anchors are checked against the file the citation NAMES when that file
+	// exists, and only against the fallbacks when it does not. Pooling every
+	// candidate's anchors let a stale citation pass by matching an ARCHIVED
+	// copy that still carried the old heading: renaming a requirement in the
+	// live spec left `#requirement-prospect-to-lead-conversion` resolving
+	// against the archive, and hydra's gate-46 caught what this missed.
+	const literal = path.join(ROOT, file)
+	const anchorSources = fs.existsSync(literal) === true ? [literal] : hits
 	const offered = anchor
 		? new Set(
-				hits
+				anchorSources
 					.flatMap((h) => [...anchorsOf(h)])
 					.flatMap((a) => [
 						a,
