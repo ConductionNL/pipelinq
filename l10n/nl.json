@@ -3577,7 +3577,11 @@
         "Open Flows in the menu": "Open Flows in het menu",
         "Could not load requests": "Kon verzoeken niet laden",
         "Could not load your items": "Kon uw items niet laden",
-        "Could not load complaints": "Kon klachten niet laden"
+        "Could not load complaints": "Kon klachten niet laden",
+        "Logical entity slug boarded here ('lead', 'request', …). Ticket subtypes resolve onto the unified `ticket` schema via resolveObjectType().": "Logische entiteitsslug die hier op het bord staat ('lead', 'request', …). Ticketsubtypes worden via resolveObjectType() herleid naar het samengevoegde `ticket`-schema.",
+        "Object property whose value names the stage column (normally 'stage').": "Objecteigenschap waarvan de waarde de fasekolom benoemt (normaal 'stage').",
+        "Optional numeric property summed per column for a stage total (e.g. 'value').": "Optionele numerieke eigenschap die per kolom wordt opgeteld tot een fasetotaal (bijvoorbeeld 'value').",
+        "Which object types this pipeline boards, and which property of each supplies the stage column. A pipeline that declares none is unscoped and offered for every entity type. Supersedes the retired `entityType` field.": "Welke objecttypen deze pipeline op het bord zet, en welke eigenschap van elk de fasekolom levert. Een pipeline die er geen declareert is ongebonden en wordt voor elk entiteitstype aangeboden. Vervangt het vervallen veld `entityType`."
     },
     "plurals": null
 }
