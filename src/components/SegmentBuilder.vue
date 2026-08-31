@@ -258,6 +258,8 @@ export default {
 		 * Validate the current rule tree against the server-side SegmentService
 		 * validator. Errors are stored per-path so leaf rows can render their
 		 * field-level message.
+		 *
+		 * @spec openspec/specs/marketing-ui/spec.md#scenario-visual-rule-tree-with-live-validation
 		 */
 		async runValidate() {
 			this.validationError = ''

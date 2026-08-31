@@ -176,6 +176,10 @@ export default {
 			this.pin = this.pin.slice(0, -1)
 		},
 
+		/**
+		 * @spec exclude the pos-staff-pin-permissions change is archived and no spec
+		 *   inherited POS staff, PIN login or roles
+		 */
 		async submit() {
 			if (!this.canSubmit) {
 				return
