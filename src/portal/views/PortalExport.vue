@@ -81,6 +81,14 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * Ask the backend for an AVG data export and surface its download link.
+		 *
+		 * @return {Promise<void>}
+		 * @spec exclude Deprecated-global swap only (OC.generateUrl -> @nextcloud/router);
+		 *   openspec/specs/customer-portal specifies the origin gate, not the export
+		 *   request, so there is no requirement to point at.
+		 */
 		async requestExport() {
 			this.error = ''
 			try {

@@ -69,6 +69,9 @@ export default {
 		 * The article body, sanitised before it reaches v-html.
 		 *
 		 * @return {string} Safe HTML, or '' when no article is loaded.
+		 * @spec exclude XSS hardening on remote xWiki markup; openspec/specs/xwiki-proxy
+		 *   covers where the content is fetched from, not how it is rendered, so
+		 *   there is no requirement to point at.
 		 */
 		sanitisedContent() {
 			const raw = this.store.currentArticle?.content
