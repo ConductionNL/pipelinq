@@ -674,49 +674,89 @@ class DemoSeedService {
 	 * @return array<string, mixed> Data with relation fields set.
 	 */
 	private function linkReferences(array $data, array $definition, array $uuids, ?string $ticketType = null): array {
-		if (isset($definition['clientKey']) === true) {
-			$clientUuid = $uuids['clients:' . $definition['clientKey']] ?? null;
-			if ($clientUuid !== null) {
-				// The FK field name is not uniform across the register: the
-				// contract schema calls it `clientRef` ("UUID reference to the
-				// existing client object. Client identity is never duplicated
-				// into the contract."), everything else calls it `client`.
-				// Writing the wrong key is silent — the object saves, the FK is
-				// simply absent — so the map is explicit rather than assumed.
-				$data[($definition['clientField'] ?? 'client')] = $clientUuid;
-			}
-		}
+		// The FK field name is not uniform across the register: the contract
+		// schema calls it `clientRef` ("UUID reference to the existing client
+		// object. Client identity is never duplicated into the contract."),
+		// everything else calls it `client`. Writing the wrong key is silent —
+		// the object saves, the FK is simply absent — so the map is explicit
+		// rather than assumed.
+		$data = $this->linkOneReference(
+			data: $data,
+			definition: $definition,
+			uuids: $uuids,
+			keyName: 'clientKey',
+			section: 'clients',
+			field: ($definition['clientField'] ?? 'client'),
+		);
 
-		if (isset($definition['contactKey']) === true) {
-			$contactUuid = $uuids['contacts:' . $definition['contactKey']] ?? null;
-			if ($contactUuid !== null) {
-				$data['contact'] = $contactUuid;
-			}
-		}
+		$data = $this->linkOneReference(
+			data: $data,
+			definition: $definition,
+			uuids: $uuids,
+			keyName: 'contactKey',
+			section: 'contacts',
+			field: 'contact',
+		);
 
 		// Without this a seeded lead / ticket carries a `stage` name but no
 		// `pipeline`, so it belongs to no board and every stage column counts
 		// zero — the demo data cannot demonstrate the pipeline it was written
 		// for. `pipelines` is seeded before `leads`, so the uuid is available.
-		if (isset($definition['pipelineKey']) === true) {
-			$pipelineUuid = $uuids['pipelines:' . $definition['pipelineKey']] ?? null;
-			if ($pipelineUuid !== null) {
-				$data['pipeline'] = $pipelineUuid;
-			}
+		$data = $this->linkOneReference(
+			data: $data,
+			definition: $definition,
+			uuids: $uuids,
+			keyName: 'pipelineKey',
+			section: 'pipelines',
+			field: 'pipeline',
+		);
+
+		// On a ticket the parent-request link is `parentTicket` (the legacy
+		// contactmoment field was `request`).
+		$requestField = 'request';
+		if ($ticketType !== null) {
+			$requestField = 'parentTicket';
 		}
 
-		if (isset($definition['requestKey']) === true) {
-			$requestUuid = $uuids['requests:' . $definition['requestKey']] ?? null;
-			if ($requestUuid !== null) {
-				$field = 'request';
-				if ($ticketType !== null) {
-					$field = 'parentTicket';
-				}
-
-				$data[$field] = $requestUuid;
-			}
-		}
+		$data = $this->linkOneReference(
+			data: $data,
+			definition: $definition,
+			uuids: $uuids,
+			keyName: 'requestKey',
+			section: 'requests',
+			field: $requestField,
+		);
 
 		return $data;
 	}//end linkReferences()
+
+	/**
+	 * Set one relation field from the seeded uuid map, when the definition
+	 * names a key and that key has already been seeded.
+	 *
+	 * Extracted from linkReferences() so its four call sites stop each
+	 * contributing two branches to a single method: phpmd measured the
+	 * combined cyclomatic complexity at 10 against a threshold of 10.
+	 *
+	 * @param array<string, mixed> $data Definition data.
+	 * @param array<string, mixed> $definition Full definition.
+	 * @param array<string, string> $uuids Already-seeded uuid map (section:key => uuid).
+	 * @param string $keyName Definition key naming the target (e.g. 'clientKey').
+	 * @param string $section Uuid-map section the key lives in (e.g. 'clients').
+	 * @param string $field Field on $data to set.
+	 *
+	 * @return array<string, mixed> Data with the relation field set when resolvable.
+	 */
+	private function linkOneReference(array $data, array $definition, array $uuids, string $keyName, string $section, string $field): array {
+		if (isset($definition[$keyName]) === false) {
+			return $data;
+		}
+
+		$uuid = ($uuids[$section . ':' . $definition[$keyName]] ?? null);
+		if ($uuid !== null) {
+			$data[$field] = $uuid;
+		}
+
+		return $data;
+	}//end linkOneReference()
 }//end class
