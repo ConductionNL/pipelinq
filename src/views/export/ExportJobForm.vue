@@ -302,7 +302,7 @@ export default {
 				this.destinations =
 					this.objectStore.getCollection('exportDestination')?.results
 					|| []
-			} catch (e) {
+			} catch {
 				this.destinations = []
 			}
 		},
@@ -323,7 +323,7 @@ export default {
 						', ',
 					)
 				}
-			} catch (e) {
+			} catch {
 				showError(this.t('pipelinq', 'Could not load the job'))
 			} finally {
 				this.loading = false
@@ -367,7 +367,7 @@ export default {
 				await this.objectStore.saveObject('exportJob', payload)
 				showSuccess(this.t('pipelinq', 'Export job saved'))
 				this.$router.push({ name: 'ExportJobs' })
-			} catch (e) {
+			} catch {
 				showError(this.t('pipelinq', 'Could not save the job'))
 			} finally {
 				this.busy = false

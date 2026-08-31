@@ -156,7 +156,7 @@
 				@click="submit">
 				{{
 					submitting
-						? t('pipelinq', 'Saving...')
+						? t('pipelinq', 'Saving…')
 						: t('pipelinq', 'Create blast')
 				}}
 			</NcButton>
@@ -377,7 +377,7 @@ export default {
 					generateUrl('/apps/pipelinq/api/segments'),
 				)
 				this.segments = data?.data || data?.results || data || []
-			} catch (_e) {
+			} catch {
 				this.segments = []
 			} finally {
 				this.segmentsLoading = false
@@ -394,7 +394,7 @@ export default {
 					generateUrl('/apps/pipelinq/api/templates'),
 				)
 				this.templates = data?.data || data?.results || data || []
-			} catch (_e) {
+			} catch {
 				this.templates = []
 			} finally {
 				this.templatesLoading = false
@@ -431,7 +431,7 @@ export default {
 					id: src.id || src.uuid,
 					label: src.name || src.title || src.id,
 				}))
-			} catch (_e) {
+			} catch {
 				this.connectorSources = []
 				this.connectorSourcesError = this.t(
 					'pipelinq',
@@ -520,7 +520,7 @@ export default {
 				this.missingConsentContacts = missing
 				this.showConsentModal = true
 				return await this.awaitConsentDecision()
-			} catch (_e) {
+			} catch {
 				// On preflight failure, surface the error inline and block the send.
 				this.submitError = this.t(
 					'pipelinq',

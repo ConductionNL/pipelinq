@@ -426,7 +426,7 @@ export default {
 					t('pipelinq', 'Lead moved to {stage}', { stage: newStage }),
 				)
 				this.$emit('refresh')
-			} catch (e) {
+			} catch {
 				this.selectedStage = this.currentColumnValue
 				showError(t('pipelinq', 'Failed to move lead. Please try again.'))
 			}
@@ -447,7 +447,7 @@ export default {
 				)
 				showSuccess(t('pipelinq', 'Assignee updated'))
 				this.$emit('refresh')
-			} catch (e) {
+			} catch {
 				this.selectedAssignee = this.item.assignee
 				showError(t('pipelinq', 'Failed to update assignee.'))
 			}
@@ -522,7 +522,7 @@ export default {
 				)
 				showSuccess(t('pipelinq', 'Priority updated'))
 				this.$emit('refresh')
-			} catch (e) {
+			} catch {
 				showError(t('pipelinq', 'Failed to update priority.'))
 			}
 		},

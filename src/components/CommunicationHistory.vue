@@ -31,7 +31,7 @@
 			role="status">
 			<NcLoadingIcon :size="32" />
 			<span class="communication-history__loading-text">
-				{{ t('pipelinq', 'Loading communication history...') }}
+				{{ t('pipelinq', 'Loading communication history…') }}
 			</span>
 		</div>
 
@@ -48,7 +48,7 @@
 				rowKey="id"
 				:rowClass="rowClass"
 				:loading="loading"
-				:loadingText="t('pipelinq', 'Loading communication history...')"
+				:loadingText="t('pipelinq', 'Loading communication history…')"
 				:emptyText="t('pipelinq', 'No communication history yet')"
 				@rowClick="goToContactmoment">
 				<template #column-channel="{ value }">
@@ -200,7 +200,7 @@ export default {
 				this.total = Number(data.total) || 0
 				this.pages = Number(data.pages) || 1
 				this.page = Number(data.page) || this.page
-			} catch (error) {
+			} catch {
 				showError(this.t('pipelinq', 'Could not load communication history'))
 				this.items = []
 				this.total = 0

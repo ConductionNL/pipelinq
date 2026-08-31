@@ -160,7 +160,7 @@
 					<template #icon>
 						<NcLoadingIcon v-if="saving" :size="20" />
 					</template>
-					{{ saving ? t('pipelinq', 'Saving...') : t('pipelinq', 'Save') }}
+					{{ saving ? t('pipelinq', 'Saving…') : t('pipelinq', 'Save') }}
 				</NcButton>
 			</div>
 		</div>
@@ -223,7 +223,7 @@ export default {
 					generateUrl('/apps/pipelinq/api/settings/forecast'),
 				)
 				this.form = { ...this.form, ...response.data }
-			} catch (e) {
+			} catch {
 				this.message = t(
 					'pipelinq',
 					'Could not load the forecast configuration.',
@@ -247,7 +247,7 @@ export default {
 				)
 				this.message = t('pipelinq', 'Forecast configuration saved.')
 				this.messageType = 'success'
-			} catch (e) {
+			} catch {
 				this.message = t(
 					'pipelinq',
 					'Could not save the forecast configuration.',

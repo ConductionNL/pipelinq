@@ -160,7 +160,7 @@ export default {
 					showSuccess(this.t('pipelinq', 'Job enabled'))
 				}
 				await this.refresh()
-			} catch (e) {
+			} catch {
 				showError(this.t('pipelinq', 'Could not change job status'))
 			} finally {
 				this.busyId = null

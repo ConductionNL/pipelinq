@@ -288,7 +288,7 @@ export default {
 					level: this.childLevel,
 				})
 				this.rows = data.snapshots || []
-			} catch (error) {
+			} catch {
 				this.rows = []
 			} finally {
 				this.loading = false

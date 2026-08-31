@@ -108,7 +108,7 @@
 				variant="primary"
 				:disabled="!isValid || saving"
 				@click="onSave">
-				{{ saving ? t('pipelinq', 'Saving...') : t('pipelinq', 'Save') }}
+				{{ saving ? t('pipelinq', 'Saving…') : t('pipelinq', 'Save') }}
 			</NcButton>
 		</div>
 

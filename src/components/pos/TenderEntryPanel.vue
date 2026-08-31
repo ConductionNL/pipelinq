@@ -257,7 +257,7 @@ export default {
 				)
 				const response = await axios.get(url)
 				this.tenderTypes = response?.data?.results || []
-			} catch (error) {
+			} catch {
 				this.tenderTypes = []
 			}
 		},

@@ -133,7 +133,7 @@ export default {
 			 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-91
 			 */
 			default() {
-				return t('pipelinq', 'Enter name...')
+				return t('pipelinq', 'Enter name…')
 			},
 		},
 
@@ -286,7 +286,7 @@ export default {
 							{ count, name: tag.name },
 						)
 					}
-				} catch (e) {
+				} catch {
 					// Non-blocking — proceed with generic message
 				}
 			}

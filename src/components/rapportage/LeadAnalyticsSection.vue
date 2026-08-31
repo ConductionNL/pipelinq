@@ -93,7 +93,7 @@ export default {
 					{ params },
 				)
 				this.stats = response?.data || {}
-			} catch (e) {
+			} catch {
 				showError(
 					t(
 						'pipelinq',

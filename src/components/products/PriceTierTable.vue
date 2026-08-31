@@ -197,7 +197,7 @@ export default {
 				} else {
 					showError(t('pipelinq', 'Failed to save price tiers'))
 				}
-			} catch (e) {
+			} catch {
 				showError(t('pipelinq', 'Failed to save price tiers'))
 			} finally {
 				this.saving = false

@@ -27,7 +27,7 @@ export default {
 			try {
 				const store = useSettingsStore()
 				return (store.config && store.config.xwiki_default_space) || ''
-			} catch (e) {
+			} catch {
 				return ''
 			}
 		},

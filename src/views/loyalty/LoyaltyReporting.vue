@@ -217,7 +217,7 @@ export default {
 					this.selectedProgramme = this.programmeOptions[0]
 					this.loadKpis()
 				}
-			} catch (error) {
+			} catch {
 				showError(this.t('pipelinq', 'Failed to load programmes'))
 			}
 		},
@@ -238,7 +238,7 @@ export default {
 				)
 				const response = await axios.get(url)
 				this.kpis = response.data
-			} catch (error) {
+			} catch {
 				showError(this.t('pipelinq', 'Failed to load KPIs'))
 			} finally {
 				this.loading = false

@@ -27,8 +27,8 @@
 					:modelValue="searchQuery"
 					type="search"
 					labelOutside
-					:placeholder="t('pipelinq', 'Search pipeline...')"
-					:aria-label="t('pipelinq', 'Search pipeline...')"
+					:placeholder="t('pipelinq', 'Search pipeline…')"
+					:aria-label="t('pipelinq', 'Search pipeline…')"
 					class="pipeline-search"
 					@update:modelValue="(v) => (searchQuery = v)" />
 				<div class="view-toggle">

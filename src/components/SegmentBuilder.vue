@@ -148,7 +148,7 @@ export default {
 			}
 			try {
 				return JSON.parse(JSON.stringify(node))
-			} catch (_e) {
+			} catch {
 				return emptyTree()
 			}
 		},
@@ -228,7 +228,7 @@ export default {
 							? data.size
 							: 0
 				this.estimateError = false
-			} catch (_e) {
+			} catch {
 				this.estimateError = true
 			} finally {
 				this.estimating = false

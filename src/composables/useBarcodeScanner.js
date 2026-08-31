@@ -238,7 +238,7 @@ export function useBarcodeScanner(onScan) {
 				emitScan(value)
 				return
 			}
-		} catch (e) {
+		} catch {
 			// A transient detect() failure must not kill the loop.
 		}
 		rafId = requestAnimationFrame(scanLoop)

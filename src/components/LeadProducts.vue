@@ -79,7 +79,7 @@
 									v-model="item.notes"
 									type="text"
 									class="inline-input inline-input--notes"
-									:placeholder="t('pipelinq', 'Notes...')"
+									:placeholder="t('pipelinq', 'Notes…')"
 									:aria-label="
 										t('pipelinq', 'Notes for {product}', {
 											product: getProductName(item.product),
@@ -150,7 +150,7 @@
 							v-model="addForm.product"
 							:options="productOptions"
 							:aria-label-combobox="t('pipelinq', 'Product')"
-							:placeholder="t('pipelinq', 'Search products...')"
+							:placeholder="t('pipelinq', 'Search products…')"
 							label="name"
 							:reduce="(opt) => opt.id"
 							@update:modelValue="onProductSelect" />

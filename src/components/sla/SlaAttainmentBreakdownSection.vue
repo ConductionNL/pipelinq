@@ -153,7 +153,7 @@ export default {
 				}
 				const response = await axios.get(url, { params })
 				this.payload = response.data || this.payload
-			} catch (e) {
+			} catch {
 				this.error = this.t(
 					'pipelinq',
 					'Failed to load SLA attainment. Please try again.',

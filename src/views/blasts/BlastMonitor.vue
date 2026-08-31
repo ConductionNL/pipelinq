@@ -277,7 +277,7 @@ export default {
 				if (TERMINAL_STATUSES.includes(this.blast?.status)) {
 					this.stopPolling()
 				}
-			} catch (_e) {
+			} catch {
 				// Keep polling; transient errors are silently retried.
 			} finally {
 				this.loading = false
@@ -298,7 +298,7 @@ export default {
 					params: { limit: TIMELINE_MAX },
 				})
 				return data?.data || data?.results || data || []
-			} catch (_e) {
+			} catch {
 				return []
 			}
 		},
@@ -412,7 +412,7 @@ export default {
 					return ts
 				}
 				return date.toLocaleString()
-			} catch (_e) {
+			} catch {
 				return ts
 			}
 		},

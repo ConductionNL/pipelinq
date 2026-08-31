@@ -216,7 +216,7 @@ export default {
 						},
 					]
 				}
-			} catch (err) {
+			} catch {
 				this.statusMessage = this.t(
 					'pipelinq',
 					'Could not load matching settings.',
@@ -256,7 +256,7 @@ export default {
 					: []
 				this.form.excludedText = excludedOut.join(', ')
 				this.statusMessage = this.t('pipelinq', 'Matching settings saved.')
-			} catch (err) {
+			} catch {
 				this.statusMessage = this.t(
 					'pipelinq',
 					'Could not save matching settings.',
@@ -297,7 +297,7 @@ export default {
 					scanned: Number(statusData.scanned) || 0,
 					error: statusData.error || null,
 				}
-			} catch (err) {
+			} catch {
 				this.statusMessage = this.t(
 					'pipelinq',
 					'Could not run the matching job.',

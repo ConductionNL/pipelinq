@@ -3,7 +3,7 @@
 		<div class="search-bar">
 			<NcTextField
 				v-model="searchQuery"
-				:placeholder="t('pipelinq', 'Search clients...')"
+				:placeholder="t('pipelinq', 'Search clients…')"
 				:label="t('pipelinq', 'Search')" />
 			<NcButton
 				variant="secondary"
@@ -36,7 +36,7 @@
 				@click="createClient">
 				{{
 					creatingClient
-						? t('pipelinq', 'Creating...')
+						? t('pipelinq', 'Creating…')
 						: t('pipelinq', 'Add client')
 				}}
 			</NcButton>

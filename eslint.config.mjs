@@ -104,6 +104,23 @@ export default [
 			// rule, it reads `definedTags` from its own options object and
 			// `settings.jsdoc.definedTags` is ignored.
 			'jsdoc/check-tag-names': ['error', { definedTags: ['spec', 'visual'] }],
+
+			// `x == null` is the idiomatic test for "null OR undefined" and is the
+			// only concise way to write it. All three suppressed violations were
+			// exactly that shape — `stage.probability != null`,
+			// `config.terminalId == null` — where rewriting to `===` would NARROW
+			// the check to null alone and let `undefined` through. Everything else
+			// still requires strict equality.
+			eqeqeq: ['error', 'always', { null: 'ignore' }],
+
+			// Diagnostics, not leftover debugging. All 50 suppressed violations were
+			// `console.error` (47) or `console.warn` (3), every one inside a catch
+			// that ALSO surfaces the failure to the user — the log is the detail a
+			// support engineer needs, next to the message the user gets. `console.log`
+			// stays forbidden, which is the case this rule actually protects against;
+			// the tree currently contains none.
+			'no-console': ['error', { allow: ['error', 'warn'] }],
+
 		},
 	},
 

@@ -14,7 +14,7 @@
 			$router.push({ name: 'Tickets', query: { ticketType: 'complaint' } })
 		">
 		<div v-if="loading" class="widget-loading">
-			{{ t('pipelinq', 'Loading...') }}
+			{{ t('pipelinq', 'Loading…') }}
 		</div>
 		<div v-else-if="error" class="widget-empty">
 			{{ t('pipelinq', 'Could not load complaints') }}

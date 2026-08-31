@@ -216,7 +216,7 @@
 						@click="retryLedgerSync">
 						{{
 							ledgerRetrying
-								? t('pipelinq', 'Retrying...')
+								? t('pipelinq', 'Retrying…')
 								: t('pipelinq', 'Retry Sync')
 						}}
 					</NcButton>

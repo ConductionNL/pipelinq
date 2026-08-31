@@ -162,7 +162,7 @@ export default {
 					pipeline: Number(s.pipeline || 0),
 				}))
 				this.buildDelta()
-			} catch (error) {
+			} catch {
 				this.series = []
 			} finally {
 				this.loading = false
