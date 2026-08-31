@@ -106,6 +106,8 @@ export default {
 		CnMassExportDialog,
 	},
 
+	emits: ['export-confirmed'],
+
 	data() {
 		return {
 			expanded: false,

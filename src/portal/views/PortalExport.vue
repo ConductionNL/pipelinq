@@ -71,6 +71,7 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 </template>
 
 <script>
+import { generateUrl } from '@nextcloud/router'
 import { portalApi } from '../portalApi.js'
 
 export default {
@@ -84,9 +85,7 @@ export default {
 			this.error = ''
 			try {
 				const result = await portalApi.requestExport()
-				this.exportLink = OC.generateUrl(
-					'/apps/pipelinq' + result.downloadUrl,
-				)
+				this.exportLink = generateUrl('/apps/pipelinq' + result.downloadUrl)
 			} catch (e) {
 				this.error =
 					e.message || t('pipelinq', 'Could not request the export.')

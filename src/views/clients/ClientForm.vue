@@ -167,6 +167,8 @@ export default {
 		},
 	},
 
+	emits: ['cancel', 'save', 'update:valid'],
+
 	data() {
 		return {
 			form: {

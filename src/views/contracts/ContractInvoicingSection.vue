@@ -84,6 +84,8 @@ export default {
 		},
 	},
 
+	emits: ['sent'],
+
 	data() {
 		return {
 			loading: false,

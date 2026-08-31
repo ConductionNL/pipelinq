@@ -141,6 +141,8 @@ export default {
 		},
 	},
 
+	emits: ['cancel', 'save'],
+
 	data() {
 		return {
 			form: {

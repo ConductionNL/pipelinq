@@ -97,6 +97,7 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 </template>
 
 <script>
+import { generateUrl } from '@nextcloud/router'
 import { portalApi } from '../portalApi.js'
 
 export default {
@@ -198,7 +199,7 @@ export default {
 						: this.activeTab.replace(/s$/, '')
 				const signed = await portalApi.signDocument(row.id, objectType)
 				window.open(
-					OC.generateUrl('/apps/pipelinq' + signed.downloadUrl),
+					generateUrl('/apps/pipelinq' + signed.downloadUrl),
 					'_blank',
 				)
 			} catch (e) {

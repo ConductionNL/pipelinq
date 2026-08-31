@@ -97,6 +97,8 @@ export default {
 		},
 	},
 
+	emits: ['close', 'imported'],
+
 	data() {
 		return {
 			query: '',

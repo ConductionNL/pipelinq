@@ -248,7 +248,7 @@ export default {
 			await this.objectStore.saveObject('ticket', {
 				...item,
 				ticketType: item.ticketType || 'request',
-				assignee: OC.currentUser,
+				assignee: window.OC?.getCurrentUser?.()?.uid,
 			})
 			await this.queuesStore.fetchQueueItems(this.queueId)
 		},
@@ -271,7 +271,7 @@ export default {
 					this.objectStore.saveObject('ticket', {
 						...item,
 						ticketType: item.ticketType || 'request',
-						assignee: OC.currentUser,
+						assignee: window.OC?.getCurrentUser?.()?.uid,
 					}),
 				)
 

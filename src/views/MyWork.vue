@@ -207,7 +207,7 @@ export default {
 		 * @spec openspec/changes/reverse-2026-05-26-fe-mywork-ui/tasks.md#task-4
 		 */
 		currentUser() {
-			return OC.currentUser
+			return window.OC?.getCurrentUser?.()?.uid
 		},
 
 		/**

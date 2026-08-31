@@ -84,6 +84,8 @@ export default {
 		},
 	},
 
+	emits: ['converted'],
+
 	data() {
 		return {
 			loading: false,

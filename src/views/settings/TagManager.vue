@@ -143,6 +143,8 @@ export default {
 		},
 	},
 
+	emits: ['remove'],
+
 	data() {
 		return {
 			adding: false,

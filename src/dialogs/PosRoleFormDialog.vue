@@ -37,6 +37,8 @@ export default {
 		},
 	},
 
+	emits: ['done'],
+
 	computed: {
 		/**
 		 * @return {string} Dialog heading, reflecting create vs edit.

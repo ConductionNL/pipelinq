@@ -173,6 +173,8 @@ export default {
 		},
 	},
 
+	emits: ['open', 'refresh'],
+
 	data() {
 		return {
 			users: [],

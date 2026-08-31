@@ -73,6 +73,8 @@ function uuid() {
 export default {
 	name: 'QuestionEditor',
 	props: { value: { type: Array, default: () => [] } },
+	emits: ['input'],
+
 	computed: {
 		questions() {
 			return this.value || []
