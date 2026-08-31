@@ -68,7 +68,8 @@ export default {
 		},
 
 		/**
-		 * Trigger the form's own validate-then-emit flow; @save fires onSave.
+		 * Trigger the form's own validate-then-emit flow; `@save` fires onSave.
+		 *
 		 * @spec openspec/specs/unify-client-contact/spec.md
 		 */
 		submit() {
@@ -84,7 +85,7 @@ export default {
 		 * NC contact via ContactVcardService and saves the client with the
 		 * resolved contactsUid + the denormalised name/email/phone mirror.
 		 *
-		 * @param formData
+		 * @param {object} formData The raw create-form fields.
 		 * @spec openspec/specs/unify-client-contact/spec.md
 		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-2
 		 */

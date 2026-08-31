@@ -430,8 +430,8 @@ export default {
 		},
 
 		/**
-		 * @param entityId
-		 * @param entityType
+		 * @param {string} entityId Identifier of the linked entity.
+		 * @param {string} entityType Logical type of the linked entity (client, contact, …).
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-10
 		 */
 		async loadEntityName(entityId, entityType) {
@@ -453,7 +453,7 @@ export default {
 		},
 
 		/**
-		 * @param rel
+		 * @param {object} rel The relationship row to test.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-9
 		 */
 		isEnded(rel) {
@@ -464,7 +464,7 @@ export default {
 		},
 
 		/**
-		 * @param rel
+		 * @param {object} rel The relationship row whose entity to open.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-11
 		 */
 		navigateToEntity(rel) {
@@ -473,7 +473,7 @@ export default {
 		},
 
 		/**
-		 * @param typeValue
+		 * @param {string} typeValue The relationship type the user picked.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-13
 		 */
 		onTypeSelect(typeValue) {
@@ -488,7 +488,7 @@ export default {
 		},
 
 		/**
-		 * @param query
+		 * @param {string} query The search term typed by the user.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-16
 		 */
 		async searchEntities(query) {
@@ -629,7 +629,7 @@ export default {
 		},
 
 		/**
-		 * @param rel
+		 * @param {object} rel The relationship row to edit.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-6
 		 */
 		editRelationship(rel) {
@@ -655,7 +655,7 @@ export default {
 		},
 
 		/**
-		 * @param rel
+		 * @param {object} rel The relationship row to remove.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-14
 		 */
 		removeRelationship(rel) {

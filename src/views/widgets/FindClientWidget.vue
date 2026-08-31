@@ -211,6 +211,15 @@ export default {
 	},
 
 	props: {
+		/**
+		 * Widget heading, supplied by the manifest.
+		 *
+		 * Declared but not rendered here: the widget chrome draws the heading.
+		 * Declaring it is what stops Vue's attribute fallthrough painting
+		 * `title="…"` onto the component's root element, which would hover a
+		 * browser tooltip over the whole widget.
+		 */
+		// eslint-disable-next-line vue/no-unused-properties
 		title: {
 			type: String,
 			required: true,
@@ -288,8 +297,8 @@ export default {
 		},
 
 		/**
-		 * @param type
-		 * @param params
+		 * @param {string} type The registered object-type slug.
+		 * @param {string} params Query parameters.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-39
 		 */
 		async fetchRaw(type, params = {}) {
@@ -324,7 +333,7 @@ export default {
 		},
 
 		/**
-		 * @param client
+		 * @param {object} client The client to open.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-42
 		 */
 		viewClient(client) {
@@ -332,7 +341,7 @@ export default {
 		},
 
 		/**
-		 * @param client
+		 * @param {object} client The client to raise a request for.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-37
 		 */
 		createRequestForClient(client) {
@@ -342,7 +351,7 @@ export default {
 		},
 
 		/**
-		 * @param client
+		 * @param {object} client The client to raise a lead for.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-36
 		 */
 		createLeadForClient(client) {
@@ -352,7 +361,7 @@ export default {
 		},
 
 		/**
-		 * @param client
+		 * @param {object} client The client whose email to copy.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-34
 		 */
 		async copyEmail(client) {

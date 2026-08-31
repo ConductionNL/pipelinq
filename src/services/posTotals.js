@@ -36,7 +36,7 @@ const RATE_DESCRIPTIONS = {
 /**
  * Normalise a price mode to a known value ('excl' default).
  *
- * @param {*} mode The raw price mode.
+ * @param {(string|null|undefined)} mode The raw price mode.
  * @return {string} Either 'excl' or 'incl'.
  */
 export function normalizePriceMode(mode) {

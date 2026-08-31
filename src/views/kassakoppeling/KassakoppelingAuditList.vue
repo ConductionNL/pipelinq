@@ -328,6 +328,7 @@ export default {
 	methods: {
 		/**
 		 * Load entries from the bespoke audit endpoint.
+		 *
 		 * @spec openspec/changes/pos-kassakoppeling-audit/tasks.md#5.1
 		 */
 		async refresh() {

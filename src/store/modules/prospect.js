@@ -16,7 +16,7 @@ export const useProspectStore = defineStore('prospect', {
 	}),
 	actions: {
 		/**
-		 * @param refresh
+		 * @param {boolean} refresh Bypass the cache and refetch.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-33
 		 */
 		async fetchProspects(refresh = false) {
@@ -59,7 +59,7 @@ export const useProspectStore = defineStore('prospect', {
 		},
 
 		/**
-		 * @param prospectData
+		 * @param {object} prospectData The prospect to convert into a lead.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-32
 		 */
 		async createLeadFromProspect(prospectData) {

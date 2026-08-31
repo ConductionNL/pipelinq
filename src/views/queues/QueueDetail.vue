@@ -217,7 +217,7 @@ export default {
 		getWaitingTime,
 
 		/**
-		 * @param item
+		 * @param {object} item The row to open.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-queues-ui/tasks.md#task-9
 		 */
 		openItem(item) {
@@ -227,7 +227,7 @@ export default {
 		},
 
 		/**
-		 * @param id
+		 * @param {string} id Identifier of the row to toggle.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-queues-ui/tasks.md#task-14
 		 */
 		toggleSelect(id) {
@@ -239,7 +239,7 @@ export default {
 		},
 
 		/**
-		 * @param item
+		 * @param {object} item The row to assign to the current user.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-queues-ui/tasks.md#task-2
 		 */
 		async assignToMe(item) {
@@ -248,7 +248,7 @@ export default {
 			await this.objectStore.saveObject('ticket', {
 				...item,
 				ticketType: item.ticketType || 'request',
-				assignee: OC.currentUser,
+				assignee: window.OC?.getCurrentUser?.()?.uid,
 			})
 			await this.queuesStore.fetchQueueItems(this.queueId)
 		},
@@ -271,7 +271,7 @@ export default {
 					this.objectStore.saveObject('ticket', {
 						...item,
 						ticketType: item.ticketType || 'request',
-						assignee: OC.currentUser,
+						assignee: window.OC?.getCurrentUser?.()?.uid,
 					}),
 				)
 

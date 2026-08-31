@@ -2,9 +2,6 @@
   "src/components/ActivityTimeline.vue": {
     "@typescript-eslint/no-unused-vars": {
       "count": 1
-    },
-    "jsdoc/require-param-type": {
-      "count": 6
     }
   },
   "src/components/BrpContactPanel.vue": {
@@ -26,9 +23,6 @@
   "src/components/ContactRelationships.vue": {
     "@nextcloud/l10n-enforce-ellipsis": {
       "count": 3
-    },
-    "jsdoc/require-param-type": {
-      "count": 8
     }
   },
   "src/components/ContactmomentQuickLog.vue": {
@@ -36,38 +30,17 @@
       "count": 1
     }
   },
-  "src/components/EmailTimeline.vue": {
-    "jsdoc/require-param-type": {
-      "count": 1
-    }
-  },
   "src/components/EntityNotes.vue": {
     "@nextcloud/l10n-enforce-ellipsis": {
       "count": 2
-    },
-    "jsdoc/require-param-type": {
-      "count": 2
-    }
-  },
-  "src/components/LeadContactRoles.vue": {
-    "jsdoc/require-param-type": {
-      "count": 5
     }
   },
   "src/components/LeadProducts.vue": {
     "@nextcloud/l10n-enforce-ellipsis": {
       "count": 2
     },
-    "jsdoc/require-param-type": {
-      "count": 7
-    },
     "vue/custom-event-name-casing": {
       "count": 4
-    }
-  },
-  "src/components/ProductRevenue.vue": {
-    "jsdoc/require-param-type": {
-      "count": 1
     }
   },
   "src/components/ProjectWbsTree.vue": {
@@ -80,15 +53,7 @@
       "count": 2
     }
   },
-  "src/components/ProspectWidget.vue": {
-    "jsdoc/require-param-type": {
-      "count": 2
-    }
-  },
   "src/components/RoutingSuggestionPanel.vue": {
-    "jsdoc/require-param-type": {
-      "count": 3
-    },
     "no-console": {
       "count": 2
     }
@@ -106,26 +71,11 @@
       "count": 6
     }
   },
-  "src/components/admin/AgentProfileSettings.vue": {
-    "jsdoc/require-param-type": {
-      "count": 5
-    }
-  },
   "src/components/admin/ForecastSettings.vue": {
     "@nextcloud/l10n-enforce-ellipsis": {
       "count": 1
     },
     "@typescript-eslint/no-unused-vars": {
-      "count": 2
-    }
-  },
-  "src/components/admin/QueueSettings.vue": {
-    "jsdoc/require-param-type": {
-      "count": 2
-    }
-  },
-  "src/components/admin/SkillSettings.vue": {
-    "jsdoc/require-param-type": {
       "count": 2
     }
   },
@@ -202,11 +152,6 @@
       "count": 1
     }
   },
-  "src/components/surveys/QuestionEditor.vue": {
-    "jsdoc/require-param-type": {
-      "count": 5
-    }
-  },
   "src/components/sync/SyncSettingsSection.vue": {
     "@typescript-eslint/no-unused-vars": {
       "count": 3
@@ -215,9 +160,6 @@
   "src/components/widgets/ClientAutocomplete.vue": {
     "@nextcloud/l10n-enforce-ellipsis": {
       "count": 1
-    },
-    "jsdoc/require-param-type": {
-      "count": 2
     },
     "no-console": {
       "count": 2
@@ -246,16 +188,8 @@
       "count": 1
     }
   },
-  "src/dialogs/ClientCreateDialog.vue": {
-    "jsdoc/require-param-type": {
-      "count": 1
-    }
-  },
   "src/dialogs/ContactImportDialog.vue": {
     "@nextcloud/l10n-enforce-ellipsis": {
-      "count": 2
-    },
-    "jsdoc/require-param-type": {
       "count": 2
     }
   },
@@ -267,27 +201,14 @@
       "count": 1
     }
   },
-  "src/dialogs/LeadCreateDialog.vue": {
-    "jsdoc/require-param-type": {
-      "count": 1
-    }
-  },
   "src/dialogs/PipelineFormDialog.vue": {
     "eqeqeq": {
       "count": 1
-    },
-    "jsdoc/require-param-type": {
-      "count": 4
     }
   },
   "src/dialogs/QueueCreateDialog.vue": {
     "@nextcloud/l10n-enforce-ellipsis": {
       "count": 2
-    }
-  },
-  "src/dialogs/RequestCreateDialog.vue": {
-    "jsdoc/require-param-type": {
-      "count": 1
     }
   },
   "src/main.js": {
@@ -382,9 +303,6 @@
     }
   },
   "src/views/MyWork.vue": {
-    "jsdoc/require-param-type": {
-      "count": 10
-    },
     "no-console": {
       "count": 1
     }
@@ -405,11 +323,6 @@
   "src/views/blasts/PerformanceDashboard.vue": {
     "@typescript-eslint/no-unused-vars": {
       "count": 2
-    }
-  },
-  "src/views/clients/ClientForm.vue": {
-    "jsdoc/require-param-type": {
-      "count": 3
     }
   },
   "src/views/contracts/ContractInvoicingSection.vue": {
@@ -538,9 +451,6 @@
   "src/views/pipeline/PipelineCard.vue": {
     "@typescript-eslint/no-unused-vars": {
       "count": 3
-    },
-    "jsdoc/require-param-type": {
-      "count": 6
     }
   },
   "src/views/portal/BookingConfirmationPage.vue": {
@@ -576,28 +486,10 @@
   "src/views/pos/PosTransactionForm.vue": {
     "@typescript-eslint/no-unused-vars": {
       "count": 2
-    },
-    "jsdoc/require-param-type": {
-      "count": 2
-    }
-  },
-  "src/views/products/ProductForm.vue": {
-    "jsdoc/require-param-type": {
-      "count": 3
     }
   },
   "src/views/projects/ProjectDetail.vue": {
     "@nextcloud/l10n-enforce-ellipsis": {
-      "count": 1
-    }
-  },
-  "src/views/queues/QueueDetail.vue": {
-    "jsdoc/require-param-type": {
-      "count": 3
-    }
-  },
-  "src/views/queues/QueueList.vue": {
-    "jsdoc/require-param-type": {
       "count": 1
     }
   },
@@ -632,14 +524,6 @@
   "src/views/settings/PipelineManager.vue": {
     "@typescript-eslint/no-unused-vars": {
       "count": 1
-    },
-    "jsdoc/require-param-type": {
-      "count": 7
-    }
-  },
-  "src/views/settings/ProductCategoryManager.vue": {
-    "jsdoc/require-param-type": {
-      "count": 3
     }
   },
   "src/views/settings/ProspectSettings.vue": {
@@ -654,9 +538,6 @@
     "@typescript-eslint/no-unused-vars": {
       "count": 3
     },
-    "jsdoc/require-param-type": {
-      "count": 14
-    },
     "vue/multi-word-component-names": {
       "count": 1
     }
@@ -667,9 +548,6 @@
     },
     "@typescript-eslint/no-unused-vars": {
       "count": 1
-    },
-    "jsdoc/require-param-type": {
-      "count": 3
     }
   },
   "src/views/sync/SyncSettings.vue": {
@@ -686,9 +564,6 @@
     "@nextcloud/l10n-enforce-ellipsis": {
       "count": 2
     },
-    "jsdoc/require-param-type": {
-      "count": 2
-    },
     "no-console": {
       "count": 4
     }
@@ -701,9 +576,6 @@
   "src/views/widgets/FindClientWidget.vue": {
     "@nextcloud/l10n-enforce-ellipsis": {
       "count": 2
-    },
-    "jsdoc/require-param-type": {
-      "count": 6
     },
     "no-console": {
       "count": 4
@@ -722,9 +594,6 @@
   "src/views/widgets/StartRequestWidget.vue": {
     "@nextcloud/l10n-enforce-ellipsis": {
       "count": 2
-    },
-    "jsdoc/require-param-type": {
-      "count": 1
     },
     "no-console": {
       "count": 4

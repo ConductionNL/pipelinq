@@ -137,8 +137,8 @@ export default {
 	/**
 	 * Expose the prospect Pinia store to the component.
 	 *
-	 * @spec exclude Pinia store wiring — no business logic
 	 * @return {object} The setup bindings.
+	 * @spec exclude Pinia store wiring — no business logic
 	 */
 	setup() {
 		return { prospectStore: useProspectStore() }
@@ -156,8 +156,8 @@ export default {
 		/**
 		 * Prospects sorted by the active sort column/direction.
 		 *
-		 * @spec openspec/changes/refactor-pipelinq-ia-alignment/tasks.md#task-20
 		 * @return {Array<object>} The sorted prospect list.
+		 * @spec openspec/changes/refactor-pipelinq-ia-alignment/tasks.md#task-20
 		 */
 		sortedProspects() {
 			const list = [...(this.prospectStore.prospects || [])]
@@ -206,8 +206,8 @@ export default {
 		 * The sort arrow for a column header.
 		 *
 		 * @param {string} key - The column key.
-		 * @spec exclude presentational sort-arrow helper — no business logic
 		 * @return {string} The indicator glyph.
+		 * @spec exclude presentational sort-arrow helper — no business logic
 		 */
 		sortIndicator(key) {
 			if (this.sortKey !== key) return ''
@@ -218,8 +218,8 @@ export default {
 		 * Map a fit score to a CSS severity class.
 		 *
 		 * @param {number} score - The prospect fit score (0-100).
-		 * @spec exclude presentational score-band helper — no business logic
 		 * @return {string} The CSS class.
+		 * @spec exclude presentational score-band helper — no business logic
 		 */
 		scoreClass(score) {
 			const s = score || 0
@@ -232,8 +232,8 @@ export default {
 		 * Convert a prospect into a CRM lead via the prospect store.
 		 *
 		 * @param {object} prospect - The prospect record.
-		 * @spec openspec/changes/refactor-pipelinq-ia-alignment/tasks.md#task-20
 		 * @return {Promise<void>}
+		 * @spec openspec/changes/refactor-pipelinq-ia-alignment/tasks.md#task-20
 		 */
 		async convertToLead(prospect) {
 			this.convertingKvk = prospect.kvkNumber

@@ -94,7 +94,7 @@ async function fetchRaw(type, params = {}) {
  * without an explicit refresh.
  *
  * @param {string} key - Unique cache key (e.g. 'lead', 'lead:mine').
- * @param {Function} fetcher - Promise-returning fetcher invoked on miss.
+ * @param {(function(): Promise<Array>)} fetcher - Promise-returning fetcher invoked on miss.
  * @return {Promise<Array>} The cached or freshly fetched data.
  */
 function cached(key, fetcher) {
@@ -123,8 +123,8 @@ export function getLeads() {
  * Requests, read from the unified `ticket` schema and narrowed to the
  * `request` subtype (unify-ticket-supertype).
  *
- * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-21
  * @return {Promise<Array>} The request-type ticket records.
+ * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-21
  */
 export function getRequests() {
 	return cached('ticket:request', () =>
@@ -146,8 +146,8 @@ export function getPipelines() {
  * Get all contracts (contract-renewal-tracking). Returns [] when the contract
  * schema is not registered (graceful no-op for instances without the feature).
  *
- * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-recurring-revenue-roll-up
  * @return {Promise<Array>} The contract records.
+ * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-recurring-revenue-roll-up
  */
 export function getContracts() {
 	return cached('contract', () => fetchRaw('contract', { _limit: 1000 }))
@@ -157,8 +157,8 @@ export function getContracts() {
  * Complaints, read from the unified `ticket` schema and narrowed to the
  * `complaint` subtype (unify-ticket-supertype).
  *
- * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-16
  * @return {Promise<Array>} The complaint-type ticket records.
+ * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-16
  */
 export function getComplaints() {
 	return cached('ticket:complaint', () =>
@@ -194,8 +194,8 @@ export function getMyLeads() {
  * The current user's requests, read from the unified `ticket` schema and
  * narrowed to the `request` subtype (unify-ticket-supertype).
  *
- * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-19
  * @return {Promise<Array>} The request-type ticket records assigned to the user.
+ * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-19
  */
 export function getMyRequests() {
 	const uid = window.OC?.getCurrentUser?.()?.uid

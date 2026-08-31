@@ -74,6 +74,8 @@ export default {
 		},
 	},
 
+	emits: ['input'],
+
 	data() {
 		return {
 			query: '',
@@ -87,7 +89,7 @@ export default {
 
 	watch: {
 		/**
-		 * @param newVal
+		 * @param {string} newVal The incoming value.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-14
 		 */
 		value(newVal) {
@@ -166,7 +168,7 @@ export default {
 		},
 
 		/**
-		 * @param client
+		 * @param {object} client The client the user picked.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-13
 		 */
 		selectClient(client) {

@@ -160,12 +160,19 @@ export default {
 		 * Render the built-in Save / Cancel buttons. Set to `false` when the
 		 * host supplies its own action buttons (e.g. a parent NcDialog driving
 		 * the form via a ref + the `update:valid` event).
+		 *
+		 * Defaults ON deliberately: a host that supplies its own action bar
+		 * opts OUT. Inverting the name would make every ordinary use pass a
+		 * negative prop just to get the normal form.
 		 */
 		showActions: {
 			type: Boolean,
+			// eslint-disable-next-line vue/no-boolean-default
 			default: true,
 		},
 	},
+
+	emits: ['cancel', 'save', 'update:valid'],
 
 	data() {
 		return {
@@ -216,7 +223,7 @@ export default {
 		client: {
 			immediate: true,
 			/**
-			 * @param val
+			 * @param {object} val The incoming value.
 			 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-26
 			 */
 			handler(val) {
@@ -229,7 +236,7 @@ export default {
 
 	methods: {
 		/**
-		 * @param data
+		 * @param {object} data The contact to load into the form.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-29
 		 */
 		populateForm(data) {
@@ -247,7 +254,7 @@ export default {
 		},
 
 		/**
-		 * @param field
+		 * @param {string} field Name of the field to validate.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-31
 		 */
 		validateField(field) {

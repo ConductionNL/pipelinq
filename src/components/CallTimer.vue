@@ -23,6 +23,8 @@ import { NcButton } from '@nextcloud/vue'
 export default {
 	name: 'CallTimer',
 	components: { NcButton },
+	emits: ['reset', 'stopped', 'tick'],
+
 	data() {
 		return {
 			seconds: 0,

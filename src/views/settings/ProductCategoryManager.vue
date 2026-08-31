@@ -217,7 +217,7 @@ export default {
 		},
 
 		/**
-		 * @param cat
+		 * @param {object} cat The category to edit.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-64
 		 */
 		startEditing(cat) {
@@ -242,7 +242,7 @@ export default {
 		},
 
 		/**
-		 * @param id
+		 * @param {string} id Identifier of the category being saved.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-60
 		 */
 		async saveEdit(id) {
@@ -265,7 +265,7 @@ export default {
 		},
 
 		/**
-		 * @param cat
+		 * @param {object} cat The category the user asked to remove.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-57
 		 */
 		async confirmRemove(cat) {

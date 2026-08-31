@@ -97,6 +97,7 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 </template>
 
 <script>
+import { generateUrl } from '@nextcloud/router'
 import { portalApi } from '../portalApi.js'
 
 export default {
@@ -190,6 +191,15 @@ export default {
 			})
 		},
 
+		/**
+		 * Fetch a signed URL for a portal document and open it.
+		 *
+		 * @param {object} row The document row to download.
+		 * @return {Promise<void>}
+		 * @spec exclude Deprecated-global swap only (OC.generateUrl -> `@nextcloud/router`);
+		 *   openspec/specs/customer-portal specifies the origin gate, not document
+		 *   download, so there is no requirement to point at.
+		 */
 		async download(row) {
 			try {
 				const objectType =
@@ -198,7 +208,7 @@ export default {
 						: this.activeTab.replace(/s$/, '')
 				const signed = await portalApi.signDocument(row.id, objectType)
 				window.open(
-					OC.generateUrl('/apps/pipelinq' + signed.downloadUrl),
+					generateUrl('/apps/pipelinq' + signed.downloadUrl),
 					'_blank',
 				)
 			} catch (e) {

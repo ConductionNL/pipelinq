@@ -167,7 +167,7 @@ export default {
 		},
 
 		/**
-		 * @param entityId
+		 * @param {string} entityId Identifier of the linked entity.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-4
 		 */
 		async loadEntityName(entityId) {
@@ -191,7 +191,7 @@ export default {
 		},
 
 		/**
-		 * @param roleType
+		 * @param {string} roleType The stored role type.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-3
 		 */
 		getRoleLabel(roleType) {
@@ -200,7 +200,7 @@ export default {
 		},
 
 		/**
-		 * @param query
+		 * @param {string} query The search term typed by the user.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-8
 		 */
 		async searchContacts(query) {
@@ -228,7 +228,7 @@ export default {
 		},
 
 		/**
-		 * @param form
+		 * @param {object} form The role to add.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-1
 		 */
 		async addRole(form) {
@@ -258,7 +258,7 @@ export default {
 		},
 
 		/**
-		 * @param role
+		 * @param {object} role The role to remove.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-6
 		 */
 		async removeRole(role) {

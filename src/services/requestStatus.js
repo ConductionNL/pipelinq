@@ -47,7 +47,7 @@ const VALID_PRIORITIES = ['low', 'normal', 'high', 'urgent']
 /**
  * Get allowed target statuses for a given current status.
  *
- * @param {string} currentStatus
+ * @param {string} currentStatus The status the record is in now.
  * @return {string[]}
  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-39
  */
@@ -71,7 +71,7 @@ export function isValidTransition(from, to) {
 /**
  * Check if a status is terminal (no further transitions allowed).
  *
- * @param {string} status
+ * @param {string} status The status to test.
  * @return {boolean}
  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-44
  */
@@ -82,7 +82,7 @@ export function isTerminalStatus(status) {
 /**
  * Get human-readable label for a status.
  *
- * @param {string} status
+ * @param {string} status The stored status value.
  * @return {string}
  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-43
  */
@@ -93,7 +93,7 @@ export function getStatusLabel(status) {
 /**
  * Get color for a status.
  *
- * @param {string} status
+ * @param {string} status The stored status value.
  * @return {string}
  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-42
  */
@@ -104,7 +104,7 @@ export function getStatusColor(status) {
 /**
  * Get human-readable label for a priority.
  *
- * @param {string} priority
+ * @param {string} priority The stored priority value.
  * @return {string}
  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-41
  */
@@ -115,7 +115,7 @@ export function getPriorityLabel(priority) {
 /**
  * Get color for a priority.
  *
- * @param {string} priority
+ * @param {string} priority The stored priority value.
  * @return {string}
  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-40
  */
@@ -126,7 +126,7 @@ export function getPriorityColor(priority) {
 /**
  * Check if a priority value is valid.
  *
- * @param {string} priority
+ * @param {string} priority The priority value to test.
  * @return {boolean}
  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-45
  */
