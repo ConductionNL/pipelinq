@@ -317,6 +317,9 @@ export default {
 		 * @param {object} body The request body.
 		 * @param {string} successMessage The success toast.
 		 * @return {Promise<boolean>} Whether the action succeeded.
+		 * @spec exclude pos-lifecycle-guard-adoption names posTransaction and posRefund
+		 *   transitions only -- the cash-shift lifecycle has no owning
+		 *   requirement in any spec
 		 */
 		async lifecycle(path, body, successMessage) {
 			this.busy = true

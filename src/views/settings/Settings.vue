@@ -534,6 +534,9 @@ export default {
 		/**
 		 * Whether the entered Shillinq webhook URL is present but not a valid HTTPS URL.
 		 * An empty value is valid (disables the integration).
+		 *
+		 * @spec exclude input validation predicate: checks the entered URL parses as
+		 *   https, with empty meaning the integration is off
 		 */
 		shillinqUrlInvalid() {
 			const url = (this.config.shillinq_ledger_webhook_url || '').trim()
@@ -999,6 +1002,7 @@ export default {
 		 * @param {object} [extraFilters] Additional query filters, e.g. the
 		 *   `ticketType` discriminator needed to narrow the `ticket` supertype
 		 *   down to one of its subtypes (unify-ticket-supertype).
+		 *
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-71
 		 */
 		async countObjectsWithField(type, field, value, extraFilters = {}) {

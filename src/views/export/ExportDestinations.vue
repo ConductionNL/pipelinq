@@ -124,6 +124,7 @@ export default {
 		 * Test connectivity to a destination.
 		 *
 		 * @param {object} row The destination row.
+		 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#requirement-destination-configuration-and-validation-req-bie-001
 		 */
 		async testConnection(row) {
 			this.busyId = row.id

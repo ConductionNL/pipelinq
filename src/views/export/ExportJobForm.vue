@@ -293,6 +293,8 @@ export default {
 	methods: {
 		/**
 		 * Load destinations for the dropdown.
+		 *
+		 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#requirement-destination-configuration-and-validation-req-bie-001
 		 */
 		async loadDestinations() {
 			try {
@@ -309,6 +311,8 @@ export default {
 
 		/**
 		 * Load the job for editing.
+		 *
+		 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#requirement-destination-upload-with-retries-req-bie-008
 		 */
 		async load() {
 			this.loading = true
@@ -353,6 +357,8 @@ export default {
 
 		/**
 		 * Persist the job via the shared object store.
+		 *
+		 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#requirement-destination-upload-with-retries-req-bie-008
 		 */
 		async save() {
 			this.busy = true

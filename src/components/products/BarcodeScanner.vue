@@ -190,6 +190,8 @@ export default {
 
 		/**
 		 * Open the camera viewfinder.
+		 *
+		 * @spec openspec/specs/pos-barcode-scan/spec.md#REQ-PBS-002
 		 */
 		async onOpenCamera() {
 			try {

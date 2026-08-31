@@ -215,6 +215,10 @@ export default {
 	methods: {
 		/**
 		 * Load the current forecast configuration.
+		 *
+		 * @spec exclude no requirement governs the forecast admin form. pipeline-insights
+		 *   defers its config scenario to admin-settings, and admin-settings
+		 *   never delivered one. Real spec gap, not plumbing
 		 */
 		async load() {
 			this.loading = true
@@ -236,6 +240,9 @@ export default {
 
 		/**
 		 * Persist the forecast configuration.
+		 *
+		 * @spec exclude see load(): the forecast config surface has no owning requirement
+		 *   in either pipeline-insights or admin-settings
 		 */
 		async save() {
 			this.saving = true

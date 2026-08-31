@@ -161,6 +161,10 @@ export default {
 		},
 	},
 
+	/**
+	 * @spec exclude loads the provider list for the picker; the payment-provider adapter
+	 *   change that specified it is archived and no spec inherited it
+	 */
 	async mounted() {
 		try {
 			this.providers = await listProviders()

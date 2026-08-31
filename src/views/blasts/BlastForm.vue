@@ -386,6 +386,8 @@ export default {
 
 		/**
 		 * Load all campaign templates.
+		 *
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-blast-creation-wizard-gates-on-compliance
 		 */
 		async loadTemplates() {
 			this.templatesLoading = true

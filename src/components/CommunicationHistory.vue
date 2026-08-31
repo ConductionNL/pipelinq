@@ -181,6 +181,9 @@ export default {
 			)
 		},
 
+		/**
+		 * @spec openspec/specs/activity-timeline/spec.md#requirement-timeline-entries-must-be-available-via-api
+		 */
 		async fetchHistory() {
 			if (!this.entityId) {
 				return

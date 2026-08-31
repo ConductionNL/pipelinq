@@ -66,6 +66,10 @@ export default {
 			}
 		},
 
+		/**
+		 * @spec exclude portal session extension has no owning requirement, see
+		 *   PortalApp::logout
+		 */
 		async extend() {
 			try {
 				const result = await portalApi.extendSession()
@@ -76,6 +80,10 @@ export default {
 			}
 		},
 
+		/**
+		 * @spec exclude portal session handling has no owning requirement, see
+		 *   PortalApp::logout
+		 */
 		async logout() {
 			try {
 				await portalApi.logout()

@@ -23,6 +23,10 @@ export default {
 	name: 'XWikiDashboardWidget',
 	components: { XWikiWidget },
 	computed: {
+		/**
+		 * @spec exclude reads one config key with an empty-string fallback; a settings
+		 *   passthrough, not behaviour
+		 */
 		defaultSpace() {
 			try {
 				const store = useSettingsStore()

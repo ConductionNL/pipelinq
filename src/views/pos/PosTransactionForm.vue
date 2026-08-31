@@ -568,6 +568,8 @@ export default {
 		 * Totals are intentionally NOT sent: the backend recomputes them
 		 * server-side on confirm. The client only persists the editable header
 		 * + line inputs.
+		 *
+		 * @spec openspec/specs/pos-transaction-core/spec.md#REQ-POS-004
 		 */
 		async save() {
 			if (!this.checkoutAllowed) {

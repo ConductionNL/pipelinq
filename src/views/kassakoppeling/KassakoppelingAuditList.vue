@@ -415,6 +415,7 @@ export default {
 		 *
 		 * @param {string} value The ISO timestamp.
 		 * @return {string} The formatted value.
+		 * @spec exclude display formatter: ISO timestamp to an nl-NL date
 		 */
 		formatTimestamp(value) {
 			if (!value) {
@@ -439,6 +440,7 @@ export default {
 		 *
 		 * @param {number|string} cents The amount in cents.
 		 * @return {string} The formatted EUR value.
+		 * @spec exclude display formatter: integer cents to a localised EUR string
 		 */
 		formatEur(cents) {
 			const value = Number.isFinite(Number(cents)) ? Number(cents) / 100 : 0

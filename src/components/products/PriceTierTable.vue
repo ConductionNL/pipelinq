@@ -180,6 +180,8 @@ export default {
 
 		/**
 		 * Persist the sorted tiers to the product.
+		 *
+		 * @spec openspec/specs/pos-product-catalogue/spec.md#REQ-PPC-003
 		 */
 		async save() {
 			this.saving = true

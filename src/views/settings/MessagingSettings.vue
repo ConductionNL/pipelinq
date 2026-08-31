@@ -742,6 +742,9 @@ export default {
 			}
 		},
 
+		/**
+		 * @spec openspec/specs/outbound-messaging/spec.md#REQ-OM-001
+		 */
 		async fetchProviders() {
 			this.loadingProviders = true
 			try {

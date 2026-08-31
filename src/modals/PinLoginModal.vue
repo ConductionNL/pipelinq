@@ -141,6 +141,10 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * @spec exclude the pos-staff-pin-permissions change is archived and no spec
+		 *   inherited POS staff, PIN login or roles
+		 */
 		async loadStaff() {
 			this.loading = true
 			try {

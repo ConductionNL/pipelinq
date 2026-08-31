@@ -454,6 +454,8 @@ export default {
 		 *
 		 * Amounts are recomputed server-side on confirm; the client persists the
 		 * editable header + line selections only.
+		 *
+		 * @spec openspec/specs/pos-refund-return/spec.md#REQ-REF-003
 		 */
 		async save() {
 			const selected = this.candidates.filter((c) => c.selected)

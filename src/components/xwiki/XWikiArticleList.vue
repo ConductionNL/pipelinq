@@ -51,6 +51,14 @@ export default {
 
 	emits: ['select'],
 	methods: {
+		/**
+		 * Format an article's publication date for the list.
+		 *
+		 * @param {string} iso The ISO timestamp.
+		 * @return {string} The locale date, or the raw value when it will not parse.
+		 * @spec exclude display formatter: turns an ISO string into a locale date and
+		 *   falls back to the raw value
+		 */
 		formatDate(iso) {
 			if (!iso) return ''
 			const d = new Date(iso)

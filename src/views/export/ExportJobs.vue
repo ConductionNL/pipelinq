@@ -148,6 +148,7 @@ export default {
 		 * Enable or disable a job.
 		 *
 		 * @param {object} row The job row.
+		 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#requirement-destination-upload-with-retries-req-bie-008
 		 */
 		async toggleEnabled(row) {
 			this.busyId = row.id

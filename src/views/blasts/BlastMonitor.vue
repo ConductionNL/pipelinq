@@ -288,6 +288,7 @@ export default {
 		 * Fallback fetch of deliveries when the blast payload does not embed them.
 		 *
 		 * @return {Promise<Array>}
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-live-send-monitor
 		 */
 		async fetchDeliveries() {
 			try {
@@ -401,6 +402,8 @@ export default {
 		 *
 		 * @param {string} ts Timestamp string.
 		 * @return {string}
+		 * @spec exclude display formatter for the timeline list; returns the raw value when
+		 *   the timestamp will not parse
 		 */
 		formatTime(ts) {
 			if (!ts) {

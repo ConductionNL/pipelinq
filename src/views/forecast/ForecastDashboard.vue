@@ -280,6 +280,10 @@ export default {
 			return '€' + num.toLocaleString('nl-NL', { maximumFractionDigits: 0 })
 		},
 
+		/**
+		 * @spec exclude forecast snapshots have no owning requirement, see
+		 *   ForecastSettings::load for the same gap
+		 */
 		async loadSnapshots() {
 			this.loading = true
 			try {
