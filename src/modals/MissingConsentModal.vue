@@ -41,10 +41,10 @@
 				<NcButton variant="tertiary" @click="$emit('cancel')">
 					{{ t('pipelinq', 'Cancel') }}
 				</NcButton>
-				<NcButton variant="secondary" @click="$emit('request-consent')">
+				<NcButton variant="secondary" @click="$emit('requestConsent')">
 					{{ t('pipelinq', 'Request consent') }}
 				</NcButton>
-				<NcButton variant="primary" @click="$emit('skip-and-send')">
+				<NcButton variant="primary" @click="$emit('skipAndSend')">
 					{{ t('pipelinq', 'Skip and send') }}
 				</NcButton>
 			</div>
@@ -76,7 +76,7 @@ export default {
 		},
 	},
 
-	emits: ['cancel', 'request-consent', 'skip-and-send'],
+	emits: ['cancel', 'requestConsent', 'skipAndSend'],
 	computed: {
 		/**
 		 * Trimmed list of contacts shown in the modal (avoids huge DOM trees).

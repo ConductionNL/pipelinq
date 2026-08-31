@@ -76,7 +76,7 @@ export default {
 		},
 	},
 
-	emits: ['update:modelValue', 'validity-change'],
+	emits: ['update:modelValue', 'validityChange'],
 	data() {
 		return {
 			tree: this.cloneTree(this.modelValue),
@@ -263,7 +263,7 @@ export default {
 			this.validationError = ''
 			this.errors = {}
 			if (!this.hasAnyLeaf) {
-				this.$emit('validity-change', false)
+				this.$emit('validityChange', false)
 				return
 			}
 			try {
@@ -276,9 +276,9 @@ export default {
 					this.validationError =
 						data?.error || this.t('pipelinq', 'Invalid rules.')
 					this.errors = data?.fieldErrors || {}
-					this.$emit('validity-change', false)
+					this.$emit('validityChange', false)
 				} else {
-					this.$emit('validity-change', true)
+					this.$emit('validityChange', true)
 				}
 			} catch (e) {
 				const response = e?.response?.data
@@ -286,7 +286,7 @@ export default {
 					response?.error
 					|| this.t('pipelinq', 'Could not validate rules.')
 				this.errors = response?.fieldErrors || {}
-				this.$emit('validity-change', false)
+				this.$emit('validityChange', false)
 			}
 		},
 

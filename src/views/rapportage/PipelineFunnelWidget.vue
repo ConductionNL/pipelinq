@@ -17,7 +17,7 @@
 				trackBy="value"
 				@update:modelValue="
 					$emit(
-						'pipeline-change',
+						'pipelineChange',
 						selectedPipeline ? selectedPipeline.value : null,
 					)
 				" />
@@ -58,7 +58,7 @@ export default {
 		},
 	},
 
-	emits: ['pipeline-change'],
+	emits: ['pipelineChange'],
 	data() {
 		return {
 			selectedPipeline: null,
