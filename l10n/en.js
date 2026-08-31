@@ -3562,7 +3562,11 @@ OC.L10N.register(
         "Logical entity slug boarded here ('lead', 'request', …). Ticket subtypes resolve onto the unified `ticket` schema via resolveObjectType().": "Logical entity slug boarded here ('lead', 'request', …). Ticket subtypes resolve onto the unified `ticket` schema via resolveObjectType().",
         "Object property whose value names the stage column (normally 'stage').": "Object property whose value names the stage column (normally 'stage').",
         "Optional numeric property summed per column for a stage total (e.g. 'value').": "Optional numeric property summed per column for a stage total (e.g. 'value').",
-        "Which object types this pipeline boards, and which property of each supplies the stage column. A pipeline that declares none is unscoped and offered for every entity type. Supersedes the retired `entityType` field.": "Which object types this pipeline boards, and which property of each supplies the stage column. A pipeline that declares none is unscoped and offered for every entity type. Supersedes the retired `entityType` field."
+        "Which object types this pipeline boards, and which property of each supplies the stage column. A pipeline that declares none is unscoped and offered for every entity type. Supersedes the retired `entityType` field.": "Which object types this pipeline boards, and which property of each supplies the stage column. A pipeline that declares none is unscoped and offered for every entity type. Supersedes the retired `entityType` field.",
+        "Failed to create contact.": "Failed to create contact.",
+        "Select a client first": "Select a client first",
+        "Select or create a client": "Select or create a client",
+        "Select or create a contact": "Select or create a contact"
     },
     "nplurals=2; plural=(n != 1);"
 )

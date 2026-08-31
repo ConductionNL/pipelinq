@@ -287,10 +287,26 @@
 			"route": "/",
 			"type": "dashboard",
 			"title": "Sales overview",
-			"actionsComponent": "DashboardHeaderActions",
 			"config": {
-				"showRefresh": false,
+				"showRefresh": true,
 				"widgetShowRefresh": false,
+				"headerActions": [
+					{
+						"id": "new-lead",
+						"label": "New Lead",
+						"type": "open-modal",
+						"target": "LeadCreateDialog",
+						"variant": "primary",
+						"icon": "Plus"
+					},
+					{
+						"id": "new-client",
+						"label": "New Client",
+						"type": "open-modal",
+						"target": "ClientCreateDialog",
+						"icon": "Plus"
+					}
+				],
 				"description": "Revenue, pipeline and win performance",
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"dateRange": {
@@ -345,10 +361,26 @@
 			"route": "/operational",
 			"type": "dashboard",
 			"title": "Operational overview",
-			"actionsComponent": "DashboardHeaderActions",
 			"config": {
-				"showRefresh": false,
+				"showRefresh": true,
 				"widgetShowRefresh": false,
+				"headerActions": [
+					{
+						"id": "new-lead",
+						"label": "New Lead",
+						"type": "open-modal",
+						"target": "LeadCreateDialog",
+						"variant": "primary",
+						"icon": "Plus"
+					},
+					{
+						"id": "new-client",
+						"label": "New Client",
+						"type": "open-modal",
+						"target": "ClientCreateDialog",
+						"icon": "Plus"
+					}
+				],
 				"description": "Leads, requests, service and team workload",
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"dateRange": {

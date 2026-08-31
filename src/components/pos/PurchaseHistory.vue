@@ -64,6 +64,9 @@ export default {
 
 		defaultCollapsed: {
 			type: Boolean,
+			// History is long, so it starts collapsed and a caller opts INTO
+			// expanding it.
+			// eslint-disable-next-line vue/no-boolean-default
 			default: true,
 		},
 	},

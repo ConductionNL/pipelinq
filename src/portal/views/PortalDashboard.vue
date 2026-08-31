@@ -196,7 +196,7 @@ export default {
 		 *
 		 * @param {object} row The document row to download.
 		 * @return {Promise<void>}
-		 * @spec exclude Deprecated-global swap only (OC.generateUrl -> @nextcloud/router);
+		 * @spec exclude Deprecated-global swap only (OC.generateUrl -> `@nextcloud/router`);
 		 *   openspec/specs/customer-portal specifies the origin gate, not document
 		 *   download, so there is no requirement to point at.
 		 */
