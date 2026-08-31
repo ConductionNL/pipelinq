@@ -216,6 +216,7 @@ export default {
 		},
 
 		/**
+		 * @param {object} payload The BRP lookup request.
 		 * @spec openspec/changes/bsn-validatie-en-brp-lookup/tasks.md#5.1
 		 */
 		async onLookup(payload) {

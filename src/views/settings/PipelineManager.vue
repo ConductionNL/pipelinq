@@ -164,7 +164,7 @@ export default {
 
 	methods: {
 		/**
-		 * @param pipeline
+		 * @param {object} pipeline The pipeline whose scope to label.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-52
 		 */
 		schemaLabel(pipeline) {
@@ -182,7 +182,7 @@ export default {
 		},
 
 		/**
-		 * @param pipeline
+		 * @param {object} pipeline The pipeline to count stages for.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-53
 		 */
 		stageCount(pipeline) {
@@ -191,7 +191,7 @@ export default {
 		},
 
 		/**
-		 * @param pipeline
+		 * @param {object} pipeline The pipeline to preview stages for.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-54
 		 */
 		stagePreview(pipeline) {
@@ -207,7 +207,7 @@ export default {
 		},
 
 		/**
-		 * @param pipeline
+		 * @param {object} pipeline The pipeline to edit.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-49
 		 */
 		onEdit(pipeline) {
@@ -243,7 +243,7 @@ export default {
 		},
 
 		/**
-		 * @param pipeline
+		 * @param {object} pipeline The pipeline the user asked to delete.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-47
 		 */
 		async onDeleteClick(pipeline) {
@@ -282,7 +282,7 @@ export default {
 		},
 
 		/**
-		 * @param pipelineData
+		 * @param {string} pipelineData The pipeline to persist.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-50
 		 */
 		async onSave(pipelineData) {
@@ -336,7 +336,7 @@ export default {
 		},
 
 		/**
-		 * @param pipelineId
+		 * @param {string} pipelineId Identifier of the pipeline whose items to count.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-44
 		 */
 		async countAffectedItems(pipelineId) {

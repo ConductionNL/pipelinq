@@ -170,7 +170,7 @@ export default {
 
 	methods: {
 		/**
-		 * @param queue
+		 * @param {object} queue The queue to edit.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-21
 		 */
 		startEdit(queue) {
@@ -228,7 +228,7 @@ export default {
 		},
 
 		/**
-		 * @param queue
+		 * @param {object} queue The queue to delete.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-16
 		 */
 		async deleteQueue(queue) {

@@ -70,7 +70,7 @@ export function isValidBarcode(barcode) {
  * @param {number} [options.minLength] Minimum burst length.
  * @param {number} [options.maxIntervalMs] Maximum average inter-key delay.
  * @param {number} [options.idleResetMs] Idle window before the buffer resets.
- * @return {{push: Function, reset: Function}} The reducer.
+ * @return {{push: (function(string): (string|null)), reset: (function(): void)}} The reducer.
  */
 export function createHidBufferReducer(options = {}) {
 	const minLength = options.minLength ?? SCAN_MIN_LENGTH
@@ -144,7 +144,7 @@ export function createHidBufferReducer(options = {}) {
 /**
  * The barcode-scanner composable.
  *
- * @param {Function} onScan Callback invoked with a validated barcode string.
+ * @param {(function(string): void)} onScan Callback invoked with a validated barcode string.
  * @return {object} Reactive state + camera controls.
  */
 export function useBarcodeScanner(onScan) {

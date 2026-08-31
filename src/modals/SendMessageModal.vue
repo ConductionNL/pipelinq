@@ -263,6 +263,7 @@ export default {
 		 * only needs the contact to not have opted out. This mirrors the
 		 * server's own gating (REQ-OM-005) purely for UX — the server
 		 * decides authoritatively on send regardless of this value.
+		 *
 		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
 		 */
 		consentOk() {

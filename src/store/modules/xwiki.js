@@ -24,8 +24,10 @@ function headers() {
 }
 
 /**
+ * Build a query string, dropping empty values.
  *
- * @param params
+ * @param {object} params The query parameters.
+ * @return {string} The encoded query string.
  */
 function qs(params) {
 	const usp = new URLSearchParams()

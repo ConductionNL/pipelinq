@@ -148,6 +148,8 @@ export default {
 		},
 	},
 
+	emits: ['cancel', 'saved'],
+
 	data() {
 		return {
 			// Ticket fields, written verbatim to the `ticket` schema on save.
@@ -287,7 +289,7 @@ export default {
 				title: this.form.title,
 				channel: this.form.channel,
 				occurredAt: new Date().toISOString(),
-				assignee: OC.currentUser,
+				assignee: window.OC?.getCurrentUser?.()?.uid,
 				channelMetadata: {},
 			}
 

@@ -324,7 +324,7 @@ export default {
 		},
 
 		/**
-		 * @param productId
+		 * @param {string} productId Identifier of the product.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-14
 		 */
 		getProductName(productId) {
@@ -333,7 +333,7 @@ export default {
 		},
 
 		/**
-		 * @param item
+		 * @param {object} item The line item to total.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-11
 		 */
 		calculateTotal(item) {
@@ -344,7 +344,7 @@ export default {
 		},
 
 		/**
-		 * @param productId
+		 * @param {string} productId Identifier of the product the user picked.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-18
 		 */
 		onProductSelect(productId) {
@@ -381,7 +381,7 @@ export default {
 		},
 
 		/**
-		 * @param item
+		 * @param {object} item The line item to persist.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-22
 		 */
 		async updateLineItem(item) {
@@ -403,7 +403,7 @@ export default {
 		},
 
 		/**
-		 * @param item
+		 * @param {object} item The line item whose notes changed.
 		 * @spec openspec/changes/2026-03-20-lead-product-link/tasks.md#task-2.2
 		 */
 		async updateNotes(item) {
@@ -415,7 +415,7 @@ export default {
 		},
 
 		/**
-		 * @param item
+		 * @param {object} item The line item to remove.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-20
 		 */
 		async removeLineItem(item) {
@@ -444,7 +444,7 @@ export default {
 		},
 
 		/**
-		 * @param value
+		 * @param {string} value The amount to format.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-13
 		 */
 		formatCurrency(value) {

@@ -177,7 +177,7 @@ export default {
 
 	methods: {
 		/**
-		 * @param profile
+		 * @param {object} profile The agent profile whose skills to name.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-5
 		 */
 		getSkillNames(profile) {
@@ -189,7 +189,7 @@ export default {
 		},
 
 		/**
-		 * @param profile
+		 * @param {object} profile The agent profile to edit.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-12
 		 */
 		startEdit(profile) {
@@ -206,8 +206,8 @@ export default {
 		},
 
 		/**
-		 * @param skillId
-		 * @param checked
+		 * @param {string} skillId Identifier of the skill.
+		 * @param {boolean} checked Whether the skill is now selected.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-13
 		 */
 		toggleSkill(skillId, checked) {
@@ -244,7 +244,7 @@ export default {
 		},
 
 		/**
-		 * @param profile
+		 * @param {object} profile The agent profile to delete.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-4
 		 */
 		async deleteProfile(profile) {

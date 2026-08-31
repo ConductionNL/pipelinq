@@ -162,7 +162,7 @@ export default {
 	},
 
 	props: {
-		/** The Z-report id (token-resolved from @objectId by CnBodySections). */
+		/** The Z-report id (token-resolved from `@objectId` by CnBodySections). */
 		zReportId: {
 			type: String,
 			default: '',
@@ -243,6 +243,7 @@ export default {
 		formatEur,
 		/**
 		 * Load the Z-report so the breakdown tables + bookkeeping projection render.
+		 *
 		 * @spec openspec/changes/pipelinq-bookkeeping-to-shillinq/specs/pipelinq-bookkeeping-to-shillinq/spec.md#REQ-PBTS-002
 		 */
 		async load() {

@@ -126,7 +126,7 @@ export default {
 	},
 
 	props: {
-		/** The refund id (token-resolved from @objectId by CnBodySections). */
+		/** The refund id (token-resolved from `@objectId` by CnBodySections). */
 		refundId: {
 			type: String,
 			default: '',

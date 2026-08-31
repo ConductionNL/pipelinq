@@ -160,7 +160,7 @@ export default {
 		},
 
 		/**
-		 * @param suggestion
+		 * @param {object} suggestion The routing suggestion to act on.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-routing-ui/tasks.md#task-1
 		 */
 		async assign(suggestion) {
@@ -173,7 +173,7 @@ export default {
 		},
 
 		/**
-		 * @param suggestion
+		 * @param {object} suggestion The routing suggestion.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-routing-ui/tasks.md#task-5
 		 */
 		workloadIcon(suggestion) {
@@ -186,7 +186,7 @@ export default {
 		},
 
 		/**
-		 * @param suggestion
+		 * @param {object} suggestion The routing suggestion.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-routing-ui/tasks.md#task-6
 		 */
 		workloadTitle(suggestion) {

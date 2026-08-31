@@ -77,12 +77,14 @@ export default {
 	},
 
 	props: {
-		/** The request id (token-resolved from @objectId by CnBodySections). */
+		/** The request id (token-resolved from `@objectId` by CnBodySections). */
 		requestId: {
 			type: String,
 			default: '',
 		},
 	},
+
+	emits: ['converted'],
 
 	data() {
 		return {
@@ -174,6 +176,7 @@ export default {
 
 		/**
 		 * Convert the request into a case via the semantic handoff endpoint.
+		 *
 		 * @spec openspec/specs/request-management/spec.md#requirement-request-to-case-conversion-v1
 		 */
 		async convertToCase() {
@@ -228,6 +231,7 @@ export default {
 
 		/**
 		 * Copy the case reference UUID to the clipboard.
+		 *
 		 * @spec openspec/specs/request-management/spec.md#requirement-request-to-case-conversion-v1
 		 */
 		async copyReference() {
