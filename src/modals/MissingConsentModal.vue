@@ -139,7 +139,7 @@ export default {
 
 .missing-consent__list {
 	margin: 0;
-	padding-left: 20px;
+	padding-inline-start: 20px;
 	max-height: 240px;
 	overflow-y: auto;
 }
@@ -150,7 +150,7 @@ export default {
 
 .missing-consent__reason {
 	color: var(--color-text-lighter);
-	margin-left: 6px;
+	margin-inline-start: 6px;
 }
 
 .missing-consent__more {

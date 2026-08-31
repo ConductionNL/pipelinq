@@ -166,7 +166,7 @@ export default {
 .xwiki-widget__more {
 	display: block;
 	margin-top: 8px;
-	text-align: right;
+	text-align: end;
 	font-size: 0.9em;
 	color: var(--color-primary, #006aa3);
 }

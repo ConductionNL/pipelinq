@@ -494,7 +494,7 @@ export default {
 .viewTable th,
 .viewTable td {
 	padding: 8px 12px;
-	text-align: left;
+	text-align: start;
 	border-bottom: 1px solid var(--color-border);
 	vertical-align: middle;
 }
@@ -536,7 +536,7 @@ export default {
 }
 
 .total-label {
-	text-align: right;
+	text-align: end;
 	font-weight: 700;
 }
 
@@ -561,8 +561,7 @@ export default {
 .create-overlay {
 	position: fixed;
 	top: 0;
-	left: 0;
-	right: 0;
+	inset-inline: 0;
 	bottom: 0;
 	background: rgba(0, 0, 0, 0.5);
 	display: flex;

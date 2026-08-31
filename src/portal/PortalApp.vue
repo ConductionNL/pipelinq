@@ -142,7 +142,7 @@ export default {
 
 .portal-nav a,
 .portal-nav button {
-	margin-left: 1rem;
+	margin-inline-start: 1rem;
 }
 
 .portal-field {
@@ -166,7 +166,7 @@ export default {
 
 .portal-table th,
 .portal-table td {
-	text-align: left;
+	text-align: start;
 	padding: 0.5rem;
 	border-bottom: 1px solid var(--color-border, #ddd);
 }
@@ -209,7 +209,7 @@ export default {
 .portal-session-warning {
 	position: fixed;
 	bottom: 1rem;
-	left: 50%;
+	inset-inline-start: 50%;
 	transform: translateX(-50%);
 	background: #fff;
 	border: 2px solid var(--portal-brand-primary, #21468b);

@@ -373,7 +373,7 @@ export default {
 }
 
 .pos-refund-section__lines th {
-	text-align: left;
+	text-align: start;
 	font-size: 12px;
 	color: var(--color-text-maxcontrast);
 	padding: 6px 8px;
@@ -386,7 +386,7 @@ export default {
 }
 
 .num {
-	text-align: right;
+	text-align: end;
 }
 
 .empty {

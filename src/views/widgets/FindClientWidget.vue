@@ -616,7 +616,7 @@ export default {
 .copy-feedback {
 	position: fixed;
 	bottom: 16px;
-	right: 16px;
+	inset-inline-end: 16px;
 	padding: 8px 16px;
 	background: var(--color-success);
 	color: var(--color-primary-text);

@@ -356,6 +356,6 @@ export default {
 .recent-status {
 	font-size: 11px;
 	color: var(--color-text-maxcontrast);
-	margin-left: 8px;
+	margin-inline-start: 8px;
 }
 </style>

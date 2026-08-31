@@ -1231,7 +1231,7 @@ export default {
 	width: 8px;
 	height: 8px;
 	border-radius: 50%;
-	margin-right: 6px;
+	margin-inline-end: 6px;
 	vertical-align: middle;
 }
 
@@ -1248,7 +1248,7 @@ export default {
 	width: 12px;
 	height: 12px;
 	border-radius: 3px;
-	margin-right: 6px;
+	margin-inline-end: 6px;
 	border: 1px solid var(--color-border);
 	vertical-align: middle;
 }

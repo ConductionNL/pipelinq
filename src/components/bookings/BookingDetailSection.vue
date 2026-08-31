@@ -780,7 +780,7 @@ export default {
 .viewTable th,
 .viewTable td {
 	padding: 12px;
-	text-align: left;
+	text-align: start;
 	border-bottom: 1px solid var(--color-border);
 }
 
@@ -798,7 +798,7 @@ export default {
 
 .timeline {
 	margin: 0;
-	padding-left: 20px;
+	padding-inline-start: 20px;
 }
 
 .timeline li {

@@ -477,7 +477,7 @@ export default {
 	width: 8px;
 	height: 8px;
 	border-radius: 50%;
-	margin-right: 6px;
+	margin-inline-end: 6px;
 	vertical-align: middle;
 }
 

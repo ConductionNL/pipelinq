@@ -99,11 +99,11 @@ export default {
 .screen-pop__table th,
 .screen-pop__table td {
 	padding: 8px 12px;
-	text-align: left;
+	text-align: start;
 	border-bottom: 1px solid var(--color-border);
 }
 
 .screen-pop__actions {
-	text-align: right;
+	text-align: end;
 }
 </style>

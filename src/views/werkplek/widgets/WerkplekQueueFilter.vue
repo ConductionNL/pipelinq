@@ -165,7 +165,7 @@ export default {
 	color: var(--color-main-text);
 	cursor: pointer;
 	font: inherit;
-	text-align: left;
+	text-align: start;
 }
 
 .werkplek-queue-filter__item:hover {

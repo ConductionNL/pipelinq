@@ -468,7 +468,7 @@ export default {
 }
 
 .blast-monitor__eta {
-	margin-left: 6px;
+	margin-inline-start: 6px;
 }
 
 .blast-monitor__totals {

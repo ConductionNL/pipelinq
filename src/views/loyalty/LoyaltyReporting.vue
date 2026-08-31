@@ -328,7 +328,7 @@ export default {
 
 .loyalty-reporting__table th,
 .loyalty-reporting__table td {
-	text-align: left;
+	text-align: start;
 	padding: 0.5rem;
 }
 </style>
