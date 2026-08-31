@@ -49,6 +49,24 @@ export default {
 
 	methods: {
 		/**
+		 * Navigate to the created record and close.
+		 *
+		 * A registry modal is mounted by CnAppRoot, which forwards only
+		 * `close` — there is no parent to route on the dialog's behalf the way
+		 * the old bespoke header-actions component did.
+		 *
+		 * @param {string} route The detail route name.
+		 * @param {string} id The created object's id.
+		 * @return {void}
+		 */
+		goToDetail(route, id) {
+			this.$emit('close')
+			if (id && this.$router) {
+				this.$router.push({ name: route, params: { id } }).catch(() => {})
+			}
+		},
+
+		/**
 		 * Trigger the form's own validate-then-emit flow; @save fires onSave.
 		 * @spec openspec/specs/unify-client-contact/spec.md
 		 */
@@ -76,6 +94,7 @@ export default {
 				const id = created?.id ?? created?.['@self']?.id
 				if (id) {
 					this.$emit('created', id)
+					this.goToDetail('ClientDetail', id)
 					return
 				}
 				showError(t('pipelinq', 'Failed to create client.'))

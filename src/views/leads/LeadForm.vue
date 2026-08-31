@@ -77,18 +77,52 @@
 				@update:modelValue="expectedCloseDateObj = $event" />
 		</div>
 
-		<!-- Client -->
-		<div class="form-group" data-testid="lead-form-client">
-			<label>{{ t('pipelinq', 'Client') }}</label>
-			<NcSelect
-				v-model="form.client"
-				:options="clientOptions"
-				:aria-label-combobox="t('pipelinq', 'Client')"
-				:clearable="true"
-				label="label"
-				:reduce="(o) => o.value"
-				:placeholder="t('pipelinq', 'Select client')" />
+		<!-- Client + Contact. Contact is scoped to the chosen client and stays
+		     disabled until there is one — the same cascade Stage has on
+		     Pipeline below. Both can create what they cannot find. -->
+		<div class="form-row">
+			<div class="form-group" data-testid="lead-form-client">
+				<CnResourceSelect
+					register="pipelinq"
+					schema="client"
+					labelField="name"
+					:modelValue="form.client || ''"
+					:inputLabel="t('pipelinq', 'Client')"
+					:placeholder="t('pipelinq', 'Select or create a client')"
+					:preload="true"
+					:createHandler="createClient"
+					@update:modelValue="onClientChange" />
+			</div>
+			<div class="form-group" data-testid="lead-form-contact">
+				<CnResourceSelect
+					register="pipelinq"
+					schema="contact"
+					labelField="name"
+					:modelValue="form.contact || ''"
+					:inputLabel="t('pipelinq', 'Contact')"
+					:filters="contactFilters"
+					:disabled="!form.client"
+					:preload="true"
+					:createHandler="createContact"
+					:placeholder="
+						form.client
+							? t('pipelinq', 'Select or create a contact')
+							: t('pipelinq', 'Select a client first')
+					"
+					@update:modelValue="(v) => (form.contact = v || null)" />
+			</div>
 		</div>
+
+		<ClientCreateDialog
+			v-if="clientDialogOpen"
+			@created="onClientCreated"
+			@close="closeClientDialog" />
+		<ContactCreateDialog
+			v-if="contactDialogOpen"
+			:client="form.client"
+			:name="pendingName"
+			@created="onContactCreated"
+			@close="closeContactDialog" />
 
 		<!-- Pipeline + Stage row -->
 		<div class="form-row">
@@ -133,12 +167,15 @@
 </template>
 
 <script>
+import { CnResourceSelect } from '@conduction/nextcloud-vue'
 import {
 	NcButton,
 	NcDateTimePickerNative,
 	NcSelect,
 	NcTextField,
 } from '@nextcloud/vue'
+import ClientCreateDialog from '../../dialogs/ClientCreateDialog.vue'
+import ContactCreateDialog from '../../dialogs/ContactCreateDialog.vue'
 import { toDateInputString, toDateObject } from '../../services/localeUtils.js'
 import { pipelineAppliesTo } from '../../services/pipelineUtils.js'
 import { useLeadSourcesStore } from '../../store/modules/leadSources.js'
@@ -147,6 +184,9 @@ import { useObjectStore } from '../../store/modules/object.js'
 export default {
 	name: 'LeadForm',
 	components: {
+		ClientCreateDialog,
+		CnResourceSelect,
+		ContactCreateDialog,
 		NcButton,
 		NcDateTimePickerNative,
 		NcSelect,
@@ -183,11 +223,21 @@ export default {
 				priority: 'normal',
 				expectedCloseDate: null,
 				client: null,
+				contact: null,
 				pipeline: null,
 				stage: null,
 			},
 
 			priorityOptions: ['low', 'normal', 'high', 'urgent'],
+
+			// Inline-create plumbing. `resolveCreate` is the promise resolver
+			// CnResourceSelect is awaiting: the picker hands control to a full
+			// dialog and resumes when that dialog resolves (with the created
+			// object) or is cancelled (with null).
+			clientDialogOpen: false,
+			contactDialogOpen: false,
+			pendingName: '',
+			resolveCreate: null,
 		}
 	},
 
@@ -274,20 +324,14 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-43
+		 * Scope for the contact picker. CnResourceSelect drops empty entries,
+		 * so an unchosen client scopes to nothing rather than querying for
+		 * contacts whose client is the empty string.
+		 *
+		 * @return {{client: (string|null)}}
 		 */
-		clients() {
-			return this.objectStore.collections.client || []
-		},
-
-		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-42
-		 */
-		clientOptions() {
-			return this.clients.map((c) => ({
-				value: c.id,
-				label: c.name || c.id,
-			}))
+		contactFilters() {
+			return { client: this.form.client }
 		},
 
 		/**
@@ -336,7 +380,6 @@ export default {
 		// Load pipelines, clients, and lead sources for dropdowns
 		await Promise.all([
 			this.objectStore.fetchCollection('pipeline', { _limit: 100 }),
-			this.objectStore.fetchCollection('client', { _limit: 100 }),
 			this.leadSourcesStore.fetchSources(),
 		])
 
@@ -352,6 +395,7 @@ export default {
 				priority: this.lead.priority || 'normal',
 				expectedCloseDate: this.lead.expectedCloseDate || null,
 				client: this.lead.client || null,
+				contact: this.lead.contact || null,
 				pipeline: this.lead.pipeline || null,
 				stage: this.lead.stage || null,
 			}
@@ -377,6 +421,94 @@ export default {
 					this.form.stage = firstOpen.name
 				}
 			}
+		},
+
+		/**
+		 * Selecting a different client invalidates the contact under it.
+		 *
+		 * @param {string} value The chosen client uuid, or '' when cleared.
+		 * @return {void}
+		 */
+		onClientChange(value) {
+			const next = value || null
+			if (next !== this.form.client) {
+				this.form.contact = null
+			}
+			this.form.client = next
+		},
+
+		/**
+		 * CnResourceSelect create hook for the client picker. The `client`
+		 * schema needs more than a name — `contactsUid` is server-minted — so
+		 * the typed term opens the full create dialog instead of being saved
+		 * directly.
+		 *
+		 * @return {Promise<object|null>} The created client, or null if cancelled.
+		 */
+		createClient() {
+			return new Promise((resolve) => {
+				this.resolveCreate = resolve
+				this.clientDialogOpen = true
+			})
+		},
+
+		/**
+		 * Same hook for the contact picker, carrying the typed name and the
+		 * selected client into the dialog.
+		 *
+		 * @param {string} term The name typed into the picker.
+		 * @return {Promise<object|null>} The created contact, or null if cancelled.
+		 */
+		createContact(term) {
+			this.pendingName = term || ''
+			return new Promise((resolve) => {
+				this.resolveCreate = resolve
+				this.contactDialogOpen = true
+			})
+		},
+
+		/**
+		 * Settle the awaiting picker exactly once, however the dialog ended.
+		 *
+		 * @param {object|null} created The created object, or null when cancelled.
+		 * @return {void}
+		 */
+		settleCreate(created) {
+			const resolve = this.resolveCreate
+			this.resolveCreate = null
+			this.pendingName = ''
+			if (resolve) resolve(created)
+		},
+
+		/**
+		 * @param {string} id The created client's uuid (ClientCreateDialog emits an id).
+		 * @return {void}
+		 */
+		onClientCreated(id) {
+			this.clientDialogOpen = false
+			this.form.contact = null
+			this.settleCreate(id ? { id } : null)
+		},
+
+		/** @return {void} */
+		closeClientDialog() {
+			this.clientDialogOpen = false
+			this.settleCreate(null)
+		},
+
+		/**
+		 * @param {object} contact The created contact object.
+		 * @return {void}
+		 */
+		onContactCreated(contact) {
+			this.contactDialogOpen = false
+			this.settleCreate(contact || null)
+		},
+
+		/** @return {void} */
+		closeContactDialog() {
+			this.contactDialogOpen = false
+			this.settleCreate(null)
 		},
 
 		/**
@@ -410,6 +542,7 @@ export default {
 			if (!data.source) delete data.source
 			if (!data.expectedCloseDate) delete data.expectedCloseDate
 			if (!data.client) delete data.client
+			if (!data.contact) delete data.contact
 			if (!data.pipeline) delete data.pipeline
 			if (!data.stage) delete data.stage
 
