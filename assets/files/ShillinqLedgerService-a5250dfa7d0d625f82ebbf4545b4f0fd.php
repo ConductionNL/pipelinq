@@ -294,6 +294,7 @@ class ShillinqLedgerService {
 	 * without each coupling directly to the date-time classes.
 	 *
 	 * @return string The ISO 8601 timestamp.
+	 * @spec openspec/specs/time-approval-workflow/spec.md#requirement-approved-time-entries-are-emitted-to-shillinqs-time-intake
 	 */
 	public function now(): string {
 		return (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('Y-m-d\TH:i:s\Z');
