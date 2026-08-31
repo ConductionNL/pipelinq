@@ -412,22 +412,9 @@
       "count": 3
     }
   },
-  "src/views/contacts/ContactForm.vue": {
-    "@nextcloud/l10n-enforce-ellipsis": {
-      "count": 1
-    },
-    "jsdoc/require-param-type": {
-      "count": 6
-    }
-  },
   "src/views/contracts/ContractInvoicingSection.vue": {
     "@typescript-eslint/no-unused-vars": {
       "count": 2
-    }
-  },
-  "src/views/dashboard/DashboardHeaderActions.vue": {
-    "jsdoc/require-param-type": {
-      "count": 3
     }
   },
   "src/views/dashboard/widgets/LeadsOverTimeChartWidget.vue": {
