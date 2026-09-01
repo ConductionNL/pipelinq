@@ -3570,7 +3570,8 @@ OC.L10N.register(
         "Added {name} as a client": "{name} toegevoegd als klant",
         "Could not add this prospect as a client": "Kon deze prospect niet als klant toevoegen",
         "Pipeline is required": "Pipeline is verplicht",
-        "Unknown company": "Onbekend bedrijf"
+        "Unknown company": "Onbekend bedrijf",
+        "All tickets": "Alle tickets"
     },
     "nplurals=2; plural=(n != 1);"
 )
