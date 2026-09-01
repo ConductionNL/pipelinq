@@ -64,10 +64,10 @@ import {
  * corroborating measurement that the English string is what the nav paints.
  */
 const POS_CHILDREN: Array<{ label: string; url: RegExp }> = [
-	{ label: 'Kassabon', url: /#\/pos$/ },
-	{ label: 'Returns', url: /#\/pos\/refunds/ },
-	{ label: 'Cash drawer', url: /#\/pos\/shifts/ },
-	{ label: 'Kassakoppeling audit', url: /#\/kassakoppeling\/audit/ },
+	{ label: 'Kassabon', url: /\/pos$/ },
+	{ label: 'Returns', url: /\/pos\/refunds/ },
+	{ label: 'Cash drawer', url: /\/pos\/shifts/ },
+	{ label: 'Kassakoppeling audit', url: /\/kassakoppeling\/audit/ },
 ]
 
 /** Is `label` painted as a TOP-LEVEL nav entry (not nested in a group)? */

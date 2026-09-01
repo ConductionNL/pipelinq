@@ -68,17 +68,17 @@ const ABSENT_ID = 'e2e-gate26-no-such-record'
  * @param page  The Playwright page.
  * @param hash  The manifest `route`, e.g. `/my-work`.
  */
-async function openSpaRoute(page: Page, hash: string): Promise<void> {
-	const response = await page.goto(`/apps/pipelinq/${hash}`)
+async function openSpaRoute(page: Page, route: string): Promise<void> {
+	const response = await page.goto(`/apps/pipelinq${route}`)
 	await assertAppShellServed(page, response)
-	// THE HASH IS THE PROOF THE ROUTE MATCHED. `routesFromManifest()` closes the
-	// table with `{ path: '/:pathMatch(.*)*', redirect: '/' }`, so an unmatched
-	// route does not 404 — it REWRITES the hash to `#/` and renders the
-	// Dashboard. Asserting the hash survived the mount is therefore the one
+	// THE SURVIVING PATH IS THE PROOF THE ROUTE MATCHED. `routesFromManifest()`
+	// closes the table with `{ path: '/:pathMatch(.*)*', redirect: '/' }`, so an
+	// unmatched route does not 404 — it redirects to `/` and renders the
+	// Dashboard. Asserting the path survived the mount is therefore the one
 	// cheap check that separates "this page rendered" from "the catch-all sent
 	// me to the dashboard and something dashboard-shaped rendered instead".
 	await expect(page).toHaveURL(
-		new RegExp(`#${hash.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`),
+		new RegExp(`${route.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`),
 		{ timeout: 10000 },
 	)
 	// The first-visit product tour and the fleet support dialog paint over the

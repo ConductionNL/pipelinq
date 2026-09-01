@@ -143,7 +143,7 @@ test('request list surfaces the channel column', async ({ page }) => {
 // @e2e openspec/specs/request-management/spec.md#set-priority-during-creation
 test('request list is reachable from the sidebar', async ({ page }) => {
 	await openApp(page)
-	await navClick(page, 'All tickets', /#\/tickets/)
+	await navClick(page, 'All tickets', /\/tickets/)
 	await expect(
 		page
 			.locator('#content-vue')

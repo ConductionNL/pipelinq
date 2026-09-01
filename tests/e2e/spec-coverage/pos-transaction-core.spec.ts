@@ -68,7 +68,7 @@ test('Kassabon (POS) page exposes the new-transaction entry point and nav', asyn
 	await openApp(page)
 	// Navigate via the Kassabon nav entry rather than a bare deep-link (more
 	// robust than goto, which can reset the manifest router to Dashboard).
-	await navClick(page, 'Kassabon', /#\/pos/)
+	await navClick(page, 'Kassabon', /\/pos/)
 	await expect(page.locator('body')).not.toContainText('Internal Server Error')
 
 	// CORRECTED 2026-08-06. This asserted `[data-testid="cn-cta-primary"]`.
