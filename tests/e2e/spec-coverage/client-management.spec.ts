@@ -83,13 +83,23 @@ test('client list has search capability', async ({ page }) => {
 	// the goto settled, and the locator it built was discarded without ever
 	// being awaited or asserted — so the search input this test is named for
 	// was never actually checked.
+	//
+	// THE INPUT IS NOT ON THE PAGE UNTIL IT IS ASKED FOR. CnIndexPage puts
+	// search behind a "Search and columns" disclosure button, so asserting the
+	// input directly fails on an index that offers search perfectly well. The
+	// user path is the contract: open the control, then the input is there.
+	await page
+		.getByRole('button', { name: /Search and columns/i })
+		.first()
+		.click()
+
 	await expect(
 		page
 			.locator(
 				'input[type="search"], input[placeholder*="search" i], input[placeholder*="zoek" i]',
 			)
 			.first(),
-		'the client index must offer a search input',
+		'the client index must offer a search input once "Search and columns" is opened',
 	).toBeVisible({ timeout: 15000 })
 
 	// Check the page loads fully
