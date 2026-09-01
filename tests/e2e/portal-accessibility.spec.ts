@@ -27,7 +27,16 @@
 
 import { expect, test } from '@playwright/test'
 
-// Hash-routed SPA. Every deep link maps to the same shell.
+// History-routed SPA (src/portal.js builds createWebHistory(routerBase())).
+// Every deep link is a real path, served by `portalPage#subpath`.
+//
+// ⚠️ These used to read `PORTAL_BASE + '#/login'`. Built by concatenation, the
+// literal `portal/#` never appeared in the file, so the sweep that de-hashed
+// the portal missed all six. Five of them still PASSED, which is why nothing
+// noticed: `/portal/#/login` is the path `/portal/`, installPortalGuard()
+// sends an unauthenticated visitor to /login anyway, and the login page is
+// exactly what those tests assert. Only `#/password-reset` failed, because the
+// guard sent it to /login too and `#portal-reset-email` was never rendered.
 const PORTAL_BASE = '/apps/pipelinq/portal/'
 
 test.describe('Customer portal — WCAG 2.2 AA structural checks', () => {
