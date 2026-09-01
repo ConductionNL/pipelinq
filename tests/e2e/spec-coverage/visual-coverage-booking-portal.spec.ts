@@ -17,33 +17,33 @@
  * already exercises this same entry point in CI, which is what makes the portal
  * bundle a known-good target rather than an assumption.
  *
- * WHY THE ASSERTIONS STOP AT "THE COMPONENT MOUNTED"
+ * THE API CLIENT USED TO BE POINTED AT THE WRONG PATH
  * ---------------------------------------------------
- * ⚠️ THE BOOKING PORTAL'S API CLIENT IS POINTED AT THE WRONG PATH, so neither
- * page can reach any of its data-bearing states. `src/services/bookingPortalApi.js`
- * sets `const base = '/apps/pipelinq/portal'` and appends `/services` and
- * `/booking/<id>`, but the routes registered in `appinfo/routes.php` are
- * `/portal/api/booking/services` and `/portal/api/booking/{bookingId}`. The
- * `/api/booking` segment is missing from every call, so each request instead
- * matches the SPA catch-all `portalPage#subpath` (`/portal/{path}`, requirement
- * `^(?!api/).*`) and Nextcloud answers with the portal shell as HTTP 200
- * text/html rather than 404. Consequences, both observed in run 31472541017:
+ * `src/services/bookingPortalApi.js` set `const base = '/apps/pipelinq/portal'`
+ * and appended `/services` and `/booking/<id>`, but the routes registered in
+ * `appinfo/routes.php` are `/portal/api/booking/services` and
+ * `/portal/api/booking/{bookingId}`. With the `/api/booking` segment missing,
+ * every call matched the SPA catch-all `portalPage#subpath` (`/portal/{path}`,
+ * requirement `^(?!api/).*`) and Nextcloud answered the portal shell as HTTP
+ * 200 text/html rather than 404 — so nothing threw. Observed in run
+ * 31472541017:
  *
- *   * BookingPortal — `fetchServices()` resolves with an HTML string,
- *     `Array.isArray(html)` is false and `html.services` is undefined, so the
- *     list is `[]` and `fetchServiceBySlug()` returns null for EVERY slug. With
- *     `service`, `loadError` and `loadingService` all falsy, none of the three
- *     v-if branches render — only the unconditional root and skip link. The
- *     public booking portal therefore cannot display a service at all.
- *   * BookingConfirmationPage — `fetchBooking()` resolves instead of throwing,
- *     `booking` becomes a truthy HTML string, and the page renders
- *     "Your booking is confirmed" with every field blank and the `{email}`
+ *   * BookingPortal — `fetchServices()` resolved with an HTML string,
+ *     `Array.isArray(html)` was false and `html.services` undefined, so the
+ *     list was `[]` and `fetchServiceBySlug()` returned null for EVERY slug.
+ *     The public booking portal could not display a service at all.
+ *   * BookingConfirmationPage — `fetchBooking()` resolved instead of throwing,
+ *     `booking` became a truthy HTML string, and the page rendered "Your
+ *     booking is confirmed" with every field blank and the `{email}`
  *     placeholder unsubstituted, for a booking id that does not exist.
  *
- * Both are reported as product defects. The tests below therefore assert only
- * what is true both BEFORE and AFTER that fix — the route resolved, the right
- * component mounted, and it is not the login page — so they neither freeze the
- * bug into the suite nor leave CI red for a defect this change may not fix.
+ * The base now carries `/api/booking`, verified against the dev instance:
+ * `/portal/api/booking/services` answers 200 application/json,
+ * `/portal/api/booking/<absent-id>` answers 404 {"error":"Booking not found"}.
+ * The confirmation test below therefore asserts the error branch that was
+ * unreachable while the bug stood — a fabricated confirmation is a regression
+ * that fails by showing MORE, not less, so it needs an assertion that a blank
+ * success card cannot satisfy.
  */
 
 import type { Page } from '@playwright/test'
@@ -100,8 +100,7 @@ test('BookingPortal: /book/:serviceSlug mounts src/views/portal/BookingPortal.vu
 	// The router-view resolved to BookingPortal and not to PortalLogin.
 	await expect(main.locator('.booking-portal')).toHaveCount(1, { timeout: 15000 })
 	// The skip link is the one element BookingPortal renders unconditionally,
-	// above every v-if (WCAG 2.4.1 Bypass Blocks) — and, until the API base path
-	// above is fixed, the only element it renders at all. It is asserted with
+	// above every v-if (WCAG 2.4.1 Bypass Blocks). It is asserted with
 	// `toHaveText` because a skip link is positioned off-screen until focused,
 	// so `toBeVisible` would be testing the CSS, not the render.
 	await expect(main.locator('.booking-portal .booking-skip-link')).toHaveText(
@@ -124,33 +123,21 @@ test('BookingConfirmationPage: /booking-confirmation/:bookingId mounts src/views
 	// Not the login page — proves the public route resolved to this component.
 	await expect(page.locator('#portal-email')).toHaveCount(0)
 
-	// ⚠️ THE 404 BRANCH IS UNREACHABLE, so it is not asserted. The first version
-	// of this file asserted `.booking-error` with "This booking could not be
-	// found." and CI answered `element(s) not found`. That is not a selector
-	// typo — the captured DOM shows the SUCCESS branch rendering for an id that
-	// does not exist:
+	// The 404 branch, which used to be UNREACHABLE. `bookingPortalApi.js` had
+	// `const base = '/apps/pipelinq/portal'`, so fetchBooking() GET'd
+	// /apps/pipelinq/portal/booking/<id> while the route is registered at
+	// /portal/api/booking/{bookingId}. Missing the `/api/booking` segment, the
+	// request matched `portalPage#subpath` (`/portal/{path}`, requirement
+	// `^(?!api/).*`) instead and Nextcloud answered the portal SPA shell as
+	// HTTP 200 text/html. axios RESOLVED, `booking` became a truthy HTML
+	// string, and the page rendered a FABRICATED confirmation -- "Your booking
+	// is confirmed" for an id that does not exist, every field blank and the
+	// {email} placeholder unsubstituted.
 	//
-	//     - main:
-	//       - heading "Your booking is confirmed" [level=1]
-	//       - status: "A confirmation email has been sent to {email}."
-	//       - term: Name        / definition        (empty)
-	//       - term: Service     / definition        (empty)
-	//       - term: Date and time / definition      (empty)
-	//
-	// Cause (src/services/bookingPortalApi.js): `const base =
-	// '/apps/pipelinq/portal'`, so `fetchBooking()` GETs
-	// `/apps/pipelinq/portal/booking/<id>` — but the route registered in
-	// appinfo/routes.php is `/portal/api/booking/{bookingId}`. The `/api/booking`
-	// segment is missing, so the request instead matches `portalPage#subpath`
-	// (`/portal/{path}`, requirement `^(?!api/).*`) and Nextcloud answers with
-	// the portal SPA shell as HTTP 200 text/html. axios RESOLVES, `booking`
-	// becomes a truthy HTML string, no error is ever thrown, and the component
-	// renders a fabricated confirmation with every field blank and the `{email}`
-	// placeholder unsubstituted.
-	//
-	// This is reported as a product defect. It is deliberately NOT asserted
-	// here in either direction: asserting the success branch would freeze the
-	// bug into the suite, and asserting the 404 branch would leave CI red for a
-	// defect this change is not authorised to fix. The assertions above hold
-	// both before and after the fix, so this test keeps its value either way.
+	// Now that the base carries /api/booking, an unknown id gets a real 404
+	// with {"error":"Booking not found"}, so the error branch renders. This
+	// asserts it, because the fabricated-confirmation regression is silent by
+	// nature: it fails by showing MORE, not less.
+	await expect(main.locator('.booking-error')).toBeVisible({ timeout: 15000 })
+	await expect(main.locator('.booking-confirmation-card')).toHaveCount(0)
 })
