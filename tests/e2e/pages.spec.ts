@@ -21,8 +21,8 @@
  * And the assertions that remained were keyed on things that have all moved:
  * `getByRole('radio', { name: 'Cards' })` for the view toggle (it is a BUTTON
  * now, and on this `nl` instance it reads "Kaarten"), `Add Item` (now
- * `Add Client`), and path routes like `/apps/pipelinq/clients` (the shell
- * routes on the hash).
+ * `Add Client`), and path routes like `/apps/pipelinq/clients` (which the shell
+ * did not serve back then, because it routed on the hash; since #1684 it does).
  *
  * WHAT THIS FILE ASSERTS INSTEAD
  *
@@ -34,8 +34,8 @@
  * primary action.
  *
  * The three tiers below were MEASURED route by route against the running app on
- * 2026-08-24, not assumed. The distinction matters: `#/services`,
- * `#/resources` and `#/bookings` are index pages that carry NO primary CTA, so
+ * 2026-08-24, not assumed. The distinction matters: `/services`,
+ * `/resources` and `/bookings` are index pages that carry NO primary CTA, so
  * a uniform "every index page has a CTA" contract would have been wrong, and
  * asserting it would have produced exactly the kind of finding that gets a
  * suite disabled again.
@@ -47,21 +47,21 @@ import { dismissSupportDialog, dismissWalkthrough } from './helpers/pipelinq.ts'
 
 /** Index routes that carry a primary create action. */
 const INDEX_WITH_CTA: Array<[string, string]> = [
-	['Clients', '#/clients'],
-	['Contacts', '#/contacts'],
-	['Leads', '#/leads'],
-	['Tickets', '#/tickets'],
-	['Tasks', '#/tasks'],
-	['Products', '#/products'],
-	['Queues', '#/queues'],
-	['Contracts', '#/contracts'],
+	['Clients', '/clients'],
+	['Contacts', '/contacts'],
+	['Leads', '/leads'],
+	['Tickets', '/tickets'],
+	['Tasks', '/tasks'],
+	['Products', '/products'],
+	['Queues', '/queues'],
+	['Contracts', '/contracts'],
 ]
 
 /** Index routes with no primary create action on this build. */
 const INDEX_WITHOUT_CTA: Array<[string, string]> = [
-	['Services', '#/services'],
-	['Resources', '#/resources'],
-	['Bookings', '#/bookings'],
+	['Services', '/services'],
+	['Resources', '/resources'],
+	['Bookings', '/bookings'],
 ]
 
 /**
@@ -70,27 +70,29 @@ const INDEX_WITHOUT_CTA: Array<[string, string]> = [
  * that matters for them (a blank shell).
  */
 const NON_INDEX: Array<[string, string]> = [
-	['Dashboard', '#/'],
-	['Pipeline', '#/pipeline'],
-	['My Work', '#/my-work'],
-	['Prospects', '#/prospects'],
-	['Forecast', '#/forecast'],
-	['Contact reporting', '#/rapportage/contactmomenten'],
+	['Dashboard', '/'],
+	['Pipeline', '/pipeline'],
+	['My Work', '/my-work'],
+	['Prospects', '/prospects'],
+	['Forecast', '/forecast'],
+	['Contact reporting', '/rapportage/contactmomenten'],
 ]
 
 /**
- * Open a hash route directly.
+ * Open a route directly, as a deep link.
  *
- * A PATH deep-link (`/apps/pipelinq/clients`) resets the SPA to the Dashboard —
- * documented in helpers/pipelinq.ts and the reason the old file's `page.goto`
- * calls silently tested the Dashboard over and over. The HASH form is a real
- * navigation, verified live.
+ * These used to be HASH routes, because a path deep-link reset the SPA to the
+ * Dashboard. `feat(router): move pipelinq off hash routing to clean path URLs`
+ * (#1684) inverted that: the shell now mounts on `createWebHistory`, so the
+ * PATH form is the real navigation and a `#/clients` goto lands on the
+ * Dashboard instead — which is what every index-page assertion here started
+ * failing on, the shell being present but the route never resolving.
  *
  * @param page  The page under test.
- * @param route The hash route, e.g. `#/clients`.
+ * @param route The path route, e.g. `/clients`.
  */
 async function openRoute(page: Page, route: string) {
-	await page.goto(`/apps/pipelinq/${route}`)
+	await page.goto(`/apps/pipelinq${route}`)
 	await expect(
 		page.locator('[data-testid="cn-app-root"]'),
 		'CnAppRoot must mount — #392 was filed because it did not',
