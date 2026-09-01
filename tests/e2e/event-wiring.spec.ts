@@ -28,22 +28,21 @@
  *
  * NOT covered, and each for a different reason:
  *
- * - `createLead` is a DEAD AFFORDANCE, not a wiring gap. ProspectCard's
- *   "Create lead" button emits it, ProspectWidget.onCreateLead receives it, and
- *   the handler then calls `prospectStore.createLeadFromProspect()` — which
- *   does not exist. `src/store/modules/prospect.js` defines only
- *   `fetchProspects` and `removeProspect`, and there is no backend behind it
- *   either: appinfo/routes.php has `prospect#index` (GET) alone,
- *   ProspectController exposes only index(), and ProspectDiscoveryService only
- *   discover(). Reconnecting the event turned a silent no-op into a TypeError.
- *   Writing a test here would assert a feature nobody has built; it needs a
- *   product decision about what a lead created from a prospect contains.
- * `requestConsent` / `skipAndSend` ARE covered, but only by stubbing the three
- * list/preflight endpoints the six-step wizard needs (segments, templates,
- * compliance). That is deliberate: this file is about whether the emit reaches
- * the parent, not about the compliance backend, and seeding a segment whose
- * contacts genuinely lack consent would make the spec depend on data no fixture
- * ships. Everything downstream of the click is real component code.
+ * - `createLead` HAS BEEN REMOVED. ProspectCard's "Create lead" button emitted
+ *   it and ProspectWidget.onCreateLead received it, but the handler called
+ *   `prospectStore.createLeadFromProspect()`, which does not exist:
+ *   src/store/modules/prospect.js defines only fetchProspects and
+ *   removeProspect. Nor was there anything behind it — appinfo/routes.php has
+ *   `prospect#index` (GET) alone, ProspectController exposes only index(), and
+ *   ProspectDiscoveryService only discover(). Reconnecting the event in #1677
+ *   turned a silent no-op into a TypeError, so the affordance was deleted
+ *   rather than left advertising a feature nobody had built.
+ *
+ *   ⚠️ And it could never have fired anyway: NOTHING imports ProspectWidget,
+ *   so it and ProspectCard are tree-shaken out — `prospect-widget` appears
+ *   zero times in the built bundle. `/prospects` is served by ProspectsView,
+ *   which does not use ProspectCard at all. Both components are orphaned,
+ *   which is a larger cleanup than removing one button and is left alone here.
  * - `validateLeaf` / `searchContacts` live in components nothing imports, so
  *   they are absent from every built chunk and cannot be reached at all.
  */
