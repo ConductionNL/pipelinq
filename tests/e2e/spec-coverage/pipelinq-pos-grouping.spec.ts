@@ -181,12 +181,15 @@ test('every regrouped POS and product route still resolves by deep link', async 
 		// only `/` leaves `.`, `?`, `+` and friends live as metacharacters — a
 		// latent false pass, because `.` matching any character would let a
 		// redirect to a similar-looking path satisfy the assertion (CodeQL
-		// js/incomplete-sanitization). It also says the right thing for hash
-		// history: what must survive the mount is the HASH, and comparing the
-		// whole URL string would pass on a path-shaped match while vue-router had
-		// quietly redirected to `/`.
+		// js/incomplete-sanitization).
+		//
+		// It reads the PATHNAME since the shell moved to createWebHistory. It
+		// used to read the hash, which is the right question under hash routing
+		// and an unanswerable one under history routing: `.hash` is now always
+		// empty, so the predicate was false for every route including the ones
+		// that resolved correctly.
 		await expect(page, `${route} was redirected away`).toHaveURL((u) =>
-			new URL(String(u)).hash.endsWith(route),
+			new URL(String(u)).pathname.endsWith(route),
 		)
 		await expect(page.locator('#content-vue')).not.toContainText(
 			'Internal Server Error',

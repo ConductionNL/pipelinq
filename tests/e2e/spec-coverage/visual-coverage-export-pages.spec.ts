@@ -54,9 +54,16 @@ async function openSpaRoute(page: Page, hash: string): Promise<void> {
 	await assertAppShellServed(page, response)
 	// `routesFromManifest()` ends the table with a catch-all that REDIRECTS to
 	// `/`, so an unmatched route silently becomes the Dashboard. A surviving
-	// hash is the evidence that this route matched.
+	// path is the evidence that this route matched.
+	//
+	// ANCHORED AT THE END, which is the whole point. The header above records
+	// why: `toHaveURL(/export\/runs/)` passes on the Dashboard too, because the
+	// path it was deep-linked with still contains those words. `$` is what the
+	// Dashboard cannot satisfy — it lands on `/apps/pipelinq/`, which does not
+	// end with the route. This assertion used to anchor on a leading `#`, which
+	// stopped existing when the shell moved to createWebHistory.
 	await expect(page).toHaveURL(
-		new RegExp(`#${hash.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`),
+		new RegExp(`${hash.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`),
 		{ timeout: 10000 },
 	)
 	await dismissWalkthrough(page)
