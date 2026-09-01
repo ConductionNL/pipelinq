@@ -369,15 +369,32 @@ test.describe('blast consent-modal events', () => {
 
 		// Channel already defaults to 'email', and schedule + A/B are optional,
 		// so the remaining steps just advance.
-		while (await next.isVisible().catch(() => false)) {
-			await next.click()
-		}
-
-		await page
+		//
+		// ⚠️ This was `while (await next.isVisible()) await next.click()`, which
+		// hung for the full 120s in CI. `Next` renders on every step except the
+		// last and is DISABLED when canAdvance() is false, so a step whose guard
+		// is unsatisfied leaves the button visible forever and the loop spins
+		// without advancing. The failure then surfaced as a timeout on
+		// "Create blast", naming a control that was never the problem. Walk a
+		// bounded number of steps, and say which step stalled.
+		const submit = page
 			.locator('button')
 			.filter({ hasText: /^Create blast$/ })
 			.first()
-			.click()
+		for (let step = 0; step < 6; step++) {
+			if (await submit.isVisible().catch(() => false)) break
+			await expect(
+				next,
+				`the wizard stalled: "Next" is disabled at step ${step}, so canAdvance() is false and that step's required input was never satisfied`,
+			).toBeEnabled({ timeout: 15000 })
+			await next.click()
+		}
+
+		await expect(
+			submit,
+			'the wizard never reached its final step, so the consent preflight never ran',
+		).toBeVisible({ timeout: 15000 })
+		await submit.click()
 
 		await expect(
 			page

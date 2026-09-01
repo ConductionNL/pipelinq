@@ -27,14 +27,23 @@
 
 import { expect, test } from '@playwright/test'
 
-// Hash-routed SPA. Every deep link maps to the same shell.
+// History-routed SPA (src/portal.js builds createWebHistory(routerBase())).
+// Every deep link is a real path, served by `portalPage#subpath`.
+//
+// ⚠️ These used to read `PORTAL_BASE + '#/login'`. Built by concatenation, the
+// literal `portal/#` never appeared in the file, so the sweep that de-hashed
+// the portal missed all six. Five of them still PASSED, which is why nothing
+// noticed: `/portal/#/login` is the path `/portal/`, installPortalGuard()
+// sends an unauthenticated visitor to /login anyway, and the login page is
+// exactly what those tests assert. Only `#/password-reset` failed, because the
+// guard sent it to /login too and `#portal-reset-email` was never rendered.
 const PORTAL_BASE = '/apps/pipelinq/portal/'
 
 test.describe('Customer portal — WCAG 2.2 AA structural checks', () => {
 	test('login page exposes correct landmarks, headings and labelled inputs', async ({
 		page,
 	}) => {
-		await page.goto(PORTAL_BASE + '#/login')
+		await page.goto(PORTAL_BASE + 'login')
 
 		// The portal SPA is served via TemplateResponse::RENDER_AS_PUBLIC, which
 		// wraps it in Nextcloud's public guest chrome — that chrome contributes
@@ -75,7 +84,7 @@ test.describe('Customer portal — WCAG 2.2 AA structural checks', () => {
 	test('login form announces errors and associates them with the input', async ({
 		page,
 	}) => {
-		await page.goto(PORTAL_BASE + '#/login')
+		await page.goto(PORTAL_BASE + 'login')
 
 		// Submit with empty/invalid credentials to surface the error region.
 		await page.fill('#portal-email', 'nobody@example.invalid')
@@ -102,7 +111,7 @@ test.describe('Customer portal — WCAG 2.2 AA structural checks', () => {
 	test('skip-link receives focus first and targets the main landmark', async ({
 		page,
 	}) => {
-		await page.goto(PORTAL_BASE + '#/login')
+		await page.goto(PORTAL_BASE + 'login')
 
 		const portal = page.locator('.portal-app')
 
@@ -129,7 +138,7 @@ test.describe('Customer portal — WCAG 2.2 AA structural checks', () => {
 	test('password-reset page is keyboard accessible and labelled', async ({
 		page,
 	}) => {
-		await page.goto(PORTAL_BASE + '#/password-reset')
+		await page.goto(PORTAL_BASE + 'password-reset')
 
 		// Scope to the portal root — NC's public guest chrome adds its own <h1>.
 		const portal = page.locator('.portal-app')
@@ -152,7 +161,7 @@ test.describe('Customer portal — WCAG 2.2 AA structural checks', () => {
 		// has the warning component slot wired (the component element is
 		// in the DOM but `v-if="visible"` keeps its content empty until
 		// triggered).
-		await page.goto(PORTAL_BASE + '#/login')
+		await page.goto(PORTAL_BASE + 'login')
 
 		// The component itself does not render any visible markup until
 		// `visible` flips true, which is correct behaviour. We instead
@@ -168,7 +177,7 @@ test.describe('Customer portal — WCAG 2.2 AA structural checks', () => {
 
 test.describe('Customer portal — visible focus indicator', () => {
 	test('focus-visible style is loaded for the portal shell', async ({ page }) => {
-		await page.goto(PORTAL_BASE + '#/login')
+		await page.goto(PORTAL_BASE + 'login')
 
 		// The global app.css ships a `:focus-visible` rule. We verify the
 		// stylesheet is loaded by inspecting the computed outline-width on a
