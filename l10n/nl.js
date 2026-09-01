@@ -3571,7 +3571,15 @@ OC.L10N.register(
         "Could not add this prospect as a client": "Kon deze prospect niet als klant toevoegen",
         "Pipeline is required": "Pipeline is verplicht",
         "Unknown company": "Onbekend bedrijf",
-        "All tickets": "Alle tickets"
+        "All tickets": "Alle tickets",
+        "Reports": "Rapportages",
+        "Every report Pipelinq offers, in one place. Pick a report to open it.": "Elke rapportage die Pipelinq biedt, op één plek. Kies een rapportage om die te openen.",
+        "Overall volumes and trends across the service.": "Totale aantallen en trends over de hele dienstverlening.",
+        "How many contacts came in, and about what.": "Hoeveel contacten er binnenkwamen, en waarover.",
+        "Which channels people reach you through, and how that shifts.": "Via welke kanalen mensen u bereiken, en hoe dat verschuift.",
+        "Handling times and workload per agent.": "Afhandeltijden en werkdruk per medewerker.",
+        "Volume and channels": "Aantallen en kanalen",
+        "People and performance": "Mensen en prestaties"
     },
     "nplurals=2; plural=(n != 1);"
 )

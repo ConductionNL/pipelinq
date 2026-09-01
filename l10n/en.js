@@ -3569,7 +3569,15 @@ OC.L10N.register(
         "Could not add this prospect as a client": "Could not add this prospect as a client",
         "Pipeline is required": "Pipeline is required",
         "Unknown company": "Unknown company",
-        "All tickets": "All tickets"
+        "All tickets": "All tickets",
+        "Reports": "Reports",
+        "Every report Pipelinq offers, in one place. Pick a report to open it.": "Every report Pipelinq offers, in one place. Pick a report to open it.",
+        "Overall volumes and trends across the service.": "Overall volumes and trends across the service.",
+        "How many contacts came in, and about what.": "How many contacts came in, and about what.",
+        "Which channels people reach you through, and how that shifts.": "Which channels people reach you through, and how that shifts.",
+        "Handling times and workload per agent.": "Handling times and workload per agent.",
+        "Volume and channels": "Volume and channels",
+        "People and performance": "People and performance"
     },
     "nplurals=2; plural=(n != 1);"
 )

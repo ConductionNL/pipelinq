@@ -266,6 +266,14 @@
 			"order": 215
 		},
 		{
+			"id": "ReportsMenu",
+			"label": "Reports",
+			"icon": "ChartBoxOutline",
+			"route": "Reports",
+			"section": "footer",
+			"order": 200
+		},
+		{
 			"id": "FeaturesRoadmapMenu",
 			"label": "Features & roadmap",
 			"icon": "MapMarkerPath",
@@ -1754,6 +1762,53 @@
 			},
 			"slots": {
 				"section-sync": "SyncSettingsView"
+			}
+		},
+		{
+			"id": "Reports",
+			"route": "/reports",
+			"type": "reports",
+			"title": "Reports",
+			"config": {
+				"description": "Every report Pipelinq offers, in one place. Pick a report to open it.",
+				"categories": {
+					"volume": "Volume and channels",
+					"people": "People and performance"
+				},
+				"cards": [
+					{
+						"id": "Rapportage",
+						"label": "Reporting",
+						"description": "Overall volumes and trends across the service.",
+						"icon": "ChartBoxOutline",
+						"category": "volume",
+						"route": "Rapportage"
+					},
+					{
+						"id": "RapportageContactmomenten",
+						"label": "Contact reporting",
+						"description": "How many contacts came in, and about what.",
+						"icon": "AccountMultipleOutline",
+						"category": "volume",
+						"route": "RapportageContactmomenten"
+					},
+					{
+						"id": "ChannelAnalyticsView",
+						"label": "Channel analytics",
+						"description": "Which channels people reach you through, and how that shifts.",
+						"icon": "ChartLine",
+						"category": "volume",
+						"route": "ChannelAnalyticsView"
+					},
+					{
+						"id": "AgentPerformanceView",
+						"label": "Agent performance",
+						"description": "Handling times and workload per agent.",
+						"icon": "AccountGroup",
+						"category": "people",
+						"route": "AgentPerformanceView"
+					}
+				]
 			}
 		},
 		{

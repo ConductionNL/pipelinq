@@ -25,10 +25,6 @@
 		"CashShifts": "PointOfSale",
 		"KassakoppelingAuditList": "PointOfSale",
 
-		"Rapportage": "Dashboard",
-		"RapportageContactmomenten": "Rapportage",
-		"ChannelAnalyticsView": "Rapportage",
-		"AgentPerformanceView": "Rapportage",
 		"SlaAttainment": "OperationalDashboard",
 
 		"Prospects": "Dashboard",
@@ -44,9 +40,17 @@
 	"_settingsSectionNote": "Promoted into the NC settings foldout (the bottom-left gear, OUTSIDE the scrollable nav) by applySettingsSection in main.js. Only entries that are still app-side config live here: Pipelines (pipeline definitions), and the Integrations caption + BI export. KassakoppelingAuditList is an audit REPORT, so it stays in the main nav under Point of Sale.",
 	"_adminSettingsNote": "IA revision 2026-07 (nav-ia-cleanup). Genuinely-admin configuration no longer lives in the app nav at all — not even in the gear foldout, which is still the app's own scrollable shell. It lives on the Nextcloud admin page (/settings/admin/pipelinq, lib/Settings/AdminSettings.php -> src/views/settings/Settings.vue), which is where an administrator already goes to configure an app and where NC's own admin-delegation applies. Moved there: Messaging (WhatsApp/SMS providers, send budgets, templates), CTI telephony settings, Payment providers (PSP), POS tender types, POS medewerkers, POS rollen. Their in-app pages and nav entries are gone; the Vue components are mounted as sections on the admin page instead.",
 	"removals": [
+    "Rapportage",
+    "RapportageContactmomenten",
+    "ChannelAnalyticsView",
+    "AgentPerformanceView",
     "Projects"
   ],
   "removalsReplacedBy": {
+  	"Rapportage": "Reports",
+  	"RapportageContactmomenten": "Reports",
+  	"ChannelAnalyticsView": "Reports",
+  	"AgentPerformanceView": "Reports",
   	"Projects": "dossiq:WorkflowBoard"
   },
 	"_removalsNote": "IA revision 2026-07 (nav-ia-cleanup): 'Reports & Compliance' (AnalyticsGroup) and its sole child 'Billing categories' are dropped — the group carried one page and the pairing of reporting with compliance never described anything real. The billingCategory SCHEMA and its objects stay (ShillinqWipService and the 'Hours by billing category' widget on the Operational dashboard still read them); only the nav entry and its three pages go. 'AVG-verzoeken' is dropped too: it was a bare deep-link into OpenRegister's DSAR engine (ADR-047 Phase 3), which owns that surface — pipelinq still contributes evidence via PipelinqEvidenceSourceProvider. 'Barcode lookup' is dropped in favour of searching the Products index by barcode, which is one surface instead of two for the same question. Product catalog (Catalog) is dissolved with it: a group wrapping a single Products page is noise.\n\nEarlier IA revision (2026-07): the Service top-level entry and its ServiceHubOverview hub page were dropped; its former service leaves live under Customer Support (KccWerkplek), the booking domain under Operational, and the Sales & CRM leaves under the Commercial dashboard (relabelled 'Sales')."

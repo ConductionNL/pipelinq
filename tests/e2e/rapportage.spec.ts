@@ -4,7 +4,7 @@
 // REQ-CR-001: Reporting dashboard loads with KPI cards visible.
 // @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-6
 import { expect, test } from '@playwright/test'
-import { navClick, openApp } from './helpers/pipelinq.ts'
+import { openApp } from './helpers/pipelinq.ts'
 
 test.describe('Rapportage (Reporting)', () => {
 	test.beforeEach(async ({ page }) => {
@@ -78,30 +78,63 @@ test.describe('Rapportage (Reporting)', () => {
 	 * already documents. So the old assertion could not have passed even if the
 	 * buttons had existed.
 	 *
-	 * The fix is a navigation fix, not a test fix: src/manifest.json now declares
-	 * menu entries for all three reporting pages and src/menu-layout.json
-	 * relocates them under `Rapportage`, so "Reporting" is a group carrying its
-	 * own sub-reports. The tests below assert what they always meant to assert —
-	 * a user can get there — through the sidebar rather than a deleted button.
+	 * The fix was a navigation fix, not a test fix: menu entries were declared
+	 * for all three reporting pages and menu-layout relocated them under
+	 * `Rapportage`, so "Reporting" became a group carrying its own sub-reports.
+	 *
+	 * UPDATED (ADR-112): that group is now one Reports page of cards, and the
+	 * per-report menu entries are retired. The route these tests take changes
+	 * with it — through the Reports page rather than the sidebar — but what
+	 * they assert does not, and must not: a user who has not memorised a URL
+	 * can still get to every report. That is the whole point of #687, and the
+	 * ADR-044 no-functionality-loss guarantee the removal rests on.
 	 */
-	test('rapportage page navigates to channel analytics', async ({ page }) => {
+	test('a reader reaches channel analytics from the reports page', async ({
+		page,
+	}) => {
 		await openApp(page)
-		await navClick(page, 'Channel Analytics', /rapportage\/channels/)
+		await page.goto('/apps/pipelinq/reports')
 
+		await page
+			.getByTestId('cn-report-card')
+			.filter({ hasText: /Channel analytics|Kanaalanalyse/i })
+			.first()
+			.click()
+
+		await expect(page).toHaveURL(/rapportage\/channels/, { timeout: 10000 })
 		await expect(
 			page.getByRole('heading', { name: /Channel Analytics|Kanaalanalyse/i }),
 		).toBeVisible({ timeout: 10000 })
 	})
 
-	test('rapportage page navigates to agent performance', async ({ page }) => {
+	test('a reader reaches agent performance from the reports page', async ({
+		page,
+	}) => {
 		await openApp(page)
-		await navClick(page, 'Agent Performance', /rapportage\/agents/)
+		await page.goto('/apps/pipelinq/reports')
 
+		await page
+			.getByTestId('cn-report-card')
+			.filter({ hasText: /Agent performance|Agentprestaties/i })
+			.first()
+			.click()
+
+		await expect(page).toHaveURL(/rapportage\/agents/, { timeout: 10000 })
 		await expect(
 			page.getByRole('heading', {
 				name: /Agent Performance|Agentprestaties/i,
 			}),
 		).toBeVisible({ timeout: 10000 })
+	})
+
+	test('the reports page lists every report pipelinq offers', async ({ page }) => {
+		// The assertion that distinguishes "regrouped" from "lost". Four report
+		// pages went from four menu entries to four cards; a change that dropped
+		// one would otherwise look like a tidier menu.
+		await openApp(page)
+		await page.goto('/apps/pipelinq/reports')
+
+		await expect(page.getByTestId('cn-report-card')).toHaveCount(4)
 	})
 
 	test('channel analytics page loads', async ({ page }) => {
