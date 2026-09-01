@@ -5,14 +5,14 @@
  * Gate-19 behavioral e2e coverage for the Products index page (/products).
  * Maps to openspec/specs/product-service-catalog/spec.md.
  */
-import { test, expect } from '@playwright/test'
+import { expect, test } from '@playwright/test'
 import {
-	openApp,
-	navClick,
-	trackPipelinqErrors,
 	assertNoHardError,
 	dismissSupportDialog,
-} from '../helpers/pipelinq'
+	navClick,
+	openApp,
+	trackPipelinqErrors,
+} from '../helpers/pipelinq.ts'
 
 // @e2e openspec/specs/product-service-catalog/spec.md#products-index
 test('Products: navigates from sidebar and shows index surface', async ({

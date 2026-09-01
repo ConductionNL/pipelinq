@@ -35,8 +35,8 @@
  * grows must not turn this file red, while a manifest that drops one of these
  * pages must.
  */
-import { test, expect } from '@playwright/test'
-import { openApp, revealNavEntryByTestId } from './helpers/pipelinq'
+import { expect, test } from '@playwright/test'
+import { openApp, revealNavEntryByTestId } from './helpers/pipelinq.ts'
 
 /**
  * Manifest page id → route PATH. Verified live against the running app by

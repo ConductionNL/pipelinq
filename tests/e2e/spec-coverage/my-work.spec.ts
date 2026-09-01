@@ -7,9 +7,8 @@
  * Backend/data/V1/Enterprise scenarios excluded per-scenario below.
  */
 
-import { test, expect } from '@playwright/test'
-
-import { assertAppShellServed, revealNavEntry } from '../helpers/pipelinq'
+import { expect, test } from '@playwright/test'
+import { assertAppShellServed, revealNavEntry } from '../helpers/pipelinq.ts'
 
 // @e2e openspec/specs/my-work/spec.md#empty-workload
 test('my work page renders with empty state', async ({ page }) => {

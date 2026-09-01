@@ -42,13 +42,14 @@
  * `title` prop while no object is resolved).
  */
 
-import { test, expect, type Page } from '@playwright/test'
+import type { Page } from '@playwright/test'
 
+import { expect, test } from '@playwright/test'
 import {
 	assertAppShellServed,
 	dismissSupportDialog,
 	dismissWalkthrough,
-} from '../helpers/pipelinq'
+} from '../helpers/pipelinq.ts'
 
 /**
  * A run-unique id used where a route needs an `:id` segment for a record that

@@ -17,15 +17,15 @@
  * inside the navigation helper — which read as a helper bug rather than as the
  * surface having MOVED. These tests drive the surface that exists.
  */
-import { test, expect } from '@playwright/test'
+import { expect, test } from '@playwright/test'
 import {
-	openApp,
-	navClick,
-	clickQuickFilter,
-	trackPipelinqErrors,
 	assertNoHardError,
+	clickQuickFilter,
 	dismissSupportDialog,
-} from '../helpers/pipelinq'
+	navClick,
+	openApp,
+	trackPipelinqErrors,
+} from '../helpers/pipelinq.ts'
 
 // @e2e openspec/specs/klachtenregistratie/spec.md#complaints-index
 test('Complaints: reachable as a ticket-type tab on the Tickets workspace', async ({

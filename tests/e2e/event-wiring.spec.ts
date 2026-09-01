@@ -30,8 +30,10 @@
  * (`validateLeaf`, `searchContacts`) live in components nothing imports, so
  * they are absent from every built chunk and cannot be reached at all.
  */
-import { test, expect } from '@playwright/test'
-import { openApp } from './helpers/pipelinq'
+import type { Page } from '@playwright/test'
+
+import { expect, test } from '@playwright/test'
+import { openApp } from './helpers/pipelinq.ts'
 
 /** The demo project the seed ships; its detail page hosts the WBS tree. */
 const PROJECT_ID = 'a1c4e2b3-4d5f-4e8a-9b6c-7d8e9f0a1b2c'
@@ -45,7 +47,7 @@ const PROJECT_ID = 'a1c4e2b3-4d5f-4e8a-9b6c-7d8e9f0a1b2c'
  * empty register and invites the conclusion that the seed failed.
  */
 async function createObject(
-	page: import('@playwright/test').Page,
+	page: Page,
 	schema: string,
 	body: Record<string, unknown>,
 ): Promise<string | null> {
@@ -79,9 +81,7 @@ async function createObject(
 }
 
 /** Open the seeded project's detail page, where the WBS tree lives. */
-async function openProjectDetail(
-	page: import('@playwright/test').Page,
-): Promise<void> {
+async function openProjectDetail(page: Page): Promise<void> {
 	// openApp() already ran in beforeEach — calling it again here doubled the
 	// shell boot and pushed each test past its budget.
 	//
@@ -95,7 +95,7 @@ async function openProjectDetail(
 }
 
 /** The dialog count, used as the observable effect of a handler running. */
-async function dialogCount(page: import('@playwright/test').Page): Promise<number> {
+async function dialogCount(page: Page): Promise<number> {
 	return await page.evaluate(
 		() => document.querySelectorAll('[role=dialog], .modal-container').length,
 	)

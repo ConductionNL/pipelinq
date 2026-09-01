@@ -8,7 +8,7 @@
  * REQ-DASH-010).
  */
 
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { rangeToPeriod } from '../../src/services/analyticsPeriod.js'
 
 describe('rangeToPeriod', () => {

@@ -1,3 +1,5 @@
+import type { Page } from '@playwright/test'
+
 /*
  * SPDX-FileCopyrightText: 2026 Pipelinq Contributors
  * SPDX-License-Identifier: EUPL-1.2
@@ -13,8 +15,12 @@
  * schema-driven data surface now loads and the per-type "not registered" error
  * no longer fires on this page.
  */
-import { test, expect, type Page } from '@playwright/test'
-import { openApp, assertNoHardError, trackPipelinqErrors } from '../helpers/pipelinq'
+import { expect, test } from '@playwright/test'
+import {
+	assertNoHardError,
+	openApp,
+	trackPipelinqErrors,
+} from '../helpers/pipelinq.ts'
 
 // The IA restructure ("move StUF/BI-export to Settings → Integrations") relocated
 // the "BI export" entry into the settings section, so it is no longer a top-level

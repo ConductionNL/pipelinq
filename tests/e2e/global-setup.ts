@@ -12,12 +12,15 @@
  * from the canonical journeydoc template in hydra/templates/journeydoc/.
  */
 
-import { chromium, request, type FullConfig } from '@playwright/test'
+import type { Page } from '@playwright/test'
+import type { FullConfig } from '@playwright/test'
+
+import { chromium, request } from '@playwright/test'
 import { execSync } from 'child_process'
-import * as path from 'path'
 import * as fs from 'fs'
-import { STORAGE_STATE } from './helpers/auth'
-import { resolveBaseUrl } from './base-url'
+import * as path from 'path'
+import { resolveBaseUrl } from './base-url.ts'
+import { STORAGE_STATE } from './helpers/auth.ts'
 
 const APP_ROOT = path.resolve(__dirname, '..', '..')
 const BUNDLE_PATH = path.join(APP_ROOT, 'js', 'pipelinq-main.js')
@@ -33,7 +36,7 @@ function ensureBundleBuilt(): void {
 	if (fs.existsSync(BUNDLE_PATH)) {
 		return
 	}
-	// eslint-disable-next-line no-console
+
 	console.log(
 		`[playwright globalSetup] bundle missing at ${BUNDLE_PATH}; running 'npm run build' once…`,
 	)
@@ -80,7 +83,7 @@ async function ensureNextcloudReachable(baseURL: string): Promise<void> {
  * @param page An authenticated page.
  * @throws {Error} When the app fails to mount, with the console errors attached.
  */
-async function assertAppBoots(page: import('@playwright/test').Page): Promise<void> {
+async function assertAppBoots(page: Page): Promise<void> {
 	const consoleErrors: string[] = []
 	page.on('console', (msg) => {
 		if (msg.type() === 'error') consoleErrors.push(msg.text())
@@ -169,7 +172,7 @@ async function globalSetup(config: FullConfig): Promise<void> {
 					'1',
 				)
 			}
-		} catch (e) {
+		} catch {
 			/* storage blocked in this context */
 		}
 	})
@@ -203,7 +206,7 @@ async function globalSetup(config: FullConfig): Promise<void> {
 					'cn-walkthrough-seen:pipelinq',
 					'999.0.0',
 				)
-			} catch (e) {
+			} catch {
 				// localStorage unavailable — specs fall back to dismissing by hand.
 			}
 		})

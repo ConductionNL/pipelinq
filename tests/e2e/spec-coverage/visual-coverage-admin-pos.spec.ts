@@ -38,9 +38,10 @@
  * "the staff list is missing".
  */
 
-import { test, expect, type Page } from '@playwright/test'
+import type { Page } from '@playwright/test'
 
-import { nextcloudErrorPage } from '../helpers/pipelinq'
+import { expect, test } from '@playwright/test'
+import { nextcloudErrorPage } from '../helpers/pipelinq.ts'
 
 /**
  * Open `/settings/admin/pipelinq` and wait for the pipelinq settings app to

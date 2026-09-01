@@ -46,9 +46,10 @@
  * bug into the suite nor leave CI red for a defect this change may not fix.
  */
 
-import { test, expect, type Page } from '@playwright/test'
+import type { Page } from '@playwright/test'
 
-import { nextcloudErrorPage } from '../helpers/pipelinq'
+import { expect, test } from '@playwright/test'
+import { nextcloudErrorPage } from '../helpers/pipelinq.ts'
 
 /** The public portal SPA shell — see `appinfo/routes.php` `portalPage#subpath`. */
 const PORTAL_BASE = '/apps/pipelinq/portal/'

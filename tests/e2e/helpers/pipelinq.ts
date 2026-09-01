@@ -12,7 +12,9 @@
  * `cn-walkthrough` product tour. Both are dismissed before interacting; see
  * dismissSupportDialog() and dismissWalkthrough().
  */
-import { Page, Locator, expect, ConsoleMessage } from '@playwright/test'
+import type { ConsoleMessage, Locator, Page } from '@playwright/test'
+
+import { expect } from '@playwright/test'
 
 /** Open the app at the dashboard and wait for the shell + nav to render. */
 export async function openApp(page: Page): Promise<void> {

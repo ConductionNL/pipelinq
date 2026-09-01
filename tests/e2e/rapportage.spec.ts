@@ -3,8 +3,8 @@
 //
 // REQ-CR-001: Reporting dashboard loads with KPI cards visible.
 // @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-6
-import { test, expect } from '@playwright/test'
-import { openApp, navClick } from './helpers/pipelinq'
+import { expect, test } from '@playwright/test'
+import { navClick, openApp } from './helpers/pipelinq.ts'
 
 test.describe('Rapportage (Reporting)', () => {
 	test.beforeEach(async ({ page }) => {

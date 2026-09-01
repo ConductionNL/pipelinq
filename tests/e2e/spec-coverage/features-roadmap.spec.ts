@@ -6,14 +6,14 @@
  * (/features-roadmap). Maps to openspec/specs/notifications-activity/spec.md
  * (closest in-app surface; the page is a static product-marketing view).
  */
-import { test, expect } from '@playwright/test'
+import { expect, test } from '@playwright/test'
 import {
-	openApp,
-	navClick,
-	trackPipelinqErrors,
 	assertNoHardError,
 	dismissSupportDialog,
-} from '../helpers/pipelinq'
+	navClick,
+	openApp,
+	trackPipelinqErrors,
+} from '../helpers/pipelinq.ts'
 
 // @e2e openspec/specs/notifications-activity/spec.md#features-roadmap-page
 test('Features & roadmap: navigates from sidebar and shows the features surface', async ({

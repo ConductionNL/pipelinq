@@ -7,9 +7,8 @@
  * Backend/persistence/V1/Enterprise scenarios excluded per-scenario below.
  */
 
-import { test, expect } from '@playwright/test'
-
-import { nextcloudErrorPage } from '../helpers/pipelinq'
+import { expect, test } from '@playwright/test'
+import { nextcloudErrorPage } from '../helpers/pipelinq.ts'
 
 // @e2e openspec/specs/admin-settings/spec.md#admin-user-accesses-settings
 test('admin user accesses pipelinq settings', async ({ page }) => {

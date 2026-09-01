@@ -33,14 +33,15 @@
  * crashing the flow. That is not a weaker version of the scenario — an
  * unconfigured proxy is the state every fresh install starts in.
  */
-import { test, expect, APIResponse } from '@playwright/test'
+import type { APIResponse } from '@playwright/test'
 
+import { expect, test } from '@playwright/test'
 import {
-	openApp,
-	dismissWalkthrough,
-	dismissSupportDialog,
 	assertNoHardError,
-} from '../helpers/pipelinq'
+	dismissSupportDialog,
+	dismissWalkthrough,
+	openApp,
+} from '../helpers/pipelinq.ts'
 
 /** The xWiki proxy endpoints the knowledge-base surface is built on. */
 const XWIKI_STATUS = '/apps/pipelinq/api/xwiki/status'

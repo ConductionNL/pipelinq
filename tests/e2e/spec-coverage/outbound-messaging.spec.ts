@@ -15,7 +15,7 @@
  * server error rather than depending on live provider data).
  */
 
-import { test, expect } from '@playwright/test'
+import { expect, test } from '@playwright/test'
 
 async function assertNoServerError(page) {
 	await expect(page.locator('body')).not.toContainText('Internal Server Error', {

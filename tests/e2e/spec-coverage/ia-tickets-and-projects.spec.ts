@@ -12,9 +12,10 @@
  * in the sidebar and only surface when a user opened an old link.
  */
 
-import { test, expect, type Page } from '@playwright/test'
+import type { Page } from '@playwright/test'
 
-import { dismissSupportDialog, dismissWalkthrough } from '../helpers/pipelinq'
+import { expect, test } from '@playwright/test'
+import { dismissSupportDialog, dismissWalkthrough } from '../helpers/pipelinq.ts'
 
 test.beforeEach(() => {
 	test.slow()

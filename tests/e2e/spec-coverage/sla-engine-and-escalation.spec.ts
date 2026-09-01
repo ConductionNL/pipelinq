@@ -70,15 +70,16 @@
  * again (measured: DELETE → 403 SCHEMA_ARCHIVAL_IMMUTABLE). Both policy-write
  * tests deliberately exercise only the REJECTED path, which persists nothing.
  */
-import { test, expect, Page } from '@playwright/test'
+import type { Page } from '@playwright/test'
 
+import { expect, test } from '@playwright/test'
 import {
-	openApp,
 	assertNoHardError,
-	nextcloudErrorPage,
-	dismissWalkthrough,
 	dismissSupportDialog,
-} from '../helpers/pipelinq'
+	dismissWalkthrough,
+	nextcloudErrorPage,
+	openApp,
+} from '../helpers/pipelinq.ts'
 
 /** One authenticated JSON call issued from inside the logged-in page. */
 async function api(
@@ -93,7 +94,7 @@ async function api(
 				method,
 				headers: {
 					'Content-Type': 'application/json',
-					// eslint-disable-next-line no-undef
+
 					requesttoken: (window as any).OC?.requestToken || '',
 					'OCS-APIREQUEST': 'true',
 				},

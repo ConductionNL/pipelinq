@@ -5,13 +5,13 @@
  * Gate-19 behavioral e2e coverage for the Forecast report page (/forecast).
  * Maps to openspec/changes/forecast-roll-up-and-categories/specs.md.
  */
-import { test, expect } from '@playwright/test'
+import { expect, test } from '@playwright/test'
 import {
-	openApp,
-	navClick,
-	trackPipelinqErrors,
 	assertNoHardError,
-} from '../helpers/pipelinq'
+	navClick,
+	openApp,
+	trackPipelinqErrors,
+} from '../helpers/pipelinq.ts'
 
 // @e2e openspec/changes/forecast-roll-up-and-categories/specs.md#forecast-page
 test('Forecast: navigates from sidebar and shows the forecast surface', async ({

@@ -7,7 +7,7 @@
  * Most scenarios are V1/Enterprise analytics not yet implemented — excluded per-scenario below.
  */
 
-import { test, expect } from '@playwright/test'
+import { expect, test } from '@playwright/test'
 
 // @e2e openspec/specs/pipeline-insights/spec.md#pipeline-value-kpi-widget
 test('pipeline value KPI tile visible on dashboard', async ({ page }) => {

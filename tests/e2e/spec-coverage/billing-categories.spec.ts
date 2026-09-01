@@ -19,8 +19,8 @@
  * all three tests inside the navigation helper, blaming the helper for an IA
  * decision that had already shipped.
  */
-import { test, expect } from '@playwright/test'
-import { openApp, assertNoHardError } from '../helpers/pipelinq'
+import { expect, test } from '@playwright/test'
+import { assertNoHardError, openApp } from '../helpers/pipelinq.ts'
 
 // @e2e openspec/specs/pos-transaction-core/spec.md#billing-categories-page
 test('Billing categories: the widget renders on the Operational dashboard', async ({

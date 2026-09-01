@@ -26,8 +26,8 @@
  * goes — and because both sections are gated on `isConfigured`, a failure here
  * also catches a settings page that mounted without a provisioned register.
  */
-import { test, expect } from '@playwright/test'
-import { nextcloudErrorPage } from '../helpers/pipelinq'
+import { expect, test } from '@playwright/test'
+import { nextcloudErrorPage } from '../helpers/pipelinq.ts'
 
 const ADMIN_SETTINGS = '/settings/admin/pipelinq'
 

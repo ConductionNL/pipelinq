@@ -13,7 +13,7 @@
  * may ship small-icu).
  */
 
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { formatEur, formatEurCompact } from '../../src/services/commercialFormat.js'
 
 describe('formatEur', () => {

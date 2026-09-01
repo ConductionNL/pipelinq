@@ -25,7 +25,7 @@
  * @e2e openspec/changes/customer-portal/specs.md#REQ-009
  */
 
-import { test, expect } from '@playwright/test'
+import { expect, test } from '@playwright/test'
 
 // Hash-routed SPA. Every deep link maps to the same shell.
 const PORTAL_BASE = '/apps/pipelinq/portal/'

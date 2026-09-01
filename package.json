@@ -13,7 +13,7 @@
     "check:vue-demi": "node scripts/check-vue-demi.js",
     "dev": "NODE_ENV=development webpack --config webpack.config.js --progress",
     "watch": "NODE_ENV=development webpack --config webpack.config.js --progress --watch",
-    "lint": "eslint src",
+    "lint": "eslint src tests scripts",
     "lint-fix": "npm run lint -- --fix",
     "test:l10n": "node tests/l10n/check-l10n.js",
     "test:unit": "vitest run",

@@ -14,9 +14,10 @@
  * spoke to at that client, which the form could not express at all before.
  */
 
-import { test, expect, type Page } from '@playwright/test'
+import type { Page } from '@playwright/test'
 
-import { dismissSupportDialog, dismissWalkthrough } from '../helpers/pipelinq'
+import { expect, test } from '@playwright/test'
+import { dismissSupportDialog, dismissWalkthrough } from '../helpers/pipelinq.ts'
 
 // The Client detail page loads a header, several object lists, a bookings
 // timeline and this form before the pickers are usable. Reaching it and then

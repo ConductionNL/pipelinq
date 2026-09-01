@@ -5,13 +5,13 @@
  * Gate-19 behavioral e2e coverage for the Loyalty programme reporting page
  * (/loyalty/reporting). Maps to openspec/changes/loyalty-program/specs.md.
  */
-import { test, expect } from '@playwright/test'
+import { expect, test } from '@playwright/test'
 import {
-	openApp,
-	navClick,
-	trackPipelinqErrors,
 	assertNoHardError,
-} from '../helpers/pipelinq'
+	navClick,
+	openApp,
+	trackPipelinqErrors,
+} from '../helpers/pipelinq.ts'
 
 // @e2e openspec/changes/loyalty-program/specs.md#loyalty-reporting-page
 test('Loyalty: navigates from sidebar and shows the reporting surface', async ({

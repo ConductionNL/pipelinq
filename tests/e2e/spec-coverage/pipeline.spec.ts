@@ -7,8 +7,8 @@
  * Backend/automation/Enterprise scenarios excluded per-scenario below.
  */
 
-import { test, expect } from '@playwright/test'
-import { openApp, navClick } from '../helpers/pipelinq'
+import { expect, test } from '@playwright/test'
+import { navClick, openApp } from '../helpers/pipelinq.ts'
 
 // @e2e openspec/specs/pipeline/spec.md#view-pipeline-details-in-sidebar
 test('pipeline page renders with sidebar', async ({ page }) => {

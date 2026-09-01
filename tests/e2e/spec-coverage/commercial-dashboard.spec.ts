@@ -9,8 +9,12 @@
  * overview reachable from the nav.
  */
 
-import { test, expect } from '@playwright/test'
-import { openApp, trackPipelinqErrors, assertNoHardError } from '../helpers/pipelinq'
+import { expect, test } from '@playwright/test'
+import {
+	assertNoHardError,
+	openApp,
+	trackPipelinqErrors,
+} from '../helpers/pipelinq.ts'
 
 // @e2e commercial-dashboard::commercial-dashboard-renders-kpis-and-charts
 test('Commercial dashboard: KPI strip + sales charts render on the landing page', async ({
