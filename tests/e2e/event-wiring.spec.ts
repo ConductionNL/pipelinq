@@ -53,16 +53,19 @@ async function createObject(
 		async ({ schema, body }) => {
 			const w = window as unknown as { OC?: { requestToken?: string } }
 			const token =
-				w.OC?.requestToken ??
-				document.head
+				w.OC?.requestToken
+				?? document.head
 					.querySelector('meta[name=requesttoken]')
-					?.getAttribute('content') ??
-				''
+					?.getAttribute('content')
+				?? ''
 			const res = await fetch(
 				`/index.php/apps/openregister/api/objects/pipelinq/${schema}`,
 				{
 					method: 'POST',
-					headers: { 'Content-Type': 'application/json', requesttoken: token },
+					headers: {
+						'Content-Type': 'application/json',
+						requesttoken: token,
+					},
 					credentials: 'include',
 					body: JSON.stringify(body),
 				},
@@ -91,12 +94,9 @@ async function openProjectDetail(
 }
 
 /** The dialog count, used as the observable effect of a handler running. */
-async function dialogCount(
-	page: import('@playwright/test').Page,
-): Promise<number> {
+async function dialogCount(page: import('@playwright/test').Page): Promise<number> {
 	return await page.evaluate(
-		() =>
-			document.querySelectorAll('[role=dialog], .modal-container').length,
+		() => document.querySelectorAll('[role=dialog], .modal-container').length,
 	)
 }
 
