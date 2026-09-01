@@ -90,7 +90,7 @@ async function gotoPage(page: Page, hash: string): Promise<void> {
 	// hash change is same-document and does not remount the view. On the first
 	// navigation of a test the goto IS a full document load and already mounts
 	// the target route.
-	const target = `/apps/pipelinq/${hash}`
+	const target = `/apps/pipelinq${hash}`
 	const alreadyMounted = page.url().includes('/apps/pipelinq')
 	await page.goto(target)
 	if (alreadyMounted) {

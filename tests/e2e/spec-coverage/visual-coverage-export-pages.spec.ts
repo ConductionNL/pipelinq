@@ -50,7 +50,7 @@ const ABSENT_RUN_ID = 'e2e-gate26-no-such-run'
  * @param hash  The manifest `route`, e.g. `/export/runs`.
  */
 async function openSpaRoute(page: Page, hash: string): Promise<void> {
-	const response = await page.goto(`/apps/pipelinq/${hash}`)
+	const response = await page.goto(`/apps/pipelinq${hash}`)
 	await assertAppShellServed(page, response)
 	// `routesFromManifest()` ends the table with a catch-all that REDIRECTS to
 	// `/`, so an unmatched route silently becomes the Dashboard. A surviving

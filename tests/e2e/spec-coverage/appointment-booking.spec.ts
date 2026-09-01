@@ -58,7 +58,7 @@ function hoursFromNow(hours: number): string {
  * spec-coverage/outbound-messaging.spec.ts).
  */
 async function gotoHash(page: Page, hash: string): Promise<void> {
-	await page.goto(`/apps/pipelinq/${hash}`)
+	await page.goto(`/apps/pipelinq${hash}`)
 	await expect(page.locator('#content-vue')).toBeVisible({ timeout: 15000 })
 	await dismissWalkthrough(page)
 	await dismissSupportDialog(page)

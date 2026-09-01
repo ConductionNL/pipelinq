@@ -163,7 +163,7 @@ test('every regrouped POS and product route still resolves by deep link', async 
 	]
 
 	for (const route of routes) {
-		await page.goto(`/apps/pipelinq/${route}`)
+		await page.goto(`/apps/pipelinq${route}`)
 		await dismissWalkthrough(page)
 		await dismissSupportDialog(page)
 

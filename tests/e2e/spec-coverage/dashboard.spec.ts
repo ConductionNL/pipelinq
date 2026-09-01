@@ -317,14 +317,19 @@ test('dashboard navigation items visible', async ({ page }) => {
 	// commercial one is labelled "Sales" — see the relabel recorded in
 	// src/menu-layout.json#_removalsNote. Assert both are present as nav
 	// entries.
+	// Since #1684 the shell routes on history, so these leaves render path
+	// hrefs (`/apps/pipelinq/`, `/apps/pipelinq/operational`) rather than hash
+	// ones.
 	await expect(
 		nav
-			.locator('a.app-navigation-entry-link[href$="#/"]')
+			.locator('a.app-navigation-entry-link[href$="/apps/pipelinq/"]')
 			.filter({ hasText: /^\s*Sales\s*$/ }),
 	).toHaveCount(1, { timeout: 10000 })
 	await expect(
 		nav
-			.locator('a.app-navigation-entry-link[href$="#/operational"]')
+			.locator(
+				'a.app-navigation-entry-link[href$="/apps/pipelinq/operational"]',
+			)
 			.filter({ hasText: /^\s*Operational\s*$/ }),
 	).toHaveCount(1)
 })

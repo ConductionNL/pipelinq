@@ -57,10 +57,11 @@ test('pipeline navigation item exists in sidebar', async ({ page }) => {
 	await openApp(page)
 	// The Pipeline leaf lives in the collapsed "Sales & CRM" nav group, so it is
 	// present in the DOM but not visible until the group is expanded. Assert the
-	// entry exists and points at the #/pipeline route.
+	// entry exists and points at the /pipeline route. Since #1684 the shell
+	// routes on history, so the leaf renders a path href, not a hash one.
 	const entry = page
 		.locator(
-			'#app-navigation-vue a.app-navigation-entry-link[href$="#/pipeline"]',
+			'#app-navigation-vue a.app-navigation-entry-link[href$="/apps/pipelinq/pipeline"]',
 		)
 		.filter({ hasText: /^\s*Pipeline\s*$/ })
 	await expect(entry).toHaveCount(1, { timeout: 10000 })
