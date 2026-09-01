@@ -64,13 +64,13 @@ test('pipeline navigation item exists in sidebar', async ({ page }) => {
 		)
 		.filter({ hasText: /^\s*Pipeline\s*$/ })
 	await expect(entry).toHaveCount(1, { timeout: 10000 })
-	await expect(entry.first()).toHaveAttribute('href', /#\/pipeline$/)
+	await expect(entry.first()).toHaveAttribute('href', /\/pipeline$/)
 })
 
 // @e2e openspec/specs/pipeline/spec.md#remember-selected-pipeline-across-navigation
 test('pipeline page navigates from dashboard nav', async ({ page }) => {
 	await openApp(page)
-	await navClick(page, 'Pipeline', /#\/pipeline/)
+	await navClick(page, 'Pipeline', /\/pipeline/)
 })
 
 // @e2e openspec/specs/pipeline/spec.md#mixed-entity-kanban
