@@ -64,7 +64,10 @@ test.describe('Sales dashboard', () => {
 	})
 
 	test('renders the dashboard page for the default route', async ({ page }) => {
-		await expect(page).toHaveURL(/#\/$|#\/$|\/apps\/pipelinq\/(#\/)?$/)
+		// History routing: the default route is the app root as a plain path.
+		// Anchored at the end so it holds under both the `/apps/...` and
+		// `/index.php/apps/...` bases Nextcloud serves.
+		await expect(page).toHaveURL(/\/apps\/pipelinq\/$/)
 		await expect(
 			page.locator('[data-testid="cn-page"]'),
 			'the default route must render a page, not an empty shell',
@@ -107,16 +110,21 @@ test.describe('Sales dashboard', () => {
 	})
 
 	test('each KPI widget links into a filtered view', async ({ page }) => {
-		// The KPI tiles are anchors into hash routes. Asserting that each one
-		// HAS a hash href catches the regression that matters (a tile that
+		// The KPI tiles are anchors into in-app routes. Asserting that each one
+		// HAS an in-app href catches the regression that matters (a tile that
 		// stopped linking) without pinning the exact destination of every tile,
 		// which is manifest configuration and moves with the product.
+		//
+		// The shell routes on HISTORY now, so these are paths rather than `#/`
+		// fragments, and the base differs between the `/apps/...` and
+		// `/index.php/apps/...` forms Nextcloud serves — hence a contains-match
+		// on the app segment rather than a prefix-match on the whole href.
 		const linked = page.locator(
-			'[role="group"][aria-label="pipeline-coverage"] a[href^="#/"]',
+			'[role="group"][aria-label="pipeline-coverage"] a[href*="/apps/pipelinq/"]',
 		)
 		await expect(
 			linked.first(),
 			'the pipeline-coverage tile must link into a filtered view',
-		).toHaveAttribute('href', /^#\//)
+		).toHaveAttribute('href', /\/apps\/pipelinq\/.+/)
 	})
 })

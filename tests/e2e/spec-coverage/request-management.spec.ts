@@ -10,7 +10,7 @@
  * `unify-ticket-supertype` removed the `/requests` route: request tickets live
  * on the unified Tickets index (src/manifest.json page id `Tickets`, route
  * `/tickets`) behind the "Tickets" `quickFilters[]` tab. Eight of the ten tests
- * here did `page.goto('/apps/pipelinq/#/requests')` and then asserted only that
+ * here did `page.goto('/apps/pipelinq/requests')` and then asserted only that
  * the body did NOT contain "Internal Server Error" / "Uncaught Error", or that
  * `main` was visible. With no `/requests` route the hash router falls back to
  * the Dashboard — and the Dashboard satisfies every one of those assertions.
@@ -165,7 +165,7 @@ test('requests by status widget on dashboard', async ({ page }) => {
 	// The request-status distribution widget lives on the Operational overview
 	// dashboard (#/operational), not the landing Commercial overview — the IA
 	// restructure split the dashboards by audience.
-	await page.goto('/apps/pipelinq/#/operational')
+	await page.goto('/apps/pipelinq/operational')
 	await expect(
 		page.locator('#content-vue').getByText('Requests by Status').first(),
 	).toBeVisible({ timeout: 15000 })

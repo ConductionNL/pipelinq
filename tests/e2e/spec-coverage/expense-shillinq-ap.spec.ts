@@ -9,7 +9,7 @@
  *  - Admin settings page renders the Shillinq integration section and the
  *    `shillinq_ap_webhook_url` text field (REQ-AP-004 / Scenario 12).
  *  - The expense list page reaches its empty/loaded state through the
- *    `/apps/pipelinq/#/expenses` route (REQ-AP-005 — column header is
+ *    `/apps/pipelinq/expenses` route (REQ-AP-005 — column header is
  *    only visible once an expense exists; here we assert the surface
  *    mounts without an internal-server error and the New expense CTA
  *    is reachable from the empty state).

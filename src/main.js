@@ -32,7 +32,7 @@ import {
 import { generateUrl } from '@nextcloud/router'
 import { setActivePinia } from 'pinia'
 import { createApp, h, markRaw } from 'vue'
-import { createRouter, createWebHashHistory } from 'vue-router'
+import { createRouter, createWebHistory } from 'vue-router'
 import App from './App.vue'
 import appIcons from './icons.js'
 import bundledManifest from './manifest.json'
@@ -264,6 +264,29 @@ setActivePinia(pinia)
 registerObjectTypes()
 
 /**
+ * The router base for THIS page load.
+ *
+ * ⚠️ `generateUrl('/apps/pipelinq')` alone is not enough. Nextcloud serves the
+ * app under BOTH `/apps/pipelinq/...` and `/index.php/apps/pipelinq/...`, but
+ * `generateUrl()` returns only the form the instance is configured for. A
+ * visitor arriving on the other form — a bookmark, an emailed deep link, an
+ * integration that hardcodes `/index.php` — falls outside the router base,
+ * vue-router cannot resolve the path, and the catch-all redirects to `/`. They
+ * land on the dashboard with no error: the deep link is silently swallowed.
+ *
+ * Hash routing never had this, because the route travelled in the fragment and
+ * the path prefix was irrelevant. This app's e2e suite pins the `/index.php`
+ * form (`const APP = '/index.php/apps/pipelinq'` in several specs), so without
+ * this every deep link the suite makes would break.
+ *
+ * @return {string} The base path vue-router should strip from the URL.
+ */
+function routerBase() {
+	const match = window.location.pathname.match(/^(.*\/apps\/pipelinq)(?:\/|$)/)
+	return match ? match[1] : generateUrl('/apps/pipelinq')
+}
+
+/**
  * Mount the Vue instance onto #content. The router is built here — not at
  * module scope — because persisted overrides can add or remove pages, and
  * routes must reflect the final manifest.
@@ -273,7 +296,7 @@ registerObjectTypes()
 function mountApp(manifest) {
 	const router = createRouter({
 		// vue-router 4 replaces `mode: 'hash'` + `base` with a history object.
-		history: createWebHashHistory(generateUrl('/apps/pipelinq')),
+		history: createWebHistory(routerBase()),
 		routes: routesFromManifest(manifest),
 	})
 	// Vue 3: `createApp(...).mount()` replaces `new Vue(...).$mount()`, and

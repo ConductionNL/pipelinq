@@ -26,7 +26,7 @@ import { openApp, trackPipelinqErrors, assertNoHardError } from '../helpers/pipe
  * surface as spurious "Failed to fetch" console noise.
  */
 async function openOperational(page) {
-	await page.goto('/apps/pipelinq/#/operational')
+	await page.goto('/apps/pipelinq/operational')
 	await expect(page.locator('#app-navigation-vue')).toBeVisible({ timeout: 15000 })
 	await page.reload()
 	await page

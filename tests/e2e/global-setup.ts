@@ -89,7 +89,7 @@ async function assertAppBoots(page: import('@playwright/test').Page): Promise<vo
 
 	for (const route of [
 		'/index.php/apps/pipelinq/',
-		'/index.php/apps/pipelinq/#/clients',
+		'/index.php/apps/pipelinq/clients',
 	]) {
 		consoleErrors.length = 0
 		await page.goto(route, { waitUntil: 'domcontentloaded' })

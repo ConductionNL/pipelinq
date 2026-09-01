@@ -85,9 +85,10 @@ async function openProjectDetail(
 	// openApp() already ran in beforeEach — calling it again here doubled the
 	// shell boot and pushed each test past its budget.
 	//
-	// The shell routes on the hash; a path deep-link resets it to the Dashboard
-	// (see helpers/pipelinq.ts).
-	await page.goto(`/apps/pipelinq/#/projects/${PROJECT_ID}`)
+	// The shell routes on HISTORY, so this path deep-link lands on the project
+	// detail directly. It used to reset the SPA to the Dashboard under hash
+	// routing (see helpers/pipelinq.ts).
+	await page.goto(`/apps/pipelinq/projects/${PROJECT_ID}`)
 	await expect(page.locator('.wbs-tree, [class*=wbs]').first()).toBeVisible({
 		timeout: 30000,
 	})

@@ -22,7 +22,7 @@ import { openApp, assertNoHardError, trackPipelinqErrors } from '../helpers/pipe
 // reload so the index re-queries its data (matches bi-export.spec.ts).
 async function gotoExportJobs(page: Page) {
 	await openApp(page)
-	await page.goto('/apps/pipelinq/#/export/jobs')
+	await page.goto('/apps/pipelinq/export/jobs')
 	await page.reload()
 	await page
 		.locator('#content-vue')

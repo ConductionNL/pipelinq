@@ -30,7 +30,7 @@ async function assertNoServerError(page) {
 test('request detail renders the conversion surface without a server error', async ({
 	page,
 }) => {
-	await page.goto('/apps/pipelinq/#/requests')
+	await page.goto('/apps/pipelinq/requests')
 	await assertNoServerError(page)
 })
 
@@ -38,7 +38,7 @@ test('request detail renders the conversion surface without a server error', asy
 test('convert-to-case action is absent when no app implements ns#Case', async ({
 	page,
 }) => {
-	await page.goto('/apps/pipelinq/#/requests')
+	await page.goto('/apps/pipelinq/requests')
 	await assertNoServerError(page)
 	// On a bare instance (no ns#Case implementer) the action must not be rendered.
 	await expect(page.getByRole('button', { name: /convert to case/i })).toHaveCount(
@@ -48,7 +48,7 @@ test('convert-to-case action is absent when no app implements ns#Case', async ({
 
 // @e2e openspec/specs/request-management/spec.md#conversion-displays-case-link
 test('a converted request shows its case link/notice', async ({ page }) => {
-	await page.goto('/apps/pipelinq/#/requests')
+	await page.goto('/apps/pipelinq/requests')
 	await assertNoServerError(page)
 })
 
@@ -56,7 +56,7 @@ test('a converted request shows its case link/notice', async ({ page }) => {
 test('a converted request renders its read-only converted notice', async ({
 	page,
 }) => {
-	await page.goto('/apps/pipelinq/#/requests')
+	await page.goto('/apps/pipelinq/requests')
 	await assertNoServerError(page)
 })
 
@@ -64,7 +64,7 @@ test('a converted request renders its read-only converted notice', async ({
 test('contract surface renders the send-to-invoicing action area', async ({
 	page,
 }) => {
-	await page.goto('/apps/pipelinq/#/contracts')
+	await page.goto('/apps/pipelinq/contracts')
 	await assertNoServerError(page)
 })
 
@@ -72,7 +72,7 @@ test('contract surface renders the send-to-invoicing action area', async ({
 test('send-to-invoicing action is absent when no app implements ns#Invoice', async ({
 	page,
 }) => {
-	await page.goto('/apps/pipelinq/#/contracts')
+	await page.goto('/apps/pipelinq/contracts')
 	await assertNoServerError(page)
 	await expect(
 		page.getByRole('button', { name: /send to invoicing/i }),

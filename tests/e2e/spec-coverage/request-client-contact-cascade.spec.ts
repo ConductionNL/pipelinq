@@ -19,7 +19,7 @@ import { dismissSupportDialog, dismissWalkthrough } from '../helpers/pipelinq'
 
 /** Open the New Request dialog from the Customer Support header action. */
 async function openNewRequestDialog(page: Page) {
-	await page.goto('/apps/pipelinq/#/werkplek')
+	await page.goto('/apps/pipelinq/werkplek')
 	await dismissWalkthrough(page)
 	await dismissSupportDialog(page)
 

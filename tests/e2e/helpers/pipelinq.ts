@@ -4,9 +4,10 @@
  *
  * Shared helpers for the spec-coverage e2e suite.
  *
- * Pipelinq mounts at #content-vue. Deep-link `page.goto('/apps/pipelinq/<route>')`
- * resets the SPA back to the Dashboard, so navigation between pages MUST go
- * through a sidebar nav-click. Two app-chrome overlays can cover the content
+ * Pipelinq mounts at #content-vue. The shell routes on HISTORY, so
+ * `page.goto('/apps/pipelinq/<route>')` is a valid deep link and lands on that
+ * route — it used to reset the SPA to the Dashboard under hash routing, which
+ * is why older specs navigate by sidebar click instead. Both work now. Two app-chrome overlays can cover the content
  * and intercept clicks — the fleet-wide `cn-support-dialog` and the first-visit
  * `cn-walkthrough` product tour. Both are dismissed before interacting; see
  * dismissSupportDialog() and dismissWalkthrough().
@@ -190,12 +191,20 @@ export async function revealNavEntryByTestId(
  * against correct navigation.
  */
 export async function revealNavEntry(page: Page, label: string): Promise<Locator> {
-	// Restrict to the leaf ENTRY anchor (href contains `#/<route>`), NOT the nav
-	// GROUP CAPTION. getByRole('link', { name }) would otherwise match the
-	// caption first and the click is a no-op (router stays on `#/`).
+	// Restrict to the leaf ENTRY anchor, NOT the nav GROUP CAPTION.
+	// getByRole('link', { name }) would otherwise match the caption first and
+	// the click is a no-op (the router stays put).
+	//
+	// The discriminator is the href: under history routing a leaf entry points
+	// at `/apps/pipelinq/<route>`, while a collapsible group caption still
+	// renders a bare `href="#"` — so matching the app segment selects exactly
+	// the leaves. (This used to filter on `href*="#/"`, which stopped matching
+	// anything the moment the shell left hash routing.)
 	// Filter by exact visible text so the entry — not the caption — is targeted.
 	const link = page
-		.locator('#app-navigation-vue a.app-navigation-entry-link[href*="#/"]')
+		.locator(
+			'#app-navigation-vue a.app-navigation-entry-link[href*="/apps/pipelinq/"]',
+		)
 		.filter({
 			hasText: new RegExp(
 				`^\\s*${label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*$`,

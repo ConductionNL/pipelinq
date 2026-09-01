@@ -23,7 +23,7 @@ test.beforeEach(() => {
 
 /** Open the New Lead dialog from the sales dashboard header action. */
 async function openNewLeadDialog(page: Page) {
-	await page.goto('/apps/pipelinq/#/')
+	await page.goto('/apps/pipelinq/')
 	await dismissWalkthrough(page)
 	await dismissSupportDialog(page)
 

@@ -15,7 +15,7 @@ test.describe('Rapportage (Reporting)', () => {
 		// route directly via the SPA hash. A path-form goto boots the shell at the
 		// Dashboard; a hash goto mounts the target view. Reload once so the view
 		// re-queries its KPI data after the same-document hash change.
-		await page.goto('/apps/pipelinq/#/rapportage/contactmomenten')
+		await page.goto('/apps/pipelinq/rapportage/contactmomenten')
 		await expect(page.locator('body')).not.toContainText('Internal Server Error')
 		await page.reload()
 	})
@@ -107,7 +107,7 @@ test.describe('Rapportage (Reporting)', () => {
 	test('channel analytics page loads', async ({ page }) => {
 		// Deep-link via the SPA hash; a path-form goto boots the shell at the
 		// Dashboard instead of the target view.
-		await page.goto('/apps/pipelinq/#/rapportage/channels')
+		await page.goto('/apps/pipelinq/rapportage/channels')
 		await page.reload()
 		await expect(
 			page.getByRole('heading', { name: /Channel Analytics|Kanaalanalyse/i }),
@@ -115,7 +115,7 @@ test.describe('Rapportage (Reporting)', () => {
 	})
 
 	test('agent performance page loads', async ({ page }) => {
-		await page.goto('/apps/pipelinq/#/rapportage/agents')
+		await page.goto('/apps/pipelinq/rapportage/agents')
 		await page.reload()
 		await expect(
 			page.getByRole('heading', {

@@ -27,7 +27,7 @@ test.beforeEach(() => {
 
 /** Open the Prospects page. */
 async function openProspects(page: Page) {
-	await page.goto('/apps/pipelinq/#/prospects')
+	await page.goto('/apps/pipelinq/prospects')
 	await dismissWalkthrough(page)
 	await dismissSupportDialog(page)
 	await expect(page.locator('.prospects-view')).toBeVisible({ timeout: 20000 })

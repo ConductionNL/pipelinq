@@ -12,7 +12,7 @@ import { openApp, navClick } from '../helpers/pipelinq'
 
 // @e2e openspec/specs/pipeline/spec.md#view-pipeline-details-in-sidebar
 test('pipeline page renders with sidebar', async ({ page }) => {
-	await page.goto('/apps/pipelinq/#/pipeline')
+	await page.goto('/apps/pipelinq/pipeline')
 	await expect(page).toHaveURL(/pipeline/, { timeout: 10000 })
 	await expect(page.locator('body')).not.toContainText('Internal Server Error')
 })
@@ -21,7 +21,7 @@ test('pipeline page renders with sidebar', async ({ page }) => {
 test('pipeline sidebar shows Details and Stages tabs or empty state', async ({
 	page,
 }) => {
-	await page.goto('/apps/pipelinq/#/pipeline')
+	await page.goto('/apps/pipelinq/pipeline')
 	// Either pipeline selector is present or we see empty state
 	const hasSelector = await page
 		.locator('select, [role="combobox"]')
@@ -37,7 +37,7 @@ test('pipeline sidebar shows Details and Stages tabs or empty state', async ({
 
 // @e2e openspec/specs/pipeline/spec.md#sidebar-does-not-block-board-interaction
 test('pipeline page main content area is accessible', async ({ page }) => {
-	await page.goto('/apps/pipelinq/#/pipeline')
+	await page.goto('/apps/pipelinq/pipeline')
 	// Main content renders without blocking overlay
 	const mainContent = page.locator('#app-content, .app-content, main').first()
 	await expect(mainContent).toBeVisible({ timeout: 10000 })
@@ -45,7 +45,7 @@ test('pipeline page main content area is accessible', async ({ page }) => {
 
 // @e2e openspec/specs/pipeline/spec.md#kanban-card-display---request-card
 test('pipeline page loads without error', async ({ page }) => {
-	await page.goto('/apps/pipelinq/#/pipeline')
+	await page.goto('/apps/pipelinq/pipeline')
 	await expect(page.locator('body')).not.toContainText('Internal Server Error', {
 		timeout: 10000,
 	})
@@ -77,7 +77,7 @@ test('pipeline page navigates from dashboard nav', async ({ page }) => {
 test('pipeline page renders without server error after navigation', async ({
 	page,
 }) => {
-	await page.goto('/apps/pipelinq/#/pipeline')
+	await page.goto('/apps/pipelinq/pipeline')
 	await page.waitForTimeout(2000)
 	await expect(page.locator('body')).not.toContainText('Internal Server Error')
 })

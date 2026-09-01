@@ -89,7 +89,7 @@ async function gotoPage(page: Page, hash: string): Promise<void> {
 	// hash change is same-document and does not remount the view. On the first
 	// navigation of a test the goto IS a full document load and already mounts
 	// the target route.
-	const target = `/apps/pipelinq/#${hash}`
+	const target = `/apps/pipelinq/${hash}`
 	const alreadyMounted = page.url().includes('/apps/pipelinq')
 	await page.goto(target)
 	if (alreadyMounted) {
@@ -351,7 +351,7 @@ test('ZReports renders from a type:"index" manifest page, badge column and all',
 
 	// The one declared row action (`handler: "navigate"`, route ZReportDetail).
 	await clickFirstRowAction(page, 'openen')
-	await expect(page).toHaveURL(/#\/pos\/z-reports\/[^/]+$/, { timeout: 15000 })
+	await expect(page).toHaveURL(/\/pos\/z-reports\/[^/]+$/, { timeout: 15000 })
 })
 
 // @e2e openspec/specs/declarative-view-system/spec.md#bookings-renders-as-a-view-only-declarative-index
@@ -388,7 +388,7 @@ test('Bookings renders as a VIEW-ONLY declarative index — no create control', 
 
 	// The single declared row action navigates to the bespoke BookingDetail.
 	await clickFirstRowAction(page, 'open')
-	await expect(page).toHaveURL(/#\/bookings\/[^/]+$/, { timeout: 15000 })
+	await expect(page).toHaveURL(/\/bookings\/[^/]+$/, { timeout: 15000 })
 })
 
 // ---------------------------------------------------------------------------
@@ -418,7 +418,7 @@ test('Services renders declaratively with currency + duration columns and a crea
 	// `params: { id: "new" }`, so it lives in the CnActionsBar overflow rather
 	// than as a visible CTA (`showAdd: false`) — see clickHeaderAction().
 	await clickHeaderAction(page, 'New service')
-	await expect(page).toHaveURL(/#\/services\/new$/, { timeout: 15000 })
+	await expect(page).toHaveURL(/\/services\/new$/, { timeout: 15000 })
 	await expect(
 		page
 			.locator('#content-vue')
@@ -446,9 +446,9 @@ test("Services: a row's open action navigates to that service's detail route", a
 	})
 
 	await clickFirstRowAction(page, 'view')
-	await expect(page).toHaveURL(/#\/services\/[^/]+$/, { timeout: 15000 })
+	await expect(page).toHaveURL(/\/services\/[^/]+$/, { timeout: 15000 })
 	// Not the create form — a real object id.
-	await expect(page).not.toHaveURL(/#\/services\/new$/)
+	await expect(page).not.toHaveURL(/\/services\/new$/)
 })
 
 // @e2e openspec/specs/declarative-view-system/spec.md#resources-new-action-opens-the-create-form
@@ -469,7 +469,7 @@ test('Resources renders declaratively and its "New resource" action opens the cr
 	).toBe(false)
 
 	await clickHeaderAction(page, 'New resource')
-	await expect(page).toHaveURL(/#\/resources\/new$/, { timeout: 15000 })
+	await expect(page).toHaveURL(/\/resources\/new$/, { timeout: 15000 })
 	await expect(
 		page
 			.locator('#content-vue')
@@ -507,7 +507,7 @@ test('Projects renders declaratively with a currency budget column and a billabl
 	).toBe(false)
 
 	await clickHeaderAction(page, 'Nieuw project')
-	await expect(page).toHaveURL(/#\/projects\/new$/, { timeout: 15000 })
+	await expect(page).toHaveURL(/\/projects\/new$/, { timeout: 15000 })
 })
 
 // ---------------------------------------------------------------------------
@@ -777,7 +777,7 @@ test.describe('Declarative detail pages (client 360 + contact)', () => {
 		await row.click()
 
 		// `rowRoute: "LeadDetail"` on the Leads related collection.
-		await expect(page).toHaveURL(new RegExp(`#/leads/${leadId}$`), {
+		await expect(page).toHaveURL(new RegExp(`/leads/${leadId}$`), {
 			timeout: 15000,
 		})
 	})

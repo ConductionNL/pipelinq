@@ -28,7 +28,7 @@ test.beforeEach(() => {
 
 /** Open the first client's detail page and return the quick-log form. */
 async function openQuickLog(page: Page) {
-	await page.goto('/apps/pipelinq/#/clients')
+	await page.goto('/apps/pipelinq/clients')
 	await dismissWalkthrough(page)
 	await dismissSupportDialog(page)
 
@@ -47,7 +47,7 @@ async function openQuickLog(page: Page) {
 	})
 	const id = await row.getAttribute('data-testid-row-id')
 	expect(id, 'the client row must carry its id').toBeTruthy()
-	await page.goto(`/apps/pipelinq/#/clients/${id}`)
+	await page.goto(`/apps/pipelinq/clients/${id}`)
 
 	const client = page.locator('[data-testid="contactmoment-form-client"]')
 	await expect(

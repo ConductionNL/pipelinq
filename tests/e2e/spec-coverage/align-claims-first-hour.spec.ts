@@ -41,7 +41,7 @@ test.describe('Operational dashboard — no permanently-null widgets', () => {
 	test.beforeEach(async ({ page }) => {
 		// The shared dev instance can be slow to fire `load`; DOMContentLoaded
 		// is enough — the assertions below wait for the widgets themselves.
-		await page.goto('/apps/pipelinq/#/operational', {
+		await page.goto('/apps/pipelinq/operational', {
 			waitUntil: 'domcontentloaded',
 		})
 		await expect(page.locator('body')).not.toContainText('Internal Server Error')
@@ -130,7 +130,7 @@ test.describe('Demo-data seed setup action', () => {
 	test('seeded demo clients render in the Clients list', async ({ page }) => {
 		test.setTimeout(90000)
 		await autoDismissWalkthrough(page)
-		await page.goto('/apps/pipelinq/#/clients')
+		await page.goto('/apps/pipelinq/clients')
 		await page.reload()
 
 		// Wait for the table to load rows.
