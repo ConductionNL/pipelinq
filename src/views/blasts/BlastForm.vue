@@ -174,6 +174,7 @@
 
 <script>
 import axios from '@nextcloud/axios'
+import { showInfo } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcLoadingIcon, NcSelect } from '@nextcloud/vue'
 import MissingConsentModal from '../../modals/MissingConsentModal.vue'
@@ -566,7 +567,12 @@ export default {
 		 */
 		onConsentRequest() {
 			this.consentDecision = 'request'
-			OC.Notification.showTemporary(
+			// `OC.Notification` does not exist on Nextcloud 34 -- window.OC is
+			// present but has no Notification member, so the legacy
+			// showTemporary() call threw a TypeError the moment this handler
+			// ran and the user saw nothing at all. Every other view in this app
+			// already uses @nextcloud/dialogs.
+			showInfo(
 				this.t(
 					'pipelinq',
 					'A consent-request flow will be opened for the listed contacts.',
