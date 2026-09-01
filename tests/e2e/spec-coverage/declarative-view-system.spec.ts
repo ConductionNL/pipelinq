@@ -745,11 +745,27 @@ test.describe('Declarative detail pages (client 360 + contact)', () => {
 		page,
 	}) => {
 		// Seeded here, not in beforeAll, so the row this test clicks is one whose
-		// destination it knows. `lead` requires only `title`, and `client` is the
-		// FK the manifest scopes the Leads collection by.
+		// destination it knows. `client` is the FK the manifest scopes the Leads
+		// collection by.
+		//
+		// `pipeline` is REQUIRED on lead since "a lead belongs to a pipeline and
+		// a client". Without it the create returns 400 "The required property
+		// (pipeline) is missing", which surfaces as a fixture error rather than
+		// as anything about the view system this spec exists to test.
+		//
+		// Read from the seed rather than created, matching how this suite gets
+		// its client: lib/Settings/demo_seed_data.json seeds two pipelines.
+		const pipelines = await fx.list('pipeline', { _limit: 1 })
+		expect(
+			pipelines.length,
+			'ci-seed.sh must have seeded at least one pipeline — `lead` requires it',
+		).toBeGreaterThan(0)
+		const pipelineId = String(pipelines[0].id || pipelines[0]['@self']?.id)
+
 		const lead = await fx.create('lead', {
 			title: LEAD_TITLE,
 			client: clientId,
+			pipeline: pipelineId,
 			status: 'open',
 			value: 4200,
 		})
