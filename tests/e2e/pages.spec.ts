@@ -40,8 +40,10 @@
  * asserting it would have produced exactly the kind of finding that gets a
  * suite disabled again.
  */
-import { test, expect } from '@playwright/test'
-import { dismissSupportDialog, dismissWalkthrough } from './helpers/pipelinq'
+import type { Page } from '@playwright/test'
+
+import { expect, test } from '@playwright/test'
+import { dismissSupportDialog, dismissWalkthrough } from './helpers/pipelinq.ts'
 
 /** Index routes that carry a primary create action. */
 const INDEX_WITH_CTA: Array<[string, string]> = [
@@ -87,7 +89,7 @@ const NON_INDEX: Array<[string, string]> = [
  * @param page  The page under test.
  * @param route The hash route, e.g. `#/clients`.
  */
-async function openRoute(page: import('@playwright/test').Page, route: string) {
+async function openRoute(page: Page, route: string) {
 	await page.goto(`/apps/pipelinq/${route}`)
 	await expect(
 		page.locator('[data-testid="cn-app-root"]'),

@@ -33,17 +33,18 @@
  * Those three are excluded in the spec with exactly that reason. What IS true
  * of the shipped IA is asserted below in full.
  */
-import { test, expect, Page } from '@playwright/test'
+import type { Page } from '@playwright/test'
 
+import { expect, test } from '@playwright/test'
 import {
+	assertNoHardError,
+	dismissSupportDialog,
+	dismissWalkthrough,
+	navClick,
+	nextcloudErrorPage,
 	openApp,
 	revealNavEntry,
-	navClick,
-	assertNoHardError,
-	nextcloudErrorPage,
-	dismissWalkthrough,
-	dismissSupportDialog,
-} from '../helpers/pipelinq'
+} from '../helpers/pipelinq.ts'
 
 /**
  * The four leaves `src/menu-layout.json` relocates into the PointOfSale group,

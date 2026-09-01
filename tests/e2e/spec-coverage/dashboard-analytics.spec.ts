@@ -15,8 +15,8 @@
  * asserting. The date-chip / refetch behaviour is unchanged by the split.
  */
 
-import { test, expect } from '@playwright/test'
-import { openApp, trackPipelinqErrors, assertNoHardError } from '../helpers/pipelinq'
+import { expect, test } from '@playwright/test'
+import { assertNoHardError, trackPipelinqErrors } from '../helpers/pipelinq.ts'
 
 /**
  * Land directly on the Operational overview where these widgets live. We set the

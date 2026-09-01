@@ -36,13 +36,13 @@
  * @e2e contract-renewal-tracking::renewals-widget-empty-state exclude empty-state rendering verified by the RenewalsDueWidget template + RenewalsDueWidget unit behaviour; no seeded fixture in the e2e env
  */
 
-import { test, expect } from '@playwright/test'
+import { expect, test } from '@playwright/test'
 import {
-	openApp,
-	navClick,
-	trackPipelinqErrors,
 	assertNoHardError,
-} from '../helpers/pipelinq'
+	navClick,
+	openApp,
+	trackPipelinqErrors,
+} from '../helpers/pipelinq.ts'
 
 test('Contracts: the Contracts list page renders from the manifest', async ({
 	page,

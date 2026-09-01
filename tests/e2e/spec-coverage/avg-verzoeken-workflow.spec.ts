@@ -35,9 +35,10 @@
  *   * POST — the catch-all is GET-only, so an unrouted POST is refused by the
  *            router. Control: a live POST route must not be refused.
  */
-import { test, expect, Page } from '@playwright/test'
+import type { Page } from '@playwright/test'
 
-import { openApp } from '../helpers/pipelinq'
+import { expect, test } from '@playwright/test'
+import { openApp } from '../helpers/pipelinq.ts'
 
 const APP = '/index.php/apps/pipelinq'
 
@@ -55,7 +56,7 @@ async function probe(page: Page, method: string, path: string): Promise<Probe> {
 				method,
 				headers: {
 					'Content-Type': 'application/json',
-					// eslint-disable-next-line no-undef
+
 					requesttoken: (window as any).OC?.requestToken || '',
 					'OCS-APIREQUEST': 'true',
 				},

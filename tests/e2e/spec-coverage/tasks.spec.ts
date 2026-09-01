@@ -5,14 +5,14 @@
  * Gate-19 behavioral e2e coverage for the Tasks index page (/tasks).
  * Maps to openspec/specs/task-background-jobs/spec.md.
  */
-import { test, expect } from '@playwright/test'
+import { expect, test } from '@playwright/test'
 import {
-	openApp,
-	navClick,
-	trackPipelinqErrors,
 	assertNoHardError,
 	dismissSupportDialog,
-} from '../helpers/pipelinq'
+	navClick,
+	openApp,
+	trackPipelinqErrors,
+} from '../helpers/pipelinq.ts'
 
 // @e2e openspec/specs/task-background-jobs/spec.md#tasks-index
 test('Tasks: navigates from sidebar and shows index surface', async ({ page }) => {

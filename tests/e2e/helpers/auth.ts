@@ -1,4 +1,5 @@
-import { Page } from '@playwright/test'
+import type { Page } from '@playwright/test'
+
 import path from 'path'
 
 export const STORAGE_STATE = path.join(__dirname, '..', '.auth', 'user.json')

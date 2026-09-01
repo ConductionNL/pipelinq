@@ -13,9 +13,10 @@
  * looked at.
  */
 
-import { test, expect, type Page } from '@playwright/test'
+import type { Page } from '@playwright/test'
 
-import { dismissSupportDialog, dismissWalkthrough } from '../helpers/pipelinq'
+import { expect, test } from '@playwright/test'
+import { dismissSupportDialog, dismissWalkthrough } from '../helpers/pipelinq.ts'
 
 /** Open the New Request dialog from the Customer Support header action. */
 async function openNewRequestDialog(page: Page) {

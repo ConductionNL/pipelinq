@@ -21,17 +21,18 @@
  * a collapsed group — reached through revealNavEntry()/navClick(), never by a
  * raw visibility assertion.
  */
-import { test, expect, Page } from '@playwright/test'
+import type { Page } from '@playwright/test'
 
+import { expect, test } from '@playwright/test'
 import {
-	openApp,
-	navClick,
-	clickHeaderAction,
 	assertNoHardError,
+	clickHeaderAction,
 	dismissSupportDialog,
 	dismissWalkthrough,
-} from '../helpers/pipelinq'
-import { FixtureSession, TEST_PREFIX } from '../workflows/helpers/fixtures'
+	navClick,
+	openApp,
+} from '../helpers/pipelinq.ts'
+import { FixtureSession, TEST_PREFIX } from '../workflows/helpers/fixtures.ts'
 
 /**
  * ISO timestamp `hours` from now (negative = in the past), on the hour.

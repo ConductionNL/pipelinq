@@ -7,9 +7,8 @@
  * Backend/validation/integration scenarios excluded per-scenario below.
  */
 
-import { test, expect } from '@playwright/test'
-
-import { revealNavEntry } from '../helpers/pipelinq'
+import { expect, test } from '@playwright/test'
+import { revealNavEntry } from '../helpers/pipelinq.ts'
 
 // @e2e openspec/specs/client-management/spec.md#display-client-list-with-default-settings
 test('client list page renders with controls', async ({ page }) => {
@@ -77,9 +76,9 @@ test('client page loads without error', async ({ page }) => {
 
 // @e2e openspec/specs/client-management/spec.md#search-clients-by-name
 test('client list has search capability', async ({ page }) => {
-	await page.goto('/apps/pipelinq/clients')
-	// Search input should be available
-	const searchInput = page
+	await page
+		.goto('/apps/pipelinq/clients')
+		// Search input should be available
 		.locator(
 			'input[type="search"], input[placeholder*="search" i], input[placeholder*="zoek" i]',
 		)

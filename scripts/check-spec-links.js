@@ -49,7 +49,12 @@ const SPEC_RE = /@spec\s+(openspec\/[^\s*]+)/g
 const SCAN_DIRS = ['lib', 'src']
 const SCAN_EXT = new Set(['.php', '.js', '.vue', '.ts', '.mjs'])
 
-/** Every file under dir whose extension we scan. */
+/**
+ * Every file under dir whose extension we scan.
+ *
+ * @param dir
+ * @param out
+ */
 function walk(dir, out = []) {
 	let entries
 	try {
@@ -72,7 +77,7 @@ function walk(dir, out = []) {
 function archiveIndex() {
 	const base = path.join(ROOT, 'openspec', 'changes', 'archive')
 	const index = new Map()
-	let names = []
+	let names
 	try {
 		names = fs.readdirSync(base)
 	} catch {
@@ -88,7 +93,12 @@ function archiveIndex() {
 	return index
 }
 
-/** Candidate on-disk locations for one cited target, best first. */
+/**
+ * Candidate on-disk locations for one cited target, best first.
+ *
+ * @param target
+ * @param archive
+ */
 function candidates(target, archive) {
 	const out = [path.join(ROOT, target)]
 
@@ -105,7 +115,7 @@ function candidates(target, archive) {
 	if (spec) {
 		const [, capability, tail] = spec
 		const changesDir = path.join(ROOT, 'openspec', 'changes')
-		let changes = []
+		let changes
 		try {
 			changes = fs.readdirSync(changesDir)
 		} catch {
@@ -139,6 +149,8 @@ function candidates(target, archive) {
  * deliberate: the job here is to catch an anchor that names nothing in the
  * file, not to arbitrate slug dialects. Being strict about the dialect
  * produced hundreds of findings that were all the same non-problem.
+ *
+ * @param heading
  */
 function slugVariants(heading) {
 	const lower = heading.toLowerCase().trim()
@@ -166,6 +178,8 @@ function slugVariants(heading) {
  *   3. A task id from a `tasks.md` checklist item — `- [x] 3.3 Create daily
  *      health-check job` is cited as `tasks.md#3.3` or `#task-3.3`. These are
  *      list items, so no heading will ever match them.
+ *
+ * @param file
  */
 function anchorsOf(file) {
 	const found = new Set()
@@ -213,6 +227,8 @@ function anchorsOf(file) {
  * `### Requirement: Backend SLA Deadline Service` beyond any doubt, and
  * refusing it teaches readers that the check is noise. What must still fail is
  * an anchor naming nothing in the file at all.
+ *
+ * @param anchor
  */
 function anchorForms(anchor) {
 	const forms = new Set()

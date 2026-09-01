@@ -23,13 +23,14 @@
  *   /export/runs/:id           ExportRunDetailView      ExportRunDetail.vue
  */
 
-import { test, expect, type Page } from '@playwright/test'
+import type { Page } from '@playwright/test'
 
+import { expect, test } from '@playwright/test'
 import {
 	assertAppShellServed,
 	dismissSupportDialog,
 	dismissWalkthrough,
-} from '../helpers/pipelinq'
+} from '../helpers/pipelinq.ts'
 
 /**
  * A run id that deliberately does not exist. `ExportRunDetail.load()` answers a
@@ -76,10 +77,11 @@ const content = (page: Page) => page.locator('#content-vue')
  *
  * @param page The Playwright page.
  */
-const indexTitle = (page: Page) =>
-	content(page)
+function indexTitle(page: Page) {
+	return content(page)
 		.locator('[data-testid="cn-index-page"] [data-testid="cn-page-title"]')
 		.first()
+}
 
 // ── src/views/export/ExportDestinations.vue — route `/export/destinations` ────
 test('ExportDestinations: /export/destinations mounts src/views/export/ExportDestinations.vue', async ({

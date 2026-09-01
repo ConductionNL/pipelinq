@@ -26,15 +26,16 @@
  * asserted below (segment names, template names/channels, blast names, the
  * delivery status mix) was read out of that file, not guessed.
  */
-import { test, expect, Page } from '@playwright/test'
+import type { Page } from '@playwright/test'
 
+import { expect, test } from '@playwright/test'
 import {
-	openApp,
-	navClick,
 	assertNoHardError,
-	dismissWalkthrough,
 	dismissSupportDialog,
-} from '../helpers/pipelinq'
+	dismissWalkthrough,
+	navClick,
+	openApp,
+} from '../helpers/pipelinq.ts'
 
 /** One authenticated JSON call issued from inside the logged-in page. */
 async function api(
@@ -49,7 +50,7 @@ async function api(
 				method,
 				headers: {
 					'Content-Type': 'application/json',
-					// eslint-disable-next-line no-undef
+
 					requesttoken: (window as any).OC?.requestToken || '',
 					'OCS-APIREQUEST': 'true',
 				},

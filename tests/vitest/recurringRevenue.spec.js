@@ -4,12 +4,12 @@
 // Unit tests for the client-side recurring-revenue helpers
 // (contract-renewal-tracking). Mirrors the PHP RecurringRevenueService tests.
 
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import {
-	normalizeToMonthly,
-	computeMrr,
 	computeArr,
 	computeClientMrr,
+	computeMrr,
+	normalizeToMonthly,
 } from '../../src/services/recurringRevenue.js'
 
 describe('recurringRevenue', () => {

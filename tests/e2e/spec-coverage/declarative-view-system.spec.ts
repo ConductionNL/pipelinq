@@ -39,18 +39,19 @@
  * view. It is also the same navigation a manifest `handler: "navigate"`
  * performs, so it does not smuggle in an assumption about the sidebar IA.
  */
-import { test, expect, Page } from '@playwright/test'
+import type { Page } from '@playwright/test'
+
+import { expect, test } from '@playwright/test'
 import * as fs from 'fs'
 import * as path from 'path'
-
 import {
-	openApp,
-	clickHeaderAction,
 	assertNoHardError,
+	clickHeaderAction,
 	dismissSupportDialog,
 	dismissWalkthrough,
-} from '../helpers/pipelinq'
-import { FixtureSession, TEST_PREFIX } from '../workflows/helpers/fixtures'
+	openApp,
+} from '../helpers/pipelinq.ts'
+import { FixtureSession, TEST_PREFIX } from '../workflows/helpers/fixtures.ts'
 
 /** App root — tests/e2e/spec-coverage/ is three levels down from it. */
 const APP_ROOT = path.resolve(__dirname, '..', '..', '..')
@@ -271,7 +272,6 @@ async function apiGet(
 	return await page.evaluate(async (p) => {
 		const res = await fetch(p, {
 			headers: {
-				// eslint-disable-next-line no-undef
 				requesttoken: (window as any).OC?.requestToken || '',
 			},
 		})

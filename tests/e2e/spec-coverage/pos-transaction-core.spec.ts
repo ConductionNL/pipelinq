@@ -19,8 +19,8 @@
  * (GIVEN seeded transactions). They are covered by PHPUnit / Newman.
  */
 
-import { test, expect } from '@playwright/test'
-import { openApp, navClick, clickHeaderAction } from '../helpers/pipelinq'
+import { expect, test } from '@playwright/test'
+import { clickHeaderAction, navClick, openApp } from '../helpers/pipelinq.ts'
 
 // @e2e openspec/specs/pos-transaction-core/spec.md#display-transaction-list-with-key-columns
 test('POS transaction list (Kassabon) page renders the real list shell', async ({

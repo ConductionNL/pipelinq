@@ -25,13 +25,13 @@
  * an assertion against a control I could not locate would have produced exactly
  * the kind of green that says nothing.
  */
-import { test, expect } from '@playwright/test'
+import { expect, test } from '@playwright/test'
 import {
-	openApp,
-	navClick,
-	trackPipelinqErrors,
 	assertNoHardError,
-} from '../helpers/pipelinq'
+	navClick,
+	openApp,
+	trackPipelinqErrors,
+} from '../helpers/pipelinq.ts'
 
 /** EAN-13 carried by the seeded "[Demo] Koffie zwart" product. */
 const SEEDED_BARCODE = '8714100000017'

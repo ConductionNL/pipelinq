@@ -21,18 +21,20 @@
  * Each test below now asserts something ONLY the request surface satisfies.
  */
 
-import { test, expect } from '@playwright/test'
+import type { Page } from '@playwright/test'
+
+import { expect, test } from '@playwright/test'
 import {
-	openApp,
-	navClick,
-	clickQuickFilter,
-	trackPipelinqErrors,
 	assertNoHardError,
+	clickQuickFilter,
 	dismissSupportDialog,
-} from '../helpers/pipelinq'
+	navClick,
+	openApp,
+	trackPipelinqErrors,
+} from '../helpers/pipelinq.ts'
 
 /** Open the Tickets workspace narrowed to the request subtype. */
-async function openRequests(page: import('@playwright/test').Page): Promise<void> {
+async function openRequests(page: Page): Promise<void> {
 	await openApp(page)
 	await navClick(page, 'All tickets', /\/tickets/)
 	await clickQuickFilter(page, 'Tickets')

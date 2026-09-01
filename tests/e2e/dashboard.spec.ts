@@ -28,8 +28,8 @@
  *
  * Verified live against the running app on 2026-08-24.
  */
-import { test, expect } from '@playwright/test'
-import { openApp } from './helpers/pipelinq'
+import { expect, test } from '@playwright/test'
+import { openApp } from './helpers/pipelinq.ts'
 
 /**
  * Manifest widget ids, which CnDashboardPage exposes as the accessible name of

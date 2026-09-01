@@ -14,16 +14,17 @@
  * landing-page title + quick-action assertions stay on `/`.
  */
 
-import { test, expect, Page } from '@playwright/test'
+import type { Page } from '@playwright/test'
+
+import { expect, test } from '@playwright/test'
 import * as fs from 'fs'
 import * as path from 'path'
-
 import {
-	openApp,
 	assertNoHardError,
 	dismissSupportDialog,
 	dismissWalkthrough,
-} from '../helpers/pipelinq'
+	openApp,
+} from '../helpers/pipelinq.ts'
 
 /**
  * Deep-link the Operational overview where the request/lead widgets live. Land
@@ -796,7 +797,6 @@ async function apiGet(
 	return await page.evaluate(async (p) => {
 		const res = await fetch(p, {
 			headers: {
-				// eslint-disable-next-line no-undef
 				requesttoken: (window as any).OC?.requestToken || '',
 			},
 		})

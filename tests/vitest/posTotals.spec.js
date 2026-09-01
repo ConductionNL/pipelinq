@@ -8,15 +8,15 @@
  * nl-NL EUR formatter. These mirror PosTransactionService / PosRefundService.
  */
 
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import {
+	computeRefundTotals,
+	computeTotals,
+	formatEur,
 	normalizePriceMode,
 	rateDescription,
 	recalculateLine,
-	computeTotals,
 	refundLineAmounts,
-	computeRefundTotals,
-	formatEur,
 } from '../../src/services/posTotals.js'
 
 describe('normalizePriceMode', () => {
@@ -155,10 +155,10 @@ describe('formatEur', () => {
 	it('formats nl-NL EUR with two decimals', () => {
 		// Use a non-breaking-space-tolerant assertion: strip whitespace + currency symbol position.
 		const formatted = formatEur(1234.5)
-		expect(formatted.replace(/ /g, ' ')).toMatch(/€\s?1\.234,50/)
+		expect(formatted.replace(/ /g, ' ')).toMatch(/€\s?1\.234,50/)
 	})
 
 	it('coerces non-numeric input to zero', () => {
-		expect(formatEur('nope').replace(/ /g, ' ')).toMatch(/€\s?0,00/)
+		expect(formatEur('nope').replace(/ /g, ' ')).toMatch(/€\s?0,00/)
 	})
 })

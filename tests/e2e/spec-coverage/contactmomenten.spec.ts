@@ -23,14 +23,14 @@
  *    assert something only the contactmoment surface satisfies.
  */
 
-import { test, expect } from '@playwright/test'
+import { expect, test } from '@playwright/test'
 import {
-	openApp,
-	navClick,
-	clickQuickFilter,
-	trackPipelinqErrors,
 	assertNoHardError,
-} from '../helpers/pipelinq'
+	clickQuickFilter,
+	navClick,
+	openApp,
+	trackPipelinqErrors,
+} from '../helpers/pipelinq.ts'
 
 // @e2e openspec/specs/contactmomenten/spec.md#navigation-item-present
 test('contactmomenten is reachable from the sidebar via the Tickets workspace', async ({

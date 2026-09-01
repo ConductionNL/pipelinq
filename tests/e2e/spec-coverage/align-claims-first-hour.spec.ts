@@ -13,7 +13,9 @@
 //
 // @spec openspec/changes/align-claims-and-first-hour/specs/dashboard/spec.md#requirement-no-permanently-null-default-widgets
 // @spec openspec/changes/align-claims-and-first-hour/specs/first-time-setup/spec.md#requirement-req-setup-pip-008--optional-demo-data-seed
-import { test, expect, Page } from '@playwright/test'
+import type { Page } from '@playwright/test'
+
+import { expect, test } from '@playwright/test'
 
 /**
  * Auto-dismiss the getting-started walkthrough tour whenever it overlays the

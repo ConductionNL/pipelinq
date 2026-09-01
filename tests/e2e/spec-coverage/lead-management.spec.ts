@@ -7,9 +7,8 @@
  * Most scenarios are backend/API/V1/Enterprise — excluded per-scenario below.
  */
 
-import { test, expect } from '@playwright/test'
-
-import { revealNavEntry } from '../helpers/pipelinq'
+import { expect, test } from '@playwright/test'
+import { revealNavEntry } from '../helpers/pipelinq.ts'
 
 // @e2e openspec/specs/lead-management/spec.md#add-tags-to-a-lead
 test('leads page accessible from navigation', async ({ page }) => {
