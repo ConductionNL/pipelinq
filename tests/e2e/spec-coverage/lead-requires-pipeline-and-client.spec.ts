@@ -65,16 +65,26 @@ test('a lead cannot be saved without a pipeline and a client', async ({ page }) 
 test('the form names which relationship is missing', async ({ page }) => {
 	const dialog = await openNewLeadDialog(page)
 
-	// Both errors are rendered from the same `errors` computed the Save button
-	// reads, so seeing them proves the user is told WHY rather than just being
+	// The client error is rendered from the `errors` computed the Save button
+	// reads, so seeing it proves the user is told WHY rather than just being
 	// faced with a dead button.
 	await expect(
 		dialog.locator('[data-testid="lead-form-client"] .field-error'),
 		'the client field must state that it is required',
 	).toBeVisible({ timeout: 10000 })
 
+	// Pipeline is deliberately NOT asserted as an error. The spec says, at
+	// lead-management/spec.md scenario 1: "if a default pipeline exists, the
+	// lead MUST be placed on the first non-closed stage of that pipeline", and
+	// autoAssignDefaultPipeline() does exactly that. The seed ships a default,
+	// so the field is filled before the user sees it and an error there would
+	// mean the auto-assignment had failed.
+	//
+	// Asserting its ABSENCE is the stronger test: it fails if the auto-assign
+	// regresses, which the previous assertion could not distinguish from the
+	// field simply being empty.
 	await expect(
 		dialog.locator('[data-testid="lead-form-pipeline"] .field-error'),
-		'the pipeline field must state that it is required',
-	).toBeVisible({ timeout: 10000 })
+		'pipeline is auto-assigned from the default, so it must NOT report as missing',
+	).toBeHidden({ timeout: 10000 })
 })
