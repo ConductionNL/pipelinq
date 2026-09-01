@@ -6,12 +6,13 @@
  * that had no e2e test naming them.
  *
  * WHY THE EXISTING bi-export.spec.ts DID NOT COVER THESE. It drives the same
- * feature but deep-links with PATH-shaped URLs — `/apps/pipelinq/export/runs` —
- * while `src/main.js` builds `createWebHashHistory(...)`. With an empty hash
- * vue-router resolves `/` and renders the Dashboard; the spec's
- * `toHaveURL(/export\/runs/)` still passes because the PATH contains the words.
- * So those tests assert against whatever the Dashboard renders, and they never
- * name a component either. Everything below carries the `#`.
+ * feature but, while the app was hash-routed, deep-linked with PATH-shaped URLs
+ * — `/apps/pipelinq/export/runs` — which left the hash empty. vue-router
+ * resolved `/` and rendered the Dashboard, yet the spec's
+ * `toHaveURL(/export\/runs/)` still passed because the PATH contains the words,
+ * so those tests asserted against whatever the Dashboard rendered and never
+ * named a component. `src/main.js` now builds `createWebHistory(routerBase())`,
+ * so a path-shaped deep link resolves to the page it names.
  *
  * All five pages are `type: "custom"` manifest entries, so the route maps
  * straight onto the .vue file rather than onto the manifest renderer:

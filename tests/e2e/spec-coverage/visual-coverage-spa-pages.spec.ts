@@ -20,14 +20,16 @@
  * Linux runner cannot byte-match a dev-container baseline. A baseline would
  * satisfy gate-26 from a suite CI never executes.
  *
- * ROUTES ARE THE MANIFEST'S, AND THEY ARE HASH ROUTES
- * ---------------------------------------------------
- * `src/main.js` builds `createWebHashHistory(generateUrl('/apps/pipelinq'))`, so
- * the route lives in `location.hash`. A path-shaped deep link
- * (`/apps/pipelinq/my-work`) leaves the hash EMPTY, vue-router resolves `/`, and
- * the SPA renders the Dashboard — while `expect(page).toHaveURL(/my-work/)`
- * still passes, because the PATH does contain it. Several pre-existing specs are
- * written that way. Every goto here carries the `#`.
+ * ROUTES ARE THE MANIFEST'S, AND THEY ARE REAL PATHS
+ * --------------------------------------------------
+ * `src/main.js` builds `createWebHistory(routerBase())`, so the route is the
+ * path. That was not always so: while the app was hash-routed a path-shaped
+ * deep link (`/apps/pipelinq/my-work`) left the hash EMPTY, vue-router resolved
+ * `/`, and the SPA rendered the Dashboard — while `expect(page).toHaveURL(/my-work/)`
+ * still passed, because the PATH does contain it. Specs written that way were
+ * asserting against the Dashboard. They resolve correctly now, but a
+ * URL-only assertion still proves nothing about which page rendered, so the
+ * assertions below name a component.
  *
  * ASSERTION SHAPE
  * ---------------

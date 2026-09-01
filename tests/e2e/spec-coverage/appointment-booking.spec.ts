@@ -337,7 +337,7 @@ test.describe('Booking admin surfaces (seeded)', () => {
 test.describe('Public booking portal (no Nextcloud login)', () => {
 	test.use({ storageState: { cookies: [], origins: [] } })
 
-	const BOOKING_ROUTE = '/apps/pipelinq/portal/#/book/haircut-simple'
+	const BOOKING_ROUTE = '/apps/pipelinq/portal/book/haircut-simple'
 
 	// @e2e openspec/specs/appointment-booking/spec.md#customer-books-without-login
 	test('the booking portal is served to an anonymous visitor', async ({

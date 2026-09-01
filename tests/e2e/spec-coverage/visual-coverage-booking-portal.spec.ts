@@ -12,8 +12,8 @@
  * Both are declared in `src/portal/portalRoutes.js` with `meta: { public: true }`
  * and served by `portalPage#subpath` (`/apps/pipelinq/portal/{path}`), whose
  * controller is a `#[PublicPage]`. `src/portal.js` builds
- * `createWebHashHistory(generateUrl('/apps/pipelinq/portal'))`, so — as in the
- * main app — the route lives in the hash. `tests/e2e/portal-accessibility.spec.ts`
+ * `createWebHistory(routerBase())`, so — as in the main app — the route is a
+ * real path. `tests/e2e/portal-accessibility.spec.ts`
  * already exercises this same entry point in CI, which is what makes the portal
  * bundle a known-good target rather than an assumption.
  *
@@ -61,14 +61,16 @@ const ABSENT_SERVICE_SLUG = 'e2e-gate26-no-such-service'
 const ABSENT_BOOKING_ID = 'e2e-gate26-no-such-booking'
 
 /**
- * Open a portal hash route and prove the portal shell — not Nextcloud's error
+ * Open a portal route and prove the portal shell — not Nextcloud's error
  * chrome, and not the login redirect — was served.
  *
  * @param page The Playwright page.
- * @param hash The portal route, e.g. `/book/some-slug`.
+ * @param route The portal route, e.g. `/book/some-slug`.
  */
-async function openPortalRoute(page: Page, hash: string): Promise<void> {
-	const response = await page.goto(`${PORTAL_BASE}#${hash}`)
+async function openPortalRoute(page: Page, route: string): Promise<void> {
+	// `route` carries its own leading slash and PORTAL_BASE ends in one, so the
+	// duplicate is trimmed rather than producing //book/...
+	const response = await page.goto(`${PORTAL_BASE.replace(/\/$/, '')}${route}`)
 	expect(response, 'navigation produced no response').not.toBeNull()
 	expect(response?.status(), 'the portal shell must be served').toBe(200)
 	await expect(nextcloudErrorPage(page)).toHaveCount(0)
@@ -79,13 +81,14 @@ async function openPortalRoute(page: Page, hash: string): Promise<void> {
 		timeout: 15000,
 	})
 
-	// A SURVIVING HASH IS THE ACCESS PROOF. `installPortalGuard()` rewrites the
-	// route to `/login` for anything without `meta.public`, so a hash that is
-	// still the requested one is evidence both that the route matched AND that
-	// it was correctly classified public — the whole point of anonymous
-	// self-booking (ADR-005).
+	// A SURVIVING PATH IS THE ACCESS PROOF. `installPortalGuard()` rewrites the
+	// route to `/login` for anything without `meta.public`, so a URL that still
+	// ends in the requested route is evidence both that the route matched AND
+	// that it was correctly classified public — the whole point of anonymous
+	// self-booking (ADR-005). This used to read the hash; the portal now builds
+	// `createWebHistory(routerBase())`, so the route is the path.
 	await expect(page).toHaveURL(
-		new RegExp(`#${hash.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`),
+		new RegExp(`${route.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`),
 		{ timeout: 10000 },
 	)
 }
