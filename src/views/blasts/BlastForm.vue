@@ -564,6 +564,8 @@ export default {
 		 * Modal handler: user wants to launch a consent-request flow. We
 		 * navigate them to a (forthcoming) consent-request screen but do not
 		 * send the blast.
+		 *
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-blast-creation-wizard-gates-on-compliance
 		 */
 		onConsentRequest() {
 			this.consentDecision = 'request'
