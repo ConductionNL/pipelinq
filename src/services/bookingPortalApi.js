@@ -77,6 +77,7 @@ export async function submitBooking(payload) {
  *
  * @param {string} bookingId The booking id.
  * @return {Promise<object>} The booking summary.
+ * @spec openspec/specs/appointment-booking/spec.md
  */
 export async function fetchBooking(bookingId) {
 	const response = await axios.get(
