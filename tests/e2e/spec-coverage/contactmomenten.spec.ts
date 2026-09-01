@@ -37,7 +37,7 @@ test('contactmomenten is reachable from the sidebar via the Tickets workspace', 
 	page,
 }) => {
 	await openApp(page)
-	await navClick(page, 'Tickets', /\/tickets/)
+	await navClick(page, 'All tickets', /\/tickets/)
 	// The subtype tab IS the navigation affordance since the unification.
 	await expect(
 		page
@@ -51,7 +51,7 @@ test('contactmomenten list renders seeded contactmoment tickets', async ({
 	page,
 }) => {
 	await openApp(page)
-	await navClick(page, 'Tickets', /\/tickets/)
+	await navClick(page, 'All tickets', /\/tickets/)
 	await clickQuickFilter(page, 'Contactmomenten')
 
 	const content = page.locator('#content-vue')
@@ -105,7 +105,7 @@ test('contactmomenten list renders seeded contactmoment tickets', async ({
 // @e2e openspec/specs/contactmomenten/spec.md#quick-log-from-contactmomenten-list
 test('contactmomenten list exposes the create entry point', async ({ page }) => {
 	await openApp(page)
-	await navClick(page, 'Tickets', /\/tickets/)
+	await navClick(page, 'All tickets', /\/tickets/)
 	await clickQuickFilter(page, 'Contactmomenten')
 
 	await expect(
@@ -119,7 +119,7 @@ test('contactmomenten surface loads without pipelinq console errors', async ({
 }) => {
 	const errs = trackPipelinqErrors(page)
 	await openApp(page)
-	await navClick(page, 'Tickets', /\/tickets/)
+	await navClick(page, 'All tickets', /\/tickets/)
 	await clickQuickFilter(page, 'Contactmomenten')
 
 	await assertNoHardError(page)
@@ -131,7 +131,7 @@ test('the channel column surfaces the seeded contactmoment channels', async ({
 	page,
 }) => {
 	await openApp(page)
-	await navClick(page, 'Tickets', /\/tickets/)
+	await navClick(page, 'All tickets', /\/tickets/)
 	await clickQuickFilter(page, 'Contactmomenten')
 
 	// `channel` is a declared column on the Tickets index and the seeded set
