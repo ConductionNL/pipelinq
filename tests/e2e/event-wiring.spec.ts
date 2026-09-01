@@ -121,7 +121,14 @@ test.describe('WBS tree child-to-parent events', () => {
 			sequence: 1,
 		})
 		if (phaseId) {
-			await createObject(page, 'task', {
+			// `projectTask`, NOT `task`. `task` is the SERVICE task schema
+			// (callbackPhoneNumber, contactMomentSummary, requestId) and it
+			// declares no `phase`, `project` or `sequence`, so OpenRegister
+			// dropped all three on save. The task was created, carried no phase
+			// link, and ProjectWbsTree's tasksFor() filter on
+			// `t.phase === phase.id` never matched it: no task row, and so no
+			// per-task "Time entry" button for this spec to click.
+			await createObject(page, 'projectTask', {
 				phase: phaseId,
 				project: PROJECT_ID,
 				title: 'e2e event wiring task',
