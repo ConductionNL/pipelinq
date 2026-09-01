@@ -65,11 +65,23 @@
 
 			<!-- Step 4: channel -->
 			<section v-if="step === 'channel'" class="blast-form__panel">
+				<!--
+					`:reduce` keeps this model a STRING, which is what every
+					reader of `selectedChannel` assumes: filteredTemplates()
+					compares it to `template.channel`, the preflight guard tests
+					it against 'email', and both the create call and the
+					preflight query send it as-is. Without it vue-select hands
+					back the whole `{ value, label }` option, and all four go
+					wrong at once while `canSubmit()`'s `!!` check still passes
+					because an object is truthy — so "Create blast" simply stays
+					disabled with nothing to show for it.
+				-->
 				<NcSelect
 					v-model="selectedChannel"
 					:options="channelOptions"
 					:inputLabel="t('pipelinq', 'Channel') + ' *'"
 					label="label"
+					:reduce="(o) => o.value"
 					:clearable="false" />
 				<NcSelect
 					v-model="selectedConnectorSource"
