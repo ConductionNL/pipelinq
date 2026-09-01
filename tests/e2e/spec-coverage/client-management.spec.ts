@@ -93,12 +93,17 @@ test('client list has search capability', async ({ page }) => {
 		.first()
 		.click()
 
+	// SCOPED TO THE PANEL, and asserted by role. A page-wide
+	// `input[placeholder*="search" i]` with `.first()` does not find this input:
+	// it finds Nextcloud's own unified-search field in the header, which sits
+	// earlier in the DOM and is hidden, so the assertion failed on an element
+	// that was never the subject. The index does render the field, as
+	// `textbox "Search"` with placeholder "Type to search..." inside the
+	// tabpanel the button opens.
 	await expect(
-		page
-			.locator(
-				'input[type="search"], input[placeholder*="search" i], input[placeholder*="zoek" i]',
-			)
-			.first(),
+		page.getByRole('tabpanel', { name: 'Search' }).getByRole('textbox', {
+			name: 'Search',
+		}),
 		'the client index must offer a search input once "Search and columns" is opened',
 	).toBeVisible({ timeout: 15000 })
 
