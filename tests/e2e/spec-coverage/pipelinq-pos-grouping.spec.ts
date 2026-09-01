@@ -150,7 +150,16 @@ test('every Point of Sale child navigates to its existing route', async ({
 test('every regrouped POS and product route still resolves by deep link', async ({
 	page,
 }) => {
-	test.setTimeout(120000)
+	// SEVEN full document loads: openApp() plus one per route below. Under hash
+	// routing only the first was a document load and the six deep links were
+	// same-document hash changes; since the shell moved to createWebHistory
+	// every one boots the app, ~150 static assets at a time, on a container
+	// shared by six parallel workers.
+	//
+	// 120s was the budget for the cheap version and this test sat exactly at it:
+	// it timed out with no failed assertion, which reads as a hang rather than
+	// as work that did not fit. The assertions themselves are fast.
+	test.setTimeout(240000)
 	await openApp(page)
 
 	const routes = [
