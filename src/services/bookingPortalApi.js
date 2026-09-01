@@ -15,7 +15,14 @@
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
 
-const base = '/apps/pipelinq/portal'
+// ⚠️ This MUST include `/api/booking`. The routes are registered at
+// /portal/api/booking/* (appinfo/routes.php, `portal#services` and friends),
+// and `portalPage#subpath` catches every other /portal/* path with the SPA
+// shell. Pointing this at /apps/pipelinq/portal therefore did not 404 -- it
+// answered HTTP 200 with HTML, `Array.isArray(html)` was false and
+// `html.services` undefined, so fetchServices() returned [] and the public
+// booking portal silently listed no bookable services at all.
+const base = '/apps/pipelinq/portal/api/booking'
 
 /**
  * Fetch the list of bookable services.
@@ -73,7 +80,9 @@ export async function submitBooking(payload) {
  */
 export async function fetchBooking(bookingId) {
 	const response = await axios.get(
-		generateUrl(base + '/booking/' + encodeURIComponent(bookingId)),
+		// `portal#getBooking` is /portal/api/booking/{bookingId}: the id hangs
+		// directly off the base, with no second `/booking` segment.
+		generateUrl(base + '/' + encodeURIComponent(bookingId)),
 	)
 	return response.data
 }
