@@ -463,7 +463,7 @@
 					{
 						"id": "view",
 						"label": "View",
-						"icon": "Eye",
+						"icon": "EyeOutline",
 						"handler": "navigate",
 						"route": "ClientDetail"
 					}
@@ -721,7 +721,7 @@
 					{ "label": "Contactmomenten", "filter": { "ticketType": "interaction" } }
 				],
 				"actions": [
-					{ "id": "view", "label": "View", "icon": "Eye", "handler": "navigate", "route": "TicketDetail" }
+					{ "id": "view", "label": "View", "icon": "EyeOutline", "handler": "navigate", "route": "TicketDetail" }
 				],
 				"columns": [
 					"ticketType",
@@ -782,7 +782,7 @@
 					{
 						"id": "view",
 						"label": "View",
-						"icon": "Eye",
+						"icon": "EyeOutline",
 						"handler": "navigate",
 						"route": "ContactDetail"
 					}
@@ -936,7 +936,7 @@
 					{
 						"id": "view",
 						"label": "View",
-						"icon": "Eye",
+						"icon": "EyeOutline",
 						"handler": "navigate",
 						"route": "LeadDetail"
 					}
@@ -1044,7 +1044,7 @@
 					{
 						"id": "view",
 						"label": "View",
-						"icon": "Eye",
+						"icon": "EyeOutline",
 						"handler": "navigate",
 						"route": "TaskDetail"
 					}
@@ -1119,7 +1119,7 @@
 					{
 						"id": "view",
 						"label": "View",
-						"icon": "Eye",
+						"icon": "EyeOutline",
 						"handler": "navigate",
 						"route": "ProductDetail"
 					}
@@ -1657,7 +1657,7 @@
 					{
 						"id": "view",
 						"label": "View",
-						"icon": "Eye",
+						"icon": "EyeOutline",
 						"handler": "navigate",
 						"route": "QueueDetail"
 					}
