@@ -17,10 +17,10 @@ const APP = '/index.php/apps/pipelinq'
 
 test.describe('PipelinQ — visual baselines', () => {
 	test('dashboard', async ({ page }) => {
-		await shootSurface(page, `${APP}/#/`, 'dashboard.png')
+		await shootSurface(page, `${APP}/`, 'dashboard.png')
 	})
 
 	test('clients list', async ({ page }) => {
-		await shootByNav(page, `${APP}/#/`, 'Clients', 'clients.png')
+		await shootByNav(page, `${APP}/`, 'Clients', 'clients.png')
 	})
 })

@@ -26,7 +26,7 @@ import { openApp, navClick, clickHeaderAction } from '../helpers/pipelinq'
 test('POS transaction list (Kassabon) page renders the real list shell', async ({
 	page,
 }) => {
-	await page.goto('/apps/pipelinq/#/pos')
+	await page.goto('/apps/pipelinq/pos')
 	await expect(page).toHaveURL(/pos/, { timeout: 10000 })
 	await expect(page.locator('body')).not.toContainText('Internal Server Error')
 	// The real CnIndexPage list surface (not just the shell mount) — its host
@@ -47,7 +47,7 @@ test('POS transaction list (Kassabon) page renders the real list shell', async (
 test('POS transaction list shows the real empty state (or populated rows) without error', async ({
 	page,
 }) => {
-	await page.goto('/apps/pipelinq/#/pos')
+	await page.goto('/apps/pipelinq/pos')
 	await expect(page.locator('body')).not.toContainText('Internal Server Error', {
 		timeout: 10000,
 	})

@@ -27,7 +27,7 @@ test('Billing categories: the widget renders on the Operational dashboard', asyn
 	page,
 }) => {
 	await openApp(page)
-	await page.goto('/apps/pipelinq/#/operational')
+	await page.goto('/apps/pipelinq/operational')
 	await page.reload()
 
 	const content = page.locator('#content-vue')
@@ -63,7 +63,7 @@ test('Billing categories: the widget sits alongside the other operational widget
 	page,
 }) => {
 	await openApp(page)
-	await page.goto('/apps/pipelinq/#/operational')
+	await page.goto('/apps/pipelinq/operational')
 	await page.reload()
 
 	const content = page.locator('#content-vue')

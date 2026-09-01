@@ -31,7 +31,7 @@ import {
  * the Commercial landing widgets never mount.
  */
 async function gotoOperational(page) {
-	await page.goto('/apps/pipelinq/#/operational')
+	await page.goto('/apps/pipelinq/operational')
 	await expect(page.locator('#app-navigation-vue')).toBeVisible({ timeout: 15000 })
 	await page.reload()
 	await page
@@ -126,7 +126,7 @@ function layoutSlotFor(widgetId: string): string {
  * `…/#/operational`, so that single navigation is the whole fixture.
  */
 async function openOperationalInteractive(page: Page): Promise<void> {
-	await page.goto('/apps/pipelinq/#/operational')
+	await page.goto('/apps/pipelinq/operational')
 	await expect(page.locator('#content-vue')).toBeVisible({ timeout: 20000 })
 	await dismissWalkthrough(page)
 	await dismissSupportDialog(page)
@@ -189,7 +189,7 @@ test('dashboard quick action buttons visible', async ({ page }) => {
 
 // @e2e openspec/specs/dashboard/spec.md#quick-action-buttons-in-header
 test('the request quick action lives on Customer Support', async ({ page }) => {
-	await page.goto('/apps/pipelinq/#/werkplek')
+	await page.goto('/apps/pipelinq/werkplek')
 	await expect(
 		page.getByRole('button', { name: /New Request/i }).first(),
 		'Customer Support must offer New Request',

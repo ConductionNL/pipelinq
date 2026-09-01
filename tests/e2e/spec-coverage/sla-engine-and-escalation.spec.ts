@@ -134,7 +134,7 @@ async function seededPolicies(page: Page): Promise<any[]> {
  * instead — `#content-vue` mounted, and Nextcloud's own error chrome absent.
  */
 async function gotoHash(page: Page, hash: string): Promise<void> {
-	await page.goto(`/apps/pipelinq/#${hash}`)
+	await page.goto(`/apps/pipelinq/${hash}`)
 	await expect(page.locator('#content-vue')).toBeVisible({ timeout: 15000 })
 	await expect(nextcloudErrorPage(page)).toHaveCount(0)
 	await dismissWalkthrough(page)

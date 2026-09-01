@@ -22,7 +22,7 @@ test.beforeEach(() => {
 
 /** Open the app and settle the first-run dialogs. */
 async function openApp(page: Page) {
-	await page.goto('/apps/pipelinq/#/')
+	await page.goto('/apps/pipelinq/')
 	await dismissWalkthrough(page)
 	await dismissSupportDialog(page)
 	await expect(
@@ -68,7 +68,7 @@ test('Projecten is no longer offered in the navigation', async ({ page }) => {
 
 // @e2e openspec/specs/pipelinq-navigation/spec.md
 test('the projects page stays reachable by direct link', async ({ page }) => {
-	await page.goto('/apps/pipelinq/#/projects')
+	await page.goto('/apps/pipelinq/projects')
 	await dismissWalkthrough(page)
 	await dismissSupportDialog(page)
 

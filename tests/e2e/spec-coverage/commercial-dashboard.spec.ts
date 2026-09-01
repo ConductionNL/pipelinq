@@ -54,7 +54,7 @@ test('Operational dashboard: previous widgets remain reachable from the nav', as
 
 	// Deep-link the OperationalDashboard via the SPA hash (`/operational`); a
 	// path-form goto boots the shell at the default Commercial dashboard.
-	await page.goto('/apps/pipelinq/#/operational')
+	await page.goto('/apps/pipelinq/operational')
 	await page.reload()
 
 	const content = page.locator('#content-vue')

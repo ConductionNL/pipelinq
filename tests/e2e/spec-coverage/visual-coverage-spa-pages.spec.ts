@@ -68,7 +68,7 @@ const ABSENT_ID = 'e2e-gate26-no-such-record'
  * @param hash  The manifest `route`, e.g. `/my-work`.
  */
 async function openSpaRoute(page: Page, hash: string): Promise<void> {
-	const response = await page.goto(`/apps/pipelinq/#${hash}`)
+	const response = await page.goto(`/apps/pipelinq/${hash}`)
 	await assertAppShellServed(page, response)
 	// THE HASH IS THE PROOF THE ROUTE MATCHED. `routesFromManifest()` closes the
 	// table with `{ path: '/:pathMatch(.*)*', redirect: '/' }`, so an unmatched
