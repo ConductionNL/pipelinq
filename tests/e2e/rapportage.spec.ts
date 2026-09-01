@@ -127,9 +127,7 @@ test.describe('Rapportage (Reporting)', () => {
 		).toBeVisible({ timeout: 10000 })
 	})
 
-	test('the reports page lists every report pipelinq offers', async ({
-		page,
-	}) => {
+	test('the reports page lists every report pipelinq offers', async ({ page }) => {
 		// The assertion that distinguishes "regrouped" from "lost". Four report
 		// pages went from four menu entries to four cards; a change that dropped
 		// one would otherwise look like a tidier menu.
