@@ -34,7 +34,7 @@ import {
 /** Open the Tickets workspace narrowed to the request subtype. */
 async function openRequests(page: import('@playwright/test').Page): Promise<void> {
 	await openApp(page)
-	await navClick(page, 'Tickets', /\/tickets/)
+	await navClick(page, 'All tickets', /\/tickets/)
 	await clickQuickFilter(page, 'Tickets')
 }
 
@@ -141,7 +141,7 @@ test('request list surfaces the channel column', async ({ page }) => {
 // @e2e openspec/specs/request-management/spec.md#set-priority-during-creation
 test('request list is reachable from the sidebar', async ({ page }) => {
 	await openApp(page)
-	await navClick(page, 'Tickets', /#\/tickets/)
+	await navClick(page, 'All tickets', /#\/tickets/)
 	await expect(
 		page
 			.locator('#content-vue')
@@ -208,7 +208,7 @@ test('the ticket list paginates and page 2 shows different rows', async ({
 	page,
 }) => {
 	await openApp(page)
-	await navClick(page, 'Tickets', /\/tickets/)
+	await navClick(page, 'All tickets', /\/tickets/)
 
 	// The ALL tab holds every subtype: the base register's 7 example tickets plus
 	// the seeded 8 requests + 3 complaints + 12 contactmomenten — 30 rows against

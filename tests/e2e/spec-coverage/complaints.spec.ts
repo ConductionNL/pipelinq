@@ -33,7 +33,7 @@ test('Complaints: reachable as a ticket-type tab on the Tickets workspace', asyn
 }) => {
 	const errs = trackPipelinqErrors(page)
 	await openApp(page)
-	await navClick(page, 'Tickets', /\/tickets/)
+	await navClick(page, 'All tickets', /\/tickets/)
 
 	await expect(
 		page
@@ -55,7 +55,7 @@ test('Complaints: the tab narrows the list to complaint tickets', async ({
 	page,
 }) => {
 	await openApp(page)
-	await navClick(page, 'Tickets', /\/tickets/)
+	await navClick(page, 'All tickets', /\/tickets/)
 	await clickQuickFilter(page, 'Complaints')
 
 	const content = page.locator('#content-vue')
@@ -106,7 +106,7 @@ test('Complaints: the tab narrows the list to complaint tickets', async ({
 // @e2e openspec/specs/klachtenregistratie/spec.md#complaints-create-modal
 test('Complaints: Add Ticket opens a create modal with a form', async ({ page }) => {
 	await openApp(page)
-	await navClick(page, 'Tickets', /\/tickets/)
+	await navClick(page, 'All tickets', /\/tickets/)
 	await clickQuickFilter(page, 'Complaints')
 	await dismissSupportDialog(page)
 
