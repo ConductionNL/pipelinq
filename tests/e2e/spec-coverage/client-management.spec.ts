@@ -76,13 +76,22 @@ test('client page loads without error', async ({ page }) => {
 
 // @e2e openspec/specs/client-management/spec.md#search-clients-by-name
 test('client list has search capability', async ({ page }) => {
-	await page
-		.goto('/apps/pipelinq/clients')
-		// Search input should be available
-		.locator(
-			'input[type="search"], input[placeholder*="search" i], input[placeholder*="zoek" i]',
-		)
-		.first()
+	await page.goto('/apps/pipelinq/clients')
+
+	// This used to chain `.locator(...).first()` straight onto `page.goto(...)`,
+	// which returns a Response, not a Locator. It threw a TypeError the moment
+	// the goto settled, and the locator it built was discarded without ever
+	// being awaited or asserted — so the search input this test is named for
+	// was never actually checked.
+	await expect(
+		page
+			.locator(
+				'input[type="search"], input[placeholder*="search" i], input[placeholder*="zoek" i]',
+			)
+			.first(),
+		'the client index must offer a search input',
+	).toBeVisible({ timeout: 15000 })
+
 	// Check the page loads fully
 	await expect(page.locator('body')).not.toContainText('Internal Server Error', {
 		timeout: 10000,
