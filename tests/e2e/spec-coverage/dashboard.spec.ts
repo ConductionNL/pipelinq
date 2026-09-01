@@ -327,7 +327,9 @@ test('dashboard navigation items visible', async ({ page }) => {
 	).toHaveCount(1, { timeout: 10000 })
 	await expect(
 		nav
-			.locator('a.app-navigation-entry-link[href$="/apps/pipelinq/operational"]')
+			.locator(
+				'a.app-navigation-entry-link[href$="/apps/pipelinq/operational"]',
+			)
 			.filter({ hasText: /^\s*Operational\s*$/ }),
 	).toHaveCount(1)
 })
