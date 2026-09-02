@@ -7,14 +7,32 @@ import { expect, test } from '@playwright/test'
 import { openApp } from './helpers/pipelinq.ts'
 
 test.describe('Rapportage (Reporting)', () => {
+	// ⚠️ 60s is not enough for these four. Each one runs openApp() — which boots
+	// the shell and dismisses the walkthrough and support dialogs — then a full
+	// navigation, and the Reports page is a lazy chunk
+	// (CnPageRenderer maps `type:"reports"` through defineAsyncComponent), so
+	// the first of them also pays for fetching it.
+	//
+	// They were failing on `cn-report-card` resolving to 0, which was a real
+	// defect: CnReportsPage read `page.config.cards` while CnPageRenderer
+	// spreads config keys as top-level props, so the page rendered its empty
+	// state for every consumer. nextcloud-vue#920 fixed that and 2.30.0 ships
+	// it. With the cards actually rendering, what is left is that the tests run
+	// out of budget — the failure carries no assertion error at all, just the
+	// timeout, which reads as "the page is broken" rather than "this test is
+	// too slow".
+	test.setTimeout(180_000)
+
 	test.beforeEach(async ({ page }) => {
 		// The contactmomenten Reporting Dashboard (KPI cards) lives at the
 		// `/rapportage/contactmomenten` page (manifest id RapportageContactmomenten
 		// → RapportageDashboard.vue). The "Reporting" sidebar link now points at
 		// the Lead-analytics page (`/rapportage`), so deep-link the dashboard
-		// route directly via the SPA hash. A path-form goto boots the shell at the
-		// Dashboard; a hash goto mounts the target view. Reload once so the view
-		// re-queries its KPI data after the same-document hash change.
+		// route directly by PATH. This said the opposite until #1684 — that a
+		// path goto boots the shell at the Dashboard and only a hash goto mounts
+		// the target view — which stopped being true when the shell moved to
+		// createWebHistory(routerBase()). The reload stays: it makes the view
+		// re-query its KPI data after the navigation.
 		await page.goto('/apps/pipelinq/rapportage/contactmomenten')
 		await expect(page.locator('body')).not.toContainText('Internal Server Error')
 		await page.reload()
@@ -138,8 +156,10 @@ test.describe('Rapportage (Reporting)', () => {
 	})
 
 	test('channel analytics page loads', async ({ page }) => {
-		// Deep-link via the SPA hash; a path-form goto boots the shell at the
-		// Dashboard instead of the target view.
+		// Deep-link by PATH. This comment used to say the opposite — that a
+		// path-form goto boots the shell at the Dashboard and the route has to
+		// travel in the hash — which was true until #1684 moved the shell to
+		// createWebHistory(routerBase()).
 		await page.goto('/apps/pipelinq/rapportage/channels')
 		await page.reload()
 		await expect(
