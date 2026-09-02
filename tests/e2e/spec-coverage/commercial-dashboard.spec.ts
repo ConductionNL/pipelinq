@@ -12,6 +12,8 @@
 import { expect, test } from '@playwright/test'
 import {
 	assertNoHardError,
+	dismissSupportDialog,
+	dismissWalkthrough,
 	openApp,
 	trackPipelinqErrors,
 } from '../helpers/pipelinq.ts'
@@ -54,12 +56,20 @@ test('Commercial dashboard: KPI strip + sales charts render on the landing page'
 test('Operational dashboard: previous widgets remain reachable from the nav', async ({
 	page,
 }) => {
-	await openApp(page)
-
-	// Deep-link the OperationalDashboard via the SPA hash (`/operational`); a
-	// path-form goto boots the shell at the default Commercial dashboard.
+	// ONE document load. This was openApp() -> goto('/operational') -> reload().
+	// Under hash routing only the first was a document load; since the shell
+	// moved to createWebHistory all three boot the app, and three loads of ~150
+	// static assets do not fit the 60s budget — the test timed out with no
+	// failed assertion, which reads as a hang rather than as work that no
+	// longer fits. openApp() also lands on the Commercial dashboard, which is
+	// the one page this test does not want.
+	//
+	// The comment this replaces said the deep link had to be a hash because a
+	// path-form goto boots the shell at the default dashboard. That was true
+	// before #1684 and is now the opposite: the path IS the route.
 	await page.goto('/apps/pipelinq/operational')
-	await page.reload()
+	await dismissWalkthrough(page)
+	await dismissSupportDialog(page)
 
 	const content = page.locator('#content-vue')
 	// Operational KPIs/panels that used to live on the old Dashboard.
