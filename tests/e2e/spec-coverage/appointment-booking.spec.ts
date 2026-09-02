@@ -304,7 +304,13 @@ test.describe('Booking admin surfaces (seeded)', () => {
 	test('Booking detail exposes its time-window-gated status actions', async ({
 		page,
 	}) => {
-		await openApp(page)
+		// No openApp() here. gotoHash() below already waits for #content-vue and
+		// clears both overlays, so openApp() only added a THIRD full document
+		// load — it lands on the Dashboard this test never looks at. Under hash
+		// routing that load was the only one and the two gotoHash calls were
+		// cheap; since the shell moved to createWebHistory each one boots the
+		// app, and three boots do not fit the 60s budget. The test timed out
+		// with no failed assertion.
 		const content = page.locator('#content-vue')
 
 		await gotoHash(page, `/bookings/${futureBookingId}`)
