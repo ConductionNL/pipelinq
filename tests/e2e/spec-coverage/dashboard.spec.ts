@@ -363,258 +363,280 @@ test('dashboard navigation items visible', async ({ page }) => {
 // Requirement: Navi AI Analytics Widget (REQ-DASH-001)
 // ---------------------------------------------------------------------------
 
-// @e2e openspec/specs/dashboard/spec.md#submit-natural-language-query
-test('Navi: a typed question is POSTed to /api/navi/query and its answer is rendered', async ({
-	page,
-}) => {
-	await openOperationalInteractive(page)
+test.describe('Navi widget', () => {
+	// ⚠️ SERIAL, and it is not a style choice. NaviConversationStore keeps ONE
+	// record PER USER — its own docblock says it overwrites whatever the user's
+	// single record held — and every worker in this suite runs as `admin`. So a
+	// Navi test running in another worker between the two turns of the follow-up
+	// test clobbers that record: read() then returns [] because the stored
+	// conversationId no longer matches, carryForward() has nothing to carry, and
+	// the follow-up earns the cold clarification instead of a contextual answer.
+	//
+	// That is why it failed intermittently rather than always — it depends on
+	// whether another Navi test interleaves. Across three runs it was a hard
+	// failure twice and reported flaky once.
+	test.describe.configure({ mode: 'serial' })
 
-	// Armed BEFORE the submit so the request cannot be missed.
-	const posted = page.waitForRequest(
-		(req) =>
-			req.url().includes('/apps/pipelinq/api/navi/query')
-			&& req.method() === 'POST',
-		{ timeout: 30000 },
-	)
-	await askNavi(page, 'Hoeveel leads zijn er deze maand?')
+	// @e2e openspec/specs/dashboard/spec.md#submit-natural-language-query
+	test('Navi: a typed question is POSTed to /api/navi/query and its answer is rendered', async ({
+		page,
+	}) => {
+		await openOperationalInteractive(page)
 
-	// The request envelope the scenario specifies: `{ query, conversationId }`.
-	const body = (await posted).postDataJSON()
-	expect(body).toHaveProperty('query', 'Hoeveel leads zijn er deze maand?')
-	expect(
-		body,
-		'the widget must always send the conversationId key',
-	).toHaveProperty('conversationId')
+		// Armed BEFORE the submit so the request cannot be missed.
+		const posted = page.waitForRequest(
+			(req) =>
+				req.url().includes('/apps/pipelinq/api/navi/query')
+				&& req.method() === 'POST',
+			{ timeout: 30000 },
+		)
+		await askNavi(page, 'Hoeveel leads zijn er deze maand?')
 
-	// The answer is rendered as an assistant turn. NaviService is deterministic
-	// (no LLM — see the class docblock: "Deterministic — no actual LLM call
-	// required"), so this is a real round trip, not a mock.
-	const widget = await naviWidget(page)
-	await expect(
-		widget.locator('.navi-widget__message--assistant').first(),
-	).toBeVisible({ timeout: 30000 })
-	// It answered rather than failing: the error branch paints `.navi-widget__error`.
-	await expect(widget.locator('.navi-widget__error')).toHaveCount(0)
-	await assertNoHardError(page)
-})
+		// The request envelope the scenario specifies: `{ query, conversationId }`.
+		const body = (await posted).postDataJSON()
+		expect(body).toHaveProperty('query', 'Hoeveel leads zijn er deze maand?')
+		expect(
+			body,
+			'the widget must always send the conversationId key',
+		).toHaveProperty('conversationId')
 
-/*
- * A live round trip, no interception: the server mints the identifier, the
- * widget adopts it, sends it back, and the second answer is computed in the
- * context of the first. Both halves of the scenario are observable without a
- * stub, and both are read off the wire of the ONE navigation this fixture
- * already performs.
- */
-// @e2e openspec/specs/dashboard/spec.md#conversational-follow-up
-test('Navi: a follow-up question carries the conversationId and is answered in context', async ({
-	page,
-}) => {
-	await openOperationalInteractive(page)
-
-	const isNaviCall = (url: string) => url.includes('/apps/pipelinq/api/navi/query')
-
-	// Armed BEFORE the submit so neither turn can be missed.
-	const firstSent = page.waitForRequest(
-		(req) => isNaviCall(req.url()) && req.method() === 'POST',
-		{ timeout: 30000 },
-	)
-	const firstGot = page.waitForResponse(
-		(res) => isNaviCall(res.url()) && res.request().method() === 'POST',
-		{ timeout: 30000 },
-	)
-	await askNavi(page, 'How many leads are open?')
-
-	expect(
-		(await firstSent).postDataJSON().conversationId,
-		'the first turn has no conversation yet',
-	).toBeFalsy()
-	const first = await (await firstGot).json()
-	expect(
-		first.conversationId,
-		'the server must mint an identifier on the first turn',
-	).toMatch(/^[0-9a-f]{32}$/)
-
-	const widget = await naviWidget(page)
-	await expect(widget.locator('.navi-widget__message--assistant')).toHaveCount(1, {
-		timeout: 30000,
+		// The answer is rendered as an assistant turn. NaviService is deterministic
+		// (no LLM — see the class docblock: "Deterministic — no actual LLM call
+		// required"), so this is a real round trip, not a mock.
+		const widget = await naviWidget(page)
+		await expect(
+			widget.locator('.navi-widget__message--assistant').first(),
+		).toBeVisible({ timeout: 30000 })
+		// It answered rather than failing: the error branch paints `.navi-widget__error`.
+		await expect(widget.locator('.navi-widget__error')).toHaveCount(0)
+		await assertNoHardError(page)
 	})
 
-	const secondSent = page.waitForRequest(
-		(req) => isNaviCall(req.url()) && req.method() === 'POST',
-		{ timeout: 30000 },
-	)
-	const secondGot = page.waitForResponse(
-		(res) => isNaviCall(res.url()) && res.request().method() === 'POST',
-		{ timeout: 30000 },
-	)
-	// A follow-up that names neither an intent nor a subject of its own: it can
-	// only be answered from what the conversation already holds.
-	await askNavi(page, 'And what about last month?')
+	/*
+	 * A live round trip, no interception: the server mints the identifier, the
+	 * widget adopts it, sends it back, and the second answer is computed in the
+	 * context of the first. Both halves of the scenario are observable without a
+	 * stub, and both are read off the wire of the ONE navigation this fixture
+	 * already performs.
+	 */
+	// @e2e openspec/specs/dashboard/spec.md#conversational-follow-up
+	test('Navi: a follow-up question carries the conversationId and is answered in context', async ({
+		page,
+	}) => {
+		await openOperationalInteractive(page)
 
-	expect(
-		(await secondSent).postDataJSON().conversationId,
-		'the follow-up must carry the minted identifier',
-	).toBe(first.conversationId)
-	const second = await (await secondGot).json()
-	expect(
-		second.conversationId,
-		'the identifier must stay stable across the conversation',
-	).toBe(first.conversationId)
-	// Answered in context. Asked cold, this wording matches no intent and earns
-	// the clarification instead.
-	expect(
-		second.textResponse,
-		'the follow-up must be answered from the accumulated context',
-	).not.toContain('I am not sure how to answer that yet')
+		const isNaviCall = (url: string) =>
+			url.includes('/apps/pipelinq/api/navi/query')
 
-	await expect(widget.locator('.navi-widget__message--assistant')).toHaveCount(2, {
-		timeout: 30000,
-	})
-	await expect(widget.locator('.navi-widget__error')).toHaveCount(0)
-})
+		// Armed BEFORE the submit so neither turn can be missed.
+		const firstSent = page.waitForRequest(
+			(req) => isNaviCall(req.url()) && req.method() === 'POST',
+			{ timeout: 30000 },
+		)
+		const firstGot = page.waitForResponse(
+			(res) => isNaviCall(res.url()) && res.request().method() === 'POST',
+			{ timeout: 30000 },
+		)
+		await askNavi(page, 'How many leads are open?')
 
-// @e2e openspec/specs/dashboard/spec.md#empty-result-set
-test('Navi: an empty result set renders as a message, not as an empty chart or table', async ({
-	page,
-}) => {
-	await openOperationalInteractive(page)
+		expect(
+			(await firstSent).postDataJSON().conversationId,
+			'the first turn has no conversation yet',
+		).toBeFalsy()
+		const first = await (await firstGot).json()
+		expect(
+			first.conversationId,
+			'the server must mint an identifier on the first turn',
+		).toMatch(/^[0-9a-f]{32}$/)
 
-	const NO_DATA = 'I could not find any matching data for that question.'
-	await page.route('**/api/navi/query', async (route) => {
-		await route.fulfill({
-			json: {
-				resultType: 'text',
-				textResponse: NO_DATA,
-				chartData: null,
-				tableData: null,
-				suggestedFollowUps: ['How many leads are open?'],
+		const widget = await naviWidget(page)
+		await expect(widget.locator('.navi-widget__message--assistant')).toHaveCount(
+			1,
+			{
+				timeout: 30000,
 			},
-		})
-	})
+		)
 
-	await askNavi(page, 'How many unicorns did we sell?')
-	const widget = await naviWidget(page)
-	const answer = widget.locator('.navi-widget__message--assistant').first()
-	await expect(answer).toBeVisible({ timeout: 20000 })
-	await expect(answer).toContainText(NO_DATA)
-	// The whole point of the scenario: no empty visualisation is drawn in its place.
-	await expect(widget.locator('.navi-widget__chart')).toHaveCount(0)
-	await expect(widget.locator('.navi-widget__table')).toHaveCount(0)
-})
+		const secondSent = page.waitForRequest(
+			(req) => isNaviCall(req.url()) && req.method() === 'POST',
+			{ timeout: 30000 },
+		)
+		const secondGot = page.waitForResponse(
+			(res) => isNaviCall(res.url()) && res.request().method() === 'POST',
+			{ timeout: 30000 },
+		)
+		// A follow-up that names neither an intent nor a subject of its own: it can
+		// only be answered from what the conversation already holds.
+		await askNavi(page, 'And what about last month?')
 
-// @e2e openspec/specs/dashboard/spec.md#invalid-or-ambiguous-query
-test('Navi: an unparseable question gets a clarification and leaves the input usable', async ({
-	page,
-}) => {
-	await openOperationalInteractive(page)
+		expect(
+			(await secondSent).postDataJSON().conversationId,
+			'the follow-up must carry the minted identifier',
+		).toBe(first.conversationId)
+		const second = await (await secondGot).json()
+		expect(
+			second.conversationId,
+			'the identifier must stay stable across the conversation',
+		).toBe(first.conversationId)
+		// Answered in context. Asked cold, this wording matches no intent and earns
+		// the clarification instead.
+		expect(
+			second.textResponse,
+			'the follow-up must be answered from the accumulated context',
+		).not.toContain('I am not sure how to answer that yet')
 
-	// No intent keyword matches, so NaviService::detectIntent returns `unknown`
-	// and the deterministic clarification branch answers. This is the real
-	// backend — nothing is stubbed here.
-	await askNavi(page, 'zxcvbnm qwertyuiop')
-
-	const widget = await naviWidget(page)
-	const answer = widget.locator('.navi-widget__message--assistant').first()
-	await expect(answer).toBeVisible({ timeout: 30000 })
-	await expect(answer).toContainText('I am not sure how to answer that yet')
-
-	// "the frontend MUST … keep the input field active" — it is neither removed
-	// nor disabled, and the widget is not in its error state.
-	const input = widget.locator('input').first()
-	await expect(input).toBeEditable()
-	await expect(widget.locator('.navi-widget__error')).toHaveCount(0)
-	await assertNoHardError(page)
-})
-
-// @e2e openspec/specs/dashboard/spec.md#navi-widget-in-dashboard-layout
-test('Navi: the widget is a full-width, registered widget of the dashboard grid', async ({
-	page,
-}) => {
-	await openOperationalInteractive(page)
-
-	// It is not merely rendered somewhere on the page — it is the body of the
-	// `navi-analytics` grid slot, which is what "registered as widget-id
-	// navi-analytics" means at render time.
-	const slot = page.locator(
-		`.grid-stack-item[gs-id="${layoutSlotFor('navi-analytics')}"]`,
-	)
-	await expect(slot).toHaveCount(1)
-	await expect(slot.locator('.navi-widget')).toHaveCount(1)
-	// 12 of 12 columns.
-	await expect(slot).toHaveAttribute('gs-w', '12')
-
-	// The widget's manifest title is the chrome the grid paints around it.
-	await expect(
-		page.locator('#content-vue').getByText('Ask Navi').first(),
-	).toBeVisible({ timeout: 20000 })
-})
-
-// ---------------------------------------------------------------------------
-// Requirement: Navi Suggested Follow-Ups (REQ-DASH-003)
-// ---------------------------------------------------------------------------
-
-// @e2e openspec/specs/dashboard/spec.md#display-follow-up-chips
-test('Navi: follow-up chips are offered and clicking one submits it', async ({
-	page,
-}) => {
-	await openOperationalInteractive(page)
-
-	// Real backend: the `unknown` branch returns NaviService::defaultFollowUps(),
-	// three suggestions, which the widget caps at three chips.
-	await askNavi(page, 'zxcvbnm qwertyuiop')
-	const widget = await naviWidget(page)
-	const chips = widget.locator('.navi-widget__suggestions button')
-	await expect(chips).toHaveCount(3, { timeout: 30000 })
-
-	const chipText = ((await chips.first().textContent()) || '').trim()
-	expect(
-		chipText.length,
-		'a suggestion chip must carry its question',
-	).toBeGreaterThan(3)
-
-	// Clicking a chip pre-fills the input with that suggestion AND submits it —
-	// so the suggestion must come back as a USER turn, not just sit in the box.
-	const resubmitted = page.waitForRequest(
-		(req) =>
-			req.url().includes('/apps/pipelinq/api/navi/query')
-			&& req.method() === 'POST',
-		{ timeout: 30000 },
-	)
-	await chips.first().click()
-	expect((await resubmitted).postDataJSON().query).toBe(chipText)
-	await expect(
-		widget
-			.locator('.navi-widget__message--user')
-			.filter({ hasText: chipText })
-			.first(),
-	).toBeVisible({ timeout: 20000 })
-})
-
-// @e2e openspec/specs/dashboard/spec.md#no-suggested-follow-ups
-test('Navi: with no suggestions the chip area is absent, not an empty strip', async ({
-	page,
-}) => {
-	await openOperationalInteractive(page)
-
-	// Every deterministic NaviService branch supplies three follow-ups, so an
-	// empty array is only reachable through the endpoint — see the header note.
-	await page.route('**/api/navi/query', async (route) => {
-		await route.fulfill({
-			json: {
-				resultType: 'text',
-				textResponse: 'No suggestions here.',
-				suggestedFollowUps: [],
+		await expect(widget.locator('.navi-widget__message--assistant')).toHaveCount(
+			2,
+			{
+				timeout: 30000,
 			},
-		})
+		)
+		await expect(widget.locator('.navi-widget__error')).toHaveCount(0)
 	})
 
-	await askNavi(page, 'How many leads are open?')
-	const widget = await naviWidget(page)
-	await expect(
-		widget.locator('.navi-widget__message--assistant').first(),
-	).toBeVisible({ timeout: 20000 })
-	// HIDDEN, not blank: the container itself must not be in the DOM.
-	await expect(widget.locator('.navi-widget__suggestions')).toHaveCount(0)
+	// @e2e openspec/specs/dashboard/spec.md#empty-result-set
+	test('Navi: an empty result set renders as a message, not as an empty chart or table', async ({
+		page,
+	}) => {
+		await openOperationalInteractive(page)
+
+		const NO_DATA = 'I could not find any matching data for that question.'
+		await page.route('**/api/navi/query', async (route) => {
+			await route.fulfill({
+				json: {
+					resultType: 'text',
+					textResponse: NO_DATA,
+					chartData: null,
+					tableData: null,
+					suggestedFollowUps: ['How many leads are open?'],
+				},
+			})
+		})
+
+		await askNavi(page, 'How many unicorns did we sell?')
+		const widget = await naviWidget(page)
+		const answer = widget.locator('.navi-widget__message--assistant').first()
+		await expect(answer).toBeVisible({ timeout: 20000 })
+		await expect(answer).toContainText(NO_DATA)
+		// The whole point of the scenario: no empty visualisation is drawn in its place.
+		await expect(widget.locator('.navi-widget__chart')).toHaveCount(0)
+		await expect(widget.locator('.navi-widget__table')).toHaveCount(0)
+	})
+
+	// @e2e openspec/specs/dashboard/spec.md#invalid-or-ambiguous-query
+	test('Navi: an unparseable question gets a clarification and leaves the input usable', async ({
+		page,
+	}) => {
+		await openOperationalInteractive(page)
+
+		// No intent keyword matches, so NaviService::detectIntent returns `unknown`
+		// and the deterministic clarification branch answers. This is the real
+		// backend — nothing is stubbed here.
+		await askNavi(page, 'zxcvbnm qwertyuiop')
+
+		const widget = await naviWidget(page)
+		const answer = widget.locator('.navi-widget__message--assistant').first()
+		await expect(answer).toBeVisible({ timeout: 30000 })
+		await expect(answer).toContainText('I am not sure how to answer that yet')
+
+		// "the frontend MUST … keep the input field active" — it is neither removed
+		// nor disabled, and the widget is not in its error state.
+		const input = widget.locator('input').first()
+		await expect(input).toBeEditable()
+		await expect(widget.locator('.navi-widget__error')).toHaveCount(0)
+		await assertNoHardError(page)
+	})
+
+	// @e2e openspec/specs/dashboard/spec.md#navi-widget-in-dashboard-layout
+	test('Navi: the widget is a full-width, registered widget of the dashboard grid', async ({
+		page,
+	}) => {
+		await openOperationalInteractive(page)
+
+		// It is not merely rendered somewhere on the page — it is the body of the
+		// `navi-analytics` grid slot, which is what "registered as widget-id
+		// navi-analytics" means at render time.
+		const slot = page.locator(
+			`.grid-stack-item[gs-id="${layoutSlotFor('navi-analytics')}"]`,
+		)
+		await expect(slot).toHaveCount(1)
+		await expect(slot.locator('.navi-widget')).toHaveCount(1)
+		// 12 of 12 columns.
+		await expect(slot).toHaveAttribute('gs-w', '12')
+
+		// The widget's manifest title is the chrome the grid paints around it.
+		await expect(
+			page.locator('#content-vue').getByText('Ask Navi').first(),
+		).toBeVisible({ timeout: 20000 })
+	})
+
+	// ---------------------------------------------------------------------------
+	// Requirement: Navi Suggested Follow-Ups (REQ-DASH-003)
+	// ---------------------------------------------------------------------------
+
+	// @e2e openspec/specs/dashboard/spec.md#display-follow-up-chips
+	test('Navi: follow-up chips are offered and clicking one submits it', async ({
+		page,
+	}) => {
+		await openOperationalInteractive(page)
+
+		// Real backend: the `unknown` branch returns NaviService::defaultFollowUps(),
+		// three suggestions, which the widget caps at three chips.
+		await askNavi(page, 'zxcvbnm qwertyuiop')
+		const widget = await naviWidget(page)
+		const chips = widget.locator('.navi-widget__suggestions button')
+		await expect(chips).toHaveCount(3, { timeout: 30000 })
+
+		const chipText = ((await chips.first().textContent()) || '').trim()
+		expect(
+			chipText.length,
+			'a suggestion chip must carry its question',
+		).toBeGreaterThan(3)
+
+		// Clicking a chip pre-fills the input with that suggestion AND submits it —
+		// so the suggestion must come back as a USER turn, not just sit in the box.
+		const resubmitted = page.waitForRequest(
+			(req) =>
+				req.url().includes('/apps/pipelinq/api/navi/query')
+				&& req.method() === 'POST',
+			{ timeout: 30000 },
+		)
+		await chips.first().click()
+		expect((await resubmitted).postDataJSON().query).toBe(chipText)
+		await expect(
+			widget
+				.locator('.navi-widget__message--user')
+				.filter({ hasText: chipText })
+				.first(),
+		).toBeVisible({ timeout: 20000 })
+	})
+
+	// @e2e openspec/specs/dashboard/spec.md#no-suggested-follow-ups
+	test('Navi: with no suggestions the chip area is absent, not an empty strip', async ({
+		page,
+	}) => {
+		await openOperationalInteractive(page)
+
+		// Every deterministic NaviService branch supplies three follow-ups, so an
+		// empty array is only reachable through the endpoint — see the header note.
+		await page.route('**/api/navi/query', async (route) => {
+			await route.fulfill({
+				json: {
+					resultType: 'text',
+					textResponse: 'No suggestions here.',
+					suggestedFollowUps: [],
+				},
+			})
+		})
+
+		await askNavi(page, 'How many leads are open?')
+		const widget = await naviWidget(page)
+		await expect(
+			widget.locator('.navi-widget__message--assistant').first(),
+		).toBeVisible({ timeout: 20000 })
+		// HIDDEN, not blank: the container itself must not be in the DOM.
+		await expect(widget.locator('.navi-widget__suggestions')).toHaveCount(0)
+	})
 })
 
 // ---------------------------------------------------------------------------
