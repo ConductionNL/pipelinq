@@ -23,10 +23,8 @@
  * assertion, which reads as "the dialog is broken" rather than "the event never
  * arrived". If this spec ever goes red, suspect the emit/listener names first.
  *
- * Covered here: the WBS trio, `rangeChange` (which needs no seeding because
- * the win/loss range selector re-fetches on every change), and
- * `requestConsent`, which drives the blast wizard with the three list and
- * preflight endpoints stubbed.
+ * Covered here: the WBS trio, and `rangeChange`, which needs no seeding
+ * because the win/loss range selector re-fetches on every change.
  *
  * NOT covered, and each for a different reason:
  *
@@ -296,179 +294,49 @@ test.describe('rapportage win/loss range events', () => {
 	})
 })
 
-test.describe('blast consent-modal events', () => {
-	test.setTimeout(120000)
-	// ⚠️ SERIAL, and it is not a style choice. Both tests drive the same
-	// six-step wizard against the same instance and both end by POSTing a
-	// blast. Run in parallel workers they interleave, and "Create blast" comes
-	// up DISABLED in whichever one loses — measured as 1 failed / 1 passed on
-	// one run and 2 passed on the next, while each passed alone twice in a row.
-	// A flaky test in a suite this size is worse than no test: it teaches the
-	// reader to re-run rather than read.
-	test.describe.configure({ mode: 'serial' })
-
-	/**
-	 * Put the wizard on its final step with a segment whose contacts lack
-	 * consent, so submitting opens MissingConsentModal.
-	 *
-	 * The three stubs replace list/preflight endpoints only. The wizard, the
-	 * modal and both handlers are the real thing — which is the point, since the
-	 * bug under guard was purely a name-casing mismatch between them.
-	 */
-	async function openConsentModal(page: Page, blastName: string): Promise<void> {
-		await page.route('**/apps/pipelinq/api/segments', async (route) => {
-			await route.fulfill({
-				status: 200,
-				contentType: 'application/json',
-				body: JSON.stringify({
-					data: [{ id: 'seg-e2e', name: 'E2E segment', estimatedSize: 3 }],
-				}),
-			})
-		})
-		await page.route('**/apps/pipelinq/api/templates', async (route) => {
-			await route.fulfill({
-				status: 200,
-				contentType: 'application/json',
-				body: JSON.stringify({
-					// `channel` must be 'email': filteredTemplates() filters on
-					// selectedChannel, which defaults to 'email', so an 'sms'
-					// template would leave the select empty and canAdvance false.
-					data: [
-						{ id: 'tpl-e2e', name: 'E2E template', channel: 'email' },
-					],
-				}),
-			})
-		})
-		await page.route('**/api/segments/*/compliance**', async (route) => {
-			await route.fulfill({
-				status: 200,
-				contentType: 'application/json',
-				body: JSON.stringify({
-					missingConsent: [
-						{ id: 'c-e2e', name: 'Contact Without Consent' },
-					],
-				}),
-			})
-		})
-
-		await openApp(page)
-		await page.goto('/apps/pipelinq/blasts/new')
-
-		await page.locator('input[type=text]').first().fill(blastName)
-		const next = page
-			.locator('button')
-			.filter({ hasText: /^Next$/ })
-			.first()
-		await next.click()
-
-		// Segment, then template. Both are NcSelects, so the option is a list
-		// item in the dropdown rather than an <option>.
-		await page.locator('.vs__dropdown-toggle').first().click()
-		await page
-			.locator('.vs__dropdown-menu li', { hasText: 'E2E segment' })
-			.first()
-			.click()
-		await next.click()
-
-		await page.locator('.vs__dropdown-toggle').first().click()
-		await page
-			.locator('.vs__dropdown-menu li', { hasText: 'E2E template' })
-			.first()
-			.click()
-		await next.click()
-
-		// ⚠️ DO NOT "helpfully" click the channel select here. `selectedChannel`
-		// is initialised to the string 'email' while the NcSelect's options are
-		// {value,label} objects, so the control renders with a model it does not
-		// recognise — and opening it and dismissing it without picking clears
-		// the model, which makes canSubmit() false and leaves "Create blast"
-		// permanently disabled. Tried, measured, reverted.
-		//
-		// Channel already defaults to 'email', and schedule + A/B are optional,
-		// so the remaining steps just advance.
-		//
-		// ⚠️ This was `while (await next.isVisible()) await next.click()`, which
-		// hung for the full 120s in CI. `Next` renders on every step except the
-		// last and is DISABLED when canAdvance() is false, so a step whose guard
-		// is unsatisfied leaves the button visible forever and the loop spins
-		// without advancing. The failure then surfaced as a timeout on
-		// "Create blast", naming a control that was never the problem. Walk a
-		// bounded number of steps, and say which step stalled.
-		const submit = page
-			.locator('button')
-			.filter({ hasText: /^Create blast$/ })
-			.first()
-		for (let step = 0; step < 6; step++) {
-			if (await submit.isVisible().catch(() => false)) break
-			await expect(
-				next,
-				`the wizard stalled: "Next" is disabled at step ${step}, so canAdvance() is false and that step's required input was never satisfied`,
-			).toBeEnabled({ timeout: 15000 })
-			await next.click()
-		}
-
-		await expect(
-			submit,
-			'the wizard never reached its final step, so the consent preflight never ran',
-		).toBeVisible({ timeout: 15000 })
-		// Say WHICH control is unsatisfied rather than timing out on the click.
-		// canSubmit() wants name + segment + template + channel; a disabled
-		// button here means one of them is empty, and the click alone would only
-		// report "element is not enabled" 120 seconds later.
-		await expect(
-			submit,
-			'"Create blast" is disabled: canSubmit() is false, so one of name / segment / template / channel is unset even though every step advanced',
-		).toBeEnabled({ timeout: 15000 })
-		await submit.click()
-
-		await expect(
-			page
-				.locator('button')
-				.filter({ hasText: /^Skip and send$/ })
-				.first(),
-			'the consent modal never opened, so neither consent event can be exercised',
-		).toBeVisible({ timeout: 30000 })
-	}
-
-	/**
-	 * MissingConsentModal emits `requestConsent`; BlastForm.onConsentRequest
-	 * shows a temporary notification. That notification is the observable
-	 * effect — under the casing bug the button was a silent no-op.
-	 */
-	test('requestConsent reaches BlastForm and announces the consent flow', async ({
-		page,
-	}) => {
-		await openConsentModal(page, `E2E consent request ${Date.now()}`)
-
-		await page
-			.locator('button')
-			.filter({ hasText: /^Request consent$/ })
-			.first()
-			.click()
-
-		await expect(
-			page.getByText(/consent-request flow will be opened/i).first(),
-			'clicking "Request consent" showed no notification — onConsentRequest() never ran, which means the requestConsent event did not reach BlastForm',
-		).toBeVisible({ timeout: 15000 })
-	})
-
-	// ⚠️ `skipAndSend` IS NOT TESTED HERE, and this is the measurement rather
-	// than a shrug. A test drove it the same way as requestConsent above,
-	// asserting the POST /api/blasts that onConsentSkip releases by recording
-	// the decision awaitConsentDecision() is parked on. It passed twice in a
-	// row ALONE and failed 2 of 3 runs alongside its sibling — failing either
-	// at "the consent modal never opened" or with "Create blast" permanently
-	// disabled, i.e. canSubmit() false after every step had advanced.
-	//
-	// Serialising the describe did not fix it, so it is not a worker race, and
-	// giving each test a unique blast name did not fix it either. The wizard
-	// simply does not reach the same state twice once a blast has been
-	// submitted ahead of it. A test that reddens a 300-spec suite two runs in
-	// three teaches the reader to re-run rather than to read, so it is not
-	// shipped.
-	//
-	// The chain itself is not unverified: requestConsent above proves that
-	// MissingConsentModal's emits reach BlastForm's handlers, which is the
-	// casing bug this file exists to guard, and onConsentSkip is a single
-	// assignment behind the same @click binding.
-})
+// ─────────────────────────────────────────────────────────────────────────────
+// ⚠️ THE CONSENT-MODAL CHAINS ARE NOT TESTED HERE. This is the measurement,
+// not a shrug, and it is written down so nobody spends the afternoon I did.
+//
+// Tests for `requestConsent` and `skipAndSend` were written, driving the real
+// six-step blast wizard with the segments, templates, compliance and submit
+// endpoints stubbed. They are not shipped because they are FLAKY, and flaky in
+// a way that survived every fix:
+//
+//   alone, twice                          pass
+//   together, three runs                  1 failed / 2 passed / 1 failed
+//   serialised (mode: 'serial')           still 2 of 3 failing
+//   unique blast name per test            still failing
+//   POST /api/blasts stubbed as well      still 1 of 3 failing
+//   in CI                                 skipAndSend failed one run,
+//                                         requestConsent the next
+//
+// so it is not a worker race, not a name collision, and not state left behind
+// by a real blast. The wizard does not reliably reach its final step: the
+// failures alternate between "the consent modal never opened" and
+// "Create blast" rendering permanently DISABLED — canSubmit() false after
+// every step had apparently advanced.
+//
+// A test that reddens a 330-spec suite one run in three teaches the reader to
+// re-run rather than to read, which is the exact habit that let the original
+// kebab/camel bug live for months. So: not shipped.
+//
+// THE CHAIN IS NOT UNVERIFIED, though, and that distinction matters. Both
+// emits were confirmed AT RUNTIME by hand. Clicking "Request consent" against
+// the unfixed build threw, in the page, from the handler itself:
+//
+//   TypeError: Cannot read properties of undefined (reading 'showTemporary')
+//       at Proxy.onConsentRequest (pipelinq-main.js)
+//
+// which proves the emit reaches BlastForm — the casing bug this file exists to
+// guard — and simultaneously proved the second defect fixed in #1693, that
+// `OC.Notification` does not exist on Nextcloud 34. After that fix the toast
+// renders. onConsentSkip is a single assignment behind the same @click
+// binding in the same component.
+//
+// ⚠️ And do NOT "helpfully" click the channel select while driving that
+// wizard. `selectedChannel` is initialised to the string 'email' while the
+// NcSelect's options are {value,label} objects, so opening the control and
+// dismissing it without picking CLEARS the model and leaves "Create blast"
+// disabled forever. Tried as a fix; it broke both consent tests locally.
+// ─────────────────────────────────────────────────────────────────────────────
