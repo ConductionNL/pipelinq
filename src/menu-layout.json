@@ -43,15 +43,13 @@
     "Rapportage",
     "RapportageContactmomenten",
     "ChannelAnalyticsView",
-    "AgentPerformanceView",
-    "Projects"
+    "AgentPerformanceView"
   ],
   "removalsReplacedBy": {
   	"Rapportage": "Reports",
   	"RapportageContactmomenten": "Reports",
   	"ChannelAnalyticsView": "Reports",
-  	"AgentPerformanceView": "Reports",
-  	"Projects": "dossiq:WorkflowBoard"
+  	"AgentPerformanceView": "Reports"
   },
 	"_removalsNote": "IA revision 2026-07 (nav-ia-cleanup): 'Reports & Compliance' (AnalyticsGroup) and its sole child 'Billing categories' are dropped — the group carried one page and the pairing of reporting with compliance never described anything real. The billingCategory SCHEMA and its objects stay (ShillinqWipService and the 'Hours by billing category' widget on the Operational dashboard still read them); only the nav entry and its three pages go. 'AVG-verzoeken' is dropped too: it was a bare deep-link into OpenRegister's DSAR engine (ADR-047 Phase 3), which owns that surface — pipelinq still contributes evidence via PipelinqEvidenceSourceProvider. 'Barcode lookup' is dropped in favour of searching the Products index by barcode, which is one surface instead of two for the same question. Product catalog (Catalog) is dissolved with it: a group wrapping a single Products page is noise.\n\nEarlier IA revision (2026-07): the Service top-level entry and its ServiceHubOverview hub page were dropped; its former service leaves live under Customer Support (KccWerkplek), the booking domain under Operational, and the Sales & CRM leaves under the Commercial dashboard (relabelled 'Sales')."
 }
