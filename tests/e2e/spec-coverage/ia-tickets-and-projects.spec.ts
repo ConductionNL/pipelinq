@@ -57,14 +57,22 @@ test('the tickets entry reads "All tickets"', async ({ page }) => {
 })
 
 // @e2e openspec/specs/pipelinq-navigation/spec.md
-test('Projecten is no longer offered in the navigation', async ({ page }) => {
+test('Projecten is offered in the navigation', async ({ page }) => {
+	// INVERTED, not deleted. This asserted the entry was GONE, on the claim
+	// that dossiq's WorkflowBoard replaced it. #1728 retracted that claim and
+	// restored the entry: `project` is a BILLING entity here, carrying
+	// billable, budgetHours, budgetAmount, hourlyRate and ledgerSync*, with
+	// sixteen files hanging off it. A planning board does not replace it.
+	//
+	// The assertion flips rather than disappearing: deleting it would leave
+	// nothing watching an entry that was already removed once by mistake.
 	await openApp(page)
 
 	const nav = page.locator('#app-navigation-vue, .app-navigation').first()
 	await expect(
 		nav.getByText(/^\s*(Projecten|Projects)\s*$/i),
-		'the retired entry must be gone from the menu',
-	).toHaveCount(0)
+		'the billing surface must stay in the menu',
+	).toHaveCount(1, { timeout: 15000 })
 })
 
 // @e2e openspec/specs/pipelinq-navigation/spec.md
