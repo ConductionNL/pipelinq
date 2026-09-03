@@ -16,7 +16,7 @@
         "x-schema-org": "schema:Message",
         "slug": "berichtenboxMessage",
         "title": "BerichtenboxMessage",
-        "description": "Outbound message delivered to a burger via MijnOverheid Berichtenbox or email fallback (REQ-OUTBOUND-001).",
+        "description": "Outbound message delivered to a burger via MijnOverheid Berichtenbox or email fallback.",
         "version": "1.0.0",
         "type": "object",
         "required": [
@@ -138,7 +138,7 @@
           "retryCount": {
             "type": "integer",
             "minimum": 0,
-            "description": "Number of dispatch attempts (capped at 5; REQ-RETRY-012).",
+            "description": "Number of dispatch attempts (capped at 5).",
             "title": "Retry Count"
           },
           "nextRetryAt": {
@@ -152,7 +152,7 @@
       "berichtenboxReply": {
         "slug": "berichtenboxReply",
         "title": "BerichtenboxReply",
-        "description": "Inbound reply from a burger via MijnOverheid Antwoord (REQ-INBOUND-006).",
+        "description": "Inbound reply from a burger via MijnOverheid Antwoord.",
         "version": "1.0.0",
         "type": "object",
         "required": [
@@ -222,7 +222,7 @@
       "berichtenboxTemplate": {
         "slug": "berichtenboxTemplate",
         "title": "BerichtenboxTemplate",
-        "description": "Mustache template per zaaktype + status + language (REQ-TEMPLATE-013).",
+        "description": "Mustache template per zaaktype + status + language.",
         "version": "1.0.0",
         "type": "object",
         "required": [
@@ -287,7 +287,7 @@
       "mailboxResolution": {
         "slug": "mailboxResolution",
         "title": "MailboxResolution",
-        "description": "Cache of BSN→mailbox lookups with Logius TTL (REQ-MAILBOX-002).",
+        "description": "Cache of BSN→mailbox lookups with Logius TTL.",
         "version": "1.0.0",
         "type": "object",
         "required": [
@@ -334,7 +334,7 @@
       "deliveryAuditLog": {
         "slug": "deliveryAuditLog",
         "title": "DeliveryAuditLog",
-        "description": "Append-only audit trail per Archiefwet (REQ-AUDIT-009).",
+        "description": "Append-only audit trail per Archiefwet.",
         "version": "1.0.0",
         "type": "object",
         "required": [

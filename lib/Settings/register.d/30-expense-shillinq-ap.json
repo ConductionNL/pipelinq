@@ -15,7 +15,7 @@
         "icon": "ReceiptOutline",
         "version": "1.0.0",
         "summary": "An approved or pending expense submission with optional Shillinq AP sync state.",
-        "description": "Captured expense (declaratie / onkostenbon) submitted in pipelinq. When status transitions to 'approved' the expense is dispatched as an AP voucher to Shillinq through OpenRegister's WebhookService; apSyncStatus and apSyncedAt record the outcome of that one-way integration (REQ-AP-001).",
+        "description": "Captured expense (declaratie / onkostenbon) submitted in pipelinq. When status transitions to 'approved' the expense is dispatched as an AP voucher to Shillinq through OpenRegister's WebhookService; apSyncStatus and apSyncedAt record the outcome of that one-way integration.",
         "required": [
           "title",
           "amount"
@@ -93,7 +93,7 @@
           },
           "apSyncStatus": {
             "type": "string",
-            "description": "Shillinq AP sync state for this expense (null until the first approval event). REQ-AP-001.",
+            "description": "Shillinq AP sync state for this expense (null until the first approval event)..",
             "enum": [
               "pending",
               "synced",
@@ -103,7 +103,7 @@
           },
           "apSyncedAt": {
             "type": "string",
-            "description": "ISO 8601 UTC timestamp of the last successful Shillinq AP dispatch. REQ-AP-001.",
+            "description": "ISO 8601 UTC timestamp of the last successful Shillinq AP dispatch..",
             "format": "date-time",
             "title": "Ap Synced At"
           }

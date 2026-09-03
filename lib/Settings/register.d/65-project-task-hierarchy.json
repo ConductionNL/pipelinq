@@ -59,7 +59,7 @@
           },
           "billable": {
             "type": "boolean",
-            "description": "Explicit billable flag for this phase. When null/unset the resolved value is inherited from the parent project (REQ-PTH-005).",
+            "description": "Explicit billable flag for this phase. When null/unset the resolved value is inherited from the parent project.",
             "title": "Billable"
           },
           "budgetHours": {
@@ -141,7 +141,7 @@
           },
           "billable": {
             "type": "boolean",
-            "description": "Explicit billable flag for this task. When null/unset the resolved value is inherited from the parent phase (REQ-PTH-005).",
+            "description": "Explicit billable flag for this task. When null/unset the resolved value is inherited from the parent phase.",
             "title": "Billable"
           },
           "estimatedHours": {
@@ -171,7 +171,7 @@
         "icon": "Timer",
         "version": "1.0.0",
         "summary": "A time entry recorded against a project task — the fourth (leaf) level of the WBS.",
-        "description": "A project activity is one user time entry against a projectTask. It is finer-grained than the project-level timeEntry schema (which is the approval/WIP-sync record dispatched to Shillinq): activities are the day-to-day capture surface inside the WBS tree. Each activity stores the date the work was performed, a duration in minutes, the executing user, and an optional billable override that wins over the resolved task/phase/project billable chain (REQ-PTH-005). The denormalised project reference enables project activity-list / budget roll-ups without a join. Mapped to schema:Action with schema:duration.",
+        "description": "A project activity is one user time entry against a projectTask. It is finer-grained than the project-level timeEntry schema (which is the approval/WIP-sync record dispatched to Shillinq): activities are the day-to-day capture surface inside the WBS tree. Each activity stores the date the work was performed, a duration in minutes, the executing user, and an optional billable override that wins over the resolved task/phase/project billable chain. The denormalised project reference enables project activity-list / budget roll-ups without a join. Mapped to schema:Action with schema:duration.",
         "x-schema-org": "schema:Action",
         "required": [
           "task",
@@ -213,7 +213,7 @@
           },
           "billable": {
             "type": "boolean",
-            "description": "Explicit billable flag for this activity. When null/unset the resolved value is inherited from the parent task (REQ-PTH-005).",
+            "description": "Explicit billable flag for this activity. When null/unset the resolved value is inherited from the parent task.",
             "title": "Billable"
           },
           "user": {

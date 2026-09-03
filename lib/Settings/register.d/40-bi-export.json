@@ -312,7 +312,7 @@
           },
           "destinationAck": {
             "type": "string",
-            "description": "Destination acknowledgement (S3 ETag, BigQuery load-job id, Snowflake query id, ...).",
+            "description": "Destination acknowledgement (S3 ETag, BigQuery load-job id, Snowflake query id,...).",
             "maxLength": 1024,
             "title": "Destination Ack"
           }

@@ -2032,7 +2032,7 @@
           },
           "staffMemberId": {
             "type": "string",
-            "description": "Optional UUID reference to the posStaff member who was actively logged in at the POS terminal when this transaction was confirmed. Drives per-staff sales reporting and the shillinq commission feed (pos-staff-pin-permissions REQ-PSP-008 / REQ-PSP-009).",
+            "description": "Optional UUID reference to the posStaff member who was actively logged in at the POS terminal when this transaction was confirmed. Drives per-staff sales reporting and the shillinq commission feed (pos-staff-pin-permissions).",
             "title": "Staff member",
             "facetable": true
           },
