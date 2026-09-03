@@ -730,7 +730,7 @@
           },
           "pin": {
             "type": "string",
-            "description": "bcrypt PIN hash — never plaintext, never logged.",
+            "description": "bcrypt PIN hash: never plaintext, never logged.",
             "title": "Pin"
           },
           "initialBalance": {
@@ -800,7 +800,7 @@
         "title": "Gift Card Transaction",
         "version": "1.0.0",
         "summary": "Immutable, append-only ledger entry recording every gift-card movement.",
-        "description": "GiftCardTransaction logs every balance movement (issue, redeem, partial_redeem, refund, topup, block). Append-only — balance changes are reconstructable from the ledger. See.",
+        "description": "GiftCardTransaction logs every balance movement (issue, redeem, partial_redeem, refund, topup, block). Append-only: balance changes are reconstructable from the ledger. See.",
         "@type": "GiftCardTransaction",
         "required": [
           "giftCardId",

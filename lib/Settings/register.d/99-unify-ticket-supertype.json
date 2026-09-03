@@ -56,7 +56,7 @@
             "enabled": true,
             "tools": {
               "search": {
-                "description": "Search inbound customer tickets — requests, complaints, and logged contactmomente — optionally filtered by ticketType discriminator, lifecycle status, or associated client. Returns RBAC-scoped ticket summaries, newest first.",
+                "description": "Search inbound customer tickets: requests, complaints, and logged contactmomente. Optionally filtered by ticketType discriminator, lifecycle status, or associated client. Returns RBAC-scoped ticket summaries, newest first.",
                 "scope": "read",
                 "filters": [
                   "ticketType",
@@ -251,7 +251,7 @@
           "decisions": {
             "type": "array",
             "title": "Decisions",
-            "description": "Governance decisions raised for this ticket (e.g. approval/escalation). References decidesk Decision objects (ADR-066); Decidesk owns the making and eIDAS signing. Carried over from the retired `request` schema when it folded into this supertype — the relation belongs to the matter, not to which of the three names it used to have.",
+            "description": "Governance decisions raised for this ticket (e.g. Approval/escalation). References decidesk Decision objects (ADR-066); Decidesk owns the making and eIDAS signing. Carried over from the retired `request` schema when it folded into this supertype: the relation belongs to the matter, not to which of the three names it used to have.",
             "items": {
               "type": "string",
               "format": "uuid",

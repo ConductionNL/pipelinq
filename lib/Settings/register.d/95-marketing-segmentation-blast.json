@@ -344,7 +344,7 @@
           },
           "contactId": {
             "type": "string",
-            "description": "FK to Contact (UUID) — recipient identity.",
+            "description": "FK to Contact (UUID): recipient identity.",
             "title": "Contact ID"
           },
           "email": {
@@ -435,7 +435,7 @@
         "icon": "ShieldCheckOutline",
         "version": "1.0.0",
         "summary": "Per-contact-per-channel marketing consent (GDPR Art. 6 lawful basis + withdrawal state).",
-        "description": "ConsentRecord is the source of truth for whether a Contact may be sent marketing on a given channel. lawfulBasis records the GDPR Art. 6 basis used at capture (consent | legitimate-interest | contract); consentSource describes the capture mechanism (web-form, double-opt-in, import, etc.). withdrawnAt + withdrawnReason close the consent. softBounceCount counts consecutive soft bounces (5 triggers automatic withdrawal — member 03 owns the rule). One record per (contactId, channel).",
+        "description": "ConsentRecord is the source of truth for whether a Contact may be sent marketing on a given channel. LawfulBasis records the GDPR Art. 6 basis used at capture (consent | legitimate-interest | contract); consentSource describes the capture mechanism (web-form, double-opt-in, import, etc.). WithdrawnAt + withdrawnReason close the consent. SoftBounceCount counts consecutive soft bounces (5 triggers automatic withdrawal: member 03 owns the rule). One record per (contactId, channel).",
         "x-schema-org": "schema:Permit",
         "required": [
           "contactId",
@@ -530,7 +530,7 @@
           },
           "dealId": {
             "type": "string",
-            "description": "FK to Lead (UUID) — the closed-won deal being attributed.",
+            "description": "FK to Lead (UUID): the closed-won deal being attributed.",
             "title": "Deal ID"
           },
           "firstClickAt": {
@@ -573,7 +573,7 @@
           "slug": "segment-gemeente-contact-blast"
         },
         "name": "Gemeente Contact Blast",
-        "description": "Contactpersonen bij Nederlandse gemeenten met sector 'overheid' — gebruikt voor de Q4 Gemeente Outreach blasts (A/B).",
+        "description": "Contactpersonen bij Nederlandse gemeenten met sector 'overheid': gebruikt voor de Q4 Gemeente Outreach blasts (A/B).",
         "entityType": "contact",
         "rules": {
           "type": "AND",
@@ -617,7 +617,7 @@
           "slug": "segment-enterprise-high-value"
         },
         "name": "Enterprise High-Value",
-        "description": "Klanten met een jaarcontract > EUR 50.000 én > 250 medewerkers — doelgroep voor account-based retention.",
+        "description": "Klanten met een jaarcontract > EUR 50.000 én > 250 medewerkers: doelgroep voor account-based retention.",
         "entityType": "customer",
         "rules": {
           "type": "AND",
@@ -654,7 +654,7 @@
           "slug": "segment-inactive-leads"
         },
         "name": "Inactive Leads",
-        "description": "Leads zonder contactmoment in de afgelopen 90 dagen die nog geen 'closed' status hebben — voor de win-back campagne.",
+        "description": "Leads zonder contactmoment in de afgelopen 90 dagen die nog geen 'closed' status hebben: voor de win-back campagne.",
         "entityType": "contact",
         "rules": {
           "type": "AND",
@@ -735,7 +735,7 @@
           "slug": "segment-technical-leads"
         },
         "name": "Technical Leads",
-        "description": "Contacten met een technische rol (CTO/architect/developer) bij prospect-organisaties — doelgroep voor de developer-onboarding serie.",
+        "description": "Contacten met een technische rol (CTO/architect/developer) bij prospect-organisaties: doelgroep voor de developer-onboarding serie.",
         "entityType": "contact",
         "rules": {
           "type": "OR",

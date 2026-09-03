@@ -339,7 +339,7 @@
         },
         "task": "@ref:task-requirementsanalyse",
         "project": "@ref:project-digitalisering-amsterdam",
-        "description": "Werksessie met projectteam gemeente — eerste ronde stakeholderinterviews",
+        "description": "Werksessie met projectteam gemeente: eerste ronde stakeholderinterviews",
         "date": "2026-02-05",
         "durationMinutes": 180,
         "billable": true,

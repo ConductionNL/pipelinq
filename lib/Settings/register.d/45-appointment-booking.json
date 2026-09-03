@@ -129,7 +129,7 @@
                 },
                 "allowGap": {
                   "type": "boolean",
-                  "description": "When true, the resource is free during this step (e.g. hair-colour processing — chair is occupied, stylist is not).",
+                  "description": "When true, the resource is free during this step (e.g. Hair-colour processing: chair is occupied, stylist is not).",
                   "default": false,
                   "title": "Allow Gap"
                 }
@@ -200,7 +200,7 @@
         "icon": "AccountTie",
         "version": "1.0.0",
         "summary": "A bookable resource (staff member, treatment room, or piece of equipment).",
-        "description": "Represents anything a Service can be booked against — a stylist, mechanic, room or machine. Carries working hours, vacations, skills, and optional calendar sync..",
+        "description": "Represents anything a Service can be booked against: a stylist, mechanic, room or machine. Carries working hours, vacations, skills, and optional calendar sync..",
         "@type": "Thing",
         "required": [
           "name",
@@ -727,7 +727,7 @@
         "icon": "DatabaseClock",
         "version": "1.0.0",
         "summary": "Internal precomputed free-slots cache per resource per date (read-only, regeneratable).",
-        "description": "Read-only optimisation produced by the availability service (member 02). NEVER hand-edited — the slot computation is the source of truth. Materialised so the portal can answer day-grid queries in sub-second time without recomputing per request..",
+        "description": "Read-only optimisation produced by the availability service (member 02). NEVER hand-edited: the slot computation is the source of truth. Materialised so the portal can answer day-grid queries in sub-second time without recomputing per request..",
         "@type": "Thing",
         "x-openregister": {
           "internal": true,
@@ -812,7 +812,7 @@
           "slug": "service-haircut-simple"
         },
         "name": "Knipbeurt",
-        "description": "Standaard knipbeurt — wassen, knippen, kort fohnen.",
+        "description": "Standaard knipbeurt: wassen, knippen, kort fohnen.",
         "durationMinutes": 30,
         "bufferBeforeMinutes": 0,
         "bufferAfterMinutes": 5,
@@ -838,7 +838,7 @@
           "slug": "service-color-and-cut"
         },
         "name": "Kleur & Knippen",
-        "description": "Complete kleurbehandeling met knippen — kleur aanbrengen, intrekken, uitspoelen en knippen.",
+        "description": "Complete kleurbehandeling met knippen: kleur aanbrengen, intrekken, uitspoelen en knippen.",
         "durationMinutes": 120,
         "bufferBeforeMinutes": 0,
         "bufferAfterMinutes": 10,

@@ -8,7 +8,7 @@
   "x-openregister": {
     "type": "mock",
     "app": "pipelinq",
-    "description": "Demo data for pipelinq. NOT installed automatically — a mock register is imported on demand, from the setup walkthrough or `occ openregister:descriptors:list --app=pipelinq --import=<slug>`."
+    "description": "Demo data for pipelinq. NOT installed automatically: a mock register is imported on demand, from the setup walkthrough or `occ openregister:descriptors:list --app=pipelinq --import=<slug>`."
   },
   "paths": {},
   "components": {
@@ -17,19 +17,19 @@
         "slug": "pipelinq",
         "title": "Pipelinq (demo)",
         "version": "1.0.0",
-        "description": "Demo data for Pipelinq. Generated from the register's own schemas — see hydra-gates/scripts/lib/generate_mock_register.py."
+        "description": "Demo data for Pipelinq. Generated from the register's own schemas: see hydra-gates/scripts/lib/generate_mock_register.py."
       },
       "pipelinq-portal": {
         "slug": "pipelinq-portal",
         "title": "Pipelinq Portal (demo)",
         "version": "1.0.0",
-        "description": "Demo data for Pipelinq Portal. Generated from the register's own schemas — see hydra-gates/scripts/lib/generate_mock_register.py."
+        "description": "Demo data for Pipelinq Portal. Generated from the register's own schemas: see hydra-gates/scripts/lib/generate_mock_register.py."
       },
       "sla": {
         "slug": "sla",
         "title": "Pipelinq SLA (demo)",
         "version": "1.0.0",
-        "description": "Demo data for Pipelinq SLA. Generated from the register's own schemas — see hydra-gates/scripts/lib/generate_mock_register.py."
+        "description": "Demo data for Pipelinq SLA. Generated from the register's own schemas: see hydra-gates/scripts/lib/generate_mock_register.py."
       }
     },
     "objects": [
