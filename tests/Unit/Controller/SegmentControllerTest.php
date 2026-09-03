@@ -420,11 +420,6 @@ class SegmentControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testRefreshSizeIgnoresStaleEstimateCache(): void {
-		$this->markTestSkipped(
-			'BUG: POST /api/segments/{id}/size returns and persists the cached '
-			. 'estimate instead of recomputing - see coordinator report'
-		);
-
 		$cache = $this->createMock(ICache::class);
 		// A pre-edit count still sitting in the estimate cache.
 		$cache->method('get')->willReturn(99);
@@ -457,11 +452,6 @@ class SegmentControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testRefreshSizeReportsPersistenceFailure(): void {
-		$this->markTestSkipped(
-			'BUG: a failed estimatedSize write is swallowed and still answered '
-			. '200 with the new count - see coordinator report'
-		);
-
 		$objects = $this->createMock(ObjectServiceInterface::class);
 		$objects->method('find')->willReturn(
 			self::entity(['id' => 'seg-1', 'entityType' => 'contact', 'rules' => self::COUNTRY_RULE])

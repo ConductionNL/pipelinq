@@ -33,6 +33,7 @@ use OCP\ICache;
 use OCP\ICacheFactory;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 use Throwable;
 
 /**
@@ -490,11 +491,32 @@ class SegmentService {
 			return 0;
 		}
 
-		$size = $this->estimateSize(segmentId: $segmentId);
+		// 🔴 A REFRESH THAT READS THE CACHE IS NOT A REFRESH.
+		//
+		// This called estimateSize(), which returns the cached count when one
+		// is present -- so POST /api/segments/{id}/size answered, and then
+		// PERSISTED, the very stale estimate the caller asked it to replace.
+		// Editing a segment's rules and refreshing left the old number on the
+		// record, looking freshly computed.
+		$size = $this->estimateSize(segmentId: $segmentId, bypassCache: true);
 		$payload = $segment;
 		$payload['estimatedSize'] = $size;
 		$payload['updatedAt'] = gmdate('Y-m-d\TH:i:s\Z');
-		$this->saveSegmentObject(payload: $payload, id: $this->extractSegmentId(payload: $segment));
+
+		// 🔴 AND A FAILED WRITE IS NOT A REFRESH EITHER.
+		//
+		// saveSegmentObject() answers null when the write failed, and that
+		// return was discarded, so the endpoint reported 200 with the new count
+		// over a record that still holds the old one. Throwing lets the
+		// controller answer honestly; the caller can retry.
+		$saved = $this->saveSegmentObject(
+			payload: $payload,
+			id: $this->extractSegmentId(payload: $segment)
+		);
+		if ($saved === null) {
+			throw new RuntimeException('Pipelinq: the refreshed segment size could not be persisted.');
+		}
+
 		return $size;
 	}//end refreshSegmentSize()
 
@@ -721,17 +743,20 @@ class SegmentService {
 	 * raising on the segment-detail view.
 	 *
 	 * @param string $segmentId Segment UUID or slug.
+	 * @param bool $bypassCache Recompute even when a cached estimate exists.
 	 *
 	 * @return int Count of matching entities; 0 on failure.
 	 *
 	 * @spec openspec/specs/marketing-segmentation/spec.md#requirement-segments-are-live-not-frozen-lists
 	 */
-	public function estimateSize(string $segmentId): int {
+	public function estimateSize(string $segmentId, bool $bypassCache = false): int {
 		$cache = $this->getEstimateCache();
 		$cacheKey = 'estimate:' . $segmentId;
-		$cached = $this->readEstimateCache(cache: $cache, cacheKey: $cacheKey);
-		if ($cached !== null) {
-			return $cached;
+		if ($bypassCache === false) {
+			$cached = $this->readEstimateCache(cache: $cache, cacheKey: $cacheKey);
+			if ($cached !== null) {
+				return $cached;
+			}
 		}
 
 		$segment = $this->loadSegment(segmentId: $segmentId);
