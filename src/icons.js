@@ -26,6 +26,7 @@ import AccountSearch from 'vue-material-design-icons/AccountSearch.vue'
 import AccountSearchOutline from 'vue-material-design-icons/AccountSearchOutline.vue'
 import AccountStarOutline from 'vue-material-design-icons/AccountStarOutline.vue'
 import AccountTie from 'vue-material-design-icons/AccountTie.vue'
+import AccountVoice from 'vue-material-design-icons/AccountVoice.vue'
 import AlertCircleOutline from 'vue-material-design-icons/AlertCircleOutline.vue'
 import AlertOctagon from 'vue-material-design-icons/AlertOctagon.vue'
 import AlertOctagonOutline from 'vue-material-design-icons/AlertOctagonOutline.vue'
@@ -160,6 +161,7 @@ export default {
 	AccountSearchOutline,
 	AccountStarOutline,
 	AccountTie,
+	AccountVoice,
 	AlertCircleOutline,
 	AlertOctagon,
 	AlertOctagonOutline,

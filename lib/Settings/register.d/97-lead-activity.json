@@ -22,12 +22,9 @@
           "lead": {
             "type": "string",
             "title": "Lead",
-            "description": "UUID reference to the deal this ticket belongs to. Carries a contactmoment (ticketType `interaction`) logged while working a deal, so the conversation history sits with the deal rather than only with the account. Scoped to the deal's own client on the form, because a contact moment about one client's deal never belongs to another client.",
+            "description": "UUID reference to the deal this ticket belongs to. Carries a contactmoment (ticketType `interaction`) logged while working a deal, so the conversation history sits with the deal rather than only with the account. NO `x-relation-filter` scoping the picker to the ticket's own client, deliberately: gate-54 resolves an `@object.<field>` token against the properties declared in the FILE it reads, and this is a partial overlay that declares only `lead`, so `@object.client` is unresolvable here however real `ticket.client` is in the assembled schema.",
             "format": "uuid",
-            "$ref": "lead",
-            "x-relation-filter": {
-              "client": "@object.client"
-            }
+            "$ref": "lead"
           }
         }
       },
@@ -42,10 +39,7 @@
               "format": "uuid",
               "$ref": "lead"
             },
-            "referenceType": "lead",
-            "x-relation-filter": {
-              "client": "@object.client"
-            }
+            "referenceType": "lead"
           }
         }
       }

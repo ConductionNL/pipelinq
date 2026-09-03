@@ -3617,7 +3617,20 @@
         "Tender types, refund reasons, till roles and a receipt template.": "Betaalwijzen, retourredenen, kassarollen en een bonsjabloon.",
         "The item could not be installed.": "Dit item kon niet worden geïnstalleerd.",
         "The store registry did not answer. The templates below ship with Pipelinq.": "De store-registry gaf geen antwoord. De sjablonen hieronder worden met Pipelinq meegeleverd.",
-        "Try a different term, or clear the kind filter.": "Probeer een andere term, of wis het soortfilter."
+        "Try a different term, or clear the kind filter.": "Probeer een andere term, of wis het soortfilter.",
+        "Contact panels": "Contactpanelen",
+        "Deal details": "Dealgegevens",
+        "Deal panels": "Dealpanelen",
+        "Decisions": "Besluiten",
+        "EUR": "EUR",
+        "Flow runs": "Flow-uitvoeringen",
+        "Mail": "E-mail",
+        "No contact moments yet. Log one to keep the conversation with this deal.": "Nog geen contactmomenten. Leg er een vast om het gesprek bij deze deal te houden.",
+        "No contact moments yet. Log one to record what was said.": "Nog geen contactmomenten. Leg er een vast om vast te leggen wat er is besproken.",
+        "No flow is running for this deal": "Er loopt geen flow voor deze deal",
+        "No tasks yet. Add one to plan the next step on this deal.": "Nog geen taken. Voeg er een toe om de volgende stap op deze deal te plannen.",
+        "Nobody is linked to this deal yet. Open a contact and add this deal to their leads.": "Er is nog niemand aan deze deal gekoppeld. Open een contactpersoon en voeg deze deal toe aan hun leads.",
+        "on this deal": "op deze deal"
     },
     "plurals": null
 }

@@ -23,4 +23,19 @@ test.describe('PipelinQ — visual baselines', () => {
 	test('clients list', async ({ page }) => {
 		await shootByNav(page, `${APP}/`, 'Clients', 'clients.png')
 	})
+
+	/*
+	 * The store, deliberately shot with NO registry configured.
+	 *
+	 * That is the state the page is in on a fresh install and the one worth
+	 * a baseline: the engine answers `not_configured` without a network call,
+	 * so the shot is deterministic, and it covers the built-in template grid
+	 * plus the note explaining why nothing was fetched.
+	 *
+	 * Shot by URL rather than by nav click because the entry lives in the
+	 * FOOTER section, outside the scrollable nav that `shootByNav` clicks in.
+	 */
+	test('Store page (StoreGallery)', async ({ page }) => {
+		await shootSurface(page, `${APP}/store`, 'store.png')
+	})
 })
