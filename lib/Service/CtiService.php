@@ -108,16 +108,31 @@ class CtiService {
 		?string $signature = null,
 	): array {
 		$adapter = $this->adapterRegistry->get($platform);
-		$valid = true;
 		$rawForSig = ($rawBody ?? json_encode($payload));
-		if ($signature !== null) {
-			$rawForSigString = '';
-			if ($rawForSig !== false) {
-				$rawForSigString = (string)$rawForSig;
-			}
-
-			$valid = $adapter->verifyWebhookSignature($rawForSigString, $signature);
+		$rawForSigString = '';
+		if ($rawForSig !== false) {
+			$rawForSigString = (string)$rawForSig;
 		}
+
+		// 🔴 ALWAYS VERIFY, INCLUDING WHEN NO SIGNATURE ARRIVED.
+		//
+		// This used to start at `$valid = true` and verify only `if ($signature
+		// !== null)`, so a delivery carrying no signature header at all was
+		// treated as verified and dispatched. The route is #[PublicPage] and
+		// #[NoCSRFRequired], which made that an UNAUTHENTICATED WRITE PRIMITIVE:
+		// an anonymous POST wrote a contactmoment.
+		//
+		// A missing signature is not a delivery to trust, it is the one to
+		// trust least. Every adapter already answers false for an empty
+		// signature or an unconfigured secret, so passing '' through is the
+		// correct fail-closed call rather than a special case here.
+		//
+		// OPERATIONAL NOTE: an instance that has a CTI webhook wired but no
+		// `cti_*_webhook_secret` configured accepted unsigned deliveries before
+		// and now rejects them with 422. That is the point of the change, and
+		// the fix for such an instance is to configure the secret the adapter
+		// already reads.
+		$valid = $adapter->verifyWebhookSignature($rawForSigString, ($signature ?? ''));
 
 		$normalised = $adapter->handleInboundWebhook($payload);
 		$interactionId = null;

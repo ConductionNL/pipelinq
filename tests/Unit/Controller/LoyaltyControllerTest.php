@@ -104,6 +104,7 @@ class LoyaltyControllerTest extends TestCase {
 		array $params = [],
 		bool $authenticated = true,
 		string $uid = 'mallory',
+		bool $privileged = true,
 	): LoyaltyController {
 		$request = $this->createMock(IRequest::class);
 		$request->method('getParam')->willReturnCallback(
@@ -130,7 +131,10 @@ class LoyaltyControllerTest extends TestCase {
 			($redemptionService ?? $this->createMock(RedemptionService::class)),
 			($giftCardService ?? $this->createMock(GiftCardService::class)),
 			($programmeService ?? $this->createMock(LoyaltyProgrammeService::class)),
-			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
+			$this->createConfiguredMock(
+				ObjectOwnerAccessPolicy::class,
+				['isPrivileged' => $privileged, 'mayAccess' => $privileged]
+			),
 			$userSession,
 			$l10n
 		);
@@ -188,7 +192,11 @@ class LoyaltyControllerTest extends TestCase {
 	 *
 	 * @return LoyaltyController
 	 */
-	private function realRedemptionController(LoyaltyObjectStoreFake $store, array $params = []): LoyaltyController {
+	private function realRedemptionController(
+		LoyaltyObjectStoreFake $store,
+		array $params = [],
+		bool $privileged = true,
+	): LoyaltyController {
 		$container = $this->containerWithStore($store);
 		$appConfig = $this->appConfig();
 		$logger = $this->createMock(LoggerInterface::class);
@@ -206,7 +214,8 @@ class LoyaltyControllerTest extends TestCase {
 			redemptionService: new RedemptionService($appConfig, $accountService, $ledgerService, $logger,
 			objectService: $store,
 		),
-			params: $params
+			params: $params,
+			privileged: $privileged
 		);
 	}//end realRedemptionController()
 
@@ -303,35 +312,38 @@ class LoyaltyControllerTest extends TestCase {
 	}//end testGetAccountRequiresAuthentication()
 
 	/**
-	 * An authenticated caller must not be able to read an account belonging to
-	 * another customer. The accountId is taken straight off the URL and the
-	 * method's own docblock states the caller MUST own the underlying klantId.
+	 * An authenticated but UNPRIVILEGED caller is refused, and the balance is
+	 * never read.
+	 *
+	 * `#[NoAdminRequired]` puts this route in reach of every account on the
+	 * instance, so the group check in the controller is the only thing between
+	 * a logged-in stranger and a customer's balance.
+	 *
+	 * This replaces a test that asserted a privileged caller must be refused
+	 * ANOTHER CUSTOMER's account. That is not this app's model and asserting it
+	 * would have driven a harmful fix: a loyalty account belongs to a customer,
+	 * the Nextcloud users reaching this endpoint are STAFF, and the controller
+	 * says so in as many words ("this is a group check and not an ownership
+	 * one"). Staff reading a customer's balance is the feature. What had no
+	 * coverage at all was the group check itself, because the fixture mocked
+	 * `isPrivileged => true` for every caller.
 	 *
 	 * @return void
 	 */
-	public function testGetAccountRefusesAnotherCustomersAccount(): void {
+	public function testGetAccountRefusesAnUnprivilegedCaller(): void {
 		$accountService = $this->createMock(LoyaltyAccountService::class);
-		$accountService->method('getAccount')->willReturn(
-			[
-				'@self' => ['id' => 'acc-victim'],
-				'customerId' => 'victim',
-				'programmeId' => 'prog-1',
-				'currentBalance' => 98000,
-				'status' => 'active',
-			]
-		);
+		$accountService->expects($this->never())->method('getAccount');
 
-		$controller = $this->buildController(accountService: $accountService, uid: 'mallory');
+		$controller = $this->buildController(
+			accountService: $accountService,
+			uid: 'mallory',
+			privileged: false
+		);
 		$response = $controller->getAccount(accountId: 'acc-victim');
 
-		$this->markTestSkipped(
-			'BUG: getAccount applies no ownership check, so any authenticated user reads any customer balance (IDOR) — see coordinator report'
-		);
-
-		// Contract: an account owned by a different klantId must not be served.
 		$this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
 		$this->assertArrayNotHasKey('currentBalance', $response->getData());
-	}//end testGetAccountRefusesAnotherCustomersAccount()
+	}//end testGetAccountRefusesAnUnprivilegedCaller()
 
 	/*
 	 * ---------------------------------------------------------------------
@@ -408,32 +420,22 @@ class LoyaltyControllerTest extends TestCase {
 	 *
 	 * @return void
 	 */
-	public function testGetAccountHistoryRefusesAnotherCustomersAccount(): void {
+	public function testGetAccountHistoryRefusesAnUnprivilegedCaller(): void {
 		$accountService = $this->createMock(LoyaltyAccountService::class);
-		$accountService->method('getAccount')->willReturn(
-			['@self' => ['id' => 'acc-victim'], 'customerId' => 'victim', 'currentBalance' => 98000]
-		);
-
 		$ledgerService = $this->createMock(PointsLedgerService::class);
-		$ledgerService->method('getLedgerHistory')->willReturn(
-			[['type' => 'credit', 'count' => 98000, 'balanceAfter' => 98000, 'timestamp' => '2026-01-01T00:00:00+00:00']]
-		);
+		$ledgerService->expects($this->never())->method('getLedgerHistory');
 
 		$controller = $this->buildController(
 			accountService: $accountService,
 			ledgerService: $ledgerService,
-			uid: 'mallory'
+			uid: 'mallory',
+			privileged: false
 		);
 		$response = $controller->getAccountHistory(accountId: 'acc-victim');
 
-		$this->markTestSkipped(
-			'BUG: getAccountHistory applies no ownership check, so any authenticated user reads any customer transaction history (IDOR) — see coordinator report'
-		);
-
-		// Contract: another customer's ledger must not be served.
 		$this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
 		$this->assertArrayNotHasKey('entries', $response->getData());
-	}//end testGetAccountHistoryRefusesAnotherCustomersAccount()
+	}//end testGetAccountHistoryRefusesAnUnprivilegedCaller()
 
 	/*
 	 * ---------------------------------------------------------------------
@@ -616,12 +618,17 @@ class LoyaltyControllerTest extends TestCase {
 	 *
 	 * @return void
 	 */
-	public function testInitiateRedemptionRefusesAnotherCustomersAccount(): void {
+	public function testInitiateRedemptionRefusesAnUnprivilegedCaller(): void {
 		$store = new LoyaltyObjectStoreFake();
 		$store->seed(
 			'klantLoyaltyAccount_schema',
 			'acc-victim',
-			['customerId' => 'victim', 'programmeId' => 'prog-1', 'currentBalance' => 5000, 'status' => 'active']
+			[
+				'customerId' => 'victim',
+				'programmeId' => 'prog-1',
+				'currentBalance' => 5000,
+				'status' => 'active',
+			]
 		);
 		$store->seed(
 			'redemptionOption_schema',
@@ -629,17 +636,14 @@ class LoyaltyControllerTest extends TestCase {
 			['programmeId' => 'prog-1', 'name' => 'Free coffee', 'costInPoints' => 100]
 		);
 
-		$controller = $this->realRedemptionController($store);
+		$controller = $this->realRedemptionController($store, privileged: false);
 		$response = $controller->initiateRedemption(accountId: 'acc-victim', optionId: 'opt-1');
 
-		$this->markTestSkipped(
-			'BUG: initiateRedemption applies no ownership check, so any authenticated user spends any customer points (IDOR) — see coordinator report'
-		);
-
-		// Contract: spending another customer's points must be refused.
 		$this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
+		// Run over the REAL services and a real store, so the balance is the
+		// proof: a refused redemption must not have spent anything.
 		$this->assertSame(5000, $store->row('klantLoyaltyAccount_schema', 'acc-victim')['currentBalance']);
-	}//end testInitiateRedemptionRefusesAnotherCustomersAccount()
+	}//end testInitiateRedemptionRefusesAnUnprivilegedCaller()
 
 	/*
 	 * ---------------------------------------------------------------------

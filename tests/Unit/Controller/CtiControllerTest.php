@@ -509,12 +509,6 @@ class CtiControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testWebhookRejectsAnUnsignedDeliveryAndMutatesNothing(): void {
-		$this->markTestSkipped(
-			'BUG: CtiService::handleWebhook defaults $valid=true and only verifies '
-			. 'when a signature is present, so an unsigned public POST is dispatched '
-			. 'and writes a contactmoment — see coordinator report'
-		);
-
 		$this->params = ['event' => 'ringing', 'callId' => 'ext-1', 'from' => '+31612345678'];
 		$this->headers = [];
 
