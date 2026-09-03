@@ -2278,10 +2278,6 @@
           "slug": "lead-voorbeeld-title-1-1"
         },
         "title": "Voorbeeld Title 1",
-        "contactName": "Voorbeeld Contactname 1",
-        "contactEmail": "voorbeeld0@example.invalid",
-        "contactPhone": "Voorbeeld Contactphone 1",
-        "organisation": "Voorbeeld Organisation 1",
         "message": "Voorbeeld Message 1",
         "client": "00000000-0000-4000-8000-000000000000",
         "contact": "00000000-0000-4000-8000-000000000000",
@@ -2311,10 +2307,6 @@
           "slug": "lead-voorbeeld-title-2-2"
         },
         "title": "Voorbeeld Title 2",
-        "contactName": "Voorbeeld Contactname 2",
-        "contactEmail": "voorbeeld1@example.invalid",
-        "contactPhone": "Voorbeeld Contactphone 2",
-        "organisation": "Voorbeeld Organisation 2",
         "message": "Voorbeeld Message 2",
         "client": "00000000-0000-4000-8000-000000000001",
         "contact": "00000000-0000-4000-8000-000000000001",
@@ -2344,10 +2336,6 @@
           "slug": "lead-voorbeeld-title-3-3"
         },
         "title": "Voorbeeld Title 3",
-        "contactName": "Voorbeeld Contactname 3",
-        "contactEmail": "voorbeeld2@example.invalid",
-        "contactPhone": "Voorbeeld Contactphone 3",
-        "organisation": "Voorbeeld Organisation 3",
         "message": "Voorbeeld Message 3",
         "client": "00000000-0000-4000-8000-000000000002",
         "contact": "00000000-0000-4000-8000-000000000002",
@@ -2425,7 +2413,6 @@
           "slug": "loyaltyprogramme-voorbeeld-name-1-1"
         },
         "name": "Voorbeeld Name 1",
-        "merk": "Voorbeeld Merk 1",
         "status": "draft",
         "programmeId": "Voorbeeld Programmeid 1",
         "brand": "Voorbeeld Brand 1",
@@ -2450,7 +2437,6 @@
           "slug": "loyaltyprogramme-voorbeeld-name-2-2"
         },
         "name": "Voorbeeld Name 2",
-        "merk": "Voorbeeld Merk 2",
         "status": "active",
         "programmeId": "Voorbeeld Programmeid 2",
         "brand": "Voorbeeld Brand 2",
@@ -2475,7 +2461,6 @@
           "slug": "loyaltyprogramme-voorbeeld-name-3-3"
         },
         "name": "Voorbeeld Name 3",
-        "merk": "Voorbeeld Merk 3",
         "status": "paused",
         "programmeId": "Voorbeeld Programmeid 3",
         "brand": "Voorbeeld Brand 3",

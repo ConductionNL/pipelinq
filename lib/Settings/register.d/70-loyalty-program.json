@@ -19,7 +19,7 @@
       "loyaltyProgramme": {
         "slug": "loyaltyProgramme",
         "title": "Loyalty Programme",
-        "version": "1.0.0",
+        "version": "1.0.1",
         "summary": "A native loyalty programme owned by a brand/retailer with configurable points rules, tier rules and redemption options.",
         "description": "A LoyaltyProgramme is the top-level container for one brand/retailer's loyalty economics. It owns its own PointsRule, TierRule and RedemptionOption collections; CustomerLoyaltyAccount links a customer (customerId) to exactly one programme. Status transitions from concept→actief are validated against rule and redemption-option presence.",
         "@type": "LoyaltyProgramme",
@@ -65,7 +65,7 @@
         },
         "required": [
           "name",
-          "merk",
+          "brand",
           "status"
         ],
         "properties": {
