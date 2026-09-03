@@ -28,6 +28,7 @@ use OCA\Pipelinq\Service\Cti\AdapterRegistry;
 use OCA\Pipelinq\Service\Cti\Result\CtiWebhookResult;
 use OCA\Pipelinq\Service\Cti\Result\OriginateResult;
 use OCA\Pipelinq\Service\Cti\Result\ScreenPopResult;
+use InvalidArgumentException;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -134,7 +135,26 @@ class CtiService {
 		// already reads.
 		$valid = $adapter->verifyWebhookSignature($rawForSigString, ($signature ?? ''));
 
-		$normalised = $adapter->handleInboundWebhook($payload);
+		// 🔴 A MALFORMED BODY IS THE EXPECTED CASE ON A PUBLIC ROUTE.
+		//
+		// This call sat outside any try/catch, and the controller caught only
+		// RuntimeException, so an adapter that could not parse the payload
+		// (JsonException, TypeError, anything) escaped as an unhandled 500 on a
+		// #[PublicPage] endpoint -- a stack trace's worth of signal to an
+		// anonymous caller, and a 5xx that tells the platform to redeliver a
+		// body that will never parse.
+		//
+		// Wrapped as InvalidArgumentException so the controller can answer 400:
+		// the delivery is the caller's problem, not the server's.
+		try {
+			$normalised = $adapter->handleInboundWebhook($payload);
+		} catch (\Throwable $e) {
+			$this->logger->warning(
+				'CTI webhook: adapter could not parse the payload',
+				['platform' => $platform, 'error' => $e->getMessage()]
+			);
+			throw new InvalidArgumentException('The webhook payload could not be parsed.', 0, $e);
+		}
 		$interactionId = null;
 		$processingError = null;
 

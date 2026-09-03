@@ -410,7 +410,28 @@ class PosCustomerLinkService {
 
 		[$register, $schema] = $this->configContact();
 
-		$payload = $contact;
+		// 🔴 WRITE AGAINST THE STORED RECORD, NOT THE DECORATED PROJECTION.
+		//
+		// The $contact handed in comes from getCustomer(), which returns
+		// decorateContact()'s ten-key VIEW of the contact. saveObject() is
+		// PUT-semantic, so writing that projection back nulled every stored
+		// field the projection does not carry -- vatNumber, billingAddress and
+		// the rest -- as a side effect of ticking a consent box at the till.
+		//
+		// Re-reading the stored object and setting one key on it means the
+		// write carries everything the record already had. Falling back to the
+		// projection when the re-read fails would reinstate the bug, so a
+		// failed re-read is a failed sync.
+		$stored = $this->fetchObject(id: $contactUuid, register: $register, schema: $schema);
+		if ($stored === null) {
+			$this->logger->warning(
+				'Pipelinq: marketing-consent sync could not re-read the contact; not writing a partial record',
+				['contact' => $contactUuid]
+			);
+			return 'failed';
+		}
+
+		$payload = $stored;
 		unset($payload['@self'], $payload['doNotContactBadge']);
 		$payload['marketingConsent'] = $consent;
 

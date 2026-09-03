@@ -418,12 +418,6 @@ class CtiControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testClickToDialRejectsANonDialableTargetNumber(): void {
-		$this->markTestSkipped(
-			'BUG: click-to-dial forwards any non-empty targetNumber and extension '
-			. 'verbatim to the telephony adapter — no E.164 check, no allowlist, no '
-			. 'rate limit — see coordinator report'
-		);
-
 		$this->params = [
 			'targetNumber' => 'sip:attacker@evil.example',
 			'extension' => '201',
@@ -629,13 +623,6 @@ class CtiControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testWebhookMalformedPayloadProducesAControlledResponse(): void {
-		$this->markTestSkipped(
-			'BUG: CtiService::handleWebhook calls adapter->handleInboundWebhook() '
-			. 'outside any try/catch and CtiController::webhook catches only '
-			. 'RuntimeException (mislabelling it 404), so a parse failure escapes '
-			. 'as a 500 — see coordinator report'
-		);
-
 		$this->params = ['garbage' => true];
 		$this->headers = ['X-Pipelinq-Signature' => 'good'];
 
