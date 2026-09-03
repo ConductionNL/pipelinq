@@ -771,6 +771,8 @@ class SegmentService {
 	 * @param string $segmentId Segment UUID or slug.
 	 *
 	 * @return int The freshly counted size.
+	 *
+	 * @spec openspec/specs/marketing-segmentation/spec.md#requirement-segments-are-live-not-frozen-lists
 	 */
 	public function recomputeSize(string $segmentId): int {
 		$cache = $this->getEstimateCache();
