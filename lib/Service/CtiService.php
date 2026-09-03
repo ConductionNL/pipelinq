@@ -331,13 +331,25 @@ class CtiService {
 	 * @param string $recordingUrl URL of the recording.
 	 * @param string $expiresAt ISO 8601 retention expiry.
 	 *
-	 * @return void
+	 * @return bool True when the recording was written, false when the ticket
+	 *              store is unconfigured or the write failed.
 	 *
 	 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
 	 */
-	public function attachRecording(string $interactionId, string $recordingUrl, string $expiresAt): void {
+	public function attachRecording(string $interactionId, string $recordingUrl, string $expiresAt): bool {
+		// 🔴 RETURNS WHETHER THE WRITE HAPPENED.
+		//
+		// This was `: void`, and swallowed BOTH the unconfigured-store early
+		// return and every Throwable — so the controller had nothing to read
+		// and answered 200 {ok: true} over a write that never occurred. A
+		// recording URL is the evidence of a recorded call; being told it was
+		// attached when it was not is worse than being told it failed.
 		if ($this->ticketService->isConfigured() === false) {
-			return;
+			$this->logger->warning(
+				'CTI attachRecording: ticket store is not configured',
+				['interactionId' => $interactionId]
+			);
+			return false;
 		}
 
 		try {
@@ -349,11 +361,13 @@ class CtiService {
 				],
 				uuid: $interactionId,
 			);
+			return true;
 		} catch (\Throwable $e) {
 			$this->logger->error(
 				'CTI attachRecording failed',
 				['exception' => $e->getMessage(), 'interactionId' => $interactionId]
 			);
+			return false;
 		}
 	}//end attachRecording()
 

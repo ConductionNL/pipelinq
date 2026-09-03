@@ -848,7 +848,12 @@ class CtiControllerTest extends TestCase {
 		$service = $this->createMock(CtiService::class);
 		$service->expects($this->once())
 			->method('attachRecording')
-			->with('cm-1', 'https://pbx.example/rec/9.wav', '2026-12-31T00:00:00Z');
+			->with('cm-1', 'https://pbx.example/rec/9.wav', '2026-12-31T00:00:00Z')
+			// attachRecording() now REPORTS whether the write happened, so the
+			// happy path has to say it did. A bare mock answers false for a
+			// bool return, which is the failure case and belongs to the test
+			// below, not to this one.
+			->willReturn(true);
 
 		$response = $this->controller($service)->attachRecording('cm-1');
 
@@ -865,13 +870,6 @@ class CtiControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testAttachRecordingReportsFailureWhenNothingWasPersisted(): void {
-		$this->markTestSkipped(
-			'BUG: CtiService::attachRecording returns void and swallows both the '
-			. 'unconfigured-store early return and every Throwable, so the endpoint '
-			. 'answers 200 {ok:true} over a write that never happened — see '
-			. 'coordinator report'
-		);
-
 		$this->params = ['recordingUrl' => 'https://pbx.example/rec/9.wav'];
 
 		$ticketService = $this->createMock(TicketService::class);

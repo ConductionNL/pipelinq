@@ -553,12 +553,6 @@ class ContactSyncControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testWriteBackDoesNotReportSuccessWhenNothingWasSynced(): void {
-		$this->markTestSkipped(
-			'BUG: writeBack() answers 200 {success:true, contactsUid:null} when '
-			. 'syncToContacts() returns null (Contacts unavailable / object not '
-			. 'found / vCard write failed) — see coordinator report'
-		);
-
 		$this->request->method('getParam')->willReturnMap(
 			[
 				['objectType', '', 'client'],

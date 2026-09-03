@@ -313,7 +313,14 @@ class CtiController extends Controller {
 			return new JSONResponse(['error' => 'recordingUrl is required'], Http::STATUS_BAD_REQUEST);
 		}
 
-		$this->ctiService->attachRecording($id, $recordingUrl, $expiresAt);
+		$attached = $this->ctiService->attachRecording($id, $recordingUrl, $expiresAt);
+		if ($attached === false) {
+			return new JSONResponse(
+				['ok' => false, 'error' => 'The recording could not be attached'],
+				Http::STATUS_INTERNAL_SERVER_ERROR
+			);
+		}
+
 		return new JSONResponse(['ok' => true]);
 	}//end attachRecording()
 
