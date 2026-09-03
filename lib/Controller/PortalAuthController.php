@@ -275,9 +275,20 @@ class PortalAuthController extends PortalApiController {
 					issuer: 'Pipelinq'
 				);
 
-				// Stash the encrypted secret as pending until verification confirms it.
-				$account['mfaSecret'] = $this->mfa->encryptSecret(secret: $secret);
-				$account['mfaEnabled'] = false;
+				// 🔴 PENDING MEANS PENDING. DO NOT TOUCH THE LIVE FACTOR.
+				//
+				// This comment used to sit above a write to `mfaSecret` itself,
+				// with `mfaEnabled = false` beside it. On an account that
+				// already had a verified second factor that was a DOWNGRADE
+				// performed before anything was proven: the working secret was
+				// destroyed and MFA switched off, so whoever called this --
+				// including someone holding only a stolen password -- could
+				// then log in with the password alone.
+				//
+				// Enrolment is a proposal. It may not weaken the account until
+				// mfaVerify() has seen a code that proves the authenticator
+				// really holds the new secret; only then is it promoted.
+				$account['mfaPendingSecret'] = $this->mfa->encryptSecret(secret: $secret);
 				$this->repository->save(self::ACCOUNT_SCHEMA, $account, $ctx['accountId']);
 
 				return [['secret' => $secret, 'otpauthUri' => $uri], Http::STATUS_OK];
@@ -312,10 +323,23 @@ class PortalAuthController extends PortalApiController {
 			handler: function (): array {
 				$ctx = $this->requireSession();
 				$account = $ctx['account'];
-				if ($this->mfa->verifyCode(encryptedSecret: ($account['mfaSecret'] ?? null), code: $this->strParam(name: 'code')) === false) {
+
+				// Verify against the PENDING secret when an enrolment is in
+				// flight, and fall back to the live one only when there is no
+				// pending enrolment — that keeps re-verification working for an
+				// account enrolled before this field existed.
+				$pending = ($account['mfaPendingSecret'] ?? null);
+				$candidate = ($pending ?? ($account['mfaSecret'] ?? null));
+				if ($this->mfa->verifyCode(encryptedSecret: $candidate, code: $this->strParam(name: 'code')) === false) {
 					return [['errorCode' => 'invalidMfaCode', 'message' => 'Ongeldige code.'], Http::STATUS_BAD_REQUEST];
 				}
 
+				// Promote only now: the code proved the authenticator holds it.
+				if ($pending !== null && $pending !== '') {
+					$account['mfaSecret'] = $pending;
+				}
+
+				unset($account['mfaPendingSecret']);
 				$account['mfaEnabled'] = true;
 				$this->repository->save(self::ACCOUNT_SCHEMA, $account, $ctx['accountId']);
 				return [['status' => 'mfa-enabled'], Http::STATUS_OK];

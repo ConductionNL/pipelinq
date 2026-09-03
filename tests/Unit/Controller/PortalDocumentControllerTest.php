@@ -32,6 +32,11 @@ use OCA\Pipelinq\Service\Portal\MainRegisterReader;
 use OCA\Pipelinq\Service\Portal\PortalAuditService;
 use OCA\Pipelinq\Service\Portal\PortalDelegationService;
 use OCA\Pipelinq\Service\Portal\PortalException;
+use OCA\Pipelinq\Service\Portal\PortalProfileService;
+use OCA\Pipelinq\Service\Portal\PortalTokenService;
+use OCA\Pipelinq\Service\Portal\PortalMailService;
+use OCP\IL10N;
+use OCA\Pipelinq\Service\Portal\PortalExportService;
 use OCA\Pipelinq\Service\Portal\PortalInvoiceService;
 use OCA\Pipelinq\Service\Portal\PortalObjectRepository;
 use OCA\Pipelinq\Service\Portal\PortalRequestGuard;
@@ -213,9 +218,43 @@ class PortalDocumentControllerTest extends TestCase {
 			($signing ?? $this->signingService()),
 			new PortalInvoiceService($this->reader, $scope),
 			$this->repository,
-			$this->audit
+			$this->audit,
+			// The REAL export service, not a mock: the data-export test asserts
+			// the shape of the export it produces (account, auditEvents,
+			// documents), which is the whole point of wiring buildExport() into
+			// the download path. A mock would answer [] and the test would then
+			// pass against an empty export -- the bug it was written for.
+			new PortalExportService(
+				// present() reads only the repository; the rest of this
+				// service's collaborators are never reached from buildExport().
+				new PortalProfileService(
+					$this->repository,
+					$this->createMock(PortalTokenService::class),
+					$this->createMock(PortalMailService::class),
+					$this->audit,
+					$this->l10nStub()
+				),
+				$this->audit,
+				new PortalInvoiceService($this->reader, $scope),
+				($signing ?? $this->signingService()),
+				$this->createMock(PortalMailService::class),
+				$this->timeFactory(self::NOW),
+				$this->l10nStub()
+			)
 		);
 	}//end build()
+
+	/**
+	 * An IL10N that answers its input, so assertions read the English source.
+	 *
+	 * @return IL10N&MockObject The stub.
+	 */
+	private function l10nStub(): IL10N {
+		$l10n = $this->createMock(IL10N::class);
+		$l10n->method('t')->willReturnArgument(0);
+
+		return $l10n;
+	}//end l10nStub()
 
 	/**
 	 * The headers the response itself set.
@@ -569,11 +608,6 @@ class PortalDocumentControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testDownloadOfADataExportLinkDeliversTheExportedRecord(): void {
-		$this->markTestSkipped(
-			'BUG: a data-export link streams only {objectType, objectId, generatedAt}; '
-			. 'PortalExportService::buildExport() is never called by anything — see coordinator report'
-		);
-
 		$this->repository->method('find')->willReturn(self::ACCOUNT);
 		$this->reader->method('find')->willReturn(self::OWN_INVOICE);
 

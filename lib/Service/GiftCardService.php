@@ -133,9 +133,25 @@ class GiftCardService {
 			return null;
 		}
 
-		if ((string)($card['status'] ?? '') !== 'issued') {
+		// 🔴 "NOT ISSUED" IS NOT ONE OUTCOME.
+		//
+		// This returned the card unchanged for ANY non-issued status — the
+		// comment beside it said "already active or beyond", and treated both
+		// halves of that the same. So activating a BLOCKED card answered 200
+		// with the card and was indistinguishable from a successful
+		// activation. At a till that reads as "activated"; the card is still
+		// blocked.
+		//
+		// Already-active stays idempotent: re-scanning an activated card is a
+		// normal thing to do and answering the card is the right reply. Every
+		// other status is a refusal the caller has to see.
+		$status = (string)($card['status'] ?? '');
+		if ($status === 'active') {
 			return $card;
-			// Already active or beyond.
+		}
+
+		if ($status !== 'issued') {
+			throw new RuntimeException('Gift card cannot be activated from status "' . $status . '".');
 		}
 
 		$card['status'] = 'active';
@@ -203,6 +219,25 @@ class GiftCardService {
 			throw new RuntimeException('Invalid PIN.');
 		}
 
+		// 🔴 A POS RETRY MUST NOT DEBIT THE CARD TWICE.
+		//
+		// posTransactionId arrived, was written onto the transaction record, and
+		// was never READ — so a POS that retried a redemption (a timeout, a lost
+		// response, an operator pressing again) debited the card once per
+		// attempt. Real money, silently, with a successful-looking answer each
+		// time.
+		//
+		// The transaction log already carries the id, so it is the idempotency
+		// key: a redemption already recorded against this card and this POS
+		// transaction replays its result instead of applying a second debit.
+		$replay = $this->findRedemptionByPosTransaction(
+			giftCardId: $giftCardId,
+			posTransactionId: $posTransactionId
+		);
+		if ($replay !== null) {
+			return $replay;
+		}
+
 		$balance = (float)($card['currentBalance'] ?? 0);
 		$applied = min($amount, $balance);
 		$change = max(0.0, $amount - $applied);
@@ -238,6 +273,101 @@ class GiftCardService {
 			'status' => (string)($card['status'] ?? 'active'),
 		];
 	}//end redeemGiftCard()
+
+	/**
+	 * A redemption already recorded for this card and POS transaction.
+	 *
+	 * Returns the same shape redeemGiftCard() answers, rebuilt from the stored
+	 * transaction, so a retry sees exactly what the first attempt returned.
+	 *
+	 * Returns null when there is no POS transaction id (nothing to be
+	 * idempotent ON), when no prior redemption exists, or when the lookup
+	 * fails. The last case deliberately falls through to a normal redemption:
+	 * refusing the sale because the idempotency CHECK broke would be a worse
+	 * failure at a till than the double debit it guards against, and the
+	 * transaction log still records both attempts for reconciliation.
+	 *
+	 * @param string $giftCardId The card UUID.
+	 * @param string|null $posTransactionId The POS transaction id, when supplied.
+	 *
+	 * @return array<string, mixed>|null The previous result, or null to proceed.
+	 */
+	private function findRedemptionByPosTransaction(string $giftCardId, ?string $posTransactionId): ?array {
+		if ($posTransactionId === null || $posTransactionId === '') {
+			return null;
+		}
+
+		[$register, $schema] = $this->config(schemaKey: 'giftCardTransaction_schema');
+		if ($register === '' || $schema === '') {
+			return null;
+		}
+
+		try {
+			$rows = $this->getObjectService()->findAll(
+				config: [
+					'filters' => [
+						'giftCardId' => $giftCardId,
+						'posTransactionId' => $posTransactionId,
+						'register' => $register,
+						'schema' => $schema,
+					],
+					'limit' => 1,
+				]
+			);
+		} catch (\Throwable $e) {
+			return null;
+		}
+
+		foreach ((array)$rows as $row) {
+			$replay = $this->replayFromTransactionRow(row: $row);
+			if ($replay !== null) {
+				return $replay;
+			}
+		}
+
+		return null;
+	}//end findRedemptionByPosTransaction()
+
+	/**
+	 * Rebuild a redemption result from a stored transaction row.
+	 *
+	 * Split from {@see findRedemptionByPosTransaction()} to keep that method
+	 * inside the complexity limits: the lookup decides WHETHER to replay, this
+	 * decides what the replay says.
+	 *
+	 * @param mixed $row A stored giftCardTransaction row.
+	 *
+	 * @return array<string, mixed>|null The result to replay, or null when the
+	 *                                   row is not a redemption.
+	 */
+	private function replayFromTransactionRow(mixed $row): ?array {
+		$array = $row;
+		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
+			$array = $row->jsonSerialize();
+		}
+
+		if (is_array($array) === false) {
+			return null;
+		}
+
+		$type = (string)($array['type'] ?? '');
+		if ($type !== 'redeem' && $type !== 'partial_redeem') {
+			return null;
+		}
+
+		$balanceAfter = (float)($array['balanceAfter'] ?? 0);
+		$status = 'active';
+		if ($balanceAfter <= 0.0) {
+			$status = 'depleted';
+		}
+
+		return [
+			'amountApplied' => (float)($array['amount'] ?? 0),
+			'balanceAfter' => $balanceAfter,
+			'changeAmount' => 0.0,
+			'status' => $status,
+		];
+	}//end replayFromTransactionRow()
 
 	/**
 	 * Refund an amount onto a card.

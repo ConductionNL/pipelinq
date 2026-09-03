@@ -36,6 +36,7 @@ use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
 use OCP\IUserSession;
+use Throwable;
 
 /**
  * REST controller for Segment entities.
@@ -186,7 +187,20 @@ class SegmentController extends Controller {
 			return $this->forbidden();
 		}
 
-		$size = $this->segmentService->refreshSegmentSize(segmentId: $id);
+		try {
+			$size = $this->segmentService->refreshSegmentSize(segmentId: $id);
+		} catch (Throwable $e) {
+			// A refresh that could not be persisted must not answer 200 with the
+			// new count: the stored record still holds the old one, and the
+			// caller would have no way to know. The service has already logged
+			// the cause; this controller carries no logger of its own.
+			unset($e);
+			return new JSONResponse(
+				['error' => 'The refreshed segment size could not be saved'],
+				Http::STATUS_INTERNAL_SERVER_ERROR
+			);
+		}
+
 		return new JSONResponse(['estimatedSize' => $size]);
 	}//end refreshSize()
 

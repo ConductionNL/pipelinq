@@ -33,6 +33,7 @@ use OCP\ICache;
 use OCP\ICacheFactory;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 use Throwable;
 
 /**
@@ -490,11 +491,32 @@ class SegmentService {
 			return 0;
 		}
 
-		$size = $this->estimateSize(segmentId: $segmentId);
+		// 🔴 A REFRESH THAT READS THE CACHE IS NOT A REFRESH.
+		//
+		// This called estimateSize(), which returns the cached count when one
+		// is present -- so POST /api/segments/{id}/size answered, and then
+		// PERSISTED, the very stale estimate the caller asked it to replace.
+		// Editing a segment's rules and refreshing left the old number on the
+		// record, looking freshly computed.
+		$size = $this->recomputeSize(segmentId: $segmentId);
 		$payload = $segment;
 		$payload['estimatedSize'] = $size;
 		$payload['updatedAt'] = gmdate('Y-m-d\TH:i:s\Z');
-		$this->saveSegmentObject(payload: $payload, id: $this->extractSegmentId(payload: $segment));
+
+		// 🔴 AND A FAILED WRITE IS NOT A REFRESH EITHER.
+		//
+		// saveSegmentObject() answers null when the write failed, and that
+		// return was discarded, so the endpoint reported 200 with the new count
+		// over a record that still holds the old one. Throwing lets the
+		// controller answer honestly; the caller can retry.
+		$saved = $this->saveSegmentObject(
+			payload: $payload,
+			id: $this->extractSegmentId(payload: $segment)
+		);
+		if ($saved === null) {
+			throw new RuntimeException('Pipelinq: the refreshed segment size could not be persisted.');
+		}
+
 		return $size;
 	}//end refreshSegmentSize()
 
@@ -727,12 +749,34 @@ class SegmentService {
 	 * @spec openspec/specs/marketing-segmentation/spec.md#requirement-segments-are-live-not-frozen-lists
 	 */
 	public function estimateSize(string $segmentId): int {
-		$cache = $this->getEstimateCache();
-		$cacheKey = 'estimate:' . $segmentId;
-		$cached = $this->readEstimateCache(cache: $cache, cacheKey: $cacheKey);
+		$cached = $this->readEstimateCache(
+			cache: $this->getEstimateCache(),
+			cacheKey: ('estimate:' . $segmentId)
+		);
 		if ($cached !== null) {
 			return $cached;
 		}
+
+		return $this->recomputeSize(segmentId: $segmentId);
+	}//end estimateSize()
+
+	/**
+	 * Count a segment's members, ignoring any cached estimate, and re-cache.
+	 *
+	 * Split from {@see estimateSize()} rather than gated by a boolean argument
+	 * on it: the two answer different questions — "what is this segment's size"
+	 * versus "count it again now" — and a flag that switches a method between
+	 * two behaviours is the shape phpmd's BooleanArgumentFlag rule names.
+	 *
+	 * @param string $segmentId Segment UUID or slug.
+	 *
+	 * @return int The freshly counted size.
+	 *
+	 * @spec openspec/specs/marketing-segmentation/spec.md#requirement-segments-are-live-not-frozen-lists
+	 */
+	public function recomputeSize(string $segmentId): int {
+		$cache = $this->getEstimateCache();
+		$cacheKey = 'estimate:' . $segmentId;
 
 		$segment = $this->loadSegment(segmentId: $segmentId);
 		if ($segment === null) {
@@ -753,7 +797,7 @@ class SegmentService {
 		}
 
 		return $count;
-	}//end estimateSize()
+	}//end recomputeSize()
 
 	/**
 	 * Read a cached estimate count, if present and int-like.

@@ -241,6 +241,24 @@ class ContactSyncController extends Controller {
 				objectType: $objectType,
 				objectId: $objectId
 			);
+
+			// 🔴 null MEANS THE SYNC DID NOT HAPPEN.
+			//
+			// syncToContacts() answers null when the Contacts app is
+			// unavailable, the object was not found, or the vCard write failed.
+			// This used to answer 200 {success: true, contactsUid: null} over
+			// every one of those, so a caller was told the write-back succeeded
+			// while nothing had been written to the addressbook at all.
+			if ($contactsUid === null) {
+				return new JSONResponse(
+					[
+						'success' => false,
+						'error' => $this->l10n->t('Write-back to Contacts did not complete'),
+					],
+					Http::STATUS_INTERNAL_SERVER_ERROR
+				);
+			}
+
 			return new JSONResponse(
 				[
 					'success' => true,
