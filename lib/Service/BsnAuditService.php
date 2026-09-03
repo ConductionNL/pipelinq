@@ -118,16 +118,7 @@ class BsnAuditService {
 		$now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
 		$retainUntil = $now->modify('+' . self::RETENTION_YEARS . ' years');
 
-		// A caller that already HOLDS the subject's hash passes it through.
-		// Hashing an empty `$rawBsn` yields sha256("") — the same constant for
-		// every person — which is an audit record that names no data subject.
-		// That is what BrpController::revealAddress produced for every
-		// geheimhouding reveal, because the raw BSN is not reconstructible there
-		// and the persoon already carries its own hash.
-		$subjectHash = BsnValidationService::hash($rawBsn);
-		if ($bsnHash !== null && $bsnHash !== '') {
-			$subjectHash = $bsnHash;
-		}
+		$subjectHash = $this->resolveSubjectHash(rawBsn: $rawBsn, bsnHash: $bsnHash);
 
 		$record = [
 			'action' => $action,
@@ -205,6 +196,35 @@ class BsnAuditService {
 			return '';
 		}//end try
 	}//end recordLookup()
+
+	/**
+	 * The hash that identifies the data subject of an audit record.
+	 *
+	 * A caller that already HOLDS the subject's hash passes it through.
+	 * Hashing an empty `$rawBsn` yields sha256("") — the same constant for
+	 * every person — which is an audit record that names no data subject at
+	 * all. That is what BrpController::revealAddress produced for every
+	 * geheimhouding reveal, because the raw BSN is not reconstructible there
+	 * and the persoon already carries its own hash.
+	 *
+	 * Extracted from {@see recordLookup()} to keep that method inside the
+	 * length limit.
+	 *
+	 * @param string $rawBsn The raw BSN, possibly empty.
+	 * @param string|null $bsnHash An already-computed hash, when the caller has one.
+	 *
+	 * @return string The subject hash to store.
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) BsnValidationService::hash is a pure stateless helper — the same
+	 * justification recordLookup() already carries for the call this was extracted from.
+	 */
+	private function resolveSubjectHash(string $rawBsn, ?string $bsnHash): string {
+		if ($bsnHash !== null && $bsnHash !== '') {
+			return $bsnHash;
+		}
+
+		return BsnValidationService::hash($rawBsn);
+	}//end resolveSubjectHash()
 
 	/**
 	 * Pseudonymise audit records linked to a given BSN (AVG art. 17).

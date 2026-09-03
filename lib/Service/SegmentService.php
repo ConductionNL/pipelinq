@@ -498,7 +498,7 @@ class SegmentService {
 		// PERSISTED, the very stale estimate the caller asked it to replace.
 		// Editing a segment's rules and refreshing left the old number on the
 		// record, looking freshly computed.
-		$size = $this->estimateSize(segmentId: $segmentId, bypassCache: true);
+		$size = $this->recomputeSize(segmentId: $segmentId);
 		$payload = $segment;
 		$payload['estimatedSize'] = $size;
 		$payload['updatedAt'] = gmdate('Y-m-d\TH:i:s\Z');
@@ -743,21 +743,38 @@ class SegmentService {
 	 * raising on the segment-detail view.
 	 *
 	 * @param string $segmentId Segment UUID or slug.
-	 * @param bool $bypassCache Recompute even when a cached estimate exists.
 	 *
 	 * @return int Count of matching entities; 0 on failure.
 	 *
 	 * @spec openspec/specs/marketing-segmentation/spec.md#requirement-segments-are-live-not-frozen-lists
 	 */
-	public function estimateSize(string $segmentId, bool $bypassCache = false): int {
+	public function estimateSize(string $segmentId): int {
+		$cached = $this->readEstimateCache(
+			cache: $this->getEstimateCache(),
+			cacheKey: ('estimate:' . $segmentId)
+		);
+		if ($cached !== null) {
+			return $cached;
+		}
+
+		return $this->recomputeSize(segmentId: $segmentId);
+	}//end estimateSize()
+
+	/**
+	 * Count a segment's members, ignoring any cached estimate, and re-cache.
+	 *
+	 * Split from {@see estimateSize()} rather than gated by a boolean argument
+	 * on it: the two answer different questions — "what is this segment's size"
+	 * versus "count it again now" — and a flag that switches a method between
+	 * two behaviours is the shape phpmd's BooleanArgumentFlag rule names.
+	 *
+	 * @param string $segmentId Segment UUID or slug.
+	 *
+	 * @return int The freshly counted size.
+	 */
+	public function recomputeSize(string $segmentId): int {
 		$cache = $this->getEstimateCache();
 		$cacheKey = 'estimate:' . $segmentId;
-		if ($bypassCache === false) {
-			$cached = $this->readEstimateCache(cache: $cache, cacheKey: $cacheKey);
-			if ($cached !== null) {
-				return $cached;
-			}
-		}
 
 		$segment = $this->loadSegment(segmentId: $segmentId);
 		if ($segment === null) {
@@ -778,7 +795,7 @@ class SegmentService {
 		}
 
 		return $count;
-	}//end estimateSize()
+	}//end recomputeSize()
 
 	/**
 	 * Read a cached estimate count, if present and int-like.

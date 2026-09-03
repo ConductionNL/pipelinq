@@ -3613,7 +3613,9 @@ OC.L10N.register(
         "No flow is running for this deal": "Er loopt geen flow voor deze deal",
         "No tasks yet. Add one to plan the next step on this deal.": "Nog geen taken. Voeg er een toe om de volgende stap op deze deal te plannen.",
         "Nobody is linked to this deal yet. Open a contact and add this deal to their leads.": "Er is nog niemand aan deze deal gekoppeld. Open een contactpersoon en voeg deze deal toe aan hun leads.",
-        "on this deal": "op deze deal"
+        "on this deal": "op deze deal",
+        "Pending MFA secret": "Nog niet bevestigde tweede factor",
+        "A second factor that has been set up but not yet confirmed with a code. It never counts as a working second factor.": "Een tweede factor die is ingesteld maar nog niet met een code is bevestigd. Deze telt nooit als werkende tweede factor."
     },
     "nplurals=2; plural=(n != 1);"
 )
