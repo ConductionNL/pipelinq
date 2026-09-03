@@ -412,13 +412,6 @@ class ContactSyncControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testImportOfTheSameContactTwiceIsIdempotent(): void {
-		$this->markTestSkipped(
-			'BUG: ContactSyncService::importContact always saves with uuid=null and '
-			. 'never looks for an existing object carrying the same contactsUid, so '
-			. 're-importing one addressbook contact creates duplicate clients — see '
-			. 'coordinator report'
-		);
-
 		$captured = [];
 		$service = $this->realSyncService(
 			ncContacts: [['UID' => 'nc-uid-1', 'FN' => 'Jan Jansen']],
@@ -612,6 +605,13 @@ class ContactSyncControllerTest extends TestCase {
 			/**
 			 * @param array<int, array<string, mixed>> $captured Capture sink, by reference.
 			 */
+			/**
+			 * Objects this fake has stored, keyed by uuid.
+			 *
+			 * @var array<string, array<string, mixed>>
+			 */
+			private array $stored = [];
+
 			public function __construct(
 				private array &$captured,
 			) {
@@ -656,8 +656,15 @@ class ContactSyncControllerTest extends TestCase {
 			): ObjectEntityInterface {
 				$this->captured[] = ['object' => $object, 'uuid' => $uuid, 'schema' => (string)$schema];
 
+				$assigned = ($uuid ?? ('obj-' . count($this->captured)));
+				// Remember what was stored, so findAll() below can answer the
+				// duplicate lookup. A fake whose findAll() always answers []
+				// cannot represent 'already imported', which is the whole
+				// scenario -- it would pass whether or not the lookup exists.
+				$this->stored[$assigned] = $object + ['id' => $assigned];
+
 				$entity = new ObjectEntity();
-				$entity->setUuid(($uuid ?? ('obj-' . count($this->captured))));
+				$entity->setUuid($assigned);
 				$entity->setRegister((string)$register);
 				$entity->setSchema((string)$schema);
 				$entity->setObject($object);
@@ -666,16 +673,34 @@ class ContactSyncControllerTest extends TestCase {
 			}//end saveObject()
 
 			/**
-			 * No stored objects.
+			 * Answer the stored objects matching a `contactsUid` filter.
+			 *
+			 * Only that one filter key is honoured, which is all the import
+			 * path asks for. Register/schema are read from `filters` exactly as
+			 * the real service does, so a caller that puts them at the top
+			 * level gets nothing back -- the same silent-empty behaviour the
+			 * real ObjectService has.
 			 *
 			 * @param array<string, mixed> $config The config.
 			 * @param bool $_rbac RBAC posture.
 			 * @param bool $_multitenancy Tenancy posture.
 			 *
-			 * @return array<int, mixed> Empty.
+			 * @return array<int, mixed> Matching rows.
 			 */
 			public function findAll(array $config = [], bool $_rbac = true, bool $_multitenancy = true): array {
-				return [];
+				$wanted = (string)($config['filters']['contactsUid'] ?? '');
+				if ($wanted === '') {
+					return [];
+				}
+
+				$out = [];
+				foreach ($this->stored as $object) {
+					if ((string)($object['contactsUid'] ?? '') === $wanted) {
+						$out[] = $object;
+					}
+				}
+
+				return $out;
 			}//end findAll()
 		};
 
