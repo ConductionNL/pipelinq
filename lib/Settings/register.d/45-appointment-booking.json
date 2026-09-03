@@ -19,7 +19,7 @@
         "icon": "Tag",
         "version": "1.0.0",
         "summary": "A bookable service offered by the business (haircut, oil change, consultation).",
-        "description": "Defines a bookable service with duration, pricing, skill/resource requirements, multi-step composition, and booking policies (online bookability, deposit, cancellation rules). Consumed by availability and booking services. REQ-APT-001.",
+        "description": "Defines a bookable service with duration, pricing, skill/resource requirements, multi-step composition, and booking policies (online bookability, deposit, cancellation rules). Consumed by availability and booking services..",
         "required": [
           "name",
           "durationMinutes",
@@ -200,7 +200,7 @@
         "icon": "AccountTie",
         "version": "1.0.0",
         "summary": "A bookable resource (staff member, treatment room, or piece of equipment).",
-        "description": "Represents anything a Service can be booked against — a stylist, mechanic, room or machine. Carries working hours, vacations, skills, and optional calendar sync. REQ-APT-002.",
+        "description": "Represents anything a Service can be booked against — a stylist, mechanic, room or machine. Carries working hours, vacations, skills, and optional calendar sync..",
         "@type": "Thing",
         "required": [
           "name",
@@ -727,7 +727,7 @@
         "icon": "DatabaseClock",
         "version": "1.0.0",
         "summary": "Internal precomputed free-slots cache per resource per date (read-only, regeneratable).",
-        "description": "Read-only optimisation produced by the availability service (member 02). NEVER hand-edited — the slot computation is the source of truth. Materialised so the portal can answer day-grid queries in sub-second time without recomputing per request. REQ-APT-016.",
+        "description": "Read-only optimisation produced by the availability service (member 02). NEVER hand-edited — the slot computation is the source of truth. Materialised so the portal can answer day-grid queries in sub-second time without recomputing per request..",
         "@type": "Thing",
         "x-openregister": {
           "internal": true,

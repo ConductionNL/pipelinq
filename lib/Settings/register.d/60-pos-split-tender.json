@@ -62,7 +62,7 @@
           },
           "code": {
             "type": "string",
-            "description": "Machine-readable identifier (CASH, CARD, VOUCHER, ACCOUNT, MOLLIE, STRIPE, ...) -- unique per register",
+            "description": "Machine-readable identifier (CASH, CARD, VOUCHER, ACCOUNT, MOLLIE, STRIPE,...) -- unique per register",
             "maxLength": 32,
             "minLength": 1,
             "facetable": true,
@@ -153,7 +153,7 @@
           },
           "reference": {
             "type": "string",
-            "description": "External reference (card auth code, voucher serial, ...) -- required when the tenderType has requiresReference=true",
+            "description": "External reference (card auth code, voucher serial,...) -- required when the tenderType has requiresReference=true",
             "maxLength": 128,
             "title": "Reference"
           },
