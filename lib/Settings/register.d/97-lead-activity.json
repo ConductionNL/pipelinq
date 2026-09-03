@@ -1,0 +1,48 @@
+{
+  "_meta": {
+    "spdx-license": "EUPL-1.2",
+    "spdx-copyright": "2026 Conduction B.V.",
+    "description": "Deal-scoped activity (ADR-037 fragment). Adds the three relations the LeadDetail tab strip needs and nothing else: task.lead, ticket.lead and contact.leads. Purely additive — no property changes type, none becomes required, and no existing value moves, so the register import needs no breaking-change acknowledgement.\n\nWHY THE CONTACT RELATION SITS ON THE CONTACT. A deal has several stakeholders, so the relation has to be plural. It is modelled as `contact.leads` rather than `lead.contacts` because the object-list widget filters the CHILD schema: `contact?leads=<leadId>` is a query OpenRegister answers with array containment (verified against a live instance — a single-value filter on an array property emits JSON_CONTAINS / jsonb @>), whereas an array held on the lead could only be resolved by filtering `contact` on `id`, and `id` is NOT a filterable field — that request returns EVERY contact and looks like it worked. Carrying it here also answers the question from the other side, which the ContactDetail page asks: which deals is this person on.\n\n`lead.contact` is untouched. It stays the deal's PRIMARY contact, it is what `x-relation-filter` scopes on the lead form, and existing data keeps its meaning."
+  },
+  "components": {
+    "schemas": {
+      "task": {
+        "properties": {
+          "lead": {
+            "type": "string",
+            "title": "Lead",
+            "description": "UUID reference to the deal this task belongs to. Set automatically when the task is created from the Tasks tab on a lead — the object-list widget merges its resolved filter into the create payload, so the deal is pre-linked without the user picking it. A task may hang off a client, a request or a deal; the three are independent.",
+            "format": "uuid",
+            "$ref": "lead"
+          }
+        }
+      },
+      "ticket": {
+        "properties": {
+          "lead": {
+            "type": "string",
+            "title": "Lead",
+            "description": "UUID reference to the deal this ticket belongs to. Carries a contactmoment (ticketType `interaction`) logged while working a deal, so the conversation history sits with the deal rather than only with the account. NO `x-relation-filter` scoping the picker to the ticket's own client, deliberately: gate-54 resolves an `@object.<field>` token against the properties declared in the FILE it reads, and this is a partial overlay that declares only `lead`, so `@object.client` is unresolvable here however real `ticket.client` is in the assembled schema.",
+            "format": "uuid",
+            "$ref": "lead"
+          }
+        }
+      },
+      "contact": {
+        "properties": {
+          "leads": {
+            "type": "array",
+            "title": "Leads",
+            "description": "The deals this person is a stakeholder on. Many-to-many: a deal is worked across several people at an account, and a person carries over from one deal to the next. The lead's own `contact` field names the PRIMARY contact and is a different question — this list is everyone involved.",
+            "items": {
+              "type": "string",
+              "format": "uuid",
+              "$ref": "lead"
+            },
+            "referenceType": "lead"
+          }
+        }
+      }
+    }
+  }
+}

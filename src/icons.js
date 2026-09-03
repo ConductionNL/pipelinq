@@ -26,6 +26,7 @@ import AccountSearch from 'vue-material-design-icons/AccountSearch.vue'
 import AccountSearchOutline from 'vue-material-design-icons/AccountSearchOutline.vue'
 import AccountStarOutline from 'vue-material-design-icons/AccountStarOutline.vue'
 import AccountTie from 'vue-material-design-icons/AccountTie.vue'
+import AccountVoice from 'vue-material-design-icons/AccountVoice.vue'
 import AlertCircleOutline from 'vue-material-design-icons/AlertCircleOutline.vue'
 import AlertOctagon from 'vue-material-design-icons/AlertOctagon.vue'
 import AlertOctagonOutline from 'vue-material-design-icons/AlertOctagonOutline.vue'
@@ -130,6 +131,7 @@ import Sitemap from 'vue-material-design-icons/Sitemap.vue'
 import SourceBranch from 'vue-material-design-icons/SourceBranch.vue'
 import SourceMerge from 'vue-material-design-icons/SourceMerge.vue'
 import Star from 'vue-material-design-icons/Star.vue'
+import StoreOutline from 'vue-material-design-icons/StoreOutline.vue'
 import TableColumn from 'vue-material-design-icons/TableColumn.vue'
 import Tag from 'vue-material-design-icons/Tag.vue'
 import TagOutline from 'vue-material-design-icons/TagOutline.vue'
@@ -159,6 +161,7 @@ export default {
 	AccountSearchOutline,
 	AccountStarOutline,
 	AccountTie,
+	AccountVoice,
 	AlertCircleOutline,
 	AlertOctagon,
 	AlertOctagonOutline,
@@ -263,6 +266,7 @@ export default {
 	SourceBranch,
 	SourceMerge,
 	Star,
+	StoreOutline,
 	TableColumn,
 	Tag,
 	TagOutline,
