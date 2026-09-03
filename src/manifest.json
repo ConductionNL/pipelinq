@@ -266,6 +266,14 @@
 			"order": 215
 		},
 		{
+			"id": "StoreMenu",
+			"label": "Store",
+			"icon": "StoreOutline",
+			"route": "Store",
+			"section": "footer",
+			"order": 92
+		},
+		{
 			"id": "ReportsMenu",
 			"label": "Reports",
 			"icon": "ChartBoxOutline",
@@ -830,16 +838,83 @@
 					] } },
 					{ "id": "contact-email", "type": "integration", "integrationId": "email", "title": "Emails", "icon": "Email" },
 					{ "id": "contact-calendar", "type": "integration", "integrationId": "calendar", "title": "Meetings", "icon": "Calendar" },
-					{ "id": "contact-files", "type": "integration", "integrationId": "files", "title": "Files", "icon": "FolderOutline" }
+					{ "id": "contact-files", "type": "integration", "integrationId": "files", "title": "Files", "icon": "FolderOutline" },
+					{
+						"id": "contact-contactmoments",
+						"type": "object-list",
+						"title": "Contact moments",
+						"icon": "AccountVoice",
+						"_note": "Contactmomenten this person was part of. Same primitive as the lead page carries, bound to the person rather than the deal: a contactmoment is a `ticket` with ticketType `interaction` (99-unify-ticket-supertype), and both filter keys are needed, because `contact` alone would also list every request and complaint this person filed. `contact` is already a scalar FK on ticket, so this needed no schema change and allowCreate pre-links a logged moment to the person.",
+						"content": {
+							"register": "pipelinq",
+							"schema": "ticket",
+							"filter": {
+								"contact": "@objectId",
+								"ticketType": "interaction"
+							},
+							"sort": {
+								"field": "occurredAt",
+								"dir": "desc"
+							},
+							"columns": [
+								{
+									"key": "title",
+									"label": "Subject"
+								},
+								{
+									"key": "channel",
+									"label": "Channel"
+								},
+								{
+									"key": "occurredAt",
+									"label": "When"
+								},
+								{
+									"key": "status",
+									"label": "Status"
+								}
+							],
+							"allowCreate": true,
+							"limit": 25,
+							"rowRoute": "TicketDetail",
+							"emptyText": "No contact moments yet. Log one to record what was said."
+						}
+					},
+					{
+						"id": "contact-panels",
+						"type": "tabs",
+						"title": "Contact panels",
+						"icon": "ViewDashboard",
+						"_note": "The same strip the lead page carries, for the same reason: four leaves describing one person, each previously a card with its own header, only one of them ever read. The children stay in `widgets` and out of `layout`, or the tabs widget and the grid would each render them once. Related keeps its own cell in the right rail rather than becoming a tab, so the person and their graph stay on screen together.",
+						"content": {
+							"ariaLabel": "Contact details",
+							"tabs": [
+								{
+									"widgetId": "contact-email",
+									"label": "Mail"
+								},
+								{
+									"widgetId": "contact-calendar",
+									"label": "Appointments"
+								},
+								{
+									"widgetId": "contact-files",
+									"label": "Files"
+								},
+								{
+									"widgetId": "contact-contactmoments",
+									"label": "Contact moments"
+								}
+							]
+						}
+					}
 				],
 				"layout": [
-					{ "id": "1", "widgetId": "contact-data",     "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 3 },
-					{ "id": "2", "widgetId": "contact-related",  "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 3 },
-					{ "id": "6-1", "widgetId": "contact-kpis-open-deals",       "gridX": 8, "gridY": 3, "gridWidth": 4, "gridHeight": 2 },
-					{ "id": "6-2", "widgetId": "contact-kpis-open-deal-value",  "gridX": 8, "gridY": 5, "gridWidth": 4, "gridHeight": 2 },
-					{ "id": "3", "widgetId": "contact-email",    "gridX": 0, "gridY": 3, "gridWidth": 8, "gridHeight": 4 },
-					{ "id": "4", "widgetId": "contact-calendar", "gridX": 0, "gridY": 7, "gridWidth": 8, "gridHeight": 3 },
-					{ "id": "5", "widgetId": "contact-files",    "gridX": 8, "gridY": 7, "gridWidth": 4, "gridHeight": 3 }
+					{ "id": "1", "widgetId": "contact-data",     "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 4 },
+					{ "id": "6-1", "widgetId": "contact-kpis-open-deals",       "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 2 },
+					{ "id": "6-2", "widgetId": "contact-kpis-open-deal-value",  "gridX": 8, "gridY": 2, "gridWidth": 4, "gridHeight": 2 },
+					{ "id": "2", "widgetId": "contact-related",  "gridX": 8, "gridY": 4, "gridWidth": 4, "gridHeight": 4 },
+					{ "id": "7", "widgetId": "contact-panels",   "gridX": 0, "gridY": 4, "gridWidth": 8, "gridHeight": 8 }
 				],
 				"relatedCollections": [
 					{
@@ -1011,20 +1086,194 @@
 						}
 					},
 					{ "id": "lead-notes", "type": "integration", "integrationId": "notes", "title": "Notes", "icon": "NoteTextOutline" },
-					{ "id": "lead-decisions", "type": "integration", "integrationId": "decidesk-decisions", "title": "Besluitvorming", "icon": "Gavel" }
+					{ "id": "lead-decisions", "type": "integration", "integrationId": "decidesk-decisions", "title": "Besluitvorming", "icon": "Gavel" },
+					{
+						"id": "lead-contacts",
+						"type": "object-list",
+						"title": "Contacts",
+						"icon": "AccountGroup",
+						"_note": "The people this deal is worked with, read from contact.leads (97-lead-activity). allowCreate is OFF and that is not an oversight: the widget pre-fills a created object by merging its resolved filter into the payload as a SCALAR, and `leads` is an array. OpenRegister answers a scalar written into an array property with 400, so an Add button here would offer a create that always fails. A person is linked to the deal from the contact form instead.",
+						"content": {
+							"register": "pipelinq",
+							"schema": "contact",
+							"filter": {
+								"leads": "@objectId"
+							},
+							"columns": [
+								{
+									"key": "name",
+									"label": "Name"
+								},
+								{
+									"key": "role",
+									"label": "Role"
+								},
+								{
+									"key": "email",
+									"label": "Email"
+								},
+								{
+									"key": "phone",
+									"label": "Phone"
+								}
+							],
+							"limit": 25,
+							"rowRoute": "ContactDetail",
+							"emptyText": "Nobody is linked to this deal yet. Open a contact and add this deal to their leads."
+						}
+					},
+					{
+						"id": "lead-contactmoments",
+						"type": "object-list",
+						"title": "Contact moments",
+						"icon": "AccountVoice",
+						"_note": "Contactmomenten logged while working this deal. A contactmoment is a `ticket` with ticketType `interaction` (99-unify-ticket-supertype), so the filter needs BOTH keys: without the discriminator this list would also show every request and complaint on the account. allowCreate is on and both filter values are scalars, so a logged moment is pre-linked to the deal and typed correctly without the user picking either.",
+						"content": {
+							"register": "pipelinq",
+							"schema": "ticket",
+							"filter": {
+								"lead": "@objectId",
+								"ticketType": "interaction"
+							},
+							"sort": {
+								"field": "occurredAt",
+								"dir": "desc"
+							},
+							"columns": [
+								{
+									"key": "title",
+									"label": "Subject"
+								},
+								{
+									"key": "channel",
+									"label": "Channel"
+								},
+								{
+									"key": "occurredAt",
+									"label": "When"
+								},
+								{
+									"key": "status",
+									"label": "Status"
+								}
+							],
+							"allowCreate": true,
+							"limit": 25,
+							"rowRoute": "TicketDetail",
+							"emptyText": "No contact moments yet. Log one to keep the conversation with this deal."
+						}
+					},
+					{
+						"id": "lead-tasks",
+						"type": "object-list",
+						"title": "Tasks",
+						"icon": "ClipboardCheckOutline",
+						"content": {
+							"register": "pipelinq",
+							"schema": "task",
+							"filter": {
+								"lead": "@objectId"
+							},
+							"sort": {
+								"field": "deadline",
+								"dir": "asc"
+							},
+							"columns": [
+								{
+									"key": "subject",
+									"label": "Task"
+								},
+								{
+									"key": "status",
+									"label": "Status"
+								},
+								{
+									"key": "priority",
+									"label": "Priority"
+								},
+								{
+									"key": "deadline",
+									"label": "Due"
+								}
+							],
+							"allowCreate": true,
+							"limit": 25,
+							"rowRoute": "TaskDetail",
+							"viewAllRoute": "Tasks",
+							"emptyText": "No tasks yet. Add one to plan the next step on this deal."
+						}
+					},
+					{
+						"id": "lead-flow-runs",
+						"type": "flow-runs",
+						"title": "Flow runs",
+						"icon": "Sitemap",
+						"_note": "Takes the cell the line-items list used to hold, which moved into the tab strip. `subject: '@objectId'` binds this deal, so OpenRegister scopes the active and finished reads to it server-side. `rowRoute` rather than `runRoute`, for the reason dossiq records on case-flow-runs: pipelinq has no run detail page, and FlowDetail (/flows/:id) resolves a FLOW id, so pointing a run uuid at it would open nothing.",
+						"content": {
+							"subject": "@objectId",
+							"limit": 5,
+							"pollSeconds": 15,
+							"rowRoute": "FlowDetail",
+							"emptyText": "No flow is running for this deal"
+						}
+					},
+					{
+						"id": "lead-panels",
+						"type": "tabs",
+						"title": "Deal panels",
+						"icon": "ViewDashboard",
+						"_note": "Nine panels describing one deal used to be nine cards stacked down the page, each with its own header and Actions menu, only one of them ever read. The strip takes over the title and the card, the children render bare, and the Actions menu is hoisted into the bar where it rebinds to whichever tab is open. The nine children stay in `widgets` and are DELIBERATELY absent from `layout`: the tabs widget renders them, so a layout entry would render each one twice.",
+						"content": {
+							"ariaLabel": "Deal details",
+							"tabs": [
+								{
+									"widgetId": "lead-lines",
+									"label": "Line items"
+								},
+								{
+									"widgetId": "lead-notes",
+									"label": "Notes"
+								},
+								{
+									"widgetId": "lead-files",
+									"label": "Files"
+								},
+								{
+									"widgetId": "lead-email",
+									"label": "Mail"
+								},
+								{
+									"widgetId": "lead-calendar",
+									"label": "Appointments"
+								},
+								{
+									"widgetId": "lead-decisions",
+									"label": "Decisions"
+								},
+								{
+									"widgetId": "lead-contacts",
+									"label": "Contacts"
+								},
+								{
+									"widgetId": "lead-contactmoments",
+									"label": "Contact moments"
+								},
+								{
+									"widgetId": "lead-tasks",
+									"label": "Tasks"
+								}
+							]
+						}
+					}
 				],
 				"layout": [
-					{ "id": "1", "widgetId": "lead-deal",          "gridX": 0, "gridY": 0,  "gridWidth": 8, "gridHeight": 3 },
-					{ "id": "7", "widgetId": "lead-kpi-value",     "gridX": 8, "gridY": 0,  "gridWidth": 4, "gridHeight": 2 },
-					{ "id": "9", "widgetId": "lead-kpi-lines",     "gridX": 8, "gridY": 2,  "gridWidth": 4, "gridHeight": 2 },
-					{ "id": "2", "widgetId": "lead-qualification", "gridX": 0, "gridY": 3,  "gridWidth": 8, "gridHeight": 4 },
-					{ "id": "3", "widgetId": "lead-related",       "gridX": 8, "gridY": 4,  "gridWidth": 4, "gridHeight": 3 },
-					{ "id": "4", "widgetId": "lead-email",         "gridX": 0, "gridY": 7,  "gridWidth": 8, "gridHeight": 4 },
-					{ "id": "5", "widgetId": "lead-files",         "gridX": 8, "gridY": 7,  "gridWidth": 4, "gridHeight": 4 },
-					{ "id": "8", "widgetId": "lead-lines",         "gridX": 0, "gridY": 11, "gridWidth": 8, "gridHeight": 4 },
-					{ "id": "6", "widgetId": "lead-calendar",      "gridX": 8, "gridY": 11, "gridWidth": 4, "gridHeight": 4 },
-					{ "id": "10", "widgetId": "lead-notes",        "gridX": 0, "gridY": 15, "gridWidth": 12, "gridHeight": 4 },
-					{ "id": "11", "widgetId": "lead-decisions",    "gridX": 0, "gridY": 19, "gridWidth": 12, "gridHeight": 4 }
+					{ "id": "1", "widgetId": "lead-deal",          "gridX": 0, "gridY": 0,  "gridWidth": 8, "gridHeight": 4 },
+					{ "id": "7", "widgetId": "lead-kpi-value",     "gridX": 8, "gridY": 0,  "gridWidth": 4, "gridHeight": 3 },
+					{ "id": "9", "widgetId": "lead-kpi-lines",     "gridX": 8, "gridY": 3,  "gridWidth": 4, "gridHeight": 3 },
+					{ "id": "2", "widgetId": "lead-qualification", "gridX": 0, "gridY": 4,  "gridWidth": 8, "gridHeight": 4 },
+					{ "id": "3", "widgetId": "lead-related",       "gridX": 8, "gridY": 6,  "gridWidth": 4, "gridHeight": 4 },
+					{ "id": "8", "widgetId": "lead-flow-runs",     "gridX": 8, "gridY": 10, "gridWidth": 4, "gridHeight": 5 },
+					{ "id": "12", "widgetId": "lead-panels",       "gridX": 0, "gridY": 8,  "gridWidth": 8, "gridHeight": 7 }
 				],
 				"lifecycleActions": { "field": "status", "transitions": [
 					{ "action": "win", "from": "open", "to": "won", "label": "Close as win", "confirm": "Close this lead as won?" },
@@ -1929,6 +2178,18 @@
 					"showMetadata": true
 				}
 			}
+		},
+		{
+			"id": "Store",
+			"route": "/store",
+			"type": "custom",
+			"title": "Store",
+			"component": "StoreGallery",
+			"config": {
+				"storeRegistry": true,
+				"documentationUrl": "https://pipelinq.conduction.nl"
+			},
+			"_note": "ADR-080: the store plane. Discovery belongs to OpenRegister, so this page reads /api/store/items, a thin action over AppHost's GenericStoreService, and the SSRF guard, the redirect refusal and the token stay in the engine. A custom component rather than type:index because store items are REMOTE objects: the object-backed index renderer resolves a local register plus schema and cannot address them. With no registry configured the engine answers not_configured WITHOUT a network call and the page renders pipelinq's built-in templates, which is Decision 4 and the only reason this surface may carry the word Store at all. Install is pipelinq's own and admin-guarded (Decision 3), and it writes commercial CONFIGURATION only (pipelines, queues, skills, catalogues, POS and loyalty setup); the record schemas are refused. PLACEMENT: footer, order 92, matching dossiq, between Documentation (160) and Reports (200). openbuild, hermiq and integriq put Store in the main section instead; ADR-080 records no placement decision, so one of the two conventions is wrong and the ADR needs an amendment either way. Ported from dossiq's Store and retargeted from case configuration to commercial configuration."
 		},
 		{
 			"id": "FeaturesRoadmap",

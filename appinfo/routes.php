@@ -544,6 +544,17 @@ return [
         ['name' => 'contract#summary',        'url' => '/api/contracts/metrics/summary', 'verb' => 'GET'],
         ['name' => 'contract#renewalMetrics', 'url' => '/api/contracts/metrics/renewal', 'verb' => 'GET'],
 
+        // Commercial-configuration store (ADR-080). Consume-only: pipelinq browses a
+        // remote registry through OpenRegister AppHost's GenericStoreService and
+        // installs CONFIGURATION only (pipelines, queues, skills, catalogues,
+        // POS and loyalty setup). The record schemas are refused by
+        // StoreController::INSTALLABLE_SLUGS. These sit ABOVE the SPA catch-all
+        // because that route matches `.*` and would otherwise answer them with HTML.
+        ['name' => 'store#search',       'url' => '/api/store/items',                 'verb' => 'GET'],
+        ['name' => 'store#install',      'url' => '/api/store/items/{slug}/install',  'verb' => 'POST', 'requirements' => ['slug' => '[a-z0-9][a-z0-9-]*[a-z0-9]']],
+        ['name' => 'store#getSettings',  'url' => '/api/store/settings',              'verb' => 'GET'],
+        ['name' => 'store#saveSettings', 'url' => '/api/store/settings',              'verb' => 'PUT'],
+
         // SPA catch-all — serves the Vue app for any frontend route (history mode)
         ['name' => 'dashboard#page', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.*'], 'defaults' => ['path' => '']],
     ],
