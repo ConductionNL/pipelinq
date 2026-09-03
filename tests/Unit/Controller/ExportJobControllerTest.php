@@ -977,12 +977,6 @@ class ExportJobControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testCreateDestinationDropsTokenShapedCredentials(): void {
-		$this->markTestSkipped(
-			'BUG: the destination payload filter is a denylist that misses '
-			. 'token / apiKey / connectionString / sasToken / clientSecret '
-			. '- see coordinator report'
-		);
-
 		$objects = $this->createMock(ObjectServiceInterface::class);
 		$objects->method('find')->willReturn(self::entity(self::STORED_DESTINATION));
 
