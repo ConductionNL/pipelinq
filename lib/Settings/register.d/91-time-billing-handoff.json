@@ -29,7 +29,7 @@
         "properties": {
           "shillinqOrganisationRef": {
             "type": "string",
-            "description": "The shillinq-resolvable customer/organisation reference used as the time-intake batch's organisationRef (time-billing-handoff-emit). Maintained by administrators/managers on the client record. A client without a mapping cannot be billed through the intake — the send surfaces an actionable 422 naming this client.",
+            "description": "The shillinq-resolvable customer/organisation reference used as the time-intake batch's organisationRef (time-billing-handoff-emit). Maintained by administrators/managers on the client record. A client without a mapping cannot be billed through the intake: the send surfaces an actionable 422 naming this client.",
             "title": "Shillinq Organisation Reference"
           }
         }

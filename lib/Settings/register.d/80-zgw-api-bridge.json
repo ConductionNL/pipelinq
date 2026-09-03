@@ -17,7 +17,7 @@
         "icon": "Server",
         "version": "1.0.0",
         "summary": "Configuration profile for a single ZGW deployment per gemeente (ZRC/DRC/BRC/ZTC/AC/NRC component URLs).",
-        "description": "Tracks the per-gemeente ZGW deployment configuration: the six component base URLs (ZRC, DRC, BRC, ZTC, AC, NRC), the bound ZgwClient credential reference, the actief/readOnly write toggles, and the optional mTLS material. Currently addressed only by the inbound status path (NrcNotificationListener via ZrcClient::getStatus) and NrcSubscriptionService; the ZGW write bridge (zaak/document/besluit creation) is not wired in this app — ZGW writes are routed via the openconnector ZGW connector instead. One endpoint per gemeente (gemeenteCode is the natural key). Mapped to Schema.org SoftwareApplication for register tooling.",
+        "description": "Tracks the per-gemeente ZGW deployment configuration: the six component base URLs (ZRC, DRC, BRC, ZTC, AC, NRC), the bound ZgwClient credential reference, the actief/readOnly write toggles, and the optional mTLS material. Currently addressed only by the inbound status path (NrcNotificationListener via ZrcClient::getStatus) and NrcSubscriptionService; the ZGW write bridge (zaak/document/besluit creation) is not wired in this app. ZGW writes are routed via the openconnector ZGW connector instead. One endpoint per gemeente (gemeenteCode is the natural key). Mapped to Schema.org SoftwareApplication for register tooling.",
         "x-schema-org": "schema:SoftwareApplication",
         "required": [
           "name",
@@ -130,7 +130,7 @@
         "icon": "Key",
         "version": "1.0.0",
         "summary": "JWT credentials per VNG-API-Common spec for one or more ZgwEndpoints.",
-        "description": "Holds the clientIdentifier (issued by the gemeente IT team) and the vault reference to the HS256 client secret used to mint per-request JWTs against VNG-API-Common-protected ZGW components. No raw secret is stored on the schema — the secretKluisRef points at a vault entry maintained by gemeente operations. Used by ZgwApiClient.mintJwt() for every outbound call. Mapped to Schema.org CreativeWork (credential-like, no closer Schema.org equivalent).",
+        "description": "Holds the clientIdentifier (issued by the gemeente IT team) and the vault reference to the HS256 client secret used to mint per-request JWTs against VNG-API-Common-protected ZGW components. No raw secret is stored on the schema: the secretKluisRef points at a vault entry maintained by gemeente operations. Used by ZgwApiClient.mintJwt() for every outbound call. Mapped to Schema.org CreativeWork (credential-like, no closer Schema.org equivalent).",
         "x-schema-org": "schema:CreativeWork",
         "required": [
           "clientIdentifier",

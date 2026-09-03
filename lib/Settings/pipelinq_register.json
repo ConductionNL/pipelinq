@@ -10,7 +10,7 @@
     "type": "application",
     "app": "pipelinq",
     "openregister": "^v0.2.10",
-    "description": "CRM data model — thin client on OpenRegister, no own database tables"
+    "description": "CRM data model: thin client on OpenRegister, no own database tables"
   },
   "components": {
     "registers": {
@@ -18,7 +18,7 @@
         "slug": "pipelinq",
         "title": "Pipelinq",
         "version": "1.0.0",
-        "description": "Client Relationship Management register for Pipelinq — manages clients, contacts, leads, requests, and pipelines using Schema.org and vCard (RFC 6350) standards.",
+        "description": "Client Relationship Management register for Pipelinq: manages clients, contacts, leads, requests, and pipelines using Schema.org and vCard (RFC 6350) standards.",
         "published": "2026-02-25T00:00:00+00:00",
         "schemas": [
           "client",
@@ -85,7 +85,7 @@
         "icon": "AccountStarOutline",
         "version": "1.1.0",
         "summary": "A client (person or organization) in the CRM",
-        "description": "Represents a client entity — either a natural person or an organization. Mapped to Schema.org Person/Organization and vCard (RFC 6350) field conventions. Clients are the primary relationship entity in Pipelinq.",
+        "description": "Represents a client entity: either a natural person or an organization. Mapped to Schema.org Person/Organization and vCard (RFC 6350) field conventions. Clients are the primary relationship entity in Pipelinq.",
         "linkedTypes": [
           "flow",
           "time-tracker",
@@ -108,7 +108,7 @@
           },
           "type": {
             "type": "string",
-            "description": "Entity type — person or organization (maps to schema:Person or schema:Organization)",
+            "description": "Entity type: person or organization (maps to schema:Person or schema:Organization)",
             "enum": [
               "person",
               "organization"
@@ -253,7 +253,7 @@
           },
           "verifiedBSN": {
             "type": "boolean",
-            "description": "True na succesvolle BRP-lookup; false na retentie-expiratie of art. 17 verwijdering. Beheerd door BrpController/BrpRetentionJob — NIET handmatig setbaar via UI.",
+            "description": "True na succesvolle BRP-lookup; false na retentie-expiratie of art. 17 verwijdering. Beheerd door BrpController/BrpRetentionJob: NIET handmatig setbaar via UI.",
             "default": false,
             "title": "BSN verified",
             "facetable": true
@@ -267,7 +267,7 @@
           },
           "secrecy": {
             "type": "boolean",
-            "description": "Afgeleid uit OptOutVlag (geheimhouding-gemeente / geheimhouding-brp). Wanneer true: adresgegevens worden afgeschermd in standaard-views — alleen via expliciete \"toon adres onder verantwoording\" zichtbaar (met extra audit-entry).",
+            "description": "Afgeleid uit OptOutVlag (geheimhouding-gemeente / geheimhouding-brp). Wanneer true: adresgegevens worden afgeschermd in standaard-views. Alleen via expliciete \"toon adres onder verantwoording\" zichtbaar (met extra audit-entry).",
             "default": false,
             "title": "Confidentiality",
             "facetable": true
@@ -354,7 +354,7 @@
         "icon": "AccountArrowRightOutline",
         "version": "1.4.0",
         "summary": "A sales lead or business opportunity",
-        "description": "Represents a sales lead — a potential deal or business opportunity linked to a client. Tracks value, probability, pipeline stage, and lifecycle status. Mapped to Schema.org Demand.",
+        "description": "Represents a sales lead: a potential deal or business opportunity linked to a client. Tracks value, probability, pipeline stage, and lifecycle status. Mapped to Schema.org Demand.",
         "linkedTypes": [
           "deck",
           "flow",
@@ -427,7 +427,7 @@
             "daysSinceActivity": {
               "type": "integer",
               "materialise": false,
-              "description": "Staleness — days since the lead was last touched. Derived from @self.updated (the object's last save) so it is always fresh on read; lead-management spec staleness scenario (Scenario 49). A consumer flags the lead as stale when this exceeds the configured threshold.",
+              "description": "Staleness: days since the lead was last touched. Derived from @self.updated (the object's last save) so it is always fresh on read; lead-management spec staleness scenario (Scenario 49). A consumer flags the lead as stale when this exceeds the configured threshold.",
               "expression": {
                 "dateDiff": {
                   "from": {
@@ -441,7 +441,7 @@
             "daysInStage": {
               "type": "integer",
               "materialise": false,
-              "description": "Aging — days the lead has spent in its current pipeline stage. Diffs stageEnteredAt against now; falls back to @self.created when the stage-change writer has not yet populated stageEnteredAt (lead-management spec Aging Indicator, Scenario 50/51).",
+              "description": "Aging: days the lead has spent in its current pipeline stage. Diffs stageEnteredAt against now; falls back to @self.created when the stage-change writer has not yet populated stageEnteredAt (lead-management spec Aging Indicator, Scenario 50/51).",
               "expression": {
                 "dateDiff": {
                   "from": {
@@ -470,7 +470,7 @@
             "weightedValue": {
               "type": "number",
               "materialise": false,
-              "description": "Probability-weighted lead value (value * probability / 100). Single-object derived figure feeding the Pipeline Value KPI. NOTE: the lead-management spec's 'lead value from line items' sum (Scenario: Calculate lead value from line items) is a cross-schema aggregation over leadProduct rows and is NOT expressible as a single-object calculation — it remains a service/frontend concern per ADR-031 exception (2).",
+              "description": "Probability-weighted lead value (value * probability / 100). Single-object derived figure feeding the Pipeline Value KPI. NOTE: the lead-management spec's 'lead value from line items' sum (Scenario: Calculate lead value from line items) is a cross-schema aggregation over leadProduct rows and is NOT expressible as a single-object calculation. It remains a service/frontend concern per ADR-031 exception (2).",
               "expression": {
                 "/": [
                   {
@@ -813,7 +813,7 @@
           },
           "qualificationScore": {
             "type": "integer",
-            "description": "Backend-computed qualification score (0-100). Materialised by the x-openregister-calculations.qualificationScore annotation on every save — never written by service code. Resolves the lead-management spec 'frontend vs backend qualification score' open question in favour of a backend calculation.",
+            "description": "Backend-computed qualification score (0-100). Materialised by the x-openregister-calculations.qualificationScore annotation on every save: never written by service code. Resolves the lead-management spec 'frontend vs backend qualification score' open question in favour of a backend calculation.",
             "minimum": 0,
             "maximum": 100,
             "facetable": true,
@@ -827,7 +827,7 @@
         "icon": "Pipe",
         "version": "3.2.0",
         "summary": "A thin CRM pipeline config mapping stage rules onto a Deck board",
-        "description": "Represents a CRM pipeline configuration — maps pipeline stages to a Deck board and its stacks, preserving CRM-specific semantics (probability, won/closed/default flags) that Deck itself does not model. Board mechanics (columns, cards, drag-and-drop) are provided by the OpenRegister deck leaf. Mapped to Schema.org ItemList.",
+        "description": "Represents a CRM pipeline configuration: maps pipeline stages to a Deck board and its stacks, preserving CRM-specific semantics (probability, won/closed/default flags) that Deck itself does not model. Board mechanics (columns, cards, drag-and-drop) are provided by the OpenRegister deck leaf. Mapped to Schema.org ItemList.",
         "x-schema-org": "schema:ItemList",
         "configuration": {
           "x-openregister-shareable": true
@@ -1284,7 +1284,7 @@
         "icon": "CartOutline",
         "version": "1.1.0",
         "summary": "A line item linking a product to a lead",
-        "description": "Represents a product line item on a lead — an instance of a product with deal-specific quantity, pricing, and discount. The total is computed as quantity * unitPrice * (1 - discount/100). Mapped to Schema.org Offer.",
+        "description": "Represents a product line item on a lead: an instance of a product with deal-specific quantity, pricing, and discount. The total is computed as quantity * unitPrice * (1 - discount/100). Mapped to Schema.org Offer.",
         "x-schema-org": "schema:Offer",
         "configuration": {
           "x-openregister-calculations": {
@@ -1309,13 +1309,13 @@
             "enabled": true,
             "tools": {
               "create": {
-                "description": "Add a priced line to a lead — one product with its quantity, unit price and optional discount. This is how an offer/quotation is built: create the lead first (pipelinq_createLead), then add one line per product. Do NOT send `total`: it is calculated by OpenRegister as quantity * unitPrice minus the discount (percent or amount, per discountType), so a supplied value would be overwritten and any figure quoted from it would be wrong.",
+                "description": "Add a priced line to a lead: one product with its quantity, unit price and optional discount. This is how an offer/quotation is built: create the lead first (pipelinq_createLead), then add one line per product. Do NOT send `total`: it is calculated by OpenRegister as quantity * unitPrice minus the discount (percent or amount, per discountType), so a supplied value would be overwritten and any figure quoted from it would be wrong.",
                 "scope": "create",
                 "destructiveHint": false,
                 "idempotentHint": false
               },
               "search": {
-                "description": "List the priced lines on a lead — the body of an offer/quotation. Filter by `lead` to get one offer's lines. Each line carries the materialised `total`.",
+                "description": "List the priced lines on a lead: the body of an offer/quotation. Filter by `lead` to get one offer's lines. Each line carries the materialised `total`.",
                 "scope": "read",
                 "filters": [
                   "lead",
@@ -1377,7 +1377,7 @@
           },
           "discount": {
             "type": "number",
-            "description": "Discount value — a percentage (0–100) or a flat amount, per Discount type.",
+            "description": "Discount value: a percentage (0–100) or a flat amount, per Discount type.",
             "minimum": 0,
             "default": 0,
             "title": "Discount"
@@ -1475,7 +1475,7 @@
         "icon": "CheckboxMarkedCircleOutline",
         "version": "1.1.0",
         "summary": "A callback request or follow-up task (terugbelverzoek / opvolgtaak / informatievraag)",
-        "description": "Represents an internal task — a callback request (terugbelverzoek), follow-up task (opvolgtaak), or information request (informatievraag) assigned to a user or department. Maps to VNG InterneTaak and Schema.org Action.",
+        "description": "Represents an internal task: a callback request (terugbelverzoek), follow-up task (opvolgtaak), or information request (informatievraag) assigned to a user or department. Maps to VNG InterneTaak and Schema.org Action.",
         "configuration": {
           "x-openregister-lifecycle": {
             "field": "status",
@@ -1538,7 +1538,7 @@
         "properties": {
           "type": {
             "type": "string",
-            "description": "Task type — terugbelverzoek (callback), opvolgtaak (follow-up), or informatievraag (information request)",
+            "description": "Task type: terugbelverzoek (callback), opvolgtaak (follow-up), or informatievraag (information request)",
             "enum": [
               "callbackRequest",
               "followUpTask",
@@ -1657,7 +1657,7 @@
           },
           "attempts": {
             "type": "array",
-            "description": "Callback attempt log — each entry has timestamp, result, and notes",
+            "description": "Callback attempt log: each entry has timestamp, result, and notes",
             "items": {
               "type": "object",
               "properties": {
@@ -2250,7 +2250,7 @@
           },
           "paymentWebhookEventId": {
             "type": "string",
-            "description": "Idempotency key — last processed provider webhook event id, prevents duplicate settlement updates",
+            "description": "Idempotency key: last processed provider webhook event id, prevents duplicate settlement updates",
             "maxLength": 128,
             "visible": false,
             "title": "Payment Webhook Event ID"
@@ -2288,7 +2288,7 @@
           },
           "description": {
             "type": "string",
-            "description": "Line description -- pre-filled from product.name, or free-text",
+            "description": "Line description: pre-filled from product.name, or free-text",
             "maxLength": 255,
             "minLength": 1,
             "title": "Description"
@@ -2740,7 +2740,7 @@
         "icon": "ReceiptText",
         "version": "1.0.0",
         "summary": "A customizable POS receipt template (header/footer/company/layout)",
-        "description": "Configures how a POS receipt is rendered: company header/footer, layout width and whether the legal-invoice (BTW) variant applies. The body is a safe placeholder template ({{ placeholder }} tokens only -- no expression evaluation), so a malicious template cannot execute code or trigger SSRF.",
+        "description": "Configures how a POS receipt is rendered: company header/footer, layout width and whether the legal-invoice (BTW) variant applies. The body is a safe placeholder template ({{ placeholder }} tokens only: no expression evaluation), so a malicious template cannot execute code or trigger SSRF.",
         "x-schema-org": "schema:CreativeWork",
         "required": [
           "name"
@@ -2762,7 +2762,7 @@
           },
           "body": {
             "type": "string",
-            "description": "Receipt body template using {{ placeholder }} tokens only (no expression evaluation). Optional -- when empty a built-in default layout is used.",
+            "description": "Receipt body template using {{ placeholder }} tokens only (no expression evaluation). Optional: when empty a built-in default layout is used.",
             "title": "Receipt Body"
           },
           "layoutWidth": {
@@ -2963,19 +2963,19 @@
           },
           "apiKey": {
             "type": "string",
-            "description": "Provider API key or secret — encrypted. Masked as ***SET*** in API responses.",
+            "description": "Provider API key or secret: encrypted. Masked as ***SET*** in API responses.",
             "visible": false,
             "title": "API Key"
           },
           "apiSecret": {
             "type": "string",
-            "description": "Additional secret for providers that require signing (e.g. CCV) — encrypted. Masked in responses.",
+            "description": "Additional secret for providers that require signing (e.g. CCV): encrypted. Masked in responses.",
             "visible": false,
             "title": "API Secret"
           },
           "webhookSecret": {
             "type": "string",
-            "description": "Webhook signature verification key from the provider — encrypted. Masked in responses.",
+            "description": "Webhook signature verification key from the provider: encrypted. Masked in responses.",
             "visible": false,
             "title": "Webhook Secret"
           },
@@ -2987,7 +2987,7 @@
           },
           "config": {
             "type": "object",
-            "description": "Provider-specific nested config — e.g. { terminalId: \"kassa-01\", merchantAccount: \"...\" }",
+            "description": "Provider-specific nested config: e.g. { terminalId: \"kassa-01\", merchantAccount: \"...\" }",
             "title": "Provider Config"
           },
           "lastTestedAt": {
@@ -3010,7 +3010,7 @@
         "icon": "ShieldCheck",
         "version": "1.0.0",
         "summary": "Resultaat van een 11-proef BSN-validatie",
-        "description": "Onveranderlijk resultaat van een 11-proef controle (RvIG-algoritme). Wordt aangemaakt bij elke validatie-poging (server-side audit). BSN wordt gemaskeerd opgeslagen (***XXXX*) — raw BSN gaat NOOIT in een bsnValidatie-object.",
+        "description": "Onveranderlijk resultaat van een 11-proef controle (RvIG-algoritme). Wordt aangemaakt bij elke validatie-poging (server-side audit). BSN wordt gemaskeerd opgeslagen (***XXXX*): raw BSN gaat NOOIT in een bsnValidatie-object.",
         "required": [
           "enteredBsn",
           "isFormalValid",
@@ -3020,7 +3020,7 @@
         "properties": {
           "enteredBsn": {
             "type": "string",
-            "description": "Gemaskeerd BSN — pattern ***XXXX* (eerste 3 + laatste 1 vervangen door ***). Raw 9-cijferig BSN wordt NIET opgeslagen.",
+            "description": "Gemaskeerd BSN: pattern ***XXXX* (eerste 3 + laatste 1 vervangen door ***). Raw 9-cijferig BSN wordt NIET opgeslagen.",
             "maxLength": 16,
             "title": "BSN (masked)"
           },
@@ -3075,7 +3075,7 @@
         "icon": "AccountSearch",
         "version": "1.0.0",
         "summary": "Een aangevraagde BRP-lookup met doelbinding (persistent voor audit)",
-        "description": "Het verzoek zelf — vastgelegd met doelbinding en wettelijke grondslag voor audit. BSN wordt GEHASHED opgeslagen (SHA-256). De aangevraagde BSN-waarde is alleen kort in het geheugen aanwezig tijdens de lookup.",
+        "description": "Het verzoek zelf: vastgelegd met doelbinding en wettelijke grondslag voor audit. BSN wordt GEHASHED opgeslagen (SHA-256). De aangevraagde BSN-waarde is alleen kort in het geheugen aanwezig tijdens de lookup.",
         "required": [
           "bsnHash",
           "verzoekreden",
@@ -3206,7 +3206,7 @@
         "icon": "AccountBox",
         "version": "1.0.0",
         "summary": "Genormaliseerde response uit HaalCentraal — versleuteld at-rest met TTL",
-        "description": "Persoonsgegevens uit HaalCentraal BRP, genormaliseerd. Gekoppeld aan Contact. Versleuteld at-rest (Nextcloud native encryption). retentieTot stuurt het BrpRetentionJob — record wordt automatisch verwijderd na ingestelde periode (default 7 dagen na verzoek-afsluiting).",
+        "description": "Persoonsgegevens uit HaalCentraal BRP, genormaliseerd. Gekoppeld aan Contact. Versleuteld at-rest (Nextcloud native encryption). RetentieTot stuurt het BrpRetentionJob: record wordt automatisch verwijderd na ingestelde periode (default 7 dagen na verzoek-afsluiting).",
         "required": [
           "bsnHash",
           "givenNames",
@@ -3278,7 +3278,7 @@
           },
           "gender": {
             "type": "string",
-            "description": "schema:gender — man, vrouw, onbekend",
+            "description": "schema:gender. Man, vrouw, onbekend",
             "enum": [
               "male",
               "female",
@@ -3294,7 +3294,7 @@
           },
           "indicationSecret": {
             "type": "string",
-            "description": "Geheimhouding-indicatie uit BRP — \"0\" (geen), \"1\" (geheimhouding gemeente)",
+            "description": "Geheimhouding-indicatie uit BRP: \"0\" (geen), \"1\" (geheimhouding gemeente)",
             "enum": [
               "0",
               "1"
@@ -3342,7 +3342,7 @@
         "icon": "FileDocumentMultiple",
         "version": "1.0.0",
         "summary": "Onveranderlijke audit-regel voor BSN-bevragingen (5 jaar bewaard per RvIG)",
-        "description": "Audit-trail voor elke BRP-lookup, ongeacht uitkomst. immutable: true — kan NIET worden gewijzigd of verwijderd via standaard CRUD. Alleen het systeem mag bij Right-to-be-forgotten pseudonimiseren (BSN-hash blijft, raw BSN-waarde gaat dan op SHA-256). bewaartot = now + 5 jaar (RvIG-richtlijn).",
+        "description": "Audit-trail voor elke BRP-lookup, ongeacht uitkomst. Immutable: true. Kan NIET worden gewijzigd of verwijderd via standaard CRUD. Alleen het systeem mag bij Right-to-be-forgotten pseudonimiseren (BSN-hash blijft, raw BSN-waarde gaat dan op SHA-256). Bewaartot = now + 5 jaar (RvIG-richtlijn).",
         "configuration": {
           "x-openregister-immutable": true
         },
@@ -3552,7 +3552,7 @@
       "default-pipeline-view": {
         "slug": "default-pipeline-view",
         "name": "Pipelinq Default View",
-        "description": "Default view for pipeline boards — includes leads and requests from the Pipelinq register",
+        "description": "Default view for pipeline boards: includes leads and requests from the Pipelinq register",
         "query": {
           "registers": [
             "pipelinq"
@@ -4330,7 +4330,7 @@
           "slug": "product-kleurenkaart-salontester"
         },
         "name": "Kleurenkaart Salontester",
-        "description": "Haar-kleurenkaart voor gebruik in de salonruimte — niet voor verkoop",
+        "description": "Haar-kleurenkaart voor gebruik in de salonruimte: niet voor verkoop",
         "sku": "SLN-TST-001",
         "barcode": "8720608999001",
         "unitPrice": 0.0,
@@ -4835,7 +4835,7 @@
           "schema": "lead",
           "slug": "lead-gemeente-voorbeeld-kcc-portaal"
         },
-        "title": "Gemeente Voorbeeld – KCC portaal",
+        "title": "Gemeente Voorbeeld: KCC portaal",
         "source": "referral",
         "value": 45000,
         "probability": 70,
@@ -4853,7 +4853,7 @@
           "schema": "lead",
           "slug": "lead-meridiaan-advies-data-governance-retainer"
         },
-        "title": "Meridiaan Advies – data-governance retainer",
+        "title": "Meridiaan Advies: data-governance retainer",
         "source": "partner",
         "value": 18000,
         "probability": 50,
@@ -4871,7 +4871,7 @@
           "schema": "lead",
           "slug": "lead-zonnereizen-boekingsplatform"
         },
-        "title": "Zonnereizen – boekingsplatform",
+        "title": "Zonnereizen: boekingsplatform",
         "source": "cold-call",
         "value": 9000,
         "probability": 40,
