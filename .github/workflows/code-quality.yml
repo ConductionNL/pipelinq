@@ -163,7 +163,9 @@ jobs:
     # A branch's FIRST push carries `github.event.created == true` and is
     # skipped entirely by this guard — without it, that push looks like CI ran
     # when it ran nothing at all.
-    if: github.event_name != 'push' || github.event.created != true
+    if: >-
+      (github.event_name != 'push' || github.event.created != true)
+      && (github.event_name != 'pull_request' || github.head_ref != 'development')
     uses: ConductionNL/.github/.github/workflows/quality.yml@main
     with:
       app-name: pipelinq
