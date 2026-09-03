@@ -1088,10 +1088,6 @@ class LoyaltyControllerTest extends TestCase {
 		$controller->redeemGiftCard();
 		$controller->redeemGiftCard();
 
-		$this->markTestSkipped(
-			'BUG: redeemGiftCard ignores posTransactionId for idempotency, so a POS retry debits the card twice — see coordinator report'
-		);
-
 		// Contract: the same POS transaction must settle at most once.
 		$this->assertSame(75.0, $store->row('giftCard_schema', 'gc-1')['currentBalance']);
 	}//end testRedeemGiftCardIsIdempotentOnPosTransactionId()
@@ -1240,10 +1236,6 @@ class LoyaltyControllerTest extends TestCase {
 
 		$controller = $this->realGiftCardController($store);
 		$response = $controller->activateGiftCard(giftCardId: 'gc-blocked');
-
-		$this->markTestSkipped(
-			'BUG: activateGiftCard answers 200 with the card for ANY non-issued status, so activating a blocked card is indistinguishable from success — see coordinator report'
-		);
 
 		// Contract: activation of a blocked card must be refused.
 		$this->assertSame(Http::STATUS_BAD_REQUEST, $response->getStatus());
