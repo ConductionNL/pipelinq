@@ -439,10 +439,20 @@ class SlaAttainmentService {
 		}
 
 		try {
+			// 🔴 register/schema GO INSIDE `filters`, NOT AT THE TOP LEVEL.
+			//
+			// ObjectService::prepareFindAllConfig() reads them from
+			// $config['filters'] and nowhere else, so a top-level pair resolved
+			// NO register/schema context and MagicMapper::findAll() answered [].
+			// /api/sla/attainment therefore returned 200 while reporting zero
+			// breaches forever — a dashboard that is confidently wrong rather
+			// than visibly broken.
 			$rows = $objectService->findAll(
 				config: [
-					'register' => $register,
-					'schema' => $schema,
+					'filters' => [
+						'register' => $register,
+						'schema' => $schema,
+					],
 					'limit' => 5000,
 				]
 			);
@@ -611,10 +621,14 @@ class SlaAttainmentService {
 	 */
 	private function fetchTrackedObjectRows(object $objectService, string $register, string $schemaId): array {
 		try {
+			// Same shape as loadBreachEventsInRange(): register/schema belong
+			// inside `filters`, or the query resolves no context and returns [].
 			$rows = $objectService->findAll(
 				config: [
-					'register' => $register,
-					'schema' => $schemaId,
+					'filters' => [
+						'register' => $register,
+						'schema' => $schemaId,
+					],
 					'limit' => 5000,
 				]
 			);
