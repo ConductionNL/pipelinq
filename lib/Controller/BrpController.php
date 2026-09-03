@@ -571,18 +571,39 @@ class BrpController extends Controller {
 			$signature = (string)$this->request->getHeader('x-signature');
 		}
 
-		// Always respond 200 OK with a structured result field — HaalCentraal
-		// expects to ack the delivery regardless of inner outcome. The HMAC
-		// verification + bsn-shape check happen inside the listener
-		// (BrpMutationWebhookListener::handle) which logs + records an audit
-		// line on every rejection; the HTTP layer is just "we received it".
+		// 🔴 A REJECTED DELIVERY MUST NOT BE ACKNOWLEDGED WITH 200.
+		//
+		// This answered 200 for every outcome, including `forbidden` (the HMAC
+		// did not verify) and `bad-request` (the body was malformed), on the
+		// stated grounds that "HaalCentraal expects to ack the delivery
+		// regardless of inner outcome". A 200 IS the acknowledgement: it tells
+		// the sender the mutation was taken. A rejected delivery was therefore
+		// indistinguishable from an accepted one at the only layer the sender
+		// can see, and a genuine misconfiguration -- a wrong shared secret --
+		// would look like a working integration forever while every mutation
+		// was dropped.
+		//
+		// The structured `result` field stays, so a client that reads the body
+		// loses nothing; the status now agrees with it. A bad signature is 403
+		// and a malformed body is 400, which are the two things the sender can
+		// actually act on.
 		$outcome = $this->webhookListener->handle($rawBody, $signature);
+
+		$status = Http::STATUS_OK;
+		if ($outcome['result'] === BrpMutationWebhookListener::RESULT_FORBIDDEN) {
+			$status = Http::STATUS_FORBIDDEN;
+		}
+
+		if ($outcome['result'] === BrpMutationWebhookListener::RESULT_BAD_REQUEST) {
+			$status = Http::STATUS_BAD_REQUEST;
+		}
+
 		return new JSONResponse(
 			[
 				'result' => $outcome['result'],
 				'invalidated' => $outcome['invalidated'],
 			],
-			Http::STATUS_OK
+			$status
 		);
 	}//end mutationWebhook()
 

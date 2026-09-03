@@ -746,12 +746,6 @@ class BrpControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testMutationWebhookAnswersNon2xxForARejectedDelivery(): void {
-		$this->markTestSkipped(
-			'BUG: mutationWebhook always returns HTTP 200, including for result '
-			. '"forbidden" (bad signature) and "bad-request" (malformed body) — see '
-			. 'coordinator report'
-		);
-
 		$response = $this->buildWebhookController(signature: str_repeat('c', 64))
 			->mutationWebhook();
 
