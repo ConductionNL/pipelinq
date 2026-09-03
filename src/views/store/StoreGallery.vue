@@ -172,7 +172,13 @@ import {
  *
  * @spec openspec/changes/pipelinq-store-surface/specs/pipelinq-store-surface/spec.md
  */
-const KINDS = ['pipeline', 'queue-routing', 'catalogue', 'pos-setup', 'loyalty-programme']
+const KINDS = [
+	'pipeline',
+	'queue-routing',
+	'catalogue',
+	'pos-setup',
+	'loyalty-programme',
+]
 
 export default {
 	name: 'StoreGallery',
