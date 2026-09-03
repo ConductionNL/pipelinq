@@ -88,6 +88,9 @@ class BsnAuditService {
 	 * @param string|null $linkedRequest UUID of linked Pipelinq verzoek.
 	 * @param string|null $actorRole Role of actor (behandelaar-burgerzaken).
 	 * @param bool $vogScreening VOG-screening flag for Justis.
+	 * @param string|null $bsnHash The subject's ALREADY-COMPUTED hash, for callers
+	 *                             that hold it but cannot reconstruct the raw BSN.
+	 *                             Takes precedence over hashing $rawBsn.
 	 *
 	 * @return string The UUID of the written audit record (empty string if writing fails).
 	 *
@@ -110,13 +113,31 @@ class BsnAuditService {
 		?string $linkedRequest = null,
 		?string $actorRole = null,
 		bool $vogScreening = false,
+		?string $bsnHash = null,
 	): string {
 		$now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
 		$retainUntil = $now->modify('+' . self::RETENTION_YEARS . ' years');
 
+		// A caller that already HOLDS the subject's hash passes it through.
+		// Hashing an empty `$rawBsn` yields sha256("") — the same constant for
+		// every person — which is an audit record that names no data subject.
+		// That is what BrpController::revealAddress produced for every
+		// geheimhouding reveal, because the raw BSN is not reconstructible there
+		// and the persoon already carries its own hash.
+		$subjectHash = BsnValidationService::hash($rawBsn);
+		if ($bsnHash !== null && $bsnHash !== '') {
+			$subjectHash = $bsnHash;
+		}
+
 		$record = [
 			'action' => $action,
-			'bsnHash' => BsnValidationService::hash($rawBsn),
+			// A caller that already HOLDS the subject's hash passes it through.
+			// Hashing an empty `$rawBsn` yields sha256("") — the same constant for
+			// every person — which is an audit record that names no data subject.
+			// That is what BrpController::revealAddress produced for every
+			// geheimhouding reveal, because the raw BSN is not reconstructible
+			// there and the persoon already carries its own hash.
+			'bsnHash' => $subjectHash,
 			'actor' => $actor,
 			'actorRole' => $actorRole,
 			'moment' => $now->format(DATE_ATOM),

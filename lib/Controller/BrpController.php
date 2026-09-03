@@ -445,8 +445,12 @@ class BrpController extends Controller {
 			);
 		}
 
-		// Reconstructing the raw BSN is impossible; use empty raw for audit (hash already on persoon).
-		$this->audit->recordLookup(
+		// The raw BSN is not reconstructible here, but the persoon in hand carries
+		// its own hash — so pass THAT, rather than letting the service hash ''.
+		// It used to hash the empty string, which stamped every geheimhouding
+		// reveal with the same sha256("") and produced an audit trail that named
+		// no data subject at all.
+		$auditId = $this->audit->recordLookup(
 			actor: $actor,
 			rawBsn: '',
 			verzoekreden: 'Adres onthuld op behandelaarsverantwoording',
@@ -456,7 +460,29 @@ class BrpController extends Controller {
 			responseCode: 200,
 			linkedRequest: null,
 			actorRole: $this->resolveActorRole(actor: $actor),
+			bsnHash: (string)($person['bsnHash'] ?? ''),
 		);
+
+		// 🔴 NO AUDIT RECORD, NO REVEAL.
+		//
+		// recordLookup() answers '' when the write failed, and that return used
+		// to be discarded — so a reveal whose audit record never landed still
+		// answered 200 with the withheld residence. An unlogged disclosure of a
+		// geheimhouding address is the exact thing the audit trail exists to
+		// make impossible, so this fails closed: the caller is told the
+		// disclosure could not be recorded, and gets no address.
+		if ($auditId === '') {
+			return new JSONResponse(
+				[
+					'error' => $this->l10n->t('Address reveal could not be recorded'),
+					'errorMessage' => $this->l10n->t(
+						'De onthulling kon niet worden vastgelegd in het BSN-auditlogboek. '
+						. 'Het adres is daarom niet getoond.'
+					),
+				],
+				Http::STATUS_INTERNAL_SERVER_ERROR
+			);
+		}
 
 		return new JSONResponse(
 			[
