@@ -77,6 +77,7 @@
 						id="template-form-sender-email"
 						v-model="model.senderEmail"
 						type="email"
+						autocomplete="off"
 						class="template-form__input" />
 
 					<label class="template-form__label" for="template-form-reply-to">
@@ -204,6 +205,8 @@ export default {
 	computed: {
 		/**
 		 * @return {string|null} The CampaignTemplate id being edited, or null for New.
+		 *
+		 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-ui/spec.md#requirement-segments-and-templates-pages-are-reachable-from-the-marketing-menu
 		 */
 		templateId() {
 			return this.$route?.params?.id || null
@@ -218,6 +221,8 @@ export default {
 
 		/**
 		 * @return {Array<{value:string,label:string}>} The two channel options.
+		 *
+		 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-ui/spec.md#requirement-segments-and-templates-pages-are-reachable-from-the-marketing-menu
 		 */
 		channelOptions() {
 			return [
@@ -232,6 +237,11 @@ export default {
 		 * @return {object}
 		 */
 		channelOption: {
+			/**
+			 * @return {object} The currently selected channel option.
+			 *
+			 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-ui/spec.md#requirement-segments-and-templates-pages-are-reachable-from-the-marketing-menu
+			 */
 			get() {
 				return (
 					this.channelOptions.find((o) => o.value === this.model.channel)
@@ -239,6 +249,14 @@ export default {
 				)
 			},
 
+			/**
+			 * Switching channel drives which fields the template renders —
+			 * email adds subject/sender/reply-to/footer, SMS does not.
+			 *
+			 * @param {object} option The NcSelect option just picked.
+			 *
+			 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-ui/spec.md#requirement-segments-and-templates-pages-are-reachable-from-the-marketing-menu
+			 */
 			set(option) {
 				this.model.channel = option?.value || 'email'
 			},
@@ -246,6 +264,8 @@ export default {
 
 		/**
 		 * @return {boolean} Whether the form has enough to attempt a save.
+		 *
+		 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-ui/spec.md#requirement-segments-and-templates-pages-are-reachable-from-the-marketing-menu
 		 */
 		canSave() {
 			return (
@@ -256,6 +276,14 @@ export default {
 		},
 	},
 
+	/**
+	 * Loads the existing CampaignTemplate when this instance is mounted in
+	 * edit mode.
+	 *
+	 * @return {Promise<void>}
+	 *
+	 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-ui/spec.md#requirement-segments-and-templates-pages-are-reachable-from-the-marketing-menu
+	 */
 	async created() {
 		if (this.isEditing) {
 			await this.loadTemplate()
@@ -265,6 +293,10 @@ export default {
 	methods: {
 		/**
 		 * Load the CampaignTemplate being edited.
+		 *
+		 * @return {Promise<void>}
+		 *
+		 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-ui/spec.md#requirement-segments-and-templates-pages-are-reachable-from-the-marketing-menu
 		 */
 		async loadTemplate() {
 			this.loading = true

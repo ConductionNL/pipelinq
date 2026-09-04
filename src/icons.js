@@ -113,6 +113,7 @@ import NoteTextOutline from 'vue-material-design-icons/NoteTextOutline.vue'
 import OfficeBuilding from 'vue-material-design-icons/OfficeBuilding.vue'
 import Package from 'vue-material-design-icons/Package.vue'
 import PackageVariantClosed from 'vue-material-design-icons/PackageVariantClosed.vue'
+import PencilOutline from 'vue-material-design-icons/PencilOutline.vue'
 import PhoneMessage from 'vue-material-design-icons/PhoneMessage.vue'
 import Pipe from 'vue-material-design-icons/Pipe.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
@@ -248,6 +249,7 @@ export default {
 	OfficeBuilding,
 	Package,
 	PackageVariantClosed,
+	PencilOutline,
 	PhoneMessage,
 	Pipe,
 	Plus,

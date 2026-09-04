@@ -270,6 +270,8 @@ export default {
 		 * plain `string` field.
 		 *
 		 * @return {string|null}
+		 *
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-segment-builder-ui-composes-rule-trees
 		 */
 		fieldFormat() {
 			return this.fieldOption?.format || null
@@ -310,6 +312,8 @@ export default {
 		 * Native input type for the value field, derived from field type.
 		 *
 		 * @return {string}
+		 *
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-segment-builder-ui-composes-rule-trees
 		 */
 		valueInputType() {
 			if (this.fieldFormat === 'date') {

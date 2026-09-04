@@ -72,7 +72,7 @@
 					{
 						"id": "view",
 						"label": "Edit rules",
-						"icon": "Pencil",
+						"icon": "PencilOutline",
 						"handler": "navigate",
 						"route": "SegmentEdit"
 					}
@@ -137,7 +137,7 @@
 					{
 						"id": "view",
 						"label": "Edit",
-						"icon": "Pencil",
+						"icon": "PencilOutline",
 						"handler": "navigate",
 						"route": "TemplateEdit"
 					}

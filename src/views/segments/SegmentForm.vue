@@ -154,6 +154,8 @@ export default {
 		 * the app for one component serving both New and Edit.
 		 *
 		 * @return {string|null} The Segment id being edited, or null for New.
+		 *
+		 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-ui/spec.md#requirement-segments-and-templates-pages-are-reachable-from-the-marketing-menu
 		 */
 		segmentId() {
 			return this.$route?.params?.id || null
@@ -168,6 +170,8 @@ export default {
 
 		/**
 		 * @return {Array<{value:string,label:string}>} The two audience options.
+		 *
+		 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-ui/spec.md#requirement-segments-and-templates-pages-are-reachable-from-the-marketing-menu
 		 */
 		entityTypeOptions() {
 			return [
@@ -182,6 +186,11 @@ export default {
 		 * @return {object}
 		 */
 		entityTypeOption: {
+			/**
+			 * @return {object} The currently selected audience option.
+			 *
+			 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-ui/spec.md#requirement-segments-and-templates-pages-are-reachable-from-the-marketing-menu
+			 */
 			get() {
 				return (
 					this.entityTypeOptions.find(
@@ -190,6 +199,16 @@ export default {
 				)
 			},
 
+			/**
+			 * Switching audience resets the rule tree — a "customer" field
+			 * does not exist on "contact", so carrying it over would leave
+			 * SegmentBuilder holding references to fields the new audience
+			 * does not have.
+			 *
+			 * @param {object} option The NcSelect option just picked.
+			 *
+			 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-ui/spec.md#requirement-segments-and-templates-pages-are-reachable-from-the-marketing-menu
+			 */
 			set(option) {
 				const next = option?.value || 'contact'
 				if (next !== this.model.entityType) {
@@ -207,6 +226,8 @@ export default {
 		 * Field options offered to SegmentBuilder for the selected audience.
 		 *
 		 * @return {Array<{value:string,label:string,type:string}>}
+		 *
+		 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-ui/spec.md#requirement-segment-builder-ui-composes-rule-trees
 		 */
 		fieldOptions() {
 			return this.model.entityType === 'customer'
@@ -220,6 +241,8 @@ export default {
 		 * "disable save until resolved").
 		 *
 		 * @return {boolean}
+		 *
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-segment-builder-ui-composes-rule-trees
 		 */
 		canSave() {
 			return (
@@ -231,6 +254,13 @@ export default {
 		},
 	},
 
+	/**
+	 * Loads the existing Segment when this instance is mounted in edit mode.
+	 *
+	 * @return {Promise<void>}
+	 *
+	 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-ui/spec.md#requirement-segments-and-templates-pages-are-reachable-from-the-marketing-menu
+	 */
 	async created() {
 		if (this.isEditing) {
 			await this.loadSegment()
@@ -242,6 +272,8 @@ export default {
 		 * React to SegmentBuilder's validity signal.
 		 *
 		 * @param {boolean} valid Whether the current rule tree is valid.
+		 *
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-segment-builder-ui-composes-rule-trees
 		 */
 		onValidityChange(valid) {
 			this.isValidTree = valid
