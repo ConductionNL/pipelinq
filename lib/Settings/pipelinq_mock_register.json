@@ -1704,7 +1704,6 @@
         "currency": "EUR",
         "category": "Voorbeeld Category 1",
         "client": "Voorbeeld Client 1",
-        "project": "Voorbeeld Project 1",
         "billable": false,
         "status": "draft",
         "approvedBy": "Voorbeeld Approvedby 1",
@@ -1724,7 +1723,6 @@
         "currency": "EUR",
         "category": "Voorbeeld Category 2",
         "client": "Voorbeeld Client 2",
-        "project": "Voorbeeld Project 2",
         "billable": false,
         "status": "submitted",
         "approvedBy": "Voorbeeld Approvedby 2",
@@ -1744,7 +1742,6 @@
         "currency": "EUR",
         "category": "Voorbeeld Category 3",
         "client": "Voorbeeld Client 3",
-        "project": "Voorbeeld Project 3",
         "billable": false,
         "status": "approved",
         "approvedBy": "Voorbeeld Approvedby 3",
@@ -2585,6 +2582,63 @@
         "expiresAt": "2026-03-03T09:00:00+00:00",
         "bsn": "Voorbeeld Bsn 3",
         "optedOut": true
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "mailingList",
+          "slug": "mailinglist-voorbeeld-name-1-1"
+        },
+        "name": "Voorbeeld Name 1",
+        "senderName": "Voorbeeld Sendername 1",
+        "senderEmail": "voorbeeld0@example.invalid",
+        "footerAddress": "Voorbeeld Footeraddress 1",
+        "description": "Voorbeeld Description 1",
+        "optInMode": "double",
+        "replyTo": "voorbeeld0@example.invalid",
+        "publicSignup": false,
+        "status": "active",
+        "createdBy": "Voorbeeld Createdby 1",
+        "createdAt": "2026-03-01T09:00:00+00:00",
+        "updatedAt": "2026-03-01T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "mailingList",
+          "slug": "mailinglist-voorbeeld-name-2-2"
+        },
+        "name": "Voorbeeld Name 2",
+        "senderName": "Voorbeeld Sendername 2",
+        "senderEmail": "voorbeeld1@example.invalid",
+        "footerAddress": "Voorbeeld Footeraddress 2",
+        "description": "Voorbeeld Description 2",
+        "optInMode": "soft",
+        "replyTo": "voorbeeld1@example.invalid",
+        "publicSignup": false,
+        "status": "paused",
+        "createdBy": "Voorbeeld Createdby 2",
+        "createdAt": "2026-03-02T09:00:00+00:00",
+        "updatedAt": "2026-03-02T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "mailingList",
+          "slug": "mailinglist-voorbeeld-name-3-3"
+        },
+        "name": "Voorbeeld Name 3",
+        "senderName": "Voorbeeld Sendername 3",
+        "senderEmail": "voorbeeld2@example.invalid",
+        "footerAddress": "Voorbeeld Footeraddress 3",
+        "description": "Voorbeeld Description 3",
+        "optInMode": "double",
+        "replyTo": "voorbeeld2@example.invalid",
+        "publicSignup": false,
+        "status": "archived",
+        "createdBy": "Voorbeeld Createdby 3",
+        "createdAt": "2026-03-03T09:00:00+00:00",
+        "updatedAt": "2026-03-03T09:00:00+00:00"
       },
       {
         "@self": {
@@ -4740,6 +4794,63 @@
       {
         "@self": {
           "register": "pipelinq",
+          "schema": "subscription",
+          "slug": "subscription-subscription-1-1"
+        },
+        "listId": "Voorbeeld Listid 1",
+        "email": "voorbeeld0@example.invalid",
+        "state": "pending",
+        "contactId": "Voorbeeld Contactid 1",
+        "source": "Voorbeeld Source 1",
+        "lawfulBasis": "consent",
+        "confirmTokenHash": "Voorbeeld Confirmtokenhash 1",
+        "confirmedAt": "2026-03-01T09:00:00+00:00",
+        "confirmIpHash": "Voorbeeld Confirmiphash 1",
+        "unsubscribedAt": "2026-03-01T09:00:00+00:00",
+        "reason": "Voorbeeld Reason 1",
+        "createdAt": "2026-03-01T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "subscription",
+          "slug": "subscription-subscription-2-2"
+        },
+        "listId": "Voorbeeld Listid 2",
+        "email": "voorbeeld1@example.invalid",
+        "state": "confirmed",
+        "contactId": "Voorbeeld Contactid 2",
+        "source": "Voorbeeld Source 2",
+        "lawfulBasis": "soft-opt-in",
+        "confirmTokenHash": "Voorbeeld Confirmtokenhash 2",
+        "confirmedAt": "2026-03-02T09:00:00+00:00",
+        "confirmIpHash": "Voorbeeld Confirmiphash 2",
+        "unsubscribedAt": "2026-03-02T09:00:00+00:00",
+        "reason": "Voorbeeld Reason 2",
+        "createdAt": "2026-03-02T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "subscription",
+          "slug": "subscription-subscription-3-3"
+        },
+        "listId": "Voorbeeld Listid 3",
+        "email": "voorbeeld2@example.invalid",
+        "state": "unsubscribed",
+        "contactId": "Voorbeeld Contactid 3",
+        "source": "Voorbeeld Source 3",
+        "lawfulBasis": "legitimate-interest",
+        "confirmTokenHash": "Voorbeeld Confirmtokenhash 3",
+        "confirmedAt": "2026-03-03T09:00:00+00:00",
+        "confirmIpHash": "Voorbeeld Confirmiphash 3",
+        "unsubscribedAt": "2026-03-03T09:00:00+00:00",
+        "reason": "Voorbeeld Reason 3",
+        "createdAt": "2026-03-03T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
           "schema": "task",
           "slug": "task-task-1-1"
         },
@@ -5039,7 +5150,6 @@
         "billingCategory": "Voorbeeld Billingcategory 1",
         "client": "Voorbeeld Client 1",
         "lead": "Voorbeeld Lead 1",
-        "project": "Voorbeeld Project 1",
         "approvedBy": "Voorbeeld Approvedby 1",
         "approvedAt": "2026-03-01T09:00:00+00:00",
         "wipSyncStatus": "pending",
@@ -5064,7 +5174,6 @@
         "billingCategory": "Voorbeeld Billingcategory 2",
         "client": "Voorbeeld Client 2",
         "lead": "Voorbeeld Lead 2",
-        "project": "Voorbeeld Project 2",
         "approvedBy": "Voorbeeld Approvedby 2",
         "approvedAt": "2026-03-02T09:00:00+00:00",
         "wipSyncStatus": "synced",
@@ -5089,7 +5198,6 @@
         "billingCategory": "Voorbeeld Billingcategory 3",
         "client": "Voorbeeld Client 3",
         "lead": "Voorbeeld Lead 3",
-        "project": "Voorbeeld Project 3",
         "approvedBy": "Voorbeeld Approvedby 3",
         "approvedAt": "2026-03-03T09:00:00+00:00",
         "wipSyncStatus": "failed",

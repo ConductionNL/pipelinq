@@ -209,10 +209,13 @@ class MailTransportService {
 	/**
 	 * Build the transport-agnostic {@see RenderedMail} from a template + delivery.
 	 *
-	 * Substitution is intentionally minimal — `{{email}}`, `{{contactId}}` —
-	 * matching the pre-existing `BlastService::renderTemplate()` semantics.
-	 * First-party tracking injection (when enabled) runs on the HTML body
-	 * before the mail is handed to any transport.
+	 * Substitution is intentionally minimal: `{{email}}`, `{{contactId}}`, and
+	 * `{{unsubscribe_link}}` when the delivery carries one (a mailing-list
+	 * send always does; a segment send has no membership to unsubscribe from,
+	 * so the token resolves empty) — matching the pre-existing
+	 * `BlastService::renderTemplate()` semantics. First-party tracking
+	 * injection (when enabled) runs on the HTML body before the mail is
+	 * handed to any transport.
 	 *
 	 * @param array<string, mixed> $template CampaignTemplate row.
 	 * @param array<string, mixed> $delivery BlastDelivery row.
@@ -223,6 +226,15 @@ class MailTransportService {
 		$tokens = [
 			'{{email}}' => (string)($delivery['email'] ?? ''),
 			'{{contactId}}' => (string)($delivery['contactId'] ?? ''),
+			// marketing-lists-and-double-opt-in: a mailing-list send always
+			// carries a per-membership unsubscribe link, minted by
+			// SubscriptionQueryService, because rule 1 of the marketing
+			// architecture says the unsubscribe is ours and not the
+			// provider's. A segment send has no membership to unsubscribe
+			// from, so the token resolves empty and the transport's own
+			// unsubscribe mechanism (provider footer, List-Unsubscribe
+			// header) applies as it does today.
+			'{{unsubscribe_link}}' => (string)($delivery['unsubscribeUrl'] ?? ''),
 		];
 
 		$html = strtr((string)($template['bodyHtml'] ?? ''), $tokens);
