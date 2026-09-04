@@ -226,11 +226,11 @@ class MailTransportService {
 		$tokens = [
 			'{{email}}' => (string)($delivery['email'] ?? ''),
 			'{{contactId}}' => (string)($delivery['contactId'] ?? ''),
-			// marketing-lists-and-double-opt-in: a mailing-list send always
-			// carries a per-membership unsubscribe link, minted by
-			// SubscriptionQueryService, because rule 1 of the marketing
-			// architecture says the unsubscribe is ours and not the
-			// provider's. A segment send has no membership to unsubscribe
+			// A mailing-list send always carries a per-membership
+			// unsubscribe link, minted by SubscriptionQueryService, because
+			// rule 1 of the marketing architecture says the unsubscribe is
+			// ours and not the provider's (marketing-lists-and-double-opt-in).
+			// A segment send has no membership to unsubscribe
 			// from, so the token resolves empty and the transport's own
 			// unsubscribe mechanism (provider footer, List-Unsubscribe
 			// header) applies as it does today.
