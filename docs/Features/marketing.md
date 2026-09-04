@@ -15,6 +15,8 @@ This page describes what you can do today and what is planned. The technical des
 
 **Templates.** Write an email or SMS body with variables. An email template is only saved when it carries the unsubscribe link and your postal address.
 
+**Articles.** Write a title, a summary, a hero image and a markdown body once. Embed it in a template's `{{articles}}` block. An article moves through a draft, review, published and archived lifecycle, and each article page shows where it has been used. See the [articles user guide](../user/articles.md).
+
 **Blasts.** Pick a segment, a template, a channel and a moment. Pipelinq checks consent for every contact before it sends and shows you who is missing. Split the audience in two to test a variant. Watch the send progress live and cancel it if you must.
 
 **Tracking and results.** Clicks are recorded by Pipelinq itself, with signed links that carry no personal data. The performance page lists open and click rates per blast, tells you whether an A/B difference is statistically meaningful, and sums the deal value attributed to each blast.
