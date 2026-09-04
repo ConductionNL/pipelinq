@@ -135,6 +135,7 @@ Vrij en open source onder de EUPL-1.2-licentie.
         <job>OCA\Pipelinq\BackgroundJob\SlaDeadlineSweepJob</job>
         <job>OCA\Pipelinq\BackgroundJob\RenewalWindowJob</job>
         <job>OCA\Pipelinq\BackgroundJob\BillingHandoffRetryJob</job>
+        <job>OCA\Pipelinq\BackgroundJob\SearchConsoleImportJob</job>
     </background-jobs>
 
     <repair-steps>

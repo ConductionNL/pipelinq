@@ -321,7 +321,32 @@ en -klikken naast sitebezoeken in de verkeersrapporten van dat portaal.
   geregistreerd en blijven pixel en redirect werken.
 - Portaliq koppelt mailverkeer aan een campagne, niet aan een persoon.
   Een mailopen en een sitebezoek horen alleen bij elkaar als het
-  sitebezoek dezelfde campagneparameters draagt.
+  sitebezoek dezelfde campagneparameters draagt. De volgende paragraaf
+  zorgt daarvoor.
+
+#### Campagneparameters op links
+
+Elke link in een verzonden blast draagt de vier GA4-campagneparameters,
+zodat het sitebezoek dat eruit volgt aan dezelfde campagne wordt
+toegeschreven als de mailopen:
+
+| Parameter | Waarde |
+| --- | --- |
+| `utm_source` | `email` |
+| `utm_medium` | `email` |
+| `utm_campaign` | de blastnaam als slug, bijvoorbeeld `voorjaarsnieuwsbrief-2026` |
+| `utm_content` | het blast-id |
+
+- Een parameter die u zelf in een link schreef blijft staan; alleen de
+  ontbrekende worden toegevoegd.
+- De uitschrijflink, ankers binnen de pagina en `mailto:`- of
+  `tel:`-links worden nooit aangeraakt.
+- De parameters worden toegevoegd voordat de eigen klikredirect de link
+  omhult, dus de pagina waar de lezer belandt draagt ze en de collector
+  van Portaliq leest ze.
+- Een beheerder kan dit uitzetten met **Campagneparameters toevoegen aan
+  links in blasts** onder **Beheerdersinstellingen, Pipelinq,
+  Marketingverkeer**. Standaard staat het aan.
 
 Een lopende verzending stoppen? Klik **Cancel**. Alle nog niet
 verstuurde leveringen worden afgebroken; reeds aan de provider
@@ -347,6 +372,28 @@ Sorteer op een kolom om uw beste (of slechtste) campagnes te vinden.
 #### Tabblad A/B testing
 
 De zij-aan-zij-vergelijking uit sectie 4.2.
+
+#### Siteverkeer uit deze campagne
+
+Onderaan het tabblad **Attribution** toont **Siteverkeer uit deze
+campagne** wat elke blast na de mail op de site deed: de sessies die
+Portaliq aan de campagne van de blast toeschreef, naast de opens, klikken
+en toegeschreven deals van de blast. Het leest de dagelijkse
+verkeersoptellingen van het portaal en koppelt die op de campagnewaarde
+die de links dragen.
+
+- Is er geen portaal ingesteld, dan meldt het blok **Niet gekoppeld aan
+  een portaal**. Stel de portaalslug in onder **Beheerdersinstellingen,
+  Pipelinq, Marketingverkeer** om te koppelen.
+- Sessies worden per campagne geteld, niet per persoon: Pipelinq komt
+  nooit te weten welk contact de site bezocht.
+- Paginaweergaven en formulierinzendingen per campagne zitten nog niet in
+  de optelling van het portaal; de API geeft ze leeg terug tot Portaliq
+  ze toevoegt.
+
+Dezelfde cijfers zijn beschikbaar op `GET /api/blasts/{id}/performance`,
+met een optionele periode `from` en `to` (`JJJJ-MM-DD`) die standaard van
+de verzenddatum van de blast tot vandaag loopt.
 
 #### Tabblad Attribution
 
