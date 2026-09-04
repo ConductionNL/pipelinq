@@ -54,6 +54,12 @@ use Throwable;
  *  independently-simple methods (each verified under phpmd's per-method
  *  thresholds); the total reflects breadth of the rule-tree surface
  *  (evaluate/validate/estimate/project), not tangled logic.
+ * @SuppressWarnings(PHPMD.TooManyPublicMethods)     Every public method is
+ *  one REST-facing entry point SegmentController delegates to (list, get,
+ *  create, update, preview, estimate, refresh, project members) — the
+ *  count tracks the Segment CRUD + rule-tree surface a marketer's UI
+ *  needs, not an object that has grown more responsibilities than it
+ *  should have.
  *
  * @spec openspec/changes/marketing-segmentation-and-blast-02-segment-service/tasks.md#task-2.1
  */
@@ -403,6 +409,122 @@ class SegmentService {
 
 		return $this->persistSegment(payload: $payload, rules: $rules, entityType: $entityType, createdByUid: $createdByUid);
 	}//end createSegment()
+
+	/**
+	 * Update an existing Segment after re-validating the rule tree.
+	 *
+	 * Backs the SegmentEdit page (marketing-segments-ui-repair): a marketer
+	 * changes the name, description or rule tree of a saved Segment through
+	 * SegmentBuilder, and the tree is re-validated with the same
+	 * `validateRules()` path `createSegment()` uses before anything is
+	 * persisted. Fields omitted from `$payload` keep their existing value
+	 * so a partial edit (e.g. name only) does not clobber the rule tree.
+	 *
+	 * @param string $segmentId Existing Segment UUID or slug.
+	 * @param array<string, mixed> $payload Inbound Segment payload (partial).
+	 *
+	 * @return array{segment?: array<string, mixed>, error?: string, estimatedSize?: int}
+	 *
+	 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-api/spec.md#requirement-api-endpoints-crud-and-query
+	 */
+	public function updateSegment(string $segmentId, array $payload): array {
+		if ($segmentId === '') {
+			return ['error' => 'Invalid id'];
+		}
+
+		$existing = $this->loadSegment(segmentId: $segmentId);
+		if ($existing === null) {
+			return ['error' => 'Segment not found'];
+		}
+
+		$name = (string)($payload['name'] ?? ($existing['name'] ?? ''));
+		if (trim($name) === '') {
+			return ['error' => 'Invalid name'];
+		}
+
+		$entityType = strtolower((string)($payload['entityType'] ?? $this->extractEntityType(segment: $existing) ?? ''));
+		if (in_array($entityType, ['contact', 'customer'], true) === false) {
+			return ['error' => 'Invalid entityType'];
+		}
+
+		$rules = ($payload['rules'] ?? $this->extractRules(segment: $existing));
+		if (is_array($rules) === false) {
+			return ['error' => 'Invalid rules'];
+		}
+
+		$error = $this->validateRules(rules: $rules, entityType: $entityType);
+		if ($error !== null) {
+			return ['error' => 'Invalid rule tree: ' . $error];
+		}
+
+		return $this->persistSegmentUpdate(
+			segmentId: $segmentId,
+			existing: $existing,
+			name: $name,
+			description: (string)($payload['description'] ?? ($existing['description'] ?? '')),
+			rules: $rules,
+			entityType: $entityType,
+		);
+	}//end updateSegment()
+
+	/**
+	 * Persist a validated Segment update and return the saved row with a
+	 * freshly recomputed `estimatedSize`.
+	 *
+	 * Extracted from {@see updateSegment()} so it stays within the
+	 * complexity budget.
+	 *
+	 * @param string $segmentId Existing Segment UUID or slug.
+	 * @param array<string, mixed> $existing The Segment row before the edit.
+	 * @param string $name Validated name.
+	 * @param string $description Description (may be unchanged).
+	 * @param array<string, mixed> $rules Validated rule tree.
+	 * @param string $entityType "contact" or "customer".
+	 *
+	 * @return array{segment?: array<string, mixed>, error?: string, estimatedSize?: int}
+	 *
+	 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-api/spec.md#requirement-api-endpoints-crud-and-query
+	 */
+	private function persistSegmentUpdate(
+		string $segmentId,
+		array $existing,
+		string $name,
+		string $description,
+		array $rules,
+		string $entityType,
+	): array {
+		// Computed from the (validated) NEW $rules/$entityType being saved,
+		// not via recomputeSize(segmentId) after the fact — that would
+		// re-read whatever is currently stored, which at this point is
+		// still the PRE-edit row, so a rule-tree edit would persist a count
+		// for the tree it just replaced. Same defect class the
+		// refreshSegmentSize() docblock already warns against ("a refresh
+		// that reads the cache is not a refresh").
+		$estimated = $this->countMatchingEntities(rules: $rules, entityType: $entityType);
+
+		$object = $existing;
+		$object['name'] = $name;
+		$object['description'] = $description;
+		$object['rules'] = $rules;
+		$object['entityType'] = $entityType;
+		$object['estimatedSize'] = $estimated;
+		$object['updatedAt'] = gmdate('Y-m-d\TH:i:s\Z');
+
+		$saved = $this->saveSegmentObject(payload: $object, id: $segmentId);
+		if ($saved === null) {
+			return ['error' => 'Could not update segment'];
+		}
+
+		// Write-through the estimate cache so a subsequent estimateSize()
+		// call does not serve the pre-edit cached count for the remainder
+		// of its TTL.
+		$cache = $this->getEstimateCache();
+		if ($cache !== null) {
+			$cache->set('estimate:' . $segmentId, $estimated, $this->getEstimateTtl());
+		}
+
+		return ['segment' => $saved, 'estimatedSize' => $estimated];
+	}//end persistSegmentUpdate()
 
 	/**
 	 * Persist a validated Segment payload and return the saved row.
@@ -1610,6 +1732,10 @@ class SegmentService {
 	 *                                   schema is not resolvable.
 	 *
 	 * @spec openspec/specs/marketing-segmentation/spec.md#requirement-segment-builder-composes-rule-trees
+	 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-segmentation/spec.md#requirement-segment-builder-composes-rule-trees
+	 *   pipelinq#773 — SchemaMapper::find() dropped its $published
+	 *   parameter (openregister ea99a5004); the call site no longer
+	 *   passes it.
 	 */
 	protected function resolveSchemaProperties(string $entityType): ?array {
 		$schemaSlug = $this->resolveSchemaSlug(entityType: $entityType);
@@ -1625,7 +1751,6 @@ class SegmentService {
 		try {
 			$schema = $schemaMapper->find(
 				id: $schemaSlug,
-				published: null,
 				_rbac: false,
 				_multitenancy: false,
 			);
@@ -1721,6 +1846,17 @@ class SegmentService {
 				'SegmentService.loadSegment: not found',
 				['segmentId' => $segmentId, 'exception' => $e->getMessage()]
 			);
+			return null;
+		}
+
+		// OpenRegister's find() is documented to return null on a miss
+		// rather than always throwing (ADR-084). Returning early here —
+		// rather than letting a null fall through to toArray(), which
+		// normalises it to `[]` — is what lets updateSegment()
+		// (marketing-segments-ui-repair) tell "no such Segment" apart from
+		// "an empty Segment row"; getSegmentById()
+		// and show()'s 404 depend on the same distinction.
+		if ($entity === null) {
 			return null;
 		}
 
