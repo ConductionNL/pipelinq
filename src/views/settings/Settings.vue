@@ -154,6 +154,9 @@
 			</NcNoteCard>
 		</NcSettingsSection>
 
+		<!-- Mailing list signup embed (marketing-lists-and-double-opt-in) -->
+		<MailingListEmbedSettings v-if="isConfigured" />
+
 		<!-- Shillinq Integration -->
 		<NcSettingsSection
 			v-if="isAdmin"
@@ -386,6 +389,7 @@ import ForecastSettings from '../../components/admin/ForecastSettings.vue'
 import SkillSettings from '../../components/admin/SkillSettings.vue'
 import CtiPage from './CtiPage.vue'
 import ExportConfigurationSettings from './ExportConfigurationSettings.vue'
+import MailingListEmbedSettings from './MailingListEmbedSettings.vue'
 // Configuration surfaces moved off the app nav onto this admin page
 // (nav-ia-cleanup): channels, telephony, and the POS master-data.
 import MessagingSettings from './MessagingSettings.vue'
@@ -429,6 +433,7 @@ export default {
 		AgentProfileSettings,
 		ForecastSettings,
 		ExportConfigurationSettings,
+		MailingListEmbedSettings,
 	},
 
 	data() {

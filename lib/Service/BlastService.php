@@ -190,33 +190,16 @@ class BlastService {
 		}
 
 		$segmentId = (string)($blast['segmentId'] ?? '');
-		if ($segmentId === '') {
-			return $this->emptySummary(status: 'no-segment');
+		$listId = (string)($blast['listId'] ?? '');
+		if ($segmentId === '' && $listId === '') {
+			return $this->emptySummary(status: 'no-audience');
 		}
 
 		$channel = (string)($blast['channel'] ?? 'email');
 
-		$complianceResult = $this->checkSegmentCompliance(
-			segmentId: $segmentId,
-			channel: $channel,
-		);
-		$missingConsent = $complianceResult['missingConsent'];
-		$missingSet = array_flip($missingConsent);
-
-		$members = $this->segmentService->getMembersForBlast(segmentId: $segmentId);
-		$compliantMembers = [];
-		foreach ($members as $member) {
-			$contactId = (string)($member['contactId'] ?? '');
-			if ($contactId === '') {
-				continue;
-			}
-
-			if (isset($missingSet[$contactId]) === true) {
-				continue;
-			}
-
-			$compliantMembers[] = $member;
-		}
+		$audience = $this->resolveAudience(segmentId: $segmentId, listId: $listId, channel: $channel);
+		$missingConsent = $audience['missingConsent'];
+		$compliantMembers = $audience['members'];
 
 		if ($compliantMembers === []) {
 			$this->logger->info(
@@ -646,7 +629,8 @@ class BlastService {
 		$now = $this->nowIso();
 		$object = [
 			'name' => (string)$payload['name'],
-			'segmentId' => (string)$payload['segmentId'],
+			'segmentId' => (string)($payload['segmentId'] ?? ''),
+			'listId' => (string)($payload['listId'] ?? ''),
 			'templateId' => (string)$payload['templateId'],
 			'channel' => (string)$payload['channel'],
 			'connectorSourceId' => (string)($payload['connectorSourceId'] ?? ''),
@@ -681,9 +665,9 @@ class BlastService {
 			return 'Invalid name';
 		}
 
-		$segmentId = (string)($payload['segmentId'] ?? '');
-		if (trim($segmentId) === '' || $this->loadOne(id: $segmentId, schemaSlug: $this->segmentService->getSegmentSchemaSlugPublic()) === null) {
-			return 'Invalid segment';
+		$audienceError = $this->validateAudience(payload: $payload);
+		if ($audienceError !== null) {
+			return $audienceError;
 		}
 
 		$templateId = (string)($payload['templateId'] ?? '');
@@ -698,6 +682,62 @@ class BlastService {
 
 		return null;
 	}//end validateDraftBlastPayload()
+
+	/**
+	 * Validate the audience half of a draft-blast payload.
+	 *
+	 * A blast names exactly one audience. Naming both would leave the send
+	 * path to pick, and whichever it picked would surprise the marketer who
+	 * named the other one; naming neither is the `no-audience` refusal
+	 * `sendBlast()` would otherwise reach much later, with a draft already
+	 * stored.
+	 *
+	 * @param array<string, mixed> $payload Inbound payload.
+	 *
+	 * @return string|null Error message, or null when the audience is usable.
+	 *
+	 * @spec openspec/specs/marketing-blast/spec.md#requirement-a-blast-may-target-a-mailing-list
+	 */
+	private function validateAudience(array $payload): ?string {
+		$segmentId = trim((string)($payload['segmentId'] ?? ''));
+		$listId = trim((string)($payload['listId'] ?? ''));
+
+		if ($segmentId !== '' && $listId !== '') {
+			return 'Choose either a segment or a mailing list, not both';
+		}
+
+		if ($segmentId === '' && $listId === '') {
+			return 'Choose a segment or a mailing list';
+		}
+
+		if ($listId !== '') {
+			if ($this->loadOne(id: $listId, schemaSlug: $this->getMailingListSchemaSlug()) === null) {
+				return 'Invalid mailing list';
+			}
+
+			return null;
+		}
+
+		if ($this->loadOne(id: $segmentId, schemaSlug: $this->segmentService->getSegmentSchemaSlugPublic()) === null) {
+			return 'Invalid segment';
+		}
+
+		return null;
+	}//end validateAudience()
+
+	/**
+	 * Resolve the MailingList schema slug from app config.
+	 *
+	 * @return string Schema slug.
+	 */
+	private function getMailingListSchemaSlug(): string {
+		$slug = $this->appConfig->getValueString(Application::APP_ID, 'mailing_list_schema', '');
+		if ($slug !== '') {
+			return $slug;
+		}
+
+		return 'mailingList';
+	}//end getMailingListSchemaSlug()
 
 	/**
 	 * Patch the editable Blast fields. Only `name` is editable post-create.
@@ -965,6 +1005,112 @@ class BlastService {
 	}//end sliceMembersForAb()
 
 	/**
+	 * Resolve the audience a Blast names, whether that is a Segment or a
+	 * mailing list.
+	 *
+	 * A Segment is a saved query over people the tenant already holds, so
+	 * its members are gated by the channel-wide ConsentRecord. A mailing
+	 * list is something a person joined, so its members are the confirmed
+	 * subscriptions whose LIST consent stands. Both are evaluated at send
+	 * time and both come back in the same shape, so nothing downstream
+	 * branches on where the recipients came from.
+	 *
+	 * @param string $segmentId Segment UUID or slug, empty when a list is named.
+	 * @param string $listId MailingList UUID or slug, empty when a segment is named.
+	 * @param string $channel Channel ("email" / "sms").
+	 *
+	 * @return array{members: array<int, array<string, mixed>>, missingConsent: array<int, string>}
+	 *
+	 * @spec openspec/specs/marketing-blast/spec.md#requirement-a-blast-may-target-a-mailing-list
+	 */
+	protected function resolveAudience(string $segmentId, string $listId, string $channel): array {
+		if ($listId !== '') {
+			return $this->resolveListAudience(listId: $listId);
+		}
+
+		$complianceResult = $this->checkSegmentCompliance(segmentId: $segmentId, channel: $channel);
+		$missingConsent = $complianceResult['missingConsent'];
+		$missingSet = array_flip($missingConsent);
+
+		$members = [];
+		foreach ($this->segmentService->getMembersForBlast(segmentId: $segmentId) as $member) {
+			$contactId = (string)($member['contactId'] ?? '');
+			if ($contactId === '' || isset($missingSet[$contactId]) === true) {
+				continue;
+			}
+
+			$members[] = $member;
+		}
+
+		return ['members' => $members, 'missingConsent' => $missingConsent];
+	}//end resolveAudience()
+
+	/**
+	 * Resolve a mailing list's audience through SubscriptionQueryService.
+	 *
+	 * Fails closed when that service cannot be resolved: an empty
+	 * audience leaves the Blast in draft, which is the same outcome the
+	 * segment path already produces when compliance is unavailable.
+	 *
+	 * `missingConsent` carries every membership that was NOT queued, so the
+	 * send summary's `skippedNoConsent` counts a pending or unsubscribed
+	 * member exactly as it counts a contact without a ConsentRecord.
+	 *
+	 * @param string $listId MailingList UUID or slug.
+	 *
+	 * @return array{members: array<int, array<string, mixed>>, missingConsent: array<int, string>}
+	 *
+	 * @spec openspec/specs/marketing-lists/spec.md#requirement-a-pending-subscription-never-receives-a-blast
+	 */
+	protected function resolveListAudience(string $listId): array {
+		try {
+			$service = $this->container->get('OCA\\Pipelinq\\Service\\Marketing\\SubscriptionQueryService');
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				'BlastService.resolveListAudience: SubscriptionQueryService unavailable — failing closed',
+				['listId' => $listId, 'exception' => $e->getMessage()]
+			);
+			return ['members' => [], 'missingConsent' => []];
+		}
+
+		try {
+			$audience = $service->getBlastAudienceForList($listId);
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				'BlastService.resolveListAudience: call failed — failing closed',
+				['listId' => $listId, 'exception' => $e->getMessage()]
+			);
+			return ['members' => [], 'missingConsent' => []];
+		}
+
+		if (is_array($audience) === false) {
+			return ['members' => [], 'missingConsent' => []];
+		}
+
+		$members = [];
+		foreach (($audience['members'] ?? []) as $row) {
+			if (is_array($row) === false) {
+				continue;
+			}
+
+			$members[] = [
+				'contactId' => (string)($row['contactId'] ?? ''),
+				'email' => (string)($row['email'] ?? ''),
+				'unsubscribeUrl' => (string)($row['unsubscribeUrl'] ?? ''),
+			];
+		}
+
+		$skipped = [];
+		foreach (($audience['skipped'] ?? []) as $contactId) {
+			if (is_scalar($contactId) === true) {
+				$skipped[] = (string)$contactId;
+			}
+		}
+
+		return ['members' => $members, 'missingConsent' => $skipped];
+	}//end resolveListAudience()
+
+	/**
 	 * Wrap the ComplianceService call so this service compiles before
 	 * member 03 lands. When ComplianceService is unavailable in the
 	 * container we fail closed: every member is treated as missing
@@ -1076,6 +1222,11 @@ class BlastService {
 			'email' => (string)($member['email'] ?? ''),
 			'status' => 'queued',
 		];
+		$unsubscribeUrl = (string)($member['unsubscribeUrl'] ?? '');
+		if ($unsubscribeUrl !== '') {
+			$payload['unsubscribeUrl'] = $unsubscribeUrl;
+		}
+
 		if ($channel === 'sms') {
 			$payload['phone'] = (string)($member['phone'] ?? '');
 		}
@@ -1376,10 +1527,14 @@ class BlastService {
 	/**
 	 * Render the template's subject/body with per-recipient substitution.
 	 *
-	 * Substitution is intentionally minimal — `{{email}}`, `{{firstName}}`,
-	 * `{{lastName}}` from the delivery snapshot. Provider-specific link
-	 * tracking / unsubscribe links are appended by the openconnector
-	 * source.
+	 * Substitution is intentionally minimal: `{{email}}` and `{{contactId}}`
+	 * from the delivery snapshot, plus `{{unsubscribe_link}}` when the
+	 * delivery carries one. A mailing list send always carries one, minted
+	 * per membership by `SubscriptionQueryService`, because rule 1 of the
+	 * marketing architecture says the unsubscribe is ours and not the
+	 * provider's. A segment send has no membership to unsubscribe from, so
+	 * the token resolves empty and the openconnector source appends its own
+	 * as it does today.
 	 *
 	 * @param array<string, mixed> $template Template payload.
 	 * @param array<string, mixed> $delivery Delivery payload.
@@ -1390,6 +1545,7 @@ class BlastService {
 		$tokens = [
 			'{{email}}' => (string)($delivery['email'] ?? ''),
 			'{{contactId}}' => (string)($delivery['contactId'] ?? ''),
+			'{{unsubscribe_link}}' => (string)($delivery['unsubscribeUrl'] ?? ''),
 		];
 
 		$subject = strtr((string)($template['subject'] ?? ''), $tokens);

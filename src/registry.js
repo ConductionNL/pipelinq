@@ -47,6 +47,15 @@ import ContactRelationships from './components/ContactRelationships.vue'
 //     declarative type:"index" page cannot express. Donut widget for the
 //     dashboard (hours per billing category) registered as a slot. ---
 import BillingCategoryWidget from './components/dashboard/BillingCategoryWidget.vue'
+// --- Mailing-list memberships (marketing-lists-and-double-opt-in). One
+//     kind:'section' bound either to a list (the mailing list detail page) or
+//     to a contact (the contact detail page): the row is the same row read
+//     from two directions, and a state that means "not reachable" must not
+//     look reachable in one of them. Not a declarative object-list widget,
+//     because a membership is read through its STATE and needs the chip
+//     vocabulary, and because the list view leads with per-state counts that
+//     summaryAggregates cannot express. ---
+import SubscriptionsSection from './components/marketing/SubscriptionsSection.vue'
 import CashShiftActionsSection from './components/pos/CashShiftActionsSection.vue'
 // --- POS refund detail — declarative type:"detail" (pipelinq-pos-mdm-detail-
 //     declarative): refund fields auto-render; the manager-gated confirm/reject
@@ -656,6 +665,11 @@ const registry = {
 		kind: 'section',
 		component: ContactRelationships,
 		_note: 'Outbound/inbound relationship graph for a client or contact; self-fetches by entityId/entityType.',
+	},
+	SubscriptionsSection: {
+		kind: 'section',
+		component: SubscriptionsSection,
+		_note: 'Mailing-list memberships, bound either to a list (listId) or to a contact (contactId); self-fetches the matching endpoint. Kept custom because a membership row renders a STATE chip the declarative object-list widget cannot express, and because the list view leads with per-state counts that summaryAggregates (equality-only, one schema) cannot break out of one field.',
 	},
 	ActivityTimeline: {
 		kind: 'section',
