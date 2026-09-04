@@ -41,6 +41,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Typed contact channels** (`contact-channel-details`): `client` and `contact` gain typed
+  `emails[]`/`phones[]` (kind: work/private/mobile/whatsapp/other, value, primary, verified),
+  `socialProfiles[]` (network: linkedin/x/mastodon/bluesky/facebook/instagram/threads/tiktok/
+  youtube/other, handle, url, verified, followedByUs, followsUs), plus `preferredChannel`,
+  `timezone` and `language` (`lib/Settings/register.d/16-contact-channel-details.json`). The
+  legacy single `email`/`phone` fields are unchanged and kept in sync with the primary array
+  entry. A non-destructive repair step backfills the arrays from the legacy values on upgrade.
+  The Contacts sync now maps the typed arrays to/from multi-valued vCard `EMAIL`/`TEL`/
+  `X-SOCIALPROFILE` properties, both directions. ClientDetail and ContactDetail gain a
+  "Contact channels" section (linked `mailto:`/`tel:`/profile list with kind chips) and two
+  add/edit modals. The segment rule builder now resolves and evaluates a dotted
+  `arrayProp.subProp` field path (e.g. `phones.kind`), so a rule can target "has a mobile
+  number" once a rule-builder UI wires it up. Fixes pipelinq#773
+  (`SegmentService::resolveSchemaProperties()`'s stale `published:` argument) in passing,
+  merged from `marketing-segments-ui-repair`.
+
 - **MCP provider declarative migration** (`mcp-provider-declarative-migration`): declares
   the `x-openregister-mcp` dialect (ADR-063) on the `client`, `lead`, and `ticket` schemas
   (`lib/Settings/pipelinq_register.json`, `lib/Settings/register.d/99-unify-ticket-supertype.json`),
