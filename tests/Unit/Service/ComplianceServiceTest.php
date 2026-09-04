@@ -537,4 +537,111 @@ class ComplianceServiceTest extends TestCase {
 		$this->assertNull($result['templateError']);
 		$this->assertTrue($result['segmentCompliance']['compliant']);
 	}//end testPreflightBlastReturnsValidWhenAllChecksPass()
+
+	/**
+	 * hasConsentForList: a confirmed subscription's list record opens that
+	 * list.
+	 *
+	 * @return void
+	 */
+	public function testHasConsentForListConfirmedSubscription(): void {
+		$this->seedConsent('c-list', 'email', 'consent', ['listId' => 'list-news']);
+
+		$this->assertTrue($this->service->hasConsentForList('c-list', 'list-news', 'email'));
+	}//end testHasConsentForListConfirmedSubscription()
+
+	/**
+	 * A list-scoped record does NOT open the channel, and a channel-wide
+	 * record does NOT open a list.
+	 *
+	 * This is the regression the nullable list scope exists to prevent:
+	 * before it, `findConsentRecord()` returned the first row matching
+	 * (contactId, channel), so the moment a list record existed it could
+	 * answer for the whole channel.
+	 *
+	 * @return void
+	 */
+	public function testListScopeAndChannelScopeDoNotLeakIntoEachOther(): void {
+		$this->seedConsent('c-scoped', 'email', 'consent', ['listId' => 'list-news']);
+
+		$this->assertTrue($this->service->hasConsentForList('c-scoped', 'list-news', 'email'));
+		$this->assertFalse($this->service->hasConsentForChannel('c-scoped', 'email'));
+		$this->assertFalse($this->service->hasConsentForList('c-scoped', 'list-other', 'email'));
+	}//end testListScopeAndChannelScopeDoNotLeakIntoEachOther()
+
+	/**
+	 * A withdrawn list record closes that list.
+	 *
+	 * @return void
+	 */
+	public function testHasConsentForListWithdrawn(): void {
+		$this->seedConsent('c-gone', 'email', 'consent', [
+			'listId' => 'list-news',
+			'withdrawnAt' => '2026-08-01T10:00:00Z',
+			'withdrawnReason' => 'user-unsubscribed',
+		]);
+
+		$this->assertFalse($this->service->hasConsentForList('c-gone', 'list-news', 'email'));
+	}//end testHasConsentForListWithdrawn()
+
+	/**
+	 * Soft opt-in permits a send only with the objection recorded.
+	 *
+	 * @return void
+	 */
+	public function testSoftOptInBasisSatisfiesConsentOnlyWithEvidence(): void {
+		$this->seedConsent('c-soft-ok', 'email', 'soft-opt-in', [
+			'listId' => 'list-updates',
+			'evidence' => ['objectionOffered' => true, 'objectionOfferedAt' => '2026-06-04T10:00:00Z'],
+		]);
+		$this->seedConsent('c-soft-bare', 'email', 'soft-opt-in', ['listId' => 'list-updates']);
+
+		$this->assertTrue($this->service->hasConsentForList('c-soft-ok', 'list-updates', 'email'));
+		$this->assertFalse($this->service->hasConsentForList('c-soft-bare', 'list-updates', 'email'));
+	}//end testSoftOptInBasisSatisfiesConsentOnlyWithEvidence()
+
+	/**
+	 * recordListConsent writes a list-scoped record, and reopens rather than
+	 * duplicating one that was withdrawn.
+	 *
+	 * @return void
+	 */
+	public function testRecordListConsentReopensRatherThanDuplicating(): void {
+		$this->seedConsent('c-back', 'email', 'consent', [
+			'listId' => 'list-news',
+			'withdrawnAt' => '2026-08-01T10:00:00Z',
+			'withdrawnReason' => 'user-unsubscribed',
+		]);
+
+		$this->service->recordListConsent(
+			'c-back',
+			'list-news',
+			'email',
+			'consent',
+			'double-opt-in',
+			['objectionOffered' => true],
+		);
+
+		$this->assertEmpty($this->objectService->saved, 'an existing record must be reopened, not duplicated');
+		$this->assertTrue($this->service->hasConsentForList('c-back', 'list-news', 'email'));
+	}//end testRecordListConsentReopensRatherThanDuplicating()
+
+	/**
+	 * A list-scoped withdrawal closes that list and leaves the channel-wide
+	 * record alone.
+	 *
+	 * @return void
+	 */
+	public function testWithdrawalScopedToAListLeavesTheChannelRecordAlone(): void {
+		$this->seedConsent('c-both', 'email', 'consent');
+		$this->seedConsent('c-both', 'email', 'consent', [
+			'uuid' => 'consent-c-both-email-list',
+			'listId' => 'list-news',
+		]);
+
+		$this->service->recordConsentWithdrawal('c-both', 'email', 'user-unsubscribed', null, 'list-news');
+
+		$this->assertFalse($this->service->hasConsentForList('c-both', 'list-news', 'email'));
+		$this->assertTrue($this->service->hasConsentForChannel('c-both', 'email'));
+	}//end testWithdrawalScopedToAListLeavesTheChannelRecordAlone()
 }//end class

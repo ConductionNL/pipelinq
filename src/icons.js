@@ -16,6 +16,7 @@ import Account from 'vue-material-design-icons/Account.vue'
 import AccountArrowRightOutline from 'vue-material-design-icons/AccountArrowRightOutline.vue'
 import AccountBox from 'vue-material-design-icons/AccountBox.vue'
 import AccountBoxOutline from 'vue-material-design-icons/AccountBoxOutline.vue'
+import AccountCheckOutline from 'vue-material-design-icons/AccountCheckOutline.vue'
 import AccountClock from 'vue-material-design-icons/AccountClock.vue'
 import AccountCog from 'vue-material-design-icons/AccountCog.vue'
 import AccountGroup from 'vue-material-design-icons/AccountGroup.vue'
@@ -76,6 +77,8 @@ import Domain from 'vue-material-design-icons/Domain.vue'
 import Email from 'vue-material-design-icons/Email.vue'
 import EmailEditOutline from 'vue-material-design-icons/EmailEditOutline.vue'
 import EmailFastOutline from 'vue-material-design-icons/EmailFastOutline.vue'
+import EmailMultiple from 'vue-material-design-icons/EmailMultiple.vue'
+import EmailMultipleOutline from 'vue-material-design-icons/EmailMultipleOutline.vue'
 import EmailOutline from 'vue-material-design-icons/EmailOutline.vue'
 import Export from 'vue-material-design-icons/Export.vue'
 import Eye from 'vue-material-design-icons/Eye.vue'
@@ -152,6 +155,7 @@ export default {
 	AccountArrowRightOutline,
 	AccountBox,
 	AccountBoxOutline,
+	AccountCheckOutline,
 	AccountClock,
 	AccountCog,
 	AccountGroup,
@@ -212,6 +216,8 @@ export default {
 	Email,
 	EmailEditOutline,
 	EmailFastOutline,
+	EmailMultiple,
+	EmailMultipleOutline,
 	EmailOutline,
 	Export,
 	Eye,
