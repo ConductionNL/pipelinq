@@ -122,6 +122,41 @@ and the retention posture SHALL be documented.
 - **WHEN** first-party tracking has recorded opens and clicks for a blast
 - **THEN** the marketing-analytics Overview table's open-rate and click-rate columns reflect them, derived from `blast.totals` exactly as for webhook-sourced events
 
+### Requirement: Opens and clicks are reported to Portaliq as email traffic events
+
+An open or click MUST be reported to Portaliq's traffic collector as an email event
+when a portal is configured. The app-config key `blast.traffic_portal` names the
+Portaliq portal slug; when it is empty, or Portaliq's
+`OCA\Portaliq\Service\TrafficIngestService` is not loadable, the report is skipped
+silently and the `blastDelivery` write is unaffected. The report runs strictly AFTER
+the `blastDelivery` write and the `updateBlastTotals()` roll-up. The event follows the
+fleet traffic contract's server-side shape: `name` `email_open` or `email_click`,
+`sequence` 0 or 1, `pageLocation` the clicked URL or `mailto:blast/<blastId>`,
+`campaign` the blast name, `source` and `medium` `email`, `blastRef` and `contactRef`.
+It MUST NOT carry a client id, an email address, an IP address or a user agent.
+
+#### Scenario: Portal configured and Portaliq installed ingests one email event
+
+@e2e exclude the CI instance installs openregister only (.github/workflows/code-quality.yml pins `additional-apps`), so Portaliq's ingest service is never loadable there, and the recording path needs a valid HMAC token a browser cannot mint. Asserted by tests/Unit/Service/TrafficEventEmitterTest.php (testOpenEventMatchesTheContract, testClickEventCarriesTheClickedUrl, testEventCarriesNoPii, testCampaignFallsBackToTemplateIdThenBlastId) and tests/Unit/Service/TrackingLinkServiceTest.php (testRecordOpenReportsToTrafficAfterSaveAndTotals, testRecordClickReportsToTrafficWithTheClickedUrl).
+- **WHEN** `blast.traffic_portal` names a portal, Portaliq's ingest service is loadable, and a valid open token is recorded
+- **THEN** exactly one `email_open` event with `blastRef`, `contactRef`, `source` and `medium` `email` and no email address, IP or client id is passed to `ingest()` for that portal, after the `blastDelivery` write and the totals roll-up
+
+#### Scenario: No portal configured sends nothing and still records
+
+@e2e exclude the "still records" half needs a valid HMAC token a browser cannot mint, and the "sends nothing" half is the ABSENCE of a call on a service the CI instance does not install. Asserted by tests/Unit/Service/TrafficEventEmitterTest.php (testSkipsWhenNoPortalIsConfigured) and tests/Unit/Service/TrackingLinkServiceTest.php (testRecordOpenSetsOpenedAtAndUpdatesTotals, which runs with a never-configured emitter).
+- **WHEN** `blast.traffic_portal` is empty and a valid open or click token is recorded
+- **THEN** nothing is sent to Portaliq and the delivery is recorded exactly as before
+
+#### Scenario: Portaliq absent skips the report and the pixel still answers
+- **WHEN** `blast.traffic_portal` names a portal but Portaliq is not installed
+- **THEN** the open pixel still answers 200 `image/gif` with caching disabled, nothing is sent, and an unverified token leaves the delivery untouched
+
+#### Scenario: A failing ingest never loses the record
+
+@e2e exclude a throwing ingest needs Portaliq installed AND a valid HMAC token, neither of which the CI instance has; the surviving `blastDelivery` write is stored state, not rendered output. Asserted by tests/Unit/Service/TrafficEventEmitterTest.php (testSwallowsAThrowingIngest, testSwallowsAnUnresolvableIngestService) and tests/Unit/Service/TrackingLinkServiceTest.php (testRecordOpenSurvivesAThrowingEmitter); the pixel-still-answers half by tests/Unit/Controller/BlastTrackingControllerTest.php (the record call is wrapped in a Throwable guard).
+- **WHEN** `ingest()` throws or the service cannot be resolved
+- **THEN** the delivery is still recorded, the totals are still refreshed, the failure is logged at warning, and the pixel or redirect still answers
+
 ## Follow-ups
 
 - **`blast.totals` aggregation migration** (ADR-031 declarative-vs-imperative): the

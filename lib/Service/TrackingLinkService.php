@@ -130,6 +130,8 @@ class TrackingLinkService {
 	 * @param AttributionService $attributionService Click-record semantics.
 	 * @param BlastService $blastService Totals roll-up.
 	 * @param LoggerInterface $logger Logger.
+	 * @param TrafficEventEmitter $trafficEventEmitter Portaliq traffic
+	 *                                                 dual-write.
 	 *
 	 * @spec openspec/changes/marketing-email-open-click-tracking/tasks.md#1
 	 */
@@ -141,6 +143,7 @@ class TrackingLinkService {
 		private AttributionService $attributionService,
 		private BlastService $blastService,
 		private LoggerInterface $logger,
+		private TrafficEventEmitter $trafficEventEmitter,
 	) {
 	}//end __construct()
 
@@ -263,13 +266,15 @@ class TrackingLinkService {
 	/**
 	 * Record an open on a BlastDelivery — set-once `openedAt`, advance
 	 * `status` toward `opened` (never downgrading a terminal status), then
-	 * refresh the per-blast totals roll-up.
+	 * refresh the per-blast totals roll-up, then report the open to the
+	 * configured Portaliq portal as an `email_open` traffic event.
 	 *
 	 * @param string $blastDeliveryId BlastDelivery UUID or slug.
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/changes/marketing-email-open-click-tracking/tasks.md#1.3
+	 * @spec openspec/specs/marketing-email-tracking/spec.md#requirement-opens-and-clicks-are-reported-to-portaliq-as-email-traffic-events
 	 */
 	public function recordOpen(string $blastDeliveryId): void {
 		$delivery = $this->loadDelivery(id: $blastDeliveryId);
@@ -293,13 +298,16 @@ class TrackingLinkService {
 		if ($blastId !== '') {
 			$this->blastService->updateBlastTotals(blastId: $blastId);
 		}
+
+		$this->reportToTraffic(kind: 'open', delivery: $delivery, clickedUrl: null);
 	}//end recordOpen()
 
 	/**
 	 * Record a click on a BlastDelivery — delegates the click semantics to
 	 * {@see AttributionService::recordClick()} (set-once `firstClickAt`,
 	 * deduped `clickedUrls`, status advance), then refreshes the per-blast
-	 * totals roll-up.
+	 * totals roll-up, then reports the click to the configured Portaliq
+	 * portal as an `email_click` traffic event.
 	 *
 	 * @param string $blastDeliveryId BlastDelivery UUID or slug.
 	 * @param string $url The clicked (decoded) target URL.
@@ -307,6 +315,7 @@ class TrackingLinkService {
 	 * @return void
 	 *
 	 * @spec openspec/changes/marketing-email-open-click-tracking/tasks.md#1.3
+	 * @spec openspec/specs/marketing-email-tracking/spec.md#requirement-opens-and-clicks-are-reported-to-portaliq-as-email-traffic-events
 	 */
 	public function recordClick(string $blastDeliveryId, string $url): void {
 		$delivery = $this->loadDelivery(id: $blastDeliveryId);
@@ -323,7 +332,44 @@ class TrackingLinkService {
 		if ($blastId !== '') {
 			$this->blastService->updateBlastTotals(blastId: $blastId);
 		}
+
+		$this->reportToTraffic(kind: 'click', delivery: $delivery, clickedUrl: $url);
 	}//end recordClick()
+
+	/**
+	 * Dual-write a recorded open or click to Portaliq's traffic collector.
+	 *
+	 * Runs strictly AFTER the blastDelivery write and the totals roll-up so
+	 * a Portaliq outage can never lose the record, and swallows anything
+	 * the emitter lets through so the pixel or redirect still answers.
+	 *
+	 * @param string $kind `open` or `click`.
+	 * @param array<string, mixed> $delivery The loaded blastDelivery row.
+	 * @param string|null $clickedUrl The decoded click target, or null.
+	 *
+	 * @return void
+	 */
+	private function reportToTraffic(string $kind, array $delivery, ?string $clickedUrl): void {
+		try {
+			$blastId = (string)($delivery['blastId'] ?? '');
+			$blast = null;
+			if ($blastId !== '') {
+				$blast = $this->blastService->getBlastById(blastId: $blastId);
+			}
+
+			$this->trafficEventEmitter->emitEmailEvent(
+				kind: $kind,
+				delivery: $delivery,
+				blast: ($blast ?? []),
+				clickedUrl: $clickedUrl,
+			);
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				'TrackingLinkService.reportToTraffic: traffic dual-write failed',
+				['kind' => $kind, 'exception' => $e->getMessage()]
+			);
+		}
+	}//end reportToTraffic()
 
 	/**
 	 * Rewrite one `<a href="...">` match from `injectTracking()`.

@@ -261,6 +261,13 @@ class SettingsService {
 		// injection is feature-flagged with a provider fallback".
 		'blast.first_party_tracking' => 'false',
 		'blast.tracking_token_ttl_days' => '90',
+		// Portal slug in Portaliq that mail opens and clicks are reported to
+		// as traffic events. Leave empty to keep mail tracking inside
+		// Pipelinq. Read by TrafficEventEmitter; the dual-write is skipped
+		// silently when this is empty or Portaliq is not installed.
+		// spec ref: marketing-email-tracking Requirement "Opens and clicks are
+		// reported to Portaliq as email traffic events".
+		'blast.traffic_portal' => '',
 	];
 
 	/**
