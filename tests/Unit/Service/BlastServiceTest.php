@@ -21,7 +21,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\Pipelinq\Service\ArticleService;
 use OCA\Pipelinq\Service\BlastService;
+use OCA\Pipelinq\Service\Marketing\ListObjectStore;
 use OCA\Pipelinq\Service\SegmentService;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
@@ -41,6 +43,15 @@ class BlastServiceTest extends TestCase {
 	private IAppConfig $appConfig;
 
 	private SegmentService $segmentService;
+
+	/**
+	 * The real article service over an in-memory store, so a template
+	 * carrying `{{articles}}` renders through the code the send path uses
+	 * rather than through a mock that would agree with whatever it is told.
+	 *
+	 * @var ArticleService
+	 */
+	private ArticleService $articleService;
 
 	private LoggerInterface $logger;
 
@@ -62,6 +73,7 @@ class BlastServiceTest extends TestCase {
 		$this->container = $this->createMock(ContainerInterface::class);
 		$this->appConfig = $this->createMock(IAppConfig::class);
 		$this->segmentService = $this->createMock(SegmentService::class);
+		$this->articleService = new ArticleService($this->createMock(ListObjectStore::class));
 		$this->logger = $this->createMock(LoggerInterface::class);
 
 		$this->objectService = new class {
@@ -203,6 +215,7 @@ class BlastServiceTest extends TestCase {
 		$this->service = new BlastService($this->container,
 			$this->appConfig,
 			$this->segmentService,
+			$this->articleService,
 			$this->logger,
 		);
 	}//end setUp()
@@ -602,6 +615,7 @@ class BlastServiceTest extends TestCase {
 		$this->service = new BlastService($this->container,
 			$this->appConfig,
 			$this->segmentService,
+			$this->articleService,
 			$this->logger,
 		);
 
@@ -679,6 +693,7 @@ class BlastServiceTest extends TestCase {
 		$this->service = new BlastService($this->container,
 			$this->appConfig,
 			$this->segmentService,
+			$this->articleService,
 			$this->logger,
 		);
 
@@ -806,7 +821,7 @@ class BlastServiceTest extends TestCase {
 
 		// Use a throttle-counting subclass to assert the rate-limit hook
 		// is invoked between batches without sleeping the test.
-		$service = new class($this->container, $this->appConfig, $this->segmentService, $this->logger) extends BlastService {
+		$service = new class($this->container, $this->appConfig, $this->segmentService, $this->articleService, $this->logger) extends BlastService {
 
 			/**
 			 * @var integer
@@ -1008,7 +1023,7 @@ class BlastServiceTest extends TestCase {
 			}
 		);
 
-		$service = new BlastService($this->container, $this->appConfig, $this->segmentService, $this->logger);
+		$service = new BlastService($this->container, $this->appConfig, $this->segmentService, $this->articleService, $this->logger);
 		$dispatched = $service->dispatchBlastDeliveries('blast-flag-off', 100);
 
 		$this->assertSame(1, $dispatched);
@@ -1101,7 +1116,7 @@ class BlastServiceTest extends TestCase {
 			}
 		);
 
-		$service = new BlastService($this->container, $this->appConfig, $this->segmentService, $this->logger);
+		$service = new BlastService($this->container, $this->appConfig, $this->segmentService, $this->articleService, $this->logger);
 		$dispatched = $service->dispatchBlastDeliveries('blast-flag-on', 100);
 
 		$this->assertSame(1, $dispatched);
@@ -1202,7 +1217,7 @@ class BlastServiceTest extends TestCase {
 			}
 		);
 
-		$service = new BlastService($this->container, $this->appConfig, $this->segmentService, $this->logger);
+		$service = new BlastService($this->container, $this->appConfig, $this->segmentService, $this->articleService, $this->logger);
 		$dispatched = $service->dispatchBlastDeliveries('blast-shape', 100);
 
 		$this->assertSame(1, $dispatched);
@@ -1241,4 +1256,151 @@ class BlastServiceTest extends TestCase {
 		$this->assertCount(1, $sentRows);
 		$this->assertSame('p-shape', array_values($sentRows)[0]['providerId']);
 	}//end testSendOneDeliveryResolvesSourceFromOpenconnectorRegisterAndCallsCallServiceWithJsonPost()
+
+	/**
+	 * The send path itself expands `{{articles}}`.
+	 *
+	 * ArticleServiceTest proves the renderer produces the right block. That
+	 * says nothing about whether `renderTemplate()` ever calls it: a template
+	 * key that is read nowhere renders a body still carrying the marker, and
+	 * every renderer test stays green. This asserts the wire, from a stored
+	 * template with `articleIds` to the JSON body the connector receives.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/marketing-article-hub/specs/marketing-blast/spec.md#requirement-a-campaign-template-may-embed-articles
+	 */
+	public function testSendExpandsTheArticlesMarkerInBothBodies(): void {
+		$this->objectService->store['blast-articles'] = [
+			'uuid' => 'blast-articles',
+			'templateId' => 'tmpl-articles',
+			'channel' => 'email',
+			'status' => 'sending',
+			'connectorSourceId' => 'oc-source-articles',
+		];
+		$this->objectService->store['tmpl-articles'] = [
+			'uuid' => 'tmpl-articles',
+			'subject' => 'Nieuwsbrief',
+			'bodyHtml' => '<p>Hallo</p>{{articles}}',
+			'bodyText' => "Hallo\n\n{{articles}}",
+			'articleIds' => ['article-1'],
+		];
+		$this->objectService->store['oc-source-articles'] = ['uuid' => 'oc-source-articles'];
+		$this->objectService->deliveries = [
+			['uuid' => 'd-articles', 'blastId' => 'blast-articles', 'contactId' => 'c1', 'email' => 'c1@example.test', 'status' => 'queued'],
+		];
+
+		$callService = new class {
+			/** @var array<int, array<string, mixed>> */
+			public array $calls = [];
+
+			public function call(array|object $source, string $endpoint, string $method, array $config): object {
+				$this->calls[] = $config['json'];
+				return BlastServiceTest::fakeCallLog(200, ['providerId' => 'p-articles']);
+			}//end call()
+		};
+
+		$objectService = $this->objectService;
+		$this->container = $this->createMock(ContainerInterface::class);
+		$this->container->method('get')->willReturnCallback(
+			function (string $id) use ($callService, $objectService) {
+				if ($id === 'OCA\\OpenRegister\\Service\\ObjectService') {
+					return $objectService;
+				}
+
+				if ($id === 'OCA\\OpenConnector\\Service\\CallService') {
+					return $callService;
+				}
+
+				throw new \RuntimeException('not registered: ' . $id);
+			}
+		);
+
+		$articleStore = $this->makeArticleStore();
+		$articleStore->save(
+			schemaSlug: 'article',
+			payload: [
+				'title' => 'OpenRegister 3.0 is uit',
+				'summary' => 'Wat er verandert en wat je moet doen.',
+				'language' => 'nl',
+				'portalPageRef' => 'https://example.org/nieuws/openregister-3-0',
+			],
+			id: 'article-1',
+		);
+
+		$service = new BlastService($this->container, $this->appConfig, $this->segmentService, new ArticleService($articleStore), $this->logger);
+
+		$this->assertSame(1, $service->dispatchBlastDeliveries('blast-articles', 100));
+		$this->assertCount(1, $callService->calls);
+		$rendered = $callService->calls[0];
+		$this->assertStringNotContainsString('{{articles}}', $rendered['bodyHtml']);
+		$this->assertStringNotContainsString('{{articles}}', $rendered['bodyText']);
+		$this->assertStringContainsString('<h2>OpenRegister 3.0 is uit</h2>', $rendered['bodyHtml']);
+		$this->assertStringContainsString('Lees verder', $rendered['bodyHtml']);
+		$this->assertStringContainsString('OpenRegister 3.0 is uit', $rendered['bodyText']);
+		$this->assertStringNotContainsString('<h2>', $rendered['bodyText']);
+	}//end testSendExpandsTheArticlesMarkerInBothBodies()
+
+	/**
+	 * An in-memory article store, so the render reads back what was written.
+	 *
+	 * @return ListObjectStore The store.
+	 */
+	private function makeArticleStore(): ListObjectStore {
+		return new class(
+			$this->createMock(ContainerInterface::class),
+			$this->createMock(IAppConfig::class),
+			$this->createMock(LoggerInterface::class),
+		) extends ListObjectStore {
+			/** @var array<string, array<string, array<string, mixed>>> */
+			public array $rows = [];
+
+			/**
+			 * @param string $configKey Ignored.
+			 * @param string $default The slug.
+			 * @return string The slug.
+			 */
+			public function schemaSlug(string $configKey, string $default): string {
+				return $default;
+			}
+
+			/**
+			 * @param string $schemaSlug The schema.
+			 * @param string $id The id.
+			 * @return array<string, mixed>|null The row.
+			 */
+			public function find(string $schemaSlug, string $id): ?array {
+				return ($this->rows[$schemaSlug][$id] ?? null);
+			}
+
+			/**
+			 * @param string $schemaSlug The schema.
+			 * @param array<string, string> $filters Field-value pairs.
+			 * @return array<int, array<string, mixed>> The rows.
+			 */
+			public function findAll(string $schemaSlug, array $filters = []): array {
+				return array_values(($this->rows[$schemaSlug] ?? []));
+			}
+
+			/**
+			 * @param string $schemaSlug The schema.
+			 * @param array<string, mixed> $payload The payload.
+			 * @param string|null $id Existing id.
+			 * @return array<string, mixed>|null The saved row.
+			 */
+			public function save(string $schemaSlug, array $payload, ?string $id = null): ?array {
+				$payload['id'] = (string)$id;
+				$this->rows[$schemaSlug][(string)$id] = $payload;
+				return $payload;
+			}
+
+			/**
+			 * @param array<string, mixed>|null $payload The row.
+			 * @return string The id.
+			 */
+			public function idOf(?array $payload): string {
+				return (string)($payload['id'] ?? '');
+			}
+		};
+	}//end makeArticleStore()
 }//end class

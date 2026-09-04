@@ -123,11 +123,20 @@ class BlastService {
 	private const OPENCONNECTOR_SOURCE_SCHEMA_SLUG = 'source';
 
 	/**
+	 * Articles resolved for a set of ids, memoised for the life of the
+	 * request so a per-delivery render does not reload them.
+	 *
+	 * @var array<string, array<int, array<string, mixed>>>
+	 */
+	private array $resolvedArticles = [];
+
+	/**
 	 * Constructor.
 	 *
 	 * @param ContainerInterface $container DI container.
 	 * @param IAppConfig $appConfig Pipelinq app config.
 	 * @param SegmentService $segmentService Segment evaluator.
+	 * @param ArticleService $articleService Article reader and `{{articles}}` renderer.
 	 * @param LoggerInterface $logger Logger.
 	 *
 	 * @spec openspec/changes/marketing-segmentation-and-blast-04-blast-attribution-services/tasks.md#task-2.3
@@ -136,6 +145,7 @@ class BlastService {
 		private ContainerInterface $container,
 		private IAppConfig $appConfig,
 		private SegmentService $segmentService,
+		private ArticleService $articleService,
 		private LoggerInterface $logger,
 	) {
 	}//end __construct()
@@ -1549,8 +1559,8 @@ class BlastService {
 		];
 
 		$subject = strtr((string)($template['subject'] ?? ''), $tokens);
-		$bodyHtml = strtr((string)($template['bodyHtml'] ?? ''), $tokens);
-		$bodyText = strtr((string)($template['bodyText'] ?? ''), $tokens);
+		$bodyHtml = strtr($this->expandArticles(template: $template, format: ArticleService::FORMAT_HTML), $tokens);
+		$bodyText = strtr($this->expandArticles(template: $template, format: ArticleService::FORMAT_TEXT), $tokens);
 
 		return [
 			'to' => (string)($delivery['email'] ?? ''),
@@ -1562,6 +1572,66 @@ class BlastService {
 			'replyTo' => (string)($template['replyTo'] ?? ''),
 		];
 	}//end renderTemplate()
+
+	/**
+	 * Expand a template's `{{articles}}` marker for one body format.
+	 *
+	 * The resolved articles are memoised per template for the life of the
+	 * request. `renderTemplate()` runs once per delivery, so a blast to ten
+	 * thousand recipients would otherwise reload the same article rows ten
+	 * thousand times to build a block that is identical every time.
+	 *
+	 * A template naming no articles, or a body carrying no marker, comes back
+	 * byte-identical: a template written before this change renders exactly as
+	 * it did.
+	 *
+	 * @param array<string, mixed> $template Template payload.
+	 * @param string $format `html` or `text`.
+	 *
+	 * @return string The body with the marker expanded.
+	 *
+	 * @spec openspec/changes/marketing-article-hub/specs/marketing-blast/spec.md#requirement-a-campaign-template-may-embed-articles
+	 */
+	private function expandArticles(array $template, string $format): string {
+		$key = 'bodyText';
+		if ($format === ArticleService::FORMAT_HTML) {
+			$key = 'bodyHtml';
+		}
+
+		$body = (string)($template[$key] ?? '');
+		if (str_contains($body, ArticleService::ARTICLES_MARKER) === false) {
+			return $body;
+		}
+
+		return $this->articleService->expandArticlesMarker(
+			body: $body,
+			articles: $this->resolveTemplateArticles(template: $template),
+			format: $format,
+		);
+	}//end expandArticles()
+
+	/**
+	 * The articles a template names, resolved once per request.
+	 *
+	 * @param array<string, mixed> $template Template payload.
+	 *
+	 * @return array<int, array<string, mixed>> The resolved articles.
+	 *
+	 * @spec openspec/changes/marketing-article-hub/specs/marketing-blast/spec.md#requirement-a-campaign-template-may-embed-articles
+	 */
+	private function resolveTemplateArticles(array $template): array {
+		$ids = ($template['articleIds'] ?? []);
+		if (is_array($ids) === false) {
+			$ids = [];
+		}
+
+		$key = implode('|', array_map('strval', array_filter($ids, 'is_scalar')));
+		if (array_key_exists($key, $this->resolvedArticles) === false) {
+			$this->resolvedArticles[$key] = $this->articleService->loadArticlesByIds(articleIds: $ids);
+		}
+
+		return $this->resolvedArticles[$key];
+	}//end resolveTemplateArticles()
 
 	/**
 	 * Resolve the effective rate limit (messages per second).

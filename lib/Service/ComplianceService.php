@@ -630,6 +630,7 @@ class ComplianceService {
 			'senderName' => (string)($payload['senderName'] ?? ''),
 			'senderEmail' => (string)($payload['senderEmail'] ?? ''),
 			'footerOverride' => (string)($payload['footerOverride'] ?? ''),
+			'articleIds' => $this->normaliseArticleIds(value: ($payload['articleIds'] ?? [])),
 			'createdBy' => $createdByUid,
 			'createdAt' => $now,
 			'updatedAt' => $now,
@@ -672,6 +673,10 @@ class ComplianceService {
 			}
 		}
 
+		if (array_key_exists('articleIds', $patch) === true) {
+			$payload['articleIds'] = $this->normaliseArticleIds(value: $patch['articleIds']);
+		}
+
 		$channel = strtolower((string)($existing['channel'] ?? 'email'));
 		$error = $this->validateTemplate(templateData: $payload, channel: $channel);
 		if ($error !== null) {
@@ -686,6 +691,39 @@ class ComplianceService {
 
 		return ['template' => $saved];
 	}//end patchTemplate()
+
+	/**
+	 * Normalise the embedded-article list to plain, non-empty strings.
+	 *
+	 * The order is the marketer's and is kept: it is the order the
+	 * `{{articles}}` block renders in. Duplicates are dropped, because the
+	 * same article twice in one newsletter is a mistake nobody meant.
+	 *
+	 * @param mixed $value Whatever arrived in the request body.
+	 *
+	 * @return array<int, string> Article ids in the order they were given.
+	 *
+	 * @spec openspec/changes/marketing-article-hub/specs/marketing-blast/spec.md#requirement-a-campaign-template-may-embed-articles
+	 */
+	private function normaliseArticleIds(mixed $value): array {
+		if (is_array($value) === false) {
+			return [];
+		}
+
+		$out = [];
+		foreach ($value as $id) {
+			if (is_scalar($id) === false) {
+				continue;
+			}
+
+			$id = trim((string)$id);
+			if ($id !== '' && in_array($id, $out, true) === false) {
+				$out[] = $id;
+			}
+		}
+
+		return $out;
+	}//end normaliseArticleIds()
 
 	/**
 	 * Load every CampaignTemplate via ObjectService.
