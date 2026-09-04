@@ -243,6 +243,34 @@ class ListPublicControllerTest extends TestCase {
 	}//end testPreferencesRejectedTokenRegistersAttempt()
 
 	/**
+	 * Saving preferences answers with what changed, and a token that does not
+	 * verify is counted and refused with the same 410 every other rejected
+	 * token gets.
+	 *
+	 * @spec openspec/specs/marketing-lists/spec.md#requirement-the-preference-centre-shows-and-saves-a-subscribers-lists
+	 *
+	 * @return void
+	 */
+	public function testSavePreferencesAnswersWhatChangedAndCountsARejection(): void {
+		$this->preferences->method('savePreferences')->willReturnOnConsecutiveCalls(
+			['status' => 'saved', 'confirmed' => 1, 'unsubscribed' => 2],
+			['status' => 'invalid', 'confirmed' => 0, 'unsubscribed' => 0],
+		);
+
+		$controller = $this->makeController();
+		$saved = $controller->savePreferences(token: 'good', lists: ['list-1']);
+		$refused = $controller->savePreferences(token: 'forged', lists: []);
+
+		$this->assertSame(Http::STATUS_OK, $saved->getStatus());
+		$this->assertSame(1, $saved->getData()['confirmed']);
+		$this->assertSame(2, $saved->getData()['unsubscribed']);
+
+		$this->assertSame(Http::STATUS_GONE, $refused->getStatus());
+		$this->assertCount(1, $this->attempts);
+		$this->assertSame('pipelinq_mailing_list_token', $this->attempts[0]['action']);
+	}//end testSavePreferencesAnswersWhatChangedAndCountsARejection()
+
+	/**
 	 * Build the controller over the stubs, with a fixed caller address.
 	 *
 	 * @return ListPublicController The controller under test.
