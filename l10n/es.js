@@ -1841,7 +1841,6 @@ OC.L10N.register(
         "Thank you!": "¡Gracias!",
         "Thanks for your feedback.": "Gracias por sus comentarios.",
         "That time was just taken. Please choose another slot.": "Esa hora se acaba de ocupar. Elija otra franja.",
-        "The HTTPS endpoint of the Shillinq project ledger. Leave empty to disable ledger sync.": "El endpoint HTTPS del libro mayor de proyectos de Shillinq. Déjelo vacío para desactivar la sincronización del libro mayor.",
         "The OpenConnector source that holds the warehouse credentials": "El origen de OpenConnector que contiene las credenciales del almacén de datos",
         "The optional xWiki Nextcloud app is not installed. Pipelinq is falling back to the configured direct URL.": "La aplicación opcional xWiki de Nextcloud no está instalada. Pipelinq está recurriendo a la URL directa configurada.",
         "The receipt is sent to the linked customer:": "El recibo se envía al cliente vinculado:",
@@ -2197,7 +2196,14 @@ OC.L10N.register(
         "Select strength…": "Seleccione la fuerza…",
         "Select type…": "Seleccione un tipo…",
         "Card auth code, voucher serial, …": "Código de autorización de tarjeta, número de serie del vale, …",
-        "CASH, CARD, VOUCHER, …": "EFECTIVO, TARJETA, VALE, …"
+        "CASH, CARD, VOUCHER, …": "EFECTIVO, TARJETA, VALE, …",
+        "The HTTPS endpoint Shillinq receives approved hours on. Leave empty to disable the handoff.": "El punto final HTTPS en el que Shillinq recibe las horas aprobadas. Déjalo vacío para desactivar el traspaso.",
+        "What the quarter is set to close, per owner.": "Lo que se prevé cerrar en el trimestre, por responsable.",
+        "Points, tiers and redemptions per loyalty programme.": "Puntos, niveles y canjes por programa de fidelización.",
+        "No projects for this client yet.": "Aún no hay proyectos para este cliente.",
+        "Projecten": "Proyectos",
+        "Factureerbaar": "Facturable",
+        "Einddatum": "Fecha de fin"
     },
     "nplurals=2; plural=(n != 1);"
 )

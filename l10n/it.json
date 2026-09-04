@@ -1840,7 +1840,6 @@
         "Thank you!": "Grazie!",
         "Thanks for your feedback.": "Grazie per il Suo feedback.",
         "That time was just taken. Please choose another slot.": "Quell'orario è appena stato occupato. Scelga un'altra fascia.",
-        "The HTTPS endpoint of the Shillinq project ledger. Leave empty to disable ledger sync.": "L'endpoint HTTPS del registro di progetto Shillinq. Lasci vuoto per disabilitare la sincronizzazione del registro.",
         "The OpenConnector source that holds the warehouse credentials": "L'origine OpenConnector che contiene le credenziali del warehouse",
         "The optional xWiki Nextcloud app is not installed. Pipelinq is falling back to the configured direct URL.": "L'app facoltativa xWiki per Nextcloud non è installata. Pipelinq utilizza l'URL diretto configurato come ripiego.",
         "The receipt is sent to the linked customer:": "Lo scontrino viene inviato al cliente collegato:",
@@ -2196,7 +2195,14 @@
         "Select strength…": "Seleziona forza…",
         "Select type…": "Seleziona tipo…",
         "Card auth code, voucher serial, …": "Codice di autorizzazione carta, numero di serie del buono, …",
-        "CASH, CARD, VOUCHER, …": "CONTANTI, CARTA, BUONO, …"
+        "CASH, CARD, VOUCHER, …": "CONTANTI, CARTA, BUONO, …",
+        "The HTTPS endpoint Shillinq receives approved hours on. Leave empty to disable the handoff.": "L'endpoint HTTPS su cui Shillinq riceve le ore approvate. Lascia vuoto per disattivare il passaggio.",
+        "What the quarter is set to close, per owner.": "Quanto si prevede di chiudere nel trimestre, per responsabile.",
+        "Points, tiers and redemptions per loyalty programme.": "Punti, livelli e riscatti per programma fedeltà.",
+        "No projects for this client yet.": "Nessun progetto per questo cliente.",
+        "Projecten": "Progetti",
+        "Factureerbaar": "Fatturabile",
+        "Einddatum": "Data di fine"
     },
     "plurals": null
 }

@@ -18,7 +18,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pipelinq-time-to-shillinq-wip/specs/pipelinq-time-to-shillinq-wip/spec.md#REQ-WIP-003
+ * @spec openspec/changes/archive/2026-06-14-pipelinq-time-to-shillinq-wip/specs/pipelinq-time-to-shillinq-wip/spec.md#REQ-WIP-003
  */
 
 declare(strict_types=1);
@@ -34,7 +34,7 @@ use OCP\IGroupManager;
  * both the group manager and the notification service (keeps listener coupling
  * within the project's PHPMD threshold).
  *
- * @spec openspec/changes/pipelinq-time-to-shillinq-wip/specs/pipelinq-time-to-shillinq-wip/spec.md#REQ-WIP-003
+ * @spec openspec/changes/archive/2026-06-14-pipelinq-time-to-shillinq-wip/specs/pipelinq-time-to-shillinq-wip/spec.md#REQ-WIP-003
  */
 class WipSyncNotifier {
 	/**
@@ -57,7 +57,7 @@ class WipSyncNotifier {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/pipelinq-time-to-shillinq-wip/specs/pipelinq-time-to-shillinq-wip/spec.md#REQ-WIP-003
+	 * @spec openspec/changes/archive/2026-06-14-pipelinq-time-to-shillinq-wip/specs/pipelinq-time-to-shillinq-wip/spec.md#REQ-WIP-003
 	 */
 	public function notifyFailure(string $title, string $uuid): void {
 		$adminGroup = $this->groupManager->get('admin');

@@ -57,12 +57,6 @@ class SettingsLoadService {
 		'queue',
 		'skill',
 		'agentProfile',
-		// Project ledger schemas (project-to-shillinq-ledger integration).
-		'project',
-		'projectPhase',
-		// Project / WBS hierarchy (project-task-hierarchy).
-		'projectTask',
-		'projectActivity',
 		// Time & WIP tracking (time-wip).
 		'timeEntry',
 		'posTransaction',

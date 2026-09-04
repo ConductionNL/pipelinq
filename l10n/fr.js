@@ -1841,7 +1841,6 @@ OC.L10N.register(
         "Thank you!": "Merci !",
         "Thanks for your feedback.": "Merci pour votre retour.",
         "That time was just taken. Please choose another slot.": "Ce créneau vient d'être pris. Veuillez en choisir un autre.",
-        "The HTTPS endpoint of the Shillinq project ledger. Leave empty to disable ledger sync.": "Le point de terminaison HTTPS du grand livre de projet Shillinq. Laissez vide pour désactiver la synchronisation du grand livre.",
         "The OpenConnector source that holds the warehouse credentials": "La source OpenConnector qui contient les identifiants de l'entrepôt",
         "The optional xWiki Nextcloud app is not installed. Pipelinq is falling back to the configured direct URL.": "L'application Nextcloud xWiki facultative n'est pas installée. Pipelinq se rabat sur l'URL directe configurée.",
         "The receipt is sent to the linked customer:": "Le reçu est envoyé au client lié :",
@@ -2197,7 +2196,14 @@ OC.L10N.register(
         "Select strength…": "Sélectionner la force…",
         "Select type…": "Sélectionner un type…",
         "Card auth code, voucher serial, …": "Code d'autorisation de carte, numéro de série du bon, …",
-        "CASH, CARD, VOUCHER, …": "ESPÈCES, CARTE, BON, …"
+        "CASH, CARD, VOUCHER, …": "ESPÈCES, CARTE, BON, …",
+        "The HTTPS endpoint Shillinq receives approved hours on. Leave empty to disable the handoff.": "Le point de terminaison HTTPS sur lequel Shillinq reçoit les heures approuvées. Laisser vide pour désactiver le transfert.",
+        "What the quarter is set to close, per owner.": "Ce que le trimestre devrait conclure, par responsable.",
+        "Points, tiers and redemptions per loyalty programme.": "Points, niveaux et échanges par programme de fidélité.",
+        "No projects for this client yet.": "Aucun projet pour ce client pour l'instant.",
+        "Projecten": "Projets",
+        "Factureerbaar": "Facturable",
+        "Einddatum": "Date de fin"
     },
     "nplurals=2; plural=(n != 1);"
 )

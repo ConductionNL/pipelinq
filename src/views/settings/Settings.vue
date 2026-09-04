@@ -161,19 +161,9 @@
 			:description="
 				t(
 					'pipelinq',
-					'The HTTPS endpoint of the Shillinq project ledger. Leave empty to disable ledger sync.',
+					'The HTTPS endpoint Shillinq receives approved hours on. Leave empty to disable the handoff.',
 				)
 			">
-			<NcTextField
-				v-model="config.shillinq_ledger_webhook_url"
-				:label="t('pipelinq', 'Shillinq Ledger Webhook URL')"
-				placeholder="https://shillinq.example.com/ledger/webhook"
-				:error="shillinqUrlInvalid"
-				:helperText="
-					shillinqUrlInvalid
-						? t('pipelinq', 'Please enter a valid HTTPS URL')
-						: ''
-				" />
 			<NcTextField
 				v-model="config.shillinq_wip_webhook_url"
 				:label="t('pipelinq', 'Shillinq WIP webhook URL')"
@@ -206,7 +196,7 @@
 				" />
 			<NcButton
 				variant="primary"
-				:disabled="savingShillinq || shillinqUrlInvalid || wipUrlInvalid"
+				:disabled="savingShillinq || wipUrlInvalid"
 				@click="saveShillinq">
 				<template #icon>
 					<NcLoadingIcon v-if="savingShillinq" :size="16" />
@@ -527,29 +517,10 @@ export default {
 		},
 
 		/**
-		 * Whether the entered Shillinq webhook URL is present but not a valid HTTPS URL.
-		 * An empty value is valid (disables the integration).
-		 *
-		 * @spec exclude input validation predicate: checks the entered URL parses as
-		 *   https, with empty meaning the integration is off
-		 */
-		shillinqUrlInvalid() {
-			const url = (this.config.shillinq_ledger_webhook_url || '').trim()
-			if (url === '') {
-				return false
-			}
-			try {
-				return new URL(url).protocol !== 'https:'
-			} catch {
-				return true
-			}
-		},
-
-		/**
 		 * Whether the entered Shillinq WIP webhook URL is present but not a valid HTTPS URL.
 		 * An empty value is valid (disables the integration).
 		 *
-		 * @spec openspec/changes/pipelinq-time-to-shillinq-wip/specs/pipelinq-time-to-shillinq-wip/spec.md#REQ-WIP-004
+		 * @spec openspec/changes/archive/2026-06-14-pipelinq-time-to-shillinq-wip/specs/pipelinq-time-to-shillinq-wip/spec.md#REQ-WIP-004
 		 */
 		wipUrlInvalid() {
 			const url = (this.config.shillinq_wip_webhook_url || '').trim()
@@ -792,10 +763,10 @@ export default {
 		/**
 		 * Persist the Shillinq ledger webhook URL through the standard settings endpoint.
 		 *
-		 * @spec openspec/changes/pipelinq-project-to-shillinq-ledger/specs.md#REQ-PLG-006-03
+		 * @spec openspec/changes/archive/2026-06-14-pipelinq-time-to-shillinq-wip/specs/pipelinq-time-to-shillinq-wip/spec.md#REQ-WIP-003
 		 */
 		async saveShillinq() {
-			if (this.shillinqUrlInvalid || this.wipUrlInvalid) {
+			if (this.wipUrlInvalid) {
 				return
 			}
 			this.savingShillinq = true
@@ -803,9 +774,6 @@ export default {
 			try {
 				const result = await this.settingsStore.saveSettings({
 					...this.config,
-					shillinq_ledger_webhook_url: (
-						this.config.shillinq_ledger_webhook_url || ''
-					).trim(),
 					shillinq_wip_webhook_url: (
 						this.config.shillinq_wip_webhook_url || ''
 					).trim(),

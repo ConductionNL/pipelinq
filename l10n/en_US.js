@@ -548,7 +548,14 @@ OC.L10N.register(
         "Saving…": "Saving…",
         "Search clients…": "Search clients…",
         "Search contacts…": "Search contacts…",
-        "Search products…": "Search products…"
+        "Search products…": "Search products…",
+        "The HTTPS endpoint Shillinq receives approved hours on. Leave empty to disable the handoff.": "The HTTPS endpoint Shillinq receives approved hours on. Leave empty to disable the handoff.",
+        "What the quarter is set to close, per owner.": "What the quarter is set to close, per owner.",
+        "Points, tiers and redemptions per loyalty programme.": "Points, tiers and redemptions per loyalty programme.",
+        "No projects for this client yet.": "No projects for this client yet.",
+        "Projecten": "Projecten",
+        "Factureerbaar": "Factureerbaar",
+        "Einddatum": "Einddatum"
     },
     "nplurals=2; plural=(n != 1);"
 )
