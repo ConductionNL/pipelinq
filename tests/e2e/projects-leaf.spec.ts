@@ -46,14 +46,14 @@ const PROJECT_TITLE = `E2E cross-app project ${Date.now()}`
  * @param schema   The schema slug.
  * @param body     The object body.
  *
- * @return The created object's id, or null.
+ * @return The created object's id, and the reason when it could not be made.
  */
 async function createObject(
 	page: Page,
 	register: string,
 	schema: string,
 	body: Record<string, unknown>,
-): Promise<string | null> {
+): Promise<{ id: string | null, error: string }> {
 	return await page.evaluate(
 		async ({ register, schema, body }) => {
 			const res = await fetch(
@@ -70,11 +70,23 @@ async function createObject(
 					body: JSON.stringify(body),
 				},
 			)
+			const text = await res.text()
 			if (!res.ok) {
-				return null
+				// The body carries the reason — a missing required property, an
+				// RBAC refusal. Returning a bare null here is what made the first
+				// run of this spec report "could not seed" and nothing else.
+				return { id: null, error: `HTTP ${res.status}: ${text.slice(0, 300)}` }
 			}
-			const created = await res.json()
-			return created?.id ?? created?.['@self']?.id ?? null
+			let created
+			try {
+				created = JSON.parse(text)
+			} catch {
+				return { id: null, error: `unparseable body: ${text.slice(0, 200)}` }
+			}
+			return {
+				id: created?.id ?? created?.['@self']?.id ?? null,
+				error: '',
+			}
 		},
 		{ register, schema, body },
 	)
@@ -89,40 +101,50 @@ test.describe('client projects come from planninq', () => {
 	}) => {
 		await openApp(page)
 
-		// Planninq must be installed, or the rest of this test is meaningless.
+		// Planninq must be INSTALLED, or the rest of this test is meaningless.
 		// Asserted FIRST and explicitly, so an absent app reports itself rather
-		// than surfacing four assertions later as "the project did not appear".
-		const planninqServed = await page.evaluate(async () => {
-			const res = await fetch(
-				'/index.php/apps/openregister/api/objects/planninq/project?_limit=1',
-			)
-			return res.status
-		})
+		// than surfacing three assertions later as "the project did not appear".
+		//
+		// ⚠️ Read from `OC.appswebroots`, NOT from the object API. Measured
+		// 2026-09-04: with planninq disabled, GET /api/objects/planninq/project
+		// still answers < 400, because OpenRegister's register and schema rows
+		// outlive `occ app:disable` — so an API probe here reports a healthy
+		// integration for an app that is switched off, which is the exact class
+		// of false green this spec exists to catch.
+		const planninqInstalled = await page.evaluate(
+			() => Object.keys(window.OC?.appswebroots ?? {}).includes('planninq'),
+		)
 		expect(
-			planninqServed,
-			'planninq is not installed or its register was never imported, so this page has nothing to read across to. '
+			planninqInstalled,
+			'planninq is not installed, so this page has nothing to read across to. '
 				+ 'It is provisioned by additional-apps in code-quality.yml — repo planix, app planninq.',
-		).toBeLessThan(400)
+		).toBe(true)
 
-		const clientId = await createObject(page, 'pipelinq', 'client', {
+		// `contactsUid` is REQUIRED on client and has no default. Omitting it
+		// fails the write with a validation message, not a silent empty page.
+		const client = await createObject(page, 'pipelinq', 'client', {
 			name: `E2E cross-app client ${Date.now()}`,
 			type: 'organization',
+			contactsUid: `e2e-cross-app-${Date.now()}`,
 		})
-		expect(clientId, 'could not seed a pipelinq client').toBeTruthy()
+		expect(
+			client.id,
+			`could not seed a pipelinq client — ${client.error}`,
+		).toBeTruthy()
 
-		const projectId = await createObject(page, 'planninq', 'project', {
+		const project = await createObject(page, 'planninq', 'project', {
 			title: PROJECT_TITLE,
 			status: 'active',
 			billable: true,
 			budgetAmount: 12345,
-			client: clientId,
+			client: client.id,
 		})
 		expect(
-			projectId,
-			'could not seed a planninq project — the client FK is the whole point of this test',
+			project.id,
+			`could not seed a planninq project, and the client FK is the whole point of this test — ${project.error}`,
 		).toBeTruthy()
 
-		await page.goto(`/apps/pipelinq/clients/${clientId}`)
+		await page.goto(`/apps/pipelinq/clients/${client.id}`)
 
 		// The project's NAME, not the section heading. A heading renders whether
 		// or not the cross-app read returned anything.
