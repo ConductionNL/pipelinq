@@ -5,7 +5,7 @@
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">Client Management | Pipelinq</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" property="og:image" content="https://pipelinq.conduction.nl/img/og-pipelinq.png"><meta data-rh="true" name="twitter:image" content="https://pipelinq.conduction.nl/img/og-pipelinq.png"><meta data-rh="true" property="og:url" content="https://pipelinq.conduction.nl/docs/Features/client-management/"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" property="og:locale:alternate" content="nl"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="twitter:site" content="@ConductionNL"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:type" content="website"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Client Management | Pipelinq"><meta data-rh="true" name="description" content="Manages persons and organizations as CRM clients, with linked contact persons and optional sync to Nextcloud&#x27;s native Contacts app."><meta data-rh="true" property="og:description" content="Manages persons and organizations as CRM clients, with linked contact persons and optional sync to Nextcloud&#x27;s native Contacts app."><link data-rh="true" rel="icon" href="/img/favicon.svg"><link data-rh="true" rel="canonical" href="https://pipelinq.conduction.nl/docs/Features/client-management/"><link data-rh="true" rel="alternate" href="https://pipelinq.conduction.nl/docs/Features/client-management/" hreflang="en"><link data-rh="true" rel="alternate" href="https://pipelinq.conduction.nl/nl/docs/Features/client-management/" hreflang="nl"><link data-rh="true" rel="alternate" href="https://pipelinq.conduction.nl/docs/Features/client-management/" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pipelinq: Feature Overview","item":"https://pipelinq.conduction.nl/docs/Features/"},{"@type":"ListItem","position":2,"name":"Client Management","item":"https://pipelinq.conduction.nl/docs/Features/client-management"}]}</script><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","@id":"https://pipelinq.conduction.nl/docs/Features/client-management#article","mainEntityOfPage":"https://pipelinq.conduction.nl/docs/Features/client-management","headline":"Client Management","inLanguage":"en","publisher":{"@id":"https://www.conduction.nl/#org"},"description":"Manages persons and organizations as CRM clients, with linked contact persons and optional sync to Nextcloud's native Contacts app.","author":{"@type":"Organization","name":"Conduction","@id":"https://www.conduction.nl/#org"}}</script><script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","@id":"https://www.conduction.nl/#org","name":"Conduction B.V.","alternateName":"Conduction","url":"https://www.conduction.nl/","logo":"https://www.conduction.nl/img/brand/avatar-conduction-gold-on-white.svg","foundingDate":"2019","description":"Dutch open-source software company building EUPL-1.2 apps for the Nextcloud workspace.","address":{"@type":"PostalAddress","streetAddress":"Lauriergracht 14h","postalCode":"1016 RR","addressLocality":"Amsterdam","addressCountry":"NL"},"email":"info@conduction.nl","telephone":"+31-85-303-6840","taxID":"NL860784241B01","vatID":"NL860784241B01","identifier":{"@type":"PropertyValue","propertyID":"KvK","value":"76741850"},"sameAs":["https://codeberg.org/Conduction","https://www.linkedin.com/company/conduction/"]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","@id":"https://pipelinq.conduction.nl/#website","url":"https://pipelinq.conduction.nl/","name":"Pipelinq","publisher":{"@id":"https://www.conduction.nl/#org"},"inLanguage":["en","nl"]}</script><link rel="stylesheet" href="/assets/css/styles.e0ad784d.css">
-<script src="/assets/js/runtime~main.3254a854.js" defer="defer"></script>
+<script src="/assets/js/runtime~main.a2a8f5d7.js" defer="defer"></script>
 <script src="/assets/js/main.17af5596.js" defer="defer"></script>
 </head>
 <body>
@@ -18,6 +18,7 @@
 <ul>
 <li class=""><code>openspec/specs/client-management/spec.md</code></li>
 <li class=""><code>openspec/specs/contacts-sync/spec.md</code></li>
+<li class=""><code>openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md</code></li>
 </ul>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="features">Features<a href="#features" class="hash-link" aria-label="Direct link to Features" title="Direct link to Features" translate="no">​</a></h2>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="client-crud-mvp">Client CRUD (MVP)<a href="#client-crud-mvp" class="hash-link" aria-label="Direct link to Client CRUD (MVP)" title="Direct link to Client CRUD (MVP)" translate="no">​</a></h3>
@@ -27,6 +28,9 @@
 <li class="">Client detail view with summary stats and linked entities (contacts, leads, requests)</li>
 <li class="">Client types: person and organization</li>
 <li class="">Fields: name, email, phone, website, address, type, notes</li>
+<li class="">Typed channels: multiple emails and phone numbers (kind: work, private, mobile, whatsapp, other), each marked primary or verified</li>
+<li class="">Social profiles: LinkedIn, X, Mastodon, Bluesky, Facebook, Instagram, Threads, TikTok, YouTube, or other, with a handle, a profile URL, and whether Conduction follows or is followed</li>
+<li class="">Preferred channel, timezone, and language, so a mailing can reach a client on the channel and at the time they actually want it</li>
 </ul>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="contact-person-management-mvp">Contact Person Management (MVP)<a href="#contact-person-management-mvp" class="hash-link" aria-label="Direct link to Contact Person Management (MVP)" title="Direct link to Contact Person Management (MVP)" translate="no">​</a></h3>
 <p>Contact persons are individuals linked to a client organization, representing specific people within that organization.</p>
@@ -36,6 +40,7 @@
 <li class="">Contact detail view with client navigation link</li>
 <li class="">Fields: name, role, email, phone</li>
 <li class="">Batch client name resolution in list view (avoids N+1 queries)</li>
+<li class="">Same typed emails, phones, social profiles, and channel preferences as clients (see above)</li>
 </ul>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="nextcloud-contacts-sync-mvp">Nextcloud Contacts Sync (MVP)<a href="#nextcloud-contacts-sync-mvp" class="hash-link" aria-label="Direct link to Nextcloud Contacts Sync (MVP)" title="Direct link to Nextcloud Contacts Sync (MVP)" translate="no">​</a></h3>
 <p>Two-way sync between Pipelinq clients/contacts and Nextcloud&#x27;s native Contacts app via IManager, eliminating duplicate data entry.</p>
@@ -44,6 +49,7 @@
 <li class="">Import from Contacts: pull existing contacts into Pipelinq</li>
 <li class="">Sync status indicator: badge showing &quot;Synced with Contacts&quot; on synced entities</li>
 <li class=""><code>contactsUid</code> field tracks the link between Pipelinq and Contacts records</li>
+<li class="">Typed emails and phones map to multiple vCard <code>EMAIL</code>/<code>TEL</code> properties (with a <code>TYPE</code>); social profiles map to <code>X-SOCIALPROFILE</code>, both directions</li>
 </ul>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="orphaned-reference-handling-mvp">Orphaned Reference Handling (MVP)<a href="#orphaned-reference-handling-mvp" class="hash-link" aria-label="Direct link to Orphaned Reference Handling (MVP)" title="Direct link to Orphaned Reference Handling (MVP)" translate="no">​</a></h3>
 <p>When a linked entity (e.g., a client linked to a contact) is deleted, the UI shows <code>[Deleted client]</code> placeholders instead of broken references or empty fields.</p>
