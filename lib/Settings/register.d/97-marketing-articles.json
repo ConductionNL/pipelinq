@@ -183,6 +183,11 @@
             "description": "Last update timestamp (UTC).",
             "title": "Updated At"
           }
+        },
+        "configuration": {
+          "objectNameField": "title",
+          "objectDescriptionField": "summary",
+          "objectImageField": "heroImage"
         }
       },
       "campaignTemplate": {

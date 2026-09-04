@@ -509,10 +509,24 @@ return [
 
         // Marketing — CampaignTemplates (marketing-segmentation-and-blast chain member 06).
         // Specific routes precede any wildcard {slug} routes (ADR-016).
-        ['name' => 'template#index',  'url' => '/api/templates',      'verb' => 'GET'],
-        ['name' => 'template#create', 'url' => '/api/templates',      'verb' => 'POST'],
-        ['name' => 'template#show',   'url' => '/api/templates/{id}', 'verb' => 'GET'],
-        ['name' => 'template#update', 'url' => '/api/templates/{id}', 'verb' => 'PATCH'],
+        ['name' => 'template#index',   'url' => '/api/templates',          'verb' => 'GET'],
+        ['name' => 'template#create',  'url' => '/api/templates',          'verb' => 'POST'],
+        ['name' => 'template#preview', 'url' => '/api/templates/{id}/preview', 'verb' => 'GET'],
+        ['name' => 'template#show',    'url' => '/api/templates/{id}',     'verb' => 'GET'],
+        ['name' => 'template#update',  'url' => '/api/templates/{id}',     'verb' => 'PATCH'],
+
+        // Marketing — Articles (marketing-article-hub). Articles are the
+        // content hub for both mailings and posts. Literal-suffixed routes
+        // (publish, archive, transition, usages) precede the bare {id}
+        // routes (ADR-016), matching the Blast block below.
+        ['name' => 'article#index',      'url' => '/api/articles',                'verb' => 'GET'],
+        ['name' => 'article#create',     'url' => '/api/articles',                'verb' => 'POST'],
+        ['name' => 'article#publish',    'url' => '/api/articles/{id}/publish',   'verb' => 'POST'],
+        ['name' => 'article#archive',    'url' => '/api/articles/{id}/archive',   'verb' => 'POST'],
+        ['name' => 'article#transition', 'url' => '/api/articles/{id}/transition', 'verb' => 'POST'],
+        ['name' => 'article#usages',     'url' => '/api/articles/{id}/usages',    'verb' => 'GET'],
+        ['name' => 'article#show',       'url' => '/api/articles/{id}',           'verb' => 'GET'],
+        ['name' => 'article#update',     'url' => '/api/articles/{id}',           'verb' => 'PATCH'],
 
         // Marketing — Blasts (marketing-segmentation-and-blast chain member 06).
         // Specific routes precede any wildcard {slug} routes (ADR-016).
