@@ -20,9 +20,6 @@ return [
         ['name' => 'settings#getUserSettings', 'url' => '/api/settings/user', 'verb' => 'GET'],
         ['name' => 'settings#updateUserSettings', 'url' => '/api/settings/user', 'verb' => 'PUT'],
 
-        // Admin — Shillinq project ledger manual re-dispatch (project-to-shillinq-ledger).
-        ['name' => 'ledger#retry', 'url' => '/api/ledger/retry/{projectId}', 'verb' => 'POST'],
-
         // Admin — Shillinq WIP manual re-dispatch (pipelinq-time-to-shillinq-wip / REQ-WIP-003).
         ['name' => 'timeEntryWip#retry', 'url' => '/api/time-entries/{uuid}/wip-retry', 'verb' => 'POST'],
 
@@ -490,9 +487,11 @@ return [
         // Specific routes precede any wildcard {slug} routes (ADR-016).
         ['name' => 'segment#index',         'url' => '/api/segments',                  'verb' => 'GET'],
         ['name' => 'segment#create',        'url' => '/api/segments',                  'verb' => 'POST'],
+        ['name' => 'segment#preview',       'url' => '/api/segments/preview',          'verb' => 'POST'],
         ['name' => 'segment#refreshSize',   'url' => '/api/segments/{id}/size',        'verb' => 'POST'],
         ['name' => 'segment#members',       'url' => '/api/segments/{id}/members',     'verb' => 'GET'],
         ['name' => 'segment#show',          'url' => '/api/segments/{id}',             'verb' => 'GET'],
+        ['name' => 'segment#update',        'url' => '/api/segments/{id}',             'verb' => 'PATCH'],
 
         // Marketing — Mailing lists and subscriptions (marketing-lists-and-
         // double-opt-in). The marketer's side; the subscriber's side is the

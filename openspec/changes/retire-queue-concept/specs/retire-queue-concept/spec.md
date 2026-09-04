@@ -8,10 +8,14 @@ Pipelinq SHALL NOT model a queue as a record. The queue SHALL be every ticket th
 open and has no assignee, rendered on one page at `/queue` as an index over the
 `ticket` schema.
 
-The base filter SHALL be `assignee: "IS NULL"` and `status_in: ["new",
-"in_progress"]`. The `assignee_isnull=true` spelling SHALL NOT be used: OpenRegister's
-`SearchQueryHandler::cleanQuery` compares the value with `=== true`, so a query string
-degrades it to `IS NOT NULL` and the page renders empty with no error.
+The base filter SHALL be `assignee: "IS NULL"` and
+`status_notIn: ["resolved", "completed", "rejected", "converted", "closed"]`, naming the
+closed half of the lifecycle so a newly added open status is in the queue by default.
+
+`assignee: "IS NULL"` is the literal sentinel every OpenRegister condition builder
+matches by value, and it SHALL be preferred over the `assignee_isnull=true` suffix, which
+was unimplemented when this page shipped and works only on instances carrying
+openregister `isnull-filter-operator`.
 
 #### Scenario: The queue holds unassigned open tickets
 

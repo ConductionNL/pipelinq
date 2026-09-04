@@ -500,7 +500,7 @@
 		},
 		{
 			"id": "ClientDetail",
-			"_note": "Client 360 record as a declarative type:detail page (pipelinq-client-contact-detail-declarative). Identity + account/relationship fields auto-render in the body (CnObjectDataWidget; name/email/phone/address/website are sourced from the linked NC contact and stay read-only via the index fieldOverrides). KPI chips come from summaryAggregates; related lists (leads/projecten/contactmomenten/complaints/contracts, FK 'client') from relatedCollections; the rich sub-features (Relationships / Activity / Communication / Bookings / contactmoment quick-log) stay in the page body via bodyWidgets registered as kind:'section'. KEPT-AS-NOTE: (1) the 'Edit in Contacts' deep-link and the delete-with-linked-entity warning have no declarative primitive — the page Delete uses CnDetailPage's standard delete and 'Edit in Contacts' is reachable from the linked NC contact; (2) summaryAggregates filters are equality-only, so 'Open leads'=status:open (the lead enum is open|won|lost) and 'Open requests' counts status:new (in_progress not expressible as one equality chip); (3) the contactmoment quick-log no longer auto-refreshes the related list on save — use the page Refresh action. klantbeeld-360-activation: (4) Contacts and Requests moved from relatedCollections into object-list widgets (client-quick-contacts / client-quick-requests) with allowCreate:true so 'Contactpersoon toevoegen' / 'Nieuw verzoek' are one-click, pre-linked-to-this-client quick actions (CnObjectListWidget merges its resolved filter into the create payload as defaults — the FK is silently pre-filled); (5) 'Nieuw verzoek's ticketType is NOT silently defaulted — CnObjectListWidget's create dialog does not yet forward its content.filter into CnFormDialog's initialData/lockedFields (only into the post-submit payload merge), so the required ticketType enum still needs one manual pick in the dialog. Filed as an nc-vue follow-up (wire resolvedFilter into initialData+lockedFields); the client FK prefill itself IS fully automatic since 'client' is not required. (6) 'Notitie toevoegen' reuses the existing 'notes' integration widget (same primitive as LeadDetail's lead-notes) — no bespoke component. (7) The consolidated summary (open-ticket count across all ticketTypes, SLA breached/at-risk, last activity) is the one piece the declarative layer can't express (ADR-031 exception 2) — four endpoint-bound `stat` widgets read `Customer360SummaryService` via `GET /api/customer-360/summary?clientId=@objectId`, the same source.kind:'endpoint' binding the rapportage KPI tiles already use.",
+			"_note": "Client 360 record as a declarative type:detail page (pipelinq-client-contact-detail-declarative). Identity + account/relationship fields auto-render in the body (CnObjectDataWidget; name/email/phone/address/website are sourced from the linked NC contact and stay read-only via the index fieldOverrides). KPI chips come from summaryAggregates; related lists (leads/contactmomenten/complaints/contracts, FK 'client') from relatedCollections; the rich sub-features (Relationships / Activity / Communication / Bookings / contactmoment quick-log) stay in the page body via bodyWidgets registered as kind:'section'. KEPT-AS-NOTE: (1) the 'Edit in Contacts' deep-link and the delete-with-linked-entity warning have no declarative primitive — the page Delete uses CnDetailPage's standard delete and 'Edit in Contacts' is reachable from the linked NC contact; (2) summaryAggregates filters are equality-only, so 'Open leads'=status:open (the lead enum is open|won|lost) and 'Open requests' counts status:new (in_progress not expressible as one equality chip); (3) the contactmoment quick-log no longer auto-refreshes the related list on save — use the page Refresh action. klantbeeld-360-activation: (4) Contacts and Requests moved from relatedCollections into object-list widgets (client-quick-contacts / client-quick-requests) with allowCreate:true so 'Contactpersoon toevoegen' / 'Nieuw verzoek' are one-click, pre-linked-to-this-client quick actions (CnObjectListWidget merges its resolved filter into the create payload as defaults — the FK is silently pre-filled); (5) 'Nieuw verzoek's ticketType is NOT silently defaulted — CnObjectListWidget's create dialog does not yet forward its content.filter into CnFormDialog's initialData/lockedFields (only into the post-submit payload merge), so the required ticketType enum still needs one manual pick in the dialog. Filed as an nc-vue follow-up (wire resolvedFilter into initialData+lockedFields); the client FK prefill itself IS fully automatic since 'client' is not required. (6) 'Notitie toevoegen' reuses the existing 'notes' integration widget (same primitive as LeadDetail's lead-notes) — no bespoke component. (7) The consolidated summary (open-ticket count across all ticketTypes, SLA breached/at-risk, last activity) is the one piece the declarative layer can't express (ADR-031 exception 2) — four endpoint-bound `stat` widgets read `Customer360SummaryService` via `GET /api/customer-360/summary?clientId=@objectId`, the same source.kind:'endpoint' binding the rapportage KPI tiles already use.",
 			"route": "/clients/:id",
 			"type": "detail",
 			"title": "Client",
@@ -508,7 +508,7 @@
 				"register": "pipelinq",
 				"schema": "client",
 				"documentationUrl": "https://pipelinq.conduction.nl",
-				"_note": "Customer-360 archetype. A client is the account hub of the CRM: everything (contacts, deals, requests, contracts, projects, complaints, interactions) hangs off it via FK 'client' (contract via 'clientRef'). ADR-062 rev3: the lead row is a field-split data pair — Identity (name/email/phone/address/website, the read-only NC-contact mirror) 8-wide + a stats-block KPI card top-right (open/won pipeline count & value, new requests, @objectId-scoped) — with the Account data widget (type/industry/notes) and the comms Email/Files leaves below; child relationships stay FK-scoped related-collection tables plus the Relationships/Activity/Bookings/Messages/quick-log app sections. Contracts are a first-class collection because recurring revenue is core to a customer view. summaryAggregates chips retired to the in-grid stats-block (rule 2). Sidebar is audit-only.",
+				"_note": "Customer-360 archetype. A client is the account hub of the CRM: everything (contacts, deals, requests, contracts, complaints, interactions) hangs off it via FK 'client' (contract via 'clientRef'). Projects are the exception and deliberately so: planninq owns them, and this page renders them through the `planninq-projects` leaf declared in the client schema's linkedTypes rather than reading planninq's register itself. A relatedCollections table pointed at another app's register renders empty when that app is absent, which is exactly what a client with no projects renders. ADR-062 rev3: the lead row is a field-split data pair — Identity (name/email/phone/address/website, the read-only NC-contact mirror) 8-wide + a stats-block KPI card top-right (open/won pipeline count & value, new requests, @objectId-scoped) — with the Account data widget (type/industry/notes) and the comms Email/Files leaves below; child relationships stay FK-scoped related-collection tables plus the Relationships/Activity/Bookings/Messages/quick-log app sections. Contracts are a first-class collection because recurring revenue is core to a customer view. summaryAggregates chips retired to the in-grid stats-block (rule 2). Sidebar is audit-only.",
 				"widgets": [
 					{ "id": "client-identity", "type": "data", "title": "Identity", "icon": "Account", "content": { "columns": 2, "include": ["name", "email", "phone", "address", "website"] } },
 					{ "id": "client-commercial", "type": "data", "title": "Account", "icon": "OfficeBuilding", "content": { "columns": 2, "include": ["type", "industry", "notes"] } },
@@ -564,6 +564,22 @@
 						"allowCreate": true,
 						"addLabel": "Contactpersoon toevoegen",
 						"emptyText": "No contact persons yet. Add one to get started."
+					} },
+					{ "id": "client-projects", "type": "object-list", "title": "Projecten", "icon": "FolderOutline",
+						"_note": "Planninq owns the project entity, so this reads planninq's register rather than pipelinq's — pipelinq no longer has a project schema. `requiredApp` is what makes that safe and is required by gate-55: without it, an install without planninq gets a 404 that renders as an empty table, which is exactly what a client with genuinely no projects renders. With it, nc-vue renders the widget's normal chrome and a set-up state and issues NO request. Read-only on purpose: creating a project is planninq's own affordance, reached from there.",
+						"requiredApp": "planninq",
+						"content": {
+						"register": "planninq", "schema": "project",
+						"filter": { "client": "@objectId" },
+						"columns": [
+							{ "key": "title", "label": "Name" },
+							{ "key": "status", "label": "Status" },
+							{ "key": "billable", "label": "Factureerbaar" },
+							{ "key": "budgetAmount", "label": "Budget" },
+							{ "key": "endDate", "label": "Einddatum" }
+						],
+						"limit": 20,
+						"emptyText": "No projects for this client yet."
 					} }
 				],
 				"layout": [
@@ -582,7 +598,8 @@
 					{ "id": "6-4", "widgetId": "client-summary-last-activity", "gridX": 0, "gridY": 17, "gridWidth": 4, "gridHeight": 2 },
 					{ "id": "7", "widgetId": "client-quick-requests", "gridX": 0, "gridY": 19, "gridWidth": 6, "gridHeight": 4 },
 					{ "id": "8", "widgetId": "client-quick-contacts", "gridX": 6, "gridY": 19, "gridWidth": 6, "gridHeight": 4 },
-					{ "id": "9", "widgetId": "client-notes", "gridX": 0, "gridY": 23, "gridWidth": 12, "gridHeight": 4 }
+					{ "id": "9", "widgetId": "client-projects", "gridX": 0, "gridY": 23, "gridWidth": 12, "gridHeight": 4 },
+					{ "id": "10", "widgetId": "client-notes", "gridX": 0, "gridY": 27, "gridWidth": 12, "gridHeight": 4 }
 				],
 				"relatedCollections": [
 					{
@@ -600,22 +617,6 @@
 						],
 						"limit": 10,
 						"rowRoute": "LeadDetail"
-					},
-					{
-						"title": "Projecten",
-						"register": "pipelinq",
-						"schema": "project",
-						"filter": { "client": "@objectId" },
-						"sort": { "field": "_dateCreated", "dir": "desc" },
-						"columns": [
-							{ "key": "name", "label": "Name" },
-							{ "key": "status", "label": "Status" },
-							{ "key": "billable", "label": "Billable" },
-							{ "key": "budgetHours", "label": "Budget hours" },
-							{ "key": "endDate", "label": "End date" }
-						],
-						"limit": 10,
-						"rowRoute": "ProjectDetail"
 					},
 					{
 						"title": "Contactmomenten",
@@ -1912,7 +1913,7 @@
 			"route": "/queue",
 			"type": "index",
 			"title": "Queue",
-			"_note": "The one queue (retire-queue-concept). There is no queue RECORD any more: the queue is every open ticket nobody has picked up, so this page is an index over `ticket` with a base filter, not a schema of its own. `assignee: \"IS NULL\"` is the literal sentinel MariaDbSearchHandler::applyNullCheck matches. The documented `assignee_isnull=true` spelling does NOT work over HTTP: SearchQueryHandler::cleanQuery tests the value with `=== true`, and a query string can only ever deliver the string \"true\", so it silently degrades to IS NOT NULL and the page renders empty. `status_in` carries the open half of the lifecycle because OpenRegister has no not-in operator. Assigning a ticket removes it from here and puts it on the assignee's My Work; All tickets still shows it either way. The ticketType tabs are the same strip the Tickets index uses, so the queue narrows to requests, complaints or contactmomenten without a second page. WHY THIS IS A PAGE AND NOT A `menu[].query` PRESET, which is what gate-68 (ADR-097 Decision 5) proposes for a second index over an already-indexed schema: a preset's values are constrained to string/number/boolean by the manifest schema, so the two-value `status_in` cannot be expressed as one at all, and OpenRegister has no not-in operator to collapse it into a single scalar. A preset is also only a link: the target page's own facets sit in the same filter map and can widen it back to every ticket, where a base filter on the page cannot be cleared by the person reading it. gate-68 reports this pair informationally and never blocks.",
+			"_note": "The one queue (retire-queue-concept). There is no queue RECORD any more: the queue is every open ticket nobody has picked up, so this page is an index over `ticket` with a base filter, not a schema of its own. `assignee: \"IS NULL\"` is the literal sentinel every OpenRegister condition builder matches by value. The suffix spelling `assignee_isnull=true` was dead when this page shipped and is fixed in openregister `isnull-filter-operator`; the sentinel is kept because it also works on instances that do not yet carry that change, and the two are two spellings of one predicate. `status_notIn` names the CLOSED half of the lifecycle rather than enumerating the open half, so a new open status is in the queue the day it is added instead of being silently missing from an `in` list. CORRECTION 2026-09-04: this note previously claimed OpenRegister has no not-in operator. That was wrong. `notIn` and `ne` both work on object fields, measured over HTTP. Assigning a ticket removes it from here and puts it on the assignee's My Work; All tickets still shows it either way. The ticketType tabs are the same strip the Tickets index uses, so the queue narrows to requests, complaints or contactmomenten without a second page. WHY THIS IS A PAGE AND NOT A `menu[].query` PRESET, which is what gate-68 (ADR-097 Decision 5) proposes for a second index over an already-indexed schema: a preset's values are constrained to string/number/boolean by the manifest schema, so the five-value `status_notIn` list cannot be expressed as one. A preset is also only a link: the target page's own facets sit in the same filter map and can widen it back to every ticket, where a base filter on the page cannot be cleared by the person reading it. gate-68 reports this pair informationally and never blocks.",
 			"config": {
 				"register": "pipelinq",
 				"schema": "ticket",
@@ -1920,7 +1921,7 @@
 				"showViewAction": false,
 				"filter": {
 					"assignee": "IS NULL",
-					"status_in": ["new", "in_progress"]
+					"status_notIn": ["resolved", "completed", "rejected", "converted", "closed"]
 				},
 				"quickFilters": [
 					{ "label": "All", "filter": {}, "default": true },

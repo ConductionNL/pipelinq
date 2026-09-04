@@ -9,7 +9,8 @@
 					"id": "MailingLists",
 					"label": "Lists",
 					"icon": "EmailMultiple",
-					"route": "MailingLists"
+					"route": "MailingLists",
+					"order": 30
 				}
 			]
 		}

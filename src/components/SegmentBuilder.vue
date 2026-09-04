@@ -213,30 +213,23 @@ export default {
 
 		/**
 		 * Perform the size estimate by posting the current rules to the
-		 * segment-size endpoint. The endpoint accepts an inline rule payload
-		 * so the segment does not need to be persisted yet.
+		 * segment-preview endpoint. The endpoint accepts an inline rule
+		 * payload so the segment does not need to be persisted yet, and
+		 * validates before counting -- see runPreview() below, shared with
+		 * runValidate() so both debounced calls hit the same endpoint.
 		 *
 		 * @spec openspec/specs/marketing-ui/spec.md#scenario-live-size-estimate-shown
 		 */
 		async runEstimate() {
-			try {
-				const url = generateUrl('/apps/pipelinq/api/segments/size')
-				const { data } = await axios.post(url, {
-					entityType: this.entityType,
-					rules: this.tree,
-				})
-				this.estimatedSize =
-					typeof data?.estimatedSize === 'number'
-						? data.estimatedSize
-						: typeof data?.size === 'number'
-							? data.size
-							: 0
-				this.estimateError = false
-			} catch {
+			const result = await this.runPreview()
+			if (result === null) {
 				this.estimateError = true
-			} finally {
 				this.estimating = false
+				return
 			}
+			this.estimatedSize = result.valid ? result.estimatedSize : 0
+			this.estimateError = false
+			this.estimating = false
 		},
 
 		/**
@@ -256,8 +249,11 @@ export default {
 
 		/**
 		 * Validate the current rule tree against the server-side SegmentService
-		 * validator. Errors are stored per-path so leaf rows can render their
-		 * field-level message.
+		 * validator via the shared runPreview() call. Errors are stored
+		 * per-path so leaf rows can render their field-level message (the
+		 * backend currently returns one error string per request; per-leaf
+		 * `fieldErrors` is a forward-compatible shape, empty until the
+		 * service starts returning it).
 		 *
 		 * @spec openspec/specs/marketing-ui/spec.md#scenario-visual-rule-tree-with-live-validation
 		 */
@@ -268,27 +264,46 @@ export default {
 				this.$emit('validityChange', false)
 				return
 			}
+			const result = await this.runPreview()
+			if (result === null) {
+				this.validationError = this.t(
+					'pipelinq',
+					'Could not validate rules.',
+				)
+				this.$emit('validityChange', false)
+				return
+			}
+			if (result.valid === false) {
+				this.validationError =
+					result.error || this.t('pipelinq', 'Invalid rules.')
+				this.errors = result.fieldErrors || {}
+				this.$emit('validityChange', false)
+			} else {
+				this.$emit('validityChange', true)
+			}
+		},
+
+		/**
+		 * Shared preview call used by both runEstimate() and
+		 * runValidate(): posts the current (unsaved) rule tree to the
+		 * segment-preview endpoint, which validates then estimates in one
+		 * request (`SegmentService.previewRulePayload()`).
+		 *
+		 * @return {Promise<object|null>} `{valid, error, estimatedSize}`, or
+		 *   null when the request itself failed (network error, auth).
+		 *
+		 * @spec openspec/specs/marketing-api/spec.md#scenario-segment-create-validates-rule-tree
+		 */
+		async runPreview() {
 			try {
-				const url = generateUrl('/apps/pipelinq/api/segments/validate')
+				const url = generateUrl('/apps/pipelinq/api/segments/preview')
 				const { data } = await axios.post(url, {
 					entityType: this.entityType,
 					rules: this.tree,
 				})
-				if (data?.valid === false) {
-					this.validationError =
-						data?.error || this.t('pipelinq', 'Invalid rules.')
-					this.errors = data?.fieldErrors || {}
-					this.$emit('validityChange', false)
-				} else {
-					this.$emit('validityChange', true)
-				}
-			} catch (e) {
-				const response = e?.response?.data
-				this.validationError =
-					response?.error
-					|| this.t('pipelinq', 'Could not validate rules.')
-				this.errors = response?.fieldErrors || {}
-				this.$emit('validityChange', false)
+				return data
+			} catch {
+				return null
 			}
 		},
 

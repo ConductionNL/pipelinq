@@ -78,11 +78,6 @@
             "description": "UUID of the related lead, if any.",
             "title": "Lead"
           },
-          "project": {
-            "type": "string",
-            "description": "UUID of the related project, if any.",
-            "title": "Project"
-          },
           "approvedBy": {
             "type": "string",
             "description": "User UID of the approver.",

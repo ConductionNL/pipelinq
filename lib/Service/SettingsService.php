@@ -55,10 +55,6 @@ class SettingsService {
 		'relationship_schema',
 		'skill_schema',
 		'agentProfile_schema',
-		'project_schema',
-		'projectPhase_schema',
-		'projectTask_schema',
-		'projectActivity_schema',
 		'timeEntry_schema',
 		'posTransaction_schema',
 		'posTransactionLine_schema',
@@ -186,7 +182,6 @@ class SettingsService {
 		'receipt_printer_host' => '',
 		'receipt_printer_port' => '9100',
 		'receipt_default_template' => '',
-		'shillinq_ledger_webhook_url' => '',
 		'shillinq_wip_webhook_url' => '',
 		// Shillinq AP webhook for expense voucher dispatch (REQ-AP-004). Empty disables the integration.
 		'shillinq_ap_webhook_url' => '',
@@ -266,6 +261,13 @@ class SettingsService {
 		// injection is feature-flagged with a provider fallback".
 		'blast.first_party_tracking' => 'false',
 		'blast.tracking_token_ttl_days' => '90',
+		// Portal slug in Portaliq that mail opens and clicks are reported to
+		// as traffic events. Leave empty to keep mail tracking inside
+		// Pipelinq. Read by TrafficEventEmitter; the dual-write is skipped
+		// silently when this is empty or Portaliq is not installed.
+		// spec ref: marketing-email-tracking Requirement "Opens and clicks are
+		// reported to Portaliq as email traffic events".
+		'blast.traffic_portal' => '',
 	];
 
 	/**

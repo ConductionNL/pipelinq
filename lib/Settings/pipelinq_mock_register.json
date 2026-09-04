@@ -1704,7 +1704,6 @@
         "currency": "EUR",
         "category": "Voorbeeld Category 1",
         "client": "Voorbeeld Client 1",
-        "project": "Voorbeeld Project 1",
         "billable": false,
         "status": "draft",
         "approvedBy": "Voorbeeld Approvedby 1",
@@ -1724,7 +1723,6 @@
         "currency": "EUR",
         "category": "Voorbeeld Category 2",
         "client": "Voorbeeld Client 2",
-        "project": "Voorbeeld Project 2",
         "billable": false,
         "status": "submitted",
         "approvedBy": "Voorbeeld Approvedby 2",
@@ -1744,7 +1742,6 @@
         "currency": "EUR",
         "category": "Voorbeeld Category 3",
         "client": "Voorbeeld Client 3",
-        "project": "Voorbeeld Project 3",
         "billable": false,
         "status": "approved",
         "approvedBy": "Voorbeeld Approvedby 3",
@@ -4038,210 +4035,6 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "project",
-          "slug": "project-voorbeeld-name-1-1"
-        },
-        "name": "Voorbeeld Name 1",
-        "client": "Voorbeeld Client 1",
-        "description": "Voorbeeld Description 1",
-        "status": "open",
-        "billable": true,
-        "budgetHours": 0,
-        "budgetAmount": 0,
-        "hourlyRate": 0,
-        "startDate": "2026-03-01",
-        "endDate": "2026-03-01",
-        "color": "Voorbeeld Color 1",
-        "ledgerSyncStatus": "pending",
-        "ledgerSyncedAt": "2026-03-01T09:00:00+00:00"
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "project",
-          "slug": "project-voorbeeld-name-2-2"
-        },
-        "name": "Voorbeeld Name 2",
-        "client": "Voorbeeld Client 2",
-        "description": "Voorbeeld Description 2",
-        "status": "in_progress",
-        "billable": true,
-        "budgetHours": 0,
-        "budgetAmount": 0,
-        "hourlyRate": 0,
-        "startDate": "2026-03-02",
-        "endDate": "2026-03-02",
-        "color": "Voorbeeld Color 2",
-        "ledgerSyncStatus": "synced",
-        "ledgerSyncedAt": "2026-03-02T09:00:00+00:00"
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "project",
-          "slug": "project-voorbeeld-name-3-3"
-        },
-        "name": "Voorbeeld Name 3",
-        "client": "Voorbeeld Client 3",
-        "description": "Voorbeeld Description 3",
-        "status": "completed",
-        "billable": true,
-        "budgetHours": 0,
-        "budgetAmount": 0,
-        "hourlyRate": 0,
-        "startDate": "2026-03-03",
-        "endDate": "2026-03-03",
-        "color": "Voorbeeld Color 3",
-        "ledgerSyncStatus": "failed",
-        "ledgerSyncedAt": "2026-03-03T09:00:00+00:00"
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "projectActivity",
-          "slug": "projectactivity-projectactivity-1-1"
-        },
-        "task": "00000000-0000-4000-8000-000000000000",
-        "date": "2026-03-01",
-        "durationMinutes": 1,
-        "user": "Voorbeeld User 1",
-        "project": "00000000-0000-4000-8000-000000000000",
-        "description": "Voorbeeld Description 1",
-        "billable": true,
-        "hourlyRate": 0.0
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "projectActivity",
-          "slug": "projectactivity-projectactivity-2-2"
-        },
-        "task": "00000000-0000-4000-8000-000000000001",
-        "date": "2026-03-02",
-        "durationMinutes": 2,
-        "user": "Voorbeeld User 2",
-        "project": "00000000-0000-4000-8000-000000000001",
-        "description": "Voorbeeld Description 2",
-        "billable": false,
-        "hourlyRate": 1.0
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "projectActivity",
-          "slug": "projectactivity-projectactivity-3-3"
-        },
-        "task": "00000000-0000-4000-8000-000000000002",
-        "date": "2026-03-03",
-        "durationMinutes": 3,
-        "user": "Voorbeeld User 3",
-        "project": "00000000-0000-4000-8000-000000000002",
-        "description": "Voorbeeld Description 3",
-        "billable": true,
-        "hourlyRate": 2.0
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "projectPhase",
-          "slug": "projectphase-voorbeeld-name-1-1"
-        },
-        "name": "Voorbeeld Name 1",
-        "project": "Voorbeeld Project 1",
-        "status": "open",
-        "sequence": 0,
-        "startDate": "2026-03-01",
-        "endDate": "2026-03-01",
-        "description": "Voorbeeld Description 1",
-        "billable": true,
-        "budgetHours": 0
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "projectPhase",
-          "slug": "projectphase-voorbeeld-name-2-2"
-        },
-        "name": "Voorbeeld Name 2",
-        "project": "Voorbeeld Project 2",
-        "status": "in_progress",
-        "sequence": 0,
-        "startDate": "2026-03-02",
-        "endDate": "2026-03-02",
-        "description": "Voorbeeld Description 2",
-        "billable": false,
-        "budgetHours": 0
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "projectPhase",
-          "slug": "projectphase-voorbeeld-name-3-3"
-        },
-        "name": "Voorbeeld Name 3",
-        "project": "Voorbeeld Project 3",
-        "status": "completed",
-        "sequence": 0,
-        "startDate": "2026-03-03",
-        "endDate": "2026-03-03",
-        "description": "Voorbeeld Description 3",
-        "billable": true,
-        "budgetHours": 0
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "projectTask",
-          "slug": "projecttask-voorbeeld-name-1-1"
-        },
-        "name": "Voorbeeld Name 1",
-        "phase": "00000000-0000-4000-8000-000000000000",
-        "project": "00000000-0000-4000-8000-000000000000",
-        "description": "Voorbeeld Description 1",
-        "sequence": 0,
-        "status": "open",
-        "billable": true,
-        "estimatedHours": 0,
-        "assignee": "Voorbeeld Assignee 1",
-        "deadline": "2026-03-01"
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "projectTask",
-          "slug": "projecttask-voorbeeld-name-2-2"
-        },
-        "name": "Voorbeeld Name 2",
-        "phase": "00000000-0000-4000-8000-000000000001",
-        "project": "00000000-0000-4000-8000-000000000001",
-        "description": "Voorbeeld Description 2",
-        "sequence": 0,
-        "status": "in_progress",
-        "billable": false,
-        "estimatedHours": 0,
-        "assignee": "Voorbeeld Assignee 2",
-        "deadline": "2026-03-02"
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "projectTask",
-          "slug": "projecttask-voorbeeld-name-3-3"
-        },
-        "name": "Voorbeeld Name 3",
-        "phase": "00000000-0000-4000-8000-000000000002",
-        "project": "00000000-0000-4000-8000-000000000002",
-        "description": "Voorbeeld Description 3",
-        "sequence": 0,
-        "status": "completed",
-        "billable": true,
-        "estimatedHours": 0,
-        "assignee": "Voorbeeld Assignee 3",
-        "deadline": "2026-03-03"
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
           "schema": "receiptPrintLog",
           "slug": "receiptprintlog-receiptprintlog-1-1"
         },
@@ -5288,7 +5081,6 @@
         "billingCategory": "Voorbeeld Billingcategory 1",
         "client": "Voorbeeld Client 1",
         "lead": "Voorbeeld Lead 1",
-        "project": "Voorbeeld Project 1",
         "approvedBy": "Voorbeeld Approvedby 1",
         "approvedAt": "2026-03-01T09:00:00+00:00",
         "wipSyncStatus": "pending",
@@ -5313,7 +5105,6 @@
         "billingCategory": "Voorbeeld Billingcategory 2",
         "client": "Voorbeeld Client 2",
         "lead": "Voorbeeld Lead 2",
-        "project": "Voorbeeld Project 2",
         "approvedBy": "Voorbeeld Approvedby 2",
         "approvedAt": "2026-03-02T09:00:00+00:00",
         "wipSyncStatus": "synced",
@@ -5338,7 +5129,6 @@
         "billingCategory": "Voorbeeld Billingcategory 3",
         "client": "Voorbeeld Client 3",
         "lead": "Voorbeeld Lead 3",
-        "project": "Voorbeeld Project 3",
         "approvedBy": "Voorbeeld Approvedby 3",
         "approvedAt": "2026-03-03T09:00:00+00:00",
         "wipSyncStatus": "failed",
