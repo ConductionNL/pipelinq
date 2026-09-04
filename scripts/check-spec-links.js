@@ -52,8 +52,9 @@ const SCAN_EXT = new Set(['.php', '.js', '.vue', '.ts', '.mjs'])
 /**
  * Every file under dir whose extension we scan.
  *
- * @param dir
- * @param out
+ * @param {string} dir The directory to walk, recursively.
+ * @param {Array<string>} [out] Accumulator the recursion appends paths to.
+ * @return {Array<string>} Every scannable file found under dir.
  */
 function walk(dir, out = []) {
 	let entries
@@ -96,8 +97,10 @@ function archiveIndex() {
 /**
  * Candidate on-disk locations for one cited target, best first.
  *
- * @param target
- * @param archive
+ * @param {string} target The cited path, e.g. `openspec/changes/x/tasks.md`.
+ * @param {Map<string, Array<string>>} archive Archived change directories by
+ *   slug, as archiveIndex() returns them.
+ * @return {Array<string>} Absolute paths to try, in order.
  */
 function candidates(target, archive) {
 	const out = [path.join(ROOT, target)]
@@ -150,7 +153,8 @@ function candidates(target, archive) {
  * file, not to arbitrate slug dialects. Being strict about the dialect
  * produced hundreds of findings that were all the same non-problem.
  *
- * @param heading
+ * @param {string} heading The heading text, without its leading hashes.
+ * @return {Array<string>} Every slug dialect that heading could be cited as.
  */
 function slugVariants(heading) {
 	const lower = heading.toLowerCase().trim()
@@ -179,7 +183,8 @@ function slugVariants(heading) {
  *      health-check job` is cited as `tasks.md#3.3` or `#task-3.3`. These are
  *      list items, so no heading will ever match them.
  *
- * @param file
+ * @param {string} file Absolute path to the markdown file to read.
+ * @return {Set<string>} Every anchor the file offers, across all three schemes.
  */
 function anchorsOf(file) {
 	const found = new Set()
@@ -228,7 +233,8 @@ function anchorsOf(file) {
  * refusing it teaches readers that the check is noise. What must still fail is
  * an anchor naming nothing in the file at all.
  *
- * @param anchor
+ * @param {string} anchor The cited anchor, without its leading hash.
+ * @return {Set<string>} Every form the anchor may legitimately take.
  */
 function anchorForms(anchor) {
 	const forms = new Set()

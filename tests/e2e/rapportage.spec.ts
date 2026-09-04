@@ -146,13 +146,46 @@ test.describe('Rapportage (Reporting)', () => {
 	})
 
 	test('the reports page lists every report pipelinq offers', async ({ page }) => {
-		// The assertion that distinguishes "regrouped" from "lost". Four report
-		// pages went from four menu entries to four cards; a change that dropped
-		// one would otherwise look like a tidier menu.
+		// The assertion that distinguishes "regrouped" from "lost". Report pages
+		// went from menu entries to cards; a change that dropped one would
+		// otherwise look like a tidier menu.
+		//
+		// This used to be `toHaveCount(4)` alone, which is a weaker claim than it
+		// reads as. A bare count cannot say WHICH report went missing, it passes
+		// if one report is swapped for another, and it fails on a report being
+		// ADDED — which is not a loss, and is exactly what happened when Forecast
+		// and Loyalty moved here off the sidebar. Naming them keeps the guard the
+		// comment above promises: removing one fails and says which, and adding
+		// one fails until somebody writes the new name down here on purpose.
+		const EXPECTED = [
+			'Reporting',
+			'Contact reporting',
+			'Channel analytics',
+			'Agent performance',
+			'Forecast',
+			'Loyalty reporting',
+		]
+
 		await openApp(page)
 		await page.goto('/apps/pipelinq/reports')
 
-		await expect(page.getByTestId('cn-report-card')).toHaveCount(4)
+		const cards = page.getByTestId('cn-report-card')
+		await expect(cards).toHaveCount(EXPECTED.length)
+
+		// Matched on the START of each card's text, not `hasText`, which is a
+		// substring: "Reporting" is inside "Contact reporting" and "Loyalty
+		// reporting" too, so a `hasText` check would still pass with the
+		// Reporting card deleted. A card reads "<label> <description>
+		// <category>", so the label is its prefix and nothing else's.
+		const texts = (await cards.allTextContents()).map((t) =>
+			t.replace(/\s+/g, ' ').trim(),
+		)
+		for (const label of EXPECTED) {
+			expect(
+				texts.filter((t) => t.startsWith(label)),
+				`exactly one card on the reports page must be titled "${label}"`,
+			).toHaveLength(1)
+		}
 	})
 
 	test('channel analytics page loads', async ({ page }) => {

@@ -9,8 +9,6 @@
 		"Contacts": "Dashboard",
 		"Leads": "Dashboard",
 		"Pipeline": "Dashboard",
-		"Forecast": "Dashboard",
-		"Loyalty": "Dashboard",
 
 		"Tickets": "KccWerkplek",
 		"Tasks": "KccWerkplek",
@@ -43,13 +41,17 @@
     "Rapportage",
     "RapportageContactmomenten",
     "ChannelAnalyticsView",
-    "AgentPerformanceView"
+    "AgentPerformanceView",
+    "Forecast",
+    "Loyalty"
   ],
   "removalsReplacedBy": {
   	"Rapportage": "Reports",
   	"RapportageContactmomenten": "Reports",
   	"ChannelAnalyticsView": "Reports",
-  	"AgentPerformanceView": "Reports"
+  	"AgentPerformanceView": "Reports",
+  	"Forecast": "Reports",
+  	"Loyalty": "Reports"
   },
-	"_removalsNote": "IA revision 2026-07 (nav-ia-cleanup): 'Reports & Compliance' (AnalyticsGroup) and its sole child 'Billing categories' are dropped — the group carried one page and the pairing of reporting with compliance never described anything real. The billingCategory SCHEMA and its objects stay (ShillinqWipService and the 'Hours by billing category' widget on the Operational dashboard still read them); only the nav entry and its three pages go. 'AVG-verzoeken' is dropped too: it was a bare deep-link into OpenRegister's DSAR engine (ADR-047 Phase 3), which owns that surface — pipelinq still contributes evidence via PipelinqEvidenceSourceProvider. 'Barcode lookup' is dropped in favour of searching the Products index by barcode, which is one surface instead of two for the same question. Product catalog (Catalog) is dissolved with it: a group wrapping a single Products page is noise.\n\nEarlier IA revision (2026-07): the Service top-level entry and its ServiceHubOverview hub page were dropped; its former service leaves live under Customer Support (KccWerkplek), the booking domain under Operational, and the Sales & CRM leaves under the Commercial dashboard (relabelled 'Sales')."
+	"_removalsNote": "IA revision 2026-07 (nav-ia-cleanup): 'Reports & Compliance' (AnalyticsGroup) and its sole child 'Billing categories' are dropped — the group carried one page and the pairing of reporting with compliance never described anything real. The billingCategory SCHEMA and its objects stay (ShillinqWipService and the 'Hours by billing category' widget on the Operational dashboard still read them); only the nav entry and its three pages go. 'AVG-verzoeken' is dropped too: it was a bare deep-link into OpenRegister's DSAR engine (ADR-047 Phase 3), which owns that surface — pipelinq still contributes evidence via PipelinqEvidenceSourceProvider. 'Barcode lookup' is dropped in favour of searching the Products index by barcode, which is one surface instead of two for the same question. Product catalog (Catalog) is dissolved with it: a group wrapping a single Products page is noise.\n\nEarlier IA revision (2026-07): the Service top-level entry and its ServiceHubOverview hub page were dropped; its former service leaves live under Customer Support (KccWerkplek), the booking domain under Operational, and the Sales & CRM leaves under the Commercial dashboard (relabelled 'Sales').\n\nADR-112 follow-up (2026-09): 'Forecast' (/forecast) and 'Loyalty' (/loyalty/reporting) are retired the same way. Both are reports, and both sat under Sales as leaves next to the deals they report on. They are cards on the Reports page now, under two new categories ('Revenue and forecast', 'Customer loyalty'). Their routes stay live: /forecast is deep-linked by tests/e2e/pages.spec.ts, and /loyalty/enroll never had a menu entry to lose."
 }

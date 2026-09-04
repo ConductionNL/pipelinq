@@ -1300,6 +1300,20 @@ test('every kept-custom reporting page is still type:"custom" and names why', as
 test('a kept-custom page keeps its host component AND its behaviour — it is not half-converted', async ({
 	page,
 }) => {
+	// This test is TWO kept-custom surfaces, each a full document load followed
+	// by a bespoke view that fetches its own data. Measured against a running
+	// instance it takes about a minute, and it was left on the 30s default, so
+	// it failed inside `page.goto` before reaching a single assertion. That
+	// reads as "the page is broken" when it means "this test ran out of time",
+	// and it fails or passes with host load, which is the definition of flaky.
+	//
+	// Reducing the work already happened once: gotoPage() above documents
+	// cutting three navigations per call down to one after this same test blew
+	// a 60s budget. What is left is genuinely two page loads, so the budget is
+	// what has to move. Same reasoning, and the same number, as
+	// rapportage.spec.ts.
+	test.setTimeout(180_000)
+
 	// Forecast is the clearest case: it stays custom because its mandatory
 	// `periodId` is derived client-side, and it keeps a bespoke export entry
 	// point that no declarative index action expresses.
