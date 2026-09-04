@@ -427,6 +427,21 @@ return [
         ['name' => 'blastTracking#open',  'url' => '/api/blast/track/open/{token}',  'verb' => 'GET'],
         ['name' => 'blastTracking#click', 'url' => '/api/blast/track/click/{token}', 'verb' => 'GET'],
 
+        // Mailing lists — the subscriber's four doors (marketing-lists-and-
+        // double-opt-in). PublicPage + signed token + throttled per ADR-082;
+        // they stay on pipelinq rather than moving to portaliq because an
+        // RFC 8058 List-Unsubscribe header names the URL (ADR-108).
+        // camelCase slug matches ListPublicController class name.
+        // The literal-prefixed paths come FIRST: `/api/lists/confirm/{token}`
+        // and `/api/lists/{id}/subscribe` are different shapes, but ordering
+        // them by specificity keeps that true if either ever gains a segment.
+        ['name' => 'listPublic#confirm',          'url' => '/api/lists/confirm/{token}',     'verb' => 'GET'],
+        ['name' => 'listPublic#unsubscribePage',  'url' => '/api/lists/unsubscribe/{token}', 'verb' => 'GET'],
+        ['name' => 'listPublic#unsubscribe',      'url' => '/api/lists/unsubscribe/{token}', 'verb' => 'POST'],
+        ['name' => 'listPublic#preferences',      'url' => '/api/lists/preferences/{token}', 'verb' => 'GET'],
+        ['name' => 'listPublic#savePreferences',  'url' => '/api/lists/preferences/{token}', 'verb' => 'POST'],
+        ['name' => 'listPublic#subscribe',        'url' => '/api/lists/{id}/subscribe',      'verb' => 'POST'],
+
         // Appointment booking — deposit payment webhook (signature-verified, PublicPage)
         // appointment-booking-08-deposit-payment / REQ-APT-010.
         // openconnector hits this URL with the payment outcome.
@@ -478,6 +493,20 @@ return [
         ['name' => 'segment#refreshSize',   'url' => '/api/segments/{id}/size',        'verb' => 'POST'],
         ['name' => 'segment#members',       'url' => '/api/segments/{id}/members',     'verb' => 'GET'],
         ['name' => 'segment#show',          'url' => '/api/segments/{id}',             'verb' => 'GET'],
+
+        // Marketing — Mailing lists and subscriptions (marketing-lists-and-
+        // double-opt-in). The marketer's side; the subscriber's side is the
+        // PublicPage block above. Specific routes precede any wildcard {id}
+        // routes (ADR-016).
+        ['name' => 'mailingList#index',         'url' => '/api/mailing-lists',                    'verb' => 'GET'],
+        ['name' => 'mailingList#create',        'url' => '/api/mailing-lists',                    'verb' => 'POST'],
+        ['name' => 'mailingList#subscriptions', 'url' => '/api/mailing-lists/{id}/subscriptions', 'verb' => 'GET'],
+        ['name' => 'mailingList#show',          'url' => '/api/mailing-lists/{id}',               'verb' => 'GET'],
+        ['name' => 'mailingList#update',        'url' => '/api/mailing-lists/{id}',               'verb' => 'PATCH'],
+        ['name' => 'subscription#softOptIn',    'url' => '/api/subscriptions/soft-opt-in',        'verb' => 'POST'],
+        ['name' => 'subscription#unsubscribe',  'url' => '/api/subscriptions/unsubscribe',        'verb' => 'POST'],
+        ['name' => 'subscription#forContact',      'url' => '/api/contacts/{contactId}/subscriptions',  'verb' => 'GET'],
+        ['name' => 'subscription#preferenceLink',  'url' => '/api/contacts/{contactId}/preference-link', 'verb' => 'GET'],
 
         // Marketing — CampaignTemplates (marketing-segmentation-and-blast chain member 06).
         // Specific routes precede any wildcard {slug} routes (ADR-016).
