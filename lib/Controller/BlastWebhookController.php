@@ -74,6 +74,10 @@ use Throwable;
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Wires three sibling
  * services + raw-body extraction.
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Seven provider webhook
+ *  parsers (SendGrid, SES, Twilio, Brevo, Mailjet, Mailgun, Postmark), each
+ *  individually simple; splitting the class would only scatter one cohesive
+ *  concern (provider event ingestion) across several files.
  *
  * @spec openspec/changes/marketing-segmentation-and-blast-05-jobs-and-webhooks/tasks.md#webhooks
  */

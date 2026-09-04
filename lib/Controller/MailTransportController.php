@@ -50,6 +50,9 @@ class MailTransportController extends Controller {
 	 *
 	 * @param IRequest $request HTTP request.
 	 * @param DeliverabilityCheckService $deliverabilityCheckService SPF/DKIM/DMARC lookup.
+	 *
+	 * @SuppressWarnings(PHPMD.LongVariable) $deliverabilityCheckService mirrors the
+	 *  class it holds; renaming would obscure what it is.
 	 */
 	public function __construct(
 		IRequest $request,
@@ -67,6 +70,9 @@ class MailTransportController extends Controller {
 	 * @return JSONResponse The verdict, or 404 when the transport does not exist.
 	 *
 	 * @spec openspec/changes/marketing-mail-transports/specs/marketing-mail-transports/spec.md#requirement-the-deliverability-panel-shows-spf-dkim-and-dmarc-status-per-sender-domain
+	 *
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $refresh is the documented
+	 *  cache-bypass request from the "Check now" button, not a behaviour switch.
 	 */
 	#[AuthorizedAdminSetting(Application::APP_ID)]
 	public function checkDeliverability(string $id = '', bool $refresh = false): JSONResponse {

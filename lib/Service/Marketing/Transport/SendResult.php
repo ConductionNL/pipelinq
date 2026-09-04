@@ -46,30 +46,4 @@ final class SendResult {
 		public readonly ?string $error = null,
 	) {
 	}//end __construct()
-
-	/**
-	 * Build an accepted result.
-	 *
-	 * @param string|null $providerId The provider/transport message id, when one was returned.
-	 *
-	 * @return self
-	 *
-	 * @spec openspec/changes/marketing-mail-transports/specs/marketing-blast/spec.md#requirement-send-via-openconnector-with-per-tenant-provider
-	 */
-	public static function accepted(?string $providerId = null): self {
-		return new self(accepted: true, providerId: $providerId);
-	}//end accepted()
-
-	/**
-	 * Build a failed result.
-	 *
-	 * @param string $reason A short, loggable reason.
-	 *
-	 * @return self
-	 *
-	 * @spec openspec/changes/marketing-mail-transports/specs/marketing-blast/spec.md#requirement-send-via-openconnector-with-per-tenant-provider
-	 */
-	public static function failed(string $reason): self {
-		return new self(accepted: false, error: $reason);
-	}//end failed()
 }//end class

@@ -94,7 +94,7 @@ final class MailAccountTransport implements TransportInterface {
 				'MailAccountTransport.send: malformed mailAccountRef/mailAccountUserId',
 				['deliveryId' => $mail->deliveryId, 'mailAccountRef' => $this->mailAccountRef]
 			);
-			return SendResult::failed(reason: 'malformed-mail-account-reference');
+			return new SendResult(accepted: false, error: 'malformed-mail-account-reference');
 		}
 
 		$accountService = $this->resolve(key: 'accounts');
@@ -104,7 +104,7 @@ final class MailAccountTransport implements TransportInterface {
 				'MailAccountTransport.send: Mail app unavailable',
 				['deliveryId' => $mail->deliveryId]
 			);
-			return SendResult::failed(reason: 'mail-app-not-available');
+			return new SendResult(accepted: false, error: 'mail-app-not-available');
 		}
 
 		try {
@@ -114,7 +114,7 @@ final class MailAccountTransport implements TransportInterface {
 				'MailAccountTransport.send: account lookup failed',
 				['deliveryId' => $mail->deliveryId, 'exception' => $e->getMessage()]
 			);
-			return SendResult::failed(reason: 'mail-account-not-found');
+			return new SendResult(accepted: false, error: 'mail-account-not-found');
 		}
 
 		return $this->sendViaOutbox(
@@ -134,9 +134,9 @@ final class MailAccountTransport implements TransportInterface {
 	 * @return SendResult The outcome.
 	 */
 	private function sendViaOutbox(object $outboxService, object $account, RenderedMail $mail): SendResult {
-		$localMessageClass = (self::MAIL_CLASSES['localMessage'] ?? '');
-		if ($localMessageClass === '' || class_exists($localMessageClass) === false) {
-			return SendResult::failed(reason: 'mail-app-not-available');
+		$localMessageClass = self::MAIL_CLASSES['localMessage'];
+		if (class_exists($localMessageClass) === false) {
+			return new SendResult(accepted: false, error: 'mail-app-not-available');
 		}
 
 		try {
@@ -159,10 +159,10 @@ final class MailAccountTransport implements TransportInterface {
 				'MailAccountTransport.send: outbox send failed',
 				['deliveryId' => $mail->deliveryId, 'exception' => $e->getMessage()]
 			);
-			return SendResult::failed(reason: 'mail-account-send-failed');
+			return new SendResult(accepted: false, error: 'mail-account-send-failed');
 		}
 
-		return SendResult::accepted();
+		return new SendResult(accepted: true);
 	}//end sendViaOutbox()
 
 	/**

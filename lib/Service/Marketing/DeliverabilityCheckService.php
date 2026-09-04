@@ -85,6 +85,9 @@ class DeliverabilityCheckService {
 	 *               The verdict, or null when the transport does not exist.
 	 *
 	 * @spec openspec/changes/marketing-mail-transports/specs/marketing-mail-transports/spec.md#requirement-the-deliverability-panel-shows-spf-dkim-and-dmarc-status-per-sender-domain
+	 *
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $forceRefresh is the documented
+	 *  cache-bypass request, not a behaviour switch.
 	 */
 	public function checkTransportById(string $id, bool $forceRefresh = false): ?array {
 		$transport = $this->loadOne(id: $id);
@@ -149,6 +152,9 @@ class DeliverabilityCheckService {
 	 * @return array{dkimVerified: bool, dmarcStatus: string, checkedAt: string} The verdict.
 	 *
 	 * @spec openspec/changes/marketing-mail-transports/specs/marketing-mail-transports/spec.md#requirement-the-deliverability-panel-shows-spf-dkim-and-dmarc-status-per-sender-domain
+	 *
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $forceRefresh is the documented
+	 *  cache-bypass request, not a behaviour switch.
 	 */
 	public function checkTransport(array $transport, bool $forceRefresh = false): array {
 		$domain = (string)($transport['senderDomain'] ?? '');
@@ -317,7 +323,12 @@ class DeliverabilityCheckService {
 	 * @return string
 	 */
 	private function getRegisterSlug(): string {
-		return $this->appConfig->getValueString(Application::APP_ID, 'register', self::DEFAULT_REGISTER_SLUG);
+		$slug = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		if ($slug !== '') {
+			return $slug;
+		}
+
+		return self::DEFAULT_REGISTER_SLUG;
 	}//end getRegisterSlug()
 
 	/**
@@ -326,7 +337,12 @@ class DeliverabilityCheckService {
 	 * @return string
 	 */
 	private function getMailTransportSchemaSlug(): string {
-		return $this->appConfig->getValueString(Application::APP_ID, 'mailTransport_schema', self::DEFAULT_MAIL_TRANSPORT_SCHEMA_SLUG);
+		$slug = $this->appConfig->getValueString(Application::APP_ID, 'mailTransport_schema', '');
+		if ($slug !== '') {
+			return $slug;
+		}
+
+		return self::DEFAULT_MAIL_TRANSPORT_SCHEMA_SLUG;
 	}//end getMailTransportSchemaSlug()
 
 	/**

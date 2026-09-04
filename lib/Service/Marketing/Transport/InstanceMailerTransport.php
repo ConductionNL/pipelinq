@@ -78,7 +78,7 @@ final class InstanceMailerTransport implements TransportInterface {
 				'InstanceMailerTransport.send: createMessage failed',
 				['exception' => $e->getMessage()]
 			);
-			return SendResult::failed(reason: 'instance-mailer-unavailable');
+			return new SendResult(accepted: false, error: 'instance-mailer-unavailable');
 		}
 
 		$this->applyEnvelope(message: $message, mail: $mail);
@@ -93,18 +93,18 @@ final class InstanceMailerTransport implements TransportInterface {
 				'InstanceMailerTransport.send: send failed',
 				['deliveryId' => $mail->deliveryId, 'exception' => $e->getMessage()]
 			);
-			return SendResult::failed(reason: 'instance-mailer-send-failed');
+			return new SendResult(accepted: false, error: 'instance-mailer-send-failed');
 		}
 
-		if (is_array($failedRecipients) === true && $failedRecipients !== []) {
+		if ($failedRecipients !== []) {
 			$this->logger->warning(
 				'InstanceMailerTransport.send: provider rejected recipient(s)',
 				['deliveryId' => $mail->deliveryId, 'failedRecipients' => $failedRecipients]
 			);
-			return SendResult::failed(reason: 'recipient-rejected');
+			return new SendResult(accepted: false, error: 'recipient-rejected');
 		}
 
-		return SendResult::accepted();
+		return new SendResult(accepted: true);
 	}//end send()
 
 	/**

@@ -44,6 +44,11 @@ use Throwable;
  * ConnectorSourceTransport: sends through an OpenConnector source.
  *
  * @spec openspec/changes/marketing-mail-transports/specs/marketing-mail-transports/spec.md#requirement-a-provider-transport-never-carries-a-credential
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Six provider request-body
+ *  builders (SES, Brevo, Mailjet, SendGrid, Mailgun, Postmark), each a short,
+ *  independently simple mapping; splitting would only scatter one cohesive
+ *  "shape a request for this provider" concern across several files.
  */
 final class ConnectorSourceTransport implements TransportInterface {
 	/**
@@ -95,17 +100,17 @@ final class ConnectorSourceTransport implements TransportInterface {
 	public function send(RenderedMail $mail): SendResult {
 		if ($this->connectorSourceId === '') {
 			$this->logger->warning('ConnectorSourceTransport.send: no connectorSourceId', ['deliveryId' => $mail->deliveryId]);
-			return SendResult::failed(reason: 'no-connector-source');
+			return new SendResult(accepted: false, error: 'no-connector-source');
 		}
 
 		$source = $this->resolveSource();
 		if ($source === null) {
-			return SendResult::failed(reason: 'connector-source-not-found');
+			return new SendResult(accepted: false, error: 'connector-source-not-found');
 		}
 
 		$callService = $this->resolveCallService();
 		if ($callService === null) {
-			return SendResult::failed(reason: 'call-service-unavailable');
+			return new SendResult(accepted: false, error: 'call-service-unavailable');
 		}
 
 		$body = $this->buildRequestBody(mail: $mail);
@@ -122,7 +127,7 @@ final class ConnectorSourceTransport implements TransportInterface {
 				'ConnectorSourceTransport.send: connector call failed',
 				['connectorSourceId' => $this->connectorSourceId, 'exception' => $e->getMessage()]
 			);
-			return SendResult::failed(reason: 'connector-call-failed');
+			return new SendResult(accepted: false, error: 'connector-call-failed');
 		}
 
 		$callLogData = $this->toArray(value: $callLog);
@@ -132,13 +137,13 @@ final class ConnectorSourceTransport implements TransportInterface {
 				'ConnectorSourceTransport.send: connector source responded with a non-2xx status',
 				['connectorSourceId' => $this->connectorSourceId, 'statusCode' => $statusCode]
 			);
-			return SendResult::failed(reason: 'non-2xx-response');
+			return new SendResult(accepted: false, error: 'non-2xx-response');
 		}
 
 		$providerId = $this->extractProviderId(
 			result: $this->decodeCallLogResponseBody(callLogData: $callLogData),
 		);
-		return SendResult::accepted(providerId: $providerId);
+		return new SendResult(accepted: true, providerId: $providerId);
 	}//end send()
 
 	/**

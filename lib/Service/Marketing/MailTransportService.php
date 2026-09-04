@@ -52,6 +52,13 @@ use Throwable;
  * @SuppressWarnings(PHPMD.TooManyPublicMethods) Public repository-style helpers
  *  (resolveTransport, resolveRateLimit, sendOneDelivery) plus their private
  *  support methods are cohesive with the single responsibility of this class.
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Transport resolution + daily-limit
+ *  enforcement + adapter dispatch + persistence live together by design, matching
+ *  BlastService's own precedent for the send pipeline it replaces; splitting would
+ *  only scatter one send-orchestration concern across several files.
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Measured 13, threshold 13. Wires
+ *  the three transport adapters plus OpenRegister/tracking/app-config collaborators
+ *  a send-orchestration service genuinely needs.
  */
 class MailTransportService {
 	/**
@@ -119,9 +126,9 @@ class MailTransportService {
 			}
 		}
 
-		$legacyConnectorSourceId = (string)($blast['connectorSourceId'] ?? '');
-		if ($transportId === '' && $legacyConnectorSourceId !== '') {
-			return $this->legacyProviderTransport(connectorSourceId: $legacyConnectorSourceId);
+		$legacySourceId = (string)($blast['connectorSourceId'] ?? '');
+		if ($transportId === '' && $legacySourceId !== '') {
+			return $this->legacyProviderTransport(connectorSourceId: $legacySourceId);
 		}
 
 		return $this->loadDefaultTransport();
@@ -269,12 +276,12 @@ class MailTransportService {
 				'MailTransportService.dispatchToAdapter: adapter construction failed',
 				['kind' => $kind, 'exception' => $e->getMessage()]
 			);
-			return SendResult::failed(reason: 'adapter-construction-failed');
+			return new SendResult(accepted: false, error: 'adapter-construction-failed');
 		}
 
 		if ($adapter === null) {
 			$this->logger->error('MailTransportService.dispatchToAdapter: unknown transport kind', ['kind' => $kind]);
-			return SendResult::failed(reason: 'unknown-transport-kind');
+			return new SendResult(accepted: false, error: 'unknown-transport-kind');
 		}
 
 		return $adapter->send(mail: $mail);
@@ -523,6 +530,11 @@ class MailTransportService {
 	 * @param string $connectorSourceId The source id.
 	 *
 	 * @return int|null Rate limit (messages/second), or null when unset/unresolvable.
+	 *
+	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential resolve/parse guard
+	 *  clauses over the source lookup; extraction adds no clarity.
+	 * @SuppressWarnings(PHPMD.NPathComplexity) Same flat guard sequence; path count is a
+	 *  product of independent conditions, not nesting.
 	 */
 	private function readSourceRateLimit(string $connectorSourceId): ?int {
 		if ($connectorSourceId === '') {
@@ -640,7 +652,12 @@ class MailTransportService {
 	 * @return string
 	 */
 	private function getRegisterSlug(): string {
-		return $this->appConfig->getValueString(Application::APP_ID, 'register', self::DEFAULT_REGISTER_SLUG);
+		$slug = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		if ($slug !== '') {
+			return $slug;
+		}
+
+		return self::DEFAULT_REGISTER_SLUG;
 	}//end getRegisterSlug()
 
 	/**
@@ -649,7 +666,12 @@ class MailTransportService {
 	 * @return string
 	 */
 	private function getMailTransportSchemaSlug(): string {
-		return $this->appConfig->getValueString(Application::APP_ID, 'mailTransport_schema', self::DEFAULT_MAIL_TRANSPORT_SCHEMA_SLUG);
+		$slug = $this->appConfig->getValueString(Application::APP_ID, 'mailTransport_schema', '');
+		if ($slug !== '') {
+			return $slug;
+		}
+
+		return self::DEFAULT_MAIL_TRANSPORT_SCHEMA_SLUG;
 	}//end getMailTransportSchemaSlug()
 
 	/**
@@ -658,7 +680,12 @@ class MailTransportService {
 	 * @return string
 	 */
 	private function getBlastDeliverySchemaSlug(): string {
-		return $this->appConfig->getValueString(Application::APP_ID, 'blastDelivery_schema', self::DEFAULT_BLAST_DELIVERY_SCHEMA_SLUG);
+		$slug = $this->appConfig->getValueString(Application::APP_ID, 'blastDelivery_schema', '');
+		if ($slug !== '') {
+			return $slug;
+		}
+
+		return self::DEFAULT_BLAST_DELIVERY_SCHEMA_SLUG;
 	}//end getBlastDeliverySchemaSlug()
 
 	/**
