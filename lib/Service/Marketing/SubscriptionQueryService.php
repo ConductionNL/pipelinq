@@ -32,6 +32,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\Marketing;
 
 use OCA\Pipelinq\Service\ComplianceService;
+use OCA\Pipelinq\Service\ListTokenService;
 use OCA\Pipelinq\Service\SubscriptionService;
 
 /**
@@ -59,12 +60,14 @@ class SubscriptionQueryService {
 	 *
 	 * @param ListObjectStore $store Register-scoped, session-free object access.
 	 * @param ComplianceService $compliance The consent ledger.
+	 * @param ListTokenService $tokens Signs the per-recipient unsubscribe link.
 	 *
 	 * @spec openspec/specs/marketing-lists/spec.md#requirement-a-pending-subscription-never-receives-a-blast
 	 */
 	public function __construct(
 		private ListObjectStore $store,
 		private ComplianceService $compliance,
+		private ListTokenService $tokens,
 	) {
 	}//end __construct()
 
@@ -84,7 +87,10 @@ class SubscriptionQueryService {
 	 *
 	 * @param string $listId MailingList UUID or slug.
 	 *
-	 * @return array{members: array<int, array{contactId: string, email: string, subscriptionId: string}>, skipped: array<int, string>}
+	 * @return array{
+	 *     members: array<int, array{contactId: string, email: string, subscriptionId: string, unsubscribeUrl: string}>,
+	 *     skipped: array<int, string>
+	 * }
 	 *
 	 * @spec openspec/specs/marketing-lists/spec.md#requirement-a-pending-subscription-never-receives-a-blast
 	 */
@@ -112,15 +118,53 @@ class SubscriptionQueryService {
 				continue;
 			}
 
+			$subscriptionId = $this->store->idOf(payload: $subscription);
 			$members[] = [
 				'contactId' => $contactId,
 				'email' => (string)($subscription['email'] ?? ''),
-				'subscriptionId' => $this->store->idOf(payload: $subscription),
+				'subscriptionId' => $subscriptionId,
+				'unsubscribeUrl' => $this->unsubscribeUrlFor(
+					subscriptionId: $subscriptionId,
+					contactId: $contactId,
+				),
 			];
 		}
 
 		return ['members' => $members, 'skipped' => $skipped];
 	}//end getBlastAudienceForList()
+
+	/**
+	 * The first-party unsubscribe link for one membership.
+	 *
+	 * Minted here rather than at dispatch time because the audience pass
+	 * already holds the subscription id and the contact id, and signing is
+	 * pure computation: a send to fifty thousand people costs fifty thousand
+	 * HMACs and not one extra query.
+	 *
+	 * Rule 1 of the marketing architecture: the link a recipient follows to
+	 * leave is ours, whatever transport carried the mail.
+	 *
+	 * @param string $subscriptionId Subscription UUID or slug.
+	 * @param string $contactId Contact the subscription belongs to, so the
+	 *                          page can offer to leave every list at once.
+	 *
+	 * @return string Absolute URL, or an empty string when either id is
+	 *                missing.
+	 *
+	 * @spec openspec/specs/marketing-lists/spec.md#requirement-unsubscribe-is-first-party-and-takes-one-click
+	 */
+	public function unsubscribeUrlFor(string $subscriptionId, string $contactId): string {
+		if ($subscriptionId === '' || $contactId === '') {
+			return '';
+		}
+
+		return $this->tokens->unsubscribeUrl(
+			token: $this->tokens->signUnsubscribeToken(
+				subscriptionId: $subscriptionId,
+				contactId: $contactId,
+			),
+		);
+	}//end unsubscribeUrlFor()
 
 	/**
 	 * Per-state counts for one list.

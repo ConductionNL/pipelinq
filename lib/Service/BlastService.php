@@ -1096,6 +1096,7 @@ class BlastService {
 			$members[] = [
 				'contactId' => (string)($row['contactId'] ?? ''),
 				'email' => (string)($row['email'] ?? ''),
+				'unsubscribeUrl' => (string)($row['unsubscribeUrl'] ?? ''),
 			];
 		}
 
@@ -1221,6 +1222,11 @@ class BlastService {
 			'email' => (string)($member['email'] ?? ''),
 			'status' => 'queued',
 		];
+		$unsubscribeUrl = (string)($member['unsubscribeUrl'] ?? '');
+		if ($unsubscribeUrl !== '') {
+			$payload['unsubscribeUrl'] = $unsubscribeUrl;
+		}
+
 		if ($channel === 'sms') {
 			$payload['phone'] = (string)($member['phone'] ?? '');
 		}
@@ -1521,10 +1527,14 @@ class BlastService {
 	/**
 	 * Render the template's subject/body with per-recipient substitution.
 	 *
-	 * Substitution is intentionally minimal — `{{email}}`, `{{firstName}}`,
-	 * `{{lastName}}` from the delivery snapshot. Provider-specific link
-	 * tracking / unsubscribe links are appended by the openconnector
-	 * source.
+	 * Substitution is intentionally minimal: `{{email}}` and `{{contactId}}`
+	 * from the delivery snapshot, plus `{{unsubscribe_link}}` when the
+	 * delivery carries one. A mailing list send always carries one, minted
+	 * per membership by `SubscriptionQueryService`, because rule 1 of the
+	 * marketing architecture says the unsubscribe is ours and not the
+	 * provider's. A segment send has no membership to unsubscribe from, so
+	 * the token resolves empty and the openconnector source appends its own
+	 * as it does today.
 	 *
 	 * @param array<string, mixed> $template Template payload.
 	 * @param array<string, mixed> $delivery Delivery payload.
@@ -1535,6 +1545,7 @@ class BlastService {
 		$tokens = [
 			'{{email}}' => (string)($delivery['email'] ?? ''),
 			'{{contactId}}' => (string)($delivery['contactId'] ?? ''),
+			'{{unsubscribe_link}}' => (string)($delivery['unsubscribeUrl'] ?? ''),
 		];
 
 		$subject = strtr((string)($template['subject'] ?? ''), $tokens);

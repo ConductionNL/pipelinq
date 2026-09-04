@@ -321,6 +321,17 @@
             "title": "List ID"
           }
         }
+      },
+      "blastDelivery": {
+        "version": "1.1.0",
+        "description": "A BlastDelivery is one message to one recipient. When the blast targets a mailing list the row carries the first-party unsubscribe link minted for that membership, so the rendered mail points at Pipelinq rather than at the provider. See the marketing-lists spec.",
+        "properties": {
+          "unsubscribeUrl": {
+            "type": "string",
+            "description": "Absolute, signed first-party unsubscribe URL for this recipient, substituted into {{unsubscribe_link}} when the mail is rendered. Present only on a mailing list send; a segment send has no membership to leave.",
+            "title": "Unsubscribe URL"
+          }
+        }
       }
     },
     "objects": [

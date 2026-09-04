@@ -151,6 +151,7 @@ class SubscriptionServiceTest extends TestCase {
 		$this->queries = new SubscriptionQueryService(
 			store: $this->store,
 			compliance: $this->compliance,
+			tokens: $this->tokens,
 		);
 
 		$this->seedList(slug: 'list-news', optInMode: 'double', publicSignup: true);
@@ -431,6 +432,47 @@ class SubscriptionServiceTest extends TestCase {
 		$this->assertSame([], $audience['members']);
 		$this->assertSame(['contact-1'], $audience['skipped']);
 	}//end testConfirmedMemberWithWithdrawnConsentIsSkipped()
+
+	/**
+	 * Every member of a list audience carries its own first-party unsubscribe
+	 * link, and the link verifies back to that membership.
+	 *
+	 * This is rule 1 of the marketing architecture as a test: without it the
+	 * endpoint exists and nothing ever hands a recipient its address, which
+	 * is a failure no send would report.
+	 *
+	 * @spec openspec/specs/marketing-lists/spec.md#requirement-unsubscribe-is-first-party-and-takes-one-click
+	 *
+	 * @return void
+	 */
+	public function testEveryAudienceMemberCarriesItsOwnUnsubscribeLink(): void {
+		$this->seedConfirmed(listId: 'list-news', contactId: 'contact-1', email: 'a@a.nl');
+
+		$audience = $this->queries->getBlastAudienceForList(listId: 'list-news');
+		$member = $audience['members'][0];
+
+		$this->assertNotSame('', $member['unsubscribeUrl']);
+
+		$token = substr($member['unsubscribeUrl'], (strrpos($member['unsubscribeUrl'], '/') + 1));
+		$closed = $this->service->unsubscribeByToken(token: $token, global: false, reason: 'test');
+
+		$this->assertSame('unsubscribed', $closed['status']);
+		$this->assertSame(1, $closed['count']);
+	}//end testEveryAudienceMemberCarriesItsOwnUnsubscribeLink()
+
+	/**
+	 * A membership with no id gets no link rather than a link that names
+	 * nothing: a signed token for an empty subscription would verify and
+	 * then resolve to no row, which reads to a subscriber as a broken page.
+	 *
+	 * @spec openspec/specs/marketing-lists/spec.md#requirement-unsubscribe-is-first-party-and-takes-one-click
+	 *
+	 * @return void
+	 */
+	public function testUnsubscribeUrlIsEmptyWithoutBothIds(): void {
+		$this->assertSame('', $this->queries->unsubscribeUrlFor(subscriptionId: '', contactId: 'contact-1'));
+		$this->assertSame('', $this->queries->unsubscribeUrlFor(subscriptionId: 'sub-1', contactId: ''));
+	}//end testUnsubscribeUrlIsEmptyWithoutBothIds()
 
 	/**
 	 * The per-state counts name every state, even at zero.
