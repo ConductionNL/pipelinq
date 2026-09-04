@@ -17,4 +17,4 @@
 ## 4. Docs and spec maintenance
 
 - [x] 4.1 Update `docs/user/marketing-blasts.md` and `.nl.md` where the Marketing navigation changed
-- [x] 4.2 Sync the `marketing-ui` and `marketing-api` delta specs into `openspec/specs/`, flipping their frontmatter `status` to `in-progress` while this change is open — verify with `node scripts/check-spec-links.js`
+- [x] 4.2 Sync the `marketing-ui`, `marketing-api` and `marketing-segmentation` delta specs into `openspec/specs/`, flipping their frontmatter `status` to `in-progress` while this change is open — verify with `node scripts/check-spec-links.js`

@@ -56,6 +56,12 @@ still declares `$published`, so they cannot catch this class of drift.
 - `marketing-api`: removes the `@e2e exclude` on "Segment create validates
   rule tree" now that `SegmentService::resolveSchemaProperties()` no longer
   throws on every call.
+- `marketing-segmentation`: updates the reasons on the two related
+  `@e2e exclude` markers ("Rule tree validated on save", "Operators
+  validated per field type") now that the crash they described is fixed;
+  both keep their exclusion, since direct coverage of the identical HTTP
+  path already lives in `marketing-ui` and `marketing-api` (see Deferred
+  decisions).
 
 ## Impact
 

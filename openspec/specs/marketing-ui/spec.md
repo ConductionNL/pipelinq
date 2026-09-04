@@ -4,12 +4,14 @@ status: in-progress
 
 # marketing-ui Specification
 
+**OpenSpec changes**: [marketing-segments-ui-repair](../../changes/marketing-segments-ui-repair/) _(in progress)_ — mounts `SegmentBuilder.vue` into a Segments page and adds a Templates page, both reachable from the Marketing menu; removes the `@e2e exclude` on "Segment Builder UI Composes Rule Trees" now that the component is reachable.
+
 ## Purpose
 Provides the marketing blast user interface: a SegmentBuilder for visually composing AND/OR rule trees with live validation and member-size estimates, a BlastForm wizard that walks the marketer through name, segment, template, channel, schedule, and A/B and gates sending on compliance, and a BlastMonitor that polls for real-time send progress, totals, and events and can cancel a sending blast.
 ## Requirements
 ### Requirement: Segment Builder UI Composes Rule Trees
 
-@e2e exclude UNWIRED COMPONENT — reported as a product bug, not worked around. `src/components/SegmentBuilder.vue` and `src/components/SegmentRuleNode.vue` are imported by NOTHING: the only occurrence of the identifier anywhere outside those two files is a prose comment at src/registry.js:228, so no page, route or registry entry mounts them and no browser can reach the rule-tree editor at all. The rules the component would enforce are asserted at the service boundary by tests/Unit/Service/SegmentServiceTest.php (testValidateRulesRejectsOperatorIncompatibleWithFieldType, testValidateRulesRejectsUnknownField, testValidateRulesRejectsUnsupportedOperator, testEstimateSizeReturnsMatchingCount), and the same validate-then-estimate contract is proven end to end over HTTP by tests/e2e/spec-coverage/marketing.spec.ts ("POST /api/segments validates the rule tree before saving"). This exclusion should be revisited the moment the component is mounted.
+`src/components/SegmentBuilder.vue` and `src/components/SegmentRuleNode.vue` are mounted by `SegmentFormView` (`src/views/segments/SegmentForm.vue`), reachable at `/segments/new` (`SegmentNew`) and `/segments/:id` (`SegmentEdit`), both linked from the Marketing menu's Segments entry (marketing-segments-ui-repair, pipelinq#773). Both scenarios below are exercised end to end by `tests/e2e/spec-coverage/marketing.spec.ts` ("the Segment builder blocks save on an invalid predicate, then validates and estimates once fixed").
 
 The SegmentBuilder Vue component SHALL allow marketers to construct rule
 trees visually using AND/OR logic with leaf predicates, validate them, and
@@ -62,4 +64,34 @@ counts and an event timeline.
 - **GIVEN** a Blast with status "sending"
 - **WHEN** the marketer clicks "Cancel send"
 - **THEN** the component SHALL POST `/api/blasts/:id/cancel` and show a cancelling state
+
+### Requirement: Segments and Templates Pages Are Reachable From the Marketing Menu
+
+The Marketing menu group SHALL list Segments and Templates ahead of Blasts
+and Blast performance. The Segments page SHALL be a declarative `type:
+"index"` page over the `segment` schema whose Add action and row action both
+navigate to a custom `SegmentFormView` page (`SegmentNew` / `SegmentEdit`,
+one component, edit mode driven by a route `:id` param) that mounts
+SegmentBuilder. The Templates page SHALL be a declarative `type: "index"`
+page over the `campaignTemplate` schema whose Add action and row action both
+navigate to a custom `TemplateFormView` page (`TemplateNew` / `TemplateEdit`)
+whose fields are conditional on the selected channel (email adds subject,
+sender, reply-to and footer fields; SMS does not).
+
+#### Scenario: Marketing menu lists Segments and Templates first
+
+- **GIVEN** a user with Pipelinq access opens the Marketing menu group
+- **THEN** the menu SHALL list, in order: Segments, Templates, Blasts, Blast performance
+
+#### Scenario: Creating a segment from the Segments page
+
+- **GIVEN** a marketer on the Segments index page
+- **WHEN** they choose "New segment"
+- **THEN** they SHALL land on `SegmentFormView`, choose an audience (contact or customer), compose a rule tree with SegmentBuilder, and SHALL NOT be able to save until the tree is valid
+
+#### Scenario: Template save surfaces a compliance error as a field error
+
+- **GIVEN** a marketer on the Templates New page for an email channel
+- **WHEN** they submit a body with no `{{unsubscribe_link}}` token
+- **THEN** the page SHALL call `POST /api/templates`, which rejects the save, and SHALL render the returned error against the body field rather than only a page-level banner
 
