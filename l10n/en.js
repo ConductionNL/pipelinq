@@ -3657,7 +3657,17 @@ OC.L10N.register(
         "Whether the person was offered the chance to object at the moment the ground was established. Required for soft opt-in.": "Whether the person was offered the chance to object at the moment the ground was established. Required for soft opt-in.",
         "Whether the public subscribe endpoint accepts submissions for this list.": "Whether the public subscribe endpoint accepts submissions for this list.",
         "Why the membership ended, as the subscriber or the provider gave it.": "Why the membership ended, as the subscriber or the provider gave it.",
-        "FK (UUID or slug) to the MailingList this blast goes to. Set instead of segmentId, never alongside it. Only confirmed subscriptions are queued.": "FK (UUID or slug) to the MailingList this blast goes to. Set instead of segmentId, never alongside it. Only confirmed subscriptions are queued."
+        "FK (UUID or slug) to the MailingList this blast goes to. Set instead of segmentId, never alongside it. Only confirmed subscriptions are queued.": "FK (UUID or slug) to the MailingList this blast goes to. Set instead of segmentId, never alongside it. Only confirmed subscriptions are queued.",
+        "Lists": "Lists",
+        "List details": "List details",
+        "Mailing list": "Mailing list",
+        "Subscribers": "Subscribers",
+        "Subscriptions": "Subscriptions",
+        "Points, tiers and redemptions per loyalty programme.": "Points, tiers and redemptions per loyalty programme.",
+        "What the quarter is set to close, per owner.": "What the quarter is set to close, per owner.",
+        "Unsubscribe URL": "Unsubscribe URL",
+        "Absolute, signed first-party unsubscribe URL for this recipient, substituted into {{unsubscribe_link}} when the mail is rendered. Present only on a mailing list send; a segment send has no membership to leave.": "Absolute, signed first-party unsubscribe URL for this recipient, substituted into {{unsubscribe_link}} when the mail is rendered. Present only on a mailing list send; a segment send has no membership to leave.",
+        "A BlastDelivery is one message to one recipient. When the blast targets a mailing list the row carries the first-party unsubscribe link minted for that membership, so the rendered mail points at Pipelinq rather than at the provider. See the marketing-lists spec.": "A BlastDelivery is one message to one recipient. When the blast targets a mailing list the row carries the first-party unsubscribe link minted for that membership, so the rendered mail points at Pipelinq rather than at the provider. See the marketing-lists spec."
     },
     "nplurals=2; plural=(n != 1);"
 )

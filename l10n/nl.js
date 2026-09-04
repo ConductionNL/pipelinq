@@ -3660,7 +3660,17 @@ OC.L10N.register(
         "Whether the person was offered the chance to object at the moment the ground was established. Required for soft opt-in.": "Of de persoon bezwaar kon maken op het moment dat de grondslag ontstond. Verplicht bij zachte opt-in.",
         "Whether the public subscribe endpoint accepts submissions for this list.": "Of het openbare aanmeldpunt inzendingen voor deze lijst aanneemt.",
         "Why the membership ended, as the subscriber or the provider gave it.": "Waarom het lidmaatschap eindigde, zoals de abonnee of de provider het opgaf.",
-        "FK (UUID or slug) to the MailingList this blast goes to. Set instead of segmentId, never alongside it. Only confirmed subscriptions are queued.": "Verwijzing (UUID of slug) naar de mailinglijst waar deze blast heen gaat. Staat er in plaats van segmentId, nooit ernaast. Alleen bevestigde abonnementen worden ingepland."
+        "FK (UUID or slug) to the MailingList this blast goes to. Set instead of segmentId, never alongside it. Only confirmed subscriptions are queued.": "Verwijzing (UUID of slug) naar de mailinglijst waar deze blast heen gaat. Staat er in plaats van segmentId, nooit ernaast. Alleen bevestigde abonnementen worden ingepland.",
+        "Lists": "Lijsten",
+        "List details": "Lijstdetails",
+        "Mailing list": "Mailinglijst",
+        "Subscribers": "Abonnees",
+        "Subscriptions": "Abonnementen",
+        "Points, tiers and redemptions per loyalty programme.": "Punten, niveaus en inwisselingen per loyaliteitsprogramma.",
+        "What the quarter is set to close, per owner.": "Wat het kwartaal naar verwachting sluit, per eigenaar.",
+        "Unsubscribe URL": "Afmeld-URL",
+        "Absolute, signed first-party unsubscribe URL for this recipient, substituted into {{unsubscribe_link}} when the mail is rendered. Present only on a mailing list send; a segment send has no membership to leave.": "Absolute, ondertekende eigen afmeld-URL voor deze ontvanger, ingevuld op {{unsubscribe_link}} bij het opmaken van de mail. Staat er alleen bij een verzending naar een mailinglijst; bij een segment is er geen lidmaatschap om te verlaten.",
+        "A BlastDelivery is one message to one recipient. When the blast targets a mailing list the row carries the first-party unsubscribe link minted for that membership, so the rendered mail points at Pipelinq rather than at the provider. See the marketing-lists spec.": "Een BlastDelivery is één bericht aan één ontvanger. Gaat de blast naar een mailinglijst, dan draagt de regel de eigen afmeldlink die voor dat lidmaatschap is aangemaakt, zodat de opgemaakte mail naar Pipelinq wijst en niet naar de provider. Zie de marketing-lists-specificatie."
     },
     "nplurals=2; plural=(n != 1);"
 )

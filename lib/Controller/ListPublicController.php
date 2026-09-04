@@ -406,6 +406,8 @@ class ListPublicController extends Controller {
 	 *                     string for a page with nothing to do.
 	 * @param int $status HTTP status.
 	 *
+	 * @phpstan-param Http::STATUS_OK|Http::STATUS_GONE $status
+	 *
 	 * @return DataDisplayResponse The rendered page.
 	 */
 	private function page(

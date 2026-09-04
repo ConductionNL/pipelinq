@@ -60,6 +60,7 @@ const CHIPS = {
  *
  * @param {string} state The stored `state` value.
  * @return {{label: string, color: string, reachable: boolean}} The chip.
+ * @spec openspec/specs/marketing-lists/spec.md#requirement-a-pending-subscription-never-receives-a-blast
  */
 export function chipForState(state) {
 	const chip = CHIPS[state]
@@ -78,6 +79,7 @@ export function chipForState(state) {
  *
  * @param {string} state The stored `state` value.
  * @return {boolean} True only for a confirmed membership.
+ * @spec openspec/specs/marketing-lists/spec.md#requirement-a-pending-subscription-never-receives-a-blast
  */
 export function isReachable(state) {
 	return chipForState(state).reachable
@@ -91,6 +93,7 @@ export function isReachable(state) {
  *
  * @param {Array<object>} rows Subscription payloads.
  * @return {object} `{pending, confirmed, unsubscribed, bounced, total}`.
+ * @spec openspec/specs/marketing-lists/spec.md#requirement-a-mailing-list-carries-its-own-sender-identity-and-opt-in-mode
  */
 export function countByState(rows) {
 	const counts = { total: 0 }
@@ -120,6 +123,7 @@ export function countByState(rows) {
  * @param {string} baseUrl The instance base URL, without a trailing slash.
  * @param {string} listId The mailing list id.
  * @return {string} The snippet, or an empty string when either input is missing.
+ * @spec openspec/specs/marketing-lists/spec.md#requirement-self-service-subscribe-creates-a-pending-subscription
  */
 export function embedSnippet(baseUrl, listId) {
 	if (!baseUrl || !listId) {

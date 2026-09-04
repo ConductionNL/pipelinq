@@ -358,6 +358,7 @@ export default {
 		 * Returns true when the current step's required input is satisfied.
 		 *
 		 * @return {boolean}
+		 * @spec openspec/specs/marketing-blast/spec.md#requirement-a-blast-may-target-a-mailing-list
 		 */
 		canAdvance() {
 			switch (this.step) {
@@ -414,10 +415,24 @@ export default {
 			this.model.segmentId = option?.id || ''
 		},
 
+		/**
+		 * Mirror the picked list onto the payload.
+		 *
+		 * @param {object|null} option The chosen list, or null.
+		 * @return {void}
+		 * @spec openspec/specs/marketing-blast/spec.md#requirement-a-blast-may-target-a-mailing-list
+		 */
 		selectedList(option) {
 			this.model.listId = option?.id || ''
 		},
 
+		/**
+		 * Switch the audience picker and clear the side that is now hidden.
+		 *
+		 * @param {string} kind Either 'segment' or 'list'.
+		 * @return {void}
+		 * @spec openspec/specs/marketing-blast/spec.md#requirement-a-blast-may-target-a-mailing-list
+		 */
 		audienceKind(kind) {
 			// Clear the other side rather than leaving it set but hidden: a
 			// stale id would travel in the payload and the server would refuse

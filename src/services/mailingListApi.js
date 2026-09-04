@@ -17,6 +17,7 @@ import { generateUrl } from '@nextcloud/router'
  *
  * @param {string} listId The mailing list id.
  * @return {Promise<{data: Array<object>, counts: object}>} The envelope.
+ * @spec openspec/specs/marketing-lists/spec.md#requirement-a-pending-subscription-never-receives-a-blast
  */
 export async function fetchListSubscriptions(listId) {
 	const { data } = await axios.get(
@@ -30,6 +31,7 @@ export async function fetchListSubscriptions(listId) {
  *
  * @param {string} contactId The contact id.
  * @return {Promise<Array<object>>} The subscriptions.
+ * @spec openspec/specs/marketing-lists/spec.md#requirement-the-preference-centre-shows-and-saves-a-subscribers-lists
  */
 export async function fetchContactSubscriptions(contactId) {
 	const { data } = await axios.get(
@@ -45,6 +47,7 @@ export async function fetchContactSubscriptions(contactId) {
  * @param {string} listId The mailing list id, or an empty string for all.
  * @param {string} reason What the subscriber gave as the reason.
  * @return {Promise<object>} `{count}`.
+ * @spec openspec/specs/marketing-lists/spec.md#requirement-unsubscribe-is-first-party-and-takes-one-click
  */
 export async function unsubscribeContact(contactId, listId = '', reason = '') {
 	const { data } = await axios.post(
@@ -60,6 +63,7 @@ export async function unsubscribeContact(contactId, listId = '', reason = '') {
  * @param {object} payload The import: listId, contactId, email and the
  *                         objection evidence.
  * @return {Promise<object>} `{status}`.
+ * @spec openspec/specs/marketing-lists/spec.md#requirement-soft-opt-in-records-its-ground-and-the-objection-offered
  */
 export async function importSoftOptIn(payload) {
 	const { data } = await axios.post(
@@ -74,6 +78,7 @@ export async function importSoftOptIn(payload) {
  *
  * @param {string} contactId The contact id.
  * @return {Promise<string>} The absolute URL.
+ * @spec openspec/specs/marketing-lists/spec.md#requirement-the-preference-centre-shows-and-saves-a-subscribers-lists
  */
 export async function fetchPreferenceLink(contactId) {
 	const { data } = await axios.get(
@@ -86,6 +91,7 @@ export async function fetchPreferenceLink(contactId) {
  * Every mailing list, for a picker.
  *
  * @return {Promise<Array<object>>} The lists.
+ * @spec openspec/specs/marketing-lists/spec.md#requirement-a-mailing-list-carries-its-own-sender-identity-and-opt-in-mode
  */
 export async function fetchMailingLists() {
 	const { data } = await axios.get(generateUrl('/apps/pipelinq/api/mailing-lists'))
