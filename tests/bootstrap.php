@@ -24,6 +24,46 @@ define('PHPUNIT_RUN', 1);
 // ClassLoader instance is returned even when PHPUnit has already pulled it in.
 $autoloader = require __DIR__ . '/../vendor/autoload.php';
 
+// Repoint OCA\Pipelinq\* classmap entries at THIS checkout's own lib/.
+//
+// Local dev checkouts symlink vendor/ (and node_modules/) into a git worktree
+// rather than running `composer install` per worktree. Composer's generated
+// autoload_classmap.php computes its base directory as
+// `dirname(dirname(__DIR__))` from inside vendor/composer/ — and PHP resolves
+// __DIR__ through the symlink to vendor's REAL location, so in a worktree
+// that base directory is the symlink TARGET (the main checkout), not this
+// worktree. Every OCA\Pipelinq\* class then silently autoloads from a
+// different git checkout than the one the tests are running in: a fix
+// present here can be invisible to phpunit, and a class added here but not
+// yet in the main checkout throws "Class not found". Composer's classmap is
+// consulted before any PSR-4 prefix, so only overwriting the classmap itself
+// (not addPsr4) fixes resolution. This has no effect in CI, where vendor/ is
+// a real `composer install` inside the checkout being tested and the
+// original paths already point at the right files.
+if ($autoloader instanceof \Composer\Autoload\ClassLoader) {
+	$appRoot = dirname(__DIR__);
+	$localPipelinqMap = [];
+	foreach ($autoloader->getClassMap() as $mappedClass => $mappedPath) {
+		if (str_starts_with($mappedClass, 'OCA\\Pipelinq\\') === false) {
+			continue;
+		}
+
+		$libPos = strrpos($mappedPath, '/lib/');
+		if ($libPos === false) {
+			continue;
+		}
+
+		$localPath = $appRoot . substr($mappedPath, $libPos);
+		if (is_file($localPath) === true) {
+			$localPipelinqMap[$mappedClass] = $localPath;
+		}
+	}
+
+	if ($localPipelinqMap !== []) {
+		$autoloader->addClassMap($localPipelinqMap);
+	}
+}
+
 // Register the test-only stub namespaces on the composer loader at test time.
 // These previously lived in composer.json "autoload-dev" (mapping the real
 // cross-app / framework namespaces OCA\OpenRegister\, Doctrine\DBAL\ and OC\ to
