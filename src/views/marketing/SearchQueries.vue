@@ -131,6 +131,12 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * The selectable windows.
+		 *
+		 * @return {Array<object>} days and label per option.
+		 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-queries-page-lists-top-queries
+		 */
 		windowOptions() {
 			return [
 				{ days: 7, label: this.t('pipelinq', 'Last 7 days') },
@@ -139,6 +145,13 @@ export default {
 			]
 		},
 
+		/**
+		 * What the empty state says: point at the settings when nothing is
+		 * connected, at Google's publishing lag when it is.
+		 *
+		 * @return {string}
+		 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-queries-page-lists-top-queries
+		 */
 		emptyDescription() {
 			if (!this.configured) {
 				return this.t(
@@ -203,6 +216,7 @@ export default {
 		/**
 		 * @param {Date} date A date.
 		 * @return {string} YYYY-MM-DD in UTC.
+		 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-queries-page-lists-top-queries
 		 */
 		isoDay(date) {
 			return date.toISOString().slice(0, 10)
@@ -211,6 +225,7 @@ export default {
 		/**
 		 * @param {number} ratio A ratio between 0 and 1.
 		 * @return {string} A percentage with one decimal.
+		 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-queries-page-lists-top-queries
 		 */
 		percent(ratio) {
 			return `${(Number(ratio || 0) * 100).toFixed(1)}%`

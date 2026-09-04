@@ -463,6 +463,8 @@ export default {
 		 * Load blasts, segments (for name lookup) and per-blast attribution
 		 * summaries in parallel. Each block degrades independently —
 		 * Attribution failures don't blank the Overview tab.
+		 *
+		 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-campaign-performance-joins-site-sessions-to-a-blast
 		 */
 		async fetchAll() {
 			this.loading = true

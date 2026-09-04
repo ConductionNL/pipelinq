@@ -164,10 +164,18 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * @return {object} The pinia settings store.
+		 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-marketing-traffic-settings
+		 */
 		settingsStore() {
 			return useSettingsStore()
 		},
 
+		/**
+		 * @return {string} The key field's placeholder, which says whether a key is on file.
+		 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-marketing-traffic-settings
+		 */
 		keyPlaceholder() {
 			return this.keySet
 				? this.t(
@@ -177,6 +185,10 @@ export default {
 				: '{ "type": "service_account", ... }'
 		},
 
+		/**
+		 * @return {string} The key field's helper text.
+		 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-marketing-traffic-settings
+		 */
 		keyHelp() {
 			return this.t(
 				'pipelinq',
@@ -188,6 +200,10 @@ export default {
 	watch: {
 		config: {
 			immediate: true,
+			/**
+			 * @param {object} value The settings map.
+			 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-marketing-traffic-settings
+			 */
 			handler(value) {
 				this.applyConfig(value || {})
 			},
@@ -203,6 +219,7 @@ export default {
 		 * Copy the stored values into the form.
 		 *
 		 * @param {object} config The settings map.
+		 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-marketing-traffic-settings
 		 */
 		applyConfig(config) {
 			this.utmAuto = String(config[UTM_KEY] ?? 'true') !== 'false'
@@ -218,6 +235,8 @@ export default {
 		/**
 		 * The service account email and last import, from the read endpoint.
 		 * Failure is non-fatal: the form still works without them.
+		 *
+		 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-marketing-traffic-settings
 		 */
 		async fetchStatus() {
 			try {
@@ -268,6 +287,8 @@ export default {
 
 		/**
 		 * Delete the stored key.
+		 *
+		 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
 		 */
 		async clearKey() {
 			this.saving = true

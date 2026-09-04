@@ -105,6 +105,7 @@ import History from 'vue-material-design-icons/History.vue'
 import Key from 'vue-material-design-icons/Key.vue'
 import Link from 'vue-material-design-icons/Link.vue'
 import LinkVariant from 'vue-material-design-icons/LinkVariant.vue'
+import Magnify from 'vue-material-design-icons/Magnify.vue'
 import MapMarkerPath from 'vue-material-design-icons/MapMarkerPath.vue'
 import MessageOutline from 'vue-material-design-icons/MessageOutline.vue'
 import MessageText from 'vue-material-design-icons/MessageText.vue'
@@ -241,6 +242,7 @@ export default {
 	Key,
 	Link,
 	LinkVariant,
+	Magnify,
 	MapMarkerPath,
 	MessageOutline,
 	MessageText,

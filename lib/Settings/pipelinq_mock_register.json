@@ -5894,6 +5894,57 @@
         "validUntil": "2026-03-03T09:00:00+00:00",
         "justification": "Voorbeeld Justification 3",
         "status": "archived"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "searchQueryDaily",
+          "slug": "searchquerydaily-demo-1"
+        },
+        "property": "https://example.org/",
+        "date": "2026-09-01",
+        "query": "woo verzoek indienen",
+        "page": "https://example.org/woo",
+        "clicks": 12,
+        "impressions": 340,
+        "ctr": 0.0353,
+        "position": 4.2,
+        "source": "gsc",
+        "importedAt": "2026-09-04T03:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "searchQueryDaily",
+          "slug": "searchquerydaily-demo-2"
+        },
+        "property": "https://example.org/",
+        "date": "2026-09-01",
+        "query": "openingstijden gemeente",
+        "page": "https://example.org/contact",
+        "clicks": 7,
+        "impressions": 90,
+        "ctr": 0.0778,
+        "position": 2.1,
+        "source": "gsc",
+        "importedAt": "2026-09-04T03:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "searchQueryDaily",
+          "slug": "searchquerydaily-demo-3"
+        },
+        "property": "https://example.org/",
+        "date": "2026-09-02",
+        "query": "woo verzoek indienen",
+        "page": "https://example.org/woo",
+        "clicks": 15,
+        "impressions": 360,
+        "ctr": 0.0417,
+        "position": 3.9,
+        "source": "gsc",
+        "importedAt": "2026-09-04T03:00:00+00:00"
       }
     ]
   }

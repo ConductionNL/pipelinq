@@ -685,6 +685,7 @@ export default {
 		 * section saved, so the other sections do not overwrite it.
 		 *
 		 * @param {object} updated The updated config returned by the section.
+		 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-marketing-traffic-settings
 		 */
 		onMarketingTrafficSaved(updated) {
 			this.config = updated || this.config

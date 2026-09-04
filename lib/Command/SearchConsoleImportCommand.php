@@ -55,6 +55,8 @@ class SearchConsoleImportCommand extends Command {
 	 * Configure the command name, description and options.
 	 *
 	 * @return void
+	 *
+	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-console-queries-are-imported-with-a-service-account
 	 */
 	protected function configure(): void {
 		$this->setName(name: 'pipelinq:marketing:search-console:import')
