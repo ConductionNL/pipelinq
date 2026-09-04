@@ -19,7 +19,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/pipelinq-time-to-shillinq-wip/specs/pipelinq-time-to-shillinq-wip/spec.md#REQ-WIP-001
+ * @spec openspec/changes/archive/2026-06-14-pipelinq-time-to-shillinq-wip/specs/pipelinq-time-to-shillinq-wip/spec.md#REQ-WIP-001
  */
 
 declare(strict_types=1);
@@ -42,7 +42,7 @@ use Psr\Log\LoggerInterface;
  * When configured, approved time entries are emitted as CloudEvents 1.0
  * envelopes through OpenRegister's WebhookService.
  *
- * @spec openspec/changes/pipelinq-time-to-shillinq-wip/specs/pipelinq-time-to-shillinq-wip/spec.md#REQ-WIP-001
+ * @spec openspec/changes/archive/2026-06-14-pipelinq-time-to-shillinq-wip/specs/pipelinq-time-to-shillinq-wip/spec.md#REQ-WIP-001
  */
 class ShillinqWipService {
 	/**
@@ -82,7 +82,7 @@ class ShillinqWipService {
 	 *
 	 * @return bool True when a valid HTTPS webhook URL is configured.
 	 *
-	 * @spec openspec/changes/pipelinq-time-to-shillinq-wip/specs/pipelinq-time-to-shillinq-wip/spec.md#REQ-WIP-001
+	 * @spec openspec/changes/archive/2026-06-14-pipelinq-time-to-shillinq-wip/specs/pipelinq-time-to-shillinq-wip/spec.md#REQ-WIP-001
 	 */
 	public function shouldDispatch(): bool {
 		$url = $this->webhookUrl();
@@ -109,7 +109,7 @@ class ShillinqWipService {
 	 *
 	 * @return bool True on successful dispatch, false on failure.
 	 *
-	 * @spec openspec/changes/pipelinq-time-to-shillinq-wip/specs/pipelinq-time-to-shillinq-wip/spec.md#REQ-WIP-001
+	 * @spec openspec/changes/archive/2026-06-14-pipelinq-time-to-shillinq-wip/specs/pipelinq-time-to-shillinq-wip/spec.md#REQ-WIP-001
 	 */
 	public function dispatchWipEvent(array $timeEntry, string $approvedBy, string $approvedAt): bool {
 		if ($this->shouldDispatch() === false) {
@@ -130,7 +130,7 @@ class ShillinqWipService {
 	 *
 	 * @return array<string, mixed> The CloudEvent payload.
 	 *
-	 * @spec openspec/changes/pipelinq-time-to-shillinq-wip/specs/pipelinq-time-to-shillinq-wip/spec.md#REQ-WIP-001
+	 * @spec openspec/changes/archive/2026-06-14-pipelinq-time-to-shillinq-wip/specs/pipelinq-time-to-shillinq-wip/spec.md#REQ-WIP-001
 	 */
 	private function buildPayload(array $timeEntry, string $approvedBy, string $approvedAt): array {
 		$uuid = (string)($timeEntry['id'] ?? $timeEntry['uuid'] ?? '');

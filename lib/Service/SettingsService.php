@@ -55,10 +55,6 @@ class SettingsService {
 		'relationship_schema',
 		'skill_schema',
 		'agentProfile_schema',
-		'project_schema',
-		'projectPhase_schema',
-		'projectTask_schema',
-		'projectActivity_schema',
 		'timeEntry_schema',
 		'posTransaction_schema',
 		'posTransactionLine_schema',
@@ -186,7 +182,6 @@ class SettingsService {
 		'receipt_printer_host' => '',
 		'receipt_printer_port' => '9100',
 		'receipt_default_template' => '',
-		'shillinq_ledger_webhook_url' => '',
 		'shillinq_wip_webhook_url' => '',
 		// Shillinq AP webhook for expense voucher dispatch (REQ-AP-004). Empty disables the integration.
 		'shillinq_ap_webhook_url' => '',

@@ -399,7 +399,21 @@ jobs:
       # had never executed a single test. A `uses:`-grep for the wrong org does
       # NOT find this line, because the org name is embedded in a JSON input
       # rather than a `uses:`. (Fixed concurrently in #671; same value.)
-      additional-apps: '[{"repo":"ConductionNL/openregister","app":"openregister","ref":"development"}]'
+      #
+      # planninq is here for the projects leaf. Planninq owns the project
+      # entity; this app renders a client's projects through the ADR-066
+      # `planninq-projects` leaf rather than reading planninq's register from
+      # its own manifest. A leaf cannot render when its app is absent, which is
+      # the whole reason it is a leaf — and it also means the cross-app
+      # assertion in tests/e2e/projects-leaf.spec.ts is unrunnable unless the
+      # sibling app is installed here.
+      #
+      # ⚠️ The REPO is `planix` and the APP is `planninq`. They differ: the app
+      # was renamed and the GitHub repo was not. Nextcloud loads an app by
+      # directory name, so `app` must be the id from appinfo/info.xml or the
+      # checkout lands in a directory nothing enables — silently, since a
+      # missing app is exactly what "the leaf did not render" looks like.
+      additional-apps: '[{"repo":"ConductionNL/openregister","app":"openregister","ref":"development"},{"repo":"ConductionNL/planix","app":"planninq","ref":"development"}]'
       # The old seed was `php occ app:disable pipelinq && php occ app:enable
       # pipelinq`. It reported success on every run and provisioned nothing
       # reliable: the repair step it triggers runs with NO user session (OR RBAC

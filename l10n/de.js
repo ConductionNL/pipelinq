@@ -1841,7 +1841,6 @@ OC.L10N.register(
         "Thank you!": "Vielen Dank!",
         "Thanks for your feedback.": "Danke für Ihr Feedback.",
         "That time was just taken. Please choose another slot.": "Diese Zeit wurde gerade vergeben. Bitte wählen Sie ein anderes Zeitfenster.",
-        "The HTTPS endpoint of the Shillinq project ledger. Leave empty to disable ledger sync.": "Der HTTPS-Endpunkt des Shillinq-Projekt-Ledgers. Lassen Sie das Feld leer, um die Ledger-Synchronisierung zu deaktivieren.",
         "The OpenConnector source that holds the warehouse credentials": "Die OpenConnector-Quelle, die die Warehouse-Zugangsdaten enthält",
         "The optional xWiki Nextcloud app is not installed. Pipelinq is falling back to the configured direct URL.": "Die optionale xWiki Nextcloud-App ist nicht installiert. Pipelinq greift auf die konfigurierte direkte URL zurück.",
         "The receipt is sent to the linked customer:": "Der Beleg wird an den verknüpften Kunden gesendet:",
@@ -2197,7 +2196,14 @@ OC.L10N.register(
         "Select strength…": "Stärke auswählen…",
         "Select type…": "Typ auswählen…",
         "Card auth code, voucher serial, …": "Karten-Autorisierungscode, Gutschein-Seriennummer, …",
-        "CASH, CARD, VOUCHER, …": "CASH, CARD, VOUCHER, …"
+        "CASH, CARD, VOUCHER, …": "CASH, CARD, VOUCHER, …",
+        "The HTTPS endpoint Shillinq receives approved hours on. Leave empty to disable the handoff.": "Der HTTPS-Endpunkt, an dem Shillinq genehmigte Stunden empfängt. Leer lassen, um die Übergabe zu deaktivieren.",
+        "What the quarter is set to close, per owner.": "Was das Quartal voraussichtlich abschließt, pro Verantwortlichem.",
+        "Points, tiers and redemptions per loyalty programme.": "Punkte, Stufen und Einlösungen pro Treueprogramm.",
+        "No projects for this client yet.": "Noch keine Projekte für diesen Kunden.",
+        "Projecten": "Projekte",
+        "Factureerbaar": "Abrechenbar",
+        "Einddatum": "Enddatum"
     },
     "nplurals=2; plural=(n != 1);"
 )

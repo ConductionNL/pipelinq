@@ -20,9 +20,6 @@ return [
         ['name' => 'settings#getUserSettings', 'url' => '/api/settings/user', 'verb' => 'GET'],
         ['name' => 'settings#updateUserSettings', 'url' => '/api/settings/user', 'verb' => 'PUT'],
 
-        // Admin — Shillinq project ledger manual re-dispatch (project-to-shillinq-ledger).
-        ['name' => 'ledger#retry', 'url' => '/api/ledger/retry/{projectId}', 'verb' => 'POST'],
-
         // Admin — Shillinq WIP manual re-dispatch (pipelinq-time-to-shillinq-wip / REQ-WIP-003).
         ['name' => 'timeEntryWip#retry', 'url' => '/api/time-entries/{uuid}/wip-retry', 'verb' => 'POST'],
 

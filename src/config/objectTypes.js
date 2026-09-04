@@ -291,31 +291,6 @@ export function objectTypes() {
 			label: t(APP, 'Availability Cache'),
 			description: t(APP, 'Cached bookable-slot availability'),
 		},
-		// Project / WBS hierarchy (group: projects)
-		{
-			slug: 'project',
-			group: 'projects',
-			label: t(APP, 'Project'),
-			description: t(APP, 'Projects'),
-		},
-		{
-			slug: 'projectPhase',
-			group: 'projects',
-			label: t(APP, 'Project Phase'),
-			description: t(APP, 'Phases within a project'),
-		},
-		{
-			slug: 'projectTask',
-			group: 'projects',
-			label: t(APP, 'Project Task'),
-			description: t(APP, 'Tasks within a project phase'),
-		},
-		{
-			slug: 'projectActivity',
-			group: 'projects',
-			label: t(APP, 'Project Activity'),
-			description: t(APP, 'Logged activities on project tasks'),
-		},
 		// BI export (bi-export-and-data-warehouse-sink) — REQ-BIE-002.
 		{
 			slug: 'exportJob',
