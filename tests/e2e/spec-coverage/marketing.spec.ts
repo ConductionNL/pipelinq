@@ -658,6 +658,121 @@ test.describe('Blasts ledger and wizard', () => {
 })
 
 /* ══════════════════════════════════════════════════════════════════════════
+ * Segments and Templates — marketing-segments-ui-repair (pipelinq#773).
+ *
+ * `SegmentBuilder.vue` / `SegmentRuleNode.vue` were imported by nothing
+ * before this change (the only occurrence of either identifier outside
+ * those two files was a prose comment in src/registry.js), so this is the
+ * FIRST browser exercise of the rule-tree editor. `SegmentForm.vue` mounts
+ * it at `/segments/new` (route id `SegmentNew`), reachable from the
+ * Marketing menu's "Segments" entry.
+ * ══════════════════════════════════════════════════════════════════════════ */
+test.describe('Segments', () => {
+	// @e2e openspec/specs/marketing-ui/spec.md#visual-rule-tree-with-live-validation
+	// @e2e openspec/specs/marketing-ui/spec.md#live-size-estimate-shown
+	test('the Segment builder blocks save on an invalid predicate, then validates and estimates once fixed', async ({
+		page,
+	}) => {
+		await openApp(page)
+		await gotoHash(page, '/segments/new')
+
+		const form = page.locator('.segment-form')
+		await expect(form.getByRole('heading', { name: 'New segment' })).toBeVisible(
+			{ timeout: 20000 },
+		)
+
+		await form.locator('#segment-form-name').fill('E2E gate-19 segment')
+
+		// The audience defaults to "contact"; SegmentBuilder mounts once an
+		// audience is chosen and starts as an empty AND group with no leaf —
+		// "Add condition" is the group's own action, not part of a leaf row.
+		const builder = form.locator('.segment-builder')
+		await expect(builder).toBeVisible({ timeout: 20000 })
+		await builder.getByRole('button', { name: 'Add condition' }).click()
+
+		// Field / operator are NcSelect (vue-select). @nextcloud/vue defaults
+		// `appendToBody: true`, so the open dropdown paints at the end of
+		// <body> — matched page-wide, the same way the Blast wizard's
+		// segment picker is driven above.
+		const fieldToggle = builder.locator('.rule-node__field .vs__dropdown-toggle')
+		await fieldToggle.click()
+		await page
+			.locator('li[role="option"], .vs__dropdown-option')
+			.filter({ hasText: 'Marketing consent' })
+			.first()
+			.click()
+
+		// "Marketing consent" is a boolean field. The operator list SegmentRuleNode
+		// now offers is already filtered to what SegmentService::OPERATOR_TYPE_MATRIX
+		// allows for a boolean field (equals / not-equals only) — an
+		// operator/type mismatch can no longer be composed through the UI by
+		// construction. What remains reachable, and is exercised here, is a
+		// VALUE that does not coerce to the field's type: typing a non-boolean
+		// string into the value input.
+		const valueInput = builder.locator('.rule-node__value')
+		await valueInput.fill('not-a-boolean')
+
+		// The debounced validator (250ms) reports the coercion failure and the
+		// component disables Save via its validityChange event.
+		await expect(builder.locator('.builder-error')).toBeVisible({
+			timeout: 10000,
+		})
+		const saveButton = form.getByRole('button', { name: 'Create segment' })
+		await expect(saveButton).toBeDisabled()
+
+		// Fix it: a boolean-coercible value ("true") passes validation, the
+		// error clears, and the debounced estimate (400ms) resolves to a
+		// number rendered as "Estimated members: N".
+		await valueInput.fill('true')
+		await expect(builder.locator('.builder-error')).toHaveCount(0, {
+			timeout: 10000,
+		})
+		await expect(saveButton).toBeEnabled({ timeout: 10000 })
+		await expect(builder.locator('.builder-estimate')).toContainText(
+			'Estimated members:',
+			{ timeout: 10000 },
+		)
+
+		await assertNoHardError(page)
+	})
+
+	// @e2e openspec/specs/marketing-ui/spec.md#marketing-menu-lists-segments-and-templates-first
+	test('the Marketing menu lists Segments and Templates ahead of Blasts', async ({
+		page,
+	}) => {
+		await openApp(page)
+
+		const nav = page.locator('nav, [role="navigation"]').first()
+		const segmentsLink = nav.getByRole('link', { name: 'Segments' }).first()
+		const templatesLink = nav.getByRole('link', { name: 'Templates' }).first()
+		const blastsLink = nav
+			.getByRole('link', { name: 'Blasts', exact: true })
+			.first()
+
+		await expect(segmentsLink).toBeVisible({ timeout: 20000 })
+		await expect(templatesLink).toBeVisible()
+		await expect(blastsLink).toBeVisible()
+
+		const [segmentsBox, templatesBox, blastsBox] = await Promise.all([
+			segmentsLink.boundingBox(),
+			templatesLink.boundingBox(),
+			blastsLink.boundingBox(),
+		])
+		expect(segmentsBox && templatesBox && blastsBox).toBeTruthy()
+		expect(
+			segmentsBox!.y,
+			'Segments must render above Templates in the Marketing group',
+		).toBeLessThan(templatesBox!.y)
+		expect(
+			templatesBox!.y,
+			'Templates must render above Blasts in the Marketing group',
+		).toBeLessThan(blastsBox!.y)
+
+		await assertNoHardError(page)
+	})
+})
+
+/* ══════════════════════════════════════════════════════════════════════════
  * The marketing HTTP contract, driven through the authenticated session.
  * ══════════════════════════════════════════════════════════════════════════ */
 test.describe('Marketing API contract', () => {
@@ -878,6 +993,63 @@ test.describe('Marketing API contract', () => {
 		}
 	})
 
+	// @e2e openspec/specs/marketing-api/spec.md#segment-create-validates-rule-tree
+	test('POST /api/segments validates the rule tree before saving', async ({
+		page,
+	}) => {
+		await openApp(page)
+
+		// Fields below are the REAL `contact` schema properties
+		// (lib/Settings/pipelinq_register.json) — not the fictional
+		// industry/employees/optedIn fields tests/Unit/Service/SegmentServiceTest.php
+		// uses against its own fake schema.
+		const unknownField = await api(page, 'POST', `${APP}/api/segments`, {
+			name: 'E2E gate-19 unknown field',
+			entityType: 'contact',
+			rules: { field: 'not_a_real_field', operator: 'equals', value: 'x' },
+		})
+		expect(unknownField.status, unknownField.text).toBe(400)
+		expect(unknownField.json?.error).toMatch(/not_a_real_field/)
+
+		// `marketingConsent` is boolean; `gt` is only valid for
+		// integer/number/string per SegmentService::OPERATOR_TYPE_MATRIX, so
+		// this is a genuine operator/type mismatch — not just an unresolved
+		// schema lookup, which is what every payload used to draw before
+		// pipelinq#773 was fixed.
+		const badOperator = await api(page, 'POST', `${APP}/api/segments`, {
+			name: 'E2E gate-19 bad operator',
+			entityType: 'contact',
+			rules: { field: 'marketingConsent', operator: 'gt', value: 0 },
+		})
+		expect(badOperator.status, badOperator.text).toBe(400)
+		expect(badOperator.json?.error).toMatch(/gt/)
+		expect(
+			badOperator.json?.error,
+			'must not be the pre-fix "no schema mapping configured" 400',
+		).not.toMatch(/no schema mapping configured/)
+
+		const valid = await api(page, 'POST', `${APP}/api/segments`, {
+			name: 'E2E gate-19 valid segment',
+			entityType: 'contact',
+			rules: { field: 'name', operator: 'equals', value: 'E2E' },
+		})
+		expect(valid.status, valid.text).toBe(201)
+		expect(valid.json?.segment?.name).toBe('E2E gate-19 valid segment')
+		expect(typeof valid.json?.estimatedSize).toBe('number')
+
+		// Clean up the Segment this test created.
+		const newId = idOf(valid.json?.segment)
+		if (newId) {
+			await api(
+				page,
+				'DELETE',
+				`/index.php/apps/openregister/api/objects/pipelinq/segment/${newId}`,
+			)
+		}
+
+		await assertNoHardError(page)
+	})
+
 	/*
 	 * WHAT THIS TEST USED TO DO, AND WHY IT WAS NOT MEASURING VALIDATION
 	 * ------------------------------------------------------------------
@@ -906,9 +1078,14 @@ test.describe('Marketing API contract', () => {
 	 * PHP raises `Error: Unknown named parameter $published`, the method's own
 	 * `catch (Throwable)` swallows it into an info log, and the caller reports
 	 * "no schema mapping configured". Segment creation is broken app-wide, not
-	 * only in CI. Tracked as pipelinq#773; the three validation scenarios carry
-	 * a reason-bearing `@e2e exclude` naming that measurement, and those
-	 * exclusions lapse when #773 lands.
+	 * only in CI. Tracked as pipelinq#773.
+	 *
+	 * UPDATE (marketing-segments-ui-repair): #773 is fixed — the call site no
+	 * longer passes `published:` — and the test this history describes is
+	 * reinstated above as "POST /api/segments validates the rule tree before
+	 * saving", against the app's REAL contact schema fields rather than
+	 * invented ones, with an explicit assertion that the 400 is not the
+	 * pre-fix "no schema mapping configured" message.
 	 *
 	 * WHAT IS STILL OBSERVABLE, AND IS ASSERTED BELOW. `estimateSize()` does not
 	 * go through `resolveSchemaProperties()` at all — it loads the segment,
