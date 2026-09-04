@@ -292,6 +292,7 @@ test.describe('Double opt-in over the public endpoints', () => {
 	})
 
 	// @e2e marketing-lists::a-missing-list-answers-like-a-closed-one
+	// @e2e marketing-lists::public-signup-is-refused-on-a-closed-list
 	test('a missing list and a closed list answer the same way', async ({
 		page,
 	}) => {

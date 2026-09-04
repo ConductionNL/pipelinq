@@ -1,8 +1,11 @@
 ---
-status: done
+status: in-progress
 ---
 
 # marketing-blast Specification
+
+**OpenSpec changes**:
+- `marketing-lists-and-double-opt-in` (in progress) — a Blast may name a `listId` instead of a `segmentId`, and a list audience resolves to its confirmed subscriptions at send time. See [marketing-lists](../marketing-lists/spec.md).
 
 ## Purpose
 Sends marketing email blasts to contact segments, dispatching through openconnector's per-tenant send-mail provider so provider credentials never live in pipelinq code. It supports deterministic A/B splitting (each contact always gets the same variant), respects per-source rate limits, and creates revenue attribution links that join blasts to closed deals with first-click timestamps and attributed value.

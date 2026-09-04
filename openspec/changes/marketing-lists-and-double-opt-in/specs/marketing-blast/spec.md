@@ -6,6 +6,8 @@ A Blast SHALL name either a Segment or a mailing list as its audience, and SHALL
 
 #### Scenario: A blast targeting a list queues its confirmed subscribers
 
+@e2e exclude the queueing runs inside `BlastService::sendBlast()` and dispatches through `OCA\OpenConnector\Service\SourceService`, which the CI instance has no openconnector to hold — .github/workflows/code-quality.yml pins `additional-apps` to openregister only — so no browser run reaches a send. Asserted by tests/Unit/Service/SubscriptionServiceTest.php (testOnlyConfirmedMembersReachABlast, testConfirmedMemberWithWithdrawnConsentIsSkipped).
+
 - **GIVEN** a Blast whose `listId` names a mailing list with two confirmed subscriptions
 - **WHEN** the Blast is sent
 - **THEN** two BlastDeliveries SHALL be queued, one per confirmed subscriber

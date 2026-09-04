@@ -1,9 +1,19 @@
+---
+status: in-progress
+---
+
+# marketing-lists Specification
+
+**Spec refs**: `docs/Technical/marketing-architecture.md` (rule 1, unsubscribes are ours; rule 4, no secret on an OpenRegister object), hydra ADR-031 (declare it in the schema where an extension fits), ADR-064 (secrets live in the broker, not in objects), ADR-082 (a public endpoint is throttled, and the attribute alone does nothing), ADR-108 (which public surface stays on the leaf app)
+
+**OpenSpec changes**:
+- `marketing-lists-and-double-opt-in` (in progress) — establishes the capability: the `mailingList` and `subscription` schemas, the signed confirm, unsubscribe and preference endpoints, the soft opt-in import, and a mailing list as a blast audience. The requirement text below mirrors the in-flight change delta and becomes authoritative once that change archives.
+
 ## Purpose
 
 Mailing lists a person can join and leave on their own. A list holds its own sender identity and opt-in mode, a subscription records one person's membership with the ground it rests on, and four signed public endpoints let a recipient subscribe, confirm, unsubscribe and manage preferences without a Nextcloud account.
 
-## ADDED Requirements
-
+## Requirements
 ### Requirement: A Mailing List Carries Its Own Sender Identity and Opt-In Mode
 
 A mailing list SHALL carry the sender name, sender address, reply-to address and postal footer used for every mailing sent to it, and an opt-in mode of either `double` or `soft`. New lists SHALL default to `double`. A list SHALL declare whether it accepts public signup; a list that does not SHALL refuse the public subscribe endpoint.

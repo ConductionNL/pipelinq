@@ -1,8 +1,11 @@
 ---
-status: done
+status: in-progress
 ---
 
 # marketing-compliance Specification
+
+**OpenSpec changes**:
+- `marketing-lists-and-double-opt-in` (in progress) — a ConsentRecord may be scoped to a mailing list through `listId`, a confirmed subscription is consent for its own list, and `soft-opt-in` joins the lawful bases that permit a send, but only with the objection recorded. See [marketing-lists](../marketing-lists/spec.md).
 
 ## Purpose
 Enforces lawful-basis consent and anti-spam rules before a marketing blast can be sent. Blocks sends to contacts that lack a consent record for the target channel, requires an unsubscribe token and physical-address block on email templates, and propagates consent withdrawals from unsubscribes and hard bounces so queued deliveries are skipped.
