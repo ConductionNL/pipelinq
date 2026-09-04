@@ -37,7 +37,7 @@ automatically.
 ### 1.1 Open the segment builder
 
 1. Navigate to **Marketing → Segments**.
-2. Click **+ New segment** in the top right.
+2. Click **New segment** in the top right.
 3. Give the segment a clear name (e.g. *Gemeente prospects — Zuid-Holland*).
    The name appears in the **New blast** wizard and on the performance
    dashboard.
@@ -96,7 +96,7 @@ or used in a blast (see *Compliance requirements* below).
 ### 2.1 Open the template editor
 
 1. Navigate to **Marketing → Templates**.
-2. Click **+ New template**.
+2. Click **New template**.
 3. Choose the **channel** (email or SMS).
 4. Give the template a name (e.g. *Q4 Outreach — Gemeenten*).
 
@@ -292,6 +292,26 @@ through a plain per-tenant connector without webhook support, enable
   user-agent; the unsubscribe link and the required physical-address
   footer are never rewritten, so unsubscribing and compliance
   reporting are unaffected by enabling this setting.
+
+#### Reporting to Portaliq traffic
+
+Run a portal in Portaliq next to Pipelinq? Then you can see mail opens
+and clicks next to site visits in that portal's traffic reports.
+
+- An admin sets **`blast.traffic_portal`** under **Admin settings,
+  Pipelinq** to the portal slug in Portaliq. Leave it empty to keep
+  mail tracking inside Pipelinq. Empty is the default.
+- Every recorded open or click is then also reported to that portal as
+  an `email_open` or `email_click` traffic event. The event carries the
+  blast, the contact reference, the campaign name and the clicked link.
+  It never carries an email address, IP address or user agent.
+- The blast delivery in Pipelinq stays the system of record. The
+  report runs after the delivery is written. When Portaliq is not
+  installed, or the report fails, the open or click is still recorded
+  here and the pixel or redirect still works.
+- Portaliq attributes mail traffic by campaign, not by person. A mail
+  open and a site visit only link when the site visit carries the same
+  campaign parameters.
 
 To stop a blast that is currently sending, click **Cancel**. All
 queued deliveries are aborted; deliveries already handed to the

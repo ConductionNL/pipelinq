@@ -1,8 +1,10 @@
 ---
-status: done
+status: in-progress
 ---
 
 # marketing-segmentation Specification
+
+**OpenSpec changes**: [marketing-segments-ui-repair](../../changes/marketing-segments-ui-repair/) _(in progress)_ — fixes pipelinq#773 inside the rule-tree validation requirement and updates the two related `@e2e exclude` reasons now that the crash they described no longer reproduces.
 
 ## Purpose
 Provides rule-based audience segments for marketing blasts, composed from AND/OR rule trees whose leaf predicates are validated against the entity schema before save. Segments are evaluated dynamically at send time rather than frozen as static lists, so newly matching contacts are auto-included and deleted contacts drop out, and the register seeds realistic Dutch example data across the six marketing schemas.
@@ -56,9 +58,17 @@ The segment service SHALL validate rule trees using AND/OR logic with leaf
 predicates (field, operator, value). Each predicate SHALL be validated
 against the entity schema before save.
 
+`resolveSchemaProperties()` calls `$schemaMapper->find(id: $schemaSlug,
+_rbac: false, _multitenancy: false)` — no `published` argument, matching
+`OCA\OpenRegister\Db\SchemaMapper::find(string|int $id, ?array $_extend =
+[], bool $_rbac = true, bool $_multitenancy = true)`. The unit-test fake
+`SchemaMapper` in `tests/Unit/Service/SegmentServiceTest.php` now declares
+the same signature, so a future signature drift there fails the test
+instead of passing silently.
+
 #### Scenario: Rule tree validated on save
 
-@e2e exclude no save can currently succeed, so the "on validation success SHALL save" half has no observable state and the "on failure" half is indistinguishable from it. MEASURED, run 31473685688: POST `/api/segments` returned 400 `{"error":"Invalid rule tree: Unknown entityType \"contact\" (no schema mapping configured)."}` for a VALID leaf, byte-identical to the reply the two deliberately-invalid trees in the same test drew — so a 400 there says nothing about the leaf. ROOT CAUSE: `SegmentService::resolveSchemaProperties()` calls `$schemaMapper->find(id: …, published: null, …)`; OpenRegister's `SchemaMapper::find()` dropped `$published` in commit ea99a5004 (2026-06-25, on `origin/development`, the ref CI installs), so PHP raises `Error: Unknown named parameter $published`, the local `catch (Throwable)` swallows it, and validation aborts before reading the tree. Covered at the service boundary by tests/Unit/Service/SegmentServiceTest.php (testValidateRulesAcceptsValidLeaf, testValidateRulesAcceptsAndComposite, testValidateRulesRejectsUnknownField, testValidateRulesRejectsIncoercibleValue, testValidateRulesRejectsUnknownEntityType) — which pass only because their fake SchemaMapper still declares `find(string $id, $published = null, …)`, i.e. the mock is shaped to the caller rather than to the collaborator. Tracked as pipelinq#773; this exclusion lapses when that lands — drop it when the call site stops passing the removed parameter.
+@e2e exclude the crash this exclusion originally described (`SchemaMapper::find()`'s removed `$published` parameter, pipelinq#773) is fixed by this change — `resolveSchemaProperties()` no longer passes it. This exact scenario wording ("on save") does not get its own dedicated e2e test in this change: the same `POST /api/segments` code path is exercised end to end by `tests/e2e/spec-coverage/marketing.spec.ts`'s "Segment create validates rule tree" (marketing-api) and the SegmentBuilder UI flow (marketing-ui "Visual rule tree with live validation"), which together prove the validate-then-save sequence; a third test asserting the identical HTTP behaviour under a different name would duplicate coverage rather than add it. Revisit if a save-specific regression (as opposed to a validate-specific one) is ever suspected.
 
 - **GIVEN** a rule `industry = "gemeente" AND (employees > 50 OR annual_revenue > 5000000) AND last_contact_moment < 90 days`
 - **WHEN** the segment is saved
@@ -75,7 +85,7 @@ against the entity schema before save.
 
 #### Scenario: Operators validated per field type
 
-@e2e exclude the operator/type matrix is never consulted over HTTP on a current OpenRegister, so a browser cannot tell an operator-not-valid-for-type rejection from any other rejection. MEASURED, run 31473685688: `POST /api/segments` with `{field: industry, operator: gt, value: 50}` and with a VALID `{field: industry, operator: eq, value: gemeente}` both returned the same 400 `{"error":"Invalid rule tree: Unknown entityType \"contact\" (no schema mapping configured)."}`. ROOT CAUSE: `SegmentService::resolveSchemaProperties()` passes a `published:` named argument that OpenRegister's `SchemaMapper::find()` removed in commit ea99a5004 (2026-06-25, `origin/development`); the resulting `Error` is caught locally and reported as a missing schema mapping, so `validateRules()` returns before the matrix is reached. The matrix itself is covered by tests/Unit/Service/SegmentServiceTest.php (testValidateRulesRejectsOperatorIncompatibleWithFieldType, testValidateRulesRejectsUnsupportedOperator, testValidateRulesRejectsIncoercibleValue), which exercise `validateRules()` directly against a properties map. Those tests cannot detect this defect — their fake SchemaMapper's `find()` still accepts `$published`. Tracked as pipelinq#773; this exclusion lapses as soon as the call site is corrected.
+@e2e exclude the crash this exclusion originally described (pipelinq#773) is fixed by this change, so the operator/type matrix is reached over HTTP again. This exact scenario is not given its own e2e test here: `tests/e2e/spec-coverage/marketing.spec.ts`'s "Segment create validates rule tree" (marketing-api) submits an operator invalid for its field's type as part of proving the validator runs, which is this scenario's assertion under a different scenario name. Give this its own named e2e test if the operator/type matrix needs to be pinned independently of that assertion.
 
 - **GIVEN** a contact schema with `industry` (string), `employees` (integer), `last_contact_moment` (date)
 - **WHEN** a predicate `industry > 50` is validated (string field with numeric operator)

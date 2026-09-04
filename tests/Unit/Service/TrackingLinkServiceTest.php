@@ -10,6 +10,8 @@
  * - `{{unsubscribe_link}}` and in-page anchors are never rewritten
  * - recordOpen is idempotent (openedAt set-once) and refreshes totals
  * - recordClick delegates to AttributionService and refreshes totals
+ * - recordOpen/recordClick report to Portaliq only after the write and the
+ *   totals roll-up, and survive a throwing emitter
  *
  * Uses placeholder secrets and a nil-UUID delivery id per design.md's Seed
  * Data section (`00000000-0000-0000-0000-000000000000`).
@@ -35,6 +37,7 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 use OCA\Pipelinq\Service\AttributionService;
 use OCA\Pipelinq\Service\BlastService;
 use OCA\Pipelinq\Service\TrackingLinkService;
+use OCA\Pipelinq\Service\TrafficEventEmitter;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IAppConfig;
 use OCP\Security\ISecureRandom;
@@ -76,6 +79,7 @@ class TrackingLinkServiceTest extends TestCase {
 	 * @param int $time Fixed timestamp for ITimeFactory.
 	 * @param AttributionService|null $attributionService Optional pre-configured mock.
 	 * @param BlastService|null $blastService Optional pre-configured mock.
+	 * @param TrafficEventEmitter|null $trafficEventEmitter Optional pre-configured mock.
 	 *
 	 * @return TrackingLinkService
 	 */
@@ -83,6 +87,7 @@ class TrackingLinkServiceTest extends TestCase {
 		int $time = 1700000000,
 		?AttributionService $attributionService = null,
 		?BlastService $blastService = null,
+		?TrafficEventEmitter $trafficEventEmitter = null,
 	): TrackingLinkService {
 		$this->appConfigStore = [
 			'register' => 'pipelinq',
@@ -152,6 +157,7 @@ class TrackingLinkServiceTest extends TestCase {
 			($attributionService ?? $this->createMock(AttributionService::class)),
 			($blastService ?? $this->createMock(BlastService::class)),
 			$logger,
+			($trafficEventEmitter ?? $this->createMock(TrafficEventEmitter::class)),
 		);
 	}//end build()
 
@@ -377,4 +383,128 @@ class TrackingLinkServiceTest extends TestCase {
 		$service = $this->build(attributionService: $attributionService, blastService: $blastService);
 		$service->recordClick(blastDeliveryId: 'unknown-delivery', url: 'https://pipelinq.nl/x');
 	}//end testRecordClickNoOpWhenDeliveryMissing()
+
+	/**
+	 * recordOpen reports an `open` to the traffic emitter with the loaded
+	 * delivery row and the parent blast, and only AFTER the blastDelivery
+	 * write and the totals roll-up have both happened.
+	 *
+	 * @return void
+	 */
+	public function testRecordOpenReportsToTrafficAfterSaveAndTotals(): void {
+		$totalsDone = false;
+		$blastService = $this->createMock(BlastService::class);
+		$blastService->method('updateBlastTotals')->willReturnCallback(
+			function () use (&$totalsDone): void {
+				$totalsDone = true;
+			}
+		);
+		$blastService->method('getBlastById')->with('blast-1')->willReturn(['name' => 'Spring launch']);
+
+		$emitter = $this->createMock(TrafficEventEmitter::class);
+		$emitter->expects($this->once())
+			->method('emitEmailEvent')
+			->willReturnCallback(
+				function (string $kind, array $delivery, array $blast, ?string $clickedUrl) use (&$totalsDone): void {
+					$this->assertCount(1, $this->objectService->saved, 'the delivery must be written before the report');
+					$this->assertTrue($totalsDone, 'the totals roll-up must run before the report');
+					$this->assertSame('open', $kind);
+					$this->assertSame('blast-1', $delivery['blastId']);
+					$this->assertSame('contact-9', $delivery['contactId']);
+					$this->assertSame(['name' => 'Spring launch'], $blast);
+					$this->assertNull($clickedUrl);
+				}
+			);
+
+		$service = $this->build(blastService: $blastService, trafficEventEmitter: $emitter);
+		$this->objectService->store[self::DELIVERY_ID] = [
+			'uuid' => self::DELIVERY_ID,
+			'blastId' => 'blast-1',
+			'contactId' => 'contact-9',
+			'status' => 'delivered',
+		];
+
+		$service->recordOpen(blastDeliveryId: self::DELIVERY_ID);
+	}//end testRecordOpenReportsToTrafficAfterSaveAndTotals()
+
+	/**
+	 * recordClick reports a `click` with the clicked URL and the loaded
+	 * delivery row, after AttributionService and the totals roll-up.
+	 *
+	 * @return void
+	 */
+	public function testRecordClickReportsToTrafficWithTheClickedUrl(): void {
+		$clickRecorded = false;
+		$attributionService = $this->createMock(AttributionService::class);
+		$attributionService->method('recordClick')->willReturnCallback(
+			function () use (&$clickRecorded): array {
+				$clickRecorded = true;
+				return [];
+			}
+		);
+
+		$emitter = $this->createMock(TrafficEventEmitter::class);
+		$emitter->expects($this->once())
+			->method('emitEmailEvent')
+			->willReturnCallback(
+				function (string $kind, array $delivery, array $blast, ?string $clickedUrl) use (&$clickRecorded): void {
+					$this->assertTrue($clickRecorded, 'the click must be recorded before the report');
+					$this->assertSame('click', $kind);
+					$this->assertSame('blast-1', $delivery['blastId']);
+					$this->assertSame([], $blast);
+					$this->assertSame('https://pipelinq.nl/x', $clickedUrl);
+				}
+			);
+
+		$service = $this->build(attributionService: $attributionService, trafficEventEmitter: $emitter);
+		$this->objectService->store[self::DELIVERY_ID] = [
+			'uuid' => self::DELIVERY_ID,
+			'blastId' => 'blast-1',
+			'status' => 'delivered',
+		];
+
+		$service->recordClick(blastDeliveryId: self::DELIVERY_ID, url: 'https://pipelinq.nl/x');
+	}//end testRecordClickReportsToTrafficWithTheClickedUrl()
+
+	/**
+	 * A throwing emitter never breaks the record: the delivery is written,
+	 * the totals are refreshed and recordOpen returns normally.
+	 *
+	 * @return void
+	 */
+	public function testRecordOpenSurvivesAThrowingEmitter(): void {
+		$blastService = $this->createMock(BlastService::class);
+		$blastService->expects($this->once())->method('updateBlastTotals')->with('blast-1');
+
+		$emitter = $this->createMock(TrafficEventEmitter::class);
+		$emitter->method('emitEmailEvent')->willThrowException(new \RuntimeException('portaliq is on fire'));
+
+		$service = $this->build(blastService: $blastService, trafficEventEmitter: $emitter);
+		$this->objectService->store[self::DELIVERY_ID] = [
+			'uuid' => self::DELIVERY_ID,
+			'blastId' => 'blast-1',
+			'status' => 'delivered',
+		];
+
+		$service->recordOpen(blastDeliveryId: self::DELIVERY_ID);
+
+		$saved = end($this->objectService->saved);
+		$this->assertSame('opened', $saved['status']);
+		$this->assertNotEmpty($saved['openedAt']);
+	}//end testRecordOpenSurvivesAThrowingEmitter()
+
+	/**
+	 * A missing delivery records nothing and reports nothing.
+	 *
+	 * @return void
+	 */
+	public function testRecordOpenDoesNotReportWhenDeliveryMissing(): void {
+		$emitter = $this->createMock(TrafficEventEmitter::class);
+		$emitter->expects($this->never())->method('emitEmailEvent');
+
+		$service = $this->build(trafficEventEmitter: $emitter);
+		$service->recordOpen(blastDeliveryId: 'unknown-delivery');
+
+		$this->assertSame([], $this->objectService->saved);
+	}//end testRecordOpenDoesNotReportWhenDeliveryMissing()
 }//end class

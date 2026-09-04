@@ -120,8 +120,8 @@ import PosCustomerSettingsView from './views/admin/PosCustomerSettings.vue'
 //     three-route Vue surface — list, multi-step create wizard, live monitor.
 //     The wizard embeds the missing-consent modal (own file under modals/);
 //     the monitor polls /api/blasts/:id every 2s and stops on terminal status.
-//     SegmentBuilder + SegmentRuleNode live under components/ for reuse by
-//     forthcoming SegmentEditor / dashboard surfaces (slice 08). ---
+//     SegmentBuilder + SegmentRuleNode live under components/, mounted by
+//     SegmentFormView below (marketing-segments-ui-repair, pipelinq#773). ---
 import BlastFormView from './views/blasts/BlastForm.vue'
 import BlastMonitorView from './views/blasts/BlastMonitor.vue'
 import BlastPerformanceDashboardView from './views/blasts/PerformanceDashboard.vue'
@@ -234,12 +234,19 @@ import WinLossWidget from './views/rapportage/WinLossWidget.vue'
 //     availability endpoint and hide when no installed app implements the
 //     kind — same self-fetching-by-props pattern as the sections above. ---
 import RequestConversionSection from './views/requests/RequestConversionSection.vue'
+// --- Marketing segments + templates (marketing-segments-ui-repair): the
+//     Segments list is a declarative type:"index" page; SegmentFormView
+//     mounts SegmentBuilder for both SegmentNew and SegmentEdit (one
+//     component, edit mode driven by a route :id param). Templates follows
+//     the same index+form shape over the existing /api/templates endpoints. ---
+import SegmentFormView from './views/segments/SegmentForm.vue'
 // --- Admin managers (lib gap: no pipeline-designer / settings rich-section type). ---
 import PipelineManagerView from './views/settings/PipelineManager.vue'
 // --- Store — REMOTE objects, which the object-backed index renderer
 //     cannot address (ADR-080). ---
 import StoreGallery from './views/store/StoreGallery.vue'
 import SyncSettingsView from './views/sync/SyncSettings.vue'
+import TemplateFormView from './views/templates/TemplateForm.vue'
 import WerkplekHeaderActions from './views/werkplek/widgets/WerkplekHeaderActions.vue'
 // --- KCC Werkplek (pipelinq-werkplek-declarative): unified KCC agent workspace
 //     rendered as a declarative type:"dashboard" page. Requests, Tasks, the
@@ -764,6 +771,16 @@ const registry = {
 		kind: 'page',
 		component: BlastPerformanceDashboardView,
 		_note: 'Post-send performance dashboard (marketing-segmentation-and-blast 08): three tabs — Overview (sortable blast table with sent/delivered/open-rate/click-rate/unsubscribed), A/B Testing (side-by-side variant comparison + chi-square p-value once each arm has >=500 delivered and 24h elapsed since send), Attribution (per-blast attributed deal count + summed EUR value from GET /api/blasts/:id/attribution).',
+	},
+	SegmentFormView: {
+		kind: 'page',
+		component: SegmentFormView,
+		_note: 'Segment create/edit (marketing-segments-ui-repair): mounts SegmentBuilder + SegmentRuleNode (previously imported by nothing, pipelinq#773) with a name/description/audience header and live validation gating Save. One component serves both SegmentNew and SegmentEdit routes — edit mode is a route :id param, matching the PosTransactionForm convention. Custom rather than declarative: SegmentBuilder is a recursive rule-tree editor with a debounced backend preview call, which no declarative form primitive expresses.',
+	},
+	TemplateFormView: {
+		kind: 'page',
+		component: TemplateFormView,
+		_note: 'CampaignTemplate create/edit (marketing-segments-ui-repair): channel-conditional fields (email adds subject/sender/reply-to/footer) and a best-effort mapping from ComplianceService.validateTemplate()\'s single error string onto the field that caused it, so a missing {{unsubscribe_link}} or address block reads as a field error. Custom rather than declarative: the channel-conditional field set and post-submit error-to-field mapping are not expressible by type:"form".',
 	},
 
 	// --- Appointment booking — admin views (appointment-booking 11 of 12). ---
