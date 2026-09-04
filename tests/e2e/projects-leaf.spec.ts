@@ -53,7 +53,7 @@ async function createObject(
 	register: string,
 	schema: string,
 	body: Record<string, unknown>,
-): Promise<{ id: string | null, error: string }> {
+): Promise<{ id: string | null; error: string }> {
 	return await page.evaluate(
 		async ({ register, schema, body }) => {
 			const res = await fetch(
@@ -75,7 +75,10 @@ async function createObject(
 				// The body carries the reason — a missing required property, an
 				// RBAC refusal. Returning a bare null here is what made the first
 				// run of this spec report "could not seed" and nothing else.
-				return { id: null, error: `HTTP ${res.status}: ${text.slice(0, 300)}` }
+				return {
+					id: null,
+					error: `HTTP ${res.status}: ${text.slice(0, 300)}`,
+				}
 			}
 			let created
 			try {
@@ -111,8 +114,8 @@ test.describe('client projects come from planninq', () => {
 		// outlive `occ app:disable` — so an API probe here reports a healthy
 		// integration for an app that is switched off, which is the exact class
 		// of false green this spec exists to catch.
-		const planninqInstalled = await page.evaluate(
-			() => Object.keys(window.OC?.appswebroots ?? {}).includes('planninq'),
+		const planninqInstalled = await page.evaluate(() =>
+			Object.keys(window.OC?.appswebroots ?? {}).includes('planninq'),
 		)
 		expect(
 			planninqInstalled,

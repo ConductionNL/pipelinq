@@ -91,7 +91,7 @@ email address, name, or any other personal identifier.
 
 ### Requirement: Render-time injection is feature-flagged with a provider fallback
 
-@e2e exclude injection happens at per-delivery RENDER time, inside the mail body handed to openconnector — which the CI instance does not install (.github/workflows/code-quality.yml pins `additional-apps` to openregister only) — so the rendered email never exists in a browser run, and "unchanged from today" is a diff between two never-displayed strings. Asserted by tests/Unit/Service/TrackingLinkServiceTest.php (testInjectTrackingRewritesLinksAndAppendsPixel, testInjectTrackingLeavesUnsubscribeLinkUntouched, testInjectTrackingNoOpOnEmptyInput) and, across the flag, by tests/Unit/Service/BlastServiceTest.php (testSendOneDeliveryInjectsTrackingWhenFlagOn, testSendOneDeliveryDoesNotInjectTrackingWhenFlagOff).
+@e2e exclude injection happens at per-delivery RENDER time, inside the mail body handed to openconnector — which the CI instance does not install (.github/workflows/code-quality.yml pins `additional-apps` to openregister and planninq) — so the rendered email never exists in a browser run, and "unchanged from today" is a diff between two never-displayed strings. Asserted by tests/Unit/Service/TrackingLinkServiceTest.php (testInjectTrackingRewritesLinksAndAppendsPixel, testInjectTrackingLeavesUnsubscribeLinkUntouched, testInjectTrackingNoOpOnEmptyInput) and, across the flag, by tests/Unit/Service/BlastServiceTest.php (testSendOneDeliveryInjectsTrackingWhenFlagOn, testSendOneDeliveryDoesNotInjectTrackingWhenFlagOff).
 
 A `TrackingLinkService` SHALL rewrite `<a href>` links to the click-redirect and
 append the open pixel to a blast email at per-delivery render time, only when the
@@ -137,7 +137,7 @@ It MUST NOT carry a client id, an email address, an IP address or a user agent.
 
 #### Scenario: Portal configured and Portaliq installed ingests one email event
 
-@e2e exclude the CI instance installs openregister only (.github/workflows/code-quality.yml pins `additional-apps`), so Portaliq's ingest service is never loadable there, and the recording path needs a valid HMAC token a browser cannot mint. Asserted by tests/Unit/Service/TrafficEventEmitterTest.php (testOpenEventMatchesTheContract, testClickEventCarriesTheClickedUrl, testEventCarriesNoPii, testCampaignFallsBackToTemplateIdThenBlastId) and tests/Unit/Service/TrackingLinkServiceTest.php (testRecordOpenReportsToTrafficAfterSaveAndTotals, testRecordClickReportsToTrafficWithTheClickedUrl).
+@e2e exclude the CI instance does not install Portaliq (.github/workflows/code-quality.yml pins `additional-apps` to openregister and planninq), so Portaliq's ingest service is never loadable there, and the recording path needs a valid HMAC token a browser cannot mint. Asserted by tests/Unit/Service/TrafficEventEmitterTest.php (testOpenEventMatchesTheContract, testClickEventCarriesTheClickedUrl, testEventCarriesNoPii, testCampaignFallsBackToTemplateIdThenBlastId) and tests/Unit/Service/TrackingLinkServiceTest.php (testRecordOpenReportsToTrafficAfterSaveAndTotals, testRecordClickReportsToTrafficWithTheClickedUrl).
 - **WHEN** `blast.traffic_portal` names a portal, Portaliq's ingest service is loadable, and a valid open token is recorded
 - **THEN** exactly one `email_open` event with `blastRef`, `contactRef`, `source` and `medium` `email` and no email address, IP or client id is passed to `ingest()` for that portal, after the `blastDelivery` write and the totals roll-up
 

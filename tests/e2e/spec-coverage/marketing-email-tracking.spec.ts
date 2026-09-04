@@ -10,8 +10,9 @@
  * `blast.traffic_portal` is an admin tunable written through the same
  * `PUT /api/settings` the admin page uses. Once it names a portal, every
  * recorded open or click is reported to Portaliq's ingest service, IF that
- * service is loadable. The CI instance installs openregister only
- * (.github/workflows/code-quality.yml pins `additional-apps`), so here the
+ * service is loadable. The CI instance does not install Portaliq
+ * (.github/workflows/code-quality.yml pins `additional-apps` to openregister
+ * and planninq), so here the
  * probe answers "not installed" and the report is skipped. That skip path is
  * exactly what this file drives end to end: with a portal configured and no
  * Portaliq, the open pixel must still answer 200 `image/gif`, never 500, and
