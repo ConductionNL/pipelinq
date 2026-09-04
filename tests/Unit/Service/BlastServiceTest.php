@@ -1270,7 +1270,14 @@ class BlastServiceTest extends TestCase {
 		$this->objectService->store['tmpl-utm'] = $template;
 		$this->objectService->store['oc-source-utm'] = ['uuid' => 'oc-source-utm'];
 		$this->objectService->deliveries = [
-			['uuid' => 'd-utm', 'blastId' => 'blast-utm', 'contactId' => 'c1', 'email' => 'c1@example.test', 'status' => 'queued'],
+			[
+				'uuid' => 'd-utm',
+				'blastId' => 'blast-utm',
+				'contactId' => 'c1',
+				'email' => 'c1@example.test',
+				'status' => 'queued',
+				'unsubscribeUrl' => 'https://example.org/u/tok-1',
+			],
 		];
 
 		$this->appConfig = $this->createMock(IAppConfig::class);
@@ -1329,7 +1336,10 @@ class BlastServiceTest extends TestCase {
 		$sent = $callService->calls[0]['bodyHtml'];
 		$this->assertStringContainsString('utm_campaign=spring-newsletter', $sent);
 		$this->assertStringContainsString('utm_content=blast-utm', $sent);
-		$this->assertStringContainsString('href="{{unsubscribe_link}}"', $sent);
+		// The unsubscribe merge tag is skipped by the decorator and only then
+		// rendered into the recipient's link, so that link carries no utm_.
+		$this->assertStringContainsString('href="https://example.org/u/tok-1"', $sent);
+		$this->assertStringNotContainsString('u/tok-1?utm', $sent);
 		$this->assertStringEndsWith('<!--tracked-->', $sent);
 		// The tracking wrap saw the decorated body: decoration precedes it.
 		$this->assertStringContainsString('utm_campaign=spring-newsletter', $trackingLinkService->seen[0]);
