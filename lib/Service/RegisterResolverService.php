@@ -112,7 +112,7 @@ class RegisterResolverService {
 	 * It cleared the memo below and was documented as "primarily for tests".
 	 * It had no production caller in any of the five consumers
 	 * (ContactVcardService, ContactVcardWriterService, Customer360SummaryService,
-	 * DefaultQueueService, QueueService) — which is exactly the shape gate-57
+	 * DefaultSkillService) — which is exactly the shape gate-57
 	 * exists to catch: implemented, unit-tested by calling the class directly,
 	 * never reached from a live path. The memo is request-scoped, so nothing
 	 * outlives the request that would need clearing.

@@ -69,7 +69,6 @@ class DemoSeedServiceTest extends TestCase {
 		'lead_schema' => '22',
 		'contact_schema' => '23',
 		'pipeline_schema' => '24',
-		'queue_schema' => '26',
 		'product_schema' => '27',
 		'task_schema' => '28',
 		'contract_schema' => '29',
@@ -87,7 +86,6 @@ class DemoSeedServiceTest extends TestCase {
 		'clients' => ['21', 'name', 'name', null],
 		'contacts' => ['23', 'name', 'name', null],
 		'pipelines' => ['24', 'title', 'title', null],
-		'queues' => ['26', 'title', 'title', null],
 		'products' => ['27', 'name', 'name', null],
 		'leads' => ['22', 'title', 'title', null],
 		'requests' => [self::TICKET_SCHEMA_ID, 'title', 'title', 'request'],
@@ -336,7 +334,6 @@ class DemoSeedServiceTest extends TestCase {
 		self::assertSame(5, $result['created']['clients']);
 		self::assertSame(4, $result['created']['contacts']);
 		self::assertSame(2, $result['created']['pipelines']);
-		self::assertSame(3, $result['created']['queues']);
 		self::assertSame(3, $result['created']['products']);
 		self::assertSame(6, $result['created']['leads']);
 		self::assertSame(8, $result['created']['requests']);
@@ -467,7 +464,7 @@ class DemoSeedServiceTest extends TestCase {
 
 		self::assertTrue($result['success']);
 		self::assertSame(0, array_sum($result['created']));
-		self::assertSame(51, array_sum($result['skipped']));
+		self::assertSame(48, array_sum($result['skipped']));
 	}//end testSeedIsIdempotentOnRerun()
 
 	/**
@@ -502,8 +499,8 @@ class DemoSeedServiceTest extends TestCase {
 		$result = $this->service->remove();
 
 		self::assertTrue($result['success']);
-		self::assertSame(51, array_sum($result['removed']));
-		self::assertCount(51, $deleted);
+		self::assertSame(48, array_sum($result['removed']));
+		self::assertCount(48, $deleted);
 
 		// The non-demo decoy rows are never deleted.
 		foreach ($deleted as $uuid) {
@@ -558,10 +555,9 @@ class DemoSeedServiceTest extends TestCase {
 		self::assertSame(0, $result['removed']['requests']);
 		self::assertSame(3, $result['retained']['complaints']);
 		self::assertSame(0, $result['removed']['complaints']);
-		// Clients (5) + contacts (4) + pipelines (2) + queues (3) + products (3)
-		// + leads (6) + tasks (3) + contracts (2) are on their own schemas and
-		// still delete.
-		self::assertSame(28, array_sum($result['removed']));
+		// Clients (5) + contacts (4) + pipelines (2) + products (3) + leads (6)
+		// + tasks (3) + contracts (2) are on their own schemas and still delete.
+		self::assertSame(25, array_sum($result['removed']));
 	}//end testRemoveRetainsArchivalSchemaRows()
 
 	/**

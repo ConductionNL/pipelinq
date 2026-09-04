@@ -98,10 +98,10 @@ The system SHALL support assigning skills to Nextcloud users. An agent's skill p
 
 ### Requirement: Skill-Based Routing Suggestion [Enterprise]
 
-The system SHALL suggest agents for assignment based on skill match and current workload when a request or lead is added to a queue or its category changes. Routing is advisory (suggestions) rather than mandatory (auto-assignment).
+The system SHALL suggest agents for assignment based on skill match and current workload when a request or lead is created or its category changes. Routing is advisory (suggestions) rather than mandatory (auto-assignment).
 
 #### Scenario: Suggest agents based on category match
-- **WHEN** request "Aanvraag parkeervergunning" with category "vergunningen" is added to a queue
+- **WHEN** request "Aanvraag parkeervergunning" with category "vergunningen" is created
 - **THEN** the system SHALL display a "Suggested agents" list
 - **THEN** agents whose skills include a skill with "vergunningen" in its categories SHALL appear in the list
 - **THEN** agents SHALL be sorted by current workload (fewest open items first)
@@ -134,7 +134,7 @@ The system SHALL suggest agents for assignment based on skill match and current 
 
 ### Requirement: Workload Calculation [Enterprise]
 
-The system SHALL calculate an agent's current workload as the count of open items (requests with non-terminal status + leads in non-closed stages) assigned to them. This count is used for routing suggestions and queue dashboard metrics.
+The system SHALL calculate an agent's current workload as the count of open items (requests with non-terminal status + leads in non-closed stages) assigned to them. This count is used for routing suggestions.
 
 #### Scenario: Count open items for agent
 - **WHEN** "jan.devries" has 3 requests (status: new, in_progress, completed) and 2 leads (stages: Contacted, Won)
@@ -170,9 +170,9 @@ The system SHALL create default skills during the repair step to provide an out-
 **Implemented:**
 - **Skill Definition Entity:** Fully implemented. Skill schema defined in `lib/Settings/pipelinq_register.json` with `@type: schema:DefinedTerm`. CRUD via `src/store/modules/skills.js` Pinia store. Admin UI in `src/components/admin/SkillSettings.vue`.
 - **Agent Skill Profile:** Fully implemented. AgentProfile schema in register JSON. CRUD via `src/store/modules/agentProfiles.js`. Admin UI in `src/components/admin/AgentProfileSettings.vue` with skill checkbox assignment.
-- **Skill-Based Routing Suggestion:** Implemented in `src/components/RoutingSuggestionPanel.vue`. Uses `findMatchingAgents()`, `filterByCapacity()`, `sortByWorkload()` from `src/services/queueUtils.js`. Integrated into `RequestDetail.vue`.
+- **Skill-Based Routing Suggestion:** Implemented in `src/components/RoutingSuggestionPanel.vue`, backed by `RoutingService::findMatchingAgents()`, `filterByCapacity()` and `sortByWorkload()`. Integrated into `RequestDetail.vue`.
 - **Workload Calculation:** Implemented in `agentProfiles.js` store via `getWorkload()` method. Counts open requests (non-terminal status) and open leads (status=open).
-- **Default Skills:** Created via `DefaultQueueService::createDefaultSkills()` called from repair step. Creates 5 default skills for Dutch government KCC use cases.
+- **Default Skills:** Created via `DefaultSkillService::createDefaultSkills()` called from repair step. Creates 5 default skills for Dutch government KCC use cases.
 
 ### Requirement: Routing suggestion UI — documented operations
 

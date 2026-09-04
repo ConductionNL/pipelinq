@@ -28,7 +28,6 @@ Request management handles the intake and tracking of requests (verzoeken) — s
 | `stage` | reference | -- | -- | No | -- |
 | `stageOrder` | integer | -- | -- | No | 0 |
 | `assignedTo` | string (user UID) | `schema:agent` | -- | No | -- |
-| `queue` | reference | -- | -- | No | -- |
 | `caseReference` | reference | -- | -- | No | -- |
 
 ### Status Lifecycle
@@ -384,37 +383,25 @@ The system MUST enforce validation rules for request data integrity.
 
 ---
 
-### Requirement: Request Queue Assignment [Enterprise]
+### Requirement: An unassigned request waits in the queue
 
-The request entity SHALL support an optional `queue` reference field linking the request to a queue for workload management.
+A request SHALL NOT carry a queue reference. A request with no `assignee` and an open
+`status` is in the queue, which is the `/queue` page filtering the ticket index. There
+is no queue record to point at and no queue column to render.
 
-#### Scenario: Request with queue reference
-@e2e exclude requires queue data
-- **WHEN** a request is assigned to queue "Vergunningen"
-- **THEN** the request's `queue` field SHALL store the queue's UUID
-- **THEN** the request SHALL appear in the queue's item list view
+#### Scenario: A request without an assignee is in the queue
+@e2e exclude covered by spec-coverage/queue.spec.ts, which asserts the filter on the page itself
 
-#### Scenario: Request without queue
-- **WHEN** a request has no queue assigned
-- **THEN** the `queue` field SHALL be null
+- **WHEN** a request has no assignee and its status is `new` or `in_progress`
+- **THEN** it appears on `/queue`
+- **AND** it appears on `/tickets`
+- **AND** it appears on no agent's `/my-work`
+
+#### Scenario: A request functions with no queue field at all
+
+- **WHEN** a request is created
+- **THEN** it carries no `queue` property
 - **THEN** the request SHALL function normally with its existing status lifecycle and pipeline placement
-
-#### Scenario: Queue field in request list view
-@e2e exclude requires queue data
-- **WHEN** the request list is displayed
-- **THEN** a "Queue" column SHALL be available showing the queue title or "--" if unqueued
-
-#### Scenario: Queue field in request detail view
-@e2e exclude requires queue data
-- **WHEN** the request detail view is displayed for a queued request
-- **THEN** the queue name SHALL be displayed as a link to the queue detail view
-- **THEN** a "Change queue" action SHALL be available
-
-#### Scenario: Assign to queue from request detail
-@e2e exclude requires queue data
-- **WHEN** an agent clicks "Change queue" on a request detail view
-- **THEN** a dropdown SHALL show all active queues
-- **THEN** selecting a queue SHALL update the request's `queue` field
 
 ---
 

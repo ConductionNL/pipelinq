@@ -189,41 +189,26 @@ Each item MUST follow a consistent card layout showing entity badge, title, stag
 
 ---
 
-### Requirement: Queue-Based Work Section [Enterprise]
+### Requirement: My Work holds what is mine, the queue holds what is nobody's
 
-The My Work view SHALL include a "My Queues" tab showing items from queues the current user is assigned to, providing a queue-centric view of incoming work alongside the existing time-based grouping.
+My Work SHALL show the tickets assigned to the current user. It SHALL NOT show
+unassigned work: that lives on the Queue page (`/queue`), which is every open ticket
+with no assignee. Assigning a ticket moves it from the Queue to the assignee's My
+Work; All tickets shows it in both states.
 
-#### Scenario: View items from assigned queues
-@e2e exclude Enterprise queue feature
-- WHEN the current user is assigned to queues "Vergunningen" and "Klachten"
-- THEN the My Work view SHALL display a "My Queues" tab/section
-- THEN the section SHALL show items grouped by queue name
-- THEN within each queue group, items SHALL be sorted by priority then age
+#### Scenario: My Work shows only the current user's tickets
+@e2e exclude covered by spec-coverage/my-work.spec.ts, which asserts the assignee-scoped index
 
-#### Scenario: Queue section shows unassigned items
-@e2e exclude Enterprise queue feature
-- WHEN queue "Vergunningen" contains 5 items (3 unassigned, 2 assigned to others)
-- THEN the "My Queues" section SHALL show all 5 items
-- THEN unassigned items SHALL be visually distinguished (e.g., "Unassigned" badge)
-- THEN items assigned to others SHALL show the assignee name
+- **WHEN** an agent opens `/my-work`
+- **THEN** every ticket shown has that agent as its assignee
+- **AND** no unassigned ticket appears
 
-#### Scenario: Pick from queue in My Work
-@e2e exclude Enterprise queue feature
-- WHEN an agent clicks "Pick" on an unassigned item in the My Queues section
-- THEN the item's assignee SHALL be set to the current user
-- THEN the item SHALL move to the "My Items" section (existing temporal grouping)
+#### Scenario: Picking work up moves it
+@e2e exclude mutates a shared instance — assigning a ticket rewrites demo data other suites read
 
-#### Scenario: No queue assignments
-@e2e exclude Enterprise queue feature
-- WHEN the current user is not assigned to any queues
-- THEN the "My Queues" tab/section SHALL display "You are not assigned to any queues"
-- THEN the existing time-based My Work view SHALL still function normally
-
-#### Scenario: Toggle between views
-@e2e exclude V1 view toggle; not yet implemented
-- WHEN the My Work view is displayed
-- THEN the user SHALL be able to toggle between "My Items" (existing temporal view) and "My Queues" (queue-based view)
-- THEN the default view SHALL be "My Items"
+- **WHEN** an agent assigns themselves an unassigned ticket from `/queue`
+- **THEN** the ticket appears on their `/my-work`
+- **AND** it no longer appears on `/queue`
 
 ---
 

@@ -52,7 +52,6 @@ final class SchemaSlugMap {
 	 */
 	public const SLUG_TO_CONFIG_KEY = [
 		'pipeline' => 'pipeline_schema',
-		'queue' => 'queue_schema',
 		'skill' => 'skill_schema',
 		'product' => 'product_schema',
 		'productCategory' => 'productCategory_schema',

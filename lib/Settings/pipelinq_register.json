@@ -33,7 +33,6 @@
           "contactmoment",
           "task",
           "relationship",
-          "queue",
           "skill",
           "agentProfile",
           "posTransaction",
@@ -1781,71 +1780,6 @@
             "default": "medium",
             "visible": false,
             "title": "Relationship Strength"
-          }
-        }
-      },
-      "queue": {
-        "slug": "queue",
-        "title": "Queue",
-        "icon": "TrayFull",
-        "version": "1.0.0",
-        "summary": "A priority queue for organizing work items",
-        "description": "Represents a named queue for organizing requests with priority-based ordering. Used for workload distribution and skill-based routing in KCC/service desk scenarios. Mapped to Schema.org ItemList.",
-        "x-schema-org": "schema:ItemList",
-        "required": [
-          "title"
-        ],
-        "properties": {
-          "title": {
-            "type": "string",
-            "description": "Queue name (e.g., 'Algemene Zaken', 'Vergunningen')",
-            "maxLength": 255,
-            "minLength": 1,
-            "title": "Title"
-          },
-          "description": {
-            "type": "string",
-            "description": "Description of the queue's purpose",
-            "visible": false,
-            "title": "Description"
-          },
-          "categories": {
-            "type": "array",
-            "description": "Category tags for routing (matched against request categories and agent skills)",
-            "items": {
-              "type": "string"
-            },
-            "default": [],
-            "title": "Categories"
-          },
-          "isActive": {
-            "type": "boolean",
-            "description": "Whether the queue is active and accepting items",
-            "default": true,
-            "title": "Active",
-            "facetable": true
-          },
-          "maxCapacity": {
-            "type": "integer",
-            "description": "Maximum number of items allowed in the queue (null = unlimited)",
-            "minimum": 1,
-            "title": "Max Capacity"
-          },
-          "sortOrder": {
-            "type": "integer",
-            "description": "Display order of the queue in the list",
-            "default": 0,
-            "visible": false,
-            "title": "Sort Order"
-          },
-          "assignedAgents": {
-            "type": "array",
-            "description": "Nextcloud user UIDs of agents assigned to work this queue",
-            "items": {
-              "type": "string"
-            },
-            "default": [],
-            "title": "Assigned Agents"
           }
         }
       },
@@ -5363,45 +5297,6 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "queue",
-          "slug": "queue-algemene-zaken",
-          "id": "f1a2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c01"
-        },
-        "title": "Algemene Zaken",
-        "description": "Diverse gemeentelijke vragen en informatieverzoeken",
-        "isActive": true,
-        "maxCapacity": null,
-        "sortOrder": 1
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "queue",
-          "slug": "queue-vergunningen",
-          "id": "f1a2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c02"
-        },
-        "title": "Vergunningen",
-        "description": "Aanvragen en meldingen omgevingsvergunning",
-        "isActive": true,
-        "maxCapacity": 50,
-        "sortOrder": 2
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "queue",
-          "slug": "queue-wmo-zorg",
-          "id": "f1a2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c03"
-        },
-        "title": "WMO / Zorg",
-        "description": "Wmo-aanvragen, hulpmiddelenvragen en zorgondersteuning",
-        "isActive": true,
-        "maxCapacity": 30,
-        "sortOrder": 3
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
           "schema": "agentProfile",
           "slug": "agent-jan-de-vries",
           "id": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c11"
@@ -5485,7 +5380,7 @@
           "slug": "client-gemeente-voorbeeld",
           "id": "994174bf-3e92-4bec-aea2-701b7131201f"
         },
-        "_note": "klantbeeld-360-activation seed: municipality archetype — see design.md Seed Data. Client for lead-gemeente-voorbeeld-kcc-portaal + 4 open tickets (request/complaint/2x contactmoment) below, so the customer-360 summary is verifiable on a fresh install (open-ticket count 4, SLA breached 1, one queue, pipeline value from the lead).",
+        "_note": "klantbeeld-360-activation seed: municipality archetype — see design.md Seed Data. Client for lead-gemeente-voorbeeld-kcc-portaal + 4 open tickets (request/complaint/2x contactmoment) below, so the customer-360 summary is verifiable on a fresh install (open-ticket count 4, SLA breached 1, pipeline value from the lead).",
         "name": "Gemeente Voorbeeld",
         "type": "organization",
         "contactsUid": "seed-gemeente-voorbeeld-001",
@@ -5544,8 +5439,7 @@
         "priority": "normal",
         "channel": "web",
         "occurredAt": "2026-07-10T09:00:00+02:00",
-        "category": "vergunningen",
-        "queue": "f1a2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c02"
+        "category": "vergunningen"
       },
       {
         "@self": {

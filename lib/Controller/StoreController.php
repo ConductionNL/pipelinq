@@ -112,7 +112,6 @@ class StoreController extends Controller {
 	 */
 	private const INSTALLABLE_SLUGS = [
 		'pipeline',
-		'queue',
 		'skill',
 		'product',
 		'productCategory',
