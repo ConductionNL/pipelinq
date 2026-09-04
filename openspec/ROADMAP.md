@@ -34,6 +34,23 @@ The admin settings MVP is implemented (panel registration, register status, pipe
 
 Note: Lead sources and request channels already have API routes and basic TagManager UI — V1 polishes these.
 
+### Marketing suite
+
+Decided 2026-09-04. The design, data model and decisions are on
+`docs/Technical/marketing-architecture.md`; the user-facing summary is
+`docs/Features/marketing.md`. Phases are ordered by value, carry no dates,
+and each names the openspec changes to open.
+
+| Phase | Scope | Openspec changes |
+|-------|-------|------------------|
+| 0 | Platform prerequisites: OAuth2 token-set kind with refresh in the OpenRegister credential broker, connect relay, RFC 8058 header path on IMailer, portaliq landing-page action, Matomo in dev compose | `credential-oauth2-token-set`, `credential-oauth2-connect-flow` (openregister); `contribution-landing-page-action` (portaliq); Matomo profile (.github); ADR-064 amendment (hydra) |
+| 1 | Lists and mailings: segment UI repair (pipelinq#773), mailing lists with double opt-in, preference centre, RFC 8058 headers, transports, newsletter composer, typed contact channels | `marketing-segments-ui-repair`, `marketing-lists-and-double-opt-in`, `marketing-mail-transports`, `marketing-rfc8058-headers`, `marketing-newsletter-composer`, `contact-channel-details` |
+| 2 | Content hub and hermiq: article objects, writing skill export, marketing agent template, repurpose actions, companion context | `marketing-article-hub`, `marketing-agent-template` (hermiq), `writing-skill-agentskills-export` (hydra), `marketing-companion-context` |
+| 3 | Social publishing: account connection, adapters (fediverse, LinkedIn, X, Meta), composer and calendar, advocacy flow, metrics pull | `social-accounts-and-connect`, `social-post-composer-and-calendar`, `social-adapter-fediverse`, `social-adapter-linkedin`, `social-adapter-x`, `social-adapter-meta`, `social-advocacy-share-flow`, `social-metrics-pull` |
+| 4 | Campaigns and attribution: campaign object and UTM vocabulary, landing pages via portaliq, touchpoint attribution, attribution on paid invoices, campaign report | `marketing-campaigns-and-utm`, `marketing-landing-pages-via-portaliq`, `marketing-touchpoint-attribution`, `shillinq-attribution-on-paid-invoice` (shillinq), `marketing-campaign-report` |
+| 5 | Search and competitor intelligence: Search Console and Matomo connectors, keyword analysis, competitor watches, connection audit | `search-console-and-matomo-connectors`, `keyword-intelligence`, `competitor-watches`, `social-connection-audit` |
+| 6 | Integrated campaigns: shillinq signals, standard audiences, journeys on OR flows, weekly review agent | `shillinq-marketing-signals` (shillinq), `marketing-standard-audiences`, `marketing-journeys-on-or-flows`, `marketing-weekly-review-agent` (hermiq) |
+
 ### Potential Future Features
 
 These are not yet specified but may be needed:

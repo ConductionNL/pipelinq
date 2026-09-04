@@ -58,6 +58,7 @@ Pipelinq is a Nextcloud CRM and customer interaction app for municipal KCC (Klan
 | CRM Workflow Automation | n8n-powered automation rules triggered on CRM events | Planned | TEC 5.2 | [crm-workflow-automation.md](crm-workflow-automation.md) |
 | Email & Calendar Sync | Sync emails and calendar events to CRM entities | Planned | TEC 5.1; vCard RFC 6350 | [email-calendar-sync.md](email-calendar-sync.md) |
 | Public Intake Forms | Public-facing intake forms for citizen self-service | Planned | GEMMA Klantgeleiding; TEC 3.6 | [public-intake-forms.md](public-intake-forms.md) |
+| Marketing | Segments, templates and email blasts today; lists with double opt-in, content hub, social publishing, campaigns with attribution, search and competitor intelligence in six planned phases | Partial | GEMMA Sociale media; GEMMA Mediamonitor en webcare; TEC 2; RFC 8058 | [marketing.md](marketing.md) |
 | Product Catalog Quoting | Quotation generation from product catalog line items | Planned | TEC 1.8 | [product-catalog-quoting.md](product-catalog-quoting.md) |
 | CRM MCP Tool Surface | Agent-addressable CRM tools (clients, leads, forecast, create-lead, log-contactmoment) for the Nextcloud Hub Assistant | Implemented | Model Context Protocol; OpenRegister `IMcpToolProvider` | [crm-mcp-tool-surface.md](crm-mcp-tool-surface.md) |
 
@@ -121,6 +122,7 @@ Advanced features for larger deployments.
 | Public Intake Forms | [public-intake-forms.md](public-intake-forms.md) |
 | Product Catalog Quoting | [product-catalog-quoting.md](product-catalog-quoting.md) |
 | CRM MCP Tool Surface | [crm-mcp-tool-surface.md](crm-mcp-tool-surface.md) |
+| Marketing | [marketing.md](marketing.md) |
 
 ### Infrastructure
 
