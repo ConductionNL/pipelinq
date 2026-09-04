@@ -1,0 +1,329 @@
+{
+  "components": {
+    "registers": {
+      "pipelinq": {
+        "schemas": [
+          "article"
+        ]
+      }
+    },
+    "schemas": {
+      "article": {
+        "slug": "article",
+        "title": "Article",
+        "icon": "NewspaperVariantOutline",
+        "version": "1.0.0",
+        "summary": "A piece of writing the tenant owns, written once in markdown and reused by a mailing, a social post and a public page.",
+        "description": "An Article is the content hub object. Its body is markdown and never HTML, because the same text has to render into an email, a social post and a portal page without one of the three owning the markup. The declared lifecycle owns which status changes are legal; ArticleService owns the two things the grammar cannot express, namely that publishing stamps publishedAt exactly once and that archiving leaves every reference intact. Where an article has been used is NOT a property: it is derived at read time from the campaign templates that name it and the blasts built on those templates, so removing a reference removes the usage without a second write. See the marketing-articles spec and docs/Technical/marketing-architecture.md.",
+        "x-schema-org": "schema:Article",
+        "x-openregister-lifecycle": {
+          "field": "status",
+          "initial": "draft",
+          "transitions": {
+            "submitForReview": {
+              "from": [
+                "draft"
+              ],
+              "to": "review",
+              "description": "Hand the draft to a colleague to read. An agent-authored draft always passes through here, because rule 4 of the marketing architecture says an agent proposes and a person disposes."
+            },
+            "returnToDraft": {
+              "from": [
+                "review"
+              ],
+              "to": "draft",
+              "description": "The reviewer wants changes. The article goes back to its author with nothing published."
+            },
+            "publish": {
+              "from": [
+                "draft",
+                "review"
+              ],
+              "to": "published",
+              "description": "Make the article available to a mailing, a post and a page. ArticleService stamps publishedAt on the first publish and never moves it afterwards."
+            },
+            "archive": {
+              "from": [
+                "draft",
+                "review",
+                "published"
+              ],
+              "to": "archived",
+              "description": "Take the article out of use. It stays readable and every reference to it stays intact, because a mailing already sent still names it."
+            },
+            "restore": {
+              "from": [
+                "archived"
+              ],
+              "to": "draft",
+              "description": "Bring an archived article back as a draft. It is rewritten and published afresh rather than reappearing as it was."
+            }
+          }
+        },
+        "required": [
+          "title"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Headline of the article, shown on the card, on the detail page and in an embedded newsletter block.",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Title"
+          },
+          "slug": {
+            "type": "string",
+            "description": "URL-safe identifier, unique within the register. It is what a public page and a link both address, so it is derived from the title once and then left alone.",
+            "maxLength": 255,
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+            "title": "Slug"
+          },
+          "summary": {
+            "type": "string",
+            "description": "One or two sentences describing the article, used on the card and in an embedded newsletter block.",
+            "maxLength": 1000,
+            "title": "Summary"
+          },
+          "body": {
+            "type": "string",
+            "description": "The article itself, written in markdown. Stored as markdown so a mailing, a social post and a portal page can each render it their own way.",
+            "title": "Body"
+          },
+          "heroImage": {
+            "type": "string",
+            "description": "Path in Nextcloud Files to the image shown above the article, or an absolute URL to one hosted elsewhere.",
+            "maxLength": 2048,
+            "title": "Hero Image"
+          },
+          "links": {
+            "type": "array",
+            "description": "Further reading offered with the article, each a label and a destination.",
+            "title": "Links",
+            "items": {
+              "type": "object",
+              "properties": {
+                "label": {
+                  "type": "string",
+                  "description": "Text of the link as the reader sees it.",
+                  "title": "Label"
+                },
+                "url": {
+                  "type": "string",
+                  "description": "Destination of the link.",
+                  "title": "URL"
+                }
+              }
+            }
+          },
+          "tags": {
+            "type": "array",
+            "description": "Free-form subject tags used to group articles and to suggest related ones.",
+            "title": "Tags",
+            "items": {
+              "type": "string"
+            }
+          },
+          "language": {
+            "type": "string",
+            "default": "nl",
+            "description": "Language the article is written in, as a two-letter code such as nl or en.",
+            "maxLength": 8,
+            "title": "Language"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "review",
+              "published",
+              "archived"
+            ],
+            "default": "draft",
+            "description": "Where the article stands. Only a published article may be embedded in a mailing or a post.",
+            "title": "Status"
+          },
+          "author": {
+            "type": "string",
+            "description": "Nextcloud user id of the person who owns the article. Stamped from the session and never taken from the request body.",
+            "title": "Author"
+          },
+          "publishedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Moment the article was first published (UTC). Set once and never moved by a later publish.",
+            "title": "Published At"
+          },
+          "portalPageRef": {
+            "type": "string",
+            "description": "Reference to the public page that carries this article, filled in by hand until the portal contribution contract writes it. When empty, an embedded newsletter block renders no read-more link rather than a link that goes nowhere.",
+            "maxLength": 2048,
+            "title": "Portal Page Ref"
+          },
+          "agentAuthored": {
+            "type": "boolean",
+            "default": false,
+            "description": "Whether an agent drafted or changed this article. Applied by the write path itself and ignored when it arrives in a request body, because a mark a client can set is not a mark (ADR-088).",
+            "title": "Agent Authored"
+          },
+          "agentAuthoredBy": {
+            "type": "string",
+            "description": "Identity of the agent that drafted or changed the article, so the record can be followed back to the run that produced it. Empty on an article a person wrote.",
+            "maxLength": 255,
+            "title": "Agent Authored By"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Creation timestamp (UTC).",
+            "title": "Created At"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Last update timestamp (UTC).",
+            "title": "Updated At"
+          }
+        }
+      },
+      "campaignTemplate": {
+        "properties": {
+          "articleIds": {
+            "type": "array",
+            "description": "Articles embedded in this template, in the order the marketer chose. They are rendered where the body carries the {{articles}} marker; a template with articles and no marker renders none of them.",
+            "title": "Article IDs",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "objects": [
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "article",
+          "slug": "article-openregister-3-0-is-uit"
+        },
+        "title": "OpenRegister 3.0 is uit",
+        "slug": "openregister-3-0-is-uit",
+        "summary": "Schema's met een levenscyclus, berekende velden en zoekopdrachten die binnen een seconde klaar zijn. Dit is wat er verandert en wat je moet doen.",
+        "body": "## Wat er nieuw is\n\nOpenRegister 3.0 brengt drie dingen die je meteen merkt.\n\n- **Schema's met een levenscyclus.** Je legt in het schema vast welke statusovergangen mogen, en de applicatie hoeft die regel niet nog een keer te schrijven.\n- **Berekende velden.** Een veld dat uit andere objecten volgt wordt aan de serverkant bijgehouden, dus een overzicht hoeft niet meer te rekenen.\n- **Snellere zoekopdrachten.** Een register met een miljoen objecten filtert nu binnen een seconde.\n\n## Wat je moet doen\n\nWerk je registers bij via de beheerpagina. Bestaande objecten blijven staan; alleen de schema's krijgen een nieuwe versie.\n\n## Vragen\n\nLoop je ergens tegenaan, stel je vraag in de community of neem contact met ons op.",
+        "heroImage": "/Photos/Marketing/openregister-3-0.jpg",
+        "links": [
+          {
+            "label": "Release notes",
+            "url": "https://github.com/ConductionNL/openregister/releases"
+          },
+          {
+            "label": "Documentatie",
+            "url": "https://openregister.conduction.nl"
+          }
+        ],
+        "tags": [
+          "release",
+          "openregister",
+          "product"
+        ],
+        "language": "nl",
+        "status": "published",
+        "author": "admin",
+        "publishedAt": "2026-08-04T09:00:00+00:00",
+        "portalPageRef": "https://conduction.nl/nieuws/openregister-3-0-is-uit",
+        "agentAuthored": false,
+        "agentAuthoredBy": "",
+        "createdAt": "2026-07-28T13:40:00+00:00",
+        "updatedAt": "2026-08-04T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "article",
+          "slug": "article-rotterdam-koppelt-in-zes-weken"
+        },
+        "title": "Gemeente Rotterdam koppelt haar zaaksysteem in zes weken",
+        "slug": "rotterdam-koppelt-in-zes-weken",
+        "summary": "Beginnen bij de gegevens in plaats van bij de koppeling. Hoe Rotterdam van eerste gesprek naar productie ging zonder een migratie van een jaar.",
+        "body": "Gemeente Rotterdam wilde haar zaaksysteem koppelen aan de landelijke voorzieningen zonder een jaar aan een migratie kwijt te zijn. Dat is gelukt in zes weken.\n\n## De aanpak\n\nWe zijn begonnen bij de gegevens, niet bij de koppeling. Eerst is in kaart gebracht welke objecten de gemeente echt bijhoudt, daarna is per object bepaald wie eigenaar is. Pas toen dat vaststond is de eerste koppeling gelegd.\n\n## Het resultaat\n\n- Zes weken van eerste gesprek tot productie.\n- Geen enkele handmatige overzetting van gegevens.\n- Het team van de gemeente beheert de koppelingen nu zelf.\n\n## In de woorden van de gemeente\n\n\"We dachten dat we een nieuw systeem nodig hadden. We hadden een beter beeld van onze eigen gegevens nodig.\"\n",
+        "heroImage": "/Photos/Marketing/rotterdam-stadhuis.jpg",
+        "links": [
+          {
+            "label": "Common Ground",
+            "url": "https://commonground.nl"
+          }
+        ],
+        "tags": [
+          "klantverhaal",
+          "gemeente",
+          "zaakgericht werken"
+        ],
+        "language": "nl",
+        "status": "published",
+        "author": "admin",
+        "publishedAt": "2026-08-21T07:30:00+00:00",
+        "portalPageRef": "",
+        "agentAuthored": false,
+        "agentAuthoredBy": "",
+        "createdAt": "2026-08-14T15:05:00+00:00",
+        "updatedAt": "2026-08-21T07:30:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "article",
+          "slug": "article-common-ground-meetup-november"
+        },
+        "title": "Kom langs op de Common Ground meetup in november",
+        "slug": "common-ground-meetup-november",
+        "summary": "Drie korte verhalen uit de praktijk en daarna ruimte om door te praten. Den Haag, november, gratis toegang.",
+        "body": "We organiseren in november weer een Common Ground meetup, deze keer in Den Haag.\n\n## Waar het over gaat\n\nDrie korte verhalen uit de praktijk, en daarna ruimte om door te praten. Onderwerpen dit keer:\n\n- Registers delen tussen gemeenten zonder een centrale kopie.\n- Wat er misging bij een koppeling, en wat we ervan geleerd hebben.\n- Open source afspraken maken die ook na de aanbesteding standhouden.\n\n## Praktisch\n\nDe inloop is vanaf 15.30 uur, we beginnen om 16.00 uur en sluiten af met eten. Deelname is gratis.\n\n## Aanmelden\n\nLaat weten dat je komt, dan houden we een plek vrij.",
+        "heroImage": "/Photos/Marketing/meetup-den-haag.jpg",
+        "links": [
+          {
+            "label": "Programma",
+            "url": "https://conduction.nl/agenda"
+          }
+        ],
+        "tags": [
+          "evenement",
+          "community",
+          "common ground"
+        ],
+        "language": "nl",
+        "status": "review",
+        "author": "admin",
+        "portalPageRef": "",
+        "agentAuthored": true,
+        "agentAuthoredBy": "hermiq:marketing-editor",
+        "createdAt": "2026-09-01T10:12:00+00:00",
+        "updatedAt": "2026-09-02T08:47:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "campaignTemplate",
+          "slug": "template-nieuwsbrief-september"
+        },
+        "name": "Nieuwsbrief september",
+        "channel": "email",
+        "subject": "Wat er deze maand bij Conduction gebeurde",
+        "bodyHtml": "<p>Hallo,</p><p>Dit is wat er deze maand speelde.</p>{{articles}}<p>Tot volgende maand,<br>Het team van Conduction</p><hr><p>Conduction B.V., Turfmarkt 147, 2511 DP Den Haag, Nederland<br><a href=\"{{unsubscribe_link}}\">Uitschrijven</a></p>",
+        "bodyText": "Hallo,\n\nDit is wat er deze maand speelde.\n\n{{articles}}\n\nTot volgende maand,\nHet team van Conduction\n\nConduction B.V., Turfmarkt 147, 2511 DP Den Haag, Nederland\nUitschrijven: {{unsubscribe_link}}",
+        "senderName": "Conduction",
+        "senderEmail": "nieuwsbrief@conduction.nl",
+        "replyTo": "info@conduction.nl",
+        "variables": [
+          "unsubscribe_link",
+          "articles"
+        ],
+        "articleIds": [
+          "article-openregister-3-0-is-uit",
+          "article-rotterdam-koppelt-in-zes-weken"
+        ],
+        "language": "nl",
+        "createdBy": "admin",
+        "createdAt": "2026-09-02T09:15:00+00:00"
+      }
+    ]
+  }
+}

@@ -1,9 +1,9 @@
 ## 1. Schema and seed data
 
-- [ ] 1.1 Add `lib/Settings/register.d/97-marketing-articles.json` with the `article` schema, its `x-openregister-lifecycle` on `status`, the `agentAuthored` and `agentAuthoredBy` mark, and `article` listed on the `pipelinq` register; verify `python3 -m json.tool` parses it and `npm run check:manifest` exits 0.
-- [ ] 1.2 Extend `campaignTemplate` in the same fragment with `articleIds`, restating the whole property block because a fragment replaces rather than merges; verify the merged schema still carries `name`, `channel`, `bodyHtml` and `variables`.
-- [ ] 1.3 Seed three Dutch articles per ADR-111, a product update, a customer story and an event announcement, one of them agent-authored, and name one of them from a seeded campaign template so the usages page is not empty; verify every seeded slug is unique and the referenced template slug exists.
-- [ ] 1.4 Add every new schema title, property title and enum label to `l10n/en.json` and `l10n/nl.json`, then run `npm run l10n:build`; verify `npm run check:schema-l10n` and `npm run check:l10n-js` exit 0 without moving the baseline.
+- [x] 1.1 Add `lib/Settings/register.d/97-marketing-articles.json` with the `article` schema, its `x-openregister-lifecycle` on `status`, the `agentAuthored` and `agentAuthoredBy` mark, and `article` listed on the `pipelinq` register; verify `python3 -m json.tool` parses it and `npm run check:manifest` exits 0.
+- [x] 1.2 Extend `campaignTemplate` in the same fragment with `articleIds` only, because `components.schemas.*.properties` is an associative node the fragment loader merges recursively while a list such as `required` would be replaced; verify the merged schema still carries `name`, `channel`, `bodyHtml` and `variables`.
+- [x] 1.3 Seed three Dutch articles per ADR-111, a product update, a customer story and an event announcement, one of them agent-authored, and name one of them from a seeded campaign template so the usages page is not empty; verify every seeded slug is unique and the referenced template slug exists.
+- [x] 1.4 Add every new schema title, property title and enum label to `l10n/en.json` and `l10n/nl.json`, then run `npm run l10n:build`; verify `npm run check:schema-l10n` and `npm run check:l10n-js` exit 0 without moving the baseline.
 
 ## 2. Service layer
 
