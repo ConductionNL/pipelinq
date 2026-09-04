@@ -36,6 +36,7 @@ use OCA\Pipelinq\Service\AttributionService;
 use OCA\Pipelinq\Service\BlastService;
 use OCA\Pipelinq\Service\CampaignLinkDecorator;
 use OCA\Pipelinq\Service\CampaignPerformanceService;
+use OCA\Pipelinq\Service\Marketing\MailTransportService;
 use OCA\Pipelinq\Service\SegmentService;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -43,6 +44,7 @@ use OCP\IAppConfig;
 use OCP\IRequest;
 use OCP\IUser;
 use OCP\IUserSession;
+use OCP\Mail\IMailer;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -279,6 +281,12 @@ class BlastControllerTest extends TestCase {
 		$blastService = new BlastService(
 			appConfig: $appConfig,
 			segmentService: $this->createMock(SegmentService::class),
+			mailTransportService: new MailTransportService(
+				container: $container,
+				appConfig: $appConfig,
+				mailer: $this->createMock(IMailer::class),
+				logger: $logger,
+			),
 			logger: $logger,
 			container: $container,
 		);

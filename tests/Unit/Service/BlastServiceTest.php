@@ -22,8 +22,10 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\Pipelinq\Service\BlastService;
+use OCA\Pipelinq\Service\Marketing\MailTransportService;
 use OCA\Pipelinq\Service\SegmentService;
 use OCP\IAppConfig;
+use OCP\Mail\IMailer;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -44,6 +46,8 @@ class BlastServiceTest extends TestCase {
 
 	private LoggerInterface $logger;
 
+	private IMailer $mailer;
+
 	private object $objectService;
 
 	/**
@@ -63,6 +67,7 @@ class BlastServiceTest extends TestCase {
 		$this->appConfig = $this->createMock(IAppConfig::class);
 		$this->segmentService = $this->createMock(SegmentService::class);
 		$this->logger = $this->createMock(LoggerInterface::class);
+		$this->mailer = $this->createMock(IMailer::class);
 
 		$this->objectService = new class {
 
@@ -200,12 +205,24 @@ class BlastServiceTest extends TestCase {
 			}
 		);
 
-		$this->service = new BlastService($this->container,
-			$this->appConfig,
-			$this->segmentService,
-			$this->logger,
-		);
+		$this->service = $this->buildService($this->container, $this->appConfig);
 	}//end setUp()
+
+	/**
+	 * Build a BlastService wired to a real MailTransportService over the
+	 * given (test-local) container/appConfig — mirrors production wiring so
+	 * the dispatch/send-path tests below exercise the real resolution +
+	 * dispatch logic rather than a stubbed collaborator.
+	 *
+	 * @param ContainerInterface $container The container to resolve through.
+	 * @param IAppConfig $appConfig The app config to read from.
+	 *
+	 * @return BlastService
+	 */
+	private function buildService(ContainerInterface $container, IAppConfig $appConfig): BlastService {
+		$mailTransportService = new MailTransportService($container, $appConfig, $this->mailer, $this->logger);
+		return new BlastService($container, $appConfig, $this->segmentService, $mailTransportService, $this->logger);
+	}//end buildService()
 
 	/**
 	 * Build a fake CallLog-shaped object mirroring the real
@@ -599,11 +616,7 @@ class BlastServiceTest extends TestCase {
 				throw new \RuntimeException('not registered: ' . $id);
 			}
 		);
-		$this->service = new BlastService($this->container,
-			$this->appConfig,
-			$this->segmentService,
-			$this->logger,
-		);
+		$this->service = $this->buildService($this->container, $this->appConfig);
 
 		$summary = $this->service->sendBlast('blast-q4', false);
 
@@ -676,11 +689,7 @@ class BlastServiceTest extends TestCase {
 				throw new \RuntimeException('not registered: ' . $id);
 			}
 		);
-		$this->service = new BlastService($this->container,
-			$this->appConfig,
-			$this->segmentService,
-			$this->logger,
-		);
+		$this->service = $this->buildService($this->container, $this->appConfig);
 
 		$summary = $this->service->sendBlast('blast-ab', false);
 
@@ -806,7 +815,8 @@ class BlastServiceTest extends TestCase {
 
 		// Use a throttle-counting subclass to assert the rate-limit hook
 		// is invoked between batches without sleeping the test.
-		$service = new class($this->container, $this->appConfig, $this->segmentService, $this->logger) extends BlastService {
+		$mailTransportService = new MailTransportService($this->container, $this->appConfig, $this->mailer, $this->logger);
+		$service = new class($this->container, $this->appConfig, $this->segmentService, $mailTransportService, $this->logger) extends BlastService {
 
 			/**
 			 * @var integer
@@ -1008,7 +1018,7 @@ class BlastServiceTest extends TestCase {
 			}
 		);
 
-		$service = new BlastService($this->container, $this->appConfig, $this->segmentService, $this->logger);
+		$service = $this->buildService($this->container, $this->appConfig);
 		$dispatched = $service->dispatchBlastDeliveries('blast-flag-off', 100);
 
 		$this->assertSame(1, $dispatched);
@@ -1101,7 +1111,7 @@ class BlastServiceTest extends TestCase {
 			}
 		);
 
-		$service = new BlastService($this->container, $this->appConfig, $this->segmentService, $this->logger);
+		$service = $this->buildService($this->container, $this->appConfig);
 		$dispatched = $service->dispatchBlastDeliveries('blast-flag-on', 100);
 
 		$this->assertSame(1, $dispatched);
@@ -1202,7 +1212,7 @@ class BlastServiceTest extends TestCase {
 			}
 		);
 
-		$service = new BlastService($this->container, $this->appConfig, $this->segmentService, $this->logger);
+		$service = $this->buildService($this->container, $this->appConfig);
 		$dispatched = $service->dispatchBlastDeliveries('blast-shape', 100);
 
 		$this->assertSame(1, $dispatched);
@@ -1330,7 +1340,7 @@ class BlastServiceTest extends TestCase {
 			}
 		);
 
-		$service = new BlastService($this->container, $this->appConfig, $this->segmentService, $this->logger);
+		$service = $this->buildService($this->container, $this->appConfig);
 		$this->assertSame(1, $service->dispatchBlastDeliveries('blast-utm', 100));
 
 		$sent = $callService->calls[0]['bodyHtml'];
@@ -1404,7 +1414,7 @@ class BlastServiceTest extends TestCase {
 			}
 		);
 
-		$service = new BlastService($this->container, $this->appConfig, $this->segmentService, $this->logger);
+		$service = $this->buildService($this->container, $this->appConfig);
 		$this->assertSame(1, $service->dispatchBlastDeliveries('blast-plain', 100));
 		$this->assertSame('<a href="https://example.org/">x</a>', $callService->calls[0]['bodyHtml']);
 	}//end testDispatchWithoutADecoratorSendsLinksAsAuthored()

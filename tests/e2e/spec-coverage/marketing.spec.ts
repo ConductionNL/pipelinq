@@ -613,8 +613,10 @@ test.describe('Blasts ledger and wizard', () => {
 			timeout: 20000,
 		})
 
-		// The six declared steps are rendered as an ordered progress list.
-		await expect(form.locator('.blast-form__steps li')).toHaveCount(6)
+		// The seven declared steps are rendered as an ordered progress list.
+		// marketing-mail-transports added a "Transport" step between Channel
+		// and Schedule (six steps before that change).
+		await expect(form.locator('.blast-form__steps li')).toHaveCount(7)
 		await expect(form.locator('.blast-form__steps li.is-current')).toHaveCount(1)
 
 		// Step 1 — name. `canAdvance` gates Next until it is filled.
