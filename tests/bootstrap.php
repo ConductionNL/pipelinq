@@ -62,6 +62,18 @@ if ($autoloader instanceof \Composer\Autoload\ClassLoader) {
 	if ($localPipelinqMap !== []) {
 		$autoloader->addClassMap($localPipelinqMap);
 	}
+
+	// A class that exists ONLY in this worktree (added after the main
+	// checkout's classmap was last generated — e.g. by a `git merge` of
+	// development that the main checkout has not pulled) has no classmap
+	// entry to remap at all, and falls through to the PSR-4 prefix, which
+	// carries the exact same symlink-resolved-to-the-main-checkout problem
+	// as the classmap did. `setPsr4()` (not `addPsr4()`) REPLACES the
+	// registered base directory for the prefix rather than appending to
+	// it, so `OCA\Pipelinq\` resolves against this worktree's lib/ only —
+	// composer.json's own declared mapping, just re-pointed at where this
+	// process is actually running.
+	$autoloader->setPsr4('OCA\\Pipelinq\\', [$appRoot . '/lib']);
 }
 
 // Register the test-only stub namespaces on the composer loader at test time.
