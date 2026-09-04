@@ -3,7 +3,8 @@
 ## 1. The Queue page
 
 - [x] 1.1 Add the `Queue` page (`/queue`), a `type: index` over `ticket` filtered to
-  `assignee: "IS NULL"` and `status_in: [new, in_progress]`, with the ticketType tab
+  `assignee: "IS NULL"` and `status_notIn: [resolved, completed, rejected, converted,
+  closed]`, with the ticketType tab
   strip and an empty state.
 - [x] 1.2 Add its menu entry and relocate it into the Customer Support group above
   My Work.

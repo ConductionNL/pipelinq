@@ -66,17 +66,25 @@ everything.
 
 ## Note on the filter spelling
 
-The base filter is `{"assignee": "IS NULL", "status_in": ["new", "in_progress"]}`.
+The base filter is
+`{"assignee": "IS NULL", "status_notIn": ["resolved", "completed", "rejected", "converted", "closed"]}`.
 
-`assignee: "IS NULL"` is the literal sentinel `MariaDbSearchHandler::applyNullCheck`
-matches. The documented `assignee_isnull=true` spelling does **not** work over HTTP:
-`SearchQueryHandler::cleanQuery` tests the value with `=== true`, and a query string
-can only ever deliver the string `"true"`, so the operator silently degrades to
-`IS NOT NULL` and the page renders empty. Verified against a live instance: 30
-unassigned tickets with the sentinel, 0 with the documented spelling.
+`assignee: "IS NULL"` is the literal sentinel every OpenRegister condition builder
+matches by value. The suffix spelling `assignee_isnull=true` was dead when this page
+shipped, and is fixed in openregister `isnull-filter-operator`. The sentinel is kept
+because it works on instances that do not yet carry that change, and the two are two
+spellings of one predicate.
 
-`status_in` carries the open half of the lifecycle explicitly because OpenRegister
-has no not-in operator.
+`status_notIn` names the CLOSED half of the lifecycle rather than enumerating the open
+half, so a new open status joins the queue the day it is added instead of being silently
+missing from an `in` list.
+
+**Correction, 2026-09-04.** This proposal originally said OpenRegister has no not-in
+operator, and used `status_in: ["new", "in_progress"]` on that basis. The claim was
+wrong: `notIn` and `ne` both work on object fields, measured over HTTP
+(`status_notIn[]=closed` correctly excluded exactly the closed row). The filter was
+correct either way; only the recorded reasoning was false, and a false reason in a note
+is worse than no note.
 
 ## Why a page rather than a menu preset
 
@@ -85,9 +93,8 @@ tickets as two `type: index` pages over `pipelinq`/`ticket`, and proposes a
 `menu[].query` preset instead. It reports this informationally and does not block.
 
 The preset cannot carry this filter. Its values are constrained to string, number
-or boolean by the manifest schema, so `status_in: ["new", "in_progress"]` has no
-expressible form, and OpenRegister offers no not-in operator to collapse it into a
-single scalar. A preset is also only a link into another page: the query filters and
+or boolean by the manifest schema, so the five-value `status_notIn` list has no
+expressible form as one. A preset is also only a link into another page: the query filters and
 the reader's own facet filters share one map there, so a facet interaction can widen
 the queue back to every ticket. A base filter on the page itself cannot be cleared by
 the person reading it, which is the property that makes the queue trustworthy.
