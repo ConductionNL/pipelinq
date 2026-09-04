@@ -31,6 +31,7 @@ import type { Page } from '@playwright/test'
 import { expect, test } from '@playwright/test'
 import {
 	assertNoHardError,
+	clickHeaderAction,
 	dismissSupportDialog,
 	dismissWalkthrough,
 	navClick,
@@ -670,11 +671,18 @@ test.describe('Blasts ledger and wizard', () => {
 test.describe('Segments', () => {
 	// @e2e openspec/specs/marketing-ui/spec.md#visual-rule-tree-with-live-validation
 	// @e2e openspec/specs/marketing-ui/spec.md#live-size-estimate-shown
+	// @e2e openspec/specs/marketing-ui/spec.md#creating-a-segment-from-the-segments-page
 	test('the Segment builder blocks save on an invalid predicate, then validates and estimates once fixed', async ({
 		page,
 	}) => {
 		await openApp(page)
-		await gotoHash(page, '/segments/new')
+		// Reach SegmentFormView the way the scenario describes it: from the
+		// Segments index page's "New segment" action, not a direct deep link —
+		// that action is what proves the Segments page (not just the target
+		// route) is reachable and wired.
+		await navClick(page, 'Segments', /\/segments$/)
+		await clickHeaderAction(page, 'New segment')
+		await expect(page).toHaveURL(/\/segments\/new$/, { timeout: 10000 })
 
 		const form = page.locator('.segment-form')
 		await expect(form.getByRole('heading', { name: 'New segment' })).toBeVisible(
@@ -767,6 +775,44 @@ test.describe('Segments', () => {
 			templatesBox!.y,
 			'Templates must render above Blasts in the Marketing group',
 		).toBeLessThan(blastsBox!.y)
+
+		await assertNoHardError(page)
+	})
+
+	// @e2e openspec/specs/marketing-ui/spec.md#template-save-surfaces-a-compliance-error-as-a-field-error
+	test('the Templates New page renders a rejected save as a body field error', async ({
+		page,
+	}) => {
+		await openApp(page)
+		await navClick(page, 'Templates', /\/templates$/)
+		await clickHeaderAction(page, 'New template')
+		await expect(page).toHaveURL(/\/templates\/new$/, { timeout: 10000 })
+
+		const form = page.locator('.template-form')
+		await expect(
+			form.getByRole('heading', { name: 'New template' }),
+		).toBeVisible({ timeout: 20000 })
+
+		// Channel defaults to email, so the subject/sender/body-html fields
+		// this scenario needs are already present.
+		await form.locator('#template-form-name').fill('E2E gate-19 field error')
+		await form
+			.locator('#template-form-body-html')
+			.fill('<p>Geen afmeldlink hier.</p>')
+
+		await form.getByRole('button', { name: 'Create template' }).click()
+
+		// The rejected POST /api/templates lands as a field-level error under
+		// the body, not only the page-level banner — this scenario's whole
+		// point.
+		const bodyFieldError = form.locator(
+			'#template-form-body-html + .template-form__field-error',
+		)
+		await expect(bodyFieldError).toBeVisible({ timeout: 10000 })
+		await expect(bodyFieldError).toContainText(/unsubscribe/i)
+
+		// Still on the New page — a rejected save does not navigate away.
+		await expect(page).toHaveURL(/\/templates\/new$/)
 
 		await assertNoHardError(page)
 	})
@@ -1046,6 +1092,129 @@ test.describe('Marketing API contract', () => {
 				`/index.php/apps/openregister/api/objects/pipelinq/segment/${newId}`,
 			)
 		}
+
+		await assertNoHardError(page)
+	})
+
+	// @e2e openspec/specs/marketing-api/spec.md#patch-updates-a-segment-after-re-validation
+	// @e2e openspec/specs/marketing-api/spec.md#patch-on-an-unknown-segment-id-is-a-generic-404
+	test('PATCH /api/segments/:id re-validates before updating, and a 404 stays generic', async ({
+		page,
+	}) => {
+		await openApp(page)
+
+		const created = await api(page, 'POST', `${APP}/api/segments`, {
+			name: 'E2E gate-19 patch target',
+			entityType: 'contact',
+			rules: { field: 'name', operator: 'equals', value: 'E2E' },
+		})
+		expect(created.status, created.text).toBe(201)
+		const id = idOf(created.json?.segment)
+		expect(id, 'the created Segment must carry an id').toBeTruthy()
+
+		try {
+			// A valid edit: renamed and a different (still valid) rule tree.
+			// estimatedSize must come back freshly recomputed, not echoed.
+			const updated = await api(page, 'PATCH', `${APP}/api/segments/${id}`, {
+				name: 'E2E gate-19 patch target (renamed)',
+				entityType: 'contact',
+				rules: { field: 'name', operator: 'equals', value: 'E2E renamed' },
+			})
+			expect(updated.status, updated.text).toBe(200)
+			expect(updated.json?.segment?.name).toBe(
+				'E2E gate-19 patch target (renamed)',
+			)
+			expect(typeof updated.json?.estimatedSize).toBe('number')
+
+			// An invalid edit is rejected, and the Segment is left as the last
+			// successful PATCH above left it — not reverted, not partially
+			// applied.
+			const invalidEdit = await api(
+				page,
+				'PATCH',
+				`${APP}/api/segments/${id}`,
+				{
+					name: 'E2E gate-19 patch target (should not stick)',
+					entityType: 'contact',
+					rules: {
+						field: 'marketingConsent',
+						operator: 'gt',
+						value: 0,
+					},
+				},
+			)
+			expect(invalidEdit.status, invalidEdit.text).toBe(400)
+			expect(invalidEdit.json?.error).toMatch(/gt/)
+
+			const afterInvalid = await api(page, 'GET', `${APP}/api/segments/${id}`)
+			expect(afterInvalid.status, afterInvalid.text).toBe(200)
+			expect(
+				afterInvalid.json?.name,
+				'a rejected PATCH must not have changed the stored name',
+			).toBe('E2E gate-19 patch target (renamed)')
+		} finally {
+			await api(
+				page,
+				'DELETE',
+				`/index.php/apps/openregister/api/objects/pipelinq/segment/${id}`,
+			)
+		}
+
+		// An unknown id is a generic 404, not a stack trace or a 500.
+		const missing = await api(
+			page,
+			'PATCH',
+			`${APP}/api/segments/e2e-no-such-segment-0000`,
+			{
+				name: 'irrelevant',
+				entityType: 'contact',
+				rules: { field: 'name', operator: 'equals', value: 'x' },
+			},
+		)
+		expect(missing.status, missing.text).toBe(404)
+		expectGenericError(missing.json?.error)
+
+		await assertNoHardError(page)
+	})
+
+	// @e2e openspec/specs/marketing-api/spec.md#post-apisegmentspreview-validates-and-estimates-an-unsaved-tree
+	test('POST /api/segments/preview validates and estimates without persisting', async ({
+		page,
+	}) => {
+		await openApp(page)
+
+		const before = await api(page, 'GET', `${APP}/api/segments`)
+		expect(before.status, before.text).toBe(200)
+		const countBefore = (before.json?.data ?? before.json ?? []).length
+
+		// An invalid, unsaved tree: valid:false, an error naming the field,
+		// and no estimate.
+		const invalid = await api(page, 'POST', `${APP}/api/segments/preview`, {
+			entityType: 'contact',
+			rules: { field: 'marketingConsent', operator: 'gt', value: 0 },
+		})
+		expect(invalid.status, invalid.text).toBe(200)
+		expect(invalid.json?.valid).toBe(false)
+		expect(invalid.json?.error).toMatch(/gt/)
+		expect(invalid.json?.estimatedSize).toBe(0)
+
+		// A valid, unsaved tree: valid:true and a numeric estimate.
+		const valid = await api(page, 'POST', `${APP}/api/segments/preview`, {
+			entityType: 'contact',
+			rules: { field: 'name', operator: 'equals', value: 'E2E' },
+		})
+		expect(valid.status, valid.text).toBe(200)
+		expect(valid.json?.valid).toBe(true)
+		expect(valid.json?.error).toBeFalsy()
+		expect(typeof valid.json?.estimatedSize).toBe('number')
+
+		// Neither call created a Segment object.
+		const after = await api(page, 'GET', `${APP}/api/segments`)
+		expect(after.status, after.text).toBe(200)
+		expect(
+			(after.json?.data ?? after.json ?? []).length,
+			'a preview call must not persist a Segment',
+		).toBe(countBefore)
 
 		await assertNoHardError(page)
 	})
