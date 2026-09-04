@@ -1,14 +1,16 @@
----
-status: in-progress
----
-
-# marketing-api Specification
-
-**OpenSpec changes**: [marketing-segments-ui-repair](../../changes/marketing-segments-ui-repair/) _(in progress)_ — fixes pipelinq#773 (`SegmentService::resolveSchemaProperties()` calling a removed `SchemaMapper::find()` parameter), removes the `@e2e exclude` this blocked, and adds `PATCH /api/segments/{id}` and `POST /api/segments/preview`.
+# marketing-api Specification Delta
 
 ## Purpose
-Exposes the REST API for marketing blasts, segments, and campaign templates with standard CRUD, pagination, and filtering. It derives user identity from the server session rather than trusting the request body, validates segment rule trees and template compliance before saving, and returns generic error messages that do not leak internal details.
-## Requirements
+
+Fixes pipelinq#773 (`SegmentService::resolveSchemaProperties()` calling a
+removed `SchemaMapper::find()` parameter) so segment rule-tree validation
+works over HTTP again, removes the `@e2e exclude` this blocked, and adds the
+two Segment endpoints the newly-mounted SegmentBuilder needs: a preview
+endpoint for an unsaved rule tree and an update endpoint for an existing
+Segment.
+
+## MODIFIED Requirements
+
 ### Requirement: API Endpoints CRUD and Query
 
 All Blast, Segment, CampaignTemplate API endpoints SHALL support standard
@@ -42,7 +44,12 @@ SHALL be derived from `IUserSession`, never trusted from the frontend.
 
 #### Scenario: Segment create validates rule tree
 
-`SegmentService::resolveSchemaProperties()` no longer passes the `published` named argument OpenRegister's `SchemaMapper::find()` removed (commit `ea99a5004`), so the schema lookup this scenario depends on no longer throws (marketing-segments-ui-repair, pipelinq#773). Exercised end to end by `tests/e2e/spec-coverage/marketing.spec.ts` ("POST /api/segments validates the rule tree before saving") against the app's real `contact` schema fields.
+`SegmentService::resolveSchemaProperties()` no longer passes the `published`
+named argument OpenRegister's `SchemaMapper::find()` removed (commit
+`ea99a5004`), so the schema lookup this scenario depends on no longer
+throws. The `@e2e exclude` this scenario previously carried is removed:
+`tests/e2e/spec-coverage/marketing.spec.ts` exercises it directly against a
+running instance.
 
 - **GIVEN** a POST `/api/segments` with a rule tree
 - **WHEN** the controller processes it
@@ -53,6 +60,8 @@ SHALL be derived from `IUserSession`, never trusted from the frontend.
 - **GIVEN** a POST `/api/templates` for an email channel
 - **WHEN** the controller processes it
 - **THEN** it SHALL call `ComplianceService.validateTemplate()` and reject templates missing the unsubscribe token or physical address
+
+## ADDED Requirements
 
 ### Requirement: Segment Update and Unsaved-Tree Preview
 
@@ -83,4 +92,3 @@ a Segment has an id to call `POST /api/segments/{id}/size` against.
 - **WHEN** POST `/api/segments/preview` is called
 - **THEN** the response SHALL be HTTP 200 with `{valid, error, estimatedSize}`, counting matches only when `valid` is true
 - **AND** no Segment object SHALL be persisted by this call
-

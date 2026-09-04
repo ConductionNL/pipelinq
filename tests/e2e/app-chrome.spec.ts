@@ -120,6 +120,47 @@ test.describe('app chrome (ADR-114)', () => {
 		}
 	})
 
+	test('Store opens the hosted store surface and asks nothing of the network', async ({
+		page,
+	}) => {
+		// The whole fleet's Store is one declarative surface: openregister hosts
+		// the plane and each app declares a `type:"store"` page, so no app ships
+		// a store controller. ADR-080 Decision 4 requires that with no registry
+		// configured it renders the app's built-in items and makes NO network
+		// call, and that clause is the reason a Store row is allowed to exist
+		// on an instance that has never been pointed at a registry.
+		//
+		// Asserted here rather than in twelve copies: this is shared code, and
+		// a per-app copy of this test would pass or fail identically.
+		const calls: string[] = []
+		page.on('request', (r) => {
+			const u = r.url()
+			if (
+				!u.startsWith('http://localhost')
+				&& !u.startsWith('https://localhost')
+			) {
+				calls.push(u)
+			}
+		})
+
+		const footer = page.locator(
+			'[data-testid="cn-nav"] .cn-app-nav__footer-list',
+		)
+		await footer
+			.getByRole('link', { name: /^Store$/ })
+			.first()
+			.click()
+
+		await expect(page).toHaveURL(/\/apps\/pipelinq\/store(\?|$)/, {
+			timeout: 15_000,
+		})
+		await expect(page.locator('[data-testid="cn-nav"]')).toBeVisible()
+
+		// No off-instance request. A store that phoned home on open would be a
+		// privacy regression nobody would see in a manifest.
+		expect(calls).toEqual([])
+	})
+
 	test('the settings foldout carries Personal settings, Admin settings and Flows', async ({
 		page,
 	}) => {

@@ -37,7 +37,7 @@ automatically.
 ### 1.1 Open the segment builder
 
 1. Navigate to **Marketing → Segments**.
-2. Click **+ New segment** in the top right.
+2. Click **New segment** in the top right.
 3. Give the segment a clear name (e.g. *Gemeente prospects — Zuid-Holland*).
    The name appears in the **New blast** wizard and on the performance
    dashboard.
@@ -96,7 +96,7 @@ or used in a blast (see *Compliance requirements* below).
 ### 2.1 Open the template editor
 
 1. Navigate to **Marketing → Templates**.
-2. Click **+ New template**.
+2. Click **New template**.
 3. Choose the **channel** (email or SMS).
 4. Give the template a name (e.g. *Q4 Outreach — Gemeenten*).
 

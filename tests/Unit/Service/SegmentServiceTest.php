@@ -109,14 +109,27 @@ class SegmentServiceTest extends TestCase {
 			/**
 			 * Mock find() — returns a fake Schema object exposing the props.
 			 *
-			 * @param string $id Schema slug.
-			 * @param mixed $published Published filter (ignored).
+			 * Signature mirrors OpenRegister's real
+			 * `SchemaMapper::find(string|int $id, ?array $_extend = [],
+			 * bool $_rbac = true, bool $_multitenancy = true)` exactly
+			 * (openregister lib/Db/SchemaMapper.php). It used to declare a
+			 * `$published` parameter that OpenRegister removed in commit
+			 * ea99a5004 ("refactor!: remove deprecated SOLR search index and
+			 * Register/Schema publishing") — this fake still declared it,
+			 * so it could not catch SegmentService passing a named
+			 * `published:` argument that no longer exists (pipelinq#773).
+			 * Keeping this signature in lockstep with the real collaborator
+			 * is the point of the fix: a future drift here now fails PHP's
+			 * own named-argument binding instead of passing silently.
+			 *
+			 * @param string|int $id Schema slug.
+			 * @param array|null $_extend Extend list (ignored).
 			 * @param bool $_rbac RBAC flag (ignored).
 			 * @param bool $_multitenancy Multitenancy flag (ignored).
 			 *
 			 * @return object Fake schema.
 			 */
-			public function find(string $id, $published = null, bool $_rbac = false, bool $_multitenancy = false): object {
+			public function find(string|int $id, ?array $_extend = [], bool $_rbac = true, bool $_multitenancy = true): object {
 				$props = $this->properties;
 				return new class($props) {
 					/** @var array<string, array<string, string>> */
@@ -536,4 +549,84 @@ class SegmentServiceTest extends TestCase {
 		$this->assertSame('a@example.test', $members[0]['email']);
 		$this->assertSame('Ada', $members[0]['firstName']);
 	}//end testGetMembersForBlastReturnsProjectedRecipients()
+
+	/**
+	 * updateSegment: an unknown Segment id is a generic "not found" error,
+	 * not a fall-through to persisting a fresh row under that id.
+	 *
+	 * @return void
+	 */
+	public function testUpdateSegmentReturnsErrorForUnknownSegment(): void {
+		$result = $this->service->updateSegment(
+			'seg-does-not-exist',
+			['name' => 'New name', 'entityType' => 'contact', 'rules' => ['field' => 'industry', 'operator' => 'equals', 'value' => 'x']]
+		);
+		$this->assertArrayHasKey('error', $result);
+		$this->assertSame('Segment not found', $result['error']);
+	}//end testUpdateSegmentReturnsErrorForUnknownSegment()
+
+	/**
+	 * updateSegment: an invalid edited rule tree is rejected the same way
+	 * createSegment() rejects one — before any write is attempted (the fake
+	 * ObjectService in this file has no saveObject(), so reaching it would
+	 * fatal rather than silently pass).
+	 *
+	 * @return void
+	 */
+	public function testUpdateSegmentRejectsInvalidRuleTree(): void {
+		$this->objectService->segments['seg-1'] = [
+			'id' => 'seg-1',
+			'name' => 'Original name',
+			'entityType' => 'contact',
+			'rules' => ['field' => 'industry', 'operator' => 'equals', 'value' => 'Public sector'],
+		];
+
+		$result = $this->service->updateSegment(
+			'seg-1',
+			['rules' => ['field' => 'not_a_field', 'operator' => 'equals', 'value' => 'x']]
+		);
+
+		$this->assertArrayHasKey('error', $result);
+		$this->assertStringContainsString('not_a_field', (string)$result['error']);
+	}//end testUpdateSegmentRejectsInvalidRuleTree()
+
+	/**
+	 * updateSegment: an invalid entityType is rejected before the rule tree
+	 * is even validated.
+	 *
+	 * @return void
+	 */
+	public function testUpdateSegmentRejectsInvalidEntityType(): void {
+		$this->objectService->segments['seg-1'] = [
+			'id' => 'seg-1',
+			'name' => 'Original name',
+			'entityType' => 'contact',
+			'rules' => ['field' => 'industry', 'operator' => 'equals', 'value' => 'Public sector'],
+		];
+
+		$result = $this->service->updateSegment('seg-1', ['entityType' => 'not-a-real-type']);
+
+		$this->assertArrayHasKey('error', $result);
+		$this->assertSame('Invalid entityType', $result['error']);
+	}//end testUpdateSegmentRejectsInvalidEntityType()
+
+	/**
+	 * updateSegment: a blank name is rejected, matching createSegment()'s
+	 * "Invalid name" guard.
+	 *
+	 * @return void
+	 */
+	public function testUpdateSegmentRejectsBlankName(): void {
+		$this->objectService->segments['seg-1'] = [
+			'id' => 'seg-1',
+			'name' => 'Original name',
+			'entityType' => 'contact',
+			'rules' => ['field' => 'industry', 'operator' => 'equals', 'value' => 'Public sector'],
+		];
+
+		$result = $this->service->updateSegment('seg-1', ['name' => '   ']);
+
+		$this->assertArrayHasKey('error', $result);
+		$this->assertSame('Invalid name', $result['error']);
+	}//end testUpdateSegmentRejectsBlankName()
 }//end class

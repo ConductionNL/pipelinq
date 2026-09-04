@@ -166,6 +166,68 @@ class SegmentController extends Controller {
 	}//end members()
 
 	/**
+	 * POST /api/segments/preview — validate + estimate an unsaved rule tree.
+	 *
+	 * Backs the SegmentBuilder live-validation and debounced size-estimate
+	 * calls (marketing-ui) before a Segment has been persisted — there is
+	 * no `:id` yet for `refreshSize()` to recompute against. Delegates to
+	 * `SegmentService.previewRulePayload()`, which runs the same
+	 * `validateRules()` path `create()` uses and only counts matches when
+	 * the tree is valid.
+	 *
+	 * @return JSONResponse `{valid, error, estimatedSize}`.
+	 *
+	 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-ui/spec.md#requirement-segment-builder-ui-composes-rule-trees
+	 */
+	#[NoAdminRequired]
+	public function preview(): JSONResponse {
+		$uid = $this->requireUser();
+		if ($uid === null) {
+			return $this->unauthorized();
+		}
+
+		// Authentication is not authorization. A rule-tree preview reveals a
+		// count over the customer base; only privileged CRM users may run it.
+		if ($this->policy->isPrivileged(uid: $uid) === false) {
+			return $this->forbidden();
+		}
+
+		$entityType = strtolower((string)$this->request->getParam('entityType', ''));
+		$rules = $this->collectRulesBody();
+		$result = $this->segmentService->previewRulePayload(rules: $rules, entityType: $entityType);
+		return new JSONResponse($result);
+	}//end preview()
+
+	/**
+	 * PATCH /api/segments/:id — update a Segment after rule-tree re-validation.
+	 *
+	 * Backs the SegmentEdit page (marketing-segments-ui-repair): re-runs
+	 * `SegmentService.validateRules()` on the (possibly edited) rule tree
+	 * before anything is persisted, exactly as `create()` does.
+	 *
+	 * @param string $id Segment UUID or slug.
+	 *
+	 * @return JSONResponse 200 with segment+estimatedSize, 400 on invalid input, 404 when missing.
+	 *
+	 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-api/spec.md#requirement-api-endpoints-crud-and-query
+	 */
+	#[NoAdminRequired]
+	public function update(string $id): JSONResponse {
+		$uid = $this->requireUser();
+		if ($uid === null) {
+			return $this->unauthorized();
+		}
+
+		if ($this->policy->isPrivileged(uid: $uid) === false) {
+			return $this->forbidden();
+		}
+
+		$payload = $this->collectSegmentBody();
+		$result = $this->segmentService->updateSegment(segmentId: $id, payload: $payload);
+		return $this->renderUpdate(result: $result);
+	}//end update()
+
+	/**
 	 * POST /api/segments/:id/size — recompute + persist estimatedSize.
 	 *
 	 * @param string $id Segment UUID or slug.
@@ -252,6 +314,53 @@ class SegmentController extends Controller {
 			'rules' => $rules,
 		];
 	}//end collectSegmentBody()
+
+	/**
+	 * Collect just the `rules` param, accepting either an array/object body
+	 * or a JSON-encoded string. Used by {@see preview()}, which has no other
+	 * Segment fields to sanitise.
+	 *
+	 * @return array<string, mixed> The rule tree, or an empty array when absent/malformed.
+	 */
+	private function collectRulesBody(): array {
+		$rules = $this->request->getParam('rules');
+		if (is_string($rules) === true) {
+			$decoded = json_decode($rules, true);
+			if (is_array($decoded) === true) {
+				$rules = $decoded;
+			}
+		}
+
+		if (is_array($rules) === true) {
+			return $rules;
+		}
+
+		return [];
+	}//end collectRulesBody()
+
+	/**
+	 * Render the update result.
+	 *
+	 * @param array{segment?: array<string, mixed>, error?: string, estimatedSize?: int} $result Service result.
+	 *
+	 * @return JSONResponse
+	 */
+	private function renderUpdate(array $result): JSONResponse {
+		if (isset($result['error']) === true) {
+			$status = Http::STATUS_BAD_REQUEST;
+			if ($result['error'] === 'Segment not found') {
+				$status = Http::STATUS_NOT_FOUND;
+			}
+
+			return new JSONResponse(['error' => $result['error']], $status);
+		}
+
+		$payload = [
+			'segment' => ($result['segment'] ?? null),
+			'estimatedSize' => (int)($result['estimatedSize'] ?? 0),
+		];
+		return new JSONResponse($payload, Http::STATUS_OK);
+	}//end renderUpdate()
 
 	/**
 	 * Render the create result.
