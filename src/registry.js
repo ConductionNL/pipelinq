@@ -232,9 +232,6 @@ import ProjectActivityList from './views/projects/ProjectActivityList.vue'
 //     the inline-add CnFormDialogs feeding three different schemas. ---
 import ProjectDetail from './views/projects/ProjectDetail.vue'
 import ProspectsView from './views/prospects/ProspectsView.vue'
-import QueueDetailView from './views/queues/QueueDetail.vue'
-// --- Queues / routing rules (lib gap: no routing-rules widget). ---
-import QueueListView from './views/queues/QueueList.vue'
 import LeadAgingWidget from './views/rapportage/LeadAgingWidget.vue'
 import PipelineFunnelWidget from './views/rapportage/PipelineFunnelWidget.vue'
 import SourcePerformanceWidget from './views/rapportage/SourcePerformanceWidget.vue'
@@ -254,12 +251,10 @@ import SyncSettingsView from './views/sync/SyncSettings.vue'
 import WerkplekHeaderActions from './views/werkplek/widgets/WerkplekHeaderActions.vue'
 // --- KCC Werkplek (pipelinq-werkplek-declarative): unified KCC agent workspace
 //     rendered as a declarative type:"dashboard" page. Requests, Tasks, the
-//     queue filter, the active-interaction form, the summary-driven knowledge
-//     base and the client overview are all widgets on the standard dashboard
-//     grid (header + actions + single scroll region). Only two small host
-//     widgets remain: the queue filter (pipelinq-specific /state endpoint) and
-//     the header agent-availability toggle. ---
-import WerkplekQueueFilter from './views/werkplek/widgets/WerkplekQueueFilter.vue'
+//     active-interaction form, the summary-driven knowledge base and the client
+//     overview are all widgets on the standard dashboard grid (header + actions
+//     + single scroll region). One small host widget remains: the header
+//     agent-availability toggle. ---
 import { createWithContact } from './services/contactSyncApi.js'
 
 // --- Features & Roadmap page (lib's CnFeaturesAndRoadmapView wrapper). ---
@@ -313,14 +308,14 @@ const SIDEBAR_TAB_META = {
 const registry = {
 	// --- Service Hub — cards-collapse landing page (service-group-cards-collapse,
 	//     ADR-044). The former expandable Service nav group (Requests / Tasks /
-	//     Contactmomenten / Complaints / Projects / MyWork / BookingsGroup /
-	//     Queues) is collapsed into a single top-level menu item linking here.
+	//     Contactmomenten / Complaints / Projects / MyWork / BookingsGroup)
+	//     is collapsed into a single top-level menu item linking here.
 	//     All former leaf routes remain registered; the hub renders one CnCard
 	//     per leaf (REQ-NAV-001 / REQ-NAV-002 / REQ-NAV-003). ---
 	ServiceHubOverview: {
 		kind: 'page',
 		component: ServiceHubOverview,
-		_note: 'ADR-044 cards-collapse hub for the Service group: eight CnCards linking to the former Service child leaves (Requests/Tasks/Contactmomenten/Complaints/Projects/MyWork/BookingsGroup/Queues). Leaf routes stay registered.',
+		_note: 'ADR-044 cards-collapse hub for the Service group: seven CnCards linking to the former Service child leaves (Requests/Tasks/Contactmomenten/Complaints/Projects/MyWork/BookingsGroup). Leaf routes stay registered.',
 	},
 
 	// --- MyWork — multi-entity user dashboard. ---
@@ -442,18 +437,6 @@ const registry = {
 		component: TopCustomersChartWidget,
 		...PANEL_WIDGET_META,
 		_note: 'KEPT CUSTOM (ADR-049 Phase-4 — chart-endpoint gap, see LeadsOverTimeChartWidget). Horizontal bar: top customers by revenue from GET /api/analytics/trends?metric=top-customers.',
-	},
-
-	// --- Queues / routing rules. ---
-	QueueListView: {
-		kind: 'page',
-		component: QueueListView,
-		_note: 'Bespoke routing-rule editor list with priority ordering; lib gap: no routing-rules list widget.',
-	},
-	QueueDetailView: {
-		kind: 'page',
-		component: QueueDetailView,
-		_note: 'Bespoke routing-rule condition + action builder; lib gap: no routing-rules detail widget.',
 	},
 
 	// --- Surveys + Forms migrated to the OpenRegister forms leaf (NC Forms). ---
@@ -823,16 +806,8 @@ const registry = {
 	},
 
 	// --- KCC Werkplek — declarative agent workspace (pipelinq-werkplek-declarative).
-	//     The page is a type:"dashboard"; these two host widgets cover the
-	//     pieces that aren't pure OpenRegister data: the queue filter (reads the
-	//     aggregated /api/kcc-werkplek/state counts and writes selectedQueue into
-	//     the page workspace context) and the header agent-availability toggle. ---
-	WerkplekQueueFilter: {
-		kind: 'widget',
-		component: WerkplekQueueFilter,
-		...PANEL_WIDGET_META,
-		_note: 'Queue filter widget: lists queues + open-request counts from /api/kcc-werkplek/state and writes selectedQueue into the workspace context so the Requests/Tasks object-list widgets filter on @workspace.selectedQueue.',
-	},
+	//     The page is a type:"dashboard"; one host widget covers the piece that
+	//     isn't pure OpenRegister data: the header agent-availability toggle. ---
 	WerkplekHeaderActions: {
 		kind: 'widget',
 		component: WerkplekHeaderActions,

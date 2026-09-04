@@ -152,12 +152,6 @@ export function objectTypes() {
 			description: t(APP, 'Typed relationships between contacts and clients'),
 		},
 		{
-			slug: 'queue',
-			group: 'core',
-			label: t(APP, 'Queue'),
-			description: t(APP, 'Work queues for routing'),
-		},
-		{
 			slug: 'skill',
 			group: 'core',
 			label: t(APP, 'Skill'),

@@ -232,9 +232,9 @@ The KCC werkplek MUST be rendered as a single declarative `type: "dashboard"` pa
 standard library page chrome (one page header, one `actionsComponent` action bar, one scroll
 region), composed of library widgets on the dashboard grid — NOT a bespoke multi-panel page
 with independently-scrolling columns. Work is split into separate **Requests** and **Tasks**
-widgets; a **queue filter** widget narrows both; an **active-interaction** form, a
-**knowledge-base** search, and **client-overview** lists complete the grid. The page MUST
-scroll as one region with no cut-off action buttons.
+widgets; an **active-interaction** form, a **knowledge-base** search, and
+**client-overview** lists complete the grid. The page MUST scroll as one region with no
+cut-off action buttons.
 
 **Feature tier**: MVP
 
@@ -246,12 +246,12 @@ scroll as one region with no cut-off action buttons.
 - AND Requests and Tasks MUST be two distinct `object-list` widgets (not a single fused inbox)
 - AND the page MUST be a single scroll region with no action buttons clipped off-screen
 
-#### Scenario: Queue filter narrows the work lists
+#### Scenario: The werkplek shows the agent's own work only
 
-- GIVEN the werkplek is loaded and the queue filter widget lists the agent's queues with open-request counts
-- WHEN the agent clicks a queue
-- THEN the Requests and Tasks widgets MUST re-query filtered to that queue (via the `@workspace.selectedQueue` page context written by the filter)
-- AND clicking "All queues" MUST clear the filter so both lists show all of the agent's work
+- GIVEN the werkplek is loaded
+- WHEN the agent reads the Requests and Tasks widgets
+- THEN both MUST be scoped to that agent (`assignee` / `assigneeUserId` = the session user)
+- AND unassigned work MUST NOT appear here: it lives on the Queue page (`/queue`)
 
 #### Scenario: Standard chrome carries the availability toggle
 

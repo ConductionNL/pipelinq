@@ -74,9 +74,6 @@
 		<!-- Product Categories -->
 		<ProductCategoryManager v-if="isConfigured" />
 
-		<!-- Queue Management -->
-		<QueueSettings v-if="isConfigured" />
-
 		<!-- Skill Management -->
 		<SkillSettings v-if="isConfigured" />
 
@@ -396,7 +393,6 @@ import {
 import Refresh from 'vue-material-design-icons/Refresh.vue'
 import AgentProfileSettings from '../../components/admin/AgentProfileSettings.vue'
 import ForecastSettings from '../../components/admin/ForecastSettings.vue'
-import QueueSettings from '../../components/admin/QueueSettings.vue'
 import SkillSettings from '../../components/admin/SkillSettings.vue'
 import CtiPage from './CtiPage.vue'
 import ExportConfigurationSettings from './ExportConfigurationSettings.vue'
@@ -439,7 +435,6 @@ export default {
 		ProductCategoryManager,
 		ProspectSettings,
 		TagManager,
-		QueueSettings,
 		SkillSettings,
 		AgentProfileSettings,
 		ForecastSettings,

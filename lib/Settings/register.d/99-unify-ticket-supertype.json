@@ -292,13 +292,6 @@
             "description": "Ordinal of the current pipeline stage (request only).",
             "visible": false
           },
-          "queue": {
-            "type": "string",
-            "title": "Queue",
-            "description": "UUID reference to the routing queue (request only).",
-            "format": "uuid",
-            "$ref": "queue"
-          },
           "caseReference": {
             "type": "string",
             "title": "Case Reference",

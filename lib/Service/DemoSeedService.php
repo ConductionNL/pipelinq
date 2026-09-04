@@ -105,7 +105,6 @@ class DemoSeedService {
 		'clients' => ['client_schema', 'name', null],
 		'contacts' => ['contact_schema', 'name', null],
 		'pipelines' => ['pipeline_schema', 'title', null],
-		'queues' => ['queue_schema', 'title', null],
 		'products' => ['product_schema', 'name', null],
 		'leads' => ['lead_schema', 'title', null],
 		'requests' => [self::TICKET_SCHEMA_KEY, 'title', TicketService::TYPE_REQUEST],

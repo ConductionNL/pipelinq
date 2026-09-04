@@ -12,11 +12,11 @@
 		"Forecast": "Dashboard",
 		"Loyalty": "Dashboard",
 
+		"Queue": "KccWerkplek",
+		"MyWork": "KccWerkplek",
 		"Tickets": "KccWerkplek",
 		"Tasks": "KccWerkplek",
 		"Projects": "KccWerkplek",
-		"MyWork": "KccWerkplek",
-		"Queues": "KccWerkplek",
 
 		"BookingsGroup": "OperationalDashboard",
 

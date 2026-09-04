@@ -250,7 +250,7 @@ class SetupController extends Controller {
 
 	/**
 	 * Import the pipelinq register + schemas and (re)create the default
-	 * pipelines, queues, skills, lead sources and request channels.
+	 * pipelines, skills, lead sources and request channels.
 	 *
 	 * This mirrors the InitializeSettings repair step that runs on install, but
 	 * is invokable on demand from the wizard so an admin who only enabled
@@ -279,11 +279,10 @@ class SetupController extends Controller {
 			$schemaCount = count($result['schemas'] ?? []);
 
 			$this->settingsService->createDefaultPipelines();
-			$this->settingsService->createDefaultQueues();
 			$this->settingsService->createDefaultSkills();
 
 			$message = sprintf(
-				'Provisioned %d register(s) and %d schema(s); default pipelines, queues and skills are ready.',
+				'Provisioned %d register(s) and %d schema(s); default pipelines and skills are ready.',
 				$registerCount,
 				$schemaCount,
 			);

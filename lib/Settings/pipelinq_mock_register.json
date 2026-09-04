@@ -4185,48 +4185,6 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "queue",
-          "slug": "queue-voorbeeld-title-1-1"
-        },
-        "title": "Voorbeeld Title 1",
-        "description": "Voorbeeld Description 1",
-        "categories": [],
-        "isActive": true,
-        "maxCapacity": 1,
-        "sortOrder": 0,
-        "assignedAgents": []
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "queue",
-          "slug": "queue-voorbeeld-title-2-2"
-        },
-        "title": "Voorbeeld Title 2",
-        "description": "Voorbeeld Description 2",
-        "categories": [],
-        "isActive": true,
-        "maxCapacity": 2,
-        "sortOrder": 0,
-        "assignedAgents": []
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "queue",
-          "slug": "queue-voorbeeld-title-3-3"
-        },
-        "title": "Voorbeeld Title 3",
-        "description": "Voorbeeld Description 3",
-        "categories": [],
-        "isActive": true,
-        "maxCapacity": 3,
-        "sortOrder": 0,
-        "assignedAgents": []
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
           "schema": "receiptPrintLog",
           "slug": "receiptprintlog-receiptprintlog-1-1"
         },

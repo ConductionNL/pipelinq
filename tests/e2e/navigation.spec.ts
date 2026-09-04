@@ -58,7 +58,7 @@ const REQUIRED_ENTRIES: Record<string, string> = {
 	Tasks: '/tasks',
 	Products: '/products',
 	Pipeline: '/pipeline',
-	Queues: '/queues',
+	Queue: '/queue',
 	Contracts: '/contracts',
 	MyWork: '/my-work',
 	Prospects: '/prospects',

@@ -182,7 +182,7 @@ test('request rows carry the seeded request titles', async ({ page }) => {
 	})
 })
 
-// @e2e openspec/specs/request-management/spec.md#request-without-queue
+// @e2e openspec/specs/request-management/spec.md#a-request-functions-with-no-queue-field-at-all
 test('request list renders without pipelinq console errors', async ({ page }) => {
 	const errs = trackPipelinqErrors(page)
 	await openRequests(page)
@@ -216,8 +216,8 @@ test('the ticket list paginates and page 2 shows different rows', async ({
 	// the seeded 8 requests + 3 complaints + 12 contactmomenten — 30 rows against
 	// a page size of 20, so `effectivePagination.pages > 1` and CnIndexPage
 	// renders CnPagination. This is the one index in the app where the paging
-	// contract is genuinely exercisable; asserting it on Queues (6 rows, one
-	// page) asserted a control the component correctly does not render.
+	// contract is genuinely exercisable; asserting it on a smaller index (one
+	// page of rows) asserted a control the component correctly does not render.
 	const content = page.locator('#content-vue')
 	const firstRowBefore = await content
 		.locator('table tbody tr')
@@ -284,10 +284,6 @@ test('the ticket list paginates and page 2 shows different rows', async ({
  * @e2e exclude status-must-follow-transition-rules — server validation; covered by PHPUnit
  * @e2e exclude priority-must-be-a-valid-value — server validation; covered by PHPUnit
  * @e2e exclude client-reference-must-be-valid — server validation; covered by PHPUnit
- * @e2e exclude request-with-queue-reference — requires queue data
- * @e2e exclude queue-field-in-request-list-view — requires queue data
- * @e2e exclude queue-field-in-request-detail-view — requires queue data
- * @e2e exclude assign-to-queue-from-request-detail — requires queue data
  * @e2e exclude link-request-to-a-contact-person — requires client and contact data
  * @e2e exclude contact-picker-is-filtered-by-selected-client — requires linked data
  * @e2e exclude contact-is-cleared-when-client-changes — UI state interaction requiring data

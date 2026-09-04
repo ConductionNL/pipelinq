@@ -1,9 +1,9 @@
 <?php
 
 /**
- * Pipelinq DefaultQueueService.
+ * Pipelinq DefaultSkillService.
  *
- * Service for creating default queues and skills in the Pipelinq application.
+ * Service for creating the default agent skills in the Pipelinq application.
  *
  * @category Service
  * @package  OCA\Pipelinq\Service
@@ -17,7 +17,6 @@
  * @link https://github.com/ConductionNL/pipelinq
  *
  * @spec openspec/specs/skill-routing/spec.md
- * @spec openspec/specs/queue-management/spec.md
  */
 
 declare(strict_types=1);
@@ -30,40 +29,11 @@ use Psr\Log\LoggerInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
- * Service for creating default queues and skills.
+ * Service for creating the default agent skills.
  *
- * @spec openspec/specs/queue-management/spec.md
+ * @spec openspec/specs/skill-routing/spec.md
  */
-class DefaultQueueService {
-	/**
-	 * Default queue definitions.
-	 *
-	 * @var array<int, array<string, mixed>>
-	 */
-	private const DEFAULT_QUEUES = [
-		[
-			'title' => 'Algemeen',
-			'description' => 'General intake queue for unclassified requests',
-			'categories' => [],
-			'isActive' => true,
-			'sortOrder' => 0,
-		],
-		[
-			'title' => 'Vergunningen',
-			'description' => 'Queue for permit-related requests',
-			'categories' => ['vergunningen'],
-			'isActive' => true,
-			'sortOrder' => 1,
-		],
-		[
-			'title' => 'Klachten',
-			'description' => 'Queue for complaints',
-			'categories' => ['klachten'],
-			'isActive' => true,
-			'sortOrder' => 2,
-		],
-	];
-
+class DefaultSkillService {
 	/**
 	 * Default skill definitions.
 	 *
@@ -119,60 +89,6 @@ class DefaultQueueService {
 	}//end __construct()
 
 	/**
-	 * Create default queues if none exist.
-	 *
-	 * @return void
-	 *
-	 * @spec openspec/specs/queue-management/spec.md
-	 */
-	public function createDefaultQueues(): void {
-		$registerId = $this->registerResolver->resolve('queue');
-		$queueSchemaId = $this->appConfig->getValueString(Application::APP_ID, 'queue_schema', '');
-
-		if ($registerId === '' || $queueSchemaId === '') {
-			$this->logger->warning(
-				'Pipelinq: Cannot create default queues -- register or queue schema not configured'
-			);
-			return;
-		}
-
-		try {
-			$objectService = $this->getObjectService();
-
-			$existing = $objectService->findAll(
-				[
-					'filters' => [
-						'register' => $registerId,
-						'schema' => $queueSchemaId,
-					],
-					'limit' => 1,
-				]
-			);
-
-			if (empty($existing) === false) {
-				$this->logger->info('Pipelinq: Default queues already exist, skipping creation');
-				return;
-			}
-
-			foreach (self::DEFAULT_QUEUES as $queueData) {
-				$objectService->saveObject(
-					$queueData,
-					[],
-					$registerId,
-					$queueSchemaId,
-					null
-				);
-				$this->logger->info("Pipelinq: Created default queue '{$queueData['title']}'");
-			}
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'Pipelinq: Failed to create default queues',
-				['exception' => $e->getMessage()]
-			);
-		}//end try
-	}//end createDefaultQueues()
-
-	/**
 	 * Create default skills if none exist.
 	 *
 	 * @return void
@@ -180,7 +96,7 @@ class DefaultQueueService {
 	 * @spec openspec/specs/skill-routing/spec.md
 	 */
 	public function createDefaultSkills(): void {
-		$registerId = $this->registerResolver->resolve('queue');
+		$registerId = $this->registerResolver->resolve('skill');
 		$skillSchemaId = $this->appConfig->getValueString(Application::APP_ID, 'skill_schema', '');
 
 		if ($registerId === '' || $skillSchemaId === '') {

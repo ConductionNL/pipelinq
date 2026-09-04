@@ -46,7 +46,6 @@ class SchemaMapService {
 		// selected with the `ticketType` discriminator, not a separate schema.
 		'ticket_schema' => 'ticket',
 		'pipeline_schema' => 'pipeline',
-		'queue_schema' => 'queue',
 		'skill_schema' => 'skill',
 		'agentProfile_schema' => 'agentProfile',
 		'project_schema' => 'project',

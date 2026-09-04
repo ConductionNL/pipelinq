@@ -53,7 +53,6 @@ class SettingsService {
 		'leadProduct_schema',
 		'task_schema',
 		'relationship_schema',
-		'queue_schema',
 		'skill_schema',
 		'agentProfile_schema',
 		'project_schema',
@@ -169,7 +168,6 @@ class SettingsService {
 	 * @var array<string, string>
 	 */
 	public const TUNABLE_DEFAULTS = [
-		'queue_overflow.poll_interval_seconds' => '300',
 		'task_expiry.poll_interval_seconds' => '900',
 		'task_expiry.escalation_threshold_seconds' => '14400',
 		'task_expiry.in_progress_grace_seconds' => '86400',
@@ -277,7 +275,7 @@ class SettingsService {
 	 * @param IConfig $config The user config service.
 	 * @param SettingsLoadService $settingsLoadService The settings load service.
 	 * @param DefaultPipelineService $pipelineService The default pipeline service.
-	 * @param DefaultQueueService $queueService The default queue service.
+	 * @param DefaultSkillService $skillService The default skill service.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
@@ -285,7 +283,7 @@ class SettingsService {
 		private IConfig $config,
 		private SettingsLoadService $settingsLoadService,
 		private DefaultPipelineService $pipelineService,
-		private DefaultQueueService $queueService,
+		private DefaultSkillService $skillService,
 		private LoggerInterface $logger,
 	) {
 	}//end __construct()
@@ -365,27 +363,15 @@ class SettingsService {
 	}//end createDefaultPipelines()
 
 	/**
-	 * Create default queues if none exist.
-	 * Delegates to DefaultQueueService.
-	 *
-	 * @return void
-	 *
-	 * @spec openspec/specs/admin-settings/spec.md
-	 */
-	public function createDefaultQueues(): void {
-		$this->queueService->createDefaultQueues();
-	}//end createDefaultQueues()
-
-	/**
 	 * Create default skills if none exist.
-	 * Delegates to DefaultQueueService.
+	 * Delegates to DefaultSkillService.
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/specs/skill-routing/spec.md
 	 */
 	public function createDefaultSkills(): void {
-		$this->queueService->createDefaultSkills();
+		$this->skillService->createDefaultSkills();
 	}//end createDefaultSkills()
 
 	/**

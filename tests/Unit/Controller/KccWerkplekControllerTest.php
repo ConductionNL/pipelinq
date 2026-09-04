@@ -132,8 +132,6 @@ class KccWerkplekControllerTest extends TestCase {
 			],
 			'assignedRequests' => [['id' => 'req-1']],
 			'openTasks' => [],
-			'queueCounts' => ['front-office' => 2],
-			'queues' => [['id' => 'q-1', 'slug' => 'front-office', 'title' => 'Front office', 'sortOrder' => 0, 'maxCapacity' => null]],
 		];
 
 		$this->service->expects($this->once())
@@ -146,12 +144,11 @@ class KccWerkplekControllerTest extends TestCase {
 
 		$this->assertSame(Http::STATUS_OK, $response->getStatus());
 		$this->assertSame(
-			['agentProfile', 'assignedRequests', 'openTasks', 'queueCounts', 'queues'],
+			['agentProfile', 'assignedRequests', 'openTasks'],
 			array_keys($data)
 		);
 		$this->assertSame('agent-1', $data['agentProfile']['userId']);
 		$this->assertTrue($data['agentProfile']['isAvailable']);
-		$this->assertSame(2, $data['queueCounts']['front-office']);
 		$this->assertSame('req-1', $data['assignedRequests'][0]['id']);
 	}//end testStateActionReturnsTheWorkspaceEnvelopeForTheSessionUser()
 
@@ -168,8 +165,6 @@ class KccWerkplekControllerTest extends TestCase {
 				'agentProfile' => ['userId' => 'agent-1', 'isAvailable' => false, 'maxConcurrent' => 0, 'skills' => []],
 				'assignedRequests' => [],
 				'openTasks' => [],
-				'queueCounts' => [],
-				'queues' => [],
 			]
 		);
 
@@ -177,7 +172,7 @@ class KccWerkplekControllerTest extends TestCase {
 		$data = $response->getData();
 
 		$this->assertSame(Http::STATUS_OK, $response->getStatus());
-		$this->assertArrayHasKey('queues', $data);
+		$this->assertArrayHasKey('openTasks', $data);
 		$this->assertSame([], $data['assignedRequests']);
 		$this->assertFalse($data['agentProfile']['isAvailable']);
 	}//end testStateActionReturnsAFullEnvelopeForAnEmptyWorkspace()

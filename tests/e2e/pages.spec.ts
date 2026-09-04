@@ -53,7 +53,7 @@ const INDEX_WITH_CTA: Array<[string, string]> = [
 	['Tickets', '/tickets'],
 	['Tasks', '/tasks'],
 	['Products', '/products'],
-	['Queues', '/queues'],
+	['Queue', '/queue'],
 	['Contracts', '/contracts'],
 ]
 
