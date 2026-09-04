@@ -112,22 +112,38 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * @return {boolean} Whether an existing entry is being edited.
+		 * @spec exclude trivial presence check, no independent behaviour.
+		 */
 		isEdit() {
 			return !!this.entry
 		},
 
+		/**
+		 * @return {string} The dialog title when adding a new entry.
+		 * @spec openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md#requirement-channels-are-added-edited-and-removed-through-dedicated-modals
+		 */
 		addTitle() {
 			return this.channelType === 'email'
 				? t('pipelinq', 'Add email address')
 				: t('pipelinq', 'Add phone number')
 		},
 
+		/**
+		 * @return {string} The dialog title when editing an existing entry.
+		 * @spec openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md#requirement-channels-are-added-edited-and-removed-through-dedicated-modals
+		 */
 		editTitle() {
 			return this.channelType === 'email'
 				? t('pipelinq', 'Edit email address')
 				: t('pipelinq', 'Edit phone number')
 		},
 
+		/**
+		 * @return {string} The value field's label for the current channel type.
+		 * @spec openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md#requirement-channels-are-added-edited-and-removed-through-dedicated-modals
+		 */
 		valueLabel() {
 			return this.channelType === 'email'
 				? t('pipelinq', 'Email address')

@@ -321,11 +321,18 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * @return {object} The shared object store.
+		 * @spec exclude thin accessor for the injected Pinia store, no independent behaviour.
+		 */
 		objectStore() {
 			return useObjectStore()
 		},
 
-		/** The resolved entity id — prop wins, else the injected section context. */
+		/**
+		 * @return {string} The resolved entity id — prop wins, else the injected section context.
+		 * @spec exclude id-resolution plumbing shared with every other body section (ContactRelationships, ClientBillingHandoffSection, …), no behaviour specific to this change.
+		 */
 		resolvedId() {
 			if (this.entityId) {
 				return this.entityId
@@ -336,14 +343,26 @@ export default {
 			return (bag && bag.objectId) || ''
 		},
 
+		/**
+		 * @return {Array} The entity's typed emails, or `[]` when none.
+		 * @spec openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md#requirement-detail-pages-display-channels-as-a-linked-list-with-kind-chips
+		 */
 		emails() {
 			return (this.entity && this.entity.emails) || []
 		},
 
+		/**
+		 * @return {Array} The entity's typed phones, or `[]` when none.
+		 * @spec openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md#requirement-detail-pages-display-channels-as-a-linked-list-with-kind-chips
+		 */
 		phones() {
 			return (this.entity && this.entity.phones) || []
 		},
 
+		/**
+		 * @return {Array} The entity's social profiles, or `[]` when none.
+		 * @spec openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md#requirement-detail-pages-display-channels-as-a-linked-list-with-kind-chips
+		 */
 		socialProfiles() {
 			return (this.entity && this.entity.socialProfiles) || []
 		},
@@ -355,6 +374,7 @@ export default {
 		 * summary for context alongside the channel lists.
 		 *
 		 * @return {string} The summary, or '' when nothing is set.
+		 * @spec openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md#requirement-client-and-contact-schemas-carry-typed-channel-arrays
 		 */
 		preferencesLine() {
 			if (!this.entity) {
@@ -383,6 +403,10 @@ export default {
 	watch: {
 		resolvedId: {
 			immediate: true,
+			/**
+			 * @return {void}
+			 * @spec exclude re-fetch trigger, no behaviour beyond calling the already-tagged load().
+			 */
 			handler() {
 				this.load()
 			},
@@ -415,6 +439,7 @@ export default {
 		/**
 		 * @param {string} kind One of the `kind` enum values.
 		 * @return {string} The localised label.
+		 * @spec openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md#requirement-detail-pages-display-channels-as-a-linked-list-with-kind-chips
 		 */
 		kindLabel(kind) {
 			const fn = KIND_LABELS[kind]
@@ -427,6 +452,7 @@ export default {
 		 *   different vocabulary from `kind`/`network`, so it gets its own
 		 *   label lookup rather than reusing either.
 		 * @return {string} The localised or proper-noun label.
+		 * @spec openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md#requirement-client-and-contact-schemas-carry-typed-channel-arrays
 		 */
 		preferredChannelLabel(channel) {
 			if (channel === 'email') {
@@ -444,6 +470,7 @@ export default {
 		/**
 		 * @param {string} network One of the `network` enum values.
 		 * @return {string} The label (network names are proper nouns, not translated).
+		 * @spec openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md#requirement-detail-pages-display-channels-as-a-linked-list-with-kind-chips
 		 */
 		networkLabel(network) {
 			const label = NETWORK_LABELS[network]
@@ -457,6 +484,7 @@ export default {
 		 * @param {string} channelType 'email' or 'phone'.
 		 * @param {number|null} index The entry index to edit, or null to add.
 		 * @return {void}
+		 * @spec openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md#requirement-channels-are-added-edited-and-removed-through-dedicated-modals
 		 */
 		openEmailPhoneModal(channelType, index) {
 			const list = channelType === 'email' ? this.emails : this.phones
@@ -471,6 +499,7 @@ export default {
 		/**
 		 * @param {number|null} index The entry index to edit, or null to add.
 		 * @return {void}
+		 * @spec openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md#requirement-channels-are-added-edited-and-removed-through-dedicated-modals
 		 */
 		openSocialModal(index) {
 			this.socialModal = {
@@ -483,6 +512,7 @@ export default {
 		/**
 		 * @param {object} entry The built entry from ContactEmailPhoneModal.
 		 * @return {Promise<void>}
+		 * @spec openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md#requirement-channels-are-added-edited-and-removed-through-dedicated-modals
 		 */
 		async onEmailPhoneSaved(entry) {
 			const { channelType, index } = this.emailPhoneModal
@@ -508,6 +538,7 @@ export default {
 		/**
 		 * @param {object} profile The built entry from ContactSocialProfileModal.
 		 * @return {Promise<void>}
+		 * @spec openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md#requirement-channels-are-added-edited-and-removed-through-dedicated-modals
 		 */
 		async onSocialProfileSaved(profile) {
 			const { index } = this.socialModal
@@ -527,6 +558,7 @@ export default {
 		 * @param {'emails'|'phones'|'socialProfiles'} arrayKey Which array.
 		 * @param {number} index The entry index to drop.
 		 * @return {Promise<void>}
+		 * @spec openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md#requirement-channels-are-added-edited-and-removed-through-dedicated-modals
 		 */
 		async removeEntry(arrayKey, index) {
 			const list = [...(this.entity[arrayKey] || [])]

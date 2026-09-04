@@ -88,39 +88,7 @@ import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcLoadingIcon, NcSelect } from '@nextcloud/vue'
 import SegmentBuilder from '../../components/SegmentBuilder.vue'
-
-/**
- * Curated field options for the "contact" audience, grounded in the real
- * `contact` schema properties (lib/Settings/pipelinq_register.json). Kept
- * as a static list rather than a live schema-introspection endpoint --
- * that is a materially larger surface than a UI-repair change warrants;
- * see DEFERRED_QUESTIONS in the change's proposal.
- *
- * @type {Array<{value:string,label:string,type:string}>}
- */
-const CONTACT_FIELD_OPTIONS = [
-	{ value: 'name', label: 'Name', type: 'string' },
-	{ value: 'email', label: 'Email', type: 'string' },
-	{ value: 'phone', label: 'Phone', type: 'string' },
-	{ value: 'role', label: 'Role', type: 'string' },
-	{ value: 'marketingConsent', label: 'Marketing consent', type: 'boolean' },
-	{ value: 'doNotContact', label: 'Do not contact', type: 'boolean' },
-]
-
-/**
- * Curated field options for the "customer" audience (the `client` schema).
- *
- * @type {Array<{value:string,label:string,type:string}>}
- */
-const CUSTOMER_FIELD_OPTIONS = [
-	{ value: 'name', label: 'Name', type: 'string' },
-	{ value: 'type', label: 'Organisation type', type: 'string' },
-	{ value: 'email', label: 'Email', type: 'string' },
-	{ value: 'phone', label: 'Phone', type: 'string' },
-	{ value: 'address', label: 'Address', type: 'string' },
-	{ value: 'website', label: 'Website', type: 'string' },
-	{ value: 'industry', label: 'Industry', type: 'string' },
-]
+import { fieldOptionsFor } from '../../services/segmentFieldOptions.js'
 
 export default {
 	name: 'SegmentForm',
@@ -230,9 +198,7 @@ export default {
 		 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-ui/spec.md#requirement-segment-builder-ui-composes-rule-trees
 		 */
 		fieldOptions() {
-			return this.model.entityType === 'customer'
-				? CUSTOMER_FIELD_OPTIONS
-				: CONTACT_FIELD_OPTIONS
+			return fieldOptionsFor(this.model.entityType)
 		},
 
 		/**
