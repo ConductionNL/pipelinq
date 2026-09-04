@@ -719,6 +719,7 @@ test.describe('Declarative detail pages (client 360 + contact)', () => {
 		// sidebar. CnBodySections stamps each with its manifest id.
 		for (const id of [
 			'relationships',
+			'channels',
 			'activity',
 			'bookings',
 			'messaging-conversation',
@@ -823,7 +824,12 @@ test.describe('Declarative detail pages (client 360 + contact)', () => {
 
 		// BSN/BRP, Relationships and Communication history are page-BODY
 		// sections, each resolved from the component registry.
-		for (const id of ['relationships', 'brp', 'messaging-conversation']) {
+		for (const id of [
+			'relationships',
+			'channels',
+			'brp',
+			'messaging-conversation',
+		]) {
 			await expect(page.locator(`[data-section-id="${id}"]`)).toHaveCount(1)
 		}
 		await expect(
