@@ -33,6 +33,7 @@ const DMARC_LABELS = {
  * @param {string} kind One of `instance`, `mailAccount`, `provider`.
  * @return {string} The English label text (untranslated), or `kind` itself
  *                   when it is not one of the known values.
+ * @spec openspec/changes/marketing-mail-transports/specs/marketing-mail-transports/spec.md#requirement-the-deliverability-panel-shows-spf-dkim-and-dmarc-status-per-sender-domain
  */
 export function kindLabel(kind) {
 	return KIND_LABELS[kind] || kind || ''
@@ -43,6 +44,7 @@ export function kindLabel(kind) {
  *
  * @param {string} dmarcStatus One of `found`, `missing`, `invalid`, `unknown`.
  * @return {string} The English verdict text (untranslated).
+ * @spec openspec/changes/marketing-mail-transports/specs/marketing-mail-transports/spec.md#requirement-the-deliverability-panel-shows-spf-dkim-and-dmarc-status-per-sender-domain
  */
 export function dmarcVerdictText(dmarcStatus) {
 	return DMARC_LABELS[dmarcStatus] || DMARC_LABELS.unknown
@@ -53,6 +55,7 @@ export function dmarcVerdictText(dmarcStatus) {
  *
  * @param {boolean} dkimVerified Whether DKIM was found.
  * @return {string} `deliverability-settings__badge--on` or `--off`.
+ * @spec openspec/changes/marketing-mail-transports/specs/marketing-mail-transports/spec.md#requirement-the-deliverability-panel-shows-spf-dkim-and-dmarc-status-per-sender-domain
  */
 export function dkimBadgeClass(dkimVerified) {
 	return dkimVerified
@@ -65,6 +68,7 @@ export function dkimBadgeClass(dkimVerified) {
  *
  * @param {string} dmarcStatus One of `found`, `missing`, `invalid`, `unknown`.
  * @return {string} A `deliverability-settings__badge--*` class name.
+ * @spec openspec/changes/marketing-mail-transports/specs/marketing-mail-transports/spec.md#requirement-the-deliverability-panel-shows-spf-dkim-and-dmarc-status-per-sender-domain
  */
 export function dmarcBadgeClass(dmarcStatus) {
 	if (dmarcStatus === 'found') {

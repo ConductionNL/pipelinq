@@ -53,6 +53,8 @@ final class SendResult {
 	 * @param string|null $providerId The provider/transport message id, when one was returned.
 	 *
 	 * @return self
+	 *
+	 * @spec openspec/changes/marketing-mail-transports/specs/marketing-blast/spec.md#requirement-send-via-openconnector-with-per-tenant-provider
 	 */
 	public static function accepted(?string $providerId = null): self {
 		return new self(accepted: true, providerId: $providerId);
@@ -64,6 +66,8 @@ final class SendResult {
 	 * @param string $reason A short, loggable reason.
 	 *
 	 * @return self
+	 *
+	 * @spec openspec/changes/marketing-mail-transports/specs/marketing-blast/spec.md#requirement-send-via-openconnector-with-per-tenant-provider
 	 */
 	public static function failed(string $reason): self {
 		return new self(accepted: false, error: $reason);

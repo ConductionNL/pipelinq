@@ -389,6 +389,10 @@ export default {
 			this.model.connectorSourceId = option?.id || ''
 		},
 
+		/**
+		 * @param {object} option The picked transport option, or null.
+		 * @spec openspec/changes/marketing-mail-transports/specs/marketing-mail-transports/spec.md#requirement-the-wizard-offers-a-transport-step
+		 */
 		selectedTransport(option) {
 			this.model.transportId = option?.id || ''
 		},
@@ -402,6 +406,9 @@ export default {
 		},
 	},
 
+	/**
+	 * @spec openspec/changes/marketing-mail-transports/specs/marketing-mail-transports/spec.md#requirement-the-wizard-offers-a-transport-step
+	 */
 	mounted() {
 		this.loadSegments()
 		this.loadTemplates()

@@ -181,6 +181,7 @@ export default {
 		/**
 		 * @param {string} kind The transport kind.
 		 * @return {string} Human label for a transport kind.
+		 * @spec openspec/changes/marketing-mail-transports/specs/marketing-mail-transports/spec.md#requirement-the-deliverability-panel-shows-spf-dkim-and-dmarc-status-per-sender-domain
 		 */
 		kindLabel(kind) {
 			return t('pipelinq', kindLabel(kind))
@@ -189,6 +190,7 @@ export default {
 		/**
 		 * @param {object} transport The transport row.
 		 * @return {string} Human DMARC verdict text.
+		 * @spec openspec/changes/marketing-mail-transports/specs/marketing-mail-transports/spec.md#requirement-the-deliverability-panel-shows-spf-dkim-and-dmarc-status-per-sender-domain
 		 */
 		dmarcVerdictText(transport) {
 			return t('pipelinq', dmarcVerdictText(transport.dmarcStatus))
@@ -197,6 +199,7 @@ export default {
 		/**
 		 * @param {object} transport The transport row.
 		 * @return {string} CSS class for the DKIM badge.
+		 * @spec openspec/changes/marketing-mail-transports/specs/marketing-mail-transports/spec.md#requirement-the-deliverability-panel-shows-spf-dkim-and-dmarc-status-per-sender-domain
 		 */
 		dkimBadgeClass(transport) {
 			return dkimBadgeClass(transport.dkimVerified)
@@ -205,6 +208,7 @@ export default {
 		/**
 		 * @param {object} transport The transport row.
 		 * @return {string} CSS class for the DMARC badge.
+		 * @spec openspec/changes/marketing-mail-transports/specs/marketing-mail-transports/spec.md#requirement-the-deliverability-panel-shows-spf-dkim-and-dmarc-status-per-sender-domain
 		 */
 		dmarcBadgeClass(transport) {
 			return dmarcBadgeClass(transport.dmarcStatus)

@@ -254,6 +254,8 @@ class DeliverabilityCheckService {
 	 * @param int $type One of the `DNS_*` type constants.
 	 *
 	 * @return array<int, array<string, mixed>>|false
+	 *
+	 * @spec openspec/changes/marketing-mail-transports/specs/marketing-mail-transports/spec.md#requirement-the-deliverability-panel-shows-spf-dkim-and-dmarc-status-per-sender-domain
 	 */
 	protected function dnsGetRecord(string $hostname, int $type): array|false {
 		return dns_get_record($hostname, $type);

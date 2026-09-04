@@ -139,6 +139,8 @@ class MailTransportService {
 	 * @param int $callerRate Caller's max-per-second.
 	 *
 	 * @return int Resolved rate limit (>=1).
+	 *
+	 * @spec openspec/specs/marketing-blast/spec.md#requirement-throttle-respects-provider-rate-limits
 	 */
 	public function resolveRateLimit(array $transport, int $callerRate): int {
 		$candidate = self::DEFAULT_RATE_LIMIT_PER_SECOND;
