@@ -1,0 +1,102 @@
+{
+	"menu": [
+		{
+			"id": "MarketingGroup",
+			"label": "Marketing",
+			"order": 130,
+			"children": [
+				{
+					"id": "MailingLists",
+					"label": "Lists",
+					"icon": "EmailMultiple",
+					"route": "MailingLists"
+				}
+			]
+		}
+	],
+	"pages": [
+		{
+			"id": "MailingLists",
+			"_note": "Mailing lists as a declarative type:index page. Nothing here needs a component: the fields are flat, the row action opens the detail page, and Add is the standard create dialog. That is the ADR-031 and ADR-049 default, and the reason the list detail page below is not one is stated on that page.",
+			"route": "/mailing-lists",
+			"type": "index",
+			"title": "Lists",
+			"config": {
+				"register": "pipelinq",
+				"schema": "mailingList",
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"showViewAction": false,
+				"includeColumns": ["name", "optInMode", "publicSignup", "status"],
+				"actions": [
+					{
+						"id": "view",
+						"label": "Open",
+						"icon": "Eye",
+						"handler": "navigate",
+						"route": "MailingListDetail"
+					}
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				}
+			}
+		},
+		{
+			"id": "MailingListDetail",
+			"_note": "Mailing list record as a declarative type:detail page. The list's own fields (name, opt-in mode, sender identity, footer address, status) auto-render in the body via CnObjectDataWidget. The subscriptions table stays a kind:'section' bodyWidget for two reasons no declarative primitive covers: (1) a membership row is read through its STATE, so each row needs a chip vocabulary mapping pending/confirmed/unsubscribed/bounced to a colour and a label, and the object-list widget renders a value, not a chip; (2) the page leads with per-state counts, and summaryAggregates filters are equality-only over one schema and cannot break one field out into four counts on one strip. The section self-fetches GET /api/mailing-lists/{id}/subscriptions, which returns both in one envelope.",
+			"route": "/mailing-lists/:id",
+			"type": "detail",
+			"title": "Mailing list",
+			"config": {
+				"register": "pipelinq",
+				"schema": "mailingList",
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"widgets": [
+					{
+						"id": "mailing-list-data",
+						"type": "data",
+						"title": "List details",
+						"icon": "EmailMultipleOutline",
+						"content": {
+							"columns": 2
+						}
+					}
+				],
+				"layout": [
+					{
+						"id": "1",
+						"widgetId": "mailing-list-data",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 12,
+						"gridHeight": 4
+					}
+				],
+				"bodyWidgets": [
+					{
+						"id": "list-subscriptions",
+						"component": "SubscriptionsSection",
+						"title": "Subscribers",
+						"placement": "end",
+						"props": {
+							"listId": "@objectId"
+						}
+					}
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true,
+					"tabs": [
+						{
+							"id": "audit",
+							"label": "History",
+							"icon": "History",
+							"widgets": [{ "type": "audit" }]
+						}
+					]
+				}
+			}
+		}
+	]
+}

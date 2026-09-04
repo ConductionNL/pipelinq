@@ -992,6 +992,14 @@
 						"title": "Messages",
 						"placement": "end",
 						"props": { "entityId": "@objectId", "entityType": "contact" }
+					},
+					{
+						"id": "contact-subscriptions",
+						"component": "SubscriptionsSection",
+						"title": "Subscriptions",
+						"placement": "end",
+						"_note": "Which mailing lists this person is on and the state of each (marketing-lists-and-double-opt-in). Appended here rather than declared in a src/manifest.d fragment because mergePages REPLACES a page whose id a fragment repeats: adding one bodyWidget from a fragment would mean restating the whole ContactDetail page, and anything added to it later would be lost without a word.",
+						"props": { "contactId": "@objectId" }
 					}
 				],
 				"sidebar": {

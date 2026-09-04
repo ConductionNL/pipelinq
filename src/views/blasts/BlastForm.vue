@@ -33,17 +33,61 @@
 					:placeholder="t('pipelinq', 'Q4 Gemeente Outreach')" />
 			</section>
 
-			<!-- Step 2: segment -->
+			<!-- Step 2: audience — a segment the tenant queries, or a list
+			     someone joined (marketing-lists-and-double-opt-in). -->
 			<section v-if="step === 'segment'" class="blast-form__panel">
+				<fieldset class="blast-form__audience-kind">
+					<legend>{{ t('pipelinq', 'Send to') }}</legend>
+					<NcCheckboxRadioSwitch
+						:modelValue="audienceKind"
+						value="segment"
+						name="blast-audience-kind"
+						type="radio"
+						data-testid="blast-audience-segment"
+						@update:modelValue="audienceKind = $event">
+						{{ t('pipelinq', 'A segment') }}
+					</NcCheckboxRadioSwitch>
+					<NcCheckboxRadioSwitch
+						:modelValue="audienceKind"
+						value="list"
+						name="blast-audience-kind"
+						type="radio"
+						data-testid="blast-audience-list"
+						@update:modelValue="audienceKind = $event">
+						{{ t('pipelinq', 'A mailing list') }}
+					</NcCheckboxRadioSwitch>
+				</fieldset>
+
 				<NcSelect
+					v-if="audienceKind === 'segment'"
 					v-model="selectedSegment"
 					:options="segments"
 					:inputLabel="t('pipelinq', 'Segment') + ' *'"
 					label="name"
 					:loading="segmentsLoading" />
-				<p v-if="selectedSegment" class="blast-form__hint">
+				<p
+					v-if="audienceKind === 'segment' && selectedSegment"
+					class="blast-form__hint">
 					{{ t('pipelinq', 'Estimated audience:') }}
 					<strong>{{ selectedSegment.estimatedSize ?? '—' }}</strong>
+				</p>
+
+				<NcSelect
+					v-if="audienceKind === 'list'"
+					v-model="selectedList"
+					:options="mailingLists"
+					:inputLabel="t('pipelinq', 'Mailing list') + ' *'"
+					label="name"
+					:loading="mailingListsLoading" />
+				<p
+					v-if="audienceKind === 'list' && selectedList"
+					class="blast-form__hint">
+					{{
+						t(
+							'pipelinq',
+							'Only confirmed subscribers receive this. Anyone still awaiting confirmation is skipped.',
+						)
+					}}
 				</p>
 			</section>
 
@@ -188,7 +232,12 @@
 import axios from '@nextcloud/axios'
 import { showInfo } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
-import { NcButton, NcLoadingIcon, NcSelect } from '@nextcloud/vue'
+import {
+	NcButton,
+	NcCheckboxRadioSwitch,
+	NcLoadingIcon,
+	NcSelect,
+} from '@nextcloud/vue'
 import MissingConsentModal from '../../modals/MissingConsentModal.vue'
 
 const STEPS = [
@@ -204,6 +253,7 @@ export default {
 	name: 'BlastForm',
 	components: {
 		NcButton,
+		NcCheckboxRadioSwitch,
 		NcLoadingIcon,
 		NcSelect,
 		MissingConsentModal,
@@ -218,6 +268,7 @@ export default {
 			model: {
 				name: '',
 				segmentId: '',
+				listId: '',
 				templateId: '',
 				channel: 'email',
 				connectorSourceId: '',
@@ -226,15 +277,19 @@ export default {
 			},
 
 			abEnabled: false,
+			audienceKind: 'segment',
 			segments: [],
+			mailingLists: [],
 			templates: [],
 			connectorSources: [],
 			connectorSourcesError: '',
 			selectedSegment: null,
+			selectedList: null,
 			selectedTemplate: null,
 			selectedChannel: 'email',
 			selectedConnectorSource: null,
 			segmentsLoading: false,
+			mailingListsLoading: false,
 			templatesLoading: false,
 			connectorSourcesLoading: false,
 			templateValidationError: '',
@@ -309,7 +364,7 @@ export default {
 				case 'name':
 					return !!(this.model.name && this.model.name.trim())
 				case 'segment':
-					return !!this.selectedSegment
+					return this.hasAudience
 				case 'template':
 					return !!this.selectedTemplate && !this.templateValidationError
 				case 'channel':
@@ -317,6 +372,22 @@ export default {
 				default:
 					return true
 			}
+		},
+
+		/**
+		 * Whether an audience has been chosen. Exactly one is named: the two
+		 * pickers are mutually exclusive because a blast that named both would
+		 * leave the send path to pick, and whichever it picked would surprise
+		 * the marketer who named the other.
+		 *
+		 * @return {boolean}
+		 * @spec openspec/specs/marketing-blast/spec.md#requirement-a-blast-may-target-a-mailing-list
+		 */
+		hasAudience() {
+			if (this.audienceKind === 'list') {
+				return !!this.selectedList
+			}
+			return !!this.selectedSegment
 		},
 
 		/**
@@ -330,7 +401,7 @@ export default {
 		canSubmit() {
 			return (
 				!!(this.model.name && this.model.name.trim())
-				&& !!this.selectedSegment
+				&& this.hasAudience
 				&& !!this.selectedTemplate
 				&& !!this.selectedChannel
 				&& !this.templateValidationError
@@ -341,6 +412,25 @@ export default {
 	watch: {
 		selectedSegment(option) {
 			this.model.segmentId = option?.id || ''
+		},
+
+		selectedList(option) {
+			this.model.listId = option?.id || ''
+		},
+
+		audienceKind(kind) {
+			// Clear the other side rather than leaving it set but hidden: a
+			// stale id would travel in the payload and the server would refuse
+			// the blast for naming two audiences, with nothing on screen to
+			// explain why.
+			if (kind === 'list') {
+				this.selectedSegment = null
+				this.model.segmentId = ''
+				this.loadMailingLists()
+				return
+			}
+			this.selectedList = null
+			this.model.listId = ''
 		},
 
 		selectedTemplate(option) {
@@ -618,6 +708,7 @@ export default {
 				const payload = {
 					name: this.model.name.trim(),
 					segmentId: this.model.segmentId,
+					listId: this.model.listId,
 					templateId: this.model.templateId,
 					channel: this.model.channel,
 					connectorSourceId: this.model.connectorSourceId,
