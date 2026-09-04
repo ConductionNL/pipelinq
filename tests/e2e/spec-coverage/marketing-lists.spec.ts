@@ -105,7 +105,10 @@ async function openList(page: Page): Promise<string> {
 
 /** Deep-link to a hash route and let the view settle. */
 async function gotoHash(page: Page, hash: string): Promise<void> {
-	await page.goto(`/apps/pipelinq${hash}`)
+	// The app is path-routed, not hash-routed: `/apps/pipelinq#/mailing-lists/x`
+	// loads the default page and drops the rest on the floor, so a test written
+	// that way asserts against the dashboard and never says so.
+	await page.goto(`${APP}${hash.replace(/^#/, '')}`)
 	await expect(page.locator('#content-vue')).toBeVisible({ timeout: 15000 })
 	await dismissWalkthrough(page)
 	await dismissSupportDialog(page)
@@ -179,7 +182,7 @@ test.describe('Mailing lists page', () => {
 		await openApp(page)
 		const listId = await openList(page)
 
-		await gotoHash(page, `#/mailing-lists/${listId}`)
+		await gotoHash(page, `/mailing-lists/${listId}`)
 
 		await expect(
 			page.getByText('Subscribers', { exact: false }).first(),
@@ -647,7 +650,7 @@ test.describe('Subscriptions on a contact', () => {
 		const contactId = idOf(rows[0])
 		expect(contactId, 'the seed must hold at least one contact').toBeTruthy()
 
-		await gotoHash(page, `#/contacts/${contactId}`)
+		await gotoHash(page, `/contacts/${contactId}`)
 
 		await expect(
 			page.getByText('Subscriptions', { exact: false }).first(),

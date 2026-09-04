@@ -37,7 +37,7 @@
 				:class="[
 					{ 'performance-dashboard__tab--active': activeTab === tab.id },
 				]"
-				@click="activeTab = tab.id">
+				@click="onTabClick(tab.id)">
 				{{ tab.label }}
 			</button>
 		</nav>
@@ -312,6 +312,8 @@ import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
 
 const OVERVIEW_LIMIT = 50
+/** How many per-blast attribution reads may be in flight at once. */
+const ATTRIBUTION_CONCURRENCY = 6
 const AB_MIN_DELIVERED = 500
 const AB_MIN_ELAPSED_MS = 24 * 60 * 60 * 1000
 const P_VALUE_ALPHA = 0.05
@@ -336,6 +338,8 @@ export default {
 			// answers, then whether a portal is connected.
 			trafficConnected: null,
 			trafficRows: [],
+			/** Whether the Attribution tab's per-blast reads have been started. */
+			attributionRequested: false,
 			overviewSortKey: 'sent',
 			overviewSortOrder: 'desc',
 		}
@@ -477,7 +481,6 @@ export default {
 			this.error = ''
 			try {
 				await Promise.all([this.fetchBlasts(), this.fetchSegments()])
-				await this.fetchAttributionRows()
 			} catch (e) {
 				this.error =
 					e?.response?.data?.error
@@ -485,8 +488,47 @@ export default {
 			} finally {
 				this.loading = false
 			}
-			// The site-traffic block loads on its own, after the page is up:
-			// it is one more request per blast and must not hold the tabs.
+			// Attribution and site traffic each cost one request per blast, and
+			// only the Attribution tab shows either. Loading them here held the
+			// spinner for the length of the whole fan-out, so Overview and A/B
+			// testing rendered nothing at all until the last answer arrived.
+			// They now load when that tab is first opened, in loadAttribution().
+		},
+
+		/**
+		 * Select a tab, and load what that tab needs the first time it is
+		 * opened.
+		 *
+		 * @param {string} tabId One of `overview`, `ab`, `attribution`.
+		 *
+		 * @return {void}
+		 *
+		 * @spec openspec/specs/marketing-analytics/spec.md#requirement-attribution-dashboard-sums-revenue-per-blast
+		 */
+		onTabClick(tabId) {
+			this.activeTab = tabId
+			if (tabId === 'attribution') {
+				this.loadAttribution()
+			}
+		},
+
+		/**
+		 * Load the Attribution tab's two per-blast blocks, once.
+		 *
+		 * Both cost one request per blast, so they are deliberately not part
+		 * of the page load: a reader on Overview or A/B testing never pays for
+		 * them.
+		 *
+		 * @return {void}
+		 *
+		 * @spec openspec/specs/marketing-analytics/spec.md#requirement-attribution-dashboard-sums-revenue-per-blast
+		 */
+		loadAttribution() {
+			if (this.attributionRequested) {
+				return
+			}
+			this.attributionRequested = true
+			this.fetchAttributionRows()
 			this.fetchTrafficRows()
 		},
 
@@ -537,33 +579,58 @@ export default {
 		 * @spec openspec/specs/marketing-analytics/spec.md#requirement-attribution-dashboard-sums-revenue-per-blast
 		 */
 		async fetchAttributionRows() {
-			const rows = []
-			for (const blast of this.blasts) {
-				const id = blast.id || blast.uuid || blast.slug
-				if (!id) {
-					continue
-				}
-				try {
-					const url = generateUrl(
-						`/apps/pipelinq/api/blasts/${id}/attribution`,
-					)
-					const { data } = await axios.get(url)
-					if (
-						(data?.dealCount || 0) > 0
-						|| (data?.attributedValue || 0) > 0
-					) {
-						rows.push({
-							id,
-							name: blast.name || id,
-							dealCount: data.dealCount || 0,
-							attributedValue: data.attributedValue || 0,
-						})
+			// One request per blast, run a few at a time. Strictly sequential
+			// it took as many round trips as there are blasts before the tab
+			// could say anything; unbounded it would open fifty at once.
+			const ids = this.blasts
+				.map((blast) => ({
+					id: blast.id || blast.uuid || blast.slug,
+					name: blast.name,
+				}))
+				.filter((entry) => Boolean(entry.id))
+			const found = new Map()
+
+			const worker = async (queue) => {
+				for (;;) {
+					const entry = queue.shift()
+					if (entry === undefined) {
+						return
 					}
-				} catch {
-					// Skip; keep loop alive.
+					try {
+						const url = generateUrl(
+							`/apps/pipelinq/api/blasts/${entry.id}/attribution`,
+						)
+						const { data } = await axios.get(url)
+						if (
+							(data?.dealCount || 0) > 0
+							|| (data?.attributedValue || 0) > 0
+						) {
+							found.set(entry.id, {
+								id: entry.id,
+								name: entry.name || entry.id,
+								dealCount: data.dealCount || 0,
+								attributedValue: data.attributedValue || 0,
+							})
+						}
+					} catch {
+						// Skip; keep the queue draining.
+					}
 				}
 			}
-			this.attributionRows = rows
+
+			const queue = ids.slice()
+			await Promise.all(
+				Array.from(
+					{ length: Math.min(ATTRIBUTION_CONCURRENCY, queue.length) },
+					() => worker(queue),
+				),
+			)
+
+			// Report in the order the blasts were listed, not the order the
+			// answers happened to arrive.
+			this.attributionRows = ids
+				.map((entry) => found.get(entry.id))
+				.filter(Boolean)
 		},
 
 		/**
