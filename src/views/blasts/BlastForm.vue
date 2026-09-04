@@ -506,12 +506,22 @@ export default {
 			this.model.listId = ''
 		},
 
+		/**
+		 * @param {object|null} option The template just picked, or null.
+		 * @spec openspec/changes/marketing-article-hub/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
+		 * @return {void}
+		 */
 		selectedTemplate(option) {
 			this.model.templateId = option?.id || ''
 			this.validateTemplate()
 			this.loadPreview()
 		},
 
+		/**
+		 * @param {string} value The channel just picked.
+		 * @spec openspec/changes/marketing-article-hub/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
+		 * @return {void}
+		 */
 		selectedChannel(value) {
 			this.model.channel = value
 			// Drop the template if it no longer matches the channel.

@@ -46,6 +46,7 @@ export function shouldWarnMissingMarker(articleIds, body) {
  * The id an article (or an NcSelect option carrying one) resolves to.
  *
  * @param {object} article An article payload or picker option.
+ * @spec openspec/changes/marketing-article-hub/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
  * @return {string} The id, matching the `uuid`-then-`id` order
  *   `ArticleService`/`ListObjectStore` resolve identity with, or an empty
  *   string.

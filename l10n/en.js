@@ -3938,7 +3938,9 @@ OC.L10N.register(
         "Articles": "Articles",
         "Pick published articles to embed": "Pick published articles to embed",
         "Embedded where the body carries the {{articles}} marker, in the order picked here.": "Embedded where the body carries the {{articles}} marker, in the order picked here.",
-        "The body has no {{articles}} marker, so these articles will not appear until you add one.": "The body has no {{articles}} marker, so these articles will not appear until you add one."
+        "The body has no {{articles}} marker, so these articles will not appear until you add one.": "The body has no {{articles}} marker, so these articles will not appear until you add one.",
+        "Article details": "Article details",
+        "Where this is used": "Where this is used"
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -206,6 +206,7 @@ export default {
 		},
 
 		/**
+		 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
 		 * @return {string} The modal title.
 		 */
 		modalTitle() {
@@ -215,6 +216,7 @@ export default {
 		},
 
 		/**
+		 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
 		 * @return {Array<{value: string, label: string}>} The two language options.
 		 */
 		languageOptions() {
@@ -228,6 +230,7 @@ export default {
 		 */
 		languageOption: {
 			/**
+			 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
 			 * @return {string} The current language code.
 			 */
 			get() {
@@ -236,6 +239,7 @@ export default {
 
 			/**
 			 * @param {string} value The language code just picked.
+			 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
 			 */
 			set(value) {
 				this.model.language = value || 'nl'
@@ -243,6 +247,7 @@ export default {
 		},
 
 		/**
+		 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
 		 * @return {boolean} Whether the form has enough to attempt a save.
 		 */
 		canSave() {
@@ -255,6 +260,7 @@ export default {
 		 * Open the Nextcloud Files picker restricted to images, and store the
 		 * picked node's path.
 		 *
+		 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
 		 * @return {Promise<void>} Resolves once a pick has been applied, or declined.
 		 */
 		async openHeroPicker() {
@@ -297,6 +303,7 @@ export default {
 		 * Build the payload from the model, splitting the tags text field
 		 * back into an array.
 		 *
+		 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
 		 * @return {object} The payload the API expects.
 		 */
 		buildPayload() {

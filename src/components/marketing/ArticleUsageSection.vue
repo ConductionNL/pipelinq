@@ -114,6 +114,7 @@ export default {
 		 * The id this section is bound to, either the prop or the section
 		 * context the page host provides.
 		 *
+		 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-an-article-reports-where-it-has-been-used
 		 * @return {string} The article id, or an empty string.
 		 */
 		effectiveId() {
@@ -155,6 +156,7 @@ export default {
 		 * vocabulary's English label) keeps this `t()` call a literal.
 		 *
 		 * @param {string} kind Either `template` or `blast`.
+		 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-an-article-reports-where-it-has-been-used
 		 * @return {string} The translated group heading.
 		 */
 		groupLabel(kind) {

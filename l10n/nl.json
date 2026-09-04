@@ -3960,7 +3960,9 @@
         "Articles": "Artikelen",
         "Pick published articles to embed": "Kies gepubliceerde artikelen om in te sluiten",
         "Embedded where the body carries the {{articles}} marker, in the order picked here.": "Ingesloten waar de inhoud de {{articles}} markering bevat, in de hier gekozen volgorde.",
-        "The body has no {{articles}} marker, so these articles will not appear until you add one.": "De inhoud bevat geen {{articles}} markering, dus deze artikelen verschijnen pas als u er een toevoegt."
+        "The body has no {{articles}} marker, so these articles will not appear until you add one.": "De inhoud bevat geen {{articles}} markering, dus deze artikelen verschijnen pas als u er een toevoegt.",
+        "Article details": "Artikelgegevens",
+        "Where this is used": "Waar dit wordt gebruikt"
     },
     "plurals": null
 }

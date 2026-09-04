@@ -34,6 +34,7 @@ export default {
 		/**
 		 * The modal was dismissed without saving.
 		 *
+		 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
 		 * @return {void}
 		 */
 		onClose() {

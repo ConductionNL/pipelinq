@@ -167,6 +167,7 @@ export default {
 		 * The article record whichever way it arrived: as a resolved prop, or
 		 * loaded here by id.
 		 *
+		 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
 		 * @return {object|null} The article, or null while unresolved.
 		 */
 		effectiveArticle() {
@@ -174,7 +175,7 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-the-detail-page-renders-the-body-as-formatted-text
+		 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
 		 * @return {string} The article body as sanitised HTML.
 		 */
 		renderedBody() {
@@ -228,6 +229,7 @@ export default {
 		 * preview endpoint; an absolute URL (an image hosted elsewhere) is
 		 * used as-is.
 		 *
+		 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
 		 * @return {string} The hero image URL, or an empty string.
 		 */
 		heroImageUrl() {
@@ -249,6 +251,7 @@ export default {
 			 * Resolve the article by id when the host gave the section only an
 			 * id (`@objectId`) rather than the whole record.
 			 *
+			 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
 			 * @return {void}
 			 */
 			handler() {
@@ -264,6 +267,7 @@ export default {
 		 * The id this section is bound to, either the prop or the section
 		 * context the page host provides.
 		 *
+		 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
 		 * @return {string} The article id, or an empty string.
 		 */
 		effectiveId() {
@@ -277,6 +281,7 @@ export default {
 		/**
 		 * The object id the page host resolved, when no prop carries one.
 		 *
+		 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
 		 * @return {string} The id, or an empty string.
 		 */
 		contextId() {
@@ -289,6 +294,7 @@ export default {
 		/**
 		 * Load the article when only its id is known.
 		 *
+		 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
 		 * @return {Promise<void>} Resolves when the article is in place.
 		 */
 		async load() {
@@ -310,6 +316,7 @@ export default {
 		 * Refresh after a save or a lifecycle move, whichever way the host
 		 * expects it.
 		 *
+		 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
 		 * @return {Promise<void>} Resolves when the article is current again.
 		 */
 		async refresh() {
@@ -322,6 +329,7 @@ export default {
 		/**
 		 * Close the edit modal and refresh.
 		 *
+		 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
 		 * @return {Promise<void>} Resolves when the section reflects the save.
 		 */
 		async onSaved() {
@@ -336,6 +344,7 @@ export default {
 		 * tooling requires.
 		 *
 		 * @param {string} id The transition id from `transitionsForStatus()`.
+		 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-an-article-moves-through-a-declared-lifecycle
 		 * @return {string} The translated button label.
 		 */
 		actionLabel(id) {

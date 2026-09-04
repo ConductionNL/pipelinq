@@ -318,6 +318,7 @@ export default {
 		 */
 		selectedArticles: {
 			/**
+			 * @spec openspec/changes/marketing-article-hub/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
 			 * @return {Array<object>} The picked articles, in the saved order.
 			 */
 			get() {
@@ -326,6 +327,7 @@ export default {
 
 			/**
 			 * @param {Array<object>} options The articles just picked, in NcSelect's order.
+			 * @spec openspec/changes/marketing-article-hub/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
 			 */
 			set(options) {
 				this.model.articleIds = orderedArticleIds(options)
@@ -352,6 +354,7 @@ export default {
 		 * carries literal double braces, and nesting those inside a mustache
 		 * interpolation does not parse.
 		 *
+		 * @spec openspec/changes/marketing-article-hub/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
 		 * @return {string} The hint.
 		 */
 		articlesHintText() {
