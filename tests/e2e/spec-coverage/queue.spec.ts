@@ -73,7 +73,10 @@ test('Queue: the ticket-type tabs narrow the queue', async ({ page }) => {
 	})
 	const before = await content.locator('table tbody tr').count()
 
-	await content.getByRole('button', { name: 'Complaints' }).first().click()
+	// role=tab, NOT button. CnIndexPage renders the quickFilters strip as a
+	// tablist; targeting a button here timed out for 60s against a page that was
+	// rendering perfectly.
+	await content.getByRole('tab', { name: 'Complaints' }).first().click()
 	await expect(
 		content.locator('table tbody tr, .cn-index-page__empty').first(),
 	).toBeVisible({ timeout: 15000 })
