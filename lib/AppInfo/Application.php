@@ -52,8 +52,6 @@ use OCA\Pipelinq\Listener\ExpenseApprovalListener;
 use OCA\Pipelinq\Listener\ObjectEventListener;
 use OCA\Pipelinq\Listener\ObjectsMergedSyncListener;
 use OCA\Pipelinq\Listener\PosTransactionCompletedListener;
-use OCA\Pipelinq\Listener\ProjectCreationListener;
-use OCA\Pipelinq\Listener\ProjectPhaseStatusListener;
 use OCA\Pipelinq\Listener\SchemaChangeListener;
 use OCA\Pipelinq\Listener\SlaObjectCreatedListener;
 use OCA\Pipelinq\Listener\SlaObjectUpdatedListener;
@@ -186,15 +184,6 @@ class Application extends App implements IBootstrap {
 			event: ObjectUpdatedEvent::class,
 			listener: DealUpdatedListener::class
 		);
-		$context->registerEventListener(
-			event: ObjectCreatedEvent::class,
-			listener: ProjectCreationListener::class
-		);
-		$context->registerEventListener(
-			event: ObjectUpdatedEvent::class,
-			listener: ProjectPhaseStatusListener::class
-		);
-
 		// Burgerportaal / MijnOverheid Berichtenbox bridge:
 		// listen for zaak status transitions and queue an outbound
 		// Berichtenbox message via BerichtenboxService

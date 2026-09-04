@@ -82,7 +82,7 @@
         "slug": "client",
         "title": "Client",
         "icon": "AccountStarOutline",
-        "version": "1.1.0",
+        "version": "1.2.0",
         "summary": "A client (person or organization) in the CRM",
         "description": "Represents a client entity: either a natural person or an organization. Mapped to Schema.org Person/Organization and vCard (RFC 6350) field conventions. Clients are the primary relationship entity in Pipelinq.",
         "linkedTypes": [
@@ -91,7 +91,8 @@
           "xwiki",
           "email",
           "calendar",
-          "forms"
+          "forms",
+          "planninq-projects"
         ],
         "required": [
           "name",

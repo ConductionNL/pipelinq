@@ -222,15 +222,6 @@ import PipelineBoardView from './views/pipeline/PipelineBoard.vue'
 import CashShiftListView from './views/pos/CashShiftList.vue'
 import PosRefundFormView from './views/pos/PosRefundForm.vue'
 import PosTransactionFormView from './views/pos/PosTransactionForm.vue'
-import ProjectActivityList from './views/projects/ProjectActivityList.vue'
-// --- Project / WBS hierarchy (project-task-hierarchy):
-//     four schemas (project / projectPhase / projectTask / projectActivity)
-//     surface as ProjectList → ProjectDetail (WBS tree with inline phase /
-//     task / time-entry CnFormDialogs) → ProjectActivityList. Custom views
-//     because the declarative type:"detail" cannot drive the cross-schema
-//     parallel relation fetch, the resolved-billable inheritance chain or
-//     the inline-add CnFormDialogs feeding three different schemas. ---
-import ProjectDetail from './views/projects/ProjectDetail.vue'
 import ProspectsView from './views/prospects/ProspectsView.vue'
 import LeadAgingWidget from './views/rapportage/LeadAgingWidget.vue'
 import PipelineFunnelWidget from './views/rapportage/PipelineFunnelWidget.vue'
@@ -756,18 +747,6 @@ const registry = {
 	// which is where an admin already goes to configure an app and where NC's own
 	// admin delegation applies. Settings.vue imports the views directly, so they
 	// need no registry entry here. (nav-ia-cleanup)
-
-	// --- Project / WBS hierarchy (project-task-hierarchy). ---
-	ProjectDetail: {
-		kind: 'page',
-		component: ProjectDetail,
-		_note: 'Project detail with parallel cross-schema relation fetch (phases / tasks / activities), budget KPI cards, embedded WBS tree (ProjectWbsTree.vue), inline CnFormDialogs for phase/task/activity create and CnObjectSidebar; declarative type:"detail" cannot orchestrate three nested schemas through one screen (REQ-PTH-001 / REQ-PTH-007).',
-	},
-	ProjectActivityList: {
-		kind: 'page',
-		component: ProjectActivityList,
-		_note: 'Time-entry list for one project with date/user/task/billable filters and a totals row that applies the billable inheritance chain (REQ-PTH-004 / REQ-PTH-005 / REQ-PTH-008).',
-	},
 
 	// --- Marketing blasts (marketing-segmentation-and-blast slice 07). The
 	//     Blasts list is now a declarative type:"index" page

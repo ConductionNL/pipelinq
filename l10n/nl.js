@@ -1959,7 +1959,6 @@ OC.L10N.register(
         "Thank you!": "Bedankt!",
         "Thanks for your feedback.": "Bedankt voor uw feedback.",
         "That time was just taken. Please choose another slot.": "Die tijd is zojuist bezet. Kies een ander tijdslot.",
-        "The HTTPS endpoint of the Shillinq project ledger. Leave empty to disable ledger sync.": "Het HTTPS-eindpunt van het Shillinq-projectgrootboek. Laat leeg om grootboeksynchronisatie uit te schakelen.",
         "The OpenConnector source that holds the warehouse credentials": "De OpenConnector-bron met de warehouse-inloggegevens",
         "The optional xWiki Nextcloud app is not installed. Pipelinq is falling back to the configured direct URL.": "De optionele xWiki Nextcloud-app is niet geïnstalleerd. Pipelinq valt terug op de geconfigureerde directe URL.",
         "The receipt is sent to the linked customer:": "Het bonnetje wordt naar de gekoppelde klant gestuurd:",
@@ -3645,7 +3644,11 @@ OC.L10N.register(
         "Nobody is linked to this deal yet. Open a contact and add this deal to their leads.": "Er is nog niemand aan deze deal gekoppeld. Open een contactpersoon en voeg deze deal toe aan hun leads.",
         "on this deal": "op deze deal",
         "Pending MFA secret": "Nog niet bevestigde tweede factor",
-        "A second factor that has been set up but not yet confirmed with a code. It never counts as a working second factor.": "Een tweede factor die is ingesteld maar nog niet met een code is bevestigd. Deze telt nooit als werkende tweede factor."
+        "A second factor that has been set up but not yet confirmed with a code. It never counts as a working second factor.": "Een tweede factor die is ingesteld maar nog niet met een code is bevestigd. Deze telt nooit als werkende tweede factor.",
+        "The HTTPS endpoint Shillinq receives approved hours on. Leave empty to disable the handoff.": "Het HTTPS-eindpunt waarop Shillinq goedgekeurde uren ontvangt. Laat leeg om de overdracht uit te schakelen.",
+        "What the quarter is set to close, per owner.": "Wat het kwartaal naar verwachting sluit, per eigenaar.",
+        "Points, tiers and redemptions per loyalty programme.": "Punten, niveaus en inwisselingen per loyaliteitsprogramma.",
+        "No projects for this client yet.": "Nog geen projecten voor deze klant."
     },
     "nplurals=2; plural=(n != 1);"
 )

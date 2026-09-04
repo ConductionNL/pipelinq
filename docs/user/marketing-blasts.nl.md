@@ -302,6 +302,27 @@ worden:
   worden nooit herschreven, dus uitschrijven en compliance-rapportage
   blijven onaangetast door het aanzetten van deze instelling.
 
+#### Rapporteren aan Portaliq-verkeer
+
+Draait u naast Pipelinq een portaal in Portaliq? Dan ziet u mailopens
+en -klikken naast sitebezoeken in de verkeersrapporten van dat portaal.
+
+- Een beheerder zet **`blast.traffic_portal`** onder **Admin settings,
+  Pipelinq** op de portaalslug in Portaliq. Laat de instelling leeg om
+  mailtracking binnen Pipelinq te houden. Leeg is de standaard.
+- Elke geregistreerde open of klik wordt dan ook aan dat portaal
+  gemeld als `email_open`- of `email_click`-verkeersevent. Het event
+  bevat de blast, de contactreferentie, de campagnenaam en de
+  aangeklikte link. Het bevat nooit een e-mailadres, IP-adres of
+  user-agent.
+- De blastlevering in Pipelinq blijft leidend. De melding loopt pas na
+  het wegschrijven van de levering. Is Portaliq niet geïnstalleerd, of
+  mislukt de melding, dan wordt de open of klik hier gewoon
+  geregistreerd en blijven pixel en redirect werken.
+- Portaliq koppelt mailverkeer aan een campagne, niet aan een persoon.
+  Een mailopen en een sitebezoek horen alleen bij elkaar als het
+  sitebezoek dezelfde campagneparameters draagt.
+
 Een lopende verzending stoppen? Klik **Cancel**. Alle nog niet
 verstuurde leveringen worden afgebroken; reeds aan de provider
 overgedragen berichten gaan door. De blast gaat naar `canceled`.

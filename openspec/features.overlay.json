@@ -103,10 +103,37 @@
     "slug": "marketing-campaigns",
     "title": "Marketing campaigns",
     "title_nl": "Marketingcampagnes",
-    "summary": "Segment your audience and send measurable email blasts.",
-    "summary_nl": "Je segmenteert je publiek en verstuurt meetbare e-mailcampagnes.",
+    "summary": "Segment your audience and send measurable email blasts; lists, social and campaigns are on the way.",
+    "summary_nl": "Je segmenteert je publiek en verstuurt meetbare e-mailcampagnes; lijsten, social en campagnes volgen.",
     "status": "stable",
-    "docsUrl": "openspec/specs/marketing-blast/spec.md"
+    "docsUrl": "docs/Features/marketing.md"
+  },
+  {
+    "slug": "marketing-lists-and-mailings",
+    "title": "Mailing lists and newsletters",
+    "title_nl": "Mailinglijsten en nieuwsbrieven",
+    "summary": "Run lists people subscribe to with double opt-in, and send newsletters from your own mail server.",
+    "summary_nl": "Je beheert lijsten waarop mensen zich met dubbele opt-in inschrijven en verstuurt nieuwsbrieven via je eigen mailserver.",
+    "status": "soon",
+    "docsUrl": "docs/Features/marketing.md"
+  },
+  {
+    "slug": "social-publishing",
+    "title": "Social publishing",
+    "title_nl": "Social media publiceren",
+    "summary": "Schedule and approve posts for company pages and colleagues' profiles, and see which posts perform.",
+    "summary_nl": "Je plant en keurt berichten goed voor bedrijfspagina's en profielen van collega's, en ziet welke berichten werken.",
+    "status": "soon",
+    "docsUrl": "docs/Features/marketing.md"
+  },
+  {
+    "slug": "search-and-competitor-intelligence",
+    "title": "Search and competitor intelligence",
+    "title_nl": "Zoek- en concurrentie-inzicht",
+    "summary": "See which keywords you rank for and which you miss, and follow what competitors publish.",
+    "summary_nl": "Je ziet op welke zoekwoorden je scoort en welke je mist, en volgt wat concurrenten publiceren.",
+    "status": "soon",
+    "docsUrl": "docs/Features/marketing.md"
   },
   {
     "slug": "loyalty-programme",

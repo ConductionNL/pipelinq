@@ -27,8 +27,6 @@ use OCA\Pipelinq\Listener\DealUpdatedListener;
 use OCA\Pipelinq\Listener\DeferredObjectWork;
 use OCA\Pipelinq\Listener\DeferredWorkGuard;
 use OCA\Pipelinq\Listener\ExpenseApprovalListener;
-use OCA\Pipelinq\Listener\ProjectCreationListener;
-use OCA\Pipelinq\Listener\ProjectPhaseStatusListener;
 use OCA\Pipelinq\Listener\SlaObjectCreatedListener;
 use OCA\Pipelinq\Listener\SlaObjectUpdatedListener;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -78,8 +76,6 @@ class DeferredObjectListenerJob extends ActorForwardedJob {
 	private const HANDLERS = [
 		DealCreatedListener::HANDLER_KEY => DealCreatedListener::class,
 		DealUpdatedListener::HANDLER_KEY => DealUpdatedListener::class,
-		ProjectCreationListener::HANDLER_KEY => ProjectCreationListener::class,
-		ProjectPhaseStatusListener::HANDLER_KEY => ProjectPhaseStatusListener::class,
 		ExpenseApprovalListener::HANDLER_KEY => ExpenseApprovalListener::class,
 		SlaObjectCreatedListener::HANDLER_KEY => SlaObjectCreatedListener::class,
 		SlaObjectUpdatedListener::HANDLER_KEY => SlaObjectUpdatedListener::class,

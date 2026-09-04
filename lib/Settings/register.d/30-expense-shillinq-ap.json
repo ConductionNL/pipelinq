@@ -57,11 +57,6 @@
             "description": "UUID of the related client (pipelinq client schema).",
             "title": "Client"
           },
-          "project": {
-            "type": "string",
-            "description": "UUID of the related project for billable pass-through cost routing.",
-            "title": "Project"
-          },
           "billable": {
             "type": "boolean",
             "description": "Whether this expense is billable to the linked project/client.",

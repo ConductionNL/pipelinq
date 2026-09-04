@@ -1894,7 +1894,6 @@
         "Thank you!": "Thank you!",
         "Thanks for your feedback.": "Thanks for your feedback.",
         "That time was just taken. Please choose another slot.": "That time was just taken. Please choose another slot.",
-        "The HTTPS endpoint of the Shillinq project ledger. Leave empty to disable ledger sync.": "The HTTPS endpoint of the Shillinq project ledger. Leave empty to disable ledger sync.",
         "The OpenConnector source that holds the warehouse credentials": "The OpenConnector source that holds the warehouse credentials",
         "The optional xWiki Nextcloud app is not installed. Pipelinq is falling back to the configured direct URL.": "The optional xWiki Nextcloud app is not installed. Pipelinq is falling back to the configured direct URL.",
         "The receipt is sent to the linked customer:": "The receipt is sent to the linked customer:",
@@ -3653,7 +3652,13 @@
         "Segment name": "Segment name",
         "Sender name": "Sender name",
         "Template name": "Template name",
-        "Use {{unsubscribe_link}} and a physical address so the compliance check passes.": "Use {{unsubscribe_link}} and a physical address so the compliance check passes."
+        "Use {{unsubscribe_link}} and a physical address so the compliance check passes.": "Use {{unsubscribe_link}} and a physical address so the compliance check passes.",
+        "Pending MFA secret": "Pending MFA secret",
+        "A second factor that has been set up but not yet confirmed with a code. It never counts as a working second factor.": "A second factor that has been set up but not yet confirmed with a code. It never counts as a working second factor.",
+        "The HTTPS endpoint Shillinq receives approved hours on. Leave empty to disable the handoff.": "The HTTPS endpoint Shillinq receives approved hours on. Leave empty to disable the handoff.",
+        "What the quarter is set to close, per owner.": "What the quarter is set to close, per owner.",
+        "Points, tiers and redemptions per loyalty programme.": "Points, tiers and redemptions per loyalty programme.",
+        "No projects for this client yet.": "No projects for this client yet."
     },
     "plurals": null
 }
