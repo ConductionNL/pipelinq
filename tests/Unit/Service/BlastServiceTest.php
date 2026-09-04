@@ -389,6 +389,32 @@ class BlastServiceTest extends TestCase {
 	}//end testSendBlastReportsNotFound()
 
 	/**
+	 * sendBlast refuses a Blast that names neither a Segment nor a mailing
+	 * list, and queues nothing. The guard sits ahead of audience resolution,
+	 * so a Blast with no audience never reaches the compliance check.
+	 *
+	 * @spec openspec/specs/marketing-blast/spec.md#a-blast-with-no-audience-is-refused
+	 *
+	 * @return void
+	 */
+	public function testSendBlastWithoutAudienceIsRefused(): void {
+		$this->objectService->store['blast-no-audience'] = [
+			'uuid' => 'blast-no-audience',
+			'segmentId' => '',
+			'listId' => '',
+			'templateId' => 'tmpl-1',
+			'channel' => 'email',
+			'status' => 'draft',
+		];
+
+		$summary = $this->service->sendBlast('blast-no-audience', false);
+
+		$this->assertSame('no-audience', $summary['status']);
+		$this->assertSame(0, $summary['queued']);
+		$this->assertSame([], $this->objectService->deliveries);
+	}//end testSendBlastWithoutAudienceIsRefused()
+
+	/**
 	 * updateBlastTotals recounts delivery statuses into the Blast totals
 	 * map matching the schema's keys.
 	 *

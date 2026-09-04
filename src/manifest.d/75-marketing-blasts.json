@@ -9,25 +9,29 @@
 					"id": "Segments",
 					"label": "Segments",
 					"icon": "AccountGroup",
-					"route": "Segments"
+					"route": "Segments",
+					"order": 10
 				},
 				{
 					"id": "Templates",
 					"label": "Templates",
 					"icon": "FileDocumentOutline",
-					"route": "Templates"
+					"route": "Templates",
+					"order": 20
 				},
 				{
 					"id": "Blasts",
 					"label": "Blasts",
 					"icon": "Email",
-					"route": "Blasts"
+					"route": "Blasts",
+					"order": 40
 				},
 				{
 					"id": "BlastPerformance",
 					"label": "Blast performance",
 					"icon": "ChartLine",
-					"route": "BlastPerformance"
+					"route": "BlastPerformance",
+					"order": 50
 				}
 			]
 		}
