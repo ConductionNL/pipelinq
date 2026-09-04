@@ -38,7 +38,7 @@ nieuw kwalificerende contacten automatisch meegenomen worden.
 ### 1.1 Open de segmentbouwer
 
 1. Ga naar **Marketing → Segments**.
-2. Klik rechtsboven op **+ New segment**.
+2. Klik rechtsboven op **New segment**.
 3. Geef het segment een duidelijke naam (bijv. *Gemeente prospects —
    Zuid-Holland*). De naam verschijnt in de wizard **New blast** en
    op het performance-dashboard.
@@ -98,7 +98,7 @@ hieronder).
 ### 2.1 Open de template-editor
 
 1. Ga naar **Marketing → Templates**.
-2. Klik **+ New template**.
+2. Klik **New template**.
 3. Kies het **kanaal** (e-mail of SMS).
 4. Geef de template een naam (bijv. *Q4 Outreach — Gemeenten*).
 
