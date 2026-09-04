@@ -5,7 +5,7 @@
 <meta name="generator" content="Docusaurus v3.10.2">
 <title data-rh="true">marketing-blasts | Pipelinq</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" property="og:image" content="https://pipelinq.conduction.nl/nl/img/og-pipelinq.png"><meta data-rh="true" name="twitter:image" content="https://pipelinq.conduction.nl/nl/img/og-pipelinq.png"><meta data-rh="true" property="og:url" content="https://pipelinq.conduction.nl/nl/docs/user/marketing-blasts/"><meta data-rh="true" property="og:locale" content="nl"><meta data-rh="true" property="og:locale:alternate" content="en"><meta data-rh="true" name="docusaurus_locale" content="nl"><meta data-rh="true" name="docsearch:language" content="nl"><meta data-rh="true" name="twitter:site" content="@ConductionNL"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:type" content="website"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="marketing-blasts | Pipelinq"><meta data-rh="true" name="description" content="&lt;!--"><meta data-rh="true" property="og:description" content="&lt;!--"><link data-rh="true" rel="icon" href="/nl/img/favicon.svg"><link data-rh="true" rel="canonical" href="https://pipelinq.conduction.nl/nl/docs/user/marketing-blasts/"><link data-rh="true" rel="alternate" href="https://pipelinq.conduction.nl/docs/user/marketing-blasts/" hreflang="en"><link data-rh="true" rel="alternate" href="https://pipelinq.conduction.nl/nl/docs/user/marketing-blasts/" hreflang="nl"><link data-rh="true" rel="alternate" href="https://pipelinq.conduction.nl/docs/user/marketing-blasts/" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"marketing-blasts","item":"https://pipelinq.conduction.nl/nl/docs/user/marketing-blasts"}]}</script><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","@id":"https://pipelinq.conduction.nl/nl/docs/user/marketing-blasts#article","mainEntityOfPage":"https://pipelinq.conduction.nl/nl/docs/user/marketing-blasts","headline":"marketing-blasts","inLanguage":"en","publisher":{"@id":"https://www.conduction.nl/#org"},"description":"<!--","author":{"@type":"Organization","name":"Conduction","@id":"https://www.conduction.nl/#org"}}</script><script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","@id":"https://www.conduction.nl/#org","name":"Conduction B.V.","alternateName":"Conduction","url":"https://www.conduction.nl/","logo":"https://www.conduction.nl/img/brand/avatar-conduction-gold-on-white.svg","foundingDate":"2019","description":"Dutch open-source software company building EUPL-1.2 apps for the Nextcloud workspace.","address":{"@type":"PostalAddress","streetAddress":"Lauriergracht 14h","postalCode":"1016 RR","addressLocality":"Amsterdam","addressCountry":"NL"},"email":"info@conduction.nl","telephone":"+31-85-303-6840","taxID":"NL860784241B01","vatID":"NL860784241B01","identifier":{"@type":"PropertyValue","propertyID":"KvK","value":"76741850"},"sameAs":["https://codeberg.org/Conduction","https://www.linkedin.com/company/conduction/"]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","@id":"https://pipelinq.conduction.nl/#website","url":"https://pipelinq.conduction.nl/","name":"Pipelinq","publisher":{"@id":"https://www.conduction.nl/#org"},"inLanguage":["en","nl"]}</script><link rel="stylesheet" href="/nl/assets/css/styles.e0ad784d.css">
-<script src="/nl/assets/js/runtime~main.63929dc3.js" defer="defer"></script>
+<script src="/nl/assets/js/runtime~main.6fa46c3b.js" defer="defer"></script>
 <script src="/nl/assets/js/main.26df80c0.js" defer="defer"></script>
 </head>
 <body>
@@ -241,6 +241,25 @@ deleting or archiving the blast removes its tracking data with it.</li>
 user-agent; the unsubscribe link and the required physical-address
 footer are never rewritten, so unsubscribing and compliance
 reporting are unaffected by enabling this setting.</li>
+</ul>
+<h4 class="anchor anchorTargetStickyNavbar_Vzrq" id="reporting-to-portaliq-traffic">Reporting to Portaliq traffic<a href="#reporting-to-portaliq-traffic" class="hash-link" aria-label="Direct link naar Reporting to Portaliq traffic" title="Direct link naar Reporting to Portaliq traffic" translate="no">​</a></h4>
+<p>Run a portal in Portaliq next to Pipelinq? Then you can see mail opens
+and clicks next to site visits in that portal&#x27;s traffic reports.</p>
+<ul>
+<li class="">An admin sets <strong><code>blast.traffic_portal</code></strong> under <strong>Admin settings,
+Pipelinq</strong> to the portal slug in Portaliq. Leave it empty to keep
+mail tracking inside Pipelinq. Empty is the default.</li>
+<li class="">Every recorded open or click is then also reported to that portal as
+an <code>email_open</code> or <code>email_click</code> traffic event. The event carries the
+blast, the contact reference, the campaign name and the clicked link.
+It never carries an email address, IP address or user agent.</li>
+<li class="">The blast delivery in Pipelinq stays the system of record. The
+report runs after the delivery is written. When Portaliq is not
+installed, or the report fails, the open or click is still recorded
+here and the pixel or redirect still works.</li>
+<li class="">Portaliq attributes mail traffic by campaign, not by person. A mail
+open and a site visit only link when the site visit carries the same
+campaign parameters.</li>
 </ul>
 <p>To stop a blast that is currently sending, click <strong>Cancel</strong>. All
 queued deliveries are aborted; deliveries already handed to the
