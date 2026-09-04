@@ -80,7 +80,8 @@ class ArticleController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function index(int $page = 1, int $limit = 20): JSONResponse {
-		if ($this->requireCrmUser() === null) {
+		$uid = $this->requireCrmUser();
+		if ($uid === null) {
 			return $this->refuse();
 		}
 
@@ -98,7 +99,8 @@ class ArticleController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function show(string $id): JSONResponse {
-		if ($this->requireCrmUser() === null) {
+		$uid = $this->requireCrmUser();
+		if ($uid === null) {
 			return $this->refuse();
 		}
 
@@ -143,7 +145,8 @@ class ArticleController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function update(string $id): JSONResponse {
-		if ($this->requireCrmUser() === null) {
+		$uid = $this->requireCrmUser();
+		if ($uid === null) {
 			return $this->refuse();
 		}
 
@@ -161,7 +164,8 @@ class ArticleController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function publish(string $id): JSONResponse {
-		if ($this->requireCrmUser() === null) {
+		$uid = $this->requireCrmUser();
+		if ($uid === null) {
 			return $this->refuse();
 		}
 
@@ -179,7 +183,8 @@ class ArticleController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function archive(string $id): JSONResponse {
-		if ($this->requireCrmUser() === null) {
+		$uid = $this->requireCrmUser();
+		if ($uid === null) {
 			return $this->refuse();
 		}
 
@@ -201,7 +206,8 @@ class ArticleController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function transition(string $id): JSONResponse {
-		if ($this->requireCrmUser() === null) {
+		$uid = $this->requireCrmUser();
+		if ($uid === null) {
 			return $this->refuse();
 		}
 
@@ -223,7 +229,8 @@ class ArticleController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function usages(string $id): JSONResponse {
-		if ($this->requireCrmUser() === null) {
+		$uid = $this->requireCrmUser();
+		if ($uid === null) {
 			return $this->refuse();
 		}
 
