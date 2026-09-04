@@ -97,7 +97,28 @@
 				</p>
 			</section>
 
-			<!-- Step 5: schedule -->
+			<!-- Step 5: transport -->
+			<section v-if="step === 'transport'" class="blast-form__panel">
+				<NcSelect
+					v-model="selectedTransport"
+					:options="transports"
+					:inputLabel="t('pipelinq', 'Send through')"
+					label="label"
+					:loading="transportsLoading" />
+				<p class="blast-form__hint">
+					{{
+						t(
+							'pipelinq',
+							'Leave empty to send through the default transport.',
+						)
+					}}
+				</p>
+				<p v-if="transportsError" class="blast-form__error" role="alert">
+					{{ transportsError }}
+				</p>
+			</section>
+
+			<!-- Step 6: schedule -->
 			<section v-if="step === 'schedule'" class="blast-form__panel">
 				<label class="blast-form__label" for="blast-form-scheduled-for">
 					{{ t('pipelinq', 'Send at') }}
@@ -112,7 +133,7 @@
 				</p>
 			</section>
 
-			<!-- Step 6: A/B -->
+			<!-- Step 7: A/B -->
 			<section v-if="step === 'ab'" class="blast-form__panel">
 				<label class="blast-form__checkbox">
 					<input v-model="abEnabled" type="checkbox" />
@@ -196,6 +217,7 @@ const STEPS = [
 	{ key: 'segment', labelKey: 'Segment' },
 	{ key: 'template', labelKey: 'Template' },
 	{ key: 'channel', labelKey: 'Channel' },
+	{ key: 'transport', labelKey: 'Transport' },
 	{ key: 'schedule', labelKey: 'Schedule' },
 	{ key: 'ab', labelKey: 'A/B split' },
 ]
@@ -221,6 +243,7 @@ export default {
 				templateId: '',
 				channel: 'email',
 				connectorSourceId: '',
+				transportId: '',
 				scheduledFor: '',
 				abSplitPercent: 50,
 			},
@@ -230,13 +253,17 @@ export default {
 			templates: [],
 			connectorSources: [],
 			connectorSourcesError: '',
+			transports: [],
+			transportsError: '',
 			selectedSegment: null,
 			selectedTemplate: null,
 			selectedChannel: 'email',
 			selectedConnectorSource: null,
+			selectedTransport: null,
 			segmentsLoading: false,
 			templatesLoading: false,
 			connectorSourcesLoading: false,
+			transportsLoading: false,
 			templateValidationError: '',
 			showConsentModal: false,
 			missingConsentContacts: [],
@@ -362,6 +389,10 @@ export default {
 			this.model.connectorSourceId = option?.id || ''
 		},
 
+		selectedTransport(option) {
+			this.model.transportId = option?.id || ''
+		},
+
 		abEnabled(on) {
 			if (!on) {
 				this.model.abSplitPercent = 100
@@ -375,6 +406,7 @@ export default {
 		this.loadSegments()
 		this.loadTemplates()
 		this.loadConnectorSources()
+		this.loadTransports()
 	},
 
 	methods: {
@@ -454,6 +486,44 @@ export default {
 				)
 			} finally {
 				this.connectorSourcesLoading = false
+			}
+		},
+
+		/**
+		 * Load the tenant's mailTransport rows for the transport step,
+		 * pre-selecting the one marked `default = true` so a user who never
+		 * touches this step still gets the sensible transport.
+		 *
+		 * @spec openspec/changes/marketing-mail-transports/specs/marketing-mail-transports/spec.md#requirement-the-wizard-offers-a-transport-step
+		 */
+		async loadTransports() {
+			this.transportsLoading = true
+			this.transportsError = ''
+			try {
+				const { data } = await axios.get(
+					generateUrl(
+						'/apps/openregister/api/objects/pipelinq/mailTransport'
+							+ '?active=true&_limit=200',
+					),
+				)
+				const list = data?.results || data?.data || data || []
+				this.transports = list.map((t) => ({
+					id: t.id || t.uuid,
+					label: t.displayName || t.id,
+					default: !!t.default,
+				}))
+				const defaultTransport = this.transports.find((t) => t.default)
+				if (defaultTransport) {
+					this.selectedTransport = defaultTransport
+				}
+			} catch {
+				this.transports = []
+				this.transportsError = this.t(
+					'pipelinq',
+					'Could not load mail transports. The blast will send through the default transport.',
+				)
+			} finally {
+				this.transportsLoading = false
 			}
 		},
 
@@ -621,6 +691,7 @@ export default {
 					templateId: this.model.templateId,
 					channel: this.model.channel,
 					connectorSourceId: this.model.connectorSourceId,
+					transportId: this.model.transportId,
 					scheduledFor: this.model.scheduledFor || null,
 					abSplitPercent: this.abEnabled ? this.model.abSplitPercent : 100,
 				}

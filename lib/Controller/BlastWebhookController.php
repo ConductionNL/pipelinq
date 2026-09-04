@@ -55,6 +55,18 @@ use Throwable;
  *   - blast.webhook_secret.sendgrid
  *   - blast.webhook_secret.ses
  *   - blast.webhook_secret.twilio
+ *   - blast.webhook_secret.brevo
+ *   - blast.webhook_secret.mailjet
+ *   - blast.webhook_secret.mailgun
+ *   - blast.webhook_secret.postmark
+ *
+ * The four mail-transports-added providers (Brevo, Mailjet, Mailgun,
+ * Postmark) each have a different native signature scheme (or, for
+ * Postmark, none at all), so — exactly like SendGrid/SES/Twilio already
+ * do — every endpoint prefers the shared `X-Pipelinq-Signature` header over
+ * the provider-native one via {@see extractSignatureHeader()}. An operator
+ * who wants to verify a provider's own native signature instead fronts the
+ * webhook with a reverse proxy that re-signs it into `X-Pipelinq-Signature`.
  *
  * On invalid signature the controller returns 401 (NOT 422) — providers
  * treat 401 as a permanent failure (no retry) while 422 may trigger
@@ -228,6 +240,324 @@ class BlastWebhookController extends Controller {
 
 		return new JSONResponse(['ok' => true, 'accepted' => 1]);
 	}//end twilio()
+
+	/**
+	 * POST /api/blast-webhooks/brevo — Brevo (Sendinblue) transactional
+	 * event ingest.
+	 *
+	 * Brevo POSTs either a single event object or a JSON array, depending
+	 * on the tenant's webhook configuration — both are accepted.
+	 *
+	 * @return JSONResponse Acknowledgement (`accepted` count).
+	 *
+	 * @spec openspec/changes/marketing-mail-transports/specs/marketing-blast-delivery/spec.md#requirement-additional-provider-webhooks-map-to-the-same-consent-withdrawal-path
+	 */
+	#[PublicPage]
+	#[NoCSRFRequired]
+	#[AnonRateLimit(limit: 300, period: 60)]
+	public function brevo(): JSONResponse {
+		$rawBody = $this->readRawBody();
+		$signature = $this->extractSignatureHeader(fallback: 'X-Sib-Signature');
+
+		if ($this->verifySignature(provider: 'brevo', rawBody: $rawBody, signature: $signature) === false) {
+			$this->logger->warning('BlastWebhookController.brevo: invalid signature', ['ip' => $this->request->getRemoteAddress()]);
+			return new JSONResponse(['error' => 'Invalid webhook signature'], Http::STATUS_UNPROCESSABLE_ENTITY);
+		}
+
+		$decoded = json_decode($rawBody, true);
+		if (is_array($decoded) === false) {
+			return new JSONResponse(['error' => 'Invalid payload'], Http::STATUS_BAD_REQUEST);
+		}
+
+		$events = $this->asEventList(decoded: $decoded);
+		$accepted = 0;
+		foreach ($events as $event) {
+			$this->blastSendJob->enqueueWebhookEvent(provider: 'brevo', event: $this->normaliseBrevoEvent(event: $event));
+			$accepted++;
+		}
+
+		return new JSONResponse(['ok' => true, 'accepted' => $accepted]);
+	}//end brevo()
+
+	/**
+	 * POST /api/blast-webhooks/mailjet — Mailjet event ingest.
+	 *
+	 * Mailjet POSTs a JSON array of event objects per batch.
+	 *
+	 * @return JSONResponse Acknowledgement (`accepted` count).
+	 *
+	 * @spec openspec/changes/marketing-mail-transports/specs/marketing-blast-delivery/spec.md#requirement-additional-provider-webhooks-map-to-the-same-consent-withdrawal-path
+	 */
+	#[PublicPage]
+	#[NoCSRFRequired]
+	#[AnonRateLimit(limit: 300, period: 60)]
+	public function mailjet(): JSONResponse {
+		$rawBody = $this->readRawBody();
+		$signature = $this->extractSignatureHeader(fallback: 'X-Mailjet-Signature');
+
+		if ($this->verifySignature(provider: 'mailjet', rawBody: $rawBody, signature: $signature) === false) {
+			$this->logger->warning('BlastWebhookController.mailjet: invalid signature', ['ip' => $this->request->getRemoteAddress()]);
+			return new JSONResponse(['error' => 'Invalid webhook signature'], Http::STATUS_UNPROCESSABLE_ENTITY);
+		}
+
+		$decoded = json_decode($rawBody, true);
+		if (is_array($decoded) === false) {
+			return new JSONResponse(['error' => 'Invalid payload'], Http::STATUS_BAD_REQUEST);
+		}
+
+		$events = $this->asEventList(decoded: $decoded);
+		$accepted = 0;
+		foreach ($events as $event) {
+			$this->blastSendJob->enqueueWebhookEvent(provider: 'mailjet', event: $this->normaliseMailjetEvent(event: $event));
+			$accepted++;
+		}
+
+		return new JSONResponse(['ok' => true, 'accepted' => $accepted]);
+	}//end mailjet()
+
+	/**
+	 * POST /api/blast-webhooks/mailgun — Mailgun event ingest.
+	 *
+	 * Mailgun's own signature scheme is HMAC-SHA256 over
+	 * `timestamp . token` (embedded in the body's `signature` object), not
+	 * over the raw body — irrelevant here since verification goes through
+	 * the shared `X-Pipelinq-Signature` header like every other provider.
+	 * One event per POST, nested under `event-data`.
+	 *
+	 * @return JSONResponse Acknowledgement.
+	 *
+	 * @spec openspec/changes/marketing-mail-transports/specs/marketing-blast-delivery/spec.md#requirement-additional-provider-webhooks-map-to-the-same-consent-withdrawal-path
+	 */
+	#[PublicPage]
+	#[NoCSRFRequired]
+	#[AnonRateLimit(limit: 300, period: 60)]
+	public function mailgun(): JSONResponse {
+		$rawBody = $this->readRawBody();
+		$signature = $this->extractSignatureHeader(fallback: 'X-Mailgun-Signature-256');
+
+		if ($this->verifySignature(provider: 'mailgun', rawBody: $rawBody, signature: $signature) === false) {
+			$this->logger->warning('BlastWebhookController.mailgun: invalid signature', ['ip' => $this->request->getRemoteAddress()]);
+			return new JSONResponse(['error' => 'Invalid webhook signature'], Http::STATUS_UNPROCESSABLE_ENTITY);
+		}
+
+		$envelope = json_decode($rawBody, true);
+		if (is_array($envelope) === false) {
+			return new JSONResponse(['error' => 'Invalid payload'], Http::STATUS_BAD_REQUEST);
+		}
+
+		$eventData = ($envelope['event-data'] ?? $envelope);
+		if (is_array($eventData) === false) {
+			$eventData = [];
+		}
+
+		$this->blastSendJob->enqueueWebhookEvent(provider: 'mailgun', event: $this->normaliseMailgunEvent(event: $eventData));
+
+		return new JSONResponse(['ok' => true, 'accepted' => 1]);
+	}//end mailgun()
+
+	/**
+	 * POST /api/blast-webhooks/postmark — Postmark event ingest.
+	 *
+	 * Postmark has no native payload signature at all (its webhook security
+	 * model is Basic Auth / an allow-listed source IP) — verification is
+	 * exclusively via the shared `X-Pipelinq-Signature` header. One event
+	 * per POST, discriminated by `RecordType`.
+	 *
+	 * @return JSONResponse Acknowledgement.
+	 *
+	 * @spec openspec/changes/marketing-mail-transports/specs/marketing-blast-delivery/spec.md#requirement-additional-provider-webhooks-map-to-the-same-consent-withdrawal-path
+	 */
+	#[PublicPage]
+	#[NoCSRFRequired]
+	#[AnonRateLimit(limit: 300, period: 60)]
+	public function postmark(): JSONResponse {
+		$rawBody = $this->readRawBody();
+		$signature = $this->extractSignatureHeader(fallback: 'X-Pipelinq-Signature');
+
+		if ($this->verifySignature(provider: 'postmark', rawBody: $rawBody, signature: $signature) === false) {
+			$this->logger->warning('BlastWebhookController.postmark: invalid signature', ['ip' => $this->request->getRemoteAddress()]);
+			return new JSONResponse(['error' => 'Invalid webhook signature'], Http::STATUS_UNPROCESSABLE_ENTITY);
+		}
+
+		$event = json_decode($rawBody, true);
+		if (is_array($event) === false) {
+			return new JSONResponse(['error' => 'Invalid payload'], Http::STATUS_BAD_REQUEST);
+		}
+
+		$this->blastSendJob->enqueueWebhookEvent(provider: 'postmark', event: $this->normalisePostmarkEvent(event: $event));
+
+		return new JSONResponse(['ok' => true, 'accepted' => 1]);
+	}//end postmark()
+
+	/**
+	 * Normalise a decoded webhook body into a list of event arrays —
+	 * accepts either a single event object or a JSON array of events.
+	 *
+	 * @param array<int|string, mixed> $decoded Decoded JSON body.
+	 *
+	 * @return array<int, array<string, mixed>> List of event arrays.
+	 */
+	private function asEventList(array $decoded): array {
+		if (array_is_list($decoded) === true) {
+			return array_values(array_filter($decoded, static fn ($item) => is_array($item) === true));
+		}
+
+		return [$decoded];
+	}//end asEventList()
+
+	/**
+	 * Normalise a Brevo event into our internal event shape.
+	 *
+	 * @param array<string, mixed> $event Raw Brevo event.
+	 *
+	 * @return array<string, mixed> Normalised event.
+	 */
+	private function normaliseBrevoEvent(array $event): array {
+		$nativeType = strtolower((string)($event['event'] ?? ''));
+		$map = [
+			'delivered' => 'delivered',
+			'hard_bounce' => 'bounce',
+			'soft_bounce' => 'bounce',
+			'blocked' => 'bounce',
+			'invalid_email' => 'bounce',
+			'spam' => 'complaint',
+			'unsubscribed' => 'unsubscribe',
+			'opened' => 'open',
+			'click' => 'click',
+		];
+		$eventType = ($map[$nativeType] ?? $nativeType);
+
+		$bounceTypeOut = 'soft';
+		if ($nativeType === 'hard_bounce' || $nativeType === 'blocked' || $nativeType === 'invalid_email') {
+			$bounceTypeOut = 'hard';
+		}
+
+		return [
+			'eventType' => $eventType,
+			'bounceType' => $bounceTypeOut,
+			'providerId' => (string)($event['message-id'] ?? $event['id'] ?? ''),
+			'email' => (string)($event['email'] ?? ''),
+			'timestamp' => (string)($event['date'] ?? ''),
+			'reason' => (string)($event['reason'] ?? ''),
+		];
+	}//end normaliseBrevoEvent()
+
+	/**
+	 * Normalise a Mailjet event into our internal event shape.
+	 *
+	 * @param array<string, mixed> $event Raw Mailjet event.
+	 *
+	 * @return array<string, mixed> Normalised event.
+	 */
+	private function normaliseMailjetEvent(array $event): array {
+		$nativeType = strtolower((string)($event['event'] ?? ''));
+		$map = [
+			'sent' => 'delivered',
+			'open' => 'open',
+			'click' => 'click',
+			'bounce' => 'bounce',
+			'blocked' => 'bounce',
+			'spam' => 'complaint',
+			'unsub' => 'unsubscribe',
+		];
+		$eventType = ($map[$nativeType] ?? $nativeType);
+
+		$bounceTypeOut = 'soft';
+		if ((bool)($event['hard_bounce'] ?? false) === true || $nativeType === 'blocked') {
+			$bounceTypeOut = 'hard';
+		}
+
+		$timestamp = ($event['time'] ?? '');
+		if (is_numeric($timestamp) === true) {
+			$timestamp = gmdate('Y-m-d\TH:i:s\Z', (int)$timestamp);
+		}
+
+		return [
+			'eventType' => $eventType,
+			'bounceType' => $bounceTypeOut,
+			'providerId' => (string)($event['MessageID'] ?? ''),
+			'email' => (string)($event['email'] ?? ''),
+			'timestamp' => (string)$timestamp,
+			'reason' => (string)($event['error_related_to'] ?? $event['error'] ?? ''),
+		];
+	}//end normaliseMailjetEvent()
+
+	/**
+	 * Normalise a Mailgun `event-data` object into our internal event shape.
+	 *
+	 * @param array<string, mixed> $event Raw Mailgun `event-data`.
+	 *
+	 * @return array<string, mixed> Normalised event.
+	 */
+	private function normaliseMailgunEvent(array $event): array {
+		$nativeType = strtolower((string)($event['event'] ?? ''));
+		$map = [
+			'delivered' => 'delivered',
+			'failed' => 'bounce',
+			'opened' => 'open',
+			'clicked' => 'click',
+			'unsubscribed' => 'unsubscribe',
+			'complained' => 'complaint',
+		];
+		$eventType = ($map[$nativeType] ?? $nativeType);
+
+		$severity = strtolower((string)($event['severity'] ?? ''));
+		$bounceTypeOut = 'soft';
+		if ($severity === 'permanent') {
+			$bounceTypeOut = 'hard';
+		}
+
+		$timestamp = ($event['timestamp'] ?? '');
+		if (is_numeric($timestamp) === true) {
+			$timestamp = gmdate('Y-m-d\TH:i:s\Z', (int)$timestamp);
+		}
+
+		return [
+			'eventType' => $eventType,
+			'bounceType' => $bounceTypeOut,
+			'providerId' => (string)($event['message']['headers']['message-id'] ?? $event['id'] ?? ''),
+			'email' => (string)($event['recipient'] ?? ''),
+			'timestamp' => (string)$timestamp,
+			'reason' => (string)($event['reason'] ?? $event['delivery-status']['description'] ?? ''),
+		];
+	}//end normaliseMailgunEvent()
+
+	/**
+	 * Normalise a Postmark event into our internal event shape.
+	 *
+	 * @param array<string, mixed> $event Raw Postmark event.
+	 *
+	 * @return array<string, mixed> Normalised event.
+	 */
+	private function normalisePostmarkEvent(array $event): array {
+		$recordType = (string)($event['RecordType'] ?? '');
+		$map = [
+			'Delivery' => 'delivered',
+			'Bounce' => 'bounce',
+			'SpamComplaint' => 'complaint',
+			'Open' => 'open',
+			'Click' => 'click',
+		];
+		$eventType = ($map[$recordType] ?? strtolower($recordType));
+		if ($recordType === 'SubscriptionChange' && (bool)($event['SuppressSending'] ?? false) === true) {
+			$eventType = 'unsubscribe';
+		}
+
+		$bounceType = strtolower((string)($event['Type'] ?? ''));
+		$bounceTypeOut = 'soft';
+		if (str_contains($bounceType, 'hard') === true || $bounceType === 'blocked') {
+			$bounceTypeOut = 'hard';
+		}
+
+		return [
+			'eventType' => $eventType,
+			'bounceType' => $bounceTypeOut,
+			'providerId' => (string)($event['MessageID'] ?? ''),
+			'email' => (string)($event['Email'] ?? $event['Recipient'] ?? ''),
+			'timestamp' => (string)($event['DeliveredAt'] ?? $event['BouncedAt'] ?? $event['ReceivedAt'] ?? ''),
+			'reason' => (string)($event['Description'] ?? ''),
+		];
+	}//end normalisePostmarkEvent()
 
 	/**
 	 * Normalise + enqueue a SendGrid event batch.

@@ -417,6 +417,17 @@ return [
         ['name' => 'blastWebhook#sendgrid', 'url' => '/api/blast-webhooks/sendgrid', 'verb' => 'POST'],
         ['name' => 'blastWebhook#ses',      'url' => '/api/blast-webhooks/ses',      'verb' => 'POST'],
         ['name' => 'blastWebhook#twilio',   'url' => '/api/blast-webhooks/twilio',   'verb' => 'POST'],
+        // marketing-mail-transports: four more bulk-provider webhooks,
+        // same signature-verified/PublicPage shape as the three above.
+        ['name' => 'blastWebhook#brevo',    'url' => '/api/blast-webhooks/brevo',    'verb' => 'POST'],
+        ['name' => 'blastWebhook#mailjet',  'url' => '/api/blast-webhooks/mailjet',  'verb' => 'POST'],
+        ['name' => 'blastWebhook#mailgun',  'url' => '/api/blast-webhooks/mailgun',  'verb' => 'POST'],
+        ['name' => 'blastWebhook#postmark', 'url' => '/api/blast-webhooks/postmark', 'verb' => 'POST'],
+
+        // marketing-mail-transports: deliverability panel's SPF/DKIM/DMARC
+        // check (AuthorizedAdminSetting; not CRUD, so it is not on
+        // useObjectStore). camelCase slug matches MailTransportController.
+        ['name' => 'mailTransport#checkDeliverability', 'url' => '/api/mail-transports/{id}/check-deliverability', 'verb' => 'POST'],
 
         // First-party marketing-email open/click tracking (HMAC-signed
         // tokens, PublicPage, fail-closed) — marketing-email-open-click-tracking.

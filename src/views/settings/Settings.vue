@@ -348,6 +348,7 @@
 		<!-- Channels & telephony. Configuration, not an operator surface, so it
 		     lives here rather than in the app nav (nav-ia-cleanup). -->
 		<MessagingSettings v-if="isAdmin && isConfigured" />
+		<DeliverabilitySettings v-if="isAdmin && isConfigured" />
 		<CtiPage v-if="isAdmin && isConfigured" />
 
 		<!-- Point of Sale configuration. `PaymentSettingsForm` (PSP providers —
@@ -385,6 +386,8 @@ import AgentProfileSettings from '../../components/admin/AgentProfileSettings.vu
 import ForecastSettings from '../../components/admin/ForecastSettings.vue'
 import SkillSettings from '../../components/admin/SkillSettings.vue'
 import CtiPage from './CtiPage.vue'
+// marketing-mail-transports: transport list + SPF/DKIM/DMARC panel.
+import DeliverabilitySettings from './DeliverabilitySettings.vue'
 import ExportConfigurationSettings from './ExportConfigurationSettings.vue'
 // Configuration surfaces moved off the app nav onto this admin page
 // (nav-ia-cleanup): channels, telephony, and the POS master-data.
@@ -407,6 +410,7 @@ export default {
 	name: 'PipelinqAdminSettings',
 	components: {
 		MessagingSettings,
+		DeliverabilitySettings,
 		CtiPage,
 		PaymentSettingsForm,
 		PosTenderTypeManager,

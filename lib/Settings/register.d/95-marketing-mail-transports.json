@@ -1,5 +1,5 @@
 {
-  "$comment": "ADR-037 register fragment (marketing-mail-transports). Adds the mailTransport schema — a per-tenant sending route for the marketing blast engine — and a transportId reference on the existing blast schema (95-marketing-segmentation-blast.json). components.registers.pipelinq.schemas and components.objects are additive-list paths (ConfigFileLoaderService::ADDITIVE_LIST_PATHS), so this fragment unions its schema slug and seed objects onto the monolith and its sibling fragments rather than replacing them. mailTransport never stores a provider credential: a provider-kind row carries only a connectorSourceId reference (ADR-064/067/091, mirroring channelProvider.sourceId in 80-whatsapp-sms-channel.json) and a mailAccount-kind row carries only the Mail app's numeric account id. The instance-kind row needs neither — IMailer is always present.",
+  "$comment": "ADR-037 register fragment (marketing-mail-transports). Adds the mailTransport schema, a per-tenant sending route for the marketing blast engine, and a transportId reference on the existing blast schema (95-marketing-segmentation-blast.json). components.registers.pipelinq.schemas and components.objects are additive-list paths (ConfigFileLoaderService::ADDITIVE_LIST_PATHS), so this fragment unions its schema slug and seed objects onto the monolith and its sibling fragments rather than replacing them. mailTransport never stores a provider credential: a provider-kind row carries only a connectorSourceId reference (ADR-064/067/091, mirroring channelProvider.sourceId in 80-whatsapp-sms-channel.json) and a mailAccount-kind row carries only the Mail app's numeric account id. The instance-kind row needs neither: IMailer is always present.",
   "components": {
     "registers": {
       "pipelinq": {
@@ -15,7 +15,7 @@
         "icon": "EmailFastOutline",
         "version": "1.0.0",
         "summary": "A per-tenant email sending route: the instance mail server, a sender's Mail account, or a bulk provider.",
-        "description": "MailTransport names one route a blast can send through. kind=instance uses the Nextcloud instance's own mail server (IMailer) and needs no further configuration — every tenant gets one, seeded and marked default. kind=mailAccount sends through the sender's own Nextcloud Mail account (mailAccountRef, the Mail app's numeric account id) for low-volume sends. kind=provider sends through a bulk email provider (Amazon SES, Brevo, Mailjet, SendGrid, Mailgun or Postmark) addressed by connectorSourceId — credentials live on that OpenConnector source, never here. Exactly one transport should carry default=true; MailTransportService falls back to it when a blast names no transportId. dailyLimit (0 = no cap) is enforced against sentToday, which resets at dailyLimitResetAt. dkimVerified and dmarcStatus cache the deliverability panel's DNS lookup for senderDomain so the panel does not re-query DNS on every page load.",
+        "description": "MailTransport names one route a blast can send through. kind=instance uses the Nextcloud instance's own mail server (IMailer) and needs no further configuration: every tenant gets one, seeded and marked default. kind=mailAccount sends through the sender's own Nextcloud Mail account (mailAccountRef, the Mail app's numeric account id) for low-volume sends. kind=provider sends through a bulk email provider (Amazon SES, Brevo, Mailjet, SendGrid, Mailgun or Postmark) addressed by connectorSourceId; credentials live on that OpenConnector source, never here. Exactly one transport should carry default=true; MailTransportService falls back to it when a blast names no transportId. dailyLimit (0 = no cap) is enforced against sentToday, which resets at dailyLimitResetAt. dkimVerified and dmarcStatus cache the deliverability panel's DNS lookup for senderDomain so the panel does not re-query DNS on every page load.",
         "x-schema-org": "schema:ContactPoint",
         "required": [
           "kind",
@@ -61,6 +61,11 @@
             "type": "string",
             "description": "The Nextcloud Mail app's numeric account id (AccountService::find expects an int) for a kind=mailAccount transport, stored as a numeric string. Required when kind=mailAccount.",
             "title": "Mail Account Reference"
+          },
+          "mailAccountUserId": {
+            "type": "string",
+            "description": "The Nextcloud user id that owns mailAccountRef. The Mail app scopes account lookups per user (AccountService::find(userId, id)), so this is required alongside mailAccountRef when kind=mailAccount: it is not optional metadata, it is the IDOR guard.",
+            "title": "Mail Account Owner"
           },
           "senderDomain": {
             "type": "string",
@@ -166,8 +171,9 @@
           "slug": "sender-mail-account"
         },
         "kind": "mailAccount",
-        "displayName": "Advies & Zo — sender's Mail account",
+        "displayName": "Advies & Zo, sender's Mail account",
         "mailAccountRef": "1",
+        "mailAccountUserId": "advies-en-zo-sender",
         "senderDomain": "advieszo.example.nl",
         "dailyLimit": 100,
         "sentToday": 0,
@@ -185,7 +191,7 @@
         },
         "kind": "provider",
         "provider": "sendgrid",
-        "displayName": "Zonnig Reizen — SendGrid bulk newsletter",
+        "displayName": "Zonnig Reizen, SendGrid bulk newsletter",
         "connectorSourceId": "openconnector-sendgrid-prod",
         "senderDomain": "zonnigreizen.example.nl",
         "dailyLimit": 5000,
