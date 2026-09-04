@@ -129,7 +129,7 @@
 		{
 			"id": "Leads",
 			"label": "Leads",
-			"icon": "AccountArrowRightOutline",
+			"icon": "CashMultiple",
 			"route": "Leads",
 			"order": 40
 		},
@@ -2022,7 +2022,9 @@
 				"description": "Every report Pipelinq offers, in one place. Pick a report to open it.",
 				"categories": {
 					"volume": "Volume and channels",
-					"people": "People and performance"
+					"people": "People and performance",
+					"revenue": "Revenue and forecast",
+					"loyalty": "Customer loyalty"
 				},
 				"cards": [
 					{
@@ -2056,6 +2058,22 @@
 						"icon": "AccountGroup",
 						"category": "people",
 						"route": "AgentPerformanceView"
+					},
+					{
+						"id": "Forecast",
+						"label": "Forecast",
+						"description": "What the quarter is set to close, per owner.",
+						"icon": "ChartTimelineVariant",
+						"category": "revenue",
+						"route": "Forecast"
+					},
+					{
+						"id": "LoyaltyReporting",
+						"label": "Loyalty reporting",
+						"description": "Points, tiers and redemptions per loyalty programme.",
+						"icon": "Star",
+						"category": "loyalty",
+						"route": "LoyaltyReporting"
 					}
 				]
 			}

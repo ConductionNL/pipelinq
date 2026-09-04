@@ -48,6 +48,12 @@ import { openApp, revealNavEntryByTestId } from './helpers/pipelinq.ts'
  * `/index.php/apps/pipelinq/...`, and vue-router emits whichever base the page
  * was loaded under. Asserting the full href would pin the test to one of the
  * two and fail on the other for a reason that is not a routing defect.
+ *
+ * `Forecast` used to be listed here. It is a report, and ADR-112 says a report
+ * is a card on the Reports page, not a sidebar leaf, so `menu-layout.json`
+ * retires the entry. `/forecast` is still routable and still asserted, by
+ * `pages.spec.ts` as a deep link and by `spec-coverage/forecast.spec.ts`
+ * through the Reports page. Do not add it back without moving the report back.
  */
 const REQUIRED_ENTRIES: Record<string, string> = {
 	Dashboard: '/',
@@ -62,7 +68,6 @@ const REQUIRED_ENTRIES: Record<string, string> = {
 	Contracts: '/contracts',
 	MyWork: '/my-work',
 	Prospects: '/prospects',
-	Forecast: '/forecast',
 	Services: '/services',
 	Resources: '/resources',
 	Bookings: '/bookings',
