@@ -139,6 +139,30 @@
 						class="template-form__textarea"
 						rows="2" />
 				</template>
+
+				<label class="template-form__label" for="template-form-articles">
+					{{ t('pipelinq', 'Articles') }}
+				</label>
+				<NcSelect
+					id="template-form-articles"
+					v-model="selectedArticles"
+					:options="publishedArticles"
+					:inputLabel="t('pipelinq', 'Articles')"
+					:multiple="true"
+					label="title"
+					:loading="articlesLoading"
+					:placeholder="
+						t('pipelinq', 'Pick published articles to embed')
+					" />
+				<p class="template-form__hint">
+					{{ articlesHintText }}
+				</p>
+				<p
+					v-if="showMarkerWarning"
+					class="template-form__warning"
+					role="alert">
+					{{ markerWarningText }}
+				</p>
 			</section>
 
 			<p v-if="saveError" class="template-form__error" role="alert">
@@ -167,6 +191,13 @@
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcLoadingIcon, NcSelect } from '@nextcloud/vue'
+import { fetchArticles } from '../../services/articlesApi.js'
+import {
+	orderedArticleIds,
+	publishedOnly,
+	resolveSelectedArticles,
+	shouldWarnMissingMarker,
+} from '../../services/templateArticlePicker.js'
 
 export default {
 	name: 'TemplateForm',
@@ -182,6 +213,8 @@ export default {
 			loadError: '',
 			saveError: '',
 			saving: false,
+			articles: [],
+			articlesLoading: false,
 			// Field-level errors parsed out of the single compliance error
 			// string ComplianceService.validateTemplate() returns -- @see
 			// parseFieldErrors. The service does not (yet) return a
@@ -198,6 +231,7 @@ export default {
 				senderEmail: '',
 				replyTo: '',
 				footerOverride: '',
+				articleIds: [],
 			},
 		}
 	},
@@ -263,6 +297,86 @@ export default {
 		},
 
 		/**
+		 * Published articles offered by the picker. Only a published article
+		 * may be embedded (marketing-articles spec, "Only a published article
+		 * may be embedded in a mailing or a post").
+		 *
+		 * @spec openspec/changes/marketing-article-hub/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
+		 * @return {Array<object>} The published articles.
+		 */
+		publishedArticles() {
+			return publishedOnly(this.articles)
+		},
+
+		/**
+		 * The picked articles as NcSelect option objects, in the order
+		 * `model.articleIds` holds them — a picker in NcSelect's own order
+		 * would silently reorder the embed on every open.
+		 *
+		 * @spec openspec/changes/marketing-article-hub/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
+		 * @return {Array<object>}
+		 */
+		selectedArticles: {
+			/**
+			 * @return {Array<object>} The picked articles, in the saved order.
+			 */
+			get() {
+				return resolveSelectedArticles(this.model.articleIds, this.articles)
+			},
+
+			/**
+			 * @param {Array<object>} options The articles just picked, in NcSelect's order.
+			 */
+			set(options) {
+				this.model.articleIds = orderedArticleIds(options)
+			},
+		},
+
+		/**
+		 * Whether to warn that the picked articles will not render because
+		 * the body carries no `{{articles}}` marker.
+		 *
+		 * @spec openspec/changes/marketing-article-hub/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
+		 * @return {boolean}
+		 */
+		showMarkerWarning() {
+			return shouldWarnMissingMarker(
+				this.model.articleIds,
+				this.model.bodyHtml,
+			)
+		},
+
+		/**
+		 * Static hint text under the picker. Composed here rather than as a
+		 * `{{ t(...) }}` template mustache: the `{{articles}}` marker name
+		 * carries literal double braces, and nesting those inside a mustache
+		 * interpolation does not parse.
+		 *
+		 * @return {string} The hint.
+		 */
+		articlesHintText() {
+			return this.t(
+				'pipelinq',
+				'Embedded where the body carries the {{articles}} marker, in the order picked here.',
+			)
+		},
+
+		/**
+		 * Warning text shown when articles are picked and the body carries
+		 * no marker. Same reason as `articlesHintText` for living here
+		 * rather than inline in the template.
+		 *
+		 * @spec openspec/changes/marketing-article-hub/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
+		 * @return {string} The warning.
+		 */
+		markerWarningText() {
+			return this.t(
+				'pipelinq',
+				'The body has no {{articles}} marker, so these articles will not appear until you add one.',
+			)
+		},
+
+		/**
 		 * @return {boolean} Whether the form has enough to attempt a save.
 		 *
 		 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-ui/spec.md#requirement-segments-and-templates-pages-are-reachable-from-the-marketing-menu
@@ -285,12 +399,30 @@ export default {
 	 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-ui/spec.md#requirement-segments-and-templates-pages-are-reachable-from-the-marketing-menu
 	 */
 	async created() {
+		this.loadArticles()
 		if (this.isEditing) {
 			await this.loadTemplate()
 		}
 	},
 
 	methods: {
+		/**
+		 * Load the articles the picker offers.
+		 *
+		 * @spec openspec/changes/marketing-article-hub/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
+		 * @return {Promise<void>} Resolves when the picker has its options.
+		 */
+		async loadArticles() {
+			this.articlesLoading = true
+			try {
+				this.articles = await fetchArticles()
+			} catch {
+				this.articles = []
+			} finally {
+				this.articlesLoading = false
+			}
+		},
+
 		/**
 		 * Load the CampaignTemplate being edited.
 		 *
@@ -362,6 +494,7 @@ export default {
 				senderName: this.model.senderName,
 				senderEmail: this.model.senderEmail,
 				footerOverride: this.model.footerOverride,
+				articleIds: this.model.articleIds,
 			}
 			try {
 				if (this.isEditing) {
@@ -443,6 +576,17 @@ export default {
 .template-form__field-error,
 .template-form__error {
 	color: var(--color-error);
+	font-weight: 600;
+	margin: 0;
+}
+
+.template-form__hint {
+	color: var(--color-text-maxcontrast);
+	margin: 0;
+}
+
+.template-form__warning {
+	color: var(--color-warning);
 	font-weight: 600;
 	margin: 0;
 }
