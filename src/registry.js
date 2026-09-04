@@ -214,6 +214,9 @@ import LeadListView from './views/leads/LeadList.vue'
 import LoyaltyAccountCreationView from './views/loyalty/LoyaltyAccountCreation.vue'
 // --- Loyalty program (loyalty-program). ---
 import LoyaltyReportingView from './views/loyalty/LoyaltyReporting.vue'
+// --- Search Console top queries (marketing-campaign-attribution): an
+//     aggregation over searchQueryDaily rows, not a row list. ---
+import SearchQueriesView from './views/marketing/SearchQueries.vue'
 // --- Outbound WhatsApp/SMS conversation section (outbound-messaging-
 //     provider-wiring): self-fetches conversation/message rows by contactId
 //     + the composer preflight facts, and hosts the SendMessageModal
@@ -785,6 +788,11 @@ const registry = {
 		kind: 'page',
 		component: BlastPerformanceDashboardView,
 		_note: 'Post-send performance dashboard (marketing-segmentation-and-blast 08): three tabs — Overview (sortable blast table with sent/delivered/open-rate/click-rate/unsubscribed), A/B Testing (side-by-side variant comparison + chi-square p-value once each arm has >=500 delivered and 24h elapsed since send), Attribution (per-blast attributed deal count + summed EUR value from GET /api/blasts/:id/attribution).',
+	},
+	SearchQueriesView: {
+		kind: 'page',
+		component: SearchQueriesView,
+		_note: 'Search Console top queries (marketing-campaign-attribution): one row per query with clicks and impressions summed and an impression-weighted position over a selectable window, from GET /api/marketing/search-queries; empty state points at the Marketing traffic settings. Custom because the page is an aggregation, which no declarative index primitive expresses.',
 	},
 	SegmentFormView: {
 		kind: 'page',

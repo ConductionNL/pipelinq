@@ -1,0 +1,32 @@
+{
+	"menu": [
+		{
+			"id": "MarketingGroup",
+			"label": "Marketing",
+			"order": 130,
+			"children": [
+				{
+					"id": "SearchQueries",
+					"label": "Search queries",
+					"icon": "Magnify",
+					"route": "SearchQueries"
+				}
+			]
+		}
+	],
+	"pages": [
+		{
+			"id": "SearchQueries",
+			"_note": "Search Console top queries (marketing-campaign-attribution). Custom rather than a declarative type:index over searchQueryDaily because the page shows an AGGREGATION (one row per query, clicks and impressions summed, impression-weighted position over a window) served by GET /api/marketing/search-queries, and an empty state that points to the settings when nothing is connected. Missing primitive: an aggregation-backed index page.",
+			"route": "/marketing/search-queries",
+			"type": "custom",
+			"title": "Search queries",
+			"component": "SearchQueriesView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "searchQueryDaily",
+				"documentationUrl": "https://pipelinq.conduction.nl"
+			}
+		}
+	]
+}

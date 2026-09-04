@@ -349,6 +349,15 @@ class BlastService {
 			return 0;
 		}
 
+		// Campaign parameters go on the template once per blast, BEFORE the
+		// per-delivery render and the click-redirect wrap, so the redirect
+		// target carries them (marketing-campaign-attribution).
+		$template['bodyHtml'] = $this->decorateCampaignLinks(
+			html: (string)($template['bodyHtml'] ?? ''),
+			blast: $blast,
+			template: $template,
+		);
+
 		$connectorSourceId = (string)($blast['connectorSourceId'] ?? '');
 		if ($connectorSourceId === '') {
 			$this->logger->warning(
@@ -1446,6 +1455,40 @@ class BlastService {
 			'false',
 		) === 'true';
 	}//end firstPartyTrackingEnabled()
+
+	/**
+	 * Append `utm_*` campaign parameters to the template body's links via
+	 * {@see CampaignLinkDecorator::decorate()}.
+	 *
+	 * Resolved lazily through the container like the tracking service, so
+	 * an install whose container cannot build the decorator (or a test
+	 * that never registered it) sends the body as authored. Fails soft:
+	 * a decorator fault never blocks a send.
+	 *
+	 * @param string $html Template body HTML.
+	 * @param array<string, mixed> $blast The blast row.
+	 * @param array<string, mixed> $template The template row.
+	 *
+	 * @return string The decorated HTML, or the original on failure.
+	 *
+	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-blast-links-carry-campaign-parameters
+	 */
+	private function decorateCampaignLinks(string $html, array $blast, array $template): string {
+		if ($html === '') {
+			return $html;
+		}
+
+		try {
+			$decorator = $this->container->get('OCA\\Pipelinq\\Service\\CampaignLinkDecorator');
+			return $decorator->decorate(html: $html, blast: $blast, template: $template);
+		} catch (Throwable $e) {
+			$this->logger->info(
+				'BlastService.decorateCampaignLinks: decorator unavailable or failed, sending links as authored',
+				['exception' => $e->getMessage()]
+			);
+			return $html;
+		}
+	}//end decorateCampaignLinks()
 
 	/**
 	 * Rewrite a rendered email body's links + append the open pixel via

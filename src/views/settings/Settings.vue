@@ -362,6 +362,13 @@
 		<PosStaffManager v-if="isAdmin && isConfigured" />
 		<PosRoleManager v-if="isAdmin && isConfigured" />
 
+		<!-- Marketing traffic (marketing-campaign-attribution): campaign
+		     parameters on blast links, the Portaliq portal, Search Console. -->
+		<MarketingTrafficSettings
+			v-if="isAdmin"
+			:config="config"
+			@saved="onMarketingTrafficSaved" />
+
 		<!-- Re-import Status -->
 		<div v-if="message" class="actions-section">
 			<NcNoteCard :type="messageType">
@@ -390,6 +397,7 @@ import SkillSettings from '../../components/admin/SkillSettings.vue'
 import CtiPage from './CtiPage.vue'
 import ExportConfigurationSettings from './ExportConfigurationSettings.vue'
 import MailingListEmbedSettings from './MailingListEmbedSettings.vue'
+import MarketingTrafficSettings from './MarketingTrafficSettings.vue'
 // Configuration surfaces moved off the app nav onto this admin page
 // (nav-ia-cleanup): channels, telephony, and the POS master-data.
 import MessagingSettings from './MessagingSettings.vue'
@@ -434,6 +442,7 @@ export default {
 		ForecastSettings,
 		ExportConfigurationSettings,
 		MailingListEmbedSettings,
+		MarketingTrafficSettings,
 	},
 
 	data() {
@@ -674,6 +683,17 @@ export default {
 			} finally {
 				this.reimporting = false
 			}
+		},
+
+		/**
+		 * Keep the page's config in step with what the marketing traffic
+		 * section saved, so the other sections do not overwrite it.
+		 *
+		 * @param {object} updated The updated config returned by the section.
+		 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-marketing-traffic-settings
+		 */
+		onMarketingTrafficSaved(updated) {
+			this.config = updated || this.config
 		},
 
 		/**
