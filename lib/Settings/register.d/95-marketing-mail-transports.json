@@ -1,0 +1,201 @@
+{
+  "$comment": "ADR-037 register fragment (marketing-mail-transports). Adds the mailTransport schema — a per-tenant sending route for the marketing blast engine — and a transportId reference on the existing blast schema (95-marketing-segmentation-blast.json). components.registers.pipelinq.schemas and components.objects are additive-list paths (ConfigFileLoaderService::ADDITIVE_LIST_PATHS), so this fragment unions its schema slug and seed objects onto the monolith and its sibling fragments rather than replacing them. mailTransport never stores a provider credential: a provider-kind row carries only a connectorSourceId reference (ADR-064/067/091, mirroring channelProvider.sourceId in 80-whatsapp-sms-channel.json) and a mailAccount-kind row carries only the Mail app's numeric account id. The instance-kind row needs neither — IMailer is always present.",
+  "components": {
+    "registers": {
+      "pipelinq": {
+        "schemas": [
+          "mailTransport"
+        ]
+      }
+    },
+    "schemas": {
+      "mailTransport": {
+        "slug": "mailTransport",
+        "title": "Mail Transport",
+        "icon": "EmailFastOutline",
+        "version": "1.0.0",
+        "summary": "A per-tenant email sending route: the instance mail server, a sender's Mail account, or a bulk provider.",
+        "description": "MailTransport names one route a blast can send through. kind=instance uses the Nextcloud instance's own mail server (IMailer) and needs no further configuration — every tenant gets one, seeded and marked default. kind=mailAccount sends through the sender's own Nextcloud Mail account (mailAccountRef, the Mail app's numeric account id) for low-volume sends. kind=provider sends through a bulk email provider (Amazon SES, Brevo, Mailjet, SendGrid, Mailgun or Postmark) addressed by connectorSourceId — credentials live on that OpenConnector source, never here. Exactly one transport should carry default=true; MailTransportService falls back to it when a blast names no transportId. dailyLimit (0 = no cap) is enforced against sentToday, which resets at dailyLimitResetAt. dkimVerified and dmarcStatus cache the deliverability panel's DNS lookup for senderDomain so the panel does not re-query DNS on every page load.",
+        "x-schema-org": "schema:ContactPoint",
+        "required": [
+          "kind",
+          "displayName"
+        ],
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "instance",
+              "mailAccount",
+              "provider"
+            ],
+            "description": "Which route this transport sends through.",
+            "title": "Kind"
+          },
+          "displayName": {
+            "type": "string",
+            "description": "Tenant-visible label shown in the transport step and the deliverability panel.",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Display Name"
+          },
+          "provider": {
+            "type": "string",
+            "enum": [
+              "ses",
+              "brevo",
+              "mailjet",
+              "sendgrid",
+              "mailgun",
+              "postmark"
+            ],
+            "description": "The bulk provider behind a kind=provider transport. Selects the adapter's per-provider request mapping. Ignored for other kinds.",
+            "title": "Provider"
+          },
+          "connectorSourceId": {
+            "type": "string",
+            "description": "OpenConnector source id or slug that transports a kind=provider send. Credentials and the provider base URL live on that source; this row carries routing metadata only. Required when kind=provider.",
+            "title": "Connector Source ID"
+          },
+          "mailAccountRef": {
+            "type": "string",
+            "description": "The Nextcloud Mail app's numeric account id (AccountService::find expects an int) for a kind=mailAccount transport, stored as a numeric string. Required when kind=mailAccount.",
+            "title": "Mail Account Reference"
+          },
+          "senderDomain": {
+            "type": "string",
+            "description": "The domain in the sender address this transport sends from, used to key the deliverability panel's SPF/DKIM/DMARC lookup.",
+            "title": "Sender Domain"
+          },
+          "dailyLimit": {
+            "type": "integer",
+            "default": 0,
+            "minimum": 0,
+            "description": "Maximum messages this transport may send per day (0 = no cap). Enforced alongside the existing per-OpenConnector-source rate limit.",
+            "title": "Daily Limit"
+          },
+          "sentToday": {
+            "type": "integer",
+            "default": 0,
+            "minimum": 0,
+            "description": "Messages already sent through this transport since dailyLimitResetAt. Advanced by MailTransportService on each accepted send.",
+            "title": "Sent Today"
+          },
+          "dailyLimitResetAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO 8601 instant sentToday last reset. MailTransportService rolls the counter when this falls on an earlier calendar day than the current send.",
+            "title": "Daily Limit Reset At"
+          },
+          "dkimVerified": {
+            "type": "boolean",
+            "default": false,
+            "description": "Cached result of the deliverability panel's DKIM DNS lookup for senderDomain.",
+            "title": "DKIM Verified"
+          },
+          "dmarcStatus": {
+            "type": "string",
+            "enum": [
+              "unknown",
+              "missing",
+              "invalid",
+              "found"
+            ],
+            "default": "unknown",
+            "description": "Cached result of the deliverability panel's DMARC DNS lookup for senderDomain.",
+            "title": "DMARC Status"
+          },
+          "deliverabilityCheckedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO 8601 instant the SPF/DKIM/DMARC cache (dkimVerified, dmarcStatus) was last refreshed.",
+            "title": "Deliverability Checked At"
+          },
+          "active": {
+            "type": "boolean",
+            "default": true,
+            "description": "Whether this transport may be selected for a send. An inactive transport stays visible in the panel but is not offered in the wizard.",
+            "title": "Active"
+          },
+          "default": {
+            "type": "boolean",
+            "default": false,
+            "description": "Whether this is the transport a blast uses when it names no transportId. Exactly one transport should carry default=true; the seeded instance transport does.",
+            "title": "Default"
+          },
+          "mock": {
+            "type": "boolean",
+            "default": false,
+            "description": "Whether this is a placeholder transport shipped for demonstration, with no live connectorSourceId credential behind it. Mirrors channelProvider.sandbox (80-whatsapp-sms-channel.json) and OpenConnector's configuration.mock convention.",
+            "title": "Mock"
+          }
+        }
+      },
+      "blast": {
+        "properties": {
+          "transportId": {
+            "type": "string",
+            "description": "FK to mailTransport (UUID or slug). When empty, MailTransportService uses the transport marked default=true.",
+            "title": "Transport ID"
+          }
+        }
+      }
+    },
+    "objects": [
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "mailTransport",
+          "slug": "instance-mail-server"
+        },
+        "kind": "instance",
+        "displayName": "Instance mail server",
+        "senderDomain": "gemeente-voorbeeld.example.nl",
+        "dailyLimit": 0,
+        "sentToday": 0,
+        "dkimVerified": false,
+        "dmarcStatus": "unknown",
+        "active": true,
+        "default": true,
+        "mock": false
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "mailTransport",
+          "slug": "sender-mail-account"
+        },
+        "kind": "mailAccount",
+        "displayName": "Advies & Zo — sender's Mail account",
+        "mailAccountRef": "1",
+        "senderDomain": "advieszo.example.nl",
+        "dailyLimit": 100,
+        "sentToday": 0,
+        "dkimVerified": false,
+        "dmarcStatus": "unknown",
+        "active": true,
+        "default": false,
+        "mock": false
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "mailTransport",
+          "slug": "sendgrid-bulk"
+        },
+        "kind": "provider",
+        "provider": "sendgrid",
+        "displayName": "Zonnig Reizen — SendGrid bulk newsletter",
+        "connectorSourceId": "openconnector-sendgrid-prod",
+        "senderDomain": "zonnigreizen.example.nl",
+        "dailyLimit": 5000,
+        "sentToday": 0,
+        "dkimVerified": true,
+        "dmarcStatus": "found",
+        "active": false,
+        "default": false,
+        "mock": true
+      }
+    ]
+  }
+}

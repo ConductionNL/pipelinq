@@ -1,11 +1,13 @@
 ---
-status: done
+status: in-progress
 ---
 
 # marketing-blast Specification
 
+**OpenSpec changes**: [marketing-mail-transports](../../changes/marketing-mail-transports/) _(in-progress)_
+
 ## Purpose
-Sends marketing email blasts to contact segments, dispatching through openconnector's per-tenant send-mail provider so provider credentials never live in pipelinq code. It supports deterministic A/B splitting (each contact always gets the same variant), respects per-source rate limits, and creates revenue attribution links that join blasts to closed deals with first-click timestamps and attributed value.
+Sends marketing email blasts to contact segments, dispatching through the resolved mailTransport (instance mail server, a sender's Mail account, or an OpenConnector source) so provider credentials never live in pipelinq code. It supports deterministic A/B splitting (each contact always gets the same variant), respects per-source rate limits, and creates revenue attribution links that join blasts to closed deals with first-click timestamps and attributed value.
 ## Requirements
 ### Requirement: A/B Test Splits Segment Deterministically
 
