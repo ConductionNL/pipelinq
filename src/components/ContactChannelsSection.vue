@@ -19,7 +19,7 @@
   - declaratively. After a successful save, write-back sync is triggered
   - so the linked Nextcloud Contact vCard picks up the new channels too.
   -
-  - @spec openspec/changes/contact-channel-details/specs/contacts-sync/spec.md
+  - @spec openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md#requirement-detail-pages-display-channels-as-a-linked-list-with-kind-chips
   -->
 <template>
 	<div class="contact-channels-section">
@@ -394,7 +394,7 @@ export default {
 		 * Fetch the full client/contact object.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/contact-channel-details/specs/contacts-sync/spec.md
+		 * @spec openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md#requirement-detail-pages-display-channels-as-a-linked-list-with-kind-chips
 		 */
 		async load() {
 			if (!this.resolvedId) {
@@ -549,7 +549,7 @@ export default {
 		 *
 		 * @param {object} patch The array field(s) being changed.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/contact-channel-details/specs/contacts-sync/spec.md
+		 * @spec openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md#requirement-channels-are-added-edited-and-removed-through-dedicated-modals
 		 */
 		async persist(patch) {
 			const merged = { ...this.entity, ...patch }

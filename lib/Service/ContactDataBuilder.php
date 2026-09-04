@@ -180,12 +180,20 @@ class ContactDataBuilder {
 
 		$entries = [];
 		foreach ($items as $item) {
-			$raw = is_array($item) === true ? (string)($item['value'] ?? '') : (string)$item;
+			$raw = (string)$item;
+			if (is_array($item) === true) {
+				$raw = (string)($item['value'] ?? '');
+			}
+
 			if ($raw === '') {
 				continue;
 			}
 
-			$type = is_array($item) === true ? (string)($item['type'] ?? '') : '';
+			$type = '';
+			if (is_array($item) === true) {
+				$type = (string)($item['type'] ?? '');
+			}
+
 			$entries[] = [
 				'kind' => $this->mapVcardTypeToKind(type: $type),
 				'value' => $raw,
@@ -215,19 +223,40 @@ class ContactDataBuilder {
 
 		$profiles = [];
 		foreach ($items as $item) {
-			$raw = is_array($item) === true ? (string)($item['value'] ?? '') : (string)$item;
+			$raw = (string)$item;
+			if (is_array($item) === true) {
+				$raw = (string)($item['value'] ?? '');
+			}
+
 			if ($raw === '') {
 				continue;
 			}
 
-			$typeRaw = strtolower(is_array($item) === true ? (string)($item['type'] ?? '') : '');
-			$network = in_array($typeRaw, self::SOCIAL_NETWORKS, true) === true ? $typeRaw : 'other';
+			$typeRaw = '';
+			if (is_array($item) === true) {
+				$typeRaw = (string)($item['type'] ?? '');
+			}
+
+			$typeRaw = strtolower($typeRaw);
+
+			$network = 'other';
+			if (in_array($typeRaw, self::SOCIAL_NETWORKS, true) === true) {
+				$network = $typeRaw;
+			}
+
 			$isUrl = (str_starts_with($raw, 'http://') === true || str_starts_with($raw, 'https://') === true);
+
+			$handle = $raw;
+			$url = '';
+			if ($isUrl === true) {
+				$handle = '';
+				$url = $raw;
+			}
 
 			$profiles[] = [
 				'network' => $network,
-				'handle' => $isUrl === false ? $raw : '',
-				'url' => $isUrl === true ? $raw : '',
+				'handle' => $handle,
+				'url' => $url,
 				'verified' => false,
 				'followedByUs' => false,
 				'followsUs' => false,

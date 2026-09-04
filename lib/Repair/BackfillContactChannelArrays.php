@@ -165,32 +165,77 @@ class BackfillContactChannelArrays implements IRepairStep {
 			return 'skipped';
 		}
 
-		$patch = [];
-
-		$existingEmails = $row['emails'] ?? [];
-		if (is_array($existingEmails) === false || $existingEmails === []) {
-			$email = trim((string)($row['email'] ?? ''));
-			if ($email !== '') {
-				$patch['emails'] = [
-					['kind' => 'work', 'value' => $email, 'primary' => true, 'verified' => false],
-				];
-			}
-		}
-
-		$existingPhones = $row['phones'] ?? [];
-		if (is_array($existingPhones) === false || $existingPhones === []) {
-			$phone = trim((string)($row['phone'] ?? ''));
-			if ($phone !== '') {
-				$patch['phones'] = [
-					['kind' => 'work', 'value' => $phone, 'primary' => true, 'verified' => false],
-				];
-			}
-		}
+		$patch = array_merge(
+			$this->channelPatchFor(row: $row, arrayKey: 'emails', scalarKey: 'email'),
+			$this->channelPatchFor(row: $row, arrayKey: 'phones', scalarKey: 'phone'),
+		);
 
 		if ($patch === []) {
 			return 'skipped';
 		}
 
+		return $this->savePatch(
+			objectService: $objectService,
+			register: $register,
+			schema: $schema,
+			row: $row,
+			patch: $patch,
+			uuid: $uuid,
+			actingAdmin: $actingAdmin,
+		);
+	}//end backfillOne()
+
+	/**
+	 * Compute the single-entry patch for one channel array (`emails` or
+	 * `phones`), seeded from its legacy scalar field. Returns `[]` when the
+	 * array already has data, or the scalar is empty — no patch needed.
+	 *
+	 * @param array<string,mixed> $row The stored row.
+	 * @param string $arrayKey `emails` or `phones`.
+	 * @param string $scalarKey The matching legacy scalar field.
+	 *
+	 * @return array<string,mixed> A `[$arrayKey => [...]]` patch, or `[]`.
+	 */
+	private function channelPatchFor(array $row, string $arrayKey, string $scalarKey): array {
+		$existing = $row[$arrayKey] ?? [];
+		if (is_array($existing) === true && $existing !== []) {
+			return [];
+		}
+
+		$value = trim((string)($row[$scalarKey] ?? ''));
+		if ($value === '') {
+			return [];
+		}
+
+		return [
+			$arrayKey => [
+				['kind' => 'work', 'value' => $value, 'primary' => true, 'verified' => false],
+			],
+		];
+	}//end channelPatchFor()
+
+	/**
+	 * Save the merged patch, translating the outcome into the run() tally.
+	 *
+	 * @param object $objectService OpenRegister ObjectService.
+	 * @param string $register Register id.
+	 * @param string $schema Schema id.
+	 * @param array<string,mixed> $row The stored row.
+	 * @param array<string,mixed> $patch The fields to merge onto it.
+	 * @param string $uuid The row's id.
+	 * @param IUser|null $actingAdmin User to save as.
+	 *
+	 * @return string 'fixed' on success, 'stuck' on failure.
+	 */
+	private function savePatch(
+		object $objectService,
+		string $register,
+		string $schema,
+		array $row,
+		array $patch,
+		string $uuid,
+		?IUser $actingAdmin,
+	): string {
 		try {
 			$objectService->saveObject(
 				object: array_merge($row, $patch),
@@ -211,8 +256,8 @@ class BackfillContactChannelArrays implements IRepairStep {
 			);
 
 			return 'stuck';
-		}//end try
-	}//end backfillOne()
+		}
+	}//end savePatch()
 
 	/**
 	 * Resolve an admin to act as while saving.

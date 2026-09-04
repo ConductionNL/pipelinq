@@ -1833,17 +1833,8 @@ class SegmentService {
 		}
 
 		try {
-			// PRE-EXISTING BUG (pipelinq#773): this call used to pass a
-			// `published:` named argument that OpenRegister's
-			// `SchemaMapper::find()` dropped in commit ea99a5004
-			// (2026-06-25, origin/development) — the current signature is
-			// `find(string|int $id, ?array $_extend = [], bool $_rbac = true,
-			// bool $_multitenancy = true)`. Passing an unknown named argument
-			// raised `Error: Unknown named parameter $published`, which the
-			// catch below swallowed, so every rule validation/evaluation
-			// silently failed closed with "no schema mapping configured".
-			// Fixed here while extending this method for dotted array-item
-			// field paths (@spec below), since both touch this call site.
+			// Pipelinq#773 fix (see docblock above) merged from
+			// marketing-segments-ui-repair — no `published:` argument.
 			$schema = $schemaMapper->find(
 				id: $schemaSlug,
 				_rbac: false,

@@ -3678,7 +3678,26 @@ OC.L10N.register(
         "Whether this profile has been confirmed to belong to this contact person.": "Whether this profile has been confirmed to belong to this contact person.",
         "The channel this contact person prefers to be contacted through.": "The channel this contact person prefers to be contacted through.",
         "IANA timezone name for this contact person (e.g. \"Europe/Amsterdam\"), used to schedule sends at a sensible local time.": "IANA timezone name for this contact person (e.g. \"Europe/Amsterdam\"), used to schedule sends at a sensible local time.",
-        "ISO 639-1 language code this contact person prefers for communication (e.g. \"nl\", \"en\").": "ISO 639-1 language code this contact person prefers for communication (e.g. \"nl\", \"en\")."
+        "ISO 639-1 language code this contact person prefers for communication (e.g. \"nl\", \"en\").": "ISO 639-1 language code this contact person prefers for communication (e.g. \"nl\", \"en\").",
+        "A handle or a profile URL is required": "A handle or a profile URL is required",
+        "Add email address": "Add email address",
+        "Add phone number": "Add phone number",
+        "Add social profile": "Add social profile",
+        "Contact channels saved.": "Contact channels saved.",
+        "Edit email address": "Edit email address",
+        "Edit phone number": "Edit phone number",
+        "Edit social profile": "Edit social profile",
+        "Email address is required": "Email address is required",
+        "Failed to save contact channels.": "Failed to save contact channels.",
+        "Mobile": "Mobile",
+        "No email addresses yet.": "No email addresses yet.",
+        "No phone numbers yet.": "No phone numbers yet.",
+        "No social profiles yet.": "No social profiles yet.",
+        "Phone number is required": "Phone number is required",
+        "Prefers {channel}": "Prefers {channel}",
+        "Private": "Private",
+        "Without the leading @": "Without the leading @",
+        "Work": "Work"
     },
     "nplurals=2; plural=(n != 1);"
 )
