@@ -49,6 +49,15 @@ use OCA\Pipelinq\Service\Marketing\ListObjectStore;
  * @SuppressWarnings(PHPMD.TooManyPublicMethods) The lifecycle, the derived
  *  usages and the shared renderer are one cohesive surface; splitting them
  *  would put the renderer somewhere the send path has to reach across for.
+ * @SuppressWarnings(PHPMD.TooManyMethods) Same reason as TooManyPublicMethods
+ *  above: the private slug/identity/rendering helpers back that one cohesive
+ *  surface and moving them out would not reduce complexity, only relocate it
+ *  behind a second constructor dependency every caller has to carry.
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) The aggregate is the sum
+ *  of several independently-simple concerns (CRUD + stamping, the derived
+ *  usages join, and the marker renderer design.md requires both the send
+ *  path and the preview to share) rather than one tangled method; each
+ *  method stays individually readable.
  */
 class ArticleService {
 	/**
@@ -449,8 +458,8 @@ class ArticleService {
 		return [
 			'data' => $usages,
 			'counts' => [
-				'template' => count(array_filter($usages, static fn (array $u): bool => $u['kind'] === 'template')),
-				'blast' => count(array_filter($usages, static fn (array $u): bool => $u['kind'] === 'blast')),
+				'template' => count(array_filter($usages, static fn (array $usage): bool => $usage['kind'] === 'template')),
+				'blast' => count(array_filter($usages, static fn (array $usage): bool => $usage['kind'] === 'blast')),
 			],
 		];
 	}//end listUsages()
@@ -689,8 +698,12 @@ class ArticleService {
 	private function identitiesOf(array $object): array {
 		$out = [];
 		$self = ($object['@self'] ?? []);
+		if (is_array($self) === false) {
+			$self = [];
+		}
+
 		foreach (['uuid', 'id', 'slug'] as $key) {
-			foreach ([$object, (is_array($self) === true ? $self : [])] as $source) {
+			foreach ([$object, $self] as $source) {
 				$value = ($source[$key] ?? null);
 				if (is_scalar($value) === true && (string)$value !== '') {
 					$out[] = (string)$value;

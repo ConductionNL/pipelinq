@@ -21,6 +21,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Integration;
 
+use OCA\Pipelinq\Service\ArticleService;
 use OCA\Pipelinq\Service\BlastService;
 use OCA\Pipelinq\Service\ComplianceService;
 use OCA\Pipelinq\Service\SchemaMapService;
@@ -282,6 +283,7 @@ class BlastWorkflowTest extends TestCase {
 		$blastService = new BlastService($this->container,
 			$this->appConfig,
 			$segmentService,
+			$this->createMock(ArticleService::class),
 			$this->logger,
 		);
 
