@@ -127,7 +127,7 @@ class BackfillContactChannelArrays implements IRepairStep {
 
 			$rows = $this->readAll(objectService: $objectService, register: $register, schema: $schema);
 			foreach ($rows as $row) {
-				$outcome = $this->backfillOne(
+				$outcome = $this->backfillRecord(
 					objectService: $objectService,
 					register: $register,
 					schema: $schema,
@@ -159,7 +159,7 @@ class BackfillContactChannelArrays implements IRepairStep {
 	 *
 	 * @return string One of 'fixed', 'skipped' or 'stuck'.
 	 */
-	private function backfillOne(object $objectService, string $register, string $schema, array $row, ?IUser $actingAdmin): string {
+	private function backfillRecord(object $objectService, string $register, string $schema, array $row, ?IUser $actingAdmin): string {
 		$uuid = (string)($row['id'] ?? '');
 		if ($uuid === '') {
 			return 'skipped';
@@ -183,7 +183,7 @@ class BackfillContactChannelArrays implements IRepairStep {
 			uuid: $uuid,
 			actingAdmin: $actingAdmin,
 		);
-	}//end backfillOne()
+	}//end backfillRecord()
 
 	/**
 	 * Compute the single-entry patch for one channel array (`emails` or
