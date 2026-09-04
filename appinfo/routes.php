@@ -525,6 +525,10 @@ return [
         ['name' => 'template#show',   'url' => '/api/templates/{id}', 'verb' => 'GET'],
         ['name' => 'template#update', 'url' => '/api/templates/{id}', 'verb' => 'PATCH'],
 
+        // Marketing — Search Console (marketing-campaign-attribution): top queries
+        // over a window plus the connection status. Static path, no wildcard.
+        ['name' => 'searchConsole#index', 'url' => '/api/marketing/search-queries', 'verb' => 'GET'],
+
         // Marketing — Blasts (marketing-segmentation-and-blast chain member 06).
         // Specific routes precede any wildcard {slug} routes (ADR-016).
         ['name' => 'blast#index',      'url' => '/api/blasts',                     'verb' => 'GET'],
@@ -533,6 +537,9 @@ return [
         ['name' => 'blast#cancel',     'url' => '/api/blasts/{id}/cancel',         'verb' => 'POST'],
         ['name' => 'blast#deliveries', 'url' => '/api/blasts/{id}/deliveries',     'verb' => 'GET'],
         ['name' => 'blast#attribution', 'url' => '/api/blasts/{id}/attribution',   'verb' => 'GET'],
+        // Phase 2 of the fleet traffic programme (marketing-campaign-attribution):
+        // mailbox numbers plus the site sessions Portaliq attributed to the campaign.
+        ['name' => 'blast#performance', 'url' => '/api/blasts/{id}/performance',   'verb' => 'GET'],
         ['name' => 'blast#show',       'url' => '/api/blasts/{id}',                'verb' => 'GET'],
         ['name' => 'blast#update',     'url' => '/api/blasts/{id}',                'verb' => 'PATCH'],
 

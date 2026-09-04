@@ -1251,4 +1251,171 @@ class BlastServiceTest extends TestCase {
 		$this->assertCount(1, $sentRows);
 		$this->assertSame('p-shape', array_values($sentRows)[0]['providerId']);
 	}//end testSendOneDeliveryResolvesSourceFromOpenconnectorRegisterAndCallsCallServiceWithJsonPost()
+
+	/**
+	 * Phase 2 (marketing-campaign-attribution): the template body's links get
+	 * utm_* parameters once per blast, before render and before the tracking
+	 * wrap, and a container that cannot build the decorator sends the body
+	 * as authored.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-blast-links-carry-campaign-parameters
+	 */
+	public function testDispatchDecoratesTheTemplateBodyWithCampaignParameters(): void {
+		$blast = [
+			'uuid' => 'blast-utm',
+			'name' => 'Spring newsletter',
+			'templateId' => 'tmpl-utm',
+			'channel' => 'email',
+			'status' => 'sending',
+			'connectorSourceId' => 'oc-source-utm',
+		];
+		$template = [
+			'uuid' => 'tmpl-utm',
+			'subject' => 'Hi',
+			'bodyHtml' => '<a href="https://example.org/?p=1">x</a><a href="{{unsubscribe_link}}">u</a>',
+		];
+		$this->objectService->store['blast-utm'] = $blast;
+		$this->objectService->store['tmpl-utm'] = $template;
+		$this->objectService->store['oc-source-utm'] = ['uuid' => 'oc-source-utm'];
+		$this->objectService->deliveries = [
+			[
+				'uuid' => 'd-utm',
+				'blastId' => 'blast-utm',
+				'contactId' => 'c1',
+				'email' => 'c1@example.test',
+				'status' => 'queued',
+				'unsubscribeUrl' => 'https://example.org/u/tok-1',
+			],
+		];
+
+		$this->appConfig = $this->createMock(IAppConfig::class);
+		$this->appConfig->method('getValueString')->willReturnCallback(
+			function (string $app, string $key, string $default) {
+				return match ($key) {
+					'register' => 'pipelinq',
+					'blast_schema' => 'blast',
+					'blastDelivery_schema' => 'blastDelivery',
+					'campaignTemplate_schema' => 'campaignTemplate',
+					'blast.dispatch_batch_size' => '50',
+					'blast.first_party_tracking' => 'true',
+					default => $default,
+				};
+			}
+		);
+
+		$callService = new class {
+			/** @var array<int, array<string, mixed>> */
+			public array $calls = [];
+
+			public function call(array|object $source, string $endpoint, string $method, array $config): object {
+				$this->calls[] = $config['json'];
+				return BlastServiceTest::fakeCallLog(200, ['providerId' => 'p-1']);
+			}//end call()
+		};
+
+		$trackingLinkService = new class {
+			/** @var array<int, string> */
+			public array $seen = [];
+
+			public function injectTracking(string $html, string $blastDeliveryId): string {
+				$this->seen[] = $html;
+				return ($html . '<!--tracked-->');
+			}//end injectTracking()
+		};
+
+		$decorator = new \OCA\Pipelinq\Service\CampaignLinkDecorator($this->appConfig);
+		$objectService = $this->objectService;
+		$this->container = $this->createMock(ContainerInterface::class);
+		$this->container->method('get')->willReturnCallback(
+			function (string $id) use ($callService, $objectService, $trackingLinkService, $decorator) {
+				return match ($id) {
+					'OCA\\OpenRegister\\Service\\ObjectService' => $objectService,
+					'OCA\\OpenConnector\\Service\\CallService' => $callService,
+					'OCA\\Pipelinq\\Service\\TrackingLinkService' => $trackingLinkService,
+					'OCA\\Pipelinq\\Service\\CampaignLinkDecorator' => $decorator,
+					default => throw new \RuntimeException('not registered: ' . $id),
+				};
+			}
+		);
+
+		$service = $this->buildService($this->container, $this->appConfig);
+		$this->assertSame(1, $service->dispatchBlastDeliveries('blast-utm', 100));
+
+		$sent = $callService->calls[0]['bodyHtml'];
+		$this->assertStringContainsString('utm_campaign=spring-newsletter', $sent);
+		$this->assertStringContainsString('utm_content=blast-utm', $sent);
+		// The unsubscribe merge tag is skipped by the decorator and only then
+		// rendered into the recipient's link, so that link carries no utm_.
+		$this->assertStringContainsString('href="https://example.org/u/tok-1"', $sent);
+		$this->assertStringNotContainsString('u/tok-1?utm', $sent);
+		$this->assertStringEndsWith('<!--tracked-->', $sent);
+		// The tracking wrap saw the decorated body: decoration precedes it.
+		$this->assertStringContainsString('utm_campaign=spring-newsletter', $trackingLinkService->seen[0]);
+	}//end testDispatchDecoratesTheTemplateBodyWithCampaignParameters()
+
+	/**
+	 * A container without the decorator sends the body as authored.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-blast-links-carry-campaign-parameters
+	 */
+	public function testDispatchWithoutADecoratorSendsLinksAsAuthored(): void {
+		$blast = [
+			'uuid' => 'blast-plain',
+			'name' => 'Plain',
+			'templateId' => 'tmpl-plain',
+			'channel' => 'email',
+			'status' => 'sending',
+			'connectorSourceId' => 'oc-source-plain',
+		];
+		$this->objectService->store['blast-plain'] = $blast;
+		$this->objectService->store['tmpl-plain'] = ['uuid' => 'tmpl-plain', 'subject' => 'Hi', 'bodyHtml' => '<a href="https://example.org/">x</a>'];
+		$this->objectService->store['oc-source-plain'] = ['uuid' => 'oc-source-plain'];
+		$this->objectService->deliveries = [
+			['uuid' => 'd-plain', 'blastId' => 'blast-plain', 'contactId' => 'c1', 'email' => 'c1@example.test', 'status' => 'queued'],
+		];
+
+		$this->appConfig = $this->createMock(IAppConfig::class);
+		$this->appConfig->method('getValueString')->willReturnCallback(
+			function (string $app, string $key, string $default) {
+				return match ($key) {
+					'register' => 'pipelinq',
+					'blast_schema' => 'blast',
+					'blastDelivery_schema' => 'blastDelivery',
+					'campaignTemplate_schema' => 'campaignTemplate',
+					'blast.dispatch_batch_size' => '50',
+					default => $default,
+				};
+			}
+		);
+
+		$callService = new class {
+			/** @var array<int, array<string, mixed>> */
+			public array $calls = [];
+
+			public function call(array|object $source, string $endpoint, string $method, array $config): object {
+				$this->calls[] = $config['json'];
+				return BlastServiceTest::fakeCallLog(200, ['providerId' => 'p-1']);
+			}//end call()
+		};
+
+		$objectService = $this->objectService;
+		$this->container = $this->createMock(ContainerInterface::class);
+		$this->container->method('get')->willReturnCallback(
+			function (string $id) use ($callService, $objectService) {
+				return match ($id) {
+					'OCA\\OpenRegister\\Service\\ObjectService' => $objectService,
+					'OCA\\OpenConnector\\Service\\CallService' => $callService,
+					default => throw new \RuntimeException('not registered: ' . $id),
+				};
+			}
+		);
+
+		$service = $this->buildService($this->container, $this->appConfig);
+		$this->assertSame(1, $service->dispatchBlastDeliveries('blast-plain', 100));
+		$this->assertSame('<a href="https://example.org/">x</a>', $callService->calls[0]['bodyHtml']);
+	}//end testDispatchWithoutADecoratorSendsLinksAsAuthored()
 }//end class
