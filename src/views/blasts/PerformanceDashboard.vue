@@ -217,6 +217,85 @@
 						</tr>
 					</tbody>
 				</table>
+
+				<!-- Site traffic per campaign (marketing-campaign-attribution):
+				     the sessions Portaliq attributed to each blast's campaign. -->
+				<div
+					class="performance-dashboard__traffic"
+					data-testid="campaign-traffic">
+					<h3>{{ t('pipelinq', 'Site traffic from this campaign') }}</h3>
+					<p
+						v-if="trafficConnected === null"
+						class="performance-dashboard__empty"
+						data-testid="campaign-traffic-loading">
+						{{ t('pipelinq', 'Loading site traffic') }}
+					</p>
+					<p
+						v-else-if="trafficConnected === false"
+						class="performance-dashboard__empty"
+						data-testid="campaign-traffic-unconnected">
+						{{ t('pipelinq', 'Not connected to a portal.') }}
+						{{
+							t(
+								'pipelinq',
+								'Set the Portaliq portal under Settings, Marketing traffic, to see the site sessions each campaign brought in.',
+							)
+						}}
+					</p>
+					<p
+						v-else-if="
+							trafficConnected === true && trafficRows.length === 0
+						"
+						class="performance-dashboard__empty">
+						{{
+							t(
+								'pipelinq',
+								'No site sessions attributed to a blast yet.',
+							)
+						}}
+					</p>
+					<table
+						v-else-if="trafficConnected === true"
+						class="performance-dashboard__table"
+						data-testid="campaign-traffic-table">
+						<thead>
+							<tr>
+								<th scope="col">{{ t('pipelinq', 'Blast') }}</th>
+								<th scope="col">{{ t('pipelinq', 'Campaign') }}</th>
+								<th scope="col" class="performance-dashboard__num">
+									{{ t('pipelinq', 'Opens') }}
+								</th>
+								<th scope="col" class="performance-dashboard__num">
+									{{ t('pipelinq', 'Clicks') }}
+								</th>
+								<th scope="col" class="performance-dashboard__num">
+									{{ t('pipelinq', 'Site sessions') }}
+								</th>
+								<th scope="col" class="performance-dashboard__num">
+									{{ t('pipelinq', 'Attributed deals') }}
+								</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr v-for="row in trafficRows" :key="row.id">
+								<td>{{ row.name }}</td>
+								<td>{{ row.campaign }}</td>
+								<td class="performance-dashboard__num">
+									{{ row.opened }}
+								</td>
+								<td class="performance-dashboard__num">
+									{{ row.clicked }}
+								</td>
+								<td class="performance-dashboard__num">
+									{{ row.sessions }}
+								</td>
+								<td class="performance-dashboard__num">
+									{{ row.dealCount }}
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
 			</section>
 		</section>
 
@@ -253,6 +332,10 @@ export default {
 			blasts: [],
 			segments: {},
 			attributionRows: [],
+			// Site traffic per campaign: null until the first performance read
+			// answers, then whether a portal is connected.
+			trafficConnected: null,
+			trafficRows: [],
 			overviewSortKey: 'sent',
 			overviewSortOrder: 'desc',
 		}
@@ -386,6 +469,8 @@ export default {
 		 * Load blasts, segments (for name lookup) and per-blast attribution
 		 * summaries in parallel. Each block degrades independently —
 		 * Attribution failures don't blank the Overview tab.
+		 *
+		 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-campaign-performance-joins-site-sessions-to-a-blast
 		 */
 		async fetchAll() {
 			this.loading = true
@@ -400,6 +485,9 @@ export default {
 			} finally {
 				this.loading = false
 			}
+			// The site-traffic block loads on its own, after the page is up:
+			// it is one more request per blast and must not hold the tabs.
+			this.fetchTrafficRows()
 		},
 
 		/**
@@ -476,6 +564,51 @@ export default {
 				}
 			}
 			this.attributionRows = rows
+		},
+
+		/**
+		 * For every loaded blast, read `GET /api/blasts/:id/performance` and
+		 * collect the site sessions Portaliq attributed to its campaign. The
+		 * first answer says whether a portal is connected at all; when it is
+		 * not, the loop stops there and the block says so.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-campaign-performance-joins-site-sessions-to-a-blast
+		 */
+		async fetchTrafficRows() {
+			const rows = []
+			let connected = null
+			for (const blast of this.blasts) {
+				const id = blast.id || blast.uuid || blast.slug
+				if (!id) {
+					continue
+				}
+				try {
+					const url = generateUrl(
+						`/apps/pipelinq/api/blasts/${id}/performance`,
+					)
+					const { data } = await axios.get(url)
+					connected = Boolean(data?.connected)
+					if (!connected) {
+						break
+					}
+					if ((data?.site?.sessions || 0) > 0) {
+						rows.push({
+							id,
+							name: blast.name || id,
+							campaign: data.campaign || '',
+							opened: data.email?.opened || 0,
+							clicked: data.email?.clicked || 0,
+							sessions: data.site?.sessions || 0,
+							dealCount: data.deals?.dealCount || 0,
+						})
+					}
+				} catch {
+					// Skip; keep loop alive.
+				}
+			}
+			this.trafficConnected = connected
+			this.trafficRows = rows
 		},
 
 		/**
@@ -797,6 +930,16 @@ export default {
 	display: flex;
 	flex-direction: column;
 	gap: 16px;
+}
+
+.performance-dashboard__traffic {
+	margin-top: 32px;
+
+	h3 {
+		font-size: 1rem;
+		font-weight: bold;
+		margin-bottom: 8px;
+	}
 }
 
 .performance-dashboard__empty {

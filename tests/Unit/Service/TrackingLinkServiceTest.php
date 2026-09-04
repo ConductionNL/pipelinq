@@ -507,4 +507,39 @@ class TrackingLinkServiceTest extends TestCase {
 
 		$this->assertSame([], $this->objectService->saved);
 	}//end testRecordOpenDoesNotReportWhenDeliveryMissing()
+
+	/**
+	 * Phase 2 ordering (marketing-campaign-attribution): the campaign
+	 * decorator runs on the template BEFORE injectTracking(), so the signed
+	 * click token's target URL already carries the utm_* parameters and the
+	 * redirect Portaliq's collector sees is the decorated one.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-blast-links-carry-campaign-parameters
+	 */
+	public function testInjectTrackingWrapsADecoratedUrlSoTheRedirectTargetCarriesUtm(): void {
+		$appConfig = $this->createMock(\OCP\IAppConfig::class);
+		$appConfig->method('getValueString')->willReturnCallback(
+			static fn (string $app, string $key, string $default = ''): string => $default
+		);
+		$decorator = new \OCA\Pipelinq\Service\CampaignLinkDecorator($appConfig);
+		$decorated = $decorator->decorate(
+			html: '<a href="https://example.org/woo?x=1">x</a><a href="{{unsubscribe_link}}">u</a>',
+			blast: ['uuid' => 'blast-9', 'name' => 'Herfst actie'],
+		);
+		$this->assertStringContainsString('utm_campaign=herfst-actie', $decorated);
+
+		$service = $this->build();
+		$out = $service->injectTracking(html: $decorated, blastDeliveryId: self::DELIVERY_ID);
+
+		$this->assertStringContainsString('href="{{unsubscribe_link}}"', $out);
+		$this->assertSame(1, preg_match('#href="/api/blast/track/click/([^"]+)"#', $out, $m));
+		$payload = $service->verifyToken($m[1]);
+		$this->assertNotNull($payload);
+		$this->assertSame(
+			'https://example.org/woo?x=1&utm_source=email&utm_medium=email&utm_campaign=herfst-actie&utm_content=blast-9',
+			$payload['u']
+		);
+	}//end testInjectTrackingWrapsADecoratedUrlSoTheRedirectTargetCarriesUtm()
 }//end class

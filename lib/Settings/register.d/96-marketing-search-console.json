@@ -1,0 +1,93 @@
+{
+  "components": {
+    "registers": {
+      "pipelinq": {
+        "schemas": [
+          "searchQueryDaily"
+        ]
+      }
+    },
+    "schemas": {
+      "searchQueryDaily": {
+        "slug": "searchQueryDaily",
+        "title": "Search Query Daily",
+        "icon": "Magnify",
+        "version": "1.0.0",
+        "summary": "One search query on one page on one day, as Search Console reports it.",
+        "description": "Imported by SearchConsoleImportService from the Search Console API (searchanalytics/query, dimensions date, query, page) and upserted per (property, date, query, page), so a re-run of the same window changes nothing. Read by the Search queries page through SearchQueryReportService. Contains counts only, never a visitor. Part of the fleet traffic analytics programme, phase 2 (marketing-campaign-attribution).",
+        "x-schema-org": "schema:Dataset",
+        "required": [
+          "property",
+          "date",
+          "query",
+          "page"
+        ],
+        "properties": {
+          "property": {
+            "type": "string",
+            "title": "Property",
+            "description": "The Search Console property: a site URL such as https://example.org/ or a domain property such as sc-domain:example.org.",
+            "example": "sc-domain:example.org"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date",
+            "description": "The day, YYYY-MM-DD, as Search Console reports it (Pacific time).",
+            "example": "2026-09-01"
+          },
+          "query": {
+            "type": "string",
+            "title": "Query",
+            "description": "The search query people typed.",
+            "example": "woo verzoek indienen"
+          },
+          "page": {
+            "type": "string",
+            "title": "Page",
+            "description": "The page URL that appeared in the results.",
+            "example": "https://example.org/woo"
+          },
+          "clicks": {
+            "type": "integer",
+            "title": "Clicks",
+            "description": "Clicks from the results to the page for this query on this day.",
+            "example": 12
+          },
+          "impressions": {
+            "type": "integer",
+            "title": "Impressions",
+            "description": "How often the page appeared in the results for this query on this day.",
+            "example": 340
+          },
+          "ctr": {
+            "type": "number",
+            "title": "CTR",
+            "description": "Clicks divided by impressions, between 0 and 1.",
+            "example": 0.0353
+          },
+          "position": {
+            "type": "number",
+            "title": "Position",
+            "description": "The average position in the results, 1 being the top.",
+            "example": 4.2
+          },
+          "source": {
+            "type": "string",
+            "title": "Source",
+            "description": "Which search engine reported the row. Only gsc today.",
+            "default": "gsc",
+            "example": "gsc"
+          },
+          "importedAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Imported at",
+            "description": "When the importer last wrote this row.",
+            "example": "2026-09-04T03:00:00Z"
+          }
+        }
+      }
+    }
+  }
+}
