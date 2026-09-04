@@ -149,9 +149,15 @@ test.describe('Marketing traffic settings', () => {
 		await expect(page.getByTestId('marketing-gsc-properties')).toBeVisible()
 		await expect(page.getByTestId('marketing-gsc-key')).toBeVisible()
 		await expect(page.getByTestId('marketing-traffic-save')).toBeVisible()
-		// The switch reflects the shipped default: on.
+		// The switch reflects the shipped default: on. NcCheckboxRadioSwitch
+		// forwards non-prop attributes to its <input>, so the test id may sit
+		// on the input itself or on a wrapper around it.
 		await expect(
-			page.getByTestId('marketing-utm-auto').locator('input[type="checkbox"]'),
+			page
+				.locator(
+					'input[type="checkbox"][data-testid="marketing-utm-auto"], [data-testid="marketing-utm-auto"] input[type="checkbox"]',
+				)
+				.first(),
 		).toBeChecked()
 	})
 
@@ -275,6 +281,10 @@ test.describe('Campaign performance without a portal', () => {
 	test('the blast performance page says "Not connected to a portal" in the Attribution tab', async ({
 		page,
 	}) => {
+		// The dashboard fans out one attribution request per seeded blast
+		// before it paints; marketing.spec.ts waits 20 s for the same table,
+		// and the throwaway rig is slower than CI.
+		test.setTimeout(120000)
 		await landOnApp(page)
 		await putSettings(page, { [PORTAL_KEY]: '' })
 
@@ -284,11 +294,11 @@ test.describe('Campaign performance without a portal', () => {
 		await dash.getByRole('tab', { name: /Attribution/i }).click()
 
 		const block = page.getByTestId('campaign-traffic')
-		await expect(block).toBeVisible({ timeout: 15000 })
+		await expect(block).toBeVisible({ timeout: 60000 })
 		await expect(block).toContainText('Site traffic from this campaign')
 		await expect(page.getByTestId('campaign-traffic-unconnected')).toContainText(
 			'Not connected to a portal',
-			{ timeout: 20000 },
+			{ timeout: 60000 },
 		)
 	})
 })

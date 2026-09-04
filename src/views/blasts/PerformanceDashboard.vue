@@ -225,7 +225,13 @@
 					data-testid="campaign-traffic">
 					<h3>{{ t('pipelinq', 'Site traffic from this campaign') }}</h3>
 					<p
-						v-if="trafficConnected === false"
+						v-if="trafficConnected === null"
+						class="performance-dashboard__empty"
+						data-testid="campaign-traffic-loading">
+						{{ t('pipelinq', 'Loading site traffic') }}
+					</p>
+					<p
+						v-else-if="trafficConnected === false"
 						class="performance-dashboard__empty"
 						data-testid="campaign-traffic-unconnected">
 						{{ t('pipelinq', 'Not connected to a portal.') }}
@@ -472,7 +478,6 @@ export default {
 			try {
 				await Promise.all([this.fetchBlasts(), this.fetchSegments()])
 				await this.fetchAttributionRows()
-				await this.fetchTrafficRows()
 			} catch (e) {
 				this.error =
 					e?.response?.data?.error
@@ -480,6 +485,9 @@ export default {
 			} finally {
 				this.loading = false
 			}
+			// The site-traffic block loads on its own, after the page is up:
+			// it is one more request per blast and must not hold the tabs.
+			this.fetchTrafficRows()
 		},
 
 		/**

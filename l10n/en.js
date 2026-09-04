@@ -3680,7 +3680,8 @@ OC.L10N.register(
         "Site traffic from this campaign": "Site traffic from this campaign",
         "The import has not brought in rows for this period yet. Search Console publishes a day about two days later.": "The import has not brought in rows for this period yet. Search Console publishes a day about two days later.",
         "The JSON key file of a Google Cloud service account. It is stored encrypted and never shown again.": "The JSON key file of a Google Cloud service account. It is stored encrypted and never shown again.",
-        "The stored key was removed": "The stored key was removed"
+        "The stored key was removed": "The stored key was removed",
+        "Loading site traffic": "Loading site traffic"
     },
     "nplurals=2; plural=(n != 1);"
 )

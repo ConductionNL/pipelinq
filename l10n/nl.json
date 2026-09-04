@@ -3702,7 +3702,8 @@
         "Site traffic from this campaign": "Siteverkeer uit deze campagne",
         "The import has not brought in rows for this period yet. Search Console publishes a day about two days later.": "De import heeft voor deze periode nog geen rijen opgehaald. Search Console publiceert een dag ongeveer twee dagen later.",
         "The JSON key file of a Google Cloud service account. It is stored encrypted and never shown again.": "Het JSON-sleutelbestand van een Google Cloud-serviceaccount. Het wordt versleuteld opgeslagen en nooit meer getoond.",
-        "The stored key was removed": "De opgeslagen sleutel is verwijderd"
+        "The stored key was removed": "De opgeslagen sleutel is verwijderd",
+        "Loading site traffic": "Siteverkeer laden"
     },
     "plurals": null
 }
