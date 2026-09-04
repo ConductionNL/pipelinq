@@ -972,15 +972,56 @@ class SegmentService {
 
 		$operator = (string)($leaf['operator'] ?? 'equals');
 		$value = ($leaf['value'] ?? null);
-		$actual = ($entity[$field] ?? null);
 
 		$handler = ($this->operatorHandlers()[$operator] ?? null);
 		if ($handler === null) {
 			return false;
 		}
 
+		if (str_contains($field, '.') === true) {
+			return $this->evaluateProjectedLeaf(entity: $entity, field: $field, handler: $handler, value: $value);
+		}
+
+		$actual = ($entity[$field] ?? null);
 		return $handler($actual, $value);
 	}//end evaluateLeaf()
+
+	/**
+	 * Evaluate a dotted `arrayProp.subProp` leaf (e.g. `phones.kind`,
+	 * `socialProfiles.network`): project `subProp` across every element of
+	 * the entity's `arrayProp` list and return true when ANY element's
+	 * projected value satisfies the operator — "at least one phone entry
+	 * has kind mobile" rather than a literal lookup of the (non-existent)
+	 * key `"phones.kind"` on the entity.
+	 *
+	 * @param array<string, mixed> $entity Entity payload.
+	 * @param string $field Dotted field path (`arrayProp.subProp`).
+	 * @param callable(mixed, mixed): bool $handler Operator handler.
+	 * @param mixed $value Rule value.
+	 *
+	 * @return bool Whether any element matches.
+	 *
+	 * @spec openspec/changes/contact-channel-details/specs/marketing-segmentation/spec.md#requirement-rule-fields-reach-into-array-of-object-properties
+	 */
+	private function evaluateProjectedLeaf(array $entity, string $field, callable $handler, mixed $value): bool {
+		[$parent, $child] = explode('.', $field, 2);
+		$parentValue = ($entity[$parent] ?? null);
+		if (is_array($parentValue) === false) {
+			return false;
+		}
+
+		foreach ($parentValue as $item) {
+			if (is_array($item) === false || array_key_exists($child, $item) === false) {
+				continue;
+			}
+
+			if ($handler($item[$child], $value) === true) {
+				return true;
+			}
+		}
+
+		return false;
+	}//end evaluateProjectedLeaf()
 
 	/**
 	 * Operator name → predicate closure map used by {@see evaluateLeaf()}.
@@ -1379,7 +1420,8 @@ class SegmentService {
 			return sprintf('%s: leaf predicate requires non-empty "field".', $path);
 		}
 
-		if (array_key_exists($field, $properties) === false) {
+		$fieldType = $this->resolveFieldType(field: $field, properties: $properties);
+		if ($fieldType === null) {
 			return sprintf('%s: field "%s" is not declared on the entity schema.', $path, $field);
 		}
 
@@ -1389,7 +1431,6 @@ class SegmentService {
 			return sprintf('%s: operator "%s" is not supported.', $path, (string)$operator);
 		}
 
-		$fieldType = $this->propertyType(property: $properties[$field]);
 		if (in_array($fieldType, $allowedTypes, true) === false) {
 			return sprintf(
 				'%s: operator "%s" is not valid for field "%s" of type "%s".',
@@ -1595,6 +1636,49 @@ class SegmentService {
 	}//end propertyType()
 
 	/**
+	 * Resolve the declared JSON-schema type for a leaf `field`, supporting
+	 * both a plain top-level property name (`phones`) and a dotted
+	 * `arrayProp.subProp` path into an array-of-objects property's item
+	 * schema (`phones.kind`, `socialProfiles.network`). Returns null when
+	 * the field (or, for a dotted path, its parent array or the named
+	 * sub-property) is not declared — the caller turns that into the
+	 * existing "not declared on the entity schema" validation error.
+	 *
+	 * @param string $field The leaf field name, plain or dotted.
+	 * @param array<string, mixed> $properties Schema properties map.
+	 *
+	 * @return string|null The JSON-schema type, or null when undeclared.
+	 *
+	 * @spec openspec/changes/contact-channel-details/specs/marketing-segmentation/spec.md#requirement-rule-fields-reach-into-array-of-object-properties
+	 */
+	private function resolveFieldType(string $field, array $properties): ?string {
+		if (str_contains($field, '.') === false) {
+			if (array_key_exists($field, $properties) === false) {
+				return null;
+			}
+
+			return $this->propertyType(property: $properties[$field]);
+		}
+
+		[$parent, $child] = explode('.', $field, 2);
+		if (array_key_exists($parent, $properties) === false) {
+			return null;
+		}
+
+		$parentProperty = $properties[$parent];
+		if (is_array($parentProperty) === false || ($parentProperty['type'] ?? null) !== 'array') {
+			return null;
+		}
+
+		$itemProperties = $parentProperty['items']['properties'] ?? null;
+		if (is_array($itemProperties) === false || array_key_exists($child, $itemProperties) === false) {
+			return null;
+		}
+
+		return $this->propertyType(property: $itemProperties[$child]);
+	}//end resolveFieldType()
+
+	/**
 	 * Resolve the entityType's schema properties via OpenRegister.
 	 *
 	 * Looks up the schema slug for the requested entityType, then fetches
@@ -1623,9 +1707,19 @@ class SegmentService {
 		}
 
 		try {
+			// PRE-EXISTING BUG (pipelinq#773): this call used to pass a
+			// `published:` named argument that OpenRegister's
+			// `SchemaMapper::find()` dropped in commit ea99a5004
+			// (2026-06-25, origin/development) — the current signature is
+			// `find(string|int $id, ?array $_extend = [], bool $_rbac = true,
+			// bool $_multitenancy = true)`. Passing an unknown named argument
+			// raised `Error: Unknown named parameter $published`, which the
+			// catch below swallowed, so every rule validation/evaluation
+			// silently failed closed with "no schema mapping configured".
+			// Fixed here while extending this method for dotted array-item
+			// field paths (@spec below), since both touch this call site.
 			$schema = $schemaMapper->find(
 				id: $schemaSlug,
-				published: null,
 				_rbac: false,
 				_multitenancy: false,
 			);

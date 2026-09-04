@@ -173,6 +173,13 @@ Vrij en open source onder de EUPL-1.2-licentie.
             <step>OCA\Pipelinq\Repair\IngestProductVendorMaster</step>
             <step>OCA\Pipelinq\Repair\MigratePosBookkeepingToShillinq</step>
             <step>OCA\Pipelinq\Repair\UnifyClientContactIdentity</step>
+            <!--
+                After UnifyClientContactIdentity: emails[]/phones[] backfill
+                from the legacy email/phone scalar fields those steps already
+                populate. Idempotent and non-destructive — never overwrites a
+                non-empty array.
+            -->
+            <step>OCA\Pipelinq\Repair\BackfillContactChannelArrays</step>
             <step>OCA\Pipelinq\Repair\SeedTrustConfigurationRows</step>
             <step>OCA\Pipelinq\Repair\RemoveRetiredAvgJobs</step>
             <step>OCA\Pipelinq\Repair\DrainMdmSyncQueue</step>

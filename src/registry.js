@@ -32,7 +32,6 @@ import BookingDetailSection from './components/bookings/BookingDetailSection.vue
 import BookingsCard from './components/bookings/BookingsCard.vue'
 import BrpContactPanel from './components/BrpContactPanel.vue'
 import CommunicationHistory from './components/CommunicationHistory.vue'
-import ContactmomentQuickLog from './components/ContactmomentQuickLog.vue'
 // --- Client / Contact 360 detail sub-features (pipelinq-client-contact-detail-
 //     declarative). The ClientDetail / ContactDetail monolithic page-host views
 //     are gone — the pages are declarative type:"detail" manifest entries whose
@@ -41,6 +40,8 @@ import ContactmomentQuickLog from './components/ContactmomentQuickLog.vue'
 //     org link from `relationLinks`, and these rich sub-features stay in the
 //     page body via `bodyWidgets` (kind:'section'). Each reads the live object
 //     via props (token-resolved `@objectId`) — no page host needed. ---
+import ContactChannelsSection from './components/ContactChannelsSection.vue'
+import ContactmomentQuickLog from './components/ContactmomentQuickLog.vue'
 import ContactRelationships from './components/ContactRelationships.vue'
 // --- Billing categories (billable-categories-and-tags): list view with a
 //     bespoke color-swatch + DBA / active badge column layout the
@@ -649,6 +650,11 @@ const registry = {
 		kind: 'section',
 		component: ContactRelationships,
 		_note: 'Outbound/inbound relationship graph for a client or contact; self-fetches by entityId/entityType.',
+	},
+	ContactChannelsSection: {
+		kind: 'section',
+		component: ContactChannelsSection,
+		_note: 'Typed emails/phones/social profiles for a client or contact (contact-channel-details); self-fetches by entityId/entityType.',
 	},
 	ActivityTimeline: {
 		kind: 'section',

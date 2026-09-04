@@ -73,6 +73,27 @@ class SegmentServiceTest extends TestCase {
 		'optedIn' => ['type' => 'boolean'],
 		'tags' => ['type' => 'array'],
 		'lastContact' => ['type' => 'string'],
+		'phones' => [
+			'type' => 'array',
+			'items' => [
+				'type' => 'object',
+				'properties' => [
+					'kind' => ['type' => 'string'],
+					'value' => ['type' => 'string'],
+					'primary' => ['type' => 'boolean'],
+				],
+			],
+		],
+		'socialProfiles' => [
+			'type' => 'array',
+			'items' => [
+				'type' => 'object',
+				'properties' => [
+					'network' => ['type' => 'string'],
+					'handle' => ['type' => 'string'],
+				],
+			],
+		],
 	];
 
 	/**
@@ -536,4 +557,115 @@ class SegmentServiceTest extends TestCase {
 		$this->assertSame('a@example.test', $members[0]['email']);
 		$this->assertSame('Ada', $members[0]['firstName']);
 	}//end testGetMembersForBlastReturnsProjectedRecipients()
+
+	/**
+	 * validateRules: a dotted `phones.kind` field resolves against the
+	 * array property's `items.properties.kind` sub-schema and passes
+	 * validation for an operator valid on that sub-property's type.
+	 *
+	 * @return void
+	 */
+	public function testValidateRulesAcceptsDottedArrayItemField(): void {
+		$rules = [
+			'field' => 'phones.kind',
+			'operator' => 'equals',
+			'value' => 'mobile',
+		];
+		$error = $this->service->validateRules($rules, 'contact');
+		$this->assertNull($error);
+	}//end testValidateRulesAcceptsDottedArrayItemField()
+
+	/**
+	 * validateRules: a dotted field naming a sub-property that does not
+	 * exist on the array's item schema is rejected the same way an
+	 * unknown top-level field is.
+	 *
+	 * @return void
+	 */
+	public function testValidateRulesRejectsUnknownDottedSubProperty(): void {
+		$rules = [
+			'field' => 'phones.notAField',
+			'operator' => 'equals',
+			'value' => 'x',
+		];
+		$error = $this->service->validateRules($rules, 'contact');
+		$this->assertIsString($error);
+		$this->assertStringContainsString('phones.notAField', (string)$error);
+	}//end testValidateRulesRejectsUnknownDottedSubProperty()
+
+	/**
+	 * validateRules: a dotted field whose parent is not declared as an
+	 * array (or not declared at all) is rejected.
+	 *
+	 * @return void
+	 */
+	public function testValidateRulesRejectsDottedFieldOnNonArrayParent(): void {
+		$rules = [
+			'field' => 'industry.kind',
+			'operator' => 'equals',
+			'value' => 'x',
+		];
+		$error = $this->service->validateRules($rules, 'contact');
+		$this->assertIsString($error);
+	}//end testValidateRulesRejectsDottedFieldOnNonArrayParent()
+
+	/**
+	 * evaluateRules: `phones.kind equals mobile` matches an entity whose
+	 * `phones` array has AT LEAST ONE entry with kind "mobile" — an
+	 * any-element-matches projection, not a literal lookup of the
+	 * (non-existent) key `"phones.kind"`.
+	 *
+	 * @return void
+	 */
+	public function testEvaluateRulesDottedArrayFieldMatchesAnyElement(): void {
+		$rule = [
+			'field' => 'phones.kind',
+			'operator' => 'equals',
+			'value' => 'mobile',
+		];
+
+		$hasMobile = [
+			'phones' => [
+				['kind' => 'work', 'value' => '+31600000001'],
+				['kind' => 'mobile', 'value' => '+31600000002'],
+			],
+		];
+		$noMobile = [
+			'phones' => [
+				['kind' => 'work', 'value' => '+31600000003'],
+			],
+		];
+		$noPhones = ['phones' => []];
+
+		$this->assertTrue($this->service->evaluateRules($rule, $hasMobile));
+		$this->assertFalse($this->service->evaluateRules($rule, $noMobile));
+		$this->assertFalse($this->service->evaluateRules($rule, $noPhones));
+		$this->assertFalse($this->service->evaluateRules($rule, []));
+	}//end testEvaluateRulesDottedArrayFieldMatchesAnyElement()
+
+	/**
+	 * evaluateRules: `socialProfiles.network equals linkedin` behaves the
+	 * same way for a second array-of-object property, confirming the
+	 * projection is not special-cased to `phones`.
+	 *
+	 * @return void
+	 */
+	public function testEvaluateRulesDottedSocialProfileNetworkField(): void {
+		$rule = [
+			'field' => 'socialProfiles.network',
+			'operator' => 'equals',
+			'value' => 'linkedin',
+		];
+
+		$hasLinkedIn = [
+			'socialProfiles' => [
+				['network' => 'mastodon', 'handle' => 'a'],
+				['network' => 'linkedin', 'handle' => 'b'],
+			],
+		];
+		$noLinkedIn = ['socialProfiles' => [['network' => 'mastodon', 'handle' => 'a']]];
+
+		$this->assertTrue($this->service->evaluateRules($rule, $hasLinkedIn));
+		$this->assertFalse($this->service->evaluateRules($rule, $noLinkedIn));
+	}//end testEvaluateRulesDottedSocialProfileNetworkField()
 }//end class
