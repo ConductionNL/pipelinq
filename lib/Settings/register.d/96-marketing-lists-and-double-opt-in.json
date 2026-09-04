@@ -1,0 +1,597 @@
+{
+  "components": {
+    "registers": {
+      "pipelinq": {
+        "schemas": [
+          "segment",
+          "campaignTemplate",
+          "blast",
+          "blastDelivery",
+          "consentRecord",
+          "attributionLink",
+          "mailingList",
+          "subscription"
+        ]
+      }
+    },
+    "schemas": {
+      "mailingList": {
+        "slug": "mailingList",
+        "title": "Mailing List",
+        "icon": "EmailMultipleOutline",
+        "version": "1.0.0",
+        "summary": "An opt-in container a person subscribes to, carrying its own sender identity, opt-in mode and postal footer.",
+        "description": "A MailingList is what a person joins, as opposed to a Segment, which is a saved query the tenant runs over people it already holds. The list owns the sender identity and the postal footer every mailing to it must carry, and its optInMode decides how someone may get on it: 'double' requires a confirmed Subscription minted through the public signup endpoint, 'soft' additionally permits an existing customer to be imported with a recorded lawful ground and the objection offered. publicSignup gates the public subscribe endpoint; a list with it false answers 404 there. See the marketing-lists spec and docs/Technical/marketing-architecture.md.",
+        "x-schema-org": "schema:ItemList",
+        "required": [
+          "name",
+          "senderName",
+          "senderEmail",
+          "footerAddress"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Display name of the mailing list, shown to the subscriber on the confirmation and unsubscribe pages.",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "description": {
+            "type": "string",
+            "description": "What a subscriber receives on this list and roughly how often.",
+            "title": "Description"
+          },
+          "optInMode": {
+            "type": "string",
+            "enum": [
+              "double",
+              "soft"
+            ],
+            "default": "double",
+            "description": "How someone may join. Double opt-in requires a confirmed link; soft opt-in additionally permits an existing customer to be imported with a recorded ground.",
+            "title": "Opt In Mode"
+          },
+          "senderName": {
+            "type": "string",
+            "description": "From-name on every mailing sent to this list.",
+            "maxLength": 255,
+            "title": "Sender Name"
+          },
+          "senderEmail": {
+            "type": "string",
+            "format": "email",
+            "description": "From-address on every mailing sent to this list.",
+            "title": "Sender Email"
+          },
+          "replyTo": {
+            "type": "string",
+            "format": "email",
+            "description": "Reply-To address for this list. Falls back to the sender address when empty.",
+            "title": "Reply To"
+          },
+          "publicSignup": {
+            "type": "boolean",
+            "default": false,
+            "description": "Whether the public subscribe endpoint accepts submissions for this list.",
+            "title": "Public Signup"
+          },
+          "footerAddress": {
+            "type": "string",
+            "description": "Postal address block printed in the footer of every mailing to this list, as the anti-spam rules require.",
+            "title": "Footer Address"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "paused",
+              "archived"
+            ],
+            "default": "active",
+            "description": "Whether the list is in use. A paused list accepts no new subscriptions; an archived list sends nothing.",
+            "title": "Status"
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "Nextcloud user id that created the mailing list.",
+            "title": "Created By"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Creation timestamp (UTC).",
+            "title": "Created At"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Last update timestamp (UTC).",
+            "title": "Updated At"
+          }
+        }
+      },
+      "subscription": {
+        "slug": "subscription",
+        "title": "Subscription",
+        "icon": "AccountCheckOutline",
+        "version": "1.0.0",
+        "summary": "One contact's membership of one mailing list, with the state machine that carries it from pending to confirmed or unsubscribed.",
+        "description": "A Subscription is the membership record. The declared lifecycle owns which state changes are legal; the token check that earns one lives in SubscriptionService, because no schema grammar reaches an HMAC signature and a hash comparison against a digest the request carries. confirmTokenHash is the SHA-256 of the nonce inside the signed confirmation link, never the link itself: it is write-only so it never leaves through the object API, and it is cleared on confirmation so a link cannot be spent twice. Only a Subscription in state 'confirmed' is ever queued for a blast. See the marketing-lists spec.",
+        "x-schema-org": "schema:Subscription",
+        "required": [
+          "listId",
+          "email",
+          "state"
+        ],
+        "properties": {
+          "listId": {
+            "type": "string",
+            "description": "FK (UUID or slug) to the MailingList this membership belongs to.",
+            "title": "List ID"
+          },
+          "contactId": {
+            "type": "string",
+            "description": "FK to Contact (UUID or slug). Empty while a public signup has not yet been matched to a known contact.",
+            "title": "Contact ID"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "The address that subscribed. Held on the subscription rather than read from the contact, so a later address change never silently redirects a confirmed opt-in.",
+            "title": "Email"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "confirmed",
+              "unsubscribed",
+              "bounced"
+            ],
+            "default": "pending",
+            "description": "Membership state. Only 'confirmed' may receive a mailing.",
+            "title": "State"
+          },
+          "source": {
+            "type": "string",
+            "description": "How the membership started: 'public-signup', 'soft-opt-in-import', 'preference-centre' or 'manual'.",
+            "title": "Source"
+          },
+          "lawfulBasis": {
+            "type": "string",
+            "enum": [
+              "consent",
+              "soft-opt-in",
+              "legitimate-interest",
+              "contract"
+            ],
+            "description": "GDPR Art. 6 ground this membership rests on. 'soft-opt-in' is only usable with the objection recorded in the consent record's evidence.",
+            "title": "Lawful Basis"
+          },
+          "confirmTokenHash": {
+            "type": "string",
+            "description": "SHA-256 of the nonce inside the pending confirmation link. Write-only: never returned by any API response, and cleared once the link is spent.",
+            "maxLength": 64,
+            "writeOnly": true,
+            "title": "Confirm Token Hash"
+          },
+          "confirmedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the confirmation link was opened and verified.",
+            "title": "Confirmed At"
+          },
+          "confirmIpHash": {
+            "type": "string",
+            "description": "Salted hash of the address the confirmation came from, kept as opt-in evidence without storing the address itself.",
+            "maxLength": 64,
+            "title": "Confirm IP Hash"
+          },
+          "unsubscribedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the membership ended.",
+            "title": "Unsubscribed At"
+          },
+          "reason": {
+            "type": "string",
+            "description": "Why the membership ended, as the subscriber or the provider gave it.",
+            "title": "Reason"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Creation timestamp (UTC).",
+            "title": "Created At"
+          }
+        },
+        "x-openregister-lifecycle": {
+          "field": "state",
+          "initial": "pending",
+          "transitions": {
+            "confirm": {
+              "from": [
+                "pending"
+              ],
+              "to": "confirmed",
+              "description": "Confirm the membership after the signed confirmation link verified. SubscriptionService additionally requires the link's nonce to match the stored digest."
+            },
+            "unsubscribe": {
+              "from": [
+                "pending",
+                "confirmed",
+                "bounced"
+              ],
+              "to": "unsubscribed",
+              "description": "End the membership. Reached from the first-party unsubscribe endpoint, the preference centre, a provider webhook or a marketer."
+            },
+            "resubscribe": {
+              "from": [
+                "unsubscribed"
+              ],
+              "to": "pending",
+              "description": "Someone who left asks to come back. They start pending again and confirm afresh: a past opt-in is not revived."
+            },
+            "markBounced": {
+              "from": [
+                "pending",
+                "confirmed"
+              ],
+              "to": "bounced",
+              "description": "The address stopped accepting mail. Set from a hard bounce, so the list stops sending without recording a withdrawal the subscriber never asked for."
+            }
+          }
+        }
+      },
+      "consentRecord": {
+        "version": "1.1.0",
+        "description": "ConsentRecord is the source of truth for whether a Contact may be sent marketing on a given channel. LawfulBasis records the GDPR Art. 6 basis used at capture (consent | legitimate-interest | contract | soft-opt-in); consentSource describes the capture mechanism (web-form, double-opt-in, import, etc.). WithdrawnAt + withdrawnReason close the consent. SoftBounceCount counts consecutive soft bounces (5 triggers automatic withdrawal: member 03 owns the rule). A record with a listId gates sends to that mailing list only; a record without one is the channel-wide record the Segment path consults, so a list subscription and a channel consent share one ledger. One record per (contactId, channel, listId).",
+        "properties": {
+          "lawfulBasis": {
+            "type": "string",
+            "enum": [
+              "consent",
+              "legitimate-interest",
+              "contract",
+              "soft-opt-in"
+            ],
+            "description": "GDPR Art. 6 lawful basis at capture. 'soft-opt-in' only satisfies a send when evidence.objectionOffered is recorded.",
+            "title": "Lawful Basis"
+          },
+          "listId": {
+            "type": "string",
+            "description": "FK to MailingList (UUID or slug) when this consent is scoped to one list. Empty means the channel-wide record.",
+            "title": "List ID"
+          },
+          "evidence": {
+            "type": "object",
+            "description": "What was shown to the person and when, so the capture can be reconstructed years later.",
+            "title": "Evidence",
+            "properties": {
+              "mechanism": {
+                "type": "string",
+                "description": "How the ground was established: 'double-opt-in', 'soft-opt-in-import', 'preference-centre' or 'contract-clause'.",
+                "title": "Mechanism"
+              },
+              "reference": {
+                "type": "string",
+                "description": "The subscription, contract or import run this capture came from.",
+                "title": "Reference"
+              },
+              "objectionOffered": {
+                "type": "boolean",
+                "default": false,
+                "description": "Whether the person was offered the chance to object at the moment the ground was established. Required for soft opt-in.",
+                "title": "Objection Offered"
+              },
+              "objectionOfferedAt": {
+                "type": "string",
+                "format": "date-time",
+                "description": "When the objection was offered.",
+                "title": "Objection Offered At"
+              },
+              "objectionText": {
+                "type": "string",
+                "description": "The wording the person was shown when the objection was offered.",
+                "title": "Objection Text"
+              },
+              "ipHash": {
+                "type": "string",
+                "description": "Salted hash of the address the capture came from, kept as evidence without storing the address itself.",
+                "title": "IP Hash"
+              },
+              "recordedAt": {
+                "type": "string",
+                "format": "date-time",
+                "description": "When this evidence block was written.",
+                "title": "Recorded At"
+              }
+            }
+          }
+        }
+      },
+      "blast": {
+        "version": "1.1.0",
+        "description": "A Blast is one campaign send. It binds an AUDIENCE (a Segment, which is a saved query over people the tenant already holds, or a mailingList, which is something a person joined) to a CampaignTemplate for a single channel, with optional scheduling, A/B split, and rolling delivery totals. Exactly one of segmentId and listId is set. abVariantOf links a child variant to its parent A blast; abSplitPercent on the parent records the audience split (0-100). totals is an aggregated counter map updated by BlastDelivery state changes. See ADR-000 and the marketing-blast spec.",
+        "properties": {
+          "listId": {
+            "type": "string",
+            "description": "FK (UUID or slug) to the MailingList this blast goes to. Set instead of segmentId, never alongside it. Only confirmed subscriptions are queued.",
+            "title": "List ID"
+          }
+        }
+      }
+    },
+    "objects": [
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "mailingList",
+          "slug": "mailing-list-conduction-nieuwsbrief"
+        },
+        "name": "Conduction nieuwsbrief",
+        "description": "Maandelijkse nieuwsbrief over open source, common ground en wat we bij gemeenten tegenkomen.",
+        "optInMode": "double",
+        "senderName": "Conduction",
+        "senderEmail": "nieuwsbrief@conduction.nl",
+        "replyTo": "info@conduction.nl",
+        "publicSignup": true,
+        "footerAddress": "Conduction B.V., Turfmarkt 147, 2511 DP Den Haag, Nederland",
+        "status": "active",
+        "createdBy": "admin",
+        "createdAt": "2026-06-03T09:00:00+00:00",
+        "updatedAt": "2026-08-28T11:20:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "mailingList",
+          "slug": "mailing-list-klantupdates"
+        },
+        "name": "Klantupdates",
+        "description": "Release- en onderhoudsberichten voor gemeenten met een lopend contract. Alleen voor bestaande klanten.",
+        "optInMode": "soft",
+        "senderName": "Conduction support",
+        "senderEmail": "updates@conduction.nl",
+        "replyTo": "support@conduction.nl",
+        "publicSignup": false,
+        "footerAddress": "Conduction B.V., Turfmarkt 147, 2511 DP Den Haag, Nederland",
+        "status": "active",
+        "createdBy": "admin",
+        "createdAt": "2026-06-03T09:05:00+00:00",
+        "updatedAt": "2026-08-28T11:22:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "subscription",
+          "slug": "subscription-nieuwsbrief-amsterdam-jansen"
+        },
+        "listId": "mailing-list-conduction-nieuwsbrief",
+        "contactId": "contact-gemeente-amsterdam-jansen",
+        "email": "p.jansen@amsterdam.nl",
+        "state": "confirmed",
+        "source": "public-signup",
+        "lawfulBasis": "consent",
+        "confirmedAt": "2026-04-12T10:20:11+00:00",
+        "createdAt": "2026-04-12T10:18:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "subscription",
+          "slug": "subscription-nieuwsbrief-rotterdam-devries"
+        },
+        "listId": "mailing-list-conduction-nieuwsbrief",
+        "contactId": "contact-gemeente-rotterdam-devries",
+        "email": "m.devries@rotterdam.nl",
+        "state": "confirmed",
+        "source": "public-signup",
+        "lawfulBasis": "consent",
+        "confirmedAt": "2026-07-22T14:07:40+00:00",
+        "createdAt": "2026-07-22T14:05:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "subscription",
+          "slug": "subscription-nieuwsbrief-nijmegen-vandermeer"
+        },
+        "listId": "mailing-list-conduction-nieuwsbrief",
+        "contactId": "contact-gemeente-nijmegen-vandermeer",
+        "email": "e.vandermeer@nijmegen.nl",
+        "state": "confirmed",
+        "source": "preference-centre",
+        "lawfulBasis": "consent",
+        "confirmedAt": "2026-08-19T08:41:02+00:00",
+        "createdAt": "2026-08-19T08:40:12+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "subscription",
+          "slug": "subscription-nieuwsbrief-arnhem-jacobs"
+        },
+        "listId": "mailing-list-conduction-nieuwsbrief",
+        "contactId": "contact-gemeente-arnhem-jacobs",
+        "email": "t.jacobs@arnhem.nl",
+        "state": "pending",
+        "source": "public-signup",
+        "lawfulBasis": "consent",
+        "createdAt": "2026-09-01T16:12:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "subscription",
+          "slug": "subscription-nieuwsbrief-haarlem-vandenberg"
+        },
+        "listId": "mailing-list-conduction-nieuwsbrief",
+        "contactId": "contact-gemeente-haarlem-vandenberg",
+        "email": "r.vandenberg@haarlem.nl",
+        "state": "unsubscribed",
+        "source": "public-signup",
+        "lawfulBasis": "consent",
+        "confirmedAt": "2026-04-12T11:02:30+00:00",
+        "unsubscribedAt": "2026-10-15T12:03:14+00:00",
+        "reason": "Te veel post",
+        "createdAt": "2026-04-12T11:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "subscription",
+          "slug": "subscription-nieuwsbrief-groningen-visser"
+        },
+        "listId": "mailing-list-conduction-nieuwsbrief",
+        "contactId": "contact-gemeente-groningen-visser",
+        "email": "h.visser@groningen.nl",
+        "state": "bounced",
+        "source": "public-signup",
+        "lawfulBasis": "consent",
+        "confirmedAt": "2025-11-08T09:04:00+00:00",
+        "createdAt": "2025-11-08T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "subscription",
+          "slug": "subscription-klantupdates-utrecht-bakker"
+        },
+        "listId": "mailing-list-klantupdates",
+        "contactId": "contact-gemeente-utrecht-bakker",
+        "email": "s.bakker@utrecht.nl",
+        "state": "confirmed",
+        "source": "soft-opt-in-import",
+        "lawfulBasis": "soft-opt-in",
+        "confirmedAt": "2026-06-04T10:00:00+00:00",
+        "createdAt": "2026-06-04T10:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "subscription",
+          "slug": "subscription-klantupdates-eindhoven-mulder"
+        },
+        "listId": "mailing-list-klantupdates",
+        "contactId": "contact-gemeente-eindhoven-mulder",
+        "email": "j.mulder@eindhoven.nl",
+        "state": "confirmed",
+        "source": "soft-opt-in-import",
+        "lawfulBasis": "soft-opt-in",
+        "confirmedAt": "2026-06-04T10:00:00+00:00",
+        "createdAt": "2026-06-04T10:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "consentRecord",
+          "slug": "consent-011-list-nieuwsbrief-jansen"
+        },
+        "contactId": "contact-gemeente-amsterdam-jansen",
+        "channel": "email",
+        "lawfulBasis": "consent",
+        "consentSource": "double-opt-in",
+        "consentedAt": "2026-04-12T10:20:11+00:00",
+        "listId": "mailing-list-conduction-nieuwsbrief",
+        "evidence": {
+          "mechanism": "double-opt-in",
+          "reference": "subscription-nieuwsbrief-amsterdam-jansen",
+          "objectionOffered": true,
+          "objectionOfferedAt": "2026-04-12T10:18:00+00:00",
+          "recordedAt": "2026-04-12T10:20:11+00:00"
+        },
+        "softBounceCount": 0
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "consentRecord",
+          "slug": "consent-012-list-nieuwsbrief-devries"
+        },
+        "contactId": "contact-gemeente-rotterdam-devries",
+        "channel": "email",
+        "lawfulBasis": "consent",
+        "consentSource": "double-opt-in",
+        "consentedAt": "2026-07-22T14:07:40+00:00",
+        "listId": "mailing-list-conduction-nieuwsbrief",
+        "evidence": {
+          "mechanism": "double-opt-in",
+          "reference": "subscription-nieuwsbrief-rotterdam-devries",
+          "objectionOffered": true,
+          "objectionOfferedAt": "2026-07-22T14:05:00+00:00",
+          "recordedAt": "2026-07-22T14:07:40+00:00"
+        },
+        "softBounceCount": 0
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "consentRecord",
+          "slug": "consent-013-list-klantupdates-bakker"
+        },
+        "contactId": "contact-gemeente-utrecht-bakker",
+        "channel": "email",
+        "lawfulBasis": "soft-opt-in",
+        "consentSource": "soft-opt-in-import",
+        "consentedAt": "2026-06-04T10:00:00+00:00",
+        "listId": "mailing-list-klantupdates",
+        "evidence": {
+          "mechanism": "soft-opt-in-import",
+          "reference": "import-klantupdates-2026-06",
+          "objectionOffered": true,
+          "objectionOfferedAt": "2026-06-04T10:00:00+00:00",
+          "objectionText": "U ontvangt deze updates omdat u klant bent. Afmelden kan met de link onderaan elke mail.",
+          "recordedAt": "2026-06-04T10:00:00+00:00"
+        },
+        "softBounceCount": 0
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "consentRecord",
+          "slug": "consent-014-list-klantupdates-mulder"
+        },
+        "contactId": "contact-gemeente-eindhoven-mulder",
+        "channel": "email",
+        "lawfulBasis": "soft-opt-in",
+        "consentSource": "soft-opt-in-import",
+        "consentedAt": "2026-06-04T10:00:00+00:00",
+        "listId": "mailing-list-klantupdates",
+        "evidence": {
+          "mechanism": "soft-opt-in-import",
+          "reference": "import-klantupdates-2026-06",
+          "objectionOffered": true,
+          "objectionOfferedAt": "2026-06-04T10:00:00+00:00",
+          "objectionText": "U ontvangt deze updates omdat u klant bent. Afmelden kan met de link onderaan elke mail.",
+          "recordedAt": "2026-06-04T10:00:00+00:00"
+        },
+        "softBounceCount": 0
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "consentRecord",
+          "slug": "consent-015-list-nieuwsbrief-vandenberg"
+        },
+        "contactId": "contact-gemeente-haarlem-vandenberg",
+        "channel": "email",
+        "lawfulBasis": "consent",
+        "consentSource": "double-opt-in",
+        "consentedAt": "2026-04-12T11:02:30+00:00",
+        "listId": "mailing-list-conduction-nieuwsbrief",
+        "evidence": {
+          "mechanism": "double-opt-in",
+          "reference": "subscription-nieuwsbrief-haarlem-vandenberg",
+          "objectionOffered": true,
+          "objectionOfferedAt": "2026-04-12T11:00:00+00:00",
+          "recordedAt": "2026-04-12T11:02:30+00:00"
+        },
+        "withdrawnAt": "2026-10-15T12:03:14+00:00",
+        "withdrawnReason": "user-unsubscribed",
+        "softBounceCount": 0
+      }
+    ]
+  }
+}
