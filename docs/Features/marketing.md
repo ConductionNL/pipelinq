@@ -25,13 +25,19 @@ This page describes what you can do today and what is planned. The technical des
 
 **SMS and WhatsApp.** Send one-to-one messages from a client or contact page, with per-channel consent, approved WhatsApp templates and a spend budget. See [outbound messaging](outbound-messaging.md).
 
+## Sending
+
+Every blast sends through a transport you choose. A fresh install already has one ready: the instance's own mail server, no setup required. Add your own Mail account for occasional low-volume sends, or connect a bulk provider (Amazon SES, Brevo, Mailjet, SendGrid, Mailgun or Postmark) through OpenConnector once volume grows. Set a default transport in admin settings, or pick one per blast in the wizard.
+
+The deliverability panel checks each transport's sender domain against SPF, DKIM and DMARC, so you know before you send whether Gmail and Yahoo will accept your mail in bulk.
+
 ## What is planned
 
 The programme runs in six phases, ordered by value. Each phase is a set of openspec changes; the [architecture page](../Technical/marketing-architecture.md#phases) lists them.
 
 | Phase | You will be able to | Status |
 | --- | --- | --- |
-| 1 · Lists and mailings | Run mailing lists people subscribe to, with double opt-in and a preference centre. Compose a newsletter from articles. Send through your own Nextcloud mail server, your own Mail account, or a bulk provider. Record work, private and mobile numbers, several email addresses and social handles per contact. | Planned |
+| 1 · Lists and mailings | Run mailing lists people subscribe to, with double opt-in and a preference centre. Compose a newsletter from articles. Record work, private and mobile numbers, several email addresses and social handles per contact. Sending through your own mail server, your own Mail account, or a bulk provider is already live, see [Sending](#sending). | Planned |
 | 2 · Content hub and AI | Write an article once and reuse it in a newsletter, a social post and a portaliq page. Ask hermiq for a draft, a shorter subject line or a LinkedIn variant, in your organisation's voice. Every AI draft is marked and needs your approval before anything leaves. | Planned |
 | 3 · Social publishing | Connect your company pages on LinkedIn, Mastodon, Bluesky, X, Facebook, Instagram and Threads, and let colleagues connect their own profiles. Schedule and approve posts in one calendar. Where a network does not allow posting on someone's behalf, they receive the prepared post and share it themselves. See which posts perform. | Planned |
 | 4 · Campaigns and attribution | Group a mailing, posts and a landing page into one campaign. Create the landing page with a form in portaliq from Pipelinq. A form submission becomes a lead that remembers which mailing and which post brought it in. See attributed revenue per campaign, closed on paid invoices in shillinq. | Planned |

@@ -417,6 +417,17 @@ return [
         ['name' => 'blastWebhook#sendgrid', 'url' => '/api/blast-webhooks/sendgrid', 'verb' => 'POST'],
         ['name' => 'blastWebhook#ses',      'url' => '/api/blast-webhooks/ses',      'verb' => 'POST'],
         ['name' => 'blastWebhook#twilio',   'url' => '/api/blast-webhooks/twilio',   'verb' => 'POST'],
+        // marketing-mail-transports: four more bulk-provider webhooks,
+        // same signature-verified/PublicPage shape as the three above.
+        ['name' => 'blastWebhook#brevo',    'url' => '/api/blast-webhooks/brevo',    'verb' => 'POST'],
+        ['name' => 'blastWebhook#mailjet',  'url' => '/api/blast-webhooks/mailjet',  'verb' => 'POST'],
+        ['name' => 'blastWebhook#mailgun',  'url' => '/api/blast-webhooks/mailgun',  'verb' => 'POST'],
+        ['name' => 'blastWebhook#postmark', 'url' => '/api/blast-webhooks/postmark', 'verb' => 'POST'],
+
+        // marketing-mail-transports: deliverability panel's SPF/DKIM/DMARC
+        // check (AuthorizedAdminSetting; not CRUD, so it is not on
+        // useObjectStore). camelCase slug matches MailTransportController.
+        ['name' => 'mailTransport#checkDeliverability', 'url' => '/api/mail-transports/{id}/check-deliverability', 'verb' => 'POST'],
 
         // First-party marketing-email open/click tracking (HMAC-signed
         // tokens, PublicPage, fail-closed) — marketing-email-open-click-tracking.
@@ -528,6 +539,10 @@ return [
         ['name' => 'article#show',       'url' => '/api/articles/{id}',           'verb' => 'GET'],
         ['name' => 'article#update',     'url' => '/api/articles/{id}',           'verb' => 'PATCH'],
 
+        // Marketing — Search Console (marketing-campaign-attribution): top queries
+        // over a window plus the connection status. Static path, no wildcard.
+        ['name' => 'searchConsole#index', 'url' => '/api/marketing/search-queries', 'verb' => 'GET'],
+
         // Marketing — Blasts (marketing-segmentation-and-blast chain member 06).
         // Specific routes precede any wildcard {slug} routes (ADR-016).
         ['name' => 'blast#index',      'url' => '/api/blasts',                     'verb' => 'GET'],
@@ -536,6 +551,9 @@ return [
         ['name' => 'blast#cancel',     'url' => '/api/blasts/{id}/cancel',         'verb' => 'POST'],
         ['name' => 'blast#deliveries', 'url' => '/api/blasts/{id}/deliveries',     'verb' => 'GET'],
         ['name' => 'blast#attribution', 'url' => '/api/blasts/{id}/attribution',   'verb' => 'GET'],
+        // Phase 2 of the fleet traffic programme (marketing-campaign-attribution):
+        // mailbox numbers plus the site sessions Portaliq attributed to the campaign.
+        ['name' => 'blast#performance', 'url' => '/api/blasts/{id}/performance',   'verb' => 'GET'],
         ['name' => 'blast#show',       'url' => '/api/blasts/{id}',                'verb' => 'GET'],
         ['name' => 'blast#update',     'url' => '/api/blasts/{id}',                'verb' => 'PATCH'],
 

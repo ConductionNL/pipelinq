@@ -351,6 +351,7 @@
 		<!-- Channels & telephony. Configuration, not an operator surface, so it
 		     lives here rather than in the app nav (nav-ia-cleanup). -->
 		<MessagingSettings v-if="isAdmin && isConfigured" />
+		<DeliverabilitySettings v-if="isAdmin && isConfigured" />
 		<CtiPage v-if="isAdmin && isConfigured" />
 
 		<!-- Point of Sale configuration. `PaymentSettingsForm` (PSP providers —
@@ -361,6 +362,13 @@
 		<PosTenderTypeManager v-if="isAdmin && isConfigured" />
 		<PosStaffManager v-if="isAdmin && isConfigured" />
 		<PosRoleManager v-if="isAdmin && isConfigured" />
+
+		<!-- Marketing traffic (marketing-campaign-attribution): campaign
+		     parameters on blast links, the Portaliq portal, Search Console. -->
+		<MarketingTrafficSettings
+			v-if="isAdmin"
+			:config="config"
+			@saved="onMarketingTrafficSaved" />
 
 		<!-- Re-import Status -->
 		<div v-if="message" class="actions-section">
@@ -388,8 +396,11 @@ import AgentProfileSettings from '../../components/admin/AgentProfileSettings.vu
 import ForecastSettings from '../../components/admin/ForecastSettings.vue'
 import SkillSettings from '../../components/admin/SkillSettings.vue'
 import CtiPage from './CtiPage.vue'
+// marketing-mail-transports: transport list + SPF/DKIM/DMARC panel.
+import DeliverabilitySettings from './DeliverabilitySettings.vue'
 import ExportConfigurationSettings from './ExportConfigurationSettings.vue'
 import MailingListEmbedSettings from './MailingListEmbedSettings.vue'
+import MarketingTrafficSettings from './MarketingTrafficSettings.vue'
 // Configuration surfaces moved off the app nav onto this admin page
 // (nav-ia-cleanup): channels, telephony, and the POS master-data.
 import MessagingSettings from './MessagingSettings.vue'
@@ -411,6 +422,7 @@ export default {
 	name: 'PipelinqAdminSettings',
 	components: {
 		MessagingSettings,
+		DeliverabilitySettings,
 		CtiPage,
 		PaymentSettingsForm,
 		PosTenderTypeManager,
@@ -434,6 +446,7 @@ export default {
 		ForecastSettings,
 		ExportConfigurationSettings,
 		MailingListEmbedSettings,
+		MarketingTrafficSettings,
 	},
 
 	data() {
@@ -674,6 +687,17 @@ export default {
 			} finally {
 				this.reimporting = false
 			}
+		},
+
+		/**
+		 * Keep the page's config in step with what the marketing traffic
+		 * section saved, so the other sections do not overwrite it.
+		 *
+		 * @param {object} updated The updated config returned by the section.
+		 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-marketing-traffic-settings
+		 */
+		onMarketingTrafficSaved(updated) {
+			this.config = updated || this.config
 		},
 
 		/**

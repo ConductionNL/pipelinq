@@ -36,6 +36,7 @@ import {
 	dismissWalkthrough,
 	navClick,
 	openApp,
+	revealNavEntry,
 } from '../helpers/pipelinq.ts'
 
 /** One authenticated JSON call issued from inside the logged-in page. */
@@ -613,8 +614,10 @@ test.describe('Blasts ledger and wizard', () => {
 			timeout: 20000,
 		})
 
-		// The six declared steps are rendered as an ordered progress list.
-		await expect(form.locator('.blast-form__steps li')).toHaveCount(6)
+		// The seven declared steps are rendered as an ordered progress list.
+		// marketing-mail-transports added a "Transport" step between Channel
+		// and Schedule (six steps before that change).
+		await expect(form.locator('.blast-form__steps li')).toHaveCount(7)
 		await expect(form.locator('.blast-form__steps li.is-current')).toHaveCount(1)
 
 		// Step 1 — name. `canAdvance` gates Next until it is filled.
@@ -750,8 +753,14 @@ test.describe('Segments', () => {
 	}) => {
 		await openApp(page)
 
-		const nav = page.locator('nav, [role="navigation"]').first()
-		const segmentsLink = nav.getByRole('link', { name: 'Segments' }).first()
+		// Two things this assertion needs that it did not ask for. The first
+		// match of `nav, [role="navigation"]` is Nextcloud's own app-menu,
+		// which carries no links at all; and the Marketing group renders
+		// collapsed on the landing page, so its children are in the DOM and
+		// invisible until it is opened. revealNavEntry() expands the group
+		// that holds the label and hands back the leaf anchor.
+		const segmentsLink = await revealNavEntry(page, 'Segments')
+		const nav = page.locator('#app-navigation-vue')
 		const templatesLink = nav.getByRole('link', { name: 'Templates' }).first()
 		const blastsLink = nav
 			.getByRole('link', { name: 'Blasts', exact: true })

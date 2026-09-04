@@ -1,11 +1,13 @@
 ---
-status: done
+status: in-progress
 ---
 
 # marketing-blast-delivery Specification
 
+**OpenSpec changes**: [marketing-mail-transports](../../changes/marketing-mail-transports/) _(in-progress)_
+
 ## Purpose
-Drives blast delivery via a background job that dispatches queued sends every few minutes and processes provider webhooks without one blast's failure aborting the others. It propagates unsubscribes to consent records within a minute, handles hard and soft bounces to protect sender reputation, and records click events (first-click time, clicked URLs, UTM campaign) for attribution.
+Drives blast delivery via a background job that dispatches queued sends every few minutes and processes provider webhooks (SendGrid, SES, Twilio, Brevo, Mailjet, Mailgun, Postmark) without one blast's failure aborting the others. It propagates unsubscribes to consent records within a minute, handles hard and soft bounces to protect sender reputation, and records click events (first-click time, clicked URLs, UTM campaign) for attribution.
 ## Requirements
 ### Requirement: Background Job Dispatches Sending Blasts
 

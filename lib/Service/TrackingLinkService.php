@@ -392,7 +392,11 @@ class TrackingLinkService {
 			return $matches[0];
 		}
 
-		$token = $this->signClickToken(blastDeliveryId: $blastDeliveryId, targetUrl: $href);
+		// The attribute value is HTML: `&amp;` between query parameters is
+		// the correct spelling there, but the redirect target must be the
+		// URL itself, or every second parameter arrives as `amp;name`.
+		$target = html_entity_decode($href, (ENT_QUOTES | ENT_HTML5));
+		$token = $this->signClickToken(blastDeliveryId: $blastDeliveryId, targetUrl: $target);
 		$newHref = (self::CLICK_ROUTE_PREFIX . $token);
 		return ('<a' . $before . ' href=' . $quote . $newHref . $quote . $after . '>');
 	}//end rewriteAnchor()

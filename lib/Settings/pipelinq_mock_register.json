@@ -2478,6 +2478,75 @@
       {
         "@self": {
           "register": "pipelinq",
+          "schema": "mailTransport",
+          "slug": "mailtransport-mailtransport-1-1"
+        },
+        "kind": "instance",
+        "displayName": "Voorbeeld Displayname 1",
+        "provider": "ses",
+        "connectorSourceId": "Voorbeeld Connectorsourceid 1",
+        "mailAccountRef": "Voorbeeld Mailaccountref 1",
+        "mailAccountUserId": "Voorbeeld Mailaccountuserid 1",
+        "senderDomain": "Voorbeeld Senderdomain 1",
+        "dailyLimit": 0,
+        "sentToday": 0,
+        "dailyLimitResetAt": "2026-03-01T09:00:00+00:00",
+        "dkimVerified": false,
+        "dmarcStatus": "unknown",
+        "deliverabilityCheckedAt": "2026-03-01T09:00:00+00:00",
+        "active": true,
+        "default": false,
+        "mock": false
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "mailTransport",
+          "slug": "mailtransport-mailtransport-2-2"
+        },
+        "kind": "mailAccount",
+        "displayName": "Voorbeeld Displayname 2",
+        "provider": "brevo",
+        "connectorSourceId": "Voorbeeld Connectorsourceid 2",
+        "mailAccountRef": "Voorbeeld Mailaccountref 2",
+        "mailAccountUserId": "Voorbeeld Mailaccountuserid 2",
+        "senderDomain": "Voorbeeld Senderdomain 2",
+        "dailyLimit": 0,
+        "sentToday": 0,
+        "dailyLimitResetAt": "2026-03-02T09:00:00+00:00",
+        "dkimVerified": false,
+        "dmarcStatus": "missing",
+        "deliverabilityCheckedAt": "2026-03-02T09:00:00+00:00",
+        "active": true,
+        "default": false,
+        "mock": false
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "mailTransport",
+          "slug": "mailtransport-mailtransport-3-3"
+        },
+        "kind": "provider",
+        "displayName": "Voorbeeld Displayname 3",
+        "provider": "mailjet",
+        "connectorSourceId": "Voorbeeld Connectorsourceid 3",
+        "mailAccountRef": "Voorbeeld Mailaccountref 3",
+        "mailAccountUserId": "Voorbeeld Mailaccountuserid 3",
+        "senderDomain": "Voorbeeld Senderdomain 3",
+        "dailyLimit": 0,
+        "sentToday": 0,
+        "dailyLimitResetAt": "2026-03-03T09:00:00+00:00",
+        "dkimVerified": false,
+        "dmarcStatus": "invalid",
+        "deliverabilityCheckedAt": "2026-03-03T09:00:00+00:00",
+        "active": true,
+        "default": false,
+        "mock": false
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
           "schema": "mailboxResolution",
           "slug": "mailboxresolution-mailboxresolution-1-1"
         },
@@ -6002,6 +6071,57 @@
         "validUntil": "2026-03-03T09:00:00+00:00",
         "justification": "Voorbeeld Justification 3",
         "status": "archived"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "searchQueryDaily",
+          "slug": "searchquerydaily-demo-1"
+        },
+        "property": "https://example.org/",
+        "date": "2026-09-01",
+        "query": "woo verzoek indienen",
+        "page": "https://example.org/woo",
+        "clicks": 12,
+        "impressions": 340,
+        "ctr": 0.0353,
+        "position": 4.2,
+        "source": "gsc",
+        "importedAt": "2026-09-04T03:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "searchQueryDaily",
+          "slug": "searchquerydaily-demo-2"
+        },
+        "property": "https://example.org/",
+        "date": "2026-09-01",
+        "query": "openingstijden gemeente",
+        "page": "https://example.org/contact",
+        "clicks": 7,
+        "impressions": 90,
+        "ctr": 0.0778,
+        "position": 2.1,
+        "source": "gsc",
+        "importedAt": "2026-09-04T03:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "searchQueryDaily",
+          "slug": "searchquerydaily-demo-3"
+        },
+        "property": "https://example.org/",
+        "date": "2026-09-02",
+        "query": "woo verzoek indienen",
+        "page": "https://example.org/woo",
+        "clicks": 15,
+        "impressions": 360,
+        "ctr": 0.0417,
+        "position": 3.9,
+        "source": "gsc",
+        "importedAt": "2026-09-04T03:00:00+00:00"
       }
     ]
   }

@@ -268,6 +268,30 @@ class SettingsService {
 		// spec ref: marketing-email-tracking Requirement "Opens and clicks are
 		// reported to Portaliq as email traffic events".
 		'blast.traffic_portal' => '',
+		// Campaign parameters on blast links (marketing-campaign-attribution):
+		// every link in a blast body gets utm_source/medium/campaign/content
+		// appended when absent. On by default; `false` sends links as authored.
+		'blast.utm_auto' => 'true',
+		// Search Console properties (site URLs or sc-domain: properties), one
+		// per line or comma-separated, imported daily by SearchConsoleImportJob
+		// with the service account key in SECRET_KEYS below.
+		'search.gsc.properties' => '',
+		// When the last Search Console import finished, ISO 8601. Written by
+		// the importer, read back for the settings page.
+		'search.gsc.last_import_at' => '',
+	];
+
+	/**
+	 * Secrets written through the settings API but never read back through
+	 * it. Stored sensitive in app config; `getSettings()` reports only
+	 * `<key>_set` so a page can say "a key is on file" without seeing it.
+	 * An empty value in the payload is ignored (a form save must not wipe
+	 * the key); `<key>_clear` = `true` deletes it.
+	 *
+	 * @var array<int, string>
+	 */
+	private const SECRET_KEYS = [
+		'search.gsc.service_account_key',
 	];
 
 	/**
@@ -307,6 +331,13 @@ class SettingsService {
 			$config[$key] = $this->appConfig->getValueString(Application::APP_ID, $key, $default);
 		}
 
+		foreach (self::SECRET_KEYS as $key) {
+			$config[$key . '_set'] = 'false';
+			if ($this->appConfig->getValueString(Application::APP_ID, $key, '') !== '') {
+				$config[$key . '_set'] = 'true';
+			}
+		}
+
 		return $config;
 	}//end getSettings()
 
@@ -329,6 +360,18 @@ class SettingsService {
 		foreach (array_keys(array: self::TUNABLE_DEFAULTS) as $key) {
 			if (isset($data[$key]) === true) {
 				$this->appConfig->setValueString(Application::APP_ID, $key, (string)$data[$key]);
+			}
+		}
+
+		foreach (self::SECRET_KEYS as $key) {
+			if ((string)($data[$key . '_clear'] ?? '') === 'true') {
+				$this->appConfig->deleteKey(Application::APP_ID, $key);
+				continue;
+			}
+
+			$value = trim((string)($data[$key] ?? ''));
+			if ($value !== '') {
+				$this->appConfig->setValueString(Application::APP_ID, $key, $value, false, true);
 			}
 		}
 

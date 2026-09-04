@@ -147,4 +147,130 @@ class ContactDataBuilderTest extends TestCase {
 		$this->assertSame('SomeCorp', $result['name']);
 		$this->assertSame('organization', $result['type']);
 	}//end testBuildClientImportDataEmptyNameUsesOrg()
+
+	/**
+	 * Multi-valued typed EMAIL/TEL (IManager `types` => true shape) build
+	 * `emails[]`/`phones[]` with kind mapped from TYPE and the first entry
+	 * marked primary, while `email`/`phone` mirror that first entry.
+	 *
+	 * @return void
+	 */
+	public function testBuildClientImportDataTypedEmailsAndPhones(): void {
+		$ncContact = [
+			'FN' => 'John Doe',
+			'EMAIL' => [
+				['type' => 'WORK', 'value' => 'john@work.example'],
+				['type' => 'HOME', 'value' => 'john@home.example'],
+			],
+			'TEL' => [
+				['type' => 'CELL', 'value' => '+31611111111'],
+				['type' => 'WORK', 'value' => '+31622222222'],
+			],
+		];
+
+		$result = $this->builder->buildClientImportData($ncContact, 'uid-typed');
+
+		$this->assertSame('john@work.example', $result['email']);
+		$this->assertSame('+31611111111', $result['phone']);
+
+		$this->assertSame(
+			[
+				['kind' => 'work', 'value' => 'john@work.example', 'primary' => true, 'verified' => false],
+				['kind' => 'private', 'value' => 'john@home.example', 'primary' => false, 'verified' => false],
+			],
+			$result['emails']
+		);
+		$this->assertSame(
+			[
+				['kind' => 'mobile', 'value' => '+31611111111', 'primary' => true, 'verified' => false],
+				['kind' => 'work', 'value' => '+31622222222', 'primary' => false, 'verified' => false],
+			],
+			$result['phones']
+		);
+	}//end testBuildClientImportDataTypedEmailsAndPhones()
+
+	/**
+	 * An untyped TEL (no TYPE parameter) maps to kind "other" rather than
+	 * guessing.
+	 *
+	 * @return void
+	 */
+	public function testBuildClientImportDataUntypedPhoneMapsToOther(): void {
+		$ncContact = ['FN' => 'Jane', 'TEL' => '+31699999999'];
+
+		$result = $this->builder->buildClientImportData($ncContact, 'uid-untyped');
+
+		$this->assertSame(
+			[['kind' => 'other', 'value' => '+31699999999', 'primary' => true, 'verified' => false]],
+			$result['phones']
+		);
+	}//end testBuildClientImportDataUntypedPhoneMapsToOther()
+
+	/**
+	 * X-SOCIALPROFILE entries build `socialProfiles[]`: a recognised
+	 * network TYPE is kept, an unrecognised one falls back to "other", and
+	 * a value that looks like a URL is stored as `url` rather than
+	 * `handle`.
+	 *
+	 * @return void
+	 */
+	public function testBuildClientImportDataSocialProfiles(): void {
+		$ncContact = [
+			'FN' => 'Jane',
+			'X-SOCIALPROFILE' => [
+				['type' => 'linkedin', 'value' => 'https://linkedin.com/in/jane'],
+				['type' => 'mastodon', 'value' => '@jane@mastodon.social'],
+				['type' => 'unknown-network', 'value' => 'janedoe'],
+			],
+		];
+
+		$result = $this->builder->buildClientImportData($ncContact, 'uid-social');
+
+		$this->assertSame(
+			[
+				['network' => 'linkedin', 'handle' => '', 'url' => 'https://linkedin.com/in/jane', 'verified' => false, 'followedByUs' => false, 'followsUs' => false],
+				['network' => 'mastodon', 'handle' => '@jane@mastodon.social', 'url' => '', 'verified' => false, 'followedByUs' => false, 'followsUs' => false],
+				['network' => 'other', 'handle' => 'janedoe', 'url' => '', 'verified' => false, 'followedByUs' => false, 'followsUs' => false],
+			],
+			$result['socialProfiles']
+		);
+	}//end testBuildClientImportDataSocialProfiles()
+
+	/**
+	 * No EMAIL/TEL/X-SOCIALPROFILE at all yields empty (not missing)
+	 * arrays, so a form reading `emails`/`phones`/`socialProfiles` never
+	 * has to guard against an absent key.
+	 *
+	 * @return void
+	 */
+	public function testBuildClientImportDataNoChannelsYieldsEmptyArrays(): void {
+		$result = $this->builder->buildClientImportData(['FN' => 'No Channels'], 'uid-none');
+
+		$this->assertSame([], $result['emails']);
+		$this->assertSame([], $result['phones']);
+		$this->assertSame([], $result['socialProfiles']);
+		$this->assertArrayNotHasKey('email', $result);
+		$this->assertArrayNotHasKey('phone', $result);
+	}//end testBuildClientImportDataNoChannelsYieldsEmptyArrays()
+
+	/**
+	 * buildContactImportData carries the same typed-array mapping as the
+	 * client builder.
+	 *
+	 * @return void
+	 */
+	public function testBuildContactImportDataTypedEmails(): void {
+		$ncContact = [
+			'FN' => 'John Doe',
+			'EMAIL' => [['type' => 'WORK', 'value' => 'john@work.example']],
+		];
+
+		$result = $this->builder->buildContactImportData($ncContact, 'uid-123', null);
+
+		$this->assertSame('john@work.example', $result['email']);
+		$this->assertSame(
+			[['kind' => 'work', 'value' => 'john@work.example', 'primary' => true, 'verified' => false]],
+			$result['emails']
+		);
+	}//end testBuildContactImportDataTypedEmails()
 }//end class

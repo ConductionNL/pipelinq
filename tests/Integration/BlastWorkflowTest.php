@@ -24,11 +24,13 @@ namespace OCA\Pipelinq\Tests\Integration;
 use OCA\Pipelinq\Service\ArticleService;
 use OCA\Pipelinq\Service\BlastService;
 use OCA\Pipelinq\Service\ComplianceService;
+use OCA\Pipelinq\Service\Marketing\MailTransportService;
 use OCA\Pipelinq\Service\SchemaMapService;
 use OCA\Pipelinq\Service\SegmentService;
 use OCP\IAppConfig;
 use OCP\ICache;
 use OCP\ICacheFactory;
+use OCP\Mail\IMailer;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -280,10 +282,17 @@ class BlastWorkflowTest extends TestCase {
 			$segmentService,
 			$this->logger,
 		);
+		$mailTransportService = new MailTransportService(
+			$this->container,
+			$this->appConfig,
+			$this->createMock(IMailer::class),
+			$this->createMock(ArticleService::class),
+			$this->logger,
+		);
 		$blastService = new BlastService($this->container,
 			$this->appConfig,
 			$segmentService,
-			$this->createMock(ArticleService::class),
+			$mailTransportService,
 			$this->logger,
 		);
 

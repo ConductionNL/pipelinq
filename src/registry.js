@@ -32,7 +32,6 @@ import BookingDetailSection from './components/bookings/BookingDetailSection.vue
 import BookingsCard from './components/bookings/BookingsCard.vue'
 import BrpContactPanel from './components/BrpContactPanel.vue'
 import CommunicationHistory from './components/CommunicationHistory.vue'
-import ContactmomentQuickLog from './components/ContactmomentQuickLog.vue'
 // --- Client / Contact 360 detail sub-features (pipelinq-client-contact-detail-
 //     declarative). The ClientDetail / ContactDetail monolithic page-host views
 //     are gone — the pages are declarative type:"detail" manifest entries whose
@@ -41,6 +40,8 @@ import ContactmomentQuickLog from './components/ContactmomentQuickLog.vue'
 //     org link from `relationLinks`, and these rich sub-features stay in the
 //     page body via `bodyWidgets` (kind:'section'). Each reads the live object
 //     via props (token-resolved `@objectId`) — no page host needed. ---
+import ContactChannelsSection from './components/ContactChannelsSection.vue'
+import ContactmomentQuickLog from './components/ContactmomentQuickLog.vue'
 import ContactRelationships from './components/ContactRelationships.vue'
 // --- Billing categories (billable-categories-and-tags): list view with a
 //     bespoke color-swatch + DBA / active badge column layout the
@@ -232,6 +233,9 @@ import LoyaltyReportingView from './views/loyalty/LoyaltyReporting.vue'
 //     ArticleEditModal, the one editing surface the change owns. Matches the
 //     SegmentNew / TemplateNew / BlastNew convention below. ---
 import ArticleFormView from './views/marketing/ArticleFormView.vue'
+// --- Search Console top queries (marketing-campaign-attribution): an
+//     aggregation over searchQueryDaily rows, not a row list. ---
+import SearchQueriesView from './views/marketing/SearchQueries.vue'
 // --- Outbound WhatsApp/SMS conversation section (outbound-messaging-
 //     provider-wiring): self-fetches conversation/message rows by contactId
 //     + the composer preflight facts, and hosts the SendMessageModal
@@ -680,6 +684,11 @@ const registry = {
 		component: ContactRelationships,
 		_note: 'Outbound/inbound relationship graph for a client or contact; self-fetches by entityId/entityType.',
 	},
+	ContactChannelsSection: {
+		kind: 'section',
+		component: ContactChannelsSection,
+		_note: 'Typed emails/phones/social profiles for a client or contact (contact-channel-details); self-fetches by entityId/entityType.',
+	},
 	SubscriptionsSection: {
 		kind: 'section',
 		component: SubscriptionsSection,
@@ -808,6 +817,11 @@ const registry = {
 		kind: 'page',
 		component: ArticleFormView,
 		_note: 'New-article route wrapper (marketing-article-hub). Mounts ArticleEditModal in create mode — the bespoke ArticleService create path (author stamp, slug derivation, the ADR-088 agent-mark refusal) has no declarative equivalent, so there is no generic type:"form" page here. On save, navigates to the new article\'s ArticleDetail.',
+	},
+	SearchQueriesView: {
+		kind: 'page',
+		component: SearchQueriesView,
+		_note: 'Search Console top queries (marketing-campaign-attribution): one row per query with clicks and impressions summed and an impression-weighted position over a selectable window, from GET /api/marketing/search-queries; empty state points at the Marketing traffic settings. Custom because the page is an aggregation, which no declarative index primitive expresses.',
 	},
 	SegmentFormView: {
 		kind: 'page',
