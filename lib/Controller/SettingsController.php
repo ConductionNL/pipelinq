@@ -38,6 +38,7 @@ use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use UnexpectedValueException;
 
 /**
  * Controller for Pipelinq settings.
@@ -176,7 +177,17 @@ class SettingsController extends Controller {
 	#[AuthorizedAdminSetting(Application::APP_ID)]
 	public function update(): JSONResponse {
 		$data = $this->request->getParams();
-		$config = $this->settingsService->updateSettings($data);
+
+		// A refused value is a 400 with the service's own message, not a 500.
+		// The only refusal today is a raw Matomo token written into the
+		// credential REFERENCE field (marketing-search-intelligence): the
+		// admin has to be told what to do instead, and an unhandled throw
+		// would tell them only that saving failed.
+		try {
+			$config = $this->settingsService->updateSettings($data);
+		} catch (UnexpectedValueException $e) {
+			return new JSONResponse(['success' => false, 'error' => $e->getMessage()], Http::STATUS_BAD_REQUEST);
+		}
 
 		return new JSONResponse(
 			[

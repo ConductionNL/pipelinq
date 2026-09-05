@@ -107,6 +107,31 @@ class SearchQueryReportService {
 	}//end topQueries()
 
 	/**
+	 * The raw rows of a window.
+	 *
+	 * Phase 5 (marketing-search-intelligence) derives position buckets,
+	 * striking distance, cannibalisation and content gaps from the same rows
+	 * this service already reads. Exposing the read it performs anyway is
+	 * what keeps that phase from growing a SECOND reader over
+	 * `searchQueryDaily`, which is the one thing the phase was told not to
+	 * build: two readers drift, and the drift shows up as two pages
+	 * disagreeing about the same window.
+	 *
+	 * @param string|null $from Window start `YYYY-MM-DD`; defaults to 28 days ago.
+	 * @param string|null $to Window end `YYYY-MM-DD`, inclusive; defaults to today.
+	 * @param string|null $property Restrict to one property; null for all.
+	 *
+	 * @return array{from: string, to: string, rows: array<int, array<string, mixed>>}
+	 *
+	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
+	 */
+	public function rows(?string $from = null, ?string $to = null, ?string $property = null): array {
+		[$from, $to] = $this->window(from: $from, to: $to);
+
+		return ['from' => $from, 'to' => $to, 'rows' => $this->loadRows(from: $from, to: $to, property: $property)];
+	}//end rows()
+
+	/**
 	 * Aggregate flat rows per query. Public so the arithmetic is testable
 	 * without OpenRegister.
 	 *

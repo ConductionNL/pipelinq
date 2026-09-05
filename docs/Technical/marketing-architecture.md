@@ -184,6 +184,17 @@ Phase 3 shipped as one change, `social-publishing`, on 2026-09-05. What is prova
 | Facebook page, Instagram business | Same | Meta App Review with Business Verification. |
 | Threads | Same | A `threads` provider in OpenRegister's credential catalogue. There is none, so the adapter reports `not_configured` with a reason rather than failing at the call. |
 
+Phase 5 shipped as one change, `marketing-search-intelligence`, on 2026-09-05. It differs from the plan above in four places, each recorded here so a later reader does not treat the difference as drift:
+
+| Planned | Shipped | Why |
+| --- | --- | --- |
+| `searchProperty` and `searchQueryStat` schemas | Neither. The phase reads the `searchQueryDaily` schema and store phase 2 shipped, and properties stay in `search.gsc.properties` | A second reader over the same rows drifts from the first, and two pages then disagree about the same window. Moving the property list to objects is a migration with no new capability behind it. |
+| Competitor watches on OpenRegister flow schedules | Exactly that, plus a contributed node | ADR-094 decision 3 records that the flow engine has no outbound-HTTP node, re-checked against `lib/Service/Flow/Nodes/` for this change. So the schedule is the engine's and the fetching step is ours, `pipelinq.competitor-watch-run`, the way humaniq's payroll flow already works. There is no `TimedJob` in this change and a unit test asserts that. |
+| DataForSEO as a later source | Out of scope, and `keywordTarget.volume` and `difficulty` are left UNSET rather than defaulted | A zero in those fields reads as a measurement of no demand rather than as an absence of one. |
+| `socialConnection` with a `direction` | `weFollowThem` and `theyFollowUs`, each `yes`, `no` or `unknown` | Only Mastodon and Bluesky publish a follower list an audit can read. A boolean would record "the network will not say" as "no", which is an answer a marketer acts on and which would be wrong about half the time. |
+
+What is provable without a Google or Matomo credential: every keyword derivation over hand-written rows, the sitemap, page and feed parses and diffs, the Matomo request shape and its credential-reference refusal, the relevance degrade path, the connection audit's `unknown` vocabulary, and every page's empty state. What is not: any actual fetch.
+
 ## Decisions
 
 Taken on 2026-09-04. Later specs start here.
