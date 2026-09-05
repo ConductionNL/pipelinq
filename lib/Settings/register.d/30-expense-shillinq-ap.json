@@ -3,14 +3,14 @@
     "registers": {
       "pipelinq": {
         "schemas": [
-          "expense"
+          "billableExpense"
         ]
       }
     },
     "schemas": {
-      "expense": {
+      "billableExpense": {
         "x-schema-org": "schema:Invoice",
-        "slug": "expense",
+        "slug": "billableExpense",
         "title": "Expense",
         "icon": "ReceiptOutline",
         "version": "1.0.0",
@@ -109,7 +109,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "expense",
+          "schema": "billableExpense",
           "slug": "expense-ap-synced-1"
         },
         "title": "Hotelaccommodatie Amsterdam",
@@ -127,7 +127,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "expense",
+          "schema": "billableExpense",
           "slug": "expense-ap-synced-2"
         },
         "title": "Reiskosten client bezoek",
@@ -145,7 +145,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "expense",
+          "schema": "billableExpense",
           "slug": "expense-ap-pending-1"
         },
         "title": "Kantoorbenodigdheden",
@@ -162,7 +162,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "expense",
+          "schema": "billableExpense",
           "slug": "expense-ap-failed-1"
         },
         "title": "Catering vergadering",
@@ -179,7 +179,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "expense",
+          "schema": "billableExpense",
           "slug": "expense-ap-synced-3"
         },
         "title": "Software licentie (jaarlijks)",

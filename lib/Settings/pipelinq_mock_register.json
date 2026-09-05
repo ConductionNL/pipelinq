@@ -2277,7 +2277,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "expense",
+          "schema": "billableExpense",
           "slug": "expense-voorbeeld-title-1-1"
         },
         "title": "Voorbeeld Title 1",
@@ -2296,7 +2296,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "expense",
+          "schema": "billableExpense",
           "slug": "expense-voorbeeld-title-2-2"
         },
         "title": "Voorbeeld Title 2",
@@ -2315,7 +2315,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "expense",
+          "schema": "billableExpense",
           "slug": "expense-voorbeeld-title-3-3"
         },
         "title": "Voorbeeld Title 3",
@@ -3567,7 +3567,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "mergeOperation",
+          "schema": "masterMergeOperation",
           "slug": "mergeoperation-mergeoperation-1-1"
         },
         "mergedIntoMasterId": "Voorbeeld Mergedintomasterid 1",
@@ -3589,7 +3589,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "mergeOperation",
+          "schema": "masterMergeOperation",
           "slug": "mergeoperation-mergeoperation-2-2"
         },
         "mergedIntoMasterId": "Voorbeeld Mergedintomasterid 2",
@@ -3611,7 +3611,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "mergeOperation",
+          "schema": "masterMergeOperation",
           "slug": "mergeoperation-mergeoperation-3-3"
         },
         "mergedIntoMasterId": "Voorbeeld Mergedintomasterid 3",
