@@ -80,7 +80,7 @@ final class EgressResult {
 	/**
 	 * Constructor.
 	 *
-	 * @param bool $ok Whether the read succeeded.
+	 * @param bool $succeeded Whether the read succeeded.
 	 * @param int $status The HTTP status, 0 when no call was made.
 	 * @param string $body The response body, empty on failure.
 	 * @param string|null $failure One of {@see FAILURES}, or null on success.
@@ -89,7 +89,7 @@ final class EgressResult {
 	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-every-outbound-read-leaves-through-an-openconnector-source
 	 */
 	public function __construct(
-		public readonly bool $ok,
+		public readonly bool $succeeded,
 		public readonly int $status = 0,
 		public readonly string $body = '',
 		public readonly ?string $failure = null,
@@ -108,7 +108,7 @@ final class EgressResult {
 	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-every-outbound-read-leaves-through-an-openconnector-source
 	 */
 	public static function success(string $body, int $status = 200): self {
-		return new self(ok: true, status: $status, body: $body);
+		return new self(succeeded: true, status: $status, body: $body);
 	}//end success()
 
 	/**
@@ -123,7 +123,7 @@ final class EgressResult {
 	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-every-outbound-read-leaves-through-an-openconnector-source
 	 */
 	public static function failed(string $failure, string $reason, int $status = 0): self {
-		return new self(ok: false, status: $status, failure: $failure, reason: $reason);
+		return new self(succeeded: false, status: $status, failure: $failure, reason: $reason);
 	}//end failed()
 
 	/**
@@ -134,7 +134,7 @@ final class EgressResult {
 	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-every-outbound-read-leaves-through-an-openconnector-source
 	 */
 	public function json(): ?array {
-		if ($this->ok === false || $this->body === '') {
+		if ($this->succeeded === false || $this->body === '') {
 			return null;
 		}
 

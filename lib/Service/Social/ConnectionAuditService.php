@@ -50,6 +50,13 @@ use OCP\AppFramework\Utility\ITimeFactory;
  * Who follows whom, and where the question cannot be answered.
  *
  * @spec openspec/changes/marketing-search-intelligence/specs/marketing-analytics-connectors/spec.md#requirement-the-connection-audit-answers-only-what-an-api-will-say
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) The complexity is the
+ *  three-valued answer itself: every read has a yes, a no and a reason it
+ *  could not say, and each of the two readable networks has its own shape
+ *  for all three. Collapsing any of those branches is exactly the defect
+ *  this class exists to prevent, because a network that will not answer
+ *  would then be recorded as a no.
  */
 class ConnectionAuditService {
 
@@ -179,7 +186,7 @@ class ConnectionAuditService {
 
 		$following = $this->listOf(network: $network, account: $account, direction: 'following');
 		$followers = $this->listOf(network: $network, account: $account, direction: 'followers');
-		if ($following['ok'] === false && $followers['ok'] === false) {
+		if ($following['readable'] === false && $followers['readable'] === false) {
 			$row['reason'] = $following['reason'];
 			return $row;
 		}
@@ -202,13 +209,13 @@ class ConnectionAuditService {
 	/**
 	 * Yes, no or unknown, from a list that may not have been readable.
 	 *
-	 * @param array{ok: bool, handles: array<int, string>, reason: string} $list The list.
+	 * @param array{readable: bool, handles: array<int, string>, reason: string} $list The list.
 	 * @param string $handle The handle to look for, lowercase and without the at sign.
 	 *
 	 * @return string `yes`, `no` or `unknown`.
 	 */
 	private function verdict(array $list, string $handle): string {
-		if ($list['ok'] === false) {
+		if ($list['readable'] === false) {
 			return 'unknown';
 		}
 
@@ -226,7 +233,7 @@ class ConnectionAuditService {
 	 * @param array<string, mixed> $account Our account.
 	 * @param string $direction `following` or `followers`.
 	 *
-	 * @return array{ok: bool, handles: array<int, string>, reason: string}
+	 * @return array{readable: bool, handles: array<int, string>, reason: string}
 	 */
 	private function listOf(string $network, array $account, string $direction): array {
 		if ($network === 'bluesky') {
@@ -242,12 +249,12 @@ class ConnectionAuditService {
 	 * @param array<string, mixed> $account Our account.
 	 * @param string $direction `following` or `followers`.
 	 *
-	 * @return array{ok: bool, handles: array<int, string>, reason: string}
+	 * @return array{readable: bool, handles: array<int, string>, reason: string}
 	 */
 	private function mastodonList(array $account, string $direction): array {
 		$handle = ltrim(trim((string)($account['handle'] ?? '')), '@');
 		if (str_contains($handle, '@') === false) {
-			return ['ok' => false, 'handles' => [], 'reason' => 'The connected Mastodon handle does not name an instance.'];
+			return ['readable' => false, 'handles' => [], 'reason' => 'The connected Mastodon handle does not name an instance.'];
 		}
 
 		[$user, $instance] = explode('@', $handle, 2);
@@ -258,8 +265,8 @@ class ConnectionAuditService {
 			config: ['query' => ['acct' => ($user . '@' . $instance)]]
 		);
 		$id = trim((string)(($lookup->json() ?? [])['id'] ?? ''));
-		if ($lookup->ok === false || $id === '') {
-			return ['ok' => false, 'handles' => [], 'reason' => 'The instance ' . $instance . ' did not answer the account lookup.'];
+		if ($lookup->succeeded === false || $id === '') {
+			return ['readable' => false, 'handles' => [], 'reason' => 'The instance ' . $instance . ' did not answer the account lookup.'];
 		}
 
 		$list = $this->egress->readUrl(
@@ -268,8 +275,8 @@ class ConnectionAuditService {
 			config: ['query' => ['limit' => (string)self::MAX_FOLLOWS]]
 		);
 		$rows = $list->json();
-		if ($list->ok === false || $rows === null) {
-			return ['ok' => false, 'handles' => [], 'reason' => 'The instance ' . $instance . ' does not publish this list.'];
+		if ($list->succeeded === false || $rows === null) {
+			return ['readable' => false, 'handles' => [], 'reason' => 'The instance ' . $instance . ' does not publish this list.'];
 		}
 
 		$handles = [];
@@ -284,7 +291,7 @@ class ConnectionAuditService {
 			}
 		}
 
-		return ['ok' => true, 'handles' => $handles, 'reason' => ''];
+		return ['readable' => true, 'handles' => $handles, 'reason' => ''];
 	}//end mastodonList()
 
 	/**
@@ -293,12 +300,12 @@ class ConnectionAuditService {
 	 * @param array<string, mixed> $account Our account.
 	 * @param string $direction `following` or `followers`.
 	 *
-	 * @return array{ok: bool, handles: array<int, string>, reason: string}
+	 * @return array{readable: bool, handles: array<int, string>, reason: string}
 	 */
 	private function blueskyList(array $account, string $direction): array {
 		$handle = ltrim(trim((string)($account['handle'] ?? '')), '@');
 		if ($handle === '') {
-			return ['ok' => false, 'handles' => [], 'reason' => 'The connected Bluesky account has no handle.'];
+			return ['readable' => false, 'handles' => [], 'reason' => 'The connected Bluesky account has no handle.'];
 		}
 
 		$method = 'app.bsky.graph.getFollows';
@@ -314,8 +321,8 @@ class ConnectionAuditService {
 			config: ['query' => ['actor' => $handle, 'limit' => (string)self::MAX_FOLLOWS]]
 		);
 		$decoded = $list->json();
-		if ($list->ok === false || is_array($decoded[$key] ?? null) === false) {
-			return ['ok' => false, 'handles' => [], 'reason' => 'The Bluesky AppView did not answer the ' . $direction . ' list.'];
+		if ($list->succeeded === false || is_array($decoded[$key] ?? null) === false) {
+			return ['readable' => false, 'handles' => [], 'reason' => 'The Bluesky AppView did not answer the ' . $direction . ' list.'];
 		}
 
 		$handles = [];
@@ -330,7 +337,7 @@ class ConnectionAuditService {
 			}
 		}
 
-		return ['ok' => true, 'handles' => $handles, 'reason' => ''];
+		return ['readable' => true, 'handles' => $handles, 'reason' => ''];
 	}//end blueskyList()
 
 	/**

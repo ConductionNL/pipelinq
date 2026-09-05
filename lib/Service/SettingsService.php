@@ -37,6 +37,11 @@ use UnexpectedValueException;
  * Service for managing Pipelinq settings.
  *
  * @spec openspec/changes/migrate-kennisbank-to-xwiki-leaf/tasks.md#task-1.2
+ *
+ * @SuppressWarnings(PHPMD.StaticAccess) `MatomoReportService::looksLikeAToken()`
+ *  is a pure predicate over a string shape. It is a static on that class
+ *  rather than a constant here so the rule and the service that depends on
+ *  it cannot drift, and there is no state an injected instance could hold.
  */
 class SettingsService {
 	private const CONFIG_KEYS = [

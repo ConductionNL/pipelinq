@@ -219,7 +219,7 @@ class SitemapWatchReaderTest extends TestCase {
 			previous: ['https://example.org/a' => '2026-08-01']
 		);
 
-		$this->assertTrue($outcome->ok());
+		$this->assertTrue($outcome->succeeded());
 		$this->assertCount(2, $outcome->items);
 		$this->assertArrayHasKey('locations', $outcome->state);
 		$this->assertCount(2, $outcome->state['locations']);
@@ -236,7 +236,7 @@ class SitemapWatchReaderTest extends TestCase {
 
 		$outcome = $this->reader->read(url: 'https://example.org/sitemap.xml', previous: $locations);
 
-		$this->assertTrue($outcome->ok());
+		$this->assertTrue($outcome->succeeded());
 		$this->assertSame([], $outcome->items);
 	}//end testASecondReadOverAnUnchangedSitemapProducesNothing()
 }//end class

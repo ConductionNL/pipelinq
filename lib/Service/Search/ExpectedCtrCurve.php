@@ -105,7 +105,7 @@ final class ExpectedCtrCurve {
 	 *
 	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-striking-distance-queries-are-queries-one-push-from-page-one
 	 */
-	public static function at(float $position): float {
+	public static function rateAt(float $position): float {
 		if ($position <= 1.0) {
 			return self::CURVE[1];
 		}
@@ -121,5 +121,5 @@ final class ExpectedCtrCurve {
 		$high = (self::CURVE[$upper] ?? self::TAIL_RATE);
 
 		return ($low + (($high - $low) * $fraction));
-	}//end at()
+	}//end rateAt()
 }//end class

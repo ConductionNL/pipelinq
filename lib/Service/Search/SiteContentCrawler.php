@@ -141,7 +141,7 @@ class SiteContentCrawler {
 		$lastReason = '';
 		foreach ($urls as $url) {
 			$result = $this->egress->readUrl(configKey: self::SOURCE_KEY, url: $url);
-			if ($result->ok === false) {
+			if ($result->succeeded === false) {
 				$lastFailure = $result->failure;
 				$lastReason = $result->reason;
 				continue;

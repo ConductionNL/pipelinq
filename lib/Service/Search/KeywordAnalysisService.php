@@ -45,6 +45,18 @@ namespace OCA\Pipelinq\Service\Search;
  * Position buckets, striking distance, cannibalisation and content gaps.
  *
  * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-queries-are-grouped-into-position-buckets
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Four independent
+ *  derivations over one row shape, each a short predicate with its own
+ *  thresholds. They are together because they share the per-query and
+ *  per-page aggregation and because a marketer reads them as one answer;
+ *  splitting them into four classes would duplicate that aggregation four
+ *  times and let the four copies drift, which is the defect this class is
+ *  written to avoid.
+ * @SuppressWarnings(PHPMD.StaticAccess) `ExpectedCtrCurve::rateAt()` is a
+ *  pure lookup over a documented constant table. It holds no state and no
+ *  collaborators, so there is nothing an injected instance could carry;
+ *  making it a service would add DI wiring around a table.
  */
 class KeywordAnalysisService {
 
@@ -199,7 +211,7 @@ class KeywordAnalysisService {
 			}
 
 			$ctr = ($entry['clicks'] / $entry['impressions']);
-			$expected = ExpectedCtrCurve::at(position: $position);
+			$expected = ExpectedCtrCurve::rateAt(position: $position);
 			if ($ctr >= $expected) {
 				continue;
 			}

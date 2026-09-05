@@ -148,7 +148,7 @@ class PageWatchReaderTest extends TestCase {
 			lineFingerprints: []
 		);
 
-		$this->assertFalse($outcome->ok());
+		$this->assertFalse($outcome->succeeded());
 		$this->assertSame(EgressResult::UNPARSABLE, $outcome->outcome);
 		$this->assertStringContainsString('#news', $outcome->reason);
 	}//end testASelectorThatMatchesNothingIsUnparsable()
@@ -161,7 +161,7 @@ class PageWatchReaderTest extends TestCase {
 	public function testStoresFingerprintsAndNotTheFragment(): void {
 		$outcome = $this->readOnce(body: $this->page(inside: self::DISTINCTIVE, outside: 'Menu'));
 
-		$this->assertTrue($outcome->ok());
+		$this->assertTrue($outcome->succeeded());
 		$this->assertArrayHasKey('fingerprint', $outcome->state);
 		$this->assertStringNotContainsString(self::DISTINCTIVE, json_encode($outcome->state, JSON_THROW_ON_ERROR));
 		$this->assertStringNotContainsString('aanbesteding', json_encode($outcome->state, JSON_THROW_ON_ERROR));
@@ -221,7 +221,7 @@ class PageWatchReaderTest extends TestCase {
 			lines: $known['lineFingerprints']
 		);
 
-		$this->assertTrue($outcome->ok());
+		$this->assertTrue($outcome->succeeded());
 		$this->assertSame([], $outcome->items);
 	}//end testAnUnchangedFragmentProducesNoEvent()
 }//end class

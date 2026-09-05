@@ -150,7 +150,7 @@ class FeedWatchReaderTest extends TestCase {
 
 		$outcome = $this->reader->read(url: 'https://example.org/feed.xml');
 
-		$this->assertFalse($outcome->ok());
+		$this->assertFalse($outcome->succeeded());
 		$this->assertSame(EgressResult::UNPARSABLE, $outcome->outcome);
 		$this->assertStringContainsString('example.org/feed.xml', $outcome->reason);
 	}//end testReadReportsUnparsableRatherThanNoEntries()
@@ -182,7 +182,7 @@ class FeedWatchReaderTest extends TestCase {
 
 		$outcome = $this->reader->read(url: 'https://example.org/feed.xml');
 
-		$this->assertTrue($outcome->ok());
+		$this->assertTrue($outcome->succeeded());
 		$this->assertCount(2, $outcome->items);
 	}//end testASuccessfulReadReturnsTheEntries()
 }//end class

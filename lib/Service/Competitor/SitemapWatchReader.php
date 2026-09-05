@@ -48,6 +48,13 @@ use Throwable;
  * New and changed locations out of a sitemap.
  *
  * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-sitemap-watch-reports-new-and-changed-locations
+ *
+ * @SuppressWarnings(PHPMD.StaticAccess) The named constructors of the
+ *  immutable result type this class returns (WatchOutcome). A value
+ *  object's own factory is not the hidden dependency StaticAccess exists
+ *  to catch: there is nothing here that could be injected, and the
+ *  alternative is a constructor call whose argument order says less than
+ *  the method name does.
  */
 class SitemapWatchReader {
 
@@ -150,6 +157,34 @@ class SitemapWatchReader {
 	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-sitemap-watch-reports-new-and-changed-locations
 	 */
 	public function parse(string $document): ?array {
+		$xml = $this->load(document: $document);
+		if ($xml === null) {
+			return null;
+		}
+
+		$isIndex = (isset($xml->sitemap) === true);
+		$children = ($xml->url ?? null);
+		if ($isIndex === true) {
+			$children = $xml->sitemap;
+		}
+
+		if ($children === null) {
+			return null;
+		}
+
+		return ['index' => $isIndex, 'locations' => $this->locationsOf(children: $children)];
+	}//end parse()
+
+	/**
+	 * Parse the document as XML, with libxml's own errors collected rather
+	 * than logged: a competitor's sitemap being slightly invalid is not our
+	 * incident.
+	 *
+	 * @param string $document The document.
+	 *
+	 * @return SimpleXMLElement|null The root, or null.
+	 */
+	private function load(string $document): ?SimpleXMLElement {
 		if (trim($document) === '') {
 			return null;
 		}
@@ -168,16 +203,18 @@ class SitemapWatchReader {
 			return null;
 		}
 
-		$isIndex = (isset($xml->sitemap) === true);
-		$children = ($xml->url ?? null);
-		if ($isIndex === true) {
-			$children = $xml->sitemap;
-		}
+		return $xml;
+	}//end load()
 
-		if ($children === null) {
-			return null;
-		}
-
+	/**
+	 * The `<loc>` entries of a `<urlset>` or `<sitemapindex>`, each with its
+	 * `<lastmod>` or an empty string.
+	 *
+	 * @param SimpleXMLElement $children The `<url>` or `<sitemap>` elements.
+	 *
+	 * @return array<string, string> Location to stamp.
+	 */
+	private function locationsOf(SimpleXMLElement $children): array {
 		$locations = [];
 		foreach ($children as $child) {
 			$loc = trim((string)$child->loc);
@@ -191,8 +228,8 @@ class SitemapWatchReader {
 			}
 		}
 
-		return ['index' => $isIndex, 'locations' => $locations];
-	}//end parse()
+		return $locations;
+	}//end locationsOf()
 
 	/**
 	 * Read a sitemap, following an index one level.
@@ -205,7 +242,7 @@ class SitemapWatchReader {
 	 */
 	private function collect(string $url, string $sourceId, int $depth): array|WatchOutcome {
 		$result = $this->egress->readUrl(configKey: CompetitorWatchService::SOURCE_KEY, url: $url, sourceId: $sourceId);
-		if ($result->ok === false) {
+		if ($result->succeeded === false) {
 			return WatchOutcome::failed(outcome: (string)$result->failure, reason: $result->reason);
 		}
 

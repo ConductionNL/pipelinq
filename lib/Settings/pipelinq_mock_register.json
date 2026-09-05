@@ -169,7 +169,13 @@
         "closedWonAt": "2026-03-01T09:00:00+00:00",
         "attributedValue": 1.0,
         "currency": "EUR",
-        "createdAt": "2026-03-01T09:00:00+00:00"
+        "createdAt": "2026-03-01T09:00:00+00:00",
+        "campaignId": "00000000-0000-4000-8000-000000000000",
+        "touchpointIds": [
+          "00000000-0000-4000-8000-000000000000"
+        ],
+        "invoiceRef": "Voorbeeld Invoiceref 1",
+        "model": "first"
       },
       {
         "@self": {
@@ -184,7 +190,13 @@
         "closedWonAt": "2026-03-02T09:00:00+00:00",
         "attributedValue": 2.0,
         "currency": "EUR",
-        "createdAt": "2026-03-02T09:00:00+00:00"
+        "createdAt": "2026-03-02T09:00:00+00:00",
+        "campaignId": "00000000-0000-4000-8000-000000000001",
+        "touchpointIds": [
+          "00000000-0000-4000-8000-000000000001"
+        ],
+        "invoiceRef": "Voorbeeld Invoiceref 2",
+        "model": "last"
       },
       {
         "@self": {
@@ -199,7 +211,13 @@
         "closedWonAt": "2026-03-03T09:00:00+00:00",
         "attributedValue": 3.0,
         "currency": "EUR",
-        "createdAt": "2026-03-03T09:00:00+00:00"
+        "createdAt": "2026-03-03T09:00:00+00:00",
+        "campaignId": "00000000-0000-4000-8000-000000000002",
+        "touchpointIds": [
+          "00000000-0000-4000-8000-000000000002"
+        ],
+        "invoiceRef": "Voorbeeld Invoiceref 3",
+        "model": "linear"
       },
       {
         "@self": {
@@ -502,6 +520,7 @@
         "segmentId": "Voorbeeld Segmentid 1",
         "templateId": "Voorbeeld Templateid 1",
         "channel": "email",
+        "transportId": "Voorbeeld Transportid 1",
         "scheduledFor": "2026-03-01T09:00:00+00:00",
         "sentAt": "2026-03-01T09:00:00+00:00",
         "status": "draft",
@@ -519,7 +538,9 @@
         },
         "connectorSourceId": "Voorbeeld Connectorsourceid 1",
         "createdBy": "Voorbeeld Createdby 1",
-        "createdAt": "2026-03-01T09:00:00+00:00"
+        "createdAt": "2026-03-01T09:00:00+00:00",
+        "listId": "Voorbeeld Listid 1",
+        "campaignId": "00000000-0000-4000-8000-000000000000"
       },
       {
         "@self": {
@@ -531,6 +552,7 @@
         "segmentId": "Voorbeeld Segmentid 2",
         "templateId": "Voorbeeld Templateid 2",
         "channel": "sms",
+        "transportId": "Voorbeeld Transportid 2",
         "scheduledFor": "2026-03-02T09:00:00+00:00",
         "sentAt": "2026-03-02T09:00:00+00:00",
         "status": "scheduled",
@@ -548,7 +570,9 @@
         },
         "connectorSourceId": "Voorbeeld Connectorsourceid 2",
         "createdBy": "Voorbeeld Createdby 2",
-        "createdAt": "2026-03-02T09:00:00+00:00"
+        "createdAt": "2026-03-02T09:00:00+00:00",
+        "listId": "Voorbeeld Listid 2",
+        "campaignId": "00000000-0000-4000-8000-000000000001"
       },
       {
         "@self": {
@@ -560,6 +584,7 @@
         "segmentId": "Voorbeeld Segmentid 3",
         "templateId": "Voorbeeld Templateid 3",
         "channel": "email",
+        "transportId": "Voorbeeld Transportid 3",
         "scheduledFor": "2026-03-03T09:00:00+00:00",
         "sentAt": "2026-03-03T09:00:00+00:00",
         "status": "sending",
@@ -577,7 +602,9 @@
         },
         "connectorSourceId": "Voorbeeld Connectorsourceid 3",
         "createdBy": "Voorbeeld Createdby 3",
-        "createdAt": "2026-03-03T09:00:00+00:00"
+        "createdAt": "2026-03-03T09:00:00+00:00",
+        "listId": "Voorbeeld Listid 3",
+        "campaignId": "00000000-0000-4000-8000-000000000002"
       },
       {
         "@self": {
@@ -599,7 +626,8 @@
         ],
         "bouncedAt": "2026-03-01T09:00:00+00:00",
         "bounceType": "soft",
-        "unsubscribedAt": "2026-03-01T09:00:00+00:00"
+        "unsubscribedAt": "2026-03-01T09:00:00+00:00",
+        "unsubscribeUrl": "Voorbeeld Unsubscribeurl 1"
       },
       {
         "@self": {
@@ -621,7 +649,8 @@
         ],
         "bouncedAt": "2026-03-02T09:00:00+00:00",
         "bounceType": "hard",
-        "unsubscribedAt": "2026-03-02T09:00:00+00:00"
+        "unsubscribedAt": "2026-03-02T09:00:00+00:00",
+        "unsubscribeUrl": "Voorbeeld Unsubscribeurl 2"
       },
       {
         "@self": {
@@ -643,7 +672,8 @@
         ],
         "bouncedAt": "2026-03-03T09:00:00+00:00",
         "bounceType": "soft",
-        "unsubscribedAt": "2026-03-03T09:00:00+00:00"
+        "unsubscribedAt": "2026-03-03T09:00:00+00:00",
+        "unsubscribeUrl": "Voorbeeld Unsubscribeurl 3"
       },
       {
         "@self": {
@@ -1169,7 +1199,10 @@
         ],
         "language": "nl",
         "createdBy": "Voorbeeld Createdby 1",
-        "createdAt": "2026-03-01T09:00:00+00:00"
+        "createdAt": "2026-03-01T09:00:00+00:00",
+        "articleIds": [
+          "Voorbeeld Articleids 1"
+        ]
       },
       {
         "@self": {
@@ -1191,7 +1224,10 @@
         ],
         "language": "nl",
         "createdBy": "Voorbeeld Createdby 2",
-        "createdAt": "2026-03-02T09:00:00+00:00"
+        "createdAt": "2026-03-02T09:00:00+00:00",
+        "articleIds": [
+          "Voorbeeld Articleids 2"
+        ]
       },
       {
         "@self": {
@@ -1213,7 +1249,10 @@
         ],
         "language": "nl",
         "createdBy": "Voorbeeld Createdby 3",
-        "createdAt": "2026-03-03T09:00:00+00:00"
+        "createdAt": "2026-03-03T09:00:00+00:00",
+        "articleIds": [
+          "Voorbeeld Articleids 3"
+        ]
       },
       {
         "@self": {
@@ -1480,6 +1519,35 @@
         "segment": "Voorbeeld Segment 1",
         "accountOwner": "Voorbeeld Accountowner 1",
         "accountStatus": "active",
+        "emails": [
+          {
+            "kind": "work",
+            "value": "voorbeeld0@example.invalid",
+            "primary": false,
+            "verified": false
+          }
+        ],
+        "phones": [
+          {
+            "kind": "work",
+            "value": "Voorbeeld Value 1",
+            "primary": false,
+            "verified": false
+          }
+        ],
+        "socialProfiles": [
+          {
+            "network": "linkedin",
+            "handle": "Voorbeeld Handle 1",
+            "url": "https://example.invalid/resource/0",
+            "verified": false,
+            "followedByUs": false,
+            "followsUs": false
+          }
+        ],
+        "preferredChannel": "email",
+        "timezone": "Voorbeeld Timezone 1",
+        "language": "nl",
         "masterEntityRef": "Voorbeeld Masterentityref 1",
         "isMasterRecord": false,
         "shillinqOrganisationRef": "Voorbeeld Shillinqorganisationref 1"
@@ -1503,6 +1571,35 @@
         "segment": "Voorbeeld Segment 2",
         "accountOwner": "Voorbeeld Accountowner 2",
         "accountStatus": "inactive",
+        "emails": [
+          {
+            "kind": "private",
+            "value": "voorbeeld1@example.invalid",
+            "primary": false,
+            "verified": false
+          }
+        ],
+        "phones": [
+          {
+            "kind": "private",
+            "value": "Voorbeeld Value 2",
+            "primary": false,
+            "verified": false
+          }
+        ],
+        "socialProfiles": [
+          {
+            "network": "x",
+            "handle": "Voorbeeld Handle 2",
+            "url": "https://example.invalid/resource/1",
+            "verified": false,
+            "followedByUs": false,
+            "followsUs": false
+          }
+        ],
+        "preferredChannel": "phone",
+        "timezone": "Voorbeeld Timezone 2",
+        "language": "nl",
         "masterEntityRef": "Voorbeeld Masterentityref 2",
         "isMasterRecord": false,
         "shillinqOrganisationRef": "Voorbeeld Shillinqorganisationref 2"
@@ -1526,9 +1623,140 @@
         "segment": "Voorbeeld Segment 3",
         "accountOwner": "Voorbeeld Accountowner 3",
         "accountStatus": "blocked",
+        "emails": [
+          {
+            "kind": "mobile",
+            "value": "voorbeeld2@example.invalid",
+            "primary": false,
+            "verified": false
+          }
+        ],
+        "phones": [
+          {
+            "kind": "mobile",
+            "value": "Voorbeeld Value 3",
+            "primary": false,
+            "verified": false
+          }
+        ],
+        "socialProfiles": [
+          {
+            "network": "mastodon",
+            "handle": "Voorbeeld Handle 3",
+            "url": "https://example.invalid/resource/2",
+            "verified": false,
+            "followedByUs": false,
+            "followsUs": false
+          }
+        ],
+        "preferredChannel": "whatsapp",
+        "timezone": "Voorbeeld Timezone 3",
+        "language": "nl",
         "masterEntityRef": "Voorbeeld Masterentityref 3",
         "isMasterRecord": false,
         "shillinqOrganisationRef": "Voorbeeld Shillinqorganisationref 3"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "competitor",
+          "slug": "competitor-voorbeeld-name-1-1"
+        },
+        "name": "Voorbeeld Name 1",
+        "website": "Voorbeeld Website 1",
+        "feeds": [],
+        "sitemapUrl": "Voorbeeld Sitemapurl 1",
+        "socialHandles": [],
+        "clientId": "Voorbeeld Clientid 1",
+        "active": true,
+        "notes": "Voorbeeld Notes 1"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "competitor",
+          "slug": "competitor-voorbeeld-name-2-2"
+        },
+        "name": "Voorbeeld Name 2",
+        "website": "Voorbeeld Website 2",
+        "feeds": [],
+        "sitemapUrl": "Voorbeeld Sitemapurl 2",
+        "socialHandles": [],
+        "clientId": "Voorbeeld Clientid 2",
+        "active": true,
+        "notes": "Voorbeeld Notes 2"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "competitor",
+          "slug": "competitor-voorbeeld-name-3-3"
+        },
+        "name": "Voorbeeld Name 3",
+        "website": "Voorbeeld Website 3",
+        "feeds": [],
+        "sitemapUrl": "Voorbeeld Sitemapurl 3",
+        "socialHandles": [],
+        "clientId": "Voorbeeld Clientid 3",
+        "active": true,
+        "notes": "Voorbeeld Notes 3"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "competitorWatch",
+          "slug": "competitorwatch-competitorwatch-1-1"
+        },
+        "competitorId": "Voorbeeld Competitorid 1",
+        "kind": "rss",
+        "target": "Voorbeeld Target 1",
+        "selector": "Voorbeeld Selector 1",
+        "schedule": "hourly",
+        "active": true,
+        "connectorSourceId": "Voorbeeld Connectorsourceid 1",
+        "lastRunAt": "2026-03-01T09:00:00+00:00",
+        "lastOutcome": "ok",
+        "lastReason": "Voorbeeld Lastreason 1",
+        "fingerprint": "Voorbeeld Fingerprint 1",
+        "lineFingerprints": []
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "competitorWatch",
+          "slug": "competitorwatch-competitorwatch-2-2"
+        },
+        "competitorId": "Voorbeeld Competitorid 2",
+        "kind": "sitemap",
+        "target": "Voorbeeld Target 2",
+        "selector": "Voorbeeld Selector 2",
+        "schedule": "daily",
+        "active": true,
+        "connectorSourceId": "Voorbeeld Connectorsourceid 2",
+        "lastRunAt": "2026-03-02T09:00:00+00:00",
+        "lastOutcome": "not_configured",
+        "lastReason": "Voorbeeld Lastreason 2",
+        "fingerprint": "Voorbeeld Fingerprint 2",
+        "lineFingerprints": []
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "competitorWatch",
+          "slug": "competitorwatch-competitorwatch-3-3"
+        },
+        "competitorId": "Voorbeeld Competitorid 3",
+        "kind": "page",
+        "target": "Voorbeeld Target 3",
+        "selector": "Voorbeeld Selector 3",
+        "schedule": "weekly",
+        "active": true,
+        "connectorSourceId": "Voorbeeld Connectorsourceid 3",
+        "lastRunAt": "2026-03-03T09:00:00+00:00",
+        "lastOutcome": "unavailable",
+        "lastReason": "Voorbeeld Lastreason 3",
+        "fingerprint": "Voorbeeld Fingerprint 3",
+        "lineFingerprints": []
       },
       {
         "@self": {
@@ -1543,7 +1771,17 @@
         "consentedAt": "2026-03-01T09:00:00+00:00",
         "withdrawnAt": "2026-03-01T09:00:00+00:00",
         "withdrawnReason": "user-unsubscribed",
-        "softBounceCount": 0
+        "softBounceCount": 0,
+        "listId": "Voorbeeld Listid 1",
+        "evidence": {
+          "mechanism": "Voorbeeld Mechanism 1",
+          "reference": "Voorbeeld Reference 1",
+          "objectionOffered": false,
+          "objectionOfferedAt": "2026-03-01T09:00:00+00:00",
+          "objectionText": "Voorbeeld Objectiontext 1",
+          "ipHash": "Voorbeeld Iphash 1",
+          "recordedAt": "2026-03-01T09:00:00+00:00"
+        }
       },
       {
         "@self": {
@@ -1558,7 +1796,17 @@
         "consentedAt": "2026-03-02T09:00:00+00:00",
         "withdrawnAt": "2026-03-02T09:00:00+00:00",
         "withdrawnReason": "bounce-hard",
-        "softBounceCount": 0
+        "softBounceCount": 0,
+        "listId": "Voorbeeld Listid 2",
+        "evidence": {
+          "mechanism": "Voorbeeld Mechanism 2",
+          "reference": "Voorbeeld Reference 2",
+          "objectionOffered": false,
+          "objectionOfferedAt": "2026-03-02T09:00:00+00:00",
+          "objectionText": "Voorbeeld Objectiontext 2",
+          "ipHash": "Voorbeeld Iphash 2",
+          "recordedAt": "2026-03-02T09:00:00+00:00"
+        }
       },
       {
         "@self": {
@@ -1573,7 +1821,17 @@
         "consentedAt": "2026-03-03T09:00:00+00:00",
         "withdrawnAt": "2026-03-03T09:00:00+00:00",
         "withdrawnReason": "bounce-soft-x5",
-        "softBounceCount": 0
+        "softBounceCount": 0,
+        "listId": "Voorbeeld Listid 3",
+        "evidence": {
+          "mechanism": "Voorbeeld Mechanism 3",
+          "reference": "Voorbeeld Reference 3",
+          "objectionOffered": false,
+          "objectionOfferedAt": "2026-03-03T09:00:00+00:00",
+          "objectionText": "Voorbeeld Objectiontext 3",
+          "ipHash": "Voorbeeld Iphash 3",
+          "recordedAt": "2026-03-03T09:00:00+00:00"
+        }
       },
       {
         "@self": {
@@ -1592,8 +1850,40 @@
         "verifiedBSN": false,
         "brpPersonId": "00000000-0000-4000-8000-000000000000",
         "secrecy": false,
+        "emails": [
+          {
+            "kind": "work",
+            "value": "voorbeeld0@example.invalid",
+            "primary": false,
+            "verified": false
+          }
+        ],
+        "phones": [
+          {
+            "kind": "work",
+            "value": "Voorbeeld Value 1",
+            "primary": false,
+            "verified": false
+          }
+        ],
+        "socialProfiles": [
+          {
+            "network": "linkedin",
+            "handle": "Voorbeeld Handle 1",
+            "url": "https://example.invalid/resource/0",
+            "verified": false,
+            "followedByUs": false,
+            "followsUs": false
+          }
+        ],
+        "preferredChannel": "email",
+        "timezone": "Voorbeeld Timezone 1",
+        "language": "nl",
         "masterEntityRef": "Voorbeeld Masterentityref 1",
-        "isMasterRecord": false
+        "isMasterRecord": false,
+        "leads": [
+          "00000000-0000-4000-8000-000000000000"
+        ]
       },
       {
         "@self": {
@@ -1612,8 +1902,40 @@
         "verifiedBSN": false,
         "brpPersonId": "00000000-0000-4000-8000-000000000001",
         "secrecy": false,
+        "emails": [
+          {
+            "kind": "private",
+            "value": "voorbeeld1@example.invalid",
+            "primary": false,
+            "verified": false
+          }
+        ],
+        "phones": [
+          {
+            "kind": "private",
+            "value": "Voorbeeld Value 2",
+            "primary": false,
+            "verified": false
+          }
+        ],
+        "socialProfiles": [
+          {
+            "network": "x",
+            "handle": "Voorbeeld Handle 2",
+            "url": "https://example.invalid/resource/1",
+            "verified": false,
+            "followedByUs": false,
+            "followsUs": false
+          }
+        ],
+        "preferredChannel": "phone",
+        "timezone": "Voorbeeld Timezone 2",
+        "language": "nl",
         "masterEntityRef": "Voorbeeld Masterentityref 2",
-        "isMasterRecord": false
+        "isMasterRecord": false,
+        "leads": [
+          "00000000-0000-4000-8000-000000000001"
+        ]
       },
       {
         "@self": {
@@ -1632,8 +1954,40 @@
         "verifiedBSN": false,
         "brpPersonId": "00000000-0000-4000-8000-000000000002",
         "secrecy": false,
+        "emails": [
+          {
+            "kind": "mobile",
+            "value": "voorbeeld2@example.invalid",
+            "primary": false,
+            "verified": false
+          }
+        ],
+        "phones": [
+          {
+            "kind": "mobile",
+            "value": "Voorbeeld Value 3",
+            "primary": false,
+            "verified": false
+          }
+        ],
+        "socialProfiles": [
+          {
+            "network": "mastodon",
+            "handle": "Voorbeeld Handle 3",
+            "url": "https://example.invalid/resource/2",
+            "verified": false,
+            "followedByUs": false,
+            "followsUs": false
+          }
+        ],
+        "preferredChannel": "whatsapp",
+        "timezone": "Voorbeeld Timezone 3",
+        "language": "nl",
         "masterEntityRef": "Voorbeeld Masterentityref 3",
-        "isMasterRecord": false
+        "isMasterRecord": false,
+        "leads": [
+          "00000000-0000-4000-8000-000000000002"
+        ]
       },
       {
         "@self": {
@@ -2496,12 +2850,67 @@
       {
         "@self": {
           "register": "pipelinq",
+          "schema": "keywordTarget",
+          "slug": "keywordtarget-keywordtarget-1-1"
+        },
+        "term": "Voorbeeld Term 1",
+        "status": "use-more",
+        "intent": "informational",
+        "targetPageRef": "Voorbeeld Targetpageref 1",
+        "proposalKind": "striking-distance",
+        "property": "Voorbeeld Property 1",
+        "volume": 0,
+        "difficulty": 0,
+        "notes": "Voorbeeld Notes 1",
+        "createdBy": "Voorbeeld Createdby 1",
+        "createdAt": "2026-03-01T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "keywordTarget",
+          "slug": "keywordtarget-keywordtarget-2-2"
+        },
+        "term": "Voorbeeld Term 2",
+        "status": "use-less",
+        "intent": "navigational",
+        "targetPageRef": "Voorbeeld Targetpageref 2",
+        "proposalKind": "cannibalisation",
+        "property": "Voorbeeld Property 2",
+        "volume": 1,
+        "difficulty": 1,
+        "notes": "Voorbeeld Notes 2",
+        "createdBy": "Voorbeeld Createdby 2",
+        "createdAt": "2026-03-02T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "keywordTarget",
+          "slug": "keywordtarget-keywordtarget-3-3"
+        },
+        "term": "Voorbeeld Term 3",
+        "status": "watch",
+        "intent": "commercial",
+        "targetPageRef": "Voorbeeld Targetpageref 3",
+        "proposalKind": "content-gap",
+        "property": "Voorbeeld Property 3",
+        "volume": 2,
+        "difficulty": 2,
+        "notes": "Voorbeeld Notes 3",
+        "createdBy": "Voorbeeld Createdby 3",
+        "createdAt": "2026-03-03T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
           "schema": "lead",
           "slug": "lead-voorbeeld-title-1-1"
         },
         "title": "Voorbeeld Title 1",
-        "message": "Voorbeeld Message 1",
+        "pipeline": "00000000-0000-4000-8000-000000000000",
         "client": "00000000-0000-4000-8000-000000000000",
+        "message": "Voorbeeld Message 1",
         "contact": "00000000-0000-4000-8000-000000000000",
         "source": "Voorbeeld Source 1",
         "value": 0,
@@ -2509,7 +2918,6 @@
         "expectedCloseDate": "2026-03-01",
         "assignee": "Voorbeeld Assignee 1",
         "priority": "low",
-        "pipeline": "00000000-0000-4000-8000-000000000000",
         "stage": "Voorbeeld Stage 1",
         "stageOrder": 1,
         "notes": "Voorbeeld Notes 1",
@@ -2520,7 +2928,23 @@
         "description": "Voorbeeld Description 1",
         "stageEnteredAt": "2026-03-01T09:00:00+00:00",
         "qualificationScore": 0,
-        "forecast_category": "commit"
+        "forecast_category": "commit",
+        "commit_justification": "Voorbeeld Commit Justification 1",
+        "firstTouch": {
+          "campaign": "Voorbeeld Campaign 1",
+          "source": "Voorbeeld Source 1",
+          "medium": "Voorbeeld Medium 1",
+          "term": "Voorbeeld Term 1",
+          "content": "Voorbeeld Content 1"
+        },
+        "lastTouch": {
+          "campaign": "Voorbeeld Campaign 1",
+          "source": "Voorbeeld Source 1",
+          "medium": "Voorbeeld Medium 1",
+          "term": "Voorbeeld Term 1",
+          "content": "Voorbeeld Content 1"
+        },
+        "campaignId": "00000000-0000-4000-8000-000000000000"
       },
       {
         "@self": {
@@ -2529,8 +2953,9 @@
           "slug": "lead-voorbeeld-title-2-2"
         },
         "title": "Voorbeeld Title 2",
-        "message": "Voorbeeld Message 2",
+        "pipeline": "00000000-0000-4000-8000-000000000001",
         "client": "00000000-0000-4000-8000-000000000001",
+        "message": "Voorbeeld Message 2",
         "contact": "00000000-0000-4000-8000-000000000001",
         "source": "Voorbeeld Source 2",
         "value": 0,
@@ -2538,7 +2963,6 @@
         "expectedCloseDate": "2026-03-02",
         "assignee": "Voorbeeld Assignee 2",
         "priority": "normal",
-        "pipeline": "00000000-0000-4000-8000-000000000001",
         "stage": "Voorbeeld Stage 2",
         "stageOrder": 2,
         "notes": "Voorbeeld Notes 2",
@@ -2549,7 +2973,23 @@
         "description": "Voorbeeld Description 2",
         "stageEnteredAt": "2026-03-02T09:00:00+00:00",
         "qualificationScore": 1,
-        "forecast_category": "best_case"
+        "forecast_category": "best_case",
+        "commit_justification": "Voorbeeld Commit Justification 2",
+        "firstTouch": {
+          "campaign": "Voorbeeld Campaign 2",
+          "source": "Voorbeeld Source 2",
+          "medium": "Voorbeeld Medium 2",
+          "term": "Voorbeeld Term 2",
+          "content": "Voorbeeld Content 2"
+        },
+        "lastTouch": {
+          "campaign": "Voorbeeld Campaign 2",
+          "source": "Voorbeeld Source 2",
+          "medium": "Voorbeeld Medium 2",
+          "term": "Voorbeeld Term 2",
+          "content": "Voorbeeld Content 2"
+        },
+        "campaignId": "00000000-0000-4000-8000-000000000001"
       },
       {
         "@self": {
@@ -2558,8 +2998,9 @@
           "slug": "lead-voorbeeld-title-3-3"
         },
         "title": "Voorbeeld Title 3",
-        "message": "Voorbeeld Message 3",
+        "pipeline": "00000000-0000-4000-8000-000000000002",
         "client": "00000000-0000-4000-8000-000000000002",
+        "message": "Voorbeeld Message 3",
         "contact": "00000000-0000-4000-8000-000000000002",
         "source": "Voorbeeld Source 3",
         "value": 0,
@@ -2567,7 +3008,6 @@
         "expectedCloseDate": "2026-03-03",
         "assignee": "Voorbeeld Assignee 3",
         "priority": "high",
-        "pipeline": "00000000-0000-4000-8000-000000000002",
         "stage": "Voorbeeld Stage 3",
         "stageOrder": 3,
         "notes": "Voorbeeld Notes 3",
@@ -2578,7 +3018,23 @@
         "description": "Voorbeeld Description 3",
         "stageEnteredAt": "2026-03-03T09:00:00+00:00",
         "qualificationScore": 2,
-        "forecast_category": "pipeline"
+        "forecast_category": "pipeline",
+        "commit_justification": "Voorbeeld Commit Justification 3",
+        "firstTouch": {
+          "campaign": "Voorbeeld Campaign 3",
+          "source": "Voorbeeld Source 3",
+          "medium": "Voorbeeld Medium 3",
+          "term": "Voorbeeld Term 3",
+          "content": "Voorbeeld Content 3"
+        },
+        "lastTouch": {
+          "campaign": "Voorbeeld Campaign 3",
+          "source": "Voorbeeld Source 3",
+          "medium": "Voorbeeld Medium 3",
+          "term": "Voorbeeld Term 3",
+          "content": "Voorbeeld Content 3"
+        },
+        "campaignId": "00000000-0000-4000-8000-000000000002"
       },
       {
         "@self": {
@@ -2635,9 +3091,9 @@
           "slug": "loyaltyprogramme-voorbeeld-name-1-1"
         },
         "name": "Voorbeeld Name 1",
+        "brand": "Voorbeeld Brand 1",
         "status": "draft",
         "programmeId": "Voorbeeld Programmeid 1",
-        "brand": "Voorbeeld Brand 1",
         "description": "Voorbeeld Description 1",
         "startDate": "2026-03-01",
         "endDate": "2026-03-01",
@@ -2659,9 +3115,9 @@
           "slug": "loyaltyprogramme-voorbeeld-name-2-2"
         },
         "name": "Voorbeeld Name 2",
+        "brand": "Voorbeeld Brand 2",
         "status": "active",
         "programmeId": "Voorbeeld Programmeid 2",
-        "brand": "Voorbeeld Brand 2",
         "description": "Voorbeeld Description 2",
         "startDate": "2026-03-02",
         "endDate": "2026-03-02",
@@ -2683,9 +3139,9 @@
           "slug": "loyaltyprogramme-voorbeeld-name-3-3"
         },
         "name": "Voorbeeld Name 3",
+        "brand": "Voorbeeld Brand 3",
         "status": "paused",
         "programmeId": "Voorbeeld Programmeid 3",
-        "brand": "Voorbeeld Brand 3",
         "description": "Voorbeeld Description 3",
         "startDate": "2026-03-03",
         "endDate": "2026-03-03",
@@ -3422,6 +3878,13 @@
         ],
         "description": "Voorbeeld Description 1",
         "deckBoardId": 1,
+        "propertyMappings": [
+          {
+            "schemaSlug": "Voorbeeld Schemaslug 1",
+            "columnProperty": "Voorbeeld Columnproperty 1",
+            "totalsProperty": "Voorbeeld Totalsproperty 1"
+          }
+        ],
         "isDefault": false
       },
       {
@@ -3444,6 +3907,13 @@
         ],
         "description": "Voorbeeld Description 2",
         "deckBoardId": 2,
+        "propertyMappings": [
+          {
+            "schemaSlug": "Voorbeeld Schemaslug 2",
+            "columnProperty": "Voorbeeld Columnproperty 2",
+            "totalsProperty": "Voorbeeld Totalsproperty 2"
+          }
+        ],
         "isDefault": false
       },
       {
@@ -3466,6 +3936,13 @@
         ],
         "description": "Voorbeeld Description 3",
         "deckBoardId": 3,
+        "propertyMappings": [
+          {
+            "schemaSlug": "Voorbeeld Schemaslug 3",
+            "columnProperty": "Voorbeeld Columnproperty 3",
+            "totalsProperty": "Voorbeeld Totalsproperty 3"
+          }
+        ],
         "isDefault": false
       },
       {
@@ -4774,52 +5251,52 @@
         "@self": {
           "register": "pipelinq",
           "schema": "searchQueryDaily",
-          "slug": "searchquerydaily-demo-1"
+          "slug": "searchquerydaily-searchquerydaily-1-1"
         },
-        "property": "https://example.org/",
-        "date": "2026-09-01",
-        "query": "woo verzoek indienen",
-        "page": "https://example.org/woo",
-        "clicks": 12,
-        "impressions": 340,
-        "ctr": 0.0353,
-        "position": 4.2,
+        "property": "Voorbeeld Property 1",
+        "date": "2026-03-01",
+        "query": "Voorbeeld Query 1",
+        "page": "Voorbeeld Page 1",
+        "clicks": 1,
+        "impressions": 1,
+        "ctr": 1.0,
+        "position": 1.0,
         "source": "gsc",
-        "importedAt": "2026-09-04T03:00:00+00:00"
+        "importedAt": "2026-03-01T09:00:00+00:00"
       },
       {
         "@self": {
           "register": "pipelinq",
           "schema": "searchQueryDaily",
-          "slug": "searchquerydaily-demo-2"
+          "slug": "searchquerydaily-searchquerydaily-2-2"
         },
-        "property": "https://example.org/",
-        "date": "2026-09-01",
-        "query": "openingstijden gemeente",
-        "page": "https://example.org/contact",
-        "clicks": 7,
-        "impressions": 90,
-        "ctr": 0.0778,
-        "position": 2.1,
+        "property": "Voorbeeld Property 2",
+        "date": "2026-03-02",
+        "query": "Voorbeeld Query 2",
+        "page": "Voorbeeld Page 2",
+        "clicks": 2,
+        "impressions": 2,
+        "ctr": 2.0,
+        "position": 2.0,
         "source": "gsc",
-        "importedAt": "2026-09-04T03:00:00+00:00"
+        "importedAt": "2026-03-02T09:00:00+00:00"
       },
       {
         "@self": {
           "register": "pipelinq",
           "schema": "searchQueryDaily",
-          "slug": "searchquerydaily-demo-3"
+          "slug": "searchquerydaily-searchquerydaily-3-3"
         },
-        "property": "https://example.org/",
-        "date": "2026-09-02",
-        "query": "woo verzoek indienen",
-        "page": "https://example.org/woo",
-        "clicks": 15,
-        "impressions": 360,
-        "ctr": 0.0417,
-        "position": 3.9,
+        "property": "Voorbeeld Property 3",
+        "date": "2026-03-03",
+        "query": "Voorbeeld Query 3",
+        "page": "Voorbeeld Page 3",
+        "clicks": 3,
+        "impressions": 3,
+        "ctr": 3.0,
+        "position": 3.0,
         "source": "gsc",
-        "importedAt": "2026-09-04T03:00:00+00:00"
+        "importedAt": "2026-03-03T09:00:00+00:00"
       },
       {
         "@self": {
@@ -5087,6 +5564,54 @@
         "followerCount": 0,
         "followerCountAt": "2026-03-03T09:00:00+00:00",
         "active": true
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "socialConnection",
+          "slug": "socialconnection-socialconnection-1-1"
+        },
+        "network": "mastodon",
+        "counterpartHandle": "Voorbeeld Counterparthandle 1",
+        "accountId": "Voorbeeld Accountid 1",
+        "clientId": "Voorbeeld Clientid 1",
+        "counterpartUrl": "Voorbeeld Counterparturl 1",
+        "weFollowThem": "yes",
+        "theyFollowUs": "yes",
+        "reason": "Voorbeeld Reason 1",
+        "seenAt": "2026-03-01T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "socialConnection",
+          "slug": "socialconnection-socialconnection-2-2"
+        },
+        "network": "bluesky",
+        "counterpartHandle": "Voorbeeld Counterparthandle 2",
+        "accountId": "Voorbeeld Accountid 2",
+        "clientId": "Voorbeeld Clientid 2",
+        "counterpartUrl": "Voorbeeld Counterparturl 2",
+        "weFollowThem": "no",
+        "theyFollowUs": "no",
+        "reason": "Voorbeeld Reason 2",
+        "seenAt": "2026-03-02T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "socialConnection",
+          "slug": "socialconnection-socialconnection-3-3"
+        },
+        "network": "linkedin",
+        "counterpartHandle": "Voorbeeld Counterparthandle 3",
+        "accountId": "Voorbeeld Accountid 3",
+        "clientId": "Voorbeeld Clientid 3",
+        "counterpartUrl": "Voorbeeld Counterparturl 3",
+        "weFollowThem": "unknown",
+        "theyFollowUs": "unknown",
+        "reason": "Voorbeeld Reason 3",
+        "seenAt": "2026-03-03T09:00:00+00:00"
       },
       {
         "@self": {
@@ -5461,7 +5986,8 @@
             "result": "Voorbeeld Result 1",
             "notes": "Voorbeeld Notes 1"
           }
-        ]
+        ],
+        "lead": "00000000-0000-4000-8000-000000000000"
       },
       {
         "@self": {
@@ -5491,7 +6017,8 @@
             "result": "Voorbeeld Result 2",
             "notes": "Voorbeeld Notes 2"
           }
-        ]
+        ],
+        "lead": "00000000-0000-4000-8000-000000000001"
       },
       {
         "@self": {
@@ -5521,7 +6048,8 @@
             "result": "Voorbeeld Result 3",
             "notes": "Voorbeeld Notes 3"
           }
-        ]
+        ],
+        "lead": "00000000-0000-4000-8000-000000000002"
       },
       {
         "@self": {
@@ -5570,8 +6098,8 @@
         "zgwResourceMappings": [
           "Voorbeeld Zgwresourcemappings 1"
         ],
-        "description": "Voorbeeld Description 1",
-        "client": "00000000-0000-4000-8000-000000000000"
+        "lead": "00000000-0000-4000-8000-000000000000",
+        "description": "Voorbeeld Description 1"
       },
       {
         "@self": {
@@ -5620,8 +6148,8 @@
         "zgwResourceMappings": [
           "Voorbeeld Zgwresourcemappings 2"
         ],
-        "description": "Voorbeeld Description 2",
-        "client": "00000000-0000-4000-8000-000000000001"
+        "lead": "00000000-0000-4000-8000-000000000001",
+        "description": "Voorbeeld Description 2"
       },
       {
         "@self": {
@@ -5670,8 +6198,8 @@
         "zgwResourceMappings": [
           "Voorbeeld Zgwresourcemappings 3"
         ],
-        "description": "Voorbeeld Description 3",
-        "client": "00000000-0000-4000-8000-000000000002"
+        "lead": "00000000-0000-4000-8000-000000000002",
+        "description": "Voorbeeld Description 3"
       },
       {
         "@self": {
@@ -6017,6 +6545,60 @@
         "estimatedReadyAt": "2026-03-03T09:00:00+00:00",
         "assignedResourceId": "Voorbeeld Assignedresourceid 3",
         "actualServedAt": "2026-03-03T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "watchEvent",
+          "slug": "watchevent-voorbeeld-title-1-1"
+        },
+        "competitorId": "Voorbeeld Competitorid 1",
+        "watchId": "Voorbeeld Watchid 1",
+        "kind": "rss",
+        "url": "Voorbeeld Url 1",
+        "title": "Voorbeeld Title 1",
+        "diffSummary": "Voorbeeld Diffsummary 1",
+        "sourceStamp": "Voorbeeld Sourcestamp 1",
+        "seenAt": "2026-03-01T09:00:00+00:00",
+        "relevanceScore": 0,
+        "relevanceReason": "Voorbeeld Relevancereason 1",
+        "agentAuthored": false
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "watchEvent",
+          "slug": "watchevent-voorbeeld-title-2-2"
+        },
+        "competitorId": "Voorbeeld Competitorid 2",
+        "watchId": "Voorbeeld Watchid 2",
+        "kind": "sitemap",
+        "url": "Voorbeeld Url 2",
+        "title": "Voorbeeld Title 2",
+        "diffSummary": "Voorbeeld Diffsummary 2",
+        "sourceStamp": "Voorbeeld Sourcestamp 2",
+        "seenAt": "2026-03-02T09:00:00+00:00",
+        "relevanceScore": 1,
+        "relevanceReason": "Voorbeeld Relevancereason 2",
+        "agentAuthored": false
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "watchEvent",
+          "slug": "watchevent-voorbeeld-title-3-3"
+        },
+        "competitorId": "Voorbeeld Competitorid 3",
+        "watchId": "Voorbeeld Watchid 3",
+        "kind": "page",
+        "url": "Voorbeeld Url 3",
+        "title": "Voorbeeld Title 3",
+        "diffSummary": "Voorbeeld Diffsummary 3",
+        "sourceStamp": "Voorbeeld Sourcestamp 3",
+        "seenAt": "2026-03-03T09:00:00+00:00",
+        "relevanceScore": 2,
+        "relevanceReason": "Voorbeeld Relevancereason 3",
+        "agentAuthored": false
       },
       {
         "@self": {

@@ -149,4 +149,4 @@ The Competitors page MUST list the watch events over a window, newest first, sho
 
 #### Scenario: The page renders its empty state and names the setting
 - **WHEN** the Competitors page is opened on an instance with no configured egress source
-- **THEN** it renders an empty state naming the Marketing intelligence settings, and no watch claims a last run
+- **THEN** it says so and names the Marketing intelligence settings, rather than rendering an empty event list that reads as "they published nothing"

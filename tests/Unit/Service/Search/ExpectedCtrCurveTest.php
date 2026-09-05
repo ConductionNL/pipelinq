@@ -37,7 +37,7 @@ class ExpectedCtrCurveTest extends TestCase {
 	public function testInterpolatesBetweenTwoIntegerPositions(): void {
 		$expected = ((ExpectedCtrCurve::CURVE[10] + ExpectedCtrCurve::CURVE[11]) / 2);
 
-		$this->assertEqualsWithDelta($expected, ExpectedCtrCurve::at(position: 10.5), 0.000001);
+		$this->assertEqualsWithDelta($expected, ExpectedCtrCurve::rateAt(position: 10.5), 0.000001);
 	}//end testInterpolatesBetweenTwoIntegerPositions()
 
 	/**
@@ -46,8 +46,8 @@ class ExpectedCtrCurveTest extends TestCase {
 	 * @return void
 	 */
 	public function testAnIntegerPositionAnswersItsOwnValue(): void {
-		$this->assertEqualsWithDelta(ExpectedCtrCurve::CURVE[8], ExpectedCtrCurve::at(position: 8.0), 0.000001);
-		$this->assertEqualsWithDelta(ExpectedCtrCurve::CURVE[3], ExpectedCtrCurve::at(position: 3.0), 0.000001);
+		$this->assertEqualsWithDelta(ExpectedCtrCurve::CURVE[8], ExpectedCtrCurve::rateAt(position: 8.0), 0.000001);
+		$this->assertEqualsWithDelta(ExpectedCtrCurve::CURVE[3], ExpectedCtrCurve::rateAt(position: 3.0), 0.000001);
 	}//end testAnIntegerPositionAnswersItsOwnValue()
 
 	/**
@@ -56,8 +56,8 @@ class ExpectedCtrCurveTest extends TestCase {
 	 * @return void
 	 */
 	public function testIsFlatBeyondPositionTwenty(): void {
-		$this->assertSame(ExpectedCtrCurve::TAIL_RATE, ExpectedCtrCurve::at(position: 20.0));
-		$this->assertSame(ExpectedCtrCurve::TAIL_RATE, ExpectedCtrCurve::at(position: 47.3));
+		$this->assertSame(ExpectedCtrCurve::TAIL_RATE, ExpectedCtrCurve::rateAt(position: 20.0));
+		$this->assertSame(ExpectedCtrCurve::TAIL_RATE, ExpectedCtrCurve::rateAt(position: 47.3));
 	}//end testIsFlatBeyondPositionTwenty()
 
 	/**
@@ -67,8 +67,8 @@ class ExpectedCtrCurveTest extends TestCase {
 	 * @return void
 	 */
 	public function testAPositionBelowOneUsesTheFirstValue(): void {
-		$this->assertSame(ExpectedCtrCurve::CURVE[1], ExpectedCtrCurve::at(position: 0.4));
-		$this->assertSame(ExpectedCtrCurve::CURVE[1], ExpectedCtrCurve::at(position: 1.0));
+		$this->assertSame(ExpectedCtrCurve::CURVE[1], ExpectedCtrCurve::rateAt(position: 0.4));
+		$this->assertSame(ExpectedCtrCurve::CURVE[1], ExpectedCtrCurve::rateAt(position: 1.0));
 	}//end testAPositionBelowOneUsesTheFirstValue()
 
 	/**

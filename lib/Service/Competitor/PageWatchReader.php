@@ -48,6 +48,13 @@ use OCA\Pipelinq\Service\Search\HtmlTextExtractor;
  * Change detection over a CSS-selected fragment.
  *
  * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-page-watch-diffs-a-selected-fragment-and-stores-a-fingerprint
+ *
+ * @SuppressWarnings(PHPMD.StaticAccess) The named constructors of the
+ *  immutable result type this class returns (WatchOutcome). A value
+ *  object's own factory is not the hidden dependency StaticAccess exists
+ *  to catch: there is nothing here that could be injected, and the
+ *  alternative is a constructor call whose argument order says less than
+ *  the method name does.
  */
 class PageWatchReader {
 
@@ -102,7 +109,7 @@ class PageWatchReader {
 		string $sourceId = '',
 	): WatchOutcome {
 		$result = $this->egress->readUrl(configKey: CompetitorWatchService::SOURCE_KEY, url: $url, sourceId: $sourceId);
-		if ($result->ok === false) {
+		if ($result->succeeded === false) {
 			return WatchOutcome::failed(outcome: (string)$result->failure, reason: $result->reason);
 		}
 

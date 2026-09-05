@@ -76,7 +76,7 @@ class ConnectorEgressTest extends TestCase {
 	public function testReportsNotConfiguredWithoutASourceId(): void {
 		$result = $this->egress(sourceId: '')->read(configKey: 'competitor.egress_source', endpoint: '/feed');
 
-		$this->assertFalse($result->ok);
+		$this->assertFalse($result->succeeded);
 		$this->assertSame(EgressResult::NOT_CONFIGURED, $result->failure);
 		$this->assertStringContainsString('competitor.egress_source', $result->reason);
 	}//end testReportsNotConfiguredWithoutASourceId()
@@ -90,7 +90,7 @@ class ConnectorEgressTest extends TestCase {
 	public function testReportsUnavailableWithoutOpenConnector(): void {
 		$result = $this->egress(sourceId: 'source-1')->read(configKey: 'competitor.egress_source', endpoint: '/feed');
 
-		$this->assertFalse($result->ok);
+		$this->assertFalse($result->succeeded);
 		$this->assertSame(EgressResult::UNAVAILABLE, $result->failure);
 	}//end testReportsUnavailableWithoutOpenConnector()
 
@@ -113,7 +113,7 @@ class ConnectorEgressTest extends TestCase {
 	public function testReportsRefusedOnANonTwoHundredStatus(): void {
 		$refused = EgressResult::failed(failure: EgressResult::REFUSED, reason: 'answered 404', status: 404);
 
-		$this->assertFalse($refused->ok);
+		$this->assertFalse($refused->succeeded);
 		$this->assertSame(404, $refused->status);
 		$this->assertSame(EgressResult::REFUSED, $refused->failure);
 		$this->assertNull($refused->json());

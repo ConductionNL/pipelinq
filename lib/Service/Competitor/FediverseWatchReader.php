@@ -42,6 +42,13 @@ use OCA\Pipelinq\Service\Egress\EgressResult;
  * Public Mastodon and Bluesky timelines.
  *
  * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-five-watch-kinds-and-the-two-that-are-excluded-are-named
+ *
+ * @SuppressWarnings(PHPMD.StaticAccess) The named constructors of the
+ *  immutable result type this class returns (WatchOutcome). A value
+ *  object's own factory is not the hidden dependency StaticAccess exists
+ *  to catch: there is nothing here that could be injected, and the
+ *  alternative is a constructor call whose argument order says less than
+ *  the method name does.
  */
 class FediverseWatchReader {
 
@@ -111,7 +118,7 @@ class FediverseWatchReader {
 			config: ['query' => ['acct' => ($user . '@' . $instance)]],
 			sourceId: $sourceId
 		);
-		if ($lookup->ok === false) {
+		if ($lookup->succeeded === false) {
 			return WatchOutcome::failed(outcome: (string)$lookup->failure, reason: $lookup->reason);
 		}
 
@@ -130,7 +137,7 @@ class FediverseWatchReader {
 			config: ['query' => ['limit' => (string)self::MAX_POSTS, 'exclude_replies' => 'true']],
 			sourceId: $sourceId
 		);
-		if ($statuses->ok === false) {
+		if ($statuses->succeeded === false) {
 			return WatchOutcome::failed(outcome: (string)$statuses->failure, reason: $statuses->reason);
 		}
 
@@ -157,7 +164,7 @@ class FediverseWatchReader {
 			config: ['query' => ['actor' => $handle, 'limit' => (string)self::MAX_POSTS]],
 			sourceId: $sourceId
 		);
-		if ($feed->ok === false) {
+		if ($feed->succeeded === false) {
 			return WatchOutcome::failed(outcome: (string)$feed->failure, reason: $feed->reason);
 		}
 

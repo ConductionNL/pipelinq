@@ -229,7 +229,7 @@ class KeywordAnalysisServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testAQueryAtOrAboveTheExpectedRateIsNotAFinding(): void {
-		$expected = ExpectedCtrCurve::at(position: 10.0);
+		$expected = ExpectedCtrCurve::rateAt(position: 10.0);
 		$earning = (int)ceil((1000 * $expected));
 
 		$this->assertSame([], $this->analysis->strikingDistance(rows: [$this->row('a', '/a', $earning, 1000, 10.0)]));

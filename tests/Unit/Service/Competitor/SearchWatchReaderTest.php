@@ -94,7 +94,7 @@ class SearchWatchReaderTest extends TestCase {
 	public function testReturnsNothingWithoutHermiq(): void {
 		$outcome = $this->reader(client: null)->read(query: 'voorbeeld aanbesteding');
 
-		$this->assertFalse($outcome->ok());
+		$this->assertFalse($outcome->succeeded());
 		$this->assertSame(EgressResult::NOT_CONFIGURED, $outcome->outcome);
 		$this->assertSame([], $outcome->items);
 		$this->assertStringContainsString('Hermiq', $outcome->reason);
@@ -123,7 +123,7 @@ class SearchWatchReaderTest extends TestCase {
 
 		$outcome = $this->reader(client: $client)->read(query: 'voorbeeld');
 
-		$this->assertFalse($outcome->ok());
+		$this->assertFalse($outcome->succeeded());
 		$this->assertSame('No web search provider is configured.', $outcome->reason);
 	}//end testHermiqsOwnErrorIsReportedWithItsMessage()
 
@@ -158,7 +158,7 @@ class SearchWatchReaderTest extends TestCase {
 
 		$outcome = $this->reader(client: $client)->read(query: 'voorbeeld');
 
-		$this->assertTrue($outcome->ok());
+		$this->assertTrue($outcome->succeeded());
 		$this->assertCount(1, $outcome->items);
 		$this->assertSame('https://nieuws.example.org/1', $outcome->items[0]['url']);
 		$this->assertSame('https://nieuws.example.org/1', $outcome->items[0]['stamp']);

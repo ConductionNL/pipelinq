@@ -44,6 +44,12 @@
 							"commercial",
 							"transactional"
 						],
+						"x-enum-labels": {
+							"informational": "Find something out",
+							"navigational": "Reach a specific page",
+							"commercial": "Compare options",
+							"transactional": "Arrange something"
+						},
 						"facetable": true,
 						"example": "informational"
 					},
@@ -57,6 +63,11 @@
 							"use-less",
 							"watch"
 						],
+						"x-enum-labels": {
+							"use-more": "Use more",
+							"use-less": "Use less",
+							"watch": "Keep an eye on it"
+						},
 						"facetable": true,
 						"example": "use-more"
 					},
@@ -78,6 +89,12 @@
 							"content-gap",
 							"manual"
 						],
+						"x-enum-labels": {
+							"striking-distance": "One push from page one",
+							"cannibalisation": "Two pages, one query",
+							"content-gap": "Nothing of ours answers it",
+							"manual": "Added by hand"
+						},
 						"facetable": true,
 						"example": "striking-distance"
 					},
@@ -187,12 +204,18 @@
 										"mastodon",
 										"bluesky"
 									],
-									"example": "mastodon"
+									"example": "mastodon",
+									"description": "The network this handle lives on. Only Mastodon and Bluesky publish a timeline that can be read without impersonating anybody.",
+									"x-enum-labels": {
+										"mastodon": "Mastodon",
+										"bluesky": "Bluesky"
+									}
 								},
 								"handle": {
 									"type": "string",
 									"title": "Handle",
-									"example": "voorbeeld@mastodon.example.org"
+									"example": "voorbeeld@mastodon.example.org",
+									"description": "The handle as its own network spells it, without the leading at sign."
 								}
 							}
 						}
@@ -303,6 +326,13 @@
 							"fediverse",
 							"search"
 						],
+						"x-enum-labels": {
+							"rss": "Feed",
+							"sitemap": "Sitemap",
+							"page": "Page fragment",
+							"fediverse": "Public timeline",
+							"search": "Saved search"
+						},
 						"facetable": true,
 						"example": "rss"
 					},
@@ -331,6 +361,11 @@
 							"daily",
 							"weekly"
 						],
+						"x-enum-labels": {
+							"hourly": "Every hour",
+							"daily": "Every day",
+							"weekly": "Every week"
+						},
 						"facetable": true,
 						"example": "daily"
 					},
@@ -367,6 +402,13 @@
 							"refused",
 							"unparsable"
 						],
+						"x-enum-labels": {
+							"ok": "Read",
+							"not_configured": "Not configured",
+							"unavailable": "Could not reach it",
+							"refused": "Refused",
+							"unparsable": "Could not read it"
+						},
 						"facetable": true,
 						"example": "ok"
 					},
@@ -439,6 +481,13 @@
 							"fediverse",
 							"search"
 						],
+						"x-enum-labels": {
+							"rss": "Feed",
+							"sitemap": "Sitemap",
+							"page": "Page fragment",
+							"fediverse": "Public timeline",
+							"search": "Saved search"
+						},
 						"facetable": true,
 						"example": "rss"
 					},
@@ -536,6 +585,15 @@
 							"instagram",
 							"threads"
 						],
+						"x-enum-labels": {
+							"mastodon": "Mastodon",
+							"bluesky": "Bluesky",
+							"linkedin": "LinkedIn",
+							"x": "X",
+							"facebook": "Facebook page",
+							"instagram": "Instagram business",
+							"threads": "Threads"
+						},
 						"facetable": true,
 						"example": "mastodon"
 					},
@@ -571,6 +629,11 @@
 							"no",
 							"unknown"
 						],
+						"x-enum-labels": {
+							"yes": "Yes",
+							"no": "No",
+							"unknown": "Cannot be checked"
+						},
 						"facetable": true,
 						"example": "yes"
 					},
@@ -584,6 +647,11 @@
 							"no",
 							"unknown"
 						],
+						"x-enum-labels": {
+							"yes": "Yes",
+							"no": "No",
+							"unknown": "Cannot be checked"
+						},
 						"facetable": true,
 						"example": "unknown"
 					},

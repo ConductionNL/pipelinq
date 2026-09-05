@@ -46,6 +46,13 @@ use Throwable;
  * RSS and Atom entries out of a feed.
  *
  * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-feed-watch-reports-the-entries-it-has-not-seen
+ *
+ * @SuppressWarnings(PHPMD.StaticAccess) The named constructors of the
+ *  immutable result type this class returns (WatchOutcome). A value
+ *  object's own factory is not the hidden dependency StaticAccess exists
+ *  to catch: there is nothing here that could be injected, and the
+ *  alternative is a constructor call whose argument order says less than
+ *  the method name does.
  */
 class FeedWatchReader {
 
@@ -80,7 +87,7 @@ class FeedWatchReader {
 	 */
 	public function read(string $url, string $sourceId = ''): WatchOutcome {
 		$result = $this->egress->readUrl(configKey: CompetitorWatchService::SOURCE_KEY, url: $url, sourceId: $sourceId);
-		if ($result->ok === false) {
+		if ($result->succeeded === false) {
 			return WatchOutcome::failed(outcome: (string)$result->failure, reason: $result->reason);
 		}
 

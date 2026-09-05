@@ -101,7 +101,7 @@ final class WatchOutcome {
 	 *
 	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-watch-event-is-written-once-per-watch-and-url
 	 */
-	public function ok(): bool {
+	public function succeeded(): bool {
 		return ($this->outcome === self::OK);
-	}//end ok()
+	}//end succeeded()
 }//end class

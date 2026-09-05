@@ -48,6 +48,13 @@ use Throwable;
  * One outbound read, through one OpenConnector source.
  *
  * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-every-outbound-read-leaves-through-an-openconnector-source
+ *
+ * @SuppressWarnings(PHPMD.StaticAccess) The named constructors of the
+ *  immutable result type this class returns (EgressResult). A value
+ *  object's own factory is not the hidden dependency StaticAccess exists
+ *  to catch: there is nothing here that could be injected, and the
+ *  alternative is a constructor call whose argument order says less than
+ *  the method name does.
  */
 class ConnectorEgress {
 

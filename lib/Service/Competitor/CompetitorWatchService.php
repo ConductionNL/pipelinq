@@ -48,6 +48,19 @@ use Throwable;
  * Runs the competitor watches that are due.
  *
  * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-a-watch-runs-on-an-openregister-flow-schedule-and-never-on-a-job-of-ours
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) This class is the
+ *  dispatcher over the five watch readers, and a dispatcher over five
+ *  things depends on five things. Each reader is independently testable
+ *  and none of them knows about the others; hiding them behind a registry
+ *  would move the same five dependencies one file along and cost the
+ *  match expression that makes the dispatch readable.
+ * @SuppressWarnings(PHPMD.ExcessiveParameterList) Same reason: five
+ *  readers, the scorer, the event store, the register access, a clock and
+ *  a logger. Every one of them is injected so it can be replaced in a
+ *  test, which is what makes the watch pass assertable without a network.
+ * @SuppressWarnings(PHPMD.StaticAccess) `WatchOutcome`'s named
+ *  constructors, on the same grounds as the readers themselves.
  */
 class CompetitorWatchService {
 
