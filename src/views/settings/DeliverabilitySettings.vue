@@ -340,7 +340,7 @@ export default {
 		th,
 		td {
 			padding: 8px 12px;
-			text-align: left;
+			text-align: start;
 			vertical-align: middle;
 			border-bottom: 1px solid var(--color-border);
 		}

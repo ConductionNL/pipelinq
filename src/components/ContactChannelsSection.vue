@@ -674,7 +674,7 @@ export default {
 .contact-channels-section__value {
 	flex: 1;
 	color: var(--color-main-text);
-	word-break: break-word;
+	overflow-wrap: break-word;
 }
 
 .contact-channels-section__badge {
