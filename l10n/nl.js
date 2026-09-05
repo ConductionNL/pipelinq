@@ -1,6 +1,18 @@
 OC.L10N.register(
     "pipelinq",
     {
+        "Example data fills the lists, dashboards and the 360 degree client view so you can see the app working straight away. Pick \"None\" on a production install.": "Voorbeeldgegevens vullen de lijsten, dashboards en het 360 graden klantbeeld, zodat je de app meteen ziet werken. Kies \"Geen\" op een productieomgeving.",
+        "Loads what you picked. Every object is marked [Demo], it is safe to run more than once, and `occ pipelinq:demo:seed --remove` takes it away again.": "Laadt wat je koos. Elk object is gemarkeerd met [Demo], je kunt dit meer dan een keer uitvoeren en `occ pipelinq:demo:seed --remove` haalt het weer weg.",
+        "Nothing is seeded. You start with an empty app and add your own data.": "Er wordt niets klaargezet. Je begint met een lege app en voegt zelf gegevens toe.",
+        "A worked CRM: clients and contacts, pipelines, products and leads, requests, complaints and contact moments, tasks and contracts. It shows the lists, detail pages and dashboards working. Safe to run more than once, and `occ pipelinq:demo:remove` takes it away again.": "Een uitgewerkt CRM: klanten en contactpersonen, pipelines, producten en leads, verzoeken, klachten en contactmomenten, taken en contracten. Het laat de lijsten, detailpagina’s en dashboards werkend zien. Veilig om vaker uit te voeren, en `occ pipelinq:demo:remove` haalt het weer weg.",
+        "Load example data?": "Voorbeeldgegevens laden?",
+        "Example data fills the lists, detail pages and dashboards so you can see the app working straight away. Pick \"None\" on a production install.": "Voorbeeldgegevens vullen de lijsten, detailpagina’s en dashboards, zodat je de app meteen ziet werken. Kies \"Geen\" op een productieomgeving.",
+        "Load the example data": "Laad de voorbeeldgegevens",
+        "Loads what you picked. The data is obviously sample data, it is safe to run more than once, and you can delete it afterwards.": "Laadt wat je koos. De gegevens zijn herkenbaar voorbeeldgegevens, je kunt dit meer dan een keer uitvoeren en je kunt ze daarna verwijderen.",
+        "None, I will set this up myself": "Geen, ik richt dit zelf in",
+        "Nothing is imported. You start with an empty app and add your own data.": "Er wordt niets geïmporteerd. Je begint met een lege app en voegt zelf gegevens toe.",
+        "Example data": "Voorbeeldgegevens",
+        "Sample values for every schema this app supplies, generated from the schemas themselves. It shows the lists, detail pages and dashboards working rather than telling a story. Safe to run more than once, and you can delete it afterwards.": "Voorbeeldwaarden voor elk schema dat deze app levert, gegenereerd uit de schema’s zelf. Het laat de lijsten, detailpagina’s en dashboards werkend zien in plaats van een verhaal te vertellen. Veilig om vaker uit te voeren, en je kunt het daarna verwijderen.",
         "\"Vanaf\" datum moet voor of gelijk zijn aan \"tot en met\" datum.": "\"Vanaf\" datum moet voor of gelijk zijn aan \"tot en met\" datum.",
         "#": "#",
         "%n contact in this segment is missing {channel} consent. Choose how to proceed.": ["%n contact in dit segment mist toestemming voor {channel}. Kies hoe u verdergaat.","%n contacten in dit segment missen toestemming voor {channel}. Kies hoe u verdergaat."],

@@ -186,6 +186,67 @@ class DemoSeedService {
 	}//end __construct()
 
 	/**
+	 * The answer that means "seed nothing".
+	 *
+	 * 🔴 NOT THE ABSENCE OF AN ANSWER. An operator who declines has FINISHED the
+	 * step; a step that can never be marked done reopens the wizard over every
+	 * page (nextcloud-vue#806).
+	 *
+	 * @var string
+	 */
+	public const NONE_DATASET = 'none';
+
+	/**
+	 * The id of the dataset this app seeds.
+	 *
+	 * @var string
+	 */
+	public const DEMO_DATASET = 'demo';
+
+	/**
+	 * Every answer the wizard's choice step may offer, declining included.
+	 *
+	 * 🔴 THE SERVER OWNS THIS LIST, AND THAT IS THE POINT. The step declares
+	 * `optionsSource: datasets` and no options of its own, so what the card
+	 * says is what this service will actually create.
+	 *
+	 * `objectCount` is 0 because this seeder BUILDS its objects rather than
+	 * importing a file, so there is no honest number until it has run. The card
+	 * shows no count rather than a made-up one.
+	 *
+	 * @return array<int, array{id: string, label: string, description: string, objectCount: integer, icon: string}> The answers.
+	 *
+	 * @spec exclude Demo-data choice list; ADR-111 rule 1 has no per-app behavioural spec.
+	 */
+	public function listChoices(): array {
+		return [
+			[
+				'id'          => self::NONE_DATASET,
+				'label'       => 'None, I will set this up myself',
+				'description' => 'Nothing is seeded. You start with an empty app and add your own data.',
+				'objectCount' => 0,
+				'icon'        => 'CloseCircleOutline',
+			],
+			[
+				'id'    => self::DEMO_DATASET,
+				'label' => 'Example data',
+				// 🔴 NAMES WHAT IT CREATES. The sections below are the ones
+				// SECTIONS declares, so the sentence and the seeder cannot
+				// drift apart without this list changing too.
+				'description' => (
+					'A worked CRM: clients and contacts, pipelines, products and leads, requests, '
+					. 'complaints and contact moments, tasks and contracts. It shows the lists, '
+					. 'detail pages and dashboards working. Safe to run more than once, and '
+					. '`occ pipelinq:demo:remove` takes it away again.'
+				),
+				'objectCount' => 0,
+				'icon'        => 'DatabaseOutline',
+			],
+		];
+
+	}//end listChoices()
+
+	/**
 	 * Seed the demo dataset (idempotent: existing demo objects are reused).
 	 *
 	 * @return array{success: bool, message?: string, created: array<string, int>, skipped: array<string, int>}
