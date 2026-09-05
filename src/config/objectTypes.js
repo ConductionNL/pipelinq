@@ -369,7 +369,7 @@ export function objectTypes() {
 			description: t(APP, 'Messaging conversations (WhatsApp / SMS)'),
 		},
 		{
-			slug: 'message',
+			slug: 'channelMessage',
 			group: 'marketing',
 			label: t(APP, 'Message'),
 			description: t(APP, 'Outbound / inbound messages within a conversation'),

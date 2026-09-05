@@ -60,7 +60,7 @@ class SmsAdapter {
 	/**
 	 * Default message schema slug.
 	 */
-	private const DEFAULT_MESSAGE_SCHEMA_SLUG = 'message';
+	private const DEFAULT_MESSAGE_SCHEMA_SLUG = 'channelMessage';
 
 	/**
 	 * Default conversation schema slug.
