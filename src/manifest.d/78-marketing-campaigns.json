@@ -1,0 +1,127 @@
+{
+	"menu": [
+		{
+			"id": "MarketingGroup",
+			"label": "Marketing",
+			"order": 130,
+			"children": [
+				{
+					"id": "Campaigns",
+					"label": "Campaigns",
+					"icon": "BullhornOutline",
+					"route": "Campaigns",
+					"order": 45
+				}
+			]
+		}
+	],
+	"pages": [
+		{
+			"id": "Campaigns",
+			"_note": "Campaign list as a declarative type:index page (marketing-campaigns). Everything the list shows is a stored campaign field, so no custom page is needed: the name, the goal, the campaign value and the dates read straight off the schema. Create and edit use the declarative dialog; the two things a dialog cannot do, asking portaliq for a landing page and reading the report, live on the detail page and on the Reports page instead.",
+			"route": "/campaigns",
+			"type": "index",
+			"title": "Campaigns",
+			"config": {
+				"register": "pipelinq",
+				"schema": "campaign",
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"includeColumns": [
+					"name",
+					"status",
+					"utmCampaign",
+					"startsAt",
+					"endsAt"
+				],
+				"actions": [
+					{
+						"id": "view",
+						"label": "Open",
+						"icon": "Eye",
+						"handler": "navigate",
+						"route": "CampaignDetail"
+					}
+				]
+			}
+		},
+		{
+			"id": "CampaignDetail",
+			"_note": "Campaign record as a declarative type:detail page (ADR-062 grid). The campaign's own fields auto-render in the details widget. The landing page block is a bodyWidgets section rather than a declarative widget for two reasons: it carries an ACTION that dispatches a cross-app event portaliq answers, which no declarative action expresses, and it must surface portaliq's own typed error code verbatim, which a generic write dialog would collapse into a save failure. Its props carry @objectId, the only token that resolves on a detail page.",
+			"route": "/campaigns/:id",
+			"type": "detail",
+			"title": "Campaign",
+			"config": {
+				"register": "pipelinq",
+				"schema": "campaign",
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"widgets": [
+					{
+						"id": "campaign-data",
+						"type": "data",
+						"title": "Campaign details",
+						"icon": "InformationOutline",
+						"content": {
+							"columns": 2,
+							"include": [
+								"goal",
+								"status",
+								"utmCampaign",
+								"utmSource",
+								"utmMedium",
+								"startsAt",
+								"endsAt",
+								"budgetEur"
+							]
+						}
+					}
+				],
+				"layout": [
+					{
+						"id": "1",
+						"widgetId": "campaign-data",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 12,
+						"gridHeight": 5
+					}
+				],
+				"bodyWidgets": [
+					{
+						"id": "campaign-landing-page",
+						"component": "CampaignLandingPageSection",
+						"title": "Landing page",
+						"placement": "end",
+						"props": {
+							"campaignId": "@objectId"
+						}
+					}
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true,
+					"tabs": [
+						{
+							"id": "audit",
+							"label": "History",
+							"icon": "History",
+							"widgets": [{ "type": "audit" }]
+						}
+					]
+				}
+			}
+		},
+		{
+			"id": "CampaignReportPage",
+			"_note": "The campaign report (marketing-campaigns, ADR-112). Reached as a card on the Reports page and never as a menu entry of its own. Custom because the page renders ONE aggregate response that joins blasts, touchpoints, leads and shillinq invoices across four schemas, with three attribution models already computed in it; no declarative index or dashboard primitive expresses that, and building it from per-object reads is the fan-out pipelinq#1781 removed from the blast performance page. Missing primitive: an aggregation-backed report page.",
+			"route": "/reports/campaign",
+			"type": "custom",
+			"title": "Campaign report",
+			"component": "CampaignReportView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "campaign",
+				"documentationUrl": "https://pipelinq.conduction.nl"
+			}
+		}
+	]
+}

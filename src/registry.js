@@ -58,6 +58,7 @@ import BillingCategoryWidget from './components/dashboard/BillingCategoryWidget.
 //     express. ---
 import ArticleContentSection from './components/marketing/ArticleContentSection.vue'
 import ArticleUsageSection from './components/marketing/ArticleUsageSection.vue'
+import CampaignLandingPageSection from './components/marketing/CampaignLandingPageSection.vue'
 // --- Mailing-list memberships (marketing-lists-and-double-opt-in). One
 //     kind:'section' bound either to a list (the mailing list detail page) or
 //     to a contact (the contact detail page): the row is the same row read
@@ -233,6 +234,7 @@ import LoyaltyReportingView from './views/loyalty/LoyaltyReporting.vue'
 //     ArticleEditModal, the one editing surface the change owns. Matches the
 //     SegmentNew / TemplateNew / BlastNew convention below. ---
 import ArticleFormView from './views/marketing/ArticleFormView.vue'
+import CampaignReportView from './views/marketing/CampaignReport.vue'
 // --- Search Console top queries (marketing-campaign-attribution): an
 //     aggregation over searchQueryDaily rows, not a row list. ---
 import SearchQueriesView from './views/marketing/SearchQueries.vue'
@@ -699,6 +701,11 @@ const registry = {
 		component: ArticleContentSection,
 		_note: 'In-body section for the declarative type:"detail" ArticleDetail page (marketing-article-hub, placement before-body). Renders the markdown body (cnRenderMarkdown), the hero image, the agent-authored mark (ADR-088) and the lifecycle actions (submit for review / publish / return to draft / archive / restore), and hosts ArticleEditModal. NOT a declarative text widget: that widget renders a literal manifest string, and only bodyWidgets props carry @object.<field> token resolution on a detail page. NOT lifecycleActions either (ADR-062 rule 10): OR\'s TransitionEngine would flip status, but ArticleService::publish() stamps publishedAt once and never moves it, which the grammar cannot express. Self-fetches by articleId (@objectId).',
 	},
+	CampaignLandingPageSection: {
+		kind: 'section',
+		component: CampaignLandingPageSection,
+		_note: 'In-body section for the declarative type:"detail" CampaignDetail page (marketing-campaigns, placement end). Hosts the Create landing page action, which dispatches portaliq\'s LandingPageRequestedEvent through POST /api/campaigns/{id}/landing-page and shows portaliq\'s own typed error code verbatim. Not a declarative action: the grammar has no cross-app command, and a generic write dialog would collapse five distinct failure codes into one save error. Self-fetches by campaignId (@objectId).',
+	},
 	ArticleUsageSection: {
 		kind: 'section',
 		component: ArticleUsageSection,
@@ -817,6 +824,11 @@ const registry = {
 		kind: 'page',
 		component: ArticleFormView,
 		_note: 'New-article route wrapper (marketing-article-hub). Mounts ArticleEditModal in create mode — the bespoke ArticleService create path (author stamp, slug derivation, the ADR-088 agent-mark refusal) has no declarative equivalent, so there is no generic type:"form" page here. On save, navigates to the new article\'s ArticleDetail.',
+	},
+	CampaignReportView: {
+		kind: 'page',
+		component: CampaignReportView,
+		_note: 'The campaign report (marketing-campaigns, ADR-112): reach and clicks per channel, submissions, leads with the basis each one closed on, attributed value under first touch, last touch and linear, and the recorded cost, all from ONE GET /api/campaigns/{id}/report. Custom because the response joins four schemas plus shillinq AR invoices and carries three precomputed models, which no declarative index or dashboard primitive expresses; switching the model re-reads nothing.',
 	},
 	SearchQueriesView: {
 		kind: 'page',

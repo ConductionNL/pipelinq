@@ -22,6 +22,7 @@ Pipelinq already ships a compliant blast engine. Everything below is live in the
 | First-party open pixel and click redirect with HMAC tokens | `TrackingLinkService`, `BlastTrackingController` | marketing-email-tracking |
 | Provider webhooks for bounce, complaint and unsubscribe | `BlastWebhookController` | marketing-blast-delivery |
 | Revenue attribution from first click to a won lead | `AttributionService` | marketing-blast |
+| Campaigns that own the UTM vocabulary, landing pages created in portaliq, touchpoint attribution in three models closed on a paid invoice or a won lead | `CampaignService`, `LandingPageProvisioningService`, `TouchpointService`, `CampaignAttributionService`, `CampaignReportService` | marketing-campaigns |
 | Performance dashboard with a chi-square A/B verdict | `BlastPerformanceDashboardView` | marketing-analytics |
 | SMS and WhatsApp messaging with per-channel consent and budgets | `80-whatsapp-sms-channel.json` | outbound-messaging |
 
