@@ -1357,6 +1357,115 @@ class BlastServiceTest extends TestCase {
 	}//end testDispatchDecoratesTheTemplateBodyWithCampaignParameters()
 
 	/**
+	 * A blast that belongs to a campaign carries the CAMPAIGN's source,
+	 * medium and campaign value, not the per-blast defaults. The blast id
+	 * stays in `utm_content`, which is what tells two mailings of one
+	 * campaign apart in the portal's rollup.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-tracked-link-is-minted-from-the-campaign-when-there-is-one
+	 */
+	public function testDispatchStampsTheCampaignsUtmValuesWhenTheBlastHasACampaign(): void {
+		$blast = [
+			'uuid' => 'blast-camp',
+			'name' => 'Spring newsletter',
+			'templateId' => 'tmpl-camp',
+			'channel' => 'email',
+			'status' => 'sending',
+			'connectorSourceId' => 'oc-source-camp',
+			'campaignId' => 'camp-1',
+		];
+		$this->objectService->store['blast-camp'] = $blast;
+		$this->objectService->store['tmpl-camp'] = [
+			'uuid' => 'tmpl-camp',
+			'subject' => 'Hi',
+			'bodyHtml' => '<a href="https://example.org/webinar">x</a>',
+		];
+		$this->objectService->store['oc-source-camp'] = ['uuid' => 'oc-source-camp'];
+		$this->objectService->deliveries = [
+			[
+				'uuid' => 'd-camp',
+				'blastId' => 'blast-camp',
+				'contactId' => 'c1',
+				'email' => 'c1@example.test',
+				'status' => 'queued',
+				'unsubscribeUrl' => 'https://example.org/u/tok-1',
+			],
+		];
+
+		$this->appConfig = $this->createMock(IAppConfig::class);
+		$this->appConfig->method('getValueString')->willReturnCallback(
+			function (string $app, string $key, string $default) {
+				return match ($key) {
+					'register' => 'pipelinq',
+					'blast_schema' => 'blast',
+					'blastDelivery_schema' => 'blastDelivery',
+					'campaignTemplate_schema' => 'campaignTemplate',
+					'blast.dispatch_batch_size' => '50',
+					default => $default,
+				};
+			}
+		);
+
+		$callService = new class {
+			/** @var array<int, array<string, mixed>> */
+			public array $calls = [];
+
+			public function call(array|object $source, string $endpoint, string $method, array $config): object {
+				$this->calls[] = $config['json'];
+				return BlastServiceTest::fakeCallLog(200, ['providerId' => 'p-1']);
+			}//end call()
+		};
+
+		$campaigns = new class {
+			/** @var array<int, array<string, mixed>> */
+			public array $asked = [];
+
+			/**
+			 * @param array<string, mixed> $blast The blast row.
+			 *
+			 * @return array<string, mixed> The campaign.
+			 */
+			public function forBlast(array $blast): array {
+				$this->asked[] = $blast;
+				return [
+					'uuid' => 'camp-1',
+					'utmCampaign' => 'webinar-ai-voor-gemeenten',
+					'utmSource' => 'nieuwsbrief',
+					'utmMedium' => 'social',
+				];
+			}//end forBlast()
+		};
+
+		$decorator = new \OCA\Pipelinq\Service\CampaignLinkDecorator($this->appConfig);
+		$objectService = $this->objectService;
+		$this->container = $this->createMock(ContainerInterface::class);
+		$this->container->method('get')->willReturnCallback(
+			function (string $id) use ($callService, $objectService, $decorator, $campaigns) {
+				return match ($id) {
+					'OCA\\OpenRegister\\Service\\ObjectService' => $objectService,
+					'OCA\\OpenConnector\\Service\\CallService' => $callService,
+					'OCA\\Pipelinq\\Service\\CampaignLinkDecorator' => $decorator,
+					'OCA\\Pipelinq\\Service\\CampaignService' => $campaigns,
+					default => throw new \RuntimeException('not registered: ' . $id),
+				};
+			}
+		);
+
+		$service = $this->buildService($this->container, $this->appConfig);
+		$this->assertSame(1, $service->dispatchBlastDeliveries('blast-camp', 100));
+
+		$sent = $callService->calls[0]['bodyHtml'];
+		$this->assertStringContainsString('utm_source=nieuwsbrief', $sent);
+		$this->assertStringContainsString('utm_medium=social', $sent);
+		$this->assertStringContainsString('utm_campaign=webinar-ai-voor-gemeenten', $sent);
+		$this->assertStringContainsString('utm_content=blast-camp', $sent);
+		$this->assertStringNotContainsString('utm_campaign=spring-newsletter', $sent);
+		$this->assertCount(1, $campaigns->asked);
+	}//end testDispatchStampsTheCampaignsUtmValuesWhenTheBlastHasACampaign()
+
+	/**
 	 * A container without the decorator sends the body as authored.
 	 *
 	 * @return void

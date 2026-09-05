@@ -543,6 +543,13 @@ return [
         // over a window plus the connection status. Static path, no wildcard.
         ['name' => 'searchConsole#index', 'url' => '/api/marketing/search-queries', 'verb' => 'GET'],
 
+        // Marketing — Campaigns (marketing-campaigns): the aggregate report the
+        // one campaign report page renders from, and the action that asks
+        // portaliq for a landing page. Plain campaign reads and writes go
+        // through OpenRegister's object API, so no CRUD routes live here.
+        ['name' => 'campaign#report',            'url' => '/api/campaigns/{id}/report',       'verb' => 'GET'],
+        ['name' => 'campaign#createLandingPage', 'url' => '/api/campaigns/{id}/landing-page', 'verb' => 'POST'],
+
         // Marketing — Blasts (marketing-segmentation-and-blast chain member 06).
         // Specific routes precede any wildcard {slug} routes (ADR-016).
         ['name' => 'blast#index',      'url' => '/api/blasts',                     'verb' => 'GET'],
