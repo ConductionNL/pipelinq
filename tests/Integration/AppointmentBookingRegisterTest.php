@@ -72,7 +72,7 @@ class AppointmentBookingRegisterTest extends TestCase {
 	 */
 	public static function bookingSchemaProvider(): array {
 		return [
-			'service' => ['service',           ['name', 'durationMinutes', 'status']],
+			'appointmentService' => ['appointmentService',           ['name', 'durationMinutes', 'status']],
 			'appointmentResource' => ['appointmentResource',          ['name', 'type', 'status']],
 			'appointmentBooking' => ['appointmentBooking',           ['customerId', 'serviceId', 'startAt', 'endAt', 'status']],
 			'walkInTicket' => ['walkInTicket',      ['displayName', 'arrivedAt', 'status']],
@@ -127,7 +127,7 @@ class AppointmentBookingRegisterTest extends TestCase {
 		$pipelinqSchemas = ($registers['pipelinq']['schemas'] ?? []);
 
 		$this->assertIsArray($pipelinqSchemas, 'pipelinq register MUST declare schemas[].');
-		foreach (['service', 'appointmentResource', 'appointmentBooking', 'walkInTicket', 'availabilityCache'] as $expected) {
+		foreach (['appointmentService', 'appointmentResource', 'appointmentBooking', 'walkInTicket', 'availabilityCache'] as $expected) {
 			$this->assertContains($expected,
 				$pipelinqSchemas,
 				"pipelinq register MUST list '{$expected}' (fragment merge contract)."
@@ -150,7 +150,7 @@ class AppointmentBookingRegisterTest extends TestCase {
 	 */
 	public static function seedObjectProvider(): array {
 		return [
-			'service-seeds' => ['pipelinq', 'service',  4],
+			'service-seeds' => ['pipelinq', 'appointmentService',  4],
 			'resource-seeds' => ['pipelinq', 'appointmentResource', 4],
 			'booking-seeds' => ['pipelinq', 'appointmentBooking',  2],
 		];
@@ -208,7 +208,7 @@ class AppointmentBookingRegisterTest extends TestCase {
 		];
 
 		foreach ($expected as $slug) {
-			$hit = $this->findOneBySlug($objects, 'pipelinq', 'service', $slug);
+			$hit = $this->findOneBySlug($objects, 'pipelinq', 'appointmentService', $slug);
 			$this->assertNotNull($hit, "Service seed '{$slug}' MUST be present.");
 			$this->assertNotEmpty(($hit['name'] ?? ''), "Service '{$slug}' MUST have a Dutch display name.");
 			$this->assertSame('EUR', ($hit['currency'] ?? 'EUR'), "Service '{$slug}' MUST quote prices in EUR.");
@@ -225,7 +225,7 @@ class AppointmentBookingRegisterTest extends TestCase {
 	 */
 	public function testMultiStepServiceSeedRoundTrip(): void {
 		$objects = ($this->config['components']['objects'] ?? []);
-		$service = $this->findOneBySlug($objects, 'pipelinq', 'service', 'service-color-and-cut');
+		$service = $this->findOneBySlug($objects, 'pipelinq', 'appointmentService', 'service-color-and-cut');
 
 		$this->assertNotNull($service, 'service-color-and-cut MUST be present.');
 		$this->assertCount(3, ($service['multiStep'] ?? []), 'service-color-and-cut MUST declare three steps.');

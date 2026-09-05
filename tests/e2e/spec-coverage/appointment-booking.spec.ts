@@ -207,7 +207,7 @@ test.describe('Booking admin surfaces (seeded)', () => {
 		customerId = String(created.id || created['@self']?.id)
 		fx.track('client', customerId)
 
-		const service = await fx.create('service', {
+		const service = await fx.create('appointmentService', {
 			name: `${TEST_PREFIX}-Knipbeurt`,
 			durationMinutes: 30,
 			status: 'active',

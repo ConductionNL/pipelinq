@@ -103,6 +103,10 @@ class RenameCollidingSchemaSlugs implements IRepairStep {
 		// shillinq's bookings subsystem is the larger claimant, so its slug stays
 		// bare. The two share `status` and nothing else.
 		'booking' => ['to' => 'appointmentBooking', 'with' => 'shillinq'],
+		// The bookable service, completing the appointment set. `service` was
+		// claimed by three apps and all three share only `name`, so all three
+		// namespace: shillinq keeps the bare slug, stackiq took catalogService.
+		'service' => ['to' => 'appointmentService', 'with' => 'shillinq, stackiq'],
 	];
 
 	/**

@@ -532,7 +532,7 @@ export default {
 				const booking = this.booking
 				if (booking.serviceId && !this.service) {
 					this.service = await this.objectStore.fetchObject(
-						'service',
+						'appointmentService',
 						booking.serviceId,
 					)
 				}

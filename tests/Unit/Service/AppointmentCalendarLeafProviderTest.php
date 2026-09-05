@@ -72,7 +72,7 @@ class AppointmentCalendarLeafProviderTest extends TestCase {
 				$values = [
 					'register' => 'pipelinq',
 					'booking_schema' => 'appointmentBooking',
-					'service_schema' => 'service',
+					'service_schema' => 'appointmentService',
 					'resource_schema' => 'appointmentResource',
 					'contact_schema' => 'contact',
 				];

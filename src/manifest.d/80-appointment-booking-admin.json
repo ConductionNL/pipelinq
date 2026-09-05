@@ -36,7 +36,7 @@
 			"title": "Services",
 			"config": {
 				"register": "pipelinq",
-				"schema": "service",
+				"schema": "appointmentService",
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"showAdd": false,
 				"showFormDialog": false,
@@ -72,7 +72,7 @@
 			"_note": "Uses CnDetailPage/CnDetailCard, but a type:detail page cannot carry the SIDE EFFECT this one owes: every save calls invalidateAvailability, because changing a service's duration or required skills invalidates the cached booking-availability windows computed from it. Stale windows would offer slots that can no longer be honoured. It also derives display-only labels (formatDuration, formatCurrency, requiredSkillsLabel) that are not schema properties.",
 			"config": {
 				"register": "pipelinq",
-				"schema": "service"
+				"schema": "appointmentService"
 			}
 		},
 		{

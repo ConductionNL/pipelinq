@@ -131,7 +131,7 @@ class SettingsLoadService {
 		// contracts with renewal-window detection and churn metrics.
 		'salesContract',
 		// Appointment booking (appointment-booking).
-		'service',
+		'appointmentService',
 		'appointmentResource',
 		'appointmentBooking',
 		'walkInTicket',
@@ -317,6 +317,8 @@ class SettingsLoadService {
 		'appointmentResource' => 'resource_schema',
 		// The appointment booking, same reasoning as the resource above.
 		'appointmentBooking' => 'booking_schema',
+		// The bookable service, same reasoning as the booking above.
+		'appointmentService' => 'service_schema',
 	];
 
 	/**

@@ -5502,7 +5502,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "service",
+          "schema": "appointmentService",
           "slug": "service-voorbeeld-name-1-1"
         },
         "name": "Voorbeeld Name 1",
@@ -5537,7 +5537,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "service",
+          "schema": "appointmentService",
           "slug": "service-voorbeeld-name-2-2"
         },
         "name": "Voorbeeld Name 2",
@@ -5572,7 +5572,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "service",
+          "schema": "appointmentService",
           "slug": "service-voorbeeld-name-3-3"
         },
         "name": "Voorbeeld Name 3",

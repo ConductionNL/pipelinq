@@ -150,7 +150,7 @@ class EligibilityServiceTest extends TestCase {
 					'register' => 'pipelinq',
 					'resource_schema' => 'appointmentResource',
 					'booking_schema' => 'appointmentBooking',
-					'service_schema' => 'service',
+					'service_schema' => 'appointmentService',
 					'availability_cache_schema' => 'availability-cache',
 				];
 				return ($values[$key] ?? $default);
@@ -288,7 +288,7 @@ class EligibilityServiceTest extends TestCase {
 	 */
 	public function testEligibleResourcesExcludesUncertifiedForSkillRequiredService(): void {
 		$mock = $this->createMock(originalClassName: ObjectServiceInterface::class);
-		$this->wireFind(mock: $mock, bySchema: ['service' => ['svc-color' => self::SERVICE_COLOR_REQUIRED]]);
+		$this->wireFind(mock: $mock, bySchema: ['appointmentService' => ['svc-color' => self::SERVICE_COLOR_REQUIRED]]);
 		$this->wireFindAll(mock: $mock, bySchema: ['appointmentResource' => [self::RESOURCE_SARAH, self::RESOURCE_MIA, self::RESOURCE_TOM]]);
 
 		$service = $this->buildService(objectService: $mock);
@@ -311,7 +311,7 @@ class EligibilityServiceTest extends TestCase {
 	 */
 	public function testResourceWithNoSkillsIsEligibleForNoSkillService(): void {
 		$mock = $this->createMock(originalClassName: ObjectServiceInterface::class);
-		$this->wireFind(mock: $mock, bySchema: ['service' => ['svc-trim' => self::SERVICE_NO_SKILL]]);
+		$this->wireFind(mock: $mock, bySchema: ['appointmentService' => ['svc-trim' => self::SERVICE_NO_SKILL]]);
 		$this->wireFindAll(mock: $mock, bySchema: ['appointmentResource' => [self::RESOURCE_TOM]]);
 
 		$service = $this->buildService(objectService: $mock);
@@ -330,7 +330,7 @@ class EligibilityServiceTest extends TestCase {
 	 */
 	public function testMultiStepServiceAppliesStepSpecificSkillFilters(): void {
 		$mock = $this->createMock(originalClassName: ObjectServiceInterface::class);
-		$this->wireFind(mock: $mock, bySchema: ['service' => ['svc-color-cut' => self::SERVICE_MULTISTEP]]);
+		$this->wireFind(mock: $mock, bySchema: ['appointmentService' => ['svc-color-cut' => self::SERVICE_MULTISTEP]]);
 		$this->wireFindAll(mock: $mock, bySchema: ['appointmentResource' => [self::RESOURCE_SARAH, self::RESOURCE_MIA, self::RESOURCE_TOM]]);
 
 		$service = $this->buildService(objectService: $mock);
@@ -394,7 +394,7 @@ class EligibilityServiceTest extends TestCase {
 		$this->wireFind(
 			mock: $mock,
 			bySchema: [
-				'service' => ['svc-color' => self::SERVICE_COLOR_REQUIRED],
+				'appointmentService' => ['svc-color' => self::SERVICE_COLOR_REQUIRED],
 				'appointmentResource' => [
 					'res-sarah' => self::RESOURCE_SARAH,
 					'res-mia' => self::RESOURCE_MIA,
@@ -428,7 +428,7 @@ class EligibilityServiceTest extends TestCase {
 	 */
 	public function testEmptyAndUnknownServiceIdReturnsEmptyList(): void {
 		$mock = $this->createMock(originalClassName: ObjectServiceInterface::class);
-		$this->wireFind(mock: $mock, bySchema: ['service' => []]);
+		$this->wireFind(mock: $mock, bySchema: ['appointmentService' => []]);
 		$this->wireFindAll(mock: $mock, bySchema: ['appointmentResource' => [self::RESOURCE_SARAH]]);
 
 		$service = $this->buildService(objectService: $mock);
