@@ -207,8 +207,16 @@ test.describe('Segment signals', () => {
 			).toBeTruthy()
 		}
 
-		expect(res.json?.availability?.shillinq).toBe(false)
-		expect(res.json?.availability?.reason).toBe('shillinq_not_installed')
+		// Whether shillinq answers depends on the instance, and the contract is
+		// the same either way: the endpoint says so plainly, and when it cannot
+		// reach shillinq it names why. CI installs openregister alone; a
+		// workstation has shillinq. Asserting only the absent case made this
+		// pass on CI and fail on every instance that has the app.
+		const availability = res.json?.availability ?? {}
+		expect(typeof availability.shillinq, res.text).toBe('boolean')
+		if (availability.shillinq === false) {
+			expect(availability.reason).toBe('shillinq_not_installed')
+		}
 	})
 })
 
