@@ -118,6 +118,8 @@ class FacebookPageAdapter extends AbstractSocialAdapter {
 	 *
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) The composite id already
 	 *  carries the page.
+	 *
+	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
 	 */
 	protected function readPublishedUrl(array $payload, SocialPublishRequest $request): string {
 		$id = (string)($payload['id'] ?? '');
@@ -189,6 +191,8 @@ class FacebookPageAdapter extends AbstractSocialAdapter {
 	 * @param array<string, mixed> $payload The insights payload.
 	 *
 	 * @return array<string, int> The values by metric name.
+	 *
+	 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
 	 */
 	protected function seriesByName(array $payload): array {
 		$out = [];

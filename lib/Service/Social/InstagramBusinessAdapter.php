@@ -184,6 +184,8 @@ class InstagramBusinessAdapter extends FacebookPageAdapter {
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) Instagram publishes no
 	 *  permalink on this response, and guessing one would be wrong more often
 	 *  than right.
+	 *
+	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
 	 */
 	protected function readPublishedUrl(array $payload, SocialPublishRequest $request): string {
 		return '';

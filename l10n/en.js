@@ -4103,7 +4103,15 @@ OC.L10N.register(
         "This post has not gone out yet.": "This post has not gone out yet.",
         "This post names no accounts yet.": "This post names no accounts yet.",
         "What this post says on every network": "What this post says on every network",
-        "Written by an agent: {agent}": "Written by an agent: {agent}"
+        "Written by an agent: {agent}": "Written by an agent: {agent}",
+        "New post": "New post",
+        "Post details": "Post details",
+        "Prepared text": "Prepared text",
+        "Social account": "Social account",
+        "Social post": "Social post",
+        "Social posts": "Social posts",
+        "What this says per network": "What this says per network",
+        "Where it went": "Where it went"
     },
     "nplurals=2; plural=(n != 1);"
 )

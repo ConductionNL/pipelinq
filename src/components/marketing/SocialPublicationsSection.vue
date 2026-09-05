@@ -91,7 +91,13 @@
 						)
 					}}
 				</p>
+				<label
+					class="social-publications__label"
+					for="social-share-prepared-body">
+					{{ t('pipelinq', 'Prepared text') }}
+				</label>
 				<textarea
+					id="social-share-prepared-body"
 					class="social-publications__prepared"
 					rows="5"
 					readonly
@@ -368,5 +374,11 @@ export default {
 
 .social-publications__prepared {
 	width: 100%;
+}
+
+.social-publications__label {
+	font-weight: bold;
+	display: block;
+	margin-top: 8px;
 }
 </style>

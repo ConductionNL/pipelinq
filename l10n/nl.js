@@ -4108,7 +4108,15 @@ OC.L10N.register(
         "This post has not gone out yet.": "Dit bericht is nog niet uitgegaan.",
         "This post names no accounts yet.": "Dit bericht noemt nog geen accounts.",
         "What this post says on every network": "Wat dit bericht op elk netwerk zegt",
-        "Written by an agent: {agent}": "Geschreven door een agent: {agent}"
+        "Written by an agent: {agent}": "Geschreven door een agent: {agent}",
+        "New post": "Nieuw bericht",
+        "Post details": "Berichtgegevens",
+        "Prepared text": "Voorbereide tekst",
+        "Social account": "Social account",
+        "Social post": "Social bericht",
+        "Social posts": "Social berichten",
+        "What this says per network": "Wat dit per netwerk zegt",
+        "Where it went": "Waar het heen ging"
     },
     "nplurals=2; plural=(n != 1);"
 )

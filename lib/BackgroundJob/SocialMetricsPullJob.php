@@ -72,6 +72,8 @@ class SocialMetricsPullJob extends TimedJob {
 	 *
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) The TimedJob contract
 	 *  passes an argument this job does not take.
+	 *
+	 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
 	 */
 	protected function run($argument): void {
 		try {

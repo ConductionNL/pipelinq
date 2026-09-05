@@ -134,6 +134,8 @@ class BlueskyAdapter extends AbstractSocialAdapter {
 	 * @param array<string, mixed> $payload The response body.
 	 *
 	 * @return string The AT URI.
+	 *
+	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
 	 */
 	protected function readPublishedId(array $payload): string {
 		return (string)($payload['uri'] ?? '');
@@ -147,6 +149,8 @@ class BlueskyAdapter extends AbstractSocialAdapter {
 	 * @param SocialPublishRequest $request The post, for the handle.
 	 *
 	 * @return string The public address, or an empty string.
+	 *
+	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
 	 */
 	protected function readPublishedUrl(array $payload, SocialPublishRequest $request): string {
 		$uri = (string)($payload['uri'] ?? '');

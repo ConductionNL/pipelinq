@@ -236,6 +236,8 @@ abstract class AbstractSocialAdapter implements SocialNetworkAdapter {
 	 * @param array<string, mixed> $payload The response body.
 	 *
 	 * @return string The id, or an empty string when the network gave none.
+	 *
+	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
 	 */
 	protected function readPublishedId(array $payload): string {
 		return (string)($payload['id'] ?? '');
@@ -251,6 +253,8 @@ abstract class AbstractSocialAdapter implements SocialNetworkAdapter {
 	 *
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) The request is what the
 	 *  overrides use; the base reads the network's own field.
+	 *
+	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
 	 */
 	protected function readPublishedUrl(array $payload, SocialPublishRequest $request): string {
 		foreach (['url', 'permalink', 'uri'] as $field) {
@@ -270,6 +274,8 @@ abstract class AbstractSocialAdapter implements SocialNetworkAdapter {
 	 * @param array<int, string> $path The keys to walk, in order.
 	 *
 	 * @return int The value, or 0 when any level is missing or not a number.
+	 *
+	 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-every-publications-numbers-are-pulled-daily-and-normalised
 	 */
 	protected function readInt(array $payload, array $path): int {
 		$node = $payload;

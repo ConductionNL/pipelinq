@@ -149,6 +149,8 @@ class LinkedInAdapter extends AbstractSocialAdapter {
 	 * @param array<string, mixed> $payload The response body.
 	 *
 	 * @return string The post URN.
+	 *
+	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
 	 */
 	protected function readPublishedId(array $payload): string {
 		foreach (['id', 'urn'] as $field) {
@@ -171,6 +173,8 @@ class LinkedInAdapter extends AbstractSocialAdapter {
 	 *
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) LinkedIn's address is
 	 *  derived from the URN alone.
+	 *
+	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-each-networks-request-is-shaped-as-that-network-documents-it
 	 */
 	protected function readPublishedUrl(array $payload, SocialPublishRequest $request): string {
 		$urn = $this->readPublishedId(payload: $payload);
