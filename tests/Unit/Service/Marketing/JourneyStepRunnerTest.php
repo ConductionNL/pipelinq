@@ -183,7 +183,7 @@ class JourneyStepRunnerTest extends TestCase {
 
 		$this->assertSame('task-created', $outcomes[0]['state']);
 
-		$tasks = $this->store->findAll('task');
+		$tasks = $this->store->findAll('crmTask');
 		$this->assertSame('Call about the renewal', $tasks[0]['subject']);
 		$this->assertSame('client-1', $tasks[0]['clientId']);
 	}//end testATaskStepDoesNotConsultTheConsentGate()

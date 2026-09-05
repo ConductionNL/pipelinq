@@ -6117,7 +6117,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "task",
+          "schema": "crmTask",
           "slug": "task-task-1-1"
         },
         "subject": "Voorbeeld Subject 1",
@@ -6148,7 +6148,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "task",
+          "schema": "crmTask",
           "slug": "task-task-2-2"
         },
         "subject": "Voorbeeld Subject 2",
@@ -6179,7 +6179,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "task",
+          "schema": "crmTask",
           "slug": "task-task-3-3"
         },
         "subject": "Voorbeeld Subject 3",

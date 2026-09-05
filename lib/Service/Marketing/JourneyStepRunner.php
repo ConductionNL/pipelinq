@@ -263,7 +263,7 @@ class JourneyStepRunner {
 			$payload['assigneeUserId'] = $assignee;
 		}
 
-		$stored = $this->store->save(schemaSlug: $this->store->schemaSlug('task_schema', 'task'), payload: $payload);
+		$stored = $this->store->save(schemaSlug: $this->store->schemaSlug('task_schema', 'crmTask'), payload: $payload);
 		if ($stored === null) {
 			return ['state' => 'failed', 'reason' => 'task_write_failed'];
 		}

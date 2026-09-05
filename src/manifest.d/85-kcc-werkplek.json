@@ -70,7 +70,7 @@
 						"title": "Tasks",
 						"content": {
 							"register": "pipelinq",
-							"schema": "task",
+							"schema": "crmTask",
 							"filter": {
 								"assigneeUserId": "@me",
 								"status": "open"

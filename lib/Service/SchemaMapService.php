@@ -54,7 +54,7 @@ class SchemaMapService {
 		// booking, planninq's project booking and this app's billing/WIP record —
 		// so `SchemaMapper::find()` answered whichever it reached first.
 		'timeEntry_schema' => 'billingTimeEntry',
-		'task_schema' => 'task',
+		'task_schema' => 'crmTask',
 		'posTransaction_schema' => 'posTransaction',
 		// POS staff PIN + role permissions (pos-staff-pin-permissions).
 		'posRole_schema' => 'posRole',

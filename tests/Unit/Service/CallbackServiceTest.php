@@ -294,7 +294,7 @@ class CallbackServiceTest extends TestCase {
 		// The schema declaration matches the documented mirror constant.
 		$graph = (new \OCA\Pipelinq\Service\Lifecycle\SchemaLifecycleGraph(
 			settingsDir: __DIR__ . '/../../../lib/Settings'
-		))->adjacencyFor(schemaSlug: 'task');
+		))->adjacencyFor(schemaSlug: 'crmTask');
 		$this->assertSame(CallbackService::ALLOWED_TRANSITIONS, $graph);
 	}//end testTransitionGraphIsSourcedFromSchemaDeclaration()
 

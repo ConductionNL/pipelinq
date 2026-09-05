@@ -31,7 +31,7 @@
           "productCategory",
           "leadProduct",
           "contactmoment",
-          "task",
+          "crmTask",
           "relationship",
           "skill",
           "agentProfile",
@@ -1426,9 +1426,9 @@
           }
         }
       },
-      "task": {
+      "crmTask": {
         "x-schema-org": "schema:Action",
-        "slug": "task",
+        "slug": "crmTask",
         "x-openregister-notifications": {
           "taskCompleted": {
             "trigger": {

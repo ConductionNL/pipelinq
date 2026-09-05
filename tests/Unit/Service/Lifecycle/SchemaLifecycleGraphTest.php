@@ -52,7 +52,7 @@ class SchemaLifecycleGraphTest extends TestCase {
 				'completed' => ['open'],
 				'expired' => ['open'],
 			],
-			actual: $this->graph()->adjacencyFor(schemaSlug: 'task')
+			actual: $this->graph()->adjacencyFor(schemaSlug: 'crmTask')
 		);
 	}//end testTaskAdjacencyMatchesDeclaredGraph()
 
@@ -202,6 +202,6 @@ class SchemaLifecycleGraphTest extends TestCase {
 	 */
 	public function testUnreadableSettingsDirYieldsEmptyMap(): void {
 		$graph = new SchemaLifecycleGraph(settingsDir: '/nonexistent/path/Settings');
-		$this->assertSame(expected: [], actual: $graph->adjacencyFor(schemaSlug: 'task'));
+		$this->assertSame(expected: [], actual: $graph->adjacencyFor(schemaSlug: 'crmTask'));
 	}//end testUnreadableSettingsDirYieldsEmptyMap()
 }//end class
