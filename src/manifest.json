@@ -221,7 +221,7 @@
 						"advanceOn": {
 							"type": "object-created",
 							"register": "pipelinq",
-							"schema": "contract",
+							"schema": "salesContract",
 							"capture": { "contractId": ":id" }
 						}
 					},
@@ -2083,7 +2083,7 @@
 					{
 						"title": "Contracts",
 						"register": "pipelinq",
-						"schema": "contract",
+						"schema": "salesContract",
 						"filter": { "clientRef": "@objectId" },
 						"sort": { "field": "endDate", "dir": "asc" },
 						"columns": [

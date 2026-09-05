@@ -186,7 +186,7 @@ class SemanticHandoffServiceTest extends TestCase {
 	 */
 	public function testHandoffParked(): void {
 		$service = $this->make([self::ENGINE => $this->engineStub(['status' => 'parked', 'correlationId' => 'corr-2'])]);
-		$result = $service->handoff('pipelinq', 'contract', 'c-1', 'send-to-invoicing');
+		$result = $service->handoff('pipelinq', 'salesContract', 'c-1', 'send-to-invoicing');
 		$this->assertTrue($result['ok']);
 		$this->assertSame('queued', $result['reason']);
 	}//end testHandoffParked()

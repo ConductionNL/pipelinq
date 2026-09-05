@@ -42,7 +42,7 @@ class PortalContractService extends AbstractPortalReadFacade {
 	 * @return string The schema key.
 	 */
 	protected function schemaKey(): string {
-		return 'contract';
+		return 'salesContract';
 	}//end schemaKey()
 
 	/**

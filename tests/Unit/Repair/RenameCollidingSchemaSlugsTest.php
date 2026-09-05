@@ -111,13 +111,13 @@ final class RenameCollidingSchemaSlugsTest extends TestCase {
 	 *
 	 * @return void
 	 */
-	public function testRenamesBothSlugsInPlace(): void {
-		$this->lookups(['cashCount' => [601], 'conversation' => [602]]);
+	public function testRenamesEverySlugInPlace(): void {
+		$this->lookups(['cashCount' => [601], 'conversation' => [602], 'contract' => [603]]);
 		$statements = &$this->captureStatements();
 
 		$this->step->run($this->createMock(IOutput::class));
 
-		$this->assertCount(2, $statements, 'exactly two rows may be rewritten');
+		$this->assertCount(3, $statements, 'exactly three rows may be rewritten');
 		foreach ($statements as $statement) {
 			$this->assertStringContainsString('openregister_schemas', $statement[0]);
 			$this->assertStringContainsString('SET slug', $statement[0]);
@@ -126,8 +126,9 @@ final class RenameCollidingSchemaSlugsTest extends TestCase {
 		$written = array_map(static fn (array $s): array => $s[1], $statements);
 		$this->assertContains(['posCashCount', 601], $written);
 		$this->assertContains(['channelConversation', 602], $written);
+		$this->assertContains(['salesContract', 603], $written);
 
-	}//end testRenamesBothSlugsInPlace()
+	}//end testRenamesEverySlugInPlace()
 
 	/**
 	 * An install already namespaced is left alone.
@@ -135,7 +136,7 @@ final class RenameCollidingSchemaSlugsTest extends TestCase {
 	 * @return void
 	 */
 	public function testIsANoOpWhenTheOldSlugsAreAbsent(): void {
-		$this->lookups(['posCashCount' => [601], 'channelConversation' => [602]]);
+		$this->lookups(['posCashCount' => [601], 'channelConversation' => [602], 'salesContract' => [603]]);
 		$this->db->expects($this->never())->method('executeStatement');
 
 		$this->step->run($this->createMock(IOutput::class));

@@ -234,7 +234,7 @@ class PortalContributionProvider {
 				[
 					'id' => 'clientContracts',
 					'register' => self::REGISTER,
-					'schema' => 'contract',
+					'schema' => 'salesContract',
 					'scopeField' => 'clientRef',
 					'scopeClaim' => 'clientId',
 					'label' => 'My contracts',

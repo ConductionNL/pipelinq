@@ -102,7 +102,7 @@ class SchemaLifecycleGraphTest extends TestCase {
 				'churned' => [],
 				'cancelled' => [],
 			],
-			actual: $this->graph()->fullAdjacencyFor(schemaSlug: 'contract')
+			actual: $this->graph()->fullAdjacencyFor(schemaSlug: 'salesContract')
 		);
 	}//end testContractFullAdjacencyMatchesReachability()
 
@@ -112,7 +112,7 @@ class SchemaLifecycleGraphTest extends TestCase {
 	 * @return void
 	 */
 	public function testContractLifecycleDeclaresTerminalStates(): void {
-		$lifecycle = $this->graph()->lifecycleFor(schemaSlug: 'contract');
+		$lifecycle = $this->graph()->lifecycleFor(schemaSlug: 'salesContract');
 		$this->assertIsArray($lifecycle);
 		$this->assertSame(
 			expected: ['renewed', 'churned', 'cancelled'],

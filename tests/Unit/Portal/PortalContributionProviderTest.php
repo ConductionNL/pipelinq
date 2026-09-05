@@ -157,7 +157,7 @@ final class PortalContributionProviderTest extends TestCase {
 		$expected = [
 			'clientRequests' => ['ticket', 'client', 'request'],
 			'clientComplaints' => ['ticket', 'client', 'complaint'],
-			'clientContracts' => ['contract', 'clientRef', null],
+			'clientContracts' => ['salesContract', 'clientRef', null],
 			'clientContactmoments' => ['ticket', 'client', 'interaction'],
 		];
 		foreach ($expected as $id => [$schema, $scopeField, $ticketType]) {
