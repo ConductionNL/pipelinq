@@ -317,6 +317,24 @@ export function objectTypes() {
 			label: t(APP, 'Blast'),
 			description: t(APP, 'Marketing blasts / campaigns'),
 		},
+		// Campaigns and attribution (marketing-campaigns). The Campaigns index
+		// and detail pages read these through the object store, so both slugs
+		// must be registered or fetchCollection() throws and the page is blank.
+		{
+			slug: 'campaign',
+			group: 'marketing',
+			label: t(APP, 'Campaign'),
+			description: t(
+				APP,
+				'Campaigns that group mailings, posts and a landing page',
+			),
+		},
+		{
+			slug: 'touchpoint',
+			group: 'marketing',
+			label: t(APP, 'Touchpoint'),
+			description: t(APP, 'One attributable interaction with a campaign'),
+		},
 		// Outbound messaging (outbound-messaging-provider-wiring). These slugs are
 		// self-fetched by the conversation section on client/contact detail and by
 		// the Messaging settings page; register them so fetchCollection() resolves

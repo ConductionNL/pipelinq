@@ -8,6 +8,8 @@
  * - a parameter the author wrote is kept as written
  * - the unsubscribe merge tag, anchors, mailto:, tel: and other schemes are untouched
  * - the campaign slug derives from the blast name, template name, then id
+ * - a campaign's own source, medium and campaign value win, per parameter
+ * - a blast that belongs to no campaign is decorated exactly as before
  * - the per-tenant switch turns decoration off
  *
  * @category Test
@@ -45,6 +47,19 @@ class CampaignLinkDecoratorTest extends TestCase {
 	 * @var array<string, mixed>
 	 */
 	private const BLAST = ['uuid' => 'blast-42', 'name' => 'Spring newsletter 2026', 'templateId' => 'tpl-1'];
+
+	/**
+	 * A campaign row as CampaignService loads it.
+	 *
+	 * @var array<string, mixed>
+	 */
+	private const CAMPAIGN = [
+		'uuid' => 'camp-1',
+		'name' => 'Webinar AI voor gemeenten',
+		'utmCampaign' => 'webinar-ai-voor-gemeenten',
+		'utmSource' => 'nieuwsbrief',
+		'utmMedium' => 'social',
+	];
 
 	/**
 	 * Build a decorator with the switch at a given value.
@@ -192,4 +207,83 @@ class CampaignLinkDecoratorTest extends TestCase {
 	public function testEmptyBodyIsReturnedAsIs(): void {
 		$this->assertSame('', $this->build()->decorate(html: '', blast: self::BLAST));
 	}//end testEmptyBodyIsReturnedAsIs()
+
+	/**
+	 * @return void
+	 */
+	public function testCampaignSourceAndMediumWinOverTheEmailDefaults(): void {
+		$utm = $this->build()->utmFor(blast: self::BLAST, campaign: self::CAMPAIGN);
+
+		$this->assertSame(
+			[
+				'utm_source' => 'nieuwsbrief',
+				'utm_medium' => 'social',
+				'utm_campaign' => 'webinar-ai-voor-gemeenten',
+				'utm_content' => 'blast-42',
+			],
+			$utm
+		);
+	}//end testCampaignSourceAndMediumWinOverTheEmailDefaults()
+
+	/**
+	 * @return void
+	 */
+	public function testCampaignSlugWinsOverTheBlastName(): void {
+		$decorator = $this->build();
+
+		$this->assertSame(
+			'webinar-ai-voor-gemeenten',
+			$decorator->campaignFor(blast: self::BLAST, campaign: self::CAMPAIGN)
+		);
+
+		$html = '<p><a href="https://example.org/webinar">Aanmelden</a></p>';
+		$this->assertStringContainsString(
+			'utm_campaign=webinar-ai-voor-gemeenten',
+			$decorator->decorate(html: $html, blast: self::BLAST, campaign: self::CAMPAIGN)
+		);
+	}//end testCampaignSlugWinsOverTheBlastName()
+
+	/**
+	 * A campaign that names only a source must not empty the other three.
+	 * Resolution is per parameter for exactly this case: an empty value is
+	 * dropped by the decorator, so a set-wide swap would silently remove
+	 * the campaign value the blast already had.
+	 *
+	 * @return void
+	 */
+	public function testAPartialCampaignFallsBackPerParameter(): void {
+		$utm = $this->build()->utmFor(blast: self::BLAST, campaign: ['utmSource' => 'linkedin']);
+
+		$this->assertSame(
+			[
+				'utm_source' => 'linkedin',
+				'utm_medium' => 'email',
+				'utm_campaign' => 'spring-newsletter-2026',
+				'utm_content' => 'blast-42',
+			],
+			$utm
+		);
+	}//end testAPartialCampaignFallsBackPerParameter()
+
+	/**
+	 * @return void
+	 */
+	public function testABlastWithoutACampaignIsUnchanged(): void {
+		$decorator = $this->build();
+		$html = '<p><a href="https://example.org/woo">Lees meer</a></p>';
+
+		$this->assertSame(
+			$decorator->decorate(html: $html, blast: self::BLAST),
+			$decorator->decorate(html: $html, blast: self::BLAST, template: [], campaign: [])
+		);
+	}//end testABlastWithoutACampaignIsUnchanged()
+
+	/**
+	 * @return void
+	 */
+	public function testACampaignValueIsLowercasedBeforeItIsStamped(): void {
+		$utm = $this->build()->utmFor(blast: self::BLAST, campaign: ['utmSource' => 'LinkedIn']);
+
+		$this->assertSame('linkedin', $utm['utm_source']);
+	}//end testACampaignValueIsLowercasedBeforeItIsStamped()
 }//end class
