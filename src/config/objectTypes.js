@@ -170,7 +170,7 @@ export function objectTypes() {
 			description: t(APP, 'Billable categories and tags'),
 		},
 		{
-			slug: 'task',
+			slug: 'crmTask',
 			group: 'core',
 			label: t(APP, 'Task'),
 			description: t(APP, 'Work items / tasks'),

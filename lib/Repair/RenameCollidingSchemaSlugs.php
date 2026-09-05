@@ -107,6 +107,10 @@ class RenameCollidingSchemaSlugs implements IRepairStep {
 		// claimed by three apps and all three share only `name`, so all three
 		// namespace: shillinq keeps the bare slug, stackiq took catalogService.
 		'service' => ['to' => 'appointmentService', 'with' => 'shillinq, stackiq'],
+		// The CRM task. `task` was claimed by three apps and they share only
+		// `description`, `priority` and `status`. planninq's project task is the
+		// largest and keeps the bare slug; dossiq took caseTask.
+		'task' => ['to' => 'crmTask', 'with' => 'planninq, dossiq'],
 	];
 
 	/**

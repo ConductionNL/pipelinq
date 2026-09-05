@@ -160,7 +160,7 @@ export default {
 				status: 'open',
 			}
 			try {
-				const result = await this.objectStore.saveObject('task', payload)
+				const result = await this.objectStore.saveObject('crmTask', payload)
 				if (!result) {
 					try {
 						showError(

@@ -2923,7 +2923,7 @@
 						"icon": "ClipboardCheckOutline",
 						"content": {
 							"register": "pipelinq",
-							"schema": "task",
+							"schema": "crmTask",
 							"filter": {
 								"lead": "@objectId"
 							},
@@ -3117,7 +3117,7 @@
 			"title": "Tasks",
 			"config": {
 				"register": "pipelinq",
-				"schema": "task",
+				"schema": "crmTask",
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"showViewAction": false,
 				"actions": [
@@ -3151,7 +3151,7 @@
 			"component": "CnWizardDialog",
 			"config": {
 				"register": "pipelinq",
-				"schema": "task"
+				"schema": "crmTask"
 			}
 		},
 		{
@@ -3161,7 +3161,7 @@
 			"title": "Task",
 			"config": {
 				"register": "pipelinq",
-				"schema": "task",
+				"schema": "crmTask",
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"_note": "Task/action-item archetype (bespoke-detail-pages). A task is a to-do an agent works to completion, so the body leads with the execution fields (type, status, priority, deadline, assignee user/group, callbackPhoneNumber, preferredTimeSlot, attempts, resultText) 8-wide and the source records it hangs off (client, request, originating contactmoment) at 4-wide. Documents full-width for any attached result artefact. NO email/calendar body widgets — task declares no comms linkedType; a callback task carries the phone number as a field, not a live mailbox. No child collection, so no object-list.",
 				"widgets": [

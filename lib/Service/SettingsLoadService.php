@@ -52,7 +52,7 @@ class SettingsLoadService {
 		'productCategory',
 		'billingCategory',
 		'leadProduct',
-		'task',
+		'crmTask',
 		'relationship',
 		'queue',
 		'skill',
@@ -319,6 +319,8 @@ class SettingsLoadService {
 		'appointmentBooking' => 'booking_schema',
 		// The bookable service, same reasoning as the booking above.
 		'appointmentService' => 'service_schema',
+		// The CRM task, same reasoning as the appointment schemas above.
+		'crmTask' => 'task_schema',
 	];
 
 	/**

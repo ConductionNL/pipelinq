@@ -119,7 +119,7 @@ import { useObjectStore } from '../../store/modules/object.js'
 // `contactmoment` schemas are one schema now, discriminated by `ticketType`.
 // Exporting `ticket` therefore covers all three; narrow to a single subtype
 // with a row filter (e.g. `ticketType = 'complaint'`).
-const EXPORTABLE_SCHEMAS = ['client', 'contact', 'lead', 'ticket', 'task', 'product']
+const EXPORTABLE_SCHEMAS = ['client', 'contact', 'lead', 'ticket', 'crmTask', 'product']
 const FORMATS = ['csv', 'parquet', 'jsonl']
 const MODES = ['full', 'incremental']
 
