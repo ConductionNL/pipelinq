@@ -83,7 +83,7 @@
 			"title": "Resources",
 			"config": {
 				"register": "pipelinq",
-				"schema": "resource",
+				"schema": "appointmentResource",
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"showAdd": false,
 				"showFormDialog": false,
@@ -118,7 +118,7 @@
 			"_note": "Same reason as ServiceDetail: a type:detail page cannot own the post-save invalidateAvailability side effect, and a resource's skills or working hours changing must expire the cached availability windows or the booking flow will offer slots this resource can no longer serve. It additionally holds a live useObjectSubscription so a concurrently edited resource updates in place, which declarative detail pages do not do.",
 			"config": {
 				"register": "pipelinq",
-				"schema": "resource"
+				"schema": "appointmentResource"
 			}
 		},
 		{

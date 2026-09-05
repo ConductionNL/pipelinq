@@ -73,7 +73,7 @@ class AppointmentBookingRegisterTest extends TestCase {
 	public static function bookingSchemaProvider(): array {
 		return [
 			'service' => ['service',           ['name', 'durationMinutes', 'status']],
-			'resource' => ['resource',          ['name', 'type', 'status']],
+			'appointmentResource' => ['appointmentResource',          ['name', 'type', 'status']],
 			'booking' => ['booking',           ['customerId', 'serviceId', 'startAt', 'endAt', 'status']],
 			'walkInTicket' => ['walkInTicket',      ['displayName', 'arrivedAt', 'status']],
 			'availabilityCache' => ['availabilityCache', ['resourceId', 'date', 'generatedAt']],
@@ -127,7 +127,7 @@ class AppointmentBookingRegisterTest extends TestCase {
 		$pipelinqSchemas = ($registers['pipelinq']['schemas'] ?? []);
 
 		$this->assertIsArray($pipelinqSchemas, 'pipelinq register MUST declare schemas[].');
-		foreach (['service', 'resource', 'booking', 'walkInTicket', 'availabilityCache'] as $expected) {
+		foreach (['service', 'appointmentResource', 'booking', 'walkInTicket', 'availabilityCache'] as $expected) {
 			$this->assertContains($expected,
 				$pipelinqSchemas,
 				"pipelinq register MUST list '{$expected}' (fragment merge contract)."
@@ -151,7 +151,7 @@ class AppointmentBookingRegisterTest extends TestCase {
 	public static function seedObjectProvider(): array {
 		return [
 			'service-seeds' => ['pipelinq', 'service',  4],
-			'resource-seeds' => ['pipelinq', 'resource', 4],
+			'resource-seeds' => ['pipelinq', 'appointmentResource', 4],
 			'booking-seeds' => ['pipelinq', 'booking',  2],
 		];
 

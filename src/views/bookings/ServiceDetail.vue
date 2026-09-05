@@ -356,7 +356,7 @@ export default {
 			if (!serviceId) return
 			try {
 				const resources = await this.objectStore.fetchCollection(
-					'resource',
+					'appointmentResource',
 					{ _limit: 200 },
 				)
 				const types = this.serviceData.requiredResourceTypes || []

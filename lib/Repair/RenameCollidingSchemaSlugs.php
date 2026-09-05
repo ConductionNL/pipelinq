@@ -89,6 +89,11 @@ class RenameCollidingSchemaSlugs implements IRepairStep {
 		// are renamed apart rather than folded the way `contract` was.
 		'portalAccount' => ['to' => 'crmPortalAccount', 'with' => 'portaliq'],
 		'portalSession' => ['to' => 'crmPortalSession', 'with' => 'portaliq'],
+		// The appointment resource. shillinq's bookings subsystem is the larger
+		// claimant of `resource`, so its slug stays bare; this is the room, chair
+		// or person a customer books time with. They share `name`, `status` and
+		// `type`, and nothing that identifies the record.
+		'resource' => ['to' => 'appointmentResource', 'with' => 'shillinq'],
 	];
 
 	/**

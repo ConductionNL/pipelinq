@@ -4,7 +4,7 @@
       "pipelinq": {
         "schemas": [
           "service",
-          "resource",
+          "appointmentResource",
           "booking",
           "walkInTicket",
           "availabilityCache"
@@ -194,8 +194,8 @@
           }
         }
       },
-      "resource": {
-        "slug": "resource",
+      "appointmentResource": {
+        "slug": "appointmentResource",
         "title": "Resource",
         "icon": "AccountTie",
         "version": "1.0.0",
@@ -935,7 +935,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "resource",
+          "schema": "appointmentResource",
           "slug": "resource-sarah-stylist"
         },
         "name": "Sarah",
@@ -985,7 +985,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "resource",
+          "schema": "appointmentResource",
           "slug": "resource-jan-mechanic"
         },
         "name": "Jan",
@@ -1029,7 +1029,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "resource",
+          "schema": "appointmentResource",
           "slug": "resource-treatment-room-a"
         },
         "name": "Behandelkamer A",
@@ -1075,7 +1075,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "resource",
+          "schema": "appointmentResource",
           "slug": "resource-workshop-bay-1"
         },
         "name": "Werkplaats brug 1",

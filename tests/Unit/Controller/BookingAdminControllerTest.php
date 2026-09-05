@@ -144,7 +144,7 @@ class BookingAdminControllerTest extends TestCase {
 					'register' => 'pipelinq',
 					'booking_schema' => 'booking',
 					'service_schema' => 'service',
-					'resource_schema' => 'resource',
+					'resource_schema' => 'appointmentResource',
 					'contact_schema' => 'contact',
 					'walkInTicket_schema' => 'walkInTicket',
 				];
@@ -539,7 +539,7 @@ class BookingAdminControllerTest extends TestCase {
 		$this->objects->seed(
 			'res-1',
 			'pipelinq',
-			'resource',
+			'appointmentResource',
 			['name' => 'Chair 1', 'bookable' => true, 'status' => 'active', 'type' => 'chair']
 		);
 	}//end seedScheduleFixtures()

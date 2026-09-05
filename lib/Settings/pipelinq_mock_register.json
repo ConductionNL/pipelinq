@@ -5265,7 +5265,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "resource",
+          "schema": "appointmentResource",
           "slug": "resource-voorbeeld-name-1-1"
         },
         "name": "Voorbeeld Name 1",
@@ -5296,7 +5296,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "resource",
+          "schema": "appointmentResource",
           "slug": "resource-voorbeeld-name-2-2"
         },
         "name": "Voorbeeld Name 2",
@@ -5327,7 +5327,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "resource",
+          "schema": "appointmentResource",
           "slug": "resource-voorbeeld-name-3-3"
         },
         "name": "Voorbeeld Name 3",
