@@ -11,11 +11,11 @@
  * publish path anywhere in this class, so the agent that reads it has none
  * either. An agent drafts and analyses; a person decides (ADR-088).
  *
- * 🔴 A SOURCE THAT IS ABSENT IS NAMED, NEVER COUNTED AS ZERO. Phase 5's watch
- * events are not on this branch, so the review reports `watchEvent` under
- * `degraded` and draws its topic ideas from search queries instead. Reporting
- * "0 competitor moves" for a collection that does not exist is the kind of
- * number that gets believed.
+ * 🔴 A SOURCE THIS TENANT HOLDS NOTHING FOR IS NAMED, NEVER PASSED OFF AS A
+ * ZERO. A quiet week and a Search Console nobody connected both render as no
+ * line in the review, and only one of them is a result. `degraded` is what
+ * tells them apart. Reporting "0 competitor moves" to a tenant with no watches
+ * configured is the kind of number that gets believed.
  *
  * @category Service
  * @package  OCA\Pipelinq\Service\Marketing
@@ -28,7 +28,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-three-sources-and-names-the-one-it-cannot
+ * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
  */
 
 declare(strict_types=1);
@@ -43,7 +43,7 @@ use OCP\AppFramework\Utility\ITimeFactory;
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) One read model over four
  *  collections, assembled once so the page fetches once.
  *
- * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-three-sources-and-names-the-one-it-cannot
+ * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
  */
 class WeeklyReviewService {
 
@@ -75,14 +75,7 @@ class WeeklyReviewService {
 	 *
 	 * @var array<int, string>
 	 */
-	public const SOURCES = ['blast', 'touchpoint', 'socialPublication', 'searchQueryDaily'];
-
-	/**
-	 * The source phase 5 was to bring and has not.
-	 *
-	 * @var string
-	 */
-	public const DEFERRED_SOURCE = 'watchEvent';
+	public const SOURCES = ['blast', 'touchpoint', 'socialPublication', 'searchQueryDaily', 'watchEvent'];
 
 	/**
 	 * How many topic ideas a review carries.
@@ -98,7 +91,7 @@ class WeeklyReviewService {
 	 * @param WeeklyReviewNumbers $numbers One week of counting, per collection.
 	 * @param ITimeFactory $time Clock.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-three-sources-and-names-the-one-it-cannot
+	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
 	 */
 	public function __construct(
 		private ListObjectStore $store,
@@ -114,7 +107,7 @@ class WeeklyReviewService {
 	 *
 	 * @return array<string, mixed> The review, not yet stored.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-three-sources-and-names-the-one-it-cannot
+	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
 	 */
 	public function compose(string $weekStarting = ''): array {
 		$monday = $this->mondayOf(day: $weekStarting);
@@ -123,8 +116,14 @@ class WeeklyReviewService {
 		$mail = $this->numbers->mail(from: $monday, to: $sunday);
 		$social = $this->numbers->social(from: $monday, to: $sunday);
 		$search = $this->numbers->search(from: $monday, to: $sunday);
+		$watch = $this->numbers->watch(from: $monday, to: $sunday);
 
-		$highlights = array_merge($mail['highlights'], $social['highlights'], $search['highlights']);
+		$highlights = array_merge(
+			$mail['highlights'],
+			$social['highlights'],
+			$search['highlights'],
+			$watch['highlights']
+		);
 
 		return [
 			'weekStarting' => $monday,
@@ -133,7 +132,9 @@ class WeeklyReviewService {
 			'summary' => $this->summaryOf(monday: $monday, sunday: $sunday, highlights: $highlights),
 			'highlights' => $highlights,
 			'suggestions' => $this->suggestionsFor(mail: $mail, social: $social, search: $search),
-			'topicIdeas' => array_slice($search['ideas'], 0, self::IDEAS),
+			// A competitor's headline is a better prompt than a search query,
+			// so it goes first; the queries fill the rest.
+			'topicIdeas' => array_slice(array_merge($watch['ideas'], $search['ideas']), 0, self::IDEAS),
 			'generatedAt' => date('c', $this->time->getTime()),
 		];
 	}//end compose()
@@ -145,7 +146,7 @@ class WeeklyReviewService {
 	 *
 	 * @return array<string, mixed>|null The stored review, or null when the write failed.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-three-sources-and-names-the-one-it-cannot
+	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
 	 */
 	public function generate(string $weekStarting = ''): ?array {
 		$review = $this->compose(weekStarting: $weekStarting);
@@ -163,7 +164,7 @@ class WeeklyReviewService {
 	 *
 	 * @return array<string, mixed>|null The review, or null when none exists.
 	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-three-sources-and-names-the-one-it-cannot
+	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
 	 */
 	public function latest(): ?array {
 		$latest = null;
@@ -229,17 +230,24 @@ class WeeklyReviewService {
 	}//end summaryOf()
 
 	/**
-	 * The sources this instance cannot read.
+	 * The sources this instance holds no data for at all.
 	 *
-	 * @return array<int, string> The absent source slugs.
+	 * Not "no data last week": no data ever. That is the difference between a
+	 * quiet week and a tenant that never connected Search Console, and only
+	 * one of the two is a result worth reading.
+	 *
+	 * @return array<int, string> The slugs of the sources holding nothing.
 	 */
 	private function degradedSources(): array {
-		$schema = $this->store->schemaSlug('watchEvent_schema', self::DEFERRED_SOURCE);
-		if ($this->numbers->readable(schemaSlug: $schema) === true) {
-			return [];
+		$empty = [];
+		foreach (self::SOURCES as $source) {
+			$schema = $this->store->schemaSlug($source . '_schema', $source);
+			if ($this->numbers->readable(schemaSlug: $schema) === false) {
+				$empty[] = $source;
+			}
 		}
 
-		return [self::DEFERRED_SOURCE];
+		return $empty;
 	}//end degradedSources()
 
 	/**

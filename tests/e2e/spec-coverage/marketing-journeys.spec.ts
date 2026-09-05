@@ -20,7 +20,7 @@
  *   4. a journey written through POST /api/journeys comes back with a flow
  *      status, and the page says so when it will not run;
  *   5. the weekly review is a card on the Reports page, renders from one
- *      response, and names the source it could not read.
+ *      response, and names the sources this instance holds nothing for.
  *
  * Everything else is excluded in the spec with a reason and asserted by
  * PHPUnit: a signal derivation needs shillinq's invoices, a journey send
@@ -254,7 +254,7 @@ test.describe('Standard audiences', () => {
  * (ADR-112), rendering from ONE response.
  * ══════════════════════════════════════════════════════════════════════════ */
 test.describe('Weekly review', () => {
-	// @e2e marketing-integrated-campaigns::the-review-names-the-source-it-could-not-read
+	// @e2e marketing-integrated-campaigns::an-empty-source-is-named-rather-than-counted-as-zero
 	test('the Reports page carries the card and the page names its missing source', async ({
 		page,
 	}) => {
@@ -274,6 +274,10 @@ test.describe('Weekly review', () => {
 				.or(page.getByTestId('weekly-review-empty')),
 		).toBeVisible({ timeout: 15000 })
 
+		// This instance holds no watch events and no Search Console rows, so
+		// the review names them. It never reports them as zero: an empty week
+		// and an unconnected source render as the same missing line, and only
+		// one of the two is a result.
 		await expect(page.getByTestId('weekly-review-degraded')).toContainText(
 			'watchEvent',
 			{ timeout: 15000 },
@@ -281,7 +285,7 @@ test.describe('Weekly review', () => {
 		await assertNoHardError(page)
 	})
 
-	// @e2e marketing-integrated-campaigns::the-review-names-the-source-it-could-not-read
+	// @e2e marketing-integrated-campaigns::an-empty-source-is-named-rather-than-counted-as-zero
 	test('the whole review arrives in one response', async ({ page }) => {
 		await gotoRoute(page, '/reports/weekly-review')
 
@@ -305,9 +309,10 @@ test.describe('Weekly review', () => {
 			)
 		}
 
-		// The absent source is NAMED. It is never reported as a zero: "0
-		// competitor moves" for a collection that does not exist is a number
-		// a reader believes.
+		// A source this instance holds nothing for is NAMED. It is never
+		// reported as a zero: "0 competitor moves" on an instance with no
+		// watches configured is a number a reader believes.
 		expect(res.json?.degraded).toContain('watchEvent')
+		expect(res.json?.sources).toContain('watchEvent')
 	})
 })

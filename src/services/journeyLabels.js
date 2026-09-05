@@ -102,14 +102,14 @@ export function flowStatusMessage(journey, t) {
 }
 
 /**
- * The sources a review could not read.
+ * The sources a review found nothing in at all.
  *
- * An absent source is NEVER a zero. "0 competitor moves" for a collection
- * that does not exist is the kind of number a reader believes.
+ * An empty source is NEVER a zero. "0 competitor moves" on an instance with
+ * no watches configured is the kind of number a reader believes.
  *
  * @param {object} review The composed review.
- * @return {Array<string>} The absent source slugs.
- * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-three-sources-and-names-the-one-it-cannot
+ * @return {Array<string>} The empty source slugs.
+ * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
  */
 export function degradedSources(review) {
 	const degraded = review?.degraded

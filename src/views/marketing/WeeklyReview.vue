@@ -9,10 +9,11 @@
   paints from it. pipelinq#1781 fixed a page that asked the server once per
   object before it rendered anything.
 
-  🔴 A SOURCE THAT COULD NOT BE READ IS SHOWN AS ABSENT, NEVER AS ZERO. The
-  review names it, and so does this page.
+  🔴 A SOURCE THIS TENANT HOLDS NOTHING FOR IS SHOWN AS ABSENT, NEVER AS A
+  ZERO. A quiet week and an unconnected Search Console both render as no
+  line; the review names which is which, and so does this page.
 
-  @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-three-sources-and-names-the-one-it-cannot
+  @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
 -->
 <template>
 	<div class="weekly-review">
@@ -90,7 +91,7 @@
 				{{
 					t(
 						'pipelinq',
-						'These sources could not be read, so nothing from them is in this review: {sources}',
+						'These sources hold nothing yet, so their absence here is missing data and not a zero: {sources}',
 						{ sources: degraded.join(', ') },
 					)
 				}}
@@ -138,7 +139,7 @@ export default {
 
 		/**
 		 * @return {Array<string>} The sources this instance could not read.
-		 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-three-sources-and-names-the-one-it-cannot
+		 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
 		 */
 		degraded() {
 			return degradedSources(this.review)
@@ -153,7 +154,7 @@ export default {
 		/**
 		 * Read the review, in one request.
 		 *
-		 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-three-sources-and-names-the-one-it-cannot
+		 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
 		 */
 		async load() {
 			this.loading = true
@@ -170,7 +171,7 @@ export default {
 		/**
 		 * Compose last week's numbers again.
 		 *
-		 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-three-sources-and-names-the-one-it-cannot
+		 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
 		 */
 		async regenerate() {
 			this.loading = true

@@ -14,7 +14,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-three-sources-and-names-the-one-it-cannot
+ * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
  */
 
 declare(strict_types=1);
@@ -31,7 +31,7 @@ use PHPUnit\Framework\TestCase;
  * Tests for WeeklyReviewService: the window, the absent source, and the
  * ADR-088 mark on a narrative.
  *
- * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-three-sources-and-names-the-one-it-cannot
+ * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
  */
 class WeeklyReviewServiceTest extends TestCase {
 
@@ -75,6 +75,20 @@ class WeeklyReviewServiceTest extends TestCase {
 			'socialPublication' => [
 				['uuid' => 's-1', 'publishedAt' => '2026-08-25T12:00:00+02:00', 'metrics' => ['views' => 120]],
 			],
+			'watchEvent' => [
+				[
+					'uuid' => 'w-1',
+					'title' => 'Concurrent lanceert open source portaal',
+					'seenAt' => '2026-08-26T08:00:00+02:00',
+					'relevanceScore' => 80,
+				],
+				[
+					'uuid' => 'w-2',
+					'title' => 'Oud nieuws',
+					'seenAt' => '2026-07-02T08:00:00+02:00',
+					'relevanceScore' => 90,
+				],
+			],
 			'searchQueryDaily' => [
 				['uuid' => 'q-1', 'date' => '2026-08-25', 'query' => 'open source gemeente', 'clicks' => 4, 'impressions' => 300],
 				['uuid' => 'q-2', 'date' => '2026-08-26', 'query' => 'woo verzoek', 'clicks' => 1, 'impressions' => 150],
@@ -101,32 +115,59 @@ class WeeklyReviewServiceTest extends TestCase {
 	}//end testComposesFromOneReadOfEachCollection()
 
 	/**
-	 * 🔴 A source that cannot be read is NAMED, never counted as zero.
-	 * "0 competitor moves" for a collection that does not exist is the kind
-	 * of number a reader believes.
+	 * 🔴 A source this tenant holds nothing for is NAMED, never passed off as
+	 * a zero. A quiet week and a Search Console nobody connected both render
+	 * as no line, and only one of them is a result.
 	 *
 	 * @return void
 	 */
-	public function testAnAbsentSourceIsNamedNotCountedAsZero(): void {
+	public function testAnEmptySourceIsNamedNotCountedAsZero(): void {
 		$review = $this->service()->compose();
 
-		$this->assertSame([WeeklyReviewService::DEFERRED_SOURCE], $review['degraded']);
+		// The store holds watchEvent rows, so it is NOT reported empty.
+		$this->assertNotContains('watchEvent', $review['degraded']);
+
+		$this->store->rows['watchEvent'] = [];
+		$this->store->rows['socialPublication'] = [];
+		$degraded = $this->service()->compose()['degraded'];
+
+		$this->assertContains('watchEvent', $degraded);
+		$this->assertContains('socialPublication', $degraded);
+		$this->assertNotContains('blast', $degraded);
+
 		foreach (array_merge($review['highlights'], $review['suggestions']) as $line) {
-			$this->assertStringNotContainsString('competitor', strtolower($line));
+			$this->assertStringNotContainsString('0 posts', $line);
 		}
-	}//end testAnAbsentSourceIsNamedNotCountedAsZero()
+	}//end testAnEmptySourceIsNamedNotCountedAsZero()
 
 	/**
-	 * The topic ideas are the three most-shown queries of the week, and
-	 * last month's row does not qualify however well it did.
+	 * A competitor's headline is a better prompt than a search query, so it
+	 * leads the topic ideas and the queries fill the rest.
 	 *
 	 * @return void
 	 */
-	public function testTopicIdeasAreTheWeeksThreeMostShownQueries(): void {
+	public function testACompetitorHeadlineLeadsTheTopicIdeas(): void {
+		$review = $this->service()->compose();
+
+		$this->assertSame('Concurrent lanceert open source portaal', $review['topicIdeas'][0]);
+		$this->assertSame('open source gemeente', $review['topicIdeas'][1]);
+		$this->assertStringContainsString(
+			'Competitors published 1 things worth looking at.',
+			implode(' ', $review['highlights'])
+		);
+	}//end testACompetitorHeadlineLeadsTheTopicIdeas()
+
+	/**
+	 * The topic ideas are this week's three strongest prompts, and last
+	 * month's rows do not qualify however well they did.
+	 *
+	 * @return void
+	 */
+	public function testTopicIdeasAreThisWeeksThreeStrongestPrompts(): void {
 		$review = $this->service()->compose();
 
 		$this->assertSame(
-			['open source gemeente', 'woo verzoek', 'crm nextcloud'],
+			['Concurrent lanceert open source portaal', 'open source gemeente', 'woo verzoek'],
 			$review['topicIdeas']
 		);
 	}//end testTopicIdeasAreTheWeeksThreeMostShownQueries()

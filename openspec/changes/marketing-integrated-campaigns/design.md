@@ -62,11 +62,11 @@ A `recordNarrative()` method was written and then removed for exactly that reaso
 
 The template is seeded by a repair step rather than by a register fragment. Seeding into a foreign register through `components.objects[]` needs that register to exist at import time, and hermiq is an optional peer: a missing register would take pipelinq's own register import down with it, which is far worse than a template nobody received.
 
-## Decision 7: what phase 5 did not bring
+## Decision 7: an empty source and a quiet week are different answers
 
-`watchEvent` and `competitorWatch` are not on `development`. The review therefore reads blasts, touchpoints, social publications and Search Console rows, and lists `watchEvent` under `degraded`.
+This change was drafted against a `development` where phase 5's `watchEvent` did not exist, and the review reported it under `degraded` as a source it could not read. Phase 5 merged while this branch was in flight, so `watchEvent` is now a real fourth source: a competitor's headline leads the topic ideas and the search queries fill the rest, because a headline is a better prompt than a query.
 
-Naming the absent source rather than counting it as zero is the whole discipline here. "0 competitor moves" is a number a reader believes.
+That changed what `degraded` means, and the new meaning is the more useful one. It no longer says "this collection does not exist"; it says **this tenant holds no rows for this source at all.** A quiet week and a Search Console nobody connected both render as no line in the review, and only one of the two is a result. Naming which is which is the whole discipline: "0 competitor moves" to a tenant with no watches configured is a number a reader believes.
 
 ## What the demo data can and cannot prove
 

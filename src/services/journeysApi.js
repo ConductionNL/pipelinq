@@ -74,7 +74,7 @@ export async function fetchJourneyRuns(journeyId) {
  * The weekly review, in one request.
  *
  * @return {Promise<object>} The review.
- * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-three-sources-and-names-the-one-it-cannot
+ * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
  */
 export async function fetchWeeklyReview() {
 	const { data } = await axios.get(generateUrl('/apps/pipelinq/api/weekly-review'))
@@ -86,7 +86,7 @@ export async function fetchWeeklyReview() {
  *
  * @param {string} weekStarting The Monday as `YYYY-MM-DD`, empty for last week.
  * @return {Promise<object>} The stored review.
- * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-three-sources-and-names-the-one-it-cannot
+ * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-four-sources-and-names-the-ones-with-nothing-in-them
  */
 export async function generateWeeklyReview(weekStarting = '') {
 	const { data } = await axios.post(

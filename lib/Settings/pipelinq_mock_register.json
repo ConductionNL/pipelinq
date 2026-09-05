@@ -1662,6 +1662,108 @@
       {
         "@self": {
           "register": "pipelinq",
+          "schema": "competitor",
+          "slug": "competitor-voorbeeld-name-1-1"
+        },
+        "name": "Voorbeeld Name 1",
+        "website": "Voorbeeld Website 1",
+        "feeds": [],
+        "sitemapUrl": "Voorbeeld Sitemapurl 1",
+        "socialHandles": [],
+        "clientId": "Voorbeeld Clientid 1",
+        "active": true,
+        "notes": "Voorbeeld Notes 1"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "competitor",
+          "slug": "competitor-voorbeeld-name-2-2"
+        },
+        "name": "Voorbeeld Name 2",
+        "website": "Voorbeeld Website 2",
+        "feeds": [],
+        "sitemapUrl": "Voorbeeld Sitemapurl 2",
+        "socialHandles": [],
+        "clientId": "Voorbeeld Clientid 2",
+        "active": true,
+        "notes": "Voorbeeld Notes 2"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "competitor",
+          "slug": "competitor-voorbeeld-name-3-3"
+        },
+        "name": "Voorbeeld Name 3",
+        "website": "Voorbeeld Website 3",
+        "feeds": [],
+        "sitemapUrl": "Voorbeeld Sitemapurl 3",
+        "socialHandles": [],
+        "clientId": "Voorbeeld Clientid 3",
+        "active": true,
+        "notes": "Voorbeeld Notes 3"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "competitorWatch",
+          "slug": "competitorwatch-competitorwatch-1-1"
+        },
+        "competitorId": "Voorbeeld Competitorid 1",
+        "kind": "rss",
+        "target": "Voorbeeld Target 1",
+        "selector": "Voorbeeld Selector 1",
+        "schedule": "hourly",
+        "active": true,
+        "connectorSourceId": "Voorbeeld Connectorsourceid 1",
+        "lastRunAt": "2026-03-01T09:00:00+00:00",
+        "lastOutcome": "ok",
+        "lastReason": "Voorbeeld Lastreason 1",
+        "fingerprint": "Voorbeeld Fingerprint 1",
+        "lineFingerprints": []
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "competitorWatch",
+          "slug": "competitorwatch-competitorwatch-2-2"
+        },
+        "competitorId": "Voorbeeld Competitorid 2",
+        "kind": "sitemap",
+        "target": "Voorbeeld Target 2",
+        "selector": "Voorbeeld Selector 2",
+        "schedule": "daily",
+        "active": true,
+        "connectorSourceId": "Voorbeeld Connectorsourceid 2",
+        "lastRunAt": "2026-03-02T09:00:00+00:00",
+        "lastOutcome": "not_configured",
+        "lastReason": "Voorbeeld Lastreason 2",
+        "fingerprint": "Voorbeeld Fingerprint 2",
+        "lineFingerprints": []
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "competitorWatch",
+          "slug": "competitorwatch-competitorwatch-3-3"
+        },
+        "competitorId": "Voorbeeld Competitorid 3",
+        "kind": "page",
+        "target": "Voorbeeld Target 3",
+        "selector": "Voorbeeld Selector 3",
+        "schedule": "weekly",
+        "active": true,
+        "connectorSourceId": "Voorbeeld Connectorsourceid 3",
+        "lastRunAt": "2026-03-03T09:00:00+00:00",
+        "lastOutcome": "unavailable",
+        "lastReason": "Voorbeeld Lastreason 3",
+        "fingerprint": "Voorbeeld Fingerprint 3",
+        "lineFingerprints": []
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
           "schema": "consentRecord",
           "slug": "consentrecord-consentrecord-1-1"
         },
@@ -2900,6 +3002,60 @@
         "description": "Voorbeeld Description 3",
         "verified": true,
         "exportedAt": "2026-03-03T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "keywordTarget",
+          "slug": "keywordtarget-keywordtarget-1-1"
+        },
+        "term": "Voorbeeld Term 1",
+        "status": "use-more",
+        "intent": "informational",
+        "targetPageRef": "Voorbeeld Targetpageref 1",
+        "proposalKind": "striking-distance",
+        "property": "Voorbeeld Property 1",
+        "volume": 0,
+        "difficulty": 0,
+        "notes": "Voorbeeld Notes 1",
+        "createdBy": "Voorbeeld Createdby 1",
+        "createdAt": "2026-03-01T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "keywordTarget",
+          "slug": "keywordtarget-keywordtarget-2-2"
+        },
+        "term": "Voorbeeld Term 2",
+        "status": "use-less",
+        "intent": "navigational",
+        "targetPageRef": "Voorbeeld Targetpageref 2",
+        "proposalKind": "cannibalisation",
+        "property": "Voorbeeld Property 2",
+        "volume": 1,
+        "difficulty": 1,
+        "notes": "Voorbeeld Notes 2",
+        "createdBy": "Voorbeeld Createdby 2",
+        "createdAt": "2026-03-02T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "keywordTarget",
+          "slug": "keywordtarget-keywordtarget-3-3"
+        },
+        "term": "Voorbeeld Term 3",
+        "status": "watch",
+        "intent": "commercial",
+        "targetPageRef": "Voorbeeld Targetpageref 3",
+        "proposalKind": "content-gap",
+        "property": "Voorbeeld Property 3",
+        "volume": 2,
+        "difficulty": 2,
+        "notes": "Voorbeeld Notes 3",
+        "createdBy": "Voorbeeld Createdby 3",
+        "createdAt": "2026-03-03T09:00:00+00:00"
       },
       {
         "@self": {
@@ -5568,6 +5724,54 @@
       {
         "@self": {
           "register": "pipelinq",
+          "schema": "socialConnection",
+          "slug": "socialconnection-socialconnection-1-1"
+        },
+        "network": "mastodon",
+        "counterpartHandle": "Voorbeeld Counterparthandle 1",
+        "accountId": "Voorbeeld Accountid 1",
+        "clientId": "Voorbeeld Clientid 1",
+        "counterpartUrl": "Voorbeeld Counterparturl 1",
+        "weFollowThem": "yes",
+        "theyFollowUs": "yes",
+        "reason": "Voorbeeld Reason 1",
+        "seenAt": "2026-03-01T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "socialConnection",
+          "slug": "socialconnection-socialconnection-2-2"
+        },
+        "network": "bluesky",
+        "counterpartHandle": "Voorbeeld Counterparthandle 2",
+        "accountId": "Voorbeeld Accountid 2",
+        "clientId": "Voorbeeld Clientid 2",
+        "counterpartUrl": "Voorbeeld Counterparturl 2",
+        "weFollowThem": "no",
+        "theyFollowUs": "no",
+        "reason": "Voorbeeld Reason 2",
+        "seenAt": "2026-03-02T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "socialConnection",
+          "slug": "socialconnection-socialconnection-3-3"
+        },
+        "network": "linkedin",
+        "counterpartHandle": "Voorbeeld Counterparthandle 3",
+        "accountId": "Voorbeeld Accountid 3",
+        "clientId": "Voorbeeld Clientid 3",
+        "counterpartUrl": "Voorbeeld Counterparturl 3",
+        "weFollowThem": "unknown",
+        "theyFollowUs": "unknown",
+        "reason": "Voorbeeld Reason 3",
+        "seenAt": "2026-03-03T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
           "schema": "socialPost",
           "slug": "socialpost-voorbeeld-title-1-1"
         },
@@ -6497,6 +6701,60 @@
         "estimatedReadyAt": "2026-03-03T09:00:00+00:00",
         "assignedResourceId": "Voorbeeld Assignedresourceid 3",
         "actualServedAt": "2026-03-03T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "watchEvent",
+          "slug": "watchevent-voorbeeld-title-1-1"
+        },
+        "competitorId": "Voorbeeld Competitorid 1",
+        "watchId": "Voorbeeld Watchid 1",
+        "kind": "rss",
+        "url": "Voorbeeld Url 1",
+        "title": "Voorbeeld Title 1",
+        "diffSummary": "Voorbeeld Diffsummary 1",
+        "sourceStamp": "Voorbeeld Sourcestamp 1",
+        "seenAt": "2026-03-01T09:00:00+00:00",
+        "relevanceScore": 0,
+        "relevanceReason": "Voorbeeld Relevancereason 1",
+        "agentAuthored": false
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "watchEvent",
+          "slug": "watchevent-voorbeeld-title-2-2"
+        },
+        "competitorId": "Voorbeeld Competitorid 2",
+        "watchId": "Voorbeeld Watchid 2",
+        "kind": "sitemap",
+        "url": "Voorbeeld Url 2",
+        "title": "Voorbeeld Title 2",
+        "diffSummary": "Voorbeeld Diffsummary 2",
+        "sourceStamp": "Voorbeeld Sourcestamp 2",
+        "seenAt": "2026-03-02T09:00:00+00:00",
+        "relevanceScore": 1,
+        "relevanceReason": "Voorbeeld Relevancereason 2",
+        "agentAuthored": false
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "watchEvent",
+          "slug": "watchevent-voorbeeld-title-3-3"
+        },
+        "competitorId": "Voorbeeld Competitorid 3",
+        "watchId": "Voorbeeld Watchid 3",
+        "kind": "page",
+        "url": "Voorbeeld Url 3",
+        "title": "Voorbeeld Title 3",
+        "diffSummary": "Voorbeeld Diffsummary 3",
+        "sourceStamp": "Voorbeeld Sourcestamp 3",
+        "seenAt": "2026-03-03T09:00:00+00:00",
+        "relevanceScore": 2,
+        "relevanceReason": "Voorbeeld Relevancereason 3",
+        "agentAuthored": false
       },
       {
         "@self": {

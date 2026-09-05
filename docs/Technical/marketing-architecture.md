@@ -178,7 +178,7 @@ Phase 6 shipped as one change, `marketing-integrated-campaigns`, on 2026-09-05. 
 | Days to contract renewal, days a lead has been stalled | Resolves on every instance | Nothing. Both read pipelinq's own contracts and leads. |
 | Recognised revenue, value tier, months since the last invoice, purchased products and services, dunning state | Derived and asserted, and resolves to nothing against the demo data | Shillinq, plus a real `client.shillinqOrganisationRef`. Every seeded client carries a nil-UUID placeholder, so the six bookkeeping signals correctly answer "no bookkeeping" even where shillinq is installed. An unresolved signal makes an audience smaller, never larger. |
 | A journey's wait, condition and schedule | Compiled and published to OpenRegister's flow engine | Nothing on an instance whose OpenRegister carries the flow engine. Where it does not, the journey records `engine_missing` and stays inert; pipelinq ships no scheduler of its own. |
-| The weekly review's competitor half | Absent | Phase 5's `watchEvent` collection, which is not on `development`. The review lists `watchEvent` under `degraded` and draws its topic ideas from search queries instead. |
+| The weekly review's competitor half | Reads phase 5's watch events | Nothing. `watchEvent` landed with `marketing-search-intelligence` while this change was in flight, so a competitor headline leads the topic ideas and the search queries fill the rest. A source this tenant holds no rows for is listed under `degraded` rather than counted as zero. |
 | The weekly review's narrative | Composed by pipelinq, written by an agent when there is one | Hermiq. The agent template is seeded into hermiq's register when hermiq is installed and is a silent no-op otherwise. It grants read-only tools: no send tool, no publish tool. |
 
 External filings gate phase 3 by calendar, not by code: the LinkedIn Community Management application, Meta App Review with Business Verification, and an X developer account with billing. They are filed under Conduction at the start of the programme.
@@ -193,6 +193,17 @@ Phase 3 shipped as one change, `social-publishing`, on 2026-09-05. What is prova
 | X | Same, plus a hard-stop spend budget on `messageSendBudget` | A developer account with billing. |
 | Facebook page, Instagram business | Same | Meta App Review with Business Verification. |
 | Threads | Same | A `threads` provider in OpenRegister's credential catalogue. There is none, so the adapter reports `not_configured` with a reason rather than failing at the call. |
+
+Phase 5 shipped as one change, `marketing-search-intelligence`, on 2026-09-05. It differs from the plan above in four places, each recorded here so a later reader does not treat the difference as drift:
+
+| Planned | Shipped | Why |
+| --- | --- | --- |
+| `searchProperty` and `searchQueryStat` schemas | Neither. The phase reads the `searchQueryDaily` schema and store phase 2 shipped, and properties stay in `search.gsc.properties` | A second reader over the same rows drifts from the first, and two pages then disagree about the same window. Moving the property list to objects is a migration with no new capability behind it. |
+| Competitor watches on OpenRegister flow schedules | Exactly that, plus a contributed node | ADR-094 decision 3 records that the flow engine has no outbound-HTTP node, re-checked against `lib/Service/Flow/Nodes/` for this change. So the schedule is the engine's and the fetching step is ours, `pipelinq.competitor-watch-run`, the way humaniq's payroll flow already works. There is no `TimedJob` in this change and a unit test asserts that. |
+| DataForSEO as a later source | Out of scope, and `keywordTarget.volume` and `difficulty` are left UNSET rather than defaulted | A zero in those fields reads as a measurement of no demand rather than as an absence of one. |
+| `socialConnection` with a `direction` | `weFollowThem` and `theyFollowUs`, each `yes`, `no` or `unknown` | Only Mastodon and Bluesky publish a follower list an audit can read. A boolean would record "the network will not say" as "no", which is an answer a marketer acts on and which would be wrong about half the time. |
+
+What is provable without a Google or Matomo credential: every keyword derivation over hand-written rows, the sitemap, page and feed parses and diffs, the Matomo request shape and its credential-reference refusal, the relevance degrade path, the connection audit's `unknown` vocabulary, and every page's empty state. What is not: any actual fetch.
 
 ## Decisions
 

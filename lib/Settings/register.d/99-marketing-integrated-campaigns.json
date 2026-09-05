@@ -334,7 +334,7 @@
 				"icon": "CalendarWeek",
 				"version": "1.0.0",
 				"summary": "One page of what moved last week, what to try, and three topic ideas.",
-				"description": "Pipelinq composes the numbers from campaigns, social publications and search queries. A hermiq agent may write the narrative back and is then marked as its author (ADR-088). The review takes no action: it has no send and no publish path.",
+				"description": "Pipelinq composes the numbers from mailings, social publications, search queries and competitor watch events. The agentAuthored pair is the ADR-088 mark storage: nothing writes it yet, because pipelinq ships no MCP tool provider and the seeded agent template grants read-only tools. The review takes no action: it has no send and no publish path.",
 				"x-schema-org": "schema:Report",
 				"required": [
 					"weekStarting"
@@ -363,8 +363,8 @@
 							"type": "string"
 						},
 						"default": [],
-						"title": "Missing sources",
-						"description": "Collections the review could not read, so a reader knows what is absent rather than assuming it was zero.",
+						"title": "Empty sources",
+						"description": "Sources this tenant holds no rows for at all, so a reader knows the absence is missing data rather than a zero.",
 						"example": "watchEvent"
 					},
 					"summary": {
@@ -412,7 +412,7 @@
 						"type": "boolean",
 						"default": false,
 						"title": "Agent authored",
-						"description": "Whether an agent wrote the narrative. Applied by the write path itself and ignored when it arrives in a request body, because a mark a client can set is not a mark (ADR-088)."
+						"description": "Whether an agent wrote the narrative. Nothing writes it yet: pipelinq ships no MCP tool provider, so no agent reaches a write path. When the writer lands it applies this itself and ignores a value arriving in a request body, because a mark a client can set is not a mark (ADR-088)."
 					},
 					"agentAuthoredBy": {
 						"type": "string",

@@ -3,11 +3,12 @@
 /**
  * Test stub for OCA\OpenRegister\Service\Flow\IFlowNode.
  *
- * Mirrors the real interface
- * (openregister/lib/Service/Flow/IFlowNode.php) method for method, so a
- * pipelinq node implementing it analyses without OpenRegister on the path.
- * Declaration only: PSR-4 maps `OCA\Pipelinq\` to `lib/`, so this file is
- * never autoloaded at runtime and the real interface always wins.
+ * Mirrors the real interface (openregister/lib/Service/Flow/IFlowNode.php)
+ * method for method, so `CompetitorWatchRunNode` compiles and can be unit
+ * tested on an instance where OpenRegister is not installed. The real
+ * interface wins whenever OpenRegister is enabled: PSR-4 maps only
+ * `OCA\Pipelinq\` to `lib/`, so this file is scanned by psalm and phpstan and
+ * loaded by the test bootstrap, never autoloaded at run time.
  *
  * @category Test
  * @package  OCA\Pipelinq\Tests\Stubs\Service\Flow
@@ -21,67 +22,67 @@ declare(strict_types=1);
 
 namespace OCA\OpenRegister\Service\Flow;
 
-/**
- * A flow node type contributed to OpenRegister's single flow engine.
- */
-interface IFlowNode {
-
+if (interface_exists(IFlowNode::class) === false) {
 	/**
-	 * The app-namespaced type identifier.
-	 *
-	 * @return string The type identifier.
+	 * Stub of the flow node contract.
 	 */
-	public function getId(): string;
+	interface IFlowNode {
 
-	/**
-	 * Human-readable name for the palette.
-	 *
-	 * @return string The display name.
-	 */
-	public function getDisplayName(): string;
+		/**
+		 * The node type.
+		 *
+		 * @return string The id.
+		 */
+		public function getId(): string;
 
-	/**
-	 * One sentence describing what the node does.
-	 *
-	 * @return string The description.
-	 */
-	public function getDescription(): string;
+		/**
+		 * Palette name.
+		 *
+		 * @return string The display name.
+		 */
+		public function getDisplayName(): string;
 
-	/**
-	 * Absolute URL of the palette icon.
-	 *
-	 * @return string The icon URL.
-	 */
-	public function getIcon(): string;
+		/**
+		 * Palette description.
+		 *
+		 * @return string The description.
+		 */
+		public function getDescription(): string;
 
-	/**
-	 * Whether the node may be used in the given workflow scope.
-	 *
-	 * @param int $scope The scope constant.
-	 *
-	 * @return bool Whether it is available.
-	 */
-	public function isAvailableForScope(int $scope): bool;
+		/**
+		 * Palette icon.
+		 *
+		 * @return string The icon URL.
+		 */
+		public function getIcon(): string;
 
-	/**
-	 * Refuse an unusable configuration at save time.
-	 *
-	 * @param array $config The step's authored configuration.
-	 *
-	 * @return void
-	 *
-	 * @throws \UnexpectedValueException When the configuration is unusable.
-	 */
-	public function validateConfig(array $config): void;
+		/**
+		 * Whether the node is offered in a scope.
+		 *
+		 * @param int $scope The Nextcloud workflow scope constant.
+		 *
+		 * @return bool
+		 */
+		public function isAvailableForScope(int $scope): bool;
 
-	/**
-	 * Do the work: items in, items out.
-	 *
-	 * @param array $items The input items.
-	 * @param array $config The step's authored configuration.
-	 * @param array $context Run-level metadata.
-	 *
-	 * @return array The output items.
-	 */
-	public function execute(array $items, array $config, array $context): array;
-}//end interface
+		/**
+		 * Refuse a configuration that cannot work, at save time.
+		 *
+		 * @param array $config The authored configuration.
+		 *
+		 * @return void
+		 */
+		public function validateConfig(array $config): void;
+
+		/**
+		 * Do the work.
+		 *
+		 * @param array $items The input items.
+		 * @param array $config The step configuration.
+		 * @param array $context Run-level metadata.
+		 *
+		 * @return array The output items.
+		 */
+		public function execute(array $items, array $config, array $context): array;
+	}//end interface
+}

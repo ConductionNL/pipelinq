@@ -193,27 +193,29 @@ A dunning state that cannot be read MUST NOT suppress. Refusing to mail everybod
 - **WHEN** a segment holds one contact without consent and one suppressed contact
 - **THEN** `missingConsent` names the first, `suppressed` names the second, and `compliant` is false only because of the first
 
-### Requirement: The weekly review reads three sources and names the one it cannot
+### Requirement: The weekly review reads four sources and names the ones with nothing in them
 
 `WeeklyReviewService` MUST compose one page per week in a single read: what moved, what to try, and three topic ideas drawn from what changed.
 
-It MUST read blasts, touchpoints, social publications and Search Console rows. It MUST NOT fan out per object before the page renders (pipelinq#1781).
+It MUST read blasts, touchpoints, social publications, Search Console rows and competitor watch events. `watchEvent` landed with phase 5 (`marketing-search-intelligence`), so it is a source rather than the absent one an earlier draft of this change reported. A competitor's headline MUST lead the topic ideas and the search queries MUST fill the rest: a headline is a better prompt than a query.
 
-A source it cannot read MUST be listed under `degraded` and MUST NOT be counted as zero. Phase 5's `watchEvent` collection is not on `development`, so the review draws its topic ideas from search queries instead and says which source is absent. Reporting "0 competitor moves" for a collection that does not exist is the kind of number that gets believed.
+The review MUST NOT fan out per object before the page renders (pipelinq#1781).
+
+A source this tenant holds **no rows for at all** MUST be listed under `degraded`. Not "no rows last week": no rows ever. A quiet week and a Search Console nobody connected both render as no line in the review, and only one of the two is a result. Reporting "0 competitor moves" to a tenant with no watches configured is the kind of number that gets believed.
 
 The review MUST take no action. There is no send path and no publish path on it, which is why the agent that reads it has none either.
 
 `GET /api/weekly-review` MUST return the whole record, and the page MUST be a card on the Reports page rather than a menu entry (ADR-112).
 
-#### Scenario: The review names the source it could not read
+#### Scenario: The review renders from one response and names its empty sources
 - **WHEN** a marketer opens the Weekly review card on the Reports page
-- **THEN** the page shows the week, what moved, what to try and the topic ideas, and names `watchEvent` as a source it could not read
+- **THEN** the page shows the week, what moved, what to try and the topic ideas, and names every source this instance holds no rows for
 
-#### Scenario: An absent source is not reported as zero
+#### Scenario: An empty source is named rather than counted as zero
 
-@e2e exclude the browser sees the rendered sentence either way; what this scenario guards is the difference between an empty list and a zero, which only the composed record shows. Asserted by tests/Unit/Service/Marketing/WeeklyReviewServiceTest.php (testAnAbsentSourceIsNamedNotCountedAsZero, testComposesFromOneReadOfEachCollection).
-- **WHEN** the review is composed on an instance with no watch events
-- **THEN** `degraded` holds `watchEvent`, and no highlight or suggestion claims a competitor number
+@e2e exclude the browser sees no line either way; what this scenario guards is the difference between an empty week and an unconnected source, which only the composed record shows. Asserted by tests/Unit/Service/Marketing/WeeklyReviewServiceTest.php (testAnEmptySourceIsNamedNotCountedAsZero, testComposesFromOneReadOfEachCollection, testACompetitorHeadlineLeadsTheTopicIdeas).
+- **WHEN** the review is composed on an instance holding social publications but no watch events
+- **THEN** `degraded` holds `watchEvent` and not `socialPublication`, and no highlight claims a competitor number
 
 ### Requirement: The narrative mark has storage and a renderer and no writer yet
 

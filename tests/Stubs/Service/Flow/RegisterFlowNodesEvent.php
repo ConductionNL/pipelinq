@@ -3,9 +3,10 @@
 /**
  * Test stub for OCA\OpenRegister\Service\Flow\RegisterFlowNodesEvent.
  *
- * The event a leaf app listens for to contribute its own node types.
- * Declaration only; the constructor argument is dropped because nothing in
- * pipelinq constructs one.
+ * Mirrors the shape `PipelinqFlowNodeListener` depends on: the event a leaf
+ * app listens for, and the `registerNode()` it calls. The collected nodes are
+ * readable here so a unit test can assert what was contributed, which the real
+ * event does not need to offer.
  *
  * @category Test
  * @package  OCA\Pipelinq\Tests\Stubs\Service\Flow
@@ -21,18 +22,37 @@ namespace OCA\OpenRegister\Service\Flow;
 
 use OCP\EventDispatcher\Event;
 
-/**
- * Dispatched once so every app may contribute its flow node types.
- */
-class RegisterFlowNodesEvent extends Event {
-
+if (class_exists(RegisterFlowNodesEvent::class) === false) {
 	/**
-	 * Contribute a node type.
-	 *
-	 * @param IFlowNode $node The node type.
-	 *
-	 * @return void
+	 * Stub of the node-registration event.
 	 */
-	public function registerNode(IFlowNode $node): void {
-	}//end registerNode()
-}//end class
+	class RegisterFlowNodesEvent extends Event {
+
+		/**
+		 * The nodes contributed so far.
+		 *
+		 * @var array<int, object>
+		 */
+		private array $nodes = [];
+
+		/**
+		 * Contribute one node.
+		 *
+		 * @param IFlowNode $node The node.
+		 *
+		 * @return void
+		 */
+		public function registerNode(IFlowNode $node): void {
+			$this->nodes[] = $node;
+		}//end registerNode()
+
+		/**
+		 * What was contributed.
+		 *
+		 * @return array<int, object> The nodes.
+		 */
+		public function nodes(): array {
+			return $this->nodes;
+		}//end nodes()
+	}//end class
+}
