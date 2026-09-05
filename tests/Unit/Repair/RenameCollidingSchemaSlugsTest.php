@@ -112,12 +112,20 @@ final class RenameCollidingSchemaSlugsTest extends TestCase {
 	 * @return void
 	 */
 	public function testRenamesEverySlugInPlace(): void {
-		$this->lookups(['cashCount' => [601], 'conversation' => [602], 'contract' => [603]]);
+		$this->lookups(
+			[
+				'cashCount' => [601],
+				'conversation' => [602],
+				'contract' => [603],
+				'portalAccount' => [604],
+				'portalSession' => [605],
+			]
+		);
 		$statements = &$this->captureStatements();
 
 		$this->step->run($this->createMock(IOutput::class));
 
-		$this->assertCount(3, $statements, 'exactly three rows may be rewritten');
+		$this->assertCount(5, $statements, 'exactly five rows may be rewritten');
 		foreach ($statements as $statement) {
 			$this->assertStringContainsString('openregister_schemas', $statement[0]);
 			$this->assertStringContainsString('SET slug', $statement[0]);
@@ -127,6 +135,8 @@ final class RenameCollidingSchemaSlugsTest extends TestCase {
 		$this->assertContains(['posCashCount', 601], $written);
 		$this->assertContains(['channelConversation', 602], $written);
 		$this->assertContains(['salesContract', 603], $written);
+		$this->assertContains(['crmPortalAccount', 604], $written);
+		$this->assertContains(['crmPortalSession', 605], $written);
 
 	}//end testRenamesEverySlugInPlace()
 
@@ -136,7 +146,15 @@ final class RenameCollidingSchemaSlugsTest extends TestCase {
 	 * @return void
 	 */
 	public function testIsANoOpWhenTheOldSlugsAreAbsent(): void {
-		$this->lookups(['posCashCount' => [601], 'channelConversation' => [602], 'salesContract' => [603]]);
+		$this->lookups(
+			[
+				'posCashCount' => [601],
+				'channelConversation' => [602],
+				'salesContract' => [603],
+				'crmPortalAccount' => [604],
+				'crmPortalSession' => [605],
+			]
+		);
 		$this->db->expects($this->never())->method('executeStatement');
 
 		$this->step->run($this->createMock(IOutput::class));

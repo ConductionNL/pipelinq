@@ -45,7 +45,7 @@ class PortalCleanupService {
 	 *
 	 * @var string
 	 */
-	private const ACCOUNT_SCHEMA = 'portalAccount';
+	private const ACCOUNT_SCHEMA = 'crmPortalAccount';
 
 	/**
 	 * Constructor.

@@ -81,6 +81,14 @@ class RenameCollidingSchemaSlugs implements IRepairStep {
 		// the lifecycle (ADR-066, the same reference the ticket supertype
 		// already carries); this is the sales side and it now points at it.
 		'contract' => ['to' => 'salesContract', 'with' => 'shillinq'],
+		// The portal pair. portaliq owns the portal, so its slugs stay bare.
+		// These two are the CRM side: a local credential store, with password
+		// hash, MFA secrets and reset tokens, against portaliq's OIDC identity
+		// projection. They share an email address, and an email is a contact
+		// attribute rather than something that identifies the record, so they
+		// are renamed apart rather than folded the way `contract` was.
+		'portalAccount' => ['to' => 'crmPortalAccount', 'with' => 'portaliq'],
+		'portalSession' => ['to' => 'crmPortalSession', 'with' => 'portaliq'],
 	];
 
 	/**

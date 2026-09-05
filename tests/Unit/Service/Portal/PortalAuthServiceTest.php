@@ -123,7 +123,7 @@ class PortalAuthServiceTest extends TestCase {
 	 * @return array<string, mixed> The seeded account.
 	 */
 	private function seedAccount(array $overrides = []): array {
-		return $this->repository->seed('portalAccount', 'acc-1', array_merge([
+		return $this->repository->seed('crmPortalAccount', 'acc-1', array_merge([
 			'email' => 'jan@pietersen.nl',
 			'tenantId' => 'tenant-a',
 			'passwordHash' => 'h:geheimwachtwoord123',
@@ -226,7 +226,7 @@ class PortalAuthServiceTest extends TestCase {
 		$this->seedAccount(['failedLoginAttempts' => 3]);
 		$this->auth->login('jan@pietersen.nl', 'geheimwachtwoord123', 'tenant-a', null, 'ip', 'ua');
 
-		$account = $this->repository->find('portalAccount', 'acc-1');
+		$account = $this->repository->find('crmPortalAccount', 'acc-1');
 		$this->assertSame(0, $account['failedLoginAttempts']);
 	}//end testSuccessResetsFailureCounter()
 

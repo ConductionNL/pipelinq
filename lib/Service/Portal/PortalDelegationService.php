@@ -52,7 +52,7 @@ class PortalDelegationService {
 	 *
 	 * @var string
 	 */
-	private const ACCOUNT_SCHEMA = 'portalAccount';
+	private const ACCOUNT_SCHEMA = 'crmPortalAccount';
 
 	/**
 	 * The scopes a delegation may carry.

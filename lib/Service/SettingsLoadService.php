@@ -85,8 +85,8 @@ class SettingsLoadService {
 		// POS kassakoppeling audit trail (pos-kassakoppeling-audit).
 		'kassakoppelingAuditLog',
 		// Customer portal schemas (live in the separate pipelinq-portal register).
-		'portalAccount',
-		'portalSession',
+		'crmPortalAccount',
+		'crmPortalSession',
 		'portalDelegation',
 		'portalAuditEvent',
 		'portalTenantConfig',
@@ -302,6 +302,14 @@ class SettingsLoadService {
 		// claimed. All three carry `contractNumber`, so they are one contract
 		// seen three ways; shillinq owns it and this is the sales side.
 		'salesContract' => 'contract_schema',
+		// The portal pair: portaliq owns the portal, so its `portalAccount` and
+		// `portalSession` keep the bare slugs. These two are the CRM side: a
+		// local credential store (password hash, MFA secrets, reset tokens)
+		// against portaliq's OIDC identity projection. They share an email
+		// address and nothing else that identifies the record, so they are
+		// renamed apart rather than folded.
+		'crmPortalAccount' => 'portalAccount_schema',
+		'crmPortalSession' => 'portalSession_schema',
 	];
 
 	/**

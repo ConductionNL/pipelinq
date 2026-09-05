@@ -6963,7 +6963,7 @@
       {
         "@self": {
           "register": "pipelinq-portal",
-          "schema": "portalAccount",
+          "schema": "crmPortalAccount",
           "slug": "portalaccount-portalaccount-1-1"
         },
         "email": "voorbeeld0@example.invalid",
@@ -6994,7 +6994,7 @@
       {
         "@self": {
           "register": "pipelinq-portal",
-          "schema": "portalAccount",
+          "schema": "crmPortalAccount",
           "slug": "portalaccount-portalaccount-2-2"
         },
         "email": "voorbeeld1@example.invalid",
@@ -7025,7 +7025,7 @@
       {
         "@self": {
           "register": "pipelinq-portal",
-          "schema": "portalAccount",
+          "schema": "crmPortalAccount",
           "slug": "portalaccount-portalaccount-3-3"
         },
         "email": "voorbeeld2@example.invalid",
@@ -7158,7 +7158,7 @@
       {
         "@self": {
           "register": "pipelinq-portal",
-          "schema": "portalSession",
+          "schema": "crmPortalSession",
           "slug": "portalsession-portalsession-1-1"
         },
         "accountId": "Voorbeeld Accountid 1",
@@ -7175,7 +7175,7 @@
       {
         "@self": {
           "register": "pipelinq-portal",
-          "schema": "portalSession",
+          "schema": "crmPortalSession",
           "slug": "portalsession-portalsession-2-2"
         },
         "accountId": "Voorbeeld Accountid 2",
@@ -7192,7 +7192,7 @@
       {
         "@self": {
           "register": "pipelinq-portal",
-          "schema": "portalSession",
+          "schema": "crmPortalSession",
           "slug": "portalsession-portalsession-3-3"
         },
         "accountId": "Voorbeeld Accountid 3",
