@@ -132,7 +132,7 @@ class SettingsLoadService {
 		'salesContract',
 		// Appointment booking (appointment-booking).
 		'service',
-		'resource',
+		'appointmentResource',
 		'booking',
 		'walkInTicket',
 		'availabilityCache',
@@ -310,6 +310,11 @@ class SettingsLoadService {
 		// renamed apart rather than folded.
 		'crmPortalAccount' => 'portalAccount_schema',
 		'crmPortalSession' => 'portalSession_schema',
+		// The appointment resource. shillinq's bookings subsystem is the larger
+		// claimant of `resource`, so its slug stays bare; this one is the room,
+		// chair or person a customer books time with. The two share only `name`,
+		// `status` and `type`, none of which identifies the record.
+		'appointmentResource' => 'resource_schema',
 	];
 
 	/**

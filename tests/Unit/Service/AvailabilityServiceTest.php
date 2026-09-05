@@ -74,7 +74,7 @@ class AvailabilityServiceTest extends TestCase {
 			callback: static function (string $app, string $key, string $default = ''): string {
 				$values = [
 					'register' => 'pipelinq',
-					'resource_schema' => 'resource',
+					'resource_schema' => 'appointmentResource',
 					'booking_schema' => 'booking',
 					'service_schema' => 'service',
 					'availability_cache_schema' => 'availability-cache',

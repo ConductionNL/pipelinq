@@ -57,7 +57,7 @@ class WalkInQueueServiceTest extends TestCase {
 					'register' => 'pipelinq',
 					'walkInTicket_schema' => 'walkInTicket',
 					'service_schema' => 'service',
-					'resource_schema' => 'resource',
+					'resource_schema' => 'appointmentResource',
 				];
 				return ($values[$key] ?? $default);
 			}
@@ -446,7 +446,7 @@ class WalkInQueueServiceTest extends TestCase {
 		$object->method('findAll')->willReturnCallback(
 			callback: function (array $config = []) use ($waiting, $resources): array {
 				$schema = (string)($config['schema'] ?? '');
-				if ($schema === 'resource') {
+				if ($schema === 'appointmentResource') {
 					return $resources;
 				}
 

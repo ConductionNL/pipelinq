@@ -199,7 +199,7 @@ export default {
 			for (const id of resourceIds) {
 				if (this.resourceLookup[id]) continue
 				try {
-					const r = await this.objectStore.fetchObject('resource', id)
+					const r = await this.objectStore.fetchObject('appointmentResource', id)
 					if (r?.name) {
 						this.resourceLookup = {
 							...this.resourceLookup,

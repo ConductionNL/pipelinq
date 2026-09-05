@@ -176,7 +176,7 @@ export default {
 	/**
 	 * Live updates for the viewed resource (or-object-{uuid} via the
 	 * nc-vue liveUpdatesPlugin, default-on since beta.212). Events are
-	 * refetch hints — the plugin re-runs fetchObject('resource', id)
+	 * refetch hints — the plugin re-runs fetchObject('appointmentResource', id)
 	 * into the same store cache resourceData renders from. Re-scopes on
 	 * id change, releases on unmount, skips the create archetype.
 	 *
@@ -189,7 +189,7 @@ export default {
 		const liveObjectId = computed(() =>
 			props.id && props.id !== 'new' ? props.id : null,
 		)
-		useObjectSubscription(objectStore, 'resource', liveObjectId, {
+		useObjectSubscription(objectStore, 'appointmentResource', liveObjectId, {
 			enabled: computed(() =>
 				Boolean(
 					liveObjectId.value && objectStore.objectTypeRegistry?.resource,
@@ -225,7 +225,7 @@ export default {
 
 		resourceData() {
 			if (this.isNew) return {}
-			return this.objectStore.getObject('resource', this.resourceId) || {}
+			return this.objectStore.getObject('appointmentResource', this.resourceId) || {}
 		},
 
 		workingHours() {
@@ -258,15 +258,15 @@ export default {
 
 	async mounted() {
 		if (!this.isNew) {
-			await this.objectStore.fetchObject('resource', this.resourceId)
+			await this.objectStore.fetchObject('appointmentResource', this.resourceId)
 		}
 	},
 
 	methods: {
 		async onFormSave(formData) {
-			const saved = await this.objectStore.saveObject('resource', formData)
+			const saved = await this.objectStore.saveObject('appointmentResource', formData)
 			if (!saved) {
-				const error = this.objectStore.getError?.('resource')
+				const error = this.objectStore.getError?.('appointmentResource')
 				showError(
 					error?.message || t('pipelinq', 'Failed to save resource.'),
 				)
@@ -280,7 +280,7 @@ export default {
 					params: { id: saved.id },
 				})
 			} else {
-				await this.objectStore.fetchObject('resource', this.resourceId)
+				await this.objectStore.fetchObject('appointmentResource', this.resourceId)
 				this.editing = false
 			}
 		},
@@ -296,13 +296,13 @@ export default {
 		async confirmDelete() {
 			this.showDelete = false
 			const ok = await this.objectStore.deleteObject(
-				'resource',
+				'appointmentResource',
 				this.resourceId,
 			)
 			if (ok) {
 				this.$router.push({ name: 'Resources' })
 			} else {
-				const error = this.objectStore.getError?.('resource')
+				const error = this.objectStore.getError?.('appointmentResource')
 				showError(
 					error?.message || t('pipelinq', 'Failed to delete resource.'),
 				)

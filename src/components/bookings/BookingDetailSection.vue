@@ -567,7 +567,7 @@ export default {
 				].filter((id) => !this.resourceLookup[id])
 				for (const id of resourceIds) {
 					const resource = await this.objectStore.fetchObject(
-						'resource',
+						'appointmentResource',
 						id,
 					)
 					if (resource?.name) {

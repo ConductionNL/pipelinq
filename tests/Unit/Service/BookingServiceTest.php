@@ -125,7 +125,7 @@ class BookingServiceTest extends TestCase {
 					'register' => 'pipelinq',
 					'booking_schema' => 'booking',
 					'service_schema' => 'service',
-					'resource_schema' => 'resource',
+					'resource_schema' => 'appointmentResource',
 					'contact_schema' => 'contact',
 				];
 				return ($values[$key] ?? $default);
