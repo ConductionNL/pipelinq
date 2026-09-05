@@ -58,6 +58,9 @@ import BillingCategoryWidget from './components/dashboard/BillingCategoryWidget.
 //     express. ---
 import ArticleContentSection from './components/marketing/ArticleContentSection.vue'
 import ArticleUsageSection from './components/marketing/ArticleUsageSection.vue'
+import CampaignLandingPageSection from './components/marketing/CampaignLandingPageSection.vue'
+import SocialPostVariantsSection from './components/marketing/SocialPostVariantsSection.vue'
+import SocialPublicationsSection from './components/marketing/SocialPublicationsSection.vue'
 // --- Mailing-list memberships (marketing-lists-and-double-opt-in). One
 //     kind:'section' bound either to a list (the mailing list detail page) or
 //     to a contact (the contact detail page): the row is the same row read
@@ -233,6 +236,8 @@ import LoyaltyReportingView from './views/loyalty/LoyaltyReporting.vue'
 //     ArticleEditModal, the one editing surface the change owns. Matches the
 //     SegmentNew / TemplateNew / BlastNew convention below. ---
 import ArticleFormView from './views/marketing/ArticleFormView.vue'
+import CampaignFormView from './views/marketing/CampaignFormView.vue'
+import CampaignReportView from './views/marketing/CampaignReport.vue'
 // --- Search Console top queries (marketing-campaign-attribution): an
 //     aggregation over searchQueryDaily rows, not a row list. ---
 import SearchQueriesView from './views/marketing/SearchQueries.vue'
@@ -268,6 +273,9 @@ import RequestConversionSection from './views/requests/RequestConversionSection.
 import SegmentFormView from './views/segments/SegmentForm.vue'
 // --- Admin managers (lib gap: no pipeline-designer / settings rich-section type). ---
 import PipelineManagerView from './views/settings/PipelineManager.vue'
+import SocialAccountsView from './views/social/SocialAccountsView.vue'
+import SocialPerformanceView from './views/social/SocialPerformanceView.vue'
+import SocialPostFormView from './views/social/SocialPostFormView.vue'
 // --- Store — REMOTE objects, which the object-backed index renderer
 //     cannot address (ADR-080). ---
 import StoreGallery from './views/store/StoreGallery.vue'
@@ -699,10 +707,25 @@ const registry = {
 		component: ArticleContentSection,
 		_note: 'In-body section for the declarative type:"detail" ArticleDetail page (marketing-article-hub, placement before-body). Renders the markdown body (cnRenderMarkdown), the hero image, the agent-authored mark (ADR-088) and the lifecycle actions (submit for review / publish / return to draft / archive / restore), and hosts ArticleEditModal. NOT a declarative text widget: that widget renders a literal manifest string, and only bodyWidgets props carry @object.<field> token resolution on a detail page. NOT lifecycleActions either (ADR-062 rule 10): OR\'s TransitionEngine would flip status, but ArticleService::publish() stamps publishedAt once and never moves it, which the grammar cannot express. Self-fetches by articleId (@objectId).',
 	},
+	CampaignLandingPageSection: {
+		kind: 'section',
+		component: CampaignLandingPageSection,
+		_note: 'In-body section for the declarative type:"detail" CampaignDetail page (marketing-campaigns, placement end). Hosts the Create landing page action, which dispatches portaliq\'s LandingPageRequestedEvent through POST /api/campaigns/{id}/landing-page and shows portaliq\'s own typed error code verbatim. Not a declarative action: the grammar has no cross-app command, and a generic write dialog would collapse five distinct failure codes into one save error. Self-fetches by campaignId (@objectId).',
+	},
 	ArticleUsageSection: {
 		kind: 'section',
 		component: ArticleUsageSection,
 		_note: 'In-body section for the declarative type:"detail" ArticleDetail page (marketing-article-hub, placement end). Answers where the article has been used by self-fetching GET /api/articles/{id}/usages, a read-time join of TWO schemas (campaignTemplate, blast) the declarative object-list widget (one schema per instance) cannot express. Nothing is written here.',
+	},
+	SocialPostVariantsSection: {
+		kind: 'section',
+		component: SocialPostVariantsSection,
+		_note: 'In-body section for the declarative type:"detail" SocialPostDetail page (social-publishing, placement before-body). Shows the RESOLVED text per network (the post body with that network\'s variant merged onto it, the same rule SocialPostService::resolveVariant() applies on the way out) and hosts the approval step. NOT a declarative text widget: that widget renders a literal manifest string, not a per-network merge. NOT lifecycleActions either (ADR-062 rule 10): an approval has to record WHO decided and when, in the post\'s approvals list stamped from the session, which the transition grammar has no field for.',
+	},
+	SocialPublicationsSection: {
+		kind: 'section',
+		component: SocialPublicationsSection,
+		_note: 'In-body section for the declarative type:"detail" SocialPostDetail page (social-publishing, placement end). One row per account the post named, with the failure reason where it did not go out. The Retry button appears only on the two of six failure codes a retry can fix, because a Retry on a dead grant or an unfiled developer application is a button that cannot work. Also hosts the share path for accounts no application may post to: the prepared text, a copy action, a link into the network\'s own composer and the confirmation.',
 	},
 	ActivityTimeline: {
 		kind: 'section',
@@ -817,6 +840,31 @@ const registry = {
 		kind: 'page',
 		component: ArticleFormView,
 		_note: 'New-article route wrapper (marketing-article-hub). Mounts ArticleEditModal in create mode — the bespoke ArticleService create path (author stamp, slug derivation, the ADR-088 agent-mark refusal) has no declarative equivalent, so there is no generic type:"form" page here. On save, navigates to the new article\'s ArticleDetail.',
+	},
+	SocialAccountsView: {
+		kind: 'page',
+		component: SocialAccountsView,
+		_note: "Connected social accounts, and the only place a connection is started, restarted or ended (social-publishing). Custom rather than type:index because Connect is a three-step conversation the grammar has no verb for: Pipelinq answers WHAT to connect, the BROWSER posts that to OpenRegister's own connect endpoint with the user's session, and the consent screen returns to this page's own path. The authorization code and the token never pass through Pipelinq (rule 2 of the marketing architecture, ADR-064). One component serves both SocialAccounts and SocialAccountDetail: the account has to be in the PATH because OpenRegister's safeReturnUrl() drops a query string.",
+	},
+	SocialPostFormView: {
+		kind: 'page',
+		component: SocialPostFormView,
+		_note: 'New-post route wrapper (social-publishing). Mounts SocialPostComposeModal in create mode. The per-network variants, the live character count against each network\'s own limit and the submit-for-approval step have no declarative equivalent, so there is no generic type:"form" page here. On save, navigates to the new post\'s SocialPostDetail.',
+	},
+	SocialPerformanceView: {
+		kind: 'page',
+		component: SocialPerformanceView,
+		_note: 'Engagement ranking per network (social-publishing). Custom because the ranking divides engagement by the follower count the daily pull recorded onto the account, which no single-schema declarative view expresses. Renders its table shell BEFORE the one request that fills it, which is the pipelinq#1781 rule: never await a per-object fan-out before painting.',
+	},
+	CampaignFormView: {
+		kind: 'page',
+		component: CampaignFormView,
+		_note: "Campaign create and edit (marketing-campaigns); one component serves CampaignNew and CampaignEdit, matching the SegmentNew / SegmentEdit convention. NOT the declarative create dialog: a campaign written through OpenRegister's object API carries whatever utmCampaign the browser sent and stores a source outside the tenant's vocabulary without complaint. Minting the value once, freezing it across a rename, and refusing an unknown source or medium live in CampaignService, which only POST and PATCH /api/campaigns reach. The source and medium pickers read GET /api/campaigns/vocabulary, admin-maintained app config that is not a schema enum.",
+	},
+	CampaignReportView: {
+		kind: 'page',
+		component: CampaignReportView,
+		_note: 'The campaign report (marketing-campaigns, ADR-112): reach and clicks per channel, submissions, leads with the basis each one closed on, attributed value under first touch, last touch and linear, and the recorded cost, all from ONE GET /api/campaigns/{id}/report. Custom because the response joins four schemas plus shillinq AR invoices and carries three precomputed models, which no declarative index or dashboard primitive expresses; switching the model re-reads nothing.',
 	},
 	SearchQueriesView: {
 		kind: 'page',

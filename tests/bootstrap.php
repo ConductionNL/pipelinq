@@ -88,6 +88,11 @@ if ($autoloader instanceof \Composer\Autoload\ClassLoader) {
 // OCP/NC registration below is irrelevant.
 if ($autoloader instanceof \Composer\Autoload\ClassLoader) {
 	$autoloader->addPsr4('OCA\\OpenRegister\\', __DIR__ . '/Stubs/');
+	// Test-only helper classes that are NOT themselves tests, such as the
+	// in-memory object store the social publishing suite shares. PHPUnit loads
+	// only files matching the *Test.php suffix, so a helper beside them needs
+	// an autoload rule or every test using it dies with "class not found".
+	$autoloader->addPsr4('OCA\\Pipelinq\\Tests\\', __DIR__ . '/');
 	$autoloader->addPsr4('Doctrine\\DBAL\\', __DIR__ . '/Stubs/DBAL/');
 	$autoloader->addPsr4('OC\\', __DIR__ . '/Stubs/OC/');
 }

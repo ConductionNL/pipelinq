@@ -539,9 +539,49 @@ return [
         ['name' => 'article#show',       'url' => '/api/articles/{id}',           'verb' => 'GET'],
         ['name' => 'article#update',     'url' => '/api/articles/{id}',           'verb' => 'PATCH'],
 
+        // Marketing — Social publishing (social-publishing, phase 3). Three
+        // objects, three controllers. Literal-suffixed routes (connect,
+        // attach, revoke, sync, submit, approve, reject, publications, retry,
+        // share, confirm-share) precede the bare {id} routes (ADR-016), and
+        // the static /api/social-performance is declared before anything that
+        // could take it for an id.
+        ['name' => 'socialAccount#index',   'url' => '/api/social-accounts',              'verb' => 'GET'],
+        ['name' => 'socialAccount#create',  'url' => '/api/social-accounts',              'verb' => 'POST'],
+        ['name' => 'socialAccount#connect', 'url' => '/api/social-accounts/{id}/connect', 'verb' => 'POST'],
+        ['name' => 'socialAccount#attach',  'url' => '/api/social-accounts/{id}/attach',  'verb' => 'POST'],
+        ['name' => 'socialAccount#revoke',  'url' => '/api/social-accounts/{id}/revoke',  'verb' => 'POST'],
+        ['name' => 'socialAccount#sync',    'url' => '/api/social-accounts/{id}/sync',    'verb' => 'POST'],
+        ['name' => 'socialAccount#show',    'url' => '/api/social-accounts/{id}',         'verb' => 'GET'],
+
+        ['name' => 'socialPost#performance',  'url' => '/api/social-performance',              'verb' => 'GET'],
+        ['name' => 'socialPost#index',        'url' => '/api/social-posts',                    'verb' => 'GET'],
+        ['name' => 'socialPost#create',       'url' => '/api/social-posts',                    'verb' => 'POST'],
+        ['name' => 'socialPost#submit',       'url' => '/api/social-posts/{id}/submit',        'verb' => 'POST'],
+        ['name' => 'socialPost#approve',      'url' => '/api/social-posts/{id}/approve',       'verb' => 'POST'],
+        ['name' => 'socialPost#reject',       'url' => '/api/social-posts/{id}/reject',        'verb' => 'POST'],
+        ['name' => 'socialPost#publications', 'url' => '/api/social-posts/{id}/publications',  'verb' => 'GET'],
+        ['name' => 'socialPost#show',         'url' => '/api/social-posts/{id}',               'verb' => 'GET'],
+        ['name' => 'socialPost#update',       'url' => '/api/social-posts/{id}',               'verb' => 'PATCH'],
+
+        ['name' => 'socialPost#retry',              'url' => '/api/social-publications/{id}/retry',         'verb' => 'POST'],
+        ['name' => 'socialAdvocacy#share',          'url' => '/api/social-publications/{id}/share',         'verb' => 'GET'],
+        ['name' => 'socialAdvocacy#confirmShare',   'url' => '/api/social-publications/{id}/confirm-share', 'verb' => 'POST'],
+
         // Marketing — Search Console (marketing-campaign-attribution): top queries
         // over a window plus the connection status. Static path, no wildcard.
         ['name' => 'searchConsole#index', 'url' => '/api/marketing/search-queries', 'verb' => 'GET'],
+
+        // Marketing — Campaigns (marketing-campaigns): the aggregate report the
+        // one campaign report page renders from, and the action that asks
+        // portaliq for a landing page. Plain campaign reads and writes go
+        // through OpenRegister's object API, so no CRUD routes live here.
+        // The static vocabulary route precedes every {id} route (ADR-016);
+        // reads and lists still go through OpenRegister's object API.
+        ['name' => 'campaign#vocabularies',      'url' => '/api/campaigns/vocabulary',        'verb' => 'GET'],
+        ['name' => 'campaign#create',            'url' => '/api/campaigns',                   'verb' => 'POST'],
+        ['name' => 'campaign#report',            'url' => '/api/campaigns/{id}/report',       'verb' => 'GET'],
+        ['name' => 'campaign#createLandingPage', 'url' => '/api/campaigns/{id}/landing-page', 'verb' => 'POST'],
+        ['name' => 'campaign#update',            'url' => '/api/campaigns/{id}',              'verb' => 'PATCH'],
 
         // Marketing — Blasts (marketing-segmentation-and-blast chain member 06).
         // Specific routes precede any wildcard {slug} routes (ADR-016).
