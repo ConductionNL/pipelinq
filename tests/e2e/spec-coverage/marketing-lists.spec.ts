@@ -103,6 +103,32 @@ async function openList(page: Page): Promise<string> {
 	return idOf(open)
 }
 
+/**
+ * Every subscription on a list, across pages.
+ *
+ * The endpoint pages at 25. A test that reads only the first page finds its
+ * own signup until the list outgrows one page, and then silently stops: the
+ * newest row sorts onto page two while the assertion still scans page one.
+ * A real tenant's list passes 25 long before a test instance does.
+ */
+async function allSubscriptions(page: Page, listId: string): Promise<any[]> {
+	const rows: any[] = []
+	for (let p = 1; p <= 20; p++) {
+		const res = await api(
+			page,
+			'GET',
+			`${APP}/api/mailing-lists/${listId}/subscriptions?page=${p}&limit=100`,
+		)
+		expect(res.status, res.text).toBe(200)
+		rows.push(...(res.json?.data ?? []))
+		const pages = Number(res.json?.pagination?.pages ?? 1)
+		if (p >= pages) {
+			break
+		}
+	}
+	return rows
+}
+
 /** Deep-link to a hash route and let the view settle. */
 async function gotoHash(page: Page, hash: string): Promise<void> {
 	// The app is path-routed, not hash-routed: `/apps/pipelinq#/mailing-lists/x`
@@ -217,13 +243,9 @@ test.describe('Double opt-in over the public endpoints', () => {
 		)
 		expect(posted.status, posted.text).toBe(202)
 
-		const rows = await api(
-			page,
-			'GET',
-			`${APP}/api/mailing-lists/${listId}/subscriptions`,
+		const mine = (await allSubscriptions(page, listId)).find(
+			(row: any) => row.email === email,
 		)
-		expect(rows.status, rows.text).toBe(200)
-		const mine = (rows.json?.data ?? []).find((row: any) => row.email === email)
 		expect(mine, 'the signup must be stored').toBeTruthy()
 		expect(mine.state).toBe('pending')
 		expect(mine.source).toBe('public-signup')
@@ -264,12 +286,7 @@ test.describe('Double opt-in over the public endpoints', () => {
 		await api(page, 'POST', `${APP}/api/lists/${listId}/subscribe`, { email })
 		await api(page, 'POST', `${APP}/api/lists/${listId}/subscribe`, { email })
 
-		const rows = await api(
-			page,
-			'GET',
-			`${APP}/api/mailing-lists/${listId}/subscriptions`,
-		)
-		const mine = (rows.json?.data ?? []).filter(
+		const mine = (await allSubscriptions(page, listId)).filter(
 			(row: any) => row.email === email,
 		)
 		expect(mine).toHaveLength(1)
