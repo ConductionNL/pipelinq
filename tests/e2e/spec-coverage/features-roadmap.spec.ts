@@ -43,7 +43,11 @@ test('Features & roadmap: exposes roadmap + suggest-feature actions', async ({
 	const content = page.locator('#content-vue')
 	await expect(content.getByRole('button', { name: 'Show roadmap' })).toBeVisible()
 	await expect(
-		content.getByRole('button', { name: 'Suggest feature' }).first(),
+		// A LINK, not a button. nextcloud-vue 2.36.4 removed the in-product
+		// suggestion modal (team decision 2026-09-04: the forge is where the
+		// conversation happens), and the CTA is an anchor to the forge's
+		// feature-request issue form now. An `<a href>` has role `link`.
+		content.getByRole('link', { name: 'Suggest feature' }).first(),
 	).toBeVisible()
 })
 
