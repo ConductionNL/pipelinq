@@ -668,8 +668,7 @@
         "sourceRef": "blast-webinar-ai-voor-gemeenten",
         "occurredAt": "2026-10-14T10:21:33+00:00",
         "createdAt": "2026-10-14T10:21:34+00:00",
-        "leadId": "d2f7c3b5-8a4e-4b69-8c32-6e9f5d18b024",
-        "contactId": ""
+        "leadId": "d2f7c3b5-8a4e-4b69-8c32-6e9f5d18b024"
       },
       {
         "@self": {
@@ -687,8 +686,7 @@
         },
         "occurredAt": "2026-10-20T14:02:00+00:00",
         "createdAt": "2026-10-20T14:02:01+00:00",
-        "leadId": "d2f7c3b5-8a4e-4b69-8c32-6e9f5d18b024",
-        "contactId": ""
+        "leadId": "d2f7c3b5-8a4e-4b69-8c32-6e9f5d18b024"
       },
       {
         "@self": {
@@ -707,8 +705,7 @@
         "occurredAt": "2026-10-21T09:47:12+00:00",
         "nonce": "REPLACE_WITH_A_SERVER_GENERATED_NONCE",
         "createdAt": "2026-10-21T09:47:13+00:00",
-        "leadId": "d2f7c3b5-8a4e-4b69-8c32-6e9f5d18b024",
-        "contactId": ""
+        "leadId": "d2f7c3b5-8a4e-4b69-8c32-6e9f5d18b024"
       }
     ]
   }
