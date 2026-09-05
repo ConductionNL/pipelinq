@@ -400,6 +400,11 @@ class SetupController extends Controller {
 			// Record the decision so `status()` can report the step done. See
 			// DEMO_DATA_DECIDED_KEY — an optional step the server can never
 			// report done covers the whole app with the setup wizard.
+			// 🔴 BOTH KEYS. The step is a choice followed by a run-action now, and
+			// CnAppRoot opens the wizard while ANY optional step is outstanding
+			// — so recording only the decision would leave the choice open and
+			// the wizard covering every page. Seeding IS choosing the set.
+			$this->appConfig->setValueString(Application::APP_ID, self::DATASET_KEY, DemoSeedService::DEMO_DATASET);
 			$this->appConfig->setValueString(Application::APP_ID, self::DEMO_DATA_DECIDED_KEY, 'seeded');
 
 			$created = array_sum($result['created']);
