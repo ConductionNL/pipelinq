@@ -70,7 +70,9 @@ test.describe('Blast wizard transport step', () => {
 		page,
 	}) => {
 		await openApp(page)
-		await page.goto('/apps/pipelinq/#/blasts/new')
+		// The app is path-routed: a '#/blasts/new' hash loads the default page
+		// and the wizard never mounts.
+		await page.goto('/index.php/apps/pipelinq/blasts/new')
 		await expect(page.locator('#content-vue')).toBeVisible({ timeout: 15000 })
 		await dismissWalkthrough(page)
 		await dismissSupportDialog(page)
