@@ -51,7 +51,7 @@ class PortalAuthService {
 	 *
 	 * @var string
 	 */
-	private const SCHEMA = 'portalAccount';
+	private const SCHEMA = 'crmPortalAccount';
 
 	/**
 	 * Maximum failed attempts before lockout.

@@ -45,7 +45,7 @@ class PortalAccountService {
 	 *
 	 * @var string
 	 */
-	private const SCHEMA = 'portalAccount';
+	private const SCHEMA = 'crmPortalAccount';
 
 	/**
 	 * Closure-token TTL in minutes.

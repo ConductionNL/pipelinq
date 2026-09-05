@@ -58,7 +58,7 @@ class PortalAuthController extends PortalApiController {
 	 *
 	 * @var string
 	 */
-	private const ACCOUNT_SCHEMA = 'portalAccount';
+	private const ACCOUNT_SCHEMA = 'crmPortalAccount';
 
 	/**
 	 * Constructor.
