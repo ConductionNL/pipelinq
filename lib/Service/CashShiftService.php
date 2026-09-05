@@ -221,7 +221,7 @@ class CashShiftService {
 	/**
 	 * Record a blind close count, close the shift and compute the variance.
 	 *
-	 * Creates an append-only cashCount, flips the shift to `closed` with a
+	 * Creates an append-only posCashCount, flips the shift to `closed` with a
 	 * server-set closedAt, then derives and persists a pending cashDiff via
 	 * {@see self::calculateDiff()}. The counted amount must be non-negative; the
 	 * countedBy UID and countedAt timestamp are server-set.

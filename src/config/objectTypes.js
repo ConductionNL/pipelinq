@@ -231,7 +231,7 @@ export function objectTypes() {
 			description: t(APP, 'Cash drops and pickups during a shift'),
 		},
 		{
-			slug: 'cashCount',
+			slug: 'posCashCount',
 			group: 'pos',
 			label: t(APP, 'Cash Count'),
 			description: t(APP, 'Cash count entries for a shift'),
@@ -363,7 +363,7 @@ export function objectTypes() {
 		// instead of throwing "Object type X is not registered" — which otherwise
 		// blanks the whole Messaging settings page and errors on every detail page.
 		{
-			slug: 'conversation',
+			slug: 'channelConversation',
 			group: 'marketing',
 			label: t(APP, 'Conversation'),
 			description: t(APP, 'Messaging conversations (WhatsApp / SMS)'),

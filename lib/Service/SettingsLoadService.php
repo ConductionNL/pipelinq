@@ -76,7 +76,7 @@ class SettingsLoadService {
 		// POS cash-drawer (pos-cash-management).
 		'cashShift',
 		'cashDrop',
-		'cashCount',
+		'posCashCount',
 		'cashDiff',
 		// POS staff/roles (pos-end-of-day-bookkeeping) and end-of-day Z-reports.
 		'posRole',
@@ -293,6 +293,11 @@ class SettingsLoadService {
 		'slaPolicy' => 'sla_policy_schema',
 		'slaBreachEvent' => 'sla_breach_event_schema',
 		'customerLoyaltyAccount' => 'klantLoyaltyAccount_schema',
+		// `cashCount` was a global slug two apps claimed: this POS drawer count
+		// and shillinq's kasadministratie Z-report, which share NO fields. The
+		// slug moved to `posCashCount`, matching the app's other POS schemas.
+		// The config KEY deliberately did not: it is live persisted state.
+		'posCashCount' => 'cashCount_schema',
 	];
 
 	/**

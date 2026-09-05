@@ -29,7 +29,7 @@
           "posRefundLine",
           "cashShift",
           "cashDrop",
-          "cashCount",
+          "posCashCount",
           "cashDiff",
           "posZReport"
         ]

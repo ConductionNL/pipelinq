@@ -160,6 +160,14 @@ Vrij en open source onder de EUPL-1.2-licentie.
                 a `timeEntry` reference to the booking it bills.
             -->
             <step>OCA\Pipelinq\Repair\RenameTimeEntrySchemaSlug</step>
+            <!--
+                Same reason again, for the two remaining slugs this app shared with
+                another. `cashCount` collided with shillinq's kasadministratie
+                Z-report and `conversation` with hermiq's agent chat thread. Each
+                pair shares ZERO declared fields, so these are renamed apart rather
+                than folded the way `timeEntry` was.
+            -->
+            <step>OCA\Pipelinq\Repair\RenameCollidingSchemaSlugs</step>
             <step>OCA\Pipelinq\Repair\InitializeSettings</step>
             <!--
                 After InitializeSettings imports the register: the schema edit
