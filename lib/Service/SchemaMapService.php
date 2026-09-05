@@ -48,7 +48,12 @@ class SchemaMapService {
 		'pipeline_schema' => 'pipeline',
 		'skill_schema' => 'skill',
 		'agentProfile_schema' => 'agentProfile',
-		'timeEntry_schema' => 'timeEntry',
+		// The entity type follows the renamed slug; the app-config KEY deliberately
+		// does not, matching `klantLoyaltyAccount_schema` below. `timeEntry` was
+		// global per organisation and three apps declared one — humaniq's HR
+		// booking, planninq's project booking and this app's billing/WIP record —
+		// so `SchemaMapper::find()` answered whichever it reached first.
+		'timeEntry_schema' => 'billingTimeEntry',
 		'task_schema' => 'task',
 		'posTransaction_schema' => 'posTransaction',
 		// POS staff PIN + role permissions (pos-staff-pin-permissions).

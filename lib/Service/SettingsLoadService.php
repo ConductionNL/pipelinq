@@ -58,7 +58,7 @@ class SettingsLoadService {
 		'skill',
 		'agentProfile',
 		// Time & WIP tracking (time-wip).
-		'timeEntry',
+		'billingTimeEntry',
 		'posTransaction',
 		'posTransactionLine',
 		// POS split-tender schemas (pos-split-tender). Without these two slugs
