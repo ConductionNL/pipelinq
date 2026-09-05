@@ -3,13 +3,20 @@
  * SPDX-License-Identifier: EUPL-1.2
  *
  * Navigation changes: "Tickets" reads "All tickets", and "Projecten" is gone
- * from the menu because dossiq's workflow board covers that ground.
+ * from the menu because planninq owns the project entity.
  *
- * The third test is the one that matters. `menu-layout.json` retires an entry
- * by id while promising its PAGE stays routable, so bookmarks, shared URLs and
- * existing e2e specs keep working. That promise is only worth anything if
- * something checks it: a removal that also broke the route would look identical
- * in the sidebar and only surface when a user opened an old link.
+ * That last claim has been reversed twice, so it is worth writing down which
+ * way round it now is. #1672 retired the entry on the theory that dossiq's
+ * workflow board replaced it; #1728 put it back, because a board does not
+ * replace a billing entity; #1757 removed it again for a different and better
+ * reason, handing the whole work breakdown structure to planninq, deleting
+ * pipelinq's four project schemas and its three project pages.
+ *
+ * So the surface is not lost, it moved: a client's projects still render on
+ * ClientDetail, through a widget that reads planninq's register and declares
+ * `requiredApp: planninq`. The menu half of that claim is asserted here; the
+ * client-page half is asserted in declarative-view-system.spec.ts, which
+ * already pins a seeded client deterministically.
  */
 
 import type { Page } from '@playwright/test'
@@ -57,35 +64,25 @@ test('the tickets entry reads "All tickets"', async ({ page }) => {
 })
 
 // @e2e openspec/specs/pipelinq-navigation/spec.md
-test('Projecten is offered in the navigation', async ({ page }) => {
-	// INVERTED, not deleted. This asserted the entry was GONE, on the claim
-	// that dossiq's WorkflowBoard replaced it. #1728 retracted that claim and
-	// restored the entry: `project` is a BILLING entity here, carrying
-	// billable, budgetHours, budgetAmount, hourlyRate and ledgerSync*, with
-	// sixteen files hanging off it. A planning board does not replace it.
+test("Projecten is not offered in pipelinq's navigation", async ({ page }) => {
+	// INVERTED for the second time, and the reason matters more than the
+	// assertion. This read "the billing surface must stay in the menu" after
+	// #1728, which was right against the claim it answered: a planning board
+	// does not replace a billing entity. #1757 answered a different question.
+	// Planninq already owned `project`, `task` and `timeEntry`, and a schema
+	// slug is GLOBAL on a shared OpenRegister, so pipelinq's parallel
+	// definitions could answer for planninq's without anything reporting it.
+	// Pipelinq gave its four project schemas up rather than keep a second
+	// definition of the same word.
 	//
-	// The assertion flips rather than disappearing: deleting it would leave
-	// nothing watching an entry that was already removed once by mistake.
+	// So this is not the earlier mistake repeating. It is kept as an assertion
+	// rather than deleted because an entry restored by accident is as much a
+	// regression as one removed by accident, and this app has now done both.
 	await openApp(page)
 
 	const nav = page.locator('#app-navigation-vue, .app-navigation').first()
 	await expect(
 		nav.getByText(/^\s*(Projecten|Projects)\s*$/i),
-		'the billing surface must stay in the menu',
-	).toHaveCount(1, { timeout: 15000 })
-})
-
-// @e2e openspec/specs/pipelinq-navigation/spec.md
-test('the projects page stays reachable by direct link', async ({ page }) => {
-	await page.goto('/apps/pipelinq/projects')
-	await dismissWalkthrough(page)
-	await dismissSupportDialog(page)
-
-	// Retiring a MENU entry must not retire its ROUTE: menu-layout.json says so
-	// explicitly, and old links and specs depend on it. A blank page here would
-	// mean the removal took the route with it.
-	await expect(
-		page.locator('[data-testid="cn-page"]'),
-		"the retired entry's page must still render for a deep link",
-	).toBeVisible({ timeout: 20000 })
+		'planninq owns projects, so pipelinq must not offer them in its menu',
+	).toHaveCount(0, { timeout: 15000 })
 })

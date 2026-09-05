@@ -164,6 +164,8 @@ test.describe('Rapportage (Reporting)', () => {
 			'Agent performance',
 			'Forecast',
 			'Loyalty reporting',
+			'Campaign report',
+			'Weekly review',
 		]
 
 		await openApp(page)
