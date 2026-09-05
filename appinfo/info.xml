@@ -151,6 +151,15 @@ Vrij en open source onder de EUPL-1.2-licentie.
                 updates the schema in place and keeps its id, and its shard table.
             -->
             <step>OCA\Pipelinq\Repair\RenameLoyaltyAccountSchemaSlug</step>
+            <!--
+                Same reason, one slug over. `timeEntry` is global per organisation
+                and three apps declared one — humaniq's HR booking, planninq's
+                project booking and this app's billing/WIP record — so
+                SchemaMapper::find() answered whichever it reached first. humaniq
+                owns the hours; this record is the BILLING side of one, and keeps
+                a `timeEntry` reference to the booking it bills.
+            -->
+            <step>OCA\Pipelinq\Repair\RenameTimeEntrySchemaSlug</step>
             <step>OCA\Pipelinq\Repair\InitializeSettings</step>
             <!--
                 After InitializeSettings imports the register: the schema edit

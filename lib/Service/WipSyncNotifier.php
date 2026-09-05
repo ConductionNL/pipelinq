@@ -72,7 +72,7 @@ class WipSyncNotifier {
 				parameters: [
 					'title' => $title,
 				],
-				objectType: 'timeEntry',
+				objectType: 'billingTimeEntry',
 				objectId: $uuid
 			);
 		}

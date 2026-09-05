@@ -6408,7 +6408,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "timeEntry",
+          "schema": "billingTimeEntry",
           "slug": "timeentry-voorbeeld-title-1-1"
         },
         "title": "Voorbeeld Title 1",
@@ -6432,7 +6432,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "timeEntry",
+          "schema": "billingTimeEntry",
           "slug": "timeentry-voorbeeld-title-2-2"
         },
         "title": "Voorbeeld Title 2",
@@ -6456,7 +6456,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "timeEntry",
+          "schema": "billingTimeEntry",
           "slug": "timeentry-voorbeeld-title-3-3"
         },
         "title": "Voorbeeld Title 3",

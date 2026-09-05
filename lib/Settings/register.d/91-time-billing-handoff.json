@@ -1,8 +1,17 @@
 {
   "components": {
     "schemas": {
-      "timeEntry": {
+      "billingTimeEntry": {
         "properties": {
+          "timeEntry": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Urenboeking",
+            "title:en": "Time entry",
+            "description": "De humaniq `TimeEntry` die deze regel factureert. Een platte uuid en geen `$ref`: humaniq's register is een ander register, en ADR-062 regel 7 geeft een doel buiten dit register geen `$ref`.",
+            "description:en": "The humaniq `TimeEntry` this line bills. A plain uuid and not a `$ref`: humaniq's register is a different register, and ADR-062 rule 7 gives a cross-register target no `$ref`.",
+            "facetable": true
+          },
           "billingSyncStatus": {
             "type": "string",
             "enum": [
@@ -83,7 +92,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "timeEntry",
+          "schema": "billingTimeEntry",
           "slug": "time-entry-billing-demo-muni-1",
           "id": "84354c2c-5009-4a67-baac-1ccd11a8ec95"
         },
@@ -100,7 +109,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "timeEntry",
+          "schema": "billingTimeEntry",
           "slug": "time-entry-billing-demo-muni-2",
           "id": "8cefcadf-f17e-47cf-a898-48c287200615"
         },
@@ -117,7 +126,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "timeEntry",
+          "schema": "billingTimeEntry",
           "slug": "time-entry-billing-demo-consult-1",
           "id": "5ebe90c9-3dea-4832-ba47-a9c6992f51ea"
         },
@@ -137,7 +146,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "timeEntry",
+          "schema": "billingTimeEntry",
           "slug": "time-entry-billing-demo-travel-1",
           "id": "8b34a794-7ca1-411a-909a-f902d5360ae6"
         },

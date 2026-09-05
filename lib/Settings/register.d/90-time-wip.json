@@ -3,13 +3,13 @@
     "registers": {
       "pipelinq": {
         "schemas": [
-          "timeEntry"
+          "billingTimeEntry"
         ]
       }
     },
     "schemas": {
-      "timeEntry": {
-        "slug": "timeEntry",
+      "billingTimeEntry": {
+        "slug": "billingTimeEntry",
         "title": "Time Entry",
         "icon": "ClockOutline",
         "version": "1.2.0",
@@ -123,7 +123,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "timeEntry",
+          "schema": "billingTimeEntry",
           "slug": "time-entry-wip-synced-1"
         },
         "title": "Adviesgesprek intake De Vries BV",
@@ -140,7 +140,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "timeEntry",
+          "schema": "billingTimeEntry",
           "slug": "time-entry-wip-synced-2"
         },
         "title": "Technische implementatie OpenRegister module",
@@ -157,7 +157,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "timeEntry",
+          "schema": "billingTimeEntry",
           "slug": "time-entry-wip-synced-3"
         },
         "title": "Onderzoek algoritmisch routeren vergunningaanvragen",
@@ -174,7 +174,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "timeEntry",
+          "schema": "billingTimeEntry",
           "slug": "time-entry-wip-pending-1"
         },
         "title": "Projectopstartgesprek subsidieportaal GroenNet",
@@ -191,7 +191,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "timeEntry",
+          "schema": "billingTimeEntry",
           "slug": "time-entry-wip-failed-1"
         },
         "title": "ZZP-advies supply chain optimalisatie",
