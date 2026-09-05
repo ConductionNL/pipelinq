@@ -35,6 +35,7 @@ use UnexpectedValueException;
 
 /**
  * @covers \OCA\Pipelinq\Service\SettingsService
+ * @uses \OCA\Pipelinq\Service\Matomo\MatomoReportService
  */
 class SettingsServiceMatomoReferenceTest extends TestCase {
 

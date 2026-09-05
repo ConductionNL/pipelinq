@@ -26,6 +26,7 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * @covers \OCA\Pipelinq\Service\Search\KeywordAnalysisService
+ * @uses \OCA\Pipelinq\Service\Search\ExpectedCtrCurve
  */
 class KeywordAnalysisServiceTest extends TestCase {
 

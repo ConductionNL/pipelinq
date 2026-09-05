@@ -29,6 +29,8 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * @covers \OCA\Pipelinq\Service\Search\SiteContentCrawler
+ * @uses \OCA\Pipelinq\Service\Egress\EgressResult
+ * @uses \OCA\Pipelinq\Service\Search\HtmlTextExtractor
  */
 class SiteContentCrawlerTest extends TestCase {
 
