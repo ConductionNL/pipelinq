@@ -30,6 +30,7 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * @covers \OCA\Pipelinq\Service\Social\ConnectionAuditService
+ * @uses \OCA\Pipelinq\Service\Egress\EgressResult
  */
 class ConnectionAuditServiceTest extends TestCase {
 

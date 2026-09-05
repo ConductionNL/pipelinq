@@ -294,6 +294,47 @@ class DemoSeedServiceTest extends TestCase {
 	 *
 	 * @spec openspec/changes/align-claims-and-first-hour/specs/first-time-setup/spec.md#requirement-req-setup-pip-008--optional-demo-data-seed
 	 */
+	/**
+	 * The wizard's choice step is offered declining and the shipped set.
+	 *
+	 * 🔴 "NO THANKS" HAS TO BE SAYABLE. This app implemented a
+	 * `skip-demo-data` action that no manifest step could reach, so the step
+	 * stayed outstanding and CnAppRoot reopened the wizard over every page
+	 * unless the operator seeded data they did not want.
+	 *
+	 * @return void
+	 */
+	public function testTheChoiceStepIsOfferedDecliningAndTheShippedSet(): void {
+		$choices = $this->service->listChoices();
+
+		$this->assertSame(['none', 'demo'], array_column($choices, 'id'));
+		foreach ($choices as $choice) {
+			$this->assertNotSame('', $choice['label']);
+			$this->assertNotSame('', $choice['description']);
+			$this->assertNotSame('', $choice['icon']);
+		}
+
+	}//end testTheChoiceStepIsOfferedDecliningAndTheShippedSet()
+
+	/**
+	 * The card promises no object count, because this seeder builds its objects.
+	 *
+	 * There is no honest number until it has run, and a made-up one is worse
+	 * than none: the wizard renders no stat for a zero.
+	 *
+	 * @return void
+	 */
+	public function testTheOfferedSetPromisesNoCountItCannotKnow(): void {
+		$demo = $this->service->listChoices()[1];
+
+		$this->assertSame(0, $demo['objectCount']);
+		// 🔴 NO NUMBER IN THE SENTENCE EITHER. The wizard translates a card's
+		// description by literal lookup, so an interpolated count would leave a
+		// Dutch operator reading English.
+		$this->assertDoesNotMatchRegularExpression('/\d/', $demo['description']);
+
+	}//end testTheOfferedSetPromisesNoCountItCannotKnow()
+
 	public function testSeedOnCleanInstallCreatesLinkedDemoSet(): void {
 		$this->provisionConfig();
 

@@ -65,6 +65,7 @@ class FakeWebSearchClient {
 
 /**
  * @covers \OCA\Pipelinq\Service\Competitor\SearchWatchReader
+ * @uses \OCA\Pipelinq\Service\Competitor\WatchOutcome
  */
 class SearchWatchReaderTest extends TestCase {
 

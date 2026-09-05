@@ -29,6 +29,9 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * @covers \OCA\Pipelinq\Service\Competitor\PageWatchReader
+ * @uses \OCA\Pipelinq\Service\Competitor\WatchOutcome
+ * @uses \OCA\Pipelinq\Service\Egress\EgressResult
+ * @uses \OCA\Pipelinq\Service\Search\HtmlTextExtractor
  */
 class PageWatchReaderTest extends TestCase {
 

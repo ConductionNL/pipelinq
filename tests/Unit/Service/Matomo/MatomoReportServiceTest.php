@@ -31,6 +31,7 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * @covers \OCA\Pipelinq\Service\Matomo\MatomoReportService
+ * @uses \OCA\Pipelinq\Service\Egress\EgressResult
  */
 class MatomoReportServiceTest extends TestCase {
 

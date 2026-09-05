@@ -23,10 +23,19 @@
 			},
 			{
 				"id": "demo-data",
+				"type": "choice",
+				"display": "cards",
+				"optionsSource": "datasets",
+				"configKey": "demo_dataset",
+				"title": "Load example data?",
+				"body": "Example data fills the lists, dashboards and the 360 degree client view so you can see the app working straight away. Pick \"None\" on a production install."
+			},
+			{
+				"id": "load-demo-data",
 				"type": "run-action",
-				"title": "Demo data (optional)",
-				"action": "seed-demo-data",
-				"body": "Seed a small linked demo dataset of clients, leads, requests and contactmomenten, so lists, dashboards and the 360° client view show a working product right away. Optional and safe to run more than once; every object is marked [Demo] and can be removed later with `occ pipelinq:demo:seed --remove`. Skip this on a production install."
+				"action": "load-demo-data",
+				"title": "Load the example data",
+				"body": "Loads what you picked. Every object is marked [Demo], it is safe to run more than once, and `occ pipelinq:demo:seed --remove` takes it away again."
 			},
 			{
 				"id": "currency",
