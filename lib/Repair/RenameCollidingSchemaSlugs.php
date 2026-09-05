@@ -94,6 +94,11 @@ class RenameCollidingSchemaSlugs implements IRepairStep {
 		// or person a customer books time with. They share `name`, `status` and
 		// `type`, and nothing that identifies the record.
 		'resource' => ['to' => 'appointmentResource', 'with' => 'shillinq'],
+		// The channel message, alongside `channelConversation` above. hermiq is
+		// the messaging app and owns the bare slug; this is one WhatsApp or SMS
+		// message on a channel thread. The two share only `conversationId`,
+		// which points at a thread rather than identifying the message.
+		'message' => ['to' => 'channelMessage', 'with' => 'hermiq'],
 	];
 
 	/**

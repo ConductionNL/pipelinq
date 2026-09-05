@@ -7,7 +7,7 @@
           "messageTemplate",
           "messagingConsentRecord",
           "messageSendBudget",
-          "message",
+          "channelMessage",
           "channelConversation"
         ]
       }
@@ -332,9 +332,9 @@
           }
         }
       },
-      "message": {
+      "channelMessage": {
         "x-schema-org": "schema:Message",
-        "slug": "message",
+        "slug": "channelMessage",
         "title": "Message",
         "icon": "MessageOutline",
         "version": "1.0.0",
