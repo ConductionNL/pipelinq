@@ -21,6 +21,14 @@ use Psr\Log\NullLogger;
  * the seed script's own assertion caught.
  *
  * @covers \OCA\Pipelinq\Controller\SetupController
+ *
+ * 🔴 `@uses` IS NOT DECORATION. `beStrictAboutCoverageMetadata` makes a test
+ * RISKY when it executes a class this block does not name, and status() resolves
+ * the integration app id through FleetAppId. Locally that is invisible: the
+ * check only runs with a coverage driver, so all six PHPUnit cells went red on
+ * a suite that is green here.
+ *
+ * @uses \OCA\Pipelinq\Support\FleetAppId
  */
 class SetupControllerDemoDataTest extends TestCase {
 	private array $written = [];
