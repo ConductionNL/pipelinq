@@ -450,6 +450,25 @@
             "format": "date-time",
             "description": "ISO 8601 instant the owner of a share-mode account was asked to post. Set by the advocacy path only.",
             "title": "Share Prompted At"
+          },
+          "preparedBody": {
+            "type": "string",
+            "description": "The exact text the owner of a share-mode account is asked to post, with the network's variant already applied and the campaign link already added. It is stored here rather than rebuilt on read, so the words the person copies are the words they were asked to post even after the post is edited.",
+            "maxLength": 10000,
+            "title": "Prepared Text"
+          },
+          "preparedMedia": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "path": { "type": "string", "description": "Path of the file in Nextcloud Files.", "title": "Path" },
+                "url": { "type": "string", "description": "Publicly reachable address of the image.", "title": "URL" },
+                "alt": { "type": "string", "description": "Alternative text for the image.", "title": "Alt Text" }
+              }
+            },
+            "description": "The media the owner of a share-mode account is asked to post, frozen alongside the prepared text.",
+            "title": "Prepared Media"
           }
         }
       }
