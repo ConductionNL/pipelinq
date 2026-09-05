@@ -1,0 +1,676 @@
+{
+	"$comment": "ADR-037 register fragment for marketing-search-intelligence (phase 5 of the pipelinq marketing programme). Adds the five objects the phase needs and NO copy of searchQueryDaily: the Search Console side shipped in marketing-campaign-attribution and this phase reads it. keywordTarget is written only by KeywordTargetService::confirm(), never by the analysis, so a striking-distance list recomputed daily cannot create and delete records under the marketer. competitorWatch carries the scheduled flow as x-openregister-flows: ADR-094 routes new scheduled automation to OpenRegister's flow engine, and because that engine still has no outbound-HTTP node (ADR-094 decision 3, re-checked against openregister/lib/Service/Flow/Nodes/ for this change), the schedule is the engine's and the fetching node is ours, exactly as humaniq's payroll flow does it. socialConnection stores yes/no/unknown rather than a boolean, because a network that will not answer must not be recorded as a no.",
+	"components": {
+		"registers": {
+			"pipelinq": {
+				"schemas": [
+					"keywordTarget",
+					"competitor",
+					"competitorWatch",
+					"watchEvent",
+					"socialConnection"
+				]
+			}
+		},
+		"schemas": {
+			"keywordTarget": {
+				"slug": "keywordTarget",
+				"title": "Keyword Target",
+				"icon": "KeyVariant",
+				"version": "1.0.0",
+				"summary": "A search term to win, to stop chasing, or to keep an eye on.",
+				"description": "Created only when a person confirms a proposal from the Keywords page. KeywordAnalysisService derives proposals from the imported searchQueryDaily rows and writes nothing; KeywordTargetService::confirm() is the single write path and records which proposal kind produced the target. volume and difficulty stay empty: the source that would fill them (DataForSEO) is a later bring-your-own-key source, and a zero would read as a measurement rather than as an absence.",
+				"x-schema-org": "schema:DefinedTerm",
+				"required": [
+					"term",
+					"status"
+				],
+				"properties": {
+					"term": {
+						"type": "string",
+						"title": "Term",
+						"description": "The search term itself, as people type it.",
+						"minLength": 1,
+						"maxLength": 255,
+						"example": "woo verzoek indienen"
+					},
+					"intent": {
+						"type": "string",
+						"title": "Intent",
+						"description": "What somebody typing this is trying to do.",
+						"enum": [
+							"informational",
+							"navigational",
+							"commercial",
+							"transactional"
+						],
+						"facetable": true,
+						"example": "informational"
+					},
+					"status": {
+						"type": "string",
+						"title": "Status",
+						"description": "What we decided to do about this term.",
+						"default": "watch",
+						"enum": [
+							"use-more",
+							"use-less",
+							"watch"
+						],
+						"facetable": true,
+						"example": "use-more"
+					},
+					"targetPageRef": {
+						"type": "string",
+						"title": "Target page",
+						"description": "The page that should win this term. A URL on our own site, or a portaliq page reference.",
+						"maxLength": 500,
+						"example": "https://example.org/woo"
+					},
+					"proposalKind": {
+						"type": "string",
+						"title": "Came from",
+						"description": "Which derivation proposed this term, so a target can be traced back to the evidence for it.",
+						"default": "manual",
+						"enum": [
+							"striking-distance",
+							"cannibalisation",
+							"content-gap",
+							"manual"
+						],
+						"facetable": true,
+						"example": "striking-distance"
+					},
+					"property": {
+						"type": "string",
+						"title": "Property",
+						"description": "The Search Console property the proposal came from, when it came from one.",
+						"maxLength": 255,
+						"example": "sc-domain:example.org"
+					},
+					"volume": {
+						"type": "integer",
+						"title": "Search volume",
+						"description": "Monthly searches, when somebody has looked it up. Nothing in Pipelinq fills this in: the source that would is out of scope, so an empty value means not measured.",
+						"minimum": 0,
+						"example": 320
+					},
+					"difficulty": {
+						"type": "integer",
+						"title": "Difficulty",
+						"description": "How hard the term is to win, 0 to 100, when somebody has looked it up. Filled in by hand for the same reason as volume.",
+						"minimum": 0,
+						"maximum": 100,
+						"example": 42
+					},
+					"notes": {
+						"type": "string",
+						"title": "Notes",
+						"description": "Why this term matters, and what was decided about it.",
+						"maxLength": 2000,
+						"example": "Staat op positie elf. Een alinea over de termijn zou genoeg moeten zijn."
+					},
+					"createdBy": {
+						"type": "string",
+						"title": "Confirmed by",
+						"description": "The user who confirmed the proposal.",
+						"maxLength": 64,
+						"example": "admin"
+					},
+					"createdAt": {
+						"type": "string",
+						"format": "date-time",
+						"title": "Confirmed at",
+						"description": "When the proposal was confirmed.",
+						"example": "2026-09-05T09:00:00+00:00"
+					}
+				}
+			},
+			"competitor": {
+				"slug": "competitor",
+				"title": "Competitor",
+				"icon": "AccountGroupOutline",
+				"version": "1.0.0",
+				"summary": "An organisation we watch, and the public places it publishes.",
+				"description": "Only public, legitimately readable sources are recorded here: feeds, a sitemap and fediverse handles. LinkedIn and Meta are deliberately absent. Neither offers machine access to another organisation's posts, so a field for them would only be filled by scraping. A competitor may point at a client when the same organisation is both.",
+				"x-schema-org": "schema:Organization",
+				"required": [
+					"name"
+				],
+				"properties": {
+					"name": {
+						"type": "string",
+						"title": "Name",
+						"description": "The organisation's name.",
+						"minLength": 1,
+						"maxLength": 255,
+						"example": "Voorbeeld B.V."
+					},
+					"website": {
+						"type": "string",
+						"title": "Website",
+						"description": "The organisation's own site.",
+						"maxLength": 500,
+						"example": "https://example.org"
+					},
+					"feeds": {
+						"type": "array",
+						"title": "Feeds",
+						"description": "RSS or Atom feed URLs to watch.",
+						"default": [],
+						"items": {
+							"type": "string",
+							"title": "Feed URL",
+							"example": "https://example.org/blog/feed.xml"
+						}
+					},
+					"sitemapUrl": {
+						"type": "string",
+						"title": "Sitemap",
+						"description": "The sitemap to diff for new and changed pages. A sitemap index is followed.",
+						"maxLength": 500,
+						"example": "https://example.org/sitemap.xml"
+					},
+					"socialHandles": {
+						"type": "array",
+						"title": "Public handles",
+						"description": "Public fediverse handles. Only networks with a public timeline can be watched.",
+						"default": [],
+						"items": {
+							"type": "object",
+							"title": "Handle",
+							"properties": {
+								"network": {
+									"type": "string",
+									"title": "Network",
+									"enum": [
+										"mastodon",
+										"bluesky"
+									],
+									"example": "mastodon"
+								},
+								"handle": {
+									"type": "string",
+									"title": "Handle",
+									"example": "voorbeeld@mastodon.example.org"
+								}
+							}
+						}
+					},
+					"clientId": {
+						"type": "string",
+						"title": "Client",
+						"description": "The client record for this organisation, when it is also a customer.",
+						"maxLength": 64,
+						"example": "b7f4a9c1-2d3e-4f56-8a90-1b2c3d4e5f60"
+					},
+					"active": {
+						"type": "boolean",
+						"title": "Active",
+						"description": "Whether this competitor's watches run.",
+						"default": true,
+						"facetable": true,
+						"example": true
+					},
+					"notes": {
+						"type": "string",
+						"title": "Notes",
+						"description": "What we watch this organisation for.",
+						"maxLength": 2000,
+						"example": "Overlappende aanbestedingen bij gemeenten."
+					}
+				}
+			},
+			"competitorWatch": {
+				"slug": "competitorWatch",
+				"title": "Competitor Watch",
+				"icon": "EyeOutline",
+				"version": "1.0.0",
+				"summary": "One thing to poll about one competitor, and how often.",
+				"description": "Driven by the OpenRegister flow declared below and never by a background job of ours (ADR-094). The flow fires on its own schedule; this object's own schedule decides which watches are due on that firing, so one flow drives an hourly page watch next to a daily feed watch. A page watch keeps a fingerprint of the selected fragment and never the fragment itself: watching a page is not archiving somebody else's page.",
+				"x-schema-org": "schema:Action",
+				"required": [
+					"competitorId",
+					"kind",
+					"target"
+				],
+				"configuration": {
+					"x-openregister-flows": [
+						{
+							"name": "Competitor watches",
+							"app": "pipelinq",
+							"description": "Runs the competitor watches that are due (marketing-search-intelligence). The engine owns the schedule; the pipelinq.competitor-watch-run node does the reading, because the node registry has no outbound-HTTP node (ADR-094 decision 3). The flow arrives disabled per the engine's adoption contract: enable it deliberately and repoint the trigger's runAs at a service account of your own rather than leaving it on the administrator.",
+							"trigger": "schedule",
+							"enabled": false,
+							"executionMode": "async",
+							"limits": {
+								"maxTransitions": 20
+							},
+							"nodes": [
+								{
+									"id": "every-hour",
+									"type": "openregister.trigger-schedule",
+									"config": {
+										"cron": "5 * * * *",
+										"runAs": "admin"
+									}
+								},
+								{
+									"id": "run-due-watches",
+									"type": "pipelinq.competitor-watch-run",
+									"config": {
+										"limit": 25
+									}
+								},
+								{
+									"id": "end",
+									"type": "openregister.end",
+									"config": {}
+								}
+							],
+							"edges": [
+								{
+									"id": "e-fired",
+									"from": "every-hour",
+									"to": "run-due-watches"
+								},
+								{
+									"id": "e-ran",
+									"from": "run-due-watches",
+									"to": "end"
+								}
+							]
+						}
+					]
+				},
+				"properties": {
+					"competitorId": {
+						"type": "string",
+						"title": "Competitor",
+						"description": "The competitor this watch belongs to.",
+						"minLength": 1,
+						"maxLength": 64,
+						"example": "a1b2c3d4-5e6f-4708-9a1b-2c3d4e5f6071"
+					},
+					"kind": {
+						"type": "string",
+						"title": "Kind",
+						"description": "What is being watched. These five are the sources that can be read legitimately; LinkedIn and Meta post data are not among them, and no sixth kind should be added for them.",
+						"enum": [
+							"rss",
+							"sitemap",
+							"page",
+							"fediverse",
+							"search"
+						],
+						"facetable": true,
+						"example": "rss"
+					},
+					"target": {
+						"type": "string",
+						"title": "Target",
+						"description": "What to read: a feed URL, a sitemap URL, a page URL, a fediverse handle, or a search query.",
+						"minLength": 1,
+						"maxLength": 500,
+						"example": "https://example.org/blog/feed.xml"
+					},
+					"selector": {
+						"type": "string",
+						"title": "Selector",
+						"description": "For a page watch, the CSS selector of the fragment to compare. A selector that matches nothing is reported rather than silently treated as unchanged.",
+						"maxLength": 255,
+						"example": "#news"
+					},
+					"schedule": {
+						"type": "string",
+						"title": "How often",
+						"description": "How often this watch is due. The flow fires hourly and runs the watches whose cadence has come round.",
+						"default": "daily",
+						"enum": [
+							"hourly",
+							"daily",
+							"weekly"
+						],
+						"facetable": true,
+						"example": "daily"
+					},
+					"active": {
+						"type": "boolean",
+						"title": "Active",
+						"description": "Whether this watch runs.",
+						"default": true,
+						"facetable": true,
+						"example": true
+					},
+					"connectorSourceId": {
+						"type": "string",
+						"title": "Connector source",
+						"description": "The OpenConnector source this watch reads through, when it needs one of its own. An OpenConnector source is a per-origin allow-list, so a competitor on their own domain gets their own source; leave this empty to use the shared source in competitor.egress_source.",
+						"maxLength": 64,
+						"example": "6f708192-3456-4a7b-8c9d-0e1f20314253"
+					},
+					"lastRunAt": {
+						"type": "string",
+						"format": "date-time",
+						"title": "Last run",
+						"description": "When this watch last ran, whatever the outcome.",
+						"example": "2026-09-05T06:05:00+00:00"
+					},
+					"lastOutcome": {
+						"type": "string",
+						"title": "Last outcome",
+						"description": "How the last run ended.",
+						"enum": [
+							"ok",
+							"not_configured",
+							"unavailable",
+							"refused",
+							"unparsable"
+						],
+						"facetable": true,
+						"example": "ok"
+					},
+					"lastReason": {
+						"type": "string",
+						"title": "Last reason",
+						"description": "What the last run said when it did not end in ok.",
+						"maxLength": 500,
+						"example": "No egress source is configured for competitor watches."
+					},
+					"fingerprint": {
+						"type": "string",
+						"title": "Fingerprint",
+						"description": "For a page watch, a hash of the selected fragment as it was last seen. The fragment itself is never stored.",
+						"maxLength": 128,
+						"example": "9f2c41d0a7b3e58c6142f09d3b7a4e51"
+					},
+					"lineFingerprints": {
+						"type": "array",
+						"title": "Line fingerprints",
+						"description": "For a page watch, a hash per line of the fragment as it was last seen, capped. It is what lets the next run say how much was removed without keeping a copy of somebody else's page: the lines that were ADDED are shown from the run's own fresh fetch, and the removed ones are counted, not quoted.",
+						"default": [],
+						"items": {
+							"type": "string",
+							"title": "Line fingerprint",
+							"example": "3f1a9c2e"
+						}
+					}
+				}
+			},
+			"watchEvent": {
+				"slug": "watchEvent",
+				"title": "Watch Event",
+				"icon": "BellRingOutline",
+				"version": "1.0.0",
+				"summary": "Something a competitor published or changed.",
+				"description": "Written by WatchEventStore, upserted per watch and URL so a re-run over the same window changes nothing and a schedule that fires twice cannot duplicate a headline. sourceStamp holds whatever decides that an item changed: a sitemap lastmod, a feed guid, or a fragment fingerprint. relevanceScore is ABSENT rather than zero when hermiq did not score the event, because an unscored event and an irrelevant one would otherwise sort together and the unscored ones would never be read.",
+				"x-schema-org": "schema:Event",
+				"required": [
+					"competitorId",
+					"watchId",
+					"kind",
+					"url"
+				],
+				"properties": {
+					"competitorId": {
+						"type": "string",
+						"title": "Competitor",
+						"description": "The competitor this event is about.",
+						"minLength": 1,
+						"maxLength": 64,
+						"example": "a1b2c3d4-5e6f-4708-9a1b-2c3d4e5f6071"
+					},
+					"watchId": {
+						"type": "string",
+						"title": "Watch",
+						"description": "The watch that produced this event.",
+						"minLength": 1,
+						"maxLength": 64,
+						"example": "c3d4e5f6-0718-4a2b-8c3d-4e5f60718293"
+					},
+					"kind": {
+						"type": "string",
+						"title": "Kind",
+						"description": "The kind of watch that produced it.",
+						"enum": [
+							"rss",
+							"sitemap",
+							"page",
+							"fediverse",
+							"search"
+						],
+						"facetable": true,
+						"example": "rss"
+					},
+					"title": {
+						"type": "string",
+						"title": "Title",
+						"description": "What the item is called, as the source names it.",
+						"maxLength": 500,
+						"example": "Voorbeeld B.V. wint aanbesteding bij gemeente Voorbeeld"
+					},
+					"url": {
+						"type": "string",
+						"title": "URL",
+						"description": "Where the item lives. Together with the watch this is the event's identity, so a re-run updates rather than duplicates.",
+						"minLength": 1,
+						"maxLength": 500,
+						"example": "https://example.org/blog/aanbesteding"
+					},
+					"diffSummary": {
+						"type": "string",
+						"title": "What changed",
+						"description": "A short summary of the change, for a page or sitemap watch. For a feed or a timeline this is the entry's own summary.",
+						"maxLength": 2000,
+						"example": "Twee regels toegevoegd onder Nieuws."
+					},
+					"sourceStamp": {
+						"type": "string",
+						"title": "Source stamp",
+						"description": "The value that decides whether this item changed: a sitemap lastmod, a feed guid, or a fragment fingerprint.",
+						"maxLength": 128,
+						"example": "2026-09-04"
+					},
+					"seenAt": {
+						"type": "string",
+						"format": "date-time",
+						"title": "Seen at",
+						"description": "When the watch first saw this item.",
+						"example": "2026-09-05T06:05:12+00:00"
+					},
+					"relevanceScore": {
+						"type": "integer",
+						"title": "Relevance",
+						"description": "How relevant hermiq judged this item, 0 to 100. Absent when hermiq did not score it, which is not the same as a zero and is rendered as not scored.",
+						"minimum": 0,
+						"maximum": 100,
+						"example": 72
+					},
+					"relevanceReason": {
+						"type": "string",
+						"title": "Why",
+						"description": "The one-line reason hermiq gave for the score.",
+						"maxLength": 500,
+						"example": "Raakt dezelfde doelgroep en dezelfde aanbestedingen."
+					},
+					"agentAuthored": {
+						"type": "boolean",
+						"title": "Scored by an agent",
+						"description": "Whether the relevance on this event was written by an agent (ADR-088). The item itself is never agent-authored: it is somebody else's publication.",
+						"default": false,
+						"facetable": true,
+						"example": true
+					}
+				}
+			},
+			"socialConnection": {
+				"slug": "socialConnection",
+				"title": "Social Connection",
+				"icon": "AccountArrowRightOutline",
+				"version": "1.0.0",
+				"summary": "Whether we follow a client on a network, and whether they follow us.",
+				"description": "Written by ConnectionAuditService from the accounts connected in social-publishing and the handles a client carries. Both directions are yes, no or unknown rather than a boolean: only Mastodon and Bluesky expose a follower list an audit can read, and reporting no where the truth is that the API will not say would be an answer somebody acts on. The reason is per row rather than per network, because a Mastodon instance that hides its lists answers unknown on the same path a network without an API does.",
+				"x-schema-org": "schema:InteractionCounter",
+				"required": [
+					"network",
+					"counterpartHandle"
+				],
+				"properties": {
+					"accountId": {
+						"type": "string",
+						"title": "Our account",
+						"description": "The connected socialAccount the audit looked from.",
+						"maxLength": 64,
+						"example": "d4e5f607-1829-4a3b-8c4d-5e6f70819234"
+					},
+					"network": {
+						"type": "string",
+						"title": "Network",
+						"description": "The network this row is about.",
+						"enum": [
+							"mastodon",
+							"bluesky",
+							"linkedin",
+							"x",
+							"facebook",
+							"instagram",
+							"threads"
+						],
+						"facetable": true,
+						"example": "mastodon"
+					},
+					"clientId": {
+						"type": "string",
+						"title": "Client",
+						"description": "The client whose handle this is.",
+						"maxLength": 64,
+						"example": "b7f4a9c1-2d3e-4f56-8a90-1b2c3d4e5f60"
+					},
+					"counterpartHandle": {
+						"type": "string",
+						"title": "Their handle",
+						"description": "The handle on the other side.",
+						"minLength": 1,
+						"maxLength": 255,
+						"example": "voorbeeld@mastodon.example.org"
+					},
+					"counterpartUrl": {
+						"type": "string",
+						"title": "Their profile",
+						"description": "Their public profile, when the network gave one.",
+						"maxLength": 500,
+						"example": "https://mastodon.example.org/@voorbeeld"
+					},
+					"weFollowThem": {
+						"type": "string",
+						"title": "We follow them",
+						"description": "Whether our account follows theirs. Unknown means the network will not say, not that we do not.",
+						"default": "unknown",
+						"enum": [
+							"yes",
+							"no",
+							"unknown"
+						],
+						"facetable": true,
+						"example": "yes"
+					},
+					"theyFollowUs": {
+						"type": "string",
+						"title": "They follow us",
+						"description": "Whether their account follows ours, on the same three-value vocabulary.",
+						"default": "unknown",
+						"enum": [
+							"yes",
+							"no",
+							"unknown"
+						],
+						"facetable": true,
+						"example": "unknown"
+					},
+					"reason": {
+						"type": "string",
+						"title": "Reason",
+						"description": "Why the answer is unknown, in the words the page shows.",
+						"maxLength": 500,
+						"example": "LinkedIn exposes follower counts, not a list an audit can search."
+					},
+					"seenAt": {
+						"type": "string",
+						"format": "date-time",
+						"title": "Checked at",
+						"description": "When the audit last looked.",
+						"example": "2026-09-05T07:00:00+00:00"
+					}
+				}
+			}
+		},
+		"objects": [
+			{
+				"@self": {
+					"register": "pipelinq",
+					"schema": "competitor",
+					"slug": "competitor-voorbeeld-bv",
+					"id": "a1b2c3d4-5e6f-4708-9a1b-2c3d4e5f6071"
+				},
+				"name": "Voorbeeld B.V.",
+				"website": "https://example.org",
+				"feeds": [
+					"https://example.org/blog/feed.xml"
+				],
+				"sitemapUrl": "https://example.org/sitemap.xml",
+				"socialHandles": [
+					{
+						"network": "mastodon",
+						"handle": "voorbeeld@mastodon.example.org"
+					}
+				],
+				"active": true,
+				"notes": "Overlappende aanbestedingen bij gemeenten."
+			},
+			{
+				"@self": {
+					"register": "pipelinq",
+					"schema": "competitorWatch",
+					"slug": "competitor-watch-voorbeeld-feed",
+					"id": "c3d4e5f6-0718-4a2b-8c3d-4e5f60718293"
+				},
+				"competitorId": "a1b2c3d4-5e6f-4708-9a1b-2c3d4e5f6071",
+				"kind": "rss",
+				"target": "https://example.org/blog/feed.xml",
+				"schedule": "daily",
+				"active": true
+			},
+			{
+				"@self": {
+					"register": "pipelinq",
+					"schema": "competitorWatch",
+					"slug": "competitor-watch-voorbeeld-nieuws",
+					"id": "e5f60718-293a-4b4c-8d5e-6f7081923456"
+				},
+				"competitorId": "a1b2c3d4-5e6f-4708-9a1b-2c3d4e5f6071",
+				"kind": "page",
+				"target": "https://example.org/nieuws",
+				"selector": "#news",
+				"schedule": "daily",
+				"active": true
+			},
+			{
+				"@self": {
+					"register": "pipelinq",
+					"schema": "keywordTarget",
+					"slug": "keyword-target-woo-verzoek-indienen",
+					"id": "f6071829-3a4b-4c5d-8e6f-708192345678"
+				},
+				"term": "woo verzoek indienen",
+				"intent": "informational",
+				"status": "use-more",
+				"targetPageRef": "https://example.org/woo",
+				"proposalKind": "striking-distance",
+				"property": "sc-domain:example.org",
+				"notes": "Staat op positie elf. Een alinea over de termijn zou genoeg moeten zijn.",
+				"createdBy": "admin",
+				"createdAt": "2026-09-05T09:00:00+00:00"
+			}
+		]
+	}
+}

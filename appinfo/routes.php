@@ -571,6 +571,18 @@ return [
         // over a window plus the connection status. Static path, no wildcard.
         ['name' => 'searchConsole#index', 'url' => '/api/marketing/search-queries', 'verb' => 'GET'],
 
+        // Marketing — search intelligence (marketing-search-intelligence, phase 5).
+        // The proposals read serves the whole Keywords page in ONE request; the
+        // confirmation is the only path that creates a keywordTarget. Every
+        // path here is literal except the watch id, which comes last (ADR-016).
+        ['name' => 'keywordIntelligence#proposals', 'url' => '/api/marketing/keyword-proposals', 'verb' => 'GET'],
+        ['name' => 'keywordIntelligence#targets',   'url' => '/api/marketing/keyword-targets',   'verb' => 'GET'],
+        ['name' => 'keywordIntelligence#confirm',   'url' => '/api/marketing/keyword-targets',   'verb' => 'POST'],
+        ['name' => 'marketingConnector#matomo',          'url' => '/api/marketing/matomo/report',    'verb' => 'GET'],
+        ['name' => 'marketingConnector#connectionAudit', 'url' => '/api/marketing/connection-audit', 'verb' => 'GET'],
+        ['name' => 'competitorWatch#index', 'url' => '/api/marketing/watch-events', 'verb' => 'GET'],
+        ['name' => 'competitorWatch#run',   'url' => '/api/marketing/competitor-watches/{id}/run', 'verb' => 'POST'],
+
         // Marketing — Campaigns (marketing-campaigns): the aggregate report the
         // one campaign report page renders from, and the action that asks
         // portaliq for a landing page. Plain campaign reads and writes go

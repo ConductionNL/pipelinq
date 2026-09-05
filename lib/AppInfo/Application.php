@@ -41,6 +41,7 @@ use OCA\Pipelinq\Dashboard\RecentActivitiesWidget;
 use OCA\Pipelinq\Dashboard\StartRequestWidget;
 use OCA\Pipelinq\Event\LandingPageFormSubmittedEvent;
 use OCA\Pipelinq\Event\TimeEntryApprovedEvent;
+use OCA\Pipelinq\Flow\PipelinqFlowNodeListener;
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
 use OCA\Pipelinq\Lifecycle\PosRefundManagerGuard;
 use OCA\Pipelinq\Lifecycle\PosTransactionAccessGuard;
@@ -262,6 +263,18 @@ class Application extends App implements IBootstrap {
 		$context->registerEventListener(
 			event: LandingPageFormSubmittedEvent::class,
 			listener: LandingPageFormSubmittedListener::class
+		);
+
+		// Marketing: contribute the competitor-watch step to OpenRegister's
+		// flow catalogue (ADR-065, ADR-094). The engine owns the schedule and
+		// pipelinq owns the step, which is the only way a scheduled watch can
+		// exist at all: the node registry has no outbound-HTTP node, so a flow
+		// built from stock nodes cannot fetch a feed. Registering against a
+		// class OpenRegister owns is safe with OpenRegister absent: the event
+		// is simply never dispatched.
+		$context->registerEventListener(
+			event: \OCA\OpenRegister\Service\Flow\RegisterFlowNodesEvent::class,
+			listener: PipelinqFlowNodeListener::class
 		);
 
 		$context->registerDashboardWidget(DealsOverviewWidget::class);

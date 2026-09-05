@@ -21,11 +21,11 @@ Competitor watches MUST be driven by an OpenRegister flow: a `openregister.trigg
 - **WHEN** `lib/BackgroundJob/` is enumerated
 - **THEN** no job references a competitor watch
 
-#### Scenario: The node refuses to run without an acting identity
+#### Scenario: The node does not scope itself, because the dispatcher already does
 
-@e2e exclude the node executes inside the engine, which the CI instance does not fire. Asserted by tests/Unit/Flow/CompetitorWatchRunNodeTest.php (testRefusesWithoutAnActingIdentity, testRunsOnlyTheWatchesThatAreDue).
-- **WHEN** the node executes with no acting identity in its context
-- **THEN** it throws rather than reading the register as nobody, and with an identity it runs only the watches whose schedule is due
+@e2e exclude the node executes inside the engine, which the CI instance does not fire. Asserted by tests/Unit/Flow/CompetitorWatchRunNodeTest.php (testDoesNotDeclareItselfSelfScoped, testRunsOnlyTheWatchesThatAreDue, testOneFailingWatchDoesNotStopTheRun).
+- **WHEN** the node executes
+- **THEN** it runs only the watches whose schedule is due, it does not wrap itself in a run-as scope (the dispatcher wraps every contributed node in the run's acting identity, and self-wrapping double-scopes), and a watch that fails leaves the rest of the run intact
 
 ### Requirement: Five watch kinds, and the two that are excluded are named
 
@@ -77,7 +77,7 @@ A `competitorWatch.kind` MUST be one of `rss`, `sitemap`, `page`, `fediverse` or
 
 ### Requirement: A page watch diffs a selected fragment and stores a fingerprint
 
-A `page` watch MUST take a CSS selector and compare only the fragment it selects. `PageWatchReader::diff()` MUST return whether the fragment changed and a short summary naming what was added and what was removed. The watch MUST store a **fingerprint** of the fragment, never the fragment itself, so Pipelinq does not become a copy of somebody else's page. A selector that matches nothing MUST report `unparsable` with the selector in the reason, not silently report "no change" forever.
+A `page` watch MUST take a CSS selector and compare only the fragment it selects. `PageWatchReader::diff()` MUST return whether the fragment changed and a short summary. The watch MUST store **fingerprints** of the fragment and of its lines, never the fragment itself, so Pipelinq does not become a copy of somebody else's page. The summary MUST therefore quote only lines that were ADDED, which come from the run's own fresh fetch, and MUST report removals as a count rather than as text, because the previous text is deliberately not kept. A selector that matches nothing MUST report `unparsable` with the selector in the reason, not silently report "no change" forever.
 
 #### Scenario: Only the selected fragment decides a change
 
@@ -91,11 +91,11 @@ A `page` watch MUST take a CSS selector and compare only the fragment it selects
 - **WHEN** the selector matches no element
 - **THEN** the result is `unparsable` and names the selector
 
-#### Scenario: The stored state is a fingerprint
+#### Scenario: The stored state is fingerprints, and removals are counted rather than quoted
 
-@e2e exclude the stored value is inspected in the unit suite. Asserted by tests/Unit/Service/Competitor/PageWatchReaderTest.php (testStoresAFingerprintAndNotTheFragment).
-- **WHEN** a page watch runs against a fragment carrying a distinctive sentence
-- **THEN** the stored state does not contain that sentence
+@e2e exclude the stored value is inspected in the unit suite. Asserted by tests/Unit/Service/Competitor/PageWatchReaderTest.php (testStoresFingerprintsAndNotTheFragment, testQuotesAddedLinesAndCountsRemovedOnes).
+- **WHEN** a page watch runs against a fragment carrying a distinctive sentence, and a later run removes it
+- **THEN** the stored state never contains that sentence, the summary quotes only the lines the fresh fetch added, and the removed one appears as a count
 
 ### Requirement: A watch event is written once per watch and URL
 

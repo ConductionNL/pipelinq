@@ -27,9 +27,11 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Service\Matomo\MatomoReportService;
 use OCP\IAppConfig;
 use OCP\IConfig;
 use Psr\Log\LoggerInterface;
+use UnexpectedValueException;
 
 /**
  * Service for managing Pipelinq settings.
@@ -291,6 +293,35 @@ class SettingsService {
 		// to blast.traffic_portal, so a tenant with one portal configures it
 		// once.
 		'marketing.landing_portal' => '',
+		// Marketing search intelligence (marketing-search-intelligence).
+		// The OpenConnector source that reaches OUR OWN site, so the content
+		// gap check can read what our pages say. Empty means the gap check
+		// does not run, and the page says so rather than reporting no gaps.
+		'search.crawl_source' => '',
+		// Impressions a query needs over the window before any keyword
+		// derivation calls it a finding. Empty falls back to the documented
+		// default in KeywordAnalysisService.
+		'search.striking_min_impressions' => '',
+		// Matomo. The base URL and site id are for the settings page and for
+		// links out; the CALL goes through the OpenConnector source in
+		// matomo.source_id, which is where the credential is resolved.
+		'matomo.base_url' => '',
+		'matomo.site_id' => '',
+		'matomo.source_id' => '',
+		// The BROKERED CREDENTIAL for Matomo, by reference. Never a token:
+		// a value that looks like Matomo's 32-character token_auth is refused
+		// at the write, because pasting one here is the likeliest way rule 2
+		// of the marketing architecture gets broken and it is silent
+		// otherwise (ADR-064).
+		'matomo.credential_ref' => '',
+		// The OpenConnector source competitor reads leave through, and the
+		// user agent those reads identify themselves with. Relevance scoring
+		// is OFF unless it says true: it sends a competitor's headline to the
+		// configured model, which is a decision an administrator makes.
+		'competitor.egress_source' => '',
+		'competitor.user_agent' => '',
+		'competitor.relevance' => 'false',
+		'competitor.relevance_context' => '',
 	];
 
 	/**
@@ -363,6 +394,8 @@ class SettingsService {
 	 * @spec openspec/specs/admin-settings/spec.md
 	 */
 	public function updateSettings(array $data): array {
+		$this->refuseAMatomoToken(data: $data);
+
 		foreach (self::CONFIG_KEYS as $key) {
 			if (isset($data[$key]) === true) {
 				$this->appConfig->setValueString(Application::APP_ID, $key, (string)$data[$key]);
@@ -391,6 +424,38 @@ class SettingsService {
 
 		return $this->getSettings();
 	}//end updateSettings()
+
+	/**
+	 * Refuse a raw Matomo token written into the credential REFERENCE field.
+	 *
+	 * Rule 2 of the marketing architecture and ADR-064 say a token lives in
+	 * the credential broker and never in a setting. `matomo.credential_ref`
+	 * holds a credential UUID, and the single most likely way that rule gets
+	 * broken is somebody pasting the `token_auth` from Matomo's own settings
+	 * page into a field that accepts any string. Matomo's token is 32
+	 * hexadecimal characters, which is recognisable, so it is recognised and
+	 * refused rather than stored and quietly logged.
+	 *
+	 * @param array $data The settings data being written.
+	 *
+	 * @return void
+	 *
+	 * @throws UnexpectedValueException When the reference field carries a token.
+	 *
+	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-analytics-connectors/spec.md#requirement-matomo-is-read-through-a-source-with-the-token-as-a-credential-reference
+	 */
+	private function refuseAMatomoToken(array $data): void {
+		$value = trim((string)($data[MatomoReportService::CREDENTIAL_KEY] ?? ''));
+		if ($value === '' || MatomoReportService::looksLikeAToken(value: $value) === false) {
+			return;
+		}
+
+		throw new UnexpectedValueException(
+			'That looks like a Matomo token rather than a credential reference. '
+			. 'Store the token in the credential broker and put the credential\'s id here, '
+			. 'so Pipelinq never holds the secret.'
+		);
+	}//end refuseAMatomoToken()
 
 	/**
 	 * Load settings by importing the register JSON via ConfigurationService.

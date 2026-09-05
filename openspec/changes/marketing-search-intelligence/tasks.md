@@ -37,7 +37,7 @@ Phase 5 of the pipelinq marketing programme. Read `design.md` first: the flow-en
   - **spec_ref**: `specs/marketing-competitor-watches/spec.md#requirement-a-feed-watch-reports-the-entries-it-has-not-seen`
 - [ ] 5.2 Add `lib/Service/Competitor/RelevanceScorer.php` (hermiq or unscored, never zero, off by default, agent-marked per ADR-088), `WatchEventStore.php` (upsert per watch and URL) and `CompetitorWatchService.php` (due selection, per-watch outcome, one failing watch does not stop the run); verify a second run over unchanged input writes nothing new.
   - **spec_ref**: `specs/marketing-competitor-watches/spec.md#requirement-relevance-is-scored-by-hermiq-or-left-unscored`
-- [ ] 5.3 Add `lib/Flow/CompetitorWatchRunNode.php` and `lib/Flow/PipelinqFlowNodeListener.php`, registered on `RegisterFlowNodesEvent` in `Application.php`, and `lib/Command/CompetitorWatchRunCommand.php` for an on-demand run; verify the node refuses without an acting identity, runs only the due watches, and that `lib/BackgroundJob/` gained nothing.
+- [ ] 5.3 Add `lib/Flow/CompetitorWatchRunNode.php` and `lib/Flow/PipelinqFlowNodeListener.php`, registered on `RegisterFlowNodesEvent` in `Application.php`, and `lib/Command/CompetitorWatchRunCommand.php` for an on-demand run; verify the node runs only the due watches, never self-scopes (the dispatcher already wraps a contributed node in the run identity, and self-wrapping double-scopes), and that `lib/BackgroundJob/` gained nothing.
   - **spec_ref**: `specs/marketing-competitor-watches/spec.md#requirement-a-watch-runs-on-an-openregister-flow-schedule-and-never-on-a-job-of-ours`
 
 ## 6. Connection audit
