@@ -29,7 +29,7 @@
           "posRefundLine",
           "cashShift",
           "cashDrop",
-          "cashCount",
+          "posCashCount",
           "cashDiff"
         ]
       }
@@ -186,8 +186,8 @@
           }
         }
       },
-      "cashCount": {
-        "slug": "cashCount",
+      "posCashCount": {
+        "slug": "posCashCount",
         "title": "Cash Count",
         "icon": "Counter",
         "version": "1.0.0",
@@ -271,8 +271,8 @@
           "count": {
             "type": "string",
             "format": "uuid",
-            "$ref": "cashCount",
-            "description": "UUID reference to the cashCount this diff reconciles",
+            "$ref": "posCashCount",
+            "description": "UUID reference to the posCashCount this diff reconciles",
             "facetable": true,
             "title": "Count"
           },
@@ -437,7 +437,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "cashCount",
+          "schema": "posCashCount",
           "slug": "count-2026-0520-01"
         },
         "shift": "@ref:shift-2026-0520-01",
@@ -449,7 +449,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "cashCount",
+          "schema": "posCashCount",
           "slug": "count-2026-0521-02"
         },
         "shift": "@ref:shift-2026-0521-02",
@@ -460,7 +460,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "cashCount",
+          "schema": "posCashCount",
           "slug": "count-2026-0521-01"
         },
         "shift": "@ref:shift-2026-0521-01",

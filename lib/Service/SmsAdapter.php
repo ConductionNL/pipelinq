@@ -65,7 +65,7 @@ class SmsAdapter {
 	/**
 	 * Default conversation schema slug.
 	 */
-	private const DEFAULT_CONVERSATION_SCHEMA_SLUG = 'conversation';
+	private const DEFAULT_CONVERSATION_SCHEMA_SLUG = 'channelConversation';
 
 	/**
 	 * Default contact schema slug (in the pipelinq register; the

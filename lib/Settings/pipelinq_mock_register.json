@@ -1260,7 +1260,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "cashCount",
+          "schema": "posCashCount",
           "slug": "cashcount-cashcount-1-1"
         },
         "shift": "00000000-0000-4000-8000-000000000000",
@@ -1275,7 +1275,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "cashCount",
+          "schema": "posCashCount",
           "slug": "cashcount-cashcount-2-2"
         },
         "shift": "00000000-0000-4000-8000-000000000001",
@@ -1290,7 +1290,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "cashCount",
+          "schema": "posCashCount",
           "slug": "cashcount-cashcount-3-3"
         },
         "shift": "00000000-0000-4000-8000-000000000002",
@@ -1995,7 +1995,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "conversation",
+          "schema": "channelConversation",
           "slug": "conversation-conversation-1-1"
         },
         "channel": "email",
@@ -2009,7 +2009,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "conversation",
+          "schema": "channelConversation",
           "slug": "conversation-conversation-2-2"
         },
         "channel": "web-form",
@@ -2023,7 +2023,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "conversation",
+          "schema": "channelConversation",
           "slug": "conversation-conversation-3-3"
         },
         "channel": "chat",

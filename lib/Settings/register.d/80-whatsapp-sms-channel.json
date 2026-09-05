@@ -8,7 +8,7 @@
           "messagingConsentRecord",
           "messageSendBudget",
           "message",
-          "conversation"
+          "channelConversation"
         ]
       }
     },
@@ -442,9 +442,9 @@
           }
         }
       },
-      "conversation": {
+      "channelConversation": {
         "x-schema-org": "schema:Conversation",
-        "slug": "conversation",
+        "slug": "channelConversation",
         "title": "Conversation",
         "icon": "ForumOutline",
         "version": "1.0.0",
