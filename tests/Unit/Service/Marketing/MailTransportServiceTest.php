@@ -21,6 +21,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service\Marketing;
 
+use OCA\Pipelinq\Service\ArticleService;
+use OCA\Pipelinq\Service\Marketing\ListObjectStore;
 use OCA\Pipelinq\Service\Marketing\MailTransportService;
 use OCP\IAppConfig;
 use OCP\Mail\IMailer;
@@ -122,7 +124,13 @@ class MailTransportServiceTest extends TestCase {
 			}
 		);
 
-		$this->service = new MailTransportService($this->container, $this->appConfig, $this->mailer, $this->logger);
+		$this->service = new MailTransportService(
+			$this->container,
+			$this->appConfig,
+			$this->mailer,
+			new ArticleService($this->makeArticleStore()),
+			$this->logger,
+		);
 	}//end setUp()
 
 	/**
@@ -410,7 +418,13 @@ class MailTransportServiceTest extends TestCase {
 				throw new \RuntimeException('not registered: ' . $id);
 			}
 		);
-		$this->service = new MailTransportService($this->container, $this->appConfig, $this->mailer, $this->logger);
+		$this->service = new MailTransportService(
+			$this->container,
+			$this->appConfig,
+			$this->mailer,
+			new ArticleService($this->makeArticleStore()),
+			$this->logger,
+		);
 
 		$delivery = ['uuid' => 'd-prov', 'email' => 'user@example.com'];
 		$template = ['subject' => 'Hi', 'bodyHtml' => '<p>hi</p>'];
@@ -421,4 +435,204 @@ class MailTransportServiceTest extends TestCase {
 		$this->assertSame('p-1', $this->objectService->store['d-prov']['providerId']);
 		$this->assertSame('sent', $this->objectService->store['d-prov']['status']);
 	}//end testSendOneDeliveryDispatchesToConnectorSourceTransport()
+
+	/**
+	 * buildRenderedMail() expands a template's `{{articles}}` marker in both
+	 * the HTML and the text body before dispatch.
+	 *
+	 * ArticleServiceTest proves the renderer produces the right block. That
+	 * says nothing about whether this class ever calls it: a template key
+	 * that is read nowhere renders a body still carrying the marker, and
+	 * every renderer test stays green. This asserts the wire, from a stored
+	 * template with `articleIds` to the JSON body the connector receives —
+	 * porting the coverage `BlastService::renderTemplate()` used to carry
+	 * before marketing-mail-transports moved rendering into this class.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/marketing-article-hub/specs/marketing-blast/spec.md#requirement-a-campaign-template-may-embed-articles
+	 */
+	public function testSendOneDeliveryExpandsTheArticlesMarkerInBothBodies(): void {
+		$transport = [
+			'uuid' => 't-articles',
+			'kind' => 'provider',
+			'provider' => 'sendgrid',
+			'connectorSourceId' => 'oc-source-articles',
+			'dailyLimit' => 0,
+			'sentToday' => 0,
+		];
+		$this->objectService->store['t-articles'] = $transport;
+		$this->objectService->store['oc-source-articles'] = ['uuid' => 'oc-source-articles'];
+
+		$callService = new class {
+			/** @var array<int, array<string, mixed>> */
+			public array $calls = [];
+
+			public function call(array|object $source, string $endpoint, string $method, array $config): object {
+				$this->calls[] = $config['json'];
+				return new class {
+					public function getObject(): array {
+						return [
+							'statusCode' => 200,
+							'response' => ['statusCode' => 200, 'body' => json_encode(['providerId' => 'p-articles']), 'encoding' => 'UTF-8'],
+						];
+					}
+				};
+			}
+		};
+
+		$articleStore = $this->makeArticleStore();
+		$articleStore->save(
+			schemaSlug: 'article',
+			payload: [
+				'title' => 'OpenRegister 3.0 is uit',
+				'summary' => 'Wat er verandert en wat je moet doen.',
+				'language' => 'nl',
+				'portalPageRef' => 'https://example.org/nieuws/openregister-3-0',
+			],
+			id: 'article-1',
+		);
+
+		$objectService = $this->objectService;
+		$this->container = $this->createMock(ContainerInterface::class);
+		$this->container->method('get')->willReturnCallback(
+			function (string $id) use ($callService, $objectService) {
+				if ($id === 'OCA\\OpenRegister\\Service\\ObjectService') {
+					return $objectService;
+				}
+
+				if ($id === 'OCA\\OpenConnector\\Service\\CallService') {
+					return $callService;
+				}
+
+				throw new \RuntimeException('not registered: ' . $id);
+			}
+		);
+		$this->service = new MailTransportService(
+			$this->container,
+			$this->appConfig,
+			$this->mailer,
+			new ArticleService($articleStore),
+			$this->logger,
+		);
+
+		$delivery = ['uuid' => 'd-articles', 'email' => 'c1@example.test'];
+		$template = [
+			'subject' => 'Nieuwsbrief',
+			'bodyHtml' => '<p>Hallo</p>{{articles}}',
+			'bodyText' => "Hallo\n\n{{articles}}",
+			'articleIds' => ['article-1'],
+		];
+
+		$result = $this->service->sendOneDelivery($delivery, $template, $transport);
+
+		$this->assertTrue($result);
+		$this->assertCount(1, $callService->calls);
+		$rendered = $callService->calls[0];
+		$this->assertStringNotContainsString('{{articles}}', $rendered['bodyHtml']);
+		$this->assertStringNotContainsString('{{articles}}', $rendered['bodyText']);
+		$this->assertStringContainsString('<h2>OpenRegister 3.0 is uit</h2>', $rendered['bodyHtml']);
+		$this->assertStringContainsString('Lees verder', $rendered['bodyHtml']);
+		$this->assertStringContainsString('OpenRegister 3.0 is uit', $rendered['bodyText']);
+	}//end testSendOneDeliveryExpandsTheArticlesMarkerInBothBodies()
+
+	/**
+	 * A template with no `{{articles}}` marker and no articleIds renders
+	 * byte-identical: a template written before this feature sends exactly
+	 * as it did.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/marketing-article-hub/specs/marketing-blast/spec.md#requirement-a-campaign-template-may-embed-articles
+	 */
+	public function testSendOneDeliveryLeavesATemplateWithNoMarkerUnchanged(): void {
+		$transport = ['uuid' => 't-no-articles', 'kind' => 'instance', 'dailyLimit' => 0, 'sentToday' => 0];
+		$this->objectService->store['t-no-articles'] = $transport;
+
+		$message = $this->createMock(IMessage::class);
+		$message->method('setFrom')->willReturn($message);
+		$message->method('setTo')->willReturn($message);
+		$message->method('setReplyTo')->willReturn($message);
+		$message->method('setSubject')->willReturn($message);
+		$html = null;
+		$message->method('setHtmlBody')->willReturnCallback(
+			function (string $value) use ($message, &$html) {
+				$html = $value;
+				return $message;
+			}
+		);
+		$this->mailer->method('createMessage')->willReturn($message);
+		$this->mailer->method('send')->willReturn([]);
+
+		$delivery = ['uuid' => 'd-no-articles', 'email' => 'user@example.com'];
+		$template = ['subject' => 'Hi', 'bodyHtml' => '<p>hi, no marker here</p>'];
+
+		$result = $this->service->sendOneDelivery($delivery, $template, $transport);
+
+		$this->assertTrue($result);
+		$this->assertSame('<p>hi, no marker here</p>', $html);
+	}//end testSendOneDeliveryLeavesATemplateWithNoMarkerUnchanged()
+
+	/**
+	 * Build an in-memory {@see ListObjectStore} double for {@see ArticleService}.
+	 *
+	 * @return ListObjectStore
+	 */
+	private function makeArticleStore(): ListObjectStore {
+		return new class(
+			$this->createMock(ContainerInterface::class),
+			$this->createMock(IAppConfig::class),
+			$this->createMock(LoggerInterface::class),
+		) extends ListObjectStore {
+			/** @var array<string, array<string, array<string, mixed>>> */
+			public array $rows = [];
+
+			/**
+			 * @param string $configKey Ignored.
+			 * @param string $default The slug.
+			 * @return string The slug.
+			 */
+			public function schemaSlug(string $configKey, string $default): string {
+				return $default;
+			}
+
+			/**
+			 * @param string $schemaSlug The schema.
+			 * @param string $id The id.
+			 * @return array<string, mixed>|null The row.
+			 */
+			public function find(string $schemaSlug, string $id): ?array {
+				return ($this->rows[$schemaSlug][$id] ?? null);
+			}
+
+			/**
+			 * @param string $schemaSlug The schema.
+			 * @param array<string, string> $filters Field-value pairs.
+			 * @return array<int, array<string, mixed>> The rows.
+			 */
+			public function findAll(string $schemaSlug, array $filters = []): array {
+				return array_values(($this->rows[$schemaSlug] ?? []));
+			}
+
+			/**
+			 * @param string $schemaSlug The schema.
+			 * @param array<string, mixed> $payload The payload.
+			 * @param string|null $id Existing id.
+			 * @return array<string, mixed>|null The saved row.
+			 */
+			public function save(string $schemaSlug, array $payload, ?string $id = null): ?array {
+				$payload['id'] = (string)$id;
+				$this->rows[$schemaSlug][(string)$id] = $payload;
+				return $payload;
+			}
+
+			/**
+			 * @param array<string, mixed>|null $payload The row.
+			 * @return string The id.
+			 */
+			public function idOf(?array $payload): string {
+				return (string)($payload['id'] ?? '');
+			}
+		};
+	}//end makeArticleStore()
 }//end class

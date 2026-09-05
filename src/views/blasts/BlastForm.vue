@@ -105,6 +105,34 @@
 					role="alert">
 					{{ templateValidationError }}
 				</p>
+
+				<NcLoadingIcon v-if="previewLoading" :size="24" />
+
+				<div v-else-if="preview" class="blast-form__preview">
+					<h3>{{ t('pipelinq', 'Preview') }}</h3>
+					<p v-if="preview.subject" class="blast-form__preview-subject">
+						{{ preview.subject }}
+					</p>
+					<!-- eslint-disable vue/no-v-html -- preview.bodyHtml is the server's own expandArticlesMarker() output, already sanitised there -->
+					<div
+						class="blast-form__preview-body"
+						v-html="preview.bodyHtml" />
+					<!-- eslint-enable vue/no-v-html -->
+					<ul
+						v-if="preview.articles && preview.articles.length"
+						class="blast-form__preview-articles">
+						<li
+							v-for="(article, index) in preview.articles"
+							:key="index">
+							<strong>{{ article.title }}</strong>
+							<p
+								v-if="article.summary"
+								class="blast-form__preview-article-summary">
+								{{ article.summary }}
+							</p>
+						</li>
+					</ul>
+				</div>
 			</section>
 
 			<!-- Step 4: channel -->
@@ -260,6 +288,7 @@ import {
 	NcSelect,
 } from '@nextcloud/vue'
 import MissingConsentModal from '../../modals/MissingConsentModal.vue'
+import { previewTemplate } from '../../services/articlesApi.js'
 
 const STEPS = [
 	{ key: 'name', labelKey: 'Name' },
@@ -320,6 +349,8 @@ export default {
 			connectorSourcesLoading: false,
 			transportsLoading: false,
 			templateValidationError: '',
+			preview: null,
+			previewLoading: false,
 			showConsentModal: false,
 			missingConsentContacts: [],
 			consentDecision: null,
@@ -475,11 +506,22 @@ export default {
 			this.model.listId = ''
 		},
 
+		/**
+		 * @param {object|null} option The template just picked, or null.
+		 * @spec openspec/changes/marketing-article-hub/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
+		 * @return {void}
+		 */
 		selectedTemplate(option) {
 			this.model.templateId = option?.id || ''
 			this.validateTemplate()
+			this.loadPreview()
 		},
 
+		/**
+		 * @param {string} value The channel just picked.
+		 * @spec openspec/changes/marketing-article-hub/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
+		 * @return {void}
+		 */
 		selectedChannel(value) {
 			this.model.channel = value
 			// Drop the template if it no longer matches the channel.
@@ -488,6 +530,7 @@ export default {
 				this.model.templateId = ''
 			}
 			this.validateTemplate()
+			this.loadPreview()
 		},
 
 		selectedConnectorSource(option) {
@@ -669,6 +712,30 @@ export default {
 				const msg = e?.response?.data?.error
 				this.templateValidationError =
 					msg || this.t('pipelinq', 'Template validation failed.')
+			}
+		},
+
+		/**
+		 * Load the rendered preview for the selected template: its bodies
+		 * with the `{{articles}}` marker already expanded, produced by the
+		 * same `ArticleService::expandArticlesMarker()` call the send path
+		 * runs — so what a marketer reads here is what will send.
+		 *
+		 * @spec openspec/changes/marketing-article-hub/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
+		 * @return {Promise<void>} Resolves when the preview is in place.
+		 */
+		async loadPreview() {
+			this.preview = null
+			if (!this.selectedTemplate) {
+				return
+			}
+			this.previewLoading = true
+			try {
+				this.preview = await previewTemplate(this.selectedTemplate.id)
+			} catch {
+				this.preview = null
+			} finally {
+				this.previewLoading = false
 			}
 		},
 
@@ -898,6 +965,36 @@ export default {
 	color: var(--color-error);
 	font-weight: 600;
 	margin: 0;
+}
+
+.blast-form__preview {
+	margin-block-start: 12px;
+	padding: 12px;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius);
+}
+
+.blast-form__preview h3 {
+	margin: 0 0 8px;
+}
+
+.blast-form__preview-subject {
+	font-weight: 600;
+}
+
+.blast-form__preview-body {
+	color: var(--color-text-maxcontrast);
+}
+
+.blast-form__preview-articles {
+	list-style: none;
+	margin: 8px 0 0;
+	padding: 0;
+}
+
+.blast-form__preview-article-summary {
+	margin: 0;
+	color: var(--color-text-maxcontrast);
 }
 
 .blast-form__checkbox {

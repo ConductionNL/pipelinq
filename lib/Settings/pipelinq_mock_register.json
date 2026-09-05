@@ -6122,6 +6122,96 @@
         "position": 3.9,
         "source": "gsc",
         "importedAt": "2026-09-04T03:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "article",
+          "slug": "article-voorbeeld-title-1-1"
+        },
+        "title": "Voorbeeld Title 1",
+        "slug": "abc",
+        "summary": "Voorbeeld Summary 1",
+        "body": "Voorbeeld Body 1",
+        "heroImage": "Voorbeeld Heroimage 1",
+        "links": [
+          {
+            "label": "Voorbeeld Label 1",
+            "url": "Voorbeeld Url 1"
+          }
+        ],
+        "tags": [
+          "Voorbeeld Tags 1"
+        ],
+        "language": "nl",
+        "status": "draft",
+        "author": "Voorbeeld Author 1",
+        "publishedAt": "2026-03-01T09:00:00+00:00",
+        "portalPageRef": "Voorbeeld Portalpageref 1",
+        "agentAuthored": false,
+        "agentAuthoredBy": "Voorbeeld Agentauthoredby 1",
+        "createdAt": "2026-03-01T09:00:00+00:00",
+        "updatedAt": "2026-03-01T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "article",
+          "slug": "article-voorbeeld-title-2-2"
+        },
+        "title": "Voorbeeld Title 2",
+        "slug": "bcd",
+        "summary": "Voorbeeld Summary 2",
+        "body": "Voorbeeld Body 2",
+        "heroImage": "Voorbeeld Heroimage 2",
+        "links": [
+          {
+            "label": "Voorbeeld Label 2",
+            "url": "Voorbeeld Url 2"
+          }
+        ],
+        "tags": [
+          "Voorbeeld Tags 2"
+        ],
+        "language": "nl",
+        "status": "review",
+        "author": "Voorbeeld Author 2",
+        "publishedAt": "2026-03-02T09:00:00+00:00",
+        "portalPageRef": "Voorbeeld Portalpageref 2",
+        "agentAuthored": false,
+        "agentAuthoredBy": "Voorbeeld Agentauthoredby 2",
+        "createdAt": "2026-03-02T09:00:00+00:00",
+        "updatedAt": "2026-03-02T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "article",
+          "slug": "article-voorbeeld-title-3-3"
+        },
+        "title": "Voorbeeld Title 3",
+        "slug": "cde",
+        "summary": "Voorbeeld Summary 3",
+        "body": "Voorbeeld Body 3",
+        "heroImage": "Voorbeeld Heroimage 3",
+        "links": [
+          {
+            "label": "Voorbeeld Label 3",
+            "url": "Voorbeeld Url 3"
+          }
+        ],
+        "tags": [
+          "Voorbeeld Tags 3"
+        ],
+        "language": "nl",
+        "status": "published",
+        "author": "Voorbeeld Author 3",
+        "publishedAt": "2026-03-03T09:00:00+00:00",
+        "portalPageRef": "Voorbeeld Portalpageref 3",
+        "agentAuthored": false,
+        "agentAuthoredBy": "Voorbeeld Agentauthoredby 3",
+        "createdAt": "2026-03-03T09:00:00+00:00",
+        "updatedAt": "2026-03-03T09:00:00+00:00"
       }
     ]
   }

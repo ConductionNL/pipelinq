@@ -21,6 +21,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\Pipelinq\Service\ArticleService;
 use OCA\Pipelinq\Service\BlastService;
 use OCA\Pipelinq\Service\Marketing\MailTransportService;
 use OCA\Pipelinq\Service\SegmentService;
@@ -220,7 +221,7 @@ class BlastServiceTest extends TestCase {
 	 * @return BlastService
 	 */
 	private function buildService(ContainerInterface $container, IAppConfig $appConfig): BlastService {
-		$mailTransportService = new MailTransportService($container, $appConfig, $this->mailer, $this->logger);
+		$mailTransportService = new MailTransportService($container, $appConfig, $this->mailer, $this->createMock(ArticleService::class), $this->logger);
 		return new BlastService($container, $appConfig, $this->segmentService, $mailTransportService, $this->logger);
 	}//end buildService()
 
@@ -815,7 +816,7 @@ class BlastServiceTest extends TestCase {
 
 		// Use a throttle-counting subclass to assert the rate-limit hook
 		// is invoked between batches without sleeping the test.
-		$mailTransportService = new MailTransportService($this->container, $this->appConfig, $this->mailer, $this->logger);
+		$mailTransportService = new MailTransportService($this->container, $this->appConfig, $this->mailer, $this->createMock(ArticleService::class), $this->logger);
 		$service = new class($this->container, $this->appConfig, $this->segmentService, $mailTransportService, $this->logger) extends BlastService {
 
 			/**

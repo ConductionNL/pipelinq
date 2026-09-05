@@ -33,6 +33,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\Marketing;
 
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Service\ArticleService;
 use OCA\Pipelinq\Service\Marketing\Transport\ConnectorSourceTransport;
 use OCA\Pipelinq\Service\Marketing\Transport\InstanceMailerTransport;
 use OCA\Pipelinq\Service\Marketing\Transport\MailAccountTransport;
@@ -85,17 +86,27 @@ class MailTransportService {
 	private const DEFAULT_RATE_LIMIT_PER_SECOND = 100;
 
 	/**
+	 * Articles resolved for a set of ids, memoised for the life of the
+	 * request so a per-delivery render does not reload them.
+	 *
+	 * @var array<string, array<int, array<string, mixed>>>
+	 */
+	private array $resolvedArticles = [];
+
+	/**
 	 * Constructor.
 	 *
 	 * @param ContainerInterface $container DI container.
 	 * @param IAppConfig $appConfig Pipelinq app config.
 	 * @param IMailer $mailer Nextcloud's own mailer (instance-mailer transport).
+	 * @param ArticleService $articleService Article reader and `{{articles}}` renderer.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
 		private ContainerInterface $container,
 		private IAppConfig $appConfig,
 		private IMailer $mailer,
+		private ArticleService $articleService,
 		private LoggerInterface $logger,
 	) {
 	}//end __construct()
@@ -213,14 +224,20 @@ class MailTransportService {
 	 * `{{unsubscribe_link}}` when the delivery carries one (a mailing-list
 	 * send always does; a segment send has no membership to unsubscribe from,
 	 * so the token resolves empty) — matching the pre-existing
-	 * `BlastService::renderTemplate()` semantics. First-party tracking
-	 * injection (when enabled) runs on the HTML body before the mail is
-	 * handed to any transport.
+	 * `BlastService::renderTemplate()` semantics. Before those tokens are
+	 * substituted, the template's own `{{articles}}` marker (when present)
+	 * is expanded via `ArticleService::expandArticlesMarker()` — the same
+	 * call `TemplateController::preview()` runs, so what a marketer saw in
+	 * the preview is what sends. First-party tracking injection (when
+	 * enabled) runs on the HTML body before the mail is handed to any
+	 * transport.
 	 *
 	 * @param array<string, mixed> $template CampaignTemplate row.
 	 * @param array<string, mixed> $delivery BlastDelivery row.
 	 *
 	 * @return RenderedMail
+	 *
+	 * @spec openspec/changes/marketing-article-hub/specs/marketing-blast/spec.md#requirement-a-campaign-template-may-embed-articles
 	 */
 	private function buildRenderedMail(array $template, array $delivery): RenderedMail {
 		$tokens = [
@@ -237,7 +254,7 @@ class MailTransportService {
 			'{{unsubscribe_link}}' => (string)($delivery['unsubscribeUrl'] ?? ''),
 		];
 
-		$html = strtr((string)($template['bodyHtml'] ?? ''), $tokens);
+		$html = strtr($this->expandArticles(template: $template, format: ArticleService::FORMAT_HTML), $tokens);
 		$deliveryId = $this->extractId(payload: $delivery);
 		if ($this->firstPartyTrackingEnabled() === true) {
 			$html = $this->injectTrackingLinks(html: $html, blastDeliveryId: $deliveryId);
@@ -250,11 +267,71 @@ class MailTransportService {
 			toEmail: (string)($delivery['email'] ?? ''),
 			subject: strtr((string)($template['subject'] ?? ''), $tokens),
 			html: $html,
-			text: strtr((string)($template['bodyText'] ?? ''), $tokens),
+			text: strtr($this->expandArticles(template: $template, format: ArticleService::FORMAT_TEXT), $tokens),
 			headers: [],
 			deliveryId: $deliveryId,
 		);
 	}//end buildRenderedMail()
+
+	/**
+	 * Expand a template's `{{articles}}` marker for one body format.
+	 *
+	 * The resolved articles are memoised per template for the life of the
+	 * request: `buildRenderedMail()` runs once per delivery, so a blast to
+	 * ten thousand recipients would otherwise reload the same article rows
+	 * ten thousand times to build a block that is identical every time.
+	 *
+	 * A template naming no articles, or a body carrying no marker, comes
+	 * back byte-identical: a template written before this feature renders
+	 * exactly as it did.
+	 *
+	 * @param array<string, mixed> $template Template payload.
+	 * @param string $format `html` or `text`.
+	 *
+	 * @return string The body with the marker expanded.
+	 *
+	 * @spec openspec/changes/marketing-article-hub/specs/marketing-blast/spec.md#requirement-a-campaign-template-may-embed-articles
+	 */
+	private function expandArticles(array $template, string $format): string {
+		$key = 'bodyText';
+		if ($format === ArticleService::FORMAT_HTML) {
+			$key = 'bodyHtml';
+		}
+
+		$body = (string)($template[$key] ?? '');
+		if (str_contains($body, ArticleService::ARTICLES_MARKER) === false) {
+			return $body;
+		}
+
+		return $this->articleService->expandArticlesMarker(
+			body: $body,
+			articles: $this->resolveTemplateArticles(template: $template),
+			format: $format,
+		);
+	}//end expandArticles()
+
+	/**
+	 * The articles a template names, resolved once per request.
+	 *
+	 * @param array<string, mixed> $template Template payload.
+	 *
+	 * @return array<int, array<string, mixed>> The resolved articles.
+	 *
+	 * @spec openspec/changes/marketing-article-hub/specs/marketing-blast/spec.md#requirement-a-campaign-template-may-embed-articles
+	 */
+	private function resolveTemplateArticles(array $template): array {
+		$ids = ($template['articleIds'] ?? []);
+		if (is_array($ids) === false) {
+			$ids = [];
+		}
+
+		$key = implode('|', array_map('strval', array_filter($ids, 'is_scalar')));
+		if (array_key_exists($key, $this->resolvedArticles) === false) {
+			$this->resolvedArticles[$key] = $this->articleService->loadArticlesByIds(articleIds: $ids);
+		}
+
+		return $this->resolvedArticles[$key];
+	}//end resolveTemplateArticles()
 
 	/**
 	 * Pick the adapter matching `transport.kind` and send.

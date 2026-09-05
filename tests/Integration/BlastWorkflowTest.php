@@ -21,6 +21,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Integration;
 
+use OCA\Pipelinq\Service\ArticleService;
 use OCA\Pipelinq\Service\BlastService;
 use OCA\Pipelinq\Service\ComplianceService;
 use OCA\Pipelinq\Service\Marketing\MailTransportService;
@@ -285,6 +286,7 @@ class BlastWorkflowTest extends TestCase {
 			$this->container,
 			$this->appConfig,
 			$this->createMock(IMailer::class),
+			$this->createMock(ArticleService::class),
 			$this->logger,
 		);
 		$blastService = new BlastService($this->container,

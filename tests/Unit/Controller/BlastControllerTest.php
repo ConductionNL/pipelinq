@@ -32,6 +32,7 @@ use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\Pipelinq\Controller\BlastController;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
+use OCA\Pipelinq\Service\ArticleService;
 use OCA\Pipelinq\Service\AttributionService;
 use OCA\Pipelinq\Service\BlastService;
 use OCA\Pipelinq\Service\CampaignLinkDecorator;
@@ -285,6 +286,7 @@ class BlastControllerTest extends TestCase {
 				container: $container,
 				appConfig: $appConfig,
 				mailer: $this->createMock(IMailer::class),
+				articleService: $this->createMock(ArticleService::class),
 				logger: $logger,
 			),
 			logger: $logger,

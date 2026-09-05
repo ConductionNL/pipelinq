@@ -29,6 +29,7 @@ namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
+use OCA\Pipelinq\Service\ArticleService;
 use OCA\Pipelinq\Service\ComplianceService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -48,12 +49,14 @@ class TemplateController extends Controller {
 	 *
 	 * @param IRequest $request The request.
 	 * @param ComplianceService $complianceService Compliance + template repo.
+	 * @param ArticleService $articleService Article reader and `{{articles}}` renderer.
 	 * @param IUserSession $userSession Current user session.
 	 * @param ObjectOwnerAccessPolicy $policy Per-object owner access policy.
 	 */
 	public function __construct(
 		IRequest $request,
 		private readonly ComplianceService $complianceService,
+		private readonly ArticleService $articleService,
 		private readonly IUserSession $userSession,
 		private readonly ObjectOwnerAccessPolicy $policy,
 	) {
@@ -164,6 +167,66 @@ class TemplateController extends Controller {
 	}//end update()
 
 	/**
+	 * GET /api/templates/:id/preview — the bodies as they will be sent.
+	 *
+	 * The preview runs the same `{{articles}}` expansion the send path runs,
+	 * so what a marketer reads before sending is produced by the code that
+	 * will do the sending. Per-recipient tokens are deliberately left in
+	 * place: a preview showing one recipient's address would say nothing
+	 * about whether the token is there at all.
+	 *
+	 * @param string $id Template UUID or slug.
+	 *
+	 * @return JSONResponse The expanded bodies and the embedded articles, or 404.
+	 *
+	 * @spec openspec/changes/marketing-article-hub/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
+	 */
+	#[NoAdminRequired]
+	public function preview(string $id): JSONResponse {
+		$uid = $this->requireUser();
+		if ($uid === null) {
+			return $this->unauthorized();
+		}
+
+		if ($this->policy->isPrivileged(uid: $uid) === false) {
+			return $this->forbidden();
+		}
+
+		$template = $this->complianceService->getTemplateById(templateId: $id);
+		if ($template === null) {
+			return $this->notFound();
+		}
+
+		$ids = ($template['articleIds'] ?? []);
+		if (is_array($ids) === false) {
+			$ids = [];
+		}
+
+		$articles = $this->articleService->loadArticlesByIds(articleIds: $ids);
+
+		return new JSONResponse([
+			'subject' => (string)($template['subject'] ?? ''),
+			'bodyHtml' => $this->articleService->expandArticlesMarker(
+				body: (string)($template['bodyHtml'] ?? ''),
+				articles: $articles,
+				format: ArticleService::FORMAT_HTML,
+			),
+			'bodyText' => $this->articleService->expandArticlesMarker(
+				body: (string)($template['bodyText'] ?? ''),
+				articles: $articles,
+				format: ArticleService::FORMAT_TEXT,
+			),
+			'articles' => array_map(
+				static fn (array $article): array => [
+					'title' => (string)($article['title'] ?? ''),
+					'summary' => (string)($article['summary'] ?? ''),
+				],
+				$articles,
+			),
+		]);
+	}//end preview()
+
+	/**
 	 * Authenticated user id, or null.
 	 *
 	 * @return string|null UID or null.
@@ -193,6 +256,7 @@ class TemplateController extends Controller {
 			'senderName' => (string)$this->request->getParam('senderName', ''),
 			'senderEmail' => (string)$this->request->getParam('senderEmail', ''),
 			'footerOverride' => (string)$this->request->getParam('footerOverride', ''),
+			'articleIds' => $this->request->getParam('articleIds', []),
 		];
 	}//end collectTemplateBody()
 

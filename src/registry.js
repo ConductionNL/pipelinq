@@ -48,6 +48,16 @@ import ContactRelationships from './components/ContactRelationships.vue'
 //     declarative type:"index" page cannot express. Donut widget for the
 //     dashboard (hours per billing category) registered as a slot. ---
 import BillingCategoryWidget from './components/dashboard/BillingCategoryWidget.vue'
+// --- Articles — the content hub for a mailing and a post (marketing-article-hub).
+//     ArticleDetail is a declarative type:"detail" page; the rendered body, the
+//     hero image, the agent-authored mark, the Edit action and the lifecycle
+//     moves live in ArticleContentSection (no declarative widget resolves
+//     @object.<field> the way a bodyWidget prop does — see that file's header),
+//     and ArticleUsageSection answers where the article has been used, joined
+//     server-side from two schemas no single-schema object-list widget can
+//     express. ---
+import ArticleContentSection from './components/marketing/ArticleContentSection.vue'
+import ArticleUsageSection from './components/marketing/ArticleUsageSection.vue'
 // --- Mailing-list memberships (marketing-lists-and-double-opt-in). One
 //     kind:'section' bound either to a list (the mailing list detail page) or
 //     to a contact (the contact detail page): the row is the same row read
@@ -214,6 +224,15 @@ import LeadListView from './views/leads/LeadList.vue'
 import LoyaltyAccountCreationView from './views/loyalty/LoyaltyAccountCreation.vue'
 // --- Loyalty program (loyalty-program). ---
 import LoyaltyReportingView from './views/loyalty/LoyaltyReporting.vue'
+// --- Marketing segments + templates (marketing-segments-ui-repair): the
+//     Segments list is a declarative type:"index" page; SegmentFormView
+//     mounts SegmentBuilder for both SegmentNew and SegmentEdit (one
+//     component, edit mode driven by a route :id param). Templates follows
+//     the same index+form shape over the existing /api/templates endpoints. ---
+// --- Articles new/edit route wrapper (marketing-article-hub): thin host for
+//     ArticleEditModal, the one editing surface the change owns. Matches the
+//     SegmentNew / TemplateNew / BlastNew convention below. ---
+import ArticleFormView from './views/marketing/ArticleFormView.vue'
 // --- Search Console top queries (marketing-campaign-attribution): an
 //     aggregation over searchQueryDaily rows, not a row list. ---
 import SearchQueriesView from './views/marketing/SearchQueries.vue'
@@ -246,11 +265,6 @@ import WinLossWidget from './views/rapportage/WinLossWidget.vue'
 //     availability endpoint and hide when no installed app implements the
 //     kind — same self-fetching-by-props pattern as the sections above. ---
 import RequestConversionSection from './views/requests/RequestConversionSection.vue'
-// --- Marketing segments + templates (marketing-segments-ui-repair): the
-//     Segments list is a declarative type:"index" page; SegmentFormView
-//     mounts SegmentBuilder for both SegmentNew and SegmentEdit (one
-//     component, edit mode driven by a route :id param). Templates follows
-//     the same index+form shape over the existing /api/templates endpoints. ---
 import SegmentFormView from './views/segments/SegmentForm.vue'
 // --- Admin managers (lib gap: no pipeline-designer / settings rich-section type). ---
 import PipelineManagerView from './views/settings/PipelineManager.vue'
@@ -680,6 +694,16 @@ const registry = {
 		component: SubscriptionsSection,
 		_note: 'Mailing-list memberships, bound either to a list (listId) or to a contact (contactId); self-fetches the matching endpoint. Kept custom because a membership row renders a STATE chip the declarative object-list widget cannot express, and because the list view leads with per-state counts that summaryAggregates (equality-only, one schema) cannot break out of one field.',
 	},
+	ArticleContentSection: {
+		kind: 'section',
+		component: ArticleContentSection,
+		_note: 'In-body section for the declarative type:"detail" ArticleDetail page (marketing-article-hub, placement before-body). Renders the markdown body (cnRenderMarkdown), the hero image, the agent-authored mark (ADR-088) and the lifecycle actions (submit for review / publish / return to draft / archive / restore), and hosts ArticleEditModal. NOT a declarative text widget: that widget renders a literal manifest string, and only bodyWidgets props carry @object.<field> token resolution on a detail page. NOT lifecycleActions either (ADR-062 rule 10): OR\'s TransitionEngine would flip status, but ArticleService::publish() stamps publishedAt once and never moves it, which the grammar cannot express. Self-fetches by articleId (@objectId).',
+	},
+	ArticleUsageSection: {
+		kind: 'section',
+		component: ArticleUsageSection,
+		_note: 'In-body section for the declarative type:"detail" ArticleDetail page (marketing-article-hub, placement end). Answers where the article has been used by self-fetching GET /api/articles/{id}/usages, a read-time join of TWO schemas (campaignTemplate, blast) the declarative object-list widget (one schema per instance) cannot express. Nothing is written here.',
+	},
 	ActivityTimeline: {
 		kind: 'section',
 		component: ActivityTimeline,
@@ -788,6 +812,11 @@ const registry = {
 		kind: 'page',
 		component: BlastPerformanceDashboardView,
 		_note: 'Post-send performance dashboard (marketing-segmentation-and-blast 08): three tabs — Overview (sortable blast table with sent/delivered/open-rate/click-rate/unsubscribed), A/B Testing (side-by-side variant comparison + chi-square p-value once each arm has >=500 delivered and 24h elapsed since send), Attribution (per-blast attributed deal count + summed EUR value from GET /api/blasts/:id/attribution).',
+	},
+	ArticleFormView: {
+		kind: 'page',
+		component: ArticleFormView,
+		_note: 'New-article route wrapper (marketing-article-hub). Mounts ArticleEditModal in create mode — the bespoke ArticleService create path (author stamp, slug derivation, the ADR-088 agent-mark refusal) has no declarative equivalent, so there is no generic type:"form" page here. On save, navigates to the new article\'s ArticleDetail.',
 	},
 	SearchQueriesView: {
 		kind: 'page',

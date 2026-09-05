@@ -105,6 +105,7 @@ import Gavel from 'vue-material-design-icons/Gavel.vue'
 import HandshakeOutline from 'vue-material-design-icons/HandshakeOutline.vue'
 import Heart from 'vue-material-design-icons/Heart.vue'
 import History from 'vue-material-design-icons/History.vue'
+import InformationOutline from 'vue-material-design-icons/InformationOutline.vue'
 import Key from 'vue-material-design-icons/Key.vue'
 import Link from 'vue-material-design-icons/Link.vue'
 import LinkVariant from 'vue-material-design-icons/LinkVariant.vue'
@@ -113,6 +114,7 @@ import MapMarkerPath from 'vue-material-design-icons/MapMarkerPath.vue'
 import MessageOutline from 'vue-material-design-icons/MessageOutline.vue'
 import MessageText from 'vue-material-design-icons/MessageText.vue'
 import MessageTextOutline from 'vue-material-design-icons/MessageTextOutline.vue'
+import NewspaperVariantOutline from 'vue-material-design-icons/NewspaperVariantOutline.vue'
 import NoteTextOutline from 'vue-material-design-icons/NoteTextOutline.vue'
 import OfficeBuilding from 'vue-material-design-icons/OfficeBuilding.vue'
 import Package from 'vue-material-design-icons/Package.vue'
@@ -245,6 +247,7 @@ export default {
 	HandshakeOutline,
 	Heart,
 	History,
+	InformationOutline,
 	Key,
 	Link,
 	LinkVariant,
@@ -253,6 +256,7 @@ export default {
 	MessageOutline,
 	MessageText,
 	MessageTextOutline,
+	NewspaperVariantOutline,
 	NoteTextOutline,
 	OfficeBuilding,
 	Package,
