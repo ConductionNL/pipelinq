@@ -384,6 +384,15 @@ export function objectTypes() {
 			),
 		},
 		{
+			slug: 'mailTransport',
+			group: 'marketing',
+			label: t(APP, 'Mail Transport'),
+			description: t(
+				APP,
+				'How a mailing leaves the instance: the mail server, a Mail account or a bulk provider',
+			),
+		},
+		{
 			slug: 'messageSendBudget',
 			group: 'marketing',
 			label: t(APP, 'Message Send Budget'),
