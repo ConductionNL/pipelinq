@@ -44,7 +44,7 @@
 					{
 						"id": "edit",
 						"label": "Edit",
-						"icon": "Pencil",
+						"icon": "PencilOutline",
 						"handler": "navigate",
 						"route": "CampaignEdit"
 					}
