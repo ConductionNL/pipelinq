@@ -494,6 +494,18 @@ test.describe('Blast performance dashboard', () => {
 	test('the Attribution tab shows attributed deal count and value per blast', async ({
 		page,
 	}) => {
+		// The longest fixture in this file: a blast, four deals, two attribution
+		// links, a dashboard read and then a multi-call teardown, all sequential
+		// through `api()`'s in-page fetch. It timed out at 60 s inside `api()`
+		// on the 2026-09-05 development push, never on an assertion.
+		//
+		// Once, not repeatedly — the other seven failures in that run reproduce
+		// on every push and this one does not, so it is the margin that is thin
+		// rather than the test that is wrong. `marketing-campaign-attribution
+		// .spec.ts` gives the same shape of test 120 s; this matches it rather
+		// than inventing a third number.
+		test.setTimeout(120_000)
+
 		await openApp(page)
 		const { segmentId, templateId } = await seededFks(page)
 
