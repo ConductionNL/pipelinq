@@ -121,7 +121,7 @@ class SettingsLoadService {
 		'masterEntity',
 		'sourceRecord',
 		'trustConfiguration',
-		'mergeOperation',
+		'masterMergeOperation',
 		// Supplier commercial master (pipelinq-product-vendor-master). Without
 		// this slug the `supplier_schema` app-config key is never populated on
 		// import, so ProductVendorProviderService::resolveSupplier() and the
@@ -137,7 +137,7 @@ class SettingsLoadService {
 		'walkInTicket',
 		'availabilityCache',
 		// Expense-to-Shillinq accounts-payable sync (expense-shillinq-ap).
-		'expense',
+		'billableExpense',
 		// Marketing segmentation & blast (marketing-segmentation-blast).
 		'blast',
 		// Berichtenbox messaging channel (berichtenbox).
@@ -321,6 +321,9 @@ class SettingsLoadService {
 		'appointmentService' => 'service_schema',
 		// The CRM task, same reasoning as the appointment schemas above.
 		'crmTask' => 'task_schema',
+		// The last two colliding slugs; keys stay as persisted.
+		'billableExpense' => 'expense_schema',
+		'masterMergeOperation' => 'mergeOperation_schema',
 	];
 
 	/**

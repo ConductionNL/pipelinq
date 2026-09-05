@@ -73,7 +73,7 @@ class SchemaMapService {
 		'giftCard_schema' => 'giftCard',
 		'giftCardTransaction_schema' => 'giftCardTransaction',
 		// Expense → Shillinq AP integration (pipelinq-expense-to-shillinq-ap / REQ-AP-001).
-		'expense_schema' => 'expense',
+		'expense_schema' => 'billableExpense',
 		// Billing categories (billable-categories-and-tags / REQ-BCT-001).
 		'billingCategory_schema' => 'billingCategory',
 	];

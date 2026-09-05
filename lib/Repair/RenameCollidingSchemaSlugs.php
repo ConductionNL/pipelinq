@@ -111,6 +111,14 @@ class RenameCollidingSchemaSlugs implements IRepairStep {
 		// `description`, `priority` and `status`. planninq's project task is the
 		// largest and keeps the bare slug; dossiq took caseTask.
 		'task' => ['to' => 'crmTask', 'with' => 'planninq, dossiq'],
+		// The last two. `expense` is humaniq's employee reimbursement claim
+		// against this app's billable client cost; they share generic expense
+		// attributes and no receipt or expense number. `mergeOperation` is the
+		// same merge MECHANICS as openregister's (snapshot, reversible) applied
+		// to a different subject: OR merges objects by uuid, this merges MDM
+		// master entities by masterId, which are different id spaces.
+		'expense' => ['to' => 'billableExpense', 'with' => 'humaniq'],
+		'mergeOperation' => ['to' => 'masterMergeOperation', 'with' => 'openregister'],
 	];
 
 	/**
