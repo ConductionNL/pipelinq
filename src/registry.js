@@ -59,6 +59,7 @@ import BillingCategoryWidget from './components/dashboard/BillingCategoryWidget.
 import ArticleContentSection from './components/marketing/ArticleContentSection.vue'
 import ArticleUsageSection from './components/marketing/ArticleUsageSection.vue'
 import CampaignLandingPageSection from './components/marketing/CampaignLandingPageSection.vue'
+import JourneyRunsSection from './components/marketing/JourneyRunsSection.vue'
 import SocialPostVariantsSection from './components/marketing/SocialPostVariantsSection.vue'
 import SocialPublicationsSection from './components/marketing/SocialPublicationsSection.vue'
 // --- Mailing-list memberships (marketing-lists-and-double-opt-in). One
@@ -238,9 +239,11 @@ import LoyaltyReportingView from './views/loyalty/LoyaltyReporting.vue'
 import ArticleFormView from './views/marketing/ArticleFormView.vue'
 import CampaignFormView from './views/marketing/CampaignFormView.vue'
 import CampaignReportView from './views/marketing/CampaignReport.vue'
+import JourneyFormView from './views/marketing/JourneyFormView.vue'
 // --- Search Console top queries (marketing-campaign-attribution): an
 //     aggregation over searchQueryDaily rows, not a row list. ---
 import SearchQueriesView from './views/marketing/SearchQueries.vue'
+import WeeklyReviewView from './views/marketing/WeeklyReview.vue'
 // --- Outbound WhatsApp/SMS conversation section (outbound-messaging-
 //     provider-wiring): self-fetches conversation/message rows by contactId
 //     + the composer preflight facts, and hosts the SendMessageModal
@@ -707,6 +710,11 @@ const registry = {
 		component: ArticleContentSection,
 		_note: 'In-body section for the declarative type:"detail" ArticleDetail page (marketing-article-hub, placement before-body). Renders the markdown body (cnRenderMarkdown), the hero image, the agent-authored mark (ADR-088) and the lifecycle actions (submit for review / publish / return to draft / archive / restore), and hosts ArticleEditModal. NOT a declarative text widget: that widget renders a literal manifest string, and only bodyWidgets props carry @object.<field> token resolution on a detail page. NOT lifecycleActions either (ADR-062 rule 10): OR\'s TransitionEngine would flip status, but ArticleService::publish() stamps publishedAt once and never moves it, which the grammar cannot express. Self-fetches by articleId (@objectId).',
 	},
+	JourneyRunsSection: {
+		kind: 'section',
+		component: JourneyRunsSection,
+		_note: 'In-body section for the declarative type:"detail" JourneyDetail page (marketing-integrated-campaigns, placement end). Lists every contact a journey reached and every contact it REFUSED, with the reason in words. Not a declarative object-list widget: that widget renders the stored enum value, and "suppressed_dunning" tells a marketer nothing. The refusal is the whole point of the section, because a journey that reached nobody looks exactly like a journey with a small audience. Self-fetches by journeyId (@objectId).',
+	},
 	CampaignLandingPageSection: {
 		kind: 'section',
 		component: CampaignLandingPageSection,
@@ -860,6 +868,16 @@ const registry = {
 		kind: 'page',
 		component: CampaignFormView,
 		_note: "Campaign create and edit (marketing-campaigns); one component serves CampaignNew and CampaignEdit, matching the SegmentNew / SegmentEdit convention. NOT the declarative create dialog: a campaign written through OpenRegister's object API carries whatever utmCampaign the browser sent and stores a source outside the tenant's vocabulary without complaint. Minting the value once, freezing it across a rename, and refusing an unknown source or medium live in CampaignService, which only POST and PATCH /api/campaigns reach. The source and medium pickers read GET /api/campaigns/vocabulary, admin-maintained app config that is not a schema enum.",
+	},
+	JourneyFormView: {
+		kind: 'page',
+		component: JourneyFormView,
+		_note: "Journey create and edit (marketing-integrated-campaigns); one component serves JourneyNew and JourneyEdit, matching the CampaignNew / CampaignEdit convention. NOT the declarative create dialog: every write compiles the journey into an OpenRegister flow through POST and PATCH /api/journeys, and a journey saved through the object API would be stored and never compiled, which looks exactly like a journey whose trigger has not fired. It also surfaces the flow engine's own refusal verbatim.",
+	},
+	WeeklyReviewView: {
+		kind: 'page',
+		component: WeeklyReviewView,
+		_note: 'The weekly marketing review (marketing-integrated-campaigns, ADR-112): what moved, what to try and three topic ideas, from ONE GET /api/weekly-review. Reached as a card on the Reports page and never as a menu entry of its own. Custom because the response aggregates four collections into one narrative record and names the sources it could not read, which no declarative index or dashboard primitive expresses. It also renders the ADR-088 mark when an agent wrote the summary.',
 	},
 	CampaignReportView: {
 		kind: 'page',

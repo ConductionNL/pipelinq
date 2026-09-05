@@ -170,6 +170,17 @@ class Application extends App implements IBootstrap {
 		// conformance sweep.
 		$context->registerNotifierService(\OCA\Pipelinq\Notification\Notifier::class);
 
+		// Journeys are OpenRegister flows (ADR-094), so the action step has to
+		// be a node the engine can call. No `class_exists` guard: `::class` is
+		// a compile-time string that autoloads nothing, and the listener is
+		// only constructed when the event fires, which only happens where
+		// OpenRegister is installed. An over-eager guard here is how a
+		// registry silently loses nodes.
+		$context->registerEventListener(
+			event: \OCA\OpenRegister\Service\Flow\RegisterFlowNodesEvent::class,
+			listener: \OCA\Pipelinq\Flow\FlowNodeListener::class
+		);
+
 		$context->registerEventListener(
 			event: ObjectCreatedEvent::class,
 			listener: ObjectEventListener::class

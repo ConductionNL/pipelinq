@@ -21,6 +21,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\Pipelinq\Service\Marketing\SegmentSignalService;
 use OCA\Pipelinq\Service\SchemaMapService;
 use OCA\Pipelinq\Service\SegmentService;
 use OCP\IAppConfig;
@@ -40,6 +41,65 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/marketing-segmentation-and-blast-09-unit-integration-tests/tasks.md#segmentservice-tests-task-4.1-of-giant
  */
+class StubSignalService extends SegmentSignalService {
+
+	/**
+	 * Field to the value it resolves to. An absent key resolves to nothing.
+	 *
+	 * @var array<string, mixed>
+	 */
+	public array $values = [];
+
+	/**
+	 * Construct without the real collaborators.
+	 */
+	public function __construct() {
+	}//end __construct()
+
+	/**
+	 * Three signals is enough to exercise the guard and the validator.
+	 *
+	 * @return array<string, array{type: string, title: string, source: string, description: string}> The catalogue.
+	 */
+	public function catalogue(): array {
+		return [
+			'shillinqMonthsSinceLastInvoice' => [
+				'type' => 'integer',
+				'title' => 'Months since the last invoice',
+				'source' => 'shillinq',
+				'description' => 'Test signal.',
+			],
+			'shillinqValueTier' => [
+				'type' => 'string',
+				'title' => 'Value tier',
+				'source' => 'shillinq',
+				'description' => 'Test signal.',
+			],
+			'shillinqPurchasedServices' => [
+				'type' => 'array',
+				'title' => 'Purchased services',
+				'source' => 'shillinq',
+				'description' => 'Test signal.',
+			],
+		];
+	}//end catalogue()
+
+	/**
+	 * What this signal resolves to for this entity.
+	 *
+	 * @param string $field The signal.
+	 * @param array<string, mixed> $entity The entity.
+	 *
+	 * @return mixed The value, or null.
+	 */
+	public function valueFor(string $field, array $entity): mixed {
+		return ($this->values[$field] ?? null);
+	}//end valueFor()
+}//end class
+
+/**
+ * Tests for SegmentService.
+ */
 class SegmentServiceTest extends TestCase {
 	private ContainerInterface $container;
 	private IAppConfig $appConfig;
@@ -55,6 +115,13 @@ class SegmentServiceTest extends TestCase {
 	 * @var SegmentService
 	 */
 	private SegmentService $service;
+
+	/**
+	 * The stub signal service the guard tests reconfigure.
+	 *
+	 * @var StubSignalService
+	 */
+	private StubSignalService $signals;
 
 	/**
 	 * Schema "properties" returned by the in-memory schema mapper, keyed by
@@ -261,13 +328,108 @@ class SegmentServiceTest extends TestCase {
 		$this->cacheFactory->method('createDistributed')->willReturn($cache);
 		$this->cacheFactory->method('createLocal')->willReturn($cache);
 
+		$this->signals = new StubSignalService();
+
 		$this->service = new SegmentService($this->container,
 			$this->appConfig,
 			$this->schemaMapService,
 			$this->cacheFactory,
 			$this->logger,
+			$this->signals,
 		);
 	}//end setUp()
+
+	/**
+	 * A leaf on a signal the evaluator cannot resolve is FALSE under every
+	 * comparison operator, including the three that would otherwise answer
+	 * true: `compareNumeric()` returns 0 for a value it cannot read, so
+	 * `gte`, `lte` and `between` all read that 0 as a match. Without the
+	 * guard, "no invoice in twelve months" matches the whole customer base
+	 * on an instance without shillinq, and the send list looks correct.
+	 *
+	 * @return void
+	 */
+	public function testAnUnresolvedSignalIsFalseUnderEveryComparisonOperator(): void {
+		$entity = ['name' => 'Bakkerij'];
+
+		foreach ([
+			['operator' => 'gte', 'value' => 12],
+			['operator' => 'lte', 'value' => 12],
+			['operator' => 'greaterThan', 'value' => 12],
+			['operator' => 'lessThan', 'value' => 12],
+			['operator' => 'equals', 'value' => 12],
+			['operator' => 'between', 'value' => [0, 90]],
+		] as $leaf) {
+			$rules = array_merge(['field' => 'shillinqMonthsSinceLastInvoice'], $leaf);
+			$this->assertFalse(
+				$this->service->evaluateRules($rules, $entity),
+				$leaf['operator'] . ' must not match an unresolved signal'
+			);
+		}
+	}//end testAnUnresolvedSignalIsFalseUnderEveryComparisonOperator()
+
+	/**
+	 * `isNull` is the one operator that still answers on an unresolved
+	 * signal, because "this customer has no bookkeeping" is a real question.
+	 *
+	 * @return void
+	 */
+	public function testIsNullMatchesAnUnresolvedSignal(): void {
+		$rules = ['field' => 'shillinqValueTier', 'operator' => 'isNull', 'value' => null];
+
+		$this->assertTrue($this->service->evaluateRules($rules, ['name' => 'Bakkerij']));
+	}//end testIsNullMatchesAnUnresolvedSignal()
+
+	/**
+	 * A signal that DOES resolve is compared like any other value.
+	 *
+	 * @return void
+	 */
+	public function testAResolvedSignalIsComparedNormally(): void {
+		$this->signals->values['shillinqMonthsSinceLastInvoice'] = 14;
+		$rules = ['field' => 'shillinqMonthsSinceLastInvoice', 'operator' => 'gte', 'value' => 12];
+
+		$this->assertTrue($this->service->evaluateRules($rules, ['name' => 'Bakkerij']));
+	}//end testAResolvedSignalIsComparedNormally()
+
+	/**
+	 * A rule leaf naming a signal validates against the catalogue, and the
+	 * operator matrix still applies to it.
+	 *
+	 * @return void
+	 */
+	public function testASignalFieldValidatesAgainstItsDeclaredType(): void {
+		$this->assertNull(
+			$this->service->validateRules(
+				['field' => 'shillinqMonthsSinceLastInvoice', 'operator' => 'gte', 'value' => 12],
+				'contact'
+			)
+		);
+
+		$this->assertNotNull(
+			$this->service->validateRules(
+				['field' => 'shillinqPurchasedServices', 'operator' => 'greaterThan', 'value' => 50],
+				'contact'
+			)
+		);
+	}//end testASignalFieldValidatesAgainstItsDeclaredType()
+
+	/**
+	 * Membership in an array-typed field is expressible. Before this change
+	 * `contains` on an array field was refused by the validator while the
+	 * evaluator implemented exactly that comparison, so "bought this
+	 * product" could be evaluated and could not be saved.
+	 *
+	 * @return void
+	 */
+	public function testContainsOnAnArrayFieldValidates(): void {
+		$this->assertNull(
+			$this->service->validateRules(
+				['field' => 'shillinqPurchasedServices', 'operator' => 'contains', 'value' => 'advice hour'],
+				'contact'
+			)
+		);
+	}//end testContainsOnAnArrayFieldValidates()
 
 	/**
 	 * validateRules: a leaf with a recognised field, an operator from the

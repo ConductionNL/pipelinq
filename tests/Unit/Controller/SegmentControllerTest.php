@@ -37,6 +37,7 @@ use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Controller\SegmentController;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\SchemaMapService;
+use OCA\Pipelinq\Service\Marketing\SegmentSignalService;
 use OCA\Pipelinq\Service\SegmentService;
 use OCP\AppFramework\Http;
 use OCP\IAppConfig;
@@ -107,6 +108,49 @@ class SegmentControllerTest extends TestCase {
 			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true])
 		);
 	}//end setUp()
+
+	/**
+	 * GET /api/segments/signals returns the catalogue AND the availability
+	 * report. The catalogue alone would offer a marketer a rule that saves,
+	 * validates and silently matches nobody.
+	 *
+	 * @return void
+	 */
+	public function testSignalsReturnsTheCatalogueAndTheAvailability(): void {
+		$this->authenticate('marketeer');
+		$this->segmentService->method('signalCatalogue')->willReturn([
+			'shillinqValueTier' => [
+				'type' => 'string',
+				'title' => 'Value tier',
+				'source' => 'shillinq',
+				'description' => 'Test signal.',
+			],
+		]);
+		$this->segmentService->method('signalAvailability')->willReturn([
+			'shillinq' => false,
+			'reason' => 'shillinq_not_installed',
+		]);
+
+		$response = $this->controller->signals();
+		$data = $response->getData();
+
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertArrayHasKey('shillinqValueTier', $data['catalogue']);
+		$this->assertFalse($data['availability']['shillinq']);
+		$this->assertSame('shillinq_not_installed', $data['availability']['reason']);
+	}//end testSignalsReturnsTheCatalogueAndTheAvailability()
+
+	/**
+	 * The signals endpoint takes the same privilege check the rest of the
+	 * segment surface takes: the catalogue names what the tenant tracks.
+	 *
+	 * @return void
+	 */
+	public function testSignalsRefusesACallerWithoutASession(): void {
+		$this->authenticate(null);
+
+		$this->assertSame(Http::STATUS_UNAUTHORIZED, $this->controller->signals()->getStatus());
+	}//end testSignalsRefusesACallerWithoutASession()
 
 	/**
 	 * Stub the acting user (or none) on the shared session mock.
@@ -188,7 +232,8 @@ class SegmentControllerTest extends TestCase {
 			$appConfig,
 			$this->createMock(SchemaMapService::class),
 			$cacheFactory,
-			$this->createMock(LoggerInterface::class)
+			$this->createMock(LoggerInterface::class),
+			$this->createMock(SegmentSignalService::class)
 		);
 
 		$session = $this->createMock(IUserSession::class);
@@ -716,7 +761,8 @@ class SegmentControllerTest extends TestCase {
 			$appConfig,
 			$this->createMock(SchemaMapService::class),
 			$cacheFactory,
-			$this->createMock(LoggerInterface::class)
+			$this->createMock(LoggerInterface::class),
+			$this->createMock(SegmentSignalService::class)
 		);
 	}//end getWiredService()
 

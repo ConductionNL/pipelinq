@@ -184,6 +184,7 @@ class BlastService {
 
 		$audience = $this->resolveAudience(segmentId: $segmentId, listId: $listId, channel: $channel);
 		$missingConsent = $audience['missingConsent'];
+		$suppressed = ($audience['suppressed'] ?? []);
 		$compliantMembers = $audience['members'];
 
 		if ($compliantMembers === []) {
@@ -194,6 +195,7 @@ class BlastService {
 			return [
 				'queued' => 0,
 				'skippedNoConsent' => count($missingConsent),
+				'skippedSuppressed' => count($suppressed),
 				'variantA' => 0,
 				'variantB' => 0,
 				'variantBlastId' => null,
@@ -262,6 +264,7 @@ class BlastService {
 		return [
 			'queued' => ($variantACount + $variantBCount),
 			'skippedNoConsent' => count($missingConsent),
+			'skippedSuppressed' => count($suppressed),
 			'variantA' => $variantACount,
 			'variantB' => $variantBCount,
 			'variantBlastId' => $variantBlastId,
@@ -1004,9 +1007,10 @@ class BlastService {
 	 * @param string $listId MailingList UUID or slug, empty when a segment is named.
 	 * @param string $channel Channel ("email" / "sms").
 	 *
-	 * @return array{members: array<int, array<string, mixed>>, missingConsent: array<int, string>}
+	 * @return array{members: array<int, array<string, mixed>>, missingConsent: array<int, string>, suppressed: array<int, string>}
 	 *
 	 * @spec openspec/specs/marketing-blast/spec.md#requirement-a-blast-may-target-a-mailing-list
+	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-promotional-send-skips-a-customer-in-dunning
 	 */
 	protected function resolveAudience(string $segmentId, string $listId, string $channel): array {
 		if ($listId !== '') {
@@ -1016,18 +1020,23 @@ class BlastService {
 		$complianceResult = $this->checkSegmentCompliance(segmentId: $segmentId, channel: $channel);
 		$missingConsent = $complianceResult['missingConsent'];
 		$missingSet = array_flip($missingConsent);
+		// A suppressed contact is dropped from the audience just as firmly
+		// as one without consent, and is counted separately so the send
+		// summary can say "skipped because they owe us money" rather than
+		// reporting a lawful basis that is actually there.
+		$suppressedSet = array_flip($complianceResult['suppressed']);
 
 		$members = [];
 		foreach ($this->segmentService->getMembersForBlast(segmentId: $segmentId) as $member) {
 			$contactId = (string)($member['contactId'] ?? '');
-			if ($contactId === '' || isset($missingSet[$contactId]) === true) {
+			if ($contactId === '' || isset($missingSet[$contactId]) === true || isset($suppressedSet[$contactId]) === true) {
 				continue;
 			}
 
 			$members[] = $member;
 		}
 
-		return ['members' => $members, 'missingConsent' => $missingConsent];
+		return ['members' => $members, 'missingConsent' => $missingConsent, 'suppressed' => $complianceResult['suppressed']];
 	}//end resolveAudience()
 
 	/**
@@ -1043,7 +1052,7 @@ class BlastService {
 	 *
 	 * @param string $listId MailingList UUID or slug.
 	 *
-	 * @return array{members: array<int, array<string, mixed>>, missingConsent: array<int, string>}
+	 * @return array{members: array<int, array<string, mixed>>, missingConsent: array<int, string>, suppressed: array<int, string>}
 	 *
 	 * @spec openspec/specs/marketing-lists/spec.md#requirement-a-pending-subscription-never-receives-a-blast
 	 */
@@ -1055,7 +1064,7 @@ class BlastService {
 				'BlastService.resolveListAudience: SubscriptionQueryService unavailable — failing closed',
 				['listId' => $listId, 'exception' => $e->getMessage()]
 			);
-			return ['members' => [], 'missingConsent' => []];
+			return ['members' => [], 'missingConsent' => [], 'suppressed' => []];
 		}
 
 		try {
@@ -1065,11 +1074,11 @@ class BlastService {
 				'BlastService.resolveListAudience: call failed — failing closed',
 				['listId' => $listId, 'exception' => $e->getMessage()]
 			);
-			return ['members' => [], 'missingConsent' => []];
+			return ['members' => [], 'missingConsent' => [], 'suppressed' => []];
 		}
 
 		if (is_array($audience) === false) {
-			return ['members' => [], 'missingConsent' => []];
+			return ['members' => [], 'missingConsent' => [], 'suppressed' => []];
 		}
 
 		$members = [];
@@ -1092,7 +1101,7 @@ class BlastService {
 			}
 		}
 
-		return ['members' => $members, 'missingConsent' => $skipped];
+		return ['members' => $members, 'missingConsent' => $skipped, 'suppressed' => []];
 	}//end resolveListAudience()
 
 	/**
@@ -1104,7 +1113,7 @@ class BlastService {
 	 * @param string $segmentId Segment UUID or slug.
 	 * @param string $channel Channel ("email" / "sms").
 	 *
-	 * @return array<string, mixed> `{compliant, missingConsent[], missingCount}`.
+	 * @return array<string, mixed> `{compliant, missingConsent[], missingCount, suppressed[]}`.
 	 */
 	protected function checkSegmentCompliance(string $segmentId, string $channel): array {
 		try {
@@ -1127,6 +1136,7 @@ class BlastService {
 				'compliant' => false,
 				'missingConsent' => $missingConsent,
 				'missingCount' => count($missingConsent),
+				'suppressed' => [],
 			];
 		}//end try
 
@@ -1137,31 +1147,47 @@ class BlastService {
 				'BlastService.checkSegmentCompliance: call failed — failing closed',
 				['segmentId' => $segmentId, 'channel' => $channel, 'exception' => $e->getMessage()]
 			);
-			return ['compliant' => false, 'missingConsent' => [], 'missingCount' => 0];
+			return ['compliant' => false, 'missingConsent' => [], 'missingCount' => 0, 'suppressed' => []];
 		}
 
 		if (is_array($result) === false) {
-			return ['compliant' => false, 'missingConsent' => [], 'missingCount' => 0];
+			return ['compliant' => false, 'missingConsent' => [], 'missingCount' => 0, 'suppressed' => []];
 		}
 
-		$missing = ($result['missingConsent'] ?? []);
-		if (is_array($missing) === false) {
-			$missing = [];
-		}
-
-		$missingScalars = [];
-		foreach ($missing as $id) {
-			if (is_scalar($id) === true) {
-				$missingScalars[] = (string)$id;
-			}
-		}
+		$missingScalars = $this->contactIdsOf(value: ($result['missingConsent'] ?? []));
+		$suppressedScalars = $this->contactIdsOf(value: ($result['suppressed'] ?? []));
 
 		return [
 			'compliant' => (bool)($result['compliant'] ?? false),
 			'missingConsent' => $missingScalars,
 			'missingCount' => (int)($result['missingCount'] ?? count($missingScalars)),
+			'suppressed' => $suppressedScalars,
 		];
 	}//end checkSegmentCompliance()
+
+	/**
+	 * Reduce whatever the compliance gate returned to a list of contact ids.
+	 *
+	 * @param mixed $value The raw list.
+	 *
+	 * @return array<int, string> The ids.
+	 *
+	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-promotional-send-skips-a-customer-in-dunning
+	 */
+	private function contactIdsOf(mixed $value): array {
+		if (is_array($value) === false) {
+			return [];
+		}
+
+		$ids = [];
+		foreach ($value as $id) {
+			if (is_scalar($id) === true) {
+				$ids[] = (string)$id;
+			}
+		}
+
+		return $ids;
+	}//end contactIdsOf()
 
 	/**
 	 * Deterministic A/B assignment from contactId.
@@ -1638,6 +1664,7 @@ class BlastService {
 		return [
 			'queued' => 0,
 			'skippedNoConsent' => 0,
+			'skippedSuppressed' => 0,
 			'variantA' => 0,
 			'variantB' => 0,
 			'variantBlastId' => null,

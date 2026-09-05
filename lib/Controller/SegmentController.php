@@ -89,6 +89,35 @@ class SegmentController extends Controller {
 	}//end index()
 
 	/**
+	 * GET /api/segments/signals — the derived fields a rule may use.
+	 *
+	 * The builder needs the catalogue AND the availability report, because a
+	 * field whose bookkeeping cannot be read still validates and still saves.
+	 * Listing it without saying so would offer the marketer a rule that
+	 * silently matches nobody.
+	 *
+	 * @return JSONResponse `{catalogue, availability}`.
+	 *
+	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-segment-builder-lists-the-signals-and-validates-a-rule-on-one
+	 */
+	#[NoAdminRequired]
+	public function signals(): JSONResponse {
+		$uid = $this->requireUser();
+		if ($uid === null) {
+			return $this->unauthorized();
+		}
+
+		if ($this->policy->isPrivileged(uid: $uid) === false) {
+			return $this->forbidden();
+		}
+
+		return new JSONResponse([
+			'catalogue' => $this->segmentService->signalCatalogue(),
+			'availability' => $this->segmentService->signalAvailability(),
+		]);
+	}//end signals()
+
+	/**
 	 * POST /api/segments — create a Segment after rule-tree validation.
 	 *
 	 * @return JSONResponse 201 with segment+estimatedSize, 400 on invalid input.

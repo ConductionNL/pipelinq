@@ -26,6 +26,7 @@ use OCA\Pipelinq\Service\BlastService;
 use OCA\Pipelinq\Service\ComplianceService;
 use OCA\Pipelinq\Service\Marketing\MailTransportService;
 use OCA\Pipelinq\Service\SchemaMapService;
+use OCA\Pipelinq\Service\Marketing\SegmentSignalService;
 use OCA\Pipelinq\Service\SegmentService;
 use OCP\IAppConfig;
 use OCP\ICache;
@@ -271,16 +272,21 @@ class BlastWorkflowTest extends TestCase {
 
 		// Build the three services and wire them through the container so
 		// BlastService → ComplianceService lookup succeeds.
+		$signals = $this->createMock(SegmentSignalService::class);
+		$signals->method('isSignalField')->willReturn(false);
+		$signals->method('schemaProperties')->willReturn([]);
 		$segmentService = new SegmentService($this->container,
 			$this->appConfig,
 			$this->schemaMapService,
 			$this->cacheFactory,
 			$this->logger,
+			$signals,
 		);
 		$complianceService = new ComplianceService($this->container,
 			$this->appConfig,
 			$segmentService,
 			$this->logger,
+			$signals,
 		);
 		$mailTransportService = new MailTransportService(
 			$this->container,
