@@ -121,7 +121,7 @@ export function degradedSources(review) {
  *
  * @param {object} review The composed review.
  * @return {boolean} True when an agent wrote it.
- * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-an-agent-may-write-the-narrative-and-is-marked-as-its-author
+ * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-narrative-mark-has-storage-and-a-renderer-and-no-writer-yet
  */
 export function isAgentAuthored(review) {
 	return Boolean(review?.agentAuthored) && Boolean(review?.agentAuthoredBy)

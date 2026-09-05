@@ -36,7 +36,6 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\Marketing;
 
 use OCP\AppFramework\Utility\ITimeFactory;
-use Psr\Log\LoggerInterface;
 
 /**
  * WeeklyReviewService: the numbers, in one read.
@@ -56,7 +55,16 @@ class WeeklyReviewService {
 	public const SCHEMA = 'weeklyReview';
 
 	/**
-	 * The mark written on a review an agent added prose to.
+	 * The identity an agent-written narrative would be marked with.
+	 *
+	 * 🔴 NOTHING WRITES IT YET, AND SAYING SO IS THE POINT. The mark's storage
+	 * is on the schema and the page renders it, but pipelinq ships no MCP tool
+	 * provider (ADR-034 Decision 3), so the seeded agent template grants
+	 * read-only tools and no agent can reach a pipelinq write path. A method
+	 * that stamped this mark and had no caller would be a capability that
+	 * looks present and can never run, which is worse than an absent one. The
+	 * constant is here so the writer, when it exists, does not invent a second
+	 * spelling of the same identity.
 	 *
 	 * @var string
 	 */
@@ -89,7 +97,6 @@ class WeeklyReviewService {
 	 * @param ListObjectStore $store Register-scoped object plumbing.
 	 * @param WeeklyReviewNumbers $numbers One week of counting, per collection.
 	 * @param ITimeFactory $time Clock.
-	 * @param LoggerInterface $logger Logger.
 	 *
 	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-three-sources-and-names-the-one-it-cannot
 	 */
@@ -97,7 +104,6 @@ class WeeklyReviewService {
 		private ListObjectStore $store,
 		private WeeklyReviewNumbers $numbers,
 		private ITimeFactory $time,
-		private LoggerInterface $logger,
 	) {
 	}//end __construct()
 
@@ -174,37 +180,6 @@ class WeeklyReviewService {
 
 		return $latest;
 	}//end latest()
-
-	/**
-	 * Write an agent's narrative onto a stored review, marked as its author.
-	 *
-	 * The mark is applied here and never taken from the caller's payload: a
-	 * mark a client can set is not a mark (ADR-088).
-	 *
-	 * @param string $weekStarting The week the narrative belongs to.
-	 * @param string $summary The prose the agent wrote.
-	 * @param string $agent The agent identity.
-	 *
-	 * @return array<string, mixed>|null The stored review, or null when there is none.
-	 *
-	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-an-agent-may-write-the-narrative-and-is-marked-as-its-author
-	 */
-	public function recordNarrative(string $weekStarting, string $summary, string $agent = self::AGENT_IDENTITY): ?array {
-		$review = $this->findByWeek(weekStarting: $weekStarting);
-		if ($review === null) {
-			$this->logger->info(
-				'WeeklyReviewService.recordNarrative: no review for that week',
-				['weekStarting' => $weekStarting]
-			);
-			return null;
-		}
-
-		$review['summary'] = $summary;
-		$review['agentAuthored'] = ($agent !== '');
-		$review['agentAuthoredBy'] = $agent;
-
-		return $this->store->save(schemaSlug: $this->schema(), payload: $review, id: $this->store->idOf($review));
-	}//end recordNarrative()
 
 	/**
 	 * What to try next week.

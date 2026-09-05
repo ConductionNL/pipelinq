@@ -56,6 +56,10 @@ The weekly review has two halves. Pipelinq composes the facts: what went out, wh
 
 The agent template grants `openregister.searchObjects` and nothing else. No send tool, no publish tool. Its output reaches a person as a Talk message through hermiq's own schedule delivery, and the review it read is a card on the Reports page.
 
+That grant is read-only in both directions, and it has a consequence worth stating rather than papering over: **no agent can write the narrative back onto the review yet.** Pipelinq ships no MCP tool provider (ADR-034 Decision 3), so there is no pipelinq tool an agent could be granted. The ADR-088 mark therefore has storage on the schema and a renderer on the page and no writer at all, and a review pipelinq composed carries no mark.
+
+A `recordNarrative()` method was written and then removed for exactly that reason: gate-57 found it orphaned, and a write capability with no caller is a feature that looks present and can never run. The identity constant stays so the writer, when it exists, does not invent a second spelling of the same agent.
+
 The template is seeded by a repair step rather than by a register fragment. Seeding into a foreign register through `components.objects[]` needs that register to exist at import time, and hermiq is an optional peer: a missing register would take pipelinq's own register import down with it, which is far worse than a template nobody received.
 
 ## Decision 7: what phase 5 did not bring

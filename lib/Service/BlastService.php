@@ -1114,6 +1114,9 @@ class BlastService {
 	 * @param string $channel Channel ("email" / "sms").
 	 *
 	 * @return array<string, mixed> `{compliant, missingConsent[], missingCount, suppressed[]}`.
+	 *
+	 * @spec openspec/specs/marketing-compliance/spec.md#requirement-blast-cannot-send-without-lawful-basis
+	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-promotional-send-skips-a-customer-in-dunning
 	 */
 	protected function checkSegmentCompliance(string $segmentId, string $channel): array {
 		try {

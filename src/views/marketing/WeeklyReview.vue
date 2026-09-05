@@ -130,7 +130,7 @@ export default {
 	computed: {
 		/**
 		 * @return {boolean} Whether an agent wrote the summary (ADR-088).
-		 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-an-agent-may-write-the-narrative-and-is-marked-as-its-author
+		 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-narrative-mark-has-storage-and-a-renderer-and-no-writer-yet
 		 */
 		agentAuthored() {
 			return isAgentAuthored(this.review)

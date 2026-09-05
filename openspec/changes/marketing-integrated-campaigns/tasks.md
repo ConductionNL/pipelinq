@@ -47,7 +47,7 @@
 
 ## 5. The weekly review
 
-- [x] 5.1 `WeeklyReviewService`: one read over four collections, the degraded list, and the ADR-088 mark on a narrative
+- [x] 5.1 `WeeklyReviewService` and `WeeklyReviewNumbers`: one read over four collections, and the degraded list
   - **spec_ref**: `specs/marketing-integrated-campaigns/spec.md#requirement-the-weekly-review-reads-three-sources-and-names-the-one-it-cannot`
   - **files**: `lib/Service/Marketing/WeeklyReviewService.php`, `tests/Unit/Service/Marketing/WeeklyReviewServiceTest.php`
 - [x] 5.2 `WeeklyReviewController` and its routes

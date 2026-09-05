@@ -26,7 +26,6 @@ use OCA\Pipelinq\Service\Marketing\WeeklyReviewService;
 use OCA\Pipelinq\Tests\Unit\Support\InMemoryListObjectStore;
 use OCP\AppFramework\Utility\ITimeFactory;
 use PHPUnit\Framework\TestCase;
-use Psr\Log\LoggerInterface;
 
 /**
  * Tests for WeeklyReviewService: the window, the absent source, and the
@@ -163,43 +162,23 @@ class WeeklyReviewServiceTest extends TestCase {
 	}//end testGeneratingTwiceKeepsOneReviewPerWeek()
 
 	/**
-	 * An agent narrative carries its author, and the page can say so.
+	 * A review pipelinq composed carries NO agent mark at all.
+	 *
+	 * 🔴 THE MARK'S ABSENCE IS THE ASSERTION. Nothing in pipelinq can write an
+	 * agent narrative today: the app ships no MCP tool provider, so the seeded
+	 * agent template grants read-only tools and no agent reaches a write path.
+	 * A review that claimed an author would be claiming one that does not
+	 * exist, and the page would tell a reader an agent wrote what pipelinq
+	 * counted.
 	 *
 	 * @return void
 	 */
-	public function testAnAgentNarrativeIsMarkedWithItsAuthor(): void {
-		$service = $this->service();
-		$service->generate();
-
-		$review = $service->recordNarrative(
-			weekStarting: self::LAST_MONDAY,
-			summary: 'The newsletter did the work last week.'
-		);
-
-		$this->assertTrue($review['agentAuthored']);
-		$this->assertSame(WeeklyReviewService::AGENT_IDENTITY, $review['agentAuthoredBy']);
-		$this->assertSame('The newsletter did the work last week.', $review['summary']);
-	}//end testAnAgentNarrativeIsMarkedWithItsAuthor()
-
-	/**
-	 * A review composed by pipelinq alone carries no mark at all: a mark on
-	 * text no agent wrote is as wrong as a missing one.
-	 *
-	 * @return void
-	 */
-	public function testTheMarkIsNotTakenFromTheCaller(): void {
+	public function testAComposedReviewCarriesNoAgentMark(): void {
 		$review = $this->service()->generate();
 
 		$this->assertArrayNotHasKey('agentAuthored', $review);
-
-		$marked = $this->service()->recordNarrative(
-			weekStarting: self::LAST_MONDAY,
-			summary: 'Written by a person.',
-			agent: ''
-		);
-		$this->assertFalse($marked['agentAuthored']);
-		$this->assertSame('', $marked['agentAuthoredBy']);
-	}//end testTheMarkIsNotTakenFromTheCaller()
+		$this->assertArrayNotHasKey('agentAuthoredBy', $review);
+	}//end testAComposedReviewCarriesNoAgentMark()
 
 	/**
 	 * The latest review is the one with the most recent week, not the row
@@ -229,7 +208,6 @@ class WeeklyReviewServiceTest extends TestCase {
 			$this->store,
 			new WeeklyReviewNumbers($this->store),
 			$time,
-			$this->createMock(LoggerInterface::class),
 		);
 	}//end service()
 }//end class

@@ -215,17 +215,19 @@ The review MUST take no action. There is no send path and no publish path on it,
 - **WHEN** the review is composed on an instance with no watch events
 - **THEN** `degraded` holds `watchEvent`, and no highlight or suggestion claims a competitor number
 
-### Requirement: An agent may write the narrative and is marked as its author
+### Requirement: The narrative mark has storage and a renderer and no writer yet
 
-`WeeklyReviewService::recordNarrative()` MUST stamp `agentAuthored` and `agentAuthoredBy` itself and MUST ignore any such value arriving in a request body, because a mark a client can set is not a mark (ADR-088).
+The `weeklyReview` schema MUST carry `agentAuthored` and `agentAuthoredBy`, the same pair `article` and `socialPost` already use, and the review page MUST show the mark whenever it is set, naming the agent (ADR-088).
 
-The review page MUST show the mark whenever the summary was written by an agent, naming the agent.
+Nothing in pipelinq MUST write that mark today, and a review pipelinq composed MUST NOT carry it. Pipelinq ships no MCP tool provider (ADR-034 Decision 3), so the seeded agent template grants read-only tools and no agent can reach a pipelinq write path. A method that stamped the mark and had no caller would be a capability that looks present and can never run, which is worse than an absent one.
 
-#### Scenario: An agent narrative carries its author
+When the writer lands it MUST stamp both properties itself and MUST ignore any such value arriving in a request body, because a mark a client can set is not a mark.
 
-@e2e exclude writing a narrative needs hermiq, which the CI instance does not install. Asserted by tests/Unit/Service/Marketing/WeeklyReviewServiceTest.php (testAnAgentNarrativeIsMarkedWithItsAuthor, testTheMarkIsNotTakenFromTheCaller).
-- **WHEN** an agent writes the summary for a stored week
-- **THEN** the review carries `agentAuthored` true and `agentAuthoredBy` naming the agent, and the page says an agent wrote it
+#### Scenario: A composed review claims no author
+
+@e2e exclude the mark's absence is the assertion, and an absent property renders as an absent paragraph, which looks the same as a page that failed to load it. Asserted by tests/Unit/Service/Marketing/WeeklyReviewServiceTest.php (testAComposedReviewCarriesNoAgentMark).
+- **WHEN** pipelinq composes a review
+- **THEN** it carries neither `agentAuthored` nor `agentAuthoredBy`, and the page shows no author line
 
 ### Requirement: The weekly review ships as an agent template with no send tool
 

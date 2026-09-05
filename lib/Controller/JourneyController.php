@@ -37,6 +37,7 @@ use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
 use OCP\IUserSession;
+use Throwable;
 
 /**
  * JourneyController: journeys, their compilation and their run log.
@@ -90,6 +91,10 @@ class JourneyController extends Controller {
 	 *
 	 * @return JSONResponse The journey, or 404.
 	 *
+	 * @throws Throwable Never: a read that fails is translated below, because a
+	 *         stack trace on a detail page tells the marketer nothing and the
+	 *         browser renders it as a blank record.
+	 *
 	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
 	 */
 	#[NoAdminRequired]
@@ -99,7 +104,12 @@ class JourneyController extends Controller {
 			return $denied;
 		}
 
-		$journey = $this->journeys->find(journeyId: $id);
+		try {
+			$journey = $this->journeys->find(journeyId: $id);
+		} catch (Throwable $e) {
+			return new JSONResponse(['error' => 'read_failed', 'reason' => $e->getMessage()], Http::STATUS_BAD_GATEWAY);
+		}
+
 		if ($journey === null) {
 			return new JSONResponse(['error' => 'not_found'], Http::STATUS_NOT_FOUND);
 		}
