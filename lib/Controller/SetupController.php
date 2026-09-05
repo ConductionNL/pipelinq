@@ -284,7 +284,7 @@ class SetupController extends Controller {
 		// dataset, and it still means "seed the one this app builds". Kept so
 		// an older manifest, a runbook or a script that posts it keeps working.
 		if ($actionId === 'load-demo-data') {
-			return $this->loadDataset(actionId: $actionId);
+			return $this->loadDataset();
 		}
 
 		if ($actionId === 'seed-demo-data') {
@@ -358,13 +358,11 @@ class SetupController extends Controller {
 	 * Skipping this step never blocks setup completion (the wizard treats it
 	 * as optional; only the currency step is required).
 	 *
-	 * @param string $actionId The action that asked.
-	 *
 	 * @return DataResponse `{ success, message }`.
 	 *
 	 * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
 	 */
-	private function loadDataset(string $actionId): DataResponse {
+	private function loadDataset(): DataResponse {
 		$picked = $this->config(key: self::DATASET_KEY);
 
 		// 🔴 NO SILENT DEFAULT. Seeding here because the operator clicked Run
