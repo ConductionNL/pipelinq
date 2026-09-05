@@ -162,7 +162,7 @@ class Notifier implements INotifier {
 
 			case 'task_completed':
 				$resultText = $params['resultText'] ?? '';
-				$notification->setParsedSubject($l->t('Task completed: %1$s — %2$s', [$title, $resultText]));
+				$notification->setParsedSubject($l->t('Task completed: %1$s (%2$s)', [$title, $resultText]));
 				$notification->setRichSubject(
 					subject: $l->t('Task completed: {title}'),
 					parameters: $richParams
@@ -240,7 +240,7 @@ class Notifier implements INotifier {
 				$period = (string)($params['period'] ?? '');
 				$errors = (string)($params['errors'] ?? '');
 				$notification->setParsedSubject(
-					$l->t('Forecast snapshot job — partial failure for %1$s', [$period])
+					$l->t('Forecast snapshot job: partial failure for %1$s', [$period])
 				);
 				$notification->setParsedMessage(
 					$l->t('Some forecast snapshots could not be generated: %1$s', [$errors])
@@ -269,6 +269,34 @@ class Notifier implements INotifier {
 				$notification->setRichSubject(
 					$l->t('Billing handoff failed for {title}'),
 					$richParams
+				);
+				break;
+
+			case 'social_share_requested':
+				$handle = (string)($params['handle'] ?? '');
+				$notification->setParsedSubject(
+					$l->t('Please share this post on %1$s', [$handle])
+				);
+				$notification->setParsedMessage(
+					$l->t(
+						'The text is ready for you. Copy it, open the network and post it, '
+						. 'then confirm in Pipelinq that you did. No application may post to '
+						. 'this account for you.'
+					)
+				);
+				break;
+
+			case 'social_relink_needed':
+				$handle = (string)($params['handle'] ?? '');
+				$notification->setParsedSubject(
+					$l->t('Reconnect your %1$s account', [$handle])
+				);
+				$notification->setParsedMessage(
+					$l->t(
+						'The connection to this account has ended, so posts to it are not '
+						. 'going out. Reconnect it in Social accounts and the scheduled posts '
+						. 'go out again.'
+					)
 				);
 				break;
 

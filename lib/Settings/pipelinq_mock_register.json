@@ -5007,6 +5007,315 @@
       {
         "@self": {
           "register": "pipelinq",
+          "schema": "socialAccount",
+          "slug": "socialaccount-socialaccount-1-1"
+        },
+        "network": "mastodon",
+        "kind": "organisation",
+        "handle": "Voorbeeld Handle 1",
+        "displayName": "Voorbeeld Displayname 1",
+        "profileUrl": "https://example.invalid/resource/0",
+        "externalAccountId": "Voorbeeld Externalaccountid 1",
+        "instanceBaseUrl": "https://example.invalid/resource/0",
+        "ownerUserId": "Voorbeeld Owneruserid 1",
+        "clientId": "Voorbeeld Clientid 1",
+        "credentialRef": "Voorbeeld Credentialref 1",
+        "scopes": [
+          "Voorbeeld Scopes 1"
+        ],
+        "status": "pending",
+        "statusReason": "Voorbeeld Statusreason 1",
+        "connectedAt": "2026-03-01T09:00:00+00:00",
+        "expiresAt": "2026-03-01T09:00:00+00:00",
+        "publishMode": "api",
+        "followerCount": 0,
+        "followerCountAt": "2026-03-01T09:00:00+00:00",
+        "active": true
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "socialAccount",
+          "slug": "socialaccount-socialaccount-2-2"
+        },
+        "network": "bluesky",
+        "kind": "person",
+        "handle": "Voorbeeld Handle 2",
+        "displayName": "Voorbeeld Displayname 2",
+        "profileUrl": "https://example.invalid/resource/1",
+        "externalAccountId": "Voorbeeld Externalaccountid 2",
+        "instanceBaseUrl": "https://example.invalid/resource/1",
+        "ownerUserId": "Voorbeeld Owneruserid 2",
+        "clientId": "Voorbeeld Clientid 2",
+        "credentialRef": "Voorbeeld Credentialref 2",
+        "scopes": [
+          "Voorbeeld Scopes 2"
+        ],
+        "status": "active",
+        "statusReason": "Voorbeeld Statusreason 2",
+        "connectedAt": "2026-03-02T09:00:00+00:00",
+        "expiresAt": "2026-03-02T09:00:00+00:00",
+        "publishMode": "share",
+        "followerCount": 0,
+        "followerCountAt": "2026-03-02T09:00:00+00:00",
+        "active": true
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "socialAccount",
+          "slug": "socialaccount-socialaccount-3-3"
+        },
+        "network": "linkedin",
+        "kind": "organisation",
+        "handle": "Voorbeeld Handle 3",
+        "displayName": "Voorbeeld Displayname 3",
+        "profileUrl": "https://example.invalid/resource/2",
+        "externalAccountId": "Voorbeeld Externalaccountid 3",
+        "instanceBaseUrl": "https://example.invalid/resource/2",
+        "ownerUserId": "Voorbeeld Owneruserid 3",
+        "clientId": "Voorbeeld Clientid 3",
+        "credentialRef": "Voorbeeld Credentialref 3",
+        "scopes": [
+          "Voorbeeld Scopes 3"
+        ],
+        "status": "expired",
+        "statusReason": "Voorbeeld Statusreason 3",
+        "connectedAt": "2026-03-03T09:00:00+00:00",
+        "expiresAt": "2026-03-03T09:00:00+00:00",
+        "publishMode": "api",
+        "followerCount": 0,
+        "followerCountAt": "2026-03-03T09:00:00+00:00",
+        "active": true
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "socialPost",
+          "slug": "socialpost-voorbeeld-title-1-1"
+        },
+        "body": "Voorbeeld Body 1",
+        "title": "Voorbeeld Title 1",
+        "articleId": "Voorbeeld Articleid 1",
+        "campaignId": "Voorbeeld Campaignid 1",
+        "media": [
+          {
+            "path": "Voorbeeld Path 1",
+            "url": "Voorbeeld Url 1",
+            "alt": "Voorbeeld Alt 1",
+            "mimeType": "Voorbeeld Mimetype 1"
+          }
+        ],
+        "link": "https://example.invalid/resource/0",
+        "accountIds": [
+          "Voorbeeld Accountids 1"
+        ],
+        "variants": {},
+        "scheduledFor": "2026-03-01T09:00:00+00:00",
+        "status": "draft",
+        "approvals": [
+          {
+            "userId": "Voorbeeld Userid 1",
+            "decision": "approved",
+            "decidedAt": "2026-03-01T09:00:00+00:00",
+            "note": "Voorbeeld Note 1"
+          }
+        ],
+        "agentAuthored": false,
+        "agentAuthoredBy": "Voorbeeld Agentauthoredby 1",
+        "createdBy": "Voorbeeld Createdby 1",
+        "publishedAt": "2026-03-01T09:00:00+00:00",
+        "failureReason": "Voorbeeld Failurereason 1"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "socialPost",
+          "slug": "socialpost-voorbeeld-title-2-2"
+        },
+        "body": "Voorbeeld Body 2",
+        "title": "Voorbeeld Title 2",
+        "articleId": "Voorbeeld Articleid 2",
+        "campaignId": "Voorbeeld Campaignid 2",
+        "media": [
+          {
+            "path": "Voorbeeld Path 2",
+            "url": "Voorbeeld Url 2",
+            "alt": "Voorbeeld Alt 2",
+            "mimeType": "Voorbeeld Mimetype 2"
+          }
+        ],
+        "link": "https://example.invalid/resource/1",
+        "accountIds": [
+          "Voorbeeld Accountids 2"
+        ],
+        "variants": {},
+        "scheduledFor": "2026-03-02T09:00:00+00:00",
+        "status": "approval",
+        "approvals": [
+          {
+            "userId": "Voorbeeld Userid 2",
+            "decision": "rejected",
+            "decidedAt": "2026-03-02T09:00:00+00:00",
+            "note": "Voorbeeld Note 2"
+          }
+        ],
+        "agentAuthored": false,
+        "agentAuthoredBy": "Voorbeeld Agentauthoredby 2",
+        "createdBy": "Voorbeeld Createdby 2",
+        "publishedAt": "2026-03-02T09:00:00+00:00",
+        "failureReason": "Voorbeeld Failurereason 2"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "socialPost",
+          "slug": "socialpost-voorbeeld-title-3-3"
+        },
+        "body": "Voorbeeld Body 3",
+        "title": "Voorbeeld Title 3",
+        "articleId": "Voorbeeld Articleid 3",
+        "campaignId": "Voorbeeld Campaignid 3",
+        "media": [
+          {
+            "path": "Voorbeeld Path 3",
+            "url": "Voorbeeld Url 3",
+            "alt": "Voorbeeld Alt 3",
+            "mimeType": "Voorbeeld Mimetype 3"
+          }
+        ],
+        "link": "https://example.invalid/resource/2",
+        "accountIds": [
+          "Voorbeeld Accountids 3"
+        ],
+        "variants": {},
+        "scheduledFor": "2026-03-03T09:00:00+00:00",
+        "status": "scheduled",
+        "approvals": [
+          {
+            "userId": "Voorbeeld Userid 3",
+            "decision": "approved",
+            "decidedAt": "2026-03-03T09:00:00+00:00",
+            "note": "Voorbeeld Note 3"
+          }
+        ],
+        "agentAuthored": false,
+        "agentAuthoredBy": "Voorbeeld Agentauthoredby 3",
+        "createdBy": "Voorbeeld Createdby 3",
+        "publishedAt": "2026-03-03T09:00:00+00:00",
+        "failureReason": "Voorbeeld Failurereason 3"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "socialPublication",
+          "slug": "socialpublication-socialpublication-1-1"
+        },
+        "postId": "Voorbeeld Postid 1",
+        "accountId": "Voorbeeld Accountid 1",
+        "network": "Voorbeeld Network 1",
+        "status": "pending",
+        "externalId": "Voorbeeld Externalid 1",
+        "url": "https://example.invalid/resource/0",
+        "publishedAt": "2026-03-01T09:00:00+00:00",
+        "metrics": {
+          "views": 0,
+          "likes": 0,
+          "comments": 0,
+          "shares": 0,
+          "clicks": 0
+        },
+        "rawMetrics": {},
+        "metricsAt": "2026-03-01T09:00:00+00:00",
+        "cost": 0,
+        "attempts": 0,
+        "failureCode": "",
+        "failureReason": "Voorbeeld Failurereason 1",
+        "sharePromptedAt": "2026-03-01T09:00:00+00:00",
+        "preparedBody": "Voorbeeld Preparedbody 1",
+        "preparedMedia": [
+          {
+            "path": "Voorbeeld Path 1",
+            "url": "Voorbeeld Url 1",
+            "alt": "Voorbeeld Alt 1"
+          }
+        ]
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "socialPublication",
+          "slug": "socialpublication-socialpublication-2-2"
+        },
+        "postId": "Voorbeeld Postid 2",
+        "accountId": "Voorbeeld Accountid 2",
+        "network": "Voorbeeld Network 2",
+        "status": "published",
+        "externalId": "Voorbeeld Externalid 2",
+        "url": "https://example.invalid/resource/1",
+        "publishedAt": "2026-03-02T09:00:00+00:00",
+        "metrics": {
+          "views": 1,
+          "likes": 1,
+          "comments": 1,
+          "shares": 1,
+          "clicks": 1
+        },
+        "rawMetrics": {},
+        "metricsAt": "2026-03-02T09:00:00+00:00",
+        "cost": 0,
+        "attempts": 0,
+        "failureCode": "not_configured",
+        "failureReason": "Voorbeeld Failurereason 2",
+        "sharePromptedAt": "2026-03-02T09:00:00+00:00",
+        "preparedBody": "Voorbeeld Preparedbody 2",
+        "preparedMedia": [
+          {
+            "path": "Voorbeeld Path 2",
+            "url": "Voorbeeld Url 2",
+            "alt": "Voorbeeld Alt 2"
+          }
+        ]
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "socialPublication",
+          "slug": "socialpublication-socialpublication-3-3"
+        },
+        "postId": "Voorbeeld Postid 3",
+        "accountId": "Voorbeeld Accountid 3",
+        "network": "Voorbeeld Network 3",
+        "status": "failed",
+        "externalId": "Voorbeeld Externalid 3",
+        "url": "https://example.invalid/resource/2",
+        "publishedAt": "2026-03-03T09:00:00+00:00",
+        "metrics": {
+          "views": 2,
+          "likes": 2,
+          "comments": 2,
+          "shares": 2,
+          "clicks": 2
+        },
+        "rawMetrics": {},
+        "metricsAt": "2026-03-03T09:00:00+00:00",
+        "cost": 0,
+        "attempts": 0,
+        "failureCode": "relink_needed",
+        "failureReason": "Voorbeeld Failurereason 3",
+        "sharePromptedAt": "2026-03-03T09:00:00+00:00",
+        "preparedBody": "Voorbeeld Preparedbody 3",
+        "preparedMedia": [
+          {
+            "path": "Voorbeeld Path 3",
+            "url": "Voorbeeld Url 3",
+            "alt": "Voorbeeld Alt 3"
+          }
+        ]
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
           "schema": "sourceRecord",
           "slug": "sourcerecord-sourcerecord-1-1"
         },

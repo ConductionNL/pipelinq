@@ -130,6 +130,7 @@ import Repeat from 'vue-material-design-icons/Repeat.vue'
 import RouterWireless from 'vue-material-design-icons/RouterWireless.vue'
 import ScaleBalance from 'vue-material-design-icons/ScaleBalance.vue'
 import SchoolOutline from 'vue-material-design-icons/SchoolOutline.vue'
+import SendCheckOutline from 'vue-material-design-icons/SendCheckOutline.vue'
 import Server from 'vue-material-design-icons/Server.vue'
 import ShieldAccountOutline from 'vue-material-design-icons/ShieldAccountOutline.vue'
 import ShieldCheck from 'vue-material-design-icons/ShieldCheck.vue'
@@ -273,6 +274,7 @@ export default {
 	ScaleBalance,
 	SchoolOutline,
 	Server,
+	SendCheckOutline,
 	ShieldAccountOutline,
 	ShieldCheck,
 	ShieldCheckOutline,
