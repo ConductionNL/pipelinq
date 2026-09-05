@@ -22,6 +22,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\Pipelinq\Service\ComplianceService;
+use OCA\Pipelinq\Service\Marketing\SegmentSignalService;
 use OCA\Pipelinq\Service\SegmentService;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
@@ -43,6 +44,20 @@ class ComplianceServiceTest extends TestCase {
 	private IAppConfig $appConfig;
 	private SegmentService $segmentService;
 	private LoggerInterface $logger;
+
+	/**
+	 * The signal service the suppression rule reads the dunning state from.
+	 *
+	 * @var SegmentSignalService
+	 */
+	private SegmentSignalService $signals;
+
+	/**
+	 * Contact id to the dunning state the signal service answers with.
+	 *
+	 * @var array<string, string>
+	 */
+	private array $dunning = [];
 	private object $objectService;
 
 	/**
@@ -212,12 +227,120 @@ class ComplianceServiceTest extends TestCase {
 			}
 		);
 
+		$this->appConfig->method('getValueBool')->willReturnCallback(
+			fn (string $app, string $key, bool $default = false): bool => $default
+		);
+
+		$this->signals = $this->createMock(SegmentSignalService::class);
+		$this->signals->method('dunningStateForContact')->willReturnCallback(
+			fn (string $contactId): ?string => ($this->dunning[$contactId] ?? null)
+		);
+
 		$this->service = new ComplianceService($this->container,
 			$this->appConfig,
 			$this->segmentService,
 			$this->logger,
+			$this->signals,
 		);
 	}//end setUp()
+
+	/**
+	 * A promotional send is skipped for a customer in dunning; the same
+	 * contact still receives a service message, because an invoice reminder
+	 * and a delivery notice have to reach a late payer.
+	 *
+	 * @return void
+	 */
+	public function testAPromotionalSendIsSuppressedForAnOverdueCustomer(): void {
+		$this->seedConsent('contact-1', 'email', 'consent');
+		$this->dunning['contact-1'] = 'overdue';
+
+		$promotional = $this->service->permitsSend('contact-1', 'email', ComplianceService::INTENT_PROMOTIONAL);
+		$this->assertFalse($promotional['allowed']);
+		$this->assertSame(ComplianceService::REASON_SUPPRESSED, $promotional['reason']);
+
+		$service = $this->service->permitsSend('contact-1', 'email', ComplianceService::INTENT_SERVICE);
+		$this->assertTrue($service['allowed']);
+		$this->assertSame('', $service['reason']);
+	}//end testAPromotionalSendIsSuppressedForAnOverdueCustomer()
+
+	/**
+	 * A service message is never suppressed, whatever the state.
+	 *
+	 * @return void
+	 */
+	public function testAServiceMessageIsNeverSuppressed(): void {
+		$this->seedConsent('contact-1', 'email', 'consent');
+
+		foreach (['overdue', 'written-off', 'disputed'] as $state) {
+			$this->dunning['contact-1'] = $state;
+			$this->assertFalse($this->service->isSuppressed('contact-1', ComplianceService::INTENT_SERVICE));
+		}
+	}//end testAServiceMessageIsNeverSuppressed()
+
+	/**
+	 * A dunning state nobody can read does NOT suppress. Refusing to mail
+	 * everybody the moment shillinq is uninstalled is worse than mailing a
+	 * late payer once.
+	 *
+	 * @return void
+	 */
+	public function testAnUnreadableDunningStateDoesNotSuppress(): void {
+		$this->seedConsent('contact-1', 'email', 'consent');
+
+		$this->assertFalse($this->service->isSuppressed('contact-1'));
+		$this->assertTrue($this->service->permitsSend('contact-1', 'email')['allowed']);
+	}//end testAnUnreadableDunningStateDoesNotSuppress()
+
+	/**
+	 * A contact who is current with the bookkeeping is not suppressed.
+	 *
+	 * @return void
+	 */
+	public function testACurrentCustomerIsNotSuppressed(): void {
+		$this->seedConsent('contact-1', 'email', 'consent');
+		$this->dunning['contact-1'] = 'current';
+
+		$this->assertFalse($this->service->isSuppressed('contact-1'));
+	}//end testACurrentCustomerIsNotSuppressed()
+
+	/**
+	 * No consent beats suppression: the gate reports the reason that would
+	 * still block the send if the invoice were paid tomorrow.
+	 *
+	 * @return void
+	 */
+	public function testNoConsentIsReportedBeforeSuppression(): void {
+		$this->dunning['contact-2'] = 'overdue';
+
+		$gate = $this->service->permitsSend('contact-2', 'email');
+
+		$this->assertFalse($gate['allowed']);
+		$this->assertSame(ComplianceService::REASON_NO_CONSENT, $gate['reason']);
+	}//end testNoConsentIsReportedBeforeSuppression()
+
+	/**
+	 * Compliance separates the contact it MAY NOT mail from the contact it
+	 * chose not to. Collapsing the two would report a lawful campaign as
+	 * non-compliant, and a compliance flag that cries wolf gets ignored.
+	 *
+	 * @return void
+	 */
+	public function testSuppressedContactsAreReportedSeparatelyFromMissingConsent(): void {
+		$this->seedConsent('contact-1', 'email', 'consent');
+		$this->dunning['contact-1'] = 'overdue';
+
+		$this->segmentService->method('getMembersForBlast')->willReturn([
+			['contactId' => 'contact-1'],
+			['contactId' => 'contact-2'],
+		]);
+
+		$result = $this->service->checkSegmentCompliance('segment-1', 'email');
+
+		$this->assertSame(['contact-2'], $result['missingConsent']);
+		$this->assertSame(['contact-1'], $result['suppressed']);
+		$this->assertFalse($result['compliant']);
+	}//end testSuppressedContactsAreReportedSeparatelyFromMissingConsent()
 
 	/**
 	 * Push a ConsentRecord row into the in-memory backing store.

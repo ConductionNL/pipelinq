@@ -497,6 +497,8 @@ return [
         // Marketing — Segments (marketing-segmentation-and-blast chain member 06).
         // Specific routes precede any wildcard {slug} routes (ADR-016).
         ['name' => 'segment#index',         'url' => '/api/segments',                  'verb' => 'GET'],
+        // Above `{id}` so "signals" is never captured as a segment id.
+        ['name' => 'segment#signals',       'url' => '/api/segments/signals',          'verb' => 'GET'],
         ['name' => 'segment#create',        'url' => '/api/segments',                  'verb' => 'POST'],
         ['name' => 'segment#preview',       'url' => '/api/segments/preview',          'verb' => 'POST'],
         ['name' => 'segment#refreshSize',   'url' => '/api/segments/{id}/size',        'verb' => 'POST'],
@@ -571,6 +573,18 @@ return [
         // over a window plus the connection status. Static path, no wildcard.
         ['name' => 'searchConsole#index', 'url' => '/api/marketing/search-queries', 'verb' => 'GET'],
 
+        // Marketing — search intelligence (marketing-search-intelligence, phase 5).
+        // The proposals read serves the whole Keywords page in ONE request; the
+        // confirmation is the only path that creates a keywordTarget. Every
+        // path here is literal except the watch id, which comes last (ADR-016).
+        ['name' => 'keywordIntelligence#proposals', 'url' => '/api/marketing/keyword-proposals', 'verb' => 'GET'],
+        ['name' => 'keywordIntelligence#targets',   'url' => '/api/marketing/keyword-targets',   'verb' => 'GET'],
+        ['name' => 'keywordIntelligence#confirm',   'url' => '/api/marketing/keyword-targets',   'verb' => 'POST'],
+        ['name' => 'marketingConnector#matomo',          'url' => '/api/marketing/matomo/report',    'verb' => 'GET'],
+        ['name' => 'marketingConnector#connectionAudit', 'url' => '/api/marketing/connection-audit', 'verb' => 'GET'],
+        ['name' => 'competitorWatch#index', 'url' => '/api/marketing/watch-events', 'verb' => 'GET'],
+        ['name' => 'competitorWatch#run',   'url' => '/api/marketing/competitor-watches/{id}/run', 'verb' => 'POST'],
+
         // Marketing — Campaigns (marketing-campaigns): the aggregate report the
         // one campaign report page renders from, and the action that asks
         // portaliq for a landing page. Plain campaign reads and writes go
@@ -582,6 +596,22 @@ return [
         ['name' => 'campaign#report',            'url' => '/api/campaigns/{id}/report',       'verb' => 'GET'],
         ['name' => 'campaign#createLandingPage', 'url' => '/api/campaigns/{id}/landing-page', 'verb' => 'POST'],
         ['name' => 'campaign#update',            'url' => '/api/campaigns/{id}',              'verb' => 'PATCH'],
+
+        // Marketing — Journeys (marketing-integrated-campaigns). A journey is
+        // compiled into an OpenRegister flow on every write, so the write path
+        // cannot be the plain object API: a journey saved through it would be
+        // stored and never compiled, which looks exactly like a journey whose
+        // trigger has not fired yet.
+        ['name' => 'journey#index',   'url' => '/api/journeys',              'verb' => 'GET'],
+        ['name' => 'journey#create',  'url' => '/api/journeys',              'verb' => 'POST'],
+        ['name' => 'journey#compile', 'url' => '/api/journeys/{id}/compile', 'verb' => 'POST'],
+        ['name' => 'journey#runs',    'url' => '/api/journeys/{id}/runs',    'verb' => 'GET'],
+        ['name' => 'journey#show',    'url' => '/api/journeys/{id}',         'verb' => 'GET'],
+        ['name' => 'journey#update',  'url' => '/api/journeys/{id}',         'verb' => 'PATCH'],
+
+        // Marketing — Weekly review (marketing-integrated-campaigns, ADR-112).
+        ['name' => 'weeklyReview#show',     'url' => '/api/weekly-review',          'verb' => 'GET'],
+        ['name' => 'weeklyReview#generate', 'url' => '/api/weekly-review/generate', 'verb' => 'POST'],
 
         // Marketing — Blasts (marketing-segmentation-and-blast chain member 06).
         // Specific routes precede any wildcard {slug} routes (ADR-016).

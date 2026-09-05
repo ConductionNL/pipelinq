@@ -20,6 +20,7 @@ import AccountCheckOutline from 'vue-material-design-icons/AccountCheckOutline.v
 import AccountClock from 'vue-material-design-icons/AccountClock.vue'
 import AccountCog from 'vue-material-design-icons/AccountCog.vue'
 import AccountGroup from 'vue-material-design-icons/AccountGroup.vue'
+import AccountGroupOutline from 'vue-material-design-icons/AccountGroupOutline.vue'
 import AccountKey from 'vue-material-design-icons/AccountKey.vue'
 import AccountMultiple from 'vue-material-design-icons/AccountMultiple.vue'
 import AccountMultipleOutline from 'vue-material-design-icons/AccountMultipleOutline.vue'
@@ -33,12 +34,14 @@ import AlertOctagon from 'vue-material-design-icons/AlertOctagon.vue'
 import AlertOctagonOutline from 'vue-material-design-icons/AlertOctagonOutline.vue'
 import AlertOutline from 'vue-material-design-icons/AlertOutline.vue'
 import BellRing from 'vue-material-design-icons/BellRing.vue'
+import BellRingOutline from 'vue-material-design-icons/BellRingOutline.vue'
 import BookOpenPageVariant from 'vue-material-design-icons/BookOpenPageVariant.vue'
 import BookOpenVariantOutline from 'vue-material-design-icons/BookOpenVariantOutline.vue'
 import BullhornOutline from 'vue-material-design-icons/BullhornOutline.vue'
 import Calendar from 'vue-material-design-icons/Calendar.vue'
 import CalendarCheck from 'vue-material-design-icons/CalendarCheck.vue'
 import CalendarClockOutline from 'vue-material-design-icons/CalendarClockOutline.vue'
+import CalendarWeek from 'vue-material-design-icons/CalendarWeek.vue'
 import CardAccountDetails from 'vue-material-design-icons/CardAccountDetails.vue'
 import CartArrowDown from 'vue-material-design-icons/CartArrowDown.vue'
 import CartOutline from 'vue-material-design-icons/CartOutline.vue'
@@ -107,9 +110,11 @@ import Heart from 'vue-material-design-icons/Heart.vue'
 import History from 'vue-material-design-icons/History.vue'
 import InformationOutline from 'vue-material-design-icons/InformationOutline.vue'
 import Key from 'vue-material-design-icons/Key.vue'
+import KeyVariant from 'vue-material-design-icons/KeyVariant.vue'
 import Link from 'vue-material-design-icons/Link.vue'
 import LinkVariant from 'vue-material-design-icons/LinkVariant.vue'
 import Magnify from 'vue-material-design-icons/Magnify.vue'
+import MapMarkerCheck from 'vue-material-design-icons/MapMarkerCheck.vue'
 import MapMarkerPath from 'vue-material-design-icons/MapMarkerPath.vue'
 import MessageOutline from 'vue-material-design-icons/MessageOutline.vue'
 import MessageText from 'vue-material-design-icons/MessageText.vue'
@@ -163,6 +168,7 @@ export default {
 	AccountClock,
 	AccountCog,
 	AccountGroup,
+	AccountGroupOutline,
 	AccountKey,
 	AccountMultiple,
 	AccountMultipleOutline,
@@ -176,12 +182,14 @@ export default {
 	AlertOctagonOutline,
 	AlertOutline,
 	BellRing,
+	BellRingOutline,
 	BookOpenPageVariant,
 	BookOpenVariantOutline,
 	BullhornOutline,
 	Calendar,
 	CalendarCheck,
 	CalendarClockOutline,
+	CalendarWeek,
 	CardAccountDetails,
 	CartArrowDown,
 	CartOutline,
@@ -250,9 +258,11 @@ export default {
 	History,
 	InformationOutline,
 	Key,
+	KeyVariant,
 	Link,
 	LinkVariant,
 	Magnify,
+	MapMarkerCheck,
 	MapMarkerPath,
 	MessageOutline,
 	MessageText,

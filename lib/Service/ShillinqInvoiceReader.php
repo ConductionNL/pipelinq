@@ -37,6 +37,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use OCA\Pipelinq\Service\Marketing\ShillinqInvoiceProjection;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -95,12 +96,14 @@ class ShillinqInvoiceReader {
 	 *
 	 * @param ContainerInterface $container DI container for the lazy, duck-typed object service.
 	 * @param LoggerInterface $logger Logger.
+	 * @param ShillinqInvoiceProjection $projection Reduces one shillinq row to what pipelinq reads.
 	 *
 	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-attribution-closes-on-a-paid-invoice-or-on-a-won-lead-and-the-report-says-which
 	 */
 	public function __construct(
 		private ContainerInterface $container,
 		private LoggerInterface $logger,
+		private ShillinqInvoiceProjection $projection = new ShillinqInvoiceProjection(),
 	) {
 	}//end __construct()
 
@@ -162,6 +165,61 @@ class ShillinqInvoiceReader {
 
 		return $invoices;
 	}//end paidInvoicesFor()
+
+	/**
+	 * Every invoice of one shillinq customer that is past the draft stage.
+	 *
+	 * `paidInvoicesFor()` answers "what money arrived", which is the only
+	 * question a campaign report may ask. A marketing signal asks two more:
+	 * when the customer last received an invoice at all, and whether one of
+	 * them is in dunning. Both need the invoices that were NOT paid, so this
+	 * is a second read rather than a widened first one: nothing that closes
+	 * attribution may accidentally start counting an unpaid invoice.
+	 *
+	 * Drafts are excluded. A draft invoice is a document nobody has sent, so
+	 * treating it as contact with the customer would date a lapsed customer
+	 * from a note somebody typed.
+	 *
+	 * @param string $customerRef The shillinq customer reference, as
+	 *                            `client.shillinqOrganisationRef` records it.
+	 *
+	 * @return array<int, array<string, mixed>> One entry per invoice: `id`,
+	 *         `amount`, `currency`, `invoiceDate`, `dueDate`, `lifecycleState`
+	 *         and `lines`. Newest first is NOT guaranteed: the caller sorts.
+	 *
+	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-bookkeeping-supplies-six-segment-fields-and-pipelinq-stores-none-of-them
+	 */
+	public function invoicesFor(string $customerRef): array {
+		$customer = trim($customerRef);
+		if ($customer === '' || $this->probe() === false) {
+			return [];
+		}
+
+		$objectService = $this->objectService();
+		if ($objectService === null) {
+			return [];
+		}
+
+		$rows = $this->pages(
+			objectService: $objectService,
+			filters: [
+				'register' => self::SHILLINQ_REGISTER,
+				'schema' => self::AR_INVOICE_SCHEMA,
+				'customerId' => $customer,
+			],
+			maxRows: self::MAX_ROWS
+		);
+
+		$invoices = [];
+		foreach ($rows as $row) {
+			$invoice = $this->projection->whole(row: $row);
+			if ($invoice !== null) {
+				$invoices[] = $invoice;
+			}
+		}
+
+		return $invoices;
+	}//end invoicesFor()
 
 	/**
 	 * Whether shillinq's application class is loadable. Protected so a
@@ -257,16 +315,7 @@ class ShillinqInvoiceReader {
 			return null;
 		}
 
-		$id = '';
-		foreach ([$row, (array)($row['@self'] ?? [])] as $source) {
-			foreach (['uuid', 'id', 'slug'] as $key) {
-				$value = ($source[$key] ?? null);
-				if ($id === '' && is_scalar($value) === true && (string)$value !== '') {
-					$id = (string)$value;
-				}
-			}
-		}
-
+		$id = $this->projection->identify(row: $row);
 		if ($id === '') {
 			return null;
 		}

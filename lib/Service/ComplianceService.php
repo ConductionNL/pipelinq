@@ -31,6 +31,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Service\Marketing\SegmentSignalService;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -131,6 +132,34 @@ class ComplianceService {
 	public const LAWFUL_BASIS_SOFT_OPT_IN = 'soft-opt-in';
 
 	/**
+	 * A send that promotes something. Suppression applies.
+	 *
+	 * @var string
+	 */
+	public const INTENT_PROMOTIONAL = 'promotional';
+
+	/**
+	 * A send the contact needs whatever their invoices say.
+	 *
+	 * @var string
+	 */
+	public const INTENT_SERVICE = 'service';
+
+	/**
+	 * The gate refused because no lawful basis permits the send.
+	 *
+	 * @var string
+	 */
+	public const REASON_NO_CONSENT = 'no_consent';
+
+	/**
+	 * The gate refused because the customer is in dunning.
+	 *
+	 * @var string
+	 */
+	public const REASON_SUPPRESSED = 'suppressed_dunning';
+
+	/**
 	 * Lawful-basis values that are recorded on a ConsentRecord but do
 	 * NOT permit a marketing send. The list is consulted explicitly so
 	 * an audit-log line surfaces every blocked "imported" send.
@@ -146,6 +175,7 @@ class ComplianceService {
 	 * @param IAppConfig $appConfig Pipelinq app config.
 	 * @param SegmentService $segmentService Segment member projection.
 	 * @param LoggerInterface $logger Logger.
+	 * @param SegmentSignalService $signals Derived signals, for the dunning state.
 	 *
 	 * @spec openspec/specs/marketing-compliance/spec.md#requirement-blast-cannot-send-without-lawful-basis
 	 */
@@ -154,8 +184,103 @@ class ComplianceService {
 		private IAppConfig $appConfig,
 		private SegmentService $segmentService,
 		private LoggerInterface $logger,
+		private SegmentSignalService $signals,
 	) {
 	}//end __construct()
+
+	/**
+	 * Whether this send may go out at all, and why not when it may not.
+	 *
+	 * One gate, two reasons. Consent answers whether the tenant is allowed
+	 * to mail this contact; suppression answers whether it should right
+	 * now. They are asked here together rather than in two engines, because
+	 * a second rule engine beside the consent gate is a second place to
+	 * forget a rule, and forgetting one of these is a mailing to somebody
+	 * who is being chased for money.
+	 *
+	 * @param string $contactId Contact UUID or slug.
+	 * @param string $channel "email" or "sms".
+	 * @param string $intent `promotional` or `service`.
+	 * @param string|null $listId The list, when the send is list-scoped.
+	 *
+	 * @return array{allowed: bool, reason: string} `reason` is empty when allowed,
+	 *         otherwise `no_consent` or `suppressed_dunning`.
+	 *
+	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-promotional-send-skips-a-customer-in-dunning
+	 */
+	public function permitsSend(string $contactId, string $channel, string $intent = self::INTENT_PROMOTIONAL, ?string $listId = null): array {
+		$hasConsent = $this->hasConsentForChannel(contactId: $contactId, channel: $channel);
+		if ($listId !== null && $listId !== '') {
+			$hasConsent = $this->hasConsentForList(contactId: $contactId, listId: $listId, channel: $channel);
+		}
+
+		if ($hasConsent === false) {
+			return ['allowed' => false, 'reason' => self::REASON_NO_CONSENT];
+		}
+
+		if ($this->isSuppressed(contactId: $contactId, intent: $intent) === true) {
+			return ['allowed' => false, 'reason' => self::REASON_SUPPRESSED];
+		}
+
+		return ['allowed' => true, 'reason' => ''];
+	}//end permitsSend()
+
+	/**
+	 * Whether a promotional send to this contact is suppressed.
+	 *
+	 * A service message is never suppressed. An invoice reminder, a
+	 * delivery notice and a password reset all have to reach a late payer,
+	 * and the whole point of suppression is that the promotion does not.
+	 *
+	 * @param string $contactId Contact UUID or slug.
+	 * @param string $intent `promotional` or `service`.
+	 *
+	 * @return bool True when the send is skipped.
+	 *
+	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-promotional-send-skips-a-customer-in-dunning
+	 */
+	public function isSuppressed(string $contactId, string $intent = self::INTENT_PROMOTIONAL): bool {
+		if ($intent !== self::INTENT_PROMOTIONAL) {
+			return false;
+		}
+
+		if ($this->appConfig->getValueBool(Application::APP_ID, 'marketing.suppress_late_payers', true) === false) {
+			return false;
+		}
+
+		$state = $this->signals->dunningStateForContact(contactId: $contactId);
+		if ($state === null) {
+			return false;
+		}
+
+		return in_array($state, $this->suppressingStates(), true);
+	}//end isSuppressed()
+
+	/**
+	 * The dunning states a promotional send is suppressed on.
+	 *
+	 * @return array<int, string> The configured states, or the default pair.
+	 */
+	private function suppressingStates(): array {
+		$raw = trim($this->appConfig->getValueString(Application::APP_ID, 'marketing.suppression_states', ''));
+		if ($raw === '') {
+			return SegmentSignalService::SUPPRESSING_DUNNING_STATES;
+		}
+
+		$states = [];
+		foreach (explode(',', $raw) as $state) {
+			$state = strtolower(trim($state));
+			if ($state !== '') {
+				$states[] = $state;
+			}
+		}
+
+		if ($states === []) {
+			return SegmentSignalService::SUPPRESSING_DUNNING_STATES;
+		}
+
+		return $states;
+	}//end suppressingStates()
 
 	/**
 	 * Check every member of a Segment for a usable ConsentRecord on the
@@ -175,12 +300,14 @@ class ComplianceService {
 	 *
 	 * @param string $segmentId Segment UUID or slug.
 	 * @param string $channel "email" or "sms".
+	 * @param string $intent `promotional` or `service`; a service message is never suppressed.
 	 *
-	 * @return array{compliant: bool, missingConsent: array<int, string>, missingCount: int}
+	 * @return array{compliant: bool, missingConsent: array<int, string>, missingCount: int, suppressed: array<int, string>, suppressedCount: int}
 	 *
 	 * @spec openspec/specs/marketing-compliance/spec.md#requirement-blast-cannot-send-without-lawful-basis
+	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-promotional-send-skips-a-customer-in-dunning
 	 */
-	public function checkSegmentCompliance(string $segmentId, string $channel): array {
+	public function checkSegmentCompliance(string $segmentId, string $channel, string $intent = self::INTENT_PROMOTIONAL): array {
 		$channel = strtolower(trim($channel));
 		$members = $this->segmentService->getMembersForBlast(segmentId: $segmentId);
 		if ($members === []) {
@@ -188,10 +315,13 @@ class ComplianceService {
 				'compliant' => true,
 				'missingConsent' => [],
 				'missingCount' => 0,
+				'suppressed' => [],
+				'suppressedCount' => 0,
 			];
 		}
 
 		$missing = [];
+		$suppressed = [];
 		foreach ($members as $member) {
 			$contactId = (string)($member['contactId'] ?? '');
 			if ($contactId === '') {
@@ -203,15 +333,27 @@ class ComplianceService {
 
 			if ($this->hasConsentForChannel(contactId: $contactId, channel: $channel) === false) {
 				$missing[] = $contactId;
+				continue;
+			}
+
+			if ($this->isSuppressed(contactId: $contactId, intent: $intent) === true) {
+				$suppressed[] = $contactId;
 			}
 		}
 
 		$missing = array_values(array_unique($missing));
+		$suppressed = array_values(array_unique($suppressed));
 
+		// `compliant` still means "every member has a lawful basis".
+		// A suppressed contact is one the tenant MAY mail and chose not to,
+		// which is a different thing from one it may not, and collapsing the
+		// two would report a lawful campaign as non-compliant.
 		return [
 			'compliant' => ($missing === []),
 			'missingConsent' => $missing,
 			'missingCount' => count($missing),
+			'suppressed' => $suppressed,
+			'suppressedCount' => count($suppressed),
 		];
 	}//end checkSegmentCompliance()
 
@@ -234,6 +376,7 @@ class ComplianceService {
 	 * @param string $segmentId Segment UUID / slug.
 	 * @param array<string, mixed> $template CampaignTemplate payload.
 	 * @param string $channel "email" or "sms".
+	 * @param string $intent `promotional` or `service`; a service message is never suppressed.
 	 *
 	 * @return array<string, mixed> Preflight triple — see
 	 *                              `validateTemplate()` / `checkSegmentCompliance()`
@@ -241,9 +384,9 @@ class ComplianceService {
 	 *
 	 * @spec openspec/specs/marketing-compliance/spec.md#requirement-blast-cannot-send-without-lawful-basis
 	 */
-	public function preflightBlast(string $segmentId, array $template, string $channel): array {
+	public function preflightBlast(string $segmentId, array $template, string $channel, string $intent = self::INTENT_PROMOTIONAL): array {
 		$templateError = $this->validateTemplate(templateData: $template, channel: $channel);
-		$segmentCheck = $this->checkSegmentCompliance(segmentId: $segmentId, channel: $channel);
+		$segmentCheck = $this->checkSegmentCompliance(segmentId: $segmentId, channel: $channel, intent: $intent);
 
 		$valid = ($templateError === null && $segmentCheck['compliant'] === true);
 

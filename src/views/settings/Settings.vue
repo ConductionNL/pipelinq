@@ -370,6 +370,15 @@
 			:config="config"
 			@saved="onMarketingTrafficSaved" />
 
+		<!-- Marketing intelligence (marketing-search-intelligence): the
+		     sources the keyword, Matomo and competitor reads leave through,
+		     and the relevance switch. No secret is entered here: the Matomo
+		     token lives in the credential broker. -->
+		<MarketingIntelSettings
+			v-if="isAdmin"
+			:config="config"
+			@saved="onMarketingTrafficSaved" />
+
 		<!-- Re-import Status -->
 		<div v-if="message" class="actions-section">
 			<NcNoteCard :type="messageType">
@@ -400,6 +409,7 @@ import CtiPage from './CtiPage.vue'
 import DeliverabilitySettings from './DeliverabilitySettings.vue'
 import ExportConfigurationSettings from './ExportConfigurationSettings.vue'
 import MailingListEmbedSettings from './MailingListEmbedSettings.vue'
+import MarketingIntelSettings from './MarketingIntelSettings.vue'
 import MarketingTrafficSettings from './MarketingTrafficSettings.vue'
 // Configuration surfaces moved off the app nav onto this admin page
 // (nav-ia-cleanup): channels, telephony, and the POS master-data.
@@ -446,6 +456,7 @@ export default {
 		ForecastSettings,
 		ExportConfigurationSettings,
 		MailingListEmbedSettings,
+		MarketingIntelSettings,
 		MarketingTrafficSettings,
 	},
 

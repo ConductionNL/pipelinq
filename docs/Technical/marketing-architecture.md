@@ -169,7 +169,17 @@ Phases are ordered by value and dependency. No dates. Tracks inside a phase can 
 | 3 · Social publishing | Account connection through the broker, seven adapters behind one interface (Mastodon, Bluesky, LinkedIn member and page, X with a spend cap, Facebook page, Instagram business, Threads), composer and calendar with approvals, advocacy share flow, daily metrics pull, read-only inbox | `social-publishing` (built as ONE change rather than the eight below, because the adapters share an interface, a broker seam and a failure vocabulary that would have been written three times over eight changes); read-only inbox deferred to phase 5 | A post drafted from an article is approved and published to a company page, a colleague's profile and Mastodon at the scheduled time, and shows views the next morning |
 | 4 · Campaigns and attribution | Campaign object with a fixed UTM vocabulary, landing pages and forms in portaliq, form submit to lead with first and last touch, attribution models, attribution closed on paid invoices, one campaign report | `marketing-campaigns-and-utm`, `marketing-landing-pages-via-portaliq`, `marketing-touchpoint-attribution`, `shillinq-attribution-on-paid-invoice` (shillinq), `marketing-campaign-report` | A lead created from a landing-page form shows the mailing as first touch, a post as last touch, and an attributed value once shillinq records the invoice as paid |
 | 5 · Search and competitor intelligence | Search Console and Matomo connectors, first-party keyword analysis (position buckets, striking distance, cannibalisation, content gaps), DataForSEO bring-your-own-key, competitor watches on OpenRegister flow schedules, connection audit | `search-console-and-matomo-connectors`, `keyword-intelligence`, `competitor-watches`, `social-connection-audit` | The keyword page lists striking-distance queries from real Search Console data; the competitor page shows the last ten items three competitors published |
-| 6 · Integrated campaigns | Shillinq signals as segment fields, standard audiences, journeys as OpenRegister flows, weekly review agent, suppression rules | `shillinq-marketing-signals` (shillinq), `marketing-standard-audiences`, `marketing-journeys-on-or-flows`, `marketing-weekly-review-agent` (hermiq) | A win-back journey starts from a "no invoice in 12 months" signal and the Monday review names its result |
+| 6 · Integrated campaigns | Shillinq signals as segment fields, standard audiences, journeys as OpenRegister flows, weekly review agent, suppression rules | `marketing-integrated-campaigns` (built as ONE change rather than the four below, because the signals, the audiences and the suppression rule are the same eight derived fields read from three places, and splitting them would have written that catalogue three times) | A win-back journey starts from a "no invoice in 12 months" signal and the Monday review names its result |
+
+Phase 6 shipped as one change, `marketing-integrated-campaigns`, on 2026-09-05. What resolves today and what waits:
+
+| Signal | State | What it waits on |
+| --- | --- | --- |
+| Days to contract renewal, days a lead has been stalled | Resolves on every instance | Nothing. Both read pipelinq's own contracts and leads. |
+| Recognised revenue, value tier, months since the last invoice, purchased products and services, dunning state | Derived and asserted, and resolves to nothing against the demo data | Shillinq, plus a real `client.shillinqOrganisationRef`. Every seeded client carries a nil-UUID placeholder, so the six bookkeeping signals correctly answer "no bookkeeping" even where shillinq is installed. An unresolved signal makes an audience smaller, never larger. |
+| A journey's wait, condition and schedule | Compiled and published to OpenRegister's flow engine | Nothing on an instance whose OpenRegister carries the flow engine. Where it does not, the journey records `engine_missing` and stays inert; pipelinq ships no scheduler of its own. |
+| The weekly review's competitor half | Reads phase 5's watch events | Nothing. `watchEvent` landed with `marketing-search-intelligence` while this change was in flight, so a competitor headline leads the topic ideas and the search queries fill the rest. A source this tenant holds no rows for is listed under `degraded` rather than counted as zero. |
+| The weekly review's narrative | Composed by pipelinq, written by an agent when there is one | Hermiq. The agent template is seeded into hermiq's register when hermiq is installed and is a silent no-op otherwise. It grants read-only tools: no send tool, no publish tool. |
 
 External filings gate phase 3 by calendar, not by code: the LinkedIn Community Management application, Meta App Review with Business Verification, and an X developer account with billing. They are filed under Conduction at the start of the programme.
 
@@ -183,6 +193,17 @@ Phase 3 shipped as one change, `social-publishing`, on 2026-09-05. What is prova
 | X | Same, plus a hard-stop spend budget on `messageSendBudget` | A developer account with billing. |
 | Facebook page, Instagram business | Same | Meta App Review with Business Verification. |
 | Threads | Same | A `threads` provider in OpenRegister's credential catalogue. There is none, so the adapter reports `not_configured` with a reason rather than failing at the call. |
+
+Phase 5 shipped as one change, `marketing-search-intelligence`, on 2026-09-05. It differs from the plan above in four places, each recorded here so a later reader does not treat the difference as drift:
+
+| Planned | Shipped | Why |
+| --- | --- | --- |
+| `searchProperty` and `searchQueryStat` schemas | Neither. The phase reads the `searchQueryDaily` schema and store phase 2 shipped, and properties stay in `search.gsc.properties` | A second reader over the same rows drifts from the first, and two pages then disagree about the same window. Moving the property list to objects is a migration with no new capability behind it. |
+| Competitor watches on OpenRegister flow schedules | Exactly that, plus a contributed node | ADR-094 decision 3 records that the flow engine has no outbound-HTTP node, re-checked against `lib/Service/Flow/Nodes/` for this change. So the schedule is the engine's and the fetching step is ours, `pipelinq.competitor-watch-run`, the way humaniq's payroll flow already works. There is no `TimedJob` in this change and a unit test asserts that. |
+| DataForSEO as a later source | Out of scope, and `keywordTarget.volume` and `difficulty` are left UNSET rather than defaulted | A zero in those fields reads as a measurement of no demand rather than as an absence of one. |
+| `socialConnection` with a `direction` | `weFollowThem` and `theyFollowUs`, each `yes`, `no` or `unknown` | Only Mastodon and Bluesky publish a follower list an audit can read. A boolean would record "the network will not say" as "no", which is an answer a marketer acts on and which would be wrong about half the time. |
+
+What is provable without a Google or Matomo credential: every keyword derivation over hand-written rows, the sitemap, page and feed parses and diffs, the Matomo request shape and its credential-reference refusal, the relevance degrade path, the connection audit's `unknown` vocabulary, and every page's empty state. What is not: any actual fetch.
 
 ## Decisions
 

@@ -335,6 +335,28 @@ export function objectTypes() {
 			label: t(APP, 'Touchpoint'),
 			description: t(APP, 'One attributable interaction with a campaign'),
 		},
+		// Journeys and the weekly review (marketing-integrated-campaigns). The
+		// Journeys index and detail pages read these through the object store,
+		// so both slugs must be registered or fetchCollection() throws and the
+		// page renders blank.
+		{
+			slug: 'journey',
+			group: 'marketing',
+			label: t(APP, 'Journey'),
+			description: t(APP, 'A trigger, a wait, a condition and one action'),
+		},
+		{
+			slug: 'journeyRun',
+			group: 'marketing',
+			label: t(APP, 'Journey run'),
+			description: t(APP, 'What a journey did for one contact'),
+		},
+		{
+			slug: 'weeklyReview',
+			group: 'marketing',
+			label: t(APP, 'Weekly review'),
+			description: t(APP, 'What moved last week, and what to try'),
+		},
 		// Outbound messaging (outbound-messaging-provider-wiring). These slugs are
 		// self-fetched by the conversation section on client/contact detail and by
 		// the Messaging settings page; register them so fetchCollection() resolves
