@@ -517,7 +517,8 @@
         "@self": {
           "register": "pipelinq",
           "schema": "campaign",
-          "slug": "campaign-webinar-ai-voor-gemeenten"
+          "slug": "campaign-webinar-ai-voor-gemeenten",
+          "id": "c1e6b2a4-7f3d-4a58-9b21-5d8e4c07a913"
         },
         "name": "Webinar AI voor gemeenten",
         "goal": "Vijftig aanmeldingen voor het webinar van 12 november.",
@@ -602,10 +603,61 @@
       {
         "@self": {
           "register": "pipelinq",
+          "schema": "blast",
+          "slug": "blast-webinar-ai-voor-gemeenten"
+        },
+        "name": "Uitnodiging webinar AI voor gemeenten",
+        "segmentId": "segment-gemeente-contact-blast",
+        "templateId": "template-q4-product-launch",
+        "channel": "email",
+        "status": "sent",
+        "sentAt": "2026-10-14T09:00:00+00:00",
+        "campaignId": "c1e6b2a4-7f3d-4a58-9b21-5d8e4c07a913",
+        "totals": {
+          "queued": 248,
+          "sent": 248,
+          "delivered": 241,
+          "bounced": 7,
+          "opened": 96,
+          "clicked": 31,
+          "unsubscribed": 2,
+          "complained": 0
+        },
+        "createdBy": "admin",
+        "createdAt": "2026-10-10T08:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "lead",
+          "slug": "lead-webinar-ai-gemeente-voorbeeld",
+          "id": "d2f7c3b5-8a4e-4b69-8c32-6e9f5d18b024"
+        },
+        "title": "Webinar AI voor gemeenten: Gemeente Voorbeeld",
+        "source": "landing-page",
+        "value": 3000,
+        "status": "won",
+        "stage": "closed-won",
+        "campaignId": "c1e6b2a4-7f3d-4a58-9b21-5d8e4c07a913",
+        "firstTouch": {
+          "campaign": "webinar-ai-voor-gemeenten",
+          "source": "nieuwsbrief",
+          "medium": "email"
+        },
+        "lastTouch": {
+          "campaign": "webinar-ai-voor-gemeenten",
+          "source": "linkedin",
+          "medium": "social"
+        },
+        "notes": "Aangemeld via de landingspagina van het webinar. Eerste contact via de nieuwsbrief, laatste via LinkedIn."
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
           "schema": "touchpoint",
           "slug": "touchpoint-webinar-klik-amsterdam"
         },
-        "campaignId": "campaign-webinar-ai-voor-gemeenten",
+        "campaignId": "c1e6b2a4-7f3d-4a58-9b21-5d8e4c07a913",
         "kind": "click",
         "channel": "email",
         "utm": {
@@ -613,9 +665,11 @@
           "source": "nieuwsbrief",
           "medium": "email"
         },
-        "sourceRef": "blast-q4-gemeente-outreach-a",
+        "sourceRef": "blast-webinar-ai-voor-gemeenten",
         "occurredAt": "2026-10-14T10:21:33+00:00",
-        "createdAt": "2026-10-14T10:21:34+00:00"
+        "createdAt": "2026-10-14T10:21:34+00:00",
+        "leadId": "d2f7c3b5-8a4e-4b69-8c32-6e9f5d18b024",
+        "contactId": ""
       },
       {
         "@self": {
@@ -623,7 +677,7 @@
           "schema": "touchpoint",
           "slug": "touchpoint-webinar-bezoek-amsterdam"
         },
-        "campaignId": "campaign-webinar-ai-voor-gemeenten",
+        "campaignId": "c1e6b2a4-7f3d-4a58-9b21-5d8e4c07a913",
         "kind": "visit",
         "channel": "social",
         "utm": {
@@ -632,7 +686,9 @@
           "medium": "social"
         },
         "occurredAt": "2026-10-20T14:02:00+00:00",
-        "createdAt": "2026-10-20T14:02:01+00:00"
+        "createdAt": "2026-10-20T14:02:01+00:00",
+        "leadId": "d2f7c3b5-8a4e-4b69-8c32-6e9f5d18b024",
+        "contactId": ""
       },
       {
         "@self": {
@@ -640,7 +696,7 @@
           "schema": "touchpoint",
           "slug": "touchpoint-webinar-aanmelding-amsterdam"
         },
-        "campaignId": "campaign-webinar-ai-voor-gemeenten",
+        "campaignId": "c1e6b2a4-7f3d-4a58-9b21-5d8e4c07a913",
         "kind": "submit",
         "channel": "social",
         "utm": {
@@ -650,7 +706,9 @@
         },
         "occurredAt": "2026-10-21T09:47:12+00:00",
         "nonce": "REPLACE_WITH_A_SERVER_GENERATED_NONCE",
-        "createdAt": "2026-10-21T09:47:13+00:00"
+        "createdAt": "2026-10-21T09:47:13+00:00",
+        "leadId": "d2f7c3b5-8a4e-4b69-8c32-6e9f5d18b024",
+        "contactId": ""
       }
     ]
   }

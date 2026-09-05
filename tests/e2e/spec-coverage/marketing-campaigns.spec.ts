@@ -293,6 +293,31 @@ test.describe('Campaign report endpoint', () => {
 		// The seeded campaign records a linkedin spend and a budget; an
 		// unrecorded cost would be null, never zero.
 		expect(body.cost?.totalEur).toBeGreaterThan(0)
+
+		// The seed wires one blast, one won lead and three touchpoints to
+		// this campaign, so the report is not merely well-shaped: it counts.
+		// Every number below was read out of 98-marketing-campaigns.json.
+		expect(body.engagement?.click).toBe(1)
+		expect(body.engagement?.visit).toBe(1)
+		expect(body.engagement?.submit).toBe(1)
+		expect(body.totals?.leads).toBe(1)
+		expect(body.totals?.attributedValue).toBe(3000)
+
+		// Shillinq is not installed here, so the lead closes on its own
+		// value and the report says which of the two rules it used.
+		expect(body.leads?.[0]?.basis).toBe('won_lead')
+
+		// Reach comes from the blast's own totals, not from the touchpoints.
+		const email = (body.channels ?? []).find(
+			(row: any) => row.channel === 'email',
+		)
+		expect(email?.reach).toBe(241)
+
+		// Every model divides the same total; only the split differs.
+		for (const model of ['first', 'last', 'linear']) {
+			expect(body.models[model].total).toBe(3000)
+		}
+		expect(body.models.linear.byChannel).not.toEqual(body.models.first.byChannel)
 	})
 
 	// @e2e openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#an-unknown-cost-is-absent-not-zero

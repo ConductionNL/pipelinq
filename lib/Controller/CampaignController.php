@@ -240,11 +240,12 @@ class CampaignController extends Controller {
 		unset($body['id'], $body['_route'], $body['createdBy'], $body['utmCampaign']);
 
 		$user = $this->userSession->getUser();
-		$result = $this->campaigns->save(
-			payload: $body,
-			id: $id,
-			uid: ($user === null) ? '' : $user->getUID()
-		);
+		$uid = '';
+		if ($user !== null) {
+			$uid = $user->getUID();
+		}
+
+		$result = $this->campaigns->save(payload: $body, id: $id, uid: $uid);
 
 		if ($result['error'] === '') {
 			return new JSONResponse($result['campaign']);
