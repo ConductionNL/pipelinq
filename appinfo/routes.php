@@ -547,8 +547,13 @@ return [
         // one campaign report page renders from, and the action that asks
         // portaliq for a landing page. Plain campaign reads and writes go
         // through OpenRegister's object API, so no CRUD routes live here.
+        // The static vocabulary route precedes every {id} route (ADR-016);
+        // reads and lists still go through OpenRegister's object API.
+        ['name' => 'campaign#vocabularies',      'url' => '/api/campaigns/vocabulary',        'verb' => 'GET'],
+        ['name' => 'campaign#create',            'url' => '/api/campaigns',                   'verb' => 'POST'],
         ['name' => 'campaign#report',            'url' => '/api/campaigns/{id}/report',       'verb' => 'GET'],
         ['name' => 'campaign#createLandingPage', 'url' => '/api/campaigns/{id}/landing-page', 'verb' => 'POST'],
+        ['name' => 'campaign#update',            'url' => '/api/campaigns/{id}',              'verb' => 'PATCH'],
 
         // Marketing — Blasts (marketing-segmentation-and-blast chain member 06).
         // Specific routes precede any wildcard {slug} routes (ADR-016).

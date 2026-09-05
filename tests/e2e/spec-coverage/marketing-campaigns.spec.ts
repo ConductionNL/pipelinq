@@ -143,6 +143,64 @@ test.describe('Campaigns page', () => {
 })
 
 /* ══════════════════════════════════════════════════════════════════════════
+ * The write path — POST /api/campaigns, which mints the campaign value and
+ * checks the vocabulary. A campaign written straight through OpenRegister's
+ * object API would do neither, which is why the Campaigns page turns the
+ * declarative create dialog off.
+ * ══════════════════════════════════════════════════════════════════════════ */
+test.describe('Creating a campaign', () => {
+	// @e2e openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#a-source-outside-the-vocabulary-is-refused
+	test('a source outside the vocabulary is refused, naming the value and the list', async ({
+		page,
+	}) => {
+		await gotoRoute(page, '/campaigns')
+
+		const refused = await api(page, 'POST', `${APP}/api/campaigns`, {
+			name: 'E2E beursactie',
+			utmSource: 'Beurs',
+		})
+		expect(refused.status, refused.text).toBe(422)
+		expect(refused.json?.error).toBe('unknown_utm_source')
+		expect(refused.json?.value).toBe('Beurs')
+		expect(refused.json?.allowed).toContain('beurs')
+
+		// Nothing was written: a refusal creates no campaign.
+		const listed = await api(page, 'GET', `${OR}/campaign?_limit=100`)
+		const rows: any[] = listed.json?.results ?? listed.json?.data ?? []
+		expect(rows.some((row: any) => row?.name === 'E2E beursactie')).toBe(false)
+	})
+
+	// @e2e marketing-campaigns::the-campaign-value-is-minted-from-the-name-and-frozen
+	test('the campaign value is minted from the name and survives a rename', async ({
+		page,
+	}) => {
+		await gotoRoute(page, '/campaigns')
+
+		const created = await api(page, 'POST', `${APP}/api/campaigns`, {
+			name: 'E2E webinar over open source',
+			utmSource: 'nieuwsbrief',
+			utmMedium: 'email',
+		})
+		expect(created.status, created.text).toBe(200)
+		expect(created.json?.utmCampaign).toBe('e2e-webinar-over-open-source')
+		const id = idOf(created.json)
+		expect(id).toBeTruthy()
+
+		const renamed = await api(page, 'PATCH', `${APP}/api/campaigns/${id}`, {
+			name: 'E2E webinar over open source, hernoemd',
+		})
+		expect(renamed.status, renamed.text).toBe(200)
+		expect(renamed.json?.name).toBe('E2E webinar over open source, hernoemd')
+		expect(
+			renamed.json?.utmCampaign,
+			'the campaign value is already in links that have left the building',
+		).toBe('e2e-webinar-over-open-source')
+
+		await api(page, 'DELETE', `${OR}/campaign/${id}`)
+	})
+})
+
+/* ══════════════════════════════════════════════════════════════════════════
  * The campaign detail page — the same fragment's type:detail page, whose
  * CampaignLandingPageSection hosts the portaliq hand-off.
  * ══════════════════════════════════════════════════════════════════════════ */

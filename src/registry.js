@@ -234,6 +234,7 @@ import LoyaltyReportingView from './views/loyalty/LoyaltyReporting.vue'
 //     ArticleEditModal, the one editing surface the change owns. Matches the
 //     SegmentNew / TemplateNew / BlastNew convention below. ---
 import ArticleFormView from './views/marketing/ArticleFormView.vue'
+import CampaignFormView from './views/marketing/CampaignFormView.vue'
 import CampaignReportView from './views/marketing/CampaignReport.vue'
 // --- Search Console top queries (marketing-campaign-attribution): an
 //     aggregation over searchQueryDaily rows, not a row list. ---
@@ -824,6 +825,11 @@ const registry = {
 		kind: 'page',
 		component: ArticleFormView,
 		_note: 'New-article route wrapper (marketing-article-hub). Mounts ArticleEditModal in create mode — the bespoke ArticleService create path (author stamp, slug derivation, the ADR-088 agent-mark refusal) has no declarative equivalent, so there is no generic type:"form" page here. On save, navigates to the new article\'s ArticleDetail.',
+	},
+	CampaignFormView: {
+		kind: 'page',
+		component: CampaignFormView,
+		_note: "Campaign create and edit (marketing-campaigns); one component serves CampaignNew and CampaignEdit, matching the SegmentNew / SegmentEdit convention. NOT the declarative create dialog: a campaign written through OpenRegister's object API carries whatever utmCampaign the browser sent and stores a source outside the tenant's vocabulary without complaint. Minting the value once, freezing it across a rename, and refusing an unknown source or medium live in CampaignService, which only POST and PATCH /api/campaigns reach. The source and medium pickers read GET /api/campaigns/vocabulary, admin-maintained app config that is not a schema enum.",
 	},
 	CampaignReportView: {
 		kind: 'page',

@@ -4091,7 +4091,20 @@
         "Which attribution model produced this row.": "Welk attributiemodel deze regel opleverde.",
         "Which channel carried it, resolved from the medium.": "Welk kanaal het droeg, afgeleid uit het medium.",
         "Who interacted, when we know. Empty for an anonymous visit.": "Wie de interactie had, voor zover bekend. Leeg bij een anoniem bezoek.",
-        "Window": "Periode"
+        "Window": "Periode",
+        "New campaign": "Nieuwe campagne",
+        "Edit campaign": "Campagne bewerken",
+        "Back to campaigns": "Terug naar campagnes",
+        "Budget in euro": "Budget in euro",
+        "Campaign value: {value}. It was minted from the name and does not change when you rename the campaign.": "Campagnewaarde: {value}. Die is uit de naam afgeleid en verandert niet als u de campagne hernoemt.",
+        "What this campaign should achieve, in one sentence": "Wat deze campagne moet opleveren, in een zin",
+        "The landing page opens with this. Portaliq refuses a page without it.": "Hiermee opent de landingspagina. Portaliq weigert een pagina zonder samenvatting.",
+        "Markdown. Headings, lists and links all work.": "Markdown. Koppen, lijsten en links werken allemaal.",
+        "Could not load the campaign vocabulary.": "De campagnelijsten konden niet worden geladen.",
+        "Could not save the campaign.": "De campagne kon niet worden opgeslagen.",
+        "A campaign needs a name.": "Een campagne heeft een naam nodig.",
+        "{value} is not one of the allowed sources: {allowed}": "{value} staat niet in de toegestane bronnen: {allowed}",
+        "{value} is not one of the allowed mediums: {allowed}": "{value} staat niet in de toegestane media: {allowed}"
     },
     "plurals": null
 }

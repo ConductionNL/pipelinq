@@ -168,6 +168,8 @@ class ShillinqInvoiceReader {
 	 * test can substitute the answer without shillinq present.
 	 *
 	 * @return bool True when shillinq is installed.
+	 *
+	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-attribution-closes-on-a-paid-invoice-or-on-a-won-lead-and-the-report-says-which
 	 */
 	protected function probe(): bool {
 		return class_exists(self::SHILLINQ_PROBE_CLASS);

@@ -18,7 +18,7 @@
 	"pages": [
 		{
 			"id": "Campaigns",
-			"_note": "Campaign list as a declarative type:index page (marketing-campaigns). Everything the list shows is a stored campaign field, so no custom page is needed: the name, the goal, the campaign value and the dates read straight off the schema. Create and edit use the declarative dialog; the two things a dialog cannot do, asking portaliq for a landing page and reading the report, live on the detail page and on the Reports page instead.",
+			"_note": "Campaign list as a declarative type:index page (marketing-campaigns), read-only. Create and edit go to CampaignFormView instead of the declarative dialog, and showAdd / showFormDialog / showEditAction are therefore off: a campaign written through OpenRegister's object API carries whatever utmCampaign the browser sent and stores a source outside the tenant's vocabulary without complaint. Minting the campaign value once, freezing it across a rename, and refusing an unknown source or medium live in CampaignService, which only POST and PATCH /api/campaigns reach. The report is not reachable from here either: it is a card on the Reports page (ADR-112).",
 			"route": "/campaigns",
 			"type": "index",
 			"title": "Campaigns",
@@ -40,8 +40,52 @@
 						"icon": "Eye",
 						"handler": "navigate",
 						"route": "CampaignDetail"
+					},
+					{
+						"id": "edit",
+						"label": "Edit",
+						"icon": "Pencil",
+						"handler": "navigate",
+						"route": "CampaignEdit"
+					}
+				],
+				"showAdd": false,
+				"showFormDialog": false,
+				"showEditAction": false,
+				"showCopyAction": false,
+				"headerActions": [
+					{
+						"id": "create",
+						"label": "New campaign",
+						"icon": "Plus",
+						"handler": "navigate",
+						"route": "CampaignNew"
 					}
 				]
+			}
+		},
+		{
+			"id": "CampaignNew",
+			"_note": "Campaign create and edit as a thin route wrapper around CampaignFormView (marketing-campaigns), matching the SegmentNew / TemplateNew / BlastNew convention. Custom rather than a declarative form: the create path mints the campaign value from the name and freezes it, and it refuses a source or medium outside the tenant's app-config vocabulary, which no declarative form primitive expresses. Missing primitive: a form whose enum options come from app config rather than from the schema.",
+			"route": "/campaigns/new",
+			"type": "custom",
+			"title": "New campaign",
+			"component": "CampaignFormView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "campaign"
+			}
+		},
+		{
+			"id": "CampaignEdit",
+			"_note": "Campaign create and edit as a thin route wrapper around CampaignFormView (marketing-campaigns), matching the SegmentNew / TemplateNew / BlastNew convention. Custom rather than a declarative form: the create path mints the campaign value from the name and freezes it, and it refuses a source or medium outside the tenant's app-config vocabulary, which no declarative form primitive expresses. Missing primitive: a form whose enum options come from app config rather than from the schema.",
+			"route": "/campaigns/:id/edit",
+			"type": "custom",
+			"title": "Edit campaign",
+			"component": "CampaignFormView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "campaign"
 			}
 		},
 		{
@@ -104,7 +148,11 @@
 							"id": "audit",
 							"label": "History",
 							"icon": "History",
-							"widgets": [{ "type": "audit" }]
+							"widgets": [
+								{
+									"type": "audit"
+								}
+							]
 						}
 					]
 				}

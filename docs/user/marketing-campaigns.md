@@ -14,20 +14,21 @@ campaign instead of two.
 
 | You want to ... | Open ... |
 | --- | --- |
-| Start a campaign | **Marketing > Campaigns > Add** |
+| Start a campaign | **Marketing > Campaigns > New campaign** |
 | Give a mailing to a campaign | **Marketing > Blasts > (the blast)**, the Campaign field |
 | Publish a landing page with a sign-up form | **Marketing > Campaigns > (the campaign)**, the Landing page section |
 | See what a campaign did | **Reports > Campaign report** |
 
 ## 1. Start a campaign
 
-Go to **Marketing > Campaigns** and add one. Give it a name and say in one
+Go to **Marketing > Campaigns** and click **New campaign**. Give it a name and say in one
 sentence what it should achieve. Pick a source and a medium: the source is
 where the visit comes from (`nieuwsbrief`, `linkedin`, `beurs`), the medium is
 how it travels (`email`, `social`, `cpc`).
 
-Both are lowercase, and both come from a list your administrator maintains
-under **Settings**. That is not tidiness. `LinkedIn` and `linkedin` count as two
+Both come from a list your administrator maintains under **Settings**, and
+both are lowercase. Pick one that is not on the list and the form refuses it
+and shows you what is allowed. That is not tidiness. `LinkedIn` and `linkedin` count as two
 different campaigns in every analytics tool, and you only notice when a report
 comes back half the size you expected.
 

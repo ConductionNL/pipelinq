@@ -77,3 +77,48 @@ export async function fetchCampaigns(limit = 100) {
 	)
 	return data?.results || data?.data || []
 }
+
+/**
+ * The source and medium vocabularies an administrator maintains.
+ *
+ * @return {Promise<{sources: Array<string>, mediums: Array<string>}>} Both lists.
+ * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
+ */
+export async function fetchCampaignVocabularies() {
+	const { data } = await axios.get(
+		generateUrl('/apps/pipelinq/api/campaigns/vocabulary'),
+	)
+	return { sources: data?.sources || [], mediums: data?.mediums || [] }
+}
+
+/**
+ * Create or update a campaign through Pipelinq, never straight through the
+ * object API.
+ *
+ * 🔴 THE ROUTE MATTERS. A campaign written through OpenRegister carries
+ * whatever `utmCampaign` the browser sent and accepts a source outside the
+ * vocabulary. Minting and the vocabulary check live in `CampaignService`,
+ * which only these two endpoints reach.
+ *
+ * @param {object} payload The campaign fields.
+ * @param {string} id The campaign to update, empty to create.
+ * @return {Promise<object>} `{campaign}` on success, `{error, value, allowed}` on a refusal.
+ * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
+ */
+export async function saveCampaign(payload, id = '') {
+	const url = id
+		? generateUrl(`/apps/pipelinq/api/campaigns/${id}`)
+		: generateUrl('/apps/pipelinq/api/campaigns')
+	try {
+		const { data } = id
+			? await axios.patch(url, payload)
+			: await axios.post(url, payload)
+		return { campaign: data }
+	} catch (error) {
+		const body = error?.response?.data
+		if (body && typeof body === 'object' && body.error) {
+			return body
+		}
+		throw error
+	}
+}

@@ -4063,7 +4063,20 @@ OC.L10N.register(
         "Which attribution model produced this row.": "Which attribution model produced this row.",
         "Which channel carried it, resolved from the medium.": "Which channel carried it, resolved from the medium.",
         "Who interacted, when we know. Empty for an anonymous visit.": "Who interacted, when we know. Empty for an anonymous visit.",
-        "Window": "Window"
+        "Window": "Window",
+        "{value} is not one of the allowed mediums: {allowed}": "{value} is not one of the allowed mediums: {allowed}",
+        "{value} is not one of the allowed sources: {allowed}": "{value} is not one of the allowed sources: {allowed}",
+        "A campaign needs a name.": "A campaign needs a name.",
+        "Back to campaigns": "Back to campaigns",
+        "Budget in euro": "Budget in euro",
+        "Campaign value: {value}. It was minted from the name and does not change when you rename the campaign.": "Campaign value: {value}. It was minted from the name and does not change when you rename the campaign.",
+        "Could not load the campaign vocabulary.": "Could not load the campaign vocabulary.",
+        "Could not save the campaign.": "Could not save the campaign.",
+        "Edit campaign": "Edit campaign",
+        "Markdown. Headings, lists and links all work.": "Markdown. Headings, lists and links all work.",
+        "New campaign": "New campaign",
+        "The landing page opens with this. Portaliq refuses a page without it.": "The landing page opens with this. Portaliq refuses a page without it.",
+        "What this campaign should achieve, in one sentence": "What this campaign should achieve, in one sentence"
     },
     "nplurals=2; plural=(n != 1);"
 )
