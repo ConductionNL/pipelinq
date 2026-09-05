@@ -5,7 +5,7 @@
 
   Props:
     customerId (string, required) — UUID of the customer whose bookings to
-      list. The card fetches via objectStore.fetchCollection('booking',
+      list. The card fetches via objectStore.fetchCollection('appointmentBooking',
       { customerId, _limit: 200 }) and sorts future-first (upcoming bookings
       bubble to the top; past bookings follow in reverse-chronological order).
 
@@ -149,7 +149,7 @@ export default {
 			this.loading = true
 			this.error = ''
 			try {
-				const rows = await this.objectStore.fetchCollection('booking', {
+				const rows = await this.objectStore.fetchCollection('appointmentBooking', {
 					customerId: this.customerId,
 					_limit: 200,
 				})

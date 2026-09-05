@@ -499,7 +499,7 @@ export default {
 			this.loading = true
 			try {
 				this.booking =
-					(await this.objectStore.fetchObject('booking', this.resolvedId))
+					(await this.objectStore.fetchObject('appointmentBooking', this.resolvedId))
 					|| {}
 				this.editableNotes = this.booking.notes || ''
 				this.savedNotes = this.booking.notes || ''
@@ -590,7 +590,7 @@ export default {
 					notes: this.editableNotes,
 					internalNotes: this.editableInternalNotes,
 				}
-				const saved = await this.objectStore.saveObject('booking', payload)
+				const saved = await this.objectStore.saveObject('appointmentBooking', payload)
 				if (saved) {
 					this.savedNotes = this.editableNotes
 					this.savedInternalNotes = this.editableInternalNotes

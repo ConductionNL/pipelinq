@@ -423,7 +423,7 @@ class PortalContributionProvider {
 				[
 					'id' => 'customerBookings',
 					'register' => self::REGISTER,
-					'schema' => 'booking',
+					'schema' => 'appointmentBooking',
 					'scopeField' => 'customerId',
 					'scopeClaim' => 'customerUid',
 					'label' => 'My appointments',

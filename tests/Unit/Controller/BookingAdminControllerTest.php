@@ -142,7 +142,7 @@ class BookingAdminControllerTest extends TestCase {
 			static function (string $app, string $key, string $default = ''): string {
 				$map = [
 					'register' => 'pipelinq',
-					'booking_schema' => 'booking',
+					'booking_schema' => 'appointmentBooking',
 					'service_schema' => 'service',
 					'resource_schema' => 'appointmentResource',
 					'contact_schema' => 'contact',
@@ -578,7 +578,7 @@ class BookingAdminControllerTest extends TestCase {
 		$this->objects->seed(
 			'bk-1',
 			'pipelinq',
-			'booking',
+			'appointmentBooking',
 			['status' => 'confirmed', 'customerId' => 'cust-1', 'serviceId' => 'svc-1']
 		);
 
@@ -598,7 +598,7 @@ class BookingAdminControllerTest extends TestCase {
 	 */
 	public function testMarkCompletedRejectsTerminalBookingWith422(): void {
 		$this->signIn();
-		$this->objects->seed('bk-2', 'pipelinq', 'booking', ['status' => 'completed']);
+		$this->objects->seed('bk-2', 'pipelinq', 'appointmentBooking', ['status' => 'completed']);
 
 		$response = $this->buildController()->markCompleted(id: 'bk-2');
 
@@ -645,7 +645,7 @@ class BookingAdminControllerTest extends TestCase {
 		$this->signIn();
 		$this->seedScheduleFixtures();
 		$this->seedWaitingQueue(count: WalkInQueueService::QUEUE_PAGE_SIZE);
-		$this->objects->seed('bk-3', 'pipelinq', 'booking', ['status' => 'confirmed', 'serviceId' => 'svc-1']);
+		$this->objects->seed('bk-3', 'pipelinq', 'appointmentBooking', ['status' => 'confirmed', 'serviceId' => 'svc-1']);
 
 		$response = $this->buildController()->markCompleted(id: 'bk-3');
 
@@ -685,7 +685,7 @@ class BookingAdminControllerTest extends TestCase {
 		$this->objects->acceptTopLevelContext = true;
 		$this->seedScheduleFixtures();
 		$this->seedWaitingQueue(count: WalkInQueueService::QUEUE_PAGE_SIZE);
-		$this->objects->seed('bk-3', 'pipelinq', 'booking', ['status' => 'confirmed', 'serviceId' => 'svc-1']);
+		$this->objects->seed('bk-3', 'pipelinq', 'appointmentBooking', ['status' => 'confirmed', 'serviceId' => 'svc-1']);
 
 		$response = $this->buildController()->markCompleted(id: 'bk-3');
 
@@ -720,7 +720,7 @@ class BookingAdminControllerTest extends TestCase {
 	 */
 	public function testMarkCompletedStillReportsSuccessWhenTheRebalanceCannotBeScheduled(): void {
 		$this->signIn();
-		$this->objects->seed('bk-4', 'pipelinq', 'booking', ['status' => 'confirmed']);
+		$this->objects->seed('bk-4', 'pipelinq', 'appointmentBooking', ['status' => 'confirmed']);
 
 		$failing = $this->createMock(IJobList::class);
 		$failing->method('add')->willThrowException(new \RuntimeException('job list down'));
@@ -747,7 +747,7 @@ class BookingAdminControllerTest extends TestCase {
 		$this->objects->seed(
 			'bk-5',
 			'pipelinq',
-			'booking',
+			'appointmentBooking',
 			[
 				'status' => 'pending-deposit',
 				'depositAmount' => 25.0,
@@ -788,7 +788,7 @@ class BookingAdminControllerTest extends TestCase {
 	 */
 	public function testConfirmDepositIsIdempotentOnASecondCall(): void {
 		$this->signIn();
-		$this->objects->seed('bk-6', 'pipelinq', 'booking', ['status' => 'pending-deposit', 'depositAmount' => 40.0]);
+		$this->objects->seed('bk-6', 'pipelinq', 'appointmentBooking', ['status' => 'pending-deposit', 'depositAmount' => 40.0]);
 		$this->request->method('getParam')->willReturnCallback(
 			static fn (string $key, mixed $default = null): mixed => ($key === 'reason' ? 'Cash at counter' : $default)
 		);

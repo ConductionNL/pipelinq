@@ -149,7 +149,7 @@ class EligibilityServiceTest extends TestCase {
 				$values = [
 					'register' => 'pipelinq',
 					'resource_schema' => 'appointmentResource',
-					'booking_schema' => 'booking',
+					'booking_schema' => 'appointmentBooking',
 					'service_schema' => 'service',
 					'availability_cache_schema' => 'availability-cache',
 				];
@@ -405,7 +405,7 @@ class EligibilityServiceTest extends TestCase {
 			mock: $mock,
 			bySchema: [
 				'appointmentResource' => [self::RESOURCE_SARAH, self::RESOURCE_MIA],
-				'booking' => [],
+				'appointmentBooking' => [],
 			]
 		);
 

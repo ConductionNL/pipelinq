@@ -274,7 +274,7 @@ export function objectTypes() {
 			description: t(APP, 'Bookable resources (staff, rooms, equipment)'),
 		},
 		{
-			slug: 'booking',
+			slug: 'appointmentBooking',
 			group: 'appointments',
 			label: t(APP, 'Booking'),
 			description: t(APP, 'Appointment bookings'),

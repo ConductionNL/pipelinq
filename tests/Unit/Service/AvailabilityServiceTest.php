@@ -75,7 +75,7 @@ class AvailabilityServiceTest extends TestCase {
 				$values = [
 					'register' => 'pipelinq',
 					'resource_schema' => 'appointmentResource',
-					'booking_schema' => 'booking',
+					'booking_schema' => 'appointmentBooking',
 					'service_schema' => 'service',
 					'availability_cache_schema' => 'availability-cache',
 				];
@@ -171,7 +171,7 @@ class AvailabilityServiceTest extends TestCase {
 		$object->method('findAll')->willReturnCallback(
 			callback: static function (array $config) {
 				$filters = ($config['filters'] ?? []);
-				if (($filters['schema'] ?? '') !== 'booking') {
+				if (($filters['schema'] ?? '') !== 'appointmentBooking') {
 					return [];
 				}
 
@@ -277,7 +277,7 @@ class AvailabilityServiceTest extends TestCase {
 		$object->method('findAll')->willReturnCallback(
 			callback: static function (array $config) {
 				$filters = ($config['filters'] ?? []);
-				if (($filters['schema'] ?? '') !== 'booking') {
+				if (($filters['schema'] ?? '') !== 'appointmentBooking') {
 					return [];
 				}
 

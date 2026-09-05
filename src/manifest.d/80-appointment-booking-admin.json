@@ -129,7 +129,7 @@
 			"title": "Bookings",
 			"config": {
 				"register": "pipelinq",
-				"schema": "booking",
+				"schema": "appointmentBooking",
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"showAdd": false,
 				"showFormDialog": false,
@@ -162,11 +162,11 @@
 			"title": "Booking",
 			"config": {
 				"register": "pipelinq",
-				"schema": "booking",
+				"schema": "appointmentBooking",
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"_note": "Booking archetype (bespoke-detail-pages). An appointment booking is a scheduled service slot, so the body opens with a deposit KPI stat then the booking fields (status, source, startAt/endAt, customerId, serviceId, depositAmount, confirmation/reminder timestamps, cancellationReason) 8-wide and the related graph (service, resource, customer, previousBookingId reschedule chain) 4-wide, with Documents full-width for any signed intake / deposit receipt. IMPORTANT: no calendar body widget or tab — although a booking is time-bound, the booking schema declares NO calendar linkedType, and per the hard rule comms/scheduling leaves only appear when the schema declares them; the real schedule + the six TIME-WINDOW-gated admin actions, the resourceAssignments/statusHistory arrays-on-object and the computed Timeline all stay in the PRESERVED BookingDetailSection bodyWidget (after-data), whose note explains why lifecycleActions cannot be wired (bespoke endpoints, side-effects, reschedule mints a new UUID).",
 				"widgets": [
-					{ "id": "booking-deposit", "type": "stat", "title": "Deposit", "icon": "Cash", "content": { "label": "Deposit", "format": "currency", "source": { "register": "pipelinq", "schema": "booking", "metric": "sum", "field": "depositAmount", "filter": { "id": "@objectId" } } } },
+					{ "id": "booking-deposit", "type": "stat", "title": "Deposit", "icon": "Cash", "content": { "label": "Deposit", "format": "currency", "source": { "register": "pipelinq", "schema": "appointmentBooking", "metric": "sum", "field": "depositAmount", "filter": { "id": "@objectId" } } } },
 					{ "id": "booking-data", "type": "data", "title": "Booking", "icon": "Calendar", "content": { "columns": 2, "include": ["status", "source", "startAt", "endAt", "customerId", "serviceId", "depositAmount", "confirmationSentAt", "reminderSentAt", "cancellationReason", "notes"], "overrides": { "status": { "editable": false }, "startAt": { "editable": false }, "endAt": { "editable": false }, "confirmationSentAt": { "editable": false }, "reminderSentAt": { "editable": false } } } },
 					{ "id": "booking-related", "type": "related", "title": "Related", "icon": "LinkVariant" },
 					{ "id": "booking-files", "type": "integration", "integrationId": "files", "title": "Documents", "icon": "FolderOutline" }
