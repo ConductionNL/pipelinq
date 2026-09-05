@@ -143,7 +143,7 @@ class BookingAdminControllerTest extends TestCase {
 				$map = [
 					'register' => 'pipelinq',
 					'booking_schema' => 'appointmentBooking',
-					'service_schema' => 'service',
+					'service_schema' => 'appointmentService',
 					'resource_schema' => 'appointmentResource',
 					'contact_schema' => 'contact',
 					'walkInTicket_schema' => 'walkInTicket',
@@ -533,7 +533,7 @@ class BookingAdminControllerTest extends TestCase {
 		$this->objects->seed(
 			'svc-1',
 			'pipelinq',
-			'service',
+			'appointmentService',
 			['name' => 'Haircut', 'durationMinutes' => 30]
 		);
 		$this->objects->seed(

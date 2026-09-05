@@ -76,7 +76,7 @@ class AvailabilityServiceTest extends TestCase {
 					'register' => 'pipelinq',
 					'resource_schema' => 'appointmentResource',
 					'booking_schema' => 'appointmentBooking',
-					'service_schema' => 'service',
+					'service_schema' => 'appointmentService',
 					'availability_cache_schema' => 'availability-cache',
 				];
 				return ($values[$key] ?? $default);

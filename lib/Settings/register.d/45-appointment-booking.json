@@ -3,7 +3,7 @@
     "registers": {
       "pipelinq": {
         "schemas": [
-          "service",
+          "appointmentService",
           "appointmentResource",
           "appointmentBooking",
           "walkInTicket",
@@ -12,9 +12,9 @@
       }
     },
     "schemas": {
-      "service": {
+      "appointmentService": {
         "x-schema-org": "schema:Service",
-        "slug": "service",
+        "slug": "appointmentService",
         "title": "Service",
         "icon": "Tag",
         "version": "1.0.0",
@@ -808,7 +808,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "service",
+          "schema": "appointmentService",
           "slug": "service-haircut-simple"
         },
         "name": "Knipbeurt",
@@ -834,7 +834,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "service",
+          "schema": "appointmentService",
           "slug": "service-color-and-cut"
         },
         "name": "Kleur & Knippen",
@@ -880,7 +880,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "service",
+          "schema": "appointmentService",
           "slug": "service-oil-change-standard"
         },
         "name": "Olieverversing",
@@ -909,7 +909,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "service",
+          "schema": "appointmentService",
           "slug": "service-consultation-tax"
         },
         "name": "Belastingadvies gesprek",

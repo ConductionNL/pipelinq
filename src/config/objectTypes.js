@@ -262,7 +262,7 @@ export function objectTypes() {
 		},
 		// Appointment booking (group: appointments)
 		{
-			slug: 'service',
+			slug: 'appointmentService',
 			group: 'appointments',
 			label: t(APP, 'Service'),
 			description: t(APP, 'Bookable services'),

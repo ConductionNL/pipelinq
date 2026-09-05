@@ -56,7 +56,7 @@ class WalkInQueueServiceTest extends TestCase {
 				$values = [
 					'register' => 'pipelinq',
 					'walkInTicket_schema' => 'walkInTicket',
-					'service_schema' => 'service',
+					'service_schema' => 'appointmentService',
 					'resource_schema' => 'appointmentResource',
 				];
 				return ($values[$key] ?? $default);

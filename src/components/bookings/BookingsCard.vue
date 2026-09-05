@@ -185,7 +185,7 @@ export default {
 			for (const id of serviceIds) {
 				if (this.serviceLookup[id]) continue
 				try {
-					const svc = await this.objectStore.fetchObject('service', id)
+					const svc = await this.objectStore.fetchObject('appointmentService', id)
 					if (svc?.name) {
 						this.serviceLookup = {
 							...this.serviceLookup,
