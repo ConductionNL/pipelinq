@@ -220,10 +220,11 @@ test.describe('Social posts page', () => {
 		await page.goto(`${APP}/social-posts/${id}`)
 		await assertNoHardError(page)
 
-		await expect(page.getByTestId('social-variants')).toContainText(
-			'marketing-agent',
-			{ timeout: 15000 },
-		)
+		// The section's own testid is the one the shared body-section wrapper
+		// assigns, not the component's name: `social-variants` matches nothing.
+		await expect(
+			page.getByTestId('cn-body-section-component-social-post-variants'),
+		).toContainText('marketing-agent', { timeout: 15000 })
 	})
 
 	// @e2e marketing-ui::a-marketer-writes-a-variant-for-one-network-only

@@ -154,7 +154,15 @@ test.describe('Create then publish', () => {
 		await openApp(page)
 		await navClick(page, 'Articles', /\/articles(\?|$)/)
 
-		await page.getByRole('button', { name: /New article/i }).click()
+		// A declarative `headerActions[]` entry is not a standalone button:
+		// CnIndexPage folds it into the page's own Actions menu, next to
+		// Refresh and Documentation. Open the menu, then pick the entry.
+		await page
+			.locator('#content-vue')
+			.getByRole('button', { name: /^Actions$/ })
+			.first()
+			.click()
+		await page.getByRole('menuitem', { name: /New article/i }).click()
 		await expect(page).toHaveURL(/\/articles\/new/, { timeout: 10000 })
 
 		const title = `E2E article ${Date.now()}`

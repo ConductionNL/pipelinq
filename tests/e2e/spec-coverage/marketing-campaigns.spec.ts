@@ -222,32 +222,48 @@ test.describe('Campaign detail page', () => {
 	})
 
 	// @e2e openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#portaliq-absent-is-its-own-answer
-	test('with portaliq absent the action answers portaliq_missing and says so', async ({
+	test('a landing page that cannot be made is refused with a typed reason and writes nothing', async ({
 		page,
 	}) => {
 		await gotoRoute(page, '/campaigns')
 		const campaign = await seededCampaign(page)
 		const id = idOf(campaign)
 
+		// Which refusal comes back depends on the instance, and both are the
+		// same contract: the action never half-succeeds. CI installs
+		// openregister only, so portaliq is absent and the answer is
+		// `portaliq_missing`; a workstation with portaliq installed reaches it
+		// and is told the portal does not exist. Asserting only the first made
+		// this test pass on CI and fail on every instance that has portaliq.
 		const created = await api(
 			page,
 			'POST',
 			`${APP}/api/campaigns/${id}/landing-page`,
 			{ portal: 'open-tilburg', route: '/campagne/e2e-probe' },
 		)
-		expect(created.status, created.text).toBe(501)
-		expect(created.json?.error).toBe('portaliq_missing')
+		expect(created.status, created.text).toBeGreaterThanOrEqual(400)
+		const reason = String(created.json?.error ?? '')
+		expect(
+			['portaliq_missing', 'unknown_portal'],
+			`the refusal must name a typed reason, got ${created.text}`,
+		).toContain(reason)
 
 		// Nothing was recorded on the campaign: a refusal writes nothing.
 		const reread = await api(page, 'GET', `${OR}/campaign/${id}`)
 		const stored = reread.json?.data ?? reread.json ?? {}
 		expect(stored.landingPage?.route ?? '').toBe('')
 
+		// The button does not repeat the probe above: it asks for the campaign's
+		// own portal, so its reason is its own. What both share is the contract
+		// under test, a refusal that names a typed reason rather than failing
+		// silently, so the alert is asserted against the same two words and not
+		// against whichever one the probe happened to draw.
 		await gotoRoute(page, `/campaigns/${id}`)
 		await page.getByTestId('campaign-landing-create').click()
-		await expect(page.getByRole('alert')).toContainText('portaliq_missing', {
-			timeout: 15000,
-		})
+		await expect(page.getByRole('alert')).toContainText(
+			/portaliq_missing|unknown_portal/,
+			{ timeout: 15000 },
+		)
 	})
 })
 

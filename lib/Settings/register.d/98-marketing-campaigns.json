@@ -1,712 +1,715 @@
 {
-  "_meta": {
-    "change": "marketing-campaigns",
-    "license": "EUPL-1.2",
-    "copyright": "2026 Conduction B.V. <info@conduction.nl>",
-    "description": "Phase 4 of the marketing programme: the campaign that owns the UTM vocabulary and its landing page, and the touchpoint log attribution is computed from. Also adds campaignId to blast, firstTouch and lastTouch to lead, and campaignId, touchpointIds, invoiceRef and model to attributionLink, all additive. socialPost is phase 3 and is deliberately not declared here; campaign.postIds holds its references as plain ids until that schema lands."
-  },
-  "components": {
-    "registers": {
-      "pipelinq": {
-        "schemas": [
-          "campaign",
-          "touchpoint"
-        ]
-      }
+    "_meta": {
+        "change": "marketing-campaigns",
+        "license": "EUPL-1.2",
+        "copyright": "2026 Conduction B.V. <info@conduction.nl>",
+        "description": "Phase 4 of the marketing programme: the campaign that owns the UTM vocabulary and its landing page, and the touchpoint log attribution is computed from. Also adds campaignId to blast, firstTouch and lastTouch to lead, and campaignId, touchpointIds, invoiceRef and model to attributionLink, all additive. socialPost is phase 3 and is deliberately not declared here; campaign.postIds holds its references as plain ids until that schema lands."
     },
-    "schemas": {
-      "campaign": {
-        "slug": "campaign",
-        "title": "Campaign",
-        "icon": "BullhornOutline",
-        "version": "1.0.0",
-        "summary": "One marketing campaign: the mailings, posts and landing page that share a campaign value.",
-        "description": "A campaign groups everything that carries one utm_campaign value, so two mailings and a post report as one campaign instead of three. utmCampaign is minted from the name on the first save by CampaignService and never changes afterwards, because the value is already written into portaliq's daily rollups and into links that have left the building. utmSource and utmMedium are lowercase and come from the vocabularies in the app-config values campaign.utm_sources and campaign.utm_mediums, which an administrator maintains. The landingPage block is written by LandingPageProvisioningService from what portaliq answers; pipelinq never renders the page itself (ADR-086).",
-        "x-schema-org": "schema:Campaign",
-        "required": [
-          "name",
-          "utmCampaign"
-        ],
-        "properties": {
-          "name": {
-            "type": "string",
-            "title": "Name",
-            "description": "What the campaign is called, as the marketer writes it.",
-            "minLength": 1,
-            "maxLength": 255,
-            "example": "Webinar AI voor gemeenten"
-          },
-          "goal": {
-            "type": "string",
-            "title": "Goal",
-            "description": "What this campaign is meant to achieve, in one sentence.",
-            "maxLength": 500,
-            "example": "Vijftig aanmeldingen voor het webinar van 12 november."
-          },
-          "status": {
-            "type": "string",
-            "title": "Status",
-            "description": "Where the campaign is in its own life.",
-            "default": "planned",
-            "enum": [
-              "planned",
-              "running",
-              "finished",
-              "cancelled"
-            ],
-            "facetable": true,
-            "example": "running"
-          },
-          "utmCampaign": {
-            "type": "string",
-            "title": "Campaign value",
-            "description": "The utm_campaign value every link in this campaign carries. Minted from the name once and frozen; renaming the campaign leaves it alone.",
-            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
-            "maxLength": 80,
-            "example": "webinar-ai-voor-gemeenten"
-          },
-          "utmSource": {
-            "type": "string",
-            "title": "Source",
-            "description": "The utm_source value, lowercase, from the vocabulary in campaign.utm_sources. Linkedin and linkedin are two campaigns in every analytics tool, so the case rule is enforced rather than corrected.",
-            "pattern": "^[a-z0-9]+([._-][a-z0-9]+)*$",
-            "maxLength": 60,
-            "facetable": true,
-            "example": "nieuwsbrief"
-          },
-          "utmMedium": {
-            "type": "string",
-            "title": "Medium",
-            "description": "The utm_medium value, lowercase, from the vocabulary in campaign.utm_mediums.",
-            "pattern": "^[a-z0-9]+([._-][a-z0-9]+)*$",
-            "maxLength": 60,
-            "facetable": true,
-            "example": "email"
-          },
-          "mailingIds": {
-            "type": "array",
-            "title": "Mailings",
-            "description": "The blasts that belong to this campaign. A blast also names its campaign, so the list is a convenience for the report, not the truth.",
-            "items": {
-              "type": "string",
-              "format": "uuid",
-              "$ref": "blast"
-            },
-            "referenceType": "blast"
-          },
-          "postIds": {
-            "type": "array",
-            "title": "Posts",
-            "description": "The social posts that belong to this campaign. Plain ids until phase 3 ships the socialPost schema.",
-            "items": {
-              "type": "string"
-            },
-            "example": [
-              "00000000-0000-0000-0000-000000000000"
-            ]
-          },
-          "landingPage": {
-            "type": "object",
-            "title": "Landing page",
-            "description": "What portaliq answered when this campaign asked for a page. Written by LandingPageProvisioningService, never by hand.",
-            "properties": {
-              "portal": {
-                "type": "string",
-                "title": "Portal",
-                "description": "The portal slug the page was created on.",
-                "example": "open-tilburg"
-              },
-              "route": {
-                "type": "string",
-                "title": "Route",
-                "description": "The in-portal route, as portaliq echoed it back.",
-                "example": "/campagne/webinar-ai-voor-gemeenten"
-              },
-              "pageId": {
-                "type": "string",
-                "title": "Page id",
-                "description": "The created page's OpenRegister id.",
-                "example": "00000000-0000-0000-0000-000000000000"
-              },
-              "publicUrl": {
-                "type": "string",
-                "title": "Public URL",
-                "description": "Where a visitor reaches the page. Empty when the portal has no domain configured.",
-                "example": "https://open-tilburg.nl/campagne/webinar-ai-voor-gemeenten"
-              },
-              "createdAt": {
-                "type": "string",
-                "format": "date-time",
-                "title": "Created at",
-                "description": "When portaliq created the page.",
-                "example": "2026-09-05T09:00:00+00:00"
-              }
+    "components": {
+        "registers": {
+            "pipelinq": {
+                "schemas": [
+                    "campaign",
+                    "touchpoint"
+                ]
             }
-          },
-          "formRef": {
-            "type": "string",
-            "title": "Form",
-            "description": "The portaliq form bound to the landing page. A submission on this form becomes a lead in this campaign.",
-            "example": "00000000-0000-0000-0000-000000000000"
-          },
-          "articleSummary": {
-            "type": "string",
-            "title": "Page summary",
-            "description": "The summary the landing page opens with. Portaliq refuses an empty one.",
-            "maxLength": 500,
-            "example": "Praktische AI-toepassingen voor de publieke sector, in een uur."
-          },
-          "articleBody": {
-            "type": "string",
-            "title": "Page body",
-            "description": "The landing page body, in markdown.",
-            "example": "## Programma\n\n- Wat AI vandaag wel en niet kan\n- Drie toepassingen bij gemeenten\n- Vragen"
-          },
-          "startsAt": {
-            "type": "string",
-            "format": "date",
-            "title": "Starts at",
-            "description": "First day of the campaign. The report window opens here.",
-            "example": "2026-10-01"
-          },
-          "endsAt": {
-            "type": "string",
-            "format": "date",
-            "title": "Ends at",
-            "description": "Last day of the campaign. The report window closes here.",
-            "example": "2026-11-30"
-          },
-          "budgetEur": {
-            "type": "number",
-            "title": "Budget",
-            "description": "What the campaign was allowed to cost, in euro.",
-            "minimum": 0,
-            "example": 2500
-          },
-          "costs": {
-            "type": "array",
-            "title": "Costs",
-            "description": "What the campaign actually cost, per channel, as far as anyone recorded it. A channel that is absent is reported as not recorded, never as zero: zero reads as free.",
-            "items": {
-              "type": "object",
-              "properties": {
-                "channel": {
-                  "type": "string",
-                  "title": "Channel",
-                  "description": "The channel the spend belongs to.",
-                  "example": "x"
-                },
-                "amountEur": {
-                  "type": "number",
-                  "title": "Amount",
-                  "description": "What was spent, in euro.",
-                  "example": 180.5
-                },
-                "note": {
-                  "type": "string",
-                  "title": "Note",
-                  "description": "Where the figure comes from.",
-                  "example": "Advertentiebudget week 41 tot en met 44."
-                }
-              }
-            }
-          },
-          "attribution": {
-            "type": "object",
-            "title": "Attribution",
-            "description": "How this campaign's report divides value. The models are computed at report time from the touchpoint log; nothing here is a stored answer.",
-            "properties": {
-              "model": {
-                "type": "string",
-                "title": "Default model",
-                "description": "The model the report opens on.",
-                "default": "last",
-                "enum": [
-                  "first",
-                  "last",
-                  "linear"
+        },
+        "schemas": {
+            "campaign": {
+                "slug": "campaign",
+                "title": "Campaign",
+                "icon": "BullhornOutline",
+                "version": "1.0.0",
+                "summary": "One marketing campaign: the mailings, posts and landing page that share a campaign value.",
+                "description": "A campaign groups everything that carries one utm_campaign value, so two mailings and a post report as one campaign instead of three. utmCampaign is minted from the name on the first save by CampaignService and never changes afterwards, because the value is already written into portaliq's daily rollups and into links that have left the building. utmSource and utmMedium are lowercase and come from the vocabularies in the app-config values campaign.utm_sources and campaign.utm_mediums, which an administrator maintains. The landingPage block is written by LandingPageProvisioningService from what portaliq answers; pipelinq never renders the page itself (ADR-086).",
+                "x-schema-org": "schema:Campaign",
+                "required": [
+                    "name",
+                    "utmCampaign"
                 ],
-                "example": "linear"
-              },
-              "windowDays": {
-                "type": "integer",
-                "title": "Window",
-                "description": "How many days after the last touchpoint a close still counts.",
-                "default": 90,
-                "minimum": 1,
-                "maximum": 366,
-                "example": 90
-              }
-            }
-          },
-          "createdBy": {
-            "type": "string",
-            "title": "Created by",
-            "description": "The user who created the campaign. Set by the server, never by the browser.",
-            "example": "admin"
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Created at",
-            "description": "When the campaign was created.",
-            "example": "2026-09-05T08:00:00+00:00"
-          }
-        }
-      },
-      "touchpoint": {
-        "slug": "touchpoint",
-        "title": "Touchpoint",
-        "icon": "ChartTimelineVariantShimmer",
-        "version": "1.0.0",
-        "summary": "One attributable interaction between a person and a campaign.",
-        "description": "The ledger the attribution models read. A touchpoint is written when someone clicks a link in a mailing, lands on a campaign page, submits its form or replies. Attribution is computed over these rows at report time and is never written back, so a model can change without rewriting history. The nonce carries the id portaliq stamped on a form submission and is what makes the submission listener idempotent: a redelivered submission finds its own touchpoint and writes nothing.",
-        "x-schema-org": "schema:InteractAction",
-        "required": [
-          "campaignId",
-          "kind",
-          "occurredAt"
-        ],
-        "properties": {
-          "campaignId": {
-            "type": "string",
-            "title": "Campaign",
-            "description": "The campaign this interaction belongs to.",
-            "format": "uuid",
-            "$ref": "campaign"
-          },
-          "contactId": {
-            "type": "string",
-            "title": "Contact",
-            "description": "Who interacted, when we know. Empty for an anonymous visit.",
-            "format": "uuid",
-            "$ref": "contact"
-          },
-          "leadId": {
-            "type": "string",
-            "title": "Lead",
-            "description": "The lead this interaction contributed to, when there is one.",
-            "format": "uuid",
-            "$ref": "lead"
-          },
-          "kind": {
-            "type": "string",
-            "title": "Kind",
-            "description": "What happened.",
-            "enum": [
-              "click",
-              "visit",
-              "submit",
-              "reply"
-            ],
-            "facetable": true,
-            "example": "submit"
-          },
-          "channel": {
-            "type": "string",
-            "title": "Channel",
-            "description": "Which channel carried it, resolved from the medium.",
-            "maxLength": 60,
-            "facetable": true,
-            "example": "email"
-          },
-          "utm": {
-            "type": "object",
-            "title": "UTM",
-            "description": "The campaign parameters this interaction carried.",
-            "properties": {
-              "campaign": {
-                "type": "string",
-                "title": "Campaign",
-                "description": "The utm_campaign value.",
-                "example": "webinar-ai-voor-gemeenten"
-              },
-              "source": {
-                "type": "string",
-                "title": "Source",
-                "description": "The utm_source value.",
-                "example": "nieuwsbrief"
-              },
-              "medium": {
-                "type": "string",
-                "title": "Medium",
-                "description": "The utm_medium value.",
-                "example": "email"
-              },
-              "term": {
-                "type": "string",
-                "title": "Term",
-                "description": "The utm_term value.",
-                "example": "ai-gemeenten"
-              },
-              "content": {
-                "type": "string",
-                "title": "Content",
-                "description": "The utm_content value, which is the blast id for a mailing.",
-                "example": "00000000-0000-0000-0000-000000000000"
-              }
-            }
-          },
-          "sourceRef": {
-            "type": "string",
-            "title": "Source object",
-            "description": "The blast, post or page that caused the interaction.",
-            "example": "00000000-0000-0000-0000-000000000000"
-          },
-          "occurredAt": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Occurred at",
-            "description": "When it happened, to the second or better. Rows with the same moment keep the order they were written in, so a report is reproducible.",
-            "example": "2026-10-14T10:21:33+00:00"
-          },
-          "nonce": {
-            "type": "string",
-            "title": "Nonce",
-            "description": "The id the producing system stamped on this interaction. Portaliq stamps one per form submission; the submission listener refuses to act twice on the same value.",
-            "maxLength": 128,
-            "example": "REPLACE_WITH_A_SERVER_GENERATED_NONCE"
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Created at",
-            "description": "When the row was written.",
-            "example": "2026-10-14T10:21:34+00:00"
-          }
-        }
-      },
-      "blast": {
-        "properties": {
-          "campaignId": {
-            "type": "string",
-            "title": "Campaign",
-            "description": "The campaign this blast belongs to. When set, the campaign's source, medium and campaign value are stamped on every link instead of the per-blast defaults.",
-            "format": "uuid",
-            "$ref": "campaign"
-          }
-        }
-      },
-      "lead": {
-        "properties": {
-          "firstTouch": {
-            "type": "object",
-            "title": "First touch",
-            "description": "The campaign parameters of the visit that first brought this person to the site, captured at form submission.",
-            "properties": {
-              "campaign": {
-                "type": "string",
-                "title": "Campaign",
-                "description": "The utm_campaign value at first touch.",
-                "example": "webinar-ai-voor-gemeenten"
-              },
-              "source": {
-                "type": "string",
-                "title": "Source",
-                "description": "The utm_source value at first touch.",
-                "example": "nieuwsbrief"
-              },
-              "medium": {
-                "type": "string",
-                "title": "Medium",
-                "description": "The utm_medium value at first touch.",
-                "example": "email"
-              },
-              "term": {
-                "type": "string",
-                "title": "Term",
-                "description": "The utm_term value at first touch.",
-                "example": "ai-gemeenten"
-              },
-              "content": {
-                "type": "string",
-                "title": "Content",
-                "description": "The utm_content value at first touch.",
-                "example": "00000000-0000-0000-0000-000000000000"
-              }
-            }
-          },
-          "lastTouch": {
-            "type": "object",
-            "title": "Last touch",
-            "description": "The campaign parameters of the visit the form was submitted on.",
-            "properties": {
-              "campaign": {
-                "type": "string",
-                "title": "Campaign",
-                "description": "The utm_campaign value at last touch.",
-                "example": "webinar-ai-voor-gemeenten"
-              },
-              "source": {
-                "type": "string",
-                "title": "Source",
-                "description": "The utm_source value at last touch.",
-                "example": "linkedin"
-              },
-              "medium": {
-                "type": "string",
-                "title": "Medium",
-                "description": "The utm_medium value at last touch.",
-                "example": "social"
-              },
-              "term": {
-                "type": "string",
-                "title": "Term",
-                "description": "The utm_term value at last touch.",
-                "example": "ai-gemeenten"
-              },
-              "content": {
-                "type": "string",
-                "title": "Content",
-                "description": "The utm_content value at last touch.",
-                "example": "00000000-0000-0000-0000-000000000000"
-              }
-            }
-          },
-          "campaignId": {
-            "type": "string",
-            "title": "Campaign",
-            "description": "The campaign that produced this lead.",
-            "format": "uuid",
-            "$ref": "campaign"
-          }
-        }
-      },
-      "attributionLink": {
-        "properties": {
-          "campaignId": {
-            "type": "string",
-            "title": "Campaign",
-            "description": "The campaign the attributed value belongs to.",
-            "format": "uuid",
-            "$ref": "campaign"
-          },
-          "touchpointIds": {
-            "type": "array",
-            "title": "Touchpoints",
-            "description": "The touchpoints the value was divided over.",
-            "items": {
-              "type": "string",
-              "format": "uuid",
-              "$ref": "touchpoint"
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "title": "Name",
+                        "description": "What the campaign is called, as the marketer writes it.",
+                        "minLength": 1,
+                        "maxLength": 255,
+                        "example": "Webinar AI voor gemeenten"
+                    },
+                    "goal": {
+                        "type": "string",
+                        "title": "Goal",
+                        "description": "What this campaign is meant to achieve, in one sentence.",
+                        "maxLength": 500,
+                        "example": "Vijftig aanmeldingen voor het webinar van 12 november."
+                    },
+                    "status": {
+                        "type": "string",
+                        "title": "Status",
+                        "description": "Where the campaign is in its own life.",
+                        "default": "planned",
+                        "enum": [
+                            "planned",
+                            "running",
+                            "finished",
+                            "cancelled"
+                        ],
+                        "facetable": true,
+                        "example": "running"
+                    },
+                    "utmCampaign": {
+                        "type": "string",
+                        "title": "Campaign value",
+                        "description": "The utm_campaign value every link in this campaign carries. Minted from the name once and frozen; renaming the campaign leaves it alone.",
+                        "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+                        "maxLength": 80,
+                        "example": "webinar-ai-voor-gemeenten"
+                    },
+                    "utmSource": {
+                        "type": "string",
+                        "title": "Source",
+                        "description": "The utm_source value, lowercase, from the vocabulary in campaign.utm_sources. Linkedin and linkedin are two campaigns in every analytics tool, so the case rule is enforced rather than corrected.",
+                        "pattern": "^[a-z0-9]+([._-][a-z0-9]+)*$",
+                        "maxLength": 60,
+                        "facetable": true,
+                        "example": "nieuwsbrief"
+                    },
+                    "utmMedium": {
+                        "type": "string",
+                        "title": "Medium",
+                        "description": "The utm_medium value, lowercase, from the vocabulary in campaign.utm_mediums.",
+                        "pattern": "^[a-z0-9]+([._-][a-z0-9]+)*$",
+                        "maxLength": 60,
+                        "facetable": true,
+                        "example": "email"
+                    },
+                    "mailingIds": {
+                        "type": "array",
+                        "title": "Mailings",
+                        "description": "The blasts that belong to this campaign. A blast also names its campaign, so the list is a convenience for the report, not the truth.",
+                        "items": {
+                            "type": "string",
+                            "format": "uuid",
+                            "$ref": "blast"
+                        },
+                        "referenceType": "blast"
+                    },
+                    "postIds": {
+                        "type": "array",
+                        "title": "Posts",
+                        "description": "The social posts that belong to this campaign. Plain ids until phase 3 ships the socialPost schema.",
+                        "items": {
+                            "type": "string"
+                        },
+                        "example": [
+                            "00000000-0000-0000-0000-000000000000"
+                        ]
+                    },
+                    "landingPage": {
+                        "type": "object",
+                        "title": "Landing page",
+                        "description": "What portaliq answered when this campaign asked for a page. Written by LandingPageProvisioningService, never by hand.",
+                        "properties": {
+                            "portal": {
+                                "type": "string",
+                                "title": "Portal",
+                                "description": "The portal slug the page was created on.",
+                                "example": "open-tilburg"
+                            },
+                            "route": {
+                                "type": "string",
+                                "title": "Route",
+                                "description": "The in-portal route, as portaliq echoed it back.",
+                                "example": "/campagne/webinar-ai-voor-gemeenten"
+                            },
+                            "pageId": {
+                                "type": "string",
+                                "title": "Page id",
+                                "description": "The created page's OpenRegister id.",
+                                "example": "00000000-0000-0000-0000-000000000000"
+                            },
+                            "publicUrl": {
+                                "type": "string",
+                                "title": "Public URL",
+                                "description": "Where a visitor reaches the page. Empty when the portal has no domain configured.",
+                                "example": "https://open-tilburg.nl/campagne/webinar-ai-voor-gemeenten"
+                            },
+                            "createdAt": {
+                                "type": "string",
+                                "format": "date-time",
+                                "title": "Created at",
+                                "description": "When portaliq created the page.",
+                                "example": "2026-09-05T09:00:00+00:00"
+                            }
+                        }
+                    },
+                    "formRef": {
+                        "type": "string",
+                        "title": "Form",
+                        "description": "The portaliq form bound to the landing page. A submission on this form becomes a lead in this campaign.",
+                        "example": "00000000-0000-0000-0000-000000000000"
+                    },
+                    "articleSummary": {
+                        "type": "string",
+                        "title": "Page summary",
+                        "description": "The summary the landing page opens with. Portaliq refuses an empty one.",
+                        "maxLength": 500,
+                        "example": "Praktische AI-toepassingen voor de publieke sector, in een uur."
+                    },
+                    "articleBody": {
+                        "type": "string",
+                        "title": "Page body",
+                        "description": "The landing page body, in markdown.",
+                        "example": "## Programma\n\n- Wat AI vandaag wel en niet kan\n- Drie toepassingen bij gemeenten\n- Vragen"
+                    },
+                    "startsAt": {
+                        "type": "string",
+                        "format": "date",
+                        "title": "Starts at",
+                        "description": "First day of the campaign. The report window opens here.",
+                        "example": "2026-10-01"
+                    },
+                    "endsAt": {
+                        "type": "string",
+                        "format": "date",
+                        "title": "Ends at",
+                        "description": "Last day of the campaign. The report window closes here.",
+                        "example": "2026-11-30"
+                    },
+                    "budgetEur": {
+                        "type": "number",
+                        "title": "Budget",
+                        "description": "What the campaign was allowed to cost, in euro.",
+                        "minimum": 0,
+                        "example": 2500
+                    },
+                    "costs": {
+                        "type": "array",
+                        "title": "Costs",
+                        "description": "What the campaign actually cost, per channel, as far as anyone recorded it. A channel that is absent is reported as not recorded, never as zero: zero reads as free.",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "channel": {
+                                    "type": "string",
+                                    "title": "Channel",
+                                    "description": "The channel the spend belongs to.",
+                                    "example": "x"
+                                },
+                                "amountEur": {
+                                    "type": "number",
+                                    "title": "Amount",
+                                    "description": "What was spent, in euro.",
+                                    "example": 180.5
+                                },
+                                "note": {
+                                    "type": "string",
+                                    "title": "Note",
+                                    "description": "Where the figure comes from.",
+                                    "example": "Advertentiebudget week 41 tot en met 44."
+                                }
+                            }
+                        }
+                    },
+                    "attribution": {
+                        "type": "object",
+                        "title": "Attribution",
+                        "description": "How this campaign's report divides value. The models are computed at report time from the touchpoint log; nothing here is a stored answer.",
+                        "properties": {
+                            "model": {
+                                "type": "string",
+                                "title": "Default model",
+                                "description": "The model the report opens on.",
+                                "default": "last",
+                                "enum": [
+                                    "first",
+                                    "last",
+                                    "linear"
+                                ],
+                                "example": "linear"
+                            },
+                            "windowDays": {
+                                "type": "integer",
+                                "title": "Window",
+                                "description": "How many days after the last touchpoint a close still counts.",
+                                "default": 90,
+                                "minimum": 1,
+                                "maximum": 366,
+                                "example": 90
+                            }
+                        }
+                    },
+                    "createdBy": {
+                        "type": "string",
+                        "title": "Created by",
+                        "description": "The user who created the campaign. Set by the server, never by the browser.",
+                        "example": "admin"
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Created at",
+                        "description": "When the campaign was created.",
+                        "example": "2026-09-05T08:00:00+00:00"
+                    }
+                }
             },
-            "referenceType": "touchpoint"
-          },
-          "invoiceRef": {
-            "type": "string",
-            "title": "Invoice",
-            "description": "The shillinq AR invoice this value closed on, when it closed on a paid invoice rather than on a won lead. Pipelinq reads the invoice and never books it (ADR-107).",
-            "example": "00000000-0000-0000-0000-000000000000"
-          },
-          "model": {
-            "type": "string",
-            "title": "Model",
-            "description": "Which attribution model produced this row.",
-            "enum": [
-              "first",
-              "last",
-              "linear"
-            ],
-            "example": "last"
-          }
-        }
-      }
-    },
-    "objects": [
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "campaign",
-          "slug": "campaign-webinar-ai-voor-gemeenten",
-          "id": "c1e6b2a4-7f3d-4a58-9b21-5d8e4c07a913"
+            "touchpoint": {
+                "slug": "touchpoint",
+                "title": "Touchpoint",
+                "icon": "ChartTimelineVariantShimmer",
+                "version": "1.0.0",
+                "summary": "One attributable interaction between a person and a campaign.",
+                "description": "The ledger the attribution models read. A touchpoint is written when someone clicks a link in a mailing, lands on a campaign page, submits its form or replies. Attribution is computed over these rows at report time and is never written back, so a model can change without rewriting history. The nonce carries the id portaliq stamped on a form submission and is what makes the submission listener idempotent: a redelivered submission finds its own touchpoint and writes nothing.",
+                "x-schema-org": "schema:InteractAction",
+                "required": [
+                    "campaignId",
+                    "kind",
+                    "occurredAt"
+                ],
+                "properties": {
+                    "campaignId": {
+                        "type": "string",
+                        "title": "Campaign",
+                        "description": "The campaign this interaction belongs to.",
+                        "format": "uuid",
+                        "$ref": "campaign"
+                    },
+                    "contactId": {
+                        "type": "string",
+                        "title": "Contact",
+                        "description": "Who interacted, when we know. Empty for an anonymous visit.",
+                        "format": "uuid",
+                        "$ref": "contact"
+                    },
+                    "leadId": {
+                        "type": "string",
+                        "title": "Lead",
+                        "description": "The lead this interaction contributed to, when there is one.",
+                        "format": "uuid",
+                        "$ref": "lead"
+                    },
+                    "kind": {
+                        "type": "string",
+                        "title": "Kind",
+                        "description": "What happened.",
+                        "enum": [
+                            "click",
+                            "visit",
+                            "submit",
+                            "reply"
+                        ],
+                        "facetable": true,
+                        "example": "submit"
+                    },
+                    "channel": {
+                        "type": "string",
+                        "title": "Channel",
+                        "description": "Which channel carried it, resolved from the medium.",
+                        "maxLength": 60,
+                        "facetable": true,
+                        "example": "email"
+                    },
+                    "utm": {
+                        "type": "object",
+                        "title": "UTM",
+                        "description": "The campaign parameters this interaction carried.",
+                        "properties": {
+                            "campaign": {
+                                "type": "string",
+                                "title": "Campaign",
+                                "description": "The utm_campaign value.",
+                                "example": "webinar-ai-voor-gemeenten"
+                            },
+                            "source": {
+                                "type": "string",
+                                "title": "Source",
+                                "description": "The utm_source value.",
+                                "example": "nieuwsbrief"
+                            },
+                            "medium": {
+                                "type": "string",
+                                "title": "Medium",
+                                "description": "The utm_medium value.",
+                                "example": "email"
+                            },
+                            "term": {
+                                "type": "string",
+                                "title": "Term",
+                                "description": "The utm_term value.",
+                                "example": "ai-gemeenten"
+                            },
+                            "content": {
+                                "type": "string",
+                                "title": "Content",
+                                "description": "The utm_content value, which is the blast id for a mailing.",
+                                "example": "00000000-0000-0000-0000-000000000000"
+                            }
+                        }
+                    },
+                    "sourceRef": {
+                        "type": "string",
+                        "title": "Source object",
+                        "description": "The blast, post or page that caused the interaction.",
+                        "example": "00000000-0000-0000-0000-000000000000"
+                    },
+                    "occurredAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Occurred at",
+                        "description": "When it happened, to the second or better. Rows with the same moment keep the order they were written in, so a report is reproducible.",
+                        "example": "2026-10-14T10:21:33+00:00"
+                    },
+                    "nonce": {
+                        "type": "string",
+                        "title": "Nonce",
+                        "description": "The id the producing system stamped on this interaction. Portaliq stamps one per form submission; the submission listener refuses to act twice on the same value.",
+                        "maxLength": 128,
+                        "example": "REPLACE_WITH_A_SERVER_GENERATED_NONCE"
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Created at",
+                        "description": "When the row was written.",
+                        "example": "2026-10-14T10:21:34+00:00"
+                    }
+                }
+            },
+            "blast": {
+                "properties": {
+                    "campaignId": {
+                        "type": "string",
+                        "title": "Campaign",
+                        "description": "The campaign this blast belongs to. When set, the campaign's source, medium and campaign value are stamped on every link instead of the per-blast defaults.",
+                        "format": "uuid",
+                        "$ref": "campaign"
+                    }
+                }
+            },
+            "lead": {
+                "properties": {
+                    "firstTouch": {
+                        "type": "object",
+                        "title": "First touch",
+                        "description": "The campaign parameters of the visit that first brought this person to the site, captured at form submission.",
+                        "properties": {
+                            "campaign": {
+                                "type": "string",
+                                "title": "Campaign",
+                                "description": "The utm_campaign value at first touch.",
+                                "example": "webinar-ai-voor-gemeenten"
+                            },
+                            "source": {
+                                "type": "string",
+                                "title": "Source",
+                                "description": "The utm_source value at first touch.",
+                                "example": "nieuwsbrief"
+                            },
+                            "medium": {
+                                "type": "string",
+                                "title": "Medium",
+                                "description": "The utm_medium value at first touch.",
+                                "example": "email"
+                            },
+                            "term": {
+                                "type": "string",
+                                "title": "Term",
+                                "description": "The utm_term value at first touch.",
+                                "example": "ai-gemeenten"
+                            },
+                            "content": {
+                                "type": "string",
+                                "title": "Content",
+                                "description": "The utm_content value at first touch.",
+                                "example": "00000000-0000-0000-0000-000000000000"
+                            }
+                        }
+                    },
+                    "lastTouch": {
+                        "type": "object",
+                        "title": "Last touch",
+                        "description": "The campaign parameters of the visit the form was submitted on.",
+                        "properties": {
+                            "campaign": {
+                                "type": "string",
+                                "title": "Campaign",
+                                "description": "The utm_campaign value at last touch.",
+                                "example": "webinar-ai-voor-gemeenten"
+                            },
+                            "source": {
+                                "type": "string",
+                                "title": "Source",
+                                "description": "The utm_source value at last touch.",
+                                "example": "linkedin"
+                            },
+                            "medium": {
+                                "type": "string",
+                                "title": "Medium",
+                                "description": "The utm_medium value at last touch.",
+                                "example": "social"
+                            },
+                            "term": {
+                                "type": "string",
+                                "title": "Term",
+                                "description": "The utm_term value at last touch.",
+                                "example": "ai-gemeenten"
+                            },
+                            "content": {
+                                "type": "string",
+                                "title": "Content",
+                                "description": "The utm_content value at last touch.",
+                                "example": "00000000-0000-0000-0000-000000000000"
+                            }
+                        }
+                    },
+                    "campaignId": {
+                        "type": "string",
+                        "title": "Campaign",
+                        "description": "The campaign that produced this lead.",
+                        "format": "uuid",
+                        "$ref": "campaign"
+                    }
+                }
+            },
+            "attributionLink": {
+                "properties": {
+                    "campaignId": {
+                        "type": "string",
+                        "title": "Campaign",
+                        "description": "The campaign the attributed value belongs to.",
+                        "format": "uuid",
+                        "$ref": "campaign"
+                    },
+                    "touchpointIds": {
+                        "type": "array",
+                        "title": "Touchpoints",
+                        "description": "The touchpoints the value was divided over.",
+                        "items": {
+                            "type": "string",
+                            "format": "uuid",
+                            "$ref": "touchpoint"
+                        },
+                        "referenceType": "touchpoint"
+                    },
+                    "invoiceRef": {
+                        "type": "string",
+                        "title": "Invoice",
+                        "description": "The shillinq AR invoice this value closed on, when it closed on a paid invoice rather than on a won lead. Pipelinq reads the invoice and never books it (ADR-107).",
+                        "example": "00000000-0000-0000-0000-000000000000"
+                    },
+                    "model": {
+                        "type": "string",
+                        "title": "Model",
+                        "description": "Which attribution model produced this row.",
+                        "enum": [
+                            "first",
+                            "last",
+                            "linear"
+                        ],
+                        "example": "last"
+                    }
+                }
+            }
         },
-        "name": "Webinar AI voor gemeenten",
-        "goal": "Vijftig aanmeldingen voor het webinar van 12 november.",
-        "status": "running",
-        "utmCampaign": "webinar-ai-voor-gemeenten",
-        "utmSource": "nieuwsbrief",
-        "utmMedium": "email",
-        "articleSummary": "Praktische AI-toepassingen voor de publieke sector, in een uur.",
-        "articleBody": "## Programma\n\n- Wat AI vandaag wel en niet kan\n- Drie toepassingen bij gemeenten\n- Ruimte voor vragen\n\nHet webinar duurt een uur en is gratis.",
-        "startsAt": "2026-10-01",
-        "endsAt": "2026-11-30",
-        "budgetEur": 2500,
-        "costs": [
-          {
-            "channel": "linkedin",
-            "amountEur": 180.5,
-            "note": "Gesponsorde post week 41 tot en met 44."
-          }
-        ],
-        "attribution": {
-          "model": "linear",
-          "windowDays": 90
-        },
-        "createdBy": "admin",
-        "createdAt": "2026-09-28T09:00:00+00:00"
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "campaign",
-          "slug": "campaign-open-source-voor-provincies"
-        },
-        "name": "Open source voor provincies",
-        "goal": "Twintig gesprekken met provincies over open source inkoop.",
-        "status": "planned",
-        "utmCampaign": "open-source-voor-provincies",
-        "utmSource": "linkedin",
-        "utmMedium": "social",
-        "articleSummary": "Waarom provincies vaker voor open source kiezen, en hoe dat aanbesteden werkt.",
-        "articleBody": "## Wat we behandelen\n\n- Inkoopkaders en open source\n- Drie voorbeelden uit de praktijk",
-        "startsAt": "2026-12-01",
-        "endsAt": "2027-02-28",
-        "budgetEur": 1200,
-        "attribution": {
-          "model": "last",
-          "windowDays": 90
-        },
-        "createdBy": "admin",
-        "createdAt": "2026-09-30T11:15:00+00:00"
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "campaign",
-          "slug": "campaign-woo-verzoeken-sneller-afhandelen"
-        },
-        "name": "Woo-verzoeken sneller afhandelen",
-        "goal": "Tien demo-aanvragen van gemeenten met een Woo-achterstand.",
-        "status": "finished",
-        "utmCampaign": "woo-verzoeken-sneller-afhandelen",
-        "utmSource": "nieuwsbrief",
-        "utmMedium": "email",
-        "articleSummary": "Van binnenkomst tot publicatie in een week, zonder extra mensen.",
-        "articleBody": "## Wat u leert\n\n- Waar de tijd in een Woo-verzoek gaat zitten\n- Welke stappen u kunt automatiseren",
-        "startsAt": "2026-05-01",
-        "endsAt": "2026-06-30",
-        "budgetEur": 900,
-        "costs": [
-          {
-            "channel": "email",
-            "amountEur": 42,
-            "note": "Verzendkosten bulkprovider mei en juni."
-          }
-        ],
-        "attribution": {
-          "model": "first",
-          "windowDays": 90
-        },
-        "createdBy": "admin",
-        "createdAt": "2026-04-20T08:30:00+00:00"
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "blast",
-          "slug": "blast-webinar-ai-voor-gemeenten"
-        },
-        "name": "Uitnodiging webinar AI voor gemeenten",
-        "segmentId": "segment-gemeente-contact-blast",
-        "templateId": "template-q4-product-launch",
-        "channel": "email",
-        "status": "sent",
-        "sentAt": "2026-10-14T09:00:00+00:00",
-        "campaignId": "c1e6b2a4-7f3d-4a58-9b21-5d8e4c07a913",
-        "totals": {
-          "queued": 248,
-          "sent": 248,
-          "delivered": 241,
-          "bounced": 7,
-          "opened": 96,
-          "clicked": 31,
-          "unsubscribed": 2,
-          "complained": 0
-        },
-        "createdBy": "admin",
-        "createdAt": "2026-10-10T08:00:00+00:00"
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "lead",
-          "slug": "lead-webinar-ai-gemeente-voorbeeld",
-          "id": "d2f7c3b5-8a4e-4b69-8c32-6e9f5d18b024"
-        },
-        "title": "Webinar AI voor gemeenten: Gemeente Voorbeeld",
-        "source": "landing-page",
-        "value": 3000,
-        "status": "won",
-        "stage": "closed-won",
-        "campaignId": "c1e6b2a4-7f3d-4a58-9b21-5d8e4c07a913",
-        "firstTouch": {
-          "campaign": "webinar-ai-voor-gemeenten",
-          "source": "nieuwsbrief",
-          "medium": "email"
-        },
-        "lastTouch": {
-          "campaign": "webinar-ai-voor-gemeenten",
-          "source": "linkedin",
-          "medium": "social"
-        },
-        "notes": "Aangemeld via de landingspagina van het webinar. Eerste contact via de nieuwsbrief, laatste via LinkedIn."
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "touchpoint",
-          "slug": "touchpoint-webinar-klik-amsterdam"
-        },
-        "campaignId": "c1e6b2a4-7f3d-4a58-9b21-5d8e4c07a913",
-        "kind": "click",
-        "channel": "email",
-        "utm": {
-          "campaign": "webinar-ai-voor-gemeenten",
-          "source": "nieuwsbrief",
-          "medium": "email"
-        },
-        "sourceRef": "blast-webinar-ai-voor-gemeenten",
-        "occurredAt": "2026-10-14T10:21:33+00:00",
-        "createdAt": "2026-10-14T10:21:34+00:00",
-        "leadId": "d2f7c3b5-8a4e-4b69-8c32-6e9f5d18b024"
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "touchpoint",
-          "slug": "touchpoint-webinar-bezoek-amsterdam"
-        },
-        "campaignId": "c1e6b2a4-7f3d-4a58-9b21-5d8e4c07a913",
-        "kind": "visit",
-        "channel": "social",
-        "utm": {
-          "campaign": "webinar-ai-voor-gemeenten",
-          "source": "linkedin",
-          "medium": "social"
-        },
-        "occurredAt": "2026-10-20T14:02:00+00:00",
-        "createdAt": "2026-10-20T14:02:01+00:00",
-        "leadId": "d2f7c3b5-8a4e-4b69-8c32-6e9f5d18b024"
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "touchpoint",
-          "slug": "touchpoint-webinar-aanmelding-amsterdam"
-        },
-        "campaignId": "c1e6b2a4-7f3d-4a58-9b21-5d8e4c07a913",
-        "kind": "submit",
-        "channel": "social",
-        "utm": {
-          "campaign": "webinar-ai-voor-gemeenten",
-          "source": "linkedin",
-          "medium": "social"
-        },
-        "occurredAt": "2026-10-21T09:47:12+00:00",
-        "nonce": "REPLACE_WITH_A_SERVER_GENERATED_NONCE",
-        "createdAt": "2026-10-21T09:47:13+00:00",
-        "leadId": "d2f7c3b5-8a4e-4b69-8c32-6e9f5d18b024"
-      }
-    ]
-  }
+        "objects": [
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "campaign",
+                    "slug": "campaign-webinar-ai-voor-gemeenten",
+                    "id": "c1e6b2a4-7f3d-4a58-9b21-5d8e4c07a913"
+                },
+                "name": "Webinar AI voor gemeenten",
+                "goal": "Vijftig aanmeldingen voor het webinar van 12 november.",
+                "status": "running",
+                "utmCampaign": "webinar-ai-voor-gemeenten",
+                "utmSource": "nieuwsbrief",
+                "utmMedium": "email",
+                "articleSummary": "Praktische AI-toepassingen voor de publieke sector, in een uur.",
+                "articleBody": "## Programma\n\n- Wat AI vandaag wel en niet kan\n- Drie toepassingen bij gemeenten\n- Ruimte voor vragen\n\nHet webinar duurt een uur en is gratis.",
+                "startsAt": "2026-10-01",
+                "endsAt": "2026-11-30",
+                "budgetEur": 2500,
+                "costs": [
+                    {
+                        "channel": "linkedin",
+                        "amountEur": 180.5,
+                        "note": "Gesponsorde post week 41 tot en met 44."
+                    }
+                ],
+                "attribution": {
+                    "model": "linear",
+                    "windowDays": 90
+                },
+                "createdBy": "admin",
+                "createdAt": "2026-09-28T09:00:00+00:00"
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "campaign",
+                    "slug": "campaign-open-source-voor-provincies"
+                },
+                "name": "Open source voor provincies",
+                "goal": "Twintig gesprekken met provincies over open source inkoop.",
+                "status": "planned",
+                "utmCampaign": "open-source-voor-provincies",
+                "utmSource": "linkedin",
+                "utmMedium": "social",
+                "articleSummary": "Waarom provincies vaker voor open source kiezen, en hoe dat aanbesteden werkt.",
+                "articleBody": "## Wat we behandelen\n\n- Inkoopkaders en open source\n- Drie voorbeelden uit de praktijk",
+                "startsAt": "2026-12-01",
+                "endsAt": "2027-02-28",
+                "budgetEur": 1200,
+                "attribution": {
+                    "model": "last",
+                    "windowDays": 90
+                },
+                "createdBy": "admin",
+                "createdAt": "2026-09-30T11:15:00+00:00"
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "campaign",
+                    "slug": "campaign-woo-verzoeken-sneller-afhandelen"
+                },
+                "name": "Woo-verzoeken sneller afhandelen",
+                "goal": "Tien demo-aanvragen van gemeenten met een Woo-achterstand.",
+                "status": "finished",
+                "utmCampaign": "woo-verzoeken-sneller-afhandelen",
+                "utmSource": "nieuwsbrief",
+                "utmMedium": "email",
+                "articleSummary": "Van binnenkomst tot publicatie in een week, zonder extra mensen.",
+                "articleBody": "## Wat u leert\n\n- Waar de tijd in een Woo-verzoek gaat zitten\n- Welke stappen u kunt automatiseren",
+                "startsAt": "2026-05-01",
+                "endsAt": "2026-06-30",
+                "budgetEur": 900,
+                "costs": [
+                    {
+                        "channel": "email",
+                        "amountEur": 42,
+                        "note": "Verzendkosten bulkprovider mei en juni."
+                    }
+                ],
+                "attribution": {
+                    "model": "first",
+                    "windowDays": 90
+                },
+                "createdBy": "admin",
+                "createdAt": "2026-04-20T08:30:00+00:00"
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "blast",
+                    "slug": "blast-webinar-ai-voor-gemeenten"
+                },
+                "name": "Uitnodiging webinar AI voor gemeenten",
+                "segmentId": "segment-gemeente-contact-blast",
+                "templateId": "template-q4-product-launch",
+                "channel": "email",
+                "status": "sent",
+                "sentAt": "2026-10-14T09:00:00+00:00",
+                "campaignId": "c1e6b2a4-7f3d-4a58-9b21-5d8e4c07a913",
+                "totals": {
+                    "queued": 248,
+                    "sent": 248,
+                    "delivered": 241,
+                    "bounced": 7,
+                    "opened": 96,
+                    "clicked": 31,
+                    "unsubscribed": 2,
+                    "complained": 0
+                },
+                "createdBy": "admin",
+                "createdAt": "2026-10-10T08:00:00+00:00"
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "lead",
+                    "slug": "lead-webinar-ai-gemeente-voorbeeld",
+                    "id": "d2f7c3b5-8a4e-4b69-8c32-6e9f5d18b024"
+                },
+                "title": "Webinar AI voor gemeenten: Gemeente Voorbeeld",
+                "source": "landing-page",
+                "value": 3000,
+                "status": "won",
+                "stage": "Won",
+                "campaignId": "c1e6b2a4-7f3d-4a58-9b21-5d8e4c07a913",
+                "firstTouch": {
+                    "campaign": "webinar-ai-voor-gemeenten",
+                    "source": "nieuwsbrief",
+                    "medium": "email"
+                },
+                "lastTouch": {
+                    "campaign": "webinar-ai-voor-gemeenten",
+                    "source": "linkedin",
+                    "medium": "social"
+                },
+                "notes": "Aangemeld via de landingspagina van het webinar. Eerste contact via de nieuwsbrief, laatste via LinkedIn.",
+                "client": "994174bf-3e92-4bec-aea2-701b7131201f",
+                "pipeline": "73a968ae-e5f2-4e5b-9119-005eefc75392",
+                "_note": "The lead schema requires client and pipeline. Seeded without them the import was refused and dropped, so the three touchpoints pointed at a lead that did not exist and the campaign report counted no leads and no value."
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "touchpoint",
+                    "slug": "touchpoint-webinar-klik-amsterdam"
+                },
+                "campaignId": "c1e6b2a4-7f3d-4a58-9b21-5d8e4c07a913",
+                "kind": "click",
+                "channel": "email",
+                "utm": {
+                    "campaign": "webinar-ai-voor-gemeenten",
+                    "source": "nieuwsbrief",
+                    "medium": "email"
+                },
+                "sourceRef": "blast-webinar-ai-voor-gemeenten",
+                "occurredAt": "2026-10-14T10:21:33+00:00",
+                "createdAt": "2026-10-14T10:21:34+00:00",
+                "leadId": "d2f7c3b5-8a4e-4b69-8c32-6e9f5d18b024"
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "touchpoint",
+                    "slug": "touchpoint-webinar-bezoek-amsterdam"
+                },
+                "campaignId": "c1e6b2a4-7f3d-4a58-9b21-5d8e4c07a913",
+                "kind": "visit",
+                "channel": "social",
+                "utm": {
+                    "campaign": "webinar-ai-voor-gemeenten",
+                    "source": "linkedin",
+                    "medium": "social"
+                },
+                "occurredAt": "2026-10-20T14:02:00+00:00",
+                "createdAt": "2026-10-20T14:02:01+00:00",
+                "leadId": "d2f7c3b5-8a4e-4b69-8c32-6e9f5d18b024"
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "touchpoint",
+                    "slug": "touchpoint-webinar-aanmelding-amsterdam"
+                },
+                "campaignId": "c1e6b2a4-7f3d-4a58-9b21-5d8e4c07a913",
+                "kind": "submit",
+                "channel": "social",
+                "utm": {
+                    "campaign": "webinar-ai-voor-gemeenten",
+                    "source": "linkedin",
+                    "medium": "social"
+                },
+                "occurredAt": "2026-10-21T09:47:12+00:00",
+                "nonce": "REPLACE_WITH_A_SERVER_GENERATED_NONCE",
+                "createdAt": "2026-10-21T09:47:13+00:00",
+                "leadId": "d2f7c3b5-8a4e-4b69-8c32-6e9f5d18b024"
+            }
+        ]
+    }
 }

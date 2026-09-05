@@ -24,7 +24,7 @@
 import type { Page } from '@playwright/test'
 
 import { expect, test } from '@playwright/test'
-import { dismissWalkthrough } from '../helpers/pipelinq.ts'
+import { dismissWalkthrough, openApp } from '../helpers/pipelinq.ts'
 import { FixtureSession } from '../workflows/helpers/fixtures.ts'
 
 /** Navigate to a pipelinq SPA route, mounting or remounting as needed. */
@@ -44,6 +44,10 @@ test.describe('Contact channels body section', () => {
 	test('a client with a seeded mobile phone and LinkedIn profile renders both in the Contact channels section', async ({
 		page,
 	}) => {
+		// FixtureSession issues its reads with `page.evaluate(fetch('/index.php/…'))`,
+		// so the page must already be ON the instance: a relative URL cannot be
+		// parsed against about:blank, and the failure names the URL, not the cause.
+		await openApp(page)
 		const fx = new FixtureSession(page)
 		const clients = await fx.list('client', { _limit: 100 })
 		const anna = clients.find((c: any) => c.name === '[Demo] Anna Jansen')
@@ -76,6 +80,10 @@ test.describe('Contact channels body section', () => {
 	test('the Contact channels section renders on the Contact detail page too', async ({
 		page,
 	}) => {
+		// FixtureSession issues its reads with `page.evaluate(fetch('/index.php/…'))`,
+		// so the page must already be ON the instance: a relative URL cannot be
+		// parsed against about:blank, and the failure names the URL, not the cause.
+		await openApp(page)
 		const fx = new FixtureSession(page)
 		const contacts = await fx.list('contact', { _limit: 1 })
 		expect(
@@ -98,6 +106,10 @@ test.describe('Contact channels body section', () => {
 	test('clicking Add on the Emails list opens the add-email modal', async ({
 		page,
 	}) => {
+		// FixtureSession issues its reads with `page.evaluate(fetch('/index.php/…'))`,
+		// so the page must already be ON the instance: a relative URL cannot be
+		// parsed against about:blank, and the failure names the URL, not the cause.
+		await openApp(page)
 		const fx = new FixtureSession(page)
 		const clients = await fx.list('client', { _limit: 1 })
 		expect(
