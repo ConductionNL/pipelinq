@@ -33,7 +33,7 @@
 			v-if="hasMore"
 			class="xwiki-widget__more"
 			href="#"
-			@click.prevent="$emit('view-more')">
+			@click.prevent="$emit('viewMore')">
 			{{ t('pipelinq', 'View more') }}
 		</a>
 	</div>
@@ -79,7 +79,7 @@ export default {
 		},
 	},
 
-	emits: ['select', 'view-more'],
+	emits: ['select', 'viewMore'],
 	setup() {
 		return { store: useXwikiStore() }
 	},
@@ -166,7 +166,7 @@ export default {
 .xwiki-widget__more {
 	display: block;
 	margin-top: 8px;
-	text-align: right;
+	text-align: end;
 	font-size: 0.9em;
 	color: var(--color-primary, #006aa3);
 }

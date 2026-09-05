@@ -119,7 +119,7 @@ import { useObjectStore } from '../../store/modules/object.js'
 // `contactmoment` schemas are one schema now, discriminated by `ticketType`.
 // Exporting `ticket` therefore covers all three; narrow to a single subtype
 // with a row filter (e.g. `ticketType = 'complaint'`).
-const EXPORTABLE_SCHEMAS = ['client', 'contact', 'lead', 'ticket', 'task', 'product']
+const EXPORTABLE_SCHEMAS = ['client', 'contact', 'lead', 'ticket', 'crmTask', 'product']
 const FORMATS = ['csv', 'parquet', 'jsonl']
 const MODES = ['full', 'incremental']
 
@@ -293,6 +293,8 @@ export default {
 	methods: {
 		/**
 		 * Load destinations for the dropdown.
+		 *
+		 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#requirement-destination-configuration-and-validation-req-bie-001
 		 */
 		async loadDestinations() {
 			try {
@@ -302,13 +304,15 @@ export default {
 				this.destinations =
 					this.objectStore.getCollection('exportDestination')?.results
 					|| []
-			} catch (e) {
+			} catch {
 				this.destinations = []
 			}
 		},
 
 		/**
 		 * Load the job for editing.
+		 *
+		 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#requirement-destination-upload-with-retries-req-bie-008
 		 */
 		async load() {
 			this.loading = true
@@ -323,7 +327,7 @@ export default {
 						', ',
 					)
 				}
-			} catch (e) {
+			} catch {
 				showError(this.t('pipelinq', 'Could not load the job'))
 			} finally {
 				this.loading = false
@@ -353,6 +357,8 @@ export default {
 
 		/**
 		 * Persist the job via the shared object store.
+		 *
+		 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#requirement-destination-upload-with-retries-req-bie-008
 		 */
 		async save() {
 			this.busy = true
@@ -367,7 +373,7 @@ export default {
 				await this.objectStore.saveObject('exportJob', payload)
 				showSuccess(this.t('pipelinq', 'Export job saved'))
 				this.$router.push({ name: 'ExportJobs' })
-			} catch (e) {
+			} catch {
 				showError(this.t('pipelinq', 'Could not save the job'))
 			} finally {
 				this.busy = false

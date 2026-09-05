@@ -52,19 +52,13 @@ class SettingsLoadService {
 		'productCategory',
 		'billingCategory',
 		'leadProduct',
-		'task',
+		'crmTask',
 		'relationship',
 		'queue',
 		'skill',
 		'agentProfile',
-		// Project ledger schemas (project-to-shillinq-ledger integration).
-		'project',
-		'projectPhase',
-		// Project / WBS hierarchy (project-task-hierarchy).
-		'projectTask',
-		'projectActivity',
 		// Time & WIP tracking (time-wip).
-		'timeEntry',
+		'billingTimeEntry',
 		'posTransaction',
 		'posTransactionLine',
 		// POS split-tender schemas (pos-split-tender). Without these two slugs
@@ -82,7 +76,7 @@ class SettingsLoadService {
 		// POS cash-drawer (pos-cash-management).
 		'cashShift',
 		'cashDrop',
-		'cashCount',
+		'posCashCount',
 		'cashDiff',
 		// POS staff/roles (pos-end-of-day-bookkeeping) and end-of-day Z-reports.
 		'posRole',
@@ -91,8 +85,8 @@ class SettingsLoadService {
 		// POS kassakoppeling audit trail (pos-kassakoppeling-audit).
 		'kassakoppelingAuditLog',
 		// Customer portal schemas (live in the separate pipelinq-portal register).
-		'portalAccount',
-		'portalSession',
+		'crmPortalAccount',
+		'crmPortalSession',
 		'portalDelegation',
 		'portalAuditEvent',
 		'portalTenantConfig',
@@ -127,7 +121,7 @@ class SettingsLoadService {
 		'masterEntity',
 		'sourceRecord',
 		'trustConfiguration',
-		'mergeOperation',
+		'masterMergeOperation',
 		// Supplier commercial master (pipelinq-product-vendor-master). Without
 		// this slug the `supplier_schema` app-config key is never populated on
 		// import, so ProductVendorProviderService::resolveSupplier() and the
@@ -135,15 +129,15 @@ class SettingsLoadService {
 		'supplier',
 		// Contract & renewal tracking (contract-renewal-tracking) — recurring-revenue
 		// contracts with renewal-window detection and churn metrics.
-		'contract',
+		'salesContract',
 		// Appointment booking (appointment-booking).
-		'service',
-		'resource',
-		'booking',
+		'appointmentService',
+		'appointmentResource',
+		'appointmentBooking',
 		'walkInTicket',
 		'availabilityCache',
 		// Expense-to-Shillinq accounts-payable sync (expense-shillinq-ap).
-		'expense',
+		'billableExpense',
 		// Marketing segmentation & blast (marketing-segmentation-blast).
 		'blast',
 		// Berichtenbox messaging channel (berichtenbox).
@@ -299,6 +293,37 @@ class SettingsLoadService {
 		'slaPolicy' => 'sla_policy_schema',
 		'slaBreachEvent' => 'sla_breach_event_schema',
 		'customerLoyaltyAccount' => 'klantLoyaltyAccount_schema',
+		// `cashCount` was a global slug two apps claimed: this POS drawer count
+		// and shillinq's kasadministratie Z-report, which share NO fields. The
+		// slug moved to `posCashCount`, matching the app's other POS schemas.
+		// The config KEY deliberately did not: it is live persisted state.
+		'posCashCount' => 'cashCount_schema',
+		// Same again for `contract`, which shillinq, stackiq and this app all
+		// claimed. All three carry `contractNumber`, so they are one contract
+		// seen three ways; shillinq owns it and this is the sales side.
+		'salesContract' => 'contract_schema',
+		// The portal pair: portaliq owns the portal, so its `portalAccount` and
+		// `portalSession` keep the bare slugs. These two are the CRM side: a
+		// local credential store (password hash, MFA secrets, reset tokens)
+		// against portaliq's OIDC identity projection. They share an email
+		// address and nothing else that identifies the record, so they are
+		// renamed apart rather than folded.
+		'crmPortalAccount' => 'portalAccount_schema',
+		'crmPortalSession' => 'portalSession_schema',
+		// The appointment resource. shillinq's bookings subsystem is the larger
+		// claimant of `resource`, so its slug stays bare; this one is the room,
+		// chair or person a customer books time with. The two share only `name`,
+		// `status` and `type`, none of which identifies the record.
+		'appointmentResource' => 'resource_schema',
+		// The appointment booking, same reasoning as the resource above.
+		'appointmentBooking' => 'booking_schema',
+		// The bookable service, same reasoning as the booking above.
+		'appointmentService' => 'service_schema',
+		// The CRM task, same reasoning as the appointment schemas above.
+		'crmTask' => 'task_schema',
+		// The last two colliding slugs; keys stay as persisted.
+		'billableExpense' => 'expense_schema',
+		'masterMergeOperation' => 'mergeOperation_schema',
 	];
 
 	/**

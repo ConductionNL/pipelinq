@@ -295,6 +295,7 @@ export default {
 		 * @param {object} body The optional request body.
 		 * @param {string} successMessage The success toast.
 		 * @return {Promise<boolean>} Whether the action succeeded.
+		 * @spec openspec/specs/pos-lifecycle-guard-adoption/spec.md#REQ-PLG-001
 		 */
 		async lifecycle(action, body, successMessage) {
 			this.busy = true
@@ -321,7 +322,7 @@ export default {
 				showSuccess(successMessage)
 				await this.load()
 				return true
-			} catch (e) {
+			} catch {
 				showError(t('pipelinq', 'Action failed.'))
 				return false
 			} finally {
@@ -372,7 +373,7 @@ export default {
 }
 
 .pos-refund-section__lines th {
-	text-align: left;
+	text-align: start;
 	font-size: 12px;
 	color: var(--color-text-maxcontrast);
 	padding: 6px 8px;
@@ -385,7 +386,7 @@ export default {
 }
 
 .num {
-	text-align: right;
+	text-align: end;
 }
 
 .empty {

@@ -437,6 +437,7 @@ class WalkInQueueService {
 	 * mirrored constant only when the declaration is unreadable.
 	 *
 	 * @return array<string, array<int, string>>
+	 * @spec openspec/specs/appointment-booking/spec.md#REQ-APT-012
 	 */
 	public static function allowedTransitions(): array {
 		$graph = (new SchemaLifecycleGraph())->fullAdjacencyFor(schemaSlug: self::TICKET_SCHEMA_SLUG);

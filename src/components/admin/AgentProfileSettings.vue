@@ -292,7 +292,7 @@ export default {
 	border-radius: 8px;
 	background: var(--color-error);
 	color: #fff;
-	margin-left: 6px;
+	margin-inline-start: 6px;
 }
 
 .agent-meta {

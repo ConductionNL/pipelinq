@@ -15,7 +15,7 @@
 
 			<ClientAutocomplete
 				:value="selectedClient"
-				:placeholder="t('pipelinq', 'Search client...')"
+				:placeholder="t('pipelinq', 'Search client…')"
 				:label="t('pipelinq', 'Client')"
 				@input="onClientSelected" />
 
@@ -44,7 +44,7 @@
 			<NcButton variant="primary" :disabled="submitting" @click="onSubmit">
 				{{
 					submitting
-						? t('pipelinq', 'Creating...')
+						? t('pipelinq', 'Creating…')
 						: t('pipelinq', 'Create lead')
 				}}
 			</NcButton>

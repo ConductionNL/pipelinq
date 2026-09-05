@@ -160,7 +160,7 @@ export default {
 				status: 'open',
 			}
 			try {
-				const result = await this.objectStore.saveObject('task', payload)
+				const result = await this.objectStore.saveObject('crmTask', payload)
 				if (!result) {
 					try {
 						showError(
@@ -186,7 +186,6 @@ export default {
 				} catch {
 					/* no-op */
 				}
-				// eslint-disable-next-line no-console
 				console.warn('[WerkplekNewTaskDialog] save failed', e)
 			}
 		},

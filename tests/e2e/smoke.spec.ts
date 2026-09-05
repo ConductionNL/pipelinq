@@ -2,9 +2,8 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V.
  * SPDX-License-Identifier: EUPL-1.2
  */
-import { test, expect } from '@playwright/test'
-
-import { assertAppShellServed, nextcloudErrorPage } from './helpers/pipelinq'
+import { expect, test } from '@playwright/test'
+import { assertAppShellServed, nextcloudErrorPage } from './helpers/pipelinq.ts'
 
 test.describe('Smoke', () => {
 	test('app loads without server errors', async ({ page }) => {
@@ -59,7 +58,7 @@ test.describe('Smoke', () => {
 
 		// Belt and braces: on a stock Nextcloud this is the 404 guest chrome.
 		// Kept as a non-blocking observation of WHICH failure mode occurred.
-		// eslint-disable-next-line no-console
+
 		console.log(
 			`[positive control] status=${response?.status()} ncErrorChrome=${await nextcloudErrorPage(page).count()}`,
 		)

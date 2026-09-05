@@ -38,9 +38,14 @@
  * set, the connectivity probe actually producing a verdict, the log's declared
  * columns, its filters being applied, and its retention statement.
  */
-import { test, expect, Page } from '@playwright/test'
+import type { Page } from '@playwright/test'
 
-import { openApp, nextcloudErrorPage, assertNoHardError } from '../helpers/pipelinq'
+import { expect, test } from '@playwright/test'
+import {
+	assertNoHardError,
+	nextcloudErrorPage,
+	openApp,
+} from '../helpers/pipelinq.ts'
 
 /** The Nextcloud admin settings page that hosts pipelinq's admin sections. */
 const ADMIN_SETTINGS = '/settings/admin/pipelinq'

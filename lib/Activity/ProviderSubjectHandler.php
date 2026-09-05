@@ -27,6 +27,8 @@ use OCP\Activity\IEvent;
 
 /**
  * Handler for applying activity subject text and rich parameters.
+ *
+ * @spec openspec/specs/activity-stream-publishing/spec.md#requirement-activity-stream-publishing-uses-the-nextcloud-first-party-activity-api
  */
 class ProviderSubjectHandler {
 	/**

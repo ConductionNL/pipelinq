@@ -112,10 +112,12 @@ echo "[ci-seed] target: ${BASE}"
 # `/index.php/apps/<app>`, which is not a prefix of the `/apps/<app>/…` URL a
 # spec opens — vue-router matches nothing and silently falls back to the default
 # route. That single cause produced 36 failures in decidesk and 67 of 68 in
-# openbuild. Pipelinq is structurally immune: `src/main.js` builds
-# `createWebHashHistory(generateUrl('/apps/pipelinq'))`, and vue-router's hash
-# history reads the route from `location.hash` (`base.slice(hashPos)` is just
-# `'#'`), so the path prefix cannot shift which route matches.
+# openbuild. Pipelinq used to be structurally immune because it was hash-routed;
+# it is not any more. `src/main.js` and `src/portal.js` both build
+# `createWebHistory(routerBase())`, where routerBase() is derived from
+# `window.location.pathname` rather than from generateUrl(), so BOTH URL forms
+# resolve and the path prefix still cannot shift which route matches. The
+# immunity now comes from routerBase(), not from the hash.
 #
 # It is still set, because the CI box should describe a real deployment rather
 # than a special case, and the shared workflow's `ci-router.php` already serves

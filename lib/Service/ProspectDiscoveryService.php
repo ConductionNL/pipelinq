@@ -27,6 +27,8 @@ use Psr\Log\LoggerInterface;
 
 /**
  * Orchestrator for prospect discovery.
+ *
+ * @spec openspec/specs/prospect-discovery/spec.md#requirement-ideal-customer-profile-configuration
  */
 class ProspectDiscoveryService {
 	/**
@@ -167,51 +169,6 @@ class ProspectDiscoveryService {
 	}//end discover()
 
 	/**
-	 * Create a client and lead from a prospect.
-	 *
-	 * @param array $prospectData The prospect data.
-	 *
-	 * @return array The created client and lead IDs.
-	 * @spec   openspec/changes/reverse-2026-05-26-be-prospect/tasks.md#task-14
-	 */
-	public function createLeadFromProspect(array $prospectData): array {
-		$objectStore = $this->getObjectStoreConfig();
-		$clientConfig = $objectStore['client'] ?? null;
-		$leadConfig = $objectStore['lead'] ?? null;
-
-		if ($clientConfig === null || $leadConfig === null) {
-			return ['error' => 'Object store not configured for client or lead'];
-		}
-
-		// Create client.
-		$clientData = [
-			'name' => $prospectData['tradeName'] ?? 'Unknown',
-			'type' => 'organization',
-			'address' => $prospectData['address'] ?? '',
-			'notes' => sprintf(
-				'KVK: %s | SBI: %s',
-				$prospectData['kvkNumber'] ?? '',
-				$prospectData['sbiDescription'] ?? ''
-			),
-		];
-
-		// Create lead.
-		$leadData = [
-			'title' => $prospectData['tradeName'] ?? 'New Lead',
-			'description' => sprintf(
-				'Prospect from %s discovery. %s',
-				$prospectData['source'] ?? 'unknown',
-				$prospectData['sbiDescription'] ?? ''
-			),
-		];
-
-		return [
-			'clientData' => $clientData,
-			'leadData' => $leadData,
-		];
-	}//end createLeadFromProspect()
-
-	/**
 	 * Exclude existing clients from prospect results by matching company names.
 	 *
 	 * @param array $prospects The prospects to filter.
@@ -293,32 +250,6 @@ class ProspectDiscoveryService {
 			return [];
 		}//end try
 	}//end getExistingClientNames()
-
-	/**
-	 * Get object store configuration.
-	 *
-	 * @return array The object store config.
-	 */
-	private function getObjectStoreConfig(): array {
-		$config = $this->settings->getSettings();
-		$result = [];
-
-		if (($config['register'] ?? '') !== '' && ($config['client_schema'] ?? '') !== '') {
-			$result['client'] = [
-				'register' => $config['register'],
-				'schema' => $config['client_schema'],
-			];
-		}
-
-		if (($config['register'] ?? '') !== '' && ($config['lead_schema'] ?? '') !== '') {
-			$result['lead'] = [
-				'register' => $config['register'],
-				'schema' => $config['lead_schema'],
-			];
-		}
-
-		return $result;
-	}//end getObjectStoreConfig()
 
 	/**
 	 * Get cached results.

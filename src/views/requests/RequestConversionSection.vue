@@ -147,6 +147,8 @@ export default {
 	methods: {
 		/**
 		 * Fetch the current conversion availability for this request.
+		 *
+		 * @spec openspec/specs/request-management/spec.md#requirement-request-to-case-conversion-v1
 		 */
 		async loadAvailability() {
 			if (!this.resolvedId) {
@@ -167,7 +169,7 @@ export default {
 					canConvert: !!data.canConvert,
 					caseReference: data.caseReference || '',
 				}
-			} catch (e) {
+			} catch {
 				this.availability = { ...DEFAULT_AVAILABILITY }
 			} finally {
 				this.loading = false
@@ -238,7 +240,7 @@ export default {
 			try {
 				await navigator.clipboard.writeText(this.caseReference)
 				showSuccess(t('pipelinq', 'Case reference copied.'))
-			} catch (e) {
+			} catch {
 				showError(t('pipelinq', 'Could not copy the case reference.'))
 			}
 		},

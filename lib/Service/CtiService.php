@@ -28,6 +28,7 @@ use OCA\Pipelinq\Service\Cti\AdapterRegistry;
 use OCA\Pipelinq\Service\Cti\Result\CtiWebhookResult;
 use OCA\Pipelinq\Service\Cti\Result\OriginateResult;
 use OCA\Pipelinq\Service\Cti\Result\ScreenPopResult;
+use InvalidArgumentException;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -108,18 +109,52 @@ class CtiService {
 		?string $signature = null,
 	): array {
 		$adapter = $this->adapterRegistry->get($platform);
-		$valid = true;
 		$rawForSig = ($rawBody ?? json_encode($payload));
-		if ($signature !== null) {
-			$rawForSigString = '';
-			if ($rawForSig !== false) {
-				$rawForSigString = (string)$rawForSig;
-			}
-
-			$valid = $adapter->verifyWebhookSignature($rawForSigString, $signature);
+		$rawForSigString = '';
+		if ($rawForSig !== false) {
+			$rawForSigString = (string)$rawForSig;
 		}
 
-		$normalised = $adapter->handleInboundWebhook($payload);
+		// 🔴 ALWAYS VERIFY, INCLUDING WHEN NO SIGNATURE ARRIVED.
+		//
+		// This used to start at `$valid = true` and verify only `if ($signature
+		// !== null)`, so a delivery carrying no signature header at all was
+		// treated as verified and dispatched. The route is #[PublicPage] and
+		// #[NoCSRFRequired], which made that an UNAUTHENTICATED WRITE PRIMITIVE:
+		// an anonymous POST wrote a contactmoment.
+		//
+		// A missing signature is not a delivery to trust, it is the one to
+		// trust least. Every adapter already answers false for an empty
+		// signature or an unconfigured secret, so passing '' through is the
+		// correct fail-closed call rather than a special case here.
+		//
+		// OPERATIONAL NOTE: an instance that has a CTI webhook wired but no
+		// `cti_*_webhook_secret` configured accepted unsigned deliveries before
+		// and now rejects them with 422. That is the point of the change, and
+		// the fix for such an instance is to configure the secret the adapter
+		// already reads.
+		$valid = $adapter->verifyWebhookSignature($rawForSigString, ($signature ?? ''));
+
+		// 🔴 A MALFORMED BODY IS THE EXPECTED CASE ON A PUBLIC ROUTE.
+		//
+		// This call sat outside any try/catch, and the controller caught only
+		// RuntimeException, so an adapter that could not parse the payload
+		// (JsonException, TypeError, anything) escaped as an unhandled 500 on a
+		// #[PublicPage] endpoint -- a stack trace's worth of signal to an
+		// anonymous caller, and a 5xx that tells the platform to redeliver a
+		// body that will never parse.
+		//
+		// Wrapped as InvalidArgumentException so the controller can answer 400:
+		// the delivery is the caller's problem, not the server's.
+		try {
+			$normalised = $adapter->handleInboundWebhook($payload);
+		} catch (\Throwable $e) {
+			$this->logger->warning(
+				'CTI webhook: adapter could not parse the payload',
+				['platform' => $platform, 'error' => $e->getMessage()]
+			);
+			throw new InvalidArgumentException('The webhook payload could not be parsed.', 0, $e);
+		}
 		$interactionId = null;
 		$processingError = null;
 
@@ -179,6 +214,7 @@ class CtiService {
 	 * @param string|null $orgId Reserved for multi-tenant pipelinq.
 	 *
 	 * @return ScreenPopResult The screen-pop result for the frontend.
+	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-inbound-screen-pop-on-call-answer-req-cti-001
 	 */
 	public function initiateScreenPop(string $fromNumber, ?string $orgId = null): ScreenPopResult {
 		$normalised = $this->phoneNormaliser->normaliseForOrg($fromNumber, $orgId);
@@ -315,13 +351,25 @@ class CtiService {
 	 * @param string $recordingUrl URL of the recording.
 	 * @param string $expiresAt ISO 8601 retention expiry.
 	 *
-	 * @return void
+	 * @return bool True when the recording was written, false when the ticket
+	 *              store is unconfigured or the write failed.
 	 *
 	 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
 	 */
-	public function attachRecording(string $interactionId, string $recordingUrl, string $expiresAt): void {
+	public function attachRecording(string $interactionId, string $recordingUrl, string $expiresAt): bool {
+		// 🔴 RETURNS WHETHER THE WRITE HAPPENED.
+		//
+		// This was `: void`, and swallowed BOTH the unconfigured-store early
+		// return and every Throwable — so the controller had nothing to read
+		// and answered 200 {ok: true} over a write that never occurred. A
+		// recording URL is the evidence of a recorded call; being told it was
+		// attached when it was not is worse than being told it failed.
 		if ($this->ticketService->isConfigured() === false) {
-			return;
+			$this->logger->warning(
+				'CTI attachRecording: ticket store is not configured',
+				['interactionId' => $interactionId]
+			);
+			return false;
 		}
 
 		try {
@@ -333,11 +381,13 @@ class CtiService {
 				],
 				uuid: $interactionId,
 			);
+			return true;
 		} catch (\Throwable $e) {
 			$this->logger->error(
 				'CTI attachRecording failed',
 				['exception' => $e->getMessage(), 'interactionId' => $interactionId]
 			);
+			return false;
 		}
 	}//end attachRecording()
 
@@ -411,6 +461,7 @@ class CtiService {
 	 * @param string|null $platform Reporting platform.
 	 *
 	 * @return void
+	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-inbound-screen-pop-on-call-answer-req-cti-001
 	 */
 	public function syncPresence(string $userId, string $presenceState, ?string $extension = null, ?string $platform = null): void {
 		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
@@ -463,6 +514,7 @@ class CtiService {
 	 * Active CTI platform from configuration.
 	 *
 	 * @return string Platform identifier (empty when not configured).
+	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-inbound-screen-pop-on-call-answer-req-cti-001
 	 */
 	public function activePlatform(): string {
 		$config = $this->loadConfig();
@@ -473,6 +525,7 @@ class CtiService {
 	 * Read the CTI singleton config.
 	 *
 	 * @return array<string,mixed>
+	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-inbound-screen-pop-on-call-answer-req-cti-001
 	 */
 	public function loadConfig(): array {
 		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
@@ -512,6 +565,7 @@ class CtiService {
 	 * @param array<string,mixed> $config The config payload.
 	 *
 	 * @return array<string,mixed>
+	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-inbound-screen-pop-on-call-answer-req-cti-001
 	 */
 	public function saveConfig(array $config): array {
 		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
@@ -552,6 +606,7 @@ class CtiService {
 	 * Test connectivity against the configured platform.
 	 *
 	 * @return array{ok: bool, platform: string, message: string}
+	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-inbound-screen-pop-on-call-answer-req-cti-001
 	 */
 	public function testConnection(): array {
 		$platform = $this->activePlatform();
@@ -587,6 +642,7 @@ class CtiService {
 	 * @param int $offset Page offset.
 	 *
 	 * @return array<int,array<string,mixed>>
+	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-inbound-screen-pop-on-call-answer-req-cti-001
 	 */
 	public function listEventLog(array $filters = [], int $limit = 50, int $offset = 0): array {
 		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');

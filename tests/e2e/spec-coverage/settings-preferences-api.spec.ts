@@ -45,14 +45,10 @@
  * @spec openspec/specs/admin-settings/spec.md
  */
 
-import {
-	test,
-	expect,
-	request as playwrightRequest,
-	type APIRequestContext,
-} from '@playwright/test'
+import type { APIRequestContext } from '@playwright/test'
 
-import { resolveBaseUrl } from '../base-url'
+import { expect, request as playwrightRequest, test } from '@playwright/test'
+import { resolveBaseUrl } from '../base-url.ts'
 
 const ADMIN_USER = process.env.ADMIN_USER ?? process.env.NC_ADMIN_USER ?? 'admin'
 const ADMIN_PASS = process.env.ADMIN_PASSWORD ?? process.env.NC_ADMIN_PASS ?? 'admin'

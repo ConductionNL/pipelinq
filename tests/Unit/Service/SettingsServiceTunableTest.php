@@ -20,7 +20,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\Pipelinq\Service\DefaultPipelineService;
-use OCA\Pipelinq\Service\DefaultQueueService;
+use OCA\Pipelinq\Service\DefaultSkillService;
 use OCA\Pipelinq\Service\SettingsLoadService;
 use OCA\Pipelinq\Service\SettingsService;
 use OCP\IAppConfig;
@@ -60,7 +60,7 @@ class SettingsServiceTunableTest extends TestCase {
 			$this->createMock(IConfig::class),
 			$this->createMock(SettingsLoadService::class),
 			$this->createMock(DefaultPipelineService::class),
-			$this->createMock(DefaultQueueService::class),
+			$this->createMock(DefaultSkillService::class),
 			$this->createMock(LoggerInterface::class),
 		);
 	}//end setUp()
@@ -154,7 +154,7 @@ class SettingsServiceTunableTest extends TestCase {
 
 		$settings = $this->service->getSettings();
 
-		$this->assertSame('300', $settings['queue_overflow.poll_interval_seconds']);
+		$this->assertSame('900', $settings['task_expiry.poll_interval_seconds']);
 		$this->assertSame('17', $settings['task.business_hour_end']);
 		$this->assertSame('https://api.kvk.nl/api/v1', $settings['kvk.api_base_url']);
 	}//end testGetSettingsIncludesTunableDefaults()

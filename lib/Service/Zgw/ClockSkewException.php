@@ -35,6 +35,9 @@ namespace OCA\Pipelinq\Service\Zgw;
 
 /**
  * Clock-skew (VNG "JWT verlopen" / "JWT nog niet geldig") error.
+ *
+ * @spec exclude exception type: carries a failure mode, not a behaviour a requirement
+ *   can specify
  */
 class ClockSkewException extends ZgwException {
 	/**

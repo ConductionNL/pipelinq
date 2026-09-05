@@ -93,6 +93,7 @@ class DrainMdmSyncQueue implements IRepairStep {
 	 * Human-readable repair step name.
 	 *
 	 * @return string The name.
+	 * @spec openspec/specs/master-data-management/spec.md#requirement-req-mdm-001--golden-record-per-master-entity
 	 */
 	public function getName(): string {
 		return 'Drain in-flight Pipelinq MDM sync-queue rows through OpenRegister WebhookService (retire-mdm-sync-queue)';

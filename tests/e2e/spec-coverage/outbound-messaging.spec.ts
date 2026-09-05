@@ -15,7 +15,7 @@
  * server error rather than depending on live provider data).
  */
 
-import { test, expect } from '@playwright/test'
+import { expect, test } from '@playwright/test'
 
 async function assertNoServerError(page) {
 	await expect(page.locator('body')).not.toContainText('Internal Server Error', {
@@ -30,7 +30,7 @@ async function assertNoServerError(page) {
 test('messaging settings page renders the provider administration surface', async ({
 	page,
 }) => {
-	await page.goto('/apps/pipelinq/#/settings/messaging')
+	await page.goto('/apps/pipelinq/settings/messaging')
 	await assertNoServerError(page)
 })
 
@@ -38,7 +38,7 @@ test('messaging settings page renders the provider administration surface', asyn
 test('messaging settings offers no credential field (credentials live on the source)', async ({
 	page,
 }) => {
-	await page.goto('/apps/pipelinq/#/settings/messaging')
+	await page.goto('/apps/pipelinq/settings/messaging')
 	await assertNoServerError(page)
 	// The provider form must not present an API-key / credential input.
 	await expect(
@@ -48,13 +48,13 @@ test('messaging settings offers no credential field (credentials live on the sou
 
 // @e2e openspec/specs/outbound-messaging/spec.md#template-sync-status-and-manual-trigger
 test('messaging settings renders the templates panel', async ({ page }) => {
-	await page.goto('/apps/pipelinq/#/settings/messaging')
+	await page.goto('/apps/pipelinq/settings/messaging')
 	await assertNoServerError(page)
 })
 
 // @e2e openspec/specs/outbound-messaging/spec.md#connectivity-test-against-a-mock-mode-source
 test('messaging settings exposes a connectivity test action', async ({ page }) => {
-	await page.goto('/apps/pipelinq/#/settings/messaging')
+	await page.goto('/apps/pipelinq/settings/messaging')
 	await assertNoServerError(page)
 })
 
@@ -62,13 +62,13 @@ test('messaging settings exposes a connectivity test action', async ({ page }) =
 test('connectivity test surfaces a degraded leaf without a browser 500', async ({
 	page,
 }) => {
-	await page.goto('/apps/pipelinq/#/settings/messaging')
+	await page.goto('/apps/pipelinq/settings/messaging')
 	await assertNoServerError(page)
 })
 
 // @e2e openspec/specs/outbound-messaging/spec.md#agent-sends-an-sms-from-a-client-record
 test('client detail renders the messages conversation section', async ({ page }) => {
-	await page.goto('/apps/pipelinq/#/clients')
+	await page.goto('/apps/pipelinq/clients')
 	await assertNoServerError(page)
 })
 
@@ -76,13 +76,13 @@ test('client detail renders the messages conversation section', async ({ page })
 test('contact detail renders the messages conversation section', async ({
 	page,
 }) => {
-	await page.goto('/apps/pipelinq/#/contacts')
+	await page.goto('/apps/pipelinq/contacts')
 	await assertNoServerError(page)
 })
 
 // @e2e openspec/specs/outbound-messaging/spec.md#composer-blocks-and-explains-on-missing-consent
 test('the send composer surface loads without a server error', async ({ page }) => {
-	await page.goto('/apps/pipelinq/#/clients')
+	await page.goto('/apps/pipelinq/clients')
 	await assertNoServerError(page)
 })
 
@@ -90,13 +90,13 @@ test('the send composer surface loads without a server error', async ({ page }) 
 test('the consent recording action is reachable from the send surface', async ({
 	page,
 }) => {
-	await page.goto('/apps/pipelinq/#/clients')
+	await page.goto('/apps/pipelinq/clients')
 	await assertNoServerError(page)
 })
 
 // @e2e openspec/specs/outbound-messaging/spec.md#opt-out-always-wins
 test('an opt-out state is reflected on the send surface', async ({ page }) => {
-	await page.goto('/apps/pipelinq/#/clients')
+	await page.goto('/apps/pipelinq/clients')
 	await assertNoServerError(page)
 })
 
@@ -104,7 +104,7 @@ test('an opt-out state is reflected on the send surface', async ({ page }) => {
 test('within-window whatsapp free-text reply is allowed on the composer', async ({
 	page,
 }) => {
-	await page.goto('/apps/pipelinq/#/contacts')
+	await page.goto('/apps/pipelinq/contacts')
 	await assertNoServerError(page)
 })
 
@@ -112,7 +112,7 @@ test('within-window whatsapp free-text reply is allowed on the composer', async 
 test('client contactmoment timeline renders (outbound sends land here)', async ({
 	page,
 }) => {
-	await page.goto('/apps/pipelinq/#/contactmomenten')
+	await page.goto('/apps/pipelinq/contactmomenten')
 	await assertNoServerError(page)
 })
 
@@ -120,7 +120,7 @@ test('client contactmoment timeline renders (outbound sends land here)', async (
 test('contactmomenten list renders with the channel column (sms bucket)', async ({
 	page,
 }) => {
-	await page.goto('/apps/pipelinq/#/contactmomenten')
+	await page.goto('/apps/pipelinq/contactmomenten')
 	await assertNoServerError(page)
 })
 
@@ -128,6 +128,6 @@ test('contactmomenten list renders with the channel column (sms bucket)', async 
 test('existing contactmomenten remain readable after the additive sms enum', async ({
 	page,
 }) => {
-	await page.goto('/apps/pipelinq/#/contactmomenten')
+	await page.goto('/apps/pipelinq/contactmomenten')
 	await assertNoServerError(page)
 })

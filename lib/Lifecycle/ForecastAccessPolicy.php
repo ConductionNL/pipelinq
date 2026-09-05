@@ -36,6 +36,9 @@ use OCP\IGroupManager;
  * level. A rep may always read their own (rep-level, own owner_id) forecast.
  * Managers (a member of the forecast manager group, or an admin) may read,
  * override and set quota at team/division/company level. Fails closed.
+ *
+ * @spec exclude forecast has no owning requirement. pipeline-insights defers its config
+ *   scenario to admin-settings, which never grew one
  */
 class ForecastAccessPolicy {
 	/**
@@ -63,6 +66,8 @@ class ForecastAccessPolicy {
 	 * @param string $userId The acting user UID.
 	 *
 	 * @return bool True when the user is a forecast manager.
+	 * @spec exclude forecast has no owning requirement. pipeline-insights defers its config
+	 *   scenario to admin-settings, which never grew one
 	 */
 	public function isManager(string $userId): bool {
 		if ($userId === '') {

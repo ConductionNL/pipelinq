@@ -13,15 +13,41 @@
 import { translatePlural as n, translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
 import { createApp } from 'vue'
-import { createRouter, createWebHashHistory } from 'vue-router'
+import { createRouter, createWebHistory } from 'vue-router'
 import PortalApp from './portal/PortalApp.vue'
 import { installPortalGuard, portalRoutes } from './portal/portalRoutes.js'
 
 import './assets/app.css'
 
-// vue-router 4 replaces `mode: 'hash'` + `base` with a history object.
+/**
+ * The router base for THIS page load.
+ *
+ * ⚠️ `generateUrl('/apps/pipelinq/portal')` alone is not enough. Nextcloud
+ * serves the app under BOTH /apps/pipelinq/portal/... and
+ * /index.php/apps/pipelinq/portal/..., but `generateUrl()` returns only the
+ * form the instance is configured for. A visitor arriving on the other form
+ * falls outside the router base, vue-router cannot resolve the path, and the
+ * portal silently lands on its default route instead of the one that was
+ * linked — which for a customer-facing booking link means the booking is lost
+ * with no error shown.
+ *
+ * @return {string} The base path vue-router should strip from the URL.
+ */
+function routerBase() {
+	const match = window.location.pathname.match(
+		/^(.*\/apps\/pipelinq\/portal)(?:\/|$)/,
+	)
+	return match ? match[1] : generateUrl('/apps/pipelinq/portal')
+}
+
+// History mode. The server already serves this: `portalPage#subpath` in
+// appinfo/routes.php answers /portal/{path} with requirement `^(?!api/).*`,
+// so every portal deep link reaches the SPA shell while /portal/api/* stays
+// with the real controllers. That api exclusion is what makes history mode
+// safe here — without it the SPA would swallow the booking API, which is
+// exactly what it was doing to /portal/services until #1697.
 const router = createRouter({
-	history: createWebHashHistory(generateUrl('/apps/pipelinq/portal')),
+	history: createWebHistory(routerBase()),
 	routes: portalRoutes,
 })
 installPortalGuard(router)

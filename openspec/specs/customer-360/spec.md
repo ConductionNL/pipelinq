@@ -31,7 +31,7 @@ The customer 360 aggregates data from multiple sources into a unified view per p
 ## Follow-ups (out of MVP scope)
 
 `klantbeeld-360-activation` satisfies the MVP core (identity, open/closed tickets
-across the unified `ticket` schema, leads, contactmomenten timeline, SLA/queue
+across the unified `ticket` schema, leads, contactmomenten timeline, SLA
 status, quick actions, doelbinding access logging) over the already-declarative
 `ClientDetail` page. The following remain explicit, tracked follow-ups — their
 requirements below stay in this spec as the V1/Enterprise target, not as MVP
@@ -396,8 +396,8 @@ The system SHALL provide a consolidated 360 summary for a single client via a
 the objects the caller may read: the count of **open tickets across all
 `ticketType`s** (request, complaint, contactmoment), the count of open leads and
 their total pipeline value, the client's SLA status (counts of open tickets whose
-`slaDeadline` is breached and at-risk), the distinct queues on the client's open
-tickets, and the timestamp of the client's most recent activity. This aggregation
+`slaDeadline` is breached and at-risk), and the timestamp of the client's most
+recent activity. This aggregation
 SHALL be computed in the service because it spans ticket types and statuses in a way
 the equality-only declarative `summaryAggregates` / `stats-block` primitives cannot
 express (ADR-031 exception 2).
@@ -425,7 +425,7 @@ declarative-view-system).
 
 #### Scenario: Client 360 shows the unified summary panel
 - **WHEN** a KCC agent opens a client's detail page
-- **THEN** the page renders the consolidated summary (open tickets, SLA/queue status, open leads + pipeline value, last activity) alongside the identity, related tickets/leads/contacts, and the activity timeline — all from the declarative page
+- **THEN** the page renders the consolidated summary (open tickets, SLA status, open leads + pipeline value, last activity) alongside the identity, related tickets/leads/contacts, and the activity timeline — all from the declarative page
 
 ### Requirement: Quick actions from the customer 360
 
@@ -455,7 +455,7 @@ requirement is met at MVP level.
 ### Requirement: MVP scope boundary is explicit
 
 The activation MVP SHALL satisfy the unified customer view over identity, tickets,
-leads, contactmomenten timeline, and SLA/queue status using the unified `ticket`
+leads, contactmomenten timeline, and SLA status using the unified `ticket`
 schema. BRP/KVK enrichment, ZGW/Procest case fetch, the documents overview, and
 pinned notes SHALL remain out of the MVP and be tracked as follow-ups.
 

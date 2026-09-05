@@ -163,6 +163,10 @@ export default {
 
 		/**
 		 * Fire the search request.
+		 *
+		 * @spec exclude the pos-customer-link change that specified the lookup modal is
+		 *   archived; no current spec mentions attaching a customer to a till
+		 *   transaction
 		 */
 		async runSearch() {
 			const needle = (this.query || '').trim()
@@ -174,7 +178,7 @@ export default {
 			try {
 				this.results = await searchCustomers(needle, 20)
 				this.hasSearched = true
-			} catch (e) {
+			} catch {
 				this.error = t('pipelinq', 'Error searching. Try again later.')
 				this.results = []
 				this.hasSearched = true

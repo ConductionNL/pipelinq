@@ -79,6 +79,8 @@ export default {
 		 * Fetch analytics data from the rapportage pipeline-stats endpoint
 		 * (single fetch shared across the four child widgets), matching the
 		 * legacy RapportageView behaviour.
+		 *
+		 * @spec openspec/specs/contactmomenten-rapportage/spec.md#requirement-kpi-dashboard
 		 */
 		async loadStats() {
 			this.loading = true
@@ -93,7 +95,7 @@ export default {
 					{ params },
 				)
 				this.stats = response?.data || {}
-			} catch (e) {
+			} catch {
 				showError(
 					t(
 						'pipelinq',

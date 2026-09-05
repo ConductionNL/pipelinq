@@ -40,6 +40,8 @@ use Psr\Log\LoggerInterface;
 
 /**
  * Daily 5-working-day fallback email job.
+ *
+ * @spec openspec/specs/outbound-messaging/spec.md#REQ-OM-004
  */
 class FallbackEmailJob extends TimedJob {
 	/**

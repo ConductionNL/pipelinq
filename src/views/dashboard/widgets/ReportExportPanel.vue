@@ -106,7 +106,7 @@ export default {
 		CnMassExportDialog,
 	},
 
-	emits: ['export-confirmed'],
+	emits: ['exportConfirmed'],
 
 	data() {
 		return {
@@ -196,9 +196,11 @@ export default {
 		 * for the parent / app-wide event bus.
 		 *
 		 * @param {{format: string, ids: Array<string>}} payload - Dialog payload.
+		 *
+		 * @spec openspec/specs/dashboard/spec.md
 		 */
 		onExportConfirm(payload) {
-			this.$emit('export-confirmed', {
+			this.$emit('exportConfirmed', {
 				entityType: this.entityType,
 				period: this.period,
 				format: payload?.format,

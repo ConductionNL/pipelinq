@@ -25,6 +25,8 @@ namespace OCA\Pipelinq\Service;
 
 /**
  * Mapper for KVK API results to prospect format.
+ *
+ * @spec openspec/specs/prospect-discovery/spec.md#requirement-ideal-customer-profile-configuration
  */
 class KvkResultMapper {
 	/**

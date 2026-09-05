@@ -238,6 +238,8 @@ export default {
 
 		/**
 		 * Persist the variants to the product.
+		 *
+		 * @spec openspec/specs/pos-product-catalogue/spec.md#REQ-PPC-001
 		 */
 		async save() {
 			this.saving = true
@@ -252,7 +254,7 @@ export default {
 				} else {
 					showError(t('pipelinq', 'Failed to save variants'))
 				}
-			} catch (e) {
+			} catch {
 				showError(t('pipelinq', 'Failed to save variants'))
 			} finally {
 				this.saving = false
@@ -271,7 +273,7 @@ export default {
 
 .product-variant-panel__actions-col {
 	width: 96px;
-	text-align: right;
+	text-align: end;
 	white-space: nowrap;
 }
 
@@ -294,7 +296,7 @@ export default {
 .viewTable th,
 .viewTable td {
 	padding: 8px 12px;
-	text-align: left;
+	text-align: start;
 	border-bottom: 1px solid var(--color-border);
 	vertical-align: middle;
 }

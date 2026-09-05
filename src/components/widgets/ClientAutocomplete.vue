@@ -59,7 +59,7 @@ export default {
 			 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-9
 			 */
 			default() {
-				return t('pipelinq', 'Search client...')
+				return t('pipelinq', 'Search client…')
 			},
 		},
 
@@ -199,8 +199,7 @@ export default {
 .autocomplete-dropdown {
 	position: absolute;
 	top: 100%;
-	left: 0;
-	right: 0;
+	inset-inline: 0;
 	background: var(--color-main-background);
 	border: 1px solid var(--color-border);
 	border-radius: var(--border-radius);
@@ -219,7 +218,7 @@ export default {
 	border: none;
 	background: none;
 	cursor: pointer;
-	text-align: left;
+	text-align: start;
 }
 
 .autocomplete-item:hover {

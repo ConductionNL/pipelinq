@@ -96,10 +96,10 @@ export async function portalFetch(method, path, body = null) {
 		body: body !== null ? JSON.stringify(body) : undefined,
 	})
 
-	let payload = {}
+	let payload
 	try {
 		payload = await response.json()
-	} catch (e) {
+	} catch {
 		payload = {}
 	}
 

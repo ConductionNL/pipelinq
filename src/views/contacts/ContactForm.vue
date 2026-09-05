@@ -253,7 +253,7 @@ export default {
 		 *
 		 * @param {string} value The chosen client uuid, or '' when cleared.
 		 * @return {void}
-		 * @spec openspec/specs/lead-management/spec.md#requirement-linked-party-selection-on-the-create-form
+		 * @spec openspec/specs/lead-management/spec.md#requirement-linked-party-selection-on-the-create-form-mvp
 		 */
 		onClientSelected(value) {
 			this.selectedClient = value || null
@@ -266,7 +266,7 @@ export default {
 		 * dialog rather than being saved on its own.
 		 *
 		 * @return {Promise<object|null>} The created client, or null if cancelled.
-		 * @spec openspec/specs/lead-management/spec.md#requirement-linked-party-selection-on-the-create-form
+		 * @spec openspec/specs/lead-management/spec.md#requirement-linked-party-selection-on-the-create-form-mvp
 		 */
 		createClient() {
 			return new Promise((resolve) => {
@@ -278,7 +278,7 @@ export default {
 		/**
 		 * @param {string} id The created client's uuid.
 		 * @return {void}
-		 * @spec openspec/specs/lead-management/spec.md#requirement-linked-party-selection-on-the-create-form
+		 * @spec openspec/specs/lead-management/spec.md#requirement-linked-party-selection-on-the-create-form-mvp
 		 */
 		onClientCreated(id) {
 			this.clientDialogOpen = false
@@ -289,7 +289,7 @@ export default {
 
 		/**
 		 * @return {void}
-		 * @spec openspec/specs/lead-management/spec.md#requirement-linked-party-selection-on-the-create-form
+		 * @spec openspec/specs/lead-management/spec.md#requirement-linked-party-selection-on-the-create-form-mvp
 		 */
 		closeClientDialog() {
 			this.clientDialogOpen = false

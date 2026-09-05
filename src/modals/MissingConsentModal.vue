@@ -41,10 +41,10 @@
 				<NcButton variant="tertiary" @click="$emit('cancel')">
 					{{ t('pipelinq', 'Cancel') }}
 				</NcButton>
-				<NcButton variant="secondary" @click="$emit('request-consent')">
+				<NcButton variant="secondary" @click="$emit('requestConsent')">
 					{{ t('pipelinq', 'Request consent') }}
 				</NcButton>
-				<NcButton variant="primary" @click="$emit('skip-and-send')">
+				<NcButton variant="primary" @click="$emit('skipAndSend')">
 					{{ t('pipelinq', 'Skip and send') }}
 				</NcButton>
 			</div>
@@ -76,7 +76,7 @@ export default {
 		},
 	},
 
-	emits: ['cancel', 'request-consent', 'skip-and-send'],
+	emits: ['cancel', 'requestConsent', 'skipAndSend'],
 	computed: {
 		/**
 		 * Trimmed list of contacts shown in the modal (avoids huge DOM trees).
@@ -139,7 +139,7 @@ export default {
 
 .missing-consent__list {
 	margin: 0;
-	padding-left: 20px;
+	padding-inline-start: 20px;
 	max-height: 240px;
 	overflow-y: auto;
 }
@@ -150,7 +150,7 @@ export default {
 
 .missing-consent__reason {
 	color: var(--color-text-lighter);
-	margin-left: 6px;
+	margin-inline-start: 6px;
 }
 
 .missing-consent__more {

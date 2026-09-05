@@ -19,14 +19,14 @@
  * (GIVEN seeded transactions). They are covered by PHPUnit / Newman.
  */
 
-import { test, expect } from '@playwright/test'
-import { openApp, navClick, clickHeaderAction } from '../helpers/pipelinq'
+import { expect, test } from '@playwright/test'
+import { clickHeaderAction, navClick, openApp } from '../helpers/pipelinq.ts'
 
 // @e2e openspec/specs/pos-transaction-core/spec.md#display-transaction-list-with-key-columns
 test('POS transaction list (Kassabon) page renders the real list shell', async ({
 	page,
 }) => {
-	await page.goto('/apps/pipelinq/#/pos')
+	await page.goto('/apps/pipelinq/pos')
 	await expect(page).toHaveURL(/pos/, { timeout: 10000 })
 	await expect(page.locator('body')).not.toContainText('Internal Server Error')
 	// The real CnIndexPage list surface (not just the shell mount) — its host
@@ -47,7 +47,7 @@ test('POS transaction list (Kassabon) page renders the real list shell', async (
 test('POS transaction list shows the real empty state (or populated rows) without error', async ({
 	page,
 }) => {
-	await page.goto('/apps/pipelinq/#/pos')
+	await page.goto('/apps/pipelinq/pos')
 	await expect(page.locator('body')).not.toContainText('Internal Server Error', {
 		timeout: 10000,
 	})
@@ -68,7 +68,7 @@ test('Kassabon (POS) page exposes the new-transaction entry point and nav', asyn
 	await openApp(page)
 	// Navigate via the Kassabon nav entry rather than a bare deep-link (more
 	// robust than goto, which can reset the manifest router to Dashboard).
-	await navClick(page, 'Kassabon', /#\/pos/)
+	await navClick(page, 'Kassabon', /\/pos/)
 	await expect(page.locator('body')).not.toContainText('Internal Server Error')
 
 	// CORRECTED 2026-08-06. This asserted `[data-testid="cn-cta-primary"]`.

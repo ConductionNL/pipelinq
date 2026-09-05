@@ -100,6 +100,8 @@ class EncryptionService {
 	 * @param object $provider Duck-typed vault provider.
 	 *
 	 * @return void
+	 * @spec exclude infrastructure utility with no feature requirement of its own; it is
+	 *   exercised through the features that call it
 	 */
 	public function setVaultProvider(object $provider): void {
 		$this->vaultProvider = $provider;
@@ -193,6 +195,8 @@ class EncryptionService {
 	 * @param string $tenantId Tenant identifier.
 	 *
 	 * @return string Hex-encoded HMAC-SHA256 digest.
+	 * @spec exclude infrastructure utility with no feature requirement of its own; it is
+	 *   exercised through the features that call it
 	 */
 	public function hashBsn(string $plaintext, string $tenantId): string {
 		$hmacKey = $this->getHmacKey(tenantId: $tenantId);
@@ -207,6 +211,8 @@ class EncryptionService {
 	 * @param string $tenantId Tenant identifier.
 	 *
 	 * @return bool True iff the candidate matches the hash.
+	 * @spec exclude infrastructure utility with no feature requirement of its own; it is
+	 *   exercised through the features that call it
 	 */
 	public function bsnEquals(string $candidate, string $hash, string $tenantId): bool {
 		return hash_equals($hash, $this->hashBsn(plaintext: $candidate, tenantId: $tenantId));

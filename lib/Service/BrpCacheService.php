@@ -217,6 +217,7 @@ class BrpCacheService {
 	 * Get the configured cache TTL (hours).
 	 *
 	 * @return int Hours (>= 1).
+	 * @spec openspec/specs/brp-lookup/spec.md
 	 */
 	public function getConfiguredTtlHours(): int {
 		$value = (int)$this->appConfig->getValueString(

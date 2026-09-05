@@ -1,156 +1,165 @@
 {
-  "components": {
-    "schemas": {
-      "timeEntry": {
-        "properties": {
-          "billingSyncStatus": {
-            "type": "string",
-            "enum": [
-              "pending",
-              "synced",
-              "failed"
-            ],
-            "description": "Shillinq time-intake billing handoff state (time-billing-handoff-emit). Unset until the first 'Send to billing' attempt for the batch this entry belongs to. pending = marked before the intake call; synced = the batch was accepted (billingInvoiceId set); failed = a transient/transport error, retried by BillingHandoffRetryJob's re-notification and a manual re-send.",
-            "title": "Billing Sync Status"
-          },
-          "billingBatchId": {
-            "type": "string",
-            "description": "Deterministic UUIDv5 batch id (client + period + sorted entry UUIDs) this entry was last submitted under. Stable across a replay so shillinq's idempotency check returns duplicated:true instead of double-billing.",
-            "title": "Billing Batch ID"
-          },
-          "billingInvoiceId": {
-            "type": "string",
-            "description": "The shillinq draft invoice id returned by the time-intake endpoint on success. An entry carrying a billingInvoiceId is excluded from every future batch selection.",
-            "title": "Billing Invoice ID"
-          }
-        }
-      },
-      "client": {
-        "properties": {
-          "shillinqOrganisationRef": {
-            "type": "string",
-            "description": "The shillinq-resolvable customer/organisation reference used as the time-intake batch's organisationRef (time-billing-handoff-emit). Maintained by administrators/managers on the client record. A client without a mapping cannot be billed through the intake — the send surfaces an actionable 422 naming this client.",
-            "title": "Shillinq Organisation Reference"
-          }
-        }
-      }
-    },
-    "objects": [
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "client",
-          "slug": "client-billing-demo-municipality",
-          "id": "16c492f2-d639-400c-b36d-03a1a39e97e9"
+    "components": {
+        "schemas": {
+            "billingTimeEntry": {
+                "properties": {
+                    "timeEntry": {
+                        "type": "string",
+                        "format": "uuid",
+                        "title": "Time entry",
+                        "title:en": "Time entry",
+                        "description": "The humaniq `TimeEntry` this line bills. A plain uuid and not a `$ref`: humaniq's register is a different register, and ADR-062 rule 7 gives a target outside this register no `$ref`.",
+                        "description:en": "The humaniq `TimeEntry` this line bills. A plain uuid and not a `$ref`: humaniq's register is a different register, and ADR-062 rule 7 gives a cross-register target no `$ref`.",
+                        "facetable": true
+                    },
+                    "billingSyncStatus": {
+                        "type": "string",
+                        "enum": [
+                            "pending",
+                            "synced",
+                            "failed"
+                        ],
+                        "description": "Shillinq time-intake billing handoff state (time-billing-handoff-emit). Unset until the first 'Send to billing' attempt for the batch this entry belongs to. pending = marked before the intake call; synced = the batch was accepted (billingInvoiceId set); failed = a transient/transport error, retried by BillingHandoffRetryJob's re-notification and a manual re-send.",
+                        "title": "Billing Sync Status"
+                    },
+                    "billingBatchId": {
+                        "type": "string",
+                        "description": "Deterministic UUIDv5 batch id (client + period + sorted entry UUIDs) this entry was last submitted under. Stable across a replay so shillinq's idempotency check returns duplicated:true instead of double-billing.",
+                        "title": "Billing Batch ID"
+                    },
+                    "billingInvoiceId": {
+                        "type": "string",
+                        "description": "The shillinq draft invoice id returned by the time-intake endpoint on success. An entry carrying a billingInvoiceId is excluded from every future batch selection.",
+                        "title": "Billing Invoice ID"
+                    }
+                }
+            },
+            "client": {
+                "properties": {
+                    "shillinqOrganisationRef": {
+                        "type": "string",
+                        "description": "The shillinq-resolvable customer/organisation reference used as the time-intake batch's organisationRef (time-billing-handoff-emit). Maintained by administrators/managers on the client record. A client without a mapping cannot be billed through the intake: the send surfaces an actionable 422 naming this client.",
+                        "title": "Shillinq Organisation Reference"
+                    }
+                }
+            }
         },
-        "name": "Gemeente Voorbeeld",
-        "type": "organization",
-        "contactsUid": "demo-municipality-billing-001",
-        "email": "info@gemeente-voorbeeld.nl",
-        "industry": "Lokale overheid",
-        "shillinqOrganisationRef": "00000000-0000-0000-0000-000000000000",
-        "notes": "time-billing-handoff-emit demo archetype: two approved, un-billed time entries in the same period map to one 'Send to billing' batch. shillinqOrganisationRef is an obvious nil-UUID placeholder — replace with the real shillinq customer id before enabling the intake."
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "client",
-          "slug": "client-billing-demo-consultancy",
-          "id": "00fd49da-6752-4a0d-8b37-9085e22bb10c"
-        },
-        "name": "Meridiaan Advies B.V.",
-        "type": "organization",
-        "contactsUid": "demo-consultancy-billing-001",
-        "email": "info@meridiaan-advies.nl",
-        "industry": "Consultancy",
-        "shillinqOrganisationRef": "00000000-0000-0000-0000-000000000000",
-        "notes": "time-billing-handoff-emit demo archetype: already-billed exclusion — its one approved entry already carries billingSyncStatus:synced + nil-UUID batch/invoice placeholders, so it is excluded from any new batch selection."
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "client",
-          "slug": "client-billing-demo-travel",
-          "id": "c8f0824c-ee9c-4149-a545-a8d85bd24b01"
-        },
-        "name": "Zonnereizen",
-        "type": "organization",
-        "contactsUid": "demo-travel-billing-001",
-        "email": "info@zonnereizen.nl",
-        "industry": "Reizen",
-        "notes": "time-billing-handoff-emit demo archetype: no shillinqOrganisationRef mapping — 'Send to billing' for this client surfaces the actionable 422 unmapped-client scenario."
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "timeEntry",
-          "slug": "time-entry-billing-demo-muni-1",
-          "id": "84354c2c-5009-4a67-baac-1ccd11a8ec95"
-        },
-        "title": "KCC inrichting werkplekprofielen",
-        "description": "Inrichting van werkplekprofielen voor het KCC-team.",
-        "hours": 6.5,
-        "date": "2026-06-10",
-        "status": "approved",
-        "billingCategory": "billing-category-declarabel",
-        "client": "16c492f2-d639-400c-b36d-03a1a39e97e9",
-        "approvedBy": "admin",
-        "approvedAt": "2026-06-10T16:00:00Z"
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "timeEntry",
-          "slug": "time-entry-billing-demo-muni-2",
-          "id": "8cefcadf-f17e-47cf-a898-48c287200615"
-        },
-        "title": "Kennisbank redactie",
-        "description": "Redactie van de kennisbankartikelen voor het subsidieportaal.",
-        "hours": 3.0,
-        "date": "2026-06-12",
-        "status": "approved",
-        "billingCategory": "billing-category-declarabel",
-        "client": "16c492f2-d639-400c-b36d-03a1a39e97e9",
-        "approvedBy": "admin",
-        "approvedAt": "2026-06-12T11:00:00Z"
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "timeEntry",
-          "slug": "time-entry-billing-demo-consult-1",
-          "id": "5ebe90c9-3dea-4832-ba47-a9c6992f51ea"
-        },
-        "title": "Data-governance assessment",
-        "description": "Assessment van de data-governance volwassenheid.",
-        "hours": 8.0,
-        "date": "2026-06-08",
-        "status": "approved",
-        "billingCategory": "billing-category-declarabel",
-        "client": "00fd49da-6752-4a0d-8b37-9085e22bb10c",
-        "approvedBy": "admin",
-        "approvedAt": "2026-06-08T15:00:00Z",
-        "billingSyncStatus": "synced",
-        "billingBatchId": "00000000-0000-0000-0000-000000000000",
-        "billingInvoiceId": "00000000-0000-0000-0000-000000000000"
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "timeEntry",
-          "slug": "time-entry-billing-demo-travel-1",
-          "id": "8b34a794-7ca1-411a-909a-f902d5360ae6"
-        },
-        "title": "Boekingsflow support",
-        "description": "Support op de boekingsflow van het reisplatform.",
-        "hours": 2.0,
-        "date": "2026-06-14",
-        "status": "approved",
-        "billingCategory": "billing-category-declarabel",
-        "client": "c8f0824c-ee9c-4149-a545-a8d85bd24b01",
-        "approvedBy": "admin",
-        "approvedAt": "2026-06-14T09:00:00Z"
-      }
-    ]
-  }
+        "objects": [
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "client",
+                    "slug": "client-billing-demo-municipality",
+                    "id": "16c492f2-d639-400c-b36d-03a1a39e97e9"
+                },
+                "name": "Gemeente Voorbeeld",
+                "type": "organization",
+                "contactsUid": "demo-municipality-billing-001",
+                "email": "info@gemeente-voorbeeld.nl",
+                "industry": "Lokale overheid",
+                "shillinqOrganisationRef": "00000000-0000-0000-0000-000000000000",
+                "notes": "time-billing-handoff-emit demo archetype: two approved, un-billed time entries in the same period map to one 'Send to billing' batch. shillinqOrganisationRef is an obvious nil-UUID placeholder — replace with the real shillinq customer id before enabling the intake."
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "client",
+                    "slug": "client-billing-demo-consultancy",
+                    "id": "00fd49da-6752-4a0d-8b37-9085e22bb10c"
+                },
+                "name": "Meridiaan Advies B.V.",
+                "type": "organization",
+                "contactsUid": "demo-consultancy-billing-001",
+                "email": "info@meridiaan-advies.nl",
+                "industry": "Consultancy",
+                "shillinqOrganisationRef": "00000000-0000-0000-0000-000000000000",
+                "notes": "time-billing-handoff-emit demo archetype: already-billed exclusion — its one approved entry already carries billingSyncStatus:synced + nil-UUID batch/invoice placeholders, so it is excluded from any new batch selection."
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "client",
+                    "slug": "client-billing-demo-travel",
+                    "id": "c8f0824c-ee9c-4149-a545-a8d85bd24b01"
+                },
+                "name": "Zonnereizen",
+                "type": "organization",
+                "contactsUid": "demo-travel-billing-001",
+                "email": "info@zonnereizen.nl",
+                "industry": "Reizen",
+                "notes": "time-billing-handoff-emit demo archetype: no shillinqOrganisationRef mapping — 'Send to billing' for this client surfaces the actionable 422 unmapped-client scenario."
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "billingTimeEntry",
+                    "slug": "time-entry-billing-demo-muni-1",
+                    "id": "84354c2c-5009-4a67-baac-1ccd11a8ec95"
+                },
+                "title": "KCC inrichting werkplekprofielen",
+                "description": "Inrichting van werkplekprofielen voor het KCC-team.",
+                "hours": 6.5,
+                "date": "2026-06-10",
+                "status": "approved",
+                "billingCategory": "billing-category-declarabel",
+                "client": "16c492f2-d639-400c-b36d-03a1a39e97e9",
+                "approvedBy": "admin",
+                "approvedAt": "2026-06-10T16:00:00Z"
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "billingTimeEntry",
+                    "slug": "time-entry-billing-demo-muni-2",
+                    "id": "8cefcadf-f17e-47cf-a898-48c287200615"
+                },
+                "title": "Kennisbank redactie",
+                "description": "Redactie van de kennisbankartikelen voor het subsidieportaal.",
+                "hours": 3.0,
+                "date": "2026-06-12",
+                "status": "approved",
+                "billingCategory": "billing-category-declarabel",
+                "client": "16c492f2-d639-400c-b36d-03a1a39e97e9",
+                "approvedBy": "admin",
+                "approvedAt": "2026-06-12T11:00:00Z"
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "billingTimeEntry",
+                    "slug": "time-entry-billing-demo-consult-1",
+                    "id": "5ebe90c9-3dea-4832-ba47-a9c6992f51ea"
+                },
+                "title": "Data-governance assessment",
+                "description": "Assessment van de data-governance volwassenheid.",
+                "hours": 8.0,
+                "date": "2026-06-08",
+                "status": "approved",
+                "billingCategory": "billing-category-declarabel",
+                "client": "00fd49da-6752-4a0d-8b37-9085e22bb10c",
+                "approvedBy": "admin",
+                "approvedAt": "2026-06-08T15:00:00Z",
+                "billingSyncStatus": "synced",
+                "billingBatchId": "00000000-0000-0000-0000-000000000000",
+                "billingInvoiceId": "00000000-0000-0000-0000-000000000000"
+            },
+            {
+                "@self": {
+                    "register": "pipelinq",
+                    "schema": "billingTimeEntry",
+                    "slug": "time-entry-billing-demo-travel-1",
+                    "id": "8b34a794-7ca1-411a-909a-f902d5360ae6"
+                },
+                "title": "Boekingsflow support",
+                "description": "Support op de boekingsflow van het reisplatform.",
+                "hours": 2.0,
+                "date": "2026-06-14",
+                "status": "approved",
+                "billingCategory": "billing-category-declarabel",
+                "client": "c8f0824c-ee9c-4149-a545-a8d85bd24b01",
+                "approvedBy": "admin",
+                "approvedAt": "2026-06-14T09:00:00Z"
+            }
+        ]
+    }
 }

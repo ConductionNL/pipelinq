@@ -28,6 +28,8 @@ use OCP\IRequest;
 
 /**
  * Controller for the Pipelinq dashboard.
+ *
+ * @spec openspec/specs/dashboard/spec.md#requirement-crm-dashboard-layout
  */
 class DashboardController extends Controller {
 	/**

@@ -5,7 +5,7 @@
         "schemas": [
           "masterEntity",
           "sourceRecord",
-          "mergeOperation"
+          "masterMergeOperation"
         ]
       }
     },
@@ -194,7 +194,7 @@
           "dataQualityScore": {
             "type": "number",
             "title": "Data quality score",
-            "description": "Downstream-facing quality score 0-1. Mirrors OpenRegister's materialised qualityScore directly; the former app-side cross-source agreement blend (DataQualityScorer) is retired (ADR-045). Optional — OpenRegister materialises qualityScore on save.",
+            "description": "Downstream-facing quality score 0-1. Mirrors OpenRegister's materialised qualityScore directly; the former app-side cross-source agreement blend (DataQualityScorer) is retired (ADR-045). Optional: OpenRegister materialises qualityScore on save.",
             "minimum": 0,
             "maximum": 1,
             "facetable": true
@@ -372,8 +372,8 @@
           }
         }
       },
-      "mergeOperation": {
-        "slug": "mergeOperation",
+      "masterMergeOperation": {
+        "slug": "masterMergeOperation",
         "title": "Merge Operation",
         "icon": "SourceMerge",
         "version": "1.0.0",

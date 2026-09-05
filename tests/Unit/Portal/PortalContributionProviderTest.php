@@ -157,7 +157,7 @@ final class PortalContributionProviderTest extends TestCase {
 		$expected = [
 			'clientRequests' => ['ticket', 'client', 'request'],
 			'clientComplaints' => ['ticket', 'client', 'complaint'],
-			'clientContracts' => ['contract', 'clientRef', null],
+			'clientContracts' => ['salesContract', 'clientRef', null],
 			'clientContactmoments' => ['ticket', 'client', 'interaction'],
 		];
 		foreach ($expected as $id => [$schema, $scopeField, $ticketType]) {
@@ -193,7 +193,7 @@ final class PortalContributionProviderTest extends TestCase {
 		$this->assertSame(['complaint', 'interaction', 'request'], $ticketTypes, 'Each ticket collection narrows to its own kind');
 
 		$schemas = array_column($manifest['collections'], 'schema');
-		$this->assertNotContains('booking', $schemas, 'booking is a customer surface, never in the client manifest');
+		$this->assertNotContains('appointmentBooking', $schemas, 'booking is a customer surface, never in the client manifest');
 		$this->assertSame(
 			[],
 			array_intersect(['request', 'complaint', 'interaction'], $schemas),
@@ -287,14 +287,14 @@ final class PortalContributionProviderTest extends TestCase {
 
 		$booking = $collections['customerBookings'];
 		$this->assertSame('pipelinq', $booking['register']);
-		$this->assertSame('booking', $booking['schema']);
+		$this->assertSame('appointmentBooking', $booking['schema']);
 		$this->assertSame('customerId', $booking['scopeField']);
 		$this->assertSame('customerUid', $booking['scopeClaim'], 'Booking scopes by the NC addressbook contact ref — same customerUid claim space as loyalty');
 		$this->assertSame('substantial', $booking['minTrust'], 'Booking notes may carry special-category (allergy) data — eIDAS-substantial floor');
 		$this->assertTrue($booking['listable']);
 
 		$schemas = array_column($manifest['collections'], 'schema');
-		$this->assertContains('booking', $schemas, 'booking is now field-projected in, not excluded');
+		$this->assertContains('appointmentBooking', $schemas, 'booking is now field-projected in, not excluded');
 		$this->assertNotContains('berichtenboxMessage', $schemas, 'Berichtenbox stays BSN-scoped, not contact/customer-scoped — no inbox');
 		foreach ($manifest['collections'] as $collection) {
 			$this->assertArrayNotHasKey('kind', $collection, 'No inbox collections ship');
@@ -469,7 +469,7 @@ final class PortalContributionProviderTest extends TestCase {
 		$this->assertIsArray($manifest);
 
 		$booking = $this->indexById($manifest['collections'])['customerBookings'];
-		$this->assertSame('booking', $booking['schema']);
+		$this->assertSame('appointmentBooking', $booking['schema']);
 		$this->assertSame('customerId', $booking['scopeField']);
 		$this->assertSame('customerUid', $booking['scopeClaim']);
 		$this->assertSame('substantial', $booking['minTrust']);

@@ -29,6 +29,8 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Service for building vCard properties from Pipelinq object data.
+ *
+ * @spec openspec/specs/contacts-sync/spec.md#requirement-write-back-sync-mvp
  */
 class ContactVcardPropertyBuilder {
 	/**
@@ -57,13 +59,7 @@ class ContactVcardPropertyBuilder {
 		$name = $objData['name'] ?? 'Unknown';
 		$properties = ['FN' => $name];
 
-		if (empty($objData['email']) === false) {
-			$properties['EMAIL'] = $objData['email'];
-		}
-
-		if (empty($objData['phone']) === false) {
-			$properties['TEL'] = $objData['phone'];
-		}
+		$properties = $this->addChannelProperties(properties: $properties, objData: $objData);
 
 		if ($objectType === 'client') {
 			$properties = $this->addClientProperties(
@@ -82,6 +78,143 @@ class ContactVcardPropertyBuilder {
 
 		return $properties;
 	}//end buildProperties()
+
+	/**
+	 * kind/network -> vCard TYPE token used by {@see buildTypedVcardEntries()}
+	 * and {@see buildSocialProfileEntries()}. vCard has no native TYPE for
+	 * `whatsapp`; it is written as CELL like `mobile`, so it round-trips as
+	 * `mobile` on the next import — a documented, accepted limitation (see
+	 * design.md, DEFERRED_QUESTIONS). `other`/unmapped kinds omit TYPE.
+	 *
+	 * @var array<string, string>
+	 */
+	private const KIND_TO_VCARD_TYPE = [
+		'work' => 'WORK',
+		'private' => 'HOME',
+		'mobile' => 'CELL',
+		'whatsapp' => 'CELL',
+	];
+
+	/**
+	 * Build the EMAIL/TEL/X-SOCIALPROFILE vCard properties from the typed
+	 * `emails[]`/`phones[]`/`socialProfiles[]` arrays, falling back to the
+	 * legacy scalar `email`/`phone` fields when the corresponding array is
+	 * absent or empty (objects not yet carrying the typed arrays, or a
+	 * caller — e.g. {@see ContactVcardService::provisionContactFromForm()}
+	 * — that only ever populated the scalar fields).
+	 *
+	 * @param array $properties The vCard properties built so far.
+	 * @param array $objData The object data.
+	 *
+	 * @return array The updated properties.
+	 *
+	 * @spec openspec/changes/contact-channel-details/specs/contacts-sync/spec.md#requirement-write-back-maps-channel-arrays-to-typed-vcard-properties
+	 */
+	private function addChannelProperties(array $properties, array $objData): array {
+		$emailEntries = $this->buildTypedVcardEntries(entries: ($objData['emails'] ?? []));
+		if ($emailEntries !== []) {
+			$properties['EMAIL'] = $emailEntries;
+		} elseif (empty($objData['email']) === false) {
+			$properties['EMAIL'] = $objData['email'];
+		}
+
+		$phoneEntries = $this->buildTypedVcardEntries(entries: ($objData['phones'] ?? []));
+		if ($phoneEntries !== []) {
+			$properties['TEL'] = $phoneEntries;
+		} elseif (empty($objData['phone']) === false) {
+			$properties['TEL'] = $objData['phone'];
+		}
+
+		$socialEntries = $this->buildSocialProfileEntries(profiles: ($objData['socialProfiles'] ?? []));
+		if ($socialEntries !== []) {
+			$properties['X-SOCIALPROFILE'] = $socialEntries;
+		}
+
+		return $properties;
+	}//end addChannelProperties()
+
+	/**
+	 * Build the `[{value, type}, ...]` vCard multi-value shape Nextcloud's
+	 * `AddressBookImpl::createOrUpdate()` expects for a typed EMAIL/TEL
+	 * list from a Pipelinq `emails[]`/`phones[]` array. Entries with an
+	 * empty `value` are skipped; a `kind` with no vCard TYPE mapping omits
+	 * the TYPE parameter rather than guessing.
+	 *
+	 * @param mixed $entries The `emails[]`/`phones[]` array.
+	 *
+	 * @return array<int, array{value:string, type?:string}> The vCard entries.
+	 */
+	private function buildTypedVcardEntries(mixed $entries): array {
+		if (is_array($entries) === false) {
+			return [];
+		}
+
+		$out = [];
+		foreach ($entries as $entry) {
+			if (is_array($entry) === false) {
+				continue;
+			}
+
+			$value = (string)($entry['value'] ?? '');
+			if ($value === '') {
+				continue;
+			}
+
+			$vcardEntry = ['value' => $value];
+			$vcardType = self::KIND_TO_VCARD_TYPE[(string)($entry['kind'] ?? '')] ?? null;
+			if ($vcardType !== null) {
+				$vcardEntry['type'] = $vcardType;
+			}
+
+			$out[] = $vcardEntry;
+		}
+
+		return $out;
+	}//end buildTypedVcardEntries()
+
+	/**
+	 * Build the `[{value, type}, ...]` vCard multi-value shape for
+	 * X-SOCIALPROFILE from a Pipelinq `socialProfiles[]` array. Prefers
+	 * the profile `url`, falling back to `handle` when no URL is set; an
+	 * entry with neither is skipped. TYPE is the network name verbatim
+	 * (already one of our lower-case enum values), so import can match it
+	 * straight back without a translation table.
+	 *
+	 * @param mixed $profiles The `socialProfiles[]` array.
+	 *
+	 * @return array<int, array{value:string, type?:string}> The vCard entries.
+	 */
+	private function buildSocialProfileEntries(mixed $profiles): array {
+		if (is_array($profiles) === false) {
+			return [];
+		}
+
+		$out = [];
+		foreach ($profiles as $profile) {
+			if (is_array($profile) === false) {
+				continue;
+			}
+
+			$value = (string)($profile['url'] ?? '');
+			if ($value === '') {
+				$value = (string)($profile['handle'] ?? '');
+			}
+
+			if ($value === '') {
+				continue;
+			}
+
+			$entry = ['value' => $value];
+			$network = (string)($profile['network'] ?? '');
+			if ($network !== '') {
+				$entry['type'] = $network;
+			}
+
+			$out[] = $entry;
+		}
+
+		return $out;
+	}//end buildSocialProfileEntries()
 
 	/**
 	 * Add client-specific vCard properties.

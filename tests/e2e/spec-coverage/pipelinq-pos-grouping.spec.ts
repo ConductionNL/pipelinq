@@ -33,17 +33,18 @@
  * Those three are excluded in the spec with exactly that reason. What IS true
  * of the shipped IA is asserted below in full.
  */
-import { test, expect, Page } from '@playwright/test'
+import type { Page } from '@playwright/test'
 
+import { expect, test } from '@playwright/test'
 import {
+	assertNoHardError,
+	dismissSupportDialog,
+	dismissWalkthrough,
+	navClick,
+	nextcloudErrorPage,
 	openApp,
 	revealNavEntry,
-	navClick,
-	assertNoHardError,
-	nextcloudErrorPage,
-	dismissWalkthrough,
-	dismissSupportDialog,
-} from '../helpers/pipelinq'
+} from '../helpers/pipelinq.ts'
 
 /**
  * The four leaves `src/menu-layout.json` relocates into the PointOfSale group,
@@ -63,10 +64,10 @@ import {
  * corroborating measurement that the English string is what the nav paints.
  */
 const POS_CHILDREN: Array<{ label: string; url: RegExp }> = [
-	{ label: 'Kassabon', url: /#\/pos$/ },
-	{ label: 'Returns', url: /#\/pos\/refunds/ },
-	{ label: 'Cash drawer', url: /#\/pos\/shifts/ },
-	{ label: 'Kassakoppeling audit', url: /#\/kassakoppeling\/audit/ },
+	{ label: 'Kassabon', url: /\/pos$/ },
+	{ label: 'Returns', url: /\/pos\/refunds/ },
+	{ label: 'Cash drawer', url: /\/pos\/shifts/ },
+	{ label: 'Kassakoppeling audit', url: /\/kassakoppeling\/audit/ },
 ]
 
 /** Is `label` painted as a TOP-LEVEL nav entry (not nested in a group)? */
@@ -149,7 +150,16 @@ test('every Point of Sale child navigates to its existing route', async ({
 test('every regrouped POS and product route still resolves by deep link', async ({
 	page,
 }) => {
-	test.setTimeout(120000)
+	// SEVEN full document loads: openApp() plus one per route below. Under hash
+	// routing only the first was a document load and the six deep links were
+	// same-document hash changes; since the shell moved to createWebHistory
+	// every one boots the app, ~150 static assets at a time, on a container
+	// shared by six parallel workers.
+	//
+	// 120s was the budget for the cheap version and this test sat exactly at it:
+	// it timed out with no failed assertion, which reads as a hang rather than
+	// as work that did not fit. The assertions themselves are fast.
+	test.setTimeout(240000)
 	await openApp(page)
 
 	const routes = [
@@ -162,7 +172,7 @@ test('every regrouped POS and product route still resolves by deep link', async 
 	]
 
 	for (const route of routes) {
-		await page.goto(`/apps/pipelinq/#${route}`)
+		await page.goto(`/apps/pipelinq${route}`)
 		await dismissWalkthrough(page)
 		await dismissSupportDialog(page)
 
@@ -180,12 +190,15 @@ test('every regrouped POS and product route still resolves by deep link', async 
 		// only `/` leaves `.`, `?`, `+` and friends live as metacharacters — a
 		// latent false pass, because `.` matching any character would let a
 		// redirect to a similar-looking path satisfy the assertion (CodeQL
-		// js/incomplete-sanitization). It also says the right thing for hash
-		// history: what must survive the mount is the HASH, and comparing the
-		// whole URL string would pass on a path-shaped match while vue-router had
-		// quietly redirected to `/`.
+		// js/incomplete-sanitization).
+		//
+		// It reads the PATHNAME since the shell moved to createWebHistory. It
+		// used to read the hash, which is the right question under hash routing
+		// and an unanswerable one under history routing: `.hash` is now always
+		// empty, so the predicate was false for every route including the ones
+		// that resolved correctly.
 		await expect(page, `${route} was redirected away`).toHaveURL((u) =>
-			new URL(String(u)).hash.endsWith(route),
+			new URL(String(u)).pathname.endsWith(route),
 		)
 		await expect(page.locator('#content-vue')).not.toContainText(
 			'Internal Server Error',

@@ -311,19 +311,40 @@ class ExportDestinationService extends AbstractExportService {
 	 * @return array<string, mixed> The sanitised payload.
 	 */
 	private function sanitize(array $data): array {
-		unset(
-			$data['@self'],
-			$data['id'],
-			$data['uuid'],
-			$data['password'],
-			$data['secret'],
-			$data['accessKey'],
-			$data['secretKey'],
-			$data['credentials'],
-			$data['privateKey']
-		);
+		// 🔴 AN ALLOWLIST, BECAUSE A DENYLIST CANNOT WIN THIS.
+		//
+		// This used to unset a fixed list of credential-shaped names
+		// (password, secret, accessKey, secretKey, credentials, privateKey)
+		// and pass everything else through. It therefore STORED, in plaintext
+		// on the destination object, every credential whose name nobody had
+		// thought of: `token`, `apiKey`, `connectionString`, `sasToken` and
+		// `clientSecret` all reached the stored record.
+		//
+		// That is the losing shape for this problem. A destination is
+		// administrator-supplied config posted straight from a form, the set of
+		// names a connector might use for its secret is open-ended, and every
+		// new integration is another chance to miss one. Naming what MAY be
+		// stored inverts that: an unknown key is dropped rather than kept, and
+		// the failure mode of forgetting to update this list is a missing
+		// setting, not a leaked credential.
+		//
+		// The list is the `exportDestination` schema's own properties
+		// (40-bi-export.json). Credentials belong in the connector Source that
+		// `connectorSourceId` points at, which is where resolveCredentials()
+		// below reads them from, and where a rendered read already strips them.
+		$allowed = [
+			'name',
+			'type',
+			'connectorSourceId',
+			'pathTemplate',
+			'compression',
+			'encryptionEnabled',
+			'namingConvention',
+			'validationStatus',
+			'lastValidatedAt',
+		];
 
-		return $data;
+		return array_intersect_key($data, array_flip($allowed));
 	}//end sanitize()
 
 	/**

@@ -368,7 +368,7 @@ export default {
 				const data = await response.json()
 				this.entries = Array.isArray(data.entries) ? data.entries : []
 				this.page = 1
-			} catch (e) {
+			} catch {
 				showError(t('pipelinq', 'Could not load audit log.'))
 				this.entries = []
 			} finally {
@@ -415,6 +415,7 @@ export default {
 		 *
 		 * @param {string} value The ISO timestamp.
 		 * @return {string} The formatted value.
+		 * @spec exclude display formatter: ISO timestamp to an nl-NL date
 		 */
 		formatTimestamp(value) {
 			if (!value) {
@@ -429,7 +430,7 @@ export default {
 					minute: '2-digit',
 					second: '2-digit',
 				})
-			} catch (e) {
+			} catch {
 				return value
 			}
 		},
@@ -439,6 +440,7 @@ export default {
 		 *
 		 * @param {number|string} cents The amount in cents.
 		 * @return {string} The formatted EUR value.
+		 * @spec exclude display formatter: integer cents to a localised EUR string
 		 */
 		formatEur(cents) {
 			const value = Number.isFinite(Number(cents)) ? Number(cents) / 100 : 0
@@ -447,7 +449,7 @@ export default {
 					style: 'currency',
 					currency: 'EUR',
 				}).format(value)
-			} catch (e) {
+			} catch {
 				return `€ ${value.toFixed(2)}`
 			}
 		},
@@ -556,7 +558,7 @@ export default {
 				showSuccess(t('pipelinq', 'Belastingdienst export downloaded.'))
 				this.showExport = false
 				await this.refresh()
-			} catch (e) {
+			} catch {
 				showError(t('pipelinq', 'Belastingdienst export failed.'))
 			} finally {
 				this.exporting = false
@@ -640,7 +642,7 @@ export default {
 }
 
 .kassakoppeling-audit-list__table th {
-	text-align: left;
+	text-align: start;
 	padding: 8px 12px;
 	border-bottom: 1px solid var(--color-border);
 	font-size: 12px;
@@ -662,7 +664,7 @@ export default {
 }
 
 .num {
-	text-align: right;
+	text-align: end;
 }
 
 .kassakoppeling-audit-list__table .chevron-col {

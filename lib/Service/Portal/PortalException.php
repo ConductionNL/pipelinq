@@ -30,6 +30,9 @@ use Exception;
 
 /**
  * Safe, status-bearing portal error.
+ *
+ * @spec exclude exception type: carries a failure mode, not a behaviour a requirement
+ *   can specify
  */
 class PortalException extends Exception {
 	/**
@@ -53,6 +56,8 @@ class PortalException extends Exception {
 	 * The HTTP status code.
 	 *
 	 * @return int The status.
+	 * @spec exclude exception type: carries a failure mode, not a behaviour a requirement
+	 *   can specify
 	 */
 	public function getStatus(): int {
 		return $this->status;
@@ -62,6 +67,8 @@ class PortalException extends Exception {
 	 * The stable machine error code.
 	 *
 	 * @return string The error code.
+	 * @spec exclude exception type: carries a failure mode, not a behaviour a requirement
+	 *   can specify
 	 */
 	public function getErrorCode(): string {
 		return $this->errorCode;
@@ -71,6 +78,8 @@ class PortalException extends Exception {
 	 * Extra safe context fields for the response body.
 	 *
 	 * @return array<string, mixed> The context.
+	 * @spec exclude exception type: carries a failure mode, not a behaviour a requirement
+	 *   can specify
 	 */
 	public function getContext(): array {
 		return $this->context;
@@ -80,6 +89,8 @@ class PortalException extends Exception {
 	 * The full safe response body for this error.
 	 *
 	 * @return array<string, mixed> The body.
+	 * @spec exclude exception type: carries a failure mode, not a behaviour a requirement
+	 *   can specify
 	 */
 	public function toBody(): array {
 		return array_merge(['errorCode' => $this->errorCode, 'message' => $this->getMessage()], $this->context);

@@ -78,12 +78,12 @@ class WhatsAppAdapter {
 	/**
 	 * Default message schema slug.
 	 */
-	private const DEFAULT_MESSAGE_SCHEMA_SLUG = 'message';
+	private const DEFAULT_MESSAGE_SCHEMA_SLUG = 'channelMessage';
 
 	/**
 	 * Default conversation schema slug.
 	 */
-	private const DEFAULT_CONVERSATION_SCHEMA_SLUG = 'conversation';
+	private const DEFAULT_CONVERSATION_SCHEMA_SLUG = 'channelConversation';
 
 	/**
 	 * Default contact schema slug.

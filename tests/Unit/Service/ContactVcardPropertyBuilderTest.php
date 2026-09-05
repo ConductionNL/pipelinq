@@ -120,4 +120,113 @@ class ContactVcardPropertyBuilderTest extends TestCase {
 
 		$this->assertSame('Unknown', $result['FN']);
 	}//end testBuildPropertiesDefaultsToUnknown()
+
+	/**
+	 * A typed `emails[]`/`phones[]` array wins over the legacy scalar
+	 * `email`/`phone` field, and is written as the multi-value `[{value,
+	 * type}, ...]` shape `AddressBookImpl::createOrUpdate()` expects, with
+	 * kind mapped to the matching vCard TYPE token.
+	 *
+	 * @return void
+	 */
+	public function testBuildPropertiesUsesTypedEmailsAndPhonesOverLegacyScalar(): void {
+		$result = $this->builder->buildProperties(
+			[
+				'name' => 'Jane',
+				'email' => 'stale@example.com',
+				'phone' => '+31600000000',
+				'emails' => [
+					['kind' => 'work', 'value' => 'jane@work.example', 'primary' => true, 'verified' => false],
+					['kind' => 'private', 'value' => 'jane@home.example', 'primary' => false, 'verified' => false],
+				],
+				'phones' => [
+					['kind' => 'mobile', 'value' => '+31611111111', 'primary' => true, 'verified' => false],
+				],
+			],
+			'contact'
+		);
+
+		$this->assertSame(
+			[
+				['value' => 'jane@work.example', 'type' => 'WORK'],
+				['value' => 'jane@home.example', 'type' => 'HOME'],
+			],
+			$result['EMAIL']
+		);
+		$this->assertSame(
+			[['value' => '+31611111111', 'type' => 'CELL']],
+			$result['TEL']
+		);
+	}//end testBuildPropertiesUsesTypedEmailsAndPhonesOverLegacyScalar()
+
+	/**
+	 * An empty `emails[]`/`phones[]` array falls back to the legacy scalar
+	 * field, so an object not yet carrying typed channels still syncs.
+	 *
+	 * @return void
+	 */
+	public function testBuildPropertiesFallsBackToScalarWhenArraysEmpty(): void {
+		$result = $this->builder->buildProperties(
+			['name' => 'Jane', 'email' => 'jane@example.com', 'phone' => '+31600000000', 'emails' => [], 'phones' => []],
+			'contact'
+		);
+
+		$this->assertSame('jane@example.com', $result['EMAIL']);
+		$this->assertSame('+31600000000', $result['TEL']);
+	}//end testBuildPropertiesFallsBackToScalarWhenArraysEmpty()
+
+	/**
+	 * An entry with a `kind` that has no vCard TYPE mapping (e.g. "other")
+	 * omits the TYPE parameter rather than guessing one.
+	 *
+	 * @return void
+	 */
+	public function testBuildPropertiesOmitsTypeForUnmappedKind(): void {
+		$result = $this->builder->buildProperties(
+			['name' => 'Jane', 'emails' => [['kind' => 'other', 'value' => 'jane@example.com', 'primary' => true, 'verified' => false]]],
+			'contact'
+		);
+
+		$this->assertSame([['value' => 'jane@example.com']], $result['EMAIL']);
+	}//end testBuildPropertiesOmitsTypeForUnmappedKind()
+
+	/**
+	 * `socialProfiles[]` builds X-SOCIALPROFILE entries, preferring `url`
+	 * over `handle` and carrying the network name verbatim as TYPE.
+	 *
+	 * @return void
+	 */
+	public function testBuildPropertiesIncludesSocialProfiles(): void {
+		$result = $this->builder->buildProperties(
+			[
+				'name' => 'Jane',
+				'socialProfiles' => [
+					['network' => 'linkedin', 'handle' => 'jane', 'url' => 'https://linkedin.com/in/jane', 'verified' => false, 'followedByUs' => false, 'followsUs' => false],
+					['network' => 'mastodon', 'handle' => '@jane@mastodon.social', 'url' => '', 'verified' => false, 'followedByUs' => false, 'followsUs' => false],
+				],
+			],
+			'contact'
+		);
+
+		$this->assertSame(
+			[
+				['value' => 'https://linkedin.com/in/jane', 'type' => 'linkedin'],
+				['value' => '@jane@mastodon.social', 'type' => 'mastodon'],
+			],
+			$result['X-SOCIALPROFILE']
+		);
+	}//end testBuildPropertiesIncludesSocialProfiles()
+
+	/**
+	 * No `socialProfiles[]` at all omits the X-SOCIALPROFILE key entirely
+	 * (never an empty array), matching `AddressBookImpl::createOrUpdate()`'s
+	 * "no key means untouched" contract.
+	 *
+	 * @return void
+	 */
+	public function testBuildPropertiesOmitsSocialProfileKeyWhenAbsent(): void {
+		$result = $this->builder->buildProperties(['name' => 'Jane'], 'contact');
+
+		$this->assertArrayNotHasKey('X-SOCIALPROFILE', $result);
+	}//end testBuildPropertiesOmitsSocialProfileKeyWhenAbsent()
 }//end class

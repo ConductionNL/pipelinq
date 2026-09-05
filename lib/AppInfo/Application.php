@@ -39,7 +39,9 @@ use OCA\Pipelinq\Dashboard\FindClientWidget;
 use OCA\Pipelinq\Dashboard\MyLeadsWidget;
 use OCA\Pipelinq\Dashboard\RecentActivitiesWidget;
 use OCA\Pipelinq\Dashboard\StartRequestWidget;
+use OCA\Pipelinq\Event\LandingPageFormSubmittedEvent;
 use OCA\Pipelinq\Event\TimeEntryApprovedEvent;
+use OCA\Pipelinq\Flow\PipelinqFlowNodeListener;
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
 use OCA\Pipelinq\Lifecycle\PosRefundManagerGuard;
 use OCA\Pipelinq\Lifecycle\PosTransactionAccessGuard;
@@ -49,11 +51,10 @@ use OCA\Pipelinq\Listener\BerichtenboxZaakStatusListener;
 use OCA\Pipelinq\Listener\DealCreatedListener;
 use OCA\Pipelinq\Listener\DealUpdatedListener;
 use OCA\Pipelinq\Listener\ExpenseApprovalListener;
+use OCA\Pipelinq\Listener\LandingPageFormSubmittedListener;
 use OCA\Pipelinq\Listener\ObjectEventListener;
 use OCA\Pipelinq\Listener\ObjectsMergedSyncListener;
 use OCA\Pipelinq\Listener\PosTransactionCompletedListener;
-use OCA\Pipelinq\Listener\ProjectCreationListener;
-use OCA\Pipelinq\Listener\ProjectPhaseStatusListener;
 use OCA\Pipelinq\Listener\SchemaChangeListener;
 use OCA\Pipelinq\Listener\SlaObjectCreatedListener;
 use OCA\Pipelinq\Listener\SlaObjectUpdatedListener;
@@ -186,15 +187,6 @@ class Application extends App implements IBootstrap {
 			event: ObjectUpdatedEvent::class,
 			listener: DealUpdatedListener::class
 		);
-		$context->registerEventListener(
-			event: ObjectCreatedEvent::class,
-			listener: ProjectCreationListener::class
-		);
-		$context->registerEventListener(
-			event: ObjectUpdatedEvent::class,
-			listener: ProjectPhaseStatusListener::class
-		);
-
 		// Burgerportaal / MijnOverheid Berichtenbox bridge:
 		// listen for zaak status transitions and queue an outbound
 		// Berichtenbox message via BerichtenboxService
@@ -260,6 +252,29 @@ class Application extends App implements IBootstrap {
 		$context->registerEventListener(
 			event: \OCA\OpenRegister\Event\ObjectsMergedEvent::class,
 			listener: ObjectsMergedSyncListener::class
+		);
+
+		// Marketing: portaliq relays a landing-page form submission by
+		// dispatching PIPELINQ'S OWN event class, which it resolves by the
+		// sourceApp on the form and class_exists()-guards (ADR-041,
+		// landing-page-provisioning). The event is ours, so this is an
+		// ordinary same-app registration: nothing here needs portaliq to be
+		// installed, and with portaliq absent the listener simply never fires.
+		$context->registerEventListener(
+			event: LandingPageFormSubmittedEvent::class,
+			listener: LandingPageFormSubmittedListener::class
+		);
+
+		// Marketing: contribute the competitor-watch step to OpenRegister's
+		// flow catalogue (ADR-065, ADR-094). The engine owns the schedule and
+		// pipelinq owns the step, which is the only way a scheduled watch can
+		// exist at all: the node registry has no outbound-HTTP node, so a flow
+		// built from stock nodes cannot fetch a feed. Registering against a
+		// class OpenRegister owns is safe with OpenRegister absent: the event
+		// is simply never dispatched.
+		$context->registerEventListener(
+			event: \OCA\OpenRegister\Service\Flow\RegisterFlowNodesEvent::class,
+			listener: PipelinqFlowNodeListener::class
 		);
 
 		$context->registerDashboardWidget(DealsOverviewWidget::class);

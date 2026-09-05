@@ -5,14 +5,14 @@
  *
  * Send-orchestration engine for the marketing-segmentation-and-blast
  * chain. Owns the lifecycle transition from `draft` Blast to a queue of
- * BlastDelivery rows and the throttled dispatch via openconnector. Never
- * touches provider SDKs or credentials — every send is a generic HTTP call
- * through `OCA\OpenConnector\Service\CallService::call()` against the
- * connector Source resolved from OpenRegister's `openconnector`/`source`
- * register+schema (ADR-005). `SourceService` / `executeAction()` no longer
- * exist in OpenConnector — its Source/Mapping/Synchronization/Job entities
- * moved onto OpenRegister's generic object API when OpenConnector's CRUD
- * was rebuilt on top of it.
+ * BlastDelivery rows and the throttled batch dispatch. The per-delivery send
+ * itself (render, resolve the Blast's `mailTransport`, dispatch to the
+ * matching adapter) lives in
+ * `OCA\Pipelinq\Service\Marketing\MailTransportService` since
+ * marketing-mail-transports: BlastService never touches provider SDKs or
+ * credentials, and no longer touches an OpenConnector source directly
+ * either — that is `ConnectorSourceTransport`'s job, one of three transport
+ * adapters `MailTransportService` picks between.
  *
  * Reads Blast / BlastDelivery / CampaignTemplate schemas (member 01) via
  * `ObjectService`, consults `SegmentService` (member 02) for recipient
@@ -37,6 +37,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Service\Marketing\MailTransportService;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -47,7 +48,7 @@ use Throwable;
  *
  * Public entry points:
  * - `sendBlast()` — compliance-gate, queue BlastDeliveries, optional A/B split
- * - `dispatchBlastDeliveries()` — throttled openconnector dispatch
+ * - `dispatchBlastDeliveries()` — throttled dispatch via the resolved mailTransport
  * - `createAbVariant()` — create the variant-B Blast
  * - `updateBlastTotals()` — recount BlastDelivery statuses
  * - `transitionQueuedDeliveries()` — called by ComplianceService on consent
@@ -99,28 +100,10 @@ class BlastService {
 	private const DEFAULT_DISPATCH_BATCH_SIZE = 50;
 
 	/**
-	 * Fallback rate limit (messages per second) when neither the call-site
-	 * nor the openconnector source declare one.
-	 */
-	private const DEFAULT_RATE_LIMIT_PER_SECOND = 100;
-
-	/**
 	 * Status used to mark a queued BlastDelivery that was cut by
 	 * ComplianceService before dispatch.
 	 */
 	private const STATUS_UNSUBSCRIBED_BEFORE_SEND = 'unsubscribed-before-send';
-
-	/**
-	 * OpenConnector's own OpenRegister register slug. Source objects
-	 * (formerly served by the now-removed `SourceService`) live here, not
-	 * in pipelinq's own `register` app-config register.
-	 */
-	private const OPENCONNECTOR_REGISTER_SLUG = 'openconnector';
-
-	/**
-	 * OpenConnector's Source schema slug within {@see OPENCONNECTOR_REGISTER_SLUG}.
-	 */
-	private const OPENCONNECTOR_SOURCE_SCHEMA_SLUG = 'source';
 
 	/**
 	 * Constructor.
@@ -128,6 +111,7 @@ class BlastService {
 	 * @param ContainerInterface $container DI container.
 	 * @param IAppConfig $appConfig Pipelinq app config.
 	 * @param SegmentService $segmentService Segment evaluator.
+	 * @param MailTransportService $mailTransportService Transport resolution + per-delivery dispatch.
 	 * @param LoggerInterface $logger Logger.
 	 *
 	 * @spec openspec/changes/marketing-segmentation-and-blast-04-blast-attribution-services/tasks.md#task-2.3
@@ -136,6 +120,7 @@ class BlastService {
 		private ContainerInterface $container,
 		private IAppConfig $appConfig,
 		private SegmentService $segmentService,
+		private MailTransportService $mailTransportService,
 		private LoggerInterface $logger,
 	) {
 	}//end __construct()
@@ -190,33 +175,17 @@ class BlastService {
 		}
 
 		$segmentId = (string)($blast['segmentId'] ?? '');
-		if ($segmentId === '') {
-			return $this->emptySummary(status: 'no-segment');
+		$listId = (string)($blast['listId'] ?? '');
+		if ($segmentId === '' && $listId === '') {
+			return $this->emptySummary(status: 'no-audience');
 		}
 
 		$channel = (string)($blast['channel'] ?? 'email');
 
-		$complianceResult = $this->checkSegmentCompliance(
-			segmentId: $segmentId,
-			channel: $channel,
-		);
-		$missingConsent = $complianceResult['missingConsent'];
-		$missingSet = array_flip($missingConsent);
-
-		$members = $this->segmentService->getMembersForBlast(segmentId: $segmentId);
-		$compliantMembers = [];
-		foreach ($members as $member) {
-			$contactId = (string)($member['contactId'] ?? '');
-			if ($contactId === '') {
-				continue;
-			}
-
-			if (isset($missingSet[$contactId]) === true) {
-				continue;
-			}
-
-			$compliantMembers[] = $member;
-		}
+		$audience = $this->resolveAudience(segmentId: $segmentId, listId: $listId, channel: $channel);
+		$missingConsent = $audience['missingConsent'];
+		$suppressed = ($audience['suppressed'] ?? []);
+		$compliantMembers = $audience['members'];
 
 		if ($compliantMembers === []) {
 			$this->logger->info(
@@ -226,6 +195,7 @@ class BlastService {
 			return [
 				'queued' => 0,
 				'skippedNoConsent' => count($missingConsent),
+				'skippedSuppressed' => count($suppressed),
 				'variantA' => 0,
 				'variantB' => 0,
 				'variantBlastId' => null,
@@ -294,6 +264,7 @@ class BlastService {
 		return [
 			'queued' => ($variantACount + $variantBCount),
 			'skippedNoConsent' => count($missingConsent),
+			'skippedSuppressed' => count($suppressed),
 			'variantA' => $variantACount,
 			'variantB' => $variantBCount,
 			'variantBlastId' => $variantBlastId,
@@ -317,33 +288,31 @@ class BlastService {
 	}//end summaryStatusFor()
 
 	/**
-	 * Dispatch queued BlastDeliveries for a Blast through openconnector.
+	 * Dispatch queued BlastDeliveries for a Blast through its resolved mail transport.
 	 *
-	 * Reads queued BlastDelivery rows for `$blastId`, batches them
-	 * (default 50), renders the CampaignTemplate per recipient, then POSTs
-	 * the rendered payload to the openconnector Source's base URL via
-	 * `CallService::call()`. The returned `providerId` (parsed from the
-	 * provider's JSON response, when present) is persisted on the
-	 * BlastDelivery and the row transitions to `sent`. Rate limit is read
-	 * from the Source's `rateLimitLimit` / `rateLimitWindow` fields
-	 * (preferred over the caller's `$maxPerSecond` when the source value is
-	 * smaller, so the source config always wins) and enforced by sleeping
-	 * between batches.
+	 * Reads queued BlastDelivery rows for `$blastId`, batches them (default
+	 * 50), and hands each one to {@see MailTransportService::sendOneDelivery()},
+	 * which renders the CampaignTemplate, resolves the Blast's `mailTransport`
+	 * (instance mail server, a Mail account, or an OpenConnector source) and
+	 * sends through the matching adapter. Rate limit is resolved once per
+	 * call via {@see MailTransportService::resolveRateLimit()} — for a
+	 * `provider`-kind transport this reads the OpenConnector source's
+	 * `rateLimitLimit`/`rateLimitWindow` fields (preferred over the caller's
+	 * `$maxPerSecond` when smaller); for `instance`/`mailAccount` it is the
+	 * caller's rate — and enforced by sleeping between batches.
 	 *
-	 * The Source is resolved ONCE per call (not per delivery) via
-	 * OpenRegister's `openconnector`/`source` register+schema and reused for
-	 * every delivery in the batch.
-	 *
-	 * Returns the count of deliveries successfully accepted by the
-	 * provider. Pipelinq code never reads provider credentials and never
-	 * constructs an SDK request — that is the openconnector source's job.
+	 * The transport is resolved ONCE per call (not per delivery) and reused
+	 * for every delivery in the batch. Returns the count of deliveries
+	 * successfully accepted. Pipelinq code never reads provider credentials
+	 * and never constructs an SDK request directly — that is the resolved
+	 * transport adapter's job.
 	 *
 	 * @param string $blastId Blast UUID or slug.
 	 * @param int $maxPerSecond Caller-supplied rate ceiling.
 	 *
 	 * @return int Number of deliveries dispatched.
 	 *
-	 * @spec openspec/changes/marketing-segmentation-and-blast-04-blast-attribution-services/tasks.md#task-2.3
+	 * @spec openspec/changes/marketing-mail-transports/specs/marketing-blast/spec.md#requirement-send-via-openconnector-with-per-tenant-provider
 	 *
 	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential throttle/dispatch guard
 	 *  clauses over the delivery batch; extraction adds no clarity.
@@ -366,24 +335,25 @@ class BlastService {
 			return 0;
 		}
 
-		$connectorSourceId = (string)($blast['connectorSourceId'] ?? '');
-		if ($connectorSourceId === '') {
+		// Campaign parameters go on the template once per blast, BEFORE the
+		// per-delivery render and the click-redirect wrap, so the redirect
+		// target carries them (marketing-campaign-attribution).
+		$template['bodyHtml'] = $this->decorateCampaignLinks(
+			html: (string)($template['bodyHtml'] ?? ''),
+			blast: $blast,
+			template: $template,
+		);
+
+		$transport = $this->mailTransportService->resolveTransport(blast: $blast);
+		if ($transport === null) {
 			$this->logger->warning(
-				'BlastService.dispatchBlastDeliveries: no connectorSourceId on blast',
+				'BlastService.dispatchBlastDeliveries: no mail transport resolved for blast',
 				['blastId' => $blastId]
 			);
 			return 0;
 		}
 
-		$source = $this->resolveConnectorSource(connectorSourceId: $connectorSourceId);
-		if ($source === null) {
-			return 0;
-		}
-
-		$rateLimit = $this->resolveRateLimit(
-			source: $source,
-			callerRate: $maxPerSecond,
-		);
+		$rateLimit = $this->mailTransportService->resolveRateLimit(transport: $transport, callerRate: $maxPerSecond);
 		$batchSize = $this->resolveBatchSize();
 
 		$queued = $this->loadQueuedDeliveries(blastId: $blastId);
@@ -396,11 +366,10 @@ class BlastService {
 		foreach ($batches as $batchIndex => $batch) {
 			$start = microtime(true);
 			foreach ($batch as $delivery) {
-				$result = $this->sendOneDelivery(
+				$result = $this->mailTransportService->sendOneDelivery(
 					delivery: $delivery,
 					template: $template,
-					source: $source,
-					connectorSourceId: $connectorSourceId,
+					transport: $transport,
 				);
 				if ($result === false) {
 					continue;
@@ -463,6 +432,7 @@ class BlastService {
 			'status' => 'draft',
 			'abVariantOf' => (string)($parent['@self']['uuid'] ?? $parent['uuid'] ?? $parentBlastId),
 			'connectorSourceId' => (string)($parent['connectorSourceId'] ?? ''),
+			'transportId' => (string)($parent['transportId'] ?? ''),
 			'totals' => $this->emptyTotals(),
 			'createdBy' => (string)($parent['createdBy'] ?? ''),
 			'createdAt' => $this->nowIso(),
@@ -646,10 +616,12 @@ class BlastService {
 		$now = $this->nowIso();
 		$object = [
 			'name' => (string)$payload['name'],
-			'segmentId' => (string)$payload['segmentId'],
+			'segmentId' => (string)($payload['segmentId'] ?? ''),
+			'listId' => (string)($payload['listId'] ?? ''),
 			'templateId' => (string)$payload['templateId'],
 			'channel' => (string)$payload['channel'],
 			'connectorSourceId' => (string)($payload['connectorSourceId'] ?? ''),
+			'transportId' => (string)($payload['transportId'] ?? ''),
 			'status' => 'draft',
 			'totals' => $this->emptyTotals(),
 			'createdBy' => $createdByUid,
@@ -681,9 +653,9 @@ class BlastService {
 			return 'Invalid name';
 		}
 
-		$segmentId = (string)($payload['segmentId'] ?? '');
-		if (trim($segmentId) === '' || $this->loadOne(id: $segmentId, schemaSlug: $this->segmentService->getSegmentSchemaSlugPublic()) === null) {
-			return 'Invalid segment';
+		$audienceError = $this->validateAudience(payload: $payload);
+		if ($audienceError !== null) {
+			return $audienceError;
 		}
 
 		$templateId = (string)($payload['templateId'] ?? '');
@@ -698,6 +670,62 @@ class BlastService {
 
 		return null;
 	}//end validateDraftBlastPayload()
+
+	/**
+	 * Validate the audience half of a draft-blast payload.
+	 *
+	 * A blast names exactly one audience. Naming both would leave the send
+	 * path to pick, and whichever it picked would surprise the marketer who
+	 * named the other one; naming neither is the `no-audience` refusal
+	 * `sendBlast()` would otherwise reach much later, with a draft already
+	 * stored.
+	 *
+	 * @param array<string, mixed> $payload Inbound payload.
+	 *
+	 * @return string|null Error message, or null when the audience is usable.
+	 *
+	 * @spec openspec/specs/marketing-blast/spec.md#requirement-a-blast-may-target-a-mailing-list
+	 */
+	private function validateAudience(array $payload): ?string {
+		$segmentId = trim((string)($payload['segmentId'] ?? ''));
+		$listId = trim((string)($payload['listId'] ?? ''));
+
+		if ($segmentId !== '' && $listId !== '') {
+			return 'Choose either a segment or a mailing list, not both';
+		}
+
+		if ($segmentId === '' && $listId === '') {
+			return 'Choose a segment or a mailing list';
+		}
+
+		if ($listId !== '') {
+			if ($this->loadOne(id: $listId, schemaSlug: $this->getMailingListSchemaSlug()) === null) {
+				return 'Invalid mailing list';
+			}
+
+			return null;
+		}
+
+		if ($this->loadOne(id: $segmentId, schemaSlug: $this->segmentService->getSegmentSchemaSlugPublic()) === null) {
+			return 'Invalid segment';
+		}
+
+		return null;
+	}//end validateAudience()
+
+	/**
+	 * Resolve the MailingList schema slug from app config.
+	 *
+	 * @return string Schema slug.
+	 */
+	private function getMailingListSchemaSlug(): string {
+		$slug = $this->appConfig->getValueString(Application::APP_ID, 'mailing_list_schema', '');
+		if ($slug !== '') {
+			return $slug;
+		}
+
+		return 'mailingList';
+	}//end getMailingListSchemaSlug()
 
 	/**
 	 * Patch the editable Blast fields. Only `name` is editable post-create.
@@ -965,6 +993,118 @@ class BlastService {
 	}//end sliceMembersForAb()
 
 	/**
+	 * Resolve the audience a Blast names, whether that is a Segment or a
+	 * mailing list.
+	 *
+	 * A Segment is a saved query over people the tenant already holds, so
+	 * its members are gated by the channel-wide ConsentRecord. A mailing
+	 * list is something a person joined, so its members are the confirmed
+	 * subscriptions whose LIST consent stands. Both are evaluated at send
+	 * time and both come back in the same shape, so nothing downstream
+	 * branches on where the recipients came from.
+	 *
+	 * @param string $segmentId Segment UUID or slug, empty when a list is named.
+	 * @param string $listId MailingList UUID or slug, empty when a segment is named.
+	 * @param string $channel Channel ("email" / "sms").
+	 *
+	 * @return array{members: array<int, array<string, mixed>>, missingConsent: array<int, string>, suppressed: array<int, string>}
+	 *
+	 * @spec openspec/specs/marketing-blast/spec.md#requirement-a-blast-may-target-a-mailing-list
+	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-promotional-send-skips-a-customer-in-dunning
+	 */
+	protected function resolveAudience(string $segmentId, string $listId, string $channel): array {
+		if ($listId !== '') {
+			return $this->resolveListAudience(listId: $listId);
+		}
+
+		$complianceResult = $this->checkSegmentCompliance(segmentId: $segmentId, channel: $channel);
+		$missingConsent = $complianceResult['missingConsent'];
+		$missingSet = array_flip($missingConsent);
+		// A suppressed contact is dropped from the audience just as firmly
+		// as one without consent, and is counted separately so the send
+		// summary can say "skipped because they owe us money" rather than
+		// reporting a lawful basis that is actually there.
+		$suppressedSet = array_flip($complianceResult['suppressed']);
+
+		$members = [];
+		foreach ($this->segmentService->getMembersForBlast(segmentId: $segmentId) as $member) {
+			$contactId = (string)($member['contactId'] ?? '');
+			if ($contactId === '' || isset($missingSet[$contactId]) === true || isset($suppressedSet[$contactId]) === true) {
+				continue;
+			}
+
+			$members[] = $member;
+		}
+
+		return ['members' => $members, 'missingConsent' => $missingConsent, 'suppressed' => $complianceResult['suppressed']];
+	}//end resolveAudience()
+
+	/**
+	 * Resolve a mailing list's audience through SubscriptionQueryService.
+	 *
+	 * Fails closed when that service cannot be resolved: an empty
+	 * audience leaves the Blast in draft, which is the same outcome the
+	 * segment path already produces when compliance is unavailable.
+	 *
+	 * `missingConsent` carries every membership that was NOT queued, so the
+	 * send summary's `skippedNoConsent` counts a pending or unsubscribed
+	 * member exactly as it counts a contact without a ConsentRecord.
+	 *
+	 * @param string $listId MailingList UUID or slug.
+	 *
+	 * @return array{members: array<int, array<string, mixed>>, missingConsent: array<int, string>, suppressed: array<int, string>}
+	 *
+	 * @spec openspec/specs/marketing-lists/spec.md#requirement-a-pending-subscription-never-receives-a-blast
+	 */
+	protected function resolveListAudience(string $listId): array {
+		try {
+			$service = $this->container->get('OCA\\Pipelinq\\Service\\Marketing\\SubscriptionQueryService');
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				'BlastService.resolveListAudience: SubscriptionQueryService unavailable — failing closed',
+				['listId' => $listId, 'exception' => $e->getMessage()]
+			);
+			return ['members' => [], 'missingConsent' => [], 'suppressed' => []];
+		}
+
+		try {
+			$audience = $service->getBlastAudienceForList($listId);
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				'BlastService.resolveListAudience: call failed — failing closed',
+				['listId' => $listId, 'exception' => $e->getMessage()]
+			);
+			return ['members' => [], 'missingConsent' => [], 'suppressed' => []];
+		}
+
+		if (is_array($audience) === false) {
+			return ['members' => [], 'missingConsent' => [], 'suppressed' => []];
+		}
+
+		$members = [];
+		foreach (($audience['members'] ?? []) as $row) {
+			if (is_array($row) === false) {
+				continue;
+			}
+
+			$members[] = [
+				'contactId' => (string)($row['contactId'] ?? ''),
+				'email' => (string)($row['email'] ?? ''),
+				'unsubscribeUrl' => (string)($row['unsubscribeUrl'] ?? ''),
+			];
+		}
+
+		$skipped = [];
+		foreach (($audience['skipped'] ?? []) as $contactId) {
+			if (is_scalar($contactId) === true) {
+				$skipped[] = (string)$contactId;
+			}
+		}
+
+		return ['members' => $members, 'missingConsent' => $skipped, 'suppressed' => []];
+	}//end resolveListAudience()
+
+	/**
 	 * Wrap the ComplianceService call so this service compiles before
 	 * member 03 lands. When ComplianceService is unavailable in the
 	 * container we fail closed: every member is treated as missing
@@ -973,7 +1113,10 @@ class BlastService {
 	 * @param string $segmentId Segment UUID or slug.
 	 * @param string $channel Channel ("email" / "sms").
 	 *
-	 * @return array<string, mixed> `{compliant, missingConsent[], missingCount}`.
+	 * @return array<string, mixed> `{compliant, missingConsent[], missingCount, suppressed[]}`.
+	 *
+	 * @spec openspec/specs/marketing-compliance/spec.md#requirement-blast-cannot-send-without-lawful-basis
+	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-promotional-send-skips-a-customer-in-dunning
 	 */
 	protected function checkSegmentCompliance(string $segmentId, string $channel): array {
 		try {
@@ -996,6 +1139,7 @@ class BlastService {
 				'compliant' => false,
 				'missingConsent' => $missingConsent,
 				'missingCount' => count($missingConsent),
+				'suppressed' => [],
 			];
 		}//end try
 
@@ -1006,31 +1150,47 @@ class BlastService {
 				'BlastService.checkSegmentCompliance: call failed — failing closed',
 				['segmentId' => $segmentId, 'channel' => $channel, 'exception' => $e->getMessage()]
 			);
-			return ['compliant' => false, 'missingConsent' => [], 'missingCount' => 0];
+			return ['compliant' => false, 'missingConsent' => [], 'missingCount' => 0, 'suppressed' => []];
 		}
 
 		if (is_array($result) === false) {
-			return ['compliant' => false, 'missingConsent' => [], 'missingCount' => 0];
+			return ['compliant' => false, 'missingConsent' => [], 'missingCount' => 0, 'suppressed' => []];
 		}
 
-		$missing = ($result['missingConsent'] ?? []);
-		if (is_array($missing) === false) {
-			$missing = [];
-		}
-
-		$missingScalars = [];
-		foreach ($missing as $id) {
-			if (is_scalar($id) === true) {
-				$missingScalars[] = (string)$id;
-			}
-		}
+		$missingScalars = $this->contactIdsOf(value: ($result['missingConsent'] ?? []));
+		$suppressedScalars = $this->contactIdsOf(value: ($result['suppressed'] ?? []));
 
 		return [
 			'compliant' => (bool)($result['compliant'] ?? false),
 			'missingConsent' => $missingScalars,
 			'missingCount' => (int)($result['missingCount'] ?? count($missingScalars)),
+			'suppressed' => $suppressedScalars,
 		];
 	}//end checkSegmentCompliance()
+
+	/**
+	 * Reduce whatever the compliance gate returned to a list of contact ids.
+	 *
+	 * @param mixed $value The raw list.
+	 *
+	 * @return array<int, string> The ids.
+	 *
+	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-promotional-send-skips-a-customer-in-dunning
+	 */
+	private function contactIdsOf(mixed $value): array {
+		if (is_array($value) === false) {
+			return [];
+		}
+
+		$ids = [];
+		foreach ($value as $id) {
+			if (is_scalar($id) === true) {
+				$ids[] = (string)$id;
+			}
+		}
+
+		return $ids;
+	}//end contactIdsOf()
 
 	/**
 	 * Deterministic A/B assignment from contactId.
@@ -1076,6 +1236,11 @@ class BlastService {
 			'email' => (string)($member['email'] ?? ''),
 			'status' => 'queued',
 		];
+		$unsubscribeUrl = (string)($member['unsubscribeUrl'] ?? '');
+		if ($unsubscribeUrl !== '') {
+			$payload['unsubscribeUrl'] = $unsubscribeUrl;
+		}
+
 		if ($channel === 'sms') {
 			$payload['phone'] = (string)($member['phone'] ?? '');
 		}
@@ -1088,423 +1253,78 @@ class BlastService {
 	}//end persistQueuedDelivery()
 
 	/**
-	 * POST one rendered delivery to the openconnector Source's base URL via
-	 * `CallService::call()` and persist the result.
+	 * Append `utm_*` campaign parameters to the template body's links via
+	 * {@see CampaignLinkDecorator::decorate()}.
 	 *
-	 * @param array<string, mixed> $delivery Queued BlastDelivery row.
-	 * @param array<string, mixed> $template CampaignTemplate row.
-	 * @param array<string, mixed>|object $source Resolved openconnector Source
-	 *                                            entity (from {@see resolveConnectorSource()}).
-	 *                                            Always an `ObjectEntity` in
-	 *                                            production; an array in tests
-	 *                                            is tolerated for the same
-	 *                                            reason {@see toArray()} exists.
-	 * @param string $connectorSourceId Source UUID (for logging only —
-	 *                                  `$source` is already resolved).
+	 * The blast's campaign is loaded first, so a blast that belongs to one
+	 * carries the campaign's source, medium and campaign value instead of
+	 * the per-blast defaults. A blast that belongs to none is decorated
+	 * exactly as before.
 	 *
-	 * @return bool True when the provider accepted the call (2xx response).
+	 * Resolved lazily through the container like the tracking service, so
+	 * an install whose container cannot build the decorator (or a test
+	 * that never registered it) sends the body as authored. Fails soft:
+	 * a decorator fault never blocks a send.
+	 *
+	 * @param string $html Template body HTML.
+	 * @param array<string, mixed> $blast The blast row.
+	 * @param array<string, mixed> $template The template row.
+	 *
+	 * @return string The decorated HTML, or the original on failure.
+	 *
+	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-tracked-link-is-minted-from-the-campaign-when-there-is-one
 	 */
-	private function sendOneDelivery(array $delivery, array $template, array|object $source, string $connectorSourceId): bool {
-		$rendered = $this->renderTemplate(template: $template, delivery: $delivery);
-
-		if ($this->firstPartyTrackingEnabled() === true) {
-			$rendered['bodyHtml'] = $this->injectTrackingLinks(
-				html: (string)($rendered['bodyHtml'] ?? ''),
-				blastDeliveryId: $this->extractId(payload: $delivery),
-			);
-		}
-
-		$callService = $this->getCallService();
-		if ($callService === null) {
-			return false;
-		}
-
-		try {
-			$callLog = $callService->call(
-				source: $source,
-				endpoint: '',
-				method: 'POST',
-				config: ['json' => $rendered],
-			);
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'BlastService.sendOneDelivery: connector call failed (transport)',
-				['connectorSourceId' => $connectorSourceId, 'exception' => $e->getMessage()]
-			);
-			return false;
-		}
-
-		$callLogData = $this->toArray(value: $callLog);
-		$statusCode = (int)($callLogData['statusCode'] ?? 0);
-		if ($statusCode < 200 || $statusCode >= 300) {
-			$this->logger->warning(
-				'BlastService.sendOneDelivery: connector source responded with a non-2xx status',
-				['connectorSourceId' => $connectorSourceId, 'statusCode' => $statusCode]
-			);
-			return false;
-		}
-
-		$providerId = $this->extractProviderId(
-			result: $this->decodeCallLogResponseBody(callLogData: $callLogData),
-		);
-
-		$payload = $delivery;
-		$payload['status'] = 'sent';
-		$payload['sentAt'] = $this->nowIso();
-		if ($providerId !== null && $providerId !== '') {
-			$payload['providerId'] = $providerId;
-		}
-
-		$this->saveObject(
-			payload: $payload,
-			schemaSlug: $this->getBlastDeliverySchemaSlug(),
-			id: $this->extractId(payload: $delivery),
-		);
-
-		return true;
-	}//end sendOneDelivery()
-
-	/**
-	 * Resolve the OpenConnector Source object addressed by `$connectorSourceId`.
-	 *
-	 * Sources are OpenRegister objects in the `openconnector` register /
-	 * `source` schema (OpenConnector's own CRUD, not pipelinq's `register`
-	 * app-config register) — `OCA\OpenConnector\Service\SourceService`, the
-	 * class this used to resolve through, no longer exists.
-	 *
-	 * @param string $connectorSourceId Source UUID.
-	 *
-	 * @return array<string, mixed>|object|null The resolved Source entity
-	 *                                           (an `ObjectEntity` in
-	 *                                           production), or null when
-	 *                                           OpenRegister is unavailable
-	 *                                           or the source does not exist.
-	 */
-	private function resolveConnectorSource(string $connectorSourceId): array|object|null {
-		$objectService = $this->getObjectService();
-		if ($objectService === null) {
-			return null;
-		}
-
-		try {
-			$source = $objectService->find(
-				id: $connectorSourceId,
-				register: self::OPENCONNECTOR_REGISTER_SLUG,
-				schema: self::OPENCONNECTOR_SOURCE_SCHEMA_SLUG,
-			);
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'BlastService.resolveConnectorSource: lookup failed',
-				['connectorSourceId' => $connectorSourceId, 'exception' => $e->getMessage()]
-			);
-			return null;
-		}
-
-		if ($source === null) {
-			$this->logger->warning(
-				'BlastService.resolveConnectorSource: connector source not found',
-				['connectorSourceId' => $connectorSourceId]
-			);
-			return null;
-		}
-
-		if (is_array($source) === false && is_object($source) === false) {
-			return null;
-		}
-
-		return $source;
-	}//end resolveConnectorSource()
-
-	/**
-	 * Resolve OpenConnector's `CallService` from the DI container.
-	 *
-	 * @return object|null The service, or null when OpenConnector is
-	 *                      unavailable or lacks `call()`.
-	 */
-	private function getCallService(): ?object {
-		try {
-			$callService = $this->container->get('OCA\\OpenConnector\\Service\\CallService');
-		} catch (Throwable $e) {
-			$this->logger->error(
-				'BlastService.getCallService: OpenConnector CallService unavailable',
-				['exception' => $e->getMessage()]
-			);
-			return null;
-		}
-
-		if (method_exists($callService, 'call') === false) {
-			$this->logger->error('BlastService.getCallService: CallService lacks call()');
-			return null;
-		}
-
-		return $callService;
-	}//end getCallService()
-
-	/**
-	 * Decode a CallLog's `response.body` for provider-id extraction.
-	 *
-	 * Mirrors OpenConnector's own `SourceCallNode::decodeBody()` convention:
-	 * a UTF-8 JSON-object body is decoded; anything else (non-UTF-8/base64,
-	 * non-JSON, empty) is left for {@see extractProviderId()} to fail
-	 * gracefully on.
-	 *
-	 * @param array<string, mixed> $callLogData CallLog payload
-	 *                                          (`getObject()`/`jsonSerialize()` shape).
-	 *
-	 * @return mixed Decoded JSON body, or null when it cannot be decoded.
-	 */
-	private function decodeCallLogResponseBody(array $callLogData): mixed {
-		$response = ($callLogData['response'] ?? null);
-		if (is_array($response) === false) {
-			return null;
-		}
-
-		$body = ($response['body'] ?? null);
-		if (is_string($body) === false || $body === '') {
-			return null;
-		}
-
-		if ((string)($response['encoding'] ?? 'UTF-8') !== 'UTF-8') {
-			return null;
-		}
-
-		$decoded = json_decode($body, true);
-		if (json_last_error() === JSON_ERROR_NONE && is_array($decoded) === true) {
-			return $decoded;
-		}
-
-		return null;
-	}//end decodeCallLogResponseBody()
-
-	/**
-	 * Whether first-party open/click tracking is enabled.
-	 *
-	 * Off by default (`blast.first_party_tracking` app-config key) so the
-	 * render path is byte-for-byte unchanged unless an admin opts in;
-	 * telemetry then continues to arrive only via provider webhooks
-	 * (marketing-email-open-click-tracking).
-	 *
-	 * @return bool True when the admin has enabled first-party tracking.
-	 *
-	 * @spec openspec/changes/marketing-email-open-click-tracking/tasks.md#3.2
-	 */
-	private function firstPartyTrackingEnabled(): bool {
-		return $this->appConfig->getValueString(
-			Application::APP_ID,
-			'blast.first_party_tracking',
-			'false',
-		) === 'true';
-	}//end firstPartyTrackingEnabled()
-
-	/**
-	 * Rewrite a rendered email body's links + append the open pixel via
-	 * {@see TrackingLinkService::injectTracking()}.
-	 *
-	 * Resolved lazily through the DI container (not constructor-injected)
-	 * because `TrackingLinkService` itself depends on `BlastService` for
-	 * the totals roll-up — a constructor cycle would break the container.
-	 * Fails soft: any resolution or injection error returns the original
-	 * HTML unchanged so a tracking-service fault never blocks a send.
-	 *
-	 * @param string $html Rendered email body HTML.
-	 * @param string $blastDeliveryId BlastDelivery UUID or slug.
-	 *
-	 * @return string The rewritten HTML, or the original on failure.
-	 *
-	 * @spec openspec/changes/marketing-email-open-click-tracking/tasks.md#3.2
-	 */
-	private function injectTrackingLinks(string $html, string $blastDeliveryId): string {
-		if ($html === '' || $blastDeliveryId === '') {
+	private function decorateCampaignLinks(string $html, array $blast, array $template): string {
+		if ($html === '') {
 			return $html;
 		}
 
 		try {
-			$trackingLinkService = $this->container->get('OCA\\Pipelinq\\Service\\TrackingLinkService');
+			$decorator = $this->container->get('OCA\\Pipelinq\\Service\\CampaignLinkDecorator');
+			return $decorator->decorate(
+				html: $html,
+				blast: $blast,
+				template: $template,
+				campaign: $this->campaignForBlast(blast: $blast),
+			);
 		} catch (Throwable $e) {
 			$this->logger->info(
-				'BlastService.injectTrackingLinks: TrackingLinkService unavailable',
+				'BlastService.decorateCampaignLinks: decorator unavailable or failed, sending links as authored',
 				['exception' => $e->getMessage()]
 			);
 			return $html;
 		}
+	}//end decorateCampaignLinks()
+
+	/**
+	 * The campaign a blast belongs to, or an empty array.
+	 *
+	 * Lazy and fail-soft for the same reason as the decorator itself: a
+	 * campaign that cannot be read must cost the blast its campaign
+	 * parameters, never its send.
+	 *
+	 * @param array<string, mixed> $blast The blast row.
+	 *
+	 * @return array<string, mixed> The campaign, or an empty array.
+	 *
+	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-tracked-link-is-minted-from-the-campaign-when-there-is-one
+	 */
+	private function campaignForBlast(array $blast): array {
+		if (trim((string)($blast['campaignId'] ?? '')) === '') {
+			return [];
+		}
 
 		try {
-			return $trackingLinkService->injectTracking(html: $html, blastDeliveryId: $blastDeliveryId);
+			$campaigns = $this->container->get('OCA\\Pipelinq\\Service\\CampaignService');
+			return $campaigns->forBlast(blast: $blast);
 		} catch (Throwable $e) {
-			$this->logger->warning(
-				'BlastService.injectTrackingLinks: injection failed',
-				['blastDeliveryId' => $blastDeliveryId, 'exception' => $e->getMessage()]
+			$this->logger->info(
+				'BlastService.campaignForBlast: campaign unavailable, using the per-blast parameters',
+				['exception' => $e->getMessage()]
 			);
-			return $html;
+			return [];
 		}
-	}//end injectTrackingLinks()
-
-	/**
-	 * Extract a provider message id from a decoded connector response body.
-	 *
-	 * @param mixed $result Decoded response body.
-	 *
-	 * @return string|null Provider message id.
-	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Flat fallback chain over candidate
-	 *  id keys across the array/object result shapes; each branch is an early return.
-	 */
-	private function extractProviderId(mixed $result): ?string {
-		if (is_array($result) === true) {
-			foreach (['providerId', 'messageId', 'id'] as $key) {
-				if (isset($result[$key]) === true && is_scalar($result[$key]) === true && (string)$result[$key] !== '') {
-					return (string)$result[$key];
-				}
-			}
-		}
-
-		if (is_object($result) === true) {
-			foreach (['providerId', 'messageId', 'id'] as $key) {
-				if (isset($result->{$key}) === true && is_scalar($result->{$key}) === true && (string)$result->{$key} !== '') {
-					return (string)$result->{$key};
-				}
-			}
-		}
-
-		if (is_string($result) === true && $result !== '') {
-			return $result;
-		}
-
-		return null;
-	}//end extractProviderId()
-
-	/**
-	 * Render the template's subject/body with per-recipient substitution.
-	 *
-	 * Substitution is intentionally minimal — `{{email}}`, `{{firstName}}`,
-	 * `{{lastName}}` from the delivery snapshot. Provider-specific link
-	 * tracking / unsubscribe links are appended by the openconnector
-	 * source.
-	 *
-	 * @param array<string, mixed> $template Template payload.
-	 * @param array<string, mixed> $delivery Delivery payload.
-	 *
-	 * @return array<string, mixed> Rendered request body for the connector call.
-	 */
-	private function renderTemplate(array $template, array $delivery): array {
-		$tokens = [
-			'{{email}}' => (string)($delivery['email'] ?? ''),
-			'{{contactId}}' => (string)($delivery['contactId'] ?? ''),
-		];
-
-		$subject = strtr((string)($template['subject'] ?? ''), $tokens);
-		$bodyHtml = strtr((string)($template['bodyHtml'] ?? ''), $tokens);
-		$bodyText = strtr((string)($template['bodyText'] ?? ''), $tokens);
-
-		return [
-			'to' => (string)($delivery['email'] ?? ''),
-			'subject' => $subject,
-			'bodyHtml' => $bodyHtml,
-			'bodyText' => $bodyText,
-			'senderName' => (string)($template['senderName'] ?? ''),
-			'senderEmail' => (string)($template['senderEmail'] ?? ''),
-			'replyTo' => (string)($template['replyTo'] ?? ''),
-		];
-	}//end renderTemplate()
-
-	/**
-	 * Resolve the effective rate limit (messages per second).
-	 *
-	 * The openconnector source's rate limit always wins when it is lower
-	 * than the caller's value (so a tight provider limit cannot be blown by
-	 * a permissive caller). When neither is set, fall back to
-	 * `DEFAULT_RATE_LIMIT_PER_SECOND` (100).
-	 *
-	 * @param array<string, mixed>|object $source Resolved openconnector Source entity.
-	 * @param int $callerRate Caller's max-per-second.
-	 *
-	 * @return int Resolved rate limit (>=1).
-	 */
-	private function resolveRateLimit(array|object $source, int $callerRate): int {
-		$sourceRate = $this->readSourceRateLimit(source: $source);
-		$candidate = self::DEFAULT_RATE_LIMIT_PER_SECOND;
-		if ($callerRate > 0) {
-			$candidate = $callerRate;
-		}
-
-		if ($sourceRate !== null && $sourceRate > 0 && $sourceRate < $candidate) {
-			return $sourceRate;
-		}
-
-		return max($candidate, 1);
-	}//end resolveRateLimit()
-
-	/**
-	 * Read the effective per-second rate limit from an openconnector source.
-	 *
-	 * The current Source schema has no single `sendRateLimit` field (that
-	 * name never existed on the migrated schema); it carries
-	 * `rateLimitLimit` (requests per window) and `rateLimitWindow` (window
-	 * size in seconds) instead. Both are optional admin-configured fields —
-	 * absent on most sources, in which case this returns null and the
-	 * caller's own rate wins.
-	 *
-	 * @param array<string, mixed>|object $source Resolved openconnector Source entity.
-	 *
-	 * @return int|null Rate limit (messages/second) or null when unset.
-	 */
-	private function readSourceRateLimit(array|object $source): ?int {
-		$limitValue = $this->readSourceField(source: $source, field: 'rateLimitLimit');
-		if ($limitValue === null || is_numeric($limitValue) === false) {
-			return null;
-		}
-
-		$limit = (int)$limitValue;
-		if ($limit <= 0) {
-			return null;
-		}
-
-		$windowValue = $this->readSourceField(source: $source, field: 'rateLimitWindow');
-		$window = 1;
-		if ($windowValue !== null && is_numeric($windowValue) === true) {
-			$window = (int)$windowValue;
-		}
-
-		if ($window <= 0) {
-			$window = 1;
-		}
-
-		return max(1, (int)floor($limit / $window));
-	}//end readSourceRateLimit()
-
-	/**
-	 * Read a field from an openconnector source object or array.
-	 *
-	 * @param mixed $source The source row.
-	 * @param string $field Field name.
-	 *
-	 * @return mixed Field value or null.
-	 */
-	private function readSourceField(mixed $source, string $field): mixed {
-		if (is_array($source) === true) {
-			return ($source[$field] ?? null);
-		}
-
-		if (is_object($source) === true) {
-			$getter = 'get' . ucfirst($field);
-			if (method_exists($source, $getter) === true) {
-				return $source->{$getter}();
-			}
-
-			if (isset($source->{$field}) === true) {
-				return $source->{$field};
-			}
-
-			if (method_exists($source, 'jsonSerialize') === true) {
-				$serialised = $source->jsonSerialize();
-				if (is_array($serialised) === true && isset($serialised[$field]) === true) {
-					return $serialised[$field];
-				}
-			}
-		}
-
-		return null;
-	}//end readSourceField()
+	}//end campaignForBlast()
 
 	/**
 	 * Sleep for `$seconds` (float). Indirected to a method so tests can
@@ -1847,6 +1667,7 @@ class BlastService {
 		return [
 			'queued' => 0,
 			'skippedNoConsent' => 0,
+			'skippedSuppressed' => 0,
 			'variantA' => 0,
 			'variantB' => 0,
 			'variantBlastId' => null,

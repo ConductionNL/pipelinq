@@ -57,7 +57,7 @@ class Customer360SummaryServiceTest extends TestCase {
 	private ActivityTimelineService $activityTimeline;
 
 	/**
-	 * The mocked OpenRegister ObjectService (leads + queues).
+	 * The mocked OpenRegister ObjectService (leads).
 	 *
 	 * @var \OCA\OpenRegister\Service\ObjectServiceInterface&MockObject
 	 */
@@ -69,13 +69,6 @@ class Customer360SummaryServiceTest extends TestCase {
 	 * @var array<int, array<string, mixed>>
 	 */
 	private array $leads = [];
-
-	/**
-	 * Queues returned by the mocked ObjectService for `findAll(queue)`.
-	 *
-	 * @var array<int, array<string, mixed>>
-	 */
-	private array $queues = [];
 
 	/**
 	 * Set up fixtures with mocked collaborators.
@@ -96,9 +89,6 @@ class Customer360SummaryServiceTest extends TestCase {
 				if ($schema === 'lead') {
 					return $this->leads;
 				}
-				if ($schema === 'queue') {
-					return $this->queues;
-				}
 				return [];
 			}
 		);
@@ -111,7 +101,6 @@ class Customer360SummaryServiceTest extends TestCase {
 			static function (string $app, string $key, string $default = ''): string {
 				return match ($key) {
 					'lead_schema' => 'lead',
-					'queue_schema' => 'queue',
 					default => $default,
 				};
 			}
@@ -237,33 +226,28 @@ class Customer360SummaryServiceTest extends TestCase {
 	}//end testSlaOnTrackForFarFutureDeadline()
 
 	/**
-	 * The distinct set of queues on open tickets is reduced (not a count of
-	 * tickets), and resolved to `{id, name}` pairs via the queue schema.
+	 * The summary payload carries no queue plane: the concept is retired, so a
+	 * consumer that still reads `queues` / `queueCount` fails loudly here rather
+	 * than rendering a silent zero.
 	 *
 	 * @return void
 	 */
-	public function testDistinctQueuesAreReduced(): void {
+	public function testSummaryCarriesNoQueuePlane(): void {
 		$this->stubTicketsByType(
 			[
 				TicketService::TYPE_REQUEST => [
-					['title' => 'R1', 'queue' => 'queue-a'],
-					['title' => 'R2', 'queue' => 'queue-a'],
-					['title' => 'R3', 'queue' => 'queue-b'],
+					['title' => 'R1'],
+					['title' => 'R2'],
 				],
 			]
 		);
-		$this->queues = [
-			['@self' => ['id' => 'queue-a'], 'title' => 'Vergunningen'],
-			['@self' => ['id' => 'queue-b'], 'title' => 'Algemene Zaken'],
-		];
 
 		$summary = $this->service->getSummary('client-1');
 
-		$this->assertSame(2, $summary['queueCount']);
-		$names = array_column($summary['queues'], 'name');
-		sort($names);
-		$this->assertSame(['Algemene Zaken', 'Vergunningen'], $names);
-	}//end testDistinctQueuesAreReduced()
+		$this->assertArrayNotHasKey('queues', $summary);
+		$this->assertArrayNotHasKey('queueCount', $summary);
+		$this->assertSame(2, $summary['openTicketCount']);
+	}//end testSummaryCarriesNoQueuePlane()
 
 	/**
 	 * Open-lead count and summed value are read via the shared ObjectService,

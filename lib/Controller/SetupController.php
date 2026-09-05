@@ -66,6 +66,19 @@ class SetupController extends Controller {
 	private const DEMO_DATA_DECIDED_KEY = 'demo_data_decided';
 
 	/**
+	 * App-config key holding the dataset the operator picked.
+	 *
+	 * The wizard's `choice` step writes it through `POST /api/setup/config`, and
+	 * the `run-action` step that follows reads it back. Two steps rather than
+	 * one because `CnSetupWizard::runAction()` posts to
+	 * `/api/setup/action/{action}` with no body: an action cannot carry the
+	 * answer, so the answer has to be stored before the action runs.
+	 *
+	 * @var string
+	 */
+	private const DATASET_KEY = 'demo_dataset';
+
+	/**
 	 * Constructor.
 	 *
 	 * @param string $appName The app id.
@@ -136,6 +149,7 @@ class SetupController extends Controller {
 		// the marker when it runs, and `occ pipelinq:demo:seed --remove` leaving
 		// the marker in place is correct: the decision was still made.
 		$demoDataDone = $this->config(key: self::DEMO_DATA_DECIDED_KEY) !== '';
+		$pickedDataset = $this->config(key: self::DATASET_KEY);
 
 		// Organisation step done once the operator has named the organisation.
 		$organisationDone = $this->config(key: 'receipt_company_name') !== '';
@@ -160,11 +174,20 @@ class SetupController extends Controller {
 			[
 				'version' => self::SETUP_VERSION,
 				'completed' => $currencyDone,
+				// The choice step reads its options from here: it declares
+				// `optionsSource: datasets` and no options of its own, so a
+				// dataset missing from this list is a dataset nobody can pick.
+				'datasets' => $this->demoSeedService->listChoices(),
 				'steps' => [
 					'welcome' => ['done' => true],
 					'currency' => ['done' => $currencyDone],
 					'provision' => ['done' => $registerDone],
-					'demo-data' => ['done' => $demoDataDone],
+					'demo-data' => ['done' => ($pickedDataset !== '')],
+					// "None" is an ANSWER, so the seed step is finished the
+					// moment it is chosen: there is nothing left to run.
+					'load-demo-data' => [
+						'done' => ($demoDataDone === true || $pickedDataset === DemoSeedService::NONE_DATASET),
+					],
 					'organisation' => ['done' => $organisationDone],
 					'integrations' => ['done' => $integrationsDone],
 					'done' => ['done' => true],
@@ -187,6 +210,11 @@ class SetupController extends Controller {
 	 * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
 	 */
 	private function skipDemoData(): DataResponse {
+		// 🔴 IT ANSWERS *BOTH* STEPS. The wizard now has a choice step and a
+		// run-action step; closing only the second leaves the first
+		// outstanding, and CnAppRoot opens the wizard while ANY optional step
+		// is outstanding.
+		$this->appConfig->setValueString(Application::APP_ID, self::DATASET_KEY, DemoSeedService::NONE_DATASET);
 		$this->appConfig->setValueString(Application::APP_ID, self::DEMO_DATA_DECIDED_KEY, 'skipped');
 
 		return new DataResponse(
@@ -203,6 +231,24 @@ class SetupController extends Controller {
 	 */
 	#[AuthorizedAdminSetting(AdminSettings::class)]
 	public function saveConfig(): DataResponse {
+		// 🔴 THE DATASET IS VALIDATED BEFORE IT IS STORED. Everything else here
+		// is written as posted, because a `config-fields` step declares its own
+		// keys and this endpoint cannot know them. The dataset is different:
+		// the seed step reads it back and acts on it, so an unknown value would
+		// surface a step later with no clue why.
+		$dataset = $this->request->getParam(self::DATASET_KEY);
+		if ($dataset !== null) {
+			$named = 'that';
+			if (is_scalar($dataset) === true) {
+				$named = (string)$dataset;
+			}
+
+			$known = array_column($this->demoSeedService->listChoices(), 'id');
+			if (in_array($named, $known, true) === false) {
+				return new DataResponse(['success' => false, 'message' => 'No dataset is called "' . $named . '".']);
+			}
+		}
+
 		foreach ($this->request->getParams() as $key => $value) {
 			if ($key === '_route') {
 				continue;
@@ -234,6 +280,13 @@ class SetupController extends Controller {
 			return $this->provisionRegister();
 		}
 
+		// `seed-demo-data` is the id the step used before it asked WHICH
+		// dataset, and it still means "seed the one this app builds". Kept so
+		// an older manifest, a runbook or a script that posts it keeps working.
+		if ($actionId === 'load-demo-data') {
+			return $this->loadDataset();
+		}
+
 		if ($actionId === 'seed-demo-data') {
 			return $this->seedDemoData();
 		}
@@ -250,7 +303,7 @@ class SetupController extends Controller {
 
 	/**
 	 * Import the pipelinq register + schemas and (re)create the default
-	 * pipelines, queues, skills, lead sources and request channels.
+	 * pipelines, skills, lead sources and request channels.
 	 *
 	 * This mirrors the InitializeSettings repair step that runs on install, but
 	 * is invokable on demand from the wizard so an admin who only enabled
@@ -279,11 +332,10 @@ class SetupController extends Controller {
 			$schemaCount = count($result['schemas'] ?? []);
 
 			$this->settingsService->createDefaultPipelines();
-			$this->settingsService->createDefaultQueues();
 			$this->settingsService->createDefaultSkills();
 
 			$message = sprintf(
-				'Provisioned %d register(s) and %d schema(s); default pipelines, queues and skills are ready.',
+				'Provisioned %d register(s) and %d schema(s); default pipelines and skills are ready.',
 				$registerCount,
 				$schemaCount,
 			);
@@ -299,7 +351,7 @@ class SetupController extends Controller {
 	}//end provisionRegister()
 
 	/**
-	 * Seed the optional demo dataset (ADR-042 optional action `seed-demo-data`).
+	 * Seed the dataset the operator picked in the previous step.
 	 *
 	 * Invokes the same DemoSeedService the `occ pipelinq:demo:seed` command
 	 * uses (one write path). Idempotent — re-running creates no duplicates.
@@ -309,6 +361,30 @@ class SetupController extends Controller {
 	 * @return DataResponse `{ success, message }`.
 	 *
 	 * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
+	 */
+	private function loadDataset(): DataResponse {
+		$picked = $this->config(key: self::DATASET_KEY);
+
+		// 🔴 NO SILENT DEFAULT. Seeding here because the operator clicked Run
+		// one step early would plant example objects nobody asked for.
+		if ($picked === '') {
+			return new DataResponse(['success' => false, 'message' => 'Pick a dataset first.']);
+		}
+
+		if ($picked === DemoSeedService::NONE_DATASET) {
+			$this->appConfig->setValueString(Application::APP_ID, self::DEMO_DATA_DECIDED_KEY, 'skipped');
+
+			return new DataResponse(['success' => true, 'message' => 'No example data was seeded.']);
+		}
+
+		return $this->seedDemoData();
+
+	}//end loadDataset()
+
+	/**
+	 * Seed the dataset this app builds.
+	 *
+	 * @return DataResponse `{ success, message }`.
 	 */
 	private function seedDemoData(): DataResponse {
 		try {
@@ -324,6 +400,11 @@ class SetupController extends Controller {
 			// Record the decision so `status()` can report the step done. See
 			// DEMO_DATA_DECIDED_KEY — an optional step the server can never
 			// report done covers the whole app with the setup wizard.
+			// 🔴 BOTH KEYS. The step is a choice followed by a run-action now, and
+			// CnAppRoot opens the wizard while ANY optional step is outstanding
+			// — so recording only the decision would leave the choice open and
+			// the wizard covering every page. Seeding IS choosing the set.
+			$this->appConfig->setValueString(Application::APP_ID, self::DATASET_KEY, DemoSeedService::DEMO_DATASET);
 			$this->appConfig->setValueString(Application::APP_ID, self::DEMO_DATA_DECIDED_KEY, 'seeded');
 
 			$created = array_sum($result['created']);

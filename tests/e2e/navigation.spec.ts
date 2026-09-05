@@ -16,9 +16,12 @@
  *      the navigation, so every assertion here goes through the manifest page
  *      id instead — `data-testid="cn-nav-entry-<pageId>"`, untranslated by
  *      construction.
- *   2. PATH ROUTES — `href="/apps/pipelinq/clients"`. The shell routes on the
- *      HASH (`#/clients`), and helpers/pipelinq.ts documents why a path
- *      deep-link is worse than wrong: it resets the SPA to the Dashboard.
+ *   2. PATH ROUTES — `href="/apps/pipelinq/clients"`. That was WRONG when this
+ *      file was rewritten, because the shell routed on the hash (`#/clients`)
+ *      and a path deep-link reset the SPA to the Dashboard. It is RIGHT again
+ *      as of the move to history routing — but the assertion now compares the
+ *      route as a SUFFIX, because the base differs between the `/apps/...` and
+ *      `/index.php/apps/...` forms and both are legitimate.
  *   3. FLAT VISIBILITY. Since the 2026-07 IA revision most leaves sit inside a
  *      collapsed group. Measured on this build: 37 entries in the DOM, 11
  *      visible at load. `toBeVisible()` on a nested leaf asserts the old flat
@@ -32,30 +35,42 @@
  * grows must not turn this file red, while a manifest that drops one of these
  * pages must.
  */
-import { test, expect } from '@playwright/test'
-import { openApp, revealNavEntryByTestId } from './helpers/pipelinq'
+import { expect, test } from '@playwright/test'
+import { openApp, revealNavEntryByTestId } from './helpers/pipelinq.ts'
 
 /**
- * Manifest page id → hash route. Verified live against the running app on
- * 2026-08-24 by reading every `[data-testid^="cn-nav-entry-"]` and its href.
+ * Manifest page id → route PATH. Verified live against the running app by
+ * reading every `[data-testid^="cn-nav-entry-"]` and its href.
+ *
+ * These are compared as a SUFFIX of the href, not as the whole value, because
+ * the shell now routes on history and the router base legitimately differs by
+ * URL form: Nextcloud serves the app as both `/apps/pipelinq/...` and
+ * `/index.php/apps/pipelinq/...`, and vue-router emits whichever base the page
+ * was loaded under. Asserting the full href would pin the test to one of the
+ * two and fail on the other for a reason that is not a routing defect.
+ *
+ * `Forecast` used to be listed here. It is a report, and ADR-112 says a report
+ * is a card on the Reports page, not a sidebar leaf, so `menu-layout.json`
+ * retires the entry. `/forecast` is still routable and still asserted, by
+ * `pages.spec.ts` as a deep link and by `spec-coverage/forecast.spec.ts`
+ * through the Reports page. Do not add it back without moving the report back.
  */
 const REQUIRED_ENTRIES: Record<string, string> = {
-	Dashboard: '#/',
-	Clients: '#/clients',
-	Contacts: '#/contacts',
-	Leads: '#/leads',
-	Tickets: '#/tickets',
-	Tasks: '#/tasks',
-	Products: '#/products',
-	Pipeline: '#/pipeline',
-	Queues: '#/queues',
-	Contracts: '#/contracts',
-	MyWork: '#/my-work',
-	Prospects: '#/prospects',
-	Forecast: '#/forecast',
-	Services: '#/services',
-	Resources: '#/resources',
-	Bookings: '#/bookings',
+	Dashboard: '/',
+	Clients: '/clients',
+	Contacts: '/contacts',
+	Leads: '/leads',
+	Tickets: '/tickets',
+	Tasks: '/tasks',
+	Products: '/products',
+	Pipeline: '/pipeline',
+	Queue: '/queue',
+	Contracts: '/contracts',
+	MyWork: '/my-work',
+	Prospects: '/prospects',
+	Services: '/services',
+	Resources: '/resources',
+	Bookings: '/bookings',
 }
 
 /**
@@ -97,9 +112,9 @@ test.describe('Sidebar navigation (manifest-driven shell)', () => {
 		)
 	})
 
-	test('each sidebar entry points at its hash route', async ({ page }) => {
+	test('each sidebar entry points at its route', async ({ page }) => {
 		const wrong: string[] = []
-		for (const [pageId, href] of Object.entries(REQUIRED_ENTRIES)) {
+		for (const [pageId, route] of Object.entries(REQUIRED_ENTRIES)) {
 			const link = page
 				.locator(
 					`#app-navigation-vue [data-testid="cn-nav-entry-${pageId}"]`,
@@ -107,12 +122,17 @@ test.describe('Sidebar navigation (manifest-driven shell)', () => {
 				.locator('xpath=descendant-or-self::a[1]')
 				.first()
 			const actual = await link.getAttribute('href').catch(() => null)
-			if (actual !== href)
-				wrong.push(`${pageId}: expected ${href}, got ${actual}`)
+			// Suffix, not equality — see the note on REQUIRED_ENTRIES: the base
+			// differs between the `/apps/...` and `/index.php/apps/...` forms and
+			// both are correct.
+			if (actual === null || actual.endsWith(route) === false)
+				wrong.push(
+					`${pageId}: expected an href ending ${route}, got ${actual}`,
+				)
 		}
 		expect(
 			wrong,
-			'the shell routes on the hash; a path href resets the SPA to the Dashboard',
+			'the shell routes on history; every nav href must end with its manifest route',
 		).toEqual([])
 	})
 
@@ -140,7 +160,12 @@ test.describe('Sidebar navigation (manifest-driven shell)', () => {
 		const link = await revealNavEntryByTestId(page, 'Clients')
 		await expect(link).toBeVisible({ timeout: 10000 })
 		await link.click()
-		await expect(page).toHaveURL(/#\/clients/, { timeout: 10000 })
+		// History routing: the URL is a real path. Matched at the END so the
+		// assertion holds under both the `/apps/...` and `/index.php/apps/...`
+		// bases Nextcloud serves.
+		await expect(page).toHaveURL(/\/apps\/pipelinq\/clients$/, {
+			timeout: 10000,
+		})
 		await expect(
 			page.locator('[data-testid="cn-index-page"]'),
 			'the Clients route must render its index page, not an empty shell',

@@ -51,13 +51,14 @@ Pipelinq is a Nextcloud CRM and customer interaction app for municipal KCC (Klan
 | Customer 360 | Unified 360-degree citizen/client profile view | Planned | GEMMA CRM; TEC 1.4 | [customer-360.md](customer-360.md) |
 | Kennisbank | Searchable knowledge base for KCC agents with article lifecycle | Planned | GEMMA Callcenter; TEC 3.5 | [kennisbank.md](kennisbank.md) |
 | Terugbel- & Taakbeheer | Callback requests and follow-up task assignment with deadline tracking | Planned | GEMMA Callcenter; TEC 3.2–3.3 | [terugbel-taakbeheer.md](terugbel-taakbeheer.md) |
-| Queue Management | Priority queues and skill-based routing for requests and leads | Planned | GEMMA Klantgeleiding; TEC 3.2 | [queue-management.md](queue-management.md) |
+| Skill-based routing | Route a ticket to the best-matched, least-loaded agent | Planned | GEMMA Klantgeleiding; TEC 3.2 | [skill-routing.md](skill-routing.md) |
 | Klachtenregistratie | Complaint registration, categorization, SLA tracking, and audit trail | Planned | GEMMA Klachten- en meldingen; TEC 3.1–3.4 | [klachtenregistratie.md](klachtenregistratie.md) |
 | Customer Satisfaction (KTO) | Survey management, NPS calculation, and satisfaction analytics | Planned | GEMMA Klanttevredenheid; TEC 4.1 | [customer-satisfaction.md](customer-satisfaction.md) |
 | KCC Werkplek | Integrated KCC agent workstation view for municipal customer service | Planned | GEMMA Callcenter; GEMMA Klantgeleiding | [kcc-werkplek.md](kcc-werkplek.md) |
 | CRM Workflow Automation | n8n-powered automation rules triggered on CRM events | Planned | TEC 5.2 | [crm-workflow-automation.md](crm-workflow-automation.md) |
 | Email & Calendar Sync | Sync emails and calendar events to CRM entities | Planned | TEC 5.1; vCard RFC 6350 | [email-calendar-sync.md](email-calendar-sync.md) |
 | Public Intake Forms | Public-facing intake forms for citizen self-service | Planned | GEMMA Klantgeleiding; TEC 3.6 | [public-intake-forms.md](public-intake-forms.md) |
+| Marketing | Segments, templates and email blasts today; lists with double opt-in, content hub, social publishing, campaigns with attribution, search and competitor intelligence in six planned phases | Partial | GEMMA Sociale media; GEMMA Mediamonitor en webcare; TEC 2; RFC 8058 | [marketing.md](marketing.md) |
 | Product Catalog Quoting | Quotation generation from product catalog line items | Planned | TEC 1.8 | [product-catalog-quoting.md](product-catalog-quoting.md) |
 | CRM MCP Tool Surface | Agent-addressable CRM tools (clients, leads, forecast, create-lead, log-contactmoment) for the Nextcloud Hub Assistant | Implemented | Model Context Protocol; OpenRegister `IMcpToolProvider` | [crm-mcp-tool-surface.md](crm-mcp-tool-surface.md) |
 
@@ -93,7 +94,7 @@ Features required for Dutch municipal KCC-werkplek deployments. Demand validated
 | Contactmomenten | 54% of klantinteractie tenders | [contactmomenten.md](contactmomenten.md) |
 | Contactmomenten Rapportage | 98% of klantinteractie tenders | [contactmomenten-rapportage.md](contactmomenten-rapportage.md) |
 | Terugbel- & Taakbeheer | 31% of klantinteractie tenders | [terugbel-taakbeheer.md](terugbel-taakbeheer.md) |
-| Queue Management | Government CRM/KCC tooling | [queue-management.md](queue-management.md) |
+| Skill-based routing | Government CRM/KCC tooling | [skill-routing.md](skill-routing.md) |
 | Klachtenregistratie | 141 tenders, 637 requirements | [klachtenregistratie.md](klachtenregistratie.md) |
 | Kennisbank | 51/52 KCC tenders | [kennisbank.md](kennisbank.md) |
 | Customer 360 | KCC citizen profile | [customer-360.md](customer-360.md) |
@@ -121,6 +122,7 @@ Advanced features for larger deployments.
 | Public Intake Forms | [public-intake-forms.md](public-intake-forms.md) |
 | Product Catalog Quoting | [product-catalog-quoting.md](product-catalog-quoting.md) |
 | CRM MCP Tool Surface | [crm-mcp-tool-surface.md](crm-mcp-tool-surface.md) |
+| Marketing | [marketing.md](marketing.md) |
 
 ### Infrastructure
 
@@ -162,8 +164,7 @@ kennisbank              → kennisbank.md
 knowledge-base          → kennisbank.md
 terugbel-taakbeheer     → terugbel-taakbeheer.md
 callback-management     → terugbel-taakbeheer.md
-queue-management        → queue-management.md
-skill-routing           → queue-management.md
+skill-routing           → skill-routing.md
 klachtenregistratie     → klachtenregistratie.md
 customer-satisfaction   → customer-satisfaction.md
 kcc-werkplek            → kcc-werkplek.md

@@ -36,6 +36,11 @@ use OCP\Security\IHasher;
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Aggregates the reset-flow
  *  collaborators (repository, tokens, hasher, mailer, sessions, audit, l10n).
+ *
+ * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+ *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+ *   sessions, tokens, delegation, documents, invoices, orders, exports and
+ *   audit are all unspecified
  */
 class PasswordResetService {
 	/**
@@ -43,7 +48,7 @@ class PasswordResetService {
 	 *
 	 * @var string
 	 */
-	private const SCHEMA = 'portalAccount';
+	private const SCHEMA = 'crmPortalAccount';
 
 	/**
 	 * Reset-token TTL in minutes.
@@ -90,6 +95,10 @@ class PasswordResetService {
 	 * @param string $tenantId The tenant id.
 	 *
 	 * @return void
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function requestReset(string $email, string $tenantId): void {
 		$email = strtolower(trim($email));
@@ -122,6 +131,10 @@ class PasswordResetService {
 	 * @return void
 	 *
 	 * @throws PortalException On an invalid/expired token or a weak password.
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function resetPassword(string $token, string $newPassword, string $tenantId): void {
 		if (strlen($newPassword) < self::MIN_PASSWORD_LENGTH) {

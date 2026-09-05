@@ -31,11 +31,6 @@
 				],
 				"widgets": [
 					{
-						"id": "queue-filter",
-						"type": "custom",
-						"title": "Queues"
-					},
-					{
 						"id": "requests",
 						"type": "object-list",
 						"title": "Requests",
@@ -45,8 +40,7 @@
 							"filter": {
 								"ticketType": "request",
 								"assignee": "@me",
-								"status": "new",
-								"queue": "@workspace.selectedQueue?"
+								"status": "new"
 							},
 							"sort": {
 								"field": "occurredAt",
@@ -76,7 +70,7 @@
 						"title": "Tasks",
 						"content": {
 							"register": "pipelinq",
-							"schema": "task",
+							"schema": "crmTask",
 							"filter": {
 								"assigneeUserId": "@me",
 								"status": "open"
@@ -252,19 +246,11 @@
 				],
 				"layout": [
 					{
-						"id": "wq",
-						"widgetId": "queue-filter",
-						"gridX": 0,
-						"gridY": 0,
-						"gridWidth": 3,
-						"gridHeight": 4
-					},
-					{
 						"id": "wr",
 						"widgetId": "requests",
-						"gridX": 3,
+						"gridX": 0,
 						"gridY": 0,
-						"gridWidth": 5,
+						"gridWidth": 8,
 						"gridHeight": 4
 					},
 					{
@@ -308,9 +294,6 @@
 						"gridHeight": 6
 					}
 				]
-			},
-			"slots": {
-				"widget-queue-filter": "WerkplekQueueFilter"
 			}
 		}
 	]

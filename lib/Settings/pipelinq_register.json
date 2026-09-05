@@ -3,14 +3,14 @@
   "info": {
     "title": "Pipelinq CRM Register",
     "description": "Client Relationship Management register for the Pipelinq Nextcloud app. Manages clients, contacts, leads, requests, and pipelines.",
-    "version": "1.5.0",
-    "x-changelog": "1.5.0: pipeline gains propertyMappings — which object types the pipeline boards and which property supplies the stage column. The pipeline editor already wrote this array and PipelineBoard/PipelineManager already read it, but the schema never declared it, so magic-table storage dropped every mapping a user configured: the board resolved no object types and the create forms, filtering on the retired entityType field, offered no pipeline at all. A pipeline declaring no mappings is unscoped, not inapplicable. pipeline schema version 3.1.0->3.2.0. 1.4.0: timeEntry gains user (Nextcloud uid / imported identity performing the work — distinct from approvedBy, needed for per-person hour reporting and migrated worklogs) and metadata (declared object catch-all for source-system provenance such as tempoWorklogId/jiraIssueKey/migratedAt — declared explicitly because magic-table storage drops undeclared properties). timeEntry schema version 1.1.0->1.2.0. 1.3.0: Loyalty vocabulary completed. Schema slug klantLoyaltyAccount->customerLoyaltyAccount (@type KlantLoyaltyAccount->CustomerLoyaltyAccount), and the last two Dutch property keys in the loyalty fragment: loyaltyProgramme.merk->brand, loyaltyProgramme.valuta->currency, giftCard.valuta->currency. Both keys are added to RenameDutchColumns so existing rows move with the declaration. The oc_appconfig key klantLoyaltyAccount_schema deliberately does NOT move: it is derived from the slug, so it is pinned in SettingsLoadService::SCHEMA_CONFIG_KEYS rather than left to follow the rename. 1.2.2: Re-authored 2 Dutch schema-level titles to English (klantLoyaltyAccount \"Klant Loyalty Account\"->\"Customer Loyalty Account\", nrcAbonnement \"NRC Abonnement\"->\"NRC Subscription\"); Dutch labels now live in l10n/nl.json + nl.js. VNG Klantinteracties and Kassakoppeling schema titles kept as-is (formal standard / established domain terms). No property titles, keys, enums, or other fields changed. 1.2.1: Re-authored 38 Dutch schema property titles to English (contact.geheimhouding plus the bsnValidatie, brpLookupVerzoek, brpPersoon, bsnAuditRecord, and optOutVlag schemas); Dutch labels now live in l10n/nl.json + nl.js. No property keys, enums, or other fields changed."
+    "version": "1.6.1",
+    "x-changelog": "1.6.1: lead swaps its AccountArrowRightOutline icon for CashMultiple. A lead is a deal, not a person: the person is the contact, which carries the people icon, and two adjacent surfaces reading as the same thing is a rebrand the icon never got. lead schema version 1.4.0->1.4.1; declaration only, no property changed. 1.5.0: pipeline gains propertyMappings — which object types the pipeline boards and which property supplies the stage column. The pipeline editor already wrote this array and PipelineBoard/PipelineManager already read it, but the schema never declared it, so magic-table storage dropped every mapping a user configured: the board resolved no object types and the create forms, filtering on the retired entityType field, offered no pipeline at all. A pipeline declaring no mappings is unscoped, not inapplicable. pipeline schema version 3.1.0->3.2.0. 1.4.0: timeEntry gains user (Nextcloud uid / imported identity performing the work — distinct from approvedBy, needed for per-person hour reporting and migrated worklogs) and metadata (declared object catch-all for source-system provenance such as tempoWorklogId/jiraIssueKey/migratedAt — declared explicitly because magic-table storage drops undeclared properties). timeEntry schema version 1.1.0->1.2.0. 1.3.0: Loyalty vocabulary completed. Schema slug klantLoyaltyAccount->customerLoyaltyAccount (@type KlantLoyaltyAccount->CustomerLoyaltyAccount), and the last two Dutch property keys in the loyalty fragment: loyaltyProgramme.merk->brand, loyaltyProgramme.valuta->currency, giftCard.valuta->currency. Both keys are added to RenameDutchColumns so existing rows move with the declaration. The oc_appconfig key klantLoyaltyAccount_schema deliberately does NOT move: it is derived from the slug, so it is pinned in SettingsLoadService::SCHEMA_CONFIG_KEYS rather than left to follow the rename. 1.2.2: Re-authored 2 Dutch schema-level titles to English (klantLoyaltyAccount \"Klant Loyalty Account\"->\"Customer Loyalty Account\", nrcAbonnement \"NRC Abonnement\"->\"NRC Subscription\"); Dutch labels now live in l10n/nl.json + nl.js. VNG Klantinteracties and Kassakoppeling schema titles kept as-is (formal standard / established domain terms). No property titles, keys, enums, or other fields changed. 1.2.1: Re-authored 38 Dutch schema property titles to English (contact.geheimhouding plus the bsnValidatie, brpLookupVerzoek, brpPersoon, bsnAuditRecord, and optOutVlag schemas); Dutch labels now live in l10n/nl.json + nl.js. No property keys, enums, or other fields changed."
   },
   "x-openregister": {
     "type": "application",
     "app": "pipelinq",
     "openregister": "^v0.2.10",
-    "description": "CRM data model — thin client on OpenRegister, no own database tables"
+    "description": "CRM data model: thin client on OpenRegister, no own database tables"
   },
   "components": {
     "registers": {
@@ -18,7 +18,7 @@
         "slug": "pipelinq",
         "title": "Pipelinq",
         "version": "1.0.0",
-        "description": "Client Relationship Management register for Pipelinq — manages clients, contacts, leads, requests, and pipelines using Schema.org and vCard (RFC 6350) standards.",
+        "description": "Client Relationship Management register for Pipelinq: manages clients, contacts, leads, requests, and pipelines using Schema.org and vCard (RFC 6350) standards.",
         "published": "2026-02-25T00:00:00+00:00",
         "schemas": [
           "client",
@@ -31,9 +31,8 @@
           "productCategory",
           "leadProduct",
           "contactmoment",
-          "task",
+          "crmTask",
           "relationship",
-          "queue",
           "skill",
           "agentProfile",
           "posTransaction",
@@ -82,17 +81,18 @@
         },
         "slug": "client",
         "title": "Client",
-        "icon": "AccountGroup",
-        "version": "1.1.0",
+        "icon": "AccountStarOutline",
+        "version": "1.2.0",
         "summary": "A client (person or organization) in the CRM",
-        "description": "Represents a client entity — either a natural person or an organization. Mapped to Schema.org Person/Organization and vCard (RFC 6350) field conventions. Clients are the primary relationship entity in Pipelinq.",
+        "description": "Represents a client entity: either a natural person or an organization. Mapped to Schema.org Person/Organization and vCard (RFC 6350) field conventions. Clients are the primary relationship entity in Pipelinq.",
         "linkedTypes": [
           "flow",
           "time-tracker",
           "xwiki",
           "email",
           "calendar",
-          "forms"
+          "forms",
+          "planninq-projects"
         ],
         "required": [
           "name",
@@ -108,7 +108,7 @@
           },
           "type": {
             "type": "string",
-            "description": "Entity type — person or organization (maps to schema:Person or schema:Organization)",
+            "description": "Entity type: person or organization (maps to schema:Person or schema:Organization)",
             "enum": [
               "person",
               "organization"
@@ -253,7 +253,7 @@
           },
           "verifiedBSN": {
             "type": "boolean",
-            "description": "True na succesvolle BRP-lookup; false na retentie-expiratie of art. 17 verwijdering. Beheerd door BrpController/BrpRetentionJob — NIET handmatig setbaar via UI.",
+            "description": "True na succesvolle BRP-lookup; false na retentie-expiratie of art. 17 verwijdering. Beheerd door BrpController/BrpRetentionJob: NIET handmatig setbaar via UI.",
             "default": false,
             "title": "BSN verified",
             "facetable": true
@@ -267,7 +267,7 @@
           },
           "secrecy": {
             "type": "boolean",
-            "description": "Afgeleid uit OptOutVlag (geheimhouding-gemeente / geheimhouding-brp). Wanneer true: adresgegevens worden afgeschermd in standaard-views — alleen via expliciete \"toon adres onder verantwoording\" zichtbaar (met extra audit-entry).",
+            "description": "Afgeleid uit OptOutVlag (geheimhouding-gemeente / geheimhouding-brp). Wanneer true: adresgegevens worden afgeschermd in standaard-views. Alleen via expliciete \"toon adres onder verantwoording\" zichtbaar (met extra audit-entry).",
             "default": false,
             "title": "Confidentiality",
             "facetable": true
@@ -351,10 +351,10 @@
           }
         },
         "title": "Lead",
-        "icon": "TrendingUp",
-        "version": "1.3.1",
+        "icon": "CashMultiple",
+        "version": "1.4.1",
         "summary": "A sales lead or business opportunity",
-        "description": "Represents a sales lead — a potential deal or business opportunity linked to a client. Tracks value, probability, pipeline stage, and lifecycle status. Mapped to Schema.org Demand.",
+        "description": "Represents a sales lead: a potential deal or business opportunity linked to a client. Tracks value, probability, pipeline stage, and lifecycle status. Mapped to Schema.org Demand.",
         "linkedTypes": [
           "deck",
           "flow",
@@ -427,7 +427,7 @@
             "daysSinceActivity": {
               "type": "integer",
               "materialise": false,
-              "description": "Staleness — days since the lead was last touched. Derived from @self.updated (the object's last save) so it is always fresh on read; lead-management spec staleness scenario (Scenario 49). A consumer flags the lead as stale when this exceeds the configured threshold.",
+              "description": "Staleness: days since the lead was last touched. Derived from @self.updated (the object's last save) so it is always fresh on read; lead-management spec staleness scenario (Scenario 49). A consumer flags the lead as stale when this exceeds the configured threshold.",
               "expression": {
                 "dateDiff": {
                   "from": {
@@ -441,7 +441,7 @@
             "daysInStage": {
               "type": "integer",
               "materialise": false,
-              "description": "Aging — days the lead has spent in its current pipeline stage. Diffs stageEnteredAt against now; falls back to @self.created when the stage-change writer has not yet populated stageEnteredAt (lead-management spec Aging Indicator, Scenario 50/51).",
+              "description": "Aging: days the lead has spent in its current pipeline stage. Diffs stageEnteredAt against now; falls back to @self.created when the stage-change writer has not yet populated stageEnteredAt (lead-management spec Aging Indicator, Scenario 50/51).",
               "expression": {
                 "dateDiff": {
                   "from": {
@@ -470,7 +470,7 @@
             "weightedValue": {
               "type": "number",
               "materialise": false,
-              "description": "Probability-weighted lead value (value * probability / 100). Single-object derived figure feeding the Pipeline Value KPI. NOTE: the lead-management spec's 'lead value from line items' sum (Scenario: Calculate lead value from line items) is a cross-schema aggregation over leadProduct rows and is NOT expressible as a single-object calculation — it remains a service/frontend concern per ADR-031 exception (2).",
+              "description": "Probability-weighted lead value (value * probability / 100). Single-object derived figure feeding the Pipeline Value KPI. NOTE: the lead-management spec's 'lead value from line items' sum (Scenario: Calculate lead value from line items) is a cross-schema aggregation over leadProduct rows and is NOT expressible as a single-object calculation. It remains a service/frontend concern per ADR-031 exception (2).",
               "expression": {
                 "/": [
                   {
@@ -655,7 +655,9 @@
           }
         },
         "required": [
-          "title"
+          "title",
+          "pipeline",
+          "client"
         ],
         "authorization": {
           "create": [
@@ -680,32 +682,6 @@
             "minLength": 1,
             "translatable": true,
             "title": "Lead Title"
-          },
-          "contactName": {
-            "type": "string",
-            "description": "Name of the person submitting the lead (used for anonymous website intake, before a contact object exists)",
-            "maxLength": 255,
-            "title": "Contact Name"
-          },
-          "contactEmail": {
-            "type": "string",
-            "description": "Email address of the person submitting the lead (anonymous website intake)",
-            "format": "email",
-            "maxLength": 255,
-            "title": "Contact Email"
-          },
-          "contactPhone": {
-            "type": "string",
-            "description": "Phone number of the person submitting the lead (anonymous website intake)",
-            "maxLength": 64,
-            "title": "Contact Phone"
-          },
-          "organisation": {
-            "type": "string",
-            "description": "Organisation the submitter represents (anonymous website intake)",
-            "maxLength": 255,
-            "title": "Organisation",
-            "facetable": true
           },
           "message": {
             "type": "string",
@@ -777,7 +753,6 @@
             "description": "UUID reference to the pipeline this lead is tracked in",
             "format": "uuid",
             "$ref": "pipeline",
-            "visible": false,
             "title": "Pipeline"
           },
           "stage": {
@@ -838,7 +813,7 @@
           },
           "qualificationScore": {
             "type": "integer",
-            "description": "Backend-computed qualification score (0-100). Materialised by the x-openregister-calculations.qualificationScore annotation on every save — never written by service code. Resolves the lead-management spec 'frontend vs backend qualification score' open question in favour of a backend calculation.",
+            "description": "Backend-computed qualification score (0-100). Materialised by the x-openregister-calculations.qualificationScore annotation on every save: never written by service code. Resolves the lead-management spec 'frontend vs backend qualification score' open question in favour of a backend calculation.",
             "minimum": 0,
             "maximum": 100,
             "facetable": true,
@@ -852,7 +827,7 @@
         "icon": "Pipe",
         "version": "3.2.0",
         "summary": "A thin CRM pipeline config mapping stage rules onto a Deck board",
-        "description": "Represents a CRM pipeline configuration — maps pipeline stages to a Deck board and its stacks, preserving CRM-specific semantics (probability, won/closed/default flags) that Deck itself does not model. Board mechanics (columns, cards, drag-and-drop) are provided by the OpenRegister deck leaf. Mapped to Schema.org ItemList.",
+        "description": "Represents a CRM pipeline configuration: maps pipeline stages to a Deck board and its stacks, preserving CRM-specific semantics (probability, won/closed/default flags) that Deck itself does not model. Board mechanics (columns, cards, drag-and-drop) are provided by the OpenRegister deck leaf. Mapped to Schema.org ItemList.",
         "x-schema-org": "schema:ItemList",
         "configuration": {
           "x-openregister-shareable": true
@@ -996,7 +971,7 @@
         },
         "slug": "product",
         "title": "Product",
-        "icon": "Package",
+        "icon": "PackageVariantClosed",
         "version": "1.0.0",
         "summary": "A product or service that the organization sells",
         "description": "Represents a product or service in the CRM catalog. Linked to leads via LeadProduct line items for accurate pipeline valuation. Mapped to Schema.org Product.",
@@ -1309,7 +1284,7 @@
         "icon": "CartOutline",
         "version": "1.1.0",
         "summary": "A line item linking a product to a lead",
-        "description": "Represents a product line item on a lead — an instance of a product with deal-specific quantity, pricing, and discount. The total is computed as quantity * unitPrice * (1 - discount/100). Mapped to Schema.org Offer.",
+        "description": "Represents a product line item on a lead: an instance of a product with deal-specific quantity, pricing, and discount. The total is computed as quantity * unitPrice * (1 - discount/100). Mapped to Schema.org Offer.",
         "x-schema-org": "schema:Offer",
         "configuration": {
           "x-openregister-calculations": {
@@ -1334,13 +1309,13 @@
             "enabled": true,
             "tools": {
               "create": {
-                "description": "Add a priced line to a lead — one product with its quantity, unit price and optional discount. This is how an offer/quotation is built: create the lead first (pipelinq_createLead), then add one line per product. Do NOT send `total`: it is calculated by OpenRegister as quantity * unitPrice minus the discount (percent or amount, per discountType), so a supplied value would be overwritten and any figure quoted from it would be wrong.",
+                "description": "Add a priced line to a lead: one product with its quantity, unit price and optional discount. This is how an offer/quotation is built: create the lead first (pipelinq_createLead), then add one line per product. Do NOT send `total`: it is calculated by OpenRegister as quantity * unitPrice minus the discount (percent or amount, per discountType), so a supplied value would be overwritten and any figure quoted from it would be wrong.",
                 "scope": "create",
                 "destructiveHint": false,
                 "idempotentHint": false
               },
               "search": {
-                "description": "List the priced lines on a lead — the body of an offer/quotation. Filter by `lead` to get one offer's lines. Each line carries the materialised `total`.",
+                "description": "List the priced lines on a lead: the body of an offer/quotation. Filter by `lead` to get one offer's lines. Each line carries the materialised `total`.",
                 "scope": "read",
                 "filters": [
                   "lead",
@@ -1402,7 +1377,7 @@
           },
           "discount": {
             "type": "number",
-            "description": "Discount value — a percentage (0–100) or a flat amount, per Discount type.",
+            "description": "Discount value: a percentage (0–100) or a flat amount, per Discount type.",
             "minimum": 0,
             "default": 0,
             "title": "Discount"
@@ -1451,9 +1426,9 @@
           }
         }
       },
-      "task": {
+      "crmTask": {
         "x-schema-org": "schema:Action",
-        "slug": "task",
+        "slug": "crmTask",
         "x-openregister-notifications": {
           "taskCompleted": {
             "trigger": {
@@ -1497,10 +1472,10 @@
           }
         },
         "title": "Task",
-        "icon": "ClipboardCheck",
+        "icon": "CheckboxMarkedCircleOutline",
         "version": "1.1.0",
         "summary": "A callback request or follow-up task (terugbelverzoek / opvolgtaak / informatievraag)",
-        "description": "Represents an internal task — a callback request (terugbelverzoek), follow-up task (opvolgtaak), or information request (informatievraag) assigned to a user or department. Maps to VNG InterneTaak and Schema.org Action.",
+        "description": "Represents an internal task: a callback request (terugbelverzoek), follow-up task (opvolgtaak), or information request (informatievraag) assigned to a user or department. Maps to VNG InterneTaak and Schema.org Action.",
         "configuration": {
           "x-openregister-lifecycle": {
             "field": "status",
@@ -1563,7 +1538,7 @@
         "properties": {
           "type": {
             "type": "string",
-            "description": "Task type — terugbelverzoek (callback), opvolgtaak (follow-up), or informatievraag (information request)",
+            "description": "Task type: terugbelverzoek (callback), opvolgtaak (follow-up), or informatievraag (information request)",
             "enum": [
               "callbackRequest",
               "followUpTask",
@@ -1682,7 +1657,7 @@
           },
           "attempts": {
             "type": "array",
-            "description": "Callback attempt log — each entry has timestamp, result, and notes",
+            "description": "Callback attempt log: each entry has timestamp, result, and notes",
             "items": {
               "type": "object",
               "properties": {
@@ -1806,71 +1781,6 @@
             "default": "medium",
             "visible": false,
             "title": "Relationship Strength"
-          }
-        }
-      },
-      "queue": {
-        "slug": "queue",
-        "title": "Queue",
-        "icon": "Tray",
-        "version": "1.0.0",
-        "summary": "A priority queue for organizing work items",
-        "description": "Represents a named queue for organizing requests with priority-based ordering. Used for workload distribution and skill-based routing in KCC/service desk scenarios. Mapped to Schema.org ItemList.",
-        "x-schema-org": "schema:ItemList",
-        "required": [
-          "title"
-        ],
-        "properties": {
-          "title": {
-            "type": "string",
-            "description": "Queue name (e.g., 'Algemene Zaken', 'Vergunningen')",
-            "maxLength": 255,
-            "minLength": 1,
-            "title": "Title"
-          },
-          "description": {
-            "type": "string",
-            "description": "Description of the queue's purpose",
-            "visible": false,
-            "title": "Description"
-          },
-          "categories": {
-            "type": "array",
-            "description": "Category tags for routing (matched against request categories and agent skills)",
-            "items": {
-              "type": "string"
-            },
-            "default": [],
-            "title": "Categories"
-          },
-          "isActive": {
-            "type": "boolean",
-            "description": "Whether the queue is active and accepting items",
-            "default": true,
-            "title": "Active",
-            "facetable": true
-          },
-          "maxCapacity": {
-            "type": "integer",
-            "description": "Maximum number of items allowed in the queue (null = unlimited)",
-            "minimum": 1,
-            "title": "Max Capacity"
-          },
-          "sortOrder": {
-            "type": "integer",
-            "description": "Display order of the queue in the list",
-            "default": 0,
-            "visible": false,
-            "title": "Sort Order"
-          },
-          "assignedAgents": {
-            "type": "array",
-            "description": "Nextcloud user UIDs of agents assigned to work this queue",
-            "items": {
-              "type": "string"
-            },
-            "default": [],
-            "title": "Assigned Agents"
           }
         }
       },
@@ -2057,7 +1967,7 @@
           },
           "staffMemberId": {
             "type": "string",
-            "description": "Optional UUID reference to the posStaff member who was actively logged in at the POS terminal when this transaction was confirmed. Drives per-staff sales reporting and the shillinq commission feed (pos-staff-pin-permissions REQ-PSP-008 / REQ-PSP-009).",
+            "description": "Optional UUID reference to the posStaff member who was actively logged in at the POS terminal when this transaction was confirmed. Drives per-staff sales reporting and the shillinq commission feed (pos-staff-pin-permissions).",
             "title": "Staff member",
             "facetable": true
           },
@@ -2275,7 +2185,7 @@
           },
           "paymentWebhookEventId": {
             "type": "string",
-            "description": "Idempotency key — last processed provider webhook event id, prevents duplicate settlement updates",
+            "description": "Idempotency key: last processed provider webhook event id, prevents duplicate settlement updates",
             "maxLength": 128,
             "visible": false,
             "title": "Payment Webhook Event ID"
@@ -2313,7 +2223,7 @@
           },
           "description": {
             "type": "string",
-            "description": "Line description -- pre-filled from product.name, or free-text",
+            "description": "Line description: pre-filled from product.name, or free-text",
             "maxLength": 255,
             "minLength": 1,
             "title": "Description"
@@ -2765,7 +2675,7 @@
         "icon": "ReceiptText",
         "version": "1.0.0",
         "summary": "A customizable POS receipt template (header/footer/company/layout)",
-        "description": "Configures how a POS receipt is rendered: company header/footer, layout width and whether the legal-invoice (BTW) variant applies. The body is a safe placeholder template ({{ placeholder }} tokens only -- no expression evaluation), so a malicious template cannot execute code or trigger SSRF.",
+        "description": "Configures how a POS receipt is rendered: company header/footer, layout width and whether the legal-invoice (BTW) variant applies. The body is a safe placeholder template ({{ placeholder }} tokens only: no expression evaluation), so a malicious template cannot execute code or trigger SSRF.",
         "x-schema-org": "schema:CreativeWork",
         "required": [
           "name"
@@ -2787,7 +2697,7 @@
           },
           "body": {
             "type": "string",
-            "description": "Receipt body template using {{ placeholder }} tokens only (no expression evaluation). Optional -- when empty a built-in default layout is used.",
+            "description": "Receipt body template using {{ placeholder }} tokens only (no expression evaluation). Optional: when empty a built-in default layout is used.",
             "title": "Receipt Body"
           },
           "layoutWidth": {
@@ -2988,19 +2898,19 @@
           },
           "apiKey": {
             "type": "string",
-            "description": "Provider API key or secret — encrypted. Masked as ***SET*** in API responses.",
+            "description": "Provider API key or secret: encrypted. Masked as ***SET*** in API responses.",
             "visible": false,
             "title": "API Key"
           },
           "apiSecret": {
             "type": "string",
-            "description": "Additional secret for providers that require signing (e.g. CCV) — encrypted. Masked in responses.",
+            "description": "Additional secret for providers that require signing (e.g. CCV): encrypted. Masked in responses.",
             "visible": false,
             "title": "API Secret"
           },
           "webhookSecret": {
             "type": "string",
-            "description": "Webhook signature verification key from the provider — encrypted. Masked in responses.",
+            "description": "Webhook signature verification key from the provider: encrypted. Masked in responses.",
             "visible": false,
             "title": "Webhook Secret"
           },
@@ -3012,7 +2922,7 @@
           },
           "config": {
             "type": "object",
-            "description": "Provider-specific nested config — e.g. { terminalId: \"kassa-01\", merchantAccount: \"...\" }",
+            "description": "Provider-specific nested config: e.g. { terminalId: \"kassa-01\", merchantAccount: \"...\" }",
             "title": "Provider Config"
           },
           "lastTestedAt": {
@@ -3035,7 +2945,7 @@
         "icon": "ShieldCheck",
         "version": "1.0.0",
         "summary": "Resultaat van een 11-proef BSN-validatie",
-        "description": "Onveranderlijk resultaat van een 11-proef controle (RvIG-algoritme). Wordt aangemaakt bij elke validatie-poging (server-side audit). BSN wordt gemaskeerd opgeslagen (***XXXX*) — raw BSN gaat NOOIT in een bsnValidatie-object.",
+        "description": "Onveranderlijk resultaat van een 11-proef controle (RvIG-algoritme). Wordt aangemaakt bij elke validatie-poging (server-side audit). BSN wordt gemaskeerd opgeslagen (***XXXX*): raw BSN gaat NOOIT in een bsnValidatie-object.",
         "required": [
           "enteredBsn",
           "isFormalValid",
@@ -3045,7 +2955,7 @@
         "properties": {
           "enteredBsn": {
             "type": "string",
-            "description": "Gemaskeerd BSN — pattern ***XXXX* (eerste 3 + laatste 1 vervangen door ***). Raw 9-cijferig BSN wordt NIET opgeslagen.",
+            "description": "Gemaskeerd BSN: pattern ***XXXX* (eerste 3 + laatste 1 vervangen door ***). Raw 9-cijferig BSN wordt NIET opgeslagen.",
             "maxLength": 16,
             "title": "BSN (masked)"
           },
@@ -3100,7 +3010,7 @@
         "icon": "AccountSearch",
         "version": "1.0.0",
         "summary": "Een aangevraagde BRP-lookup met doelbinding (persistent voor audit)",
-        "description": "Het verzoek zelf — vastgelegd met doelbinding en wettelijke grondslag voor audit. BSN wordt GEHASHED opgeslagen (SHA-256). De aangevraagde BSN-waarde is alleen kort in het geheugen aanwezig tijdens de lookup.",
+        "description": "Het verzoek zelf: vastgelegd met doelbinding en wettelijke grondslag voor audit. BSN wordt GEHASHED opgeslagen (SHA-256). De aangevraagde BSN-waarde is alleen kort in het geheugen aanwezig tijdens de lookup.",
         "required": [
           "bsnHash",
           "verzoekreden",
@@ -3231,7 +3141,7 @@
         "icon": "AccountBox",
         "version": "1.0.0",
         "summary": "Genormaliseerde response uit HaalCentraal — versleuteld at-rest met TTL",
-        "description": "Persoonsgegevens uit HaalCentraal BRP, genormaliseerd. Gekoppeld aan Contact. Versleuteld at-rest (Nextcloud native encryption). retentieTot stuurt het BrpRetentionJob — record wordt automatisch verwijderd na ingestelde periode (default 7 dagen na verzoek-afsluiting).",
+        "description": "Persoonsgegevens uit HaalCentraal BRP, genormaliseerd. Gekoppeld aan Contact. Versleuteld at-rest (Nextcloud native encryption). RetentieTot stuurt het BrpRetentionJob: record wordt automatisch verwijderd na ingestelde periode (default 7 dagen na verzoek-afsluiting).",
         "required": [
           "bsnHash",
           "givenNames",
@@ -3303,7 +3213,7 @@
           },
           "gender": {
             "type": "string",
-            "description": "schema:gender — man, vrouw, onbekend",
+            "description": "schema:gender. Man, vrouw, onbekend",
             "enum": [
               "male",
               "female",
@@ -3319,7 +3229,7 @@
           },
           "indicationSecret": {
             "type": "string",
-            "description": "Geheimhouding-indicatie uit BRP — \"0\" (geen), \"1\" (geheimhouding gemeente)",
+            "description": "Geheimhouding-indicatie uit BRP: \"0\" (geen), \"1\" (geheimhouding gemeente)",
             "enum": [
               "0",
               "1"
@@ -3367,7 +3277,7 @@
         "icon": "FileDocumentMultiple",
         "version": "1.0.0",
         "summary": "Onveranderlijke audit-regel voor BSN-bevragingen (5 jaar bewaard per RvIG)",
-        "description": "Audit-trail voor elke BRP-lookup, ongeacht uitkomst. immutable: true — kan NIET worden gewijzigd of verwijderd via standaard CRUD. Alleen het systeem mag bij Right-to-be-forgotten pseudonimiseren (BSN-hash blijft, raw BSN-waarde gaat dan op SHA-256). bewaartot = now + 5 jaar (RvIG-richtlijn).",
+        "description": "Audit-trail voor elke BRP-lookup, ongeacht uitkomst. Immutable: true. Kan NIET worden gewijzigd of verwijderd via standaard CRUD. Alleen het systeem mag bij Right-to-be-forgotten pseudonimiseren (BSN-hash blijft, raw BSN-waarde gaat dan op SHA-256). Bewaartot = now + 5 jaar (RvIG-richtlijn).",
         "configuration": {
           "x-openregister-immutable": true
         },
@@ -3577,7 +3487,7 @@
       "default-pipeline-view": {
         "slug": "default-pipeline-view",
         "name": "Pipelinq Default View",
-        "description": "Default view for pipeline boards — includes leads and requests from the Pipelinq register",
+        "description": "Default view for pipeline boards: includes leads and requests from the Pipelinq register",
         "query": {
           "registers": [
             "pipelinq"
@@ -4355,7 +4265,7 @@
           "slug": "product-kleurenkaart-salontester"
         },
         "name": "Kleurenkaart Salontester",
-        "description": "Haar-kleurenkaart voor gebruik in de salonruimte — niet voor verkoop",
+        "description": "Haar-kleurenkaart voor gebruik in de salonruimte: niet voor verkoop",
         "sku": "SLN-TST-001",
         "barcode": "8720608999001",
         "unitPrice": 0.0,
@@ -4860,7 +4770,7 @@
           "schema": "lead",
           "slug": "lead-gemeente-voorbeeld-kcc-portaal"
         },
-        "title": "Gemeente Voorbeeld – KCC portaal",
+        "title": "Gemeente Voorbeeld: KCC portaal",
         "source": "referral",
         "value": 45000,
         "probability": 70,
@@ -4878,7 +4788,7 @@
           "schema": "lead",
           "slug": "lead-meridiaan-advies-data-governance-retainer"
         },
-        "title": "Meridiaan Advies – data-governance retainer",
+        "title": "Meridiaan Advies: data-governance retainer",
         "source": "partner",
         "value": 18000,
         "probability": 50,
@@ -4896,7 +4806,7 @@
           "schema": "lead",
           "slug": "lead-zonnereizen-boekingsplatform"
         },
-        "title": "Zonnereizen – boekingsplatform",
+        "title": "Zonnereizen: boekingsplatform",
         "source": "cold-call",
         "value": 9000,
         "probability": 40,
@@ -5388,45 +5298,6 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "queue",
-          "slug": "queue-algemene-zaken",
-          "id": "f1a2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c01"
-        },
-        "title": "Algemene Zaken",
-        "description": "Diverse gemeentelijke vragen en informatieverzoeken",
-        "isActive": true,
-        "maxCapacity": null,
-        "sortOrder": 1
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "queue",
-          "slug": "queue-vergunningen",
-          "id": "f1a2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c02"
-        },
-        "title": "Vergunningen",
-        "description": "Aanvragen en meldingen omgevingsvergunning",
-        "isActive": true,
-        "maxCapacity": 50,
-        "sortOrder": 2
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "queue",
-          "slug": "queue-wmo-zorg",
-          "id": "f1a2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c03"
-        },
-        "title": "WMO / Zorg",
-        "description": "Wmo-aanvragen, hulpmiddelenvragen en zorgondersteuning",
-        "isActive": true,
-        "maxCapacity": 30,
-        "sortOrder": 3
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
           "schema": "agentProfile",
           "slug": "agent-jan-de-vries",
           "id": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c11"
@@ -5510,7 +5381,7 @@
           "slug": "client-gemeente-voorbeeld",
           "id": "994174bf-3e92-4bec-aea2-701b7131201f"
         },
-        "_note": "klantbeeld-360-activation seed: municipality archetype — see design.md Seed Data. Client for lead-gemeente-voorbeeld-kcc-portaal + 4 open tickets (request/complaint/2x contactmoment) below, so the customer-360 summary is verifiable on a fresh install (open-ticket count 4, SLA breached 1, one queue, pipeline value from the lead).",
+        "_note": "klantbeeld-360-activation seed: municipality archetype — see design.md Seed Data. Client for lead-gemeente-voorbeeld-kcc-portaal + 4 open tickets (request/complaint/2x contactmoment) below, so the customer-360 summary is verifiable on a fresh install (open-ticket count 4, SLA breached 1, pipeline value from the lead).",
         "name": "Gemeente Voorbeeld",
         "type": "organization",
         "contactsUid": "seed-gemeente-voorbeeld-001",
@@ -5569,8 +5440,7 @@
         "priority": "normal",
         "channel": "web",
         "occurredAt": "2026-07-10T09:00:00+02:00",
-        "category": "vergunningen",
-        "queue": "f1a2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c02"
+        "category": "vergunningen"
       },
       {
         "@self": {

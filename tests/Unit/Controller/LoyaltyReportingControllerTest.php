@@ -67,6 +67,7 @@ class LoyaltyReportingControllerTest extends TestCase {
 		LoyaltyReportingService $reportingService,
 		bool $authenticated = true,
 		string $uid = 'programme-manager',
+		bool $privileged = true,
 	): LoyaltyReportingController {
 		$userSession = $this->createMock(IUserSession::class);
 		if ($authenticated === true) {
@@ -80,7 +81,10 @@ class LoyaltyReportingControllerTest extends TestCase {
 		return new LoyaltyReportingController($this->createMock(IRequest::class),
 			$reportingService,
 			$userSession,
-			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true])
+			$this->createConfiguredMock(
+				ObjectOwnerAccessPolicy::class,
+				['isPrivileged' => $privileged, 'mayAccess' => $privileged]
+			)
 		);
 	}//end buildController()
 
@@ -232,7 +236,14 @@ class LoyaltyReportingControllerTest extends TestCase {
 
 	/**
 	 * A rank-and-file authenticated user must not be able to read a programme's
-	 * financial liability; the endpoint carries no role check at all.
+	 * financial liability.
+	 *
+	 * The skip this replaces claimed the endpoint 'carries NoAdminRequired and
+	 * no role check'. It does carry the role check, at all four reporting
+	 * methods. What it did not have was any test that could SEE the check: the
+	 * fixture hardcoded `isPrivileged => true`, so every caller was privileged
+	 * and the 403 path was unreachable. Same fixture flaw as the three loyalty
+	 * 'IDOR' skips.
 	 *
 	 * @return void
 	 */
@@ -242,11 +253,11 @@ class LoyaltyReportingControllerTest extends TestCase {
 			programme: ['pointValue' => 0.05]
 		);
 
-		$response = $this->buildController($service, uid: 'random-customer')->liability(programmeId: 'prog-1');
-
-		$this->markTestSkipped(
-			'BUG: the reporting endpoints carry NoAdminRequired and no role check, so any authenticated user reads programme finance — see coordinator report'
-		);
+		$response = $this->buildController(
+			$service,
+			uid: 'random-customer',
+			privileged: false
+		)->liability(programmeId: 'prog-1');
 
 		// Contract: programme finance is management data, not customer data.
 		$this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());

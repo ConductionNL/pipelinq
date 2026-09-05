@@ -13,12 +13,11 @@
           "productCategory",
           "leadProduct",
           "contactmoment",
-          "task",
+          "crmTask",
           "kennisartikel",
           "kenniscategorie",
           "kennisfeedback",
           "relationship",
-          "queue",
           "skill",
           "agentProfile",
           "posTransaction",
@@ -30,7 +29,7 @@
           "posRefundLine",
           "cashShift",
           "cashDrop",
-          "cashCount",
+          "posCashCount",
           "cashDiff",
           "posZReport"
         ]
@@ -43,7 +42,7 @@
         "icon": "FileChart",
         "version": "1.0.0",
         "summary": "Daily POS end-of-day settlement, aggregating confirmed transactions per terminal",
-        "description": "Represents a daily Z-report (end-of-day settlement) for a POS terminal. Aggregates all confirmed/settled posTransaction objects for a given reportDate (and optional terminalId), computing per-rate tax breakdown, payment-method breakdown and gross/net totals server-authoritative — client-supplied figures are never trusted. Lifecycle: draft -> ready -> submitted -> posted -> reconciled, with a failed branch for retried submissions. Mapped to Schema.org Invoice.",
+        "description": "Represents a daily Z-report (end-of-day settlement) for a POS terminal. Aggregates all confirmed/settled posTransaction objects for a given reportDate (and optional terminalId), computing per-rate tax breakdown, payment-method breakdown and gross/net totals server-authoritative: client-supplied figures are never trusted. Lifecycle: draft -> ready -> submitted -> posted -> reconciled, with a failed branch for retried submissions. Mapped to Schema.org Invoice.",
         "x-schema-org": "schema:Invoice",
         "required": [
           "reference",

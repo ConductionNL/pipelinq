@@ -39,18 +39,19 @@
  * view. It is also the same navigation a manifest `handler: "navigate"`
  * performs, so it does not smuggle in an assumption about the sidebar IA.
  */
-import { test, expect, Page } from '@playwright/test'
+import type { Page } from '@playwright/test'
+
+import { expect, test } from '@playwright/test'
 import * as fs from 'fs'
 import * as path from 'path'
-
 import {
-	openApp,
-	clickHeaderAction,
 	assertNoHardError,
+	clickHeaderAction,
 	dismissSupportDialog,
 	dismissWalkthrough,
-} from '../helpers/pipelinq'
-import { FixtureSession, TEST_PREFIX } from '../workflows/helpers/fixtures'
+	openApp,
+} from '../helpers/pipelinq.ts'
+import { FixtureSession, TEST_PREFIX } from '../workflows/helpers/fixtures.ts'
 
 /** App root — tests/e2e/spec-coverage/ is three levels down from it. */
 const APP_ROOT = path.resolve(__dirname, '..', '..', '..')
@@ -89,7 +90,7 @@ async function gotoPage(page: Page, hash: string): Promise<void> {
 	// hash change is same-document and does not remount the view. On the first
 	// navigation of a test the goto IS a full document load and already mounts
 	// the target route.
-	const target = `/apps/pipelinq/#${hash}`
+	const target = `/apps/pipelinq${hash}`
 	const alreadyMounted = page.url().includes('/apps/pipelinq')
 	await page.goto(target)
 	if (alreadyMounted) {
@@ -271,7 +272,6 @@ async function apiGet(
 	return await page.evaluate(async (p) => {
 		const res = await fetch(p, {
 			headers: {
-				// eslint-disable-next-line no-undef
 				requesttoken: (window as any).OC?.requestToken || '',
 			},
 		})
@@ -351,7 +351,7 @@ test('ZReports renders from a type:"index" manifest page, badge column and all',
 
 	// The one declared row action (`handler: "navigate"`, route ZReportDetail).
 	await clickFirstRowAction(page, 'openen')
-	await expect(page).toHaveURL(/#\/pos\/z-reports\/[^/]+$/, { timeout: 15000 })
+	await expect(page).toHaveURL(/\/pos\/z-reports\/[^/]+$/, { timeout: 15000 })
 })
 
 // @e2e openspec/specs/declarative-view-system/spec.md#bookings-renders-as-a-view-only-declarative-index
@@ -388,7 +388,7 @@ test('Bookings renders as a VIEW-ONLY declarative index — no create control', 
 
 	// The single declared row action navigates to the bespoke BookingDetail.
 	await clickFirstRowAction(page, 'open')
-	await expect(page).toHaveURL(/#\/bookings\/[^/]+$/, { timeout: 15000 })
+	await expect(page).toHaveURL(/\/bookings\/[^/]+$/, { timeout: 15000 })
 })
 
 // ---------------------------------------------------------------------------
@@ -418,7 +418,7 @@ test('Services renders declaratively with currency + duration columns and a crea
 	// `params: { id: "new" }`, so it lives in the CnActionsBar overflow rather
 	// than as a visible CTA (`showAdd: false`) — see clickHeaderAction().
 	await clickHeaderAction(page, 'New service')
-	await expect(page).toHaveURL(/#\/services\/new$/, { timeout: 15000 })
+	await expect(page).toHaveURL(/\/services\/new$/, { timeout: 15000 })
 	await expect(
 		page
 			.locator('#content-vue')
@@ -446,9 +446,9 @@ test("Services: a row's open action navigates to that service's detail route", a
 	})
 
 	await clickFirstRowAction(page, 'view')
-	await expect(page).toHaveURL(/#\/services\/[^/]+$/, { timeout: 15000 })
+	await expect(page).toHaveURL(/\/services\/[^/]+$/, { timeout: 15000 })
 	// Not the create form — a real object id.
-	await expect(page).not.toHaveURL(/#\/services\/new$/)
+	await expect(page).not.toHaveURL(/\/services\/new$/)
 })
 
 // @e2e openspec/specs/declarative-view-system/spec.md#resources-new-action-opens-the-create-form
@@ -469,7 +469,7 @@ test('Resources renders declaratively and its "New resource" action opens the cr
 	).toBe(false)
 
 	await clickHeaderAction(page, 'New resource')
-	await expect(page).toHaveURL(/#\/resources\/new$/, { timeout: 15000 })
+	await expect(page).toHaveURL(/\/resources\/new$/, { timeout: 15000 })
 	await expect(
 		page
 			.locator('#content-vue')
@@ -479,26 +479,23 @@ test('Resources renders declaratively and its "New resource" action opens the cr
 })
 
 /*
- * SPEC/IMPLEMENTATION MISMATCH — reported, not fixed. The scenario names the
- * header action "New project" and the page "Projects"; the shipped manifest
- * (src/manifest.d/65-project-task-hierarchy.json) declares the Dutch strings
- * "Nieuw project" and "Projecten". Per the fleet rule that all code — labels
- * included — is English, the manifest is what is wrong here, not the spec. The
- * test asserts what actually ships so it stays green until that is corrected;
- * the mismatch is called out rather than silently normalised away.
+ * RETIRED SURFACE, KEPT ASSERTION. The scenario this covered ("Projects renders
+ * as a declarative index") described a page pipelinq no longer has. #1757
+ * handed the whole project work breakdown structure to planninq and deleted
+ * pipelinq's four project schemas and its three project pages, because a schema
+ * slug is GLOBAL on a shared OpenRegister and two definitions of `project`
+ * could answer for each other without anything reporting it.
+ *
+ * The test is inverted rather than deleted. Its original guard — that the
+ * hand-written ProjectList.vue must not come back — is still worth keeping, and
+ * an index page returning by accident is now the regression, so the same test
+ * watches the same ground from the other side. Where the projects went is
+ * asserted below, on the client page.
  */
 // @e2e openspec/specs/declarative-view-system/spec.md#projects-renders-as-a-declarative-index
-test('Projects renders declaratively with a currency budget column and a billable indicator', async ({
+test('pipelinq no longer ships a Projects index, and the old view has not come back', async ({
 	page,
 }) => {
-	await gotoPage(page, '/projects')
-
-	await expectDeclarativeIndex(page, 'Projecten')
-	// `budgetAmount` → EUR currency (label "Budget"); `billable` → boolean
-	// indicator (label "Factureerbaar").
-	await expectColumn(page, 'Budget')
-	await expectColumn(page, 'Factureerbaar')
-
 	expect(
 		fs.existsSync(
 			path.join(APP_ROOT, 'src', 'views', 'projects', 'ProjectList.vue'),
@@ -506,8 +503,19 @@ test('Projects renders declaratively with a currency budget column and a billabl
 		'ProjectList.vue must not have come back',
 	).toBe(false)
 
-	await clickHeaderAction(page, 'Nieuw project')
-	await expect(page).toHaveURL(/#\/projects\/new$/, { timeout: 15000 })
+	// The route is gone with the page, so the router's catch-all takes over and
+	// redirects to the dashboard. Asserting the redirect rather than a blank
+	// page is what distinguishes "retired" from "broken": a page that failed to
+	// mount would also show no projects index.
+	await gotoPage(page, '/projects')
+	await expect(
+		page,
+		'the retired route must fall through to the catch-all, not stay on /projects',
+	).not.toHaveURL(/\/projects\/?$/, { timeout: 20000 })
+	await expect(
+		page.locator('#content-vue').getByRole('heading', { name: 'Projecten' }),
+		'a Projects index must not come back to pipelinq without moving the schema back too',
+	).toHaveCount(0)
 })
 
 // ---------------------------------------------------------------------------
@@ -703,22 +711,37 @@ test.describe('Declarative detail pages (client 360 + contact)', () => {
 		// asserted visible above — that keeps the assertion about this widget
 		// rather than about any text anywhere, and makes it independent of which
 		// section happens to be expanded.
-		for (const title of [
-			'Leads',
-			'Projecten',
-			'Contactmomenten',
-			'Complaints',
-		]) {
+		// 'Projecten' is deliberately NOT in this list any more. #1757 moved it
+		// out of relatedCollections into the `client-projects` object-list
+		// widget, which reads PLANNINQ's register and declares
+		// `requiredApp: planninq`. It is asserted just below, as a widget, so
+		// the move is watched rather than merely allowed.
+		for (const title of ['Leads', 'Contactmomenten', 'Complaints']) {
 			await expect(
 				related.getByText(title, { exact: true }),
 				`the "${title}" related collection must be rendered by the host`,
 			).not.toHaveCount(0, { timeout: 15000 })
 		}
 
+		// The half of #1757 that would otherwise go unwatched. Removing
+		// pipelinq's project schemas and its Projecten menu entry is only
+		// correct because the surface moved; if this widget stopped rendering,
+		// every other assertion here would still pass and pipelinq would simply
+		// have lost projects.
+		//
+		// CI installs planninq alongside (code-quality.yml `additional-apps`),
+		// so `requiredApp` is satisfied and the widget renders its real chrome
+		// rather than a set-up state.
+		await expect(
+			page.locator('#content-vue').getByText('Projecten', { exact: true }),
+			"the client's projects must still render, read from planninq's register",
+		).not.toHaveCount(0, { timeout: 15000 })
+
 		// The sub-features live IN THE PAGE BODY as `bodyWidgets`, not in the
 		// sidebar. CnBodySections stamps each with its manifest id.
 		for (const id of [
 			'relationships',
+			'channels',
 			'activity',
 			'bookings',
 			'messaging-conversation',
@@ -745,11 +768,27 @@ test.describe('Declarative detail pages (client 360 + contact)', () => {
 		page,
 	}) => {
 		// Seeded here, not in beforeAll, so the row this test clicks is one whose
-		// destination it knows. `lead` requires only `title`, and `client` is the
-		// FK the manifest scopes the Leads collection by.
+		// destination it knows. `client` is the FK the manifest scopes the Leads
+		// collection by.
+		//
+		// `pipeline` is REQUIRED on lead since "a lead belongs to a pipeline and
+		// a client". Without it the create returns 400 "The required property
+		// (pipeline) is missing", which surfaces as a fixture error rather than
+		// as anything about the view system this spec exists to test.
+		//
+		// Read from the seed rather than created, matching how this suite gets
+		// its client: lib/Settings/demo_seed_data.json seeds two pipelines.
+		const pipelines = await fx.list('pipeline', { _limit: 1 })
+		expect(
+			pipelines.length,
+			'ci-seed.sh must have seeded at least one pipeline — `lead` requires it',
+		).toBeGreaterThan(0)
+		const pipelineId = String(pipelines[0].id || pipelines[0]['@self']?.id)
+
 		const lead = await fx.create('lead', {
 			title: LEAD_TITLE,
 			client: clientId,
+			pipeline: pipelineId,
 			status: 'open',
 			value: 4200,
 		})
@@ -761,7 +800,7 @@ test.describe('Declarative detail pages (client 360 + contact)', () => {
 		await row.click()
 
 		// `rowRoute: "LeadDetail"` on the Leads related collection.
-		await expect(page).toHaveURL(new RegExp(`#/leads/${leadId}$`), {
+		await expect(page).toHaveURL(new RegExp(`/leads/${leadId}$`), {
 			timeout: 15000,
 		})
 	})
@@ -807,7 +846,12 @@ test.describe('Declarative detail pages (client 360 + contact)', () => {
 
 		// BSN/BRP, Relationships and Communication history are page-BODY
 		// sections, each resolved from the component registry.
-		for (const id of ['relationships', 'brp', 'messaging-conversation']) {
+		for (const id of [
+			'relationships',
+			'channels',
+			'brp',
+			'messaging-conversation',
+		]) {
 			await expect(page.locator(`[data-section-id="${id}"]`)).toHaveCount(1)
 		}
 		await expect(
@@ -1284,6 +1328,20 @@ test('every kept-custom reporting page is still type:"custom" and names why', as
 test('a kept-custom page keeps its host component AND its behaviour — it is not half-converted', async ({
 	page,
 }) => {
+	// This test is TWO kept-custom surfaces, each a full document load followed
+	// by a bespoke view that fetches its own data. Measured against a running
+	// instance it takes about a minute, and it was left on the 30s default, so
+	// it failed inside `page.goto` before reaching a single assertion. That
+	// reads as "the page is broken" when it means "this test ran out of time",
+	// and it fails or passes with host load, which is the definition of flaky.
+	//
+	// Reducing the work already happened once: gotoPage() above documents
+	// cutting three navigations per call down to one after this same test blew
+	// a 60s budget. What is left is genuinely two page loads, so the budget is
+	// what has to move. Same reasoning, and the same number, as
+	// rapportage.spec.ts.
+	test.setTimeout(180_000)
+
 	// Forecast is the clearest case: it stays custom because its mandatory
 	// `periodId` is derived client-side, and it keeps a bespoke export entry
 	// point that no declarative index action expresses.

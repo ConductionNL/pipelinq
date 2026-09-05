@@ -29,6 +29,11 @@ namespace OCA\Pipelinq\Service\Portal;
 
 /**
  * Per-customer contract read facade.
+ *
+ * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+ *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+ *   sessions, tokens, delegation, documents, invoices, orders, exports and
+ *   audit are all unspecified
  */
 class PortalContractService extends AbstractPortalReadFacade {
 	/**
@@ -37,7 +42,7 @@ class PortalContractService extends AbstractPortalReadFacade {
 	 * @return string The schema key.
 	 */
 	protected function schemaKey(): string {
-		return 'contract';
+		return 'salesContract';
 	}//end schemaKey()
 
 	/**

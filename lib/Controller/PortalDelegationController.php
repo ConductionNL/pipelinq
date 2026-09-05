@@ -38,6 +38,11 @@ use Psr\Log\LoggerInterface;
 
 /**
  * Portal B2B delegation endpoints.
+ *
+ * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+ *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+ *   sessions, tokens, delegation, documents, invoices, orders, exports and
+ *   audit are all unspecified
  */
 class PortalDelegationController extends PortalApiController {
 	/**
@@ -65,6 +70,10 @@ class PortalDelegationController extends PortalApiController {
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
 	 * @PublicPage
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	#[AnonRateLimit(limit: 120, period: 60)]
 	public function index(): JSONResponse {
@@ -89,6 +98,10 @@ class PortalDelegationController extends PortalApiController {
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
 	 * @PublicPage
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	#[AnonRateLimit(limit: 20, period: 60)]
 	public function create(): JSONResponse {
@@ -129,6 +142,10 @@ class PortalDelegationController extends PortalApiController {
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
 	 * @PublicPage
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	#[AnonRateLimit(limit: 30, period: 60)]
 	public function destroy(string $id): JSONResponse {

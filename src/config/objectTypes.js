@@ -152,12 +152,6 @@ export function objectTypes() {
 			description: t(APP, 'Typed relationships between contacts and clients'),
 		},
 		{
-			slug: 'queue',
-			group: 'core',
-			label: t(APP, 'Queue'),
-			description: t(APP, 'Work queues for routing'),
-		},
-		{
 			slug: 'skill',
 			group: 'core',
 			label: t(APP, 'Skill'),
@@ -176,7 +170,7 @@ export function objectTypes() {
 			description: t(APP, 'Billable categories and tags'),
 		},
 		{
-			slug: 'task',
+			slug: 'crmTask',
 			group: 'core',
 			label: t(APP, 'Task'),
 			description: t(APP, 'Work items / tasks'),
@@ -237,7 +231,7 @@ export function objectTypes() {
 			description: t(APP, 'Cash drops and pickups during a shift'),
 		},
 		{
-			slug: 'cashCount',
+			slug: 'posCashCount',
 			group: 'pos',
 			label: t(APP, 'Cash Count'),
 			description: t(APP, 'Cash count entries for a shift'),
@@ -268,19 +262,19 @@ export function objectTypes() {
 		},
 		// Appointment booking (group: appointments)
 		{
-			slug: 'service',
+			slug: 'appointmentService',
 			group: 'appointments',
 			label: t(APP, 'Service'),
 			description: t(APP, 'Bookable services'),
 		},
 		{
-			slug: 'resource',
+			slug: 'appointmentResource',
 			group: 'appointments',
 			label: t(APP, 'Resource'),
 			description: t(APP, 'Bookable resources (staff, rooms, equipment)'),
 		},
 		{
-			slug: 'booking',
+			slug: 'appointmentBooking',
 			group: 'appointments',
 			label: t(APP, 'Booking'),
 			description: t(APP, 'Appointment bookings'),
@@ -296,31 +290,6 @@ export function objectTypes() {
 			group: 'appointments',
 			label: t(APP, 'Availability Cache'),
 			description: t(APP, 'Cached bookable-slot availability'),
-		},
-		// Project / WBS hierarchy (group: projects)
-		{
-			slug: 'project',
-			group: 'projects',
-			label: t(APP, 'Project'),
-			description: t(APP, 'Projects'),
-		},
-		{
-			slug: 'projectPhase',
-			group: 'projects',
-			label: t(APP, 'Project Phase'),
-			description: t(APP, 'Phases within a project'),
-		},
-		{
-			slug: 'projectTask',
-			group: 'projects',
-			label: t(APP, 'Project Task'),
-			description: t(APP, 'Tasks within a project phase'),
-		},
-		{
-			slug: 'projectActivity',
-			group: 'projects',
-			label: t(APP, 'Project Activity'),
-			description: t(APP, 'Logged activities on project tasks'),
 		},
 		// BI export (bi-export-and-data-warehouse-sink) — REQ-BIE-002.
 		{
@@ -348,19 +317,59 @@ export function objectTypes() {
 			label: t(APP, 'Blast'),
 			description: t(APP, 'Marketing blasts / campaigns'),
 		},
+		// Campaigns and attribution (marketing-campaigns). The Campaigns index
+		// and detail pages read these through the object store, so both slugs
+		// must be registered or fetchCollection() throws and the page is blank.
+		{
+			slug: 'campaign',
+			group: 'marketing',
+			label: t(APP, 'Campaign'),
+			description: t(
+				APP,
+				'Campaigns that group mailings, posts and a landing page',
+			),
+		},
+		{
+			slug: 'touchpoint',
+			group: 'marketing',
+			label: t(APP, 'Touchpoint'),
+			description: t(APP, 'One attributable interaction with a campaign'),
+		},
+		// Journeys and the weekly review (marketing-integrated-campaigns). The
+		// Journeys index and detail pages read these through the object store,
+		// so both slugs must be registered or fetchCollection() throws and the
+		// page renders blank.
+		{
+			slug: 'journey',
+			group: 'marketing',
+			label: t(APP, 'Journey'),
+			description: t(APP, 'A trigger, a wait, a condition and one action'),
+		},
+		{
+			slug: 'journeyRun',
+			group: 'marketing',
+			label: t(APP, 'Journey run'),
+			description: t(APP, 'What a journey did for one contact'),
+		},
+		{
+			slug: 'weeklyReview',
+			group: 'marketing',
+			label: t(APP, 'Weekly review'),
+			description: t(APP, 'What moved last week, and what to try'),
+		},
 		// Outbound messaging (outbound-messaging-provider-wiring). These slugs are
 		// self-fetched by the conversation section on client/contact detail and by
 		// the Messaging settings page; register them so fetchCollection() resolves
 		// instead of throwing "Object type X is not registered" — which otherwise
 		// blanks the whole Messaging settings page and errors on every detail page.
 		{
-			slug: 'conversation',
+			slug: 'channelConversation',
 			group: 'marketing',
 			label: t(APP, 'Conversation'),
 			description: t(APP, 'Messaging conversations (WhatsApp / SMS)'),
 		},
 		{
-			slug: 'message',
+			slug: 'channelMessage',
 			group: 'marketing',
 			label: t(APP, 'Message'),
 			description: t(APP, 'Outbound / inbound messages within a conversation'),
@@ -372,6 +381,15 @@ export function objectTypes() {
 			description: t(
 				APP,
 				'Messaging channel providers (WhatsApp / SMS gateways)',
+			),
+		},
+		{
+			slug: 'mailTransport',
+			group: 'marketing',
+			label: t(APP, 'Mail Transport'),
+			description: t(
+				APP,
+				'How a mailing leaves the instance: the mail server, a Mail account or a bulk provider',
 			),
 		},
 		{

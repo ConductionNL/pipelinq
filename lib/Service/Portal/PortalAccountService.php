@@ -33,6 +33,11 @@ use OCP\IL10N;
 
 /**
  * Handles portal account closure.
+ *
+ * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+ *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+ *   sessions, tokens, delegation, documents, invoices, orders, exports and
+ *   audit are all unspecified
  */
 class PortalAccountService {
 	/**
@@ -40,7 +45,7 @@ class PortalAccountService {
 	 *
 	 * @var string
 	 */
-	private const SCHEMA = 'portalAccount';
+	private const SCHEMA = 'crmPortalAccount';
 
 	/**
 	 * Closure-token TTL in minutes.
@@ -76,6 +81,10 @@ class PortalAccountService {
 	 * @param string $tenantId The tenant id.
 	 *
 	 * @return void
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function requestClosure(array $account, string $tenantId): void {
 		$accountId = (string)$this->repository->idOf(object: $account);
@@ -104,6 +113,10 @@ class PortalAccountService {
 	 * @return void
 	 *
 	 * @throws PortalException On an invalid/expired token.
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function close(string $token, string $tenantId): void {
 		$account = $this->repository->findOneBy(

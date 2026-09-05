@@ -31,6 +31,7 @@ use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\AttributionService;
 use OCA\Pipelinq\Service\BlastService;
+use OCA\Pipelinq\Service\CampaignPerformanceService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -56,6 +57,7 @@ class BlastController extends Controller {
 	 * @param AttributionService $attributionService Attribution roll-up service (member 04).
 	 * @param IUserSession $userSession Current user session.
 	 * @param ObjectOwnerAccessPolicy $policy Per-object owner access policy.
+	 * @param CampaignPerformanceService $performanceService Mailbox plus site numbers per blast (marketing-campaign-attribution).
 	 */
 	public function __construct(
 		IRequest $request,
@@ -63,6 +65,7 @@ class BlastController extends Controller {
 		private readonly AttributionService $attributionService,
 		private readonly IUserSession $userSession,
 		private readonly ObjectOwnerAccessPolicy $policy,
+		private readonly CampaignPerformanceService $performanceService,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 	}//end __construct()
@@ -298,6 +301,41 @@ class BlastController extends Controller {
 		$summary = $this->attributionService->getBlastAttributionSummary(blastId: $id);
 		return new JSONResponse($summary);
 	}//end attribution()
+
+	/**
+	 * GET /api/blasts/:id/performance: the blast's opens, clicks and
+	 * attributed deals next to the site sessions Portaliq attributed to
+	 * its campaign over a window. `connected` is false, with a `reason`,
+	 * when no portal is configured or Portaliq is not installed.
+	 *
+	 * @param string $id Blast UUID or slug.
+	 * @param string|null $from Window start `YYYY-MM-DD`; defaults to the blast's send date.
+	 * @param string|null $to Window end `YYYY-MM-DD`; defaults to today.
+	 *
+	 * @return JSONResponse The performance record, or 401/403/404.
+	 *
+	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-campaign-performance-joins-site-sessions-to-a-blast
+	 */
+	#[NoAdminRequired]
+	public function performance(string $id, ?string $from = null, ?string $to = null): JSONResponse {
+		$uid = $this->requireUser();
+		if ($uid === null) {
+			return $this->unauthorized();
+		}
+
+		// Same posture as attribution(): blasts are a CRM capability.
+		// Admins bypass via the policy.
+		if ($this->policy->isPrivileged(uid: $uid) === false) {
+			return $this->forbidden();
+		}
+
+		$record = $this->performanceService->forBlast(blastId: $id, from: $from, to: $to);
+		if ($record === null) {
+			return $this->notFound();
+		}
+
+		return new JSONResponse($record);
+	}//end performance()
 
 	/**
 	 * Return the authenticated user id, or null when unauthenticated.

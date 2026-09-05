@@ -112,6 +112,7 @@ class MdmObjectRepository {
 	 * @return string The schema id.
 	 *
 	 * @throws RuntimeException If the schema is not configured.
+	 * @spec openspec/specs/master-data-management/spec.md#requirement-req-mdm-001--golden-record-per-master-entity
 	 */
 	public function schema(string $schemaSlug): string {
 		$schema = $this->appConfig->getValueString(Application::APP_ID, $schemaSlug . '_schema', '');
@@ -129,6 +130,7 @@ class MdmObjectRepository {
 	 * @param string $id The object uuid.
 	 *
 	 * @return array<string, mixed>|null The object as array, or null if absent.
+	 * @spec openspec/specs/master-data-management/spec.md#requirement-req-mdm-001--golden-record-per-master-entity
 	 */
 	public function find(string $schemaSlug, string $id): ?array {
 		try {
@@ -155,6 +157,7 @@ class MdmObjectRepository {
 	 * @param array<string, mixed> $filters Extra equality filters.
 	 *
 	 * @return array<int, array<string, mixed>> The matching objects.
+	 * @spec openspec/specs/master-data-management/spec.md#requirement-req-mdm-001--golden-record-per-master-entity
 	 */
 	public function findAll(string $schemaSlug, array $filters = []): array {
 		$baseFilters = [
@@ -190,6 +193,7 @@ class MdmObjectRepository {
 	 * @param string|null $uuid Optional uuid to write to.
 	 *
 	 * @return array<string, mixed> The saved object as array.
+	 * @spec openspec/specs/master-data-management/spec.md#requirement-req-mdm-001--golden-record-per-master-entity
 	 */
 	public function save(string $schemaSlug, array $object, ?string $uuid = null): array {
 		unset($object['@self']);
@@ -212,6 +216,7 @@ class MdmObjectRepository {
 	 * @param string $id The object uuid.
 	 *
 	 * @return void
+	 * @spec openspec/specs/master-data-management/spec.md#requirement-req-mdm-001--golden-record-per-master-entity
 	 */
 	public function delete(string $schemaSlug, string $id): void {
 		// Resolve to validate the schema is configured before mutating.
@@ -280,6 +285,7 @@ class MdmObjectRepository {
 	 * Generate an RFC-4122 v4 UUID.
 	 *
 	 * @return string The UUID.
+	 * @spec openspec/specs/master-data-management/spec.md#requirement-req-mdm-001--golden-record-per-master-entity
 	 */
 	public function uuid(): string {
 		$data = random_bytes(16);
@@ -293,6 +299,7 @@ class MdmObjectRepository {
 	 * Current UTC timestamp in ISO 8601.
 	 *
 	 * @return string The timestamp.
+	 * @spec openspec/specs/master-data-management/spec.md#requirement-req-mdm-001--golden-record-per-master-entity
 	 */
 	public function now(): string {
 		return (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('Y-m-d\TH:i:s\Z');
@@ -304,6 +311,7 @@ class MdmObjectRepository {
 	 * @param mixed $object The OR object.
 	 *
 	 * @return array<string, mixed> The array form.
+	 * @spec openspec/specs/master-data-management/spec.md#requirement-req-mdm-001--golden-record-per-master-entity
 	 */
 	public function toArray(mixed $object): array {
 		if (is_array($object) === true) {

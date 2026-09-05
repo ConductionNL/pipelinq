@@ -26,6 +26,8 @@ use OCP\Util;
 
 /**
  * Create Lead widget for the Nextcloud Dashboard.
+ *
+ * @spec openspec/specs/dashboard/spec.md#requirement-crm-dashboard-layout
  */
 class CreateLeadWidget implements IWidget {
 	/**
@@ -42,6 +44,7 @@ class CreateLeadWidget implements IWidget {
 	 * Get the unique widget identifier.
 	 *
 	 * @return string The widget ID
+	 * @spec openspec/specs/dashboard/spec.md#requirement-crm-dashboard-layout
 	 */
 	public function getId(): string {
 		return 'pipelinq_create_lead_widget';
@@ -51,6 +54,7 @@ class CreateLeadWidget implements IWidget {
 	 * Get the translated widget title.
 	 *
 	 * @return string The widget title
+	 * @spec openspec/specs/dashboard/spec.md#requirement-crm-dashboard-layout
 	 */
 	public function getTitle(): string {
 		return $this->l10n->t('Create Lead');
@@ -60,6 +64,7 @@ class CreateLeadWidget implements IWidget {
 	 * Get the display order of this widget.
 	 *
 	 * @return int The sort order
+	 * @spec openspec/specs/dashboard/spec.md#requirement-crm-dashboard-layout
 	 */
 	public function getOrder(): int {
 		return 15;
@@ -69,6 +74,7 @@ class CreateLeadWidget implements IWidget {
 	 * Get the CSS class for the widget icon.
 	 *
 	 * @return string The icon CSS class
+	 * @spec openspec/specs/dashboard/spec.md#requirement-crm-dashboard-layout
 	 */
 	public function getIconClass(): string {
 		return 'icon-pipelinq-widget';
@@ -78,6 +84,7 @@ class CreateLeadWidget implements IWidget {
 	 * Get the URL for the widget header link.
 	 *
 	 * @return string|null The URL or null if none
+	 * @spec openspec/specs/dashboard/spec.md#requirement-crm-dashboard-layout
 	 */
 	public function getUrl(): ?string {
 		return null;
@@ -89,6 +96,7 @@ class CreateLeadWidget implements IWidget {
 	 * @return void
 	 *
 	 * @SuppressWarnings(PHPMD.StaticAccess) — Nextcloud Util API is static by design
+	 * @spec openspec/specs/dashboard/spec.md#requirement-crm-dashboard-layout
 	 */
 	public function load(): void {
 		// Shared vendor chunks emitted by webpack splitChunks (see webpack.config.js).

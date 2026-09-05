@@ -36,6 +36,8 @@ use Psr\Log\LoggerInterface;
 
 /**
  * Controller for request channel management.
+ *
+ * @spec openspec/specs/omnichannel-registratie/spec.md#requirement-unified-contact-registration-form
  */
 class RequestChannelController extends Controller {
 	private const OBJECT_TYPE = 'pipelinq_request_channel';

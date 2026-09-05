@@ -225,7 +225,7 @@ export default {
 				this.page = data.page || page
 				this.pages = data.pages || 1
 				this.total = data.total || 0
-			} catch (error) {
+			} catch {
 				showError(this.t('pipelinq', 'Failed to load activities'))
 			} finally {
 				this.loading = false
@@ -354,28 +354,28 @@ export default {
 	gap: 12px;
 	padding: 10px 12px;
 	border-radius: var(--border-radius);
-	border-left: 3px solid transparent;
+	border-inline-start: 3px solid transparent;
 	background: var(--color-background-hover);
 }
 
 .activity-timeline__item--contactmoment {
-	border-left-color: var(--color-primary-element);
+	border-inline-start-color: var(--color-primary-element);
 }
 
 .activity-timeline__item--task {
-	border-left-color: var(--color-success);
+	border-inline-start-color: var(--color-success);
 }
 
 .activity-timeline__item--email {
-	border-left-color: var(--color-warning);
+	border-inline-start-color: var(--color-warning);
 }
 
 .activity-timeline__item--calendar {
-	border-left-color: var(--color-text-maxcontrast);
+	border-inline-start-color: var(--color-text-maxcontrast);
 }
 
 .activity-timeline__item--worklog {
-	border-left-color: var(--color-info);
+	border-inline-start-color: var(--color-info);
 }
 
 .activity-timeline__icon {

@@ -6,14 +6,14 @@
  * — the pipeline-definition list, distinct from the deal board (/pipeline).
  * Maps to openspec/specs/pipeline/spec.md.
  */
-import { test, expect } from '@playwright/test'
+import { expect, test } from '@playwright/test'
 import {
-	openApp,
-	navClick,
-	trackPipelinqErrors,
 	assertNoHardError,
 	dismissSupportDialog,
-} from '../helpers/pipelinq'
+	navClick,
+	openApp,
+	trackPipelinqErrors,
+} from '../helpers/pipelinq.ts'
 
 // @e2e openspec/specs/pipeline/spec.md#pipelines-index
 test('Pipelines: navigates from sidebar and shows index surface', async ({

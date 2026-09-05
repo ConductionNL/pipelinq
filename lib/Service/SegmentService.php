@@ -28,11 +28,13 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Service\Marketing\SegmentSignalService;
 use OCP\IAppConfig;
 use OCP\ICache;
 use OCP\ICacheFactory;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 use Throwable;
 
 /**
@@ -53,6 +55,12 @@ use Throwable;
  *  independently-simple methods (each verified under phpmd's per-method
  *  thresholds); the total reflects breadth of the rule-tree surface
  *  (evaluate/validate/estimate/project), not tangled logic.
+ * @SuppressWarnings(PHPMD.TooManyPublicMethods)     Every public method is
+ *  one REST-facing entry point SegmentController delegates to (list, get,
+ *  create, update, preview, estimate, refresh, project members) — the
+ *  count tracks the Segment CRUD + rule-tree surface a marketer's UI
+ *  needs, not an object that has grown more responsibilities than it
+ *  should have.
  *
  * @spec openspec/changes/marketing-segmentation-and-blast-02-segment-service/tasks.md#task-2.1
  */
@@ -132,6 +140,7 @@ class SegmentService {
 	 * @param SchemaMapService $schemaMapService Schema-slug map.
 	 * @param ICacheFactory $cacheFactory NC cache factory.
 	 * @param LoggerInterface $logger Logger.
+	 * @param SegmentSignalService $signals The derived fields a rule may also use.
 	 *
 	 * @spec openspec/specs/marketing-segmentation/spec.md#requirement-segment-builder-composes-rule-trees
 	 */
@@ -141,8 +150,32 @@ class SegmentService {
 		private SchemaMapService $schemaMapService,
 		private ICacheFactory $cacheFactory,
 		private LoggerInterface $logger,
+		private SegmentSignalService $signals,
 	) {
 	}//end __construct()
+
+	/**
+	 * The derived fields a rule may use next to the schema's own properties.
+	 *
+	 * @return array<string, array{type: string, title: string, source: string, description: string}>
+	 *         The signal catalogue, as {@see SegmentSignalService::catalogue()} publishes it.
+	 *
+	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-segment-builder-lists-the-signals-and-validates-a-rule-on-one
+	 */
+	public function signalCatalogue(): array {
+		return $this->signals->catalogue();
+	}//end signalCatalogue()
+
+	/**
+	 * Whether the bookkeeping behind the shillinq signals can be read.
+	 *
+	 * @return array{shillinq: bool, reason: string} The availability report.
+	 *
+	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-an-unresolved-signal-shrinks-the-audience
+	 */
+	public function signalAvailability(): array {
+		return $this->signals->availability();
+	}//end signalAvailability()
 
 	/**
 	 * Validate a rule tree against the schema for the given entity type.
@@ -175,6 +208,11 @@ class SegmentService {
 		if ($properties === null) {
 			return sprintf('Unknown entityType "%s" (no schema mapping configured).', $entityType);
 		}
+
+		// The schema goes first: a signal must never shadow a stored
+		// property, because a segment written before this change means the
+		// stored one and would start reading a different value.
+		$properties = array_merge($this->signals->schemaProperties(), $properties);
 
 		return $this->validateNode(node: $rules, path: '$', properties: $properties);
 	}//end validateRules()
@@ -404,6 +442,122 @@ class SegmentService {
 	}//end createSegment()
 
 	/**
+	 * Update an existing Segment after re-validating the rule tree.
+	 *
+	 * Backs the SegmentEdit page (marketing-segments-ui-repair): a marketer
+	 * changes the name, description or rule tree of a saved Segment through
+	 * SegmentBuilder, and the tree is re-validated with the same
+	 * `validateRules()` path `createSegment()` uses before anything is
+	 * persisted. Fields omitted from `$payload` keep their existing value
+	 * so a partial edit (e.g. name only) does not clobber the rule tree.
+	 *
+	 * @param string $segmentId Existing Segment UUID or slug.
+	 * @param array<string, mixed> $payload Inbound Segment payload (partial).
+	 *
+	 * @return array{segment?: array<string, mixed>, error?: string, estimatedSize?: int}
+	 *
+	 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-api/spec.md#requirement-api-endpoints-crud-and-query
+	 */
+	public function updateSegment(string $segmentId, array $payload): array {
+		if ($segmentId === '') {
+			return ['error' => 'Invalid id'];
+		}
+
+		$existing = $this->loadSegment(segmentId: $segmentId);
+		if ($existing === null) {
+			return ['error' => 'Segment not found'];
+		}
+
+		$name = (string)($payload['name'] ?? ($existing['name'] ?? ''));
+		if (trim($name) === '') {
+			return ['error' => 'Invalid name'];
+		}
+
+		$entityType = strtolower((string)($payload['entityType'] ?? $this->extractEntityType(segment: $existing) ?? ''));
+		if (in_array($entityType, ['contact', 'customer'], true) === false) {
+			return ['error' => 'Invalid entityType'];
+		}
+
+		$rules = ($payload['rules'] ?? $this->extractRules(segment: $existing));
+		if (is_array($rules) === false) {
+			return ['error' => 'Invalid rules'];
+		}
+
+		$error = $this->validateRules(rules: $rules, entityType: $entityType);
+		if ($error !== null) {
+			return ['error' => 'Invalid rule tree: ' . $error];
+		}
+
+		return $this->persistSegmentUpdate(
+			segmentId: $segmentId,
+			existing: $existing,
+			name: $name,
+			description: (string)($payload['description'] ?? ($existing['description'] ?? '')),
+			rules: $rules,
+			entityType: $entityType,
+		);
+	}//end updateSegment()
+
+	/**
+	 * Persist a validated Segment update and return the saved row with a
+	 * freshly recomputed `estimatedSize`.
+	 *
+	 * Extracted from {@see updateSegment()} so it stays within the
+	 * complexity budget.
+	 *
+	 * @param string $segmentId Existing Segment UUID or slug.
+	 * @param array<string, mixed> $existing The Segment row before the edit.
+	 * @param string $name Validated name.
+	 * @param string $description Description (may be unchanged).
+	 * @param array<string, mixed> $rules Validated rule tree.
+	 * @param string $entityType "contact" or "customer".
+	 *
+	 * @return array{segment?: array<string, mixed>, error?: string, estimatedSize?: int}
+	 *
+	 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-api/spec.md#requirement-api-endpoints-crud-and-query
+	 */
+	private function persistSegmentUpdate(
+		string $segmentId,
+		array $existing,
+		string $name,
+		string $description,
+		array $rules,
+		string $entityType,
+	): array {
+		// Computed from the (validated) NEW $rules/$entityType being saved,
+		// not via recomputeSize(segmentId) after the fact — that would
+		// re-read whatever is currently stored, which at this point is
+		// still the PRE-edit row, so a rule-tree edit would persist a count
+		// for the tree it just replaced. Same defect class the
+		// refreshSegmentSize() docblock already warns against ("a refresh
+		// that reads the cache is not a refresh").
+		$estimated = $this->countMatchingEntities(rules: $rules, entityType: $entityType);
+
+		$object = $existing;
+		$object['name'] = $name;
+		$object['description'] = $description;
+		$object['rules'] = $rules;
+		$object['entityType'] = $entityType;
+		$object['estimatedSize'] = $estimated;
+		$object['updatedAt'] = gmdate('Y-m-d\TH:i:s\Z');
+
+		$saved = $this->saveSegmentObject(payload: $object, id: $segmentId);
+		if ($saved === null) {
+			return ['error' => 'Could not update segment'];
+		}
+
+		// Write-through the estimate cache so a subsequent estimateSize()
+		// call does not serve the pre-edit cached count for the remainder
+		// of its TTL.
+		$cache = $this->getEstimateCache();
+		if ($cache !== null) {
+			$cache->set('estimate:' . $segmentId, $estimated, $this->getEstimateTtl());
+		}
+
+		return ['segment' => $saved, 'estimatedSize' => $estimated];
+	}//end persistSegmentUpdate()
+
+	/**
 	 * Persist a validated Segment payload and return the saved row.
 	 *
 	 * @param array<string, mixed> $payload Inbound payload.
@@ -490,11 +644,32 @@ class SegmentService {
 			return 0;
 		}
 
-		$size = $this->estimateSize(segmentId: $segmentId);
+		// 🔴 A REFRESH THAT READS THE CACHE IS NOT A REFRESH.
+		//
+		// This called estimateSize(), which returns the cached count when one
+		// is present -- so POST /api/segments/{id}/size answered, and then
+		// PERSISTED, the very stale estimate the caller asked it to replace.
+		// Editing a segment's rules and refreshing left the old number on the
+		// record, looking freshly computed.
+		$size = $this->recomputeSize(segmentId: $segmentId);
 		$payload = $segment;
 		$payload['estimatedSize'] = $size;
 		$payload['updatedAt'] = gmdate('Y-m-d\TH:i:s\Z');
-		$this->saveSegmentObject(payload: $payload, id: $this->extractSegmentId(payload: $segment));
+
+		// 🔴 AND A FAILED WRITE IS NOT A REFRESH EITHER.
+		//
+		// saveSegmentObject() answers null when the write failed, and that
+		// return was discarded, so the endpoint reported 200 with the new count
+		// over a record that still holds the old one. Throwing lets the
+		// controller answer honestly; the caller can retry.
+		$saved = $this->saveSegmentObject(
+			payload: $payload,
+			id: $this->extractSegmentId(payload: $segment)
+		);
+		if ($saved === null) {
+			throw new RuntimeException('Pipelinq: the refreshed segment size could not be persisted.');
+		}
+
 		return $size;
 	}//end refreshSegmentSize()
 
@@ -727,12 +902,34 @@ class SegmentService {
 	 * @spec openspec/specs/marketing-segmentation/spec.md#requirement-segments-are-live-not-frozen-lists
 	 */
 	public function estimateSize(string $segmentId): int {
-		$cache = $this->getEstimateCache();
-		$cacheKey = 'estimate:' . $segmentId;
-		$cached = $this->readEstimateCache(cache: $cache, cacheKey: $cacheKey);
+		$cached = $this->readEstimateCache(
+			cache: $this->getEstimateCache(),
+			cacheKey: ('estimate:' . $segmentId)
+		);
 		if ($cached !== null) {
 			return $cached;
 		}
+
+		return $this->recomputeSize(segmentId: $segmentId);
+	}//end estimateSize()
+
+	/**
+	 * Count a segment's members, ignoring any cached estimate, and re-cache.
+	 *
+	 * Split from {@see estimateSize()} rather than gated by a boolean argument
+	 * on it: the two answer different questions — "what is this segment's size"
+	 * versus "count it again now" — and a flag that switches a method between
+	 * two behaviours is the shape phpmd's BooleanArgumentFlag rule names.
+	 *
+	 * @param string $segmentId Segment UUID or slug.
+	 *
+	 * @return int The freshly counted size.
+	 *
+	 * @spec openspec/specs/marketing-segmentation/spec.md#requirement-segments-are-live-not-frozen-lists
+	 */
+	public function recomputeSize(string $segmentId): int {
+		$cache = $this->getEstimateCache();
+		$cacheKey = 'estimate:' . $segmentId;
 
 		$segment = $this->loadSegment(segmentId: $segmentId);
 		if ($segment === null) {
@@ -753,7 +950,7 @@ class SegmentService {
 		}
 
 		return $count;
-	}//end estimateSize()
+	}//end recomputeSize()
 
 	/**
 	 * Read a cached estimate count, if present and int-like.
@@ -928,15 +1125,90 @@ class SegmentService {
 
 		$operator = (string)($leaf['operator'] ?? 'equals');
 		$value = ($leaf['value'] ?? null);
-		$actual = ($entity[$field] ?? null);
 
 		$handler = ($this->operatorHandlers()[$operator] ?? null);
 		if ($handler === null) {
 			return false;
 		}
 
+		if ($this->signals->isSignalField(field: $field) === true) {
+			return $this->evaluateSignalLeaf(field: $field, operator: $operator, handler: $handler, value: $value, entity: $entity);
+		}
+
+		if (str_contains($field, '.') === true) {
+			return $this->evaluateProjectedLeaf(entity: $entity, field: $field, handler: $handler, value: $value);
+		}
+
+		$actual = ($entity[$field] ?? null);
 		return $handler($actual, $value);
 	}//end evaluateLeaf()
+
+	/**
+	 * Evaluate a leaf whose field is a derived signal rather than a
+	 * stored property.
+	 *
+	 * 🔴 AN UNRESOLVED SIGNAL IS FALSE, WHATEVER THE OPERATOR. Handing a
+	 * null to the ordinary handlers would not fail: `compareNumeric()`
+	 * returns 0 when either side is not numeric, so `gte`, `lte` and
+	 * `between` all answer TRUE. "No invoice for twelve months" would then
+	 * match every customer on an instance without shillinq, and the send
+	 * list would look exactly like a correct one. `isNull` is the single
+	 * exception, because "this customer has no bookkeeping" is a question a
+	 * marketer may legitimately ask.
+	 *
+	 * @param string $field The signal field.
+	 * @param string $operator The rule operator, as written.
+	 * @param callable(mixed, mixed): bool $handler Operator handler.
+	 * @param mixed $value Rule value.
+	 * @param array<string, mixed> $entity Entity payload.
+	 *
+	 * @return bool Whether the entity matches.
+	 *
+	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-an-unresolved-signal-shrinks-the-audience
+	 */
+	private function evaluateSignalLeaf(string $field, string $operator, callable $handler, mixed $value, array $entity): bool {
+		$actual = $this->signals->valueFor(field: $field, entity: $entity);
+		if ($actual === null) {
+			return ($operator === 'isNull');
+		}
+
+		return $handler($actual, $value);
+	}//end evaluateSignalLeaf()
+
+	/**
+	 * Evaluate a dotted `arrayProp.subProp` leaf (e.g. `phones.kind`,
+	 * `socialProfiles.network`): project `subProp` across every element of
+	 * the entity's `arrayProp` list and return true when ANY element's
+	 * projected value satisfies the operator.
+	 *
+	 * @param array<string, mixed> $entity Entity payload.
+	 * @param string $field Dotted field path (`arrayProp.subProp`).
+	 * @param callable(mixed, mixed): bool $handler Operator handler.
+	 * @param mixed $value Rule value.
+	 *
+	 * @return bool Whether any element matches.
+	 *
+	 * @spec openspec/changes/contact-channel-details/specs/marketing-segmentation/spec.md#requirement-rule-fields-reach-into-array-of-object-properties
+	 */
+	private function evaluateProjectedLeaf(array $entity, string $field, callable $handler, mixed $value): bool {
+		[$parent, $child] = explode('.', $field, 2);
+		$parentValue = ($entity[$parent] ?? null);
+		if (is_array($parentValue) === false) {
+			return false;
+		}
+
+		foreach ($parentValue as $item) {
+			if (is_array($item) === false || array_key_exists($child, $item) === false) {
+				continue;
+			}
+
+			if ($handler($item[$child], $value) === true) {
+				return true;
+			}
+		}
+
+		return false;
+	}//end evaluateProjectedLeaf()
 
 	/**
 	 * Operator name → predicate closure map used by {@see evaluateLeaf()}.
@@ -1335,7 +1607,8 @@ class SegmentService {
 			return sprintf('%s: leaf predicate requires non-empty "field".', $path);
 		}
 
-		if (array_key_exists($field, $properties) === false) {
+		$fieldType = $this->resolveFieldType(field: $field, properties: $properties);
+		if ($fieldType === null) {
 			return sprintf('%s: field "%s" is not declared on the entity schema.', $path, $field);
 		}
 
@@ -1345,7 +1618,6 @@ class SegmentService {
 			return sprintf('%s: operator "%s" is not supported.', $path, (string)$operator);
 		}
 
-		$fieldType = $this->propertyType(property: $properties[$field]);
 		if (in_array($fieldType, $allowedTypes, true) === false) {
 			return sprintf(
 				'%s: operator "%s" is not valid for field "%s" of type "%s".',
@@ -1407,6 +1679,10 @@ class SegmentService {
 	 * @return bool True when coercion succeeds.
 	 */
 	private function isValueCoercible(mixed $value, string $fieldType, string $operator): bool {
+		if ($fieldType === 'array' && in_array($operator, ['contains', 'containsAny'], true) === true) {
+			return $this->isMembershipCoercible(value: $value);
+		}
+
 		if (in_array($operator, ['in', 'notIn', 'containsAny', 'between'], true) === true) {
 			if (is_array($value) === false) {
 				return false;
@@ -1427,6 +1703,38 @@ class SegmentService {
 
 		return $this->isScalarCoercible(value: $value, fieldType: $fieldType);
 	}//end isValueCoercible()
+
+	/**
+	 * Whether a value can be a MEMBER of an array-typed field.
+	 *
+	 * 🔴 ON AN ARRAY FIELD, `contains` ASKS ABOUT A MEMBER, NOT ABOUT THE
+	 * CONTAINER. Requiring the value to be an array made membership
+	 * unexpressible: `valueContains()` has always compared one needle against
+	 * each element, and the validator refused the only value shape that ever
+	 * reaches it. So "bought this product" could be evaluated and could not be
+	 * saved. Widening only, so no rule that validated before this change stops
+	 * validating.
+	 *
+	 * @param mixed $value One member, or a list of them.
+	 *
+	 * @return bool True when every candidate is a scalar.
+	 *
+	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-segment-builder-lists-the-signals-and-validates-a-rule-on-one
+	 */
+	private function isMembershipCoercible(mixed $value): bool {
+		$candidates = $value;
+		if (is_array($candidates) === false) {
+			$candidates = [$value];
+		}
+
+		foreach ($candidates as $candidate) {
+			if (is_scalar($candidate) === false) {
+				return false;
+			}
+		}
+
+		return true;
+	}//end isMembershipCoercible()
 
 	/**
 	 * Determine whether one scalar value coerces to the field type.
@@ -1551,6 +1859,49 @@ class SegmentService {
 	}//end propertyType()
 
 	/**
+	 * Resolve the declared JSON-schema type for a leaf `field`, supporting
+	 * both a plain top-level property name (`phones`) and a dotted
+	 * `arrayProp.subProp` path into an array-of-objects property's item
+	 * schema (`phones.kind`, `socialProfiles.network`). Returns null when
+	 * the field (or, for a dotted path, its parent array or the named
+	 * sub-property) is not declared — the caller turns that into the
+	 * existing "not declared on the entity schema" validation error.
+	 *
+	 * @param string $field The leaf field name, plain or dotted.
+	 * @param array<string, mixed> $properties Schema properties map.
+	 *
+	 * @return string|null The JSON-schema type, or null when undeclared.
+	 *
+	 * @spec openspec/changes/contact-channel-details/specs/marketing-segmentation/spec.md#requirement-rule-fields-reach-into-array-of-object-properties
+	 */
+	private function resolveFieldType(string $field, array $properties): ?string {
+		if (str_contains($field, '.') === false) {
+			if (array_key_exists($field, $properties) === false) {
+				return null;
+			}
+
+			return $this->propertyType(property: $properties[$field]);
+		}
+
+		[$parent, $child] = explode('.', $field, 2);
+		if (array_key_exists($parent, $properties) === false) {
+			return null;
+		}
+
+		$parentProperty = $properties[$parent];
+		if (is_array($parentProperty) === false || ($parentProperty['type'] ?? null) !== 'array') {
+			return null;
+		}
+
+		$itemProperties = $parentProperty['items']['properties'] ?? null;
+		if (is_array($itemProperties) === false || array_key_exists($child, $itemProperties) === false) {
+			return null;
+		}
+
+		return $this->propertyType(property: $itemProperties[$child]);
+	}//end resolveFieldType()
+
+	/**
 	 * Resolve the entityType's schema properties via OpenRegister.
 	 *
 	 * Looks up the schema slug for the requested entityType, then fetches
@@ -1566,6 +1917,10 @@ class SegmentService {
 	 *                                   schema is not resolvable.
 	 *
 	 * @spec openspec/specs/marketing-segmentation/spec.md#requirement-segment-builder-composes-rule-trees
+	 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-segmentation/spec.md#requirement-segment-builder-composes-rule-trees
+	 *   pipelinq#773 — SchemaMapper::find() dropped its $published
+	 *   parameter (openregister ea99a5004); the call site no longer
+	 *   passes it.
 	 */
 	protected function resolveSchemaProperties(string $entityType): ?array {
 		$schemaSlug = $this->resolveSchemaSlug(entityType: $entityType);
@@ -1579,9 +1934,10 @@ class SegmentService {
 		}
 
 		try {
+			// Pipelinq#773 fix (see docblock above) merged from
+			// marketing-segments-ui-repair — no `published:` argument.
 			$schema = $schemaMapper->find(
 				id: $schemaSlug,
-				published: null,
 				_rbac: false,
 				_multitenancy: false,
 			);
@@ -1677,6 +2033,17 @@ class SegmentService {
 				'SegmentService.loadSegment: not found',
 				['segmentId' => $segmentId, 'exception' => $e->getMessage()]
 			);
+			return null;
+		}
+
+		// OpenRegister's find() is documented to return null on a miss
+		// rather than always throwing (ADR-084). Returning early here —
+		// rather than letting a null fall through to toArray(), which
+		// normalises it to `[]` — is what lets updateSegment()
+		// (marketing-segments-ui-repair) tell "no such Segment" apart from
+		// "an empty Segment row"; getSegmentById()
+		// and show()'s 404 depend on the same distinction.
+		if ($entity === null) {
 			return null;
 		}
 

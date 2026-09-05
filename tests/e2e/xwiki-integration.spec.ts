@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { expect, test } from '@playwright/test'
 
 /**
  * E2E coverage for the xwiki-integration change.
@@ -17,7 +17,7 @@ test.describe('xWiki Integration', () => {
 	}) => {
 		// The knowledge-base widget lives on the Operational overview dashboard
 		// after the IA dashboard split, not the landing Commercial overview.
-		await page.goto('/apps/pipelinq/#/operational')
+		await page.goto('/apps/pipelinq/operational')
 		// Wait for the manifest shell to mount before checking widgets.
 		await page
 			.locator('#content-vue')
@@ -74,11 +74,11 @@ test.describe('xWiki Integration', () => {
 		const first = (await res.json())?.results?.[0]
 		test.skip(!first?.id, 'no seeded client to open a detail page for')
 
-		await page.goto(`/apps/pipelinq/#/clients/${first.id}`)
+		await page.goto(`/apps/pipelinq/clients/${first.id}`)
 
 		// The detail route resolved. Asserted, never caught: if this fails the
 		// message must say the page did not load, not that a tab is missing.
-		await expect(page).toHaveURL(/#\/clients\/[^/]+/, { timeout: 15000 })
+		await expect(page).toHaveURL(/\/clients\/[^/]+/, { timeout: 15000 })
 		await expect(page.locator('#content-vue')).toBeVisible({ timeout: 15000 })
 
 		// OPEN THE SIDEBAR. The tab lives inside it, and it mounts CLOSED:

@@ -256,6 +256,8 @@ class TierService {
 	 * @param array<string, mixed> $tier The tier rule.
 	 *
 	 * @return float The multiplier.
+	 * @spec exclude loyalty has no spec at all; the change that specified it was archived
+	 *   and nothing inherited it
 	 */
 	public function applyTierBenefits(array $tier): float {
 		$benefits = $tier['benefits'] ?? [];

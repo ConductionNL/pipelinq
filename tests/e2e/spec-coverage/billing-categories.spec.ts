@@ -19,16 +19,28 @@
  * all three tests inside the navigation helper, blaming the helper for an IA
  * decision that had already shipped.
  */
-import { test, expect } from '@playwright/test'
-import { openApp, assertNoHardError } from '../helpers/pipelinq'
+import { expect, test } from '@playwright/test'
+import {
+	assertNoHardError,
+	dismissSupportDialog,
+	dismissWalkthrough,
+	openApp,
+} from '../helpers/pipelinq.ts'
 
 // @e2e openspec/specs/pos-transaction-core/spec.md#billing-categories-page
 test('Billing categories: the widget renders on the Operational dashboard', async ({
 	page,
 }) => {
-	await openApp(page)
-	await page.goto('/apps/pipelinq/#/operational')
-	await page.reload()
+	// ONE document load. This was openApp() -> goto('/operational') -> reload(),
+	// which cost three full page loads once the shell moved to history routing:
+	// openApp lands on the Sales dashboard this test does not want, the goto is
+	// no longer a cheap same-document hash change, and the reload boots the whole
+	// document again. Three loads of ~150 static assets did not fit the 60s
+	// budget. Same reasoning as openOperationalInteractive() in
+	// spec-coverage/dashboard.spec.ts.
+	await page.goto('/apps/pipelinq/operational')
+	await dismissWalkthrough(page)
+	await dismissSupportDialog(page)
 
 	const content = page.locator('#content-vue')
 	await expect(content.getByText('Hours by billing category').first()).toBeVisible(
@@ -62,9 +74,16 @@ test('Billing categories: the retired nav entry is gone from the sidebar', async
 test('Billing categories: the widget sits alongside the other operational widgets', async ({
 	page,
 }) => {
-	await openApp(page)
-	await page.goto('/apps/pipelinq/#/operational')
-	await page.reload()
+	// ONE document load. This was openApp() -> goto('/operational') -> reload(),
+	// which cost three full page loads once the shell moved to history routing:
+	// openApp lands on the Sales dashboard this test does not want, the goto is
+	// no longer a cheap same-document hash change, and the reload boots the whole
+	// document again. Three loads of ~150 static assets did not fit the 60s
+	// budget. Same reasoning as openOperationalInteractive() in
+	// spec-coverage/dashboard.spec.ts.
+	await page.goto('/apps/pipelinq/operational')
+	await dismissWalkthrough(page)
+	await dismissSupportDialog(page)
 
 	const content = page.locator('#content-vue')
 	// The widget is part of the operational grid, not a page of its own — assert

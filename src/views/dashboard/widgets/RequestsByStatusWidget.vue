@@ -104,7 +104,7 @@ export default {
 .status-bar-label {
 	width: 110px;
 	font-size: 13px;
-	text-align: right;
+	text-align: end;
 	flex-shrink: 0;
 }
 
@@ -127,7 +127,7 @@ export default {
 	width: 30px;
 	font-size: 13px;
 	font-weight: 600;
-	text-align: right;
+	text-align: end;
 	flex-shrink: 0;
 }
 

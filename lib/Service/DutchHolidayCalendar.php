@@ -92,6 +92,7 @@ class DutchHolidayCalendar {
 	 * @param string $tenantTimeZone IANA TZ; default Europe/Amsterdam.
 	 *
 	 * @return DateTimeImmutable The resulting date at 00:00 in the tenant TZ.
+	 * @spec openspec/specs/sla-engine-and-escalation/spec.md#requirement-attainment-reporting
 	 */
 	public function addWorkingDays(
 		DateTimeInterface $from,
@@ -126,6 +127,7 @@ class DutchHolidayCalendar {
 	 * @param DateTimeInterface $date The date to inspect.
 	 *
 	 * @return bool True if the day is a working day.
+	 * @spec openspec/specs/sla-engine-and-escalation/spec.md#requirement-attainment-reporting
 	 */
 	public function isWorkingDay(DateTimeInterface $date): bool {
 		// Saturday (6) and Sunday (7) per ISO-8601.

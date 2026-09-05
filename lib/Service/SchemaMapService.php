@@ -27,6 +27,9 @@ use Psr\Log\LoggerInterface;
 
 /**
  * Service for resolving schema IDs to entity types.
+ *
+ * @spec exclude infrastructure utility with no feature requirement of its own; it is
+ *   exercised through the features that call it
  */
 class SchemaMapService {
 	/**
@@ -43,15 +46,15 @@ class SchemaMapService {
 		// selected with the `ticketType` discriminator, not a separate schema.
 		'ticket_schema' => 'ticket',
 		'pipeline_schema' => 'pipeline',
-		'queue_schema' => 'queue',
 		'skill_schema' => 'skill',
 		'agentProfile_schema' => 'agentProfile',
-		'project_schema' => 'project',
-		'projectPhase_schema' => 'projectPhase',
-		'projectTask_schema' => 'projectTask',
-		'projectActivity_schema' => 'projectActivity',
-		'timeEntry_schema' => 'timeEntry',
-		'task_schema' => 'task',
+		// The entity type follows the renamed slug; the app-config KEY deliberately
+		// does not, matching `klantLoyaltyAccount_schema` below. `timeEntry` was
+		// global per organisation and three apps declared one — humaniq's HR
+		// booking, planninq's project booking and this app's billing/WIP record —
+		// so `SchemaMapper::find()` answered whichever it reached first.
+		'timeEntry_schema' => 'billingTimeEntry',
+		'task_schema' => 'crmTask',
 		'posTransaction_schema' => 'posTransaction',
 		// POS staff PIN + role permissions (pos-staff-pin-permissions).
 		'posRole_schema' => 'posRole',
@@ -70,7 +73,7 @@ class SchemaMapService {
 		'giftCard_schema' => 'giftCard',
 		'giftCardTransaction_schema' => 'giftCardTransaction',
 		// Expense → Shillinq AP integration (pipelinq-expense-to-shillinq-ap / REQ-AP-001).
-		'expense_schema' => 'expense',
+		'expense_schema' => 'billableExpense',
 		// Billing categories (billable-categories-and-tags / REQ-BCT-001).
 		'billingCategory_schema' => 'billingCategory',
 	];

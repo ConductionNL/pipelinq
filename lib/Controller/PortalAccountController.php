@@ -43,6 +43,11 @@ use Psr\Log\LoggerInterface;
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Aggregates profile, account and
  *  export services this self-service surface fronts.
+ *
+ * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+ *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+ *   sessions, tokens, delegation, documents, invoices, orders, exports and
+ *   audit are all unspecified
  */
 class PortalAccountController extends PortalApiController {
 	/**
@@ -74,6 +79,10 @@ class PortalAccountController extends PortalApiController {
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
 	 * @PublicPage
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	#[AnonRateLimit(limit: 120, period: 60)]
 	public function profile(): JSONResponse {
@@ -93,6 +102,10 @@ class PortalAccountController extends PortalApiController {
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
 	 * @PublicPage
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	#[AnonRateLimit(limit: 30, period: 60)]
 	public function updateProfile(): JSONResponse {
@@ -127,6 +140,10 @@ class PortalAccountController extends PortalApiController {
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
 	 * @PublicPage
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	#[AnonRateLimit(limit: 20, period: 60)]
 	public function verifyEmail(): JSONResponse {
@@ -154,6 +171,10 @@ class PortalAccountController extends PortalApiController {
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
 	 * @PublicPage
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	#[AnonRateLimit(limit: 10, period: 60)]
 	public function requestExport(): JSONResponse {
@@ -174,6 +195,10 @@ class PortalAccountController extends PortalApiController {
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
 	 * @PublicPage
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	#[AnonRateLimit(limit: 10, period: 60)]
 	public function requestClose(): JSONResponse {
@@ -194,6 +219,10 @@ class PortalAccountController extends PortalApiController {
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
 	 * @PublicPage
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	#[AnonRateLimit(limit: 20, period: 60)]
 	public function confirmClose(): JSONResponse {

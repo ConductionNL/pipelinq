@@ -45,6 +45,9 @@ use Throwable;
  *
  * Idempotent: re-running on the same day produces zero net effect because
  * expiring an account zeroes out lastActivityDate's eligibility window.
+ *
+ * @spec exclude loyalty has no spec at all; the change that specified it was archived
+ *   and nothing inherited it
  */
 class PointsExpiryBatchJob extends TimedJob {
 	private const DEFAULT_INTERVAL = 86400;

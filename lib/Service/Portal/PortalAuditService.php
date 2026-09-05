@@ -31,6 +31,11 @@ use Psr\Log\LoggerInterface;
 
 /**
  * Writes immutable portal_audit_event records.
+ *
+ * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+ *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+ *   sessions, tokens, delegation, documents, invoices, orders, exports and
+ *   audit are all unspecified
  */
 class PortalAuditService {
 	/**
@@ -66,6 +71,10 @@ class PortalAuditService {
 	 * @param array<string, mixed> $details Event-specific structured detail.
 	 *
 	 * @return void
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function log(
 		?string $accountId,
@@ -109,6 +118,10 @@ class PortalAuditService {
 	 * @param string $accountId The account id.
 	 *
 	 * @return array<int, array<string, mixed>> The events, newest first.
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function getForAccount(string $accountId): array {
 		$events = $this->repository->findAll(self::SCHEMA, ['accountId' => $accountId]);
@@ -121,6 +134,10 @@ class PortalAuditService {
 	 * @param string $tenantId The tenant id.
 	 *
 	 * @return array<int, array<string, mixed>> The events, newest first.
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function getForTenant(string $tenantId): array {
 		$events = $this->repository->findAll(self::SCHEMA, ['tenantId' => $tenantId]);

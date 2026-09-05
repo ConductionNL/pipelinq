@@ -176,6 +176,8 @@ class LoyaltyProgrammeService {
 	 * @param string $programmeId The programme UUID.
 	 *
 	 * @return array<string, mixed>|null
+	 * @spec exclude loyalty has no spec at all; the change that specified it was archived
+	 *   and nothing inherited it
 	 */
 	public function getProgramme(string $programmeId): ?array {
 		[$register, $schema] = $this->config(schemaKey: 'loyaltyProgramme_schema');

@@ -32,6 +32,8 @@ use Throwable;
 
 /**
  * Client for the OpenCorporates API.
+ *
+ * @spec openspec/specs/prospect-discovery/spec.md#requirement-ideal-customer-profile-configuration
  */
 class OpenCorporatesApiClient {
 	/**

@@ -142,6 +142,10 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * @spec exclude forecast snapshots have no owning requirement, see
+		 *   ForecastSettings::load for the same gap
+		 */
 		async loadTrend() {
 			if (!this.ownerId) {
 				this.series = []
@@ -162,7 +166,7 @@ export default {
 					pipeline: Number(s.pipeline || 0),
 				}))
 				this.buildDelta()
-			} catch (error) {
+			} catch {
 				this.series = []
 			} finally {
 				this.loading = false
@@ -292,7 +296,7 @@ export default {
 
 .accuracy-table th,
 .accuracy-table td {
-	text-align: left;
+	text-align: start;
 	padding: 8px 12px;
 	border-bottom: 1px solid var(--color-border);
 }

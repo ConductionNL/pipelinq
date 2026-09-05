@@ -12,7 +12,10 @@
 
 declare(strict_types=1);
 
+use OCA\Pipelinq\Command\CompetitorWatchRunCommand;
+use OCA\Pipelinq\Command\ConnectionAuditCommand;
 use OCA\Pipelinq\Command\PortalCleanupCommand;
+use OCA\Pipelinq\Command\SearchConsoleImportCommand;
 use OCA\Pipelinq\Command\SeedDemoDataCommand;
 use OCP\Server;
 
@@ -21,3 +24,6 @@ use OCP\Server;
  */
 $application->add(Server::get(PortalCleanupCommand::class));
 $application->add(Server::get(SeedDemoDataCommand::class));
+$application->add(Server::get(SearchConsoleImportCommand::class));
+$application->add(Server::get(CompetitorWatchRunCommand::class));
+$application->add(Server::get(ConnectionAuditCommand::class));

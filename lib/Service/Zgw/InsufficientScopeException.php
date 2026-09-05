@@ -38,6 +38,9 @@ namespace OCA\Pipelinq\Service\Zgw;
 
 /**
  * AC scope-missing pre-flight error.
+ *
+ * @spec exclude exception type: carries a failure mode, not a behaviour a requirement
+ *   can specify
  */
 class InsufficientScopeException extends ZgwException {
 	/**

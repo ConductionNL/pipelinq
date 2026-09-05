@@ -20,14 +20,16 @@
  * Linux runner cannot byte-match a dev-container baseline. A baseline would
  * satisfy gate-26 from a suite CI never executes.
  *
- * ROUTES ARE THE MANIFEST'S, AND THEY ARE HASH ROUTES
- * ---------------------------------------------------
- * `src/main.js` builds `createWebHashHistory(generateUrl('/apps/pipelinq'))`, so
- * the route lives in `location.hash`. A path-shaped deep link
- * (`/apps/pipelinq/my-work`) leaves the hash EMPTY, vue-router resolves `/`, and
- * the SPA renders the Dashboard — while `expect(page).toHaveURL(/my-work/)`
- * still passes, because the PATH does contain it. Several pre-existing specs are
- * written that way. Every goto here carries the `#`.
+ * ROUTES ARE THE MANIFEST'S, AND THEY ARE REAL PATHS
+ * --------------------------------------------------
+ * `src/main.js` builds `createWebHistory(routerBase())`, so the route is the
+ * path. That was not always so: while the app was hash-routed a path-shaped
+ * deep link (`/apps/pipelinq/my-work`) left the hash EMPTY, vue-router resolved
+ * `/`, and the SPA rendered the Dashboard — while `expect(page).toHaveURL(/my-work/)`
+ * still passed, because the PATH does contain it. Specs written that way were
+ * asserting against the Dashboard. They resolve correctly now, but a
+ * URL-only assertion still proves nothing about which page rendered, so the
+ * assertions below name a component.
  *
  * ASSERTION SHAPE
  * ---------------
@@ -42,13 +44,14 @@
  * `title` prop while no object is resolved).
  */
 
-import { test, expect, type Page } from '@playwright/test'
+import type { Page } from '@playwright/test'
 
+import { expect, test } from '@playwright/test'
 import {
 	assertAppShellServed,
 	dismissSupportDialog,
 	dismissWalkthrough,
-} from '../helpers/pipelinq'
+} from '../helpers/pipelinq.ts'
 
 /**
  * A run-unique id used where a route needs an `:id` segment for a record that
@@ -67,17 +70,17 @@ const ABSENT_ID = 'e2e-gate26-no-such-record'
  * @param page  The Playwright page.
  * @param hash  The manifest `route`, e.g. `/my-work`.
  */
-async function openSpaRoute(page: Page, hash: string): Promise<void> {
-	const response = await page.goto(`/apps/pipelinq/#${hash}`)
+async function openSpaRoute(page: Page, route: string): Promise<void> {
+	const response = await page.goto(`/apps/pipelinq${route}`)
 	await assertAppShellServed(page, response)
-	// THE HASH IS THE PROOF THE ROUTE MATCHED. `routesFromManifest()` closes the
-	// table with `{ path: '/:pathMatch(.*)*', redirect: '/' }`, so an unmatched
-	// route does not 404 — it REWRITES the hash to `#/` and renders the
-	// Dashboard. Asserting the hash survived the mount is therefore the one
+	// THE SURVIVING PATH IS THE PROOF THE ROUTE MATCHED. `routesFromManifest()`
+	// closes the table with `{ path: '/:pathMatch(.*)*', redirect: '/' }`, so an
+	// unmatched route does not 404 — it redirects to `/` and renders the
+	// Dashboard. Asserting the path survived the mount is therefore the one
 	// cheap check that separates "this page rendered" from "the catch-all sent
 	// me to the dashboard and something dashboard-shaped rendered instead".
 	await expect(page).toHaveURL(
-		new RegExp(`#${hash.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`),
+		new RegExp(`${route.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`),
 		{ timeout: 10000 },
 	)
 	// The first-visit product tour and the fleet support dialog paint over the

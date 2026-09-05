@@ -27,8 +27,6 @@ use OCA\Pipelinq\Listener\DealUpdatedListener;
 use OCA\Pipelinq\Listener\DeferredObjectWork;
 use OCA\Pipelinq\Listener\DeferredWorkGuard;
 use OCA\Pipelinq\Listener\ExpenseApprovalListener;
-use OCA\Pipelinq\Listener\ProjectCreationListener;
-use OCA\Pipelinq\Listener\ProjectPhaseStatusListener;
 use OCA\Pipelinq\Listener\SlaObjectCreatedListener;
 use OCA\Pipelinq\Listener\SlaObjectUpdatedListener;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -65,6 +63,8 @@ use Throwable;
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The class exists precisely to
  *  fan one job out to the app's converted listeners; naming them is the point.
+ *
+ * @spec openspec/specs/event-listener-work-placement/spec.md#requirement-deferred-post-event-work-runs-in-one-actor-forwarded-job
  */
 class DeferredObjectListenerJob extends ActorForwardedJob {
 
@@ -76,8 +76,6 @@ class DeferredObjectListenerJob extends ActorForwardedJob {
 	private const HANDLERS = [
 		DealCreatedListener::HANDLER_KEY => DealCreatedListener::class,
 		DealUpdatedListener::HANDLER_KEY => DealUpdatedListener::class,
-		ProjectCreationListener::HANDLER_KEY => ProjectCreationListener::class,
-		ProjectPhaseStatusListener::HANDLER_KEY => ProjectPhaseStatusListener::class,
 		ExpenseApprovalListener::HANDLER_KEY => ExpenseApprovalListener::class,
 		SlaObjectCreatedListener::HANDLER_KEY => SlaObjectCreatedListener::class,
 		SlaObjectUpdatedListener::HANDLER_KEY => SlaObjectUpdatedListener::class,

@@ -23,14 +23,16 @@
  * documented test.fixme blocks at the bottom (a real store-registration bug,
  * not a test defect).
  */
-import { test, expect, Page, Locator } from '@playwright/test'
+import type { Locator, Page } from '@playwright/test'
+
+import { expect, test } from '@playwright/test'
 import {
-	openApp,
-	navClick,
-	dismissSupportDialog,
 	clickHeaderAction,
-} from '../helpers/pipelinq'
-import { FixtureSession } from './helpers/fixtures'
+	dismissSupportDialog,
+	navClick,
+	openApp,
+} from '../helpers/pipelinq.ts'
+import { FixtureSession } from './helpers/fixtures.ts'
 
 /** Set a numeric input to an exact value and let Vue's @update:value fire. */
 async function setNum(page: Page, input: Locator, value: string): Promise<void> {

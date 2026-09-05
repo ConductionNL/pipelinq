@@ -99,6 +99,7 @@ class ExportJobService extends AbstractExportService {
 	 * @return array<string, mixed> The job.
 	 *
 	 * @throws OCSNotFoundException When absent.
+	 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#requirement-destination-configuration-and-validation-req-bie-001
 	 */
 	public function getJob(string $id): array {
 		$job = $this->findObjectById(schemaKey: self::SCHEMA_KEY, id: $id);
@@ -143,6 +144,7 @@ class ExportJobService extends AbstractExportService {
 	 *
 	 * @throws OCSBadRequestException On validation failure.
 	 * @throws OCSNotFoundException When absent.
+	 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#requirement-destination-configuration-and-validation-req-bie-001
 	 */
 	public function updateJob(string $id, array $data): array {
 		$existing = $this->getJob(id: $id);
@@ -163,6 +165,7 @@ class ExportJobService extends AbstractExportService {
 	 * @return void
 	 *
 	 * @throws OCSNotFoundException When absent.
+	 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#requirement-destination-configuration-and-validation-req-bie-001
 	 */
 	public function deleteJob(string $id): void {
 		$this->getJob(id: $id);
@@ -205,6 +208,7 @@ class ExportJobService extends AbstractExportService {
 	 * @return array<string, mixed> The disabled job.
 	 *
 	 * @throws OCSNotFoundException When absent.
+	 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#requirement-destination-configuration-and-validation-req-bie-001
 	 */
 	public function disableJob(string $id): array {
 		$job = $this->getJob(id: $id);

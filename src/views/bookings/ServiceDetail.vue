@@ -217,7 +217,7 @@ export default {
 	/**
 	 * Live updates for the viewed service (or-object-{uuid} via the
 	 * nc-vue liveUpdatesPlugin, default-on since beta.212). Events are
-	 * refetch hints — the plugin re-runs fetchObject('service', id)
+	 * refetch hints — the plugin re-runs fetchObject('appointmentService', id)
 	 * into the same store cache serviceData renders from. Re-scopes on
 	 * id change, releases on unmount, skips the create archetype.
 	 *
@@ -230,7 +230,7 @@ export default {
 		const liveObjectId = computed(() =>
 			props.id && props.id !== 'new' ? props.id : null,
 		)
-		useObjectSubscription(objectStore, 'service', liveObjectId, {
+		useObjectSubscription(objectStore, 'appointmentService', liveObjectId, {
 			enabled: computed(() =>
 				Boolean(
 					liveObjectId.value && objectStore.objectTypeRegistry?.service,
@@ -266,7 +266,7 @@ export default {
 
 		serviceData() {
 			if (this.isNew) return {}
-			return this.objectStore.getObject('service', this.serviceId) || {}
+			return this.objectStore.getObject('appointmentService', this.serviceId) || {}
 		},
 
 		steps() {
@@ -293,15 +293,15 @@ export default {
 
 	async mounted() {
 		if (!this.isNew) {
-			await this.objectStore.fetchObject('service', this.serviceId)
+			await this.objectStore.fetchObject('appointmentService', this.serviceId)
 		}
 	},
 
 	methods: {
 		async onFormSave(formData) {
-			const saved = await this.objectStore.saveObject('service', formData)
+			const saved = await this.objectStore.saveObject('appointmentService', formData)
 			if (!saved) {
-				const error = this.objectStore.getError?.('service')
+				const error = this.objectStore.getError?.('appointmentService')
 				showError(error?.message || t('pipelinq', 'Failed to save service.'))
 				return
 			}
@@ -313,7 +313,7 @@ export default {
 					params: { id: saved.id },
 				})
 			} else {
-				await this.objectStore.fetchObject('service', this.serviceId)
+				await this.objectStore.fetchObject('appointmentService', this.serviceId)
 				this.editing = false
 			}
 		},
@@ -328,11 +328,11 @@ export default {
 
 		async confirmDelete() {
 			this.showDelete = false
-			const ok = await this.objectStore.deleteObject('service', this.serviceId)
+			const ok = await this.objectStore.deleteObject('appointmentService', this.serviceId)
 			if (ok) {
 				this.$router.push({ name: 'Services' })
 			} else {
-				const error = this.objectStore.getError?.('service')
+				const error = this.objectStore.getError?.('appointmentService')
 				showError(
 					error?.message || t('pipelinq', 'Failed to delete service.'),
 				)
@@ -356,7 +356,7 @@ export default {
 			if (!serviceId) return
 			try {
 				const resources = await this.objectStore.fetchCollection(
-					'resource',
+					'appointmentResource',
 					{ _limit: 200 },
 				)
 				const types = this.serviceData.requiredResourceTypes || []
@@ -467,7 +467,7 @@ export default {
 .viewTable th,
 .viewTable td {
 	padding: 12px;
-	text-align: left;
+	text-align: start;
 	border-bottom: 1px solid var(--color-border);
 }
 

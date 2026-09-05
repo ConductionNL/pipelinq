@@ -100,12 +100,15 @@ export default {
 			}
 		},
 
+		/**
+		 * @spec exclude POS roles have no owning requirement, see PinLoginModal::loadStaff
+		 */
 		async loadRoles() {
 			try {
 				const url = generateUrl('/apps/pipelinq/api/pos/roles')
 				const response = await axios.get(url)
 				this.roles = response?.data?.roles || []
-			} catch (error) {
+			} catch {
 				this.roles = []
 			}
 		},
@@ -164,7 +167,7 @@ export default {
 .pos-staff-list__table th,
 .pos-staff-list__table td {
 	padding: 8px;
-	text-align: left;
+	text-align: start;
 	border-bottom: 1px solid var(--color-border);
 }
 

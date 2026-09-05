@@ -33,6 +33,8 @@ use Psr\Log\LoggerInterface;
 
 /**
  * Repair step for initializing Pipelinq settings.
+ *
+ * @spec openspec/specs/repair-steps/spec.md
  */
 class InitializeSettings implements IRepairStep {
 	/**
@@ -53,6 +55,7 @@ class InitializeSettings implements IRepairStep {
 	 * Get the name of this repair step.
 	 *
 	 * @return string The repair step name.
+	 * @spec openspec/specs/repair-steps/spec.md
 	 */
 	public function getName(): string {
 		return 'Initialize Pipelinq register and schemas via ConfigurationService';
@@ -150,17 +153,16 @@ class InitializeSettings implements IRepairStep {
 
 		$output->advance(1);
 
-		// Create default queues and skills if none exist.
-		$output->info('Checking default queues and skills...');
+		// Create default skills if none exist.
+		$output->info('Checking default skills...');
 		try {
 			$settingsService = $this->container->get(SettingsService::class);
-			$settingsService->createDefaultQueues();
 			$settingsService->createDefaultSkills();
-			$output->info('Default queues and skills checked/created');
+			$output->info('Default skills checked/created');
 		} catch (\Exception $e) {
-			$output->warning('Failed to create default queues/skills: ' . $e->getMessage());
+			$output->warning('Failed to create default skills: ' . $e->getMessage());
 			$this->logger->error(
-				'Pipelinq default queue/skill creation failed',
+				'Pipelinq default skill creation failed',
 				['exception' => $e->getMessage()]
 			);
 		}

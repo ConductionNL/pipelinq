@@ -47,6 +47,9 @@ use RuntimeException;
 
 /**
  * Berichtenbox-koppelvlak BBK 1.7 API client.
+ *
+ * @spec exclude infrastructure utility with no feature requirement of its own; it is
+ *   exercised through the features that call it
  */
 class LogiusConnector {
 	/**
@@ -145,6 +148,8 @@ class LogiusConnector {
 	 * @return string Bearer token.
 	 *
 	 * @throws RuntimeException If authentication fails.
+	 * @spec exclude infrastructure utility with no feature requirement of its own; it is
+	 *   exercised through the features that call it
 	 */
 	public function authenticate(): string {
 		$now = time();
@@ -206,6 +211,8 @@ class LogiusConnector {
 	 * @return array{logiusMessageId: string, raw: array} The Logius response.
 	 *
 	 * @throws RuntimeException On validation or transport failure.
+	 * @spec exclude infrastructure utility with no feature requirement of its own; it is
+	 *   exercised through the features that call it
 	 */
 	public function sendMessage(array $message, string $tenantPkiCert, string $tenantPkiKey): array {
 		$this->validateOutboundPayload(message: $message);
@@ -375,6 +382,9 @@ class LogiusConnector {
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) $pkiCertPem is part of the
 	 *  public signRequest contract (kept for callers/tests and future cert-pinning);
 	 *  the signature itself only needs the private key.
+	 *
+	 * @spec exclude infrastructure utility with no feature requirement of its own; it is
+	 *   exercised through the features that call it
 	 */
 	public function signRequest(array $body, string $pkiCertPem, string $pkiKeyPem): string {
 		if ($pkiKeyPem === '') {
@@ -408,6 +418,8 @@ class LogiusConnector {
 	 * @return bool True iff Logius reports the burger has an active mailbox.
 	 *
 	 * @throws RuntimeException On transport or auth failure.
+	 * @spec exclude infrastructure utility with no feature requirement of its own; it is
+	 *   exercised through the features that call it
 	 */
 	public function checkMailboxExists(string $bsn): bool {
 		$baseUrl = $this->appConfig->getValueString(
@@ -481,6 +493,8 @@ class LogiusConnector {
 	 * Generate a RFC 4122 v4 UUID.
 	 *
 	 * @return string The UUID string.
+	 * @spec exclude infrastructure utility with no feature requirement of its own; it is
+	 *   exercised through the features that call it
 	 */
 	public function newUuidV4(): string {
 		$data = random_bytes(16);

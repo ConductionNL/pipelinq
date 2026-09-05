@@ -27,7 +27,7 @@
 				v-model="form.code"
 				:disabled="!isNew"
 				:label="t('pipelinq', 'Code')"
-				:placeholder="t('pipelinq', 'CASH, CARD, VOUCHER, ...')"
+				:placeholder="t('pipelinq', 'CASH, CARD, VOUCHER, …')"
 				:helperText="
 					!isNew
 						? t('pipelinq', 'Code is immutable after creation')

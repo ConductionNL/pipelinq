@@ -120,6 +120,7 @@ class ExportJobController extends Controller {
 	 * @param string $id The destination UUID.
 	 *
 	 * @return JSONResponse The updated destination.
+	 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#requirement-destination-configuration-and-validation-req-bie-001
 	 */
 	#[NoAdminRequired]
 	public function updateDestination(string $id): JSONResponse {
@@ -136,6 +137,7 @@ class ExportJobController extends Controller {
 	 * @param string $id The destination UUID.
 	 *
 	 * @return JSONResponse The deletion result.
+	 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#requirement-destination-configuration-and-validation-req-bie-001
 	 */
 	#[NoAdminRequired]
 	public function deleteDestination(string $id): JSONResponse {
@@ -183,6 +185,7 @@ class ExportJobController extends Controller {
 	 * @param string $id The job UUID.
 	 *
 	 * @return JSONResponse The job.
+	 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#requirement-destination-configuration-and-validation-req-bie-001
 	 */
 	#[NoAdminRequired]
 	public function showJob(string $id): JSONResponse {
@@ -213,6 +216,7 @@ class ExportJobController extends Controller {
 	 * @param string $id The job UUID.
 	 *
 	 * @return JSONResponse The updated job.
+	 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#requirement-destination-configuration-and-validation-req-bie-001
 	 */
 	#[NoAdminRequired]
 	public function updateJob(string $id): JSONResponse {
@@ -229,6 +233,7 @@ class ExportJobController extends Controller {
 	 * @param string $id The job UUID.
 	 *
 	 * @return JSONResponse The deletion result.
+	 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#requirement-destination-configuration-and-validation-req-bie-001
 	 */
 	#[NoAdminRequired]
 	public function deleteJob(string $id): JSONResponse {
@@ -281,6 +286,7 @@ class ExportJobController extends Controller {
 	 * @param string $id The job UUID.
 	 *
 	 * @return JSONResponse The disabled job.
+	 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#requirement-destination-configuration-and-validation-req-bie-001
 	 */
 	#[NoAdminRequired]
 	public function disableJob(string $id): JSONResponse {

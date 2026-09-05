@@ -124,6 +124,7 @@ export default {
 		 * Test connectivity to a destination.
 		 *
 		 * @param {object} row The destination row.
+		 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#requirement-destination-configuration-and-validation-req-bie-001
 		 */
 		async testConnection(row) {
 			this.busyId = row.id
@@ -135,7 +136,7 @@ export default {
 					showError(this.t('pipelinq', 'Connection failed'))
 				}
 				await this.refresh()
-			} catch (e) {
+			} catch {
 				showError(this.t('pipelinq', 'Connection test failed'))
 			} finally {
 				this.busyId = null

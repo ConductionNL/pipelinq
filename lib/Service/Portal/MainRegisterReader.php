@@ -39,6 +39,11 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Minimal collaborator set
  *  (OR container, app config, logger) a register reader needs.
+ *
+ * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+ *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+ *   sessions, tokens, delegation, documents, invoices, orders, exports and
+ *   audit are all unspecified
  */
 class MainRegisterReader {
 	/**
@@ -61,6 +66,10 @@ class MainRegisterReader {
 	 * @param string $schemaKey The app-config schema key (e.g. posTransaction_schema).
 	 *
 	 * @return bool True when both register and schema are configured.
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function hasSchema(string $schemaKey): bool {
 		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
@@ -78,6 +87,10 @@ class MainRegisterReader {
 	 * @param array<string, mixed> $filters Extra equality filters.
 	 *
 	 * @return array<int, array<string, mixed>> The objects as arrays.
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function findAll(string $schemaKey, array $filters = []): array {
 		if ($this->hasSchema(schemaKey: $schemaKey) === false) {
@@ -113,6 +126,10 @@ class MainRegisterReader {
 	 * @param string $id The object id.
 	 *
 	 * @return array<string, mixed>|null The object, or null.
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function find(string $schemaKey, string $id): ?array {
 		if ($id === '' || $this->hasSchema(schemaKey: $schemaKey) === false) {
@@ -146,6 +163,10 @@ class MainRegisterReader {
 	 * @return array<string, mixed> The saved object.
 	 *
 	 * @throws RuntimeException When persistence fails.
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function save(string $schemaKey, array $data, ?string $id = null): array {
 		[$register, $schema] = $this->config(schemaKey: $schemaKey);

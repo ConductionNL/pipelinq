@@ -5,7 +5,7 @@
 		<div class="entity-notes__input">
 			<textarea
 				v-model="newMessage"
-				:placeholder="t('pipelinq', 'Add a note...')"
+				:placeholder="t('pipelinq', 'Add a note…')"
 				:aria-label="t('pipelinq', 'New note')"
 				class="entity-notes__textarea"
 				rows="3" />
@@ -14,9 +14,7 @@
 				:disabled="submitting || newMessage.trim() === ''"
 				@click="addNote">
 				{{
-					submitting
-						? t('pipelinq', 'Saving...')
-						: t('pipelinq', 'Add note')
+					submitting ? t('pipelinq', 'Saving…') : t('pipelinq', 'Add note')
 				}}
 			</NcButton>
 		</div>
@@ -282,7 +280,7 @@ export default {
 }
 
 .entity-notes__delete {
-	margin-left: auto;
+	margin-inline-start: auto;
 }
 
 .entity-notes__message {

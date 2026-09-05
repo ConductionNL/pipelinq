@@ -499,7 +499,7 @@ export default {
 			this.loading = true
 			try {
 				this.booking =
-					(await this.objectStore.fetchObject('booking', this.resolvedId))
+					(await this.objectStore.fetchObject('appointmentBooking', this.resolvedId))
 					|| {}
 				this.editableNotes = this.booking.notes || ''
 				this.savedNotes = this.booking.notes || ''
@@ -532,7 +532,7 @@ export default {
 				const booking = this.booking
 				if (booking.serviceId && !this.service) {
 					this.service = await this.objectStore.fetchObject(
-						'service',
+						'appointmentService',
 						booking.serviceId,
 					)
 				}
@@ -567,7 +567,7 @@ export default {
 				].filter((id) => !this.resourceLookup[id])
 				for (const id of resourceIds) {
 					const resource = await this.objectStore.fetchObject(
-						'resource',
+						'appointmentResource',
 						id,
 					)
 					if (resource?.name) {
@@ -590,7 +590,7 @@ export default {
 					notes: this.editableNotes,
 					internalNotes: this.editableInternalNotes,
 				}
-				const saved = await this.objectStore.saveObject('booking', payload)
+				const saved = await this.objectStore.saveObject('appointmentBooking', payload)
 				if (saved) {
 					this.savedNotes = this.editableNotes
 					this.savedInternalNotes = this.editableInternalNotes
@@ -780,7 +780,7 @@ export default {
 .viewTable th,
 .viewTable td {
 	padding: 12px;
-	text-align: left;
+	text-align: start;
 	border-bottom: 1px solid var(--color-border);
 }
 
@@ -798,7 +798,7 @@ export default {
 
 .timeline {
 	margin: 0;
-	padding-left: 20px;
+	padding-inline-start: 20px;
 }
 
 .timeline li {

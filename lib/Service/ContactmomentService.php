@@ -267,7 +267,7 @@ class ContactmomentService {
 		// array arm was dead and getCreatedBy() is not on the contract — the
 		// value lives in the payload. Both facts came from phpstan:
 		//   Call to an undefined method ObjectEntityInterface::getCreatedBy()
-		//   Call to is_array() with ObjectEntityInterface will always evaluate to false
+		//   Call to is_array() with ObjectEntityInterface will always evaluate to false.
 		$payload = $object->getObject();
 		$createdBy = (string)($payload['createdBy'] ?? '');
 

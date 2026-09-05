@@ -350,7 +350,7 @@ export default {
 					generateUrl('/apps/openregister/api/credentials'),
 				)
 				this.credentials = data.results || []
-			} catch (e) {
+			} catch {
 				this.credentials = []
 			} finally {
 				this.loadingCredentials = false

@@ -150,7 +150,7 @@ export function getPipelines() {
  * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-recurring-revenue-roll-up
  */
 export function getContracts() {
-	return cached('contract', () => fetchRaw('contract', { _limit: 1000 }))
+	return cached('salesContract', () => fetchRaw('salesContract', { _limit: 1000 }))
 }
 
 /**

@@ -129,7 +129,7 @@
         "title": "CTI Adapter Config",
         "version": "1.0.0",
         "summary": "Per-organisation telephony platform configuration for the CTI screen-pop / click-to-dial adapter.",
-        "description": "Singleton record per organisation. Credentials are NEVER stored here — credentials_ref points at an OpenConnector source that owns the secret. Updated only by Pipelinq admins via the CTI admin settings page.",
+        "description": "Singleton record per organisation. Credentials are NEVER stored here: credentials_ref points at an OpenConnector source that owns the secret. Updated only by Pipelinq admins via the CTI admin settings page.",
         "@type": "Thing",
         "required": [
           "platform",

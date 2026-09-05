@@ -35,6 +35,8 @@ use Psr\Log\LoggerInterface;
  *
  * Reads per-category SLA hours from app config and provides helpers
  * for calculating deadlines and checking overdue status.
+ *
+ * @spec openspec/specs/sla-engine-and-escalation/spec.md#requirement-attainment-reporting
  */
 class ComplaintSlaService {
 	/**

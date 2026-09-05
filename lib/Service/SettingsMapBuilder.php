@@ -25,6 +25,8 @@ namespace OCA\Pipelinq\Service;
 
 /**
  * Service for building schema and register maps from import results.
+ *
+ * @spec openspec/specs/admin-settings/spec.md#REQ-AS-011
  */
 class SettingsMapBuilder {
 	/**

@@ -87,11 +87,14 @@
 					schema="client"
 					labelField="name"
 					:modelValue="form.client || ''"
-					:inputLabel="t('pipelinq', 'Client')"
+					:inputLabel="t('pipelinq', 'Client') + ' *'"
 					:placeholder="t('pipelinq', 'Select or create a client')"
 					:preload="true"
 					:createHandler="createClient"
 					@update:modelValue="onClientChange" />
+				<p v-if="errors.client" class="field-error" role="alert">
+					{{ errors.client }}
+				</p>
 			</div>
 			<div class="form-group" data-testid="lead-form-contact">
 				<CnResourceSelect
@@ -127,7 +130,7 @@
 		<!-- Pipeline + Stage row -->
 		<div class="form-row">
 			<div class="form-group" data-testid="lead-form-pipeline">
-				<label>{{ t('pipelinq', 'Pipeline') }}</label>
+				<label>{{ t('pipelinq', 'Pipeline') }} *</label>
 				<NcSelect
 					v-model="form.pipeline"
 					:options="pipelineOptions"
@@ -137,6 +140,9 @@
 					:reduce="(o) => o.value"
 					:placeholder="t('pipelinq', 'Select pipeline')"
 					@update:modelValue="onPipelineChange" />
+				<p v-if="errors.pipeline" class="field-error" role="alert">
+					{{ errors.pipeline }}
+				</p>
 			</div>
 			<div class="form-group" data-testid="lead-form-stage">
 				<label>{{ t('pipelinq', 'Stage') }}</label>
@@ -176,6 +182,7 @@ import {
 } from '@nextcloud/vue'
 import ClientCreateDialog from '../../dialogs/ClientCreateDialog.vue'
 import ContactCreateDialog from '../../dialogs/ContactCreateDialog.vue'
+import linkedPartyCascadeMixin from '../../mixins/linkedPartyCascadeMixin.js'
 import { toDateInputString, toDateObject } from '../../services/localeUtils.js'
 import { pipelineAppliesTo } from '../../services/pipelineUtils.js'
 import { useLeadSourcesStore } from '../../store/modules/leadSources.js'
@@ -192,6 +199,8 @@ export default {
 		NcSelect,
 		NcTextField,
 	},
+
+	mixins: [linkedPartyCascadeMixin],
 
 	props: {
 		lead: {
@@ -234,15 +243,6 @@ export default {
 			},
 
 			priorityOptions: ['low', 'normal', 'high', 'urgent'],
-
-			// Inline-create plumbing. `resolveCreate` is the promise resolver
-			// CnResourceSelect is awaiting: the picker hands control to a full
-			// dialog and resumes when that dialog resolves (with the created
-			// object) or is cancelled (with null).
-			clientDialogOpen: false,
-			contactDialogOpen: false,
-			pendingName: '',
-			resolveCreate: null,
 		}
 	},
 
@@ -329,18 +329,6 @@ export default {
 		},
 
 		/**
-		 * Scope for the contact picker. CnResourceSelect drops empty entries,
-		 * so an unchosen client scopes to nothing rather than querying for
-		 * contacts whose client is the empty string.
-		 *
-		 * @return {{client: (string|null)}}
-		 * @spec openspec/specs/lead-management/spec.md#requirement-linked-party-selection-on-the-create-form
-		 */
-		contactFilters() {
-			return { client: this.form.client }
-		},
-
-		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-45
 		 */
 		errors() {
@@ -360,6 +348,19 @@ export default {
 					'Probability must be between 0 and 100',
 				)
 			}
+
+			// A lead belongs to a pipeline and to a client; the schema requires
+			// both. Catching it here means the user sees which field is missing,
+			// instead of OpenRegister rejecting the whole save with
+			// "The required property (client) is missing".
+			if (!this.form.pipeline) {
+				errors.pipeline = t('pipelinq', 'Pipeline is required')
+			}
+
+			if (!this.form.client) {
+				errors.client = t('pipelinq', 'Client is required')
+			}
+
 			return errors
 		},
 
@@ -430,106 +431,6 @@ export default {
 		},
 
 		/**
-		 * Selecting a different client invalidates the contact under it.
-		 *
-		 * @param {string} value The chosen client uuid, or '' when cleared.
-		 * @return {void}
-		 * @spec openspec/specs/lead-management/spec.md#requirement-linked-party-selection-on-the-create-form
-		 */
-		onClientChange(value) {
-			const next = value || null
-			if (next !== this.form.client) {
-				this.form.contact = null
-			}
-			this.form.client = next
-		},
-
-		/**
-		 * CnResourceSelect create hook for the client picker. The `client`
-		 * schema needs more than a name — `contactsUid` is server-minted — so
-		 * the typed term opens the full create dialog instead of being saved
-		 * directly.
-		 *
-		 * @return {Promise<object|null>} The created client, or null if cancelled.
-		 * @spec openspec/specs/lead-management/spec.md#requirement-linked-party-selection-on-the-create-form
-		 */
-		createClient() {
-			return new Promise((resolve) => {
-				this.resolveCreate = resolve
-				this.clientDialogOpen = true
-			})
-		},
-
-		/**
-		 * Same hook for the contact picker, carrying the typed name and the
-		 * selected client into the dialog.
-		 *
-		 * @param {string} term The name typed into the picker.
-		 * @return {Promise<object|null>} The created contact, or null if cancelled.
-		 * @spec openspec/specs/lead-management/spec.md#requirement-linked-party-selection-on-the-create-form
-		 */
-		createContact(term) {
-			this.pendingName = term || ''
-			return new Promise((resolve) => {
-				this.resolveCreate = resolve
-				this.contactDialogOpen = true
-			})
-		},
-
-		/**
-		 * Settle the awaiting picker exactly once, however the dialog ended.
-		 *
-		 * @param {object|null} created The created object, or null when cancelled.
-		 * @return {void}
-		 * @spec openspec/specs/lead-management/spec.md#requirement-linked-party-selection-on-the-create-form
-		 */
-		settleCreate(created) {
-			const resolve = this.resolveCreate
-			this.resolveCreate = null
-			this.pendingName = ''
-			if (resolve) resolve(created)
-		},
-
-		/**
-		 * @param {string} id The created client's uuid (ClientCreateDialog emits an id).
-		 * @return {void}
-		 * @spec openspec/specs/lead-management/spec.md#requirement-linked-party-selection-on-the-create-form
-		 */
-		onClientCreated(id) {
-			this.clientDialogOpen = false
-			this.form.contact = null
-			this.settleCreate(id ? { id } : null)
-		},
-
-		/**
-		 * @return {void}
-		 * @spec openspec/specs/lead-management/spec.md#requirement-linked-party-selection-on-the-create-form
-		 */
-		closeClientDialog() {
-			this.clientDialogOpen = false
-			this.settleCreate(null)
-		},
-
-		/**
-		 * @param {object} contact The created contact object.
-		 * @return {void}
-		 * @spec openspec/specs/lead-management/spec.md#requirement-linked-party-selection-on-the-create-form
-		 */
-		onContactCreated(contact) {
-			this.contactDialogOpen = false
-			this.settleCreate(contact || null)
-		},
-
-		/**
-		 * @return {void}
-		 * @spec openspec/specs/lead-management/spec.md#requirement-linked-party-selection-on-the-create-form
-		 */
-		closeContactDialog() {
-			this.contactDialogOpen = false
-			this.settleCreate(null)
-		},
-
-		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-49
 		 */
 		onPipelineChange() {
@@ -594,6 +495,12 @@ export default {
 
 .form-row .form-group {
 	flex: 1;
+}
+
+.field-error {
+	color: var(--color-error);
+	font-size: 12px;
+	margin-top: 4px;
 }
 
 .form-actions {

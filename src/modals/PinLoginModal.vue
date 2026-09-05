@@ -104,7 +104,7 @@ import { usePosSessionStore } from '../store/modules/posSessionStore.js'
 export default {
 	name: 'PinLoginModal',
 	components: { NcButton, NcDialog, NcSelect, NcTextField },
-	emits: ['close', 'login-success'],
+	emits: ['close', 'loginSuccess'],
 	data() {
 		return {
 			staff: [],
@@ -141,13 +141,17 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * @spec exclude the pos-staff-pin-permissions change is archived and no spec
+		 *   inherited POS staff, PIN login or roles
+		 */
 		async loadStaff() {
 			this.loading = true
 			try {
 				const url = generateUrl('/apps/pipelinq/api/pos/staff')
 				const response = await axios.get(url)
 				this.staff = response?.data?.staff || []
-			} catch (error) {
+			} catch {
 				// Non-admin users may not list staff; fall back to a manual id field.
 				this.staff = []
 			} finally {
@@ -172,6 +176,10 @@ export default {
 			this.pin = this.pin.slice(0, -1)
 		},
 
+		/**
+		 * @spec exclude the pos-staff-pin-permissions change is archived and no spec
+		 *   inherited POS staff, PIN login or roles
+		 */
 		async submit() {
 			if (!this.canSubmit) {
 				return
@@ -191,7 +199,7 @@ export default {
 				}
 				const store = usePosSessionStore()
 				store.openSession(session)
-				this.$emit('login-success', session)
+				this.$emit('loginSuccess', session)
 				this.$emit('close')
 			} catch (error) {
 				const status = error?.response?.status

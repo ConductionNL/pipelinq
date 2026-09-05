@@ -39,6 +39,8 @@ use RuntimeException;
 
 /**
  * Sends fallback emails for the Berichtenbox bridge.
+ *
+ * @spec openspec/specs/outbound-messaging/spec.md#REQ-OM-004
  */
 class EmailFallbackSender {
 	/**

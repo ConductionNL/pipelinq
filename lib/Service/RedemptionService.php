@@ -240,6 +240,8 @@ class RedemptionService {
 	 * @param string $redemptionId The Redemption UUID.
 	 *
 	 * @return ?array<string, mixed>
+	 * @spec exclude loyalty has no spec at all; the change that specified it was archived
+	 *   and nothing inherited it
 	 */
 	public function expireRedemption(string $redemptionId): ?array {
 		return $this->markExpired(redemptionId: $redemptionId);
@@ -304,6 +306,8 @@ class RedemptionService {
 	 * @param string $redemptionId The Redemption UUID.
 	 *
 	 * @return array<string, mixed>|null
+	 * @spec exclude loyalty has no spec at all; the change that specified it was archived
+	 *   and nothing inherited it
 	 */
 	public function getRedemption(string $redemptionId): ?array {
 		[$register, $schema] = $this->config(schemaKey: 'redemption_schema');

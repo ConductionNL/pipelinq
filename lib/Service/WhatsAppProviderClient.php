@@ -103,6 +103,7 @@ class WhatsAppProviderClient {
 	 *
 	 * @throws TransientSmsProviderException On 5xx / network failure.
 	 * @throws PermanentSmsProviderException On 4xx / config failure.
+	 * @spec openspec/specs/outbound-messaging/spec.md#REQ-OM-004
 	 */
 	public function sendTemplate(
 		array $channelProvider,
@@ -158,6 +159,7 @@ class WhatsAppProviderClient {
 	 *
 	 * @throws TransientSmsProviderException On transient.
 	 * @throws PermanentSmsProviderException On permanent.
+	 * @spec openspec/specs/outbound-messaging/spec.md#REQ-OM-004
 	 */
 	public function sendFreeForm(
 		array $channelProvider,
@@ -210,6 +212,7 @@ class WhatsAppProviderClient {
 	 *
 	 * @throws TransientSmsProviderException On transient.
 	 * @throws PermanentSmsProviderException On permanent.
+	 * @spec openspec/specs/outbound-messaging/spec.md#REQ-OM-004
 	 */
 	public function listTemplates(array $channelProvider): array {
 		$result = $this->dispatch(
@@ -233,6 +236,7 @@ class WhatsAppProviderClient {
 	 * @param string $signature Header value (sha256=...).
 	 *
 	 * @return bool True when authentic.
+	 * @spec openspec/specs/outbound-messaging/spec.md#REQ-OM-004
 	 */
 	public function verifySignature(array $channelProvider, string $rawBody, string $signature): bool {
 		$secret = (string)($channelProvider['webhookSecret'] ?? '');

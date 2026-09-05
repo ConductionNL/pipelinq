@@ -32,14 +32,20 @@ use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\Pipelinq\Controller\BlastController;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
+use OCA\Pipelinq\Service\ArticleService;
 use OCA\Pipelinq\Service\AttributionService;
 use OCA\Pipelinq\Service\BlastService;
+use OCA\Pipelinq\Service\CampaignLinkDecorator;
+use OCA\Pipelinq\Service\CampaignPerformanceService;
+use OCA\Pipelinq\Service\Marketing\MailTransportService;
 use OCA\Pipelinq\Service\SegmentService;
 use OCP\AppFramework\Http;
+use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IAppConfig;
 use OCP\IRequest;
 use OCP\IUser;
 use OCP\IUserSession;
+use OCP\Mail\IMailer;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -273,22 +279,42 @@ class BlastControllerTest extends TestCase {
 		);
 
 		$logger = $this->createMock(LoggerInterface::class);
+		$blastService = new BlastService(
+			appConfig: $appConfig,
+			segmentService: $this->createMock(SegmentService::class),
+			mailTransportService: new MailTransportService(
+				container: $container,
+				appConfig: $appConfig,
+				mailer: $this->createMock(IMailer::class),
+				articleService: $this->createMock(ArticleService::class),
+				logger: $logger,
+			),
+			logger: $logger,
+			container: $container,
+		);
+		$attributionService = new AttributionService(
+			appConfig: $appConfig,
+			logger: $logger,
+			container: $container,
+		);
+		$time = $this->createMock(ITimeFactory::class);
+		$time->method('getTime')->willReturn(1788516000);
 
 		return new BlastController(
 			request: $this->createMock(IRequest::class),
-			blastService: new BlastService(
-				appConfig: $appConfig,
-				segmentService: $this->createMock(SegmentService::class),
-				logger: $logger,
-				container: $container,
-			),
-			attributionService: new AttributionService(
-				appConfig: $appConfig,
-				logger: $logger,
-				container: $container,
-			),
+			blastService: $blastService,
+			attributionService: $attributionService,
 			userSession: $this->userSession,
 			policy: $this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
+			performanceService: new CampaignPerformanceService(
+				container: $container,
+				appConfig: $appConfig,
+				time: $time,
+				blastService: $blastService,
+				attributionService: $attributionService,
+				decorator: new CampaignLinkDecorator($appConfig),
+				logger: $logger,
+			),
 		);
 	}//end buildController()
 
@@ -446,6 +472,63 @@ class BlastControllerTest extends TestCase {
 		$this->assertSame(Http::STATUS_UNAUTHORIZED, $response->getStatus());
 		$this->assertSame(['error' => 'Authentication required'], $response->getData());
 	}//end testAttributionRequiresAuthentication()
+
+	/**
+	 * Unauthenticated performance read is refused with 401.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-campaign-performance-joins-site-sessions-to-a-blast
+	 */
+	public function testPerformanceRequiresAuthentication(): void {
+		$this->userSession->method('getUser')->willReturn(null);
+
+		$response = $this->buildController()->performance(id: 'blast-1');
+
+		$this->assertSame(Http::STATUS_UNAUTHORIZED, $response->getStatus());
+	}//end testPerformanceRequiresAuthentication()
+
+	/**
+	 * An unknown Blast yields a generic 404 on the performance read.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-campaign-performance-joins-site-sessions-to-a-blast
+	 */
+	public function testPerformanceOnAnUnknownBlastReturnsNotFound(): void {
+		$this->signIn();
+
+		$response = $this->buildController()->performance(id: 'ghost');
+
+		$this->assertSame(Http::STATUS_NOT_FOUND, $response->getStatus());
+		$this->assertSame(['error' => 'Not found'], $response->getData());
+	}//end testPerformanceOnAnUnknownBlastReturnsNotFound()
+
+	/**
+	 * With no `blast.traffic_portal` the read reports not connected and
+	 * still carries the campaign slug and the attribution numbers.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-campaign-performance-joins-site-sessions-to-a-blast
+	 */
+	public function testPerformanceReportsNoPortalForASeededBlast(): void {
+		$this->signIn();
+		$this->objects->store['blast-1'] = ['uuid' => 'blast-1', 'name' => 'Q4 gemeente outreach', 'totals' => ['opened' => 3]];
+
+		$response = $this->buildController()->performance(id: 'blast-1', from: '2026-08-01', to: '2026-08-31');
+		$data = $response->getData();
+
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertSame('blast-1', $data['blastId']);
+		$this->assertSame('q4-gemeente-outreach', $data['campaign']);
+		$this->assertFalse($data['connected']);
+		$this->assertSame('no_portal', $data['reason']);
+		$this->assertNull($data['site']);
+		$this->assertSame(['from' => '2026-08-01', 'to' => '2026-08-31'], $data['window']);
+		$this->assertSame(3, $data['email']['opened']);
+		$this->assertArrayHasKey('dealCount', $data['deals']);
+	}//end testPerformanceReportsNoPortalForASeededBlast()
 
 	/**
 	 * An unknown Blast yields a generic 404.

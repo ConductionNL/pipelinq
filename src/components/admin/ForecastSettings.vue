@@ -160,7 +160,7 @@
 					<template #icon>
 						<NcLoadingIcon v-if="saving" :size="20" />
 					</template>
-					{{ saving ? t('pipelinq', 'Saving...') : t('pipelinq', 'Save') }}
+					{{ saving ? t('pipelinq', 'Saving…') : t('pipelinq', 'Save') }}
 				</NcButton>
 			</div>
 		</div>
@@ -215,6 +215,10 @@ export default {
 	methods: {
 		/**
 		 * Load the current forecast configuration.
+		 *
+		 * @spec exclude no requirement governs the forecast admin form. pipeline-insights
+		 *   defers its config scenario to admin-settings, and admin-settings
+		 *   never delivered one. Real spec gap, not plumbing
 		 */
 		async load() {
 			this.loading = true
@@ -223,7 +227,7 @@ export default {
 					generateUrl('/apps/pipelinq/api/settings/forecast'),
 				)
 				this.form = { ...this.form, ...response.data }
-			} catch (e) {
+			} catch {
 				this.message = t(
 					'pipelinq',
 					'Could not load the forecast configuration.',
@@ -236,6 +240,9 @@ export default {
 
 		/**
 		 * Persist the forecast configuration.
+		 *
+		 * @spec exclude see load(): the forecast config surface has no owning requirement
+		 *   in either pipeline-insights or admin-settings
 		 */
 		async save() {
 			this.saving = true
@@ -247,7 +254,7 @@ export default {
 				)
 				this.message = t('pipelinq', 'Forecast configuration saved.')
 				this.messageType = 'success'
-			} catch (e) {
+			} catch {
 				this.message = t(
 					'pipelinq',
 					'Could not save the forecast configuration.',

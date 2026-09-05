@@ -7,8 +7,8 @@
           "messageTemplate",
           "messagingConsentRecord",
           "messageSendBudget",
-          "message",
-          "conversation"
+          "channelMessage",
+          "channelConversation"
         ]
       }
     },
@@ -332,9 +332,9 @@
           }
         }
       },
-      "message": {
+      "channelMessage": {
         "x-schema-org": "schema:Message",
-        "slug": "message",
+        "slug": "channelMessage",
         "title": "Message",
         "icon": "MessageOutline",
         "version": "1.0.0",
@@ -442,9 +442,9 @@
           }
         }
       },
-      "conversation": {
+      "channelConversation": {
         "x-schema-org": "schema:Conversation",
-        "slug": "conversation",
+        "slug": "channelConversation",
         "title": "Conversation",
         "icon": "ForumOutline",
         "version": "1.0.0",

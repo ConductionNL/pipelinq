@@ -6,14 +6,14 @@
  * (/features-roadmap). Maps to openspec/specs/notifications-activity/spec.md
  * (closest in-app surface; the page is a static product-marketing view).
  */
-import { test, expect } from '@playwright/test'
+import { expect, test } from '@playwright/test'
 import {
-	openApp,
-	navClick,
-	trackPipelinqErrors,
 	assertNoHardError,
 	dismissSupportDialog,
-} from '../helpers/pipelinq'
+	navClick,
+	openApp,
+	trackPipelinqErrors,
+} from '../helpers/pipelinq.ts'
 
 // @e2e openspec/specs/notifications-activity/spec.md#features-roadmap-page
 test('Features & roadmap: navigates from sidebar and shows the features surface', async ({
@@ -43,7 +43,11 @@ test('Features & roadmap: exposes roadmap + suggest-feature actions', async ({
 	const content = page.locator('#content-vue')
 	await expect(content.getByRole('button', { name: 'Show roadmap' })).toBeVisible()
 	await expect(
-		content.getByRole('button', { name: 'Suggest feature' }).first(),
+		// A LINK, not a button. nextcloud-vue 2.36.4 removed the in-product
+		// suggestion modal (team decision 2026-09-04: the forge is where the
+		// conversation happens), and the CTA is an anchor to the forge's
+		// feature-request issue form now. An `<a href>` has role `link`.
+		content.getByRole('link', { name: 'Suggest feature' }).first(),
 	).toBeVisible()
 })
 
