@@ -95,7 +95,7 @@ class StandardAudiencesTest extends TestCase {
 		$demo = json_decode((string)file_get_contents($root . '/lib/Settings/demo_seed_data.json'), true);
 		$this->store = new InMemoryListObjectStore([
 			'client' => $this->clientsOf(demo: $demo),
-			'contract' => $this->linkedOf(demo: $demo, collection: 'contracts', field: 'clientRef'),
+			'salesContract' => $this->linkedOf(demo: $demo, collection: 'contracts', field: 'clientRef'),
 			'lead' => $this->linkedOf(demo: $demo, collection: 'leads', field: 'client'),
 			'product' => [],
 		]);

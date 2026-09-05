@@ -75,6 +75,12 @@ class RenameCollidingSchemaSlugs implements IRepairStep {
 	private const RENAMES = [
 		'cashCount' => ['to' => 'posCashCount', 'with' => 'shillinq'],
 		'conversation' => ['to' => 'channelConversation', 'with' => 'hermiq'],
+		// `contract` is the one of the three that is NOT renamed apart because
+		// the records differ. shillinq, stackiq and this app all carry
+		// `contractNumber`, so it is one contract seen three ways. shillinq owns
+		// the lifecycle (ADR-066, the same reference the ticket supertype
+		// already carries); this is the sales side and it now points at it.
+		'contract' => ['to' => 'salesContract', 'with' => 'shillinq'],
 	];
 
 	/**

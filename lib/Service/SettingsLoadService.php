@@ -129,7 +129,7 @@ class SettingsLoadService {
 		'supplier',
 		// Contract & renewal tracking (contract-renewal-tracking) — recurring-revenue
 		// contracts with renewal-window detection and churn metrics.
-		'contract',
+		'salesContract',
 		// Appointment booking (appointment-booking).
 		'service',
 		'resource',
@@ -298,6 +298,10 @@ class SettingsLoadService {
 		// slug moved to `posCashCount`, matching the app's other POS schemas.
 		// The config KEY deliberately did not: it is live persisted state.
 		'posCashCount' => 'cashCount_schema',
+		// Same again for `contract`, which shillinq, stackiq and this app all
+		// claimed. All three carry `contractNumber`, so they are one contract
+		// seen three ways; shillinq owns it and this is the sales side.
+		'salesContract' => 'contract_schema',
 	];
 
 	/**

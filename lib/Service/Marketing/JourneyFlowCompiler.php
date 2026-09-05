@@ -69,7 +69,7 @@ class JourneyFlowCompiler {
 	 */
 	public const TRIGGER_SCHEMAS = [
 		'leadStageChanged' => 'lead',
-		'contractRenewalWindow' => 'contract',
+		'contractRenewalWindow' => 'salesContract',
 		'listConfirmed' => 'subscription',
 	];
 

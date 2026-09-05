@@ -440,7 +440,7 @@ class SegmentSignalService {
 	 */
 	private function renewalDays(string $clientId): ?int {
 		$rows = $this->store->findAll(
-			schemaSlug: $this->store->schemaSlug('contract_schema', 'contract'),
+			schemaSlug: $this->store->schemaSlug('contract_schema', 'salesContract'),
 			filters: ['clientRef' => $clientId]
 		);
 
