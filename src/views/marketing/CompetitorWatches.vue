@@ -401,7 +401,9 @@ export default {
 
 .competitors__event-title {
 	font-weight: bold;
-	word-break: break-word;
+	/* `break-word` is deprecated: the modern spelling of "break anywhere rather
+	   than overflow" is overflow-wrap, and word-break keeps its own meaning. */
+	overflow-wrap: anywhere;
 }
 
 .competitors__relevance,

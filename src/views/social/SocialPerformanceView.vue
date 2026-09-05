@@ -146,7 +146,7 @@ export default {
 
 .social-performance__table th,
 .social-performance__table td {
-	text-align: left;
+	text-align: start;
 	padding: 8px;
 	border-bottom: 1px solid var(--color-border);
 }
