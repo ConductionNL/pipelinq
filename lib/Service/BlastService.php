@@ -1224,9 +1224,13 @@ class BlastService {
 	}//end persistQueuedDelivery()
 
 	/**
-	/**
 	 * Append `utm_*` campaign parameters to the template body's links via
 	 * {@see CampaignLinkDecorator::decorate()}.
+	 *
+	 * The blast's campaign is loaded first, so a blast that belongs to one
+	 * carries the campaign's source, medium and campaign value instead of
+	 * the per-blast defaults. A blast that belongs to none is decorated
+	 * exactly as before.
 	 *
 	 * Resolved lazily through the container like the tracking service, so
 	 * an install whose container cannot build the decorator (or a test
@@ -1239,7 +1243,7 @@ class BlastService {
 	 *
 	 * @return string The decorated HTML, or the original on failure.
 	 *
-	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-blast-links-carry-campaign-parameters
+	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-tracked-link-is-minted-from-the-campaign-when-there-is-one
 	 */
 	private function decorateCampaignLinks(string $html, array $blast, array $template): string {
 		if ($html === '') {
@@ -1248,7 +1252,12 @@ class BlastService {
 
 		try {
 			$decorator = $this->container->get('OCA\\Pipelinq\\Service\\CampaignLinkDecorator');
-			return $decorator->decorate(html: $html, blast: $blast, template: $template);
+			return $decorator->decorate(
+				html: $html,
+				blast: $blast,
+				template: $template,
+				campaign: $this->campaignForBlast(blast: $blast),
+			);
 		} catch (Throwable $e) {
 			$this->logger->info(
 				'BlastService.decorateCampaignLinks: decorator unavailable or failed, sending links as authored',
@@ -1257,6 +1266,36 @@ class BlastService {
 			return $html;
 		}
 	}//end decorateCampaignLinks()
+
+	/**
+	 * The campaign a blast belongs to, or an empty array.
+	 *
+	 * Lazy and fail-soft for the same reason as the decorator itself: a
+	 * campaign that cannot be read must cost the blast its campaign
+	 * parameters, never its send.
+	 *
+	 * @param array<string, mixed> $blast The blast row.
+	 *
+	 * @return array<string, mixed> The campaign, or an empty array.
+	 *
+	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-tracked-link-is-minted-from-the-campaign-when-there-is-one
+	 */
+	private function campaignForBlast(array $blast): array {
+		if (trim((string)($blast['campaignId'] ?? '')) === '') {
+			return [];
+		}
+
+		try {
+			$campaigns = $this->container->get('OCA\\Pipelinq\\Service\\CampaignService');
+			return $campaigns->forBlast(blast: $blast);
+		} catch (Throwable $e) {
+			$this->logger->info(
+				'BlastService.campaignForBlast: campaign unavailable, using the per-blast parameters',
+				['exception' => $e->getMessage()]
+			);
+			return [];
+		}
+	}//end campaignForBlast()
 
 	/**
 	 * Sleep for `$seconds` (float). Indirected to a method so tests can

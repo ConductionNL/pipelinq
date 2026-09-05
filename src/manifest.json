@@ -4329,7 +4329,8 @@
 					"volume": "Volume and channels",
 					"people": "People and performance",
 					"revenue": "Revenue and forecast",
-					"loyalty": "Customer loyalty"
+					"loyalty": "Customer loyalty",
+					"marketing": "Marketing and campaigns"
 				},
 				"cards": [
 					{
@@ -4379,6 +4380,14 @@
 						"icon": "Star",
 						"category": "loyalty",
 						"route": "LoyaltyReporting"
+					},
+					{
+						"id": "CampaignReportPage",
+						"label": "Campaign report",
+						"description": "What one campaign reached, what it brought in, and what it cost.",
+						"icon": "BullhornOutline",
+						"category": "marketing",
+						"route": "CampaignReportPage"
 					}
 				]
 			}

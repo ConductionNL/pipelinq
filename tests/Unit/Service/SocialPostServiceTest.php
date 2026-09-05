@@ -33,6 +33,7 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\BudgetService;
 use OCA\Pipelinq\Service\CampaignLinkDecorator;
+use OCA\Pipelinq\Service\CampaignService;
 use OCA\Pipelinq\Service\NotificationService;
 use OCA\Pipelinq\Service\Social\BrokerCredentialReader;
 use OCA\Pipelinq\Service\Social\SocialAdapterRegistry;
@@ -168,6 +169,16 @@ class SocialPostServiceTest extends TestCase {
 			}
 		);
 
+		// The campaign owns its utm value, so the decorator is handed the frozen
+		// one rather than a slug of the id. A campaignId naming no campaign row
+		// still decorates, because a marketer may fill the field in first.
+		$campaigns = $this->createMock(CampaignService::class);
+		$campaigns->method('find')->willReturnCallback(
+			static fn (string $id): ?array => (
+				$id === 'campaign-1' ? ['id' => 'campaign-1', 'utmCampaign' => 'najaarscampagne-2026'] : null
+			)
+		);
+
 		return new SocialPostService(
 			$this->store,
 			$this->accounts,
@@ -175,6 +186,7 @@ class SocialPostServiceTest extends TestCase {
 			$this->publications,
 			$this->advocacy,
 			$links,
+			$campaigns,
 			$this->budget,
 			$this->createMock(IAppConfig::class),
 		);
@@ -580,7 +592,7 @@ class SocialPostServiceTest extends TestCase {
 		$postId = $this->seedPost([
 			'accountIds' => ['acc-m'],
 			'status' => SocialPostService::STATUS_SCHEDULED,
-			'campaignId' => 'Najaarscampagne 2026',
+			'campaignId' => 'campaign-1',
 		]);
 
 		$this->service()->publishPost(postId: $postId);

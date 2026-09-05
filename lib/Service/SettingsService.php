@@ -279,6 +279,18 @@ class SettingsService {
 		// When the last Search Console import finished, ISO 8601. Written by
 		// the importer, read back for the settings page.
 		'search.gsc.last_import_at' => '',
+		// The lowercase source and medium vocabulary a campaign may draw
+		// from (marketing-campaigns), comma-separated. Empty means the
+		// built-in list in CampaignService. A value outside the list is
+		// refused rather than lowercased, because `LinkedIn` and `linkedin`
+		// are two campaigns in every analytics tool and the split is
+		// invisible until a report comes back short.
+		'campaign.utm_sources' => '',
+		'campaign.utm_mediums' => '',
+		// The portal campaign landing pages are created on. Empty falls back
+		// to blast.traffic_portal, so a tenant with one portal configures it
+		// once.
+		'marketing.landing_portal' => '',
 	];
 
 	/**

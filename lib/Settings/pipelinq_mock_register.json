@@ -1017,6 +1017,141 @@
       {
         "@self": {
           "register": "pipelinq",
+          "schema": "campaign",
+          "slug": "campaign-voorbeeld-name-1-1"
+        },
+        "name": "Voorbeeld Name 1",
+        "utmCampaign": "abc",
+        "goal": "Voorbeeld Goal 1",
+        "status": "planned",
+        "utmSource": "abc",
+        "utmMedium": "abc",
+        "mailingIds": [
+          "00000000-0000-4000-8000-000000000000"
+        ],
+        "postIds": [
+          "Voorbeeld Postids 1"
+        ],
+        "landingPage": {
+          "portal": "Voorbeeld Portal 1",
+          "route": "Voorbeeld Route 1",
+          "pageId": "Voorbeeld Pageid 1",
+          "publicUrl": "Voorbeeld Publicurl 1",
+          "createdAt": "2026-03-01T09:00:00+00:00"
+        },
+        "formRef": "Voorbeeld Formref 1",
+        "articleSummary": "Voorbeeld Articlesummary 1",
+        "articleBody": "Voorbeeld Articlebody 1",
+        "startsAt": "2026-03-01",
+        "endsAt": "2026-03-01",
+        "budgetEur": 0.0,
+        "costs": [
+          {
+            "channel": "Voorbeeld Channel 1",
+            "amountEur": 1.0,
+            "note": "Voorbeeld Note 1"
+          }
+        ],
+        "attribution": {
+          "model": "first",
+          "windowDays": 90
+        },
+        "createdBy": "Voorbeeld Createdby 1",
+        "createdAt": "2026-03-01T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "campaign",
+          "slug": "campaign-voorbeeld-name-2-2"
+        },
+        "name": "Voorbeeld Name 2",
+        "utmCampaign": "bcd",
+        "goal": "Voorbeeld Goal 2",
+        "status": "running",
+        "utmSource": "bcd",
+        "utmMedium": "bcd",
+        "mailingIds": [
+          "00000000-0000-4000-8000-000000000001"
+        ],
+        "postIds": [
+          "Voorbeeld Postids 2"
+        ],
+        "landingPage": {
+          "portal": "Voorbeeld Portal 2",
+          "route": "Voorbeeld Route 2",
+          "pageId": "Voorbeeld Pageid 2",
+          "publicUrl": "Voorbeeld Publicurl 2",
+          "createdAt": "2026-03-02T09:00:00+00:00"
+        },
+        "formRef": "Voorbeeld Formref 2",
+        "articleSummary": "Voorbeeld Articlesummary 2",
+        "articleBody": "Voorbeeld Articlebody 2",
+        "startsAt": "2026-03-02",
+        "endsAt": "2026-03-02",
+        "budgetEur": 1.0,
+        "costs": [
+          {
+            "channel": "Voorbeeld Channel 2",
+            "amountEur": 2.0,
+            "note": "Voorbeeld Note 2"
+          }
+        ],
+        "attribution": {
+          "model": "last",
+          "windowDays": 90
+        },
+        "createdBy": "Voorbeeld Createdby 2",
+        "createdAt": "2026-03-02T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "campaign",
+          "slug": "campaign-voorbeeld-name-3-3"
+        },
+        "name": "Voorbeeld Name 3",
+        "utmCampaign": "cde",
+        "goal": "Voorbeeld Goal 3",
+        "status": "finished",
+        "utmSource": "cde",
+        "utmMedium": "cde",
+        "mailingIds": [
+          "00000000-0000-4000-8000-000000000002"
+        ],
+        "postIds": [
+          "Voorbeeld Postids 3"
+        ],
+        "landingPage": {
+          "portal": "Voorbeeld Portal 3",
+          "route": "Voorbeeld Route 3",
+          "pageId": "Voorbeeld Pageid 3",
+          "publicUrl": "Voorbeeld Publicurl 3",
+          "createdAt": "2026-03-03T09:00:00+00:00"
+        },
+        "formRef": "Voorbeeld Formref 3",
+        "articleSummary": "Voorbeeld Articlesummary 3",
+        "articleBody": "Voorbeeld Articlebody 3",
+        "startsAt": "2026-03-03",
+        "endsAt": "2026-03-03",
+        "budgetEur": 2.0,
+        "costs": [
+          {
+            "channel": "Voorbeeld Channel 3",
+            "amountEur": 3.0,
+            "note": "Voorbeeld Note 3"
+          }
+        ],
+        "attribution": {
+          "model": "linear",
+          "windowDays": 90
+        },
+        "createdBy": "Voorbeeld Createdby 3",
+        "createdAt": "2026-03-03T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
           "schema": "campaignTemplate",
           "slug": "campaigntemplate-voorbeeld-name-1-1"
         },
@@ -5657,6 +5792,75 @@
         "billingSyncStatus": "failed",
         "billingBatchId": "Voorbeeld Billingbatchid 3",
         "billingInvoiceId": "Voorbeeld Billinginvoiceid 3"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "touchpoint",
+          "slug": "touchpoint-touchpoint-1-1"
+        },
+        "campaignId": "00000000-0000-4000-8000-000000000000",
+        "kind": "click",
+        "occurredAt": "2026-03-01T09:00:00+00:00",
+        "contactId": "00000000-0000-4000-8000-000000000000",
+        "leadId": "00000000-0000-4000-8000-000000000000",
+        "channel": "Voorbeeld Channel 1",
+        "utm": {
+          "campaign": "Voorbeeld Campaign 1",
+          "source": "Voorbeeld Source 1",
+          "medium": "Voorbeeld Medium 1",
+          "term": "Voorbeeld Term 1",
+          "content": "Voorbeeld Content 1"
+        },
+        "sourceRef": "Voorbeeld Sourceref 1",
+        "nonce": "Voorbeeld Nonce 1",
+        "createdAt": "2026-03-01T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "touchpoint",
+          "slug": "touchpoint-touchpoint-2-2"
+        },
+        "campaignId": "00000000-0000-4000-8000-000000000001",
+        "kind": "visit",
+        "occurredAt": "2026-03-02T09:00:00+00:00",
+        "contactId": "00000000-0000-4000-8000-000000000001",
+        "leadId": "00000000-0000-4000-8000-000000000001",
+        "channel": "Voorbeeld Channel 2",
+        "utm": {
+          "campaign": "Voorbeeld Campaign 2",
+          "source": "Voorbeeld Source 2",
+          "medium": "Voorbeeld Medium 2",
+          "term": "Voorbeeld Term 2",
+          "content": "Voorbeeld Content 2"
+        },
+        "sourceRef": "Voorbeeld Sourceref 2",
+        "nonce": "Voorbeeld Nonce 2",
+        "createdAt": "2026-03-02T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "touchpoint",
+          "slug": "touchpoint-touchpoint-3-3"
+        },
+        "campaignId": "00000000-0000-4000-8000-000000000002",
+        "kind": "submit",
+        "occurredAt": "2026-03-03T09:00:00+00:00",
+        "contactId": "00000000-0000-4000-8000-000000000002",
+        "leadId": "00000000-0000-4000-8000-000000000002",
+        "channel": "Voorbeeld Channel 3",
+        "utm": {
+          "campaign": "Voorbeeld Campaign 3",
+          "source": "Voorbeeld Source 3",
+          "medium": "Voorbeeld Medium 3",
+          "term": "Voorbeeld Term 3",
+          "content": "Voorbeeld Content 3"
+        },
+        "sourceRef": "Voorbeeld Sourceref 3",
+        "nonce": "Voorbeeld Nonce 3",
+        "createdAt": "2026-03-03T09:00:00+00:00"
       },
       {
         "@self": {

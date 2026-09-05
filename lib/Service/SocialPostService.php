@@ -176,6 +176,7 @@ class SocialPostService {
 	 * @param SocialPublicationStore $publications The per-account result rows.
 	 * @param SocialAdvocacyService $advocacy The prepared-share path.
 	 * @param CampaignLinkDecorator $links The campaign UTM decorator the mailings already use.
+	 * @param CampaignService $campaigns The campaigns, for the frozen UTM value a campaign owns.
 	 * @param BudgetService $budget The per-tenant spend budget.
 	 * @param IAppConfig $appConfig App config, for the tenant id.
 	 *
@@ -188,6 +189,7 @@ class SocialPostService {
 		private readonly SocialPublicationStore $publications,
 		private readonly SocialAdvocacyService $advocacy,
 		private readonly CampaignLinkDecorator $links,
+		private readonly CampaignService $campaigns,
 		private readonly BudgetService $budget,
 		private readonly IAppConfig $appConfig,
 	) {
@@ -701,8 +703,21 @@ class SocialPostService {
 	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-a-posts-link-carries-its-campaign
 	 */
 	private function decoratedLink(array $post, string $network, string $link): string {
-		$campaign = CampaignLinkDecorator::slugify(value: (string)($post['campaignId'] ?? ''));
-		if ($link === '' || $campaign === '' || $this->links->isEnabled() === false) {
+		$campaignId = trim((string)($post['campaignId'] ?? ''));
+		if ($link === '' || $campaignId === '' || $this->links->isEnabled() === false) {
+			return $link;
+		}
+
+		// The campaign OWNS its utm value: CampaignService mints it once and
+		// freezes it across a rename, so two mailings and three posts of one
+		// campaign roll up together. Slugifying the id here instead would put a
+		// UUID in the query string and split the campaign into as many rows as
+		// it has channels. A campaignId naming no campaign row still works,
+		// because a marketer can fill the field in before a campaign exists.
+		$campaign = CampaignLinkDecorator::slugify(
+			value: (string)($this->campaigns->find(id: $campaignId)['utmCampaign'] ?? $campaignId),
+		);
+		if ($campaign === '') {
 			return $link;
 		}
 

@@ -54,6 +54,20 @@ A post has one `body` and a `variants` map keyed by network. Resolving a variant
 
 Per-network length limits live in the same pure module. A variant over its network's limit is refused at approval time rather than at publish time, because a refusal three hours after the marketer left is a refusal nobody sees.
 
+### 4b. The campaign owns its UTM value, and this change reads it rather than inventing one
+
+Phase 4 (`marketing-campaigns`) landed on `development` while this change was
+being written, and it changed the answer to one question here. A campaign now
+MINTS its `utmCampaign` once and freezes it across a rename, so two mailings
+and three posts of one campaign roll up together. `SocialPostService` therefore
+resolves the campaign row and decorates with that frozen value; slugifying the
+`campaignId` instead would put a UUID in the query string and split one
+campaign into as many rows as it has channels.
+
+A `campaignId` that names no campaign row still decorates, from the string
+itself. A marketer can fill the field in before the campaign object exists, and
+refusing to track that link would lose the clicks rather than the mistake.
+
 ### 5. The performance page renders first and counts second
 
 pipelinq#1781 fixed a page that awaited a per-object fan-out before it rendered anything. The ranking page here reads `socialPublication` rows in one filtered query and computes engagement rate from `metrics` and the `followerCount` already copied onto the account by the daily pull. It never walks publications to fetch their accounts. Division by a zero follower count yields no rate rather than an error, and a publication with no metrics yet sorts last instead of being dropped.

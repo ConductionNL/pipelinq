@@ -68,6 +68,13 @@ class CampaignLinkDecorator {
 	private const SLUG_MAX_LENGTH = 80;
 
 	/**
+	 * The source and medium a blast that belongs to no campaign carries.
+	 *
+	 * @var string
+	 */
+	private const CHANNEL_DEFAULT = 'email';
+
+	/**
 	 * Constructor.
 	 *
 	 * @param IAppConfig $appConfig Pipelinq app config.
@@ -92,18 +99,25 @@ class CampaignLinkDecorator {
 	}//end isEnabled()
 
 	/**
-	 * The campaign value for a blast: its name as a slug, falling back to
-	 * the template name and then to the blast id.
+	 * The campaign value for a blast: the campaign's own frozen slug when
+	 * the blast belongs to one, otherwise its name as a slug, falling back
+	 * to the template name and then to the blast id.
 	 *
 	 * @param array<string, mixed> $blast The blast row.
 	 * @param array<string, mixed> $template The campaign template row, may be empty.
+	 * @param array<string, mixed> $campaign The campaign row, empty when the blast belongs to none.
 	 *
 	 * @return string The slug, empty only when every source is empty.
 	 *
-	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-blast-links-carry-campaign-parameters
+	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-tracked-link-is-minted-from-the-campaign-when-there-is-one
 	 */
-	public function campaignFor(array $blast, array $template = []): string {
-		$candidates = [(string)($blast['name'] ?? ''), (string)($template['name'] ?? ''), $this->blastId(blast: $blast)];
+	public function campaignFor(array $blast, array $template = [], array $campaign = []): string {
+		$candidates = [
+			(string)($campaign['utmCampaign'] ?? ''),
+			(string)($blast['name'] ?? ''),
+			(string)($template['name'] ?? ''),
+			$this->blastId(blast: $blast),
+		];
 		foreach ($candidates as $candidate) {
 			$slug = self::slugify(value: $candidate);
 			if ($slug !== '') {
@@ -117,21 +131,48 @@ class CampaignLinkDecorator {
 	/**
 	 * The four parameters a blast link carries.
 	 *
+	 * Each parameter is resolved on its own, not the set as a whole: a
+	 * campaign that names only a source still leaves the blast's own
+	 * campaign value in place, where taking the campaign's whole block
+	 * would have emptied it and the decorator drops empty parameters.
+	 *
+	 * `utm_content` stays the blast id under a campaign, because that is
+	 * what tells two mailings of one campaign apart in the rollup.
+	 *
 	 * @param array<string, mixed> $blast The blast row.
 	 * @param array<string, mixed> $template The campaign template row, may be empty.
+	 * @param array<string, mixed> $campaign The campaign row, empty when the blast belongs to none.
 	 *
 	 * @return array<string, string> `utm_source`, `utm_medium`, `utm_campaign`, `utm_content`.
 	 *
-	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-blast-links-carry-campaign-parameters
+	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-tracked-link-is-minted-from-the-campaign-when-there-is-one
 	 */
-	public function utmFor(array $blast, array $template = []): array {
+	public function utmFor(array $blast, array $template = [], array $campaign = []): array {
 		return [
-			'utm_source' => 'email',
-			'utm_medium' => 'email',
-			'utm_campaign' => $this->campaignFor(blast: $blast, template: $template),
+			'utm_source' => $this->fromCampaign(campaign: $campaign, key: 'utmSource', fallback: self::CHANNEL_DEFAULT),
+			'utm_medium' => $this->fromCampaign(campaign: $campaign, key: 'utmMedium', fallback: self::CHANNEL_DEFAULT),
+			'utm_campaign' => $this->campaignFor(blast: $blast, template: $template, campaign: $campaign),
 			'utm_content' => $this->blastId(blast: $blast),
 		];
 	}//end utmFor()
+
+	/**
+	 * One campaign-owned parameter, or the per-blast default.
+	 *
+	 * @param array<string, mixed> $campaign The campaign row, may be empty.
+	 * @param string $key The campaign property holding the value.
+	 * @param string $fallback What a blast without a campaign uses.
+	 *
+	 * @return string The value.
+	 */
+	private function fromCampaign(array $campaign, string $key, string $fallback): string {
+		$value = strtolower(trim((string)($campaign[$key] ?? '')));
+		if ($value !== '') {
+			return $value;
+		}
+
+		return $fallback;
+	}//end fromCampaign()
 
 	/**
 	 * Decorate every eligible `<a href>` in a blast body.
@@ -139,17 +180,21 @@ class CampaignLinkDecorator {
 	 * @param string $html The template or rendered body.
 	 * @param array<string, mixed> $blast The blast row.
 	 * @param array<string, mixed> $template The campaign template row, may be empty.
+	 * @param array<string, mixed> $campaign The campaign row, empty when the blast belongs to none.
 	 *
 	 * @return string The body, unchanged when the setting is off or nothing qualified.
 	 *
-	 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-blast-links-carry-campaign-parameters
+	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-tracked-link-is-minted-from-the-campaign-when-there-is-one
 	 */
-	public function decorate(string $html, array $blast, array $template = []): string {
+	public function decorate(string $html, array $blast, array $template = [], array $campaign = []): string {
 		if ($html === '' || $this->isEnabled() === false) {
 			return $html;
 		}
 
-		$utm = array_filter($this->utmFor(blast: $blast, template: $template), static fn (string $value): bool => $value !== '');
+		$utm = array_filter(
+			$this->utmFor(blast: $blast, template: $template, campaign: $campaign),
+			static fn (string $value): bool => $value !== ''
+		);
 		if ($utm === []) {
 			return $html;
 		}
@@ -204,6 +249,20 @@ class CampaignLinkDecorator {
 
 		return $result;
 	}//end decorateUrl()
+
+	/**
+	 * The slug rule as an instance call, for a collaborator that holds the
+	 * decorator rather than reaching for the class.
+	 *
+	 * @param string $value Any string.
+	 *
+	 * @return string The slug, empty when nothing survives.
+	 *
+	 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
+	 */
+	public function slug(string $value): string {
+		return self::slugify(value: $value);
+	}//end slug()
 
 	/**
 	 * Lower-case ASCII slug: letters, digits and single hyphens.

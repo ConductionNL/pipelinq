@@ -39,6 +39,7 @@ use OCA\Pipelinq\Dashboard\FindClientWidget;
 use OCA\Pipelinq\Dashboard\MyLeadsWidget;
 use OCA\Pipelinq\Dashboard\RecentActivitiesWidget;
 use OCA\Pipelinq\Dashboard\StartRequestWidget;
+use OCA\Pipelinq\Event\LandingPageFormSubmittedEvent;
 use OCA\Pipelinq\Event\TimeEntryApprovedEvent;
 use OCA\Pipelinq\Lifecycle\PosAccessPolicy;
 use OCA\Pipelinq\Lifecycle\PosRefundManagerGuard;
@@ -49,6 +50,7 @@ use OCA\Pipelinq\Listener\BerichtenboxZaakStatusListener;
 use OCA\Pipelinq\Listener\DealCreatedListener;
 use OCA\Pipelinq\Listener\DealUpdatedListener;
 use OCA\Pipelinq\Listener\ExpenseApprovalListener;
+use OCA\Pipelinq\Listener\LandingPageFormSubmittedListener;
 use OCA\Pipelinq\Listener\ObjectEventListener;
 use OCA\Pipelinq\Listener\ObjectsMergedSyncListener;
 use OCA\Pipelinq\Listener\PosTransactionCompletedListener;
@@ -249,6 +251,17 @@ class Application extends App implements IBootstrap {
 		$context->registerEventListener(
 			event: \OCA\OpenRegister\Event\ObjectsMergedEvent::class,
 			listener: ObjectsMergedSyncListener::class
+		);
+
+		// Marketing: portaliq relays a landing-page form submission by
+		// dispatching PIPELINQ'S OWN event class, which it resolves by the
+		// sourceApp on the form and class_exists()-guards (ADR-041,
+		// landing-page-provisioning). The event is ours, so this is an
+		// ordinary same-app registration: nothing here needs portaliq to be
+		// installed, and with portaliq absent the listener simply never fires.
+		$context->registerEventListener(
+			event: LandingPageFormSubmittedEvent::class,
+			listener: LandingPageFormSubmittedListener::class
 		);
 
 		$context->registerDashboardWidget(DealsOverviewWidget::class);
