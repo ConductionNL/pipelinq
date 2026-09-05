@@ -540,7 +540,8 @@
         "createdBy": "Voorbeeld Createdby 1",
         "createdAt": "2026-03-01T09:00:00+00:00",
         "listId": "Voorbeeld Listid 1",
-        "campaignId": "00000000-0000-4000-8000-000000000000"
+        "campaignId": "00000000-0000-4000-8000-000000000000",
+        "journeyId": "Voorbeeld Journeyid 1"
       },
       {
         "@self": {
@@ -572,7 +573,8 @@
         "createdBy": "Voorbeeld Createdby 2",
         "createdAt": "2026-03-02T09:00:00+00:00",
         "listId": "Voorbeeld Listid 2",
-        "campaignId": "00000000-0000-4000-8000-000000000001"
+        "campaignId": "00000000-0000-4000-8000-000000000001",
+        "journeyId": "Voorbeeld Journeyid 2"
       },
       {
         "@self": {
@@ -604,7 +606,8 @@
         "createdBy": "Voorbeeld Createdby 3",
         "createdAt": "2026-03-03T09:00:00+00:00",
         "listId": "Voorbeeld Listid 3",
-        "campaignId": "00000000-0000-4000-8000-000000000002"
+        "campaignId": "00000000-0000-4000-8000-000000000002",
+        "journeyId": "Voorbeeld Journeyid 3"
       },
       {
         "@self": {
@@ -2783,6 +2786,159 @@
         "balanceAfter": 3.0,
         "posTransactionId": "Voorbeeld Postransactionid 3",
         "processedBy": "Voorbeeld Processedby 3"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "journey",
+          "slug": "journey-voorbeeld-name-1-1"
+        },
+        "name": "Voorbeeld Name 1",
+        "trigger": {
+          "kind": "leadStageChanged",
+          "cron": "Voorbeeld Cron 1"
+        },
+        "action": {
+          "kind": "sendMailing",
+          "templateId": "Voorbeeld Templateid 1",
+          "listId": "Voorbeeld Listid 1",
+          "intent": "promotional",
+          "taskSubject": "Voorbeeld Tasksubject 1",
+          "taskType": "callback",
+          "taskAssignee": "Voorbeeld Taskassignee 1"
+        },
+        "description": "Voorbeeld Description 1",
+        "status": "draft",
+        "audienceSegment": "Voorbeeld Audiencesegment 1",
+        "waitFor": "Voorbeeld Waitfor 1",
+        "condition": {
+          "field": "Voorbeeld Field 1",
+          "operator": "equals",
+          "value": "Voorbeeld Value 1"
+        },
+        "flowUuid": "Voorbeeld Flowuuid 1",
+        "flowStatus": "not_compiled",
+        "flowError": "Voorbeeld Flowerror 1",
+        "createdBy": "Voorbeeld Createdby 1",
+        "createdAt": "2026-03-01T09:00:00+00:00",
+        "updatedAt": "2026-03-01T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "journey",
+          "slug": "journey-voorbeeld-name-2-2"
+        },
+        "name": "Voorbeeld Name 2",
+        "trigger": {
+          "kind": "contractRenewalWindow",
+          "cron": "Voorbeeld Cron 2"
+        },
+        "action": {
+          "kind": "createTask",
+          "templateId": "Voorbeeld Templateid 2",
+          "listId": "Voorbeeld Listid 2",
+          "intent": "service",
+          "taskSubject": "Voorbeeld Tasksubject 2",
+          "taskType": "callback",
+          "taskAssignee": "Voorbeeld Taskassignee 2"
+        },
+        "description": "Voorbeeld Description 2",
+        "status": "active",
+        "audienceSegment": "Voorbeeld Audiencesegment 2",
+        "waitFor": "Voorbeeld Waitfor 2",
+        "condition": {
+          "field": "Voorbeeld Field 2",
+          "operator": "notEquals",
+          "value": "Voorbeeld Value 2"
+        },
+        "flowUuid": "Voorbeeld Flowuuid 2",
+        "flowStatus": "compiled",
+        "flowError": "Voorbeeld Flowerror 2",
+        "createdBy": "Voorbeeld Createdby 2",
+        "createdAt": "2026-03-02T09:00:00+00:00",
+        "updatedAt": "2026-03-02T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "journey",
+          "slug": "journey-voorbeeld-name-3-3"
+        },
+        "name": "Voorbeeld Name 3",
+        "trigger": {
+          "kind": "listConfirmed",
+          "cron": "Voorbeeld Cron 3"
+        },
+        "action": {
+          "kind": "sendMailing",
+          "templateId": "Voorbeeld Templateid 3",
+          "listId": "Voorbeeld Listid 3",
+          "intent": "promotional",
+          "taskSubject": "Voorbeeld Tasksubject 3",
+          "taskType": "callback",
+          "taskAssignee": "Voorbeeld Taskassignee 3"
+        },
+        "description": "Voorbeeld Description 3",
+        "status": "paused",
+        "audienceSegment": "Voorbeeld Audiencesegment 3",
+        "waitFor": "Voorbeeld Waitfor 3",
+        "condition": {
+          "field": "Voorbeeld Field 3",
+          "operator": "isNull",
+          "value": "Voorbeeld Value 3"
+        },
+        "flowUuid": "Voorbeeld Flowuuid 3",
+        "flowStatus": "engine_missing",
+        "flowError": "Voorbeeld Flowerror 3",
+        "createdBy": "Voorbeeld Createdby 3",
+        "createdAt": "2026-03-03T09:00:00+00:00",
+        "updatedAt": "2026-03-03T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "journeyRun",
+          "slug": "journeyrun-journeyrun-1-1"
+        },
+        "journeyId": "Voorbeeld Journeyid 1",
+        "state": "sent",
+        "contactId": "Voorbeeld Contactid 1",
+        "clientId": "Voorbeeld Clientid 1",
+        "reason": "Voorbeeld Reason 1",
+        "actionKind": "Voorbeeld Actionkind 1",
+        "occurredAt": "2026-03-01T09:00:00+00:00",
+        "flowRunUuid": "Voorbeeld Flowrunuuid 1"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "journeyRun",
+          "slug": "journeyrun-journeyrun-2-2"
+        },
+        "journeyId": "Voorbeeld Journeyid 2",
+        "state": "refused",
+        "contactId": "Voorbeeld Contactid 2",
+        "clientId": "Voorbeeld Clientid 2",
+        "reason": "Voorbeeld Reason 2",
+        "actionKind": "Voorbeeld Actionkind 2",
+        "occurredAt": "2026-03-02T09:00:00+00:00",
+        "flowRunUuid": "Voorbeeld Flowrunuuid 2"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "journeyRun",
+          "slug": "journeyrun-journeyrun-3-3"
+        },
+        "journeyId": "Voorbeeld Journeyid 3",
+        "state": "task-created",
+        "contactId": "Voorbeeld Contactid 3",
+        "clientId": "Voorbeeld Clientid 3",
+        "reason": "Voorbeeld Reason 3",
+        "actionKind": "Voorbeeld Actionkind 3",
+        "occurredAt": "2026-03-03T09:00:00+00:00",
+        "flowRunUuid": "Voorbeeld Flowrunuuid 3"
       },
       {
         "@self": {
@@ -6599,6 +6755,57 @@
         "relevanceScore": 2,
         "relevanceReason": "Voorbeeld Relevancereason 3",
         "agentAuthored": false
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "weeklyReview",
+          "slug": "weeklyreview-weeklyreview-1-1"
+        },
+        "weekStarting": "2026-03-01",
+        "sources": [],
+        "degraded": [],
+        "summary": "Voorbeeld Summary 1",
+        "highlights": [],
+        "suggestions": [],
+        "topicIdeas": [],
+        "generatedAt": "2026-03-01T09:00:00+00:00",
+        "agentAuthored": false,
+        "agentAuthoredBy": "Voorbeeld Agentauthoredby 1"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "weeklyReview",
+          "slug": "weeklyreview-weeklyreview-2-2"
+        },
+        "weekStarting": "2026-03-02",
+        "sources": [],
+        "degraded": [],
+        "summary": "Voorbeeld Summary 2",
+        "highlights": [],
+        "suggestions": [],
+        "topicIdeas": [],
+        "generatedAt": "2026-03-02T09:00:00+00:00",
+        "agentAuthored": false,
+        "agentAuthoredBy": "Voorbeeld Agentauthoredby 2"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "weeklyReview",
+          "slug": "weeklyreview-weeklyreview-3-3"
+        },
+        "weekStarting": "2026-03-03",
+        "sources": [],
+        "degraded": [],
+        "summary": "Voorbeeld Summary 3",
+        "highlights": [],
+        "suggestions": [],
+        "topicIdeas": [],
+        "generatedAt": "2026-03-03T09:00:00+00:00",
+        "agentAuthored": false,
+        "agentAuthoredBy": "Voorbeeld Agentauthoredby 3"
       },
       {
         "@self": {

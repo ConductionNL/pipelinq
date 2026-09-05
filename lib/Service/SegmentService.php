@@ -28,6 +28,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Service\Marketing\SegmentSignalService;
 use OCP\IAppConfig;
 use OCP\ICache;
 use OCP\ICacheFactory;
@@ -139,6 +140,7 @@ class SegmentService {
 	 * @param SchemaMapService $schemaMapService Schema-slug map.
 	 * @param ICacheFactory $cacheFactory NC cache factory.
 	 * @param LoggerInterface $logger Logger.
+	 * @param SegmentSignalService $signals The derived fields a rule may also use.
 	 *
 	 * @spec openspec/specs/marketing-segmentation/spec.md#requirement-segment-builder-composes-rule-trees
 	 */
@@ -148,8 +150,32 @@ class SegmentService {
 		private SchemaMapService $schemaMapService,
 		private ICacheFactory $cacheFactory,
 		private LoggerInterface $logger,
+		private SegmentSignalService $signals,
 	) {
 	}//end __construct()
+
+	/**
+	 * The derived fields a rule may use next to the schema's own properties.
+	 *
+	 * @return array<string, array{type: string, title: string, source: string, description: string}>
+	 *         The signal catalogue, as {@see SegmentSignalService::catalogue()} publishes it.
+	 *
+	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-segment-builder-lists-the-signals-and-validates-a-rule-on-one
+	 */
+	public function signalCatalogue(): array {
+		return $this->signals->catalogue();
+	}//end signalCatalogue()
+
+	/**
+	 * Whether the bookkeeping behind the shillinq signals can be read.
+	 *
+	 * @return array{shillinq: bool, reason: string} The availability report.
+	 *
+	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-an-unresolved-signal-shrinks-the-audience
+	 */
+	public function signalAvailability(): array {
+		return $this->signals->availability();
+	}//end signalAvailability()
 
 	/**
 	 * Validate a rule tree against the schema for the given entity type.
@@ -182,6 +208,11 @@ class SegmentService {
 		if ($properties === null) {
 			return sprintf('Unknown entityType "%s" (no schema mapping configured).', $entityType);
 		}
+
+		// The schema goes first: a signal must never shadow a stored
+		// property, because a segment written before this change means the
+		// stored one and would start reading a different value.
+		$properties = array_merge($this->signals->schemaProperties(), $properties);
 
 		return $this->validateNode(node: $rules, path: '$', properties: $properties);
 	}//end validateRules()
@@ -1100,6 +1131,10 @@ class SegmentService {
 			return false;
 		}
 
+		if ($this->signals->isSignalField(field: $field) === true) {
+			return $this->evaluateSignalLeaf(field: $field, operator: $operator, handler: $handler, value: $value, entity: $entity);
+		}
+
 		if (str_contains($field, '.') === true) {
 			return $this->evaluateProjectedLeaf(entity: $entity, field: $field, handler: $handler, value: $value);
 		}
@@ -1109,12 +1144,42 @@ class SegmentService {
 	}//end evaluateLeaf()
 
 	/**
+	 * Evaluate a leaf whose field is a derived signal rather than a
+	 * stored property.
+	 *
+	 * 🔴 AN UNRESOLVED SIGNAL IS FALSE, WHATEVER THE OPERATOR. Handing a
+	 * null to the ordinary handlers would not fail: `compareNumeric()`
+	 * returns 0 when either side is not numeric, so `gte`, `lte` and
+	 * `between` all answer TRUE. "No invoice for twelve months" would then
+	 * match every customer on an instance without shillinq, and the send
+	 * list would look exactly like a correct one. `isNull` is the single
+	 * exception, because "this customer has no bookkeeping" is a question a
+	 * marketer may legitimately ask.
+	 *
+	 * @param string $field The signal field.
+	 * @param string $operator The rule operator, as written.
+	 * @param callable(mixed, mixed): bool $handler Operator handler.
+	 * @param mixed $value Rule value.
+	 * @param array<string, mixed> $entity Entity payload.
+	 *
+	 * @return bool Whether the entity matches.
+	 *
+	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-an-unresolved-signal-shrinks-the-audience
+	 */
+	private function evaluateSignalLeaf(string $field, string $operator, callable $handler, mixed $value, array $entity): bool {
+		$actual = $this->signals->valueFor(field: $field, entity: $entity);
+		if ($actual === null) {
+			return ($operator === 'isNull');
+		}
+
+		return $handler($actual, $value);
+	}//end evaluateSignalLeaf()
+
+	/**
 	 * Evaluate a dotted `arrayProp.subProp` leaf (e.g. `phones.kind`,
 	 * `socialProfiles.network`): project `subProp` across every element of
 	 * the entity's `arrayProp` list and return true when ANY element's
-	 * projected value satisfies the operator — "at least one phone entry
-	 * has kind mobile" rather than a literal lookup of the (non-existent)
-	 * key `"phones.kind"` on the entity.
+	 * projected value satisfies the operator.
 	 *
 	 * @param array<string, mixed> $entity Entity payload.
 	 * @param string $field Dotted field path (`arrayProp.subProp`).
@@ -1614,6 +1679,10 @@ class SegmentService {
 	 * @return bool True when coercion succeeds.
 	 */
 	private function isValueCoercible(mixed $value, string $fieldType, string $operator): bool {
+		if ($fieldType === 'array' && in_array($operator, ['contains', 'containsAny'], true) === true) {
+			return $this->isMembershipCoercible(value: $value);
+		}
+
 		if (in_array($operator, ['in', 'notIn', 'containsAny', 'between'], true) === true) {
 			if (is_array($value) === false) {
 				return false;
@@ -1634,6 +1703,38 @@ class SegmentService {
 
 		return $this->isScalarCoercible(value: $value, fieldType: $fieldType);
 	}//end isValueCoercible()
+
+	/**
+	 * Whether a value can be a MEMBER of an array-typed field.
+	 *
+	 * 🔴 ON AN ARRAY FIELD, `contains` ASKS ABOUT A MEMBER, NOT ABOUT THE
+	 * CONTAINER. Requiring the value to be an array made membership
+	 * unexpressible: `valueContains()` has always compared one needle against
+	 * each element, and the validator refused the only value shape that ever
+	 * reaches it. So "bought this product" could be evaluated and could not be
+	 * saved. Widening only, so no rule that validated before this change stops
+	 * validating.
+	 *
+	 * @param mixed $value One member, or a list of them.
+	 *
+	 * @return bool True when every candidate is a scalar.
+	 *
+	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-the-segment-builder-lists-the-signals-and-validates-a-rule-on-one
+	 */
+	private function isMembershipCoercible(mixed $value): bool {
+		$candidates = $value;
+		if (is_array($candidates) === false) {
+			$candidates = [$value];
+		}
+
+		foreach ($candidates as $candidate) {
+			if (is_scalar($candidate) === false) {
+				return false;
+			}
+		}
+
+		return true;
+	}//end isMembershipCoercible()
 
 	/**
 	 * Determine whether one scalar value coerces to the field type.

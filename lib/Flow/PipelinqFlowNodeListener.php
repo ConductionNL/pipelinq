@@ -73,6 +73,7 @@ class PipelinqFlowNodeListener implements IEventListener {
 	 */
 	private const NODES = [
 		CompetitorWatchRunNode::class,
+		JourneyActionNode::class,
 	];
 
 	/**

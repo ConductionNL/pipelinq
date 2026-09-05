@@ -4388,6 +4388,14 @@
 						"icon": "BullhornOutline",
 						"category": "marketing",
 						"route": "CampaignReportPage"
+					},
+					{
+						"id": "WeeklyReviewPage",
+						"label": "Weekly review",
+						"description": "What moved last week, what to try, and three topic ideas.",
+						"icon": "CalendarWeek",
+						"category": "marketing",
+						"route": "WeeklyReviewPage"
 					}
 				]
 			}

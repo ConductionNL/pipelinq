@@ -184,6 +184,8 @@ Vrij en open source onder de EUPL-1.2-licentie.
             -->
             <step>OCA\Pipelinq\Repair\BackfillContactChannelArrays</step>
             <step>OCA\Pipelinq\Repair\SeedTrustConfigurationRows</step>
+            <!-- Hermiq is an optional peer: the step is a silent no-op without it. -->
+            <step>OCA\Pipelinq\Repair\SeedWeeklyReviewAgentTemplate</step>
             <step>OCA\Pipelinq\Repair\RemoveRetiredAvgJobs</step>
             <step>OCA\Pipelinq\Repair\DrainMdmSyncQueue</step>
             <step>OCA\Pipelinq\Repair\MigrateAvgVerzoekenToOrDsar</step>
@@ -223,6 +225,8 @@ Vrij en open source onder de EUPL-1.2-licentie.
             -->
             <step>OCA\Pipelinq\Repair\RenameDutchPipelinqValues</step>
             <step>OCA\Pipelinq\Repair\SeedTrustConfigurationRows</step>
+            <!-- Hermiq is an optional peer: the step is a silent no-op without it. -->
+            <step>OCA\Pipelinq\Repair\SeedWeeklyReviewAgentTemplate</step>
         </install>
     </repair-steps>
 

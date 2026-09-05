@@ -1,0 +1,167 @@
+{
+	"menu": [
+		{
+			"id": "MarketingGroup",
+			"label": "Marketing",
+			"order": 130,
+			"children": [
+				{
+					"id": "Journeys",
+					"label": "Journeys",
+					"icon": "MapMarkerPath",
+					"route": "Journeys",
+					"order": 50
+				}
+			]
+		}
+	],
+	"pages": [
+		{
+			"id": "Journeys",
+			"_note": "Journey list as a declarative type:index page (marketing-integrated-campaigns), read-only. Create and edit go to JourneyFormView instead of the declarative dialog, and showAdd / showFormDialog / showEditAction are therefore off: every write compiles the journey into an OpenRegister flow, which only POST and PATCH /api/journeys do. A journey written through the object API would be stored and never compiled, and a journey that is never compiled looks exactly like one whose trigger has not fired yet. The flow status column is what makes that difference visible in the list.",
+			"route": "/journeys",
+			"type": "index",
+			"title": "Journeys",
+			"config": {
+				"register": "pipelinq",
+				"schema": "journey",
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"includeColumns": ["name", "status", "flowStatus", "waitFor"],
+				"actions": [
+					{
+						"id": "view",
+						"label": "Open",
+						"icon": "Eye",
+						"handler": "navigate",
+						"route": "JourneyDetail"
+					},
+					{
+						"id": "edit",
+						"label": "Edit",
+						"icon": "PencilOutline",
+						"handler": "navigate",
+						"route": "JourneyEdit"
+					}
+				],
+				"showAdd": false,
+				"showFormDialog": false,
+				"showEditAction": false,
+				"showCopyAction": false,
+				"headerActions": [
+					{
+						"id": "create",
+						"label": "New journey",
+						"icon": "Plus",
+						"handler": "navigate",
+						"route": "JourneyNew"
+					}
+				]
+			}
+		},
+		{
+			"id": "JourneyNew",
+			"_note": "Journey create as a thin route wrapper around JourneyFormView (marketing-integrated-campaigns), matching the CampaignNew convention. Custom rather than declarative: the write path compiles the journey into a flow and surfaces the flow engine's own refusal verbatim, which no declarative form primitive expresses. Missing primitive: a form whose save action returns a compilation result the page has to show.",
+			"route": "/journeys/new",
+			"type": "custom",
+			"title": "New journey",
+			"component": "JourneyFormView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "journey"
+			}
+		},
+		{
+			"id": "JourneyEdit",
+			"_note": "Journey edit as a thin route wrapper around JourneyFormView (marketing-integrated-campaigns). Same reason as JourneyNew: a journey saved through the declarative dialog is stored and never compiled.",
+			"route": "/journeys/:id/edit",
+			"type": "custom",
+			"title": "Edit journey",
+			"component": "JourneyFormView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "journey"
+			}
+		},
+		{
+			"id": "JourneyDetail",
+			"_note": "Journey record as a declarative type:detail page (ADR-062 grid). The journey's own fields auto-render in the details widget. The run log is a bodyWidgets section rather than a declarative object-list widget because the refusal reason has to be read as words: 'suppressed_dunning' is the answer to the only question a marketer asks here, and a raw enum value does not answer it. Its props carry @objectId, the only token that resolves on a detail page.",
+			"route": "/journeys/:id",
+			"type": "detail",
+			"title": "Journey",
+			"config": {
+				"register": "pipelinq",
+				"schema": "journey",
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"widgets": [
+					{
+						"id": "journey-data",
+						"type": "data",
+						"title": "Journey details",
+						"icon": "InformationOutline",
+						"content": {
+							"columns": 2,
+							"include": [
+								"description",
+								"status",
+								"audienceSegment",
+								"waitFor",
+								"flowStatus",
+								"flowError"
+							]
+						}
+					}
+				],
+				"layout": [
+					{
+						"id": "1",
+						"widgetId": "journey-data",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 12,
+						"gridHeight": 5
+					}
+				],
+				"bodyWidgets": [
+					{
+						"id": "journey-runs",
+						"component": "JourneyRunsSection",
+						"title": "What this journey did",
+						"placement": "end",
+						"props": {
+							"journeyId": "@objectId"
+						}
+					}
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true,
+					"tabs": [
+						{
+							"id": "audit",
+							"label": "History",
+							"icon": "History",
+							"widgets": [
+								{
+									"type": "audit"
+								}
+							]
+						}
+					]
+				}
+			}
+		},
+		{
+			"id": "WeeklyReviewPage",
+			"_note": "The weekly marketing review (marketing-integrated-campaigns, ADR-112). Reached as a card on the Reports page and never as a menu entry of its own. Custom because the page renders ONE aggregate response joining blasts, touchpoints, social publications and search queries, and because it names the sources it could NOT read rather than reporting them as zero; no declarative index or dashboard primitive expresses either. Missing primitive: an aggregation-backed report page.",
+			"route": "/reports/weekly-review",
+			"type": "custom",
+			"title": "Weekly review",
+			"component": "WeeklyReviewView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "weeklyReview",
+				"documentationUrl": "https://pipelinq.conduction.nl"
+			}
+		}
+	]
+}

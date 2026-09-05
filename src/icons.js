@@ -41,6 +41,7 @@ import BullhornOutline from 'vue-material-design-icons/BullhornOutline.vue'
 import Calendar from 'vue-material-design-icons/Calendar.vue'
 import CalendarCheck from 'vue-material-design-icons/CalendarCheck.vue'
 import CalendarClockOutline from 'vue-material-design-icons/CalendarClockOutline.vue'
+import CalendarWeek from 'vue-material-design-icons/CalendarWeek.vue'
 import CardAccountDetails from 'vue-material-design-icons/CardAccountDetails.vue'
 import CartArrowDown from 'vue-material-design-icons/CartArrowDown.vue'
 import CartOutline from 'vue-material-design-icons/CartOutline.vue'
@@ -113,6 +114,7 @@ import KeyVariant from 'vue-material-design-icons/KeyVariant.vue'
 import Link from 'vue-material-design-icons/Link.vue'
 import LinkVariant from 'vue-material-design-icons/LinkVariant.vue'
 import Magnify from 'vue-material-design-icons/Magnify.vue'
+import MapMarkerCheck from 'vue-material-design-icons/MapMarkerCheck.vue'
 import MapMarkerPath from 'vue-material-design-icons/MapMarkerPath.vue'
 import MessageOutline from 'vue-material-design-icons/MessageOutline.vue'
 import MessageText from 'vue-material-design-icons/MessageText.vue'
@@ -187,6 +189,7 @@ export default {
 	Calendar,
 	CalendarCheck,
 	CalendarClockOutline,
+	CalendarWeek,
 	CardAccountDetails,
 	CartArrowDown,
 	CartOutline,
@@ -259,6 +262,7 @@ export default {
 	Link,
 	LinkVariant,
 	Magnify,
+	MapMarkerCheck,
 	MapMarkerPath,
 	MessageOutline,
 	MessageText,
