@@ -26,7 +26,7 @@ Pipelinq already ships a compliant blast engine. Everything below is live in the
 | Performance dashboard with a chi-square A/B verdict | `BlastPerformanceDashboardView` | marketing-analytics |
 | SMS and WhatsApp messaging with per-channel consent and budgets | `80-whatsapp-sms-channel.json` | outbound-messaging |
 
-Two defects are known and are the first work of phase 1. The segment builder component is imported by nothing, so the Segments and Templates pages the user guide describes are not reachable. Segment validation fails on current OpenRegister because `SegmentService` still passes a removed `$published` argument to `SchemaMapper::find()` (pipelinq#773).
+Both of the defects this page opened with are fixed. The segment builder was imported by nothing, so the Segments and Templates pages the user guide describes could not be reached; they are mounted now. Segment validation failed on current OpenRegister because `SegmentService` passed a removed `$published` argument to `SchemaMapper::find()`; that call site no longer does (pipelinq#773, pipelinq#1764).
 
 ## Five rules
 
@@ -107,7 +107,7 @@ flowchart LR
 
 The transport is a per-tenant choice. The three endpoints on the right never change. They are `PublicPage` routes with signed tokens, throttled per ADR-082, and they fail closed.
 
-The Nextcloud `IMessage` interface has no header setter. Setting `List-Unsubscribe` and `List-Unsubscribe-Post` on the default transport needs either the private `Message::getSymfonyEmail()` or a Symfony `Email` sent through the same transport DSN. Phase 0 decides which and records it in its spec.
+The Nextcloud `IMessage` interface has no header setter. `List-Unsubscribe` and `List-Unsubscribe-Post` reach the default transport through the private `Message::getSymfonyEmail()`, called behind a `method_exists` guard so an install whose mailer does not expose it degrades with a logged warning rather than a fatal. Provider transports carry the headers natively.
 
 ## How a tenant connects an account
 
@@ -158,6 +158,8 @@ All schemas are OpenRegister configuration in `lib/Settings/register.d/`, follow
 - `lead` gains `firstTouch` and `lastTouch` UTM blocks written at form submission.
 
 ## Phases
+
+> **All six phases have shipped**, together with the phase 0 prerequisites. What each row promised is live on `development` and covered by Playwright, with three limits worth naming: social publishing is provable on Mastodon alone until the LinkedIn, Meta and X developer applications are filed; the keyword analysis needs a connected Search Console property; and the bookkeeping audiences need shillinq installed and a client linked to a shillinq organisation. The per-phase status is on the [feature page](../Features/marketing.md#the-six-phases).
 
 Phases are ordered by value and dependency. No dates. Tracks inside a phase can be built in parallel. Each phase names the openspec changes to open and the exit criterion that lets the next one start.
 

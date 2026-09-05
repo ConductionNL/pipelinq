@@ -39,18 +39,18 @@ Every blast sends through a transport you choose. A fresh install already has on
 
 The deliverability panel checks each transport's sender domain against SPF, DKIM and DMARC, so you know before you send whether Gmail and Yahoo will accept your mail in bulk.
 
-## What is planned
+## The six phases
 
-The programme runs in six phases, ordered by value. Each phase is a set of openspec changes; the [architecture page](../Technical/marketing-architecture.md#phases) lists them.
+The programme ran in six phases, ordered by value. Each phase is a set of openspec changes; the [architecture page](../Technical/marketing-architecture.md#phases) lists them. All six have shipped, with the limits each row names.
 
 | Phase | You will be able to | Status |
 | --- | --- | --- |
-| 1 · Lists and mailings | Run mailing lists people subscribe to, with double opt-in and a preference centre. Compose a newsletter from articles. Record work, private and mobile numbers, several email addresses and social handles per contact. Sending through your own mail server, your own Mail account, or a bulk provider is already live, see [Sending](#sending). | Planned |
-| 2 · Content hub and AI | Write an article once and reuse it in a newsletter, a social post and a portaliq page. Ask hermiq for a draft, a shorter subject line or a LinkedIn variant, in your organisation's voice. Every AI draft is marked and needs your approval before anything leaves. | Planned |
+| 1 · Lists and mailings | Run mailing lists people subscribe to, with double opt-in and a preference centre. Compose a newsletter from articles. Record work, private and mobile numbers, several email addresses and social handles per contact. Sending through your own mail server, your own Mail account, or a bulk provider is already live, see [Sending](#sending). | Live |
+| 2 · Content hub and AI | Write an article once and reuse it in a newsletter, a social post and a portaliq page. Ask hermiq for a draft, a shorter subject line or a LinkedIn variant, in your organisation's voice. Every AI draft is marked and needs your approval before anything leaves. | The content hub is live. Asking hermiq for a draft is not built yet: nothing can write into Pipelinq as an agent, so the mark exists and no agent sets it |
 | 3 · Social publishing | Connect your company pages on LinkedIn, Mastodon, Bluesky, X, Facebook, Instagram and Threads, and let colleagues connect their own profiles. Schedule and approve posts in one calendar. Where a network does not allow posting on someone's behalf, they receive the prepared post and share it themselves. See which posts perform. | Live for Mastodon; the other networks wait on their developer applications |
 | 4 · Campaigns and attribution | Group a mailing, posts and a landing page into one campaign. Create the landing page with a form in portaliq from Pipelinq. A form submission becomes a lead that remembers which mailing and which post brought it in. See attributed revenue per campaign, closed on paid invoices in shillinq. | Live |
 | 5 · Search and competitors | Connect Google Search Console and Matomo. See which keywords you rank for, which are within reach, which pages compete with each other, and which terms to use more or less. Follow competitors through their feeds, sitemaps and public social timelines. Check which clients follow you and whom you follow. | Live. The keyword analysis needs a connected Search Console property; the watches and the Matomo reports need an OpenConnector source each |
-| 6 · Integrated campaigns | Build audiences from bookkeeping: lapsed customers, top-tier customers, buyers of one product without another. Run journeys that start from a stage change or a renewal window. Get a weekly review from hermiq with what moved and what to try. | Planned |
+| 6 · Integrated campaigns | Build audiences from bookkeeping: lapsed customers, top-tier customers, buyers of one product without another. Run journeys that start from a stage change or a renewal window. Get a weekly review from hermiq with what moved and what to try. | Live. The two CRM audiences work everywhere; the four bookkeeping ones need shillinq installed and a client linked to a shillinq organisation, and say so when they cannot answer |
 
 ## How it stays yours
 
