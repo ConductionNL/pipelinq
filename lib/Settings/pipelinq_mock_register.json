@@ -681,7 +681,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "booking",
+          "schema": "appointmentBooking",
           "slug": "booking-booking-1-1"
         },
         "customerId": "Voorbeeld Customerid 1",
@@ -721,7 +721,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "booking",
+          "schema": "appointmentBooking",
           "slug": "booking-booking-2-2"
         },
         "customerId": "Voorbeeld Customerid 2",
@@ -761,7 +761,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "booking",
+          "schema": "appointmentBooking",
           "slug": "booking-booking-3-3"
         },
         "customerId": "Voorbeeld Customerid 3",

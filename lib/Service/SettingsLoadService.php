@@ -133,7 +133,7 @@ class SettingsLoadService {
 		// Appointment booking (appointment-booking).
 		'service',
 		'appointmentResource',
-		'booking',
+		'appointmentBooking',
 		'walkInTicket',
 		'availabilityCache',
 		// Expense-to-Shillinq accounts-payable sync (expense-shillinq-ap).
@@ -315,6 +315,8 @@ class SettingsLoadService {
 		// chair or person a customer books time with. The two share only `name`,
 		// `status` and `type`, none of which identifies the record.
 		'appointmentResource' => 'resource_schema',
+		// The appointment booking, same reasoning as the resource above.
+		'appointmentBooking' => 'booking_schema',
 	];
 
 	/**

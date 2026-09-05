@@ -123,7 +123,7 @@ class BookingServiceTest extends TestCase {
 			callback: static function (string $app, string $key, string $default = ''): string {
 				$values = [
 					'register' => 'pipelinq',
-					'booking_schema' => 'booking',
+					'booking_schema' => 'appointmentBooking',
 					'service_schema' => 'service',
 					'resource_schema' => 'appointmentResource',
 					'contact_schema' => 'contact',

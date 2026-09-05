@@ -2551,7 +2551,7 @@
 					{
 						"title": "Appointments",
 						"register": "pipelinq",
-						"schema": "booking",
+						"schema": "appointmentBooking",
 						"filter": { "customerId": "@objectId" },
 						"sort": { "field": "startAt", "dir": "desc" },
 						"columns": [

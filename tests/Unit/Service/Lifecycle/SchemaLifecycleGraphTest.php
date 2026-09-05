@@ -147,7 +147,7 @@ class SchemaLifecycleGraphTest extends TestCase {
 				'cancelled-by-business' => [],
 				'rescheduled' => [],
 			],
-			actual: $this->graph()->fullAdjacencyFor(schemaSlug: 'booking')
+			actual: $this->graph()->fullAdjacencyFor(schemaSlug: 'appointmentBooking')
 		);
 	}//end testBookingFullAdjacencyMatchesPriorMap()
 

@@ -79,7 +79,7 @@ class BookingService {
 	 *
 	 * @var string
 	 */
-	private const BOOKING_SCHEMA_SLUG = 'booking';
+	private const BOOKING_SCHEMA_SLUG = 'appointmentBooking';
 
 	/**
 	 * App-config key for the Service schema id/slug.

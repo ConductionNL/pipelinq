@@ -99,6 +99,10 @@ class RenameCollidingSchemaSlugs implements IRepairStep {
 		// message on a channel thread. The two share only `conversationId`,
 		// which points at a thread rather than identifying the message.
 		'message' => ['to' => 'channelMessage', 'with' => 'hermiq'],
+		// The appointment booking, alongside `appointmentResource` above.
+		// shillinq's bookings subsystem is the larger claimant, so its slug stays
+		// bare. The two share `status` and nothing else.
+		'booking' => ['to' => 'appointmentBooking', 'with' => 'shillinq'],
 	];
 
 	/**

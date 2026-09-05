@@ -243,7 +243,7 @@ test.describe('Booking admin surfaces (seeded)', () => {
 	}) => {
 		// Two future + one past: the card sorts upcoming ascending, then past
 		// descending (BookingsCard.sortedBookings).
-		const future = await fx.create('booking', {
+		const future = await fx.create('appointmentBooking', {
 			customerId,
 			serviceId,
 			startAt: hoursFromNow(48),
@@ -251,14 +251,14 @@ test.describe('Booking admin surfaces (seeded)', () => {
 			status: 'confirmed',
 		})
 		futureBookingId = String(future.id || future['@self']?.id)
-		await fx.create('booking', {
+		await fx.create('appointmentBooking', {
 			customerId,
 			serviceId,
 			startAt: hoursFromNow(72),
 			endAt: hoursFromNow(73),
 			status: 'pending-deposit',
 		})
-		const past = await fx.create('booking', {
+		const past = await fx.create('appointmentBooking', {
 			customerId,
 			serviceId,
 			startAt: hoursFromNow(-48),

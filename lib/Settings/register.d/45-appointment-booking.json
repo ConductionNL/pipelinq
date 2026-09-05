@@ -5,7 +5,7 @@
         "schemas": [
           "service",
           "appointmentResource",
-          "booking",
+          "appointmentBooking",
           "walkInTicket",
           "availabilityCache"
         ]
@@ -342,9 +342,9 @@
           }
         }
       },
-      "booking": {
+      "appointmentBooking": {
         "x-schema-org": "schema:Reservation",
-        "slug": "booking",
+        "slug": "appointmentBooking",
         "title": "Booking",
         "icon": "CalendarCheck",
         "version": "1.0.0",
@@ -1116,7 +1116,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "booking",
+          "schema": "appointmentBooking",
           "slug": "booking-001-completed"
         },
         "customerId": "00000000-0000-0000-0000-000000000001",
@@ -1156,7 +1156,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "booking",
+          "schema": "appointmentBooking",
           "slug": "booking-002-confirmed"
         },
         "customerId": "00000000-0000-0000-0000-000000000002",
