@@ -101,6 +101,19 @@ class BlastServiceTest extends TestCase {
 			}//end find()
 
 			/**
+			 * Every config `findAll()` was handed, newest last.
+			 *
+			 * Recorded so a test can assert what was pushed DOWN to
+			 * OpenRegister rather than only what came back: an ordering that
+			 * never leaves the service is invisible to a result-shaped
+			 * assertion, because the fake returns rows in insertion order
+			 * either way.
+			 *
+			 * @var array<int, array<string, mixed>>
+			 */
+			public array $findAllConfigs = [];
+
+			/**
 			 * Mock findAll() — mirrors the real OR ObjectService signature
 			 * (single $config array) and returns delivery rows filtered by
 			 * blastId and optional status / contactId, honouring limit/offset.
@@ -111,6 +124,7 @@ class BlastServiceTest extends TestCase {
 			 * @return array<int, array<string, mixed>> Rows.
 			 */
 			public function findAll(array $config = []): array {
+				$this->findAllConfigs[] = $config;
 				$out = $this->matchDeliveries(filters: ($config['filters'] ?? []));
 
 				$offset = (int)($config['offset'] ?? 0);
@@ -1528,4 +1542,46 @@ class BlastServiceTest extends TestCase {
 		$this->assertSame(1, $service->dispatchBlastDeliveries('blast-plain', 100));
 		$this->assertSame('<a href="https://example.org/">x</a>', $callService->calls[0]['bodyHtml']);
 	}//end testDispatchWithoutADecoratorSendsLinksAsAuthored()
+
+
+	/**
+	 * `listBlasts()` asks OpenRegister for the NEWEST blasts, not the first
+	 * fifty ever written.
+	 *
+	 * The assertion is on the config pushed DOWN, not on the rows that came
+	 * back, and that is the whole point: `findAll()` returns insertion order
+	 * when no sort is given, so a service that forgot to ask for one produces
+	 * exactly the same result shape from a fake as one that asked correctly.
+	 * The only place the difference is visible is the request.
+	 *
+	 * Regression guard for the defect this replaced: every caller called this
+	 * list "recent" — the docblock, the controller and PerformanceDashboard's
+	 * own comment — while a page of fifty was the fifty OLDEST rows. On an
+	 * instance past its first fifty sends the dashboard showed blasts nobody
+	 * was asking about, and it read as an empty Attribution tab rather than as
+	 * a wrong one.
+	 *
+	 * @return void
+	 *
+	 * @spec exclude Regression guard for a query-shape defect; no spec scenario
+	 *               describes the ORDER the list endpoint asks for.
+	 */
+	public function testListBlastsAsksOpenRegisterForTheNewestFirst(): void {
+		$this->objectService->findAllConfigs = [];
+
+		$this->service->listBlasts(status: null, page: 1, limit: 50);
+
+		$this->assertNotEmpty(
+			$this->objectService->findAllConfigs,
+			'listBlasts() must reach OpenRegister at all'
+		);
+		$config = $this->objectService->findAllConfigs[0];
+		$this->assertArrayHasKey(
+			'sort',
+			$config,
+			'listBlasts() must push an ORDER BY down to OpenRegister; without one '
+			. 'findAll() answers in insertion order and "recent" is the oldest fifty'
+		);
+		$this->assertSame(['createdAt' => 'desc'], $config['sort']);
+	}//end testListBlastsAsksOpenRegisterForTheNewestFirst()
 }//end class
