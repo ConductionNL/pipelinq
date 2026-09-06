@@ -308,6 +308,38 @@ test.describe('Campaign performance without a portal', () => {
 		expect(own.status, own.text).toBeLessThan(300)
 		expect(idOf(own.json), 'the minted blast must have an id').toBeTruthy()
 
+		// A CREATED BLAST IS NOT YET A LISTED BLAST, and minting one is not the
+		// same as arranging the precondition. The first attempt of this test on
+		// development at 518719f still failed: the object was written, the POST
+		// returned under 300, and `GET /api/blasts?limit=50` — which is what the
+		// dashboard reads — still answered with nothing. The page then rendered
+		// "No blasts yet", which is the correct thing to say about an empty
+		// list and the wrong thing for this test to meet. It passed on the
+		// retry a minute later, which is what a propagation delay looks like
+		// from the outside.
+		//
+		// So wait for the read the dashboard actually performs, rather than for
+		// the write. Polling the same endpoint is the only thing that can tell
+		// "the blast exists" from "the blast is visible to the page".
+		await expect
+			.poll(
+				async () => {
+					const listed = await api(
+						page,
+						'GET',
+						`${APP}/api/blasts?limit=50`,
+					)
+					const rows = listed.json?.results ?? listed.json?.data ?? []
+					return Array.isArray(rows) ? rows.length : 0
+				},
+				{
+					timeout: 30_000,
+					message:
+						'the minted blast never appeared in GET /api/blasts, so the dashboard would have had nothing to ask about',
+				},
+			)
+			.toBeGreaterThan(0)
+
 		await gotoRoute(page, '/blasts/performance')
 		const dash = page.locator('.performance-dashboard')
 		await expect(dash).toBeVisible({ timeout: 15000 })
