@@ -143,20 +143,172 @@ class ReferencesAuditCommand extends Command {
 
 		try {
 			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-		} catch (Throwable $e) {
-			$output->writeln('<error>OpenRegister is not available: '.$e->getMessage().'</error>');
-			return 1;
-		}
-
-		try {
 			$satellites = $this->readAll($objectService, self::REGISTER, self::SATELLITE_SCHEMA);
 		} catch (Throwable $e) {
 			$output->writeln('<error>could not read '.self::SATELLITE_SCHEMA.': '.$e->getMessage().'</error>');
 			return 1;
 		}
 
+		[$owners, $ownerIds] = $this->ownerIndex($objectService, $output);
+		$counts = $this->auditRows($objectService, $satellites, $owners, $ownerIds, $write, $output);
+		$this->report($output, $counts, $write);
+
+		if ($counts['dangling'] > 0) {
+			return 1;
+		}
+
+		return 0;
+	}//end execute()
+
+	/**
+	 * Classify every satellite row, writing the unambiguous ones when allowed.
+	 *
+	 * EXTRACTED FROM execute() alongside classifyRow(), because phpmd measured
+	 * the original at cyclomatic complexity 22 against a threshold of 10 here.
+	 * Splitting the loop out is not cosmetic: execute() now reads as "read,
+	 * index, audit, report", and each of those four is separately testable.
+	 *
+	 * @param mixed $objectService The OpenRegister object service.
+	 * @param array<int, mixed> $satellites The satellite rows.
+	 * @param array<string, array<int, string>> $owners Identity key to owner ids.
+	 * @param array<string, bool> $ownerIds Every known owner id.
+	 * @param bool $write Whether this run may write.
+	 * @param OutputInterface $output Console output.
+	 *
+	 * @return array<string, int> The per-outcome tally.
+	 */
+	private function auditRows(
+		mixed $objectService,
+		array $satellites,
+		array $owners,
+		array $ownerIds,
+		bool $write,
+		OutputInterface $output,
+	): array {
+		$counts = ['set' => 0, 'dangling' => 0, 'backfillable' => 0, 'ambiguous' => 0, 'unmatched' => 0, 'written' => 0];
+
+		foreach ($satellites as $raw) {
+			$row = $this->payload($raw);
+			if ($row === []) {
+				continue;
+			}
+
+			$verdict = $this->classifyRow($row, $owners, $ownerIds);
+			$counts[$verdict['outcome']]++;
+
+			if ($verdict['message'] !== '') {
+				$output->writeln($verdict['message']);
+			}
+
+			if ($verdict['outcome'] !== 'backfillable' || $write === false) {
+				continue;
+			}
+
+			if ($this->backfill($objectService, $verdict['id'], $verdict['owner'], $output) === true) {
+				$counts['written']++;
+			}
+		}//end foreach
+
+		return $counts;
+	}//end auditRows()
+
+	/**
+	 * Decide what one satellite row is, against the index of owners.
+	 *
+	 * EXTRACTED FROM execute(), which phpmd measured at cyclomatic complexity
+	 * 22 against a threshold of 15. The branching was never incidental: this is
+	 * a five-way classification, and naming it is what lets execute() read as
+	 * "classify, report, maybe write". The ORDER the cases are tested in
+	 * matters and is unchanged: a row carrying a reference is never a backfill
+	 * candidate, regardless of what its identity key would have matched.
+	 *
+	 * @param array<string, mixed> $row One satellite row's payload.
+	 * @param array<string, array<int, string>> $owners Identity key to owner ids.
+	 * @param array<string, bool> $ownerIds Every known owner id.
+	 *
+	 * @return array{outcome: string, id: string, owner: string, message: string} The verdict.
+	 */
+	private function classifyRow(array $row, array $owners, array $ownerIds): array {
+		$id = (string)($row['id'] ?? '');
+		$reference = trim((string)($row[self::REFERENCE_PROPERTY] ?? ''));
+		$identity = trim((string)($row[self::IDENTITY_KEY] ?? ''));
+
+		if ($reference !== '') {
+			// An empty owner index means the owner could not be read at all.
+			// That is reported as presence, never as a dangling link, or an
+			// outage would look like data loss.
+			if ($ownerIds === [] || isset($ownerIds[$reference]) === true) {
+				return ['outcome' => 'set', 'id' => $id, 'owner' => '', 'message' => ''];
+			}
+
+			return [
+				'outcome' => 'dangling',
+				'id' => $id,
+				'owner' => '',
+				'message' => '  <error>dangling</error>  '.$id.' -> '.$reference,
+			];
+		}
+
+		$candidates = ($owners[$identity] ?? []);
+		if ($identity === '' || $candidates === []) {
+			return ['outcome' => 'unmatched', 'id' => $id, 'owner' => '', 'message' => ''];
+		}
+
+		if (count($candidates) > 1) {
+			return [
+				'outcome' => 'ambiguous',
+				'id' => $id,
+				'owner' => '',
+				'message' => '  <comment>ambiguous</comment> '.$id.' '.self::IDENTITY_KEY.'='.$identity
+					.' matches '.count($candidates).' owners',
+			];
+		}
+
+		return ['outcome' => 'backfillable', 'id' => $id, 'owner' => $candidates[0], 'message' => ''];
+	}//end classifyRow()
+
+	/**
+	 * Write one unambiguous owner reference onto a satellite row.
+	 *
+	 * @param mixed $objectService The OpenRegister object service.
+	 * @param string $id The satellite row's id.
+	 * @param string $owner The owner id to record.
+	 * @param OutputInterface $output Console output.
+	 *
+	 * @return bool True when the write landed.
+	 */
+	private function backfill(mixed $objectService, string $id, string $owner, OutputInterface $output): bool {
+		try {
+			// Patch, NOT saveObject/updateObject. Those two are PUT-semantic: a
+			// property absent from the payload is written as null, so a
+			// one-field update through them quietly clears every field the
+			// read did not return.
+			$objectService->patchObject(
+				objectId: $id,
+				data: [self::REFERENCE_PROPERTY => $owner],
+				register: self::REGISTER,
+				schema: self::SATELLITE_SCHEMA,
+				_rbac: false,
+				_multitenancy: false
+			);
+			return true;
+		} catch (Throwable $e) {
+			$output->writeln('  <error>write failed</error> '.$id.': '.$e->getMessage());
+			return false;
+		}
+	}//end backfill()
+
+	/**
+	 * Index every owner record by the identity key both sides carry.
+	 *
+	 * @param mixed $objectService The OpenRegister object service.
+	 * @param OutputInterface $output Console output.
+	 *
+	 * @return array{0: array<string, array<int, string>>, 1: array<string, bool>} The index and the id set.
+	 */
+	private function ownerIndex(mixed $objectService, OutputInterface $output): array {
 		$owners = [];
-		$ownerReadable = true;
+
 		try {
 			foreach ($this->readAll($objectService, self::OWNER_REGISTER, self::OWNER_SCHEMA) as $row) {
 				$owner = $this->payload($row);
@@ -175,7 +327,7 @@ class ReferencesAuditCommand extends Command {
 				'<comment>shillinq is not readable ('.$e->getMessage().'). '
 				.'Nothing can be resolved or backfilled; reporting presence only.</comment>'
 			);
-			$ownerReadable = false;
+			return [[], []];
 		}//end try
 
 		$ownerIds = [];
@@ -185,68 +337,19 @@ class ReferencesAuditCommand extends Command {
 			}
 		}
 
-		$counts = ['set' => 0, 'dangling' => 0, 'backfillable' => 0, 'ambiguous' => 0, 'unmatched' => 0, 'written' => 0];
+		return [$owners, $ownerIds];
+	}//end ownerIndex()
 
-		foreach ($satellites as $raw) {
-			$row = $this->payload($raw);
-			if ($row === []) {
-				continue;
-			}
-
-			$id = (string)($row['id'] ?? '');
-			$reference = trim((string)($row[self::REFERENCE_PROPERTY] ?? ''));
-			$identity = trim((string)($row[self::IDENTITY_KEY] ?? ''));
-
-			if ($reference !== '') {
-				if ($ownerReadable === false || isset($ownerIds[$reference]) === true) {
-					$counts['set']++;
-					continue;
-				}
-
-				$counts['dangling']++;
-				$output->writeln('  <error>dangling</error>  '.$id.' -> '.$reference);
-				continue;
-			}
-
-			$candidates = ($owners[$identity] ?? []);
-			if ($identity === '' || $candidates === []) {
-				$counts['unmatched']++;
-				continue;
-			}
-
-			if (count($candidates) > 1) {
-				$counts['ambiguous']++;
-				$output->writeln(
-					'  <comment>ambiguous</comment> '.$id.' '.self::IDENTITY_KEY.'='.$identity
-					.' matches '.count($candidates).' owners'
-				);
-				continue;
-			}
-
-			$counts['backfillable']++;
-			if ($write === false) {
-				continue;
-			}
-
-			try {
-				// Patch, NOT saveObject/updateObject. Those two are
-				// PUT-semantic: a property absent from the payload is written
-				// as null, so a one-field update through them quietly clears
-				// every field the read did not return.
-				$objectService->patchObject(
-					objectId: $id,
-					data: [self::REFERENCE_PROPERTY => $candidates[0]],
-					register: self::REGISTER,
-					schema: self::SATELLITE_SCHEMA,
-					_rbac: false,
-					_multitenancy: false
-				);
-				$counts['written']++;
-			} catch (Throwable $e) {
-				$output->writeln('  <error>write failed</error> '.$id.': '.$e->getMessage());
-			}
-		}//end foreach
-
+	/**
+	 * Print the one-line summary, and the nudge toward the write option.
+	 *
+	 * @param OutputInterface $output Console output.
+	 * @param array<string, int> $counts The per-outcome tally.
+	 * @param bool $write Whether this run was allowed to write.
+	 *
+	 * @return void
+	 */
+	private function report(OutputInterface $output, array $counts, bool $write): void {
 		$output->writeln('');
 		$output->writeln(
 			sprintf(
@@ -268,13 +371,7 @@ class ReferencesAuditCommand extends Command {
 		if ($write === false && $counts['backfillable'] > 0) {
 			$output->writeln('Re-run with the write option to fill in the '.$counts['backfillable'].' unambiguous match(es).');
 		}
-
-		if ($counts['dangling'] > 0) {
-			return 1;
-		}
-
-		return 0;
-	}//end execute()
+	}//end report()
 
 	/**
 	 * Read every row of a schema in explicit limit/offset pages.
