@@ -4565,7 +4565,10 @@ OC.L10N.register(
         "Prepared Text": "Prepared Text",
         "The media the owner of a share-mode account is asked to post, frozen alongside the prepared text.": "The media the owner of a share-mode account is asked to post, frozen alongside the prepared text.",
         "Prepared Media": "Prepared Media",
-        "Publicly reachable address of the image.": "Publicly reachable address of the image."
+        "Publicly reachable address of the image.": "Publicly reachable address of the image.",
+        "Every performance request failed. Reload the page, and check the server log if it keeps happening.": "Every performance request failed. Reload the page, and check the server log if it keeps happening.",
+        "Send a blast, and the sessions its campaign brought in appear here.": "Send a blast, and the sessions its campaign brought in appear here.",
+        "Site traffic could not be read.": "Site traffic could not be read."
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -288,6 +288,26 @@ test.describe('Campaign performance without a portal', () => {
 		await landOnApp(page)
 		await putSettings(page, { [PORTAL_KEY]: '' })
 
+		// ARRANGE THE PRECONDITION, DO NOT INHERIT IT. "Not connected" is the
+		// answer to a per-blast performance read, so with no blast the page asks
+		// nothing and can never say it. This test used to rely on a blast left
+		// behind by a sibling, and on the development run of 2026-09-06 it ran
+		// against an empty list: `GET /api/blasts?limit=50` returned 200 with
+		// nothing in it, zero `/performance` calls were made, and the assertion
+		// waited out its 60 s against a block that was still saying "Loading".
+		const stamp = Date.now()
+		const { segmentId, templateId } = await seededFks(page)
+		const own = await api(page, 'POST', `${OR}/blast`, {
+			name: `Attribution tab ${stamp}`,
+			segmentId,
+			templateId,
+			channel: 'email',
+			status: 'sent',
+			totals: { sent: 1, delivered: 1, opened: 1, clicked: 0 },
+		})
+		expect(own.status, own.text).toBeLessThan(300)
+		expect(idOf(own.json), 'the minted blast must have an id').toBeTruthy()
+
 		await gotoRoute(page, '/blasts/performance')
 		const dash = page.locator('.performance-dashboard')
 		await expect(dash).toBeVisible({ timeout: 15000 })
