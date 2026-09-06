@@ -79,7 +79,7 @@
 									v-model="item.notes"
 									type="text"
 									class="inline-input inline-input--notes"
-									:placeholder="t('pipelinq', 'Notes...')"
+									:placeholder="t('pipelinq', 'Notes…')"
 									:aria-label="
 										t('pipelinq', 'Notes for {product}', {
 											product: getProductName(item.product),
@@ -123,9 +123,7 @@
 						},
 					)
 				}}
-				<NcButton
-					variant="tertiary"
-					@click="$emit('sync-value', grandTotal)">
+				<NcButton variant="tertiary" @click="$emit('syncValue', grandTotal)">
 					{{ t('pipelinq', 'Use calculated value') }}
 				</NcButton>
 			</div>
@@ -150,7 +148,7 @@
 							v-model="addForm.product"
 							:options="productOptions"
 							:aria-label-combobox="t('pipelinq', 'Product')"
-							:placeholder="t('pipelinq', 'Search products...')"
+							:placeholder="t('pipelinq', 'Search products…')"
 							label="name"
 							:reduce="(opt) => opt.id"
 							@update:modelValue="onProductSelect" />
@@ -240,7 +238,7 @@ export default {
 		},
 	},
 
-	emits: ['value-changed', 'sync-value'],
+	emits: ['valueChanged', 'syncValue'],
 	data() {
 		return {
 			lineItems: [],
@@ -374,7 +372,7 @@ export default {
 				this.showAddDialog = false
 				this.resetAddForm()
 				await this.fetchData()
-				this.$emit('value-changed', this.grandTotal)
+				this.$emit('valueChanged', this.grandTotal)
 			} catch (e) {
 				showError(e.message || t('pipelinq', 'Failed to add product'))
 			}
@@ -396,7 +394,7 @@ export default {
 					total,
 				})
 				item.total = total
-				this.$emit('value-changed', this.grandTotal)
+				this.$emit('valueChanged', this.grandTotal)
 			} catch (e) {
 				showError(e.message || t('pipelinq', 'Failed to update line item'))
 			}
@@ -424,7 +422,7 @@ export default {
 			try {
 				await this.objectStore.deleteObject('leadProduct', item.id)
 				await this.fetchData()
-				this.$emit('value-changed', this.grandTotal)
+				this.$emit('valueChanged', this.grandTotal)
 			} catch (e) {
 				showError(e.message || t('pipelinq', 'Failed to remove line item'))
 			}
@@ -494,7 +492,7 @@ export default {
 .viewTable th,
 .viewTable td {
 	padding: 8px 12px;
-	text-align: left;
+	text-align: start;
 	border-bottom: 1px solid var(--color-border);
 	vertical-align: middle;
 }
@@ -536,7 +534,7 @@ export default {
 }
 
 .total-label {
-	text-align: right;
+	text-align: end;
 	font-weight: 700;
 }
 
@@ -561,8 +559,7 @@ export default {
 .create-overlay {
 	position: fixed;
 	top: 0;
-	left: 0;
-	right: 0;
+	inset-inline: 0;
 	bottom: 0;
 	background: rgba(0, 0, 0, 0.5);
 	display: flex;

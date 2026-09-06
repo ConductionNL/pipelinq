@@ -26,7 +26,7 @@
  * run created (tracked by id), so a crashed run never leaves the register dirty
  * and a parallel run never deletes another run's data.
  */
-import { Page } from '@playwright/test'
+import type { Page } from '@playwright/test'
 
 /**
  * The OpenRegister register that holds pipelinq objects.
@@ -123,7 +123,7 @@ export class FixtureSession {
 					method,
 					headers: {
 						'Content-Type': 'application/json',
-						// eslint-disable-next-line no-undef
+
 						requesttoken: (window as any).OC?.requestToken || '',
 						'OCS-APIREQUEST': 'true',
 					},
@@ -221,7 +221,6 @@ export class FixtureSession {
 		delete (merged as any)['@self']
 		const res = await this.apiFetch('PUT', this.url(schema, id), merged)
 		if (!res.ok) {
-			// eslint-disable-next-line no-console
 			console.error(
 				`[fixture] PUT ${this.url(schema, id)} -> ${res.status}`
 					+ ` | patched keys: ${Object.keys(patch).join(', ')}`
@@ -267,7 +266,6 @@ export class FixtureSession {
 				() => undefined,
 			)
 			if (!res || !res.ok) {
-				// eslint-disable-next-line no-console
 				console.warn(
 					`[fixtures] cleanup failed for ${schema}/${id}: ${res?.status ?? 'no-response'}`,
 				)

@@ -207,7 +207,7 @@ export default {
 				if (defaultPipeline && Array.isArray(defaultPipeline.stages)) {
 					this.stages = defaultPipeline.stages
 				}
-			} catch (e) {
+			} catch {
 				// Non-fatal — overdue calc falls back to the date check
 				// without stage isClosed information.
 			}

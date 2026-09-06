@@ -213,10 +213,14 @@ class ConsentServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testOptInAfterOptOutKeepsHistory(): void {
+		// NO sleep(1) here, deliberately. There used to be one, with the comment
+		// "Force the next record to land later — usort uses recordedAt and
+		// gmdate seconds", and it was a workaround for a real ordering bug that
+		// it did not reliably work around: this test failed roughly one run in
+		// five. recordedAt now carries microseconds and the comparison parses
+		// instants, so two changes in the same second order correctly and the
+		// back-to-back calls below are the stronger test.
 		$this->service->recordOptOut('contact-1', 'sms', 'keyword-stop', 'stop');
-		// Force the next record to land later — usort uses
-		// recordedAt and gmdate seconds. Add a delay.
-		sleep(1);
 		$this->service->recordOptIn('contact-1', 'sms', 'chat-reply', 'JA');
 
 		$this->assertTrue($this->service->canSend('contact-1', 'sms'));

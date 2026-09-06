@@ -28,6 +28,8 @@ use OCP\IURLGenerator;
 
 /**
  * Activity filter for Pipelinq events.
+ *
+ * @spec openspec/specs/activity-stream-publishing/spec.md#requirement-activity-stream-publishing-uses-the-nextcloud-first-party-activity-api
  */
 class Filter implements IFilter {
 	/**
@@ -46,6 +48,7 @@ class Filter implements IFilter {
 	 * Get the unique identifier of the filter.
 	 *
 	 * @return string The filter identifier.
+	 * @spec openspec/specs/activity-stream-publishing/spec.md#requirement-activity-stream-publishing-uses-the-nextcloud-first-party-activity-api
 	 */
 	public function getIdentifier(): string {
 		return Application::APP_ID;
@@ -55,6 +58,7 @@ class Filter implements IFilter {
 	 * Get the human-readable name of the filter.
 	 *
 	 * @return string The filter name.
+	 * @spec openspec/specs/activity-stream-publishing/spec.md#requirement-activity-stream-publishing-uses-the-nextcloud-first-party-activity-api
 	 */
 	public function getName(): string {
 		return $this->l->t('Pipelinq');
@@ -64,6 +68,7 @@ class Filter implements IFilter {
 	 * Get the priority of the filter.
 	 *
 	 * @return int The filter priority.
+	 * @spec openspec/specs/activity-stream-publishing/spec.md#requirement-activity-stream-publishing-uses-the-nextcloud-first-party-activity-api
 	 */
 	public function getPriority(): int {
 		return 50;
@@ -73,6 +78,7 @@ class Filter implements IFilter {
 	 * Get the icon URL for the filter.
 	 *
 	 * @return string The icon URL.
+	 * @spec openspec/specs/activity-stream-publishing/spec.md#requirement-activity-stream-publishing-uses-the-nextcloud-first-party-activity-api
 	 */
 	public function getIcon(): string {
 		return $this->urlGenerator->getAbsoluteURL(
@@ -88,6 +94,7 @@ class Filter implements IFilter {
 	 * @return array<array-key, string> The filtered types.
 	 *
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) — $types required by IFilter interface
+	 * @spec openspec/specs/activity-stream-publishing/spec.md#requirement-activity-stream-publishing-uses-the-nextcloud-first-party-activity-api
 	 */
 	public function filterTypes(array $types): array {
 		return ['pipelinq_assignment', 'pipelinq_stage_status', 'pipelinq_notes'];
@@ -97,6 +104,7 @@ class Filter implements IFilter {
 	 * Get the allowed apps for this filter.
 	 *
 	 * @return array<array-key, string> The allowed app IDs.
+	 * @spec openspec/specs/activity-stream-publishing/spec.md#requirement-activity-stream-publishing-uses-the-nextcloud-first-party-activity-api
 	 */
 	public function allowedApps(): array {
 		return [Application::APP_ID];

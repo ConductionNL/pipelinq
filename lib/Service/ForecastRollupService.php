@@ -30,6 +30,9 @@ namespace OCA\Pipelinq\Service;
  * A "totals" array always has the shape:
  *   commit_amount, best_case_amount, pipeline_amount, closed_won_amount (floats).
  * The {@see self::EMPTY_TOTALS} constant provides the zeroed baseline.
+ *
+ * @spec exclude forecast has no owning requirement. pipeline-insights defers its config
+ *   scenario to admin-settings, which never grew one
  */
 class ForecastRollupService {
 	/**
@@ -128,6 +131,8 @@ class ForecastRollupService {
 	 * @param array<string, mixed> $snapshot The snapshot data.
 	 *
 	 * @return array<string, float> The four amounts.
+	 * @spec exclude forecast has no owning requirement. pipeline-insights defers its config
+	 *   scenario to admin-settings, which never grew one
 	 */
 	public function totalsFromSnapshot(array $snapshot): array {
 		$totals = $this->emptyTotals();
@@ -142,6 +147,8 @@ class ForecastRollupService {
 	 * A zeroed totals baseline.
 	 *
 	 * @return array<string, float> The empty totals.
+	 * @spec exclude forecast has no owning requirement. pipeline-insights defers its config
+	 *   scenario to admin-settings, which never grew one
 	 */
 	public function emptyTotals(): array {
 		return [

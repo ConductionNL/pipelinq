@@ -35,6 +35,8 @@ use OCP\Settings\IDelegatedSettings;
  *
  * Implements IDelegatedSettings so #[AuthorizedAdminSetting(AdminSettings::class)]
  * can scope the controllers that mutate Pipelinq configuration (SetupController).
+ *
+ * @spec openspec/specs/admin-settings/spec.md#REQ-AS-011
  */
 class AdminSettings implements IDelegatedSettings {
 	/**
@@ -77,6 +79,7 @@ class AdminSettings implements IDelegatedSettings {
 	 * Get the settings section ID.
 	 *
 	 * @return string The section ID.
+	 * @spec openspec/specs/admin-settings/spec.md#REQ-AS-011
 	 */
 	public function getSection(): string {
 		return 'pipelinq';
@@ -86,6 +89,7 @@ class AdminSettings implements IDelegatedSettings {
 	 * Get the settings priority.
 	 *
 	 * @return int The priority.
+	 * @spec openspec/specs/admin-settings/spec.md#REQ-AS-011
 	 */
 	public function getPriority(): int {
 		return 10;
@@ -95,6 +99,7 @@ class AdminSettings implements IDelegatedSettings {
 	 * Human-readable name of the delegated settings section.
 	 *
 	 * @return string|null The section name, or null to use the section default.
+	 * @spec openspec/specs/admin-settings/spec.md#REQ-AS-011
 	 */
 	public function getName(): ?string {
 		return null;
@@ -104,6 +109,7 @@ class AdminSettings implements IDelegatedSettings {
 	 * App config keys an authorized (delegated) admin may manage.
 	 *
 	 * @return array<string,string[]> Map of appId to allowed config keys.
+	 * @spec openspec/specs/admin-settings/spec.md#REQ-AS-011
 	 */
 	public function getAuthorizedAppConfig(): array {
 		return [];

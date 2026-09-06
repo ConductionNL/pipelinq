@@ -13,7 +13,7 @@
     "check:vue-demi": "node scripts/check-vue-demi.js",
     "dev": "NODE_ENV=development webpack --config webpack.config.js --progress",
     "watch": "NODE_ENV=development webpack --config webpack.config.js --progress --watch",
-    "lint": "eslint src",
+    "lint": "eslint src tests scripts",
     "lint-fix": "npm run lint -- --fix",
     "test:l10n": "node tests/l10n/check-l10n.js",
     "test:unit": "vitest run",
@@ -24,6 +24,7 @@
     "test:e2e:docs": "playwright test --project docs-capture",
     "test:e2e:install": "playwright install chromium",
     "check:manifest": "node scripts/check-manifest.js",
+    "check:spec-links": "node scripts/check-spec-links.js",
     "format": "prettier --check \"**/*.{js,ts,vue,css,scss}\"",
     "format:fix": "prettier --write \"**/*.{js,ts,vue,css,scss}\"",
     "prepare": "git config core.hooksPath .githooks || true",
@@ -34,8 +35,8 @@
     "extends @nextcloud/browserslist-config"
   ],
   "dependencies": {
-    "@conduction/nextcloud-vue": "^2.27.1",
-    "@nextcloud/axios": "~2.5.2",
+    "@conduction/nextcloud-vue": "^2.37.0",
+    "@nextcloud/axios": "~2.6.0",
     "@nextcloud/capabilities": "^1.2.1",
     "@nextcloud/dialogs": "^7.4.1",
     "@nextcloud/initial-state": "^3.0.0",
@@ -58,7 +59,7 @@
     "vuedraggable": "^4.1.0"
   },
   "overrides": {
-    "@nextcloud/axios": "~2.5.2"
+    "@nextcloud/axios": "$@nextcloud/axios"
   },
   "devDependencies": {
     "@babel/core": "^7.22.9",

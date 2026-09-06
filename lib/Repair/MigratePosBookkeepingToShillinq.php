@@ -97,6 +97,7 @@ class MigratePosBookkeepingToShillinq implements IRepairStep {
 	 * Get the name of this repair step.
 	 *
 	 * @return string The step name.
+	 * @spec openspec/specs/time-approval-workflow/spec.md#requirement-approved-time-entries-are-emitted-to-shillinqs-time-intake
 	 */
 	public function getName(): string {
 		return 'Migrate POS bookkeeping (GL mapping + outbound journal) to the shillinq integration registry';

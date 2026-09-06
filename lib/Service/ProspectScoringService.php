@@ -32,6 +32,8 @@ namespace OCA\Pipelinq\Service;
  * - Location (province) match: 20 points
  * - Legal form match: 15 points
  * - Active registration: 10 points
+ *
+ * @spec openspec/specs/prospect-discovery/spec.md#requirement-ideal-customer-profile-configuration
  */
 class ProspectScoringService {
 	/**

@@ -789,6 +789,7 @@ class PosBookkeepingService {
 	 * @return array<string, mixed> The Z-report.
 	 *
 	 * @throws OCSNotFoundException When the Z-report is not found.
+	 * @spec openspec/specs/time-approval-workflow/spec.md#requirement-approved-time-entries-are-emitted-to-shillinqs-time-intake
 	 */
 	public function fetchZReport(string $id): array {
 		return $this->fetchOne(schemaKey: 'posZReport_schema', id: $id, label: 'Z-report niet gevonden.');

@@ -5,13 +5,13 @@ TBD - created by archiving change pipelinq-setup-wizard-complete. Update Purpose
 ## Requirements
 ### Requirement: REQ-SETUP-PIP-004 — Optional Provisioning Action
 
-pipelinq SHALL expose a `provision-register` setup action (`POST /apps/pipelinq/api/setup/action/provision-register`, admin-only) that imports the pipelinq OpenRegister register + schemas and (re)creates the default pipelines, queues, skills, lead sources and request channels by delegating to the same provisioning the install-time repair step uses. The action SHALL be idempotent and SHALL fail gracefully with a precondition error when OpenRegister is not installed. It SHALL NOT be required and SHALL NOT gate the app.
+pipelinq SHALL expose a `provision-register` setup action (`POST /apps/pipelinq/api/setup/action/provision-register`, admin-only) that imports the pipelinq OpenRegister register + schemas and (re)creates the default pipelines, skills, lead sources and request channels by delegating to the same provisioning the install-time repair step uses. The action SHALL be idempotent and SHALL fail gracefully with a precondition error when OpenRegister is not installed. It SHALL NOT be required and SHALL NOT gate the app.
 
 #### Scenario: Provision on demand after enabling OpenRegister later
 
 - **GIVEN** an admin opens the setup wizard and the `provision` step
 - **WHEN** the admin runs the `provision-register` action
-- **THEN** the pipelinq register, default pipelines, queues and skills SHALL exist
+- **THEN** the pipelinq register, default pipelines and skills SHALL exist
 - **AND** running it again SHALL succeed without creating duplicates
 
 #### Scenario: Provision blocked without OpenRegister

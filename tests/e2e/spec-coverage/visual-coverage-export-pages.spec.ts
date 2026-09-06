@@ -6,12 +6,13 @@
  * that had no e2e test naming them.
  *
  * WHY THE EXISTING bi-export.spec.ts DID NOT COVER THESE. It drives the same
- * feature but deep-links with PATH-shaped URLs — `/apps/pipelinq/export/runs` —
- * while `src/main.js` builds `createWebHashHistory(...)`. With an empty hash
- * vue-router resolves `/` and renders the Dashboard; the spec's
- * `toHaveURL(/export\/runs/)` still passes because the PATH contains the words.
- * So those tests assert against whatever the Dashboard renders, and they never
- * name a component either. Everything below carries the `#`.
+ * feature but, while the app was hash-routed, deep-linked with PATH-shaped URLs
+ * — `/apps/pipelinq/export/runs` — which left the hash empty. vue-router
+ * resolved `/` and rendered the Dashboard, yet the spec's
+ * `toHaveURL(/export\/runs/)` still passed because the PATH contains the words,
+ * so those tests asserted against whatever the Dashboard rendered and never
+ * named a component. `src/main.js` now builds `createWebHistory(routerBase())`,
+ * so a path-shaped deep link resolves to the page it names.
  *
  * All five pages are `type: "custom"` manifest entries, so the route maps
  * straight onto the .vue file rather than onto the manifest renderer:
@@ -23,13 +24,14 @@
  *   /export/runs/:id           ExportRunDetailView      ExportRunDetail.vue
  */
 
-import { test, expect, type Page } from '@playwright/test'
+import type { Page } from '@playwright/test'
 
+import { expect, test } from '@playwright/test'
 import {
 	assertAppShellServed,
 	dismissSupportDialog,
 	dismissWalkthrough,
-} from '../helpers/pipelinq'
+} from '../helpers/pipelinq.ts'
 
 /**
  * A run id that deliberately does not exist. `ExportRunDetail.load()` answers a
@@ -48,13 +50,20 @@ const ABSENT_RUN_ID = 'e2e-gate26-no-such-run'
  * @param hash  The manifest `route`, e.g. `/export/runs`.
  */
 async function openSpaRoute(page: Page, hash: string): Promise<void> {
-	const response = await page.goto(`/apps/pipelinq/#${hash}`)
+	const response = await page.goto(`/apps/pipelinq${hash}`)
 	await assertAppShellServed(page, response)
 	// `routesFromManifest()` ends the table with a catch-all that REDIRECTS to
 	// `/`, so an unmatched route silently becomes the Dashboard. A surviving
-	// hash is the evidence that this route matched.
+	// path is the evidence that this route matched.
+	//
+	// ANCHORED AT THE END, which is the whole point. The header above records
+	// why: `toHaveURL(/export\/runs/)` passes on the Dashboard too, because the
+	// path it was deep-linked with still contains those words. `$` is what the
+	// Dashboard cannot satisfy — it lands on `/apps/pipelinq/`, which does not
+	// end with the route. This assertion used to anchor on a leading `#`, which
+	// stopped existing when the shell moved to createWebHistory.
 	await expect(page).toHaveURL(
-		new RegExp(`#${hash.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`),
+		new RegExp(`${hash.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`),
 		{ timeout: 10000 },
 	)
 	await dismissWalkthrough(page)
@@ -76,10 +85,11 @@ const content = (page: Page) => page.locator('#content-vue')
  *
  * @param page The Playwright page.
  */
-const indexTitle = (page: Page) =>
-	content(page)
+function indexTitle(page: Page) {
+	return content(page)
 		.locator('[data-testid="cn-index-page"] [data-testid="cn-page-title"]')
 		.first()
+}
 
 // ── src/views/export/ExportDestinations.vue — route `/export/destinations` ────
 test('ExportDestinations: /export/destinations mounts src/views/export/ExportDestinations.vue', async ({

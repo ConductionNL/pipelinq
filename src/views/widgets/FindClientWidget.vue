@@ -3,7 +3,7 @@
 		<div class="search-bar">
 			<NcTextField
 				v-model="searchQuery"
-				:placeholder="t('pipelinq', 'Search clients...')"
+				:placeholder="t('pipelinq', 'Search clients…')"
 				:label="t('pipelinq', 'Search')" />
 			<NcButton
 				variant="secondary"
@@ -36,7 +36,7 @@
 				@click="createClient">
 				{{
 					creatingClient
-						? t('pipelinq', 'Creating...')
+						? t('pipelinq', 'Creating…')
 						: t('pipelinq', 'Add client')
 				}}
 			</NcButton>
@@ -616,7 +616,7 @@ export default {
 .copy-feedback {
 	position: fixed;
 	bottom: 16px;
-	right: 16px;
+	inset-inline-end: 16px;
 	padding: 8px 16px;
 	background: var(--color-success);
 	color: var(--color-primary-text);

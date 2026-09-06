@@ -37,7 +37,7 @@ automatically.
 ### 1.1 Open the segment builder
 
 1. Navigate to **Marketing → Segments**.
-2. Click **+ New segment** in the top right.
+2. Click **New segment** in the top right.
 3. Give the segment a clear name (e.g. *Gemeente prospects — Zuid-Holland*).
    The name appears in the **New blast** wizard and on the performance
    dashboard.
@@ -96,7 +96,7 @@ or used in a blast (see *Compliance requirements* below).
 ### 2.1 Open the template editor
 
 1. Navigate to **Marketing → Templates**.
-2. Click **+ New template**.
+2. Click **New template**.
 3. Choose the **channel** (email or SMS).
 4. Give the template a name (e.g. *Q4 Outreach — Gemeenten*).
 
@@ -293,6 +293,50 @@ through a plain per-tenant connector without webhook support, enable
   footer are never rewritten, so unsubscribing and compliance
   reporting are unaffected by enabling this setting.
 
+#### Reporting to Portaliq traffic
+
+Run a portal in Portaliq next to Pipelinq? Then you can see mail opens
+and clicks next to site visits in that portal's traffic reports.
+
+- An admin sets **`blast.traffic_portal`** under **Admin settings,
+  Pipelinq** to the portal slug in Portaliq. Leave it empty to keep
+  mail tracking inside Pipelinq. Empty is the default.
+- Every recorded open or click is then also reported to that portal as
+  an `email_open` or `email_click` traffic event. The event carries the
+  blast, the contact reference, the campaign name and the clicked link.
+  It never carries an email address, IP address or user agent.
+- The blast delivery in Pipelinq stays the system of record. The
+  report runs after the delivery is written. When Portaliq is not
+  installed, or the report fails, the open or click is still recorded
+  here and the pixel or redirect still works.
+- Portaliq attributes mail traffic by campaign, not by person. A mail
+  open and a site visit only link when the site visit carries the same
+  campaign parameters. The next section is what makes that happen.
+
+#### Campaign parameters on links
+
+Every link in a sent blast carries the four GA4 campaign parameters, so
+the site visit it causes is attributed to the same campaign as the mail
+open:
+
+| Parameter | Value |
+| --- | --- |
+| `utm_source` | `email` |
+| `utm_medium` | `email` |
+| `utm_campaign` | the blast name as a slug, such as `spring-newsletter-2026` |
+| `utm_content` | the blast id |
+
+- A parameter you wrote into a link yourself is kept as written; only
+  the missing ones are added.
+- The unsubscribe link, in-page anchors and `mailto:` or `tel:` links
+  are never touched.
+- The parameters are added before the first-party click redirect wraps
+  the link, so the page the reader lands on carries them and Portaliq's
+  collector reads them.
+- An admin can switch this off with **Add campaign parameters to blast
+  links** under **Admin settings, Pipelinq, Marketing traffic**. It is
+  on by default.
+
 To stop a blast that is currently sending, click **Cancel**. All
 queued deliveries are aborted; deliveries already handed to the
 provider continue. The blast moves to `canceled`.
@@ -317,6 +361,26 @@ Sort by any column to find your best (or worst) campaigns.
 #### A/B testing tab
 
 The side-by-side variant comparison described in section 4.2.
+
+#### Site traffic from this campaign
+
+At the bottom of the **Attribution** tab, **Site traffic from this
+campaign** shows what each blast did on the site after the mail: the
+sessions Portaliq attributed to the blast's campaign, next to the
+blast's opens, clicks and attributed deals. It reads the portal's daily
+traffic rollups and matches them on the campaign value the links carry.
+
+- When no portal is set the block says **Not connected to a portal**.
+  Set the portal slug under **Admin settings, Pipelinq, Marketing
+  traffic** to connect it.
+- Sessions are counted per campaign, not per person: Pipelinq never
+  learns which contact visited.
+- Per-campaign page views and form submits are not in the portal's
+  rollup yet; the API returns them as empty until Portaliq adds them.
+
+The same numbers are available on `GET /api/blasts/{id}/performance`,
+with an optional `from` and `to` (`YYYY-MM-DD`) window that defaults to
+the blast's send date up to today.
 
 #### Attribution tab
 

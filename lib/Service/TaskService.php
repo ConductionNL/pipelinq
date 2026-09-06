@@ -34,6 +34,8 @@ use Psr\Log\LoggerInterface;
  * Service for task and callback request operations.
  *
  * Handles deadline calculation, task validation, and business hours logic.
+ *
+ * @spec openspec/specs/task-background-jobs/spec.md
  */
 class TaskService {
 	/**

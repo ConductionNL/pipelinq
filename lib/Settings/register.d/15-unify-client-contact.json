@@ -140,7 +140,7 @@
           "contactsUid": {
             "type": "string",
             "title": "Contacts UID",
-            "description": "Canonical foreign key to the Nextcloud addressbook contact (vCard UID) that this interaction was with — the party of the contact moment. Set by the migration from the linked client's contactsUid and on new interactions from the chosen party. Works for any addressbook party (client account or contact person).",
+            "description": "Canonical foreign key to the Nextcloud addressbook contact (vCard UID) that this interaction was with: the party of the contact moment. Set by the migration from the linked client's contactsUid and on new interactions from the chosen party. Works for any addressbook party (client account or contact person).",
             "maxLength": 255,
             "facetable": true
           }

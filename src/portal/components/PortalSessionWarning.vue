@@ -66,20 +66,28 @@ export default {
 			}
 		},
 
+		/**
+		 * @spec exclude portal session extension has no owning requirement, see
+		 *   PortalApp::logout
+		 */
 		async extend() {
 			try {
 				const result = await portalApi.extendSession()
 				setToken(getToken(), result.expiresAt)
 				this.visible = false
-			} catch (e) {
+			} catch {
 				this.expire()
 			}
 		},
 
+		/**
+		 * @spec exclude portal session handling has no owning requirement, see
+		 *   PortalApp::logout
+		 */
 		async logout() {
 			try {
 				await portalApi.logout()
-			} catch (e) {
+			} catch {
 				// best-effort
 			}
 			this.expire()

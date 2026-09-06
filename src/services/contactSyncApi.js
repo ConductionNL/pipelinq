@@ -33,3 +33,26 @@ export async function createWithContact(objectType, form) {
 	})
 	return data.object
 }
+
+/**
+ * Write-back sync of an existing client/contact to its linked Nextcloud
+ * Contact vCard (contacts-sync spec, write-back requirement). Best-effort:
+ * a failure here must never block the caller's own save flow, since the
+ * Pipelinq object is already persisted by the time this runs.
+ *
+ * @param {string} objectType The object type ('client' or 'contact').
+ * @param {string} objectId The saved object's id.
+ * @return {Promise<string|null>} The contacts UID on success, or null.
+ * @spec openspec/changes/contact-channel-details/specs/contacts-sync/spec.md
+ */
+export async function writeBack(objectType, objectId) {
+	try {
+		const { data } = await axios.post(base('/api/contacts-sync/write-back'), {
+			objectType,
+			objectId,
+		})
+		return data?.contactsUid || null
+	} catch {
+		return null
+	}
+}

@@ -78,6 +78,7 @@ class CallVoipAdapter implements CtiAdapterInterface {
 	 * {@inheritDoc}
 	 *
 	 * @return string The platform identifier.
+	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-inbound-screen-pop-on-call-answer-req-cti-001
 	 */
 	public function getPlatform(): string {
 		return 'callvoip';
@@ -193,6 +194,7 @@ class CallVoipAdapter implements CtiAdapterInterface {
 	 * @param string $callerId The caller ID to present.
 	 *
 	 * @return CtiCallResult The result of the originate request.
+	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-inbound-screen-pop-on-call-answer-req-cti-001
 	 */
 	public function originateCall(string $extension, string $targetNumber, string $callerId): CtiCallResult {
 		if ($this->rateLimit() === false) {
@@ -272,6 +274,7 @@ class CallVoipAdapter implements CtiAdapterInterface {
 	 * @param string $signature The signature to verify.
 	 *
 	 * @return bool True when the signature is valid.
+	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-inbound-screen-pop-on-call-answer-req-cti-001
 	 */
 	public function verifyWebhookSignature(string $payload, string $signature): bool {
 		$secret = $this->appConfig->getValueString(Application::APP_ID, 'cti_callvoip_webhook_secret', '');

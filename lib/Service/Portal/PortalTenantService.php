@@ -33,6 +33,11 @@ use OCP\AppFramework\Http;
 
 /**
  * Resolves and persists portal tenant configuration.
+ *
+ * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+ *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+ *   sessions, tokens, delegation, documents, invoices, orders, exports and
+ *   audit are all unspecified
  */
 class PortalTenantService {
 	/**
@@ -94,6 +99,10 @@ class PortalTenantService {
 	 * @param string|null $widgetTenant The X-Portal-Tenant header value (widget mode).
 	 *
 	 * @return string The resolved tenant id.
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function resolveTenantId(?string $host, ?string $widgetTenant): string {
 		$host = strtolower(trim((string)$host));
@@ -126,6 +135,10 @@ class PortalTenantService {
 	 * @param string $tenantId The tenant id.
 	 *
 	 * @return array<string, mixed>|null The config, or null.
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function getConfig(string $tenantId): ?array {
 		return $this->repository->findOneBy(self::SCHEMA, ['tenantId' => $tenantId]);
@@ -137,6 +150,10 @@ class PortalTenantService {
 	 * @param string $tenantId The tenant id.
 	 *
 	 * @return array<string, mixed> The public config (defaults when unconfigured).
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function getPublicConfig(string $tenantId): array {
 		$config = ($this->getConfig(tenantId: $tenantId) ?? $this->defaults(tenantId: $tenantId));
@@ -160,6 +177,10 @@ class PortalTenantService {
 	 * @return array<string, mixed> The saved config.
 	 *
 	 * @throws PortalException When contrast is below AA.
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function saveConfig(string $tenantId, array $config): array {
 		$config['tenantId'] = $tenantId;
@@ -181,6 +202,10 @@ class PortalTenantService {
 	 * @param string $feature The feature key (e.g. invoices).
 	 *
 	 * @return bool True when enabled.
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function isFeatureEnabled(string $tenantId, string $feature): bool {
 		$config = ($this->getConfig(tenantId: $tenantId) ?? $this->defaults(tenantId: $tenantId));
@@ -197,6 +222,10 @@ class PortalTenantService {
 	 * @return void
 	 *
 	 * @throws PortalException When the feature is disabled.
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function requireFeature(string $tenantId, string $feature): void {
 		if ($this->isFeatureEnabled(tenantId: $tenantId, feature: $feature) === false) {
@@ -214,6 +243,10 @@ class PortalTenantService {
 	 * @param string $tenantId The tenant id.
 	 *
 	 * @return bool True when enforced.
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function mfaEnforced(string $tenantId): bool {
 		$config = $this->getConfig(tenantId: $tenantId);
@@ -226,6 +259,10 @@ class PortalTenantService {
 	 * @param string $tenantId The tenant id.
 	 *
 	 * @return int The TTL in hours.
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function sessionTtlHours(string $tenantId): int {
 		$config = $this->getConfig(tenantId: $tenantId);
@@ -244,6 +281,10 @@ class PortalTenantService {
 	 * @param string|null $origin The request Origin header.
 	 *
 	 * @return bool True when widget embedding from this origin is allowed.
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function isWidgetOriginAllowed(string $tenantId, ?string $origin): bool {
 		$config = $this->getConfig(tenantId: $tenantId);
@@ -293,6 +334,11 @@ class PortalTenantService {
 	 * fix is to BUILD that flow and call this from it — never to invent an
 	 * account-creation endpoint just to give the predicate a caller. Decision
 	 * pending in pipelinq#764.
+	 *
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function isSelfSignupAllowed(string $tenantId): bool {
 		$config = $this->getConfig(tenantId: $tenantId);

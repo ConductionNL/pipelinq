@@ -53,6 +53,8 @@ use Throwable;
  *  engine, the per-category complaint SLA service, the ticket resolver and OR's
  *  ObjectService over date/time value objects. Splitting would only shuffle the
  *  same collaborators between two halves of one sweep.
+ *
+ * @spec openspec/specs/sla-engine-and-escalation/spec.md#requirement-attainment-reporting
  */
 class SlaDeadlineSweepJob extends TimedJob {
 	private const BATCH_SIZE = 100;

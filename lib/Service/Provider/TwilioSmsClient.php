@@ -116,6 +116,7 @@ class TwilioSmsClient implements SmsProviderClientInterface {
 	 * @param string $signature Header value.
 	 *
 	 * @return bool True when authentic.
+	 * @spec openspec/specs/outbound-messaging/spec.md#REQ-OM-004
 	 */
 	public function verifySignature(string $rawBody, string $signature): bool {
 		if ($this->webhookSecret === '' || $signature === '') {
@@ -135,6 +136,7 @@ class TwilioSmsClient implements SmsProviderClientInterface {
 	 * Vendor key.
 	 *
 	 * @return string `twilio`.
+	 * @spec openspec/specs/outbound-messaging/spec.md#REQ-OM-004
 	 */
 	public function getVendor(): string {
 		return 'twilio';

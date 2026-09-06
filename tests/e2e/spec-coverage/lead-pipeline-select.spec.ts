@@ -18,9 +18,10 @@
  * passes in one and fails in the other for no product reason.
  */
 
-import { test, expect, type Page } from '@playwright/test'
+import type { Page } from '@playwright/test'
 
-import { dismissSupportDialog, dismissWalkthrough } from '../helpers/pipelinq'
+import { expect, test } from '@playwright/test'
+import { dismissSupportDialog, dismissWalkthrough } from '../helpers/pipelinq.ts'
 
 /** Open the New Lead dialog from the dashboard header actions. */
 async function openNewLeadDialog(page: Page) {

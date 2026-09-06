@@ -264,4 +264,203 @@ class BlastWebhookControllerTest extends TestCase {
 		$response = $this->buildController(rawBody: $tamperedBody)->ses();
 		$this->assertSame(Http::STATUS_UNPROCESSABLE_ENTITY, $response->getStatus());
 	}//end testSesRejectsTamperedBody()
+
+	/**
+	 * marketing-mail-transports — Brevo: valid signature normalises a
+	 * hard-bounce event and enqueues it.
+	 *
+	 * @return void
+	 */
+	public function testBrevoValidSignatureEnqueuesEvent(): void {
+		$secret = 'brevo-secret';
+		$rawBody = '{"event":"hard_bounce","email":"user@example.com","message-id":"brevo-1","date":"2026-06-07T12:00:00Z","reason":"mailbox does not exist"}';
+		$sig = hash_hmac('sha256', $rawBody, $secret);
+
+		$this->appConfigStore['blast.webhook_secret.brevo'] = $secret;
+		$this->request->method('getHeader')->willReturnCallback(
+			function (string $header) use ($sig): string {
+				if ($header === 'X-Pipelinq-Signature') {
+					return $sig;
+				}
+
+				return '';
+			}
+		);
+
+		$this->blastSendJob->expects($this->once())
+			->method('enqueueWebhookEvent')
+			->with($this->equalTo('brevo'),
+				$this->callback(function (array $event): bool {
+					return ($event['eventType'] ?? '') === 'bounce'
+						&& ($event['bounceType'] ?? '') === 'hard'
+						&& ($event['providerId'] ?? '') === 'brevo-1'
+						&& ($event['email'] ?? '') === 'user@example.com';
+				}),
+			);
+
+		$response = $this->buildController(rawBody: $rawBody)->brevo();
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+	}//end testBrevoValidSignatureEnqueuesEvent()
+
+	/**
+	 * marketing-mail-transports — Brevo: invalid signature → 422, no enqueue.
+	 *
+	 * @return void
+	 */
+	public function testBrevoInvalidSignatureReturns422(): void {
+		$this->request->method('getHeader')->willReturn('');
+		$this->blastSendJob->expects($this->never())->method('enqueueWebhookEvent');
+
+		$response = $this->buildController(rawBody: '{"event":"delivered"}')->brevo();
+		$this->assertSame(Http::STATUS_UNPROCESSABLE_ENTITY, $response->getStatus());
+	}//end testBrevoInvalidSignatureReturns422()
+
+	/**
+	 * marketing-mail-transports — Mailjet: valid signature normalises an
+	 * unsubscribe event from a batch array and enqueues it.
+	 *
+	 * @return void
+	 */
+	public function testMailjetValidSignatureEnqueuesEvent(): void {
+		$secret = 'mailjet-secret';
+		$rawBody = '[{"event":"unsub","email":"user@example.com","MessageID":123456,"time":1700000000}]';
+		$sig = hash_hmac('sha256', $rawBody, $secret);
+
+		$this->appConfigStore['blast.webhook_secret.mailjet'] = $secret;
+		$this->request->method('getHeader')->willReturnCallback(
+			function (string $header) use ($sig): string {
+				if ($header === 'X-Pipelinq-Signature') {
+					return $sig;
+				}
+
+				return '';
+			}
+		);
+
+		$this->blastSendJob->expects($this->once())
+			->method('enqueueWebhookEvent')
+			->with($this->equalTo('mailjet'),
+				$this->callback(function (array $event): bool {
+					return ($event['eventType'] ?? '') === 'unsubscribe'
+						&& ($event['providerId'] ?? '') === '123456'
+						&& ($event['email'] ?? '') === 'user@example.com';
+				}),
+			);
+
+		$response = $this->buildController(rawBody: $rawBody)->mailjet();
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+	}//end testMailjetValidSignatureEnqueuesEvent()
+
+	/**
+	 * marketing-mail-transports — Mailjet: invalid signature → 422, no enqueue.
+	 *
+	 * @return void
+	 */
+	public function testMailjetInvalidSignatureReturns422(): void {
+		$this->request->method('getHeader')->willReturn('');
+		$this->blastSendJob->expects($this->never())->method('enqueueWebhookEvent');
+
+		$response = $this->buildController(rawBody: '[]')->mailjet();
+		$this->assertSame(Http::STATUS_UNPROCESSABLE_ENTITY, $response->getStatus());
+	}//end testMailjetInvalidSignatureReturns422()
+
+	/**
+	 * marketing-mail-transports — Mailgun: valid signature normalises a
+	 * `complained` event-data payload and enqueues a complaint.
+	 *
+	 * @return void
+	 */
+	public function testMailgunValidSignatureEnqueuesEvent(): void {
+		$secret = 'mailgun-secret';
+		$rawBody = '{"event-data":{"event":"complained","recipient":"user@example.com","timestamp":1700000000,"id":"mg-1"}}';
+		$sig = hash_hmac('sha256', $rawBody, $secret);
+
+		$this->appConfigStore['blast.webhook_secret.mailgun'] = $secret;
+		$this->request->method('getHeader')->willReturnCallback(
+			function (string $header) use ($sig): string {
+				if ($header === 'X-Pipelinq-Signature') {
+					return $sig;
+				}
+
+				return '';
+			}
+		);
+
+		$this->blastSendJob->expects($this->once())
+			->method('enqueueWebhookEvent')
+			->with($this->equalTo('mailgun'),
+				$this->callback(function (array $event): bool {
+					return ($event['eventType'] ?? '') === 'complaint'
+						&& ($event['providerId'] ?? '') === 'mg-1'
+						&& ($event['email'] ?? '') === 'user@example.com';
+				}),
+			);
+
+		$response = $this->buildController(rawBody: $rawBody)->mailgun();
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+	}//end testMailgunValidSignatureEnqueuesEvent()
+
+	/**
+	 * marketing-mail-transports — Mailgun: invalid signature → 422, no enqueue.
+	 *
+	 * @return void
+	 */
+	public function testMailgunInvalidSignatureReturns422(): void {
+		$this->request->method('getHeader')->willReturn('');
+		$this->blastSendJob->expects($this->never())->method('enqueueWebhookEvent');
+
+		$response = $this->buildController(rawBody: '{"event-data":{"event":"delivered"}}')->mailgun();
+		$this->assertSame(Http::STATUS_UNPROCESSABLE_ENTITY, $response->getStatus());
+	}//end testMailgunInvalidSignatureReturns422()
+
+	/**
+	 * marketing-mail-transports — Postmark: valid `X-Pipelinq-Signature`
+	 * (Postmark has no native payload signature) normalises a hard-bounce
+	 * event and enqueues it.
+	 *
+	 * @return void
+	 */
+	public function testPostmarkValidSignatureEnqueuesEvent(): void {
+		$secret = 'postmark-secret';
+		$rawBody = '{"RecordType":"Bounce","Type":"HardBounce","MessageID":"pm-1","Email":"user@example.com","BouncedAt":"2026-06-07T12:00:00Z","Description":"mailbox unavailable"}';
+		$sig = hash_hmac('sha256', $rawBody, $secret);
+
+		$this->appConfigStore['blast.webhook_secret.postmark'] = $secret;
+		$this->request->method('getHeader')->willReturnCallback(
+			function (string $header) use ($sig): string {
+				if ($header === 'X-Pipelinq-Signature') {
+					return $sig;
+				}
+
+				return '';
+			}
+		);
+
+		$this->blastSendJob->expects($this->once())
+			->method('enqueueWebhookEvent')
+			->with($this->equalTo('postmark'),
+				$this->callback(function (array $event): bool {
+					return ($event['eventType'] ?? '') === 'bounce'
+						&& ($event['bounceType'] ?? '') === 'hard'
+						&& ($event['providerId'] ?? '') === 'pm-1'
+						&& ($event['email'] ?? '') === 'user@example.com';
+				}),
+			);
+
+		$response = $this->buildController(rawBody: $rawBody)->postmark();
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+	}//end testPostmarkValidSignatureEnqueuesEvent()
+
+	/**
+	 * marketing-mail-transports — Postmark: invalid signature → 422, no enqueue.
+	 *
+	 * @return void
+	 */
+	public function testPostmarkInvalidSignatureReturns422(): void {
+		$this->request->method('getHeader')->willReturn('');
+		$this->blastSendJob->expects($this->never())->method('enqueueWebhookEvent');
+
+		$response = $this->buildController(rawBody: '{"RecordType":"Delivery"}')->postmark();
+		$this->assertSame(Http::STATUS_UNPROCESSABLE_ENTITY, $response->getStatus());
+	}//end testPostmarkInvalidSignatureReturns422()
 }//end class

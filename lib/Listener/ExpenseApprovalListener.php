@@ -335,7 +335,7 @@ class ExpenseApprovalListener implements IEventListener, DeferredObjectWork {
 		}
 
 		$entityType = $this->schemaMapService->resolveEntityType(schemaId: $schemaId);
-		if ($entityType === 'expense') {
+		if ($entityType === 'billableExpense') {
 			return true;
 		}
 

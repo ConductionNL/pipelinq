@@ -413,18 +413,6 @@ class SlaAttainmentControllerTest extends TestCase {
 		// double is wired correctly and that this endpoint CAN see seeded data.
 		$this->assertSame(1, $data['met']);
 
-		if ($data['breached'] === 0) {
-			$this->markTestSkipped(
-				'BUG: SlaAttainmentService::loadBreachEventsInRange() supplies register/schema at '
-				. 'the TOP LEVEL of the findAll() config (lib/Service/SlaAttainmentService.php:456) '
-				. 'instead of inside `filters`, which is the only place '
-				. 'ObjectService::prepareFindAllConfig() reads them — the query resolves no '
-				. 'register/schema context and MagicMapper::findAll() returns []. '
-				. '/api/sla/attainment therefore answers 200 while reporting zero breaches forever. '
-				. 'The same mistake sits at line 631 (fetchTrackedObjectRows). '
-				. 'See coordinator report.'
-			);
-		}
 
 		$this->assertSame(1, $data['breached']);
 		$this->assertSame(2, $data['total']);

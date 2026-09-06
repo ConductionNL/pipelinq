@@ -91,6 +91,8 @@ interface BerichtenboxAdapterInterface {
 	 *
 	 * @return BerichtenboxResult The dispatch outcome (status +
 	 *                            Logius-side kenmerk).
+	 *
+	 * @spec openspec/specs/portal-contribution/spec.md
 	 */
 	public function dispatchMessage(array $message): BerichtenboxResult;
 
@@ -106,6 +108,7 @@ interface BerichtenboxAdapterInterface {
 	 *                                      `X-Logius-Signature`).
 	 *
 	 * @return BerichtenboxResult The verification outcome.
+	 * @spec openspec/specs/portal-contribution/spec.md
 	 */
 	public function verifyDeliveryWebhook(string $rawBody, array $headers): BerichtenboxResult;
 
@@ -115,6 +118,7 @@ interface BerichtenboxAdapterInterface {
 	 * @param string $bsn 9-digit Burgerservicenummer.
 	 *
 	 * @return BerichtenboxResult The mailbox-status outcome.
+	 * @spec openspec/specs/portal-contribution/spec.md
 	 */
 	public function checkMailbox(string $bsn): BerichtenboxResult;
 
@@ -123,6 +127,7 @@ interface BerichtenboxAdapterInterface {
 	 * Logius.
 	 *
 	 * @return bool TRUE when the adapter is a log-only stub.
+	 * @spec openspec/specs/portal-contribution/spec.md
 	 */
 	public function isDormant(): bool;
 }//end interface

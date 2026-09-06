@@ -253,7 +253,7 @@ class SemanticHandoffController extends Controller {
 			return new JSONResponse(['status' => 'unauthorized'], Http::STATUS_UNAUTHORIZED);
 		}
 
-		$contract = $this->loadObject(schema: $this->schemaSlug(key: 'contract_schema', default: 'contract'), id: $id);
+		$contract = $this->loadObject(schema: $this->schemaSlug(key: 'contract_schema', default: 'salesContract'), id: $id);
 		if ($contract === null) {
 			return new JSONResponse(['status' => 'not-found'], Http::STATUS_NOT_FOUND);
 		}
@@ -290,7 +290,7 @@ class SemanticHandoffController extends Controller {
 			return new JSONResponse(['status' => 'unauthorized'], Http::STATUS_UNAUTHORIZED);
 		}
 
-		$contract = $this->loadObject(schema: $this->schemaSlug(key: 'contract_schema', default: 'contract'), id: $id);
+		$contract = $this->loadObject(schema: $this->schemaSlug(key: 'contract_schema', default: 'salesContract'), id: $id);
 		if ($contract === null) {
 			return new JSONResponse(['status' => 'not-found'], Http::STATUS_NOT_FOUND);
 		}
@@ -314,7 +314,7 @@ class SemanticHandoffController extends Controller {
 
 		$result = $this->handoffService->handoff(
 			register: $this->registerSlug(),
-			schema: $this->schemaSlug(key: 'contract_schema', default: 'contract'),
+			schema: $this->schemaSlug(key: 'contract_schema', default: 'salesContract'),
 			id: $id,
 			handoffId: self::HANDOFF_SEND_TO_INVOICING
 		);
@@ -328,7 +328,7 @@ class SemanticHandoffController extends Controller {
 
 		$contract['invoiceReference'] = (string)$result['targetUuid'];
 		$this->saveObject(
-			schema: $this->schemaSlug(key: 'contract_schema', default: 'contract'),
+			schema: $this->schemaSlug(key: 'contract_schema', default: 'salesContract'),
 			id: $id,
 			payload: $contract
 		);

@@ -13,13 +13,14 @@
  * looked at.
  */
 
-import { test, expect, type Page } from '@playwright/test'
+import type { Page } from '@playwright/test'
 
-import { dismissSupportDialog, dismissWalkthrough } from '../helpers/pipelinq'
+import { expect, test } from '@playwright/test'
+import { dismissSupportDialog, dismissWalkthrough } from '../helpers/pipelinq.ts'
 
 /** Open the New Request dialog from the Customer Support header action. */
 async function openNewRequestDialog(page: Page) {
-	await page.goto('/apps/pipelinq/#/werkplek')
+	await page.goto('/apps/pipelinq/werkplek')
 	await dismissWalkthrough(page)
 	await dismissSupportDialog(page)
 
@@ -35,12 +36,25 @@ async function openNewRequestDialog(page: Page) {
 	return dialog
 }
 
+// Customer Support is a heavy page: a queue filter, two object lists, the
+// interaction form, a knowledge-base search and a client-cases list all load
+// before the header action is usable. Reaching it, opening the dialog and then
+// driving two debounced pickers does not reliably fit the default 30s.
+//
+// This applies to EVERY test in the file, not one of them. The first run
+// flaked on the cascade test and a repeat run flaked on the other — same
+// ceiling, different victim — so widening only the one that happened to fail
+// would have just moved the flake.
+test.beforeEach(() => {
+	test.slow()
+})
+
 /** The search input inside one of the form's pickers. */
 function pickerInput(dialog: ReturnType<Page['locator']>, testid: string) {
 	return dialog.locator(`[data-testid="${testid}"] input`).first()
 }
 
-// @e2e openspec/specs/lead-management/spec.md#requirement-linked-party-selection-on-the-create-form
+// @e2e openspec/specs/lead-management/spec.md#requirement-linked-party-selection-on-the-create-form-mvp
 test('the request client picker can be browsed and can create', async ({ page }) => {
 	const dialog = await openNewRequestDialog(page)
 	const input = pickerInput(dialog, 'request-form-client')
@@ -58,7 +72,7 @@ test('the request client picker can be browsed and can create', async ({ page })
 	).toBeVisible({ timeout: 10000 })
 })
 
-// @e2e openspec/specs/lead-management/spec.md#requirement-linked-party-selection-on-the-create-form
+// @e2e openspec/specs/lead-management/spec.md#requirement-linked-party-selection-on-the-create-form-mvp
 test('the request contact picker unlocks and scopes to the chosen client', async ({
 	page,
 }) => {

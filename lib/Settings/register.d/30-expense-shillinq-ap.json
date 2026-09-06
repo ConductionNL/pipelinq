@@ -3,19 +3,19 @@
     "registers": {
       "pipelinq": {
         "schemas": [
-          "expense"
+          "billableExpense"
         ]
       }
     },
     "schemas": {
-      "expense": {
+      "billableExpense": {
         "x-schema-org": "schema:Invoice",
-        "slug": "expense",
+        "slug": "billableExpense",
         "title": "Expense",
-        "icon": "Receipt",
+        "icon": "ReceiptOutline",
         "version": "1.0.0",
         "summary": "An approved or pending expense submission with optional Shillinq AP sync state.",
-        "description": "Captured expense (declaratie / onkostenbon) submitted in pipelinq. When status transitions to 'approved' the expense is dispatched as an AP voucher to Shillinq through OpenRegister's WebhookService; apSyncStatus and apSyncedAt record the outcome of that one-way integration (REQ-AP-001).",
+        "description": "Captured expense (declaratie / onkostenbon) submitted in pipelinq. When status transitions to 'approved' the expense is dispatched as an AP voucher to Shillinq through OpenRegister's WebhookService; apSyncStatus and apSyncedAt record the outcome of that one-way integration.",
         "required": [
           "title",
           "amount"
@@ -57,11 +57,6 @@
             "description": "UUID of the related client (pipelinq client schema).",
             "title": "Client"
           },
-          "project": {
-            "type": "string",
-            "description": "UUID of the related project for billable pass-through cost routing.",
-            "title": "Project"
-          },
           "billable": {
             "type": "boolean",
             "description": "Whether this expense is billable to the linked project/client.",
@@ -93,7 +88,7 @@
           },
           "apSyncStatus": {
             "type": "string",
-            "description": "Shillinq AP sync state for this expense (null until the first approval event). REQ-AP-001.",
+            "description": "Shillinq AP sync state for this expense (null until the first approval event)..",
             "enum": [
               "pending",
               "synced",
@@ -103,7 +98,7 @@
           },
           "apSyncedAt": {
             "type": "string",
-            "description": "ISO 8601 UTC timestamp of the last successful Shillinq AP dispatch. REQ-AP-001.",
+            "description": "ISO 8601 UTC timestamp of the last successful Shillinq AP dispatch..",
             "format": "date-time",
             "title": "Ap Synced At"
           }
@@ -114,7 +109,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "expense",
+          "schema": "billableExpense",
           "slug": "expense-ap-synced-1"
         },
         "title": "Hotelaccommodatie Amsterdam",
@@ -132,7 +127,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "expense",
+          "schema": "billableExpense",
           "slug": "expense-ap-synced-2"
         },
         "title": "Reiskosten client bezoek",
@@ -150,7 +145,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "expense",
+          "schema": "billableExpense",
           "slug": "expense-ap-pending-1"
         },
         "title": "Kantoorbenodigdheden",
@@ -167,7 +162,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "expense",
+          "schema": "billableExpense",
           "slug": "expense-ap-failed-1"
         },
         "title": "Catering vergadering",
@@ -184,7 +179,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "expense",
+          "schema": "billableExpense",
           "slug": "expense-ap-synced-3"
         },
         "title": "Software licentie (jaarlijks)",

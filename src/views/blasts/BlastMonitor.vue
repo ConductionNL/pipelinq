@@ -277,7 +277,7 @@ export default {
 				if (TERMINAL_STATUSES.includes(this.blast?.status)) {
 					this.stopPolling()
 				}
-			} catch (_e) {
+			} catch {
 				// Keep polling; transient errors are silently retried.
 			} finally {
 				this.loading = false
@@ -288,6 +288,7 @@ export default {
 		 * Fallback fetch of deliveries when the blast payload does not embed them.
 		 *
 		 * @return {Promise<Array>}
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-live-send-monitor
 		 */
 		async fetchDeliveries() {
 			try {
@@ -298,7 +299,7 @@ export default {
 					params: { limit: TIMELINE_MAX },
 				})
 				return data?.data || data?.results || data || []
-			} catch (_e) {
+			} catch {
 				return []
 			}
 		},
@@ -401,6 +402,8 @@ export default {
 		 *
 		 * @param {string} ts Timestamp string.
 		 * @return {string}
+		 * @spec exclude display formatter for the timeline list; returns the raw value when
+		 *   the timestamp will not parse
 		 */
 		formatTime(ts) {
 			if (!ts) {
@@ -412,7 +415,7 @@ export default {
 					return ts
 				}
 				return date.toLocaleString()
-			} catch (_e) {
+			} catch {
 				return ts
 			}
 		},
@@ -465,7 +468,7 @@ export default {
 }
 
 .blast-monitor__eta {
-	margin-left: 6px;
+	margin-inline-start: 6px;
 }
 
 .blast-monitor__totals {

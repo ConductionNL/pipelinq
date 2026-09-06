@@ -69,6 +69,96 @@
       {
         "@self": {
           "register": "pipelinq",
+          "schema": "article",
+          "slug": "article-voorbeeld-title-1-1"
+        },
+        "title": "Voorbeeld Title 1",
+        "slug": "abc",
+        "summary": "Voorbeeld Summary 1",
+        "body": "Voorbeeld Body 1",
+        "heroImage": "Voorbeeld Heroimage 1",
+        "links": [
+          {
+            "label": "Voorbeeld Label 1",
+            "url": "Voorbeeld Url 1"
+          }
+        ],
+        "tags": [
+          "Voorbeeld Tags 1"
+        ],
+        "language": "nl",
+        "status": "draft",
+        "author": "Voorbeeld Author 1",
+        "publishedAt": "2026-03-01T09:00:00+00:00",
+        "portalPageRef": "Voorbeeld Portalpageref 1",
+        "agentAuthored": false,
+        "agentAuthoredBy": "Voorbeeld Agentauthoredby 1",
+        "createdAt": "2026-03-01T09:00:00+00:00",
+        "updatedAt": "2026-03-01T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "article",
+          "slug": "article-voorbeeld-title-2-2"
+        },
+        "title": "Voorbeeld Title 2",
+        "slug": "bcd",
+        "summary": "Voorbeeld Summary 2",
+        "body": "Voorbeeld Body 2",
+        "heroImage": "Voorbeeld Heroimage 2",
+        "links": [
+          {
+            "label": "Voorbeeld Label 2",
+            "url": "Voorbeeld Url 2"
+          }
+        ],
+        "tags": [
+          "Voorbeeld Tags 2"
+        ],
+        "language": "nl",
+        "status": "review",
+        "author": "Voorbeeld Author 2",
+        "publishedAt": "2026-03-02T09:00:00+00:00",
+        "portalPageRef": "Voorbeeld Portalpageref 2",
+        "agentAuthored": false,
+        "agentAuthoredBy": "Voorbeeld Agentauthoredby 2",
+        "createdAt": "2026-03-02T09:00:00+00:00",
+        "updatedAt": "2026-03-02T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "article",
+          "slug": "article-voorbeeld-title-3-3"
+        },
+        "title": "Voorbeeld Title 3",
+        "slug": "cde",
+        "summary": "Voorbeeld Summary 3",
+        "body": "Voorbeeld Body 3",
+        "heroImage": "Voorbeeld Heroimage 3",
+        "links": [
+          {
+            "label": "Voorbeeld Label 3",
+            "url": "Voorbeeld Url 3"
+          }
+        ],
+        "tags": [
+          "Voorbeeld Tags 3"
+        ],
+        "language": "nl",
+        "status": "published",
+        "author": "Voorbeeld Author 3",
+        "publishedAt": "2026-03-03T09:00:00+00:00",
+        "portalPageRef": "Voorbeeld Portalpageref 3",
+        "agentAuthored": false,
+        "agentAuthoredBy": "Voorbeeld Agentauthoredby 3",
+        "createdAt": "2026-03-03T09:00:00+00:00",
+        "updatedAt": "2026-03-03T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
           "schema": "attributionLink",
           "slug": "attributionlink-attributionlink-1-1"
         },
@@ -79,7 +169,13 @@
         "closedWonAt": "2026-03-01T09:00:00+00:00",
         "attributedValue": 1.0,
         "currency": "EUR",
-        "createdAt": "2026-03-01T09:00:00+00:00"
+        "createdAt": "2026-03-01T09:00:00+00:00",
+        "campaignId": "00000000-0000-4000-8000-000000000000",
+        "touchpointIds": [
+          "00000000-0000-4000-8000-000000000000"
+        ],
+        "invoiceRef": "Voorbeeld Invoiceref 1",
+        "model": "first"
       },
       {
         "@self": {
@@ -94,7 +190,13 @@
         "closedWonAt": "2026-03-02T09:00:00+00:00",
         "attributedValue": 2.0,
         "currency": "EUR",
-        "createdAt": "2026-03-02T09:00:00+00:00"
+        "createdAt": "2026-03-02T09:00:00+00:00",
+        "campaignId": "00000000-0000-4000-8000-000000000001",
+        "touchpointIds": [
+          "00000000-0000-4000-8000-000000000001"
+        ],
+        "invoiceRef": "Voorbeeld Invoiceref 2",
+        "model": "last"
       },
       {
         "@self": {
@@ -109,7 +211,13 @@
         "closedWonAt": "2026-03-03T09:00:00+00:00",
         "attributedValue": 3.0,
         "currency": "EUR",
-        "createdAt": "2026-03-03T09:00:00+00:00"
+        "createdAt": "2026-03-03T09:00:00+00:00",
+        "campaignId": "00000000-0000-4000-8000-000000000002",
+        "touchpointIds": [
+          "00000000-0000-4000-8000-000000000002"
+        ],
+        "invoiceRef": "Voorbeeld Invoiceref 3",
+        "model": "linear"
       },
       {
         "@self": {
@@ -412,6 +520,7 @@
         "segmentId": "Voorbeeld Segmentid 1",
         "templateId": "Voorbeeld Templateid 1",
         "channel": "email",
+        "transportId": "Voorbeeld Transportid 1",
         "scheduledFor": "2026-03-01T09:00:00+00:00",
         "sentAt": "2026-03-01T09:00:00+00:00",
         "status": "draft",
@@ -429,7 +538,10 @@
         },
         "connectorSourceId": "Voorbeeld Connectorsourceid 1",
         "createdBy": "Voorbeeld Createdby 1",
-        "createdAt": "2026-03-01T09:00:00+00:00"
+        "createdAt": "2026-03-01T09:00:00+00:00",
+        "listId": "Voorbeeld Listid 1",
+        "campaignId": "00000000-0000-4000-8000-000000000000",
+        "journeyId": "Voorbeeld Journeyid 1"
       },
       {
         "@self": {
@@ -441,6 +553,7 @@
         "segmentId": "Voorbeeld Segmentid 2",
         "templateId": "Voorbeeld Templateid 2",
         "channel": "sms",
+        "transportId": "Voorbeeld Transportid 2",
         "scheduledFor": "2026-03-02T09:00:00+00:00",
         "sentAt": "2026-03-02T09:00:00+00:00",
         "status": "scheduled",
@@ -458,7 +571,10 @@
         },
         "connectorSourceId": "Voorbeeld Connectorsourceid 2",
         "createdBy": "Voorbeeld Createdby 2",
-        "createdAt": "2026-03-02T09:00:00+00:00"
+        "createdAt": "2026-03-02T09:00:00+00:00",
+        "listId": "Voorbeeld Listid 2",
+        "campaignId": "00000000-0000-4000-8000-000000000001",
+        "journeyId": "Voorbeeld Journeyid 2"
       },
       {
         "@self": {
@@ -470,6 +586,7 @@
         "segmentId": "Voorbeeld Segmentid 3",
         "templateId": "Voorbeeld Templateid 3",
         "channel": "email",
+        "transportId": "Voorbeeld Transportid 3",
         "scheduledFor": "2026-03-03T09:00:00+00:00",
         "sentAt": "2026-03-03T09:00:00+00:00",
         "status": "sending",
@@ -487,7 +604,10 @@
         },
         "connectorSourceId": "Voorbeeld Connectorsourceid 3",
         "createdBy": "Voorbeeld Createdby 3",
-        "createdAt": "2026-03-03T09:00:00+00:00"
+        "createdAt": "2026-03-03T09:00:00+00:00",
+        "listId": "Voorbeeld Listid 3",
+        "campaignId": "00000000-0000-4000-8000-000000000002",
+        "journeyId": "Voorbeeld Journeyid 3"
       },
       {
         "@self": {
@@ -509,7 +629,8 @@
         ],
         "bouncedAt": "2026-03-01T09:00:00+00:00",
         "bounceType": "soft",
-        "unsubscribedAt": "2026-03-01T09:00:00+00:00"
+        "unsubscribedAt": "2026-03-01T09:00:00+00:00",
+        "unsubscribeUrl": "Voorbeeld Unsubscribeurl 1"
       },
       {
         "@self": {
@@ -531,7 +652,8 @@
         ],
         "bouncedAt": "2026-03-02T09:00:00+00:00",
         "bounceType": "hard",
-        "unsubscribedAt": "2026-03-02T09:00:00+00:00"
+        "unsubscribedAt": "2026-03-02T09:00:00+00:00",
+        "unsubscribeUrl": "Voorbeeld Unsubscribeurl 2"
       },
       {
         "@self": {
@@ -553,12 +675,13 @@
         ],
         "bouncedAt": "2026-03-03T09:00:00+00:00",
         "bounceType": "soft",
-        "unsubscribedAt": "2026-03-03T09:00:00+00:00"
+        "unsubscribedAt": "2026-03-03T09:00:00+00:00",
+        "unsubscribeUrl": "Voorbeeld Unsubscribeurl 3"
       },
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "booking",
+          "schema": "appointmentBooking",
           "slug": "booking-booking-1-1"
         },
         "customerId": "Voorbeeld Customerid 1",
@@ -598,7 +721,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "booking",
+          "schema": "appointmentBooking",
           "slug": "booking-booking-2-2"
         },
         "customerId": "Voorbeeld Customerid 2",
@@ -638,7 +761,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "booking",
+          "schema": "appointmentBooking",
           "slug": "booking-booking-3-3"
         },
         "customerId": "Voorbeeld Customerid 3",
@@ -927,6 +1050,141 @@
       {
         "@self": {
           "register": "pipelinq",
+          "schema": "campaign",
+          "slug": "campaign-voorbeeld-name-1-1"
+        },
+        "name": "Voorbeeld Name 1",
+        "utmCampaign": "abc",
+        "goal": "Voorbeeld Goal 1",
+        "status": "planned",
+        "utmSource": "abc",
+        "utmMedium": "abc",
+        "mailingIds": [
+          "00000000-0000-4000-8000-000000000000"
+        ],
+        "postIds": [
+          "Voorbeeld Postids 1"
+        ],
+        "landingPage": {
+          "portal": "Voorbeeld Portal 1",
+          "route": "Voorbeeld Route 1",
+          "pageId": "Voorbeeld Pageid 1",
+          "publicUrl": "Voorbeeld Publicurl 1",
+          "createdAt": "2026-03-01T09:00:00+00:00"
+        },
+        "formRef": "Voorbeeld Formref 1",
+        "articleSummary": "Voorbeeld Articlesummary 1",
+        "articleBody": "Voorbeeld Articlebody 1",
+        "startsAt": "2026-03-01",
+        "endsAt": "2026-03-01",
+        "budgetEur": 0.0,
+        "costs": [
+          {
+            "channel": "Voorbeeld Channel 1",
+            "amountEur": 1.0,
+            "note": "Voorbeeld Note 1"
+          }
+        ],
+        "attribution": {
+          "model": "first",
+          "windowDays": 90
+        },
+        "createdBy": "Voorbeeld Createdby 1",
+        "createdAt": "2026-03-01T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "campaign",
+          "slug": "campaign-voorbeeld-name-2-2"
+        },
+        "name": "Voorbeeld Name 2",
+        "utmCampaign": "bcd",
+        "goal": "Voorbeeld Goal 2",
+        "status": "running",
+        "utmSource": "bcd",
+        "utmMedium": "bcd",
+        "mailingIds": [
+          "00000000-0000-4000-8000-000000000001"
+        ],
+        "postIds": [
+          "Voorbeeld Postids 2"
+        ],
+        "landingPage": {
+          "portal": "Voorbeeld Portal 2",
+          "route": "Voorbeeld Route 2",
+          "pageId": "Voorbeeld Pageid 2",
+          "publicUrl": "Voorbeeld Publicurl 2",
+          "createdAt": "2026-03-02T09:00:00+00:00"
+        },
+        "formRef": "Voorbeeld Formref 2",
+        "articleSummary": "Voorbeeld Articlesummary 2",
+        "articleBody": "Voorbeeld Articlebody 2",
+        "startsAt": "2026-03-02",
+        "endsAt": "2026-03-02",
+        "budgetEur": 1.0,
+        "costs": [
+          {
+            "channel": "Voorbeeld Channel 2",
+            "amountEur": 2.0,
+            "note": "Voorbeeld Note 2"
+          }
+        ],
+        "attribution": {
+          "model": "last",
+          "windowDays": 90
+        },
+        "createdBy": "Voorbeeld Createdby 2",
+        "createdAt": "2026-03-02T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "campaign",
+          "slug": "campaign-voorbeeld-name-3-3"
+        },
+        "name": "Voorbeeld Name 3",
+        "utmCampaign": "cde",
+        "goal": "Voorbeeld Goal 3",
+        "status": "finished",
+        "utmSource": "cde",
+        "utmMedium": "cde",
+        "mailingIds": [
+          "00000000-0000-4000-8000-000000000002"
+        ],
+        "postIds": [
+          "Voorbeeld Postids 3"
+        ],
+        "landingPage": {
+          "portal": "Voorbeeld Portal 3",
+          "route": "Voorbeeld Route 3",
+          "pageId": "Voorbeeld Pageid 3",
+          "publicUrl": "Voorbeeld Publicurl 3",
+          "createdAt": "2026-03-03T09:00:00+00:00"
+        },
+        "formRef": "Voorbeeld Formref 3",
+        "articleSummary": "Voorbeeld Articlesummary 3",
+        "articleBody": "Voorbeeld Articlebody 3",
+        "startsAt": "2026-03-03",
+        "endsAt": "2026-03-03",
+        "budgetEur": 2.0,
+        "costs": [
+          {
+            "channel": "Voorbeeld Channel 3",
+            "amountEur": 3.0,
+            "note": "Voorbeeld Note 3"
+          }
+        ],
+        "attribution": {
+          "model": "linear",
+          "windowDays": 90
+        },
+        "createdBy": "Voorbeeld Createdby 3",
+        "createdAt": "2026-03-03T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
           "schema": "campaignTemplate",
           "slug": "campaigntemplate-voorbeeld-name-1-1"
         },
@@ -944,7 +1202,10 @@
         ],
         "language": "nl",
         "createdBy": "Voorbeeld Createdby 1",
-        "createdAt": "2026-03-01T09:00:00+00:00"
+        "createdAt": "2026-03-01T09:00:00+00:00",
+        "articleIds": [
+          "Voorbeeld Articleids 1"
+        ]
       },
       {
         "@self": {
@@ -966,7 +1227,10 @@
         ],
         "language": "nl",
         "createdBy": "Voorbeeld Createdby 2",
-        "createdAt": "2026-03-02T09:00:00+00:00"
+        "createdAt": "2026-03-02T09:00:00+00:00",
+        "articleIds": [
+          "Voorbeeld Articleids 2"
+        ]
       },
       {
         "@self": {
@@ -988,12 +1252,15 @@
         ],
         "language": "nl",
         "createdBy": "Voorbeeld Createdby 3",
-        "createdAt": "2026-03-03T09:00:00+00:00"
+        "createdAt": "2026-03-03T09:00:00+00:00",
+        "articleIds": [
+          "Voorbeeld Articleids 3"
+        ]
       },
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "cashCount",
+          "schema": "posCashCount",
           "slug": "cashcount-cashcount-1-1"
         },
         "shift": "00000000-0000-4000-8000-000000000000",
@@ -1008,7 +1275,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "cashCount",
+          "schema": "posCashCount",
           "slug": "cashcount-cashcount-2-2"
         },
         "shift": "00000000-0000-4000-8000-000000000001",
@@ -1023,7 +1290,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "cashCount",
+          "schema": "posCashCount",
           "slug": "cashcount-cashcount-3-3"
         },
         "shift": "00000000-0000-4000-8000-000000000002",
@@ -1255,6 +1522,35 @@
         "segment": "Voorbeeld Segment 1",
         "accountOwner": "Voorbeeld Accountowner 1",
         "accountStatus": "active",
+        "emails": [
+          {
+            "kind": "work",
+            "value": "voorbeeld0@example.invalid",
+            "primary": false,
+            "verified": false
+          }
+        ],
+        "phones": [
+          {
+            "kind": "work",
+            "value": "Voorbeeld Value 1",
+            "primary": false,
+            "verified": false
+          }
+        ],
+        "socialProfiles": [
+          {
+            "network": "linkedin",
+            "handle": "Voorbeeld Handle 1",
+            "url": "https://example.invalid/resource/0",
+            "verified": false,
+            "followedByUs": false,
+            "followsUs": false
+          }
+        ],
+        "preferredChannel": "email",
+        "timezone": "Voorbeeld Timezone 1",
+        "language": "nl",
         "masterEntityRef": "Voorbeeld Masterentityref 1",
         "isMasterRecord": false,
         "shillinqOrganisationRef": "Voorbeeld Shillinqorganisationref 1"
@@ -1278,6 +1574,35 @@
         "segment": "Voorbeeld Segment 2",
         "accountOwner": "Voorbeeld Accountowner 2",
         "accountStatus": "inactive",
+        "emails": [
+          {
+            "kind": "private",
+            "value": "voorbeeld1@example.invalid",
+            "primary": false,
+            "verified": false
+          }
+        ],
+        "phones": [
+          {
+            "kind": "private",
+            "value": "Voorbeeld Value 2",
+            "primary": false,
+            "verified": false
+          }
+        ],
+        "socialProfiles": [
+          {
+            "network": "x",
+            "handle": "Voorbeeld Handle 2",
+            "url": "https://example.invalid/resource/1",
+            "verified": false,
+            "followedByUs": false,
+            "followsUs": false
+          }
+        ],
+        "preferredChannel": "phone",
+        "timezone": "Voorbeeld Timezone 2",
+        "language": "nl",
         "masterEntityRef": "Voorbeeld Masterentityref 2",
         "isMasterRecord": false,
         "shillinqOrganisationRef": "Voorbeeld Shillinqorganisationref 2"
@@ -1301,9 +1626,140 @@
         "segment": "Voorbeeld Segment 3",
         "accountOwner": "Voorbeeld Accountowner 3",
         "accountStatus": "blocked",
+        "emails": [
+          {
+            "kind": "mobile",
+            "value": "voorbeeld2@example.invalid",
+            "primary": false,
+            "verified": false
+          }
+        ],
+        "phones": [
+          {
+            "kind": "mobile",
+            "value": "Voorbeeld Value 3",
+            "primary": false,
+            "verified": false
+          }
+        ],
+        "socialProfiles": [
+          {
+            "network": "mastodon",
+            "handle": "Voorbeeld Handle 3",
+            "url": "https://example.invalid/resource/2",
+            "verified": false,
+            "followedByUs": false,
+            "followsUs": false
+          }
+        ],
+        "preferredChannel": "whatsapp",
+        "timezone": "Voorbeeld Timezone 3",
+        "language": "nl",
         "masterEntityRef": "Voorbeeld Masterentityref 3",
         "isMasterRecord": false,
         "shillinqOrganisationRef": "Voorbeeld Shillinqorganisationref 3"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "competitor",
+          "slug": "competitor-voorbeeld-name-1-1"
+        },
+        "name": "Voorbeeld Name 1",
+        "website": "Voorbeeld Website 1",
+        "feeds": [],
+        "sitemapUrl": "Voorbeeld Sitemapurl 1",
+        "socialHandles": [],
+        "clientId": "Voorbeeld Clientid 1",
+        "active": true,
+        "notes": "Voorbeeld Notes 1"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "competitor",
+          "slug": "competitor-voorbeeld-name-2-2"
+        },
+        "name": "Voorbeeld Name 2",
+        "website": "Voorbeeld Website 2",
+        "feeds": [],
+        "sitemapUrl": "Voorbeeld Sitemapurl 2",
+        "socialHandles": [],
+        "clientId": "Voorbeeld Clientid 2",
+        "active": true,
+        "notes": "Voorbeeld Notes 2"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "competitor",
+          "slug": "competitor-voorbeeld-name-3-3"
+        },
+        "name": "Voorbeeld Name 3",
+        "website": "Voorbeeld Website 3",
+        "feeds": [],
+        "sitemapUrl": "Voorbeeld Sitemapurl 3",
+        "socialHandles": [],
+        "clientId": "Voorbeeld Clientid 3",
+        "active": true,
+        "notes": "Voorbeeld Notes 3"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "competitorWatch",
+          "slug": "competitorwatch-competitorwatch-1-1"
+        },
+        "competitorId": "Voorbeeld Competitorid 1",
+        "kind": "rss",
+        "target": "Voorbeeld Target 1",
+        "selector": "Voorbeeld Selector 1",
+        "schedule": "hourly",
+        "active": true,
+        "connectorSourceId": "Voorbeeld Connectorsourceid 1",
+        "lastRunAt": "2026-03-01T09:00:00+00:00",
+        "lastOutcome": "ok",
+        "lastReason": "Voorbeeld Lastreason 1",
+        "fingerprint": "Voorbeeld Fingerprint 1",
+        "lineFingerprints": []
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "competitorWatch",
+          "slug": "competitorwatch-competitorwatch-2-2"
+        },
+        "competitorId": "Voorbeeld Competitorid 2",
+        "kind": "sitemap",
+        "target": "Voorbeeld Target 2",
+        "selector": "Voorbeeld Selector 2",
+        "schedule": "daily",
+        "active": true,
+        "connectorSourceId": "Voorbeeld Connectorsourceid 2",
+        "lastRunAt": "2026-03-02T09:00:00+00:00",
+        "lastOutcome": "not_configured",
+        "lastReason": "Voorbeeld Lastreason 2",
+        "fingerprint": "Voorbeeld Fingerprint 2",
+        "lineFingerprints": []
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "competitorWatch",
+          "slug": "competitorwatch-competitorwatch-3-3"
+        },
+        "competitorId": "Voorbeeld Competitorid 3",
+        "kind": "page",
+        "target": "Voorbeeld Target 3",
+        "selector": "Voorbeeld Selector 3",
+        "schedule": "weekly",
+        "active": true,
+        "connectorSourceId": "Voorbeeld Connectorsourceid 3",
+        "lastRunAt": "2026-03-03T09:00:00+00:00",
+        "lastOutcome": "unavailable",
+        "lastReason": "Voorbeeld Lastreason 3",
+        "fingerprint": "Voorbeeld Fingerprint 3",
+        "lineFingerprints": []
       },
       {
         "@self": {
@@ -1318,7 +1774,17 @@
         "consentedAt": "2026-03-01T09:00:00+00:00",
         "withdrawnAt": "2026-03-01T09:00:00+00:00",
         "withdrawnReason": "user-unsubscribed",
-        "softBounceCount": 0
+        "softBounceCount": 0,
+        "listId": "Voorbeeld Listid 1",
+        "evidence": {
+          "mechanism": "Voorbeeld Mechanism 1",
+          "reference": "Voorbeeld Reference 1",
+          "objectionOffered": false,
+          "objectionOfferedAt": "2026-03-01T09:00:00+00:00",
+          "objectionText": "Voorbeeld Objectiontext 1",
+          "ipHash": "Voorbeeld Iphash 1",
+          "recordedAt": "2026-03-01T09:00:00+00:00"
+        }
       },
       {
         "@self": {
@@ -1333,7 +1799,17 @@
         "consentedAt": "2026-03-02T09:00:00+00:00",
         "withdrawnAt": "2026-03-02T09:00:00+00:00",
         "withdrawnReason": "bounce-hard",
-        "softBounceCount": 0
+        "softBounceCount": 0,
+        "listId": "Voorbeeld Listid 2",
+        "evidence": {
+          "mechanism": "Voorbeeld Mechanism 2",
+          "reference": "Voorbeeld Reference 2",
+          "objectionOffered": false,
+          "objectionOfferedAt": "2026-03-02T09:00:00+00:00",
+          "objectionText": "Voorbeeld Objectiontext 2",
+          "ipHash": "Voorbeeld Iphash 2",
+          "recordedAt": "2026-03-02T09:00:00+00:00"
+        }
       },
       {
         "@self": {
@@ -1348,7 +1824,17 @@
         "consentedAt": "2026-03-03T09:00:00+00:00",
         "withdrawnAt": "2026-03-03T09:00:00+00:00",
         "withdrawnReason": "bounce-soft-x5",
-        "softBounceCount": 0
+        "softBounceCount": 0,
+        "listId": "Voorbeeld Listid 3",
+        "evidence": {
+          "mechanism": "Voorbeeld Mechanism 3",
+          "reference": "Voorbeeld Reference 3",
+          "objectionOffered": false,
+          "objectionOfferedAt": "2026-03-03T09:00:00+00:00",
+          "objectionText": "Voorbeeld Objectiontext 3",
+          "ipHash": "Voorbeeld Iphash 3",
+          "recordedAt": "2026-03-03T09:00:00+00:00"
+        }
       },
       {
         "@self": {
@@ -1367,8 +1853,40 @@
         "verifiedBSN": false,
         "brpPersonId": "00000000-0000-4000-8000-000000000000",
         "secrecy": false,
+        "emails": [
+          {
+            "kind": "work",
+            "value": "voorbeeld0@example.invalid",
+            "primary": false,
+            "verified": false
+          }
+        ],
+        "phones": [
+          {
+            "kind": "work",
+            "value": "Voorbeeld Value 1",
+            "primary": false,
+            "verified": false
+          }
+        ],
+        "socialProfiles": [
+          {
+            "network": "linkedin",
+            "handle": "Voorbeeld Handle 1",
+            "url": "https://example.invalid/resource/0",
+            "verified": false,
+            "followedByUs": false,
+            "followsUs": false
+          }
+        ],
+        "preferredChannel": "email",
+        "timezone": "Voorbeeld Timezone 1",
+        "language": "nl",
         "masterEntityRef": "Voorbeeld Masterentityref 1",
-        "isMasterRecord": false
+        "isMasterRecord": false,
+        "leads": [
+          "00000000-0000-4000-8000-000000000000"
+        ]
       },
       {
         "@self": {
@@ -1387,8 +1905,40 @@
         "verifiedBSN": false,
         "brpPersonId": "00000000-0000-4000-8000-000000000001",
         "secrecy": false,
+        "emails": [
+          {
+            "kind": "private",
+            "value": "voorbeeld1@example.invalid",
+            "primary": false,
+            "verified": false
+          }
+        ],
+        "phones": [
+          {
+            "kind": "private",
+            "value": "Voorbeeld Value 2",
+            "primary": false,
+            "verified": false
+          }
+        ],
+        "socialProfiles": [
+          {
+            "network": "x",
+            "handle": "Voorbeeld Handle 2",
+            "url": "https://example.invalid/resource/1",
+            "verified": false,
+            "followedByUs": false,
+            "followsUs": false
+          }
+        ],
+        "preferredChannel": "phone",
+        "timezone": "Voorbeeld Timezone 2",
+        "language": "nl",
         "masterEntityRef": "Voorbeeld Masterentityref 2",
-        "isMasterRecord": false
+        "isMasterRecord": false,
+        "leads": [
+          "00000000-0000-4000-8000-000000000001"
+        ]
       },
       {
         "@self": {
@@ -1407,13 +1957,45 @@
         "verifiedBSN": false,
         "brpPersonId": "00000000-0000-4000-8000-000000000002",
         "secrecy": false,
+        "emails": [
+          {
+            "kind": "mobile",
+            "value": "voorbeeld2@example.invalid",
+            "primary": false,
+            "verified": false
+          }
+        ],
+        "phones": [
+          {
+            "kind": "mobile",
+            "value": "Voorbeeld Value 3",
+            "primary": false,
+            "verified": false
+          }
+        ],
+        "socialProfiles": [
+          {
+            "network": "mastodon",
+            "handle": "Voorbeeld Handle 3",
+            "url": "https://example.invalid/resource/2",
+            "verified": false,
+            "followedByUs": false,
+            "followsUs": false
+          }
+        ],
+        "preferredChannel": "whatsapp",
+        "timezone": "Voorbeeld Timezone 3",
+        "language": "nl",
         "masterEntityRef": "Voorbeeld Masterentityref 3",
-        "isMasterRecord": false
+        "isMasterRecord": false,
+        "leads": [
+          "00000000-0000-4000-8000-000000000002"
+        ]
       },
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "conversation",
+          "schema": "channelConversation",
           "slug": "conversation-conversation-1-1"
         },
         "channel": "email",
@@ -1427,7 +2009,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "conversation",
+          "schema": "channelConversation",
           "slug": "conversation-conversation-2-2"
         },
         "channel": "web-form",
@@ -1441,7 +2023,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "conversation",
+          "schema": "channelConversation",
           "slug": "conversation-conversation-3-3"
         },
         "channel": "chat",
@@ -1695,7 +2277,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "expense",
+          "schema": "billableExpense",
           "slug": "expense-voorbeeld-title-1-1"
         },
         "title": "Voorbeeld Title 1",
@@ -1704,7 +2286,6 @@
         "currency": "EUR",
         "category": "Voorbeeld Category 1",
         "client": "Voorbeeld Client 1",
-        "project": "Voorbeeld Project 1",
         "billable": false,
         "status": "draft",
         "approvedBy": "Voorbeeld Approvedby 1",
@@ -1715,7 +2296,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "expense",
+          "schema": "billableExpense",
           "slug": "expense-voorbeeld-title-2-2"
         },
         "title": "Voorbeeld Title 2",
@@ -1724,7 +2305,6 @@
         "currency": "EUR",
         "category": "Voorbeeld Category 2",
         "client": "Voorbeeld Client 2",
-        "project": "Voorbeeld Project 2",
         "billable": false,
         "status": "submitted",
         "approvedBy": "Voorbeeld Approvedby 2",
@@ -1735,7 +2315,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "expense",
+          "schema": "billableExpense",
           "slug": "expense-voorbeeld-title-3-3"
         },
         "title": "Voorbeeld Title 3",
@@ -1744,7 +2324,6 @@
         "currency": "EUR",
         "category": "Voorbeeld Category 3",
         "client": "Voorbeeld Client 3",
-        "project": "Voorbeeld Project 3",
         "billable": false,
         "status": "approved",
         "approvedBy": "Voorbeeld Approvedby 3",
@@ -2211,6 +2790,159 @@
       {
         "@self": {
           "register": "pipelinq",
+          "schema": "journey",
+          "slug": "journey-voorbeeld-name-1-1"
+        },
+        "name": "Voorbeeld Name 1",
+        "trigger": {
+          "kind": "leadStageChanged",
+          "cron": "Voorbeeld Cron 1"
+        },
+        "action": {
+          "kind": "sendMailing",
+          "templateId": "Voorbeeld Templateid 1",
+          "listId": "Voorbeeld Listid 1",
+          "intent": "promotional",
+          "taskSubject": "Voorbeeld Tasksubject 1",
+          "taskType": "callback",
+          "taskAssignee": "Voorbeeld Taskassignee 1"
+        },
+        "description": "Voorbeeld Description 1",
+        "status": "draft",
+        "audienceSegment": "Voorbeeld Audiencesegment 1",
+        "waitFor": "Voorbeeld Waitfor 1",
+        "condition": {
+          "field": "Voorbeeld Field 1",
+          "operator": "equals",
+          "value": "Voorbeeld Value 1"
+        },
+        "flowUuid": "Voorbeeld Flowuuid 1",
+        "flowStatus": "not_compiled",
+        "flowError": "Voorbeeld Flowerror 1",
+        "createdBy": "Voorbeeld Createdby 1",
+        "createdAt": "2026-03-01T09:00:00+00:00",
+        "updatedAt": "2026-03-01T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "journey",
+          "slug": "journey-voorbeeld-name-2-2"
+        },
+        "name": "Voorbeeld Name 2",
+        "trigger": {
+          "kind": "contractRenewalWindow",
+          "cron": "Voorbeeld Cron 2"
+        },
+        "action": {
+          "kind": "createTask",
+          "templateId": "Voorbeeld Templateid 2",
+          "listId": "Voorbeeld Listid 2",
+          "intent": "service",
+          "taskSubject": "Voorbeeld Tasksubject 2",
+          "taskType": "callback",
+          "taskAssignee": "Voorbeeld Taskassignee 2"
+        },
+        "description": "Voorbeeld Description 2",
+        "status": "active",
+        "audienceSegment": "Voorbeeld Audiencesegment 2",
+        "waitFor": "Voorbeeld Waitfor 2",
+        "condition": {
+          "field": "Voorbeeld Field 2",
+          "operator": "notEquals",
+          "value": "Voorbeeld Value 2"
+        },
+        "flowUuid": "Voorbeeld Flowuuid 2",
+        "flowStatus": "compiled",
+        "flowError": "Voorbeeld Flowerror 2",
+        "createdBy": "Voorbeeld Createdby 2",
+        "createdAt": "2026-03-02T09:00:00+00:00",
+        "updatedAt": "2026-03-02T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "journey",
+          "slug": "journey-voorbeeld-name-3-3"
+        },
+        "name": "Voorbeeld Name 3",
+        "trigger": {
+          "kind": "listConfirmed",
+          "cron": "Voorbeeld Cron 3"
+        },
+        "action": {
+          "kind": "sendMailing",
+          "templateId": "Voorbeeld Templateid 3",
+          "listId": "Voorbeeld Listid 3",
+          "intent": "promotional",
+          "taskSubject": "Voorbeeld Tasksubject 3",
+          "taskType": "callback",
+          "taskAssignee": "Voorbeeld Taskassignee 3"
+        },
+        "description": "Voorbeeld Description 3",
+        "status": "paused",
+        "audienceSegment": "Voorbeeld Audiencesegment 3",
+        "waitFor": "Voorbeeld Waitfor 3",
+        "condition": {
+          "field": "Voorbeeld Field 3",
+          "operator": "isNull",
+          "value": "Voorbeeld Value 3"
+        },
+        "flowUuid": "Voorbeeld Flowuuid 3",
+        "flowStatus": "engine_missing",
+        "flowError": "Voorbeeld Flowerror 3",
+        "createdBy": "Voorbeeld Createdby 3",
+        "createdAt": "2026-03-03T09:00:00+00:00",
+        "updatedAt": "2026-03-03T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "journeyRun",
+          "slug": "journeyrun-journeyrun-1-1"
+        },
+        "journeyId": "Voorbeeld Journeyid 1",
+        "state": "sent",
+        "contactId": "Voorbeeld Contactid 1",
+        "clientId": "Voorbeeld Clientid 1",
+        "reason": "Voorbeeld Reason 1",
+        "actionKind": "Voorbeeld Actionkind 1",
+        "occurredAt": "2026-03-01T09:00:00+00:00",
+        "flowRunUuid": "Voorbeeld Flowrunuuid 1"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "journeyRun",
+          "slug": "journeyrun-journeyrun-2-2"
+        },
+        "journeyId": "Voorbeeld Journeyid 2",
+        "state": "refused",
+        "contactId": "Voorbeeld Contactid 2",
+        "clientId": "Voorbeeld Clientid 2",
+        "reason": "Voorbeeld Reason 2",
+        "actionKind": "Voorbeeld Actionkind 2",
+        "occurredAt": "2026-03-02T09:00:00+00:00",
+        "flowRunUuid": "Voorbeeld Flowrunuuid 2"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "journeyRun",
+          "slug": "journeyrun-journeyrun-3-3"
+        },
+        "journeyId": "Voorbeeld Journeyid 3",
+        "state": "task-created",
+        "contactId": "Voorbeeld Contactid 3",
+        "clientId": "Voorbeeld Clientid 3",
+        "reason": "Voorbeeld Reason 3",
+        "actionKind": "Voorbeeld Actionkind 3",
+        "occurredAt": "2026-03-03T09:00:00+00:00",
+        "flowRunUuid": "Voorbeeld Flowrunuuid 3"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
           "schema": "kassakoppelingAuditLog",
           "slug": "kassakoppelingauditlog-kassakoppelingauditlog-1-1"
         },
@@ -2274,16 +3006,67 @@
       {
         "@self": {
           "register": "pipelinq",
+          "schema": "keywordTarget",
+          "slug": "keywordtarget-keywordtarget-1-1"
+        },
+        "term": "Voorbeeld Term 1",
+        "status": "use-more",
+        "intent": "informational",
+        "targetPageRef": "Voorbeeld Targetpageref 1",
+        "proposalKind": "striking-distance",
+        "property": "Voorbeeld Property 1",
+        "volume": 0,
+        "difficulty": 0,
+        "notes": "Voorbeeld Notes 1",
+        "createdBy": "Voorbeeld Createdby 1",
+        "createdAt": "2026-03-01T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "keywordTarget",
+          "slug": "keywordtarget-keywordtarget-2-2"
+        },
+        "term": "Voorbeeld Term 2",
+        "status": "use-less",
+        "intent": "navigational",
+        "targetPageRef": "Voorbeeld Targetpageref 2",
+        "proposalKind": "cannibalisation",
+        "property": "Voorbeeld Property 2",
+        "volume": 1,
+        "difficulty": 1,
+        "notes": "Voorbeeld Notes 2",
+        "createdBy": "Voorbeeld Createdby 2",
+        "createdAt": "2026-03-02T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "keywordTarget",
+          "slug": "keywordtarget-keywordtarget-3-3"
+        },
+        "term": "Voorbeeld Term 3",
+        "status": "watch",
+        "intent": "commercial",
+        "targetPageRef": "Voorbeeld Targetpageref 3",
+        "proposalKind": "content-gap",
+        "property": "Voorbeeld Property 3",
+        "volume": 2,
+        "difficulty": 2,
+        "notes": "Voorbeeld Notes 3",
+        "createdBy": "Voorbeeld Createdby 3",
+        "createdAt": "2026-03-03T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
           "schema": "lead",
           "slug": "lead-voorbeeld-title-1-1"
         },
         "title": "Voorbeeld Title 1",
-        "contactName": "Voorbeeld Contactname 1",
-        "contactEmail": "voorbeeld0@example.invalid",
-        "contactPhone": "Voorbeeld Contactphone 1",
-        "organisation": "Voorbeeld Organisation 1",
-        "message": "Voorbeeld Message 1",
+        "pipeline": "00000000-0000-4000-8000-000000000000",
         "client": "00000000-0000-4000-8000-000000000000",
+        "message": "Voorbeeld Message 1",
         "contact": "00000000-0000-4000-8000-000000000000",
         "source": "Voorbeeld Source 1",
         "value": 0,
@@ -2291,7 +3074,6 @@
         "expectedCloseDate": "2026-03-01",
         "assignee": "Voorbeeld Assignee 1",
         "priority": "low",
-        "pipeline": "00000000-0000-4000-8000-000000000000",
         "stage": "Voorbeeld Stage 1",
         "stageOrder": 1,
         "notes": "Voorbeeld Notes 1",
@@ -2302,7 +3084,23 @@
         "description": "Voorbeeld Description 1",
         "stageEnteredAt": "2026-03-01T09:00:00+00:00",
         "qualificationScore": 0,
-        "forecast_category": "commit"
+        "forecast_category": "commit",
+        "commit_justification": "Voorbeeld Commit Justification 1",
+        "firstTouch": {
+          "campaign": "Voorbeeld Campaign 1",
+          "source": "Voorbeeld Source 1",
+          "medium": "Voorbeeld Medium 1",
+          "term": "Voorbeeld Term 1",
+          "content": "Voorbeeld Content 1"
+        },
+        "lastTouch": {
+          "campaign": "Voorbeeld Campaign 1",
+          "source": "Voorbeeld Source 1",
+          "medium": "Voorbeeld Medium 1",
+          "term": "Voorbeeld Term 1",
+          "content": "Voorbeeld Content 1"
+        },
+        "campaignId": "00000000-0000-4000-8000-000000000000"
       },
       {
         "@self": {
@@ -2311,12 +3109,9 @@
           "slug": "lead-voorbeeld-title-2-2"
         },
         "title": "Voorbeeld Title 2",
-        "contactName": "Voorbeeld Contactname 2",
-        "contactEmail": "voorbeeld1@example.invalid",
-        "contactPhone": "Voorbeeld Contactphone 2",
-        "organisation": "Voorbeeld Organisation 2",
-        "message": "Voorbeeld Message 2",
+        "pipeline": "00000000-0000-4000-8000-000000000001",
         "client": "00000000-0000-4000-8000-000000000001",
+        "message": "Voorbeeld Message 2",
         "contact": "00000000-0000-4000-8000-000000000001",
         "source": "Voorbeeld Source 2",
         "value": 0,
@@ -2324,7 +3119,6 @@
         "expectedCloseDate": "2026-03-02",
         "assignee": "Voorbeeld Assignee 2",
         "priority": "normal",
-        "pipeline": "00000000-0000-4000-8000-000000000001",
         "stage": "Voorbeeld Stage 2",
         "stageOrder": 2,
         "notes": "Voorbeeld Notes 2",
@@ -2335,7 +3129,23 @@
         "description": "Voorbeeld Description 2",
         "stageEnteredAt": "2026-03-02T09:00:00+00:00",
         "qualificationScore": 1,
-        "forecast_category": "best_case"
+        "forecast_category": "best_case",
+        "commit_justification": "Voorbeeld Commit Justification 2",
+        "firstTouch": {
+          "campaign": "Voorbeeld Campaign 2",
+          "source": "Voorbeeld Source 2",
+          "medium": "Voorbeeld Medium 2",
+          "term": "Voorbeeld Term 2",
+          "content": "Voorbeeld Content 2"
+        },
+        "lastTouch": {
+          "campaign": "Voorbeeld Campaign 2",
+          "source": "Voorbeeld Source 2",
+          "medium": "Voorbeeld Medium 2",
+          "term": "Voorbeeld Term 2",
+          "content": "Voorbeeld Content 2"
+        },
+        "campaignId": "00000000-0000-4000-8000-000000000001"
       },
       {
         "@self": {
@@ -2344,12 +3154,9 @@
           "slug": "lead-voorbeeld-title-3-3"
         },
         "title": "Voorbeeld Title 3",
-        "contactName": "Voorbeeld Contactname 3",
-        "contactEmail": "voorbeeld2@example.invalid",
-        "contactPhone": "Voorbeeld Contactphone 3",
-        "organisation": "Voorbeeld Organisation 3",
-        "message": "Voorbeeld Message 3",
+        "pipeline": "00000000-0000-4000-8000-000000000002",
         "client": "00000000-0000-4000-8000-000000000002",
+        "message": "Voorbeeld Message 3",
         "contact": "00000000-0000-4000-8000-000000000002",
         "source": "Voorbeeld Source 3",
         "value": 0,
@@ -2357,7 +3164,6 @@
         "expectedCloseDate": "2026-03-03",
         "assignee": "Voorbeeld Assignee 3",
         "priority": "high",
-        "pipeline": "00000000-0000-4000-8000-000000000002",
         "stage": "Voorbeeld Stage 3",
         "stageOrder": 3,
         "notes": "Voorbeeld Notes 3",
@@ -2368,7 +3174,23 @@
         "description": "Voorbeeld Description 3",
         "stageEnteredAt": "2026-03-03T09:00:00+00:00",
         "qualificationScore": 2,
-        "forecast_category": "pipeline"
+        "forecast_category": "pipeline",
+        "commit_justification": "Voorbeeld Commit Justification 3",
+        "firstTouch": {
+          "campaign": "Voorbeeld Campaign 3",
+          "source": "Voorbeeld Source 3",
+          "medium": "Voorbeeld Medium 3",
+          "term": "Voorbeeld Term 3",
+          "content": "Voorbeeld Content 3"
+        },
+        "lastTouch": {
+          "campaign": "Voorbeeld Campaign 3",
+          "source": "Voorbeeld Source 3",
+          "medium": "Voorbeeld Medium 3",
+          "term": "Voorbeeld Term 3",
+          "content": "Voorbeeld Content 3"
+        },
+        "campaignId": "00000000-0000-4000-8000-000000000002"
       },
       {
         "@self": {
@@ -2425,10 +3247,9 @@
           "slug": "loyaltyprogramme-voorbeeld-name-1-1"
         },
         "name": "Voorbeeld Name 1",
-        "merk": "Voorbeeld Merk 1",
+        "brand": "Voorbeeld Brand 1",
         "status": "draft",
         "programmeId": "Voorbeeld Programmeid 1",
-        "brand": "Voorbeeld Brand 1",
         "description": "Voorbeeld Description 1",
         "startDate": "2026-03-01",
         "endDate": "2026-03-01",
@@ -2450,10 +3271,9 @@
           "slug": "loyaltyprogramme-voorbeeld-name-2-2"
         },
         "name": "Voorbeeld Name 2",
-        "merk": "Voorbeeld Merk 2",
+        "brand": "Voorbeeld Brand 2",
         "status": "active",
         "programmeId": "Voorbeeld Programmeid 2",
-        "brand": "Voorbeeld Brand 2",
         "description": "Voorbeeld Description 2",
         "startDate": "2026-03-02",
         "endDate": "2026-03-02",
@@ -2475,10 +3295,9 @@
           "slug": "loyaltyprogramme-voorbeeld-name-3-3"
         },
         "name": "Voorbeeld Name 3",
-        "merk": "Voorbeeld Merk 3",
+        "brand": "Voorbeeld Brand 3",
         "status": "paused",
         "programmeId": "Voorbeeld Programmeid 3",
-        "brand": "Voorbeeld Brand 3",
         "description": "Voorbeeld Description 3",
         "startDate": "2026-03-03",
         "endDate": "2026-03-03",
@@ -2492,6 +3311,75 @@
           "value": 3,
           "advanceNoticeDays": 30
         }
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "mailTransport",
+          "slug": "mailtransport-mailtransport-1-1"
+        },
+        "kind": "instance",
+        "displayName": "Voorbeeld Displayname 1",
+        "provider": "ses",
+        "connectorSourceId": "Voorbeeld Connectorsourceid 1",
+        "mailAccountRef": "Voorbeeld Mailaccountref 1",
+        "mailAccountUserId": "Voorbeeld Mailaccountuserid 1",
+        "senderDomain": "Voorbeeld Senderdomain 1",
+        "dailyLimit": 0,
+        "sentToday": 0,
+        "dailyLimitResetAt": "2026-03-01T09:00:00+00:00",
+        "dkimVerified": false,
+        "dmarcStatus": "unknown",
+        "deliverabilityCheckedAt": "2026-03-01T09:00:00+00:00",
+        "active": true,
+        "default": false,
+        "mock": false
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "mailTransport",
+          "slug": "mailtransport-mailtransport-2-2"
+        },
+        "kind": "mailAccount",
+        "displayName": "Voorbeeld Displayname 2",
+        "provider": "brevo",
+        "connectorSourceId": "Voorbeeld Connectorsourceid 2",
+        "mailAccountRef": "Voorbeeld Mailaccountref 2",
+        "mailAccountUserId": "Voorbeeld Mailaccountuserid 2",
+        "senderDomain": "Voorbeeld Senderdomain 2",
+        "dailyLimit": 0,
+        "sentToday": 0,
+        "dailyLimitResetAt": "2026-03-02T09:00:00+00:00",
+        "dkimVerified": false,
+        "dmarcStatus": "missing",
+        "deliverabilityCheckedAt": "2026-03-02T09:00:00+00:00",
+        "active": true,
+        "default": false,
+        "mock": false
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "mailTransport",
+          "slug": "mailtransport-mailtransport-3-3"
+        },
+        "kind": "provider",
+        "displayName": "Voorbeeld Displayname 3",
+        "provider": "mailjet",
+        "connectorSourceId": "Voorbeeld Connectorsourceid 3",
+        "mailAccountRef": "Voorbeeld Mailaccountref 3",
+        "mailAccountUserId": "Voorbeeld Mailaccountuserid 3",
+        "senderDomain": "Voorbeeld Senderdomain 3",
+        "dailyLimit": 0,
+        "sentToday": 0,
+        "dailyLimitResetAt": "2026-03-03T09:00:00+00:00",
+        "dkimVerified": false,
+        "dmarcStatus": "invalid",
+        "deliverabilityCheckedAt": "2026-03-03T09:00:00+00:00",
+        "active": true,
+        "default": false,
+        "mock": false
       },
       {
         "@self": {
@@ -2531,6 +3419,63 @@
         "expiresAt": "2026-03-03T09:00:00+00:00",
         "bsn": "Voorbeeld Bsn 3",
         "optedOut": true
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "mailingList",
+          "slug": "mailinglist-voorbeeld-name-1-1"
+        },
+        "name": "Voorbeeld Name 1",
+        "senderName": "Voorbeeld Sendername 1",
+        "senderEmail": "voorbeeld0@example.invalid",
+        "footerAddress": "Voorbeeld Footeraddress 1",
+        "description": "Voorbeeld Description 1",
+        "optInMode": "double",
+        "replyTo": "voorbeeld0@example.invalid",
+        "publicSignup": false,
+        "status": "active",
+        "createdBy": "Voorbeeld Createdby 1",
+        "createdAt": "2026-03-01T09:00:00+00:00",
+        "updatedAt": "2026-03-01T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "mailingList",
+          "slug": "mailinglist-voorbeeld-name-2-2"
+        },
+        "name": "Voorbeeld Name 2",
+        "senderName": "Voorbeeld Sendername 2",
+        "senderEmail": "voorbeeld1@example.invalid",
+        "footerAddress": "Voorbeeld Footeraddress 2",
+        "description": "Voorbeeld Description 2",
+        "optInMode": "soft",
+        "replyTo": "voorbeeld1@example.invalid",
+        "publicSignup": false,
+        "status": "paused",
+        "createdBy": "Voorbeeld Createdby 2",
+        "createdAt": "2026-03-02T09:00:00+00:00",
+        "updatedAt": "2026-03-02T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "mailingList",
+          "slug": "mailinglist-voorbeeld-name-3-3"
+        },
+        "name": "Voorbeeld Name 3",
+        "senderName": "Voorbeeld Sendername 3",
+        "senderEmail": "voorbeeld2@example.invalid",
+        "footerAddress": "Voorbeeld Footeraddress 3",
+        "description": "Voorbeeld Description 3",
+        "optInMode": "double",
+        "replyTo": "voorbeeld2@example.invalid",
+        "publicSignup": false,
+        "status": "archived",
+        "createdBy": "Voorbeeld Createdby 3",
+        "createdAt": "2026-03-03T09:00:00+00:00",
+        "updatedAt": "2026-03-03T09:00:00+00:00"
       },
       {
         "@self": {
@@ -2622,7 +3567,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "mergeOperation",
+          "schema": "masterMergeOperation",
           "slug": "mergeoperation-mergeoperation-1-1"
         },
         "mergedIntoMasterId": "Voorbeeld Mergedintomasterid 1",
@@ -2644,7 +3589,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "mergeOperation",
+          "schema": "masterMergeOperation",
           "slug": "mergeoperation-mergeoperation-2-2"
         },
         "mergedIntoMasterId": "Voorbeeld Mergedintomasterid 2",
@@ -2666,7 +3611,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "mergeOperation",
+          "schema": "masterMergeOperation",
           "slug": "mergeoperation-mergeoperation-3-3"
         },
         "mergedIntoMasterId": "Voorbeeld Mergedintomasterid 3",
@@ -2688,7 +3633,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "message",
+          "schema": "channelMessage",
           "slug": "message-message-1-1"
         },
         "channel": "email",
@@ -2711,7 +3656,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "message",
+          "schema": "channelMessage",
           "slug": "message-message-2-2"
         },
         "channel": "web-form",
@@ -2734,7 +3679,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "message",
+          "schema": "channelMessage",
           "slug": "message-message-3-3"
         },
         "channel": "chat",
@@ -3089,6 +4034,13 @@
         ],
         "description": "Voorbeeld Description 1",
         "deckBoardId": 1,
+        "propertyMappings": [
+          {
+            "schemaSlug": "Voorbeeld Schemaslug 1",
+            "columnProperty": "Voorbeeld Columnproperty 1",
+            "totalsProperty": "Voorbeeld Totalsproperty 1"
+          }
+        ],
         "isDefault": false
       },
       {
@@ -3111,6 +4063,13 @@
         ],
         "description": "Voorbeeld Description 2",
         "deckBoardId": 2,
+        "propertyMappings": [
+          {
+            "schemaSlug": "Voorbeeld Schemaslug 2",
+            "columnProperty": "Voorbeeld Columnproperty 2",
+            "totalsProperty": "Voorbeeld Totalsproperty 2"
+          }
+        ],
         "isDefault": false
       },
       {
@@ -3133,6 +4092,13 @@
         ],
         "description": "Voorbeeld Description 3",
         "deckBoardId": 3,
+        "propertyMappings": [
+          {
+            "schemaSlug": "Voorbeeld Schemaslug 3",
+            "columnProperty": "Voorbeeld Columnproperty 3",
+            "totalsProperty": "Voorbeeld Totalsproperty 3"
+          }
+        ],
         "isDefault": false
       },
       {
@@ -3996,252 +4962,6 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "project",
-          "slug": "project-voorbeeld-name-1-1"
-        },
-        "name": "Voorbeeld Name 1",
-        "client": "Voorbeeld Client 1",
-        "description": "Voorbeeld Description 1",
-        "status": "open",
-        "billable": true,
-        "budgetHours": 0,
-        "budgetAmount": 0,
-        "hourlyRate": 0,
-        "startDate": "2026-03-01",
-        "endDate": "2026-03-01",
-        "color": "Voorbeeld Color 1",
-        "ledgerSyncStatus": "pending",
-        "ledgerSyncedAt": "2026-03-01T09:00:00+00:00"
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "project",
-          "slug": "project-voorbeeld-name-2-2"
-        },
-        "name": "Voorbeeld Name 2",
-        "client": "Voorbeeld Client 2",
-        "description": "Voorbeeld Description 2",
-        "status": "in_progress",
-        "billable": true,
-        "budgetHours": 0,
-        "budgetAmount": 0,
-        "hourlyRate": 0,
-        "startDate": "2026-03-02",
-        "endDate": "2026-03-02",
-        "color": "Voorbeeld Color 2",
-        "ledgerSyncStatus": "synced",
-        "ledgerSyncedAt": "2026-03-02T09:00:00+00:00"
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "project",
-          "slug": "project-voorbeeld-name-3-3"
-        },
-        "name": "Voorbeeld Name 3",
-        "client": "Voorbeeld Client 3",
-        "description": "Voorbeeld Description 3",
-        "status": "completed",
-        "billable": true,
-        "budgetHours": 0,
-        "budgetAmount": 0,
-        "hourlyRate": 0,
-        "startDate": "2026-03-03",
-        "endDate": "2026-03-03",
-        "color": "Voorbeeld Color 3",
-        "ledgerSyncStatus": "failed",
-        "ledgerSyncedAt": "2026-03-03T09:00:00+00:00"
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "projectActivity",
-          "slug": "projectactivity-projectactivity-1-1"
-        },
-        "task": "00000000-0000-4000-8000-000000000000",
-        "date": "2026-03-01",
-        "durationMinutes": 1,
-        "user": "Voorbeeld User 1",
-        "project": "00000000-0000-4000-8000-000000000000",
-        "description": "Voorbeeld Description 1",
-        "billable": true,
-        "hourlyRate": 0.0
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "projectActivity",
-          "slug": "projectactivity-projectactivity-2-2"
-        },
-        "task": "00000000-0000-4000-8000-000000000001",
-        "date": "2026-03-02",
-        "durationMinutes": 2,
-        "user": "Voorbeeld User 2",
-        "project": "00000000-0000-4000-8000-000000000001",
-        "description": "Voorbeeld Description 2",
-        "billable": false,
-        "hourlyRate": 1.0
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "projectActivity",
-          "slug": "projectactivity-projectactivity-3-3"
-        },
-        "task": "00000000-0000-4000-8000-000000000002",
-        "date": "2026-03-03",
-        "durationMinutes": 3,
-        "user": "Voorbeeld User 3",
-        "project": "00000000-0000-4000-8000-000000000002",
-        "description": "Voorbeeld Description 3",
-        "billable": true,
-        "hourlyRate": 2.0
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "projectPhase",
-          "slug": "projectphase-voorbeeld-name-1-1"
-        },
-        "name": "Voorbeeld Name 1",
-        "project": "Voorbeeld Project 1",
-        "status": "open",
-        "sequence": 0,
-        "startDate": "2026-03-01",
-        "endDate": "2026-03-01",
-        "description": "Voorbeeld Description 1",
-        "billable": true,
-        "budgetHours": 0
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "projectPhase",
-          "slug": "projectphase-voorbeeld-name-2-2"
-        },
-        "name": "Voorbeeld Name 2",
-        "project": "Voorbeeld Project 2",
-        "status": "in_progress",
-        "sequence": 0,
-        "startDate": "2026-03-02",
-        "endDate": "2026-03-02",
-        "description": "Voorbeeld Description 2",
-        "billable": false,
-        "budgetHours": 0
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "projectPhase",
-          "slug": "projectphase-voorbeeld-name-3-3"
-        },
-        "name": "Voorbeeld Name 3",
-        "project": "Voorbeeld Project 3",
-        "status": "completed",
-        "sequence": 0,
-        "startDate": "2026-03-03",
-        "endDate": "2026-03-03",
-        "description": "Voorbeeld Description 3",
-        "billable": true,
-        "budgetHours": 0
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "projectTask",
-          "slug": "projecttask-voorbeeld-name-1-1"
-        },
-        "name": "Voorbeeld Name 1",
-        "phase": "00000000-0000-4000-8000-000000000000",
-        "project": "00000000-0000-4000-8000-000000000000",
-        "description": "Voorbeeld Description 1",
-        "sequence": 0,
-        "status": "open",
-        "billable": true,
-        "estimatedHours": 0,
-        "assignee": "Voorbeeld Assignee 1",
-        "deadline": "2026-03-01"
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "projectTask",
-          "slug": "projecttask-voorbeeld-name-2-2"
-        },
-        "name": "Voorbeeld Name 2",
-        "phase": "00000000-0000-4000-8000-000000000001",
-        "project": "00000000-0000-4000-8000-000000000001",
-        "description": "Voorbeeld Description 2",
-        "sequence": 0,
-        "status": "in_progress",
-        "billable": false,
-        "estimatedHours": 0,
-        "assignee": "Voorbeeld Assignee 2",
-        "deadline": "2026-03-02"
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "projectTask",
-          "slug": "projecttask-voorbeeld-name-3-3"
-        },
-        "name": "Voorbeeld Name 3",
-        "phase": "00000000-0000-4000-8000-000000000002",
-        "project": "00000000-0000-4000-8000-000000000002",
-        "description": "Voorbeeld Description 3",
-        "sequence": 0,
-        "status": "completed",
-        "billable": true,
-        "estimatedHours": 0,
-        "assignee": "Voorbeeld Assignee 3",
-        "deadline": "2026-03-03"
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "queue",
-          "slug": "queue-voorbeeld-title-1-1"
-        },
-        "title": "Voorbeeld Title 1",
-        "description": "Voorbeeld Description 1",
-        "categories": [],
-        "isActive": true,
-        "maxCapacity": 1,
-        "sortOrder": 0,
-        "assignedAgents": []
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "queue",
-          "slug": "queue-voorbeeld-title-2-2"
-        },
-        "title": "Voorbeeld Title 2",
-        "description": "Voorbeeld Description 2",
-        "categories": [],
-        "isActive": true,
-        "maxCapacity": 2,
-        "sortOrder": 0,
-        "assignedAgents": []
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "queue",
-          "slug": "queue-voorbeeld-title-3-3"
-        },
-        "title": "Voorbeeld Title 3",
-        "description": "Voorbeeld Description 3",
-        "categories": [],
-        "isActive": true,
-        "maxCapacity": 3,
-        "sortOrder": 0,
-        "assignedAgents": []
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
           "schema": "receiptPrintLog",
           "slug": "receiptprintlog-receiptprintlog-1-1"
         },
@@ -4545,7 +5265,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "resource",
+          "schema": "appointmentResource",
           "slug": "resource-voorbeeld-name-1-1"
         },
         "name": "Voorbeeld Name 1",
@@ -4576,7 +5296,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "resource",
+          "schema": "appointmentResource",
           "slug": "resource-voorbeeld-name-2-2"
         },
         "name": "Voorbeeld Name 2",
@@ -4607,7 +5327,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "resource",
+          "schema": "appointmentResource",
           "slug": "resource-voorbeeld-name-3-3"
         },
         "name": "Voorbeeld Name 3",
@@ -4686,6 +5406,57 @@
       {
         "@self": {
           "register": "pipelinq",
+          "schema": "searchQueryDaily",
+          "slug": "searchquerydaily-searchquerydaily-1-1"
+        },
+        "property": "Voorbeeld Property 1",
+        "date": "2026-03-01",
+        "query": "Voorbeeld Query 1",
+        "page": "Voorbeeld Page 1",
+        "clicks": 1,
+        "impressions": 1,
+        "ctr": 1.0,
+        "position": 1.0,
+        "source": "gsc",
+        "importedAt": "2026-03-01T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "searchQueryDaily",
+          "slug": "searchquerydaily-searchquerydaily-2-2"
+        },
+        "property": "Voorbeeld Property 2",
+        "date": "2026-03-02",
+        "query": "Voorbeeld Query 2",
+        "page": "Voorbeeld Page 2",
+        "clicks": 2,
+        "impressions": 2,
+        "ctr": 2.0,
+        "position": 2.0,
+        "source": "gsc",
+        "importedAt": "2026-03-02T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "searchQueryDaily",
+          "slug": "searchquerydaily-searchquerydaily-3-3"
+        },
+        "property": "Voorbeeld Property 3",
+        "date": "2026-03-03",
+        "query": "Voorbeeld Query 3",
+        "page": "Voorbeeld Page 3",
+        "clicks": 3,
+        "impressions": 3,
+        "ctr": 3.0,
+        "position": 3.0,
+        "source": "gsc",
+        "importedAt": "2026-03-03T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
           "schema": "segment",
           "slug": "segment-voorbeeld-name-1-1"
         },
@@ -4731,7 +5502,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "service",
+          "schema": "appointmentService",
           "slug": "service-voorbeeld-name-1-1"
         },
         "name": "Voorbeeld Name 1",
@@ -4766,7 +5537,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "service",
+          "schema": "appointmentService",
           "slug": "service-voorbeeld-name-2-2"
         },
         "name": "Voorbeeld Name 2",
@@ -4801,7 +5572,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "service",
+          "schema": "appointmentService",
           "slug": "service-voorbeeld-name-3-3"
         },
         "name": "Voorbeeld Name 3",
@@ -4869,6 +5640,363 @@
       {
         "@self": {
           "register": "pipelinq",
+          "schema": "socialAccount",
+          "slug": "socialaccount-socialaccount-1-1"
+        },
+        "network": "mastodon",
+        "kind": "organisation",
+        "handle": "Voorbeeld Handle 1",
+        "displayName": "Voorbeeld Displayname 1",
+        "profileUrl": "https://example.invalid/resource/0",
+        "externalAccountId": "Voorbeeld Externalaccountid 1",
+        "instanceBaseUrl": "https://example.invalid/resource/0",
+        "ownerUserId": "Voorbeeld Owneruserid 1",
+        "clientId": "Voorbeeld Clientid 1",
+        "credentialRef": "Voorbeeld Credentialref 1",
+        "scopes": [
+          "Voorbeeld Scopes 1"
+        ],
+        "status": "pending",
+        "statusReason": "Voorbeeld Statusreason 1",
+        "connectedAt": "2026-03-01T09:00:00+00:00",
+        "expiresAt": "2026-03-01T09:00:00+00:00",
+        "publishMode": "api",
+        "followerCount": 0,
+        "followerCountAt": "2026-03-01T09:00:00+00:00",
+        "active": true
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "socialAccount",
+          "slug": "socialaccount-socialaccount-2-2"
+        },
+        "network": "bluesky",
+        "kind": "person",
+        "handle": "Voorbeeld Handle 2",
+        "displayName": "Voorbeeld Displayname 2",
+        "profileUrl": "https://example.invalid/resource/1",
+        "externalAccountId": "Voorbeeld Externalaccountid 2",
+        "instanceBaseUrl": "https://example.invalid/resource/1",
+        "ownerUserId": "Voorbeeld Owneruserid 2",
+        "clientId": "Voorbeeld Clientid 2",
+        "credentialRef": "Voorbeeld Credentialref 2",
+        "scopes": [
+          "Voorbeeld Scopes 2"
+        ],
+        "status": "active",
+        "statusReason": "Voorbeeld Statusreason 2",
+        "connectedAt": "2026-03-02T09:00:00+00:00",
+        "expiresAt": "2026-03-02T09:00:00+00:00",
+        "publishMode": "share",
+        "followerCount": 0,
+        "followerCountAt": "2026-03-02T09:00:00+00:00",
+        "active": true
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "socialAccount",
+          "slug": "socialaccount-socialaccount-3-3"
+        },
+        "network": "linkedin",
+        "kind": "organisation",
+        "handle": "Voorbeeld Handle 3",
+        "displayName": "Voorbeeld Displayname 3",
+        "profileUrl": "https://example.invalid/resource/2",
+        "externalAccountId": "Voorbeeld Externalaccountid 3",
+        "instanceBaseUrl": "https://example.invalid/resource/2",
+        "ownerUserId": "Voorbeeld Owneruserid 3",
+        "clientId": "Voorbeeld Clientid 3",
+        "credentialRef": "Voorbeeld Credentialref 3",
+        "scopes": [
+          "Voorbeeld Scopes 3"
+        ],
+        "status": "expired",
+        "statusReason": "Voorbeeld Statusreason 3",
+        "connectedAt": "2026-03-03T09:00:00+00:00",
+        "expiresAt": "2026-03-03T09:00:00+00:00",
+        "publishMode": "api",
+        "followerCount": 0,
+        "followerCountAt": "2026-03-03T09:00:00+00:00",
+        "active": true
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "socialConnection",
+          "slug": "socialconnection-socialconnection-1-1"
+        },
+        "network": "mastodon",
+        "counterpartHandle": "Voorbeeld Counterparthandle 1",
+        "accountId": "Voorbeeld Accountid 1",
+        "clientId": "Voorbeeld Clientid 1",
+        "counterpartUrl": "Voorbeeld Counterparturl 1",
+        "weFollowThem": "yes",
+        "theyFollowUs": "yes",
+        "reason": "Voorbeeld Reason 1",
+        "seenAt": "2026-03-01T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "socialConnection",
+          "slug": "socialconnection-socialconnection-2-2"
+        },
+        "network": "bluesky",
+        "counterpartHandle": "Voorbeeld Counterparthandle 2",
+        "accountId": "Voorbeeld Accountid 2",
+        "clientId": "Voorbeeld Clientid 2",
+        "counterpartUrl": "Voorbeeld Counterparturl 2",
+        "weFollowThem": "no",
+        "theyFollowUs": "no",
+        "reason": "Voorbeeld Reason 2",
+        "seenAt": "2026-03-02T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "socialConnection",
+          "slug": "socialconnection-socialconnection-3-3"
+        },
+        "network": "linkedin",
+        "counterpartHandle": "Voorbeeld Counterparthandle 3",
+        "accountId": "Voorbeeld Accountid 3",
+        "clientId": "Voorbeeld Clientid 3",
+        "counterpartUrl": "Voorbeeld Counterparturl 3",
+        "weFollowThem": "unknown",
+        "theyFollowUs": "unknown",
+        "reason": "Voorbeeld Reason 3",
+        "seenAt": "2026-03-03T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "socialPost",
+          "slug": "socialpost-voorbeeld-title-1-1"
+        },
+        "body": "Voorbeeld Body 1",
+        "title": "Voorbeeld Title 1",
+        "articleId": "Voorbeeld Articleid 1",
+        "campaignId": "Voorbeeld Campaignid 1",
+        "media": [
+          {
+            "path": "Voorbeeld Path 1",
+            "url": "Voorbeeld Url 1",
+            "alt": "Voorbeeld Alt 1",
+            "mimeType": "Voorbeeld Mimetype 1"
+          }
+        ],
+        "link": "https://example.invalid/resource/0",
+        "accountIds": [
+          "Voorbeeld Accountids 1"
+        ],
+        "variants": {},
+        "scheduledFor": "2026-03-01T09:00:00+00:00",
+        "status": "draft",
+        "approvals": [
+          {
+            "userId": "Voorbeeld Userid 1",
+            "decision": "approved",
+            "decidedAt": "2026-03-01T09:00:00+00:00",
+            "note": "Voorbeeld Note 1"
+          }
+        ],
+        "agentAuthored": false,
+        "agentAuthoredBy": "Voorbeeld Agentauthoredby 1",
+        "createdBy": "Voorbeeld Createdby 1",
+        "publishedAt": "2026-03-01T09:00:00+00:00",
+        "failureReason": "Voorbeeld Failurereason 1"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "socialPost",
+          "slug": "socialpost-voorbeeld-title-2-2"
+        },
+        "body": "Voorbeeld Body 2",
+        "title": "Voorbeeld Title 2",
+        "articleId": "Voorbeeld Articleid 2",
+        "campaignId": "Voorbeeld Campaignid 2",
+        "media": [
+          {
+            "path": "Voorbeeld Path 2",
+            "url": "Voorbeeld Url 2",
+            "alt": "Voorbeeld Alt 2",
+            "mimeType": "Voorbeeld Mimetype 2"
+          }
+        ],
+        "link": "https://example.invalid/resource/1",
+        "accountIds": [
+          "Voorbeeld Accountids 2"
+        ],
+        "variants": {},
+        "scheduledFor": "2026-03-02T09:00:00+00:00",
+        "status": "approval",
+        "approvals": [
+          {
+            "userId": "Voorbeeld Userid 2",
+            "decision": "rejected",
+            "decidedAt": "2026-03-02T09:00:00+00:00",
+            "note": "Voorbeeld Note 2"
+          }
+        ],
+        "agentAuthored": false,
+        "agentAuthoredBy": "Voorbeeld Agentauthoredby 2",
+        "createdBy": "Voorbeeld Createdby 2",
+        "publishedAt": "2026-03-02T09:00:00+00:00",
+        "failureReason": "Voorbeeld Failurereason 2"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "socialPost",
+          "slug": "socialpost-voorbeeld-title-3-3"
+        },
+        "body": "Voorbeeld Body 3",
+        "title": "Voorbeeld Title 3",
+        "articleId": "Voorbeeld Articleid 3",
+        "campaignId": "Voorbeeld Campaignid 3",
+        "media": [
+          {
+            "path": "Voorbeeld Path 3",
+            "url": "Voorbeeld Url 3",
+            "alt": "Voorbeeld Alt 3",
+            "mimeType": "Voorbeeld Mimetype 3"
+          }
+        ],
+        "link": "https://example.invalid/resource/2",
+        "accountIds": [
+          "Voorbeeld Accountids 3"
+        ],
+        "variants": {},
+        "scheduledFor": "2026-03-03T09:00:00+00:00",
+        "status": "scheduled",
+        "approvals": [
+          {
+            "userId": "Voorbeeld Userid 3",
+            "decision": "approved",
+            "decidedAt": "2026-03-03T09:00:00+00:00",
+            "note": "Voorbeeld Note 3"
+          }
+        ],
+        "agentAuthored": false,
+        "agentAuthoredBy": "Voorbeeld Agentauthoredby 3",
+        "createdBy": "Voorbeeld Createdby 3",
+        "publishedAt": "2026-03-03T09:00:00+00:00",
+        "failureReason": "Voorbeeld Failurereason 3"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "socialPublication",
+          "slug": "socialpublication-socialpublication-1-1"
+        },
+        "postId": "Voorbeeld Postid 1",
+        "accountId": "Voorbeeld Accountid 1",
+        "network": "Voorbeeld Network 1",
+        "status": "pending",
+        "externalId": "Voorbeeld Externalid 1",
+        "url": "https://example.invalid/resource/0",
+        "publishedAt": "2026-03-01T09:00:00+00:00",
+        "metrics": {
+          "views": 0,
+          "likes": 0,
+          "comments": 0,
+          "shares": 0,
+          "clicks": 0
+        },
+        "rawMetrics": {},
+        "metricsAt": "2026-03-01T09:00:00+00:00",
+        "cost": 0,
+        "attempts": 0,
+        "failureCode": "",
+        "failureReason": "Voorbeeld Failurereason 1",
+        "sharePromptedAt": "2026-03-01T09:00:00+00:00",
+        "preparedBody": "Voorbeeld Preparedbody 1",
+        "preparedMedia": [
+          {
+            "path": "Voorbeeld Path 1",
+            "url": "Voorbeeld Url 1",
+            "alt": "Voorbeeld Alt 1"
+          }
+        ]
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "socialPublication",
+          "slug": "socialpublication-socialpublication-2-2"
+        },
+        "postId": "Voorbeeld Postid 2",
+        "accountId": "Voorbeeld Accountid 2",
+        "network": "Voorbeeld Network 2",
+        "status": "published",
+        "externalId": "Voorbeeld Externalid 2",
+        "url": "https://example.invalid/resource/1",
+        "publishedAt": "2026-03-02T09:00:00+00:00",
+        "metrics": {
+          "views": 1,
+          "likes": 1,
+          "comments": 1,
+          "shares": 1,
+          "clicks": 1
+        },
+        "rawMetrics": {},
+        "metricsAt": "2026-03-02T09:00:00+00:00",
+        "cost": 0,
+        "attempts": 0,
+        "failureCode": "not_configured",
+        "failureReason": "Voorbeeld Failurereason 2",
+        "sharePromptedAt": "2026-03-02T09:00:00+00:00",
+        "preparedBody": "Voorbeeld Preparedbody 2",
+        "preparedMedia": [
+          {
+            "path": "Voorbeeld Path 2",
+            "url": "Voorbeeld Url 2",
+            "alt": "Voorbeeld Alt 2"
+          }
+        ]
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "socialPublication",
+          "slug": "socialpublication-socialpublication-3-3"
+        },
+        "postId": "Voorbeeld Postid 3",
+        "accountId": "Voorbeeld Accountid 3",
+        "network": "Voorbeeld Network 3",
+        "status": "failed",
+        "externalId": "Voorbeeld Externalid 3",
+        "url": "https://example.invalid/resource/2",
+        "publishedAt": "2026-03-03T09:00:00+00:00",
+        "metrics": {
+          "views": 2,
+          "likes": 2,
+          "comments": 2,
+          "shares": 2,
+          "clicks": 2
+        },
+        "rawMetrics": {},
+        "metricsAt": "2026-03-03T09:00:00+00:00",
+        "cost": 0,
+        "attempts": 0,
+        "failureCode": "relink_needed",
+        "failureReason": "Voorbeeld Failurereason 3",
+        "sharePromptedAt": "2026-03-03T09:00:00+00:00",
+        "preparedBody": "Voorbeeld Preparedbody 3",
+        "preparedMedia": [
+          {
+            "path": "Voorbeeld Path 3",
+            "url": "Voorbeeld Url 3",
+            "alt": "Voorbeeld Alt 3"
+          }
+        ]
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
           "schema": "sourceRecord",
           "slug": "sourcerecord-sourcerecord-1-1"
         },
@@ -4932,7 +6060,64 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "task",
+          "schema": "subscription",
+          "slug": "subscription-subscription-1-1"
+        },
+        "listId": "Voorbeeld Listid 1",
+        "email": "voorbeeld0@example.invalid",
+        "state": "pending",
+        "contactId": "Voorbeeld Contactid 1",
+        "source": "Voorbeeld Source 1",
+        "lawfulBasis": "consent",
+        "confirmTokenHash": "Voorbeeld Confirmtokenhash 1",
+        "confirmedAt": "2026-03-01T09:00:00+00:00",
+        "confirmIpHash": "Voorbeeld Confirmiphash 1",
+        "unsubscribedAt": "2026-03-01T09:00:00+00:00",
+        "reason": "Voorbeeld Reason 1",
+        "createdAt": "2026-03-01T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "subscription",
+          "slug": "subscription-subscription-2-2"
+        },
+        "listId": "Voorbeeld Listid 2",
+        "email": "voorbeeld1@example.invalid",
+        "state": "confirmed",
+        "contactId": "Voorbeeld Contactid 2",
+        "source": "Voorbeeld Source 2",
+        "lawfulBasis": "soft-opt-in",
+        "confirmTokenHash": "Voorbeeld Confirmtokenhash 2",
+        "confirmedAt": "2026-03-02T09:00:00+00:00",
+        "confirmIpHash": "Voorbeeld Confirmiphash 2",
+        "unsubscribedAt": "2026-03-02T09:00:00+00:00",
+        "reason": "Voorbeeld Reason 2",
+        "createdAt": "2026-03-02T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "subscription",
+          "slug": "subscription-subscription-3-3"
+        },
+        "listId": "Voorbeeld Listid 3",
+        "email": "voorbeeld2@example.invalid",
+        "state": "unsubscribed",
+        "contactId": "Voorbeeld Contactid 3",
+        "source": "Voorbeeld Source 3",
+        "lawfulBasis": "legitimate-interest",
+        "confirmTokenHash": "Voorbeeld Confirmtokenhash 3",
+        "confirmedAt": "2026-03-03T09:00:00+00:00",
+        "confirmIpHash": "Voorbeeld Confirmiphash 3",
+        "unsubscribedAt": "2026-03-03T09:00:00+00:00",
+        "reason": "Voorbeeld Reason 3",
+        "createdAt": "2026-03-03T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "crmTask",
           "slug": "task-task-1-1"
         },
         "subject": "Voorbeeld Subject 1",
@@ -4957,12 +6142,13 @@
             "result": "Voorbeeld Result 1",
             "notes": "Voorbeeld Notes 1"
           }
-        ]
+        ],
+        "lead": "00000000-0000-4000-8000-000000000000"
       },
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "task",
+          "schema": "crmTask",
           "slug": "task-task-2-2"
         },
         "subject": "Voorbeeld Subject 2",
@@ -4987,12 +6173,13 @@
             "result": "Voorbeeld Result 2",
             "notes": "Voorbeeld Notes 2"
           }
-        ]
+        ],
+        "lead": "00000000-0000-4000-8000-000000000001"
       },
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "task",
+          "schema": "crmTask",
           "slug": "task-task-3-3"
         },
         "subject": "Voorbeeld Subject 3",
@@ -5017,7 +6204,8 @@
             "result": "Voorbeeld Result 3",
             "notes": "Voorbeeld Notes 3"
           }
-        ]
+        ],
+        "lead": "00000000-0000-4000-8000-000000000002"
       },
       {
         "@self": {
@@ -5066,8 +6254,8 @@
         "zgwResourceMappings": [
           "Voorbeeld Zgwresourcemappings 1"
         ],
-        "description": "Voorbeeld Description 1",
-        "client": "00000000-0000-4000-8000-000000000000"
+        "lead": "00000000-0000-4000-8000-000000000000",
+        "description": "Voorbeeld Description 1"
       },
       {
         "@self": {
@@ -5116,8 +6304,8 @@
         "zgwResourceMappings": [
           "Voorbeeld Zgwresourcemappings 2"
         ],
-        "description": "Voorbeeld Description 2",
-        "client": "00000000-0000-4000-8000-000000000001"
+        "lead": "00000000-0000-4000-8000-000000000001",
+        "description": "Voorbeeld Description 2"
       },
       {
         "@self": {
@@ -5166,8 +6354,8 @@
         "zgwResourceMappings": [
           "Voorbeeld Zgwresourcemappings 3"
         ],
-        "description": "Voorbeeld Description 3",
-        "client": "00000000-0000-4000-8000-000000000002"
+        "lead": "00000000-0000-4000-8000-000000000002",
+        "description": "Voorbeeld Description 3"
       },
       {
         "@self": {
@@ -5220,7 +6408,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "timeEntry",
+          "schema": "billingTimeEntry",
           "slug": "timeentry-voorbeeld-title-1-1"
         },
         "title": "Voorbeeld Title 1",
@@ -5231,7 +6419,6 @@
         "billingCategory": "Voorbeeld Billingcategory 1",
         "client": "Voorbeeld Client 1",
         "lead": "Voorbeeld Lead 1",
-        "project": "Voorbeeld Project 1",
         "approvedBy": "Voorbeeld Approvedby 1",
         "approvedAt": "2026-03-01T09:00:00+00:00",
         "wipSyncStatus": "pending",
@@ -5245,7 +6432,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "timeEntry",
+          "schema": "billingTimeEntry",
           "slug": "timeentry-voorbeeld-title-2-2"
         },
         "title": "Voorbeeld Title 2",
@@ -5256,7 +6443,6 @@
         "billingCategory": "Voorbeeld Billingcategory 2",
         "client": "Voorbeeld Client 2",
         "lead": "Voorbeeld Lead 2",
-        "project": "Voorbeeld Project 2",
         "approvedBy": "Voorbeeld Approvedby 2",
         "approvedAt": "2026-03-02T09:00:00+00:00",
         "wipSyncStatus": "synced",
@@ -5270,7 +6456,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "timeEntry",
+          "schema": "billingTimeEntry",
           "slug": "timeentry-voorbeeld-title-3-3"
         },
         "title": "Voorbeeld Title 3",
@@ -5281,7 +6467,6 @@
         "billingCategory": "Voorbeeld Billingcategory 3",
         "client": "Voorbeeld Client 3",
         "lead": "Voorbeeld Lead 3",
-        "project": "Voorbeeld Project 3",
         "approvedBy": "Voorbeeld Approvedby 3",
         "approvedAt": "2026-03-03T09:00:00+00:00",
         "wipSyncStatus": "failed",
@@ -5291,6 +6476,75 @@
         "billingSyncStatus": "failed",
         "billingBatchId": "Voorbeeld Billingbatchid 3",
         "billingInvoiceId": "Voorbeeld Billinginvoiceid 3"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "touchpoint",
+          "slug": "touchpoint-touchpoint-1-1"
+        },
+        "campaignId": "00000000-0000-4000-8000-000000000000",
+        "kind": "click",
+        "occurredAt": "2026-03-01T09:00:00+00:00",
+        "contactId": "00000000-0000-4000-8000-000000000000",
+        "leadId": "00000000-0000-4000-8000-000000000000",
+        "channel": "Voorbeeld Channel 1",
+        "utm": {
+          "campaign": "Voorbeeld Campaign 1",
+          "source": "Voorbeeld Source 1",
+          "medium": "Voorbeeld Medium 1",
+          "term": "Voorbeeld Term 1",
+          "content": "Voorbeeld Content 1"
+        },
+        "sourceRef": "Voorbeeld Sourceref 1",
+        "nonce": "Voorbeeld Nonce 1",
+        "createdAt": "2026-03-01T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "touchpoint",
+          "slug": "touchpoint-touchpoint-2-2"
+        },
+        "campaignId": "00000000-0000-4000-8000-000000000001",
+        "kind": "visit",
+        "occurredAt": "2026-03-02T09:00:00+00:00",
+        "contactId": "00000000-0000-4000-8000-000000000001",
+        "leadId": "00000000-0000-4000-8000-000000000001",
+        "channel": "Voorbeeld Channel 2",
+        "utm": {
+          "campaign": "Voorbeeld Campaign 2",
+          "source": "Voorbeeld Source 2",
+          "medium": "Voorbeeld Medium 2",
+          "term": "Voorbeeld Term 2",
+          "content": "Voorbeeld Content 2"
+        },
+        "sourceRef": "Voorbeeld Sourceref 2",
+        "nonce": "Voorbeeld Nonce 2",
+        "createdAt": "2026-03-02T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "touchpoint",
+          "slug": "touchpoint-touchpoint-3-3"
+        },
+        "campaignId": "00000000-0000-4000-8000-000000000002",
+        "kind": "submit",
+        "occurredAt": "2026-03-03T09:00:00+00:00",
+        "contactId": "00000000-0000-4000-8000-000000000002",
+        "leadId": "00000000-0000-4000-8000-000000000002",
+        "channel": "Voorbeeld Channel 3",
+        "utm": {
+          "campaign": "Voorbeeld Campaign 3",
+          "source": "Voorbeeld Source 3",
+          "medium": "Voorbeeld Medium 3",
+          "term": "Voorbeeld Term 3",
+          "content": "Voorbeeld Content 3"
+        },
+        "sourceRef": "Voorbeeld Sourceref 3",
+        "nonce": "Voorbeeld Nonce 3",
+        "createdAt": "2026-03-03T09:00:00+00:00"
       },
       {
         "@self": {
@@ -5451,6 +6705,111 @@
       {
         "@self": {
           "register": "pipelinq",
+          "schema": "watchEvent",
+          "slug": "watchevent-voorbeeld-title-1-1"
+        },
+        "competitorId": "Voorbeeld Competitorid 1",
+        "watchId": "Voorbeeld Watchid 1",
+        "kind": "rss",
+        "url": "Voorbeeld Url 1",
+        "title": "Voorbeeld Title 1",
+        "diffSummary": "Voorbeeld Diffsummary 1",
+        "sourceStamp": "Voorbeeld Sourcestamp 1",
+        "seenAt": "2026-03-01T09:00:00+00:00",
+        "relevanceScore": 0,
+        "relevanceReason": "Voorbeeld Relevancereason 1",
+        "agentAuthored": false
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "watchEvent",
+          "slug": "watchevent-voorbeeld-title-2-2"
+        },
+        "competitorId": "Voorbeeld Competitorid 2",
+        "watchId": "Voorbeeld Watchid 2",
+        "kind": "sitemap",
+        "url": "Voorbeeld Url 2",
+        "title": "Voorbeeld Title 2",
+        "diffSummary": "Voorbeeld Diffsummary 2",
+        "sourceStamp": "Voorbeeld Sourcestamp 2",
+        "seenAt": "2026-03-02T09:00:00+00:00",
+        "relevanceScore": 1,
+        "relevanceReason": "Voorbeeld Relevancereason 2",
+        "agentAuthored": false
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "watchEvent",
+          "slug": "watchevent-voorbeeld-title-3-3"
+        },
+        "competitorId": "Voorbeeld Competitorid 3",
+        "watchId": "Voorbeeld Watchid 3",
+        "kind": "page",
+        "url": "Voorbeeld Url 3",
+        "title": "Voorbeeld Title 3",
+        "diffSummary": "Voorbeeld Diffsummary 3",
+        "sourceStamp": "Voorbeeld Sourcestamp 3",
+        "seenAt": "2026-03-03T09:00:00+00:00",
+        "relevanceScore": 2,
+        "relevanceReason": "Voorbeeld Relevancereason 3",
+        "agentAuthored": false
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "weeklyReview",
+          "slug": "weeklyreview-weeklyreview-1-1"
+        },
+        "weekStarting": "2026-03-01",
+        "sources": [],
+        "degraded": [],
+        "summary": "Voorbeeld Summary 1",
+        "highlights": [],
+        "suggestions": [],
+        "topicIdeas": [],
+        "generatedAt": "2026-03-01T09:00:00+00:00",
+        "agentAuthored": false,
+        "agentAuthoredBy": "Voorbeeld Agentauthoredby 1"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "weeklyReview",
+          "slug": "weeklyreview-weeklyreview-2-2"
+        },
+        "weekStarting": "2026-03-02",
+        "sources": [],
+        "degraded": [],
+        "summary": "Voorbeeld Summary 2",
+        "highlights": [],
+        "suggestions": [],
+        "topicIdeas": [],
+        "generatedAt": "2026-03-02T09:00:00+00:00",
+        "agentAuthored": false,
+        "agentAuthoredBy": "Voorbeeld Agentauthoredby 2"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "weeklyReview",
+          "slug": "weeklyreview-weeklyreview-3-3"
+        },
+        "weekStarting": "2026-03-03",
+        "sources": [],
+        "degraded": [],
+        "summary": "Voorbeeld Summary 3",
+        "highlights": [],
+        "suggestions": [],
+        "topicIdeas": [],
+        "generatedAt": "2026-03-03T09:00:00+00:00",
+        "agentAuthored": false,
+        "agentAuthoredBy": "Voorbeeld Agentauthoredby 3"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
           "schema": "zgwClient",
           "slug": "zgwclient-zgwclient-1-1"
         },
@@ -5604,7 +6963,7 @@
       {
         "@self": {
           "register": "pipelinq-portal",
-          "schema": "portalAccount",
+          "schema": "crmPortalAccount",
           "slug": "portalaccount-portalaccount-1-1"
         },
         "email": "voorbeeld0@example.invalid",
@@ -5635,7 +6994,7 @@
       {
         "@self": {
           "register": "pipelinq-portal",
-          "schema": "portalAccount",
+          "schema": "crmPortalAccount",
           "slug": "portalaccount-portalaccount-2-2"
         },
         "email": "voorbeeld1@example.invalid",
@@ -5666,7 +7025,7 @@
       {
         "@self": {
           "register": "pipelinq-portal",
-          "schema": "portalAccount",
+          "schema": "crmPortalAccount",
           "slug": "portalaccount-portalaccount-3-3"
         },
         "email": "voorbeeld2@example.invalid",
@@ -5799,7 +7158,7 @@
       {
         "@self": {
           "register": "pipelinq-portal",
-          "schema": "portalSession",
+          "schema": "crmPortalSession",
           "slug": "portalsession-portalsession-1-1"
         },
         "accountId": "Voorbeeld Accountid 1",
@@ -5816,7 +7175,7 @@
       {
         "@self": {
           "register": "pipelinq-portal",
-          "schema": "portalSession",
+          "schema": "crmPortalSession",
           "slug": "portalsession-portalsession-2-2"
         },
         "accountId": "Voorbeeld Accountid 2",
@@ -5833,7 +7192,7 @@
       {
         "@self": {
           "register": "pipelinq-portal",
-          "schema": "portalSession",
+          "schema": "crmPortalSession",
           "slug": "portalsession-portalsession-3-3"
         },
         "accountId": "Voorbeeld Accountid 3",

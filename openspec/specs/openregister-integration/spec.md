@@ -1234,7 +1234,7 @@ Operations for frontend API service helpers MUST tolerate missing, empty, or mal
 The Pinia store actions and getters implemented in this app MUST provide the
 operations of the store modules that currently exist in `src/store/modules/`
 (`agentProfiles.js`, `leadSources.js`, `object.js`, `product.js`, `prospect.js`,
-`queues.js`, `requestChannels.js`, `settings.js`, `skills.js`, `survey.js` — for
+`requestChannels.js`, `settings.js`, `skills.js`, `survey.js` — for
 example `_countOpenRequests`, `deleteProfile`, `fetchProfiles`, `getWorkload`,
 `saveProfile`, `_addToRecentlyViewed`). Each listed method realises an observable
 part of Pinia store actions and getters and MUST behave as implemented in the
@@ -1294,13 +1294,6 @@ A predicate MAY remain in PHP **only** when OpenRegister's query engine cannot e
 simple filter call path. Such a leg MUST carry an inline comment stating why it stays in PHP.
 
 **Feature tier**: MVP
-
-#### Scenario: Queue depth is counted server-side
-
-- GIVEN a queue holding more than one request
-- WHEN `QueueService::getQueueDepth()` is called
-- THEN it MUST call `ObjectService::count()` filtered to that queue
-- AND it MUST return the queue's true item count (NOT a value capped at 1 by a `limit: 1` fetch)
 
 #### Scenario: Active-staff-for-role count pushes the role filter down
 
@@ -1536,16 +1529,6 @@ MUST NOT be modified here.
 - THEN it MUST request the subset via `findAll` with `assignee = userId` and `status IN (new, in_progress)`
 - AND it MUST NOT fetch every request and filter them in PHP for this list
 - AND the returned `assignedRequests` MUST equal the prior PHP-filtered list (same rows, same order)
-
-#### Scenario: Open requests are counted per queue server-side with a computed slug bucket preserved
-
-- GIVEN open and closed requests referencing queues by slug or by id
-- WHEN `KccWerkplekService::getWorkspaceState(userId)` builds `queueCounts`
-- THEN it MUST request a grouped `COUNT` by the stored `queue` field via `runAdhocByRef`, filtered to `status IN (new, in_progress)`
-- AND each returned group key (the raw queue ref) MUST be re-mapped in PHP to the queue's slug and folded into `queueCounts[slug]`
-- AND `queueCounts` MUST stay seeded to 0 for every queue with a non-empty slug
-- AND a group whose key matches no queue (including the null/empty group) MUST NOT be counted
-- AND the per-queue counts MUST equal the prior PHP loop
 
 #### Scenario: A cross-source, computed-bucket, ISO-T-windowed, or post-IDOR leg stays in PHP with a stated reason
 

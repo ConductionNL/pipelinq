@@ -250,7 +250,7 @@ class ConfigFileLoaderServiceTest extends TestCase {
 			'components' => [
 				'registers' => [
 					'pipelinq' => ['slug' => 'pipelinq', 'schemas' => ['request']],
-					'pipelinq-portal' => ['slug' => 'pipelinq-portal', 'schemas' => ['portalAccount']],
+					'pipelinq-portal' => ['slug' => 'pipelinq-portal', 'schemas' => ['crmPortalAccount']],
 				],
 			],
 		];

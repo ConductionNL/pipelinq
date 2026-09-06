@@ -37,6 +37,7 @@ use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Controller\SegmentController;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\SchemaMapService;
+use OCA\Pipelinq\Service\Marketing\SegmentSignalService;
 use OCA\Pipelinq\Service\SegmentService;
 use OCP\AppFramework\Http;
 use OCP\IAppConfig;
@@ -107,6 +108,49 @@ class SegmentControllerTest extends TestCase {
 			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true])
 		);
 	}//end setUp()
+
+	/**
+	 * GET /api/segments/signals returns the catalogue AND the availability
+	 * report. The catalogue alone would offer a marketer a rule that saves,
+	 * validates and silently matches nobody.
+	 *
+	 * @return void
+	 */
+	public function testSignalsReturnsTheCatalogueAndTheAvailability(): void {
+		$this->authenticate('marketeer');
+		$this->segmentService->method('signalCatalogue')->willReturn([
+			'shillinqValueTier' => [
+				'type' => 'string',
+				'title' => 'Value tier',
+				'source' => 'shillinq',
+				'description' => 'Test signal.',
+			],
+		]);
+		$this->segmentService->method('signalAvailability')->willReturn([
+			'shillinq' => false,
+			'reason' => 'shillinq_not_installed',
+		]);
+
+		$response = $this->controller->signals();
+		$data = $response->getData();
+
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertArrayHasKey('shillinqValueTier', $data['catalogue']);
+		$this->assertFalse($data['availability']['shillinq']);
+		$this->assertSame('shillinq_not_installed', $data['availability']['reason']);
+	}//end testSignalsReturnsTheCatalogueAndTheAvailability()
+
+	/**
+	 * The signals endpoint takes the same privilege check the rest of the
+	 * segment surface takes: the catalogue names what the tenant tracks.
+	 *
+	 * @return void
+	 */
+	public function testSignalsRefusesACallerWithoutASession(): void {
+		$this->authenticate(null);
+
+		$this->assertSame(Http::STATUS_UNAUTHORIZED, $this->controller->signals()->getStatus());
+	}//end testSignalsRefusesACallerWithoutASession()
 
 	/**
 	 * Stub the acting user (or none) on the shared session mock.
@@ -188,7 +232,8 @@ class SegmentControllerTest extends TestCase {
 			$appConfig,
 			$this->createMock(SchemaMapService::class),
 			$cacheFactory,
-			$this->createMock(LoggerInterface::class)
+			$this->createMock(LoggerInterface::class),
+			$this->createMock(SegmentSignalService::class)
 		);
 
 		$session = $this->createMock(IUserSession::class);
@@ -420,11 +465,6 @@ class SegmentControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testRefreshSizeIgnoresStaleEstimateCache(): void {
-		$this->markTestSkipped(
-			'BUG: POST /api/segments/{id}/size returns and persists the cached '
-			. 'estimate instead of recomputing - see coordinator report'
-		);
-
 		$cache = $this->createMock(ICache::class);
 		// A pre-edit count still sitting in the estimate cache.
 		$cache->method('get')->willReturn(99);
@@ -457,11 +497,6 @@ class SegmentControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testRefreshSizeReportsPersistenceFailure(): void {
-		$this->markTestSkipped(
-			'BUG: a failed estimatedSize write is swallowed and still answered '
-			. '200 with the new count - see coordinator report'
-		);
-
 		$objects = $this->createMock(ObjectServiceInterface::class);
 		$objects->method('find')->willReturn(
 			self::entity(['id' => 'seg-1', 'entityType' => 'contact', 'rules' => self::COUNTRY_RULE])
@@ -473,4 +508,276 @@ class SegmentControllerTest extends TestCase {
 
 		$this->assertNotSame(Http::STATUS_OK, $response->getStatus());
 	}//end testRefreshSizeReportsPersistenceFailure()
+
+	/**
+	 * An unauthenticated caller cannot preview an unsaved rule tree.
+	 *
+	 * @return void
+	 */
+	public function testPreviewRequiresAuthentication(): void {
+		$this->authenticate(null);
+		$this->segmentService->expects($this->never())->method('previewRulePayload');
+
+		$response = $this->controller->preview();
+
+		$this->assertSame(Http::STATUS_UNAUTHORIZED, $response->getStatus());
+	}//end testPreviewRequiresAuthentication()
+
+	/**
+	 * The preview endpoint delegates straight to
+	 * `SegmentService.previewRulePayload()` and answers whatever it returns —
+	 * this is the endpoint SegmentBuilder.vue calls before a Segment has an
+	 * id (marketing-segments-ui-repair, pipelinq#773).
+	 *
+	 * @return void
+	 */
+	public function testPreviewReturnsServiceResult(): void {
+		$this->authenticate('marketeer');
+		$this->segmentService->expects($this->once())
+			->method('previewRulePayload')
+			->with(rules: self::COUNTRY_RULE, entityType: 'contact')
+			->willReturn(['valid' => true, 'error' => null, 'estimatedSize' => 3]);
+
+		$request = $this->createMock(IRequest::class);
+		$request->method('getParam')->willReturnCallback(
+			static function (string $key, $default = null) {
+				return match ($key) {
+					'entityType' => 'contact',
+					'rules' => self::COUNTRY_RULE,
+					default => $default,
+				};
+			}
+		);
+		$controller = new SegmentController($request,
+			$this->segmentService,
+			$this->userSession,
+			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true])
+		);
+
+		$response = $controller->preview();
+
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertSame(['valid' => true, 'error' => null, 'estimatedSize' => 3], $response->getData());
+	}//end testPreviewReturnsServiceResult()
+
+	/**
+	 * An unauthenticated caller cannot update a Segment.
+	 *
+	 * @return void
+	 */
+	public function testUpdateRequiresAuthentication(): void {
+		$this->authenticate(null);
+		$this->segmentService->expects($this->never())->method('updateSegment');
+
+		$response = $this->controller->update('seg-1');
+
+		$this->assertSame(Http::STATUS_UNAUTHORIZED, $response->getStatus());
+	}//end testUpdateRequiresAuthentication()
+
+	/**
+	 * A successful update answers 200 with the segment and estimatedSize.
+	 *
+	 * @return void
+	 */
+	public function testUpdateReturnsUpdatedSegment(): void {
+		$this->authenticate('marketeer');
+		$this->segmentService->expects($this->once())
+			->method('updateSegment')
+			->with(segmentId: 'seg-1', payload: $this->anything())
+			->willReturn(
+				[
+					'segment' => ['id' => 'seg-1', 'name' => 'Renamed'],
+					'estimatedSize' => 7,
+				]
+			);
+
+		$response = $this->controller->update('seg-1');
+
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertSame(
+			['segment' => ['id' => 'seg-1', 'name' => 'Renamed'], 'estimatedSize' => 7],
+			$response->getData()
+		);
+	}//end testUpdateReturnsUpdatedSegment()
+
+	/**
+	 * An update against a Segment id that does not exist is a generic 404,
+	 * not a 400 — the caller sent a structurally fine request, the resource
+	 * just is not there.
+	 *
+	 * @return void
+	 */
+	public function testUpdateReturns404ForUnknownSegment(): void {
+		$this->authenticate('marketeer');
+		$this->segmentService->method('updateSegment')->willReturn(['error' => 'Segment not found']);
+
+		$response = $this->controller->update('seg-missing');
+
+		$this->assertSame(Http::STATUS_NOT_FOUND, $response->getStatus());
+	}//end testUpdateReturns404ForUnknownSegment()
+
+	/**
+	 * An invalid edited rule tree is a generic 400.
+	 *
+	 * @return void
+	 */
+	public function testUpdateReturns400ForInvalidRuleTree(): void {
+		$this->authenticate('marketeer');
+		$this->segmentService->method('updateSegment')->willReturn(['error' => 'Invalid rule tree: bad leaf']);
+
+		$response = $this->controller->update('seg-1');
+
+		$this->assertSame(Http::STATUS_BAD_REQUEST, $response->getStatus());
+	}//end testUpdateReturns400ForInvalidRuleTree()
+
+	/**
+	 * Wired against a real service: editing a Segment's rules recomputes and
+	 * persists `estimatedSize`, the same guarantee refreshSize() gives —
+	 * an update must not leave a stale count sitting on the record.
+	 *
+	 * @return void
+	 */
+	public function testUpdateRecomputesEstimatedSizeThroughRealService(): void {
+		$objects = $this->createMock(ObjectServiceInterface::class);
+		$objects->method('find')->willReturn(
+			self::entity(
+				[
+					'id' => 'seg-1',
+					'name' => 'Dutch contacts',
+					'entityType' => 'contact',
+					'rules' => self::COUNTRY_RULE,
+					'estimatedSize' => 0,
+				]
+			)
+		);
+		$objects->method('findAll')->willReturn(
+			[
+				['id' => 'c1', 'country' => 'NL'],
+				['id' => 'c2', 'country' => 'BE'],
+				['id' => 'c3', 'country' => 'NL'],
+			]
+		);
+
+		$persisted = null;
+		$objects->expects($this->once())
+			->method('saveObject')
+			->willReturnCallback(
+				static function (array $object, ...$rest) use (&$persisted): ObjectEntityInterface {
+					$persisted = $object;
+					return self::entity($object);
+				}
+			);
+
+		// wiredController() wires an IRequest mock with no params by default;
+		// build a fresh controller with a request carrying the update body.
+		$request = $this->createMock(IRequest::class);
+		$request->method('getParam')->willReturnCallback(
+			static function (string $key, $default = null) {
+				return match ($key) {
+					'name' => 'Dutch contacts (renamed)',
+					'entityType' => 'contact',
+					'rules' => self::COUNTRY_RULE,
+					default => $default,
+				};
+			}
+		);
+		$controller = new SegmentController($request,
+			$this->getWiredService($objects),
+			$this->wiredSession(),
+			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true])
+		);
+
+		$response = $controller->update('seg-1');
+
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertSame(2, $response->getData()['estimatedSize']);
+		$this->assertIsArray($persisted);
+		$this->assertSame('Dutch contacts (renamed)', $persisted['name']);
+		$this->assertSame(2, $persisted['estimatedSize'], 'the recomputed size must be written back');
+	}//end testUpdateRecomputesEstimatedSizeThroughRealService()
+
+	/**
+	 * Build the real SegmentService wired to a mocked ObjectService, the
+	 * same wiring `wiredController()` uses — extracted so
+	 * {@see testUpdateRecomputesEstimatedSizeThroughRealService} can pair it
+	 * with a request mock carrying a body (wiredController() always builds
+	 * a bodyless request mock).
+	 *
+	 * @param ObjectServiceInterface&MockObject $objects The mocked object service.
+	 *
+	 * @return SegmentService
+	 */
+	private function getWiredService(ObjectServiceInterface $objects): SegmentService {
+		// updateSegment() re-validates the rule tree via validateRules(),
+		// which — unlike refreshSize()'s recomputeSize() path — needs a
+		// SchemaMapper to resolve the entity schema's declared properties.
+		// This fake mirrors tests/Unit/Service/SegmentServiceTest.php's,
+		// declaring `country` (the field COUNTRY_RULE names) as a string.
+		$schemaMapper = new class {
+			/**
+			 * @param string|int $id Schema slug (ignored).
+			 * @param array|null $_extend Extend list (ignored).
+			 * @param bool $_rbac RBAC flag (ignored).
+			 * @param bool $_multitenancy Multitenancy flag (ignored).
+			 *
+			 * @return object Fake schema exposing a `country` property.
+			 */
+			public function find(string|int $id, ?array $_extend = [], bool $_rbac = true, bool $_multitenancy = true): object {
+				return new class {
+					/**
+					 * @return array<string, array<string, string>>
+					 */
+					public function getProperties(): array {
+						return ['country' => ['type' => 'string']];
+					}
+				};
+			}
+		};
+
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')->willReturnCallback(
+			static function (string $id) use ($objects, $schemaMapper): object {
+				if ($id === 'OCA\OpenRegister\Service\ObjectService') {
+					return $objects;
+				}
+
+				if ($id === 'OCA\OpenRegister\Db\SchemaMapper') {
+					return $schemaMapper;
+				}
+
+				throw new \RuntimeException('Not registered: ' . $id);
+			}
+		);
+
+		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig->method('getValueString')->willReturn('');
+		$appConfig->method('getValueInt')->willReturnArgument(2);
+
+		$cacheFactory = $this->createMock(ICacheFactory::class);
+		$cacheFactory->method('isAvailable')->willReturn(false);
+		$cacheFactory->method('createLocal')->willThrowException(new \RuntimeException('no cache'));
+
+		return new SegmentService($container,
+			$appConfig,
+			$this->createMock(SchemaMapService::class),
+			$cacheFactory,
+			$this->createMock(LoggerInterface::class),
+			$this->createMock(SegmentSignalService::class)
+		);
+	}//end getWiredService()
+
+	/**
+	 * Build a user session authenticated as "marketeer", matching
+	 * {@see wiredController}'s session.
+	 *
+	 * @return IUserSession&MockObject
+	 */
+	private function wiredSession(): IUserSession {
+		$session = $this->createMock(IUserSession::class);
+		$user = $this->createMock(IUser::class);
+		$user->method('getUID')->willReturn('marketeer');
+		$session->method('getUser')->willReturn($user);
+
+		return $session;
+	}//end wiredSession()
 }//end class

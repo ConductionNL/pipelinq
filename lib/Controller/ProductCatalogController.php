@@ -137,6 +137,21 @@ class ProductCatalogController extends Controller {
 
 		$product = (array)$this->request->getParam('product', []);
 		$quantity = (float)$this->request->getParam('quantity', 1);
+
+		// 🔴 A NEGATIVE QUANTITY IS A BAD REQUEST, NOT A ZERO.
+		//
+		// ProductCatalogService clamps with max(0.0, $quantity), which is right
+		// for a PRICE but wrong for an ordered quantity: -5 was silently priced
+		// as 0 and answered 200, so a caller that had computed a quantity wrong
+		// got a confident answer instead of an error. Rejecting at the boundary
+		// leaves the service's own clamp alone, where it still guards the
+		// prices it was written for.
+		if ($quantity < 0.0) {
+			return new JSONResponse(
+				['error' => 'quantity must not be negative'],
+				Http::STATUS_BAD_REQUEST
+			);
+		}
 		$variantSku = $this->request->getParam('variantSku');
 		if ($variantSku !== null) {
 			$variantSku = (string)$variantSku;

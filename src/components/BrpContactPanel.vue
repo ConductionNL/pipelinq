@@ -44,7 +44,7 @@
 
 			<div v-if="lookupState === 'loading'" class="brp-panel__status">
 				<NcLoadingIcon />
-				<span>{{ t('pipelinq', 'Retrieve from BRP...') }}</span>
+				<span>{{ t('pipelinq', 'Retrieve from BRP…') }}</span>
 			</div>
 			<div
 				v-else-if="lookupState === 'error'"
@@ -139,7 +139,7 @@ export default {
 		},
 	},
 
-	emits: ['contact-updated'],
+	emits: ['contactUpdated'],
 	data() {
 		return {
 			rawBsn: this.initialBsn || '',
@@ -239,7 +239,7 @@ export default {
 				this.lookupState = this.persoon ? 'success' : 'error'
 				if (this.persoon) {
 					showSuccess(this.t('pipelinq', 'BRP data retrieved'))
-					this.$emit('contact-updated')
+					this.$emit('contactUpdated')
 				}
 			} catch (err) {
 				this.lookupState = 'error'

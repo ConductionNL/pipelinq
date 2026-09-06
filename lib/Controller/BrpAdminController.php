@@ -73,6 +73,7 @@ class BrpAdminController extends Controller {
 	 * Secrets are returned as either `'***SET***'` (already configured) or empty string.
 	 *
 	 * @return JSONResponse
+	 * @spec openspec/specs/brp-lookup/spec.md
 	 */
 	#[AuthorizedAdminSetting(settings: \OCA\Pipelinq\Settings\AdminSettings::class)]
 	public function get(): JSONResponse {
@@ -104,6 +105,7 @@ class BrpAdminController extends Controller {
 	 * a non-empty string is encrypted via ICrypto before storage.
 	 *
 	 * @return JSONResponse
+	 * @spec openspec/specs/brp-lookup/spec.md
 	 */
 	#[AuthorizedAdminSetting(settings: \OCA\Pipelinq\Settings\AdminSettings::class)]
 	public function save(): JSONResponse {
@@ -166,6 +168,7 @@ class BrpAdminController extends Controller {
 	 * configuration; subsequent reads only return `webhookSecretSet`.
 	 *
 	 * @return JSONResponse
+	 * @spec openspec/specs/brp-lookup/spec.md
 	 */
 	#[AuthorizedAdminSetting(settings: \OCA\Pipelinq\Settings\AdminSettings::class)]
 	public function rotateWebhookSecret(): JSONResponse {

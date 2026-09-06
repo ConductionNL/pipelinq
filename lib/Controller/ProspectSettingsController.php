@@ -35,6 +35,8 @@ use RuntimeException;
 
 /**
  * Controller for prospect ICP settings (admin only).
+ *
+ * @spec openspec/specs/prospect-discovery/spec.md#requirement-ideal-customer-profile-configuration
  */
 class ProspectSettingsController extends Controller {
 

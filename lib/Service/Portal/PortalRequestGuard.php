@@ -34,6 +34,11 @@ use OCP\IRequest;
 
 /**
  * Resolves tenant + authenticates the portal customer for a request.
+ *
+ * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+ *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+ *   sessions, tokens, delegation, documents, invoices, orders, exports and
+ *   audit are all unspecified
  */
 class PortalRequestGuard {
 	/**
@@ -41,7 +46,7 @@ class PortalRequestGuard {
 	 *
 	 * @var string
 	 */
-	private const ACCOUNT_SCHEMA = 'portalAccount';
+	private const ACCOUNT_SCHEMA = 'crmPortalAccount';
 
 	/**
 	 * Constructor.
@@ -116,6 +121,10 @@ class PortalRequestGuard {
 	 * @return array{account: array<string, mixed>, accountId: string, session: array<string, mixed>, tenantId: string}
 	 *
 	 * @throws PortalException On any authentication failure.
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function authenticate(IRequest $request): array {
 		$tenantId = $this->resolveTenant(request: $request);
@@ -146,6 +155,10 @@ class PortalRequestGuard {
 	 * @param IRequest $request The request.
 	 *
 	 * @return string The IP hash.
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function ipHash(IRequest $request): string {
 		return hash('sha256', $request->getRemoteAddress());
@@ -157,6 +170,10 @@ class PortalRequestGuard {
 	 * @param IRequest $request The request.
 	 *
 	 * @return string The user-agent hash.
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function userAgentHash(IRequest $request): string {
 		return hash('sha256', $this->headerOrNull(request: $request, name: 'User-Agent') ?? '');

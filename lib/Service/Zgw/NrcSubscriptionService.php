@@ -43,6 +43,8 @@ use Throwable;
 
 /**
  * NRC abonnement lifecycle service.
+ *
+ * @spec openspec/specs/vng-klantinteracties-leaf/spec.md
  */
 class NrcSubscriptionService {
 	/**
@@ -194,6 +196,7 @@ class NrcSubscriptionService {
 	 * Generate a fresh 256-bit callback bearer token.
 	 *
 	 * @return string Hex-encoded random token.
+	 * @spec openspec/specs/vng-klantinteracties-leaf/spec.md
 	 */
 	public function generateCallbackBearer(): string {
 		return bin2hex(random_bytes(32));

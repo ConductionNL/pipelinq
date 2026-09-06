@@ -232,7 +232,7 @@ export default {
 
 .export-test-run__list {
 	margin: 8px 0 0;
-	padding-left: 18px;
+	padding-inline-start: 18px;
 	list-style: disc;
 }
 

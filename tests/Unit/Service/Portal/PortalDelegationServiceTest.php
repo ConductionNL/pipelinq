@@ -65,7 +65,7 @@ class PortalDelegationServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testGrantSanitisesScopes(): void {
-		$this->repository->seed('portalAccount', 'granter', ['email' => 'boss@org.nl', 'tenantId' => 'tenant-a']);
+		$this->repository->seed('crmPortalAccount', 'granter', ['email' => 'boss@org.nl', 'tenantId' => 'tenant-a']);
 
 		$delegation = $this->service->grant(
 			'granter',
@@ -84,7 +84,7 @@ class PortalDelegationServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testCannotGrantToSelf(): void {
-		$this->repository->seed('portalAccount', 'granter', ['email' => 'boss@org.nl', 'tenantId' => 'tenant-a']);
+		$this->repository->seed('crmPortalAccount', 'granter', ['email' => 'boss@org.nl', 'tenantId' => 'tenant-a']);
 
 		try {
 			$this->service->grant('granter', 'tenant-a', 'boss@org.nl', ['view-invoices'], null);

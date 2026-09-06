@@ -27,10 +27,10 @@
 				v-model="form.toContact"
 				:options="contactOptions"
 				:aria-label-combobox="t('pipelinq', 'Contact')"
-				:placeholder="t('pipelinq', 'Search contacts...')"
+				:placeholder="t('pipelinq', 'Search contacts…')"
 				label="name"
 				:reduce="(opt) => opt.id"
-				@search="(term) => $emit('search-contacts', term)" />
+				@search="(term) => $emit('searchContacts', term)" />
 		</div>
 		<div class="form-group">
 			<label for="add-contact-role-type">{{ t('pipelinq', 'Role') }} *</label>
@@ -39,7 +39,7 @@
 				v-model="form.type"
 				:options="roleOptions"
 				:aria-label-combobox="t('pipelinq', 'Role')"
-				:placeholder="t('pipelinq', 'Select role...')"
+				:placeholder="t('pipelinq', 'Select role…')"
 				label="label"
 				:reduce="(opt) => opt.value" />
 		</div>
@@ -74,7 +74,7 @@ export default {
 		roleOptions: { type: Array, default: () => [] },
 	},
 
-	emits: ['submit', 'cancel', 'search-contacts'],
+	emits: ['submit', 'cancel', 'searchContacts'],
 	data() {
 		return {
 			form: { toContact: null, type: null, notes: '' },

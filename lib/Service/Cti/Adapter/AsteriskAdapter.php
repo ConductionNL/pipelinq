@@ -59,6 +59,7 @@ class AsteriskAdapter implements CtiAdapterInterface {
 	 * {@inheritDoc}
 	 *
 	 * @return string Platform identifier.
+	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-inbound-screen-pop-on-call-answer-req-cti-001
 	 */
 	public function getPlatform(): string {
 		return 'asterisk';
@@ -180,6 +181,7 @@ class AsteriskAdapter implements CtiAdapterInterface {
 	 * @param string $callerId Caller-ID to present on the outbound call.
 	 *
 	 * @return CtiCallResult Outcome including the new external call id.
+	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-inbound-screen-pop-on-call-answer-req-cti-001
 	 */
 	public function originateCall(string $extension, string $targetNumber, string $callerId): CtiCallResult {
 		$baseUrl = $this->appConfig->getValueString(Application::APP_ID, 'cti_asterisk_api_base_url', '');
@@ -257,6 +259,7 @@ class AsteriskAdapter implements CtiAdapterInterface {
 	 * @param string $signature Signature/token to validate.
 	 *
 	 * @return bool True when the signature is valid.
+	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-inbound-screen-pop-on-call-answer-req-cti-001
 	 */
 	public function verifyWebhookSignature(string $payload, string $signature): bool {
 		$expected = $this->appConfig->getValueString(Application::APP_ID, 'cti_asterisk_webhook_secret', '');

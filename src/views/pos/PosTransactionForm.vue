@@ -24,12 +24,15 @@
 				<NcTextField
 					v-model="transaction.terminalId"
 					:label="t('pipelinq', 'Terminal')" />
-				<NcSelect
-					:modelValue="selectedClient"
-					:options="clientOptions"
+				<CnResourceSelect
+					register="pipelinq"
+					schema="client"
+					labelField="name"
+					:modelValue="transaction.client || ''"
 					:inputLabel="t('pipelinq', 'Client (optional)')"
-					label="label"
-					:clearable="true"
+					:placeholder="t('pipelinq', 'Search clients')"
+					:preload="true"
+					data-testid="pos-form-client"
 					@update:modelValue="onClientSelect" />
 				<NcSelect
 					:modelValue="selectedPriceMode"
@@ -174,6 +177,7 @@
 </template>
 
 <script>
+import { CnResourceSelect } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
 import { showError, showSuccess, showWarning } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
@@ -212,6 +216,7 @@ function collectionRows(collection) {
 export default {
 	name: 'PosTransactionForm',
 	components: {
+		CnResourceSelect,
 		NcButton,
 		NcTextField,
 		NcSelect,
@@ -251,7 +256,6 @@ export default {
 
 			lines: [],
 			products: [],
-			clients: [],
 			deletedLineIds: [],
 			loading: false,
 			saving: false,
@@ -286,27 +290,6 @@ export default {
 		 */
 		isNew() {
 			return !this.transactionId || this.transactionId === 'new'
-		},
-
-		/**
-		 * Client picker options.
-		 *
-		 * @return {Array<object>} The options.
-		 */
-		clientOptions() {
-			return this.clients.map((c) => ({ id: c.id, label: c.name }))
-		},
-
-		/**
-		 * The selected client option.
-		 *
-		 * @return {object|null} The option.
-		 */
-		selectedClient() {
-			return (
-				this.clientOptions.find((o) => o.id === this.transaction.client)
-				|| null
-			)
 		},
 
 		/**
@@ -412,7 +395,6 @@ export default {
 		this.loading = true
 		try {
 			await this.loadProducts()
-			await this.loadClients()
 			if (!this.isNew) {
 				await this.loadTransaction()
 			}
@@ -436,20 +418,6 @@ export default {
 				)
 			} catch {
 				this.products = []
-			}
-		},
-
-		/**
-		 * Load clients for the optional account-sale picker.
-		 */
-		async loadClients() {
-			try {
-				await this.objectStore.fetchCollection('client', { _limit: 500 })
-				this.clients = collectionRows(
-					this.objectStore.getCollection('client'),
-				)
-			} catch {
-				this.clients = []
 			}
 		},
 
@@ -600,6 +568,8 @@ export default {
 		 * Totals are intentionally NOT sent: the backend recomputes them
 		 * server-side on confirm. The client only persists the editable header
 		 * + line inputs.
+		 *
+		 * @spec openspec/specs/pos-transaction-core/spec.md#REQ-POS-004
 		 */
 		async save() {
 			if (!this.checkoutAllowed) {
@@ -682,7 +652,7 @@ export default {
 								+ '/confirm',
 						),
 					)
-				} catch (confirmError) {
+				} catch {
 					showError(
 						t(
 							'pipelinq',
@@ -701,7 +671,7 @@ export default {
 					name: 'PosTransactionDetail',
 					params: { id: txId },
 				})
-			} catch (e) {
+			} catch {
 				showError(t('pipelinq', 'Failed to save transaction.'))
 			} finally {
 				this.saving = false
@@ -711,10 +681,14 @@ export default {
 		/**
 		 * Apply a client selection.
 		 *
-		 * @param {object|null} option The chosen client.
+		 * @param {string} value The chosen client uuid, or '' when cleared.
+		 * @return {void}
+		 * @spec exclude the optional account-sale client is not governed by a
+		 *   requirement — pos-transaction-core/spec.md does not mention `client`
+		 *   anywhere, so linking one of its REQs would be a fabricated citation.
 		 */
-		onClientSelect(option) {
-			this.transaction.client = option ? option.id : null
+		onClientSelect(value) {
+			this.transaction.client = value || null
 		},
 
 		/**
@@ -871,7 +845,7 @@ export default {
 }
 
 .pos-form__lines th {
-	text-align: left;
+	text-align: start;
 	font-size: 12px;
 	color: var(--color-text-maxcontrast);
 	padding: 4px 8px;

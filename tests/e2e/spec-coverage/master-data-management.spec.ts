@@ -25,9 +25,8 @@
  * The ONE thing a browser can still decide is REQ-MDM-010: whether pipelinq's
  * retired read-API is really gone from the router. That is asserted below.
  */
-import { test, expect } from '@playwright/test'
-
-import { openApp, assertNoHardError } from '../helpers/pipelinq'
+import { expect, test } from '@playwright/test'
+import { assertNoHardError, openApp } from '../helpers/pipelinq.ts'
 
 /**
  * The retired MDM read-API paths (`retire-mdm-sync-queue`, ADR-022 / ADR-045 #D).

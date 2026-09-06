@@ -36,20 +36,20 @@ use Throwable;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
- * Aggregates a client's open tickets (all `ticketType`s), SLA/queue status,
+ * Aggregates a client's open tickets (all `ticketType`s), SLA status,
  * open leads, and last activity into one summary payload.
  *
  * ADR-031 exception (2): this is a legitimate service concern, not a
  * declarative `summaryAggregates`/`stats-block` chip, because it spans
  * ticket types and statuses (an OR over `ticketType`, an OR over open
- * statuses) and does a per-row time comparison (SLA deadline vs now) then a
- * distinct-set reduce (queues) — none of which is a single-object
- * calculation or a single-equality aggregation. See
+ * statuses) and does a per-row time comparison (SLA deadline vs now) —
+ * neither of which is a single-object calculation or a single-equality
+ * aggregation. See
  * `openspec/changes/klantbeeld-360-activation/design.md` for the full
  * declarative-vs-imperative table. The service reads RBAC-visible objects
  * and reduces; it persists nothing.
  *
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Aggregates across ticket/lead/queue/activity reads.
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Aggregates across ticket/lead/activity reads.
  *
  * @spec openspec/specs/customer-360/spec.md#requirement-consolidated-customer-360-summary
  */
@@ -104,7 +104,7 @@ class Customer360SummaryService {
 	 * Build the consolidated customer 360 summary for one client.
 	 *
 	 * All reads go through OpenRegister's `ObjectService` (via {@see TicketService}
-	 * for tickets, directly for leads/queues), which applies the caller's RBAC —
+	 * for tickets, directly for leads), which applies the caller's RBAC —
 	 * an object the caller may not read never contributes to any count or total.
 	 *
 	 * @param string $clientId The client UUID.
@@ -116,7 +116,7 @@ class Customer360SummaryService {
 	public function getSummary(string $clientId): array {
 		$now = new DateTimeImmutable('now');
 
-		[$openTicketsByType, $slaBreached, $slaAtRisk, $queueIds] = $this->collectOpenTickets(clientId: $clientId, now: $now);
+		[$openTicketsByType, $slaBreached, $slaAtRisk] = $this->collectOpenTickets(clientId: $clientId, now: $now);
 
 		$openLeads = $this->findLeadsSafe(filters: ['client' => $clientId, 'status' => 'open']);
 		$openLeadValue = 0.0;
@@ -132,8 +132,6 @@ class Customer360SummaryService {
 				'breached' => $slaBreached,
 				'atRisk' => $slaAtRisk,
 			],
-			'queues' => array_values($this->resolveQueueNames(queueIds: array_keys($queueIds))),
-			'queueCount' => count($queueIds),
 			'openLeadCount' => count($openLeads),
 			'openLeadValue' => $openLeadValue,
 			'lastActivityAt' => $this->resolveLastActivity(clientId: $clientId),
@@ -142,14 +140,12 @@ class Customer360SummaryService {
 
 	/**
 	 * Read the client's open tickets across all `ticketType`s and reduce them
-	 * into a per-type count, SLA breached/at-risk counts, and the distinct set
-	 * of queue ids in one pass.
+	 * into a per-type count and SLA breached/at-risk counts in one pass.
 	 *
 	 * @param string $clientId The client UUID.
 	 * @param DateTimeImmutable $now Evaluation instant (SLA comparison).
 	 *
-	 * @return array{0: array<string,int>, 1: int, 2: int, 3: array<string,bool>}
-	 *                                                                            [openTicketsByType, slaBreached, slaAtRisk, queueIds (id => true)].
+	 * @return array{0: array<string,int>, 1: int, 2: int} [openTicketsByType, slaBreached, slaAtRisk].
 	 */
 	private function collectOpenTickets(string $clientId, DateTimeImmutable $now): array {
 		$atRiskThreshold = $now->modify('+' . self::AT_RISK_WINDOW_HOURS . ' hours');
@@ -157,7 +153,6 @@ class Customer360SummaryService {
 		$openTicketsByType = [];
 		$slaBreached = 0;
 		$slaAtRisk = 0;
-		$queueIds = [];
 
 		foreach (TicketService::TYPES as $ticketType) {
 			$tickets = $this->ticketService->findByType(
@@ -177,15 +172,10 @@ class Customer360SummaryService {
 						$slaAtRisk++;
 					}
 				}
-
-				$queueId = (string)($ticket['queue'] ?? '');
-				if ($queueId !== '') {
-					$queueIds[$queueId] = true;
-				}
 			}
 		}//end foreach
 
-		return [$openTicketsByType, $slaBreached, $slaAtRisk, $queueIds];
+		return [$openTicketsByType, $slaBreached, $slaAtRisk];
 	}//end collectOpenTickets()
 
 	/**
@@ -240,41 +230,6 @@ class Customer360SummaryService {
 	}//end resolveLastActivity()
 
 	/**
-	 * Resolve queue ids to `{id, name}` pairs. Unknown ids (a queue not found —
-	 * deleted, or RBAC-hidden) fall back to the raw id as the name.
-	 *
-	 * @param array<int, string> $queueIds Distinct queue ids from open tickets.
-	 *
-	 * @return array<int, array{id: string, name: string}> The resolved queues.
-	 */
-	private function resolveQueueNames(array $queueIds): array {
-		if (empty($queueIds) === true) {
-			return [];
-		}
-
-		$allQueues = $this->findAllSafe(schemaKey: 'queue_schema');
-		$nameById = [];
-		foreach ($allQueues as $queue) {
-			$id = (string)($queue['@self']['id'] ?? $queue['id'] ?? '');
-			if ($id !== '') {
-				// Queue's display field is `title` (not `name`) — see the
-				// `queue` schema in lib/Settings/pipelinq_register.json.
-				$nameById[$id] = (string)($queue['title'] ?? $id);
-			}
-		}
-
-		$resolved = [];
-		foreach ($queueIds as $queueId) {
-			$resolved[] = [
-				'id' => $queueId,
-				'name' => ($nameById[$queueId] ?? $queueId),
-			];
-		}
-
-		return $resolved;
-	}//end resolveQueueNames()
-
-	/**
 	 * Resolve the OpenRegister ObjectService lazily.
 	 *
 	 * @return \OCA\OpenRegister\Contract\ObjectServiceInterface The OpenRegister object service.
@@ -297,7 +252,7 @@ class Customer360SummaryService {
 	/**
 	 * Read a schema slug from the app config.
 	 *
-	 * @param string $schemaKey App config key (e.g. `queue_schema`).
+	 * @param string $schemaKey App config key (e.g. `lead_schema`).
 	 *
 	 * @return string Resolved schema slug, or empty string when missing.
 	 */
@@ -332,43 +287,8 @@ class Customer360SummaryService {
 	}//end toArray()
 
 	/**
-	 * Find all objects of a schema, swallowing OR outages so a partial summary
-	 * still renders (mirrors KccWerkplekService::findAllSafe()'s fail-soft contract).
-	 *
-	 * @param string $schemaKey App config key (e.g. `queue_schema`).
-	 *
-	 * @return array<int, array<string, mixed>> Plain object arrays.
-	 */
-	private function findAllSafe(string $schemaKey): array {
-		$register = $this->getRegister();
-		$schema = $this->getSchema(schemaKey: $schemaKey);
-		if ($register === '' || $schema === '') {
-			return [];
-		}
-
-		try {
-			$results = $this->getObjectService()->findAll(
-				['filters' => ['register' => $register, 'schema' => $schema]]
-			);
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'Customer360SummaryService: findAll failed',
-				['schemaKey' => $schemaKey, 'error' => $e->getMessage()]
-			);
-			return [];
-		}
-
-		$out = [];
-		foreach ($results as $result) {
-			$out[] = $this->toArray(object: $result);
-		}
-
-		return $out;
-	}//end findAllSafe()
-
-	/**
 	 * Find leads matching the given equality filters, scoped to the pipelinq
-	 * register + lead schema. Swallows OR outages (fail-soft, see findAllSafe()).
+	 * register + lead schema. Swallows OR outages so a partial summary still renders.
 	 *
 	 * @param array<string, mixed> $filters Field criteria (eq).
 	 *

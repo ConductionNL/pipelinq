@@ -180,6 +180,8 @@ export default {
 
 		/**
 		 * Persist the sorted tiers to the product.
+		 *
+		 * @spec openspec/specs/pos-product-catalogue/spec.md#REQ-PPC-003
 		 */
 		async save() {
 			this.saving = true
@@ -197,7 +199,7 @@ export default {
 				} else {
 					showError(t('pipelinq', 'Failed to save price tiers'))
 				}
-			} catch (e) {
+			} catch {
 				showError(t('pipelinq', 'Failed to save price tiers'))
 			} finally {
 				this.saving = false
@@ -216,7 +218,7 @@ export default {
 
 .price-tier-table__actions-col {
 	width: 48px;
-	text-align: right;
+	text-align: end;
 }
 
 .viewTableContainer {
@@ -234,7 +236,7 @@ export default {
 .viewTable th,
 .viewTable td {
 	padding: 8px 12px;
-	text-align: left;
+	text-align: start;
 	border-bottom: 1px solid var(--color-border);
 	vertical-align: middle;
 }

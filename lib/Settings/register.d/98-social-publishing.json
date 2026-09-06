@@ -1,0 +1,602 @@
+{
+  "$comment": "ADR-037 register fragment (social-publishing, phase 3 of the marketing programme). Adds socialAccount, socialPost and socialPublication to the pipelinq register. components.registers.pipelinq.schemas and components.objects are additive-list paths (ConfigFileLoaderService::ADDITIVE_LIST_PATHS), so this fragment unions its slugs and seed objects onto the monolith and its sibling fragments rather than replacing them. RULE 2 OF THE MARKETING ARCHITECTURE IS THE WHOLE POINT OF THIS FILE: no token, no client secret and no refresh token is a property of any schema here. A connected account carries credentialRef, which is the UUID of a credential OpenRegister's broker holds in keepiq, and clientId, which is a public identifier. Everything else about the grant lives on the broker's own credential object and is read through it. See docs/Technical/marketing-architecture.md and openspec/changes/social-publishing/. The fragment also seeds ONE messageSendBudget row, for `x`: X charges for every post and every read, so the one network that can run up a bill starts with a hard stop rather than without one. Its providerId is the broker provider identifier `x` rather than a channelProvider UUID, because BudgetService keys on the string it is handed and for social publishing the network IS the provider. A tenant that wants more raises maxCostEur; a tenant that wants none sets hardStop false and keeps the alert.",
+  "components": {
+    "registers": {
+      "pipelinq": {
+        "schemas": ["socialAccount", "socialPost", "socialPublication"]
+      }
+    },
+    "schemas": {
+      "socialAccount": {
+        "slug": "socialAccount",
+        "title": "Social Account",
+        "icon": "AccountBoxOutline",
+        "version": "1.0.0",
+        "summary": "A connected social profile: a company page the tenant runs, or a colleague's own account they connected themselves.",
+        "description": "SocialAccount names one profile Pipelinq may publish to or prepare a share for. It never stores a token. credentialRef is the UUID of a credential OpenRegister's broker minted at connect time and keeps in keepiq; every call to the network goes through that broker, so a bug in Pipelinq cannot leak the grant. status mirrors the broker's own vocabulary, so relink_needed here and relink_needed there mean the same thing. publishMode records what the network actually allows: api means Pipelinq publishes, share means no application may post there at all and the owner gets a prepared text to post themselves. ownerUserId is the Nextcloud user the account belongs to, and for a person account it is the authorization boundary, not a label: only that user or an administrator may publish as them, and the publishing job asserts that identity to the broker (ADR-099). See openspec/changes/social-publishing/specs/social-accounts/spec.md.",
+        "x-schema-org": "schema:Organization",
+        "required": ["network", "kind", "handle"],
+        "configuration": {
+          "objectNameField": "displayName",
+          "objectDescriptionField": "handle"
+        },
+        "properties": {
+          "network": {
+            "type": "string",
+            "enum": ["mastodon", "bluesky", "linkedin", "x", "facebook", "instagram", "threads"],
+            "x-enum-labels": {
+              "mastodon": "Mastodon",
+              "bluesky": "Bluesky",
+              "linkedin": "LinkedIn",
+              "x": "X",
+              "facebook": "Facebook page",
+              "instagram": "Instagram business",
+              "threads": "Threads"
+            },
+            "description": "The network this account lives on. It selects the adapter that shapes a publish request and the broker provider the credential was minted against.",
+            "title": "Network"
+          },
+          "kind": {
+            "type": "string",
+            "enum": ["organisation", "person"],
+            "x-enum-labels": {
+              "organisation": "Company account",
+              "person": "Personal account"
+            },
+            "default": "organisation",
+            "description": "Whether this is a company account the tenant runs or a colleague's own account. A personal account belongs to the person who connected it and only they or an administrator may act on it.",
+            "title": "Kind"
+          },
+          "handle": {
+            "type": "string",
+            "description": "The account as its own network spells it, for example @conduction@mastodon.nl. It is what a colleague recognises, so it is stored exactly as the network returns it.",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Handle"
+          },
+          "displayName": {
+            "type": "string",
+            "description": "The name the network shows for this account.",
+            "maxLength": 255,
+            "title": "Display Name"
+          },
+          "profileUrl": {
+            "type": "string",
+            "format": "uri",
+            "description": "Public address of the profile, used to open the account in its own network.",
+            "maxLength": 2048,
+            "title": "Profile URL"
+          },
+          "externalAccountId": {
+            "type": "string",
+            "description": "The network's own identifier for this account: a Facebook page id, an Instagram business account id, a LinkedIn person or organisation URN, or a Bluesky DID. Adapters address the account by this value, so a renamed handle does not break publishing.",
+            "maxLength": 512,
+            "title": "External Account ID"
+          },
+          "instanceBaseUrl": {
+            "type": "string",
+            "format": "uri",
+            "description": "The account's own server, for the two networks that have no single API host: a Mastodon instance or a Bluesky personal data server. The broker pins this host onto the credential at mint and refuses to move it afterwards, so this field is a readable copy and never the authority.",
+            "maxLength": 2048,
+            "title": "Instance Base URL"
+          },
+          "ownerUserId": {
+            "type": "string",
+            "description": "The Nextcloud user this account belongs to. For a personal account it is the authorization boundary: only this user or an administrator may publish as them, request a share from them or revoke the connection. Stamped by the connect path from the session and never taken from a request body.",
+            "maxLength": 255,
+            "title": "Owner"
+          },
+          "clientId": {
+            "type": "string",
+            "description": "The OAuth client id the connection was made with. Public by design, never a secret. Empty when the connection used the Conduction developer app; filled when the tenant brought its own application.",
+            "maxLength": 512,
+            "title": "Client ID"
+          },
+          "credentialRef": {
+            "type": "string",
+            "description": "UUID of the credential OpenRegister's broker holds for this account. It is a reference, not a secret: Pipelinq cannot read the token behind it and never tries. Empty until the connect flow returns.",
+            "maxLength": 128,
+            "title": "Credential Reference"
+          },
+          "scopes": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "The permissions the account granted, as the network names them. Read back from the broker so a missing scope explains a refusal instead of looking like a bug.",
+            "title": "Scopes"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["pending", "active", "expired", "relink_needed", "disabled", "not_configured"],
+            "x-enum-labels": {
+              "pending": "Connecting",
+              "active": "Connected",
+              "expired": "Expired",
+              "relink_needed": "Reconnect needed",
+              "disabled": "Disabled",
+              "not_configured": "Not configured"
+            },
+            "default": "pending",
+            "description": "Where the connection stands. The first five values are the broker's own vocabulary and are mirrored from it. not_configured is Pipelinq's own: the network has no developer application filed yet, so nothing can be connected and the interface says so instead of offering a button that fails.",
+            "title": "Status"
+          },
+          "statusReason": {
+            "type": "string",
+            "description": "Why the account holds its current status, in words a marketer can act on. Written by the connect and publish paths, never by a client.",
+            "maxLength": 1000,
+            "title": "Status Reason"
+          },
+          "connectedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO 8601 instant the connection was completed or last re-authorised.",
+            "title": "Connected At"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO 8601 instant the grant behind this account expires, as the broker last reported it. A refresh moves it; a dead refresh flips the status to relink_needed instead.",
+            "title": "Expires At"
+          },
+          "publishMode": {
+            "type": "string",
+            "enum": ["api", "share"],
+            "x-enum-labels": {
+              "api": "Publish directly",
+              "share": "Prepare a share"
+            },
+            "default": "api",
+            "description": "Whether Pipelinq publishes to this account itself or prepares the text for its owner to post. Personal Facebook and Instagram accounts are always share, because no application may post to them at all.",
+            "title": "Publish Mode"
+          },
+          "followerCount": {
+            "type": "integer",
+            "minimum": 0,
+            "default": 0,
+            "description": "Followers at the last metrics pull, used to turn engagement into a rate rather than a raw count.",
+            "title": "Follower Count"
+          },
+          "followerCountAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO 8601 instant followerCount was last read from the network.",
+            "title": "Follower Count Read At"
+          },
+          "active": {
+            "type": "boolean",
+            "default": true,
+            "description": "Whether this account may be picked in the composer. Revoking a connection clears it rather than deleting the row, so the publications that already went out keep naming the account they went to.",
+            "title": "Active"
+          }
+        }
+      },
+      "socialPost": {
+        "slug": "socialPost",
+        "title": "Social Post",
+        "icon": "BullhornOutline",
+        "version": "1.0.0",
+        "summary": "One piece of content written once, shaped per network, and published to the accounts it names after a person approves it.",
+        "description": "SocialPost is the composer's object. body is the text that applies everywhere; variants overrides it per network, so the same message can be short on X and long on LinkedIn without becoming two posts nobody can keep in step. link carries the campaign UTM when the post belongs to a campaign, added by CampaignLinkDecorator at publish time rather than typed by hand. approvals is the record rule 4 of the marketing architecture asks for: nothing leaves the instance until a person has approved it, and an agent-drafted post carries the ADR-088 mark that says so. status is a plain field rather than a declared lifecycle because the moves that matter are made by the publishing job against per-account outcomes, and a schema transition cannot say published to three of five. See openspec/changes/social-publishing/specs/social-posts/spec.md.",
+        "x-schema-org": "schema:SocialMediaPosting",
+        "required": ["body"],
+        "configuration": {
+          "objectNameField": "title",
+          "objectDescriptionField": "body"
+        },
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Internal name for the post, used in the calendar and the list. Never published.",
+            "maxLength": 255,
+            "title": "Title"
+          },
+          "articleId": {
+            "type": "string",
+            "description": "The article this post repurposes, when it came from one. Reading the article gives the composer its summary, hero image and public link to start from.",
+            "maxLength": 128,
+            "title": "Article"
+          },
+          "campaignId": {
+            "type": "string",
+            "description": "The campaign this post belongs to. When set, the link is decorated with that campaign's UTM parameters so a click can be attributed. Campaigns arrive in phase 4; until then this is a value a marketer fills in and the decorator already honours.",
+            "maxLength": 128,
+            "title": "Campaign"
+          },
+          "body": {
+            "type": "string",
+            "description": "The text of the post as it applies to every network that has no variant of its own.",
+            "maxLength": 10000,
+            "minLength": 1,
+            "title": "Body"
+          },
+          "media": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string",
+                  "description": "Path of the file in Nextcloud Files.",
+                  "title": "Path"
+                },
+                "url": {
+                  "type": "string",
+                  "description": "Publicly reachable address of the image, required by the networks that fetch media rather than accept an upload.",
+                  "title": "URL"
+                },
+                "alt": {
+                  "type": "string",
+                  "description": "Alternative text. Every network that accepts media accepts alt text, and a post without it is unreadable to a screen reader.",
+                  "title": "Alt Text"
+                },
+                "mimeType": { "type": "string", "description": "Media type of the file.", "title": "Media Type" }
+              }
+            },
+            "description": "Images or video the post carries. Each network takes as many as it allows and no more.",
+            "title": "Media"
+          },
+          "link": {
+            "type": "string",
+            "format": "uri",
+            "description": "The address the post points at, before campaign decoration. The stored value stays clean so the same post can be moved to another campaign without unpicking a query string.",
+            "maxLength": 2048,
+            "title": "Link"
+          },
+          "accountIds": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "The connected accounts this post goes to. One post to five accounts produces five publications, each with its own outcome.",
+            "title": "Accounts"
+          },
+          "variants": {
+            "type": "object",
+            "description": "Per-network overrides, keyed by network name. A variant may carry its own body, link or media; anything it leaves out falls back to the post's own value.",
+            "title": "Variants"
+          },
+          "scheduledFor": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO 8601 instant the post should go out. Empty means as soon as it is approved.",
+            "title": "Scheduled For"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["draft", "approval", "scheduled", "published", "failed"],
+            "x-enum-labels": {
+              "draft": "Draft",
+              "approval": "Waiting for approval",
+              "scheduled": "Scheduled",
+              "published": "Published",
+              "failed": "Failed"
+            },
+            "default": "draft",
+            "description": "Where the post stands. A post reaches scheduled only after a person approved it, and reaches published only when every account it names has a publication that succeeded or was handed to its owner to share.",
+            "title": "Status"
+          },
+          "approvals": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "userId": { "type": "string", "description": "The Nextcloud user who decided.", "title": "User" },
+                "decision": {
+                  "type": "string",
+                  "enum": ["approved", "rejected"],
+                  "x-enum-labels": { "approved": "Approved", "rejected": "Rejected" },
+                  "description": "What they decided.",
+                  "title": "Decision"
+                },
+                "decidedAt": { "type": "string", "format": "date-time", "description": "ISO 8601 instant of the decision.", "title": "Decided At" },
+                "note": { "type": "string", "description": "Why, in their own words.", "title": "Note" }
+              }
+            },
+            "description": "The human decisions taken on this post. Appended by the approve and reject paths from the session user and never taken from a request body.",
+            "title": "Approvals"
+          },
+          "agentAuthored": {
+            "type": "boolean",
+            "default": false,
+            "description": "Whether an agent drafted this post (ADR-088). Stamped by the write path, never accepted from a client.",
+            "title": "Agent Authored"
+          },
+          "agentAuthoredBy": {
+            "type": "string",
+            "description": "Which agent drafted it. Stamped alongside agentAuthored and cleared when a person takes authorship.",
+            "maxLength": 255,
+            "title": "Agent Authored By"
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "The Nextcloud user who created the post, stamped from the session.",
+            "maxLength": 255,
+            "title": "Created By"
+          },
+          "publishedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO 8601 instant the last account finished. Stamped once and never moved.",
+            "title": "Published At"
+          },
+          "failureReason": {
+            "type": "string",
+            "description": "Why the post is in status failed, in words a marketer can act on. It names the account and the network, so a retry goes to the right place.",
+            "maxLength": 2000,
+            "title": "Failure Reason"
+          }
+        }
+      },
+      "socialPublication": {
+        "slug": "socialPublication",
+        "title": "Social Publication",
+        "icon": "SendCheckOutline",
+        "version": "1.0.0",
+        "summary": "What happened when one post went to one account: the outcome, the address it landed on, and the numbers it collected afterwards.",
+        "description": "SocialPublication is the per-account result of a post. One row is created for every account the post names, before anything is sent, so a failure has somewhere to be recorded rather than only somewhere to be logged. metrics is normalised to views, likes, comments, shares and clicks, because Meta and LinkedIn withdrew reach and impressions in June 2026 and a report built on those numbers would have gone blank; the untouched provider payload is kept alongside in rawMetrics so a later normalisation can be recomputed. cost carries what the network charged, which today only X does. A publication whose account has publishMode share is the advocacy path: it waits for its owner to confirm they posted, and records the moment they did. See openspec/changes/social-publishing/specs/social-metrics/spec.md.",
+        "x-schema-org": "schema:InteractionCounter",
+        "required": ["postId", "accountId"],
+        "properties": {
+          "postId": {
+            "type": "string",
+            "description": "The post this publication belongs to.",
+            "maxLength": 128,
+            "title": "Post"
+          },
+          "accountId": {
+            "type": "string",
+            "description": "The connected account this publication went to.",
+            "maxLength": 128,
+            "title": "Account"
+          },
+          "network": {
+            "type": "string",
+            "description": "The network of the account, copied here so a ranking can group by network without reading every account.",
+            "maxLength": 64,
+            "title": "Network"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["pending", "published", "failed", "awaiting_share", "shared", "skipped"],
+            "x-enum-labels": {
+              "pending": "Waiting to go out",
+              "published": "Published",
+              "failed": "Failed",
+              "awaiting_share": "Waiting for the owner to share",
+              "shared": "Shared by the owner",
+              "skipped": "Skipped"
+            },
+            "default": "pending",
+            "description": "The outcome for this one account. awaiting_share and shared are the advocacy path, where no application may post and the owner does it themselves.",
+            "title": "Status"
+          },
+          "externalId": {
+            "type": "string",
+            "description": "The network's own identifier for the published item, used to read its numbers back.",
+            "maxLength": 512,
+            "title": "External ID"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "Public address of the published item, so a marketer can open what actually went out.",
+            "maxLength": 2048,
+            "title": "URL"
+          },
+          "publishedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO 8601 instant the item went live, or the moment the owner confirmed they shared it.",
+            "title": "Published At"
+          },
+          "metrics": {
+            "type": "object",
+            "properties": {
+              "views": { "type": "integer", "minimum": 0, "description": "Times the item was seen.", "title": "Views" },
+              "likes": { "type": "integer", "minimum": 0, "description": "Likes, favourites or reactions.", "title": "Likes" },
+              "comments": { "type": "integer", "minimum": 0, "description": "Replies or comments.", "title": "Comments" },
+              "shares": { "type": "integer", "minimum": 0, "description": "Reposts, reblogs or shares.", "title": "Shares" },
+              "clicks": { "type": "integer", "minimum": 0, "description": "Clicks on the link, counted by Pipelinq's own redirect where one was used.", "title": "Clicks" }
+            },
+            "description": "The five numbers every network can answer, after normalisation.",
+            "title": "Metrics"
+          },
+          "rawMetrics": {
+            "type": "object",
+            "description": "The provider's own payload, kept untouched so a normalisation can be recomputed when a network changes what it reports.",
+            "title": "Raw Metrics"
+          },
+          "metricsAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO 8601 instant the metrics were last pulled.",
+            "title": "Metrics Read At"
+          },
+          "cost": {
+            "type": "number",
+            "minimum": 0,
+            "default": 0,
+            "description": "What this publication cost in euros. Only X charges per post and per read today; every other network records zero.",
+            "title": "Cost"
+          },
+          "attempts": {
+            "type": "integer",
+            "minimum": 0,
+            "default": 0,
+            "description": "How many times publishing was tried. A retry advances it, so a post that keeps failing is visible as such.",
+            "title": "Attempts"
+          },
+          "failureCode": {
+            "type": "string",
+            "enum": ["", "not_configured", "relink_needed", "budget_exhausted", "not_permitted", "rejected_by_network", "unavailable"],
+            "x-enum-labels": {
+              "": "None",
+              "not_configured": "Network not configured",
+              "relink_needed": "Reconnect needed",
+              "budget_exhausted": "Spend budget reached",
+              "not_permitted": "Not permitted",
+              "rejected_by_network": "Rejected by the network",
+              "unavailable": "Network unavailable"
+            },
+            "default": "",
+            "description": "Why this publication failed, as one of a closed set a caller can branch on. A failure always carries one of these rather than only a sentence, so the interface can offer the right next step.",
+            "title": "Failure Code"
+          },
+          "failureReason": {
+            "type": "string",
+            "description": "The failure in words a marketer can act on. Never carries a token, a header or a full request.",
+            "maxLength": 2000,
+            "title": "Failure Reason"
+          },
+          "sharePromptedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO 8601 instant the owner of a share-mode account was asked to post. Set by the advocacy path only.",
+            "title": "Share Prompted At"
+          },
+          "preparedBody": {
+            "type": "string",
+            "description": "The exact text the owner of a share-mode account is asked to post, with the network's variant already applied and the campaign link already added. It is stored here rather than rebuilt on read, so the words the person copies are the words they were asked to post even after the post is edited.",
+            "maxLength": 10000,
+            "title": "Prepared Text"
+          },
+          "preparedMedia": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "path": { "type": "string", "description": "Path of the file in Nextcloud Files.", "title": "Path" },
+                "url": { "type": "string", "description": "Publicly reachable address of the image.", "title": "URL" },
+                "alt": { "type": "string", "description": "Alternative text for the image.", "title": "Alt Text" }
+              }
+            },
+            "description": "The media the owner of a share-mode account is asked to post, frozen alongside the prepared text.",
+            "title": "Prepared Media"
+          }
+        }
+      }
+    },
+    "objects": [
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "socialAccount",
+          "slug": "socialaccount-conduction-mastodon"
+        },
+        "network": "mastodon",
+        "kind": "organisation",
+        "handle": "@conduction@mastodon.nl",
+        "displayName": "Conduction",
+        "profileUrl": "https://mastodon.nl/@conduction",
+        "externalAccountId": "",
+        "instanceBaseUrl": "https://mastodon.nl",
+        "ownerUserId": "admin",
+        "clientId": "",
+        "credentialRef": "",
+        "scopes": ["read:accounts", "read:statuses", "write:statuses", "write:media"],
+        "status": "pending",
+        "statusReason": "Nog niet verbonden. Klik op Verbinden om het account te koppelen.",
+        "publishMode": "api",
+        "followerCount": 0,
+        "active": true
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "socialAccount",
+          "slug": "socialaccount-ruben-linkedin"
+        },
+        "network": "linkedin",
+        "kind": "person",
+        "handle": "Ruben van der Linde",
+        "displayName": "Ruben van der Linde",
+        "profileUrl": "https://www.linkedin.com/in/rubenvanderlinde/",
+        "externalAccountId": "",
+        "ownerUserId": "admin",
+        "clientId": "",
+        "credentialRef": "",
+        "scopes": ["openid", "profile", "w_member_social"],
+        "status": "pending",
+        "statusReason": "Nog niet verbonden. Alleen de eigenaar van dit account kan het koppelen.",
+        "publishMode": "api",
+        "followerCount": 0,
+        "active": true
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "socialAccount",
+          "slug": "socialaccount-ruben-instagram-prive"
+        },
+        "network": "instagram",
+        "kind": "person",
+        "handle": "@rubenvdlinde",
+        "displayName": "Ruben van der Linde",
+        "profileUrl": "https://www.instagram.com/rubenvdlinde/",
+        "ownerUserId": "admin",
+        "credentialRef": "",
+        "status": "not_configured",
+        "statusReason": "Een persoonlijk Instagram-account kan door geen enkele applicatie beschreven worden. Pipelinq bereidt de tekst voor en jij plaatst hem zelf.",
+        "publishMode": "share",
+        "followerCount": 0,
+        "active": true
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "socialPost",
+          "slug": "socialpost-openregister-3-0-aankondiging"
+        },
+        "title": "Aankondiging OpenRegister 3.0",
+        "articleId": "",
+        "campaignId": "",
+        "body": "OpenRegister 3.0 is uit. Schema's met een levenscyclus, berekende velden en zoekopdrachten die binnen een seconde klaar zijn. Lees wat er verandert en wat je moet doen.",
+        "link": "https://conduction.nl/nieuws/openregister-3-0-is-uit",
+        "accountIds": [],
+        "variants": {
+          "x": {
+            "body": "OpenRegister 3.0 is uit: schema's met een levenscyclus, berekende velden en zoeken binnen een seconde."
+          },
+          "linkedin": {
+            "body": "OpenRegister 3.0 is uit.\n\nDrie dingen die je meteen merkt: schema's met een levenscyclus, berekende velden die aan de serverkant bijgehouden worden, en zoekopdrachten die op een miljoen objecten binnen een seconde klaar zijn.\n\nIn het artikel staat wat je moet doen om bij te werken."
+          }
+        },
+        "status": "draft",
+        "approvals": [],
+        "agentAuthored": false,
+        "agentAuthoredBy": "",
+        "createdBy": "admin"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "socialPost",
+          "slug": "socialpost-meetup-common-ground"
+        },
+        "title": "Uitnodiging Common Ground meetup",
+        "body": "Kom in november langs op de Common Ground meetup. We laten zien hoe een gemeente haar zaaksysteem in zes weken koppelt, en er is genoeg tijd om vragen te stellen.",
+        "link": "https://conduction.nl/agenda/common-ground-meetup",
+        "accountIds": [],
+        "variants": {},
+        "status": "approval",
+        "approvals": [],
+        "agentAuthored": true,
+        "agentAuthoredBy": "marketing-agent",
+        "createdBy": "admin"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "messageSendBudget",
+          "slug": "messagesendbudget-default-x"
+        },
+        "tenantId": "default",
+        "providerId": "x",
+        "period": "monthly",
+        "maxMessages": 200,
+        "maxCostEur": 50,
+        "alertThresholdPct": 0.8,
+        "hardStop": true,
+        "currentPeriodMessages": 0,
+        "currentPeriodCostEur": 0
+      }
+    ]
+  }
+}

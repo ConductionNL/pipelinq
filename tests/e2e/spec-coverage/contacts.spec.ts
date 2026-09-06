@@ -9,14 +9,14 @@
  * primary action button, table/search/columns chrome, and the "Add Contact"
  * modal. Asserts no pipelinq-origin console error and no hard server error.
  */
-import { test, expect } from '@playwright/test'
+import { expect, test } from '@playwright/test'
 import {
-	openApp,
-	navClick,
-	trackPipelinqErrors,
 	assertNoHardError,
 	dismissSupportDialog,
-} from '../helpers/pipelinq'
+	navClick,
+	openApp,
+	trackPipelinqErrors,
+} from '../helpers/pipelinq.ts'
 
 // @e2e openspec/specs/contacts-sync/spec.md#contacts-index
 test('Contacts: navigates from sidebar and shows index surface', async ({

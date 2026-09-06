@@ -7,9 +7,8 @@
  * Backend/persistence/V1/Enterprise scenarios excluded per-scenario below.
  */
 
-import { test, expect } from '@playwright/test'
-
-import { nextcloudErrorPage } from '../helpers/pipelinq'
+import { expect, test } from '@playwright/test'
+import { nextcloudErrorPage } from '../helpers/pipelinq.ts'
 
 // @e2e openspec/specs/admin-settings/spec.md#admin-user-accesses-settings
 test('admin user accesses pipelinq settings', async ({ page }) => {
@@ -143,11 +142,6 @@ test('admin settings stage management area accessible', async ({ page }) => {
  * @e2e exclude pipeline-settings-persist-across-restarts — persistence; covered by PHPUnit
  * @e2e exclude source-channel-settings-persist — persistence; covered by PHPUnit
  * @e2e exclude settings-stored-in-openregister — OR persistence; covered by PHPUnit
- * @e2e exclude view-queue-list-in-admin-settings — Enterprise queue feature
- * @e2e exclude create-a-queue-from-admin-settings — Enterprise queue feature
- * @e2e exclude edit-a-queue — Enterprise queue feature
- * @e2e exclude delete-a-queue-from-admin-settings — Enterprise queue feature
- * @e2e exclude assign-agents-to-a-queue — Enterprise queue feature
  * @e2e exclude view-skills-list-in-admin-settings — Enterprise skill routing feature
  * @e2e exclude create-a-skill — Enterprise skill routing feature
  * @e2e exclude edit-a-skill — Enterprise skill routing feature

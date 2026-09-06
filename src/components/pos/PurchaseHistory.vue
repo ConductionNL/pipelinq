@@ -166,7 +166,7 @@ export default {
 	padding: 8px 12px;
 	cursor: pointer;
 	font-weight: 600;
-	text-align: left;
+	text-align: start;
 }
 
 .purchase-history__body {
@@ -185,7 +185,7 @@ export default {
 
 .purchase-history__table th {
 	font-size: 11px;
-	text-align: left;
+	text-align: start;
 	color: var(--color-text-maxcontrast);
 	padding: 4px 6px;
 	border-bottom: 1px solid var(--color-border);

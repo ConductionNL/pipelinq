@@ -27,6 +27,8 @@ namespace OCA\Pipelinq\Service;
  * Service for detecting field changes between old and new object data.
  *
  * @SuppressWarnings(PHPMD.TooManyPublicMethods)
+ * @spec exclude infrastructure utility with no feature requirement of its own; it is
+ *   exercised through the features that call it
  */
 class ObjectUpdateDiffService {
 	/**

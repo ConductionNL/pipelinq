@@ -46,6 +46,8 @@ use Throwable;
 
 /**
  * OR ObjectService facade for the four ZGW schemas.
+ *
+ * @spec openspec/specs/vng-klantinteracties-leaf/spec.md
  */
 class ZgwRegisterAccess {
 	/**
@@ -211,6 +213,7 @@ class ZgwRegisterAccess {
 	 * @param array<string, mixed> $endpoint Endpoint payload (must include clientId).
 	 *
 	 * @return array<string, mixed>|null
+	 * @spec openspec/specs/vng-klantinteracties-leaf/spec.md
 	 */
 	public function findClientForEndpoint(array $endpoint): ?array {
 		$clientId = (string)($endpoint['clientId'] ?? '');

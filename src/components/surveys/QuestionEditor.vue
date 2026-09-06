@@ -205,7 +205,7 @@ export default {
 
 .opts {
 	margin-top: 8px;
-	padding-left: 20px;
+	padding-inline-start: 20px;
 }
 
 .opt-row {

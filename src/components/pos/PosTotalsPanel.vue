@@ -89,7 +89,7 @@ export default {
 	flex-direction: column;
 	gap: 4px;
 	max-width: 360px;
-	margin-left: auto;
+	margin-inline-start: auto;
 }
 
 .pos-totals__row {

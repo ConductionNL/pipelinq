@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6c9d3b9b74cbd227b171e20eb0f08895",
+    "content-hash": "ce4a672b9b9d7669943c3918f07b48ac",
     "packages": [],
     "packages-dev": [
         {
@@ -516,16 +516,16 @@
         },
         {
             "name": "conduction/hydra-gates",
-            "version": "v1.10.0",
+            "version": "v1.15.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/ConductionNL/.github.git",
-                "reference": "d143bc27aecbb44a66c843dba89d374628bf9eef"
+                "reference": "0bc214023be78aac94142035a9988986cfccccbc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ConductionNL/.github/zipball/d143bc27aecbb44a66c843dba89d374628bf9eef",
-                "reference": "d143bc27aecbb44a66c843dba89d374628bf9eef",
+                "url": "https://api.github.com/repos/ConductionNL/.github/zipball/0bc214023be78aac94142035a9988986cfccccbc",
+                "reference": "0bc214023be78aac94142035a9988986cfccccbc",
                 "shasum": ""
             },
             "require": {
@@ -564,9 +564,9 @@
             "support": {
                 "docs": "https://github.com/ConductionNL/.github/blob/main/hydra-gates/README.md",
                 "issues": "https://github.com/ConductionNL/.github/issues",
-                "source": "https://github.com/ConductionNL/.github/tree/v1.10.0"
+                "source": "https://github.com/ConductionNL/.github/tree/v1.15.0"
             },
-            "time": "2026-08-27T16:18:04+00:00"
+            "time": "2026-09-04T16:24:04+00:00"
         },
         {
             "name": "consolidation/annotated-command",
@@ -3224,11 +3224,11 @@
         },
         {
             "name": "phpstan/phpstan",
-            "version": "2.2.9",
+            "version": "2.2.10",
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/13d6b4f347bad222da436580c8304fa6f83e6bd0",
-                "reference": "13d6b4f347bad222da436580c8304fa6f83e6bd0",
+                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/36d1509c998b0602811824143526b4a9ee2774e7",
+                "reference": "36d1509c998b0602811824143526b4a9ee2774e7",
                 "shasum": ""
             },
             "require": {
@@ -3284,7 +3284,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-08-22T07:38:16+00:00"
+            "time": "2026-08-30T12:46:16+00:00"
         },
         {
             "name": "phpunit/php-code-coverage",
@@ -8175,7 +8175,8 @@
     },
     "platform-dev": {},
     "platform-overrides": {
-        "php": "8.3"
+        "php": "8.3",
+        "ext-xsl": "1"
     },
     "plugin-api-version": "2.9.0"
 }

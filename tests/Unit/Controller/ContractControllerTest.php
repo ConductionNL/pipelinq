@@ -366,7 +366,7 @@ class ContractControllerTest extends TestCase {
 		$appConfig = $this->createMock(IAppConfig::class);
 		$appConfig->method('getValueString')->willReturnCallback(
 			static function (string $app, string $key, string $default = ''): string {
-				$map = ['register' => 'pipelinq', 'contract_schema' => 'contract'];
+				$map = ['register' => 'pipelinq', 'contract_schema' => 'salesContract'];
 				return ($map[$key] ?? $default);
 			}
 		);
@@ -463,7 +463,7 @@ class ContractControllerTest extends TestCase {
 	public function testTransitionByAnUnrelatedUserIsForbidden(): void {
 		$this->signIn(uid: 'intruder');
 		$this->groupManager->method('isInGroup')->willReturn(false);
-		$this->objects->seed('c-1', 'contract', ['status' => 'draft', 'ownerId' => 'owner-1']);
+		$this->objects->seed('c-1', 'salesContract', ['status' => 'draft', 'ownerId' => 'owner-1']);
 		$this->withBody(['status' => 'active']);
 
 		$response = $this->buildController($this->objects)->transition(id: 'c-1');
@@ -482,7 +482,7 @@ class ContractControllerTest extends TestCase {
 	 */
 	public function testTransitionAppliesALegalEdgeAndPersistsIt(): void {
 		$this->signIn();
-		$this->objects->seed('c-2', 'contract', ['status' => 'draft', 'ownerId' => 'owner-1', 'title' => 'Support']);
+		$this->objects->seed('c-2', 'salesContract', ['status' => 'draft', 'ownerId' => 'owner-1', 'title' => 'Support']);
 		$this->withBody(['status' => 'active']);
 
 		$response = $this->buildController($this->objects)->transition(id: 'c-2');
@@ -503,7 +503,7 @@ class ContractControllerTest extends TestCase {
 	 */
 	public function testTransitionOutOfATerminalStateIsRejectedAndNotPersisted(): void {
 		$this->signIn();
-		$this->objects->seed('c-3', 'contract', ['status' => 'churned', 'ownerId' => 'owner-1']);
+		$this->objects->seed('c-3', 'salesContract', ['status' => 'churned', 'ownerId' => 'owner-1']);
 		$this->withBody(['status' => 'active']);
 
 		$response = $this->buildController($this->objects)->transition(id: 'c-3');
@@ -521,7 +521,7 @@ class ContractControllerTest extends TestCase {
 	 */
 	public function testTransitionToAnUnknownStatusIsRejectedAndNotPersisted(): void {
 		$this->signIn();
-		$this->objects->seed('c-4', 'contract', ['status' => 'active', 'ownerId' => 'owner-1']);
+		$this->objects->seed('c-4', 'salesContract', ['status' => 'active', 'ownerId' => 'owner-1']);
 		$this->withBody(['status' => 'archived']);
 
 		$response = $this->buildController($this->objects)->transition(id: 'c-4');
@@ -540,7 +540,7 @@ class ContractControllerTest extends TestCase {
 	 */
 	public function testTransitionToExpiringIsReservedForTheEngine(): void {
 		$this->signIn();
-		$this->objects->seed('c-5', 'contract', ['status' => 'active', 'ownerId' => 'owner-1']);
+		$this->objects->seed('c-5', 'salesContract', ['status' => 'active', 'ownerId' => 'owner-1']);
 		$this->withBody(['status' => 'expiring']);
 
 		$response = $this->buildController($this->objects)->transition(id: 'c-5');
@@ -559,7 +559,7 @@ class ContractControllerTest extends TestCase {
 	 */
 	public function testTransitionToRenewedWithoutAWonLeadIsRejected(): void {
 		$this->signIn();
-		$this->objects->seed('c-6', 'contract', ['status' => 'active', 'ownerId' => 'owner-1']);
+		$this->objects->seed('c-6', 'salesContract', ['status' => 'active', 'ownerId' => 'owner-1']);
 		$this->withBody(['status' => 'renewed']);
 
 		$response = $this->buildController($this->objects)->transition(id: 'c-6');
@@ -578,7 +578,7 @@ class ContractControllerTest extends TestCase {
 	 */
 	public function testTransitionToCancelledWithoutAReasonIsRejected(): void {
 		$this->signIn();
-		$this->objects->seed('c-7', 'contract', ['status' => 'active', 'ownerId' => 'owner-1']);
+		$this->objects->seed('c-7', 'salesContract', ['status' => 'active', 'ownerId' => 'owner-1']);
 		$this->withBody(['status' => 'cancelled']);
 
 		$response = $this->buildController($this->objects)->transition(id: 'c-7');
@@ -598,7 +598,7 @@ class ContractControllerTest extends TestCase {
 	 */
 	public function testTransitionResolvesTheContractAgainstTheUpstreamFindSignature(): void {
 		$store = $this->buildUpstreamSignatureStore();
-		$store->seed('c-8', 'contract', ['status' => 'draft', 'ownerId' => 'owner-1']);
+		$store->seed('c-8', 'salesContract', ['status' => 'draft', 'ownerId' => 'owner-1']);
 		$this->signIn();
 		$this->withBody(['status' => 'active']);
 
@@ -648,23 +648,23 @@ class ContractControllerTest extends TestCase {
 		$this->groupManager->method('isInGroup')->willReturn(true);
 		$this->objects->seed(
 			'c-10',
-			'contract',
+			'salesContract',
 			['status' => 'renewed', 'endDate' => '2026-06-01', 'billingInterval' => 'monthly', 'valuePerInterval' => 100]
 		);
 		$this->objects->seed(
 			'c-11',
-			'contract',
+			'salesContract',
 			['status' => 'renewed', 'endDate' => '2026-06-15', 'billingInterval' => 'annual', 'valuePerInterval' => 1200]
 		);
 		$this->objects->seed(
 			'c-12',
-			'contract',
+			'salesContract',
 			['status' => 'churned', 'endDate' => '2026-06-20', 'billingInterval' => 'quarterly', 'valuePerInterval' => 300]
 		);
 		// Outside the requested window — must not be counted.
 		$this->objects->seed(
 			'c-13',
-			'contract',
+			'salesContract',
 			['status' => 'churned', 'endDate' => '2020-01-01', 'billingInterval' => 'monthly', 'valuePerInterval' => 999]
 		);
 		$this->withBody(['from' => '2026-06-01', 'to' => '2026-06-30']);
@@ -697,12 +697,12 @@ class ContractControllerTest extends TestCase {
 		$this->groupManager->method('isInGroup')->willReturn(true);
 		$this->objects->seed(
 			'c-20',
-			'contract',
+			'salesContract',
 			['status' => 'renewed', 'endDate' => '2026-06-01', 'billingInterval' => 'monthly', 'valuePerInterval' => 100]
 		);
 		$this->objects->seed(
 			'c-21',
-			'contract',
+			'salesContract',
 			[
 				'status' => 'churned',
 				'endDate' => '2026-06-02',

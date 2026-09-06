@@ -36,6 +36,11 @@ use OCP\Security\ISecureRandom;
 
 /**
  * Signed-URL token issuer/validator for portal document downloads.
+ *
+ * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+ *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+ *   sessions, tokens, delegation, documents, invoices, orders, exports and
+ *   audit are all unspecified
  */
 class DocumentSigningService {
 	/**
@@ -75,6 +80,10 @@ class DocumentSigningService {
 	 * @param int $ttlMinutes The TTL in minutes.
 	 *
 	 * @return array{token: string, path: string, expiresAt: int} The signed material.
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function generateUrl(
 		string $objectId,
@@ -114,6 +123,10 @@ class DocumentSigningService {
 	 * @param string $token The presented token.
 	 *
 	 * @return array<string, mixed>|string|null The payload, 'expired', or null.
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function validateToken(string $token): array|string|null {
 		$parts = explode('.', $token);

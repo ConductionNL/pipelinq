@@ -75,6 +75,7 @@ class DeliveryAuditLogger {
 	 * @param string $actor Actor (defaults to 'system').
 	 *
 	 * @return void
+	 * @spec openspec/specs/outbound-messaging/spec.md#REQ-OM-004
 	 */
 	public function logQueued(
 		string $messageId,
@@ -95,6 +96,7 @@ class DeliveryAuditLogger {
 	 * @param string $actor Actor.
 	 *
 	 * @return void
+	 * @spec openspec/specs/outbound-messaging/spec.md#REQ-OM-004
 	 */
 	public function logSent(
 		string $messageId,
@@ -122,6 +124,7 @@ class DeliveryAuditLogger {
 	 * @param string $actor Actor.
 	 *
 	 * @return void
+	 * @spec openspec/specs/outbound-messaging/spec.md#REQ-OM-004
 	 */
 	public function logRead(
 		string $messageId,
@@ -142,6 +145,7 @@ class DeliveryAuditLogger {
 	 * @param string $actor Actor.
 	 *
 	 * @return void
+	 * @spec openspec/specs/outbound-messaging/spec.md#REQ-OM-004
 	 */
 	public function logFallback(
 		string $messageId,
@@ -170,6 +174,7 @@ class DeliveryAuditLogger {
 	 * @param string $actor Actor.
 	 *
 	 * @return void
+	 * @spec openspec/specs/outbound-messaging/spec.md#REQ-OM-004
 	 */
 	public function logFailed(
 		string $messageId,
@@ -197,6 +202,7 @@ class DeliveryAuditLogger {
 	 * @param string $actor Actor.
 	 *
 	 * @return void
+	 * @spec openspec/specs/outbound-messaging/spec.md#REQ-OM-004
 	 */
 	public function logReplyReceived(
 		string $replyId,
@@ -217,6 +223,7 @@ class DeliveryAuditLogger {
 	 * @param string $actor Actor.
 	 *
 	 * @return void
+	 * @spec openspec/specs/outbound-messaging/spec.md#REQ-OM-004
 	 */
 	public function logProcessingError(
 		string $messageId,
@@ -244,6 +251,7 @@ class DeliveryAuditLogger {
 	 * @param string $actor Actor.
 	 *
 	 * @return void
+	 * @spec openspec/specs/outbound-messaging/spec.md#REQ-OM-004
 	 */
 	public function logOptedOut(
 		string $messageId,
@@ -296,6 +304,7 @@ class DeliveryAuditLogger {
 	 * @param string $body Body content.
 	 *
 	 * @return string Hex digest.
+	 * @spec openspec/specs/outbound-messaging/spec.md#REQ-OM-004
 	 */
 	public function hashPayload(string $body): string {
 		return hash('sha256', $body);

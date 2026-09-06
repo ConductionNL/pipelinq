@@ -31,6 +31,7 @@ namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\Service\Portal\DocumentSigningService;
 use OCA\Pipelinq\Service\Portal\PortalAuditService;
+use OCA\Pipelinq\Service\Portal\PortalExportService;
 use OCA\Pipelinq\Service\Portal\PortalInvoiceService;
 use OCA\Pipelinq\Service\Portal\PortalObjectRepository;
 use OCA\Pipelinq\Service\Portal\PortalRequestGuard;
@@ -47,6 +48,11 @@ use Throwable;
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Wires the signing service, the
  *  access re-check facade, the account store and the audit log a secure proxy needs.
+ *
+ * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+ *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+ *   sessions, tokens, delegation, documents, invoices, orders, exports and
+ *   audit are all unspecified
  */
 class PortalDocumentController extends PortalApiController {
 	/**
@@ -54,7 +60,7 @@ class PortalDocumentController extends PortalApiController {
 	 *
 	 * @var string
 	 */
-	private const ACCOUNT_SCHEMA = 'portalAccount';
+	private const ACCOUNT_SCHEMA = 'crmPortalAccount';
 
 	/**
 	 * Constructor.
@@ -66,6 +72,7 @@ class PortalDocumentController extends PortalApiController {
 	 * @param PortalInvoiceService $invoices The invoice facade (access re-check).
 	 * @param PortalObjectRepository $repository The portal object repository.
 	 * @param PortalAuditService $audit The audit service.
+	 * @param PortalExportService $exports Builds the AVG art. 15 data export.
 	 */
 	public function __construct(
 		IRequest $request,
@@ -75,6 +82,7 @@ class PortalDocumentController extends PortalApiController {
 		private PortalInvoiceService $invoices,
 		private PortalObjectRepository $repository,
 		private PortalAuditService $audit,
+		private PortalExportService $exports,
 	) {
 		parent::__construct(request: $request, guard: $guard, logger: $logger);
 	}//end __construct()
@@ -93,6 +101,10 @@ class PortalDocumentController extends PortalApiController {
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
 	 * @PublicPage
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	#[AnonRateLimit(limit: 20, period: 60)]
 	public function sign(): JSONResponse {
@@ -170,7 +182,21 @@ class PortalDocumentController extends PortalApiController {
 			// IRootFolder instead. Streaming the bound file is deferred to a live
 			// instance (see DEPLOYMENT.md), the descriptor below is the canonical
 			// machine-readable representation in the meantime.
+			// 🔴 A DATA EXPORT HAS TO CONTAIN THE DATA.
+			//
+			// Every object type got the same three-key descriptor, so a
+			// data-export link -- the thing a customer is handed to exercise
+			// their AVG art. 15 right of access -- streamed
+			// {objectType, objectId, generatedAt} and nothing else.
+			// PortalExportService::buildExport() had been written for exactly
+			// this and was called by nothing in the tree.
+			//
+			// Other object types keep the descriptor: for those it IS the
+			// canonical machine-readable representation, as the note above says.
 			$payload = $this->documentPayload(objectType: $objectType, objectId: $objectId);
+			if ($objectType === 'data-export') {
+				$payload = $this->exports->buildExport(account: $account);
+			}
 			return new DataDownloadResponse(
 				(string)json_encode($payload),
 				$objectType . '-' . $objectId . '.json',

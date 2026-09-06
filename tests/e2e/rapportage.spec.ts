@@ -3,19 +3,37 @@
 //
 // REQ-CR-001: Reporting dashboard loads with KPI cards visible.
 // @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-6
-import { test, expect } from '@playwright/test'
-import { openApp, navClick } from './helpers/pipelinq'
+import { expect, test } from '@playwright/test'
+import { openApp } from './helpers/pipelinq.ts'
 
 test.describe('Rapportage (Reporting)', () => {
+	// ⚠️ 60s is not enough for these four. Each one runs openApp() — which boots
+	// the shell and dismisses the walkthrough and support dialogs — then a full
+	// navigation, and the Reports page is a lazy chunk
+	// (CnPageRenderer maps `type:"reports"` through defineAsyncComponent), so
+	// the first of them also pays for fetching it.
+	//
+	// They were failing on `cn-report-card` resolving to 0, which was a real
+	// defect: CnReportsPage read `page.config.cards` while CnPageRenderer
+	// spreads config keys as top-level props, so the page rendered its empty
+	// state for every consumer. nextcloud-vue#920 fixed that and 2.30.0 ships
+	// it. With the cards actually rendering, what is left is that the tests run
+	// out of budget — the failure carries no assertion error at all, just the
+	// timeout, which reads as "the page is broken" rather than "this test is
+	// too slow".
+	test.setTimeout(180_000)
+
 	test.beforeEach(async ({ page }) => {
 		// The contactmomenten Reporting Dashboard (KPI cards) lives at the
 		// `/rapportage/contactmomenten` page (manifest id RapportageContactmomenten
 		// → RapportageDashboard.vue). The "Reporting" sidebar link now points at
 		// the Lead-analytics page (`/rapportage`), so deep-link the dashboard
-		// route directly via the SPA hash. A path-form goto boots the shell at the
-		// Dashboard; a hash goto mounts the target view. Reload once so the view
-		// re-queries its KPI data after the same-document hash change.
-		await page.goto('/apps/pipelinq/#/rapportage/contactmomenten')
+		// route directly by PATH. This said the opposite until #1684 — that a
+		// path goto boots the shell at the Dashboard and only a hash goto mounts
+		// the target view — which stopped being true when the shell moved to
+		// createWebHistory(routerBase()). The reload stays: it makes the view
+		// re-query its KPI data after the navigation.
+		await page.goto('/apps/pipelinq/rapportage/contactmomenten')
 		await expect(page.locator('body')).not.toContainText('Internal Server Error')
 		await page.reload()
 	})
@@ -78,25 +96,48 @@ test.describe('Rapportage (Reporting)', () => {
 	 * already documents. So the old assertion could not have passed even if the
 	 * buttons had existed.
 	 *
-	 * The fix is a navigation fix, not a test fix: src/manifest.json now declares
-	 * menu entries for all three reporting pages and src/menu-layout.json
-	 * relocates them under `Rapportage`, so "Reporting" is a group carrying its
-	 * own sub-reports. The tests below assert what they always meant to assert —
-	 * a user can get there — through the sidebar rather than a deleted button.
+	 * The fix was a navigation fix, not a test fix: menu entries were declared
+	 * for all three reporting pages and menu-layout relocated them under
+	 * `Rapportage`, so "Reporting" became a group carrying its own sub-reports.
+	 *
+	 * UPDATED (ADR-112): that group is now one Reports page of cards, and the
+	 * per-report menu entries are retired. The route these tests take changes
+	 * with it — through the Reports page rather than the sidebar — but what
+	 * they assert does not, and must not: a user who has not memorised a URL
+	 * can still get to every report. That is the whole point of #687, and the
+	 * ADR-044 no-functionality-loss guarantee the removal rests on.
 	 */
-	test('rapportage page navigates to channel analytics', async ({ page }) => {
+	test('a reader reaches channel analytics from the reports page', async ({
+		page,
+	}) => {
 		await openApp(page)
-		await navClick(page, 'Channel Analytics', /rapportage\/channels/)
+		await page.goto('/apps/pipelinq/reports')
 
+		await page
+			.getByTestId('cn-report-card')
+			.filter({ hasText: /Channel analytics|Kanaalanalyse/i })
+			.first()
+			.click()
+
+		await expect(page).toHaveURL(/rapportage\/channels/, { timeout: 10000 })
 		await expect(
 			page.getByRole('heading', { name: /Channel Analytics|Kanaalanalyse/i }),
 		).toBeVisible({ timeout: 10000 })
 	})
 
-	test('rapportage page navigates to agent performance', async ({ page }) => {
+	test('a reader reaches agent performance from the reports page', async ({
+		page,
+	}) => {
 		await openApp(page)
-		await navClick(page, 'Agent Performance', /rapportage\/agents/)
+		await page.goto('/apps/pipelinq/reports')
 
+		await page
+			.getByTestId('cn-report-card')
+			.filter({ hasText: /Agent performance|Agentprestaties/i })
+			.first()
+			.click()
+
+		await expect(page).toHaveURL(/rapportage\/agents/, { timeout: 10000 })
 		await expect(
 			page.getByRole('heading', {
 				name: /Agent Performance|Agentprestaties/i,
@@ -104,10 +145,57 @@ test.describe('Rapportage (Reporting)', () => {
 		).toBeVisible({ timeout: 10000 })
 	})
 
+	test('the reports page lists every report pipelinq offers', async ({ page }) => {
+		// The assertion that distinguishes "regrouped" from "lost". Report pages
+		// went from menu entries to cards; a change that dropped one would
+		// otherwise look like a tidier menu.
+		//
+		// This used to be `toHaveCount(4)` alone, which is a weaker claim than it
+		// reads as. A bare count cannot say WHICH report went missing, it passes
+		// if one report is swapped for another, and it fails on a report being
+		// ADDED — which is not a loss, and is exactly what happened when Forecast
+		// and Loyalty moved here off the sidebar. Naming them keeps the guard the
+		// comment above promises: removing one fails and says which, and adding
+		// one fails until somebody writes the new name down here on purpose.
+		const EXPECTED = [
+			'Reporting',
+			'Contact reporting',
+			'Channel analytics',
+			'Agent performance',
+			'Forecast',
+			'Loyalty reporting',
+			'Campaign report',
+			'Weekly review',
+		]
+
+		await openApp(page)
+		await page.goto('/apps/pipelinq/reports')
+
+		const cards = page.getByTestId('cn-report-card')
+		await expect(cards).toHaveCount(EXPECTED.length)
+
+		// Matched on the START of each card's text, not `hasText`, which is a
+		// substring: "Reporting" is inside "Contact reporting" and "Loyalty
+		// reporting" too, so a `hasText` check would still pass with the
+		// Reporting card deleted. A card reads "<label> <description>
+		// <category>", so the label is its prefix and nothing else's.
+		const texts = (await cards.allTextContents()).map((t) =>
+			t.replace(/\s+/g, ' ').trim(),
+		)
+		for (const label of EXPECTED) {
+			expect(
+				texts.filter((t) => t.startsWith(label)),
+				`exactly one card on the reports page must be titled "${label}"`,
+			).toHaveLength(1)
+		}
+	})
+
 	test('channel analytics page loads', async ({ page }) => {
-		// Deep-link via the SPA hash; a path-form goto boots the shell at the
-		// Dashboard instead of the target view.
-		await page.goto('/apps/pipelinq/#/rapportage/channels')
+		// Deep-link by PATH. This comment used to say the opposite — that a
+		// path-form goto boots the shell at the Dashboard and the route has to
+		// travel in the hash — which was true until #1684 moved the shell to
+		// createWebHistory(routerBase()).
+		await page.goto('/apps/pipelinq/rapportage/channels')
 		await page.reload()
 		await expect(
 			page.getByRole('heading', { name: /Channel Analytics|Kanaalanalyse/i }),
@@ -115,7 +203,7 @@ test.describe('Rapportage (Reporting)', () => {
 	})
 
 	test('agent performance page loads', async ({ page }) => {
-		await page.goto('/apps/pipelinq/#/rapportage/agents')
+		await page.goto('/apps/pipelinq/rapportage/agents')
 		await page.reload()
 		await expect(
 			page.getByRole('heading', {

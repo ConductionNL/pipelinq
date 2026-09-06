@@ -88,6 +88,9 @@ class BsnAuditService {
 	 * @param string|null $linkedRequest UUID of linked Pipelinq verzoek.
 	 * @param string|null $actorRole Role of actor (behandelaar-burgerzaken).
 	 * @param bool $vogScreening VOG-screening flag for Justis.
+	 * @param string|null $bsnHash The subject's ALREADY-COMPUTED hash, for callers
+	 *                             that hold it but cannot reconstruct the raw BSN.
+	 *                             Takes precedence over hashing $rawBsn.
 	 *
 	 * @return string The UUID of the written audit record (empty string if writing fails).
 	 *
@@ -110,13 +113,22 @@ class BsnAuditService {
 		?string $linkedRequest = null,
 		?string $actorRole = null,
 		bool $vogScreening = false,
+		?string $bsnHash = null,
 	): string {
 		$now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
 		$retainUntil = $now->modify('+' . self::RETENTION_YEARS . ' years');
 
+		$subjectHash = $this->resolveSubjectHash(rawBsn: $rawBsn, bsnHash: $bsnHash);
+
 		$record = [
 			'action' => $action,
-			'bsnHash' => BsnValidationService::hash($rawBsn),
+			// A caller that already HOLDS the subject's hash passes it through.
+			// Hashing an empty `$rawBsn` yields sha256("") — the same constant for
+			// every person — which is an audit record that names no data subject.
+			// That is what BrpController::revealAddress produced for every
+			// geheimhouding reveal, because the raw BSN is not reconstructible
+			// there and the persoon already carries its own hash.
+			'bsnHash' => $subjectHash,
 			'actor' => $actor,
 			'actorRole' => $actorRole,
 			'moment' => $now->format(DATE_ATOM),
@@ -184,6 +196,35 @@ class BsnAuditService {
 			return '';
 		}//end try
 	}//end recordLookup()
+
+	/**
+	 * The hash that identifies the data subject of an audit record.
+	 *
+	 * A caller that already HOLDS the subject's hash passes it through.
+	 * Hashing an empty `$rawBsn` yields sha256("") — the same constant for
+	 * every person — which is an audit record that names no data subject at
+	 * all. That is what BrpController::revealAddress produced for every
+	 * geheimhouding reveal, because the raw BSN is not reconstructible there
+	 * and the persoon already carries its own hash.
+	 *
+	 * Extracted from {@see recordLookup()} to keep that method inside the
+	 * length limit.
+	 *
+	 * @param string $rawBsn The raw BSN, possibly empty.
+	 * @param string|null $bsnHash An already-computed hash, when the caller has one.
+	 *
+	 * @return string The subject hash to store.
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) BsnValidationService::hash is a pure stateless helper — the same
+	 * justification recordLookup() already carries for the call this was extracted from.
+	 */
+	private function resolveSubjectHash(string $rawBsn, ?string $bsnHash): string {
+		if ($bsnHash !== null && $bsnHash !== '') {
+			return $bsnHash;
+		}
+
+		return BsnValidationService::hash($rawBsn);
+	}//end resolveSubjectHash()
 
 	/**
 	 * Pseudonymise audit records linked to a given BSN (AVG art. 17).

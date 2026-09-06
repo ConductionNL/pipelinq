@@ -53,7 +53,7 @@ class CostReconciliationService {
 	/**
 	 * Default message schema slug.
 	 */
-	private const DEFAULT_SCHEMA_SLUG = 'message';
+	private const DEFAULT_SCHEMA_SLUG = 'channelMessage';
 
 	/**
 	 * Constructor.

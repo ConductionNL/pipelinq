@@ -190,11 +190,11 @@ export default {
 .cti-event-log__table td {
 	padding: 6px 12px;
 	border-bottom: 1px solid var(--color-border);
-	text-align: left;
+	text-align: start;
 }
 
 .cti-event-log__actions {
-	text-align: right;
+	text-align: end;
 }
 
 .cti-event-log__empty {

@@ -33,6 +33,11 @@ namespace OCA\Pipelinq\Service\Portal;
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Spans the portal account store
  *  and the main register (contacts + invoices) a retention check legitimately needs.
+ *
+ * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+ *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+ *   sessions, tokens, delegation, documents, invoices, orders, exports and
+ *   audit are all unspecified
  */
 class PortalCleanupService {
 	/**
@@ -40,7 +45,7 @@ class PortalCleanupService {
 	 *
 	 * @var string
 	 */
-	private const ACCOUNT_SCHEMA = 'portalAccount';
+	private const ACCOUNT_SCHEMA = 'crmPortalAccount';
 
 	/**
 	 * Constructor.
@@ -60,6 +65,10 @@ class PortalCleanupService {
 	 * Run a cleanup pass over all closed accounts.
 	 *
 	 * @return int The number of contacts pseudonymised.
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function run(): int {
 		$pseudonymised = 0;
@@ -79,6 +88,10 @@ class PortalCleanupService {
 	 * @param array<string, mixed> $account The closed account.
 	 *
 	 * @return bool True when a contact was pseudonymised.
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function processClosedAccount(array $account): bool {
 		$contactId = ($account['linkedContactId'] ?? null);

@@ -33,6 +33,8 @@ use RuntimeException;
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) The class is the one cohesive
  *  register-fragment loader (read + deep-merge + additive-list union + version
  *  hashing); the merge rules belong together (ADR-037).
+ *
+ * @spec openspec/specs/admin-settings/spec.md#REQ-AS-011
  */
 class ConfigFileLoaderService {
 	/**

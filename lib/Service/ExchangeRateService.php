@@ -33,6 +33,9 @@ use OCP\IAppConfig;
  * via app config. Rates express "units of reporting currency per 1 unit of the
  * source currency". An unknown source currency falls back to a 1:1 rate so a
  * roll-up never silently drops a deal's value.
+ *
+ * @spec exclude infrastructure utility with no feature requirement of its own; it is
+ *   exercised through the features that call it
  */
 class ExchangeRateService {
 	/**

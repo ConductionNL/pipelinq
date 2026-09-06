@@ -36,6 +36,11 @@ use OCP\IRequest;
 
 /**
  * Serves the public portal SPA shell.
+ *
+ * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+ *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+ *   sessions, tokens, delegation, documents, invoices, orders, exports and
+ *   audit are all unspecified
  */
 class PortalPageController extends Controller {
 	/**
@@ -55,6 +60,10 @@ class PortalPageController extends Controller {
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
 	 * @PublicPage
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	#[AnonRateLimit(limit: 240, period: 60)]
 	public function index(): TemplateResponse {
@@ -98,6 +107,11 @@ class PortalPageController extends Controller {
 	 *
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) $path is a route-binding
 	 *  placeholder; the SPA shell is identical for every sub-path.
+	 *
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	#[AnonRateLimit(limit: 240, period: 60)]
 	public function subpath(string $path = ''): TemplateResponse {

@@ -66,7 +66,7 @@ export default {
 		 * term and the parent client are handed over that way.
 		 *
 		 * @return {object}
-		 * @spec openspec/specs/lead-management/spec.md#requirement-linked-party-selection-on-the-create-form
+		 * @spec openspec/specs/lead-management/spec.md#requirement-linked-party-selection-on-the-create-form-mvp
 		 */
 		seed() {
 			const seed = {}
@@ -83,7 +83,7 @@ export default {
 		 *
 		 * @param {object} formData The raw create-form fields.
 		 * @return {Promise<void>}
-		 * @spec openspec/specs/lead-management/spec.md#requirement-linked-party-selection-on-the-create-form
+		 * @spec openspec/specs/lead-management/spec.md#requirement-linked-party-selection-on-the-create-form-mvp
 		 */
 		async onSave(formData) {
 			try {

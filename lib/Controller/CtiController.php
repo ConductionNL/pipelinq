@@ -128,6 +128,18 @@ class CtiController extends Controller {
 				rawBody: $rawBody,
 				signature: $signatureArg,
 			);
+		} catch (\InvalidArgumentException $e) {
+			// A body this adapter cannot parse. 400, not 5xx: a 5xx tells the
+			// platform to redeliver a payload that will never parse, and this
+			// route is public so the response must say nothing more than that.
+			$this->logger->warning(
+				'CTI webhook: unparseable payload',
+				['platform' => $platform, 'exception' => $e->getMessage()]
+			);
+			return new JSONResponse(
+				['error' => 'The webhook payload could not be parsed'],
+				Http::STATUS_BAD_REQUEST
+			);
 		} catch (\RuntimeException $e) {
 			$this->logger->warning(
 				'CTI webhook: unknown platform',
@@ -210,6 +222,31 @@ class CtiController extends Controller {
 		if ($targetNumber === '' || $extension === '') {
 			return new JSONResponse(
 				['error' => 'targetNumber and extension are required'],
+				Http::STATUS_BAD_REQUEST
+			);
+		}
+
+		// 🔴 NON-EMPTY IS NOT DIALABLE.
+		//
+		// Both values were forwarded to the telephony adapter verbatim once
+		// they were non-empty, so anything at all reached the PBX --
+		// 'sip:attacker@evil.example' among them. What a dial string can make a
+		// PBX do is the adapter's business and varies per platform, which is
+		// exactly why the app must not hand it arbitrary text.
+		//
+		// A dialable target is E.164, optionally with the separators a person
+		// might paste from a contact card, and an extension is digits. Anything
+		// else is refused here rather than interpreted downstream.
+		if (preg_match('/^\+?[0-9][0-9 ()-]{1,20}$/', $targetNumber) !== 1) {
+			return new JSONResponse(
+				['error' => 'targetNumber is not a dialable number'],
+				Http::STATUS_BAD_REQUEST
+			);
+		}
+
+		if (preg_match('/^[0-9]{1,10}$/', $extension) !== 1) {
+			return new JSONResponse(
+				['error' => 'extension is not a dialable extension'],
 				Http::STATUS_BAD_REQUEST
 			);
 		}
@@ -313,7 +350,14 @@ class CtiController extends Controller {
 			return new JSONResponse(['error' => 'recordingUrl is required'], Http::STATUS_BAD_REQUEST);
 		}
 
-		$this->ctiService->attachRecording($id, $recordingUrl, $expiresAt);
+		$attached = $this->ctiService->attachRecording($id, $recordingUrl, $expiresAt);
+		if ($attached === false) {
+			return new JSONResponse(
+				['ok' => false, 'error' => 'The recording could not be attached'],
+				Http::STATUS_INTERNAL_SERVER_ERROR
+			);
+		}
+
 		return new JSONResponse(['ok' => true]);
 	}//end attachRecording()
 

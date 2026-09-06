@@ -81,6 +81,7 @@ class ExportRunService extends AbstractExportService {
 	 * @return array<string, mixed> The run.
 	 *
 	 * @throws OCSNotFoundException When the run does not exist.
+	 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#requirement-destination-configuration-and-validation-req-bie-001
 	 */
 	public function getRun(string $runId): array {
 		$run = $this->findObjectById(schemaKey: self::RUN_SCHEMA_KEY, id: $runId);
@@ -134,6 +135,7 @@ class ExportRunService extends AbstractExportService {
 	 * @param string $runId The run UUID.
 	 *
 	 * @return array<string, mixed> The updated run.
+	 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#requirement-destination-configuration-and-validation-req-bie-001
 	 */
 	public function markRunning(string $runId): array {
 		$run = $this->getRun(runId: $runId);
@@ -232,6 +234,7 @@ class ExportRunService extends AbstractExportService {
 	 * @param string $runId The run UUID.
 	 *
 	 * @return array<int, array<string, mixed>> The snapshots.
+	 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#requirement-destination-configuration-and-validation-req-bie-001
 	 */
 	public function listSnapshots(string $runId): array {
 		return $this->findAllObjects(

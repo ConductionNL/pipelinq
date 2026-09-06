@@ -98,7 +98,7 @@ class PortalRequestServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testOnlyOwnRequestsListed(): void {
-		$account = $this->portalRepo->seed('portalAccount', 'acc-a', ['linkedContactId' => 'contact-a']);
+		$account = $this->portalRepo->seed('crmPortalAccount', 'acc-a', ['linkedContactId' => 'contact-a']);
 		$this->reader->seed('request', 'r1', ['contact' => 'contact-a', 'title' => 'Mine', 'requestedAt' => '2026-05-01T00:00:00Z']);
 		$this->reader->seed('request', 'r2', ['contact' => 'contact-x', 'title' => 'Theirs', 'requestedAt' => '2026-05-02T00:00:00Z']);
 
@@ -113,7 +113,7 @@ class PortalRequestServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testCrossCustomerRequestDetailNull(): void {
-		$account = $this->portalRepo->seed('portalAccount', 'acc-a', ['linkedContactId' => 'contact-a']);
+		$account = $this->portalRepo->seed('crmPortalAccount', 'acc-a', ['linkedContactId' => 'contact-a']);
 		$this->reader->seed('request', 'r-x', ['contact' => 'contact-x', 'title' => 'Theirs']);
 
 		$this->assertNull($this->service->getDetailForAccount($account, 'r-x', false));
@@ -125,7 +125,7 @@ class PortalRequestServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testInternalNotesFiltered(): void {
-		$account = $this->portalRepo->seed('portalAccount', 'acc-a', ['linkedContactId' => 'contact-a']);
+		$account = $this->portalRepo->seed('crmPortalAccount', 'acc-a', ['linkedContactId' => 'contact-a']);
 		$this->reader->seed('request', 'r1', [
 			'contact' => 'contact-a',
 			'title' => 'Mine',
@@ -148,7 +148,7 @@ class PortalRequestServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testAssigneeHiddenByDefault(): void {
-		$account = $this->portalRepo->seed('portalAccount', 'acc-a', ['linkedContactId' => 'contact-a']);
+		$account = $this->portalRepo->seed('crmPortalAccount', 'acc-a', ['linkedContactId' => 'contact-a']);
 		$this->reader->seed('request', 'r1', ['contact' => 'contact-a', 'assignee' => 'm.bakker']);
 
 		$detail = $this->service->getDetailForAccount($account, 'r1', false);
@@ -162,7 +162,7 @@ class PortalRequestServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testSubmitCreatesRequest(): void {
-		$account = $this->portalRepo->seed('portalAccount', 'acc-a', ['linkedContactId' => 'contact-a']);
+		$account = $this->portalRepo->seed('crmPortalAccount', 'acc-a', ['linkedContactId' => 'contact-a']);
 		$result = $this->service->submit($account, 'tenant-a', 'Subject', 'Body', [], 'cat-1');
 
 		$this->assertArrayHasKey('requestId', $result);
@@ -177,7 +177,7 @@ class PortalRequestServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testSubmitRateLimited(): void {
-		$account = $this->portalRepo->seed('portalAccount', 'acc-a', ['linkedContactId' => 'contact-a']);
+		$account = $this->portalRepo->seed('crmPortalAccount', 'acc-a', ['linkedContactId' => 'contact-a']);
 		for ($i = 0; $i < 5; $i++) {
 			$this->service->submit($account, 'tenant-a', 'S' . $i, 'B', [], 'cat-1');
 		}
@@ -197,7 +197,7 @@ class PortalRequestServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testOversizeAttachmentRejected(): void {
-		$account = $this->portalRepo->seed('portalAccount', 'acc-a', ['linkedContactId' => 'contact-a']);
+		$account = $this->portalRepo->seed('crmPortalAccount', 'acc-a', ['linkedContactId' => 'contact-a']);
 		try {
 			$this->service->submit($account, 'tenant-a', 'S', 'B', [['id' => 'f1', 'size' => (30 * 1024 * 1024)]], 'cat-1');
 			$this->fail('Expected file-too-large');
@@ -213,7 +213,7 @@ class PortalRequestServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testReplyUnpausesAwaitingCustomer(): void {
-		$account = $this->portalRepo->seed('portalAccount', 'acc-a', ['linkedContactId' => 'contact-a']);
+		$account = $this->portalRepo->seed('crmPortalAccount', 'acc-a', ['linkedContactId' => 'contact-a']);
 		$this->reader->seed('request', 'r1', ['contact' => 'contact-a', 'status' => 'awaiting-customer']);
 
 		$this->service->addReply($account, 'tenant-a', 'r1', 'Here is my reply');

@@ -445,8 +445,12 @@ class BrpController extends Controller {
 			);
 		}
 
-		// Reconstructing the raw BSN is impossible; use empty raw for audit (hash already on persoon).
-		$this->audit->recordLookup(
+		// The raw BSN is not reconstructible here, but the persoon in hand carries
+		// its own hash — so pass THAT, rather than letting the service hash ''.
+		// It used to hash the empty string, which stamped every geheimhouding
+		// reveal with the same sha256("") and produced an audit trail that named
+		// no data subject at all.
+		$auditId = $this->audit->recordLookup(
 			actor: $actor,
 			rawBsn: '',
 			verzoekreden: 'Adres onthuld op behandelaarsverantwoording',
@@ -456,7 +460,29 @@ class BrpController extends Controller {
 			responseCode: 200,
 			linkedRequest: null,
 			actorRole: $this->resolveActorRole(actor: $actor),
+			bsnHash: (string)($person['bsnHash'] ?? ''),
 		);
+
+		// 🔴 NO AUDIT RECORD, NO REVEAL.
+		//
+		// recordLookup() answers '' when the write failed, and that return used
+		// to be discarded — so a reveal whose audit record never landed still
+		// answered 200 with the withheld residence. An unlogged disclosure of a
+		// geheimhouding address is the exact thing the audit trail exists to
+		// make impossible, so this fails closed: the caller is told the
+		// disclosure could not be recorded, and gets no address.
+		if ($auditId === '') {
+			return new JSONResponse(
+				[
+					'error' => $this->l10n->t('Address reveal could not be recorded'),
+					'errorMessage' => $this->l10n->t(
+						'De onthulling kon niet worden vastgelegd in het BSN-auditlogboek. '
+						. 'Het adres is daarom niet getoond.'
+					),
+				],
+				Http::STATUS_INTERNAL_SERVER_ERROR
+			);
+		}
 
 		return new JSONResponse(
 			[
@@ -545,18 +571,39 @@ class BrpController extends Controller {
 			$signature = (string)$this->request->getHeader('x-signature');
 		}
 
-		// Always respond 200 OK with a structured result field — HaalCentraal
-		// expects to ack the delivery regardless of inner outcome. The HMAC
-		// verification + bsn-shape check happen inside the listener
-		// (BrpMutationWebhookListener::handle) which logs + records an audit
-		// line on every rejection; the HTTP layer is just "we received it".
+		// 🔴 A REJECTED DELIVERY MUST NOT BE ACKNOWLEDGED WITH 200.
+		//
+		// This answered 200 for every outcome, including `forbidden` (the HMAC
+		// did not verify) and `bad-request` (the body was malformed), on the
+		// stated grounds that "HaalCentraal expects to ack the delivery
+		// regardless of inner outcome". A 200 IS the acknowledgement: it tells
+		// the sender the mutation was taken. A rejected delivery was therefore
+		// indistinguishable from an accepted one at the only layer the sender
+		// can see, and a genuine misconfiguration -- a wrong shared secret --
+		// would look like a working integration forever while every mutation
+		// was dropped.
+		//
+		// The structured `result` field stays, so a client that reads the body
+		// loses nothing; the status now agrees with it. A bad signature is 403
+		// and a malformed body is 400, which are the two things the sender can
+		// actually act on.
 		$outcome = $this->webhookListener->handle($rawBody, $signature);
+
+		$status = Http::STATUS_OK;
+		if ($outcome['result'] === BrpMutationWebhookListener::RESULT_FORBIDDEN) {
+			$status = Http::STATUS_FORBIDDEN;
+		}
+
+		if ($outcome['result'] === BrpMutationWebhookListener::RESULT_BAD_REQUEST) {
+			$status = Http::STATUS_BAD_REQUEST;
+		}
+
 		return new JSONResponse(
 			[
 				'result' => $outcome['result'],
 				'invalidated' => $outcome['invalidated'],
 			],
-			Http::STATUS_OK
+			$status
 		);
 	}//end mutationWebhook()
 

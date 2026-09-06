@@ -51,6 +51,8 @@ use Throwable;
 
 /**
  * NRC notification dispatcher.
+ *
+ * @spec openspec/specs/vng-klantinteracties-leaf/spec.md
  */
 class NrcNotificationListener {
 	/**

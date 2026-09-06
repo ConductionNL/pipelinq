@@ -60,7 +60,7 @@ class RegisterResolverServiceTest extends TestCase {
 
 		$service = new RegisterResolverService(appConfig: $this->appConfig);
 
-		$this->assertSame('reg-42', $service->resolve('queue'));
+		$this->assertSame('reg-42', $service->resolve('skill'));
 	}//end testResolveReturnsConfiguredRegisterId()
 
 	/**
@@ -95,7 +95,7 @@ class RegisterResolverServiceTest extends TestCase {
 
 		$service = new RegisterResolverService(appConfig: $this->appConfig);
 
-		$this->assertSame('reg-shared', $service->resolve('queue'));
+		$this->assertSame('reg-shared', $service->resolve('skill'));
 		$this->assertSame('reg-shared', $service->resolve('contact'));
 	}//end testAllLogicalNamesResolveToSameRegister()
 
@@ -115,8 +115,8 @@ class RegisterResolverServiceTest extends TestCase {
 
 		$service = new RegisterResolverService(appConfig: $this->appConfig);
 
-		$first = $service->resolve('queue');
-		$second = $service->resolve('queue');
+		$first = $service->resolve('skill');
+		$second = $service->resolve('skill');
 
 		$this->assertSame('reg-cached', $first);
 		$this->assertSame($first, $second);

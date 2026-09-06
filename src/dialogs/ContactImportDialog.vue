@@ -6,7 +6,7 @@
 		<div class="import-dialog">
 			<NcTextField
 				:modelValue="query"
-				:label="t('pipelinq', 'Search contacts...')"
+				:label="t('pipelinq', 'Search contacts…')"
 				:showTrailingButton="query !== ''"
 				class="import-dialog__search"
 				@update:modelValue="onSearch"
@@ -43,7 +43,7 @@
 							@click="importContact(contact)">
 							{{
 								importing === contact.uid
-									? t('pipelinq', 'Importing...')
+									? t('pipelinq', 'Importing…')
 									: t('pipelinq', 'Import')
 							}}
 						</NcButton>

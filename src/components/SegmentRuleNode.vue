@@ -31,7 +31,7 @@
 				:path="childPath(index)"
 				@update:node="updateChild(index, $event)"
 				@remove="removeChild(index)"
-				@validateLeaf="$emit('validate-leaf')" />
+				@validateLeaf="$emit('validateLeaf')" />
 
 			<div class="rule-node__group-actions">
 				<NcButton variant="secondary" @click="addCondition">
@@ -77,7 +77,7 @@
 					class="rule-node__value"
 					:aria-label="t('pipelinq', 'Rule value')"
 					@input="onValueInput($event.target.value)"
-					@blur="$emit('validate-leaf')" />
+					@blur="$emit('validateLeaf')" />
 				<input
 					v-else-if="valueInputType === 'date'"
 					:value="node.value"
@@ -85,7 +85,7 @@
 					class="rule-node__value"
 					:aria-label="t('pipelinq', 'Rule value')"
 					@input="onValueInput($event.target.value)"
-					@blur="$emit('validate-leaf')" />
+					@blur="$emit('validateLeaf')" />
 				<input
 					v-else
 					:value="node.value"
@@ -93,7 +93,7 @@
 					class="rule-node__value"
 					:aria-label="t('pipelinq', 'Rule value')"
 					@input="onValueInput($event.target.value)"
-					@blur="$emit('validate-leaf')" />
+					@blur="$emit('validateLeaf')" />
 			</div>
 			<NcButton
 				variant="tertiary"
@@ -115,30 +115,50 @@ import { NcButton, NcSelect } from '@nextcloud/vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 
+// Operator vocabulary matches SegmentService::OPERATOR_TYPE_MATRIX
+// (lib/Service/SegmentService.php) exactly -- these values travel to
+// POST /api/segments/preview and /api/segments unchanged, and a name the
+// service does not recognise is rejected as "operator not supported"
+// (marketing-segments-ui-repair pipelinq#773 follow-up: the component was
+// never mounted, so this vocabulary had never been exercised against the
+// real validator).
 const OPERATORS_BY_TYPE = {
 	string: [
-		{ value: 'eq', label: 'Equals' },
-		{ value: 'ne', label: 'Not equals' },
+		{ value: 'equals', label: 'Equals' },
+		{ value: 'notEquals', label: 'Not equals' },
 		{ value: 'contains', label: 'Contains' },
-		{ value: 'starts_with', label: 'Starts with' },
-		{ value: 'is_empty', label: 'Is empty' },
-		{ value: 'is_not_empty', label: 'Is not empty' },
+	],
+	integer: [
+		{ value: 'equals', label: 'Equals' },
+		{ value: 'notEquals', label: 'Not equals' },
+		{ value: 'greaterThan', label: 'Greater than' },
+		{ value: 'greaterThanOrEqual', label: 'Greater than or equal' },
+		{ value: 'lessThan', label: 'Less than' },
+		{ value: 'lessThanOrEqual', label: 'Less than or equal' },
 	],
 	number: [
-		{ value: 'eq', label: 'Equals' },
-		{ value: 'ne', label: 'Not equals' },
-		{ value: 'gt', label: 'Greater than' },
-		{ value: 'gte', label: 'Greater than or equal' },
-		{ value: 'lt', label: 'Less than' },
-		{ value: 'lte', label: 'Less than or equal' },
+		{ value: 'equals', label: 'Equals' },
+		{ value: 'notEquals', label: 'Not equals' },
+		{ value: 'greaterThan', label: 'Greater than' },
+		{ value: 'greaterThanOrEqual', label: 'Greater than or equal' },
+		{ value: 'lessThan', label: 'Less than' },
+		{ value: 'lessThanOrEqual', label: 'Less than or equal' },
 	],
-	boolean: [{ value: 'eq', label: 'Is true / false' }],
-	date: [
-		{ value: 'before', label: 'Before' },
-		{ value: 'after', label: 'After' },
-		{ value: 'on', label: 'On' },
+	boolean: [
+		{ value: 'equals', label: 'Is true / false' },
+		{ value: 'notEquals', label: 'Is not true / false' },
 	],
+	array: [{ value: 'contains', label: 'Contains' }],
 }
+
+// Additive operators offered on a string field carrying a `format: 'date'`
+// hint (@see fieldFormat below). OPERATOR_TYPE_MATRIX allows `before` /
+// `after` on `string`-typed fields since dates are stored as ISO strings,
+// so these extend OPERATORS_BY_TYPE.string rather than replacing it.
+const DATE_OPERATORS = [
+	{ value: 'before', label: 'Before' },
+	{ value: 'after', label: 'After' },
+]
 
 export default {
 	name: 'SegmentRuleNode',
@@ -181,7 +201,7 @@ export default {
 		},
 	},
 
-	emits: ['update:node', 'remove', 'validate-leaf'],
+	emits: ['update:node', 'remove', 'validateLeaf'],
 	computed: {
 		/**
 		 * Whether this node is an AND/OR group (versus a leaf predicate).
@@ -235,7 +255,8 @@ export default {
 		},
 
 		/**
-		 * Detected type for the currently-selected field (default string).
+		 * The field's JSON-schema type (default string) -- one of the keys
+		 * OPERATOR_TYPE_MATRIX and OPERATORS_BY_TYPE both key on.
 		 *
 		 * @return {string}
 		 */
@@ -244,13 +265,31 @@ export default {
 		},
 
 		/**
-		 * Operators applicable to the current field type.
+		 * Optional format hint on the selected field (e.g. `'date'`), used to
+		 * offer `before` / `after` and a native date input on an otherwise
+		 * plain `string` field.
+		 *
+		 * @return {string|null}
+		 *
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-segment-builder-ui-composes-rule-trees
+		 */
+		fieldFormat() {
+			return this.fieldOption?.format || null
+		},
+
+		/**
+		 * Operators applicable to the current field type, plus the additive
+		 * before/after pair when the field is date-formatted.
 		 *
 		 * @return {Array<{value:string,label:string}>}
+		 *
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-segment-builder-ui-composes-rule-trees
 		 */
 		operatorOptions() {
-			const list =
+			const base =
 				OPERATORS_BY_TYPE[this.fieldType] || OPERATORS_BY_TYPE.string
+			const list =
+				this.fieldFormat === 'date' ? [...base, ...DATE_OPERATORS] : base
 			return list.map((o) => ({
 				value: o.value,
 				label: this.t('pipelinq', o.label),
@@ -273,13 +312,15 @@ export default {
 		 * Native input type for the value field, derived from field type.
 		 *
 		 * @return {string}
+		 *
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-segment-builder-ui-composes-rule-trees
 		 */
 		valueInputType() {
-			if (this.fieldType === 'number') {
-				return 'number'
-			}
-			if (this.fieldType === 'date') {
+			if (this.fieldFormat === 'date') {
 				return 'date'
+			}
+			if (this.fieldType === 'number' || this.fieldType === 'integer') {
+				return 'number'
 			}
 			return 'text'
 		},
@@ -359,6 +400,8 @@ export default {
 		 * Set the leaf's field; reset operator to a sensible default for the type.
 		 *
 		 * @param {object} option NcSelect option (`{value, label, type}`).
+		 *
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-segment-builder-ui-composes-rule-trees
 		 */
 		onFieldChange(option) {
 			const value = option?.value || ''
@@ -366,17 +409,19 @@ export default {
 				OPERATORS_BY_TYPE[option?.type || 'string']
 				|| OPERATORS_BY_TYPE.string
 			this.emitChange({ ...this.node, field: value, operator: list[0].value })
-			this.$emit('validate-leaf')
+			this.$emit('validateLeaf')
 		},
 
 		/**
 		 * Update the leaf's operator.
 		 *
 		 * @param {object} option NcSelect option (`{value, label}`).
+		 *
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-segment-builder-ui-composes-rule-trees
 		 */
 		onOperatorChange(option) {
 			this.emitChange({ ...this.node, operator: option?.value || 'eq' })
-			this.$emit('validate-leaf')
+			this.$emit('validateLeaf')
 		},
 
 		/**
@@ -402,8 +447,8 @@ export default {
 
 <style scoped>
 .rule-node {
-	border-left: 2px solid var(--color-border);
-	padding-left: 8px;
+	border-inline-start: 2px solid var(--color-border);
+	padding-inline-start: 8px;
 	margin: 6px 0;
 }
 

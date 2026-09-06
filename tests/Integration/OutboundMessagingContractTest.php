@@ -288,7 +288,7 @@ class OutboundMessagingContractTest extends TestCase {
 		$this->assertSame('sent', $result['status']);
 		$this->assertSame('MOCK-SMS-0001', $result['externalMessageId']);
 
-		$outbound = $this->rowsBySchema(schema: 'message');
+		$outbound = $this->rowsBySchema(schema: 'channelMessage');
 		$this->assertNotEmpty($outbound, 'outbound message row not persisted');
 
 		$contactmomenten = $this->rowsBySchema(schema: 'ticket');

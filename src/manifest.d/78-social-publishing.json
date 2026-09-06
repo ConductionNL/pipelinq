@@ -1,0 +1,198 @@
+{
+  "menu": [
+    {
+      "id": "MarketingGroup",
+      "label": "Marketing",
+      "order": 130,
+      "children": [
+        {
+          "id": "SocialAccounts",
+          "label": "Social accounts",
+          "icon": "AccountBoxOutline",
+          "route": "SocialAccounts",
+          "order": 60
+        },
+        {
+          "id": "SocialPosts",
+          "label": "Social posts",
+          "icon": "BullhornOutline",
+          "route": "SocialPosts",
+          "order": 62
+        },
+        {
+          "id": "SocialPerformance",
+          "label": "Social performance",
+          "icon": "ChartLine",
+          "route": "SocialPerformance",
+          "order": 64
+        }
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "id": "SocialAccounts",
+      "_note": "Connected accounts as a CUSTOM page rather than a declarative type:index (social-publishing). The reason is not styling: Connect is a three-step conversation the grammar has no verb for. Pipelinq answers WHAT to connect, the browser posts that to OpenRegister's own connect endpoint with the user's session, and the network's consent screen returns to this page's own path. The authorization code and the token never pass through Pipelinq, which is rule 2 of the marketing architecture and cannot be expressed as a form field.",
+      "route": "/social-accounts",
+      "type": "custom",
+      "title": "Social accounts",
+      "component": "SocialAccountsView",
+      "config": {
+        "register": "pipelinq",
+        "schema": "socialAccount"
+      }
+    },
+    {
+      "id": "SocialAccountDetail",
+      "_note": "The same view, addressed per account. It exists because OpenRegister's safeReturnUrl() keeps only the PATH of a proposed return URL: a query string is dropped, so the account being connected has to be IN the path for the browser to be identifiable on the way back from the consent screen.",
+      "route": "/social-accounts/:id",
+      "type": "custom",
+      "title": "Social account",
+      "component": "SocialAccountsView",
+      "config": {
+        "register": "pipelinq",
+        "schema": "socialAccount"
+      }
+    },
+    {
+      "id": "SocialPosts",
+      "_note": "Social posts as a declarative type:index page. Add navigates to SocialPostNew, which mounts the one composing surface the change owns (SocialPostComposeModal): the per-network variants, the live character count against each network's own limit and the submit-for-approval step have no declarative equivalent, so showAdd and showFormDialog stay off. Row view opens SocialPostDetail.",
+      "route": "/social-posts",
+      "type": "index",
+      "title": "Social posts",
+      "config": {
+        "register": "pipelinq",
+        "schema": "socialPost",
+        "documentationUrl": "https://pipelinq.conduction.nl",
+        "showAdd": false,
+        "showFormDialog": false,
+        "showEditAction": false,
+        "showCopyAction": false,
+        "showMassImport": false,
+        "showMassExport": false,
+        "showMassCopy": false,
+        "includeColumns": ["title", "status", "scheduledFor", "publishedAt"],
+        "headerActions": [
+          {
+            "id": "create",
+            "label": "New post",
+            "icon": "Plus",
+            "handler": "navigate",
+            "route": "SocialPostNew"
+          }
+        ],
+        "actions": [
+          {
+            "id": "view",
+            "label": "Open",
+            "icon": "Eye",
+            "handler": "navigate",
+            "route": "SocialPostDetail"
+          }
+        ]
+      }
+    },
+    {
+      "id": "SocialPostNew",
+      "route": "/social-posts/new",
+      "type": "custom",
+      "title": "New post",
+      "component": "SocialPostFormView",
+      "_note": "Mounts SocialPostComposeModal in create mode (social-publishing). Matches the ArticleNew / SegmentNew / TemplateNew convention of a thin route wrapper around the one editing surface the change owns.",
+      "config": {
+        "register": "pipelinq",
+        "schema": "socialPost"
+      }
+    },
+    {
+      "id": "SocialPostDetail",
+      "_note": "Post record as a declarative type:detail page (ADR-062 grid). The post's own metadata auto-renders in the data widget. The RESOLVED text per network and the approval step live in SocialPostVariantsSection (placement before-body, because what the post says is the reason a marketer opened the page), and the per-account outcomes with their retry and share actions live in SocialPublicationsSection (placement end). Neither is lifecycleActions: an approval has to record WHO decided, which the transition grammar has no field for.",
+      "route": "/social-posts/:id",
+      "type": "detail",
+      "title": "Social post",
+      "config": {
+        "register": "pipelinq",
+        "schema": "socialPost",
+        "documentationUrl": "https://pipelinq.conduction.nl",
+        "widgets": [
+          {
+            "id": "social-post-data",
+            "type": "data",
+            "title": "Post details",
+            "icon": "InformationOutline",
+            "content": {
+              "columns": 2,
+              "include": [
+                "status",
+                "scheduledFor",
+                "publishedAt",
+                "campaignId",
+                "articleId",
+                "createdBy",
+                "agentAuthored"
+              ]
+            }
+          }
+        ],
+        "layout": [
+          {
+            "id": "1",
+            "widgetId": "social-post-data",
+            "gridX": 0,
+            "gridY": 0,
+            "gridWidth": 12,
+            "gridHeight": 5
+          }
+        ],
+        "bodyWidgets": [
+          {
+            "id": "social-post-variants",
+            "component": "SocialPostVariantsSection",
+            "title": "What this says per network",
+            "placement": "before-body",
+            "props": {
+              "postId": "@objectId"
+            }
+          },
+          {
+            "id": "social-post-publications",
+            "component": "SocialPublicationsSection",
+            "title": "Where it went",
+            "placement": "end",
+            "props": {
+              "postId": "@objectId"
+            }
+          }
+        ],
+        "sidebar": {
+          "enabled": true,
+          "showMetadata": true,
+          "tabs": [
+            {
+              "id": "audit",
+              "label": "History",
+              "icon": "History",
+              "widgets": [
+                {
+                  "type": "audit"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "SocialPerformance",
+      "_note": "Engagement ranking as a CUSTOM page. The ranking divides engagement by the follower count the daily pull recorded, which no single-schema declarative view can express, and the page renders its table shell before the one request that fills it (pipelinq#1781: never await a per-object fan-out before painting).",
+      "route": "/social-performance",
+      "type": "custom",
+      "title": "Social performance",
+      "component": "SocialPerformanceView",
+      "config": {
+        "register": "pipelinq",
+        "schema": "socialPublication"
+      }
+    }
+  ]
+}

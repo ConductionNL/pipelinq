@@ -31,7 +31,7 @@
 /* Skip-link for keyboard users; hidden until focused (WCAG 2.4.1). */
 .portal-skip-link {
 	position: absolute;
-	left: -10000px;
+	inset-inline-start: -10000px;
 	top: auto;
 	width: 1px;
 	height: 1px;

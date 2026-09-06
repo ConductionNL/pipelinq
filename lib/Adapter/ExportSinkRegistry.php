@@ -62,6 +62,7 @@ class ExportSinkRegistry {
 	 * @param ExportSinkInterface $sink The adapter.
 	 *
 	 * @return void
+	 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#requirement-destination-configuration-and-validation-req-bie-001
 	 */
 	public function register(ExportSinkInterface $sink): void {
 		$this->sinks[$sink->getType()] = $sink;
@@ -73,6 +74,7 @@ class ExportSinkRegistry {
 	 * @param string $type The destination type slug.
 	 *
 	 * @return bool True when supported.
+	 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#requirement-destination-configuration-and-validation-req-bie-001
 	 */
 	public function supports(string $type): bool {
 		return isset($this->sinks[$type]);
@@ -86,6 +88,7 @@ class ExportSinkRegistry {
 	 * @return ExportSinkInterface The adapter.
 	 *
 	 * @throws \InvalidArgumentException When no adapter handles the type.
+	 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#requirement-destination-configuration-and-validation-req-bie-001
 	 */
 	public function get(string $type): ExportSinkInterface {
 		if (isset($this->sinks[$type]) === false) {

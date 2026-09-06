@@ -85,8 +85,7 @@
 				<ProspectCard
 					v-for="prospect in prospectStore.prospects"
 					:key="prospect.kvkNumber"
-					:prospect="prospect"
-					@createLead="onCreateLead" />
+					:prospect="prospect" />
 
 				<div
 					v-if="prospectStore.cachedAt"
@@ -103,7 +102,6 @@
 </template>
 
 <script>
-import { showError, showSuccess } from '@nextcloud/dialogs'
 import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
 import Refresh from 'vue-material-design-icons/Refresh.vue'
 import ProspectCard from './ProspectCard.vue'
@@ -143,29 +141,6 @@ export default {
 		 */
 		async refresh() {
 			await this.prospectStore.fetchProspects(true)
-		},
-
-		/**
-		 * @param {object} prospect The prospect to raise a lead for.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-5
-		 */
-		async onCreateLead(prospect) {
-			const result = await this.prospectStore.createLeadFromProspect(prospect)
-			if (result.error) {
-				showError(result.error)
-			} else {
-				showSuccess(
-					t('pipelinq', 'Lead created from {name}', {
-						name: prospect.tradeName,
-					}),
-				)
-				if (result.lead?.id) {
-					this.$router.push({
-						name: 'LeadDetail',
-						params: { id: result.lead.id },
-					})
-				}
-			}
 		},
 
 		/**

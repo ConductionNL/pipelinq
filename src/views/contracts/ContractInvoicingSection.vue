@@ -137,6 +137,8 @@ export default {
 	methods: {
 		/**
 		 * Fetch the current send-to-invoicing availability for this contract.
+		 *
+		 * @spec openspec/specs/contract-renewal-tracking/spec.md#requirement-contract-to-invoicing-handoff-emit
 		 */
 		async loadAvailability() {
 			if (!this.resolvedId) {
@@ -156,7 +158,7 @@ export default {
 					status: data.status || '',
 					canSend: !!data.canSend,
 				}
-			} catch (e) {
+			} catch {
 				this.availability = { ...DEFAULT_AVAILABILITY }
 			} finally {
 				this.loading = false
@@ -227,7 +229,7 @@ export default {
 			try {
 				await navigator.clipboard.writeText(this.lastInvoiceReference)
 				showSuccess(t('pipelinq', 'Invoice reference copied.'))
-			} catch (e) {
+			} catch {
 				showError(t('pipelinq', 'Could not copy the invoice reference.'))
 			}
 		},

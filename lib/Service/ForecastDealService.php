@@ -44,6 +44,9 @@ use OCP\IAppConfig;
  * OpenRegister's `x-openregister-lifecycle` already owns the `status` field and
  * supports only one enforced lifecycle field per schema, so this one is enforced
  * in PHP (the deal listeners' revert-after-write), NOT by OR's listener.
+ *
+ * @spec exclude forecast has no owning requirement. pipeline-insights defers its config
+ *   scenario to admin-settings, which never grew one
  */
 class ForecastDealService {
 	/**

@@ -208,6 +208,7 @@ class BerichtenboxService {
 	 * @param int $limit Maximum messages per run (default 100).
 	 *
 	 * @return int Number of messages processed.
+	 * @spec openspec/specs/portal-contribution/spec.md
 	 */
 	public function dispatchQueuedMessages(int $limit = 100): int {
 		$messages = $this->findDispatchableMessages(limit: $limit);
@@ -274,6 +275,7 @@ class BerichtenboxService {
 	 * @param string $readAtIso Read timestamp (ISO 8601).
 	 *
 	 * @return bool True iff a matching message was found and updated.
+	 * @spec openspec/specs/portal-contribution/spec.md
 	 */
 	public function handleReadReceipt(string $logiusMessageId, string $readAtIso): bool {
 		$message = $this->findMessageByLogiusId(logiusMessageId: $logiusMessageId);
@@ -300,6 +302,7 @@ class BerichtenboxService {
 	 * Run the daily 5-working-day fallback pass.
 	 *
 	 * @return int Number of fallback emails sent.
+	 * @spec openspec/specs/portal-contribution/spec.md
 	 */
 	public function processFallbackQueue(): int {
 		$unread = $this->findUnreadSentMessages();

@@ -32,6 +32,8 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Service for searching and importing Nextcloud contacts into Pipelinq.
+ *
+ * @spec openspec/specs/contacts-sync/spec.md#requirement-write-back-sync-mvp
  */
 class ContactSyncService {
 	/**
@@ -281,7 +283,11 @@ class ContactSyncService {
 	 * @return ?array The contact data or null if not found.
 	 */
 	private function findContactByUid(string $uid): ?array {
-		$results = $this->contactsManager->search($uid, ['UID'], ['limit' => 1]);
+		// 'types' => true so multi-valued EMAIL/TEL/X-SOCIALPROFILE come back
+		// as [{type, value}, ...] instead of a plain list of strings —
+		// ContactDataBuilder needs the TYPE to build typed emails[]/phones[]/
+		// socialProfiles[] entries on import.
+		$results = $this->contactsManager->search($uid, ['UID'], ['limit' => 1, 'types' => true]);
 
 		foreach ($results as $r) {
 			if (($r['UID'] ?? '') === $uid) {

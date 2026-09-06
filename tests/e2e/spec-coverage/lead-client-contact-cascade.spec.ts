@@ -17,9 +17,10 @@
  * Dutch and CI renders English.
  */
 
-import { test, expect, type Page } from '@playwright/test'
+import type { Page } from '@playwright/test'
 
-import { dismissSupportDialog, dismissWalkthrough } from '../helpers/pipelinq'
+import { expect, test } from '@playwright/test'
+import { dismissSupportDialog, dismissWalkthrough } from '../helpers/pipelinq.ts'
 
 /** Open the New Lead dialog from the dashboard's declarative header action. */
 async function openNewLeadDialog(page: Page) {

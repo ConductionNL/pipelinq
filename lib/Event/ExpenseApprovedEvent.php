@@ -58,6 +58,7 @@ class ExpenseApprovedEvent extends Event {
 	 * Get the expense UUID.
 	 *
 	 * @return string The expense UUID.
+	 * @spec openspec/specs/time-approval-workflow/spec.md#requirement-approved-time-entries-are-emitted-to-shillinqs-time-intake
 	 */
 	public function getExpenseUuid(): string {
 		return $this->expenseUuid;
@@ -67,6 +68,7 @@ class ExpenseApprovedEvent extends Event {
 	 * Get the expense payload.
 	 *
 	 * @return array<string, mixed> The expense data.
+	 * @spec openspec/specs/time-approval-workflow/spec.md#requirement-approved-time-entries-are-emitted-to-shillinqs-time-intake
 	 */
 	public function getExpense(): array {
 		return $this->expense;
@@ -76,6 +78,7 @@ class ExpenseApprovedEvent extends Event {
 	 * Get the approver's user id.
 	 *
 	 * @return string The user id.
+	 * @spec openspec/specs/time-approval-workflow/spec.md#requirement-approved-time-entries-are-emitted-to-shillinqs-time-intake
 	 */
 	public function getApprovedBy(): string {
 		return $this->approvedBy;
@@ -85,6 +88,7 @@ class ExpenseApprovedEvent extends Event {
 	 * Get the ISO 8601 approval timestamp.
 	 *
 	 * @return string The timestamp.
+	 * @spec openspec/specs/time-approval-workflow/spec.md#requirement-approved-time-entries-are-emitted-to-shillinqs-time-intake
 	 */
 	public function getApprovedAt(): string {
 		return $this->approvedAt;

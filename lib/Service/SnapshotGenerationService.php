@@ -47,6 +47,8 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  *  roll-up plus persistence and notification in one cohesive orchestrator
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)   orchestrates rollup, exchange
  *  rate, fiscal period, quota, notification and OpenRegister collaborators by design
+ *
+ * @spec exclude forecast snapshot generation; see the forecast gap above
  */
 class SnapshotGenerationService {
 	/**

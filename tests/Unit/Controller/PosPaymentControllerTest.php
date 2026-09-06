@@ -367,11 +367,6 @@ class PosPaymentControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testWebhookDoesNotAcknowledgeAnUnprocessedDelivery(): void {
-		$this->markTestSkipped(
-			'BUG: a crash inside handleWebhook is answered HTTP 200 {"status":"deferred"}, '
-			. 'so the provider never redelivers and the settlement is lost — see coordinator report'
-		);
-
 		// Unreachable while the bug stands; kept so the intended contract is on record.
 		$this->withBody(['id' => 'tr_1']);
 		$this->withHeaders(['X-Mollie-Signature' => 'good-signature']);

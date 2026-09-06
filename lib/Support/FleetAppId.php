@@ -41,6 +41,9 @@ use Throwable;
 
 /**
  * Resolves fleet app ids across the in-flight rename.
+ *
+ * @spec exclude infrastructure utility with no feature requirement of its own; it is
+ *   exercised through the features that call it
  */
 final class FleetAppId
 {
@@ -77,6 +80,8 @@ final class FleetAppId
      * @param string      $canonical  Canonical (new) app name, e.g. 'integriq'.
      *
      * @return string|null The installed id, or null when the app is absent.
+     * @spec exclude infrastructure utility with no feature requirement of its own; it is
+     *   exercised through the features that call it
      */
     public static function resolve(IAppManager $appManager, string $canonical): ?string
     {
@@ -104,6 +109,8 @@ final class FleetAppId
      * @param string      $canonical  Canonical (new) app name, e.g. 'integriq'.
      *
      * @return bool True when the app is present under some id.
+     * @spec exclude infrastructure utility with no feature requirement of its own; it is
+     *   exercised through the features that call it
      */
     public static function isInstalled(IAppManager $appManager, string $canonical): bool
     {
@@ -122,6 +129,8 @@ final class FleetAppId
      * @param string      $canonical  Canonical (new) app name, e.g. 'integriq'.
      *
      * @return bool True when present and enabled for the current user.
+     * @spec exclude infrastructure utility with no feature requirement of its own; it is
+     *   exercised through the features that call it
      */
     public static function isEnabledForUser(IAppManager $appManager, string $canonical): bool
     {
@@ -152,6 +161,8 @@ final class FleetAppId
      * @param string      $suffix     Path after the app segment, no leading slash.
      *
      * @return string|null The path, or null when the app is not installed.
+     * @spec exclude infrastructure utility with no feature requirement of its own; it is
+     *   exercised through the features that call it
      */
     public static function appPath(IAppManager $appManager, string $canonical, string $suffix = ''): ?string
     {

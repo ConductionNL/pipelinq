@@ -41,6 +41,8 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Admin endpoints for Berichtenbox ops.
+ *
+ * @spec openspec/specs/portal-contribution/spec.md
  */
 class BerichtenboxAdminController extends Controller {
 	/**
@@ -67,6 +69,7 @@ class BerichtenboxAdminController extends Controller {
 	 * @auth admin-only Re-dispatches a citizen message on any tenant's behalf; restricted to server administrators by the framework default.
 	 *
 	 * @return JSONResponse
+	 * @spec openspec/specs/portal-contribution/spec.md
 	 */
 	public function retry(string $id): JSONResponse {
 		try {

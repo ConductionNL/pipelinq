@@ -44,8 +44,7 @@
 
 import { defineConfig, devices } from '@playwright/test'
 import * as path from 'path'
-
-import { resolveBaseUrl } from './base-url'
+import { resolveBaseUrl } from './base-url.ts'
 
 const APP_ROOT = path.resolve(__dirname, '..', '..')
 const STORAGE_STATE = path.resolve(__dirname, '.auth', 'user.json')

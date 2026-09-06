@@ -145,7 +145,7 @@
 				<NcButton variant="primary" :disabled="saving" @click="save">
 					{{
 						saving
-							? t('pipelinq', 'Saving...')
+							? t('pipelinq', 'Saving…')
 							: t('pipelinq', 'Save ICP Settings')
 					}}
 				</NcButton>

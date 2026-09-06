@@ -20,14 +20,16 @@
  *
  * Created objects are tracked + removed via the OR object API in afterAll.
  */
-import { test, expect, Locator, Page } from '@playwright/test'
+import type { Locator, Page } from '@playwright/test'
+
+import { expect, test } from '@playwright/test'
 import {
-	openApp,
-	navClick,
 	dismissSupportDialog,
+	navClick,
+	openApp,
 	openIndexSearch,
-} from '../helpers/pipelinq'
-import { FixtureSession, TEST_PREFIX } from './helpers/fixtures'
+} from '../helpers/pipelinq.ts'
+import { FixtureSession, TEST_PREFIX } from './helpers/fixtures.ts'
 
 const NAME = `${TEST_PREFIX}-Cnd Werkbank`
 const SKU = `SKU-${TEST_PREFIX}`

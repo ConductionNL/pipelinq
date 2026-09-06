@@ -434,7 +434,23 @@ The following questions need further investigation as the app matures:
 
 6. **Lead-to-order flow**: Leads can be won, but order/product/finance management is out of scope for now. When should Pipelinq support post-sale workflows?
 
-## 6. References
+## 6. Marketing suite
+
+The Marketing group grows from email blasts into lists, a content hub, social publishing, campaigns with attribution, and search and competitor intelligence. The design keeps five rules: unsubscribes and clicks are recorded by Pipelinq whatever transport sends the mail; no secret ever sits on an object (credentials resolve through OpenRegister's broker into keepiq, ADR-064); every external call runs through OpenConnector (ADR-067, ADR-091); hermiq drafts and analyses but never sends or publishes; money stays in shillinq and public pages stay in portaliq.
+
+```mermaid
+flowchart LR
+  crm[Pipelinq CRM<br/>clients · contacts · leads] -- segments --> mk[Pipelinq Marketing<br/>articles · lists · mailings<br/>social · campaigns · intelligence]
+  hermiq[hermiq agents] -- drafts, human-approved --> mk
+  mk -- credentialRef --> broker[OpenRegister broker] --> keepiq[keepiq]
+  mk -- sends · publishes · pulls --> oc[OpenConnector egress<br/>mail · social APIs · Search Console · Matomo]
+  mk -- landing page + form --> portaliq[portaliq]
+  shillinq[shillinq] -- revenue signals --> mk
+```
+
+The full design, the data model additions, the connection model for social accounts and the six phases are on the [marketing architecture](marketing-architecture.md) page. The user-facing summary is the [marketing feature page](../Features/marketing.md).
+
+## 7. References
 
 ### Primary Standards (International)
 - [Schema.org](https://schema.org/): Linked data vocabulary (primary data model)

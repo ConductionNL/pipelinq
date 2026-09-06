@@ -26,10 +26,13 @@ namespace OCA\Pipelinq\Service;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
 use RuntimeException;
+use Throwable;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Service for importing Nextcloud contacts into Pipelinq objects.
+ *
+ * @spec openspec/specs/contacts-sync/spec.md#requirement-write-back-sync-mvp
  */
 class ContactImportService {
 	/**
@@ -123,16 +126,102 @@ class ContactImportService {
 			throw new RuntimeException('Pipelinq: register or schema is not configured for the contact import.');
 		}
 
+		// 🔴 AN IMPORT IS NOT ALWAYS A CREATE.
+		//
+		// This passed `null` as the uuid unconditionally, so every import
+		// CREATED. Re-importing one addressbook contact — which is the normal
+		// thing to do after editing it in Contacts, and what a re-run of a bulk
+		// import does to every row — produced a duplicate client each time,
+		// with no error and nothing in the UI to say so.
+		//
+		// `contactsUid` is the addressbook contact's own UID and is the
+		// identity that survives both sides, so it is what an existing object
+		// is found by. Found => UPDATE that object; not found => create.
+		$existingUuid = $this->findExistingByContactsUid(
+			objectService: $objectService,
+			registerId: $registerId,
+			schemaId: $schemaId,
+			contactsUid: (string)($data['contactsUid'] ?? '')
+		);
+
 		$created = $objectService->saveObject(
 			$data,
 			[],
 			$registerId,
 			$schemaId,
-			null
+			$existingUuid
 		);
 
 		return $this->serializeResult(result: $created);
 	}//end saveAndSerialize()
+
+	/**
+	 * The uuid of an object already imported from this addressbook contact.
+	 *
+	 * Returns null when there is none, when the uid is empty, or when the
+	 * lookup itself fails — all three mean "no known object", and the caller
+	 * then creates. A failed lookup deliberately does NOT abort the import: the
+	 * cost of that is the duplicate this method exists to avoid, which is
+	 * better than losing the import outright.
+	 *
+	 * @param object $objectService The OpenRegister object service.
+	 * @param string $registerId The register id.
+	 * @param string $schemaId The schema id.
+	 * @param string $contactsUid The addressbook contact UID.
+	 *
+	 * @return string|null The existing uuid, or null to create.
+	 */
+	private function findExistingByContactsUid(
+		object $objectService,
+		string $registerId,
+		string $schemaId,
+		string $contactsUid,
+	): ?string {
+		if ($contactsUid === '') {
+			return null;
+		}
+
+		try {
+			// Register/schema go INSIDE `filters`: prepareFindAllConfig() reads
+			// them from there and nowhere else, and a top-level pair silently
+			// resolves no context and answers [].
+			$rows = $objectService->findAll(
+				[
+					'filters' => [
+						'register' => $registerId,
+						'schema' => $schemaId,
+						'contactsUid' => $contactsUid,
+					],
+					'limit' => 1,
+				]
+			);
+		} catch (Throwable $e) {
+			// No logger on this class, and adding one for a swallowed lookup is
+			// not worth the constructor change: the caller creates, which is the
+			// pre-existing behaviour, so a failed lookup can only cost the
+			// duplicate this method exists to avoid.
+			unset($e);
+			return null;
+		}
+
+		foreach ((array)$rows as $row) {
+			$array = $row;
+			if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
+				$array = $row->jsonSerialize();
+			}
+
+			if (is_array($array) === false) {
+				continue;
+			}
+
+			$uuid = (string)($array['@self']['id'] ?? $array['id'] ?? '');
+			if ($uuid !== '') {
+				return $uuid;
+			}
+		}
+
+		return null;
+	}//end findExistingByContactsUid()
 
 	/**
 	 * Serialize an object or array result to an array.

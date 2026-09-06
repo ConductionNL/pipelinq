@@ -30,7 +30,7 @@ export default {
 		 * The `payload_json` of the event-log row being inspected.
 		 */
 		payload: {
-			type: [Object, Array, String, Number, Boolean],
+			type: [Boolean, Object, Array, String, Number],
 			default: null,
 		},
 	},
@@ -47,7 +47,7 @@ export default {
 		pretty() {
 			try {
 				return JSON.stringify(this.payload, null, 2)
-			} catch (e) {
+			} catch {
 				return String(this.payload)
 			}
 		},

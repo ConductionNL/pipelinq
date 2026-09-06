@@ -160,7 +160,7 @@
           },
           "avgBsnPolicyOutboundGuardRule": {
             "type": "string",
-            "description": "OpenConnector Rule slug guarding outbound responses against raw-BSN reconstruction (after-timing; adapter as-built: vng-avg-bsn-policy-outbound-guard). Not in this leaf's original design — the adapter split AVG BSN handling into two Rule objects because its `rule.timing` property is single-valued.",
+            "description": "OpenConnector Rule slug guarding outbound responses against raw-BSN reconstruction (after-timing; adapter as-built: vng-avg-bsn-policy-outbound-guard). Not in this leaf's original design: the adapter split AVG BSN handling into two Rule objects because its `rule.timing` property is single-valued.",
             "maxLength": 128,
             "title": "AVG BSN Policy Outbound Guard Rule"
           },

@@ -280,6 +280,10 @@ export default {
 			return '€' + num.toLocaleString('nl-NL', { maximumFractionDigits: 0 })
 		},
 
+		/**
+		 * @spec exclude forecast snapshots have no owning requirement, see
+		 *   ForecastSettings::load for the same gap
+		 */
 		async loadSnapshots() {
 			this.loading = true
 			try {
@@ -288,7 +292,7 @@ export default {
 					level: this.childLevel,
 				})
 				this.rows = data.snapshots || []
-			} catch (error) {
+			} catch {
 				this.rows = []
 			} finally {
 				this.loading = false
@@ -403,7 +407,7 @@ export default {
 
 .forecast-table th,
 .forecast-table td {
-	text-align: left;
+	text-align: start;
 	padding: 8px 12px;
 	border-bottom: 1px solid var(--color-border);
 }
@@ -414,7 +418,7 @@ export default {
 }
 
 .forecast-table__badge {
-	margin-left: 6px;
+	margin-inline-start: 6px;
 	font-size: 0.8em;
 	color: var(--color-error);
 	cursor: help;

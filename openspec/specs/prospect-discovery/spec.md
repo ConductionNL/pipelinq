@@ -534,9 +534,24 @@ The system MUST ensure prospect discovery and data storage complies with GDPR (A
 
 ---
 
-### Requirement: Prospect-to-Lead Conversion
+### Requirement: Prospect-to-Client Conversion
 
-The system MUST provide a structured workflow for converting prospects into qualified leads with full data transfer and tracking.
+A prospect is not a separate kind of record. It is a company that discovery has
+found and that is not a client yet; once it is worth pursuing it becomes an
+ordinary `client` with no contract. There is deliberately no `prospect` schema,
+and adding one would split the same organisation across two data models.
+
+The system MUST let a user turn a discovered prospect into a stored client in
+one action. Discovery itself stays ephemeral: results are live KvK /
+OpenCorporates hits held in memory, and only this explicit action persists
+anything.
+
+The created client MUST carry `type: organization` and the prospect's KVK
+number, and MUST be created through the contact-first path so the required
+`contactsUid` is provisioned — a direct object save is rejected without it.
+
+A lead is NOT created here. A lead now requires a client, so the client has to
+exist first; creating the lead is a separate step from the client itself.
 
 #### Scenario: Single prospect conversion
 - GIVEN a prospect with fit score 85 in the discovery widget
@@ -560,12 +575,14 @@ The system MUST provide a structured workflow for converting prospects into qual
 - AND the system MUST display: "Client already exists: Acme B.V. — lead will be linked to existing client"
 - AND the user MUST confirm or cancel the conversion
 
-#### Scenario: Conversion with qualification fields
-- GIVEN a prospect being converted to a lead
-- WHEN the conversion dialog opens
-- THEN the system MUST additionally ask for: estimated deal value, expected close quarter, assigned sales rep, priority (high/medium/low)
-- AND these fields MUST be optional (conversion can proceed without them)
-- AND the assigned sales rep field MUST default to the current user
+#### Scenario: Adding a prospect as a client
+
+- GIVEN a discovered prospect that is not yet a client
+- WHEN the user chooses "Add as client" on its row
+- THEN the system MUST create a `client` with `type: organization`, the prospect's trade name, its address and its KVK number
+- AND the client MUST have no contract, which is what makes it a prospect rather than a customer
+- AND the row MUST disappear from the discovery list, because discovery already excludes companies matching an existing client by name and a stale row would invite adding the same company twice
+- AND the user MUST be told the client was created, or told why it failed
 
 ---
 
@@ -760,7 +777,7 @@ _(none)_
 - **Prospect outreach tracking:** Not implemented -- no activity logging on prospects.
 - **GDPR prospect data retention:** Not implemented -- no automated cleanup or retention policies.
 - **Prospect-to-lead bulk conversion:** Not implemented -- only single conversion exists.
-- **Conversion duplicate prevention:** Not implemented -- no check for existing clients during conversion.
+- **Conversion duplicate prevention:** Handled by exclusion rather than a check at conversion time: discovery filters out companies whose name matches a stored client, and the added row is removed from the list immediately.
 - **Market segment analysis:** Not implemented -- no analytical views.
 - **Competitor intelligence:** Not implemented.
 - **Score breakdown visibility:** Not implemented -- score is shown as a percentage badge but no breakdown tooltip.

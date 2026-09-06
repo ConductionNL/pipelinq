@@ -3,13 +3,13 @@
     "registers": {
       "pipelinq": {
         "schemas": [
-          "timeEntry"
+          "billingTimeEntry"
         ]
       }
     },
     "schemas": {
-      "timeEntry": {
-        "slug": "timeEntry",
+      "billingTimeEntry": {
+        "slug": "billingTimeEntry",
         "title": "Time Entry",
         "icon": "ClockOutline",
         "version": "1.2.0",
@@ -78,11 +78,6 @@
             "description": "UUID of the related lead, if any.",
             "title": "Lead"
           },
-          "project": {
-            "type": "string",
-            "description": "UUID of the related project, if any.",
-            "title": "Project"
-          },
           "approvedBy": {
             "type": "string",
             "description": "User UID of the approver.",
@@ -128,7 +123,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "timeEntry",
+          "schema": "billingTimeEntry",
           "slug": "time-entry-wip-synced-1"
         },
         "title": "Adviesgesprek intake De Vries BV",
@@ -145,7 +140,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "timeEntry",
+          "schema": "billingTimeEntry",
           "slug": "time-entry-wip-synced-2"
         },
         "title": "Technische implementatie OpenRegister module",
@@ -162,7 +157,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "timeEntry",
+          "schema": "billingTimeEntry",
           "slug": "time-entry-wip-synced-3"
         },
         "title": "Onderzoek algoritmisch routeren vergunningaanvragen",
@@ -179,7 +174,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "timeEntry",
+          "schema": "billingTimeEntry",
           "slug": "time-entry-wip-pending-1"
         },
         "title": "Projectopstartgesprek subsidieportaal GroenNet",
@@ -196,7 +191,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "timeEntry",
+          "schema": "billingTimeEntry",
           "slug": "time-entry-wip-failed-1"
         },
         "title": "ZZP-advies supply chain optimalisatie",
