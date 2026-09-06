@@ -225,10 +225,34 @@
 					data-testid="campaign-traffic">
 					<h3>{{ t('pipelinq', 'Site traffic from this campaign') }}</h3>
 					<p
-						v-if="trafficConnected === null"
+						v-if="trafficState === 'loading'"
 						class="performance-dashboard__empty"
 						data-testid="campaign-traffic-loading">
 						{{ t('pipelinq', 'Loading site traffic') }}
+					</p>
+					<p
+						v-else-if="trafficState === 'no-blasts'"
+						class="performance-dashboard__empty"
+						data-testid="campaign-traffic-no-blasts">
+						{{ t('pipelinq', 'No blasts yet.') }}
+						{{
+							t(
+								'pipelinq',
+								'Send a blast, and the sessions its campaign brought in appear here.',
+							)
+						}}
+					</p>
+					<p
+						v-else-if="trafficState === 'unreadable'"
+						class="performance-dashboard__empty"
+						data-testid="campaign-traffic-unreadable">
+						{{ t('pipelinq', 'Site traffic could not be read.') }}
+						{{
+							t(
+								'pipelinq',
+								'Every performance request failed. Reload the page, and check the server log if it keeps happening.',
+							)
+						}}
 					</p>
 					<p
 						v-else-if="trafficConnected === false"
@@ -310,6 +334,7 @@ import { CnStatusBadge } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
+import { trafficOutcome } from '../../services/campaignTraffic.js'
 
 const OVERVIEW_LIMIT = 50
 /** How many per-blast attribution reads may be in flight at once. */
@@ -338,6 +363,21 @@ export default {
 			// answers, then whether a portal is connected.
 			trafficConnected: null,
 			trafficRows: [],
+			// WHY THIS EXISTS RATHER THAN `trafficConnected === null`. That one
+			// value used to carry three different meanings — still loading,
+			// nothing to ask, and every ask failed — and the template read all
+			// three as "loading". An instance with no blasts therefore showed a
+			// spinner that never stopped, because `fetchTrafficRows` iterates
+			// the blast list and there was nothing to iterate: no request was
+			// ever sent, so nothing ever set the flag.
+			//
+			// Measured on the development run of 2026-09-06: the page fetched
+			// `GET /api/blasts?limit=50`, got 200 with an empty list, made ZERO
+			// `/performance` calls, and sat on "Loading site traffic" until the
+			// e2e assertion gave up 60 s later.
+			//
+			// 'loading' | 'no-blasts' | 'unreadable' | 'answered'
+			trafficState: 'loading',
 			/** Whether the Attribution tab's per-blast reads have been started. */
 			attributionRequested: false,
 			overviewSortKey: 'sent',
@@ -645,16 +685,24 @@ export default {
 		async fetchTrafficRows() {
 			const rows = []
 			let connected = null
+			// Counted, not inferred. "No answer" has two causes that need
+			// different words: there was no blast to ask about, or every ask
+			// failed. Neither is "loading", and neither may leave the spinner up.
+			let asked = 0
+			let answered = 0
+
 			for (const blast of this.blasts) {
 				const id = blast.id || blast.uuid || blast.slug
 				if (!id) {
 					continue
 				}
+				asked += 1
 				try {
 					const url = generateUrl(
 						`/apps/pipelinq/api/blasts/${id}/performance`,
 					)
 					const { data } = await axios.get(url)
+					answered += 1
 					connected = Boolean(data?.connected)
 					if (!connected) {
 						break
@@ -671,11 +719,16 @@ export default {
 						})
 					}
 				} catch {
-					// Skip; keep loop alive.
+					// Skip; keep loop alive. The count above is what makes this
+					// swallow visible: a run where every request threw ends with
+					// asked > 0 and answered === 0, which the block names.
 				}
 			}
+
 			this.trafficConnected = connected
 			this.trafficRows = rows
+
+			this.trafficState = trafficOutcome({ asked, answered })
 		},
 
 		/**
