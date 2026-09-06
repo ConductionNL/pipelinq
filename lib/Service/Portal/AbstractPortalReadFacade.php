@@ -31,6 +31,11 @@ namespace OCA\Pipelinq\Service\Portal;
 
 /**
  * Base class for per-customer scoped read facades.
+ *
+ * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+ *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+ *   sessions, tokens, delegation, documents, invoices, orders, exports and
+ *   audit are all unspecified
  */
 abstract class AbstractPortalReadFacade {
 	/**
@@ -95,6 +100,10 @@ abstract class AbstractPortalReadFacade {
 	 * @param int $perPage The page size.
 	 *
 	 * @return array{total: int, page: int, perPage: int, items: array<int, array<string, mixed>>}
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function getForAccount(array $account, int $page = 1, int $perPage = 10): array {
 		$page = max(1, $page);
@@ -140,6 +149,10 @@ abstract class AbstractPortalReadFacade {
 	 * @param string $id The object id.
 	 *
 	 * @return array<string, mixed>|null The row, or null.
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function getOneForAccount(array $account, string $id): ?array {
 		$object = $this->reader->find($this->schemaKey(), $id);

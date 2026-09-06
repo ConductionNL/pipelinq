@@ -36,6 +36,9 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  *
  * Overrides never touch the underlying deals; they are independent records the
  * {@see ForecastService::computeRollUp()} reads when applying overrides.
+ *
+ * @spec exclude forecast has no owning requirement. pipeline-insights defers its config
+ *   scenario to admin-settings, which never grew one
  */
 class ForecastOverrideService {
 	/**
@@ -155,6 +158,8 @@ class ForecastOverrideService {
 	 * @param string $id The override UUID.
 	 *
 	 * @return array<string, mixed>|null The override data, or null.
+	 * @spec exclude forecast has no owning requirement. pipeline-insights defers its config
+	 *   scenario to admin-settings, which never grew one
 	 */
 	public function getOverride(string $id): ?array {
 		[$register, $schema] = $this->config();
@@ -181,6 +186,8 @@ class ForecastOverrideService {
 	 * @param string $id The override UUID.
 	 *
 	 * @return bool True when deleted.
+	 * @spec exclude forecast has no owning requirement. pipeline-insights defers its config
+	 *   scenario to admin-settings, which never grew one
 	 */
 	public function deleteOverride(string $id): bool {
 		[$register, $schema] = $this->config();

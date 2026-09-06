@@ -352,7 +352,7 @@ class ExpenseApSyncTest extends TestCase {
 		);
 
 		$schemaMap = $this->createMock(SchemaMapService::class);
-		$schemaMap->method('resolveEntityType')->willReturn('expense');
+		$schemaMap->method('resolveEntityType')->willReturn('billableExpense');
 
 		$this->deferral = new \OCA\Pipelinq\Tests\Unit\Listener\RecordingDeferralService();
 

@@ -52,7 +52,6 @@ export default {
 				const profile = (res.data && res.data.agentProfile) || {}
 				this.isAvailable = Boolean(profile.isAvailable)
 			} catch (e) {
-				// eslint-disable-next-line no-console
 				console.warn('[WerkplekHeaderActions] availability fetch failed', e)
 			}
 		},

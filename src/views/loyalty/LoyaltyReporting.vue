@@ -217,11 +217,15 @@ export default {
 					this.selectedProgramme = this.programmeOptions[0]
 					this.loadKpis()
 				}
-			} catch (error) {
+			} catch {
 				showError(this.t('pipelinq', 'Failed to load programmes'))
 			}
 		},
 
+		/**
+		 * @spec exclude the loyalty-program change is archived and no spec inherited
+		 *   loyalty; there is no loyalty spec at all
+		 */
 		async loadKpis() {
 			if (!this.selectedProgramme) {
 				return
@@ -238,7 +242,7 @@ export default {
 				)
 				const response = await axios.get(url)
 				this.kpis = response.data
-			} catch (error) {
+			} catch {
 				showError(this.t('pipelinq', 'Failed to load KPIs'))
 			} finally {
 				this.loading = false
@@ -324,7 +328,7 @@ export default {
 
 .loyalty-reporting__table th,
 .loyalty-reporting__table td {
-	text-align: left;
+	text-align: start;
 	padding: 0.5rem;
 }
 </style>

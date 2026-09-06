@@ -372,7 +372,7 @@ export default {
 				}
 				const data = await response.json()
 				this.entry = data.entry || {}
-			} catch (e) {
+			} catch {
 				showError(t('pipelinq', 'Could not load audit entry.'))
 				this.entry = {}
 			} finally {
@@ -426,7 +426,7 @@ export default {
 						),
 					)
 				}
-			} catch (e) {
+			} catch {
 				showError(t('pipelinq', 'Verification failed.'))
 			} finally {
 				this.busy = false
@@ -438,6 +438,7 @@ export default {
 		 *
 		 * @param {string} value The ISO timestamp.
 		 * @return {string} The formatted value.
+		 * @spec exclude display formatter: ISO timestamp to an nl-NL date
 		 */
 		formatTimestamp(value) {
 			if (!value) {
@@ -452,7 +453,7 @@ export default {
 					minute: '2-digit',
 					second: '2-digit',
 				})
-			} catch (e) {
+			} catch {
 				return value
 			}
 		},
@@ -462,6 +463,7 @@ export default {
 		 *
 		 * @param {number|string} cents The amount in cents.
 		 * @return {string} The formatted EUR value.
+		 * @spec exclude display formatter: integer cents to a localised EUR string
 		 */
 		formatEur(cents) {
 			const value = Number.isFinite(Number(cents)) ? Number(cents) / 100 : 0
@@ -470,7 +472,7 @@ export default {
 					style: 'currency',
 					currency: 'EUR',
 				}).format(value)
-			} catch (e) {
+			} catch {
 				return `€ ${value.toFixed(2)}`
 			}
 		},
@@ -505,7 +507,7 @@ export default {
 			try {
 				await navigator.clipboard.writeText(value)
 				showSuccess(t('pipelinq', '{label} copied.', { label }))
-			} catch (e) {
+			} catch {
 				showError(t('pipelinq', 'Copy failed.'))
 			}
 		},

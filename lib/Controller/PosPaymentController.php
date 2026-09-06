@@ -317,9 +317,21 @@ class PosPaymentController extends Controller {
 					'class' => get_class($e),
 				]
 			);
-			// Still return 200 — providers will retry on 5xx and we never
-			// want a transient error to block ingest. Forensics are in logs.
-			return new JSONResponse(['status' => 'deferred']);
+			// 🔴 THE OLD COMMENT HERE HAD THE MECHANISM BACKWARDS.
+			//
+			// It read: "Still return 200 — providers will retry on 5xx and we
+			// never want a transient error to block ingest." Both halves are
+			// true and the conclusion inverts them. A provider retries on 5xx,
+			// so answering 200 is exactly what STOPS the retry: the delivery
+			// was acknowledged, the crash meant nothing was recorded, and the
+			// settlement is simply lost. Forensics in the log cannot get the
+			// money back.
+			//
+			// A transient error is the case that most needs the redelivery.
+			return new JSONResponse(
+				['status' => 'error', 'error' => 'Webhook processing failed'],
+				Http::STATUS_INTERNAL_SERVER_ERROR
+			);
 		}
 
 		$status = (string)($result['status'] ?? '');

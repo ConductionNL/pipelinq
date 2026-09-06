@@ -73,6 +73,7 @@ class AdapterRegistry {
 	 * @param class-string<CtiAdapterInterface> $adapterClass Adapter class name.
 	 *
 	 * @return void
+	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-inbound-screen-pop-on-call-answer-req-cti-001
 	 */
 	public function register(string $platform, string $adapterClass): void {
 		$this->adapterClasses[$platform] = $adapterClass;
@@ -87,6 +88,7 @@ class AdapterRegistry {
 	 * @return CtiAdapterInterface Adapter instance.
 	 *
 	 * @throws RuntimeException When the platform has no registered adapter.
+	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-inbound-screen-pop-on-call-answer-req-cti-001
 	 */
 	public function get(string $platform): CtiAdapterInterface {
 		$platform = strtolower(trim($platform));
@@ -115,6 +117,7 @@ class AdapterRegistry {
 	 * List all registered platform identifiers.
 	 *
 	 * @return array<int,string>
+	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-inbound-screen-pop-on-call-answer-req-cti-001
 	 */
 	public function listPlatforms(): array {
 		return array_keys($this->adapterClasses);

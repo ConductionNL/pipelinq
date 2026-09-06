@@ -54,6 +54,8 @@ use Throwable;
  * full Zaken component (zaak/status/rol/resultaat/eigenschap CRUD + optimistic-lock
  * retry); the aggregate complexity is inherent to the API breadth, not to any single
  * over-complex method, so splitting the class would only fragment one cohesive client.
+ *
+ * @spec openspec/specs/vng-klantinteracties-leaf/spec.md
  */
 class ZrcClient {
 	public const SCOPE_LEZEN = 'zaken.lezen';
@@ -104,6 +106,7 @@ class ZrcClient {
 	 * @return array<string, mixed> Zaak body.
 	 *
 	 * @throws ZgwResourceNotFoundException
+	 * @spec openspec/specs/vng-klantinteracties-leaf/spec.md
 	 */
 	public function getZaak(array $endpoint, array $mapping): array {
 		$url = (string)($mapping['zgwUrl'] ?? '');
@@ -167,6 +170,7 @@ class ZrcClient {
 	 * @param string $statusUrl Status URL.
 	 *
 	 * @return array<string, mixed> Status body.
+	 * @spec openspec/specs/vng-klantinteracties-leaf/spec.md
 	 */
 	public function getStatus(array $endpoint, string $statusUrl): array {
 		$client = $this->requireClient(endpoint: $endpoint);

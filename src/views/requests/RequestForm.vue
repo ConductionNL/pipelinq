@@ -68,18 +68,52 @@
 				@update:modelValue="occurredAtDate = $event" />
 		</div>
 
-		<!-- Client -->
-		<div class="form-group" data-testid="request-form-client">
-			<label>{{ t('pipelinq', 'Client') }}</label>
-			<NcSelect
-				v-model="form.client"
-				:options="clientOptions"
-				:aria-label-combobox="t('pipelinq', 'Client')"
-				:clearable="true"
-				label="label"
-				:reduce="(o) => o.value"
-				:placeholder="t('pipelinq', 'Select client')" />
+		<!-- Client + Contact. Contact is scoped to the chosen client and stays
+		     disabled until there is one — the same cascade Stage has on
+		     Pipeline below. Both can create what they cannot find. -->
+		<div class="form-row">
+			<div class="form-group" data-testid="request-form-client">
+				<CnResourceSelect
+					register="pipelinq"
+					schema="client"
+					labelField="name"
+					:modelValue="form.client || ''"
+					:inputLabel="t('pipelinq', 'Client')"
+					:placeholder="t('pipelinq', 'Select or create a client')"
+					:preload="true"
+					:createHandler="createClient"
+					@update:modelValue="onClientChange" />
+			</div>
+			<div class="form-group" data-testid="request-form-contact">
+				<CnResourceSelect
+					register="pipelinq"
+					schema="contact"
+					labelField="name"
+					:modelValue="form.contact || ''"
+					:inputLabel="t('pipelinq', 'Contact')"
+					:filters="contactFilters"
+					:disabled="!form.client"
+					:preload="true"
+					:createHandler="createContact"
+					:placeholder="
+						form.client
+							? t('pipelinq', 'Select or create a contact')
+							: t('pipelinq', 'Select a client first')
+					"
+					@update:modelValue="(v) => (form.contact = v || null)" />
+			</div>
 		</div>
+
+		<ClientCreateDialog
+			v-if="clientDialogOpen"
+			@created="onClientCreated"
+			@close="closeClientDialog" />
+		<ContactCreateDialog
+			v-if="contactDialogOpen"
+			:client="form.client"
+			:name="pendingName"
+			@created="onContactCreated"
+			@close="closeContactDialog" />
 
 		<!-- Pipeline + Stage row -->
 		<div class="form-row">
@@ -124,12 +158,16 @@
 </template>
 
 <script>
+import { CnResourceSelect } from '@conduction/nextcloud-vue'
 import {
 	NcButton,
 	NcDateTimePickerNative,
 	NcSelect,
 	NcTextField,
 } from '@nextcloud/vue'
+import ClientCreateDialog from '../../dialogs/ClientCreateDialog.vue'
+import ContactCreateDialog from '../../dialogs/ContactCreateDialog.vue'
+import linkedPartyCascadeMixin from '../../mixins/linkedPartyCascadeMixin.js'
 import { toDateInputString, toDateObject } from '../../services/localeUtils.js'
 import { pipelineAppliesTo } from '../../services/pipelineUtils.js'
 import { getAllowedTransitions } from '../../services/requestStatus.js'
@@ -139,11 +177,16 @@ import { useRequestChannelsStore } from '../../store/modules/requestChannels.js'
 export default {
 	name: 'RequestForm',
 	components: {
+		ClientCreateDialog,
+		CnResourceSelect,
+		ContactCreateDialog,
 		NcButton,
 		NcDateTimePickerNative,
 		NcSelect,
 		NcTextField,
 	},
+
+	mixins: [linkedPartyCascadeMixin],
 
 	props: {
 		request: {
@@ -160,9 +203,14 @@ export default {
 		 * Render the built-in Cancel / Save buttons. Set to `false` when the
 		 * host supplies its own action buttons (e.g. a parent NcDialog driving
 		 * the form via a ref + the `update:valid` event).
+		 *
+		 * Defaults ON deliberately: a host that supplies its own action bar
+		 * opts OUT. Inverting the name would make every ordinary use pass a
+		 * negative prop just to get the normal form.
 		 */
 		showActions: {
 			type: Boolean,
+			// eslint-disable-next-line vue/no-boolean-default
 			default: true,
 		},
 	},
@@ -180,11 +228,21 @@ export default {
 				category: '',
 				occurredAt: null,
 				client: null,
+				contact: null,
 				pipeline: null,
 				stage: null,
 			},
 
 			priorityOptions: ['low', 'normal', 'high', 'urgent'],
+
+			// Inline-create plumbing. `resolveCreate` is the promise resolver
+			// CnResourceSelect is awaiting: the picker hands control to a full
+			// dialog and resumes when that dialog resolves (with the created
+			// object) or is cancelled (with null).
+			clientDialogOpen: false,
+			contactDialogOpen: false,
+			pendingName: '',
+			resolveCreate: null,
 		}
 	},
 
@@ -291,23 +349,6 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-41
-		 */
-		clients() {
-			return this.objectStore.collections.client || []
-		},
-
-		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-40
-		 */
-		clientOptions() {
-			return this.clients.map((c) => ({
-				value: c.id,
-				label: c.name || c.id,
-			}))
-		},
-
-		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-requests-ui/tasks.md#task-43
 		 */
 		errors() {
@@ -340,7 +381,6 @@ export default {
 	async created() {
 		await Promise.all([
 			this.objectStore.fetchCollection('pipeline', { _limit: 100 }),
-			this.objectStore.fetchCollection('client', { _limit: 100 }),
 			this.requestChannelsStore.fetchChannels(),
 		])
 
@@ -355,6 +395,7 @@ export default {
 				category: this.request.category || '',
 				occurredAt: this.request.occurredAt || null,
 				client: this.request.client || null,
+				contact: this.request.contact || null,
 				pipeline: this.request.pipeline || null,
 				stage: this.request.stage || null,
 			}
@@ -410,6 +451,7 @@ export default {
 			if (!data.channel) delete data.channel
 			if (!data.occurredAt) delete data.occurredAt
 			if (!data.client) delete data.client
+			if (!data.contact) delete data.contact
 			if (!data.pipeline) delete data.pipeline
 			if (!data.stage) delete data.stage
 			if (!data.category) delete data.category

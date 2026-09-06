@@ -263,6 +263,7 @@ export default {
 		 * Fetch the open queue (waiting + called) from OpenRegister.
 		 *
 		 * @return {Promise<void>} Resolves when fetch completes.
+		 * @spec openspec/specs/appointment-booking/spec.md#REQ-APT-012
 		 */
 		async fetchTickets() {
 			if (this.busyTicketId) return
@@ -277,7 +278,7 @@ export default {
 				const list = payload.results || payload.objects || payload || []
 				this.tickets = Array.isArray(list) ? list : []
 				this.loadError = ''
-			} catch (err) {
+			} catch {
 				this.loadError = t(
 					'pipelinq',
 					'Could not load the walk-in queue. Retrying in {seconds} seconds.',
@@ -358,7 +359,7 @@ export default {
 				}
 				await axios.put(this.buildUrl(key), payload)
 				await this.fetchTickets()
-			} catch (err) {
+			} catch {
 				this.loadError = t(
 					'pipelinq',
 					'Could not update the ticket. Please try again.',

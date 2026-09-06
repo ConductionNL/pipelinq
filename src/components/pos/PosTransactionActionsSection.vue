@@ -352,6 +352,8 @@ export default {
 
 		/**
 		 * Load the active receipt templates for the print/email modal pickers.
+		 *
+		 * @spec openspec/specs/pos-receipt-engine/spec.md#REQ-PRE-003
 		 */
 		async loadReceiptTemplates() {
 			try {
@@ -364,7 +366,7 @@ export default {
 				this.receiptTemplates = rows.filter(
 					(tpl) => (tpl.status || 'active') === 'active',
 				)
-			} catch (e) {
+			} catch {
 				this.receiptTemplates = []
 			}
 		},
@@ -402,6 +404,7 @@ export default {
 		 * @param {object} body The optional request body.
 		 * @param {string} successMessage The success toast.
 		 * @return {Promise<boolean>} Whether the action succeeded.
+		 * @spec openspec/specs/pos-lifecycle-guard-adoption/spec.md#REQ-PLG-001
 		 */
 		async lifecycle(action, body, successMessage) {
 			this.busy = true
@@ -428,7 +431,7 @@ export default {
 				showSuccess(successMessage)
 				await this.load()
 				return true
-			} catch (e) {
+			} catch {
 				showError(t('pipelinq', 'Action failed.'))
 				return false
 			} finally {

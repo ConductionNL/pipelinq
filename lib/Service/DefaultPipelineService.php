@@ -30,6 +30,8 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 
 /**
  * Service for creating default pipelines.
+ *
+ * @spec openspec/specs/pipeline/spec.md#requirement-default-pipelines-mvp
  */
 class DefaultPipelineService {
 	/**

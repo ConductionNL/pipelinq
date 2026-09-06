@@ -494,10 +494,18 @@ class LoyaltyController extends Controller {
 			$posTransactionRef = $posTransactionId;
 		}
 
-		$card = $this->giftCardService->activateGiftCard(
-			giftCardId: $giftCardId,
-			posTransactionId: $posTransactionRef
-		);
+		try {
+			$card = $this->giftCardService->activateGiftCard(
+				giftCardId: $giftCardId,
+				posTransactionId: $posTransactionRef
+			);
+		} catch (Throwable $e) {
+			// A card that cannot be activated from its current status (blocked,
+			// depleted, expired) is a refusal the caller must see, not a 200
+			// carrying the unchanged card. Same mapping redeemGiftCard() uses.
+			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_BAD_REQUEST);
+		}
+
 		if ($card === null) {
 			return new JSONResponse(
 				['error' => $this->l10n->t('Gift card not found')],

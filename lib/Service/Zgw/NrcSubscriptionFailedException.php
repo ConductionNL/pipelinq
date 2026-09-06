@@ -32,6 +32,9 @@ namespace OCA\Pipelinq\Service\Zgw;
 
 /**
  * NRC abonnement registration / deregistration failure.
+ *
+ * @spec exclude exception type: carries a failure mode, not a behaviour a requirement
+ *   can specify
  */
 class NrcSubscriptionFailedException extends ZgwException {
 }//end class

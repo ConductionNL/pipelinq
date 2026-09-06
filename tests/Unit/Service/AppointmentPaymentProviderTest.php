@@ -48,7 +48,7 @@ class AppointmentPaymentProviderTest extends TestCase {
 	 */
 	private array $appConfigStore = [
 		'register' => 'pipelinq',
-		'booking_schema' => 'booking',
+		'booking_schema' => 'appointmentBooking',
 		'contact_schema' => 'contact',
 		'appointment_payment_source' => 'mollie-prod',
 	];

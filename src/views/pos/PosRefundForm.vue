@@ -454,6 +454,8 @@ export default {
 		 *
 		 * Amounts are recomputed server-side on confirm; the client persists the
 		 * editable header + line selections only.
+		 *
+		 * @spec openspec/specs/pos-refund-return/spec.md#REQ-REF-003
 		 */
 		async save() {
 			const selected = this.candidates.filter((c) => c.selected)
@@ -522,7 +524,7 @@ export default {
 					name: 'PosRefundDetail',
 					params: { id: refundId },
 				})
-			} catch (e) {
+			} catch {
 				showError(t('pipelinq', 'Failed to save refund.'))
 			} finally {
 				this.saving = false
@@ -570,7 +572,7 @@ export default {
 }
 
 .pos-refund-form__lines th {
-	text-align: left;
+	text-align: start;
 	font-size: 12px;
 	color: var(--color-text-maxcontrast);
 	padding: 4px 8px;

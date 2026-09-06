@@ -14,7 +14,7 @@
         "icon": "TagOutline",
         "version": "1.0.0",
         "summary": "Structured billing classification for time entries (declarabel / niet-declarabel / intern / WBSO / DBA).",
-        "description": "A billingCategory provides the controlled vocabulary for classifying time entries. Replaces free-text tagging with consistent, reportable categories. Supports Dutch compliance flags: requiresWbsoRef for WBSO/RVO hour administration and isDba for Wet DBA contractor classification. Referenced by timeEntry.billingCategory (slug or UUID). REQ-BCT-001.",
+        "description": "A billingCategory provides the controlled vocabulary for classifying time entries. Replaces free-text tagging with consistent, reportable categories. Supports Dutch compliance flags: requiresWbsoRef for WBSO/RVO hour administration and isDba for Wet DBA contractor classification. Referenced by timeEntry.billingCategory (slug or UUID)..",
         "@type": "DefinedTerm",
         "required": [
           "name",
@@ -66,13 +66,13 @@
           },
           "requiresWbsoRef": {
             "type": "boolean",
-            "description": "When true, time entries in this category MUST carry a WBSO project reference for RVO submissions. REQ-BCT-003.",
+            "description": "When true, time entries in this category MUST carry a WBSO project reference for RVO submissions..",
             "default": false,
             "title": "Requires Wbso Ref"
           },
           "isDba": {
             "type": "boolean",
-            "description": "When true, marks hours as ZZP/DBA contractor work for Wet DBA tax compliance. REQ-BCT-005.",
+            "description": "When true, marks hours as ZZP/DBA contractor work for Wet DBA tax compliance..",
             "default": false,
             "title": "Is Dba"
           },

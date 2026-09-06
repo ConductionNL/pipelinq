@@ -33,6 +33,11 @@ use OCP\Security\ISecureRandom;
 
 /**
  * Issues and verifies single-use hashed portal tokens.
+ *
+ * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+ *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+ *   sessions, tokens, delegation, documents, invoices, orders, exports and
+ *   audit are all unspecified
  */
 class PortalTokenService {
 	/**
@@ -61,6 +66,10 @@ class PortalTokenService {
 	 * @param int $ttlMinutes Minutes until the token expires.
 	 *
 	 * @return array{plain: string, hash: string, expiresAt: string} The token material.
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function issue(int $ttlMinutes): array {
 		$plain = $this->randomToken();
@@ -85,6 +94,10 @@ class PortalTokenService {
 	 * @param string|null $expiresAt The stored ISO-8601 expiry, or null.
 	 *
 	 * @return bool True when the token is valid and unexpired.
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function verify(?string $plain, ?string $storedHash, ?string $expiresAt): bool {
 		if ($plain === null || $plain === '' || $storedHash === null || $storedHash === '') {
@@ -104,6 +117,10 @@ class PortalTokenService {
 	 * @param string|null $expiresAt The expiry timestamp, or null.
 	 *
 	 * @return bool True when unexpired.
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function isUnexpired(?string $expiresAt): bool {
 		if ($expiresAt === null || $expiresAt === '') {
@@ -125,6 +142,10 @@ class PortalTokenService {
 	 * @param string $plain The plaintext token.
 	 *
 	 * @return string The hex SHA-256 digest.
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function hash(string $plain): string {
 		return hash('sha256', $plain);
@@ -134,6 +155,10 @@ class PortalTokenService {
 	 * Generate a 256-bit URL-safe random token.
 	 *
 	 * @return string The base64url-encoded token.
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function randomToken(): string {
 		$bytes = $this->secureRandom->generate(

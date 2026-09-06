@@ -4,7 +4,7 @@
  * Pipelinq KccWerkplekService.
  *
  * Server-side aggregation of the KCC agent workspace state — the assigned
- * requests, open tasks, queue counts and the current agent's profile — into
+ * requests, open tasks and the current agent's profile — into
  * a single payload so the unified workspace UI does not have to perform
  * N+1 client-side queries on every page load (REQ-KWP-010 / REQ-KWP-020 /
  * REQ-KWP-050).
@@ -30,7 +30,6 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use OCA\OpenRegister\Service\Aggregation\AggregationQuery;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -41,7 +40,7 @@ use RuntimeException;
  * KCC Werkplek workspace state aggregator.
  *
  * Returns a single merged payload for the workspace page (assigned requests,
- * open tasks, queue counts, agent profile) and applies idempotent availability
+ * open tasks, agent profile) and applies idempotent availability
  * toggles to the user's `agentProfile`.
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Aggregator fans out over several
@@ -119,32 +118,6 @@ class KccWerkplekService {
 	}//end getObjectService()
 
 	/**
-	 * Resolve the OpenRegister ad-hoc AggregationRunner lazily.
-	 *
-	 * Resolved from the DI container the same way the ObjectService is, so the
-	 * workspace can push grouped COUNT work (open requests per queue) down into
-	 * OpenRegister (ADR-022) instead of hydrating every request and counting in
-	 * PHP.
-	 *
-	 * @return object The OpenRegister aggregation runner.
-	 *
-	 * @throws RuntimeException If the OpenRegister app is not installed.
-	 *
-	 * @spec openspec/changes/pipelinq-query-pushdown-batch-3/tasks.md#task-2.1
-	 */
-	private function getAggregationRunner(): object {
-		try {
-			return $this->container->get('OCA\\OpenRegister\\Service\\Aggregation\\AggregationRunner');
-		} catch (\Throwable $e) {
-			throw new RuntimeException(
-				'OpenRegister AggregationRunner is not available',
-				0,
-				$e
-			);
-		}
-	}//end getAggregationRunner()
-
-	/**
 	 * Read a schema slug from the app config, falling back to a static key.
 	 *
 	 * @param string $schemaKey App config key (e.g. `task_schema`).
@@ -214,7 +187,7 @@ class KccWerkplekService {
 	 * Find all objects of a given schema, swallowing OR outages so a partial
 	 * workspace still renders (REQ-KWP-010 - the page must remain usable).
 	 *
-	 * @param string $schemaKey App config key (e.g. `queue_schema`).
+	 * @param string $schemaKey App config key (e.g. `task_schema`).
 	 *
 	 * @return array<int, array<string, mixed>> Plain object arrays.
 	 *
@@ -333,78 +306,15 @@ class KccWerkplekService {
 	}//end findTicketsSafe()
 
 	/**
-	 * Count open requests grouped by the stored `queue` field, pushing the
-	 * grouped COUNT down into OpenRegister rather than hydrating every request.
-	 *
-	 * Returns a raw map of `<stored queue ref> => <open count>`. The stored ref
-	 * may be a queue slug OR a queue id (a request stores either), so the caller
-	 * MUST re-map each key to a queue slug before folding — the bucket key stays
-	 * computed in PHP. Degrades to an empty map when OR is unavailable.
-	 *
-	 * @return array<string, int> Map of raw queue ref to open-request count.
-	 *
-	 * @SuppressWarnings(PHPMD.StaticAccess) AggregationQuery::create is OR's public query factory; no DI alternative.
-	 *
-	 * @spec openspec/changes/pipelinq-query-pushdown-batch-3/tasks.md#task-2.4
-	 */
-	private function openRequestCountsByQueue(): array {
-		$register = $this->ticketService->getRegisterId();
-		$schema = $this->ticketService->getSchemaId();
-		if ($register === '' || $schema === '') {
-			return [];
-		}
-
-		try {
-			// The grouped COUNT now runs over the unified `ticket` schema, so the
-			// `ticketType` discriminator narrows it back to requests only.
-			$query = AggregationQuery::create(
-				metric: 'count',
-				filter: [
-					'ticketType' => TicketService::TYPE_REQUEST,
-					'status' => ['in' => self::OPEN_REQUEST_STATUSES],
-				],
-				groupBy: ['field' => 'queue'],
-			);
-			$result = $this->getAggregationRunner()->runAdhocByRef(
-				registerRef: $register,
-				schemaRef: $schema,
-				query: $query
-			);
-		} catch (\Throwable $e) {
-			$this->logger->warning(
-				message: '[KccWerkplekService] queue-count aggregation failed',
-				context: ['error' => $e->getMessage()]
-			);
-			return [];
-		}//end try
-
-		$counts = [];
-		foreach ((array)($result['groups'] ?? []) as $group) {
-			$key = ($group['key'] ?? null);
-			// A null/empty group key (requests with no queue) matches no queue
-			// downstream; skip it here to mirror the prior `$queueRef === ''` skip.
-			if ($key === null || $key === '') {
-				continue;
-			}
-
-			$counts[(string)$key] = (int)($group['value'] ?? 0);
-		}
-
-		return $counts;
-	}//end openRequestCountsByQueue()
-
-	/**
 	 * Build the aggregated workspace state payload for one agent.
 	 *
 	 * Returns the agent profile (with sensible defaults if none exists),
-	 * the assigned-and-open requests, the open tasks assigned to the user
-	 * and the queue counts (open requests grouped by queue UUID).
+	 * the assigned-and-open requests and the open tasks assigned to the user.
 	 *
 	 * @param string $userId Nextcloud user UID of the agent.
 	 *
 	 * @return array{agentProfile: array<string, mixed>, assignedRequests: array<int, array<string, mixed>>,
-	 *               openTasks: array<int, array<string, mixed>>, queueCounts: array<string, int>,
-	 *               queues: array<int, array<string, mixed>>} Workspace state.
+	 *               openTasks: array<int, array<string, mixed>>} Workspace state.
 	 *
 	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Sequential guard clauses assembling one payload; extraction adds no clarity.
 	 *
@@ -429,7 +339,6 @@ class KccWerkplekService {
 		);
 
 		$allAgents = $this->findAllSafe(schemaKey: 'agentProfile_schema');
-		$allQueues = $this->findAllSafe(schemaKey: 'queue_schema');
 
 		// Resolve the agent profile for this user (fallback: sensible defaults).
 		$agentProfile = [
@@ -451,60 +360,10 @@ class KccWerkplekService {
 			}
 		}
 
-		// Compute the queue counts across all queues (open requests per queue UUID).
-		// The grouped COUNT is pushed down into OpenRegister; the raw group key
-		// (the stored `queue` ref, which a request may store as either the queue
-		// slug or its id) is re-mapped to the queue slug HERE — the bucket key
-		// stays computed in PHP because OpenRegister groups on the raw column.
-		$queueCounts = [];
-		foreach ($allQueues as $queue) {
-			$slug = (string)($queue['@self']['slug'] ?? $queue['slug'] ?? '');
-			if ($slug !== '') {
-				$queueCounts[$slug] = 0;
-			}
-		}
-
-		foreach ($this->openRequestCountsByQueue() as $queueRef => $count) {
-			// Match queue by id or slug (the request may store either). A ref
-			// that matches no queue is dropped, mirroring the prior loop's
-			// no-match path.
-			foreach ($allQueues as $queue) {
-				$qSlug = (string)($queue['@self']['slug'] ?? $queue['slug'] ?? '');
-				$qId = (string)($queue['@self']['id'] ?? $queue['id'] ?? '');
-				if ((string)$queueRef === $qSlug || (string)$queueRef === $qId) {
-					$queueCounts[$qSlug] = ($queueCounts[$qSlug] ?? 0) + $count;
-					break;
-				}
-			}
-		}
-
-		// Strip private fields and order queues by sortOrder for the menu.
-		$queues = [];
-		foreach ($allQueues as $queue) {
-			if ((bool)($queue['isActive'] ?? true) === false) {
-				continue;
-			}
-
-			$queues[] = [
-				'id' => (string)($queue['@self']['id'] ?? $queue['id'] ?? ''),
-				'slug' => (string)($queue['@self']['slug'] ?? $queue['slug'] ?? ''),
-				'title' => (string)($queue['title'] ?? ''),
-				'sortOrder' => (int)($queue['sortOrder'] ?? 0),
-				'maxCapacity' => $queue['maxCapacity'] ?? null,
-			];
-		}
-
-		usort(
-			$queues,
-			static fn (array $a, array $b): int => $a['sortOrder'] <=> $b['sortOrder']
-		);
-
 		return [
 			'agentProfile' => $agentProfile,
 			'assignedRequests' => $assignedRequests,
 			'openTasks' => $openTasks,
-			'queueCounts' => $queueCounts,
-			'queues' => $queues,
 		];
 	}//end getWorkspaceState()
 

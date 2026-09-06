@@ -160,9 +160,14 @@ export default {
 		 * Render the built-in Save / Cancel buttons. Set to `false` when the
 		 * host supplies its own action buttons (e.g. a parent NcDialog driving
 		 * the form via a ref + the `update:valid` event).
+		 *
+		 * Defaults ON deliberately: a host that supplies its own action bar
+		 * opts OUT. Inverting the name would make every ordinary use pass a
+		 * negative prop just to get the normal form.
 		 */
 		showActions: {
 			type: Boolean,
+			// eslint-disable-next-line vue/no-boolean-default
 			default: true,
 		},
 	},

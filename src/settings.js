@@ -11,7 +11,7 @@ app.mixin({ methods: { t, n } })
 app.use(pinia)
 
 // Register object types in the store before mounting, so the object-backed
-// sections (pipelines, product categories, queues, …) can read/write objects
+// sections (pipelines, product categories, skills, …) can read/write objects
 // in their own mounted() hooks. The settings page is its own webpack entry, so
 // — unlike the main app entry (src/main.js), which relies on useListView's
 // retry logic — it must register types itself and wait for that to finish.

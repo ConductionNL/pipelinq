@@ -1,0 +1,74 @@
+{
+	"_comment": "ADR-037 manifest fragment for marketing-search-intelligence (phase 5). Kept in its own file so the concurrent campaigns build does not conflict on the Marketing group. All three pages are path-routed: a deep link is /index.php/apps/pipelinq/marketing/keywords, never a hash route.",
+	"menu": [
+		{
+			"id": "MarketingGroup",
+			"label": "Marketing",
+			"order": 130,
+			"children": [
+				{
+					"id": "KeywordIntelligence",
+					"label": "Keywords",
+					"icon": "KeyVariant",
+					"route": "KeywordIntelligence",
+					"order": 72
+				},
+				{
+					"id": "CompetitorWatches",
+					"label": "Competitors",
+					"icon": "AccountGroupOutline",
+					"route": "CompetitorWatches",
+					"order": 74
+				},
+				{
+					"id": "ConnectionAudit",
+					"label": "Connection audit",
+					"icon": "AccountArrowRightOutline",
+					"route": "ConnectionAudit",
+					"order": 76
+				}
+			]
+		}
+	],
+	"pages": [
+		{
+			"id": "KeywordIntelligence",
+			"_note": "Keyword proposals (marketing-search-intelligence). Custom rather than a declarative type:index over keywordTarget, because what this page shows is not a collection at all: it is four DERIVATIONS computed over the searchQueryDaily rows at read time (position buckets, striking distance, cannibalisation, content gaps), served by one GET /api/marketing/keyword-proposals. The keywordTarget objects it can create are the OUTPUT, not the input. Missing primitive: a page backed by a computed report with a per-row create action.",
+			"route": "/marketing/keywords",
+			"type": "custom",
+			"title": "Keywords",
+			"component": "KeywordIntelligenceView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "keywordTarget",
+				"documentationUrl": "https://pipelinq.conduction.nl"
+			}
+		},
+		{
+			"id": "CompetitorWatches",
+			"_note": "Competitor watches and what they saw (marketing-search-intelligence). Custom rather than a declarative type:index over watchEvent, because the page has to join three schemas in one read (competitor, competitorWatch, watchEvent) and, more importantly, because a watch's LAST OUTCOME is what tells 'they published nothing' apart from 'we could not read it'. A plain event list would render both as an empty table. It also carries a per-watch run action, which the declarative grammar has no verb for.",
+			"route": "/marketing/competitors",
+			"type": "custom",
+			"title": "Competitors",
+			"component": "CompetitorWatchesView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "watchEvent",
+				"documentationUrl": "https://pipelinq.conduction.nl"
+			}
+		},
+		{
+			"id": "ConnectionAudit",
+			"_note": "The follow audit (marketing-search-intelligence). Custom rather than a declarative type:index over socialConnection, because the page's whole job is to render the REASON an answer is unknown next to the answer, and because it offers a re-run action. A declarative index would show the three-valued fields as bare enum labels and drop the reason, which is the half a marketer needs in order not to act on a wrong no.",
+			"route": "/marketing/connection-audit",
+			"type": "custom",
+			"title": "Connection audit",
+			"component": "ConnectionAuditView",
+			"config": {
+				"register": "pipelinq",
+				"schema": "socialConnection",
+				"documentationUrl": "https://pipelinq.conduction.nl"
+			}
+		}
+	]
+}

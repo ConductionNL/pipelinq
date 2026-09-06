@@ -327,7 +327,7 @@ export default {
 }
 
 .pos-tender-type-list__table th {
-	text-align: left;
+	text-align: start;
 	font-size: 12px;
 	color: var(--color-text-maxcontrast);
 	border-bottom: 1px solid var(--color-border);
@@ -341,7 +341,7 @@ export default {
 }
 
 .pos-tender-type-list__col-actions {
-	text-align: right;
+	text-align: end;
 	white-space: nowrap;
 }
 
@@ -350,7 +350,7 @@ export default {
 }
 
 .pos-tender-type-list__col-sort {
-	text-align: right;
+	text-align: end;
 }
 
 .pos-tender-type-list__flag {

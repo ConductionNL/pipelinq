@@ -110,6 +110,7 @@ class MessageBirdSmsClient implements SmsProviderClientInterface {
 	 * @param string $signature Header.
 	 *
 	 * @return bool True when authentic.
+	 * @spec openspec/specs/outbound-messaging/spec.md#REQ-OM-004
 	 */
 	public function verifySignature(string $rawBody, string $signature): bool {
 		if ($this->webhookSecret === '' || $signature === '') {
@@ -124,6 +125,7 @@ class MessageBirdSmsClient implements SmsProviderClientInterface {
 	 * Vendor key.
 	 *
 	 * @return string `messagebird`.
+	 * @spec openspec/specs/outbound-messaging/spec.md#REQ-OM-004
 	 */
 	public function getVendor(): string {
 		return 'messagebird';

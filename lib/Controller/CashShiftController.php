@@ -6,7 +6,7 @@
  * Thin controller for the POS cash-drawer lifecycle actions (open shift, record
  * drop, close-and-count, approve / reject variance). All business logic,
  * server-authoritative money math and authorization live in CashShiftService;
- * plain CRUD on cashShift / cashDrop / cashCount / cashDiff is handled by
+ * plain CRUD on cashShift / cashDrop / posCashCount / cashDiff is handled by
  * OpenRegister's generic object API.
  *
  * @category Controller

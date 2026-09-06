@@ -53,7 +53,7 @@ export default {
 		},
 	},
 
-	emits: ['range-change'],
+	emits: ['rangeChange'],
 	data() {
 		return {
 			selectedRange: { value: 'all', label: '' },
@@ -128,7 +128,7 @@ export default {
 		onRangeChange(option) {
 			const value = option?.value || 'all'
 			if (value === 'all') {
-				this.$emit('range-change', null)
+				this.$emit('rangeChange', null)
 				return
 			}
 			const now = new Date()
@@ -137,7 +137,7 @@ export default {
 			else if (value === '90d') from.setDate(now.getDate() - 90)
 			else if (value === '12m') from.setMonth(now.getMonth() - 12)
 			const fmt = (d) => d.toISOString().slice(0, 10)
-			this.$emit('range-change', { from: fmt(from), to: fmt(now) })
+			this.$emit('rangeChange', { from: fmt(from), to: fmt(now) })
 		},
 	},
 }

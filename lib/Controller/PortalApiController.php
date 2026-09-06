@@ -40,6 +40,11 @@ use Psr\Log\LoggerInterface;
 
 /**
  * Shared base for portal API controllers.
+ *
+ * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+ *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+ *   sessions, tokens, delegation, documents, invoices, orders, exports and
+ *   audit are all unspecified
  */
 abstract class PortalApiController extends Controller {
 	/**

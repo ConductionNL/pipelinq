@@ -142,6 +142,9 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * @spec openspec/specs/sla-engine-and-escalation/spec.md#requirement-attainment-reporting
+		 */
 		async fetchAttainment() {
 			this.loading = true
 			this.error = null
@@ -153,7 +156,7 @@ export default {
 				}
 				const response = await axios.get(url, { params })
 				this.payload = response.data || this.payload
-			} catch (e) {
+			} catch {
 				this.error = this.t(
 					'pipelinq',
 					'Failed to load SLA attainment. Please try again.',
@@ -186,10 +189,10 @@ export default {
 		td {
 			padding: 8px 12px;
 			border-bottom: 1px solid var(--color-border);
-			text-align: left;
+			text-align: start;
 
 			&.num {
-				text-align: right;
+				text-align: end;
 			}
 		}
 

@@ -136,6 +136,7 @@ class ChannelProviderRepository {
 	 * @param string $id Provider UUID / slug.
 	 *
 	 * @return array<string, mixed>|null Row or null.
+	 * @spec openspec/specs/outbound-messaging/spec.md#REQ-OM-004
 	 */
 	public function findById(string $id): ?array {
 		if ($id === '') {
@@ -175,6 +176,7 @@ class ChannelProviderRepository {
 	 * @param string $vendor Vendor key (twilio / messagebird / ...).
 	 *
 	 * @return array<string, mixed>|null Row or null.
+	 * @spec openspec/specs/outbound-messaging/spec.md#REQ-OM-004
 	 */
 	public function findByVendor(string $kind, string $vendor): ?array {
 		foreach ($this->listActive(kind: $kind) as $row) {

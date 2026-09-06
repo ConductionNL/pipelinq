@@ -1,0 +1,145 @@
+{
+	"menu": [
+		{
+			"id": "MarketingGroup",
+			"label": "Marketing",
+			"order": 130,
+			"children": [
+				{
+					"id": "Articles",
+					"label": "Articles",
+					"icon": "NewspaperVariantOutline",
+					"route": "Articles",
+					"order": 25
+				}
+			]
+		}
+	],
+	"pages": [
+		{
+			"id": "Articles",
+			"_note": "Article list as a declarative type:index page (marketing-article-hub), opened in cards view: the hero image, title and summary the spec asks for read naturally as a card and only awkwardly as a table row (the card's title/description/image come from the article schema's own `configuration.objectNameField/objectDescriptionField/objectImageField`, not page config). Add navigates to ArticleNew, which mounts the one editing surface the change owns (ArticleEditModal) — the bespoke ArticleService create path (author stamp, slug derivation, the ADR-088 agent-mark refusal) has no declarative equivalent, so `showAdd`/`showFormDialog` stay off. Row view opens ArticleDetail.",
+			"route": "/articles",
+			"type": "index",
+			"title": "Articles",
+			"config": {
+				"register": "pipelinq",
+				"schema": "article",
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"viewMode": "cards",
+				"showAdd": false,
+				"showFormDialog": false,
+				"showEditAction": false,
+				"showCopyAction": false,
+				"showMassImport": false,
+				"showMassExport": false,
+				"showMassCopy": false,
+				"includeColumns": ["title", "status", "language", "publishedAt"],
+				"headerActions": [
+					{
+						"id": "create",
+						"label": "New article",
+						"icon": "Plus",
+						"handler": "navigate",
+						"route": "ArticleNew"
+					}
+				],
+				"actions": [
+					{
+						"id": "view",
+						"label": "Open",
+						"icon": "Eye",
+						"handler": "navigate",
+						"route": "ArticleDetail"
+					}
+				]
+			}
+		},
+		{
+			"id": "ArticleNew",
+			"route": "/articles/new",
+			"type": "custom",
+			"title": "New article",
+			"component": "ArticleFormView",
+			"_note": "Mounts ArticleEditModal in create mode (marketing-article-hub). Matches the SegmentNew / TemplateNew / BlastNew convention of a thin route wrapper around the one editing surface the change owns, rather than a second declarative create dialog that could not host CnMarkdownEditor or the Files hero-image picker anyway.",
+			"config": {
+				"register": "pipelinq",
+				"schema": "article"
+			}
+		},
+		{
+			"id": "ArticleDetail",
+			"_note": "Article record as a declarative type:detail page (ADR-062 grid). The article's own metadata (status, language, author, publication moment, portal page, tags) auto-renders in the 'Article details' data widget. The rendered body, the hero image, the agent-authored mark, the Edit action and the lifecycle moves live in ArticleContentSection (placement before-body, ahead of the data widget, because the body is the reason a marketer opened the page) — see that component's file header and design.md 'The body renders through an in-body section, not a declarative widget' for why: the built-in text widget renders a literal manifest string, not @object.<field>, and only bodyWidgets props carry that token on a detail page. ArticleUsageSection (placement end) answers where the article has been used, joined server-side from two schemas (campaignTemplate, blast) that no single-schema object-list widget can express.",
+			"route": "/articles/:id",
+			"type": "detail",
+			"title": "Article",
+			"config": {
+				"register": "pipelinq",
+				"schema": "article",
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"widgets": [
+					{
+						"id": "article-data",
+						"type": "data",
+						"title": "Article details",
+						"icon": "InformationOutline",
+						"content": {
+							"columns": 2,
+							"include": [
+								"status",
+								"language",
+								"author",
+								"publishedAt",
+								"portalPageRef",
+								"tags",
+								"slug"
+							]
+						}
+					}
+				],
+				"layout": [
+					{
+						"id": "1",
+						"widgetId": "article-data",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 12,
+						"gridHeight": 5
+					}
+				],
+				"bodyWidgets": [
+					{
+						"id": "article-content",
+						"component": "ArticleContentSection",
+						"title": "Article",
+						"placement": "before-body",
+						"props": {
+							"articleId": "@objectId"
+						}
+					},
+					{
+						"id": "article-usage",
+						"component": "ArticleUsageSection",
+						"title": "Where this is used",
+						"placement": "end",
+						"props": {
+							"articleId": "@objectId"
+						}
+					}
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true,
+					"tabs": [
+						{
+							"id": "audit",
+							"label": "History",
+							"icon": "History",
+							"widgets": [{ "type": "audit" }]
+						}
+					]
+				}
+			}
+		}
+	]
+}

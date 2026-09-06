@@ -58,6 +58,7 @@ abstract class AbstractOpenConnectorSink implements ExportSinkInterface {
 	 * The destination type slug this adapter handles.
 	 *
 	 * @return string The destination type.
+	 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#requirement-destination-configuration-and-validation-req-bie-001
 	 */
 	abstract public function getType(): string;
 
@@ -82,6 +83,7 @@ abstract class AbstractOpenConnectorSink implements ExportSinkInterface {
 	 * @param array<string, mixed> $destination The destination configuration.
 	 *
 	 * @return bool True when reachable.
+	 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#requirement-destination-configuration-and-validation-req-bie-001
 	 */
 	public function testConnection(array $credentials, array $destination): bool {
 		try {
@@ -106,6 +108,7 @@ abstract class AbstractOpenConnectorSink implements ExportSinkInterface {
 	 * @return string The destination acknowledgement.
 	 *
 	 * @throws RuntimeException When the transfer fails.
+	 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#requirement-destination-configuration-and-validation-req-bie-001
 	 */
 	public function upload(array $credentials, array $destination, string $remotePath, string $contents): string {
 		$result = $this->transfer(

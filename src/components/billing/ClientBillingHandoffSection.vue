@@ -255,6 +255,8 @@ export default {
 	methods: {
 		/**
 		 * Fetch the current "Send to billing" availability for this client.
+		 *
+		 * @spec openspec/specs/time-approval-workflow/spec.md#requirement-approved-time-entries-are-emitted-to-shillinqs-time-intake
 		 */
 		async loadAvailability() {
 			if (!this.resolvedId) {
@@ -266,7 +268,7 @@ export default {
 				this.availability = await getBillingHandoffAvailability(
 					this.resolvedId,
 				)
-			} catch (e) {
+			} catch {
 				this.availability = { ...DEFAULT_AVAILABILITY }
 			} finally {
 				this.loading = false

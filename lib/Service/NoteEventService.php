@@ -30,6 +30,8 @@ use Throwable;
 
 /**
  * Service for triggering note-related events and notifications.
+ *
+ * @spec openspec/specs/entity-notes/spec.md#requirement-notes-crud-on-all-entity-types-mvp
  */
 class NoteEventService {
 	private const TYPE_MAP = [

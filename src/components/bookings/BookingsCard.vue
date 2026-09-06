@@ -5,7 +5,7 @@
 
   Props:
     customerId (string, required) — UUID of the customer whose bookings to
-      list. The card fetches via objectStore.fetchCollection('booking',
+      list. The card fetches via objectStore.fetchCollection('appointmentBooking',
       { customerId, _limit: 200 }) and sorts future-first (upcoming bookings
       bubble to the top; past bookings follow in reverse-chronological order).
 
@@ -149,10 +149,13 @@ export default {
 			this.loading = true
 			this.error = ''
 			try {
-				const rows = await this.objectStore.fetchCollection('booking', {
-					customerId: this.customerId,
-					_limit: 200,
-				})
+				const rows = await this.objectStore.fetchCollection(
+					'appointmentBooking',
+					{
+						customerId: this.customerId,
+						_limit: 200,
+					},
+				)
 				this.bookings = Array.isArray(rows) ? rows : []
 				await this.primeLabels()
 			} catch {
@@ -185,7 +188,10 @@ export default {
 			for (const id of serviceIds) {
 				if (this.serviceLookup[id]) continue
 				try {
-					const svc = await this.objectStore.fetchObject('service', id)
+					const svc = await this.objectStore.fetchObject(
+						'appointmentService',
+						id,
+					)
 					if (svc?.name) {
 						this.serviceLookup = {
 							...this.serviceLookup,
@@ -199,7 +205,10 @@ export default {
 			for (const id of resourceIds) {
 				if (this.resourceLookup[id]) continue
 				try {
-					const r = await this.objectStore.fetchObject('resource', id)
+					const r = await this.objectStore.fetchObject(
+						'appointmentResource',
+						id,
+					)
 					if (r?.name) {
 						this.resourceLookup = {
 							...this.resourceLookup,
@@ -270,7 +279,7 @@ export default {
 .viewTable th,
 .viewTable td {
 	padding: 12px;
-	text-align: left;
+	text-align: start;
 	border-bottom: 1px solid var(--color-border);
 }
 

@@ -39,6 +39,9 @@ use Throwable;
 
 /**
  * Daily scheduled tier downgrade processor (loyalty-program REQ-LOY-003).
+ *
+ * @spec exclude loyalty has no spec at all; the change that specified it was archived
+ *   and nothing inherited it
  */
 class TierDowngradeJob extends TimedJob {
 	private const DEFAULT_INTERVAL = 86400;

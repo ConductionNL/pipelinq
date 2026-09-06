@@ -28,8 +28,8 @@
  *
  * Verified live against the running app on 2026-08-24.
  */
-import { test, expect } from '@playwright/test'
-import { openApp } from './helpers/pipelinq'
+import { expect, test } from '@playwright/test'
+import { openApp } from './helpers/pipelinq.ts'
 
 /**
  * Manifest widget ids, which CnDashboardPage exposes as the accessible name of
@@ -64,7 +64,10 @@ test.describe('Sales dashboard', () => {
 	})
 
 	test('renders the dashboard page for the default route', async ({ page }) => {
-		await expect(page).toHaveURL(/#\/$|#\/$|\/apps\/pipelinq\/(#\/)?$/)
+		// History routing: the default route is the app root as a plain path.
+		// Anchored at the end so it holds under both the `/apps/...` and
+		// `/index.php/apps/...` bases Nextcloud serves.
+		await expect(page).toHaveURL(/\/apps\/pipelinq\/$/)
 		await expect(
 			page.locator('[data-testid="cn-page"]'),
 			'the default route must render a page, not an empty shell',
@@ -84,30 +87,44 @@ test.describe('Sales dashboard', () => {
 	})
 
 	test('the quick-create actions are offered', async ({ page }) => {
-		// These three come from the manifest's action list, not from the i18n
+		// These come from the manifest's action list, not from the i18n
 		// catalogue — they render in English even on this `nl` instance, which
 		// is why they are safe to assert by name. The refresh control beside
 		// them is NOT: its accessible name is translated
 		// ("Dashboard vernieuwen"), so it is asserted by role and count below.
-		for (const name of ['New Lead', 'New Request', 'New Client']) {
+		for (const name of ['New Lead', 'New Client']) {
 			await expect(
 				page.getByRole('button', { name, exact: true }).first(),
 				`the ${name} quick-create action must be offered`,
 			).toBeVisible({ timeout: 15000 })
 		}
+
+		// New Request is NOT here. Raising a request is customer-support work,
+		// and it now lives on that page instead. The three buttons used to be
+		// hardcoded together in one actionsComponent, so every dashboard naming
+		// that component got all three whether or not they belonged.
+		await expect(
+			page.getByRole('button', { name: 'New Request', exact: true }),
+			'New Request belongs on Customer Support, not on the sales dashboard',
+		).toHaveCount(0)
 	})
 
 	test('each KPI widget links into a filtered view', async ({ page }) => {
-		// The KPI tiles are anchors into hash routes. Asserting that each one
-		// HAS a hash href catches the regression that matters (a tile that
+		// The KPI tiles are anchors into in-app routes. Asserting that each one
+		// HAS an in-app href catches the regression that matters (a tile that
 		// stopped linking) without pinning the exact destination of every tile,
 		// which is manifest configuration and moves with the product.
+		//
+		// The shell routes on HISTORY now, so these are paths rather than `#/`
+		// fragments, and the base differs between the `/apps/...` and
+		// `/index.php/apps/...` forms Nextcloud serves — hence a contains-match
+		// on the app segment rather than a prefix-match on the whole href.
 		const linked = page.locator(
-			'[role="group"][aria-label="pipeline-coverage"] a[href^="#/"]',
+			'[role="group"][aria-label="pipeline-coverage"] a[href*="/apps/pipelinq/"]',
 		)
 		await expect(
 			linked.first(),
 			'the pipeline-coverage tile must link into a filtered view',
-		).toHaveAttribute('href', /^#\//)
+		).toHaveAttribute('href', /\/apps\/pipelinq\/.+/)
 	})
 })

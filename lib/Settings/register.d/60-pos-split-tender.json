@@ -13,12 +13,11 @@
           "productCategory",
           "leadProduct",
           "contactmoment",
-          "task",
+          "crmTask",
           "kennisartikel",
           "kenniscategorie",
           "kennisfeedback",
           "relationship",
-          "queue",
           "skill",
           "agentProfile",
           "posTransaction",
@@ -30,7 +29,7 @@
           "posRefundLine",
           "cashShift",
           "cashDrop",
-          "cashCount",
+          "posCashCount",
           "cashDiff",
           "posZReport",
           "posTenderType",
@@ -62,7 +61,7 @@
           },
           "code": {
             "type": "string",
-            "description": "Machine-readable identifier (CASH, CARD, VOUCHER, ACCOUNT, MOLLIE, STRIPE, ...) -- unique per register",
+            "description": "Machine-readable identifier (CASH, CARD, VOUCHER, ACCOUNT, MOLLIE, STRIPE,...): unique per register",
             "maxLength": 32,
             "minLength": 1,
             "facetable": true,
@@ -121,7 +120,7 @@
         "icon": "CashMultiple",
         "version": "1.0.0",
         "summary": "One payment-method instance on a posTransaction (split-tender component)",
-        "description": "A single tender (payment leg) on a posTransaction. A transaction MAY have one or more tenders -- e.g. cash + card on a single sale -- and the sum of tender amounts MUST equal the transaction total before settle. The tender records its method (tenderType), the amount in EUR, the optional external reference (card auth code, voucher serial), and the GL account it posts to (copied from tenderType.glAccount at add-time so it is immutable thereafter). Mapped to Schema.org PaymentChargeSpecification.",
+        "description": "A single tender (payment leg) on a posTransaction. A transaction MAY have one or more tenders: e.g. Cash + card on a single sale. And the sum of tender amounts MUST equal the transaction total before settle. The tender records its method (tenderType), the amount in EUR, the optional external reference (card auth code, voucher serial), and the GL account it posts to (copied from tenderType.glAccount at add-time so it is immutable thereafter). Mapped to Schema.org PaymentChargeSpecification.",
         "x-schema-org": "schema:PaymentChargeSpecification",
         "required": [
           "transaction",
@@ -153,13 +152,13 @@
           },
           "reference": {
             "type": "string",
-            "description": "External reference (card auth code, voucher serial, ...) -- required when the tenderType has requiresReference=true",
+            "description": "External reference (card auth code, voucher serial,...): required when the tenderType has requiresReference=true",
             "maxLength": 128,
             "title": "Reference"
           },
           "glAccount": {
             "type": "string",
-            "description": "GL account this tender posts to -- copied from tenderType.glAccount on add (immutable thereafter)",
+            "description": "GL account this tender posts to: copied from tenderType.glAccount on add (immutable thereafter)",
             "maxLength": 32,
             "title": "GL Account"
           },

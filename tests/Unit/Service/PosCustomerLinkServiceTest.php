@@ -283,9 +283,32 @@ class PosCustomerLinkServiceTest extends TestCase {
 	 */
 	public function testSyncConsentWritesContact(): void {
 		$this->stubAppConfig();
+
+		// syncConsent() re-reads the STORED contact before writing, because the
+		// array it is handed is decorateContact()'s ten-key projection and
+		// saveObject() is PUT-semantic — writing the projection back nulled
+		// every stored field it does not carry. So the read has to be stubbed,
+		// and the write is asserted to carry a field only the stored record has.
+		$this->objectService->method('find')->willReturn(
+			self::entity(
+				[
+					'id' => 'c1',
+					'name' => 'Maria',
+					'doNotContact' => false,
+					'vatNumber' => 'NL001234567B01',
+				]
+			)
+		);
+
+		$written = null;
 		$this->objectService->expects($this->once())
 			->method('saveObject')
-			->willReturn(self::entity(['id' => 'c1', 'marketingConsent' => true]));
+			->willReturnCallback(
+				function (array $object, ...$rest) use (&$written) {
+					$written = $object;
+					return self::entity(['id' => 'c1', 'marketingConsent' => true]);
+				}
+			);
 
 		$status = $this->service->syncConsent(
 			contact: [
@@ -297,6 +320,12 @@ class PosCustomerLinkServiceTest extends TestCase {
 		);
 
 		$this->assertSame(expected: 'success', actual: $status);
+		$this->assertTrue(condition: $written['marketingConsent']);
+		$this->assertSame(
+			expected: 'NL001234567B01',
+			actual: ($written['vatNumber'] ?? null),
+			message: 'the write must carry stored fields the projection does not'
+		);
 
 	}//end testSyncConsentWritesContact()
 

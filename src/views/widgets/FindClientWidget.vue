@@ -3,7 +3,7 @@
 		<div class="search-bar">
 			<NcTextField
 				v-model="searchQuery"
-				:placeholder="t('pipelinq', 'Search clients...')"
+				:placeholder="t('pipelinq', 'Search clients…')"
 				:label="t('pipelinq', 'Search')" />
 			<NcButton
 				variant="secondary"
@@ -36,7 +36,7 @@
 				@click="createClient">
 				{{
 					creatingClient
-						? t('pipelinq', 'Creating...')
+						? t('pipelinq', 'Creating…')
 						: t('pipelinq', 'Add client')
 				}}
 			</NcButton>
@@ -211,6 +211,15 @@ export default {
 	},
 
 	props: {
+		/**
+		 * Widget heading, supplied by the manifest.
+		 *
+		 * Declared but not rendered here: the widget chrome draws the heading.
+		 * Declaring it is what stops Vue's attribute fallthrough painting
+		 * `title="…"` onto the component's root element, which would hover a
+		 * browser tooltip over the whole widget.
+		 */
+		// eslint-disable-next-line vue/no-unused-properties
 		title: {
 			type: String,
 			required: true,
@@ -607,7 +616,7 @@ export default {
 .copy-feedback {
 	position: fixed;
 	bottom: 16px;
-	right: 16px;
+	inset-inline-end: 16px;
 	padding: 8px 16px;
 	background: var(--color-success);
 	color: var(--color-primary-text);

@@ -37,7 +37,7 @@
 				:class="[
 					{ 'performance-dashboard__tab--active': activeTab === tab.id },
 				]"
-				@click="activeTab = tab.id">
+				@click="onTabClick(tab.id)">
 				{{ tab.label }}
 			</button>
 		</nav>
@@ -217,6 +217,109 @@
 						</tr>
 					</tbody>
 				</table>
+
+				<!-- Site traffic per campaign (marketing-campaign-attribution):
+				     the sessions Portaliq attributed to each blast's campaign. -->
+				<div
+					class="performance-dashboard__traffic"
+					data-testid="campaign-traffic">
+					<h3>{{ t('pipelinq', 'Site traffic from this campaign') }}</h3>
+					<p
+						v-if="trafficState === 'loading'"
+						class="performance-dashboard__empty"
+						data-testid="campaign-traffic-loading">
+						{{ t('pipelinq', 'Loading site traffic') }}
+					</p>
+					<p
+						v-else-if="trafficState === 'no-blasts'"
+						class="performance-dashboard__empty"
+						data-testid="campaign-traffic-no-blasts">
+						{{ t('pipelinq', 'No blasts yet.') }}
+						{{
+							t(
+								'pipelinq',
+								'Send a blast, and the sessions its campaign brought in appear here.',
+							)
+						}}
+					</p>
+					<p
+						v-else-if="trafficState === 'unreadable'"
+						class="performance-dashboard__empty"
+						data-testid="campaign-traffic-unreadable">
+						{{ t('pipelinq', 'Site traffic could not be read.') }}
+						{{
+							t(
+								'pipelinq',
+								'Every performance request failed. Reload the page, and check the server log if it keeps happening.',
+							)
+						}}
+					</p>
+					<p
+						v-else-if="trafficConnected === false"
+						class="performance-dashboard__empty"
+						data-testid="campaign-traffic-unconnected">
+						{{ t('pipelinq', 'Not connected to a portal.') }}
+						{{
+							t(
+								'pipelinq',
+								'Set the Portaliq portal under Settings, Marketing traffic, to see the site sessions each campaign brought in.',
+							)
+						}}
+					</p>
+					<p
+						v-else-if="
+							trafficConnected === true && trafficRows.length === 0
+						"
+						class="performance-dashboard__empty">
+						{{
+							t(
+								'pipelinq',
+								'No site sessions attributed to a blast yet.',
+							)
+						}}
+					</p>
+					<table
+						v-else-if="trafficConnected === true"
+						class="performance-dashboard__table"
+						data-testid="campaign-traffic-table">
+						<thead>
+							<tr>
+								<th scope="col">{{ t('pipelinq', 'Blast') }}</th>
+								<th scope="col">{{ t('pipelinq', 'Campaign') }}</th>
+								<th scope="col" class="performance-dashboard__num">
+									{{ t('pipelinq', 'Opens') }}
+								</th>
+								<th scope="col" class="performance-dashboard__num">
+									{{ t('pipelinq', 'Clicks') }}
+								</th>
+								<th scope="col" class="performance-dashboard__num">
+									{{ t('pipelinq', 'Site sessions') }}
+								</th>
+								<th scope="col" class="performance-dashboard__num">
+									{{ t('pipelinq', 'Attributed deals') }}
+								</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr v-for="row in trafficRows" :key="row.id">
+								<td>{{ row.name }}</td>
+								<td>{{ row.campaign }}</td>
+								<td class="performance-dashboard__num">
+									{{ row.opened }}
+								</td>
+								<td class="performance-dashboard__num">
+									{{ row.clicked }}
+								</td>
+								<td class="performance-dashboard__num">
+									{{ row.sessions }}
+								</td>
+								<td class="performance-dashboard__num">
+									{{ row.dealCount }}
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
 			</section>
 		</section>
 
@@ -231,8 +334,11 @@ import { CnStatusBadge } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
+import { trafficOutcome } from '../../services/campaignTraffic.js'
 
 const OVERVIEW_LIMIT = 50
+/** How many per-blast attribution reads may be in flight at once. */
+const ATTRIBUTION_CONCURRENCY = 6
 const AB_MIN_DELIVERED = 500
 const AB_MIN_ELAPSED_MS = 24 * 60 * 60 * 1000
 const P_VALUE_ALPHA = 0.05
@@ -253,6 +359,27 @@ export default {
 			blasts: [],
 			segments: {},
 			attributionRows: [],
+			// Site traffic per campaign: null until the first performance read
+			// answers, then whether a portal is connected.
+			trafficConnected: null,
+			trafficRows: [],
+			// WHY THIS EXISTS RATHER THAN `trafficConnected === null`. That one
+			// value used to carry three different meanings — still loading,
+			// nothing to ask, and every ask failed — and the template read all
+			// three as "loading". An instance with no blasts therefore showed a
+			// spinner that never stopped, because `fetchTrafficRows` iterates
+			// the blast list and there was nothing to iterate: no request was
+			// ever sent, so nothing ever set the flag.
+			//
+			// Measured on the development run of 2026-09-06: the page fetched
+			// `GET /api/blasts?limit=50`, got 200 with an empty list, made ZERO
+			// `/performance` calls, and sat on "Loading site traffic" until the
+			// e2e assertion gave up 60 s later.
+			//
+			// 'loading' | 'no-blasts' | 'unreadable' | 'answered'
+			trafficState: 'loading',
+			/** Whether the Attribution tab's per-blast reads have been started. */
+			attributionRequested: false,
 			overviewSortKey: 'sent',
 			overviewSortOrder: 'desc',
 		}
@@ -386,13 +513,14 @@ export default {
 		 * Load blasts, segments (for name lookup) and per-blast attribution
 		 * summaries in parallel. Each block degrades independently —
 		 * Attribution failures don't blank the Overview tab.
+		 *
+		 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-campaign-performance-joins-site-sessions-to-a-blast
 		 */
 		async fetchAll() {
 			this.loading = true
 			this.error = ''
 			try {
 				await Promise.all([this.fetchBlasts(), this.fetchSegments()])
-				await this.fetchAttributionRows()
 			} catch (e) {
 				this.error =
 					e?.response?.data?.error
@@ -400,6 +528,48 @@ export default {
 			} finally {
 				this.loading = false
 			}
+			// Attribution and site traffic each cost one request per blast, and
+			// only the Attribution tab shows either. Loading them here held the
+			// spinner for the length of the whole fan-out, so Overview and A/B
+			// testing rendered nothing at all until the last answer arrived.
+			// They now load when that tab is first opened, in loadAttribution().
+		},
+
+		/**
+		 * Select a tab, and load what that tab needs the first time it is
+		 * opened.
+		 *
+		 * @param {string} tabId One of `overview`, `ab`, `attribution`.
+		 *
+		 * @return {void}
+		 *
+		 * @spec openspec/specs/marketing-analytics/spec.md#requirement-attribution-dashboard-sums-revenue-per-blast
+		 */
+		onTabClick(tabId) {
+			this.activeTab = tabId
+			if (tabId === 'attribution') {
+				this.loadAttribution()
+			}
+		},
+
+		/**
+		 * Load the Attribution tab's two per-blast blocks, once.
+		 *
+		 * Both cost one request per blast, so they are deliberately not part
+		 * of the page load: a reader on Overview or A/B testing never pays for
+		 * them.
+		 *
+		 * @return {void}
+		 *
+		 * @spec openspec/specs/marketing-analytics/spec.md#requirement-attribution-dashboard-sums-revenue-per-blast
+		 */
+		loadAttribution() {
+			if (this.attributionRequested) {
+				return
+			}
+			this.attributionRequested = true
+			this.fetchAttributionRows()
+			this.fetchTrafficRows()
 		},
 
 		/**
@@ -420,6 +590,7 @@ export default {
 		 * Segment column. Failure is non-fatal: rows fall back to '—'.
 		 *
 		 * @return {Promise<void>}
+		 * @spec openspec/specs/marketing-analytics/spec.md#requirement-overview-metrics-table
 		 */
 		async fetchSegments() {
 			try {
@@ -434,7 +605,7 @@ export default {
 					}
 				}
 				this.segments = map
-			} catch (_e) {
+			} catch {
 				this.segments = {}
 			}
 		},
@@ -445,35 +616,119 @@ export default {
 		 * the Attribution tab table.
 		 *
 		 * @return {Promise<void>}
+		 * @spec openspec/specs/marketing-analytics/spec.md#requirement-attribution-dashboard-sums-revenue-per-blast
 		 */
 		async fetchAttributionRows() {
+			// One request per blast, run a few at a time. Strictly sequential
+			// it took as many round trips as there are blasts before the tab
+			// could say anything; unbounded it would open fifty at once.
+			const ids = this.blasts
+				.map((blast) => ({
+					id: blast.id || blast.uuid || blast.slug,
+					name: blast.name,
+				}))
+				.filter((entry) => Boolean(entry.id))
+			const found = new Map()
+
+			const worker = async (queue) => {
+				for (;;) {
+					const entry = queue.shift()
+					if (entry === undefined) {
+						return
+					}
+					try {
+						const url = generateUrl(
+							`/apps/pipelinq/api/blasts/${entry.id}/attribution`,
+						)
+						const { data } = await axios.get(url)
+						if (
+							(data?.dealCount || 0) > 0
+							|| (data?.attributedValue || 0) > 0
+						) {
+							found.set(entry.id, {
+								id: entry.id,
+								name: entry.name || entry.id,
+								dealCount: data.dealCount || 0,
+								attributedValue: data.attributedValue || 0,
+							})
+						}
+					} catch {
+						// Skip; keep the queue draining.
+					}
+				}
+			}
+
+			const queue = ids.slice()
+			await Promise.all(
+				Array.from(
+					{ length: Math.min(ATTRIBUTION_CONCURRENCY, queue.length) },
+					() => worker(queue),
+				),
+			)
+
+			// Report in the order the blasts were listed, not the order the
+			// answers happened to arrive.
+			this.attributionRows = ids
+				.map((entry) => found.get(entry.id))
+				.filter(Boolean)
+		},
+
+		/**
+		 * For every loaded blast, read `GET /api/blasts/:id/performance` and
+		 * collect the site sessions Portaliq attributed to its campaign. The
+		 * first answer says whether a portal is connected at all; when it is
+		 * not, the loop stops there and the block says so.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-campaign-performance-joins-site-sessions-to-a-blast
+		 */
+		async fetchTrafficRows() {
 			const rows = []
+			let connected = null
+			// Counted, not inferred. "No answer" has two causes that need
+			// different words: there was no blast to ask about, or every ask
+			// failed. Neither is "loading", and neither may leave the spinner up.
+			let asked = 0
+			let answered = 0
+
 			for (const blast of this.blasts) {
 				const id = blast.id || blast.uuid || blast.slug
 				if (!id) {
 					continue
 				}
+				asked += 1
 				try {
 					const url = generateUrl(
-						`/apps/pipelinq/api/blasts/${id}/attribution`,
+						`/apps/pipelinq/api/blasts/${id}/performance`,
 					)
 					const { data } = await axios.get(url)
-					if (
-						(data?.dealCount || 0) > 0
-						|| (data?.attributedValue || 0) > 0
-					) {
+					answered += 1
+					connected = Boolean(data?.connected)
+					if (!connected) {
+						break
+					}
+					if ((data?.site?.sessions || 0) > 0) {
 						rows.push({
 							id,
 							name: blast.name || id,
-							dealCount: data.dealCount || 0,
-							attributedValue: data.attributedValue || 0,
+							campaign: data.campaign || '',
+							opened: data.email?.opened || 0,
+							clicked: data.email?.clicked || 0,
+							sessions: data.site?.sessions || 0,
+							dealCount: data.deals?.dealCount || 0,
 						})
 					}
-				} catch (_e) {
-					// Skip; keep loop alive.
+				} catch {
+					// Skip; keep loop alive. The count above is what makes this
+					// swallow visible: a run where every request threw ends with
+					// asked > 0 and answered === 0, which the block names.
 				}
 			}
-			this.attributionRows = rows
+
+			this.trafficConnected = connected
+			this.trafficRows = rows
+
+			this.trafficState = trafficOutcome({ asked, answered })
 		},
 
 		/**
@@ -797,6 +1052,16 @@ export default {
 	gap: 16px;
 }
 
+.performance-dashboard__traffic {
+	margin-top: 32px;
+
+	h3 {
+		font-size: 1rem;
+		font-weight: bold;
+		margin-bottom: 8px;
+	}
+}
+
 .performance-dashboard__empty {
 	color: var(--color-text-lighter);
 	margin: 0;
@@ -810,7 +1075,7 @@ export default {
 .performance-dashboard__table th,
 .performance-dashboard__table td {
 	padding: 8px 12px;
-	text-align: left;
+	text-align: start;
 	border-bottom: 1px solid var(--color-border);
 }
 
@@ -822,11 +1087,11 @@ export default {
 }
 
 .performance-dashboard__num {
-	text-align: right;
+	text-align: end;
 }
 
 .performance-dashboard__sort-indicator {
-	margin-left: 4px;
+	margin-inline-start: 4px;
 	color: var(--color-primary-element);
 }
 

@@ -72,6 +72,8 @@ class HaalCentraalException extends RuntimeException {
 	 * Get the HTTP status code (0 = transport error).
 	 *
 	 * @return int
+	 * @spec exclude exception type: carries a failure mode, not a behaviour a requirement
+	 *   can specify
 	 */
 	public function getStatusCode(): int {
 		return $this->statusCode;
@@ -81,6 +83,8 @@ class HaalCentraalException extends RuntimeException {
 	 * Get the correlation ID (or null).
 	 *
 	 * @return string|null
+	 * @spec exclude exception type: carries a failure mode, not a behaviour a requirement
+	 *   can specify
 	 */
 	public function getCorrelationId(): ?string {
 		return $this->correlationId;

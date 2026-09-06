@@ -163,5 +163,5 @@ would require a live Shillinq consumer at the configured webhook URL.
 
 - Admin guide: [`docs/Integrations/shillinq-ap-setup.md`](../Integrations/shillinq-ap-setup.md)
 - Spec: [`openspec/changes/pipelinq-expense-to-shillinq-ap/specs.md`](../../openspec/changes/pipelinq-expense-to-shillinq-ap/specs.md)
-- Sibling Shillinq integration: [`lib/Service/ShillinqLedgerService.php`](../../lib/Service/ShillinqLedgerService.php)
+- Sibling Shillinq integration: [`lib/Service/ShillinqWipService.php`](../../lib/Service/ShillinqWipService.php)
 - Pattern reference: ADR-022 (event-driven cross-app integration)

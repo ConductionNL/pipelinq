@@ -46,6 +46,8 @@ use Throwable;
 
 /**
  * Typed AC client with scope caching.
+ *
+ * @spec openspec/specs/vng-klantinteracties-leaf/spec.md
  */
 class AcClient {
 	/**
@@ -233,6 +235,7 @@ class AcClient {
 	 * @param string $scope Scope name (e.g. "zaken.aanmaken").
 	 *
 	 * @return bool True when the scope is granted.
+	 * @spec openspec/specs/vng-klantinteracties-leaf/spec.md
 	 */
 	public function hasScope(array $endpoint, string $resourceUrl, string $scope): bool {
 		$endpointId = (string)($endpoint['id'] ?? ($endpoint['@self']['slug'] ?? ''));
@@ -271,6 +274,7 @@ class AcClient {
 	 * @param string $resourceUrl Target resource URL.
 	 *
 	 * @return array<int, string>
+	 * @spec openspec/specs/vng-klantinteracties-leaf/spec.md
 	 */
 	public function getScopesFor(array $endpoint, string $resourceUrl): array {
 		$endpointId = (string)($endpoint['id'] ?? ($endpoint['@self']['slug'] ?? ''));
@@ -326,6 +330,7 @@ class AcClient {
 	 * @param int|null $refreshedAt Optional override timestamp.
 	 *
 	 * @return void
+	 * @spec openspec/specs/vng-klantinteracties-leaf/spec.md
 	 */
 	public function primeCache(string $endpointId, array $scopes, ?int $refreshedAt = null): void {
 		$this->cache[$endpointId] = ['refreshedAt' => $refreshedAt ?? time(), 'scopes' => $scopes];

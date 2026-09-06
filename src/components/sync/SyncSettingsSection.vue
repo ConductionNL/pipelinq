@@ -178,6 +178,8 @@ export default {
 	methods: {
 		/**
 		 * Load the persisted matching settings + last-run status.
+		 *
+		 * @spec openspec/specs/email-calendar-sync/spec.md#requirement-email-sync-must-be-configurable-per-user
 		 */
 		async load() {
 			this.loading = true
@@ -216,7 +218,7 @@ export default {
 						},
 					]
 				}
-			} catch (err) {
+			} catch {
 				this.statusMessage = this.t(
 					'pipelinq',
 					'Could not load matching settings.',
@@ -229,6 +231,8 @@ export default {
 
 		/**
 		 * Persist the form.
+		 *
+		 * @spec openspec/specs/email-calendar-sync/spec.md#requirement-email-sync-must-be-configurable-per-user
 		 */
 		async save() {
 			this.saving = true
@@ -256,7 +260,7 @@ export default {
 					: []
 				this.form.excludedText = excludedOut.join(', ')
 				this.statusMessage = this.t('pipelinq', 'Matching settings saved.')
-			} catch (err) {
+			} catch {
 				this.statusMessage = this.t(
 					'pipelinq',
 					'Could not save matching settings.',
@@ -269,6 +273,8 @@ export default {
 
 		/**
 		 * Run the matcher once for the current user.
+		 *
+		 * @spec openspec/specs/email-calendar-sync/spec.md#requirement-sync-must-be-near-real-time-and-handle-conflicts
 		 */
 		async trigger() {
 			this.triggering = true
@@ -297,7 +303,7 @@ export default {
 					scanned: Number(statusData.scanned) || 0,
 					error: statusData.error || null,
 				}
-			} catch (err) {
+			} catch {
 				this.statusMessage = this.t(
 					'pipelinq',
 					'Could not run the matching job.',

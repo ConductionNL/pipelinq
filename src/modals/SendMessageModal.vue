@@ -391,7 +391,7 @@ export default {
 					state: data.state || 'opted-in',
 				}
 				showSuccess(t('pipelinq', 'Consent recorded.'))
-			} catch (e) {
+			} catch {
 				showError(t('pipelinq', 'Failed to record consent.'))
 			} finally {
 				this.recordingConsent = false

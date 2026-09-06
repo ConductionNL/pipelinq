@@ -64,6 +64,8 @@ class InvalidTenderException extends Exception {
 	 * The HTTP status code the controller should map to.
 	 *
 	 * @return int The status code.
+	 * @spec exclude exception type: carries a failure mode, not a behaviour a requirement
+	 *   can specify
 	 */
 	public function getStatusCode(): int {
 		return $this->statusCode;

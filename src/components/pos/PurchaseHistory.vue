@@ -64,6 +64,9 @@ export default {
 
 		defaultCollapsed: {
 			type: Boolean,
+			// History is long, so it starts collapsed and a caller opts INTO
+			// expanding it.
+			// eslint-disable-next-line vue/no-boolean-default
 			default: true,
 		},
 	},
@@ -163,7 +166,7 @@ export default {
 	padding: 8px 12px;
 	cursor: pointer;
 	font-weight: 600;
-	text-align: left;
+	text-align: start;
 }
 
 .purchase-history__body {
@@ -182,7 +185,7 @@ export default {
 
 .purchase-history__table th {
 	font-size: 11px;
-	text-align: left;
+	text-align: start;
 	color: var(--color-text-maxcontrast);
 	padding: 4px 6px;
 	border-bottom: 1px solid var(--color-border);

@@ -27,6 +27,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
+use DateTimeImmutable;
+use DateTimeZone;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -395,10 +397,37 @@ class ConsentService {
 			return null;
 		}
 
+		// Compare INSTANTS, not strings. A strcmp cannot order a record written
+		// at second resolution ('…T12:00:00Z') against one written at
+		// microsecond resolution in the same second ('…T12:00:00.123456Z'):
+		// 'Z' sorts after '.', so the older record would win. Parsing gives the
+		// right answer for either format, and for a mix of the two.
 		usort(
 			$matching,
 			static function (array $a, array $b): int {
-				return strcmp((string)($b['recordedAt'] ?? ''), (string)($a['recordedAt'] ?? ''));
+				$rawA = (string)($a['recordedAt'] ?? '');
+				$rawB = (string)($b['recordedAt'] ?? '');
+				$left = null;
+				$right = null;
+				try {
+					$left = new DateTimeImmutable($rawA);
+					$right = new DateTimeImmutable($rawB);
+				} catch (Throwable $e) {
+					unset($e);
+				}
+
+				// Strtotime() would truncate to whole seconds and re-create the
+				// tie this fix exists to remove, so compare with microseconds.
+				if ($left !== null && $right !== null) {
+					$cmp = ($right->format('U.u') <=> $left->format('U.u'));
+					if ($cmp !== 0) {
+						return $cmp;
+					}
+				}
+
+				// Unparseable, or genuinely simultaneous to the microsecond:
+				// the string at least makes the order deterministic.
+				return strcmp($rawB, $rawA);
 			}
 		);
 
@@ -583,11 +612,27 @@ class ConsentService {
 	}//end getSchemaSlug()
 
 	/**
-	 * Current ISO 8601 UTC timestamp.
+	 * Current ISO 8601 UTC timestamp, to MICROSECOND resolution.
+	 *
+	 * 🔴 SECONDS ARE NOT ENOUGH TO ORDER CONSENT.
+	 *
+	 * This was gmdate('Y-m-d\TH:i:s\Z'), and loadLatestRecord() orders consent
+	 * events by this value. Two changes in the SAME SECOND therefore had no
+	 * defined order, and "the latest consent" — which is the whole question
+	 * this service answers, and a legally meaningful one — came down to which
+	 * row the store happened to return first. Opting out and back in inside one
+	 * second could leave the opt-out winning.
+	 *
+	 * ConsentServiceTest carried a sleep() to work around it, with a comment
+	 * saying so, and still failed roughly one run in five.
+	 *
+	 * Microseconds keep the value ISO 8601 and keep it string-sortable; the
+	 * comparison in loadLatestRecord() parses rather than strcmp's, so records
+	 * written at the old resolution still order correctly against new ones.
 	 *
 	 * @return string Timestamp.
 	 */
 	private function nowIso(): string {
-		return gmdate('Y-m-d\TH:i:s\Z');
+		return (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format('Y-m-d\TH:i:s.u\Z');
 	}//end nowIso()
 }//end class

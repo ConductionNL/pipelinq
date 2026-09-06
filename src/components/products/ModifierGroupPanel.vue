@@ -246,6 +246,8 @@ export default {
 
 		/**
 		 * Persist the modifier groups to the product.
+		 *
+		 * @spec openspec/specs/pos-product-catalogue/spec.md#REQ-PPC-002
 		 */
 		async save() {
 			this.saving = true
@@ -260,7 +262,7 @@ export default {
 				} else {
 					showError(t('pipelinq', 'Failed to save modifier groups'))
 				}
-			} catch (e) {
+			} catch {
 				showError(t('pipelinq', 'Failed to save modifier groups'))
 			} finally {
 				this.saving = false
@@ -316,14 +318,14 @@ export default {
 .modifier-group-panel__options th,
 .modifier-group-panel__options td {
 	padding: 6px 8px;
-	text-align: left;
+	text-align: start;
 	border-bottom: 1px solid var(--color-border);
 	vertical-align: middle;
 }
 
 .modifier-group-panel__actions-col {
 	width: 48px;
-	text-align: right;
+	text-align: end;
 }
 
 .modifier-group-panel__hint {

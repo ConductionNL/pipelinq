@@ -593,11 +593,6 @@ class ProductCatalogControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testResolvePriceRejectsANegativeQuantity(): void {
-		$this->markTestSkipped(
-			'BUG: a negative quantity is silently clamped to 0 and answered HTTP 200 '
-			. 'instead of being rejected — see coordinator report'
-		);
-
 		// Unreachable while the bug stands; kept so the intended contract is on record.
 		$response = $this->controllerWithRealService(
 			['product' => ['unitPrice' => 10.0], 'quantity' => -5]

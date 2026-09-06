@@ -148,6 +148,7 @@ export default {
 		 * Enable or disable a job.
 		 *
 		 * @param {object} row The job row.
+		 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#requirement-destination-upload-with-retries-req-bie-008
 		 */
 		async toggleEnabled(row) {
 			this.busyId = row.id
@@ -160,7 +161,7 @@ export default {
 					showSuccess(this.t('pipelinq', 'Job enabled'))
 				}
 				await this.refresh()
-			} catch (e) {
+			} catch {
 				showError(this.t('pipelinq', 'Could not change job status'))
 			} finally {
 				this.busyId = null

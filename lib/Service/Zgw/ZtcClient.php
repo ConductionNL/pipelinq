@@ -43,6 +43,8 @@ use Throwable;
 
 /**
  * Typed ZTC client with omschrijving → URL cache.
+ *
+ * @spec openspec/specs/vng-klantinteracties-leaf/spec.md
  */
 class ZtcClient {
 	public const RESOURCE_ZAAKTYPE = 'zaaktypen';
@@ -90,6 +92,7 @@ class ZtcClient {
 	 * @return string Zaaktype URL.
 	 *
 	 * @throws ZaaktypeNotInCatalogusException When no zaaktype matches.
+	 * @spec openspec/specs/vng-klantinteracties-leaf/spec.md
 	 */
 	public function resolveZaaktype(array $endpoint, string $omschrijving): string {
 		$hit = $this->resolveByOmschrijving(
@@ -165,6 +168,7 @@ class ZtcClient {
 	 * @return string Besluittype URL.
 	 *
 	 * @throws BesluittypeNotInCatalogusException When no besluittype matches.
+	 * @spec openspec/specs/vng-klantinteracties-leaf/spec.md
 	 */
 	public function resolveBesluittype(array $endpoint, string $omschrijving): string {
 		$hit = $this->resolveByOmschrijving(
@@ -190,6 +194,7 @@ class ZtcClient {
 	 * @param string $statustypeUrl Fully-qualified statustype URL.
 	 *
 	 * @return string|null Omschrijving (or null when the lookup fails).
+	 * @spec openspec/specs/vng-klantinteracties-leaf/spec.md
 	 */
 	public function resolveOmschrijvingFromUrl(array $endpoint, string $statustypeUrl): ?string {
 		$endpointId = (string)($endpoint['id'] ?? '');
@@ -239,6 +244,7 @@ class ZtcClient {
 	 * @param string $resourceType One of RESOURCE_* (or '*' for all).
 	 *
 	 * @return void
+	 * @spec openspec/specs/vng-klantinteracties-leaf/spec.md
 	 */
 	public function invalidateCache(array $endpoint, string $resourceType = '*'): void {
 		$endpointId = (string)($endpoint['id'] ?? '');
@@ -264,6 +270,7 @@ class ZtcClient {
 	 * @param array<string, mixed> $data Optional full body for ZTC entry.
 	 *
 	 * @return void
+	 * @spec openspec/specs/vng-klantinteracties-leaf/spec.md
 	 */
 	public function primeCache(string $endpointId, string $resourceType, string $omschrijving, string $url, array $data = []): void {
 		$cacheData = $data;

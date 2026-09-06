@@ -30,6 +30,11 @@ namespace OCA\Pipelinq\Service\Portal;
 
 /**
  * Per-customer invoice read facade.
+ *
+ * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+ *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+ *   sessions, tokens, delegation, documents, invoices, orders, exports and
+ *   audit are all unspecified
  */
 class PortalInvoiceService extends AbstractPortalReadFacade {
 	/**

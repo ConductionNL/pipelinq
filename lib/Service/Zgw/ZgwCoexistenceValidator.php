@@ -64,6 +64,8 @@ use Psr\Log\LoggerInterface;
 
 /**
  * Coexistence validator (write-path conflict detector).
+ *
+ * @spec openspec/specs/vng-klantinteracties-leaf/spec.md
  */
 class ZgwCoexistenceValidator {
 	/**

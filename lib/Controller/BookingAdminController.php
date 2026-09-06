@@ -132,6 +132,7 @@ class BookingAdminController extends Controller {
 	 * @param string $id The booking UUID.
 	 *
 	 * @return JSONResponse The result, or an error.
+	 * @spec openspec/specs/appointment-booking/spec.md#REQ-APT-012
 	 */
 	#[NoAdminRequired]
 	public function cancel(string $id): JSONResponse {

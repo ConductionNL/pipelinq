@@ -33,14 +33,15 @@
  * crashing the flow. That is not a weaker version of the scenario — an
  * unconfigured proxy is the state every fresh install starts in.
  */
-import { test, expect, APIResponse } from '@playwright/test'
+import type { APIResponse } from '@playwright/test'
 
+import { expect, test } from '@playwright/test'
 import {
-	openApp,
-	dismissWalkthrough,
-	dismissSupportDialog,
 	assertNoHardError,
-} from '../helpers/pipelinq'
+	dismissSupportDialog,
+	dismissWalkthrough,
+	openApp,
+} from '../helpers/pipelinq.ts'
 
 /** The xWiki proxy endpoints the knowledge-base surface is built on. */
 const XWIKI_STATUS = '/apps/pipelinq/api/xwiki/status'
@@ -90,7 +91,7 @@ test('the knowledge-base surface is reachable: the widget mounts and the proxy a
 	// The knowledge-base widget lives on the Operational overview dashboard
 	// (src/manifest.json, page `OperationalDashboard`, widget `xwiki-knowledge`
 	// at layout slot 13), NOT on the landing Commercial overview.
-	await page.goto('/apps/pipelinq/#/operational')
+	await page.goto('/apps/pipelinq/operational')
 	await expect(page.locator('#content-vue')).toBeVisible({ timeout: 15000 })
 	await dismissWalkthrough(page)
 	await dismissSupportDialog(page)
@@ -243,7 +244,7 @@ test('knowledge-base operations tolerate absent or unresolvable input', async ({
 
 	// The surrounding flow survives it: the dashboard that hosts the widget
 	// still renders, with no server error or uncaught render failure.
-	await page.goto('/apps/pipelinq/#/operational')
+	await page.goto('/apps/pipelinq/operational')
 	await expect(page.locator('#content-vue')).toBeVisible({ timeout: 15000 })
 	await assertNoHardError(page)
 })

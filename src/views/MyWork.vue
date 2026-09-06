@@ -652,7 +652,7 @@ export default {
 	font-weight: 700;
 	background: var(--color-background-darker, rgba(0, 0, 0, 0.07));
 	color: var(--color-text-maxcontrast);
-	margin-left: 6px;
+	margin-inline-start: 6px;
 }
 
 .group-count--overdue {
@@ -684,7 +684,7 @@ export default {
 }
 
 .work-card--overdue {
-	border-left: 3px solid var(--color-error);
+	border-inline-start: 3px solid var(--color-error);
 }
 
 .work-card--completed {
@@ -780,7 +780,7 @@ export default {
 	background: #fff7ed;
 	color: #c2410c;
 	border: 1px solid #fdba74;
-	margin-left: 6px;
+	margin-inline-start: 6px;
 	vertical-align: middle;
 }
 

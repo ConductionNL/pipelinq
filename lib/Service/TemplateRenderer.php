@@ -41,6 +41,8 @@ use RuntimeException;
 
 /**
  * Render a BerichtenboxTemplate into a rendered subject + body.
+ *
+ * @spec openspec/specs/outbound-messaging/spec.md#REQ-OM-004
  */
 class TemplateRenderer {
 	/**
@@ -70,6 +72,7 @@ class TemplateRenderer {
 	 * @return array{subject: string, body: string, deepLink: ?string}
 	 *
 	 * @throws RuntimeException If the body fails XHTML strict validation.
+	 * @spec openspec/specs/outbound-messaging/spec.md#REQ-OM-004
 	 */
 	public function render(array $template, array $variables): array {
 		$deepLink = null;

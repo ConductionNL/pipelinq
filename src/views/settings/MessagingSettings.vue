@@ -737,11 +737,14 @@ export default {
 			try {
 				await navigator.clipboard.writeText(this.webhookUrl(provider))
 				showSuccess(t('pipelinq', 'Webhook URL copied to clipboard.'))
-			} catch (e) {
+			} catch {
 				showError(t('pipelinq', 'Could not copy the webhook URL.'))
 			}
 		},
 
+		/**
+		 * @spec openspec/specs/outbound-messaging/spec.md#REQ-OM-001
+		 */
 		async fetchProviders() {
 			this.loadingProviders = true
 			try {
@@ -749,7 +752,7 @@ export default {
 					(await this.objectStore.fetchCollection('channelProvider', {
 						_limit: 200,
 					})) || []
-			} catch (e) {
+			} catch {
 				this.providers = []
 				showError(t('pipelinq', 'Failed to load channel providers.'))
 			} finally {
@@ -879,7 +882,7 @@ export default {
 					(await this.objectStore.fetchCollection('messageSendBudget', {
 						_limit: 200,
 					})) || []
-			} catch (e) {
+			} catch {
 				this.budgets = []
 				showError(t('pipelinq', 'Failed to load send budgets.'))
 			} finally {
@@ -991,7 +994,7 @@ export default {
 					(await this.objectStore.fetchCollection('messageTemplate', {
 						_limit: 200,
 					})) || []
-			} catch (e) {
+			} catch {
 				this.templates = []
 				showError(t('pipelinq', 'Failed to load templates.'))
 			} finally {
@@ -1025,7 +1028,7 @@ export default {
 }
 
 .messaging-settings__table th {
-	text-align: left;
+	text-align: start;
 	font-size: 12px;
 	color: var(--color-text-maxcontrast);
 	border-bottom: 1px solid var(--color-border);
@@ -1040,7 +1043,7 @@ export default {
 }
 
 .messaging-settings__col-actions {
-	text-align: right;
+	text-align: end;
 	white-space: nowrap;
 }
 

@@ -7,9 +7,8 @@
  * Backend/data/V1/Enterprise scenarios excluded per-scenario below.
  */
 
-import { test, expect } from '@playwright/test'
-
-import { assertAppShellServed, revealNavEntry } from '../helpers/pipelinq'
+import { expect, test } from '@playwright/test'
+import { assertAppShellServed, revealNavEntry } from '../helpers/pipelinq.ts'
 
 // @e2e openspec/specs/my-work/spec.md#empty-workload
 test('my work page renders with empty state', async ({ page }) => {
@@ -98,11 +97,7 @@ test('my work page loads for V1 expanded view', async ({ page }) => {
  * @e2e exclude procest-unavailable-gracefully — backend graceful degradation; covered by PHPUnit
  * @e2e exclude lead-card-in-my-work — requires assigned lead data
  * @e2e exclude request-card-in-my-work — requires assigned request data
- * @e2e exclude view-items-from-assigned-queues — Enterprise queue feature
- * @e2e exclude queue-section-shows-unassigned-items — Enterprise queue feature
- * @e2e exclude pick-from-queue-in-my-work — Enterprise queue feature
- * @e2e exclude no-queue-assignments — Enterprise queue feature
- * @e2e exclude toggle-between-views — V1 view toggle; not yet implemented
+ * @e2e exclude picking-work-up-moves-it — mutates a shared instance
  * @e2e exclude task-card-in-my-work — V1 task cards; not yet implemented
  * @e2e exclude kpi-tiles-update-with-filter — requires data + filter interaction
  * @e2e exclude kpi-tiles-with-zero-values — depends on test data state

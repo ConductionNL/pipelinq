@@ -1,0 +1,560 @@
+{
+	"_meta": {
+		"change": "marketing-integrated-campaigns",
+		"license": "EUPL-1.2",
+		"copyright": "2026 Conduction B.V.",
+		"description": "Phase 6 of the marketing programme. Three schemas and five seeded standard audiences. The `journey` is authored in pipelinq and COMPILED into an OpenRegister flow (ADR-094); `flowUuid` and `flowStatus` are the only record of that compilation, and pipelinq ships no scheduler of its own. `journeyRun` is the per-contact outcome, and it is what the flow's action node writes so a refusal names the contact it refused. `weeklyReview` holds the numbers pipelinq composed and the narrative an agent may write back, carrying the ADR-088 mark in the same `agentAuthored` / `agentAuthoredBy` pair `article` and `socialPost` already use. The five seeded segments are EXAMPLES a marketer copies: three of them read shillinq signals and resolve to nobody where shillinq is absent, which is the safe direction and is stated in each description."
+	},
+	"components": {
+		"registers": {
+			"pipelinq": {
+				"schemas": [
+					"journey",
+					"journeyRun",
+					"weeklyReview",
+					"blast"
+				]
+			}
+		},
+		"schemas": {
+			"journey": {
+				"slug": "journey",
+				"title": "Journey",
+				"icon": "MapMarkerPath",
+				"version": "1.0.0",
+				"summary": "A trigger, a wait, a condition and one action, compiled into an OpenRegister flow.",
+				"description": "Authored in pipelinq and executed by OpenRegister's flow engine (ADR-094). Compilation writes flowUuid and flowStatus; nothing here runs until a journey is compiled and active. The action always passes ComplianceService, so a journey can never send where an ordinary blast could not.",
+				"x-schema-org": "schema:Action",
+				"required": [
+					"name",
+					"trigger",
+					"action"
+				],
+				"properties": {
+					"name": {
+						"type": "string",
+						"minLength": 1,
+						"maxLength": 255,
+						"title": "Name",
+						"description": "What this journey is for, in the marketer's own words.",
+						"example": "Win back a customer who has not bought in a year"
+					},
+					"description": {
+						"type": "string",
+						"title": "Description",
+						"description": "Why the journey exists and who it is meant to reach."
+					},
+					"status": {
+						"type": "string",
+						"enum": [
+							"draft",
+							"active",
+							"paused"
+						],
+						"default": "draft",
+						"title": "Status",
+						"description": "A journey only runs while it is active.",
+						"x-enum-labels": {
+							"draft": "Draft",
+							"active": "Active",
+							"paused": "Paused"
+						}
+					},
+					"audienceSegment": {
+						"type": "string",
+						"title": "Audience",
+						"description": "The segment a contact must still match when the action runs. Empty means every contact the trigger delivered.",
+						"example": "segment-lapsed-customers"
+					},
+					"trigger": {
+						"type": "object",
+						"title": "Trigger",
+						"description": "What starts the journey.",
+						"properties": {
+							"kind": {
+								"type": "string",
+								"enum": [
+									"leadStageChanged",
+									"contractRenewalWindow",
+									"listConfirmed",
+									"shillinqSignal"
+								],
+								"title": "Trigger kind",
+								"description": "A stage change, a contract renewal window, a list confirmation or a bookkeeping signal.",
+								"x-enum-labels": {
+									"leadStageChanged": "A lead moved stage",
+									"contractRenewalWindow": "A contract is up for renewal",
+									"listConfirmed": "Someone confirmed a subscription",
+									"shillinqSignal": "A bookkeeping signal changed"
+								}
+							},
+							"cron": {
+								"type": "string",
+								"title": "Schedule",
+								"description": "Cron expression for a bookkeeping signal, which no object event announces. Ignored by the other three kinds.",
+								"example": "0 7 * * *"
+							}
+						}
+					},
+					"waitFor": {
+						"type": "string",
+						"title": "Wait",
+						"description": "How long to wait before the condition is checked, as OpenRegister's wait node reads it. Empty means no wait.",
+						"example": "5 days"
+					},
+					"condition": {
+						"type": "object",
+						"title": "Condition",
+						"description": "One check on the triggering object after the wait. Empty means the action always runs.",
+						"properties": {
+							"field": {
+								"type": "string",
+								"title": "Field",
+								"description": "The field on the triggering object to check.",
+								"example": "status"
+							},
+							"operator": {
+								"type": "string",
+								"enum": [
+									"equals",
+									"notEquals",
+									"isNull",
+									"isNotNull"
+								],
+								"default": "equals",
+								"title": "Operator",
+								"description": "How the field is compared.",
+								"x-enum-labels": {
+									"equals": "Is",
+									"notEquals": "Is not",
+									"isNull": "Is empty",
+									"isNotNull": "Is filled in"
+								}
+							},
+							"value": {
+								"type": "string",
+								"title": "Value",
+								"description": "What the field is compared against.",
+								"example": "open"
+							}
+						}
+					},
+					"action": {
+						"type": "object",
+						"title": "Action",
+						"description": "What the journey does once the condition holds.",
+						"properties": {
+							"kind": {
+								"type": "string",
+								"enum": [
+									"sendMailing",
+									"createTask"
+								],
+								"default": "createTask",
+								"title": "Action kind",
+								"description": "Send a mailing to the contact, or put a task on somebody's list.",
+								"x-enum-labels": {
+									"sendMailing": "Send a mailing",
+									"createTask": "Create a task"
+								}
+							},
+							"templateId": {
+								"type": "string",
+								"title": "Template",
+								"description": "The campaign template a mailing is rendered from.",
+								"example": "template-renewal-reminder"
+							},
+							"listId": {
+								"type": "string",
+								"title": "Mailing list",
+								"description": "The list whose consent gate the send is checked against. Empty checks the channel gate instead.",
+								"example": "list-nieuwsbrief"
+							},
+							"intent": {
+								"type": "string",
+								"enum": [
+									"promotional",
+									"service"
+								],
+								"default": "promotional",
+								"title": "Send intent",
+								"description": "A promotional send is suppressed for a customer in dunning. A service message is not.",
+								"x-enum-labels": {
+									"promotional": "Promotional",
+									"service": "Service message"
+								}
+							},
+							"taskSubject": {
+								"type": "string",
+								"title": "Task subject",
+								"description": "The subject of the task a createTask action writes.",
+								"example": "Call about the renewal"
+							},
+							"taskType": {
+								"type": "string",
+								"default": "callback",
+								"title": "Task type",
+								"description": "The task type, as the task schema records it.",
+								"example": "callback"
+							},
+							"taskAssignee": {
+								"type": "string",
+								"title": "Task assignee",
+								"description": "The user the task goes to. Empty leaves it unassigned.",
+								"example": "admin"
+							}
+						}
+					},
+					"flowUuid": {
+						"type": "string",
+						"title": "Flow",
+						"description": "The OpenRegister flow this journey compiled into. Written by the compiler, never by hand.",
+						"example": "00000000-0000-0000-0000-000000000000"
+					},
+					"flowStatus": {
+						"type": "string",
+						"enum": [
+							"not_compiled",
+							"compiled",
+							"engine_missing",
+							"refused"
+						],
+						"default": "not_compiled",
+						"title": "Flow status",
+						"description": "Whether the flow engine accepted this journey.",
+						"x-enum-labels": {
+							"not_compiled": "Not compiled yet",
+							"compiled": "Compiled",
+							"engine_missing": "No flow engine",
+							"refused": "Refused by the flow engine"
+						}
+					},
+					"flowError": {
+						"type": "string",
+						"title": "Flow error",
+						"description": "What the flow engine said, word for word, when it refused. Empty on a clean compile."
+					},
+					"createdBy": {
+						"type": "string",
+						"title": "Created by",
+						"description": "The user who wrote this journey.",
+						"example": "admin"
+					},
+					"createdAt": {
+						"type": "string",
+						"format": "date-time",
+						"title": "Created at",
+						"description": "When the journey was written."
+					},
+					"updatedAt": {
+						"type": "string",
+						"format": "date-time",
+						"title": "Updated at",
+						"description": "When the journey last changed."
+					}
+				}
+			},
+			"journeyRun": {
+				"slug": "journeyRun",
+				"title": "Journey run",
+				"icon": "MapMarkerCheck",
+				"version": "1.0.0",
+				"summary": "What one journey did, or refused to do, for one contact.",
+				"description": "Written by the pipelinq.journey-action flow node. A refusal is recorded with the contact it refused and the reason, because a journey that quietly skips people looks exactly like a journey with a small audience.",
+				"x-schema-org": "schema:Action",
+				"required": [
+					"journeyId",
+					"state"
+				],
+				"properties": {
+					"journeyId": {
+						"type": "string",
+						"title": "Journey",
+						"description": "The journey this run belongs to.",
+						"example": "journey-win-back"
+					},
+					"contactId": {
+						"type": "string",
+						"title": "Contact",
+						"description": "The contact the action was meant for.",
+						"example": "00000000-0000-0000-0000-000000000000"
+					},
+					"clientId": {
+						"type": "string",
+						"title": "Customer",
+						"description": "The customer the contact belongs to, when there is one.",
+						"example": "00000000-0000-0000-0000-000000000000"
+					},
+					"state": {
+						"type": "string",
+						"enum": [
+							"sent",
+							"refused",
+							"task-created",
+							"failed"
+						],
+						"title": "State",
+						"description": "What happened.",
+						"x-enum-labels": {
+							"sent": "Sent",
+							"refused": "Refused",
+							"task-created": "Task created",
+							"failed": "Failed"
+						}
+					},
+					"reason": {
+						"type": "string",
+						"title": "Reason",
+						"description": "Why the action was refused or failed. Empty on a send that went out.",
+						"example": "no_consent"
+					},
+					"actionKind": {
+						"type": "string",
+						"title": "Action kind",
+						"description": "Which action the journey asked for.",
+						"example": "sendMailing"
+					},
+					"occurredAt": {
+						"type": "string",
+						"format": "date-time",
+						"title": "Occurred at",
+						"description": "When the step ran."
+					},
+					"flowRunUuid": {
+						"type": "string",
+						"title": "Flow run",
+						"description": "The OpenRegister flow run this step belonged to.",
+						"example": "00000000-0000-0000-0000-000000000000"
+					}
+				}
+			},
+			"weeklyReview": {
+				"slug": "weeklyReview",
+				"title": "Weekly review",
+				"icon": "CalendarWeek",
+				"version": "1.0.0",
+				"summary": "One page of what moved last week, what to try, and three topic ideas.",
+				"description": "Pipelinq composes the numbers from mailings, social publications, search queries and competitor watch events. The agentAuthored pair is the ADR-088 mark storage: nothing writes it yet, because pipelinq ships no MCP tool provider and the seeded agent template grants read-only tools. The review takes no action: it has no send and no publish path.",
+				"x-schema-org": "schema:Report",
+				"required": [
+					"weekStarting"
+				],
+				"properties": {
+					"weekStarting": {
+						"type": "string",
+						"format": "date",
+						"title": "Week starting",
+						"description": "The Monday the reviewed week began on.",
+						"example": "2026-09-07"
+					},
+					"sources": {
+						"type": "array",
+						"items": {
+							"type": "string"
+						},
+						"default": [],
+						"title": "Sources",
+						"description": "Which collections the numbers came from.",
+						"example": "campaign"
+					},
+					"degraded": {
+						"type": "array",
+						"items": {
+							"type": "string"
+						},
+						"default": [],
+						"title": "Empty sources",
+						"description": "Sources this tenant holds no rows for at all, so a reader knows the absence is missing data rather than a zero.",
+						"example": "watchEvent"
+					},
+					"summary": {
+						"type": "string",
+						"title": "Summary",
+						"description": "What moved last week, in prose."
+					},
+					"highlights": {
+						"type": "array",
+						"items": {
+							"type": "string"
+						},
+						"default": [],
+						"title": "Highlights",
+						"description": "The few numbers worth reading first.",
+						"example": "Webinar AI voor gemeenten reached 120 people"
+					},
+					"suggestions": {
+						"type": "array",
+						"items": {
+							"type": "string"
+						},
+						"default": [],
+						"title": "Suggestions",
+						"description": "What to try next week.",
+						"example": "Follow up the webinar with a short case study"
+					},
+					"topicIdeas": {
+						"type": "array",
+						"items": {
+							"type": "string"
+						},
+						"default": [],
+						"title": "Topic ideas",
+						"description": "Three things worth writing about, drawn from what changed.",
+						"example": "Open source procurement for provinces"
+					},
+					"generatedAt": {
+						"type": "string",
+						"format": "date-time",
+						"title": "Generated at",
+						"description": "When the review was composed."
+					},
+					"agentAuthored": {
+						"type": "boolean",
+						"default": false,
+						"title": "Agent authored",
+						"description": "Whether an agent wrote the narrative. Nothing writes it yet: pipelinq ships no MCP tool provider, so no agent reaches a write path. When the writer lands it applies this itself and ignores a value arriving in a request body, because a mark a client can set is not a mark (ADR-088)."
+					},
+					"agentAuthoredBy": {
+						"type": "string",
+						"maxLength": 255,
+						"title": "Agent authored by",
+						"description": "Identity of the agent that wrote the narrative. Empty on a review nobody added prose to.",
+						"example": "hermiq:marketing-weekly-review"
+					}
+				}
+			},
+			"blast": {
+				"version": "1.2.0",
+				"description": "A blast is one campaign send. A journey that sends a mailing records its deliveries against a blast of its own, so the click redirect, the unsubscribe link and the campaign report keep working on a journey send without a second code path. journeyId is empty on every blast a person composed.",
+				"properties": {
+					"journeyId": {
+						"type": "string",
+						"title": "Journey",
+						"description": "The journey whose sends this blast is the ledger for. Empty on a blast a person composed.",
+						"example": "journey-win-back"
+					}
+				}
+			}
+		},
+		"objects": [
+			{
+				"@self": {
+					"register": "pipelinq",
+					"schema": "segment",
+					"slug": "segment-lapsed-customers"
+				},
+				"name": "Lapsed customers",
+				"description": "Customers with no invoice for twelve months. Reads shillinq. Where shillinq is absent this audience is empty, which is the safe direction: an unreadable bookkeeping never widens a mailing.",
+				"entityType": "customer",
+				"rules": {
+					"type": "AND",
+					"children": [
+						{
+							"field": "shillinqMonthsSinceLastInvoice",
+							"operator": "gte",
+							"value": 12
+						}
+					]
+				},
+				"estimatedSize": 0
+			},
+			{
+				"@self": {
+					"register": "pipelinq",
+					"schema": "segment",
+					"slug": "segment-top-tier-customers"
+				},
+				"name": "Top tier customers",
+				"description": "Customers whose recognised revenue puts them in the top tier. Reads shillinq, and is empty where shillinq is absent.",
+				"entityType": "customer",
+				"rules": {
+					"type": "AND",
+					"children": [
+						{
+							"field": "shillinqValueTier",
+							"operator": "equals",
+							"value": "top"
+						}
+					]
+				},
+				"estimatedSize": 0
+			},
+			{
+				"@self": {
+					"register": "pipelinq",
+					"schema": "segment",
+					"slug": "segment-service-without-product"
+				},
+				"name": "Advice customers without a product",
+				"description": "Customers invoiced for the demo advice hour and never for the demo coffee. Copy it and swap the two item names for your own catalogue. Reads shillinq, and is empty where shillinq is absent.",
+				"entityType": "customer",
+				"rules": {
+					"type": "AND",
+					"children": [
+						{
+							"field": "shillinqPurchasedServices",
+							"operator": "contains",
+							"value": "[demo] adviesuur"
+						},
+						{
+							"type": "NOT",
+							"children": [
+								{
+									"field": "shillinqPurchasedProducts",
+									"operator": "contains",
+									"value": "[demo] koffie zwart"
+								}
+							]
+						}
+					]
+				},
+				"estimatedSize": 0
+			},
+			{
+				"@self": {
+					"register": "pipelinq",
+					"schema": "segment",
+					"slug": "segment-renewing-within-ninety-days"
+				},
+				"name": "Contracts renewing within ninety days",
+				"description": "Customers whose nearest contract ends in the next ninety days. Reads pipelinq's own contracts, so it resolves on every instance.",
+				"entityType": "customer",
+				"rules": {
+					"type": "AND",
+					"children": [
+						{
+							"field": "pipelinqContractRenewalDays",
+							"operator": "between",
+							"value": [
+								0,
+								90
+							]
+						}
+					]
+				},
+				"estimatedSize": 0
+			},
+			{
+				"@self": {
+					"register": "pipelinq",
+					"schema": "segment",
+					"slug": "segment-stalled-leads-thirty-days"
+				},
+				"name": "Leads stalled for thirty days",
+				"description": "Customers with an open lead that has sat in the same stage for thirty days or more. Reads pipelinq's own leads, so it resolves on every instance.",
+				"entityType": "customer",
+				"rules": {
+					"type": "AND",
+					"children": [
+						{
+							"field": "pipelinqStalledLeadDays",
+							"operator": "gte",
+							"value": 30
+						}
+					]
+				},
+				"estimatedSize": 0
+			}
+		]
+	}
+}

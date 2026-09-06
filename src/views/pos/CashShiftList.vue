@@ -125,6 +125,8 @@ export default {
 		 * the client only supplies the drawer and the declared float amount.
 		 *
 		 * @param {object} payload The dialog payload (drawer, floatAmount, reference, notes).
+		 * @spec exclude the cash-shift surface has no owning requirement, see
+		 *   CashShiftActionsSection::lifecycle
 		 */
 		async createShift(payload) {
 			this.opening = true
@@ -154,7 +156,7 @@ export default {
 				} else {
 					await this.refresh()
 				}
-			} catch (e) {
+			} catch {
 				showError(t('pipelinq', 'Failed to open shift.'))
 			} finally {
 				this.opening = false

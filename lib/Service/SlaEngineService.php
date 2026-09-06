@@ -558,10 +558,19 @@ class SlaEngineService {
 		}
 
 		try {
+			// Register/schema belong inside `filters`: prepareFindAllConfig()
+			// reads them from there and nowhere else, so a top-level pair
+			// resolves NO context and findAll() answers []. Found by grepping
+			// for the shape after fixing the same mistake twice in
+			// SlaAttainmentService — this third site loads the POLICIES, so an
+			// empty answer means every ticket is evaluated against no policy at
+			// all, silently.
 			$rows = $objectService->findAll(
 				config: [
-					'register' => $register,
-					'schema' => $schema,
+					'filters' => [
+						'register' => $register,
+						'schema' => $schema,
+					],
 					'limit' => 500,
 				]
 			);

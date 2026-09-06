@@ -38,6 +38,15 @@ export default {
 	},
 
 	props: {
+		/**
+		 * Widget heading, supplied by the manifest.
+		 *
+		 * Declared but not rendered here: the widget chrome draws the heading.
+		 * Declaring it is what stops Vue's attribute fallthrough painting
+		 * `title="…"` onto the component's root element, which would hover a
+		 * browser tooltip over the whole widget.
+		 */
+		// eslint-disable-next-line vue/no-unused-properties
 		title: {
 			type: String,
 			required: true,

@@ -5,7 +5,7 @@
         "properties": {
           "slaStatus": {
             "type": "object",
-            "description": "SLA tracking snapshot (managed by SlaEngineService — do not edit manually). unify-ticket-supertype: this used to overlay `request` AND `complaint` with an identical block; both are now `ticketType` subtypes of the unified `ticket` schema, so the two overlays collapse into this one.",
+            "description": "SLA tracking snapshot (managed by SlaEngineService: do not edit manually). Unify-ticket-supertype: this used to overlay `request` AND `complaint` with an identical block; both are now `ticketType` subtypes of the unified `ticket` schema, so the two overlays collapse into this one.",
             "properties": {
               "policyId": {
                 "type": "string",

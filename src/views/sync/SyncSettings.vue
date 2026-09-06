@@ -146,7 +146,7 @@ export default {
 						? t('pipelinq', 'Email sync enabled')
 						: t('pipelinq', 'Email sync disabled'),
 				)
-			} catch (error) {
+			} catch {
 				showError(t('pipelinq', 'Failed to update sync settings'))
 			}
 		},
@@ -168,7 +168,7 @@ export default {
 						? t('pipelinq', 'Calendar sync enabled')
 						: t('pipelinq', 'Calendar sync disabled'),
 				)
-			} catch (error) {
+			} catch {
 				showError(t('pipelinq', 'Failed to update sync settings'))
 			}
 		},

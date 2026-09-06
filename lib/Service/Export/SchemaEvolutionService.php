@@ -111,6 +111,8 @@ class SchemaEvolutionService {
 	 *
 	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Per-column scalar type
 	 *  inference enumerates the small fixed set of JSON scalar types.
+	 *
+	 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#requirement-destination-configuration-and-validation-req-bie-001
 	 */
 	public function deriveColumnDefinitions(array $rows): array {
 		$columns = [];

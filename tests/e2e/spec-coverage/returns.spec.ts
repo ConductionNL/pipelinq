@@ -12,14 +12,14 @@
  * empty *_schema), so the schema-driven data surface now loads and the per-type
  * "not registered" error no longer fires on this page.
  */
-import { test, expect } from '@playwright/test'
+import { expect, test } from '@playwright/test'
 import {
-	openApp,
-	navClick,
 	assertNoHardError,
-	trackPipelinqErrors,
+	navClick,
 	openActionsOverflow,
-} from '../helpers/pipelinq'
+	openApp,
+	trackPipelinqErrors,
+} from '../helpers/pipelinq.ts'
 
 // @e2e openspec/specs/pos-refund-return/spec.md#returns-page
 test('Returns: navigates from sidebar and mounts the index chrome', async ({

@@ -30,6 +30,8 @@ use RuntimeException;
 
 /**
  * Service for managing notes on Pipelinq entities.
+ *
+ * @spec openspec/specs/entity-notes/spec.md#requirement-notes-crud-on-all-entity-types-mvp
  */
 class NotesService {
 	public const VALID_TYPES = [

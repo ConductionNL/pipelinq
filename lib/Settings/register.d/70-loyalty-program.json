@@ -19,9 +19,9 @@
       "loyaltyProgramme": {
         "slug": "loyaltyProgramme",
         "title": "Loyalty Programme",
-        "version": "1.0.0",
+        "version": "1.0.1",
         "summary": "A native loyalty programme owned by a brand/retailer with configurable points rules, tier rules and redemption options.",
-        "description": "A LoyaltyProgramme is the top-level container for one brand/retailer's loyalty economics. It owns its own PointsRule, TierRule and RedemptionOption collections; CustomerLoyaltyAccount links a customer (customerId) to exactly one programme. Status transitions from concept→actief are validated against rule and redemption-option presence (REQ-LOY-001).",
+        "description": "A LoyaltyProgramme is the top-level container for one brand/retailer's loyalty economics. It owns its own PointsRule, TierRule and RedemptionOption collections; CustomerLoyaltyAccount links a customer (customerId) to exactly one programme. Status transitions from concept→actief are validated against rule and redemption-option presence.",
         "@type": "LoyaltyProgramme",
         "configuration": {
           "x-openregister-lifecycle": {
@@ -36,7 +36,7 @@
                   "draft"
                 ],
                 "to": "active",
-                "description": "Activate the programme (validated against rule and redemption-option presence, REQ-LOY-001)."
+                "description": "Activate the programme (validated against rule and redemption-option presence)."
               },
               "pause": {
                 "from": [
@@ -65,7 +65,7 @@
         },
         "required": [
           "name",
-          "merk",
+          "brand",
           "status"
         ],
         "properties": {
@@ -139,7 +139,7 @@
           "pointValue": {
             "type": "number",
             "default": 0.01,
-            "description": "EUR value of one point, used for IFRS 15 / RJ 270 liability calculation (REQ-LOY-009).",
+            "description": "EUR value of one point, used for IFRS 15 / RJ 270 liability calculation.",
             "title": "Point Value"
           },
           "expiryPolicy": {
@@ -177,7 +177,7 @@
         "title": "Points Rule",
         "version": "1.0.0",
         "summary": "A trigger-based rule that awards points; conditions filter applicability, formula derives the amount.",
-        "description": "PointsRule defines when (trigger), under what conditions (JSON condition), and how many points (JSON formula) are awarded. Rules are evaluated in priority order; the highest-priority matching rule wins (non-cumulative). See REQ-LOY-002.",
+        "description": "PointsRule defines when (trigger), under what conditions (JSON condition), and how many points (JSON formula) are awarded. Rules are evaluated in priority order; the highest-priority matching rule wins (non-cumulative). See.",
         "@type": "PointsRule",
         "required": [
           "programmeId",
@@ -267,7 +267,7 @@
         "title": "Tier Rule",
         "version": "1.0.0",
         "summary": "A tier definition with threshold and benefits; benefits modify points multiplier and exclusive offers.",
-        "description": "TierRule defines a tier (e.g. Zilver, Goud, Platina) with a threshold against lifetimePoints, rolling-window points, or annual spend. Benefits include a points multiplier (applied to credit amount) and optional flags such as exclusiveOffers, freeShipping. See REQ-LOY-003.",
+        "description": "TierRule defines a tier (e.g. Zilver, Goud, Platina) with a threshold against lifetimePoints, rolling-window points, or annual spend. Benefits include a points multiplier (applied to credit amount) and optional flags such as exclusiveOffers, freeShipping. See.",
         "@type": "TierRule",
         "required": [
           "programmeId",
@@ -344,7 +344,7 @@
         "title": "Customer Loyalty Account",
         "version": "1.0.0",
         "summary": "A customer's enrollment in a loyalty programme; tracks balances, tier, and opt-in.",
-        "description": "CustomerLoyaltyAccount links one customer (customerId, references a Nextcloud contact UID) to one LoyaltyProgramme. currentBalance and lifetimePoints are denormalised for query performance; the immutable PointsLedgerEntry collection is the source of truth (REQ-LOY-002, REQ-LOY-005). Composite uniqueness on (customerId, programmeId).",
+        "description": "CustomerLoyaltyAccount links one customer (customerId, references a Nextcloud contact UID) to one LoyaltyProgramme. currentBalance and lifetimePoints are denormalised for query performance; the immutable PointsLedgerEntry collection is the source of truth. Composite uniqueness on (customerId, programmeId).",
         "@type": "CustomerLoyaltyAccount",
         "required": [
           "customerId",
@@ -403,7 +403,7 @@
               "deactivated"
             ],
             "default": "active",
-            "description": "Account status. Geblokkerd accounts do not earn points (REQ-LOY-002-05).",
+            "description": "Account status. Geblokkerd accounts do not earn points.",
             "title": "Status"
           },
           "createdOn": {
@@ -415,13 +415,13 @@
           "lastActivityDate": {
             "type": "string",
             "format": "date-time",
-            "description": "Used for inactivity-based expiry (REQ-LOY-005).",
+            "description": "Used for inactivity-based expiry.",
             "title": "Last Activity Date"
           },
           "optInAccepted": {
             "type": "boolean",
             "default": false,
-            "description": "GDPR opt-in flag (REQ-LOY-010).",
+            "description": "GDPR opt-in flag.",
             "title": "Opt In Accepted"
           },
           "optInTimestamp": {
@@ -448,7 +448,7 @@
         "title": "Points Ledger Entry",
         "version": "1.0.0",
         "summary": "Immutable, append-only entry recording every points movement (credit, debit, expiry, adjustment).",
-        "description": "PointsLedgerEntry is the authoritative ledger of points movements. Entries are immutable (write-once, no UPDATE/DELETE except for GDPR anonymisation of customerId). balanceAfter records the running balance after the entry was applied. sourceDocument links to the originating event (POS transaction, redemption, expiry batch, manual adjustment). See REQ-LOY-002, REQ-LOY-005, REQ-LOY-009.",
+        "description": "PointsLedgerEntry is the authoritative ledger of points movements. Entries are immutable (write-once, no UPDATE/DELETE except for GDPR anonymisation of customerId). balanceAfter records the running balance after the entry was applied. sourceDocument links to the originating event (POS transaction, redemption, expiry batch, manual adjustment). See.",
         "@type": "PointsLedgerEntry",
         "required": [
           "accountId",
@@ -522,7 +522,7 @@
         "title": "Redemption Option",
         "version": "1.0.0",
         "summary": "A reward customers can buy with points (discount, free product, gift card, partner voucher).",
-        "description": "RedemptionOption defines what a customer can claim with points. costInPoints is the cost in points; rewardType/rewardValue define the reward; perCustomerLimit caps repeat redemptions. See REQ-LOY-004.",
+        "description": "RedemptionOption defines what a customer can claim with points. costInPoints is the cost in points; rewardType/rewardValue define the reward; perCustomerLimit caps repeat redemptions. See.",
         "@type": "RedemptionOption",
         "required": [
           "programmeId",
@@ -585,7 +585,7 @@
           },
           "costBasisEur": {
             "type": "number",
-            "description": "Estimated business cost in EUR for cost % reporting (REQ-LOY-008).",
+            "description": "Estimated business cost in EUR for cost % reporting.",
             "title": "Kost Basis Eur"
           },
           "stock": {
@@ -617,7 +617,7 @@
         "title": "Redemption",
         "version": "1.0.0",
         "summary": "A claimed reward with status lifecycle (gereserveerd → gebruikt | vervallen | geannuleerd).",
-        "description": "Redemption tracks one customer's claim against a RedemptionOption. On initiate, points are debited atomically (immutable PointsLedgerEntry of type 'debit') and a unique rewardCode is issued. Status transitions through gereserveerd → gebruikt (used) | vervallen (expired) | geannuleerd (cancelled, points refunded). See REQ-LOY-004.",
+        "description": "Redemption tracks one customer's claim against a RedemptionOption. On initiate, points are debited atomically (immutable PointsLedgerEntry of type 'debit') and a unique rewardCode is issued. Status transitions through gereserveerd → gebruikt (used) | vervallen (expired) | geannuleerd (cancelled, points refunded). See.",
         "@type": "Redemption",
         "required": [
           "accountId",
@@ -703,7 +703,7 @@
         "title": "Gift Card",
         "version": "1.0.0",
         "summary": "A gift card with hashed PIN and unique serial; balance is mutated via GiftCardTransaction (append-only).",
-        "description": "GiftCard tracks a stored-value instrument with serial (globally unique), PIN (bcrypt hashed, NEVER plaintext — REQ-LOY-006-04), initial balance, current balance, status (issued → active → depleted | blocked), and expiry. All balance movements are logged via GiftCardTransaction. See REQ-LOY-006, REQ-LOY-007.",
+        "description": "GiftCard tracks a stored-value instrument with serial (globally unique), PIN (bcrypt hashed, NEVER plaintext), initial balance, current balance, status (issued → active → depleted | blocked), and expiry. All balance movements are logged via GiftCardTransaction. See.",
         "@type": "GiftCard",
         "required": [
           "serial",
@@ -730,7 +730,7 @@
           },
           "pin": {
             "type": "string",
-            "description": "bcrypt PIN hash — never plaintext, never logged.",
+            "description": "bcrypt PIN hash: never plaintext, never logged.",
             "title": "Pin"
           },
           "initialBalance": {
@@ -800,7 +800,7 @@
         "title": "Gift Card Transaction",
         "version": "1.0.0",
         "summary": "Immutable, append-only ledger entry recording every gift-card movement.",
-        "description": "GiftCardTransaction logs every balance movement (issue, redeem, partial_redeem, refund, topup, block). Append-only — balance changes are reconstructable from the ledger. See REQ-LOY-006, REQ-LOY-007.",
+        "description": "GiftCardTransaction logs every balance movement (issue, redeem, partial_redeem, refund, topup, block). Append-only: balance changes are reconstructable from the ledger. See.",
         "@type": "GiftCardTransaction",
         "required": [
           "giftCardId",

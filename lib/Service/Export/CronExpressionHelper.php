@@ -108,6 +108,7 @@ class CronExpressionHelper {
 	 * @param string $expression The cron expression.
 	 *
 	 * @return string The 5-field expression, or the trimmed input when unknown.
+	 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#requirement-destination-configuration-and-validation-req-bie-001
 	 */
 	public function normalize(string $expression): string {
 		$expression = trim($expression);

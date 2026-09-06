@@ -47,6 +47,11 @@ use Psr\Log\LoggerInterface;
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Aggregates the tenant, audit and
  *  account stores plus the admin gate this management surface needs.
+ *
+ * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+ *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+ *   sessions, tokens, delegation, documents, invoices, orders, exports and
+ *   audit are all unspecified
  */
 class PortalAdminController extends Controller {
 	/**
@@ -78,6 +83,10 @@ class PortalAdminController extends Controller {
 	 * @auth admin-only Writes tenant-wide portal configuration; the body additionally enforces it through adminGuarded().
 	 *
 	 * @return JSONResponse The saved config, or an error.
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function saveConfig(): JSONResponse {
 		return $this->adminGuarded(
@@ -100,11 +109,15 @@ class PortalAdminController extends Controller {
 	 * @auth admin-only Enumerates every portal account on the tenant; the body additionally enforces it through adminGuarded().
 	 *
 	 * @return JSONResponse The accounts.
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function accounts(): JSONResponse {
 		return $this->adminGuarded(
 			handler: function (): array {
-				$accounts = $this->repository->findAll('portalAccount', ['tenantId' => $this->tenantId()]);
+				$accounts = $this->repository->findAll('crmPortalAccount', ['tenantId' => $this->tenantId()]);
 				$safe = array_map(
 					static fn (array $account): array => [
 						'id' => ($account['@self']['id'] ?? $account['id'] ?? null),
@@ -127,6 +140,10 @@ class PortalAdminController extends Controller {
 	 * @auth admin-only Returns the tenant-wide audit trail used for DPO reporting; the body additionally enforces it through adminGuarded().
 	 *
 	 * @return JSONResponse The events.
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function auditEvents(): JSONResponse {
 		return $this->adminGuarded(

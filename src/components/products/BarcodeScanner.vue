@@ -112,6 +112,9 @@ export default {
 		/** Autofocus the HID input on mount so a keyboard-wedge scanner types into it. */
 		autofocus: {
 			type: Boolean,
+			// A keyboard-wedge scanner types into whatever holds focus, so this
+			// input must claim it by default or the first scan of a session is lost.
+			// eslint-disable-next-line vue/no-boolean-default
 			default: true,
 		},
 
@@ -129,7 +132,7 @@ export default {
 		},
 	},
 
-	emits: ['camera-error', 'scan'],
+	emits: ['cameraError', 'scan'],
 	setup(props, { emit }) {
 		const { supported, scanning, videoEl, startCamera, stopCamera } =
 			useBarcodeScanner((barcode) => {
@@ -187,12 +190,14 @@ export default {
 
 		/**
 		 * Open the camera viewfinder.
+		 *
+		 * @spec openspec/specs/pos-barcode-scan/spec.md#REQ-PBS-002
 		 */
 		async onOpenCamera() {
 			try {
 				await this.startCamera()
-			} catch (e) {
-				this.$emit('camera-error')
+			} catch {
+				this.$emit('cameraError')
 			}
 		},
 
@@ -255,7 +260,7 @@ export default {
 .barcode-scanner__reticle {
 	position: absolute;
 	top: 50%;
-	left: 50%;
+	inset-inline-start: 50%;
 	transform: translate(-50%, -50%);
 	pointer-events: none;
 }

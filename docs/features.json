@@ -102,11 +102,38 @@
   {
     "slug": "marketing-campaigns",
     "title": "Marketing campaigns",
-    "summary": "Segment your audience and send measurable email blasts.",
+    "summary": "Segment your audience and send measurable email blasts; lists, social and campaigns are on the way.",
     "status": "stable",
-    "docsUrl": "openspec/specs/marketing-blast/spec.md",
+    "docsUrl": "docs/Features/marketing.md",
     "title_nl": "Marketingcampagnes",
-    "summary_nl": "Je segmenteert je publiek en verstuurt meetbare e-mailcampagnes."
+    "summary_nl": "Je segmenteert je publiek en verstuurt meetbare e-mailcampagnes; lijsten, social en campagnes volgen."
+  },
+  {
+    "slug": "marketing-lists-and-mailings",
+    "title": "Mailing lists and newsletters",
+    "summary": "Run lists people subscribe to with double opt-in, and send newsletters from your own mail server.",
+    "status": "soon",
+    "docsUrl": "docs/Features/marketing.md",
+    "title_nl": "Mailinglijsten en nieuwsbrieven",
+    "summary_nl": "Je beheert lijsten waarop mensen zich met dubbele opt-in inschrijven en verstuurt nieuwsbrieven via je eigen mailserver."
+  },
+  {
+    "slug": "social-publishing",
+    "title": "Social publishing",
+    "summary": "Schedule and approve posts for company pages and colleagues' profiles, and see which posts perform.",
+    "status": "soon",
+    "docsUrl": "docs/Features/marketing.md",
+    "title_nl": "Social media publiceren",
+    "summary_nl": "Je plant en keurt berichten goed voor bedrijfspagina's en profielen van collega's, en ziet welke berichten werken."
+  },
+  {
+    "slug": "search-and-competitor-intelligence",
+    "title": "Search and competitor intelligence",
+    "summary": "See which keywords you rank for and which you miss, and follow what competitors publish.",
+    "status": "soon",
+    "docsUrl": "docs/Features/marketing.md",
+    "title_nl": "Zoek- en concurrentie-inzicht",
+    "summary_nl": "Je ziet op welke zoekwoorden je scoort en welke je mist, en volgt wat concurrenten publiceren."
   },
   {
     "slug": "loyalty-programme",

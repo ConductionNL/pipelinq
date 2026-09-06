@@ -22,9 +22,10 @@
  * touch, and no other spec in the suite reads `receipt_company_*` (verified by
  * grep across tests/e2e).
  */
-import { test, expect, Page } from '@playwright/test'
+import type { Page } from '@playwright/test'
 
-import { openApp } from '../helpers/pipelinq'
+import { expect, test } from '@playwright/test'
+import { openApp } from '../helpers/pipelinq.ts'
 
 const APP = '/index.php/apps/pipelinq'
 
@@ -41,7 +42,7 @@ async function api(
 				method,
 				headers: {
 					'Content-Type': 'application/json',
-					// eslint-disable-next-line no-undef
+
 					requesttoken: (window as any).OC?.requestToken || '',
 					'OCS-APIREQUEST': 'true',
 				},

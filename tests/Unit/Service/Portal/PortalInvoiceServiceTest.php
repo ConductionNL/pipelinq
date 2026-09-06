@@ -74,7 +74,7 @@ class PortalInvoiceServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testOnlyOwnInvoicesAreReturned(): void {
-		$account = $this->portalRepo->seed('portalAccount', 'acc-a', ['linkedOrganisationId' => 'org-a']);
+		$account = $this->portalRepo->seed('crmPortalAccount', 'acc-a', ['linkedOrganisationId' => 'org-a']);
 
 		$this->reader->seed('posTransaction', 'inv-1', ['client' => 'org-a', 'total' => 100, 'confirmedAt' => '2026-05-01T00:00:00Z']);
 		$this->reader->seed('posTransaction', 'inv-2', ['client' => 'org-a', 'total' => 200, 'confirmedAt' => '2026-05-02T00:00:00Z']);
@@ -95,7 +95,7 @@ class PortalInvoiceServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testCrossCustomerInvoiceIdReturnsNull(): void {
-		$account = $this->portalRepo->seed('portalAccount', 'acc-a', ['linkedOrganisationId' => 'org-a']);
+		$account = $this->portalRepo->seed('crmPortalAccount', 'acc-a', ['linkedOrganisationId' => 'org-a']);
 		$this->reader->seed('posTransaction', 'inv-x', ['client' => 'org-x', 'total' => 999]);
 
 		$this->assertNull($this->service->getOneForAccount($account, 'inv-x'));
@@ -107,7 +107,7 @@ class PortalInvoiceServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testOwnInvoiceByIdReturned(): void {
-		$account = $this->portalRepo->seed('portalAccount', 'acc-a', ['linkedOrganisationId' => 'org-a']);
+		$account = $this->portalRepo->seed('crmPortalAccount', 'acc-a', ['linkedOrganisationId' => 'org-a']);
 		$this->reader->seed('posTransaction', 'inv-1', ['client' => 'org-a', 'total' => 100, 'invoiceNumber' => 'INV-1']);
 
 		$invoice = $this->service->getOneForAccount($account, 'inv-1');
@@ -122,7 +122,7 @@ class PortalInvoiceServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testOrderingAndPagination(): void {
-		$account = $this->portalRepo->seed('portalAccount', 'acc-a', ['linkedOrganisationId' => 'org-a']);
+		$account = $this->portalRepo->seed('crmPortalAccount', 'acc-a', ['linkedOrganisationId' => 'org-a']);
 		for ($i = 1; $i <= 25; $i++) {
 			$this->reader->seed('posTransaction', 'inv-' . $i, [
 				'client' => 'org-a',
@@ -147,8 +147,8 @@ class PortalInvoiceServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testDelegatedInvoiceTagged(): void {
-		$this->portalRepo->seed('portalAccount', 'granter', ['linkedOrganisationId' => 'org-shared']);
-		$grantee = $this->portalRepo->seed('portalAccount', 'grantee', ['linkedOrganisationId' => 'org-own']);
+		$this->portalRepo->seed('crmPortalAccount', 'granter', ['linkedOrganisationId' => 'org-shared']);
+		$grantee = $this->portalRepo->seed('crmPortalAccount', 'grantee', ['linkedOrganisationId' => 'org-own']);
 		$this->portalRepo->seed('portalDelegation', 'del-1', [
 			'granterAccountId' => 'granter',
 			'granteeAccountId' => 'grantee',

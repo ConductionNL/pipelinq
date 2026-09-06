@@ -1,0 +1,300 @@
+{
+  "components": {
+    "schemas": {
+      "client": {
+        "properties": {
+          "emails": {
+            "type": "array",
+            "title": "Emails",
+            "description": "Typed email addresses for this client. The legacy single `email` field mirrors the primary entry and stays in sync with it on save.",
+            "visible": false,
+            "items": {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "type": "string",
+                  "title": "Kind",
+                  "description": "The channel kind this email address is used for.",
+                  "enum": ["work", "private", "mobile", "whatsapp", "other"],
+                  "default": "work"
+                },
+                "value": {
+                  "type": "string",
+                  "title": "Email address",
+                  "description": "The email address.",
+                  "format": "email",
+                  "maxLength": 255
+                },
+                "primary": {
+                  "type": "boolean",
+                  "title": "Primary",
+                  "description": "Whether this is the primary email address. Exactly one entry SHOULD be primary; the first entry is treated as primary when none is marked.",
+                  "default": false
+                },
+                "verified": {
+                  "type": "boolean",
+                  "title": "Verified",
+                  "description": "Whether this email address has been verified as reachable.",
+                  "default": false
+                }
+              }
+            }
+          },
+          "phones": {
+            "type": "array",
+            "title": "Phones",
+            "description": "Typed phone numbers for this client. The legacy single `phone` field mirrors the primary entry and stays in sync with it on save.",
+            "visible": false,
+            "items": {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "type": "string",
+                  "title": "Kind",
+                  "description": "The channel kind this phone number is used for.",
+                  "enum": ["work", "private", "mobile", "whatsapp", "other"],
+                  "default": "work"
+                },
+                "value": {
+                  "type": "string",
+                  "title": "Phone number",
+                  "description": "The phone number.",
+                  "maxLength": 40
+                },
+                "primary": {
+                  "type": "boolean",
+                  "title": "Primary",
+                  "description": "Whether this is the primary phone number. Exactly one entry SHOULD be primary; the first entry is treated as primary when none is marked.",
+                  "default": false
+                },
+                "verified": {
+                  "type": "boolean",
+                  "title": "Verified",
+                  "description": "Whether this phone number has been verified as reachable.",
+                  "default": false
+                }
+              }
+            }
+          },
+          "socialProfiles": {
+            "type": "array",
+            "title": "Social profiles",
+            "description": "Social network profiles linked to this client, used for advocacy sharing and engagement tracking.",
+            "visible": false,
+            "items": {
+              "type": "object",
+              "properties": {
+                "network": {
+                  "type": "string",
+                  "title": "Network",
+                  "description": "The social network this profile belongs to.",
+                  "enum": ["linkedin", "x", "mastodon", "bluesky", "facebook", "instagram", "threads", "tiktok", "youtube", "other"],
+                  "default": "linkedin"
+                },
+                "handle": {
+                  "type": "string",
+                  "title": "Handle",
+                  "description": "The account handle or username on the network (without the leading @).",
+                  "maxLength": 255
+                },
+                "url": {
+                  "type": "string",
+                  "title": "Profile URL",
+                  "description": "The full URL to the profile on the network.",
+                  "format": "uri",
+                  "maxLength": 500
+                },
+                "verified": {
+                  "type": "boolean",
+                  "title": "Verified",
+                  "description": "Whether this profile has been confirmed to belong to this client.",
+                  "default": false
+                },
+                "followedByUs": {
+                  "type": "boolean",
+                  "title": "Followed by us",
+                  "description": "Whether Conduction's own account follows this profile.",
+                  "default": false
+                },
+                "followsUs": {
+                  "type": "boolean",
+                  "title": "Follows us",
+                  "description": "Whether this profile follows Conduction's own account.",
+                  "default": false
+                }
+              }
+            }
+          },
+          "preferredChannel": {
+            "type": "string",
+            "title": "Preferred channel",
+            "description": "The channel this client prefers to be contacted through.",
+            "enum": ["email", "phone", "whatsapp", "linkedin", "x", "mastodon", "bluesky", "other"],
+            "facetable": true
+          },
+          "timezone": {
+            "type": "string",
+            "title": "Timezone",
+            "description": "IANA timezone name for this client (e.g. \"Europe/Amsterdam\"), used to schedule sends at a sensible local time.",
+            "maxLength": 64
+          },
+          "language": {
+            "type": "string",
+            "title": "Language",
+            "description": "ISO 639-1 language code this client prefers for communication (e.g. \"nl\", \"en\").",
+            "maxLength": 5,
+            "default": "nl",
+            "facetable": true
+          }
+        }
+      },
+      "contact": {
+        "properties": {
+          "emails": {
+            "type": "array",
+            "title": "Emails",
+            "description": "Typed email addresses for this contact person. The legacy single `email` field mirrors the primary entry and stays in sync with it on save.",
+            "visible": false,
+            "items": {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "type": "string",
+                  "title": "Kind",
+                  "description": "The channel kind this email address is used for.",
+                  "enum": ["work", "private", "mobile", "whatsapp", "other"],
+                  "default": "work"
+                },
+                "value": {
+                  "type": "string",
+                  "title": "Email address",
+                  "description": "The email address.",
+                  "format": "email",
+                  "maxLength": 255
+                },
+                "primary": {
+                  "type": "boolean",
+                  "title": "Primary",
+                  "description": "Whether this is the primary email address. Exactly one entry SHOULD be primary; the first entry is treated as primary when none is marked.",
+                  "default": false
+                },
+                "verified": {
+                  "type": "boolean",
+                  "title": "Verified",
+                  "description": "Whether this email address has been verified as reachable.",
+                  "default": false
+                }
+              }
+            }
+          },
+          "phones": {
+            "type": "array",
+            "title": "Phones",
+            "description": "Typed phone numbers for this contact person. The legacy single `phone` field mirrors the primary entry and stays in sync with it on save.",
+            "visible": false,
+            "items": {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "type": "string",
+                  "title": "Kind",
+                  "description": "The channel kind this phone number is used for.",
+                  "enum": ["work", "private", "mobile", "whatsapp", "other"],
+                  "default": "work"
+                },
+                "value": {
+                  "type": "string",
+                  "title": "Phone number",
+                  "description": "The phone number.",
+                  "maxLength": 40
+                },
+                "primary": {
+                  "type": "boolean",
+                  "title": "Primary",
+                  "description": "Whether this is the primary phone number. Exactly one entry SHOULD be primary; the first entry is treated as primary when none is marked.",
+                  "default": false
+                },
+                "verified": {
+                  "type": "boolean",
+                  "title": "Verified",
+                  "description": "Whether this phone number has been verified as reachable.",
+                  "default": false
+                }
+              }
+            }
+          },
+          "socialProfiles": {
+            "type": "array",
+            "title": "Social profiles",
+            "description": "Social network profiles linked to this contact person, used for advocacy sharing and engagement tracking.",
+            "visible": false,
+            "items": {
+              "type": "object",
+              "properties": {
+                "network": {
+                  "type": "string",
+                  "title": "Network",
+                  "description": "The social network this profile belongs to.",
+                  "enum": ["linkedin", "x", "mastodon", "bluesky", "facebook", "instagram", "threads", "tiktok", "youtube", "other"],
+                  "default": "linkedin"
+                },
+                "handle": {
+                  "type": "string",
+                  "title": "Handle",
+                  "description": "The account handle or username on the network (without the leading @).",
+                  "maxLength": 255
+                },
+                "url": {
+                  "type": "string",
+                  "title": "Profile URL",
+                  "description": "The full URL to the profile on the network.",
+                  "format": "uri",
+                  "maxLength": 500
+                },
+                "verified": {
+                  "type": "boolean",
+                  "title": "Verified",
+                  "description": "Whether this profile has been confirmed to belong to this contact person.",
+                  "default": false
+                },
+                "followedByUs": {
+                  "type": "boolean",
+                  "title": "Followed by us",
+                  "description": "Whether Conduction's own account follows this profile.",
+                  "default": false
+                },
+                "followsUs": {
+                  "type": "boolean",
+                  "title": "Follows us",
+                  "description": "Whether this profile follows Conduction's own account.",
+                  "default": false
+                }
+              }
+            }
+          },
+          "preferredChannel": {
+            "type": "string",
+            "title": "Preferred channel",
+            "description": "The channel this contact person prefers to be contacted through.",
+            "enum": ["email", "phone", "whatsapp", "linkedin", "x", "mastodon", "bluesky", "other"],
+            "facetable": true
+          },
+          "timezone": {
+            "type": "string",
+            "title": "Timezone",
+            "description": "IANA timezone name for this contact person (e.g. \"Europe/Amsterdam\"), used to schedule sends at a sensible local time.",
+            "maxLength": 64
+          },
+          "language": {
+            "type": "string",
+            "title": "Language",
+            "description": "ISO 639-1 language code this contact person prefers for communication (e.g. \"nl\", \"en\").",
+            "maxLength": 5,
+            "default": "nl",
+            "facetable": true
+          }
+        }
+      }
+    }
+  }
+}

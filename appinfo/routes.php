@@ -20,9 +20,6 @@ return [
         ['name' => 'settings#getUserSettings', 'url' => '/api/settings/user', 'verb' => 'GET'],
         ['name' => 'settings#updateUserSettings', 'url' => '/api/settings/user', 'verb' => 'PUT'],
 
-        // Admin — Shillinq project ledger manual re-dispatch (project-to-shillinq-ledger).
-        ['name' => 'ledger#retry', 'url' => '/api/ledger/retry/{projectId}', 'verb' => 'POST'],
-
         // Admin — Shillinq WIP manual re-dispatch (pipelinq-time-to-shillinq-wip / REQ-WIP-003).
         ['name' => 'timeEntryWip#retry', 'url' => '/api/time-entries/{uuid}/wip-retry', 'verb' => 'POST'],
 
@@ -73,7 +70,6 @@ return [
 
         // Prospect discovery
         ['name' => 'prospect#index', 'url' => '/api/prospects', 'verb' => 'GET'],
-        ['name' => 'prospect#createLead', 'url' => '/api/prospects/create-lead', 'verb' => 'POST'],
 
         // Prospect settings (admin only; camelCase slug matches ProspectSettingsController class name)
         ['name' => 'prospectSettings#index', 'url' => '/api/prospect-settings', 'verb' => 'GET'],
@@ -421,12 +417,38 @@ return [
         ['name' => 'blastWebhook#sendgrid', 'url' => '/api/blast-webhooks/sendgrid', 'verb' => 'POST'],
         ['name' => 'blastWebhook#ses',      'url' => '/api/blast-webhooks/ses',      'verb' => 'POST'],
         ['name' => 'blastWebhook#twilio',   'url' => '/api/blast-webhooks/twilio',   'verb' => 'POST'],
+        // marketing-mail-transports: four more bulk-provider webhooks,
+        // same signature-verified/PublicPage shape as the three above.
+        ['name' => 'blastWebhook#brevo',    'url' => '/api/blast-webhooks/brevo',    'verb' => 'POST'],
+        ['name' => 'blastWebhook#mailjet',  'url' => '/api/blast-webhooks/mailjet',  'verb' => 'POST'],
+        ['name' => 'blastWebhook#mailgun',  'url' => '/api/blast-webhooks/mailgun',  'verb' => 'POST'],
+        ['name' => 'blastWebhook#postmark', 'url' => '/api/blast-webhooks/postmark', 'verb' => 'POST'],
+
+        // marketing-mail-transports: deliverability panel's SPF/DKIM/DMARC
+        // check (AuthorizedAdminSetting; not CRUD, so it is not on
+        // useObjectStore). camelCase slug matches MailTransportController.
+        ['name' => 'mailTransport#checkDeliverability', 'url' => '/api/mail-transports/{id}/check-deliverability', 'verb' => 'POST'],
 
         // First-party marketing-email open/click tracking (HMAC-signed
         // tokens, PublicPage, fail-closed) — marketing-email-open-click-tracking.
         // camelCase slug matches BlastTrackingController class name.
         ['name' => 'blastTracking#open',  'url' => '/api/blast/track/open/{token}',  'verb' => 'GET'],
         ['name' => 'blastTracking#click', 'url' => '/api/blast/track/click/{token}', 'verb' => 'GET'],
+
+        // Mailing lists — the subscriber's four doors (marketing-lists-and-
+        // double-opt-in). PublicPage + signed token + throttled per ADR-082;
+        // they stay on pipelinq rather than moving to portaliq because an
+        // RFC 8058 List-Unsubscribe header names the URL (ADR-108).
+        // camelCase slug matches ListPublicController class name.
+        // The literal-prefixed paths come FIRST: `/api/lists/confirm/{token}`
+        // and `/api/lists/{id}/subscribe` are different shapes, but ordering
+        // them by specificity keeps that true if either ever gains a segment.
+        ['name' => 'listPublic#confirm',          'url' => '/api/lists/confirm/{token}',     'verb' => 'GET'],
+        ['name' => 'listPublic#unsubscribePage',  'url' => '/api/lists/unsubscribe/{token}', 'verb' => 'GET'],
+        ['name' => 'listPublic#unsubscribe',      'url' => '/api/lists/unsubscribe/{token}', 'verb' => 'POST'],
+        ['name' => 'listPublic#preferences',      'url' => '/api/lists/preferences/{token}', 'verb' => 'GET'],
+        ['name' => 'listPublic#savePreferences',  'url' => '/api/lists/preferences/{token}', 'verb' => 'POST'],
+        ['name' => 'listPublic#subscribe',        'url' => '/api/lists/{id}/subscribe',      'verb' => 'POST'],
 
         // Appointment booking — deposit payment webhook (signature-verified, PublicPage)
         // appointment-booking-08-deposit-payment / REQ-APT-010.
@@ -475,17 +497,121 @@ return [
         // Marketing — Segments (marketing-segmentation-and-blast chain member 06).
         // Specific routes precede any wildcard {slug} routes (ADR-016).
         ['name' => 'segment#index',         'url' => '/api/segments',                  'verb' => 'GET'],
+        // Above `{id}` so "signals" is never captured as a segment id.
+        ['name' => 'segment#signals',       'url' => '/api/segments/signals',          'verb' => 'GET'],
         ['name' => 'segment#create',        'url' => '/api/segments',                  'verb' => 'POST'],
+        ['name' => 'segment#preview',       'url' => '/api/segments/preview',          'verb' => 'POST'],
         ['name' => 'segment#refreshSize',   'url' => '/api/segments/{id}/size',        'verb' => 'POST'],
         ['name' => 'segment#members',       'url' => '/api/segments/{id}/members',     'verb' => 'GET'],
         ['name' => 'segment#show',          'url' => '/api/segments/{id}',             'verb' => 'GET'],
+        ['name' => 'segment#update',        'url' => '/api/segments/{id}',             'verb' => 'PATCH'],
+
+        // Marketing — Mailing lists and subscriptions (marketing-lists-and-
+        // double-opt-in). The marketer's side; the subscriber's side is the
+        // PublicPage block above. Specific routes precede any wildcard {id}
+        // routes (ADR-016).
+        ['name' => 'mailingList#index',         'url' => '/api/mailing-lists',                    'verb' => 'GET'],
+        ['name' => 'mailingList#create',        'url' => '/api/mailing-lists',                    'verb' => 'POST'],
+        ['name' => 'mailingList#subscriptions', 'url' => '/api/mailing-lists/{id}/subscriptions', 'verb' => 'GET'],
+        ['name' => 'mailingList#show',          'url' => '/api/mailing-lists/{id}',               'verb' => 'GET'],
+        ['name' => 'mailingList#update',        'url' => '/api/mailing-lists/{id}',               'verb' => 'PATCH'],
+        ['name' => 'subscription#softOptIn',    'url' => '/api/subscriptions/soft-opt-in',        'verb' => 'POST'],
+        ['name' => 'subscription#unsubscribe',  'url' => '/api/subscriptions/unsubscribe',        'verb' => 'POST'],
+        ['name' => 'subscription#forContact',      'url' => '/api/contacts/{contactId}/subscriptions',  'verb' => 'GET'],
+        ['name' => 'subscription#preferenceLink',  'url' => '/api/contacts/{contactId}/preference-link', 'verb' => 'GET'],
 
         // Marketing — CampaignTemplates (marketing-segmentation-and-blast chain member 06).
         // Specific routes precede any wildcard {slug} routes (ADR-016).
-        ['name' => 'template#index',  'url' => '/api/templates',      'verb' => 'GET'],
-        ['name' => 'template#create', 'url' => '/api/templates',      'verb' => 'POST'],
-        ['name' => 'template#show',   'url' => '/api/templates/{id}', 'verb' => 'GET'],
-        ['name' => 'template#update', 'url' => '/api/templates/{id}', 'verb' => 'PATCH'],
+        ['name' => 'template#index',   'url' => '/api/templates',          'verb' => 'GET'],
+        ['name' => 'template#create',  'url' => '/api/templates',          'verb' => 'POST'],
+        ['name' => 'template#preview', 'url' => '/api/templates/{id}/preview', 'verb' => 'GET'],
+        ['name' => 'template#show',    'url' => '/api/templates/{id}',     'verb' => 'GET'],
+        ['name' => 'template#update',  'url' => '/api/templates/{id}',     'verb' => 'PATCH'],
+
+        // Marketing — Articles (marketing-article-hub). Articles are the
+        // content hub for both mailings and posts. Literal-suffixed routes
+        // (publish, archive, transition, usages) precede the bare {id}
+        // routes (ADR-016), matching the Blast block below.
+        ['name' => 'article#index',      'url' => '/api/articles',                'verb' => 'GET'],
+        ['name' => 'article#create',     'url' => '/api/articles',                'verb' => 'POST'],
+        ['name' => 'article#publish',    'url' => '/api/articles/{id}/publish',   'verb' => 'POST'],
+        ['name' => 'article#archive',    'url' => '/api/articles/{id}/archive',   'verb' => 'POST'],
+        ['name' => 'article#transition', 'url' => '/api/articles/{id}/transition', 'verb' => 'POST'],
+        ['name' => 'article#usages',     'url' => '/api/articles/{id}/usages',    'verb' => 'GET'],
+        ['name' => 'article#show',       'url' => '/api/articles/{id}',           'verb' => 'GET'],
+        ['name' => 'article#update',     'url' => '/api/articles/{id}',           'verb' => 'PATCH'],
+
+        // Marketing — Social publishing (social-publishing, phase 3). Three
+        // objects, three controllers. Literal-suffixed routes (connect,
+        // attach, revoke, sync, submit, approve, reject, publications, retry,
+        // share, confirm-share) precede the bare {id} routes (ADR-016), and
+        // the static /api/social-performance is declared before anything that
+        // could take it for an id.
+        ['name' => 'socialAccount#index',   'url' => '/api/social-accounts',              'verb' => 'GET'],
+        ['name' => 'socialAccount#create',  'url' => '/api/social-accounts',              'verb' => 'POST'],
+        ['name' => 'socialAccount#connect', 'url' => '/api/social-accounts/{id}/connect', 'verb' => 'POST'],
+        ['name' => 'socialAccount#attach',  'url' => '/api/social-accounts/{id}/attach',  'verb' => 'POST'],
+        ['name' => 'socialAccount#revoke',  'url' => '/api/social-accounts/{id}/revoke',  'verb' => 'POST'],
+        ['name' => 'socialAccount#sync',    'url' => '/api/social-accounts/{id}/sync',    'verb' => 'POST'],
+        ['name' => 'socialAccount#show',    'url' => '/api/social-accounts/{id}',         'verb' => 'GET'],
+
+        ['name' => 'socialPost#performance',  'url' => '/api/social-performance',              'verb' => 'GET'],
+        ['name' => 'socialPost#index',        'url' => '/api/social-posts',                    'verb' => 'GET'],
+        ['name' => 'socialPost#create',       'url' => '/api/social-posts',                    'verb' => 'POST'],
+        ['name' => 'socialPost#submit',       'url' => '/api/social-posts/{id}/submit',        'verb' => 'POST'],
+        ['name' => 'socialPost#approve',      'url' => '/api/social-posts/{id}/approve',       'verb' => 'POST'],
+        ['name' => 'socialPost#reject',       'url' => '/api/social-posts/{id}/reject',        'verb' => 'POST'],
+        ['name' => 'socialPost#publications', 'url' => '/api/social-posts/{id}/publications',  'verb' => 'GET'],
+        ['name' => 'socialPost#show',         'url' => '/api/social-posts/{id}',               'verb' => 'GET'],
+        ['name' => 'socialPost#update',       'url' => '/api/social-posts/{id}',               'verb' => 'PATCH'],
+
+        ['name' => 'socialPost#retry',              'url' => '/api/social-publications/{id}/retry',         'verb' => 'POST'],
+        ['name' => 'socialAdvocacy#share',          'url' => '/api/social-publications/{id}/share',         'verb' => 'GET'],
+        ['name' => 'socialAdvocacy#confirmShare',   'url' => '/api/social-publications/{id}/confirm-share', 'verb' => 'POST'],
+
+        // Marketing — Search Console (marketing-campaign-attribution): top queries
+        // over a window plus the connection status. Static path, no wildcard.
+        ['name' => 'searchConsole#index', 'url' => '/api/marketing/search-queries', 'verb' => 'GET'],
+
+        // Marketing — search intelligence (marketing-search-intelligence, phase 5).
+        // The proposals read serves the whole Keywords page in ONE request; the
+        // confirmation is the only path that creates a keywordTarget. Every
+        // path here is literal except the watch id, which comes last (ADR-016).
+        ['name' => 'keywordIntelligence#proposals', 'url' => '/api/marketing/keyword-proposals', 'verb' => 'GET'],
+        ['name' => 'keywordIntelligence#targets',   'url' => '/api/marketing/keyword-targets',   'verb' => 'GET'],
+        ['name' => 'keywordIntelligence#confirm',   'url' => '/api/marketing/keyword-targets',   'verb' => 'POST'],
+        ['name' => 'marketingConnector#matomo',          'url' => '/api/marketing/matomo/report',    'verb' => 'GET'],
+        ['name' => 'marketingConnector#connectionAudit', 'url' => '/api/marketing/connection-audit', 'verb' => 'GET'],
+        ['name' => 'competitorWatch#index', 'url' => '/api/marketing/watch-events', 'verb' => 'GET'],
+        ['name' => 'competitorWatch#run',   'url' => '/api/marketing/competitor-watches/{id}/run', 'verb' => 'POST'],
+
+        // Marketing — Campaigns (marketing-campaigns): the aggregate report the
+        // one campaign report page renders from, and the action that asks
+        // portaliq for a landing page. Plain campaign reads and writes go
+        // through OpenRegister's object API, so no CRUD routes live here.
+        // The static vocabulary route precedes every {id} route (ADR-016);
+        // reads and lists still go through OpenRegister's object API.
+        ['name' => 'campaign#vocabularies',      'url' => '/api/campaigns/vocabulary',        'verb' => 'GET'],
+        ['name' => 'campaign#create',            'url' => '/api/campaigns',                   'verb' => 'POST'],
+        ['name' => 'campaign#report',            'url' => '/api/campaigns/{id}/report',       'verb' => 'GET'],
+        ['name' => 'campaign#createLandingPage', 'url' => '/api/campaigns/{id}/landing-page', 'verb' => 'POST'],
+        ['name' => 'campaign#update',            'url' => '/api/campaigns/{id}',              'verb' => 'PATCH'],
+
+        // Marketing — Journeys (marketing-integrated-campaigns). A journey is
+        // compiled into an OpenRegister flow on every write, so the write path
+        // cannot be the plain object API: a journey saved through it would be
+        // stored and never compiled, which looks exactly like a journey whose
+        // trigger has not fired yet.
+        ['name' => 'journey#index',   'url' => '/api/journeys',              'verb' => 'GET'],
+        ['name' => 'journey#create',  'url' => '/api/journeys',              'verb' => 'POST'],
+        ['name' => 'journey#compile', 'url' => '/api/journeys/{id}/compile', 'verb' => 'POST'],
+        ['name' => 'journey#runs',    'url' => '/api/journeys/{id}/runs',    'verb' => 'GET'],
+        ['name' => 'journey#show',    'url' => '/api/journeys/{id}',         'verb' => 'GET'],
+        ['name' => 'journey#update',  'url' => '/api/journeys/{id}',         'verb' => 'PATCH'],
+
+        // Marketing — Weekly review (marketing-integrated-campaigns, ADR-112).
+        ['name' => 'weeklyReview#show',     'url' => '/api/weekly-review',          'verb' => 'GET'],
+        ['name' => 'weeklyReview#generate', 'url' => '/api/weekly-review/generate', 'verb' => 'POST'],
 
         // Marketing — Blasts (marketing-segmentation-and-blast chain member 06).
         // Specific routes precede any wildcard {slug} routes (ADR-016).
@@ -495,6 +621,9 @@ return [
         ['name' => 'blast#cancel',     'url' => '/api/blasts/{id}/cancel',         'verb' => 'POST'],
         ['name' => 'blast#deliveries', 'url' => '/api/blasts/{id}/deliveries',     'verb' => 'GET'],
         ['name' => 'blast#attribution', 'url' => '/api/blasts/{id}/attribution',   'verb' => 'GET'],
+        // Phase 2 of the fleet traffic programme (marketing-campaign-attribution):
+        // mailbox numbers plus the site sessions Portaliq attributed to the campaign.
+        ['name' => 'blast#performance', 'url' => '/api/blasts/{id}/performance',   'verb' => 'GET'],
         ['name' => 'blast#show',       'url' => '/api/blasts/{id}',                'verb' => 'GET'],
         ['name' => 'blast#update',     'url' => '/api/blasts/{id}',                'verb' => 'PATCH'],
 
@@ -544,6 +673,17 @@ return [
         ['name' => 'contract#transition',     'url' => '/api/contracts/{id}/transition', 'verb' => 'POST'],
         ['name' => 'contract#summary',        'url' => '/api/contracts/metrics/summary', 'verb' => 'GET'],
         ['name' => 'contract#renewalMetrics', 'url' => '/api/contracts/metrics/renewal', 'verb' => 'GET'],
+
+        // Commercial-configuration store (ADR-080). Consume-only: pipelinq browses a
+        // remote registry through OpenRegister AppHost's GenericStoreService and
+        // installs CONFIGURATION only (pipelines, queues, skills, catalogues,
+        // POS and loyalty setup). The record schemas are refused by
+        // StoreController::INSTALLABLE_SLUGS. These sit ABOVE the SPA catch-all
+        // because that route matches `.*` and would otherwise answer them with HTML.
+        ['name' => 'store#search',       'url' => '/api/store/items',                 'verb' => 'GET'],
+        ['name' => 'store#install',      'url' => '/api/store/items/{slug}/install',  'verb' => 'POST', 'requirements' => ['slug' => '[a-z0-9][a-z0-9-]*[a-z0-9]']],
+        ['name' => 'store#getSettings',  'url' => '/api/store/settings',              'verb' => 'GET'],
+        ['name' => 'store#saveSettings', 'url' => '/api/store/settings',              'verb' => 'PUT'],
 
         // SPA catch-all — serves the Vue app for any frontend route (history mode)
         ['name' => 'dashboard#page', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.*'], 'defaults' => ['path' => '']],

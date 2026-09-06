@@ -64,7 +64,25 @@ if (class_exists(ObjectService::class) === false) {
 		 *
 		 * @var string
 		 */
-		private const NOT_CONFIGURED = 'ObjectService test stub: this method returns an ObjectEntityInterface and has no inert value. Configure it on the mock.';
+		private const NOT_CONFIGURED = 'ObjectService test stub: this method returns an ObjectEntityInterface '
+			. 'and has no inert value. Configure it on the mock.';
+
+		/**
+		 * Rows written through appendObjectsRaw(), keyed by register, schema and uuid.
+		 *
+		 * The rest of this stub is inert, but the raw pair is a write followed by a
+		 * sweep, and a sweep over nothing proves nothing. So these two keep a store.
+		 *
+		 * @var array<string, array<string, array<string, array<string, mixed>>>>
+		 */
+		private array $rawRows = [];
+
+		/**
+		 * Counter behind the uuids appendObjectsRaw() stamps on rows that carry none.
+		 *
+		 * @var integer
+		 */
+		private int $rawSequence = 0;
 
 		/**
 		 * Persist an object.
@@ -324,6 +342,98 @@ if (class_exists(ObjectService::class) === false) {
 		}//end saveObjects()
 
 		/**
+		 * Append rows with every safeguard switched off, into the in-memory store.
+		 *
+		 * Mirrors the contract: a `uuid` is generated when absent, and `expires` is
+		 * kept as given so purgeExpiredObjectsRaw() can sweep it.
+		 *
+		 * @param array<int, array<string, mixed>> $objects  Rows to append, as plain arrays.
+		 * @param string|int                       $register Register slug or ID.
+		 * @param string|int                       $schema   Schema slug or ID.
+		 *
+		 * @return integer The number of rows written.
+		 */
+		public function appendObjectsRaw(array $objects, string|int $register, string|int $schema): int {
+			$written = 0;
+			foreach ($objects as $object) {
+				$uuid = (string) ($object['uuid'] ?? '');
+				if ($uuid === '') {
+					$this->rawSequence++;
+					$uuid = 'raw-' . $this->rawSequence;
+					$object['uuid'] = $uuid;
+				}
+
+				$this->rawRows[(string) $register][(string) $schema][$uuid] = $object;
+				$written++;
+			}
+
+			return $written;
+		}//end appendObjectsRaw()
+
+		/**
+		 * Hard-delete the appended rows whose `expires` has passed.
+		 *
+		 * Rows without an `expires`, or with one that does not parse, are kept:
+		 * that is what the real sweep does with a NULL column.
+		 *
+		 * @param string|int $register Register slug or ID.
+		 * @param string|int $schema   Schema slug or ID.
+		 *
+		 * @return integer The number of rows removed.
+		 */
+		public function purgeExpiredObjectsRaw(string|int $register, string|int $schema): int {
+			$now = new \DateTimeImmutable();
+			$removed = 0;
+			foreach (($this->rawRows[(string) $register][(string) $schema] ?? []) as $uuid => $object) {
+				if ($this->rawRowExpired(expires: ($object['expires'] ?? null), now: $now) === true) {
+					unset($this->rawRows[(string) $register][(string) $schema][$uuid]);
+					$removed++;
+				}
+			}
+
+			return $removed;
+		}//end purgeExpiredObjectsRaw()
+
+		/**
+		 * Read back the rows appendObjectsRaw() holds for a register and schema.
+		 *
+		 * Test-only accessor, so a test can see the stamped uuid and the survivors
+		 * of a sweep rather than trusting two return counts.
+		 *
+		 * @param string|int $register Register slug or ID.
+		 * @param string|int $schema   Schema slug or ID.
+		 *
+		 * @return array<string, array<string, mixed>> Rows keyed by uuid.
+		 */
+		public function rawObjects(string|int $register, string|int $schema): array {
+			return ($this->rawRows[(string) $register][(string) $schema] ?? []);
+		}//end rawObjects()
+
+		/**
+		 * Whether a row's `expires` value lies before the given moment.
+		 *
+		 * @param mixed              $expires ISO 8601 string, DateTimeInterface, or absent.
+		 * @param \DateTimeImmutable $now     The moment to compare against.
+		 *
+		 * @return boolean
+		 */
+		private function rawRowExpired(mixed $expires, \DateTimeImmutable $now): bool {
+			if ($expires instanceof \DateTimeInterface) {
+				return $expires < $now;
+			}
+
+			if (is_string($expires) === false || $expires === '') {
+				return false;
+			}
+
+			try {
+				return new \DateTimeImmutable($expires) < $now;
+			} catch (\Exception) {
+				return false;
+			}
+		}//end rawRowExpired()
+
+		/**
 		 * Run an operation in the system context.
 		 *
 		 * @param callable $operation The operation to run.
@@ -446,6 +556,7 @@ if (class_exists(ObjectService::class) === false) {
 		 * path, and it is on the contract so callers stop reimplementing
 		 * read-merge-write or silently erasing the fields they did not send.
 		 *
+		 * @param string               $objectId       UUID of the object to patch.
 		 * @param array<string, mixed> $data           Fields to merge onto the stored object.
 		 * @param string|int|null      $register       Register the object belongs to.
 		 * @param string|int|null      $schema         Schema the object belongs to.

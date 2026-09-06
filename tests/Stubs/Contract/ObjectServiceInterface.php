@@ -370,6 +370,61 @@ interface ObjectServiceInterface {
 	): array;
 
 	/**
+	 * Append rows with every safeguard switched OFF.
+	 *
+	 * No RBAC, no multitenancy, no validation, no audit trail, no lifecycle
+	 * events, no search index, no relations, no files. Calling it is the same
+	 * declaration as `_rbac: false`: the caller has taken the authorisation
+	 * responsibility. It exists for high-volume, low-value rows such as traffic
+	 * events and telemetry; use saveObjects() for anything a person will edit,
+	 * audit or revert.
+	 *
+	 * Each row is a plain property map plus the optional metadata keys `uuid`
+	 * (generated when absent), `expires` (ISO 8601 or DateTimeInterface, swept
+	 * by purgeExpiredObjectsRaw()), `owner` and `organisation`.
+	 *
+	 * @param array      $objects  Rows to append, as plain arrays.
+	 * @param string|int $register Register id, uuid or slug.
+	 * @param string|int $schema   Schema id, uuid or slug, resolved within the register.
+	 *
+	 * @return int The number of rows written.
+	 *
+	 * @contract-shift announced — openregister#3406 names the fleet test doubles that
+	 * must declare this method or fatal at class load: pipelinq
+	 * tests/Stubs/Service/ObjectService.php (with its paired
+	 * tests/Stubs/Contract/ObjectServiceInterface.php) and shillinq
+	 * tests/Unit/Service/Support/{InMemoryObjectServiceStub,DuckObjectServiceAdapter}.php.
+	 * createMock() sites are unaffected. The break lands on the
+	 * `conduction/hydra-gates` RELEASE carrying this contract, not on this
+	 * merge, because leaf apps read it from vendor/: land the doubles before
+	 * the release, or pin.
+	 */
+	public function appendObjectsRaw(array $objects, string|int $register, string|int $schema): int;
+
+	/**
+	 * Hard-delete the rows of a register+schema whose `expires` has passed.
+	 *
+	 * The sweep for appendObjectsRaw(). Bypasses soft-delete and the audit
+	 * trail on purpose: raw rows never had either.
+	 *
+	 * @param string|int $register Register id, uuid or slug.
+	 * @param string|int $schema   Schema id, uuid or slug, resolved within the register.
+	 *
+	 * @return int The number of rows removed.
+	 *
+	 * @contract-shift announced — openregister#3406 names the fleet test doubles that
+	 * must declare this method or fatal at class load: pipelinq
+	 * tests/Stubs/Service/ObjectService.php (with its paired
+	 * tests/Stubs/Contract/ObjectServiceInterface.php) and shillinq
+	 * tests/Unit/Service/Support/{InMemoryObjectServiceStub,DuckObjectServiceAdapter}.php.
+	 * createMock() sites are unaffected. The break lands on the
+	 * `conduction/hydra-gates` RELEASE carrying this contract, not on this
+	 * merge, because leaf apps read it from vendor/: land the doubles before
+	 * the release, or pin.
+	 */
+	public function purgeExpiredObjectsRaw(string|int $register, string|int $schema): int;
+
+	/**
 	 * Run an operation with system privileges, bypassing user scoping.
 	 *
 	 * @param callable $operation The operation to run.

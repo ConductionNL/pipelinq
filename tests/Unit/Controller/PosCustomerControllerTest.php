@@ -666,11 +666,6 @@ class PosCustomerControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testAttachWithConsentPreservesUnrelatedContactFields(): void {
-		$this->markTestSkipped(
-			'BUG: the consent sync writes back the 10-key DECORATED projection of the contact, '
-			. 'so a PUT-semantic saveObject nulls every other stored contact field — see coordinator report'
-		);
-
 		// Unreachable while the bug stands; kept so the intended contract is on record.
 		$controller = $this->controllerWithRealService(
 			contact: [

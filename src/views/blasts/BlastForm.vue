@@ -33,17 +33,61 @@
 					:placeholder="t('pipelinq', 'Q4 Gemeente Outreach')" />
 			</section>
 
-			<!-- Step 2: segment -->
+			<!-- Step 2: audience — a segment the tenant queries, or a list
+			     someone joined (marketing-lists-and-double-opt-in). -->
 			<section v-if="step === 'segment'" class="blast-form__panel">
+				<fieldset class="blast-form__audience-kind">
+					<legend>{{ t('pipelinq', 'Send to') }}</legend>
+					<NcCheckboxRadioSwitch
+						:modelValue="audienceKind"
+						value="segment"
+						name="blast-audience-kind"
+						type="radio"
+						data-testid="blast-audience-segment"
+						@update:modelValue="audienceKind = $event">
+						{{ t('pipelinq', 'A segment') }}
+					</NcCheckboxRadioSwitch>
+					<NcCheckboxRadioSwitch
+						:modelValue="audienceKind"
+						value="list"
+						name="blast-audience-kind"
+						type="radio"
+						data-testid="blast-audience-list"
+						@update:modelValue="audienceKind = $event">
+						{{ t('pipelinq', 'A mailing list') }}
+					</NcCheckboxRadioSwitch>
+				</fieldset>
+
 				<NcSelect
+					v-if="audienceKind === 'segment'"
 					v-model="selectedSegment"
 					:options="segments"
 					:inputLabel="t('pipelinq', 'Segment') + ' *'"
 					label="name"
 					:loading="segmentsLoading" />
-				<p v-if="selectedSegment" class="blast-form__hint">
+				<p
+					v-if="audienceKind === 'segment' && selectedSegment"
+					class="blast-form__hint">
 					{{ t('pipelinq', 'Estimated audience:') }}
 					<strong>{{ selectedSegment.estimatedSize ?? '—' }}</strong>
+				</p>
+
+				<NcSelect
+					v-if="audienceKind === 'list'"
+					v-model="selectedList"
+					:options="mailingLists"
+					:inputLabel="t('pipelinq', 'Mailing list') + ' *'"
+					label="name"
+					:loading="mailingListsLoading" />
+				<p
+					v-if="audienceKind === 'list' && selectedList"
+					class="blast-form__hint">
+					{{
+						t(
+							'pipelinq',
+							'Only confirmed subscribers receive this. Anyone still awaiting confirmation is skipped.',
+						)
+					}}
 				</p>
 			</section>
 
@@ -61,15 +105,55 @@
 					role="alert">
 					{{ templateValidationError }}
 				</p>
+
+				<NcLoadingIcon v-if="previewLoading" :size="24" />
+
+				<div v-else-if="preview" class="blast-form__preview">
+					<h3>{{ t('pipelinq', 'Preview') }}</h3>
+					<p v-if="preview.subject" class="blast-form__preview-subject">
+						{{ preview.subject }}
+					</p>
+					<!-- eslint-disable vue/no-v-html -- preview.bodyHtml is the server's own expandArticlesMarker() output, already sanitised there -->
+					<div
+						class="blast-form__preview-body"
+						v-html="preview.bodyHtml" />
+					<!-- eslint-enable vue/no-v-html -->
+					<ul
+						v-if="preview.articles && preview.articles.length"
+						class="blast-form__preview-articles">
+						<li
+							v-for="(article, index) in preview.articles"
+							:key="index">
+							<strong>{{ article.title }}</strong>
+							<p
+								v-if="article.summary"
+								class="blast-form__preview-article-summary">
+								{{ article.summary }}
+							</p>
+						</li>
+					</ul>
+				</div>
 			</section>
 
 			<!-- Step 4: channel -->
 			<section v-if="step === 'channel'" class="blast-form__panel">
+				<!--
+					`:reduce` keeps this model a STRING, which is what every
+					reader of `selectedChannel` assumes: filteredTemplates()
+					compares it to `template.channel`, the preflight guard tests
+					it against 'email', and both the create call and the
+					preflight query send it as-is. Without it vue-select hands
+					back the whole `{ value, label }` option, and all four go
+					wrong at once while `canSubmit()`'s `!!` check still passes
+					because an object is truthy — so "Create blast" simply stays
+					disabled with nothing to show for it.
+				-->
 				<NcSelect
 					v-model="selectedChannel"
 					:options="channelOptions"
 					:inputLabel="t('pipelinq', 'Channel') + ' *'"
 					label="label"
+					:reduce="(o) => o.value"
 					:clearable="false" />
 				<NcSelect
 					v-model="selectedConnectorSource"
@@ -85,7 +169,28 @@
 				</p>
 			</section>
 
-			<!-- Step 5: schedule -->
+			<!-- Step 5: transport -->
+			<section v-if="step === 'transport'" class="blast-form__panel">
+				<NcSelect
+					v-model="selectedTransport"
+					:options="transports"
+					:inputLabel="t('pipelinq', 'Send through')"
+					label="label"
+					:loading="transportsLoading" />
+				<p class="blast-form__hint">
+					{{
+						t(
+							'pipelinq',
+							'Leave empty to send through the default transport.',
+						)
+					}}
+				</p>
+				<p v-if="transportsError" class="blast-form__error" role="alert">
+					{{ transportsError }}
+				</p>
+			</section>
+
+			<!-- Step 6: schedule -->
 			<section v-if="step === 'schedule'" class="blast-form__panel">
 				<label class="blast-form__label" for="blast-form-scheduled-for">
 					{{ t('pipelinq', 'Send at') }}
@@ -100,7 +205,7 @@
 				</p>
 			</section>
 
-			<!-- Step 6: A/B -->
+			<!-- Step 7: A/B -->
 			<section v-if="step === 'ab'" class="blast-form__panel">
 				<label class="blast-form__checkbox">
 					<input v-model="abEnabled" type="checkbox" />
@@ -156,7 +261,7 @@
 				@click="submit">
 				{{
 					submitting
-						? t('pipelinq', 'Saving...')
+						? t('pipelinq', 'Saving…')
 						: t('pipelinq', 'Create blast')
 				}}
 			</NcButton>
@@ -174,15 +279,23 @@
 
 <script>
 import axios from '@nextcloud/axios'
+import { showInfo } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
-import { NcButton, NcLoadingIcon, NcSelect } from '@nextcloud/vue'
+import {
+	NcButton,
+	NcCheckboxRadioSwitch,
+	NcLoadingIcon,
+	NcSelect,
+} from '@nextcloud/vue'
 import MissingConsentModal from '../../modals/MissingConsentModal.vue'
+import { previewTemplate } from '../../services/articlesApi.js'
 
 const STEPS = [
 	{ key: 'name', labelKey: 'Name' },
 	{ key: 'segment', labelKey: 'Segment' },
 	{ key: 'template', labelKey: 'Template' },
 	{ key: 'channel', labelKey: 'Channel' },
+	{ key: 'transport', labelKey: 'Transport' },
 	{ key: 'schedule', labelKey: 'Schedule' },
 	{ key: 'ab', labelKey: 'A/B split' },
 ]
@@ -191,6 +304,7 @@ export default {
 	name: 'BlastForm',
 	components: {
 		NcButton,
+		NcCheckboxRadioSwitch,
 		NcLoadingIcon,
 		NcSelect,
 		MissingConsentModal,
@@ -205,26 +319,38 @@ export default {
 			model: {
 				name: '',
 				segmentId: '',
+				listId: '',
 				templateId: '',
 				channel: 'email',
 				connectorSourceId: '',
+				transportId: '',
 				scheduledFor: '',
 				abSplitPercent: 50,
 			},
 
 			abEnabled: false,
+			audienceKind: 'segment',
 			segments: [],
+			mailingLists: [],
 			templates: [],
 			connectorSources: [],
 			connectorSourcesError: '',
+			transports: [],
+			transportsError: '',
 			selectedSegment: null,
+			selectedList: null,
 			selectedTemplate: null,
 			selectedChannel: 'email',
 			selectedConnectorSource: null,
+			selectedTransport: null,
 			segmentsLoading: false,
+			mailingListsLoading: false,
 			templatesLoading: false,
 			connectorSourcesLoading: false,
+			transportsLoading: false,
 			templateValidationError: '',
+			preview: null,
+			previewLoading: false,
 			showConsentModal: false,
 			missingConsentContacts: [],
 			consentDecision: null,
@@ -290,13 +416,14 @@ export default {
 		 * Returns true when the current step's required input is satisfied.
 		 *
 		 * @return {boolean}
+		 * @spec openspec/specs/marketing-blast/spec.md#requirement-a-blast-may-target-a-mailing-list
 		 */
 		canAdvance() {
 			switch (this.step) {
 				case 'name':
 					return !!(this.model.name && this.model.name.trim())
 				case 'segment':
-					return !!this.selectedSegment
+					return this.hasAudience
 				case 'template':
 					return !!this.selectedTemplate && !this.templateValidationError
 				case 'channel':
@@ -304,6 +431,22 @@ export default {
 				default:
 					return true
 			}
+		},
+
+		/**
+		 * Whether an audience has been chosen. Exactly one is named: the two
+		 * pickers are mutually exclusive because a blast that named both would
+		 * leave the send path to pick, and whichever it picked would surprise
+		 * the marketer who named the other.
+		 *
+		 * @return {boolean}
+		 * @spec openspec/specs/marketing-blast/spec.md#requirement-a-blast-may-target-a-mailing-list
+		 */
+		hasAudience() {
+			if (this.audienceKind === 'list') {
+				return !!this.selectedList
+			}
+			return !!this.selectedSegment
 		},
 
 		/**
@@ -317,7 +460,7 @@ export default {
 		canSubmit() {
 			return (
 				!!(this.model.name && this.model.name.trim())
-				&& !!this.selectedSegment
+				&& this.hasAudience
 				&& !!this.selectedTemplate
 				&& !!this.selectedChannel
 				&& !this.templateValidationError
@@ -330,11 +473,55 @@ export default {
 			this.model.segmentId = option?.id || ''
 		},
 
+		/**
+		 * Mirror the picked list onto the payload.
+		 *
+		 * @param {object|null} option The chosen list, or null.
+		 * @return {void}
+		 * @spec openspec/specs/marketing-blast/spec.md#requirement-a-blast-may-target-a-mailing-list
+		 */
+		selectedList(option) {
+			this.model.listId = option?.id || ''
+		},
+
+		/**
+		 * Switch the audience picker and clear the side that is now hidden.
+		 *
+		 * @param {string} kind Either 'segment' or 'list'.
+		 * @return {void}
+		 * @spec openspec/specs/marketing-blast/spec.md#requirement-a-blast-may-target-a-mailing-list
+		 */
+		audienceKind(kind) {
+			// Clear the other side rather than leaving it set but hidden: a
+			// stale id would travel in the payload and the server would refuse
+			// the blast for naming two audiences, with nothing on screen to
+			// explain why.
+			if (kind === 'list') {
+				this.selectedSegment = null
+				this.model.segmentId = ''
+				this.loadMailingLists()
+				return
+			}
+			this.selectedList = null
+			this.model.listId = ''
+		},
+
+		/**
+		 * @param {object|null} option The template just picked, or null.
+		 * @spec openspec/changes/marketing-article-hub/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
+		 * @return {void}
+		 */
 		selectedTemplate(option) {
 			this.model.templateId = option?.id || ''
 			this.validateTemplate()
+			this.loadPreview()
 		},
 
+		/**
+		 * @param {string} value The channel just picked.
+		 * @spec openspec/changes/marketing-article-hub/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
+		 * @return {void}
+		 */
 		selectedChannel(value) {
 			this.model.channel = value
 			// Drop the template if it no longer matches the channel.
@@ -343,10 +530,19 @@ export default {
 				this.model.templateId = ''
 			}
 			this.validateTemplate()
+			this.loadPreview()
 		},
 
 		selectedConnectorSource(option) {
 			this.model.connectorSourceId = option?.id || ''
+		},
+
+		/**
+		 * @param {object} option The picked transport option, or null.
+		 * @spec openspec/changes/marketing-mail-transports/specs/marketing-mail-transports/spec.md#requirement-the-wizard-offers-a-transport-step
+		 */
+		selectedTransport(option) {
+			this.model.transportId = option?.id || ''
 		},
 
 		abEnabled(on) {
@@ -358,10 +554,14 @@ export default {
 		},
 	},
 
+	/**
+	 * @spec openspec/changes/marketing-mail-transports/specs/marketing-mail-transports/spec.md#requirement-the-wizard-offers-a-transport-step
+	 */
 	mounted() {
 		this.loadSegments()
 		this.loadTemplates()
 		this.loadConnectorSources()
+		this.loadTransports()
 	},
 
 	methods: {
@@ -377,7 +577,7 @@ export default {
 					generateUrl('/apps/pipelinq/api/segments'),
 				)
 				this.segments = data?.data || data?.results || data || []
-			} catch (_e) {
+			} catch {
 				this.segments = []
 			} finally {
 				this.segmentsLoading = false
@@ -386,6 +586,8 @@ export default {
 
 		/**
 		 * Load all campaign templates.
+		 *
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-blast-creation-wizard-gates-on-compliance
 		 */
 		async loadTemplates() {
 			this.templatesLoading = true
@@ -394,7 +596,7 @@ export default {
 					generateUrl('/apps/pipelinq/api/templates'),
 				)
 				this.templates = data?.data || data?.results || data || []
-			} catch (_e) {
+			} catch {
 				this.templates = []
 			} finally {
 				this.templatesLoading = false
@@ -431,7 +633,7 @@ export default {
 					id: src.id || src.uuid,
 					label: src.name || src.title || src.id,
 				}))
-			} catch (_e) {
+			} catch {
 				this.connectorSources = []
 				this.connectorSourcesError = this.t(
 					'pipelinq',
@@ -439,6 +641,44 @@ export default {
 				)
 			} finally {
 				this.connectorSourcesLoading = false
+			}
+		},
+
+		/**
+		 * Load the tenant's mailTransport rows for the transport step,
+		 * pre-selecting the one marked `default = true` so a user who never
+		 * touches this step still gets the sensible transport.
+		 *
+		 * @spec openspec/changes/marketing-mail-transports/specs/marketing-mail-transports/spec.md#requirement-the-wizard-offers-a-transport-step
+		 */
+		async loadTransports() {
+			this.transportsLoading = true
+			this.transportsError = ''
+			try {
+				const { data } = await axios.get(
+					generateUrl(
+						'/apps/openregister/api/objects/pipelinq/mailTransport'
+							+ '?active=true&_limit=200',
+					),
+				)
+				const list = data?.results || data?.data || data || []
+				this.transports = list.map((t) => ({
+					id: t.id || t.uuid,
+					label: t.displayName || t.id,
+					default: !!t.default,
+				}))
+				const defaultTransport = this.transports.find((t) => t.default)
+				if (defaultTransport) {
+					this.selectedTransport = defaultTransport
+				}
+			} catch {
+				this.transports = []
+				this.transportsError = this.t(
+					'pipelinq',
+					'Could not load mail transports. The blast will send through the default transport.',
+				)
+			} finally {
+				this.transportsLoading = false
 			}
 		},
 
@@ -472,6 +712,30 @@ export default {
 				const msg = e?.response?.data?.error
 				this.templateValidationError =
 					msg || this.t('pipelinq', 'Template validation failed.')
+			}
+		},
+
+		/**
+		 * Load the rendered preview for the selected template: its bodies
+		 * with the `{{articles}}` marker already expanded, produced by the
+		 * same `ArticleService::expandArticlesMarker()` call the send path
+		 * runs — so what a marketer reads here is what will send.
+		 *
+		 * @spec openspec/changes/marketing-article-hub/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
+		 * @return {Promise<void>} Resolves when the preview is in place.
+		 */
+		async loadPreview() {
+			this.preview = null
+			if (!this.selectedTemplate) {
+				return
+			}
+			this.previewLoading = true
+			try {
+				this.preview = await previewTemplate(this.selectedTemplate.id)
+			} catch {
+				this.preview = null
+			} finally {
+				this.previewLoading = false
 			}
 		},
 
@@ -520,7 +784,7 @@ export default {
 				this.missingConsentContacts = missing
 				this.showConsentModal = true
 				return await this.awaitConsentDecision()
-			} catch (_e) {
+			} catch {
 				// On preflight failure, surface the error inline and block the send.
 				this.submitError = this.t(
 					'pipelinq',
@@ -561,10 +825,17 @@ export default {
 		 * Modal handler: user wants to launch a consent-request flow. We
 		 * navigate them to a (forthcoming) consent-request screen but do not
 		 * send the blast.
+		 *
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-blast-creation-wizard-gates-on-compliance
 		 */
 		onConsentRequest() {
 			this.consentDecision = 'request'
-			OC.Notification.showTemporary(
+			// `OC.Notification` does not exist on Nextcloud 34 -- window.OC is
+			// present but has no Notification member, so the legacy
+			// showTemporary() call threw a TypeError the moment this handler
+			// ran and the user saw nothing at all. Every other view in this app
+			// already uses @nextcloud/dialogs.
+			showInfo(
 				this.t(
 					'pipelinq',
 					'A consent-request flow will be opened for the listed contacts.',
@@ -596,9 +867,11 @@ export default {
 				const payload = {
 					name: this.model.name.trim(),
 					segmentId: this.model.segmentId,
+					listId: this.model.listId,
 					templateId: this.model.templateId,
 					channel: this.model.channel,
 					connectorSourceId: this.model.connectorSourceId,
+					transportId: this.model.transportId,
 					scheduledFor: this.model.scheduledFor || null,
 					abSplitPercent: this.abEnabled ? this.model.abSplitPercent : 100,
 				}
@@ -692,6 +965,36 @@ export default {
 	color: var(--color-error);
 	font-weight: 600;
 	margin: 0;
+}
+
+.blast-form__preview {
+	margin-block-start: 12px;
+	padding: 12px;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius);
+}
+
+.blast-form__preview h3 {
+	margin: 0 0 8px;
+}
+
+.blast-form__preview-subject {
+	font-weight: 600;
+}
+
+.blast-form__preview-body {
+	color: var(--color-text-maxcontrast);
+}
+
+.blast-form__preview-articles {
+	list-style: none;
+	margin: 8px 0 0;
+	padding: 0;
+}
+
+.blast-form__preview-article-summary {
+	margin: 0;
+	color: var(--color-text-maxcontrast);
 }
 
 .blast-form__checkbox {

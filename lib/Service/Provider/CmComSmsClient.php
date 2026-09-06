@@ -109,6 +109,7 @@ class CmComSmsClient implements SmsProviderClientInterface {
 	 * @param string $signature Header.
 	 *
 	 * @return bool True when authentic.
+	 * @spec openspec/specs/outbound-messaging/spec.md#REQ-OM-004
 	 */
 	public function verifySignature(string $rawBody, string $signature): bool {
 		if ($this->webhookSecret === '' || $signature === '') {
@@ -123,6 +124,7 @@ class CmComSmsClient implements SmsProviderClientInterface {
 	 * Vendor key.
 	 *
 	 * @return string `cm-com`.
+	 * @spec openspec/specs/outbound-messaging/spec.md#REQ-OM-004
 	 */
 	public function getVendor(): string {
 		return 'cm-com';

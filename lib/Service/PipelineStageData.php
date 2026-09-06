@@ -25,6 +25,8 @@ namespace OCA\Pipelinq\Service;
 
 /**
  * Data provider for default pipeline stage configurations.
+ *
+ * @spec exclude value object holding one stage row for the pipeline summary
  */
 class PipelineStageData {
 	/**

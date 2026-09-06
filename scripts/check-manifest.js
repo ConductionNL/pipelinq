@@ -10,8 +10,8 @@
  */
 'use strict'
 
-const path = require('path')
 const fs = require('fs')
+const path = require('path')
 
 const manifestPath = path.resolve(__dirname, '../src/manifest.json')
 const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'))
@@ -31,7 +31,7 @@ try {
 		)
 		process.exit(0)
 	}
-} catch (_) {
+} catch {
 	// Library not yet available or does not export validateManifest.
 }
 

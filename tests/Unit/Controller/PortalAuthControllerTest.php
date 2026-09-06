@@ -616,7 +616,8 @@ class PortalAuthControllerTest extends TestCase {
 
 	/**
 	 * The plaintext secret must never be written to the account record; only the
-	 * encrypted form may be persisted.
+	 * encrypted form may be persisted — and it goes to the PENDING field, so an
+	 * unverified enrolment cannot become a live second factor.
 	 *
 	 * @return void
 	 */
@@ -633,8 +634,10 @@ class PortalAuthControllerTest extends TestCase {
 		$body = $this->build(mfa: $this->realMfaService())->mfaEnroll()->getData();
 
 		$this->assertIsArray($written);
-		$this->assertSame('enc:' . $body['secret'], $written['mfaSecret']);
-		$this->assertNotSame($body['secret'], $written['mfaSecret']);
+		$this->assertSame('enc:' . $body['secret'], $written['mfaPendingSecret']);
+		$this->assertNotSame($body['secret'], $written['mfaPendingSecret']);
+		// The live factor is not touched by a proposal.
+		$this->assertArrayNotHasKey('mfaSecret', $written);
 	}//end testMfaEnrollPersistsOnlyTheEncryptedSecret()
 
 	/**
@@ -646,11 +649,6 @@ class PortalAuthControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testMfaEnrollDoesNotDisableAnAlreadyVerifiedSecondFactor(): void {
-		$this->markTestSkipped(
-			'BUG: mfaEnroll writes mfaEnabled=false and overwrites the live mfaSecret before any '
-			. 'verification, silently downgrading an MFA-protected account — see coordinator report'
-		);
-
 		$enrolled = array_merge(self::ACCOUNT, ['mfaEnabled' => true, 'mfaSecret' => 'enc:LIVESECRET']);
 		$this->authenticate($enrolled);
 		$written = null;
@@ -676,11 +674,6 @@ class PortalAuthControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testMfaEnrollDoesNotDowngradeASubsequentPasswordLogin(): void {
-		$this->markTestSkipped(
-			'BUG: after mfaEnroll, a password-only login on the same account returns a full session '
-			. 'token instead of demanding a second factor — see coordinator report'
-		);
-
 		$store = array_merge(self::ACCOUNT, ['mfaEnabled' => true, 'mfaSecret' => 'enc:LIVESECRET']);
 		$account = static function () use (&$store): array {
 			return $store;

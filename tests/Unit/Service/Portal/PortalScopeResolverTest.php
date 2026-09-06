@@ -64,7 +64,7 @@ class PortalScopeResolverTest extends TestCase {
 	 * @return void
 	 */
 	public function testOwnVisibleStrangerNot(): void {
-		$account = $this->repository->seed('portalAccount', 'acc-a', [
+		$account = $this->repository->seed('crmPortalAccount', 'acc-a', [
 			'linkedContactId' => 'contact-a',
 			'linkedOrganisationId' => 'org-a',
 		]);
@@ -81,11 +81,11 @@ class PortalScopeResolverTest extends TestCase {
 	 * @return void
 	 */
 	public function testCrossCustomerIdorRejected(): void {
-		$victim = $this->repository->seed('portalAccount', 'victim', [
+		$victim = $this->repository->seed('crmPortalAccount', 'victim', [
 			'linkedContactId' => 'contact-victim',
 			'linkedOrganisationId' => 'org-victim',
 		]);
-		$attacker = $this->repository->seed('portalAccount', 'attacker', [
+		$attacker = $this->repository->seed('crmPortalAccount', 'attacker', [
 			'linkedContactId' => 'contact-attacker',
 			'linkedOrganisationId' => 'org-attacker',
 		]);
@@ -104,11 +104,11 @@ class PortalScopeResolverTest extends TestCase {
 	 * @return void
 	 */
 	public function testActiveDelegationWidensVisibility(): void {
-		$granter = $this->repository->seed('portalAccount', 'granter', [
+		$granter = $this->repository->seed('crmPortalAccount', 'granter', [
 			'email' => 'boss@org.nl',
 			'linkedOrganisationId' => 'org-shared',
 		]);
-		$grantee = $this->repository->seed('portalAccount', 'grantee', [
+		$grantee = $this->repository->seed('crmPortalAccount', 'grantee', [
 			'email' => 'colleague@org.nl',
 			'linkedOrganisationId' => 'org-own',
 		]);
@@ -134,8 +134,8 @@ class PortalScopeResolverTest extends TestCase {
 	 * @return void
 	 */
 	public function testDelegationScopeIsolation(): void {
-		$this->repository->seed('portalAccount', 'granter', ['linkedOrganisationId' => 'org-shared']);
-		$grantee = $this->repository->seed('portalAccount', 'grantee', ['linkedOrganisationId' => 'org-own']);
+		$this->repository->seed('crmPortalAccount', 'granter', ['linkedOrganisationId' => 'org-shared']);
+		$grantee = $this->repository->seed('crmPortalAccount', 'grantee', ['linkedOrganisationId' => 'org-own']);
 		$this->repository->seed('portalDelegation', 'del-1', [
 			'granterAccountId' => 'granter',
 			'granteeAccountId' => 'grantee',
@@ -155,8 +155,8 @@ class PortalScopeResolverTest extends TestCase {
 	 * @return void
 	 */
 	public function testRevokedDelegationDoesNotWiden(): void {
-		$this->repository->seed('portalAccount', 'granter', ['linkedOrganisationId' => 'org-shared']);
-		$grantee = $this->repository->seed('portalAccount', 'grantee', ['linkedOrganisationId' => 'org-own']);
+		$this->repository->seed('crmPortalAccount', 'granter', ['linkedOrganisationId' => 'org-shared']);
+		$grantee = $this->repository->seed('crmPortalAccount', 'grantee', ['linkedOrganisationId' => 'org-own']);
 		$this->repository->seed('portalDelegation', 'del-1', [
 			'granterAccountId' => 'granter',
 			'granteeAccountId' => 'grantee',

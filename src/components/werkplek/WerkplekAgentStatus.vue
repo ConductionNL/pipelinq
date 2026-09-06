@@ -121,7 +121,6 @@ export default {
 				} catch {
 					// dialogs lib may be missing in tests — ignore.
 				}
-				// eslint-disable-next-line no-console
 				console.warn('[WerkplekAgentStatus] availability update failed', e)
 			} finally {
 				this.saving = false

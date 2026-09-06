@@ -465,12 +465,6 @@ class BrpControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testRevealAddressAuditEntryIdentifiesTheDataSubject(): void {
-		$this->markTestSkipped(
-			'BUG: BrpController::revealAddress calls recordLookup(rawBsn: \'\') so the '
-			. 'audit entry stores sha256("") for every reveal and carries no contact '
-			. 'id — the persoon in hand already has its bsnHash — see coordinator report'
-		);
-
 		$recorded = [];
 		$audit = $this->capturingAudit($recorded);
 
@@ -487,10 +481,20 @@ class BrpControllerTest extends TestCase {
 
 		$controller->revealAddress('contact-1');
 
+		// The raw BSN genuinely cannot be reconstructed at this point, and the
+		// controller says so. What the audit record must carry is the SUBJECT,
+		// and the persoon in hand already holds its own hash — so that is what
+		// has to reach the service. Asserting on `rawBsn` would only be
+		// satisfiable by inventing a BSN nobody has.
+		$this->assertSame(
+			str_repeat('f', 64),
+			$recorded[0]['bsnHash'],
+			'the audit entry must carry the subject hash, not hash the empty string'
+		);
 		$this->assertNotSame(
-			'',
-			$recorded[0]['rawBsn'],
-			'the audit entry hashes the empty string, identifying nobody'
+			hash('sha256', ''),
+			$recorded[0]['bsnHash'],
+			'every reveal would otherwise stamp a byte-identical hash'
 		);
 	}//end testRevealAddressAuditEntryIdentifiesTheDataSubject()
 
@@ -503,12 +507,6 @@ class BrpControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testRevealAddressIsRefusedWhenTheAuditEntryCouldNotBeWritten(): void {
-		$this->markTestSkipped(
-			'BUG: revealAddress ignores recordLookup()\'s return value, so a failed '
-			. 'audit write still returns 200 with the withheld residence — an '
-			. 'unlogged geheimhouding reveal — see coordinator report'
-		);
-
 		$audit = $this->createMock(BsnAuditService::class);
 		// An empty uuid is what recordLookup() returns when its own write failed.
 		$audit->method('recordLookup')->willReturn('');
@@ -748,12 +746,6 @@ class BrpControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testMutationWebhookAnswersNon2xxForARejectedDelivery(): void {
-		$this->markTestSkipped(
-			'BUG: mutationWebhook always returns HTTP 200, including for result '
-			. '"forbidden" (bad signature) and "bad-request" (malformed body) — see '
-			. 'coordinator report'
-		);
-
 		$response = $this->buildWebhookController(signature: str_repeat('c', 64))
 			->mutationWebhook();
 
@@ -793,6 +785,7 @@ class BrpControllerTest extends TestCase {
 				?string $linkedRequest = null,
 				?string $actorRole = null,
 				bool $vogScreening = false,
+				?string $bsnHash = null,
 			) use (&$recorded): string {
 				$recorded[] = [
 					'actor' => $actor,
@@ -802,6 +795,7 @@ class BrpControllerTest extends TestCase {
 					'outcome' => $outcome,
 					'action' => $action,
 					'actorRole' => $actorRole,
+					'bsnHash' => $bsnHash,
 				];
 				return 'audit-1';
 			}
@@ -962,7 +956,14 @@ class BrpControllerTest extends TestCase {
 			$validation,
 			$this->createMock(BrpCacheService::class),
 			$this->createMock(HaalCentraalClient::class),
-			($audit ?? $this->createMock(BsnAuditService::class)),
+			// A WORKING audit service by default. A bare mock answers '' from
+			// recordLookup(), which now means "the audit write failed" and makes
+			// revealAddress fail closed — so every test that does not care about
+			// auditing would otherwise be asserting an audit outage.
+			($audit ?? $this->createConfiguredMock(
+				BsnAuditService::class,
+				['recordLookup' => 'audit-default']
+			)),
 			($optOut ?? $this->createMock(OptOutService::class)),
 			$this->createMock(BrpMutationWebhookListener::class),
 			$this->createMock(LoggerInterface::class),

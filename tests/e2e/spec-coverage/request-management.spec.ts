@@ -10,7 +10,7 @@
  * `unify-ticket-supertype` removed the `/requests` route: request tickets live
  * on the unified Tickets index (src/manifest.json page id `Tickets`, route
  * `/tickets`) behind the "Tickets" `quickFilters[]` tab. Eight of the ten tests
- * here did `page.goto('/apps/pipelinq/#/requests')` and then asserted only that
+ * here did `page.goto('/apps/pipelinq/requests')` and then asserted only that
  * the body did NOT contain "Internal Server Error" / "Uncaught Error", or that
  * `main` was visible. With no `/requests` route the hash router falls back to
  * the Dashboard — and the Dashboard satisfies every one of those assertions.
@@ -21,20 +21,22 @@
  * Each test below now asserts something ONLY the request surface satisfies.
  */
 
-import { test, expect } from '@playwright/test'
+import type { Page } from '@playwright/test'
+
+import { expect, test } from '@playwright/test'
 import {
-	openApp,
-	navClick,
-	clickQuickFilter,
-	trackPipelinqErrors,
 	assertNoHardError,
+	clickQuickFilter,
 	dismissSupportDialog,
-} from '../helpers/pipelinq'
+	navClick,
+	openApp,
+	trackPipelinqErrors,
+} from '../helpers/pipelinq.ts'
 
 /** Open the Tickets workspace narrowed to the request subtype. */
-async function openRequests(page: import('@playwright/test').Page): Promise<void> {
+async function openRequests(page: Page): Promise<void> {
 	await openApp(page)
-	await navClick(page, 'Tickets', /\/tickets/)
+	await navClick(page, 'All tickets', /\/tickets/)
 	await clickQuickFilter(page, 'Tickets')
 }
 
@@ -141,7 +143,7 @@ test('request list surfaces the channel column', async ({ page }) => {
 // @e2e openspec/specs/request-management/spec.md#set-priority-during-creation
 test('request list is reachable from the sidebar', async ({ page }) => {
 	await openApp(page)
-	await navClick(page, 'Tickets', /#\/tickets/)
+	await navClick(page, 'All tickets', /\/tickets/)
 	await expect(
 		page
 			.locator('#content-vue')
@@ -165,7 +167,7 @@ test('requests by status widget on dashboard', async ({ page }) => {
 	// The request-status distribution widget lives on the Operational overview
 	// dashboard (#/operational), not the landing Commercial overview — the IA
 	// restructure split the dashboards by audience.
-	await page.goto('/apps/pipelinq/#/operational')
+	await page.goto('/apps/pipelinq/operational')
 	await expect(
 		page.locator('#content-vue').getByText('Requests by Status').first(),
 	).toBeVisible({ timeout: 15000 })
@@ -180,7 +182,7 @@ test('request rows carry the seeded request titles', async ({ page }) => {
 	})
 })
 
-// @e2e openspec/specs/request-management/spec.md#request-without-queue
+// @e2e openspec/specs/request-management/spec.md#a-request-functions-with-no-queue-field-at-all
 test('request list renders without pipelinq console errors', async ({ page }) => {
 	const errs = trackPipelinqErrors(page)
 	await openRequests(page)
@@ -208,14 +210,14 @@ test('the ticket list paginates and page 2 shows different rows', async ({
 	page,
 }) => {
 	await openApp(page)
-	await navClick(page, 'Tickets', /\/tickets/)
+	await navClick(page, 'All tickets', /\/tickets/)
 
 	// The ALL tab holds every subtype: the base register's 7 example tickets plus
 	// the seeded 8 requests + 3 complaints + 12 contactmomenten — 30 rows against
 	// a page size of 20, so `effectivePagination.pages > 1` and CnIndexPage
 	// renders CnPagination. This is the one index in the app where the paging
-	// contract is genuinely exercisable; asserting it on Queues (6 rows, one
-	// page) asserted a control the component correctly does not render.
+	// contract is genuinely exercisable; asserting it on a smaller index (one
+	// page of rows) asserted a control the component correctly does not render.
 	const content = page.locator('#content-vue')
 	const firstRowBefore = await content
 		.locator('table tbody tr')
@@ -282,10 +284,6 @@ test('the ticket list paginates and page 2 shows different rows', async ({
  * @e2e exclude status-must-follow-transition-rules — server validation; covered by PHPUnit
  * @e2e exclude priority-must-be-a-valid-value — server validation; covered by PHPUnit
  * @e2e exclude client-reference-must-be-valid — server validation; covered by PHPUnit
- * @e2e exclude request-with-queue-reference — requires queue data
- * @e2e exclude queue-field-in-request-list-view — requires queue data
- * @e2e exclude queue-field-in-request-detail-view — requires queue data
- * @e2e exclude assign-to-queue-from-request-detail — requires queue data
  * @e2e exclude link-request-to-a-contact-person — requires client and contact data
  * @e2e exclude contact-picker-is-filtered-by-selected-client — requires linked data
  * @e2e exclude contact-is-cleared-when-client-changes — UI state interaction requiring data

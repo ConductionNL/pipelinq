@@ -38,6 +38,8 @@ use Psr\Log\LoggerInterface;
  *
  * The escalation threshold (hours before deadline) is admin-tunable via
  * `pipelinq.task_escalation.threshold_hours`.
+ *
+ * @spec openspec/specs/task-background-jobs/spec.md
  */
 class TaskEscalationJob extends TimedJob {
 	/**

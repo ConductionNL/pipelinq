@@ -11,7 +11,7 @@
  * and covered by PHPUnit + integration tests.
  */
 
-import { test, expect } from '@playwright/test'
+import { expect, test } from '@playwright/test'
 
 // @e2e openspec/changes/bi-export-and-data-warehouse-sink/specs.md#REQ-BIE-002
 test('export jobs list page renders without error', async ({ page }) => {

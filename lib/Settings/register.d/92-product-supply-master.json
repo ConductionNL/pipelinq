@@ -9,7 +9,7 @@
           "productId": {
             "type": "string",
             "title": "Product ID",
-            "description": "Canonical stable UUID key for cross-app references. Defaults to and equals the OpenRegister object UUID. shillinq stock-keeping and the integration registry use this as the FK — never change it after first write.",
+            "description": "Canonical stable UUID key for cross-app references. Defaults to and equals the OpenRegister object UUID. Shillinq stock-keeping and the integration registry use this as the FK: never change it after first write.",
             "maxLength": 64,
             "visible": false,
             "facetable": true
@@ -97,7 +97,7 @@
             "type": "string",
             "format": "uuid",
             "title": "Vendor",
-            "description": "The vendor/supplier this product is procured from. Cross-app reference resolved by the canonical role type https://openregister.app/ns#Vendor (ADR-048) — sourced from shillinq's Payee (accounts-payable vendor) master when installed; otherwise the field is unfillable, since the supplying app is optional. Uses the precise ns#Vendor role rather than the broad schema.org/Organization so it targets the AP vendor, not any organisation.",
+            "description": "The vendor/supplier this product is procured from. Cross-app reference resolved by the canonical role type https://openregister.app/ns#Vendor (ADR-048): sourced from shillinq's Payee (accounts-payable vendor) master when installed; otherwise the field is unfillable, since the supplying app is optional. Uses the precise ns#Vendor role rather than the broad schema.org/Organization so it targets the AP vendor, not any organisation.",
             "referenceSemanticType": "https://openregister.app/ns#Vendor",
             "referenceSemanticApp": "shillinq",
             "visible": true

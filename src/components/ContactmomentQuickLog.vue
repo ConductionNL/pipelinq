@@ -49,18 +49,53 @@
 			</div>
 		</div>
 
-		<!-- Client -->
-		<div class="form-group">
-			<label>{{ t('pipelinq', 'Client') }}</label>
-			<NcSelect
-				v-model="form.client"
-				:options="clientSelectOptions"
-				:aria-label-combobox="t('pipelinq', 'Client')"
-				:clearable="true"
-				label="label"
-				:reduce="(o) => o.value"
-				:placeholder="t('pipelinq', 'Select client')" />
+		<!-- Client + Contact → ticket.client / ticket.contact. Contact is scoped
+		     to the chosen client and stays disabled until there is one; both can
+		     create what they cannot find. Shared with the lead and request forms
+		     through linkedPartyCascadeMixin. -->
+		<div class="form-row">
+			<div class="form-group" data-testid="contactmoment-form-client">
+				<CnResourceSelect
+					register="pipelinq"
+					schema="client"
+					labelField="name"
+					:modelValue="form.client || ''"
+					:inputLabel="t('pipelinq', 'Client')"
+					:placeholder="t('pipelinq', 'Select or create a client')"
+					:preload="true"
+					:createHandler="createClient"
+					@update:modelValue="onClientChange" />
+			</div>
+			<div class="form-group" data-testid="contactmoment-form-contact">
+				<CnResourceSelect
+					register="pipelinq"
+					schema="contact"
+					labelField="name"
+					:modelValue="form.contact || ''"
+					:inputLabel="t('pipelinq', 'Contact')"
+					:filters="contactFilters"
+					:disabled="!form.client"
+					:preload="true"
+					:createHandler="createContact"
+					:placeholder="
+						form.client
+							? t('pipelinq', 'Select or create a contact')
+							: t('pipelinq', 'Select a client first')
+					"
+					@update:modelValue="(v) => (form.contact = v || null)" />
+			</div>
 		</div>
+
+		<ClientCreateDialog
+			v-if="clientDialogOpen"
+			@created="onClientCreated"
+			@close="closeClientDialog" />
+		<ContactCreateDialog
+			v-if="contactDialogOpen"
+			:client="form.client"
+			:name="pendingName"
+			@created="onContactCreated"
+			@close="closeContactDialog" />
 
 		<!-- Request → ticket.parentTicket (a request-type ticket) -->
 		<div class="form-group">
@@ -108,7 +143,7 @@
 				variant="primary"
 				:disabled="!isValid || saving"
 				@click="onSave">
-				{{ saving ? t('pipelinq', 'Saving...') : t('pipelinq', 'Save') }}
+				{{ saving ? t('pipelinq', 'Saving…') : t('pipelinq', 'Save') }}
 			</NcButton>
 		</div>
 
@@ -119,17 +154,26 @@
 </template>
 
 <script>
+import { CnResourceSelect } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { NcButton, NcSelect, NcTextField } from '@nextcloud/vue'
+import ClientCreateDialog from '../dialogs/ClientCreateDialog.vue'
+import ContactCreateDialog from '../dialogs/ContactCreateDialog.vue'
+import linkedPartyCascadeMixin from '../mixins/linkedPartyCascadeMixin.js'
 import { useObjectStore } from '../store/modules/object.js'
 
 export default {
 	name: 'ContactmomentQuickLog',
 	components: {
+		ClientCreateDialog,
+		CnResourceSelect,
+		ContactCreateDialog,
 		NcButton,
 		NcSelect,
 		NcTextField,
 	},
+
+	mixins: [linkedPartyCascadeMixin],
 
 	props: {
 		clientId: {
@@ -158,6 +202,7 @@ export default {
 				channel: null,
 				outcome: null,
 				client: null,
+				contact: null,
 				parentTicket: null,
 				description: '',
 				duration: '',
@@ -198,23 +243,6 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-20
-		 */
-		clients() {
-			return this.objectStore.collections.client || []
-		},
-
-		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-19
-		 */
-		clientSelectOptions() {
-			return this.clients.map((c) => ({
-				value: c.id,
-				label: c.name || c.id,
-			}))
-		},
-
-		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-25
 		 */
 		requestSelectOptions() {
@@ -247,15 +275,17 @@ export default {
 	 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-21
 	 */
 	async created() {
-		const [, requests] = await Promise.all([
-			this.objectStore.fetchCollection('client', { _limit: 100 }),
-			// Request-type tickets only — the unified `ticket` schema is narrowed
-			// by its `ticketType` discriminator (unify-ticket-supertype).
-			this.objectStore.fetchCollection('ticket', {
-				ticketType: 'request',
-				_limit: 100,
-			}),
-		])
+		// Clients and contacts are no longer fetched here: CnResourceSelect
+		// searches them server-side, which is the point — the old preloaded
+		// `_limit: 100` collection made client 101 unselectable with no way to
+		// tell from the UI that it had been cut off.
+		//
+		// Request-type tickets only — the unified `ticket` schema is narrowed
+		// by its `ticketType` discriminator (unify-ticket-supertype).
+		const requests = await this.objectStore.fetchCollection('ticket', {
+			ticketType: 'request',
+			_limit: 100,
+		})
 		this.requests = requests || []
 
 		if (this.clientId) {
@@ -295,6 +325,7 @@ export default {
 
 			if (this.form.outcome) data.outcome = this.form.outcome
 			if (this.form.client) data.client = this.form.client
+			if (this.form.contact) data.contact = this.form.contact
 			if (this.form.parentTicket) data.parentTicket = this.form.parentTicket
 			if (this.form.description) data.description = this.form.description
 			if (this.form.duration) data.duration = this.form.duration

@@ -21,17 +21,18 @@
  * a collapsed group — reached through revealNavEntry()/navClick(), never by a
  * raw visibility assertion.
  */
-import { test, expect, Page } from '@playwright/test'
+import type { Page } from '@playwright/test'
 
+import { expect, test } from '@playwright/test'
 import {
-	openApp,
-	navClick,
-	clickHeaderAction,
 	assertNoHardError,
+	clickHeaderAction,
 	dismissSupportDialog,
 	dismissWalkthrough,
-} from '../helpers/pipelinq'
-import { FixtureSession, TEST_PREFIX } from '../workflows/helpers/fixtures'
+	navClick,
+	openApp,
+} from '../helpers/pipelinq.ts'
+import { FixtureSession, TEST_PREFIX } from '../workflows/helpers/fixtures.ts'
 
 /**
  * ISO timestamp `hours` from now (negative = in the past), on the hour.
@@ -57,7 +58,7 @@ function hoursFromNow(hours: number): string {
  * spec-coverage/outbound-messaging.spec.ts).
  */
 async function gotoHash(page: Page, hash: string): Promise<void> {
-	await page.goto(`/apps/pipelinq/#${hash}`)
+	await page.goto(`/apps/pipelinq${hash}`)
 	await expect(page.locator('#content-vue')).toBeVisible({ timeout: 15000 })
 	await dismissWalkthrough(page)
 	await dismissSupportDialog(page)
@@ -206,7 +207,7 @@ test.describe('Booking admin surfaces (seeded)', () => {
 		customerId = String(created.id || created['@self']?.id)
 		fx.track('client', customerId)
 
-		const service = await fx.create('service', {
+		const service = await fx.create('appointmentService', {
 			name: `${TEST_PREFIX}-Knipbeurt`,
 			durationMinutes: 30,
 			status: 'active',
@@ -242,7 +243,7 @@ test.describe('Booking admin surfaces (seeded)', () => {
 	}) => {
 		// Two future + one past: the card sorts upcoming ascending, then past
 		// descending (BookingsCard.sortedBookings).
-		const future = await fx.create('booking', {
+		const future = await fx.create('appointmentBooking', {
 			customerId,
 			serviceId,
 			startAt: hoursFromNow(48),
@@ -250,14 +251,14 @@ test.describe('Booking admin surfaces (seeded)', () => {
 			status: 'confirmed',
 		})
 		futureBookingId = String(future.id || future['@self']?.id)
-		await fx.create('booking', {
+		await fx.create('appointmentBooking', {
 			customerId,
 			serviceId,
 			startAt: hoursFromNow(72),
 			endAt: hoursFromNow(73),
 			status: 'pending-deposit',
 		})
-		const past = await fx.create('booking', {
+		const past = await fx.create('appointmentBooking', {
 			customerId,
 			serviceId,
 			startAt: hoursFromNow(-48),
@@ -303,7 +304,13 @@ test.describe('Booking admin surfaces (seeded)', () => {
 	test('Booking detail exposes its time-window-gated status actions', async ({
 		page,
 	}) => {
-		await openApp(page)
+		// No openApp() here. gotoHash() below already waits for #content-vue and
+		// clears both overlays, so openApp() only added a THIRD full document
+		// load — it lands on the Dashboard this test never looks at. Under hash
+		// routing that load was the only one and the two gotoHash calls were
+		// cheap; since the shell moved to createWebHistory each one boots the
+		// app, and three boots do not fit the 60s budget. The test timed out
+		// with no failed assertion.
 		const content = page.locator('#content-vue')
 
 		await gotoHash(page, `/bookings/${futureBookingId}`)
@@ -336,7 +343,7 @@ test.describe('Booking admin surfaces (seeded)', () => {
 test.describe('Public booking portal (no Nextcloud login)', () => {
 	test.use({ storageState: { cookies: [], origins: [] } })
 
-	const BOOKING_ROUTE = '/apps/pipelinq/portal/#/book/haircut-simple'
+	const BOOKING_ROUTE = '/apps/pipelinq/portal/book/haircut-simple'
 
 	// @e2e openspec/specs/appointment-booking/spec.md#customer-books-without-login
 	test('the booking portal is served to an anonymous visitor', async ({

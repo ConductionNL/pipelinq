@@ -112,10 +112,12 @@ echo "[ci-seed] target: ${BASE}"
 # `/index.php/apps/<app>`, which is not a prefix of the `/apps/<app>/…` URL a
 # spec opens — vue-router matches nothing and silently falls back to the default
 # route. That single cause produced 36 failures in decidesk and 67 of 68 in
-# openbuild. Pipelinq is structurally immune: `src/main.js` builds
-# `createWebHashHistory(generateUrl('/apps/pipelinq'))`, and vue-router's hash
-# history reads the route from `location.hash` (`base.slice(hashPos)` is just
-# `'#'`), so the path prefix cannot shift which route matches.
+# openbuild. Pipelinq used to be structurally immune because it was hash-routed;
+# it is not any more. `src/main.js` and `src/portal.js` both build
+# `createWebHistory(routerBase())`, where routerBase() is derived from
+# `window.location.pathname` rather than from generateUrl(), so BOTH URL forms
+# resolve and the path prefix still cannot shift which route matches. The
+# immunity now comes from routerBase(), not from the hash.
 #
 # It is still set, because the CI box should describe a real deployment rather
 # than a special case, and the shared workflow's `ci-router.php` already serves
@@ -198,11 +200,35 @@ fi
 # describes. It went unnoticed because most specs never click behind the
 # overlay; one that opens a row and then reads its sidebar does.
 #
-# `integrations` needs nothing: SetupController reports it done when neither
-# shillinq nor integriq is installed, which is the CI stack. It is deliberately
-# NOT forced here — setting `xwiki_direct_url` would point the xWiki
-# integration at a host that does not exist and break the specs that assert on
-# its degraded state.
+# `integrations` is done when EITHER integration URL is set, or when neither
+# shillinq nor integriq is installed. The second arm is the CI stack, where
+# nothing needs doing.
+#
+# It is not the only stack this script runs on. On a fleet instance every app
+# is installed — which is also what a customer runs — and there the step is
+# genuinely outstanding, the wizard arms, and the suite fails on a modal mask
+# for a reason that has nothing to do with any assertion.
+#
+# So point the shillinq integration at this instance when shillinq is actually
+# here. That is TRUE rather than a mute: the app is installed and reachable at
+# this base URL. `xwiki_direct_url` is still deliberately NOT forced — it would
+# point at a host that does not exist and break the specs asserting on its
+# degraded state.
+# `format=json` is not optional here. Without it OCS answers XML, the app name
+# comes back as `<element>shillinq</element>`, and a grep for the JSON spelling
+# silently matches nothing — the check then reports "not installed" on an
+# instance where it plainly is, which is the failure this block exists to stop.
+if curl -sS -u "${USER_NAME}:${USER_PASS}" -H 'OCS-APIRequest: true' \
+	"${BASE}/ocs/v2.php/cloud/apps?filter=enabled&format=json" 2>/dev/null \
+	| grep -q '"shillinq"'; then
+	echo "[ci-seed] shillinq is installed — recording its URL so the integrations step is met"
+	post_json "${APP_BASE}/api/setup/config" "{\"shillinq_app_url\":\"${BASE}/apps/shillinq\"}"
+	if [ "$POST_CODE" != "200" ]; then
+		echo "::error::Could not record the shillinq integration URL (HTTP ${POST_CODE}). On an instance where shillinq IS installed the integrations step stays unmet and CnAppRoot covers the shell with the setup wizard."
+		exit 1
+	fi
+fi
+
 post_json "${APP_BASE}/api/setup/config" '{"receipt_company_name":"CI Test Organisation"}'
 if [ "$POST_CODE" != "200" ]; then
 	echo "::error::Could not complete the organisation setup step (HTTP ${POST_CODE}). An unmet optional step makes CnAppRoot cover the shell with the wizard in every fresh browser context."

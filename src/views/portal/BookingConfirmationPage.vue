@@ -139,6 +139,7 @@ export default {
 		 * The formatted price.
 		 *
 		 * @return {string} The price label.
+		 * @spec exclude display formatter: amount and currency to a localised price string
 		 */
 		priceLabel() {
 			const cur = (this.booking && this.booking.currency) || 'EUR'
@@ -148,7 +149,7 @@ export default {
 					style: 'currency',
 					currency: cur,
 				}).format(amount)
-			} catch (e) {
+			} catch {
 				return amount + ' ' + cur
 			}
 		},
@@ -286,7 +287,7 @@ export default {
 
 .booking-summary-row dd {
 	margin: 0;
-	text-align: right;
+	text-align: end;
 }
 
 .booking-actions {

@@ -1,19 +1,29 @@
 ---
-status: done
+status: in-progress
 ---
 
 # marketing-compliance Specification
+
+**OpenSpec changes**:
+- `marketing-lists-and-double-opt-in` (in progress) — a ConsentRecord may be scoped to a mailing list through `listId`, a confirmed subscription is consent for its own list, and `soft-opt-in` joins the lawful bases that permit a send, but only with the objection recorded. See [marketing-lists](../marketing-lists/spec.md).
 
 ## Purpose
 Enforces lawful-basis consent and anti-spam rules before a marketing blast can be sent. Blocks sends to contacts that lack a consent record for the target channel, requires an unsubscribe token and physical-address block on email templates, and propagates consent withdrawals from unsubscribes and hard bounces so queued deliveries are skipped.
 ## Requirements
 ### Requirement: Blast Cannot Send Without Lawful Basis
 
-@e2e exclude the preflight runs inside ComplianceService against a whole segment's ConsentRecords and returns a machine-readable missing-contacts list to the caller; the send it gates dispatches through openconnector, which the CI instance does not install (.github/workflows/code-quality.yml pins `additional-apps` to openregister only), so no browser run can reach the blocked-send state. Asserted by tests/Unit/Service/ComplianceServiceTest.php (testCheckSegmentComplianceMissingContacts, testCheckSegmentComplianceAllCompliant, testHasConsentForChannelImportedNotSatisfying, testPreflightBlastReturnsValidWhenAllChecksPass), tests/Unit/Service/BlastServiceTest.php (testSendBlastQueuesCompliantSkipsNonCompliant, testSendBlastFailsClosedWhenComplianceUnavailable) and tests/Integration/BlastWorkflowTest.php (testAllCompliantSegmentQueuesAllMembers).
+@e2e exclude the preflight runs inside ComplianceService against a whole segment's ConsentRecords and returns a machine-readable missing-contacts list to the caller; the send it gates dispatches through openconnector, which the CI instance does not install (.github/workflows/code-quality.yml pins `additional-apps` to openregister only), so no browser run can reach the blocked-send state. Asserted by tests/Unit/Service/ComplianceServiceTest.php (testCheckSegmentComplianceMissingContacts, testCheckSegmentComplianceAllCompliant, testHasConsentForChannelImportedNotSatisfying, testPreflightBlastReturnsValidWhenAllChecksPass, testHasConsentForListConfirmedSubscription, testHasConsentForListWithdrawn, testSoftOptInBasisSatisfiesConsentOnlyWithEvidence, testListScopeAndChannelScopeDoNotLeakIntoEachOther, testWithdrawalScopedToAListLeavesTheChannelRecordAlone), tests/Unit/Service/BlastServiceTest.php (testSendBlastQueuesCompliantSkipsNonCompliant, testSendBlastFailsClosedWhenComplianceUnavailable) and tests/Integration/BlastWorkflowTest.php (testAllCompliantSegmentQueuesAllMembers).
 
 A Blast SHALL NOT be sent to any Contact that lacks a ConsentRecord for the
 target channel with lawful-basis set. The system SHALL block the send and
 offer remediation options.
+
+A ConsentRecord MAY be scoped to a mailing list through `listId`. A list-scoped
+record gates sends to that list only; a record with no `listId` remains the
+channel-wide record and is the one consulted when a Blast targets a Segment. A
+confirmed subscription SHALL be consent for its own list, and `soft-opt-in`
+SHALL join `consent`, `legitimate-interest` and `contract` as a lawful basis
+that permits a send.
 
 #### Scenario: Send blocked with missing consent list
 
@@ -28,6 +38,15 @@ offer remediation options.
 - **WHEN** compliance is checked
 - **THEN** lawful-basis "imported" SHALL NOT satisfy consent gating
 - **AND** the audit log SHALL note that "imported" does not permit marketing sends
+
+#### Scenario: A list-scoped record does not open the channel
+
+@e2e exclude both halves are return values of `hasConsentForChannel()` and `hasConsentForList()` against a ConsentRecord read straight out of the register; no pipelinq screen renders either answer. Asserted by tests/Unit/Service/ComplianceServiceTest.php (testListScopeAndChannelScopeDoNotLeakIntoEachOther, testHasConsentForListConfirmedSubscription).
+
+- **GIVEN** a Contact whose only ConsentRecord carries a `listId`
+- **WHEN** `hasConsentForChannel(contactId, "email")` is called with no list named
+- **THEN** it SHALL return false, because the channel-wide record does not exist
+- **AND** `hasConsentForList(contactId, listId, "email")` SHALL return true
 
 ### Requirement: Unsubscribe Footer Enforced on Email Templates
 
@@ -74,3 +93,23 @@ for that contact to be skipped.
 - **WHEN** `hasConsentForChannel(contactId, "email")` is called
 - **THEN** it SHALL return false
 
+### Requirement: Soft Opt-In Is Only Consent With the Objection Recorded
+
+A ConsentRecord with lawful basis `soft-opt-in` SHALL carry evidence stating that an objection was offered and when. A record that claims `soft-opt-in` without that evidence SHALL NOT satisfy consent gating, and the audit log SHALL name the missing evidence.
+
+#### Scenario: Soft opt-in without evidence does not permit a send
+
+@e2e exclude the claim is about what `ComplianceService::hasConsentForList()` RETURNS for a stored ConsentRecord whose evidence is absent; nothing renders a consent verdict and the send it gates dispatches through openconnector, which the CI instance does not install. Asserted by tests/Unit/Service/ComplianceServiceTest.php (testSoftOptInBasisSatisfiesConsentOnlyWithEvidence).
+
+- **GIVEN** a ConsentRecord with lawful basis `soft-opt-in` and no `evidence.objectionOffered`
+- **WHEN** consent is checked for that contact and list
+- **THEN** it SHALL return false
+- **AND** the audit log SHALL note that soft opt-in needs the objection recorded
+
+#### Scenario: Soft opt-in with evidence permits a send
+
+@e2e exclude same verdict, same absence of a rendered surface; the browser-observable half of this requirement is the import refusal, which tests/e2e/spec-coverage/marketing-lists.spec.ts covers ("an import without the objection recorded is refused", "an import with the objection recorded lands as confirmed"). Asserted by tests/Unit/Service/ComplianceServiceTest.php (testSoftOptInBasisSatisfiesConsentOnlyWithEvidence).
+
+- **GIVEN** a ConsentRecord with lawful basis `soft-opt-in` whose evidence records the objection offered and its date
+- **WHEN** consent is checked for that contact and list
+- **THEN** it SHALL return true

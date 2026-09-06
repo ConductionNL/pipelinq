@@ -38,6 +38,8 @@ use Psr\Log\LoggerInterface;
 
 /**
  * 5-minute dispatcher for queued Berichtenbox messages.
+ *
+ * @spec openspec/specs/outbound-messaging/spec.md#REQ-OM-004
  */
 class DispatchQueuedMessagesJob extends TimedJob {
 	/**

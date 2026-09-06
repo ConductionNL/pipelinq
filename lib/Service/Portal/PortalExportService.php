@@ -36,6 +36,11 @@ use OCP\IL10N;
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Aggregates the data sources an
  *  export legitimately spans (audit, invoices, profile, signing, mail).
+ *
+ * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+ *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+ *   sessions, tokens, delegation, documents, invoices, orders, exports and
+ *   audit are all unspecified
  */
 class PortalExportService {
 	/**
@@ -73,6 +78,10 @@ class PortalExportService {
 	 * @param array<string, mixed> $account The authenticated account.
 	 *
 	 * @return array<string, mixed> The export payload.
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function buildExport(array $account): array {
 		$accountId = (string)($account['@self']['id'] ?? $account['id'] ?? $account['uuid'] ?? '');
@@ -109,6 +118,10 @@ class PortalExportService {
 	 * @param string $tenantId The tenant id.
 	 *
 	 * @return array{downloadUrl: string, expiresAt: int} The download descriptor.
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	public function requestExport(array $account, string $tenantId): array {
 		$accountId = (string)($account['@self']['id'] ?? $account['id'] ?? $account['uuid'] ?? '');

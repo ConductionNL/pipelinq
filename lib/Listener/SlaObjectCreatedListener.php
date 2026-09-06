@@ -62,6 +62,8 @@ use Throwable;
  *  the event and entity types it reacts to, and the deferral/job types it hands
  *  work to. The count is the contract's width, not an accumulation of
  *  responsibilities.
+ *
+ * @spec openspec/specs/sla-engine-and-escalation/spec.md#requirement-attainment-reporting
  */
 class SlaObjectCreatedListener implements IEventListener, DeferredObjectWork {
 

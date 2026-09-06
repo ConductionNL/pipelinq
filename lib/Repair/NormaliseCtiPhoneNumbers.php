@@ -59,6 +59,7 @@ class NormaliseCtiPhoneNumbers implements IRepairStep {
 	 * Get the name of this repair step.
 	 *
 	 * @return string
+	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-inbound-screen-pop-on-call-answer-req-cti-001
 	 */
 	public function getName(): string {
 		return 'Normalise contact and client phone numbers to E.164 for CTI matching';
@@ -70,6 +71,7 @@ class NormaliseCtiPhoneNumbers implements IRepairStep {
 	 * @param IOutput $output The output interface.
 	 *
 	 * @return void
+	 * @spec openspec/specs/cti-screenpop-adapter/spec.md#requirement-inbound-screen-pop-on-call-answer-req-cti-001
 	 */
 	public function run(IOutput $output): void {
 		if (in_array('openregister', $this->appManager->getInstalledApps(), true) === false) {

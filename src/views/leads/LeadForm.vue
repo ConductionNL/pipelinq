@@ -77,23 +77,60 @@
 				@update:modelValue="expectedCloseDateObj = $event" />
 		</div>
 
-		<!-- Client -->
-		<div class="form-group" data-testid="lead-form-client">
-			<label>{{ t('pipelinq', 'Client') }}</label>
-			<NcSelect
-				v-model="form.client"
-				:options="clientOptions"
-				:aria-label-combobox="t('pipelinq', 'Client')"
-				:clearable="true"
-				label="label"
-				:reduce="(o) => o.value"
-				:placeholder="t('pipelinq', 'Select client')" />
+		<!-- Client + Contact. Contact is scoped to the chosen client and stays
+		     disabled until there is one — the same cascade Stage has on
+		     Pipeline below. Both can create what they cannot find. -->
+		<div class="form-row">
+			<div class="form-group" data-testid="lead-form-client">
+				<CnResourceSelect
+					register="pipelinq"
+					schema="client"
+					labelField="name"
+					:modelValue="form.client || ''"
+					:inputLabel="t('pipelinq', 'Client') + ' *'"
+					:placeholder="t('pipelinq', 'Select or create a client')"
+					:preload="true"
+					:createHandler="createClient"
+					@update:modelValue="onClientChange" />
+				<p v-if="errors.client" class="field-error" role="alert">
+					{{ errors.client }}
+				</p>
+			</div>
+			<div class="form-group" data-testid="lead-form-contact">
+				<CnResourceSelect
+					register="pipelinq"
+					schema="contact"
+					labelField="name"
+					:modelValue="form.contact || ''"
+					:inputLabel="t('pipelinq', 'Contact')"
+					:filters="contactFilters"
+					:disabled="!form.client"
+					:preload="true"
+					:createHandler="createContact"
+					:placeholder="
+						form.client
+							? t('pipelinq', 'Select or create a contact')
+							: t('pipelinq', 'Select a client first')
+					"
+					@update:modelValue="(v) => (form.contact = v || null)" />
+			</div>
 		</div>
+
+		<ClientCreateDialog
+			v-if="clientDialogOpen"
+			@created="onClientCreated"
+			@close="closeClientDialog" />
+		<ContactCreateDialog
+			v-if="contactDialogOpen"
+			:client="form.client"
+			:name="pendingName"
+			@created="onContactCreated"
+			@close="closeContactDialog" />
 
 		<!-- Pipeline + Stage row -->
 		<div class="form-row">
 			<div class="form-group" data-testid="lead-form-pipeline">
-				<label>{{ t('pipelinq', 'Pipeline') }}</label>
+				<label>{{ t('pipelinq', 'Pipeline') }} *</label>
 				<NcSelect
 					v-model="form.pipeline"
 					:options="pipelineOptions"
@@ -103,6 +140,9 @@
 					:reduce="(o) => o.value"
 					:placeholder="t('pipelinq', 'Select pipeline')"
 					@update:modelValue="onPipelineChange" />
+				<p v-if="errors.pipeline" class="field-error" role="alert">
+					{{ errors.pipeline }}
+				</p>
 			</div>
 			<div class="form-group" data-testid="lead-form-stage">
 				<label>{{ t('pipelinq', 'Stage') }}</label>
@@ -133,12 +173,16 @@
 </template>
 
 <script>
+import { CnResourceSelect } from '@conduction/nextcloud-vue'
 import {
 	NcButton,
 	NcDateTimePickerNative,
 	NcSelect,
 	NcTextField,
 } from '@nextcloud/vue'
+import ClientCreateDialog from '../../dialogs/ClientCreateDialog.vue'
+import ContactCreateDialog from '../../dialogs/ContactCreateDialog.vue'
+import linkedPartyCascadeMixin from '../../mixins/linkedPartyCascadeMixin.js'
 import { toDateInputString, toDateObject } from '../../services/localeUtils.js'
 import { pipelineAppliesTo } from '../../services/pipelineUtils.js'
 import { useLeadSourcesStore } from '../../store/modules/leadSources.js'
@@ -147,11 +191,16 @@ import { useObjectStore } from '../../store/modules/object.js'
 export default {
 	name: 'LeadForm',
 	components: {
+		ClientCreateDialog,
+		CnResourceSelect,
+		ContactCreateDialog,
 		NcButton,
 		NcDateTimePickerNative,
 		NcSelect,
 		NcTextField,
 	},
+
+	mixins: [linkedPartyCascadeMixin],
 
 	props: {
 		lead: {
@@ -163,9 +212,14 @@ export default {
 		 * Render the built-in Cancel / Save buttons. Set to `false` when the
 		 * host supplies its own action buttons (e.g. a parent NcDialog driving
 		 * the form via a ref + the `update:valid` event).
+		 *
+		 * Defaults ON deliberately: a host that supplies its own action bar
+		 * opts OUT. Inverting the name would make every ordinary use pass a
+		 * negative prop just to get the normal form.
 		 */
 		showActions: {
 			type: Boolean,
+			// eslint-disable-next-line vue/no-boolean-default
 			default: true,
 		},
 	},
@@ -183,6 +237,7 @@ export default {
 				priority: 'normal',
 				expectedCloseDate: null,
 				client: null,
+				contact: null,
 				pipeline: null,
 				stage: null,
 			},
@@ -274,23 +329,6 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-43
-		 */
-		clients() {
-			return this.objectStore.collections.client || []
-		},
-
-		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-42
-		 */
-		clientOptions() {
-			return this.clients.map((c) => ({
-				value: c.id,
-				label: c.name || c.id,
-			}))
-		},
-
-		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-45
 		 */
 		errors() {
@@ -310,6 +348,19 @@ export default {
 					'Probability must be between 0 and 100',
 				)
 			}
+
+			// A lead belongs to a pipeline and to a client; the schema requires
+			// both. Catching it here means the user sees which field is missing,
+			// instead of OpenRegister rejecting the whole save with
+			// "The required property (client) is missing".
+			if (!this.form.pipeline) {
+				errors.pipeline = t('pipelinq', 'Pipeline is required')
+			}
+
+			if (!this.form.client) {
+				errors.client = t('pipelinq', 'Client is required')
+			}
+
 			return errors
 		},
 
@@ -336,7 +387,6 @@ export default {
 		// Load pipelines, clients, and lead sources for dropdowns
 		await Promise.all([
 			this.objectStore.fetchCollection('pipeline', { _limit: 100 }),
-			this.objectStore.fetchCollection('client', { _limit: 100 }),
 			this.leadSourcesStore.fetchSources(),
 		])
 
@@ -352,6 +402,7 @@ export default {
 				priority: this.lead.priority || 'normal',
 				expectedCloseDate: this.lead.expectedCloseDate || null,
 				client: this.lead.client || null,
+				contact: this.lead.contact || null,
 				pipeline: this.lead.pipeline || null,
 				stage: this.lead.stage || null,
 			}
@@ -410,6 +461,7 @@ export default {
 			if (!data.source) delete data.source
 			if (!data.expectedCloseDate) delete data.expectedCloseDate
 			if (!data.client) delete data.client
+			if (!data.contact) delete data.contact
 			if (!data.pipeline) delete data.pipeline
 			if (!data.stage) delete data.stage
 
@@ -443,6 +495,12 @@ export default {
 
 .form-row .form-group {
 	flex: 1;
+}
+
+.field-error {
+	color: var(--color-error);
+	font-size: 12px;
+	margin-top: 4px;
 }
 
 .form-actions {

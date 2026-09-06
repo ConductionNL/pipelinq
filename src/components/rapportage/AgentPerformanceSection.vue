@@ -200,7 +200,7 @@ export default {
 .agent-performance__table th,
 .agent-performance__table td {
 	padding: 10px 12px;
-	text-align: left;
+	text-align: start;
 	border-bottom: 1px solid var(--color-border);
 }
 

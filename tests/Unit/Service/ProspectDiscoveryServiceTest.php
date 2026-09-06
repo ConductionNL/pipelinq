@@ -100,37 +100,4 @@ class ProspectDiscoveryServiceTest extends TestCase {
 
 		$this->assertSame('no_icp_configured', $result['error']);
 	}//end testDiscoverReturnsErrorWhenNotConfigured()
-
-	/**
-	 * Test createLeadFromProspect returns data arrays.
-	 *
-	 * @return void
-	 */
-	public function testCreateLeadFromProspectReturnsData(): void {
-		$prospect = [
-			'tradeName' => 'Test BV',
-			'kvkNumber' => '12345678',
-			'sbiDescription' => 'Software',
-			'source' => 'kvk',
-			'address' => 'Street 1',
-		];
-
-		$result = $this->service->createLeadFromProspect($prospect);
-
-		$this->assertSame('Test BV', $result['clientData']['name']);
-		$this->assertSame('organization', $result['clientData']['type']);
-		$this->assertSame('Test BV', $result['leadData']['title']);
-	}//end testCreateLeadFromProspectReturnsData()
-
-	/**
-	 * Test createLeadFromProspect with minimal data.
-	 *
-	 * @return void
-	 */
-	public function testCreateLeadFromProspectMinimalData(): void {
-		$result = $this->service->createLeadFromProspect([]);
-
-		$this->assertSame('Unknown', $result['clientData']['name']);
-		$this->assertSame('New Lead', $result['leadData']['title']);
-	}//end testCreateLeadFromProspectMinimalData()
 }//end class

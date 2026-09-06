@@ -59,34 +59,18 @@ export const useProspectStore = defineStore('prospect', {
 		},
 
 		/**
-		 * @param {object} prospectData The prospect to convert into a lead.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-store/tasks.md#task-32
+		 * Drop one prospect from the in-memory list.
+		 *
+		 * Called after it has been added as a client: discovery already excludes
+		 * companies that match an existing client by name, so a stale row would
+		 * invite adding the same company a second time until the next refresh.
+		 *
+		 * @param {string} kvkNumber The prospect's KVK number, its identity here.
+		 * @return {void}
+		 * @spec openspec/specs/prospect-discovery/spec.md#requirement-existing-client-exclusion
 		 */
-		async createLeadFromProspect(prospectData) {
-			try {
-				const response = await fetch(
-					generateUrl('/apps/pipelinq/api/prospects/create-lead'),
-					{
-						method: 'POST',
-						headers: {
-							'Content-Type': 'application/json',
-							requesttoken: OC.requestToken,
-							'OCS-APIREQUEST': 'true',
-						},
-						body: JSON.stringify(prospectData),
-					},
-				)
-
-				const data = await response.json()
-
-				if (!response.ok) {
-					return { error: data.error || 'Failed to create lead' }
-				}
-
-				return data
-			} catch (err) {
-				return { error: err.message || 'Failed to create lead' }
-			}
+		removeProspect(kvkNumber) {
+			this.prospects = this.prospects.filter((p) => p.kvkNumber !== kvkNumber)
 		},
 	},
 })

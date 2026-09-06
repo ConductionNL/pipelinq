@@ -418,12 +418,6 @@ class CtiControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testClickToDialRejectsANonDialableTargetNumber(): void {
-		$this->markTestSkipped(
-			'BUG: click-to-dial forwards any non-empty targetNumber and extension '
-			. 'verbatim to the telephony adapter — no E.164 check, no allowlist, no '
-			. 'rate limit — see coordinator report'
-		);
-
 		$this->params = [
 			'targetNumber' => 'sip:attacker@evil.example',
 			'extension' => '201',
@@ -509,12 +503,6 @@ class CtiControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testWebhookRejectsAnUnsignedDeliveryAndMutatesNothing(): void {
-		$this->markTestSkipped(
-			'BUG: CtiService::handleWebhook defaults $valid=true and only verifies '
-			. 'when a signature is present, so an unsigned public POST is dispatched '
-			. 'and writes a contactmoment — see coordinator report'
-		);
-
 		$this->params = ['event' => 'ringing', 'callId' => 'ext-1', 'from' => '+31612345678'];
 		$this->headers = [];
 
@@ -635,13 +623,6 @@ class CtiControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testWebhookMalformedPayloadProducesAControlledResponse(): void {
-		$this->markTestSkipped(
-			'BUG: CtiService::handleWebhook calls adapter->handleInboundWebhook() '
-			. 'outside any try/catch and CtiController::webhook catches only '
-			. 'RuntimeException (mislabelling it 404), so a parse failure escapes '
-			. 'as a 500 — see coordinator report'
-		);
-
 		$this->params = ['garbage' => true];
 		$this->headers = ['X-Pipelinq-Signature' => 'good'];
 
@@ -854,7 +835,12 @@ class CtiControllerTest extends TestCase {
 		$service = $this->createMock(CtiService::class);
 		$service->expects($this->once())
 			->method('attachRecording')
-			->with('cm-1', 'https://pbx.example/rec/9.wav', '2026-12-31T00:00:00Z');
+			->with('cm-1', 'https://pbx.example/rec/9.wav', '2026-12-31T00:00:00Z')
+			// attachRecording() now REPORTS whether the write happened, so the
+			// happy path has to say it did. A bare mock answers false for a
+			// bool return, which is the failure case and belongs to the test
+			// below, not to this one.
+			->willReturn(true);
 
 		$response = $this->controller($service)->attachRecording('cm-1');
 
@@ -871,13 +857,6 @@ class CtiControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testAttachRecordingReportsFailureWhenNothingWasPersisted(): void {
-		$this->markTestSkipped(
-			'BUG: CtiService::attachRecording returns void and swallows both the '
-			. 'unconfigured-store early return and every Throwable, so the endpoint '
-			. 'answers 200 {ok:true} over a write that never happened — see '
-			. 'coordinator report'
-		);
-
 		$this->params = ['recordingUrl' => 'https://pbx.example/rec/9.wav'];
 
 		$ticketService = $this->createMock(TicketService::class);

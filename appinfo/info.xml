@@ -52,7 +52,7 @@ Vrij en open source onder de EUPL-1.2-licentie.
 
 **Ondersteuning:** Voor ondersteuning, neem contact op via support@conduction.nl. Voor een Service Level Agreement (SLA), neem contact op via sales@conduction.nl.
     ]]></description>
-    <version>0.4.11-unstable.20260831024541</version>
+    <version>0.4.18-unstable.20260905153554</version>
     <licence>EUPL-1.2</licence>
     <author mail="info@conduction.nl" homepage="https://www.conduction.nl/">Conduction</author>
     <namespace>Pipelinq</namespace>
@@ -106,7 +106,6 @@ Vrij en open source onder de EUPL-1.2-licentie.
     </dependencies>
 
     <background-jobs>
-        <job>OCA\Pipelinq\BackgroundJob\QueueOverflowJob</job>
         <job>OCA\Pipelinq\BackgroundJob\ScheduledTaskJob</job>
         <job>OCA\Pipelinq\BackgroundJob\CallbackOverdueJob</job>
         <job>OCA\Pipelinq\BackgroundJob\PortalCleanupJob</job>
@@ -136,6 +135,9 @@ Vrij en open source onder de EUPL-1.2-licentie.
         <job>OCA\Pipelinq\BackgroundJob\SlaDeadlineSweepJob</job>
         <job>OCA\Pipelinq\BackgroundJob\RenewalWindowJob</job>
         <job>OCA\Pipelinq\BackgroundJob\BillingHandoffRetryJob</job>
+        <job>OCA\Pipelinq\BackgroundJob\SearchConsoleImportJob</job>
+        <job>OCA\Pipelinq\BackgroundJob\SocialPublishJob</job>
+        <job>OCA\Pipelinq\BackgroundJob\SocialMetricsPullJob</job>
     </background-jobs>
 
     <repair-steps>
@@ -149,6 +151,23 @@ Vrij en open source onder de EUPL-1.2-licentie.
                 updates the schema in place and keeps its id, and its shard table.
             -->
             <step>OCA\Pipelinq\Repair\RenameLoyaltyAccountSchemaSlug</step>
+            <!--
+                Same reason, one slug over. `timeEntry` is global per organisation
+                and three apps declared one — humaniq's HR booking, planninq's
+                project booking and this app's billing/WIP record — so
+                SchemaMapper::find() answered whichever it reached first. humaniq
+                owns the hours; this record is the BILLING side of one, and keeps
+                a `timeEntry` reference to the booking it bills.
+            -->
+            <step>OCA\Pipelinq\Repair\RenameTimeEntrySchemaSlug</step>
+            <!--
+                Same reason again, for the two remaining slugs this app shared with
+                another. `cashCount` collided with shillinq's kasadministratie
+                Z-report and `conversation` with hermiq's agent chat thread. Each
+                pair shares ZERO declared fields, so these are renamed apart rather
+                than folded the way `timeEntry` was.
+            -->
+            <step>OCA\Pipelinq\Repair\RenameCollidingSchemaSlugs</step>
             <step>OCA\Pipelinq\Repair\InitializeSettings</step>
             <!--
                 After InitializeSettings imports the register: the schema edit
@@ -157,13 +176,33 @@ Vrij en open source onder de EUPL-1.2-licentie.
                 null rather than an error.
             -->
             <step>OCA\Pipelinq\Repair\RenameDutchPipelinqValues</step>
+            <!--
+                Also after InitializeSettings, and it has to be: `lead.pipeline`
+                and `lead.client` became REQUIRED in register 1.6.0, and
+                OpenRegister validates required on EVERY save, not only on
+                create. An un-backfilled lead is therefore not merely
+                incomplete: it cannot be edited at all, returning
+                "The required property (client) is missing" on a record the
+                user never touched. This step supplies those two fields, which
+                is itself a valid save, so running after the import is safe.
+            -->
+            <step>OCA\Pipelinq\Repair\BackfillLeadRelations</step>
             <step>OCA\Pipelinq\Repair\NormaliseCtiPhoneNumbers</step>
             <step>OCA\Pipelinq\Repair\NormaliseTicketTitle</step>
             <step>OCA\Pipelinq\Repair\InitSlaStatus</step>
             <step>OCA\Pipelinq\Repair\IngestProductVendorMaster</step>
             <step>OCA\Pipelinq\Repair\MigratePosBookkeepingToShillinq</step>
             <step>OCA\Pipelinq\Repair\UnifyClientContactIdentity</step>
+            <!--
+                After UnifyClientContactIdentity: emails[]/phones[] backfill
+                from the legacy email/phone scalar fields those steps already
+                populate. Idempotent and non-destructive — never overwrites a
+                non-empty array.
+            -->
+            <step>OCA\Pipelinq\Repair\BackfillContactChannelArrays</step>
             <step>OCA\Pipelinq\Repair\SeedTrustConfigurationRows</step>
+            <!-- Hermiq is an optional peer: the step is a silent no-op without it. -->
+            <step>OCA\Pipelinq\Repair\SeedWeeklyReviewAgentTemplate</step>
             <step>OCA\Pipelinq\Repair\RemoveRetiredAvgJobs</step>
             <step>OCA\Pipelinq\Repair\DrainMdmSyncQueue</step>
             <step>OCA\Pipelinq\Repair\MigrateAvgVerzoekenToOrDsar</step>
@@ -203,6 +242,8 @@ Vrij en open source onder de EUPL-1.2-licentie.
             -->
             <step>OCA\Pipelinq\Repair\RenameDutchPipelinqValues</step>
             <step>OCA\Pipelinq\Repair\SeedTrustConfigurationRows</step>
+            <!-- Hermiq is an optional peer: the step is a silent no-op without it. -->
+            <step>OCA\Pipelinq\Repair\SeedWeeklyReviewAgentTemplate</step>
         </install>
     </repair-steps>
 

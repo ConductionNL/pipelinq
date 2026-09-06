@@ -65,6 +65,8 @@ use Psr\Log\LoggerInterface;
  *  the event and entity types it reacts to, and the deferral/job types it hands
  *  work to. The count is the contract's width, not an accumulation of
  *  responsibilities.
+ *
+ * @spec openspec/specs/event-listener-work-placement/spec.md#requirement-deferred-post-event-work-runs-in-one-actor-forwarded-job
  */
 class DealUpdatedListener implements IEventListener, DeferredObjectWork {
 

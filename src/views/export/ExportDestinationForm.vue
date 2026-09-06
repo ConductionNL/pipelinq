@@ -208,6 +208,8 @@ export default {
 	methods: {
 		/**
 		 * Load the destination for editing.
+		 *
+		 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#requirement-destination-configuration-and-validation-req-bie-001
 		 */
 		async load() {
 			this.loading = true
@@ -219,7 +221,7 @@ export default {
 				if (existing) {
 					this.model = { ...this.model, ...existing }
 				}
-			} catch (e) {
+			} catch {
 				showError(this.t('pipelinq', 'Could not load the destination'))
 			} finally {
 				this.loading = false
@@ -228,6 +230,8 @@ export default {
 
 		/**
 		 * Persist the destination via the shared object store.
+		 *
+		 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#requirement-destination-configuration-and-validation-req-bie-001
 		 */
 		async save() {
 			this.busy = true
@@ -239,7 +243,7 @@ export default {
 				await this.objectStore.saveObject('exportDestination', payload)
 				showSuccess(this.t('pipelinq', 'Destination saved'))
 				this.$router.push({ name: 'ExportDestinations' })
-			} catch (e) {
+			} catch {
 				showError(this.t('pipelinq', 'Could not save the destination'))
 			} finally {
 				this.busy = false
@@ -248,6 +252,8 @@ export default {
 
 		/**
 		 * Test connectivity to the (saved) destination.
+		 *
+		 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#requirement-destination-configuration-and-validation-req-bie-001
 		 */
 		async testConnection() {
 			this.busy = true
@@ -258,7 +264,7 @@ export default {
 				} else {
 					showError(this.t('pipelinq', 'Connection failed'))
 				}
-			} catch (e) {
+			} catch {
 				showError(this.t('pipelinq', 'Connection test failed'))
 			} finally {
 				this.busy = false

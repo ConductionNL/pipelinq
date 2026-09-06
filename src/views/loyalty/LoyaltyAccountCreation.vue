@@ -155,7 +155,7 @@ export default {
 					name: p.name,
 					termsUrl: p.termsUrl,
 				}))
-			} catch (error) {
+			} catch {
 				showError(this.t('pipelinq', 'Failed to load programmes'))
 			}
 		},
@@ -189,7 +189,7 @@ export default {
 					payload,
 				)
 				this.result = response.data
-			} catch (error) {
+			} catch {
 				showError(this.t('pipelinq', 'Failed to create loyalty account'))
 			}
 		},

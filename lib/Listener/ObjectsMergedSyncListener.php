@@ -50,6 +50,7 @@ use Psr\Log\LoggerInterface;
  * Dispatches downstream sync webhooks for each OpenRegister merge / reversal.
  *
  * @implements IEventListener<Event>
+ * @spec openspec/specs/unify-client-contact/spec.md
  */
 class ObjectsMergedSyncListener implements IEventListener {
 	/**

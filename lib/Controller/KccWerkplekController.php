@@ -68,7 +68,7 @@ class KccWerkplekController extends Controller {
 	 * GET /api/kcc-werkplek/state.
 	 *
 	 * Returns the aggregated workspace state for the calling agent: assigned
-	 * requests, open tasks, queue counts and the agent profile. Failures
+	 * requests, open tasks and the agent profile. Failures
 	 * return a static error envelope — never the underlying exception text.
 	 *
 	 * @return JSONResponse The workspace state payload, or an error envelope.

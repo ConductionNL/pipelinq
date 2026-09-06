@@ -45,6 +45,8 @@ use Psr\Log\LoggerInterface;
  * Authentication is mandated by @NoAdminRequired (no @PublicPage). Error
  * responses use static messages — internal exception details are logged but
  * never returned to the caller.
+ *
+ * @spec openspec/specs/activity-timeline/spec.md#requirement-every-entity-must-have-a-timeline-view
  */
 class ActivityTimelineController extends Controller {
 	/**

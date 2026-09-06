@@ -51,6 +51,8 @@ use Throwable;
  * Routes:
  *   - POST  /api/sla/policies     create policy (justification required)
  *   - PUT   /api/sla/policies/{id} update policy (justification required)
+ *
+ * @spec openspec/specs/sla-engine-and-escalation/spec.md#requirement-attainment-reporting
  */
 class SlaPolicyController extends Controller {
 	/**

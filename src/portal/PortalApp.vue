@@ -63,18 +63,22 @@ export default {
 		},
 	},
 
+	/**
+	 * @spec exclude loads best-effort tenant branding; no requirement governs portal
+	 *   branding, and the portal renders with defaults when it fails
+	 */
 	async mounted() {
 		try {
 			this.branding = await portalApi.tenantConfig()
 			this.applyBranding()
-		} catch (e) {
+		} catch {
 			// Branding is best-effort; the portal still works with defaults.
 		}
 		if (this.authenticated) {
 			try {
 				const profile = await portalApi.profile()
 				this.isB2b = profile.accountType === 'b2b'
-			} catch (e) {
+			} catch {
 				// ignore
 			}
 		}
@@ -97,10 +101,15 @@ export default {
 			}
 		},
 
+		/**
+		 * @spec exclude portal session handling has no owning requirement. customer-portal
+		 *   specifies only the origin allow-list, portal-contribution only
+		 *   audience contribution
+		 */
 		async logout() {
 			try {
 				await portalApi.logout()
-			} catch (e) {
+			} catch {
 				// best-effort
 			}
 			clearToken()
@@ -133,7 +142,7 @@ export default {
 
 .portal-nav a,
 .portal-nav button {
-	margin-left: 1rem;
+	margin-inline-start: 1rem;
 }
 
 .portal-field {
@@ -157,7 +166,7 @@ export default {
 
 .portal-table th,
 .portal-table td {
-	text-align: left;
+	text-align: start;
 	padding: 0.5rem;
 	border-bottom: 1px solid var(--color-border, #ddd);
 }
@@ -200,7 +209,7 @@ export default {
 .portal-session-warning {
 	position: fixed;
 	bottom: 1rem;
-	left: 50%;
+	inset-inline-start: 50%;
 	transform: translateX(-50%);
 	background: #fff;
 	border: 2px solid var(--portal-brand-primary, #21468b);

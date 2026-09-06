@@ -7,9 +7,8 @@
  * Backend/validation/integration scenarios excluded per-scenario below.
  */
 
-import { test, expect } from '@playwright/test'
-
-import { revealNavEntry } from '../helpers/pipelinq'
+import { expect, test } from '@playwright/test'
+import { revealNavEntry } from '../helpers/pipelinq.ts'
 
 // @e2e openspec/specs/client-management/spec.md#display-client-list-with-default-settings
 test('client list page renders with controls', async ({ page }) => {
@@ -78,12 +77,36 @@ test('client page loads without error', async ({ page }) => {
 // @e2e openspec/specs/client-management/spec.md#search-clients-by-name
 test('client list has search capability', async ({ page }) => {
 	await page.goto('/apps/pipelinq/clients')
-	// Search input should be available
-	const searchInput = page
-		.locator(
-			'input[type="search"], input[placeholder*="search" i], input[placeholder*="zoek" i]',
-		)
+
+	// This used to chain `.locator(...).first()` straight onto `page.goto(...)`,
+	// which returns a Response, not a Locator. It threw a TypeError the moment
+	// the goto settled, and the locator it built was discarded without ever
+	// being awaited or asserted — so the search input this test is named for
+	// was never actually checked.
+	//
+	// THE INPUT IS NOT ON THE PAGE UNTIL IT IS ASKED FOR. CnIndexPage puts
+	// search behind a "Search and columns" disclosure button, so asserting the
+	// input directly fails on an index that offers search perfectly well. The
+	// user path is the contract: open the control, then the input is there.
+	await page
+		.getByRole('button', { name: /Search and columns/i })
 		.first()
+		.click()
+
+	// SCOPED TO THE PANEL, and asserted by role. A page-wide
+	// `input[placeholder*="search" i]` with `.first()` does not find this input:
+	// it finds Nextcloud's own unified-search field in the header, which sits
+	// earlier in the DOM and is hidden, so the assertion failed on an element
+	// that was never the subject. The index does render the field, as
+	// `textbox "Search"` with placeholder "Type to search..." inside the
+	// tabpanel the button opens.
+	await expect(
+		page.getByRole('tabpanel', { name: 'Search' }).getByRole('textbox', {
+			name: 'Search',
+		}),
+		'the client index must offer a search input once "Search and columns" is opened',
+	).toBeVisible({ timeout: 15000 })
+
 	// Check the page loads fully
 	await expect(page.locator('body')).not.toContainText('Internal Server Error', {
 		timeout: 10000,

@@ -18,7 +18,7 @@
 // not.
 //
 // @spec openspec/specs/pipelinq-or-adoption/spec.md#requirement-initial-state-is-computed-only-for-requests-that-render-a-page
-import { test, expect } from '@playwright/test'
+import { expect, test } from '@playwright/test'
 
 test.describe('Initial state survives the page/API boot split', () => {
 	test('a rendered pipelinq page carries its serialised initial state', async ({

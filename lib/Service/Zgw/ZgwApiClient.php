@@ -236,6 +236,7 @@ class ZgwApiClient {
 	 * @param string $reference The `secretKluisRef` value.
 	 *
 	 * @return string The resolved secret (empty string when unresolvable).
+	 * @spec openspec/specs/vng-klantinteracties-leaf/spec.md
 	 */
 	public function resolveClientSecret(string $reference): string {
 		if ($reference === '') {
@@ -347,6 +348,7 @@ class ZgwApiClient {
 	 * @param string $text Body or message text.
 	 *
 	 * @return bool True when "JWT verlopen" or "JWT nog niet geldig" is detected.
+	 * @spec openspec/specs/vng-klantinteracties-leaf/spec.md
 	 */
 	public static function looksLikeClockSkew(string $text): bool {
 		if ($text === '') {
@@ -393,6 +395,7 @@ class ZgwApiClient {
 	 * @param string $secret HS256 secret.
 	 *
 	 * @return string Compact JWT.
+	 * @spec openspec/specs/vng-klantinteracties-leaf/spec.md
 	 */
 	public static function encodeJwt(array $header, array $payload, string $secret): string {
 		$segments = [];
@@ -412,6 +415,7 @@ class ZgwApiClient {
 	 * @param string $jwt Compact JWT.
 	 *
 	 * @return array{header: array<string, mixed>, payload: array<string, mixed>}|null
+	 * @spec openspec/specs/vng-klantinteracties-leaf/spec.md
 	 */
 	public static function inspectJwt(string $jwt): ?array {
 		$parts = explode('.', $jwt);
@@ -435,6 +439,7 @@ class ZgwApiClient {
 	 * @param string $secret Shared secret.
 	 *
 	 * @return bool True when the signature matches.
+	 * @spec openspec/specs/vng-klantinteracties-leaf/spec.md
 	 */
 	public static function verifyJwt(string $jwt, string $secret): bool {
 		$parts = explode('.', $jwt);

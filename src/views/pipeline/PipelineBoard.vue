@@ -27,8 +27,8 @@
 					:modelValue="searchQuery"
 					type="search"
 					labelOutside
-					:placeholder="t('pipelinq', 'Search pipeline...')"
-					:aria-label="t('pipelinq', 'Search pipeline...')"
+					:placeholder="t('pipelinq', 'Search pipeline…')"
+					:aria-label="t('pipelinq', 'Search pipeline…')"
 					class="pipeline-search"
 					@update:modelValue="(v) => (searchQuery = v)" />
 				<div class="view-toggle">
@@ -1305,7 +1305,7 @@ export default {
 .view-toggle {
 	display: flex;
 	gap: 2px;
-	margin-left: 8px;
+	margin-inline-start: 8px;
 }
 
 .pipeline-board__empty {
@@ -1389,7 +1389,7 @@ export default {
 	cursor: pointer;
 	font: inherit;
 	color: inherit;
-	text-align: left;
+	text-align: start;
 	width: 100%;
 }
 
@@ -1403,8 +1403,7 @@ export default {
 .stage-breakdown {
 	position: absolute;
 	top: calc(100% + 6px);
-	left: 0;
-	right: 0;
+	inset-inline: 0;
 	z-index: 20;
 	min-width: 220px;
 	background: var(--color-main-background);
@@ -1493,7 +1492,7 @@ export default {
 .kanban-closed {
 	display: flex;
 	gap: 8px;
-	margin-left: 8px;
+	margin-inline-start: 8px;
 	flex-shrink: 0;
 }
 
@@ -1548,7 +1547,7 @@ export default {
 }
 
 .list-table th {
-	text-align: left;
+	text-align: start;
 	padding: 10px 12px;
 	font-size: 12px;
 	font-weight: 700;
@@ -1570,7 +1569,7 @@ export default {
 
 .sort-indicator {
 	font-size: 10px;
-	margin-left: 4px;
+	margin-inline-start: 4px;
 }
 
 .list-row {
@@ -1632,7 +1631,7 @@ export default {
 	background: #fff7ed;
 	color: #c2410c;
 	border: 1px solid #fdba74;
-	margin-left: 6px;
+	margin-inline-start: 6px;
 	vertical-align: middle;
 }
 

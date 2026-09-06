@@ -4,7 +4,7 @@
 		"spdx-copyright": "2024 Conduction B.V.",
 		"change": "service-group-cards-collapse",
 		"adr": "ADR-037 modular manifest fragment — never edit src/manifest.json | ADR-044 cards-collapse (superseded)",
-		"description": "SUPERSEDED by the 2026-07 IA revision: the Service top-level entry and its ServiceHubOverview hub page are dropped. The former service leaves (Requests→Tickets, Tasks, Contactmomenten, Complaints, Projects, MyWork, Queues) now live under Customer Support (KccWerkplek) and the booking domain moves under Operational — see src/menu-layout.json#relocations. This fragment is intentionally left empty rather than deleted to preserve the ADR-037 fragment slot; the leaf page routes remain registered by their own fragments/manifest."
+		"description": "SUPERSEDED by the 2026-07 IA revision: the Service top-level entry and its ServiceHubOverview hub page are dropped. The former service leaves (Requests→Tickets, Tasks, Contactmomenten, Complaints, Projects, MyWork) now live under Customer Support (KccWerkplek) and the booking domain moves under Operational: see src/menu-layout.json#relocations. This fragment is intentionally left empty rather than deleted to preserve the ADR-037 fragment slot; the leaf page routes remain registered by their own fragments/manifest."
 	},
 	"menu": [],
 	"pages": []

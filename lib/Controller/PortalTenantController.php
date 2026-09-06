@@ -38,6 +38,11 @@ use Psr\Log\LoggerInterface;
 
 /**
  * Public tenant-branding endpoint.
+ *
+ * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+ *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+ *   sessions, tokens, delegation, documents, invoices, orders, exports and
+ *   audit are all unspecified
  */
 class PortalTenantController extends PortalApiController {
 	/**
@@ -65,6 +70,10 @@ class PortalTenantController extends PortalApiController {
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
 	 * @PublicPage
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
 	 */
 	#[AnonRateLimit(limit: 240, period: 60)]
 	public function config(): JSONResponse {

@@ -27,7 +27,7 @@
 					</template>
 					{{
 						reimporting
-							? t('pipelinq', 'Importing...')
+							? t('pipelinq', 'Importing…')
 							: t('pipelinq', 'Re-import configuration')
 					}}
 				</NcButton>
@@ -74,9 +74,6 @@
 		<!-- Product Categories -->
 		<ProductCategoryManager v-if="isConfigured" />
 
-		<!-- Queue Management -->
-		<QueueSettings v-if="isConfigured" />
-
 		<!-- Skill Management -->
 		<SkillSettings v-if="isConfigured" />
 
@@ -93,7 +90,7 @@
 			:tags="leadSourceTags"
 			:loading="leadSourcesLoading"
 			:addLabel="t('pipelinq', '+ Add Source')"
-			:addPlaceholder="t('pipelinq', 'Enter source name...')"
+			:addPlaceholder="t('pipelinq', 'Enter source name…')"
 			:usageCheck="checkLeadSourceUsage"
 			@add="addLeadSource"
 			@remove="removeLeadSource"
@@ -106,7 +103,7 @@
 			:tags="requestChannelTags"
 			:loading="requestChannelsLoading"
 			:addLabel="t('pipelinq', '+ Add Channel')"
-			:addPlaceholder="t('pipelinq', 'Enter channel name...')"
+			:addPlaceholder="t('pipelinq', 'Enter channel name…')"
 			:usageCheck="checkRequestChannelUsage"
 			@add="addRequestChannel"
 			@remove="removeRequestChannel"
@@ -157,6 +154,9 @@
 			</NcNoteCard>
 		</NcSettingsSection>
 
+		<!-- Mailing list signup embed (marketing-lists-and-double-opt-in) -->
+		<MailingListEmbedSettings v-if="isConfigured" />
+
 		<!-- Shillinq Integration -->
 		<NcSettingsSection
 			v-if="isAdmin"
@@ -164,19 +164,9 @@
 			:description="
 				t(
 					'pipelinq',
-					'The HTTPS endpoint of the Shillinq project ledger. Leave empty to disable ledger sync.',
+					'The HTTPS endpoint Shillinq receives approved hours on. Leave empty to disable the handoff.',
 				)
 			">
-			<NcTextField
-				v-model="config.shillinq_ledger_webhook_url"
-				:label="t('pipelinq', 'Shillinq Ledger Webhook URL')"
-				placeholder="https://shillinq.example.com/ledger/webhook"
-				:error="shillinqUrlInvalid"
-				:helperText="
-					shillinqUrlInvalid
-						? t('pipelinq', 'Please enter a valid HTTPS URL')
-						: ''
-				" />
 			<NcTextField
 				v-model="config.shillinq_wip_webhook_url"
 				:label="t('pipelinq', 'Shillinq WIP webhook URL')"
@@ -209,7 +199,7 @@
 				" />
 			<NcButton
 				variant="primary"
-				:disabled="savingShillinq || shillinqUrlInvalid || wipUrlInvalid"
+				:disabled="savingShillinq || wipUrlInvalid"
 				@click="saveShillinq">
 				<template #icon>
 					<NcLoadingIcon v-if="savingShillinq" :size="16" />
@@ -361,6 +351,7 @@
 		<!-- Channels & telephony. Configuration, not an operator surface, so it
 		     lives here rather than in the app nav (nav-ia-cleanup). -->
 		<MessagingSettings v-if="isAdmin && isConfigured" />
+		<DeliverabilitySettings v-if="isAdmin && isConfigured" />
 		<CtiPage v-if="isAdmin && isConfigured" />
 
 		<!-- Point of Sale configuration. `PaymentSettingsForm` (PSP providers —
@@ -371,6 +362,22 @@
 		<PosTenderTypeManager v-if="isAdmin && isConfigured" />
 		<PosStaffManager v-if="isAdmin && isConfigured" />
 		<PosRoleManager v-if="isAdmin && isConfigured" />
+
+		<!-- Marketing traffic (marketing-campaign-attribution): campaign
+		     parameters on blast links, the Portaliq portal, Search Console. -->
+		<MarketingTrafficSettings
+			v-if="isAdmin"
+			:config="config"
+			@saved="onMarketingTrafficSaved" />
+
+		<!-- Marketing intelligence (marketing-search-intelligence): the
+		     sources the keyword, Matomo and competitor reads leave through,
+		     and the relevance switch. No secret is entered here: the Matomo
+		     token lives in the credential broker. -->
+		<MarketingIntelSettings
+			v-if="isAdmin"
+			:config="config"
+			@saved="onMarketingTrafficSaved" />
 
 		<!-- Re-import Status -->
 		<div v-if="message" class="actions-section">
@@ -396,10 +403,14 @@ import {
 import Refresh from 'vue-material-design-icons/Refresh.vue'
 import AgentProfileSettings from '../../components/admin/AgentProfileSettings.vue'
 import ForecastSettings from '../../components/admin/ForecastSettings.vue'
-import QueueSettings from '../../components/admin/QueueSettings.vue'
 import SkillSettings from '../../components/admin/SkillSettings.vue'
 import CtiPage from './CtiPage.vue'
+// marketing-mail-transports: transport list + SPF/DKIM/DMARC panel.
+import DeliverabilitySettings from './DeliverabilitySettings.vue'
 import ExportConfigurationSettings from './ExportConfigurationSettings.vue'
+import MailingListEmbedSettings from './MailingListEmbedSettings.vue'
+import MarketingIntelSettings from './MarketingIntelSettings.vue'
+import MarketingTrafficSettings from './MarketingTrafficSettings.vue'
 // Configuration surfaces moved off the app nav onto this admin page
 // (nav-ia-cleanup): channels, telephony, and the POS master-data.
 import MessagingSettings from './MessagingSettings.vue'
@@ -418,9 +429,10 @@ import { useRequestChannelsStore } from '../../store/modules/requestChannels.js'
 import { useSettingsStore } from '../../store/modules/settings.js'
 
 export default {
-	name: 'Settings',
+	name: 'PipelinqAdminSettings',
 	components: {
 		MessagingSettings,
+		DeliverabilitySettings,
 		CtiPage,
 		PaymentSettingsForm,
 		PosTenderTypeManager,
@@ -439,11 +451,13 @@ export default {
 		ProductCategoryManager,
 		ProspectSettings,
 		TagManager,
-		QueueSettings,
 		SkillSettings,
 		AgentProfileSettings,
 		ForecastSettings,
 		ExportConfigurationSettings,
+		MailingListEmbedSettings,
+		MarketingIntelSettings,
+		MarketingTrafficSettings,
 	},
 
 	data() {
@@ -532,26 +546,10 @@ export default {
 		},
 
 		/**
-		 * Whether the entered Shillinq webhook URL is present but not a valid HTTPS URL.
-		 * An empty value is valid (disables the integration).
-		 */
-		shillinqUrlInvalid() {
-			const url = (this.config.shillinq_ledger_webhook_url || '').trim()
-			if (url === '') {
-				return false
-			}
-			try {
-				return new URL(url).protocol !== 'https:'
-			} catch (e) {
-				return true
-			}
-		},
-
-		/**
 		 * Whether the entered Shillinq WIP webhook URL is present but not a valid HTTPS URL.
 		 * An empty value is valid (disables the integration).
 		 *
-		 * @spec openspec/changes/pipelinq-time-to-shillinq-wip/specs/pipelinq-time-to-shillinq-wip/spec.md#REQ-WIP-004
+		 * @spec openspec/changes/archive/2026-06-14-pipelinq-time-to-shillinq-wip/specs/pipelinq-time-to-shillinq-wip/spec.md#REQ-WIP-004
 		 */
 		wipUrlInvalid() {
 			const url = (this.config.shillinq_wip_webhook_url || '').trim()
@@ -560,7 +558,7 @@ export default {
 			}
 			try {
 				return new URL(url).protocol !== 'https:'
-			} catch (e) {
+			} catch {
 				return true
 			}
 		},
@@ -578,7 +576,7 @@ export default {
 			}
 			try {
 				return new URL(url).protocol !== 'https:'
-			} catch (e) {
+			} catch {
 				return true
 			}
 		},
@@ -703,6 +701,17 @@ export default {
 		},
 
 		/**
+		 * Keep the page's config in step with what the marketing traffic
+		 * section saved, so the other sections do not overwrite it.
+		 *
+		 * @param {object} updated The updated config returned by the section.
+		 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-marketing-traffic-settings
+		 */
+		onMarketingTrafficSaved(updated) {
+			this.config = updated || this.config
+		},
+
+		/**
 		 * Persist the app configuration.
 		 *
 		 * @param {object} configuration The full settings payload to save.
@@ -794,10 +803,10 @@ export default {
 		/**
 		 * Persist the Shillinq ledger webhook URL through the standard settings endpoint.
 		 *
-		 * @spec openspec/changes/pipelinq-project-to-shillinq-ledger/specs.md#REQ-PLG-006-03
+		 * @spec openspec/changes/archive/2026-06-14-pipelinq-time-to-shillinq-wip/specs/pipelinq-time-to-shillinq-wip/spec.md#REQ-WIP-003
 		 */
 		async saveShillinq() {
-			if (this.shillinqUrlInvalid || this.wipUrlInvalid) {
+			if (this.wipUrlInvalid) {
 				return
 			}
 			this.savingShillinq = true
@@ -805,9 +814,6 @@ export default {
 			try {
 				const result = await this.settingsStore.saveSettings({
 					...this.config,
-					shillinq_ledger_webhook_url: (
-						this.config.shillinq_ledger_webhook_url || ''
-					).trim(),
 					shillinq_wip_webhook_url: (
 						this.config.shillinq_wip_webhook_url || ''
 					).trim(),
@@ -999,6 +1005,7 @@ export default {
 		 * @param {object} [extraFilters] Additional query filters, e.g. the
 		 *   `ticketType` discriminator needed to narrow the `ticket` supertype
 		 *   down to one of its subtypes (unify-ticket-supertype).
+		 *
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-71
 		 */
 		async countObjectsWithField(type, field, value, extraFilters = {}) {

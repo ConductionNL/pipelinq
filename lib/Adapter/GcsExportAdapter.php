@@ -37,6 +37,7 @@ class GcsExportAdapter extends AbstractOpenConnectorSink {
 	 * The destination type slug.
 	 *
 	 * @return string The type ('gcs').
+	 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#requirement-destination-configuration-and-validation-req-bie-001
 	 */
 	public function getType(): string {
 		return 'gcs';
