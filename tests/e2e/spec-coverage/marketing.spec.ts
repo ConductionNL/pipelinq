@@ -549,6 +549,44 @@ test.describe('Blast performance dashboard', () => {
 		}
 
 		try {
+			// WAIT FOR THE READ, NOT THE WRITE. The dashboard builds its
+			// attribution table by listing blasts and asking each one for its
+			// attribution, so a blast that has been written but is not yet
+			// LISTED leaves `attributionRows` empty. The table is `v-else` to
+			// that, so it never renders and the page shows "No attribution data
+			// yet" instead — the correct thing to say about an empty list, and
+			// the wrong thing for this test to meet.
+			//
+			// This failed on BOTH attempts of the 2026-09-06 development run,
+			// always at `expect(table).toBeVisible()` and never at the writes
+			// above, which all returned under 300. Same cause as the sibling
+			// case in marketing-campaign-attribution.spec.ts.
+			//
+			// Polling for THIS blast by id, not merely for a non-empty list: an
+			// older blast would satisfy the list while this test's own rows are
+			// still invisible.
+			await expect
+				.poll(
+					async () => {
+						const listed = await api(
+							page,
+							'GET',
+							`${APP}/api/blasts?limit=50`,
+						)
+						const rows = listed.json?.results ?? listed.json?.data ?? []
+						return (
+							Array.isArray(rows)
+							&& rows.some((r: any) => idOf(r) === blastId)
+						)
+					},
+					{
+						timeout: 30_000,
+						message:
+							'the minted blast never appeared in GET /api/blasts, so the dashboard could not have attributed anything to it',
+					},
+				)
+				.toBe(true)
+
 			await gotoHash(page, '/blasts/performance')
 
 			const dash = page.locator('.performance-dashboard')
