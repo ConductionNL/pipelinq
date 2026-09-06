@@ -36,7 +36,7 @@
  * @e2e contract-renewal-tracking::renewals-widget-empty-state exclude empty-state rendering verified by the RenewalsDueWidget template + RenewalsDueWidget unit behaviour; no seeded fixture in the e2e env
  */
 
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 import {
 	assertNoHardError,
 	navClick,
@@ -83,28 +83,79 @@ test('Contracts: the Contracts list page renders from the manifest', async ({
  * shillinq is not installed there, and the spec requires the tile to show the
  * "Install shillinq" call-to-action and NOT a locally computed number.
  */
+/**
+ * Whether shillinq is enabled on the instance under test.
+ *
+ * `requiresApp` widgets render a different body depending on this, so a spec
+ * that asserts one of the two has to know which it is looking at. Reads the
+ * provisioning API rather than guessing from the DOM: the DOM is the thing
+ * under test.
+ *
+ * Fails CLOSED to `false` (the CI shape) when the endpoint cannot be read, so
+ * a permissions problem surfaces as the familiar CI assertion rather than as
+ * a silent pass down the other branch.
+ *
+ * @param page - the page whose request context carries the admin session.
+ * @returns true when shillinq is enabled.
+ */
+async function shillinqIsInstalled(page: Page): Promise<boolean> {
+	const res = await page.request.get('/ocs/v2.php/cloud/apps?filter=enabled', {
+		headers: { 'OCS-APIRequest': 'true', Accept: 'application/json' },
+	})
+	if (res.ok() === false) {
+		return false
+	}
+	const body = await res.json()
+	const apps = body?.ocs?.data?.apps
+	return Array.isArray(apps) === true && apps.includes('shillinq')
+}
+
 test('Dashboard: the recurring-revenue tile renders and defers to shillinq', async ({
 	page,
 }) => {
 	await openApp(page)
 
 	const content = page.locator('#content-vue')
-	// The tile's layout slot sets `showTitle: false`, so the manifest `title`
-	// ("Recurring revenue") is never painted — and because the widget declares
-	// `requiresApp: "shillinq"` and shillinq is absent on CI, CnDashboardPage
-	// replaces the body with the install CTA rather than a number. That is the
-	// SPEC'd behaviour, verbatim: "GIVEN shillinq is not installed … THEN the
-	// recurring-revenue tile MUST show the 'Install shillinq' call-to-action AND
-	// MUST NOT display a locally-computed run-rate number."
-	await expect(content.getByText('Install shillinq').first()).toBeVisible({
-		timeout: 15000,
-	})
-	// The retired local roll-up formatted its figure as EUR currency; asserting
-	// its absence is what makes "MUST NOT display a locally-computed number"
-	// testable rather than decorative.
-	await expect(
-		content.locator('.cn-dashboard-page__requires-app'),
-	).not.toContainText('€')
+
+	// The widget declares `requiresApp: "shillinq"`, so WHICH body renders
+	// depends on the instance, and this suite runs on both kinds. On CI only
+	// pipelinq and openregister are installed; on a fleet instance every app
+	// is, which is also what a customer runs.
+	//
+	// Asserting the install CTA unconditionally passes on CI and fails on a
+	// fleet rig for a correct app — a test that can only be green in the
+	// configuration nobody ships. So branch on the fact, and keep the
+	// invariant that holds either way.
+	const installed = await shillinqIsInstalled(page)
+
+	if (installed === false) {
+		// "GIVEN shillinq is not installed … THEN the recurring-revenue tile
+		// MUST show the 'Install shillinq' call-to-action AND MUST NOT display
+		// a locally-computed run-rate number."
+		const placeholder = content.locator('.cn-dashboard-page__requires-app')
+		await expect(content.getByText('Install shillinq').first()).toBeVisible({
+			timeout: 15000,
+		})
+		// The retired local roll-up formatted its figure as EUR currency, so
+		// the absence of one here is what makes "MUST NOT display a
+		// locally-computed number" testable rather than decorative.
+		//
+		// This belongs INSIDE this branch. `not.toContainText` on an element
+		// that does not exist FAILS with "element(s) not found" rather than
+		// passing vacuously, and the placeholder is gone in the other branch.
+		await expect(placeholder).not.toContainText('€')
+	} else {
+		// With shillinq present the placeholder must be gone: the tile defers
+		// to shillinq for the figure instead of advertising an install.
+		//
+		// No currency assertion here, and deliberately so. Any figure now
+		// shown is shillinq's, and shillinq formats money as money — asserting
+		// its absence would be asserting the integration does not work.
+		await expect(
+			content.locator('.cn-dashboard-page__requires-app'),
+		).toHaveCount(0)
+		await expect(content.getByText('Install shillinq')).toHaveCount(0)
+	}
 
 	await assertNoHardError(page)
 })
