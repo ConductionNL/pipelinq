@@ -266,7 +266,10 @@ export default {
 
 		serviceData() {
 			if (this.isNew) return {}
-			return this.objectStore.getObject('appointmentService', this.serviceId) || {}
+			return (
+				this.objectStore.getObject('appointmentService', this.serviceId)
+				|| {}
+			)
 		},
 
 		steps() {
@@ -299,7 +302,10 @@ export default {
 
 	methods: {
 		async onFormSave(formData) {
-			const saved = await this.objectStore.saveObject('appointmentService', formData)
+			const saved = await this.objectStore.saveObject(
+				'appointmentService',
+				formData,
+			)
 			if (!saved) {
 				const error = this.objectStore.getError?.('appointmentService')
 				showError(error?.message || t('pipelinq', 'Failed to save service.'))
@@ -313,7 +319,10 @@ export default {
 					params: { id: saved.id },
 				})
 			} else {
-				await this.objectStore.fetchObject('appointmentService', this.serviceId)
+				await this.objectStore.fetchObject(
+					'appointmentService',
+					this.serviceId,
+				)
 				this.editing = false
 			}
 		},
@@ -328,7 +337,10 @@ export default {
 
 		async confirmDelete() {
 			this.showDelete = false
-			const ok = await this.objectStore.deleteObject('appointmentService', this.serviceId)
+			const ok = await this.objectStore.deleteObject(
+				'appointmentService',
+				this.serviceId,
+			)
 			if (ok) {
 				this.$router.push({ name: 'Services' })
 			} else {

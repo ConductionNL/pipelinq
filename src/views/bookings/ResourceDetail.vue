@@ -225,7 +225,10 @@ export default {
 
 		resourceData() {
 			if (this.isNew) return {}
-			return this.objectStore.getObject('appointmentResource', this.resourceId) || {}
+			return (
+				this.objectStore.getObject('appointmentResource', this.resourceId)
+				|| {}
+			)
 		},
 
 		workingHours() {
@@ -258,13 +261,19 @@ export default {
 
 	async mounted() {
 		if (!this.isNew) {
-			await this.objectStore.fetchObject('appointmentResource', this.resourceId)
+			await this.objectStore.fetchObject(
+				'appointmentResource',
+				this.resourceId,
+			)
 		}
 	},
 
 	methods: {
 		async onFormSave(formData) {
-			const saved = await this.objectStore.saveObject('appointmentResource', formData)
+			const saved = await this.objectStore.saveObject(
+				'appointmentResource',
+				formData,
+			)
 			if (!saved) {
 				const error = this.objectStore.getError?.('appointmentResource')
 				showError(
@@ -280,7 +289,10 @@ export default {
 					params: { id: saved.id },
 				})
 			} else {
-				await this.objectStore.fetchObject('appointmentResource', this.resourceId)
+				await this.objectStore.fetchObject(
+					'appointmentResource',
+					this.resourceId,
+				)
 				this.editing = false
 			}
 		},

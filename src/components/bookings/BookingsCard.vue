@@ -149,10 +149,13 @@ export default {
 			this.loading = true
 			this.error = ''
 			try {
-				const rows = await this.objectStore.fetchCollection('appointmentBooking', {
-					customerId: this.customerId,
-					_limit: 200,
-				})
+				const rows = await this.objectStore.fetchCollection(
+					'appointmentBooking',
+					{
+						customerId: this.customerId,
+						_limit: 200,
+					},
+				)
 				this.bookings = Array.isArray(rows) ? rows : []
 				await this.primeLabels()
 			} catch {
@@ -185,7 +188,10 @@ export default {
 			for (const id of serviceIds) {
 				if (this.serviceLookup[id]) continue
 				try {
-					const svc = await this.objectStore.fetchObject('appointmentService', id)
+					const svc = await this.objectStore.fetchObject(
+						'appointmentService',
+						id,
+					)
 					if (svc?.name) {
 						this.serviceLookup = {
 							...this.serviceLookup,
@@ -199,7 +205,10 @@ export default {
 			for (const id of resourceIds) {
 				if (this.resourceLookup[id]) continue
 				try {
-					const r = await this.objectStore.fetchObject('appointmentResource', id)
+					const r = await this.objectStore.fetchObject(
+						'appointmentResource',
+						id,
+					)
 					if (r?.name) {
 						this.resourceLookup = {
 							...this.resourceLookup,
