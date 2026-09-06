@@ -4557,7 +4557,15 @@ OC.L10N.register(
         "{sent} sent, {refused} refused, {failed} failed": "{sent} sent, {refused} refused, {failed} failed",
         "{value} is not one of the allowed mediums: {allowed}": "{value} is not one of the allowed mediums: {allowed}",
         "{value} is not one of the allowed sources: {allowed}": "{value} is not one of the allowed sources: {allowed}",
-        "{value} of {quota} on track ({percent}%)": "{value} of {quota} on track ({percent}%)"
+        "{value} of {quota} on track ({percent}%)": "{value} of {quota} on track ({percent}%)",
+        "UUID of the shillinq `Contract` this sales record belongs to. shillinq owns contract lifecycle (ADR-066), the same cross-app reference the ticket supertype already carries. A plain uuid and not a `$ref`: shillinq's register is a different register, and ADR-062 rule 7 gives a cross-register target a plain string. Empty when shillinq is not installed, in which case this record stands alone on `contractNumber`.": "UUID of the shillinq `Contract` this sales record belongs to. shillinq owns contract lifecycle (ADR-066), the same cross-app reference the ticket supertype already carries. A plain uuid and not a `$ref`: shillinq's register is a different register, and ADR-062 rule 7 gives a cross-register target a plain string. Empty when shillinq is not installed, in which case this record stands alone on `contractNumber`.",
+        "Governing contract": "Governing contract",
+        "Alternative text for the image.": "Alternative text for the image.",
+        "The exact text the owner of a share-mode account is asked to post, with the network's variant already applied and the campaign link already added. It is stored here rather than rebuilt on read, so the words the person copies are the words they were asked to post even after the post is edited.": "The exact text the owner of a share-mode account is asked to post, with the network's variant already applied and the campaign link already added. It is stored here rather than rebuilt on read, so the words the person copies are the words they were asked to post even after the post is edited.",
+        "Prepared Text": "Prepared Text",
+        "The media the owner of a share-mode account is asked to post, frozen alongside the prepared text.": "The media the owner of a share-mode account is asked to post, frozen alongside the prepared text.",
+        "Prepared Media": "Prepared Media",
+        "Publicly reachable address of the image.": "Publicly reachable address of the image."
     },
     "nplurals=2; plural=(n != 1);"
 )

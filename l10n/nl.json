@@ -4488,6 +4488,14 @@
         "{n}h": "{n}u",
         "{value} is not one of the allowed mediums: {allowed}": "{value} staat niet in de toegestane media: {allowed}",
         "{value} is not one of the allowed sources: {allowed}": "{value} staat niet in de toegestane bronnen: {allowed}",
-        "{value} of {quota} on track ({percent}%)": "{value} van {quota} op koers ({percent}%)"
+        "{value} of {quota} on track ({percent}%)": "{value} van {quota} op koers ({percent}%)",
+        "Governing contract": "Beheersend contract",
+        "Alternative text for the image.": "Alternatieve tekst voor de afbeelding.",
+        "Prepared Text": "Voorbereide tekst",
+        "Prepared Media": "Voorbereide media",
+        "Publicly reachable address of the image.": "Publiek bereikbaar adres van de afbeelding.",
+        "UUID of the shillinq `Contract` this sales record belongs to. shillinq owns contract lifecycle (ADR-066), the same cross-app reference the ticket supertype already carries. A plain uuid and not a `$ref`: shillinq's register is a different register, and ADR-062 rule 7 gives a cross-register target a plain string. Empty when shillinq is not installed, in which case this record stands alone on `contractNumber`.": "UUID van het shillinq-`Contract` waar deze verkoopregel bij hoort. Shillinq beheert de contractlevenscyclus (ADR-066), dezelfde koppeling tussen apps die het ticket-supertype al draagt. Een gewone uuid en geen `$ref`: shillinq’s register is een ander register, en ADR-062 regel 7 geeft een doel in een ander register een gewone string. Leeg wanneer shillinq niet is geïnstalleerd; dan staat deze regel op zichzelf op `contractNumber`.",
+        "The exact text the owner of a share-mode account is asked to post, with the network's variant already applied and the campaign link already added. It is stored here rather than rebuilt on read, so the words the person copies are the words they were asked to post even after the post is edited.": "De exacte tekst die de eigenaar van een deel-account wordt gevraagd te plaatsen, met de variant van het netwerk al toegepast en de campagnelink al toegevoegd. Hij wordt hier opgeslagen in plaats van bij het lezen opnieuw opgebouwd, zodat de woorden die iemand kopieert de woorden zijn die gevraagd werden, ook nadat de post is bewerkt.",
+        "The media the owner of a share-mode account is asked to post, frozen alongside the prepared text.": "De media die de eigenaar van een deel-account wordt gevraagd te plaatsen, bevroren naast de voorbereide tekst."
     }
 }
