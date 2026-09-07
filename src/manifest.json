@@ -24,8 +24,10 @@
 			{
 				"id": "demo-data",
 				"type": "choice",
+				"display": "cards",
 				"optionsSource": "datasets",
 				"configKey": "demo_dataset",
+				"required": false,
 				"title": "Load example data?",
 				"body": "Example data fills the lists, dashboards and the 360 degree client view so you can see the app working straight away. Pick \"None\" on a production install."
 			},
