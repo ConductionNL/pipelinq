@@ -562,9 +562,17 @@ test.describe('Blast performance dashboard', () => {
 			// above, which all returned under 300. Same cause as the sibling
 			// case in marketing-campaign-attribution.spec.ts.
 			//
-			// Polling for THIS blast by id, not merely for a non-empty list: an
-			// older blast would satisfy the list while this test's own rows are
-			// still invisible.
+			// ⚠️ AND THE LIST IS NOT ENOUGH. The first version of this waited
+			// for the blast to appear in `GET /api/blasts`, which it did — and
+			// the table still never rendered. The dashboard only keeps a row
+			// when the blast's OWN attribution read comes back non-zero
+			// (`dealCount > 0 || attributedValue > 0` in fetchAttributionRows),
+			// so the attributionLink objects have to be visible to
+			// `GET /api/blasts/:id/attribution`, not merely written.
+			//
+			// So poll the read that decides, and poll it for THIS blast: an
+			// older blast with attribution would satisfy a weaker check while
+			// this test's own rows are still invisible.
 			await expect
 				.poll(
 					async () => {
@@ -574,15 +582,24 @@ test.describe('Blast performance dashboard', () => {
 							`${APP}/api/blasts?limit=50`,
 						)
 						const rows = listed.json?.results ?? listed.json?.data ?? []
-						return (
+						const isListed =
 							Array.isArray(rows)
 							&& rows.some((r: any) => idOf(r) === blastId)
+						if (isListed === false) {
+							return false
+						}
+
+						const attributed = await api(
+							page,
+							'GET',
+							`${APP}/api/blasts/${blastId}/attribution`,
 						)
+						return (attributed.json?.dealCount || 0) > 0
 					},
 					{
 						timeout: 30_000,
 						message:
-							'the minted blast never appeared in GET /api/blasts, so the dashboard could not have attributed anything to it',
+							'GET /api/blasts/:id/attribution never reported a deal for the minted blast, so the dashboard would have kept no row and rendered no table',
 					},
 				)
 				.toBe(true)
