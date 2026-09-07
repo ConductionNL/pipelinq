@@ -137,6 +137,8 @@ class ReferencesAuditCommand extends Command {
 	 * @param OutputInterface $output Console output.
 	 *
 	 * @return int 0 when no reference dangles, 1 when at least one does.
+	 *
+	 * @spec openspec/specs/contract-renewal-tracking/spec.md
 	 */
 	protected function execute(InputInterface $input, OutputInterface $output): int {
 		$write = (bool)$input->getOption('write');
