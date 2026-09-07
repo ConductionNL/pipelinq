@@ -511,9 +511,19 @@ export default {
 		},
 	},
 
+	/**
+	 * Start the page load, and HOLD it.
+	 *
+	 * The Attribution tab's fan-out iterates the blast list this fetches, so
+	 * it has to be able to wait for it rather than race it. Firing and
+	 * forgetting is what let the tab settle on "No blasts yet" about an
+	 * instance with plenty; see loadAttribution().
+	 *
+	 * @return {void}
+	 *
+	 * @spec openspec/specs/marketing-analytics/spec.md#requirement-attribution-dashboard-sums-revenue-per-blast
+	 */
 	mounted() {
-		// Held, not fired and forgotten: loadAttribution() has to wait for it.
-		// See the comment there.
 		this.pageLoad = this.fetchAll()
 	},
 
