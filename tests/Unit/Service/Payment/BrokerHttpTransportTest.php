@@ -28,11 +28,13 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service\Payment;
 
+use OCA\OpenRegister\Service\Credential\CredentialBrokerService;
 use OCA\Pipelinq\Service\Payment\AbstractPaymentAdapter;
 use OCA\Pipelinq\Service\Payment\BrokerHttpTransport;
 use OCA\Pipelinq\Service\Payment\CurlHttpTransport;
 use OCA\Pipelinq\Service\Payment\HttpTransport;
 use PHPUnit\Framework\TestCase;
+use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use ReflectionClass;
 
@@ -46,7 +48,8 @@ class BrokerHttpTransportTest extends TestCase {
 	public function testItIsAnHttpTransport(): void {
 		$transport = new BrokerHttpTransport(
 			credentialId: 'cred-1',
-			logger: $this->createMock(LoggerInterface::class)
+			logger: $this->createMock(LoggerInterface::class),
+			container: $this->createMock(ContainerInterface::class)
 		);
 
 		$this->assertInstanceOf(HttpTransport::class, $transport);
@@ -64,7 +67,8 @@ class BrokerHttpTransportTest extends TestCase {
 	public function testTheHostIsDiscardedAndOnlyThePathSurvives(): void {
 		$transport = new BrokerHttpTransport(
 			credentialId: 'cred-1',
-			logger: $this->createMock(LoggerInterface::class)
+			logger: $this->createMock(LoggerInterface::class),
+			container: $this->createMock(ContainerInterface::class)
 		);
 
 		$toPath = (new ReflectionClass($transport))->getMethod('toPath');
@@ -97,7 +101,8 @@ class BrokerHttpTransportTest extends TestCase {
 	public function testAuthHeadersAreStripped(): void {
 		$transport = new BrokerHttpTransport(
 			credentialId: 'cred-1',
-			logger: $this->createMock(LoggerInterface::class)
+			logger: $this->createMock(LoggerInterface::class),
+			container: $this->createMock(ContainerInterface::class)
 		);
 
 		$strip = (new ReflectionClass($transport))->getMethod('stripBrokerOwnedHeaders');
@@ -128,13 +133,70 @@ class BrokerHttpTransportTest extends TestCase {
 		$logger = $this->createMock(LoggerInterface::class);
 		$logger->expects($this->atLeastOnce())->method('error');
 
-		$transport = new BrokerHttpTransport(credentialId: '', logger: $logger);
+		$transport = new BrokerHttpTransport(
+			credentialId: '',
+			logger: $logger,
+			container: $this->createMock(ContainerInterface::class)
+		);
 
 		$result = $transport->request(method: 'POST', url: 'https://api.mollie.com/v2/payments');
 
 		$this->assertSame(0, $result['status']);
 		$this->assertSame([], $result['body']);
 	}//end testItFailsClosedWithoutACredential()
+
+	/**
+	 * The broker comes from the INJECTED container, not from the global server.
+	 *
+	 * Outside a booted Nextcloud a global lookup autowires from scratch and can recurse
+	 * through a constructor cycle until memory runs out, and inside one it is a hidden
+	 * dependency a test cannot control. This test can only pass if the transport asks
+	 * the container it was handed: the double below exists nowhere else.
+	 *
+	 * @return void
+	 */
+	public function testTheBrokerIsResolvedFromTheInjectedContainer(): void {
+		$broker = $this->createMock(CredentialBrokerService::class);
+		$broker->expects($this->once())
+			->method('request')
+			->with(
+				'cred-1',
+				'pipelinq',
+				'POST',
+				'/v2/payments',
+				['Content-Type' => 'application/json'],
+				'{"amount":1}',
+				'alice'
+			)
+			->willReturn(['status' => 201, 'headers' => [], 'body' => '{"id":"tr_123"}']);
+
+		$container = $this->createMock(ContainerInterface::class);
+		$container->expects($this->once())
+			->method('get')
+			->with(BrokerHttpTransport::BROKER_CLASS)
+			->willReturn($broker);
+
+		$transport = new BrokerHttpTransport(
+			credentialId: 'cred-1',
+			logger: $this->createMock(LoggerInterface::class),
+			container: $container,
+			actingUserId: 'alice'
+		);
+
+		$result = $transport->request(
+			method: 'POST',
+			url: 'https://api.mollie.com/v2/payments',
+			headers: [
+				'Content-Type' => 'application/json',
+				'Authorization' => 'Bearer whatever',
+			],
+			body: '{"amount":1}'
+		);
+
+		$this->assertSame(201, $result['status']);
+		$this->assertSame(['id' => 'tr_123'], $result['body']);
+		$this->assertSame('{"id":"tr_123"}', $result['raw']);
+	}//end testTheBrokerIsResolvedFromTheInjectedContainer()
 
 	/**
 	 * The tripwire: the broker-managed placeholder must never reach the wire.
