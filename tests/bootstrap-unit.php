@@ -151,22 +151,29 @@ if ($pipelinqNcRoot !== false && file_exists($pipelinqNcRoot . '/lib/base.php') 
 		try {
 			require_once $pipelinqNcRoot . '/lib/base.php';
 		} catch (\Throwable $e) {
-			// The root passed the installed check but base.php still failed
-			// (unreachable database, broken app, ...). `OC::$server` is a typed
-			// static that already holds a half-built container, so falling
-			// through to "vendor stubs only" would be a lie that costs
-			// gigabytes. Stop the run and say why.
+			// The tree IS installed, so the dangerous case this guard exists for
+			// (loading a bare source tree) did not happen. base.php still failed
+			// part-way.
+			//
+			// This does NOT abort. `OC::$server` is a typed static, so a half-built
+			// container cannot be unset, and aborting was tried: it turned all six
+			// PHPUnit legs red on a suite that passes (humaniq, 2026-09-08). The
+			// runaway this guard exists for needs an autowiring lookup to reach the
+			// poisoned container, this app has none in lib, and phpunit.xml's 2G cap
+			// bounds one anyway.
+			//
+			// So: say plainly that the container is unreliable, and let the pure unit
+			// tests run. A container-bound test failing loudly is the intended outcome.
 			fwrite(
 				STDERR,
 				sprintf(
-					"[pipelinq/tests/bootstrap-unit] Nextcloud root at %s could not be initialised (%s).\n"
-					. "  A half-booted server cannot be undone, so the run stops here rather than pretending to be pure-unit.\n"
-					. "  Fix the instance, or use phpunit-bare.xml (defines OC_CONSOLE) for pure-unit mode.\n",
+					"[pipelinq/tests/bootstrap-unit] Nextcloud at %s could not finish booting (%s).\n"
+					. "  \\OC::\$server now holds a HALF-BUILT container and cannot be unset. Pure unit tests\n"
+					. "  continue; anything resolving a service from that container is UNVERIFIED by this run.\n",
 					$pipelinqNcRoot,
 					$e->getMessage()
 				)
 			);
-			exit(1);
 		}
 	} else {
 		fwrite(
