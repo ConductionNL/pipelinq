@@ -39,6 +39,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\Egress;
 
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Support\FleetAppId;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -71,13 +72,6 @@ class ConnectorEgress {
 	 * @var string
 	 */
 	public const SOURCE_SCHEMA = 'source';
-
-	/**
-	 * OpenConnector's call service, resolved by name at run time.
-	 *
-	 * @var string
-	 */
-	private const CALL_SERVICE = 'OCA\\OpenConnector\\Service\\CallService';
 
 	/**
 	 * OpenRegister's object service, resolved by name at run time.
@@ -326,13 +320,20 @@ class ConnectorEgress {
 	 * @return object|null The service, or null when OpenConnector is absent.
 	 */
 	private function resolveCallService(): ?object {
-		try {
-			$callService = $this->container->get(self::CALL_SERVICE);
-		} catch (Throwable $e) {
-			$this->logger->info(
-				'ConnectorEgress.resolveCallService: unavailable',
-				['exception' => $e->getMessage()]
-			);
+		// Asked for by CANONICAL app name, never by a literal FQCN. The
+		// connector app renamed its PSR-4 root from `OCA\OpenConnector` to
+		// `OCA\Integriq` with no compatibility alias, and both roots are in
+		// the field. A container lookup on the wrong one throws into a catch
+		// whose whole purpose is "the optional app is absent" — so a migrated
+		// instance read as an uninstalled one and every outbound read through
+		// this class stopped, logging `unavailable` and nothing else.
+		$callService = FleetAppId::getService(
+			container: $this->container,
+			canonical: 'integriq',
+			relative: 'Service\CallService'
+		);
+		if ($callService === null) {
+			$this->logger->info('ConnectorEgress.resolveCallService: unavailable');
 			return null;
 		}
 
