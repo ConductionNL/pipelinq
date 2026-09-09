@@ -36,6 +36,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Marketing\Transport;
 
+use OCA\Pipelinq\Support\FleetAppId;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -392,13 +393,20 @@ final class ConnectorSourceTransport implements TransportInterface {
 	 * @return object|null
 	 */
 	private function resolveCallService(): ?object {
-		try {
-			$callService = $this->container->get('OCA\\OpenConnector\\Service\\CallService');
-		} catch (Throwable $e) {
-			$this->logger->error(
-				'ConnectorSourceTransport.resolveCallService: unavailable',
-				['exception' => $e->getMessage()]
-			);
+		// Asked for by CANONICAL app name, never by a literal FQCN. The
+		// connector app renamed its PSR-4 root from `OCA\OpenConnector` to
+		// `OCA\Integriq` with no compatibility alias, and both roots are in
+		// the field. Naming one of them meant the lookup threw on half the
+		// fleet, straight into a catch that reads as "the optional app is not
+		// installed" — every campaign send through a connector source went
+		// dark with one log line and no error.
+		$callService = FleetAppId::getService(
+			container: $this->container,
+			canonical: 'integriq',
+			relative: 'Service\CallService'
+		);
+		if ($callService === null) {
+			$this->logger->error('ConnectorSourceTransport.resolveCallService: unavailable');
 			return null;
 		}
 

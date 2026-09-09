@@ -44,6 +44,14 @@ use ReflectionClass;
 /**
  * @covers \OCA\Pipelinq\Service\Egress\ConnectorEgress
  * @covers \OCA\Pipelinq\Service\Egress\EgressResult
+ *
+ * `@uses` is not decoration. `beStrictAboutCoverageMetadata` makes a test RISKY
+ * when it executes a class this block does not name, and `failOnRisky` turns
+ * that into a red suite. `resolveCallService()` now runs through FleetAppId, and
+ * no local run can show it: the check only fires with a coverage driver, which
+ * is not installed here.
+ *
+ * @uses \OCA\Pipelinq\Support\FleetAppId
  */
 class ConnectorEgressTest extends TestCase {
 

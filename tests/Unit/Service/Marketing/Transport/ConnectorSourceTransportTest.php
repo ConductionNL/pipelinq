@@ -69,10 +69,16 @@ class ConnectorSourceTransportTest extends TestCase {
 	 * request-capturing fake CallService.
 	 *
 	 * @param object $captureTarget An object exposing a public `$lastJson` property.
+	 * @param string $callServiceId The ONLY FQCN this container answers to for the
+	 *                              call service; every other id throws, exactly as a
+	 *                              real container does for an unregistered class.
 	 *
 	 * @return ContainerInterface
 	 */
-	private function buildContainer(object $captureTarget): ContainerInterface {
+	private function buildContainer(
+		object $captureTarget,
+		string $callServiceId = 'OCA\\Integriq\\Service\\CallService',
+	): ContainerInterface {
 		$objectService = new class {
 			public function find(string $id, $register = null, $schema = null): array {
 				return ['uuid' => $id];
@@ -95,12 +101,12 @@ class ConnectorSourceTransportTest extends TestCase {
 
 		$container = $this->createMock(ContainerInterface::class);
 		$container->method('get')->willReturnCallback(
-			function (string $id) use ($objectService, $callService) {
+			function (string $id) use ($objectService, $callService, $callServiceId) {
 				if ($id === 'OCA\\OpenRegister\\Service\\ObjectService') {
 					return $objectService;
 				}
 
-				if ($id === 'OCA\\OpenConnector\\Service\\CallService') {
+				if ($id === $callServiceId) {
 					return $callService;
 				}
 
@@ -109,6 +115,41 @@ class ConnectorSourceTransportTest extends TestCase {
 		);
 		return $container;
 	}//end buildContainer()
+
+	/**
+	 * The transport sends on an instance where the connector app ships under its
+	 * CURRENT namespace, and on one where it still ships under the old one.
+	 *
+	 * This is the whole defect. `$container->get()` on a namespace that moved
+	 * throws, the transport catches it, logs "unavailable" and returns a
+	 * fail-closed result — identical to the optional app genuinely being absent.
+	 * Nothing errors, nothing is retried, and every campaign send through a
+	 * connector source stops. Pinning either spelling alone reproduces it on the
+	 * half of the fleet that runs the other one, so both are asserted here.
+	 *
+	 * @return void
+	 */
+	public function testSendResolvesTheCallServiceUnderEitherFleetNamespace(): void {
+		foreach (['OCA\\Integriq\\Service\\CallService', 'OCA\\OpenConnector\\Service\\CallService'] as $fqcn) {
+			$capture = new class {
+				public array $lastJson = [];
+			};
+			$transport = new ConnectorSourceTransport(
+				$this->buildContainer($capture, $fqcn),
+				$this->logger,
+				'oc-1',
+				'sendgrid'
+			);
+
+			$transport->send($this->mail());
+
+			$this->assertSame(
+				'user@example.test',
+				($capture->lastJson['to'] ?? null),
+				'the call service was not reached when it ships as ' . $fqcn
+			);
+		}
+	}//end testSendResolvesTheCallServiceUnderEitherFleetNamespace()
 
 	/**
 	 * `sendgrid` (and any unrecognised/empty provider) reproduces the exact
