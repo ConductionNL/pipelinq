@@ -16,6 +16,28 @@
     </projectFiles>
     <stubs>
         <file name="vendor/nextcloud/ocp/OCP/Capabilities/ICapability.php" preloadClasses="true" />
+        <!-- OpenRegister's published register-slug contracts, read as STUBS rather
+             than suppressed as unknown classes.
+             This repository resolves the two Object* contracts by accident: it keeps
+             copies of them under tests/Stubs/Contract/, and psalm reads a symbol from
+             that tree even though projectFiles is `lib` only. The register-slug pair
+             is deliberately not copied there (tests/bootstrap.php says why), and the
+             vendored copies do not help on their own, because `vendor` is under
+             ignoreFiles and is never scanned for symbols.
+             The obvious fix was a `referencedClass` UndefinedClass suppression, and it
+             is the wrong one: suppressing the class makes every value that flows
+             through it `mixed`, so psalm stops analysing the very branch this contract
+             exists to force. decidesk measured exactly that, and psalm found a real
+             NullableReturnStatement within a minute of being able to see the types.
+             A stub is read even though vendor is ignored for project files, so the
+             types stay live and no suppression is needed.
+             Verified in both directions rather than assumed: with these two lines,
+             `$resolution->noSuchMethodAtAll()` is reported as UndefinedMethod on
+             RegisterSlugResolution, so psalm really is resolving the contract; and the
+             six touched files carry no finding of their own beyond the repo-wide
+             MissingClassConstType noise. -->
+        <file name="vendor/conduction/hydra-gates/hydra-gates/contracts/RegisterSlugResolution.php" />
+        <file name="vendor/conduction/hydra-gates/hydra-gates/contracts/RegisterSlugResolverInterface.php" />
     </stubs>
     <issueHandlers>
         <UndefinedDocblockClass errorLevel="suppress"/>
@@ -75,22 +97,6 @@
                 <referencedClass name="OCA\OpenRegister\Service\FileService"/>
                 <referencedClass name="OCA\OpenRegister\Service\CalendarEventService"/>
                 <referencedClass name="OCA\OpenRegister\Mcp\IMcpToolProvider"/>
-                <!-- OpenRegister's published register-slug resolver contract.
-                     MEASURED, not assumed. The two Object* contracts resolve
-                     without an entry here because this repository keeps copies of
-                     them under tests/Stubs/Contract/, and psalm reads a symbol
-                     from that tree even though `projectFiles` is `lib` only. The
-                     register-slug pair is deliberately NOT copied there (see
-                     tests/bootstrap.php for why), and the vendored copies in
-                     conduction/hydra-gates v1.18.0 do not help: `vendor` is under
-                     `ignoreFiles`, so psalm never scans them for symbols. With the
-                     package installed and the copy absent, psalm reported three
-                     UndefinedClass errors for this interface and none for
-                     ObjectServiceInterface. That is what this entry answers.
-                     `RegisterSlugResolution` needs no entry: it only ever appears
-                     in a docblock, and UndefinedDocblockClass is already
-                     suppressed above. -->
-                <referencedClass name="OCA\OpenRegister\Contract\RegisterSlugResolverInterface"/>
                 <!-- ADR-078 actor-forwarded deferral contract (gate-61). The seven
                      converted post-event listeners hand their work to
                      DeferredObjectListenerJob through ListenerDeferralService instead
