@@ -75,22 +75,6 @@
                 <referencedClass name="OCA\OpenRegister\Service\FileService"/>
                 <referencedClass name="OCA\OpenRegister\Service\CalendarEventService"/>
                 <referencedClass name="OCA\OpenRegister\Mcp\IMcpToolProvider"/>
-                <!-- OpenRegister's published register-slug resolver contract.
-                     MEASURED, not assumed. The two Object* contracts resolve
-                     without an entry here because this repository keeps copies of
-                     them under tests/Stubs/Contract/, and psalm reads a symbol
-                     from that tree even though `projectFiles` is `lib` only. The
-                     register-slug pair is deliberately NOT copied there (see
-                     tests/bootstrap.php for why), and the vendored copies in
-                     conduction/hydra-gates v1.18.0 do not help: `vendor` is under
-                     `ignoreFiles`, so psalm never scans them for symbols. With the
-                     package installed and the copy absent, psalm reported three
-                     UndefinedClass errors for this interface and none for
-                     ObjectServiceInterface. That is what this entry answers.
-                     `RegisterSlugResolution` needs no entry: it only ever appears
-                     in a docblock, and UndefinedDocblockClass is already
-                     suppressed above. -->
-                <referencedClass name="OCA\OpenRegister\Contract\RegisterSlugResolverInterface"/>
                 <!-- ADR-078 actor-forwarded deferral contract (gate-61). The seven
                      converted post-event listeners hand their work to
                      DeferredObjectListenerJob through ListenerDeferralService instead
@@ -170,5 +154,26 @@
              UndefinedClass psalm reported — this line was simply missing, so psalm
              never read them. phpstan.neon had the same omission. -->
         <directory name="tests/Stubs" />
+        <!-- OpenRegister's published contracts, shipped by
+             conduction/hydra-gates v1.18.0 and held byte identical to
+             openregister's own lib/Contract/ by gate 67
+             (openregister-contract-parity).
+
+             Scanned rather than suppressed. The UndefinedClass suppression this
+             replaces argued that the vendored copies could not help, "because
+             `vendor` is under `ignoreFiles`, so psalm never scans them for
+             symbols". That is a real rule about `projectFiles` and it does not
+             reach here: `extraFiles` is a separate scope, and its whole job is
+             to make symbols visible without analysing them. Measured both ways
+             on this checkout. With this line psalm exits 0 and reports no
+             UndefinedClass; without it psalm exits 2 with three, at
+             Application.php:161 and ConnectorSourceRegister.php:87 and :118.
+
+             The difference is not cosmetic. A suppression accepts any spelling,
+             including RegisterSlugResolution::isReslved(); a scanned contract
+             makes psalm check the resolution branch against the real signature.
+             Read out of vendor, never copied: a copy of a published contract
+             drifts, and the drift still resolves. -->
+        <directory name="vendor/conduction/hydra-gates/hydra-gates/contracts" />
     </extraFiles>
 </psalm>
