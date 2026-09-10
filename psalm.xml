@@ -47,7 +47,16 @@
              carries no @psalm-assert and psalm does not infer one across the call. It
              costs nothing today, since slugOrNull() returns `?string` either way - but
              do not declare a non-nullable return here on the assumption that the
-             positive branch narrows. It does not. -->
+             positive branch narrows. It does not.
+             That is fixable at the source rather than per consumer, and is being
+             fixed: ConductionNL/openregister#3582 adds
+             `@psalm-assert-if-true !null $this->slug` to isResolved(), measured on
+             decidesk to make `slug` trace as `string` inside the true branch. It has
+             to land in openregister's lib/Contract/ AND the hydra-gates copy, which
+             gate 67 keeps byte identical, then be tagged. Once a tag carrying it is
+             installed here, re-run the trace: if `slug` narrows, this paragraph is
+             stale and slugOrNull() can return a non-nullable `string` on the resolved
+             path. Do not act on that without re-measuring. -->
         <file name="vendor/conduction/hydra-gates/hydra-gates/contracts/RegisterSlugResolution.php" />
         <file name="vendor/conduction/hydra-gates/hydra-gates/contracts/RegisterSlugResolverInterface.php" />
     </stubs>
