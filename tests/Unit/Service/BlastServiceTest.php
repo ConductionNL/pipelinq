@@ -25,6 +25,7 @@ use OCA\Pipelinq\Service\ArticleService;
 use OCA\Pipelinq\Service\BlastService;
 use OCA\Pipelinq\Service\Marketing\MailTransportService;
 use OCA\Pipelinq\Service\SegmentService;
+use OCA\Pipelinq\Tests\Unit\Support\FakeSlugResolver;
 use OCP\IAppConfig;
 use OCP\Mail\IMailer;
 use PHPUnit\Framework\TestCase;
@@ -235,7 +236,7 @@ class BlastServiceTest extends TestCase {
 	 * @return BlastService
 	 */
 	private function buildService(ContainerInterface $container, IAppConfig $appConfig): BlastService {
-		$mailTransportService = new MailTransportService($container, $appConfig, $this->mailer, $this->createMock(ArticleService::class), $this->logger);
+		$mailTransportService = new MailTransportService($container, $appConfig, $this->mailer, $this->createMock(ArticleService::class), FakeSlugResolver::connectorRegister(), $this->logger);
 		return new BlastService($container, $appConfig, $this->segmentService, $mailTransportService, $this->logger);
 	}//end buildService()
 
@@ -830,7 +831,7 @@ class BlastServiceTest extends TestCase {
 
 		// Use a throttle-counting subclass to assert the rate-limit hook
 		// is invoked between batches without sleeping the test.
-		$mailTransportService = new MailTransportService($this->container, $this->appConfig, $this->mailer, $this->createMock(ArticleService::class), $this->logger);
+		$mailTransportService = new MailTransportService($this->container, $this->appConfig, $this->mailer, $this->createMock(ArticleService::class), FakeSlugResolver::connectorRegister(), $this->logger);
 		$service = new class($this->container, $this->appConfig, $this->segmentService, $mailTransportService, $this->logger) extends BlastService {
 
 			/**
@@ -901,7 +902,7 @@ class BlastServiceTest extends TestCase {
 		];
 
 		// 'oc-source-missing' is not in the objectService store — the
-		// register:'openconnector'/schema:'source' lookup misses, so every
+		// Integriq-register/schema:'source' lookup misses, so every
 		// send call should fail-closed and the row should NOT flip to sent.
 		$dispatched = $this->service->dispatchBlastDeliveries('blast-no-oc', 100);
 		$this->assertSame(0, $dispatched);
@@ -1146,7 +1147,7 @@ class BlastServiceTest extends TestCase {
 	 *
 	 * @return void
 	 */
-	public function testSendOneDeliveryResolvesSourceFromOpenconnectorRegisterAndCallsCallServiceWithJsonPost(): void {
+	public function testSendOneDeliveryResolvesSourceFromTheConnectorRegisterAndCallsCallServiceWithJsonPost(): void {
 		$blast = [
 			'uuid' => 'blast-shape',
 			'templateId' => 'tmpl-shape',
@@ -1232,13 +1233,19 @@ class BlastServiceTest extends TestCase {
 
 		$this->assertSame(1, $dispatched);
 
-		// resolveConnectorSource() looked the Source up in OpenConnector's
-		// OWN register/schema — not pipelinq's `register` app-config value
+		// resolveConnectorSource() looked the Source up in Integriq's OWN
+		// register/schema — not pipelinq's `register` app-config value
 		// ('pipelinq' per setUp()'s appConfig mock).
+		//
+		// This asserted 'openconnector' until the slug resolution landed, and it
+		// passed for exactly as long as the code pinned the same word, which is
+		// what an assertion that copies the implementation buys you. It now names
+		// the slug the INSTANCE carries: buildService() wires a resolver
+		// describing a migrated instance, so the read must go to `integriq`.
 		$sourceLookups = array_filter($objectService->findCalls, fn (array $c) => $c['id'] === 'oc-source-shape');
 		$this->assertNotEmpty($sourceLookups, 'the connector source id must be looked up');
 		foreach ($sourceLookups as $call) {
-			$this->assertSame('openconnector', $call['register']);
+			$this->assertSame('integriq', $call['register']);
 			$this->assertSame('source', $call['schema']);
 		}
 
@@ -1265,7 +1272,7 @@ class BlastServiceTest extends TestCase {
 		);
 		$this->assertCount(1, $sentRows);
 		$this->assertSame('p-shape', array_values($sentRows)[0]['providerId']);
-	}//end testSendOneDeliveryResolvesSourceFromOpenconnectorRegisterAndCallsCallServiceWithJsonPost()
+	}//end testSendOneDeliveryResolvesSourceFromTheConnectorRegisterAndCallsCallServiceWithJsonPost()
 
 	/**
 	 * Phase 2 (marketing-campaign-attribution): the template body's links get

@@ -24,6 +24,7 @@ namespace OCA\Pipelinq\Tests\Unit\Service\Marketing;
 use OCA\Pipelinq\Service\ArticleService;
 use OCA\Pipelinq\Service\Marketing\ListObjectStore;
 use OCA\Pipelinq\Service\Marketing\MailTransportService;
+use OCA\Pipelinq\Tests\Unit\Support\FakeSlugResolver;
 use OCP\IAppConfig;
 use OCP\Mail\IMailer;
 use OCP\Mail\IMessage;
@@ -129,6 +130,7 @@ class MailTransportServiceTest extends TestCase {
 			$this->appConfig,
 			$this->mailer,
 			new ArticleService($this->makeArticleStore()),
+			FakeSlugResolver::connectorRegister(),
 			$this->logger,
 		);
 	}//end setUp()
@@ -423,6 +425,7 @@ class MailTransportServiceTest extends TestCase {
 			$this->appConfig,
 			$this->mailer,
 			new ArticleService($this->makeArticleStore()),
+			FakeSlugResolver::connectorRegister(),
 			$this->logger,
 		);
 
@@ -513,6 +516,7 @@ class MailTransportServiceTest extends TestCase {
 			$this->appConfig,
 			$this->mailer,
 			new ArticleService($articleStore),
+			FakeSlugResolver::connectorRegister(),
 			$this->logger,
 		);
 

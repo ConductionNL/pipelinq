@@ -39,6 +39,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\Egress;
 
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Service\ConnectorSourceRegister;
 use OCA\Pipelinq\Support\FleetAppId;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -60,11 +61,17 @@ use Throwable;
 class ConnectorEgress {
 
 	/**
-	 * OpenConnector's own register slug. Frozen even where the app id moved.
+	 * The canonical slug of the register Integriq's sources live in.
+	 *
+	 * This used to read `openconnector` and to carry the comment "frozen even
+	 * where the app id moved". It was not frozen: Integriq's repair step renames
+	 * the register row per instance, so the slug to READ with is whatever
+	 * {@see ConnectorSourceRegister} finds. This constant is only the name asked
+	 * about, and it is here so the value has one home.
 	 *
 	 * @var string
 	 */
-	public const SOURCE_REGISTER = 'openconnector';
+	public const SOURCE_REGISTER_CANONICAL = ConnectorSourceRegister::CANONICAL_REGISTER;
 
 	/**
 	 * The `Source` schema within that register.
@@ -85,6 +92,7 @@ class ConnectorEgress {
 	 *
 	 * @param ContainerInterface $container DI container for the two lazy resolutions.
 	 * @param IAppConfig $appConfig Pipelinq app config, holding the source ids.
+	 * @param ConnectorSourceRegister $connectorRegister Which slug the source register answers to here.
 	 * @param LoggerInterface $logger Logger.
 	 *
 	 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-competitor-watches/spec.md#requirement-every-outbound-read-leaves-through-an-openconnector-source
@@ -92,6 +100,7 @@ class ConnectorEgress {
 	public function __construct(
 		private ContainerInterface $container,
 		private IAppConfig $appConfig,
+		private ConnectorSourceRegister $connectorRegister,
 		private LoggerInterface $logger,
 	) {
 	}//end __construct()
@@ -292,11 +301,24 @@ class ConnectorEgress {
 	 * @return object|array<string, mixed>|null The source, or null.
 	 */
 	private function resolveSource(string $sourceId): object|array|null {
+		// Branch on the resolution, never fall back to the canonical slug. A read
+		// against a slug this instance does not carry returns zero rows, which is
+		// what a correct read of an empty register returns, so the caller would
+		// record "the source is not configured" for a register that is simply not
+		// there. The null here is announced by ConnectorSourceRegister itself.
+		$registerSlug = $this->connectorRegister->slugOrNull(
+			operation: 'ConnectorEgress.resolveSource',
+			sourceId: $sourceId
+		);
+		if ($registerSlug === null) {
+			return null;
+		}
+
 		try {
 			$objectService = $this->container->get(self::OBJECT_SERVICE);
 			$source = $objectService->find(
 				id: $sourceId,
-				register: self::SOURCE_REGISTER,
+				register: $registerSlug,
 				schema: self::SOURCE_SCHEMA,
 			);
 		} catch (Throwable $e) {
