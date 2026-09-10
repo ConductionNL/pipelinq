@@ -35,7 +35,19 @@
              `$resolution->noSuchMethodAtAll()` is reported as UndefinedMethod on
              RegisterSlugResolution, so psalm really is resolving the contract; and the
              six touched files carry no finding of their own beyond the repo-wide
-             MissingClassConstType noise. -->
+             MissingClassConstType noise. Confirmed a second way: mutating
+             ConnectorSourceRegister::slugOrNull() to a non-nullable return - BOTH the
+             docblock and the signature, see MismatchingDocblockReturnType below -
+             produces two NullableReturnStatement ERRORs and psalm exit 2. So these
+             stubs make the analyser bite at this repo's errorLevel="4", they do not
+             merely silence it.
+             One thing they do NOT buy, measured with @psalm-trace: `isResolved()`
+             does not narrow `->slug`. Inside `if ($resolution->isResolved() === true)`
+             the property still traces as `null|string`, because the published contract
+             carries no @psalm-assert and psalm does not infer one across the call. It
+             costs nothing today, since slugOrNull() returns `?string` either way - but
+             do not declare a non-nullable return here on the assumption that the
+             positive branch narrows. It does not. -->
         <file name="vendor/conduction/hydra-gates/hydra-gates/contracts/RegisterSlugResolution.php" />
         <file name="vendor/conduction/hydra-gates/hydra-gates/contracts/RegisterSlugResolverInterface.php" />
     </stubs>
@@ -157,7 +169,22 @@
         <InvalidArgument errorLevel="suppress"/>
         <InvalidReturnType errorLevel="suppress"/>
         <InvalidReturnStatement errorLevel="suppress"/>
-        <MismatchingDocblockReturnType errorLevel="suppress"/>
+        <!-- NOT suppressed, and the reason is a trap this PR walked into.
+             Psalm reads the DOCBLOCK `@return` in preference to the native
+             return type, so a `@return string|null` sitting above a `: string`
+             signature is not a contradiction psalm reports - it is psalm
+             quietly using the docblock and ignoring the signature. That is how
+             a mutation test on this file came back green while changing the
+             code: only the native type was mutated, psalm never read it, and a
+             tool that has not looked is indistinguishable from one that is
+             satisfied.
+             With this rule on, psalm names the divergence directly:
+             "Docblock has incorrect return type 'null|string', should be
+             'string'". Measured before un-suppressing it: ZERO
+             MismatchingDocblockReturnType findings across all 544 files, so the
+             suppression was protecting nothing and cost the next person an
+             honest mutation test. -->
+        <MismatchingDocblockReturnType errorLevel="error"/>
         <EmptyArrayAccess errorLevel="suppress"/>
         <ImplementedReturnTypeMismatch errorLevel="suppress"/>
         <InvalidMethodCall errorLevel="suppress"/>
