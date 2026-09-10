@@ -22,6 +22,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\AppInfo;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Contract\RegisterSlugResolverInterface;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCA\OpenRegister\Event\SchemaUpdatedEvent;
@@ -141,6 +142,26 @@ class Application extends App implements IBootstrap {
 			ObjectServiceInterface::class,
 			'OCA\OpenRegister\Service\ObjectService'
 		);
+
+		// The register-slug resolver, bound the same way and for the same reason.
+		// What it is for is written where it is used, in ConnectorSourceRegister;
+		// what belongs here is why this binding works at all.
+		//
+		// Verified against this container, not assumed: OpenRegister registers the
+		// resolver in its OWN container, so nothing of that registration reaches
+		// here. What reaches here is the alias stated here plus autowiring of the
+		// concrete class, whose only dependencies are `RegisterMapper` and
+		// `LoggerInterface`. Both resolve from a leaf app's DIContainer, and the
+		// interface then answers with a live resolution. The one thing lost is
+		// OpenRegister's shared-instance registration: a leaf container autowires a
+		// fresh resolver per injection point, so the request-scoped memo is per
+		// consumer rather than per request. That costs one indexed read per
+		// consumer and changes no answer.
+		$context->registerServiceAlias(
+			RegisterSlugResolverInterface::class,
+			'OCA\OpenRegister\Service\RegisterSlugResolver'
+		);
+
 		// LOAD-ORDER HAZARD: OC_App::getEnabledApps() sort()s the app list and
 		// Coordinator::registerApps() calls registerAutoloading() then register()
 		// one app at a time, so an app's register() runs before the PSR-4 prefix
@@ -819,9 +840,7 @@ class Application extends App implements IBootstrap {
 	 */
 	private function bootNonPageSurfaces($server): void {
 		$this->registerCommentResolvers(server: $server);
-		$this->wireAppointmentEmailSeam();
-		$this->wireAppointmentCalendarSeam();
-		$this->wireAppointmentPaymentSeam();
+		$this->wireAppointmentSeams();
 		$this->wireGdprSeamProviders();
 		$this->registerDsarEvidenceSource();
 
@@ -987,85 +1006,67 @@ class Application extends App implements IBootstrap {
 	}//end resolveDependencyStatuses()
 
 	/**
-	 * Inject {@see AppointmentEmailService} into {@see BookingService} as the
-	 * confirmation email seam (member 07 of the appointment-booking chain).
+	 * Wire the three optional appointment-booking seams onto their consumers.
 	 *
-	 * BookingService is constructed without the email provider and uses a
-	 * setter seam so the lifecycle code never depends on the email transport;
-	 * we wire the provider at boot so confirmation emails go out automatically
-	 * on booking create / confirm.
+	 * BookingService and AvailabilityService are constructed WITHOUT these
+	 * collaborators and take them through setters, so the lifecycle code never
+	 * depends on an email, calendar or payment transport. Boot is where they are
+	 * attached, which is why they are attached here:
+	 *
+	 *  - confirmation email (chain member 07): confirmation mail goes out on
+	 *    booking create and confirm.
+	 *  - calendar leaf (member 10): AvailabilityService merges leaf-synced staff
+	 *    VEVENTs into slot computation, and BookingService pushes a confirmed
+	 *    booking back to those calendars (REQ-APT-018).
+	 *  - fee payment (member 08): no-show and late-cancellation fees are routed
+	 *    to Integriq instead of only being recorded in statusHistory.
+	 *
+	 * Each seam is wired inside its OWN try. That is the property this method has
+	 * to keep, and it is why the three are a loop rather than one block: a
+	 * container that cannot build the calendar provider must still leave the
+	 * email and payment seams attached. A seam that fails to wire stays null and
+	 * the documented degradation applies — bookings still transition, the fee is
+	 * still recorded, nothing is transported.
+	 *
+	 * This replaced three near-identical private methods (wireAppointmentEmailSeam,
+	 * wireAppointmentCalendarSeam, wireAppointmentPaymentSeam) that differed only
+	 * in which setter they called. Collapsing them took this class back under
+	 * phpmd's ExcessiveClassLength threshold, which the slug-resolver binding
+	 * above had pushed it over by five lines.
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/specs/appointment-booking/spec.md
 	 */
-	private function wireAppointmentEmailSeam(): void {
-		try {
-			$container = $this->getContainer();
-			$bookingService = $container->get(BookingService::class);
-			$emailProvider = $container->get(AppointmentEmailService::class);
-			$bookingService->setEmailProvider(provider: $emailProvider);
-		} catch (Throwable $e) {
-			// OpenRegister or one of the collaborators is unavailable — the
-			// seam stays null and bookings still transition; this is the
-			// documented graceful-degradation path from BookingService.
-		}
-	}//end wireAppointmentEmailSeam()
+	private function wireAppointmentSeams(): void {
+		$seams = [
+			// Confirmation email.
+			static function (ContainerInterface $container): void {
+				$container->get(BookingService::class)->setEmailProvider(
+					provider: $container->get(AppointmentEmailService::class)
+				);
+			},
+			// Calendar leaf, consumed by two services.
+			static function (ContainerInterface $container): void {
+				$calendarProvider = $container->get(AppointmentCalendarLeafProvider::class);
+				$container->get(AvailabilityService::class)->setCalendarProvider(provider: $calendarProvider);
+				$container->get(BookingService::class)->setCalendarProvider(provider: $calendarProvider);
+			},
+			// No-show and late-cancellation fee transport.
+			static function (ContainerInterface $container): void {
+				$container->get(BookingService::class)->setPaymentProvider(
+					provider: $container->get(AppointmentPaymentProvider::class)
+				);
+			},
+		];
 
-	/**
-	 * Inject {@see AppointmentCalendarLeafProvider} into the appointment
-	 * services as the calendar-leaf seam (member 10 of the chain).
-	 *
-	 * AvailabilityService consumes the seam in `getBlockedTimes` to merge
-	 * leaf-synced staff calendar VEVENTs into the slot computation;
-	 * BookingService consumes it after every confirmed-transition to push
-	 * the booking to staff calendars (REQ-APT-018). Setter seams keep the
-	 * lifecycle code independent of the calendar transport; we wire the
-	 * provider at boot so the merge + push happen automatically.
-	 *
-	 * @return void
-	 *
-	 * @spec openspec/specs/appointment-booking/spec.md
-	 */
-	private function wireAppointmentCalendarSeam(): void {
-		try {
-			$container = $this->getContainer();
-			$calendarProvider = $container->get(AppointmentCalendarLeafProvider::class);
-			$availabilityService = $container->get(AvailabilityService::class);
-			$bookingService = $container->get(BookingService::class);
-			$availabilityService->setCalendarProvider(provider: $calendarProvider);
-			$bookingService->setCalendarProvider(provider: $calendarProvider);
-		} catch (Throwable $e) {
-			// OpenRegister or one of the collaborators is unavailable — the
-			// seam stays null and bookings still transition; this is the
-			// documented graceful-degradation path from BookingService.
+		foreach ($seams as $wire) {
+			try {
+				$wire($this->getContainer());
+			} catch (Throwable $e) {
+				// OpenRegister or one of the collaborators is unavailable. This
+				// seam stays null; the other two are unaffected.
+			}
 		}
-	}//end wireAppointmentCalendarSeam()
-
-	/**
-	 * Inject {@see AppointmentPaymentProvider} into {@see BookingService} as
-	 * the no-show + late-cancellation fee payment seam (member 08 of the
-	 * appointment-booking chain).
-	 *
-	 * The provider routes the BookingService::chargeNoShowFee /
-	 * chargeCancellationFee invocations through openconnector. The seam is
-	 * optional: when either service cannot be resolved BookingService keeps
-	 * recording the fee intent in statusHistory but skips the transport.
-	 *
-	 * @return void
-	 *
-	 * @spec openspec/specs/appointment-booking/spec.md
-	 */
-	private function wireAppointmentPaymentSeam(): void {
-		try {
-			$container = $this->getContainer();
-			$bookingService = $container->get(BookingService::class);
-			$paymentProvider = $container->get(AppointmentPaymentProvider::class);
-			$bookingService->setPaymentProvider(provider: $paymentProvider);
-		} catch (Throwable $e) {
-			// OpenRegister or one of the collaborators is unavailable — the
-			// seam stays null and bookings still transition; the fee is then
-			// recorded in statusHistory only, never transported.
-		}
-	}//end wireAppointmentPaymentSeam()
+	}//end wireAppointmentSeams()
 }//end class

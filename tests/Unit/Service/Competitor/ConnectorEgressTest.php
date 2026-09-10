@@ -35,6 +35,7 @@ use OCA\Pipelinq\Service\Egress\EgressResult;
 use OCA\Pipelinq\Service\Matomo\MatomoReportService;
 use OCA\Pipelinq\Service\Search\SiteContentCrawler;
 use OCA\Pipelinq\Service\Social\ConnectionAuditService;
+use OCA\Pipelinq\Tests\Unit\Support\FakeSlugResolver;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -72,6 +73,7 @@ class ConnectorEgressTest extends TestCase {
 		return new ConnectorEgress(
 			container: $container,
 			appConfig: $appConfig,
+			connectorRegister: FakeSlugResolver::connectorRegister(),
 			logger: $this->createMock(LoggerInterface::class)
 		);
 	}//end egress()

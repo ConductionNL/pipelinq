@@ -23,6 +23,7 @@ namespace OCA\Pipelinq\Tests\Unit\Service\Marketing\Transport;
 
 use OCA\Pipelinq\Service\Marketing\Transport\ConnectorSourceTransport;
 use OCA\Pipelinq\Service\Marketing\Transport\RenderedMail;
+use OCA\Pipelinq\Tests\Unit\Support\FakeSlugResolver;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -137,6 +138,7 @@ class ConnectorSourceTransportTest extends TestCase {
 			$transport = new ConnectorSourceTransport(
 				$this->buildContainer($capture, $fqcn),
 				$this->logger,
+				FakeSlugResolver::connectorRegister(),
 				'oc-1',
 				'sendgrid'
 			);
@@ -161,7 +163,7 @@ class ConnectorSourceTransportTest extends TestCase {
 		$capture = new class {
 			public array $lastJson = [];
 		};
-		$transport = new ConnectorSourceTransport($this->buildContainer($capture), $this->logger, 'oc-1', 'sendgrid');
+		$transport = new ConnectorSourceTransport($this->buildContainer($capture), $this->logger, FakeSlugResolver::connectorRegister(), 'oc-1', 'sendgrid');
 
 		$transport->send($this->mail());
 
@@ -186,7 +188,7 @@ class ConnectorSourceTransportTest extends TestCase {
 		$capture = new class {
 			public array $lastJson = [];
 		};
-		$transport = new ConnectorSourceTransport($this->buildContainer($capture), $this->logger, 'oc-1', '');
+		$transport = new ConnectorSourceTransport($this->buildContainer($capture), $this->logger, FakeSlugResolver::connectorRegister(), 'oc-1', '');
 
 		$transport->send($this->mail());
 
@@ -203,7 +205,7 @@ class ConnectorSourceTransportTest extends TestCase {
 		$capture = new class {
 			public array $lastJson = [];
 		};
-		$transport = new ConnectorSourceTransport($this->buildContainer($capture), $this->logger, 'oc-1', 'ses');
+		$transport = new ConnectorSourceTransport($this->buildContainer($capture), $this->logger, FakeSlugResolver::connectorRegister(), 'oc-1', 'ses');
 
 		$transport->send($this->mail());
 
@@ -221,7 +223,7 @@ class ConnectorSourceTransportTest extends TestCase {
 		$capture = new class {
 			public array $lastJson = [];
 		};
-		$transport = new ConnectorSourceTransport($this->buildContainer($capture), $this->logger, 'oc-1', 'brevo');
+		$transport = new ConnectorSourceTransport($this->buildContainer($capture), $this->logger, FakeSlugResolver::connectorRegister(), 'oc-1', 'brevo');
 
 		$transport->send($this->mail());
 
@@ -239,7 +241,7 @@ class ConnectorSourceTransportTest extends TestCase {
 		$capture = new class {
 			public array $lastJson = [];
 		};
-		$transport = new ConnectorSourceTransport($this->buildContainer($capture), $this->logger, 'oc-1', 'mailjet');
+		$transport = new ConnectorSourceTransport($this->buildContainer($capture), $this->logger, FakeSlugResolver::connectorRegister(), 'oc-1', 'mailjet');
 
 		$transport->send($this->mail());
 
@@ -256,7 +258,7 @@ class ConnectorSourceTransportTest extends TestCase {
 		$capture = new class {
 			public array $lastJson = [];
 		};
-		$transport = new ConnectorSourceTransport($this->buildContainer($capture), $this->logger, 'oc-1', 'mailgun');
+		$transport = new ConnectorSourceTransport($this->buildContainer($capture), $this->logger, FakeSlugResolver::connectorRegister(), 'oc-1', 'mailgun');
 
 		$transport->send($this->mail());
 
@@ -274,7 +276,7 @@ class ConnectorSourceTransportTest extends TestCase {
 		$capture = new class {
 			public array $lastJson = [];
 		};
-		$transport = new ConnectorSourceTransport($this->buildContainer($capture), $this->logger, 'oc-1', 'postmark');
+		$transport = new ConnectorSourceTransport($this->buildContainer($capture), $this->logger, FakeSlugResolver::connectorRegister(), 'oc-1', 'postmark');
 
 		$transport->send($this->mail());
 
@@ -290,7 +292,7 @@ class ConnectorSourceTransportTest extends TestCase {
 	public function testSendFailsClosedWithNoConnectorSourceId(): void {
 		$container = $this->createMock(ContainerInterface::class);
 		$container->expects($this->never())->method('get');
-		$transport = new ConnectorSourceTransport($container, $this->logger, '', 'sendgrid');
+		$transport = new ConnectorSourceTransport($container, $this->logger, FakeSlugResolver::connectorRegister(), '', 'sendgrid');
 
 		$result = $transport->send($this->mail());
 
@@ -318,7 +320,7 @@ class ConnectorSourceTransportTest extends TestCase {
 				throw new \RuntimeException('not registered: ' . $id);
 			}
 		);
-		$transport = new ConnectorSourceTransport($container, $this->logger, 'oc-missing', 'sendgrid');
+		$transport = new ConnectorSourceTransport($container, $this->logger, FakeSlugResolver::connectorRegister(), 'oc-missing', 'sendgrid');
 
 		$result = $transport->send($this->mail());
 

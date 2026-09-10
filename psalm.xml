@@ -75,6 +75,22 @@
                 <referencedClass name="OCA\OpenRegister\Service\FileService"/>
                 <referencedClass name="OCA\OpenRegister\Service\CalendarEventService"/>
                 <referencedClass name="OCA\OpenRegister\Mcp\IMcpToolProvider"/>
+                <!-- OpenRegister's published register-slug resolver contract.
+                     MEASURED, not assumed. The two Object* contracts resolve
+                     without an entry here because this repository keeps copies of
+                     them under tests/Stubs/Contract/, and psalm reads a symbol
+                     from that tree even though `projectFiles` is `lib` only. The
+                     register-slug pair is deliberately NOT copied there (see
+                     tests/bootstrap.php for why), and the vendored copies in
+                     conduction/hydra-gates v1.18.0 do not help: `vendor` is under
+                     `ignoreFiles`, so psalm never scans them for symbols. With the
+                     package installed and the copy absent, psalm reported three
+                     UndefinedClass errors for this interface and none for
+                     ObjectServiceInterface. That is what this entry answers.
+                     `RegisterSlugResolution` needs no entry: it only ever appears
+                     in a docblock, and UndefinedDocblockClass is already
+                     suppressed above. -->
+                <referencedClass name="OCA\OpenRegister\Contract\RegisterSlugResolverInterface"/>
                 <!-- ADR-078 actor-forwarded deferral contract (gate-61). The seven
                      converted post-event listeners hand their work to
                      DeferredObjectListenerJob through ListenerDeferralService instead
