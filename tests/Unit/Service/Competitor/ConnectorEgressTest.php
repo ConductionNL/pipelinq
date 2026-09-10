@@ -53,6 +53,7 @@ use ReflectionClass;
  * is not installed here.
  *
  * @uses \OCA\Pipelinq\Support\FleetAppId
+ * @uses \OCA\Pipelinq\Service\ConnectorSourceRegister
  */
 class ConnectorEgressTest extends TestCase {
 
