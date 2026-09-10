@@ -135,7 +135,23 @@
         <InvalidArgument errorLevel="suppress"/>
         <InvalidReturnType errorLevel="suppress"/>
         <InvalidReturnStatement errorLevel="suppress"/>
-        <MismatchingDocblockReturnType errorLevel="suppress"/>
+        <!-- NOT suppressed, and the reason is a trap the register-slug work
+             (#1906) walked into.
+             Psalm reads the DOCBLOCK `@return` in preference to the native
+             return type, so a `@return string|null` sitting above a `: string`
+             signature is not a contradiction psalm reports - it is psalm
+             quietly using the docblock and ignoring the signature. That is how
+             a mutation test on this file came back green while changing the
+             code: only the native type was mutated, psalm never read it, and a
+             tool that has not looked is indistinguishable from one that is
+             satisfied.
+             With this rule on, psalm names the divergence directly:
+             "Docblock has incorrect return type 'null|string', should be
+             'string'". Measured before un-suppressing it: ZERO
+             MismatchingDocblockReturnType findings across all 544 files, so the
+             suppression was protecting nothing and cost the next person an
+             honest mutation test. -->
+        <MismatchingDocblockReturnType errorLevel="error"/>
         <EmptyArrayAccess errorLevel="suppress"/>
         <ImplementedReturnTypeMismatch errorLevel="suppress"/>
         <InvalidMethodCall errorLevel="suppress"/>
