@@ -50,13 +50,24 @@
              positive branch narrows. It does not.
              That is fixable at the source rather than per consumer, and is being
              fixed: ConductionNL/openregister#3582 adds
-             `@psalm-assert-if-true !null $this->slug` to isResolved(), measured on
-             decidesk to make `slug` trace as `string` inside the true branch. It has
-             to land in openregister's lib/Contract/ AND the hydra-gates copy, which
-             gate 67 keeps byte identical, then be tagged. Once a tag carrying it is
-             installed here, re-run the trace: if `slug` narrows, this paragraph is
-             stale and slugOrNull() can return a non-nullable `string` on the resolved
-             path. Do not act on that without re-measuring. -->
+             `@psalm-assert-if-true !null $this->slug` to isResolved(). It has to land
+             in openregister's lib/Contract/ AND the hydra-gates copy, which gate 67
+             keeps byte identical, then be tagged.
+             What that will buy HERE is measured, not assumed. The annotation was
+             applied to the vendored contract in a throwaway probe and the trace
+             re-run: slugOrNull()'s existing shape narrows `slug` to `string`, and so
+             does the same shape with an intervening call, including one that receives
+             the whole $resolution. The probe was reverted and both checksums verified.
+             It narrows because the property is `readonly`, so no intervening call can
+             invalidate the assertion.
+             The shape is what decides this, and this file is on the right one. Reading
+             the property BEFORE the branch does NOT narrow - nothing can narrow a copy
+             retroactively - and decidesk uses that shape, which is why its explicit
+             null check is load-bearing and this file needs none.
+             So when a tag carrying the annotation is installed, slugOrNull() can
+             return a non-nullable `string` on the resolved path and this paragraph
+             goes. Re-run the trace first: the measurement above was taken against a
+             hand-patched vendor file, not a shipped one. -->
         <file name="vendor/conduction/hydra-gates/hydra-gates/contracts/RegisterSlugResolution.php" />
         <file name="vendor/conduction/hydra-gates/hydra-gates/contracts/RegisterSlugResolverInterface.php" />
     </stubs>
