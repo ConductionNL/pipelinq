@@ -58,8 +58,14 @@
              re-run: slugOrNull()'s existing shape narrows `slug` to `string`, and so
              does the same shape with an intervening call, including one that receives
              the whole $resolution. The probe was reverted and both checksums verified.
-             It narrows because the property is `readonly`, so no intervening call can
-             invalidate the assertion.
+             `readonly` is NOT what keeps that narrowing, and the difference is the
+             point. Probed directly: with `slug` made mutable and an intervening callee
+             that sets `$r->slug = null`, psalm still traces `string`, with no error and
+             no warning. It is not reasoning about mutability at all. So on a readonly
+             property the narrowing is SOUND, because the runtime cannot make it false;
+             on a mutable one psalm gives the identical confident green while the value
+             really can be null. Anyone copying this pattern to a mutable property gets
+             the same clean run and no protection whatsoever.
              The shape is what decides this, and this file is on the right one. Reading
              the property BEFORE the branch does NOT narrow - nothing can narrow a copy
              retroactively - and decidesk uses that shape, which is why its explicit
