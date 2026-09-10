@@ -99,13 +99,15 @@ test('Features & roadmap: the comparison lists areas with a score, rows collapse
 	await expect(areas.first()).toBeVisible()
 	await expect(areas.first().locator('summary')).toContainText('Pipelinq has')
 
-	// Closed means closed: no capability row is on the screen yet.
-	await expect(areas.first().locator('.features-roadmap__cap')).toHaveCount(0)
+	// Closed means closed. NOT toHaveCount(0): an area is a `<details>`, and a
+	// closed `<details>` keeps every child in the DOM, so a count matcher
+	// passes on a shut panel and reads it as an empty one. CI caught exactly
+	// that here, returning 13. Visibility is the question being asked.
+	const firstRow = areas.first().locator('.features-roadmap__cap').first()
+	await expect(firstRow).toBeHidden()
 
 	await areas.first().locator('summary').click()
-	await expect(
-		areas.first().locator('.features-roadmap__cap').first(),
-	).toBeVisible()
+	await expect(firstRow).toBeVisible()
 
 	await assertNoHardError(page)
 })
