@@ -76,6 +76,24 @@ use Psr\Log\LoggerInterface;
  * Both files were restored from byte copies and verified identical by md5sum and
  * diff; the suite is back to 2886 tests, 0 failures.
  *
+ * ## Why the absent-instance cases carry the weight
+ *
+ * Psalm cannot protect any of the five reads, and that was measured rather
+ * than assumed. Delete the `if ($registerSlug === null) { return null; }`
+ * guard in `ConnectorEgress::resolveSource()` and psalm reports NOTHING - not
+ * an error, not an info - and exits 0. The reason is that every one of the five
+ * sites reaches OpenRegister through a duck-typed handle (`$container->get()`
+ * returning `mixed`, or a `getObjectService(): object`), so the `register:`
+ * argument is never type-checked and a `?string` flowing into it is invisible.
+ * The published contract's own types do not help: they stop at the resolver.
+ *
+ * With that same guard deleted, exactly one test fails, and it is
+ * `testAnInstanceWithoutTheRegisterReadsNothingForEgress`. So the three
+ * `AnInstanceWithoutTheRegister` cases below are not belt-and-braces beside a
+ * static analyser that has the branch covered. They are the only thing in this
+ * repository that can see a dropped `isResolved()` branch at all. Do not thin
+ * them out on the grounds that psalm would catch it.
+ *
  * ## Why the app-id check is not enough
  *
  * Pipelinq already resolves the connector app across the rename, in
