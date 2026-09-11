@@ -59,6 +59,13 @@
  *      NOT flagged: a same-document route change really does need a remount.
  *      spec-coverage/declarative-view-system.spec.ts is the reference.
  *
+ *   3. GUARD READ TOO LATE — that same guard, but assigned AFTER the goto.
+ *      `page.url()` then always names the page just navigated to, the guard is
+ *      always true, and the reload never stops happening. It reads as a fix
+ *      and behaves as a no-op, which is worse than the unguarded form because
+ *      nobody looks at it twice. This rule exists because the first draft of
+ *      this very change made that mistake in two files.
+ *
  * It is deliberately dependency-free (pure Node, no build, no npm install), in
  * the same style as tests/l10n/check-l10n.js, so CI and a bare checkout both
  * run it the same way.
@@ -126,6 +133,8 @@ const NAVIGATES = /\b(page\.goto\s*\(|goto[A-Z]\w*\s*\(|\w*[Pp]age\.goto\s*\()/
 const GOES_TO = /\bpage\.goto\s*\(/
 const RELOADS = /\bpage\.reload\s*\(/
 const REMOUNT_GUARD = /alreadyMounted|alreadyOpen|isMounted/
+const GUARD_ASSIGNMENT =
+	/(const|let|var)\s+(alreadyMounted|alreadyOpen|isMounted)\s*=/
 
 const findings = []
 
@@ -171,10 +180,65 @@ for (const file of specFiles(E2E_DIR)) {
 				}
 				if (started && depth <= 0) break
 			}
-			const next = nextCodeLine(lines, end + 1)
-			if (next !== -1 && RELOADS.test(lines[next])) {
-				const between = lines.slice(i, next + 1).join('\n')
-				if (!REMOUNT_GUARD.test(between)) {
+			// Walk forward over the guard scaffolding only. A reload reached
+			// through nothing but a guard assignment, an `if`, and braces is a
+			// reload OF THIS GOTO; a reload that first has to step over a real
+			// statement (an assertion, a click) is something else and is left
+			// alone.
+			//
+			// The walk matters: an earlier draft of this check looked only at
+			// the single next code line, so inserting the guard assignment
+			// between goto and reload hid the reload from it entirely. That is
+			// how a check goes quiet on exactly the case it was written for.
+			let next = -1
+			let cursor = end + 1
+			for (let step = 0; step < 4; step++) {
+				const n = nextCodeLine(lines, cursor)
+				if (n === -1) break
+				if (RELOADS.test(lines[n])) {
+					next = n
+					break
+				}
+				const t = lines[n].trim()
+				const scaffolding =
+					GUARD_ASSIGNMENT.test(t)
+					|| /^(if|}\s*else if)\s*\(/.test(t)
+					|| t === '{'
+				if (!scaffolding) break
+				cursor = n + 1
+			}
+
+			if (next !== -1) {
+				// The guard has to be READ before the goto. `page.url()` after a
+				// goto always names the page just navigated to, so a guard
+				// assigned afterwards is always true and the reload never stops
+				// happening: a no-op wearing the shape of a fix. This check was
+				// written after making exactly that mistake in this file's own
+				// first draft, which is why it looks at WHERE the assignment is
+				// and not merely whether the word appears.
+				const guardedBefore = lines
+					.slice(Math.max(0, i - 8), i)
+					.some((l) => GUARD_ASSIGNMENT.test(l))
+				const guardedAfter = lines
+					.slice(i, next + 1)
+					.some((l) => GUARD_ASSIGNMENT.test(l))
+				const conditional =
+					guardedBefore
+					&& REMOUNT_GUARD.test(lines.slice(i, next + 1).join('\n'))
+
+				if (guardedAfter && !guardedBefore) {
+					findings.push({
+						file: rel,
+						line: next + 1,
+						rule: 'guard-read-too-late',
+						detail:
+							'the remount guard is assigned AFTER the goto on line '
+							+ (i + 1)
+							+ ', so page.url() already names the target and the guard is '
+							+ 'always true. The reload is unconditional in practice.',
+						fix: 'assign the guard BEFORE the goto (see spec-coverage/declarative-view-system.spec.ts)',
+					})
+				} else if (!conditional) {
 					findings.push({
 						file: rel,
 						line: next + 1,

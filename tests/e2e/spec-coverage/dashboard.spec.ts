@@ -36,18 +36,22 @@ import {
  * the reload was a second one.
  */
 async function gotoOperational(page) {
-	await page.goto('/apps/pipelinq/operational', { timeout: APP_LOAD_BUDGET_MS })
-	await expect(page.locator('#app-navigation-vue')).toBeVisible({ timeout: 15000 })
 	// The reload is only needed when the app is ALREADY mounted: a same-document
 	// route change does not remount the view. On the FIRST navigation of a test
 	// the goto IS a full document load and already mounts the target route, so
-	// reloading there is a second load spent re-rendering what is on screen —
+	// reloading there is a second load spent re-rendering what is on screen:
 	// 13 to 23 s on the CI runner, out of a 60 s budget. The same guard, and
 	// the same reasoning, as spec-coverage/declarative-view-system.spec.ts.
+	//
+	// It is read BEFORE the goto on purpose. Read after, page.url() always
+	// names the app and the guard is always true, which is a reload that never
+	// stops happening dressed up as one that does.
 	const alreadyMounted = page.url().includes('/apps/pipelinq')
+	await page.goto('/apps/pipelinq/operational', { timeout: APP_LOAD_BUDGET_MS })
 	if (alreadyMounted) {
 		await page.reload({ timeout: APP_LOAD_BUDGET_MS })
 	}
+	await expect(page.locator('#app-navigation-vue')).toBeVisible({ timeout: 15000 })
 	await page
 		.locator('#content-vue')
 		.waitFor({ state: 'visible', timeout: 15000 })
