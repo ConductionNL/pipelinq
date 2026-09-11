@@ -36,12 +36,7 @@
 import type { APIResponse } from '@playwright/test'
 
 import { expect, test } from '@playwright/test'
-import {
-	assertNoHardError,
-	dismissSupportDialog,
-	dismissWalkthrough,
-	openApp,
-} from '../helpers/pipelinq.ts'
+import { assertNoHardError, gotoAppRoute, openApp } from '../helpers/pipelinq.ts'
 
 /** The xWiki proxy endpoints the knowledge-base surface is built on. */
 const XWIKI_STATUS = '/apps/pipelinq/api/xwiki/status'
@@ -86,15 +81,14 @@ function expectSearchEnvelope(body: Record<string, unknown>, label: string): voi
 test('the knowledge-base surface is reachable: the widget mounts and the proxy answers', async ({
 	page,
 }) => {
-	await openApp(page)
-
 	// The knowledge-base widget lives on the Operational overview dashboard
 	// (src/manifest.json, page `OperationalDashboard`, widget `xwiki-knowledge`
 	// at layout slot 13), NOT on the landing Commercial overview.
-	await page.goto('/apps/pipelinq/operational')
-	await expect(page.locator('#content-vue')).toBeVisible({ timeout: 15000 })
-	await dismissWalkthrough(page)
-	await dismissSupportDialog(page)
+	//
+	// One load, not two: the openApp() that used to stand here booted the
+	// landing Commercial overview and the next line navigated straight off it.
+	// This test was the flaky one in run 34532703820.
+	await gotoAppRoute(page, '/operational')
 
 	/*
 	 * The widget reached a SETTLED, rendered state — either its card (titled

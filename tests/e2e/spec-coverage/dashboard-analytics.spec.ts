@@ -16,19 +16,41 @@
  */
 
 import { expect, test } from '@playwright/test'
-import { assertNoHardError, trackPipelinqErrors } from '../helpers/pipelinq.ts'
+import {
+	APP_LOAD_BUDGET_MS,
+	assertNoHardError,
+	trackPipelinqErrors,
+} from '../helpers/pipelinq.ts'
 
 /**
- * Land directly on the Operational overview where these widgets live. We set the
- * SPA hash on the very first navigation (then a reload so the router boots
- * straight onto `/operational`) so the landing Commercial dashboard's widgets
- * never mount — otherwise their in-flight fetches abort when we route away and
- * surface as spurious "Failed to fetch" console noise.
+ * Land directly on the Operational overview where these widgets live, so the
+ * landing Commercial dashboard's widgets never mount — otherwise their
+ * in-flight fetches abort when we route away and surface as spurious "Failed
+ * to fetch" console noise.
+ *
+ * The comment that used to stand here said "we set the SPA hash on the very
+ * first navigation, then a reload so the router boots straight onto
+ * /operational". The app has routed on HISTORY since #1684, and the code below
+ * always did a PATH goto: that goto IS the boot onto `/operational`, and the
+ * reload was a second full load doing nothing the first had not.
  */
 async function openOperational(page) {
-	await page.goto('/apps/pipelinq/operational')
+	// The reload is only needed when the app is ALREADY mounted: a same-document
+	// route change does not remount the view. On the FIRST navigation of a test
+	// the goto IS a full document load and already mounts the target route, so
+	// reloading there is a second load spent re-rendering what is on screen:
+	// 13 to 23 s on the CI runner, out of a 60 s budget. The same guard, and
+	// the same reasoning, as spec-coverage/declarative-view-system.spec.ts.
+	//
+	// It is read BEFORE the goto on purpose. Read after, page.url() always
+	// names the app and the guard is always true, which is a reload that never
+	// stops happening dressed up as one that does.
+	const alreadyMounted = page.url().includes('/apps/pipelinq')
+	await page.goto('/apps/pipelinq/operational', { timeout: APP_LOAD_BUDGET_MS })
+	if (alreadyMounted) {
+		await page.reload({ timeout: APP_LOAD_BUDGET_MS })
+	}
 	await expect(page.locator('#app-navigation-vue')).toBeVisible({ timeout: 15000 })
-	await page.reload()
 	await page
 		.locator('#content-vue')
 		.waitFor({ state: 'visible', timeout: 15000 })

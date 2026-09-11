@@ -25,6 +25,7 @@
     "test:e2e:install": "playwright install chromium",
     "check:manifest": "node scripts/check-manifest.js",
     "check:spec-links": "node scripts/check-spec-links.js",
+  "check:e2e-nav": "node scripts/check-e2e-navigation.js",
     "format": "prettier --check \"**/*.{js,ts,vue,css,scss}\"",
     "format:fix": "prettier --write \"**/*.{js,ts,vue,css,scss}\"",
     "prepare": "git config core.hooksPath .githooks || true",

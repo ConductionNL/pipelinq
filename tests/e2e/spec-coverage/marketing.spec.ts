@@ -32,8 +32,7 @@ import { expect, test } from '@playwright/test'
 import {
 	assertNoHardError,
 	clickHeaderAction,
-	dismissSupportDialog,
-	dismissWalkthrough,
+	gotoAppRoute,
 	navClick,
 	openApp,
 	revealNavEntry,
@@ -160,14 +159,6 @@ function expectGenericError(message: unknown): void {
 	)
 }
 
-/** Deep-link to a hash route and let the view settle. */
-async function gotoHash(page: Page, hash: string): Promise<void> {
-	await page.goto(`/apps/pipelinq${hash}`)
-	await expect(page.locator('#content-vue')).toBeVisible({ timeout: 15000 })
-	await dismissWalkthrough(page)
-	await dismissSupportDialog(page)
-}
-
 /* ══════════════════════════════════════════════════════════════════════════
  * PerformanceDashboard — src/views/blasts/PerformanceDashboard.vue, mounted at
  * /blasts/performance (src/manifest.d/75-marketing-blasts.json, page
@@ -178,8 +169,9 @@ test.describe('Blast performance dashboard', () => {
 	test('the Overview tab lists blasts with delivery rates in sortable columns', async ({
 		page,
 	}) => {
-		await openApp(page)
-		await gotoHash(page, '/blasts/performance')
+		// One load, not two: openApp() booted the Dashboard and the next
+		// line navigated straight off it.
+		await gotoAppRoute(page, '/blasts/performance')
 
 		const dash = page.locator('.performance-dashboard')
 		await expect(
@@ -310,7 +302,7 @@ test.describe('Blast performance dashboard', () => {
 		})
 
 		try {
-			await gotoHash(page, '/blasts/performance')
+			await gotoAppRoute(page, '/blasts/performance')
 
 			const dash = page.locator('.performance-dashboard')
 			await expect(
@@ -417,7 +409,7 @@ test.describe('Blast performance dashboard', () => {
 		})
 
 		try {
-			await gotoHash(page, '/blasts/performance')
+			await gotoAppRoute(page, '/blasts/performance')
 
 			const dash = page.locator('.performance-dashboard')
 			await expect(
@@ -604,7 +596,7 @@ test.describe('Blast performance dashboard', () => {
 				)
 				.toBe(true)
 
-			await gotoHash(page, '/blasts/performance')
+			await gotoAppRoute(page, '/blasts/performance')
 
 			const dash = page.locator('.performance-dashboard')
 			await expect(
@@ -673,8 +665,9 @@ test.describe('Blasts ledger and wizard', () => {
 	test('the New-blast wizard walks name to segment to template', async ({
 		page,
 	}) => {
-		await openApp(page)
-		await gotoHash(page, '/blasts/new')
+		// One load, not two: openApp() booted the Dashboard and the next
+		// line navigated straight off it.
+		await gotoAppRoute(page, '/blasts/new')
 
 		const form = page.locator('.blast-form')
 		await expect(form.getByRole('heading', { name: 'New blast' })).toBeVisible({
@@ -1544,7 +1537,7 @@ test.describe('Blast monitor', () => {
 		blastId = idOf(made.json)
 		expect(blastId, 'the sending-blast fixture must have an id').toBeTruthy()
 
-		await gotoHash(page, `/blasts/${blastId}/monitor`)
+		await gotoAppRoute(page, `/blasts/${blastId}/monitor`)
 
 		const monitor = page.locator('.blast-monitor')
 		await expect(monitor).toBeVisible({ timeout: 20000 })
@@ -1567,8 +1560,9 @@ test.describe('Blast monitor', () => {
 			blastId,
 			'the previous test must have seeded a sending blast',
 		).toBeTruthy()
-		await openApp(page)
-		await gotoHash(page, `/blasts/${blastId}/monitor`)
+		// One load, not two: openApp() booted the Dashboard and the next
+		// line navigated straight off it.
+		await gotoAppRoute(page, `/blasts/${blastId}/monitor`)
 
 		const monitor = page.locator('.blast-monitor')
 		await expect(monitor).toBeVisible({ timeout: 20000 })
