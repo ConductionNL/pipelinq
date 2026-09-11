@@ -40,8 +40,7 @@ import type { Page } from '@playwright/test'
 import { expect, test } from '@playwright/test'
 import {
 	assertNoHardError,
-	dismissSupportDialog,
-	dismissWalkthrough,
+	gotoAppRoute,
 	navClick,
 	openApp,
 } from '../helpers/pipelinq.ts'
@@ -133,11 +132,10 @@ async function allSubscriptions(page: Page, listId: string): Promise<any[]> {
 async function gotoHash(page: Page, hash: string): Promise<void> {
 	// The app is path-routed, not hash-routed: `/apps/pipelinq#/mailing-lists/x`
 	// loads the default page and drops the rest on the floor, so a test written
-	// that way asserts against the dashboard and never says so.
-	await page.goto(`${APP}${hash.replace(/^#/, '')}`)
-	await expect(page.locator('#content-vue')).toBeVisible({ timeout: 15000 })
-	await dismissWalkthrough(page)
-	await dismissSupportDialog(page)
+	// that way asserts against the dashboard and never says so. gotoAppRoute()
+	// strips a leading `#` for the same reason, and gives the goto an explicit
+	// timeout so a slow load names its own URL.
+	await gotoAppRoute(page, `${APP}${hash.replace(/^#/, '')}`)
 }
 
 /* ══════════════════════════════════════════════════════════════════════════

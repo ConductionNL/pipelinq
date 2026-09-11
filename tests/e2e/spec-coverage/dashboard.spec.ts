@@ -20,21 +20,34 @@ import { expect, test } from '@playwright/test'
 import * as fs from 'fs'
 import * as path from 'path'
 import {
+	APP_LOAD_BUDGET_MS,
 	assertNoHardError,
-	dismissSupportDialog,
-	dismissWalkthrough,
+	gotoAppRoute,
 	openApp,
 } from '../helpers/pipelinq.ts'
 
 /**
- * Deep-link the Operational overview where the request/lead widgets live. Land
- * directly on the hash (then reload so the router boots onto `/operational`) so
+ * Deep-link the Operational overview where the request/lead widgets live, so
  * the Commercial landing widgets never mount.
+ *
+ * The comment that used to stand here said "land directly on the hash, then
+ * reload so the router boots onto /operational". The app has routed on HISTORY
+ * since #1684: the goto below IS a full document load onto `/operational`, and
+ * the reload was a second one.
  */
 async function gotoOperational(page) {
-	await page.goto('/apps/pipelinq/operational')
+	await page.goto('/apps/pipelinq/operational', { timeout: APP_LOAD_BUDGET_MS })
 	await expect(page.locator('#app-navigation-vue')).toBeVisible({ timeout: 15000 })
-	await page.reload()
+	// The reload is only needed when the app is ALREADY mounted: a same-document
+	// route change does not remount the view. On the FIRST navigation of a test
+	// the goto IS a full document load and already mounts the target route, so
+	// reloading there is a second load spent re-rendering what is on screen —
+	// 13 to 23 s on the CI runner, out of a 60 s budget. The same guard, and
+	// the same reasoning, as spec-coverage/declarative-view-system.spec.ts.
+	const alreadyMounted = page.url().includes('/apps/pipelinq')
+	if (alreadyMounted) {
+		await page.reload({ timeout: APP_LOAD_BUDGET_MS })
+	}
 	await page
 		.locator('#content-vue')
 		.waitFor({ state: 'visible', timeout: 15000 })
@@ -127,10 +140,11 @@ function layoutSlotFor(widgetId: string): string {
  * `…/#/operational`, so that single navigation is the whole fixture.
  */
 async function openOperationalInteractive(page: Page): Promise<void> {
-	await page.goto('/apps/pipelinq/operational')
-	await expect(page.locator('#content-vue')).toBeVisible({ timeout: 20000 })
-	await dismissWalkthrough(page)
-	await dismissSupportDialog(page)
+	// settleTimeout 20000 rather than the helper's 15000: that is what this
+	// helper allowed before it was collapsed onto gotoAppRoute, and this file
+	// calls it in nearly every one of its 38 tests. Tightening it here would be
+	// an unmeasured change riding along with a waste fix.
+	await gotoAppRoute(page, '/operational', { settleTimeout: 20000 })
 }
 
 /** The Navi chat widget, scrolled into view and ready for input. */

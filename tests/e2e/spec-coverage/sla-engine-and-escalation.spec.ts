@@ -75,8 +75,7 @@ import type { Page } from '@playwright/test'
 import { expect, test } from '@playwright/test'
 import {
 	assertNoHardError,
-	dismissSupportDialog,
-	dismissWalkthrough,
+	gotoAppRoute,
 	nextcloudErrorPage,
 	openApp,
 } from '../helpers/pipelinq.ts'
@@ -135,11 +134,8 @@ async function seededPolicies(page: Page): Promise<any[]> {
  * instead — `#content-vue` mounted, and Nextcloud's own error chrome absent.
  */
 async function gotoHash(page: Page, hash: string): Promise<void> {
-	await page.goto(`/apps/pipelinq${hash}`)
-	await expect(page.locator('#content-vue')).toBeVisible({ timeout: 15000 })
+	await gotoAppRoute(page, hash)
 	await expect(nextcloudErrorPage(page)).toHaveCount(0)
-	await dismissWalkthrough(page)
-	await dismissSupportDialog(page)
 }
 
 /**
@@ -353,7 +349,8 @@ test.describe('SLA attainment reporting', () => {
 	test('the SLA attainment dashboard page mounts its KPI surface', async ({
 		page,
 	}) => {
-		await openApp(page)
+		// One load, not two: openApp() booted the Dashboard and the next
+		// line navigated straight off it.
 		await gotoHash(page, '/sla/attainment')
 
 		const content = page.locator('#content-vue')
