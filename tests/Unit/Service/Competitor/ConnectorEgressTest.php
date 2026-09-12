@@ -35,6 +35,7 @@ use OCA\Pipelinq\Service\Egress\EgressResult;
 use OCA\Pipelinq\Service\Matomo\MatomoReportService;
 use OCA\Pipelinq\Service\Search\SiteContentCrawler;
 use OCA\Pipelinq\Service\Social\ConnectionAuditService;
+use OCA\Pipelinq\Tests\Unit\Support\FakeSlugResolver;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -44,6 +45,15 @@ use ReflectionClass;
 /**
  * @covers \OCA\Pipelinq\Service\Egress\ConnectorEgress
  * @covers \OCA\Pipelinq\Service\Egress\EgressResult
+ *
+ * `@uses` is not decoration. `beStrictAboutCoverageMetadata` makes a test RISKY
+ * when it executes a class this block does not name, and `failOnRisky` turns
+ * that into a red suite. `resolveCallService()` now runs through FleetAppId, and
+ * no local run can show it: the check only fires with a coverage driver, which
+ * is not installed here.
+ *
+ * @uses \OCA\Pipelinq\Support\FleetAppId
+ * @uses \OCA\Pipelinq\Service\ConnectorSourceRegister
  */
 class ConnectorEgressTest extends TestCase {
 
@@ -64,6 +74,7 @@ class ConnectorEgressTest extends TestCase {
 		return new ConnectorEgress(
 			container: $container,
 			appConfig: $appConfig,
+			connectorRegister: FakeSlugResolver::connectorRegister(),
 			logger: $this->createMock(LoggerInterface::class)
 		);
 	}//end egress()

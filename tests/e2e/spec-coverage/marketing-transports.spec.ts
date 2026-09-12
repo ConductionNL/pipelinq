@@ -23,11 +23,7 @@
  * RENDERING of a cached verdict is what gets tested, not DNS itself.
  */
 import { expect, test } from '@playwright/test'
-import {
-	dismissSupportDialog,
-	dismissWalkthrough,
-	openApp,
-} from '../helpers/pipelinq.ts'
+import { gotoAppRoute } from '../helpers/pipelinq.ts'
 
 test.describe('Deliverability panel', () => {
 	// @e2e openspec/changes/marketing-mail-transports/specs/marketing-mail-transports/spec.md#requirement-the-deliverability-panel-shows-spf-dkim-and-dmarc-status-per-sender-domain
@@ -69,13 +65,12 @@ test.describe('Blast wizard transport step', () => {
 	test('the wizard offers a transport step, pre-selected to the default transport', async ({
 		page,
 	}) => {
-		await openApp(page)
 		// The app is path-routed: a '#/blasts/new' hash loads the default page
 		// and the wizard never mounts.
-		await page.goto('/index.php/apps/pipelinq/blasts/new')
-		await expect(page.locator('#content-vue')).toBeVisible({ timeout: 15000 })
-		await dismissWalkthrough(page)
-		await dismissSupportDialog(page)
+		//
+		// One load, not two: the openApp() that used to stand here booted the
+		// Dashboard and the next line navigated straight off it.
+		await gotoAppRoute(page, '/index.php/apps/pipelinq/blasts/new')
 
 		const form = page.locator('.blast-form')
 		await expect(form.getByRole('heading', { name: 'New blast' })).toBeVisible({

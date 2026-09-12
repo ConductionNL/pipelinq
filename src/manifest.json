@@ -24,8 +24,10 @@
 			{
 				"id": "demo-data",
 				"type": "choice",
+				"display": "cards",
 				"optionsSource": "datasets",
 				"configKey": "demo_dataset",
+				"required": false,
 				"title": "Load example data?",
 				"body": "Example data fills the lists, dashboards and the 360 degree client view so you can see the app working straight away. Pick \"None\" on a production install."
 			},
@@ -4683,8 +4685,10 @@
 		{
 			"id": "FeaturesRoadmap",
 			"route": "/features-roadmap",
-			"type": "roadmap",
+			"type": "custom",
+			"component": "FeaturesRoadmapView",
 			"title": "Features & roadmap",
+			"_note": "Was type:\"roadmap\". The library's CnFeaturesAndRoadmapPage renders exactly two tabs and declares zero slots, so the help desk capability comparison could not be added from the manifest. FeaturesRoadmapView renders that library page unchanged as its default section and adds the comparison as a second one. Revert to type:\"roadmap\" the day the library grows a slot or a comparison tab. Same wall dossiq hit, same fix.",
 			"config": {
 				"documentationUrl": "https://pipelinq.conduction.nl"
 			}

@@ -21,9 +21,21 @@
  * `NEXTCLOUD_URL` is kept because this repo's own docs and the docs-capture
  * project already document it.
  *
+ * NAMING THE SHARED INSTANCE
+ * --------------------------
+ * Strict about inventing a target is not the same as safe: an explicit
+ * `PLAYWRIGHT_BASE_URL=http://localhost:8080` used to be accepted without a
+ * word. The resolved value now goes through `assertInstancePermitted`, which
+ * refuses loopback port 80 or 8080 off CI unless the run also set
+ * PIPELINQ_E2E_ALLOW_SHARED_INSTANCE (or the fleet-wide
+ * E2E_ALLOW_SHARED_INSTANCE) to that same origin. See
+ * tests/e2e/shared-instance.ts.
+ *
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V.
  */
+
+import { assertInstancePermitted } from './shared-instance.ts'
 
 /**
  * Resolve the base URL of the Nextcloud instance under test.
@@ -61,5 +73,5 @@ export function resolveBaseUrl(): string {
 				+ 'the SHARED dev container.',
 		)
 	}
-	return url.replace(/\/+$/, '')
+	return assertInstancePermitted(url.replace(/\/+$/, ''))
 }

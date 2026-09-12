@@ -36,6 +36,8 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Marketing\Transport;
 
+use OCA\Pipelinq\Service\ConnectorSourceRegister;
+use OCA\Pipelinq\Support\FleetAppId;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -52,13 +54,13 @@ use Throwable;
  */
 final class ConnectorSourceTransport implements TransportInterface {
 	/**
-	 * OpenConnector's own OpenRegister register slug (Source objects live
-	 * here — the register slug is frozen even where the app id has moved).
-	 */
-	private const OPENCONNECTOR_REGISTER_SLUG = 'openconnector';
-
-	/**
-	 * OpenConnector's Source schema slug within {@see OPENCONNECTOR_REGISTER_SLUG}.
+	 * OpenConnector's Source schema slug.
+	 *
+	 * The register slug that used to sit beside this one said `openconnector`
+	 * and claimed to be "frozen even where the app id has moved". It was not:
+	 * Integriq renames the register row per instance, so that slug is asked for
+	 * at call time through {@see ConnectorSourceRegister}. Schema slugs were not
+	 * renamed, so this one stays a literal.
 	 */
 	private const OPENCONNECTOR_SOURCE_SCHEMA_SLUG = 'source';
 
@@ -77,12 +79,14 @@ final class ConnectorSourceTransport implements TransportInterface {
 	 *
 	 * @param ContainerInterface $container DI container (OpenRegister/OpenConnector resolution).
 	 * @param LoggerInterface $logger The logger.
+	 * @param ConnectorSourceRegister $connectorRegister Which slug the source register answers to here.
 	 * @param string $connectorSourceId OpenConnector source UUID or slug.
 	 * @param string $provider The bulk provider name (one of {@see KNOWN_PROVIDERS}), or empty for legacy transports.
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
 		private readonly LoggerInterface $logger,
+		private readonly ConnectorSourceRegister $connectorRegister,
 		private readonly string $connectorSourceId,
 		private readonly string $provider,
 	) {
@@ -103,7 +107,22 @@ final class ConnectorSourceTransport implements TransportInterface {
 			return new SendResult(accepted: false, error: 'no-connector-source');
 		}
 
-		$source = $this->resolveSource();
+		// Two different failures, kept apart in the result. `connector-register-absent`
+		// means Integriq's Source register is not on this instance under any slug it
+		// has answered to, which is an operator's provisioning problem;
+		// `connector-source-not-found` means the register IS here and this source id
+		// is not in it, which is a configuration problem on the transport row. Before
+		// this branch existed the first case read as the second, because a read
+		// against a slug nothing answers to returns no source.
+		$registerSlug = $this->connectorRegister->slugOrNull(
+			operation: 'ConnectorSourceTransport.send',
+			sourceId: $this->connectorSourceId
+		);
+		if ($registerSlug === null) {
+			return new SendResult(accepted: false, error: 'connector-register-absent');
+		}
+
+		$source = $this->resolveSource(registerSlug: $registerSlug);
 		if ($source === null) {
 			return new SendResult(accepted: false, error: 'connector-source-not-found');
 		}
@@ -149,10 +168,13 @@ final class ConnectorSourceTransport implements TransportInterface {
 	/**
 	 * Resolve the OpenConnector Source object addressed by `connectorSourceId`.
 	 *
+	 * @param string $registerSlug The slug this instance's Source register answers
+	 *                             to, already resolved by the caller.
+	 *
 	 * @return array<string, mixed>|object|null The resolved Source entity, or
 	 *                                           null when unavailable/not found.
 	 */
-	private function resolveSource(): array|object|null {
+	private function resolveSource(string $registerSlug): array|object|null {
 		$objectService = $this->resolveObjectService();
 		if ($objectService === null) {
 			return null;
@@ -161,7 +183,7 @@ final class ConnectorSourceTransport implements TransportInterface {
 		try {
 			$source = $objectService->find(
 				id: $this->connectorSourceId,
-				register: self::OPENCONNECTOR_REGISTER_SLUG,
+				register: $registerSlug,
 				schema: self::OPENCONNECTOR_SOURCE_SCHEMA_SLUG,
 			);
 		} catch (Throwable $e) {
@@ -392,13 +414,20 @@ final class ConnectorSourceTransport implements TransportInterface {
 	 * @return object|null
 	 */
 	private function resolveCallService(): ?object {
-		try {
-			$callService = $this->container->get('OCA\\OpenConnector\\Service\\CallService');
-		} catch (Throwable $e) {
-			$this->logger->error(
-				'ConnectorSourceTransport.resolveCallService: unavailable',
-				['exception' => $e->getMessage()]
-			);
+		// Asked for by CANONICAL app name, never by a literal FQCN. The
+		// connector app renamed its PSR-4 root from `OCA\OpenConnector` to
+		// `OCA\Integriq` with no compatibility alias, and both roots are in
+		// the field. Naming one of them meant the lookup threw on half the
+		// fleet, straight into a catch that reads as "the optional app is not
+		// installed" — every campaign send through a connector source went
+		// dark with one log line and no error.
+		$callService = FleetAppId::getService(
+			container: $this->container,
+			canonical: 'integriq',
+			relative: 'Service\CallService'
+		);
+		if ($callService === null) {
+			$this->logger->error('ConnectorSourceTransport.resolveCallService: unavailable');
 			return null;
 		}
 

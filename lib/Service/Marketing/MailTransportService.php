@@ -34,6 +34,7 @@ namespace OCA\Pipelinq\Service\Marketing;
 
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\ArticleService;
+use OCA\Pipelinq\Service\ConnectorSourceRegister;
 use OCA\Pipelinq\Service\Marketing\Transport\ConnectorSourceTransport;
 use OCA\Pipelinq\Service\Marketing\Transport\InstanceMailerTransport;
 use OCA\Pipelinq\Service\Marketing\Transport\MailAccountTransport;
@@ -57,9 +58,13 @@ use Throwable;
  *  enforcement + adapter dispatch + persistence live together by design, matching
  *  BlastService's own precedent for the send pipeline it replaces; splitting would
  *  only scatter one send-orchestration concern across several files.
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Measured 13, threshold 13. Wires
- *  the three transport adapters plus OpenRegister/tracking/app-config collaborators
- *  a send-orchestration service genuinely needs.
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Measured 15, threshold 13. Wires
+ *  the three transport adapters plus the OpenRegister/tracking/app-config
+ *  collaborators a send-orchestration service genuinely needs, and now the
+ *  connector-source register too. This line read "Measured 13, threshold 13" and
+ *  had been wrong for some time: the value was already 14 before this change, and
+ *  a suppression that quotes a number nobody re-measures says less than no number
+ *  at all. Re-measure by deleting this tag and running `composer phpmd`.
  */
 class MailTransportService {
 	/**
@@ -100,6 +105,7 @@ class MailTransportService {
 	 * @param IAppConfig $appConfig Pipelinq app config.
 	 * @param IMailer $mailer Nextcloud's own mailer (instance-mailer transport).
 	 * @param ArticleService $articleService Article reader and `{{articles}}` renderer.
+	 * @param ConnectorSourceRegister $connectorRegister Which slug the source register answers to here.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
@@ -107,6 +113,7 @@ class MailTransportService {
 		private IAppConfig $appConfig,
 		private IMailer $mailer,
 		private ArticleService $articleService,
+		private ConnectorSourceRegister $connectorRegister,
 		private LoggerInterface $logger,
 	) {
 	}//end __construct()
@@ -355,6 +362,7 @@ class MailTransportService {
 				'provider' => new ConnectorSourceTransport(
 					container: $this->container,
 					logger: $this->logger,
+					connectorRegister: $this->connectorRegister,
 					connectorSourceId: (string)($transport['connectorSourceId'] ?? ''),
 					provider: (string)($transport['provider'] ?? ''),
 				),
@@ -635,8 +643,26 @@ class MailTransportService {
 			return null;
 		}
 
+		// The register is asked for, never assumed. A null here means the sender
+		// falls back to DEFAULT_RATE_LIMIT_PER_SECOND, which is exactly what an
+		// unread source used to produce silently: reading with a slug this instance
+		// does not carry returns no source and no declared limit, and a blast then
+		// sends at 100/s against a provider that may allow far less.
+		// ConnectorSourceRegister writes the warning that says so.
+		$registerSlug = $this->connectorRegister->slugOrNull(
+			operation: 'MailTransportService.readSourceRateLimit',
+			sourceId: $connectorSourceId
+		);
+		if ($registerSlug === null) {
+			return null;
+		}
+
 		try {
-			$source = $objectService->find(id: $connectorSourceId, register: 'openconnector', schema: 'source');
+			$source = $objectService->find(
+				id: $connectorSourceId,
+				register: $registerSlug,
+				schema: ConnectorSourceRegister::SOURCE_SCHEMA
+			);
 		} catch (Throwable $e) {
 			return null;
 		}
