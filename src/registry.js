@@ -204,6 +204,11 @@ import ExportJobFormView from './views/export/ExportJobForm.vue'
 import ExportJobsView from './views/export/ExportJobs.vue'
 import ExportRunDetailView from './views/export/ExportRunDetail.vue'
 import ExportRunsView from './views/export/ExportRuns.vue'
+// --- Features & roadmap page. Was type:"roadmap", dispatched straight to
+//     the library's CnFeaturesAndRoadmapPage, which renders two tabs and
+//     declares no slots. FeaturesRoadmapView renders that page unchanged as
+//     its first section and adds the help desk comparison as a second. ---
+import FeaturesRoadmapView from './views/FeaturesRoadmapView.vue'
 // --- Flows (ADR-110 Decision 4). The list and the canvas are the shared
 //     `flows` / `flow-detail` manifest page types; only the SIDEBAR is an
 //     app component, because CnFlowSidebar has to mount in the NC app
@@ -299,8 +304,6 @@ import WerkplekHeaderActions from './views/werkplek/widgets/WerkplekHeaderAction
 //     agent-availability toggle. ---
 import { createWithContact } from './services/contactSyncApi.js'
 
-// --- Features & Roadmap page (lib's CnFeaturesAndRoadmapView wrapper). ---
-
 /*
  * Grid metadata required for every kind:"widget" entry by the ADR-036
  * registry validator in CnAppRoot. pipelinq's dashboard positions widgets
@@ -371,6 +374,12 @@ const registry = {
 		component: ProspectsView,
 		_note: 'Full-page expansion of ProspectWidget (refactor-pipelinq-ia-alignment): scored-prospect list with sortable columns + convert-to-lead action over the prospect Pinia store; lib has no declarative type for scored external-source enrichment.',
 	},
+	FeaturesRoadmapView: {
+		kind: 'page',
+		component: FeaturesRoadmapView,
+		_note: 'Wraps the library\'s CnFeaturesAndRoadmapPage so the page can carry a second section, the help desk capability comparison. The library component declares no slots, so the comparison cannot be added from the manifest; the page moved from type:"roadmap" to type:"custom" for that reason and should move back the day the library grows a slot. Ported from dossiq, which hit the same wall first.',
+	},
+
 	StoreGallery: {
 		kind: 'page',
 		component: StoreGallery,

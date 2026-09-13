@@ -39,6 +39,7 @@ use OCA\Pipelinq\Service\CampaignLinkDecorator;
 use OCA\Pipelinq\Service\CampaignPerformanceService;
 use OCA\Pipelinq\Service\Marketing\MailTransportService;
 use OCA\Pipelinq\Service\SegmentService;
+use OCA\Pipelinq\Tests\Unit\Support\FakeSlugResolver;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IAppConfig;
@@ -287,6 +288,7 @@ class BlastControllerTest extends TestCase {
 				appConfig: $appConfig,
 				mailer: $this->createMock(IMailer::class),
 				articleService: $this->createMock(ArticleService::class),
+				connectorRegister: FakeSlugResolver::connectorRegister(),
 				logger: $logger,
 			),
 			logger: $logger,

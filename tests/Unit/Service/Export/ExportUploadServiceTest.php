@@ -41,6 +41,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Adapter\ExportSinkInterface;
 use OCA\Pipelinq\Adapter\ExportSinkRegistry;
 use OCA\Pipelinq\Service\Export\ExportUploadService;
+use OCA\Pipelinq\Tests\Unit\Support\FakeSlugResolver;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -71,6 +72,7 @@ class ExportUploadServiceTest extends TestCase {
 			appConfig: $appConfig,
 			objectService: $objectService ?? $this->createMock(ObjectServiceInterface::class),
 			sinks: $registry,
+			connectorRegister: FakeSlugResolver::connectorRegister(),
 			logger: $logger,
 		);
 		// Never sleep in tests.
@@ -414,9 +416,13 @@ class ExportUploadServiceTest extends TestCase {
 		$this->assertCount(1, $sink->uploads);
 		$this->assertSame('super-secret-key', $sink->uploads[0]['apikey']);
 
+		// This asserted 'openconnector' until the slug resolution landed, and it
+		// passed for exactly as long as the code pinned the same word. It now
+		// names the slug the INSTANCE carries: service() wires a resolver
+		// describing a migrated instance, so the read must go to `integriq`.
 		$this->assertNotEmpty($calls);
 		foreach ($calls as $call) {
-			$this->assertSame('openconnector', $call['register']);
+			$this->assertSame('integriq', $call['register']);
 			$this->assertSame('source', $call['schema']);
 			$this->assertFalse($call['_render'], 'the source must be read RAW so write-only secret fields survive');
 		}

@@ -48,6 +48,44 @@ if ($autoloader instanceof \Composer\Autoload\ClassLoader) {
 	$autoloader->addPsr4('OC\\', __DIR__ . '/Stubs/OC/');
 }
 
+// OpenRegister's PUBLISHED register-slug contracts, loaded from the hydra-gates
+// package rather than copied into this tree.
+//
+// `RegisterSlugResolution` and `RegisterSlugResolverInterface` are the pair
+// behind the register-slug resolution ADR-084 settled for `ObjectServiceInterface`.
+// Unlike the two `Object*` contracts, this repository keeps no copy of them under
+// tests/Stubs/, so the `OCA\OpenRegister\` prefix registered above finds nothing
+// and a test naming either type would die with "class not found". Deliberately no
+// copy: a contract copied here drags OpenRegister's own `@spec` annotations with
+// it, and gate 46 (`spec-anchor-existence`) resolves every `@spec` target against
+// THIS repository, where that spec does not exist. Measured: the two files
+// produced seven blocking findings before they were removed.
+//
+// They ship in conduction/hydra-gates from v1.18.0 (ConductionNL/.github#739,
+// which merged after v1.17.0 was cut), which is why composer.json asks for
+// ^1.18.0 rather than ^1.17.0. Verified 2026-09-10: the vendored copies are byte
+// identical to openregister's own `lib/Contract/`, which is what gate 67
+// (`openregister-contract-parity`) exists to keep true.
+//
+// The guard asks BOTH questions on purpose. `RegisterSlugResolution` is a CLASS
+// and `RegisterSlugResolverInterface` an INTERFACE, and `interface_exists()`
+// answers false for a loaded class. Asking only that would re-require a file
+// already in memory, and a duplicate declaration is a fatal, not a no-op.
+foreach (['RegisterSlugResolution', 'RegisterSlugResolverInterface'] as $pipelinqContract) {
+	$pipelinqContractFqcn = '\\OCA\\OpenRegister\\Contract\\' . $pipelinqContract;
+	if (interface_exists($pipelinqContractFqcn) === true || class_exists($pipelinqContractFqcn) === true) {
+		continue;
+	}
+
+	$pipelinqContractFile = __DIR__ . '/../vendor/conduction/hydra-gates/hydra-gates/contracts/'
+		. $pipelinqContract . '.php';
+	if (file_exists($pipelinqContractFile) === true) {
+		require_once $pipelinqContractFile;
+	}
+}
+
+unset($pipelinqContract, $pipelinqContractFqcn, $pipelinqContractFile);
+
 if ($autoloader instanceof \Composer\Autoload\ClassLoader) {
 	if (is_dir(__DIR__ . '/../vendor/nextcloud/ocp/OCP') === true) {
 		$autoloader->addPsr4('OCP\\', __DIR__ . '/../vendor/nextcloud/ocp/OCP/');

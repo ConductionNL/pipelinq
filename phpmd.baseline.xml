@@ -60,7 +60,6 @@
   <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/Service/LeadService.php" method="createLead"/>
   <violation rule="PHPMD\Rule\Design\NpathComplexity" file="lib/Service/LeadService.php" method="createLead"/>
   <violation rule="PHPMD\Rule\Design\TooManyPublicMethods" file="lib/Service/NotificationService.php"/>
-  <violation rule="PHPMD\Rule\CleanCode\StaticAccess" file="lib/Service/Payment/BrokerHttpTransport.php"/>
   <violation rule="PHPMD\Rule\CyclomaticComplexity" file="lib/Service/Payment/CurlHttpTransport.php" method="request"/>
   <violation rule="PHPMD\Rule\Design\NpathComplexity" file="lib/Service/Payment/CurlHttpTransport.php" method="request"/>
   <violation rule="PHPMD\Rule\CleanCode\StaticAccess" file="lib/Service/PosPaymentService.php"/>

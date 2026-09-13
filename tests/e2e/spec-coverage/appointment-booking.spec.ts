@@ -27,8 +27,7 @@ import { expect, test } from '@playwright/test'
 import {
 	assertNoHardError,
 	clickHeaderAction,
-	dismissSupportDialog,
-	dismissWalkthrough,
+	gotoAppRoute,
 	navClick,
 	openApp,
 } from '../helpers/pipelinq.ts'
@@ -46,23 +45,18 @@ function hoursFromNow(hours: number): string {
 	return d.toISOString()
 }
 
-/**
- * Deep-link to a hash route and wait for the app body to settle.
+/*
+ * Deep-linking. The declarative `type: "detail"` pages (ClientDetail
+ * `/clients/:id`, BookingDetail `/bookings/:id`) are not reachable by a row
+ * click — the Clients list row toggles the filter sidebar (see
+ * workflows/client-crud.spec.ts) and the Bookings ledger sets
+ * `rowClickToView: false`. A deep link is the same navigation the manifest
+ * `actions[].handler: "navigate"` performs.
  *
- * The declarative `type: "detail"` pages (ClientDetail `/clients/:id`,
- * BookingDetail `/bookings/:id`) are not reachable by a row click — the Clients
- * list row toggles the filter sidebar (see workflows/client-crud.spec.ts) and
- * the Bookings ledger sets `rowClickToView: false`. A hash goto is the same
- * navigation the manifest `actions[].handler: "navigate"` performs, and it is
- * the established pattern in this suite (rapportage.spec.ts,
- * spec-coverage/outbound-messaging.spec.ts).
+ * The local wrapper this file used to carry is gone: `gotoAppRoute()` in
+ * ../helpers/pipelinq.ts does the same thing, in one document load, with an
+ * explicit goto timeout. Four other specs carried their own copy of it too.
  */
-async function gotoHash(page: Page, hash: string): Promise<void> {
-	await page.goto(`/apps/pipelinq${hash}`)
-	await expect(page.locator('#content-vue')).toBeVisible({ timeout: 15000 })
-	await dismissWalkthrough(page)
-	await dismissSupportDialog(page)
-}
 
 // @e2e openspec/specs/appointment-booking/spec.md#service-list-shows-all-services-with-filters
 test('Services: the admin service catalogue index renders its list surface', async ({
@@ -224,8 +218,9 @@ test.describe('Booking admin surfaces (seeded)', () => {
 	test('a customer with no bookings gets an empty state, not an error', async ({
 		page,
 	}) => {
-		await openApp(page)
-		await gotoHash(page, `/clients/${customerId}`)
+		// One load, not two. The openApp() that used to stand here booted the
+		// Dashboard and the next line navigated straight off it.
+		await gotoAppRoute(page, `/clients/${customerId}`)
 
 		const content = page.locator('#content-vue')
 		await expect(
@@ -267,8 +262,13 @@ test.describe('Booking admin surfaces (seeded)', () => {
 		})
 		pastBookingId = String(past.id || past['@self']?.id)
 
-		await openApp(page)
-		await gotoHash(page, `/clients/${customerId}`)
+		// One load, not two. This test is the one that kept losing the race
+		// against the 60 s budget (run 34532703820, and green on the identical
+		// head in 34532768410 — flaky, not broken). It seeded three bookings
+		// over the network, then booted the Dashboard through openApp(), then
+		// navigated straight off it to the customer. Two full loads plus the
+		// seeding left nothing for the page under test on a slow runner.
+		await gotoAppRoute(page, `/clients/${customerId}`)
 
 		// BookingsCard is a bodyWidget on the declarative ClientDetail page
 		// (src/manifest.json, widget id "bookings").
@@ -313,7 +313,7 @@ test.describe('Booking admin surfaces (seeded)', () => {
 		// with no failed assertion.
 		const content = page.locator('#content-vue')
 
-		await gotoHash(page, `/bookings/${futureBookingId}`)
+		await gotoAppRoute(page, `/bookings/${futureBookingId}`)
 		await expect(
 			content.getByRole('button', { name: 'Reschedule' }),
 		).toBeVisible({ timeout: 25000 })
@@ -322,7 +322,7 @@ test.describe('Booking admin surfaces (seeded)', () => {
 		).toBeVisible()
 		await assertNoHardError(page)
 
-		await gotoHash(page, `/bookings/${pastBookingId}`)
+		await gotoAppRoute(page, `/bookings/${pastBookingId}`)
 		await expect(
 			content.getByRole('button', { name: 'Mark completed' }),
 		).toBeVisible({ timeout: 25000 })

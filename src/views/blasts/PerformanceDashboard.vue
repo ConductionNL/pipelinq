@@ -380,6 +380,13 @@ export default {
 			trafficState: 'loading',
 			/** Whether the Attribution tab's per-blast reads have been started. */
 			attributionRequested: false,
+			/**
+			 * The in-flight page load, so a tab that needs the blast list can
+			 * wait for it rather than race it.
+			 *
+			 * @type {Promise<void>|null}
+			 */
+			pageLoad: null,
 			overviewSortKey: 'sent',
 			overviewSortOrder: 'desc',
 		}
@@ -504,8 +511,20 @@ export default {
 		},
 	},
 
+	/**
+	 * Start the page load, and HOLD it.
+	 *
+	 * The Attribution tab's fan-out iterates the blast list this fetches, so
+	 * it has to be able to wait for it rather than race it. Firing and
+	 * forgetting is what let the tab settle on "No blasts yet" about an
+	 * instance with plenty; see loadAttribution().
+	 *
+	 * @return {void}
+	 *
+	 * @spec openspec/specs/marketing-analytics/spec.md#requirement-attribution-dashboard-sums-revenue-per-blast
+	 */
 	mounted() {
-		this.fetchAll()
+		this.pageLoad = this.fetchAll()
 	},
 
 	methods: {
@@ -563,13 +582,27 @@ export default {
 		 *
 		 * @spec openspec/specs/marketing-analytics/spec.md#requirement-attribution-dashboard-sums-revenue-per-blast
 		 */
-		loadAttribution() {
+		async loadAttribution() {
 			if (this.attributionRequested) {
 				return
 			}
 			this.attributionRequested = true
-			this.fetchAttributionRows()
-			this.fetchTrafficRows()
+
+			// 🔴 THE LIST HAS TO BE THERE FIRST. Both fan-outs iterate
+			// `this.blasts`, and a reader who reaches the Attribution tab
+			// before the page load lands iterates nothing: zero requests go
+			// out, and the blocks settle on "No blasts yet" about an instance
+			// that has plenty. `attributionRequested` then latches, so the
+			// wrong answer is the final one.
+			//
+			// Measured on the development run of 2026-09-07: the page read
+			// `GET /api/blasts?limit=50` and got a full list, made ZERO
+			// `/performance` calls, and reported no blasts. It is a race, so
+			// it fails the way races do, which is why the earlier fix for the
+			// spinner did not surface it.
+			await this.pageLoad
+
+			await Promise.all([this.fetchAttributionRows(), this.fetchTrafficRows()])
 		},
 
 		/**

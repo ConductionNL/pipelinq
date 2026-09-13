@@ -28,6 +28,7 @@ use OCA\Pipelinq\Service\Marketing\MailTransportService;
 use OCA\Pipelinq\Service\SchemaMapService;
 use OCA\Pipelinq\Service\Marketing\SegmentSignalService;
 use OCA\Pipelinq\Service\SegmentService;
+use OCA\Pipelinq\Tests\Unit\Support\FakeSlugResolver;
 use OCP\IAppConfig;
 use OCP\ICache;
 use OCP\ICacheFactory;
@@ -293,6 +294,7 @@ class BlastWorkflowTest extends TestCase {
 			$this->appConfig,
 			$this->createMock(IMailer::class),
 			$this->createMock(ArticleService::class),
+			FakeSlugResolver::connectorRegister(),
 			$this->logger,
 		);
 		$blastService = new BlastService($this->container,

@@ -154,5 +154,26 @@
              UndefinedClass psalm reported — this line was simply missing, so psalm
              never read them. phpstan.neon had the same omission. -->
         <directory name="tests/Stubs" />
+        <!-- OpenRegister's published contracts, shipped by
+             conduction/hydra-gates v1.18.0 and held byte identical to
+             openregister's own lib/Contract/ by gate 67
+             (openregister-contract-parity).
+
+             Scanned rather than suppressed. The UndefinedClass suppression this
+             replaces argued that the vendored copies could not help, "because
+             `vendor` is under `ignoreFiles`, so psalm never scans them for
+             symbols". That is a real rule about `projectFiles` and it does not
+             reach here: `extraFiles` is a separate scope, and its whole job is
+             to make symbols visible without analysing them. Measured both ways
+             on this checkout. With this line psalm exits 0 and reports no
+             UndefinedClass; without it psalm exits 2 with three, at
+             Application.php:161 and ConnectorSourceRegister.php:87 and :118.
+
+             The difference is not cosmetic. A suppression accepts any spelling,
+             including RegisterSlugResolution::isReslved(); a scanned contract
+             makes psalm check the resolution branch against the real signature.
+             Read out of vendor, never copied: a copy of a published contract
+             drifts, and the drift still resolves. -->
+        <directory name="vendor/conduction/hydra-gates/hydra-gates/contracts" />
     </extraFiles>
 </psalm>

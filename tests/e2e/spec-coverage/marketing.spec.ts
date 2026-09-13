@@ -32,8 +32,7 @@ import { expect, test } from '@playwright/test'
 import {
 	assertNoHardError,
 	clickHeaderAction,
-	dismissSupportDialog,
-	dismissWalkthrough,
+	gotoAppRoute,
 	navClick,
 	openApp,
 	revealNavEntry,
@@ -160,14 +159,6 @@ function expectGenericError(message: unknown): void {
 	)
 }
 
-/** Deep-link to a hash route and let the view settle. */
-async function gotoHash(page: Page, hash: string): Promise<void> {
-	await page.goto(`/apps/pipelinq${hash}`)
-	await expect(page.locator('#content-vue')).toBeVisible({ timeout: 15000 })
-	await dismissWalkthrough(page)
-	await dismissSupportDialog(page)
-}
-
 /* ══════════════════════════════════════════════════════════════════════════
  * PerformanceDashboard — src/views/blasts/PerformanceDashboard.vue, mounted at
  * /blasts/performance (src/manifest.d/75-marketing-blasts.json, page
@@ -178,8 +169,9 @@ test.describe('Blast performance dashboard', () => {
 	test('the Overview tab lists blasts with delivery rates in sortable columns', async ({
 		page,
 	}) => {
-		await openApp(page)
-		await gotoHash(page, '/blasts/performance')
+		// One load, not two: openApp() booted the Dashboard and the next
+		// line navigated straight off it.
+		await gotoAppRoute(page, '/blasts/performance')
 
 		const dash = page.locator('.performance-dashboard')
 		await expect(
@@ -310,7 +302,7 @@ test.describe('Blast performance dashboard', () => {
 		})
 
 		try {
-			await gotoHash(page, '/blasts/performance')
+			await gotoAppRoute(page, '/blasts/performance')
 
 			const dash = page.locator('.performance-dashboard')
 			await expect(
@@ -417,7 +409,7 @@ test.describe('Blast performance dashboard', () => {
 		})
 
 		try {
-			await gotoHash(page, '/blasts/performance')
+			await gotoAppRoute(page, '/blasts/performance')
 
 			const dash = page.locator('.performance-dashboard')
 			await expect(
@@ -562,9 +554,17 @@ test.describe('Blast performance dashboard', () => {
 			// above, which all returned under 300. Same cause as the sibling
 			// case in marketing-campaign-attribution.spec.ts.
 			//
-			// Polling for THIS blast by id, not merely for a non-empty list: an
-			// older blast would satisfy the list while this test's own rows are
-			// still invisible.
+			// ⚠️ AND THE LIST IS NOT ENOUGH. The first version of this waited
+			// for the blast to appear in `GET /api/blasts`, which it did — and
+			// the table still never rendered. The dashboard only keeps a row
+			// when the blast's OWN attribution read comes back non-zero
+			// (`dealCount > 0 || attributedValue > 0` in fetchAttributionRows),
+			// so the attributionLink objects have to be visible to
+			// `GET /api/blasts/:id/attribution`, not merely written.
+			//
+			// So poll the read that decides, and poll it for THIS blast: an
+			// older blast with attribution would satisfy a weaker check while
+			// this test's own rows are still invisible.
 			await expect
 				.poll(
 					async () => {
@@ -574,20 +574,29 @@ test.describe('Blast performance dashboard', () => {
 							`${APP}/api/blasts?limit=50`,
 						)
 						const rows = listed.json?.results ?? listed.json?.data ?? []
-						return (
+						const isListed =
 							Array.isArray(rows)
 							&& rows.some((r: any) => idOf(r) === blastId)
+						if (isListed === false) {
+							return false
+						}
+
+						const attributed = await api(
+							page,
+							'GET',
+							`${APP}/api/blasts/${blastId}/attribution`,
 						)
+						return (attributed.json?.dealCount || 0) > 0
 					},
 					{
 						timeout: 30_000,
 						message:
-							'the minted blast never appeared in GET /api/blasts, so the dashboard could not have attributed anything to it',
+							'GET /api/blasts/:id/attribution never reported a deal for the minted blast, so the dashboard would have kept no row and rendered no table',
 					},
 				)
 				.toBe(true)
 
-			await gotoHash(page, '/blasts/performance')
+			await gotoAppRoute(page, '/blasts/performance')
 
 			const dash = page.locator('.performance-dashboard')
 			await expect(
@@ -656,8 +665,9 @@ test.describe('Blasts ledger and wizard', () => {
 	test('the New-blast wizard walks name to segment to template', async ({
 		page,
 	}) => {
-		await openApp(page)
-		await gotoHash(page, '/blasts/new')
+		// One load, not two: openApp() booted the Dashboard and the next
+		// line navigated straight off it.
+		await gotoAppRoute(page, '/blasts/new')
 
 		const form = page.locator('.blast-form')
 		await expect(form.getByRole('heading', { name: 'New blast' })).toBeVisible({
@@ -1527,7 +1537,7 @@ test.describe('Blast monitor', () => {
 		blastId = idOf(made.json)
 		expect(blastId, 'the sending-blast fixture must have an id').toBeTruthy()
 
-		await gotoHash(page, `/blasts/${blastId}/monitor`)
+		await gotoAppRoute(page, `/blasts/${blastId}/monitor`)
 
 		const monitor = page.locator('.blast-monitor')
 		await expect(monitor).toBeVisible({ timeout: 20000 })
@@ -1550,8 +1560,9 @@ test.describe('Blast monitor', () => {
 			blastId,
 			'the previous test must have seeded a sending blast',
 		).toBeTruthy()
-		await openApp(page)
-		await gotoHash(page, `/blasts/${blastId}/monitor`)
+		// One load, not two: openApp() booted the Dashboard and the next
+		// line navigated straight off it.
+		await gotoAppRoute(page, `/blasts/${blastId}/monitor`)
 
 		const monitor = page.locator('.blast-monitor')
 		await expect(monitor).toBeVisible({ timeout: 20000 })
