@@ -1,6 +1,6 @@
 # Tasks: contact-moments-on-pipelinq-schema
 
-## Phase 0 — Schema
+## Phase 0: Schema
 
 - [ ] 0.1 Add `direction` to the contact moment facet in `lib/Settings/register.d/98-contactmoment-direction.json` with the per-type required guard (V1)
   - **spec_ref**: `specs/contactmomenten/spec.md#requirement-direction-is-a-first-class-field-req-cmd-001`
@@ -9,13 +9,13 @@
   - **spec_ref**: `specs/contactmomenten/spec.md#requirement-a-contact-moment-references-a-case-semantically-req-cmd-002`
   - **files**: `lib/Settings/register.d/99-unify-ticket-supertype.json`
 
-## Phase 1 — Migration
+## Phase 1: Migration
 
 - [ ] 1.1 Add `Repair\MigrateContactMomentDirection`, idempotent, mapping both spellings; register in `appinfo/info.xml` (V1)
   - **spec_ref**: `specs/contactmomenten/spec.md#requirement-direction-is-a-first-class-field-req-cmd-001`
   - **files**: `lib/Repair/MigrateContactMomentDirection.php`, `appinfo/info.xml`
 
-## Phase 2 — Leaves
+## Phase 2: Leaves
 
 - [ ] 2.1 Add `lib/Integration/ContactMomentLeafProvider.php` with `list` and `create` through `TicketService`; register on `RegisterLeafProvidersEvent` (V1)
   - **spec_ref**: `specs/contactmomenten/spec.md#requirement-contact-moments-are-a-data-provider-leaf-with-append-req-cmd-003`
@@ -23,7 +23,7 @@
   - **spec_ref**: `specs/contactmomenten/spec.md#requirement-a-panel-renders-the-contact-moments-on-the-host-req-cmd-004`
 - [ ] 2.3 Add the Direction facet to the contactmomenten list view (V1)
 
-## Phase 3 — Quality
+## Phase 3: Quality
 
 - [ ] 3.1 PHPUnit: validation, migration idempotence, resolver stub, provider refusal
 - [ ] 3.2 Playwright `tests/e2e/contact-moments-leaf.spec.ts`; Dutch and English strings; docs with screenshots
