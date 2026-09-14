@@ -78,13 +78,14 @@ class ConnectionReportService {
 	];
 
 	/**
-	 * The five states the registry accepts (hydra design D3). Anything else is
+	 * The six states the registry accepts (hydra design D3). Anything else is
 	 * refused here, so a typo never travels to integriq only to be dropped.
 	 *
 	 * @var array<int, string>
 	 */
 	public const STATUSES = [
 		'configured',
+		'limited',
 		'unconfigured',
 		'simulated',
 		'unavailable',
@@ -94,18 +95,27 @@ class ConnectionReportService {
 	/**
 	 * The broker's readiness state mapped onto a registry status.
 	 *
-	 * `preview` reads `unavailable`. A preview network is attempted and the
-	 * network may refuse the post, and the registry has no status for "works
-	 * in part". Understating a network that sometimes works beats overstating
-	 * one that often fails (design D5, amendment 2).
+	 * `preview` reads `limited`: an account connects and each post is
+	 * attempted, and the network may still refuse it. The contract names that
+	 * state since hydra#673 (design D4), where `unavailable` would say the
+	 * network does not work at all.
 	 *
 	 * @var array<string, string>
 	 */
 	public const READINESS_STATUS = [
 		SocialBrokerGateway::READY => 'configured',
-		SocialBrokerGateway::PREVIEW => 'unavailable',
+		SocialBrokerGateway::PREVIEW => 'limited',
 		SocialBrokerGateway::NOT_CONFIGURED => 'unconfigured',
 	];
+
+	/**
+	 * What a `limited` social row says: the part that works, then the part
+	 * that does not. The broker's own reason only covers the second half.
+	 *
+	 * @var string
+	 */
+	public const PREVIEW_MESSAGE = 'You can connect an account, and every post is attempted. '
+		. 'The network may still refuse a post: the credential broker supports it as a preview only.';
 
 	/**
 	 * Constructor.
@@ -237,6 +247,10 @@ class ConnectionReportService {
 			}
 
 			$message = trim((string)($entry['reason'] ?? ''));
+			if ($status === 'limited') {
+				$message = self::PREVIEW_MESSAGE;
+			}
+
 			if ($message === '' && $status === 'configured') {
 				$message = 'A developer application is filed for this network in the credential broker.';
 			}

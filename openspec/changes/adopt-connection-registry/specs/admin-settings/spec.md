@@ -12,6 +12,9 @@ connection that has no working code path on `development`. A `settingsUrl`
 SHALL only point at a section or page that exists. Berichtenbox SHALL require
 the four app-config keys a dispatch needs. No entry SHALL declare an `adapter`
 block, because no pipelinq connection picks its adapter with an app-config key.
+`cti` SHALL be declared `reportedOnly: true`, because its platform is a field on
+an OpenRegister object that integriq cannot read (hydra#673, contract D4), and
+no other entry SHALL be.
 
 **Feature tier**: MVP
 
@@ -31,6 +34,14 @@ block, because no pipelinq connection picks its adapter with an app-config key.
 - **THEN** it SHALL read Not configured
 - **AND** its message SHALL name the four keys and `occ config:app:set`
 - **AND** it SHALL NOT offer Open settings
+
+#### Scenario: CTI waits for pipelinq's own check
+@e2e exclude Asserted on the shipped file: tests/Unit/Settings/ConnectionsDeclarationTest.php::testOnlyCtiIsReportedOnly checks that cti alone is reportedOnly and has no requiredConfig; skipping rules 3 and 5 is integriq's resolver.
+
+- **GIVEN** the declaration integriq synced
+- **WHEN** integriq resolves the Telephony (CTI) row before any report
+- **THEN** it SHALL NOT read Simulated or Configured from app config
+- **AND** it SHALL read Not configured with the message to pick a platform and test it
 
 #### Scenario: Every settings link lands on something that exists
 @e2e exclude Asserted on the shipped files: tests/Unit/Settings/ConnectionsDeclarationTest.php checks each anchor against CtiPage.vue and DeliverabilitySettings.vue and the social route against src/manifest.d/78-social-publishing.json.
@@ -84,8 +95,10 @@ SHALL send `OCA\Integriq\Event\ConnectionStatusReportedEvent` for `cti` with
 `configured` when a platform is chosen and its adapter loads, `unconfigured`
 when no platform is chosen, and `error` with the reason when the adapter does
 not load. When the Social accounts list loads, pipelinq SHALL send one report
-per network: `configured` for `ready`, `unavailable` for `preview` and
-`unconfigured` for `not_configured`, each with the broker's reason. The event
+per network: `configured` for `ready`, `limited` for `preview` and
+`unconfigured` for `not_configured`. A `limited` report SHALL say what works
+and what does not: an account connects and each post is attempted, and the
+network may still refuse a post. The other reports carry the broker's reason. The event
 class SHALL be named by string and sent only when it exists (ADR-041, hydra
 REQ-CONN-004). A report SHALL NOT change the response of the request that sent
 it, whether integriq is absent or its listener throws. Pipelinq SHALL NOT write
@@ -108,6 +121,15 @@ it, whether integriq is absent or its listener throws. Pipelinq SHALL NOT write
 - **WHEN** a marketer opens Social accounts
 - **THEN** pipelinq SHALL send seven reports, one per network
 - **AND** the Threads row SHALL read Not configured with the broker's reason
+- **AND** a network the broker ships as a preview SHALL read Limited
+
+#### Scenario: A preview network reports Limited, not Not available
+@e2e exclude Whether a network is a preview depends on OpenRegister's provider catalogue on the instance; tests/Unit/Service/ConnectionReportServiceTest.php::testAPreviewNetworkReportsLimitedWithWhatWorksAndWhatDoesNot asserts the event's app, key, status and message.
+
+- **GIVEN** the credential broker ships Bluesky as a preview
+- **WHEN** the Social accounts list loads
+- **THEN** pipelinq SHALL send a report for `social-bluesky` with status `limited`
+- **AND** its message SHALL say an account connects and the network may still refuse a post
 
 #### Scenario: Without integriq nothing is sent and nothing breaks
 @e2e exclude The shared e2e instance installs integriq; tests/Unit/Service/ConnectionReportServiceTest.php asserts nothing is dispatched or logged when the event class is absent, and the controller tests assert the response is unchanged.

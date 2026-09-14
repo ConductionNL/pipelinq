@@ -3408,6 +3408,7 @@ OC.L10N.register(
         "Signup form": "Aanmeldformulier",
         "Silver": "Zilver",
         "Simulated": "Gesimuleerd",
+        "Limited": "Beperkt",
         "Single-step service — no composition.": "Dienst met één stap — geen samenstelling.",
         "Single-step service — no multi-step rows.": "Dienst met één stap — geen regels voor meerdere stappen.",
         "Site sessions": "Sitesessies",

@@ -4606,6 +4606,7 @@ OC.L10N.register(
         "All connections": "All connections",
         "Configured": "Configured",
         "Simulated": "Simulated",
+        "Limited": "Limited",
         "Not available": "Not available",
         "Open settings": "Open settings"
     },

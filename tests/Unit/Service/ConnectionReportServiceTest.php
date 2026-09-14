@@ -209,7 +209,52 @@ class ConnectionReportServiceTest extends TestCase {
 	}//end testAnUndeclaredKeyIsRefused()
 
 	/**
-	 * A status outside the five is refused with a warning and sends nothing.
+	 * The statuses the reporter accepts are the six of contract D3.
+	 *
+	 * Compared with the contract's list, not with the constant itself, so a
+	 * status the contract adds or drops cannot slip past.
+	 *
+	 * @return void
+	 */
+	public function testTheStatusesAreTheSixOfTheContract(): void {
+		$this->assertEqualsCanonicalizing(
+			expected: ['configured', 'limited', 'unconfigured', 'simulated', 'unavailable', 'error'],
+			actual: ConnectionReportService::STATUSES
+		);
+	}//end testTheStatusesAreTheSixOfTheContract()
+
+	/**
+	 * A preview network sends a limited report that says what works and what does not.
+	 *
+	 * Bluesky is the live preview: an account connects and a post is attempted,
+	 * and the personal data server may refuse it. The event must carry
+	 * `limited`, not `unavailable`, for exactly the declared row, and its
+	 * message must name both halves.
+	 *
+	 * @return void
+	 */
+	public function testAPreviewNetworkReportsLimitedWithWhatWorksAndWhatDoesNot(): void {
+		$sent = $this->service()->reportSocialReadiness(
+			readiness: [
+				'bluesky' => [
+					'state' => SocialBrokerGateway::PREVIEW,
+					'reason' => 'This network is still a preview in the credential broker, so the network itself may refuse a post.',
+				],
+			]
+		);
+
+		$this->assertSame(expected: ['social-bluesky'], actual: $sent);
+		$event = $this->onlyEvent();
+		$this->assertInstanceOf(expected: ConnectionStatusReportedEvent::class, actual: $event);
+		$this->assertSame(expected: 'pipelinq', actual: $event->app);
+		$this->assertSame(expected: 'social-bluesky', actual: $event->key);
+		$this->assertSame(expected: 'limited', actual: $event->status);
+		$this->assertStringContainsString(needle: 'connect an account', haystack: $event->message);
+		$this->assertStringContainsString(needle: 'may still refuse a post', haystack: $event->message);
+	}//end testAPreviewNetworkReportsLimitedWithWhatWorksAndWhatDoesNot()
+
+	/**
+	 * A status outside the six is refused with a warning and sends nothing.
 	 *
 	 * @return void
 	 */
@@ -302,8 +347,8 @@ class ConnectionReportServiceTest extends TestCase {
 
 		$this->assertSame(expected: 'configured', actual: $byKey['social-mastodon']->status);
 		$this->assertNotSame(expected: '', actual: $byKey['social-mastodon']->message);
-		$this->assertSame(expected: 'unavailable', actual: $byKey['social-bluesky']->status);
-		$this->assertSame(expected: 'Still a preview.', actual: $byKey['social-bluesky']->message);
+		$this->assertSame(expected: 'limited', actual: $byKey['social-bluesky']->status);
+		$this->assertSame(expected: ConnectionReportService::PREVIEW_MESSAGE, actual: $byKey['social-bluesky']->message);
 		$this->assertSame(expected: 'unconfigured', actual: $byKey['social-threads']->status);
 		$this->assertSame(expected: 'No application filed.', actual: $byKey['social-threads']->message);
 	}//end testSocialReadinessMapsEachStateAndSendsOneReportPerNetwork()

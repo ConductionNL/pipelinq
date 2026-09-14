@@ -60,6 +60,7 @@ class ConnectionsDeclarationTest extends TestCase {
 		'unavailableMessage',
 		'unconfiguredMessage',
 		'sourceTemplate',
+		'reportedOnly',
 	];
 
 	/**
@@ -188,8 +189,10 @@ class ConnectionsDeclarationTest extends TestCase {
 				}
 			}
 
-			if (array_key_exists('available', $connection) === true) {
-				$this->assertIsBool(actual: $connection['available']);
+			foreach (['available', 'reportedOnly'] as $field) {
+				if (array_key_exists($field, $connection) === true) {
+					$this->assertIsBool(actual: $connection[$field], message: $key . '.' . $field);
+				}
 			}
 		}//end foreach
 	}//end testEveryEntryHasTheShapeIntegriqValidates()
@@ -209,6 +212,27 @@ class ConnectionsDeclarationTest extends TestCase {
 			$this->assertArrayNotHasKey(key: 'adapter', array: $connection, message: (string)$connection['key']);
 		}
 	}//end testNoEntryDeclaresAnAdapterSeamNothingReads()
+
+	/**
+	 * Only CTI is reported-only, because only its platform lives outside app config.
+	 *
+	 * CTI picks its platform with a field on the `ctiAdapterConfig` object in
+	 * OpenRegister, so integriq cannot judge it and must skip rules 3 and 5
+	 * (contract D4, hydra#673). The other rows keep those rules: Berichtenbox
+	 * needs rule 5 to read Configured once its four keys are set, and the
+	 * social and mail rows carry no config keys, so the flag would say nothing.
+	 *
+	 * @return void
+	 */
+	public function testOnlyCtiIsReportedOnly(): void {
+		$reportedOnly = array_filter(
+			$this->declaration()['connections'],
+			static fn (array $connection): bool => ($connection['reportedOnly'] ?? false) === true
+		);
+
+		$this->assertSame(expected: ['cti'], actual: array_column($reportedOnly, 'key'));
+		$this->assertArrayNotHasKey(key: 'requiredConfig', array: $this->connectionsByKey()['cti']);
+	}//end testOnlyCtiIsReportedOnly()
 
 	/**
 	 * No text a reader sees carries an em-dash (voice rule 8).

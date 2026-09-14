@@ -7,6 +7,7 @@
             "description": "Screen pop and click to dial through Asterisk, RingCentral or CallVoip. You pick one platform.",
             "order": 10,
             "settingsUrl": "/settings/admin/pipelinq#section-cti",
+            "reportedOnly": true,
             "unconfiguredMessage": "Not checked yet. Pick a platform in the telephony settings, then choose Test connection."
         },
         {
