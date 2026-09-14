@@ -4596,7 +4596,19 @@ OC.L10N.register(
         "We rated pipelinq and two other help desk systems on {count} capabilities: {systems}.": "We rated pipelinq and two other help desk systems on {count} capabilities: {systems}.",
         "We strongly advise you to run your own evaluation. This table does not replace testing against your own requirements.": "We strongly advise you to run your own evaluation. This table does not replace testing against your own requirements.",
         "What pipelinq does": "What pipelinq does",
-        "When we correct a rating, we correct our own column only. Re-reading a rival costs another install, and a correction we guessed is worse than one we never made.": "When we correct a rating, we correct our own column only. Re-reading a rival costs another install, and a correction we guessed is worse than one we never made."
+        "When we correct a rating, we correct our own column only. Re-reading a rival costs another install, and a correction we guessed is worse than one we never made.": "When we correct a rating, we correct our own column only. Re-reading a rival costs another install, and a correction we guessed is worse than one we never made.",
+        "Connections": "Connections",
+        "Add integration": "Add integration",
+        "Connection": "Connection",
+        "Status message": "Status message",
+        "Last checked": "Last checked",
+        "Settings": "Settings",
+        "All connections": "All connections",
+        "Configured": "Configured",
+        "Simulated": "Simulated",
+        "Limited": "Limited",
+        "Not available": "Not available",
+        "Open settings": "Open settings"
     },
     "nplurals=2; plural=(n != 1);"
 )

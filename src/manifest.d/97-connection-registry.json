@@ -1,0 +1,90 @@
+{
+	"menu": [
+		{
+			"id": "ConnectionsMenu",
+			"label": "Connections",
+			"icon": "PowerPlugOutline",
+			"route": "Integrations",
+			"query": {
+				"app": "pipelinq"
+			},
+			"section": "settings",
+			"order": 210,
+			"permission": "admin",
+			"visibleIf": {
+				"appInstalled": "integriq"
+			}
+		}
+	],
+	"pages": [
+		{
+			"id": "Integrations",
+			"_note": "adopt-connection-registry (pipelinq#1939, hydra connection-registry D8). The rows are integriq's `app_connection` objects, synced from lib/Settings/connections.json; integriq works out each status. The app=pipelinq preset is the menu entry's `query` (ADR-097 decision 5), which the index page merges into the fetch as a bare filter key. The menu label is Connections because the entry sits under the Integrations caption in the settings foldout. `showAdd` is false because a row nothing declared has nothing to check (D9); Add integration leaves for integriq's overview through the openIntegriqConnections handler, since a header action's `navigate` only pushes a route inside this app. This page is not the setup wizard's `integrations` step in manifest.json, which holds the Shillinq and XWiki URL fields.",
+			"route": "/settings/integrations",
+			"type": "index",
+			"title": "Integrations",
+			"permission": "admin",
+			"requiresApp": {
+				"id": "integriq",
+				"name": "Integriq"
+			},
+			"config": {
+				"register": "integriq",
+				"schema": "app_connection",
+				"showViewAction": false,
+				"showAdd": false,
+				"headerActions": [
+					{
+						"id": "add-integration",
+						"label": "Add integration",
+						"icon": "PowerPlugOutline",
+						"handler": "openIntegriqConnections"
+					}
+				],
+				"defaultSort": {
+					"field": "order",
+					"direction": "asc"
+				},
+				"columns": [
+					{
+						"key": "title",
+						"label": "Connection"
+					},
+					{
+						"key": "status",
+						"label": "Status",
+						"formatter": "connectionStatus"
+					},
+					{
+						"key": "statusMessage",
+						"label": "Status message",
+						"sortable": false
+					},
+					{
+						"key": "checkedAt",
+						"label": "Last checked"
+					},
+					{
+						"key": "settingsUrl",
+						"label": "Settings",
+						"sortable": false,
+						"formatter": "connectionSettingsLabel",
+						"widget": "link",
+						"widgetProps": {
+							"href": "{settingsUrl}"
+						}
+					}
+				],
+				"folderSidebar": {
+					"source": "field",
+					"field": "status",
+					"allLabel": "All connections"
+				},
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				}
+			}
+		}
+	]
+}

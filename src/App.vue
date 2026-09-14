@@ -16,6 +16,8 @@
 		:manifest="manifest"
 		:registry="registry"
 		:cellWidgets="cellWidgets"
+		:formatters="connectionFormatters"
+		:customComponents="connectionHandlers"
 		:pageTypes="pageTypes"
 		appId="pipelinq"
 		:translate="translateForApp"
@@ -64,6 +66,7 @@ import { generateUrl } from '@nextcloud/router'
 import { reactive } from 'vue'
 import LeadCloseDateCell from './views/leads/cells/LeadCloseDateCell.vue'
 import LeadProbabilityCell from './views/leads/cells/LeadProbabilityCell.vue'
+import { createConnectionFormatters, createConnectionHandlers } from './services/connectionRegistry.js'
 
 export default {
 	name: 'App',
@@ -174,6 +177,35 @@ export default {
 				'lead-close-date': LeadCloseDateCell,
 				'lead-probability': LeadProbabilityCell,
 			}
+		},
+
+		/**
+		 * The Integrations page's status and settings-link formatters
+		 * (adopt-connection-registry). CnAppRoot merges them over its built-ins.
+		 *
+		 * @return {Record<string, function(unknown): string>}
+		 * @spec openspec/changes/adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-131-an-admin-reads-pipelinqs-connections-on-an-integrations-page-over-integriqs-registry
+		 */
+		connectionFormatters() {
+			return createConnectionFormatters((key) => ncT('pipelinq', key))
+		},
+
+		/**
+		 * The Integrations page's Add integration handler, which leaves this app
+		 * for integriq's Connections overview. CnIndexPage resolves a header
+		 * action's handler name only against `customComponents`, so this map
+		 * holds that one function. CnAppRoot logs a one-time deprecation warning
+		 * for the prop beside a v2 manifest; the registry prop has no slot for a
+		 * function handler in the installed nextcloud-vue.
+		 *
+		 * @return {Record<string, function(): void>}
+		 * @spec openspec/changes/adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-131-an-admin-reads-pipelinqs-connections-on-an-integrations-page-over-integriqs-registry
+		 */
+		connectionHandlers() {
+			return createConnectionHandlers({
+				generateUrl,
+				assign: (url) => window.location.assign(url),
+			})
 		},
 
 		/**

@@ -44,6 +44,7 @@ use OCA\Pipelinq\Service\Cti\Result\CtiCallResult;
 use OCA\Pipelinq\Service\Cti\Result\CtiWebhookResult;
 use OCA\Pipelinq\Service\Cti\Result\OriginateResult;
 use OCA\Pipelinq\Service\Cti\Result\ScreenPopResult;
+use OCA\Pipelinq\Service\ConnectionReportService;
 use OCA\Pipelinq\Service\CtiContactMatcher;
 use OCA\Pipelinq\Service\CtiDispositionService;
 use OCA\Pipelinq\Service\CtiService;
@@ -127,18 +128,120 @@ class CtiControllerTest extends TestCase {
 	 *
 	 * @param CtiService $service The CTI service (real or doubled).
 	 * @param string|null $uid Signed-in uid, or null for anonymous.
+	 * @param ConnectionReportService|null $reports The connection reporter, or a silent double.
+	 * @param IGroupManager|null $groupManager The group manager, or a double that knows no admin.
 	 *
 	 * @return CtiController The controller.
 	 */
-	private function controller(CtiService $service, ?string $uid = 'agent-1'): CtiController {
+	private function controller(
+		CtiService $service,
+		?string $uid = 'agent-1',
+		?ConnectionReportService $reports = null,
+		?IGroupManager $groupManager = null,
+	): CtiController {
 		return new CtiController($this->request(),
 			$service,
 			$this->session($uid),
 			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
-			$this->createMock(IGroupManager::class),
-			$this->createMock(LoggerInterface::class),
+			$groupManager ?? $this->createMock(originalClassName: IGroupManager::class),
+			$this->createMock(originalClassName: LoggerInterface::class),
+			$reports ?? $this->createMock(originalClassName: ConnectionReportService::class),
 		);
 	}//end controller()
+
+	/**
+	 * A group manager that reads $uid as an administrator.
+	 *
+	 * @return IGroupManager The stubbed group manager.
+	 */
+	private function adminGroupManager(): IGroupManager {
+		return $this->createConfiguredMock(originalClassName: IGroupManager::class, configuration: ['isAdmin' => true]);
+	}//end adminGroupManager()
+
+	// ------------------------------------------------------------------
+	// testConnection / updateConfig: reports to integriq's registry
+	// ------------------------------------------------------------------
+
+	/**
+	 * Test connection reports its outcome and answers it unchanged.
+	 *
+	 * @spec openspec/changes/adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-132-pipelinq-reports-what-its-own-checks-observe
+	 *
+	 * @return void
+	 */
+	public function testTestConnectionReportsTheOutcomeAndAnswersItUnchanged(): void {
+		$outcome = ['ok' => false, 'platform' => '', 'message' => 'No CTI platform configured.'];
+		$service = $this->createMock(originalClassName: CtiService::class);
+		$service->method('testConnection')->willReturn($outcome);
+		$reports = $this->createMock(originalClassName: ConnectionReportService::class);
+		$reports->expects($this->once())->method('reportCtiCheck')->with($outcome)->willReturn(true);
+
+		$response = $this->controller(service: $service, uid: 'admin', reports: $reports, groupManager: $this->adminGroupManager())->testConnection();
+
+		$this->assertSame(expected: Http::STATUS_OK, actual: $response->getStatus());
+		$this->assertSame(expected: $outcome, actual: $response->getData());
+	}//end testTestConnectionReportsTheOutcomeAndAnswersItUnchanged()
+
+	/**
+	 * A non-admin is refused before any check runs, so nothing is reported.
+	 *
+	 * @spec openspec/changes/adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-132-pipelinq-reports-what-its-own-checks-observe
+	 *
+	 * @return void
+	 */
+	public function testANonAdminTestConnectionReportsNothing(): void {
+		$service = $this->createMock(originalClassName: CtiService::class);
+		$service->expects($this->never())->method('testConnection');
+		$reports = $this->createMock(originalClassName: ConnectionReportService::class);
+		$reports->expects($this->never())->method('reportCtiCheck');
+
+		// The isAdmin() method declares no return type, so a bare double answers
+		// null, which the guard's `=== false` lets through. Say false, as the real class does.
+		$notAdmin = $this->createConfiguredMock(originalClassName: IGroupManager::class, configuration: ['isAdmin' => false]);
+
+		$response = $this->controller(service: $service, uid: 'agent-1', reports: $reports, groupManager: $notAdmin)->testConnection();
+
+		$this->assertSame(expected: Http::STATUS_FORBIDDEN, actual: $response->getStatus());
+	}//end testANonAdminTestConnectionReportsNothing()
+
+	/**
+	 * A save that stored something runs the check once and reports it.
+	 *
+	 * @spec openspec/changes/adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-132-pipelinq-reports-what-its-own-checks-observe
+	 *
+	 * @return void
+	 */
+	public function testASavedConfigReportsTheCheck(): void {
+		$this->params = ['platform' => 'asterisk', 'webhook_secret' => 's3cret'];
+		$outcome = ['ok' => true, 'platform' => 'asterisk', 'message' => 'Adapter resolved and configuration present.'];
+		$service = $this->createMock(originalClassName: CtiService::class);
+		$service->method('saveConfig')->willReturn(['platform' => 'asterisk', 'webhook_secret' => 's3cret']);
+		$service->expects($this->once())->method('testConnection')->willReturn($outcome);
+		$reports = $this->createMock(originalClassName: ConnectionReportService::class);
+		$reports->expects($this->once())->method('reportCtiCheck')->with($outcome)->willReturn(true);
+
+		$response = $this->controller(service: $service, uid: 'admin', reports: $reports, groupManager: $this->adminGroupManager())->updateConfig();
+
+		$this->assertSame(expected: ['platform' => 'asterisk'], actual: $response->getData());
+	}//end testASavedConfigReportsTheCheck()
+
+	/**
+	 * A save that stored nothing reports nothing: there is no new platform to check.
+	 *
+	 * @spec openspec/changes/adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-132-pipelinq-reports-what-its-own-checks-observe
+	 *
+	 * @return void
+	 */
+	public function testAFailedSaveReportsNothing(): void {
+		$this->params = ['platform' => 'asterisk'];
+		$service = $this->createMock(originalClassName: CtiService::class);
+		$service->method('saveConfig')->willReturn([]);
+		$service->expects($this->never())->method('testConnection');
+		$reports = $this->createMock(originalClassName: ConnectionReportService::class);
+		$reports->expects($this->never())->method('reportCtiCheck');
+
+		$this->controller(service: $service, uid: 'admin', reports: $reports, groupManager: $this->adminGroupManager())->updateConfig();
+	}//end testAFailedSaveReportsNothing()
 
 	// ------------------------------------------------------------------
 	// screenPop — POST /api/cti/screen-pop
