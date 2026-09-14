@@ -45,6 +45,7 @@ export function createConnectionFormatters(translate) {
 		 *
 		 * @param {unknown} value The row's `status`.
 		 * @return {string} The label, the raw value, or '' when missing.
+		 * @spec openspec/changes/adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-131-an-admin-reads-pipelinqs-connections-on-an-integrations-page-over-integriqs-registry
 		 */
 		connectionStatus(value) {
 			const source = typeof value === 'string' && Object.hasOwn(CONNECTION_STATUS_LABELS, value)
@@ -59,6 +60,7 @@ export function createConnectionFormatters(translate) {
 		 *
 		 * @param {unknown} value The row's `settingsUrl`.
 		 * @return {string} The link text, or ''.
+		 * @spec openspec/changes/adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-131-an-admin-reads-pipelinqs-connections-on-an-integrations-page-over-integriqs-registry
 		 */
 		connectionSettingsLabel(value) {
 			return typeof value === 'string' && value.length > 0 ? translate('Open settings') : ''
@@ -78,6 +80,12 @@ export function createConnectionFormatters(translate) {
  */
 export function createConnectionHandlers({ generateUrl, assign }) {
 	return {
+		/**
+		 * Leave for integriq's Connections overview, preset and linking.
+		 *
+		 * @return {void}
+		 * @spec openspec/changes/adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-131-an-admin-reads-pipelinqs-connections-on-an-integrations-page-over-integriqs-registry
+		 */
 		openIntegriqConnections() {
 			assign(generateUrl(INTEGRIQ_CONNECTIONS_PATH))
 		},

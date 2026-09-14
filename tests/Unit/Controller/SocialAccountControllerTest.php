@@ -103,7 +103,7 @@ class SocialAccountControllerTest extends TestCase {
 		$this->accounts = $this->createMock(SocialAccountService::class);
 		$this->userSession = $this->createMock(IUserSession::class);
 		$this->policy = $this->createMock(ObjectOwnerAccessPolicy::class);
-		$this->connectionReports = $this->createMock(ConnectionReportService::class);
+		$this->connectionReports = $this->createMock(originalClassName: ConnectionReportService::class);
 
 		$this->controller = new SocialAccountController(
 			$this->request,
@@ -178,8 +178,8 @@ class SocialAccountControllerTest extends TestCase {
 
 		$response = $this->controller->index();
 
-		$this->assertSame(Http::STATUS_OK, $response->getStatus());
-		$this->assertSame($listed, $response->getData());
+		$this->assertSame(expected: Http::STATUS_OK, actual: $response->getStatus());
+		$this->assertSame(expected: $listed, actual: $response->getData());
 	}
 
 	/**
@@ -194,7 +194,7 @@ class SocialAccountControllerTest extends TestCase {
 		$this->policy->method('isPrivileged')->willReturn(false);
 		$this->connectionReports->expects($this->never())->method('reportSocialReadiness');
 
-		$this->assertSame(Http::STATUS_FORBIDDEN, $this->controller->index()->getStatus());
+		$this->assertSame(expected: Http::STATUS_FORBIDDEN, actual: $this->controller->index()->getStatus());
 	}
 
 	/**

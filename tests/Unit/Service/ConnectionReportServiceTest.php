@@ -229,8 +229,8 @@ class ConnectionReportServiceTest extends TestCase {
 		$dispatcher = $this->createMock(originalClassName: IEventDispatcher::class);
 		$dispatcher->method('dispatchTyped')->willThrowException(new RuntimeException('listener broke'));
 		$this->logger->expects($this->once())->method('warning')->with(
-			$this->stringContains('could not send'),
-			$this->callback(static fn (array $context): bool => ($context['key'] ?? '') === 'social-x')
+			$this->stringContains(string: 'could not send'),
+			$this->callback(callback: static fn (array $context): bool => ($context['key'] ?? '') === 'social-x')
 		);
 
 		$service = new ConnectionReportService(eventDispatcher: $dispatcher, logger: $this->logger);

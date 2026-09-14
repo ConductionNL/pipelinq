@@ -143,9 +143,9 @@ class CtiControllerTest extends TestCase {
 			$service,
 			$this->session($uid),
 			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
-			$groupManager ?? $this->createMock(IGroupManager::class),
-			$this->createMock(LoggerInterface::class),
-			$reports ?? $this->createMock(ConnectionReportService::class),
+			$groupManager ?? $this->createMock(originalClassName: IGroupManager::class),
+			$this->createMock(originalClassName: LoggerInterface::class),
+			$reports ?? $this->createMock(originalClassName: ConnectionReportService::class),
 		);
 	}//end controller()
 
@@ -155,7 +155,7 @@ class CtiControllerTest extends TestCase {
 	 * @return IGroupManager The stubbed group manager.
 	 */
 	private function adminGroupManager(): IGroupManager {
-		return $this->createConfiguredMock(IGroupManager::class, ['isAdmin' => true]);
+		return $this->createConfiguredMock(originalClassName: IGroupManager::class, configuration: ['isAdmin' => true]);
 	}//end adminGroupManager()
 
 	// ------------------------------------------------------------------
@@ -171,15 +171,15 @@ class CtiControllerTest extends TestCase {
 	 */
 	public function testTestConnectionReportsTheOutcomeAndAnswersItUnchanged(): void {
 		$outcome = ['ok' => false, 'platform' => '', 'message' => 'No CTI platform configured.'];
-		$service = $this->createMock(CtiService::class);
+		$service = $this->createMock(originalClassName: CtiService::class);
 		$service->method('testConnection')->willReturn($outcome);
-		$reports = $this->createMock(ConnectionReportService::class);
+		$reports = $this->createMock(originalClassName: ConnectionReportService::class);
 		$reports->expects($this->once())->method('reportCtiCheck')->with($outcome)->willReturn(true);
 
-		$response = $this->controller($service, 'admin', $reports, $this->adminGroupManager())->testConnection();
+		$response = $this->controller(service: $service, uid: 'admin', reports: $reports, groupManager: $this->adminGroupManager())->testConnection();
 
-		$this->assertSame(Http::STATUS_OK, $response->getStatus());
-		$this->assertSame($outcome, $response->getData());
+		$this->assertSame(expected: Http::STATUS_OK, actual: $response->getStatus());
+		$this->assertSame(expected: $outcome, actual: $response->getData());
 	}//end testTestConnectionReportsTheOutcomeAndAnswersItUnchanged()
 
 	/**
@@ -190,18 +190,18 @@ class CtiControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testANonAdminTestConnectionReportsNothing(): void {
-		$service = $this->createMock(CtiService::class);
+		$service = $this->createMock(originalClassName: CtiService::class);
 		$service->expects($this->never())->method('testConnection');
-		$reports = $this->createMock(ConnectionReportService::class);
+		$reports = $this->createMock(originalClassName: ConnectionReportService::class);
 		$reports->expects($this->never())->method('reportCtiCheck');
 
-		// isAdmin() declares no return type, so a bare double answers null, which
-		// the guard's `=== false` lets through. Say false, as the real class does.
-		$notAdmin = $this->createConfiguredMock(IGroupManager::class, ['isAdmin' => false]);
+		// The isAdmin() method declares no return type, so a bare double answers
+		// null, which the guard's `=== false` lets through. Say false, as the real class does.
+		$notAdmin = $this->createConfiguredMock(originalClassName: IGroupManager::class, configuration: ['isAdmin' => false]);
 
-		$response = $this->controller($service, 'agent-1', $reports, $notAdmin)->testConnection();
+		$response = $this->controller(service: $service, uid: 'agent-1', reports: $reports, groupManager: $notAdmin)->testConnection();
 
-		$this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
+		$this->assertSame(expected: Http::STATUS_FORBIDDEN, actual: $response->getStatus());
 	}//end testANonAdminTestConnectionReportsNothing()
 
 	/**
@@ -214,15 +214,15 @@ class CtiControllerTest extends TestCase {
 	public function testASavedConfigReportsTheCheck(): void {
 		$this->params = ['platform' => 'asterisk', 'webhook_secret' => 's3cret'];
 		$outcome = ['ok' => true, 'platform' => 'asterisk', 'message' => 'Adapter resolved and configuration present.'];
-		$service = $this->createMock(CtiService::class);
+		$service = $this->createMock(originalClassName: CtiService::class);
 		$service->method('saveConfig')->willReturn(['platform' => 'asterisk', 'webhook_secret' => 's3cret']);
 		$service->expects($this->once())->method('testConnection')->willReturn($outcome);
-		$reports = $this->createMock(ConnectionReportService::class);
+		$reports = $this->createMock(originalClassName: ConnectionReportService::class);
 		$reports->expects($this->once())->method('reportCtiCheck')->with($outcome)->willReturn(true);
 
-		$response = $this->controller($service, 'admin', $reports, $this->adminGroupManager())->updateConfig();
+		$response = $this->controller(service: $service, uid: 'admin', reports: $reports, groupManager: $this->adminGroupManager())->updateConfig();
 
-		$this->assertSame(['platform' => 'asterisk'], $response->getData());
+		$this->assertSame(expected: ['platform' => 'asterisk'], actual: $response->getData());
 	}//end testASavedConfigReportsTheCheck()
 
 	/**
@@ -234,13 +234,13 @@ class CtiControllerTest extends TestCase {
 	 */
 	public function testAFailedSaveReportsNothing(): void {
 		$this->params = ['platform' => 'asterisk'];
-		$service = $this->createMock(CtiService::class);
+		$service = $this->createMock(originalClassName: CtiService::class);
 		$service->method('saveConfig')->willReturn([]);
 		$service->expects($this->never())->method('testConnection');
-		$reports = $this->createMock(ConnectionReportService::class);
+		$reports = $this->createMock(originalClassName: ConnectionReportService::class);
 		$reports->expects($this->never())->method('reportCtiCheck');
 
-		$this->controller($service, 'admin', $reports, $this->adminGroupManager())->updateConfig();
+		$this->controller(service: $service, uid: 'admin', reports: $reports, groupManager: $this->adminGroupManager())->updateConfig();
 	}//end testAFailedSaveReportsNothing()
 
 	// ------------------------------------------------------------------

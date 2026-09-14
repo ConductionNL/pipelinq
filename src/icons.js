@@ -128,6 +128,7 @@ import PencilOutline from 'vue-material-design-icons/PencilOutline.vue'
 import PhoneMessage from 'vue-material-design-icons/PhoneMessage.vue'
 import Pipe from 'vue-material-design-icons/Pipe.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
+import PowerPlugOutline from 'vue-material-design-icons/PowerPlugOutline.vue'
 import Receipt from 'vue-material-design-icons/Receipt.vue'
 import ReceiptOutline from 'vue-material-design-icons/ReceiptOutline.vue'
 import ReceiptText from 'vue-material-design-icons/ReceiptText.vue'
@@ -276,6 +277,7 @@ export default {
 	PhoneMessage,
 	Pipe,
 	Plus,
+	PowerPlugOutline,
 	Receipt,
 	ReceiptOutline,
 	ReceiptText,
