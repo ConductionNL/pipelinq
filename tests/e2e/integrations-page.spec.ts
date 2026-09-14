@@ -197,7 +197,7 @@ test.describe('Integrations', () => {
 
 		const expected: Record<string, string> = {
 			ready: 'configured',
-			preview: 'unavailable',
+			preview: 'limited',
 			not_configured: 'unconfigured',
 		}
 		const byKey = await connectionsByKey(request)

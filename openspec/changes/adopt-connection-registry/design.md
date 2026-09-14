@@ -29,10 +29,11 @@ Keys are frozen once shipped (contract D2), so a later row is additive.
 
 ## D2. Statuses, per connection
 
-- **`cti`** has no `requiredConfig` and no `adapter`. The platform is a field
-  on the `ctiAdapterConfig` object in OpenRegister, not an app-config key, so
-  integriq cannot read it. The row stays on its `unconfiguredMessage` until
-  pipelinq reports. `CtiController::testConnection` and a successful
+- **`cti`** is `reportedOnly: true`, with no `requiredConfig` and no
+  `adapter`. The platform is a field on the `ctiAdapterConfig` object in
+  OpenRegister, not an app-config key, so integriq cannot read it and skips
+  rules 3 and 5 for the row (contract D4). The row stays on its
+  `unconfiguredMessage` until pipelinq reports. `CtiController::testConnection` and a successful
   `updateConfig` report the check, mapped as:
   - a platform is chosen and its adapter loads: `configured`, with a message
     that says the check makes no call to the platform;
@@ -42,7 +43,9 @@ Keys are frozen once shipped (contract D2), so a later row is additive.
   OpenRegister's provider catalogue. `SocialAccountController::index` reports
   it for all seven networks each time the Social accounts page loads:
   - `ready`: `configured`;
-  - `preview`: `unavailable`, with the broker's reason (see D5);
+  - `preview`: `limited`, with a message that says what works (an account
+    connects and each post is attempted) and what does not (the network may
+    refuse the post);
   - `not_configured`: `unconfigured`, with the broker's reason.
 - **`berichtenbox`** declares `requiredConfig` `logius_client_id`,
   `logius_client_secret`, `pki_cert` and `pki_key`. `BerichtenboxService`
@@ -64,7 +67,7 @@ with an app-config key.
 
 - `STATUS_EVENT` is the class name as a string, resolved with `class_exists`
   (ADR-041). Without integriq nothing is sent and nothing is logged.
-- `report()` refuses a key outside `KEYS` or a status outside the five, with
+- `report()` refuses a key outside `KEYS` or a status outside the six, with
   a warning, so a typo never travels to integriq.
 - A listener that throws is caught and logged as a warning. It never reaches
   the request that reported.
@@ -98,36 +101,34 @@ The event is built with the parameter names from contract D6, and
   `customComponents` prop beside a v2 manifest.
 - `connectionStatus` and `connectionSettingsLabel` pass to CnAppRoot through
   its `formatters` prop. nextcloud-vue 2.39.0, the version pipelinq's lock
-  installs, has neither as a built-in. The local copies go once a release
-  that ships them is in the lock.
+  installs, has neither as a built-in. nextcloud-vue#1163 added them after
+  2.53.1, the latest release, so the local copies stay until a release that
+  ships them is in the lock. `connectionStatus` names all six statuses,
+  `limited` included.
 - `settingsUrl` anchors: `CtiPage.vue` gets `id="section-cti"` and
   `DeliverabilitySettings.vue` gets `id="section-mail-transports"`. The social
   rows link to `/apps/pipelinq/social-accounts`, the route
   `78-social-publishing.json` declares.
 
-## D5. Where the contract does not fit, as proposed amendments
+## D5. Where the contract did not fit, and what hydra#673 changed
+
+Pipelinq's adoption named four misfits. The contract amendment in hydra#673
+took three of them, and pipelinq now uses them.
 
 1. **A choice stored outside app config.** CTI picks its adapter with a field
-   on an OpenRegister object, not an app-config key naming a class. Neither
-   `requiredConfig` nor `adapter.configKey` can express it, so the status only
-   ever arrives as a report. Proposed: a declaration field such as
-   `reportedOnly: true`, so integriq can say "Waiting for pipelinq to check"
-   instead of the generic default.
-2. **A connection that works in part.** The broker's `preview` state means a
-   post is attempted and the network may refuse it (Bluesky, until DPoP
-   lands). The five statuses have no word for that. Pipelinq reports
-   `unavailable` with the broker's reason, which understates a network that
-   sometimes works rather than overstating one that often fails. Proposed: a
-   sixth status, `limited`.
-3. **A key set by `occ` has no refresh moment.** The Berichtenbox keys are
-   written only with `occ config:app:set`, and the resolver runs after a sync,
-   a report, a probe or a link. A row can stay Not configured until the next
-   sync after the keys are set. Proposed: the hourly health job resolves every
-   row without a source as well, or integriq listens for an app-config change.
+   on an OpenRegister object. `reportedOnly: true` on `cti` tells integriq so,
+   and integriq skips the adapter and required settings rules for the row.
+2. **A connection that works in part.** The broker's `preview` state (Bluesky,
+   until DPoP lands) now reports `limited`, the sixth status.
+3. **A key set by `occ` has no refresh moment.** The hourly health job now
+   resolves every row, so the Berichtenbox row moves within the hour after
+   the keys are set. Pipelinq changes nothing for it.
+
+One misfit stays out of the contract, by its own decision (contract D12):
+
 4. **One connection family, many objects.** SMS, WhatsApp, payment providers,
-   BI export sinks and mail transports are configured per object, and a tenant
-   can hold several. A static file can only declare the family. Proposed: a
-   declared connection may name the schema whose objects are its instances.
+   BI export sinks and mail transports are configured per object. A static
+   file can only declare the family, so they remain a follow-up.
 
 ## Risks
 

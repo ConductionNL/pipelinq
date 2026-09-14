@@ -93,14 +93,25 @@ describe('the Add integration handler', () => {
 })
 
 describe('the connection status formatter', () => {
-	it('names each of the five states through the translator', () => {
+	it('names each of the six states through the translator', () => {
 		const dutch = createConnectionFormatters((key) => `nl:${key}`)
 		expect(dutch.connectionStatus('configured')).toBe('nl:Configured')
+		expect(dutch.connectionStatus('limited')).toBe('nl:Limited')
+		expect(formatters.connectionStatus('limited')).toBe('Limited')
 		expect(formatters.connectionStatus('unconfigured')).toBe('Not configured')
 		expect(formatters.connectionStatus('simulated')).toBe('Simulated')
 		expect(formatters.connectionStatus('unavailable')).toBe('Not available')
 		expect(formatters.connectionStatus('error')).toBe('Error')
-		expect(Object.keys(CONNECTION_STATUS_LABELS)).toHaveLength(5)
+		expect(Object.keys(CONNECTION_STATUS_LABELS)).toHaveLength(6)
+	})
+
+	// A preview network works in part. Rendering it as Not available would
+	// say it does not work, and as Configured would say it always does.
+	it('keeps a connection that works in part apart from working and broken', () => {
+		const limited = formatters.connectionStatus('limited')
+		expect(limited).not.toBe(formatters.connectionStatus('configured'))
+		expect(limited).not.toBe(formatters.connectionStatus('unavailable'))
+		expect(limited).not.toBe(formatters.connectionStatus('error'))
 	})
 
 	it('does not let a mock adapter read as a configured connection', () => {

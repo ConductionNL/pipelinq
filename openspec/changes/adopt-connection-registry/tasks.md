@@ -24,5 +24,10 @@
 ## 4. After merge
 
 - [ ] 4.1 Run the e2e spec against an instance with both apps, then archive this change into `admin-settings`.
-- [ ] 4.2 Follow-up issue: declare SMS, WhatsApp, payment providers and BI export sinks once the contract can name a per-object connection family (design D5.4).
-- [ ] 4.3 Raise design D5 amendments 1 to 3 on hydra `connection-registry`.
+- [ ] 4.2 Follow-up issue: declare SMS, WhatsApp, payment providers and BI export sinks as one row per family that pipelinq reports on, since the contract keeps per-object families out (design D5.4, contract D12).
+- [x] 4.3 Raise design D5 amendments 1 to 3 on hydra `connection-registry`. Taken in hydra#673.
+
+## 5. Contract amendments (hydra#673)
+
+- [x] 5.1 `cti` declared `reportedOnly: true`; `ConnectionReportService` maps `preview` to `limited` with `PREVIEW_MESSAGE` and accepts `limited`; `connectionStatus` names Limited (`Beperkt`); `l10n` rebuilt.
+  - `ConnectionsDeclarationTest`: `reportedOnly` allowed and boolean, only `cti` carries it. `ConnectionReportServiceTest`: the statuses equal contract D3, a preview network sends `limited` with both halves of the message. `tests/vitest/connectionRegistry.spec.js`: six labels. `tests/e2e/integrations-page.spec.ts` expects `limited` for `preview`, not run.

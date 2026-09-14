@@ -7,7 +7,9 @@
  * The rows on that page are integriq's `app_connection` objects (hydra change
  * connection-registry, design D8). Each adopting app carries these seven lines
  * until nextcloud-vue ships the formatters as built-ins in a version this app
- * installs. The names are the contract's, so the copies stay interchangeable.
+ * installs. nextcloud-vue#1163 made them built-ins after 2.53.1 was released,
+ * and this app pins ^2.37.0, so the copy stays. The names are the contract's,
+ * so the copies stay interchangeable.
  *
  * Pure: the translator, the URL builder and the navigation are passed in, so
  * the module runs under vitest's node environment with nothing mocked.
@@ -21,9 +23,15 @@
  */
 export const INTEGRIQ_CONNECTIONS_PATH = '/apps/integriq/connections?app=pipelinq&link=1'
 
-/** The English label for each of the five registry statuses. */
+/**
+ * The English label for each of the six registry statuses.
+ *
+ * `limited` came with hydra#673: the connection works in part, such as a
+ * preview social network that connects and may refuse a post.
+ */
 export const CONNECTION_STATUS_LABELS = Object.freeze({
 	configured: 'Configured',
+	limited: 'Limited',
 	unconfigured: 'Not configured',
 	simulated: 'Simulated',
 	unavailable: 'Not available',
