@@ -36,6 +36,7 @@ namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use OCA\Pipelinq\Controller\SocialAccountController;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
+use OCA\Pipelinq\Service\ConnectionReportService;
 use OCA\Pipelinq\Service\SocialAccountService;
 use OCP\AppFramework\Http;
 use OCP\IRequest;
@@ -79,6 +80,13 @@ class SocialAccountControllerTest extends TestCase {
 	private ObjectOwnerAccessPolicy $policy;
 
 	/**
+	 * Mock connection reporter.
+	 *
+	 * @var ConnectionReportService&MockObject
+	 */
+	private ConnectionReportService $connectionReports;
+
+	/**
 	 * The controller under test.
 	 *
 	 * @var SocialAccountController
@@ -95,12 +103,14 @@ class SocialAccountControllerTest extends TestCase {
 		$this->accounts = $this->createMock(SocialAccountService::class);
 		$this->userSession = $this->createMock(IUserSession::class);
 		$this->policy = $this->createMock(ObjectOwnerAccessPolicy::class);
+		$this->connectionReports = $this->createMock(ConnectionReportService::class);
 
 		$this->controller = new SocialAccountController(
 			$this->request,
 			$this->accounts,
 			$this->userSession,
 			$this->policy,
+			$this->connectionReports,
 		);
 	}
 
@@ -140,6 +150,51 @@ class SocialAccountControllerTest extends TestCase {
 		) {
 			$this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
 		}
+	}
+
+	/**
+	 * Listing the accounts reports each network's readiness to integriq, and
+	 * the list answers exactly what the service returned.
+	 *
+	 * @spec openspec/changes/adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-132-pipelinq-reports-what-its-own-checks-observe
+	 *
+	 * @return void
+	 */
+	public function testTheListReportsTheReadinessAndAnswersUnchanged(): void {
+		$this->signIn(uid: 'marieke');
+		$this->policy->method('isPrivileged')->willReturn(true);
+		$listed = [
+			'data' => [['id' => 'acc-1', 'network' => 'mastodon']],
+			'readiness' => [
+				'mastodon' => ['state' => 'ready', 'reason' => ''],
+				'threads' => ['state' => 'not_configured', 'reason' => 'No application filed.'],
+			],
+		];
+		$this->accounts->method('listAccounts')->willReturn($listed);
+		$this->connectionReports->expects($this->once())
+			->method('reportSocialReadiness')
+			->with($listed['readiness'])
+			->willReturn(['social-mastodon', 'social-threads']);
+
+		$response = $this->controller->index();
+
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertSame($listed, $response->getData());
+	}
+
+	/**
+	 * A refused caller triggers no report: the readiness was never read.
+	 *
+	 * @spec openspec/changes/adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-132-pipelinq-reports-what-its-own-checks-observe
+	 *
+	 * @return void
+	 */
+	public function testARefusedListSendsNoReport(): void {
+		$this->signIn(uid: 'buurman');
+		$this->policy->method('isPrivileged')->willReturn(false);
+		$this->connectionReports->expects($this->never())->method('reportSocialReadiness');
+
+		$this->assertSame(Http::STATUS_FORBIDDEN, $this->controller->index()->getStatus());
 	}
 
 	/**
