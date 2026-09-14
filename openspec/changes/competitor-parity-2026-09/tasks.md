@@ -12,6 +12,13 @@
 - [ ] 2.2 `typed-fields-and-indicators-on-a-party`
 - [ ] 2.3 `party-kinds-accepted-per-case-type`
 
+## 4. Wave 4, the pending proposals
+
+- [x] 4.1 Record pipelinq's two pending-proposal rows (5.17, 6.25) and the changes that close them.
+- [x] 4.2 Record what was read before writing each, so a later reader does not repeat the check.
+- [ ] 4.3 `correspondence-language-per-party`
+- [ ] 4.4 `one-contact-moment-on-several-cases`
+
 ## 3. Closing
 
 - [ ] 3.1 Archive this umbrella only after the three changes under it are archived,

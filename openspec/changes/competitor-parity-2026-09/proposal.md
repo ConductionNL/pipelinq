@@ -35,6 +35,34 @@ global per organisation, so the copies collide rather than coexist.
 Cluster 14 is owned by openregister, and its stated mechanism is "extend
 openregister's contact schemas **and pipelinq's contact registry**; dossiq declares
 which kinds a case type accepts". The two changes above are pipelinq's half of it.
+
+## Wave 4: the pending proposals
+
+The pending half of the gap register (`procest/_gaps/gap-register.json`, v4,
+2026-09-14) holds 146 proposals. Two of them are pipelinq's, and neither was carried by
+anything in this repo: the reading is recorded per change.
+
+| change | rows | size | consumes from |
+|---|---|---|---|
+| `correspondence-language-per-party` | 5.17 | M | nothing new; publishes a resolver filinq (ADR-075) and integriq read, and dossiq places |
+| `one-contact-moment-on-several-cases` | 6.25 | M | extends `contact-moments-on-pipelinq-schema`; dossiq's Communication tab consumes the widened contract |
+
+Both rows entered under decision **D1**, so no competitor has been read for either and
+each change says so on its face rather than inventing a passer. Under **D17** neither is
+scoped to municipalities: an MKB client who asks to be written to in English, and a
+supplier call that touches three cases, are the same requirement.
+
+The document half of 6.25 is not closed here. A document on a case is a Files node with
+a dossiq projection, so it stays open against filinq's `case-documents-and-the-flat-list`.
+
+### What was checked before writing them
+
+- 5.17 against `typed-fields-and-indicators-on-a-party`: REQ-PFI-001 administers typed
+  fields on a party kind, which is the container, but nothing in that change makes any
+  field steer a template or an outgoing message, so the row is not inside its scope.
+- 6.25 against `contact-moments-on-pipelinq-schema`: REQ-CMD-002 makes `caseReference`
+  a semantic reference to one case. One is the number the row is about, so that change
+  is the thing this one widens rather than the thing that carries it.
 openregister's half and dossiq's declaration are written in their own repos.
 
 ## The decisions these rest on
