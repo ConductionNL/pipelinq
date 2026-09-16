@@ -49,10 +49,16 @@ const DECLARED_KEYS = [
 ]
 
 /** Integriq's objects endpoint for the connection rows. */
-const CONNECTIONS_API = '/index.php/apps/openregister/api/objects/integriq/app_connection'
+const CONNECTIONS_API =
+	'/index.php/apps/openregister/api/objects/integriq/app_connection'
 
 /** The four app-config keys the Berichtenbox row waits for. */
-const BERICHTENBOX_KEYS = ['logius_client_id', 'logius_client_secret', 'pki_cert', 'pki_key']
+const BERICHTENBOX_KEYS = [
+	'logius_client_id',
+	'logius_client_secret',
+	'pki_cert',
+	'pki_key',
+]
 
 /**
  * Pipelinq's rows in integriq's registry, keyed by connection key.
@@ -62,7 +68,9 @@ const BERICHTENBOX_KEYS = ['logius_client_id', 'logius_client_secret', 'pki_cert
  *
  * @param request The authenticated request context.
  */
-async function connectionsByKey(request: APIRequestContext): Promise<Record<string, any>> {
+async function connectionsByKey(
+	request: APIRequestContext,
+): Promise<Record<string, any>> {
 	const res = await request.get(`${CONNECTIONS_API}?app=pipelinq&_limit=200`)
 	expect(res.ok(), `list integriq/app_connection -> ${res.status()}`).toBeTruthy()
 	const body = await res.json()
@@ -93,7 +101,10 @@ async function openIntegrations(page: Page): Promise<void> {
  * @param page The Playwright page, already on a pipelinq route.
  * @param url The API path.
  */
-async function getFromPage(page: Page, url: string): Promise<{ status: number, body: any }> {
+async function getFromPage(
+	page: Page,
+	url: string,
+): Promise<{ status: number; body: any }> {
 	return page.evaluate(async (target) => {
 		const res = await fetch(target, {
 			headers: { requesttoken: (window as any).OC?.requestToken || '' },
@@ -105,28 +116,39 @@ async function getFromPage(page: Page, url: string): Promise<{ status: number, b
 
 test.describe('Integrations', () => {
 	// @e2e admin-settings::the-declaration-names-ten-connections-in-page-order
-	test('lists the ten declared connections in declared order', async ({ page, request }) => {
+	test('lists the ten declared connections in declared order', async ({
+		page,
+		request,
+	}) => {
 		const byKey = await connectionsByKey(request)
 		expect(Object.keys(byKey).sort()).toEqual([...DECLARED_KEYS].sort())
 
-		const ordered = [...DECLARED_KEYS].sort((a, b) => byKey[a].order - byKey[b].order)
+		const ordered = [...DECLARED_KEYS].sort(
+			(a, b) => byKey[a].order - byKey[b].order,
+		)
 		expect(ordered).toEqual(DECLARED_KEYS)
 
 		await openIntegrations(page)
 		for (const key of DECLARED_KEYS) {
 			await expect(
-				page.getByRole('row', { name: new RegExp(byKey[key].title, 'i') }).first(),
+				page
+					.getByRole('row', { name: new RegExp(byKey[key].title, 'i') })
+					.first(),
 				`row for ${key}`,
 			).toBeVisible({ timeout: 15_000 })
 		}
 	})
 
 	// @e2e admin-settings::the-menu-opens-the-page-on-pipelinqs-own-rows
-	test('the settings entry opens the page preset to pipelinq', async ({ page }) => {
+	test('the settings entry opens the page preset to pipelinq', async ({
+		page,
+	}) => {
 		await openApp(page)
 		const entry = await revealNavEntryByTestId(page, 'ConnectionsMenu')
 		await Promise.all([
-			page.waitForURL(/\/settings\/integrations\?app=pipelinq$/, { timeout: 30_000 }),
+			page.waitForURL(/\/settings\/integrations\?app=pipelinq$/, {
+				timeout: 30_000,
+			}),
 			entry.click(),
 		])
 		await dismissWalkthrough(page)
@@ -135,13 +157,19 @@ test.describe('Integrations', () => {
 	})
 
 	// @e2e admin-settings::berichtenbox-names-the-keys-it-waits-for
-	test('Berichtenbox reads not configured and names the keys it waits for', async ({ page, request }) => {
+	test('Berichtenbox reads not configured and names the keys it waits for', async ({
+		page,
+		request,
+	}) => {
 		const row = (await connectionsByKey(request)).berichtenbox
 		expect(row, 'no declared row for berichtenbox').toBeTruthy()
 
 		// The instance may carry Logius credentials. Only an instance without
 		// them can show the unconfigured claim, and then the claim must be exact.
-		test.skip(row.status === 'configured', 'this instance has the four Berichtenbox keys set')
+		test.skip(
+			row.status === 'configured',
+			'this instance has the four Berichtenbox keys set',
+		)
 
 		expect(row.status).toBe('unconfigured')
 		for (const key of BERICHTENBOX_KEYS) {
@@ -157,14 +185,18 @@ test.describe('Integrations', () => {
 	})
 
 	// @e2e admin-settings::add-integration-goes-to-integriq-not-to-a-form
-	test('sends Add integration to integriq instead of offering a form', async ({ page }) => {
+	test('sends Add integration to integriq instead of offering a form', async ({
+		page,
+	}) => {
 		await openIntegrations(page)
 
 		// No generic Add button: a row nothing declared has nothing to check.
 		await expect(page.locator('[data-testid="cn-cta-primary"]')).toHaveCount(0)
 
 		await Promise.all([
-			page.waitForURL(/\/apps\/integriq\/connections\?app=pipelinq&link=1$/, { timeout: 30_000 }),
+			page.waitForURL(/\/apps\/integriq\/connections\?app=pipelinq&link=1$/, {
+				timeout: 30_000,
+			}),
 			clickHeaderAction(page, /Add integration|Integratie toevoegen/i),
 		])
 	})
@@ -189,7 +221,10 @@ test.describe('Integrations', () => {
 	})
 
 	// @e2e admin-settings::the-social-readiness-reaches-all-seven-rows
-	test('opening Social accounts reports every network', async ({ page, request }) => {
+	test('opening Social accounts reports every network', async ({
+		page,
+		request,
+	}) => {
 		await gotoAppRoute(page, '/social-accounts')
 		const listed = await getFromPage(page, appUrl('/api/social-accounts'))
 		expect(listed.status, 'social-accounts list').toBe(200)

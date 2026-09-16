@@ -121,11 +121,22 @@ class ConnectionsDeclarationTest extends TestCase {
 	 *
 	 * Integriq refuses a file whose `app` differs from the app it was read from.
 	 *
+	 * ⚠️ Parses the bytes with `simplexml_load_string()`, never
+	 * `simplexml_load_file()`. Under CI the app is mounted at
+	 * `server/apps/pipelinq` and `tests/bootstrap.php` pulls in the server's
+	 * `lib/base.php`, which hardens libxml with
+	 * `libxml_set_external_entity_loader(static fn () => null)`. With that
+	 * loader in place `simplexml_load_file()` resolves even the primary
+	 * document through the resolver and returns false for a perfectly valid
+	 * file, so this test went red on all six PHPUnit legs while passing on
+	 * every developer machine. `OC\App\InfoParser` reads the bytes and calls
+	 * `simplexml_load_string()`, and so does this test.
+	 *
 	 * @return void
 	 */
 	public function testTheFileNamesThisApp(): void {
 		$declaration = $this->declaration();
-		$infoXml     = simplexml_load_file($this->root() . '/appinfo/info.xml');
+		$infoXml     = simplexml_load_string((string)file_get_contents($this->root() . '/appinfo/info.xml'));
 
 		$this->assertNotFalse(condition: $infoXml);
 		$this->assertSame(expected: (string)$infoXml->id, actual: $declaration['app']);
