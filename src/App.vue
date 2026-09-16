@@ -16,7 +16,6 @@
 		:manifest="manifest"
 		:registry="registry"
 		:cellWidgets="cellWidgets"
-		:formatters="connectionFormatters"
 		:customComponents="connectionHandlers"
 		:pageTypes="pageTypes"
 		appId="pipelinq"
@@ -66,10 +65,7 @@ import { generateUrl } from '@nextcloud/router'
 import { reactive } from 'vue'
 import LeadCloseDateCell from './views/leads/cells/LeadCloseDateCell.vue'
 import LeadProbabilityCell from './views/leads/cells/LeadProbabilityCell.vue'
-import {
-	createConnectionFormatters,
-	createConnectionHandlers,
-} from './services/connectionRegistry.js'
+import { createConnectionHandlers } from './services/connectionRegistry.js'
 
 export default {
 	name: 'App',
@@ -180,17 +176,6 @@ export default {
 				'lead-close-date': LeadCloseDateCell,
 				'lead-probability': LeadProbabilityCell,
 			}
-		},
-
-		/**
-		 * The Integrations page's status and settings-link formatters
-		 * (adopt-connection-registry). CnAppRoot merges them over its built-ins.
-		 *
-		 * @return {Record<string, function(unknown): string>}
-		 * @spec openspec/changes/adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-131-an-admin-reads-pipelinqs-connections-on-an-integrations-page-over-integriqs-registry
-		 */
-		connectionFormatters() {
-			return createConnectionFormatters((key) => ncT('pipelinq', key))
 		},
 
 		/**
