@@ -66,7 +66,10 @@ import { generateUrl } from '@nextcloud/router'
 import { reactive } from 'vue'
 import LeadCloseDateCell from './views/leads/cells/LeadCloseDateCell.vue'
 import LeadProbabilityCell from './views/leads/cells/LeadProbabilityCell.vue'
-import { createConnectionFormatters, createConnectionHandlers } from './services/connectionRegistry.js'
+import {
+	createConnectionFormatters,
+	createConnectionHandlers,
+} from './services/connectionRegistry.js'
 
 export default {
 	name: 'App',
