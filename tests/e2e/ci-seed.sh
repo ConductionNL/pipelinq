@@ -229,6 +229,25 @@ if curl -sS -u "${USER_NAME}:${USER_PASS}" -H 'OCS-APIRequest: true' \
 	fi
 fi
 
+# With integriq installed and no URL recorded, the integrations step is
+# answered the way an operator who uses neither integration answers it: by
+# saving the step blank. The step is outstanding only when both URLs are
+# already blank, so posting a blank XWiki URL overwrites nothing, and it is
+# still not forced to a host that does not exist.
+STATUS_BODY_PRE="$(mktemp)"
+curl -sS -u "${USER_NAME}:${USER_PASS}" -H 'OCS-APIRequest: true' \
+	"${APP_BASE}/api/setup/status" -o "$STATUS_BODY_PRE"
+if python3 -c 'import json, sys; sys.exit(0 if json.load(open(sys.argv[1])).get("steps", {}).get("integrations", {}).get("done") is True else 1)' "$STATUS_BODY_PRE"; then
+	echo "[ci-seed] integrations step already met"
+else
+	echo "[ci-seed] integrations step outstanding, answering it blank"
+	post_json "${APP_BASE}/api/setup/config" '{"xwiki_direct_url":""}'
+	if [ "$POST_CODE" != "200" ]; then
+		echo "::error::Could not answer the integrations setup step (HTTP ${POST_CODE}). An unmet optional step makes CnAppRoot cover the shell with the wizard in every fresh browser context."
+		exit 1
+	fi
+fi
+
 post_json "${APP_BASE}/api/setup/config" '{"receipt_company_name":"CI Test Organisation"}'
 if [ "$POST_CODE" != "200" ]; then
 	echo "::error::Could not complete the organisation setup step (HTTP ${POST_CODE}). An unmet optional step makes CnAppRoot cover the shell with the wizard in every fresh browser context."
