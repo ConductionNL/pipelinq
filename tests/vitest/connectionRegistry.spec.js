@@ -39,7 +39,10 @@ describe('the Integrations page declaration', () => {
 
 	it('offers no generic Add button, only Add integration through a registered handler', () => {
 		expect(page.config.showAdd).toBe(false)
-		const handlers = createConnectionHandlers({ generateUrl: echo, assign: () => {} })
+		const handlers = createConnectionHandlers({
+			generateUrl: echo,
+			assign: () => {},
+		})
 		const names = page.config.headerActions.map((a) => a.handler)
 		expect(names).toEqual(['openIntegriqConnections'])
 		for (const name of names) {
@@ -87,8 +90,12 @@ describe('the Add integration handler', () => {
 
 		handlers.openIntegriqConnections({ actionId: 'add-integration' })
 
-		expect(INTEGRIQ_CONNECTIONS_PATH).toBe('/apps/integriq/connections?app=pipelinq&link=1')
-		expect(visited).toEqual(['/index.php/apps/integriq/connections?app=pipelinq&link=1'])
+		expect(INTEGRIQ_CONNECTIONS_PATH).toBe(
+			'/apps/integriq/connections?app=pipelinq&link=1',
+		)
+		expect(visited).toEqual([
+			'/index.php/apps/integriq/connections?app=pipelinq&link=1',
+		])
 	})
 })
 
@@ -115,7 +122,9 @@ describe('the connection status formatter', () => {
 	})
 
 	it('does not let a mock adapter read as a configured connection', () => {
-		expect(formatters.connectionStatus('simulated')).not.toBe(formatters.connectionStatus('configured'))
+		expect(formatters.connectionStatus('simulated')).not.toBe(
+			formatters.connectionStatus('configured'),
+		)
 	})
 
 	it('renders an unknown value as itself and a missing one as empty', () => {
@@ -128,7 +137,11 @@ describe('the connection status formatter', () => {
 
 describe('the connection settings-link formatter', () => {
 	it('labels a link when there is somewhere to go', () => {
-		expect(formatters.connectionSettingsLabel('/settings/admin/pipelinq#section-cti')).toBe('Open settings')
+		expect(
+			formatters.connectionSettingsLabel(
+				'/settings/admin/pipelinq#section-cti',
+			),
+		).toBe('Open settings')
 	})
 
 	it('offers nothing when the connection has no settings section', () => {

@@ -21,7 +21,8 @@
  * Where Add integration lands: integriq's Connections overview, preset to this
  * app and opening the link-a-source dialog (hydra connection-registry D9).
  */
-export const INTEGRIQ_CONNECTIONS_PATH = '/apps/integriq/connections?app=pipelinq&link=1'
+export const INTEGRIQ_CONNECTIONS_PATH =
+	'/apps/integriq/connections?app=pipelinq&link=1'
 
 /**
  * The English label for each of the six registry statuses.
@@ -56,9 +57,11 @@ export function createConnectionFormatters(translate) {
 		 * @spec openspec/changes/adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-131-an-admin-reads-pipelinqs-connections-on-an-integrations-page-over-integriqs-registry
 		 */
 		connectionStatus(value) {
-			const source = typeof value === 'string' && Object.hasOwn(CONNECTION_STATUS_LABELS, value)
-				? CONNECTION_STATUS_LABELS[value]
-				: null
+			const source =
+				typeof value === 'string'
+				&& Object.hasOwn(CONNECTION_STATUS_LABELS, value)
+					? CONNECTION_STATUS_LABELS[value]
+					: null
 			return source ? translate(source) : String(value ?? '')
 		},
 
@@ -71,7 +74,9 @@ export function createConnectionFormatters(translate) {
 		 * @spec openspec/changes/adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-131-an-admin-reads-pipelinqs-connections-on-an-integrations-page-over-integriqs-registry
 		 */
 		connectionSettingsLabel(value) {
-			return typeof value === 'string' && value.length > 0 ? translate('Open settings') : ''
+			return typeof value === 'string' && value.length > 0
+				? translate('Open settings')
+				: ''
 		},
 	}
 }
