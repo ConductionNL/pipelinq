@@ -129,13 +129,20 @@ test.describe('Integrations', () => {
 		expect(ordered).toEqual(DECLARED_KEYS)
 
 		await openIntegrations(page)
+		// Match a row through its Connection cell, by the exact declared title.
+		// As a RegExp the title misreads: "Telephony (CTI)" becomes a group that
+		// never matches the parentheses, and "X" matches every row. A row's
+		// accessible name also starts with its "Select row" checkbox.
 		for (const key of DECLARED_KEYS) {
 			await expect(
-				page
-					.getByRole('row', { name: new RegExp(byKey[key].title, 'i') })
-					.first(),
+				page.getByRole('row').filter({
+					has: page.getByRole('cell', {
+						name: String(byKey[key].title),
+						exact: true,
+					}),
+				}),
 				`row for ${key}`,
-			).toBeVisible({ timeout: 15_000 })
+			).toHaveCount(1, { timeout: 15_000 })
 		}
 	})
 
