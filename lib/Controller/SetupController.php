@@ -79,6 +79,27 @@ class SetupController extends Controller {
 	private const DATASET_KEY = 'demo_dataset';
 
 	/**
+	 * App-config key recording that the optional integrations step has been
+	 * answered, including with "leave both blank".
+	 *
+	 * Without it the step could only be met by filling in a URL. On an
+	 * instance with integriq installed, an operator who uses neither Shillinq
+	 * nor XWiki had no answer that counted, so the step stayed unmet for good
+	 * and CnAppRoot kept opening the wizard. saveConfig() sets it whenever
+	 * either integration key is posted, blank or not.
+	 *
+	 * @var string
+	 */
+	private const INTEGRATIONS_DECIDED_KEY = 'integrations_decided';
+
+	/**
+	 * The config keys the integrations step writes.
+	 *
+	 * @var string[]
+	 */
+	private const INTEGRATION_KEYS = ['shillinq_app_url', 'xwiki_direct_url'];
+
+	/**
 	 * Constructor.
 	 *
 	 * @param string $appName The app id.
@@ -154,8 +175,10 @@ class SetupController extends Controller {
 		// Organisation step done once the operator has named the organisation.
 		$organisationDone = $this->config(key: 'receipt_company_name') !== '';
 
-		// Integrations step done once either optional integration URL is set, or
-		// when neither integration app is installed (nothing to configure).
+		// Integrations step done once either optional integration URL is set,
+		// once the step has been answered (blank counts), or when neither
+		// integration app is installed (nothing to configure).
+		$integrationsDecided = $this->config(key: self::INTEGRATIONS_DECIDED_KEY) !== '';
 		$shillinqUrl = $this->config(key: 'shillinq_app_url');
 		$xwikiUrl = $this->config(key: 'xwiki_direct_url');
 		$hasShillinq = $this->appManager->isInstalled('shillinq');
@@ -164,7 +187,7 @@ class SetupController extends Controller {
 		// "not installed" rather than erroring — which would silently mark the
 		// integrations step done when the app is in fact present.
 		$hasXwiki = FleetAppId::isInstalled($this->appManager, 'integriq');
-		$integrationsDone = ($shillinqUrl !== '' || $xwikiUrl !== '' || ($hasShillinq === false && $hasXwiki === false));
+		$integrationsDone = ($integrationsDecided === true || $shillinqUrl !== '' || $xwikiUrl !== '' || ($hasShillinq === false && $hasXwiki === false));
 
 		if ($currencyDone === true) {
 			$this->appConfig->setValueString(Application::APP_ID, 'setup_completed_version', (string)self::SETUP_VERSION);
@@ -260,6 +283,10 @@ class SetupController extends Controller {
 			}
 
 			$this->appConfig->setValueString(Application::APP_ID, (string)$key, $stored);
+
+			if (in_array($key, self::INTEGRATION_KEYS, true) === true) {
+				$this->appConfig->setValueString(Application::APP_ID, self::INTEGRATIONS_DECIDED_KEY, 'answered');
+			}
 		}
 
 		return new DataResponse(['success' => true]);
