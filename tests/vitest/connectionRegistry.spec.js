@@ -32,6 +32,7 @@ const page = fragment.pages.find((p) => p.id === 'Integrations')
 const menu = fragment.menu.find((m) => m.id === 'ConnectionsMenu')
 const echo = (key) => key
 const appVue = fs.readFileSync(path.resolve(__dirname, '../../src/App.vue'), 'utf8')
+const mainJs = fs.readFileSync(path.resolve(__dirname, '../../src/main.js'), 'utf8')
 
 // The registry the way CnAppRoot builds it: built-ins first, the app's own
 // formatters over them. App.vue passes none, so the built-ins answer alone.
@@ -112,9 +113,14 @@ describe('the Add integration handler', () => {
 describe('the connection formatters', () => {
 	it('labels a switched-off connection through the nextcloud-vue built-in', () => {
 		// CnAppRoot lets an app formatter win over a built-in, so a local copy
-		// passed to the shell would shadow the library's labels.
+		// passed to the shell would shadow the library's labels. App.vue does
+		// not declare the prop, so a `formatters` passed from main.js would
+		// fall through onto CnAppRoot all the same.
 		expect(appVue, 'App.vue passes its own formatters').not.toContain(
 			':formatters=',
+		)
+		expect(mainJs, 'main.js passes its own formatters').not.toContain(
+			'formatters:',
 		)
 		expect(formatters.connectionStatus('disabled')).toBe('Switched off')
 	})
