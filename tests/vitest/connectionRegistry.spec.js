@@ -10,14 +10,20 @@
  * a column naming a formatter no map provides, or a header action naming a
  * handler nobody registered, both render quietly as nothing.
  *
+ * The two formatters are nextcloud-vue built-ins. They translate through
+ * @nextcloud/l10n, which reads the browser session on import, so this spec
+ * runs in jsdom.
+ *
+ * @vitest-environment jsdom
  * @spec openspec/changes/adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-131-an-admin-reads-pipelinqs-connections-on-an-integrations-page-over-integriqs-registry
  */
 
+import { BUILT_IN_FORMATTERS } from '@conduction/nextcloud-vue/src/utils/builtInFormatters.js'
+import * as fs from 'fs'
+import * as path from 'path'
 import { describe, expect, it } from 'vitest'
 import fragment from '../../src/manifest.d/97-connection-registry.json'
 import {
-	CONNECTION_STATUS_LABELS,
-	createConnectionFormatters,
 	createConnectionHandlers,
 	INTEGRIQ_CONNECTIONS_PATH,
 } from '../../src/services/connectionRegistry.js'
@@ -25,7 +31,11 @@ import {
 const page = fragment.pages.find((p) => p.id === 'Integrations')
 const menu = fragment.menu.find((m) => m.id === 'ConnectionsMenu')
 const echo = (key) => key
-const formatters = createConnectionFormatters(echo)
+const appVue = fs.readFileSync(path.resolve(__dirname, '../../src/App.vue'), 'utf8')
+
+// The registry the way CnAppRoot builds it: built-ins first, the app's own
+// formatters over them. App.vue passes none, so the built-ins answer alone.
+const formatters = { ...BUILT_IN_FORMATTERS }
 
 describe('the Integrations page declaration', () => {
 	it('reads integriq app_connection and requires integriq', () => {
@@ -99,54 +109,13 @@ describe('the Add integration handler', () => {
 	})
 })
 
-describe('the connection status formatter', () => {
-	it('names each of the six states through the translator', () => {
-		const dutch = createConnectionFormatters((key) => `nl:${key}`)
-		expect(dutch.connectionStatus('configured')).toBe('nl:Configured')
-		expect(dutch.connectionStatus('limited')).toBe('nl:Limited')
-		expect(formatters.connectionStatus('limited')).toBe('Limited')
-		expect(formatters.connectionStatus('unconfigured')).toBe('Not configured')
-		expect(formatters.connectionStatus('simulated')).toBe('Simulated')
-		expect(formatters.connectionStatus('unavailable')).toBe('Not available')
-		expect(formatters.connectionStatus('error')).toBe('Error')
-		expect(Object.keys(CONNECTION_STATUS_LABELS)).toHaveLength(6)
-	})
-
-	// A preview network works in part. Rendering it as Not available would
-	// say it does not work, and as Configured would say it always does.
-	it('keeps a connection that works in part apart from working and broken', () => {
-		const limited = formatters.connectionStatus('limited')
-		expect(limited).not.toBe(formatters.connectionStatus('configured'))
-		expect(limited).not.toBe(formatters.connectionStatus('unavailable'))
-		expect(limited).not.toBe(formatters.connectionStatus('error'))
-	})
-
-	it('does not let a mock adapter read as a configured connection', () => {
-		expect(formatters.connectionStatus('simulated')).not.toBe(
-			formatters.connectionStatus('configured'),
+describe('the connection formatters', () => {
+	it('labels a switched-off connection through the nextcloud-vue built-in', () => {
+		// CnAppRoot lets an app formatter win over a built-in, so a local copy
+		// passed to the shell would shadow the library's labels.
+		expect(appVue, 'App.vue passes its own formatters').not.toContain(
+			':formatters=',
 		)
-	})
-
-	it('renders an unknown value as itself and a missing one as empty', () => {
-		expect(formatters.connectionStatus('degraded')).toBe('degraded')
-		expect(formatters.connectionStatus('toString')).toBe('toString')
-		expect(formatters.connectionStatus(undefined)).toBe('')
-		expect(formatters.connectionStatus(null)).toBe('')
-	})
-})
-
-describe('the connection settings-link formatter', () => {
-	it('labels a link when there is somewhere to go', () => {
-		expect(
-			formatters.connectionSettingsLabel(
-				'/settings/admin/pipelinq#section-cti',
-			),
-		).toBe('Open settings')
-	})
-
-	it('offers nothing when the connection has no settings section', () => {
-		expect(formatters.connectionSettingsLabel('')).toBe('')
-		expect(formatters.connectionSettingsLabel(undefined)).toBe('')
-		expect(formatters.connectionSettingsLabel(null)).toBe('')
+		expect(formatters.connectionStatus('disabled')).toBe('Switched off')
 	})
 })
