@@ -233,7 +233,8 @@ class TicketServiceTest extends TestCase {
 		$result = $this->buildService()->logContactmoment(
 			client: self::NIL_UUID,
 			channel: 'telefoon',
-			title: 'Booking change request'
+			title: 'Booking change request',
+			direction: 'inbound'
 		);
 
 		$this->assertSame(expected: 'not_configured', actual: $result['error']['code']);
@@ -268,6 +269,7 @@ class TicketServiceTest extends TestCase {
 			client: self::NIL_UUID,
 			channel: 'telefoon',
 			title: 'Booking change request',
+			direction: 'inbound',
 			outcome: 'handled',
 			notes: 'Customer wants to reschedule.'
 		);
@@ -298,7 +300,8 @@ class TicketServiceTest extends TestCase {
 		$result = $this->buildService()->logContactmoment(
 			client: self::NIL_UUID,
 			channel: 'telefoon',
-			title: 'Booking change request'
+			title: 'Booking change request',
+			direction: 'inbound'
 		);
 
 		$this->assertSame(expected: 'forbidden', actual: $result['error']['code']);
@@ -328,4 +331,84 @@ class TicketServiceTest extends TestCase {
 		$this->assertNull(actual: $service->detectTypeInText(text: 'How many leads are open?'));
 		$this->assertNull(actual: $service->detectTypeInText(text: ''));
 	}//end testDetectTypeInTextRecognisesSubtypeVocabulary()
+	/**
+	 * A contactmoment written without a direction is refused, naming the field.
+	 *
+	 * OpenRegister validates `required` per schema and `ticket` holds three
+	 * facets under one schema, so this guard is the write path's. It is the
+	 * only thing standing between a request and a schema-level `required`
+	 * that would refuse every request and complaint too.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/contact-moments-on-pipelinq-schema/specs/contactmomenten/spec.md#requirement-direction-is-a-first-class-field-req-cmd-001
+	 */
+	public function testAContactmomentWithoutADirectionIsRefused(): void {
+		$this->stubConfigured();
+		$objectService = $this->mockObjectService();
+		$objectService->expects($this->never())->method('saveObject');
+
+		$this->expectException(\InvalidArgumentException::class);
+		$this->expectExceptionMessage('direction');
+
+		$this->buildService()->save(
+			ticketType: TicketService::TYPE_CONTACTMOMENT,
+			payload: ['title' => 'Gebeld', 'channel' => 'telefoon']
+		);
+	}//end testAContactmomentWithoutADirectionIsRefused()
+
+	/**
+	 * A direction outside the enum is refused, naming what is allowed.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/contact-moments-on-pipelinq-schema/specs/contactmomenten/spec.md#requirement-direction-is-a-first-class-field-req-cmd-001
+	 */
+	public function testADirectionOutsideTheEnumIsRefused(): void {
+		$this->stubConfigured();
+		$this->mockObjectService();
+
+		$this->expectException(\InvalidArgumentException::class);
+		$this->expectExceptionMessage('inbound, outbound, internal');
+
+		$this->buildService()->save(
+			ticketType: TicketService::TYPE_CONTACTMOMENT,
+			payload: ['title' => 'Gebeld', 'channel' => 'telefoon', 'direction' => 'sideways']
+		);
+	}//end testADirectionOutsideTheEnumIsRefused()
+
+	/**
+	 * A request is NOT refused for lacking a direction.
+	 *
+	 * The control for the two tests above: without it a guard that refused
+	 * every ticket would look exactly like a guard that works.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/contact-moments-on-pipelinq-schema/specs/contactmomenten/spec.md#requirement-direction-is-a-first-class-field-req-cmd-001
+	 */
+	public function testARequestNeedsNoDirection(): void {
+		$this->stubConfigured();
+
+		$captured = [];
+		$objectService = $this->mockObjectService();
+		$objectService->method('saveObject')->willReturnCallback(
+			static function (array $object) use (&$captured): ObjectEntityInterface {
+				$captured = $object;
+				$entity = new ObjectEntity();
+				$entity->setUuid(self::NIL_UUID);
+				$entity->setObject($object);
+
+				return $entity;
+			}
+		);
+
+		$this->buildService()->save(
+			ticketType: TicketService::TYPE_REQUEST,
+			payload: ['title' => 'Aanvraag subsidie']
+		);
+
+		$this->assertSame(expected: TicketService::TYPE_REQUEST, actual: $captured['ticketType']);
+		$this->assertArrayNotHasKey(key: 'direction', array: $captured);
+	}//end testARequestNeedsNoDirection()
 }//end class

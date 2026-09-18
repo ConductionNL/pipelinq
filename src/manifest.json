@@ -2212,6 +2212,7 @@
 					"status",
 					"priority",
 					"channel",
+					"direction",
 					"occurredAt"
 				],
 				"sidebar": {
