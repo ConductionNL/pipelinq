@@ -1,0 +1,29 @@
+{
+  "_note": "correspondence-language-per-party. The language a party asked to be written in, held on the party and honoured by whoever writes to them. Nothing is inferred from a name, an address or a nationality: a preference is something a person states. The selectable values are NOT written into the schema, because the set is whatever locales the instance ships and a schema enum would go stale the day a language pack is added or removed.",
+  "components": {
+    "schemas": {
+      "client": {
+        "properties": {
+          "correspondenceLanguage": {
+            "type": "string",
+            "title": "Correspondence language",
+            "description": "The BCP 47 language tag this party asked to be written in. Optional and unset by default, and unset means unset: a party with a Dutch name and a Dutch address who has stated nothing carries nothing here. The resolver answers what would be used instead.",
+            "maxLength": 35,
+            "facetable": true
+          }
+        }
+      },
+      "contact": {
+        "properties": {
+          "correspondenceLanguage": {
+            "type": "string",
+            "title": "Correspondence language",
+            "description": "The BCP 47 language tag this party asked to be written in. Optional and unset by default; nothing infers it.",
+            "maxLength": 35,
+            "facetable": true
+          }
+        }
+      }
+    }
+  }
+}

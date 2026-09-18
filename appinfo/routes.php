@@ -141,6 +141,13 @@ return [
         ['name' => 'partyKind#import',  'url' => '/api/party-links/import',           'verb' => 'POST'],
         ['name' => 'partyKind#endLink', 'url' => '/api/party-links/{linkId}',         'verb' => 'DELETE'],
 
+        // The language a party asked to be written in, and the published
+        // resolver a consuming app calls instead of reading the property
+        // (correspondence-language-per-party).
+        ['name' => 'correspondenceLanguage#available',     'url' => '/api/correspondence-languages',                  'verb' => 'GET'],
+        ['name' => 'correspondenceLanguage#resolve',       'url' => '/api/parties/{partyId}/correspondence-language', 'verb' => 'GET'],
+        ['name' => 'correspondenceLanguage#setPreference', 'url' => '/api/parties/{partyId}/correspondence-language', 'verb' => 'PUT'],
+
         // CTI screen-pop / click-to-dial adapter endpoints (cti-screenpop-adapter).
         // Routes are listed BEFORE the SPA / wildcard catch-alls (ADR-016).
         ['name' => 'cti#webhook',          'url' => '/api/cti/webhook/{platform}',         'verb' => 'POST'],
