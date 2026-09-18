@@ -15,9 +15,11 @@ The customer 360 client view MUST include a satisfaction panel showing the clien
 - GIVEN a client with 6 survey responses across two contactmomenten
 - WHEN a user opens the client in customer 360
 - THEN the satisfaction panel MUST show the client-level NPS, average rating, response count of 6, a trend indicator, and up to 3 recent verbatims
+- @e2e exclude covered by PHPUnit on `SatisfactionAggregationService::summarise()`
 
 #### Scenario: Empty state without responses
 
 - GIVEN a client with no linked survey responses
 - WHEN the client view is opened
 - THEN the satisfaction panel MUST render an empty state explaining that no satisfaction data has been collected yet
+- e2e: `tests/e2e/customer-satisfaction.spec.ts`
