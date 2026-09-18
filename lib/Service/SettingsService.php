@@ -161,6 +161,19 @@ class SettingsService {
 		'partyKind_schema',
 		'partyKindAcceptance_schema',
 		'partyLink_schema',
+		// Customer satisfaction, closed loop (customer-satisfaction-closed-loop).
+		'survey_schema',
+		'surveyInvitation_schema',
+		'surveyResponse_schema',
+		// The dispatch rules, as a JSON array, so an administrator adds a rule
+		// without a release.
+		'survey_dispatch_rules',
+		// At or below this 1 to 5 rating a response counts as a detractor.
+		'survey_detractor_rating_threshold',
+		// Who follows up when the client has no owner. Without it an ownerless
+		// client's unhappy response reaches nobody, which looks exactly like
+		// one that was followed up.
+		'survey_default_assignee',
 	];
 
 	/**

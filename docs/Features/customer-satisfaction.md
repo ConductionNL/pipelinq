@@ -1,6 +1,29 @@
-# Customer Satisfaction (KTO/NPS)
+# Customer satisfaction (KTO/NPS)
 
-**Status:** Planned
+**Status:** the closed loop is implemented. A survey is sent on a per-recipient
+token, answered once, classified, and an unhappy answer raises a follow-up task
+with somebody's name on it.
+
+What is implemented:
+
+- dispatch rules, administered rather than coded: a trigger, a survey, a
+  channel, a delay, a cooldown and a token lifetime
+- an invitation per recipient, with its own token, persisted whether it was
+  sent or suppressed, and the reason it was suppressed
+- survey fatigue throttling per contact across surveys, and a permanent opt-out
+  the respondent can set from the form itself
+- single-use tokens: a second submission is refused, and an expired one opens a
+  closed page rather than an error
+- detractor follow-up: a task for the client's owner, or for the configured
+  default assignee when the client has none, with the notification produced by
+  the OpenRegister notification engine rather than by app code
+- response-rate analytics, with suppressed and failed invitations reported
+  beside the percentage rather than folded into it
+- a per-client satisfaction panel on customer 360, with its own empty state
+
+What is not built yet: the admin surface for the dispatch rules is the settings
+API rather than a screen, and sms and whatsapp delivery wait on the outbound
+channel adapters being configured.
 
 ## Overview
 

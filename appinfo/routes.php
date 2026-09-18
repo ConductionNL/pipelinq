@@ -148,6 +148,14 @@ return [
         ['name' => 'correspondenceLanguage#resolve',       'url' => '/api/parties/{partyId}/correspondence-language', 'verb' => 'GET'],
         ['name' => 'correspondenceLanguage#setPreference', 'url' => '/api/parties/{partyId}/correspondence-language', 'verb' => 'PUT'],
 
+        // Customer satisfaction, closed loop (customer-satisfaction-closed-loop).
+        // The two public token routes carry no session: the token IS the
+        // authorisation, so both are rate limited per anonymous caller.
+        ['name' => 'publicSurvey#showInvitation',   'url' => '/survey/i/{token}',            'verb' => 'GET'],
+        ['name' => 'publicSurvey#submitInvitation', 'url' => '/survey/i/{token}',            'verb' => 'POST'],
+        ['name' => 'satisfaction#clientPanel',      'url' => '/api/satisfaction/client/{clientId}', 'verb' => 'GET'],
+        ['name' => 'satisfaction#responseRate',     'url' => '/api/satisfaction/response-rate',     'verb' => 'GET'],
+
         // CTI screen-pop / click-to-dial adapter endpoints (cti-screenpop-adapter).
         // Routes are listed BEFORE the SPA / wildcard catch-alls (ADR-016).
         ['name' => 'cti#webhook',          'url' => '/api/cti/webhook/{platform}',         'verb' => 'POST'],

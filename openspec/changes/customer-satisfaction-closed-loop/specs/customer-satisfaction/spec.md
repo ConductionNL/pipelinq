@@ -16,6 +16,7 @@ The system MUST register a `surveyInvitation` schema in the pipelinq register ca
 - WHEN the repair step runs
 - THEN the `surveyInvitation` schema MUST exist in the pipelinq register with all listed properties
 - AND `surveyResponse.invitationRef` and `contact.surveyOptOut` MUST be present on the existing schemas
+- @e2e exclude a register import; covered by the fragment and the repair step
 
 ---
 
@@ -30,12 +31,14 @@ Admins MUST be able to configure dispatch rules — trigger (entity type + termi
 - GIVEN an admin in the survey settings view
 - WHEN they create a rule "contactmoment closed → KTO survey, email, delay 60 minutes, cooldown 30 days"
 - THEN the rule MUST be persisted in app configuration and listed as enabled
+- @e2e exclude admin settings surface; covered by PHPUnit on `SurveyDispatchService::rules()`
 
 #### Scenario: Disabled rule is inert
 
 - GIVEN a dispatch rule that is disabled
 - WHEN a matching interaction completes
 - THEN no `surveyInvitation` MUST be created for that rule
+- @e2e exclude covered by PHPUnit on `matchingRules()`
 
 ---
 
@@ -53,6 +56,7 @@ The system MUST create a `surveyInvitation` with a unique token when a tracked i
 - THEN a `surveyInvitation` MUST be created with a unique token, `channel = email`, and the contact's `contactsUid`
 - AND on the next dispatch run an email containing the link `/apps/pipelinq/survey/i/{token}` MUST be sent
 - AND the invitation status MUST become `sent` with `sentAt` populated
+- @e2e exclude needs a mail transport; covered by PHPUnit on `buildInvitation()` and the job plan
 
 #### Scenario: Delivery failure does not break the interaction
 
@@ -60,6 +64,7 @@ The system MUST create a `surveyInvitation` with a unique token when a tracked i
 - WHEN the interaction completes
 - THEN the interaction save MUST succeed unaffected
 - AND the invitation MUST be persisted with status `failed`
+- @e2e exclude a transport failure cannot be staged in the browser; covered by PHPUnit on the job
 
 ---
 
@@ -75,18 +80,21 @@ The public survey endpoint MUST accept per-invitation tokens: render the survey 
 - WHEN the respondent opens the link and submits required answers
 - THEN a `surveyResponse` MUST be created with `invitationRef` set and linked to the invitation's entity
 - AND the invitation MUST have `status = responded`, `respondedAt` and `responseRef` populated
+- e2e: `tests/e2e/customer-satisfaction.spec.ts`
 
 #### Scenario: Single use enforced
 
 - GIVEN an invitation with `status = responded`
 - WHEN its token is used again
 - THEN the submission MUST be rejected and no second `surveyResponse` MUST be created
+- e2e: `tests/e2e/customer-satisfaction.spec.ts`
 
 #### Scenario: Expired token
 
 - GIVEN an invitation whose `expiresAt` is in the past
 - WHEN the link is opened
 - THEN a "survey closed" page MUST be shown instead of the form
+- @e2e exclude covered by PHPUnit on `stateOf()`
 
 ---
 
@@ -103,18 +111,21 @@ The system MUST suppress dispatch when the contact was sent any survey invitatio
 - WHEN another tracked interaction for that contact completes
 - THEN no message MUST be sent
 - AND an invitation MUST be persisted with `status = suppressed` and `suppressionReason = cooldown`
+- @e2e exclude covered by PHPUnit on the guard chain
 
 #### Scenario: Permanent opt-out
 
 - GIVEN a contact with `surveyOptOut = true`
 - WHEN any dispatch rule matches an interaction for that contact
 - THEN the invitation MUST be suppressed with reason `opt-out`
+- @e2e exclude covered by PHPUnit on the guard chain
 
 #### Scenario: Respondent opts out from the public form
 
 - GIVEN a respondent on the public survey form
 - WHEN they tick the opt-out control and submit
 - THEN the linked contact's `surveyOptOut` MUST be set to true
+- @e2e exclude covered by PHPUnit on `recordOptOut()`
 
 ---
 
@@ -130,6 +141,7 @@ The survey analytics view MUST report invitations sent, responses received, and 
 - WHEN the analytics view loads
 - THEN the response rate MUST display 20% (10 of 50 delivered)
 - AND suppressed (5) and failed (1) MUST be shown as separate counts, outside the denominator
+- e2e: `tests/e2e/customer-satisfaction.spec.ts`
 
 ---
 
@@ -145,11 +157,13 @@ When a `surveyResponse` contains an NPS answer of 6 or lower, or a 1–5 rating 
 - WHEN a response linked to that client is submitted with NPS answer 3
 - THEN a follow-up task MUST appear in `maria`'s My Work queue referencing the response
 - AND `maria` MUST receive a Nextcloud notification produced by the OR notification engine
+- @e2e exclude covered by PHPUnit on `DetractorFollowUpService::process()`
 
 #### Scenario: Promoter response stays silent
 
 - WHEN a response is submitted with NPS answer 9 and all ratings above threshold
 - THEN no follow-up task and no detractor notification MUST be created
+- @e2e exclude covered by PHPUnit on the classification
 
 #### Scenario: Ownerless client falls back to default assignee
 
@@ -157,6 +171,7 @@ When a `surveyResponse` contains an NPS answer of 6 or lower, or a 1–5 rating 
 - AND a configured default assignee `jan`
 - WHEN the response is processed
 - THEN the follow-up task MUST be assigned to `jan`
+- @e2e exclude covered by PHPUnit on `assigneeFor()`
 
 ---
 
@@ -171,3 +186,4 @@ The feature documentation MUST reflect implementation reality: `docs/Features/cu
 - WHEN the docs pages are rendered
 - THEN `customer-satisfaction.md` MUST NOT carry a bare "Status: Planned" for the V1 engine
 - AND `terugbel-taakbeheer.md` MUST point readers at `callback-management`
+- @e2e exclude a docs assertion; covered by the docs conformance gate
