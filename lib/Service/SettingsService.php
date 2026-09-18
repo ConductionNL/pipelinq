@@ -174,6 +174,17 @@ class SettingsService {
 		// client's unhappy response reaches nobody, which looks exactly like
 		// one that was followed up.
 		'survey_default_assignee',
+		// The programme above the cases (the-project-above-the-cases).
+		'programme_schema',
+		'programmeTask_schema',
+		'programmeTeamMember_schema',
+		'programmeWorkItem_schema',
+		'programmeCycle_schema',
+		'programmeEstimate_schema',
+		'estimationScale_schema',
+		// Where a programme's progress figure comes from by default, with a
+		// per-programme override.
+		'programme_progress_mode',
 	];
 
 	/**
