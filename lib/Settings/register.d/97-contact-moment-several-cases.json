@@ -1,0 +1,66 @@
+{
+  "_note": "one-contact-moment-on-several-cases. One telephone call about three cases is one record filed on three cases, not three copies. The set lives on `caseReferences` rather than widening `caseReference`, because `caseReference` is one property on one schema that three facets share and `request` keeps it a single string. On a contact moment `caseReference` mirrors `primaryCaseReference`, so every existing reader keeps working.",
+  "components": {
+    "schemas": {
+      "ticket": {
+        "properties": {
+          "caseReferences": {
+            "type": "array",
+            "title": "Case references",
+            "description": "Every case this contact moment is filed on, in the order it was filed, as ADR-048 semantic references to https://openregister.app/ns#Case. Holds at least one entry and never the same reference twice. Filing onto a further case appends here; it never copies the contact moment.",
+            "facetable": true,
+            "items": {
+              "type": "string",
+              "format": "uuid",
+              "referenceSemanticType": "https://openregister.app/ns#Case"
+            }
+          },
+          "primaryCaseReference": {
+            "type": "string",
+            "title": "Primary case",
+            "description": "The one case a surface shows when it can show only one. Always a member of caseReferences, and never answered by position in that set: a reorder must not move the primary. Mirrored onto caseReference so a reader that knows only the single-reference shape still resolves the right case.",
+            "format": "uuid",
+            "referenceSemanticType": "https://openregister.app/ns#Case",
+            "facetable": true
+          },
+          "caseFilings": {
+            "type": "array",
+            "title": "Filing trail",
+            "description": "One entry per act that filed this contact moment onto a case or took it off one: which case, which act, who performed it and when. Filing is an act rather than a copy, so the trail is the only record that the second case was added by somebody rather than logged there.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "case": {
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Case",
+                  "description": "The case the act named."
+                },
+                "act": {
+                  "type": "string",
+                  "title": "Act",
+                  "enum": [
+                    "filed",
+                    "unfiled"
+                  ],
+                  "description": "Whether the case was added or removed."
+                },
+                "by": {
+                  "type": "string",
+                  "title": "By",
+                  "description": "The user id that performed the act."
+                },
+                "at": {
+                  "type": "string",
+                  "format": "date-time",
+                  "title": "At",
+                  "description": "When the act happened."
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

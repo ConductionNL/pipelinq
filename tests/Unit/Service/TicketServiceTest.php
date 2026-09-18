@@ -411,4 +411,99 @@ class TicketServiceTest extends TestCase {
 		$this->assertSame(expected: TicketService::TYPE_REQUEST, actual: $captured['ticketType']);
 		$this->assertArrayNotHasKey(key: 'direction', array: $captured);
 	}//end testARequestNeedsNoDirection()
+	/**
+	 * A case set holding the same case twice is refused on every write path.
+	 *
+	 * Checked in the service rather than only in the filing acts, because an
+	 * import, an API call and a flow write through here too.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/one-contact-moment-on-several-cases/specs/contactmomenten/spec.md#requirement-a-contact-moment-references-a-case-semantically-req-cmd-002
+	 */
+	public function testADuplicateCaseReferenceIsRefused(): void {
+		$this->stubConfigured();
+		$objectService = $this->mockObjectService();
+		$objectService->expects($this->never())->method('saveObject');
+
+		$this->expectException(\InvalidArgumentException::class);
+		$this->expectExceptionMessage('already holds case-a');
+
+		$this->buildService()->save(
+			ticketType: TicketService::TYPE_CONTACTMOMENT,
+			payload: [
+				'title' => 'Gebeld',
+				'channel' => 'telefoon',
+				'direction' => 'inbound',
+				'caseReferences' => ['case-a', 'case-a'],
+			]
+		);
+	}//end testADuplicateCaseReferenceIsRefused()
+
+	/**
+	 * A primary outside the set is refused, naming it.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/one-contact-moment-on-several-cases/specs/contactmomenten/spec.md#requirement-one-reference-is-the-primary-one-and-it-is-named-req-cms-002
+	 */
+	public function testAPrimaryOutsideTheSetIsRefused(): void {
+		$this->stubConfigured();
+		$objectService = $this->mockObjectService();
+		$objectService->expects($this->never())->method('saveObject');
+
+		$this->expectException(\InvalidArgumentException::class);
+		$this->expectExceptionMessage('case-c is not one of the cases');
+
+		$this->buildService()->save(
+			ticketType: TicketService::TYPE_CONTACTMOMENT,
+			payload: [
+				'title' => 'Gebeld',
+				'channel' => 'telefoon',
+				'direction' => 'inbound',
+				'caseReferences' => ['case-a', 'case-b'],
+				'primaryCaseReference' => 'case-c',
+			]
+		);
+	}//end testAPrimaryOutsideTheSetIsRefused()
+
+	/**
+	 * A primary that IS a member is accepted.
+	 *
+	 * The control for the two refusals above.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/one-contact-moment-on-several-cases/specs/contactmomenten/spec.md#requirement-one-reference-is-the-primary-one-and-it-is-named-req-cms-002
+	 */
+	public function testAPrimaryInsideTheSetIsAccepted(): void {
+		$this->stubConfigured();
+
+		$captured = [];
+		$objectService = $this->mockObjectService();
+		$objectService->method('saveObject')->willReturnCallback(
+			static function (array $object) use (&$captured): ObjectEntityInterface {
+				$captured = $object;
+				$entity = new ObjectEntity();
+				$entity->setUuid(self::NIL_UUID);
+				$entity->setObject($object);
+
+				return $entity;
+			}
+		);
+
+		$this->buildService()->save(
+			ticketType: TicketService::TYPE_CONTACTMOMENT,
+			payload: [
+				'title' => 'Gebeld',
+				'channel' => 'telefoon',
+				'direction' => 'inbound',
+				'caseReferences' => ['case-a', 'case-b'],
+				'primaryCaseReference' => 'case-b',
+			]
+		);
+
+		$this->assertSame(expected: ['case-a', 'case-b'], actual: $captured['caseReferences']);
+		$this->assertSame(expected: 'case-b', actual: $captured['primaryCaseReference']);
+	}//end testAPrimaryInsideTheSetIsAccepted()
 }//end class

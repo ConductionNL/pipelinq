@@ -35,6 +35,7 @@ namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Integration\ContactMomentLeafProvider;
+use OCA\Pipelinq\Service\ContactMomentFilingService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
@@ -51,10 +52,12 @@ class ContactMomentLeafController extends Controller {
 	 *
 	 * @param IRequest $request The request.
 	 * @param ContactMomentLeafProvider $provider The leaf's data provider.
+	 * @param ContactMomentFilingService $filingService The two filing acts.
 	 */
 	public function __construct(
 		IRequest $request,
 		private readonly ContactMomentLeafProvider $provider,
+		private readonly ContactMomentFilingService $filingService,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 	}//end __construct()
@@ -119,6 +122,50 @@ class ContactMomentLeafController extends Controller {
 
 		return $this->respond(result: $result);
 	}//end create()
+
+	/**
+	 * File an existing contact moment onto one further case.
+	 *
+	 * An act, not a copy: it appends a reference and records who did it. The
+	 * number of contact moments is unchanged by design, which is the whole
+	 * point of the capability.
+	 *
+	 * @param string $momentId The contact moment's uuid.
+	 * @param string $caseId The case to file it onto.
+	 *
+	 * @return JSONResponse The updated contact moment, or the refusal.
+	 *
+	 * @spec openspec/changes/one-contact-moment-on-several-cases/specs/contactmomenten/spec.md#requirement-filing-onto-a-further-case-is-an-act-not-a-copy-req-cms-004
+	 */
+	#[NoAdminRequired]
+	public function fileOnAlsoCase(string $momentId, string $caseId = ''): JSONResponse {
+		return $this->respond(
+			result: $this->filingService->fileOnAlsoCase(momentId: $momentId, caseId: $caseId)
+		);
+	}//end fileOnAlsoCase()
+
+	/**
+	 * Take a contact moment off one case.
+	 *
+	 * @param string $momentId The contact moment's uuid.
+	 * @param string $caseId The case to take it off.
+	 * @param string|null $newPrimary The next primary, required when the
+	 *   primary itself is being removed.
+	 *
+	 * @return JSONResponse The updated contact moment, or the refusal.
+	 *
+	 * @spec openspec/changes/one-contact-moment-on-several-cases/specs/contactmomenten/spec.md#requirement-a-contact-moment-cannot-be-left-with-no-case-req-cms-006
+	 */
+	#[NoAdminRequired]
+	public function unfileFromCase(string $momentId, string $caseId, ?string $newPrimary = null): JSONResponse {
+		return $this->respond(
+			result: $this->filingService->unfileFromCase(
+				momentId: $momentId,
+				caseId: $caseId,
+				newPrimary: $newPrimary,
+			)
+		);
+	}//end unfileFromCase()
 
 	/**
 	 * Turn a provider result into a JSON response.
