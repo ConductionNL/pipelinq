@@ -52,7 +52,7 @@ Vrij en open source onder de EUPL-1.2-licentie.
 
 **Ondersteuning:** Voor ondersteuning, neem contact op via support@conduction.nl. Voor een Service Level Agreement (SLA), neem contact op via sales@conduction.nl.
     ]]></description>
-    <version>0.5.7-unstable.20260918133000</version>
+    <version>0.5.7-unstable.20260918151500</version>
     <licence>EUPL-1.2</licence>
     <author mail="info@conduction.nl" homepage="https://www.conduction.nl/">Conduction</author>
     <namespace>Pipelinq</namespace>
@@ -204,6 +204,12 @@ Vrij en open source onder de EUPL-1.2-licentie.
                 set is left alone.
             -->
             <step>OCA\Pipelinq\Repair\WidenContactMomentCaseReference</step>
+            <!--
+                After the import, like every other row-writing step: the
+                partyKind schema the seed writes into only exists once the
+                register fragment has landed. Idempotent by code.
+            -->
+            <step>OCA\Pipelinq\Repair\SeedPartyKinds</step>
             <step>OCA\Pipelinq\Repair\InitSlaStatus</step>
             <step>OCA\Pipelinq\Repair\IngestProductVendorMaster</step>
             <step>OCA\Pipelinq\Repair\MigratePosBookkeepingToShillinq</step>

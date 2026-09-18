@@ -132,6 +132,15 @@ return [
         ['name' => 'partyLeaf#acknowledge', 'url' => '/api/party-indicator-values/{valueId}/acknowledge', 'verb' => 'POST'],
         ['name' => 'partyLeaf#setParent',   'url' => '/api/parties/{partyId}/parent',                 'verb' => 'PUT'],
 
+        // The party kind registry and the one write path for a party link
+        // (party-kinds-accepted-per-case-type). `recordType` is an opaque
+        // `<app>:<schema>:<type>` literal and is passed as a query or body
+        // parameter rather than in the path, because it holds colons.
+        ['name' => 'partyKind#index',   'url' => '/api/party-kinds',                  'verb' => 'GET'],
+        ['name' => 'partyKind#link',    'url' => '/api/party-links',                  'verb' => 'POST'],
+        ['name' => 'partyKind#import',  'url' => '/api/party-links/import',           'verb' => 'POST'],
+        ['name' => 'partyKind#endLink', 'url' => '/api/party-links/{linkId}',         'verb' => 'DELETE'],
+
         // CTI screen-pop / click-to-dial adapter endpoints (cti-screenpop-adapter).
         // Routes are listed BEFORE the SPA / wildcard catch-alls (ADR-016).
         ['name' => 'cti#webhook',          'url' => '/api/cti/webhook/{platform}',         'verb' => 'POST'],
