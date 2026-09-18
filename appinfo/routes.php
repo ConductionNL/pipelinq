@@ -156,6 +156,15 @@ return [
         ['name' => 'satisfaction#clientPanel',      'url' => '/api/satisfaction/client/{clientId}', 'verb' => 'GET'],
         ['name' => 'satisfaction#responseRate',     'url' => '/api/satisfaction/response-rate',     'verb' => 'GET'],
 
+        // The programme above the cases (the-project-above-the-cases). The
+        // slug is `programme` rather than `project`, because `project` is
+        // planninq's and a schema slug is global per organisation.
+        ['name' => 'programme#workItems',  'url' => '/api/programmes/{programmeId}/work-items', 'verb' => 'GET'],
+        ['name' => 'programme#linkWork',   'url' => '/api/programmes/{programmeId}/work-items', 'verb' => 'POST'],
+        ['name' => 'programme#progress',   'url' => '/api/programmes/{programmeId}/progress',   'verb' => 'GET'],
+        ['name' => 'programme#cycleChart', 'url' => '/api/programme-cycles/{cycleId}/chart',    'verb' => 'GET'],
+        ['name' => 'programme#closeCycle', 'url' => '/api/programme-cycles/{cycleId}/close',    'verb' => 'POST'],
+
         // CTI screen-pop / click-to-dial adapter endpoints (cti-screenpop-adapter).
         // Routes are listed BEFORE the SPA / wildcard catch-alls (ADR-016).
         ['name' => 'cti#webhook',          'url' => '/api/cti/webhook/{platform}',         'verb' => 'POST'],
