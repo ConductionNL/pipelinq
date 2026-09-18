@@ -43,6 +43,7 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use InvalidArgumentException;
 use OCA\Pipelinq\Service\ContactMomentFilingService;
+use OCA\Pipelinq\Service\PartyIndicatorService;
 use OCA\Pipelinq\Service\TicketService;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
@@ -87,12 +88,14 @@ class ContactMomentLeafProvider {
 	 *
 	 * @param TicketService $ticketService Resolver for the unified `ticket` supertype.
 	 * @param ContactMomentFilingService $filingService The case set a contact moment is filed on.
+	 * @param PartyIndicatorService $indicatorService The party's standing indicators.
 	 * @param IUserSession $userSession The acting user, stamped as the agent.
 	 * @param LoggerInterface $logger PSR logger.
 	 */
 	public function __construct(
 		private readonly TicketService $ticketService,
 		private readonly ContactMomentFilingService $filingService,
+		private readonly PartyIndicatorService $indicatorService,
 		private readonly IUserSession $userSession,
 		private readonly LoggerInterface $logger,
 	) {
@@ -108,7 +111,7 @@ class ContactMomentLeafProvider {
 	 *
 	 * @spec openspec/changes/contact-moments-on-pipelinq-schema/specs/contactmomenten/spec.md#requirement-contact-moments-are-a-data-provider-leaf-with-append-req-cmd-003
 	 */
-	public function list(string $hostId, int $limit = self::DEFAULT_LIMIT): array {
+	public function list(string $hostId, int $limit = self::DEFAULT_LIMIT, string $partyId = ''): array {
 		$hostId = trim($hostId);
 		if ($hostId === '') {
 			return ['status' => 400, 'error' => 'A host object id is required.'];
@@ -141,7 +144,14 @@ class ContactMomentLeafProvider {
 			static fn (array $a, array $b): int => strcmp((string)$b['occurredAt'], (string)$a['occurredAt'])
 		);
 
-		return ['status' => 200, 'contactMoments' => $moments];
+		// The party's indicators travel with the panel, resolved live, so a KCC
+		// agent taking a call reads "agressie-registratie" BEFORE they speak.
+		// Nothing is copied onto a contact moment: this is a read.
+		return [
+			'status' => 200,
+			'contactMoments' => $moments,
+			'indicators' => ($partyId === '' ? [] : $this->indicatorService->resolve(partyId: trim($partyId))),
+		];
 	}//end list()
 
 	/**
@@ -168,6 +178,25 @@ class ContactMomentLeafProvider {
 			return ['status' => 403, 'error' => 'You may not read this object.'];
 		}
 
+		// An outbound append against a blocking indicator is refused at the
+		// point of writing, naming the indicator. pipelinq answers the
+		// question here because the panel is pipelinq's own surface; it still
+		// places no listener on anybody else's send path.
+		$partyId = trim((string)($payload['client'] ?? $payload['partyId'] ?? ''));
+		$direction = trim((string)($payload['direction'] ?? ''));
+		if ($partyId !== '' && $direction === 'outbound') {
+			$answer = $this->indicatorService->isBlocked(partyId: $partyId, act: 'send');
+			if ($answer['blocked'] === true) {
+				$labels = implode(', ', array_column($answer['indicators'], 'label'));
+
+				return [
+					'status' => 409,
+					'error' => "Outbound contact with this party is blocked by {$labels}.",
+					'indicators' => $answer['indicators'],
+				];
+			}
+		}
+
 		$ticket = [
 			'title' => trim((string)($payload['title'] ?? $payload['subject'] ?? '')),
 			'channel' => trim((string)($payload['channel'] ?? '')),
@@ -184,6 +213,12 @@ class ContactMomentLeafProvider {
 			if ($value !== '') {
 				$ticket[$to] = $value;
 			}
+		}
+
+		if ($partyId !== '') {
+			// Only when named: an empty string on a uuid property fails the
+			// schema, and a contact moment on a case need not name a party.
+			$ticket['client'] = $partyId;
 		}
 
 		if ($ticket['title'] === '') {

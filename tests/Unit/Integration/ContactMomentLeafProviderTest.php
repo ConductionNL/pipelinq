@@ -27,6 +27,7 @@ use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Integration\ContactMomentLeafProvider;
 use OCA\Pipelinq\Service\ContactMomentFilingService;
+use OCA\Pipelinq\Service\PartyIndicatorService;
 use OCA\Pipelinq\Service\TicketService;
 use OCP\IUser;
 use OCP\IUserSession;
@@ -99,9 +100,19 @@ class ContactMomentLeafProviderTest extends TestCase {
 			$this->createMock(LoggerInterface::class),
 		);
 
+		$indicatorService = $this->getMockBuilder(PartyIndicatorService::class)
+			->disableOriginalConstructor()
+			->onlyMethods(['resolve', 'isBlocked'])
+			->getMock();
+		$indicatorService->method('resolve')->willReturn([]);
+		$indicatorService->method('isBlocked')->willReturn(
+			['blocked' => false, 'act' => 'send', 'indicators' => []]
+		);
+
 		return new ContactMomentLeafProvider(
 			$this->ticketService,
 			$filingService,
+			$indicatorService,
 			$session,
 			$this->createMock(LoggerInterface::class),
 		);
@@ -326,4 +337,104 @@ class ContactMomentLeafProviderTest extends TestCase {
 		$this->assertSame(['case-a', 'case-c'], $row['alsoOnCases'], 'The host itself is not one of the others.');
 		$this->assertSame('case-a', $row['primaryCase']);
 	}//end testASharedRowNamesTheOtherCases()
+
+	/**
+	 * An outbound append against a blocking indicator is refused, naming it.
+	 *
+	 * The panel is where a handler starts an outbound contact moment, so the
+	 * block is said at the point of writing rather than after the send.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/typed-fields-and-indicators-on-a-party/specs/contactmomenten/spec.md#requirement-the-contact-moment-panel-shall-show-the-partys-indicators-req-cmi-001
+	 */
+	public function testAnOutboundAppendAgainstABlockingIndicatorIsRefused(): void {
+		$this->hostIsReadable(true);
+		$this->ticketService->expects($this->never())->method('save');
+
+		$indicatorService = $this->getMockBuilder(PartyIndicatorService::class)
+			->disableOriginalConstructor()
+			->onlyMethods(['resolve', 'isBlocked'])
+			->getMock();
+		$indicatorService->method('resolve')->willReturn([]);
+		$indicatorService->method('isBlocked')->willReturn(
+			[
+				'blocked' => true,
+				'act' => 'send',
+				'indicators' => [['code' => 'overleden', 'label' => 'Overleden', 'severity' => 'critical']],
+			]
+		);
+
+		$session = $this->createMock(IUserSession::class);
+		$user = $this->createMock(IUser::class);
+		$user->method('getUID')->willReturn('maria');
+		$session->method('getUser')->willReturn($user);
+
+		$provider = new ContactMomentLeafProvider(
+			$this->ticketService,
+			new ContactMomentFilingService(
+				$this->ticketService,
+				$session,
+				$this->createMock(LoggerInterface::class),
+			),
+			$indicatorService,
+			$session,
+			$this->createMock(LoggerInterface::class),
+		);
+
+		$result = $provider->create(
+			hostId: 'case-42',
+			payload: [
+				'title' => 'Brief sturen',
+				'channel' => 'brief',
+				'direction' => 'outbound',
+				'client' => 'party-1',
+			],
+		);
+
+		$this->assertSame(409, $result['status']);
+		$this->assertStringContainsString('Overleden', $result['error']);
+	}//end testAnOutboundAppendAgainstABlockingIndicatorIsRefused()
+
+	/**
+	 * An INBOUND append against the same indicator is accepted.
+	 *
+	 * The control: a block that stopped every append would pass the test
+	 * above, and a contact moment recording that the family called is exactly
+	 * what a handler still has to be able to log.
+	 *
+	 * @return void
+	 */
+	public function testAnInboundAppendAgainstTheSameIndicatorIsAccepted(): void {
+		$this->hostIsReadable(true);
+
+		$saved = false;
+		$this->ticketService->method('save')->willReturnCallback(
+			function () use (&$saved): object {
+				$saved = true;
+
+				return new class implements \JsonSerializable {
+					/**
+					 * @return array<string, mixed> The saved payload.
+					 */
+					public function jsonSerialize(): array {
+						return ['id' => 'cm-1'];
+					}
+				};
+			}
+		);
+
+		$result = $this->provider()->create(
+			hostId: 'case-42',
+			payload: [
+				'title' => 'Familie belde',
+				'channel' => 'telefoon',
+				'direction' => 'inbound',
+				'client' => 'party-1',
+			],
+		);
+
+		$this->assertSame(201, $result['status']);
+		$this->assertTrue($saved);
+	}//end testAnInboundAppendAgainstTheSameIndicatorIsAccepted()
 }//end class

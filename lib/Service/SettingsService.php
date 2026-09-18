@@ -147,6 +147,15 @@ class SettingsService {
 		'contract_schema',
 		// Renewal engine tuning (contract-renewal-tracking).
 		'renewal_default_lead_time_days',
+		// Typed fields and standing indicators on a party
+		// (typed-fields-and-indicators-on-a-party).
+		'partyFieldSet_schema',
+		'partyIndicator_schema',
+		'partyIndicatorValue_schema',
+		// How deep a customer organisation tree may go. Administered rather
+		// than fixed: a breadcrumb past this depth is unreadable and the
+		// queries under it are slow, and where that line sits is a customer's.
+		'party_organisation_max_depth',
 	];
 
 	/**

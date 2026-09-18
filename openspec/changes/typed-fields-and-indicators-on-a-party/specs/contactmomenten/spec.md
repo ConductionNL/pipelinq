@@ -20,14 +20,17 @@ declared dependency of this change. Its four existing requirements are unchanged
 - **GIVEN** a party carrying "agressie-registratie" and three contact moments
 - **WHEN** the panel renders
 - **THEN** the indicator appears above the moments
+- @e2e exclude covered by PHPUnit on the panel and the indicator resolution
 
 #### Scenario: An acknowledgement is recorded
 - **GIVEN** an indicator declaring `requiresAcknowledgement`
 - **WHEN** a handler confirms it
 - **THEN** the confirmation is stored with the handler and the time
+- @e2e exclude covered by PHPUnit on `PartyIndicatorService::acknowledge()`
 
 #### Scenario: A blocked party is said at the point of writing
 - **GIVEN** a party carrying an indicator asserting `blocksOutbound`
 - **WHEN** a handler starts an outbound contact moment from the panel
 - **THEN** the panel reports the block and names the indicator, and the append is
   refused
+- @e2e exclude covered by PHPUnit on the blocking answer

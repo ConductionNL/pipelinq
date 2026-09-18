@@ -26,16 +26,19 @@ L1 for a list item).
 - **WHEN** they add it to the organisation field set as a text field
 - **THEN** it is offered on organisation records, and no schema file was edited to
   allow it
+- @e2e exclude an administered declaration; covered by PHPUnit on `PartyLeafProvider::describe()`
 
 #### Scenario: A typed field is validated as its type
 - **GIVEN** a field declared as a date
 - **WHEN** a value that is not a date is written
 - **THEN** the write is refused by OpenRegister's validation, not by an app-side
   check of pipelinq's
+- @e2e exclude OpenRegister's own validation; covered by the register import
 
 #### Scenario: Identity stays on the Contact
 - **WHEN** a party's name, e-mail and phone are read
 - **THEN** they resolve from the Nextcloud Contact, and no field set declares them
+- @e2e exclude no field set declares an identity field; covered by PHPUnit on the panel shape
 
 ### Requirement: An indicator SHALL be a declared vocabulary with dated values (REQ-PFI-002)
 
@@ -57,17 +60,20 @@ passers dimpact-zac (Betrokkenen, `docs/user-manual-features.md`) and itop.
   "agressie-registratie" value set by a KCC supervisor
 - **WHEN** both are read
 - **THEN** each names the source that set it
+- @e2e exclude covered by PHPUnit on `PartyIndicatorService::resolve()`
 
 #### Scenario: A lifted indicator stops applying on its own date
 - **GIVEN** an indicator value with a `validUntil` of yesterday
 - **WHEN** the party's indicators are resolved today
 - **THEN** it does not apply, and nobody edited it
+- e2e: `tests/e2e/party-fields-and-indicators.spec.ts`
 
 #### Scenario: A new concern needs no schema change
 - **GIVEN** an organisation that needs "bewindvoering"
 - **WHEN** an administrator declares it as an indicator
 - **THEN** values can be set against it, and no property was added to the party
   schema
+- @e2e exclude a declaration, not a surface; covered by PHPUnit on the vocabulary read
 
 ### Requirement: A party's indicators SHALL resolve live on every surface showing that party (REQ-PFI-003)
 
@@ -81,15 +87,18 @@ an indicator lifted today SHALL stop showing everywhere at once.
 - **GIVEN** a case opened in 2025 for a party
 - **WHEN** an "overleden" indicator is set on that party today
 - **THEN** the case surface shows it on the next read
+- @e2e exclude covered by PHPUnit on the live resolution
 
 #### Scenario: A lifted flag leaves every surface at once
 - **GIVEN** a party with an indicator shown on twenty cases
 - **WHEN** the indicator value is ended
 - **THEN** none of the twenty shows it on the next read, and no sweep ran
+- @e2e exclude covered by PHPUnit on the dated value
 
 #### Scenario: No copies exist to go stale
 - **WHEN** the register is inspected for stored indicator values
 - **THEN** they exist only as `partyIndicatorValue` against a party
+- @e2e exclude a storage assertion; covered by the register fragment and PHPUnit
 
 ### Requirement: pipelinq SHALL answer whether an indicator blocks an act, and SHALL NOT intercept it (REQ-PFI-004)
 
@@ -109,16 +118,19 @@ address protection, which is why the sweep marks the candidate a matrix hole.
 - **GIVEN** a party carrying an indicator asserting `blocksOutbound`
 - **WHEN** a consuming app asks whether it may send to that party
 - **THEN** the answer is blocked, and it names the indicator and its label
+- e2e: `tests/e2e/party-fields-and-indicators.spec.ts`
 
 #### Scenario: Publication is answered separately from sending
 - **GIVEN** a party carrying only `blocksAddressPublication`
 - **WHEN** a consuming app asks whether it may send to that party
 - **THEN** the answer is not blocked, and a question about publishing the address is
+- e2e: `tests/e2e/party-fields-and-indicators.spec.ts`
 
 #### Scenario: pipelinq stays out of the send path
 - **WHEN** pipelinq's code is inspected for outbound interception
 - **THEN** no listener, middleware or hook of pipelinq's sits on another app's send
   path, and the contract is a question a caller asks
+- @e2e exclude a code inspection; covered by the absence of any listener in `lib/Listener`
 
 ### Requirement: Organisations SHALL nest as a guarded tree carrying their own fields (REQ-PFI-005)
 
@@ -140,17 +152,20 @@ carrying parent, path and cycle and depth guards, and `HasObjectManagerAttribute
 - **GIVEN** a customer organisation with three regional offices
 - **WHEN** each office is given its own "vestigingsnummer"
 - **THEN** the three values are held per node, and the parent keeps its own
+- @e2e exclude covered by PHPUnit on the tree service
 
 #### Scenario: A cycle is refused on the write
 - **GIVEN** organisation A with child B
 - **WHEN** A is given B as its parent
 - **THEN** the write is refused
+- e2e: `tests/e2e/party-fields-and-indicators.spec.ts`
 
 #### Scenario: Moving a node moves its subtree
 - **GIVEN** a node with two descendants
 - **WHEN** the node is given a new parent
 - **THEN** all three paths are updated in one act, and no descendant points at a
   parent that no longer holds it
+- @e2e exclude covered by PHPUnit on `PartyOrganisationTreeService::setParent()`
 
 ### Requirement: A merge SHALL survive field values and SHALL union indicators (REQ-PFI-006)
 
@@ -166,16 +181,19 @@ prevent. The merge SHALL stay reversible, indicators included.
 - **GIVEN** two party records for one person, one carrying "overleden"
 - **WHEN** they are merged
 - **THEN** the merged party carries "overleden"
+- @e2e exclude covered by PHPUnit on `PartyIndicatorService::unionForMerge()`
 
 #### Scenario: Field values still follow trust tiers
 - **GIVEN** the same two records with different values for one custom field
 - **WHEN** they are merged
 - **THEN** the winning value is chosen by source trust tier and the loser is retained
+- @e2e exclude the survivorship rules are master-data-management's; unchanged here
 
 #### Scenario: Reversing the merge restores both sides
 - **GIVEN** a completed merge
 - **WHEN** it is reversed
 - **THEN** each record holds the field values and indicators it held before
+- @e2e exclude the merge is master-data-management's; this change only requires it carries indicators
 
 ### Requirement: A consuming app SHALL read party fields and indicators through a leaf (REQ-PFI-007)
 
@@ -194,13 +212,16 @@ value. It SHALL NOT become a second indicator model.
 - **WHEN** a consuming app places the leaf on a case detail page
 - **THEN** the widget shows the party's fields and indicators, and the consuming
   app's manifest contains no query against the pipelinq register
+- e2e: `tests/e2e/party-fields-and-indicators.spec.ts`
 
 #### Scenario: A lookup sets a value and owns no vocabulary
 - **GIVEN** a consuming app's BRP lookup returning that a person has died
 - **WHEN** it records that fact
 - **THEN** it writes a `partyIndicatorValue` against pipelinq's declared indicator,
   and declares no indicator of its own
+- @e2e exclude a consuming app's write; covered on the dossiq side
 
 #### Scenario: The surface is absent when pipelinq is
 - **WHEN** the consuming app is installed and pipelinq is not
 - **THEN** no party leaf is registered, and the host renders no party panel
+- @e2e exclude pipelinq cannot observe its own absence; covered on the consuming side
