@@ -123,6 +123,15 @@ return [
         ['name' => 'contactMomentLeaf#fileOnAlsoCase', 'url' => '/api/contact-moments/{momentId}/cases', 'verb' => 'POST'],
         ['name' => 'contactMomentLeaf#unfileFromCase', 'url' => '/api/contact-moments/{momentId}/cases/{caseId}', 'verb' => 'DELETE'],
 
+        // The party panel a host app renders on its own object, the blocking
+        // question it asks before it acts, the acknowledgement a handler
+        // records, and the guarded organisation tree
+        // (typed-fields-and-indicators-on-a-party).
+        ['name' => 'partyLeaf#panel',       'url' => '/api/leaves/party/{partyId}',                   'verb' => 'GET'],
+        ['name' => 'partyLeaf#blocked',     'url' => '/api/parties/{partyId}/blocked/{act}',          'verb' => 'GET'],
+        ['name' => 'partyLeaf#acknowledge', 'url' => '/api/party-indicator-values/{valueId}/acknowledge', 'verb' => 'POST'],
+        ['name' => 'partyLeaf#setParent',   'url' => '/api/parties/{partyId}/parent',                 'verb' => 'PUT'],
+
         // CTI screen-pop / click-to-dial adapter endpoints (cti-screenpop-adapter).
         // Routes are listed BEFORE the SPA / wildcard catch-alls (ADR-016).
         ['name' => 'cti#webhook',          'url' => '/api/cti/webhook/{platform}',         'verb' => 'POST'],

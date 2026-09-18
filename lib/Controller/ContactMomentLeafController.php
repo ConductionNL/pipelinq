@@ -71,14 +71,20 @@ class ContactMomentLeafController extends Controller {
 	 *
 	 * @param string $hostId The host object's uuid.
 	 * @param int $limit Page size.
+	 * @param string $partyId The party whose indicators travel with the panel,
+	 *   resolved live. Optional: a contact moment on a case need not name one.
 	 *
 	 * @return JSONResponse The rows, or the provider's refusal.
 	 *
 	 * @spec openspec/changes/contact-moments-on-pipelinq-schema/specs/contactmomenten/spec.md#requirement-contact-moments-are-a-data-provider-leaf-with-append-req-cmd-003
 	 */
 	#[NoAdminRequired]
-	public function index(string $hostId, int $limit = ContactMomentLeafProvider::DEFAULT_LIMIT): JSONResponse {
-		$result = $this->provider->list(hostId: $hostId, limit: $limit);
+	public function index(
+		string $hostId,
+		int $limit = ContactMomentLeafProvider::DEFAULT_LIMIT,
+		string $partyId = '',
+	): JSONResponse {
+		$result = $this->provider->list(hostId: $hostId, limit: $limit, partyId: $partyId);
 
 		return $this->respond(result: $result);
 	}//end index()
@@ -93,6 +99,7 @@ class ContactMomentLeafController extends Controller {
 	 * @param string|null $outcome Optional disposition.
 	 * @param string|null $summary Optional free text.
 	 * @param string|null $occurredAt Optional instant; defaults to now.
+	 * @param string|null $client The party this contact moment is with.
 	 *
 	 * @return JSONResponse The created row, or the provider's refusal.
 	 *
@@ -107,6 +114,7 @@ class ContactMomentLeafController extends Controller {
 		?string $outcome = null,
 		?string $summary = null,
 		?string $occurredAt = null,
+		?string $client = null,
 	): JSONResponse {
 		$result = $this->provider->create(
 			hostId: $hostId,
@@ -117,6 +125,7 @@ class ContactMomentLeafController extends Controller {
 				'outcome' => ($outcome ?? ''),
 				'summary' => ($summary ?? ''),
 				'occurredAt' => ($occurredAt ?? ''),
+				'client' => ($client ?? ''),
 			],
 		);
 
