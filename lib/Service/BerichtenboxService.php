@@ -931,6 +931,10 @@ class BerichtenboxService {
 			'title' => 'Re: ' . ((string)($parent['subject'] ?? '')),
 			'description' => (string)($reply['bodyText'] ?? ''),
 			'channel' => 'berichtenbox',
+			// A Berichtenbox reply is the citizen writing to us, so the
+			// direction is fixed rather than passed in: there is no path
+			// through this method that records an outbound message.
+			'direction' => 'inbound',
 			'outcome' => 'opvolging-nodig',
 			'caseId' => (string)($parent['caseId'] ?? ''),
 			'parentMessageId' => (string)($parent['uuid'] ?? ''),

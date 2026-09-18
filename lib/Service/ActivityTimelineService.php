@@ -654,6 +654,7 @@ class ActivityTimelineService {
 					'entityId' => $entityId,
 					'metadata' => [
 						'channel' => $channel,
+						'direction' => $this->stringOrNull(value: ($object['direction'] ?? null)),
 						'duration' => $this->stringOrNull(value: ($object['duration'] ?? null)),
 						'outcome' => $this->stringOrNull(value: ($object['outcome'] ?? null)),
 					],
@@ -752,6 +753,9 @@ class ActivityTimelineService {
 
 		$payload = [
 			'channel' => 'worklog',
+			// A worklog is a handler writing down what they did, not contact
+			// with the party, so it is internal by construction.
+			'direction' => 'internal',
 			'description' => $summary ?? '',
 			'duration' => $duration ?? '',
 			'occurredAt' => $date,

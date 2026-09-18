@@ -45,6 +45,7 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeInterface;
 use Exception;
+use InvalidArgumentException;
 use OCA\OpenRegister\Mcp\Attribute\McpTool;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\IAppConfig;
@@ -102,6 +103,37 @@ class TicketService {
 		'occurredAt',
 		'slaDeadline',
 		'resolvedAt',
+	];
+
+	/**
+	 * The directions a contact moment can run in.
+	 *
+	 * Kept in step with `direction` in
+	 * lib/Settings/register.d/98-contactmoment-direction.json.
+	 *
+	 * @var array<int, string>
+	 */
+	public const DIRECTIONS = [
+		'inbound',
+		'outbound',
+		'internal',
+	];
+
+	/**
+	 * Properties that are required on one facet of the ticket supertype only.
+	 *
+	 * OpenRegister validates `required` per schema, and `ticket` holds three
+	 * facets under one schema, so a schema-level `required: [direction]` would
+	 * refuse every request and every complaint as well. The per-facet guard
+	 * therefore lives on the write path, which is the only place that knows
+	 * which facet it is writing.
+	 *
+	 * @var array<string, array<int, string>>
+	 *
+	 * @spec openspec/changes/contact-moments-on-pipelinq-schema/specs/contactmomenten/spec.md#requirement-direction-is-a-first-class-field-req-cmd-001
+	 */
+	public const FACET_REQUIRED = [
+		self::TYPE_CONTACTMOMENT => ['direction'],
 	];
 
 	/**
@@ -298,6 +330,8 @@ class TicketService {
 
 		$payload = $this->sanitizeForSave(payload: $payload);
 
+		$this->assertFacetFields(ticketType: $ticketType, payload: $payload);
+
 		$payload['ticketType'] = $ticketType;
 
 		return $this->getObjectService()->saveObject(
@@ -307,6 +341,45 @@ class TicketService {
 			uuid: $uuid,
 		);
 	}//end save()
+
+	/**
+	 * Refuse a write that omits a property its facet requires.
+	 *
+	 * Only fields listed in FACET_REQUIRED for the facet being written are
+	 * checked, and the refusal names the property, so a caller reads what it
+	 * left out rather than a generic validation failure. An update that does
+	 * not carry the field at all is treated the same as a create that omits
+	 * it: every ticket write in this app is a full-object write.
+	 *
+	 * @param string $ticketType One of the TYPE_* constants.
+	 * @param array<string, mixed> $payload The ticket fields.
+	 *
+	 * @return void
+	 *
+	 * @throws InvalidArgumentException When a required facet field is missing
+	 *   or carries a value the schema does not offer.
+	 *
+	 * @spec openspec/changes/contact-moments-on-pipelinq-schema/specs/contactmomenten/spec.md#requirement-direction-is-a-first-class-field-req-cmd-001
+	 */
+	public function assertFacetFields(string $ticketType, array $payload): void {
+		foreach ((self::FACET_REQUIRED[$ticketType] ?? []) as $field) {
+			$value = ($payload[$field] ?? null);
+			if (is_string($value) === false || trim($value) === '') {
+				throw new InvalidArgumentException(
+					"A {$ticketType} ticket requires {$field}."
+				);
+			}
+		}
+
+		$direction = ($payload['direction'] ?? null);
+		if (is_string($direction) === true && $direction !== ''
+			&& in_array($direction, self::DIRECTIONS, true) === false
+		) {
+			throw new InvalidArgumentException(
+				'direction must be one of ' . implode(', ', self::DIRECTIONS) . "; got {$direction}."
+			);
+		}
+	}//end assertFacetFields()
 
 	/**
 	 * Repair OpenRegister's read-side artefacts before a write.
@@ -360,6 +433,7 @@ class TicketService {
 	 * @param string $client The client UUID this interaction is with.
 	 * @param string $channel The interaction channel (e.g. telefoon, email, balie, chat).
 	 * @param string $title A short summary of the interaction.
+	 * @param string $direction Which way the contact ran: inbound, outbound or internal.
 	 * @param string|null $outcome Optional outcome (e.g. afgehandeld, doorverbonden, terugbelverzoek).
 	 * @param string|null $notes Optional free-text notes about the interaction.
 	 *
@@ -372,7 +446,7 @@ class TicketService {
 		name: 'logContactmoment',
 		subject: 'contactMoment',
 		action: 'create',
-		description: 'Log a client interaction as a contactmoment (client, channel and title are required; outcome and notes are optional).',
+		description: 'Log a client interaction as a contactmoment (client, channel, title and direction are required; outcome and notes are optional).',
 		readOnlyHint: false,
 		destructiveHint: false,
 		idempotentHint: false,
@@ -382,6 +456,7 @@ class TicketService {
 		string $client,
 		string $channel,
 		string $title,
+		string $direction = '',
 		?string $outcome = null,
 		?string $notes = null,
 	): array {
@@ -400,6 +475,26 @@ class TicketService {
 			return $this->mcpErrorEnvelope(code: 'invalid_arguments', message: 'Required argument title is missing.');
 		}
 
+		// Direction is required on a contactmoment (REQ-CMD-001) and is
+		// deliberately NOT defaulted: a tool that guessed `inbound` would
+		// assert who reached out to whom, silently and often wrongly. The
+		// parameter is optional in the SIGNATURE only, so an existing caller
+		// gets a named refusal instead of a TypeError.
+		$direction = trim($direction);
+		if ($direction === '') {
+			return $this->mcpErrorEnvelope(
+				code: 'invalid_arguments',
+				message: 'Required argument direction is missing.'
+			);
+		}
+
+		if (in_array($direction, self::DIRECTIONS, true) === false) {
+			return $this->mcpErrorEnvelope(
+				code: 'invalid_arguments',
+				message: 'Argument direction must be one of ' . implode(', ', self::DIRECTIONS) . '.'
+			);
+		}
+
 		if ($this->isConfigured() === false) {
 			return $this->mcpErrorEnvelope(
 				code: 'not_configured',
@@ -411,6 +506,7 @@ class TicketService {
 			'client' => $client,
 			'channel' => $channel,
 			'title' => $title,
+			'direction' => $direction,
 			'occurredAt' => (new DateTimeImmutable())->format(DateTimeInterface::ATOM),
 		];
 

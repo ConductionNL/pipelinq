@@ -173,6 +173,11 @@ class ContactmomentService {
 			'title' => $subject,
 			'description' => $summary,
 			'channel' => $channel,
+			// This method records an outbound send and nothing else, so the
+			// direction is the method's, not the caller's envelope. The
+			// envelope keeps whatever it carried; the field is what surfaces
+			// and what facets.
+			'direction' => 'outbound',
 			'occurredAt' => gmdate('Y-m-d\TH:i:s\Z'),
 			'channelMetadata' => $channelMetadata,
 		];
