@@ -47,7 +47,7 @@
     "@nextcloud/vue": "^9.11.0",
     "@vueuse/core": "^14.3.0",
     "axe-core": "^4.13.0",
-    "dexie": "^4.4.5",
+    "dexie": "^4.4.6",
     "dompurify": "^3.4.15",
     "gridstack": "^13.3.0",
     "marked": "^18.0.9",
