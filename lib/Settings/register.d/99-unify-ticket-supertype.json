@@ -295,9 +295,10 @@
           "caseReference": {
             "type": "string",
             "title": "Case Reference",
-            "description": "UUID of the Procest case this request converted into (request only).",
+            "description": "The case this ticket belongs to, as an ADR-048 semantic reference to https://openregister.app/ns#Case. On a request it is the single case the request converted into. On a contact moment it mirrors primaryCaseReference, and the full ordered set lives in caseReferences. No app id and no concrete slug: whichever installed app implements the case type answers it.",
             "format": "uuid",
-            "x-external-register": "procest"
+            "referenceSemanticType": "https://openregister.app/ns#Case",
+            "facetable": true
           },
           "complaintCategory": {
             "type": "string",

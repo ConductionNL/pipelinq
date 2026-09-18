@@ -26,6 +26,7 @@ use InvalidArgumentException;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Integration\ContactMomentLeafProvider;
+use OCA\Pipelinq\Service\ContactMomentFilingService;
 use OCA\Pipelinq\Service\TicketService;
 use OCP\IUser;
 use OCP\IUserSession;
@@ -89,8 +90,18 @@ class ContactMomentLeafProviderTest extends TestCase {
 			$session->method('getUser')->willReturn($user);
 		}
 
+		// The filing service is REAL, not a double: the leaf's rows carry the
+		// shared marker it computes, and a double would let the provider claim
+		// a marker the real service never produces.
+		$filingService = new ContactMomentFilingService(
+			$this->ticketService,
+			$session,
+			$this->createMock(LoggerInterface::class),
+		);
+
 		return new ContactMomentLeafProvider(
 			$this->ticketService,
+			$filingService,
 			$session,
 			$this->createMock(LoggerInterface::class),
 		);
@@ -146,6 +157,8 @@ class ContactMomentLeafProviderTest extends TestCase {
 
 		$this->assertSame(201, $result['status']);
 		$this->assertSame('case-42', $written['caseReference'], 'The host is written as the case reference.');
+		$this->assertSame(['case-42'], $written['caseReferences'], 'A new contact moment starts as a one-element set.');
+		$this->assertSame('case-42', $written['primaryCaseReference']);
 		$this->assertSame('maria', $written['assignee'], 'The caller is stamped as the agent.');
 		$this->assertSame('inbound', $written['direction']);
 		$this->assertSame(TicketService::TYPE_CONTACTMOMENT, $written['ticketType']);
@@ -253,4 +266,64 @@ class ContactMomentLeafProviderTest extends TestCase {
 
 		$this->assertSame(ContactMomentLeafProvider::MAX_LIMIT, $asked);
 	}//end testThePageSizeIsBounded()
+
+	/**
+	 * The host filter is membership, not equality.
+	 *
+	 * One contact moment filed on three cases has to appear on each of the
+	 * three. Filtering on the single `caseReference` shows it only on the
+	 * primary, and an absent row on the other two looks exactly like a case
+	 * with no contact moments.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/one-contact-moment-on-several-cases/specs/contactmomenten/spec.md#requirement-a-case-lists-the-contact-moments-it-is-a-member-of-req-cms-003
+	 */
+	public function testTheHostFilterIsMembership(): void {
+		$this->hostIsReadable(true);
+
+		$filters = [];
+		$this->ticketService->method('findByType')->willReturnCallback(
+			static function (string $type, array $given) use (&$filters): array {
+				$filters = $given;
+
+				return [];
+			}
+		);
+
+		$this->provider()->list(hostId: 'case-b');
+
+		$this->assertSame(['caseReferences' => 'case-b'], $filters);
+		$this->assertArrayNotHasKey('caseReference', $filters);
+	}//end testTheHostFilterIsMembership()
+
+	/**
+	 * A row on three cases is listed once per case, with the others named.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/one-contact-moment-on-several-cases/specs/contactmomenten/spec.md#requirement-a-shared-contact-moment-says-so-before-it-is-edited-req-cms-005
+	 */
+	public function testASharedRowNamesTheOtherCases(): void {
+		$this->hostIsReadable(true);
+		$this->ticketService->method('findByType')->willReturn(
+			[
+				[
+					'id' => 'cm-1',
+					'title' => 'Een telefoontje over drie zaken',
+					'occurredAt' => '2026-09-01T10:00:00+00:00',
+					'caseReferences' => ['case-a', 'case-b', 'case-c'],
+					'primaryCaseReference' => 'case-a',
+				],
+			]
+		);
+
+		$result = $this->provider()->list(hostId: 'case-b');
+
+		$row = $result['contactMoments'][0];
+		$this->assertCount(1, $result['contactMoments'], 'One record, not one per case.');
+		$this->assertTrue($row['shared']);
+		$this->assertSame(['case-a', 'case-c'], $row['alsoOnCases'], 'The host itself is not one of the others.');
+		$this->assertSame('case-a', $row['primaryCase']);
+	}//end testASharedRowNamesTheOtherCases()
 }//end class

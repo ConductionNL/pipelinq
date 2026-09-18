@@ -379,7 +379,55 @@ class TicketService {
 				'direction must be one of ' . implode(', ', self::DIRECTIONS) . "; got {$direction}."
 			);
 		}
+
+		$this->assertCaseSet(payload: $payload);
 	}//end assertFacetFields()
+
+	/**
+	 * Refuse a case set that is not a set, or a primary outside it.
+	 *
+	 * Checked on EVERY write rather than only in the filing acts, because an
+	 * import, an API call and a flow write through here too, and a duplicate
+	 * that lands silently is a set that has stopped being one.
+	 *
+	 * @param array<string, mixed> $payload The ticket fields.
+	 *
+	 * @return void
+	 *
+	 * @throws InvalidArgumentException When the set holds a duplicate, or the
+	 *   primary is not a member of it.
+	 *
+	 * @spec openspec/changes/one-contact-moment-on-several-cases/specs/contactmomenten/spec.md#requirement-one-reference-is-the-primary-one-and-it-is-named-req-cms-002
+	 */
+	private function assertCaseSet(array $payload): void {
+		$set = ($payload['caseReferences'] ?? null);
+		if (is_array($set) === false || $set === []) {
+			return;
+		}
+
+		$seen = [];
+		foreach ($set as $reference) {
+			$reference = trim((string)$reference);
+			if ($reference === '') {
+				continue;
+			}
+
+			if (in_array($reference, $seen, true) === true) {
+				throw new InvalidArgumentException(
+					"caseReferences already holds {$reference}; a contact moment is filed on a case once."
+				);
+			}
+
+			$seen[] = $reference;
+		}
+
+		$primary = trim((string)($payload['primaryCaseReference'] ?? ''));
+		if ($primary !== '' && in_array($primary, $seen, true) === false) {
+			throw new InvalidArgumentException(
+				"primaryCaseReference {$primary} is not one of the cases this contact moment is filed on."
+			);
+		}
+	}//end assertCaseSet()
 
 	/**
 	 * Repair OpenRegister's read-side artefacts before a write.

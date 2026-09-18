@@ -14,14 +14,6 @@
               "internal"
             ],
             "facetable": true
-          },
-          "caseReference": {
-            "type": "string",
-            "title": "Case Reference",
-            "description": "The case this ticket belongs to, as an ADR-048 semantic reference to https://openregister.app/ns#Case. Allowed on a request (the case it converted into) and on a contactmoment (the case it was logged against). No app id and no concrete slug: whichever installed app implements the case type answers it, and existing UUID values stay valid because the reference is still a uuid string.",
-            "format": "uuid",
-            "referenceSemanticType": "https://openregister.app/ns#Case",
-            "facetable": true
           }
         }
       }

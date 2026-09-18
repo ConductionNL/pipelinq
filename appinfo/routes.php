@@ -117,6 +117,11 @@ return [
         // host's uuid and stays opaque to pipelinq.
         ['name' => 'contactMomentLeaf#index',  'url' => '/api/leaves/contact-moments/{hostId}', 'verb' => 'GET'],
         ['name' => 'contactMomentLeaf#create', 'url' => '/api/leaves/contact-moments/{hostId}', 'verb' => 'POST'],
+        // Filing an EXISTING contact moment onto a further case, and taking it
+        // off one. Both are acts on the contact moment, so they are keyed by
+        // its id and not by a host.
+        ['name' => 'contactMomentLeaf#fileOnAlsoCase', 'url' => '/api/contact-moments/{momentId}/cases', 'verb' => 'POST'],
+        ['name' => 'contactMomentLeaf#unfileFromCase', 'url' => '/api/contact-moments/{momentId}/cases/{caseId}', 'verb' => 'DELETE'],
 
         // CTI screen-pop / click-to-dial adapter endpoints (cti-screenpop-adapter).
         // Routes are listed BEFORE the SPA / wildcard catch-alls (ADR-016).

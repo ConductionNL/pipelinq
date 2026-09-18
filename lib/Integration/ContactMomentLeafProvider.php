@@ -42,6 +42,7 @@ namespace OCA\Pipelinq\Integration;
 use DateTimeImmutable;
 use DateTimeInterface;
 use InvalidArgumentException;
+use OCA\Pipelinq\Service\ContactMomentFilingService;
 use OCA\Pipelinq\Service\TicketService;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
@@ -85,11 +86,13 @@ class ContactMomentLeafProvider {
 	 * Constructor.
 	 *
 	 * @param TicketService $ticketService Resolver for the unified `ticket` supertype.
+	 * @param ContactMomentFilingService $filingService The case set a contact moment is filed on.
 	 * @param IUserSession $userSession The acting user, stamped as the agent.
 	 * @param LoggerInterface $logger PSR logger.
 	 */
 	public function __construct(
 		private readonly TicketService $ticketService,
+		private readonly ContactMomentFilingService $filingService,
 		private readonly IUserSession $userSession,
 		private readonly LoggerInterface $logger,
 	) {
@@ -117,14 +120,19 @@ class ContactMomentLeafProvider {
 
 		$limit = max(1, min($limit, self::MAX_LIMIT));
 
+		// MEMBERSHIP, not equality: one contact moment filed on three cases is
+		// one record, and each of the three has to see it. Filtering on the
+		// single `caseReference` would show it only on the primary, and an
+		// absent row on the other two looks exactly like a case with no
+		// contact moments. Still bounded by `limit` per ADR-058.
 		$rows = $this->ticketService->findByType(
 			ticketType: TicketService::TYPE_CONTACTMOMENT,
-			extraFilters: ['caseReference' => $hostId],
+			extraFilters: ['caseReferences' => $hostId],
 			limit: $limit,
 		);
 
 		$moments = array_map(
-			fn (mixed $row): array => $this->present(row: $row),
+			fn (mixed $row): array => $this->present(row: $row, hostId: $hostId),
 			$rows
 		);
 
@@ -165,6 +173,8 @@ class ContactMomentLeafProvider {
 			'channel' => trim((string)($payload['channel'] ?? '')),
 			'direction' => trim((string)($payload['direction'] ?? '')),
 			'caseReference' => $hostId,
+			'caseReferences' => [$hostId],
+			'primaryCaseReference' => $hostId,
 			'assignee' => $this->actingUserId(),
 			'occurredAt' => $this->occurredAt(payload: $payload),
 		];
@@ -201,7 +211,7 @@ class ContactMomentLeafProvider {
 			return ['status' => 500, 'error' => 'The contact moment could not be saved.'];
 		}//end try
 
-		return ['status' => 201, 'contactMoment' => $this->present(row: $saved)];
+		return ['status' => 201, 'contactMoment' => $this->present(row: $saved, hostId: $hostId)];
 	}//end create()
 
 	/**
@@ -258,10 +268,12 @@ class ContactMomentLeafProvider {
 	 * Present one stored ticket as a contact moment row.
 	 *
 	 * @param mixed $row The stored ticket.
+	 * @param string $hostId The case this row is being rendered on, so the
+	 *   shared marker can name the OTHER cases rather than this one.
 	 *
 	 * @return array<string, mixed> The leaf row.
 	 */
-	private function present(mixed $row): array {
+	private function present(mixed $row, string $hostId = ''): array {
 		$data = [];
 		if (is_array($row) === true) {
 			$data = $row;
@@ -272,6 +284,14 @@ class ContactMomentLeafProvider {
 			}
 		}
 
+		// A case the reader may not see is counted, not named. The permission
+		// question is OpenRegister's, asked once per other case.
+		$marker = $this->filingService->sharedMarker(
+			moment: $data,
+			hostId: $hostId,
+			mayRead: fn (string $reference): bool => $this->canReadHost(hostId: $reference),
+		);
+
 		return [
 			'id' => (string)($data['id'] ?? $data['uuid'] ?? ''),
 			'subject' => (string)($data['title'] ?? ''),
@@ -281,6 +301,10 @@ class ContactMomentLeafProvider {
 			'occurredAt' => (string)($data['occurredAt'] ?? ''),
 			'outcome' => (string)($data['outcome'] ?? ''),
 			'summary' => (string)($data['description'] ?? ''),
+			'primaryCase' => $this->filingService->primaryOf(moment: $data),
+			'shared' => $marker['shared'],
+			'alsoOnCases' => $marker['alsoOnCases'],
+			'alsoOnHiddenCount' => $marker['hiddenCount'],
 		];
 	}//end present()
 }//end class
