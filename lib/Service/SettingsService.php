@@ -156,6 +156,11 @@ class SettingsService {
 		// than fixed: a breadcrumb past this depth is unreadable and the
 		// queries under it are slow, and where that line sits is a customer's.
 		'party_organisation_max_depth',
+		// The party kind vocabulary and the acceptance per record type
+		// (party-kinds-accepted-per-case-type).
+		'partyKind_schema',
+		'partyKindAcceptance_schema',
+		'partyLink_schema',
 	];
 
 	/**

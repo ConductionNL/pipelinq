@@ -1,0 +1,127 @@
+{
+  "_note": "party-kinds-accepted-per-case-type. One vocabulary of party kinds for the fleet, held here, and a declaration per record type of which kinds it accepts. pipelinq holds no case type and no editor for one: the acceptance target is an opaque `<app>:<schema>:<type>` string it stores and matches and never interprets.",
+  "components": {
+    "schemas": {
+      "partyKind": {
+        "title": "Party kind",
+        "type": "object",
+        "description": "One kind of party: aanvrager, gemachtigde, belanghebbende, melder. A consuming app declares none of its own and ships no list of them.",
+        "required": ["code", "label"],
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "The stable code a link and an acceptance point at.",
+            "maxLength": 64,
+            "facetable": true
+          },
+          "label": {
+            "type": "string",
+            "title": "Label",
+            "description": "What a handler reads in the picker and on the record."
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "description": "What this kind means, so two municipalities do not quietly mean different things by one word."
+          },
+          "identityShapes": {
+            "type": "array",
+            "title": "Identity shapes",
+            "description": "The shapes a party of this kind may take. `none` says a party of this kind needs no account of any kind: making such a party notifiable belongs to the notification dialect openregister owns, and deliberately does not live here.",
+            "items": {
+              "type": "string",
+              "enum": ["naturalPerson", "organization", "none"]
+            }
+          },
+          "fieldSet": {
+            "type": "string",
+            "title": "Field set",
+            "description": "The party field set this kind carries, by its partyKind code.",
+            "maxLength": 64
+          },
+          "maxPerRecord": {
+            "type": "integer",
+            "title": "Maximum per record",
+            "description": "1 for a kind one record holds once, such as an aanvrager. Absent or 0 means unbounded, such as a belanghebbende. A second holder of a single kind is refused on the write, naming the party that already holds it.",
+            "default": 0
+          },
+          "active": {
+            "type": "boolean",
+            "title": "Active",
+            "description": "Whether the kind is offered in the picker. An inactive kind keeps resolving on links already written, so a retired kind does not take the meaning of old links with it.",
+            "default": true
+          }
+        }
+      },
+      "partyKindAcceptance": {
+        "title": "Party kind acceptance",
+        "type": "object",
+        "description": "Which party kinds one record type of one consuming app accepts, in the order the consuming app declared them. The declaration is the consuming app's policy; the object is pipelinq's.",
+        "required": ["recordType", "kinds"],
+        "properties": {
+          "recordType": {
+            "type": "string",
+            "title": "Record type",
+            "description": "The record type this acceptance is for, named `<app>:<schema>:<type>`. Stored and matched as an opaque string: pipelinq does not parse it, does not validate the app id and does not learn what a case type is.",
+            "maxLength": 255,
+            "facetable": true
+          },
+          "kinds": {
+            "type": "array",
+            "title": "Kinds",
+            "description": "The accepted kinds, in the declared order. The first is what most handlers will take, so the order is part of the declaration and is not re-sorted for display.",
+            "items": { "type": "string" }
+          }
+        }
+      },
+      "partyLink": {
+        "title": "Party link",
+        "type": "object",
+        "description": "One party on one record under one kind. Where an acceptance exists for the record's type, a kind it does not name is refused on every write path alike: the picker, an import, an API call and a flow. Where no acceptance is declared, nothing is refused, so an app that has declared nothing keeps working.",
+        "required": ["party", "kind", "recordType", "recordId"],
+        "properties": {
+          "party": {
+            "type": "string",
+            "title": "Party",
+            "description": "The party record.",
+            "format": "uuid",
+            "facetable": true
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind",
+            "description": "The party kind code this party holds on this record.",
+            "facetable": true
+          },
+          "recordType": {
+            "type": "string",
+            "title": "Record type",
+            "description": "The type of the record the party is linked to, as `<app>:<schema>:<type>`. Opaque to pipelinq.",
+            "maxLength": 255,
+            "facetable": true
+          },
+          "recordId": {
+            "type": "string",
+            "title": "Record",
+            "description": "The record the party is linked to.",
+            "format": "uuid",
+            "facetable": true
+          },
+          "validFrom": {
+            "type": "string",
+            "title": "Valid from",
+            "description": "When the party started holding this kind on this record.",
+            "format": "date"
+          },
+          "validUntil": {
+            "type": "string",
+            "title": "Valid until",
+            "description": "When they stopped. Replacing a single-kind holder is an explicit act: end the existing link, then write the new one.",
+            "format": "date"
+          }
+        }
+      }
+    }
+  }
+}
