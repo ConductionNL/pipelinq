@@ -25,9 +25,20 @@
 ## 3. Wiring and follow-on
 
 - [x] 3.1 Route in `appinfo/routes.php`, declared before the SPA catch-all.
-- [ ] 3.2 Run the diff check and open the PR against `development`.
+- [x] 3.2 Run the diff check and open the PR against `development`. Shipped as #1983; the conversion in section 4 as #1994.
 
 ## Out of scope, tracked separately
 
-- The convert action that turns an enquiry into a client, a contact and a lead. The schema carries the three link fields and the lifecycle transition so the data model is complete, but a transition with no call site is a guard nobody has watched refuse. It ships with its caller or not at all.
 - The conduction-website change that posts here. It lives in another repo and is the next PR.
+
+## 4. The conversion
+
+Was "out of scope, ships with its caller". It now has one: the caller is a flow trigger.
+
+- [x] 4.1 Ship the conversion as a declared flow (`x-openregister-flows` on `enquiry`) rather than a service method, so the step has a visible, switchable call site.
+- [x] 4.2 Seed a default `Sales` pipeline. `lead` requires one and a fresh install has none.
+- [x] 4.3 Write `pipelinq.provision-contact-identity`. `contactsUid` is required on client and contact and is "never minted locally", so a flow of generic object-writes cannot create a client at all. Measured: the write failed with "The required property (contactsUid) is missing" every time.
+- [x] 4.4 Register the node, or a flow naming its type is refused at save.
+- [x] 4.5 Provision the ORGANISATION without the person's email. The matcher searches email first whatever the type, so passing it made the company resolve to the person's vCard and both uids came back identical.
+- [x] 4.6 Tests, including that regression, checked against a mutation: hardcoding the email path reddens exactly `testDoesNotSendAnEmailItWasNotGiven`.
+- [x] 4.7 Verify end to end on a live instance rather than by reading the graph.

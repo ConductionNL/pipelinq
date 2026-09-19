@@ -1,0 +1,274 @@
+{
+  "components": {
+    "schemas": {
+      "enquiry": {
+        "configuration": {
+          "x-openregister-flows": [
+            {
+              "name": "Enquiry to lead",
+              "app": "pipelinq",
+              "description": "Turns a website enquiry into a client, a contact and a lead when someone in sales marks it converted. Runs on the enquiry's own status change, so the conversion has a call site rather than being a button nobody wired up.",
+              "trigger": "object.updated",
+              "triggerRegister": "pipelinq",
+              "executionMode": "async",
+              "limits": {
+                "maxTransitions": 50
+              },
+              "nodes": [
+                {
+                  "id": "trigger",
+                  "type": "openregister.trigger-object",
+                  "config": {
+                    "event": "object.updated",
+                    "register": "pipelinq",
+                    "schema": "enquiry"
+                  }
+                },
+                {
+                  "id": "only-converted",
+                  "type": "openregister.filter",
+                  "config": {
+                    "condition": {
+                      "and": [
+                        {
+                          "==": [
+                            {
+                              "var": "json.status"
+                            },
+                            "converted"
+                          ]
+                        },
+                        {
+                          "!": {
+                            "var": "json.lead"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "id": "default-pipeline",
+                  "type": "openregister.object-read",
+                  "config": {
+                    "register": "pipelinq",
+                    "schema": "pipeline",
+                    "filters": {
+                      "isDefault": true
+                    },
+                    "limit": 1,
+                    "fanOut": false,
+                    "output": "defaultPipeline"
+                  }
+                },
+                {
+                  "id": "client-identity",
+                  "type": "pipelinq.provision-contact-identity",
+                  "config": {
+                    "objectType": "client",
+                    "nameFrom": "organisation",
+                    "output": "clientContactsUid"
+                  }
+                },
+                {
+                  "id": "client",
+                  "type": "openregister.object-write",
+                  "config": {
+                    "register": "pipelinq",
+                    "schema": "client",
+                    "operation": "upsert",
+                    "match": [
+                      {
+                        "property": "name",
+                        "value": "{{ organisation }}"
+                      }
+                    ],
+                    "output": "newClient",
+                    "fields": {
+                      "name": "{{ organisation }}",
+                      "type": "organization",
+                      "email": "{{ contactEmail }}",
+                      "contactsUid": "{{ clientContactsUid }}"
+                    }
+                  }
+                },
+                {
+                  "id": "contact-identity",
+                  "type": "pipelinq.provision-contact-identity",
+                  "config": {
+                    "objectType": "contact",
+                    "nameFrom": "contactName",
+                    "emailFrom": "contactEmail",
+                    "phoneFrom": "contactPhone",
+                    "output": "contactContactsUid"
+                  }
+                },
+                {
+                  "id": "contact",
+                  "type": "openregister.object-write",
+                  "config": {
+                    "register": "pipelinq",
+                    "schema": "contact",
+                    "operation": "upsert",
+                    "match": [
+                      {
+                        "property": "email",
+                        "value": "{{ contactEmail }}"
+                      }
+                    ],
+                    "output": "newContact",
+                    "fields": {
+                      "name": "{{ contactName }}",
+                      "email": "{{ contactEmail }}",
+                      "client": "{{ newClient.uuid }}",
+                      "contactsUid": "{{ contactContactsUid }}"
+                    }
+                  }
+                },
+                {
+                  "id": "lead",
+                  "type": "openregister.object-write",
+                  "config": {
+                    "register": "pipelinq",
+                    "schema": "lead",
+                    "operation": "create",
+                    "output": "newLead",
+                    "fields": {
+                      "title": "{{ title }}",
+                      "client": "{{ newClient.id }}",
+                      "contact": "{{ newContact.id }}",
+                      "pipeline": "{{ defaultPipeline.0.id }}",
+                      "source": "{{ source }}",
+                      "description": "{{ message }}",
+                      "status": "open"
+                    }
+                  }
+                },
+                {
+                  "id": "link-back",
+                  "type": "openregister.object-write",
+                  "config": {
+                    "register": "pipelinq",
+                    "schema": "enquiry",
+                    "operation": "update",
+                    "match": [
+                      {
+                        "property": "uuid",
+                        "value": "{{ id }}"
+                      }
+                    ],
+                    "fields": {
+                      "uuid": "{{ id }}",
+                      "client": "{{ newClient.id }}",
+                      "contact": "{{ newContact.id }}",
+                      "lead": "{{ newLead.id }}"
+                    }
+                  }
+                },
+                {
+                  "id": "done",
+                  "type": "openregister.end"
+                }
+              ],
+              "edges": [
+                {
+                  "id": "e0",
+                  "from": "trigger",
+                  "to": "only-converted"
+                },
+                {
+                  "id": "e1",
+                  "from": "only-converted",
+                  "to": "default-pipeline"
+                },
+                {
+                  "id": "e2",
+                  "from": "default-pipeline",
+                  "to": "client-identity"
+                },
+                {
+                  "id": "e3",
+                  "from": "client-identity",
+                  "to": "client"
+                },
+                {
+                  "id": "e4",
+                  "from": "client",
+                  "to": "contact-identity"
+                },
+                {
+                  "id": "e5",
+                  "from": "contact-identity",
+                  "to": "contact"
+                },
+                {
+                  "id": "e6",
+                  "from": "contact",
+                  "to": "lead"
+                },
+                {
+                  "id": "e7",
+                  "from": "lead",
+                  "to": "link-back"
+                },
+                {
+                  "id": "e8",
+                  "from": "link-back",
+                  "to": "done"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "objects": [
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "pipeline",
+          "slug": "pipelinq-default-sales-pipeline"
+        },
+        "title": "Sales",
+        "description": "The pipeline a converted website enquiry lands in. Marked as the default so the enquiry conversion flow can find it without anyone pasting a uuid into a flow definition.",
+        "isDefault": true,
+        "stages": [
+          {
+            "name": "Nieuw",
+            "order": 1,
+            "isDefault": true,
+            "probability": 10
+          },
+          {
+            "name": "Gekwalificeerd",
+            "order": 2,
+            "probability": 30
+          },
+          {
+            "name": "Voorstel",
+            "order": 3,
+            "probability": 60
+          },
+          {
+            "name": "Onderhandeling",
+            "order": 4,
+            "probability": 80
+          },
+          {
+            "name": "Gewonnen",
+            "order": 5,
+            "probability": 100,
+            "isWon": true,
+            "isClosed": true
+          },
+          {
+            "name": "Verloren",
+            "order": 6,
+            "probability": 0,
+            "isClosed": true
+          }
+        ]
+      }
+    ]
+  }
+}
