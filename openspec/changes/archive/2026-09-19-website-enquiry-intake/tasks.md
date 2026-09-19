@@ -25,7 +25,7 @@
 ## 3. Wiring and follow-on
 
 - [x] 3.1 Route in `appinfo/routes.php`, declared before the SPA catch-all.
-- [ ] 3.2 Run the diff check and open the PR against `development`.
+- [x] 3.2 Run the diff check and open the PR against `development`. Shipped as #1983; the conversion in section 4 as #1994.
 
 ## Out of scope, tracked separately
 
