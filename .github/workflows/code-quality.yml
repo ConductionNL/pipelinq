@@ -413,7 +413,14 @@ jobs:
       # directory name, so `app` must be the id from appinfo/info.xml or the
       # checkout lands in a directory nothing enables — silently, since a
       # missing app is exactly what "the leaf did not render" looks like.
-      additional-apps: '[{"repo":"ConductionNL/openregister","app":"openregister","ref":"development"},{"repo":"ConductionNL/planix","app":"planninq","ref":"development"}]'
+      #
+      # integriq is here because the Integrations page reads integriq's
+      # `app_connection` rows. Without it the page shows the missing-dependency
+      # screen, the Connections menu entry is hidden by its `visibleIf`, the
+      # objects endpoint answers 404, and all six tests in
+      # `tests/e2e/integrations-page.spec.ts` fail. `app` is `integriq`, the id
+      # in its appinfo/info.xml on `development`.
+      additional-apps: '[{"repo":"ConductionNL/openregister","app":"openregister","ref":"development"},{"repo":"ConductionNL/planix","app":"planninq","ref":"development"},{"repo":"ConductionNL/integriq","app":"integriq","ref":"development"}]'
       # The old seed was `php occ app:disable pipelinq && php occ app:enable
       # pipelinq`. It reported success on every run and provisioned nothing
       # reliable: the repair step it triggers runs with NO user session (OR RBAC
@@ -491,7 +498,7 @@ jobs:
       # renders the English source inside an otherwise translated form, silently.
       # The fleet had 30,459 such strings, so this records the current count and
       # fails only when it GROWS — burning it down stays an ordinary PR.
-      frontend-checks: '["check:manifest", "check:vue-demi", "test:l10n", "format", "check:schema-l10n", "check:l10n-js"]'
+      frontend-checks: '["check:manifest", "check:vue-demi", "test:l10n", "format", "check:schema-l10n", "check:l10n-js", "check:e2e-nav"]'
 
       # ── Coverage ratchet ─────────────────────────────────────────────────
       # `enable-coverage-guard` defaults to FALSE, which is why both
@@ -508,3 +515,14 @@ jobs:
       # duplicate key in a `with:` block is accepted by every YAML parser
       # involved, last-one-wins, and is precisely the kind of thing that reads
       # as configured while being decided somewhere else in the file.)
+      # ── Cost controls (see ConductionNL/.github#596, #599) ───────────────
+      # Run PHPUnit and Playwright only when the diff could change their
+      # verdict. Fails safe TOWARDS running: an unreadable diff, a force-push,
+      # a branch creation or a dispatch all run everything, and a filtered
+      # skip is a declared state in the Quality Report, not a missing one.
+      enable-path-filtering: true
+      # PR-time PHPUnit runs the primary PHP against the newest declared
+      # Nextcloud; the full matrix still runs on every push to a default
+      # branch and on the release PR into beta. Breadth moves from
+      # per-commit to per-merge, it is not dropped.
+      reduce-pr-matrix: true

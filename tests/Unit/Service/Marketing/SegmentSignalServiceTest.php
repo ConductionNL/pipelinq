@@ -333,8 +333,8 @@ class SegmentSignalServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testRenewalDaysTakesTheNearestContractEnd(): void {
-		$this->store->save('contract', ['clientRef' => 'client-1', 'endDate' => $this->inDays(245)]);
-		$this->store->save('contract', ['clientRef' => 'client-1', 'endDate' => $this->inDays(45)]);
+		$this->store->save('salesContract', ['clientRef' => 'client-1', 'endDate' => $this->inDays(245)]);
+		$this->store->save('salesContract', ['clientRef' => 'client-1', 'endDate' => $this->inDays(45)]);
 
 		$this->assertSame(
 			45,
@@ -349,7 +349,7 @@ class SegmentSignalServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testAPastContractEndIsNegative(): void {
-		$this->store->save('contract', ['clientRef' => 'client-1', 'endDate' => $this->inDays(-30)]);
+		$this->store->save('salesContract', ['clientRef' => 'client-1', 'endDate' => $this->inDays(-30)]);
 
 		$this->assertSame(
 			-30,

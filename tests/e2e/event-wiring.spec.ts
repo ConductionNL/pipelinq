@@ -50,7 +50,7 @@
  *   they are absent from every built chunk and cannot be reached at all.
  */
 import { expect, test } from '@playwright/test'
-import { openApp } from './helpers/pipelinq.ts'
+import { gotoAppRoute } from './helpers/pipelinq.ts'
 
 test.describe('rapportage win/loss range events', () => {
 	test.setTimeout(120000)
@@ -78,8 +78,9 @@ test.describe('rapportage win/loss range events', () => {
 			}
 		})
 
-		await openApp(page)
-		await page.goto('/apps/pipelinq/rapportage')
+		// One load, not two: openApp() booted the Dashboard and the next
+		// line navigated straight off it.
+		await gotoAppRoute(page, '/rapportage')
 
 		// The initial mount fetch carries no date parameters, so nothing should
 		// have been recorded yet; if it has, the assertion below would pass for

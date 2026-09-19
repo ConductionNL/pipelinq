@@ -17,23 +17,26 @@ import type { Page } from '@playwright/test'
 import { expect, test } from '@playwright/test'
 import {
 	assertNoHardError,
-	openApp,
+	gotoAppRoute,
 	trackPipelinqErrors,
 } from '../helpers/pipelinq.ts'
 
-// The 30s default does not cover this route any more. See the same note in
-// forecast.spec.ts: openApp() plus the lazily-chunked Reports page needs the
-// budget rapportage.spec.ts already had to give these navigations.
+// See the same note in forecast.spec.ts. The raise was taken for openApp()
+// plus the lazily-chunked Reports page; the openApp() load is gone, so what is
+// left is headroom. Kept rather than tuned, for want of a measurement.
 test.describe.configure({ timeout: 180_000 })
 
 /**
  * Open the loyalty report the way a user does: through the Reports page.
  *
+ * One load, not two. openApp() used to stand here and the next line navigated
+ * straight off the Dashboard it had just booted; the Dashboard is never
+ * asserted against in this file.
+ *
  * @param page The page under test.
  */
 async function openLoyaltyReporting(page: Page) {
-	await openApp(page)
-	await page.goto('/apps/pipelinq/reports')
+	await gotoAppRoute(page, '/reports')
 
 	await page
 		.getByTestId('cn-report-card')

@@ -552,11 +552,18 @@ class BlastService {
 		$schemaSlug = $this->getBlastSchemaSlug();
 		$offset = (($page - 1) * $limit);
 		$total = $this->countObjects(schemaSlug: $schemaSlug, filters: $filters);
+		// NEWEST FIRST, because every caller of this list says "recent" and none
+		// of them got it. `findAll()` returns insertion order when no sort is
+		// given, so a page of 50 was the fifty OLDEST blasts: on any instance
+		// past its first fifty sends, the performance dashboard showed the ones
+		// nobody is asking about and the send from an hour ago was unreachable.
+		// It reads as an empty Attribution tab rather than as a missing row.
 		$slice = $this->loadObjects(
 			schemaSlug: $schemaSlug,
 			filters: $filters,
 			limit: $limit,
 			offset: $offset,
+			sort: ['createdAt' => 'desc'],
 		);
 		return [
 			'data' => $slice,
@@ -870,10 +877,18 @@ class BlastService {
 	 * @param array<string, mixed> $filters Filter map.
 	 * @param int|null $limit Optional page size pushed to OR.
 	 * @param int|null $offset Optional offset pushed to OR.
+	 * @param array<string, string>|null $sort Optional ORDER BY pushed to OR,
+	 *                                         as `['field' => 'asc'|'desc']`.
 	 *
 	 * @return array<int, array<string, mixed>> Plain payloads.
 	 */
-	private function loadObjects(string $schemaSlug, array $filters, ?int $limit = null, ?int $offset = null): array {
+	private function loadObjects(
+		string $schemaSlug,
+		array $filters,
+		?int $limit = null,
+		?int $offset = null,
+		?array $sort = null
+	): array {
 		$register = $this->getRegisterSlug();
 		if ($register === '' || $schemaSlug === '') {
 			return [];
@@ -893,6 +908,10 @@ class BlastService {
 
 		if ($offset !== null) {
 			$config['offset'] = $offset;
+		}
+
+		if ($sort !== null) {
+			$config['sort'] = $sort;
 		}
 
 		try {

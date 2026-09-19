@@ -288,6 +288,58 @@ test.describe('Campaign performance without a portal', () => {
 		await landOnApp(page)
 		await putSettings(page, { [PORTAL_KEY]: '' })
 
+		// ARRANGE THE PRECONDITION, DO NOT INHERIT IT. "Not connected" is the
+		// answer to a per-blast performance read, so with no blast the page asks
+		// nothing and can never say it. This test used to rely on a blast left
+		// behind by a sibling, and on the development run of 2026-09-06 it ran
+		// against an empty list: `GET /api/blasts?limit=50` returned 200 with
+		// nothing in it, zero `/performance` calls were made, and the assertion
+		// waited out its 60 s against a block that was still saying "Loading".
+		const stamp = Date.now()
+		const { segmentId, templateId } = await seededFks(page)
+		const own = await api(page, 'POST', `${OR}/blast`, {
+			name: `Attribution tab ${stamp}`,
+			segmentId,
+			templateId,
+			channel: 'email',
+			status: 'sent',
+			totals: { sent: 1, delivered: 1, opened: 1, clicked: 0 },
+		})
+		expect(own.status, own.text).toBeLessThan(300)
+		expect(idOf(own.json), 'the minted blast must have an id').toBeTruthy()
+
+		// A CREATED BLAST IS NOT YET A LISTED BLAST, and minting one is not the
+		// same as arranging the precondition. The first attempt of this test on
+		// development at 518719f still failed: the object was written, the POST
+		// returned under 300, and `GET /api/blasts?limit=50` — which is what the
+		// dashboard reads — still answered with nothing. The page then rendered
+		// "No blasts yet", which is the correct thing to say about an empty
+		// list and the wrong thing for this test to meet. It passed on the
+		// retry a minute later, which is what a propagation delay looks like
+		// from the outside.
+		//
+		// So wait for the read the dashboard actually performs, rather than for
+		// the write. Polling the same endpoint is the only thing that can tell
+		// "the blast exists" from "the blast is visible to the page".
+		await expect
+			.poll(
+				async () => {
+					const listed = await api(
+						page,
+						'GET',
+						`${APP}/api/blasts?limit=50`,
+					)
+					const rows = listed.json?.results ?? listed.json?.data ?? []
+					return Array.isArray(rows) ? rows.length : 0
+				},
+				{
+					timeout: 30_000,
+					message:
+						'the minted blast never appeared in GET /api/blasts, so the dashboard would have had nothing to ask about',
+				},
+			)
+			.toBeGreaterThan(0)
+
 		await gotoRoute(page, '/blasts/performance')
 		const dash = page.locator('.performance-dashboard')
 		await expect(dash).toBeVisible({ timeout: 15000 })

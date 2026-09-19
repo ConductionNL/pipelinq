@@ -25,6 +25,7 @@ use OCA\Pipelinq\Service\ArticleService;
 use OCA\Pipelinq\Service\BlastService;
 use OCA\Pipelinq\Service\Marketing\MailTransportService;
 use OCA\Pipelinq\Service\SegmentService;
+use OCA\Pipelinq\Tests\Unit\Support\FakeSlugResolver;
 use OCP\IAppConfig;
 use OCP\Mail\IMailer;
 use PHPUnit\Framework\TestCase;
@@ -101,6 +102,19 @@ class BlastServiceTest extends TestCase {
 			}//end find()
 
 			/**
+			 * Every config `findAll()` was handed, newest last.
+			 *
+			 * Recorded so a test can assert what was pushed DOWN to
+			 * OpenRegister rather than only what came back: an ordering that
+			 * never leaves the service is invisible to a result-shaped
+			 * assertion, because the fake returns rows in insertion order
+			 * either way.
+			 *
+			 * @var array<int, array<string, mixed>>
+			 */
+			public array $findAllConfigs = [];
+
+			/**
 			 * Mock findAll() — mirrors the real OR ObjectService signature
 			 * (single $config array) and returns delivery rows filtered by
 			 * blastId and optional status / contactId, honouring limit/offset.
@@ -111,6 +125,7 @@ class BlastServiceTest extends TestCase {
 			 * @return array<int, array<string, mixed>> Rows.
 			 */
 			public function findAll(array $config = []): array {
+				$this->findAllConfigs[] = $config;
 				$out = $this->matchDeliveries(filters: ($config['filters'] ?? []));
 
 				$offset = (int)($config['offset'] ?? 0);
@@ -221,7 +236,7 @@ class BlastServiceTest extends TestCase {
 	 * @return BlastService
 	 */
 	private function buildService(ContainerInterface $container, IAppConfig $appConfig): BlastService {
-		$mailTransportService = new MailTransportService($container, $appConfig, $this->mailer, $this->createMock(ArticleService::class), $this->logger);
+		$mailTransportService = new MailTransportService($container, $appConfig, $this->mailer, $this->createMock(ArticleService::class), FakeSlugResolver::connectorRegister(), $this->logger);
 		return new BlastService($container, $appConfig, $this->segmentService, $mailTransportService, $this->logger);
 	}//end buildService()
 
@@ -816,7 +831,7 @@ class BlastServiceTest extends TestCase {
 
 		// Use a throttle-counting subclass to assert the rate-limit hook
 		// is invoked between batches without sleeping the test.
-		$mailTransportService = new MailTransportService($this->container, $this->appConfig, $this->mailer, $this->createMock(ArticleService::class), $this->logger);
+		$mailTransportService = new MailTransportService($this->container, $this->appConfig, $this->mailer, $this->createMock(ArticleService::class), FakeSlugResolver::connectorRegister(), $this->logger);
 		$service = new class($this->container, $this->appConfig, $this->segmentService, $mailTransportService, $this->logger) extends BlastService {
 
 			/**
@@ -887,7 +902,7 @@ class BlastServiceTest extends TestCase {
 		];
 
 		// 'oc-source-missing' is not in the objectService store — the
-		// register:'openconnector'/schema:'source' lookup misses, so every
+		// Integriq-register/schema:'source' lookup misses, so every
 		// send call should fail-closed and the row should NOT flip to sent.
 		$dispatched = $this->service->dispatchBlastDeliveries('blast-no-oc', 100);
 		$this->assertSame(0, $dispatched);
@@ -1132,7 +1147,7 @@ class BlastServiceTest extends TestCase {
 	 *
 	 * @return void
 	 */
-	public function testSendOneDeliveryResolvesSourceFromOpenconnectorRegisterAndCallsCallServiceWithJsonPost(): void {
+	public function testSendOneDeliveryResolvesSourceFromTheConnectorRegisterAndCallsCallServiceWithJsonPost(): void {
 		$blast = [
 			'uuid' => 'blast-shape',
 			'templateId' => 'tmpl-shape',
@@ -1218,13 +1233,19 @@ class BlastServiceTest extends TestCase {
 
 		$this->assertSame(1, $dispatched);
 
-		// resolveConnectorSource() looked the Source up in OpenConnector's
-		// OWN register/schema — not pipelinq's `register` app-config value
+		// resolveConnectorSource() looked the Source up in Integriq's OWN
+		// register/schema — not pipelinq's `register` app-config value
 		// ('pipelinq' per setUp()'s appConfig mock).
+		//
+		// This asserted 'openconnector' until the slug resolution landed, and it
+		// passed for exactly as long as the code pinned the same word, which is
+		// what an assertion that copies the implementation buys you. It now names
+		// the slug the INSTANCE carries: buildService() wires a resolver
+		// describing a migrated instance, so the read must go to `integriq`.
 		$sourceLookups = array_filter($objectService->findCalls, fn (array $c) => $c['id'] === 'oc-source-shape');
 		$this->assertNotEmpty($sourceLookups, 'the connector source id must be looked up');
 		foreach ($sourceLookups as $call) {
-			$this->assertSame('openconnector', $call['register']);
+			$this->assertSame('integriq', $call['register']);
 			$this->assertSame('source', $call['schema']);
 		}
 
@@ -1251,7 +1272,7 @@ class BlastServiceTest extends TestCase {
 		);
 		$this->assertCount(1, $sentRows);
 		$this->assertSame('p-shape', array_values($sentRows)[0]['providerId']);
-	}//end testSendOneDeliveryResolvesSourceFromOpenconnectorRegisterAndCallsCallServiceWithJsonPost()
+	}//end testSendOneDeliveryResolvesSourceFromTheConnectorRegisterAndCallsCallServiceWithJsonPost()
 
 	/**
 	 * Phase 2 (marketing-campaign-attribution): the template body's links get
@@ -1528,4 +1549,46 @@ class BlastServiceTest extends TestCase {
 		$this->assertSame(1, $service->dispatchBlastDeliveries('blast-plain', 100));
 		$this->assertSame('<a href="https://example.org/">x</a>', $callService->calls[0]['bodyHtml']);
 	}//end testDispatchWithoutADecoratorSendsLinksAsAuthored()
+
+
+	/**
+	 * `listBlasts()` asks OpenRegister for the NEWEST blasts, not the first
+	 * fifty ever written.
+	 *
+	 * The assertion is on the config pushed DOWN, not on the rows that came
+	 * back, and that is the whole point: `findAll()` returns insertion order
+	 * when no sort is given, so a service that forgot to ask for one produces
+	 * exactly the same result shape from a fake as one that asked correctly.
+	 * The only place the difference is visible is the request.
+	 *
+	 * Regression guard for the defect this replaced: every caller called this
+	 * list "recent" — the docblock, the controller and PerformanceDashboard's
+	 * own comment — while a page of fifty was the fifty OLDEST rows. On an
+	 * instance past its first fifty sends the dashboard showed blasts nobody
+	 * was asking about, and it read as an empty Attribution tab rather than as
+	 * a wrong one.
+	 *
+	 * @return void
+	 *
+	 * @spec exclude Regression guard for a query-shape defect; no spec scenario
+	 *               describes the ORDER the list endpoint asks for.
+	 */
+	public function testListBlastsAsksOpenRegisterForTheNewestFirst(): void {
+		$this->objectService->findAllConfigs = [];
+
+		$this->service->listBlasts(status: null, page: 1, limit: 50);
+
+		$this->assertNotEmpty(
+			$this->objectService->findAllConfigs,
+			'listBlasts() must reach OpenRegister at all'
+		);
+		$config = $this->objectService->findAllConfigs[0];
+		$this->assertArrayHasKey(
+			'sort',
+			$config,
+			'listBlasts() must push an ORDER BY down to OpenRegister; without one '
+			. 'findAll() answers in insertion order and "recent" is the oldest fifty'
+		);
+		$this->assertSame(['createdAt' => 'desc'], $config['sort']);
+	}//end testListBlastsAsksOpenRegisterForTheNewestFirst()
 }//end class

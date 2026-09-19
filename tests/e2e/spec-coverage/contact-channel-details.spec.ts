@@ -40,6 +40,28 @@ async function gotoPage(page: Page, hash: string): Promise<void> {
 }
 
 test.describe('Contact channels body section', () => {
+	// MEASURED, not guessed. The client detail page fires 48 API requests, and
+	// on a warm local instance with no other load the last of them lands at
+	// 22.9 s — the page is genuinely that expensive, and this spec is the only
+	// one that waits for the section's DATA rather than its heading, so it is
+	// the only one that has to outlast the whole page.
+	//
+	// Without this the three tests below have failed on EVERY development push
+	// since they were added on 2026-09-04, always the same way: the section
+	// renders its NcLoadingIcon and never leaves it inside the budget. The
+	// sibling specs that touch this page (ia-tickets-and-projects,
+	// request-client-contact-cascade, contactmoment-client-contact-cascade)
+	// already carry the same marker for the same reason.
+	//
+	// The 48 requests include THREE identical GETs of the client object and
+	// three of /api/customer-360/summary: `fetchObject` de-duplicates only
+	// requests that are in flight at the same moment, and never reads the
+	// `objects[type][id]` cache it just filled. Filed upstream — this marker
+	// buys the suite honest time, it does not make the page fast.
+	test.beforeEach(() => {
+		test.slow()
+	})
+
 	// @e2e openspec/changes/contact-channel-details/specs/contact-channel-details/spec.md#requirement-detail-pages-display-channels-as-a-linked-list-with-kind-chips
 	test('a client with a seeded mobile phone and LinkedIn profile renders both in the Contact channels section', async ({
 		page,

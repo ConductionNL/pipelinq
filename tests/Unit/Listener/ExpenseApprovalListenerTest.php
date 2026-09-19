@@ -330,7 +330,7 @@ class ExpenseApprovalListenerTest extends TestCase {
 	 */
 	public function testIgnoresNonApprovedExpense(): void {
 		$schemaMap = $this->createMock(SchemaMapService::class);
-		$schemaMap->method('resolveEntityType')->willReturn('expense');
+		$schemaMap->method('resolveEntityType')->willReturn('billableExpense');
 
 		$apService = $this->createMock(ShillinqApService::class);
 		$apService->expects($this->never())->method('dispatchApEvent');
@@ -351,7 +351,7 @@ class ExpenseApprovalListenerTest extends TestCase {
 	 */
 	public function testNoopWhenUnconfigured(): void {
 		$schemaMap = $this->createMock(SchemaMapService::class);
-		$schemaMap->method('resolveEntityType')->willReturn('expense');
+		$schemaMap->method('resolveEntityType')->willReturn('billableExpense');
 
 		$apService = $this->createMock(ShillinqApService::class);
 		$apService->method('shouldDispatch')->willReturn(false);
@@ -372,7 +372,7 @@ class ExpenseApprovalListenerTest extends TestCase {
 	 */
 	public function testSuccessfulDispatchMarksSynced(): void {
 		$schemaMap = $this->createMock(SchemaMapService::class);
-		$schemaMap->method('resolveEntityType')->willReturn('expense');
+		$schemaMap->method('resolveEntityType')->willReturn('billableExpense');
 
 		$apService = $this->createMock(ShillinqApService::class);
 		$apService->method('shouldDispatch')->willReturn(true);
@@ -412,7 +412,7 @@ class ExpenseApprovalListenerTest extends TestCase {
 	 */
 	public function testFailedDispatchMarksFailedAndNotifies(): void {
 		$schemaMap = $this->createMock(SchemaMapService::class);
-		$schemaMap->method('resolveEntityType')->willReturn('expense');
+		$schemaMap->method('resolveEntityType')->willReturn('billableExpense');
 
 		$apService = $this->createMock(ShillinqApService::class);
 		$apService->method('shouldDispatch')->willReturn(true);
@@ -448,7 +448,7 @@ class ExpenseApprovalListenerTest extends TestCase {
 	 */
 	public function testIdempotentSkipsAlreadySynced(): void {
 		$schemaMap = $this->createMock(SchemaMapService::class);
-		$schemaMap->method('resolveEntityType')->willReturn('expense');
+		$schemaMap->method('resolveEntityType')->willReturn('billableExpense');
 
 		$apService = $this->createMock(ShillinqApService::class);
 		$apService->method('shouldDispatch')->willReturn(true);
@@ -499,7 +499,7 @@ class ExpenseApprovalListenerTest extends TestCase {
 	 */
 	public function testOwnWriteDoesNotReEnterTheListener(): void {
 		$schemaMap = $this->createMock(SchemaMapService::class);
-		$schemaMap->method('resolveEntityType')->willReturn('expense');
+		$schemaMap->method('resolveEntityType')->willReturn('billableExpense');
 
 		$dispatches = 0;
 

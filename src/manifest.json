@@ -24,8 +24,10 @@
 			{
 				"id": "demo-data",
 				"type": "choice",
+				"display": "cards",
 				"optionsSource": "datasets",
 				"configKey": "demo_dataset",
+				"required": false,
 				"title": "Load example data?",
 				"body": "Example data fills the lists, dashboards and the 360 degree client view so you can see the app working straight away. Pick \"None\" on a production install."
 			},
@@ -221,7 +223,7 @@
 						"advanceOn": {
 							"type": "object-created",
 							"register": "pipelinq",
-							"schema": "contract",
+							"schema": "salesContract",
 							"capture": { "contractId": ":id" }
 						}
 					},
@@ -2083,7 +2085,7 @@
 					{
 						"title": "Contracts",
 						"register": "pipelinq",
-						"schema": "contract",
+						"schema": "salesContract",
 						"filter": { "clientRef": "@objectId" },
 						"sort": { "field": "endDate", "dir": "asc" },
 						"columns": [
@@ -2210,6 +2212,7 @@
 					"status",
 					"priority",
 					"channel",
+					"direction",
 					"occurredAt"
 				],
 				"sidebar": {
@@ -2551,7 +2554,7 @@
 					{
 						"title": "Appointments",
 						"register": "pipelinq",
-						"schema": "booking",
+						"schema": "appointmentBooking",
 						"filter": { "customerId": "@objectId" },
 						"sort": { "field": "startAt", "dir": "desc" },
 						"columns": [
@@ -2923,7 +2926,7 @@
 						"icon": "ClipboardCheckOutline",
 						"content": {
 							"register": "pipelinq",
-							"schema": "task",
+							"schema": "crmTask",
 							"filter": {
 								"lead": "@objectId"
 							},
@@ -3117,7 +3120,7 @@
 			"title": "Tasks",
 			"config": {
 				"register": "pipelinq",
-				"schema": "task",
+				"schema": "crmTask",
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"showViewAction": false,
 				"actions": [
@@ -3151,7 +3154,7 @@
 			"component": "CnWizardDialog",
 			"config": {
 				"register": "pipelinq",
-				"schema": "task"
+				"schema": "crmTask"
 			}
 		},
 		{
@@ -3161,7 +3164,7 @@
 			"title": "Task",
 			"config": {
 				"register": "pipelinq",
-				"schema": "task",
+				"schema": "crmTask",
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"_note": "Task/action-item archetype (bespoke-detail-pages). A task is a to-do an agent works to completion, so the body leads with the execution fields (type, status, priority, deadline, assignee user/group, callbackPhoneNumber, preferredTimeSlot, attempts, resultText) 8-wide and the source records it hangs off (client, request, originating contactmoment) at 4-wide. Documents full-width for any attached result artefact. NO email/calendar body widgets — task declares no comms linkedType; a callback task carries the phone number as a field, not a live mailbox. No child collection, so no object-list.",
 				"widgets": [
@@ -4683,8 +4686,10 @@
 		{
 			"id": "FeaturesRoadmap",
 			"route": "/features-roadmap",
-			"type": "roadmap",
+			"type": "custom",
+			"component": "FeaturesRoadmapView",
 			"title": "Features & roadmap",
+			"_note": "Was type:\"roadmap\". The library's CnFeaturesAndRoadmapPage renders exactly two tabs and declares zero slots, so the help desk capability comparison could not be added from the manifest. FeaturesRoadmapView renders that library page unchanged as its default section and adds the comparison as a second one. Revert to type:\"roadmap\" the day the library grows a slot or a comparison tab. Same wall dossiq hit, same fix.",
 			"config": {
 				"documentationUrl": "https://pipelinq.conduction.nl"
 			}

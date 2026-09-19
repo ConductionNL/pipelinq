@@ -31,7 +31,7 @@
           "productCategory",
           "leadProduct",
           "contactmoment",
-          "task",
+          "crmTask",
           "relationship",
           "skill",
           "agentProfile",
@@ -1426,9 +1426,9 @@
           }
         }
       },
-      "task": {
+      "crmTask": {
         "x-schema-org": "schema:Action",
-        "slug": "task",
+        "slug": "crmTask",
         "x-openregister-notifications": {
           "taskCompleted": {
             "trigger": {
@@ -1688,7 +1688,7 @@
         "slug": "relationship",
         "title": "Relationship",
         "icon": "AccountMultiple",
-        "version": "1.0.0",
+        "version": "1.1.0",
         "summary": "A typed bidirectional relationship between two contacts or clients",
         "description": "Represents a relationship between two entities (contacts and/or clients) with a typed, bidirectional link. Inverse relationships are auto-created. Mapped to Schema.org Person.knows.",
         "x-schema-org": "schema:Relationship",
@@ -1748,6 +1748,19 @@
             "type": "string",
             "description": "Category grouping for the relationship type (Familie, Professioneel, Organisatie, CRM Rol)",
             "title": "Category",
+            "facetable": true
+          },
+          "provenance": {
+            "type": "string",
+            "description": "Where this relationship came from: who or what asserted it. A relationship a person typed and one a register asserted carry different weight, and nothing downstream can tell them apart unless it is recorded here.",
+            "enum": [
+              "declared",
+              "imported",
+              "derived",
+              "authoritative-source"
+            ],
+            "default": "declared",
+            "title": "Provenance",
             "facetable": true
           },
           "notes": {

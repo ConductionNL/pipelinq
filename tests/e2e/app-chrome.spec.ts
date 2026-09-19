@@ -98,6 +98,8 @@ test.describe('app chrome (ADR-114)', () => {
 	test('the report pages behind the cards are still routable', async ({
 		page,
 	}) => {
+		test.slow()
+
 		// Three full SPA loads in one test. The default 30s budget covers one
 		// comfortably and three only on a fast instance, so this timed out on a
 		// shared container while every page actually rendered — a slow
@@ -112,7 +114,15 @@ test.describe('app chrome (ADR-114)', () => {
 			'/rapportage/channels',
 			'/rapportage/agents',
 		]) {
-			await page.goto(`${APP_BASE}${path}`)
+			// 🔴 `domcontentloaded`, NOT the default `load`. Nextcloud's
+			// notification poll keeps the network busy, so waiting for the load
+			// event waits for something that does not settle — the loop dies
+			// partway through and names whichever route it was on, which reads
+			// as a broken route. The SPA mounts after DOM ready, and the
+			// assertions below are what prove the mount.
+			await page.goto(`${APP_BASE}${path}`, {
+				waitUntil: 'domcontentloaded',
+			})
 			await expect(page).toHaveURL(new RegExp(`${path}(\\?|$)`), {
 				timeout: 15_000,
 			})

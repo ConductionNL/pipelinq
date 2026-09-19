@@ -34,6 +34,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Adapter\ExportSinkInterface;
 use OCA\Pipelinq\Adapter\ExportSinkRegistry;
 use OCA\Pipelinq\Service\Export\ExportDestinationService;
+use OCA\Pipelinq\Tests\Unit\Support\FakeSlugResolver;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\IAppConfig;
@@ -119,7 +120,12 @@ class ExportDestinationServiceTest extends TestCase {
 			) use ($recorder, $destination, $sourceResult) {
 				$recorder->calls[] = ['id' => $id, 'register' => $register, 'schema' => $schema, '_render' => $_render];
 
-				if ($register === 'openconnector' && $schema === 'source') {
+				// `integriq`, not `openconnector`: service() wires a resolver
+				// describing a MIGRATED instance, which is the state of the local
+				// dev environment and the state the old pin got wrong. A double
+				// that still answered to the old slug would make a reinstated pin
+				// pass here.
+				if ($register === 'integriq' && $schema === 'source') {
 					if ($sourceResult instanceof \Throwable) {
 						throw $sourceResult;
 					}
@@ -178,6 +184,7 @@ class ExportDestinationServiceTest extends TestCase {
 			appConfig: $this->appConfig(),
 			objectService: $objectService,
 			sinks: $registry,
+			connectorRegister: FakeSlugResolver::connectorRegister(),
 			logger: $this->createMock(LoggerInterface::class),
 		);
 
@@ -226,7 +233,7 @@ class ExportDestinationServiceTest extends TestCase {
 		$sourceLookups = array_values(array_filter($recorder->calls, fn (array $c) => $c['id'] === 'oc-source-1'));
 		$this->assertNotEmpty($sourceLookups, 'the connector source must be looked up via ObjectServiceInterface::find()');
 		foreach ($sourceLookups as $call) {
-			$this->assertSame('openconnector', $call['register']);
+			$this->assertSame('integriq', $call['register']);
 			$this->assertSame('source', $call['schema']);
 			$this->assertFalse($call['_render'], 'the source must be read RAW so write-only secret fields survive');
 		}

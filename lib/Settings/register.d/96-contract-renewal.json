@@ -1,8 +1,8 @@
 {
   "components": {
     "schemas": {
-      "contract": {
-        "slug": "contract",
+      "salesContract": {
+        "slug": "salesContract",
         "title": "Contract",
         "icon": "FileSign",
         "summary": "Recurring-revenue contract with renewal lifecycle",
@@ -127,6 +127,13 @@
           "startDate"
         ],
         "properties": {
+          "contract": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Governing contract",
+            "x-external-register": "shillinq",
+            "description": "UUID of the shillinq `Contract` this sales record belongs to. shillinq owns contract lifecycle (ADR-066), the same cross-app reference the ticket supertype already carries. A plain uuid and not a `$ref`: shillinq's register is a different register, and ADR-062 rule 7 gives a cross-register target a plain string. Empty when shillinq is not installed, in which case this record stands alone on `contractNumber`."
+          },
           "contractNumber": {
             "type": "string",
             "description": "Auto-generated unique contract number (C-{year}-{seq}). Read by customer-portal.",
@@ -261,7 +268,7 @@
             "type": "string",
             "description": "UUID of the contract this one succeeds (set on a drafted successor).",
             "format": "uuid",
-            "$ref": "contract",
+            "$ref": "salesContract",
             "title": "Predecessor Contract Ref"
           },
           "invoiceReference": {

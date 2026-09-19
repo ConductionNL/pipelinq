@@ -45,7 +45,7 @@ class PortalSessionManager {
 	 *
 	 * @var string
 	 */
-	private const SCHEMA = 'portalSession';
+	private const SCHEMA = 'crmPortalSession';
 
 	/**
 	 * Default session TTL in hours.

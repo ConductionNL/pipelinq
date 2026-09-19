@@ -47,7 +47,7 @@ class PortalProfileService {
 	 *
 	 * @var string
 	 */
-	private const SCHEMA = 'portalAccount';
+	private const SCHEMA = 'crmPortalAccount';
 
 	/**
 	 * Plain editable fields (applied directly).

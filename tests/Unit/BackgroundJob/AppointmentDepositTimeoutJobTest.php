@@ -75,7 +75,7 @@ class AppointmentDepositTimeoutJobTest extends TestCase {
 				}
 
 				if ($key === 'booking_schema') {
-					return 'booking';
+					return 'appointmentBooking';
 				}
 
 				return $default;

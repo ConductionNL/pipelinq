@@ -16,6 +16,7 @@
 import type { Page } from '@playwright/test'
 
 import { expect, test } from '@playwright/test'
+import { APP_LOAD_BUDGET_MS } from '../helpers/pipelinq.ts'
 
 /**
  * Auto-dismiss the getting-started walkthrough tour whenever it overlays the
@@ -43,11 +44,18 @@ test.describe('Operational dashboard — no permanently-null widgets', () => {
 	test.beforeEach(async ({ page }) => {
 		// The shared dev instance can be slow to fire `load`; DOMContentLoaded
 		// is enough — the assertions below wait for the widgets themselves.
+		//
+		// One load, not two. The `reload()` that used to follow this goto was
+		// left over from hash routing, where the goto did not remount the view.
+		// The shell has routed on HISTORY since #1684, so this goto IS a full
+		// document load onto `/operational` and the reload only re-rendered
+		// what was already on screen — at 13 to 23 s a load on the CI runner
+		// (6 workers, one `php -S`), out of a 60 s budget.
 		await page.goto('/apps/pipelinq/operational', {
 			waitUntil: 'domcontentloaded',
+			timeout: APP_LOAD_BUDGET_MS,
 		})
 		await expect(page.locator('body')).not.toContainText('Internal Server Error')
-		await page.reload({ waitUntil: 'domcontentloaded' })
 	})
 
 	/**
@@ -91,7 +99,7 @@ test.describe('Demo-data seed setup action', () => {
 		// The idempotency pass scans every seed schema server-side, which can
 		// take ~20s per run on a data-heavy instance — two runs need headroom.
 		test.setTimeout(120000)
-		await page.goto('/apps/pipelinq/')
+		await page.goto('/apps/pipelinq/', { timeout: APP_LOAD_BUDGET_MS })
 
 		const run = async () =>
 			await page.evaluate(async () => {
@@ -132,8 +140,8 @@ test.describe('Demo-data seed setup action', () => {
 	test('seeded demo clients render in the Clients list', async ({ page }) => {
 		test.setTimeout(90000)
 		await autoDismissWalkthrough(page)
-		await page.goto('/apps/pipelinq/clients')
-		await page.reload()
+		// One load, not two: the same stale post-goto reload as above.
+		await page.goto('/apps/pipelinq/clients', { timeout: APP_LOAD_BUDGET_MS })
 
 		// Wait for the table to load rows.
 		await expect(page.locator('table tbody tr').first()).toBeVisible({

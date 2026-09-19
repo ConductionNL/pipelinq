@@ -6,7 +6,7 @@
   },
   "components": {
     "schemas": {
-      "task": {
+      "crmTask": {
         "properties": {
           "lead": {
             "type": "string",

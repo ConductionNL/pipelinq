@@ -26,11 +26,43 @@
  *
  * Vitest only collects tests/vitest/**; the PHPUnit suite under tests/Unit is
  * untouched.
+ *
+ * ONE spec needs a real DOM: featuresRoadmapComparison.spec.js mounts the
+ * Features & roadmap view to prove the four comparison caveats still render.
+ * It opts into jsdom per file with a `// @vitest-environment jsdom` pragma
+ * rather than switching the whole suite to the heavier environment. The Vue 3
+ * SFC plugin and the CSS-noop plugin below are registered unconditionally and
+ * are inert for the node-environment specs, which import no `.vue` file.
  */
 
 const path = require('path')
+const vue = require('@vitejs/plugin-vue')
+
+/**
+ * Side-effect imports of `*.css` from a component library crash Vite's
+ * transform pipeline, because those files are produced by a parallel build
+ * and are not on disk. Resolve every `.css` id to an empty virtual module so
+ * a component spec can mount without ever loading a stylesheet.
+ */
+const cssNoop = {
+	name: 'pipelinq-css-noop',
+	enforce: 'pre',
+	resolveId(id) {
+		if (typeof id === 'string' && /\.css(\?.*)?$/.test(id)) {
+			return '\0virtual:css-noop'
+		}
+		return null
+	},
+	load(id) {
+		if (id === '\0virtual:css-noop') {
+			return 'export default {}'
+		}
+		return null
+	},
+}
 
 module.exports = {
+	plugins: [cssNoop, vue.default ? vue.default() : vue()],
 	test: {
 		environment: 'node',
 		globals: false,

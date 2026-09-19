@@ -52,7 +52,7 @@ class SchemaLifecycleGraphTest extends TestCase {
 				'completed' => ['open'],
 				'expired' => ['open'],
 			],
-			actual: $this->graph()->adjacencyFor(schemaSlug: 'task')
+			actual: $this->graph()->adjacencyFor(schemaSlug: 'crmTask')
 		);
 	}//end testTaskAdjacencyMatchesDeclaredGraph()
 
@@ -102,7 +102,7 @@ class SchemaLifecycleGraphTest extends TestCase {
 				'churned' => [],
 				'cancelled' => [],
 			],
-			actual: $this->graph()->fullAdjacencyFor(schemaSlug: 'contract')
+			actual: $this->graph()->fullAdjacencyFor(schemaSlug: 'salesContract')
 		);
 	}//end testContractFullAdjacencyMatchesReachability()
 
@@ -112,7 +112,7 @@ class SchemaLifecycleGraphTest extends TestCase {
 	 * @return void
 	 */
 	public function testContractLifecycleDeclaresTerminalStates(): void {
-		$lifecycle = $this->graph()->lifecycleFor(schemaSlug: 'contract');
+		$lifecycle = $this->graph()->lifecycleFor(schemaSlug: 'salesContract');
 		$this->assertIsArray($lifecycle);
 		$this->assertSame(
 			expected: ['renewed', 'churned', 'cancelled'],
@@ -147,7 +147,7 @@ class SchemaLifecycleGraphTest extends TestCase {
 				'cancelled-by-business' => [],
 				'rescheduled' => [],
 			],
-			actual: $this->graph()->fullAdjacencyFor(schemaSlug: 'booking')
+			actual: $this->graph()->fullAdjacencyFor(schemaSlug: 'appointmentBooking')
 		);
 	}//end testBookingFullAdjacencyMatchesPriorMap()
 
@@ -202,6 +202,6 @@ class SchemaLifecycleGraphTest extends TestCase {
 	 */
 	public function testUnreadableSettingsDirYieldsEmptyMap(): void {
 		$graph = new SchemaLifecycleGraph(settingsDir: '/nonexistent/path/Settings');
-		$this->assertSame(expected: [], actual: $graph->adjacencyFor(schemaSlug: 'task'));
+		$this->assertSame(expected: [], actual: $graph->adjacencyFor(schemaSlug: 'crmTask'));
 	}//end testUnreadableSettingsDirYieldsEmptyMap()
 }//end class

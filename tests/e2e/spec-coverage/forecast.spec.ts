@@ -17,26 +17,34 @@ import type { Page } from '@playwright/test'
 import { expect, test } from '@playwright/test'
 import {
 	assertNoHardError,
-	openApp,
+	gotoAppRoute,
 	trackPipelinqErrors,
 } from '../helpers/pipelinq.ts'
 
-// The 30s default does not cover this route any more. Each test boots the shell
-// through openApp(), dismisses the walkthrough and support dialogs, then loads
-// the Reports page, which CnPageRenderer maps through defineAsyncComponent and
-// therefore fetches as its own chunk. rapportage.spec.ts hit the same wall and
-// budgets 180s for the same three steps; a bare timeout there read as "the page
-// is broken" when it only meant "this test ran out of time".
+// This raise was taken when each test booted the shell through openApp(),
+// dismissed both overlays, and THEN loaded the Reports page, which
+// CnPageRenderer maps through defineAsyncComponent and therefore fetches as
+// its own chunk. rapportage.spec.ts hit the same wall and budgeted 180s for
+// the same steps; a bare timeout in either read as "the page is broken" when
+// it only meant "this test ran out of time".
+//
+// The openApp() load is gone (see openForecast below), so the raise is now
+// headroom rather than a requirement. It is kept rather than tuned because
+// nobody has measured what this file costs post-change on the CI runner.
 test.describe.configure({ timeout: 180_000 })
 
 /**
  * Open the forecast the way a user does: through the Reports page.
  *
+ * One load, not two. openApp() used to stand here and the next line navigated
+ * straight off the Dashboard it had just booted; the Dashboard is never
+ * asserted against in this file. A load costs 13 to 23 s on the CI runner
+ * (6 workers against one `php -S`) out of a 60 s per-test budget.
+ *
  * @param page The page under test.
  */
 async function openForecast(page: Page) {
-	await openApp(page)
-	await page.goto('/apps/pipelinq/reports')
+	await gotoAppRoute(page, '/reports')
 
 	await page
 		.getByTestId('cn-report-card')

@@ -5,7 +5,7 @@
         "schemas": [
           "masterEntity",
           "sourceRecord",
-          "mergeOperation"
+          "masterMergeOperation"
         ]
       }
     },
@@ -372,8 +372,8 @@
           }
         }
       },
-      "mergeOperation": {
-        "slug": "mergeOperation",
+      "masterMergeOperation": {
+        "slug": "masterMergeOperation",
         "title": "Merge Operation",
         "icon": "SourceMerge",
         "version": "1.0.0",

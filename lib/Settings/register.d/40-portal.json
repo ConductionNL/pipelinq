@@ -8,8 +8,8 @@
         "description": "Separate auth-domain register for the customer self-service portal (ADR-005). Holds portal accounts, sessions, delegations, audit events and tenant configuration. Strictly isolated from Nextcloud users and from the main pipelinq register.",
         "published": false,
         "schemas": [
-          "portalAccount",
-          "portalSession",
+          "crmPortalAccount",
+          "crmPortalSession",
           "portalDelegation",
           "portalAuditEvent",
           "portalTenantConfig"
@@ -19,8 +19,8 @@
       }
     },
     "schemas": {
-      "portalAccount": {
-        "slug": "portalAccount",
+      "crmPortalAccount": {
+        "slug": "crmPortalAccount",
         "title": "Portal Account",
         "version": "1.0.0",
         "summary": "A customer self-service portal credential record (pipelinq-owned sync state for the linked contact).",
@@ -185,8 +185,8 @@
           }
         }
       },
-      "portalSession": {
-        "slug": "portalSession",
+      "crmPortalSession": {
+        "slug": "crmPortalSession",
         "title": "Portal Session",
         "version": "1.0.0",
         "summary": "An authenticated portal session bound to a portal account.",

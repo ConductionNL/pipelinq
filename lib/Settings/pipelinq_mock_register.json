@@ -69,6 +69,324 @@
       {
         "@self": {
           "register": "pipelinq",
+          "schema": "appointmentBooking",
+          "slug": "appointmentbooking-appointmentbooking-1-1"
+        },
+        "customerId": "Voorbeeld Customerid 1",
+        "serviceId": "Voorbeeld Serviceid 1",
+        "startAt": "2026-03-01T09:00:00+00:00",
+        "endAt": "2026-03-01T09:00:00+00:00",
+        "status": "pending-deposit",
+        "resourceAssignments": [
+          {
+            "resourceId": "Voorbeeld Resourceid 1",
+            "startAt": "2026-03-01T09:00:00+00:00",
+            "endAt": "2026-03-01T09:00:00+00:00",
+            "stepIndex": 0
+          }
+        ],
+        "statusHistory": [
+          {
+            "status": "Voorbeeld Status 1",
+            "changedAt": "2026-03-01T09:00:00+00:00",
+            "changedBy": "Voorbeeld Changedby 1",
+            "reason": "Voorbeeld Reason 1"
+          }
+        ],
+        "notes": "Voorbeeld Notes 1",
+        "internalNotes": "Voorbeeld Internalnotes 1",
+        "source": "portal",
+        "confirmationSentAt": "2026-03-01T09:00:00+00:00",
+        "reminderSentAt": "2026-03-01T09:00:00+00:00",
+        "depositPaidAt": "2026-03-01T09:00:00+00:00",
+        "depositAmount": 0.0,
+        "noShowFeeChargedAt": "2026-03-01T09:00:00+00:00",
+        "cancellationReason": "Voorbeeld Cancellationreason 1",
+        "cancelledAt": "2026-03-01T09:00:00+00:00",
+        "cancelledBy": "Voorbeeld Cancelledby 1",
+        "previousBookingId": "Voorbeeld Previousbookingid 1"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "appointmentBooking",
+          "slug": "appointmentbooking-appointmentbooking-2-2"
+        },
+        "customerId": "Voorbeeld Customerid 2",
+        "serviceId": "Voorbeeld Serviceid 2",
+        "startAt": "2026-03-02T09:00:00+00:00",
+        "endAt": "2026-03-02T09:00:00+00:00",
+        "status": "confirmed",
+        "resourceAssignments": [
+          {
+            "resourceId": "Voorbeeld Resourceid 2",
+            "startAt": "2026-03-02T09:00:00+00:00",
+            "endAt": "2026-03-02T09:00:00+00:00",
+            "stepIndex": 1
+          }
+        ],
+        "statusHistory": [
+          {
+            "status": "Voorbeeld Status 2",
+            "changedAt": "2026-03-02T09:00:00+00:00",
+            "changedBy": "Voorbeeld Changedby 2",
+            "reason": "Voorbeeld Reason 2"
+          }
+        ],
+        "notes": "Voorbeeld Notes 2",
+        "internalNotes": "Voorbeeld Internalnotes 2",
+        "source": "admin",
+        "confirmationSentAt": "2026-03-02T09:00:00+00:00",
+        "reminderSentAt": "2026-03-02T09:00:00+00:00",
+        "depositPaidAt": "2026-03-02T09:00:00+00:00",
+        "depositAmount": 1.0,
+        "noShowFeeChargedAt": "2026-03-02T09:00:00+00:00",
+        "cancellationReason": "Voorbeeld Cancellationreason 2",
+        "cancelledAt": "2026-03-02T09:00:00+00:00",
+        "cancelledBy": "Voorbeeld Cancelledby 2",
+        "previousBookingId": "Voorbeeld Previousbookingid 2"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "appointmentBooking",
+          "slug": "appointmentbooking-appointmentbooking-3-3"
+        },
+        "customerId": "Voorbeeld Customerid 3",
+        "serviceId": "Voorbeeld Serviceid 3",
+        "startAt": "2026-03-03T09:00:00+00:00",
+        "endAt": "2026-03-03T09:00:00+00:00",
+        "status": "completed",
+        "resourceAssignments": [
+          {
+            "resourceId": "Voorbeeld Resourceid 3",
+            "startAt": "2026-03-03T09:00:00+00:00",
+            "endAt": "2026-03-03T09:00:00+00:00",
+            "stepIndex": 2
+          }
+        ],
+        "statusHistory": [
+          {
+            "status": "Voorbeeld Status 3",
+            "changedAt": "2026-03-03T09:00:00+00:00",
+            "changedBy": "Voorbeeld Changedby 3",
+            "reason": "Voorbeeld Reason 3"
+          }
+        ],
+        "notes": "Voorbeeld Notes 3",
+        "internalNotes": "Voorbeeld Internalnotes 3",
+        "source": "phone",
+        "confirmationSentAt": "2026-03-03T09:00:00+00:00",
+        "reminderSentAt": "2026-03-03T09:00:00+00:00",
+        "depositPaidAt": "2026-03-03T09:00:00+00:00",
+        "depositAmount": 2.0,
+        "noShowFeeChargedAt": "2026-03-03T09:00:00+00:00",
+        "cancellationReason": "Voorbeeld Cancellationreason 3",
+        "cancelledAt": "2026-03-03T09:00:00+00:00",
+        "cancelledBy": "Voorbeeld Cancelledby 3",
+        "previousBookingId": "Voorbeeld Previousbookingid 3"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "appointmentResource",
+          "slug": "appointmentresource-voorbeeld-name-1-1"
+        },
+        "name": "Voorbeeld Name 1",
+        "type": "staff",
+        "status": "active",
+        "skills": [
+          "Voorbeeld Skills 1"
+        ],
+        "workingHours": [
+          {
+            "day": "monday",
+            "openTime": "00:00",
+            "closeTime": "00:00"
+          }
+        ],
+        "vacations": [
+          {
+            "startDate": "2026-03-01",
+            "endDate": "2026-03-01",
+            "label": "Voorbeeld Label 1"
+          }
+        ],
+        "calendarSyncId": "Voorbeeld Calendarsyncid 1",
+        "bookable": true,
+        "userId": "Voorbeeld Userid 1",
+        "maxConcurrent": 1
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "appointmentResource",
+          "slug": "appointmentresource-voorbeeld-name-2-2"
+        },
+        "name": "Voorbeeld Name 2",
+        "type": "room",
+        "status": "inactive",
+        "skills": [
+          "Voorbeeld Skills 2"
+        ],
+        "workingHours": [
+          {
+            "day": "tuesday",
+            "openTime": "11:11",
+            "closeTime": "11:11"
+          }
+        ],
+        "vacations": [
+          {
+            "startDate": "2026-03-02",
+            "endDate": "2026-03-02",
+            "label": "Voorbeeld Label 2"
+          }
+        ],
+        "calendarSyncId": "Voorbeeld Calendarsyncid 2",
+        "bookable": true,
+        "userId": "Voorbeeld Userid 2",
+        "maxConcurrent": 1
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "appointmentResource",
+          "slug": "appointmentresource-voorbeeld-name-3-3"
+        },
+        "name": "Voorbeeld Name 3",
+        "type": "equipment",
+        "status": "archived",
+        "skills": [
+          "Voorbeeld Skills 3"
+        ],
+        "workingHours": [
+          {
+            "day": "wednesday",
+            "openTime": "02:22",
+            "closeTime": "02:22"
+          }
+        ],
+        "vacations": [
+          {
+            "startDate": "2026-03-03",
+            "endDate": "2026-03-03",
+            "label": "Voorbeeld Label 3"
+          }
+        ],
+        "calendarSyncId": "Voorbeeld Calendarsyncid 3",
+        "bookable": true,
+        "userId": "Voorbeeld Userid 3",
+        "maxConcurrent": 1
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "appointmentService",
+          "slug": "appointmentservice-voorbeeld-name-1-1"
+        },
+        "name": "Voorbeeld Name 1",
+        "durationMinutes": 1,
+        "status": "draft",
+        "description": "Voorbeeld Description 1",
+        "bufferBeforeMinutes": 0,
+        "bufferAfterMinutes": 0,
+        "price": 0.0,
+        "currency": "EUR",
+        "requiredSkills": [
+          "Voorbeeld Requiredskills 1"
+        ],
+        "requiredResourceTypes": [
+          "staff"
+        ],
+        "multiStep": [
+          {
+            "durationMinutes": 0,
+            "skillRequired": "Voorbeeld Skillrequired 1",
+            "resourceType": "staff",
+            "allowGap": false
+          }
+        ],
+        "bookableOnline": true,
+        "requiresDeposit": false,
+        "depositAmount": 0.0,
+        "noShowFee": 0,
+        "cancellationPolicy": "free",
+        "cancellationHoursBefore": 24
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "appointmentService",
+          "slug": "appointmentservice-voorbeeld-name-2-2"
+        },
+        "name": "Voorbeeld Name 2",
+        "durationMinutes": 2,
+        "status": "active",
+        "description": "Voorbeeld Description 2",
+        "bufferBeforeMinutes": 0,
+        "bufferAfterMinutes": 0,
+        "price": 1.0,
+        "currency": "EUR",
+        "requiredSkills": [
+          "Voorbeeld Requiredskills 2"
+        ],
+        "requiredResourceTypes": [
+          "room"
+        ],
+        "multiStep": [
+          {
+            "durationMinutes": 1,
+            "skillRequired": "Voorbeeld Skillrequired 2",
+            "resourceType": "room",
+            "allowGap": false
+          }
+        ],
+        "bookableOnline": true,
+        "requiresDeposit": false,
+        "depositAmount": 1.0,
+        "noShowFee": 0,
+        "cancellationPolicy": "charge-deposit",
+        "cancellationHoursBefore": 24
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "appointmentService",
+          "slug": "appointmentservice-voorbeeld-name-3-3"
+        },
+        "name": "Voorbeeld Name 3",
+        "durationMinutes": 3,
+        "status": "archived",
+        "description": "Voorbeeld Description 3",
+        "bufferBeforeMinutes": 0,
+        "bufferAfterMinutes": 0,
+        "price": 2.0,
+        "currency": "EUR",
+        "requiredSkills": [
+          "Voorbeeld Requiredskills 3"
+        ],
+        "requiredResourceTypes": [
+          "equipment"
+        ],
+        "multiStep": [
+          {
+            "durationMinutes": 2,
+            "skillRequired": "Voorbeeld Skillrequired 3",
+            "resourceType": "equipment",
+            "allowGap": false
+          }
+        ],
+        "bookableOnline": true,
+        "requiresDeposit": false,
+        "depositAmount": 2.0,
+        "noShowFee": 0,
+        "cancellationPolicy": "always-charge",
+        "cancellationHoursBefore": 24
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
           "schema": "article",
           "slug": "article-voorbeeld-title-1-1"
         },
@@ -465,6 +783,63 @@
       {
         "@self": {
           "register": "pipelinq",
+          "schema": "billableExpense",
+          "slug": "billableexpense-voorbeeld-title-1-1"
+        },
+        "title": "Voorbeeld Title 1",
+        "amount": 1.0,
+        "description": "Voorbeeld Description 1",
+        "currency": "EUR",
+        "category": "Voorbeeld Category 1",
+        "client": "Voorbeeld Client 1",
+        "billable": false,
+        "status": "draft",
+        "approvedBy": "Voorbeeld Approvedby 1",
+        "approvedAt": "2026-03-01T09:00:00+00:00",
+        "apSyncStatus": "pending",
+        "apSyncedAt": "2026-03-01T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "billableExpense",
+          "slug": "billableexpense-voorbeeld-title-2-2"
+        },
+        "title": "Voorbeeld Title 2",
+        "amount": 2.0,
+        "description": "Voorbeeld Description 2",
+        "currency": "EUR",
+        "category": "Voorbeeld Category 2",
+        "client": "Voorbeeld Client 2",
+        "billable": false,
+        "status": "submitted",
+        "approvedBy": "Voorbeeld Approvedby 2",
+        "approvedAt": "2026-03-02T09:00:00+00:00",
+        "apSyncStatus": "synced",
+        "apSyncedAt": "2026-03-02T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "billableExpense",
+          "slug": "billableexpense-voorbeeld-title-3-3"
+        },
+        "title": "Voorbeeld Title 3",
+        "amount": 3.0,
+        "description": "Voorbeeld Description 3",
+        "currency": "EUR",
+        "category": "Voorbeeld Category 3",
+        "client": "Voorbeeld Client 3",
+        "billable": false,
+        "status": "approved",
+        "approvedBy": "Voorbeeld Approvedby 3",
+        "approvedAt": "2026-03-03T09:00:00+00:00",
+        "apSyncStatus": "failed",
+        "apSyncedAt": "2026-03-03T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
           "schema": "billingCategory",
           "slug": "billingcategory-voorbeeld-name-1-1"
         },
@@ -752,126 +1127,6 @@
         "bounceType": "soft",
         "unsubscribedAt": "2026-03-03T09:00:00+00:00",
         "unsubscribeUrl": "Voorbeeld Unsubscribeurl 3"
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "booking",
-          "slug": "booking-booking-1-1"
-        },
-        "customerId": "Voorbeeld Customerid 1",
-        "serviceId": "Voorbeeld Serviceid 1",
-        "startAt": "2026-03-01T09:00:00+00:00",
-        "endAt": "2026-03-01T09:00:00+00:00",
-        "status": "pending-deposit",
-        "resourceAssignments": [
-          {
-            "resourceId": "Voorbeeld Resourceid 1",
-            "startAt": "2026-03-01T09:00:00+00:00",
-            "endAt": "2026-03-01T09:00:00+00:00",
-            "stepIndex": 0
-          }
-        ],
-        "statusHistory": [
-          {
-            "status": "Voorbeeld Status 1",
-            "changedAt": "2026-03-01T09:00:00+00:00",
-            "changedBy": "Voorbeeld Changedby 1",
-            "reason": "Voorbeeld Reason 1"
-          }
-        ],
-        "notes": "Voorbeeld Notes 1",
-        "internalNotes": "Voorbeeld Internalnotes 1",
-        "source": "portal",
-        "confirmationSentAt": "2026-03-01T09:00:00+00:00",
-        "reminderSentAt": "2026-03-01T09:00:00+00:00",
-        "depositPaidAt": "2026-03-01T09:00:00+00:00",
-        "depositAmount": 0.0,
-        "noShowFeeChargedAt": "2026-03-01T09:00:00+00:00",
-        "cancellationReason": "Voorbeeld Cancellationreason 1",
-        "cancelledAt": "2026-03-01T09:00:00+00:00",
-        "cancelledBy": "Voorbeeld Cancelledby 1",
-        "previousBookingId": "Voorbeeld Previousbookingid 1"
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "booking",
-          "slug": "booking-booking-2-2"
-        },
-        "customerId": "Voorbeeld Customerid 2",
-        "serviceId": "Voorbeeld Serviceid 2",
-        "startAt": "2026-03-02T09:00:00+00:00",
-        "endAt": "2026-03-02T09:00:00+00:00",
-        "status": "confirmed",
-        "resourceAssignments": [
-          {
-            "resourceId": "Voorbeeld Resourceid 2",
-            "startAt": "2026-03-02T09:00:00+00:00",
-            "endAt": "2026-03-02T09:00:00+00:00",
-            "stepIndex": 1
-          }
-        ],
-        "statusHistory": [
-          {
-            "status": "Voorbeeld Status 2",
-            "changedAt": "2026-03-02T09:00:00+00:00",
-            "changedBy": "Voorbeeld Changedby 2",
-            "reason": "Voorbeeld Reason 2"
-          }
-        ],
-        "notes": "Voorbeeld Notes 2",
-        "internalNotes": "Voorbeeld Internalnotes 2",
-        "source": "admin",
-        "confirmationSentAt": "2026-03-02T09:00:00+00:00",
-        "reminderSentAt": "2026-03-02T09:00:00+00:00",
-        "depositPaidAt": "2026-03-02T09:00:00+00:00",
-        "depositAmount": 1.0,
-        "noShowFeeChargedAt": "2026-03-02T09:00:00+00:00",
-        "cancellationReason": "Voorbeeld Cancellationreason 2",
-        "cancelledAt": "2026-03-02T09:00:00+00:00",
-        "cancelledBy": "Voorbeeld Cancelledby 2",
-        "previousBookingId": "Voorbeeld Previousbookingid 2"
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "booking",
-          "slug": "booking-booking-3-3"
-        },
-        "customerId": "Voorbeeld Customerid 3",
-        "serviceId": "Voorbeeld Serviceid 3",
-        "startAt": "2026-03-03T09:00:00+00:00",
-        "endAt": "2026-03-03T09:00:00+00:00",
-        "status": "completed",
-        "resourceAssignments": [
-          {
-            "resourceId": "Voorbeeld Resourceid 3",
-            "startAt": "2026-03-03T09:00:00+00:00",
-            "endAt": "2026-03-03T09:00:00+00:00",
-            "stepIndex": 2
-          }
-        ],
-        "statusHistory": [
-          {
-            "status": "Voorbeeld Status 3",
-            "changedAt": "2026-03-03T09:00:00+00:00",
-            "changedBy": "Voorbeeld Changedby 3",
-            "reason": "Voorbeeld Reason 3"
-          }
-        ],
-        "notes": "Voorbeeld Notes 3",
-        "internalNotes": "Voorbeeld Internalnotes 3",
-        "source": "phone",
-        "confirmationSentAt": "2026-03-03T09:00:00+00:00",
-        "reminderSentAt": "2026-03-03T09:00:00+00:00",
-        "depositPaidAt": "2026-03-03T09:00:00+00:00",
-        "depositAmount": 2.0,
-        "noShowFeeChargedAt": "2026-03-03T09:00:00+00:00",
-        "cancellationReason": "Voorbeeld Cancellationreason 3",
-        "cancelledAt": "2026-03-03T09:00:00+00:00",
-        "cancelledBy": "Voorbeeld Cancelledby 3",
-        "previousBookingId": "Voorbeeld Previousbookingid 3"
       },
       {
         "@self": {
@@ -1335,51 +1590,6 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "cashCount",
-          "slug": "cashcount-cashcount-1-1"
-        },
-        "shift": "00000000-0000-4000-8000-000000000000",
-        "amount": 0.0,
-        "countedAt": "2026-03-01T09:00:00+00:00",
-        "countedBy": "Voorbeeld Countedby 1",
-        "notes": "Voorbeeld Notes 1",
-        "denominationBreakdown": [
-          {}
-        ]
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "cashCount",
-          "slug": "cashcount-cashcount-2-2"
-        },
-        "shift": "00000000-0000-4000-8000-000000000001",
-        "amount": 1.0,
-        "countedAt": "2026-03-02T09:00:00+00:00",
-        "countedBy": "Voorbeeld Countedby 2",
-        "notes": "Voorbeeld Notes 2",
-        "denominationBreakdown": [
-          {}
-        ]
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "cashCount",
-          "slug": "cashcount-cashcount-3-3"
-        },
-        "shift": "00000000-0000-4000-8000-000000000002",
-        "amount": 2.0,
-        "countedAt": "2026-03-03T09:00:00+00:00",
-        "countedBy": "Voorbeeld Countedby 3",
-        "notes": "Voorbeeld Notes 3",
-        "denominationBreakdown": [
-          {}
-        ]
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
           "schema": "cashDiff",
           "slug": "cashdiff-cashdiff-1-1"
         },
@@ -1530,6 +1740,117 @@
       {
         "@self": {
           "register": "pipelinq",
+          "schema": "channelConversation",
+          "slug": "channelconversation-channelconversation-1-1"
+        },
+        "channel": "email",
+        "contactId": "Voorbeeld Contactid 1",
+        "providerId": "Voorbeeld Providerid 1",
+        "status": "open",
+        "assignedTo": "Voorbeeld Assignedto 1",
+        "lastInboundAt": "2026-03-01T09:00:00+00:00",
+        "windowExpiresAt": "2026-03-01T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "channelConversation",
+          "slug": "channelconversation-channelconversation-2-2"
+        },
+        "channel": "web-form",
+        "contactId": "Voorbeeld Contactid 2",
+        "providerId": "Voorbeeld Providerid 2",
+        "status": "assigned",
+        "assignedTo": "Voorbeeld Assignedto 2",
+        "lastInboundAt": "2026-03-02T09:00:00+00:00",
+        "windowExpiresAt": "2026-03-02T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "channelConversation",
+          "slug": "channelconversation-channelconversation-3-3"
+        },
+        "channel": "chat",
+        "contactId": "Voorbeeld Contactid 3",
+        "providerId": "Voorbeeld Providerid 3",
+        "status": "closed",
+        "assignedTo": "Voorbeeld Assignedto 3",
+        "lastInboundAt": "2026-03-03T09:00:00+00:00",
+        "windowExpiresAt": "2026-03-03T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "channelMessage",
+          "slug": "channelmessage-channelmessage-1-1"
+        },
+        "channel": "email",
+        "direction": "inbound",
+        "conversationId": "Voorbeeld Conversationid 1",
+        "contactId": "Voorbeeld Contactid 1",
+        "body": "Voorbeeld Body 1",
+        "providerId": "Voorbeeld Providerid 1",
+        "externalMessageId": "Voorbeeld Externalmessageid 1",
+        "templateId": "Voorbeeld Templateid 1",
+        "templateParameters": [
+          "Voorbeeld Templateparameters 1"
+        ],
+        "costEur": 1.0,
+        "deliveryStatus": "queued",
+        "windowExpiresAt": "2026-03-01T09:00:00+00:00",
+        "metadata": {},
+        "sentAt": "2026-03-01T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "channelMessage",
+          "slug": "channelmessage-channelmessage-2-2"
+        },
+        "channel": "web-form",
+        "direction": "outbound",
+        "conversationId": "Voorbeeld Conversationid 2",
+        "contactId": "Voorbeeld Contactid 2",
+        "body": "Voorbeeld Body 2",
+        "providerId": "Voorbeeld Providerid 2",
+        "externalMessageId": "Voorbeeld Externalmessageid 2",
+        "templateId": "Voorbeeld Templateid 2",
+        "templateParameters": [
+          "Voorbeeld Templateparameters 2"
+        ],
+        "costEur": 2.0,
+        "deliveryStatus": "sent",
+        "windowExpiresAt": "2026-03-02T09:00:00+00:00",
+        "metadata": {},
+        "sentAt": "2026-03-02T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "channelMessage",
+          "slug": "channelmessage-channelmessage-3-3"
+        },
+        "channel": "chat",
+        "direction": "inbound",
+        "conversationId": "Voorbeeld Conversationid 3",
+        "contactId": "Voorbeeld Contactid 3",
+        "body": "Voorbeeld Body 3",
+        "providerId": "Voorbeeld Providerid 3",
+        "externalMessageId": "Voorbeeld Externalmessageid 3",
+        "templateId": "Voorbeeld Templateid 3",
+        "templateParameters": [
+          "Voorbeeld Templateparameters 3"
+        ],
+        "costEur": 3.0,
+        "deliveryStatus": "delivered",
+        "windowExpiresAt": "2026-03-03T09:00:00+00:00",
+        "metadata": {},
+        "sentAt": "2026-03-03T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
           "schema": "channelProvider",
           "slug": "channelprovider-channelprovider-1-1"
         },
@@ -1626,9 +1947,11 @@
         "preferredChannel": "email",
         "timezone": "Voorbeeld Timezone 1",
         "language": "nl",
-        "masterEntityRef": "Voorbeeld Masterentityref 1",
-        "isMasterRecord": false,
-        "shillinqOrganisationRef": "Voorbeeld Shillinqorganisationref 1"
+        "fieldValues": {},
+        "parentOrganisation": "00000000-0000-4000-8000-000000000000",
+        "organisationPath": "Voorbeeld Organisationpath 1",
+        "correspondenceLanguage": "Voorbeeld Correspondencelanguage 1",
+        "masterEntityRef": "Voorbeeld Masterentityref 1"
       },
       {
         "@self": {
@@ -1678,9 +2001,11 @@
         "preferredChannel": "phone",
         "timezone": "Voorbeeld Timezone 2",
         "language": "nl",
-        "masterEntityRef": "Voorbeeld Masterentityref 2",
-        "isMasterRecord": false,
-        "shillinqOrganisationRef": "Voorbeeld Shillinqorganisationref 2"
+        "fieldValues": {},
+        "parentOrganisation": "00000000-0000-4000-8000-000000000001",
+        "organisationPath": "Voorbeeld Organisationpath 2",
+        "correspondenceLanguage": "Voorbeeld Correspondencelanguage 2",
+        "masterEntityRef": "Voorbeeld Masterentityref 2"
       },
       {
         "@self": {
@@ -1730,9 +2055,11 @@
         "preferredChannel": "whatsapp",
         "timezone": "Voorbeeld Timezone 3",
         "language": "nl",
-        "masterEntityRef": "Voorbeeld Masterentityref 3",
-        "isMasterRecord": false,
-        "shillinqOrganisationRef": "Voorbeeld Shillinqorganisationref 3"
+        "fieldValues": {},
+        "parentOrganisation": "00000000-0000-4000-8000-000000000002",
+        "organisationPath": "Voorbeeld Organisationpath 3",
+        "correspondenceLanguage": "Voorbeeld Correspondencelanguage 3",
+        "masterEntityRef": "Voorbeeld Masterentityref 3"
       },
       {
         "@self": {
@@ -1957,6 +2284,9 @@
         "preferredChannel": "email",
         "timezone": "Voorbeeld Timezone 1",
         "language": "nl",
+        "fieldValues": {},
+        "correspondenceLanguage": "Voorbeeld Correspondencelanguage 1",
+        "surveyOptOut": false,
         "masterEntityRef": "Voorbeeld Masterentityref 1",
         "isMasterRecord": false,
         "leads": [
@@ -2009,6 +2339,9 @@
         "preferredChannel": "phone",
         "timezone": "Voorbeeld Timezone 2",
         "language": "nl",
+        "fieldValues": {},
+        "correspondenceLanguage": "Voorbeeld Correspondencelanguage 2",
+        "surveyOptOut": false,
         "masterEntityRef": "Voorbeeld Masterentityref 2",
         "isMasterRecord": false,
         "leads": [
@@ -2061,6 +2394,9 @@
         "preferredChannel": "whatsapp",
         "timezone": "Voorbeeld Timezone 3",
         "language": "nl",
+        "fieldValues": {},
+        "correspondenceLanguage": "Voorbeeld Correspondencelanguage 3",
+        "surveyOptOut": false,
         "masterEntityRef": "Voorbeeld Masterentityref 3",
         "isMasterRecord": false,
         "leads": [
@@ -2070,44 +2406,95 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "conversation",
-          "slug": "conversation-conversation-1-1"
+          "schema": "crmTask",
+          "slug": "crmtask-crmtask-1-1"
         },
-        "channel": "email",
-        "contactId": "Voorbeeld Contactid 1",
-        "providerId": "Voorbeeld Providerid 1",
+        "subject": "Voorbeeld Subject 1",
+        "type": "callbackRequest",
+        "description": "Voorbeeld Description 1",
         "status": "open",
-        "assignedTo": "Voorbeeld Assignedto 1",
-        "lastInboundAt": "2026-03-01T09:00:00+00:00",
-        "windowExpiresAt": "2026-03-01T09:00:00+00:00"
+        "priority": "low",
+        "deadline": "2026-03-01T09:00:00+00:00",
+        "assigneeUserId": "Voorbeeld Assigneeuserid 1",
+        "assigneeGroupId": "Voorbeeld Assigneegroupid 1",
+        "clientId": "00000000-0000-4000-8000-000000000000",
+        "requestId": "00000000-0000-4000-8000-000000000000",
+        "contactMomentSummary": "Voorbeeld Contactmomentsummary 1",
+        "callbackPhoneNumber": "Voorbeeld Callbackphonenumber 1",
+        "preferredTimeSlot": "Voorbeeld Preferredtimeslot 1",
+        "createdBy": "Voorbeeld Createdby 1",
+        "completedAt": "2026-03-01T09:00:00+00:00",
+        "resultText": "Voorbeeld Resulttext 1",
+        "attempts": [
+          {
+            "timestamp": "2026-03-01T09:00:00+00:00",
+            "result": "Voorbeeld Result 1",
+            "notes": "Voorbeeld Notes 1"
+          }
+        ],
+        "lead": "00000000-0000-4000-8000-000000000000"
       },
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "conversation",
-          "slug": "conversation-conversation-2-2"
+          "schema": "crmTask",
+          "slug": "crmtask-crmtask-2-2"
         },
-        "channel": "web-form",
-        "contactId": "Voorbeeld Contactid 2",
-        "providerId": "Voorbeeld Providerid 2",
-        "status": "assigned",
-        "assignedTo": "Voorbeeld Assignedto 2",
-        "lastInboundAt": "2026-03-02T09:00:00+00:00",
-        "windowExpiresAt": "2026-03-02T09:00:00+00:00"
+        "subject": "Voorbeeld Subject 2",
+        "type": "followUpTask",
+        "description": "Voorbeeld Description 2",
+        "status": "in_progress",
+        "priority": "normal",
+        "deadline": "2026-03-02T09:00:00+00:00",
+        "assigneeUserId": "Voorbeeld Assigneeuserid 2",
+        "assigneeGroupId": "Voorbeeld Assigneegroupid 2",
+        "clientId": "00000000-0000-4000-8000-000000000001",
+        "requestId": "00000000-0000-4000-8000-000000000001",
+        "contactMomentSummary": "Voorbeeld Contactmomentsummary 2",
+        "callbackPhoneNumber": "Voorbeeld Callbackphonenumber 2",
+        "preferredTimeSlot": "Voorbeeld Preferredtimeslot 2",
+        "createdBy": "Voorbeeld Createdby 2",
+        "completedAt": "2026-03-02T09:00:00+00:00",
+        "resultText": "Voorbeeld Resulttext 2",
+        "attempts": [
+          {
+            "timestamp": "2026-03-02T09:00:00+00:00",
+            "result": "Voorbeeld Result 2",
+            "notes": "Voorbeeld Notes 2"
+          }
+        ],
+        "lead": "00000000-0000-4000-8000-000000000001"
       },
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "conversation",
-          "slug": "conversation-conversation-3-3"
+          "schema": "crmTask",
+          "slug": "crmtask-crmtask-3-3"
         },
-        "channel": "chat",
-        "contactId": "Voorbeeld Contactid 3",
-        "providerId": "Voorbeeld Providerid 3",
-        "status": "closed",
-        "assignedTo": "Voorbeeld Assignedto 3",
-        "lastInboundAt": "2026-03-03T09:00:00+00:00",
-        "windowExpiresAt": "2026-03-03T09:00:00+00:00"
+        "subject": "Voorbeeld Subject 3",
+        "type": "informationRequest",
+        "description": "Voorbeeld Description 3",
+        "status": "completed",
+        "priority": "high",
+        "deadline": "2026-03-03T09:00:00+00:00",
+        "assigneeUserId": "Voorbeeld Assigneeuserid 3",
+        "assigneeGroupId": "Voorbeeld Assigneegroupid 3",
+        "clientId": "00000000-0000-4000-8000-000000000002",
+        "requestId": "00000000-0000-4000-8000-000000000002",
+        "contactMomentSummary": "Voorbeeld Contactmomentsummary 3",
+        "callbackPhoneNumber": "Voorbeeld Callbackphonenumber 3",
+        "preferredTimeSlot": "Voorbeeld Preferredtimeslot 3",
+        "createdBy": "Voorbeeld Createdby 3",
+        "completedAt": "2026-03-03T09:00:00+00:00",
+        "resultText": "Voorbeeld Resulttext 3",
+        "attempts": [
+          {
+            "timestamp": "2026-03-03T09:00:00+00:00",
+            "result": "Voorbeeld Result 3",
+            "notes": "Voorbeeld Notes 3"
+          }
+        ],
+        "lead": "00000000-0000-4000-8000-000000000002"
       },
       {
         "@self": {
@@ -2417,63 +2804,6 @@
         "lead": "00000000-0000-4000-8000-000000000002",
         "handledBy": "Voorbeeld Handledby 3",
         "handledAt": "2026-03-03T09:00:00+00:00"
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "expense",
-          "slug": "expense-voorbeeld-title-1-1"
-        },
-        "title": "Voorbeeld Title 1",
-        "amount": 1.0,
-        "description": "Voorbeeld Description 1",
-        "currency": "EUR",
-        "category": "Voorbeeld Category 1",
-        "client": "Voorbeeld Client 1",
-        "billable": false,
-        "status": "draft",
-        "approvedBy": "Voorbeeld Approvedby 1",
-        "approvedAt": "2026-03-01T09:00:00+00:00",
-        "apSyncStatus": "pending",
-        "apSyncedAt": "2026-03-01T09:00:00+00:00"
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "expense",
-          "slug": "expense-voorbeeld-title-2-2"
-        },
-        "title": "Voorbeeld Title 2",
-        "amount": 2.0,
-        "description": "Voorbeeld Description 2",
-        "currency": "EUR",
-        "category": "Voorbeeld Category 2",
-        "client": "Voorbeeld Client 2",
-        "billable": false,
-        "status": "submitted",
-        "approvedBy": "Voorbeeld Approvedby 2",
-        "approvedAt": "2026-03-02T09:00:00+00:00",
-        "apSyncStatus": "synced",
-        "apSyncedAt": "2026-03-02T09:00:00+00:00"
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "expense",
-          "slug": "expense-voorbeeld-title-3-3"
-        },
-        "title": "Voorbeeld Title 3",
-        "amount": 3.0,
-        "description": "Voorbeeld Description 3",
-        "currency": "EUR",
-        "category": "Voorbeeld Category 3",
-        "client": "Voorbeeld Client 3",
-        "billable": false,
-        "status": "approved",
-        "approvedBy": "Voorbeeld Approvedby 3",
-        "approvedAt": "2026-03-03T09:00:00+00:00",
-        "apSyncStatus": "failed",
-        "apSyncedAt": "2026-03-03T09:00:00+00:00"
       },
       {
         "@self": {
@@ -3711,8 +4041,8 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "mergeOperation",
-          "slug": "mergeoperation-mergeoperation-1-1"
+          "schema": "masterMergeOperation",
+          "slug": "mastermergeoperation-mastermergeoperation-1-1"
         },
         "mergedIntoMasterId": "Voorbeeld Mergedintomasterid 1",
         "mergedFromMasterIds": [
@@ -3733,8 +4063,8 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "mergeOperation",
-          "slug": "mergeoperation-mergeoperation-2-2"
+          "schema": "masterMergeOperation",
+          "slug": "mastermergeoperation-mastermergeoperation-2-2"
         },
         "mergedIntoMasterId": "Voorbeeld Mergedintomasterid 2",
         "mergedFromMasterIds": [
@@ -3755,8 +4085,8 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "mergeOperation",
-          "slug": "mergeoperation-mergeoperation-3-3"
+          "schema": "masterMergeOperation",
+          "slug": "mastermergeoperation-mastermergeoperation-3-3"
         },
         "mergedIntoMasterId": "Voorbeeld Mergedintomasterid 3",
         "mergedFromMasterIds": [
@@ -3773,75 +4103,6 @@
         "downstreamSyncStatus": {},
         "reversedAt": "2026-03-03T09:00:00+00:00",
         "reversedBy": "Voorbeeld Reversedby 3"
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "message",
-          "slug": "message-message-1-1"
-        },
-        "channel": "email",
-        "direction": "inbound",
-        "conversationId": "Voorbeeld Conversationid 1",
-        "contactId": "Voorbeeld Contactid 1",
-        "body": "Voorbeeld Body 1",
-        "providerId": "Voorbeeld Providerid 1",
-        "externalMessageId": "Voorbeeld Externalmessageid 1",
-        "templateId": "Voorbeeld Templateid 1",
-        "templateParameters": [
-          "Voorbeeld Templateparameters 1"
-        ],
-        "costEur": 1.0,
-        "deliveryStatus": "queued",
-        "windowExpiresAt": "2026-03-01T09:00:00+00:00",
-        "metadata": {},
-        "sentAt": "2026-03-01T09:00:00+00:00"
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "message",
-          "slug": "message-message-2-2"
-        },
-        "channel": "web-form",
-        "direction": "outbound",
-        "conversationId": "Voorbeeld Conversationid 2",
-        "contactId": "Voorbeeld Contactid 2",
-        "body": "Voorbeeld Body 2",
-        "providerId": "Voorbeeld Providerid 2",
-        "externalMessageId": "Voorbeeld Externalmessageid 2",
-        "templateId": "Voorbeeld Templateid 2",
-        "templateParameters": [
-          "Voorbeeld Templateparameters 2"
-        ],
-        "costEur": 2.0,
-        "deliveryStatus": "sent",
-        "windowExpiresAt": "2026-03-02T09:00:00+00:00",
-        "metadata": {},
-        "sentAt": "2026-03-02T09:00:00+00:00"
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "message",
-          "slug": "message-message-3-3"
-        },
-        "channel": "chat",
-        "direction": "inbound",
-        "conversationId": "Voorbeeld Conversationid 3",
-        "contactId": "Voorbeeld Contactid 3",
-        "body": "Voorbeeld Body 3",
-        "providerId": "Voorbeeld Providerid 3",
-        "externalMessageId": "Voorbeeld Externalmessageid 3",
-        "templateId": "Voorbeeld Templateid 3",
-        "templateParameters": [
-          "Voorbeeld Templateparameters 3"
-        ],
-        "costEur": 3.0,
-        "deliveryStatus": "delivered",
-        "windowExpiresAt": "2026-03-03T09:00:00+00:00",
-        "metadata": {},
-        "sentAt": "2026-03-03T09:00:00+00:00"
       },
       {
         "@self": {
@@ -4349,6 +4610,51 @@
         "validFrom": "2026-03-03",
         "validTo": "2026-03-03",
         "priority": 1
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "posCashCount",
+          "slug": "poscashcount-poscashcount-1-1"
+        },
+        "shift": "00000000-0000-4000-8000-000000000000",
+        "amount": 0.0,
+        "countedAt": "2026-03-01T09:00:00+00:00",
+        "countedBy": "Voorbeeld Countedby 1",
+        "notes": "Voorbeeld Notes 1",
+        "denominationBreakdown": [
+          {}
+        ]
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "posCashCount",
+          "slug": "poscashcount-poscashcount-2-2"
+        },
+        "shift": "00000000-0000-4000-8000-000000000001",
+        "amount": 1.0,
+        "countedAt": "2026-03-02T09:00:00+00:00",
+        "countedBy": "Voorbeeld Countedby 2",
+        "notes": "Voorbeeld Notes 2",
+        "denominationBreakdown": [
+          {}
+        ]
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "posCashCount",
+          "slug": "poscashcount-poscashcount-3-3"
+        },
+        "shift": "00000000-0000-4000-8000-000000000002",
+        "amount": 2.0,
+        "countedAt": "2026-03-03T09:00:00+00:00",
+        "countedBy": "Voorbeeld Countedby 3",
+        "notes": "Voorbeeld Notes 3",
+        "denominationBreakdown": [
+          {}
+        ]
       },
       {
         "@self": {
@@ -5365,6 +5671,7 @@
         "fromType": "contact",
         "toType": "contact",
         "category": "Voorbeeld Category 1",
+        "provenance": "declared",
         "notes": "Voorbeeld Notes 1",
         "startDate": "2026-03-01",
         "endDate": "2026-03-01",
@@ -5383,6 +5690,7 @@
         "fromType": "client",
         "toType": "client",
         "category": "Voorbeeld Category 2",
+        "provenance": "imported",
         "notes": "Voorbeeld Notes 2",
         "startDate": "2026-03-02",
         "endDate": "2026-03-02",
@@ -5401,103 +5709,11 @@
         "fromType": "contact",
         "toType": "contact",
         "category": "Voorbeeld Category 3",
+        "provenance": "derived",
         "notes": "Voorbeeld Notes 3",
         "startDate": "2026-03-03",
         "endDate": "2026-03-03",
         "strength": "weak"
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "resource",
-          "slug": "resource-voorbeeld-name-1-1"
-        },
-        "name": "Voorbeeld Name 1",
-        "type": "staff",
-        "status": "active",
-        "skills": [
-          "Voorbeeld Skills 1"
-        ],
-        "workingHours": [
-          {
-            "day": "monday",
-            "openTime": "00:00",
-            "closeTime": "00:00"
-          }
-        ],
-        "vacations": [
-          {
-            "startDate": "2026-03-01",
-            "endDate": "2026-03-01",
-            "label": "Voorbeeld Label 1"
-          }
-        ],
-        "calendarSyncId": "Voorbeeld Calendarsyncid 1",
-        "bookable": true,
-        "userId": "Voorbeeld Userid 1",
-        "maxConcurrent": 1
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "resource",
-          "slug": "resource-voorbeeld-name-2-2"
-        },
-        "name": "Voorbeeld Name 2",
-        "type": "room",
-        "status": "inactive",
-        "skills": [
-          "Voorbeeld Skills 2"
-        ],
-        "workingHours": [
-          {
-            "day": "tuesday",
-            "openTime": "11:11",
-            "closeTime": "11:11"
-          }
-        ],
-        "vacations": [
-          {
-            "startDate": "2026-03-02",
-            "endDate": "2026-03-02",
-            "label": "Voorbeeld Label 2"
-          }
-        ],
-        "calendarSyncId": "Voorbeeld Calendarsyncid 2",
-        "bookable": true,
-        "userId": "Voorbeeld Userid 2",
-        "maxConcurrent": 1
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "resource",
-          "slug": "resource-voorbeeld-name-3-3"
-        },
-        "name": "Voorbeeld Name 3",
-        "type": "equipment",
-        "status": "archived",
-        "skills": [
-          "Voorbeeld Skills 3"
-        ],
-        "workingHours": [
-          {
-            "day": "wednesday",
-            "openTime": "02:22",
-            "closeTime": "02:22"
-          }
-        ],
-        "vacations": [
-          {
-            "startDate": "2026-03-03",
-            "endDate": "2026-03-03",
-            "label": "Voorbeeld Label 3"
-          }
-        ],
-        "calendarSyncId": "Voorbeeld Calendarsyncid 3",
-        "bookable": true,
-        "userId": "Voorbeeld Userid 3",
-        "maxConcurrent": 1
       },
       {
         "@self": {
@@ -5642,111 +5858,6 @@
         "createdBy": "Voorbeeld Createdby 3",
         "createdAt": "2026-03-03T09:00:00+00:00",
         "updatedAt": "2026-03-03T09:00:00+00:00"
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "service",
-          "slug": "service-voorbeeld-name-1-1"
-        },
-        "name": "Voorbeeld Name 1",
-        "durationMinutes": 1,
-        "status": "draft",
-        "description": "Voorbeeld Description 1",
-        "bufferBeforeMinutes": 0,
-        "bufferAfterMinutes": 0,
-        "price": 0.0,
-        "currency": "EUR",
-        "requiredSkills": [
-          "Voorbeeld Requiredskills 1"
-        ],
-        "requiredResourceTypes": [
-          "staff"
-        ],
-        "multiStep": [
-          {
-            "durationMinutes": 0,
-            "skillRequired": "Voorbeeld Skillrequired 1",
-            "resourceType": "staff",
-            "allowGap": false
-          }
-        ],
-        "bookableOnline": true,
-        "requiresDeposit": false,
-        "depositAmount": 0.0,
-        "noShowFee": 0,
-        "cancellationPolicy": "free",
-        "cancellationHoursBefore": 24
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "service",
-          "slug": "service-voorbeeld-name-2-2"
-        },
-        "name": "Voorbeeld Name 2",
-        "durationMinutes": 2,
-        "status": "active",
-        "description": "Voorbeeld Description 2",
-        "bufferBeforeMinutes": 0,
-        "bufferAfterMinutes": 0,
-        "price": 1.0,
-        "currency": "EUR",
-        "requiredSkills": [
-          "Voorbeeld Requiredskills 2"
-        ],
-        "requiredResourceTypes": [
-          "room"
-        ],
-        "multiStep": [
-          {
-            "durationMinutes": 1,
-            "skillRequired": "Voorbeeld Skillrequired 2",
-            "resourceType": "room",
-            "allowGap": false
-          }
-        ],
-        "bookableOnline": true,
-        "requiresDeposit": false,
-        "depositAmount": 1.0,
-        "noShowFee": 0,
-        "cancellationPolicy": "charge-deposit",
-        "cancellationHoursBefore": 24
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "service",
-          "slug": "service-voorbeeld-name-3-3"
-        },
-        "name": "Voorbeeld Name 3",
-        "durationMinutes": 3,
-        "status": "archived",
-        "description": "Voorbeeld Description 3",
-        "bufferBeforeMinutes": 0,
-        "bufferAfterMinutes": 0,
-        "price": 2.0,
-        "currency": "EUR",
-        "requiredSkills": [
-          "Voorbeeld Requiredskills 3"
-        ],
-        "requiredResourceTypes": [
-          "equipment"
-        ],
-        "multiStep": [
-          {
-            "durationMinutes": 2,
-            "skillRequired": "Voorbeeld Skillrequired 3",
-            "resourceType": "equipment",
-            "allowGap": false
-          }
-        ],
-        "bookableOnline": true,
-        "requiresDeposit": false,
-        "depositAmount": 2.0,
-        "noShowFee": 0,
-        "cancellationPolicy": "always-charge",
-        "cancellationHoursBefore": 24
       },
       {
         "@self": {
@@ -6261,99 +6372,6 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "task",
-          "slug": "task-task-1-1"
-        },
-        "subject": "Voorbeeld Subject 1",
-        "type": "callbackRequest",
-        "description": "Voorbeeld Description 1",
-        "status": "open",
-        "priority": "low",
-        "deadline": "2026-03-01T09:00:00+00:00",
-        "assigneeUserId": "Voorbeeld Assigneeuserid 1",
-        "assigneeGroupId": "Voorbeeld Assigneegroupid 1",
-        "clientId": "00000000-0000-4000-8000-000000000000",
-        "requestId": "00000000-0000-4000-8000-000000000000",
-        "contactMomentSummary": "Voorbeeld Contactmomentsummary 1",
-        "callbackPhoneNumber": "Voorbeeld Callbackphonenumber 1",
-        "preferredTimeSlot": "Voorbeeld Preferredtimeslot 1",
-        "createdBy": "Voorbeeld Createdby 1",
-        "completedAt": "2026-03-01T09:00:00+00:00",
-        "resultText": "Voorbeeld Resulttext 1",
-        "attempts": [
-          {
-            "timestamp": "2026-03-01T09:00:00+00:00",
-            "result": "Voorbeeld Result 1",
-            "notes": "Voorbeeld Notes 1"
-          }
-        ],
-        "lead": "00000000-0000-4000-8000-000000000000"
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "task",
-          "slug": "task-task-2-2"
-        },
-        "subject": "Voorbeeld Subject 2",
-        "type": "followUpTask",
-        "description": "Voorbeeld Description 2",
-        "status": "in_progress",
-        "priority": "normal",
-        "deadline": "2026-03-02T09:00:00+00:00",
-        "assigneeUserId": "Voorbeeld Assigneeuserid 2",
-        "assigneeGroupId": "Voorbeeld Assigneegroupid 2",
-        "clientId": "00000000-0000-4000-8000-000000000001",
-        "requestId": "00000000-0000-4000-8000-000000000001",
-        "contactMomentSummary": "Voorbeeld Contactmomentsummary 2",
-        "callbackPhoneNumber": "Voorbeeld Callbackphonenumber 2",
-        "preferredTimeSlot": "Voorbeeld Preferredtimeslot 2",
-        "createdBy": "Voorbeeld Createdby 2",
-        "completedAt": "2026-03-02T09:00:00+00:00",
-        "resultText": "Voorbeeld Resulttext 2",
-        "attempts": [
-          {
-            "timestamp": "2026-03-02T09:00:00+00:00",
-            "result": "Voorbeeld Result 2",
-            "notes": "Voorbeeld Notes 2"
-          }
-        ],
-        "lead": "00000000-0000-4000-8000-000000000001"
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "task",
-          "slug": "task-task-3-3"
-        },
-        "subject": "Voorbeeld Subject 3",
-        "type": "informationRequest",
-        "description": "Voorbeeld Description 3",
-        "status": "completed",
-        "priority": "high",
-        "deadline": "2026-03-03T09:00:00+00:00",
-        "assigneeUserId": "Voorbeeld Assigneeuserid 3",
-        "assigneeGroupId": "Voorbeeld Assigneegroupid 3",
-        "clientId": "00000000-0000-4000-8000-000000000002",
-        "requestId": "00000000-0000-4000-8000-000000000002",
-        "contactMomentSummary": "Voorbeeld Contactmomentsummary 3",
-        "callbackPhoneNumber": "Voorbeeld Callbackphonenumber 3",
-        "preferredTimeSlot": "Voorbeeld Preferredtimeslot 3",
-        "createdBy": "Voorbeeld Createdby 3",
-        "completedAt": "2026-03-03T09:00:00+00:00",
-        "resultText": "Voorbeeld Resulttext 3",
-        "attempts": [
-          {
-            "timestamp": "2026-03-03T09:00:00+00:00",
-            "result": "Voorbeeld Result 3",
-            "notes": "Voorbeeld Notes 3"
-          }
-        ],
-        "lead": "00000000-0000-4000-8000-000000000002"
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
           "schema": "ticket",
           "slug": "ticket-voorbeeld-title-1-1"
         },
@@ -6398,8 +6416,10 @@
         "zgwResourceMappings": [
           "Voorbeeld Zgwresourcemappings 1"
         ],
-        "lead": "00000000-0000-4000-8000-000000000000",
-        "description": "Voorbeeld Description 1"
+        "caseReferences": [
+          "00000000-0000-4000-8000-000000000000"
+        ],
+        "primaryCaseReference": "00000000-0000-4000-8000-000000000000"
       },
       {
         "@self": {
@@ -6448,8 +6468,10 @@
         "zgwResourceMappings": [
           "Voorbeeld Zgwresourcemappings 2"
         ],
-        "lead": "00000000-0000-4000-8000-000000000001",
-        "description": "Voorbeeld Description 2"
+        "caseReferences": [
+          "00000000-0000-4000-8000-000000000001"
+        ],
+        "primaryCaseReference": "00000000-0000-4000-8000-000000000001"
       },
       {
         "@self": {
@@ -6498,8 +6520,10 @@
         "zgwResourceMappings": [
           "Voorbeeld Zgwresourcemappings 3"
         ],
-        "lead": "00000000-0000-4000-8000-000000000002",
-        "description": "Voorbeeld Description 3"
+        "caseReferences": [
+          "00000000-0000-4000-8000-000000000002"
+        ],
+        "primaryCaseReference": "00000000-0000-4000-8000-000000000002"
       },
       {
         "@self": {
@@ -7035,8 +7059,8 @@
       {
         "@self": {
           "register": "pipelinq-portal",
-          "schema": "portalAccount",
-          "slug": "portalaccount-portalaccount-1-1"
+          "schema": "crmPortalAccount",
+          "slug": "crmportalaccount-crmportalaccount-1-1"
         },
         "email": "voorbeeld0@example.invalid",
         "tenantId": "Voorbeeld Tenantid 1",
@@ -7066,8 +7090,8 @@
       {
         "@self": {
           "register": "pipelinq-portal",
-          "schema": "portalAccount",
-          "slug": "portalaccount-portalaccount-2-2"
+          "schema": "crmPortalAccount",
+          "slug": "crmportalaccount-crmportalaccount-2-2"
         },
         "email": "voorbeeld1@example.invalid",
         "tenantId": "Voorbeeld Tenantid 2",
@@ -7097,8 +7121,8 @@
       {
         "@self": {
           "register": "pipelinq-portal",
-          "schema": "portalAccount",
-          "slug": "portalaccount-portalaccount-3-3"
+          "schema": "crmPortalAccount",
+          "slug": "crmportalaccount-crmportalaccount-3-3"
         },
         "email": "voorbeeld2@example.invalid",
         "tenantId": "Voorbeeld Tenantid 3",
@@ -7124,6 +7148,57 @@
         "closeTokenHash": "Voorbeeld Closetokenhash 3",
         "closeExpiresAt": "2026-03-03T09:00:00+00:00",
         "acceptedTermsVersion": "Voorbeeld Acceptedtermsversion 3"
+      },
+      {
+        "@self": {
+          "register": "pipelinq-portal",
+          "schema": "crmPortalSession",
+          "slug": "crmportalsession-crmportalsession-1-1"
+        },
+        "accountId": "Voorbeeld Accountid 1",
+        "tenantId": "Voorbeeld Tenantid 1",
+        "tokenHash": "Voorbeeld Tokenhash 1",
+        "expiresAt": "2026-03-01T09:00:00+00:00",
+        "ipHash": "Voorbeeld Iphash 1",
+        "userAgentHash": "Voorbeeld Useragenthash 1",
+        "revoked": false,
+        "revokedAt": "2026-03-01T09:00:00+00:00",
+        "revokedReason": "Voorbeeld Revokedreason 1",
+        "mfaPending": false
+      },
+      {
+        "@self": {
+          "register": "pipelinq-portal",
+          "schema": "crmPortalSession",
+          "slug": "crmportalsession-crmportalsession-2-2"
+        },
+        "accountId": "Voorbeeld Accountid 2",
+        "tenantId": "Voorbeeld Tenantid 2",
+        "tokenHash": "Voorbeeld Tokenhash 2",
+        "expiresAt": "2026-03-02T09:00:00+00:00",
+        "ipHash": "Voorbeeld Iphash 2",
+        "userAgentHash": "Voorbeeld Useragenthash 2",
+        "revoked": false,
+        "revokedAt": "2026-03-02T09:00:00+00:00",
+        "revokedReason": "Voorbeeld Revokedreason 2",
+        "mfaPending": false
+      },
+      {
+        "@self": {
+          "register": "pipelinq-portal",
+          "schema": "crmPortalSession",
+          "slug": "crmportalsession-crmportalsession-3-3"
+        },
+        "accountId": "Voorbeeld Accountid 3",
+        "tenantId": "Voorbeeld Tenantid 3",
+        "tokenHash": "Voorbeeld Tokenhash 3",
+        "expiresAt": "2026-03-03T09:00:00+00:00",
+        "ipHash": "Voorbeeld Iphash 3",
+        "userAgentHash": "Voorbeeld Useragenthash 3",
+        "revoked": false,
+        "revokedAt": "2026-03-03T09:00:00+00:00",
+        "revokedReason": "Voorbeeld Revokedreason 3",
+        "mfaPending": false
       },
       {
         "@self": {
@@ -7226,57 +7301,6 @@
         "validFrom": "2026-03-03T09:00:00+00:00",
         "validUntil": "2026-03-03T09:00:00+00:00",
         "revokedAt": "2026-03-03T09:00:00+00:00"
-      },
-      {
-        "@self": {
-          "register": "pipelinq-portal",
-          "schema": "portalSession",
-          "slug": "portalsession-portalsession-1-1"
-        },
-        "accountId": "Voorbeeld Accountid 1",
-        "tenantId": "Voorbeeld Tenantid 1",
-        "tokenHash": "Voorbeeld Tokenhash 1",
-        "expiresAt": "2026-03-01T09:00:00+00:00",
-        "ipHash": "Voorbeeld Iphash 1",
-        "userAgentHash": "Voorbeeld Useragenthash 1",
-        "revoked": false,
-        "revokedAt": "2026-03-01T09:00:00+00:00",
-        "revokedReason": "Voorbeeld Revokedreason 1",
-        "mfaPending": false
-      },
-      {
-        "@self": {
-          "register": "pipelinq-portal",
-          "schema": "portalSession",
-          "slug": "portalsession-portalsession-2-2"
-        },
-        "accountId": "Voorbeeld Accountid 2",
-        "tenantId": "Voorbeeld Tenantid 2",
-        "tokenHash": "Voorbeeld Tokenhash 2",
-        "expiresAt": "2026-03-02T09:00:00+00:00",
-        "ipHash": "Voorbeeld Iphash 2",
-        "userAgentHash": "Voorbeeld Useragenthash 2",
-        "revoked": false,
-        "revokedAt": "2026-03-02T09:00:00+00:00",
-        "revokedReason": "Voorbeeld Revokedreason 2",
-        "mfaPending": false
-      },
-      {
-        "@self": {
-          "register": "pipelinq-portal",
-          "schema": "portalSession",
-          "slug": "portalsession-portalsession-3-3"
-        },
-        "accountId": "Voorbeeld Accountid 3",
-        "tenantId": "Voorbeeld Tenantid 3",
-        "tokenHash": "Voorbeeld Tokenhash 3",
-        "expiresAt": "2026-03-03T09:00:00+00:00",
-        "ipHash": "Voorbeeld Iphash 3",
-        "userAgentHash": "Voorbeeld Useragenthash 3",
-        "revoked": false,
-        "revokedAt": "2026-03-03T09:00:00+00:00",
-        "revokedReason": "Voorbeeld Revokedreason 3",
-        "mfaPending": false
       },
       {
         "@self": {

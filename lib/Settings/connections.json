@@ -1,0 +1,86 @@
+{
+    "app": "pipelinq",
+    "connections": [
+        {
+            "key": "cti",
+            "title": "Telephony (CTI)",
+            "description": "Screen pop and click to dial through Asterisk, RingCentral or CallVoip. You pick one platform.",
+            "order": 10,
+            "settingsUrl": "/settings/admin/pipelinq#section-cti",
+            "reportedOnly": true,
+            "unconfiguredMessage": "Not checked yet. Pick a platform in the telephony settings, then choose Test connection."
+        },
+        {
+            "key": "social-mastodon",
+            "title": "Mastodon",
+            "description": "Posts to Mastodon, sent through the credential broker in OpenRegister.",
+            "order": 20,
+            "settingsUrl": "/apps/pipelinq/social-accounts",
+            "unconfiguredMessage": "Not checked yet. Open Social accounts to check this network."
+        },
+        {
+            "key": "social-bluesky",
+            "title": "Bluesky",
+            "description": "Posts to Bluesky, sent through the credential broker in OpenRegister.",
+            "order": 21,
+            "settingsUrl": "/apps/pipelinq/social-accounts",
+            "unconfiguredMessage": "Not checked yet. Open Social accounts to check this network."
+        },
+        {
+            "key": "social-linkedin",
+            "title": "LinkedIn",
+            "description": "Posts to a LinkedIn member or company page, sent through the credential broker in OpenRegister.",
+            "order": 22,
+            "settingsUrl": "/apps/pipelinq/social-accounts",
+            "unconfiguredMessage": "Not checked yet. Open Social accounts to check this network."
+        },
+        {
+            "key": "social-x",
+            "title": "X",
+            "description": "Posts to X, sent through the credential broker in OpenRegister.",
+            "order": 23,
+            "settingsUrl": "/apps/pipelinq/social-accounts",
+            "unconfiguredMessage": "Not checked yet. Open Social accounts to check this network."
+        },
+        {
+            "key": "social-facebook",
+            "title": "Facebook page",
+            "description": "Posts to a Facebook page, sent through the credential broker in OpenRegister.",
+            "order": 24,
+            "settingsUrl": "/apps/pipelinq/social-accounts",
+            "unconfiguredMessage": "Not checked yet. Open Social accounts to check this network."
+        },
+        {
+            "key": "social-instagram",
+            "title": "Instagram business account",
+            "description": "Posts to an Instagram business account, sent through the credential broker in OpenRegister.",
+            "order": 25,
+            "settingsUrl": "/apps/pipelinq/social-accounts",
+            "unconfiguredMessage": "Not checked yet. Open Social accounts to check this network."
+        },
+        {
+            "key": "social-threads",
+            "title": "Threads",
+            "description": "Posts to Threads, sent through the credential broker in OpenRegister.",
+            "order": 26,
+            "settingsUrl": "/apps/pipelinq/social-accounts",
+            "unconfiguredMessage": "Not checked yet. Open Social accounts to check this network."
+        },
+        {
+            "key": "berichtenbox",
+            "title": "Berichtenbox",
+            "description": "Messages to a citizen's Mijn Overheid Berichtenbox, sent to Logius.",
+            "order": 30,
+            "requiredConfig": ["logius_client_id", "logius_client_secret", "pki_cert", "pki_key"],
+            "unconfiguredMessage": "Not configured. Set logius_client_id, logius_client_secret, pki_cert and pki_key with occ config:app:set. No settings screen writes them yet."
+        },
+        {
+            "key": "mail-provider",
+            "title": "Bulk mail provider",
+            "description": "Mailings sent through Amazon SES, Brevo, Mailjet, SendGrid, Mailgun or Postmark, over an integriq source.",
+            "order": 40,
+            "settingsUrl": "/settings/admin/pipelinq#section-mail-transports",
+            "unconfiguredMessage": "Not checked yet. Pipelinq does not test a provider itself. Link the provider's source with Add integration to have it checked."
+        }
+    ]
+}

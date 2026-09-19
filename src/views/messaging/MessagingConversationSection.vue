@@ -432,7 +432,7 @@ export default {
 			}
 			try {
 				this.conversations =
-					(await this.objectStore.fetchCollection('conversation', {
+					(await this.objectStore.fetchCollection('channelConversation', {
 						contactId: this.effectiveContactId,
 						_limit: 50,
 					})) || []

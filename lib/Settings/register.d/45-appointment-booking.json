@@ -3,18 +3,18 @@
     "registers": {
       "pipelinq": {
         "schemas": [
-          "service",
-          "resource",
-          "booking",
+          "appointmentService",
+          "appointmentResource",
+          "appointmentBooking",
           "walkInTicket",
           "availabilityCache"
         ]
       }
     },
     "schemas": {
-      "service": {
+      "appointmentService": {
         "x-schema-org": "schema:Service",
-        "slug": "service",
+        "slug": "appointmentService",
         "title": "Service",
         "icon": "Tag",
         "version": "1.0.0",
@@ -194,8 +194,8 @@
           }
         }
       },
-      "resource": {
-        "slug": "resource",
+      "appointmentResource": {
+        "slug": "appointmentResource",
         "title": "Resource",
         "icon": "AccountTie",
         "version": "1.0.0",
@@ -342,9 +342,9 @@
           }
         }
       },
-      "booking": {
+      "appointmentBooking": {
         "x-schema-org": "schema:Reservation",
-        "slug": "booking",
+        "slug": "appointmentBooking",
         "title": "Booking",
         "icon": "CalendarCheck",
         "version": "1.0.0",
@@ -808,7 +808,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "service",
+          "schema": "appointmentService",
           "slug": "service-haircut-simple"
         },
         "name": "Knipbeurt",
@@ -834,7 +834,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "service",
+          "schema": "appointmentService",
           "slug": "service-color-and-cut"
         },
         "name": "Kleur & Knippen",
@@ -880,7 +880,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "service",
+          "schema": "appointmentService",
           "slug": "service-oil-change-standard"
         },
         "name": "Olieverversing",
@@ -909,7 +909,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "service",
+          "schema": "appointmentService",
           "slug": "service-consultation-tax"
         },
         "name": "Belastingadvies gesprek",
@@ -935,7 +935,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "resource",
+          "schema": "appointmentResource",
           "slug": "resource-sarah-stylist"
         },
         "name": "Sarah",
@@ -985,7 +985,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "resource",
+          "schema": "appointmentResource",
           "slug": "resource-jan-mechanic"
         },
         "name": "Jan",
@@ -1029,7 +1029,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "resource",
+          "schema": "appointmentResource",
           "slug": "resource-treatment-room-a"
         },
         "name": "Behandelkamer A",
@@ -1075,7 +1075,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "resource",
+          "schema": "appointmentResource",
           "slug": "resource-workshop-bay-1"
         },
         "name": "Werkplaats brug 1",
@@ -1116,7 +1116,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "booking",
+          "schema": "appointmentBooking",
           "slug": "booking-001-completed"
         },
         "customerId": "00000000-0000-0000-0000-000000000001",
@@ -1156,7 +1156,7 @@
       {
         "@self": {
           "register": "pipelinq",
-          "schema": "booking",
+          "schema": "appointmentBooking",
           "slug": "booking-002-confirmed"
         },
         "customerId": "00000000-0000-0000-0000-000000000002",

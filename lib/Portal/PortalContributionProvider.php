@@ -234,7 +234,7 @@ class PortalContributionProvider {
 				[
 					'id' => 'clientContracts',
 					'register' => self::REGISTER,
-					'schema' => 'contract',
+					'schema' => 'salesContract',
 					'scopeField' => 'clientRef',
 					'scopeClaim' => 'clientId',
 					'label' => 'My contracts',
@@ -423,7 +423,7 @@ class PortalContributionProvider {
 				[
 					'id' => 'customerBookings',
 					'register' => self::REGISTER,
-					'schema' => 'booking',
+					'schema' => 'appointmentBooking',
 					'scopeField' => 'customerId',
 					'scopeClaim' => 'customerUid',
 					'label' => 'My appointments',

@@ -1543,6 +1543,16 @@ MUST NOT be modified here.
 
 ### Requirement: AVG Request Status Lifecycle Is Schema-Declared
 
+> **RETIRED in this app.** `023922c6` (ADR-047 Phase 3, "consume OpenRegister
+> DSAR engine, retire app-local AVG stack") deleted `AvgRequestService`,
+> `AvgAccessService`, `AvgRequestController` and
+> `tests/Unit/Service/Avg/AvgRequestServiceTest.php`. Data subject requests are
+> now OpenRegister `dataSubjectRequest` cases in its `data-subject-requests`
+> register, and the lifecycle graph they obey is declared there. What remains
+> here is the one-way migration, `lib/Repair/MigrateAvgVerzoekenToOrDsar.php`,
+> covered by `tests/Unit/Repair/MigrateAvgVerzoekenToOrDsarTest.php`. The
+> requirement text below is kept for history and describes code that is gone.
+
 The `avgVerzoek` schema MUST declare its `status` transition graph in
 `configuration.x-openregister-lifecycle` (ADR-031): `field: status`,
 `initial: ingediend`, `final: [afgerond, gearchiveerd]`, and a transition map in
@@ -1575,14 +1585,20 @@ FG-DPO / admin), and per-edge authorization would change that contract.
 - WHEN `SchemaLifecycleGraph::fullAdjacencyFor('avgVerzoek')` resolves the adjacency map
 - THEN each of the seven working states MUST reach all nine declared states
 - AND the two terminal states (`afgerond`, `gearchiveerd`) MUST be present as keys with empty target lists
-- `@e2e exclude` backend schema-resolution invariant; covered by AvgRequestServiceTest unit test
+- `@e2e exclude` backend schema-resolution invariant. The avgVerzoek schema and
+  the service that resolved it were retired by `023922c6`, and the PHPUnit class
+  this reason used to name was deleted with them. `SchemaLifecycleGraphTest`
+  survives but covers task, walkInTicket, loyaltyProgramme, salesContract,
+  appointmentBooking and forecast, not avgVerzoek.
 
 #### Scenario: A legal status transition succeeds with preserved behaviour
 
 - GIVEN a request the acting handler may edit, in a working state (e.g. `redactie`)
 - WHEN `update()` patches `status` to a declared target (e.g. `bundle-genereren`)
 - THEN the transition MUST be validated against the schema-derived graph and persist the new status
-- `@e2e exclude` backend service-layer transition; covered by the unit transition-matrix test
+- `@e2e exclude` backend service-layer transition. `AvgRequestService::update()`
+  was retired by `023922c6`, and the transition-matrix test this reason referred
+  to went with it. OpenRegister now validates the transition.
 
 #### Scenario: An illegal status transition is rejected with the same error contract
 
@@ -1592,14 +1608,21 @@ FG-DPO / admin), and per-edge authorization would change that contract.
 - AND WHEN `update()` is called with a status value not in the avgVerzoek enum
 - THEN it MUST raise `OCSBadRequestException` with an "Onbekende AVG-status" message
 - AND a `saveObject()` that flips the status to a value no declared transition allows MUST be rejected by OpenRegister's `LifecycleValidationListener`
-- `@e2e exclude` backend error-contract invariant; covered by the unit transition-matrix test + OR listener (defense-in-depth)
+- `@e2e exclude` backend error-contract invariant. The `OCSBadRequestException`
+  contract described here lived in `AvgRequestService`, retired by `023922c6`.
+  Only the OpenRegister half of the defense-in-depth remains, and it is asserted
+  in that repository, not here.
 
 #### Scenario: Legal computations stay in PHP
 
 - GIVEN an AVG request lifecycle action with a legal side-effect
 - WHEN intake computes the reference + `wettelijkeTermijnVerloopt`, or archive stamps `retentieTot`, or delete enforces the retention guard with DPO override
 - THEN these computations MUST run in `AvgRequestService` PHP, unchanged, because the declarative lifecycle grammar cannot express them
-- `@e2e exclude` backend legal-computation invariant; covered by existing AvgRequestServiceTest scenarios
+- `@e2e exclude` backend legal-computation invariant. The reference, deadline,
+  retention and DPO-override computations moved to OpenRegister's DSAR engine
+  with `023922c6`, and the PHPUnit class this reason used to name was deleted
+  with the service. The migration that carries the existing values across is
+  covered by `tests/Unit/Repair/MigrateAvgVerzoekenToOrDsarTest.php`.
 
 ## Requirements
 

@@ -117,7 +117,7 @@ class PortalAdminController extends Controller {
 	public function accounts(): JSONResponse {
 		return $this->adminGuarded(
 			handler: function (): array {
-				$accounts = $this->repository->findAll('portalAccount', ['tenantId' => $this->tenantId()]);
+				$accounts = $this->repository->findAll('crmPortalAccount', ['tenantId' => $this->tenantId()]);
 				$safe = array_map(
 					static fn (array $account): array => [
 						'id' => ($account['@self']['id'] ?? $account['id'] ?? null),

@@ -38,6 +38,7 @@ import type { Page } from '@playwright/test'
 import { expect, test } from '@playwright/test'
 import {
 	assertNoHardError,
+	gotoAppRoute,
 	navClick,
 	openApp,
 	revealNavEntry,
@@ -120,8 +121,7 @@ test.describe('Social accounts page', () => {
 	test('the seeded accounts are listed with their network and their status', async ({
 		page,
 	}) => {
-		await openApp(page)
-		await page.goto(`${APP}/social-accounts`)
+		await gotoAppRoute(page, `${APP}/social-accounts`)
 		await assertNoHardError(page)
 
 		const accounts = page.getByTestId('social-accounts')
@@ -138,8 +138,7 @@ test.describe('Social accounts page', () => {
 	test('an account no application may post to says so instead of offering a Connect button', async ({
 		page,
 	}) => {
-		await openApp(page)
-		await page.goto(`${APP}/social-accounts`)
+		await gotoAppRoute(page, `${APP}/social-accounts`)
 
 		const instagram = page.getByTestId('social-account-instagram')
 		await expect(instagram).toBeVisible({ timeout: 15000 })
@@ -189,8 +188,7 @@ test.describe('Social accounts page', () => {
 test.describe('Social posts page', () => {
 	// @e2e marketing-ui::the-social-posts-page-lists-the-seeded-posts
 	test('the seeded posts are listed with their status', async ({ page }) => {
-		await openApp(page)
-		await page.goto(`${APP}/social-posts`)
+		await gotoAppRoute(page, `${APP}/social-posts`)
 		await assertNoHardError(page)
 
 		await expect(page.locator('#content-vue')).toContainText(
@@ -217,7 +215,7 @@ test.describe('Social posts page', () => {
 		expect(agentPost, 'the seeded agent-drafted post is missing').toBeTruthy()
 
 		const id = String(agentPost.id || agentPost['@self']?.id || agentPost.uuid)
-		await page.goto(`${APP}/social-posts/${id}`)
+		await gotoAppRoute(page, `${APP}/social-posts/${id}`)
 		await assertNoHardError(page)
 
 		// The section's own testid is the one the shared body-section wrapper
@@ -229,8 +227,7 @@ test.describe('Social posts page', () => {
 
 	// @e2e marketing-ui::a-marketer-writes-a-variant-for-one-network-only
 	test('the composer opens and takes a body and a variant', async ({ page }) => {
-		await openApp(page)
-		await page.goto(`${APP}/social-posts/new`)
+		await gotoAppRoute(page, `${APP}/social-posts/new`)
 		await assertNoHardError(page)
 
 		const body = page.getByTestId('social-compose-body')
@@ -283,8 +280,7 @@ test.describe('Social performance page', () => {
 	test('the ranking table renders without waiting on a per-publication lookup', async ({
 		page,
 	}) => {
-		await openApp(page)
-		await page.goto(`${APP}/social-performance`)
+		await gotoAppRoute(page, `${APP}/social-performance`)
 
 		const performance = page.getByTestId('social-performance')
 		await expect(performance).toBeVisible({ timeout: 15000 })

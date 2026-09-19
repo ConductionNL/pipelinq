@@ -479,26 +479,23 @@ test('Resources renders declaratively and its "New resource" action opens the cr
 })
 
 /*
- * SPEC/IMPLEMENTATION MISMATCH — reported, not fixed. The scenario names the
- * header action "New project" and the page "Projects"; the shipped manifest
- * (src/manifest.d/65-project-task-hierarchy.json) declares the Dutch strings
- * "Nieuw project" and "Projecten". Per the fleet rule that all code — labels
- * included — is English, the manifest is what is wrong here, not the spec. The
- * test asserts what actually ships so it stays green until that is corrected;
- * the mismatch is called out rather than silently normalised away.
+ * RETIRED SURFACE, KEPT ASSERTION. The scenario this covered ("Projects renders
+ * as a declarative index") described a page pipelinq no longer has. #1757
+ * handed the whole project work breakdown structure to planninq and deleted
+ * pipelinq's four project schemas and its three project pages, because a schema
+ * slug is GLOBAL on a shared OpenRegister and two definitions of `project`
+ * could answer for each other without anything reporting it.
+ *
+ * The test is inverted rather than deleted. Its original guard — that the
+ * hand-written ProjectList.vue must not come back — is still worth keeping, and
+ * an index page returning by accident is now the regression, so the same test
+ * watches the same ground from the other side. Where the projects went is
+ * asserted below, on the client page.
  */
 // @e2e openspec/specs/declarative-view-system/spec.md#projects-renders-as-a-declarative-index
-test('Projects renders declaratively with a currency budget column and a billable indicator', async ({
+test('pipelinq no longer ships a Projects index, and the old view has not come back', async ({
 	page,
 }) => {
-	await gotoPage(page, '/projects')
-
-	await expectDeclarativeIndex(page, 'Projecten')
-	// `budgetAmount` → EUR currency (label "Budget"); `billable` → boolean
-	// indicator (label "Factureerbaar").
-	await expectColumn(page, 'Budget')
-	await expectColumn(page, 'Factureerbaar')
-
 	expect(
 		fs.existsSync(
 			path.join(APP_ROOT, 'src', 'views', 'projects', 'ProjectList.vue'),
@@ -506,8 +503,19 @@ test('Projects renders declaratively with a currency budget column and a billabl
 		'ProjectList.vue must not have come back',
 	).toBe(false)
 
-	await clickHeaderAction(page, 'Nieuw project')
-	await expect(page).toHaveURL(/\/projects\/new$/, { timeout: 15000 })
+	// The route is gone with the page, so the router's catch-all takes over and
+	// redirects to the dashboard. Asserting the redirect rather than a blank
+	// page is what distinguishes "retired" from "broken": a page that failed to
+	// mount would also show no projects index.
+	await gotoPage(page, '/projects')
+	await expect(
+		page,
+		'the retired route must fall through to the catch-all, not stay on /projects',
+	).not.toHaveURL(/\/projects\/?$/, { timeout: 20000 })
+	await expect(
+		page.locator('#content-vue').getByRole('heading', { name: 'Projecten' }),
+		'a Projects index must not come back to pipelinq without moving the schema back too',
+	).toHaveCount(0)
 })
 
 // ---------------------------------------------------------------------------
@@ -703,17 +711,31 @@ test.describe('Declarative detail pages (client 360 + contact)', () => {
 		// asserted visible above — that keeps the assertion about this widget
 		// rather than about any text anywhere, and makes it independent of which
 		// section happens to be expanded.
-		for (const title of [
-			'Leads',
-			'Projecten',
-			'Contactmomenten',
-			'Complaints',
-		]) {
+		// 'Projecten' is deliberately NOT in this list any more. #1757 moved it
+		// out of relatedCollections into the `client-projects` object-list
+		// widget, which reads PLANNINQ's register and declares
+		// `requiredApp: planninq`. It is asserted just below, as a widget, so
+		// the move is watched rather than merely allowed.
+		for (const title of ['Leads', 'Contactmomenten', 'Complaints']) {
 			await expect(
 				related.getByText(title, { exact: true }),
 				`the "${title}" related collection must be rendered by the host`,
 			).not.toHaveCount(0, { timeout: 15000 })
 		}
+
+		// The half of #1757 that would otherwise go unwatched. Removing
+		// pipelinq's project schemas and its Projecten menu entry is only
+		// correct because the surface moved; if this widget stopped rendering,
+		// every other assertion here would still pass and pipelinq would simply
+		// have lost projects.
+		//
+		// CI installs planninq alongside (code-quality.yml `additional-apps`),
+		// so `requiredApp` is satisfied and the widget renders its real chrome
+		// rather than a set-up state.
+		await expect(
+			page.locator('#content-vue').getByText('Projecten', { exact: true }),
+			"the client's projects must still render, read from planninq's register",
+		).not.toHaveCount(0, { timeout: 15000 })
 
 		// The sub-features live IN THE PAGE BODY as `bodyWidgets`, not in the
 		// sidebar. CnBodySections stamps each with its manifest id.

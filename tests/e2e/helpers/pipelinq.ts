@@ -16,9 +16,73 @@ import type { ConsoleMessage, Locator, Page } from '@playwright/test'
 
 import { expect } from '@playwright/test'
 
+/**
+ * What one document load of this app costs on the CI runner, in milliseconds.
+ *
+ * CI runs `workers: 6` against a single-threaded `php -S` (see
+ * playwright.config.ts), so six browsers queue on one PHP process and a load
+ * that takes ~2 s locally takes 13 to 23 s there. Measured off the
+ * `playwright-traces` artifact of run 34532703820.
+ *
+ * The per-test budget is 60 s, so a test has room for about TWO loads and no
+ * more. That is the number to hold in mind when a spec is written: every
+ * `openApp()`, every `goto`, every `reload()` is one of them.
+ */
+export const APP_LOAD_BUDGET_MS = 45_000
+
+/**
+ * Resolve an app route to a URL.
+ *
+ * Accepts either an app-relative route (`/clients/42`, or the legacy
+ * `#/clients/42` — the shell has routed on HISTORY since #1684, so a leading
+ * `#` is stripped rather than sent) or a path that already names the app
+ * (`/apps/pipelinq/...`, `/index.php/apps/pipelinq/...`), which is passed
+ * through unchanged.
+ */
+export function appUrl(route: string): string {
+	if (/^\/(index\.php\/)?apps\//.test(route)) {
+		return route
+	}
+	return `/apps/pipelinq${route.replace(/^#/, '')}`
+}
+
+/**
+ * Deep-link straight to an app route in ONE document load.
+ *
+ * Use this instead of `openApp()` followed by a `goto`. That pair loads the
+ * Dashboard, waits for its widgets, and then throws the whole thing away on
+ * the next line — it is a full load spent on a page the test never asserts
+ * against, and at 13 to 23 s a load it is most of the budget. It was what
+ * blew `spec-coverage/bi-export-jobs-bug.spec.ts` (fixed in #1912) and what
+ * put `spec-coverage/appointment-booking.spec.ts` on the edge of timing out.
+ *
+ * `openApp()` is still right when a test genuinely starts on the Dashboard,
+ * or when it needs a token-bearing page for an API call before it knows the
+ * URL it will visit.
+ *
+ * The `goto` carries an EXPLICIT timeout so a slow load reports itself, and
+ * names its URL, instead of surfacing as a bare "Test timeout of 60000ms
+ * exceeded" that names nothing. Diagnosing exactly that, twice, cost more
+ * than either fix did.
+ */
+export async function gotoAppRoute(
+	page: Page,
+	route: string,
+	options: { timeout?: number; settleTimeout?: number } = {},
+): Promise<void> {
+	await page.goto(appUrl(route), {
+		timeout: options.timeout ?? APP_LOAD_BUDGET_MS,
+	})
+	await expect(page.locator('#content-vue')).toBeVisible({
+		timeout: options.settleTimeout ?? 15000,
+	})
+	await dismissWalkthrough(page)
+	await dismissSupportDialog(page)
+}
+
 /** Open the app at the dashboard and wait for the shell + nav to render. */
 export async function openApp(page: Page): Promise<void> {
-	await page.goto('/apps/pipelinq/')
+	await page.goto('/apps/pipelinq/', { timeout: APP_LOAD_BUDGET_MS })
 	await expect(page.locator('#app-navigation-vue')).toBeVisible({ timeout: 15000 })
 	await dismissWalkthrough(page)
 	await dismissSupportDialog(page)

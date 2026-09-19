@@ -51,7 +51,7 @@ class CallbackService {
 	 *
 	 * @var string
 	 */
-	private const TASK_SCHEMA_SLUG = 'task';
+	private const TASK_SCHEMA_SLUG = 'crmTask';
 
 	/**
 	 * Fallback status-transition graph used only when the schema declaration is

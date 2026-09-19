@@ -48,7 +48,7 @@ class PasswordResetService {
 	 *
 	 * @var string
 	 */
-	private const SCHEMA = 'portalAccount';
+	private const SCHEMA = 'crmPortalAccount';
 
 	/**
 	 * Reset-token TTL in minutes.

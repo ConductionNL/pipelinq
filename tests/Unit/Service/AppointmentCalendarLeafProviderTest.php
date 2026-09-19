@@ -71,9 +71,9 @@ class AppointmentCalendarLeafProviderTest extends TestCase {
 			static function (string $app, string $key, string $default = ''): string {
 				$values = [
 					'register' => 'pipelinq',
-					'booking_schema' => 'booking',
-					'service_schema' => 'service',
-					'resource_schema' => 'resource',
+					'booking_schema' => 'appointmentBooking',
+					'service_schema' => 'appointmentService',
+					'resource_schema' => 'appointmentResource',
 					'contact_schema' => 'contact',
 				];
 				return ($values[$key] ?? $default);

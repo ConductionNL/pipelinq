@@ -53,7 +53,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Payment;
 
-use OCP\Server;
+use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -98,6 +98,12 @@ class BrokerHttpTransport implements HttpTransport {
 	 *                             secret — this process cannot read the key
 	 *                             behind it.
 	 * @param LoggerInterface $logger The logger.
+	 * @param ContainerInterface $container The container the broker is resolved
+	 *                                      from. Handed in by the DI-built
+	 *                                      caller rather than reached for
+	 *                                      globally, so a test can decide what
+	 *                                      the broker is and nothing autowires
+	 *                                      outside a booted server.
 	 * @param string|null $actingUserId Credential owner. Needed on background/webhook
 	 *                                  paths, where there is no session for the
 	 *                                  broker's ownership guard to read.
@@ -105,6 +111,7 @@ class BrokerHttpTransport implements HttpTransport {
 	public function __construct(
 		private string $credentialId,
 		private LoggerInterface $logger,
+		private ContainerInterface $container,
 		private ?string $actingUserId = null,
 	) {
 	}//end __construct()
@@ -156,7 +163,7 @@ class BrokerHttpTransport implements HttpTransport {
 		}
 
 		try {
-			$broker = Server::get(self::BROKER_CLASS);
+			$broker = $this->container->get(self::BROKER_CLASS);
 			$response = $broker->request(
 				$this->credentialId,
 				self::APP_ID,

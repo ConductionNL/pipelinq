@@ -170,7 +170,7 @@ export function objectTypes() {
 			description: t(APP, 'Billable categories and tags'),
 		},
 		{
-			slug: 'task',
+			slug: 'crmTask',
 			group: 'core',
 			label: t(APP, 'Task'),
 			description: t(APP, 'Work items / tasks'),
@@ -231,7 +231,7 @@ export function objectTypes() {
 			description: t(APP, 'Cash drops and pickups during a shift'),
 		},
 		{
-			slug: 'cashCount',
+			slug: 'posCashCount',
 			group: 'pos',
 			label: t(APP, 'Cash Count'),
 			description: t(APP, 'Cash count entries for a shift'),
@@ -262,19 +262,19 @@ export function objectTypes() {
 		},
 		// Appointment booking (group: appointments)
 		{
-			slug: 'service',
+			slug: 'appointmentService',
 			group: 'appointments',
 			label: t(APP, 'Service'),
 			description: t(APP, 'Bookable services'),
 		},
 		{
-			slug: 'resource',
+			slug: 'appointmentResource',
 			group: 'appointments',
 			label: t(APP, 'Resource'),
 			description: t(APP, 'Bookable resources (staff, rooms, equipment)'),
 		},
 		{
-			slug: 'booking',
+			slug: 'appointmentBooking',
 			group: 'appointments',
 			label: t(APP, 'Booking'),
 			description: t(APP, 'Appointment bookings'),
@@ -363,13 +363,13 @@ export function objectTypes() {
 		// instead of throwing "Object type X is not registered" — which otherwise
 		// blanks the whole Messaging settings page and errors on every detail page.
 		{
-			slug: 'conversation',
+			slug: 'channelConversation',
 			group: 'marketing',
 			label: t(APP, 'Conversation'),
 			description: t(APP, 'Messaging conversations (WhatsApp / SMS)'),
 		},
 		{
-			slug: 'message',
+			slug: 'channelMessage',
 			group: 'marketing',
 			label: t(APP, 'Message'),
 			description: t(APP, 'Outbound / inbound messages within a conversation'),

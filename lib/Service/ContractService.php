@@ -50,7 +50,7 @@ class ContractService {
 	 *
 	 * @var string
 	 */
-	private const CONTRACT_SCHEMA_SLUG = 'contract';
+	private const CONTRACT_SCHEMA_SLUG = 'salesContract';
 
 	/**
 	 * Fallback terminal lifecycle states used only when the schema declaration is

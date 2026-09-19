@@ -68,7 +68,7 @@ class AvailabilityCacheRefreshJobTest extends TestCase {
 			static function (string $app, string $key, string $default = ''): string {
 				$values = [
 					'register' => 'pipelinq',
-					'resource_schema' => 'resource',
+					'resource_schema' => 'appointmentResource',
 				];
 				return ($values[$key] ?? $default);
 			}
