@@ -106,6 +106,8 @@ class ContactMomentLeafProvider {
 	 *
 	 * @param string $hostId The host object's uuid.
 	 * @param int $limit Page size, capped at MAX_LIMIT.
+	 * @param string $partyId The party whose standing indicators ride along, or
+	 *   an empty string to answer without them.
 	 *
 	 * @return array<string, mixed> `status` plus either `contactMoments` or `error`.
 	 *
@@ -147,10 +149,15 @@ class ContactMomentLeafProvider {
 		// The party's indicators travel with the panel, resolved live, so a KCC
 		// agent taking a call reads "agressie-registratie" BEFORE they speak.
 		// Nothing is copied onto a contact moment: this is a read.
+		$indicators = [];
+		if ($partyId !== '') {
+			$indicators = $this->indicatorService->resolve(partyId: trim($partyId));
+		}
+
 		return [
 			'status' => 200,
 			'contactMoments' => $moments,
-			'indicators' => ($partyId === '' ? [] : $this->indicatorService->resolve(partyId: trim($partyId))),
+			'indicators' => $indicators,
 		];
 	}//end list()
 
@@ -178,48 +185,14 @@ class ContactMomentLeafProvider {
 			return ['status' => 403, 'error' => 'You may not read this object.'];
 		}
 
-		// An outbound append against a blocking indicator is refused at the
-		// point of writing, naming the indicator. pipelinq answers the
-		// question here because the panel is pipelinq's own surface; it still
-		// places no listener on anybody else's send path.
 		$partyId = trim((string)($payload['client'] ?? $payload['partyId'] ?? ''));
-		$direction = trim((string)($payload['direction'] ?? ''));
-		if ($partyId !== '' && $direction === 'outbound') {
-			$answer = $this->indicatorService->isBlocked(partyId: $partyId, act: 'send');
-			if ($answer['blocked'] === true) {
-				$labels = implode(', ', array_column($answer['indicators'], 'label'));
 
-				return [
-					'status' => 409,
-					'error' => "Outbound contact with this party is blocked by {$labels}.",
-					'indicators' => $answer['indicators'],
-				];
-			}
+		$refusal = $this->outboundRefusal(partyId: $partyId, payload: $payload);
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
-		$ticket = [
-			'title' => trim((string)($payload['title'] ?? $payload['subject'] ?? '')),
-			'channel' => trim((string)($payload['channel'] ?? '')),
-			'direction' => trim((string)($payload['direction'] ?? '')),
-			'caseReference' => $hostId,
-			'caseReferences' => [$hostId],
-			'primaryCaseReference' => $hostId,
-			'assignee' => $this->actingUserId(),
-			'occurredAt' => $this->occurredAt(payload: $payload),
-		];
-
-		foreach (['outcome' => 'outcome', 'summary' => 'description', 'description' => 'description'] as $from => $to) {
-			$value = trim((string)($payload[$from] ?? ''));
-			if ($value !== '') {
-				$ticket[$to] = $value;
-			}
-		}
-
-		if ($partyId !== '') {
-			// Only when named: an empty string on a uuid property fails the
-			// schema, and a contact moment on a case need not name a party.
-			$ticket['client'] = $partyId;
-		}
+		$ticket = $this->ticketFrom(hostId: $hostId, payload: $payload, partyId: $partyId);
 
 		if ($ticket['title'] === '') {
 			return ['status' => 400, 'error' => 'A contact moment requires a subject.'];
@@ -248,6 +221,79 @@ class ContactMomentLeafProvider {
 
 		return ['status' => 201, 'contactMoment' => $this->present(row: $saved, hostId: $hostId)];
 	}//end create()
+
+	/**
+	 * The refusal an outbound append meets, or null when it may go ahead.
+	 *
+	 * An outbound append against a blocking indicator is refused at the point
+	 * of writing, naming the indicator. Pipelinq answers the question here
+	 * because the panel is pipelinq's own surface; it still places no listener
+	 * on anybody else's send path.
+	 *
+	 * @param string $partyId The party the moment names, or an empty string.
+	 * @param array<string, mixed> $payload The append payload.
+	 *
+	 * @return array<string, mixed>|null The 409 answer, or null.
+	 *
+	 * @spec openspec/changes/typed-fields-and-indicators-on-a-party/specs/party-fields-and-indicators/spec.md#requirement-pipelinq-shall-answer-whether-an-indicator-blocks-an-act-and-shall-not-intercept-it-req-pfi-004
+	 */
+	private function outboundRefusal(string $partyId, array $payload): ?array {
+		if ($partyId === '' || trim((string)($payload['direction'] ?? '')) !== 'outbound') {
+			return null;
+		}
+
+		$answer = $this->indicatorService->isBlocked(partyId: $partyId, act: 'send');
+		if ($answer['blocked'] === false) {
+			return null;
+		}
+
+		$labels = implode(', ', array_column($answer['indicators'], 'label'));
+
+		return [
+			'status' => 409,
+			'error' => "Outbound contact with this party is blocked by {$labels}.",
+			'indicators' => $answer['indicators'],
+		];
+	}//end outboundRefusal()
+
+	/**
+	 * The ticket an append payload becomes.
+	 *
+	 * @param string $hostId The host object's uuid.
+	 * @param array<string, mixed> $payload The append payload.
+	 * @param string $partyId The party the moment names, or an empty string.
+	 *
+	 * @return array<string, mixed> The ticket, ready for TicketService::save().
+	 *
+	 * @spec openspec/changes/contact-moments-on-pipelinq-schema/specs/contactmomenten/spec.md#requirement-contact-moments-are-a-data-provider-leaf-with-append-req-cmd-003
+	 */
+	private function ticketFrom(string $hostId, array $payload, string $partyId): array {
+		$ticket = [
+			'title' => trim((string)($payload['title'] ?? $payload['subject'] ?? '')),
+			'channel' => trim((string)($payload['channel'] ?? '')),
+			'direction' => trim((string)($payload['direction'] ?? '')),
+			'caseReference' => $hostId,
+			'caseReferences' => [$hostId],
+			'primaryCaseReference' => $hostId,
+			'assignee' => $this->actingUserId(),
+			'occurredAt' => $this->occurredAt(payload: $payload),
+		];
+
+		foreach (['outcome' => 'outcome', 'summary' => 'description', 'description' => 'description'] as $from => $to) {
+			$value = trim((string)($payload[$from] ?? ''));
+			if ($value !== '') {
+				$ticket[$to] = $value;
+			}
+		}
+
+		if ($partyId !== '') {
+			// Only when named: an empty string on a uuid property fails the
+			// schema, and a contact moment on a case need not name a party.
+			$ticket['client'] = $partyId;
+		}
+
+		return $ticket;
+	}//end ticketFrom()
 
 	/**
 	 * Whether the acting user may read the host object.

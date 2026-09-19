@@ -26,15 +26,17 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
-use OCA\OpenRegister\Mcp\Attribute\McpTool;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Mcp\Attribute\McpTool;
+use OCA\Pipelinq\Mcp\McpAnswer;
 use OCA\Pipelinq\Service\TicketService;
 use OCP\IAppConfig;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 use ReflectionMethod;
 
 /**
@@ -102,6 +104,7 @@ class TicketServiceTest extends TestCase {
 			appConfig: $this->appConfig,
 			logger: $this->logger,
 			objectService: $this->objectService,
+			mcp: new McpAnswer(new NullLogger()),
 		);
 	}//end buildService()
 

@@ -56,6 +56,7 @@ class SurveyResponseService {
 	 * @param ObjectServiceInterface $objectService OpenRegister's object service.
 	 * @param SurveyDispatchService $dispatchService Reads and writes invitations.
 	 * @param DetractorFollowUpService $followUp Classifies and closes the loop.
+	 * @param SurveyOptOutService $optOut Writes the contact's standing opt-out.
 	 * @param LoggerInterface $logger PSR logger.
 	 */
 	public function __construct(
@@ -63,6 +64,7 @@ class SurveyResponseService {
 		private readonly ObjectServiceInterface $objectService,
 		private readonly SurveyDispatchService $dispatchService,
 		private readonly DetractorFollowUpService $followUp,
+		private readonly SurveyOptOutService $optOut,
 		private readonly LoggerInterface $logger,
 	) {
 	}//end __construct()
@@ -115,10 +117,30 @@ class SurveyResponseService {
 			return 'open';
 		}
 
-		// suppressed and failed: nothing was ever delivered under this token,
+		// Suppressed and failed: nothing was ever delivered under this token,
 		// so it is not a link anybody legitimately holds.
 		return 'unknown';
 	}//end stateOf()
+
+	/**
+	 * The HTTP status a refused token answers with.
+	 *
+	 * A token nobody ever held is a 404: saying "gone" about it would
+	 * confirm that it once existed. A token that was delivered and has since
+	 * expired or been used is a 410, which tells the holder the link is dead
+	 * rather than mistyped.
+	 *
+	 * @param string $state The state stateOf() returned.
+	 *
+	 * @return int 404 for an unknown token, 410 for a spent one.
+	 */
+	private function refusalStatus(string $state): int {
+		if ($state === 'unknown') {
+			return 404;
+		}
+
+		return 410;
+	}//end refusalStatus()
 
 	/**
 	 * The invitation a token belongs to, or null.
@@ -158,13 +180,13 @@ class SurveyResponseService {
 		$state = $this->stateOf(invitation: $invitation);
 
 		if ($state !== 'open') {
-			return ['status' => ($state === 'unknown' ? 404 : 410), 'state' => $state];
+			return ['status' => $this->refusalStatus(state: $state), 'state' => $state];
 		}
 
 		return [
 			'status' => 200,
 			'state' => 'open',
-			'survey' => $this->survey(surveyRef: (string)($invitation['surveyRef'] ?? '')),
+			'survey' => $this->readPublic(uuid: (string)($invitation['surveyRef'] ?? ''), what: 'survey'),
 		];
 	}//end show()
 
@@ -179,6 +201,8 @@ class SurveyResponseService {
 	 *
 	 * @return array{npsScore: int|null, averageRating: float|null, verbatim: string}
 	 *   The scored answers.
+	 *
+	 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-tokenized-invitation-response-collection
 	 */
 	public function score(array $survey, array $answers): array {
 		$nps = null;
@@ -200,45 +224,69 @@ class SurveyResponseService {
 				continue;
 			}
 
-			if ($kind === 'text' && trim((string)$answer) !== '' && $verbatim === '') {
-				$verbatim = trim((string)$answer);
+			if ($verbatim === '') {
+				$verbatim = $this->verbatimOf(kind: $kind, answer: $answer);
 			}
+		}
+
+		// Null, not 0: nobody rated is not the same as everybody rated zero.
+		$averageRating = null;
+		if ($ratings !== []) {
+			$averageRating = round((array_sum($ratings) / count($ratings)), 2);
 		}
 
 		return [
 			'npsScore' => $nps,
-			'averageRating' => ($ratings === [] ? null : round((array_sum($ratings) / count($ratings)), 2)),
+			'averageRating' => $averageRating,
 			'verbatim' => $verbatim,
 		];
 	}//end score()
+
+	/**
+	 * The verbatim a single answer contributes, or '' when it contributes none.
+	 *
+	 * @param string $kind The question's kind.
+	 * @param mixed $answer The answer given.
+	 *
+	 * @return string The trimmed text, or ''.
+	 */
+	private function verbatimOf(string $kind, mixed $answer): string {
+		if ($kind !== 'text') {
+			return '';
+		}
+
+		return trim((string)$answer);
+	}//end verbatimOf()
 
 	/**
 	 * Accept an answer against a token.
 	 *
 	 * @param string $token The token.
 	 * @param array<string, mixed> $answers The answers.
-	 * @param bool $optOut Whether the respondent asked never to be asked again.
+	 * @param bool|null $optOut Whether the respondent asked never to be asked
+	 *   again. Null when the form carried no answer to that question; only an
+	 *   explicit true records the opt-out.
 	 *
 	 * @return array<string, mixed> `status` plus either the response or `state`.
 	 *
 	 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-tokenized-invitation-response-collection
 	 */
-	public function submit(string $token, array $answers, bool $optOut = false): array {
+	public function submit(string $token, array $answers, ?bool $optOut = null): array {
 		$invitation = $this->invitationFor(token: $token);
 		$state = $this->stateOf(invitation: $invitation);
 
 		if ($state !== 'open') {
-			return ['status' => ($state === 'unknown' ? 404 : 410), 'state' => $state];
+			return ['status' => $this->refusalStatus(state: $state), 'state' => $state];
 		}
 
 		$now = new DateTimeImmutable();
-		$survey = $this->survey(surveyRef: (string)($invitation['surveyRef'] ?? ''));
+		$survey = $this->readPublic(uuid: (string)($invitation['surveyRef'] ?? ''), what: 'survey');
 		$scored = $this->score(survey: $survey, answers: $answers);
 
 		$response = array_merge(
 			[
 				'surveyRef' => (string)($invitation['surveyRef'] ?? ''),
-				'invitationRef' => (string)($invitation['id'] ?? $invitation['uuid'] ?? ''),
+				'invitationRef' => $this->uuidOf(row: $invitation),
 				'clientRef' => (string)($invitation['clientRef'] ?? ''),
 				'contactRef' => (string)($invitation['contactRef'] ?? ''),
 				'linkedEntityType' => (string)($invitation['linkedEntityType'] ?? ''),
@@ -263,138 +311,73 @@ class SurveyResponseService {
 		$invitation['responseRef'] = $responseId;
 		$this->dispatchService->write(
 			invitation: $invitation,
-			uuid: (string)($invitation['id'] ?? $invitation['uuid'] ?? ''),
+			uuid: $this->uuidOf(row: $invitation),
 		);
 
 		if ($optOut === true) {
-			$this->recordOptOut(contactRef: (string)($invitation['contactRef'] ?? ''));
+			$this->optOut->record(contactRef: (string)($invitation['contactRef'] ?? ''));
 		}
 
 		$response = $this->followUp->process(
 			response: $response,
-			client: $this->client(clientId: (string)($invitation['clientRef'] ?? '')),
+			client: $this->readPublic(uuid: (string)($invitation['clientRef'] ?? ''), what: 'client'),
 		);
 
 		return ['status' => 201, 'response' => $response];
 	}//end submit()
 
 	/**
-	 * Record that a contact never wants a satisfaction survey again.
+	 * Read one object on the public path.
 	 *
-	 * @param string $contactRef The contact uid.
+	 * The survey and the client were two readers doing the same thing, which
+	 * is how they drifted: one logged what it could not read and the other
+	 * swallowed it. One reader, one behaviour.
 	 *
-	 * @return void
+	 * @param string $uuid The object's uuid.
+	 * @param string $what What is being read, for the log line.
 	 *
-	 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-survey-fatigue-throttling-and-opt-out
+	 * @return array<string, mixed> The object, or [].
 	 */
-	public function recordOptOut(string $contactRef): void {
-		$contactRef = trim($contactRef);
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, 'contact_schema', '');
-		if ($contactRef === '' || $register === '' || $schema === '') {
-			return;
-		}
-
-		try {
-			$rows = $this->objectService->findAll(
-				[
-					'filters' => ['register' => $register, 'schema' => $schema, 'contactsUid' => $contactRef],
-					'limit' => 10,
-				]
-			);
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'SurveyResponseService: the opt-out could not be recorded',
-				['exception' => $e->getMessage()]
-			);
-
-			return;
-		}
-
-		foreach ($rows as $row) {
-			$data = ($row instanceof \JsonSerializable ? $row->jsonSerialize() : $row);
-			if (is_array($data) === false) {
-				continue;
-			}
-
-			$data['surveyOptOut'] = true;
-
-			try {
-				$this->objectService->saveObject(
-					object: $data,
-					register: $register,
-					schema: $schema,
-					uuid: (string)($data['id'] ?? $data['uuid'] ?? ''),
-				);
-			} catch (Throwable $e) {
-				$this->logger->error(
-					'SurveyResponseService: the opt-out could not be saved',
-					['exception' => $e->getMessage()]
-				);
-			}
-		}
-	}//end recordOptOut()
-
-	/**
-	 * Read one survey.
-	 *
-	 * @param string $surveyRef The survey's uuid.
-	 *
-	 * @return array<string, mixed> The survey, or [].
-	 */
-	private function survey(string $surveyRef): array {
-		if (trim($surveyRef) === '') {
+	private function readPublic(string $uuid, string $what): array {
+		if (trim($uuid) === '') {
 			return [];
 		}
 
 		try {
 			// RBAC off: this is the PUBLIC path, where the token is the
 			// authorisation and there is no session to check anything against.
-			$entity = $this->objectService->find(id: $surveyRef, _rbac: false, _multitenancy: false);
+			$entity = $this->objectService->find(id: $uuid, _rbac: false, _multitenancy: false);
 		} catch (Throwable $e) {
 			$this->logger->warning(
-				'SurveyResponseService: the survey could not be read',
-				['survey' => $surveyRef, 'exception' => $e->getMessage()]
+				'SurveyResponseService: an object on the public path could not be read',
+				['what' => $what, 'uuid' => $uuid, 'exception' => $e->getMessage()]
 			);
 
 			return [];
 		}
 
-		if ($entity === null) {
+		$data = null;
+		if ($entity !== null) {
+			$data = $entity->jsonSerialize();
+		}
+
+		if (is_array($data) === false) {
 			return [];
 		}
 
-		$data = $entity->jsonSerialize();
-
-		return (is_array($data) === true ? $data : []);
-	}//end survey()
+		return $data;
+	}//end readPublic()
 
 	/**
-	 * Read one client.
+	 * The uuid a stored row carries, under either of the two names it uses.
 	 *
-	 * @param string $clientId The client's uuid.
+	 * @param array<string, mixed> $row The stored row.
 	 *
-	 * @return array<string, mixed> The client, or [].
+	 * @return string The uuid, or ''.
 	 */
-	private function client(string $clientId): array {
-		if (trim($clientId) === '') {
-			return [];
-		}
-
-		try {
-			$entity = $this->objectService->find(id: $clientId, _rbac: false, _multitenancy: false);
-		} catch (Throwable $e) {
-			return [];
-		}
-
-		if ($entity === null) {
-			return [];
-		}
-
-		$data = $entity->jsonSerialize();
-
-		return (is_array($data) === true ? $data : []);
-	}//end client()
+	private function uuidOf(array $row): string {
+		return (string)($row['id'] ?? $row['uuid'] ?? '');
+	}//end uuidOf()
 
 	/**
 	 * Write the response.

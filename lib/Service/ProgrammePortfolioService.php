@@ -98,12 +98,16 @@ class ProgrammePortfolioService {
 	 *
 	 * @return string One of the MODES.
 	 */
-	public function defaultMode(): string {
+	private function defaultMode(): string {
 		$configured = trim(
 			$this->appConfig->getValueString(Application::APP_ID, self::DEFAULT_MODE_KEY, 'fromTasks')
 		);
 
-		return (in_array($configured, self::MODES, true) === true ? $configured : 'fromTasks');
+		if (in_array($configured, self::MODES, true) === true) {
+			return $configured;
+		}
+
+		return 'fromTasks';
 	}//end defaultMode()
 
 	/**
@@ -112,11 +116,17 @@ class ProgrammePortfolioService {
 	 * @param array<string, mixed> $programme The programme.
 	 *
 	 * @return string One of the MODES.
+	 *
+	 * @spec openspec/changes/the-project-above-the-cases/specs/project-portfolio/spec.md#requirement-progress-shall-declare-which-mode-produced-it-req-prj-003
 	 */
 	public function modeFor(array $programme): string {
 		$override = trim((string)($programme['progressMode'] ?? ''));
 
-		return (in_array($override, self::MODES, true) === true ? $override : $this->defaultMode());
+		if (in_array($override, self::MODES, true) === true) {
+			return $override;
+		}
+
+		return $this->defaultMode();
 	}//end modeFor()
 
 	/**
@@ -193,13 +203,20 @@ class ProgrammePortfolioService {
 			$title = trim((string)($workItem['title'] ?? ''));
 		}
 
+		// The reference is the last resort: a row with no readable label at
+		// all is worse than one labelled by the id it points at.
+		$label = $ref;
+		if ($title !== '') {
+			$label = $title;
+		}
+
 		return [
 			'id' => (string)($workItem['id'] ?? $workItem['uuid'] ?? ''),
 			'programme' => (string)($workItem['programme'] ?? ''),
 			'domainObjectType' => $type,
 			'domainObjectRef' => $ref,
 			'app' => $app,
-			'title' => ($title !== '' ? $title : $ref),
+			'title' => $label,
 			'resolved' => $resolved,
 		];
 	}//end presentWorkItem()
@@ -222,12 +239,20 @@ class ProgrammePortfolioService {
 
 		if ($mode === 'manual') {
 			$typed = ($programme['manualProgress'] ?? null);
+			$entered = is_numeric($typed);
+
+			$progress = null;
+			$reason = 'No progress has been entered.';
+			if ($entered === true) {
+				$progress = (int)$typed;
+				$reason = '';
+			}
 
 			return [
 				'mode' => 'manual',
-				'progress' => (is_numeric($typed) === true ? (int)$typed : null),
-				'computable' => is_numeric($typed),
-				'reason' => (is_numeric($typed) === true ? '' : 'No progress has been entered.'),
+				'progress' => $progress,
+				'computable' => $entered,
+				'reason' => $reason,
 			];
 		}
 
@@ -307,7 +332,7 @@ class ProgrammePortfolioService {
 	 *
 	 * @return array<int, array<string, mixed>> The work items.
 	 */
-	public function workItemsReferencing(string $domainObjectType, string $domainObjectRef): array {
+	private function workItemsReferencing(string $domainObjectType, string $domainObjectRef): array {
 		return $this->read(
 			schemaKey: 'programmeWorkItem_schema',
 			filters: [

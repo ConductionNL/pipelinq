@@ -83,7 +83,10 @@ class PublicSurveyController extends Controller {
 	 *
 	 * @param string $token The per-invitation token.
 	 * @param array<string, mixed> $answers The answers, keyed by question key.
-	 * @param bool $optOut Whether the respondent asked never to be asked again.
+	 * @param bool|null $optOut Whether the respondent asked never to be asked
+	 *   again. Null when the form carried no answer to that question, which is
+	 *   not the same as answering no: a preference nobody stated is not a
+	 *   preference to keep sending.
 	 *
 	 * @return JSONResponse The response, or the state that stopped it.
 	 *
@@ -92,7 +95,7 @@ class PublicSurveyController extends Controller {
 	#[PublicPage]
 	#[NoCSRFRequired]
 	#[AnonRateLimit(limit: 10, period: 300)]
-	public function submitInvitation(string $token, array $answers = [], bool $optOut = false): JSONResponse {
+	public function submitInvitation(string $token, array $answers = [], ?bool $optOut = null): JSONResponse {
 		return $this->respond(
 			result: $this->responses->submit(token: $token, answers: $answers, optOut: $optOut)
 		);

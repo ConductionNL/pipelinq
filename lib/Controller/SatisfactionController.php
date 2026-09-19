@@ -85,7 +85,10 @@ class SatisfactionController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function responseRate(string $surveyId = ''): JSONResponse {
-		$filters = (trim($surveyId) === '' ? [] : ['surveyRef' => trim($surveyId)]);
+		$filters = [];
+		if (trim($surveyId) !== '') {
+			$filters = ['surveyRef' => trim($surveyId)];
+		}
 
 		return new JSONResponse(
 			$this->dispatchService->responseRate(
