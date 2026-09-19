@@ -111,8 +111,7 @@ class LeadService {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/specs/crm-mcp-tool-surface/spec.md
-	 *   (Requirement: MCP provider exposes RBAC-guarded CRM write tools)
+	 * @spec openspec/specs/crm-mcp-tool-surface/spec.md#requirement-mcp-provider-exposes-rbac-guarded-crm-write-tools
 	 */
 	#[McpTool(
 		name: 'createLead',
@@ -187,8 +186,7 @@ class LeadService {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/specs/crm-mcp-tool-surface/spec.md
-	 *   (Requirement: MCP provider exposes a CRM read tool surface)
+	 * @spec openspec/specs/crm-mcp-tool-surface/spec.md#requirement-mcp-provider-exposes-a-crm-read-tool-surface
 	 */
 	#[McpTool(
 		name: 'pipelineForecast',
