@@ -103,7 +103,11 @@ class ProgrammePortfolioService {
 			$this->appConfig->getValueString(Application::APP_ID, self::DEFAULT_MODE_KEY, 'fromTasks')
 		);
 
-		return (in_array($configured, self::MODES, true) === true ? $configured : 'fromTasks');
+		if (in_array($configured, self::MODES, true) === true) {
+			return $configured;
+		}
+
+		return 'fromTasks';
 	}//end defaultMode()
 
 	/**
@@ -116,7 +120,11 @@ class ProgrammePortfolioService {
 	public function modeFor(array $programme): string {
 		$override = trim((string)($programme['progressMode'] ?? ''));
 
-		return (in_array($override, self::MODES, true) === true ? $override : $this->defaultMode());
+		if (in_array($override, self::MODES, true) === true) {
+			return $override;
+		}
+
+		return $this->defaultMode();
 	}//end modeFor()
 
 	/**
@@ -193,13 +201,20 @@ class ProgrammePortfolioService {
 			$title = trim((string)($workItem['title'] ?? ''));
 		}
 
+		// The reference is the last resort: a row with no readable label at
+		// all is worse than one labelled by the id it points at.
+		$label = $ref;
+		if ($title !== '') {
+			$label = $title;
+		}
+
 		return [
 			'id' => (string)($workItem['id'] ?? $workItem['uuid'] ?? ''),
 			'programme' => (string)($workItem['programme'] ?? ''),
 			'domainObjectType' => $type,
 			'domainObjectRef' => $ref,
 			'app' => $app,
-			'title' => ($title !== '' ? $title : $ref),
+			'title' => $label,
 			'resolved' => $resolved,
 		];
 	}//end presentWorkItem()
@@ -222,12 +237,20 @@ class ProgrammePortfolioService {
 
 		if ($mode === 'manual') {
 			$typed = ($programme['manualProgress'] ?? null);
+			$entered = is_numeric($typed);
+
+			$progress = null;
+			$reason = 'No progress has been entered.';
+			if ($entered === true) {
+				$progress = (int)$typed;
+				$reason = '';
+			}
 
 			return [
 				'mode' => 'manual',
-				'progress' => (is_numeric($typed) === true ? (int)$typed : null),
-				'computable' => is_numeric($typed),
-				'reason' => (is_numeric($typed) === true ? '' : 'No progress has been entered.'),
+				'progress' => $progress,
+				'computable' => $entered,
+				'reason' => $reason,
 			];
 		}
 

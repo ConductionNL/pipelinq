@@ -320,6 +320,11 @@ class TicketService {
 	 *   and would have broken any alternative entity implementation.
 	 *
 	 * @throws RuntimeException If the ticket surface is unconfigured.
+	 * @throws InvalidArgumentException When assertFacetFields() refuses the
+	 *   payload: a required facet field is missing, the direction is not one
+	 *   this app offers, or the case set holds a duplicate. Declared here
+	 *   because callers catch it to answer 400, and without the tag static
+	 *   analysis reads that catch as dead.
 	 *
 	 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
 	 */

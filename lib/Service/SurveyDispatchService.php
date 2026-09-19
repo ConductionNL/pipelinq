@@ -122,7 +122,11 @@ class SurveyDispatchService {
 			return [];
 		}
 
-		return (is_array($rules) === true ? $rules : []);
+		if (is_array($rules) === false) {
+			return [];
+		}
+
+		return $rules;
 	}//end rules()
 
 	/**
@@ -489,7 +493,11 @@ class SurveyDispatchService {
 		}
 
 		$delivered = ($counts['sent'] + $counts['responded']);
-		$rate = ($delivered === 0 ? 0.0 : round((($counts['responded'] / $delivered) * 100), 1));
+
+		$rate = 0.0;
+		if ($delivered !== 0) {
+			$rate = round((($counts['responded'] / $delivered) * 100), 1);
+		}
 
 		return [
 			'delivered' => $delivered,

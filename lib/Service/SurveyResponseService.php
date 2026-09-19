@@ -115,10 +115,30 @@ class SurveyResponseService {
 			return 'open';
 		}
 
-		// suppressed and failed: nothing was ever delivered under this token,
+		// Suppressed and failed: nothing was ever delivered under this token,
 		// so it is not a link anybody legitimately holds.
 		return 'unknown';
 	}//end stateOf()
+
+	/**
+	 * The HTTP status a refused token answers with.
+	 *
+	 * A token nobody ever held is a 404: saying "gone" about it would
+	 * confirm that it once existed. A token that was delivered and has since
+	 * expired or been used is a 410, which tells the holder the link is dead
+	 * rather than mistyped.
+	 *
+	 * @param string $state The state stateOf() returned.
+	 *
+	 * @return int 404 for an unknown token, 410 for a spent one.
+	 */
+	private function refusalStatus(string $state): int {
+		if ($state === 'unknown') {
+			return 404;
+		}
+
+		return 410;
+	}//end refusalStatus()
 
 	/**
 	 * The invitation a token belongs to, or null.
@@ -158,7 +178,7 @@ class SurveyResponseService {
 		$state = $this->stateOf(invitation: $invitation);
 
 		if ($state !== 'open') {
-			return ['status' => ($state === 'unknown' ? 404 : 410), 'state' => $state];
+			return ['status' => $this->refusalStatus(state: $state), 'state' => $state];
 		}
 
 		return [
@@ -205,9 +225,15 @@ class SurveyResponseService {
 			}
 		}
 
+		// Null, not 0: nobody rated is not the same as everybody rated zero.
+		$averageRating = null;
+		if ($ratings !== []) {
+			$averageRating = round((array_sum($ratings) / count($ratings)), 2);
+		}
+
 		return [
 			'npsScore' => $nps,
-			'averageRating' => ($ratings === [] ? null : round((array_sum($ratings) / count($ratings)), 2)),
+			'averageRating' => $averageRating,
 			'verbatim' => $verbatim,
 		];
 	}//end score()
@@ -228,7 +254,7 @@ class SurveyResponseService {
 		$state = $this->stateOf(invitation: $invitation);
 
 		if ($state !== 'open') {
-			return ['status' => ($state === 'unknown' ? 404 : 410), 'state' => $state];
+			return ['status' => $this->refusalStatus(state: $state), 'state' => $state];
 		}
 
 		$now = new DateTimeImmutable();
@@ -312,7 +338,11 @@ class SurveyResponseService {
 		}
 
 		foreach ($rows as $row) {
-			$data = ($row instanceof \JsonSerializable ? $row->jsonSerialize() : $row);
+			$data = $row;
+			if ($row instanceof \JsonSerializable) {
+				$data = $row->jsonSerialize();
+			}
+
 			if (is_array($data) === false) {
 				continue;
 			}
@@ -366,7 +396,11 @@ class SurveyResponseService {
 
 		$data = $entity->jsonSerialize();
 
-		return (is_array($data) === true ? $data : []);
+		if (is_array($data) === false) {
+			return [];
+		}
+
+		return $data;
 	}//end survey()
 
 	/**
@@ -393,7 +427,11 @@ class SurveyResponseService {
 
 		$data = $entity->jsonSerialize();
 
-		return (is_array($data) === true ? $data : []);
+		if (is_array($data) === false) {
+			return [];
+		}
+
+		return $data;
 	}//end client()
 
 	/**

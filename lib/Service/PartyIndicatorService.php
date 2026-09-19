@@ -332,7 +332,11 @@ class PartyIndicatorService {
 			return $b;
 		}
 
-		return ($untilB > $untilA ? $b : $a);
+		if ($untilB > $untilA) {
+			return $b;
+		}
+
+		return $a;
 	}//end widerPeriod()
 
 	/**

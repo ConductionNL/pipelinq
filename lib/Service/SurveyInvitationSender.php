@@ -85,7 +85,7 @@ class SurveyInvitationSender {
 	public function send(array $invitation, string $address = ''): bool {
 		$channel = trim((string)($invitation['channel'] ?? 'email'));
 		if ($channel !== 'email') {
-			// sms and whatsapp go through the outbound channel adapters, which
+			// SMS and WhatsApp go through the outbound channel adapters, which
 			// are configured per instance and absent on most. Reporting that
 			// plainly is better than pretending a message went out.
 			$this->logger->info(
@@ -96,7 +96,11 @@ class SurveyInvitationSender {
 			return false;
 		}
 
-		$address = trim(($address !== '' ? $address : (string)($invitation['deliveryAddress'] ?? '')));
+		if ($address === '') {
+			$address = (string)($invitation['deliveryAddress'] ?? '');
+		}
+
+		$address = trim($address);
 		if ($address === '' || $this->mailer->validateMailAddress($address) === false) {
 			return false;
 		}

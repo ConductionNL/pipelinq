@@ -303,7 +303,10 @@ class CorrespondenceLanguageService {
 			return ['needsChoice' => true, 'language' => '', 'options' => [$a, $b]];
 		}
 
-		$survivor = ($a !== '' ? $a : $b);
+		$survivor = $b;
+		if ($a !== '') {
+			$survivor = $a;
+		}
 
 		return ['needsChoice' => false, 'language' => $survivor, 'options' => []];
 	}//end mergeAnswer()
@@ -338,6 +341,10 @@ class CorrespondenceLanguageService {
 
 		$data = $entity->jsonSerialize();
 
-		return (is_array($data) === true ? $data : null);
+		if (is_array($data) === false) {
+			return null;
+		}
+
+		return $data;
 	}//end readParty()
 }//end class

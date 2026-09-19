@@ -106,7 +106,11 @@ class PartyOrganisationTreeService {
 			(string)self::DEFAULT_MAX_DEPTH
 		);
 
-		return ($configured > 0 ? $configured : self::DEFAULT_MAX_DEPTH);
+		if ($configured > 0) {
+			return $configured;
+		}
+
+		return self::DEFAULT_MAX_DEPTH;
 	}//end maxDepth()
 
 	/**
@@ -137,7 +141,11 @@ class PartyOrganisationTreeService {
 	public function depthOf(string $path): int {
 		$trimmed = trim($path, self::PATH_SEPARATOR);
 
-		return ($trimmed === '' ? 0 : count(explode(self::PATH_SEPARATOR, $trimmed)));
+		if ($trimmed === '') {
+			return 0;
+		}
+
+		return count(explode(self::PATH_SEPARATOR, $trimmed));
 	}//end depthOf()
 
 	/**
@@ -225,8 +233,13 @@ class PartyOrganisationTreeService {
 		// One act: the node and every descendant, or nothing. A descendant
 		// left pointing at a path its parent no longer holds is invisible
 		// until somebody reads the subtree and finds half of it.
+		$newParent = null;
+		if ($parentId !== '') {
+			$newParent = $parentId;
+		}
+
 		$writes = [$nodeId => array_merge($node, [
-			'parentOrganisation' => ($parentId === '' ? null : $parentId),
+			'parentOrganisation' => $newParent,
 			'organisationPath' => $newPath,
 		])];
 
@@ -322,7 +335,11 @@ class PartyOrganisationTreeService {
 
 		$data = $entity->jsonSerialize();
 
-		return (is_array($data) === true ? $data : null);
+		if (is_array($data) === false) {
+			return null;
+		}
+
+		return $data;
 	}//end read()
 
 	/**

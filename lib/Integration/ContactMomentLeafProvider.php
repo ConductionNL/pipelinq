@@ -106,6 +106,8 @@ class ContactMomentLeafProvider {
 	 *
 	 * @param string $hostId The host object's uuid.
 	 * @param int $limit Page size, capped at MAX_LIMIT.
+	 * @param string $partyId The party whose standing indicators ride along, or
+	 *   an empty string to answer without them.
 	 *
 	 * @return array<string, mixed> `status` plus either `contactMoments` or `error`.
 	 *
@@ -147,10 +149,15 @@ class ContactMomentLeafProvider {
 		// The party's indicators travel with the panel, resolved live, so a KCC
 		// agent taking a call reads "agressie-registratie" BEFORE they speak.
 		// Nothing is copied onto a contact moment: this is a read.
+		$indicators = [];
+		if ($partyId !== '') {
+			$indicators = $this->indicatorService->resolve(partyId: trim($partyId));
+		}
+
 		return [
 			'status' => 200,
 			'contactMoments' => $moments,
-			'indicators' => ($partyId === '' ? [] : $this->indicatorService->resolve(partyId: trim($partyId))),
+			'indicators' => $indicators,
 		];
 	}//end list()
 

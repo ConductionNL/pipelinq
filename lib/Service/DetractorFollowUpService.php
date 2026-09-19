@@ -103,7 +103,11 @@ class DetractorFollowUpService {
 	public function ratingThreshold(): int {
 		$configured = (int)$this->appConfig->getValueString(Application::APP_ID, self::THRESHOLD_KEY, '2');
 
-		return ($configured > 0 ? $configured : 2);
+		if ($configured > 0) {
+			return $configured;
+		}
+
+		return 2;
 	}//end ratingThreshold()
 
 	/**
