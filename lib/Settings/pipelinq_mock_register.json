@@ -513,6 +513,81 @@
       {
         "@self": {
           "register": "pipelinq",
+          "schema": "billingTimeEntry",
+          "slug": "billingtimeentry-voorbeeld-title-1-1"
+        },
+        "title": "Voorbeeld Title 1",
+        "hours": 0.0,
+        "date": "2026-03-01",
+        "description": "Voorbeeld Description 1",
+        "status": "draft",
+        "billingCategory": "Voorbeeld Billingcategory 1",
+        "client": "Voorbeeld Client 1",
+        "lead": "Voorbeeld Lead 1",
+        "approvedBy": "Voorbeeld Approvedby 1",
+        "approvedAt": "2026-03-01T09:00:00+00:00",
+        "wipSyncStatus": "pending",
+        "wipSyncedAt": "2026-03-01T09:00:00+00:00",
+        "user": "Voorbeeld User 1",
+        "metadata": {},
+        "timeEntry": "00000000-0000-4000-8000-000000000000",
+        "billingSyncStatus": "pending",
+        "billingBatchId": "Voorbeeld Billingbatchid 1",
+        "billingInvoiceId": "Voorbeeld Billinginvoiceid 1"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "billingTimeEntry",
+          "slug": "billingtimeentry-voorbeeld-title-2-2"
+        },
+        "title": "Voorbeeld Title 2",
+        "hours": 1.0,
+        "date": "2026-03-02",
+        "description": "Voorbeeld Description 2",
+        "status": "submitted",
+        "billingCategory": "Voorbeeld Billingcategory 2",
+        "client": "Voorbeeld Client 2",
+        "lead": "Voorbeeld Lead 2",
+        "approvedBy": "Voorbeeld Approvedby 2",
+        "approvedAt": "2026-03-02T09:00:00+00:00",
+        "wipSyncStatus": "synced",
+        "wipSyncedAt": "2026-03-02T09:00:00+00:00",
+        "user": "Voorbeeld User 2",
+        "metadata": {},
+        "timeEntry": "00000000-0000-4000-8000-000000000001",
+        "billingSyncStatus": "synced",
+        "billingBatchId": "Voorbeeld Billingbatchid 2",
+        "billingInvoiceId": "Voorbeeld Billinginvoiceid 2"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "billingTimeEntry",
+          "slug": "billingtimeentry-voorbeeld-title-3-3"
+        },
+        "title": "Voorbeeld Title 3",
+        "hours": 2.0,
+        "date": "2026-03-03",
+        "description": "Voorbeeld Description 3",
+        "status": "pending_approval",
+        "billingCategory": "Voorbeeld Billingcategory 3",
+        "client": "Voorbeeld Client 3",
+        "lead": "Voorbeeld Lead 3",
+        "approvedBy": "Voorbeeld Approvedby 3",
+        "approvedAt": "2026-03-03T09:00:00+00:00",
+        "wipSyncStatus": "failed",
+        "wipSyncedAt": "2026-03-03T09:00:00+00:00",
+        "user": "Voorbeeld User 3",
+        "metadata": {},
+        "timeEntry": "00000000-0000-4000-8000-000000000002",
+        "billingSyncStatus": "failed",
+        "billingBatchId": "Voorbeeld Billingbatchid 3",
+        "billingInvoiceId": "Voorbeeld Billinginvoiceid 3"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
           "schema": "blast",
           "slug": "blast-voorbeeld-name-1-1"
         },
@@ -2273,6 +2348,75 @@
         "payloadHash": "Voorbeeld Payloadhash 3",
         "retentionUntil": "2026-03-03T09:00:00+00:00",
         "reason": "Voorbeeld Reason 3"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "enquiry",
+          "slug": "enquiry-voorbeeld-title-1-1"
+        },
+        "title": "Voorbeeld Title 1",
+        "contactName": "Voorbeeld Contactname 1",
+        "contactEmail": "voorbeeld0@example.invalid",
+        "contactPhone": "Voorbeeld Contactphone 1",
+        "organisation": "Voorbeeld Organisation 1",
+        "message": "Voorbeeld Message 1",
+        "source": "Voorbeeld Source 1",
+        "pageUrl": "https://example.invalid/resource/0",
+        "locale": "Voorbeeld ",
+        "receivedAt": "2026-03-01T09:00:00+00:00",
+        "status": "new",
+        "client": "00000000-0000-4000-8000-000000000000",
+        "contact": "00000000-0000-4000-8000-000000000000",
+        "lead": "00000000-0000-4000-8000-000000000000",
+        "handledBy": "Voorbeeld Handledby 1",
+        "handledAt": "2026-03-01T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "enquiry",
+          "slug": "enquiry-voorbeeld-title-2-2"
+        },
+        "title": "Voorbeeld Title 2",
+        "contactName": "Voorbeeld Contactname 2",
+        "contactEmail": "voorbeeld1@example.invalid",
+        "contactPhone": "Voorbeeld Contactphone 2",
+        "organisation": "Voorbeeld Organisation 2",
+        "message": "Voorbeeld Message 2",
+        "source": "Voorbeeld Source 2",
+        "pageUrl": "https://example.invalid/resource/1",
+        "locale": "Voorbeeld ",
+        "receivedAt": "2026-03-02T09:00:00+00:00",
+        "status": "converted",
+        "client": "00000000-0000-4000-8000-000000000001",
+        "contact": "00000000-0000-4000-8000-000000000001",
+        "lead": "00000000-0000-4000-8000-000000000001",
+        "handledBy": "Voorbeeld Handledby 2",
+        "handledAt": "2026-03-02T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "enquiry",
+          "slug": "enquiry-voorbeeld-title-3-3"
+        },
+        "title": "Voorbeeld Title 3",
+        "contactName": "Voorbeeld Contactname 3",
+        "contactEmail": "voorbeeld2@example.invalid",
+        "contactPhone": "Voorbeeld Contactphone 3",
+        "organisation": "Voorbeeld Organisation 3",
+        "message": "Voorbeeld Message 3",
+        "source": "Voorbeeld Source 3",
+        "pageUrl": "https://example.invalid/resource/2",
+        "locale": "Voorbeeld ",
+        "receivedAt": "2026-03-03T09:00:00+00:00",
+        "status": "spam",
+        "client": "00000000-0000-4000-8000-000000000002",
+        "contact": "00000000-0000-4000-8000-000000000002",
+        "lead": "00000000-0000-4000-8000-000000000002",
+        "handledBy": "Voorbeeld Handledby 3",
+        "handledAt": "2026-03-03T09:00:00+00:00"
       },
       {
         "@self": {
@@ -6404,78 +6548,6 @@
         "benefits": {},
         "upgradePolicy": "immediate",
         "downgradePolicy": "end_of_quarter"
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "billingTimeEntry",
-          "slug": "timeentry-voorbeeld-title-1-1"
-        },
-        "title": "Voorbeeld Title 1",
-        "hours": 0.0,
-        "date": "2026-03-01",
-        "description": "Voorbeeld Description 1",
-        "status": "draft",
-        "billingCategory": "Voorbeeld Billingcategory 1",
-        "client": "Voorbeeld Client 1",
-        "lead": "Voorbeeld Lead 1",
-        "approvedBy": "Voorbeeld Approvedby 1",
-        "approvedAt": "2026-03-01T09:00:00+00:00",
-        "wipSyncStatus": "pending",
-        "wipSyncedAt": "2026-03-01T09:00:00+00:00",
-        "user": "Voorbeeld User 1",
-        "metadata": {},
-        "billingSyncStatus": "pending",
-        "billingBatchId": "Voorbeeld Billingbatchid 1",
-        "billingInvoiceId": "Voorbeeld Billinginvoiceid 1"
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "billingTimeEntry",
-          "slug": "timeentry-voorbeeld-title-2-2"
-        },
-        "title": "Voorbeeld Title 2",
-        "hours": 1.0,
-        "date": "2026-03-02",
-        "description": "Voorbeeld Description 2",
-        "status": "submitted",
-        "billingCategory": "Voorbeeld Billingcategory 2",
-        "client": "Voorbeeld Client 2",
-        "lead": "Voorbeeld Lead 2",
-        "approvedBy": "Voorbeeld Approvedby 2",
-        "approvedAt": "2026-03-02T09:00:00+00:00",
-        "wipSyncStatus": "synced",
-        "wipSyncedAt": "2026-03-02T09:00:00+00:00",
-        "user": "Voorbeeld User 2",
-        "metadata": {},
-        "billingSyncStatus": "synced",
-        "billingBatchId": "Voorbeeld Billingbatchid 2",
-        "billingInvoiceId": "Voorbeeld Billinginvoiceid 2"
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "billingTimeEntry",
-          "slug": "timeentry-voorbeeld-title-3-3"
-        },
-        "title": "Voorbeeld Title 3",
-        "hours": 2.0,
-        "date": "2026-03-03",
-        "description": "Voorbeeld Description 3",
-        "status": "pending_approval",
-        "billingCategory": "Voorbeeld Billingcategory 3",
-        "client": "Voorbeeld Client 3",
-        "lead": "Voorbeeld Lead 3",
-        "approvedBy": "Voorbeeld Approvedby 3",
-        "approvedAt": "2026-03-03T09:00:00+00:00",
-        "wipSyncStatus": "failed",
-        "wipSyncedAt": "2026-03-03T09:00:00+00:00",
-        "user": "Voorbeeld User 3",
-        "metadata": {},
-        "billingSyncStatus": "failed",
-        "billingBatchId": "Voorbeeld Billingbatchid 3",
-        "billingInvoiceId": "Voorbeeld Billinginvoiceid 3"
       },
       {
         "@self": {
