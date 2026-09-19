@@ -298,6 +298,8 @@
             "description": "The case this ticket belongs to, as an ADR-048 semantic reference to https://openregister.app/ns#Case. On a request it is the single case the request converted into. On a contact moment it mirrors primaryCaseReference, and the full ordered set lives in caseReferences. No app id and no concrete slug: whichever installed app implements the case type answers it.",
             "format": "uuid",
             "referenceSemanticType": "https://openregister.app/ns#Case",
+            "x-external-register": "openregister",
+            "x-notes": "ADR-048 semantic reference, resolved by OpenRegister rather than by a schema key in pipelinq's own register set: the target is whichever installed app implements https://openregister.app/ns#Case, which is not knowable at author time. Marked x-external-register so gate-54 reads it as the cross-register reference it is; a $ref here would name a schema this register does not hold, and OpenRegister could never resolve it.",
             "facetable": true
           },
           "complaintCategory": {

@@ -29,6 +29,7 @@ use OCA\Pipelinq\BackgroundJob\SurveyInvitationDispatchJob;
 use OCA\Pipelinq\Service\DetractorFollowUpService;
 use OCA\Pipelinq\Service\SurveyDispatchService;
 use OCA\Pipelinq\Service\SurveyInvitationSender;
+use OCA\Pipelinq\Service\SurveyOptOutService;
 use OCA\Pipelinq\Service\SurveyResponseService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IAppConfig;
@@ -148,6 +149,7 @@ class SurveyResponseServiceTest extends TestCase {
 			$objectService,
 			$dispatchService,
 			$followUp,
+			new SurveyOptOutService($appConfig, $objectService, $this->createMock(LoggerInterface::class)),
 			$this->createMock(LoggerInterface::class),
 		);
 	}//end service()

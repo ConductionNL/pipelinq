@@ -433,10 +433,23 @@ class PartyIndicatorService {
 	/**
 	 * The pipelinq register id.
 	 *
+	 * Fails closed and says so: '' means unconfigured, and every caller
+	 * refuses on it rather than handing an empty register to OpenRegister,
+	 * which skips setRegister() for an empty value and then answers out of
+	 * whatever register context the last call in this request left behind.
+	 * The empty case is logged so an unprovisioned instance is visible.
+	 *
 	 * @return string The register id ('' when unconfigured).
 	 */
 	private function registerId(): string {
-		return $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
+		if ($registerId === '') {
+			$this->logger->warning(
+				'PartyIndicatorService: app-config "register" is not configured; indicator reads and writes are refused, not run unscoped'
+			);
+		}
+
+		return $registerId;
 	}//end registerId()
 
 	/**

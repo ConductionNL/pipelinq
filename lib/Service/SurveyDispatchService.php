@@ -246,7 +246,7 @@ class SurveyDispatchService {
 	 *
 	 * @return string The address.
 	 */
-	public function addressFor(array $contact, string $channel): string {
+	private function addressFor(array $contact, string $channel): string {
 		if ($channel === 'email') {
 			return trim((string)($contact['email'] ?? ''));
 		}
@@ -372,7 +372,7 @@ class SurveyDispatchService {
 	 *
 	 * @return array<int, array<string, mixed>> The invitations.
 	 */
-	public function invitationsForContact(string $contactRef): array {
+	private function invitationsForContact(string $contactRef): array {
 		if (trim($contactRef) === '') {
 			return [];
 		}

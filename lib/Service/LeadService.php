@@ -46,9 +46,9 @@ namespace OCA\Pipelinq\Service;
 
 use OCA\OpenRegister\Mcp\Attribute\McpTool;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Mcp\McpAnswer;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
-use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
 
@@ -82,12 +82,12 @@ class LeadService {
 	 *
 	 * @param ContainerInterface $container The DI container (for OR ObjectService).
 	 * @param IAppConfig $appConfig The app config (lead schema resolution).
-	 * @param LoggerInterface $logger The PSR-3 logger.
+	 * @param McpAnswer $mcp Shapes what the MCP tools on this service answer.
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
 		private readonly IAppConfig $appConfig,
-		private readonly LoggerInterface $logger,
+		private readonly McpAnswer $mcp,
 	) {
 	}//end __construct()
 
@@ -133,7 +133,7 @@ class LeadService {
 	): array {
 		$title = trim($title);
 		if ($title === '') {
-			return $this->errorEnvelope(code: 'invalid_arguments', message: 'Required argument title is missing.');
+			return $this->mcp->error(code: 'invalid_arguments', message: 'Required argument title is missing.');
 		}
 
 		$config = $this->resolveLeadContext();
@@ -169,10 +169,10 @@ class LeadService {
 				uuid: null,
 			);
 		} catch (\Exception $e) {
-			return $this->mapServiceException(operation: 'create lead', exception: $e);
+			return $this->mcp->fromException(operation: 'create lead', exception: $e);
 		}//end try
 
-		return ['lead' => $this->toArray(item: $saved)];
+		return ['lead' => $this->mcp->toArray(item: $saved)];
 	}//end createLead()
 
 	/**
@@ -223,7 +223,7 @@ class LeadService {
 				]
 			);
 		} catch (\Exception $e) {
-			return $this->mapServiceException(operation: 'compute pipeline forecast', exception: $e);
+			return $this->mcp->fromException(operation: 'compute pipeline forecast', exception: $e);
 		}//end try
 
 		return $this->buildForecastFromLeads(rawLeads: $rawLeads);
@@ -244,7 +244,7 @@ class LeadService {
 	private function buildForecastFromLeads(iterable $rawLeads): array {
 		$stages = [];
 		foreach ($rawLeads as $raw) {
-			$lead = $this->toArray(item: $raw);
+			$lead = $this->mcp->toArray(item: $raw);
 			$stage = (string)($lead['stage'] ?? 'unspecified');
 			$order = (int)($lead['stageOrder'] ?? PHP_INT_MAX);
 
@@ -304,7 +304,7 @@ class LeadService {
 		$schema = $this->appConfig->getValueString(Application::APP_ID, 'lead_schema', '');
 
 		if ($register === '' || $schema === '') {
-			return $this->errorEnvelope(
+			return $this->mcp->error(
 				code: 'not_configured',
 				message: 'Pipelinq is not fully configured: the OpenRegister register or lead schema is missing.'
 			);
@@ -329,75 +329,4 @@ class LeadService {
 
 	}//end getObjectService()
 
-	/**
-	 * Map an exception raised by OpenRegister into a structured MCP error envelope.
-	 *
-	 * OpenRegister's PermissionHandler raises a plain exception whose message
-	 * mentions "permission" when the caller is not authorised; we surface that as
-	 * `forbidden`. Everything else is an `internal_error` (logged for the operator).
-	 *
-	 * @param string $operation Short label of the failed operation (for the log).
-	 * @param \Exception $exception The caught exception.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function mapServiceException(string $operation, \Exception $exception): array {
-		$message = $exception->getMessage();
-
-		if (stripos($message, 'permission') !== false || stripos($message, 'not authoriz') !== false) {
-			return $this->errorEnvelope(code: 'forbidden', message: 'You are not allowed to access this resource.');
-		}
-
-		$this->logger->error(
-			"Pipelinq MCP: failed to {$operation}",
-			['exception' => $message]
-		);
-
-		return $this->errorEnvelope(
-			code: 'internal_error',
-			message: "Failed to {$operation}. See server log for details."
-		);
-
-	}//end mapServiceException()
-
-	/**
-	 * Build a structured MCP error envelope.
-	 *
-	 * @param string $code Machine-readable error code.
-	 * @param string $message Human-readable message for the LLM.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function errorEnvelope(string $code, string $message): array {
-		return [
-			'error' => [
-				'code' => $code,
-				'message' => $message,
-			],
-		];
-
-	}//end errorEnvelope()
-
-	/**
-	 * Normalise an OpenRegister object to a plain PHP array.
-	 *
-	 * @param mixed $item Raw item from ObjectService.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function toArray(mixed $item): array {
-		if (is_array(value: $item) === true) {
-			return $item;
-		}
-
-		if (is_object(value: $item) === true && method_exists($item, 'getObject') === true) {
-			return $item->getObject();
-		}
-
-		if (is_object(value: $item) === true && method_exists($item, 'jsonSerialize') === true) {
-			return $item->jsonSerialize();
-		}
-
-		return (array)$item;
-	}//end toArray()
 }//end class

@@ -12,7 +12,8 @@
             "items": {
               "type": "string",
               "format": "uuid",
-              "referenceSemanticType": "https://openregister.app/ns#Case"
+              "referenceSemanticType": "https://openregister.app/ns#Case",
+              "x-external-register": "openregister"
             }
           },
           "primaryCaseReference": {
@@ -21,6 +22,7 @@
             "description": "The one case a surface shows when it can show only one. Always a member of caseReferences, and never answered by position in that set: a reorder must not move the primary. Mirrored onto caseReference so a reader that knows only the single-reference shape still resolves the right case.",
             "format": "uuid",
             "referenceSemanticType": "https://openregister.app/ns#Case",
+            "x-external-register": "openregister",
             "facetable": true
           },
           "caseFilings": {

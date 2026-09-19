@@ -99,6 +99,8 @@ class DetractorFollowUpService {
 	 * The rating at or below which an answer counts as a detractor.
 	 *
 	 * @return int The threshold.
+	 *
+	 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-detractor-closed-loop-follow-up
 	 */
 	public function ratingThreshold(): int {
 		$configured = (int)$this->appConfig->getValueString(Application::APP_ID, self::THRESHOLD_KEY, '2');

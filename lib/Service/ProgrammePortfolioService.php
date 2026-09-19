@@ -98,7 +98,7 @@ class ProgrammePortfolioService {
 	 *
 	 * @return string One of the MODES.
 	 */
-	public function defaultMode(): string {
+	private function defaultMode(): string {
 		$configured = trim(
 			$this->appConfig->getValueString(Application::APP_ID, self::DEFAULT_MODE_KEY, 'fromTasks')
 		);
@@ -116,6 +116,8 @@ class ProgrammePortfolioService {
 	 * @param array<string, mixed> $programme The programme.
 	 *
 	 * @return string One of the MODES.
+	 *
+	 * @spec openspec/changes/the-project-above-the-cases/specs/project-portfolio/spec.md#requirement-progress-shall-declare-which-mode-produced-it-req-prj-003
 	 */
 	public function modeFor(array $programme): string {
 		$override = trim((string)($programme['progressMode'] ?? ''));
@@ -330,7 +332,7 @@ class ProgrammePortfolioService {
 	 *
 	 * @return array<int, array<string, mixed>> The work items.
 	 */
-	public function workItemsReferencing(string $domainObjectType, string $domainObjectRef): array {
+	private function workItemsReferencing(string $domainObjectType, string $domainObjectRef): array {
 		return $this->read(
 			schemaKey: 'programmeWorkItem_schema',
 			filters: [

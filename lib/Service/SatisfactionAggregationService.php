@@ -91,6 +91,8 @@ class SatisfactionAggregationService {
 	 * @param array<int, array<string, mixed>> $responses The responses.
 	 *
 	 * @return float|null The score, or null when nobody answered the question.
+	 *
+	 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-360/spec.md#requirement-per-client-satisfaction-panel
 	 */
 	public function npsOf(array $responses): ?float {
 		$promoters = 0;

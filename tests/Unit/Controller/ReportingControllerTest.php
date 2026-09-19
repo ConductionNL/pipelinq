@@ -30,6 +30,7 @@ namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use OCA\Pipelinq\Controller\ReportingController;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
+use OCA\Pipelinq\Mcp\McpAnswer;
 use OCA\Pipelinq\Service\ReportingService;
 use OCA\Pipelinq\Service\TicketService;
 use OCP\AppFramework\Http;
@@ -41,6 +42,7 @@ use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 
 /**
  * ReportingController contract coverage.
@@ -121,6 +123,7 @@ class ReportingControllerTest extends TestCase {
 				appConfig: $appConfig,
 				logger: $logger,
 				objectService: $this->objects,
+				mcp: new McpAnswer(new NullLogger()),
 			),
 		);
 	}//end setUp()

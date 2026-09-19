@@ -98,6 +98,8 @@ class PartyOrganisationTreeService {
 	 * The administered depth cap.
 	 *
 	 * @return int The maximum number of nodes from the root to a leaf.
+	 *
+	 * @spec openspec/changes/typed-fields-and-indicators-on-a-party/specs/party-fields-and-indicators/spec.md#requirement-organisations-shall-nest-as-a-guarded-tree-carrying-their-own-fields-req-pfi-005
 	 */
 	public function maxDepth(): int {
 		$configured = (int)$this->appConfig->getValueString(
@@ -137,6 +139,8 @@ class PartyOrganisationTreeService {
 	 * @param string $path A materialised path.
 	 *
 	 * @return int The depth.
+	 *
+	 * @spec openspec/changes/typed-fields-and-indicators-on-a-party/specs/party-fields-and-indicators/spec.md#requirement-organisations-shall-nest-as-a-guarded-tree-carrying-their-own-fields-req-pfi-005
 	 */
 	public function depthOf(string $path): int {
 		$trimmed = trim($path, self::PATH_SEPARATOR);
