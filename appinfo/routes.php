@@ -112,6 +112,59 @@ return [
         // Contactmomenten (permission-checked delete)
         ['name' => 'contactmoment#destroy', 'url' => '/api/contactmomenten/{id}', 'verb' => 'DELETE'],
 
+        // The contact moments leaf a host app renders on its own object
+        // (contact-moments-on-pipelinq-schema, REQ-CMD-003). `hostId` is the
+        // host's uuid and stays opaque to pipelinq.
+        ['name' => 'contactMomentLeaf#index',  'url' => '/api/leaves/contact-moments/{hostId}', 'verb' => 'GET'],
+        ['name' => 'contactMomentLeaf#create', 'url' => '/api/leaves/contact-moments/{hostId}', 'verb' => 'POST'],
+        // Filing an EXISTING contact moment onto a further case, and taking it
+        // off one. Both are acts on the contact moment, so they are keyed by
+        // its id and not by a host.
+        ['name' => 'contactMomentLeaf#fileOnAlsoCase', 'url' => '/api/contact-moments/{momentId}/cases', 'verb' => 'POST'],
+        ['name' => 'contactMomentLeaf#unfileFromCase', 'url' => '/api/contact-moments/{momentId}/cases/{caseId}', 'verb' => 'DELETE'],
+
+        // The party panel a host app renders on its own object, the blocking
+        // question it asks before it acts, the acknowledgement a handler
+        // records, and the guarded organisation tree
+        // (typed-fields-and-indicators-on-a-party).
+        ['name' => 'partyLeaf#panel',       'url' => '/api/leaves/party/{partyId}',                   'verb' => 'GET'],
+        ['name' => 'partyLeaf#blocked',     'url' => '/api/parties/{partyId}/blocked/{act}',          'verb' => 'GET'],
+        ['name' => 'partyLeaf#acknowledge', 'url' => '/api/party-indicator-values/{valueId}/acknowledge', 'verb' => 'POST'],
+        ['name' => 'partyLeaf#setParent',   'url' => '/api/parties/{partyId}/parent',                 'verb' => 'PUT'],
+
+        // The party kind registry and the one write path for a party link
+        // (party-kinds-accepted-per-case-type). `recordType` is an opaque
+        // `<app>:<schema>:<type>` literal and is passed as a query or body
+        // parameter rather than in the path, because it holds colons.
+        ['name' => 'partyKind#index',   'url' => '/api/party-kinds',                  'verb' => 'GET'],
+        ['name' => 'partyKind#link',    'url' => '/api/party-links',                  'verb' => 'POST'],
+        ['name' => 'partyKind#import',  'url' => '/api/party-links/import',           'verb' => 'POST'],
+        ['name' => 'partyKind#endLink', 'url' => '/api/party-links/{linkId}',         'verb' => 'DELETE'],
+
+        // The language a party asked to be written in, and the published
+        // resolver a consuming app calls instead of reading the property
+        // (correspondence-language-per-party).
+        ['name' => 'correspondenceLanguage#available',     'url' => '/api/correspondence-languages',                  'verb' => 'GET'],
+        ['name' => 'correspondenceLanguage#resolve',       'url' => '/api/parties/{partyId}/correspondence-language', 'verb' => 'GET'],
+        ['name' => 'correspondenceLanguage#setPreference', 'url' => '/api/parties/{partyId}/correspondence-language', 'verb' => 'PUT'],
+
+        // Customer satisfaction, closed loop (customer-satisfaction-closed-loop).
+        // The two public token routes carry no session: the token IS the
+        // authorisation, so both are rate limited per anonymous caller.
+        ['name' => 'publicSurvey#showInvitation',   'url' => '/survey/i/{token}',            'verb' => 'GET'],
+        ['name' => 'publicSurvey#submitInvitation', 'url' => '/survey/i/{token}',            'verb' => 'POST'],
+        ['name' => 'satisfaction#clientPanel',      'url' => '/api/satisfaction/client/{clientId}', 'verb' => 'GET'],
+        ['name' => 'satisfaction#responseRate',     'url' => '/api/satisfaction/response-rate',     'verb' => 'GET'],
+
+        // The programme above the cases (the-project-above-the-cases). The
+        // slug is `programme` rather than `project`, because `project` is
+        // planninq's and a schema slug is global per organisation.
+        ['name' => 'programme#workItems',  'url' => '/api/programmes/{programmeId}/work-items', 'verb' => 'GET'],
+        ['name' => 'programme#linkWork',   'url' => '/api/programmes/{programmeId}/work-items', 'verb' => 'POST'],
+        ['name' => 'programme#progress',   'url' => '/api/programmes/{programmeId}/progress',   'verb' => 'GET'],
+        ['name' => 'programme#cycleChart', 'url' => '/api/programme-cycles/{cycleId}/chart',    'verb' => 'GET'],
+        ['name' => 'programme#closeCycle', 'url' => '/api/programme-cycles/{cycleId}/close',    'verb' => 'POST'],
+
         // CTI screen-pop / click-to-dial adapter endpoints (cti-screenpop-adapter).
         // Routes are listed BEFORE the SPA / wildcard catch-alls (ADR-016).
         ['name' => 'cti#webhook',          'url' => '/api/cti/webhook/{platform}',         'verb' => 'POST'],
@@ -134,6 +187,14 @@ return [
         ['name' => 'metrics#index', 'url' => '/api/metrics', 'verb' => 'GET'],
         // Health check endpoint.
         ['name' => 'health#index', 'url' => '/api/health', 'verb' => 'GET'],
+
+        // Public website enquiry intake (website-enquiry-intake). Anonymous and
+        // cross-origin: the conduction.nl forms post here. It exists instead of
+        // letting the browser POST straight at OpenRegister's object API
+        // because OpenRegister cannot scope which PROPERTIES a public create
+        // may set, so a direct create would let a visitor write `status` and
+        // `handledBy`. See EnquiryIntakeService's class docblock.
+        ['name' => 'enquiry#submit', 'url' => '/api/enquiry', 'verb' => 'POST'],
 
         // Schedules API — pending MUST appear before {id} so the slug does not catch "pending".
         ['name' => 'schedules#index',   'url' => '/api/schedules',         'verb' => 'GET'],

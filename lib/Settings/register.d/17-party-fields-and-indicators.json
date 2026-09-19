@@ -1,0 +1,196 @@
+{
+  "_note": "typed-fields-and-indicators-on-a-party. A party carries typed fields of its own and standing indicators that show on every case and every contact moment of theirs. The typed values hang on pipelinq's relationship record beside the identity mirrors unify-client-contact defines, because a Nextcloud Contact holds extension fields as untyped strings with no schema, no validation and no choice list. Identity stays on the Contact; anything only this organisation cares about is here.",
+  "components": {
+    "schemas": {
+      "partyFieldSet": {
+        "title": "Party field set",
+        "type": "object",
+        "description": "Declares which typed properties a kind of party carries. An administrator adds a field without a schema release; OpenRegister does the typing, so this is a declaration and not a second field engine.",
+        "required": ["partyKind", "key", "label", "fieldKind"],
+        "properties": {
+          "partyKind": {
+            "type": "string",
+            "title": "Party kind",
+            "description": "The code of the party kind this field belongs to, as declared in the party kind registry.",
+            "facetable": true
+          },
+          "key": {
+            "type": "string",
+            "title": "Key",
+            "description": "The property name the value is stored under on the party record. Stable: renaming it orphans the values already written.",
+            "maxLength": 64
+          },
+          "label": {
+            "type": "string",
+            "title": "Label",
+            "description": "What a handler reads beside the field."
+          },
+          "fieldKind": {
+            "type": "string",
+            "title": "Field kind",
+            "description": "The type of the value. The vocabulary osTicket's form types cover, and no more: a longer list belongs to the case type depth study, not here.",
+            "enum": ["text", "number", "date", "boolean", "choice", "reference"],
+            "facetable": true
+          },
+          "choices": {
+            "type": "array",
+            "title": "Choices",
+            "description": "The code list a choice field draws from. Empty for every other field kind.",
+            "items": { "type": "string" }
+          },
+          "required": {
+            "type": "boolean",
+            "title": "Required",
+            "description": "Whether a party of this kind must carry a value.",
+            "default": false
+          },
+          "order": {
+            "type": "integer",
+            "title": "Order",
+            "description": "Where the field sits among the others. Part of the declaration, not re-sorted for display.",
+            "default": 0
+          }
+        }
+      },
+      "partyIndicator": {
+        "title": "Party indicator",
+        "type": "object",
+        "description": "The vocabulary: what an indicator means and what it asserts about handling. An indicator is not a boolean per concern, because every new concern would then be a schema change, and it is not a tag, because a tag has no severity, no period, no source and no declared effect.",
+        "required": ["code", "label", "severity"],
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "The stable code a value points at, for example overleden, geheimhouding-adres, bewindvoering or agressie-registratie.",
+            "maxLength": 64,
+            "facetable": true
+          },
+          "label": {
+            "type": "string",
+            "title": "Label",
+            "description": "What a handler reads on the party, and what a refusal names."
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "description": "What this indicator means for the people handling the work."
+          },
+          "severity": {
+            "type": "string",
+            "title": "Severity",
+            "description": "How loudly a surface says it.",
+            "enum": ["info", "warning", "critical"],
+            "facetable": true
+          },
+          "blocksOutbound": {
+            "type": "boolean",
+            "title": "Blocks outbound",
+            "description": "Whether anything may be sent to this party. Writing to somebody who died last month is the failure this prevents.",
+            "default": false
+          },
+          "blocksAddressPublication": {
+            "type": "boolean",
+            "title": "Blocks address publication",
+            "description": "Whether this party's address may be published.",
+            "default": false
+          },
+          "requiresAcknowledgement": {
+            "type": "boolean",
+            "title": "Requires acknowledgement",
+            "description": "Whether a handler must confirm they have seen this before working the party.",
+            "default": false
+          },
+          "active": {
+            "type": "boolean",
+            "title": "Active",
+            "description": "Whether the indicator is offered for new values. An inactive indicator keeps resolving on values already written.",
+            "default": true
+          }
+        }
+      },
+      "partyIndicatorValue": {
+        "title": "Party indicator value",
+        "type": "object",
+        "description": "One indicator held on one party, with a period and the source that set it. There is no copy of this on a case, a contact moment, a task or a message: an indicator set today has to show on work opened at any earlier date, and one lifted today has to stop showing everywhere at once.",
+        "required": ["party", "indicator", "validFrom"],
+        "properties": {
+          "party": {
+            "type": "string",
+            "title": "Party",
+            "description": "The party record this value is held on.",
+            "format": "uuid",
+            "facetable": true
+          },
+          "indicator": {
+            "type": "string",
+            "title": "Indicator",
+            "description": "The code of the declared indicator this value is an instance of.",
+            "facetable": true
+          },
+          "validFrom": {
+            "type": "string",
+            "title": "Valid from",
+            "description": "The day the indicator starts applying.",
+            "format": "date"
+          },
+          "validUntil": {
+            "type": "string",
+            "title": "Valid until",
+            "description": "The last day it applies. A value past this date stops applying on its own date, with nobody editing it.",
+            "format": "date"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source",
+            "description": "Who or what set it: a BRP lookup and a KCC supervisor are both true and are challenged differently, so the source is recorded rather than inferred.",
+            "facetable": true
+          },
+          "acknowledgedBy": {
+            "type": "string",
+            "title": "Acknowledged by",
+            "description": "The handler who confirmed they had seen it, when the indicator requires an acknowledgement."
+          },
+          "acknowledgedAt": {
+            "type": "string",
+            "title": "Acknowledged at",
+            "description": "When that confirmation happened.",
+            "format": "date-time"
+          }
+        }
+      },
+      "client": {
+        "properties": {
+          "fieldValues": {
+            "type": "object",
+            "title": "Field values",
+            "description": "The values of the typed fields this party's kind declares, keyed by the field set's key. Held here, beside the denormalised identity mirrors, because a Nextcloud Contact cannot hold a typed, validated, choice-bearing field. Identity stays on the Contact.",
+            "visible": false
+          },
+          "parentOrganisation": {
+            "type": "string",
+            "title": "Parent organisation",
+            "description": "The organisation this one sits under. The CUSTOMER organisation, not the internal one: a gemeente's own afdelingen are org units, and a housing corporation with six regional offices is a customer tree. A parent that would close a cycle is refused on the write.",
+            "format": "uuid",
+            "facetable": true
+          },
+          "organisationPath": {
+            "type": "string",
+            "title": "Organisation path",
+            "description": "The materialised path from the root to this node, slash separated. Materialised because the common read is everything under one afdeling, and walking that recursively per read against an object store is slow enough to matter on a real municipal tree. Moving a node rewrites its subtree's paths in the same act.",
+            "facetable": true
+          }
+        }
+      },
+      "contact": {
+        "properties": {
+          "fieldValues": {
+            "type": "object",
+            "title": "Field values",
+            "description": "The values of the typed fields this party's kind declares, keyed by the field set's key.",
+            "visible": false
+          }
+        }
+      }
+    }
+  }
+}

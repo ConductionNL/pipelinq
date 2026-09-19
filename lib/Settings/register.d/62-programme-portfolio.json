@@ -1,0 +1,151 @@
+{
+  "_note": "the-project-above-the-cases. A gemeente programme sits above the zaken: Omgevingswet implementatie, Sloop Kerkstraat, Verkiezingen 2027. It holds work it does not own, a team, its own tasks, a progress figure that names where it came from, and time boxes that snapshot what they showed. SLUG NOTE: the change's proposal names this object `project`, and the slug `project` is already planninq's billable delivery project. A schema slug is GLOBAL per organisation and SchemaMapper::find() matches LOWER(slug), which is the collision three Rename*SchemaSlug repair steps in this app already exist to undo, so these are named `programme*` and the two stay apart. A planninq project is reachable from here as an ordinary work item reference, so nothing is lost by the rename.",
+  "components": {
+    "schemas": {
+      "programme": {
+        "title": "Programme",
+        "type": "object",
+        "description": "The work above the cases. A record with its own identity, never a tag, a label or a field on another record.",
+        "required": ["name"],
+        "properties": {
+          "name": { "type": "string", "title": "Name", "description": "What the programme is called." },
+          "description": { "type": "string", "title": "Description", "description": "What it is for." },
+          "client": { "type": "string", "title": "Client", "format": "uuid", "description": "The customer organisation, where there is one.", "facetable": true },
+          "orgUnit": { "type": "string", "title": "Org unit", "description": "The internal unit running it.", "facetable": true },
+          "owner": { "type": "string", "title": "Owner", "description": "Who answers for it.", "facetable": true },
+          "startDate": { "type": "string", "title": "Start", "format": "date", "description": "When it starts." },
+          "endDate": { "type": "string", "title": "End", "format": "date", "description": "When it is meant to end." },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "enum": ["planned", "active", "onHold", "closed"],
+            "description": "Where it stands.",
+            "facetable": true
+          },
+          "progressMode": {
+            "type": "string",
+            "title": "Progress mode",
+            "enum": ["manual", "fromTasks", "fromEffort"],
+            "description": "Where the progress figure comes from. Administered per instance with a per-programme override, and reported WITH every figure, so a reader can tell a typed number from a derived one.",
+            "facetable": true
+          },
+          "manualProgress": {
+            "type": "integer",
+            "title": "Manual progress",
+            "description": "The percentage somebody typed. Read only in `manual` mode; in the other two it is ignored rather than mixed in."
+          }
+        }
+      },
+      "programmeTask": {
+        "title": "Programme task",
+        "type": "object",
+        "description": "One task under one programme. Its own record, because a programme's plan is not a case and does not belong on one.",
+        "required": ["programme", "title"],
+        "properties": {
+          "programme": { "type": "string", "title": "Programme", "format": "uuid", "facetable": true, "description": "The programme it sits under." },
+          "title": { "type": "string", "title": "Title", "description": "What the task is." },
+          "status": { "type": "string", "title": "Status", "enum": ["open", "inProgress", "closed"], "facetable": true, "description": "Where the task stands. `fromTasks` progress counts closed over all." },
+          "assignee": { "type": "string", "title": "Assignee", "facetable": true, "description": "Who is doing it." },
+          "dueDate": { "type": "string", "title": "Due", "format": "date", "description": "When it is due." },
+          "cycle": { "type": "string", "title": "Cycle", "format": "uuid", "facetable": true, "description": "The time box it is in, when it is in one." }
+        }
+      },
+      "programmeTeamMember": {
+        "title": "Programme team member",
+        "type": "object",
+        "description": "One person in one role on one programme.",
+        "required": ["programme", "user", "role"],
+        "properties": {
+          "programme": { "type": "string", "title": "Programme", "format": "uuid", "facetable": true, "description": "The programme." },
+          "user": { "type": "string", "title": "User", "facetable": true, "description": "The person." },
+          "role": { "type": "string", "title": "Role", "facetable": true, "description": "What they do on it. The same vocabulary the per-role estimates use." }
+        }
+      },
+      "programmeWorkItem": {
+        "title": "Programme work item",
+        "type": "object",
+        "description": "A piece of work owned by any app, hanging under a programme by reference. The referenced object is never copied, and deleting a programme deletes its references and nothing else. One work item belongs to at most ONE programme, so effort and progress roll up unambiguously.",
+        "required": ["programme", "domainObjectType", "domainObjectRef"],
+        "properties": {
+          "programme": { "type": "string", "title": "Programme", "format": "uuid", "facetable": true, "description": "The programme it hangs under." },
+          "domainObjectType": {
+            "type": "string",
+            "title": "Object type",
+            "description": "The `<app>:<schema>` literal of the referenced object, for example dossiq:zaak or pipelinq:lead. Opaque: pipelinq does not parse it and does not require the app to be installed.",
+            "maxLength": 255,
+            "facetable": true
+          },
+          "domainObjectRef": { "type": "string", "title": "Object", "format": "uuid", "facetable": true, "description": "The referenced object's uuid." },
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "description": "The referenced object's title as it read when the link was made. A fallback for rendering, NOT the source of truth: when the owning app is present its own title wins, and when it is absent this is what keeps the item visible as unresolved rather than hidden."
+          }
+        }
+      },
+      "estimationScale": {
+        "title": "Estimation scale",
+        "type": "object",
+        "description": "An ordered set of estimate points with a label and a numeric weight. At most one scale is active per scope; a second activation in one scope is refused. A scale set inactive keeps resolving on estimates already written, so a historic figure keeps its meaning.",
+        "required": ["name", "scope", "points"],
+        "properties": {
+          "name": { "type": "string", "title": "Name", "description": "What the scale is called." },
+          "scope": { "type": "string", "title": "Scope", "description": "`instance`, or an org unit id. One active scale per scope.", "facetable": true },
+          "points": {
+            "type": "array",
+            "title": "Points",
+            "description": "The ladder, in order.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "label": { "type": "string", "title": "Label", "description": "What an estimator picks, for example 1, 2, 3, 5, 8." },
+                "weight": { "type": "number", "title": "Weight", "description": "What it counts for when totalling." }
+              }
+            }
+          },
+          "active": { "type": "boolean", "title": "Active", "default": true, "description": "Whether new estimates may be written on it.", "facetable": true }
+        }
+      },
+      "programmeEstimate": {
+        "title": "Programme estimate",
+        "type": "object",
+        "description": "One role's estimate of one work item, on the active scale. A work item carries one estimate per role, and the total is DERIVED on read as the sum of the parts. No total is stored: a stored total drifts from its parts the first time one changes, silently.",
+        "required": ["workItem", "role", "point"],
+        "properties": {
+          "workItem": { "type": "string", "title": "Work item", "format": "uuid", "facetable": true, "description": "The work item being estimated." },
+          "role": { "type": "string", "title": "Role", "facetable": true, "description": "Whose effort this estimates, for example juridisch or vakafdeling. A bezwaar costs both, and today both are one number." },
+          "point": { "type": "string", "title": "Point", "description": "The point's label on the scale." },
+          "scale": { "type": "string", "title": "Scale", "format": "uuid", "description": "The scale the point was picked from, recorded so a retired scale still resolves this estimate's meaning." }
+        }
+      },
+      "programmeCycle": {
+        "title": "Programme cycle",
+        "type": "object",
+        "description": "A named time box under a programme. Closing it writes a versioned progress snapshot, and a chart of a closed cycle reads the snapshot, so a later edit to the work beneath it cannot rewrite what the chart showed. The live figures stay readable beside it.",
+        "required": ["programme", "name"],
+        "properties": {
+          "programme": { "type": "string", "title": "Programme", "format": "uuid", "facetable": true, "description": "The programme." },
+          "name": { "type": "string", "title": "Name", "description": "What the cycle is called." },
+          "startDate": { "type": "string", "title": "Start", "format": "date", "description": "When it opens." },
+          "endDate": { "type": "string", "title": "End", "format": "date", "description": "When it closes." },
+          "status": { "type": "string", "title": "Status", "enum": ["open", "closed"], "facetable": true, "description": "Whether it is still running." },
+          "snapshots": {
+            "type": "array",
+            "title": "Snapshots",
+            "description": "One entry per close, each with its own version. Reopening and closing again appends rather than overwrites, so two closes leave two snapshots and neither is lost.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "version": { "type": "integer", "title": "Version", "description": "1 for the first close, 2 for the next." },
+                "closedAt": { "type": "string", "title": "Closed at", "format": "date-time", "description": "When this close happened." },
+                "closedBy": { "type": "string", "title": "Closed by", "description": "Who closed it." },
+                "done": { "type": "integer", "title": "Done", "description": "Items finished as they stood." },
+                "total": { "type": "integer", "title": "Total", "description": "Items in the cycle as they stood." }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,330 @@
+{
+  "_note": "customer-satisfaction-closed-loop. A survey that is sent, answered and followed up, rather than a form that exists. The V1 engine's schemas went with the forms-leaf migration, so this fragment declares the three the closed loop needs: the survey, the invitation that carries a per-recipient token, and the response. The detractor notification is a schema rule in the canonical x-openregister-notifications dialect (ADR-031): no imperative dispatch in app code.",
+  "components": {
+    "schemas": {
+      "survey": {
+        "title": "Survey",
+        "type": "object",
+        "description": "One questionnaire. Questions are held as a list rather than as a schema of their own, because a survey is answered as a whole and never queried question by question.",
+        "required": [
+          "title"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "description": "What the survey is called."
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "description": "What the respondent is told before they start."
+          },
+          "questions": {
+            "type": "array",
+            "title": "Questions",
+            "description": "The questions, in order. `nps` is the 0 to 10 recommendation question; `rating` is the 1 to 5 scale; `text` is free text, which is what the verbatims come from.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "key": {
+                  "type": "string",
+                  "title": "Key",
+                  "description": "The key an answer is stored under."
+                },
+                "label": {
+                  "type": "string",
+                  "title": "Label",
+                  "description": "The question as the respondent reads it."
+                },
+                "kind": {
+                  "type": "string",
+                  "title": "Kind",
+                  "enum": [
+                    "nps",
+                    "rating",
+                    "text",
+                    "choice"
+                  ],
+                  "description": "What kind of answer it takes."
+                },
+                "required": {
+                  "type": "boolean",
+                  "title": "Required",
+                  "default": false,
+                  "description": "Whether it must be answered."
+                }
+              }
+            }
+          },
+          "active": {
+            "type": "boolean",
+            "title": "Active",
+            "default": true,
+            "description": "Whether the survey may still be sent."
+          }
+        }
+      },
+      "surveyInvitation": {
+        "title": "Survey invitation",
+        "type": "object",
+        "description": "One invitation to one recipient, carrying the token their answer comes back on. Suppressed and failed invitations are PERSISTED rather than dropped: a dispatch that decided not to send is a fact worth keeping, and it is what the response rate is computed against.",
+        "required": [
+          "token",
+          "surveyRef",
+          "status"
+        ],
+        "properties": {
+          "token": {
+            "type": "string",
+            "title": "Token",
+            "description": "The per-invitation secret in the response link. Single use: once the invitation is responded or expired, the token is refused.",
+            "maxLength": 64
+          },
+          "surveyRef": {
+            "type": "string",
+            "title": "Survey",
+            "format": "uuid",
+            "description": "The survey being sent.",
+            "facetable": true
+          },
+          "contactRef": {
+            "type": "string",
+            "title": "Contact",
+            "description": "The recipient, as the Nextcloud contact uid the party model already keys on. Never an app-local customer record.",
+            "facetable": true
+          },
+          "clientRef": {
+            "type": "string",
+            "title": "Client",
+            "format": "uuid",
+            "description": "The client the recipient belongs to, so a response rolls up to a customer.",
+            "facetable": true
+          },
+          "linkedEntityType": {
+            "type": "string",
+            "title": "Triggering entity type",
+            "description": "What completed and triggered this invitation, as an `<app>:<schema>:<type>` literal.",
+            "facetable": true
+          },
+          "linkedEntityId": {
+            "type": "string",
+            "title": "Triggering entity",
+            "description": "The record that completed."
+          },
+          "channel": {
+            "type": "string",
+            "title": "Channel",
+            "enum": [
+              "email",
+              "sms",
+              "whatsapp"
+            ],
+            "description": "How the invitation is delivered.",
+            "facetable": true
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "enum": [
+              "scheduled",
+              "sent",
+              "responded",
+              "expired",
+              "suppressed",
+              "failed"
+            ],
+            "description": "Where the invitation stands. Suppressed and failed are excluded from the response-rate denominator and shown as counts of their own.",
+            "facetable": true
+          },
+          "suppressionReason": {
+            "type": "string",
+            "title": "Suppression reason",
+            "enum": [
+              "cooldown",
+              "opt-out",
+              "no-channel-address",
+              "channel-unavailable"
+            ],
+            "description": "Machine readable, so a low response rate can be explained rather than guessed at.",
+            "facetable": true
+          },
+          "dispatchRuleId": {
+            "type": "string",
+            "title": "Dispatch rule",
+            "description": "The rule that created this invitation."
+          },
+          "scheduledFor": {
+            "type": "string",
+            "title": "Scheduled for",
+            "format": "date-time",
+            "description": "When the delay elapses and the invitation may be sent."
+          },
+          "sentAt": {
+            "type": "string",
+            "title": "Sent at",
+            "format": "date-time",
+            "description": "When it went out."
+          },
+          "respondedAt": {
+            "type": "string",
+            "title": "Responded at",
+            "format": "date-time",
+            "description": "When the answer came back."
+          },
+          "responseRef": {
+            "type": "string",
+            "title": "Response",
+            "format": "uuid",
+            "description": "The response this invitation produced."
+          },
+          "expiresAt": {
+            "type": "string",
+            "title": "Expires at",
+            "format": "date-time",
+            "description": "After this the token opens a closed page rather than the form."
+          },
+          "deliveryAddress": {
+            "type": "string",
+            "title": "Delivery address",
+            "description": "The address this invitation was addressed to, recorded at the moment the dispatch decided to send. Held on the invitation rather than resolved again at send time, because a contact whose email changes between the decision and the send would otherwise get a message that the record cannot account for."
+          }
+        }
+      },
+      "surveyResponse": {
+        "title": "Survey response",
+        "type": "object",
+        "description": "One filled-in survey. The classification is written by the follow-up service and is what the detractor notification rule below transitions on, so the notification is a schema rule rather than an imperative dispatch in app code (ADR-031).",
+        "required": [
+          "surveyRef"
+        ],
+        "properties": {
+          "surveyRef": {
+            "type": "string",
+            "title": "Survey",
+            "format": "uuid",
+            "description": "The survey that was answered.",
+            "facetable": true
+          },
+          "invitationRef": {
+            "type": "string",
+            "title": "Invitation",
+            "format": "uuid",
+            "description": "The invitation it came back on. Absent for a response collected outside the closed loop.",
+            "facetable": true
+          },
+          "clientRef": {
+            "type": "string",
+            "title": "Client",
+            "format": "uuid",
+            "description": "The client this response rolls up to.",
+            "facetable": true
+          },
+          "contactRef": {
+            "type": "string",
+            "title": "Contact",
+            "description": "The respondent.",
+            "facetable": true
+          },
+          "linkedEntityType": {
+            "type": "string",
+            "title": "Triggering entity type",
+            "description": "What the response is about."
+          },
+          "linkedEntityId": {
+            "type": "string",
+            "title": "Triggering entity",
+            "description": "The record it is about."
+          },
+          "answers": {
+            "type": "object",
+            "title": "Answers",
+            "description": "The answers, keyed by question key."
+          },
+          "npsScore": {
+            "type": "integer",
+            "title": "NPS score",
+            "description": "The 0 to 10 recommendation answer, lifted out of the answers so it can be aggregated without reading every response.",
+            "facetable": true
+          },
+          "averageRating": {
+            "type": "number",
+            "title": "Average rating",
+            "description": "The mean of the 1 to 5 answers."
+          },
+          "verbatim": {
+            "type": "string",
+            "title": "Verbatim",
+            "description": "The free text, which is the part a manager actually reads."
+          },
+          "classification": {
+            "type": "string",
+            "title": "Classification",
+            "enum": [
+              "detractor",
+              "passive",
+              "promoter"
+            ],
+            "description": "Bain's NPS bands, with a rating at or below the configured threshold also counting as a detractor. Written by the follow-up service; the notification rule below transitions on it.",
+            "facetable": true
+          },
+          "followUpTaskRef": {
+            "type": "string",
+            "title": "Follow-up task",
+            "format": "uuid",
+            "description": "The My Work task a detractor response raised."
+          },
+          "submittedAt": {
+            "type": "string",
+            "title": "Submitted at",
+            "format": "date-time",
+            "description": "When it was submitted."
+          },
+          "followUpAssignee": {
+            "type": "string",
+            "title": "Follow-up assignee",
+            "description": "Who owns the follow-up: the client's owner, or the configured default assignee when the client has none. Named here because the detractor notification rule takes its recipient from this field, so an ownerless client still reaches somebody rather than nobody."
+          }
+        },
+        "x-openregister-notifications": {
+          "detractorResponse": {
+            "trigger": {
+              "type": "transition",
+              "field": "classification",
+              "to": "detractor"
+            },
+            "enabled": true,
+            "channels": [
+              "nc-notification"
+            ],
+            "recipients": [
+              {
+                "kind": "field",
+                "field": "followUpAssignee"
+              }
+            ],
+            "subject": {
+              "nl": "Ontevreden klant: volg dit op",
+              "en": "Unhappy customer: follow this up"
+            },
+            "message": {
+              "nl": "Er is een ontevreden reactie binnengekomen. De opvolgtaak staat in Mijn werk.",
+              "en": "An unhappy response came in. The follow-up task is in My work."
+            }
+          }
+        }
+      },
+      "contact": {
+        "properties": {
+          "surveyOptOut": {
+            "type": "boolean",
+            "title": "Survey opt-out",
+            "description": "Whether this contact has asked never to be sent a satisfaction survey again. Honoured by every dispatch rule, and settable by the respondent from the public form itself.",
+            "default": false,
+            "facetable": true
+          }
+        }
+      }
+    }
+  }
+}

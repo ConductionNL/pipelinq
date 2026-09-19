@@ -147,6 +147,44 @@ class SettingsService {
 		'contract_schema',
 		// Renewal engine tuning (contract-renewal-tracking).
 		'renewal_default_lead_time_days',
+		// Typed fields and standing indicators on a party
+		// (typed-fields-and-indicators-on-a-party).
+		'partyFieldSet_schema',
+		'partyIndicator_schema',
+		'partyIndicatorValue_schema',
+		// How deep a customer organisation tree may go. Administered rather
+		// than fixed: a breadcrumb past this depth is unreadable and the
+		// queries under it are slow, and where that line sits is a customer's.
+		'party_organisation_max_depth',
+		// The party kind vocabulary and the acceptance per record type
+		// (party-kinds-accepted-per-case-type).
+		'partyKind_schema',
+		'partyKindAcceptance_schema',
+		'partyLink_schema',
+		// Customer satisfaction, closed loop (customer-satisfaction-closed-loop).
+		'survey_schema',
+		'surveyInvitation_schema',
+		'surveyResponse_schema',
+		// The dispatch rules, as a JSON array, so an administrator adds a rule
+		// without a release.
+		'survey_dispatch_rules',
+		// At or below this 1 to 5 rating a response counts as a detractor.
+		'survey_detractor_rating_threshold',
+		// Who follows up when the client has no owner. Without it an ownerless
+		// client's unhappy response reaches nobody, which looks exactly like
+		// one that was followed up.
+		'survey_default_assignee',
+		// The programme above the cases (the-project-above-the-cases).
+		'programme_schema',
+		'programmeTask_schema',
+		'programmeTeamMember_schema',
+		'programmeWorkItem_schema',
+		'programmeCycle_schema',
+		'programmeEstimate_schema',
+		'estimationScale_schema',
+		// Where a programme's progress figure comes from by default, with a
+		// per-programme override.
+		'programme_progress_mode',
 	];
 
 	/**

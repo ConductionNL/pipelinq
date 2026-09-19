@@ -413,7 +413,14 @@ jobs:
       # directory name, so `app` must be the id from appinfo/info.xml or the
       # checkout lands in a directory nothing enables — silently, since a
       # missing app is exactly what "the leaf did not render" looks like.
-      additional-apps: '[{"repo":"ConductionNL/openregister","app":"openregister","ref":"development"},{"repo":"ConductionNL/planix","app":"planninq","ref":"development"}]'
+      #
+      # integriq is here because the Integrations page reads integriq's
+      # `app_connection` rows. Without it the page shows the missing-dependency
+      # screen, the Connections menu entry is hidden by its `visibleIf`, the
+      # objects endpoint answers 404, and all six tests in
+      # `tests/e2e/integrations-page.spec.ts` fail. `app` is `integriq`, the id
+      # in its appinfo/info.xml on `development`.
+      additional-apps: '[{"repo":"ConductionNL/openregister","app":"openregister","ref":"development"},{"repo":"ConductionNL/planix","app":"planninq","ref":"development"},{"repo":"ConductionNL/integriq","app":"integriq","ref":"development"}]'
       # The old seed was `php occ app:disable pipelinq && php occ app:enable
       # pipelinq`. It reported success on every run and provisioned nothing
       # reliable: the repair step it triggers runs with NO user session (OR RBAC

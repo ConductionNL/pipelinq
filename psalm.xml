@@ -135,7 +135,23 @@
         <InvalidArgument errorLevel="suppress"/>
         <InvalidReturnType errorLevel="suppress"/>
         <InvalidReturnStatement errorLevel="suppress"/>
-        <MismatchingDocblockReturnType errorLevel="suppress"/>
+        <!-- NOT suppressed, and the reason is a trap the register-slug work
+             (#1906) walked into.
+             Psalm reads the DOCBLOCK `@return` in preference to the native
+             return type, so a `@return string|null` sitting above a `: string`
+             signature is not a contradiction psalm reports - it is psalm
+             quietly using the docblock and ignoring the signature. That is how
+             a mutation test on this file came back green while changing the
+             code: only the native type was mutated, psalm never read it, and a
+             tool that has not looked is indistinguishable from one that is
+             satisfied.
+             With this rule on, psalm names the divergence directly:
+             "Docblock has incorrect return type 'null|string', should be
+             'string'". Measured before un-suppressing it: ZERO
+             MismatchingDocblockReturnType findings across all 544 files, so the
+             suppression was protecting nothing and cost the next person an
+             honest mutation test. -->
+        <MismatchingDocblockReturnType errorLevel="error"/>
         <EmptyArrayAccess errorLevel="suppress"/>
         <ImplementedReturnTypeMismatch errorLevel="suppress"/>
         <InvalidMethodCall errorLevel="suppress"/>
@@ -173,7 +189,47 @@
              including RegisterSlugResolution::isReslved(); a scanned contract
              makes psalm check the resolution branch against the real signature.
              Read out of vendor, never copied: a copy of a published contract
-             drifts, and the drift still resolves. -->
+             drifts, and the drift still resolves.
+
+             One thing the scanned contracts do NOT buy, measured with
+             @psalm-trace: `isResolved()` does not narrow `->slug`. Inside
+             `if ($resolution->isResolved() === true)` the property still traces
+             as `null|string`, because the published contract carries no
+             @psalm-assert and psalm does not infer one across the call. It costs
+             nothing today, since slugOrNull() returns `?string` either way, but
+             do not declare a non-nullable return on the assumption that the
+             positive branch narrows. It does not.
+
+             That is fixable at the source rather than per consumer:
+             ConductionNL/openregister#3582 adds
+             `@psalm-assert-if-true !null $this->slug` to isResolved(). It has to
+             land in openregister's lib/Contract/ AND the hydra-gates copy, which
+             gate 67 keeps byte identical, then be tagged.
+
+             What that will buy HERE was measured, not assumed. The annotation
+             was applied to the vendored contract in a throwaway probe and the
+             trace re-run: slugOrNull()'s existing shape narrows `slug` to
+             `string`, and so does the same shape with an intervening call,
+             including one that receives the whole $resolution. The probe was
+             reverted and both checksums verified.
+
+             `readonly` is NOT what keeps that narrowing, and the difference is
+             the point. Probed directly: with `slug` made mutable and an
+             intervening callee that sets `$r->slug = null`, psalm still traces
+             `string`, with no error and no warning. It is not reasoning about
+             mutability at all. So on a readonly property the narrowing is SOUND,
+             because the runtime cannot make it false; on a mutable one psalm
+             gives the identical confident green while the value really can be
+             null.
+
+             The shape decides this. Reading the property BEFORE the branch does
+             NOT narrow, because nothing can narrow a copy retroactively. decidiq
+             uses that shape, which is why its explicit null check is
+             load-bearing and ConnectorSourceRegister needs none. When a tag
+             carrying the annotation is installed, slugOrNull() can return a
+             non-nullable `string` on the resolved path and this paragraph goes.
+             Re-run the trace first: the measurement above was taken against a
+             hand-patched vendor file, not a shipped one. -->
         <directory name="vendor/conduction/hydra-gates/hydra-gates/contracts" />
     </extraFiles>
 </psalm>

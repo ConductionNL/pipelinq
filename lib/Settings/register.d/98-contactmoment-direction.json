@@ -1,0 +1,22 @@
+{
+  "_note": "contact-moments-on-pipelinq-schema. One contact moment schema in the fleet: pipelinq's. This fragment gives the contactmoment facet of `ticket` its direction as a first-class field, and widens `caseReference` from a UUID pointed at one named app into an ADR-048 semantic reference to https://openregister.app/ns#Case. Fragments are deep-merged onto pipelinq_register.json in filename order, so this one lands after 99-unify-ticket-supertype.json only for keys it names; everything it does not name is untouched.",
+  "components": {
+    "schemas": {
+      "ticket": {
+        "properties": {
+          "direction": {
+            "type": "string",
+            "title": "Direction",
+            "description": "Which way the contact ran: inbound (the party contacted us), outbound (we contacted the party) or internal (a note between handlers). Required on a contactmoment; left unset on a request or a complaint, whose direction is implied by the type. Kept as a field of its own rather than inside channelMetadata, because a facet cannot be built over a free-form envelope and every competitor in the register carries it first-class.",
+            "enum": [
+              "inbound",
+              "outbound",
+              "internal"
+            ],
+            "facetable": true
+          }
+        }
+      }
+    }
+  }
+}

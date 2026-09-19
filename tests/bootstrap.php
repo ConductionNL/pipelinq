@@ -334,6 +334,14 @@ if (class_exists(\OCA\OpenRegister\Service\Lifecycle\TransitionEngine::class) ==
 	require_once __DIR__ . '/Stubs/Service/Lifecycle/TransitionEngine.php';
 }
 
+// Integriq's connection-registry report event (adopt-connection-registry).
+// ConnectionReportService sends it by string class name, so pipelinq stays
+// installable without integriq. The stub mirrors integriq's real constructor
+// verbatim and yields to the real class when integriq is loaded.
+if (class_exists('\\OCA\\Integriq\\Event\\ConnectionStatusReportedEvent') === false) {
+	require_once __DIR__ . '/Stubs/Integriq/Event/ConnectionStatusReportedEvent.php';
+}
+
 // Portal test helpers live in the Tests namespace, which has no PSR-4 mapping
 // in autoload-dev; load the in-memory repository double explicitly so the
 // portal service tests can use it without a composer.json change.
