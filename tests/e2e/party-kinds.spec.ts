@@ -121,9 +121,9 @@ test.describe('party kinds accepted per record type', () => {
 		expect(offered.status).toBe(200)
 		expect(offered.body.declared).toBe(true)
 
-		const codes = ((offered.body.kinds ?? []) as Array<Record<string, string>>).map(
-			(k) => k.code,
-		)
+		const codes = (
+			(offered.body.kinds ?? []) as Array<Record<string, string>>
+		).map((k) => k.code)
 		// The ORDER, not merely the membership: the first kind is what most
 		// handlers will take, and that is part of the declaration.
 		expect(codes).toEqual(['aanvrager', 'gemachtigde'])
@@ -135,12 +135,17 @@ test.describe('party kinds accepted per record type', () => {
 		})
 
 		// The API, not the picker: a rule the API goes around is no rule.
-		const refused = await api(page, 'POST', '/index.php/apps/pipelinq/api/party-links', {
-			recordType: RECORD_TYPE,
-			recordId: `zaak-${STAMP}`,
-			party,
-			kind: 'vergunninghouder',
-		})
+		const refused = await api(
+			page,
+			'POST',
+			'/index.php/apps/pipelinq/api/party-links',
+			{
+				recordType: RECORD_TYPE,
+				recordId: `zaak-${STAMP}`,
+				party,
+				kind: 'vergunninghouder',
+			},
+		)
 
 		expect(refused.status).toBe(409)
 		expect(JSON.stringify(refused.body)).toContain('vergunninghouder')
@@ -161,23 +166,33 @@ test.describe('party kinds accepted per record type', () => {
 			contactsUid: `e2e-tweede-${STAMP}`,
 		})
 
-		const linked = await api(page, 'POST', '/index.php/apps/pipelinq/api/party-links', {
-			recordType: RECORD_TYPE,
-			recordId,
-			party: first,
-			kind: 'aanvrager',
-		})
+		const linked = await api(
+			page,
+			'POST',
+			'/index.php/apps/pipelinq/api/party-links',
+			{
+				recordType: RECORD_TYPE,
+				recordId,
+				party: first,
+				kind: 'aanvrager',
+			},
+		)
 		expect(
 			linked.status,
 			`the first aanvrager was refused — ${JSON.stringify(linked.body).slice(0, 300)}`,
 		).toBe(201)
 
-		const refused = await api(page, 'POST', '/index.php/apps/pipelinq/api/party-links', {
-			recordType: RECORD_TYPE,
-			recordId,
-			party: second,
-			kind: 'aanvrager',
-		})
+		const refused = await api(
+			page,
+			'POST',
+			'/index.php/apps/pipelinq/api/party-links',
+			{
+				recordType: RECORD_TYPE,
+				recordId,
+				party: second,
+				kind: 'aanvrager',
+			},
+		)
 
 		expect(refused.status).toBe(409)
 		expect(
