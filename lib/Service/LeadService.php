@@ -91,6 +91,21 @@ class LeadService {
 	) {
 	}//end __construct()
 
+	// The attribute sits ABOVE the docblock, which is the other way round
+	// from everywhere else in this app. A multi-line PHP attribute breaks the
+	// line-walk gate-16 uses to find a method's docblock, so with the usual
+	// order the @spec tag below is invisible to it and the method reads as
+	// unlinked. The tag is real either way; this makes it checkable.
+	#[McpTool(
+		name: 'createLead',
+		subject: 'lead',
+		action: 'create',
+		description: 'Create a new sales lead. Only "title" is required; client, value, source and assignee are optional.',
+		readOnlyHint: false,
+		destructiveHint: false,
+		idempotentHint: false,
+		scope: 'create'
+	)]
 	/**
 	 * Create a new sales lead. Only "title" is required; client, value,
 	 * source and assignee are optional.
@@ -113,16 +128,6 @@ class LeadService {
 	 *
 	 * @spec openspec/specs/crm-mcp-tool-surface/spec.md#requirement-mcp-provider-exposes-rbac-guarded-crm-write-tools
 	 */
-	#[McpTool(
-		name: 'createLead',
-		subject: 'lead',
-		action: 'create',
-		description: 'Create a new sales lead. Only "title" is required; client, value, source and assignee are optional.',
-		readOnlyHint: false,
-		destructiveHint: false,
-		idempotentHint: false,
-		scope: 'create'
-	)]
 	public function createLead(
 		string $title,
 		?string $client = null,
@@ -174,6 +179,24 @@ class LeadService {
 		return ['lead' => $this->mcp->toArray(item: $saved)];
 	}//end createLead()
 
+	// The attribute sits ABOVE the docblock, which is the other way round
+	// from everywhere else in this app. A multi-line PHP attribute breaks the
+	// line-walk gate-16 uses to find a method's docblock, so with the usual
+	// order the @spec tag below is invisible to it and the method reads as
+	// unlinked. The tag is real either way; this makes it checkable.
+	#[McpTool(
+		name: 'pipelineForecast',
+		// `forecast`, not `get`: it derives a projection across the whole
+		// pipeline rather than returning one stored record, so it exposes
+		// aggregate commercial data a single-record read does not.
+		subject: 'pipeline',
+		action: 'forecast',
+		description: 'Per-stage totals over open leads: lead count, summed value, weighted value, plus a grand total.',
+		readOnlyHint: true,
+		destructiveHint: false,
+		idempotentHint: true,
+		scope: 'read'
+	)]
 	/**
 	 * Per-stage totals over open leads: lead count, summed value, weighted
 	 * value, plus a grand total.
@@ -188,19 +211,6 @@ class LeadService {
 	 *
 	 * @spec openspec/specs/crm-mcp-tool-surface/spec.md#requirement-mcp-provider-exposes-a-crm-read-tool-surface
 	 */
-	#[McpTool(
-		name: 'pipelineForecast',
-		// `forecast`, not `get`: it derives a projection across the whole
-		// pipeline rather than returning one stored record, so it exposes
-		// aggregate commercial data a single-record read does not.
-		subject: 'pipeline',
-		action: 'forecast',
-		description: 'Per-stage totals over open leads: lead count, summed value, weighted value, plus a grand total.',
-		readOnlyHint: true,
-		destructiveHint: false,
-		idempotentHint: true,
-		scope: 'read'
-	)]
 	public function pipelineForecast(): array {
 		$config = $this->resolveLeadContext();
 		if (isset($config['error']) === true) {

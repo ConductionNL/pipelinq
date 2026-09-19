@@ -474,6 +474,21 @@ class TicketService {
 		return $payload;
 	}//end sanitizeForSave()
 
+	// The attribute sits ABOVE the docblock, which is the other way round
+	// from everywhere else in this app. A multi-line PHP attribute breaks the
+	// line-walk gate-16 uses to find a method's docblock, so with the usual
+	// order the @spec tag below is invisible to it and the method reads as
+	// unlinked. The tag is real either way; this makes it checkable.
+	#[McpTool(
+		name: 'logContactmoment',
+		subject: 'contactMoment',
+		action: 'create',
+		description: 'Log a client interaction as a contactmoment (client, channel, title and direction are required; outcome and notes are optional).',
+		readOnlyHint: false,
+		destructiveHint: false,
+		idempotentHint: false,
+		scope: 'create'
+	)]
 	/**
 	 * Log a client interaction as a contactmoment (client, channel and title
 	 * are required; outcome and notes are optional).
@@ -497,16 +512,6 @@ class TicketService {
 	 *
 	 * @spec openspec/specs/crm-mcp-tool-surface/spec.md#requirement-mcp-provider-exposes-rbac-guarded-crm-write-tools
 	 */
-	#[McpTool(
-		name: 'logContactmoment',
-		subject: 'contactMoment',
-		action: 'create',
-		description: 'Log a client interaction as a contactmoment (client, channel, title and direction are required; outcome and notes are optional).',
-		readOnlyHint: false,
-		destructiveHint: false,
-		idempotentHint: false,
-		scope: 'create'
-	)]
 	public function logContactmoment(
 		string $client,
 		string $channel,
