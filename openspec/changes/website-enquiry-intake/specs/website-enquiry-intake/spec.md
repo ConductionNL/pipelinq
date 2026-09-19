@@ -136,3 +136,48 @@ The endpoint SHALL accept an optional field that a human never fills. When it ar
 
 @e2e exclude the honeypot is hidden from humans by design, so a browser driver filling it would not reproduce a real bot. Asserted by PHPUnit (EnquiryIntakeServiceTest)
 
+### Requirement: A converted enquiry becomes a client, a contact and a lead
+
+Marking an enquiry `converted` SHALL create the client, the contact and the lead it implies, and SHALL write all three back onto the enquiry. The conversion SHALL be a declared OpenRegister flow rather than a service method, so the step that performs it has a call site that is visible and switchable rather than a button somebody has to remember to wire up.
+
+The flow SHALL ship as an `x-openregister-flows` declaration on the `enquiry` schema, which materialises it into the flow table `enabled = false` and ownerless. Adopting and enabling it SHALL remain two separate decisions a person makes.
+
+#### Scenario: One status change produces three objects
+
+- **GIVEN** an enquiry carrying an organisation, a contact name and an email
+- **WHEN** its `status` is set to `converted`
+- **THEN** a `client`, a `contact` and a `lead` SHALL be created, and the enquiry SHALL carry all three uuids
+
+#### Scenario: An unconverted enquiry produces nothing
+
+- **GIVEN** an enquiry whose status is not `converted`
+- **WHEN** it is updated
+- **THEN** no client, contact or lead SHALL be created
+
+#### Scenario: Converting twice does not convert twice
+
+- **GIVEN** an enquiry that already carries a `lead`
+- **WHEN** it is updated again
+- **THEN** the flow SHALL do nothing
+
+@e2e exclude the conversion runs in OpenRegister's flow engine on a background worker, so no browser drives it. Verified against a live instance instead: run 68 completed, counts moved 28 to 29 client, 6 to 7 contact, 22 to 23 lead, and the enquiry carried all three uuids
+
+### Requirement: The addressbook identity is resolved, never minted
+
+`client` and `contact` both require `contactsUid`, whose own declaration says it is resolved or created via ContactVcardService and never minted locally. The flow SHALL obtain that identity through a pipelinq node that calls `ContactVcardService`, and SHALL NOT write a value of its own devising.
+
+The node SHALL refuse, rather than continue, when an identity cannot be provisioned. It SHALL pass only the fields its configuration names, so provisioning an organisation does not reach for a person's email address.
+
+#### Scenario: A client and a contact from one enquiry get different identities
+
+- **GIVEN** an enquiry with both an organisation and a person's email
+- **WHEN** it is converted
+- **THEN** the client's `contactsUid` and the contact's `contactsUid` SHALL differ
+
+#### Scenario: An unavailable addressbook refuses rather than inventing a uid
+
+- **GIVEN** a Contacts backend that cannot provision
+- **WHEN** the node runs
+- **THEN** it SHALL throw, and no object SHALL be written with a locally minted uid
+
+@e2e exclude both are properties of a PHP flow node with no UI surface; asserted by PHPUnit (ProvisionContactIdentityNodeTest), including the conflation regression found on a live rig where both uids came back identical

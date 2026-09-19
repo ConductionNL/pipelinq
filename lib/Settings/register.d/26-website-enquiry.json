@@ -13,7 +13,7 @@
         "slug": "enquiry",
         "title": "Enquiry",
         "icon": "EmailOutline",
-        "version": "1.0.0",
+        "version": "1.1.0",
         "summary": "Someone filled in a form on a public website",
         "description": "What a website visitor sends before anyone knows who they are. Holds their own words and contact details as typed. No client or pipeline is attached, because neither exists yet. Sales reads it and converts it into a client, a contact and a lead. Kept separate from lead on purpose. A lead is a deal with a value and a stage, and counting unqualified website traffic as deals makes every pipeline report wrong.",
         "required": [
