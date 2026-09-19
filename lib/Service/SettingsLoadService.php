@@ -43,6 +43,14 @@ class SettingsLoadService {
 		'client',
 		'contact',
 		'lead',
+		// Anonymous website intake (website-enquiry). An enquiry is what a
+		// visitor sends before a client exists, so it deliberately does NOT
+		// reuse `lead`: lead requires `client` and `pipeline`, and neither is
+		// knowable at intake. Without this slug the `enquiry_schema` app-config
+		// key is never written on import and EnquiryIntakeService cannot
+		// resolve the schema, which is the same failure the posTenderType
+		// comment below records.
+		'enquiry',
 		// Unified inbound-matter supertype (unify-ticket-supertype). It replaced
 		// the retired `request`, `complaint` and `contactmoment` schemas; a
 		// subtype is selected with the `ticketType` discriminator.
