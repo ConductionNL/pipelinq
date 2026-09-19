@@ -253,9 +253,12 @@ class ContactMomentFilingService {
 		foreach ($others as $reference) {
 			if ($mayRead($reference) === true) {
 				$visible[] = $reference;
-			} else {
-				$hidden++;
+				continue;
 			}
+
+			// Counted, never named: the count says this moment is also filed
+			// elsewhere without disclosing a case the reader may not open.
+			$hidden++;
 		}
 
 		return [

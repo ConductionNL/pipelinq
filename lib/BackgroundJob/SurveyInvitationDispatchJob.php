@@ -148,13 +148,12 @@ class SurveyInvitationDispatchJob extends TimedJob {
 				$sent = false;
 			}
 
+			// `failed`, not a silent retry: an invitation that never went out
+			// is a fact the response rate has to be able to see.
+			$invitation['status'] = 'failed';
 			if ($sent === true) {
 				$invitation['status'] = 'sent';
 				$invitation['sentAt'] = $now->format(DateTimeInterface::ATOM);
-			} else {
-				// `failed`, not a silent retry: an invitation that never went
-				// out is a fact the response rate has to be able to see.
-				$invitation['status'] = 'failed';
 			}
 
 			$this->dispatchService->write(invitation: $invitation, uuid: $uuid);

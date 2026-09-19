@@ -170,17 +170,17 @@ class SatisfactionAggregationService {
 		$previousFloor = $now->modify('-' . (self::WINDOW_DAYS * 2) . ' days');
 
 		foreach ($responses as $response) {
-			$at = $this->submittedAt(response: $response);
-			if ($at === null) {
+			$submitted = $this->submittedAt(response: $response);
+			if ($submitted === null) {
 				continue;
 			}
 
-			if ($at >= $currentFloor) {
+			if ($submitted >= $currentFloor) {
 				$current[] = $response;
 				continue;
 			}
 
-			if ($at >= $previousFloor) {
+			if ($submitted >= $previousFloor) {
 				$previous[] = $response;
 			}
 		}

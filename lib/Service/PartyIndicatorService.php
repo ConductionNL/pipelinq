@@ -101,37 +101,37 @@ class PartyIndicatorService {
 	 * rather than the fact.
 	 *
 	 * @param array<string, mixed> $value The stored indicator value.
-	 * @param DateTimeImmutable|null $on The day to judge it on; today by default.
+	 * @param DateTimeImmutable|null $onDay The day to judge it on; today by default.
 	 *
 	 * @return bool True when the value applies.
 	 *
 	 * @spec openspec/changes/typed-fields-and-indicators-on-a-party/specs/party-fields-and-indicators/spec.md#requirement-an-indicator-shall-be-a-declared-vocabulary-with-dated-values-req-pfi-002
 	 */
-	public function applies(array $value, ?DateTimeImmutable $on = null): bool {
-		$on = ($on ?? new DateTimeImmutable('today'));
+	public function applies(array $value, ?DateTimeImmutable $onDay = null): bool {
+		$onDay = ($onDay ?? new DateTimeImmutable('today'));
 
 		$from = $this->day(value: ($value['validFrom'] ?? null));
-		if ($from !== null && $from > $on) {
+		if ($from !== null && $from > $onDay) {
 			return false;
 		}
 
 		$until = $this->day(value: ($value['validUntil'] ?? null));
 
-		return ($until === null || $until >= $on);
+		return ($until === null || $until >= $onDay);
 	}//end applies()
 
 	/**
 	 * Every indicator a party carries today, resolved live.
 	 *
 	 * @param string $partyId The party record's uuid.
-	 * @param DateTimeImmutable|null $on The day to resolve on; today by default.
+	 * @param DateTimeImmutable|null $onDay The day to resolve on; today by default.
 	 *
 	 * @return array<int, array<string, mixed>> The indicators, each with its
 	 *   code, label, severity, effects, period, source and acknowledgement.
 	 *
 	 * @spec openspec/changes/typed-fields-and-indicators-on-a-party/specs/party-fields-and-indicators/spec.md#requirement-a-partys-indicators-shall-resolve-live-on-every-surface-showing-that-party-req-pfi-003
 	 */
-	public function resolve(string $partyId, ?DateTimeImmutable $on = null): array {
+	public function resolve(string $partyId, ?DateTimeImmutable $onDay = null): array {
 		$partyId = trim($partyId);
 		if ($partyId === '') {
 			return [];
@@ -141,7 +141,7 @@ class PartyIndicatorService {
 		$resolved = [];
 
 		foreach ($this->valuesFor(partyId: $partyId) as $value) {
-			if ($this->applies(value: $value, on: $on) === false) {
+			if ($this->applies(value: $value, onDay: $onDay) === false) {
 				continue;
 			}
 
@@ -185,7 +185,7 @@ class PartyIndicatorService {
 	 *
 	 * @param string $partyId The party record's uuid.
 	 * @param string $act One of the ACTS keys.
-	 * @param DateTimeImmutable|null $on The day to judge on; today by default.
+	 * @param DateTimeImmutable|null $onDay The day to judge on; today by default.
 	 *
 	 * @return array{blocked: bool, act: string, indicators: array<int, array<string, mixed>>}
 	 *   The answer.
@@ -194,7 +194,7 @@ class PartyIndicatorService {
 	 *
 	 * @spec openspec/changes/typed-fields-and-indicators-on-a-party/specs/party-fields-and-indicators/spec.md#requirement-pipelinq-shall-answer-whether-an-indicator-blocks-an-act-and-shall-not-intercept-it-req-pfi-004
 	 */
-	public function isBlocked(string $partyId, string $act, ?DateTimeImmutable $on = null): array {
+	public function isBlocked(string $partyId, string $act, ?DateTimeImmutable $onDay = null): array {
 		$effect = (self::ACTS[$act] ?? null);
 		if ($effect === null) {
 			throw new InvalidArgumentException(
@@ -204,7 +204,7 @@ class PartyIndicatorService {
 
 		$blocking = array_values(
 			array_filter(
-				$this->resolve(partyId: $partyId, on: $on),
+				$this->resolve(partyId: $partyId, onDay: $onDay),
 				static fn (array $indicator): bool => ($indicator[$effect] ?? false) === true
 			)
 		);

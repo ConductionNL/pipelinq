@@ -192,37 +192,17 @@ class PartyOrganisationTreeService {
 			return ['status' => 404, 'error' => 'That organisation could not be read.'];
 		}
 
-		$parentPath = '';
-		if ($parentId !== '') {
-			$parent = $this->read(id: $parentId);
-			if ($parent === null) {
-				return ['status' => 404, 'error' => 'That parent organisation could not be read.'];
-			}
-
-			$parentPath = (string)($parent['organisationPath'] ?? $this->pathUnder(nodeId: $parentId, parentPath: ''));
-
-			// The cycle guard: a parent that already sits UNDER this node
-			// would close the loop. Reading the proposed parent's path answers
-			// that in one comparison, without walking anything.
-			if ($this->isOnPath(nodeId: $nodeId, path: $parentPath) === true) {
-				return [
-					'status' => 409,
-					'error' => 'That parent already sits under this organisation, so the move would close a cycle.',
-				];
-			}
+		$resolved = $this->parentPathFor(nodeId: $nodeId, parentId: $parentId);
+		if (array_key_exists('error', $resolved) === true) {
+			return $resolved;
 		}
 
-		$newPath = $this->pathUnder(nodeId: $nodeId, parentPath: $parentPath);
+		$newPath = $this->pathUnder(nodeId: $nodeId, parentPath: (string)$resolved['path']);
 		$oldPath = (string)($node['organisationPath'] ?? $this->pathUnder(nodeId: $nodeId, parentPath: ''));
 
 		$descendants = $this->descendantsOf(path: $oldPath);
-		$deepest = $this->depthOf(path: $newPath);
-		foreach ($descendants as $descendant) {
-			$relative = $this->depthOf(path: (string)($descendant['organisationPath'] ?? ''))
-				- $this->depthOf(path: $oldPath);
-			$deepest = max($deepest, ($this->depthOf(path: $newPath) + $relative));
-		}
 
+		$deepest = $this->deepestAfter(newPath: $newPath, oldPath: $oldPath, descendants: $descendants);
 		if ($deepest > $this->maxDepth()) {
 			return [
 				'status' => 409,
@@ -230,9 +210,107 @@ class PartyOrganisationTreeService {
 			];
 		}
 
-		// One act: the node and every descendant, or nothing. A descendant
-		// left pointing at a path its parent no longer holds is invisible
-		// until somebody reads the subtree and finds half of it.
+		$writes = $this->movePlan(
+			node: $node,
+			nodeId: $nodeId,
+			parentId: $parentId,
+			newPath: $newPath,
+			oldPath: $oldPath,
+			descendants: $descendants,
+		);
+
+		foreach ($writes as $uuid => $object) {
+			if ($this->write(uuid: (string)$uuid, object: $object) === false) {
+				return ['status' => 500, 'error' => 'The move could not be saved in full.'];
+			}
+		}
+
+		return ['status' => 200, 'moved' => count($writes), 'path' => $newPath];
+	}//end setParent()
+
+	/**
+	 * The proposed parent's path, or the refusal reading it produced.
+	 *
+	 * @param string $nodeId The organisation being moved.
+	 * @param string $parentId The proposed parent, or an empty string for a root.
+	 *
+	 * @return array<string, mixed> Either `path`, or `status` plus `error`.
+	 *
+	 * @spec openspec/changes/typed-fields-and-indicators-on-a-party/specs/party-fields-and-indicators/spec.md#requirement-organisations-shall-nest-as-a-guarded-tree-carrying-their-own-fields-req-pfi-005
+	 */
+	private function parentPathFor(string $nodeId, string $parentId): array {
+		if ($parentId === '') {
+			return ['path' => ''];
+		}
+
+		$parent = $this->read(id: $parentId);
+		if ($parent === null) {
+			return ['status' => 404, 'error' => 'That parent organisation could not be read.'];
+		}
+
+		$parentPath = (string)($parent['organisationPath'] ?? $this->pathUnder(nodeId: $parentId, parentPath: ''));
+
+		// The cycle guard: a parent that already sits UNDER this node would
+		// close the loop. Reading the proposed parent's path answers that in
+		// one comparison, without walking anything.
+		if ($this->isOnPath(nodeId: $nodeId, path: $parentPath) === true) {
+			return [
+				'status' => 409,
+				'error' => 'That parent already sits under this organisation, so the move would close a cycle.',
+			];
+		}
+
+		return ['path' => $parentPath];
+	}//end parentPathFor()
+
+	/**
+	 * How deep the deepest node sits once the subtree has moved.
+	 *
+	 * @param string $newPath The node's path after the move.
+	 * @param string $oldPath The node's path before it.
+	 * @param array<int, array<string, mixed>> $descendants The subtree.
+	 *
+	 * @return int The deepest level the move reaches.
+	 */
+	private function deepestAfter(string $newPath, string $oldPath, array $descendants): int {
+		$newDepth = $this->depthOf(path: $newPath);
+		$oldDepth = $this->depthOf(path: $oldPath);
+		$deepest = $newDepth;
+
+		foreach ($descendants as $descendant) {
+			$relative = ($this->depthOf(path: (string)($descendant['organisationPath'] ?? '')) - $oldDepth);
+			$deepest = max($deepest, ($newDepth + $relative));
+		}
+
+		return $deepest;
+	}//end deepestAfter()
+
+	/**
+	 * Every write the move needs, keyed by uuid.
+	 *
+	 * One act: the node and every descendant, or nothing. A descendant left
+	 * pointing at a path its parent no longer holds is invisible until
+	 * somebody reads the subtree and finds half of it.
+	 *
+	 * @param array<string, mixed> $node The organisation being moved.
+	 * @param string $nodeId Its uuid.
+	 * @param string $parentId The new parent, or an empty string for a root.
+	 * @param string $newPath The node's path after the move.
+	 * @param string $oldPath The node's path before it.
+	 * @param array<int, array<string, mixed>> $descendants The subtree.
+	 *
+	 * @return array<string, array<string, mixed>> The objects to write.
+	 *
+	 * @spec openspec/changes/typed-fields-and-indicators-on-a-party/specs/party-fields-and-indicators/spec.md#requirement-organisations-shall-nest-as-a-guarded-tree-carrying-their-own-fields-req-pfi-005
+	 */
+	private function movePlan(
+		array $node,
+		string $nodeId,
+		string $parentId,
+		string $newPath,
+		string $oldPath,
+		array $descendants,
+	): array {
 		$newParent = null;
 		if ($parentId !== '') {
 			$newParent = $parentId;
@@ -254,14 +332,8 @@ class PartyOrganisationTreeService {
 			]);
 		}
 
-		foreach ($writes as $uuid => $object) {
-			if ($this->write(uuid: (string)$uuid, object: $object) === false) {
-				return ['status' => 500, 'error' => 'The move could not be saved in full.'];
-			}
-		}
-
-		return ['status' => 200, 'moved' => count($writes), 'path' => $newPath];
-	}//end setParent()
+		return $writes;
+	}//end movePlan()
 
 	/**
 	 * Every organisation under a path, excluding the node that owns it.
