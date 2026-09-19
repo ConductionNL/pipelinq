@@ -188,6 +188,14 @@ return [
         // Health check endpoint.
         ['name' => 'health#index', 'url' => '/api/health', 'verb' => 'GET'],
 
+        // Public website enquiry intake (website-enquiry-intake). Anonymous and
+        // cross-origin: the conduction.nl forms post here. It exists instead of
+        // letting the browser POST straight at OpenRegister's object API
+        // because OpenRegister cannot scope which PROPERTIES a public create
+        // may set, so a direct create would let a visitor write `status` and
+        // `handledBy`. See EnquiryIntakeService's class docblock.
+        ['name' => 'enquiry#submit', 'url' => '/api/enquiry', 'verb' => 'POST'],
+
         // Schedules API — pending MUST appear before {id} so the slug does not catch "pending".
         ['name' => 'schedules#index',   'url' => '/api/schedules',         'verb' => 'GET'],
         ['name' => 'schedules#create',  'url' => '/api/schedules',         'verb' => 'POST'],

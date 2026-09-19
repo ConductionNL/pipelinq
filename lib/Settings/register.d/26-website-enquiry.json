@@ -1,0 +1,237 @@
+{
+  "components": {
+    "registers": {
+      "pipelinq": {
+        "schemas": [
+          "enquiry"
+        ]
+      }
+    },
+    "schemas": {
+      "enquiry": {
+        "x-schema-org": "schema:Message",
+        "slug": "enquiry",
+        "title": "Enquiry",
+        "icon": "EmailOutline",
+        "version": "1.0.0",
+        "summary": "Someone filled in a form on a public website",
+        "description": "What a website visitor sends before anyone knows who they are. Holds their own words and contact details as typed. No client or pipeline is attached, because neither exists yet. Sales reads it and converts it into a client, a contact and a lead. Kept separate from lead on purpose. A lead is a deal with a value and a stage, and counting unqualified website traffic as deals makes every pipeline report wrong.",
+        "required": [
+          "title"
+        ],
+        "authorization": {
+          "create": [
+            "public",
+            "authenticated"
+          ],
+          "read": [
+            "authenticated"
+          ],
+          "update": [
+            "authenticated"
+          ],
+          "delete": [
+            "authenticated"
+          ]
+        },
+        "x-openregister-notifications": {
+          "newEnquiry": {
+            "trigger": {
+              "type": "created"
+            },
+            "enabled": true,
+            "channels": [
+              "nc-notification"
+            ],
+            "recipients": [
+              {
+                "kind": "groups",
+                "groups": [
+                  "sales"
+                ]
+              }
+            ],
+            "subject": {
+              "nl": "Nieuwe aanvraag: {{title}}",
+              "en": "New enquiry: {{title}}"
+            }
+          }
+        },
+        "configuration": {
+          "x-openregister-lifecycle": {
+            "field": "status",
+            "initial": "new",
+            "final": [
+              "converted",
+              "spam",
+              "closed"
+            ],
+            "transitions": {
+              "convert": {
+                "from": [
+                  "new"
+                ],
+                "to": "converted",
+                "description": "Turn the enquiry into a client, a contact and a lead. Authorization: a member of the sales group.",
+                "authorization": [
+                  "sales"
+                ]
+              },
+              "markSpam": {
+                "from": [
+                  "new"
+                ],
+                "to": "spam",
+                "description": "Drop the enquiry as spam. Authorization: a member of the sales group.",
+                "authorization": [
+                  "sales"
+                ]
+              },
+              "close": {
+                "from": [
+                  "new"
+                ],
+                "to": "closed",
+                "description": "Close the enquiry without a lead, because it is answered or not worth one. Authorization: a member of the sales group.",
+                "authorization": [
+                  "sales"
+                ]
+              }
+            }
+          },
+          "x-openregister-mcp": {
+            "enabled": true,
+            "tools": {
+              "search": {
+                "description": "Search website enquiries, optionally filtered by lifecycle status, intake source, or the organisation the submitter named. Returns RBAC-scoped enquiry summaries, newest first.",
+                "scope": "read",
+                "filters": [
+                  "status",
+                  "source",
+                  "organisation"
+                ],
+                "readOnlyHint": true
+              },
+              "get": {
+                "description": "Get a single website enquiry by id, including the submitter's contact details and the message they wrote.",
+                "scope": "read",
+                "readOnlyHint": true
+              }
+            }
+          }
+        },
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Short summary of the enquiry, shown in the sales inbox (schema:name)",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Title"
+          },
+          "contactName": {
+            "type": "string",
+            "description": "Name of the person who sent the enquiry, as they typed it",
+            "maxLength": 255,
+            "title": "Contact name"
+          },
+          "contactEmail": {
+            "type": "string",
+            "description": "Email address the submitter gave. Usually the only way to answer them",
+            "format": "email",
+            "maxLength": 255,
+            "title": "Contact email"
+          },
+          "contactPhone": {
+            "type": "string",
+            "description": "Phone number the submitter gave, if the form asked for one",
+            "maxLength": 64,
+            "title": "Contact phone"
+          },
+          "organisation": {
+            "type": "string",
+            "description": "Organisation the submitter says they represent. Typed by them, never verified",
+            "maxLength": 255,
+            "title": "Organisation",
+            "facetable": true
+          },
+          "message": {
+            "type": "string",
+            "description": "The submitter's own words, kept verbatim",
+            "title": "Message"
+          },
+          "source": {
+            "type": "string",
+            "description": "Which form the enquiry came from, for example website-support or website-contact. Set by the intake endpoint from its own allowlist, not by the submitter",
+            "title": "Source",
+            "facetable": true
+          },
+          "pageUrl": {
+            "type": "string",
+            "description": "Page the form was on. Says what the visitor was reading when they asked",
+            "format": "uri",
+            "maxLength": 2048,
+            "title": "Page URL"
+          },
+          "locale": {
+            "type": "string",
+            "description": "Language the visitor was reading in, so the reply goes out in the same one",
+            "maxLength": 10,
+            "title": "Locale"
+          },
+          "receivedAt": {
+            "type": "string",
+            "description": "When the intake endpoint accepted the enquiry. Written by the server, never by the submitter",
+            "format": "date-time",
+            "title": "Received at"
+          },
+          "status": {
+            "type": "string",
+            "description": "Where the enquiry stands. Starts at new and is moved by the sales group",
+            "enum": [
+              "new",
+              "converted",
+              "spam",
+              "closed"
+            ],
+            "default": "new",
+            "title": "Status",
+            "facetable": true
+          },
+          "client": {
+            "type": "string",
+            "description": "UUID reference to the client created when this enquiry was converted",
+            "format": "uuid",
+            "$ref": "client",
+            "title": "Client"
+          },
+          "contact": {
+            "type": "string",
+            "description": "UUID reference to the contact created when this enquiry was converted",
+            "format": "uuid",
+            "$ref": "contact",
+            "title": "Contact"
+          },
+          "lead": {
+            "type": "string",
+            "description": "UUID reference to the lead created when this enquiry was converted",
+            "format": "uuid",
+            "$ref": "lead",
+            "title": "Lead"
+          },
+          "handledBy": {
+            "type": "string",
+            "description": "Nextcloud user who converted, closed or rejected the enquiry",
+            "maxLength": 255,
+            "title": "Handled by"
+          },
+          "handledAt": {
+            "type": "string",
+            "description": "When the enquiry left the new state",
+            "format": "date-time",
+            "title": "Handled at"
+          }
+        }
+      }
+    }
+  }
+}
