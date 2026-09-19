@@ -210,10 +210,8 @@ class EnquiryIntakeServiceTest extends TestCase {
 	public function testAcceptsEveryAllowedSource(): void {
 		$sources = [
 			'website-support',
+			'website-partner',
 			'website-contact',
-			'website-partners',
-			'website-demo',
-			'website-install',
 		];
 		foreach ($sources as $source) {
 			$this->stored = null;
@@ -262,8 +260,8 @@ class EnquiryIntakeServiceTest extends TestCase {
 	public function testAcceptsEmailWithoutMessage(): void {
 		$this->service()->submit(
 			payload: [
-				'title' => 'Demo request',
-				'source' => 'website-demo',
+				'title' => 'Partner application',
+				'source' => 'website-partner',
 				'contactEmail' => 'jane@example.test',
 			]
 		);
@@ -298,6 +296,57 @@ class EnquiryIntakeServiceTest extends TestCase {
 
 		$this->assertSame('Acme BV', $this->stored['title']);
 	}//end testFallsBackToAReadableTitle()
+
+	/**
+	 * The endpoint hands the service the RAW request params, so it is handed
+	 * whatever shape an anonymous caller chose to send. An array where a string
+	 * is expected must not reach a `(string)` cast, which is a PHP error and a
+	 * 500 on a public endpoint.
+	 *
+	 * @return void
+	 */
+	public function testTreatsArrayFieldsAsAbsent(): void {
+		$this->service()->submit(
+			payload: [
+				'title' => ['a', 'b'],
+				'source' => 'website-contact',
+				'contactEmail' => 'jane@example.test',
+				'organisation' => ['x'],
+			]
+		);
+
+		// Not the array, and not a crash: the fallback title took over.
+		$this->assertSame('jane@example.test', $this->stored['title']);
+		$this->assertArrayNotHasKey('organisation', $this->stored);
+	}//end testTreatsArrayFieldsAsAbsent()
+
+	/**
+	 * An array honeypot is a caller sending a shape no form produces.
+	 *
+	 * @return void
+	 */
+	public function testRefusesNonScalarHoneypot(): void {
+		$service = $this->service();
+
+		$this->expectException(InvalidArgumentException::class);
+		try {
+			$service->submit(payload: $this->payload(['website' => ['x']]));
+		} finally {
+			$this->assertNull($this->stored);
+		}
+	}//end testRefusesNonScalarHoneypot()
+
+	/**
+	 * The route params Nextcloud folds into getParams() are not submitter data
+	 * and must not be stored.
+	 *
+	 * @return void
+	 */
+	public function testIgnoresFrameworkRouteParams(): void {
+		$this->service()->submit(payload: $this->payload(['_route' => 'pipelinq.enquiry.submit']));
+
+		$this->assertArrayNotHasKey('_route', $this->stored);
+	}//end testIgnoresFrameworkRouteParams()
 
 	/**
 	 * An unconfigured register is a server fault, not a bad submission, and the

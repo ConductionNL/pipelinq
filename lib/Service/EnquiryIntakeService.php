@@ -84,11 +84,13 @@ class EnquiryIntakeService {
 	 * @var array<int, string>
 	 */
 	private const ALLOWED_SOURCES = [
+		// Exactly the forms conduction-website ships today, verified against
+		// its source rather than guessed: `website-partner` is SINGULAR there,
+		// and an allowlist holding the plural would have refused every partner
+		// application while looking correct in review.
 		'website-support',
+		'website-partner',
 		'website-contact',
-		'website-partners',
-		'website-demo',
-		'website-install',
 	];
 
 	/**
@@ -163,7 +165,11 @@ class EnquiryIntakeService {
 	 * @spec openspec/changes/website-enquiry-intake/specs/website-enquiry-intake/spec.md#requirement-a-filled-honeypot-is-refused
 	 */
 	private function refuseHoneypot(array $payload): void {
-		if (trim((string)($payload['website'] ?? '')) === '') {
+		$raw = ($payload['website'] ?? '');
+		// A non-scalar honeypot (`website[]=x`) is not "empty", it is a caller
+		// sending a shape no form produces. Refused rather than cast, because
+		// casting an array to string is a PHP error.
+		if (is_scalar($raw) === true && trim((string)$raw) === '') {
 			return;
 		}
 
@@ -187,7 +193,16 @@ class EnquiryIntakeService {
 	private function whitelist(array $payload): array {
 		$fields = [];
 		foreach (self::SUBMITTER_FIELDS as $name) {
-			$value = trim((string)($payload[$name] ?? ''));
+			$raw = ($payload[$name] ?? '');
+			// `title[]=a&title[]=b` arrives as an array, and casting one to
+			// string is a PHP error, not a value. The caller here is anonymous
+			// and can send any shape it likes, so a non-scalar is treated as
+			// absent rather than allowed to reach a cast.
+			if (is_scalar($raw) === false) {
+				continue;
+			}
+
+			$value = trim((string)$raw);
 			if ($value === '') {
 				continue;
 			}

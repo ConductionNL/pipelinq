@@ -70,16 +70,17 @@ class EnquiryController extends Controller {
 	 * form, so twenty a minute from one source is already far beyond what a
 	 * person does and well within what a contact-form spammer attempts.
 	 *
-	 * @param string $title        Short summary of the enquiry.
-	 * @param string $source       Which form this came from. Checked against an allowlist.
-	 * @param string $contactName  Name the submitter typed.
-	 * @param string $contactEmail Email address the submitter typed.
-	 * @param string $contactPhone Phone number the submitter typed.
-	 * @param string $organisation Organisation the submitter named.
-	 * @param string $message      The submitter's own words.
-	 * @param string $pageUrl      Page the form was on.
-	 * @param string $locale       Language the visitor was reading in.
-	 * @param string $website      Honeypot. A human never fills this in.
+	 * The whole request body is handed to the intake service rather than bound
+	 * to named method parameters. Declaring one parameter per field would put a
+	 * SECOND field list here, next to the service's whitelist, and the two
+	 * would have to be kept in step by hand: a field added to the form and to
+	 * the schema but forgotten here would arrive and be dropped, silently. One
+	 * list, in the place that refuses, is the point. Same pattern as the
+	 * webhook controllers in this app.
+	 *
+	 * Passing the raw params is safe precisely BECAUSE the service whitelists.
+	 * If that whitelist is ever removed, this line stops being safe, which is
+	 * what EnquiryIntakeServiceTest::testDiscardsSubmittedState is guarding.
 	 *
 	 * @return JSONResponse `{id}` on 201, or `{error}` on a refusal.
 	 *
@@ -88,33 +89,9 @@ class EnquiryController extends Controller {
 	#[PublicPage]
 	#[NoCSRFRequired]
 	#[AnonRateLimit(limit: 20, period: 60)]
-	public function submit(
-		string $title = '',
-		string $source = '',
-		string $contactName = '',
-		string $contactEmail = '',
-		string $contactPhone = '',
-		string $organisation = '',
-		string $message = '',
-		string $pageUrl = '',
-		string $locale = '',
-		string $website = '',
-	): JSONResponse {
+	public function submit(): JSONResponse {
 		try {
-			$id = $this->intake->submit(
-				payload: [
-					'title' => $title,
-					'source' => $source,
-					'contactName' => $contactName,
-					'contactEmail' => $contactEmail,
-					'contactPhone' => $contactPhone,
-					'organisation' => $organisation,
-					'message' => $message,
-					'pageUrl' => $pageUrl,
-					'locale' => $locale,
-					'website' => $website,
-				]
-			);
+			$id = $this->intake->submit(payload: $this->request->getParams());
 
 			return $this->cors(response: new JSONResponse(['id' => $id], Http::STATUS_CREATED));
 		} catch (InvalidArgumentException $e) {

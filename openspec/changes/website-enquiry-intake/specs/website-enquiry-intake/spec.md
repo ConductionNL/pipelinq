@@ -74,6 +74,18 @@ The intake endpoint SHALL accept only `title`, `contactName`, `contactEmail`, `c
 - **WHEN** it is accepted
 - **THEN** the stored object SHALL have no `handledBy` set
 
+#### Scenario: A field sent as an array is treated as absent
+
+- **GIVEN** a submission carrying `title` as `["a", "b"]`
+- **WHEN** it is accepted
+- **THEN** the stored object's `title` SHALL come from the fallback, and the request SHALL NOT error
+
+#### Scenario: Framework route parameters are not stored
+
+- **GIVEN** a submission whose request params include Nextcloud's own `_route`
+- **WHEN** it is accepted
+- **THEN** the stored object SHALL have no `_route`
+
 @e2e exclude a discarded field is not observable in any Pipelinq screen, only in the stored object. Asserted by PHPUnit (EnquiryIntakeServiceTest), which is also the only place a hostile payload can be sent deliberately
 
 ### Requirement: The source is refused unless it is on the allowlist
@@ -88,7 +100,7 @@ The endpoint SHALL refuse a submission whose `source` is not one it recognises, 
 
 #### Scenario: A known source is accepted
 
-- **GIVEN** a submission with `source: "website-contact"`
+- **GIVEN** a submission with `source: "website-partner"`
 - **WHEN** it is posted
 - **THEN** the response SHALL be HTTP 201
 
@@ -113,6 +125,12 @@ The endpoint SHALL accept an optional field that a human never fills. When it ar
 #### Scenario: A bot that fills every field is refused
 
 - **GIVEN** a submission with the honeypot field set to any non-empty value
+- **WHEN** it is posted
+- **THEN** the response SHALL be HTTP 400 and no `enquiry` object SHALL be created
+
+#### Scenario: A honeypot sent as an array is refused, not read as empty
+
+- **GIVEN** a submission with the honeypot field sent as `["x"]`
 - **WHEN** it is posted
 - **THEN** the response SHALL be HTTP 400 and no `enquiry` object SHALL be created
 
