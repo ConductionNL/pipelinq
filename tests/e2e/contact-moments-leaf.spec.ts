@@ -198,7 +198,11 @@ test.describe('contact moments leaf', () => {
 			page,
 			'POST',
 			'/index.php/apps/pipelinq/api/leaves/contact-moments/00000000-0000-0000-0000-000000000000',
-			{ title: `E2E onbereikbaar ${STAMP}`, channel: 'telefoon', direction: 'inbound' },
+			{
+				title: `E2E onbereikbaar ${STAMP}`,
+				channel: 'telefoon',
+				direction: 'inbound',
+			},
 		)
 
 		expect(refused.status).toBe(403)

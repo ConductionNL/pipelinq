@@ -153,9 +153,7 @@ test.describe('party fields and indicators', () => {
 		expect(publish.body.blocked).toBe(false)
 	})
 
-	test('a lifted indicator leaves the panel on its own date', async ({
-		page,
-	}) => {
+	test('a lifted indicator leaves the panel on its own date', async ({ page }) => {
 		await openApp(page)
 
 		const party = await seed(page, 'client', {
