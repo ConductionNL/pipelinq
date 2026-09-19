@@ -214,8 +214,16 @@ test.describe('the programme above the cases', () => {
 			progressMode: 'fromTasks',
 		})
 
-		await seed(page, 'programmeTask', { programme: derived, title: 'Een', status: 'closed' })
-		await seed(page, 'programmeTask', { programme: derived, title: 'Twee', status: 'open' })
+		await seed(page, 'programmeTask', {
+			programme: derived,
+			title: 'Een',
+			status: 'closed',
+		})
+		await seed(page, 'programmeTask', {
+			programme: derived,
+			title: 'Twee',
+			status: 'open',
+		})
 
 		const fromTasks = await api(
 			page,

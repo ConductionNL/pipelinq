@@ -199,7 +199,13 @@ test.describe('customer satisfaction, closed loop', () => {
 		// The shape, not the numbers: a throttle folded into the denominator
 		// reads as disinterest, so the counts have to be reported separately.
 		expect(Object.keys(rate.body)).toEqual(
-			expect.arrayContaining(['delivered', 'responded', 'rate', 'suppressed', 'failed']),
+			expect.arrayContaining([
+				'delivered',
+				'responded',
+				'rate',
+				'suppressed',
+				'failed',
+			]),
 		)
 	})
 })
