@@ -138,13 +138,18 @@ class ProgrammeController extends Controller {
 			return new JSONResponse(['error' => 'You may not read this programme.'], 403);
 		}
 
+		// Humaniq owns the hours. When it is absent the answer says progress
+		// cannot be computed rather than reporting zero.
+		$effort = null;
+		if ($this->appManager->isEnabledForUser('humaniq') === true) {
+			$effort = ['booked' => 0, 'estimated' => 0];
+		}
+
 		return new JSONResponse(
 			$this->portfolio->progressFor(
 				programme: $programme,
 				tasks: $this->portfolio->tasksOf(programmeId: $programmeId),
-				// humaniq owns the hours. When it is absent the answer says
-				// progress cannot be computed rather than reporting zero.
-				effort: ($this->appManager->isEnabledForUser('humaniq') === true ? ['booked' => 0, 'estimated' => 0] : null),
+				effort: $effort,
 			),
 			200
 		);
@@ -243,7 +248,11 @@ class ProgrammeController extends Controller {
 
 		$data = $entity->jsonSerialize();
 
-		return (is_array($data) === true ? $data : null);
+		if (is_array($data) === false) {
+			return null;
+		}
+
+		return $data;
 	}//end readObject()
 
 	/**

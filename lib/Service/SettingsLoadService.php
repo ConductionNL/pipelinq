@@ -332,6 +332,12 @@ class SettingsLoadService {
 		// The last two colliding slugs; keys stay as persisted.
 		'billableExpense' => 'expense_schema',
 		'masterMergeOperation' => 'mergeOperation_schema',
+		// The programme portfolio's head schema. learniq's `programme` is the
+		// education programme; this one is the delivery programme above the
+		// zaken, so the slug moved to `deliveryProgramme`. The key did not:
+		// `programme_schema` is already written on every instance that has the
+		// portfolio, and every reader in this app asks for it by that name.
+		'deliveryProgramme' => 'programme_schema',
 	];
 
 	/**

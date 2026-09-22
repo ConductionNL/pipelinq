@@ -34,6 +34,7 @@ namespace OCA\Pipelinq\Tests\Integration;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\Pipelinq\Mcp\McpAnswer;
 use OCA\Pipelinq\Service\BudgetService;
 use OCA\Pipelinq\Service\ChannelProviderRepository;
 use OCA\Pipelinq\Service\ConsentService;
@@ -49,6 +50,7 @@ use OCP\IUser;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 
 /**
  * Outbound messaging contract ring (network-free, mock vendor shapes).
@@ -194,6 +196,7 @@ class OutboundMessagingContractTest extends TestCase {
 		$contactmomentService = new ContactmomentService(
 			new TicketService($appConfig, $logger,
 				objectService: $this->objectService,
+				mcp: new McpAnswer(new NullLogger()),
 			),
 			$this->createMock(IGroupManager::class),
 			$logger,
@@ -332,6 +335,7 @@ class OutboundMessagingContractTest extends TestCase {
 		$contactmomentService = new ContactmomentService(
 			new TicketService($appConfig, $logger,
 				objectService: $this->createMock(ObjectServiceInterface::class),
+				mcp: new McpAnswer(new NullLogger()),
 			),
 			$this->createMock(IGroupManager::class),
 			$logger,

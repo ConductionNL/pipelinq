@@ -114,12 +114,12 @@ class PartyIndicatorServiceTest extends TestCase {
 
 		$this->assertCount(
 			1,
-			$service->resolve(partyId: 'party-1', on: new DateTimeImmutable('2026-09-17')),
+			$service->resolve(partyId: 'party-1', onDay: new DateTimeImmutable('2026-09-17')),
 			'On its last day it still applies.'
 		);
 		$this->assertSame(
 			[],
-			$service->resolve(partyId: 'party-1', on: new DateTimeImmutable('2026-09-18')),
+			$service->resolve(partyId: 'party-1', onDay: new DateTimeImmutable('2026-09-18')),
 			'The day after, it is gone, and nobody edited it.'
 		);
 	}//end testALiftedIndicatorStopsApplyingOnItsOwnDate()

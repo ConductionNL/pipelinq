@@ -27,6 +27,7 @@ namespace OCA\Pipelinq\Tests\Unit\Controller;
 use InvalidArgumentException;
 use OCA\Pipelinq\Controller\AnalyticsController;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
+use OCA\Pipelinq\Mcp\McpAnswer;
 use OCA\Pipelinq\Service\AnalyticsService;
 use OCA\Pipelinq\Service\TicketService;
 use OCP\AppFramework\Http;
@@ -38,6 +39,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 
 /**
  * Asserts the new overview/trends/funnels surface — happy path, bad metric,
@@ -390,6 +392,7 @@ class AnalyticsControllerTest extends TestCase {
 					appConfig: $appConfig,
 					logger: $this->logger,
 					objectService: $store,
+					mcp: new McpAnswer(new NullLogger()),
 				),
 				objectService: $store,
 			),

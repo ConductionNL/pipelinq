@@ -32,6 +32,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\Pipelinq\Controller\RoutingController;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
+use OCA\Pipelinq\Mcp\McpAnswer;
 use OCA\Pipelinq\Service\RoutingService;
 use OCA\Pipelinq\Service\TicketService;
 use OCP\AppFramework\Http;
@@ -42,6 +43,7 @@ use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 
 /**
  * RoutingController contract coverage.
@@ -273,6 +275,7 @@ class RoutingControllerTest extends TestCase {
 					appConfig: $appConfig,
 					logger: $logger,
 					objectService: $this->objects,
+					mcp: new McpAnswer(new NullLogger()),
 				),
 				logger: $logger,
 				objectService: $this->objects,
@@ -575,6 +578,7 @@ class RoutingControllerTest extends TestCase {
 					appConfig: $appConfig,
 					logger: $logger,
 					objectService: $failing,
+					mcp: new McpAnswer(new NullLogger()),
 				),
 				logger: $logger,
 				objectService: $failing,

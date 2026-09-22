@@ -119,6 +119,15 @@ class RenameCollidingSchemaSlugs implements IRepairStep {
 		// master entities by masterId, which are different id spaces.
 		'expense' => ['to' => 'billableExpense', 'with' => 'humaniq'],
 		'mergeOperation' => ['to' => 'masterMergeOperation', 'with' => 'openregister'],
+		// The head of the programme portfolio. learniq's `programme` is an
+		// education programme with a curriculum and enrolments; this one is
+		// the delivery programme above the zaken, with work items, a team and
+		// a progress mode. They share `name` and `status` and nothing that
+		// identifies the record, so they are renamed apart. learniq is the
+		// earlier claimant, so its slug stays bare. The children
+		// (`programmeTask`, `programmeWorkItem`, ...) are not renamed: no
+		// other app declares them.
+		'programme' => ['to' => 'deliveryProgramme', 'with' => 'learniq'],
 	];
 
 	/**

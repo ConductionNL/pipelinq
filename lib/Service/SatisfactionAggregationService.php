@@ -91,6 +91,8 @@ class SatisfactionAggregationService {
 	 * @param array<int, array<string, mixed>> $responses The responses.
 	 *
 	 * @return float|null The score, or null when nobody answered the question.
+	 *
+	 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-360/spec.md#requirement-per-client-satisfaction-panel
 	 */
 	public function npsOf(array $responses): ?float {
 		$promoters = 0;
@@ -113,7 +115,7 @@ class SatisfactionAggregationService {
 		}
 
 		if ($answered === 0) {
-			// null, not 0: a client nobody scored has no NPS, and zero is a
+			// Null, not 0: a client nobody scored has no NPS, and zero is a
 			// real score that means promoters and detractors cancelled out.
 			return null;
 		}
@@ -170,17 +172,17 @@ class SatisfactionAggregationService {
 		$previousFloor = $now->modify('-' . (self::WINDOW_DAYS * 2) . ' days');
 
 		foreach ($responses as $response) {
-			$at = $this->submittedAt(response: $response);
-			if ($at === null) {
+			$submitted = $this->submittedAt(response: $response);
+			if ($submitted === null) {
 				continue;
 			}
 
-			if ($at >= $currentFloor) {
+			if ($submitted >= $currentFloor) {
 				$current[] = $response;
 				continue;
 			}
 
-			if ($at >= $previousFloor) {
+			if ($submitted >= $previousFloor) {
 				$previous[] = $response;
 			}
 		}
@@ -193,11 +195,17 @@ class SatisfactionAggregationService {
 			}
 		}
 
+		// Null, not 0: nobody rated is not the same as everybody rated zero.
+		$averageRating = null;
+		if ($ratings !== []) {
+			$averageRating = round((array_sum($ratings) / count($ratings)), 2);
+		}
+
 		return [
 			'empty' => false,
 			'responseCount' => count($responses),
 			'nps' => $this->npsOf(responses: $responses),
-			'averageRating' => ($ratings === [] ? null : round((array_sum($ratings) / count($ratings)), 2)),
+			'averageRating' => $averageRating,
 			'trend' => $this->trend(current: $current, previous: $previous),
 			'verbatims' => $this->verbatims(responses: $responses),
 		];
@@ -225,7 +233,11 @@ class SatisfactionAggregationService {
 			return 'up';
 		}
 
-		return ($now < $before ? 'down' : 'flat');
+		if ($now < $before) {
+			return 'down';
+		}
+
+		return 'flat';
 	}//end trend()
 
 	/**

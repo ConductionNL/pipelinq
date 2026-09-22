@@ -83,7 +83,10 @@ class ContactMomentFilingService {
 		$set = ($moment['caseReferences'] ?? null);
 		if (is_array($set) === false || $set === []) {
 			$single = trim((string)($moment['caseReference'] ?? ''));
-			$set = ($single === '' ? [] : [$single]);
+			$set = [];
+			if ($single !== '') {
+				$set = [$single];
+			}
 		}
 
 		$ordered = [];
@@ -250,9 +253,12 @@ class ContactMomentFilingService {
 		foreach ($others as $reference) {
 			if ($mayRead($reference) === true) {
 				$visible[] = $reference;
-			} else {
-				$hidden++;
+				continue;
 			}
+
+			// Counted, never named: the count says this moment is also filed
+			// elsewhere without disclosing a case the reader may not open.
+			$hidden++;
 		}
 
 		return [
@@ -295,7 +301,11 @@ class ContactMomentFilingService {
 
 		$data = $row->jsonSerialize();
 
-		return (is_array($data) === true ? $data : null);
+		if (is_array($data) === false) {
+			return null;
+		}
+
+		return $data;
 	}//end read()
 
 	/**
@@ -344,10 +354,13 @@ class ContactMomentFilingService {
 		}
 
 		$data = $saved->jsonSerialize();
+		if (is_array($data) === false) {
+			$data = $moment;
+		}
 
 		return [
 			'status' => 200,
-			'contactMoment' => (is_array($data) === true ? $data : $moment),
+			'contactMoment' => $data,
 		];
 	}//end write()
 }//end class

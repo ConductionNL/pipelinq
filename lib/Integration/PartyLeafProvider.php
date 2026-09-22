@@ -220,6 +220,10 @@ class PartyLeafProvider {
 
 		$data = $entity->jsonSerialize();
 
-		return (is_array($data) === true ? $data : null);
+		if (is_array($data) === false) {
+			return null;
+		}
+
+		return $data;
 	}//end readParty()
 }//end class
