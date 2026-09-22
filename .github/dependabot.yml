@@ -42,6 +42,27 @@ updates:
         update-types: ["version-update:semver-major"]
       - dependency-name: "@babel/preset-env"
         update-types: ["version-update:semver-major"]
+      # Dexie must be the SAME version in every bundle on the page. Two copies
+      # at different versions make the library throw "Two different versions
+      # of Dexie loaded in the same app" at module init, and the SPA never
+      # mounts -- the app renders as bare chrome, with one console line and
+      # nothing else. openregister's `integration-global` bundle loads on
+      # EVERY page of the instance, so openregister's Dexie is the fleet's
+      # Dexie and no app may lead it.
+      #
+      # Measured 2026-09-22 on cloud.conduction.nl: this app on 4.4.6 against
+      # openregister 4.4.5, and the Pipelinq SPA rendered 43 characters --
+      # the instance title and nothing else. It had been dark since
+      # 19 September, when 0.5.8-beta shipped the bump, and nobody noticed,
+      # because a blank app looks like a slow one.
+      #
+      # Pinned EXACTLY in package.json rather than left as a caret: `^4.4.5`
+      # resolves to 4.4.6 on the next clean install and reintroduces the drift
+      # with nothing visible in the diff.
+      #
+      # Lift this WITH openregister, never before it: its bundle is on every
+      # page, so moving it first would blank every app still on 4.4.5.
+      - dependency-name: "dexie"
     cooldown:
       default-days: 1
       include:
