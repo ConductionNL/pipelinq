@@ -104,6 +104,7 @@
 							v-model="addForm.toContact"
 							:options="entityOptions"
 							:aria-label-combobox="t('pipelinq', 'Related entity')"
+							labelOutside
 							:placeholder="
 								t('pipelinq', 'Search contacts and clients…')
 							"
@@ -117,6 +118,7 @@
 							v-model="addForm.type"
 							:options="typeOptions"
 							:aria-label-combobox="t('pipelinq', 'Relationship type')"
+							labelOutside
 							:placeholder="t('pipelinq', 'Select type…')"
 							label="label"
 							:reduce="(opt) => opt.value"
@@ -157,6 +159,7 @@
 							v-model="addForm.strength"
 							:options="strengthOptions"
 							:aria-label-combobox="t('pipelinq', 'Strength')"
+							labelOutside
 							:placeholder="t('pipelinq', 'Select strength…')"
 							label="label"
 							:reduce="(opt) => opt.value" />

@@ -42,6 +42,7 @@
 							v-model="form.viewId"
 							:options="viewOptions"
 							:aria-label-combobox="t('pipelinq', 'View')"
+							labelOutside
 							:clearable="true"
 							label="label"
 							:reduce="(o) => o.value"

@@ -37,6 +37,7 @@
 					v-model="form.type"
 					inputId="product-type"
 					:aria-label-combobox="t('pipelinq', 'Type')"
+					labelOutside
 					:options="typeOptions"
 					:placeholder="t('pipelinq', 'Select type')"
 					@update:modelValue="validateField('type')" />
@@ -50,6 +51,7 @@
 					v-model="form.status"
 					inputId="product-status"
 					:aria-label-combobox="t('pipelinq', 'Status')"
+					labelOutside
 					:options="statusOptions"
 					:placeholder="t('pipelinq', 'Select status')" />
 			</div>
@@ -167,6 +169,7 @@
 				v-model="form.category"
 				inputId="product-category"
 				:aria-label-combobox="t('pipelinq', 'Category')"
+				labelOutside
 				:options="categoryOptions"
 				:placeholder="t('pipelinq', 'Select category')"
 				label="name"

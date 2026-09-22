@@ -147,6 +147,7 @@
 								v-model="step.resourceType"
 								:inputId="`step-resource-${idx}`"
 								:aria-label-combobox="t('pipelinq', 'Resource type')"
+								labelOutside
 								:options="resourceTypeOptions"
 								:reduce="(o) => o.value"
 								label="label" />
@@ -247,6 +248,7 @@
 					v-model="form.cancellationPolicy"
 					inputId="service-cancellation-policy"
 					:aria-label-combobox="t('pipelinq', 'Cancellation policy')"
+					labelOutside
 					:options="cancellationPolicyOptions"
 					:reduce="(o) => o.value"
 					label="label" />
@@ -271,6 +273,7 @@
 				v-model="form.status"
 				inputId="service-status"
 				:aria-label-combobox="t('pipelinq', 'Status')"
+				labelOutside
 				:options="statusOptions"
 				:reduce="(o) => o.value"
 				label="label" />

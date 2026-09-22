@@ -40,6 +40,7 @@
 					v-model="form.type"
 					inputId="resource-type"
 					:aria-label-combobox="t('pipelinq', 'Resource type')"
+					labelOutside
 					:options="typeOptions"
 					:reduce="(o) => o.value"
 					label="label" />
@@ -53,6 +54,7 @@
 					v-model="form.status"
 					inputId="resource-status"
 					:aria-label-combobox="t('pipelinq', 'Status')"
+					labelOutside
 					:options="statusOptions"
 					:reduce="(o) => o.value"
 					label="label" />
@@ -123,6 +125,7 @@
 								v-model="row.day"
 								:inputId="`hours-day-${idx}`"
 								:aria-label-combobox="t('pipelinq', 'Day')"
+								labelOutside
 								:options="dayOptions"
 								:reduce="(o) => o.value"
 								label="label" />
