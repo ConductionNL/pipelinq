@@ -92,53 +92,57 @@ webpackConfig.entry = {
 // Use local source when available (monorepo dev), otherwise fall back to the
 // published npm package.
 //
-// ⚠️ `USE_LOCAL_LIB` is opt-OUT across the fleet and the shared
-// `apps-extra/nextcloud-vue` checkout sits on the Vue 2 (beta.*) line, so a
-// default-on local build would silently compile Vue 2 library sources into this
-// Vue 3 app. Opt IN explicitly (USE_LOCAL_LIB=true) and hard-fail if the local
-// tree is not on the Vue 3 major.
+// ⚠️ `USE_LOCAL_LIB` is opt-OUT across the fleet, so a default-on local build
+// would silently compile whatever the sibling checkout happens to be on into
+// this app. Opt IN explicitly (USE_LOCAL_LIB=true) and refuse a sibling built
+// for a different Vue major.
 const localLib = path.resolve(__dirname, '../nextcloud-vue/src')
 let useLocalLib = process.env.USE_LOCAL_LIB === 'true' && fs.existsSync(localLib)
 if (useLocalLib) {
-	// The peer-vue test this replaces asked the wrong question. The sibling's
-	// `peerDependencies.vue` is ^3.5.0 — it IS a Vue 3 library — so the check
-	// passed, while the sibling was still 2.0.5 against a declared ^2.3.0. Being
-	// on the Vue 3 line and being the version this app asked for are different
-	// things, and only the second one is safe to alias in.
+	// This gate deliberately does NOT compare the sibling's package.json version
+	// against our declared range: that field is a permanent placeholder in the
+	// library repo (2.0.5 at v2.53.1, v3.2.0 and v2.55.1 alike — the release
+	// workflow bumps it only at publish time), so such a check can never pass and
+	// silently pins every developer to the npm dist. The Vue major is the property
+	// that actually breaks a build, so that is what is checked.
 	//
 	// Fail CLOSED: if the check cannot run, the sibling is refused.
-	let localVersion = 'unreadable'
-	let satisfied = false
+	let localPeerVue = 'unreadable'
+	let compatible = false
 	try {
 		// eslint-disable-next-line n/no-extraneous-require
 		const semver = require('semver')
-		const required =
-			require('./package.json').dependencies['@conduction/nextcloud-vue']
-		localVersion = String(
+		const appVue = require('./package.json').dependencies.vue
+		localPeerVue = String(
 			JSON.parse(
 				fs.readFileSync(
 					path.resolve(__dirname, '../nextcloud-vue/package.json'),
 					'utf8',
 				),
-			).version || '',
+			).peerDependencies?.vue || '',
 		)
-		satisfied = semver.satisfies(localVersion, required, {
+		compatible = semver.satisfies(semver.minVersion(appVue), localPeerVue, {
 			includePrerelease: true,
 		})
 	} catch (e) {
-		satisfied = false
+		compatible = false
 	}
 
-	if (!satisfied) {
+	if (!compatible) {
 		// Warn rather than throw: refusing the sibling still produces a complete
 		// build against the pinned npm package, so there is nothing to repair
 		// before the build can proceed.
 		// eslint-disable-next-line no-console
 		console.warn(
-			`[pipelinq] IGNORING sibling @conduction/nextcloud-vue@${localVersion} — `
-				+ "it does not satisfy this app's declared range. Building against the npm dist.",
+			`[pipelinq] IGNORING sibling @conduction/nextcloud-vue (peer vue ${localPeerVue}) — `
+				+ "it does not accept this app's Vue major. Building against the npm dist.",
 		)
 		useLocalLib = false
+	} else {
+		// eslint-disable-next-line no-console
+		console.log(
+			'[pipelinq] Building @conduction/nextcloud-vue from ../nextcloud-vue/src',
+		)
 	}
 }
 
@@ -191,6 +195,22 @@ webpackConfig.resolve = {
 	},
 }
 
+// Local-lib mode only: the sibling's sources carry bare imports (`dexie`,
+// `gridstack`, …) that webpack would otherwise resolve from
+// `../nextcloud-vue/node_modules`, giving the bundle a second copy of packages
+// this app already ships. `dexie` makes that fatal rather than merely wasteful —
+// it throws "Two different versions of Dexie loaded in the same app" on any
+// version skew — and a `dexie$` alias cannot fix it, because the package's
+// `main` is a CJS build with no singleton wrapper. Searching this app's
+// `node_modules` FIRST keeps one copy of everything it has, while packages only
+// the sibling declares still resolve through the normal upward walk.
+if (useLocalLib) {
+	webpackConfig.resolve.modules = [
+		path.resolve(__dirname, 'node_modules'),
+		'node_modules',
+	]
+}
+
 // Keep the base module rules from @nextcloud/webpack-vue-config (VUE, CSS, SCSS, JS, ASSETS).
 // Only replace plugins to avoid duplicate VueLoaderPlugin (base config also registers one).
 webpackConfig.plugins = [
@@ -198,6 +218,16 @@ webpackConfig.plugins = [
 	new webpack.DefinePlugin({ appName: JSON.stringify(appId) }),
 	new webpack.DefinePlugin({
 		appVersion: JSON.stringify(process.env.npm_package_version),
+		// Replacing `plugins` also drops the base config's DefinePlugin, which is
+		// the only place these are set — without them Vue logs a feature-flag
+		// warning at startup and cannot tree-shake those branches.
+		__VUE_OPTIONS_API__: JSON.parse(process.env.__VUE_OPTIONS_API__ ?? 'true'),
+		__VUE_PROD_DEVTOOLS__: JSON.parse(
+			process.env.__VUE_PROD_DEVTOOLS__ ?? 'false',
+		),
+		__VUE_PROD_HYDRATION_MISMATCH_DETAILS__: JSON.parse(
+			process.env.__VUE_PROD_HYDRATION_MISMATCH_DETAILS__ ?? 'false',
+		),
 	}),
 ]
 

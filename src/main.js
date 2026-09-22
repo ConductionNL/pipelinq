@@ -236,10 +236,14 @@ async function loadPersistedOverrides(manifest) {
 			return merged
 		}
 	} catch (error) {
-		console.warn(
-			'[pipelinq] Could not load persisted manifest overrides — using the bundled manifest.',
-			error,
-		)
+		// A 404 is the ordinary "buildiq is not installed" answer, not a fault —
+		// warning on it puts an AxiosError in every console on every boot.
+		if (error?.response?.status !== 404) {
+			console.warn(
+				'[pipelinq] Could not load persisted manifest overrides — using the bundled manifest.',
+				error,
+			)
+		}
 	}
 	return manifest
 }

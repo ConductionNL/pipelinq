@@ -2,41 +2,42 @@
   "name": "pipelinq",
   "version": "0.1.0",
   "license": "EUPL-1.2",
-  "engines": {
-    "node": "^22.14 || ^24 || >=26",
-    "npm": "^11.0.0"
-  },
   "scripts": {
     "prebuild": "node scripts/check-vue-demi.js",
     "build": "NODE_ENV=production webpack --config webpack.config.js --progress",
+    "check:e2e-nav": "node scripts/check-e2e-navigation.js",
+    "check:l10n-js": "node scripts/build-l10n-js.js --check",
+    "check:manifest": "node scripts/check-manifest.js",
     "check:schema-l10n": "node scripts/check-schema-l10n.js",
+    "check:spec-links": "node scripts/check-spec-links.js",
     "check:vue-demi": "node scripts/check-vue-demi.js",
     "dev": "NODE_ENV=development webpack --config webpack.config.js --progress",
-    "watch": "NODE_ENV=development webpack --config webpack.config.js --progress --watch",
+    "format": "prettier --check \"**/*.{js,ts,vue,css,scss}\"",
+    "format:fix": "prettier --write \"**/*.{js,ts,vue,css,scss}\"",
+    "l10n:build": "node scripts/build-l10n-js.js",
     "lint": "eslint src tests scripts",
     "lint-fix": "npm run lint -- --fix",
-    "test:l10n": "node tests/l10n/check-l10n.js",
-    "test:unit": "vitest run",
-    "test:unit:watch": "vitest",
+    "prepare": "git config core.hooksPath .githooks || true",
     "stylelint": "stylelint \"{src,css}/**/*.{vue,scss,css}\"",
     "stylelint-fix": "stylelint \"src/**/*.vue\" \"src/**/*.scss\" \"src/**/*.css\" --fix",
     "test:e2e": "playwright test",
     "test:e2e:docs": "playwright test --project docs-capture",
     "test:e2e:install": "playwright install chromium",
-    "check:manifest": "node scripts/check-manifest.js",
-    "check:spec-links": "node scripts/check-spec-links.js",
-  "check:e2e-nav": "node scripts/check-e2e-navigation.js",
-    "format": "prettier --check \"**/*.{js,ts,vue,css,scss}\"",
-    "format:fix": "prettier --write \"**/*.{js,ts,vue,css,scss}\"",
-    "prepare": "git config core.hooksPath .githooks || true",
-    "l10n:build": "node scripts/build-l10n-js.js",
-    "check:l10n-js": "node scripts/build-l10n-js.js --check"
+    "test:l10n": "node tests/l10n/check-l10n.js",
+    "test:unit": "vitest run",
+    "test:unit:watch": "vitest",
+    "watch": "NODE_ENV=development webpack --config webpack.config.js --progress --watch"
   },
   "browserslist": [
     "extends @nextcloud/browserslist-config"
   ],
+  "prettier": "@nextcloud/prettier-config",
+  "overrides": {
+    "@nextcloud/axios": "$@nextcloud/axios",
+    "dexie": "$dexie"
+  },
   "dependencies": {
-    "@conduction/nextcloud-vue": "^3.2.0",
+    "@conduction/nextcloud-vue": "^2.55.1",
     "@nextcloud/axios": "~2.6.0",
     "@nextcloud/capabilities": "^1.2.1",
     "@nextcloud/dialogs": "^7.4.1",
@@ -47,7 +48,7 @@
     "@nextcloud/vue": "^9.11.0",
     "@vueuse/core": "^14.3.0",
     "axe-core": "^4.13.0",
-    "dexie": "^4.4.6",
+    "dexie": "4.4.5",
     "dompurify": "^3.4.15",
     "gridstack": "^13.3.0",
     "marked": "^18.0.9",
@@ -58,9 +59,6 @@
     "vue-material-design-icons": "^5.3.0",
     "vue-router": "^4.6.4",
     "vuedraggable": "^4.1.0"
-  },
-  "overrides": {
-    "@nextcloud/axios": "$@nextcloud/axios"
   },
   "devDependencies": {
     "@babel/core": "^7.22.9",
@@ -103,5 +101,8 @@
     "webpack": "^5.110.3",
     "webpack-cli": "^6.0.1"
   },
-  "prettier": "@nextcloud/prettier-config"
+  "engines": {
+    "node": "^22.14 || ^24 || >=26",
+    "npm": "^11.0.0"
+  }
 }
