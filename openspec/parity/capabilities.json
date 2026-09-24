@@ -1,0 +1,562 @@
+{
+	"comparedOn": "2026-09-24",
+	"corpus": {
+		"repo": "concurrentie-analyse",
+		"file": "pipelinq/concurrentie-analyse.md"
+	},
+	"systems": [
+		{
+			"key": "pipelinq",
+			"name": "Pipelinq",
+			"vendor": "Conduction",
+			"isSelf": true,
+			"readOn": "2026-09-24",
+			"columnAddedOn": "2026-09-24"
+		},
+		{
+			"key": "hubspot-crm",
+			"name": "HubSpot CRM",
+			"vendor": "HubSpot",
+			"readOn": "2026-04-18",
+			"columnAddedOn": "2026-09-24"
+		},
+		{
+			"key": "pipedrive",
+			"name": "Pipedrive",
+			"vendor": "Pipedrive",
+			"readOn": "2026-04-18",
+			"columnAddedOn": "2026-09-24"
+		},
+		{
+			"key": "espocrm",
+			"name": "EspoCRM",
+			"vendor": "EspoCRM",
+			"readOn": "2026-04-18",
+			"columnAddedOn": "2026-09-24"
+		},
+		{
+			"key": "odoo-crm",
+			"name": "Odoo CRM",
+			"vendor": "Odoo",
+			"readOn": "2026-04-18",
+			"columnAddedOn": "2026-09-24"
+		},
+		{
+			"key": "kiss",
+			"name": "KISS",
+			"vendor": "Dimpact and ICATT",
+			"readOn": "2026-03-13",
+			"columnAddedOn": "2026-09-24"
+		}
+	],
+	"areas": [
+		{
+			"key": "clients",
+			"name": "Clients and contacts",
+			"name_nl": "Klanten en contactpersonen"
+		},
+		{
+			"key": "pipeline",
+			"name": "Leads and the pipeline",
+			"name_nl": "Leads en de pipeline"
+		},
+		{
+			"key": "contact-moments",
+			"name": "Contact moments and history",
+			"name_nl": "Contactmomenten en historie"
+		},
+		{
+			"key": "requests",
+			"name": "Requests, tickets and service",
+			"name_nl": "Verzoeken, tickets en service"
+		},
+		{
+			"key": "work",
+			"name": "My work, tasks and follow-up",
+			"name_nl": "Mijn werk, taken en opvolging"
+		},
+		{
+			"key": "marketing",
+			"name": "Marketing and campaigns",
+			"name_nl": "Marketing en campagnes"
+		},
+		{
+			"key": "portal",
+			"name": "Customer portal and self-service",
+			"name_nl": "Klantportaal en selfservice"
+		},
+		{
+			"key": "products",
+			"name": "Products, quotes and contracts",
+			"name_nl": "Producten, offertes en contracten"
+		},
+		{
+			"key": "pos",
+			"name": "Point of sale and loyalty",
+			"name_nl": "Kassa en loyaliteit"
+		},
+		{
+			"key": "reporting",
+			"name": "Reporting and exports",
+			"name_nl": "Rapportage en export"
+		},
+		{
+			"key": "automation",
+			"name": "Automation and integrations",
+			"name_nl": "Automatisering en koppelingen"
+		},
+		{
+			"key": "government",
+			"name": "Dutch government registries",
+			"name_nl": "Nederlandse overheidsregisters"
+		},
+		{
+			"key": "platform",
+			"name": "Platform, privacy and deployment",
+			"name_nl": "Platform, privacy en beheer"
+		}
+	],
+	"providers": [
+		{
+			"key": "pipelinq",
+			"name": "Pipelinq",
+			"kind": "self"
+		},
+		{
+			"key": "openregister",
+			"name": "Open Register",
+			"kind": "app"
+		},
+		{
+			"key": "integriq",
+			"name": "Integriq",
+			"kind": "app"
+		},
+		{
+			"key": "shillinq",
+			"name": "Shillinq",
+			"kind": "app"
+		},
+		{
+			"key": "dossiq",
+			"name": "Dossiq",
+			"kind": "app"
+		},
+		{
+			"key": "nextcloud",
+			"name": "Nextcloud",
+			"kind": "platform"
+		},
+		{
+			"key": "external",
+			"name": "A third party service",
+			"kind": "external"
+		}
+	],
+	"capabilities": [
+		{
+			"id": "clients-person",
+			"area": "clients",
+			"name": "Keep a client record for a person with their contact details in one place",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "yes",
+			"odoo-crm": "yes",
+			"kiss": "partial",
+			"provider": "pipelinq",
+			"providerHow": "read in src/manifest.json, pages Clients and ClientDetail, form in src/views/clients/ClientForm.vue",
+			"feature": "Client management",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "src/views/clients/ClientForm.vue",
+				"owner": "pipelinq"
+			},
+			"note": "KISS reads a person from the BRP and does not keep its own editable record."
+		},
+		{
+			"id": "clients-organisation",
+			"area": "clients",
+			"name": "Keep a client record for an organisation, separate from the people who work there",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "yes",
+			"odoo-crm": "yes",
+			"kiss": "partial",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/PartyKindRegistryService.php:86, which vocabularies person and organisation separately",
+			"feature": "Client management",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/PartyKindRegistryService.php:86",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "clients-contact-person",
+			"area": "clients",
+			"name": "Link a person to the organisation they work for and give them a role",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "yes",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/PartyLinkService.php:72, which links a record to a party under a kind",
+			"feature": "Client management",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/PartyLinkService.php:72",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "clients-360",
+			"area": "clients",
+			"name": "See every lead, request, note and interaction for a client on one page",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "partial",
+			"odoo-crm": "yes",
+			"kiss": "partial",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Controller/Customer360Controller.php:93 and lib/Service/Customer360SummaryService.php",
+			"feature": "Client management",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Controller/Customer360Controller.php:93",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "clients-duplicate-warning",
+			"area": "clients",
+			"name": "Get a warning when you save a client who already exists",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "yes",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "openregister",
+			"providerHow": "Open Register holds the master record and flags the match; pipelinq syncs into it at lib/Service/Mdm/OpenRegisterSyncService.php:100",
+			"feature": "Client management",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/Mdm/OpenRegisterSyncService.php:100",
+				"owner": "openregister"
+			}
+		},
+		{
+			"id": "clients-merge",
+			"area": "clients",
+			"name": "Merge two client records into one and keep both histories",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "yes",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "openregister",
+			"providerHow": "the merge happens in Open Register; pipelinq repoints its own references at lib/Listener/ObjectsMergedSyncListener.php",
+			"feature": "Client management",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Listener/ObjectsMergedSyncListener.php",
+				"owner": "openregister"
+			}
+		},
+		{
+			"id": "clients-search",
+			"area": "clients",
+			"name": "Find a client by name, email or phone from any page",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "yes",
+			"odoo-crm": "yes",
+			"kiss": "yes",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/ContactSyncService.php:159 and the Find client dashboard widget at lib/Dashboard/FindClientWidget.php",
+			"feature": "Client management",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Dashboard/FindClientWidget.php",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "clients-carddav",
+			"area": "clients",
+			"name": "Change a phone number in the CRM and find it on your phone",
+			"pipelinq": "yes",
+			"hubspot-crm": "no",
+			"pipedrive": "no",
+			"espocrm": "no",
+			"odoo-crm": "no",
+			"kiss": "no",
+			"provider": "nextcloud",
+			"providerHow": "pipelinq writes the card, Nextcloud serves it over CardDAV; read in lib/Service/ContactSyncService.php:224",
+			"feature": "Contacts sync",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/ContactSyncService.php:224",
+				"owner": "pipelinq"
+			},
+			"note": "The competitors sync with Google and Outlook instead, which is a different address book."
+		},
+		{
+			"id": "clients-vcard-import",
+			"area": "clients",
+			"name": "Import contacts from a vCard file without converting it first",
+			"pipelinq": "yes",
+			"hubspot-crm": "no",
+			"pipedrive": "no",
+			"espocrm": "no",
+			"odoo-crm": "no",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/ContactImportService.php:64, which turns a Nextcloud contact card into a client",
+			"feature": "Contacts sync",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/ContactImportService.php:64",
+				"owner": "pipelinq"
+			},
+			"note": "All four commercial and open source CRMs import CSV. None of them reads vCard directly."
+		},
+		{
+			"id": "clients-csv-import",
+			"area": "clients",
+			"name": "Import your existing client list from a spreadsheet",
+			"pipelinq": "partial",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "yes",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "openregister",
+			"providerHow": "Open Register owns bulk object import; pipelinq ships no CSV client import of its own, only the vCard path",
+			"feature": "Contacts sync",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "building",
+				"evidence": "lib/Service/ContactImportService.php holds no CSV reader",
+				"owner": "openregister"
+			}
+		},
+		{
+			"id": "clients-export",
+			"area": "clients",
+			"name": "Export your client list to a file you can open in a spreadsheet",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "yes",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/Export/ExportDataService.php and the Export jobs pages in src/views/export/",
+			"feature": "Reporting",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/Export/ExportDataService.php",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "clients-notes",
+			"area": "clients",
+			"name": "Add a note to a client and see who wrote it and when",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "yes",
+			"odoo-crm": "yes",
+			"kiss": "partial",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/NotesService.php:112, which stamps the author on every note",
+			"feature": "Client management",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/NotesService.php:112",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "clients-tags",
+			"area": "clients",
+			"name": "Tag a client and filter the list by that tag",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "yes",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "nextcloud",
+			"providerHow": "pipelinq uses Nextcloud system tags; read in lib/Service/SystemTagService.php:80",
+			"feature": "Client management",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/SystemTagService.php:80",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "clients-kvk",
+			"area": "clients",
+			"name": "Look up a Dutch company by its KvK number and fill the record from it",
+			"pipelinq": "yes",
+			"hubspot-crm": "no",
+			"pipedrive": "no",
+			"espocrm": "no",
+			"odoo-crm": "no",
+			"kiss": "yes",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/KvkApiClient.php:95 and lib/Service/KvkResultMapper.php",
+			"feature": "Dutch registries",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/KvkApiClient.php:95",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "clients-opencorporates",
+			"area": "clients",
+			"name": "Look up a company outside the Netherlands in an international register",
+			"pipelinq": "yes",
+			"hubspot-crm": "partial",
+			"pipedrive": "no",
+			"espocrm": "no",
+			"odoo-crm": "no",
+			"kiss": "no",
+			"provider": "external",
+			"providerHow": "pipelinq calls OpenCorporates; read in lib/Service/OpenCorporatesApiClient.php:96",
+			"feature": "Dutch registries",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/OpenCorporatesApiClient.php:96",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "clients-org-tree",
+			"area": "clients",
+			"name": "See an organisation's parent company and its subsidiaries as a tree",
+			"pipelinq": "yes",
+			"hubspot-crm": "partial",
+			"pipedrive": "no",
+			"espocrm": "partial",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/PartyOrganisationTreeService.php:182, which sets a parent and keeps the path",
+			"feature": "Client management",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/PartyOrganisationTreeService.php:182",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "clients-custom-fields",
+			"area": "clients",
+			"name": "Add your own field to a client record without writing code",
+			"pipelinq": "yes",
+			"hubspot-crm": "partial",
+			"pipedrive": "yes",
+			"espocrm": "yes",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "openregister",
+			"providerHow": "the schema lives in Open Register; pipelinq resolves it at lib/Service/RegisterResolverService.php",
+			"feature": "Platform",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/RegisterResolverService.php",
+				"owner": "openregister"
+			}
+		},
+		{
+			"id": "clients-owner",
+			"area": "clients",
+			"name": "Assign a client to a colleague so everyone knows who owns it",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "yes",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Lifecycle/ObjectOwnerAccessPolicy.php, which scopes a record to its owner",
+			"feature": "Client management",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Lifecycle/ObjectOwnerAccessPolicy.php",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "clients-history",
+			"area": "clients",
+			"name": "See who changed what on a client record and when",
+			"pipelinq": "yes",
+			"hubspot-crm": "partial",
+			"pipedrive": "partial",
+			"espocrm": "yes",
+			"odoo-crm": "yes",
+			"kiss": "partial",
+			"provider": "openregister",
+			"providerHow": "Open Register writes the audit trail on every object; pipelinq reads the diff at lib/Service/ObjectUpdateDiffService.php",
+			"feature": "Platform",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/ObjectUpdateDiffService.php",
+				"owner": "openregister"
+			}
+		},
+		{
+			"id": "clients-party-kind",
+			"area": "clients",
+			"name": "Say whether a client is a citizen, a business or something else",
+			"pipelinq": "yes",
+			"hubspot-crm": "no",
+			"pipedrive": "no",
+			"espocrm": "partial",
+			"odoo-crm": "partial",
+			"kiss": "partial",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/PartyKindRegistryService.php:112 and seeded by lib/Repair/SeedPartyKinds.php",
+			"feature": "Client management",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/PartyKindRegistryService.php:112",
+				"owner": "pipelinq"
+			}
+		}
+	],
+	"pending": []
+}
