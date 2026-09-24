@@ -204,10 +204,6 @@ webpackConfig.resolve.alias['@nextcloud/paths$'] = path.resolve(
 	__dirname,
 	'node_modules/@nextcloud/paths/dist/index.mjs',
 )
-webpackConfig.resolve.alias['@nextcloud/notify_push$'] = path.resolve(
-	__dirname,
-	'node_modules/@nextcloud/notify_push/dist/index.js',
-)
 
 // @nextcloud/files (pulled transitively via @nextcloud/axios → @nextcloud/auth)
 // references the Node core `stream` module, which webpack 5 does not polyfill for
