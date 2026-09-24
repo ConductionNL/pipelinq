@@ -599,12 +599,12 @@ test.describe('Declarative detail pages (client 360 + contact)', () => {
 	/*
 	 * SPEC/IMPLEMENTATION DRIFT — reported, not fixed. The scenario says the
 	 * KPI chips come from `summaryAggregates`. ADR-062 rev3 retired that
-	 * primitive on this page: the same five figures are now in-grid
-	 * `type: "stats-block"` widgets ("Open leads", "Open leads value", "Won
-	 * leads", "Won leads value", "New requests"), and the page carries no
-	 * `summaryAggregates` key at all. Likewise Contacts and Requests moved out
-	 * of `relatedCollections` into `object-list` widgets with `allowCreate`
-	 * (klantbeeld-360-activation). The assertions below therefore follow the
+	 * primitive on this page: the same five figures are now in-grid widgets
+	 * (the Sales stats-block: "Open leads", "Open leads value", "Won leads",
+	 * "Won leads value"; and the "New requests" stat tile), and the page
+	 * carries no `summaryAggregates` key at all. Likewise every related list
+	 * moved out of `relatedCollections` into `object-list` widgets behind the
+	 * Records tab strip. The assertions below therefore follow the
 	 * shipped manifest: the FIGURES and the LISTS the scenario names are all
 	 * still on the page, through the primitives that replaced the retired ones.
 	 */
@@ -688,54 +688,16 @@ test.describe('Declarative detail pages (client 360 + contact)', () => {
 			).toBeVisible({ timeout: 15000 })
 		}
 
-		// `relatedCollections` (FK `client`) — the library's declarative host.
-		const related = page.locator('[data-testid="cn-related-collections"]')
-		await expect(related).toBeVisible({ timeout: 15000 })
-
-		// PRESENCE INSIDE THE HOST, NOT PAGE-WIDE VISIBILITY (run 31485495866).
-		//
-		// This asserted `content.getByText(title).first()` was VISIBLE and failed
-		// on "Projecten" with `Received: hidden` — note hidden, not missing: the
-		// element is rendered, it just has no box. Two things were wrong with the
-		// old form. It searched the WHOLE page, so `.first()` could settle on a
-		// hidden match (a collapsed panel's header, or a nav entry with the same
-		// text) while a visible one existed elsewhere. And it required visibility
-		// of every collection at once, which the host does not promise:
-		// CnRelatedCollections renders each collection as its own collapsible
-		// section, so at most the expanded one is on screen — "Leads" passed for
-		// precisely that reason, being first.
-		//
-		// The scenario's claim is that the declared related lists are RENDERED on
-		// the page, which a collapsed section satisfies. So each title is asserted
-		// to exist INSIDE the related-collections host, and the host itself is
-		// asserted visible above — that keeps the assertion about this widget
-		// rather than about any text anywhere, and makes it independent of which
-		// section happens to be expanded.
-		// 'Projecten' is deliberately NOT in this list any more. #1757 moved it
-		// out of relatedCollections into the `client-projects` object-list
-		// widget, which reads PLANNINQ's register and declares
-		// `requiredApp: planninq`. It is asserted just below, as a widget, so
-		// the move is watched rather than merely allowed.
-		for (const title of ['Leads', 'Contactmomenten', 'Complaints']) {
+		// The related lists (FK `client`) sit behind the Records tab strip, one
+		// list at a time, so each is asserted as a tab rather than as a list.
+		// Projects reads PLANNINQ's register and declares `requiredApp:
+		// planninq` (#1757); CI installs planninq, so its tab is there too.
+		for (const label of ['Contacts', 'Requests', 'Leads', 'Contact moments', 'Complaints', 'Contracts', 'Projects']) {
 			await expect(
-				related.getByText(title, { exact: true }),
-				`the "${title}" related collection must be rendered by the host`,
-			).not.toHaveCount(0, { timeout: 15000 })
+				content.getByRole('tab', { name: label, exact: true }),
+				`the Records strip must offer a "${label}" tab`,
+			).toHaveCount(1, { timeout: 15000 })
 		}
-
-		// The half of #1757 that would otherwise go unwatched. Removing
-		// pipelinq's project schemas and its Projecten menu entry is only
-		// correct because the surface moved; if this widget stopped rendering,
-		// every other assertion here would still pass and pipelinq would simply
-		// have lost projects.
-		//
-		// CI installs planninq alongside (code-quality.yml `additional-apps`),
-		// so `requiredApp` is satisfied and the widget renders its real chrome
-		// rather than a set-up state.
-		await expect(
-			page.locator('#content-vue').getByText('Projecten', { exact: true }),
-			"the client's projects must still render, read from planninq's register",
-		).not.toHaveCount(0, { timeout: 15000 })
 
 		// The sub-features live IN THE PAGE BODY as `bodyWidgets`, not in the
 		// sidebar. CnBodySections stamps each with its manifest id.
@@ -795,11 +757,13 @@ test.describe('Declarative detail pages (client 360 + contact)', () => {
 		const leadId = String(lead.id || lead['@self']?.id)
 
 		await gotoPage(page, `/clients/${clientId}`)
+		// Leads is a tab of the Records strip; its panel mounts when opened.
+		await page.locator('#content-vue').getByRole('tab', { name: 'Leads', exact: true }).click()
 		const row = page.locator('#content-vue').getByText(LEAD_TITLE).first()
 		await expect(row).toBeVisible({ timeout: 25000 })
 		await row.click()
 
-		// `rowRoute: "LeadDetail"` on the Leads related collection.
+		// `rowRoute: "LeadDetail"` on the client-leads list widget.
 		await expect(page).toHaveURL(new RegExp(`/leads/${leadId}$`), {
 			timeout: 15000,
 		})
