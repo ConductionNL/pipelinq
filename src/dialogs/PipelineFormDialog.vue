@@ -7,7 +7,7 @@
   -
   - The whole component IS the dialog, so it lives here rather than under
   - src/views/settings/ — a modal must never be written inline inside its
-  - parent (ADR-004), and PipelineManager.vue is its only caller.
+  - parent (ADR-004), and PipelineManager.vue and the pipeline board open it.
   -->
 <template>
 	<NcDialog

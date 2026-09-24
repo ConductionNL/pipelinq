@@ -52,7 +52,8 @@
 				<NcButton
 					variant="tertiary"
 					:aria-label="t('pipelinq', 'Pipeline settings')"
-					@click="toggleSidebar">
+					:disabled="!selectedPipeline"
+					@click="showPipelineForm = true">
 					<template #icon>
 						<Cog :size="20" />
 					</template>
@@ -366,6 +367,12 @@
 				{{ t('pipelinq', 'No items in this pipeline') }}
 			</p>
 		</div>
+
+		<PipelineFormDialog
+			v-if="showPipelineForm && selectedPipeline"
+			:pipeline="selectedPipeline"
+			@save="onPipelineSave"
+			@cancel="showPipelineForm = false" />
 	</div>
 </template>
 
@@ -374,6 +381,7 @@ import { NcButton, NcLoadingIcon, NcSelect, NcTextField } from '@nextcloud/vue'
 import Cog from 'vue-material-design-icons/Cog.vue'
 import FormatListBulleted from 'vue-material-design-icons/FormatListBulleted.vue'
 import ViewColumn from 'vue-material-design-icons/ViewColumn.vue'
+import PipelineFormDialog from '../../dialogs/PipelineFormDialog.vue'
 import PipelineCard from './PipelineCard.vue'
 import { formatDate } from '../../services/localeUtils.js'
 import {
@@ -395,18 +403,16 @@ export default {
 		NcSelect,
 		NcTextField,
 		PipelineCard,
+		PipelineFormDialog,
 		ViewColumn,
 		FormatListBulleted,
 		Cog,
 	},
 
-	inject: {
-		pipelineSidebarState: { default: null },
-	},
-
 	data() {
 		return {
 			selectedPipelineId: null,
+			showPipelineForm: false,
 			showFilter: 'all',
 			/**
 			 * @spec openspec/changes/2026-03-20-pipeline/tasks.md#task-1.1
@@ -661,14 +667,6 @@ export default {
 
 	watch: {
 		/**
-		 * @param {object|null} val The newly selected pipeline object
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-25
-		 */
-		selectedPipeline(val) {
-			this.syncSidebarState(val)
-		},
-
-		/**
 		 * Re-scope the live collection subscriptions when the selected
 		 * pipeline (or the async type registration) changes.
 		 *
@@ -694,11 +692,6 @@ export default {
 	 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-15
 	 */
 	async mounted() {
-		if (this.pipelineSidebarState) {
-			this.pipelineSidebarState.active = true
-			this.pipelineSidebarState.onSave = this.onSidebarSave
-		}
-
 		this.loading = true
 
 		// Ensure object types are registered (by slug) before fetching. Shared,
@@ -723,11 +716,6 @@ export default {
 	beforeUnmount() {
 		clearTimeout(this.liveRefetchTimer)
 		this.releaseLiveSubscriptions()
-		if (this.pipelineSidebarState) {
-			this.pipelineSidebarState.active = false
-			this.pipelineSidebarState.pipeline = null
-			this.pipelineSidebarState.onSave = null
-		}
 	},
 
 	methods: {
@@ -826,32 +814,13 @@ export default {
 		},
 
 		/**
-		 * @param {object|null} pipeline The pipeline to mirror into the sidebar state
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-30
-		 */
-		syncSidebarState(pipeline) {
-			if (this.pipelineSidebarState) {
-				this.pipelineSidebarState.pipeline = pipeline
-			}
-		},
-
-		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-32
-		 */
-		toggleSidebar() {
-			if (this.pipelineSidebarState) {
-				this.pipelineSidebarState.open = !this.pipelineSidebarState.open
-			}
-		},
-
-		/**
 		 * @param {object} pipelineData The edited pipeline payload to save
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-19
 		 */
-		async onSidebarSave(pipelineData) {
+		async onPipelineSave(pipelineData) {
 			await this.objectStore.saveObject('pipeline', pipelineData)
+			this.showPipelineForm = false
 			await this.objectStore.fetchCollection('pipeline', { _limit: 100 })
-			this.syncSidebarState(this.selectedPipeline)
 			await this.fetchPipelineItems()
 		},
 
