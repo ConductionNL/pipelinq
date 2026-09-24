@@ -1,0 +1,4489 @@
+{
+	"comparedOn": "2026-09-24",
+	"corpus": {
+		"repo": "concurrentie-analyse",
+		"file": "pipelinq/concurrentie-analyse.md"
+	},
+	"systems": [
+		{
+			"key": "pipelinq",
+			"name": "Pipelinq",
+			"vendor": "Conduction",
+			"isSelf": true,
+			"readOn": "2026-09-24",
+			"columnAddedOn": "2026-09-24",
+			"note": "Rated by reading this repository at the branch head. Every rating carries a file path in built.evidence. The README and the app store description were not used as evidence."
+		},
+		{
+			"key": "hubspot-crm",
+			"name": "HubSpot CRM",
+			"vendor": "HubSpot",
+			"readOn": "2026-04-18",
+			"columnAddedOn": "2026-09-24",
+			"note": "Inherited from concurrentie-analyse/pipelinq/hubspot-crm/. Nobody drove HubSpot in this pass, so every cell is five months old."
+		},
+		{
+			"key": "pipedrive",
+			"name": "Pipedrive",
+			"vendor": "Pipedrive",
+			"readOn": "2026-04-18",
+			"columnAddedOn": "2026-09-24",
+			"note": "Inherited from concurrentie-analyse/pipelinq/pipedrive/. Add-ons are rated partial, because the capability costs extra."
+		},
+		{
+			"key": "espocrm",
+			"name": "EspoCRM",
+			"vendor": "EspoCRM",
+			"readOn": "2026-04-18",
+			"columnAddedOn": "2026-09-24",
+			"note": "Inherited from concurrentie-analyse/pipelinq/espocrm/. The paid Advanced Pack is rated partial, not yes."
+		},
+		{
+			"key": "odoo-crm",
+			"name": "Odoo CRM",
+			"vendor": "Odoo",
+			"readOn": "2026-04-18",
+			"columnAddedOn": "2026-09-24",
+			"note": "Inherited from concurrentie-analyse/pipelinq/odoo-crm/. Rated across the Odoo suite a buyer would install, not the CRM module alone."
+		},
+		{
+			"key": "kiss",
+			"name": "KISS",
+			"vendor": "Dimpact and ICATT",
+			"readOn": "2026-03-13",
+			"columnAddedOn": "2026-09-24",
+			"note": "Inherited from concurrentie-analyse/pipelinq/kiss/, read on 2026-03-13. That reading also lists gaps in pipelinq that pipelinq has since closed, so treat its pipelinq claims as stale."
+		}
+	],
+	"areas": [
+		{
+			"key": "clients",
+			"name": "Clients and contacts",
+			"name_nl": "Klanten en contactpersonen"
+		},
+		{
+			"key": "pipeline",
+			"name": "Leads and the pipeline",
+			"name_nl": "Leads en de pipeline"
+		},
+		{
+			"key": "contact-moments",
+			"name": "Contact moments and history",
+			"name_nl": "Contactmomenten en historie"
+		},
+		{
+			"key": "requests",
+			"name": "Requests, tickets and service",
+			"name_nl": "Verzoeken, tickets en service"
+		},
+		{
+			"key": "work",
+			"name": "My work, tasks and follow-up",
+			"name_nl": "Mijn werk, taken en opvolging"
+		},
+		{
+			"key": "marketing",
+			"name": "Marketing and campaigns",
+			"name_nl": "Marketing en campagnes"
+		},
+		{
+			"key": "portal",
+			"name": "Customer portal and self-service",
+			"name_nl": "Klantportaal en selfservice"
+		},
+		{
+			"key": "products",
+			"name": "Products, quotes and contracts",
+			"name_nl": "Producten, offertes en contracten"
+		},
+		{
+			"key": "pos",
+			"name": "Point of sale and loyalty",
+			"name_nl": "Kassa en loyaliteit"
+		},
+		{
+			"key": "reporting",
+			"name": "Reporting and exports",
+			"name_nl": "Rapportage en export"
+		},
+		{
+			"key": "automation",
+			"name": "Automation and integrations",
+			"name_nl": "Automatisering en koppelingen"
+		},
+		{
+			"key": "government",
+			"name": "Dutch government registries",
+			"name_nl": "Nederlandse overheidsregisters"
+		},
+		{
+			"key": "platform",
+			"name": "Platform, privacy and deployment",
+			"name_nl": "Platform, privacy en beheer"
+		}
+	],
+	"providers": [
+		{
+			"key": "pipelinq",
+			"name": "Pipelinq",
+			"kind": "self"
+		},
+		{
+			"key": "openregister",
+			"name": "Open Register",
+			"kind": "app"
+		},
+		{
+			"key": "integriq",
+			"name": "Integriq",
+			"kind": "app"
+		},
+		{
+			"key": "shillinq",
+			"name": "Shillinq",
+			"kind": "app"
+		},
+		{
+			"key": "dossiq",
+			"name": "Dossiq",
+			"kind": "app"
+		},
+		{
+			"key": "nextcloud",
+			"name": "Nextcloud",
+			"kind": "platform"
+		},
+		{
+			"key": "external",
+			"name": "A third party service",
+			"kind": "external"
+		}
+	],
+	"capabilities": [
+		{
+			"id": "clients-person",
+			"area": "clients",
+			"name": "Keep a client record for a person with their contact details in one place",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "yes",
+			"odoo-crm": "yes",
+			"kiss": "partial",
+			"provider": "pipelinq",
+			"providerHow": "read in src/manifest.json, pages Clients and ClientDetail, with the form in src/views/clients/ClientForm.vue",
+			"feature": "Client management",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "src/views/clients/ClientForm.vue",
+				"owner": "pipelinq"
+			},
+			"note": "KISS reads a person from the BRP and keeps no editable record of its own."
+		},
+		{
+			"id": "clients-organisation",
+			"area": "clients",
+			"name": "Keep a client record for an organisation, separate from the people who work there",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "yes",
+			"odoo-crm": "yes",
+			"kiss": "partial",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/PartyKindRegistryService.php:86, which vocabularies person and organisation apart",
+			"feature": "Client management",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/PartyKindRegistryService.php:86",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "clients-contact-person",
+			"area": "clients",
+			"name": "Link a person to the organisation they work for and give them a role",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "yes",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/PartyLinkService.php:72, which links a record to a party under a kind",
+			"feature": "Client management",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/PartyLinkService.php:72",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "clients-360",
+			"area": "clients",
+			"name": "See every lead, request, note and interaction for a client on one page",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "partial",
+			"odoo-crm": "yes",
+			"kiss": "partial",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Controller/Customer360Controller.php:93 and lib/Service/Customer360SummaryService.php",
+			"feature": "Client management",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Controller/Customer360Controller.php:93",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "clients-duplicate-warning",
+			"area": "clients",
+			"name": "Get a warning when you save a client who already exists",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "yes",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "openregister",
+			"providerHow": "Open Register holds the master record and flags the match; pipelinq syncs into it at lib/Service/Mdm/OpenRegisterSyncService.php:100",
+			"feature": "Client management",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/Mdm/OpenRegisterSyncService.php:100",
+				"owner": "openregister"
+			}
+		},
+		{
+			"id": "clients-merge",
+			"area": "clients",
+			"name": "Merge two client records into one and keep both histories",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "yes",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "openregister",
+			"providerHow": "the merge happens in Open Register; pipelinq repoints its own references at lib/Listener/ObjectsMergedSyncListener.php",
+			"feature": "Client management",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Listener/ObjectsMergedSyncListener.php",
+				"owner": "openregister"
+			}
+		},
+		{
+			"id": "clients-search",
+			"area": "clients",
+			"name": "Find a client by name, email or phone from any page",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "yes",
+			"odoo-crm": "yes",
+			"kiss": "yes",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/ContactSyncService.php:159 and the find widget at lib/Dashboard/FindClientWidget.php",
+			"feature": "Client management",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Dashboard/FindClientWidget.php",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "clients-carddav",
+			"area": "clients",
+			"name": "Change a phone number in the CRM and find it on your phone",
+			"pipelinq": "yes",
+			"hubspot-crm": "no",
+			"pipedrive": "no",
+			"espocrm": "no",
+			"odoo-crm": "no",
+			"kiss": "no",
+			"provider": "nextcloud",
+			"providerHow": "pipelinq writes the card and Nextcloud serves it over CardDAV; read in lib/Service/ContactSyncService.php:224",
+			"feature": "Contacts sync",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/ContactSyncService.php:224",
+				"owner": "pipelinq"
+			},
+			"note": "The four CRMs sync with Google and Outlook instead, which is a different address book."
+		},
+		{
+			"id": "clients-vcard-import",
+			"area": "clients",
+			"name": "Import contacts from a vCard file without converting it first",
+			"pipelinq": "yes",
+			"hubspot-crm": "no",
+			"pipedrive": "no",
+			"espocrm": "no",
+			"odoo-crm": "no",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/ContactImportService.php:64, which turns a Nextcloud contact card into a client",
+			"feature": "Contacts sync",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/ContactImportService.php:64",
+				"owner": "pipelinq"
+			},
+			"note": "All four commercial and open source CRMs import CSV. None of them reads vCard directly."
+		},
+		{
+			"id": "clients-csv-import",
+			"area": "clients",
+			"name": "Import your existing client list from a spreadsheet",
+			"pipelinq": "partial",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "yes",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "openregister",
+			"providerHow": "Open Register owns bulk object import; pipelinq itself ships only the vCard path in lib/Service/ContactImportService.php",
+			"feature": "Contacts sync",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "building",
+				"evidence": "lib/Service/ContactImportService.php holds no CSV reader",
+				"owner": "openregister"
+			},
+			"note": "Reachable through Open Register, not from a pipelinq page. That is why this is partial and not yes."
+		},
+		{
+			"id": "clients-export",
+			"area": "clients",
+			"name": "Export your client list to a file you can open in a spreadsheet",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "yes",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/Export/ExportDataService.php and the export pages in src/views/export/",
+			"feature": "Reporting",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/Export/ExportDataService.php",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "clients-notes",
+			"area": "clients",
+			"name": "Add a note to a client and see who wrote it and when",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "yes",
+			"odoo-crm": "yes",
+			"kiss": "partial",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/NotesService.php:112, which stamps the author on every note",
+			"feature": "Client management",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/NotesService.php:112",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "clients-tags",
+			"area": "clients",
+			"name": "Tag a client and filter the list by that tag",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "yes",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "nextcloud",
+			"providerHow": "pipelinq uses Nextcloud system tags; read in lib/Service/SystemTagService.php:80",
+			"feature": "Client management",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/SystemTagService.php:80",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "clients-kvk",
+			"area": "clients",
+			"name": "Look up a Dutch company by its KvK number and fill the record from it",
+			"pipelinq": "yes",
+			"hubspot-crm": "no",
+			"pipedrive": "no",
+			"espocrm": "no",
+			"odoo-crm": "no",
+			"kiss": "yes",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/KvkApiClient.php:95 with the mapping in lib/Service/KvkResultMapper.php",
+			"feature": "Dutch registries",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/KvkApiClient.php:95",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "clients-opencorporates",
+			"area": "clients",
+			"name": "Look up a company outside the Netherlands in an international register",
+			"pipelinq": "yes",
+			"hubspot-crm": "partial",
+			"pipedrive": "no",
+			"espocrm": "no",
+			"odoo-crm": "no",
+			"kiss": "no",
+			"provider": "external",
+			"providerHow": "the register is OpenCorporates; pipelinq calls it at lib/Service/OpenCorporatesApiClient.php:96",
+			"feature": "Dutch registries",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/OpenCorporatesApiClient.php:96",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "clients-org-tree",
+			"area": "clients",
+			"name": "See an organisation's parent company and its subsidiaries as a tree",
+			"pipelinq": "yes",
+			"hubspot-crm": "partial",
+			"pipedrive": "no",
+			"espocrm": "partial",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/PartyOrganisationTreeService.php:182, which sets a parent and keeps the path",
+			"feature": "Client management",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/PartyOrganisationTreeService.php:182",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "clients-custom-fields",
+			"area": "clients",
+			"name": "Add your own field to a client record without writing code",
+			"pipelinq": "yes",
+			"hubspot-crm": "partial",
+			"pipedrive": "yes",
+			"espocrm": "yes",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "openregister",
+			"providerHow": "the schema lives in Open Register; pipelinq resolves it at lib/Service/RegisterResolverService.php",
+			"feature": "Platform",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/RegisterResolverService.php",
+				"owner": "openregister"
+			}
+		},
+		{
+			"id": "clients-owner",
+			"area": "clients",
+			"name": "Assign a client to a colleague so everyone knows who owns it",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "yes",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Lifecycle/ObjectOwnerAccessPolicy.php, which scopes a record to its owner",
+			"feature": "Client management",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Lifecycle/ObjectOwnerAccessPolicy.php",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "clients-history",
+			"area": "clients",
+			"name": "See who changed what on a client record and when",
+			"pipelinq": "yes",
+			"hubspot-crm": "partial",
+			"pipedrive": "partial",
+			"espocrm": "yes",
+			"odoo-crm": "yes",
+			"kiss": "partial",
+			"provider": "openregister",
+			"providerHow": "Open Register writes the audit trail on every object; pipelinq reads the diff at lib/Service/ObjectUpdateDiffService.php",
+			"feature": "Platform",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/ObjectUpdateDiffService.php",
+				"owner": "openregister"
+			}
+		},
+		{
+			"id": "clients-party-kind",
+			"area": "clients",
+			"name": "Say whether a client is a citizen, a business or something else",
+			"pipelinq": "yes",
+			"hubspot-crm": "no",
+			"pipedrive": "no",
+			"espocrm": "partial",
+			"odoo-crm": "partial",
+			"kiss": "partial",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/PartyKindRegistryService.php:112, seeded by lib/Repair/SeedPartyKinds.php",
+			"feature": "Client management",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/PartyKindRegistryService.php:112",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "pipeline-kanban",
+			"area": "pipeline",
+			"name": "Drag a lead from one stage to the next on a board",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "yes",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in src/views/pipeline/PipelineBoard.vue and src/views/pipeline/PipelineCard.vue",
+			"feature": "Lead pipeline",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "src/views/pipeline/PipelineBoard.vue",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "pipeline-multiple",
+			"area": "pipeline",
+			"name": "Run more than one pipeline side by side, each with its own stages",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "partial",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/DefaultPipelineService.php:60 and the Pipelines page in src/manifest.json",
+			"feature": "Lead pipeline",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/DefaultPipelineService.php:60",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "pipeline-stage-odds",
+			"area": "pipeline",
+			"name": "Rename your stages and set the odds of winning at each one",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "partial",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/PipelineStageData.php and lib/Service/DefaultPipelineService.php:60",
+			"feature": "Lead pipeline",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/PipelineStageData.php",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "lead-value-date",
+			"area": "pipeline",
+			"name": "Put a value and an expected close date on a lead",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "yes",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/LeadService.php:131, which takes both on create",
+			"feature": "Lead pipeline",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/LeadService.php:131",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "lead-from-client",
+			"area": "pipeline",
+			"name": "Start a lead from a client you already have",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "yes",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/LeadClientResolver.php:148, which matches a lead title to an existing client",
+			"feature": "Lead pipeline",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/LeadClientResolver.php:148",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "lead-source",
+			"area": "pipeline",
+			"name": "Record where a lead came from and see which sources pay off",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "partial",
+			"espocrm": "partial",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Controller/LeadSourceController.php:70 and src/views/rapportage/SourcePerformanceWidget.vue",
+			"feature": "Lead pipeline",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "src/views/rapportage/SourcePerformanceWidget.vue",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "lead-scoring",
+			"area": "pipeline",
+			"name": "Let the app score a lead so you know which one to call first",
+			"pipelinq": "partial",
+			"hubspot-crm": "yes",
+			"pipedrive": "partial",
+			"espocrm": "no",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "prospects are scored at lib/Service/ProspectScoringService.php:49; openspec/specs/lead-scoring-win-probability has no matching service",
+			"feature": "Lead pipeline",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "building",
+				"evidence": "lib/Service/ProspectScoringService.php:49",
+				"owner": "pipelinq"
+			},
+			"note": "Prospects are scored today. A score on a lead already in the pipeline is specified and not built."
+		},
+		{
+			"id": "forecast-rollup",
+			"area": "pipeline",
+			"name": "See what your team expects to close this quarter, rolled up per manager",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "partial",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/ForecastService.php:100 and src/views/forecast/ForecastDashboard.vue",
+			"feature": "Forecasting",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/ForecastService.php:100",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "forecast-commit",
+			"area": "pipeline",
+			"name": "Commit a number as a manager and be measured against what actually closed",
+			"pipelinq": "yes",
+			"hubspot-crm": "partial",
+			"pipedrive": "partial",
+			"espocrm": "no",
+			"odoo-crm": "no",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/ForecastOverrideService.php:125 and lib/Service/ForecastService.php:160",
+			"feature": "Forecasting",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/ForecastService.php:160",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "forecast-category",
+			"area": "pipeline",
+			"name": "Mark a lead as commit or best case, and say why when it slips",
+			"pipelinq": "yes",
+			"hubspot-crm": "partial",
+			"pipedrive": "no",
+			"espocrm": "no",
+			"odoo-crm": "no",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/ForecastDealService.php:234 and :268, which demand a justification",
+			"feature": "Forecasting",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/ForecastDealService.php:268",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "forecast-trend",
+			"area": "pipeline",
+			"name": "Watch your forecast move week by week instead of guessing",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "no",
+			"odoo-crm": "partial",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in src/views/forecast/ForecastTrend.vue and lib/BackgroundJob/ForecastSnapshotJob.php",
+			"feature": "Forecasting",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/BackgroundJob/ForecastSnapshotJob.php",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "win-loss",
+			"area": "pipeline",
+			"name": "See why you win and why you lose, over time",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "partial",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in src/views/rapportage/WinLossWidget.vue",
+			"feature": "Reporting",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "src/views/rapportage/WinLossWidget.vue",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "lead-aging",
+			"area": "pipeline",
+			"name": "Spot the leads that have sat still too long",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "partial",
+			"odoo-crm": "partial",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in src/views/rapportage/LeadAgingWidget.vue",
+			"feature": "Reporting",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "src/views/rapportage/LeadAgingWidget.vue",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "pipeline-funnel",
+			"area": "pipeline",
+			"name": "See how many leads survive each step of the funnel",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "partial",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/AnalyticsService.php:613 and src/views/rapportage/PipelineFunnelWidget.vue",
+			"feature": "Reporting",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/AnalyticsService.php:613",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "prospect-discovery",
+			"area": "pipeline",
+			"name": "Find companies you do not know yet and rank them against your ideal customer",
+			"pipelinq": "yes",
+			"hubspot-crm": "partial",
+			"pipedrive": "partial",
+			"espocrm": "no",
+			"odoo-crm": "no",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/ProspectDiscoveryService.php with the profile in lib/Service/IcpConfigService.php",
+			"feature": "Prospecting",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/ProspectDiscoveryService.php",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "lead-products",
+			"area": "pipeline",
+			"name": "Attach the products you are quoting so the lead value adds up by itself",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "yes",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in openspec/specs/lead-product-link and lib/Service/ProductCatalogService.php:207",
+			"feature": "Lead pipeline",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/ProductCatalogService.php:207",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "lead-stage-notify",
+			"area": "pipeline",
+			"name": "Get told when a lead you own moves stage",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "yes",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Listener/DealUpdatedListener.php and lib/Notification/Notifier.php",
+			"feature": "Lead pipeline",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Listener/DealUpdatedListener.php",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "cm-log",
+			"area": "contact-moments",
+			"name": "Log a call, an email or a visit against a client",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "yes",
+			"odoo-crm": "yes",
+			"kiss": "yes",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/ContactmomentService.php:139 and lib/Controller/ContactmomentController.php",
+			"feature": "Contact moments",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/ContactmomentService.php:139",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "cm-timeline",
+			"area": "contact-moments",
+			"name": "See everything that ever happened with a client in one timeline",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "yes",
+			"odoo-crm": "yes",
+			"kiss": "partial",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/ActivityTimelineService.php:149",
+			"feature": "Contact moments",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/ActivityTimelineService.php:149",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "cm-channel",
+			"area": "contact-moments",
+			"name": "Record which channel the contact came in on and report per channel",
+			"pipelinq": "yes",
+			"hubspot-crm": "partial",
+			"pipedrive": "no",
+			"espocrm": "partial",
+			"odoo-crm": "partial",
+			"kiss": "yes",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Controller/RequestChannelController.php and lib/Service/ReportingService.php:150",
+			"feature": "Contact moments",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/ReportingService.php:150",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "cm-screenpop",
+			"area": "contact-moments",
+			"name": "See who is calling before you pick up the phone",
+			"pipelinq": "yes",
+			"hubspot-crm": "partial",
+			"pipedrive": "partial",
+			"espocrm": "partial",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/CtiService.php:219 with the match in lib/Service/CtiContactMatcher.php:88",
+			"feature": "Telephony",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/CtiService.php:219",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "cm-click-to-call",
+			"area": "contact-moments",
+			"name": "Call a client by clicking their number",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "partial",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/CtiService.php:404, with adapters for Asterisk, RingCentral and CallVoip",
+			"feature": "Telephony",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/CtiService.php:404",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "cm-recording",
+			"area": "contact-moments",
+			"name": "Attach the call recording to the contact moment",
+			"pipelinq": "yes",
+			"hubspot-crm": "partial",
+			"pipedrive": "partial",
+			"espocrm": "unknown",
+			"odoo-crm": "unknown",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/CtiService.php:359, which stores the recording url with an expiry",
+			"feature": "Telephony",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/CtiService.php:359",
+				"owner": "pipelinq"
+			},
+			"note": "Whether EspoCRM and Odoo attach a recording was not settled by the 2026-04 research."
+		},
+		{
+			"id": "cm-disposition",
+			"area": "contact-moments",
+			"name": "Close a call with a result code so the reporting means something",
+			"pipelinq": "yes",
+			"hubspot-crm": "partial",
+			"pipedrive": "partial",
+			"espocrm": "partial",
+			"odoo-crm": "partial",
+			"kiss": "yes",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/CtiDispositionService.php:96",
+			"feature": "Telephony",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/CtiDispositionService.php:96",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "cm-email-filing",
+			"area": "contact-moments",
+			"name": "Have mail from your inbox filed against the right client by itself",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "yes",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/EmailMatchService.php:278, driven by lib/BackgroundJob/EmailMatchJob.php",
+			"feature": "Email",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/EmailMatchService.php:278",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "cm-email-domain",
+			"area": "contact-moments",
+			"name": "Match an unknown sender to an organisation by their email domain",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "partial",
+			"espocrm": "partial",
+			"odoo-crm": "partial",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/EmailMatchService.php:172, which skips public domains at :248",
+			"feature": "Email",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/EmailMatchService.php:172",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "cm-whatsapp",
+			"area": "contact-moments",
+			"name": "Send and receive WhatsApp messages from the client record",
+			"pipelinq": "yes",
+			"hubspot-crm": "partial",
+			"pipedrive": "no",
+			"espocrm": "no",
+			"odoo-crm": "partial",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/WhatsAppAdapter.php:177 for sending and :602 for the inbound webhook",
+			"feature": "Messaging",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/WhatsAppAdapter.php:177",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "cm-sms",
+			"area": "contact-moments",
+			"name": "Send a text message to a client from their record",
+			"pipelinq": "yes",
+			"hubspot-crm": "partial",
+			"pipedrive": "partial",
+			"espocrm": "partial",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/SmsAdapter.php:154, with Twilio, MessageBird and CM.com clients",
+			"feature": "Messaging",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/SmsAdapter.php:154",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "cm-outbound-logged",
+			"area": "contact-moments",
+			"name": "Have every message you send land in the client's history by itself",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "partial",
+			"odoo-crm": "yes",
+			"kiss": "partial",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/ContactmomentService.php:139, called from the messaging send path",
+			"feature": "Contact moments",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/ContactmomentService.php:139",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "cm-file-on-case",
+			"area": "contact-moments",
+			"name": "File one contact moment against more than one case",
+			"pipelinq": "yes",
+			"hubspot-crm": "no",
+			"pipedrive": "no",
+			"espocrm": "no",
+			"odoo-crm": "no",
+			"kiss": "partial",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/ContactMomentFilingService.php:137",
+			"feature": "Contact moments",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/ContactMomentFilingService.php:137",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "cm-availability",
+			"area": "contact-moments",
+			"name": "Set yourself away so the next call goes to someone else",
+			"pipelinq": "yes",
+			"hubspot-crm": "partial",
+			"pipedrive": "no",
+			"espocrm": "no",
+			"odoo-crm": "no",
+			"kiss": "yes",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/KccWerkplekService.php:388",
+			"feature": "Service desk",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/KccWerkplekService.php:388",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "cm-survey-after",
+			"area": "contact-moments",
+			"name": "Ask the client how it went right after you spoke",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "no",
+			"espocrm": "no",
+			"odoo-crm": "partial",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/SurveyDispatchService.php:336",
+			"feature": "Satisfaction",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/SurveyDispatchService.php:336",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "cm-campaign-touchpoint",
+			"area": "contact-moments",
+			"name": "See which campaign a client touched before they called",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "partial",
+			"espocrm": "no",
+			"odoo-crm": "partial",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/TouchpointService.php:164",
+			"feature": "Contact moments",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/TouchpointService.php:164",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "req-intake",
+			"area": "requests",
+			"name": "Capture an incoming request before it becomes a formal case",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "partial",
+			"espocrm": "partial",
+			"odoo-crm": "yes",
+			"kiss": "yes",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/TicketService.php:285 and the Tickets pages in src/manifest.json",
+			"feature": "Request intake",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/TicketService.php:285",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "req-webform",
+			"area": "requests",
+			"name": "Let someone file a request from a form on your website",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "partial",
+			"espocrm": "partial",
+			"odoo-crm": "yes",
+			"kiss": "partial",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/EnquiryIntakeService.php:134 and lib/Controller/EnquiryController.php",
+			"feature": "Request intake",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/EnquiryIntakeService.php:134",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "req-to-case",
+			"area": "requests",
+			"name": "Hand a request to the case system and keep the two linked",
+			"pipelinq": "yes",
+			"hubspot-crm": "partial",
+			"pipedrive": "no",
+			"espocrm": "partial",
+			"odoo-crm": "partial",
+			"kiss": "yes",
+			"provider": "dossiq",
+			"providerHow": "pipelinq emits the hand-off and Dossiq receives it; read in lib/Service/SemanticHandoffService.php:128",
+			"feature": "Request intake",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/SemanticHandoffService.php:128",
+				"owner": "dossiq"
+			}
+		},
+		{
+			"id": "req-sla-deadline",
+			"area": "requests",
+			"name": "Give every request a deadline that counts only your working hours",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "no",
+			"espocrm": "partial",
+			"odoo-crm": "partial",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/SlaEngineService.php:216 with the clock in lib/Service/BusinessHoursCalculator.php:85",
+			"feature": "Service levels",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/SlaEngineService.php:216",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "req-sla-holidays",
+			"area": "requests",
+			"name": "Have that deadline skip Dutch public holidays",
+			"pipelinq": "yes",
+			"hubspot-crm": "partial",
+			"pipedrive": "no",
+			"espocrm": "no",
+			"odoo-crm": "partial",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/DutchHolidayCalendar.php, reached from lib/Service/SlaEngineService.php:103",
+			"feature": "Service levels",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/DutchHolidayCalendar.php",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "req-sla-escalate",
+			"area": "requests",
+			"name": "Escalate a request by itself when the deadline is about to pass",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "no",
+			"espocrm": "partial",
+			"odoo-crm": "partial",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/SlaEngineService.php:334, swept by lib/BackgroundJob/SlaDeadlineSweepJob.php",
+			"feature": "Service levels",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/SlaEngineService.php:334",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "req-sla-pause",
+			"area": "requests",
+			"name": "Pause the clock while you wait for the client to answer",
+			"pipelinq": "yes",
+			"hubspot-crm": "partial",
+			"pipedrive": "no",
+			"espocrm": "no",
+			"odoo-crm": "no",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/SlaEngineService.php:404",
+			"feature": "Service levels",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/SlaEngineService.php:404",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "req-routing",
+			"area": "requests",
+			"name": "Send a request to the colleague with the right skill and the room to take it",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "no",
+			"espocrm": "partial",
+			"odoo-crm": "partial",
+			"kiss": "partial",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/RoutingService.php:92, with capacity checked at :427",
+			"feature": "Service desk",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/RoutingService.php:92",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "req-complaint",
+			"area": "requests",
+			"name": "Register a complaint and hold it to the legal answer term",
+			"pipelinq": "yes",
+			"hubspot-crm": "partial",
+			"pipedrive": "no",
+			"espocrm": "partial",
+			"odoo-crm": "partial",
+			"kiss": "partial",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/ComplaintSlaService.php:112 and openspec/specs/klachtenregistratie",
+			"feature": "Service desk",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/ComplaintSlaService.php:112",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "req-callback",
+			"area": "requests",
+			"name": "Promise a call back and be held to that promise",
+			"pipelinq": "yes",
+			"hubspot-crm": "partial",
+			"pipedrive": "no",
+			"espocrm": "no",
+			"odoo-crm": "no",
+			"kiss": "yes",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/CallbackService.php:130 and lib/BackgroundJob/CallbackOverdueJob.php",
+			"feature": "Service desk",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/CallbackService.php:130",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "req-walkin",
+			"area": "requests",
+			"name": "Hand out a number at the counter and call the next visitor",
+			"pipelinq": "yes",
+			"hubspot-crm": "no",
+			"pipedrive": "no",
+			"espocrm": "no",
+			"odoo-crm": "no",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/WalkInQueueService.php:216 and the Queue page in src/manifest.json",
+			"feature": "Service desk",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/WalkInQueueService.php:216",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "req-knowledge",
+			"area": "requests",
+			"name": "Look up the answer in your knowledge base without leaving the request",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "no",
+			"espocrm": "partial",
+			"odoo-crm": "partial",
+			"kiss": "yes",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/ArticleService.php:185 and lib/Service/XWikiService.php:118",
+			"feature": "Service desk",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/ArticleService.php:185",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "req-sla-report",
+			"area": "requests",
+			"name": "See how often you met the deadline you promised",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "no",
+			"espocrm": "partial",
+			"odoo-crm": "partial",
+			"kiss": "partial",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/SlaAttainmentService.php and the SLA page in src/manifest.d/55-sla-engine.json",
+			"feature": "Service levels",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/SlaAttainmentService.php",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "req-nps",
+			"area": "requests",
+			"name": "Measure how happy your clients are and chase the unhappy ones",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "no",
+			"espocrm": "no",
+			"odoo-crm": "partial",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/SatisfactionAggregationService.php:97 and lib/Service/DetractorFollowUpService.php",
+			"feature": "Satisfaction",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/SatisfactionAggregationService.php:97",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "work-queue",
+			"area": "work",
+			"name": "Open one page that shows everything waiting on you",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "partial",
+			"odoo-crm": "yes",
+			"kiss": "yes",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/WorklistService.php:189 and src/views/MyWork.vue",
+			"feature": "My work",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/WorklistService.php:189",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "work-task",
+			"area": "work",
+			"name": "Create a task with a deadline and give it to a colleague",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "yes",
+			"odoo-crm": "yes",
+			"kiss": "partial",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/ScheduledTaskService.php:309 and the Tasks pages in src/manifest.json",
+			"feature": "My work",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/ScheduledTaskService.php:309",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "work-business-hours-deadline",
+			"area": "work",
+			"name": "Set a task deadline in working hours, not in calendar hours",
+			"pipelinq": "yes",
+			"hubspot-crm": "partial",
+			"pipedrive": "no",
+			"espocrm": "no",
+			"odoo-crm": "no",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/TaskService.php:168",
+			"feature": "My work",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/TaskService.php:168",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "work-overdue",
+			"area": "work",
+			"name": "Get told when a task of yours runs late",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "partial",
+			"odoo-crm": "yes",
+			"kiss": "partial",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/ScheduledTaskService.php:443 and lib/BackgroundJob/TaskEscalationJob.php",
+			"feature": "My work",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/BackgroundJob/TaskEscalationJob.php",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "work-recurring-task",
+			"area": "work",
+			"name": "Schedule a task that comes back every week",
+			"pipelinq": "yes",
+			"hubspot-crm": "partial",
+			"pipedrive": "partial",
+			"espocrm": "partial",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/Export/CronExpressionHelper.php, used by lib/BackgroundJob/ScheduledTaskJob.php",
+			"feature": "My work",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "built",
+				"evidence": "lib/BackgroundJob/ScheduledTaskJob.php",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "work-nextcloud-dashboard",
+			"area": "work",
+			"name": "See your leads on the same dashboard as your mail and calendar",
+			"pipelinq": "yes",
+			"hubspot-crm": "no",
+			"pipedrive": "no",
+			"espocrm": "no",
+			"odoo-crm": "no",
+			"kiss": "no",
+			"provider": "nextcloud",
+			"providerHow": "pipelinq registers Nextcloud dashboard widgets; read in lib/Dashboard/MyLeadsWidget.php",
+			"feature": "My work",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Dashboard/MyLeadsWidget.php",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "work-notification",
+			"area": "work",
+			"name": "Get a notification the moment something is assigned to you",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "yes",
+			"odoo-crm": "yes",
+			"kiss": "partial",
+			"provider": "nextcloud",
+			"providerHow": "pipelinq pushes through the Nextcloud notifier; read in lib/Notification/Notifier.php",
+			"feature": "My work",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Notification/Notifier.php",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "work-activity-feed",
+			"area": "work",
+			"name": "Follow what your team changed today in one feed",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "yes",
+			"odoo-crm": "yes",
+			"kiss": "partial",
+			"provider": "nextcloud",
+			"providerHow": "pipelinq publishes to the Nextcloud activity stream; read in lib/Activity/Provider.php",
+			"feature": "My work",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Activity/Provider.php",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "work-notification-choice",
+			"area": "work",
+			"name": "Choose which of these notifications you actually want",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "partial",
+			"odoo-crm": "partial",
+			"kiss": "no",
+			"provider": "nextcloud",
+			"providerHow": "read in lib/Activity/Setting/AssignmentSetting.php and its three siblings",
+			"feature": "My work",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Activity/Setting/AssignmentSetting.php",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "work-time-entry",
+			"area": "work",
+			"name": "Write down the hours you spent on a client",
+			"pipelinq": "yes",
+			"hubspot-crm": "partial",
+			"pipedrive": "partial",
+			"espocrm": "partial",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in openspec/specs/time-entry-core and lib/Controller/TimeEntryWipController.php",
+			"feature": "Time and billing",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Controller/TimeEntryWipController.php",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "work-time-approval",
+			"area": "work",
+			"name": "Have a manager approve hours before anyone is billed for them",
+			"pipelinq": "yes",
+			"hubspot-crm": "no",
+			"pipedrive": "no",
+			"espocrm": "no",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Listener/TimeApprovalListener.php and lib/Event/TimeEntryApprovedEvent.php",
+			"feature": "Time and billing",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Listener/TimeApprovalListener.php",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "work-time-to-invoice",
+			"area": "work",
+			"name": "Send approved hours to the invoicing app in one go",
+			"pipelinq": "yes",
+			"hubspot-crm": "no",
+			"pipedrive": "partial",
+			"espocrm": "no",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "shillinq",
+			"providerHow": "Shillinq raises the invoice; pipelinq selects and sends the batch at lib/Service/TimeBillingHandoffService.php:252",
+			"feature": "Time and billing",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/TimeBillingHandoffService.php:252",
+				"owner": "shillinq"
+			}
+		},
+		{
+			"id": "work-weekly-review",
+			"area": "work",
+			"name": "Get a weekly summary of what moved and what did not",
+			"pipelinq": "yes",
+			"hubspot-crm": "partial",
+			"pipedrive": "partial",
+			"espocrm": "no",
+			"odoo-crm": "no",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/Marketing/WeeklyReviewService.php and lib/Service/Marketing/WeeklyReviewNumbers.php",
+			"feature": "My work",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/Marketing/WeeklyReviewService.php",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "mkt-blast",
+			"area": "marketing",
+			"name": "Send one mailing to a list of clients",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "partial",
+			"espocrm": "partial",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/BlastService.php:166 and lib/BackgroundJob/BlastSendJob.php",
+			"feature": "Marketing",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/BlastService.php:166",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "mkt-segment",
+			"area": "marketing",
+			"name": "Build a mailing list by rule instead of picking people by hand",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "partial",
+			"espocrm": "partial",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/SegmentService.php:242 and src/views/segments/SegmentForm.vue",
+			"feature": "Marketing",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/SegmentService.php:242",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "mkt-template",
+			"area": "marketing",
+			"name": "Write a mail once and reuse it as a template",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "yes",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/TemplateRenderer.php and the Templates pages in src/manifest.d/75-marketing-blasts.json",
+			"feature": "Marketing",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/TemplateRenderer.php",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "mkt-ab-test",
+			"area": "marketing",
+			"name": "Try two versions of a mailing and see which one wins",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "partial",
+			"espocrm": "no",
+			"odoo-crm": "partial",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/BlastService.php:413",
+			"feature": "Marketing",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/BlastService.php:413",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "mkt-open-click",
+			"area": "marketing",
+			"name": "See who opened your mailing and what they clicked",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "yes",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/TrackingLinkService.php:243 and :279",
+			"feature": "Marketing",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/TrackingLinkService.php:243",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "mkt-unsubscribe",
+			"area": "marketing",
+			"name": "Let people unsubscribe in one click and never mail them again",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "yes",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/SubscriptionService.php:349 and lib/Service/OptOutService.php",
+			"feature": "Marketing",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/SubscriptionService.php:349",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "mkt-preference-centre",
+			"area": "marketing",
+			"name": "Let people pick which mailings they want instead of all or nothing",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "no",
+			"espocrm": "no",
+			"odoo-crm": "partial",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/Marketing/PreferenceCentreService.php:137",
+			"feature": "Marketing",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/Marketing/PreferenceCentreService.php:137",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "mkt-consent-block",
+			"area": "marketing",
+			"name": "Have a send blocked when you have no consent for that channel",
+			"pipelinq": "yes",
+			"hubspot-crm": "partial",
+			"pipedrive": "partial",
+			"espocrm": "no",
+			"odoo-crm": "partial",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/ComplianceService.php:211 and lib/Service/ConsentService.php:114",
+			"feature": "Marketing",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/ComplianceService.php:211",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "mkt-preflight",
+			"area": "marketing",
+			"name": "Be warned before you send that part of your list may not be mailed",
+			"pipelinq": "yes",
+			"hubspot-crm": "partial",
+			"pipedrive": "no",
+			"espocrm": "no",
+			"odoo-crm": "no",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/ComplianceService.php:387",
+			"feature": "Marketing",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/ComplianceService.php:387",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "mkt-journey",
+			"area": "marketing",
+			"name": "Build a journey that waits, branches and sends without you",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "partial",
+			"espocrm": "partial",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/Marketing/JourneyService.php:156 and lib/Service/Marketing/JourneyStepRunner.php",
+			"feature": "Marketing",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/Marketing/JourneyService.php:156",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "mkt-landing-page",
+			"area": "marketing",
+			"name": "Publish a landing page with a form for a campaign",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "partial",
+			"espocrm": "no",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/LandingPageProvisioningService.php:119",
+			"feature": "Marketing",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/LandingPageProvisioningService.php:119",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "mkt-attribution",
+			"area": "marketing",
+			"name": "See which mailing produced which deal, and what it was worth",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "partial",
+			"espocrm": "no",
+			"odoo-crm": "partial",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/AttributionService.php:154 and :205",
+			"feature": "Marketing",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/AttributionService.php:154",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "mkt-social",
+			"area": "marketing",
+			"name": "Schedule a post to your social accounts from the CRM",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "no",
+			"espocrm": "no",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/SocialPostService.php:251, with adapters for LinkedIn, Bluesky and Mastodon",
+			"feature": "Marketing",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/SocialPostService.php:251",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "mkt-deliverability",
+			"area": "marketing",
+			"name": "Check your sending domain is set up right before you mail anyone",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "partial",
+			"espocrm": "no",
+			"odoo-crm": "partial",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/Marketing/DeliverabilityCheckService.php:92",
+			"feature": "Marketing",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/Marketing/DeliverabilityCheckService.php:92",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "mkt-search-terms",
+			"area": "marketing",
+			"name": "See which search terms bring people to your site and act on them",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "no",
+			"espocrm": "no",
+			"odoo-crm": "partial",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/SearchConsole/SearchConsoleImportService.php and lib/Service/Search/KeywordTargetService.php:144",
+			"feature": "Marketing",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/Search/KeywordTargetService.php:144",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "mkt-competitor-watch",
+			"area": "marketing",
+			"name": "Get told when a competitor changes their pricing page",
+			"pipelinq": "yes",
+			"hubspot-crm": "no",
+			"pipedrive": "no",
+			"espocrm": "no",
+			"odoo-crm": "no",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/Competitor/CompetitorWatchService.php:225, with readers for feeds, sitemaps and pages",
+			"feature": "Marketing",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/Competitor/CompetitorWatchService.php:225",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "mkt-public-signup",
+			"area": "marketing",
+			"name": "Let someone sign up to your newsletter from your own website",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "partial",
+			"espocrm": "no",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/MailingListService.php:240 and lib/Controller/ListPublicController.php",
+			"feature": "Marketing",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/MailingListService.php:240",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "portal-login",
+			"area": "portal",
+			"name": "Let a client log in to see their own records",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "no",
+			"espocrm": "yes",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/Portal/PortalAuthService.php:130",
+			"feature": "Customer portal",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/Portal/PortalAuthService.php:130",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "portal-mfa",
+			"area": "portal",
+			"name": "Ask a portal user for a second factor when they log in",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "unknown",
+			"espocrm": "partial",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/Portal/PortalMfaService.php:173",
+			"feature": "Customer portal",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/Portal/PortalMfaService.php:173",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "portal-file-request",
+			"area": "portal",
+			"name": "Let a client file a request in the portal and follow what happens to it",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "no",
+			"espocrm": "yes",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/Portal/PortalRequestService.php:191 and :117",
+			"feature": "Customer portal",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/Portal/PortalRequestService.php:191",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "portal-reply",
+			"area": "portal",
+			"name": "Let a client answer your question in the portal instead of by mail",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "no",
+			"espocrm": "partial",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/Portal/PortalRequestService.php:272",
+			"feature": "Customer portal",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/Portal/PortalRequestService.php:272",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "portal-documents",
+			"area": "portal",
+			"name": "Let a client download their own documents",
+			"pipelinq": "yes",
+			"hubspot-crm": "partial",
+			"pipedrive": "no",
+			"espocrm": "partial",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Controller/PortalDocumentController.php",
+			"feature": "Customer portal",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Controller/PortalDocumentController.php",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "portal-sign",
+			"area": "portal",
+			"name": "Let a client sign a document from a link you send them",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "partial",
+			"espocrm": "no",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/Portal/DocumentSigningService.php:88",
+			"feature": "Customer portal",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/Portal/DocumentSigningService.php:88",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "portal-invoices",
+			"area": "portal",
+			"name": "Let a client see their invoices in the portal",
+			"pipelinq": "yes",
+			"hubspot-crm": "partial",
+			"pipedrive": "no",
+			"espocrm": "partial",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "shillinq",
+			"providerHow": "the invoices live in Shillinq; pipelinq presents them read only at lib/Service/Portal/PortalInvoiceService.php:77",
+			"feature": "Customer portal",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/Portal/PortalInvoiceService.php:77",
+				"owner": "shillinq"
+			}
+		},
+		{
+			"id": "portal-delegation",
+			"area": "portal",
+			"name": "Let a client give their bookkeeper access to their own account",
+			"pipelinq": "yes",
+			"hubspot-crm": "partial",
+			"pipedrive": "no",
+			"espocrm": "no",
+			"odoo-crm": "partial",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/Portal/PortalDelegationService.php:95",
+			"feature": "Customer portal",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/Portal/PortalDelegationService.php:95",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "portal-export",
+			"area": "portal",
+			"name": "Let a client download everything you hold about them",
+			"pipelinq": "yes",
+			"hubspot-crm": "partial",
+			"pipedrive": "partial",
+			"espocrm": "no",
+			"odoo-crm": "no",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/Portal/PortalExportService.php:86",
+			"feature": "Privacy",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/Portal/PortalExportService.php:86",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "portal-close-account",
+			"area": "portal",
+			"name": "Let a client close their own portal account",
+			"pipelinq": "yes",
+			"hubspot-crm": "partial",
+			"pipedrive": "no",
+			"espocrm": "no",
+			"odoo-crm": "no",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/Portal/PortalAccountService.php:89 and :121",
+			"feature": "Privacy",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/Portal/PortalAccountService.php:89",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "portal-multi-tenant",
+			"area": "portal",
+			"name": "Run more than one branded portal from a single install",
+			"pipelinq": "yes",
+			"hubspot-crm": "partial",
+			"pipedrive": "no",
+			"espocrm": "no",
+			"odoo-crm": "partial",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/Portal/PortalTenantService.php and lib/Controller/PortalTenantController.php",
+			"feature": "Customer portal",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/Portal/PortalTenantService.php",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "portal-booking",
+			"area": "portal",
+			"name": "Let a client book an appointment in your diary themselves",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "partial",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/BookingService.php:329 and src/views/portal/BookingPortal.vue",
+			"feature": "Appointments",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/BookingService.php:329",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "portal-audit",
+			"area": "portal",
+			"name": "See every action a portal user took",
+			"pipelinq": "yes",
+			"hubspot-crm": "partial",
+			"pipedrive": "unknown",
+			"espocrm": "unknown",
+			"odoo-crm": "partial",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/Portal/PortalAuditService.php and lib/Controller/PortalAuditController.php",
+			"feature": "Customer portal",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/Portal/PortalAuditService.php",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "prod-catalogue",
+			"area": "products",
+			"name": "Keep a product list with prices you can sell from",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "yes",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/ProductCatalogService.php:207 and the Products pages in src/manifest.json",
+			"feature": "Products",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/ProductCatalogService.php:207",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "prod-price-tiers",
+			"area": "products",
+			"name": "Charge less per unit when somebody buys more",
+			"pipelinq": "yes",
+			"hubspot-crm": "partial",
+			"pipedrive": "partial",
+			"espocrm": "partial",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/ProductCatalogService.php:168",
+			"feature": "Products",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/ProductCatalogService.php:168",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "prod-variants",
+			"area": "products",
+			"name": "Sell the same product in different sizes or colours",
+			"pipelinq": "yes",
+			"hubspot-crm": "partial",
+			"pipedrive": "no",
+			"espocrm": "partial",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/ProductCatalogService.php:293",
+			"feature": "Products",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/ProductCatalogService.php:293",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "prod-vat",
+			"area": "products",
+			"name": "Put the right Dutch VAT rate on a product",
+			"pipelinq": "yes",
+			"hubspot-crm": "no",
+			"pipedrive": "no",
+			"espocrm": "partial",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/ProductCatalogService.php:97 and openspec/specs/pos-nl-btw-engine",
+			"feature": "Products",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/ProductCatalogService.php:97",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "prod-quote",
+			"area": "products",
+			"name": "Build a quote from your product list and send it to the client",
+			"pipelinq": "partial",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "yes",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "openspec/specs/product-catalog-quoting describes it; lib/Controller holds no quote controller, so only the pricing half is built",
+			"feature": "Products",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "specified",
+				"evidence": "openspec/specs/product-catalog-quoting, with no matching controller in lib/Controller",
+				"owner": "pipelinq"
+			},
+			"note": "The prices and the tiers are built. Producing a quote document from them is specified and not built."
+		},
+		{
+			"id": "prod-vendor",
+			"area": "products",
+			"name": "Keep who supplies a product and what it costs you",
+			"pipelinq": "yes",
+			"hubspot-crm": "no",
+			"pipedrive": "no",
+			"espocrm": "partial",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/ProductVendorProviderService.php and lib/Repair/IngestProductVendorMaster.php",
+			"feature": "Products",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/ProductVendorProviderService.php",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "contract-number",
+			"area": "products",
+			"name": "Turn a won deal into a contract with a number of its own",
+			"pipelinq": "yes",
+			"hubspot-crm": "partial",
+			"pipedrive": "partial",
+			"espocrm": "partial",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/ContractService.php:208",
+			"feature": "Contracts",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/ContractService.php:208",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "contract-status-guard",
+			"area": "products",
+			"name": "Be stopped from moving a contract to a status that makes no sense",
+			"pipelinq": "yes",
+			"hubspot-crm": "partial",
+			"pipedrive": "no",
+			"espocrm": "partial",
+			"odoo-crm": "partial",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/ContractService.php:152",
+			"feature": "Contracts",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/ContractService.php:152",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "contract-renewal-warning",
+			"area": "products",
+			"name": "Be warned a contract is ending while there is still time to renew it",
+			"pipelinq": "yes",
+			"hubspot-crm": "partial",
+			"pipedrive": "partial",
+			"espocrm": "no",
+			"odoo-crm": "partial",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/RenewalEngineService.php:118 and lib/BackgroundJob/RenewalWindowJob.php",
+			"feature": "Contracts",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/RenewalEngineService.php:118",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "contract-renewal-lead",
+			"area": "products",
+			"name": "Have the renewal turn up in your pipeline as a lead by itself",
+			"pipelinq": "yes",
+			"hubspot-crm": "no",
+			"pipedrive": "no",
+			"espocrm": "no",
+			"odoo-crm": "partial",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/RenewalEngineService.php:167",
+			"feature": "Contracts",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/RenewalEngineService.php:167",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "contract-successor",
+			"area": "products",
+			"name": "Draft next year's contract from this year's in one click",
+			"pipelinq": "yes",
+			"hubspot-crm": "unknown",
+			"pipedrive": "no",
+			"espocrm": "unknown",
+			"odoo-crm": "partial",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/ContractService.php:245",
+			"feature": "Contracts",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/ContractService.php:245",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "contract-mrr",
+			"area": "products",
+			"name": "See your monthly recurring revenue and what is up for renewal",
+			"pipelinq": "yes",
+			"hubspot-crm": "partial",
+			"pipedrive": "partial",
+			"espocrm": "no",
+			"odoo-crm": "partial",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/RecurringRevenueService.php:103 and :167",
+			"feature": "Contracts",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/RecurringRevenueService.php:103",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "contract-to-invoice",
+			"area": "products",
+			"name": "Send a contract to the invoicing app so it actually gets billed",
+			"pipelinq": "yes",
+			"hubspot-crm": "partial",
+			"pipedrive": "partial",
+			"espocrm": "no",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "shillinq",
+			"providerHow": "Shillinq raises the invoice; pipelinq projects the contract at lib/Service/Marketing/ShillinqInvoiceProjection.php",
+			"feature": "Contracts",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/Marketing/ShillinqInvoiceProjection.php",
+				"owner": "shillinq"
+			}
+		},
+		{
+			"id": "pos-sale",
+			"area": "pos",
+			"name": "Ring up a sale at the counter",
+			"pipelinq": "yes",
+			"hubspot-crm": "no",
+			"pipedrive": "no",
+			"espocrm": "no",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/PosTransactionService.php:262 and src/views/pos/PosTransactionForm.vue",
+			"feature": "Point of sale",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/PosTransactionService.php:262",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "pos-totals",
+			"area": "pos",
+			"name": "Have the till work out the totals and the VAT for you",
+			"pipelinq": "yes",
+			"hubspot-crm": "no",
+			"pipedrive": "no",
+			"espocrm": "no",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/PosTransactionService.php:316 and :428",
+			"feature": "Point of sale",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/PosTransactionService.php:316",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "pos-barcode",
+			"area": "pos",
+			"name": "Scan a barcode to put a product in the sale",
+			"pipelinq": "yes",
+			"hubspot-crm": "no",
+			"pipedrive": "no",
+			"espocrm": "no",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Controller/ProductCatalogController.php:89",
+			"feature": "Point of sale",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Controller/ProductCatalogController.php:89",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "pos-card-payment",
+			"area": "pos",
+			"name": "Take a card payment from the till",
+			"pipelinq": "yes",
+			"hubspot-crm": "no",
+			"pipedrive": "no",
+			"espocrm": "no",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "external",
+			"providerHow": "the payment runs at Adyen, Mollie, Stripe or CCV; pipelinq drives it at lib/Service/PosPaymentService.php:450",
+			"feature": "Point of sale",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/PosPaymentService.php:450",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "pos-receipt",
+			"area": "pos",
+			"name": "Print a receipt on the till printer or mail it instead",
+			"pipelinq": "yes",
+			"hubspot-crm": "no",
+			"pipedrive": "no",
+			"espocrm": "no",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/ReceiptService.php:389 and lib/Service/ReceiptDeliveryService.php",
+			"feature": "Point of sale",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/ReceiptService.php:389",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "pos-invoice-threshold",
+			"area": "pos",
+			"name": "Turn a receipt into a proper invoice once the amount is high enough",
+			"pipelinq": "yes",
+			"hubspot-crm": "no",
+			"pipedrive": "no",
+			"espocrm": "no",
+			"odoo-crm": "partial",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/ReceiptService.php:147 and :160",
+			"feature": "Point of sale",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/ReceiptService.php:147",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "pos-refund",
+			"area": "pos",
+			"name": "Take a return and pay the money back",
+			"pipelinq": "yes",
+			"hubspot-crm": "no",
+			"pipedrive": "no",
+			"espocrm": "no",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/PosRefundService.php and src/views/pos/PosRefundForm.vue",
+			"feature": "Point of sale",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/PosRefundService.php",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "pos-refund-guard",
+			"area": "pos",
+			"name": "Require a manager for a refund above your limit",
+			"pipelinq": "yes",
+			"hubspot-crm": "no",
+			"pipedrive": "no",
+			"espocrm": "no",
+			"odoo-crm": "partial",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Lifecycle/PosRefundManagerGuard.php",
+			"feature": "Point of sale",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Lifecycle/PosRefundManagerGuard.php",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "pos-cash-drawer",
+			"area": "pos",
+			"name": "Open the drawer at the start of the day and count it at the end",
+			"pipelinq": "yes",
+			"hubspot-crm": "no",
+			"pipedrive": "no",
+			"espocrm": "no",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/CashShiftService.php:151 and :242",
+			"feature": "Point of sale",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/CashShiftService.php:151",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "pos-cash-diff",
+			"area": "pos",
+			"name": "Have a manager sign off a till that does not add up",
+			"pipelinq": "yes",
+			"hubspot-crm": "no",
+			"pipedrive": "no",
+			"espocrm": "no",
+			"odoo-crm": "partial",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/CashShiftService.php:296 and :353",
+			"feature": "Point of sale",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/CashShiftService.php:353",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "pos-zreport",
+			"area": "pos",
+			"name": "Close the day with a report your bookkeeper accepts",
+			"pipelinq": "yes",
+			"hubspot-crm": "no",
+			"pipedrive": "no",
+			"espocrm": "no",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/PosBookkeepingService.php:183",
+			"feature": "Point of sale",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/PosBookkeepingService.php:183",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "pos-bookkeeping-handoff",
+			"area": "pos",
+			"name": "Send the day's takings straight into the bookkeeping",
+			"pipelinq": "yes",
+			"hubspot-crm": "no",
+			"pipedrive": "no",
+			"espocrm": "no",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "shillinq",
+			"providerHow": "Shillinq books the journal entry; pipelinq dispatches it at lib/Service/PosBookkeepingService.php:437",
+			"feature": "Point of sale",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/PosBookkeepingService.php:437",
+				"owner": "shillinq"
+			}
+		},
+		{
+			"id": "pos-audit-signature",
+			"area": "pos",
+			"name": "Keep a signed till trail of the kind the tax office asks for",
+			"pipelinq": "yes",
+			"hubspot-crm": "no",
+			"pipedrive": "no",
+			"espocrm": "no",
+			"odoo-crm": "partial",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/KassakoppelingSignatureService.php and lib/Service/KassakoppelingAuditService.php",
+			"feature": "Point of sale",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/KassakoppelingSignatureService.php",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "pos-customer-link",
+			"area": "pos",
+			"name": "Link the sale to the client who bought it",
+			"pipelinq": "yes",
+			"hubspot-crm": "no",
+			"pipedrive": "no",
+			"espocrm": "no",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/PosCustomerLinkService.php and lib/Controller/PosCustomerController.php",
+			"feature": "Point of sale",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/PosCustomerLinkService.php",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "loyalty-points",
+			"area": "pos",
+			"name": "Give a customer points for what they spend",
+			"pipelinq": "yes",
+			"hubspot-crm": "no",
+			"pipedrive": "no",
+			"espocrm": "no",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/LoyaltyEngineService.php:92 and lib/Service/PointsRuleEngine.php",
+			"feature": "Loyalty",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/LoyaltyEngineService.php:92",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "loyalty-redeem",
+			"area": "pos",
+			"name": "Let a customer pay part of the bill with their points",
+			"pipelinq": "yes",
+			"hubspot-crm": "no",
+			"pipedrive": "no",
+			"espocrm": "no",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/RedemptionService.php and lib/Service/PointsLedgerService.php",
+			"feature": "Loyalty",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/RedemptionService.php",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "loyalty-tiers",
+			"area": "pos",
+			"name": "Move a customer up a tier when they spend enough, and down when they stop",
+			"pipelinq": "yes",
+			"hubspot-crm": "no",
+			"pipedrive": "no",
+			"espocrm": "no",
+			"odoo-crm": "partial",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/TierService.php and lib/BackgroundJob/TierDowngradeJob.php",
+			"feature": "Loyalty",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/BackgroundJob/TierDowngradeJob.php",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "loyalty-giftcard",
+			"area": "pos",
+			"name": "Sell a gift card and let somebody spend it later",
+			"pipelinq": "yes",
+			"hubspot-crm": "no",
+			"pipedrive": "no",
+			"espocrm": "no",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/GiftCardService.php:73 and :188",
+			"feature": "Loyalty",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/GiftCardService.php:188",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "rep-sales-dashboard",
+			"area": "reporting",
+			"name": "Open a dashboard that shows how sales are going",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "yes",
+			"odoo-crm": "yes",
+			"kiss": "partial",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/AnalyticsService.php:285 and the Dashboard page in src/manifest.json",
+			"feature": "Reporting",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/AnalyticsService.php:285",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "rep-service-dashboard",
+			"area": "reporting",
+			"name": "Open a second dashboard for the service side of the business",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "partial",
+			"espocrm": "partial",
+			"odoo-crm": "yes",
+			"kiss": "partial",
+			"provider": "pipelinq",
+			"providerHow": "read in the OperationalDashboard page in src/manifest.json and lib/Service/ReportingService.php:90",
+			"feature": "Reporting",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/ReportingService.php:90",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "rep-compare-periods",
+			"area": "reporting",
+			"name": "Compare this month with the last one",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "partial",
+			"odoo-crm": "yes",
+			"kiss": "partial",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/AnalyticsService.php:465",
+			"feature": "Reporting",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/AnalyticsService.php:465",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "rep-agent",
+			"area": "reporting",
+			"name": "See how much each colleague handled and how fast",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "partial",
+			"odoo-crm": "yes",
+			"kiss": "partial",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/ReportingService.php:215",
+			"feature": "Reporting",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/ReportingService.php:215",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "rep-scheduled-export",
+			"area": "reporting",
+			"name": "Have a report land in your inbox on a schedule",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "partial",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/BackgroundJob/ExportSchedulerJob.php and lib/Service/Export/ExportJobService.php",
+			"feature": "Reporting",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/BackgroundJob/ExportSchedulerJob.php",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "rep-warehouse",
+			"area": "reporting",
+			"name": "Push your data into the warehouse your analysts already use",
+			"pipelinq": "yes",
+			"hubspot-crm": "partial",
+			"pipedrive": "no",
+			"espocrm": "no",
+			"odoo-crm": "partial",
+			"kiss": "partial",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Adapter/ExportSinkRegistry.php, with sinks for BigQuery, Snowflake, S3, Azure and Postgres",
+			"feature": "Reporting",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Adapter/ExportSinkRegistry.php",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "rep-export-run-visible",
+			"area": "reporting",
+			"name": "Check whether last night's export actually ran",
+			"pipelinq": "yes",
+			"hubspot-crm": "partial",
+			"pipedrive": "unknown",
+			"espocrm": "unknown",
+			"odoo-crm": "partial",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/Export/ExportRunService.php and src/views/export/ExportRuns.vue",
+			"feature": "Reporting",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/Export/ExportRunService.php",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "rep-schema-evolution",
+			"area": "reporting",
+			"name": "Keep an export working after you add a field",
+			"pipelinq": "yes",
+			"hubspot-crm": "unknown",
+			"pipedrive": "unknown",
+			"espocrm": "unknown",
+			"odoo-crm": "unknown",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/Export/SchemaEvolutionService.php",
+			"feature": "Reporting",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/Export/SchemaEvolutionService.php",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "rep-prometheus",
+			"area": "reporting",
+			"name": "Let your own monitoring read the app's numbers",
+			"pipelinq": "yes",
+			"hubspot-crm": "no",
+			"pipedrive": "no",
+			"espocrm": "no",
+			"odoo-crm": "no",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Controller/MetricsController.php and openspec/specs/prometheus-metrics",
+			"feature": "Reporting",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Controller/MetricsController.php",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "rep-forecast-export",
+			"area": "reporting",
+			"name": "Export the forecast so finance can work with it",
+			"pipelinq": "yes",
+			"hubspot-crm": "partial",
+			"pipedrive": "partial",
+			"espocrm": "no",
+			"odoo-crm": "partial",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/ForecastExportService.php",
+			"feature": "Reporting",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/ForecastExportService.php",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "rep-website-traffic",
+			"area": "reporting",
+			"name": "See your website traffic next to your pipeline",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "partial",
+			"espocrm": "no",
+			"odoo-crm": "partial",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/Matomo/MatomoReportService.php",
+			"feature": "Reporting",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/Matomo/MatomoReportService.php",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "rep-contact-moments",
+			"area": "reporting",
+			"name": "Report on your contact moments by channel and by subject",
+			"pipelinq": "yes",
+			"hubspot-crm": "partial",
+			"pipedrive": "no",
+			"espocrm": "partial",
+			"odoo-crm": "partial",
+			"kiss": "yes",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/RapportageService.php and openspec/specs/contactmomenten-rapportage",
+			"feature": "Reporting",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/RapportageService.php",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "auto-rule",
+			"area": "automation",
+			"name": "Build a rule that fires when something changes, without writing code",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "partial",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Flow/PipelinqFlowNodeListener.php and the Flows pages in src/manifest.json",
+			"feature": "Automation",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Flow/PipelinqFlowNodeListener.php",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "auto-webhook",
+			"area": "automation",
+			"name": "Have another system told the moment a record changes",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "yes",
+			"odoo-crm": "yes",
+			"kiss": "partial",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/WebhookProcessorService.php and lib/BackgroundJob/WebhookProcessorJob.php",
+			"feature": "Automation",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/WebhookProcessorService.php",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "auto-api",
+			"area": "automation",
+			"name": "Read and write your own data from your own scripts",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "yes",
+			"odoo-crm": "yes",
+			"kiss": "partial",
+			"provider": "pipelinq",
+			"providerHow": "read in appinfo/routes.php and openspec/specs/marketing-api",
+			"feature": "Platform",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "appinfo/routes.php",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "auto-connection-registry",
+			"area": "automation",
+			"name": "See every outside system this app talks to in one list",
+			"pipelinq": "yes",
+			"hubspot-crm": "partial",
+			"pipedrive": "partial",
+			"espocrm": "no",
+			"odoo-crm": "partial",
+			"kiss": "no",
+			"provider": "integriq",
+			"providerHow": "Integriq owns the connection registry; pipelinq reports into it at lib/Service/ConnectionReportService.php",
+			"feature": "Platform",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/ConnectionReportService.php",
+				"owner": "integriq"
+			}
+		},
+		{
+			"id": "auto-connector-send",
+			"area": "automation",
+			"name": "Send a mailing through a connector you already set up elsewhere",
+			"pipelinq": "yes",
+			"hubspot-crm": "no",
+			"pipedrive": "no",
+			"espocrm": "no",
+			"odoo-crm": "no",
+			"kiss": "no",
+			"provider": "integriq",
+			"providerHow": "the connector lives in Integriq; pipelinq sends through it at lib/Service/Marketing/Transport/ConnectorSourceTransport.php",
+			"feature": "Automation",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/Marketing/Transport/ConnectorSourceTransport.php",
+				"owner": "integriq"
+			}
+		},
+		{
+			"id": "auto-mcp",
+			"area": "automation",
+			"name": "Hand a job to an AI assistant and decide what it may touch",
+			"pipelinq": "yes",
+			"hubspot-crm": "partial",
+			"pipedrive": "partial",
+			"espocrm": "no",
+			"odoo-crm": "partial",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Mcp/PipelinqScannableServices.php:58 and openspec/specs/crm-mcp-tool-surface",
+			"feature": "Automation",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Mcp/PipelinqScannableServices.php:58",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "auto-ask-question",
+			"area": "automation",
+			"name": "Ask a question in plain language and get an answer from your own data",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "no",
+			"odoo-crm": "partial",
+			"kiss": "partial",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/NaviService.php and lib/Controller/NaviController.php",
+			"feature": "Automation",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/NaviService.php",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "auto-overnight",
+			"area": "automation",
+			"name": "Have the slow work run overnight instead of while you wait",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "yes",
+			"odoo-crm": "yes",
+			"kiss": "partial",
+			"provider": "nextcloud",
+			"providerHow": "Nextcloud runs the cron; pipelinq registers dozens of jobs, for example lib/BackgroundJob/SlaDeadlineSweepJob.php",
+			"feature": "Platform",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/BackgroundJob/SlaDeadlineSweepJob.php",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "auto-retry",
+			"area": "automation",
+			"name": "Have a failed hand-off retried instead of quietly lost",
+			"pipelinq": "yes",
+			"hubspot-crm": "unknown",
+			"pipedrive": "unknown",
+			"espocrm": "unknown",
+			"odoo-crm": "unknown",
+			"kiss": "unknown",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/BackgroundJob/BillingHandoffRetryJob.php and lib/BackgroundJob/PosRetryBackoffJob.php",
+			"feature": "Platform",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "built",
+				"evidence": "lib/BackgroundJob/BillingHandoffRetryJob.php",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "auto-cross-app",
+			"area": "automation",
+			"name": "React to a change a colleague made in another app in the same workspace",
+			"pipelinq": "yes",
+			"hubspot-crm": "no",
+			"pipedrive": "no",
+			"espocrm": "no",
+			"odoo-crm": "partial",
+			"kiss": "no",
+			"provider": "openregister",
+			"providerHow": "Open Register raises the object event; pipelinq handles it at lib/Listener/ObjectEventListener.php",
+			"feature": "Platform",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Listener/ObjectEventListener.php",
+				"owner": "openregister"
+			}
+		},
+		{
+			"id": "auto-wiki-search",
+			"area": "automation",
+			"name": "Search your company wiki from inside the CRM",
+			"pipelinq": "yes",
+			"hubspot-crm": "no",
+			"pipedrive": "no",
+			"espocrm": "no",
+			"odoo-crm": "no",
+			"kiss": "no",
+			"provider": "external",
+			"providerHow": "the wiki is XWiki; pipelinq queries it at lib/Service/XWikiService.php:118",
+			"feature": "Service desk",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/XWikiService.php:118",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "auto-demo-data",
+			"area": "automation",
+			"name": "Fill a fresh install with example data so you can try it out",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "partial",
+			"odoo-crm": "yes",
+			"kiss": "unknown",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/DemoSeedService.php and lib/Command/SeedDemoDataCommand.php",
+			"feature": "Onboarding",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Command/SeedDemoDataCommand.php",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "auto-setup-wizard",
+			"area": "automation",
+			"name": "Be walked through setup the first time you open the app",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "partial",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Controller/SetupController.php and the setup and walkthrough blocks in src/manifest.json",
+			"feature": "Onboarding",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Controller/SetupController.php",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "gov-brp-lookup",
+			"area": "government",
+			"name": "Look up a citizen by their BSN",
+			"pipelinq": "yes",
+			"hubspot-crm": "no",
+			"pipedrive": "no",
+			"espocrm": "no",
+			"odoo-crm": "no",
+			"kiss": "yes",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/HaalCentraalClient.php:136 and lib/Controller/BrpController.php",
+			"feature": "Dutch registries",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/HaalCentraalClient.php:136",
+				"owner": "pipelinq"
+			},
+			"note": "The 2026-03 KISS research lists this as a pipelinq gap. It has since been built."
+		},
+		{
+			"id": "gov-bsn-audit",
+			"area": "government",
+			"name": "Log every BSN lookup so you can show afterwards it was allowed",
+			"pipelinq": "yes",
+			"hubspot-crm": "no",
+			"pipedrive": "no",
+			"espocrm": "no",
+			"odoo-crm": "no",
+			"kiss": "yes",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/BsnAuditService.php:104",
+			"feature": "Dutch registries",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/BsnAuditService.php:104",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "gov-bsn-pseudonym",
+			"area": "government",
+			"name": "Store a BSN pseudonymised rather than in the clear",
+			"pipelinq": "yes",
+			"hubspot-crm": "no",
+			"pipedrive": "no",
+			"espocrm": "no",
+			"odoo-crm": "no",
+			"kiss": "unknown",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/BsnAuditService.php:246",
+			"feature": "Dutch registries",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/BsnAuditService.php:246",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "gov-brp-mutation",
+			"area": "government",
+			"name": "Be told when a citizen's details change in the BRP",
+			"pipelinq": "yes",
+			"hubspot-crm": "no",
+			"pipedrive": "no",
+			"espocrm": "no",
+			"odoo-crm": "no",
+			"kiss": "unknown",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Listener/BrpMutationWebhookListener.php and lib/BackgroundJob/BrpMonitorJob.php",
+			"feature": "Dutch registries",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Listener/BrpMutationWebhookListener.php",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "gov-brp-retention",
+			"area": "government",
+			"name": "Throw away register data you are no longer allowed to keep",
+			"pipelinq": "yes",
+			"hubspot-crm": "no",
+			"pipedrive": "no",
+			"espocrm": "no",
+			"odoo-crm": "no",
+			"kiss": "unknown",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/BackgroundJob/BrpRetentionJob.php",
+			"feature": "Privacy",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/BackgroundJob/BrpRetentionJob.php",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "gov-bsn-validation",
+			"area": "government",
+			"name": "Refuse a BSN that cannot be real before you send it anywhere",
+			"pipelinq": "yes",
+			"hubspot-crm": "no",
+			"pipedrive": "no",
+			"espocrm": "no",
+			"odoo-crm": "no",
+			"kiss": "unknown",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/BsnValidationService.php",
+			"feature": "Dutch registries",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/BsnValidationService.php",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "gov-zgw-case",
+			"area": "government",
+			"name": "Open and read a case in your zaaksysteem over the national APIs",
+			"pipelinq": "yes",
+			"hubspot-crm": "no",
+			"pipedrive": "no",
+			"espocrm": "no",
+			"odoo-crm": "no",
+			"kiss": "yes",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/Zgw/ZgwApiClient.php:155 with lib/Service/Zgw/ZrcClient.php and ZtcClient.php",
+			"feature": "Dutch registries",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/Zgw/ZgwApiClient.php:155",
+				"owner": "pipelinq"
+			},
+			"note": "Also listed as a pipelinq gap in the 2026-03 research and since built."
+		},
+		{
+			"id": "gov-zgw-notify",
+			"area": "government",
+			"name": "Subscribe to case notifications from the national notification service",
+			"pipelinq": "yes",
+			"hubspot-crm": "no",
+			"pipedrive": "no",
+			"espocrm": "no",
+			"odoo-crm": "no",
+			"kiss": "partial",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/Zgw/NrcSubscriptionService.php and lib/Listener/NrcNotificationListener.php",
+			"feature": "Dutch registries",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/Zgw/NrcSubscriptionService.php",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "gov-klantinteracties",
+			"area": "government",
+			"name": "Publish your contact moments in the VNG Klantinteracties format",
+			"pipelinq": "yes",
+			"hubspot-crm": "no",
+			"pipedrive": "no",
+			"espocrm": "no",
+			"odoo-crm": "no",
+			"kiss": "yes",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Integration/ContactMomentLeafProvider.php and openspec/specs/vng-klantinteracties-leaf",
+			"feature": "Dutch registries",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Integration/ContactMomentLeafProvider.php",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "gov-berichtenbox",
+			"area": "government",
+			"name": "Send a citizen a message in their MijnOverheid Berichtenbox",
+			"pipelinq": "yes",
+			"hubspot-crm": "no",
+			"pipedrive": "no",
+			"espocrm": "no",
+			"odoo-crm": "no",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/BerichtenboxService.php:143 and lib/Service/LogiusConnector.php",
+			"feature": "Dutch registries",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/BerichtenboxService.php:143",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "gov-berichtenbox-fallback",
+			"area": "government",
+			"name": "Fall back to email when the Berichtenbox cannot deliver",
+			"pipelinq": "yes",
+			"hubspot-crm": "no",
+			"pipedrive": "no",
+			"espocrm": "no",
+			"odoo-crm": "no",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/BerichtenboxService.php:307 and lib/BackgroundJob/FallbackEmailJob.php",
+			"feature": "Dutch registries",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/BerichtenboxService.php:307",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "gov-data-request",
+			"area": "government",
+			"name": "Handle a request from a citizen to see or delete their own data",
+			"pipelinq": "yes",
+			"hubspot-crm": "partial",
+			"pipedrive": "partial",
+			"espocrm": "no",
+			"odoo-crm": "no",
+			"kiss": "partial",
+			"provider": "openregister",
+			"providerHow": "Open Register holds the request record; pipelinq migrated its own into it at lib/Repair/MigrateAvgVerzoekenToOrDsar.php",
+			"feature": "Privacy",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Repair/MigrateAvgVerzoekenToOrDsar.php",
+				"owner": "openregister"
+			}
+		},
+		{
+			"id": "gov-identity-verify",
+			"area": "government",
+			"name": "Check who a data request really came from before you answer it",
+			"pipelinq": "yes",
+			"hubspot-crm": "no",
+			"pipedrive": "no",
+			"espocrm": "no",
+			"odoo-crm": "no",
+			"kiss": "unknown",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/Gdpr/PipelinqBsnIdentityVerifyProvider.php:125",
+			"feature": "Privacy",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/Gdpr/PipelinqBsnIdentityVerifyProvider.php:125",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "gov-client-language",
+			"area": "government",
+			"name": "Write to a client in the language they asked for",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "partial",
+			"espocrm": "partial",
+			"odoo-crm": "yes",
+			"kiss": "partial",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/CorrespondenceLanguageService.php and lib/Controller/CorrespondenceLanguageController.php",
+			"feature": "Correspondence",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/CorrespondenceLanguageService.php",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "plat-self-host",
+			"area": "platform",
+			"name": "Run the whole thing on your own server",
+			"pipelinq": "yes",
+			"hubspot-crm": "no",
+			"pipedrive": "no",
+			"espocrm": "yes",
+			"odoo-crm": "yes",
+			"kiss": "yes",
+			"provider": "nextcloud",
+			"providerHow": "pipelinq ships as a Nextcloud app you install yourself; read in appinfo/info.xml",
+			"feature": "Platform",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "appinfo/info.xml",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "plat-source-code",
+			"area": "platform",
+			"name": "Read and change the source code",
+			"pipelinq": "yes",
+			"hubspot-crm": "no",
+			"pipedrive": "no",
+			"espocrm": "yes",
+			"odoo-crm": "partial",
+			"kiss": "yes",
+			"provider": "pipelinq",
+			"providerHow": "read in LICENSE and the licence element of appinfo/info.xml, both EUPL-1.2",
+			"feature": "Platform",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "LICENSE",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "plat-no-seat-fee",
+			"area": "platform",
+			"name": "Add a colleague without the bill going up",
+			"pipelinq": "yes",
+			"hubspot-crm": "partial",
+			"pipedrive": "no",
+			"espocrm": "yes",
+			"odoo-crm": "partial",
+			"kiss": "yes",
+			"provider": "pipelinq",
+			"providerHow": "there is no seat count anywhere in lib/; users come from Nextcloud",
+			"feature": "Platform",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "appinfo/info.xml declares no licensing tier",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "plat-in-workspace",
+			"area": "platform",
+			"name": "Use the CRM in the workspace where your files and calendar already are",
+			"pipelinq": "yes",
+			"hubspot-crm": "no",
+			"pipedrive": "no",
+			"espocrm": "no",
+			"odoo-crm": "no",
+			"kiss": "no",
+			"provider": "nextcloud",
+			"providerHow": "read in lib/AppInfo/Application.php, which registers the app into Nextcloud",
+			"feature": "Platform",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/AppInfo/Application.php",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "plat-existing-login",
+			"area": "platform",
+			"name": "Log in with the account you already use for everything else",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "yes",
+			"odoo-crm": "yes",
+			"kiss": "yes",
+			"provider": "nextcloud",
+			"providerHow": "authentication is Nextcloud's; pipelinq declares its posture per route in appinfo/routes.php",
+			"feature": "Platform",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "appinfo/routes.php",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "plat-rbac",
+			"area": "platform",
+			"name": "Say who may see which records",
+			"pipelinq": "yes",
+			"hubspot-crm": "partial",
+			"pipedrive": "yes",
+			"espocrm": "yes",
+			"odoo-crm": "yes",
+			"kiss": "partial",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Lifecycle/ObjectOwnerAccessPolicy.php, lib/Lifecycle/PosAccessPolicy.php and lib/Service/Export/ExportAccessPolicy.php",
+			"feature": "Platform",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Lifecycle/ObjectOwnerAccessPolicy.php",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "plat-field-permission",
+			"area": "platform",
+			"name": "Hide a single field from a group without hiding the whole record",
+			"pipelinq": "partial",
+			"hubspot-crm": "partial",
+			"pipedrive": "partial",
+			"espocrm": "yes",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "openregister",
+			"providerHow": "visibility is a property of the Open Register schema and it hides the field for everyone, not per group",
+			"feature": "Platform",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "building",
+				"evidence": "no per-group field rule found in lib/Lifecycle/",
+				"owner": "openregister"
+			},
+			"note": "EspoCRM does this per role. Ours is all or nothing today."
+		},
+		{
+			"id": "plat-secrets",
+			"area": "platform",
+			"name": "Keep the keys to your other systems encrypted at rest",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "unknown",
+			"odoo-crm": "unknown",
+			"kiss": "unknown",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/EncryptionService.php, used by lib/Service/PosPaymentService.php:215",
+			"feature": "Platform",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/EncryptionService.php",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "plat-connection-audit",
+			"area": "platform",
+			"name": "Keep a log of every call you made to an outside register",
+			"pipelinq": "yes",
+			"hubspot-crm": "partial",
+			"pipedrive": "partial",
+			"espocrm": "partial",
+			"odoo-crm": "partial",
+			"kiss": "yes",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/Social/ConnectionAuditService.php and lib/Service/BsnAuditService.php:104",
+			"feature": "Platform",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/Social/ConnectionAuditService.php",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "plat-rename-safe",
+			"area": "platform",
+			"name": "Rename a field and have your existing records follow",
+			"pipelinq": "yes",
+			"hubspot-crm": "partial",
+			"pipedrive": "partial",
+			"espocrm": "yes",
+			"odoo-crm": "partial",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Repair/RenameDutchColumns.php and lib/Repair/RenameCollidingSchemaSlugs.php",
+			"feature": "Platform",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Repair/RenameDutchColumns.php",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "plat-health-check",
+			"area": "platform",
+			"name": "Check from one page that every connection still works",
+			"pipelinq": "yes",
+			"hubspot-crm": "partial",
+			"pipedrive": "partial",
+			"espocrm": "partial",
+			"odoo-crm": "partial",
+			"kiss": "unknown",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Controller/HealthController.php and lib/Command/ConnectionAuditCommand.php",
+			"feature": "Platform",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Controller/HealthController.php",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "plat-delete-person",
+			"area": "platform",
+			"name": "Delete a person's details on request and leave the books intact",
+			"pipelinq": "yes",
+			"hubspot-crm": "partial",
+			"pipedrive": "partial",
+			"espocrm": "no",
+			"odoo-crm": "no",
+			"kiss": "partial",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/DataDeletionService.php:110, which pseudonymises rather than dropping the row",
+			"feature": "Privacy",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/DataDeletionService.php:110",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "plat-spend-cap",
+			"area": "platform",
+			"name": "Stop a runaway integration before it costs you money",
+			"pipelinq": "yes",
+			"hubspot-crm": "unknown",
+			"pipedrive": "unknown",
+			"espocrm": "unknown",
+			"odoo-crm": "unknown",
+			"kiss": "unknown",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/QuotaService.php, lib/Service/BudgetService.php and lib/BackgroundJob/BudgetPeriodResetJob.php",
+			"feature": "Platform",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/BudgetService.php",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "plat-house-style",
+			"area": "platform",
+			"name": "Match the app to your house style without touching the code",
+			"pipelinq": "yes",
+			"hubspot-crm": "partial",
+			"pipedrive": "partial",
+			"espocrm": "yes",
+			"odoo-crm": "yes",
+			"kiss": "partial",
+			"provider": "nextcloud",
+			"providerHow": "pipelinq styles from Nextcloud theme variables; read in css/dashboardWidgets.css",
+			"feature": "Platform",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "built",
+				"evidence": "css/dashboardWidgets.css",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "plat-languages",
+			"area": "platform",
+			"name": "Use the app in Dutch as well as English",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "yes",
+			"odoo-crm": "yes",
+			"kiss": "partial",
+			"provider": "pipelinq",
+			"providerHow": "read in l10n/nl.json, beside seven other locales in l10n/",
+			"feature": "Platform",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "l10n/nl.json",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "plat-phone",
+			"area": "platform",
+			"name": "Work from your phone while you are with a client",
+			"pipelinq": "partial",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "yes",
+			"odoo-crm": "yes",
+			"kiss": "partial",
+			"provider": "pipelinq",
+			"providerHow": "there is no mobile client in the repo; the web pages are responsive and openspec/specs/time-entry-mobile is the only mobile work",
+			"feature": "Platform",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "building",
+				"evidence": "openspec/specs/time-entry-mobile, with no native client in the repo",
+				"owner": "pipelinq"
+			},
+			"note": "The four commercial and open source CRMs all ship a native mobile app. We do not."
+		},
+		{
+			"id": "chat-on-website",
+			"area": "requests",
+			"name": "Chat with a visitor on your website before they ever fill in a form",
+			"pipelinq": "no",
+			"hubspot-crm": "yes",
+			"pipedrive": "partial",
+			"espocrm": "no",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "nothing in lib/ or src/ matches live chat or a chatbot; the only web intake is the form at lib/Service/EnquiryIntakeService.php:134",
+			"feature": "Request intake",
+			"featureConfidence": "high",
+			"built": {
+				"state": "none",
+				"evidence": "no live chat found anywhere in lib/ or src/",
+				"owner": "pipelinq"
+			},
+			"note": "HubSpot's free tier includes live chat and a chatbot. This is a real gap, not a rating we missed."
+		},
+		{
+			"id": "marketplace-integrations",
+			"area": "automation",
+			"name": "Pick a ready-made connection from a marketplace instead of building one",
+			"pipelinq": "partial",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "partial",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "integriq",
+			"providerHow": "Integriq supplies the connectors; there is no marketplace a user browses, only lib/Service/ConnectorSourceRegister.php",
+			"feature": "Platform",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "building",
+				"evidence": "lib/Service/ConnectorSourceRegister.php exposes connectors but no catalogue",
+				"owner": "integriq"
+			},
+			"note": "HubSpot lists 1,500 integrations and Pipedrive 400. We have connectors, not a shop window."
+		},
+		{
+			"id": "mail-client-plugin",
+			"area": "contact-moments",
+			"name": "Add a contact to the CRM from inside the mail you are reading",
+			"pipelinq": "no",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "partial",
+			"odoo-crm": "partial",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "there is no browser extension or mail plugin in this repo; filing happens after the fact at lib/Service/EmailMatchService.php:278",
+			"feature": "Email",
+			"featureConfidence": "high",
+			"built": {
+				"state": "none",
+				"evidence": "no extension or plugin directory in the repo",
+				"owner": "pipelinq"
+			},
+			"note": "Ours files mail afterwards by matching the address. Theirs works while you read the mail."
+		},
+		{
+			"id": "bulk-edit",
+			"area": "clients",
+			"name": "Change a field on fifty records at once, like a spreadsheet",
+			"pipelinq": "no",
+			"hubspot-crm": "partial",
+			"pipedrive": "yes",
+			"espocrm": "partial",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "no bulk edit was found in src/views or src/components; the only multi-select is on a refund form",
+			"feature": "Client management",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "none",
+				"evidence": "no bulk edit in src/views/clients/ or src/components/",
+				"owner": "pipelinq"
+			},
+			"note": "Attio and Pipedrive make this the centre of the product. We edit one record at a time."
+		},
+		{
+			"id": "stock-levels",
+			"area": "products",
+			"name": "Know how many you have left before you promise it to somebody",
+			"pipelinq": "partial",
+			"hubspot-crm": "no",
+			"pipedrive": "no",
+			"espocrm": "partial",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "shillinq",
+			"providerHow": "pipelinq emits a stock movement at lib/Service/PosTransactionService.php:692 and Shillinq keeps the count, so no pipelinq page shows a level",
+			"feature": "Products",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "building",
+				"evidence": "lib/Service/PosTransactionService.php:692 emits the event, no stock page exists here",
+				"owner": "shillinq"
+			}
+		},
+		{
+			"id": "unified-search",
+			"area": "requests",
+			"name": "Search your wiki, your articles and your client records from one box",
+			"pipelinq": "partial",
+			"hubspot-crm": "partial",
+			"pipedrive": "no",
+			"espocrm": "partial",
+			"odoo-crm": "partial",
+			"kiss": "yes",
+			"provider": "pipelinq",
+			"providerHow": "the wiki and the articles are searched separately at lib/Service/XWikiService.php:118 and lib/Service/ArticleService.php:185",
+			"feature": "Service desk",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "building",
+				"evidence": "two separate search paths, no single index",
+				"owner": "pipelinq"
+			},
+			"note": "KISS indexes everything into Elasticsearch and searches it in one box. Ours are separate searches."
+		},
+		{
+			"id": "internal-news",
+			"area": "requests",
+			"name": "Publish a work instruction your service desk sees the moment it changes",
+			"pipelinq": "partial",
+			"hubspot-crm": "partial",
+			"pipedrive": "no",
+			"espocrm": "no",
+			"odoo-crm": "partial",
+			"kiss": "yes",
+			"provider": "pipelinq",
+			"providerHow": "lib/Service/ArticleService.php:333 publishes articles, but they are marketing articles rather than desk instructions",
+			"feature": "Service desk",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "building",
+				"evidence": "lib/Service/ArticleService.php:333 publishes, with no desk-facing surface",
+				"owner": "pipelinq"
+			},
+			"note": "KISS calls these werkberichten and filters them per skill. We have the publishing half only."
+		},
+		{
+			"id": "two-calls-at-once",
+			"area": "contact-moments",
+			"name": "Handle two phone calls at once and switch between them",
+			"pipelinq": "no",
+			"hubspot-crm": "no",
+			"pipedrive": "no",
+			"espocrm": "no",
+			"odoo-crm": "no",
+			"kiss": "yes",
+			"provider": "pipelinq",
+			"providerHow": "lib/Service/CtiService.php:252 opens one pending contact moment per user, with no switching",
+			"feature": "Telephony",
+			"featureConfidence": "high",
+			"built": {
+				"state": "none",
+				"evidence": "lib/Service/CtiService.php:252 holds one pending moment at a time",
+				"owner": "pipelinq"
+			},
+			"note": "KISS does this because a contact centre needs it. Nobody else in this matrix does."
+		},
+		{
+			"id": "vendor-training",
+			"area": "platform",
+			"name": "Learn the product from courses the vendor runs",
+			"pipelinq": "partial",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "partial",
+			"odoo-crm": "yes",
+			"kiss": "partial",
+			"provider": "pipelinq",
+			"providerHow": "the app ships written documentation in docs/ and an in-app walkthrough, not a course",
+			"feature": "Onboarding",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "building",
+				"evidence": "docs/ plus the walkthrough block in src/manifest.json",
+				"owner": "pipelinq"
+			},
+			"note": "HubSpot Academy is a real reason buyers pick HubSpot. Written docs are not the same thing."
+		},
+		{
+			"id": "local-partner",
+			"area": "platform",
+			"name": "Find somebody near you who will set it up for you",
+			"pipelinq": "partial",
+			"hubspot-crm": "yes",
+			"pipedrive": "partial",
+			"espocrm": "partial",
+			"odoo-crm": "yes",
+			"kiss": "yes",
+			"provider": "pipelinq",
+			"providerHow": "appinfo/info.xml points at Conduction for support and an SLA, and names no partner network",
+			"feature": "Platform",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "building",
+				"evidence": "appinfo/info.xml names one vendor, not a partner network",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "take-your-data",
+			"area": "platform",
+			"name": "Take all your data with you if you decide to leave",
+			"pipelinq": "yes",
+			"hubspot-crm": "partial",
+			"pipedrive": "partial",
+			"espocrm": "yes",
+			"odoo-crm": "yes",
+			"kiss": "partial",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/Export/ExportDataService.php and lib/Adapter/ExportSinkRegistry.php, which write whole registers out",
+			"feature": "Platform",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Adapter/ExportSinkRegistry.php",
+				"owner": "pipelinq"
+			}
+		},
+		{
+			"id": "meeting-link",
+			"area": "portal",
+			"name": "Send a link and let somebody pick a slot in your diary",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "partial",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/AvailabilityService.php:174 and lib/Service/BookingService.php:329",
+			"feature": "Appointments",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/AvailabilityService.php:174",
+				"owner": "pipelinq"
+			}
+		}
+	],
+	"pending": [
+		{
+			"id": "q-stage-reorder",
+			"area": "pipeline",
+			"name": "Can you reorder pipeline stages by dragging them, or only by editing them?",
+			"pipelinq": "unknown",
+			"hubspot-crm": "unknown",
+			"pipedrive": "unknown",
+			"espocrm": "unknown",
+			"odoo-crm": "unknown",
+			"kiss": "unknown",
+			"note": "Not settled. The board drags leads. Whether it drags stage columns was not read."
+		},
+		{
+			"id": "q-portal-pay",
+			"area": "portal",
+			"name": "Can a client pay an invoice from the portal, or only look at it?",
+			"pipelinq": "unknown",
+			"hubspot-crm": "unknown",
+			"pipedrive": "unknown",
+			"espocrm": "unknown",
+			"odoo-crm": "unknown",
+			"kiss": "unknown",
+			"note": "Not settled. lib/Service/Portal/PortalInvoiceService.php extends a read-only facade and no portal payment route was read."
+		},
+		{
+			"id": "q-hardware-scanner",
+			"area": "pos",
+			"name": "Does the barcode lookup work with a counter scanner, or only with typed input?",
+			"pipelinq": "unknown",
+			"hubspot-crm": "unknown",
+			"pipedrive": "unknown",
+			"espocrm": "unknown",
+			"odoo-crm": "unknown",
+			"kiss": "unknown",
+			"note": "Not settled. lib/Controller/ProductCatalogController.php:89 takes a barcode parameter. The input device was not tested."
+		},
+		{
+			"id": "q-multi-question-call",
+			"area": "contact-moments",
+			"name": "Can you track several separate questions inside one phone call?",
+			"pipelinq": "unknown",
+			"hubspot-crm": "unknown",
+			"pipedrive": "unknown",
+			"espocrm": "unknown",
+			"odoo-crm": "unknown",
+			"kiss": "unknown",
+			"note": "Not settled. KISS does this and a contact centre expects it. Nothing equivalent was found in lib/Service/KccWerkplekService.php."
+		},
+		{
+			"id": "q-merge-undo",
+			"area": "clients",
+			"name": "Can a client merge be undone afterwards?",
+			"pipelinq": "unknown",
+			"hubspot-crm": "unknown",
+			"pipedrive": "unknown",
+			"espocrm": "unknown",
+			"odoo-crm": "unknown",
+			"kiss": "unknown",
+			"note": "Not settled. The merge happens in Open Register and pipelinq only follows it at lib/Listener/ObjectsMergedSyncListener.php."
+		},
+		{
+			"id": "q-hubspot-free-pipeline",
+			"area": "pipeline",
+			"name": "Does HubSpot's free tier still include the deal pipeline this matrix rates?",
+			"pipelinq": "unknown",
+			"hubspot-crm": "unknown",
+			"pipedrive": "unknown",
+			"espocrm": "unknown",
+			"odoo-crm": "unknown",
+			"kiss": "unknown",
+			"note": "Not settled. The 2026-04 research says yes for the free CRM. Free tiers move and this was not driven again."
+		},
+		{
+			"id": "q-odoo-community-marketing",
+			"area": "marketing",
+			"name": "Does Odoo Community rather than Enterprise include the marketing automation rated here?",
+			"pipelinq": "unknown",
+			"hubspot-crm": "unknown",
+			"pipedrive": "unknown",
+			"espocrm": "unknown",
+			"odoo-crm": "unknown",
+			"kiss": "unknown",
+			"note": "Not settled. The research names marketing automation as an Enterprise feature but rates the CRM as a whole."
+		},
+		{
+			"id": "q-espocrm-journey",
+			"area": "marketing",
+			"name": "Can EspoCRM's paid Advanced Pack run a journey with waits and branches?",
+			"pipelinq": "unknown",
+			"hubspot-crm": "unknown",
+			"pipedrive": "unknown",
+			"espocrm": "unknown",
+			"odoo-crm": "unknown",
+			"kiss": "unknown",
+			"note": "Not settled. The research names BPM and workflow in the Advanced Pack without saying what the steps can do."
+		},
+		{
+			"id": "q-competitor-nl-vat",
+			"area": "products",
+			"name": "Which of these competitors handle Dutch VAT rates out of the box?",
+			"pipelinq": "unknown",
+			"hubspot-crm": "unknown",
+			"pipedrive": "unknown",
+			"espocrm": "unknown",
+			"odoo-crm": "unknown",
+			"kiss": "unknown",
+			"note": "Not settled. Odoo is rated yes on the strength of its localisation packs, which nobody drove."
+		},
+		{
+			"id": "q-nldesign-theme",
+			"area": "platform",
+			"name": "Does pipelinq ship the NL Design System theme a Dutch government buyer will ask for?",
+			"pipelinq": "unknown",
+			"hubspot-crm": "unknown",
+			"pipedrive": "unknown",
+			"espocrm": "unknown",
+			"odoo-crm": "unknown",
+			"kiss": "unknown",
+			"note": "Not settled. The only nldesign string in the tree is an app id map at lib/Support/FleetAppId.php."
+		},
+		{
+			"id": "q-competitor-carddav",
+			"area": "clients",
+			"name": "Can any of these competitors reach a CardDAV address book through an add-on?",
+			"pipelinq": "unknown",
+			"hubspot-crm": "unknown",
+			"pipedrive": "unknown",
+			"espocrm": "unknown",
+			"odoo-crm": "unknown",
+			"kiss": "unknown",
+			"note": "Not settled. All four are rated no on native support. Their marketplaces were not searched."
+		},
+		{
+			"id": "q-kiss-overlap",
+			"area": "requests",
+			"name": "Would a municipality run KISS and pipelinq side by side, or pick one?",
+			"pipelinq": "unknown",
+			"hubspot-crm": "unknown",
+			"pipedrive": "unknown",
+			"espocrm": "unknown",
+			"odoo-crm": "unknown",
+			"kiss": "unknown",
+			"note": "Not settled. The 2026-03 research calls them complementary. No buyer has been asked."
+		}
+	]
+}
