@@ -3,7 +3,7 @@
   - SPDX-FileCopyrightText: 2026 Conduction B.V.
   -
   - AssigneePickerDialog picks the user a pipeline card is assigned to and
-  - emits the choice; the parent owns the store write.
+  - emits the choice on Assign; the parent owns the store write.
   -
   - It lives in its own file because a modal must never be written inline
   - inside its parent (ADR-004); it was extracted out of PipelineCard.vue.
@@ -14,17 +14,28 @@
 			v-model="picked"
 			:options="options"
 			:clearable="true"
-			:inputLabel="t('pipelinq', 'Assignee')"
-			@update:modelValue="$emit('select', $event)" />
+			:inputLabel="t('pipelinq', 'Assignee')" />
+		<template #actions>
+			<NcButton @click="$emit('close')">
+				{{ t('pipelinq', 'Cancel') }}
+			</NcButton>
+			<NcButton
+				variant="primary"
+				:disabled="!changed"
+				@click="$emit('select', picked)">
+				{{ t('pipelinq', 'Assign') }}
+			</NcButton>
+		</template>
 	</NcDialog>
 </template>
 
 <script>
-import { NcDialog, NcSelect } from '@nextcloud/vue'
+import { NcButton, NcDialog, NcSelect } from '@nextcloud/vue'
 
 export default {
 	name: 'AssigneePickerDialog',
 	components: {
+		NcButton,
 		NcDialog,
 		NcSelect,
 	},
@@ -52,6 +63,13 @@ export default {
 		return {
 			picked: this.assignee,
 		}
+	},
+
+	computed: {
+		/** Whether the selection differs from the current assignee. */
+		changed() {
+			return (this.picked || null) !== (this.assignee || null)
+		},
 	},
 }
 </script>
