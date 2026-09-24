@@ -12,7 +12,8 @@
 			}"
 			:disabled="saving"
 			:aria-pressed="isAvailable"
-			:aria-label="ariaLabel"
+			:aria-label="description"
+			:title="description"
 			@click="toggle">
 			<span class="werkplek-agent-status__dot" />
 			<span class="werkplek-agent-status__label">{{ label }}</span>
@@ -71,19 +72,20 @@ export default {
 		},
 
 		/**
-		 * Aria label describing the toggle action (a11y).
+		 * What the status means and what a click does, used as tooltip and
+		 * aria label. Routing skips agents marked unavailable.
 		 *
 		 * @return {string}
 		 */
-		ariaLabel() {
+		description() {
 			return this.isAvailable
 				? this.t(
 						'pipelinq',
-						'Currently available — click to mark unavailable',
+						'Available: routing suggests you for new contacts. Click to become unavailable.',
 					)
 				: this.t(
 						'pipelinq',
-						'Currently unavailable — click to mark available',
+						'Unavailable: routing skips you for new contacts. Click to become available.',
 					)
 		},
 	},
@@ -160,16 +162,22 @@ export default {
 	background: var(--color-text-maxcontrast);
 }
 
-.werkplek-agent-status__toggle--available .werkplek-agent-status__dot {
-	background: var(--color-success);
+.werkplek-agent-status__toggle--unavailable:hover:not(:disabled) {
+	background: var(--color-background-hover);
 }
 
+/* --color-success is a background tint; --color-success-text is the matching foreground. */
 .werkplek-agent-status__toggle--available {
-	border-color: var(--color-success);
-	color: var(--color-success);
+	background: var(--color-success);
+	border-color: var(--color-success-hover);
+	color: var(--color-success-text);
 }
 
-.werkplek-agent-status__toggle--unavailable .werkplek-agent-status__dot {
-	background: var(--color-text-maxcontrast);
+.werkplek-agent-status__toggle--available:hover:not(:disabled) {
+	background: var(--color-success-hover);
+}
+
+.werkplek-agent-status__toggle--available .werkplek-agent-status__dot {
+	background: var(--color-success-text);
 }
 </style>
