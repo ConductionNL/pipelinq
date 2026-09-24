@@ -1392,8 +1392,7 @@
 					},
 					{
 						"id": "xwiki-knowledge",
-						"type": "integration",
-						"integrationId": "xwiki",
+						"type": "custom",
 						"title": "Knowledge base"
 					}
 				],
@@ -1551,7 +1550,8 @@
 				"widget-my-work": "MyWorkWidget",
 				"widget-billing-categories": "BillingCategoryWidget",
 				"widget-navi-analytics": "NaviAnalyticsWidget",
-				"widget-report-export": "ReportExportPanel"
+				"widget-report-export": "ReportExportPanel",
+				"widget-xwiki-knowledge": "XWikiDashboardWidget"
 			}
 		},
 		{
