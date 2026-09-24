@@ -11,12 +11,7 @@
 				:helperText="errors.name"
 				:maxlength="255"
 				data-testid="client-name-input"
-				@update:modelValue="
-					(v) => {
-						form.name = v
-						validateField('name')
-					}
-				" />
+				@update:modelValue="(v) => (form.name = v)" />
 		</div>
 
 		<div class="form-row">
@@ -29,9 +24,8 @@
 					labelOutside
 					:options="typeOptions"
 					:placeholder="t('pipelinq', 'Select type')"
-					data-testid="client-type-select"
-					@update:modelValue="validateField('type')" />
-				<p v-if="errors.type" class="field-error">
+					data-testid="client-type-select" />
+				<p v-if="errors.type" class="field-error" role="alert">
 					{{ errors.type }}
 				</p>
 			</div>
@@ -46,12 +40,7 @@
 					:helperText="errors.email"
 					type="email"
 					data-testid="client-email-input"
-					@update:modelValue="
-						(v) => {
-							form.email = v
-							validateField('email')
-						}
-					" />
+					@update:modelValue="(v) => (form.email = v)" />
 			</div>
 		</div>
 
@@ -66,12 +55,7 @@
 					:error="!!errors.phone"
 					:helperText="errors.phone"
 					data-testid="client-phone-input"
-					@update:modelValue="
-						(v) => {
-							form.phone = v
-							validateField('phone')
-						}
-					" />
+					@update:modelValue="(v) => (form.phone = v)" />
 			</div>
 			<div class="form-group">
 				<label for="client-website">{{ t('pipelinq', 'Website') }}</label>
@@ -83,12 +67,7 @@
 					:error="!!errors.website"
 					:helperText="errors.website"
 					data-testid="client-website-input"
-					@update:modelValue="
-						(v) => {
-							form.website = v
-							validateField('website')
-						}
-					" />
+					@update:modelValue="(v) => (form.website = v)" />
 			</div>
 		</div>
 
@@ -186,27 +165,44 @@ export default {
 				notes: '',
 			},
 
-			errors: {
-				name: '',
-				type: '',
-				email: '',
-				phone: '',
-				website: '',
-			},
-
 			typeOptions: ['person', 'organization'],
 		}
 	},
 
 	computed: {
 		/**
+		 * Derived from the form, like LeadForm, so an empty required field shows
+		 * its error from the start rather than only after it is edited.
+		 *
+		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-31
+		 */
+		errors() {
+			const errors = {}
+			if (!this.form.name.trim()) {
+				errors.name = t('pipelinq', 'Name is required')
+			} else if (this.form.name.length > 255) {
+				errors.name = t('pipelinq', 'Name must be at most 255 characters')
+			}
+			if (!this.form.type) {
+				errors.type = t('pipelinq', 'Type is required')
+			}
+			if (this.form.email && !EMAIL_REGEX.test(this.form.email)) {
+				errors.email = t('pipelinq', 'Invalid email format')
+			}
+			if (this.form.phone && !PHONE_REGEX.test(this.form.phone)) {
+				errors.phone = t('pipelinq', 'Invalid phone format')
+			}
+			if (this.form.website && !URL_REGEX.test(this.form.website)) {
+				errors.website = t('pipelinq', 'Invalid URL format')
+			}
+			return errors
+		},
+
+		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-27
 		 */
 		isValid() {
-			const hasName = this.form.name.trim().length > 0
-			const hasType = !!this.form.type
-			const noErrors = Object.values(this.errors).every((e) => !e)
-			return hasName && hasType && noErrors
+			return Object.keys(this.errors).length === 0
 		},
 	},
 
@@ -249,69 +245,6 @@ export default {
 				address: data.address || '',
 				notes: data.notes || '',
 			}
-			// Clear errors when populating
-			this.errors = { name: '', type: '', email: '', phone: '', website: '' }
-		},
-
-		/**
-		 * @param {string} field Name of the field to validate.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-31
-		 */
-		validateField(field) {
-			switch (field) {
-				case 'name':
-					if (!this.form.name.trim()) {
-						this.errors.name = t('pipelinq', 'Name is required')
-					} else if (this.form.name.length > 255) {
-						this.errors.name = t(
-							'pipelinq',
-							'Name must be at most 255 characters',
-						)
-					} else {
-						this.errors.name = ''
-					}
-					break
-				case 'type':
-					if (!this.form.type) {
-						this.errors.type = t('pipelinq', 'Type is required')
-					} else {
-						this.errors.type = ''
-					}
-					break
-				case 'email':
-					if (this.form.email && !EMAIL_REGEX.test(this.form.email)) {
-						this.errors.email = t('pipelinq', 'Invalid email format')
-					} else {
-						this.errors.email = ''
-					}
-					break
-				case 'phone':
-					if (this.form.phone && !PHONE_REGEX.test(this.form.phone)) {
-						this.errors.phone = t('pipelinq', 'Invalid phone format')
-					} else {
-						this.errors.phone = ''
-					}
-					break
-				case 'website':
-					if (this.form.website && !URL_REGEX.test(this.form.website)) {
-						this.errors.website = t('pipelinq', 'Invalid URL format')
-					} else {
-						this.errors.website = ''
-					}
-					break
-			}
-		},
-
-		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-30
-		 */
-		validateAll() {
-			this.validateField('name')
-			this.validateField('type')
-			this.validateField('email')
-			this.validateField('phone')
-			this.validateField('website')
-			return this.isValid
 		},
 
 		/**
@@ -319,7 +252,7 @@ export default {
 		 * @spec openspec/changes/2026-03-20-client-management/tasks.md#task-3.1
 		 */
 		onSave() {
-			if (!this.validateAll()) {
+			if (!this.isValid) {
 				return
 			}
 			const data = { ...this.form }
