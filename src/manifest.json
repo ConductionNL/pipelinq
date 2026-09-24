@@ -2501,25 +2501,21 @@
 				"register": "pipelinq",
 				"schema": "contact",
 				"documentationUrl": "https://pipelinq.conduction.nl",
-				"_note": "Person archetype (contact-360). A salesperson opening a contact sees the person's details, their comms leaves (Email + Meetings calendar — a contact is a real correspondent with vCard email/phone) and files on the main body. Below, FK-scoped child tables surface everything this person drives: their deals (lead.contact), their requests (request.contact) and their appointments (booking.customerId); an in-grid stats-block (rule 2, replacing the retired summaryAggregates chips) counts open-deal count/value @objectId-scoped. BRP/BSN compliance + relationship graph stay as end-of-page app sections; the parent-organisation link stays a relationLink. Sidebar is audit-only.",
+				"_note": "Contact record as a declarative type:detail page. Layout, top to bottom: the contact's fields with a Deals KPI card beside them; a Records tab strip (deals, requests, contact moments, bookings) with the Related graph beside it, so the person and their graph stay on screen together; a Communication tab strip (mail, meetings, files); then the app sections as cards in a two-column grid. The former relatedCollections are object-list widgets so they can live in the Records strip. MessagingConversationSection and BrpContactPanel draw their own heading (and BRP its own card), so neither carries a section title and BRP has no `card`.",
 				"widgets": [
 					{
 						"id": "contact-data",
 						"type": "data",
 						"title": "Contact details",
 						"icon": "AccountBoxOutline",
-						"content": { "columns": 2 }
+						"content": {
+							"columns": 2
+						}
 					},
 					{
-						"id": "contact-related",
-						"type": "related",
-						"title": "Related",
-						"icon": "LinkVariant"
-					},
-					{
-						"id": "contact-kpis-open-deals",
+						"id": "contact-kpis-deals",
 						"type": "stats-block",
-						"title": "Open deals",
+						"title": "Deals",
 						"icon": "HandshakeOutline",
 						"content": {
 							"entries": [
@@ -2532,17 +2528,7 @@
 										"contact": "@objectId",
 										"status": "open"
 									}
-								}
-							]
-						}
-					},
-					{
-						"id": "contact-kpis-open-deal-value",
-						"type": "stats-block",
-						"title": "Open deal value",
-						"icon": "HandshakeOutline",
-						"content": {
-							"entries": [
+								},
 								{
 									"title": "Open deal value",
 									"register": "pipelinq",
@@ -2559,25 +2545,117 @@
 						}
 					},
 					{
-						"id": "contact-email",
-						"type": "integration",
-						"integrationId": "email",
-						"title": "Emails",
-						"icon": "Email"
+						"id": "contact-related",
+						"type": "related",
+						"title": "Related",
+						"icon": "LinkVariant"
 					},
 					{
-						"id": "contact-calendar",
-						"type": "integration",
-						"integrationId": "calendar",
-						"title": "Meetings",
-						"icon": "Calendar"
+						"id": "contact-records",
+						"type": "tabs",
+						"title": "Records",
+						"icon": "ViewDashboard",
+						"_note": "What this person is part of, one list at a time. The children stay in `widgets` and out of `layout`, or the tabs widget and the grid would each render them once.",
+						"content": {
+							"ariaLabel": "Contact records",
+							"tabs": [
+								{
+									"widgetId": "contact-deals",
+									"label": "Deals"
+								},
+								{
+									"widgetId": "contact-requests",
+									"label": "Requests"
+								},
+								{
+									"widgetId": "contact-contactmoments",
+									"label": "Contact moments"
+								},
+								{
+									"widgetId": "contact-bookings",
+									"label": "Bookings"
+								}
+							]
+						}
 					},
 					{
-						"id": "contact-files",
-						"type": "integration",
-						"integrationId": "files",
-						"title": "Files",
-						"icon": "FolderOutline"
+						"id": "contact-deals",
+						"type": "object-list",
+						"title": "Deals",
+						"icon": "HandshakeOutline",
+						"content": {
+							"register": "pipelinq",
+							"schema": "lead",
+							"filter": {
+								"contact": "@objectId"
+							},
+							"sort": {
+								"field": "expectedCloseDate",
+								"dir": "asc"
+							},
+							"columns": [
+								{
+									"key": "title",
+									"label": "Title"
+								},
+								{
+									"key": "stage",
+									"label": "Stage"
+								},
+								{
+									"key": "value",
+									"label": "Value"
+								},
+								{
+									"key": "probability",
+									"label": "Probability"
+								},
+								{
+									"key": "status",
+									"label": "Status"
+								}
+							],
+							"limit": 25,
+							"rowRoute": "LeadDetail"
+						}
+					},
+					{
+						"id": "contact-requests",
+						"type": "object-list",
+						"title": "Requests",
+						"icon": "ClipboardCheckOutline",
+						"content": {
+							"register": "pipelinq",
+							"schema": "ticket",
+							"filter": {
+								"ticketType": "request",
+								"contact": "@objectId"
+							},
+							"sort": {
+								"field": "occurredAt",
+								"dir": "desc"
+							},
+							"columns": [
+								{
+									"key": "title",
+									"label": "Title"
+								},
+								{
+									"key": "status",
+									"label": "Status"
+								},
+								{
+									"key": "priority",
+									"label": "Priority"
+								},
+								{
+									"key": "occurredAt",
+									"label": "Requested"
+								}
+							],
+							"limit": 25,
+							"rowRoute": "TicketDetail"
+						}
 					},
 					{
 						"id": "contact-contactmoments",
@@ -2621,13 +2699,46 @@
 						}
 					},
 					{
-						"id": "contact-panels",
-						"type": "tabs",
-						"title": "Contact panels",
-						"icon": "ViewDashboard",
-						"_note": "The same strip the lead page carries, for the same reason: four leaves describing one person, each previously a card with its own header, only one of them ever read. The children stay in `widgets` and out of `layout`, or the tabs widget and the grid would each render them once. Related keeps its own cell in the right rail rather than becoming a tab, so the person and their graph stay on screen together.",
+						"id": "contact-bookings",
+						"type": "object-list",
+						"title": "Bookings",
+						"icon": "CalendarClock",
 						"content": {
-							"ariaLabel": "Contact details",
+							"register": "pipelinq",
+							"schema": "appointmentBooking",
+							"filter": {
+								"customerId": "@objectId"
+							},
+							"sort": {
+								"field": "startAt",
+								"dir": "desc"
+							},
+							"columns": [
+								{
+									"key": "serviceId",
+									"label": "Service"
+								},
+								{
+									"key": "startAt",
+									"label": "Start"
+								},
+								{
+									"key": "status",
+									"label": "Status"
+								}
+							],
+							"limit": 25,
+							"rowRoute": "BookingDetail"
+						}
+					},
+					{
+						"id": "contact-communication",
+						"type": "tabs",
+						"title": "Communication",
+						"icon": "Email",
+						"_note": "Mail, meetings and files for this person behind one strip. Children stay out of `layout` for the same reason as contact-records.",
+						"content": {
+							"ariaLabel": "Contact communication",
 							"tabs": [
 								{
 									"widgetId": "contact-email",
@@ -2635,18 +2746,35 @@
 								},
 								{
 									"widgetId": "contact-calendar",
-									"label": "Appointments"
+									"label": "Meetings"
 								},
 								{
 									"widgetId": "contact-files",
 									"label": "Files"
-								},
-								{
-									"widgetId": "contact-contactmoments",
-									"label": "Contact moments"
 								}
 							]
 						}
+					},
+					{
+						"id": "contact-email",
+						"type": "integration",
+						"integrationId": "email",
+						"title": "Emails",
+						"icon": "Email"
+					},
+					{
+						"id": "contact-calendar",
+						"type": "integration",
+						"integrationId": "calendar",
+						"title": "Meetings",
+						"icon": "Calendar"
+					},
+					{
+						"id": "contact-files",
+						"type": "integration",
+						"integrationId": "files",
+						"title": "Files",
+						"icon": "FolderOutline"
 					}
 				],
 				"layout": [
@@ -2659,86 +2787,36 @@
 						"gridHeight": 4
 					},
 					{
-						"id": "6-1",
-						"widgetId": "contact-kpis-open-deals",
+						"id": "2",
+						"widgetId": "contact-kpis-deals",
 						"gridX": 8,
 						"gridY": 0,
-						"gridWidth": 4,
-						"gridHeight": 2
-					},
-					{
-						"id": "6-2",
-						"widgetId": "contact-kpis-open-deal-value",
-						"gridX": 8,
-						"gridY": 2,
-						"gridWidth": 4,
-						"gridHeight": 2
-					},
-					{
-						"id": "2",
-						"widgetId": "contact-related",
-						"gridX": 8,
-						"gridY": 4,
 						"gridWidth": 4,
 						"gridHeight": 4
 					},
 					{
-						"id": "7",
-						"widgetId": "contact-panels",
+						"id": "3",
+						"widgetId": "contact-records",
 						"gridX": 0,
 						"gridY": 4,
 						"gridWidth": 8,
-						"gridHeight": 8
-					}
-				],
-				"relatedCollections": [
-					{
-						"title": "Deals",
-						"register": "pipelinq",
-						"schema": "lead",
-						"filter": { "contact": "@objectId" },
-						"sort": { "field": "expectedCloseDate", "dir": "asc" },
-						"columns": [
-							{ "key": "title", "label": "Title" },
-							{ "key": "stage", "label": "Stage" },
-							{ "key": "value", "label": "Value" },
-							{ "key": "probability", "label": "Probability" },
-							{ "key": "status", "label": "Status" }
-						],
-						"limit": 25,
-						"rowRoute": "LeadDetail"
+						"gridHeight": 7
 					},
 					{
-						"title": "Requests",
-						"register": "pipelinq",
-						"schema": "ticket",
-						"filter": {
-							"ticketType": "request",
-							"contact": "@objectId"
-						},
-						"sort": { "field": "occurredAt", "dir": "desc" },
-						"columns": [
-							{ "key": "title", "label": "Title" },
-							{ "key": "status", "label": "Status" },
-							{ "key": "priority", "label": "Priority" },
-							{ "key": "occurredAt", "label": "Requested" }
-						],
-						"limit": 25,
-						"rowRoute": "TicketDetail"
+						"id": "4",
+						"widgetId": "contact-related",
+						"gridX": 8,
+						"gridY": 4,
+						"gridWidth": 4,
+						"gridHeight": 7
 					},
 					{
-						"title": "Appointments",
-						"register": "pipelinq",
-						"schema": "appointmentBooking",
-						"filter": { "customerId": "@objectId" },
-						"sort": { "field": "startAt", "dir": "desc" },
-						"columns": [
-							{ "key": "serviceId", "label": "Service" },
-							{ "key": "startAt", "label": "Start" },
-							{ "key": "status", "label": "Status" }
-						],
-						"limit": 25,
-						"rowRoute": "BookingDetail"
+						"id": "5",
+						"widgetId": "contact-communication",
+						"gridX": 0,
+						"gridY": 11,
+						"gridWidth": 12,
+						"gridHeight": 6
 					}
 				],
 				"relationLinks": [
@@ -2761,28 +2839,32 @@
 							"entityId": "@objectId",
 							"entityType": "contact",
 							"entityName": "@object.name"
-						}
+						},
+						"colSpan": 6,
+						"card": true
 					},
 					{
 						"id": "channels",
 						"component": "ContactChannelsSection",
 						"title": "Contact channels",
 						"placement": "end",
-						"props": { "entityId": "@objectId", "entityType": "contact" }
-					},
-					{
-						"id": "brp",
-						"component": "BrpContactPanel",
-						"title": "BSN / BRP",
-						"placement": "end",
-						"props": { "contactId": "@objectId" }
+						"props": {
+							"entityId": "@objectId",
+							"entityType": "contact"
+						},
+						"colSpan": 6,
+						"card": true
 					},
 					{
 						"id": "messaging-conversation",
 						"component": "MessagingConversationSection",
-						"title": "Messages",
 						"placement": "end",
-						"props": { "entityId": "@objectId", "entityType": "contact" }
+						"props": {
+							"entityId": "@objectId",
+							"entityType": "contact"
+						},
+						"colSpan": 6,
+						"card": true
 					},
 					{
 						"id": "contact-subscriptions",
@@ -2790,7 +2872,20 @@
 						"title": "Subscriptions",
 						"placement": "end",
 						"_note": "Which mailing lists this person is on and the state of each (marketing-lists-and-double-opt-in). Appended here rather than declared in a src/manifest.d fragment because mergePages REPLACES a page whose id a fragment repeats: adding one bodyWidget from a fragment would mean restating the whole ContactDetail page, and anything added to it later would be lost without a word.",
-						"props": { "contactId": "@objectId" }
+						"props": {
+							"contactId": "@objectId"
+						},
+						"colSpan": 6,
+						"card": true
+					},
+					{
+						"id": "brp",
+						"component": "BrpContactPanel",
+						"placement": "end",
+						"props": {
+							"contactId": "@objectId"
+						},
+						"colSpan": 12
 					}
 				],
 				"sidebar": {
@@ -2801,7 +2896,11 @@
 							"id": "audit",
 							"label": "History",
 							"icon": "History",
-							"widgets": [{ "type": "audit" }]
+							"widgets": [
+								{
+									"type": "audit"
+								}
+							]
 						}
 					]
 				}
