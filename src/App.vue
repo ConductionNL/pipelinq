@@ -14,9 +14,8 @@
 	<CnAppRoot
 		:aiCompanion="true"
 		:manifest="manifest"
-		:registry="registry"
+		:registry="appRegistry"
 		:cellWidgets="cellWidgets"
-		:customComponents="connectionHandlers"
 		:pageTypes="pageTypes"
 		appId="pipelinq"
 		:translate="translateForApp"
@@ -179,21 +178,23 @@ export default {
 		},
 
 		/**
-		 * The Integrations page's Add integration handler, which leaves this app
-		 * for integriq's Connections overview. CnIndexPage resolves a header
-		 * action's handler name only against `customComponents`, so this map
-		 * holds that one function. CnAppRoot logs a one-time deprecation warning
-		 * for the prop beside a v2 manifest; the registry prop has no slot for a
-		 * function handler in the installed nextcloud-vue.
+		 * The v2 registry plus the Integrations page's Add integration handler,
+		 * which leaves this app for integriq's Connections overview, registered
+		 * as a `kind: 'handler'` entry.
 		 *
-		 * @return {Record<string, function(): void>}
+		 * @return {Record<string, object>}
 		 * @spec openspec/changes/adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-131-an-admin-reads-pipelinqs-connections-on-an-integrations-page-over-integriqs-registry
 		 */
-		connectionHandlers() {
-			return createConnectionHandlers({
+		appRegistry() {
+			const handlers = createConnectionHandlers({
 				generateUrl,
 				assign: (url) => window.location.assign(url),
 			})
+			const entries = {}
+			for (const [name, handler] of Object.entries(handlers)) {
+				entries[name] = { kind: 'handler', handler }
+			}
+			return { ...this.registry, ...entries }
 		},
 
 		/**
