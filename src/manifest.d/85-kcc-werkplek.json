@@ -33,6 +33,7 @@
 					{
 						"id": "requests",
 						"type": "object-list",
+						"hideRefresh": true,
 						"title": "Requests",
 						"content": {
 							"register": "pipelinq",
@@ -67,6 +68,7 @@
 					{
 						"id": "tasks",
 						"type": "object-list",
+						"hideRefresh": true,
 						"title": "Tasks",
 						"content": {
 							"register": "pipelinq",
@@ -99,6 +101,7 @@
 					{
 						"id": "interaction",
 						"type": "interaction-form",
+						"hideRefresh": true,
 						"title": "Active interaction",
 						"content": {
 							"register": "pipelinq",
@@ -167,6 +170,7 @@
 					{
 						"id": "knowledge",
 						"type": "kb-search",
+						"hideRefresh": true,
 						"title": "Knowledge base",
 						"content": {
 							"endpoint": "/apps/openregister/api/integrations/xwiki/search",
@@ -179,6 +183,7 @@
 					{
 						"id": "client-cases",
 						"type": "object-list",
+						"hideRefresh": true,
 						"title": "Client requests",
 						"content": {
 							"register": "pipelinq",
@@ -213,6 +218,7 @@
 					{
 						"id": "client-contacts",
 						"type": "object-list",
+						"hideRefresh": true,
 						"title": "Recent contact moments",
 						"content": {
 							"register": "pipelinq",
