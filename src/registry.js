@@ -1024,7 +1024,7 @@ const registry = {
 		kind: 'modal',
 		component: LeadCreateDialog,
 		propsSchema: null,
-		_note: "New Lead. Target of the Sales/Operational dashboards' new-lead header action.",
+		_note: "New Lead. Target of the Sales/Operational dashboards' new-lead header action and the Leads index Add button.",
 	},
 
 	RequestCreateDialog: {
@@ -1038,7 +1038,7 @@ const registry = {
 		kind: 'modal',
 		component: ClientCreateDialog,
 		propsSchema: null,
-		_note: 'New Client, contact-first via POST /api/contacts-sync/create.',
+		_note: 'New Client, contact-first via POST /api/contacts-sync/create. Also the Clients index Add button (createModal).',
 	},
 
 	// Contact-aware create for the generic Add button on the Clients index page.

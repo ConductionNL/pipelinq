@@ -25,6 +25,7 @@
 		:sidebar="sidebarConfig"
 		:rowClass="rowClassFor"
 		:itemsFilter="itemsFilter"
+		createModal="LeadCreateDialog"
 		:rowClickToView="false"
 		@rowClick="openLead"
 		@view="openLead">

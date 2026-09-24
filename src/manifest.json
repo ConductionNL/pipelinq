@@ -1562,6 +1562,7 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "client",
+				"createModal": "ClientCreateDialog",
 				"createOverride": "createClientContactAware",
 				"fieldOverrides": {
 					"name": { "readOnly": false },
