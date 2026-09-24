@@ -180,7 +180,7 @@
 						:stages="sortedStages"
 						:columnProperty="getColumnProperty(item)"
 						@open="openItem"
-						@refresh="fetchPipelineItems" />
+						@refresh="refreshItems" />
 				</div>
 			</div>
 
@@ -220,7 +220,7 @@
 							:stages="sortedStages"
 							:columnProperty="getColumnProperty(item)"
 							@open="openItem"
-							@refresh="fetchPipelineItems" />
+							@refresh="refreshItems" />
 					</div>
 				</div>
 			</div>
@@ -418,6 +418,7 @@ export default {
 		return {
 			selectedPipelineId: null,
 			showPipelineForm: false,
+			itemsFetchSeq: 0,
 			showFilter: 'all',
 			/**
 			 * @spec openspec/changes/2026-03-20-pipeline/tasks.md#task-1.1
@@ -807,7 +808,7 @@ export default {
 				if (this.loading) {
 					return
 				}
-				this.fetchPipelineItems()
+				this.refreshItems()
 			}, 500)
 		},
 
@@ -819,7 +820,7 @@ export default {
 			await this.objectStore.saveObject('pipeline', pipelineData)
 			this.showPipelineForm = false
 			await this.objectStore.fetchCollection('pipeline', { _limit: 100 })
-			await this.fetchPipelineItems()
+			await this.refreshItems()
 		},
 
 		getMappingForItem(item) {
@@ -905,22 +906,40 @@ export default {
 		},
 
 		/**
+		 * @param {object} [options] Fetch options.
+		 * @param {boolean} [options.silent] Refresh in place, without the loading state.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-7
 		 */
-		async fetchPipelineItems() {
+		async fetchPipelineItems({ silent = false } = {}) {
 			if (!this.selectedPipelineId) return
-			this.loading = true
-
-			const pipeline = this.selectedPipeline
-			if (pipeline?.propertyMappings && pipeline.propertyMappings.length > 0) {
-				await this.fetchItemsViaMappings(pipeline)
-			} else {
-				await this.fetchItemsBySlug(pipeline)
+			// Only the latest fetch may write, so a silent refresh that lands
+			// after a pipeline switch cannot put the old pipeline's items back.
+			const seq = ++this.itemsFetchSeq
+			if (!silent) {
+				this.loading = true
 			}
 
-			await this.fetchLeadProductsForStages()
+			const pipeline = this.selectedPipeline
+			const items = pipeline?.propertyMappings && pipeline.propertyMappings.length > 0
+				? await this.fetchItemsViaMappings(pipeline)
+				: await this.fetchItemsBySlug(pipeline)
 
-			this.loading = false
+			if (seq === this.itemsFetchSeq) {
+				this.items = items
+				await this.fetchLeadProductsForStages()
+			}
+			if (!silent && seq === this.itemsFetchSeq) {
+				this.loading = false
+			}
+		},
+
+		/**
+		 * Refresh the items already on the board without a loading state.
+		 *
+		 * @return {Promise<void>}
+		 */
+		refreshItems() {
+			return this.fetchPipelineItems({ silent: true })
 		},
 
 		/**
@@ -1035,6 +1054,7 @@ export default {
 
 		/**
 		 * @param {object} pipeline The pipeline whose propertyMappings drive the fetch
+		 * @return {Promise<Array<object>>} The board items
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-6
 		 */
 		async fetchItemsViaMappings(pipeline) {
@@ -1048,7 +1068,7 @@ export default {
 				}))
 			})
 			const results = await Promise.all(promises)
-			this.items = results.flat()
+			return results.flat()
 		},
 
 		/**
@@ -1056,6 +1076,7 @@ export default {
 		 * `entityType`, or every boardable type when it is unscoped.
 		 *
 		 * @param {object|null} pipeline The selected pipeline
+		 * @return {Promise<Array<object>>} The board items
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-5
 		 */
 		async fetchItemsBySlug(pipeline) {
@@ -1068,7 +1089,7 @@ export default {
 					_entityType: slug,
 				}))
 			}))
-			this.items = results.flat()
+			return results.flat()
 		},
 
 		/**
@@ -1137,7 +1158,7 @@ export default {
 				if (ticketType) update.ticketType = ticketType
 
 				await this.objectStore.saveObject(objectType, update)
-				await this.fetchPipelineItems()
+				await this.refreshItems()
 			} catch {
 				// Invalid drop
 			}
