@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: EUPL-1.2
 // Copyright (C) 2026 Conduction B.V.
 const path = require('path')
-const fs = require('fs')
 const webpack = require('webpack')
 const TerserPlugin = require('terser-webpack-plugin')
 const webpackConfig = require('@nextcloud/webpack-vue-config')
@@ -89,86 +88,44 @@ webpackConfig.entry = {
 	},
 }
 
-// Use local source when available (monorepo dev), otherwise fall back to the
-// published npm package.
+// @conduction/nextcloud-vue resolves normally from node_modules. To build
+// against a local checkout instead, `npm i ../nextcloud-vue/` (npm symlinks
+// it in) and run its own build there.
 //
-// ⚠️ `USE_LOCAL_LIB` is opt-OUT across the fleet, so a default-on local build
-// would silently compile whatever the sibling checkout happens to be on into
-// this app. Opt IN explicitly (USE_LOCAL_LIB=true) and refuse a sibling built
-// for a different Vue major.
-const localLib = path.resolve(__dirname, '../nextcloud-vue/src')
-let useLocalLib = process.env.USE_LOCAL_LIB === 'true' && fs.existsSync(localLib)
-if (useLocalLib) {
-	// This gate deliberately does NOT compare the sibling's package.json version
-	// against our declared range: that field is a permanent placeholder in the
-	// library repo (2.0.5 at v2.53.1, v3.2.0 and v2.55.1 alike — the release
-	// workflow bumps it only at publish time), so such a check can never pass and
-	// silently pins every developer to the npm dist. The Vue major is the property
-	// that actually breaks a build, so that is what is checked.
-	//
-	// Fail CLOSED: if the check cannot run, the sibling is refused.
-	let localPeerVue = 'unreadable'
-	let compatible = false
-	try {
-		// eslint-disable-next-line n/no-extraneous-require
-		const semver = require('semver')
-		const appVue = require('./package.json').dependencies.vue
-		localPeerVue = String(
-			JSON.parse(
-				fs.readFileSync(
-					path.resolve(__dirname, '../nextcloud-vue/package.json'),
-					'utf8',
-				),
-			).peerDependencies?.vue || '',
-		)
-		compatible = semver.satisfies(semver.minVersion(appVue), localPeerVue, {
-			includePrerelease: true,
-		})
-	} catch (e) {
-		compatible = false
-	}
-
-	if (!compatible) {
-		// Warn rather than throw: refusing the sibling still produces a complete
-		// build against the pinned npm package, so there is nothing to repair
-		// before the build can proceed.
-		// eslint-disable-next-line no-console
-		console.warn(
-			`[pipelinq] IGNORING sibling @conduction/nextcloud-vue (peer vue ${localPeerVue}) — `
-				+ "it does not accept this app's Vue major. Building against the npm dist.",
-		)
-		useLocalLib = false
-	} else {
-		// eslint-disable-next-line no-console
-		console.log(
-			'[pipelinq] Building @conduction/nextcloud-vue from ../nextcloud-vue/src',
-		)
-	}
-}
-
+// This deliberately departs from company ADR-090 decisions 3–4 (an opt-in
+// `USE_LOCAL_LIB` with a version guard here). Which library you build against
+// is decided by the dependency itself, the pinned version or the local install,
+// which is visible in package.json and the lockfile. A shell variable is not,
+// does not work the same in every shell, and needed a version check only
+// because webpack was picking the source instead of npm. That check was itself
+// the bigger problem: a local checkout ahead of the release often still carries
+// the released version number, so the check refused it and had to be patched
+// out for every session of local library work.
 webpackConfig.resolve = {
 	extensions: ['.vue', '.js', '.mjs'],
+	// Resolve a symlinked local checkout from its place INSIDE this app's
+	// node_modules, not its real path, so its bare imports fall back to this
+	// app's installed packages instead of walking up from `../nextcloud-vue/`.
+	// No effect when nothing is symlinked.
+	symlinks: false,
 	alias: {
 		'@': path.resolve(__dirname, 'src'),
-		...(useLocalLib
-			? { '@conduction/nextcloud-vue': localLib }
-			: // Published mode: the package's main entry is dist/, but src/main.js
-				// imports the integration-registry helpers from their 0-hop definition
-				// modules (`@conduction/nextcloud-vue/integrations/...`) rather than the
-				// barrel — the barrel's multi-hop re-exports of these functions resolve
-				// to `undefined` across pipelinq's split shared-nc-vue chunk. Those
-				// subpaths exist only under the package's published `src/` tree, so map
-				// the `integrations` subpath there. The registry installs onto the
-				// `window.OCA.OpenRegister.integrations` global, so resolving these from
-				// src/ shares the same singleton as the dist components (no dual instance).
-				{
-					'@conduction/nextcloud-vue/integrations': path.resolve(
-						__dirname,
-						'node_modules/@conduction/nextcloud-vue/src/integrations',
-					),
-				}),
-		// Deduplicate shared packages so the aliased library source uses the same
-		// instances as the app (prevents dual-Pinia / dual-Vue / dual-router bugs).
+		// The package's main entry is dist/, but src/main.js imports the
+		// integration-registry helpers from their 0-hop definition modules
+		// (`@conduction/nextcloud-vue/integrations/...`) rather than the barrel —
+		// the barrel's multi-hop re-exports of these functions resolve to
+		// `undefined` across pipelinq's split shared-nc-vue chunk. Those subpaths
+		// exist only under the package's published `src/` tree, so map the
+		// `integrations` subpath there. The registry installs onto the
+		// `window.OCA.OpenRegister.integrations` global, so resolving these from
+		// src/ shares the same singleton as the dist components (no dual instance).
+		'@conduction/nextcloud-vue/integrations': path.resolve(
+			__dirname,
+			'node_modules/@conduction/nextcloud-vue/src/integrations',
+		),
+		// Deduplicate shared packages so a symlinked local nextcloud-vue checkout
+		// uses the same instances as the app (prevents dual-Pinia / dual-Vue /
+		// dual-router bugs).
 		//
 		// ⚠️ An alias that resolves to a package DIRECTORY makes webpack fall back
 		// to `main`/`mainFields` and skip the package's `exports` map entirely.
@@ -193,22 +150,6 @@ webpackConfig.resolve = {
 			'node_modules/vue-router/dist/vue-router.mjs',
 		),
 	},
-}
-
-// Local-lib mode only: the sibling's sources carry bare imports (`dexie`,
-// `gridstack`, …) that webpack would otherwise resolve from
-// `../nextcloud-vue/node_modules`, giving the bundle a second copy of packages
-// this app already ships. `dexie` makes that fatal rather than merely wasteful —
-// it throws "Two different versions of Dexie loaded in the same app" on any
-// version skew — and a `dexie$` alias cannot fix it, because the package's
-// `main` is a CJS build with no singleton wrapper. Searching this app's
-// `node_modules` FIRST keeps one copy of everything it has, while packages only
-// the sibling declares still resolve through the normal upward walk.
-if (useLocalLib) {
-	webpackConfig.resolve.modules = [
-		path.resolve(__dirname, 'node_modules'),
-		'node_modules',
-	]
 }
 
 // Keep the base module rules from @nextcloud/webpack-vue-config (VUE, CSS, SCSS, JS, ASSETS).
@@ -303,10 +244,7 @@ webpackConfig.optimization = {
 				// every page, instead of being fetched when its picker tab is
 				// opened. 'initial' leaves async imports in their own chunks.
 				chunks: 'initial',
-				// Matches both node_modules entries AND the monorepo-dev alias
-				// `../nextcloud-vue/src/...` which webpack resolves outside
-				// node_modules when @conduction/nextcloud-vue is aliased to it.
-				test: /[\\/]node_modules[\\/](@nextcloud[\\/]vue|@conduction[\\/]nextcloud-vue)[\\/]|[\\/]nextcloud-vue[\\/]src[\\/]/,
+				test: /[\\/]node_modules[\\/](@nextcloud[\\/]vue|@conduction[\\/]nextcloud-vue)[\\/]/,
 				priority: 30,
 				reuseExistingChunk: true,
 				enforce: true,
