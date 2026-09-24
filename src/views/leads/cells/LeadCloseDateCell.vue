@@ -119,15 +119,15 @@ export default {
 }
 
 .lead-close-cell__icon--overdue {
-	color: var(--color-error);
+	color: var(--color-element-error, var(--color-error));
 }
 
 .lead-close-cell__icon--soon {
-	color: var(--color-warning);
+	color: var(--color-element-warning, var(--color-warning));
 }
 
 .lead-close-cell--overdue {
-	color: var(--color-error);
+	color: var(--color-text-error, var(--color-error-text));
 	font-weight: 600;
 }
 
