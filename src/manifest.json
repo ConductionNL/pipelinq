@@ -2271,7 +2271,7 @@
 						"gridX": 0,
 						"gridY": 4,
 						"gridWidth": 6,
-						"gridHeight": 3
+						"gridHeight": 4
 					},
 					{
 						"id": "3",
@@ -2279,7 +2279,7 @@
 						"gridX": 6,
 						"gridY": 4,
 						"gridWidth": 6,
-						"gridHeight": 3
+						"gridHeight": 4
 					}
 				]
 			}
