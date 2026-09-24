@@ -24,7 +24,7 @@
 		:columns="columns"
 		:sidebar="sidebarConfig"
 		:rowClass="rowClassFor"
-		:itemsFilter="itemsFilter"
+		:filter="listFilter"
 		createModal="LeadCreateDialog"
 		rowClickToView
 		@rowClick="openLead"
@@ -69,7 +69,6 @@
 import { CnIndexPage } from '@conduction/nextcloud-vue'
 import { NcCheckboxRadioSwitch } from '@nextcloud/vue'
 import {
-	getDaysAge,
 	getOverdueDays,
 	getStaleThreshold,
 	isLeadOverdue,
@@ -129,6 +128,24 @@ export default {
 		},
 
 		/**
+		 * Server-side filter for the stale and hide-closed toggles. Stale means
+		 * not modified within the threshold, matching `isStale`.
+		 *
+		 * @return {object}
+		 * @spec openspec/specs/lead-management/spec.md
+		 */
+		listFilter() {
+			const filter = {}
+			if (this.hideClosed) {
+				filter.status = 'open'
+			}
+			if (this.showStaleOnly) {
+				filter['@self[updated][lt]'] = `@today-${this.staleThreshold}d`
+			}
+			return filter
+		},
+
+		/**
 		 * Sidebar config for the index page; mirrors the manifest.json default.
 		 */
 		sidebarConfig() {
@@ -163,30 +180,6 @@ export default {
 		 */
 		rowClassFor(item) {
 			return isLeadOverdue(item, this.stages) ? 'lead-overdue' : ''
-		},
-
-		/**
-		 * Custom items filter — applied after the platform's search/sort.
-		 * Implements the stale toggle and the optional "hide closed" filter.
-		 *
-		 * @param {Array<object>} items The base item list.
-		 * @return {Array<object>}
-		 * @spec openspec/specs/lead-management/spec.md
-		 */
-		itemsFilter(items) {
-			if (!Array.isArray(items)) return []
-			return items.filter((item) => {
-				if (
-					this.hideClosed
-					&& (item.status === 'won' || item.status === 'lost')
-				) {
-					return false
-				}
-				if (this.showStaleOnly && getDaysAge(item) < this.staleThreshold) {
-					return false
-				}
-				return true
-			})
 		},
 
 		/**
