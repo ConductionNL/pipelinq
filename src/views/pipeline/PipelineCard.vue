@@ -12,47 +12,51 @@
 		@click="$emit('open', item)"
 		@keydown.enter.prevent="$emit('open', item)"
 		@keydown.space.prevent="$emit('open', item)">
-		<!-- Quick actions menu (top-right) — kept off the keyboard tab-order
-		     for the card itself; CnRowActions handles its own focus.        -->
-		<div class="pipeline-card__menu" @click.stop>
-			<NcActions
-				:forceMenu="true"
-				:inline="0"
-				:aria-label="t('pipelinq', 'Card actions')">
-				<NcActionButton @click="openMoveMenu">
-					<template #icon>
-						<ArrowRightThick :size="18" />
-					</template>
-					{{ t('pipelinq', 'Move to stage') }}
-				</NcActionButton>
-				<NcActionButton @click="openAssignMenu">
-					<template #icon>
-						<AccountPlus :size="18" />
-					</template>
-					{{ t('pipelinq', 'Assign') }}
-				</NcActionButton>
-				<NcActionButton @click="openPriorityMenu">
-					<template #icon>
-						<Flag :size="18" />
-					</template>
-					{{ t('pipelinq', 'Priority') }}
-				</NcActionButton>
-			</NcActions>
-		</div>
-
-		<!-- Compact single-row layout: badge → title → meta → age -->
-		<div class="pipeline-card__row">
+		<!-- Header: what it is and what it is called, with its menu in the row
+		     so nothing can slide underneath it. -->
+		<div class="pipeline-card__header">
 			<span class="entity-badge" :class="'badge--' + entityType">
 				{{ entityType.toUpperCase().slice(0, 4) }}
-			</span>
-			<span class="pipeline-card__title">
-				{{ item.title }}
 			</span>
 			<span
 				v-if="item.priority && item.priority !== 'normal'"
 				class="priority-indicator"
 				:class="'priority--' + item.priority"
+				role="img"
+				:aria-label="getPriorityLabel(item.priority)"
 				:title="getPriorityLabel(item.priority)" />
+			<span class="pipeline-card__title">
+				{{ item.title }}
+			</span>
+			<div class="pipeline-card__menu" @click.stop @keydown.stop>
+				<NcActions
+					:forceMenu="true"
+					:inline="0"
+					:aria-label="t('pipelinq', 'Card actions')">
+					<NcActionButton @click="openMoveMenu">
+						<template #icon>
+							<ArrowRightThick :size="18" />
+						</template>
+						{{ t('pipelinq', 'Move to stage') }}
+					</NcActionButton>
+					<NcActionButton @click="openAssignMenu">
+						<template #icon>
+							<AccountPlus :size="18" />
+						</template>
+						{{ t('pipelinq', 'Assign') }}
+					</NcActionButton>
+					<NcActionButton @click="openPriorityMenu">
+						<template #icon>
+							<Flag :size="18" />
+						</template>
+						{{ t('pipelinq', 'Priority') }}
+					</NcActionButton>
+				</NcActions>
+			</div>
+		</div>
+
+		<!-- Details: wraps onto more lines rather than pushing into the header. -->
+		<div v-if="hasMeta" class="pipeline-card__meta">
 			<span v-if="item.value" class="card-meta">
 				{{ formatNumber(item.value) }}
 			</span>
@@ -188,6 +192,12 @@ export default {
 	},
 
 	computed: {
+		/** Whether the details row has anything to show. */
+		hasMeta() {
+			return !!(this.item.value || this.item.assignee || this.daysAge > 0
+				|| this.isStaleItem || this.item.expectedCloseDate)
+		},
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-42
 		 */
@@ -571,10 +581,9 @@ export default {
 }
 
 .pipeline-card__menu {
-	position: absolute;
-	top: 4px;
-	inset-inline-end: 4px;
-	z-index: 2;
+	flex-shrink: 0;
+	margin-block: -6px;
+	margin-inline-end: -4px;
 }
 
 .stale-badge {
@@ -592,11 +601,19 @@ export default {
 	vertical-align: middle;
 }
 
-.pipeline-card__row {
+.pipeline-card__header {
 	display: flex;
 	align-items: center;
-	gap: 8px;
+	gap: 6px;
 	min-height: 24px;
+}
+
+.pipeline-card__meta {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 4px 8px;
+	margin-top: 4px;
 }
 
 .entity-badge {
@@ -640,11 +657,11 @@ export default {
 }
 
 .priority--high {
-	background: #f59e0b;
+	background: var(--color-element-warning, var(--color-warning));
 }
 
 .priority--urgent {
-	background: #ef4444;
+	background: var(--color-element-error, var(--color-error));
 }
 
 .card-meta {
