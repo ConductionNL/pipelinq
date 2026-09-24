@@ -377,6 +377,7 @@
 </template>
 
 <script>
+import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcLoadingIcon, NcSelect, NcTextField } from '@nextcloud/vue'
 import Cog from 'vue-material-design-icons/Cog.vue'
 import FormatListBulleted from 'vue-material-design-icons/FormatListBulleted.vue'
@@ -389,11 +390,15 @@ import {
 	getAgingClass,
 	getDaysAge,
 	isStale,
+	pipelineEntitySlugs,
 	resolveObjectType,
 } from '../../services/pipelineUtils.js'
 import { getPriorityColor, getPriorityLabel } from '../../services/requestStatus.js'
 import { useObjectStore } from '../../store/modules/object.js'
 import { initializeStores } from '../../store/store.js'
+
+// What an unscoped pipeline (no propertyMappings, no legacy entityType) boards.
+const UNSCOPED_SLUGS = ['lead', 'request']
 
 export default {
 	name: 'PipelineBoard',
@@ -511,14 +516,7 @@ export default {
 		liveTypes() {
 			const pipeline = this.selectedPipeline
 			if (!pipeline) return []
-			let slugs = []
-			if (pipeline.propertyMappings && pipeline.propertyMappings.length > 0) {
-				slugs = pipeline.propertyMappings.map((m) => m.schemaSlug)
-			} else if (pipeline.entityType === 'both') {
-				slugs = ['lead', 'request']
-			} else if (pipeline.entityType) {
-				slugs = [pipeline.entityType]
-			}
+			const slugs = pipelineEntitySlugs(pipeline) ?? UNSCOPED_SLUGS
 			const types = new Set()
 			for (const slug of slugs) {
 				const { objectType } = resolveObjectType(slug)
@@ -917,7 +915,7 @@ export default {
 			if (pipeline?.propertyMappings && pipeline.propertyMappings.length > 0) {
 				await this.fetchItemsViaMappings(pipeline)
 			} else {
-				await this.fetchItemsLegacy(pipeline)
+				await this.fetchItemsBySlug(pipeline)
 			}
 
 			await this.fetchLeadProductsForStages()
@@ -1054,43 +1052,23 @@ export default {
 		},
 
 		/**
-		 * @param {object|null} pipeline The pipeline whose legacy entityType drives the fetch
+		 * Fetch items for a pipeline without property mappings: the legacy
+		 * `entityType`, or every boardable type when it is unscoped.
+		 *
+		 * @param {object|null} pipeline The selected pipeline
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-5
 		 */
-		async fetchItemsLegacy(pipeline) {
-			const et = pipeline?.entityType
-			const promises = []
-			let leads = []
-			let requests = []
-
-			if (et === 'lead' || et === 'both') {
-				promises.push(
-					this.fetchSchemaItems('lead').then((items) => {
-						leads = items
-					}),
-				)
-			}
-			if (et === 'request' || et === 'both') {
-				promises.push(
-					this.fetchSchemaItems('request').then((items) => {
-						requests = items
-					}),
-				)
-			}
-
-			await Promise.all(promises)
-			this.items = [
-				...leads.map((l) => ({
-					...l,
-					_schemaSlug: 'lead',
-					_entityType: 'lead',
-				})),
-				...requests.map((r) => ({
-					...r,
-					_schemaSlug: 'request',
-					_entityType: 'request',
-				})),
-			]
+		async fetchItemsBySlug(pipeline) {
+			const slugs = pipelineEntitySlugs(pipeline) ?? UNSCOPED_SLUGS
+			const results = await Promise.all(slugs.map(async (slug) => {
+				const rawItems = await this.fetchSchemaItems(slug)
+				return rawItems.map((item) => ({
+					...item,
+					_schemaSlug: slug,
+					_entityType: slug,
+				}))
+			}))
+			this.items = results.flat()
 		},
 
 		/**
@@ -1113,7 +1091,7 @@ export default {
 
 			try {
 				const ticketFilter = ticketType ? `ticketType=${ticketType}&` : ''
-				const url = `/apps/openregister/api/objects/${config.register}/${config.schema}?${ticketFilter}pipeline=${this.selectedPipelineId}&_limit=200`
+				const url = generateUrl(`/apps/openregister/api/objects/${config.register}/${config.schema}?${ticketFilter}pipeline=${this.selectedPipelineId}&_limit=200`)
 				const response = await fetch(url, {
 					headers: {
 						'Content-Type': 'application/json',
