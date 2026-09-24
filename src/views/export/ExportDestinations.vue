@@ -26,6 +26,8 @@
 			@emptyAction="createNew"
 			@refresh="onRefresh"
 			@sort="onSort"
+			rowClickToView
+			@rowClick="openDestination"
 			@view="openDestination"
 			@pageChanged="onPageChange">
 			<template #row-actions="{ row }">

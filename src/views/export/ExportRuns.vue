@@ -21,6 +21,8 @@
 			:showAdd="false"
 			@refresh="onRefresh"
 			@sort="onSort"
+			rowClickToView
+			@rowClick="openRun"
 			@view="openRun"
 			@pageChanged="onPageChange">
 			<template #row-actions="{ row }">

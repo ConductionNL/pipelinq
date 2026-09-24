@@ -26,7 +26,7 @@
 		:rowClass="rowClassFor"
 		:itemsFilter="itemsFilter"
 		createModal="LeadCreateDialog"
-		:rowClickToView="false"
+		rowClickToView
 		@rowClick="openLead"
 		@view="openLead">
 		<template #header-actions>

@@ -27,6 +27,8 @@
 			@emptyAction="openShift"
 			@refresh="onRefresh"
 			@sort="onSort"
+			rowClickToView
+			@rowClick="openDetail"
 			@view="openDetail"
 			@pageChanged="onPageChange" />
 

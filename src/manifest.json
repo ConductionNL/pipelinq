@@ -1571,7 +1571,6 @@
 				},
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"showViewAction": false,
-				"rowClickToView": false,
 				"actions": [
 					{
 						"id": "view",
@@ -3241,7 +3240,6 @@
 				"schema": "product",
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"showViewAction": false,
-				"rowClickToView": false,
 				"actions": [
 					{
 						"id": "view",
@@ -3412,7 +3410,6 @@
 				"showMassExport": false,
 				"showMassCopy": false,
 				"showMassDelete": false,
-				"rowClickToView": false,
 				"includeColumns": [
 					"reference",
 					"cashier",
@@ -3486,7 +3483,6 @@
 				"showMassExport": false,
 				"showMassCopy": false,
 				"showMassDelete": false,
-				"rowClickToView": false,
 				"includeColumns": [
 					"reference",
 					"originalTransaction",
