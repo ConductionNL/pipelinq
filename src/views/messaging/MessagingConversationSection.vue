@@ -406,7 +406,7 @@ export default {
 			this.loading = true
 			try {
 				const rows =
-					(await this.objectStore.fetchCollection('message', {
+					(await this.objectStore.fetchCollection('channelMessage', {
 						contactId: this.effectiveContactId,
 						_limit: 200,
 					})) || []
