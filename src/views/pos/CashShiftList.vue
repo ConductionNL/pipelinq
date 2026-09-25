@@ -128,7 +128,7 @@ export default {
 		 *
 		 * @param {object} payload The dialog payload (drawer, floatAmount, reference, notes).
 		 * @spec exclude the cash-shift surface has no owning requirement, see
-		 *   CashShiftActionsSection::lifecycle
+		 *   postShiftAction in services/posShiftActions.js
 		 */
 		async createShift(payload) {
 			this.opening = true

@@ -3829,12 +3829,12 @@
 			"route": "/pos/refunds/:id",
 			"type": "detail",
 			"title": "Retour",
+			"actionsComponent": "PosRefundHeaderActions",
 			"config": {
 				"register": "pipelinq",
 				"schema": "posRefund",
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"_note": "FINANCIAL archetype (bespoke-detail-pages). A POS refund is a credit-side ledger record, so NO comms leaves (posRefund declares no email/calendar linkedType). Two columns: the refund fields 8-wide beside the Refund amount and VAT tiles and the refund totals; the cross-schema 'Returned items' join beside Related; the plain per-line object-list (posRefundLine, FK 'refund') full width. Audit-trail is a sidebar tab.",
-				"actionsComponent": "PosRefundHeaderActions",
 				"widgets": [
 					{
 						"id": "pos-refund-data",
@@ -4007,15 +4007,16 @@
 		},
 		{
 			"id": "CashShiftDetail",
-			"_note": "Cash-shift record as a declarative type:detail page (pipelinq-pos-mdm-detail-declarative). The shift's flat float fields (reference / drawer / operator / managedBy / currency / floatAmount / floatAt / status / closedAt / reconciliationStatus / notes) auto-render in the body via CnObjectDataWidget; the drops render as a relatedCollections table (cashDrop, FK 'shift'). The parts no declarative primitive can express live in one kind:'section' bodyWidget (CashShiftActionsSection, after-related): the cash-reconciliation VARIANCE panel and the drop/count/reconcile actions. KEPT-AS-NOTE: (1) lifecycleActions is NOT wired — Geld verwijderen (drop) / Shift afsluiten en tellen (count) / reconcile POST to bespoke /api/pos-shifts/{id}/{drop|count|diff} endpoints that recompute variance server-side (NOT OR /transition); cashShift/cashDiff have no x-openregister-lifecycle; (2) the variance panel stays in the section because it is a LATEST/PENDING-child projection — relatedCollections lists ALL children and cannot pick + lay out the single most-relevant cashDiff with its tolerance verdict and inline approve/reject. Missing primitives: a host-app-endpoint action toolbar (see PosTransactionDetail); a 'latest/pending child object' projection primitive.",
+			"_note": "Cash-shift record as a declarative type:detail page (pipelinq-pos-mdm-detail-declarative). The shift's flat fields auto-render via CnObjectDataWidget; the drops are an object-list (cashDrop, FK 'shift') inside CashShiftDropsWidget, whose Add drop posts to /api/pos-shifts/{id}/drop rather than creating the object directly. Close and count shift is the header's actionsComponent (CashShiftHeaderActions); the cash-reconciliation VARIANCE with its manager-gated approve/reject is a grid widget (CashShiftVarianceWidget). KEPT-AS-NOTE: (1) lifecycleActions is NOT wired: drop / count / reconcile POST to bespoke /api/pos-shifts/{id}/{drop|count|diff} endpoints that recompute variance server-side (NOT OR /transition); cashShift/cashDiff have no x-openregister-lifecycle; (2) the variance is a custom widget because it is a LATEST/PENDING-child projection: an object-list lists ALL children and cannot pick and lay out the single most-relevant cashDiff with its tolerance verdict and inline approve/reject. Missing primitive: a 'latest/pending child object' projection primitive.",
 			"route": "/pos/shifts/:id",
 			"type": "detail",
 			"title": "Shift",
+			"actionsComponent": "CashShiftHeaderActions",
 			"config": {
 				"register": "pipelinq",
 				"schema": "cashShift",
 				"documentationUrl": "https://pipelinq.conduction.nl",
-				"_note": "FINANCIAL archetype (bespoke-detail-pages). A cash-drawer shift is a cash-management ledger record, so NO comms leaves (cashShift declares no email/calendar linkedType). The body opens with the shift fields (reference, drawer, operator, managedBy, currency, floatAt, status, closedAt, reconciliationStatus) 8-wide + an in-grid stats-block KPI card top-right (rule 2, replacing the two loose uncarded stat tiles: Opening float / Drops, @objectId-scoped) with the related graph (drawer, operator) below it. The cash drops stay in the PRESERVED relatedCollections table (cashDrop, FK 'shift') and the cash-reconciliation VARIANCE panel + drop/count/reconcile actions stay in the PRESERVED CashShiftActionsSection bodyWidget (after-related) — the variance panel is a latest/pending-child projection a plain object-list cannot lay out, as its note records. Audit-trail moves to a sidebar tab.",
+				"_note": "FINANCIAL archetype (bespoke-detail-pages). A cash-drawer shift is a cash-management ledger record, so NO comms leaves (cashShift declares no email/calendar linkedType). Two columns: the shift fields 8-wide beside the Opening float and Drops tiles and the cash-reconciliation variance; the cash drops (CashShiftDropsWidget: an object-list on cashDrop, FK 'shift', with Add drop) beside Related. Audit-trail is a sidebar tab.",
 				"widgets": [
 					{
 						"id": "shift-data",
@@ -4062,6 +4063,33 @@
 						}
 					},
 					{
+						"id": "shift-variance",
+						"type": "CashShiftVarianceWidget",
+						"title": "Cash difference",
+						"icon": "ScaleBalance"
+					},
+					{
+						"id": "shift-drops",
+						"type": "CashShiftDropsWidget",
+						"title": "Drops",
+						"icon": "CashMinus",
+						"content": {
+							"register": "pipelinq",
+							"schema": "cashDrop",
+							"filter": { "shift": "@objectId" },
+							"sort": { "field": "droppedAt", "dir": "desc" },
+							"columns": [
+								{ "key": "reason", "label": "Reden" },
+								{ "key": "amount", "label": "Bedrag" },
+								{ "key": "droppedAt", "label": "Op" },
+								{ "key": "droppedBy", "label": "Door" }
+							],
+							"limit": 25,
+							"allowCreate": false,
+							"emptyText": "No cash drops recorded on this shift yet."
+						}
+					},
+					{
 						"id": "shift-related",
 						"type": "related",
 						"title": "Related",
@@ -4075,57 +4103,47 @@
 						"gridX": 0,
 						"gridY": 0,
 						"gridWidth": 8,
-						"gridHeight": 4
+						"gridHeight": 6
 					},
 					{
 						"id": "2-1",
 						"widgetId": "shift-kpis-opening-float",
 						"gridX": 8,
 						"gridY": 0,
-						"gridWidth": 4,
+						"gridWidth": 2,
 						"gridHeight": 2
 					},
 					{
 						"id": "2-2",
 						"widgetId": "shift-kpis-drops",
-						"gridX": 8,
-						"gridY": 2,
-						"gridWidth": 4,
+						"gridX": 10,
+						"gridY": 0,
+						"gridWidth": 2,
 						"gridHeight": 2
 					},
 					{
+						"id": "2-3",
+						"widgetId": "shift-variance",
+						"gridX": 8,
+						"gridY": 2,
+						"gridWidth": 4,
+						"gridHeight": 4
+					},
+					{
 						"id": "3",
+						"widgetId": "shift-drops",
+						"gridX": 0,
+						"gridY": 6,
+						"gridWidth": 8,
+						"gridHeight": 5
+					},
+					{
+						"id": "4",
 						"widgetId": "shift-related",
 						"gridX": 8,
-						"gridY": 4,
+						"gridY": 6,
 						"gridWidth": 4,
-						"gridHeight": 2
-					}
-				],
-				"relatedCollections": [
-					{
-						"title": "Drops",
-						"register": "pipelinq",
-						"schema": "cashDrop",
-						"filter": { "shift": "@objectId" },
-						"sort": { "field": "droppedAt", "dir": "desc" },
-						"columns": [
-							{ "key": "reason", "label": "Reden" },
-							{ "key": "amount", "label": "Bedrag" },
-							{ "key": "droppedAt", "label": "Op" },
-							{ "key": "droppedBy", "label": "Door" }
-						],
-						"limit": 25,
-						"allowCreate": false,
-						"emptyText": "No cash drops recorded on this shift yet."
-					}
-				],
-				"bodyWidgets": [
-					{
-						"id": "cash-shift-actions",
-						"component": "CashShiftActionsSection",
-						"placement": "after-related",
-						"props": { "shiftId": "@objectId" }
+						"gridHeight": 5
 					}
 				],
 				"sidebar": {
@@ -4380,12 +4398,12 @@
 			"route": "/pos/:id",
 			"type": "detail",
 			"title": "Transactie",
+			"actionsComponent": "PosTransactionHeaderActions",
 			"config": {
 				"register": "pipelinq",
 				"schema": "posTransaction",
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"_note": "FINANCIAL archetype (bespoke-detail-pages). A POS transaction is a receipt/ledger record, so deliberately NO comms leaves (posTransaction declares no email/calendar linkedType). The money sits top-right beside the fields so a cashier or auditor reads it first, and the audit trail is a sidebar tab, the home for the immutable change log of a financial record.",
-				"actionsComponent": "PosTransactionHeaderActions",
 				"excludeFields": ["taxBreakdown", "invoiceBreakdown"],
 				"widgets": [
 					{

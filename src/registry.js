@@ -73,7 +73,12 @@ import SocialPublicationsSection from './components/marketing/SocialPublications
 //     vocabulary, and because the list view leads with per-state counts that
 //     summaryAggregates cannot express. ---
 import SubscriptionsSection from './components/marketing/SubscriptionsSection.vue'
-import CashShiftActionsSection from './components/pos/CashShiftActionsSection.vue'
+// --- Cash-shift detail — declarative type:"detail": the closing count is its
+//     actionsComponent; the drops (with Add drop) and the latest/pending
+//     cashDiff variance are grid widgets. ---
+import CashShiftDropsWidget from './components/pos/CashShiftDropsWidget.vue'
+import CashShiftHeaderActions from './components/pos/CashShiftHeaderActions.vue'
+import CashShiftVarianceWidget from './components/pos/CashShiftVarianceWidget.vue'
 // --- POS refund detail — declarative type:"detail" (pipelinq-pos-mdm-detail-
 //     declarative): refund fields auto-render; the manager-gated confirm/reject
 //     actions are its actionsComponent, and the cross-schema "Returned items"
@@ -668,10 +673,23 @@ const registry = {
 		component: CashShiftListView,
 		_note: 'Cash-shift list; custom so rows navigate to the drawer-reconciliation detail and the empty state offers "Shift openen".',
 	},
-	CashShiftActionsSection: {
-		kind: 'section',
-		component: CashShiftActionsSection,
-		_note: 'Cash-shift in-body section for the declarative type:"detail" CashShiftDetail page. The Geld verwijderen (drop) / Shift afsluiten en tellen (count) / reconcile actions POST to bespoke /api/pos-shifts/{id}/{drop|count|diff} endpoints (cashShift has no x-openregister-lifecycle). Hosts the latest/pending cashDiff VARIANCE projection (relatedCollections lists ALL children — it cannot pick the single most-relevant diff with its tolerance verdict) + manager-gated approve/reject. Self-fetches by @objectId.',
+	CashShiftHeaderActions: {
+		kind: 'widget',
+		component: CashShiftHeaderActions,
+		...HEADER_ACTIONS_META,
+		_note: 'CashShiftDetail actionsComponent: Close and count shift, which POSTs to the bespoke /api/pos-shifts/{id}/count endpoint (cashShift has no x-openregister-lifecycle).',
+	},
+	CashShiftDropsWidget: {
+		kind: 'widget',
+		component: CashShiftDropsWidget,
+		...PANEL_WIDGET_META,
+		_note: 'CashShiftDetail grid widget: the cashDrop object-list plus Add drop, which POSTs to /api/pos-shifts/{id}/drop (POS-operator, open-shift and positive-amount checks, server-set droppedBy/droppedAt) instead of the object-list\'s generic create.',
+	},
+	CashShiftVarianceWidget: {
+		kind: 'widget',
+		component: CashShiftVarianceWidget,
+		...PANEL_WIDGET_META,
+		_note: 'CashShiftDetail grid widget: the latest/pending cashDiff VARIANCE projection (an object-list lists ALL children; it cannot pick the single most-relevant diff with its tolerance verdict) + manager-gated approve/reject via /api/pos-shifts/{id}/diff/{approve|reject}. Re-reads on cn:page:refresh.',
 	},
 
 	// POS staff, POS roles and POS tender types are administrator configuration,
