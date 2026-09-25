@@ -82,7 +82,8 @@ async function findSeededArticle(page: Page, slug: string): Promise<any> {
 
 /* ══════════════════════════════════════════════════════════════════════════
  * The Articles page — src/manifest.d/77-marketing-articles.json, a
- * declarative type:index (cards view) over `article` under Marketing.
+ * declarative type:index (table view, cards one toggle away) over `article`
+ * under Marketing.
  * ══════════════════════════════════════════════════════════════════════════ */
 test.describe('Articles page', () => {
 	// @e2e marketing-articles::the-articles-page-lists-the-seeded-articles

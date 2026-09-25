@@ -6730,7 +6730,8 @@ OC.L10N.register(
         "Template saved.": "Sjabloon opgeslagen.",
         "The channel of an existing template cannot be changed.": "Het kanaal van een bestaand sjabloon kan niet worden gewijzigd.",
         "Edit HTML": "HTML bewerken",
-        "HTML body preview": "Voorbeeld van de HTML-tekst"
+        "HTML body preview": "Voorbeeld van de HTML-tekst",
+        "The hero image could not be loaded.": "De hoofdafbeelding kon niet worden geladen."
     },
     "nplurals=2; plural=(n != 1);"
 )

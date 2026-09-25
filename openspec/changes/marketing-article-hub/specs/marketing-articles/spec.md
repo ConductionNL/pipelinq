@@ -96,7 +96,7 @@ An article SHALL be able to answer which campaign templates, mailings and blasts
 
 ### Requirement: A Marketer Writes and Reads an Article in the Interface
 
-The Marketing menu SHALL carry an Articles entry between Templates and Lists. The index SHALL show each article as a card with its hero image, its title, its summary and a status chip. The detail page SHALL render the markdown body as formatted text, show the hero image, list where the article has been used, and open an editor in which the body is written with a markdown editor and the hero image is picked from Nextcloud Files.
+The Marketing menu SHALL carry an Articles entry between Templates and Lists. The index SHALL open as a table, and SHALL offer a cards view that shows each article as a card with its hero image, its title, its summary and a status chip. The detail page SHALL render the markdown body as formatted text in a framed preview of the article, show the hero image, list where the article has been used, and open an editor in which the body is written with a markdown editor and the hero image is picked from Nextcloud Files.
 
 #### Scenario: The Articles page lists the seeded articles
 

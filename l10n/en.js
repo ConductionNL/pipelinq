@@ -6816,7 +6816,8 @@ OC.L10N.register(
         "Template saved.": "Template saved.",
         "The channel of an existing template cannot be changed.": "The channel of an existing template cannot be changed.",
         "Edit HTML": "Edit HTML",
-        "HTML body preview": "HTML body preview"
+        "HTML body preview": "HTML body preview",
+        "The hero image could not be loaded.": "The hero image could not be loaded."
     },
     "nplurals=2; plural=(n != 1);"
 )

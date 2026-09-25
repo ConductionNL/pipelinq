@@ -18,7 +18,7 @@
 	"pages": [
 		{
 			"id": "Articles",
-			"_note": "Article list as a declarative type:index page (marketing-article-hub), opened in cards view: the hero image, title and summary the spec asks for read naturally as a card and only awkwardly as a table row (the card's title/description/image come from the article schema's own `configuration.objectNameField/objectDescriptionField/objectImageField`, not page config). Add navigates to ArticleNew, which mounts the one editing surface the change owns (ArticleEditModal) — the bespoke ArticleService create path (author stamp, slug derivation, the ADR-088 agent-mark refusal) has no declarative equivalent, so `showAdd`/`showFormDialog` stay off. Row view opens ArticleDetail.",
+			"_note": "Article list as a declarative type:index page (marketing-article-hub), opened in table view; the cards view stays one toggle away, its title/description/image coming from the article schema's own `configuration.objectNameField/objectDescriptionField/objectImageField`. Add navigates to ArticleNew, which mounts the one editing surface the change owns (ArticleEditModal) — the bespoke ArticleService create path (author stamp, slug derivation, the ADR-088 agent-mark refusal) has no declarative equivalent, so `showAdd`/`showFormDialog` stay off. The built-in View action and a row click open ArticleDetail.",
 			"route": "/articles",
 			"type": "index",
 			"title": "Articles",
@@ -26,7 +26,6 @@
 				"register": "pipelinq",
 				"schema": "article",
 				"documentationUrl": "https://pipelinq.conduction.nl",
-				"viewMode": "cards",
 				"showAdd": false,
 				"showFormDialog": false,
 				"showEditAction": false,
@@ -42,15 +41,6 @@
 						"icon": "Plus",
 						"handler": "navigate",
 						"route": "ArticleNew"
-					}
-				],
-				"actions": [
-					{
-						"id": "view",
-						"label": "Open",
-						"icon": "Eye",
-						"handler": "navigate",
-						"route": "ArticleDetail"
 					}
 				]
 			}
