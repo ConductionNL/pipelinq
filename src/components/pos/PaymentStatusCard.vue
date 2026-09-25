@@ -12,7 +12,7 @@
 <template>
 	<div class="payment-status-card">
 		<header class="payment-status-card__header">
-			<h3>{{ t('pipelinq', 'Payment') }}</h3>
+			<h4>{{ t('pipelinq', 'Payment provider') }}</h4>
 			<span :class="statusClass" class="payment-status-card__badge">{{
 				statusLabel
 			}}</span>
@@ -254,10 +254,6 @@ export default {
 
 <style scoped>
 .payment-status-card {
-	border: 1px solid var(--color-border);
-	border-radius: var(--border-radius-large);
-	padding: 16px;
-	background-color: var(--color-main-background);
 	display: flex;
 	flex-direction: column;
 	gap: 12px;
@@ -269,9 +265,13 @@ export default {
 	justify-content: space-between;
 }
 
-.payment-status-card__header h3 {
+.payment-status-card__header h4 {
 	margin: 0;
-	font-size: 1.05em;
+	font-size: 12px;
+	font-weight: 600;
+	color: var(--color-text-maxcontrast);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
 }
 
 .payment-status-card__badge {

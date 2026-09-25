@@ -78,13 +78,15 @@ import CashShiftActionsSection from './components/pos/CashShiftActionsSection.vu
 //     declarative): refund fields auto-render; the manager-gated confirm/reject
 //     actions + the cross-schema "Returned items" join + totals are a section. ---
 import PosRefundActionsSection from './components/pos/PosRefundActionsSection.vue'
-// --- POS transactions. The detail page is now a declarative type:"detail" page
-//     (pipelinq-pos-mdm-detail-declarative): the transaction's flat fields
-//     auto-render, the line items are a relatedCollections table, and the
-//     status-gated action toolbar (bespoke /api/pos-transactions endpoints) +
-//     tax breakdown + tender panel + payment card + receipt modals live in one
-//     kind:'section' bodyWidget. The form is a bespoke cart editor. ---
-import PosTransactionActionsSection from './components/pos/PosTransactionActionsSection.vue'
+// --- POS transactions. The detail page is a declarative type:"detail" page
+//     (pipelinq-pos-mdm-detail-declarative). The status-gated actions are its
+//     actionsComponent (bespoke /api/pos-transactions endpoints); the totals
+//     and the tender / provider payment panel are grid widgets beside the
+//     schema-driven data, related and line-item widgets. The form is a bespoke
+//     cart editor. ---
+import PosTransactionHeaderActions from './components/pos/PosTransactionHeaderActions.vue'
+import PosTransactionPaymentWidget from './components/pos/PosTransactionPaymentWidget.vue'
+import PosTransactionTotalsWidget from './components/pos/PosTransactionTotalsWidget.vue'
 // --- POS end-of-day Z-report. The per-report page is now a declarative
 //     type:"detail" page (pipelinq-detail-pages-declarative-r3): the Z-report's
 //     flat fields auto-render via CnObjectDataWidget; the BTW + payment-method
@@ -604,12 +606,25 @@ const registry = {
 
 	// --- POS transactions. The PosTransactions list + detail are now declarative
 	//     pages (pipelinq-declarative-pages-round1 / pipelinq-pos-mdm-detail-
-	//     declarative); only the bespoke cart-editor form view + the detail's
-	//     in-body action section stay registered. ---
-	PosTransactionActionsSection: {
-		kind: 'section',
-		component: PosTransactionActionsSection,
-		_note: 'POS transaction in-body section for the declarative type:"detail" PosTransactionDetail page. The status-gated action toolbar (confirm/park/resume/settle/refund/print/email) POSTs to bespoke /api/pos-transactions/{id}/{action} endpoints with side-effects — NOT OR /transition, and posTransaction has no x-openregister-lifecycle, so CnLifecycleActions cannot drive them. Also hosts the tax-breakdown + totals, the interactive TenderEntryPanel and the PaymentStatusCard. Self-fetches by @objectId.',
+	//     declarative); only the bespoke cart-editor form view, the detail's
+	//     header actions and its two grid widgets stay registered. ---
+	PosTransactionHeaderActions: {
+		kind: 'widget',
+		component: PosTransactionHeaderActions,
+		...HEADER_ACTIONS_META,
+		_note: 'PosTransactionDetail actionsComponent: Edit (to the cart editor) and the status-gated confirm/park/resume/settle/refund/receipt actions. They POST to bespoke /api/pos-transactions/{id}/{action} endpoints with side-effects, NOT OR /transition, and posTransaction has no x-openregister-lifecycle, so CnLifecycleActions cannot drive them. The page sets showEditAction:false because the schema form cannot edit line items.',
+	},
+	PosTransactionTotalsWidget: {
+		kind: 'widget',
+		component: PosTransactionTotalsWidget,
+		...PANEL_WIDGET_META,
+		_note: 'PosTransactionDetail grid widget: VAT per rate, subtotal/discount/VAT/total and the invoice split, read from the totals the server stored on the transaction (REQ-BTW-005).',
+	},
+	PosTransactionPaymentWidget: {
+		kind: 'widget',
+		component: PosTransactionPaymentWidget,
+		...PANEL_WIDGET_META,
+		_note: 'PosTransactionDetail grid widget: the split tenders with their balance (TenderEntryPanel) and the payment provider status (PaymentStatusCard) when a provider handled the payment. Reloads its tenders on cn:page:refresh.',
 	},
 	PosTransactionFormView: {
 		kind: 'page',

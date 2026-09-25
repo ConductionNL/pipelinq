@@ -1178,6 +1178,7 @@ OC.L10N.register(
         "ETA: ~{seconds}s remaining": "ETA: nog ~{seconds}s",
         "EUR": "EUR",
         "Edit": "Bewerken",
+        "Edit line items": "Regels bewerken",
         "Edit service": "Dienst bewerken",
         "Could not load the service form.": "Het formulier van de dienst kon niet worden geladen.",
         "{sum} of {duration} min": "{sum} van {duration} min",

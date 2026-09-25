@@ -1190,6 +1190,7 @@ OC.L10N.register(
         "ETA: ~{seconds}s remaining": "ETA: ~{seconds}s remaining",
         "EUR": "EUR",
         "Edit": "Edit",
+        "Edit line items": "Edit line items",
         "Edit service": "Edit service",
         "Could not load the service form.": "Could not load the service form.",
         "{sum} of {duration} min": "{sum} of {duration} min",

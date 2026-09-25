@@ -3684,6 +3684,7 @@
 				"showMassExport": false,
 				"showMassCopy": false,
 				"showMassDelete": false,
+				"selectable": false,
 				"includeColumns": [
 					"reference",
 					"cashier",
@@ -4353,7 +4354,7 @@
 		},
 		{
 			"id": "PosTransactionDetail",
-			"_note": "POS transaction record as a declarative type:detail page (pipelinq-pos-mdm-detail-declarative). The transaction's flat fields (reference / cashier / terminalId / status / priceMode / subtotal / totalTax / total / notes / …) auto-render in the body via CnObjectDataWidget; the line items render as a relatedCollections table (posTransactionLine, FK 'transaction'). Everything no declarative primitive can express lives in one kind:'section' bodyWidget (PosTransactionActionsSection, after-related): the status-gated action toolbar (Bevestigen / Parkeren / Hervatten / Afrekenen / Retour registreren / Terugboeken / Print / Email Receipt), the tax-breakdown + totals, the interactive TenderEntryPanel (live add/remove split tenders + recompute) and the PaymentStatusCard. KEPT-AS-NOTE: lifecycleActions is NOT wired — the action buttons POST to bespoke /api/pos-transactions/{id}/{action} endpoints with side-effects (NOT OR's /transition), and posTransaction has no x-openregister-lifecycle. Missing primitive: a declarative action-toolbar whose buttons POST to a host-app endpoint (not OR /transition), status-gated client-side, with a custom-recompute reload; and an editable/interactive sub-grid primitive for the tender panel.",
+			"_note": "POS transaction record as a declarative type:detail page (pipelinq-pos-mdm-detail-declarative). Two columns: all of the transaction's fields (data widget) beside the line count and the stored totals (PosTransactionTotalsWidget: tax return per rate, subtotal/discount/VAT/total, invoice split, REQ-BTW-005, which also carries the old Total and VAT tiles); the line items (object-list on posTransactionLine, FK 'transaction') beside Related; then the tenders and provider status full width (PosTransactionPaymentWidget). The status-gated actions and 'Edit line items' (the cart editor) are the header's actionsComponent (PosTransactionHeaderActions), beside the page's own Edit. They POST to bespoke /api/pos-transactions/{id}/{action} endpoints with side-effects, NOT OR's /transition, and posTransaction has no x-openregister-lifecycle, so lifecycleActions is not wired.",
 			"route": "/pos/:id",
 			"type": "detail",
 			"title": "Transactie",
@@ -4361,7 +4362,8 @@
 				"register": "pipelinq",
 				"schema": "posTransaction",
 				"documentationUrl": "https://pipelinq.conduction.nl",
-				"_note": "FINANCIAL archetype (bespoke-detail-pages). A POS transaction is a receipt/ledger record — so deliberately NO comms leaves (posTransaction declares no email/calendar linkedType; the receipt is a financial artefact, not a conversation). The body opens with the transaction fields (reference, cashier, terminal, tender, status, priceMode, subtotal/discount/total) 8-wide + an in-grid stats-block KPI card top-right (rule 2, replacing the three loose uncarded stat tiles: Total / VAT / Line count, @objectId-scoped, so a cashier or auditor reads the money first) with the related graph (client/customer, paymentProvider) below it. The line-item register stays in relatedCollections (posTransactionLine, FK 'transaction') and the status-gated action toolbar + interactive tender panel stay in the PRESERVED PosTransactionActionsSection bodyWidget (after-related) — both already carry the missing-primitive notes. Audit-trail moves to a sidebar tab, the correct home for the immutable change log of a financial record.",
+				"_note": "FINANCIAL archetype (bespoke-detail-pages). A POS transaction is a receipt/ledger record, so deliberately NO comms leaves (posTransaction declares no email/calendar linkedType). The money sits top-right beside the fields so a cashier or auditor reads it first, and the audit trail is a sidebar tab, the home for the immutable change log of a financial record.",
+				"actionsComponent": "PosTransactionHeaderActions",
 				"widgets": [
 					{
 						"id": "pos-tx-data",
@@ -4369,44 +4371,6 @@
 						"title": "Transaction",
 						"icon": "FileDocument",
 						"content": { "columns": 2 }
-					},
-					{
-						"id": "pos-tx-kpis-total",
-						"type": "stats-block",
-						"title": "Total",
-						"icon": "Cash",
-						"content": {
-							"entries": [
-								{
-									"title": "Total",
-									"register": "pipelinq",
-									"schema": "posTransaction",
-									"metric": "sum",
-									"field": "total",
-									"countLabel": "EUR",
-									"filter": { "id": "@objectId" }
-								}
-							]
-						}
-					},
-					{
-						"id": "pos-tx-kpis-vat",
-						"type": "stats-block",
-						"title": "VAT",
-						"icon": "Cash",
-						"content": {
-							"entries": [
-								{
-									"title": "VAT",
-									"register": "pipelinq",
-									"schema": "posTransaction",
-									"metric": "sum",
-									"field": "totalTax",
-									"countLabel": "EUR",
-									"filter": { "id": "@objectId" }
-								}
-							]
-						}
 					},
 					{
 						"id": "pos-tx-kpis-line-items",
@@ -4427,10 +4391,45 @@
 						}
 					},
 					{
+						"id": "pos-tx-totals",
+						"type": "PosTransactionTotalsWidget",
+						"title": "Totals",
+						"icon": "Cash"
+					},
+					{
+						"id": "pos-tx-lines",
+						"type": "object-list",
+						"title": "Line items",
+						"icon": "FormatListBulleted",
+						"content": {
+							"register": "pipelinq",
+							"schema": "posTransactionLine",
+							"filter": { "transaction": "@objectId" },
+							"sort": { "field": "sortOrder", "dir": "asc" },
+							"columns": [
+								{ "key": "description", "label": "Description" },
+								{ "key": "quantity", "label": "Qty" },
+								{ "key": "unitPrice", "label": "Unit price" },
+								{ "key": "discount", "label": "Discount %" },
+								{ "key": "taxRate", "label": "VAT %" },
+								{ "key": "lineTotal", "label": "Line total" }
+							],
+							"limit": 25,
+							"allowCreate": false,
+							"emptyText": "This transaction has no line items."
+						}
+					},
+					{
 						"id": "pos-tx-related",
 						"type": "related",
 						"title": "Related",
 						"icon": "LinkVariant"
+					},
+					{
+						"id": "pos-tx-payment",
+						"type": "PosTransactionPaymentWidget",
+						"title": "Payment",
+						"icon": "CreditCardOutline"
 					}
 				],
 				"layout": [
@@ -4440,67 +4439,47 @@
 						"gridX": 0,
 						"gridY": 0,
 						"gridWidth": 8,
-						"gridHeight": 4
+						"gridHeight": 7
 					},
 					{
-						"id": "2-1",
-						"widgetId": "pos-tx-kpis-total",
+						"id": "2",
+						"widgetId": "pos-tx-kpis-line-items",
 						"gridX": 8,
 						"gridY": 0,
 						"gridWidth": 4,
 						"gridHeight": 2
 					},
 					{
-						"id": "2-2",
-						"widgetId": "pos-tx-kpis-vat",
+						"id": "3",
+						"widgetId": "pos-tx-totals",
 						"gridX": 8,
 						"gridY": 2,
 						"gridWidth": 4,
-						"gridHeight": 2
+						"gridHeight": 5
 					},
 					{
-						"id": "2-3",
-						"widgetId": "pos-tx-kpis-line-items",
-						"gridX": 8,
-						"gridY": 4,
-						"gridWidth": 4,
-						"gridHeight": 2
+						"id": "4",
+						"widgetId": "pos-tx-lines",
+						"gridX": 0,
+						"gridY": 7,
+						"gridWidth": 8,
+						"gridHeight": 5
 					},
 					{
-						"id": "3",
+						"id": "5",
 						"widgetId": "pos-tx-related",
 						"gridX": 8,
-						"gridY": 6,
+						"gridY": 7,
 						"gridWidth": 4,
-						"gridHeight": 2
-					}
-				],
-				"relatedCollections": [
+						"gridHeight": 5
+					},
 					{
-						"title": "Line items",
-						"register": "pipelinq",
-						"schema": "posTransactionLine",
-						"filter": { "transaction": "@objectId" },
-						"sort": { "field": "sortOrder", "dir": "asc" },
-						"columns": [
-							{ "key": "description", "label": "Description" },
-							{ "key": "quantity", "label": "Qty" },
-							{ "key": "unitPrice", "label": "Unit price" },
-							{ "key": "discount", "label": "Discount %" },
-							{ "key": "taxRate", "label": "VAT %" },
-							{ "key": "lineTotal", "label": "Line total" }
-						],
-						"limit": 25,
-						"allowCreate": false,
-						"emptyText": "This transaction has no line items."
-					}
-				],
-				"bodyWidgets": [
-					{
-						"id": "pos-transaction-actions",
-						"component": "PosTransactionActionsSection",
-						"placement": "after-related",
-						"props": { "transactionId": "@objectId" }
+						"id": "6",
+						"widgetId": "pos-tx-payment",
+						"gridX": 0,
+						"gridY": 12,
+						"gridWidth": 12,
+						"gridHeight": 5
 					}
 				],
 				"sidebar": {

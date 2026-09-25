@@ -5,9 +5,10 @@
   - Per-transaction tender entry panel (pos-split-tender REQ-PST-002..005).
   -
   - Shows: list of tenders for the transaction, server-authoritative
-  - validation summary (sum / total / remaining / balanced), an Add Tender
-  - action that opens AddTenderDialog and a per-row Remove action. Read-only
-  - when the transaction is `settled`.
+  - validation summary (sum / total / remaining / balanced) and a per-row
+  - Remove action. It draws no heading or Add button of its own: the widget
+  - hosting it puts both in its header and calls `openAddDialog()`. Read-only
+  - when the transaction is `settled` or `refunded`.
   -
   - @spec openspec/changes/pos-split-tender/tasks.md#7.2
   - @spec openspec/changes/pos-split-tender/tasks.md#7.5
@@ -15,17 +16,6 @@
   -->
 <template>
 	<div class="tender-panel">
-		<div class="tender-panel__header">
-			<h3>{{ t('pipelinq', 'Tenders') }}</h3>
-			<NcButton
-				v-if="canEdit"
-				variant="primary"
-				:disabled="loading"
-				@click="openAddDialog">
-				{{ t('pipelinq', 'Add tender') }}
-			</NcButton>
-		</div>
-
 		<NcLoadingIcon v-if="loading" :size="32" />
 
 		<template v-else>
@@ -228,8 +218,16 @@ export default {
 			return type?.id || type?.uuid || ''
 		},
 
-		async loadTenders() {
-			this.loading = true
+		/**
+		 * Load the tenders and the server's validation summary.
+		 *
+		 * @param {object} [options] Options.
+		 * @param {boolean} [options.silent] Keep the table on screen while
+		 *   reloading, for a refresh rather than a first load.
+		 * @return {Promise<void>}
+		 */
+		async loadTenders({ silent = false } = {}) {
+			this.loading = !silent
 			this.errorMessage = ''
 			try {
 				const url = generateUrl(
@@ -334,16 +332,6 @@ export default {
 	display: flex;
 	flex-direction: column;
 	gap: 12px;
-}
-
-.tender-panel__header {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-}
-
-.tender-panel__header h3 {
-	margin: 0;
 }
 
 .tender-panel__table {
