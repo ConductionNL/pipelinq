@@ -13,9 +13,7 @@
 	<div class="payment-status-card">
 		<header class="payment-status-card__header">
 			<h4>{{ t('pipelinq', 'Payment provider') }}</h4>
-			<span :class="statusClass" class="payment-status-card__badge">{{
-				statusLabel
-			}}</span>
+			<CnStatusBadge :label="statusLabel" :variant="statusVariant" size="small" />
 		</header>
 		<dl class="payment-status-card__grid">
 			<template v-if="provider">
@@ -65,6 +63,7 @@
 </template>
 
 <script>
+import { CnStatusBadge } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { NcButton } from '@nextcloud/vue'
 import ReversalReasonDialog from '../../dialogs/ReversalReasonDialog.vue'
@@ -72,7 +71,7 @@ import { capturePayment, refundPayment } from '../../services/posPaymentApi.js'
 
 export default {
 	name: 'PaymentStatusCard',
-	components: { NcButton, ReversalReasonDialog },
+	components: { CnStatusBadge, NcButton, ReversalReasonDialog },
 	props: {
 		transaction: {
 			type: Object,
@@ -152,14 +151,21 @@ export default {
 			return map[this.status] || this.status || t('pipelinq', 'Unknown')
 		},
 
-		statusClass() {
-			return {
-				'payment-status-card__badge--settled': this.status === 'settled',
-				'payment-status-card__badge--captured': this.status === 'captured',
-				'payment-status-card__badge--pending': this.status === 'pending',
-				'payment-status-card__badge--failed': this.status === 'failed',
-				'payment-status-card__badge--refunded': this.status === 'refunded',
+		/**
+		 * The badge colour per payment status. The tinted (not solid) variant
+		 * keeps the text readable in both light and dark themes.
+		 *
+		 * @return {string} A CnStatusBadge variant.
+		 */
+		statusVariant() {
+			const map = {
+				settled: 'success',
+				captured: 'primary',
+				pending: 'warning',
+				failed: 'error',
+				refunded: 'default',
 			}
+			return map[this.status] || 'default'
 		},
 
 		canRefund() {
@@ -272,38 +278,6 @@ export default {
 	color: var(--color-text-maxcontrast);
 	text-transform: uppercase;
 	letter-spacing: 0.04em;
-}
-
-.payment-status-card__badge {
-	font-size: 0.85em;
-	padding: 4px 10px;
-	border-radius: var(--border-radius);
-	background-color: var(--color-background-hover);
-}
-
-.payment-status-card__badge--settled {
-	background-color: var(--color-success);
-	color: var(--color-main-background);
-}
-
-.payment-status-card__badge--captured {
-	background-color: var(--color-primary-element-light);
-	color: var(--color-main-text);
-}
-
-.payment-status-card__badge--pending {
-	background-color: var(--color-warning);
-	color: var(--color-main-background);
-}
-
-.payment-status-card__badge--failed {
-	background-color: var(--color-error);
-	color: var(--color-main-background);
-}
-
-.payment-status-card__badge--refunded {
-	background-color: var(--color-background-darker);
-	color: var(--color-main-text);
 }
 
 .payment-status-card__grid {
