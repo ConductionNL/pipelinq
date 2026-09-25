@@ -277,24 +277,41 @@ class TemplateController extends Controller {
 	}//end requireUser()
 
 	/**
-	 * Collect a sanitised template body. Drops any client-supplied
-	 * `createdBy` / `createdAt` so the server stamp wins.
+	 * Collect a sanitised template body from the fields the request carries.
+	 * A field it leaves out is left out here too, so a partial PATCH keeps
+	 * the template's value instead of blanking it; create fills the gaps with
+	 * its own defaults. Any client-supplied `createdBy` / `createdAt` is
+	 * dropped so the server stamp wins.
 	 *
 	 * @return array<string, mixed> Sanitised payload.
 	 */
 	private function collectTemplateBody(): array {
-		return [
-			'name' => (string)$this->request->getParam('name', ''),
-			'channel' => (string)$this->request->getParam('channel', ''),
-			'subject' => (string)$this->request->getParam('subject', ''),
-			'bodyHtml' => (string)$this->request->getParam('bodyHtml', ''),
-			'bodyText' => (string)$this->request->getParam('bodyText', ''),
-			'senderName' => (string)$this->request->getParam('senderName', ''),
-			'senderEmail' => (string)$this->request->getParam('senderEmail', ''),
-			'replyTo' => (string)$this->request->getParam('replyTo', ''),
-			'footerOverride' => (string)$this->request->getParam('footerOverride', ''),
-			'articleIds' => $this->request->getParam('articleIds', []),
+		$fields = [
+			'name',
+			'channel',
+			'subject',
+			'bodyHtml',
+			'bodyText',
+			'senderName',
+			'senderEmail',
+			'replyTo',
+			'footerOverride',
 		];
+
+		$body = [];
+		foreach ($fields as $field) {
+			$value = $this->request->getParam($field);
+			if ($value !== null) {
+				$body[$field] = (string)$value;
+			}
+		}
+
+		$articleIds = $this->request->getParam('articleIds');
+		if ($articleIds !== null) {
+			$body['articleIds'] = $articleIds;
+		}
+
+		return $body;
 	}//end collectTemplateBody()
 
 	/**

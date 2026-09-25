@@ -1385,6 +1385,60 @@ test.describe('Marketing API contract', () => {
 			)
 		}
 	})
+
+	// @e2e openspec/specs/marketing-api/spec.md#template-update-keeps-the-fields-the-request-leaves-out
+	// @e2e openspec/specs/marketing-api/spec.md#a-stored-template-can-be-validated-without-saving
+	test('PATCH /api/templates keeps untouched fields, and /validate checks a stored template', async ({
+		page,
+	}) => {
+		await openApp(page)
+
+		const created = await api(page, 'POST', `${APP}/api/templates`, {
+			name: 'E2E gate-19 partial patch',
+			channel: 'email',
+			subject: 'Hoi',
+			bodyHtml: '<p>Afmelden: {{unsubscribe_link}}</p>',
+			footerOverride: 'Conduction B.V.\nTurfmarkt 147\n2511 DP Den Haag',
+		})
+		expect(created.status, created.text).toBe(201)
+		const id = created.json?.id || created.json?.['@self']?.id
+		expect(id, 'the created template must carry an id').toBeTruthy()
+
+		try {
+			// A PATCH naming one field leaves every other field as stored.
+			const patched = await api(page, 'PATCH', `${APP}/api/templates/${id}`, {
+				subject: 'Nieuw onderwerp',
+			})
+			expect(patched.status, patched.text).toBe(200)
+			const fetched = await api(page, 'GET', `${APP}/api/templates/${id}`)
+			expect(fetched.json?.subject).toBe('Nieuw onderwerp')
+			expect(fetched.json?.name).toBe('E2E gate-19 partial patch')
+			expect(fetched.json?.bodyHtml).toBe('<p>Afmelden: {{unsubscribe_link}}</p>')
+
+			// The stored template validates, and nothing is saved by asking.
+			const valid = await api(page, 'POST', `${APP}/api/templates/${id}/validate`, {
+				channel: 'email',
+			})
+			expect(valid.status, valid.text).toBe(200)
+			expect(valid.json).toEqual({ valid: true, error: null })
+
+			// Clearing the address is refused on save, because an email must carry one.
+			const noAddress = await api(page, 'PATCH', `${APP}/api/templates/${id}`, {
+				footerOverride: '',
+			})
+			expect(noAddress.status, noAddress.text).toBe(400)
+			expect(String(noAddress.json?.error)).toMatch(/address/i)
+
+			const missing = await api(page, 'POST', `${APP}/api/templates/e2e-no-such-template/validate`, {})
+			expect(missing.status, missing.text).toBe(404)
+		} finally {
+			await api(
+				page,
+				'DELETE',
+				`/index.php/apps/openregister/api/objects/pipelinq/campaignTemplate/${id}`,
+			)
+		}
+	})
 })
 
 /* ══════════════════════════════════════════════════════════════════════════
