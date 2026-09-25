@@ -117,9 +117,12 @@
 							resize="vertical" />
 						<NcTextArea
 							v-model="model.footerOverride"
-							:label="t('pipelinq', 'Footer override')"
-							rows="2"
-							resize="vertical" />
+							:label="t('pipelinq', 'Physical address')"
+							:error="Boolean(fieldErrors.footerOverride)"
+							:helperText="fieldErrors.footerOverride || footerHint"
+							rows="3"
+							resize="vertical"
+							class="template-form__footer" />
 					</template>
 				</section>
 
@@ -182,6 +185,35 @@ import {
 	resolveSelectedArticles,
 	shouldWarnMissingMarker,
 } from '../services/templateArticlePicker.js'
+
+// Where the address goes in an email body; ComplianceService::renderPhysicalAddress()
+// places it the same way on send.
+const ADDRESS_TOKENS = ['{{physical_address}}', '{{sender_address}}', '{{company_address}}', '{{address_block}}']
+
+/**
+ * Put the physical address into an HTML body the way the send path does: at
+ * each address token, or appended when there is none.
+ *
+ * @param {string} html The HTML body.
+ * @param {string} address The template's physical address.
+ * @return {string} The body with the address in place.
+ */
+function withAddress(html, address) {
+	const trimmed = (address || '').trim()
+	if (!trimmed || !html.trim()) {
+		return html
+	}
+	const div = document.createElement('div')
+	div.textContent = trimmed
+	const rendered = div.innerHTML.replace(/\n/g, '<br>\n')
+	if (ADDRESS_TOKENS.some((token) => html.includes(token))) {
+		return ADDRESS_TOKENS.reduce((body, token) => body.split(token).join(rendered), html)
+	}
+	const close = html.toLowerCase().lastIndexOf('</body>')
+	return close === -1
+		? `${html}<p>${rendered}</p>`
+		: `${html.slice(0, close)}<p>${rendered}</p>${html.slice(close)}`
+}
 
 /**
  * @return {object} A blank template.
@@ -303,13 +335,19 @@ export default {
 		 */
 		bodyHint() {
 			return this.isEmail
-				? this.t('pipelinq', 'Use {{unsubscribe_link}} and a physical address so the compliance check passes.')
+				? this.t('pipelinq', 'Include {{unsubscribe_link}}. Put {{physical_address}} where the address below should appear; without it the address goes at the end.')
 				: ''
 		},
 
+		/** @return {string} The hint under the address field. */
+		footerHint() {
+			return this.t('pipelinq', 'Required for email: the postal address every mail must carry.')
+		},
+
 		/**
-		 * The body as a standalone document for the sandboxed preview. Its
-		 * CSP only allows inline styles and images, on top of the sandbox.
+		 * The body as a standalone document for the sandboxed preview, with the
+		 * physical address placed as it will be on send. Its CSP only allows
+		 * inline styles and images, on top of the sandbox.
 		 *
 		 * @return {string} The preview document.
 		 */
@@ -318,7 +356,7 @@ export default {
 			return '<!DOCTYPE html><html><head><meta charset="utf-8">'
 				+ `<meta http-equiv="Content-Security-Policy" content="${csp}">`
 				+ '<style>body{margin:16px;font-family:sans-serif;color:#222;background:#fff}</style>'
-				+ `</head><body>${this.model.bodyHtml}</body></html>`
+				+ `</head><body>${withAddress(this.model.bodyHtml, this.model.footerOverride)}</body></html>`
 		},
 
 		/**
@@ -398,6 +436,10 @@ export default {
 		'model.subject': function() {
 			this.clearFieldError('subject')
 		},
+
+		'model.footerOverride': function() {
+			this.clearFieldError('footerOverride')
+		},
 	},
 
 	methods: {
@@ -449,17 +491,20 @@ export default {
 
 		/**
 		 * Place the compliance check's message on the field it is about: a
-		 * missing unsubscribe link or address on the body, a subject problem
-		 * on the subject.
+		 * missing unsubscribe link on the body, a missing address on the
+		 * address field, a subject problem on the subject.
 		 *
 		 * @param {string} message The error from the API.
-		 * @return {object} A `{ bodyHtml?, subject? }` map.
+		 * @return {object} A `{ bodyHtml?, footerOverride?, subject? }` map.
 		 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-api/spec.md#scenario-template-create-validates-compliance
 		 */
 		parseFieldErrors(message) {
 			const lower = (message || '').toLowerCase()
-			if (lower.includes('unsubscribe') || lower.includes('address')) {
+			if (lower.includes('unsubscribe')) {
 				return { bodyHtml: message }
+			}
+			if (lower.includes('address')) {
+				return { footerOverride: message }
 			}
 			if (lower.includes('subject')) {
 				return { subject: message }

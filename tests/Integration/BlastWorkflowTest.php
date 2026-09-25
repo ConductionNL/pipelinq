@@ -377,6 +377,7 @@ class BlastWorkflowTest extends TestCase {
 				'subject' => 'Hi {{firstName}}',
 				'bodyHtml' => '<p>{{unsubscribe_link}} {{physical_address}}</p>',
 				'bodyText' => 'Unsubscribe: {{unsubscribe_link}}',
+				'footerOverride' => "Pipelinq B.V.\nTurfmarkt 147\nDen Haag",
 				'senderName' => 'Pipelinq',
 				'senderEmail' => 'pipelinq@example.test',
 			],

@@ -6833,7 +6833,12 @@ OC.L10N.register(
         "Send as soon as the blast is created": "Send as soon as the blast is created",
         "The whole audience receives the same message.": "The whole audience receives the same message.",
         "There are no templates for this channel yet.": "There are no templates for this channel yet.",
-        "Variant A {a}%, variant B {b}%": "Variant A {a}%, variant B {b}%"
+        "Variant A {a}%, variant B {b}%": "Variant A {a}%, variant B {b}%",
+        "Physical Address": "Physical Address",
+        "The sender's physical address every email must carry (CAN-SPAM). Required for email templates. It is placed at {{physical_address}}, {{sender_address}}, {{company_address}} or {{address_block}} in the body, or appended when the body has none.": "The sender's physical address every email must carry (CAN-SPAM). Required for email templates. It is placed at {{physical_address}}, {{sender_address}}, {{company_address}} or {{address_block}} in the body, or appended when the body has none.",
+        "Physical address": "Physical address",
+        "Required for email: the postal address every mail must carry.": "Required for email: the postal address every mail must carry.",
+        "Include {{unsubscribe_link}}. Put {{physical_address}} where the address below should appear; without it the address goes at the end.": "Include {{unsubscribe_link}}. Put {{physical_address}} where the address below should appear; without it the address goes at the end."
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -6747,7 +6747,12 @@ OC.L10N.register(
         "Send as soon as the blast is created": "Verzenden zodra de blast is aangemaakt",
         "The whole audience receives the same message.": "De hele doelgroep ontvangt hetzelfde bericht.",
         "There are no templates for this channel yet.": "Er zijn nog geen sjablonen voor dit kanaal.",
-        "Variant A {a}%, variant B {b}%": "Variant A {a}%, variant B {b}%"
+        "Variant A {a}%, variant B {b}%": "Variant A {a}%, variant B {b}%",
+        "Physical Address": "Fysiek adres",
+        "The sender's physical address every email must carry (CAN-SPAM). Required for email templates. It is placed at {{physical_address}}, {{sender_address}}, {{company_address}} or {{address_block}} in the body, or appended when the body has none.": "Het fysieke adres van de afzender dat elke e-mail moet bevatten (CAN-SPAM). Verplicht voor e-mailsjablonen. Het komt op de plek van {{physical_address}}, {{sender_address}}, {{company_address}} of {{address_block}} in de tekst, of aan het eind als de tekst daar geen heeft.",
+        "Physical address": "Fysiek adres",
+        "Required for email: the postal address every mail must carry.": "Verplicht voor e-mail: het postadres dat elke mail moet bevatten.",
+        "Include {{unsubscribe_link}}. Put {{physical_address}} where the address below should appear; without it the address goes at the end.": "Neem {{unsubscribe_link}} op. Zet {{physical_address}} waar het adres hieronder moet komen; zonder die markering komt het adres aan het eind."
     },
     "nplurals=2; plural=(n != 1);"
 )

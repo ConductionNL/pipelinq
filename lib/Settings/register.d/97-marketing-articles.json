@@ -312,14 +312,16 @@
         "name": "Nieuwsbrief september",
         "channel": "email",
         "subject": "Wat er deze maand bij Conduction gebeurde",
-        "bodyHtml": "<p>Hallo,</p><p>Dit is wat er deze maand speelde.</p>{{articles}}<p>Tot volgende maand,<br>Het team van Conduction</p><hr><p>Conduction B.V., Turfmarkt 147, 2511 DP Den Haag, Nederland<br><a href=\"{{unsubscribe_link}}\">Uitschrijven</a></p>",
-        "bodyText": "Hallo,\n\nDit is wat er deze maand speelde.\n\n{{articles}}\n\nTot volgende maand,\nHet team van Conduction\n\nConduction B.V., Turfmarkt 147, 2511 DP Den Haag, Nederland\nUitschrijven: {{unsubscribe_link}}",
+        "bodyHtml": "<p>Hallo,</p><p>Dit is wat er deze maand speelde.</p>{{articles}}<p>Tot volgende maand,<br>Het team van Conduction</p><hr><p>{{physical_address}}</p><p><a href=\"{{unsubscribe_link}}\">Uitschrijven</a></p>",
+        "bodyText": "Hallo,\n\nDit is wat er deze maand speelde.\n\n{{articles}}\n\nTot volgende maand,\nHet team van Conduction\n\n{{physical_address}}\n\nUitschrijven: {{unsubscribe_link}}",
         "senderName": "Conduction",
         "senderEmail": "nieuwsbrief@conduction.nl",
         "replyTo": "info@conduction.nl",
+        "footerOverride": "Conduction B.V.\nTurfmarkt 147\n2511 DP Den Haag, Nederland",
         "variables": [
           "unsubscribe_link",
-          "articles"
+          "articles",
+          "physical_address"
         ],
         "articleIds": [
           "article-openregister-3-0-is-uit",

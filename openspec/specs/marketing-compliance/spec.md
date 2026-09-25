@@ -51,8 +51,16 @@ that permits a send.
 ### Requirement: Unsubscribe Footer Enforced on Email Templates
 
 Every email CampaignTemplate SHALL contain the unsubscribe token
-`{{unsubscribe_link}}` and a physical-address block. Save SHALL be rejected
-if either is missing.
+`{{unsubscribe_link}}` and SHALL carry the sender's physical address in
+`footerOverride`. Save SHALL be rejected if either is missing.
+
+The address tokens `{{physical_address}}`, `{{sender_address}}`,
+`{{company_address}}` and `{{address_block}}` only mark where the address goes;
+they hold no address themselves, so a token without a `footerOverride` does
+not satisfy the rule. `ComplianceService::renderPhysicalAddress()` puts the
+address into the mail, and both the send path (`MailTransportService`) and
+the template preview (`GET /api/templates/{id}/preview`) call it, so the
+preview shows what sends.
 
 #### Scenario: Save rejected if unsubscribe token missing
 
@@ -62,9 +70,18 @@ if either is missing.
 
 #### Scenario: Save rejected if physical address missing
 
-- **GIVEN** a CampaignTemplate with channel = "email" containing `{{unsubscribe_link}}` but no physical-address block
+- **GIVEN** a CampaignTemplate with channel = "email" containing `{{unsubscribe_link}}` but an empty `footerOverride`, with or without an address token in the body
 - **WHEN** `validateTemplate()` runs
 - **THEN** it SHALL return a CAN-SPAM physical-address error
+
+#### Scenario: The physical address renders where the template marks it
+
+@e2e exclude the address lands in the mail a transport sends, which no browser run can read back (the CI instance installs no mail capture). tests/Unit/Service/Marketing/MailTransportServiceTest.php (testSendOneDeliveryRendersThePhysicalAddress) asserts the sent bodies, and tests/Unit/Service/ComplianceServiceTest.php (testRenderPhysicalAddressReplacesTokens, testRenderPhysicalAddressAppendsOrLeavesAlone) the placement rules.
+
+- **GIVEN** an email CampaignTemplate with a `footerOverride`
+- **WHEN** a mail is rendered from it, for sending or for the preview
+- **THEN** every address token in a body SHALL be replaced by the address, HTML-escaped with its line breaks kept in the HTML body
+- **AND** a body without a token SHALL get the address as a closing paragraph, inside `</body>` when the body is a full HTML document, and after a blank line in the plain-text body
 
 #### Scenario: SMS templates do not require unsubscribe footer
 

@@ -169,9 +169,9 @@ class TemplateController extends Controller {
 	/**
 	 * GET /api/templates/:id/preview — the bodies as they will be sent.
 	 *
-	 * The preview runs the same `{{articles}}` expansion the send path runs,
-	 * so what a marketer reads before sending is produced by the code that
-	 * will do the sending. Per-recipient tokens are deliberately left in
+	 * The preview runs the same `{{articles}}` expansion and physical-address
+	 * placement the send path runs, so what a marketer reads before sending
+	 * is produced by the code that will do the sending. Per-recipient tokens are deliberately left in
 	 * place: a preview showing one recipient's address would say nothing
 	 * about whether the token is there at all.
 	 *
@@ -203,17 +203,26 @@ class TemplateController extends Controller {
 		}
 
 		$articles = $this->articleService->loadArticlesByIds(articleIds: $ids);
+		$footer = (string)($template['footerOverride'] ?? '');
 
 		return new JSONResponse([
 			'subject' => (string)($template['subject'] ?? ''),
-			'bodyHtml' => $this->articleService->expandArticlesMarker(
-				body: (string)($template['bodyHtml'] ?? ''),
-				articles: $articles,
+			'bodyHtml' => ComplianceService::renderPhysicalAddress(
+				body: $this->articleService->expandArticlesMarker(
+					body: (string)($template['bodyHtml'] ?? ''),
+					articles: $articles,
+					format: ArticleService::FORMAT_HTML,
+				),
+				footerOverride: $footer,
 				format: ArticleService::FORMAT_HTML,
 			),
-			'bodyText' => $this->articleService->expandArticlesMarker(
-				body: (string)($template['bodyText'] ?? ''),
-				articles: $articles,
+			'bodyText' => ComplianceService::renderPhysicalAddress(
+				body: $this->articleService->expandArticlesMarker(
+					body: (string)($template['bodyText'] ?? ''),
+					articles: $articles,
+					format: ArticleService::FORMAT_TEXT,
+				),
+				footerOverride: $footer,
 				format: ArticleService::FORMAT_TEXT,
 			),
 			'articles' => array_map(

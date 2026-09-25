@@ -456,12 +456,12 @@ class ComplianceServiceTest extends TestCase {
 		];
 		$error = $this->service->validateTemplate($template, 'email');
 		$this->assertIsString($error);
-		$this->assertStringContainsString('physical-address', (string)$error);
+		$this->assertStringContainsString('physical address', (string)$error);
 	}//end testValidateTemplateRejectsEmailWithoutAddress()
 
 	/**
-	 * validateTemplate: an email template with the unsubscribe token AND
-	 * a recognised physical-address token is accepted (returns null).
+	 * validateTemplate: an email template with the unsubscribe token, an
+	 * address token AND the address in footerOverride is accepted.
 	 *
 	 * @return void
 	 */
@@ -469,10 +469,58 @@ class ComplianceServiceTest extends TestCase {
 		$template = [
 			'bodyHtml' => '<p>Hello. <a href="{{unsubscribe_link}}">Unsubscribe</a>{{physical_address}}</p>',
 			'bodyText' => 'Hello. Unsubscribe: {{unsubscribe_link}}',
-			'footerOverride' => '',
+			'footerOverride' => "Conduction B.V.\nNieuwe Uitleg 56\nDen Haag",
 		];
 		$this->assertNull($this->service->validateTemplate($template, 'email'));
 	}//end testValidateTemplateAcceptsValidEmail()
+
+	/**
+	 * validateTemplate: an address token without a footerOverride is
+	 * rejected, because the token holds no address and would render empty.
+	 *
+	 * @return void
+	 */
+	public function testValidateTemplateRejectsAddressTokenWithoutFooter(): void {
+		$template = [
+			'bodyHtml' => '<p>Hello. <a href="{{unsubscribe_link}}">Unsubscribe</a>{{physical_address}}</p>',
+			'bodyText' => 'Hello. Unsubscribe: {{unsubscribe_link}}',
+			'footerOverride' => '',
+		];
+		$error = $this->service->validateTemplate($template, 'email');
+		$this->assertIsString($error);
+		$this->assertStringContainsString('physical address', (string)$error);
+	}//end testValidateTemplateRejectsAddressTokenWithoutFooter()
+
+	/**
+	 * renderPhysicalAddress: every address token takes the footerOverride,
+	 * HTML-escaped with its line breaks kept.
+	 *
+	 * @return void
+	 */
+	public function testRenderPhysicalAddressReplacesTokens(): void {
+		$body = '<p>{{physical_address}}</p><p>{{company_address}}</p>';
+		$this->assertSame(
+			'<p>A &amp; B<br>' . "\n" . 'Den Haag</p><p>A &amp; B<br>' . "\n" . 'Den Haag</p>',
+			ComplianceService::renderPhysicalAddress($body, "A & B\nDen Haag", 'html'),
+		);
+	}//end testRenderPhysicalAddressReplacesTokens()
+
+	/**
+	 * renderPhysicalAddress: a body without a token gets the address
+	 * appended; an empty body and an empty address leave the body alone.
+	 *
+	 * @return void
+	 */
+	public function testRenderPhysicalAddressAppendsOrLeavesAlone(): void {
+		$this->assertSame('<p>Hi</p><p>Den Haag</p>', ComplianceService::renderPhysicalAddress('<p>Hi</p>', 'Den Haag', 'html'));
+		$this->assertSame(
+			'<html><body><p>Hi</p><p>Den Haag</p></body></html>',
+			ComplianceService::renderPhysicalAddress('<html><body><p>Hi</p></body></html>', 'Den Haag', 'html'),
+		);
+		$this->assertSame("Hi\n\nDen Haag", ComplianceService::renderPhysicalAddress("Hi\n", 'Den Haag', 'text'));
+		$this->assertSame('', ComplianceService::renderPhysicalAddress('', 'Den Haag', 'text'));
+		$this->assertSame('<p>{{physical_address}}</p>', ComplianceService::renderPhysicalAddress('<p>{{physical_address}}</p>', '  ', 'html'));
+	}//end testRenderPhysicalAddressAppendsOrLeavesAlone()
 
 	/**
 	 * validateTemplate: an email template with the unsubscribe token AND
@@ -653,6 +701,7 @@ class ComplianceServiceTest extends TestCase {
 		$template = [
 			'bodyHtml' => '<p>{{unsubscribe_link}} {{physical_address}}</p>',
 			'bodyText' => '{{unsubscribe_link}}',
+			'footerOverride' => "Conduction B.V.\nNieuwe Uitleg 56\nDen Haag",
 		];
 		$result = $this->service->preflightBlast('seg-pre', $template, 'email');
 

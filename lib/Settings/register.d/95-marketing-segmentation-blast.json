@@ -84,7 +84,7 @@
         "icon": "EmailEditOutline",
         "version": "1.0.0",
         "summary": "A reusable email or SMS template with variable substitution markers and compliance-required tokens.",
-        "description": "CampaignTemplate stores the channel-specific body (HTML + text for email, plain text for SMS), sender identity, and the variable list. Email templates MUST embed {{unsubscribe_link}} and a physical-address footer; SMS templates have no footer requirement. See marketing-segmentation-and-blast member 03 (compliance) for enforcement.",
+        "description": "CampaignTemplate stores the channel-specific body (HTML + text for email, plain text for SMS), sender identity, and the variable list. Email templates MUST embed {{unsubscribe_link}} and carry the physical address in footerOverride; SMS templates have no footer requirement. See marketing-segmentation-and-blast member 03 (compliance) for enforcement.",
         "x-schema-org": "schema:CreativeWork",
         "required": [
           "name",
@@ -141,8 +141,8 @@
           },
           "footerOverride": {
             "type": "string",
-            "description": "Optional override of the default compliance footer (physical address + unsubscribe block).",
-            "title": "Footer Override"
+            "description": "The sender's physical address every email must carry (CAN-SPAM). Required for email templates. It is placed at {{physical_address}}, {{sender_address}}, {{company_address}} or {{address_block}} in the body, or appended when the body has none.",
+            "title": "Physical Address"
           },
           "variables": {
             "type": "array",
@@ -795,6 +795,7 @@
         "senderName": "Conduction Pipelinq",
         "senderEmail": "marketing@pipelinq.example.nl",
         "replyTo": "support@pipelinq.example.nl",
+        "footerOverride": "Conduction B.V.\nTurfmarkt 147\n2511 DP Den Haag, Nederland",
         "variables": [
           "first_name",
           "organisation_name",
@@ -819,6 +820,7 @@
         "senderName": "Conduction Account Team",
         "senderEmail": "renewals@pipelinq.example.nl",
         "replyTo": "renewals@pipelinq.example.nl",
+        "footerOverride": "Conduction B.V.\nTurfmarkt 147\n2511 DP Den Haag, Nederland",
         "variables": [
           "first_name",
           "product_name",
