@@ -255,6 +255,7 @@ class TemplateController extends Controller {
 			'bodyText' => (string)$this->request->getParam('bodyText', ''),
 			'senderName' => (string)$this->request->getParam('senderName', ''),
 			'senderEmail' => (string)$this->request->getParam('senderEmail', ''),
+			'replyTo' => (string)$this->request->getParam('replyTo', ''),
 			'footerOverride' => (string)$this->request->getParam('footerOverride', ''),
 			'articleIds' => $this->request->getParam('articleIds', []),
 		];

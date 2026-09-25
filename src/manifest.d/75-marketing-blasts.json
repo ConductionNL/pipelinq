@@ -70,67 +70,28 @@
 		},
 		{
 			"id": "Templates",
-			"_note": "CampaignTemplate list as a declarative type:index page (marketing-segments-ui-repair). Row view and Add both navigate to TemplateFormView, whose channel-conditional fields and post-submit compliance-error-to-field mapping a declarative form cannot express.",
+			"_note": "CampaignTemplate list as a declarative type:index page (marketing-segments-ui-repair). Add and the row Edit action open TemplateFormDialog in the form-dialog slot: its channel-conditional fields and compliance-error-to-field mapping a declarative form cannot express. Rows have no detail page, so selection is off and a row click does nothing.",
 			"route": "/templates",
 			"type": "index",
 			"title": "Templates",
+			"slots": {
+				"form-dialog": "TemplateFormDialog"
+			},
 			"config": {
 				"register": "pipelinq",
 				"schema": "campaignTemplate",
 				"documentationUrl": "https://pipelinq.conduction.nl",
-				"showAdd": false,
-				"showFormDialog": false,
+				"selectable": false,
+				"addLabel": "New template",
 				"showViewAction": false,
-				"showEditAction": false,
+				"showEditAction": true,
 				"showCopyAction": false,
 				"showDeleteAction": false,
 				"showMassImport": false,
 				"showMassExport": false,
 				"showMassCopy": false,
 				"showMassDelete": false,
-				"includeColumns": ["name", "channel", "subject", "senderEmail"],
-				"headerActions": [
-					{
-						"id": "create",
-						"label": "New template",
-						"icon": "Plus",
-						"handler": "navigate",
-						"route": "TemplateNew"
-					}
-				],
-				"actions": [
-					{
-						"id": "view",
-						"label": "Edit",
-						"icon": "PencilOutline",
-						"handler": "navigate",
-						"route": "TemplateEdit"
-					}
-				]
-			}
-		},
-		{
-			"id": "TemplateNew",
-			"route": "/templates/new",
-			"type": "custom",
-			"title": "New template",
-			"component": "TemplateFormView",
-			"_note": "Calls the existing POST /api/templates endpoint, which runs ComplianceService.validateTemplate() before persisting — a missing {{unsubscribe_link}} token or physical address block returns a generic error TemplateFormView maps back onto the body field.",
-			"config": {
-				"register": "pipelinq",
-				"schema": "campaignTemplate"
-			}
-		},
-		{
-			"id": "TemplateEdit",
-			"route": "/templates/:id",
-			"type": "custom",
-			"title": "Edit template",
-			"component": "TemplateFormView",
-			"_note": "Same TemplateFormView as TemplateNew; edit mode is driven by the route :id param and PATCHes the existing /api/templates/{id} endpoint, which re-runs compliance validation before persisting.",
-			"config": {
-				"register": "pipelinq",
-				"schema": "campaignTemplate"
+				"includeColumns": ["name", "channel", "subject", "senderEmail"]
 			}
 		},
 		{

@@ -772,6 +772,7 @@ class ComplianceService {
 			'bodyText' => (string)($payload['bodyText'] ?? ''),
 			'senderName' => (string)($payload['senderName'] ?? ''),
 			'senderEmail' => (string)($payload['senderEmail'] ?? ''),
+			'replyTo' => (string)($payload['replyTo'] ?? ''),
 			'footerOverride' => (string)($payload['footerOverride'] ?? ''),
 			'articleIds' => $this->normaliseArticleIds(value: ($payload['articleIds'] ?? [])),
 			'createdBy' => $createdByUid,
@@ -808,7 +809,7 @@ class ComplianceService {
 			return ['error' => 'Template not found'];
 		}
 
-		$editable = ['name', 'subject', 'bodyHtml', 'bodyText', 'senderName', 'senderEmail', 'footerOverride'];
+		$editable = ['name', 'subject', 'bodyHtml', 'bodyText', 'senderName', 'senderEmail', 'replyTo', 'footerOverride'];
 		$payload = $existing;
 		foreach ($editable as $field) {
 			if (array_key_exists($field, $patch) === true && is_string($patch[$field]) === true) {

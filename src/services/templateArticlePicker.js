@@ -4,7 +4,7 @@
 /**
  * Pure logic behind the article picker on the campaign template form.
  *
- * Kept apart from `TemplateForm.vue` so it can be unit-tested offline the
+ * Kept apart from `TemplateFormDialog.vue` so it can be unit-tested offline the
  * way `subscriptionState.js` and `articleStatus.js` are — this app's
  * vitest suite carries no component-mounting harness, so behaviour that
  * matters has to live in a plain function to stay testable.

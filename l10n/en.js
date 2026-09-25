@@ -6808,7 +6808,15 @@ OC.L10N.register(
         "This group has no conditions yet.": "This group has no conditions yet.",
         "Where": "Where",
         "and": "and",
-        "or": "or"
+        "or": "or",
+        "Add a message body.": "Add a message body.",
+        "Give the template a name.": "Give the template a name.",
+        "Sender": "Sender",
+        "Template created.": "Template created.",
+        "Template saved.": "Template saved.",
+        "The channel of an existing template cannot be changed.": "The channel of an existing template cannot be changed.",
+        "Edit HTML": "Edit HTML",
+        "HTML body preview": "HTML body preview"
     },
     "nplurals=2; plural=(n != 1);"
 )

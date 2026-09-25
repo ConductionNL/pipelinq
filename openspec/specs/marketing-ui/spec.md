@@ -72,11 +72,14 @@ and Blast performance. The Segments page SHALL be a declarative `type:
 "index"` page over the `segment` schema whose Add action and row Edit action
 both open `SegmentFormDialog`, a modal in the index page's `form-dialog` slot
 that mounts SegmentBuilder and saves through `POST` / `PATCH /api/segments`.
-The index has no row selection, and a row click opens nothing. The Templates page SHALL be a declarative `type: "index"`
-page over the `campaignTemplate` schema whose Add action and row action both
-navigate to a custom `TemplateFormView` page (`TemplateNew` / `TemplateEdit`)
-whose fields are conditional on the selected channel (email adds subject,
-sender, reply-to and footer fields; SMS does not).
+The index has no row selection, and a row click opens nothing.
+The Templates page SHALL be a declarative `type: "index"` page over the
+`campaignTemplate` schema whose Add action and row Edit action both open
+`TemplateFormDialog`, a modal in the index page's `form-dialog` slot that
+saves through `POST` / `PATCH /api/templates`, and whose fields are
+conditional on the selected channel (email adds subject, sender, reply-to and
+footer fields; SMS does not). That index likewise has no row selection, and
+a row click opens nothing.
 
 #### Scenario: Marketing menu lists Segments and Templates first
 
@@ -91,7 +94,7 @@ sender, reply-to and footer fields; SMS does not).
 
 #### Scenario: Template save surfaces a compliance error as a field error
 
-- **GIVEN** a marketer on the Templates New page for an email channel
+- **GIVEN** a marketer in the new-template modal for an email channel
 - **WHEN** they submit a body with no `{{unsubscribe_link}}` token
-- **THEN** the page SHALL call `POST /api/templates`, which rejects the save, and SHALL render the returned error against the body field rather than only a page-level banner
+- **THEN** the modal SHALL call `POST /api/templates`, which rejects the save, SHALL render the returned error against the body field rather than only a banner, and SHALL stay open
 

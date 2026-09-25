@@ -6739,6 +6739,14 @@
         "This group has no conditions yet.": "Deze groep heeft nog geen voorwaarden.",
         "Where": "Waarbij",
         "and": "en",
-        "or": "of"
+        "or": "of",
+        "Add a message body.": "Voeg een berichttekst toe.",
+        "Give the template a name.": "Geef het sjabloon een naam.",
+        "Sender": "Afzender",
+        "Template created.": "Sjabloon aangemaakt.",
+        "Template saved.": "Sjabloon opgeslagen.",
+        "The channel of an existing template cannot be changed.": "Het kanaal van een bestaand sjabloon kan niet worden gewijzigd.",
+        "Edit HTML": "HTML bewerken",
+        "HTML body preview": "Voorbeeld van de HTML-tekst"
     }
 }

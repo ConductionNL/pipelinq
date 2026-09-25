@@ -146,9 +146,10 @@ import XWikiWidgetComponent from './components/xwiki/XWikiWidget.vue'
 import ClientCreateDialog from './dialogs/ClientCreateDialog.vue'
 import LeadCreateDialog from './dialogs/LeadCreateDialog.vue'
 import RequestCreateDialog from './dialogs/RequestCreateDialog.vue'
-// --- Segment create / edit (marketing-segments-ui-repair): the Segments
-//     index page's form-dialog slot, hosting SegmentBuilder. ---
+// --- Segment and template create / edit (marketing-segments-ui-repair):
+//     the Segments and Templates index pages' form-dialog slot. ---
 import SegmentFormDialog from './dialogs/SegmentFormDialog.vue'
+import TemplateFormDialog from './dialogs/TemplateFormDialog.vue'
 // --- BRP Monitor (bsn-validatie-en-brp-lookup): admin tile + detailed report
 //     view aggregating the BrpMonitorJob output (lookups / cache-hits / errors /
 //     avg response time) and the mTLS client-certificate expiry countdown. ---
@@ -248,8 +249,6 @@ import LeadListView from './views/leads/LeadList.vue'
 import LoyaltyAccountCreationView from './views/loyalty/LoyaltyAccountCreation.vue'
 // --- Loyalty program (loyalty-program). ---
 import LoyaltyReportingView from './views/loyalty/LoyaltyReporting.vue'
-// --- Marketing templates (marketing-segments-ui-repair): a declarative
-//     type:"index" list plus a form page over the /api/templates endpoints. ---
 // --- Articles new/edit route wrapper (marketing-article-hub): thin host for
 //     ArticleEditModal, the one editing surface the change owns. Matches the
 //     SegmentNew / TemplateNew / BlastNew convention below. ---
@@ -305,7 +304,6 @@ import SocialPostFormView from './views/social/SocialPostFormView.vue'
 //     cannot address (ADR-080). ---
 import StoreGallery from './views/store/StoreGallery.vue'
 import SyncSettingsView from './views/sync/SyncSettings.vue'
-import TemplateFormView from './views/templates/TemplateForm.vue'
 import WerkplekHeaderActions from './views/werkplek/widgets/WerkplekHeaderActions.vue'
 // --- KCC Werkplek (pipelinq-werkplek-declarative): unified KCC agent workspace
 //     rendered as a declarative type:"dashboard" page. Requests, Tasks, the
@@ -969,11 +967,6 @@ const registry = {
 		component: SearchQueriesView,
 		_note: 'Search Console top queries (marketing-campaign-attribution): one row per query with clicks and impressions summed and an impression-weighted position over a selectable window, from GET /api/marketing/search-queries; empty state points at the Marketing traffic settings. Custom because the page is an aggregation, which no declarative index primitive expresses.',
 	},
-	TemplateFormView: {
-		kind: 'page',
-		component: TemplateFormView,
-		_note: 'CampaignTemplate create/edit (marketing-segments-ui-repair): channel-conditional fields (email adds subject/sender/reply-to/footer) and a best-effort mapping from ComplianceService.validateTemplate()\'s single error string onto the field that caused it, so a missing {{unsubscribe_link}} or address block reads as a field error. Custom rather than declarative: the channel-conditional field set and post-submit error-to-field mapping are not expressible by type:"form".',
-	},
 
 	// --- Appointment booking — admin views (appointment-booking 11 of 12). ---
 	ServiceDetailView: {
@@ -1091,13 +1084,19 @@ const registry = {
 		_note: 'New Client, contact-first via POST /api/contacts-sync/create. Also the Clients index Add button (createModal).',
 	},
 
-	// The Segments index page's form-dialog slot (page.slots), not a
-	// header-action modal: CnIndexPage mounts it for Add and the row Edit.
+	// The Segments and Templates index pages' form-dialog slot (page.slots),
+	// not header-action modals: CnIndexPage mounts them for Add and row Edit.
 	SegmentFormDialog: {
 		kind: 'modal',
 		component: SegmentFormDialog,
 		propsSchema: null,
 		_note: 'Segment create/edit, mounted in the Segments index page\'s form-dialog slot. Custom rather than the built-in form: SegmentBuilder is a recursive rule-tree editor with a debounced preview call, and saving must go through POST/PATCH /api/segments, the only path that validates the rules.',
+	},
+	TemplateFormDialog: {
+		kind: 'modal',
+		component: TemplateFormDialog,
+		propsSchema: null,
+		_note: 'CampaignTemplate create/edit, mounted in the Templates index page\'s form-dialog slot. Custom rather than the built-in form: the fields depend on the channel, saving must go through POST/PATCH /api/templates, which runs the compliance check, and that check\'s error is placed on the field it is about.',
 	},
 
 	// Contact-aware create for the generic Add button on the Clients index page.

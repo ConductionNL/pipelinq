@@ -31,7 +31,6 @@ import type { Page } from '@playwright/test'
 import { expect, test } from '@playwright/test'
 import {
 	assertNoHardError,
-	clickHeaderAction,
 	gotoAppRoute,
 	navClick,
 	openApp,
@@ -825,39 +824,32 @@ test.describe('Segments', () => {
 	})
 
 	// @e2e openspec/specs/marketing-ui/spec.md#template-save-surfaces-a-compliance-error-as-a-field-error
-	test('the Templates New page renders a rejected save as a body field error', async ({
+	test('the new-template modal renders a rejected save as a body field error', async ({
 		page,
 	}) => {
 		await openApp(page)
 		await navClick(page, 'Templates', /\/templates$/)
-		await clickHeaderAction(page, 'New template')
-		await expect(page).toHaveURL(/\/templates\/new$/, { timeout: 10000 })
+		await page.locator('#content-vue [data-testid="cn-cta-primary"]').first().click()
 
-		const form = page.locator('.template-form')
-		await expect(
-			form.getByRole('heading', { name: 'New template' }),
-		).toBeVisible({ timeout: 20000 })
+		const dialog = page.getByRole('dialog', { name: 'New template' })
+		await expect(dialog).toBeVisible({ timeout: 20000 })
 
-		// Channel defaults to email, so the subject/sender/body-html fields
-		// this scenario needs are already present.
-		await form.locator('#template-form-name').fill('E2E gate-19 field error')
-		await form
-			.locator('#template-form-body-html')
-			.fill('<p>Geen afmeldlink hier.</p>')
+		// Channel defaults to email, so the fields this scenario needs are
+		// already present.
+		await dialog.getByLabel('Template name').fill('E2E gate-19 field error')
+		await dialog.getByLabel('HTML body').fill('<p>Geen afmeldlink hier.</p>')
 
-		await form.getByRole('button', { name: 'Create template' }).click()
+		await dialog.getByRole('button', { name: 'Create template' }).click()
 
-		// The rejected POST /api/templates lands as a field-level error under
-		// the body, not only the page-level banner — this scenario's whole
-		// point.
-		const bodyFieldError = form.locator(
-			'#template-form-body-html + .template-form__field-error',
-		)
-		await expect(bodyFieldError).toBeVisible({ timeout: 10000 })
-		await expect(bodyFieldError).toContainText(/unsubscribe/i)
+		// The rejected POST /api/templates lands on the body field itself,
+		// which is this scenario's whole point.
+		await expect(dialog.locator('.template-form__body-html')).toContainText(/unsubscribe/i, {
+			timeout: 10000,
+		})
 
-		// Still on the New page — a rejected save does not navigate away.
-		await expect(page).toHaveURL(/\/templates\/new$/)
+		// A rejected save keeps the modal open, over the list.
+		await expect(dialog).toBeVisible()
+		await expect(page).toHaveURL(/\/templates$/)
 
 		await assertNoHardError(page)
 	})
