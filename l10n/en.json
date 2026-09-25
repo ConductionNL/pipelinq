@@ -6834,6 +6834,8 @@
         "The channel of an existing template cannot be changed.": "The channel of an existing template cannot be changed.",
         "Edit HTML": "Edit HTML",
         "HTML body preview": "HTML body preview",
-        "The hero image could not be loaded.": "The hero image could not be loaded."
+        "The hero image could not be loaded.": "The hero image could not be loaded.",
+        "The title and body are written in the article editor.": "The title and body are written in the article editor.",
+        "Edit title and body": "Edit title and body"
     }
 }

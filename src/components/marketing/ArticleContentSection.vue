@@ -137,6 +137,7 @@
 <script>
 import { cnRenderMarkdown } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
+import { emit, subscribe, unsubscribe } from '@nextcloud/event-bus'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
 import ImageOffOutline from 'vue-material-design-icons/ImageOffOutline.vue'
@@ -297,6 +298,14 @@ export default {
 		},
 	},
 
+	mounted() {
+		subscribe('cn:page:refresh', this.onPageRefresh)
+	},
+
+	beforeUnmount() {
+		unsubscribe('cn:page:refresh', this.onPageRefresh)
+	},
+
 	methods: {
 		/**
 		 * The id this section is bound to, either the prop or the section
@@ -329,11 +338,15 @@ export default {
 		/**
 		 * Load the article when only its id is known.
 		 *
+		 * @param {object} [options] Load options.
+		 * @param {boolean} [options.silent] Keep the current content on screen while loading.
 		 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
 		 * @return {Promise<void>} Resolves when the article is in place.
 		 */
-		async load() {
-			this.loading = true
+		async load({ silent = false } = {}) {
+			if (!silent) {
+				this.loading = true
+			}
 			this.error = ''
 			try {
 				const { data } = await axios.get(
@@ -357,8 +370,24 @@ export default {
 		async refresh() {
 			this.$emit('refresh')
 			if (!this.article) {
-				await this.load()
+				await this.load({ silent: true })
 			}
+			// The page's other widgets show the same article.
+			emit('cn:page:refresh', { source: 'article-content' })
+		},
+
+		/**
+		 * Re-read the article when something else on the page saved it, such
+		 * as the Edit form's article editor.
+		 *
+		 * @param {object} payload The refresh event.
+		 */
+		onPageRefresh(payload) {
+			if (payload?.source === 'article-content' || this.article || !this.effectiveId()) {
+				return
+			}
+			const done = this.load({ silent: true })
+			payload?.waitUntil?.(done)
 		},
 
 		/**

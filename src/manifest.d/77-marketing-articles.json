@@ -63,6 +63,9 @@
 			"route": "/articles/:id",
 			"type": "detail",
 			"title": "Article",
+			"slots": {
+				"form-dialog": "ArticleDetailFormDialog"
+			},
 			"config": {
 				"register": "pipelinq",
 				"schema": "article",

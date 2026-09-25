@@ -143,11 +143,13 @@ import XWikiWidgetComponent from './components/xwiki/XWikiWidget.vue'
 //     `config.createOverride` string to one of these and forwards it to
 //     CnIndexPage's createOverride prop, so the GENERIC Add button on the
 //     declarative Clients/Contacts index pages is contact-aware too. ---
+// --- Form-dialog slot replacements (page.slots): the ArticleDetail edit
+//     form, and segment / template create and edit
+//     (marketing-segments-ui-repair) on their index pages. ---
+import ArticleDetailFormDialog from './dialogs/ArticleDetailFormDialog.vue'
 import ClientCreateDialog from './dialogs/ClientCreateDialog.vue'
 import LeadCreateDialog from './dialogs/LeadCreateDialog.vue'
 import RequestCreateDialog from './dialogs/RequestCreateDialog.vue'
-// --- Segment and template create / edit (marketing-segments-ui-repair):
-//     the Segments and Templates index pages' form-dialog slot. ---
 import SegmentFormDialog from './dialogs/SegmentFormDialog.vue'
 import TemplateFormDialog from './dialogs/TemplateFormDialog.vue'
 // --- BRP Monitor (bsn-validatie-en-brp-lookup): admin tile + detailed report
@@ -1084,8 +1086,14 @@ const registry = {
 		_note: 'New Client, contact-first via POST /api/contacts-sync/create. Also the Clients index Add button (createModal).',
 	},
 
-	// The Segments and Templates index pages' form-dialog slot (page.slots),
-	// not header-action modals: CnIndexPage mounts them for Add and row Edit.
+	// Pages' form-dialog slot (page.slots), not header-action modals: the
+	// index or detail page mounts them for its Add and Edit.
+	ArticleDetailFormDialog: {
+		kind: 'modal',
+		component: ArticleDetailFormDialog,
+		propsSchema: null,
+		_note: 'The ArticleDetail page\'s Edit form: its schema form without the title and body, plus a button that opens ArticleEditModal, the dedicated editor with the markdown body and Files hero picker, on top.',
+	},
 	SegmentFormDialog: {
 		kind: 'modal',
 		component: SegmentFormDialog,
