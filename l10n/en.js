@@ -2358,6 +2358,7 @@ OC.L10N.register(
         "No emails linked to this entity": "No emails linked to this entity",
         "No end date": "No end date",
         "No events yet.": "No events yet.",
+        "Now": "Now",
         "No evidence collected yet": "No evidence collected yet",
         "No evidence to redact": "No evidence to redact",
         "No executions yet": "No executions yet",

@@ -26,9 +26,11 @@ import ActivityTimeline from './components/ActivityTimeline.vue'
 //     deep-link — same self-fetching-by-props pattern as the sections above. ---
 import ClientBillingHandoffSection from './components/billing/ClientBillingHandoffSection.vue'
 // BookingDetail is now a declarative type:"detail" page (pipelinq-pos-mdm-detail-
-// declarative); its TIME-WINDOW-gated admin actions + array-on-object tables +
-// computed timeline + notes editor stay in the page body via this kind:'section'.
+// declarative); its array-on-object tables + computed timeline + notes editor
+// stay in the page body via this kind:'section', and its TIME-WINDOW-gated admin
+// actions are the page's actionsComponent.
 import BookingDetailSection from './components/bookings/BookingDetailSection.vue'
+import BookingHeaderActions from './components/bookings/BookingHeaderActions.vue'
 import BookingsCard from './components/bookings/BookingsCard.vue'
 import BrpContactPanel from './components/BrpContactPanel.vue'
 import CommunicationHistory from './components/CommunicationHistory.vue'
@@ -943,15 +945,20 @@ const registry = {
 	},
 	// --- Booking detail is now a declarative type:"detail" page
 	//     (pipelinq-pos-mdm-detail-declarative); the booking's flat fields
-	//     auto-render and this in-body section carries everything no primitive
-	//     expresses: the six TIME-WINDOW-gated admin actions (POST to bespoke
-	//     /api/bookings/{id}/{action} with side-effects, Reschedule navigates to
-	//     a new UUID), the inline notes editor, the resourceAssignments +
-	//     statusHistory array-on-object tables, and the computed timeline. ---
+	//     auto-render and this in-body section carries what no primitive
+	//     expresses: the inline notes editor, the resourceAssignments +
+	//     statusHistory array-on-object tables, and the computed timeline. The
+	//     six TIME-WINDOW-gated admin actions are the page's actionsComponent. ---
 	BookingDetailSection: {
 		kind: 'section',
 		component: BookingDetailSection,
-		_note: 'Booking in-body section for the declarative type:"detail" BookingDetail page. lifecycleActions is intentionally NOT used even though booking has an x-openregister-lifecycle: the real transitions POST to BookingService endpoints with side-effects (confirmation/reminder emails, no-show fees) and time-window gating, and Reschedule creates a new booking UUID — OR /transition would only flip status and bypass those. Self-fetches by @objectId.',
+		_note: 'Booking in-body section for the declarative type:"detail" BookingDetail page. Self-fetches by @objectId and re-reads on cn:page:refresh.',
+	},
+	BookingHeaderActions: {
+		kind: 'widget',
+		component: BookingHeaderActions,
+		...HEADER_ACTIONS_META,
+		_note: 'BookingDetail actionsComponent: the six admin actions beside Edit. lifecycleActions is intentionally NOT used even though booking has an x-openregister-lifecycle: the real transitions POST to BookingService endpoints with side-effects (confirmation/reminder emails, no-show fees) and time-window gating, and Reschedule creates a new booking UUID — OR /transition would only flip status and bypass those.',
 	},
 
 	// --- KCC Werkplek — declarative agent workspace (pipelinq-werkplek-declarative).

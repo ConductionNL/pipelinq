@@ -7,20 +7,17 @@
   - identity fields (status / source / startAt / endAt / depositAmount / …)
   - auto-render in the detail-page body via CnObjectDataWidget; this section adds
   - the parts the auto-body + relatedCollections cannot express:
-  -   1. the six TIME-WINDOW-gated admin actions (Confirm deposit / Mark completed
-  -      / Mark no-show / Reschedule / Send reminder / Cancel) which POST to bespoke
-  -      /api/bookings/{id}/{action} endpoints with side-effects (emails, no-show
-  -      fees) — Reschedule CREATES A NEW booking UUID and navigates to it. These
-  -      are NOT plain OR /transition status flips, so CnLifecycleActions cannot
-  -      drive them even though booking has an x-openregister-lifecycle;
-  -   2. the inline notes / internalNotes editor (objectStore save);
-  -   3. resourceAssignments + statusHistory — ARRAY fields ON the booking (not FK
+  -   1. the inline notes / internalNotes editor (objectStore save);
+  -   2. resourceAssignments + statusHistory — ARRAY fields ON the booking (not FK
   -      children), with cross-schema id->name resolution for resources;
-  -   4. the computed Timeline (a merge of timestamp fields);
-  -   5. human-readable Service / Customer names resolved across other schemas.
+  -   3. the computed Timeline (a merge of timestamp fields);
+  -   4. human-readable Service / Customer names resolved across other schemas.
+  -
+  - The admin actions live in the page header (BookingHeaderActions).
   -
   - Self-fetches the booking by id (passed as `bookingId` via @objectId, with a
-  - cnSectionContext inject fallback) so it stays in sync after an action.
+  - cnSectionContext inject fallback) and re-reads it on `cn:page:refresh`, which
+  - a header action sends after it succeeds.
   -
   - @spec openspec/specs/appointment-booking/spec.md
   -->
@@ -28,51 +25,6 @@
 	<div class="booking-section">
 		<NcLoadingIcon v-if="loading" :size="24" />
 		<template v-else>
-			<section class="booking-section__actions">
-				<NcButton
-					v-if="canConfirmDeposit"
-					variant="primary"
-					:disabled="busy"
-					@click="confirmDeposit">
-					{{ t('pipelinq', 'Confirm deposit') }}
-				</NcButton>
-				<NcButton
-					v-if="canMarkCompleted"
-					variant="primary"
-					:disabled="busy"
-					@click="markCompleted">
-					{{ t('pipelinq', 'Mark completed') }}
-				</NcButton>
-				<NcButton
-					v-if="canMarkNoShow"
-					variant="error"
-					:disabled="busy"
-					@click="markNoShow">
-					{{ t('pipelinq', 'Mark no-show') }}
-				</NcButton>
-				<NcButton
-					v-if="canReschedule"
-					variant="secondary"
-					:disabled="busy"
-					@click="showReschedule = true">
-					{{ t('pipelinq', 'Reschedule') }}
-				</NcButton>
-				<NcButton
-					v-if="canSendReminder"
-					variant="secondary"
-					:disabled="busy"
-					@click="sendReminder">
-					{{ t('pipelinq', 'Send reminder') }}
-				</NcButton>
-				<NcButton
-					v-if="canCancel"
-					variant="error"
-					:disabled="busy"
-					@click="showCancel = true">
-					{{ t('pipelinq', 'Cancel') }}
-				</NcButton>
-			</section>
-
 			<section class="booking-section__block">
 				<h4>{{ t('pipelinq', 'Context') }}</h4>
 				<div class="info-grid">
@@ -191,40 +143,57 @@
 
 			<section class="booking-section__block">
 				<h4>{{ t('pipelinq', 'Timeline') }}</h4>
-				<ol class="timeline">
+				<p v-if="!timeline.length" class="section-empty">
+					{{ t('pipelinq', 'No events yet.') }}
+				</p>
+				<ol v-else class="booking-timeline">
 					<li
-						v-for="(event, idx) in timeline"
+						v-for="(event, idx) in timelineWithNow"
 						:key="idx"
-						:class="`timeline-${event.kind}`">
-						<span class="timeline-when">{{
-							formatDateTime(event.at)
-						}}</span>
-						<span class="timeline-text">{{ event.text }}</span>
+						class="booking-timeline__event"
+						:class="[
+							`booking-timeline__event--${event.kind}`,
+							{ 'booking-timeline__event--upcoming': event.upcoming },
+						]">
+						<span class="booking-timeline__marker" aria-hidden="true">
+							<component :is="event.icon" v-if="event.icon" :size="16" />
+						</span>
+						<div class="booking-timeline__body">
+							<span class="booking-timeline__text">{{ event.text }}</span>
+							<time
+								v-if="event.at"
+								class="booking-timeline__when"
+								:datetime="event.at">
+								{{ formatDateTime(event.at) }}
+							</time>
+						</div>
 					</li>
 				</ol>
 			</section>
-
-			<RescheduleBookingDialog
-				v-if="showReschedule"
-				:currentStartAt="booking.startAt || ''"
-				@confirm="onReschedule"
-				@cancel="showReschedule = false" />
-
-			<CancelBookingDialog
-				v-if="showCancel"
-				@confirm="onCancel"
-				@cancel="showCancel = false" />
 		</template>
 	</div>
 </template>
 
 <script>
 import { showError, showSuccess } from '@nextcloud/dialogs'
-import { generateUrl } from '@nextcloud/router'
+import { subscribe, unsubscribe } from '@nextcloud/event-bus'
 import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
-import CancelBookingDialog from '../../dialogs/CancelBookingDialog.vue'
-import RescheduleBookingDialog from '../../dialogs/RescheduleBookingDialog.vue'
+import CalendarRemove from 'vue-material-design-icons/CalendarRemove.vue'
+import CashCheck from 'vue-material-design-icons/CashCheck.vue'
+import CashRemove from 'vue-material-design-icons/CashRemove.vue'
+import ClockEnd from 'vue-material-design-icons/ClockEnd.vue'
+import ClockStart from 'vue-material-design-icons/ClockStart.vue'
+import EmailCheckOutline from 'vue-material-design-icons/EmailCheckOutline.vue'
 import { useObjectStore } from '../../store/modules/object.js'
+
+const TIMELINE_ICONS = {
+	start: ClockStart,
+	end: ClockEnd,
+	email: EmailCheckOutline,
+	deposit: CashCheck,
+	fee: CashRemove,
+	cancel: CalendarRemove,
+}
 
 const STATUS_LABELS = {
 	'pending-deposit': 'Awaiting deposit',
@@ -236,15 +205,11 @@ const STATUS_LABELS = {
 	rescheduled: 'Rescheduled',
 }
 
-const HOUR_MS = 60 * 60 * 1000
-
 export default {
 	name: 'BookingDetailSection',
 	components: {
 		NcButton,
 		NcLoadingIcon,
-		RescheduleBookingDialog,
-		CancelBookingDialog,
 	},
 
 	inject: {
@@ -264,8 +229,6 @@ export default {
 			booking: {},
 			loading: false,
 			busy: false,
-			showReschedule: false,
-			showCancel: false,
 			editableNotes: '',
 			editableInternalNotes: '',
 			savedNotes: '',
@@ -354,14 +317,14 @@ export default {
 			if (this.booking.depositPaidAt) {
 				events.push({
 					at: this.booking.depositPaidAt,
-					kind: 'payment',
+					kind: 'deposit',
 					text: t('pipelinq', 'Deposit cleared'),
 				})
 			}
 			if (this.booking.noShowFeeChargedAt) {
 				events.push({
 					at: this.booking.noShowFeeChargedAt,
-					kind: 'payment',
+					kind: 'fee',
 					text: t('pipelinq', 'No-show fee charged'),
 				})
 			}
@@ -373,6 +336,32 @@ export default {
 				})
 			}
 			return events.sort((a, b) => Date.parse(a.at) - Date.parse(b.at))
+		},
+
+		/**
+		 * The timeline as rendered: each event with its icon and whether it is
+		 * still ahead, plus a "Now" marker between the past and the upcoming
+		 * events when the booking has both.
+		 *
+		 * @return {Array<{at?: string, kind: string, text: string, icon: object|null, upcoming: boolean}>}
+		 */
+		timelineWithNow() {
+			const now = Date.now()
+			const events = this.timeline.map((e) => ({
+				...e,
+				icon: TIMELINE_ICONS[e.kind] || null,
+				upcoming: Date.parse(e.at) > now,
+			}))
+			const firstUpcoming = events.findIndex((e) => e.upcoming)
+			if (firstUpcoming > 0) {
+				events.splice(firstUpcoming, 0, {
+					kind: 'now',
+					text: t('pipelinq', 'Now'),
+					icon: null,
+					upcoming: false,
+				})
+			}
+			return events
 		},
 
 		depositLabel() {
@@ -397,53 +386,6 @@ export default {
 				|| this.editableInternalNotes !== this.savedInternalNotes
 			)
 		},
-
-		isFuture() {
-			if (!this.booking.endAt) return false
-			return new Date(this.booking.endAt).getTime() > Date.now()
-		},
-
-		isPast() {
-			if (!this.booking.endAt) return false
-			return new Date(this.booking.endAt).getTime() <= Date.now()
-		},
-
-		hourAway() {
-			if (!this.booking.startAt) return false
-			return new Date(this.booking.startAt).getTime() - Date.now() > HOUR_MS
-		},
-
-		canConfirmDeposit() {
-			return this.booking.status === 'pending-deposit'
-		},
-
-		canMarkCompleted() {
-			return this.booking.status === 'confirmed' && this.isPast
-		},
-
-		canMarkNoShow() {
-			return this.booking.status === 'confirmed' && this.isPast
-		},
-
-		canReschedule() {
-			return (
-				['confirmed', 'pending-deposit'].includes(this.booking.status)
-				&& this.isFuture
-			)
-		},
-
-		canCancel() {
-			return (
-				['confirmed', 'pending-deposit'].includes(this.booking.status)
-				&& this.isFuture
-			)
-		},
-
-		canSendReminder() {
-			return (
-				this.booking.status === 'confirmed' && this.isFuture && this.hourAway
-			)
-		},
 	},
 
 	watch: {
@@ -453,6 +395,19 @@ export default {
 				this.load()
 			},
 		},
+	},
+
+	mounted() {
+		// A header action changed the booking; re-read it without the spinner.
+		this.onPageRefresh = (payload) => {
+			const done = this.load({ silent: true })
+			payload?.waitUntil?.(done)
+		}
+		subscribe('cn:page:refresh', this.onPageRefresh)
+	},
+
+	beforeUnmount() {
+		unsubscribe('cn:page:refresh', this.onPageRefresh)
 	},
 
 	methods: {
@@ -491,21 +446,30 @@ export default {
 		/**
 		 * Load the booking and seed the notes editor, then resolve the linked
 		 * Service / Customer / Resource names.
+		 *
+		 * @param {{silent?: boolean}} [opts] `silent` skips the spinner and
+		 *  keeps unsaved note edits (a refresh, not a first load).
 		 */
-		async load() {
+		async load(opts = {}) {
 			if (!this.resolvedId) {
 				return
 			}
-			this.loading = true
+			const silent = opts.silent === true
+			const keepNotes = silent && this.notesDirty
+			if (!silent) {
+				this.loading = true
+			}
 			try {
 				this.booking =
 					(await this.objectStore.fetchObject(
 						'appointmentBooking',
 						this.resolvedId,
 					)) || {}
-				this.editableNotes = this.booking.notes || ''
+				if (!keepNotes) {
+					this.editableNotes = this.booking.notes || ''
+					this.editableInternalNotes = this.booking.internalNotes || ''
+				}
 				this.savedNotes = this.booking.notes || ''
-				this.editableInternalNotes = this.booking.internalNotes || ''
 				this.savedInternalNotes = this.booking.internalNotes || ''
 				await this.loadContext()
 			} catch (err) {
@@ -607,105 +571,6 @@ export default {
 				this.busy = false
 			}
 		},
-
-		/**
-		 * POST to a booking-admin endpoint and reload the booking on success.
-		 *
-		 * @param {string} action The path segment (e.g. 'complete').
-		 * @param {object} body   Optional JSON body.
-		 * @param {string} okMsg  Success toast message.
-		 * @return {Promise<boolean>} Whether the call succeeded.
-		 */
-		async lifecycle(action, body, okMsg) {
-			this.busy = true
-			try {
-				const response = await fetch(
-					generateUrl(
-						`/apps/pipelinq/api/bookings/${this.resolvedId}/${action}`,
-					),
-					{
-						method: 'POST',
-						headers: {
-							'Content-Type': 'application/json',
-							requesttoken: OC.requestToken,
-							'OCS-APIREQUEST': 'true',
-						},
-						body: JSON.stringify(body || {}),
-					},
-				)
-				const data = await response.json().catch(() => ({}))
-				if (!response.ok) {
-					showError(data.error || t('pipelinq', 'Action failed.'))
-					return false
-				}
-				showSuccess(okMsg)
-				if (data.bookingId && data.bookingId !== this.resolvedId) {
-					// Reschedule returns a new UUID — navigate to the new booking.
-					this.$router.push({
-						name: 'BookingDetail',
-						params: { id: data.bookingId },
-					})
-					return true
-				}
-				await this.load()
-				return true
-			} catch {
-				showError(t('pipelinq', 'Action failed.'))
-				return false
-			} finally {
-				this.busy = false
-			}
-		},
-
-		async confirmDeposit() {
-			await this.lifecycle(
-				'confirm-deposit',
-				{},
-				t('pipelinq', 'Deposit confirmed.'),
-			)
-		},
-
-		async markCompleted() {
-			await this.lifecycle(
-				'complete',
-				{},
-				t('pipelinq', 'Booking marked completed.'),
-			)
-		},
-
-		async markNoShow() {
-			await this.lifecycle(
-				'no-show',
-				{},
-				t('pipelinq', 'Booking marked as no-show.'),
-			)
-		},
-
-		async sendReminder() {
-			await this.lifecycle(
-				'send-reminder',
-				{},
-				t('pipelinq', 'Reminder dispatched.'),
-			)
-		},
-
-		async onReschedule(newStartAt) {
-			this.showReschedule = false
-			await this.lifecycle(
-				'reschedule',
-				{ newStartAt },
-				t('pipelinq', 'Booking rescheduled.'),
-			)
-		},
-
-		async onCancel(reason) {
-			this.showCancel = false
-			await this.lifecycle(
-				'cancel',
-				{ reason: reason || '' },
-				t('pipelinq', 'Booking cancelled.'),
-			)
-		},
 	},
 }
 </script>
@@ -715,12 +580,6 @@ export default {
 	display: flex;
 	flex-direction: column;
 	gap: 20px;
-}
-
-.booking-section__actions {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 8px;
 }
 
 .booking-section__block h4 {
@@ -801,23 +660,113 @@ export default {
 	padding: 20px;
 }
 
-.timeline {
+/* Vertical timeline: a marker per event on a continuous rail. Colour tells the
+   kind of event, a dashed marker tells an event that is still ahead. */
+.booking-timeline {
+	--booking-timeline-marker: 28px;
+	--booking-timeline-gap: calc(var(--default-grid-baseline) * 4);
 	margin: 0;
-	padding-inline-start: 20px;
+	padding: 0;
+	list-style: none;
 }
 
-.timeline li {
-	margin-bottom: 8px;
+.booking-timeline__event {
+	position: relative;
+	display: flex;
+	align-items: flex-start;
+	gap: calc(var(--default-grid-baseline) * 3);
+	padding-bottom: var(--booking-timeline-gap);
 }
 
-.timeline-when {
-	display: inline-block;
-	min-width: 180px;
-	color: var(--color-text-maxcontrast);
-	font-size: 12px;
+.booking-timeline__event:last-child {
+	padding-bottom: 0;
 }
 
-.timeline-text {
+/* The rail segment from this marker down to the next one. */
+.booking-timeline__event:not(:last-child)::before {
+	content: '';
+	position: absolute;
+	inset-block: var(--booking-timeline-marker) 0;
+	inset-inline-start: calc(var(--booking-timeline-marker) / 2 - 1px);
+	width: 2px;
+	background-color: var(--color-border);
+}
+
+.booking-timeline__marker {
+	flex: 0 0 var(--booking-timeline-marker);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: var(--booking-timeline-marker);
+	height: var(--booking-timeline-marker);
+	border: 2px solid transparent;
+	border-radius: 50%;
+	background-color: var(--color-background-dark);
+	color: var(--color-main-text);
+}
+
+.booking-timeline__event--start .booking-timeline__marker,
+.booking-timeline__event--end .booking-timeline__marker {
+	background-color: var(--color-primary-element-light);
+	color: var(--color-primary-element-light-text);
+}
+
+.booking-timeline__event--deposit .booking-timeline__marker {
+	background-color: color-mix(in srgb, var(--color-success) 18%, var(--color-main-background));
+	color: var(--color-success-text);
+}
+
+.booking-timeline__event--fee .booking-timeline__marker,
+.booking-timeline__event--cancel .booking-timeline__marker {
+	background-color: color-mix(in srgb, var(--color-error) 15%, var(--color-main-background));
+	color: var(--color-error-text);
+}
+
+.booking-timeline__event--upcoming .booking-timeline__marker {
+	border-style: dashed;
+	border-color: currentColor;
+	background-color: var(--color-main-background);
+}
+
+.booking-timeline__body {
+	display: flex;
+	flex-direction: column;
+	min-height: var(--booking-timeline-marker);
+	justify-content: center;
+}
+
+.booking-timeline__text {
 	font-weight: 500;
+}
+
+.booking-timeline__event--upcoming .booking-timeline__text {
+	color: var(--color-text-maxcontrast);
+}
+
+.booking-timeline__when {
+	color: var(--color-text-maxcontrast);
+	font-size: var(--font-size-small, 13px);
+	font-variant-numeric: tabular-nums;
+}
+
+/* "Now": a small dot on the rail and a quiet label. */
+.booking-timeline__event--now .booking-timeline__marker {
+	background-color: transparent;
+}
+
+.booking-timeline__event--now .booking-timeline__marker::after {
+	content: '';
+	width: 10px;
+	height: 10px;
+	border-radius: 50%;
+	background-color: var(--color-primary-element);
+	box-shadow: 0 0 0 4px var(--color-main-background);
+}
+
+.booking-timeline__event--now .booking-timeline__text {
+	color: var(--color-primary-element-text-dark, var(--color-primary-element));
+	font-size: var(--font-size-small, 13px);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
 }
 </style>

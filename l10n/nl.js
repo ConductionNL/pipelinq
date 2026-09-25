@@ -2339,6 +2339,7 @@ OC.L10N.register(
         "No emails linked to this entity": "Geen e-mails gekoppeld aan deze entiteit",
         "No end date": "Geen einddatum",
         "No events yet.": "Nog geen gebeurtenissen.",
+        "Now": "Nu",
         "No evidence collected yet": "Nog geen bewijs verzameld",
         "No evidence to redact": "Geen bewijs om te redigeren",
         "No executions yet": "Nog geen uitvoeringen",
