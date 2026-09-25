@@ -97,6 +97,8 @@
 				"showMassExport": false,
 				"showMassCopy": false,
 				"showMassDelete": false,
+				"selectable": false,
+				"rowRoute": "ResourceDetail",
 				"columns": [
 					"name",
 					{ "key": "type", "label": "Type", "widget": "badge", "widgetProps": { "colorMap": { "staff": "primary", "room": "default", "equipment": "default" } } },
@@ -143,6 +145,7 @@
 				"showMassExport": false,
 				"showMassCopy": false,
 				"showMassDelete": false,
+				"selectable": false,
 				"columns": [
 					"customerId",
 					"serviceId",
