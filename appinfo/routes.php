@@ -586,6 +586,7 @@ return [
         ['name' => 'template#index',   'url' => '/api/templates',          'verb' => 'GET'],
         ['name' => 'template#create',  'url' => '/api/templates',          'verb' => 'POST'],
         ['name' => 'template#preview', 'url' => '/api/templates/{id}/preview', 'verb' => 'GET'],
+        ['name' => 'template#validate', 'url' => '/api/templates/{id}/validate', 'verb' => 'POST'],
         ['name' => 'template#show',    'url' => '/api/templates/{id}',     'verb' => 'GET'],
         ['name' => 'template#update',  'url' => '/api/templates/{id}',     'verb' => 'PATCH'],
 

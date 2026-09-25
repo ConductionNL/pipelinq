@@ -227,6 +227,42 @@ class TemplateController extends Controller {
 	}//end preview()
 
 	/**
+	 * POST /api/templates/:id/validate — run the compliance check on a stored
+	 * template without saving anything, so the blast wizard can refuse a
+	 * non-compliant template before a blast is created from it.
+	 *
+	 * The channel comes from the request, falling back to the template's own.
+	 * SMS templates always pass: the footer rule is email-specific.
+	 *
+	 * @param string $id Template UUID or slug.
+	 *
+	 * @return JSONResponse `{valid, error}`, or 404.
+	 *
+	 * @spec openspec/specs/marketing-ui/spec.md#scenario-email-template-validated-before-save
+	 */
+	#[NoAdminRequired]
+	public function validate(string $id): JSONResponse {
+		$uid = $this->requireUser();
+		if ($uid === null) {
+			return $this->unauthorized();
+		}
+
+		if ($this->policy->isPrivileged(uid: $uid) === false) {
+			return $this->forbidden();
+		}
+
+		$template = $this->complianceService->getTemplateById(templateId: $id);
+		if ($template === null) {
+			return $this->notFound();
+		}
+
+		$channel = (string)$this->request->getParam('channel', (string)($template['channel'] ?? 'email'));
+		$error = $this->complianceService->validateTemplate(templateData: $template, channel: $channel);
+
+		return new JSONResponse(['valid' => ($error === null), 'error' => $error]);
+	}//end validate()
+
+	/**
 	 * Authenticated user id, or null.
 	 *
 	 * @return string|null UID or null.
