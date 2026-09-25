@@ -31,8 +31,11 @@ show a live size estimate before commit.
 
 ### Requirement: Blast Creation Wizard Gates on Compliance
 
-The BlastForm Vue component SHALL walk the marketer through name → segment →
-template → channel → schedule → A/B and SHALL check compliance before send.
+The new-blast wizard (`BlastWizardDialog`, a modal the Blasts index page's Add
+opens) SHALL walk the marketer through basics (name and channel) → audience →
+content (template) → delivery (transport, connector source, schedule) → A/B →
+review, and SHALL check compliance before send. The channel comes before the
+template because the templates offered are the channel's own.
 
 #### Scenario: Missing-consent modal on send
 
@@ -40,13 +43,13 @@ template → channel → schedule → A/B and SHALL check compliance before send
 
 - **GIVEN** a segment with contacts lacking email consent
 - **WHEN** the marketer attempts to send
-- **THEN** the form SHALL show a modal listing missing contacts with options "Skip and send", "Request consent", "Cancel"
+- **THEN** the wizard SHALL show a modal listing missing contacts with options "Skip and send", "Request consent", "Cancel"
 
 #### Scenario: Email template validated before save
 
 - **GIVEN** an email channel blast
 - **WHEN** the selected template is checked
-- **THEN** the form SHALL call the template validation endpoint and surface errors for missing unsubscribe token or address
+- **THEN** the wizard SHALL call the template validation endpoint and surface errors for missing unsubscribe token or address
 
 ### Requirement: Live Send Monitor
 

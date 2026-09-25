@@ -96,17 +96,20 @@
 		},
 		{
 			"id": "Blasts",
-			"_note": "Marketing blast list as a declarative type:index page (pipelinq-declarative-pages-round1). Row view navigates to the live monitor (BlastMonitor); Add navigates to the multi-step wizard (BlastNew). Both stay custom.",
+			"_note": "Marketing blast list as a declarative type:index page (pipelinq-declarative-pages-round1). A row click and the built-in View open the live monitor (BlastMonitor, via rowRoute); Add opens BlastWizardDialog in the form-dialog slot: a multi-step wizard with a compliance gate (conditional advancing, an optional A/B split, template validation and a consent preflight that holds the create back pending the marketer's decision), which no declarative form expresses. Selection is off: there are no bulk actions.",
 			"route": "/blasts",
 			"type": "index",
 			"title": "Blasts",
+			"slots": {
+				"form-dialog": "BlastWizardDialog"
+			},
 			"config": {
 				"register": "pipelinq",
 				"schema": "blast",
 				"documentationUrl": "https://pipelinq.conduction.nl",
-				"showAdd": false,
-				"showFormDialog": false,
-				"showViewAction": false,
+				"selectable": false,
+				"rowRoute": "BlastMonitor",
+				"addLabel": "New blast",
 				"showEditAction": false,
 				"showCopyAction": false,
 				"showDeleteAction": false,
@@ -120,37 +123,7 @@
 					"status",
 					"scheduledFor",
 					"sentAt"
-				],
-				"headerActions": [
-					{
-						"id": "create",
-						"label": "New blast",
-						"icon": "Plus",
-						"handler": "navigate",
-						"route": "BlastNew"
-					}
-				],
-				"actions": [
-					{
-						"id": "view",
-						"label": "Open",
-						"icon": "Eye",
-						"handler": "navigate",
-						"route": "BlastMonitor"
-					}
 				]
-			}
-		},
-		{
-			"id": "BlastNew",
-			"route": "/blasts/new",
-			"type": "custom",
-			"title": "New blast",
-			"component": "BlastFormView",
-			"_note": "A multi-step wizard with a compliance gate, which no declarative type expresses. Advancing is conditional (canAdvance), the audience can be split into an A/B pair (abEnabled), and before a blast may be sent the page runs preflightCompliance + validateTemplate and blocks on awaitConsentDecision — the lawful-basis and unsubscribe-footer checks from the marketing-compliance spec. A declarative form submits; it cannot hold a send back pending a compliance verdict.",
-			"config": {
-				"register": "pipelinq",
-				"schema": "blast"
 			}
 		},
 		{

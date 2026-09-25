@@ -3374,7 +3374,7 @@ OC.L10N.register(
         "Send reply": "Reactie verzenden",
         "Send reset link": "Herstellink verzenden",
         "Send through": "Verzenden via",
-        "Send to": "Verzenden via",
+        "Send to": "Verzenden naar",
         "Send to billing": "Verzenden naar facturering",
         "Send to invoicing": "Verzenden naar facturering",
         "Sender Domain": "Afzenderdomein",
@@ -6733,7 +6733,21 @@ OC.L10N.register(
         "HTML body preview": "Voorbeeld van de HTML-tekst",
         "The hero image could not be loaded.": "De hoofdafbeelding kon niet worden geladen.",
         "The title and body are written in the article editor.": "De titel en tekst schrijf je in de artikeleditor.",
-        "Edit title and body": "Titel en tekst bewerken"
+        "Edit title and body": "Titel en tekst bewerken",
+        "A/B test": "A/B-test",
+        "As soon as the blast is created": "Zodra de blast is aangemaakt",
+        "Basics": "Basis",
+        "Delivery": "Verzending",
+        "Mailing list: {name}": "Mailinglijst: {name}",
+        "Message preview": "Voorbeeld van het bericht",
+        "Off": "Uit",
+        "Review": "Controleren",
+        "Schedule for later": "Inplannen voor later",
+        "Segment: {name}": "Segment: {name}",
+        "Send as soon as the blast is created": "Verzenden zodra de blast is aangemaakt",
+        "The whole audience receives the same message.": "De hele doelgroep ontvangt hetzelfde bericht.",
+        "There are no templates for this channel yet.": "Er zijn nog geen sjablonen voor dit kanaal.",
+        "Variant A {a}%, variant B {b}%": "Variant A {a}%, variant B {b}%"
     },
     "nplurals=2; plural=(n != 1);"
 )

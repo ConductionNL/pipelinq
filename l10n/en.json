@@ -6836,6 +6836,20 @@
         "HTML body preview": "HTML body preview",
         "The hero image could not be loaded.": "The hero image could not be loaded.",
         "The title and body are written in the article editor.": "The title and body are written in the article editor.",
-        "Edit title and body": "Edit title and body"
+        "Edit title and body": "Edit title and body",
+        "A/B test": "A/B test",
+        "As soon as the blast is created": "As soon as the blast is created",
+        "Basics": "Basics",
+        "Delivery": "Delivery",
+        "Mailing list: {name}": "Mailing list: {name}",
+        "Message preview": "Message preview",
+        "Off": "Off",
+        "Review": "Review",
+        "Schedule for later": "Schedule for later",
+        "Segment: {name}": "Segment: {name}",
+        "Send as soon as the blast is created": "Send as soon as the blast is created",
+        "The whole audience receives the same message.": "The whole audience receives the same message.",
+        "There are no templates for this channel yet.": "There are no templates for this channel yet.",
+        "Variant A {a}%, variant B {b}%": "Variant A {a}%, variant B {b}%"
     }
 }

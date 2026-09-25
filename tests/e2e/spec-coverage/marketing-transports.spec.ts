@@ -23,7 +23,7 @@
  * RENDERING of a cached verdict is what gets tested, not DNS itself.
  */
 import { expect, test } from '@playwright/test'
-import { gotoAppRoute } from '../helpers/pipelinq.ts'
+import { navClick, openApp } from '../helpers/pipelinq.ts'
 
 test.describe('Deliverability panel', () => {
 	// @e2e openspec/changes/marketing-mail-transports/specs/marketing-mail-transports/spec.md#requirement-the-deliverability-panel-shows-spf-dkim-and-dmarc-status-per-sender-domain
@@ -65,30 +65,26 @@ test.describe('Blast wizard transport step', () => {
 	test('the wizard offers a transport step, pre-selected to the default transport', async ({
 		page,
 	}) => {
-		// The app is path-routed: a '#/blasts/new' hash loads the default page
-		// and the wizard never mounts.
-		//
-		// One load, not two: the openApp() that used to stand here booted the
-		// Dashboard and the next line navigated straight off it.
-		await gotoAppRoute(page, '/index.php/apps/pipelinq/blasts/new')
+		await openApp(page)
+		await navClick(page, 'Blasts', /\/blasts$/)
+		await page.locator('#content-vue [data-testid="cn-cta-primary"]').first().click()
 
-		const form = page.locator('.blast-form')
-		await expect(form.getByRole('heading', { name: 'New blast' })).toBeVisible({
-			timeout: 20000,
-		})
+		const dialog = page.getByRole('dialog', { name: 'New blast' })
+		await expect(dialog).toBeVisible({ timeout: 20000 })
 
-		// The breadcrumb names every step, including the one this change adds.
-		const steps = form.locator('.blast-form__steps li')
-		await expect(steps).toHaveCount(7)
-		await expect(steps.filter({ hasText: 'Transport' })).toBeVisible()
+		// The stepper names every step, including Delivery, which holds the
+		// transport choice.
+		await expect(dialog.locator('.blast-wizard__step')).toHaveCount(6)
+		await expect(
+			dialog.locator('.blast-wizard__step').filter({ hasText: 'Delivery' }),
+		).toBeVisible()
 
-		// Name — required before Next is enabled.
-		await form.locator('#blast-form-name').fill('E2E gate-19 transport step')
-		await form.getByRole('button', { name: 'Next' }).first().click()
+		// Basics: the name is required; email is the default channel.
+		await dialog.locator('#blast-wizard-name').fill('E2E gate-19 transport step')
+		await dialog.getByRole('button', { name: 'Next' }).click()
 
-		// Segment — same NcSelect-appended-to-body pattern as the sibling
-		// wizard test in marketing.spec.ts.
-		const segmentPicker = form.locator('.vs__dropdown-toggle').first()
+		// Audience. NcSelect appends its open menu to <body>.
+		const segmentPicker = dialog.locator('.vs__dropdown-toggle').first()
 		await expect(segmentPicker).toBeVisible({ timeout: 20000 })
 		await segmentPicker.click()
 		await page
@@ -96,10 +92,10 @@ test.describe('Blast wizard transport step', () => {
 			.filter({ hasText: 'Gemeente Contact Blast' })
 			.first()
 			.click()
-		await form.getByRole('button', { name: 'Next' }).first().click()
+		await dialog.getByRole('button', { name: 'Next' }).click()
 
-		// Template — pick the seeded email-channel template.
-		const templatePicker = form.locator('.vs__dropdown-toggle').first()
+		// Content: the seeded email template.
+		const templatePicker = dialog.locator('.vs__dropdown-toggle').first()
 		await expect(templatePicker).toBeVisible({ timeout: 20000 })
 		await templatePicker.click()
 		await page
@@ -107,22 +103,20 @@ test.describe('Blast wizard transport step', () => {
 			.filter({ hasText: 'Q4 Product Launch' })
 			.first()
 			.click()
-		await form.getByRole('button', { name: 'Next' }).first().click()
+		await expect(dialog.getByRole('button', { name: 'Next' })).toBeEnabled({
+			timeout: 15000,
+		})
+		await dialog.getByRole('button', { name: 'Next' }).click()
 
-		// Channel — 'email' is selected by default, so Next advances straight
-		// through to the transport step.
-		await form.getByRole('button', { name: 'Next' }).first().click()
-
-		// Transport step: the "Send through" NcSelect is visible, and the
-		// seeded default transport (Instance mail server) is pre-selected —
-		// proves the wizard resolves and offers a default without any pick.
-		await expect(form.locator('.blast-form__hint')).toContainText(
+		// Delivery: "Send through" pre-selects the seeded default transport
+		// (Instance mail server) without any pick.
+		await expect(dialog).toContainText(
 			'Leave empty to send through the default transport.',
 			{ timeout: 15000 },
 		)
-		const transportToggle = form.locator('.vs__dropdown-toggle').first()
-		await expect(transportToggle).toContainText('Instance mail server', {
-			timeout: 15000,
-		})
+		await expect(dialog.locator('.blast-wizard__transport .vs__dropdown-toggle')).toContainText(
+			'Instance mail server',
+			{ timeout: 15000 },
+		)
 	})
 })

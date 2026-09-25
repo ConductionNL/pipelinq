@@ -661,44 +661,31 @@ test.describe('Blasts ledger and wizard', () => {
 	})
 
 	// @e2e openspec/specs/marketing-ui/spec.md#email-template-validated-before-save
-	test('the New-blast wizard walks name to segment to template', async ({
+	test('the new-blast wizard walks basics to audience to content', async ({
 		page,
 	}) => {
-		// One load, not two: openApp() booted the Dashboard and the next
-		// line navigated straight off it.
-		await gotoAppRoute(page, '/blasts/new')
+		await openApp(page)
+		await navClick(page, 'Blasts', /\/blasts$/)
+		await page.locator('#content-vue [data-testid="cn-cta-primary"]').first().click()
 
-		const form = page.locator('.blast-form')
-		await expect(form.getByRole('heading', { name: 'New blast' })).toBeVisible({
-			timeout: 20000,
-		})
+		const dialog = page.getByRole('dialog', { name: 'New blast' })
+		await expect(dialog).toBeVisible({ timeout: 20000 })
 
-		// The seven declared steps are rendered as an ordered progress list.
-		// marketing-mail-transports added a "Transport" step between Channel
-		// and Schedule (six steps before that change).
-		await expect(form.locator('.blast-form__steps li')).toHaveCount(7)
-		await expect(form.locator('.blast-form__steps li.is-current')).toHaveCount(1)
+		// The six steps render as a stepper with exactly one current step.
+		await expect(dialog.locator('.blast-wizard__step')).toHaveCount(6)
+		await expect(dialog.locator('.blast-wizard__step--current')).toHaveCount(1)
 
-		// Step 1 — name. `canAdvance` gates Next until it is filled.
-		const name = form.locator('#blast-form-name')
-		await expect(name).toBeVisible()
-		await name.fill('E2E gate-19 draft')
+		// Basics. Next stays disabled until the name is filled in.
+		const next = dialog.getByRole('button', { name: 'Next' })
+		await expect(next).toBeDisabled()
+		await dialog.locator('#blast-wizard-name').fill('E2E gate-19 draft')
+		await next.click()
 
-		// Step 2 — the segment picker is fed from the seeded Segments.
-		//
-		// The previous form of this assertion looked for the option text INSIDE
-		// `.blast-form`, and could never pass. `<NcSelect :options="segments">`
-		// paints no option until its combobox is opened, and @nextcloud/vue 9's
-		// NcSelect defaults `appendToBody: true`, so vue-select renders the open
-		// menu at the END OF <body> — outside `.blast-form` even when it is open.
-		// Run 31473685688 recorded it as "element(s) not found" after 20s.
-		// So: open the combobox, then match the option page-wide, the same way
-		// spec-coverage/appointment-booking.spec.ts drives its NcSelect.
-		await form.getByRole('button', { name: 'Next' }).first().click()
-		const segmentPicker = form.locator('.vs__dropdown-toggle').first()
+		// Audience. NcSelect appends its open menu to <body>, so the option is
+		// matched page-wide.
+		const segmentPicker = dialog.locator('.vs__dropdown-toggle').first()
 		await expect(segmentPicker).toBeVisible({ timeout: 20000 })
 		await segmentPicker.click()
-
 		const segmentOption = page
 			.locator('li[role="option"], .vs__dropdown-option')
 			.filter({ hasText: 'Gemeente Contact Blast' })
@@ -707,14 +694,18 @@ test.describe('Blasts ledger and wizard', () => {
 			segmentOption,
 			'the seeded Segment must be offered as a pickable option',
 		).toBeVisible({ timeout: 20000 })
-
-		// Picking it advances the form's own state — the estimated-audience hint
-		// is `v-if="selectedSegment"`, so it can only appear once the picker has
-		// bound a real Segment object.
 		await segmentOption.click()
-		await expect(form.locator('.blast-form__hint')).toBeVisible({
+
+		// The estimated-audience hint only renders once a real Segment is bound.
+		await expect(dialog.locator('.blast-wizard__audience-hint')).toBeVisible({
 			timeout: 20000,
 		})
+		await next.click()
+
+		// Content. Only the channel's templates are offered, and picking one
+		// runs the template validation the scenario names.
+		const templatePicker = dialog.locator('.vs__dropdown-toggle').first()
+		await expect(templatePicker).toBeVisible({ timeout: 20000 })
 
 		await assertNoHardError(page)
 	})

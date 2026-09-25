@@ -144,9 +144,10 @@ import XWikiWidgetComponent from './components/xwiki/XWikiWidget.vue'
 //     CnIndexPage's createOverride prop, so the GENERIC Add button on the
 //     declarative Clients/Contacts index pages is contact-aware too. ---
 // --- Form-dialog slot replacements (page.slots): the ArticleDetail edit
-//     form, and segment / template create and edit
+//     form, the new-blast wizard, and segment / template create and edit
 //     (marketing-segments-ui-repair) on their index pages. ---
 import ArticleDetailFormDialog from './dialogs/ArticleDetailFormDialog.vue'
+import BlastWizardDialog from './dialogs/BlastWizardDialog.vue'
 import ClientCreateDialog from './dialogs/ClientCreateDialog.vue'
 import LeadCreateDialog from './dialogs/LeadCreateDialog.vue'
 import RequestCreateDialog from './dialogs/RequestCreateDialog.vue'
@@ -158,12 +159,11 @@ import TemplateFormDialog from './dialogs/TemplateFormDialog.vue'
 import BrpMonitorView from './views/admin/BrpMonitor.vue'
 import PosCustomerSettingsView from './views/admin/PosCustomerSettings.vue'
 // --- Marketing segmentation + blast (marketing-segmentation-and-blast 07):
-//     three-route Vue surface — list, multi-step create wizard, live monitor.
-//     The wizard embeds the missing-consent modal (own file under modals/);
-//     the monitor polls /api/blasts/:id every 2s and stops on terminal status.
+//     the list, the new-blast wizard (BlastWizardDialog, which embeds the
+//     missing-consent modal) and the live monitor, which polls /api/blasts/:id
+//     every 2s and stops on terminal status.
 //     SegmentBuilder + SegmentRuleNode live under components/, mounted by
 //     SegmentFormDialog above (marketing-segments-ui-repair, pipelinq#773). ---
-import BlastFormView from './views/blasts/BlastForm.vue'
 import BlastMonitorView from './views/blasts/BlastMonitor.vue'
 import BlastPerformanceDashboardView from './views/blasts/PerformanceDashboard.vue'
 import ResourceDetailView from './views/bookings/ResourceDetail.vue'
@@ -252,8 +252,7 @@ import LoyaltyAccountCreationView from './views/loyalty/LoyaltyAccountCreation.v
 // --- Loyalty program (loyalty-program). ---
 import LoyaltyReportingView from './views/loyalty/LoyaltyReporting.vue'
 // --- Articles new/edit route wrapper (marketing-article-hub): thin host for
-//     ArticleEditModal, the one editing surface the change owns. Matches the
-//     SegmentNew / TemplateNew / BlastNew convention below. ---
+//     ArticleEditModal, the one editing surface the change owns. ---
 import ArticleFormView from './views/marketing/ArticleFormView.vue'
 import CampaignFormView from './views/marketing/CampaignFormView.vue'
 import CampaignReportView from './views/marketing/CampaignReport.vue'
@@ -894,11 +893,6 @@ const registry = {
 	// --- Marketing blasts (marketing-segmentation-and-blast slice 07). The
 	//     Blasts list is now a declarative type:"index" page
 	//     (pipelinq-declarative-pages-round1). ---
-	BlastFormView: {
-		kind: 'page',
-		component: BlastFormView,
-		_note: 'Multi-step new-blast wizard (marketing-segmentation-and-blast 07): name → segment → template → channel → schedule → A/B split, with pre-send compliance preflight, missing-consent modal (skip / request / cancel) and email template validation. Declarative type:"form" cannot express the cross-endpoint preflight or the gated send flow.',
-	},
 	BlastMonitorView: {
 		kind: 'page',
 		component: BlastMonitorView,
@@ -1088,6 +1082,12 @@ const registry = {
 
 	// Pages' form-dialog slot (page.slots), not header-action modals: the
 	// index or detail page mounts them for its Add and Edit.
+	BlastWizardDialog: {
+		kind: 'modal',
+		component: BlastWizardDialog,
+		propsSchema: null,
+		_note: 'New-blast wizard in the Blasts index page\'s form-dialog slot: basics, audience, content, delivery, A/B test and review, gated on template validation and a consent preflight before POST /api/blasts, then opens the new blast\'s monitor.',
+	},
 	ArticleDetailFormDialog: {
 		kind: 'modal',
 		component: ArticleDetailFormDialog,
