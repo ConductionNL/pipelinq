@@ -116,82 +116,9 @@
 		</div>
 
 		<div class="form-group">
-			<label>{{ t('pipelinq', 'Multi-step composition') }}</label>
-			<div v-if="form.multiStep.length === 0" class="form-empty">
-				{{ t('pipelinq', 'Single-step service — no multi-step rows.') }}
-			</div>
-			<table v-else class="step-table">
-				<thead>
-					<tr>
-						<th scope="col">{{ t('pipelinq', '#') }}</th>
-						<th scope="col">{{ t('pipelinq', 'Duration (min)') }}</th>
-						<th scope="col">{{ t('pipelinq', 'Resource type') }}</th>
-						<th scope="col">{{ t('pipelinq', 'Skill required') }}</th>
-						<th scope="col">{{ t('pipelinq', 'Allow gap') }}</th>
-						<th scope="col" />
-					</tr>
-				</thead>
-				<tbody>
-					<tr v-for="(step, idx) in form.multiStep" :key="idx">
-						<td>{{ idx + 1 }}</td>
-						<td>
-							<input
-								:id="`step-duration-${idx}`"
-								v-model.number="step.durationMinutes"
-								type="number"
-								min="0"
-								:aria-label="t('pipelinq', 'Step duration')" />
-						</td>
-						<td>
-							<NcSelect
-								v-model="step.resourceType"
-								:inputId="`step-resource-${idx}`"
-								:aria-label-combobox="t('pipelinq', 'Resource type')"
-								labelOutside
-								:options="resourceTypeOptions"
-								:reduce="(o) => o.value"
-								label="label" />
-						</td>
-						<td>
-							<input
-								:id="`step-skill-${idx}`"
-								v-model="step.skillRequired"
-								type="text"
-								:aria-label="t('pipelinq', 'Skill slug')" />
-						</td>
-						<td class="center">
-							<input
-								:id="`step-gap-${idx}`"
-								v-model="step.allowGap"
-								type="checkbox"
-								:aria-label="t('pipelinq', 'Allow gap')" />
-						</td>
-						<td>
-							<NcButton
-								variant="tertiary"
-								:disabled="idx === 0"
-								@click="moveStep(idx, -1)">
-								&#9650;
-							</NcButton>
-							<NcButton
-								variant="tertiary"
-								:disabled="idx === form.multiStep.length - 1"
-								@click="moveStep(idx, 1)">
-								&#9660;
-							</NcButton>
-							<NcButton variant="tertiary" @click="removeStep(idx)">
-								&times;
-							</NcButton>
-						</td>
-					</tr>
-				</tbody>
-			</table>
-			<NcButton variant="secondary" class="add-step" @click="addStep">
-				{{ t('pipelinq', 'Add step') }}
-			</NcButton>
-			<p v-if="multiStepWarning" class="warning-text">
-				{{ multiStepWarning }}
-			</p>
+			<ServiceStepsEditor
+				v-model="form.multiStep"
+				:durationMinutes="form.durationMinutes" />
 		</div>
 
 		<div class="form-row">
@@ -296,12 +223,11 @@
 
 <script>
 import { NcButton, NcSelect, NcTextField } from '@nextcloud/vue'
-
-const RESOURCE_TYPES = ['staff', 'room', 'equipment']
+import ServiceStepsEditor from '../../components/bookings/ServiceStepsEditor.vue'
 
 export default {
 	name: 'ServiceForm',
-	components: { NcButton, NcSelect, NcTextField },
+	components: { NcButton, NcSelect, NcTextField, ServiceStepsEditor },
 	props: {
 		service: {
 			type: Object,
@@ -350,37 +276,6 @@ export default {
 			]
 		},
 
-		resourceTypeOptions() {
-			return RESOURCE_TYPES.map((v) => ({ value: v, label: t('pipelinq', v) }))
-		},
-
-		/**
-		 * Surfaces an inline warning when the multiStep duration total
-		 * disagrees with the top-level durationMinutes — REQ-APT-001
-		 * "duration sums to multi-step total".
-		 *
-		 * @return {string} Warning message, or empty.
-		 */
-		multiStepWarning() {
-			if (!this.form.multiStep || this.form.multiStep.length === 0) {
-				return ''
-			}
-			const sum = this.form.multiStep.reduce(
-				(acc, s) => acc + (Number(s.durationMinutes) || 0),
-				0,
-			)
-			if (sum === this.form.durationMinutes) {
-				return ''
-			}
-			return t(
-				'pipelinq',
-				'Multi-step total ({sum} min) does not match Duration ({duration} min).',
-				{
-					sum,
-					duration: this.form.durationMinutes || 0,
-				},
-			)
-		},
 	},
 
 	watch: {
@@ -479,34 +374,6 @@ export default {
 				.filter((s) => s.length > 0)
 		},
 
-		addStep() {
-			this.form.multiStep.push({
-				durationMinutes: 0,
-				resourceType: 'staff',
-				skillRequired: '',
-				allowGap: false,
-			})
-		},
-
-		removeStep(idx) {
-			this.form.multiStep.splice(idx, 1)
-		},
-
-		/**
-		 * Reorder a step by `delta` positions, clamped to the array bounds.
-		 *
-		 * @param {number} idx   Source index.
-		 * @param {number} delta Direction (+1 = down, -1 = up).
-		 */
-		moveStep(idx, delta) {
-			const target = idx + delta
-			if (target < 0 || target >= this.form.multiStep.length) {
-				return
-			}
-			const step = this.form.multiStep.splice(idx, 1)[0]
-			this.form.multiStep.splice(target, 0, step)
-		},
-
 		onSave() {
 			if (!this.validateAll()) {
 				return
@@ -571,45 +438,6 @@ export default {
 .toggle-group label {
 	margin: 0;
 	font-weight: normal;
-}
-
-.step-table {
-	width: 100%;
-	border-collapse: collapse;
-}
-
-.step-table th,
-.step-table td {
-	padding: 6px;
-	border-bottom: 1px solid var(--color-border);
-	vertical-align: middle;
-}
-
-.step-table input[type='number'],
-.step-table input[type='text'] {
-	width: 100%;
-	padding: 4px;
-	border: 1px solid var(--color-border);
-	border-radius: var(--border-radius);
-}
-
-.step-table .center {
-	text-align: center;
-}
-
-.add-step {
-	margin-top: 8px;
-}
-
-.form-empty {
-	color: var(--color-text-maxcontrast);
-	font-style: italic;
-}
-
-.warning-text {
-	color: var(--color-warning);
-	margin-top: 6px;
-	font-size: 13px;
 }
 
 .service-form__actions {

@@ -4,7 +4,9 @@
   Service detail + edit page — appointment-booking member 11.
 
   View mode uses CnDetailPage with cards for the headline info, multi-step
-  composition and policies. Edit mode wraps ServiceForm.
+  composition and policies. Edit opens the schema-driven CnFormDialog, with
+  ServiceStepsEditor in its multiStep slot; creating a service (id "new")
+  still uses the full-page ServiceForm.
 
   On save we delegate to the central ObjectService and then fire a best-effort
   availability-cache invalidation for every Resource that lists this service
@@ -16,16 +18,13 @@
   @spec openspec/specs/appointment-booking/spec.md
 -->
 <template>
-	<div v-if="editing || isNew">
+	<div v-if="isNew">
 		<div class="service-detail__header">
 			<NcButton @click="onFormCancel">
 				{{ t('pipelinq', 'Back to list') }}
 			</NcButton>
-			<h2 v-if="isNew">
+			<h2>
 				{{ t('pipelinq', 'New service') }}
-			</h2>
-			<h2 v-else>
-				{{ serviceData.name || t('pipelinq', 'Service') }}
 			</h2>
 		</div>
 		<ServiceForm
@@ -46,7 +45,7 @@
 		:objectId="serviceId"
 		:sidebarProps="sidebarProps">
 		<template #actions>
-			<NcButton variant="primary" @click="editing = true">
+			<NcButton variant="primary" @click="openEditDialog">
 				{{ t('pipelinq', 'Edit') }}
 			</NcButton>
 			<NcButton variant="error" @click="showDelete = true">
@@ -178,6 +177,29 @@
 			:name="serviceData.name"
 			@confirm="confirmDelete"
 			@cancel="showDelete = false" />
+
+		<CnFormDialog
+			v-if="showEditDialog && serviceSchema"
+			ref="editDialog"
+			:schema="serviceSchema"
+			:item="serviceData"
+			:dialogTitle="t('pipelinq', 'Edit service')"
+			:excludeFields="['requiredResourceTypes']"
+			:fieldOverrides="editFieldOverrides"
+			size="large"
+			:columns="2"
+			@confirm="onEditConfirm"
+			@close="showEditDialog = false">
+			<!-- The schema form cannot edit an array of step objects. The
+			     duration is read off the dialog's live form data, with the
+			     saved value until the ref is set. -->
+			<template #field-multiStep="{ value, updateField }">
+				<ServiceStepsEditor
+					:modelValue="value || []"
+					:durationMinutes="$refs.editDialog?.formData?.durationMinutes ?? serviceData.durationMinutes"
+					@update:modelValue="(steps) => updateField('multiStep', steps)" />
+			</template>
+		</CnFormDialog>
 	</CnDetailPage>
 </template>
 
@@ -185,11 +207,13 @@
 import {
 	CnDetailCard,
 	CnDetailPage,
+	CnFormDialog,
 	useObjectSubscription,
 } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { NcButton } from '@nextcloud/vue'
 import { computed } from 'vue'
+import ServiceStepsEditor from '../../components/bookings/ServiceStepsEditor.vue'
 import DeleteServiceDialog from '../../dialogs/DeleteServiceDialog.vue'
 import ServiceForm from './ServiceForm.vue'
 import { useObjectStore } from '../../store/modules/object.js'
@@ -206,7 +230,9 @@ export default {
 		NcButton,
 		CnDetailPage,
 		CnDetailCard,
+		CnFormDialog,
 		ServiceForm,
+		ServiceStepsEditor,
 		DeleteServiceDialog,
 	},
 
@@ -242,7 +268,7 @@ export default {
 
 	data() {
 		return {
-			editing: false,
+			showEditDialog: false,
 			showDelete: false,
 		}
 	},
@@ -283,6 +309,65 @@ export default {
 			return skills.length ? skills.join(', ') : '-'
 		},
 
+		serviceSchema() {
+			return this.objectStore.getSchema('appointmentService')
+		},
+
+		/**
+		 * Labels, order and the rules ServiceForm enforced, for the edit
+		 * dialog's schema-generated fields (the schema carries no titles).
+		 *
+		 * @return {object} fieldOverrides for CnFormDialog.
+		 */
+		editFieldOverrides() {
+			return {
+				name: { label: t('pipelinq', 'Name'), order: 1 },
+				status: {
+					label: t('pipelinq', 'Status'),
+					order: 2,
+					enumLabels: {
+						draft: t('pipelinq', 'Draft'),
+						active: t('pipelinq', 'Active'),
+						archived: t('pipelinq', 'Archived'),
+					},
+				},
+
+				description: { label: t('pipelinq', 'Description'), order: 3, widget: 'textarea' },
+				durationMinutes: {
+					label: t('pipelinq', 'Duration (minutes)'),
+					order: 4,
+					validation: { minimum: 1, maximum: 1440 },
+				},
+
+				bufferBeforeMinutes: { label: t('pipelinq', 'Buffer before (min)'), order: 5 },
+				bufferAfterMinutes: { label: t('pipelinq', 'Buffer after (min)'), order: 6 },
+				price: { label: t('pipelinq', 'Price'), order: 7 },
+				currency: { label: t('pipelinq', 'Currency'), order: 8, validation: { maxLength: 3 } },
+				requiredSkills: { label: t('pipelinq', 'Required skills'), order: 9 },
+				multiStep: { label: t('pipelinq', 'Multi-step composition'), order: 10, widget: 'json' },
+				bookableOnline: { label: t('pipelinq', 'Bookable online'), order: 11 },
+				requiresDeposit: { label: t('pipelinq', 'Requires deposit'), order: 12 },
+				depositAmount: {
+					label: t('pipelinq', 'Deposit amount'),
+					order: 13,
+					visibleWhen: { field: 'requiresDeposit', truthy: true },
+				},
+
+				noShowFee: { label: t('pipelinq', 'No-show fee'), order: 14 },
+				cancellationPolicy: {
+					label: t('pipelinq', 'Cancellation policy'),
+					order: 15,
+					enumLabels: {
+						free: t('pipelinq', 'Free'),
+						'charge-deposit': t('pipelinq', 'Charge deposit'),
+						'always-charge': t('pipelinq', 'Always charge'),
+					},
+				},
+
+				cancellationHoursBefore: { label: t('pipelinq', 'Cancellation hours before'), order: 16 },
+			}
+		},
+
 		sidebarProps() {
 			const cfg = this.objectStore.objectTypeRegistry?.service || {}
 			return {
@@ -301,6 +386,36 @@ export default {
 	},
 
 	methods: {
+		async openEditDialog() {
+			await this.objectStore.fetchSchema('appointmentService')
+			if (!this.serviceSchema) {
+				showError(t('pipelinq', 'Could not load the service form.'))
+				return
+			}
+			this.showEditDialog = true
+		},
+
+		/**
+		 * Save the edit dialog's data and report the outcome back to it.
+		 *
+		 * @param {object} formData The dialog's form data.
+		 */
+		async onEditConfirm(formData) {
+			const dialog = this.$refs.editDialog
+			const saved = await this.objectStore.saveObject(
+				'appointmentService',
+				{ ...formData, id: this.serviceId },
+			)
+			if (!saved) {
+				const error = this.objectStore.getError?.('appointmentService')
+				dialog?.setResult({ error: error?.message || t('pipelinq', 'Failed to save service.') })
+				return
+			}
+			dialog?.setResult({ success: true })
+			await this.invalidateAvailability(saved.id || this.serviceId)
+			await this.objectStore.fetchObject('appointmentService', this.serviceId)
+		},
+
 		async onFormSave(formData) {
 			const saved = await this.objectStore.saveObject(
 				'appointmentService',
@@ -313,26 +428,14 @@ export default {
 			}
 			showSuccess(t('pipelinq', 'Service saved.'))
 			await this.invalidateAvailability(saved.id || formData.id)
-			if (this.isNew) {
-				this.$router.push({
-					name: 'ServiceDetail',
-					params: { id: saved.id },
-				})
-			} else {
-				await this.objectStore.fetchObject(
-					'appointmentService',
-					this.serviceId,
-				)
-				this.editing = false
-			}
+			this.$router.push({
+				name: 'ServiceDetail',
+				params: { id: saved.id },
+			})
 		},
 
 		onFormCancel() {
-			if (this.isNew) {
-				this.$router.push({ name: 'Services' })
-			} else {
-				this.editing = false
-			}
+			this.$router.push({ name: 'Services' })
 		},
 
 		async confirmDelete() {

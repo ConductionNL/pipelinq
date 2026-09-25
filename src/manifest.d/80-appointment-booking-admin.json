@@ -48,6 +48,8 @@
 				"showMassExport": false,
 				"showMassCopy": false,
 				"showMassDelete": false,
+				"selectable": false,
+				"rowRoute": "ServiceDetail",
 				"columns": [
 					"name",
 					{ "key": "durationMinutes", "label": "Duration", "format": { "style": "duration", "unit": "minutes" } },
