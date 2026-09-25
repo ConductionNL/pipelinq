@@ -76,8 +76,11 @@ import SubscriptionsSection from './components/marketing/SubscriptionsSection.vu
 import CashShiftActionsSection from './components/pos/CashShiftActionsSection.vue'
 // --- POS refund detail — declarative type:"detail" (pipelinq-pos-mdm-detail-
 //     declarative): refund fields auto-render; the manager-gated confirm/reject
-//     actions + the cross-schema "Returned items" join + totals are a section. ---
-import PosRefundActionsSection from './components/pos/PosRefundActionsSection.vue'
+//     actions are its actionsComponent, and the cross-schema "Returned items"
+//     join and the totals are grid widgets. ---
+import PosRefundHeaderActions from './components/pos/PosRefundHeaderActions.vue'
+import PosRefundItemsWidget from './components/pos/PosRefundItemsWidget.vue'
+import PosRefundTotalsWidget from './components/pos/PosRefundTotalsWidget.vue'
 // --- POS transactions. The detail page is a declarative type:"detail" page
 //     (pipelinq-pos-mdm-detail-declarative). The status-gated actions are its
 //     actionsComponent (bespoke /api/pos-transactions endpoints); the totals
@@ -635,10 +638,23 @@ const registry = {
 	// --- POS refunds / returns. The PosRefunds list + detail are now declarative
 	//     pages (pipelinq-declarative-pages-round1 / pipelinq-pos-mdm-detail-
 	//     declarative). ---
-	PosRefundActionsSection: {
-		kind: 'section',
-		component: PosRefundActionsSection,
-		_note: 'POS refund in-body section for the declarative type:"detail" PosRefundDetail page. Manager-gated Bevestigen/Afwijzen POST to bespoke /api/pos-refunds/{id}/{action} endpoints (posRefund has no x-openregister-lifecycle). Hosts the cross-schema "Returned items" JOIN (each posRefundLine enriched with its original posTransactionLine — relatedCollections renders ONE schema and cannot join) + the refund totals. Self-fetches by @objectId.',
+	PosRefundHeaderActions: {
+		kind: 'widget',
+		component: PosRefundHeaderActions,
+		...HEADER_ACTIONS_META,
+		_note: 'PosRefundDetail actionsComponent: manager-gated Confirm/Reject, which POST to bespoke /api/pos-refunds/{id}/{action} endpoints (posRefund has no x-openregister-lifecycle).',
+	},
+	PosRefundTotalsWidget: {
+		kind: 'widget',
+		component: PosRefundTotalsWidget,
+		...PANEL_WIDGET_META,
+		_note: 'PosRefundDetail grid widget: refund amount excl. VAT, VAT and total refund over the refund lines. Re-reads on cn:page:refresh.',
+	},
+	PosRefundItemsWidget: {
+		kind: 'widget',
+		component: PosRefundItemsWidget,
+		...PANEL_WIDGET_META,
+		_note: 'PosRefundDetail grid widget: the cross-schema "Returned items" JOIN (each posRefundLine enriched with its original posTransactionLine; an object-list renders ONE schema and cannot join). Re-reads on cn:page:refresh.',
 	},
 	PosRefundFormView: {
 		kind: 'page',

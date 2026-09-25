@@ -14,7 +14,7 @@
   - contactId is the page object id directly. When mounted on ClientDetail
   - (entityType 'client') there is no single contactId, so this section
   - resolves the client's linked contacts client-side (the same cross-schema
-  - join pattern already used by PosRefundActionsSection / ProjectDetail,
+  - join pattern already used by PosRefundItemsWidget / ProjectDetail,
   - since OpenRegister has no native cross-schema join) and lets the agent
   - pick which contact person to converse with via a picker.
   -

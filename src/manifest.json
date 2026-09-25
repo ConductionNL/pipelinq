@@ -3758,6 +3758,7 @@
 				"showMassExport": false,
 				"showMassCopy": false,
 				"showMassDelete": false,
+				"selectable": false,
 				"includeColumns": [
 					"reference",
 					"originalTransaction",
@@ -3824,7 +3825,7 @@
 		},
 		{
 			"id": "PosRefundDetail",
-			"_note": "POS refund record as a declarative type:detail page (pipelinq-pos-mdm-detail-declarative). The refund's flat fields (reference / originalTransaction / cashier / status / refundReason / paymentMethod / refundAmount / totalTax / confirmedAt / rejectedAt / notes / …) auto-render in the body via CnObjectDataWidget. The parts no declarative primitive can express live in one kind:'section' bodyWidget (PosRefundActionsSection, after-data): the manager-gated Bevestigen / Afwijzen actions and the 'Returned items' table. KEPT-AS-NOTE: (1) lifecycleActions is NOT wired — the actions POST to bespoke /api/pos-refunds/{id}/{action} endpoints (NOT OR /transition) and posRefund has no x-openregister-lifecycle; (2) the 'Returned items' table stays in the section because it is a CROSS-SCHEMA JOIN — each posRefundLine row is enriched with its original posTransactionLine (description + original quantity, via the line's originalLine pointer) and relatedCollections renders ONE schema and cannot resolve a column off a second schema. Missing primitives: a relatedCollections column resolved off a SECOND schema (cross-schema join lookup); the host-app-endpoint action toolbar (see PosTransactionDetail).",
+			"_note": "POS refund record as a declarative type:detail page (pipelinq-pos-mdm-detail-declarative). The refund's flat fields auto-render via CnObjectDataWidget. The manager-gated Confirm / Reject actions are the header's actionsComponent (PosRefundHeaderActions). The refund totals (PosRefundTotalsWidget) and the 'Returned items' table (PosRefundItemsWidget) are grid widgets. KEPT-AS-NOTE: (1) lifecycleActions is NOT wired: the actions POST to bespoke /api/pos-refunds/{id}/{action} endpoints (NOT OR /transition) and posRefund has no x-openregister-lifecycle; (2) 'Returned items' is a custom widget because it is a CROSS-SCHEMA JOIN: each posRefundLine row is enriched with its original posTransactionLine (description + original quantity, via the line's originalLine pointer), and an object-list renders ONE schema and cannot resolve a column off a second schema. Missing primitive: an object-list column resolved off a SECOND schema (cross-schema join lookup).",
 			"route": "/pos/refunds/:id",
 			"type": "detail",
 			"title": "Retour",
@@ -3832,7 +3833,8 @@
 				"register": "pipelinq",
 				"schema": "posRefund",
 				"documentationUrl": "https://pipelinq.conduction.nl",
-				"_note": "FINANCIAL archetype (bespoke-detail-pages). A POS refund is a credit-side ledger record, so NO comms leaves (posRefund declares no email/calendar linkedType). The body opens with the refund fields (reference, originalTransaction, cashier, status, refundReason, paymentMethod/reference, confirmed/rejected timestamps) 8-wide + an in-grid stats-block KPI card top-right (rule 2, replacing the two loose uncarded stat tiles: Refund amount / VAT, @objectId-scoped) with the related graph (original transaction, cashier) below it. The returned lines render as an object-list (posRefundLine, FK 'refund') giving the plain per-line quantities/totals; the manager-gated Bevestigen/Afwijzen actions and the CROSS-SCHEMA-JOIN 'Returned items' table (each line enriched from its original posTransactionLine) stay in the PRESERVED PosRefundActionsSection bodyWidget — that join cannot be expressed by a single-schema object-list, exactly as the section's note records. Audit-trail moves to a sidebar tab.",
+				"_note": "FINANCIAL archetype (bespoke-detail-pages). A POS refund is a credit-side ledger record, so NO comms leaves (posRefund declares no email/calendar linkedType). Two columns: the refund fields 8-wide beside the Refund amount and VAT tiles and the refund totals; the cross-schema 'Returned items' join beside Related; the plain per-line object-list (posRefundLine, FK 'refund') full width. Audit-trail is a sidebar tab.",
+				"actionsComponent": "PosRefundHeaderActions",
 				"widgets": [
 					{
 						"id": "pos-refund-data",
@@ -3880,6 +3882,18 @@
 						}
 					},
 					{
+						"id": "pos-refund-totals",
+						"type": "PosRefundTotalsWidget",
+						"title": "Refund totals",
+						"icon": "Cash"
+					},
+					{
+						"id": "pos-refund-items",
+						"type": "PosRefundItemsWidget",
+						"title": "Returned items",
+						"icon": "PackageVariant"
+					},
+					{
 						"id": "pos-refund-related",
 						"type": "related",
 						"title": "Related",
@@ -3914,7 +3928,7 @@
 						"gridX": 0,
 						"gridY": 0,
 						"gridWidth": 8,
-						"gridHeight": 4
+						"gridHeight": 7
 					},
 					{
 						"id": "2-1",
@@ -3933,28 +3947,36 @@
 						"gridHeight": 2
 					},
 					{
-						"id": "3",
-						"widgetId": "pos-refund-related",
+						"id": "2-3",
+						"widgetId": "pos-refund-totals",
 						"gridX": 8,
 						"gridY": 4,
 						"gridWidth": 4,
-						"gridHeight": 2
+						"gridHeight": 3
+					},
+					{
+						"id": "3",
+						"widgetId": "pos-refund-items",
+						"gridX": 0,
+						"gridY": 7,
+						"gridWidth": 8,
+						"gridHeight": 5
 					},
 					{
 						"id": "4",
+						"widgetId": "pos-refund-related",
+						"gridX": 8,
+						"gridY": 7,
+						"gridWidth": 4,
+						"gridHeight": 5
+					},
+					{
+						"id": "5",
 						"widgetId": "pos-refund-lines",
 						"gridX": 0,
-						"gridY": 6,
+						"gridY": 12,
 						"gridWidth": 12,
-						"gridHeight": 3
-					}
-				],
-				"bodyWidgets": [
-					{
-						"id": "pos-refund-actions",
-						"component": "PosRefundActionsSection",
-						"placement": "after-data",
-						"props": { "refundId": "@objectId" }
+						"gridHeight": 4
 					}
 				],
 				"sidebar": {
