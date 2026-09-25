@@ -3615,37 +3615,37 @@
 						"gridX": 0,
 						"gridY": 0,
 						"gridWidth": 8,
-						"gridHeight": 4
+						"gridHeight": 6
 					},
 					{
-						"id": "2",
-						"widgetId": "product-related",
+						"id": "5",
+						"widgetId": "product-kpis",
 						"gridX": 8,
 						"gridY": 0,
 						"gridWidth": 4,
 						"gridHeight": 2
 					},
 					{
-						"id": "5",
-						"widgetId": "product-kpis",
+						"id": "2",
+						"widgetId": "product-related",
 						"gridX": 8,
 						"gridY": 2,
 						"gridWidth": 4,
-						"gridHeight": 2
+						"gridHeight": 4
 					},
 					{
 						"id": "3",
 						"widgetId": "product-lines",
 						"gridX": 0,
-						"gridY": 4,
+						"gridY": 6,
 						"gridWidth": 12,
-						"gridHeight": 4
+						"gridHeight": 5
 					},
 					{
 						"id": "4",
 						"widgetId": "product-files",
 						"gridX": 0,
-						"gridY": 8,
+						"gridY": 11,
 						"gridWidth": 12,
 						"gridHeight": 3
 					}
