@@ -15,9 +15,9 @@ trees visually using AND/OR logic with leaf predicates, validate them, and
 show a live size estimate before commit.
 
 `src/components/SegmentBuilder.vue` and `src/components/SegmentRuleNode.vue`
-are now mounted by `SegmentFormView` (`src/views/segments/SegmentForm.vue`),
-reachable at `/segments/new` (`SegmentNew`) and `/segments/:id`
-(`SegmentEdit`), both linked from the Marketing menu's Segments entry. The
+are now mounted by `SegmentFormDialog` (`src/dialogs/SegmentFormDialog.vue`),
+the modal the Segments index page opens from its Add action and its row Edit
+action. The
 `@e2e exclude` this requirement previously carried is removed:
 `tests/e2e/spec-coverage/marketing.spec.ts` now exercises the visual rule
 tree and live-estimate scenarios through the mounted UI.
@@ -25,8 +25,8 @@ tree and live-estimate scenarios through the mounted UI.
 #### Scenario: Visual rule tree with live validation
 
 - **GIVEN** a marketer opens SegmentBuilder for entityType "contact"
-- **WHEN** they add a predicate with an invalid operator for the field type
-- **THEN** the component SHALL display a field-level error and disable save until resolved
+- **WHEN** a predicate is unfinished, or the backend validator rejects it
+- **THEN** the component SHALL disable save until resolved, and SHALL display a rejection as an error on the predicate it names
 
 #### Scenario: Live size estimate shown
 
@@ -40,10 +40,10 @@ tree and live-estimate scenarios through the mounted UI.
 
 The Marketing menu group SHALL list Segments and Templates ahead of Blasts
 and Blast performance. The Segments page SHALL be a declarative `type:
-"index"` page over the `segment` schema whose Add action and row action both
-navigate to a custom `SegmentFormView` page (`SegmentNew` / `SegmentEdit`,
-one component, edit mode driven by a route `:id` param) that mounts
-SegmentBuilder. The Templates page SHALL be a declarative `type: "index"`
+"index"` page over the `segment` schema whose Add action and row Edit action
+both open `SegmentFormDialog`, a modal in the index page's `form-dialog` slot
+that mounts SegmentBuilder and saves through `POST` / `PATCH /api/segments`.
+The index has no row selection, and a row click opens nothing. The Templates page SHALL be a declarative `type: "index"`
 page over the `campaignTemplate` schema whose Add action and row action both
 navigate to a custom `TemplateFormView` page (`TemplateNew` / `TemplateEdit`)
 whose fields are conditional on the selected channel (email adds subject,
@@ -58,7 +58,7 @@ sender, reply-to and footer fields; SMS does not).
 
 - **GIVEN** a marketer on the Segments index page
 - **WHEN** they choose "New segment"
-- **THEN** they SHALL land on `SegmentFormView`, choose an audience (contact or customer), compose a rule tree with SegmentBuilder, and SHALL NOT be able to save until the tree is valid
+- **THEN** a `SegmentFormDialog` modal SHALL open in which they choose an audience (contact or customer), compose a rule tree with SegmentBuilder, and SHALL NOT be able to save until the tree is valid
 
 #### Scenario: Template save surfaces a compliance error as a field error
 

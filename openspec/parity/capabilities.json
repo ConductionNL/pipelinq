@@ -1797,7 +1797,7 @@
 			"odoo-crm": "yes",
 			"kiss": "no",
 			"provider": "pipelinq",
-			"providerHow": "read in lib/Service/SegmentService.php:242 and src/views/segments/SegmentForm.vue",
+			"providerHow": "read in lib/Service/SegmentService.php:242 and src/dialogs/SegmentFormDialog.vue",
 			"feature": "Marketing",
 			"featureConfidence": "high",
 			"built": {

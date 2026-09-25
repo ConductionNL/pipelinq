@@ -146,6 +146,9 @@ import XWikiWidgetComponent from './components/xwiki/XWikiWidget.vue'
 import ClientCreateDialog from './dialogs/ClientCreateDialog.vue'
 import LeadCreateDialog from './dialogs/LeadCreateDialog.vue'
 import RequestCreateDialog from './dialogs/RequestCreateDialog.vue'
+// --- Segment create / edit (marketing-segments-ui-repair): the Segments
+//     index page's form-dialog slot, hosting SegmentBuilder. ---
+import SegmentFormDialog from './dialogs/SegmentFormDialog.vue'
 // --- BRP Monitor (bsn-validatie-en-brp-lookup): admin tile + detailed report
 //     view aggregating the BrpMonitorJob output (lookups / cache-hits / errors /
 //     avg response time) and the mTLS client-certificate expiry countdown. ---
@@ -156,7 +159,7 @@ import PosCustomerSettingsView from './views/admin/PosCustomerSettings.vue'
 //     The wizard embeds the missing-consent modal (own file under modals/);
 //     the monitor polls /api/blasts/:id every 2s and stops on terminal status.
 //     SegmentBuilder + SegmentRuleNode live under components/, mounted by
-//     SegmentFormView below (marketing-segments-ui-repair, pipelinq#773). ---
+//     SegmentFormDialog above (marketing-segments-ui-repair, pipelinq#773). ---
 import BlastFormView from './views/blasts/BlastForm.vue'
 import BlastMonitorView from './views/blasts/BlastMonitor.vue'
 import BlastPerformanceDashboardView from './views/blasts/PerformanceDashboard.vue'
@@ -245,11 +248,8 @@ import LeadListView from './views/leads/LeadList.vue'
 import LoyaltyAccountCreationView from './views/loyalty/LoyaltyAccountCreation.vue'
 // --- Loyalty program (loyalty-program). ---
 import LoyaltyReportingView from './views/loyalty/LoyaltyReporting.vue'
-// --- Marketing segments + templates (marketing-segments-ui-repair): the
-//     Segments list is a declarative type:"index" page; SegmentFormView
-//     mounts SegmentBuilder for both SegmentNew and SegmentEdit (one
-//     component, edit mode driven by a route :id param). Templates follows
-//     the same index+form shape over the existing /api/templates endpoints. ---
+// --- Marketing templates (marketing-segments-ui-repair): a declarative
+//     type:"index" list plus a form page over the /api/templates endpoints. ---
 // --- Articles new/edit route wrapper (marketing-article-hub): thin host for
 //     ArticleEditModal, the one editing surface the change owns. Matches the
 //     SegmentNew / TemplateNew / BlastNew convention below. ---
@@ -296,7 +296,6 @@ import WinLossWidget from './views/rapportage/WinLossWidget.vue'
 //     availability endpoint and hide when no installed app implements the
 //     kind — same self-fetching-by-props pattern as the sections above. ---
 import RequestConversionSection from './views/requests/RequestConversionSection.vue'
-import SegmentFormView from './views/segments/SegmentForm.vue'
 // --- Admin managers (lib gap: no pipeline-designer / settings rich-section type). ---
 import PipelineManagerView from './views/settings/PipelineManager.vue'
 import SocialAccountsView from './views/social/SocialAccountsView.vue'
@@ -970,11 +969,6 @@ const registry = {
 		component: SearchQueriesView,
 		_note: 'Search Console top queries (marketing-campaign-attribution): one row per query with clicks and impressions summed and an impression-weighted position over a selectable window, from GET /api/marketing/search-queries; empty state points at the Marketing traffic settings. Custom because the page is an aggregation, which no declarative index primitive expresses.',
 	},
-	SegmentFormView: {
-		kind: 'page',
-		component: SegmentFormView,
-		_note: 'Segment create/edit (marketing-segments-ui-repair): mounts SegmentBuilder + SegmentRuleNode (previously imported by nothing, pipelinq#773) with a name/description/audience header and live validation gating Save. One component serves both SegmentNew and SegmentEdit routes — edit mode is a route :id param, matching the PosTransactionForm convention. Custom rather than declarative: SegmentBuilder is a recursive rule-tree editor with a debounced backend preview call, which no declarative form primitive expresses.',
-	},
 	TemplateFormView: {
 		kind: 'page',
 		component: TemplateFormView,
@@ -1095,6 +1089,15 @@ const registry = {
 		component: ClientCreateDialog,
 		propsSchema: null,
 		_note: 'New Client, contact-first via POST /api/contacts-sync/create. Also the Clients index Add button (createModal).',
+	},
+
+	// The Segments index page's form-dialog slot (page.slots), not a
+	// header-action modal: CnIndexPage mounts it for Add and the row Edit.
+	SegmentFormDialog: {
+		kind: 'modal',
+		component: SegmentFormDialog,
+		propsSchema: null,
+		_note: 'Segment create/edit, mounted in the Segments index page\'s form-dialog slot. Custom rather than the built-in form: SegmentBuilder is a recursive rule-tree editor with a debounced preview call, and saving must go through POST/PATCH /api/segments, the only path that validates the rules.',
 	},
 
 	// Contact-aware create for the generic Add button on the Clients index page.

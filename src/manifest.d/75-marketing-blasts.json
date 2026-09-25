@@ -39,18 +39,21 @@
 	"pages": [
 		{
 			"id": "Segments",
-			"_note": "Segment list as a declarative type:index page (marketing-segments-ui-repair, pipelinq#773). Row view and Add both navigate to SegmentFormView, which mounts SegmentBuilder — a recursive rule-tree editor, not a declarative form.",
+			"_note": "Segment list as a declarative type:index page (marketing-segments-ui-repair, pipelinq#773). Add and the row Edit action open SegmentFormDialog in the form-dialog slot, which mounts SegmentBuilder, a recursive rule-tree editor rather than a declarative form. Rows have no detail page, so selection is off and a row click does nothing.",
 			"route": "/segments",
 			"type": "index",
 			"title": "Segments",
+			"slots": {
+				"form-dialog": "SegmentFormDialog"
+			},
 			"config": {
 				"register": "pipelinq",
 				"schema": "segment",
 				"documentationUrl": "https://pipelinq.conduction.nl",
-				"showAdd": false,
-				"showFormDialog": false,
+				"selectable": false,
+				"addLabel": "New segment",
 				"showViewAction": false,
-				"showEditAction": false,
+				"showEditAction": true,
 				"showCopyAction": false,
 				"showDeleteAction": false,
 				"showMassImport": false,
@@ -62,49 +65,7 @@
 					"entityType",
 					"estimatedSize",
 					"updatedAt"
-				],
-				"headerActions": [
-					{
-						"id": "create",
-						"label": "New segment",
-						"icon": "Plus",
-						"handler": "navigate",
-						"route": "SegmentNew"
-					}
-				],
-				"actions": [
-					{
-						"id": "view",
-						"label": "Edit rules",
-						"icon": "PencilOutline",
-						"handler": "navigate",
-						"route": "SegmentEdit"
-					}
 				]
-			}
-		},
-		{
-			"id": "SegmentNew",
-			"route": "/segments/new",
-			"type": "custom",
-			"title": "New segment",
-			"component": "SegmentFormView",
-			"_note": "Mounts SegmentBuilder (marketing-segments-ui-repair): recursive AND/OR rule-tree editing with a debounced POST /api/segments/preview call driving both live validation and the member-size estimate. A declarative form cannot host a recursive sub-tree editor or a debounced cross-field backend call.",
-			"config": {
-				"register": "pipelinq",
-				"schema": "segment"
-			}
-		},
-		{
-			"id": "SegmentEdit",
-			"route": "/segments/:id",
-			"type": "custom",
-			"title": "Edit segment",
-			"component": "SegmentFormView",
-			"_note": "Same SegmentFormView as SegmentNew; edit mode is driven by the route :id param (PosTransactionForm convention). Loads the existing Segment, then re-validates the rule tree the same way on every change.",
-			"config": {
-				"register": "pipelinq",
-				"schema": "segment"
 			}
 		},
 		{

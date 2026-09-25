@@ -1,19 +1,31 @@
 <!-- SPDX-License-Identifier: EUPL-1.2 -->
 <!-- SPDX-FileCopyrightText: 2026 Conduction B.V. -->
+<!--
+  - The segment rule editor: an AND/OR tree of conditions (SegmentRuleNode),
+  - validated and sized by a debounced POST /api/segments/preview.
+  -
+  - Unfinished conditions are caught here before anything is sent, so a row
+  - the user has only just added is not reported as an error. Once every
+  - condition is filled in, the server's verdict decides validity, and its
+  - error is shown on the row its path points at.
+  -->
 <template>
 	<div class="segment-builder">
-		<div class="builder-header">
-			<h3 class="builder-title">
-				{{ t('pipelinq', 'Segment rules') }}
+		<div class="segment-builder__header">
+			<h3 class="segment-builder__title">
+				{{ t('pipelinq', 'Rules') }}
 			</h3>
-			<div class="builder-estimate" role="status" aria-live="polite">
-				<NcLoadingIcon v-if="estimating" :size="20" />
-				<span v-else-if="estimateError" class="builder-estimate__error">
-					{{ t('pipelinq', 'Could not estimate audience size.') }}
-				</span>
-				<span v-else>
+			<div class="segment-builder__estimate" role="status" aria-live="polite">
+				<template v-if="status === 'checking'">
+					<NcLoadingIcon :size="16" />
+					{{ t('pipelinq', 'Checking rules…') }}
+				</template>
+				<span v-else-if="status === 'valid'" class="segment-builder__count">
 					{{ t('pipelinq', 'Estimated members:') }}
-					<strong>{{ estimateLabel }}</strong>
+					<strong>{{ estimatedSize }}</strong>
+				</span>
+				<span v-else-if="status === 'incomplete'">
+					{{ t('pipelinq', 'Complete every condition to see the estimate.') }}
 				</span>
 			</div>
 		</div>
@@ -21,40 +33,75 @@
 		<SegmentRuleNode
 			:node="tree"
 			:depth="0"
-			:entityType="entityType"
 			:fieldOptions="fieldOptions"
 			:errors="errors"
-			@update:node="onTreeUpdate"
-			@validateLeaf="validateLeaf" />
+			@update:node="onTreeUpdate" />
 
-		<p v-if="validationError" class="builder-error" role="alert">
-			{{ validationError }}
-		</p>
+		<NcNoteCard v-if="generalError" type="error" class="segment-builder__error">
+			{{ generalError }}
+		</NcNoteCard>
 	</div>
 </template>
 
 <script>
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
-import { NcLoadingIcon } from '@nextcloud/vue'
+import { NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
 import SegmentRuleNode from './SegmentRuleNode.vue'
 
-const DEBOUNCE_ESTIMATE_MS = 400
-const DEBOUNCE_VALIDATE_MS = 250
+const PREVIEW_DEBOUNCE_MS = 400
+
+// The validator prefixes its message with the failing node's path, e.g.
+// `$.children[1].children[0]: field "x" is not declared on the entity schema.`
+const ERROR_PATH = /^(\$(?:\.children\[\d+\])*):\s*(.*)$/s
 
 /**
- * Default rule tree shape used when modelValue is empty.
- *
- * @return {object} An empty AND-group with no children.
+ * @return {object} An empty AND group.
  */
 function emptyTree() {
 	return { type: 'AND', children: [] }
+}
+
+/**
+ * @param {object} node A rule tree node.
+ * @return {object} A deep copy, or an empty tree for anything unusable.
+ */
+function cloneTree(node) {
+	if (!node || typeof node !== 'object') {
+		return emptyTree()
+	}
+	try {
+		return JSON.parse(JSON.stringify(node))
+	} catch {
+		return emptyTree()
+	}
+}
+
+/**
+ * @param {object} node A rule tree node.
+ * @return {{leaves: number, unfinished: number}} Its condition count, and how
+ *   many conditions or groups are not filled in yet.
+ */
+function tally(node) {
+	if (Array.isArray(node?.children)) {
+		if (node.children.length === 0) {
+			return { leaves: 0, unfinished: 1 }
+		}
+		return node.children.reduce((sum, child) => {
+			const sub = tally(child)
+			return { leaves: sum.leaves + sub.leaves, unfinished: sum.unfinished + sub.unfinished }
+		}, { leaves: 0, unfinished: 0 })
+	}
+	const noValue = node?.value === '' || node?.value === null || node?.value === undefined
+	const unfinished = !node?.field || !node?.operator || noValue
+	return { leaves: 1, unfinished: unfinished ? 1 : 0 }
 }
 
 export default {
 	name: 'SegmentBuilder',
 	components: {
 		NcLoadingIcon,
+		NcNoteCard,
 		SegmentRuleNode,
 	},
 
@@ -76,243 +123,127 @@ export default {
 		},
 	},
 
-	emits: ['update:modelValue', 'validityChange'],
+	emits: ['update:modelValue', 'validityChange', 'statusChange'],
+
 	data() {
 		return {
-			tree: this.cloneTree(this.modelValue),
-			estimating: false,
-			estimateError: false,
+			tree: cloneTree(this.modelValue),
+			// empty | incomplete | checking | valid | invalid | failed
+			status: 'empty',
 			estimatedSize: null,
 			errors: {},
-			validationError: '',
-			estimateTimer: null,
-			validateTimer: null,
+			generalError: '',
+			previewTimer: null,
+			// Only the newest request may set the result; an older one can
+			// come back later.
+			requestSeq: 0,
 		}
-	},
-
-	computed: {
-		/**
-		 * Renderable estimate label for the audience size.
-		 *
-		 * @return {string} Either the numeric estimate or a dash.
-		 */
-		estimateLabel() {
-			if (this.estimatedSize === null) {
-				return '—'
-			}
-			return String(this.estimatedSize)
-		},
-
-		/**
-		 * Whether the current rule tree has any leaf condition.
-		 *
-		 * @return {boolean} True when at least one leaf is present.
-		 */
-		hasAnyLeaf() {
-			return this.countLeaves(this.tree) > 0
-		},
 	},
 
 	watch: {
-		modelValue: {
-			handler(next) {
-				// Avoid loops: only re-clone if reference actually differs.
-				if (next !== this.tree) {
-					this.tree = this.cloneTree(next)
-				}
-			},
-
-			deep: true,
+		modelValue(next) {
+			if (next !== this.tree && JSON.stringify(next) !== JSON.stringify(this.tree)) {
+				this.tree = cloneTree(next)
+				this.evaluate()
+			}
 		},
+
+		status(next) {
+			this.$emit('statusChange', next)
+			this.$emit('validityChange', next === 'valid')
+		},
+	},
+
+	mounted() {
+		this.$emit('statusChange', this.status)
+		this.evaluate()
 	},
 
 	beforeUnmount() {
-		if (this.estimateTimer) {
-			clearTimeout(this.estimateTimer)
-		}
-		if (this.validateTimer) {
-			clearTimeout(this.validateTimer)
-		}
+		clearTimeout(this.previewTimer)
 	},
 
 	methods: {
-		/**
-		 * Deep clone the rule tree so parent props remain immutable.
-		 *
-		 * @param {object} node The node to clone.
-		 * @return {object} A structural copy.
-		 * @spec exclude structural deep-clone helper with no behaviour of its own. The rule
-		 *   tree it copies is specified, the copying is not
-		 */
-		cloneTree(node) {
-			if (!node || typeof node !== 'object') {
-				return emptyTree()
-			}
-			try {
-				return JSON.parse(JSON.stringify(node))
-			} catch {
-				return emptyTree()
-			}
-		},
-
-		/**
-		 * Recursively count leaf predicates in a node tree.
-		 *
-		 * @param {object} node The tree (or sub-tree) node.
-		 * @return {number} Leaf count.
-		 */
-		countLeaves(node) {
-			if (!node) {
-				return 0
-			}
-			if (Array.isArray(node.children)) {
-				return node.children.reduce(
-					(sum, child) => sum + this.countLeaves(child),
-					0,
-				)
-			}
-			return node.field ? 1 : 0
-		},
-
-		/**
-		 * Handle a tree update from the recursive node component.
-		 * Emits update:modelValue and schedules estimate + validate calls.
-		 *
-		 * @param {object} updated The new tree value.
-		 * @spec openspec/specs/marketing-ui/spec.md#requirement-segment-builder-ui-composes-rule-trees
-		 */
 		onTreeUpdate(updated) {
 			this.tree = updated
-			this.$emit('update:modelValue', this.cloneTree(updated))
-			this.scheduleEstimate()
-			this.scheduleValidate()
+			this.$emit('update:modelValue', cloneTree(updated))
+			this.evaluate()
 		},
 
 		/**
-		 * Debounce a backend size-estimate call.
+		 * Settle what can be told locally, and schedule a preview only for a
+		 * tree whose every condition is filled in.
 		 *
-		 * @spec openspec/specs/marketing-ui/spec.md#scenario-live-size-estimate-shown
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-segment-builder-ui-composes-rule-trees
 		 */
-		scheduleEstimate() {
-			if (this.estimateTimer) {
-				clearTimeout(this.estimateTimer)
-			}
-			if (!this.hasAnyLeaf) {
-				this.estimatedSize = 0
-				this.estimating = false
-				this.estimateError = false
-				return
-			}
-			this.estimating = true
-			this.estimateError = false
-			this.estimateTimer = setTimeout(
-				() => this.runEstimate(),
-				DEBOUNCE_ESTIMATE_MS,
-			)
-		},
-
-		/**
-		 * Perform the size estimate by posting the current rules to the
-		 * segment-preview endpoint. The endpoint accepts an inline rule
-		 * payload so the segment does not need to be persisted yet, and
-		 * validates before counting -- see runPreview() below, shared with
-		 * runValidate() so both debounced calls hit the same endpoint.
-		 *
-		 * @spec openspec/specs/marketing-ui/spec.md#scenario-live-size-estimate-shown
-		 */
-		async runEstimate() {
-			const result = await this.runPreview()
-			if (result === null) {
-				this.estimateError = true
-				this.estimating = false
-				return
-			}
-			this.estimatedSize = result.valid ? result.estimatedSize : 0
-			this.estimateError = false
-			this.estimating = false
-		},
-
-		/**
-		 * Debounce a backend rule-tree validate call.
-		 *
-		 * @spec openspec/specs/marketing-ui/spec.md#scenario-visual-rule-tree-with-live-validation
-		 */
-		scheduleValidate() {
-			if (this.validateTimer) {
-				clearTimeout(this.validateTimer)
-			}
-			this.validateTimer = setTimeout(
-				() => this.runValidate(),
-				DEBOUNCE_VALIDATE_MS,
-			)
-		},
-
-		/**
-		 * Validate the current rule tree against the server-side SegmentService
-		 * validator via the shared runPreview() call. Errors are stored
-		 * per-path so leaf rows can render their field-level message (the
-		 * backend currently returns one error string per request; per-leaf
-		 * `fieldErrors` is a forward-compatible shape, empty until the
-		 * service starts returning it).
-		 *
-		 * @spec openspec/specs/marketing-ui/spec.md#scenario-visual-rule-tree-with-live-validation
-		 */
-		async runValidate() {
-			this.validationError = ''
+		evaluate() {
+			clearTimeout(this.previewTimer)
+			this.requestSeq++
 			this.errors = {}
-			if (!this.hasAnyLeaf) {
-				this.$emit('validityChange', false)
+			this.generalError = ''
+			this.estimatedSize = null
+
+			const { leaves, unfinished } = tally(this.tree)
+			if (leaves === 0 && this.tree.children?.length === 0) {
+				this.status = 'empty'
 				return
 			}
-			const result = await this.runPreview()
-			if (result === null) {
-				this.validationError = this.t(
-					'pipelinq',
-					'Could not validate rules.',
-				)
-				this.$emit('validityChange', false)
+			if (unfinished > 0) {
+				this.status = 'incomplete'
 				return
 			}
-			if (result.valid === false) {
-				this.validationError =
-					result.error || this.t('pipelinq', 'Invalid rules.')
-				this.errors = result.fieldErrors || {}
-				this.$emit('validityChange', false)
-			} else {
-				this.$emit('validityChange', true)
-			}
+			this.status = 'checking'
+			this.previewTimer = setTimeout(() => this.runPreview(), PREVIEW_DEBOUNCE_MS)
 		},
 
 		/**
-		 * Shared preview call used by both runEstimate() and
-		 * runValidate(): posts the current (unsaved) rule tree to the
-		 * segment-preview endpoint, which validates then estimates in one
-		 * request (`SegmentService.previewRulePayload()`).
+		 * Validate and size the unsaved tree in one request.
 		 *
-		 * @return {Promise<object|null>} `{valid, error, estimatedSize}`, or
-		 *   null when the request itself failed (network error, auth).
-		 *
-		 * @spec openspec/specs/marketing-api/spec.md#scenario-segment-create-validates-rule-tree
+		 * @spec openspec/specs/marketing-ui/spec.md#scenario-live-size-estimate-shown
+		 * @spec openspec/specs/marketing-ui/spec.md#scenario-visual-rule-tree-with-live-validation
 		 */
 		async runPreview() {
+			const seq = this.requestSeq
+			let data
 			try {
-				const url = generateUrl('/apps/pipelinq/api/segments/preview')
-				const { data } = await axios.post(url, {
+				const response = await axios.post(generateUrl('/apps/pipelinq/api/segments/preview'), {
 					entityType: this.entityType,
 					rules: this.tree,
 				})
-				return data
+				data = response.data
 			} catch {
-				return null
+				data = null
 			}
+			if (seq !== this.requestSeq) {
+				return
+			}
+			if (!data) {
+				this.status = 'failed'
+				this.generalError = this.t('pipelinq', 'Could not validate rules.')
+				return
+			}
+			if (data.valid === false) {
+				this.status = 'invalid'
+				this.placeError(data.error || this.t('pipelinq', 'Invalid rules.'))
+				return
+			}
+			this.estimatedSize = data.estimatedSize ?? 0
+			this.status = 'valid'
 		},
 
 		/**
-		 * Trigger an immediate validate call when a leaf field/operator/value
-		 * blur event bubbles up from the recursive node component.
+		 * Show the validator's message on the node its path names, or under
+		 * the rules when the path is missing or points nowhere shown.
+		 *
+		 * @param {string} message The validator's error.
 		 */
-		validateLeaf() {
-			this.scheduleValidate()
+		placeError(message) {
+			const match = ERROR_PATH.exec(message)
+			if (match && match[1] !== '$') {
+				this.errors = { [match[1]]: match[2] }
+				return
+			}
+			this.generalError = match ? match[2] : message
 		},
 	},
 }
@@ -325,33 +256,31 @@ export default {
 	gap: 12px;
 }
 
-.builder-header {
+.segment-builder__header {
 	display: flex;
+	flex-wrap: wrap;
 	align-items: center;
 	justify-content: space-between;
-	gap: 12px;
+	gap: 8px 12px;
 }
 
-.builder-title {
+.segment-builder__title {
 	margin: 0;
-	font-size: 1.05em;
-	color: var(--color-text-maxcontrast);
+	font-size: 1.1em;
 }
 
-.builder-estimate {
+.segment-builder__estimate {
 	display: inline-flex;
 	align-items: center;
 	gap: 6px;
-	color: var(--color-text-lighter);
+	color: var(--color-text-maxcontrast);
 }
 
-.builder-estimate__error {
-	color: var(--color-error);
+.segment-builder__count strong {
+	color: var(--color-main-text);
 }
 
-.builder-error {
-	color: var(--color-error);
-	font-weight: 600;
-	margin: 4px 0 0;
+.segment-builder__error {
+	margin: 0;
 }
 </style>
