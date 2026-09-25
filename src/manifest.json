@@ -4364,6 +4364,7 @@
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"_note": "FINANCIAL archetype (bespoke-detail-pages). A POS transaction is a receipt/ledger record, so deliberately NO comms leaves (posTransaction declares no email/calendar linkedType). The money sits top-right beside the fields so a cashier or auditor reads it first, and the audit trail is a sidebar tab, the home for the immutable change log of a financial record.",
 				"actionsComponent": "PosTransactionHeaderActions",
+				"excludeFields": ["taxBreakdown", "invoiceBreakdown"],
 				"widgets": [
 					{
 						"id": "pos-tx-data",
