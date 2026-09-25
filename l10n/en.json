@@ -6855,6 +6855,7 @@
         "The sender's physical address every email must carry (CAN-SPAM). Required for email templates. It is placed at {{physical_address}}, {{sender_address}}, {{company_address}} or {{address_block}} in the body, or appended when the body has none.": "The sender's physical address every email must carry (CAN-SPAM). Required for email templates. It is placed at {{physical_address}}, {{sender_address}}, {{company_address}} or {{address_block}} in the body, or appended when the body has none.",
         "Physical address": "Physical address",
         "Required for email: the postal address every mail must carry.": "Required for email: the postal address every mail must carry.",
-        "Include {{unsubscribe_link}}. Put {{physical_address}} where the address below should appear; without it the address goes at the end.": "Include {{unsubscribe_link}}. Put {{physical_address}} where the address below should appear; without it the address goes at the end."
+        "Include {{unsubscribe_link}}. Put {{physical_address}} where the address below should appear; without it the address goes at the end.": "Include {{unsubscribe_link}}. Put {{physical_address}} where the address below should appear; without it the address goes at the end.",
+        "The image shown above the article: a path in Nextcloud Files, an absolute URL to one hosted elsewhere, or an image the app ships, written app:<app>/<file> (a file in that app's img/ folder, as the seed articles use).": "The image shown above the article: a path in Nextcloud Files, an absolute URL to one hosted elsewhere, or an image the app ships, written app:<app>/<file> (a file in that app's img/ folder, as the seed articles use)."
     }
 }

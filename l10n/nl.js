@@ -6752,7 +6752,8 @@ OC.L10N.register(
         "The sender's physical address every email must carry (CAN-SPAM). Required for email templates. It is placed at {{physical_address}}, {{sender_address}}, {{company_address}} or {{address_block}} in the body, or appended when the body has none.": "Het fysieke adres van de afzender dat elke e-mail moet bevatten (CAN-SPAM). Verplicht voor e-mailsjablonen. Het komt op de plek van {{physical_address}}, {{sender_address}}, {{company_address}} of {{address_block}} in de tekst, of aan het eind als de tekst daar geen heeft.",
         "Physical address": "Fysiek adres",
         "Required for email: the postal address every mail must carry.": "Verplicht voor e-mail: het postadres dat elke mail moet bevatten.",
-        "Include {{unsubscribe_link}}. Put {{physical_address}} where the address below should appear; without it the address goes at the end.": "Neem {{unsubscribe_link}} op. Zet {{physical_address}} waar het adres hieronder moet komen; zonder die markering komt het adres aan het eind."
+        "Include {{unsubscribe_link}}. Put {{physical_address}} where the address below should appear; without it the address goes at the end.": "Neem {{unsubscribe_link}} op. Zet {{physical_address}} waar het adres hieronder moet komen; zonder die markering komt het adres aan het eind.",
+        "The image shown above the article: a path in Nextcloud Files, an absolute URL to one hosted elsewhere, or an image the app ships, written app:<app>/<file> (a file in that app's img/ folder, as the seed articles use).": "De afbeelding boven het artikel: een pad in Nextcloud Files, een absolute URL naar een afbeelding elders, of een afbeelding die de app meelevert, geschreven als app:<app>/<file> (een bestand in de img/-map van die app, zoals de voorbeeldartikelen gebruiken)."
     },
     "nplurals=2; plural=(n != 1);"
 )

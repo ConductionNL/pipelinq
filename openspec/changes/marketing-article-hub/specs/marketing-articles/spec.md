@@ -98,6 +98,16 @@ An article SHALL be able to answer which campaign templates, mailings and blasts
 
 The Marketing menu SHALL carry an Articles entry between Templates and Lists. The index SHALL open as a table, and SHALL offer a cards view that shows each article as a card with its hero image, its title, its summary and a status chip. The detail page SHALL render the markdown body as formatted text in a framed preview of the article, show the hero image, list where the article has been used, and open an editor in which the body is written with a markdown editor and the hero image is picked from Nextcloud Files.
 
+The hero image SHALL be one of three forms: a path in Nextcloud Files, shown through Nextcloud's preview endpoint; an absolute `http(s)` URL, used as it is; or an image the app ships, written `app:<app>/<file>` and resolved at render time by the library's `resolveImageUrl()` to that file in the app's `img/` folder, wherever the app is installed. The seeded demo articles use the third form with images in `img/marketing/`, so they show for every user without anything having to be put into anyone's Files.
+
+#### Scenario: A seeded article shows its bundled hero image
+
+@e2e exclude whether the browser loads the resolved image is not observable from the page without asserting an install-specific URL. tests/utils/resolveImageUrl.spec.js in nextcloud-vue asserts the resolution hands the app and file to Nextcloud's imagePath().
+
+- **GIVEN** a seeded article whose `heroImage` is an `app:pipelinq/marketing/<file>` reference
+- **WHEN** a marketer opens it, or the Articles cards view
+- **THEN** the hero image SHALL load from the app's own `img/marketing/` folder
+
 #### Scenario: The Articles page lists the seeded articles
 
 - **GIVEN** a fresh instance carrying the seeded demo articles

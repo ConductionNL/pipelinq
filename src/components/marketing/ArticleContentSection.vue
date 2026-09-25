@@ -135,7 +135,7 @@
 </template>
 
 <script>
-import { cnRenderMarkdown } from '@conduction/nextcloud-vue'
+import { cnRenderMarkdown, resolveImageUrl } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
 import { emit, subscribe, unsubscribe } from '@nextcloud/event-bus'
 import { generateUrl } from '@nextcloud/router'
@@ -257,9 +257,11 @@ export default {
 		},
 
 		/**
-		 * A Files path renders through Nextcloud's legacy `file=`-addressed
-		 * preview endpoint; an absolute URL (an image hosted elsewhere) is
-		 * used as-is.
+		 * An absolute URL (an image hosted elsewhere) is used as-is, and an
+		 * `app:<app>/<file>` reference (an image the app ships, as the seed
+		 * articles use) resolves through the library's resolveImageUrl().
+		 * Anything else is a Files path, rendered through Nextcloud's
+		 * `file=`-addressed preview endpoint.
 		 *
 		 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
 		 * @return {string} The hero image URL, or an empty string.
@@ -271,6 +273,9 @@ export default {
 			}
 			if (/^https?:\/\//.test(path)) {
 				return path
+			}
+			if (path.startsWith('app:')) {
+				return resolveImageUrl(path)
 			}
 			return `${generateUrl('/core/preview.png')}?file=${encodeURIComponent(path)}&x=1200&y=630&a=1`
 		},

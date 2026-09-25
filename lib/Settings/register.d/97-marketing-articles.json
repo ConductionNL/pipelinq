@@ -91,7 +91,7 @@
           },
           "heroImage": {
             "type": "string",
-            "description": "Path in Nextcloud Files to the image shown above the article, or an absolute URL to one hosted elsewhere.",
+            "description": "The image shown above the article: a path in Nextcloud Files, an absolute URL to one hosted elsewhere, or an image the app ships, written app:<app>/<file> (a file in that app's img/ folder, as the seed articles use).",
             "maxLength": 2048,
             "title": "Hero Image"
           },
@@ -214,7 +214,7 @@
         "slug": "openregister-3-0-is-uit",
         "summary": "Schema's met een levenscyclus, berekende velden en zoekopdrachten die binnen een seconde klaar zijn. Dit is wat er verandert en wat je moet doen.",
         "body": "## Wat er nieuw is\n\nOpenRegister 3.0 brengt drie dingen die je meteen merkt.\n\n- **Schema's met een levenscyclus.** Je legt in het schema vast welke statusovergangen mogen, en de applicatie hoeft die regel niet nog een keer te schrijven.\n- **Berekende velden.** Een veld dat uit andere objecten volgt wordt aan de serverkant bijgehouden, dus een overzicht hoeft niet meer te rekenen.\n- **Snellere zoekopdrachten.** Een register met een miljoen objecten filtert nu binnen een seconde.\n\n## Wat je moet doen\n\nWerk je registers bij via de beheerpagina. Bestaande objecten blijven staan; alleen de schema's krijgen een nieuwe versie.\n\n## Vragen\n\nLoop je ergens tegenaan, stel je vraag in de community of neem contact met ons op.",
-        "heroImage": "/Photos/Marketing/openregister-3-0.jpg",
+        "heroImage": "app:pipelinq/marketing/openregister-3-0.svg",
         "links": [
           {
             "label": "Release notes",
@@ -250,7 +250,7 @@
         "slug": "rotterdam-koppelt-in-zes-weken",
         "summary": "Beginnen bij de gegevens in plaats van bij de koppeling. Hoe Rotterdam van eerste gesprek naar productie ging zonder een migratie van een jaar.",
         "body": "Gemeente Rotterdam wilde haar zaaksysteem koppelen aan de landelijke voorzieningen zonder een jaar aan een migratie kwijt te zijn. Dat is gelukt in zes weken.\n\n## De aanpak\n\nWe zijn begonnen bij de gegevens, niet bij de koppeling. Eerst is in kaart gebracht welke objecten de gemeente echt bijhoudt, daarna is per object bepaald wie eigenaar is. Pas toen dat vaststond is de eerste koppeling gelegd.\n\n## Het resultaat\n\n- Zes weken van eerste gesprek tot productie.\n- Geen enkele handmatige overzetting van gegevens.\n- Het team van de gemeente beheert de koppelingen nu zelf.\n\n## In de woorden van de gemeente\n\n\"We dachten dat we een nieuw systeem nodig hadden. We hadden een beter beeld van onze eigen gegevens nodig.\"\n",
-        "heroImage": "/Photos/Marketing/rotterdam-stadhuis.jpg",
+        "heroImage": "app:pipelinq/marketing/rotterdam-stadhuis.svg",
         "links": [
           {
             "label": "Common Ground",
@@ -282,7 +282,7 @@
         "slug": "common-ground-meetup-november",
         "summary": "Drie korte verhalen uit de praktijk en daarna ruimte om door te praten. Den Haag, november, gratis toegang.",
         "body": "We organiseren in november weer een Common Ground meetup, deze keer in Den Haag.\n\n## Waar het over gaat\n\nDrie korte verhalen uit de praktijk, en daarna ruimte om door te praten. Onderwerpen dit keer:\n\n- Registers delen tussen gemeenten zonder een centrale kopie.\n- Wat er misging bij een koppeling, en wat we ervan geleerd hebben.\n- Open source afspraken maken die ook na de aanbesteding standhouden.\n\n## Praktisch\n\nDe inloop is vanaf 15.30 uur, we beginnen om 16.00 uur en sluiten af met eten. Deelname is gratis.\n\n## Aanmelden\n\nLaat weten dat je komt, dan houden we een plek vrij.",
-        "heroImage": "/Photos/Marketing/meetup-den-haag.jpg",
+        "heroImage": "app:pipelinq/marketing/meetup-den-haag.svg",
         "links": [
           {
             "label": "Programma",
