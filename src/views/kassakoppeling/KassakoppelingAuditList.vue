@@ -14,17 +14,10 @@
 <template>
 	<div class="kassakoppeling-audit-list">
 		<div class="kassakoppeling-audit-list__header">
-			<div>
-				<h2>{{ t('pipelinq', 'Cash register audit log') }}</h2>
-				<p class="kassakoppeling-audit-list__subtitle">
-					{{
-						t(
-							'pipelinq',
-							'Immutable, cryptographically signed record of every register action for Belastingdienst audits.',
-						)
-					}}
-				</p>
-			</div>
+			<CnPageHeader
+				:title="t('pipelinq', 'Cash register audit log')"
+				:description="t('pipelinq', 'Immutable, cryptographically signed record of every register action for Belastingdienst audits.')"
+				icon="ShieldCheckOutline" />
 			<div class="kassakoppeling-audit-list__actions">
 				<NcButton :disabled="loading" @click="refresh">
 					<template #icon>
@@ -46,172 +39,107 @@
 			</div>
 		</div>
 
-		<div
+		<form
 			class="kassakoppeling-audit-list__filters"
-			data-testid="kassakoppeling-audit-filters">
-			<div class="filter-cell">
-				<label for="kk-filter-from">{{ t('pipelinq', 'From') }}</label>
-				<input
-					id="kk-filter-from"
-					v-model="filters.from"
-					type="date"
-					:aria-label="t('pipelinq', 'Filter from date')" />
-			</div>
-			<div class="filter-cell">
-				<label for="kk-filter-to">{{
-					t('pipelinq', 'Up to and including')
-				}}</label>
-				<input
-					id="kk-filter-to"
-					v-model="filters.to"
-					type="date"
-					:aria-label="t('pipelinq', 'Filter to date')" />
-			</div>
-			<div class="filter-cell">
-				<label for="kk-filter-register">{{
-					t('pipelinq', 'Register')
-				}}</label>
-				<input
-					id="kk-filter-register"
-					v-model="filters.registerNumber"
-					type="text"
-					:placeholder="t('pipelinq', 'e.g. REG-001')"
-					:aria-label="t('pipelinq', 'Filter by register number')" />
-			</div>
-			<div class="filter-cell">
-				<label for="kk-filter-operator">{{
-					t('pipelinq', 'Operator')
-				}}</label>
-				<input
-					id="kk-filter-operator"
-					v-model="filters.operatorId"
-					type="text"
-					:placeholder="t('pipelinq', 'e.g. user_john')"
-					:aria-label="t('pipelinq', 'Filter by operator')" />
-			</div>
-			<div class="filter-cell">
-				<label for="kk-filter-action">{{ t('pipelinq', 'Action') }}</label>
-				<select
-					id="kk-filter-action"
-					v-model="filters.action"
-					:aria-label="t('pipelinq', 'Filter by action')">
-					<option value="">
-						{{ t('pipelinq', 'All actions') }}
-					</option>
-					<option value="sale">
-						{{ t('pipelinq', 'Sale') }}
-					</option>
-					<option value="void">
-						{{ t('pipelinq', 'Cancellation') }}
-					</option>
-					<option value="refund">
-						{{ t('pipelinq', 'Refund') }}
-					</option>
-					<option value="no-sale">
-						{{ t('pipelinq', 'No sale') }}
-					</option>
-				</select>
-			</div>
-			<div class="filter-cell filter-cell--actions">
-				<NcButton @click="applyFilters">
+			data-testid="kassakoppeling-audit-filters"
+			@submit.prevent="applyFilters">
+			<NcDateTimePickerNative
+				id="kk-filter-from"
+				class="kassakoppeling-audit-list__filter"
+				type="date"
+				:label="t('pipelinq', 'From')"
+				:modelValue="fromDate"
+				:aria-label="t('pipelinq', 'Filter from date')"
+				@update:modelValue="fromDate = $event" />
+			<NcDateTimePickerNative
+				id="kk-filter-to"
+				class="kassakoppeling-audit-list__filter"
+				type="date"
+				:label="t('pipelinq', 'Up to and including')"
+				:modelValue="toDate"
+				:aria-label="t('pipelinq', 'Filter to date')"
+				@update:modelValue="toDate = $event" />
+			<NcTextField
+				id="kk-filter-register"
+				v-model="filters.registerNumber"
+				class="kassakoppeling-audit-list__filter"
+				:label="t('pipelinq', 'Register')"
+				:placeholder="t('pipelinq', 'e.g. REG-001')"
+				:aria-label="t('pipelinq', 'Filter by register number')" />
+			<NcTextField
+				id="kk-filter-operator"
+				v-model="filters.operatorId"
+				class="kassakoppeling-audit-list__filter"
+				:label="t('pipelinq', 'Operator')"
+				:placeholder="t('pipelinq', 'e.g. user_john')"
+				:aria-label="t('pipelinq', 'Filter by operator')" />
+			<NcSelect
+				v-model="actionOption"
+				inputId="kk-filter-action"
+				class="kassakoppeling-audit-list__filter"
+				:inputLabel="t('pipelinq', 'Action')"
+				:options="actionOptions"
+				:clearable="false"
+				:aria-label-combobox="t('pipelinq', 'Filter by action')" />
+			<div class="kassakoppeling-audit-list__filter-buttons">
+				<NcButton type="submit" variant="secondary">
+					<template #icon>
+						<FilterOutline :size="20" />
+					</template>
 					{{ t('pipelinq', 'Apply filter') }}
 				</NcButton>
-				<NcButton @click="clearFilters">
+				<NcButton variant="tertiary" :disabled="!canClear" @click="clearFilters">
 					{{ t('pipelinq', 'Clear') }}
 				</NcButton>
 			</div>
-		</div>
+		</form>
 
-		<div v-if="loading" class="kassakoppeling-audit-list__loading">
-			<NcLoadingIcon :size="32" :title="t('pipelinq', 'Load audit log')" />
-		</div>
-
-		<div
-			v-else-if="entries.length === 0"
-			class="kassakoppeling-audit-list__empty">
-			<p>
-				{{
-					t('pipelinq', 'No audit entries found for the selected filters.')
-				}}
-			</p>
-		</div>
-
-		<table
-			v-else
+		<CnDataTable
 			class="kassakoppeling-audit-list__table"
-			data-testid="kassakoppeling-audit-table">
-			<thead>
-				<tr>
-					<th scope="col">{{ t('pipelinq', 'Time') }}</th>
-					<th scope="col">{{ t('pipelinq', 'Operator') }}</th>
-					<th scope="col">{{ t('pipelinq', 'Register') }}</th>
-					<th scope="col">{{ t('pipelinq', 'Action') }}</th>
-					<th scope="col" class="num">
-						{{ t('pipelinq', 'Amount') }}
-					</th>
-					<th scope="col">{{ t('pipelinq', 'Verification') }}</th>
-					<!-- Chevron affordance column: presentational only, so it stays
-					     empty and carries no accessible name. `scope="col"` still
-					     declares the association direction — WCAG 2.2 AA SC 1.3.1. -->
-					<th scope="col" class="chevron-col" />
-				</tr>
-			</thead>
-			<tbody>
-				<tr
-					v-for="entry in pageEntries"
-					:key="entry.id || entry.uuid || entry.timestamp"
-					class="kassakoppeling-audit-list__row"
-					data-testid="kassakoppeling-audit-row"
-					@click="openDetail(entry)">
-					<td>{{ formatTimestamp(entry.timestamp) }}</td>
-					<td>{{ entry.operatorId || '—' }}</td>
-					<td>{{ entry.registerNumber || '—' }}</td>
-					<td>
-						<span
-							class="action-badge"
-							:class="[`action-badge--${actionClass(entry.action)}`]">
-							{{ actionLabel(entry.action) }}
-						</span>
-					</td>
-					<td class="num">
-						{{ formatEur(entry.amount) }}
-					</td>
-					<td>
-						<span
-							class="verify-badge"
-							:class="[
-								`verify-badge--${verifyClass(entry.verified)}`,
-							]">
-							{{ verifyLabel(entry.verified) }}
-						</span>
-					</td>
-					<td class="chevron-col">
-						<ChevronRight
-							:size="20"
-							class="kassakoppeling-audit-list__chevron" />
-					</td>
-				</tr>
-			</tbody>
-		</table>
+			data-testid="kassakoppeling-audit-table"
+			:columns="columns"
+			:rows="pageEntries"
+			:loading="loading"
+			:loadingText="t('pipelinq', 'Load audit log')"
+			:emptyText="t('pipelinq', 'No audit entries found for the selected filters.')"
+			rowKey="_rowKey"
+			@rowClick="openDetail">
+			<template #column-timestamp="{ row }">
+				{{ formatTimestamp(row.timestamp) }}
+			</template>
+			<template #column-operatorId="{ row }">
+				{{ row.operatorId || '—' }}
+			</template>
+			<template #column-registerNumber="{ row }">
+				{{ row.registerNumber || '—' }}
+			</template>
+			<template #column-action="{ row }">
+				<CnStatusBadge
+					:label="actionLabel(row.action)"
+					:variant="actionVariant(row.action)"
+					size="small" />
+			</template>
+			<template #column-amount="{ row }">
+				{{ formatEur(row.amount) }}
+			</template>
+			<template #column-verified="{ row }">
+				<CnStatusBadge
+					:label="verifyLabel(row.verified)"
+					:variant="verifyVariant(row.verified)"
+					size="small" />
+			</template>
+			<template #column-chevron>
+				<ChevronRight :size="20" class="kassakoppeling-audit-list__chevron" />
+			</template>
+		</CnDataTable>
 
-		<div v-if="totalPages > 1" class="kassakoppeling-audit-list__pagination">
-			<NcButton :disabled="page === 1" @click="page = Math.max(1, page - 1)">
-				{{ t('pipelinq', 'Previous') }}
-			</NcButton>
-			<span class="page-info">
-				{{
-					t('pipelinq', 'Page {current} of {total}', {
-						current: page,
-						total: totalPages,
-					})
-				}}
-			</span>
-			<NcButton
-				:disabled="page === totalPages"
-				@click="page = Math.min(totalPages, page + 1)">
-				{{ t('pipelinq', 'Next') }}
-			</NcButton>
-		</div>
+		<CnPagination
+			:currentPage="page"
+			:totalPages="totalPages"
+			:totalItems="sortedEntries.length"
+			:currentPageSize="pageSize"
+			@pageChanged="page = $event"
+			@pageSizeChanged="onPageSizeChange" />
 
 		<BelastingdienstExportDialog
 			v-if="showExport"
@@ -222,15 +150,37 @@
 </template>
 
 <script>
+import { CnDataTable, CnPageHeader, CnPagination, CnStatusBadge } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
-import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
+import { NcButton, NcDateTimePickerNative, NcLoadingIcon, NcSelect, NcTextField } from '@nextcloud/vue'
 import ChevronRight from 'vue-material-design-icons/ChevronRight.vue'
 import Download from 'vue-material-design-icons/Download.vue'
+import FilterOutline from 'vue-material-design-icons/FilterOutline.vue'
 import Refresh from 'vue-material-design-icons/Refresh.vue'
 import BelastingdienstExportDialog from '../../dialogs/BelastingdienstExportDialog.vue'
+import { toDateInputString, toDateObject } from '../../services/localeUtils.js'
 
 const PAGE_SIZE = 25
+
+/**
+ * A filter set with nothing chosen.
+ *
+ * @return {object} The empty filters.
+ */
+function emptyFilters() {
+	return { from: '', to: '', registerNumber: '', operatorId: '', action: '' }
+}
+
+/**
+ * Whether a filter set has any value chosen.
+ *
+ * @param {object} filters The filters.
+ * @return {boolean} True when at least one filter is set.
+ */
+function hasAnyFilter(filters) {
+	return Object.values(filters).some((value) => value !== '')
+}
 
 const ACTION_LABELS = {
 	sale: 'Sale',
@@ -239,22 +189,32 @@ const ACTION_LABELS = {
 	'no-sale': 'No sale',
 }
 
-const ACTION_CLASSES = {
-	sale: 'sale',
-	void: 'void',
-	refund: 'refund',
-	'no-sale': 'no-sale',
+// Badge colour per action: a sale is the normal case, a void undoes one,
+// a refund gives money back and a no-sale only opens the drawer.
+const ACTION_VARIANTS = {
+	sale: 'success',
+	void: 'error',
+	refund: 'warning',
+	'no-sale': 'default',
 }
 
 export default {
 	name: 'KassakoppelingAuditList',
 	components: {
-		NcButton,
-		NcLoadingIcon,
-		Refresh,
-		Download,
-		ChevronRight,
 		BelastingdienstExportDialog,
+		ChevronRight,
+		CnDataTable,
+		CnPageHeader,
+		CnPagination,
+		CnStatusBadge,
+		Download,
+		FilterOutline,
+		NcButton,
+		NcDateTimePickerNative,
+		NcLoadingIcon,
+		NcSelect,
+		NcTextField,
+		Refresh,
 	},
 
 	data() {
@@ -264,17 +224,80 @@ export default {
 			showExport: false,
 			exporting: false,
 			page: 1,
-			filters: {
-				from: '',
-				to: '',
-				registerNumber: '',
-				operatorId: '',
-				action: '',
-			},
+			pageSize: PAGE_SIZE,
+			filters: emptyFilters(),
+			// The filters the list was last fetched with. Clear only fetches
+			// again when these narrowed the list; edits that were never
+			// applied are just emptied.
+			appliedFilters: emptyFilters(),
 		}
 	},
 
 	computed: {
+		/** @return {boolean} Whether Clear has anything to clear. */
+		canClear() {
+			return hasAnyFilter(this.filters) || hasAnyFilter(this.appliedFilters)
+		},
+
+		/**
+		 * The table columns. The last one is the row's chevron affordance,
+		 * presentational only, so it has no label.
+		 *
+		 * @return {Array<object>} CnDataTable column definitions.
+		 */
+		columns() {
+			return [
+				{ key: 'timestamp', label: t('pipelinq', 'Time') },
+				{ key: 'operatorId', label: t('pipelinq', 'Operator') },
+				{ key: 'registerNumber', label: t('pipelinq', 'Register') },
+				{ key: 'action', label: t('pipelinq', 'Action') },
+				{ key: 'amount', label: t('pipelinq', 'Amount'), class: 'num', cellClass: 'num' },
+				{ key: 'verified', label: t('pipelinq', 'Verification') },
+				{ key: 'chevron', label: '', class: 'chevron-col', cellClass: 'chevron-col' },
+			]
+		},
+
+		/** @return {Array<{id: string, label: string}>} The action filter choices. */
+		actionOptions() {
+			return [
+				{ id: '', label: t('pipelinq', 'All actions') },
+				{ id: 'sale', label: t('pipelinq', 'Sale') },
+				{ id: 'void', label: t('pipelinq', 'Cancellation') },
+				{ id: 'refund', label: t('pipelinq', 'Refund') },
+				{ id: 'no-sale', label: t('pipelinq', 'No sale') },
+			]
+		},
+
+		actionOption: {
+			get() {
+				return this.actionOptions.find((o) => o.id === this.filters.action) || this.actionOptions[0]
+			},
+
+			set(option) {
+				this.filters.action = option?.id || ''
+			},
+		},
+
+		fromDate: {
+			get() {
+				return toDateObject(this.filters.from)
+			},
+
+			set(date) {
+				this.filters.from = toDateInputString(date) || ''
+			},
+		},
+
+		toDate: {
+			get() {
+				return toDateObject(this.filters.to)
+			},
+
+			set(date) {
+				this.filters.to = toDateInputString(date) || ''
+			},
+		},
+
 		/**
 		 * Whether the acting user is a Nextcloud admin (controls export button).
 		 *
@@ -307,7 +330,7 @@ export default {
 		 * @return {number} The total page count.
 		 */
 		totalPages() {
-			return Math.max(1, Math.ceil(this.sortedEntries.length / PAGE_SIZE))
+			return Math.max(1, Math.ceil(this.sortedEntries.length / this.pageSize))
 		},
 
 		/**
@@ -316,8 +339,12 @@ export default {
 		 * @return {Array<object>} The page slice.
 		 */
 		pageEntries() {
-			const start = (this.page - 1) * PAGE_SIZE
-			return this.sortedEntries.slice(start, start + PAGE_SIZE)
+			const start = (this.page - 1) * this.pageSize
+			// The table keys rows by one field; an entry may carry an id, a
+			// uuid or only its timestamp.
+			return this.sortedEntries
+				.slice(start, start + this.pageSize)
+				.map((entry) => ({ ...entry, _rowKey: entry.id || entry.uuid || entry.timestamp }))
 		},
 	},
 
@@ -367,6 +394,7 @@ export default {
 				}
 				const data = await response.json()
 				this.entries = Array.isArray(data.entries) ? data.entries : []
+				this.appliedFilters = { ...this.filters }
 				this.page = 1
 			} catch {
 				showError(t('pipelinq', 'Could not load audit log.'))
@@ -384,17 +412,24 @@ export default {
 		},
 
 		/**
-		 * Clear all filters and reload.
+		 * Clear all filters, and reload only when the list was filtered.
 		 */
 		clearFilters() {
-			this.filters = {
-				from: '',
-				to: '',
-				registerNumber: '',
-				operatorId: '',
-				action: '',
+			const wasFiltered = hasAnyFilter(this.appliedFilters)
+			this.filters = emptyFilters()
+			if (wasFiltered) {
+				this.refresh()
 			}
-			this.refresh()
+		},
+
+		/**
+		 * Change the page size and go back to the first page.
+		 *
+		 * @param {number} size The new page size.
+		 */
+		onPageSizeChange(size) {
+			this.pageSize = Number(size) || PAGE_SIZE
+			this.page = 1
 		},
 
 		/**
@@ -465,13 +500,13 @@ export default {
 		},
 
 		/**
-		 * Get the CSS modifier suffix for an action badge.
+		 * Get the badge variant for an action.
 		 *
 		 * @param {string} action The action enum value.
-		 * @return {string} The css modifier suffix.
+		 * @return {string} A CnStatusBadge variant.
 		 */
-		actionClass(action) {
-			return ACTION_CLASSES[action] || 'unknown'
+		actionVariant(action) {
+			return ACTION_VARIANTS[action] || 'default'
 		},
 
 		/**
@@ -492,19 +527,19 @@ export default {
 		},
 
 		/**
-		 * Get the CSS modifier suffix for a verification badge.
+		 * Get the badge variant for a verification flag.
 		 *
 		 * @param {boolean|null} verified The flag.
-		 * @return {string} The css modifier suffix.
+		 * @return {string} A CnStatusBadge variant.
 		 */
-		verifyClass(verified) {
+		verifyVariant(verified) {
 			if (verified === true) {
-				return 'ok'
+				return 'success'
 			}
 			if (verified === false) {
-				return 'fail'
+				return 'error'
 			}
-			return 'pending'
+			return 'default'
 		},
 
 		/**
@@ -578,96 +613,45 @@ export default {
 
 .kassakoppeling-audit-list__header {
 	display: flex;
+	flex-wrap: wrap;
 	justify-content: space-between;
 	align-items: flex-start;
 	gap: 16px;
 }
 
-.kassakoppeling-audit-list__subtitle {
-	color: var(--color-text-maxcontrast);
-	margin: 4px 0 0 0;
-}
-
 .kassakoppeling-audit-list__actions {
 	display: flex;
+	flex-wrap: wrap;
 	gap: 8px;
 }
 
 .kassakoppeling-audit-list__filters {
-	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-	gap: 12px;
-	padding: 12px;
-	background: var(--color-background-hover);
-	border-radius: var(--border-radius);
-}
-
-.filter-cell {
 	display: flex;
-	flex-direction: column;
-	gap: 4px;
-}
-
-.filter-cell--actions {
-	flex-direction: row;
-	align-items: flex-end;
-	gap: 8px;
-}
-
-.filter-cell label {
-	font-size: 12px;
-	font-weight: bold;
-	color: var(--color-text-maxcontrast);
-}
-
-.filter-cell input,
-.filter-cell select {
-	padding: 6px 8px;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 12px;
+	padding: 12px 16px;
 	border: 1px solid var(--color-border);
-	border-radius: var(--border-radius);
-	background: var(--color-main-background);
-	color: var(--color-main-text);
+	border-radius: var(--border-radius-large);
 }
 
-.kassakoppeling-audit-list__loading,
-.kassakoppeling-audit-list__empty {
-	padding: 32px;
-	text-align: center;
-	color: var(--color-text-maxcontrast);
+.kassakoppeling-audit-list__filter {
+	flex: 1 1 160px;
+	min-width: 160px;
+	margin: 0;
 }
 
-.kassakoppeling-audit-list__table {
-	width: 100%;
-	border-collapse: collapse;
+.kassakoppeling-audit-list__filter-buttons {
+	display: flex;
+	gap: 8px;
+	margin-inline-start: auto;
 }
 
-.kassakoppeling-audit-list__table th {
-	text-align: start;
-	padding: 8px 12px;
-	border-bottom: 1px solid var(--color-border);
-	font-size: 12px;
-	color: var(--color-text-maxcontrast);
-}
-
-.kassakoppeling-audit-list__row,
-.kassakoppeling-audit-list__row td {
-	cursor: pointer;
-}
-
-.kassakoppeling-audit-list__row:hover {
-	background: var(--color-background-hover);
-}
-
-.kassakoppeling-audit-list__table td {
-	padding: 8px 12px;
-	border-bottom: 1px solid var(--color-border);
-}
-
-.num {
+.kassakoppeling-audit-list__table :deep(.num) {
 	text-align: end;
 }
 
-.kassakoppeling-audit-list__table .chevron-col {
+.kassakoppeling-audit-list__table :deep(.chevron-col) {
 	width: 1%;
 	padding-inline: 4px;
 }
@@ -675,63 +659,5 @@ export default {
 .kassakoppeling-audit-list__chevron {
 	display: block;
 	color: var(--color-text-maxcontrast);
-}
-
-.action-badge,
-.verify-badge {
-	display: inline-block;
-	padding: 2px 8px;
-	border-radius: 999px;
-	font-size: 12px;
-	font-weight: 500;
-}
-
-.action-badge--sale {
-	background: var(--color-success);
-	color: var(--color-success-text);
-}
-
-.action-badge--void {
-	background: var(--color-error);
-	color: var(--color-error-text);
-}
-
-.action-badge--refund {
-	background: var(--color-warning);
-	color: var(--color-warning-text);
-}
-
-.action-badge--no-sale,
-.action-badge--unknown {
-	background: var(--color-background-dark);
-	color: var(--color-main-text);
-}
-
-.verify-badge--ok {
-	background: var(--color-success);
-	color: var(--color-success-text);
-}
-
-.verify-badge--fail {
-	background: var(--color-error);
-	color: var(--color-error-text);
-}
-
-.verify-badge--pending {
-	background: var(--color-background-dark);
-	color: var(--color-text-maxcontrast);
-}
-
-.kassakoppeling-audit-list__pagination {
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	gap: 12px;
-	padding: 8px;
-}
-
-.page-info {
-	color: var(--color-text-maxcontrast);
-	font-size: 13px;
 }
 </style>
