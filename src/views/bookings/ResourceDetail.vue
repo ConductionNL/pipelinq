@@ -4,23 +4,22 @@
   Resource detail + edit page — appointment-booking member 11.
 
   View mode renders headline info, the weekly working-hours grid and the
-  vacation list. Edit mode wraps ResourceForm. On save we delegate to the
-  ObjectService and best-effort invalidate this resource's
-  availabilityCache rows (REQ-APT-002).
+  vacation list. Edit opens the schema-driven CnFormDialog, with the
+  working-hours and vacation editors in its field slots; creating a resource
+  (id "new") still uses the full-page ResourceForm. On save we delegate to the
+  ObjectService and best-effort invalidate this resource's availabilityCache
+  rows (REQ-APT-002).
 
   @spec openspec/changes/appointment-booking-11-admin-ui/tasks.md
 -->
 <template>
-	<div v-if="editing || isNew">
+	<div v-if="isNew">
 		<div class="resource-detail__header">
 			<NcButton @click="onFormCancel">
 				{{ t('pipelinq', 'Back to list') }}
 			</NcButton>
-			<h2 v-if="isNew">
+			<h2>
 				{{ t('pipelinq', 'New resource') }}
-			</h2>
-			<h2 v-else>
-				{{ resourceData.name || t('pipelinq', 'Resource') }}
 			</h2>
 		</div>
 		<ResourceForm
@@ -41,7 +40,7 @@
 		:objectId="resourceId"
 		:sidebarProps="sidebarProps">
 		<template #actions>
-			<NcButton variant="primary" @click="editing = true">
+			<NcButton variant="primary" @click="openEditDialog">
 				{{ t('pipelinq', 'Edit') }}
 			</NcButton>
 			<NcButton variant="error" @click="showDelete = true">
@@ -143,6 +142,32 @@
 			:name="resourceData.name"
 			@confirm="confirmDelete"
 			@cancel="showDelete = false" />
+
+		<CnFormDialog
+			v-if="showEditDialog && resourceSchema"
+			ref="editDialog"
+			:schema="resourceSchema"
+			:item="resourceData"
+			:dialogTitle="t('pipelinq', 'Edit resource')"
+			:fieldOverrides="editFieldOverrides"
+			size="large"
+			:columns="2"
+			@confirm="onEditConfirm"
+			@close="showEditDialog = false">
+			<!-- The schema form cannot edit arrays of objects. -->
+			<template #field-workingHours="{ value, error, updateField }">
+				<ResourceHoursEditor
+					:modelValue="value || []"
+					:error="error || ''"
+					@update:modelValue="(rows) => updateField('workingHours', rows)" />
+			</template>
+			<template #field-vacations="{ value, error, updateField }">
+				<ResourceVacationsEditor
+					:modelValue="value || []"
+					:error="error || ''"
+					@update:modelValue="(rows) => updateField('vacations', rows)" />
+			</template>
+		</CnFormDialog>
 	</CnDetailPage>
 </template>
 
@@ -150,14 +175,18 @@
 import {
 	CnDetailCard,
 	CnDetailPage,
+	CnFormDialog,
 	useObjectSubscription,
 } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { NcButton } from '@nextcloud/vue'
 import { computed } from 'vue'
+import ResourceHoursEditor from '../../components/bookings/ResourceHoursEditor.vue'
+import ResourceVacationsEditor from '../../components/bookings/ResourceVacationsEditor.vue'
 import DeleteResourceDialog from '../../dialogs/DeleteResourceDialog.vue'
 import ResourceForm from './ResourceForm.vue'
 import { useObjectStore } from '../../store/modules/object.js'
+import { vacationsError, workingHoursError } from '../../utils/resourceValidation.js'
 
 export default {
 	name: 'ResourceDetail',
@@ -165,7 +194,10 @@ export default {
 		NcButton,
 		CnDetailPage,
 		CnDetailCard,
+		CnFormDialog,
 		ResourceForm,
+		ResourceHoursEditor,
+		ResourceVacationsEditor,
 		DeleteResourceDialog,
 	},
 
@@ -201,7 +233,7 @@ export default {
 
 	data() {
 		return {
-			editing: false,
+			showEditDialog: false,
 			showDelete: false,
 		}
 	},
@@ -248,6 +280,55 @@ export default {
 			return skills.length ? skills.join(', ') : '-'
 		},
 
+		resourceSchema() {
+			return this.objectStore.getSchema('appointmentResource')
+		},
+
+		/**
+		 * Translated labels and order for the edit dialog's schema fields, as
+		 * ResourceForm had them. The schema's English descriptions are cleared
+		 * because they are not translated.
+		 *
+		 * @return {object} fieldOverrides for CnFormDialog.
+		 */
+		editFieldOverrides() {
+			const overrides = {
+				name: { label: t('pipelinq', 'Name'), order: 1 },
+				type: {
+					label: t('pipelinq', 'Type'),
+					order: 2,
+					enumLabels: {
+						staff: t('pipelinq', 'Staff'),
+						room: t('pipelinq', 'Room'),
+						equipment: t('pipelinq', 'Equipment'),
+					},
+				},
+
+				status: {
+					label: t('pipelinq', 'Status'),
+					order: 3,
+					enumLabels: {
+						active: t('pipelinq', 'Active'),
+						inactive: t('pipelinq', 'Inactive'),
+						archived: t('pipelinq', 'Archived'),
+					},
+				},
+
+				maxConcurrent: { label: t('pipelinq', 'Max concurrent bookings'), order: 4 },
+				bookable: { label: t('pipelinq', 'Bookable'), order: 5 },
+				skills: { label: t('pipelinq', 'Skills'), order: 6 },
+				userId: { label: t('pipelinq', 'Nextcloud user ID (staff only)'), order: 7 },
+				calendarSyncId: { label: t('pipelinq', 'Calendar sync link (UUID)'), order: 8 },
+				workingHours: { label: t('pipelinq', 'Working hours'), order: 9, widget: 'json' },
+				vacations: { label: t('pipelinq', 'Vacations / unavailable windows'), order: 10, widget: 'json' },
+			}
+			for (const key of Object.keys(overrides)) {
+				overrides[key].description = ''
+				overrides[key].descriptionLong = ''
+			}
+			return overrides
+		},
+
 		sidebarProps() {
 			const cfg = this.objectStore.objectTypeRegistry?.resource || {}
 			return {
@@ -269,6 +350,62 @@ export default {
 	},
 
 	methods: {
+		async openEditDialog() {
+			await this.objectStore.fetchSchema('appointmentResource')
+			if (!this.resourceSchema) {
+				showError(t('pipelinq', 'Could not load the resource form.'))
+				return
+			}
+			this.showEditDialog = true
+		},
+
+		/**
+		 * Check the row rules, save the edit dialog's data and report the
+		 * outcome back to it. A rule violation keeps the dialog open on the
+		 * offending field.
+		 *
+		 * @param {object} formData The dialog's form data.
+		 */
+		async onEditConfirm(formData) {
+			const dialog = this.$refs.editDialog
+			const fieldErrors = {}
+			const hoursError = workingHoursError(formData.workingHours)
+			const vacationError = vacationsError(formData.vacations)
+			if (hoursError) {
+				fieldErrors.workingHours = hoursError
+			}
+			if (vacationError) {
+				fieldErrors.vacations = vacationError
+			}
+			if (Object.keys(fieldErrors).length > 0) {
+				dialog?.setValidationErrors(fieldErrors)
+				return
+			}
+
+			const saved = await this.objectStore.saveObject('appointmentResource', {
+				...formData,
+				id: this.resourceId,
+				workingHours: (formData.workingHours || []).map((r) => ({
+					day: r.day,
+					openTime: r.openTime,
+					closeTime: r.closeTime,
+				})),
+				vacations: (formData.vacations || []).map((r) => ({
+					startDate: r.startDate,
+					endDate: r.endDate,
+					label: r.label || '',
+				})),
+			})
+			if (!saved) {
+				const error = this.objectStore.getError?.('appointmentResource')
+				dialog?.setResult({ error: error?.message || t('pipelinq', 'Failed to save resource.') })
+				return
+			}
+			dialog?.setResult({ success: true })
+			await this.invalidateAvailability(saved.id || this.resourceId)
+			await this.objectStore.fetchObject('appointmentResource', this.resourceId)
+		},
+
 		async onFormSave(formData) {
 			const saved = await this.objectStore.saveObject(
 				'appointmentResource',
@@ -283,26 +420,14 @@ export default {
 			}
 			showSuccess(t('pipelinq', 'Resource saved.'))
 			await this.invalidateAvailability(saved.id || formData.id)
-			if (this.isNew) {
-				this.$router.push({
-					name: 'ResourceDetail',
-					params: { id: saved.id },
-				})
-			} else {
-				await this.objectStore.fetchObject(
-					'appointmentResource',
-					this.resourceId,
-				)
-				this.editing = false
-			}
+			this.$router.push({
+				name: 'ResourceDetail',
+				params: { id: saved.id },
+			})
 		},
 
 		onFormCancel() {
-			if (this.isNew) {
-				this.$router.push({ name: 'Resources' })
-			} else {
-				this.editing = false
-			}
+			this.$router.push({ name: 'Resources' })
 		},
 
 		async confirmDelete() {

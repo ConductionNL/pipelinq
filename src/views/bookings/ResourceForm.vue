@@ -108,108 +108,11 @@
 		</div>
 
 		<div class="form-group">
-			<label>{{ t('pipelinq', 'Working hours') }}</label>
-			<table class="hours-table">
-				<thead>
-					<tr>
-						<th scope="col">{{ t('pipelinq', 'Day') }}</th>
-						<th scope="col">{{ t('pipelinq', 'Open') }}</th>
-						<th scope="col">{{ t('pipelinq', 'Close') }}</th>
-						<th scope="col" />
-					</tr>
-				</thead>
-				<tbody>
-					<tr v-for="(row, idx) in form.workingHours" :key="idx">
-						<td>
-							<NcSelect
-								v-model="row.day"
-								:inputId="`hours-day-${idx}`"
-								:aria-label-combobox="t('pipelinq', 'Day')"
-								labelOutside
-								:options="dayOptions"
-								:reduce="(o) => o.value"
-								label="label" />
-						</td>
-						<td>
-							<input
-								:id="`hours-open-${idx}`"
-								v-model="row.openTime"
-								type="time"
-								:aria-label="t('pipelinq', 'Open time')" />
-						</td>
-						<td>
-							<input
-								:id="`hours-close-${idx}`"
-								v-model="row.closeTime"
-								type="time"
-								:aria-label="t('pipelinq', 'Close time')" />
-						</td>
-						<td>
-							<NcButton variant="tertiary" @click="removeHours(idx)">
-								&times;
-							</NcButton>
-						</td>
-					</tr>
-				</tbody>
-			</table>
-			<NcButton variant="secondary" class="add-btn" @click="addHours">
-				{{ t('pipelinq', 'Add working hours row') }}
-			</NcButton>
-			<p v-if="hoursError" class="error-text">
-				{{ hoursError }}
-			</p>
+			<ResourceHoursEditor v-model="form.workingHours" />
 		</div>
 
 		<div class="form-group">
-			<label>{{ t('pipelinq', 'Vacations / unavailable windows') }}</label>
-			<table class="hours-table">
-				<thead>
-					<tr>
-						<th scope="col">{{ t('pipelinq', 'Start date') }}</th>
-						<th scope="col">{{ t('pipelinq', 'End date') }}</th>
-						<th scope="col">{{ t('pipelinq', 'Label') }}</th>
-						<th scope="col" />
-					</tr>
-				</thead>
-				<tbody>
-					<tr v-for="(row, idx) in form.vacations" :key="idx">
-						<td>
-							<input
-								:id="`vac-start-${idx}`"
-								v-model="row.startDate"
-								type="date"
-								:aria-label="t('pipelinq', 'Vacation start date')" />
-						</td>
-						<td>
-							<input
-								:id="`vac-end-${idx}`"
-								v-model="row.endDate"
-								type="date"
-								:aria-label="t('pipelinq', 'Vacation end date')" />
-						</td>
-						<td>
-							<input
-								:id="`vac-label-${idx}`"
-								v-model="row.label"
-								type="text"
-								:aria-label="t('pipelinq', 'Vacation label')" />
-						</td>
-						<td>
-							<NcButton
-								variant="tertiary"
-								@click="removeVacation(idx)">
-								&times;
-							</NcButton>
-						</td>
-					</tr>
-				</tbody>
-			</table>
-			<NcButton variant="secondary" class="add-btn" @click="addVacation">
-				{{ t('pipelinq', 'Add vacation') }}
-			</NcButton>
-			<p v-if="vacationError" class="error-text">
-				{{ vacationError }}
-			</p>
+			<ResourceVacationsEditor v-model="form.vacations" />
 		</div>
 
 		<div class="resource-form__actions">
@@ -229,20 +132,13 @@
 
 <script>
 import { NcButton, NcSelect, NcTextField } from '@nextcloud/vue'
-
-const DAYS = [
-	'monday',
-	'tuesday',
-	'wednesday',
-	'thursday',
-	'friday',
-	'saturday',
-	'sunday',
-]
+import ResourceHoursEditor from '../../components/bookings/ResourceHoursEditor.vue'
+import ResourceVacationsEditor from '../../components/bookings/ResourceVacationsEditor.vue'
+import { vacationsError, workingHoursError } from '../../utils/resourceValidation.js'
 
 export default {
 	name: 'ResourceForm',
-	components: { NcButton, NcSelect, NcTextField },
+	components: { NcButton, NcSelect, NcTextField, ResourceHoursEditor, ResourceVacationsEditor },
 	props: {
 		resource: { type: Object, default: () => ({}) },
 	},
@@ -289,39 +185,12 @@ export default {
 			]
 		},
 
-		dayOptions() {
-			return DAYS.map((d) => ({ value: d, label: t('pipelinq', d) }))
-		},
-
-		/**
-		 * @return {string} Error text when any workingHours row has openTime
-		 *  >= closeTime, empty otherwise.
-		 *
-		 * @spec openspec/changes/appointment-booking-11-admin-ui/tasks.md
-		 */
 		hoursError() {
-			const bad = (this.form.workingHours || []).find((r) => {
-				if (!r.openTime || !r.closeTime) return false
-				return r.openTime >= r.closeTime
-			})
-			return bad ? t('pipelinq', 'Open time must be before close time.') : ''
+			return workingHoursError(this.form.workingHours)
 		},
 
-		/**
-		 * @return {string} Error text when any vacations row has startDate
-		 *  > endDate, empty otherwise.
-		 */
 		vacationError() {
-			const bad = (this.form.vacations || []).find((r) => {
-				if (!r.startDate || !r.endDate) return false
-				return r.startDate > r.endDate
-			})
-			return bad
-				? t(
-						'pipelinq',
-						'Vacation start date must be on or before the end date.',
-					)
-				: ''
+			return vacationsError(this.form.vacations)
 		},
 	},
 
@@ -388,26 +257,6 @@ export default {
 				.filter((s) => s.length > 0)
 		},
 
-		addHours() {
-			this.form.workingHours.push({
-				day: 'monday',
-				openTime: '09:00',
-				closeTime: '17:00',
-			})
-		},
-
-		removeHours(idx) {
-			this.form.workingHours.splice(idx, 1)
-		},
-
-		addVacation() {
-			this.form.vacations.push({ startDate: '', endDate: '', label: '' })
-		},
-
-		removeVacation(idx) {
-			this.form.vacations.splice(idx, 1)
-		},
-
 		onSave() {
 			if (!this.validateAll()) {
 				return
@@ -468,36 +317,6 @@ export default {
 .toggle-group label {
 	margin: 0;
 	font-weight: normal;
-}
-
-.hours-table {
-	width: 100%;
-	border-collapse: collapse;
-}
-
-.hours-table th,
-.hours-table td {
-	padding: 6px;
-	border-bottom: 1px solid var(--color-border);
-}
-
-.hours-table input[type='time'],
-.hours-table input[type='date'],
-.hours-table input[type='text'] {
-	width: 100%;
-	padding: 4px;
-	border: 1px solid var(--color-border);
-	border-radius: var(--border-radius);
-}
-
-.add-btn {
-	margin-top: 8px;
-}
-
-.error-text {
-	color: var(--color-error);
-	margin-top: 6px;
-	font-size: 13px;
 }
 
 .resource-form__actions {
