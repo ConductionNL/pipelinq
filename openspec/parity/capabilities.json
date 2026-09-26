@@ -1489,6 +1489,132 @@
 			}
 		},
 		{
+			"id": "pipeline-multi-currency",
+			"area": "pipeline",
+			"name": "Record a deal in a foreign currency and see it converted at the current rate",
+			"pipelinq": "no",
+			"hubspot-crm": "partial",
+			"pipedrive": "yes",
+			"espocrm": "yes",
+			"odoo-crm": "partial",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/ExchangeRateService.php:28-40 and :125-141, lead properties listed from every register file",
+			"feature": "Forecasting",
+			"featureConfidence": "high",
+			"built": {
+				"state": "building",
+				"evidence": "lib/Service/ForecastRollupService.php:76 converts \"$deal['currency']\" through lib/Service/ExchangeRateService.php:107 using a manually kept app-config rate table (:32), but the lead schema has no currency property (lead properties in lib/Settings/pipelinq_register.json plus register.d/50-forecast.json and 98-marketing-campaigns.json hold only 'value'), so a deal cannot be recorded in a foreign currency and every deal converts 1:1",
+				"owner": "ConductionNL/pipelinq",
+				"reachedOn": "nothing",
+				"readOn": "2026-09-26"
+			},
+			"note": "lead: forecast conversion reads a deal currency the lead schema never declares, and rates are a static table, not current",
+			"evidence": {
+				"hubspot-crm": "https://knowledge.hubspot.com/account-management/add-and-edit-your-account-currencies \"add currencies to your account and set an exchange rate compared to your primary company currency\" (Starter and up); the rate is set by hand, a live current rate is not described.",
+				"pipedrive": "https://support.pipedrive.com/en/article/how-is-currency-converted-in-pipedrive \"Currency conversion in reporting is calculated through our partner Open Exchange Rates. Pipedrive automatically converts the value of deals won in different currencies to your default currency, excluding custom currencies\"; products carry one price per currency (https://support.pipedrive.com/en/article/products). All plans. Note: Read from the web.archive.org copy (how-is-currency-converted-in-pipedrive 2026-06-17) because the live knowledge base answered 429.",
+				"espocrm": "application/Espo/Modules/Crm/Resources/metadata/entityDefs/Opportunity.json:8 \"amount\" of type currency and :15 \"amountConverted\"; rates are CurrencyRecordRate entities since 9.3.0 (application/Espo/Resources/metadata/entityDefs/CurrencyRecordRate.json) managed at Administration > Currency (adminPanel.json:33 \"#Admin/currency\") and refreshed by the SyncCurrencyRates job (app/scheduledJobs.json)",
+				"odoo-crm": "addons/crm/models/crm_lead.py:141 \"expected_revenue = fields.Monetary('Expected Revenue', currency_field='company_currency'\" keeps a lead in the company currency only; the quotation from the lead can be in another currency through a pricelist (addons/product/models/product_pricelist.py:36 currency_id) and is converted at the rates in Accounting.",
+				"kiss": "src/router/index.ts:126 \"const router = createRouter(\" lists the only screens: startscherm, afhandeling, contactverzoeken, personen, bedrijven, zaken, links and beheer; a grep of src/ and Kiss.Bff/ for lead, opportunit, offerte, factuur, nieuwsbrief and campagne finds no sales, marketing or invoicing code"
+			},
+			"origin": "changelog",
+			"originUrl": "https://github.com/espocrm/espocrm/issues/3544"
+		},
+		{
+			"id": "pipeline-lead-rotation",
+			"area": "pipeline",
+			"name": "Share new leads fairly across the sales team, with a cap per person",
+			"pipelinq": "no",
+			"hubspot-crm": "partial",
+			"pipedrive": "partial",
+			"espocrm": "partial",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/RoutingService.php:92 and :419-455",
+			"feature": "Lead pipeline",
+			"featureConfidence": "high",
+			"built": {
+				"state": "none",
+				"evidence": "no round robin or auto assignment of leads (grep of lib for round robin, rotation, auto assign); lib/Service/RoutingService.php:168 knows an agent's maxConcurrent cap and ranks agents for a lead, but only as a suggestion, and src/components/RoutingSuggestionPanel.vue that shows it is mounted by nothing",
+				"owner": "ConductionNL/pipelinq",
+				"reachedOn": "nothing",
+				"readOn": "2026-09-26"
+			},
+			"evidence": {
+				"hubspot-crm": "https://knowledge.hubspot.com/workflows/assign-and-rotate-record-owners-using-workflows \"Rotate record to owner\" with \"load balanced, round robin, and random\" options for tickets and leads (Sales or Service Hub Professional, Enterprise); a cap per person applies to help desk tickets (https://knowledge.hubspot.com/help-desk/set-ticket-capacity-limits-for-users-in-help-desk), not described for leads.",
+				"pipedrive": "https://support.pipedrive.com/en/article/automatic-assignment-faq \"They are distributed on a round-robin basis\" but \"it's not possible to set a minimum or maximum of open leads or deals\". Premium and up.",
+				"espocrm": "Core Lead Capture assigns captured leads to a team (application/Espo/Resources/metadata/entityDefs/LeadCapture.json:179 \"targetTeam\"); fair rotation needs the paid Advanced Pack workflow action: https://docs.espocrm.com/administration/workflows/ \"Apply Assignment Rule ... Round-Robin and Least-Busy\", with no hard cap per person. Note: Paid Advanced Pack; least busy balances load but sets no cap.",
+				"odoo-crm": "addons/crm/models/crm_team_member.py:22-23 \"assignment_optout = fields.Boolean('Pause assignment')\" and \"assignment_max = fields.Integer('Average Leads Capacity (on 30 days)'\" shown on the team member form (addons/crm/views/crm_team_member_views.xml:11-12), used by the lead assignment cron under CRM > Configuration > Settings > Rule based assignment; 19.2 adds rotation modes \"Always in rotation, In rotation with a limit, Out of rotation\".",
+				"kiss": "src/router/index.ts:126 \"const router = createRouter(\" lists the only screens: startscherm, afhandeling, contactverzoeken, personen, bedrijven, zaken, links and beheer; a grep of src/ and Kiss.Bff/ for lead, opportunit, offerte, factuur, nieuwsbrief and campagne finds no sales, marketing or invoicing code"
+			},
+			"origin": "changelog",
+			"originUrl": "https://www.odoo.com/odoo-19-2-release-notes"
+		},
+		{
+			"id": "pipeline-stage-limit",
+			"area": "pipeline",
+			"name": "Cap how many items may sit in one stage at a time",
+			"pipelinq": "no",
+			"hubspot-crm": "unknown",
+			"pipedrive": "unknown",
+			"espocrm": "no",
+			"odoo-crm": "no",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read the pipeline stages item schema in lib/Settings/pipelinq_register.json:886",
+			"feature": "Lead pipeline",
+			"featureConfidence": "high",
+			"built": {
+				"state": "none",
+				"evidence": "a pipeline stage carries name, order, deckStackId, probability, isClosed, isWon, isDefault (lib/Settings/pipelinq_register.json:886-935) and no limit; src/views/pipeline/PipelineBoard.vue enforces none",
+				"owner": "ConductionNL/pipelinq",
+				"reachedOn": "nothing",
+				"readOn": "2026-09-26"
+			},
+			"evidence": {
+				"hubspot-crm": "not checked: pipeline rules restrict skipping and moving back (https://knowledge.hubspot.com/object-settings/set-up-pipeline-rules) but no limit on items per stage is described (read 2026-09-26).",
+				"pipedrive": "not checked: searched the Pipedrive knowledge base article list (https://support.pipedrive.com/en-sitemap.xml) and product updates on 2026-09-26 for a work-in-progress limit per stage and found none.",
+				"espocrm": "client/src/views/record/kanban.js has no column limit (searched for \"wip\", \"maxCount\" and stage limit: no hits); kanban only hides configured statuses (Crm scopes/Opportunity.json:16 \"kanbanStatusIgnoreList\")",
+				"odoo-crm": "addons/crm/models/crm_stage.py:23-33 defines sequence, fold and requirements on a stage and no maximum; searched crm_stage views and the kanban column code for a limit or WIP setting: none. The open Wishlist issue asks for kanban WIP limits.",
+				"kiss": "src/router/index.ts:126 \"const router = createRouter(\" lists the only screens: startscherm, afhandeling, contactverzoeken, personen, bedrijven, zaken, links and beheer; a grep of src/ and Kiss.Bff/ for lead, opportunit, offerte, factuur, nieuwsbrief and campagne finds no sales, marketing or invoicing code"
+			},
+			"origin": "featureRequest",
+			"originUrl": "https://github.com/odoo/odoo/issues/141745"
+		},
+		{
+			"id": "pipeline-auto-label",
+			"area": "pipeline",
+			"name": "Have a coloured label put on a lead by itself when it matches a rule you set",
+			"pipelinq": "partial",
+			"hubspot-crm": "yes",
+			"pipedrive": "partial",
+			"espocrm": "partial",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "openregister",
+			"providerHow": "the rule runs on OpenRegister's flow engine (openregister lib/Service/Flow/Nodes/SetFieldsNode.php); read the lead properties in lib/Settings/pipelinq_register.json",
+			"feature": "Automation",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "built",
+				"evidence": "the Flows and FlowDetail pages (src/manifest.json, type flow, OpenRegister flow engine per lib/Flow/PipelinqFlowNodeListener.php:4-9) can trigger on a lead and set a field with OpenRegister's SetFieldsNode; but the lead schema has no label or colour field (title, source, value, probability, priority, stage, status, ...), and system tags (lib/Service/SystemTagService.php:80) are kept for other object types",
+				"owner": "ConductionNL/openregister",
+				"reachedOn": "Flows, FlowDetail",
+				"readOn": "2026-09-26"
+			},
+			"note": "a rule can set priority or another field, not a coloured label",
+			"evidence": {
+				"hubspot-crm": "https://developers.hubspot.com/changelog/fall-2026-spotlight \"Object tags are colored labels automatically applied to records that match criteria you define, for example a 'Large deal' tag on any deal over $10,000\"; \"Available for Sales Hub and Service Hub Starter and up\".",
+				"pipedrive": "https://support.pipedrive.com/en/article/workflow-automation automations can update a deal when it matches conditions (Growth and up), which can set a deal label (https://support.pipedrive.com/en/article/deal-labels); automatic rule-based labels as a feature are not described. Note: Read from the web.archive.org copy (workflow-automation 2026-07-27; deal-labels 2026-07-27) because the live knowledge base answered 429.",
+				"espocrm": "Enum options carry colours (Crm entityDefs/Opportunity.json:177 \"style\" with displayAsLabel), and a before save formula script per entity (Entity Manager > Formula, functions in application/Espo/Resources/metadata/app/formula.json) can set such a label field when a condition matches; rules without scripting are the paid Advanced Pack workflows (https://docs.espocrm.com/administration/workflows/). Note: Formula script in core, no code rules paid.",
+				"odoo-crm": "addons/base_automation/models/base_automation.py:175-196 automation rules on create or update with a domain filter set tag_ids on a lead without code (Settings > Technical > Automation Rules), for example a tag when expected revenue passes a threshold; tags carry a colour on the kanban card.",
+				"kiss": "src/router/index.ts:126 \"const router = createRouter(\" lists the only screens: startscherm, afhandeling, contactverzoeken, personen, bedrijven, zaken, links and beheer; a grep of src/ and Kiss.Bff/ for lead, opportunit, offerte, factuur, nieuwsbrief and campagne finds no sales, marketing or invoicing code"
+			},
+			"origin": "changelog",
+			"originUrl": "https://developers.hubspot.com/changelog/fall-2026-spotlight"
+		},
+		{
 			"id": "cm-log",
 			"area": "contact-moments",
 			"name": "Log a call, an email or a visit against a client",
@@ -2658,6 +2784,180 @@
 			}
 		},
 		{
+			"id": "work-letter-template",
+			"area": "work",
+			"name": "Produce a letter from a template filled with the client's details",
+			"pipelinq": "partial",
+			"hubspot-crm": "unknown",
+			"pipedrive": "partial",
+			"espocrm": "yes",
+			"odoo-crm": "partial",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/TemplateRenderer.php:12-150 and grep of lib/Service for letter, pdf, docx",
+			"feature": "Correspondence",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/TemplateRenderer.php:77 \"render(array $template, array $variables)\" fills {{var}} placeholders for mail templates (Templates page, src/manifest.d/75-marketing-blasts.json:16) and lib/Settings/register.d/85-berichtenbox-templates.json holds Berichtenbox message templates; no letter or document (PDF, docx) is produced for one client",
+				"owner": "ConductionNL/pipelinq",
+				"reachedOn": "Templates, TemplateNew, TemplateEdit",
+				"readOn": "2026-09-26"
+			},
+			"note": "templates exist for mail and Berichtenbox, not for a printable letter",
+			"evidence": {
+				"hubspot-crm": "not checked: HubSpot has email templates, quotes and a documents library (https://knowledge.hubspot.com/documents/use-documents, Sales or Service Hub Starter and up) but no article describes generating a printable letter filled with record data (read 2026-09-26).",
+				"pipedrive": "https://support.pipedrive.com/en/article/what-features-do-the-pipedrive-plans-have Smart Docs creates documents from templates with CRM data from Google Drive, OneDrive or SharePoint (\"Included on Premium and higher plans\", add-on below); https://support.pipedrive.com/en/article/smart-docs covers templates and sharing. A letter from a template is possible; partial by the lane rule for Smart Docs. Note: Read from the web.archive.org copy (what-features-do-the-pipedrive-plans-have 2026-08-24; smart-docs 2026-05-19) because the live knowledge base answered 429.",
+				"espocrm": "application/Espo/Resources/metadata/entityDefs/Template.json fields body, header, footer, entityType, pageFormat, filename edited at Administration > Template Manager (adminPanel.json:168); client/src/views/record/detail.ts:1003 printPdfAction adds Print to PDF on the record, rendered by application/Espo/Tools/Pdf/EntityPrinter.php; PDF/A added in 9.2.0",
+				"odoo-crm": "mail templates (addons/mail/models/mail_template.py, Settings > Technical > Email Templates) fill a message with the contact's fields, and QWeb reports print documents such as quotes on the company layout; a new printable letter template is written in QWeb in developer mode or built with Studio (Enterprise, https://www.odoo.com/documentation/19.0/applications/studio.html).",
+				"kiss": "no document or letter generation in src/ or Kiss.Bff/ (grep for sjabloon, template letter and docx finds nothing); KISS only shows case documents read from the ZGW Documenten API (src/features/zaaksysteem/components/ZaakDocumenten.vue)"
+			},
+			"origin": "tender",
+			"originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/414691",
+			"originRequirements": [
+				"intelligence-db requirements#199364 (Gemeente Midden-Drenthe, 2026-03-05: documentsjabloon voor een afspraakbrief aan een processtap koppelen)",
+				"intelligence-db requirements#174086 (Kadaster, 2025-07-19: brieven automatisch uit sjablonen, aanhef naar gender)",
+				"intelligence-db requirements#55537 (NZa, 2024-12-06: sjabloon voor e-mail en brief)"
+			],
+			"alsoSeenIn": [
+				{
+					"origin": "changelog",
+					"originUrl": "https://github.com/espocrm/espocrm/issues/3417",
+					"by": "espocrm"
+				}
+			]
+		},
+		{
+			"id": "work-saved-view",
+			"area": "work",
+			"name": "Save a filtered list and share it with a colleague",
+			"pipelinq": "partial",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "partial",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "openregister",
+			"providerHow": "saved views are OpenRegister's Views API rendered by nextcloud-vue (read in nextcloud-vue v2.56.0 src/composables/useSavedViewsApi.js), pipelinq pins ^2.56.0 in package.json:39",
+			"feature": "My work",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "built",
+				"evidence": "CnIndexPage keeps filters, search and sort in the route query so a filtered list can be shared as a link; its saved-views control (nextcloud-vue v2.56.0 src/components/CnIndexPage/CnIndexPage.vue:109 CnSavedViewsControl, \"Share with other users (public)\" in CnSaveViewDialog) is opt-in via allowSavedViews, default false (:1650), and no page in src/manifest.json or src/manifest.d sets it. src/services/viewService.js reads OpenRegister views only to pick a pipeline's source in PipelineFormDialog",
+				"owner": "ConductionNL/nextcloud-vue",
+				"reachedOn": "any index page (shareable URL only); save-view control reached on nothing",
+				"readOn": "2026-09-26"
+			},
+			"note": "lead: the shared saved-views control is one manifest flag away (allowSavedViews) on Clients, Tickets, Leads and Tasks",
+			"evidence": {
+				"hubspot-crm": "https://knowledge.hubspot.com/object-settings/set-default-index-page-views \"Manage all saved index page view tabs in one place ... suggest view tabs for all users in the account\"; saved filtered views are shared with users and teams. All products and plans.",
+				"pipedrive": "https://support.pipedrive.com/en/article/filtering \"When creating a new filter in Pipedrive, you can choose whether the filter will be shared with other users or remain private. Shared filters are visible to all users\"; https://www.pipedrive.com/en/product-updates adds sharing quick-filter results by URL. All plans. Note: Read from the web.archive.org copy (filtering 2026-04-18) because the live knowledge base answered 429.",
+				"espocrm": "Users save list filters as personal presets (application/Espo/Resources/metadata/entityDefs/Preferences.json:68 \"presetFilters\"), which are not shared; shared filters come from report filters in the paid Advanced Pack: https://docs.espocrm.com/user-guide/reports/ \"The Report Filters feature allows you to create custom primary filters for list views\". Note: Personal presets in core, shared filters paid.",
+				"odoo-crm": "addons/web/static/src/search/custom_favorite_item/custom_favorite_item.xml Save current search in the search panel, and odoo/addons/base/models/ir_filters.py:14 \"user_ids ... The users the filter is shared with. If empty, the filter is shared with all users\" edited from the favorite's Edit button, so a saved list can be given to named colleagues or everyone. Note: Odoo 20 adds a link to the current search.",
+				"kiss": "lists in KISS are search results held in memory per screen (for example src/features/contact/contactverzoek/overzicht/ContactverzoekenZoeker.vue:49 \"ensureState\"); nothing saves or shares a filter"
+			},
+			"origin": "tender",
+			"originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/359983",
+			"originRequirements": [
+				"intelligence-db requirements#3785 (NZa CRM, 2024-12-06: een selectie vasthouden en delen met een collega)"
+			]
+		},
+		{
+			"id": "work-colleague-availability",
+			"area": "work",
+			"name": "Check whether a colleague is in today before you promise the client a call back",
+			"pipelinq": "partial",
+			"hubspot-crm": "yes",
+			"pipedrive": "unknown",
+			"espocrm": "yes",
+			"odoo-crm": "yes",
+			"kiss": "partial",
+			"provider": "nextcloud",
+			"providerHow": "colleague status is Nextcloud user status in the header, not a pipelinq view; pipelinq's colleague list is unreached (grep of src for RoutingSuggestionPanel returns only its own file)",
+			"feature": "Service desk",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "built",
+				"evidence": "an agent sets only their own availability (src/views/werkplek/widgets/WerkplekHeaderActions.vue:6 WerkplekAgentStatus, lib/Service/KccWerkplekService.php:388 setAvailability); lib/Service/RoutingService.php:409 filterByAvailability ranks available colleagues, but src/components/RoutingSuggestionPanel.vue, the only caller of /api/routing/suggestions, is mounted by nothing. Nextcloud's own user status and absence show in the header contacts menu on every page",
+				"owner": "nextcloud/server",
+				"reachedOn": "KccWerkplek (own status); Nextcloud header contacts menu for colleagues' status",
+				"readOn": "2026-09-26"
+			},
+			"note": "lead: RoutingSuggestionPanel.vue (available colleagues by skill) is built but no page or modal mounts it",
+			"evidence": {
+				"hubspot-crm": "https://knowledge.hubspot.com/help-desk/manage-user-availability-for-help-desk \"a user's availability status ... is set automatically based on their working hours\", with out of office hours \"reflected across both the inbox and help desk\". Service Hub Professional, Enterprise.",
+				"pipedrive": "not checked: searched the Pipedrive knowledge base article list (https://support.pipedrive.com/en-sitemap.xml) and product updates on 2026-09-26 for user availability or out of office status and found none; calendar sync shows a user's own activities (https://support.pipedrive.com/en/article/calendar-sync). Note: Read from the web.archive.org copy (calendar-sync 2026-06-28) because the live knowledge base answered 429.",
+				"espocrm": "Absences are working time ranges per user (application/Espo/Resources/metadata/entityDefs/WorkingTimeRange.json:44 \"users\", type Non-working), and the shared calendar shows colleagues' schedules (Preferences.json:62 \"sharedCalendarUserList\"; https://docs.espocrm.com/user-guide/working-time-calendar/); the scheduler checks busy time (application/Espo/Modules/Crm/Tools/Meeting/MeetingServiceAvailabilityChecker.php)",
+				"odoo-crm": "addons/hr_holidays/models/res_users.py:11 leave_date_to and :19-29 _compute_im_status set leave_online, leave_away and so on for users on approved time off, shown as an out of office status on the avatar and in Discuss; the Time Off app (hr_holidays, LGPL) holds the calendar of who is in.",
+				"kiss": "src/features/search/MedewerkerDetail.vue:37 \"beschikbaar\" shows the fixed morning and afternoon availability of a colleague from the smoelenboek, but no live presence or absence; open issues https://github.com/Klantinteractie-Servicesysteem/KISS-frontend/issues/1434 and https://github.com/Klantinteractie-Servicesysteem/KISS-frontend/issues/1511 (who stands in for an absent colleague)"
+			},
+			"origin": "featureRequest",
+			"originUrl": "https://github.com/Klantinteractie-Servicesysteem/KISS-frontend/issues/1434"
+		},
+		{
+			"id": "work-collaborators",
+			"area": "work",
+			"name": "Add colleagues to a case so they can work on it with you and follow its updates",
+			"pipelinq": "partial",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "yes",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "openregister",
+			"providerHow": "object tasks are OpenRegister's, rendered by nextcloud-vue CnObjectSidebar (read in CnObjectSidebar.vue:4); grep of lib/Settings for followers, watchers, collaborators, participants is empty",
+			"feature": "My work",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "built",
+				"evidence": "a ticket or lead has one assignee (lib/Settings/register.d/99-unify-ticket-supertype.json:210); colleagues can be given work on it through the detail sidebar's Tasks tab (nextcloud-vue CnObjectSidebar, 'Files, Notes, Tags, Tasks, and Audit Trail tabs'), but no followers, watchers or participants field exists, so nobody else is told about updates",
+				"owner": "ConductionNL/openregister",
+				"reachedOn": "TicketDetail, LeadDetail sidebar Tasks tab",
+				"readOn": "2026-09-26"
+			},
+			"evidence": {
+				"hubspot-crm": "https://knowledge.hubspot.com/records/add-collaborators-to-a-deal \"If multiple users in your HubSpot account work together on a deal, you can add them as collaborators ... Each collaborator can access a default view that lists all deals they're included on\". All products and plans.",
+				"pipedrive": "https://support.pipedrive.com/en/article/followers \"Since each item in Pipedrive can only have one owner, this feature is helpful when multiple users are working on a deal and need access to related data and ongoing updates\". All plans. Note: Read from the web.archive.org copy (followers 2026-06-13) because the live knowledge base answered 429.",
+				"espocrm": "application/Espo/Modules/Crm/Resources/metadata/entityDefs/Case.json:129 \"collaborators\" field (enabled by default for Cases and Tasks since 10.0.0); collaborators get an in app notification and auto follow the record (9.3.0, https://github.com/espocrm/espocrm/issues/3530 and 3532); https://docs.espocrm.com/administration/collaborators/",
+				"odoo-crm": "followers on every record (addons/mail/wizard/mail_followers_edit.py, the Followers button in the chatter) add colleagues who then get every message and tracked change; activities assign them work on the record, and 19.0 adds follower management on many records at once.",
+				"kiss": "a contactverzoek is assigned to one department, group or colleague (src/features/contact/contactverzoek/formulier/ContactverzoekFormulier.vue:13 to 35 ActorType radios); KISS has no followers or co-workers on a case, and zaken are read only"
+			},
+			"origin": "changelog",
+			"originUrl": "https://github.com/espocrm/espocrm/issues/3584"
+		},
+		{
+			"id": "work-calendar-feed",
+			"area": "work",
+			"name": "See appointments from an outside calendar feed next to your CRM appointments",
+			"pipelinq": "partial",
+			"hubspot-crm": "partial",
+			"pipedrive": "partial",
+			"espocrm": "partial",
+			"odoo-crm": "partial",
+			"kiss": "no",
+			"provider": "nextcloud",
+			"providerHow": "the side by side view is Nextcloud Calendar's subscription support; pipelinq writes into it (read in lib/Service/AppointmentCalendarLeafProvider.php:4-9)",
+			"feature": "Appointments",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "built",
+				"evidence": "confirmed bookings are pushed as VEVENTs into the staff member's Nextcloud calendar (lib/Service/AppointmentCalendarLeafProvider.php:218 pushBookingEvent), where the Nextcloud Calendar app also shows subscribed outside feeds (webcal/ICS); inside pipelinq the calendar widget on a record shows only events linked to that record",
+				"owner": "nextcloud/server",
+				"reachedOn": "Nextcloud Calendar app; pipelinq ClientDetail, ContactDetail and LeadDetail calendar widget (linked events only)",
+				"readOn": "2026-09-26"
+			},
+			"note": "works in the Calendar app, not on a pipelinq page",
+			"evidence": {
+				"hubspot-crm": "https://knowledge.hubspot.com/integrations/use-hubspots-integration-with-google-calendar-or-outlook-calendar syncs meetings with the user's Google or Outlook calendar, but \"Calendar sync will only sync with a user's primary calendar\"; an outside calendar feed (ICS) is not described. All products and plans.",
+				"pipedrive": "https://support.pipedrive.com/en/article/calendar-sync syncs Google and Microsoft calendars with Pipedrive activities (all plans per https://support.pipedrive.com/en/article/what-features-do-the-pipedrive-plans-have); an outside ICS feed is not described. Note: Read from the web.archive.org copy (calendar-sync 2026-06-28; what-features-do-the-pipedrive-plans-have 2026-08-24) because the live knowledge base answered 429.",
+				"espocrm": "No iCalendar subscription in core 10.0.8 (the July 2026 forum request asks for it); two way calendar sync exists only for Google and Outlook in paid extensions (https://docs.espocrm.com/extensions/google-integration/calendar/, https://docs.espocrm.com/extensions/outlook-integration/calendar/)",
+				"odoo-crm": "addons/google_calendar and addons/microsoft_calendar sync Google and Outlook calendars both ways with the Odoo calendar, so outside appointments show next to CRM meetings; a plain iCal feed from another source cannot be subscribed to.",
+				"kiss": "no calendar or appointment feature in src/ or Kiss.Bff/ (grep for afspraak and ical finds nothing); open epic https://github.com/Klantinteractie-Servicesysteem/KISS-frontend/issues/1487 asks for colleague availability from Outlook and Teams"
+			},
+			"origin": "featureRequest",
+			"originUrl": "https://forum.espocrm.com/forum/feature-requests/127276-import-or-subscribe-to-external-icalendar-calendars"
+		},
+		{
 			"id": "mkt-blast",
 			"area": "marketing",
 			"name": "Send one mailing to a list of clients",
@@ -3115,6 +3415,105 @@
 				"pipedrive": "https://support.pipedrive.com/en/article/campaigns-by-pipedrive \"If you use our Web Forms, you'll also be able to subscribe your contacts directly from the web form editor ... the marketing status in Pipedrive will be automatically updated\". Needs the LeadBooster and Campaigns add-ons. Note: Read from the web.archive.org copy (campaigns-by-pipedrive 2025-10-18) because the live knowledge base answered 429.",
 				"odoo-crm": "addons/website_mass_mailing/controllers/main.py:36 \"@route('/website_mass_mailing/subscribe', type='jsonrpc', website=True, auth='public')\" (read with git show) behind the newsletter block and popup snippets (addons/website_mass_mailing/views/snippets/s_newsletter_benefits_popup.xml) on the Community website."
 			}
+		},
+		{
+			"id": "mkt-events",
+			"area": "marketing",
+			"name": "Organise an event and take the registrations for it from a web form",
+			"pipelinq": "partial",
+			"hubspot-crm": "partial",
+			"pipedrive": "unknown",
+			"espocrm": "partial",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Settings/register.d/98-marketing-campaigns.json:24, the landing page is rendered by portaliq (ADR-086)",
+			"feature": "Marketing",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Settings/register.d/98-marketing-campaigns.json:149 \"The portaliq form bound to the landing page. A submission on this form becomes a lead in this campaign.\" (seed example 'Webinar AI voor gemeenten', :523); lib/Service/LandingPageProvisioningService.php provisions the page. There is no event object: no date, venue, capacity, attendee list or confirmation",
+				"owner": "ConductionNL/pipelinq",
+				"reachedOn": "Campaigns, CampaignNew, CampaignDetail (src/manifest.d/78-marketing-campaigns.json)",
+				"readOn": "2026-09-26"
+			},
+			"note": "an event can be run as a campaign whose landing-page form turns each sign-up into a lead; registrations are not kept as attendees of an event",
+			"evidence": {
+				"hubspot-crm": "https://knowledge.hubspot.com/integrations/use-marketing-events \"If you're organizing an in-person event, you can manually create a marketing event in HubSpot and import the list of participants\", with \"Register contacts to marketing events with workflows\" (workflows on Professional); webinar apps sync registrations. All products and plans for events. Registration from a HubSpot form needs a workflow you build.",
+				"pipedrive": "not checked: searched the Pipedrive knowledge base article list (https://support.pipedrive.com/en-sitemap.xml) and product updates on 2026-09-26 for event management and event registration and found none; web forms feed leads and deals (https://support.pipedrive.com/en/article/web-forms, LeadBooster add-on) but an event object is not described. Note: Read from the web.archive.org copy (web-forms 2026-03-11) because the live knowledge base answered 429.",
+				"espocrm": "No event entity with registrations in 10.0.8: Campaign types are application/Espo/Modules/Crm/Resources/metadata/entityDefs/Campaign.json:30 Email, Newsletter, InformationalEmail, Web, Television, Radio, Mail. A Web campaign with a hosted Lead Capture form (application/Espo/Resources/metadata/entityDefs/LeadCapture.json:138 \"formEnabled\", :7 \"campaign\") takes sign ups into a target list, and meeting invitations track attendee acceptance (Crm entityDefs/Meeting.json:113 \"acceptanceStatus\"). Note: Registration by web form into a campaign, no event object with capacity or tickets.",
+				"odoo-crm": "addons/event (Community) manages events, tickets and attendees, and addons/website_event publishes the event page with a registration form that creates event.registration records; attendees get confirmation and reminder mails from the event's mail schedule.",
+				"kiss": "src/router/index.ts:126 \"const router = createRouter(\" lists the only screens: startscherm, afhandeling, contactverzoeken, personen, bedrijven, zaken, links and beheer; a grep of src/ and Kiss.Bff/ for lead, opportunit, offerte, factuur, nieuwsbrief and campagne finds no sales, marketing or invoicing code; no event or registration entity exists"
+			},
+			"origin": "tender",
+			"originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/422277",
+			"originRequirements": [
+				"intelligence-db requirements#194381 (Kadaster CRM, 2026-04-23: aanmeldingen of registraties voor evenementen)",
+				"intelligence-db requirements#75222 (Senzer, 2025-08-13: evenementenmodule)"
+			]
+		},
+		{
+			"id": "mkt-block-editor",
+			"area": "marketing",
+			"name": "Design a mailing by dragging blocks instead of writing HTML",
+			"pipelinq": "no",
+			"hubspot-crm": "yes",
+			"pipedrive": "partial",
+			"espocrm": "no",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in src/views/templates/TemplateForm.vue:93-140",
+			"feature": "Marketing",
+			"featureConfidence": "high",
+			"built": {
+				"state": "none",
+				"evidence": "src/views/templates/TemplateForm.vue:100 \"<textarea id=\\\"template-form-body-html\\\"\": a mailing template is written as HTML in a textarea; articles can be dropped in as an {{articles}} block (lib/Service/ArticleService.php), but there is no drag and drop block designer",
+				"owner": "ConductionNL/pipelinq",
+				"reachedOn": "nothing",
+				"readOn": "2026-09-26"
+			},
+			"evidence": {
+				"hubspot-crm": "https://knowledge.hubspot.com/marketing-email/create-and-send-marketing-emails \"In the marketing email editor ... you can edit its content, appearance, and module locations\" from templates, without HTML. All products and plans.",
+				"pipedrive": "https://support.pipedrive.com/en/article/drag-drop-editor is the Campaigns drag and drop email editor; \"Campaigns by Pipedrive is available as a paid add-on\". Partial by the lane rule. Note: Read from the web.archive.org copy (drag-drop-editor 2026-04-21) because the live knowledge base answered 429.",
+				"espocrm": "application/Espo/Resources/metadata/entityDefs/EmailTemplate.json:13 \"type\": \"wysiwyg\" is a rich text editor with a code view; no block or drag and drop builder in 10.0.8 or the extension list (https://www.espocrm.com/extensions/), and the forum request has been open since 2020",
+				"odoo-crm": "addons/mass_mailing (Community) edits mailings with the drag and drop snippet editor of the website builder, with themes and building blocks; no HTML is needed.",
+				"kiss": "src/router/index.ts:126 \"const router = createRouter(\" lists the only screens: startscherm, afhandeling, contactverzoeken, personen, bedrijven, zaken, links and beheer; a grep of src/ and Kiss.Bff/ for lead, opportunit, offerte, factuur, nieuwsbrief and campagne finds no sales, marketing or invoicing code; the only rich text editor is CKEditor for news and work instructions (src/components/ckeditor/CkEditorWrapper.vue), not mailings"
+			},
+			"origin": "featureRequest",
+			"originUrl": "https://forum.espocrm.com/forum/feature-requests/61838-a-drag-and-drop-html-mail-editor-for-messages-and-templates"
+		},
+		{
+			"id": "mkt-form-campaign-tags",
+			"area": "marketing",
+			"name": "Keep the campaign tags and landing page of every web form submission on the client record",
+			"pipelinq": "partial",
+			"hubspot-crm": "partial",
+			"pipedrive": "partial",
+			"espocrm": "partial",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Listener/LandingPageFormSubmittedListener.php:115-175 and grep of src/manifest.json for touchpoint",
+			"feature": "Marketing",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "built",
+				"evidence": "a portaliq landing-page submission becomes a contact, a lead with campaignId and firstTouch/lastTouch, and a touchpoint carrying the campaign (lib/Listener/LandingPageFormSubmittedListener.php:6 \"Turns a visitor's landing-page form submission into a contact, a lead\", registered at lib/AppInfo/Application.php:285; lead fields in lib/Settings/register.d/98-marketing-campaigns.json:392); nothing puts the campaign or landing page on the client record, no page shows touchpoints, and the website enquiry form (lib/Service/EnquiryIntakeService.php) keeps no UTM values",
+				"owner": "ConductionNL/pipelinq",
+				"reachedOn": "LeadDetail (lead fields), CampaignReportPage; not the client record",
+				"readOn": "2026-09-26"
+			},
+			"note": "kept on the lead and in the attribution log, only for portaliq landing pages",
+			"evidence": {
+				"hubspot-crm": "https://knowledge.hubspot.com/campaigns/manage-your-campaign-utm-values manages campaign UTM values (listed in the knowledge base), and contacts carry original source properties set on conversion (https://knowledge.hubspot.com/properties/hubspots-default-contact-properties); the landing page per submission sits on the form submission, not read in detail here.",
+				"pipedrive": "https://www.pipedrive.com/en/product-updates \"Capture UTM parameters automatically into hidden form fields\" and \"recording the landing page where a lead converted directly to their CRM record\"; Web Forms belong to the LeadBooster add-on (https://support.pipedrive.com/en/article/web-forms), partial by the lane rule.",
+				"espocrm": "Lead Capture stamps each submission with its campaign and lead source (application/Espo/Resources/metadata/entityDefs/LeadCapture.json:7 \"campaign\", :113 \"leadSource\"), shown on the lead and its campaign log; UTM tags or the landing page URL only travel if an admin adds custom fields to the capture field list. Note: Campaign and source yes, UTM and page URL by custom field.",
+				"odoo-crm": "addons/utm/models/utm_mixin.py:26-39 default_get reads the campaign, medium and source cookies set from the landing URL, so a website form lead keeps them (website_crm/models/crm_lead.py:51 medium website); website_crm links the lead to the website visitor with the pages they viewed.",
+				"kiss": "src/router/index.ts:126 \"const router = createRouter(\" lists the only screens: startscherm, afhandeling, contactverzoeken, personen, bedrijven, zaken, links and beheer; a grep of src/ and Kiss.Bff/ for lead, opportunit, offerte, factuur, nieuwsbrief and campagne finds no sales, marketing or invoicing code; KISS has no web form intake (open epic https://github.com/Klantinteractie-Servicesysteem/KISS-frontend/issues/1440)"
+			},
+			"origin": "changelog",
+			"originUrl": "https://www.pipedrive.com/en/product-updates"
 		},
 		{
 			"id": "portal-login",
@@ -5860,6 +6259,38 @@
 			}
 		},
 		{
+			"id": "auto-failure-alerts",
+			"area": "automation",
+			"name": "Be told when an automation keeps failing, and have it switched off before it does more harm",
+			"pipelinq": "partial",
+			"hubspot-crm": "unknown",
+			"pipedrive": "yes",
+			"espocrm": "no",
+			"odoo-crm": "partial",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Notification/Notifier.php:239-300 and lib/BackgroundJob/BillingHandoffRetryJob.php:80-98",
+			"feature": "Automation",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "built",
+				"evidence": "some integrations tell people when they fail: lib/Notification/Notifier.php:239 'forecast_snapshot_partial_failure', :250 'wip_sync_failed', :261 'billing_handoff_failed', :289 'social_relink_needed', with lib/BackgroundJob/BillingHandoffRetryJob.php:95 re-notifying admins while a batch stays failed; failed export runs show on ExportRuns with a retry (appinfo/routes.php:440). Nothing switches an automation off after repeated failure (grep for circuit breaker, consecutive, auto disable finds only POS PIN lockout)",
+				"owner": "ConductionNL/pipelinq",
+				"reachedOn": "Nextcloud notifications; ExportRuns, ExportRunDetail",
+				"readOn": "2026-09-26"
+			},
+			"note": "alerts for a few integrations, no automatic switch off; flow failures are OpenRegister's and were not checked",
+			"evidence": {
+				"hubspot-crm": "not checked: https://knowledge.hubspot.com/workflows/troubleshoot-common-workflow-errors explains errors per action in the workflow history (Professional hubs), but alerts on repeated failure and automatic switch-off are not described (read 2026-09-26).",
+				"pipedrive": "https://www.pipedrive.com/en/product-updates \"Automation owners will receive email alerts when workflows fail consistently\" and \"the system will automatically deactivate an automation if failures continue over time\", with an automation overview dashboard showing health.",
+				"espocrm": "Failed webhook deliveries are only marked Failed after the attempt limit (application/Espo/Core/Webhook/Queue.php:376 webhookMaxAttemptNumber; WebhookQueueItem status Failed) and the webhook stays active (:174 checks isActive but nothing clears it); application/Espo/Tools/AdminNotifications/Manager.php warns about cron and upgrades only, so no one is told and nothing is switched off",
+				"odoo-crm": "odoo/addons/base/models/ir_cron.py:36-37 MIN_FAILURE_COUNT_BEFORE_DEACTIVATION = 5 and 7 days, :121 failure_count: a scheduled action that keeps failing is switched off by itself and logged; automation rules and webhooks (ir_actions.py:1059) only write to the server log, and no one is alerted.",
+				"kiss": "KISS has no automations; background work is the Elastic sync CronJobs (helm/kiss-chart/templates/sync-sharepoint.yaml:11) whose failures show only in cluster logs (docs/manual/zoeken-in-bronnen.md:2); no alerting in Kiss.Bff/"
+			},
+			"origin": "changelog",
+			"originUrl": "https://www.pipedrive.com/en/product-updates"
+		},
+		{
 			"id": "mail-client-plugin",
 			"area": "contact-moments",
 			"name": "Add a contact to the CRM from inside the mail you are reading",
@@ -5916,6 +6347,334 @@
 			}
 		},
 		{
+			"id": "clients-behaviour-flag",
+			"area": "clients",
+			"name": "Flag a client for aggressive or unwanted behaviour so the next colleague is warned before the contact",
+			"pipelinq": "no",
+			"hubspot-crm": "partial",
+			"pipedrive": "partial",
+			"espocrm": "partial",
+			"odoo-crm": "partial",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Integration/PartyLeafProvider.php:146 and grep of src/ for party-leaf, party-indicator and partyIndicator",
+			"feature": "Client management",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Settings/register.d/17-party-fields-and-indicators.json:64 indicator codes \"for example overleden, geheimhouding-adres, bewindvoering or agressie-registratie\" with severity info/warning/critical; lib/Service/PartyIndicatorService.php:134 resolve, :197 isBlocked, acknowledge over routes /api/leaves/party/{partyId} and /api/party-indicator-values/{valueId}/acknowledge (appinfo/routes.php:130-132). No page in src/ calls these routes and no manifest page lists partyIndicator or partyIndicatorValue",
+				"owner": "ConductionNL/pipelinq",
+				"reachedOn": "nothing",
+				"readOn": "2026-09-26"
+			},
+			"note": "lead: the whole indicator model (warning, period, acknowledgement) is built and served as a leaf, but no pipelinq page sets or shows a flag, so the next colleague is never warned",
+			"evidence": {
+				"hubspot-crm": "https://knowledge.hubspot.com/records/pin-an-activity-on-a-record \"You can pin one activity to the top of a record timeline. A pinned activity will appear on the record timeline for all users\" (all plans), so a warning note stays on top; no dedicated behaviour flag or pop-up warning is described.",
+				"pipedrive": "https://support.pipedrive.com/en/article/contact-labels labels on contacts show as a column that can be filtered (all plans), and https://www.pipedrive.com/en/product-updates adds \"pinned notes displayed on deals, leads, people and organizations\"; a warning shown before contact is not described. Note: Read from the web.archive.org copy (contact-labels 2026-04-14) because the live knowledge base answered 429.",
+				"espocrm": "No warning flag on Contact in 10.0.8 (entityDefs/Contact.json field list has doNotCall but no behaviour field); an admin can add a checkbox or enum in the Field Manager and use Dynamic Logic (https://docs.espocrm.com/administration/dynamic-logic/) to show a highlighted panel note when it is set, since 9.2.0 panels support a primary style and notes (https://github.com/espocrm/espocrm/issues/3395). Note: Configuration only; no built in flag or pop up at contact time.",
+				"odoo-crm": "addons/sale/views/res_partner_views.xml:37-41 \"Warning on Sales Orders and Invoices\" (sale_warn_msg, enabled by the sale.group_warning_sale setting) shows a warning when a colleague opens a sales order for that contact (sale_order.py:837); tags on the contact are visible on the form. Nothing warns on a call, chat or ticket before the contact.",
+				"kiss": "the person page shows only BRP facts, the BRP secrecy warning (src/features/persoon/persoon-details/BrpGegevens.vue:21 \"gegevens uit de BRP geheim te houden\") and contact details; no label or warning on the client exists; open issue https://github.com/Klantinteractie-Servicesysteem/KISS-frontend/issues/1457"
+			},
+			"origin": "tender",
+			"originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/434309",
+			"originRequirements": [
+				"intelligence-db requirements#197808 to #197827 (BghU klantcontactcentrum, 2026-07-23: categories of unwanted behaviour the desk must handle)",
+				"intelligence-db requirements#212353 (Stichting Teylingereind, 2026-01-25: alerts for aggression risk)",
+				"intelligence-db requirements#174529 (Gemeente Goes, 2023-08-02: ad hoc recording for registering unwanted behaviour)"
+			],
+			"alsoSeenIn": [
+				{
+					"origin": "featureRequest",
+					"originUrl": "https://github.com/Klantinteractie-Servicesysteem/KISS-frontend/issues/1457",
+					"by": "kiss"
+				}
+			]
+		},
+		{
+			"id": "clients-preferred-name",
+			"area": "clients",
+			"name": "Record the name a resident likes to be called by",
+			"pipelinq": "partial",
+			"hubspot-crm": "unknown",
+			"pipedrive": "unknown",
+			"espocrm": "partial",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "openregister",
+			"providerHow": "custom fields are OpenRegister schema properties (read in the existing clients-custom-fields row and lib/Service/RegisterResolverService.php)",
+			"feature": "Client management",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "built",
+				"evidence": "no preferred name, roepnaam or nickname property on client or contact (grep of lib/Settings and src for preferred name, roepnaam, nickname, aanspreek); an administrator can add one as a custom field (clients-custom-fields, lib/Service/RegisterResolverService.php) or as a typed party field (lib/Settings/register.d/17-party-fields-and-indicators.json)",
+				"owner": "ConductionNL/pipelinq",
+				"reachedOn": "ClientDetail and ContactDetail forms, only once a custom field is added",
+				"readOn": "2026-09-26"
+			},
+			"note": "not a shipped field; has to be configured",
+			"evidence": {
+				"hubspot-crm": "not checked: https://knowledge.hubspot.com/properties/hubspots-default-contact-properties was read for other rows and names first and last name; no preferred name default property was found, a custom property would be needed (read 2026-09-26).",
+				"pipedrive": "not checked: https://support.pipedrive.com/en/article/contacts-people-and-organizations names no preferred name field; a custom field would be needed (https://support.pipedrive.com/en/article/custom-fields) (read 2026-09-26). Note: Read from the web.archive.org copy (contacts-people-and-organizations 2026-05-20; custom-fields 2026-06-28) because the live knowledge base answered 429.",
+				"espocrm": "Contact name fields are salutationName, firstName, lastName (application/Espo/Modules/Crm/Resources/metadata/entityDefs/Contact.json field list); no preferred name or nickname field ships, an admin adds one in the Field Manager. Note: Custom field only.",
+				"odoo-crm": "odoo/addons/base/models/properties_base_definition_mixin.py:14 properties on res.partner (res_partner.py:187) with the Add Property button on the Contacts form (res_partner_views.xml:196) let an admin add a \"Preferred name\" field without code; there is no built in preferred name field.",
+				"kiss": "client names come from the BRP only (src/features/persoon/persoon-details/BrpGegevens.vue:26 \"<dt>Naam</dt>\") and KISS cannot edit the OpenKlant partij; open issue https://github.com/Klantinteractie-Servicesysteem/KISS-frontend/issues/1469"
+			},
+			"origin": "featureRequest",
+			"originUrl": "https://github.com/Klantinteractie-Servicesysteem/KISS-frontend/issues/1469"
+		},
+		{
+			"id": "clients-ai-summary",
+			"area": "clients",
+			"name": "Get a short written summary of a client's history before you contact them",
+			"pipelinq": "no",
+			"hubspot-crm": "yes",
+			"pipedrive": "partial",
+			"espocrm": "partial",
+			"odoo-crm": "partial",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/Customer360SummaryService.php:4-5 and lib/Service/NaviService.php:4-12",
+			"feature": "Client management",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "none",
+				"evidence": "lib/Service/Customer360SummaryService.php (route /api/customer-360/summary, appinfo/routes.php:108) and the ClientDetail stat widgets (src/manifest.json:1801 client-summary-last-activity) give counts and dates, not a written summary; lib/Service/NaviService.php uses a language model only for analytics questions",
+				"owner": "ConductionNL/pipelinq",
+				"reachedOn": "nothing",
+				"readOn": "2026-09-26"
+			},
+			"note": "a numeric 360 summary exists; no prose summary of the history",
+			"evidence": {
+				"hubspot-crm": "https://knowledge.hubspot.com/records/summarize-records \"Use the Record summary card on record previews and record views. This summary includes information about the currently viewed record's activities, notes, and ownership\". All products and plans.",
+				"pipedrive": "https://support.pipedrive.com/en/article/nova Nova \"generates an AI-powered briefing using deal context, organization information, contact history, and recent activity\" before a meeting (all plans); https://support.pipedrive.com/en/article/ai-email-summarization summarises email threads. A summary of a client's whole history on demand outside a meeting is not described. Note: Read from the web.archive.org copy (ai-email-summarization 2026-07-10) because the live knowledge base answered 429.",
+				"espocrm": "Paid Intelligence extension, requires EspoCRM 10.0.3: https://docs.espocrm.com/extensions/intelligence/ \"The summary output includes: Short summary, Summary, Sentiment, Actions\" from the record description and stream history, with a button on the detail view",
+				"odoo-crm": "https://www.odoo.com/documentation/19.0/applications/productivity/ai.html lists \"Summarize: Summarize this chatter thread\" among Ask AI requests on any record, and AI fields can hold a summary (https://www.odoo.com/documentation/19.0/applications/productivity/ai/fields.html); the AI app is Enterprise, not in the 19.0 Community source.",
+				"kiss": "no AI, transcription or summarisation code in src/ or Kiss.Bff/; AI assistance is an open theme https://github.com/Klantinteractie-Servicesysteem/KISS-frontend/issues/1450 \"Verkenning AI-assistentie voor KCC-medewerkers\""
+			},
+			"origin": "changelog",
+			"originUrl": "https://docs.espocrm.com/extensions/intelligence/"
+		},
+		{
+			"id": "clients-smart-paste",
+			"area": "clients",
+			"name": "Paste an email signature and have the contact fields filled in for you",
+			"pipelinq": "no",
+			"hubspot-crm": "unknown",
+			"pipedrive": "partial",
+			"espocrm": "partial",
+			"odoo-crm": "partial",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "grep of src and lib/Service for paste and signature parsing",
+			"feature": "Client management",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "none",
+				"evidence": "no signature or free text parser in lib/Service or src/ (grep for paste, parseSignature); contact data comes in by form, vCard import (lib/Service/ContactImportService.php:64) or KvK and BRP lookups",
+				"owner": "ConductionNL/pipelinq",
+				"reachedOn": "nothing",
+				"readOn": "2026-09-26"
+			},
+			"evidence": {
+				"hubspot-crm": "not checked: searched the knowledge base list for signature parsing and smart paste; enrichment fills fields from HubSpot's dataset (https://knowledge.hubspot.com/records/enrich-your-contact-and-company-data), not from pasted text (read 2026-09-26).",
+				"pipedrive": "https://support.pipedrive.com/en/article/card-scanner-mobile the mobile scanner \"recognizes information on your cards\" to create a contact; pasting an email signature into a form is not described. Note: Read from the web.archive.org copy (card-scanner-mobile 2026-06-13) because the live knowledge base answered 429.",
+				"espocrm": "Paid Intelligence extension: https://docs.espocrm.com/extensions/intelligence/ \"Intelligent Paste ... AI will attempt to extract record data from the input. The extracted fields are then listed, allowing the user to uncheck fields\"",
+				"odoo-crm": "https://www.odoo.com/documentation/19.0/applications/productivity/ai/fields.html AI fields generate \"structured content from unstructured data\" and an AI agent can create records from text (Enterprise AI app); there is no paste a signature button on the contact form. In Community, addons/partner_autocomplete fills company details from a name or VAT number.",
+				"kiss": "no AI, transcription or summarisation code in src/ or Kiss.Bff/; AI assistance is an open theme https://github.com/Klantinteractie-Servicesysteem/KISS-frontend/issues/1450 \"Verkenning AI-assistentie voor KCC-medewerkers\"; KISS also has no client edit form to fill"
+			},
+			"origin": "changelog",
+			"originUrl": "https://docs.espocrm.com/extensions/intelligence/"
+		},
+		{
+			"id": "clients-identifiers",
+			"area": "clients",
+			"name": "Keep several official numbers on a company, such as KvK, VAT and DUNS, each checked",
+			"pipelinq": "no",
+			"hubspot-crm": "partial",
+			"pipedrive": "partial",
+			"espocrm": "partial",
+			"odoo-crm": "partial",
+			"kiss": "partial",
+			"provider": "pipelinq",
+			"providerHow": "listed client properties across every register file and grepped lib for kvkNumber, vat, duns",
+			"feature": "Client management",
+			"featureConfidence": "high",
+			"built": {
+				"state": "none",
+				"evidence": "the client schema holds name, type, email, phone, address, website, industry, notes, contactsUid (lib/Settings/pipelinq_register.json, schema client) and no register.d fragment adds a KvK, VAT or DUNS number; KvK numbers appear only on prospects (src/components/ProspectCard.vue:34) and receipts; the only number checked is the BSN (lib/Service/BsnValidationService.php)",
+				"owner": "ConductionNL/pipelinq",
+				"reachedOn": "nothing",
+				"readOn": "2026-09-26"
+			},
+			"note": "a custom field could hold a number, but nothing checks it",
+			"evidence": {
+				"hubspot-crm": "https://knowledge.hubspot.com/properties/understand-the-property-editor custom properties carry validation rules (\"the rules it adheres to\"), so KvK, VAT and DUNS numbers can be stored as checked fields; no built-in identifier checks against registers. All products and plans.",
+				"pipedrive": "https://support.pipedrive.com/en/article/custom-fields custom fields hold KvK, VAT or DUNS numbers with \"quality rules\" set in Data fields (https://support.pipedrive.com/en/article/data-fields-in-pipedrive); checks against registers are not built in, the KvK one only via the third-party PipeEnrich app (https://cybermatic.nl/en/apps/pipe-enrich/). Note: Read from the web.archive.org copy (custom-fields 2026-06-28; data-fields-in-pipedrive 2026-06-12) because the live knowledge base answered 429.",
+				"espocrm": "Account ships one identifier field, application/Espo/Modules/Crm/Resources/metadata/entityDefs/Account.json:88 \"sicCode\"; KvK, VAT and DUNS need custom varchar fields, which can carry a regex pattern check but no register validation. Note: Custom fields with pattern checks only.",
+				"odoo-crm": "odoo/addons/base/models/res_partner.py:237 \"vat = fields.Char(string='Tax ID'\" and :241 \"company_registry = fields.Char(string=\\\"Company ID\\\"\" give one VAT number (checked by base_vat against VIES) and one registry number on the contact form in 19.0; Odoo 20 release notes add \"Multiple partner identifiers ... Identifiers can be added by type and are validated.\"",
+				"kiss": "KISS handles BSN, KvK number, vestigingsnummer and RSIN (src/helpers/validation.ts:108 \"parseBsn\" with elfproef, :118 \"parseKkvkOfVestigingsnummer\"; src/features/klant/klant-details/fetch-klant.ts:46 \"klant.rsin = bedrijf.rsin\" from the KvK); VAT and DUNS numbers are not supported. Note: Dutch identifiers only."
+			},
+			"origin": "changelog",
+			"originUrl": "https://www.odoo.com/odoo-20-release-notes"
+		},
+		{
+			"id": "clients-churn-risk",
+			"area": "clients",
+			"name": "See which clients are at risk of leaving before they actually go",
+			"pipelinq": "partial",
+			"hubspot-crm": "yes",
+			"pipedrive": "unknown",
+			"espocrm": "no",
+			"odoo-crm": "partial",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/RenewalEngineService.php:11 and :187-276, lib/Service/DetractorFollowUpService.php:6-17",
+			"feature": "Contracts",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/RenewalEngineService.php:187 marks contracts 'expiring' ahead of their end and :231 'churned' on silent expiry (ContractDetail, Contracts page), and lib/Service/DetractorFollowUpService.php:6 \"an unhappy answer becomes somebody's task\"; there is no churn score or at-risk list across signals",
+				"owner": "ConductionNL/pipelinq",
+				"reachedOn": "Contracts, ContractDetail; tasks in Tasks and MyWork",
+				"readOn": "2026-09-26"
+			},
+			"note": "warning signals exist per contract and per survey answer, not as a client risk view",
+			"evidence": {
+				"hubspot-crm": "https://knowledge.hubspot.com/ai-tools/use-the-customer-health-agent \"assess the health of an account based on logged CRM activities, call transcripts, and public information ... identify at-risk accounts and prioritize retention efforts\". Service Hub or Smart CRM Professional, Enterprise, with HubSpot Credits.",
+				"pipedrive": "not checked: searched the Pipedrive knowledge base article list (https://support.pipedrive.com/en-sitemap.xml) and product updates on 2026-09-26 for churn or health scoring and found none; Scores rate deals only (\"currently, you can only choose deals\", https://support.pipedrive.com/en/article/scores). Note: Read from the web.archive.org copy (scores 2026-06-10) because the live knowledge base answered 429.",
+				"espocrm": "No health score or churn signal in 10.0.8 (Account field list in Crm entityDefs/Account.json has no score; searched Crm en_US i18n for \"score\" and \"churn\": no hits), and the paid Intelligence extension offers no prediction (https://docs.espocrm.com/extensions/intelligence/)",
+				"odoo-crm": "https://www.odoo.com/documentation/19.0/applications/sales/subscriptions/reports.html filters subscriptions that are \"To renew\" and reports churned ones (Enterprise Subscriptions); there is no risk score that flags a client before they leave.",
+				"kiss": "src/router/index.ts:126 \"const router = createRouter(\" lists the only screens: startscherm, afhandeling, contactverzoeken, personen, bedrijven, zaken, links and beheer; a grep of src/ and Kiss.Bff/ for lead, opportunit, offerte, factuur, nieuwsbrief and campagne finds no sales, marketing or invoicing code"
+			},
+			"origin": "changelog",
+			"originUrl": "https://www.hubspot.com/spotlight"
+		},
+		{
+			"id": "clients-unmerge",
+			"area": "clients",
+			"name": "Undo a merge of two client records that should never have been merged",
+			"pipelinq": "no",
+			"hubspot-crm": "no",
+			"pipedrive": "unknown",
+			"espocrm": "no",
+			"odoo-crm": "no",
+			"kiss": "no",
+			"provider": "openregister",
+			"providerHow": "merge is OpenRegister's; grep of pipelinq lib and openregister routes for unmerge is empty",
+			"feature": "Client management",
+			"featureConfidence": "high",
+			"built": {
+				"state": "none",
+				"evidence": "merging runs on OpenRegister's merge (lib/Listener/ObjectsMergedSyncListener.php syncs the Nextcloud contact afterwards); no unmerge exists in pipelinq or in OpenRegister's routes (only objects revert, openregister appinfo/routes.php:1444, for one object's own history)",
+				"owner": "ConductionNL/pipelinq",
+				"reachedOn": "nothing",
+				"readOn": "2026-09-26"
+			},
+			"note": "the merged-away record can at best be restored from OpenRegister's deleted objects, with its links not moved back",
+			"evidence": {
+				"hubspot-crm": "https://knowledge.hubspot.com/records/merge-records \"once you've merged two records, it is not possible to unmerge them\"; the idea thread is open (community answered 403, listed, not read).",
+				"pipedrive": "not checked: https://support.pipedrive.com/en/article/merge-duplicates describes merging but not undoing it, and https://support.pipedrive.com/en/article/restore-data restores deleted items, bulk deletions and imports; no unmerge is described (read 2026-09-26). Note: Read from the web.archive.org copy (merge-duplicates 2026-01-13; restore-data 2026-03-14) because the live knowledge base answered 429.",
+				"espocrm": "application/Espo/Core/Action/Actions/Merge/Merger.php:151 moves notes and :266 relations to the kept record and :157 deletes the source record; no unmerge action exists, and restoring the deleted record (client/src/views/record/deleted-detail.js:44 restoreDeleted) does not move its relations back",
+				"odoo-crm": "odoo/addons/base/wizard/base_partner_merge.py moves links and messages to the kept contact and deletes the other (base_partner_merge.py:213-216); searched base_partner_merge for an undo or reverse action: none.",
+				"kiss": "KISS has no merge (grep for merge and samenvoeg in src/features finds nothing), so nothing to undo; client records live in OpenKlant"
+			},
+			"origin": "featureRequest",
+			"originUrl": "https://community.hubspot.com/t5/HubSpot-Ideas/Un-merging-contacts/idi-p/321397"
+		},
+		{
+			"id": "clients-undo-bulk-change",
+			"area": "clients",
+			"name": "Undo a bulk change you made by mistake, even weeks later",
+			"pipelinq": "no",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "partial",
+			"odoo-crm": "no",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "grep of src/views/clients and src/components for bulk actions, and the existing bulk-edit row",
+			"feature": "Client management",
+			"featureConfidence": "high",
+			"built": {
+				"state": "none",
+				"evidence": "pipelinq has no bulk edit (existing row bulk-edit is no), so there is no bulk change to undo; per object, OpenRegister's revert (openregister appinfo/routes.php:1444) rolls back one record's history",
+				"owner": "ConductionNL/pipelinq",
+				"reachedOn": "nothing",
+				"readOn": "2026-09-26"
+			},
+			"evidence": {
+				"hubspot-crm": "https://knowledge.hubspot.com/object-settings/restore-crm-changes \"Restore CRM changes by rolling records back to a previous point within the last 14 days. This allows you to undo updates made by workflows, imports, or manual edits\". Marketing, Sales, Service or Data Hub Starter and up.",
+				"pipedrive": "https://www.pipedrive.com/en/product-updates \"viewing and reverting bulk actions from a new page in the Restore Data feature. See what changed, when and by whom, and undo bulk edits, including lead-to-deal conversions, within 30 days\"; https://support.pipedrive.com/en/article/restore-data \"Restore multiple items\".",
+				"espocrm": "No undo for a mass update; per record, the audit log offers a restore of previous values (client/src/views/stream/record/row-actions/update.js:85 'confirmRestoreFromAudit' \"The previous values will be set in a form\") for audited fields, so a bulk change is undone record by record. Note: Record by record restore from the audit log only.",
+				"odoo-crm": "list multi edit (odoo/addons/base/views/res_partner_views.xml:19 multi_edit) writes straight to the records; tracked fields keep the old value in each record's chatter (addons/mail/models/res_partner.py:20-25), but searched web and mail for an undo of a mass write: none.",
+				"kiss": "KISS has no bulk edit of clients or any record (each beheer screen edits one item, for example src/views/Beheer/Kanalen/KanaalBeheer.vue) and no undo"
+			},
+			"origin": "changelog",
+			"originUrl": "https://www.pipedrive.com/en/product-updates"
+		},
+		{
+			"id": "clients-business-card-scan",
+			"area": "clients",
+			"name": "Create a contact by scanning a business card with your phone",
+			"pipelinq": "no",
+			"hubspot-crm": "unknown",
+			"pipedrive": "yes",
+			"espocrm": "no",
+			"odoo-crm": "partial",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "grep of src and lib for scan, ocr, camera",
+			"feature": "Client management",
+			"featureConfidence": "high",
+			"built": {
+				"state": "none",
+				"evidence": "no camera, OCR or card scan anywhere in src/ or lib/, and no mobile client (plat-phone partial: openspec/specs/time-entry-mobile only)",
+				"owner": "ConductionNL/pipelinq",
+				"reachedOn": "nothing",
+				"readOn": "2026-09-26"
+			},
+			"evidence": {
+				"hubspot-crm": "not checked: searched the knowledge base list for business card and scanner; https://knowledge.hubspot.com/account-mangagement/how-to-install-the-hubspot-mobile-application names records, calls and email but no card scanner (read 2026-09-26).",
+				"pipedrive": "https://support.pipedrive.com/en/article/card-scanner-mobile \"The scanner recognizes information on your cards and can scan multiple phone numbers or email addresses at once\", reviewed before saving; listed on https://www.pipedrive.com/en/product-updates (December 2025).",
+				"espocrm": "No card scanning or OCR in 10.0.8; the image field can take a camera photo (application/Espo/Resources/metadata/fields/image.json:36 \"capture\", added in 10.0.0) but does not read it. The paid Intelligent Paste extracts fields from pasted text, not images (https://docs.espocrm.com/extensions/intelligence/)",
+				"odoo-crm": "https://www.odoo.com/odoo-19-release-notes, CRM: \"Business card scans: Generate leads by scanning business cards\"; not in the 19.0 Community crm source (only help text mentions business cards, addons/crm/views/res_config_settings_views.xml:20), so it comes with Enterprise.",
+				"kiss": "no camera, OCR or client create form in src/; clients come from BRP, KvK and OpenKlant; the lab drive of 26 Sep 2026 also found the person search and nav off screen at 390 px after starting a contact moment. Note: Phone use is not supported either."
+			},
+			"origin": "changelog",
+			"originUrl": "https://www.pipedrive.com/en/product-updates"
+		},
+		{
+			"id": "clients-bulk-enrichment",
+			"area": "clients",
+			"name": "Fill in missing company and person details from public data for many records at once",
+			"pipelinq": "no",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "no",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/ProspectDiscoveryService.php:110-130, grep of lib and src for enrich",
+			"feature": "Dutch registries",
+			"featureConfidence": "high",
+			"built": {
+				"state": "none",
+				"evidence": "KvK and OpenCorporates are searched to discover prospects (lib/Service/ProspectDiscoveryService.php:114, ProspectsView) and BRP per person on request (lib/Service/HaalCentraalClient.php:136); no job or action fills missing company or person details for many existing client records at once (grep for enrich finds none)",
+				"owner": "ConductionNL/pipelinq",
+				"reachedOn": "nothing",
+				"readOn": "2026-09-26"
+			},
+			"evidence": {
+				"hubspot-crm": "https://knowledge.hubspot.com/records/enrich-your-contact-and-company-data \"Enrich contacts and companies using data from HubSpot's commercial dataset. Enrich records individually or in bulk\". Starter and up, with credits.",
+				"pipedrive": "https://support.pipedrive.com/en/article/data-enrichment \"Bulk enrichment for people and organizations\", powered by Surfe; \"Only empty fields will be enriched\". Organization enrichment on Premium and up, contact enrichment on Ultimate (https://support.pipedrive.com/en/article/what-features-do-the-pipedrive-plans-have).",
+				"espocrm": "No enrichment source in 10.0.8 (searched application/ for \"enrich\" and \"clearbit\": none) and none in https://www.espocrm.com/extensions/",
+				"odoo-crm": "addons/crm_iap_enrich/models/crm_lead.py:129-150 enriches leads in batches from the company's email domain, as a list action on many leads or automatically by cron (res_config_settings.py:14-21), using prepaid IAP credits; Odoo 20 adds enrichment for many contacts at once.",
+				"kiss": "KISS looks up one person in the BRP (Kiss.Bff/Extern/HaalCentraal/HaalCentraalProxyConfig.cs:58) or one company in the KvK (Kiss.Bff/Extern/Kvk/KvkProxyConfig.cs:22) at a time on demand and stores nothing; no bulk enrichment"
+			},
+			"origin": "changelog",
+			"originUrl": "https://www.pipedrive.com/en/product-updates"
+		},
+		{
 			"id": "stock-levels",
 			"area": "products",
 			"name": "Know how many you have left before you promise it to somebody",
@@ -5941,6 +6700,69 @@
 				"pipedrive": "not checked: https://support.pipedrive.com/en/article/products lists code, unit, tax, category, prices and costs but no stock on hand; searched the article list for inventory and stock (read 2026-09-26). Note: Was no without a source.",
 				"odoo-crm": "addons/sale_stock/views/sale_order_views.xml:49 \"<widget name=\\\"qty_at_date_widget\\\"/>\" shows on each quote line the forecast and on hand quantity at the delivery date, warning when the order exceeds stock; the Inventory app (stock, LGPL Community) keeps on hand quantities per warehouse and location."
 			}
+		},
+		{
+			"id": "prod-overdue-chasing",
+			"area": "products",
+			"name": "Have every overdue invoice chased with a reminder without doing it by hand",
+			"pipelinq": "no",
+			"hubspot-crm": "yes",
+			"pipedrive": "partial",
+			"espocrm": "partial",
+			"odoo-crm": "partial",
+			"kiss": "no",
+			"provider": "shillinq",
+			"providerHow": "dunning belongs to shillinq (rec-reminders partial in ~/memcap-work/w5-pipelinq/shillinq-caps.json); pipelinq has no reminder path",
+			"feature": "Time and billing",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "none",
+				"evidence": "pipelinq only reads invoices from shillinq (lib/Service/ShillinqInvoiceReader.php:175 notes whether one \"is in dunning\") for marketing signals; chasing is shillinq's DunningRunService, itself rated partial in shillinq and not reached from any pipelinq page",
+				"owner": "ConductionNL/shillinq",
+				"reachedOn": "nothing",
+				"readOn": "2026-09-26"
+			},
+			"evidence": {
+				"hubspot-crm": "https://www.hubspot.com/spotlight \"Automates collections, so every overdue invoice gets a personalized nudge, and follows up as the conversation unfolds\"; tier not stated on the page.",
+				"pipedrive": "https://support.pipedrive.com/en/article/pipedrive-integration-quickbooks the QuickBooks app shows \"when they're paid or overdue\" on the deal; chasing overdue invoices would need an automation or the accounting package, not described in Pipedrive. Note: Read from the web.archive.org copy (pipedrive-integration-quickbooks 2026-04-15) because the live knowledge base answered 429.",
+				"espocrm": "Invoices are paid Sales Pack only; its subscriptions track overdue invoices (https://docs.espocrm.com/extensions/sales-pack/subscriptions/ \"Past Due. Same as Due, but the invoice is overdue\") but the docs describe no reminder run; chasing by email needs a scheduled rule in the paid Advanced Pack workflows (https://docs.espocrm.com/administration/workflows/). Note: Paid Sales Pack plus Advanced Pack workflows.",
+				"odoo-crm": "https://www.odoo.com/documentation/19.0/applications/finance/accounting/payments/follow_up.html follow up levels by overdue days, sent by email, WhatsApp, SMS or post, with an \"Automatic\" option; follow up reports are Accounting (Enterprise), Community Invoicing only marks invoices overdue.",
+				"kiss": "src/router/index.ts:126 \"const router = createRouter(\" lists the only screens: startscherm, afhandeling, contactverzoeken, personen, bedrijven, zaken, links and beheer; a grep of src/ and Kiss.Bff/ for lead, opportunit, offerte, factuur, nieuwsbrief and campagne finds no sales, marketing or invoicing code"
+			},
+			"origin": "changelog",
+			"originUrl": "https://www.hubspot.com/spotlight"
+		},
+		{
+			"id": "prod-price-lists",
+			"area": "products",
+			"name": "Keep a separate price list for a customer group or a country and quote from it",
+			"pipelinq": "no",
+			"hubspot-crm": "yes",
+			"pipedrive": "partial",
+			"espocrm": "partial",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/ProductCatalogService.php:150-200",
+			"feature": "Products",
+			"featureConfidence": "high",
+			"built": {
+				"state": "none",
+				"evidence": "a product has one base unitPrice, variant overrides and quantity tiers (lib/Service/ProductCatalogService.php:163 resolveTier \"highest minQuantity that is at most the quantity\"); no price list per customer group or country exists in the register (grep for priceList, customerGroup, country)",
+				"owner": "ConductionNL/pipelinq",
+				"reachedOn": "nothing",
+				"readOn": "2026-09-26"
+			},
+			"note": "quantity tiers only; a price list per group or country is missing",
+			"evidence": {
+				"hubspot-crm": "https://developers.hubspot.com/changelog/fall-2026-spotlight \"The Price Books API is now generally available for Commerce Hub Professional and Enterprise accounts\", with price books and price book items managed in app and over the API.",
+				"pipedrive": "https://support.pipedrive.com/en/article/products \"The prices tab lets you set a price for the same product in each currency you sell in\", plus price variations; a separate price list per customer group is not described. All plans.",
+				"espocrm": "Paid Sales Pack price books: https://docs.espocrm.com/extensions/sales-pack/prices/ \"A price book can be associated with a specific Account\" and carried over to quotes, orders and invoices, with price rules on account attributes (\"ext\\\\priceRule\\\\accountAttribute\"). Note: Paid Sales Pack.",
+				"odoo-crm": "git show HEAD:addons/product/models/product_pricelist.py:49 \"country_group_ids = fields.Many2many(\" and :36 currency_id: a pricelist per country group or currency, assigned per customer on the contact form and applied on the quote.",
+				"kiss": "src/router/index.ts:126 \"const router = createRouter(\" lists the only screens: startscherm, afhandeling, contactverzoeken, personen, bedrijven, zaken, links and beheer; a grep of src/ and Kiss.Bff/ for lead, opportunit, offerte, factuur, nieuwsbrief and campagne finds no sales, marketing or invoicing code"
+			},
+			"origin": "changelog",
+			"originUrl": "https://developers.hubspot.com/changelog/fall-2026-spotlight"
 		},
 		{
 			"id": "unified-search",
@@ -5999,6 +6821,422 @@
 			}
 		},
 		{
+			"id": "req-multi-municipality",
+			"area": "requests",
+			"name": "Serve several municipalities from one desk and see which one each contact belongs to",
+			"pipelinq": "partial",
+			"hubspot-crm": "unknown",
+			"pipedrive": "unknown",
+			"espocrm": "partial",
+			"odoo-crm": "yes",
+			"kiss": "partial",
+			"provider": "openregister",
+			"providerHow": "multi-tenancy is OpenRegister's organisation scoping (read in lib/Settings/pipelinq_register.json:2750), the portal part is pipelinq's PortalTenantService",
+			"feature": "Platform",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "built",
+				"evidence": "the portal resolves a tenant per domain (lib/Service/Portal/PortalTenantService.php:107 \"resolveTenantId\"); the back office relies on OpenRegister organisations (lib/Settings/pipelinq_register.json:2750 \"owning organization for multi-tenant isolation\"), where a colleague switches the active organisation. Tickets carry no municipality field and no list shows which municipality a contact belongs to",
+				"owner": "ConductionNL/pipelinq",
+				"reachedOn": "portal per tenant domain; back office pages scoped by the active OpenRegister organisation",
+				"readOn": "2026-09-26"
+			},
+			"note": "several municipalities can be kept apart, but one desk cannot see them side by side with the municipality shown on each contact",
+			"evidence": {
+				"hubspot-crm": "not checked: HubSpot Brands let one account run separate brand kits (https://knowledge.hubspot.com/branding/edit-your-logo-favicon-and-brand-colors \"If you have the Brands add-on\"), but no article describes serving several organisations from one desk with each contact tagged to its organisation beyond custom properties (read 2026-09-26).",
+				"pipedrive": "not checked: searched the Pipedrive knowledge base article list (https://support.pipedrive.com/en-sitemap.xml) and product updates on 2026-09-26 for serving several organisations from one account and found none beyond visibility groups (https://support.pipedrive.com/en/article/visibility-groups) and custom fields. Note: Read from the web.archive.org copy (visibility-groups 2026-05-21) because the live knowledge base answered 429.",
+				"espocrm": "Teams separate records per organisation (every Account, Contact and Case has a teams link, e.g. Crm entityDefs/Case.json links teams) with role levels \"team\" (https://docs.espocrm.com/administration/roles-management/), and each served body can get its own portal (https://docs.espocrm.com/administration/portal/ \"An administrator can create multiple Portals\"); there is no municipality attribute on a contact moment, so the team or a custom field carries it. Note: Teams and portals per body, no built in tenant field.",
+				"odoo-crm": "multi company in Community: every contact, lead and team carries company_id (addons/crm/models/crm_lead.py:117 company_id with check_company=True), a user can be allowed several companies and switch or combine them in the top bar company switcher, and the company shows on each record and in list filters.",
+				"kiss": "KISS can connect several register systems at once (docs/decision-record/meerdere-registers.md; the linked zaak decides the target register at src/features/contact/contactmoment/ContactmomentAfhandeling.vue:631 \"const zaakSysteemId\"), but every contact gets the first configured organisation as bronorganisatie (src/features/contact/contactmoment/ContactmomentAfhandeling.vue:656 \"bronorganisatie: organisatieIds.value[0]\", from ORGANISATIE_IDS in Kiss.Bff/Config/AuthenticationSetup.cs:379) and no screen lets the KCM pick or see the municipality. Note: One organisation per instance in practice."
+			},
+			"origin": "tender",
+			"originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/306049",
+			"originRequirements": [
+				"intelligence-db requirements#174535 (Gemeente Goes, 2023-08-02: KCC's van meerdere gemeenten samenvoegen, zichtbaar voor welke gemeente)",
+				"intelligence-db requirements#16305 (SED Organisatie, 2021-12-24: bij elk proces duidelijk bij welke gemeente het hoort)"
+			]
+		},
+		{
+			"id": "req-mail-routing",
+			"area": "requests",
+			"name": "Route mail arriving in a shared mailbox to the right team by rules you manage yourself",
+			"pipelinq": "no",
+			"hubspot-crm": "yes",
+			"pipedrive": "partial",
+			"espocrm": "yes",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/EmailMatchService.php:4-9 and lib/Service/RoutingService.php:4-6",
+			"feature": "Email",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "none",
+				"evidence": "lib/Service/EmailMatchService.php:278 \"matchAndLinkMessage\" links a user's Mail message to the matching client or contact by address or domain; lib/Service/RoutingService.php:92 suggests agents for an existing ticket by skill. Nothing reads a shared mailbox, turns mail into a ticket or routes it to a team by admin-managed rules",
+				"owner": "ConductionNL/pipelinq",
+				"reachedOn": "nothing",
+				"readOn": "2026-09-26"
+			},
+			"evidence": {
+				"hubspot-crm": "https://knowledge.hubspot.com/help-desk/route-tickets-in-help-desk \"set up automatic routing rules so that tickets are automatically routed to specific users and teams\" including \"tickets created manually or via email\", and \"Set up automatic ticket assignment for team email channels\"; skill-based routing too. Service Hub Professional, Enterprise; inbox routing rules on all plans with a paid seat (https://knowledge.hubspot.com/inbox/set-your-conversations-routing-rules).",
+				"pipedrive": "https://support.pipedrive.com/en/article/team-inbox \"multiple users can access, read, and respond to emails from a shared inbox\" (Premium and up), but https://support.pipedrive.com/en/article/team-inbox-faq \"Can I use automations with Team Inbox? This will be possible in future releases\"; rule-based routing of shared mail to teams is not available yet. Note: Read from the web.archive.org copy (team-inbox 2026-04-15; team-inbox-faq 2025-11-11) because the live knowledge base answered 429.",
+				"espocrm": "application/Espo/Resources/metadata/entityDefs/EmailFilter.json fields from, to, subject, bodyContains, isGlobal, parent and action options Skip, Move to Folder, Move to Group Folder route incoming mail of a group inbox into group folders, which are shared per team (GroupEmailFolder teams); group inboxes can also assign to a team with round robin (InboundEmail.json:167 \"caseDistribution\"); managed at Administration > Email Filters",
+				"odoo-crm": "addons/crm/models/crm_team.py:25 each team has an email alias that turns incoming mail into leads for that team, fetched from a shared mailbox by the incoming mail servers; addons/base_automation/models/base_automation.py:193 \"On incoming message\" automation rules with a domain (for example on subject or sender) reassign team or user without code.",
+				"kiss": "KISS reads no mailbox and sends no mail to clients; the only SMTP use is Kiss.Bff/Intern/Feedback/SendFeedback.cs:43 \"SendMailAsync\" for content feedback; open epic https://github.com/Klantinteractie-Servicesysteem/KISS-frontend/issues/1446 \"Inkomende e-mail verwerken in KISS\""
+			},
+			"origin": "tender",
+			"originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/386888",
+			"originRequirements": [
+				"intelligence-db requirements#174066 (Kadaster CRM, 2025-07-19: routering op basis van regels zoals e-mailadres, domein of afzendergroep, beheerd door geautoriseerde gebruikers, gelogd)",
+				"intelligence-db requirements#210381 (Gemeente Amsterdam omnichannel, 2022-03-21: inkomende e-mails intelligent doorzetten naar de juiste behandelaarsgroep)"
+			]
+		},
+		{
+			"id": "req-handover-log",
+			"area": "requests",
+			"name": "See what happened to a request after you passed it to a colleague",
+			"pipelinq": "yes",
+			"hubspot-crm": "partial",
+			"pipedrive": "partial",
+			"espocrm": "yes",
+			"odoo-crm": "yes",
+			"kiss": "yes",
+			"provider": "openregister",
+			"providerHow": "the change log is OpenRegister's audit trail rendered by nextcloud-vue CnAuditTrailTab (read in CnObjectSidebar.vue:146-157)",
+			"feature": "Service desk",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "built",
+				"evidence": "TicketDetail (src/manifest.json, config without sidebar tabs) opens the host CnObjectSidebar (src/App.vue:34) whose default tabs include the Audit Trail (nextcloud-vue v2.56.0 CnObjectSidebar.vue:146 \"Audit Trail Tab\"), listing every later change to status, assignee and notes; the ticket's assignee is a field (lib/Settings/register.d/99-unify-ticket-supertype.json:210)",
+				"owner": "ConductionNL/openregister",
+				"reachedOn": "TicketDetail sidebar, History / Audit trail tab",
+				"readOn": "2026-09-26"
+			},
+			"note": "no list of 'requests I passed on'; you open each ticket to see its history",
+			"evidence": {
+				"hubspot-crm": "https://knowledge.hubspot.com/help-desk/route-tickets-in-help-desk tickets are reassigned \"to another user or team\" and the ticket record keeps its activity timeline and property history (owner changes) for all involved; a dedicated hand-over log is not described. Service Hub.",
+				"pipedrive": "https://support.pipedrive.com/en/article/contact-detail-view \"Under the History of your item, you can select the Changelog ... when these changes were made and by which user\", which records owner changes on a deal or contact; there is no request object with a hand-over log. Note: Read from the web.archive.org copy (contact-detail-view 2026-04-17) because the live knowledge base answered 429.",
+				"espocrm": "Reassigning a case writes an assignment note to its stream, and later status changes (scopes/Case.json:20 \"statusField\": \"status\") and posts follow; the previous assignee keeps following the record and is notified of new notes (application/Espo/Hooks/Note/Notifications.php:60), and the audit log (client/src/handlers/record/view-audit-log.js:31) shows every change",
+				"odoo-crm": "addons/crm/models/crm_lead.py:104-111 user_id and team_id carry tracking=True and stage_id too (:130), so every handover and stage change after it is logged with author and time in the chatter on the lead form; the colleague who passed it can follow the record and get its updates.",
+				"kiss": "src/features/contact/contactverzoek/overzicht/ContactverzoekenOverzicht.vue:72 \"<logboek-overzicht\" shows the logboek of a selected contactverzoek from the Objects API logboek (Kiss.Bff/Extern/Logboek/LogboekProxyConfig.cs), with actions such as \"Opgepakt\" (src/features/contact/contactverzoek/contactverzoekLogboek/LogboekOverzicht.vue:284); released in v1.3.0 (#1104)"
+			},
+			"origin": "changelog",
+			"originUrl": "https://github.com/Klantinteractie-Servicesysteem/KISS-frontend/releases/tag/v1.3.0"
+		},
+		{
+			"id": "req-valid-recipient",
+			"area": "requests",
+			"name": "Be made to name a colleague when the team you pass a request to has no shared mailbox",
+			"pipelinq": "no",
+			"hubspot-crm": "unknown",
+			"pipedrive": "unknown",
+			"espocrm": "no",
+			"odoo-crm": "no",
+			"kiss": "yes",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Settings/register.d/99-unify-ticket-supertype.json:205-215, no team field in the ticket schema",
+			"feature": "Service desk",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "none",
+				"evidence": "a ticket is passed on only by setting assignee, a Nextcloud UID (lib/Settings/register.d/99-unify-ticket-supertype.json:210 \"Nextcloud UID (or agent) handling the ticket\"); there is no team or department recipient, so no check for a team without a shared mailbox",
+				"owner": "ConductionNL/pipelinq",
+				"reachedOn": "nothing",
+				"readOn": "2026-09-26"
+			},
+			"evidence": {
+				"hubspot-crm": "not checked: https://knowledge.hubspot.com/help-desk/route-tickets-in-help-desk describes assignment to users or teams, but no rule forcing a named colleague when a team has no shared mailbox (read 2026-09-26).",
+				"pipedrive": "not checked: searched the Pipedrive knowledge base article list (https://support.pipedrive.com/en-sitemap.xml) and product updates on 2026-09-26 for rules on handing over to a team without a mailbox and found none.",
+				"espocrm": "Assignment in 10.0.8 accepts a team without a user (Case has assignedUser and teams as separate fields, Crm entityDefs/Case.json); no check ties a team's lack of a shared inbox to a required named colleague",
+				"odoo-crm": "addons/crm/models/crm_lead.py:104 user_id is optional and nothing checks whether the chosen team (crm_team.py:25 alias_id) has a mailbox; searched crm_lead and crm_team for a constraint tying salesperson to team alias: none. A required attribute could be added in developer mode.",
+				"kiss": "src/features/contact/contactverzoek/formulier/ContactverzoekFormulier.vue:435 \"an afdeling/groep without a groepsmailbox always needs a linked medewerker\" and :81 \"(verplicht: {{ medewerkerRequiredReason }})\", switched on by Kiss.Bff/Intern/Environment/EnvironmentController.cs:37 \"use-groepsmailbox-verplichting\"; released in v3.1.0 (#1491)"
+			},
+			"origin": "changelog",
+			"originUrl": "https://github.com/Klantinteractie-Servicesysteem/KISS-frontend/releases/tag/v3.1.0"
+		},
+		{
+			"id": "req-phone-format",
+			"area": "requests",
+			"name": "Find a request by phone number however the number was typed",
+			"pipelinq": "partial",
+			"hubspot-crm": "partial",
+			"pipedrive": "unknown",
+			"espocrm": "partial",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/CtiContactMatcher.php:34-41 and :125-145",
+			"feature": "Telephony",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/CtiContactMatcher.php:132 needles() matches on E.164, digits only and the last 8 or 9 digits, so a caller is found however the number was stored, but only for contacts and clients during a screen pop; CTI tickets store the number normalised (CtiService.php:265). Searching the Tickets list for a request by number is a plain text search on whatever was typed",
+				"owner": "ConductionNL/pipelinq",
+				"reachedOn": "CTI screen pop; Tickets list search (literal)",
+				"readOn": "2026-09-26"
+			},
+			"evidence": {
+				"hubspot-crm": "https://knowledge.hubspot.com/workflows/format-phone-numbers-using-workflows normalises phone number formats with a workflow action (Professional hubs), which makes later searches match; search tolerance for any typed format is not described.",
+				"pipedrive": "not checked: https://support.pipedrive.com/en/article/search-finding-what-you-need searches deals and people by \"phone number\" but does not say whether differently typed formats match (read 2026-09-26). Note: Read from the web.archive.org copy (search-finding-what-you-need 2026-03-15) because the live knowledge base answered 429.",
+				"espocrm": "application/Espo/Resources/metadata/entityDefs/Settings.json:715 \"phoneNumberNumericSearch\" makes text search match phone numbers on digits regardless of formatting (application/Espo/Core/Select/Text/DefaultFilter.php:123); Case itself has no phone field, so the request is found through the matching contact or account. Note: Format independent search on clients, requests one click away.",
+				"odoo-crm": "addons/phone_validation/models/mail_thread_phone.py:47 \"phone_mobile_search = fields.Char(\\\"Phone Number\\\", store=False, search='_search_phone_mobile_search')\" strips separators with a regexp_replace index (:79) so a number typed with spaces, dashes or a country code is found; it is the Phone search field on the leads list (addons/crm/views/crm_lead_views.xml:661).",
+				"kiss": "contactverzoeken are searched on the exact digitaal adres string (src/services/openklant2/service.ts:163 \"searchDigitaleAdressen\" passes adres unchanged); open issues https://github.com/Klantinteractie-Servicesysteem/KISS-frontend/issues/1538 and https://github.com/Klantinteractie-Servicesysteem/KISS-frontend/issues/1555 (normalise to E.164)"
+			},
+			"origin": "featureRequest",
+			"originUrl": "https://github.com/Klantinteractie-Servicesysteem/KISS-frontend/issues/1538"
+		},
+		{
+			"id": "req-ai-triage",
+			"area": "requests",
+			"name": "Have incoming mail sorted by subject and turned into the right request without reading it first",
+			"pipelinq": "no",
+			"hubspot-crm": "partial",
+			"pipedrive": "unknown",
+			"espocrm": "partial",
+			"odoo-crm": "partial",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/EmailMatchService.php:4-9, grep of lib/Service for classify and triage",
+			"feature": "Request intake",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "none",
+				"evidence": "no mail to ticket intake and no classifier: lib/Service/EmailMatchService.php only links a mail to a client by address, lib/Service/RoutingService.php:92 suggests agents for a ticket that already exists, and nothing sorts incoming mail by subject",
+				"owner": "ConductionNL/pipelinq",
+				"reachedOn": "nothing",
+				"readOn": "2026-09-26"
+			},
+			"evidence": {
+				"hubspot-crm": "https://knowledge.hubspot.com/help-desk/route-tickets-in-help-desk routes email tickets automatically by channel and skills, and the customer agent handles incoming conversations (https://knowledge.hubspot.com/customer-agent/deploy-the-customer-agent-to-channels, Professional hubs); sorting mail by subject into request types without reading is not described as such.",
+				"pipedrive": "not checked: searched the Pipedrive knowledge base article list (https://support.pipedrive.com/en-sitemap.xml) and product updates on 2026-09-26 for AI sorting of incoming mail into request types and found none; Team Inbox has no automations yet (https://support.pipedrive.com/en/article/team-inbox-faq). Note: Read from the web.archive.org copy (team-inbox-faq 2025-11-11) because the live knowledge base answered 429.",
+				"espocrm": "Core group inboxes create a case per email and match the sender by address (application/Espo/Resources/metadata/entityDefs/InboundEmail.json:163 \"createCase\"; application/Espo/Core/Mail/Importer/DefaultParentFinder.php:112); classifying content needs the paid Intelligence classify function inside paid Advanced Pack BPM flows (https://docs.espocrm.com/extensions/intelligence/ai-formula-functions/), which the forum request asks to make built in",
+				"odoo-crm": "https://www.odoo.com/documentation/19.0/applications/productivity/ai/support_operations.html \"AI automations that update tickets automatically when records are created\" for categorising and prioritising incoming Helpdesk tickets; Enterprise AI and Helpdesk. In Community, team aliases and automation rules route mail by rules, not by reading it.",
+				"kiss": "KISS reads no mailbox and sends no mail to clients; the only SMTP use is Kiss.Bff/Intern/Feedback/SendFeedback.cs:43 \"SendMailAsync\" for content feedback; open epic https://github.com/Klantinteractie-Servicesysteem/KISS-frontend/issues/1446 \"Inkomende e-mail verwerken in KISS\"; no AI, transcription or summarisation code in src/ or Kiss.Bff/; AI assistance is an open theme https://github.com/Klantinteractie-Servicesysteem/KISS-frontend/issues/1450 \"Verkenning AI-assistentie voor KCC-medewerkers\""
+			},
+			"origin": "featureRequest",
+			"originUrl": "https://forum.espocrm.com/forum/feature-requests/127513-ai-assisted-incoming-email-classification-parent-matching-and-crm-record-creation"
+		},
+		{
+			"id": "req-similar-answer",
+			"area": "requests",
+			"name": "See similar earlier requests and a suggested answer when a new one arrives",
+			"pipelinq": "no",
+			"hubspot-crm": "partial",
+			"pipedrive": "unknown",
+			"espocrm": "no",
+			"odoo-crm": "partial",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "grep of lib/Service and src for similar and suggestion",
+			"feature": "Service desk",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "none",
+				"evidence": "no similarity search or answer suggestion in lib/Service, src/components or src/views (grep for similar, suggested answer); the knowledge base is searched by hand through the XWiki tab",
+				"owner": "ConductionNL/pipelinq",
+				"reachedOn": "nothing",
+				"readOn": "2026-09-26"
+			},
+			"evidence": {
+				"hubspot-crm": "https://knowledge.hubspot.com/help-desk/use-reply-recommendations-in-help-desk \"Reply recommendations are based on the content sources you sync with the customer agent ... generate suggested responses in the ticket thread\" (Service Hub Professional, Enterprise); a list of similar earlier requests is not described.",
+				"pipedrive": "not checked: searched the Pipedrive knowledge base article list (https://support.pipedrive.com/en-sitemap.xml) and product updates on 2026-09-26 for similar-request suggestions and found none; AI suggested email replies are listed as a beta AI feature (https://support.pipedrive.com/en/article/pipedrive-ai). Note: Read from the web.archive.org copy (pipedrive-ai 2026-04-19) because the live knowledge base answered 429.",
+				"espocrm": "No similarity search or suggested reply in 10.0.8; the case knowledge base panel (Crm clientDefs/Case.json:80 \"articles\") is filled by hand, and the paid Intelligence extension offers summary, paste, email composer and classify, not similar cases (https://docs.espocrm.com/extensions/intelligence/)",
+				"odoo-crm": "Odoo 20 release notes, Helpdesk: \"Similar ticket detection: Detect similar helpdesk tickets using AI to provide teams with suggested answers\"; Helpdesk is Enterprise (https://www.odoo.com/documentation/19.0/applications/services/helpdesk.html) and 19.0 does not have it.",
+				"kiss": "no AI, transcription or summarisation code in src/ or Kiss.Bff/; AI assistance is an open theme https://github.com/Klantinteractie-Servicesysteem/KISS-frontend/issues/1450 \"Verkenning AI-assistentie voor KCC-medewerkers\"; the KCM searches the knowledge base by hand from the header (src/layout/TheHeader.vue:10 \"<global-search\"), nothing is suggested on arrival"
+			},
+			"origin": "changelog",
+			"originUrl": "https://www.odoo.com/odoo-20-release-notes"
+		},
+		{
+			"id": "req-close-reminder",
+			"area": "requests",
+			"name": "Warn the client before their request is closed for lack of a reply",
+			"pipelinq": "no",
+			"hubspot-crm": "unknown",
+			"pipedrive": "unknown",
+			"espocrm": "partial",
+			"odoo-crm": "partial",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read lib/BackgroundJob/ listing and grep of lib for auto close and awaiting-customer",
+			"feature": "Service desk",
+			"featureConfidence": "high",
+			"built": {
+				"state": "none",
+				"evidence": "no auto close for lack of reply and no warning before it: the only waiting state is the portal's 'awaiting-customer' (lib/Service/Portal/PortalRequestService.php:297), and no background job in lib/BackgroundJob closes or reminds on it",
+				"owner": "ConductionNL/pipelinq",
+				"reachedOn": "nothing",
+				"readOn": "2026-09-26"
+			},
+			"evidence": {
+				"hubspot-crm": "not checked: no article on warning a client before a ticket closes for lack of reply; workflows could send one, but that is not documented (read 2026-09-26).",
+				"pipedrive": "not checked: searched the Pipedrive knowledge base article list (https://support.pipedrive.com/en-sitemap.xml) and product updates on 2026-09-26 for reminders before closing a request and found none.",
+				"espocrm": "No auto close or reminder on Case in core (searched the Crm module for \"autoClose\": no hits); a scheduled rule that mails the client and closes the case needs the paid Advanced Pack workflows (https://docs.espocrm.com/administration/workflows/ \"Scheduled\" trigger). Note: Paid Advanced Pack workflows.",
+				"odoo-crm": "Odoo 19.1 release notes, Helpdesk: \"Reminder email before auto-closing tickets: Send customers a reminder email before their ticket is automatically closed\" (in 20.0 too); Helpdesk is Enterprise, and 19.0 only auto closes after inactivity (https://www.odoo.com/documentation/19.0/applications/services/helpdesk/advanced/close_tickets.html).",
+				"kiss": "KISS does not close requests and sends no mail to clients (only Kiss.Bff/Intern/Feedback/SendFeedback.cs:43); status handling of contactverzoeken happens in ITA or the e-Suite, outside KISS"
+			},
+			"origin": "changelog",
+			"originUrl": "https://www.odoo.com/odoo-19-1-release-notes"
+		},
+		{
+			"id": "req-waiting-on-us",
+			"area": "requests",
+			"name": "See which requests are waiting on your reply because the client wrote last",
+			"pipelinq": "no",
+			"hubspot-crm": "partial",
+			"pipedrive": "unknown",
+			"espocrm": "no",
+			"odoo-crm": "partial",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/Portal/PortalRequestService.php:272-300 against the ticket schema enum",
+			"feature": "Service desk",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "building",
+				"evidence": "a portal reply flips the request back (lib/Service/Portal/PortalRequestService.php:297 \"if (($request['status'] ?? null) === 'awaiting-customer') { $request['status'] = 'in-progress'; }\"), but the ticket status enum (lib/Settings/register.d/99-unify-ticket-supertype.json:220) holds neither 'awaiting-customer' nor 'in-progress' (it has 'in_progress'), and there is no 'client wrote last' marker or list for mail",
+				"owner": "ConductionNL/pipelinq",
+				"reachedOn": "nothing",
+				"readOn": "2026-09-26"
+			},
+			"note": "lead: the portal writes status values ('awaiting-customer', 'in-progress') that the unified ticket schema does not allow, and reads config key 'request' after the request schema was folded into ticket",
+			"evidence": {
+				"hubspot-crm": "https://knowledge.hubspot.com/help-desk/set-ticket-capacity-limits-for-users-in-help-desk ticket statuses include \"Waiting on internal or Waiting on contact\", and help desk views filter tickets (https://knowledge.hubspot.com/help-desk/customize-views-in-the-left-sidebar-of-help-desk). Service Hub Professional, Enterprise. Status is set by the agent; an automatic last-writer view is not described.",
+				"pipedrive": "not checked: searched the Pipedrive knowledge base article list (https://support.pipedrive.com/en-sitemap.xml) and product updates on 2026-09-26 for a view of threads where the client wrote last and found none; https://www.pipedrive.com/en/product-updates shows thread status for drafts and scheduled mail only.",
+				"espocrm": "Case has no last reply by field (Crm entityDefs/Case.json field list); Email has isReplied (application/Espo/Resources/metadata/entityDefs/Email.json) per message, but no list of cases where the client wrote last",
+				"odoo-crm": "Odoo 19.1 release notes, Helpdesk: \"Filter unanswered tickets: Identify unanswered tickets by filtering tickets where the most recent message is from the customer\"; Enterprise Helpdesk only, from 19.1 on Odoo Online and 20.0 on premise.",
+				"kiss": "contactverzoeken are found only by phone or e-mail search (src/features/contact/contactverzoek/overzicht/ContactverzoekenZoeker.vue:4 \"Telefoonnummer of e-mailadres\"); KISS has no conversation thread and no waiting list"
+			},
+			"origin": "changelog",
+			"originUrl": "https://www.odoo.com/odoo-19-1-release-notes"
+		},
+		{
+			"id": "req-saved-replies",
+			"area": "requests",
+			"name": "Answer with a saved reply instead of typing the same text again",
+			"pipelinq": "partial",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "yes",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in src/modals/SendMessageModal.vue:8-13 and :83-90",
+			"feature": "Messaging",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "built",
+				"evidence": "src/modals/SendMessageModal.vue:83 NcSelect \"v-model=\\\"templateId\\\"\" lets an agent answer on WhatsApp or SMS with an approved template (TemplateApprovalSyncService), opened from the Messages section on ClientDetail and ContactDetail; there are no saved replies for tickets, mail or the portal reply",
+				"owner": "ConductionNL/pipelinq",
+				"reachedOn": "ClientDetail and ContactDetail, Messages section, Send message",
+				"readOn": "2026-09-26"
+			},
+			"note": "templates cover messaging channels only",
+			"evidence": {
+				"hubspot-crm": "https://knowledge.hubspot.com/conversations/use-snippets \"Snippets are short, reusable text blocks\" for emails, chats and notes (free: 3, paid: up to 5,000); help desk macros are \"prewritten responses that can be quickly applied from the reply editor\" (https://knowledge.hubspot.com/help-desk/create-and-use-macros-in-help-desk, Service Hub Professional, Enterprise).",
+				"pipedrive": "https://support.pipedrive.com/en/article/email-templates \"Email templates are one of the easiest ways to save time as a salesperson by streamlining the process of emailing clients\"; WhatsApp approved templates too (https://support.pipedrive.com/en/article/whatsapp-manage-templates). Growth and up. Note: Read from the web.archive.org copy (email-templates 2026-04-21) because the live knowledge base answered 429.",
+				"espocrm": "client/src/views/email/fields/select-template.js:72 triggers 'insert-template' so an agent picks an email template when composing a reply, filled with placeholders from the case and contact (application/Espo/Resources/metadata/entityDefs/EmailTemplate.json:12 \"body\"); group inboxes can also auto reply with a template (InboundEmail replyEmailTemplate)",
+				"odoo-crm": "addons/mail/models/mail_canned_response.py:10 \"_name = 'mail.canned.response'\" with a shortcut source and substitution text, managed under Discuss > Configuration > Canned Responses (addons/mail/views/mail_menus.xml:46), and inserted in any chatter or chat composer by typing \"::\" (addons/mail/static/src/core/common/composer.js:833); the Wishlist issue asks for richer helpdesk macros on top of this.",
+				"kiss": "KISS sends no replies to clients (see Kiss.Bff/Intern/Feedback/SendFeedback.cs:43, the only mail); text fields on the contactverzoek form start empty and there is no snippet feature (grep for sjabloon and snippet finds nothing)"
+			},
+			"origin": "featureRequest",
+			"originUrl": "https://github.com/odoo/odoo/issues/120198"
+		},
+		{
+			"id": "req-conversation-export",
+			"area": "requests",
+			"name": "Archive or copy every service conversation to another system for compliance",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "partial",
+			"espocrm": "partial",
+			"odoo-crm": "partial",
+			"kiss": "partial",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/Export/ExportJobService.php:221-240 and the lib/Adapter listing",
+			"feature": "Reporting",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "built",
+				"evidence": "an export job picks any source schemas (lib/Settings/register.d/40-bi-export.json:135 \"sourceSchemas\", so ticket and channelMessage) and ships them on a schedule (lib/BackgroundJob/ExportSchedulerJob.php) to S3, SFTP, GCS, Azure Data Lake, BigQuery, Snowflake or Postgres (lib/Adapter/*ExportAdapter.php via lib/Adapter/ExportSinkRegistry.php)",
+				"owner": "ConductionNL/pipelinq",
+				"reachedOn": "ExportJobs, ExportJobNew, ExportDestinations, ExportRuns",
+				"readOn": "2026-09-26"
+			},
+			"note": "contact moments, tickets and WhatsApp/SMS messages export; mail bodies stay in Nextcloud Mail and are only linked",
+			"evidence": {
+				"hubspot-crm": "https://developers.hubspot.com/changelog/fall-2026-spotlight \"The Conversations API is now generally available ... read/write access to HubSpot's Conversations Inbox and Help Desk ... archive conversations to meet compliance requirements\", with webhooks on new messages.",
+				"pipedrive": "https://support.pipedrive.com/en/article/exporting-data-from-pipedrive exports notes and data, and the API gives programmatic access (https://developers.pipedrive.com/docs/api/v1); email conversations and their export for compliance archiving are not described as such. Note: Read from the web.archive.org copy (exporting-data-from-pipedrive 2026-05-19) because the live knowledge base answered 429.",
+				"espocrm": "All emails and stream notes are stored records reachable through the REST API (application/Espo/Resources/routes.json:554 \"/:controller\") and webhooks can push each new Email or Case event to another system (application/Espo/Resources/metadata/entityDefs/Webhook.json fields event, url, entityType); there is no built in archiving connector or compliance export. Note: Via API or webhooks, no archive connector.",
+				"odoo-crm": "addons/im_livechat/models/discuss_channel.py:574 _email_livechat_transcript mails a chat transcript, messages can be exported from Settings > Technical > Messages with the list Export (web/controllers/export.py:640) or read over the external API; there is no built in continuous archive to another system.",
+				"kiss": "contact moments are written to the standard Klantinteracties API in OpenKlant (src/services/openklant2/service.ts:521 \"saveKlantContact\"), where any system can read them, and Kiss.Bff/Intern/ContactmomentDetails/Features/ContactmomentDetailsRapportageOverzicht.cs:22 \"/api/contactmomentendetails\" exports the KISS side details; there is no push or archive connector in KISS. Note: Standard register makes it readable; no export job."
+			},
+			"origin": "changelog",
+			"originUrl": "https://developers.hubspot.com/changelog/fall-2026-spotlight"
+		},
+		{
+			"id": "req-approval-step",
+			"area": "requests",
+			"name": "Have a colleague approve a request before it can move to the next status",
+			"pipelinq": "no",
+			"hubspot-crm": "partial",
+			"pipedrive": "unknown",
+			"espocrm": "partial",
+			"odoo-crm": "partial",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read the ticket x-openregister-lifecycle transitions",
+			"feature": "Service desk",
+			"featureConfidence": "high",
+			"built": {
+				"state": "none",
+				"evidence": "the ticket lifecycle (lib/Settings/register.d/99-unify-ticket-supertype.json, x-openregister-lifecycle) has start, complete, convert, resolve, reject and close, each gated only to the assignee or the sales group; no approve transition or approver field. Approval exists for time entries (lib/Listener/TimeApprovalListener.php) and expenses, not for requests",
+				"owner": "ConductionNL/pipelinq",
+				"reachedOn": "nothing",
+				"readOn": "2026-09-26"
+			},
+			"evidence": {
+				"hubspot-crm": "https://knowledge.hubspot.com/object-settings/pipeline-approvals \"Set up an approval process for deal pipelines ... up to ten approvers\", Sales Hub Enterprise, deals only; ticket approval is the open idea (community answered 403, listed, not read).",
+				"pipedrive": "not checked: searched the Pipedrive knowledge base article list (https://support.pipedrive.com/en-sitemap.xml) and product updates on 2026-09-26 for approval steps on deals or requests and found none; required fields per stage exist (https://support.pipedrive.com/en/article/required-fields). Note: Read from the web.archive.org copy (required-fields 2026-05-19) because the live knowledge base answered 429.",
+				"espocrm": "No approval step in core Case (status is a free enum, Crm entityDefs/Case.json:15); approvals are modelled with User Tasks in the paid Advanced Pack BPM: https://docs.espocrm.com/administration/bpm/ \"User Task records, what allows checking a task resolution\". Note: Paid Advanced Pack BPM.",
+				"odoo-crm": "https://www.odoo.com/documentation/19.0/applications/studio/approval_rules.html approval rules \"define the criteria for when an approval is required before an action can be performed using a button\"; Studio is Enterprise. In Community, stage requirements are text only and sales orders lock after confirmation.",
+				"kiss": "no status workflow or approval in KISS: a contactverzoek is saved once as an internetaak (src/features/contact/contactmoment/ContactmomentAfhandeling.vue:817 \"saveInternetaak(\") and later statuses are set outside KISS"
+			},
+			"origin": "featureRequest",
+			"originUrl": "https://community.hubspot.com/t5/HubSpot-Ideas/Ticket-approval-process/idi-p/998554"
+		},
+		{
+			"id": "req-article-review-date",
+			"area": "requests",
+			"name": "Give each knowledge article a review date and an owner who is reminded to check it",
+			"pipelinq": "no",
+			"hubspot-crm": "unknown",
+			"pipedrive": "unknown",
+			"espocrm": "partial",
+			"odoo-crm": "unknown",
+			"kiss": "partial",
+			"provider": "pipelinq",
+			"providerHow": "listed the article properties in lib/Settings/register.d/97-marketing-articles.json",
+			"feature": "Service desk",
+			"featureConfidence": "high",
+			"built": {
+				"state": "none",
+				"evidence": "the article schema holds title, slug, summary, body, heroImage, links, tags, language, status, author, publishedAt, portalPageRef and timestamps (lib/Settings/register.d/97-marketing-articles.json), no review date, owner reminder or expiry; XWiki pages are read as they are (lib/Service/XWikiService.php)",
+				"owner": "ConductionNL/pipelinq",
+				"reachedOn": "nothing",
+				"readOn": "2026-09-26"
+			},
+			"evidence": {
+				"hubspot-crm": "not checked: https://knowledge.hubspot.com/knowledge-base/create-and-customize-knowledge-base-articles names no review date or reviewer; the idea thread answered 403 (listed, not read), so the absence is not stated by HubSpot.",
+				"pipedrive": "not checked: searched the Pipedrive knowledge base article list (https://support.pipedrive.com/en-sitemap.xml) and product updates on 2026-09-26 for a knowledge base with review dates and found none; Pipedrive has no customer knowledge base tool.",
+				"espocrm": "Knowledge base articles have an owner and an end date (application/Espo/Modules/Crm/Resources/metadata/entityDefs/KnowledgeBaseArticle.json:55 \"expirationDate\", assignedUser), and application/Espo/Modules/Crm/Jobs/ControlKnowledgeBaseArticleStatus.php:53 archives published articles once that date passes; there is no review date and no reminder to the owner. Note: Expiry archives the article; no review reminder.",
+				"odoo-crm": "not checked: Knowledge is Enterprise and https://www.odoo.com/documentation/19.0/applications/productivity/knowledge.html describes access rights, trash and version history but says nothing about review dates or article owners; the source is not public, so needs a vendor demo rather than a lab drive.",
+				"kiss": "news and work instructions carry a publication start and end date (Kiss.Bff/Intern/NieuwsEnWerkinstructies/Data/Entities/Bericht.cs:9 \"PublicatieDatum\" and :10 \"PublicatieEinddatum\"), so an item drops off by itself; there is no review date, no owner and no reminder, and knowledge articles and VACs come from outside sources (SDG, Objects API). Note: Expiry date only."
+			},
+			"origin": "featureRequest",
+			"originUrl": "https://community.hubspot.com/t5/HubSpot-Ideas/Knowledge-Base-article-review-dates-and-user-assignments/idi-p/540449"
+		},
+		{
 			"id": "two-calls-at-once",
 			"area": "contact-moments",
 			"name": "Handle two phone calls at once and switch between them",
@@ -6025,6 +7263,333 @@
 				"pipedrive": "not checked: \"Pipedrive doesn't have a built-in calling integration\" (https://support.pipedrive.com/en/article/how-can-i-make-calls-in-pipedrive); handling two calls would depend on the chosen calling app, which the knowledge base does not describe (read 2026-09-26). Note: Was no without a source. Read from the web.archive.org copy (how-can-i-make-calls-in-pipedrive 2025-11-17) because the live knowledge base answered 429.",
 				"odoo-crm": "https://www.odoo.com/documentation/19.0/applications/productivity/phone/support_calls.html lists in-call actions \"(pause): Place the caller on hold\" and \"(transfer): Transfer a call to another team member\" in the Phone widget, which needs the Enterprise Phone (VoIP) app; the docs do not describe taking a second call while one is on hold and switching between them. Note: Enterprise only. Odoo 19.3 (Odoo Online, May 2026, https://www.odoo.com/odoo-19-3-release-notes) and Odoo 20 add \"Simultaneous calling: Start or receive a new call during an ongoing call\", which makes this partial on the Enterprise rule on those versions too. Previous rating was no."
 			}
+		},
+		{
+			"id": "cm-social-media",
+			"area": "contact-moments",
+			"name": "Answer messages from social media in the same queue as mail and phone",
+			"pipelinq": "partial",
+			"hubspot-crm": "yes",
+			"pipedrive": "partial",
+			"espocrm": "no",
+			"odoo-crm": "no",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Controller/MessagingWebhookController.php:94 and lib/Service/Social/*Adapter.php (publish only)",
+			"feature": "Messaging",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/WhatsAppAdapter.php:602 \"handleInboundWebhook\" stores inbound WhatsApp in channelConversation, shown on contact and client detail by src/views/messaging/MessagingConversationSection.vue (src/manifest.json:2137); a ticket's channel can be set to 'social' by hand (lib/Settings/register.d/99-unify-ticket-supertype.json:235). No inbound reader for Facebook, Instagram, X or LinkedIn messages: lib/Service/Social/ only publishes posts",
+				"owner": "ConductionNL/pipelinq",
+				"reachedOn": "ClientDetail and ContactDetail (Messages section); nothing puts social messages in the Queue page",
+				"readOn": "2026-09-26"
+			},
+			"note": "WhatsApp arrives but lands per contact, not in the shared queue next to mail and phone; social network direct messages are not ingested at all",
+			"evidence": {
+				"hubspot-crm": "https://knowledge.hubspot.com/chatflows/create-a-facebook-messenger-chatflow \"When you connect your Facebook Messenger account to help desk or the conversations inbox\" messages land in the same inbox as email and chat; WhatsApp connects the same way (https://knowledge.hubspot.com/help-desk/connect-a-whatsapp-channel-to-help-desk listed in the knowledge base). All products and plans for Messenger.",
+				"pipedrive": "https://support.pipedrive.com/en/article/whatsapp-send-and-manage-messages WhatsApp conversations linked to deals and contacts are handled in Pipedrive (Growth and up, beta); Facebook, Instagram or other social messaging in the same queue is not described, and the Channels API for messaging apps was deprecated from 1 February 2026 (https://developers.pipedrive.com/changelog).",
+				"espocrm": "Searched en_US i18n in core and the Crm module for \"twitter\", \"facebook\", \"linkedin\", \"whatsapp\": no hits; inbound channels in 10.0.8 are email (InboundEmail, EmailAccount), web to lead and portal only, and the extension list https://www.espocrm.com/extensions/ names no social inbox",
+				"odoo-crm": "searched addons/im_livechat/models for messenger and instagram in 19.0: no match, live chat channels are the website widget only (addons/website_livechat/__manifest__.py:5). Odoo 20 release notes add \"Connect Messenger and Instagram DMs directly to live chat teams so they can reply from Odoo.\"",
+				"kiss": "social media exist only as channel labels to register a contact by hand (src/features/contact/contactmoment/ContactmomentAfhandeling.vue:345 \"<option>Twitter</option>\", :346 Facebook, :349 Instagram); KISS has no message intake or shared queue; open theme https://github.com/Klantinteractie-Servicesysteem/KISS-frontend/issues/1442 \"Digitale kanalen direct in KISS afhandelen\""
+			},
+			"origin": "tender",
+			"originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/401736",
+			"originRequirements": [
+				"intelligence-db requirements#16378 (Gemeente Noordwijk, 2025-11-20: telefonie, email, webchat, WhatsApp en berichten van social media)",
+				"intelligence-db requirements#174677 (GGD Groningen, 2025-11-18: social media naar de juiste contactcentergroep routeren)"
+			],
+			"alsoSeenIn": [
+				{
+					"origin": "changelog",
+					"originUrl": "https://www.odoo.com/odoo-20-release-notes",
+					"by": "odoo-crm"
+				}
+			]
+		},
+		{
+			"id": "cm-chatbot",
+			"area": "contact-moments",
+			"name": "Let a chatbot answer common questions and hand the conversation to a colleague when it gets stuck",
+			"pipelinq": "no",
+			"hubspot-crm": "yes",
+			"pipedrive": "partial",
+			"espocrm": "no",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/NaviService.php:4 and searched lib, src for chatbot/handoff",
+			"feature": "Request intake",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "none",
+				"evidence": "no chatbot in lib/ or src/portal/; lib/Service/NaviService.php is an analytics assistant for colleagues (\"Conversational analytics orchestrator\"), not a client-facing bot with handover",
+				"owner": "ConductionNL/pipelinq",
+				"reachedOn": "nothing",
+				"readOn": "2026-09-26"
+			},
+			"evidence": {
+				"hubspot-crm": "https://knowledge.hubspot.com/customer-agent/deploy-the-customer-agent-to-channels \"you can assign it to Facebook, WhatsApp, calling (BETA), live chat, form, or email channels\"; the spotlight page says it \"hands off with full context attached\" when a question needs a human. Marketing, Sales or Service Hub Professional, Enterprise.",
+				"pipedrive": "https://support.pipedrive.com/en/article/chatbot \"your customers can better qualify themselves as potential customers for your company using a scripted playbook embedded into your webpage\"; \"Chatbot is part of our Leadbooster add-on package\" (included on Premium and up). Partial by the lane rule; a scripted playbook, not an AI answer bot. Note: Read from the web.archive.org copy (chatbot 2025-11-09) because the live knowledge base answered 429.",
+				"espocrm": "No chat channel or bot in 10.0.8 (searched Crm en_US i18n for \"chat\": no hits); the paid Intelligence extension lists Summary, Intelligent Paste, AI Email Composer and AI formula functions only (https://docs.espocrm.com/extensions/intelligence/)",
+				"odoo-crm": "addons/im_livechat/models/chatbot_script_step.py:23-28 chatbot script steps include questions, answer choices and \"Forward to Operator\" (:354 hands the conversation to an available operator), configured under Live Chat > Configuration > Chatbots and attached to a website channel rule (Community). Note: Odoo 19 Enterprise adds AI agents in live chat; the scripted bot is Community.",
+				"kiss": "no chatbot or chat intake in src/ or Kiss.Bff/; \"Live chat\" is only a channel label (src/features/contact/contactmoment/ContactmomentAfhandeling.vue:348); open theme https://github.com/Klantinteractie-Servicesysteem/KISS-frontend/issues/1442"
+			},
+			"origin": "tender",
+			"originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/418890",
+			"originRequirements": [
+				"intelligence-db requirements#204142 (Gemeente Noordwijk, 2026-04-08: chatbot en voicebot, direct doorschakelen naar een CX gebruiker)",
+				"intelligence-db requirements#4339 (Veiligheidsregio Utrecht, 2025-03-17: chatbot gevoed vanuit gevalideerde documenten)"
+			],
+			"alsoSeenIn": [
+				{
+					"origin": "changelog",
+					"originUrl": "https://www.hubspot.com/spotlight",
+					"by": "hubspot-crm"
+				}
+			]
+		},
+		{
+			"id": "cm-transcribe",
+			"area": "contact-moments",
+			"name": "Have a call transcribed and summarised into the contact moment",
+			"pipelinq": "no",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "no",
+			"odoo-crm": "no",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "grep of lib and src for transcri, speech, whisper",
+			"feature": "Telephony",
+			"featureConfidence": "high",
+			"built": {
+				"state": "none",
+				"evidence": "no transcription or speech service in lib/ or src/; lib/Settings/register.d/70-cti.json:111 keeps only a recording_url (\"audio file never stored in pipelinq\"), and channelMetadata (99-unify-ticket-supertype.json:344) holds at most a \"chat transcript link\"",
+				"owner": "ConductionNL/pipelinq",
+				"reachedOn": "nothing",
+				"readOn": "2026-09-26"
+			},
+			"evidence": {
+				"hubspot-crm": "https://knowledge.hubspot.com/calling/review-call-recordings-and-transcripts \"If you're a user with an assigned Sales Hub or Service Hub Professional or Enterprise seat, you can transcribe and analyze recordings\"; call summaries come from the same page's AI analysis and record summaries (https://knowledge.hubspot.com/records/summarize-records).",
+				"pipedrive": "https://support.pipedrive.com/en/article/nova \"After the meeting, Nova generates a summary, identifies follow-up actions and suggests CRM updates for you to review before saving\"; \"included in all plans, at no additional cost\" (announced on https://www.pipedrive.com/en/product-updates, September 2026).",
+				"espocrm": "No transcription in core 10.0.8; the paid Intelligence summary uses the record description and stream history, not audio (https://docs.espocrm.com/extensions/intelligence/ \"The record name, description and stream history are provided to the AI as context\"), and the VoIP customization page lists call recordings but no transcription (https://docs.espocrm.com/extensions/voip-integration/customization/)",
+				"odoo-crm": "searched addons/mail/models and addons/mail/static/src/discuss/call for transcri in 19.0: no transcript or summary of calls. Odoo 20 release notes add \"Call transcripts: Record Discuss calls and get summaries of what was said\" for Discuss video and audio calls.",
+				"kiss": "no telephony integration in src/ or Kiss.Bff/ (grep for telefooncentrale, cti and sip finds nothing); open theme https://github.com/Klantinteractie-Servicesysteem/KISS-frontend/issues/1427 \"Thema: Telefonie-integratie\"; no AI, transcription or summarisation code in src/ or Kiss.Bff/; AI assistance is an open theme https://github.com/Klantinteractie-Servicesysteem/KISS-frontend/issues/1450 \"Verkenning AI-assistentie voor KCC-medewerkers\""
+			},
+			"origin": "tender",
+			"originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/414529",
+			"originRequirements": [
+				"intelligence-db requirements#173516 (CIBG Customer Service Platform, 2026-03-04: AI voor gespreksanalyse, transcriptie en samenvattingen)",
+				"intelligence-db requirements#204170 (Gemeente Noordwijk, 2026-04-08: realtime transcriptie in een zaaksysteem)"
+			],
+			"alsoSeenIn": [
+				{
+					"origin": "changelog",
+					"originUrl": "https://www.odoo.com/odoo-20-release-notes",
+					"by": "odoo-crm"
+				},
+				{
+					"origin": "changelog",
+					"originUrl": "https://www.pipedrive.com/en/product-updates",
+					"by": "pipedrive"
+				}
+			]
+		},
+		{
+			"id": "cm-quality-review",
+			"area": "contact-moments",
+			"name": "Listen back to a recorded conversation, score it and agree coaching points with the colleague",
+			"pipelinq": "partial",
+			"hubspot-crm": "yes",
+			"pipedrive": "partial",
+			"espocrm": "no",
+			"odoo-crm": "partial",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/CtiService.php:205 and :359, grep for coaching, scorecard, quality review",
+			"feature": "Telephony",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/CtiService.php:359 \"attachRecording\" writes the platform's recording link onto the contact moment ticket, so a recorded call can be listened back from the ticket; there is no scoring form, scorecard or coaching record anywhere in lib/ or src/",
+				"owner": "ConductionNL/pipelinq",
+				"reachedOn": "TicketDetail (recording link on the contact moment)",
+				"readOn": "2026-09-26"
+			},
+			"note": "listen back only; score and coaching points are missing",
+			"evidence": {
+				"hubspot-crm": "https://knowledge.hubspot.com/calling/review-call-recordings-and-transcripts \"Any user who is recording calls made from HubSpot can review and coach on the call recording\"; https://knowledge.hubspot.com/calling/use-coaching-playlists-to-train-your-team playlists of \"complete or clipped call recordings\" (Sales or Service Hub Professional, Enterprise); AI Quality Assurance scores tickets on tone, clarity and empathy (https://knowledge.hubspot.com/help-desk/use-the-quality-assurance-score-to-analyze-help-desk-tickets, Service Hub Enterprise).",
+				"pipedrive": "https://support.pipedrive.com/en/article/nova Nova transcribes meetings and drafts summaries (all plans); call recording and coaching depend on marketplace calling apps (https://support.pipedrive.com/en/article/how-can-i-make-calls-in-pipedrive). Scoring a conversation and agreeing coaching points is not described. Note: Read from the web.archive.org copy (how-can-i-make-calls-in-pipedrive 2025-11-17) because the live knowledge base answered 429.",
+				"espocrm": "No scoring or coaching entity in 10.0.8 metadata (application/Espo/Resources/metadata/entityDefs and the Crm module); recordings exist only in the paid VoIP Integration (https://docs.espocrm.com/extensions/voip-integration/customization/ \"Displaying a call recording\") with no review or scorecard",
+				"odoo-crm": "https://www.odoo.com/odoo-19-release-notes, Phone: \"Call recording can be enforced, controlled manually by users\" and the call form lets you \"view transcripts or recordings when available\"; the Phone app is Enterprise (https://www.odoo.com/documentation/19.0/applications/productivity/phone.html). No scoring form or coaching workflow is documented; a Survey (Community) could serve as a score sheet.",
+				"kiss": "no call recording (src/features/contact/contactmoment/ContactmomentAfhandeling.vue:655 the contact moment payload has no recording field) and no scoring or coaching feature in src/ or Kiss.Bff/; no telephony integration in src/ or Kiss.Bff/ (grep for telefooncentrale, cti and sip finds nothing); open theme https://github.com/Klantinteractie-Servicesysteem/KISS-frontend/issues/1427 \"Thema: Telefonie-integratie\""
+			},
+			"origin": "tender",
+			"originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/318074",
+			"originRequirements": [
+				"intelligence-db requirements#137422 (Het Juridisch Loket, 2023-11-29: klantinteracties historisch en realtime zoeken en beluisteren voor coaches)",
+				"intelligence-db requirements#173511 (CIBG, 2026-03-04: coaching en feedback op basis van gespreksanalyse)"
+			]
+		},
+		{
+			"id": "cm-keep-draft",
+			"area": "contact-moments",
+			"name": "Keep a half finished contact moment when the browser closes or the session expires",
+			"pipelinq": "partial",
+			"hubspot-crm": "unknown",
+			"pipedrive": "unknown",
+			"espocrm": "partial",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/CtiService.php:92 and :239, grep of src for localStorage and draft",
+			"feature": "Contact moments",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "built",
+				"evidence": "a telephony call creates a pending contact moment server side as soon as it rings (lib/Service/CtiService.php:239 \"Create a pending contactmoment ticket\"), so that record survives a closed browser; the manual form src/components/ContactmomentQuickLog.vue (mounted at src/manifest.json:2144) keeps its input only in component data, with no local or server draft",
+				"owner": "ConductionNL/pipelinq",
+				"reachedOn": "ClientDetail and ContactDetail quick log; CTI screen pop",
+				"readOn": "2026-09-26"
+			},
+			"note": "a half typed manual contact moment is lost when the tab closes or the session expires",
+			"evidence": {
+				"hubspot-crm": "not checked: https://knowledge.hubspot.com/one-to-one-email/create-and-manage-one-to-one-email-drafts covers saving an email \"as a draft for later\" on purpose; keeping a half finished note or call log after a browser crash is not described (read 2026-09-26).",
+				"pipedrive": "not checked: searched the Pipedrive knowledge base article list (https://support.pipedrive.com/en-sitemap.xml) and product updates on 2026-09-26 for autosaved drafts of notes or activities after a browser crash and found none; email drafts appear in Sales Inbox thread status (https://www.pipedrive.com/en/product-updates \"See if a thread contains a draft\").",
+				"espocrm": "client/src/router.js:307 'beforeunload' warns before leaving a form with unsaved changes, and stream post drafts are kept in local storage (client/src/views/stream/panel.js:217 storageTextKey \"stream-post-...\"); a half finished call or case form is not stored when the browser closes or the session expires. Driven 2026-09-26 on the 10.0.8 lab (second boot, for the smoke pass): a half filled Case create form (name and description typed) raised the leave warning on reload, and after the reload the Case create form came back empty; local storage held only layout caches, no form draft.",
+				"odoo-crm": "addons/web/static/src/views/form/form_controller.js:514-518 beforeUnload calls urgentSave so a half filled record is saved when the tab closes, and addons/mail/static/src/core/common/composer.js:909 saveContentToLocalStorage keeps a half written message or note in the browser until sent.. Driven 2026-09-26 on the 19.0 lab (second boot, for the smoke pass): a new lead with only its name typed was reloaded without pressing Save, and the lead existed afterwards as a saved record (crm.lead id 45), so a closed tab keeps the half finished record; an expired session was not tested.",
+				"kiss": "src/stores/contactmoment/index.ts:212 \"contactmomenten: []\" holds running contacts in memory only (just the user preferences persist, src/stores/user.ts:50 \"useStorage(\\\"preferences\\\"\"), so a reload loses them; open issue https://github.com/Klantinteractie-Servicesysteem/KISS-frontend/issues/1558"
+			},
+			"origin": "featureRequest",
+			"originUrl": "https://github.com/Klantinteractie-Servicesysteem/KISS-frontend/issues/1558"
+		},
+		{
+			"id": "cm-link-to-open-request",
+			"area": "contact-moments",
+			"name": "Add a new contact to a request that is still open instead of starting a new one",
+			"pipelinq": "yes",
+			"hubspot-crm": "yes",
+			"pipedrive": "partial",
+			"espocrm": "yes",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in src/components/ContactmomentQuickLog.vue:100-110 and :280-320",
+			"feature": "Contact moments",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "src/components/ContactmomentQuickLog.vue:100 \"Request → ticket.parentTicket (a request-type ticket)\" with an NcSelect of request tickets fetched at :285 (ticketType 'request'), so a new contact moment is filed on an existing request instead of opening a new one; a contact moment can also be filed on further cases (lib/Settings/register.d/97-contact-moment-several-cases.json caseReferences)",
+				"owner": "ConductionNL/pipelinq",
+				"reachedOn": "ClientDetail and ContactDetail quick log (src/manifest.json:2144)",
+				"readOn": "2026-09-26"
+			},
+			"note": "the request picker lists every request ticket, not only open ones",
+			"evidence": {
+				"hubspot-crm": "https://knowledge.hubspot.com/help-desk/manage-reopened-tickets-in-help-desk \"replies from customers either reopen the original ticket or create a new linked ticket based on your settings\"; replies on an open ticket thread onto it. Service Hub Professional, Enterprise.",
+				"pipedrive": "https://support.pipedrive.com/en/article/link-emails-items \"email conversations automatically link to deals, leads or projects associated with the contact person\", so a new mail joins the open deal; for requests as such there is no object. Note: Read from the web.archive.org copy (link-emails-items 2026-04-17) because the live knowledge base answered 429.",
+				"espocrm": "Calls, meetings and emails take a parent (Crm entityDefs/Call.json:72 \"parent\"), and Case has calls, meetings, emails and tasks links, so a new contact is logged on the open case from its Activities and History panels instead of creating a new case",
+				"odoo-crm": "addons/mail/models/mail_thread.py:1122 message_route threads a client's reply onto the open lead or ticket by Message-Id and References, and a colleague logs a call or note on the open record from its chatter (Log note, Schedule activity) instead of starting a new one; addons/crm merge (crm_merge_opportunities wizard) joins two leads opened for the same question.",
+				"kiss": "the afhandeling screen can only create a new contactverzoek (src/features/contact/contactmoment/ContactmomentAfhandeling.vue:817 \"saveInternetaak(\") and has no picker for an existing one; open issue https://github.com/Klantinteractie-Servicesysteem/KISS-frontend/issues/1300"
+			},
+			"origin": "featureRequest",
+			"originUrl": "https://github.com/Klantinteractie-Servicesysteem/KISS-frontend/issues/1300"
+		},
+		{
+			"id": "cm-history-by-phone",
+			"area": "contact-moments",
+			"name": "See earlier contacts from a phone number even when you cannot tell who the caller is",
+			"pipelinq": "partial",
+			"hubspot-crm": "unknown",
+			"pipedrive": "unknown",
+			"espocrm": "partial",
+			"odoo-crm": "partial",
+			"kiss": "partial",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/CtiService.php:252-280 and lib/Service/CtiContactMatcher.php:34-41",
+			"feature": "Telephony",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "built",
+				"evidence": "every CTI call stores the caller's number in E.164 on its contact moment (lib/Service/CtiService.php:272 \"'from_number' => ($fromE164 ?? $fromNumber)\", declared on ticket in lib/Settings/register.d/70-cti.json:42); the screen pop only matches the number to contacts and clients (lib/Service/CtiContactMatcher.php:88 findByPhoneNumber), and no page lists earlier contact moments for a number that matches nobody",
+				"owner": "ConductionNL/pipelinq",
+				"reachedOn": "Tickets list (from_number on each record); CTI screen pop for known callers",
+				"readOn": "2026-09-26"
+			},
+			"note": "the data is there, the view for an unknown caller is not",
+			"evidence": {
+				"hubspot-crm": "not checked: HubSpot logs calls on the matching contact (https://knowledge.hubspot.com/calling/review-call-recordings-and-transcripts) but no article describes looking up earlier calls from an unmatched number (read 2026-09-26).",
+				"pipedrive": "not checked: searched the Pipedrive knowledge base article list (https://support.pipedrive.com/en-sitemap.xml) and product updates on 2026-09-26 for looking up contact history by an unknown phone number and found none; search covers phone numbers of known people (https://support.pipedrive.com/en/article/search-finding-what-you-need). Note: Read from the web.archive.org copy (search-finding-what-you-need 2026-03-15) because the live knowledge base answered 429.",
+				"espocrm": "Phone numbers are shared PhoneNumber records linked to contacts, leads and accounts, and global search finds them by number (application/Espo/Core/Select/Text/DefaultFilter.php:115 phone handling, :123 numeric search); calls are only tied to a number through a linked contact or lead (Crm entityDefs/Call.json phoneNumbersMap), so calls from an unknown caller with no record are not searchable in core. Note: Works when the number sits on any record; not for anonymous callers.",
+				"odoo-crm": "addons/phone_validation/models/mail_thread_phone.py:47 phone_mobile_search finds leads and contacts by a number in any format (crm_lead_views.xml:661), even without a known name; the Enterprise Phone app call form shows \"all records linked to the number\" (https://www.odoo.com/odoo-19-release-notes, Phone).",
+				"kiss": "src/features/contact/contactverzoek/overzicht/ContactverzoekenZoeker.vue:4 \"Telefoonnummer of e-mailadres\" finds contactverzoeken by number, but contact moments without a request are not searchable that way; open epic https://github.com/Klantinteractie-Servicesysteem/KISS-frontend/issues/1509"
+			},
+			"origin": "featureRequest",
+			"originUrl": "https://github.com/Klantinteractie-Servicesysteem/KISS-frontend/issues/1509"
+		},
+		{
+			"id": "cm-call-flow",
+			"area": "contact-moments",
+			"name": "Decide what a caller hears and where the call goes before anyone picks up",
+			"pipelinq": "no",
+			"hubspot-crm": "yes",
+			"pipedrive": "unknown",
+			"espocrm": "no",
+			"odoo-crm": "partial",
+			"kiss": "no",
+			"provider": "external",
+			"providerHow": "call flow lives in the PBX that lib/Settings/connections.json 'cti' connects to; pipelinq does not configure it",
+			"feature": "Telephony",
+			"featureConfidence": "high",
+			"built": {
+				"state": "none",
+				"evidence": "pipelinq only records the queue a call came through (lib/Service/CtiService.php:819 \"'queue_name' => ($event->queueName ?? '')\"); menus, queues and routing before pickup are configured in the telephony platform (Asterisk, RingCentral, CallVoip adapters in lib/Service/Cti/Adapter), and no pipelinq page sets them",
+				"owner": "ConductionNL/pipelinq",
+				"reachedOn": "nothing",
+				"readOn": "2026-09-26"
+			},
+			"evidence": {
+				"hubspot-crm": "https://knowledge.hubspot.com/calling/set-up-interactive-voice-response \"Interactive voice response (IVR) is a system that allows automated interactions with callers through voice prompts and keypad inputs ... accurate call routing\". Sales or Service Hub Professional, Enterprise.",
+				"pipedrive": "not checked: \"Pipedrive doesn't have a built-in calling integration\" (https://support.pipedrive.com/en/article/how-can-i-make-calls-in-pipedrive); call menus depend on the marketplace calling app, which the knowledge base does not describe (read 2026-09-26). Note: Read from the web.archive.org copy (how-can-i-make-calls-in-pipedrive 2025-11-17) because the live knowledge base answered 429.",
+				"espocrm": "No IVR or call routing in core 10.0.8 (searched application/ and client/src for \"ivr\": no relevant hits); the paid VoIP Integration connects to a PBX (https://docs.espocrm.com/extensions/voip-integration/overview/) where call flows live, and its docs describe no call flow designer",
+				"odoo-crm": "https://www.odoo.com/documentation/19.0/applications/productivity/phone/axivox/call_queues.html describes call queues configured in the Axivox portal behind the Enterprise Phone app; Odoo 20 release notes add a \"Call flow designer: Design a flow for incoming calls with extensions, call menus, time and location specific steps\" inside Odoo. Enterprise only, no Community code path.",
+				"kiss": "no telephony integration in src/ or Kiss.Bff/ (grep for telefooncentrale, cti and sip finds nothing); open theme https://github.com/Klantinteractie-Servicesysteem/KISS-frontend/issues/1427 \"Thema: Telefonie-integratie\""
+			},
+			"origin": "changelog",
+			"originUrl": "https://www.odoo.com/odoo-20-release-notes"
+		},
+		{
+			"id": "cm-failed-send",
+			"area": "contact-moments",
+			"name": "See that an email to a client failed to send and send it again in one click",
+			"pipelinq": "partial",
+			"hubspot-crm": "unknown",
+			"pipedrive": "yes",
+			"espocrm": "partial",
+			"odoo-crm": "partial",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in src/views/messaging/MessagingConversationSection.vue:314-325 and appinfo/routes.php:555-556",
+			"feature": "Messaging",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "built",
+				"evidence": "a failed WhatsApp or SMS is stored and flagged (lib/Service/WhatsAppAdapter.php:831 persistFailureAndAlert) and shown red on the Messages section (src/views/messaging/MessagingConversationSection.vue:319 \"status === 'failed' || status === 'expired'\"), but there is no resend button; Berichtenbox has a retry API (appinfo/routes.php:556) that no page calls; an email to a client is sent from Nextcloud Mail, whose outbox handles failed sends",
+				"owner": "ConductionNL/pipelinq",
+				"reachedOn": "ClientDetail and ContactDetail Messages section (status only)",
+				"readOn": "2026-09-26"
+			},
+			"note": "the failure is visible, the one click resend is not",
+			"evidence": {
+				"hubspot-crm": "not checked: bounces are explained for marketing email (https://knowledge.hubspot.com/marketing-email/what-is-the-difference-between-a-hard-bounce-and-a-soft-bounce listed), but a one-click resend of a failed one-to-one email is not described in the articles read (read 2026-09-26).",
+				"pipedrive": "https://www.pipedrive.com/en/product-updates \"Failed send visibility and live retry: ... tracking failed email sends and initiating one-click retries directly from deal, person, organization, project and lead detail views\".",
+				"espocrm": "A failed send shows an error at once (client/src/views/email/record/detail.js:643 'sendingFailed') and keeps the email as a draft to send again; scheduled emails get status Failed (application/Espo/Entities/Email.php:57 STATUS_FAILED) and can be filtered in the email list, but there is no one click resend. Driven 2026-09-26 on the 10.0.8 lab (second boot, for the smoke pass): with outbound SMTP pointed at an unreachable host, Send from the compose dialog failed and the email stayed as status Draft (not Failed) in the Emails list; reopening it opens the compose form with Send, so a resend is two steps and nothing marks the mail as failed in the list.",
+				"odoo-crm": "addons/mail/static/src/core/common/message.xml:195-196 a failed mail shows a red envelope on the message in the chatter with the failure reason, and failures collect in the messaging menu (messaging_menu_patch.xml:92); resending is the Retry button under Settings > Technical > Emails (addons/mail/views/mail_mail_views.xml:94), not one click on the record.",
+				"kiss": "KISS sends no e-mail to clients (the only SMTP use is Kiss.Bff/Intern/Feedback/SendFeedback.cs:43), so there is no failed send to resend"
+			},
+			"origin": "changelog",
+			"originUrl": "https://www.pipedrive.com/en/product-updates"
 		},
 		{
 			"id": "vendor-training",
@@ -6110,6 +7675,336 @@
 			}
 		},
 		{
+			"id": "plat-retention-destroy",
+			"area": "platform",
+			"name": "Have client records destroyed or anonymised by themselves when their retention period ends",
+			"pipelinq": "partial",
+			"hubspot-crm": "partial",
+			"pipedrive": "unknown",
+			"espocrm": "no",
+			"odoo-crm": "partial",
+			"kiss": "no",
+			"provider": "openregister",
+			"providerHow": "the disposal sweep is OpenRegister's ArchivalRetentionTask reading pipelinq's x-openregister-archival blocks (read in openregister lib/BackgroundJob/ArchivalRetentionTask.php:77); BRP data is pipelinq's own BrpRetentionJob",
+			"feature": "Privacy",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Settings/pipelinq_register.json:1516 \"x-openregister-archival\" (task, P2Y/P1Y) and lib/Settings/register.d/99-unify-ticket-supertype.json:27 (ticket, contact moments P2Y) are enforced by OpenRegister lib/BackgroundJob/ArchivalRetentionTask.php:77; lib/BackgroundJob/BrpRetentionJob.php:189 \"deleteObject(uuid: $uuid)\" for BRP person data past retentionTo. The client and contact schemas carry no archival block, so client records themselves are never disposed",
+				"owner": "ConductionNL/pipelinq",
+				"reachedOn": "background jobs (no page needed); tickets and tasks are the Tickets, Queue and Tasks pages",
+				"readOn": "2026-09-26"
+			},
+			"note": "contact moments, tasks and BRP data expire by themselves; client and contact records have no retention term, and request/complaint tickets are set to P100Y",
+			"evidence": {
+				"hubspot-crm": "https://knowledge.hubspot.com/privacy-and-consent/manage-data-retention-policy-settings \"turn on the setting to automatically delete data\": \"Once a contact is inactive for the defined period of time, it will be deleted with the option to restore it from the recycling bin within 90 days\". All products and plans. Deletion by inactivity for contacts only, not a retention schedule per record type, and no anonymisation.",
+				"pipedrive": "not checked: searched the Pipedrive knowledge base article list (https://support.pipedrive.com/en-sitemap.xml) and product updates on 2026-09-26 for retention periods and automatic deletion or anonymisation of contacts and found none; deletion is manual with a 30 day restore window (https://support.pipedrive.com/en/article/how-can-i-delete-items-in-pipedrive). Note: Read from the web.archive.org copy (how-can-i-delete-items-in-pipedrive 2026-05-08) because the live knowledge base answered 429.",
+				"espocrm": "No retention policy on records in 10.0.8: application/Espo/Resources/i18n/en_US/Settings.json:274 \"cleanupDeletedRecords\" only purges records already soft removed, and personal data erasure (application/Espo/Tools/DataPrivacy/Erasor.php:78) is a manual action per record; searched application/Espo/Tools and en_US i18n for \"retention\" and \"anonymi\": no other hits",
+				"odoo-crm": "addons/data_recycle/models/data_recycle_model.py:33-49 a recycle rule per model with recycle_mode \"Automatic\", recycle_action \"Archive\" or \"Delete\" and a time field plus delta (for example contacts not updated for 5 years), run by a cron and managed in the Data Cleaning app (addons/data_recycle/views/data_cleaning_menu.xml:6); it archives or deletes but does not anonymise, and a contact linked to invoices cannot be deleted (account_move.py:435 ondelete restrict). Note: Archive keeps the personal data; anonymising needs custom code.",
+				"kiss": "KISS has no retention or purge job: Kiss.Bff/ has no scheduled cleanup for VerwerkingsLogs or ContactmomentDetails, and client records live in OpenKlant where KISS never deletes them; open issue https://github.com/Klantinteractie-Servicesysteem/KISS-frontend/issues/1390 \"Archiveren en vernietigen van Management info in KISS\". Note: Retention of client records is left to OpenKlant."
+			},
+			"origin": "tender",
+			"originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/421969",
+			"originRequirements": [
+				"intelligence-db requirements#193358 (Gemeente Amersfoort, 2026-04-20: bewaartermijnen en anonimisering)",
+				"intelligence-db requirements#3763 (NZa CRM, 2024-12-06: vernietigingsproces standaard in de CRM Oplossing)"
+			]
+		},
+		{
+			"id": "plat-wcag",
+			"area": "platform",
+			"name": "Use every screen with a keyboard and a screen reader, to WCAG 2.1 AA, with a published accessibility statement",
+			"pipelinq": "partial",
+			"hubspot-crm": "partial",
+			"pipedrive": "unknown",
+			"espocrm": "unknown",
+			"odoo-crm": "partial",
+			"kiss": "partial",
+			"provider": "pipelinq",
+			"providerHow": "read in tests/e2e/portal-accessibility.spec.ts:5-24 and searched the repo for an accessibility statement",
+			"feature": "Platform",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "pages are built on Nextcloud Vue components; tests/e2e/portal-accessibility.spec.ts:5 \"Customer-portal WCAG 2.2 AA structural accessibility checks\" (keyboard, landmarks, live regions) covers the portal only, and says the axe-core sweep is not run; no accessibility statement (toegankelijkheidsverklaring) anywhere in docs/ or the app",
+				"owner": "ConductionNL/pipelinq",
+				"reachedOn": "every page; portal at /apps/pipelinq/portal",
+				"readOn": "2026-09-26"
+			},
+			"note": "no published accessibility statement and no audit evidence for the back office screens",
+			"evidence": {
+				"hubspot-crm": "https://legal.hubspot.com/website-accessibility covers HubSpot's public websites against WCAG 2.1 AA; a product VPAT exists as an older PDF (https://cdn2.hubspot.net/hubfs/2353984/KnowledgeBase%20Attachments/Voluntary%20Product%20Accessibility%20Template%20(VPAT).pdf), date and scope not confirmed. No current statement for the app itself was found.",
+				"pipedrive": "not checked: no accessibility statement or VPAT found; https://www.pipedrive.com/en/accessibility answered 404 and a web search for a Pipedrive VPAT found only third-party widgets (2026-09-26).",
+				"espocrm": "not checked: no accessibility statement exists (https://www.espocrm.com/accessibility/ answered 404 on 2026-09-26 and the docs index links none), and keyboard and screen reader conformance of the 10.0.8 client cannot be judged from source; the templates under client/res/templates carry almost no aria attributes (one template file matches \"aria-label\"), which suggests gaps; needs an audit on a running instance. Driven 2026-09-26 on the 10.0.8 lab (second boot, for the smoke pass): the instance was up, but no keyboard only or screen reader audit was run, so conformance is still not settled.",
+				"odoo-crm": "Odoo publishes no accessibility statement or WCAG conformance claim (checked 2026-09-26: odoo.com/accessibility and the 19.0 documentation have none); the web client uses aria attributes and keyboard shortcuts (for example addons/mail/static/src/core/common/message.xml:196 aria-label on the delivery icon, Alt key hotkeys in the web client), but conformance to WCAG 2.1 AA is not claimed. Note: A keyboard and screen reader drive would show how far the back office gets.",
+				"kiss": "accessibility work shipped in v1.2.0 (docs/changelog/changelog.md:169 \"Improving accessibility of the search boxes\" and :170 \"Make contactmomenten & contactverzoeken accessible #1176\"), NL Design System Utrecht components are used throughout, and the repo holds a 2023 test report (docs/files/WCAG-Lighthouse-Report-20231010.pdf); no published accessibility statement found, and open bug https://github.com/Klantinteractie-Servicesysteem/KISS-frontend/issues/1131 \"Afdelingen/groepen/medewerker fields are not accessible\". Note: No toegankelijkheidsverklaring; a keyboard and screen reader drive would settle AA."
+			},
+			"origin": "tender",
+			"originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/414691",
+			"originRequirements": [
+				"intelligence-db requirements#207295 (Gemeente Midden-Drenthe, 2026-03-05: EN 301 549 met WCAG 2.1 niveau AA)",
+				"intelligence-db requirements#204185 (Gemeente Noordwijk, 2026-04-08: toegankelijkheidsverklaring)"
+			]
+		},
+		{
+			"id": "plat-field-conditions",
+			"area": "platform",
+			"name": "Show, hide or validate a field depending on the value of another field, without code",
+			"pipelinq": "no",
+			"hubspot-crm": "yes",
+			"pipedrive": "partial",
+			"espocrm": "yes",
+			"odoo-crm": "partial",
+			"kiss": "partial",
+			"provider": "pipelinq",
+			"providerHow": "read in nextcloud-vue v2.56.0 CnFormDialog.md:268 and src/utils/schema.js:683-688, grep of src/manifest.json for visibleWhen and condition",
+			"feature": "Platform",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "none",
+				"evidence": "the shared form (nextcloud-vue v2.56.0 src/components/CnFormDialog/CnFormDialog.vue:1908 \"fieldVisible\") hides a field on a condition only when a field descriptor carries condition/visibleWhen, and src/utils/schema.js does not derive one from a schema property (it maps only x-openregister-readonly-when, :688). No pipelinq manifest page declares a condition, and no admin screen lets one be set",
+				"owner": "ConductionNL/nextcloud-vue",
+				"reachedOn": "nothing",
+				"readOn": "2026-09-26"
+			},
+			"note": "conditional read-only exists at schema level (x-openregister-readonly-when); show, hide and validate on another field's value needs a developer",
+			"evidence": {
+				"hubspot-crm": "https://knowledge.hubspot.com/properties/set-up-conditional-logic-for-enumeration-properties \"Use conditional property logic to control when additional properties should display or require a value based on a user's previous input\"; https://knowledge.hubspot.com/properties/set-up-conditional-options-for-properties limits options by a controlling property. Marketing, Sales, Service or Data Hub Professional, Enterprise.",
+				"pipedrive": "https://support.pipedrive.com/en/article/required-fields \"you can select which pipelines and stages your field will be required for\" (Premium and up per https://support.pipedrive.com/en/article/what-features-do-the-pipedrive-plans-have, pipeline-specific fields too); showing or hiding a field based on another field's value is not described. Note: Read from the web.archive.org copy (required-fields 2026-05-19; what-features-do-the-pipedrive-plans-have 2026-08-24) because the live knowledge base answered 429.",
+				"espocrm": "Dynamic Logic per field at Administration > Entity Manager > Fields (application/Espo/Modules/Crm/Resources/metadata/logicDefs/Case.json and others ship defaults): https://docs.espocrm.com/administration/dynamic-logic/ \"conditions making certain fields visible, required or read-only\" and option sets per condition",
+				"odoo-crm": "in Community a field is shown, hidden or made required by another field's value through the invisible and required expressions in the view XML (for example addons/crm/views/crm_lead_views.xml uses invisible=\"type == 'lead'\"), which means editing views in developer mode; doing it without code is Studio, Enterprise (https://www.odoo.com/documentation/19.0/applications/studio.html).",
+				"kiss": "admins can build contactverzoek question sets with text, dropdown and checkbox questions per department or group (docs/manual/formulieren.md:31 vraagtypes, src/router/index.ts:298 \"formulieren-contactverzoek-afdeling\"), but there is no show, hide or validate rule between fields; the only conditional field is hard coded (src/features/contact/contactverzoek/formulier/ContactverzoekFormulier.vue:435 medewerker required when the group has no mailbox). Note: Configurable question sets, no conditional logic."
+			},
+			"origin": "tender",
+			"originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/414529",
+			"originRequirements": [
+				"intelligence-db requirements#173804 (CIBG, 2026-03-04: veldvalidatie conditioneel, afhankelijk van de waarde van een ander veld)",
+				"intelligence-db requirements#3788 (NZa CRM, 2024-12-06: afhankelijkheden van velden onderling)"
+			]
+		},
+		{
+			"id": "plat-knowledge-only-role",
+			"area": "platform",
+			"name": "Give colleagues outside the contact centre a search only view of the knowledge base",
+			"pipelinq": "no",
+			"hubspot-crm": "partial",
+			"pipedrive": "unknown",
+			"espocrm": "yes",
+			"odoo-crm": "partial",
+			"kiss": "yes",
+			"provider": "pipelinq",
+			"providerHow": "grep of src/manifest.json, src/manifest.d and src/menu-layout.json for groups, roles and visibleIf",
+			"feature": "Service desk",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "none",
+				"evidence": "the knowledge base is reached through the XWiki sidebar tab and widget (src/manifest.json:1394 \"xwiki-knowledge\", :2168 knowledgeBase) and the Articles pages; no manifest page or route is gated by role (only src/manifest.d/97-connection-registry.json:14 uses visibleIf), so there is no search only view for colleagues outside the contact centre",
+				"owner": "ConductionNL/pipelinq",
+				"reachedOn": "nothing",
+				"readOn": "2026-09-26"
+			},
+			"note": "XWiki's own permissions could give such a view, but outside pipelinq",
+			"evidence": {
+				"hubspot-crm": "https://www.hubspot.com/pricing/sales \"View-only Seats are available at no additional cost\" for read access; knowledge base articles are published pages any colleague can search (https://knowledge.hubspot.com/knowledge-base/create-and-customize-knowledge-base-articles). A role limited to knowledge base search is not described.",
+				"pipedrive": "not checked: searched the Pipedrive knowledge base article list (https://support.pipedrive.com/en-sitemap.xml) and product updates on 2026-09-26 for a knowledge base tool for customers' own articles and found none, so a search-only role for it does not apply.",
+				"espocrm": "Roles grant access per scope (https://docs.espocrm.com/administration/roles-management/), so a role with only KnowledgeBaseArticle read (Crm scopes/KnowledgeBaseArticle.json acl) and nothing else gives colleagues a search and read view of the knowledge base; the tab list follows access",
+				"odoo-crm": "https://www.odoo.com/documentation/19.0/applications/productivity/knowledge.html access rights per article, \"Can Read: Allow all internal users to read the article only\", and articles are searched with ? in the command palette; Knowledge is Enterprise. A read only internal user still needs an internal user licence.",
+				"kiss": "src/layout/TheHeader.vue:12 \"v-if=\\\"(isKcm || isKennisbank) && route.meta.showSearch\\\"\" gives the Kennisbank role the search box while src/views/HomeView.vue:13 hides the contact screens from it, and Kiss.Bff/Extern/Elasticsearch/ElasticsearchService.cs:152 \"IsOnlyKennisbank()\" filters restricted fields; released in v1.4.0 (#1028)"
+			},
+			"origin": "changelog",
+			"originUrl": "https://github.com/Klantinteractie-Servicesysteem/KISS-frontend/releases/tag/v1.4.0"
+		},
+		{
+			"id": "plat-central-authorisation",
+			"area": "platform",
+			"name": "Manage who may do what in the contact centre from the central authorisation register",
+			"pipelinq": "partial",
+			"hubspot-crm": "yes",
+			"pipedrive": "partial",
+			"espocrm": "yes",
+			"odoo-crm": "partial",
+			"kiss": "no",
+			"provider": "nextcloud",
+			"providerHow": "membership is Nextcloud groups, read in lib/Lifecycle/ObjectOwnerAccessPolicy.php:4-5 and the authorization blocks in the register",
+			"feature": "Platform",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "built",
+				"evidence": "rights are Nextcloud group names fixed in the register (lib/Settings/pipelinq_register.json:410 \"authorization\": [...], lib/Settings/register.d/99-unify-ticket-supertype.json:90 \"authorization\": [\"sales\"]) and checked by lib/Lifecycle/ObjectOwnerAccessPolicy.php; group membership can come from a central directory through Nextcloud (LDAP, SAML, OIDC), but which group may do what is written in register JSON, not managed in a central authorisation register",
+				"owner": "nextcloud/server",
+				"reachedOn": "every page (enforced on read and lifecycle actions)",
+				"readOn": "2026-09-26"
+			},
+			"note": "who is in a role can be central; what a role may do cannot",
+			"evidence": {
+				"hubspot-crm": "https://knowledge.hubspot.com/user-management/provision-hubspot-users-with-scim-through-okta users are provisioned and deprovisioned from the identity provider over SCIM (Professional, Enterprise), with permission sets assigned centrally (https://knowledge.hubspot.com/user-management/create-permission-sets, Enterprise).",
+				"pipedrive": "https://support.pipedrive.com/en/article/single-sign-on SSO on all plans with Okta and Entra ID guides (https://support.pipedrive.com/en/article/pipedrive-single-sign-on-okta); roles are managed in Pipedrive's own permission sets (https://support.pipedrive.com/en/article/permission-sets), and SCIM provisioning from the central register is not described. Note: Read from the web.archive.org copy (single-sign-on 2026-06-19; pipedrive-single-sign-on-okta 2026-05-08; permission-sets 2026-03-15) because the live knowledge base answered 429.",
+				"espocrm": "OIDC team mapping assigns teams from the identity provider's group claim on every login (https://docs.espocrm.com/administration/oidc/ \"Espo teams are mapped against identity provider's groups\"), and teams carry roles (application/Espo/Resources/metadata/entityDefs/Team.json:9 \"roles\"); LDAP has the same through Settings ldapUserTeams (Settings.json:445). Note: Rights follow central groups via teams; role definitions stay in EspoCRM.",
+				"odoo-crm": "addons/auth_ldap (git show HEAD:addons/auth_ldap/models/res_company_ldap.py:47 ldap_filter, :65 Template User, :67 create_user) logs users in against a central directory and copies rights from a template user, but groups are not synced from the directory afterwards; there is no SCIM or central role register connector.",
+				"kiss": "rights come from OIDC roles mapped in code (Kiss.Bff/Config/Permissions/PermissionConfiguration.cs:32 \"CreateDefault(string redacteurRole, string beheerderRole, string kcmRole)\"); open epic https://github.com/Klantinteractie-Servicesysteem/KISS-frontend/issues/1462 for PABC and OpenFTV"
+			},
+			"origin": "roadmap",
+			"originUrl": "https://github.com/Klantinteractie-Servicesysteem/KISS-frontend/issues/1462"
+		},
+		{
+			"id": "plat-record-lock",
+			"area": "platform",
+			"name": "Lock a finished record so nobody can change or delete it by accident",
+			"pipelinq": "partial",
+			"hubspot-crm": "unknown",
+			"pipedrive": "partial",
+			"espocrm": "yes",
+			"odoo-crm": "partial",
+			"kiss": "partial",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/ContractService.php:140-165 and lib/Lifecycle/PosTransactionConfirmGuard.php:4-12",
+			"feature": "Platform",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "built",
+				"evidence": "finished records freeze per type: a contract in a terminal state cannot transition (lib/Service/ContractService.php:152-160), a confirmed POS transaction is guarded (lib/Lifecycle/PosTransactionConfirmGuard.php), and tickets cannot be hard deleted by hand because their schema declares archival (OpenRegister ArchivalRetentionTask.php:9 \"SCHEMA_ARCHIVAL_IMMUTABLE\"). OpenRegister's lock (routes objects#lock) is a temporary edit lock, and no pipelinq page offers a lock action on a client, lead or ticket",
+				"owner": "ConductionNL/pipelinq",
+				"reachedOn": "ContractDetail, PosTransactionDetail, TicketDetail (implicit)",
+				"readOn": "2026-09-26"
+			},
+			"note": "no general 'lock this record' for users",
+			"evidence": {
+				"hubspot-crm": "not checked: HubSpot restricts property edit rights (https://knowledge.hubspot.com/properties/restrict-view-edit-access-for-properties, Enterprise) and pipeline rules, but no article describes locking a whole finished record against edit and delete (read 2026-09-26).",
+				"pipedrive": "https://support.pipedrive.com/en/article/read-only-fields makes custom field data \"visible to users without them being able to edit it\", and delete rights are set per permission set (https://support.pipedrive.com/en/article/how-can-i-delete-items-in-pipedrive); locking one finished record is not described. Note: Read from the web.archive.org copy (read-only-fields 2025-09-13; how-can-i-delete-items-in-pipedrive 2026-05-08) because the live knowledge base answered 429.",
+				"espocrm": "New in 10.0.0: application/Espo/Modules/Crm/Resources/metadata/scopes/Account.json:17 \"lockable\": true and entityDefs/Account.json:163 \"isLocked\", with client/src/handlers/record/lock-action.js giving Lock and Unlock on the detail view and mass actions (application/Espo/Resources/i18n/en_US/Global.json:468 \"confirmMassLock\"); https://docs.espocrm.com/general/record-locking/ \"Locked records cannot be edited (except for designated fields) or removed\"",
+				"odoo-crm": "addons/sale/models/sale_order.py:78 locked and :1320 action_lock lock a confirmed sales order (automatic lock is a Sales setting), and posted invoices cannot be edited; leads, contacts and other records have no lock, only archive.",
+				"kiss": "a saved contact moment or contactverzoek cannot be edited or deleted from any KISS screen: the only DELETE calls in src/ are for beheer lists (src/features/Kanalen/service.ts:32); this is by design, not a lock action, and records remain editable in OpenKlant itself. Note: Immutable from KISS by design, no explicit lock."
+			},
+			"origin": "changelog",
+			"originUrl": "https://github.com/espocrm/espocrm/issues/3592"
+		},
+		{
+			"id": "plat-restore-deleted",
+			"area": "platform",
+			"name": "Bring back a record you deleted by mistake, together with what was deleted with it",
+			"pipelinq": "partial",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "yes",
+			"odoo-crm": "partial",
+			"kiss": "no",
+			"provider": "openregister",
+			"providerHow": "read in openregister appinfo/routes.php:1432-1433",
+			"feature": "Platform",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "built",
+				"evidence": "OpenRegister keeps deleted objects and restores them (openregister appinfo/routes.php:1432 'deleted#restore', :1433 'deleted#restoreMultiple', UI in openregister src/store/modules/deleted.js); no pipelinq page reaches it, and restoring what a cascade deleted with the record is a manual multi-select",
+				"owner": "ConductionNL/openregister",
+				"reachedOn": "OpenRegister's deleted objects page, not a pipelinq page",
+				"readOn": "2026-09-26"
+			},
+			"evidence": {
+				"hubspot-crm": "https://knowledge.hubspot.com/privacy-and-consent/manage-data-retention-policy-settings deleted contacts sit in \"the recycling bin within 90 days\"; https://knowledge.hubspot.com/object-settings/restore-crm-changes rolls records back \"to a previous point within the last 14 days\" including changes by workflows and imports (Starter and up).",
+				"pipedrive": "https://support.pipedrive.com/en/article/how-can-i-delete-items-in-pipedrive \"Admins can restore deleted items within 30 days after deletion; the linked historical information will be restored as well\"; https://support.pipedrive.com/en/article/restore-data restores items in bulk. All plans. Note: Read from the web.archive.org copy (how-can-i-delete-items-in-pipedrive 2026-05-08; restore-data 2026-03-14) because the live knowledge base answered 429.",
+				"espocrm": "client/src/views/record/deleted-detail.js:44 action 'restoreDeleted' labelled Restore on a deleted record, and 10.0.0 added cascade removal and restore of linked records (https://github.com/espocrm/espocrm/releases/tag/10.0.0 \"Cascade removal and restore\")",
+				"odoo-crm": "Odoo's answer is archiving: every record with active can be archived and restored from the Archived filter, and odoo/addons/base models block deleting records still referenced; a real delete (unlink) is permanent with no recycle bin in 19.0. Note: Odoo 20 offers archive when a record cannot be deleted; it adds no restore of deleted records.",
+				"kiss": "KISS deletes no client or contact data; beheer items (news, links, kanalen, forms) are deleted outright after a confirm (docs/manual/formulieren.md:85 \"Weet u zeker dat u dit contactformulier wilt verwijderen?\"), except skills which are only hidden (docs/manual/voorbeelddata.md:7); no restore screen exists"
+			},
+			"origin": "changelog",
+			"originUrl": "https://github.com/espocrm/espocrm/issues/3603"
+		},
+		{
+			"id": "plat-work-offline",
+			"area": "platform",
+			"name": "Keep working on your client records when the connection drops",
+			"pipelinq": "no",
+			"hubspot-crm": "unknown",
+			"pipedrive": "partial",
+			"espocrm": "no",
+			"odoo-crm": "no",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "grep of src for offline mechanisms",
+			"feature": "Platform",
+			"featureConfidence": "high",
+			"built": {
+				"state": "none",
+				"evidence": "no service worker, IndexedDB cache or offline queue in src/ (grep for serviceWorker, workbox, indexedDB, navigator.onLine); every page reads OpenRegister live",
+				"owner": "ConductionNL/pipelinq",
+				"reachedOn": "nothing",
+				"readOn": "2026-09-26"
+			},
+			"evidence": {
+				"hubspot-crm": "not checked: https://knowledge.hubspot.com/account-mangagement/how-to-install-the-hubspot-mobile-application describes the mobile app but no offline mode; searched the knowledge base list for offline (read 2026-09-26).",
+				"pipedrive": "https://support.pipedrive.com/en/article/do-the-mobile-apps-work-offline \"Unlike on the Pipedrive desktop web app where you need to be online to work, you will be able to work on the mobile apps even if you do not have an internet connection\". Mobile only. Note: Read from the web.archive.org copy (do-the-mobile-apps-work-offline 2025-09-13) because the live knowledge base answered 429.",
+				"espocrm": "client/src/app.js:1304 onOffline shows Ui.error \"No internet\" and requests fail; no service worker or local data store in the 10.0.8 client",
+				"odoo-crm": "addons/web/static/src/service_worker.js:6 \"const offLineURL = `${homepageURL}/offline`\" and :14 cache only the home page and an offline notice page in 19.0, and addons/web/static/src/webclient/errors/offline_fail_to_fetch_error_handler.js shows an error when a request fails; no record is readable or editable offline. Odoo 20 release notes add \"Offline mode: Create, edit, archive, unarchive, and delete records while being offline.\"",
+				"kiss": "running contact moments sit in an in memory store (src/stores/contactmoment/index.ts:212 \"contactmomenten: []\"), no service worker or offline cache exists, and every read goes live through the BFF to BRP, KvK, OpenKlant and ZGW; open issue https://github.com/Klantinteractie-Servicesysteem/KISS-frontend/issues/1558 asks not to lose a half finished contact even on reload"
+			},
+			"origin": "changelog",
+			"originUrl": "https://www.odoo.com/odoo-20-release-notes"
+		},
+		{
+			"id": "plat-copy-access",
+			"area": "platform",
+			"name": "Give a new colleague the same access as a peer in one step",
+			"pipelinq": "partial",
+			"hubspot-crm": "yes",
+			"pipedrive": "yes",
+			"espocrm": "yes",
+			"odoo-crm": "yes",
+			"kiss": "partial",
+			"provider": "nextcloud",
+			"providerHow": "group membership is managed in Nextcloud, read in the authorization blocks of the pipelinq register",
+			"feature": "Platform",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "built",
+				"evidence": "all access is Nextcloud group membership named in the register (lib/Settings/register.d/99-unify-ticket-supertype.json:90 \"authorization\": [\"sales\"], lib/Lifecycle/ObjectOwnerAccessPolicy.php), so a new colleague gets a peer's access by being put in the same groups in Nextcloud user management; there is no 'same as this user' action, and POS staff get a posRole separately (/api/pos/staff)",
+				"owner": "nextcloud/server",
+				"reachedOn": "Nextcloud Users admin page",
+				"readOn": "2026-09-26"
+			},
+			"note": "a few group picks, not one step",
+			"evidence": {
+				"hubspot-crm": "https://knowledge.hubspot.com/user-management/create-permission-sets permission sets bundle access and are assigned to new users in one step (Enterprise hubs).",
+				"pipedrive": "https://www.pipedrive.com/en/product-updates \"Copy access settings from another team member ... copying permission sets and default visibility settings from an existing user\" when inviting or updating users.",
+				"espocrm": "Access is held in shared roles and teams (application/Espo/Resources/metadata/entityDefs/User.json:390 \"roles\", teams), and the Duplicate action on a user record (client/src/views/record/detail.ts:974 'duplicate') copies roles and teams while skipping userName and password (User.json:15 \"duplicateIgnore\": true). Driven 2026-09-26 on the 10.0.8 lab (second boot, for the smoke pass): a user with role KCC medewerker and team Klantcontact, Duplicate from the user's detail menu opened a Create User form with the role and the team filled in and the username empty.",
+				"odoo-crm": "odoo/addons/base/models/res_users.py:257 group_ids is a many2many copied on Duplicate, and copy_data (:684) only renames name and login, so duplicating a peer's user gives the new colleague the same access in one step.",
+				"kiss": "access is the OIDC role a user holds, mapped to permissions in Kiss.Bff/Config/Permissions/PermissionConfiguration.cs:32 \"CreateDefault(string redacteurRole, string beheerderRole, string kcmRole)\"; giving a colleague the same role or group in the identity provider gives the same access, but KISS itself has no user admin screen. Note: Done in the identity provider, not in KISS."
+			},
+			"origin": "changelog",
+			"originUrl": "https://www.pipedrive.com/en/product-updates"
+		},
+		{
+			"id": "plat-translated-field-names",
+			"area": "platform",
+			"name": "Show your own field names in each colleague's language",
+			"pipelinq": "partial",
+			"hubspot-crm": "yes",
+			"pipedrive": "unknown",
+			"espocrm": "yes",
+			"odoo-crm": "yes",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in nextcloud-vue v2.56.0 src/utils/schema.js:526-599 and pipelinq package.json:12",
+			"feature": "Platform",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "built",
+				"evidence": "shipped schema titles are English source strings translated at display time (nextcloud-vue v2.56.0 src/utils/schema.js:599 \"label: tr(prop.title || key)\") from pipelinq's l10n files (l10n/nl.json, de.json, guarded by package.json:12 check:schema-l10n); a field an administrator adds has a single title and no per-language labels, so it shows the same text to everyone",
+				"owner": "ConductionNL/pipelinq",
+				"reachedOn": "every index and detail page",
+				"readOn": "2026-09-26"
+			},
+			"note": "shipped fields yes, your own field names no",
+			"evidence": {
+				"hubspot-crm": "https://knowledge.hubspot.com/object-settings/translate-custom-crm-content \"you can create translations for your custom CRM data, so labels and names appear in the appropriate language\", custom properties and pipelines included. Marketing, Sales, Service or Data Hub Enterprise.",
+				"pipedrive": "not checked: the partner association's request list says \"you can not translate your custom fields\"; https://support.pipedrive.com/en/article/custom-fields names one field name and no translations, but Pipedrive does not state the absence (read 2026-09-26).",
+				"espocrm": "Administration > Label Manager (application/Espo/Resources/metadata/app/adminPanel.json:162 \"#Admin/labelManager\") edits field and option labels per language, including custom fields, and each user sees the labels of their chosen language",
+				"odoo-crm": "odoo/addons/base/models/ir_model.py:533 \"field_description = fields.Char(string='Field Label', ... translate=True)\" so a custom field's label is translated per language and each colleague sees it in their own language. Note: Property field labels are not translatable.",
+				"kiss": "all labels are hard coded Dutch in the Vue templates (for example src/features/contact/contactverzoek/overzicht/ContactverzoekenOverzicht.vue:30 \"aangemaaktDoor: 'Aangemaakt door'\"); package.json has no i18n library and users cannot define fields"
+			},
+			"origin": "featureRequest",
+			"originUrl": "https://www.pdpartnerassociation.com/top-6-feature-request/"
+		},
+		{
 			"id": "meeting-link",
 			"area": "portal",
 			"name": "Send a link and let somebody pick a slot in your diary",
@@ -6135,6 +8030,105 @@
 				"pipedrive": "https://support.pipedrive.com/en/article/scheduler links offering \"General availability\" or picked times, shared by email or embedded; \"Booking an appointment also creates an activity in your Pipedrive activities calendar\". Growth and up. Note: Read from the web.archive.org copy (scheduler 2026-05-20) because the live knowledge base answered 429.",
 				"odoo-crm": "https://www.odoo.com/documentation/19.0/applications/productivity/appointments.html \"Odoo's Appointments app is a self-service scheduling app\" with shareable booking links based on user availability; Appointments is an Enterprise app, and Community calendar (addons/calendar/models/calendar_event.py:477 \"overridden in appointment\") has no booking page of its own. Note: Previous rating yes; the booking link needs Enterprise Appointments."
 			}
+		},
+		{
+			"id": "portal-digid",
+			"area": "portal",
+			"name": "Let a citizen log in to the portal with DigiD and a business with eHerkenning",
+			"pipelinq": "no",
+			"hubspot-crm": "unknown",
+			"pipedrive": "unknown",
+			"espocrm": "partial",
+			"odoo-crm": "no",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/Portal/PortalAuthService.php:130-189 and grep for digid, eherkenning, saml, oidc",
+			"feature": "Customer portal",
+			"featureConfidence": "high",
+			"built": {
+				"state": "none",
+				"evidence": "lib/Service/Portal/PortalAuthService.php:189 \"$this->hasher->verify($password, ...)\": portal login is an own account with password plus MFA (PortalMfaService); no DigiD, eHerkenning, SAML or OIDC anywhere in lib/Service/Portal, lib/Controller/Portal* or src/portal",
+				"owner": "ConductionNL/pipelinq",
+				"reachedOn": "nothing",
+				"readOn": "2026-09-26"
+			},
+			"evidence": {
+				"hubspot-crm": "not checked: searched the HubSpot knowledge base list for DigiD, eHerkenning and SAML login for portal members; https://knowledge.hubspot.com/inbox/manage-customer-portal-settings describes portal access by email login only (read 2026-09-26).",
+				"pipedrive": "not checked: searched the Pipedrive knowledge base article list (https://support.pipedrive.com/en-sitemap.xml) and product updates on 2026-09-26 for DigiD, eHerkenning and client portals and found none; Pipedrive documents no client portal.",
+				"espocrm": "No DigiD or eHerkenning connector in 10.0.8 (searched application/ and client/ for \"digid\" and \"eherkenning\": no hits). Each portal can use an OIDC authentication provider (application/Espo/Resources/metadata/entityDefs/Portal.json:107 \"authenticationProvider\"; AuthenticationProvider.json fields oidcClientId, oidcAuthorizationEndpoint, oidcAuthorizationPkce), so a DigiD or eHerkenning broker that speaks OIDC could be connected. Note: Only through an outside OIDC broker; untested for DigiD.",
+				"odoo-crm": "searched the 19.0 source (l10n_nl, auth_oauth, auth_ldap, auth_signup and portal) for digid and eherkenning: no match; addons/auth_oauth supports OAuth2 providers like Google and Microsoft, and there is no SAML or DigiD/eHerkenning connector in Community, so a broker integration would be custom work.",
+				"kiss": "every route in src/router/index.ts sits behind the staff OIDC login (Kiss.Bff/Config/AuthenticationSetup.cs:204 \"AddOpenIdConnect\"); KISS is the KCC workstation and has no citizen or business portal; the only login is OIDC for staff, no DigiD or eHerkenning"
+			},
+			"origin": "tender",
+			"originUrl": "https://www.tenderned.nl/aankondigingen/overzicht/414691",
+			"originRequirements": [
+				"intelligence-db requirements#207282 (Gemeente Midden-Drenthe, 2026-03-05: DigiD en of eHerkenning voor authenticatie)",
+				"intelligence-db requirements#194820 (Kadaster CRM, 2026-04-23: zelfregistratie, authenticatie zoals eHerkenning)"
+			]
+		},
+		{
+			"id": "portal-visible-fields",
+			"area": "portal",
+			"name": "See which parts of a request the resident will be able to read in their portal",
+			"pipelinq": "partial",
+			"hubspot-crm": "partial",
+			"pipedrive": "unknown",
+			"espocrm": "partial",
+			"odoo-crm": "partial",
+			"kiss": "partial",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/Portal/PortalRequestService.php:444-510",
+			"feature": "Customer portal",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/Portal/PortalRequestService.php:444 presentSummary and :464 presentDetail fix in code what a resident reads (number, subject, category, status, date, description, assignee only when the tenant allows it, notes with visibility 'customer'); the back office shows no marker or preview of that set on TicketDetail",
+				"owner": "ConductionNL/pipelinq",
+				"reachedOn": "portal request detail; nothing in the back office",
+				"readOn": "2026-09-26"
+			},
+			"note": "lead: customerNotes() (:486) expects ticket.notes to be an array of notes with a visibility flag, but the ticket schema declares notes as a string (lib/Settings/register.d/99-unify-ticket-supertype.json:346), so no note can ever reach the resident",
+			"evidence": {
+				"hubspot-crm": "https://knowledge.hubspot.com/inbox/manage-customer-portal-settings portal settings choose which contacts \"can see company tickets\" and \"Manage contact properties\" shown (Service Hub Professional, Enterprise, legacy portal); a preview for the agent of what the resident sees on a request is not described.",
+				"pipedrive": "not checked: searched the Pipedrive knowledge base article list (https://support.pipedrive.com/en-sitemap.xml) and product updates on 2026-09-26 for a client portal and found none.",
+				"espocrm": "What a portal user sees is set by portal roles with field level access and by the portal's layout set (application/Espo/Resources/metadata/entityDefs/Portal.json:103 \"layoutSet\"), and internal notes are hidden (entityDefs/Note.json:120 \"isInternal\"); the agent's case view does not mark which fields the resident can read. Note: Configurable, not shown to the agent per request.",
+				"odoo-crm": "the chatter separates \"Send message\" (reaches the client and shows in their portal) from \"Log note\" (internal), and addons/sale/models/sale_order.py:1338 action_preview_sale_order gives a Preview button showing the portal page as the client sees it; task and ticket pages have no such preview and the portal template, not a setting, decides which fields show.",
+				"kiss": "src/features/contact/contactverzoek/overzicht/ContactverzoekenOverzicht.vue:37 labels \"toelichtingBijContactmoment: 'Informatie voor klant'\" against \"toelichtingVoorCollega: 'Interne toelichting'\", and docs/manual/formulieren.md:7 says the internal text is never shown to the resident; open issue https://github.com/Klantinteractie-Servicesysteem/KISS-frontend/issues/1559 asks to mark every portal visible field"
+			},
+			"origin": "featureRequest",
+			"originUrl": "https://github.com/Klantinteractie-Servicesysteem/KISS-frontend/issues/1559"
+		},
+		{
+			"id": "portal-menu-choice",
+			"area": "portal",
+			"name": "Choose which menu items and records a client sees in their portal",
+			"pipelinq": "partial",
+			"hubspot-crm": "partial",
+			"pipedrive": "unknown",
+			"espocrm": "yes",
+			"odoo-crm": "partial",
+			"kiss": "no",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/Portal/PortalTenantService.php:55-80 and :200-214, grep of src for tenant-config",
+			"feature": "Customer portal",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "built",
+				"evidence": "each portal tenant carries enabledFeatures (lib/Service/Portal/PortalTenantService.php:62 PUBLIC_FIELDS, :210 isFeatureEnabled) and src/portal/views/PortalDashboard.vue:123 \"all.filter((tab) => this.features.includes(tab.key))\" shows only those tabs; records are scoped to the account's own contact and delegations (PortalScopeResolver). The choice is per tenant, not per client, and is set only through POST /portal/api/admin/tenant-config (appinfo/routes.php:395), which no page in src/ calls",
+				"owner": "ConductionNL/pipelinq",
+				"reachedOn": "portal dashboard tabs; no admin screen",
+				"readOn": "2026-09-26"
+			},
+			"note": "lead: the portal tenant configuration has an admin API but no settings screen",
+			"evidence": {
+				"hubspot-crm": "https://knowledge.hubspot.com/inbox/manage-customer-portal-settings sets \"access permissions\", which contacts see company tickets and which properties show (Service Hub Professional, Enterprise); choosing menu items per client is not described.",
+				"pipedrive": "not checked: searched the Pipedrive knowledge base article list (https://support.pipedrive.com/en-sitemap.xml) and product updates on 2026-09-26 for a client portal and found none.",
+				"espocrm": "Each portal has its own tab list and quick create list (application/Espo/Resources/metadata/entityDefs/Portal.json:35 \"tabList\", :47 \"quickCreateList\"), and portal roles set which records a client sees at levels all, account, contact or own (Crm scopes/Case.json:7 \"aclPortalLevelList\")",
+				"odoo-crm": "addons/portal/views/portal_templates.xml:204-208 portal_my_home has an editable oe_structure area for extra content, but the document cards come from installed modules; 19.1 lets the website editor customise the portal cards and Odoo 20 lets them be reordered (https://www.odoo.com/odoo-20-release-notes \"Portal layout: Reorder the cards in the user portal\"); showing or hiding menu items per client needs code, as the open Wishlist issue asks.",
+				"kiss": "every route in src/router/index.ts sits behind the staff OIDC login (Kiss.Bff/Config/AuthenticationSetup.cs:204 \"AddOpenIdConnect\"); KISS is the KCC workstation and has no citizen or business portal"
+			},
+			"origin": "featureRequest",
+			"originUrl": "https://github.com/odoo/odoo/issues/192439"
 		}
 	],
 	"pending": [
