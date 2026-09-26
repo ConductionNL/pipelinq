@@ -175,9 +175,9 @@
 			"vendor": "Odoo",
 			"readOn": "2026-09-26",
 			"columnAddedOn": "2026-09-24",
-			"note": "Community from source, Enterprise from docs at partial; see readHow.",
-			"evidenceGrade": "docs-only",
-			"unknownReason": "Source read at 19.0, not driven: no cell in this column is unknown after the 2026-09-26 read; any later unknown on a new row carries its own reason.",
+			"note": "Community from source and a 19.0 lab drive, Enterprise from docs at partial; see readHow.",
+			"evidenceGrade": "driven",
+			"unknownReason": "Source read and driven at 19.0: no cell in this column is unknown after the 2026-09-26 read; any later unknown on a new row carries its own reason.",
 			"sources": {
 				"docs": "https://www.odoo.com/documentation/19.0/",
 				"sourceRepo": "https://github.com/odoo/odoo",
@@ -242,8 +242,8 @@
 				]
 			},
 			"evidenceGradeBefore": "docs-only",
-			"version": "Odoo 19.0 (odoo/odoo branch 19.0 at bccb550d5a5a1dfd81e6c234a7fa9a7794fc5702; Odoo publishes no release tags)",
-			"readHow": "Source read at 19.0 (bccb550d), not driven. Rated across the Odoo suite a buyer would install, not the CRM module alone. Community modules are rated from source with path:line (a sparse clone of about 68 addons: crm, mail, sale, portal, website, livechat, point_of_sale, loyalty, mass_mailing, survey, project, calendar and others). Enterprise modules are not public (helpdesk, voip, sign, appointment, knowledge, documents, studio, social, whatsapp, sale_subscription, account_reports): cells resting on them are partial with the Odoo 19 Enterprise documentation URL and are never drive-flagged, because the lab cannot boot Enterprise. Capabilities that ship only on Odoo Online 19.1 to 19.3 and reach on-premise in Odoo 20.0 (September 2026) are rated at 19.0, with the later version named in the cell's note."
+			"version": "Odoo 19.0 (source odoo/odoo branch 19.0 at bccb550d; lab image odoo:19.0 build 19.0-20260908)",
+			"readHow": "Source read at 19.0 (bccb550d) and driven on 2026-09-26 in the lab (market-intelligence pipelinq/odoo-crm/lab, image odoo:19.0 build 19.0-20260908, Community with demo data): the drive settled the five rows the reading flagged (clients-org-tree, req-sla-holidays, portal-file-request, rep-compare-periods, auto-setup-wizard) and moved rep-compare-periods and auto-setup-wizard from yes to partial; every other cell rests on the source read or, for Enterprise, the documentation. Rated across the Odoo suite a buyer would install, not the CRM module alone. Community modules are rated from source with path:line (a sparse clone of about 68 addons: crm, mail, sale, portal, website, livechat, point_of_sale, loyalty, mass_mailing, survey, project, calendar and others). Enterprise modules are not public (helpdesk, voip, sign, appointment, knowledge, documents, studio, social, whatsapp, sale_subscription, account_reports): cells resting on them are partial with the Odoo 19 Enterprise documentation URL and are never drive-flagged, because the lab cannot boot Enterprise. Capabilities that ship only on Odoo Online 19.1 to 19.3 and reach on-premise in Odoo 20.0 (September 2026) are rated at 19.0, with the later version named in the cell's note."
 		},
 		{
 			"key": "kiss",
@@ -858,7 +858,7 @@
 				"kiss": "src/features/bedrijf/bedrijf-details/HandelsregisterGegevens.vue shows one KvK record; no parent or subsidiary relation is fetched or drawn anywhere in src/features/bedrijf",
 				"espocrm": "Account links (entityDefs/Account.json links: contacts, opportunities, cases, documents and activities) carry no parent account. application/Espo/Tools/LinkManager/LinkManager.php:289 \"if ($entity === $entityForeign)\" shows the Link Manager accepts a self link, so an admin can add a parent account and a subsidiaries panel without code; no tree view is available for Account (tree lists exist only for category entities)",
 				"pipedrive": "absent from sources: pipelinq/pipedrive/pipedrive.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 40) have no mention of parent/subsidiary organisation hierarchies or an org tree view",
-				"odoo-crm": "odoo/addons/base/models/res_partner.py:215 parent_id and :217 child_ids give one level (people under a company, listed in the Contacts tab at res_partner_views.xml:200); the Company field on the form is invisible for a company without a parent (res_partner_views.xml:162 \"invisible=\\\"((is_company and not parent_id) ...\\\"\"), so a parent company to subsidiary link cannot be set from the form and no tree view exists."
+				"odoo-crm": "odoo/addons/base/models/res_partner.py:215 parent_id and :217 child_ids give one level (people under a company, listed in the Contacts tab at res_partner_views.xml:200); the Company field on the form is invisible for a company without a parent (res_partner_views.xml:162 \"invisible=\\\"((is_company and not parent_id) ...\\\"\"), so a parent company to subsidiary link cannot be set from the form and no tree view exists.. Driven 2026-09-26 on the Odoo 19.0 Community lab (odoo:19.0 image 400a621198ea, build 19.0-20260908, database with demo data, modules crm, contacts, project): the Acme Corporation company form has no parent company field at all (absent from the form) and only a Contacts tab listing its people, one level; no tree of subsidiaries anywhere."
 			}
 		},
 		{
@@ -1997,7 +1997,7 @@
 				"kiss": "no deadline or calendar logic in src/ or Kiss.Bff/ (grep for deadline and feestdag finds nothing)",
 				"espocrm": "application/Espo/Resources/metadata/entityDefs/WorkingTimeRange.json:22 \"Non-working\" ranges attach to a working time calendar, so holidays entered by hand are skipped by the working time formula functions (formula.json:560 addWorkingDays); no Dutch holiday list ships",
 				"pipedrive": "absent from sources: pipelinq/pipedrive/pipedrive.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 40) have no mention of SLA calendars that skip public holidays",
-				"odoo-crm": "addons/resource/models/resource_calendar.py:97-100 global_leave_ids \"Global Time Off\" (leaves with no resource) are subtracted by _work_intervals_batch (:556) and plan_hours (:854) in the Community resource engine; the SLA deadline that uses it is Helpdesk (https://www.odoo.com/documentation/19.0/applications/services/helpdesk/overview/sla.html \"determined by the value set in the Company Working Hours field\"), and Helpdesk is Enterprise (no addons/helpdesk in the 19.0 Community source)."
+				"odoo-crm": "addons/resource/models/resource_calendar.py:97-100 global_leave_ids \"Global Time Off\" (leaves with no resource) are subtracted by _work_intervals_batch (:556) and plan_hours (:854) in the Community resource engine; the SLA deadline that uses it is Helpdesk (https://www.odoo.com/documentation/19.0/applications/services/helpdesk/overview/sla.html \"determined by the value set in the Company Working Hours field\"), and Helpdesk is Enterprise (no addons/helpdesk in the 19.0 Community source).. Driven 2026-09-26 on the Odoo 19.0 Community lab (odoo:19.0 image 400a621198ea, build 19.0-20260908, database with demo data, modules crm, contacts, project): the helpdesk module is listed as uninstallable in the Community image, so the SLA deadline itself cannot be driven; the working schedule form (Standard 40 hours/week) shows only a Working Hours tab in this install."
 			}
 		},
 		{
@@ -3135,7 +3135,7 @@
 				"kiss": "src/router/index.ts:229 \"path: \\\"/beheer\\\"\" and the other routes are staff screens behind the OIDC login (Kiss.Bff/Config/AuthenticationSetup.cs:204 \"AddOpenIdConnect\"); KISS is the KCC workstation and has no citizen facing route",
 				"espocrm": "application/Espo/Modules/Crm/Resources/metadata/scopes/Case.json:6 \"aclPortal\": true; portal users create cases and follow status and stream (https://docs.espocrm.com/user-guide/case-management/ \"When a new Case is created by a Portal User\")",
 				"pipedrive": "absent from sources: pipelinq/pipedrive/pipedrive.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 40) have no mention of clients filing and following requests in a portal",
-				"odoo-crm": "addons/project/security/project_security.xml:220-239 rule project_task_rule_portal_project_sharing with perm_create True lets a portal collaborator with edit access (project_share_wizard.py:33 access_mode \"edit\") create tasks in a shared project at \"/my/projects/<id>/project_sharing\" (addons/project/controllers/portal.py:163) and follow each task and its stage at \"/my/projects/<id>/task/<id>\" (:176)."
+				"odoo-crm": "addons/project/security/project_security.xml:220-239 rule project_task_rule_portal_project_sharing with perm_create True lets a portal collaborator with edit access (project_share_wizard.py:33 access_mode \"edit\") create tasks in a shared project at \"/my/projects/<id>/project_sharing\" (addons/project/controllers/portal.py:163) and follow each task and its stage at \"/my/projects/<id>/task/<id>\" (:176).. Driven 2026-09-26 on the Odoo 19.0 Community lab (odoo:19.0 image 400a621198ea, build 19.0-20260908, database with demo data, modules crm, contacts, project): after sharing a project with the demo portal user in edit mode through the share wizard (project.share.wizard), that user saw the project at /my/projects, opened /my/projects/7/project_sharing, added the task Vraag over mijn vergunning on the board and saw it in the Ontvangen stage; staff must first set up and share a project per client. A collaborator record created without the wizard gave the portal user Forbidden."
 			}
 		},
 		{
@@ -4308,7 +4308,7 @@
 			"hubspot-crm": "yes",
 			"pipedrive": "unknown",
 			"espocrm": "partial",
-			"odoo-crm": "yes",
+			"odoo-crm": "partial",
 			"kiss": "partial",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/AnalyticsService.php:465",
@@ -4324,7 +4324,7 @@
 				"kiss": "Kiss.Bff/Intern/ContactmomentDetails/Features/ContactmomentDetailsRapportageOverzicht.cs:22 \"[HttpGet(\\\"/api/contactmomentendetails\\\")]\" with from and to parameters, JWT protected for external systems (docs/manual/managementinformatie.md:4) returns any date range, so two periods can be pulled and compared in the consumer; KISS shows no comparison itself",
 				"espocrm": "application/Espo/Modules/Crm/Resources/metadata/dashlets/SalesByMonth.json charts won amounts per month side by side, so months can be compared by eye for sales only; period over period comparison on other data needs paid Advanced Pack grid reports (https://docs.espocrm.com/user-guide/reports/)",
 				"pipedrive": "not checked: rated 2026-04-18 with no recorded source; vendor documentation read 2026-09-26 did not settle it (read: https://support.pipedrive.com/en/article/{insights-dashboards, insights-feature, comparative-insights} and hc article 360008029358)",
-				"odoo-crm": "every pivot and graph groups a date by month (for example addons/crm/views/crm_lead_views.xml:944 forecast pivot with date_deadline interval=\"month\"), so this month and last month sit side by side; the dedicated Comparison option in the search panel documented for 18.0 is no longer in the 19.0 web search code (searched addons/web/static/src/search for comparison: none), and the 19.0 search docs no longer mention it."
+				"odoo-crm": "every pivot and graph groups a date by month (for example addons/crm/views/crm_lead_views.xml:944 forecast pivot with date_deadline interval=\"month\"), so this month and last month sit side by side; the dedicated Comparison option in the search panel documented for 18.0 is no longer in the 19.0 web search code (searched addons/web/static/src/search for comparison: none), and the 19.0 search docs no longer mention it.. Driven 2026-09-26 on the Odoo 19.0 Community lab (odoo:19.0 image 400a621198ea, build 19.0-20260908, database with demo data, modules crm, contacts, project): CRM Pipeline Analysis search panel, with the Created on filter opened to its months, offers no Comparison section; two months can be ticked and grouped by month side by side, but no difference or variance is shown, so the comparison is left to the reader."
 			}
 		},
 		{
@@ -4902,7 +4902,7 @@
 			"hubspot-crm": "yes",
 			"pipedrive": "yes",
 			"espocrm": "yes",
-			"odoo-crm": "yes",
+			"odoo-crm": "partial",
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Controller/SetupController.php and the setup and walkthrough blocks in src/manifest.json",
@@ -4919,7 +4919,7 @@
 				"kiss": "no onboarding flow in src/; configuration is done through helm values (helm/kiss-chart/values.yaml) and the only first run aid is the sample data button",
 				"espocrm": "install/core/i18n/en_US/install.json:7 \"License Agreement\", :10 \"Database configuration\", :11 \"Administrator Setup\", :12 \"System settings\", :13 \"SMTP settings for outgoing emails\": a five step web installer runs on first open",
 				"pipedrive": "https://support.pipedrive.com/en/article/sample-data \"Upon signing up, you'll receive a brief questionnaire regarding your company size and industry to better understand your business needs.\" (vendor documentation read 2026-09-26)",
-				"odoo-crm": "addons/crm/data/crm_tour.xml:3 web_tour.tour \"crm_tour\" guides a new user through the first lead in the CRM app and ends with a rainbow message; each app ships such a tour through addons/web_tour."
+				"odoo-crm": "addons/crm/data/crm_tour.xml:3 web_tour.tour \"crm_tour\" guides a new user through the first lead in the CRM app and ends with a rainbow message; each app ships such a tour through addons/web_tour.. Driven 2026-09-26 on the Odoo 19.0 Community lab (odoo:19.0 image 400a621198ea, build 19.0-20260908, database with demo data, modules crm, contacts, project): a new salesperson opening CRM saw no tour, also after res.users.switch_tour_enabled(true); addons/web_tour/models/res_users.py:11 _compute_tour_enabled turns onboarding on only for an admin on a database without demo modules, and the user menu shows no Onboarding switch, so most users are never walked through."
 			}
 		},
 		{
