@@ -18,41 +18,51 @@
 			"key": "hubspot-crm",
 			"name": "HubSpot CRM",
 			"vendor": "HubSpot",
-			"readOn": "2026-04-18",
+			"readOn": "2026-04-10",
 			"columnAddedOn": "2026-09-24",
-			"note": "Inherited from concurrentie-analyse/pipelinq/hubspot-crm/. Nobody drove HubSpot in this pass, so every cell is five months old."
+			"note": "Inherited from concurrentie-analyse/pipelinq/hubspot-crm/. Nobody drove HubSpot in this pass, so every cell is five months old.",
+			"evidenceGrade": "docs-only",
+			"unknownReason": "Not covered by the documentation profile (concurrentie-analyse pipelinq/hubspot-crm/hubspot-crm.md) or the competitor_features rows for HubSpot CRM read for this backfill; nobody drove HubSpot."
 		},
 		{
 			"key": "pipedrive",
 			"name": "Pipedrive",
 			"vendor": "Pipedrive",
-			"readOn": "2026-04-18",
+			"readOn": "2026-04-10",
 			"columnAddedOn": "2026-09-24",
-			"note": "Inherited from concurrentie-analyse/pipelinq/pipedrive/. Add-ons are rated partial, because the capability costs extra."
+			"note": "Inherited from concurrentie-analyse/pipelinq/pipedrive/. Add-ons are rated partial, because the capability costs extra.",
+			"evidenceGrade": "docs-only",
+			"unknownReason": "Not covered by the documentation profile (concurrentie-analyse pipelinq/pipedrive/pipedrive.md) or the competitor_features rows for Pipedrive read for this backfill; nobody drove Pipedrive."
 		},
 		{
 			"key": "espocrm",
 			"name": "EspoCRM",
 			"vendor": "EspoCRM",
-			"readOn": "2026-04-18",
+			"readOn": "2026-03-14",
 			"columnAddedOn": "2026-09-24",
-			"note": "Inherited from concurrentie-analyse/pipelinq/espocrm/. The paid Advanced Pack is rated partial, not yes."
+			"note": "Inherited from concurrentie-analyse/pipelinq/espocrm/. The paid Advanced Pack is rated partial, not yes.",
+			"evidenceGrade": "driven",
+			"unknownReason": "Not reached in the 2026-03-14 Docker drive of EspoCRM (pipelinq/espocrm/business-logic/browser-walkthrough-notes.md) and not settled by the documentation and specs read beside it."
 		},
 		{
 			"key": "odoo-crm",
 			"name": "Odoo CRM",
 			"vendor": "Odoo",
-			"readOn": "2026-04-18",
+			"readOn": "2026-04-10",
 			"columnAddedOn": "2026-09-24",
-			"note": "Inherited from concurrentie-analyse/pipelinq/odoo-crm/. Rated across the Odoo suite a buyer would install, not the CRM module alone."
+			"note": "Inherited from concurrentie-analyse/pipelinq/odoo-crm/. Rated across the Odoo suite a buyer would install, not the CRM module alone.",
+			"evidenceGrade": "docs-only",
+			"unknownReason": "Not covered by the documentation profile (concurrentie-analyse pipelinq/odoo-crm/odoo-crm.md) or the competitor_features rows for Odoo CRM and the Odoo suite modules read for this backfill; nobody drove Odoo."
 		},
 		{
 			"key": "kiss",
 			"name": "KISS",
 			"vendor": "Dimpact and ICATT",
-			"readOn": "2026-03-13",
+			"readOn": "2026-03-14",
 			"columnAddedOn": "2026-09-24",
-			"note": "Inherited from concurrentie-analyse/pipelinq/kiss/, read on 2026-03-13. That reading also lists gaps in pipelinq that pipelinq has since closed, so treat its pipelinq claims as stale."
+			"note": "Inherited from concurrentie-analyse/pipelinq/kiss/, read on 2026-03-13. That reading also lists gaps in pipelinq that pipelinq has since closed, so treat its pipelinq claims as stale.",
+			"evidenceGrade": "driven",
+			"unknownReason": "Not reached in the 2026-03-14 local drive of KISS (pipelinq/kiss/business-logic/browser-walkthrough-detailed.md) and not settled by the source code analysis and documentation read beside it."
 		}
 	],
 	"areas": [
