@@ -56,12 +56,14 @@ updates:
       # 19 September, when 0.5.8-beta shipped the bump, and nobody noticed,
       # because a blank app looks like a slow one.
       #
-      # Pinned EXACTLY in package.json rather than left as a caret: `^4.4.5`
-      # resolves to 4.4.6 on the next clean install and reintroduces the drift
-      # with nothing visible in the diff.
+      # Pinned EXACTLY in package.json rather than left as a caret: a caret
+      # resolves to the next patch on a clean install and reintroduces the
+      # drift with nothing visible in the diff.
       #
-      # Lift this WITH openregister, never before it: its bundle is on every
-      # page, so moving it first would blank every app still on 4.4.5.
+      # On 2026-09-25 the whole fleet moved to 4.4.6 in one step, together
+      # with openregister (ConductionNL/openregister#3788). The next move works
+      # the same way: with openregister and every other app at once, never one
+      # app alone, because an app that differs from openregister goes blank.
       - dependency-name: "dexie"
     cooldown:
       default-days: 1
