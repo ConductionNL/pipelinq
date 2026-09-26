@@ -110,11 +110,77 @@
 			"key": "odoo-crm",
 			"name": "Odoo CRM",
 			"vendor": "Odoo",
-			"readOn": "2026-04-10",
+			"readOn": "2026-09-26",
 			"columnAddedOn": "2026-09-24",
-			"note": "Inherited from concurrentie-analyse/pipelinq/odoo-crm/. Rated across the Odoo suite a buyer would install, not the CRM module alone.",
+			"note": "Community from source, Enterprise from docs at partial; see readHow.",
 			"evidenceGrade": "docs-only",
-			"unknownReason": "Not covered by the documentation profile (concurrentie-analyse pipelinq/odoo-crm/odoo-crm.md) or the competitor_features rows for Odoo CRM and the Odoo suite modules read for this backfill; nobody drove Odoo."
+			"unknownReason": "Source read at 19.0, not driven: no cell in this column is unknown after the 2026-09-26 read; any later unknown on a new row carries its own reason.",
+			"sources": {
+				"docs": "https://www.odoo.com/documentation/19.0/",
+				"sourceRepo": "https://github.com/odoo/odoo",
+				"featurePage": "https://www.odoo.com/app/crm-features",
+				"featureRequests": [
+					"https://github.com/odoo/odoo/issues?q=is%3Aissue+is%3Aopen+label%3AWishlist",
+					"https://www.odoo.com/forum/help-1"
+				],
+				"issueTracker": {
+					"url": "https://github.com/odoo/odoo/issues",
+					"featureLabel": "Wishlist"
+				},
+				"roadmap": null,
+				"changelog": [
+					"https://www.odoo.com/page/release-notes",
+					"https://www.odoo.com/odoo-19-release-notes",
+					"https://www.odoo.com/odoo-19-1-release-notes",
+					"https://www.odoo.com/odoo-19-2-release-notes",
+					"https://www.odoo.com/odoo-19-3-release-notes",
+					"https://www.odoo.com/odoo-20-release-notes"
+				],
+				"apiReference": "https://www.odoo.com/documentation/19.0/developer/reference/external_api.html",
+				"marketplace": "https://apps.odoo.com/apps",
+				"pricing": "https://www.odoo.com/pricing",
+				"accessibilityStatement": null,
+				"securityDocs": [
+					"https://www.odoo.com/security",
+					"https://www.odoo.com/security-report",
+					"https://github.com/odoo/odoo/security/policy"
+				],
+				"demoInstance": [
+					"https://demo.odoo.com",
+					"https://www.odoo.com/trial",
+					"https://runbot.odoo.com/"
+				],
+				"community": "https://www.odoo.com/forum/help-1",
+				"reviews": [
+					"https://www.g2.com/products/odoo/reviews",
+					"https://www.capterra.com/p/135618/Odoo/"
+				],
+				"videos": "https://www.youtube.com/@Odoo",
+				"caseStudies": "https://www.odoo.com/customers",
+				"partnerDirectory": "https://www.odoo.com/partners",
+				"trainingCurriculum": "https://www.odoo.com/slides",
+				"jobPostings": "https://www.odoo.com/jobs",
+				"nullReasons": {
+					"roadmap": "Checked 2026-09-26: https://www.odoo.com/roadmap answers 404 and Odoo publishes no forward roadmap; what is coming shows up only as the saas-19.x and Odoo 20 release notes (listed under changelog).",
+					"accessibilityStatement": "Checked 2026-09-26: https://www.odoo.com/accessibility, /page/accessibility, /legal/accessibility and documentation/19.0/applications/general/accessibility.html answer 404, and the documentation index, /legal and /security pages carry no accessibility statement, WCAG or VPAT mention."
+				},
+				"notes": {
+					"issueTracker": "GitHub label list read 2026-09-26 includes \"Wishlist\" (also RFC); the issue template is a bug form and points functional requests to Odoo support, so Wishlist issues are few and old.",
+					"featureRequests": "No dedicated ideas portal; the forum and the GitHub Wishlist label are where requests surface.",
+					"changelog": "Odoo 19.1 (January 2026), 19.2 (March 2026) and 19.3 (May 2026) ship on Odoo Online only; on premise gets them in Odoo 20 (September 2026). The 19.0 release notes are the base the rows were read against.",
+					"demoInstance": "demo.odoo.com listed, not read: it redirected to a demo4.odoo.com login that answered 500 on 2026-09-26. The free trial and runbot answered 200; neither was used (no trial accounts).",
+					"reviews": "Listed, not read: G2, Capterra and TrustRadius answered 403 to curl on 2026-09-26 (bot protection).",
+					"trainingCurriculum": "eLearning courses at /slides (https://www.odoo.com/learn redirects there); the paid certification is linked from the Learn menu but /certification and /certifications answered 404 to a direct probe.",
+					"sourceRepo": "Community is LGPL-3 on GitHub; Enterprise modules (helpdesk, voip, appointment, knowledge, sign, studio and others) are not public."
+				},
+				"tenders": [
+					"intelligence-db tenders#94135 (ES, 2026-07-13, support for the COSMO ERP built on Odoo): https://contrataciondelestado.es/wps/poc?uri=deeplink:detalle_licitacion&idEvl=%2FfRJH1fVYXTkY6rls5tG9A%3D%3D",
+					"intelligence-db tenders#24811 (BE, 2019-06-07, NBN Odoo partner): https://www.publicprocurement.be/nl/publication-workspaces/d9ad5fca-9d9e-4042-8a64-e9f44d50cec4"
+				]
+			},
+			"evidenceGradeBefore": "docs-only",
+			"version": "Odoo 19.0 (odoo/odoo branch 19.0 at bccb550d5a5a1dfd81e6c234a7fa9a7794fc5702; Odoo publishes no release tags)",
+			"readHow": "Source read at 19.0 (bccb550d), not driven. Rated across the Odoo suite a buyer would install, not the CRM module alone. Community modules are rated from source with path:line (a sparse clone of about 68 addons: crm, mail, sale, portal, website, livechat, point_of_sale, loyalty, mass_mailing, survey, project, calendar and others). Enterprise modules are not public (helpdesk, voip, sign, appointment, knowledge, documents, studio, social, whatsapp, sale_subscription, account_reports): cells resting on them are partial with the Odoo 19 Enterprise documentation URL and are never drive-flagged, because the lab cannot boot Enterprise. Capabilities that ship only on Odoo Online 19.1 to 19.3 and reach on-premise in Odoo 20.0 (September 2026) are rated at 19.0, with the later version named in the cell's note."
 		},
 		{
 			"key": "kiss",
@@ -5505,7 +5571,7 @@
 			"hubspot-crm": "unknown",
 			"pipedrive": "unknown",
 			"espocrm": "partial",
-			"odoo-crm": "unknown",
+			"odoo-crm": "partial",
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/QuotaService.php, lib/Service/BudgetService.php and lib/BackgroundJob/BudgetPeriodResetJob.php",
@@ -5518,7 +5584,8 @@
 			},
 			"evidence": {
 				"kiss": "no rate limiting or budget guard in Kiss.Bff/ (grep for RateLimit finds nothing)",
-				"espocrm": "Only for AI calls, in the paid Intelligence extension: https://docs.espocrm.com/extensions/intelligence/usage-and-quota/ \"The Quota feature allows you to limit AI usage for users ... Once their balance becomes negative, they cannot use AI features\"; no spend cap on other integrations, though webhooks stop after four attempts (application/Espo/Core/Webhook/Queue.php:59)"
+				"espocrm": "Only for AI calls, in the paid Intelligence extension: https://docs.espocrm.com/extensions/intelligence/usage-and-quota/ \"The Quota feature allows you to limit AI usage for users ... Once their balance becomes negative, they cannot use AI features\"; no spend cap on other integrations, though webhooks stop after four attempts (application/Espo/Core/Webhook/Queue.php:59)",
+				"odoo-crm": "addons/iap/tools/iap_tools.py:94 \"class InsufficientCreditError\" and addons/crm_iap_enrich/models/crm_lead.py:129 \"Since there are no credits left, there is no point to process the other batches\": paid Odoo services (lead enrichment, lead mining, SMS, snailmail) run on prepaid IAP credits, so an automated run stops when the balance is spent and the admin gets a no credit notice; the balance shows on Settings > Technical > IAP Accounts (addons/iap/views/iap_views.xml:45) and an email alert threshold is kept on the account (addons/iap/models/iap_account.py:42 \"Email Alert Threshold\"). There is no cap or rate limit on outgoing webhooks or custom integrations."
 			}
 		},
 		{
@@ -5546,7 +5613,7 @@
 				"kiss": "the colours are compiled in from src/assets/design-tokens.scss:1 \":root {\" via src/App.vue:68 \"@use \\\"@/assets/design-tokens\\\"\"; helm/kiss-chart/values.yaml has no theme or logo setting, so a house style needs a code change and rebuild",
 				"espocrm": "application/Espo/Resources/metadata/entityDefs/Settings.json:279 \"companyLogo\", :547 \"theme\" and :552 \"themeParams\" (navbar and colour options) with themes in application/Espo/Resources/metadata/themes/ (Dark, Glass, Hazyblue, Light, Sakura, Violet and more), set at Administration > User Interface; each portal has its own logo and theme (entityDefs/Portal.json)",
 				"pipedrive": "https://support.pipedrive.com/en/article/web-forms \"The Style section lets you customize the appearance of your web forms in four different ways.\" (web forms only, LeadBooster; no app theming) (vendor documentation read 2026-09-26)",
-				"odoo-crm": "competitor_features#143144 \"company logo, colours, font and layout in Settings > General > Companies > Document Layout\""
+				"odoo-crm": "addons/web/models/base_document_layout.py:53-66 logo, layout, font and primary_color on the company, reached from Settings > General > Configure Document Layout (addons/base_setup/views/res_config_settings_views.xml:86), sets quotes, invoices and emailed documents in the house style; the website and portal get colours and fonts from the website editor theme options."
 			}
 		},
 		{
@@ -5574,7 +5641,7 @@
 				"kiss": "all UI strings are hard coded Dutch (for example src/views/HomeView.vue:16 \"Startscherm\"); package.json has no i18n library, so there is no English",
 				"espocrm": "application/Espo/Resources/i18n/nl_NL/ (for example nl_NL/Global.json) ships a Dutch translation among 37 languages, selectable per user in Preferences and system wide in Settings",
 				"pipedrive": "https://www.pipedrive.com/en/newsroom/pipedrive-introduces-its-crm-software-platform-in-four-new-languages \"Pipedrive is now available in 22 languages.\" (Dutch is in the page's language list; per-user choice at https://support.pipedrive.com/en/article/how-can-i-change-my-language-or-date-number-format) (vendor documentation read 2026-09-26)",
-				"odoo-crm": "competitor_features#143143 \"Settings > Translations > Application Terms edits UI terms per language in the product\""
+				"odoo-crm": "addons/crm/i18n/nl.po:3336-3337 \"msgid \\\"Pipeline\\\"\" \"msgstr \\\"Pijplijn\\\"\" (779 CRM strings translated); Dutch is installed from Settings > Languages > Add Languages (odoo/addons/base/wizard/base_language_install_views.xml:29 \"Load a Translation\") and each user picks it in preferences; application terms can be edited per language."
 			}
 		},
 		{
@@ -5602,7 +5669,7 @@
 				"kiss": "the frontend has a single media query in all of src/ (src/nl-design-system/components/Pagination.vue:184 \"@media (width >= 640px)\"); the layout is a fixed desktop KCC workstation with a sidebar (src/layout/TheSidebar.vue)",
 				"espocrm": "The web client adapts to small screens (client/src/views/site/navbar.js:580 \"const smallScreenWidth = this.getThemeManager().getParam('screenWidthXs')\" collapses the navbar on phones), so it works in a phone browser; no official native mobile app is listed at https://www.espocrm.com/extensions/",
 				"pipedrive": "competitor_features#2777 \"Native iOS/Android app with caller ID, nearby contacts, and activity logging\"",
-				"odoo-crm": "competitor_features#31252 \"Native iOS/Android across apps incl. POS offline.\""
+				"odoo-crm": "https://www.odoo.com/documentation/19.0/applications/general/mobile.html \"Two kind of Odoo mobile app exist: the progressive web app (PWA) and store apps\" with push notifications, on Google Play and the App Store; the web client is responsive, so CRM, contacts and activities work from the phone in Community too."
 			}
 		},
 		{
@@ -5630,7 +5697,7 @@
 				"kiss": "no chat widget or chat channel intake in src/ or Kiss.Bff/; \"Live chat\" exists only as a channel label (src/features/contact/contactmoment/ContactmomentAfhandeling.vue:348)",
 				"espocrm": "Searched Crm en_US i18n for \"chat\": no hits; no live chat widget in 10.0.8 or in https://www.espocrm.com/extensions/",
 				"pipedrive": "competitor_features#2772 \"Lead generation toolkit with chatbot, web forms, live chat, and prospector\" (LeadBooster, paid add-on per pipelinq/pipedrive/pipedrive.md:25)",
-				"odoo-crm": "competitor_features#14647 \"Real-time website chat with visitors. Free in Community.\" (Live Chat)"
+				"odoo-crm": "addons/website_livechat/__manifest__.py:5 \"'summary': 'Chat with your website visitors'\" (LGPL, Community) puts the im_livechat widget on the website; operators answer in Discuss, can send a proactive chat request to a visitor (addons/website_livechat/views/website_visitor_views.xml:112 website_livechat_send_chat_request_action_server) and crm_livechat turns a chat into a lead with /lead."
 			}
 		},
 		{
@@ -5658,7 +5725,7 @@
 				"kiss": "integrations are fixed proxy classes in Kiss.Bff/Extern configured through helm values; no marketplace or plugin mechanism",
 				"espocrm": "https://www.espocrm.com/extensions/ lists about a dozen official extensions (Advanced Pack, Sales Pack, Project Management, Intelligence, VoIP, Meeting Scheduler, Outlook, Google, Zoom, Stripe, MailChimp, Real Estate) installed through Administration > Extensions (https://docs.espocrm.com/administration/extensions/); no large third party marketplace",
 				"pipedrive": "pipelinq/pipedrive/pipedrive.md:38 \"400+ integrations via marketplace\"",
-				"odoo-crm": "competitor_features#19975 \"App store feature of Odoo CRM (Community)\"; competitor_features#143155 \"the module system: 692 addons in the image, third-party modules from a zip\""
+				"odoo-crm": "odoo/addons/base/views/ir_module_views.xml:215-224 Apps > Main Apps installs any of the bundled modules and Apps > Third-Party Apps opens https://apps.odoo.com/apps/modules, the Odoo app store of community modules (connectors for payment, shipping, telephony, bank and accounting services); installing is one click in the Apps menu for bundled modules."
 			}
 		},
 		{
@@ -5669,7 +5736,7 @@
 			"hubspot-crm": "yes",
 			"pipedrive": "yes",
 			"espocrm": "yes",
-			"odoo-crm": "partial",
+			"odoo-crm": "yes",
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "there is no browser extension or mail plugin in this repo; filing happens after the fact at lib/Service/EmailMatchService.php:278",
@@ -5686,7 +5753,7 @@
 				"kiss": "no Outlook or mail add-in in the repository; KISS reads no mail (open epic https://github.com/Klantinteractie-Servicesysteem/KISS-frontend/issues/1446)",
 				"espocrm": "EspoCRM has its own mail client; client/src/views/email/detail.js:65 action 'createLead' and :73 'createContact' create a lead or contact from the sender while reading the email inside EspoCRM. There is no Outlook or Gmail add in; the paid Outlook Integration covers OAuth IMAP and SMTP only (https://docs.espocrm.com/extensions/outlook-integration/email/)",
 				"pipedrive": "https://support.pipedrive.com/en/article/pipedrive-gmail-add-on \"From the Gmail side panel, you can add new contacts, deals and activities that automatically sync to Pipedrive.\" (vendor documentation read 2026-09-26)",
-				"odoo-crm": "competitor_features#143037 \"the Outlook and Gmail add-in is Community\" (reads mail into Odoo; task/lead from open mail)"
+				"odoo-crm": "addons/crm_mail_plugin/controllers/crm_client.py:42 \"@http.route('/mail_plugin/lead/create', type='jsonrpc', auth='outlook', cors=\\\"*\\\")\" and :13 log_single_mail_content are called by the Odoo Outlook and Gmail add-ins (mail_plugin and crm_mail_plugin, both LGPL Community): while reading a mail the user finds or creates the contact, creates a lead from the mail and logs the mail on it."
 			}
 		},
 		{
@@ -5714,7 +5781,7 @@
 				"kiss": "every beheer and contact screen edits one record at a time (for example src/views/Beheer/Kanalen/KanaalBeheer.vue); no multi select edit in src/",
 				"espocrm": "client/src/views/record/list-base.ts:402 mass action 'massUpdate' (also in checkAllResultMassActionList for all filtered results) sets one or more fields on every selected record at once, backed by application/Espo/Resources/metadata/app/massActions.json:14 \"update\"",
 				"pipedrive": "https://support.pipedrive.com/en/article/bulk-editing-and-filtering \"From here, you can filter, sort, and update multiple records at once.\" (vendor documentation read 2026-09-26)",
-				"odoo-crm": "competitor_features#143043 \"every list view selects rows for Export, Archive, Delete and inline multi-edit of any editable column\""
+				"odoo-crm": "odoo/addons/base/views/res_partner_views.xml:19 \"<list string=\\\"Contacts\\\" sample=\\\"1\\\" multi_edit=\\\"1\\\">\" and addons/crm/views/crm_lead_views.xml:344 and :753 the same on the Leads and Opportunities lists: select rows, edit a cell and the value is written to every selected record after a confirmation."
 			}
 		},
 		{
@@ -5741,7 +5808,7 @@
 				"kiss": "src/router/index.ts:126 \"const router = createRouter(\" lists the only screens: startscherm, afhandeling, contactverzoeken, personen, bedrijven, zaken, links and beheer; KISS has no product, price, till, payment or stock model anywhere in src/ or Kiss.Bff/ (grep for prijs, kassa, factuur, offerte finds nothing)",
 				"espocrm": "Not in core; paid Sales Pack: https://docs.espocrm.com/extensions/sales-pack/inventory-management/ \"allows tracking of product quantities, locations in warehouses ... It allows validating product availability before selling it to a customer\"",
 				"pipedrive": "absent from sources: pipelinq/pipedrive/pipedrive.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 40) have no mention of stock or inventory levels",
-				"odoo-crm": "competitor_features#14735 \"Track stock levels across multiple locations in real-time\" (Inventory)"
+				"odoo-crm": "addons/sale_stock/views/sale_order_views.xml:49 \"<widget name=\\\"qty_at_date_widget\\\"/>\" shows on each quote line the forecast and on hand quantity at the delivery date, warning when the order exceeds stock; the Inventory app (stock, LGPL Community) keeps on hand quantities per warehouse and location."
 			}
 		},
 		{
@@ -5769,7 +5836,7 @@
 				"kiss": "src/features/search/GlobalSearch.vue:23 \"fieldset class=\\\"bronnen\\\"\" searches websites, SharePoint, kennisartikelen, VACs and the smoelenboek in one box (Kiss.Bff/Extern/Elasticsearch/SearchController.cs:22); client records are not in that index and are searched on the separate Personen and Bedrijven screens",
 				"espocrm": "application/Espo/Resources/metadata/app/clientNavbar.json:3 global search covers the entity types in Settings globalSearchEntityList (default application/Espo/Resources/defaults/config.php:92 Account, Contact, Lead, Opportunity; an admin can add KnowledgeBaseArticle and others) with full text search support (application/Espo/Tools/GlobalSearch/Service.php:112); no outside wiki is indexed",
 				"pipedrive": "absent from sources: pipelinq/pipedrive/pipedrive.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 40) have no mention of one search box across wiki, articles and client records",
-				"odoo-crm": "competitor_features#143123 \"the command palette is the cross-app search and it searches menus, not records across models\""
+				"odoo-crm": "addons/web/static/src/webclient/menus/menu_providers.js:19 the command palette (Ctrl+K) searches apps and menus under \"/\", and addons/mail/static/src/discuss/core/public_web/discuss_command_palette.js:298 adds people and channels under \"@\"; records are searched per list view (https://www.odoo.com/documentation/19.0/applications/essentials/search.html), and Knowledge articles get their own \"?\" search only with Enterprise Knowledge. There is no one box over client records, articles and a wiki together."
 			}
 		},
 		{
@@ -5797,7 +5864,7 @@
 				"kiss": "src/views/HomeView.vue:102 \"header=\\\"Nieuws\\\"\" and :111 \"header=\\\"Werkinstructies\\\"\" publish messages edited at src/router/index.ts:238 \"NieuwsEnWerkinstructies\" (Kiss.Bff/Intern/NieuwsEnWerkinstructies/Features/BerichtenController.cs:10), with an important counter (GetFeaturedCountController.cs:19) and read markers",
 				"espocrm": "application/Espo/Resources/metadata/entityDefs/Note.json:43 \"targetType\" options self, all, teams, users, portals let a user post in the stream to all users or to chosen teams, which notifies them (https://docs.espocrm.com/user-guide/stream/); posts are not versioned work instructions and are not filtered by skill",
 				"pipedrive": "absent from sources: pipelinq/pipedrive/pipedrive.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 40) have no mention of internal work instructions or news for a service desk",
-				"odoo-crm": "competitor_features#15949 \"Auto-suggest knowledge articles when support agents open tickets\" (Knowledge; no per-skill push of changed instructions)"
+				"odoo-crm": "https://www.odoo.com/documentation/19.0/applications/productivity/knowledge.html Knowledge (Enterprise) publishes articles to internal users with version history and access per group; in Community a Discuss channel (addons/mail/models/discuss/discuss_channel.py:71 \"('channel', 'Channel')\") posts an announcement that members see at once, with pinned messages (addons/mail/models/mail_message.py:175 pinned_at). Neither pushes a changed instruction to agents filtered by skill."
 			}
 		},
 		{
@@ -5808,7 +5875,7 @@
 			"hubspot-crm": "no",
 			"pipedrive": "no",
 			"espocrm": "unknown",
-			"odoo-crm": "no",
+			"odoo-crm": "partial",
 			"kiss": "yes",
 			"provider": "pipelinq",
 			"providerHow": "lib/Service/CtiService.php:252 opens one pending contact moment per user, with no switching",
@@ -5825,7 +5892,7 @@
 				"kiss": "src/features/contact/contactmoment/ContactmomentSwitcher.vue:8 \"Actief ({{ moments.length }})\" lists running contact moments and :65 \"contactmomentStore.switchContactmoment(moment)\" switches between them, mounted in src/layout/TheSidebar.vue:10",
 				"espocrm": "not checked: core 10.0.8 has no telephony code, and the paid VoIP Integration docs (https://docs.espocrm.com/extensions/voip-integration/overview/ and customization/) do not say whether an agent can hold and switch between two calls; that behaviour sits in the PBX and the closed extension",
 				"pipedrive": "absent from sources: pipelinq/pipedrive/pipedrive.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 40) have no mention of handling two simultaneous calls",
-				"odoo-crm": "absent from sources: pipelinq/odoo-crm/odoo-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (all 22 listed Odoo ids) have no mention of handling two simultaneous calls; VoIP lines (14673) cover click-to-call, queues and logging only"
+				"odoo-crm": "https://www.odoo.com/documentation/19.0/applications/productivity/phone/support_calls.html lists in-call actions \"(pause): Place the caller on hold\" and \"(transfer): Transfer a call to another team member\" in the Phone widget, which needs the Enterprise Phone (VoIP) app; the docs do not describe taking a second call while one is on hold and switching between them."
 			}
 		},
 		{
@@ -5853,7 +5920,7 @@
 				"kiss": "not checked: no course catalogue found on https://www.icatt.nl or https://www.dimpact.nl/podiumd on 2026-09-26; the manual at https://kiss-klantinteractie-servicesysteem.readthedocs.io/nl/v3.1.3/manual/manual.html is documentation, not training, and Dimpact member training is not public",
 				"espocrm": "https://www.espocrm.com/video/ \"EspoCRM Video Tutorials\" (Accounts, Leads, Reports and Analytics, Workflow Management, BPM and others) plus docs at https://docs.espocrm.com/ and paid consulting and training on request (https://www.espocrm.com/support/ service option \"Consulting & Training\"); no structured course or certification programme",
 				"pipedrive": "https://learn.pipedrive.com/app \"Pipedrive Academy is a free learning platform designed to help sales professionals, teams and business owners get the most out of Pipedrive CRM through courses, tutorials and tips.\" (vendor documentation read 2026-09-26)",
-				"odoo-crm": "https://www.odoo.com/slides \"CRM Odoo Tutorials 2h 40m 22 steps\" (Odoo eLearning, free vendor courses) (vendor documentation read 2026-09-26)"
+				"odoo-crm": "https://www.odoo.com/slides lists free vendor courses, \"CRM Odoo Tutorials 2h 40m 22 steps\" among 101 courses, next to the paid certification programme under Learn > Certifications."
 			}
 		},
 		{
@@ -5881,7 +5948,7 @@
 				"kiss": "AUTHORS.md:2 \"Created by [ICATT](https://www.icatt.nl) for [Dimpact](https://www.dimpact.nl/) and [Gemeente Utrecht]\"; ICATT (https://www.icatt.nl, \"common ground-componenten te bouwen, zoals KISS (Podium D)\") implements it and Dimpact supplies it to member municipalities within PodiumD",
 				"espocrm": "No partner directory on espocrm.com (https://www.espocrm.com/partners/ answered 404 on 2026-09-26); the vendor sells implementation services itself (https://www.espocrm.com/services/) and points buyers to community developers through forum signatures (https://www.espocrm.com/community-collaboration/ \"help people who are seeking EspoCRM development or consulting to easily find a CRM expert\")",
 				"pipedrive": "https://www.pipedrive.com/en/marketplace/partners \"Find an expert --> Region Select an option Country Select an option Language\" (partner directory; docs read as fuller than partial, rating kept) (vendor documentation read 2026-09-26)",
-				"odoo-crm": "pipelinq/odoo-crm/odoo-crm.md:16 \"Odoo also earns from its partner network of implementation consultants.\""
+				"odoo-crm": "https://www.odoo.com/partners is the vendor's partner directory, filterable by country (https://www.odoo.com/partners/country/netherlands-166) with partner level, certified experts and customer references per partner."
 			}
 		},
 		{
@@ -5908,7 +5975,7 @@
 				"kiss": "contact data is stored in the municipality's own standard registers (OpenKlant 2 via src/services/openklant2/service.ts:521, ZGW for cases), so it stays with the buyer; KISS's own database (news, skills, links, forms, management details) has no export beyond Kiss.Bff/Intern/ContactmomentDetails/Features/ContactmomentDetailsRapportageOverzicht.cs:22 \"[HttpGet(\\\"/api/contactmomentendetails\\\")]\" with from and to parameters, JWT protected for external systems (docs/manual/managementinformatie.md:4)",
 				"espocrm": "client/src/views/record/list-base.ts:403 'export' to CSV or XLSX on every list, the REST API (application/Espo/Resources/routes.json:554 \"/:controller\"), and self hosting on your own MySQL, MariaDB or PostgreSQL database under AGPL (LICENSE.txt:1) mean all data can leave; https://docs.espocrm.com/administration/backup-and-restore/",
 				"pipedrive": "https://support.pipedrive.com/en/article/exporting-data-from-pipedrive \"Activities, notes and files linked to deals and contacts must be exported separately.\" (per item type XLSX/CSV, Google Drive files not exported) (vendor documentation read 2026-09-26)",
-				"odoo-crm": "competitor_features#143126 \"Export on every list, CSV or XLSX\"; pipelinq/odoo-crm/odoo-crm.md:7 \"**Self-Hosted:** Yes\" (full database on your own server)"
+				"odoo-crm": "addons/web/controllers/export.py:640 \"/web/export/csv\" and :688 \"/web/export/xlsx\" back the Export action on every list view, and addons/web/controllers/database.py:126 \"@http.route('/web/database/backup'\" gives the full database plus filestore as a zip from the database manager; self hosting in Community means the whole database is yours."
 			}
 		},
 		{
@@ -5919,7 +5986,7 @@
 			"hubspot-crm": "yes",
 			"pipedrive": "yes",
 			"espocrm": "partial",
-			"odoo-crm": "yes",
+			"odoo-crm": "partial",
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/AvailabilityService.php:174 and lib/Service/BookingService.php:329",
@@ -5935,7 +6002,7 @@
 				"kiss": "no appointment or calendar feature in src/ or Kiss.Bff/ (grep for afspraak finds nothing; the smoelenboek only shows the agenda text of a colleague, src/features/search/MedewerkerDetail.vue:19)",
 				"espocrm": "Not in core; the paid Meeting Scheduler extension: https://docs.espocrm.com/extensions/meeting-scheduler/ \"you can create online pages where contacts can book meetings with CRM users. Contacts can choose from time slots when the host is available\", with round robin across hosts",
 				"pipedrive": "https://support.pipedrive.com/en/article/scheduler \"General availability lets our customers choose from a broad set of available times\" (Growth and up; Growth limited to one general link) (vendor documentation read 2026-09-26)",
-				"odoo-crm": "competitor_features#15861 \"Click and drag to select available times and share booking links\" (Calendar/Appointments)"
+				"odoo-crm": "https://www.odoo.com/documentation/19.0/applications/productivity/appointments.html \"Odoo's Appointments app is a self-service scheduling app\" with shareable booking links based on user availability; Appointments is an Enterprise app, and Community calendar (addons/calendar/models/calendar_event.py:477 \"overridden in appointment\") has no booking page of its own."
 			}
 		}
 	],
