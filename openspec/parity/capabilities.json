@@ -505,7 +505,7 @@
 			"pipelinq": "yes",
 			"hubspot-crm": "partial",
 			"pipedrive": "yes",
-			"espocrm": "yes",
+			"espocrm": "unknown",
 			"odoo-crm": "yes",
 			"kiss": "no",
 			"provider": "nextcloud",
@@ -515,12 +515,13 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/SystemTagService.php:80",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"readOn": "2026-09-26"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/object-settings/color-coded-object-tags tags cover Deals, Leads, Tickets and other objects, not contacts or companies (Sales/Service Hub Starter+); contacts are grouped by rule in segments instead, so partial (vendor documentation read 2026-09-26)",
 				"kiss": "pipelinq/kiss/specs/beheer-admin/spec.md:27 \"Skills are tags assigned to employees and werkberichten for filtering.\" (tags cover staff and messages, not clients)",
-				"espocrm": "not supported: searched all 24 corpus files and competitor_features (id 30) for tag, label, category, keyword on accounts/contacts; only categories on custom BasePlus entities (specs/custom-fields-layouts/spec.md:24) and target lists; rating inherited unverified",
+				"espocrm": "not checked: the 2026-03-14 drive did not record this; re-drive",
 				"pipedrive": "https://support.pipedrive.com/en/article/contact-detail-view \"label(s), email address, phone number and linked organization/person\" shown on the contact; list view filters by field (https://support.pipedrive.com/en/article/bulk-editing-and-filtering) (vendor documentation read 2026-09-26)",
 				"odoo-crm": "competitor_features#14887 \"Tag and categorize contacts for easy filtering\" (Contacts)"
 			}
@@ -586,7 +587,7 @@
 			"pipelinq": "yes",
 			"hubspot-crm": "partial",
 			"pipedrive": "no",
-			"espocrm": "partial",
+			"espocrm": "unknown",
 			"odoo-crm": "yes",
 			"kiss": "no",
 			"provider": "pipelinq",
@@ -596,12 +597,13 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/PartyOrganisationTreeService.php:182",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"readOn": "2026-09-26"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/records/add-a-parent-or-child-company \"Each parent company can have multiple associated child companies, but a child company can only be associated with one parent company.\" All plans; shown as associations on the record, not a tree view (vendor documentation read 2026-09-26)",
 				"kiss": "pipelinq/kiss/overview.md:94 \"**No organization hierarchy** - flat contact model, no org trees\"",
-				"espocrm": "not supported: searched all corpus files and competitor_features (id 30) for parent account, subsidiary, hierarchy, org tree; nearest is generic Link Manager (pipelinq/espocrm/specs/custom-fields-layouts/spec.md:126 \"One-to-Many, Many-to-Many, One-to-One\"); rating inherited unverified",
+				"espocrm": "not checked: the 2026-03-14 drive did not record this; re-drive",
 				"pipedrive": "absent from sources: pipelinq/pipedrive/pipedrive.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 40) have no mention of parent/subsidiary organisation hierarchies or an org tree view",
 				"odoo-crm": "competitor_features#14886 \"Link contacts to parent companies with hierarchy\" (Contacts)"
 			}
@@ -1101,7 +1103,7 @@
 			"hubspot-crm": "partial",
 			"pipedrive": "partial",
 			"espocrm": "no",
-			"odoo-crm": "no",
+			"odoo-crm": "partial",
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/ProspectDiscoveryService.php with the profile in lib/Service/IcpConfigService.php",
@@ -1110,14 +1112,15 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/ProspectDiscoveryService.php",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"readOn": "2026-09-26"
 			},
 			"evidence": {
 				"hubspot-crm": "competitor_features#31199 \"Autonomous AI agents for prospecting, customer success, content (gated to Professional).\"; #16837 \"AI-generated lookalike audiences\" (Marketing Hub). Paid tiers only",
 				"kiss": "pipelinq/kiss/overview.md:87 \"**No lead management** - no concept of leads, opportunities, or deals\" (no prospecting)",
 				"espocrm": "absent from sources: all 24 pipelinq/espocrm files and competitor_features (id 30) have no mention of prospect discovery, company databases or ideal-customer ranking",
 				"pipedrive": "competitor_features#2772 \"Lead generation toolkit with chatbot, web forms, live chat, and prospector\" (LeadBooster, a paid add-on per pipelinq/pipedrive/pipedrive.md:25)",
-				"odoo-crm": "competitor_features#15420 \"Automatic enrichment of lead data with company information\" (enrichment of known leads only). For review: https://www.odoo.com/documentation/19.0/applications/sales/crm/acquire_leads/lead_mining.html \"generate new leads directly within their Odoo database\" (paid IAP credits)"
+				"odoo-crm": "https://www.odoo.com/documentation/19.0/applications/sales/crm/acquire_leads/lead_mining.html \"Lead mining is a feature that allows CRM users to generate new leads directly within their Odoo database\" (filtered by country, industry and company size, paid IAP credits; no ranking against an ideal customer) (vendor documentation read 2026-09-26)"
 			}
 		},
 		{
@@ -1479,7 +1482,7 @@
 			"pipedrive": "yes",
 			"espocrm": "partial",
 			"odoo-crm": "yes",
-			"kiss": "partial",
+			"kiss": "unknown",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/ContactmomentService.php:139, called from the messaging send path",
 			"feature": "Contact moments",
@@ -1487,11 +1490,12 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/ContactmomentService.php:139",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"readOn": "2026-09-26"
 			},
 			"evidence": {
 				"hubspot-crm": "competitor_features#31201 \"Auto-logs emails/calls/meetings to records.\"",
-				"kiss": "not supported: searched pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*), concurrentie-analyse.md and competitor_features (ids 34) for outbound/sent messages, e-mail sending to clients, automatic history logging, nothing found; rating inherited unverified",
+				"kiss": "not checked: the 2026-03-14 drive did not record this; re-drive",
 				"espocrm": "pipelinq/espocrm/business-logic/browser-walkthrough-notes.md:144 \"Emails are linked to CRM records (Accounts, Contacts, Leads, Opportunities)\" (email sent from the CRM lands on the record; calls and meetings are logged by hand)",
 				"pipedrive": "competitor_features#31207 \"Two-way email sync, open/click tracking, templates.\"",
 				"odoo-crm": "competitor_features#143093 \"the chatter interleaves notes, messages, incoming mail, tracking changes and activities on every task\""
@@ -1532,8 +1536,8 @@
 			"hubspot-crm": "partial",
 			"pipedrive": "no",
 			"espocrm": "no",
-			"odoo-crm": "no",
-			"kiss": "yes",
+			"odoo-crm": "partial",
+			"kiss": "unknown",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/KccWerkplekService.php:388",
 			"feature": "Service desk",
@@ -1541,14 +1545,15 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/KccWerkplekService.php:388",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"readOn": "2026-09-26"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/calling/configure-call-routing-work-hours-and-voicemail inbound calls ring only if \"the user is marked as available\"; out-of-hours calls \"automatically go to voicemail or another available team member\". Sales Hub or Service Hub Starter+ (vendor documentation read 2026-09-26)",
-				"kiss": "not supported: searched pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*), concurrentie-analyse.md and competitor_features (ids 34) for availability, presence, away status, call routing/ACD, nothing found; rating inherited unverified",
+				"kiss": "not checked: the 2026-03-14 drive did not record this; re-drive",
 				"espocrm": "absent from sources: no away/availability status in any of the 24 corpus files or competitor_features (id 30); nearest is pipelinq/espocrm/docs/bpm-and-workflows.md:35 \"Auto-assign using round-robin or least-busy\" (paid)",
 				"pipedrive": "absent from sources: pipelinq/pipedrive/pipedrive.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 40) have no mention of agent availability or away status routing calls to colleagues",
-				"odoo-crm": "competitor_features#143169 \"Time Off marks the user out of office in Discuss with the return date; no substitute\". For review: https://www.odoo.com/documentation/19.0/applications/productivity/phone/support_calls.html \"if they are taking a break, they can log out of the support call queue\""
+				"odoo-crm": "https://www.odoo.com/documentation/19.0/applications/productivity/phone/support_calls.html \"the agent will no longer receive support calls until they log back in\" (logging out of the support call queue with the agent disconnection code; the page does not say where the next call is routed) (vendor documentation read 2026-09-26)"
 			}
 		},
 		{
@@ -1775,7 +1780,7 @@
 			"hubspot-crm": "partial",
 			"pipedrive": "no",
 			"espocrm": "no",
-			"odoo-crm": "no",
+			"odoo-crm": "partial",
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/SlaEngineService.php:404",
@@ -1784,14 +1789,15 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/SlaEngineService.php:404",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"readOn": "2026-09-26"
 			},
 			"evidence": {
 				"hubspot-crm": "competitor_features#2745 \"Ticketing system with knowledge base, customer portal, and SLA management\" (pausing the clock while waiting on the client not named)",
 				"kiss": "pipelinq/kiss/business-logic/contactverzoek-flow.md:73 \"Binary only (te_verwerken / verwerkt)\" (no SLA clock to pause)",
 				"espocrm": "absent from sources: all 24 pipelinq/espocrm files and competitor_features (id 30) have no mention of pausing a deadline or SLA clock while waiting on the client",
 				"pipedrive": "absent from sources: pipelinq/pipedrive/pipedrive.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 40) have no mention of pausing an SLA clock while waiting on the client",
-				"odoo-crm": "competitor_features#143048 (Project) \"a blocked task enters `waiting_normal` on its own\" is the only pause. For review: https://www.odoo.com/documentation/19.0/applications/services/helpdesk/overview/sla.html \"Time spent in stages selected in the Excluding Stages field are not included in the calculation of the SLA deadline\""
+				"odoo-crm": "https://www.odoo.com/documentation/19.0/applications/services/helpdesk/overview/sla.html \"Time spent in stages selected in the Excluding Stages field are not included in the calculation of the SLA deadline.\" (Helpdesk; the clock stops per stage, not per wait on the client) (vendor documentation read 2026-09-26)"
 			}
 		},
 		{
@@ -1830,7 +1836,7 @@
 			"pipedrive": "no",
 			"espocrm": "partial",
 			"odoo-crm": "partial",
-			"kiss": "partial",
+			"kiss": "unknown",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/ComplaintSlaService.php:112 and openspec/specs/klachtenregistratie",
 			"feature": "Service desk",
@@ -1838,11 +1844,12 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/ComplaintSlaService.php:112",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"readOn": "2026-09-26"
 			},
 			"evidence": {
 				"hubspot-crm": "competitor_features#2745 \"Ticketing system with knowledge base, customer portal, and SLA management\" (generic tickets; complaint handling with a legal answer term not named)",
-				"kiss": "not supported: searched pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*), concurrentie-analyse.md and competitor_features (ids 34) for klacht, complaint, legal answer term, nothing found; rating inherited unverified",
+				"kiss": "not checked: the 2026-03-14 drive did not record this; re-drive",
 				"espocrm": "pipelinq/espocrm/business-logic/browser-walkthrough-notes.md:168 \"Standard list view for support case tracking\" (Cases exist; no complaint type or legal answer term described)",
 				"pipedrive": "absent from sources: pipelinq/pipedrive/pipedrive.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 40) have no mention of complaint registration with a legal response term",
 				"odoo-crm": "competitor_features#14964 \"Define SLAs based on customer, priority, team, or ticket type\" (Helpdesk ticket type; no statutory answer term)"
@@ -2073,7 +2080,7 @@
 			"pipedrive": "yes",
 			"espocrm": "partial",
 			"odoo-crm": "yes",
-			"kiss": "partial",
+			"kiss": "unknown",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/ScheduledTaskService.php:443 and lib/BackgroundJob/TaskEscalationJob.php",
 			"feature": "My work",
@@ -2081,11 +2088,12 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/BackgroundJob/TaskEscalationJob.php",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"readOn": "2026-09-26"
 			},
 			"evidence": {
 				"hubspot-crm": "competitor_features#31247 \"iOS/Android app with mobile scanning, calling, notifications.\"; pipelinq/hubspot-crm/hubspot-crm.md:39 \"Task and activity management\" (overdue-task alerts not named)",
-				"kiss": "not supported: searched pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*), concurrentie-analyse.md and competitor_features (ids 34) for overdue, deadline, reminder, herinnering, nothing found; rating inherited unverified",
+				"kiss": "not checked: the 2026-03-14 drive did not record this; re-drive",
 				"espocrm": "pipelinq/espocrm/docs/bpm-and-workflows.md:36 \"Notify specific users with message (supports placeholders)\" run from a scheduled workflow (pipelinq/espocrm/docs/bpm-and-workflows.md:17) (paid Advanced Pack; no built-in overdue alert described)",
 				"pipedrive": "pipelinq/pipedrive/pipedrive.md:32 \"Activity scheduling and reminders\"",
 				"odoo-crm": "competitor_features#143103 \"the deadline widget colours the card and the row red when past and orange when today, the Late filter isolates them\""
@@ -2154,7 +2162,7 @@
 			"pipedrive": "yes",
 			"espocrm": "yes",
 			"odoo-crm": "yes",
-			"kiss": "partial",
+			"kiss": "unknown",
 			"provider": "nextcloud",
 			"providerHow": "pipelinq pushes through the Nextcloud notifier; read in lib/Notification/Notifier.php",
 			"feature": "My work",
@@ -2162,11 +2170,12 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Notification/Notifier.php",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"readOn": "2026-09-26"
 			},
 			"evidence": {
 				"hubspot-crm": "competitor_features#31247 \"iOS/Android app with mobile scanning, calling, notifications.\" (assignment notices not named specifically)",
-				"kiss": "not supported: searched pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*), concurrentie-analyse.md and competitor_features (ids 34) for assignment notification, notificatie, e-mail on assignment, nothing found; rating inherited unverified",
+				"kiss": "not checked: the 2026-03-14 drive did not record this; re-drive",
 				"espocrm": "competitor_features#9518 \"In-app notification about being added as a collaborator\"; notifications bell in the top bar (pipelinq/espocrm/business-logic/browser-walkthrough-notes.md:17)",
 				"pipedrive": "competitor_features#2769 \"Visual workflow automations for deal movement, task creation, and notifications\"",
 				"odoo-crm": "competitor_features#143096 \"the Discuss bell with a counter, `mail.notification` rows and web push\""
@@ -2315,7 +2324,7 @@
 			"hubspot-crm": "partial",
 			"pipedrive": "partial",
 			"espocrm": "no",
-			"odoo-crm": "no",
+			"odoo-crm": "partial",
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/Marketing/WeeklyReviewService.php and lib/Service/Marketing/WeeklyReviewNumbers.php",
@@ -2324,14 +2333,15 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/Marketing/WeeklyReviewService.php",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"readOn": "2026-09-26"
 			},
 			"evidence": {
 				"hubspot-crm": "competitor_features#31204 \"Customizable dashboards, forecasting, attribution.\"; #16840 \"Drag-and-drop custom report builder\" (dashboards; a weekly summary digest is not named)",
 				"kiss": "absent from sources: pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*) and competitor_features (ids 34) have no mention of a weekly summary or digest",
 				"espocrm": "absent from sources: no weekly change digest in any corpus file or competitor_features (id 30); nearest is pipelinq/espocrm/specs/reporting-analytics/spec.md:56 \"Email scheduling (automatic report delivery)\" (paid report emails)",
 				"pipedrive": "https://support.pipedrive.com/en/article/notifications \"a daily summary email of your account activity\" (daily activity summary, not a weekly review of what moved) (vendor documentation read 2026-09-26)",
-				"odoo-crm": "absent from sources: corpus and competitor_features have no weekly summary of what moved. For review: https://www.odoo.com/documentation/19.0/applications/general/companies/digest_emails.html \"Digest Emails are periodic snapshots sent via email to users\" (KPI digest)"
+				"odoo-crm": "https://www.odoo.com/documentation/19.0/applications/general/companies/digest_emails.html \"Digest Emails are periodic snapshots sent via email to users\" (weekly periodicity; CRM KPIs New Leads and Opportunities Won are counts, not a list of what moved and what did not) (vendor documentation read 2026-09-26)"
 			}
 		},
 		{
@@ -3202,7 +3212,7 @@
 			"pipelinq": "yes",
 			"hubspot-crm": "partial",
 			"pipedrive": "partial",
-			"espocrm": "partial",
+			"espocrm": "unknown",
 			"odoo-crm": "yes",
 			"kiss": "no",
 			"provider": "pipelinq",
@@ -3212,12 +3222,13 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/ProductCatalogService.php:293",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"readOn": "2026-09-26"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/integrations/sync-shopify-product-variants-to-hubspot \"If your Shopify products have multiple variants, you can sync each variant to HubSpot as an individual product record that is linked to their base product.\" Only via the Shopify sync; the product library page names no variants, so partial (vendor documentation read 2026-09-26)",
 				"kiss": "pipelinq/kiss/overview.md:11 \"specialized call center/service desk application\" (no product variants)",
-				"espocrm": "not supported: searched all 24 pipelinq/espocrm files and competitor_features (id 30) for variant, size, colour, attribute, option on products; only a flat product catalogue (docs/features-and-extensions.md:65); rating inherited unverified",
+				"espocrm": "not checked: the 2026-03-14 drive did not record this; re-drive",
 				"pipedrive": "https://support.pipedrive.com/en/article/can-i-have-one-product-in-different-price-variations \"you can create product variations with different names, unit prices, currencies and costs per unit\" (vendor documentation read 2026-09-26); variations of one product, not full attribute matrices",
 				"odoo-crm": "competitor_features#14693 \"Add product variants to sales orders using a grid/matrix of all attribute combinations\" (Sales)"
 			}
@@ -4331,7 +4342,7 @@
 			"pipedrive": "yes",
 			"espocrm": "yes",
 			"odoo-crm": "yes",
-			"kiss": "partial",
+			"kiss": "unknown",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/WebhookProcessorService.php and lib/BackgroundJob/WebhookProcessorJob.php",
 			"feature": "Automation",
@@ -4339,11 +4350,12 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/WebhookProcessorService.php",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"readOn": "2026-09-26"
 			},
 			"evidence": {
 				"hubspot-crm": "competitor_features#2747 \"Comprehensive REST API with OAuth, webhooks, and custom object support\"; #24515 \"Webhook support in HubSpot CRM\"",
-				"kiss": "not supported: searched pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*), concurrentie-analyse.md and competitor_features (ids 34) for webhook, notificaties, event push, nothing found; rating inherited unverified",
+				"kiss": "not checked: the 2026-03-14 drive did not record this; re-drive",
 				"espocrm": "pipelinq/espocrm/specs/api-architecture/spec.md:133 \"`{entityType}.create`, `{entityType}.update`, `{entityType}.delete`, etc.\" outgoing webhook events, delivered with retry (pipelinq/espocrm/specs/api-architecture/spec.md:134)",
 				"pipedrive": "competitor_features#2776 \"Full REST API with webhooks, OAuth, and 400+ marketplace integrations\"",
 				"odoo-crm": "competitor_features#143098 \"server action Send Webhook Notification ... fired by an automation rule on any task event\""
@@ -4566,7 +4578,7 @@
 			"hubspot-crm": "no",
 			"pipedrive": "no",
 			"espocrm": "no",
-			"odoo-crm": "no",
+			"odoo-crm": "partial",
 			"kiss": "no",
 			"provider": "external",
 			"providerHow": "the wiki is XWiki; pipelinq queries it at lib/Service/XWikiService.php:118",
@@ -4575,14 +4587,15 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/XWikiService.php:118",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"readOn": "2026-09-26"
 			},
 			"evidence": {
 				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of searching an external company wiki from the CRM",
 				"kiss": "pipelinq/kiss/overview.md:64 \"Global search across multiple knowledge sources\" (includes SharePoint pages and website crawls; source suggests wiki-style search exists, rating kept, flag for review)",
 				"espocrm": "absent from sources: only the internal knowledge base (pipelinq/espocrm/business-logic/browser-walkthrough-notes.md:176 \"Article-based knowledge base with categories\") exists; no search of an external company wiki in any source",
 				"pipedrive": "absent from sources: pipelinq/pipedrive/pipedrive.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 40) have no mention of searching a company wiki from the CRM",
-				"odoo-crm": "absent from sources: pipelinq/odoo-crm/odoo-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (all 22 listed Odoo ids) have no mention of searching the wiki from a CRM record. For review: competitor_features#15946 \"Access articles via command palette from any Odoo app\" (Knowledge)"
+				"odoo-crm": "https://www.odoo.com/documentation/19.0/applications/productivity/knowledge.html \"press CTRL / CMD + K to open the command palette, then type ? to search for visible articles\" (Knowledge articles from the global command palette, so also inside CRM; not tied to the record) (vendor documentation read 2026-09-26)"
 			}
 		},
 		{
@@ -4592,7 +4605,7 @@
 			"pipelinq": "yes",
 			"hubspot-crm": "unknown",
 			"pipedrive": "yes",
-			"espocrm": "partial",
+			"espocrm": "unknown",
 			"odoo-crm": "yes",
 			"kiss": "unknown",
 			"provider": "pipelinq",
@@ -4602,11 +4615,12 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Command/SeedDemoDataCommand.php",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"readOn": "2026-09-26"
 			},
 			"evidence": {
 				"hubspot-crm": "not checked: rated 2026-04-18 with no recorded source; vendor documentation read 2026-09-26 did not settle it (read: https://knowledge.hubspot.com/records/delete-crm-records, https://knowledge.hubspot.com/import-and-export/sample-import-files, https://knowledge.hubspot.com/account-management/deploy-sandbox-changes-to-production)",
-				"espocrm": "not supported: searched all 24 pipelinq/espocrm files and competitor_features (id 30) for demo, sample, example data, seed; nothing found; rating inherited unverified",
+				"espocrm": "not checked: the 2026-03-14 drive did not record this; re-drive",
 				"pipedrive": "https://support.pipedrive.com/en/article/sample-data \"we'll include sample data for you to test and experiment with, allowing you to see how to use Pipedrive effectively\" (vendor documentation read 2026-09-26)",
 				"odoo-crm": "https://www.odoo.com/documentation/19.0/developer/reference/cli.html \"--with-demo ... install demo data in new databases.\" (vendor documentation read 2026-09-26)"
 			}
@@ -4618,7 +4632,7 @@
 			"pipelinq": "yes",
 			"hubspot-crm": "yes",
 			"pipedrive": "yes",
-			"espocrm": "partial",
+			"espocrm": "unknown",
 			"odoo-crm": "yes",
 			"kiss": "no",
 			"provider": "pipelinq",
@@ -4628,12 +4642,13 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Controller/SetupController.php",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"readOn": "2026-09-26"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/help-and-resources/use-your-home-page \"From your homepage, you can review the lists of tasks required for onboarding and work through your onboarding plan\"; onboarding plan in Marketing Hub and Sales Hub Professional (vendor documentation read 2026-09-26)",
 				"kiss": "pipelinq/kiss/business-logic/browser-walkthrough-detailed.md:100 \"Wilt u KISS vullen met voorbeelddata\" (one sample-data prompt, no setup wizard)",
-				"espocrm": "not supported: searched all 24 corpus files and competitor_features (id 30) for wizard, onboarding, first-run, setup; only pipelinq/espocrm/docs/documentation-structure.md:15 \"Installation (manual, by script, Docker, Traefik, Caddy)\"; rating inherited unverified",
+				"espocrm": "not checked: the 2026-03-14 drive did not record this; re-drive",
 				"pipedrive": "https://support.pipedrive.com/en/article/sample-data \"Upon signing up, you'll receive a brief questionnaire regarding your company size and industry to better understand your business needs.\" (vendor documentation read 2026-09-26)",
 				"odoo-crm": "https://www.odoo.com/documentation/18.0/applications/finance/accounting/get_started.html \"welcomes you with a step-by-step onboarding banner, a wizard that helps you get started\" (Accounting app) (vendor documentation read 2026-09-26)"
 			}
@@ -4753,7 +4768,7 @@
 			"hubspot-crm": "no",
 			"pipedrive": "no",
 			"espocrm": "no",
-			"odoo-crm": "no",
+			"odoo-crm": "partial",
 			"kiss": "unknown",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/BackgroundJob/BrpRetentionJob.php",
@@ -4762,13 +4777,14 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/BackgroundJob/BrpRetentionJob.php",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"readOn": "2026-09-26"
 			},
 			"evidence": {
 				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of retention/deletion rules for register data",
 				"espocrm": "absent from sources: all 24 pipelinq/espocrm files and competitor_features (id 30) have no mention of retention periods or purging register data",
 				"pipedrive": "pipelinq/pipedrive/pipedrive.md:70 \"No Nextcloud integration or Dutch government ecosystem support\" (no mention of register data retention rules anywhere)",
-				"odoo-crm": "pipelinq/odoo-crm/odoo-crm.md:72 \"No Nextcloud integration or Dutch government ecosystem support\" (no BRP data). For review: competitor_features#143108 \"`data_recycle` (Data Cleaning app): a rule per model with a time field, a delta, archive or delete\" (generic retention)"
+				"odoo-crm": "https://www.odoo.com/documentation/19.0/applications/productivity/data_cleaning.html \"Use the recycle records feature to rid the database of old and outdated records.\" (a rule per model with a Time Field, a Delta and Archive or Delete, run daily; generic retention, no BRP register data) (vendor documentation read 2026-09-26)"
 			}
 		},
 		{
@@ -4993,7 +5009,7 @@
 			"pipelinq": "yes",
 			"hubspot-crm": "yes",
 			"pipedrive": "unknown",
-			"espocrm": "partial",
+			"espocrm": "unknown",
 			"odoo-crm": "yes",
 			"kiss": "partial",
 			"provider": "pipelinq",
@@ -5003,12 +5019,13 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/CorrespondenceLanguageService.php",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"readOn": "2026-09-26"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/properties/hubspots-default-contact-properties Preferred language: \"the contact's preferred language for communications. This might be set via import, form, or integration.\" All plans; translated marketing emails need Marketing Hub Professional (vendor documentation read 2026-09-26)",
 				"kiss": "pipelinq/kiss/docs/decision-records.md:37 \"`taal=nld`\" (language is hard-coded to Dutch on every klantcontact)",
-				"espocrm": "not supported: searched all 24 corpus files and competitor_features (id 30) for preferred language, client language, locale on contacts; only UI label translation (pipelinq/espocrm/specs/custom-fields-layouts/spec.md:121); rating inherited unverified",
+				"espocrm": "not checked: the 2026-03-14 drive did not record this; re-drive",
 				"pipedrive": "not checked: rated 2026-04-18 with no recorded source; vendor documentation read 2026-09-26 did not settle it (read: https://support.pipedrive.com/en/article/{chatbot, email-templates, how-can-i-change-my-language-or-date-number-format})",
 				"odoo-crm": "https://www.odoo.com/documentation/19.0/applications/essentials/contacts.html \"Language : enter the language used by the contact. All of the emails and documents sent to this contact are then translated to the selected language.\" (vendor documentation read 2026-09-26)"
 			}
@@ -5361,7 +5378,7 @@
 			"pipelinq": "yes",
 			"hubspot-crm": "partial",
 			"pipedrive": "partial",
-			"espocrm": "yes",
+			"espocrm": "unknown",
 			"odoo-crm": "yes",
 			"kiss": "partial",
 			"provider": "nextcloud",
@@ -5371,12 +5388,13 @@
 			"built": {
 				"state": "built",
 				"evidence": "css/dashboardWidgets.css",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"readOn": "2026-09-26"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/branding/edit-your-logo-favicon-and-brand-colors brand colors \"appear in the content editor, as well as scheduling pages, quotes, and conversations channels\"; all plans; styles customer-facing output, not the CRM interface itself, so partial (vendor documentation read 2026-09-26)",
 				"kiss": "pipelinq/kiss/business-logic/browser-walkthrough-notes.md:611 \"The entire UI is built with NL Design System components (Utrecht variant)\" (NL Design theming and organisation logo; no admin theming UI shown)",
-				"espocrm": "not supported: searched all 24 corpus files and competitor_features (id 30) for theme, logo, colour, branding, CSS; only pipelinq/espocrm/business-logic/browser-walkthrough-notes.md:193 \"Customize all UI labels/translations\" and pipelinq/espocrm/overview.md:109 \"no theming for government use cases\"; rating inherited unverified",
+				"espocrm": "not checked: the 2026-03-14 drive did not record this; re-drive",
 				"pipedrive": "https://support.pipedrive.com/en/article/web-forms \"The Style section lets you customize the appearance of your web forms in four different ways.\" (web forms only, LeadBooster; no app theming) (vendor documentation read 2026-09-26)",
 				"odoo-crm": "competitor_features#143144 \"company logo, colours, font and layout in Settings > General > Companies > Document Layout\""
 			}
@@ -5390,7 +5408,7 @@
 			"pipedrive": "yes",
 			"espocrm": "yes",
 			"odoo-crm": "yes",
-			"kiss": "partial",
+			"kiss": "unknown",
 			"provider": "pipelinq",
 			"providerHow": "read in l10n/nl.json, beside seven other locales in l10n/",
 			"feature": "Platform",
@@ -5398,11 +5416,12 @@
 			"built": {
 				"state": "built",
 				"evidence": "l10n/nl.json",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"readOn": "2026-09-26"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/help-and-resources/hubspot-language-offerings \"The following languages are available in the HubSpot interface.\" Dutch is listed as Yes for the CRM, Sales Hub, Service Hub, Marketing Hub and CMS (vendor documentation read 2026-09-26)",
-				"kiss": "not supported: searched pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*), concurrentie-analyse.md and competitor_features (ids 34) for English, i18n, language switch, taal, nothing found; rating inherited unverified",
+				"kiss": "not checked: the 2026-03-14 drive did not record this; re-drive",
 				"espocrm": "pipelinq/espocrm/specs/custom-fields-layouts/spec.md:121 \"Customize field labels, entity names, and other UI text per language\" (multi-language UI; Dutch not named explicitly)",
 				"pipedrive": "https://www.pipedrive.com/en/newsroom/pipedrive-introduces-its-crm-software-platform-in-four-new-languages \"Pipedrive is now available in 22 languages.\" (Dutch is in the page's language list; per-user choice at https://support.pipedrive.com/en/article/how-can-i-change-my-language-or-date-number-format) (vendor documentation read 2026-09-26)",
 				"odoo-crm": "competitor_features#143143 \"Settings > Translations > Application Terms edits UI terms per language in the product\""
@@ -5694,7 +5713,7 @@
 			"pipelinq": "partial",
 			"hubspot-crm": "yes",
 			"pipedrive": "partial",
-			"espocrm": "partial",
+			"espocrm": "unknown",
 			"odoo-crm": "yes",
 			"kiss": "yes",
 			"provider": "pipelinq",
@@ -5704,12 +5723,13 @@
 			"built": {
 				"state": "building",
 				"evidence": "appinfo/info.xml names one vendor, not a partner network",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"readOn": "2026-09-26"
 			},
 			"evidence": {
 				"hubspot-crm": "pipelinq/hubspot-crm/hubspot-crm.md:12 \"Additional revenue from onboarding fees, HubSpot Academy certifications, and a partner marketplace.\" (partner marketplace; locality not stated)",
 				"kiss": "pipelinq/kiss/kiss.md:27 \"Through Dimpact membership and partner services\"",
-				"espocrm": "not supported: searched all 24 pipelinq/espocrm files and competitor_features (id 30) for partner, reseller, integrator, implementation; nothing found; rating inherited unverified",
+				"espocrm": "not checked: the 2026-03-14 drive did not record this; re-drive",
 				"pipedrive": "https://www.pipedrive.com/en/marketplace/partners \"Find an expert --> Region Select an option Country Select an option Language\" (partner directory; docs read as fuller than partial, rating kept) (vendor documentation read 2026-09-26)",
 				"odoo-crm": "pipelinq/odoo-crm/odoo-crm.md:16 \"Odoo also earns from its partner network of implementation consultants.\""
 			}
