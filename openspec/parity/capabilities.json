@@ -251,9 +251,9 @@
 			"vendor": "Dimpact and ICATT",
 			"readOn": "2026-09-26",
 			"columnAddedOn": "2026-09-24",
-			"note": "Grade stays docs-only unless the KISS lab boots at v3.1.3 and plat-phone is driven; see readHow.",
-			"evidenceGrade": "docs-only",
-			"unknownReason": "Source read at v3.1.3, not driven: the one unknown cell (vendor-training) is not settled by the source or the public documentation.",
+			"note": "Source read and lab drive at v3.1.3; see readHow.",
+			"evidenceGrade": "driven",
+			"unknownReason": "Source read and driven at v3.1.3: the one unknown cell (vendor-training) is not settled by the source or the public documentation.",
 			"sources": {
 				"docs": [
 					"https://kiss-klantinteractie-servicesysteem.readthedocs.io/nl/latest/",
@@ -315,7 +315,7 @@
 			},
 			"evidenceGradeBefore": "driven",
 			"version": "KISS-frontend v3.1.3 (commit 276d210e6984c3ae009b91eed9e436d969f29979, released 2026-09-22)",
-			"readHow": "Source read at v3.1.3, not driven. The previous grade 'driven' was the 2026-03-14 local drive of an older release; this column is now rated from the v3.1.3 source (Vue frontend, Kiss.Bff, Kiss.Elastic.Sync) with path:line per cell. ITA (the internal task application where contactverzoeken are picked up) is a separate app this column does not cover. The KISS-adapter repository named in earlier briefs does not exist; KISS reaches the e-Suite through ICATT's podiumd-adapter, and no rating depends on it. KISS reads persons from the BRP, companies from the KVK, cases from the ZGW APIs and stores contact moments in OpenKlant 2 or the Objects API; a capability only those registers' own admin screens reach is not credited to KISS."
+			"readHow": "Source read at v3.1.3 and driven at v3.1.3 on 2026-09-26 in the lab (market-intelligence pipelinq/kiss/lab: KISS image kiss-frontend:3.1.3 with Keycloak on TLS and Postgres, registers not connected); the drive settled plat-phone, the one row the reading flagged; every other cell rests on the source read. The previous grade 'driven' was the 2026-03-14 local drive of an older release. ITA (the internal task application where contactverzoeken are picked up) is a separate app this column does not cover. The KISS-adapter repository named in earlier briefs does not exist; KISS reaches the e-Suite through ICATT's podiumd-adapter, and no rating depends on it. KISS reads persons from the BRP, companies from the KVK, cases from the ZGW APIs and stores contact moments in OpenKlant 2 or the Objects API; a capability only those registers' own admin screens reach is not credited to KISS."
 		}
 	],
 	"areas": [
@@ -5733,7 +5733,7 @@
 			"note": "The four commercial and open source CRMs all ship a native mobile app. We do not.",
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/account-mangagement/how-to-install-the-hubspot-mobile-application \"view and edit records, make calls, manage marketing emails, and use the conversations inbox directly from your mobile device\" on iOS 17 and Android 11 and up. All products and plans.",
-				"kiss": "the frontend has a single media query in all of src/ (src/nl-design-system/components/Pagination.vue:184 \"@media (width >= 640px)\"); the layout is a fixed desktop KCC workstation with a sidebar (src/layout/TheSidebar.vue)",
+				"kiss": "the frontend has a single media query in all of src/ (src/nl-design-system/components/Pagination.vue:184 \"@media (width >= 640px)\"); the layout is a fixed desktop KCC workstation with a sidebar (src/layout/TheSidebar.vue). Driven 2026-09-26 on the v3.1.3 lab (ghcr.io/klantinteractie-servicesysteem/kiss-frontend:3.1.3, commit 276d210e shown in the footer) at a 390 by 844 viewport: the start page fits, but after Nieuw contactmoment the contact moment panel (Notitieblok, Contactverzoek, Afronden) fills the screen and the person search form and every navigation link (Contactverzoeken, Personen, Bedrijven, Zaken, Nieuws en werkinstructies, Links, Uitloggen) sit at x 415 to 713, off screen with no horizontal scroll, so a phone user cannot search a person or navigate during a contact. The stylesheet carries one media query, (width >= 640px).",
 				"espocrm": "The web client adapts to small screens (client/src/views/site/navbar.js:580 \"const smallScreenWidth = this.getThemeManager().getParam('screenWidthXs')\" collapses the navbar on phones), so it works in a phone browser; no official native mobile app is listed at https://www.espocrm.com/extensions/. Driven 2026-09-26 on the 10.0.8 lab at a 390 by 844 viewport: the navbar collapsed behind a menu button, a Contact record opened, was edited and saved without horizontal scroll (scrollWidth 379 of 390). The phone field defaulted to the +1 country code until a country is configured.",
 				"pipedrive": "competitor_features#2777 \"Native iOS/Android app with caller ID, nearby contacts, and activity logging\"",
 				"odoo-crm": "https://www.odoo.com/documentation/19.0/applications/general/mobile.html \"Two kind of Odoo mobile app exist: the progressive web app (PWA) and store apps\" with push notifications, on Google Play and the App Store; the web client is responsive, so CRM, contacts and activities work from the phone in Community too."
