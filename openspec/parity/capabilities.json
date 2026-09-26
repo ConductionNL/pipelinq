@@ -192,7 +192,8 @@
 			"note": "KISS reads a person from the BRP and keeps no editable record of its own.",
 			"evidence": {
 				"hubspot-crm": "pipelinq/hubspot-crm/hubspot-crm.md:48 \"| Client management (persons) | Yes | Yes |\"; also competitor_features#2735 \"Centralized contact database with company associations, lifecycle stages, and activity timeline\"",
-				"kiss": "pipelinq/kiss/kiss.md:50 \"Partial (read-only from BRP)\" (persons are read from the BRP; KISS keeps no editable record of its own)"
+				"kiss": "pipelinq/kiss/kiss.md:50 \"Partial (read-only from BRP)\" (persons are read from the BRP; KISS keeps no editable record of its own)",
+				"espocrm": "pipelinq/espocrm/business-logic/browser-walkthrough-notes.md:76 \"Email (multi-value), Phone (with type: Mobile default, country code)\" (Contact create form, observed in the 2026-03-14 Docker walkthrough)"
 			}
 		},
 		{
@@ -216,7 +217,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "pipelinq/hubspot-crm/hubspot-crm.md:49 \"| Organization management | Yes | Yes |\"; pipelinq/hubspot-crm/hubspot-crm.md:31 \"Contact and company management with unlimited records (free tier)\"",
-				"kiss": "pipelinq/kiss/kiss.md:51 \"Partial (read-only from KvK)\" (organisations are read from KvK only, no own record)"
+				"kiss": "pipelinq/kiss/kiss.md:51 \"Partial (read-only from KvK)\" (organisations are read from KvK only, no own record)",
+				"espocrm": "pipelinq/espocrm/overview.md:49 \"| **Account** | Companies/organizations |\"; Accounts are a separate entity from Contacts (pipelinq/espocrm/business-logic/browser-walkthrough-notes.md:47)"
 			}
 		},
 		{
@@ -240,7 +242,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "pipelinq/hubspot-crm/hubspot-crm.md:50 \"| Contact persons (linked) | Yes | Yes |\"; competitor_features#2735 \"company associations\" (a role on the link is not named)",
-				"kiss": "pipelinq/kiss/kiss.md:52 \"Contact persons (linked) | No\""
+				"kiss": "pipelinq/kiss/kiss.md:52 \"Contact persons (linked) | No\"",
+				"espocrm": "pipelinq/espocrm/specs/data-model/spec.md:34 \"Account hasMany Contacts (M:N with `role` and `isInactive` columns)\""
 			}
 		},
 		{
@@ -264,7 +267,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "competitor_features#2735 \"Centralized contact database with company associations, lifecycle stages, and activity timeline\"",
-				"kiss": "pipelinq/kiss/business-logic/browser-walkthrough-notes.md:264 \"View detailed information about a citizen, including their cases and contact history\" (cases, contact moments and contact requests; no leads or client notes)"
+				"kiss": "pipelinq/kiss/business-logic/browser-walkthrough-notes.md:264 \"View detailed information about a citizen, including their cases and contact history\" (cases, contact moments and contact requests; no leads or client notes)",
+				"espocrm": "pipelinq/espocrm/business-logic/browser-walkthrough-notes.md:66 \"Activities (with quick-add buttons for email/meeting/call), History, Tasks\" in the right sidebar (activities and history on one page; no request concept alongside)"
 			}
 		},
 		{
@@ -288,7 +292,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "pipelinq/hubspot-crm/hubspot-crm.md:56 \"| Duplicate detection | Yes (deduplication tools) | Yes |\" (a warning at save time is not named)",
-				"kiss": "pipelinq/kiss/overview.md:90 \"**No duplicate detection** - no deduplication logic for contacts\""
+				"kiss": "pipelinq/kiss/overview.md:90 \"**No duplicate detection** - no deduplication logic for contacts\"",
+				"espocrm": "pipelinq/espocrm/espocrm.md:35 \"Configurable duplicate detection on contacts, leads, and accounts\""
 			}
 		},
 		{
@@ -312,7 +317,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "pipelinq/hubspot-crm/hubspot-crm.md:56 \"| Duplicate detection | Yes (deduplication tools) | Yes |\" (deduplication tools; merging with both histories kept is not named explicitly)",
-				"kiss": "pipelinq/kiss/overview.md:90 \"**No duplicate detection** - no deduplication logic for contacts\" (no deduplication, so no merge of client records either)"
+				"kiss": "pipelinq/kiss/overview.md:90 \"**No duplicate detection** - no deduplication logic for contacts\" (no deduplication, so no merge of client records either)",
+				"espocrm": "pipelinq/espocrm/specs/lead-management/spec.md:86 \"If duplicates are found, a `ConflictSilent` exception is thrown with the duplicate list, allowing the user to choose to skip or merge.\" (only in the lead-conversion flow; a general two-record merge is not described)"
 			}
 		},
 		{
@@ -336,7 +342,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "not supported: searched pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) for global search / find a client by name, email or phone, nothing found; rating inherited unverified",
-				"kiss": "pipelinq/kiss/docs/features-overview.md:33 \"Person search via Haal Centraal BRP (by BSN, name, date of birth)\" (search pages only work during an active contactmoment, see browser-walkthrough-detailed.md:130; email/phone search covers contact requests)"
+				"kiss": "pipelinq/kiss/docs/features-overview.md:33 \"Person search via Haal Centraal BRP (by BSN, name, date of birth)\" (search pages only work during an active contactmoment, see browser-walkthrough-detailed.md:130; email/phone search covers contact requests)",
+				"espocrm": "pipelinq/espocrm/business-logic/browser-walkthrough-notes.md:17 \"The top bar features: global search, quick-create (+), notifications bell, and a user/settings menu.\""
 			}
 		},
 		{
@@ -361,7 +368,8 @@
 			"note": "The four CRMs sync with Google and Outlook instead, which is a different address book.",
 			"evidence": {
 				"hubspot-crm": "pipelinq/hubspot-crm/hubspot-crm.md:55 \"| Nextcloud Contacts sync | No | Native |\"; sync is to Gmail/Outlook instead: competitor_features#31202 \"Two-way Gmail/Outlook + meeting scheduler.\"",
-				"kiss": "pipelinq/kiss/overview.md:91 \"**No Nextcloud integration** - standalone app, no Nextcloud Contacts sync\""
+				"kiss": "pipelinq/kiss/overview.md:91 \"**No Nextcloud integration** - standalone app, no Nextcloud Contacts sync\"",
+				"espocrm": "pipelinq/espocrm/MERGED-ANALYSIS.md:214 \"| Nextcloud Contacts sync | No | Native |\"; contact sync exists only via the paid Google/Outlook extensions (pipelinq/espocrm/docs/features-and-extensions.md:106 \"Google Contacts integration\")"
 			}
 		},
 		{
@@ -386,7 +394,8 @@
 			"note": "All four commercial and open source CRMs import CSV. None of them reads vCard directly.",
 			"evidence": {
 				"hubspot-crm": "pipelinq/hubspot-crm/hubspot-crm.md:57 \"| Import/Export (CSV/vCard) | Yes | Yes |\" is the nearest line; it lumps CSV and vCard in one cell and no source names direct vCard import. Note: read literally it could contradict the no",
-				"kiss": "pipelinq/kiss/overview.md:88 \"**No import/export** - no CSV/data import or bulk operations\" (no vCard or CSV import)"
+				"kiss": "pipelinq/kiss/overview.md:88 \"**No import/export** - no CSV/data import or bulk operations\" (no vCard or CSV import)",
+				"espocrm": "pipelinq/espocrm/business-logic/browser-walkthrough-notes.md:207 \"Import (CSV), Attachments, Jobs, ...\" (import is CSV/XLSX only; pipelinq/espocrm/MERGED-ANALYSIS.md:216 lumps \"CSV/vCard\" in one row without any vCard detail)"
 			}
 		},
 		{
@@ -411,7 +420,8 @@
 			"note": "Reachable through Open Register, not from a pipelinq page. That is why this is partial and not yes.",
 			"evidence": {
 				"hubspot-crm": "pipelinq/hubspot-crm/hubspot-crm.md:57 \"| Import/Export (CSV/vCard) | Yes | Yes |\"",
-				"kiss": "pipelinq/kiss/overview.md:88 \"**No import/export** - no CSV/data import or bulk operations\" (no spreadsheet import)"
+				"kiss": "pipelinq/kiss/overview.md:88 \"**No import/export** - no CSV/data import or bulk operations\" (no spreadsheet import)",
+				"espocrm": "pipelinq/espocrm/business-logic/browser-walkthrough-notes.md:207 \"Import (CSV)\" in the Data admin section; import has column mapping and duplicate checks (pipelinq/espocrm/specs/api-architecture/spec.md:168)"
 			}
 		},
 		{
@@ -435,7 +445,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "pipelinq/hubspot-crm/hubspot-crm.md:57 \"| Import/Export (CSV/vCard) | Yes | Yes |\"",
-				"kiss": "pipelinq/kiss/overview.md:88 \"**No import/export** - no CSV/data import or bulk operations\" (no client list export)"
+				"kiss": "pipelinq/kiss/overview.md:88 \"**No import/export** - no CSV/data import or bulk operations\" (no client list export)",
+				"espocrm": "pipelinq/espocrm/docs/features-and-extensions.md:53 \"**Export** - Extract data to spreadsheet or CSV\""
 			}
 		},
 		{
@@ -459,7 +470,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "competitor_features#2735 \"Centralized contact database with company associations, lifecycle stages, and activity timeline\" (activity timeline; notes with author and time not named)",
-				"kiss": "pipelinq/kiss/specs/contactmoment-logging/spec.md:96 \"Yes (notitie per vraag)\" (notes sit on the question inside a contact moment, not on a client record)"
+				"kiss": "pipelinq/kiss/specs/contactmoment-logging/spec.md:96 \"Yes (notitie per vraag)\" (notes sit on the question inside a contact moment, not on a client record)",
+				"espocrm": "pipelinq/espocrm/specs/reports-dashboards/spec.md:104 \"Notes/comments\" in the stream every entity has (pipelinq/espocrm/specs/reports-dashboards/spec.md:102 \"Every entity can have a stream showing:\")"
 			}
 		},
 		{
@@ -483,7 +495,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "not supported: searched pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) for tags / labels on contacts and filtering by tag (only Marketing Hub smart lists, competitor_features#16832), nothing found; rating inherited unverified",
-				"kiss": "pipelinq/kiss/specs/beheer-admin/spec.md:27 \"Skills are tags assigned to employees and werkberichten for filtering.\" (tags cover staff and messages, not clients)"
+				"kiss": "pipelinq/kiss/specs/beheer-admin/spec.md:27 \"Skills are tags assigned to employees and werkberichten for filtering.\" (tags cover staff and messages, not clients)",
+				"espocrm": "not supported: searched all 24 corpus files and competitor_features (id 30) for tag, label, category, keyword on accounts/contacts; only categories on custom BasePlus entities (specs/custom-fields-layouts/spec.md:24) and target lists; rating inherited unverified"
 			}
 		},
 		{
@@ -507,7 +520,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of KvK / Dutch Chamber of Commerce lookup or company autofill from a Dutch register",
-				"kiss": "pipelinq/kiss/specs/bedrijf-search/spec.md:58 \"KCM selects business, system creates/finds matching \"Partij\" in OpenKlant\" (KvK search by name, KvK number, postcode or vestigingsnummer)"
+				"kiss": "pipelinq/kiss/specs/bedrijf-search/spec.md:58 \"KCM selects business, system creates/finds matching \"Partij\" in OpenKlant\" (KvK search by name, KvK number, postcode or vestigingsnummer)",
+				"espocrm": "pipelinq/espocrm/MERGED-ANALYSIS.md:173 \"No NL Design theming, no ZGW standards, no WCAG focus, no Dutch government ecosystem integration.\" (no KvK lookup anywhere in sources)"
 			}
 		},
 		{
@@ -531,7 +545,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "competitor_features#31200 \"AI data enrichment, form optimization, buyer-intent tracking.\" (premium tier; enrichment, not a lookup in an international company register)",
-				"kiss": "pipelinq/kiss/kiss.md:74 \"Limited to Dutch municipal context\" (only the Dutch KvK API is integrated, no international register)"
+				"kiss": "pipelinq/kiss/kiss.md:74 \"Limited to Dutch municipal context\" (only the Dutch KvK API is integrated, no international register)",
+				"espocrm": "absent from sources: all 24 pipelinq/espocrm files, pipelinq/concurrentie-analyse.md and competitor_features (id 30) have no mention of any company-register lookup (OpenCorporates or other international register)"
 			}
 		},
 		{
@@ -555,7 +570,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "not supported: searched pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) for parent company / subsidiaries / company hierarchy, nothing found; rating inherited unverified",
-				"kiss": "pipelinq/kiss/overview.md:94 \"**No organization hierarchy** - flat contact model, no org trees\""
+				"kiss": "pipelinq/kiss/overview.md:94 \"**No organization hierarchy** - flat contact model, no org trees\"",
+				"espocrm": "not supported: searched all corpus files and competitor_features (id 30) for parent account, subsidiary, hierarchy, org tree; nearest is generic Link Manager (pipelinq/espocrm/specs/custom-fields-layouts/spec.md:126 \"One-to-Many, Many-to-Many, One-to-One\"); rating inherited unverified"
 			}
 		},
 		{
@@ -579,7 +595,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "competitor_features#2747 \"Comprehensive REST API with OAuth, webhooks, and custom object support\"; #19352 \"Custom objects feature of HubSpot Sales Hub\" (custom objects via Sales Hub; custom properties not named)",
-				"kiss": "pipelinq/kiss/overview.md:95 \"**No custom fields** - data model is fixed by VNG API specs\""
+				"kiss": "pipelinq/kiss/overview.md:95 \"**No custom fields** - data model is fixed by VNG API specs\"",
+				"espocrm": "pipelinq/espocrm/specs/custom-fields-layouts/spec.md:38 \"Add custom fields to any entity\" (no-code Field Manager, ~30 field types)"
 			}
 		},
 		{
@@ -603,7 +620,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "not supported: searched pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) for record owner / assigning a contact to a colleague, nothing found; rating inherited unverified",
-				"kiss": "pipelinq/kiss/MERGED-ANALYSIS.md:44 \"Contact management | Read-only (via BRP/KvK)\" (no client record to assign an owner to)"
+				"kiss": "pipelinq/kiss/MERGED-ANALYSIS.md:44 \"Contact management | Read-only (via BRP/KvK)\" (no client record to assign an owner to)",
+				"espocrm": "pipelinq/espocrm/business-logic/browser-walkthrough-notes.md:60 \"**Right panel:** Assigned User (select), Teams (multi-select)\" (Account create form)"
 			}
 		},
 		{
@@ -627,7 +645,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "pipelinq/hubspot-crm/hubspot-crm.md:61 \"| Audit trail | Yes (Enterprise only) | Yes |\" (Enterprise tier only)",
-				"kiss": "pipelinq/kiss/business-logic/source-code-analysis.md:871 \"`{ id, userId, insertedAt, apiEndpoint, method }` (audit trail)\" (logs who called which endpoint, not field-level changes to a client)"
+				"kiss": "pipelinq/kiss/business-logic/source-code-analysis.md:871 \"`{ id, userId, insertedAt, apiEndpoint, method }` (audit trail)\" (logs who called which endpoint, not field-level changes to a client)",
+				"espocrm": "pipelinq/espocrm/specs/custom-fields-layouts/spec.md:47 \"**audited** - Track changes in activity stream\"; pipelinq/espocrm/espocrm.md:60 \"| Audit trail | Yes (stream/changelog) |\""
 			}
 		},
 		{
@@ -651,7 +670,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of a party type (citizen vs business) on a client; nearest is competitor_features#2735 \"lifecycle stages\", which is sales stage, not party kind",
-				"kiss": "pipelinq/kiss/business-logic/source-code-analysis.md:363 \"_typeOfKlant: \"bedrijf\"\" (person vs business only, derived from BRP or KvK; no other kinds)"
+				"kiss": "pipelinq/kiss/business-logic/source-code-analysis.md:363 \"_typeOfKlant: \"bedrijf\"\" (person vs business only, derived from BRP or KvK; no other kinds)",
+				"espocrm": "pipelinq/espocrm/business-logic/browser-walkthrough-notes.md:59 \"**Details section:** Type (dropdown), Industry (dropdown), Description (textarea)\" (Account type only; person vs company is split by entity, plus a \"B2C mode\" at pipelinq/espocrm/docs/documentation-structure.md:51)"
 			}
 		},
 		{
@@ -675,7 +695,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "pipelinq/hubspot-crm/hubspot-crm.md:32 \"Deal pipeline with kanban board\"; pipelinq/hubspot-crm/hubspot-crm.md:51 \"| Lead pipeline (kanban) | Yes | Yes |\"",
-				"kiss": "pipelinq/kiss/overview.md:86 \"**No pipeline/kanban** - no visual workflow stages or drag-and-drop\""
+				"kiss": "pipelinq/kiss/overview.md:86 \"**No pipeline/kanban** - no visual workflow stages or drag-and-drop\"",
+				"espocrm": "pipelinq/espocrm/business-logic/browser-walkthrough-notes.md:104 \"Cards are draggable between columns (standard Kanban behavior)\" (Opportunities Kanban, 2026-03-14 walkthrough)"
 			}
 		},
 		{
@@ -699,7 +720,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "competitor_features#2736 \"Customizable deal pipelines with stage automation, deal scoring, and forecasting\" (plural pipelines)",
-				"kiss": "pipelinq/kiss/overview.md:86 \"**No pipeline/kanban** - no visual workflow stages or drag-and-drop\" (no pipelines at all)"
+				"kiss": "pipelinq/kiss/overview.md:86 \"**No pipeline/kanban** - no visual workflow stages or drag-and-drop\" (no pipelines at all)",
+				"espocrm": "competitor_features#47030 \"Multiple pipelines\" released in 10.0.0 (2026-07-02); the older corpus says the opposite: pipelinq/espocrm/MERGED-ANALYSIS.md:220 \"| Multi-pipeline support | No (single global pipeline) |\" (2026-03-14)"
 			}
 		},
 		{
@@ -723,7 +745,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "competitor_features#2736 \"Customizable deal pipelines with stage automation, deal scoring, and forecasting\" (customisable stages; per-stage win probability not named)",
-				"kiss": "pipelinq/kiss/overview.md:86 \"**No pipeline/kanban** - no visual workflow stages or drag-and-drop\" (no stages or win odds)"
+				"kiss": "pipelinq/kiss/overview.md:86 \"**No pipeline/kanban** - no visual workflow stages or drag-and-drop\" (no stages or win odds)",
+				"espocrm": "pipelinq/espocrm/specs/sales-pipeline/spec.md:43 \"Stages are fully customizable via the admin Field Manager. The probability map is stored as metadata on the stage field definition.\" Limit: pipelinq/espocrm/specs/sales-pipeline/spec.md:53 \"This only fires on creation\" (odds not re-applied on stage change)"
 			}
 		},
 		{
@@ -747,7 +770,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "competitor_features#2736 \"Customizable deal pipelines with stage automation, deal scoring, and forecasting\" (forecasting implies deal amount and close date; neither named)",
-				"kiss": "pipelinq/kiss/overview.md:87 \"**No lead management** - no concept of leads, opportunities, or deals\""
+				"kiss": "pipelinq/kiss/overview.md:87 \"**No lead management** - no concept of leads, opportunities, or deals\"",
+				"espocrm": "pipelinq/espocrm/business-logic/browser-walkthrough-notes.md:109 \"Amount (required, currency with USD)\" and \"Close Date (required)\" on the Opportunity create form"
 			}
 		},
 		{
@@ -771,7 +795,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "not supported: searched pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) for creating a deal from an existing contact / deal-contact association, nothing found; rating inherited unverified",
-				"kiss": "pipelinq/kiss/overview.md:87 \"**No lead management** - no concept of leads, opportunities, or deals\" (no leads to start from a client)"
+				"kiss": "pipelinq/kiss/overview.md:87 \"**No lead management** - no concept of leads, opportunities, or deals\" (no leads to start from a client)",
+				"espocrm": "pipelinq/espocrm/specs/sales-pipeline/spec.md:25 \"**account** (link) - Associated company\" on each Opportunity; Account detail has related panels to add records (pipelinq/espocrm/business-logic/browser-walkthrough-notes.md:66)"
 			}
 		},
 		{
@@ -795,7 +820,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "competitor_features#2741 \"Custom dashboards with attribution reporting, funnel analytics, and revenue reporting\"",
-				"kiss": "pipelinq/kiss/overview.md:87 \"**No lead management** - no concept of leads, opportunities, or deals\" (no lead source tracking)"
+				"kiss": "pipelinq/kiss/overview.md:87 \"**No lead management** - no concept of leads, opportunities, or deals\" (no lead source tracking)",
+				"espocrm": "pipelinq/espocrm/specs/sales-pipeline/spec.md:75 \"**ByLeadSource** - Attribution analysis showing which lead sources generate the most revenue.\" (fixed built-in chart; custom source analysis needs the paid Advanced Pack reports)"
 			}
 		},
 		{
@@ -820,7 +846,8 @@
 			"note": "Prospects are scored today. A score on a lead already in the pipeline is specified and not built.",
 			"evidence": {
 				"hubspot-crm": "competitor_features#2736 \"Customizable deal pipelines with stage automation, deal scoring, and forecasting\"; also #24516 \"AI-powered lead scoring in HubSpot CRM\" (premium)",
-				"kiss": "pipelinq/kiss/overview.md:87 \"**No lead management** - no concept of leads, opportunities, or deals\" (no lead scoring)"
+				"kiss": "pipelinq/kiss/overview.md:87 \"**No lead management** - no concept of leads, opportunities, or deals\" (no lead scoring)",
+				"espocrm": "pipelinq/espocrm/MERGED-ANALYSIS.md:177 \"No MCP protocol, no intelligent routing, no prediction, no AI-powered insights.\" (no lead score field or scoring rule in any source)"
 			}
 		},
 		{
@@ -844,7 +871,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "competitor_features#2736 \"...deal scoring, and forecasting\"; #19350 \"Forecasting feature of HubSpot Sales Hub\" (rollup per manager not named)",
-				"kiss": "pipelinq/kiss/kiss.md:73 \"no pipeline, no lead management\" (no forecast)"
+				"kiss": "pipelinq/kiss/kiss.md:73 \"no pipeline, no lead management\" (no forecast)",
+				"espocrm": "pipelinq/espocrm/specs/sales-pipeline/spec.md:84 \"This enables weighted pipeline totals and forecasting without stored data.\" (weighted totals, SalesPipeline chart filterable by team at pipelinq/espocrm/specs/sales-pipeline/spec.md:69; no per-manager rollup)"
 			}
 		},
 		{
@@ -868,7 +896,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "competitor_features#19350 \"Forecasting feature of HubSpot Sales Hub\" (Sales Hub; manager commit vs actual not named)",
-				"kiss": "pipelinq/kiss/kiss.md:73 \"no pipeline, no lead management\" (no forecast commits)"
+				"kiss": "pipelinq/kiss/kiss.md:73 \"no pipeline, no lead management\" (no forecast commits)",
+				"espocrm": "absent from sources: all 24 pipelinq/espocrm files and competitor_features (id 30) have no manager commit, quota or forecast-vs-actual; nearest is pipelinq/espocrm/specs/sales-pipeline/spec.md:84 weighted pipeline totals only"
 			}
 		},
 		{
@@ -892,7 +921,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "competitor_features#19350 \"Forecasting feature of HubSpot Sales Hub\" (Sales Hub; forecast categories and slip reasons not named)",
-				"kiss": "pipelinq/kiss/kiss.md:73 \"no pipeline, no lead management\" (no forecast categories)"
+				"kiss": "pipelinq/kiss/kiss.md:73 \"no pipeline, no lead management\" (no forecast categories)",
+				"espocrm": "absent from sources: no commit/best-case forecast category or slip reason in any of the 24 corpus files or competitor_features (id 30); deals carry only stage and probability (pipelinq/espocrm/specs/sales-pipeline/spec.md:22)"
 			}
 		},
 		{
@@ -916,7 +946,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "competitor_features#31204 \"Customizable dashboards, forecasting, attribution.\" (week-by-week forecast history not named)",
-				"kiss": "pipelinq/kiss/kiss.md:73 \"no pipeline, no lead management\" (no forecast trend)"
+				"kiss": "pipelinq/kiss/kiss.md:73 \"no pipeline, no lead management\" (no forecast trend)",
+				"espocrm": "pipelinq/espocrm/specs/reporting-analytics/spec.md:95 \"No pipeline velocity or conversion rate tracking built-in\" (no forecast snapshots or week-by-week trend in any source)"
 			}
 		},
 		{
@@ -940,7 +971,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "not supported: searched pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) for win/loss reasons or win/loss analysis (only generic revenue reporting, #2741), nothing found; rating inherited unverified",
-				"kiss": "pipelinq/kiss/overview.md:87 \"**No lead management** - no concept of leads, opportunities, or deals\" (no deals, so no win/loss analysis)"
+				"kiss": "pipelinq/kiss/overview.md:87 \"**No lead management** - no concept of leads, opportunities, or deals\" (no deals, so no win/loss analysis)",
+				"espocrm": "pipelinq/espocrm/specs/sales-pipeline/spec.md:21 \"**lastStage** (enum) - Previous stage (for won/lost tracking)\" (won/lost tracked, but no loss-reason field or win/loss report described)"
 			}
 		},
 		{
@@ -964,7 +996,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "not supported: searched pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) for deal aging / stale or stuck deals / time in stage, nothing found; rating inherited unverified",
-				"kiss": "pipelinq/kiss/overview.md:87 \"**No lead management** - no concept of leads, opportunities, or deals\" (no leads to age)"
+				"kiss": "pipelinq/kiss/overview.md:87 \"**No lead management** - no concept of leads, opportunities, or deals\" (no leads to age)",
+				"espocrm": "pipelinq/espocrm/specs/reporting-analytics/spec.md:50 \"Complex filters with AND/OR groups\" (paid Advanced Pack report builder; no built-in stale-lead or days-in-stage view)"
 			}
 		},
 		{
@@ -988,7 +1021,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "competitor_features#2741 \"Custom dashboards with attribution reporting, funnel analytics, and revenue reporting\"",
-				"kiss": "pipelinq/kiss/overview.md:86 \"**No pipeline/kanban** - no visual workflow stages or drag-and-drop\" (no funnel)"
+				"kiss": "pipelinq/kiss/overview.md:86 \"**No pipeline/kanban** - no visual workflow stages or drag-and-drop\" (no funnel)",
+				"espocrm": "pipelinq/espocrm/specs/reports-dashboards/spec.md:50 \"| SalesPipeline | Chart: pipeline funnel |\" but pipelinq/espocrm/specs/reporting-analytics/spec.md:94 \"No funnel visualization (only bar/line/pie charts)\" (value per stage, not stage-to-stage survival)"
 			}
 		},
 		{
@@ -1012,7 +1046,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "competitor_features#31199 \"Autonomous AI agents for prospecting, customer success, content (gated to Professional).\"; #16837 \"AI-generated lookalike audiences\" (Marketing Hub). Paid tiers only",
-				"kiss": "pipelinq/kiss/overview.md:87 \"**No lead management** - no concept of leads, opportunities, or deals\" (no prospecting)"
+				"kiss": "pipelinq/kiss/overview.md:87 \"**No lead management** - no concept of leads, opportunities, or deals\" (no prospecting)",
+				"espocrm": "absent from sources: all 24 pipelinq/espocrm files and competitor_features (id 30) have no mention of prospect discovery, company databases or ideal-customer ranking"
 			}
 		},
 		{
@@ -1036,7 +1071,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "competitor_features#19359 \"Products feature of HubSpot Sales Hub\" (auto-summed deal value from line items not named)",
-				"kiss": "pipelinq/kiss/overview.md:87 \"**No lead management** - no concept of leads, opportunities, or deals\" (no leads or product lines)"
+				"kiss": "pipelinq/kiss/overview.md:87 \"**No lead management** - no concept of leads, opportunities, or deals\" (no leads or product lines)",
+				"espocrm": "pipelinq/espocrm/docs/features-and-extensions.md:65 \"**Products** - Item catalog management\" (paid Sales Pack, $260/year; products as opportunity line items that sum the value are not described)"
 			}
 		},
 		{
@@ -1060,7 +1096,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "competitor_features#2736 \"Customizable deal pipelines with stage automation...\"; #31247 \"...mobile scanning, calling, notifications.\" (a stage-change notice to the owner is not named)",
-				"kiss": "pipelinq/kiss/overview.md:86 \"**No pipeline/kanban** - no visual workflow stages or drag-and-drop\" (no stages, so no stage notifications)"
+				"kiss": "pipelinq/kiss/overview.md:86 \"**No pipeline/kanban** - no visual workflow stages or drag-and-drop\" (no stages, so no stage notifications)",
+				"espocrm": "pipelinq/espocrm/specs/sales-pipeline/spec.md:92 \"...are all `audited: true`, creating a full change history in the activity stream.\" with pipelinq/espocrm/business-logic/browser-walkthrough-notes.md:67 \"Star/Follow buttons for personal tracking\" (followers see stage changes in their stream)"
 			}
 		},
 		{
@@ -1084,7 +1121,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "competitor_features#31201 \"Auto-logs emails/calls/meetings to records.\"; pipelinq/hubspot-crm/hubspot-crm.md:53 \"| Contact moments logging | Yes (timeline, email tracking) | Yes |\"",
-				"kiss": "pipelinq/kiss/business-logic/browser-walkthrough-detailed.md:338 \"Submit the contact moment to OpenKlant 2\" (contact moment logged per channel such as phone, counter, email)"
+				"kiss": "pipelinq/kiss/business-logic/browser-walkthrough-detailed.md:338 \"Submit the contact moment to OpenKlant 2\" (contact moment logged per channel such as phone, counter, email)",
+				"espocrm": "pipelinq/espocrm/business-logic/browser-walkthrough-notes.md:66 \"Activities (with quick-add buttons for email/meeting/call)\" on the Account detail sidebar"
 			}
 		},
 		{
@@ -1108,7 +1146,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "pipelinq/hubspot-crm/hubspot-crm.md:53 \"| Contact moments logging | Yes (timeline, email tracking) | Yes |\"; competitor_features#2735 \"activity timeline\"",
-				"kiss": "pipelinq/kiss/business-logic/source-code-analysis.md:611 \"List past contactmomenten for a klant\" (contact moment history per client only, no timeline across other record types)"
+				"kiss": "pipelinq/kiss/business-logic/source-code-analysis.md:611 \"List past contactmomenten for a klant\" (contact moment history per client only, no timeline across other record types)",
+				"espocrm": "pipelinq/espocrm/MERGED-ANALYSIS.md:197 \"Stream (audit log) on every entity with meetings/calls/tasks\"; History panel on the record (pipelinq/espocrm/business-logic/browser-walkthrough-notes.md:66)"
 			}
 		},
 		{
@@ -1132,7 +1171,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "competitor_features#31201 \"Auto-logs emails/calls/meetings to records.\" (channel is recorded by activity type; reporting per channel not named)",
-				"kiss": "pipelinq/kiss/specs/kanalen-channels/spec.md:10 \"This data feeds into management reporting and allows analysis of channel usage patterns\""
+				"kiss": "pipelinq/kiss/specs/kanalen-channels/spec.md:10 \"This data feeds into management reporting and allows analysis of channel usage patterns\"",
+				"espocrm": "pipelinq/espocrm/business-logic/browser-walkthrough-notes.md:162 \"All three are \\\"Activity\\\" entities that appear on Calendar and in entity-related Activity panels\" (channel = separate Call/Meeting/Email entity; per-channel reporting needs the paid report builder)"
 			}
 		},
 		{
@@ -1156,7 +1196,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "not supported: searched pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) for caller ID / screen pop / incoming call identification, nothing found; rating inherited unverified",
-				"kiss": "absent from sources: pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*) and competitor_features (ids 34) have no mention of telephony/CTI integration or caller identification before pickup"
+				"kiss": "absent from sources: pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*) and competitor_features (ids 34) have no mention of telephony/CTI integration or caller identification before pickup",
+				"espocrm": "pipelinq/espocrm/docs/features-and-extensions.md:92 \"Click-to-call, incoming call popup with caller info\" (paid VoIP Integration, $388/year, pipelinq/espocrm/docs/features-and-extensions.md:90)"
 			}
 		},
 		{
@@ -1180,7 +1221,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "competitor_features#31247 \"iOS/Android app with mobile scanning, calling, notifications.\" (calling named for mobile; desktop click-to-call not named)",
-				"kiss": "absent from sources: pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*) and competitor_features (ids 34) have no mention of click-to-call or any telephony integration"
+				"kiss": "absent from sources: pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*) and competitor_features (ids 34) have no mention of click-to-call or any telephony integration",
+				"espocrm": "pipelinq/espocrm/docs/features-and-extensions.md:92 \"Click-to-call, incoming call popup with caller info\" (paid VoIP Integration extension, $388/year)"
 			}
 		},
 		{
@@ -1229,7 +1271,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "not supported: searched pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) for call outcome / disposition / result codes, nothing found; rating inherited unverified",
-				"kiss": "pipelinq/kiss/business-logic/browser-walkthrough-detailed.md:335 \"Select conversation result (gespreksresultaat)\" (admin-managed result list, included in management information)"
+				"kiss": "pipelinq/kiss/business-logic/browser-walkthrough-detailed.md:335 \"Select conversation result (gespreksresultaat)\" (admin-managed result list, included in management information)",
+				"espocrm": "pipelinq/espocrm/overview.md:55 \"| **Call** | Phone call logs | Similar to Meeting |\", i.e. a status field (pipelinq/espocrm/overview.md:54 \"name, status, dateStart, dateEnd\"); no dedicated result-code list described"
 			}
 		},
 		{
@@ -1253,7 +1296,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "competitor_features#31201 \"Auto-logs emails/calls/meetings to records.\"; #31202 \"Two-way Gmail/Outlook + meeting scheduler.\"",
-				"kiss": "pipelinq/kiss/docs/configuration.md:50 \"## Email (Feedback)\" (SMTP is only used for knowledge-article feedback; no inbox filing)"
+				"kiss": "pipelinq/kiss/docs/configuration.md:50 \"## Email (Feedback)\" (SMTP is only used for knowledge-article feedback; no inbox filing)",
+				"espocrm": "pipelinq/espocrm/specs/email-integration/spec.md:56 \"Match sender/recipient to Contact, Lead, or Account\" (IMAP-fetched mail auto-linked), plus thread tracking at pipelinq/espocrm/specs/email-integration/spec.md:57"
 			}
 		},
 		{
@@ -1277,7 +1321,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "not supported: searched pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) for matching senders to companies by email domain / automatic company association, nothing found; rating inherited unverified",
-				"kiss": "absent from sources: pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*) and competitor_features (ids 34) have no mention of matching an email sender domain to an organisation"
+				"kiss": "absent from sources: pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*) and competitor_features (ids 34) have no mention of matching an email sender domain to an organisation",
+				"espocrm": "pipelinq/espocrm/specs/email-integration/spec.md:56 \"Match sender/recipient to Contact, Lead, or Account\" (matching is on the exact address; matching an unknown sender by domain is not described)"
 			}
 		},
 		{
@@ -1301,7 +1346,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "not supported: searched pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) for WhatsApp messaging, nothing found; rating inherited unverified",
-				"kiss": "pipelinq/kiss/business-logic/browser-walkthrough-notes.md:233 \"\"Contactformulier\", \"WhatsApp\"\" (WhatsApp is only a channel label when closing a contact moment, no messaging)"
+				"kiss": "pipelinq/kiss/business-logic/browser-walkthrough-notes.md:233 \"\"Contactformulier\", \"WhatsApp\"\" (WhatsApp is only a channel label when closing a contact moment, no messaging)",
+				"espocrm": "absent from sources: all 24 pipelinq/espocrm files and competitor_features (id 30) have no mention of WhatsApp or any chat-messenger channel"
 			}
 		},
 		{
@@ -1325,7 +1371,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "not supported: searched pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) for SMS / text messaging, nothing found; rating inherited unverified",
-				"kiss": "absent from sources: pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*) and competitor_features (ids 34) have no mention of sending SMS/text messages"
+				"kiss": "absent from sources: pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*) and competitor_features (ids 34) have no mention of sending SMS/text messages",
+				"espocrm": "pipelinq/espocrm/business-logic/browser-walkthrough-notes.md:197 \"Email Templates, SMS\" in the Messaging admin section; pipelinq/espocrm/docs/documentation-structure.md:54 \"SMS sending\" (needs an SMS provider; no two-way thread described)"
 			}
 		},
 		{
@@ -1349,7 +1396,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "competitor_features#31201 \"Auto-logs emails/calls/meetings to records.\"",
-				"kiss": "not supported: searched pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*), concurrentie-analyse.md and competitor_features (ids 34) for outbound/sent messages, e-mail sending to clients, automatic history logging, nothing found; rating inherited unverified"
+				"kiss": "not supported: searched pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*), concurrentie-analyse.md and competitor_features (ids 34) for outbound/sent messages, e-mail sending to clients, automatic history logging, nothing found; rating inherited unverified",
+				"espocrm": "pipelinq/espocrm/business-logic/browser-walkthrough-notes.md:144 \"Emails are linked to CRM records (Accounts, Contacts, Leads, Opportunities)\" (email sent from the CRM lands on the record; calls and meetings are logged by hand)"
 			}
 		},
 		{
@@ -1373,7 +1421,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of filing one activity against multiple tickets or cases",
-				"kiss": "pipelinq/kiss/business-logic/contactmoment-flow.md:81 \"A single call can generate multiple vragen, each with their own linked cases and sources\" (cases linked per question inside one contact moment)"
+				"kiss": "pipelinq/kiss/business-logic/contactmoment-flow.md:81 \"A single call can generate multiple vragen, each with their own linked cases and sources\" (cases linked per question inside one contact moment)",
+				"espocrm": "pipelinq/espocrm/specs/data-model/spec.md:45 \"Meeting/Call/Task use `parent` (linkParent) pointing to Account, Lead, Contact, Opportunity, or Case\" (one parent per activity, not several cases)"
 			}
 		},
 		{
@@ -1397,7 +1446,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "not supported: searched pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) for agent availability / away status / call routing to the next agent, nothing found; rating inherited unverified",
-				"kiss": "not supported: searched pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*), concurrentie-analyse.md and competitor_features (ids 34) for availability, presence, away status, call routing/ACD, nothing found; rating inherited unverified"
+				"kiss": "not supported: searched pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*), concurrentie-analyse.md and competitor_features (ids 34) for availability, presence, away status, call routing/ACD, nothing found; rating inherited unverified",
+				"espocrm": "absent from sources: no away/availability status in any of the 24 corpus files or competitor_features (id 30); nearest is pipelinq/espocrm/docs/bpm-and-workflows.md:35 \"Auto-assign using round-robin or least-busy\" (paid)"
 			}
 		},
 		{
@@ -1421,7 +1471,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "not supported: searched pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) for post-interaction surveys / CSAT / feedback (Service Hub feature #2745 lists ticketing, knowledge base, portal and SLA only), nothing found; rating inherited unverified",
-				"kiss": "absent from sources: pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*) and competitor_features (ids 34) have no mention of a client satisfaction survey after a contact"
+				"kiss": "absent from sources: pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*) and competitor_features (ids 34) have no mention of a client satisfaction survey after a contact",
+				"espocrm": "absent from sources: all 24 pipelinq/espocrm files and competitor_features (id 30) have no mention of surveys, CSAT or post-contact feedback"
 			}
 		},
 		{
@@ -1445,7 +1496,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "competitor_features#2741 \"Custom dashboards with attribution reporting, funnel analytics, and revenue reporting\" (attribution, per-contact campaign touch view not named)",
-				"kiss": "absent from sources: pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*) and competitor_features (ids 34) have no mention of campaigns or campaign touchpoints"
+				"kiss": "absent from sources: pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*) and competitor_features (ids 34) have no mention of campaigns or campaign touchpoints",
+				"espocrm": "pipelinq/espocrm/specs/campaign-marketing/spec.md:88 \"action type (Sent, Opened, Clicked, Opted Out, Bounced, etc.)\" per contact in campaign logs (campaign touches are logged, but not surfaced against an incoming call)"
 			}
 		},
 		{
@@ -1469,7 +1521,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "pipelinq/hubspot-crm/hubspot-crm.md:52 \"| Request intake | Yes (forms, chatbot, live chat) | Yes |\"",
-				"kiss": "pipelinq/kiss/kiss.md:54 \"Request intake | Yes (contact moment registration)\""
+				"kiss": "pipelinq/kiss/kiss.md:54 \"Request intake | Yes (contact moment registration)\"",
+				"espocrm": "pipelinq/espocrm/MERGED-ANALYSIS.md:211 \"| Request intake | Partial (web forms) | Yes |\""
 			}
 		},
 		{
@@ -1493,7 +1546,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "pipelinq/hubspot-crm/hubspot-crm.md:36 \"Form builder and landing pages\"; pipelinq/hubspot-crm/hubspot-crm.md:52 \"Request intake | Yes (forms, chatbot, live chat)\"",
-				"kiss": "pipelinq/kiss/docs/adoption-and-governance.md:38 \"Open Formulieren (forms)\" (web forms come from Open Formulieren in the PodiumD stack, not from KISS; KISS forms are internal intake forms)"
+				"kiss": "pipelinq/kiss/docs/adoption-and-governance.md:38 \"Open Formulieren (forms)\" (web forms come from Open Formulieren in the PodiumD stack, not from KISS; KISS forms are internal intake forms)",
+				"espocrm": "pipelinq/espocrm/business-logic/browser-walkthrough-notes.md:292 \"Create \\\"Entry Points\\\" that generate API endpoints for web form submissions\" (leads only: pipelinq/espocrm/specs/entity-customization/spec.md:125 \"No form builder for public-facing forms (only Web-to-Lead)\")"
 			}
 		},
 		{
@@ -1517,7 +1571,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "pipelinq/hubspot-crm/hubspot-crm.md:58 \"| Case management integration | Yes (Service Hub) | Yes (Procest) |\" (needs the paid Service Hub; an external case system handoff is not named)",
-				"kiss": "pipelinq/kiss/specs/zaaksysteem-integration/spec.md:70 \"a `ZaakContactmoment` object is created in the zaaksysteem\" (links a contact moment to an existing zaak)"
+				"kiss": "pipelinq/kiss/specs/zaaksysteem-integration/spec.md:70 \"a `ZaakContactmoment` object is created in the zaaksysteem\" (links a contact moment to an existing zaak)",
+				"espocrm": "pipelinq/espocrm/MERGED-ANALYSIS.md:217 \"| Case management integration | Partial (cases module) | Yes (Procest) |\"; pipelinq/espocrm/specs/email-integration/spec.md:51 \"Case creation from incoming emails\""
 			}
 		},
 		{
@@ -1541,7 +1596,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "competitor_features#2745 \"Ticketing system with knowledge base, customer portal, and SLA management\" (working-hours counting not named)",
-				"kiss": "pipelinq/kiss/business-logic/contactverzoek-flow.md:73 \"Binary only (te_verwerken / verwerkt)\" (contact requests carry no deadline or SLA)"
+				"kiss": "pipelinq/kiss/business-logic/contactverzoek-flow.md:73 \"Binary only (te_verwerken / verwerkt)\" (contact requests carry no deadline or SLA)",
+				"espocrm": "pipelinq/espocrm/docs/features-and-extensions.md:16 \"Manage work schedules\" (working time calendar in core; deadline timers need the paid BPM, pipelinq/espocrm/specs/bpm-workflow-engine/spec.md:67 \"Intermediate events: Timer (delays)\")"
 			}
 		},
 		{
@@ -1565,7 +1621,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "competitor_features#2745 \"Ticketing system with knowledge base, customer portal, and SLA management\" (Dutch public holidays in the SLA clock not named)",
-				"kiss": "pipelinq/kiss/business-logic/contactverzoek-flow.md:73 \"Binary only (te_verwerken / verwerkt)\" (no deadline, so no holiday calendar)"
+				"kiss": "pipelinq/kiss/business-logic/contactverzoek-flow.md:73 \"Binary only (te_verwerken / verwerkt)\" (no deadline, so no holiday calendar)",
+				"espocrm": "absent from sources: pipelinq/espocrm/docs/features-and-extensions.md:16 names a working time calendar, but none of the 24 corpus files or competitor_features (id 30) mention public holidays or a Dutch holiday set"
 			}
 		},
 		{
@@ -1589,7 +1646,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "competitor_features#2745 \"Ticketing system with knowledge base, customer portal, and SLA management\" (automatic escalation not named explicitly)",
-				"kiss": "pipelinq/kiss/business-logic/contactverzoek-flow.md:73 \"Binary only (te_verwerken / verwerkt)\" (no deadline-based escalation)"
+				"kiss": "pipelinq/kiss/business-logic/contactverzoek-flow.md:73 \"Binary only (te_verwerken / verwerkt)\" (no deadline-based escalation)",
+				"espocrm": "pipelinq/espocrm/specs/bpm-workflow-engine/spec.md:67 \"Intermediate events: Timer (delays), Signal, Message, Conditional\" (timer-driven escalation only through the paid Advanced Pack BPM)"
 			}
 		},
 		{
@@ -1613,7 +1671,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "competitor_features#2745 \"Ticketing system with knowledge base, customer portal, and SLA management\" (pausing the clock while waiting on the client not named)",
-				"kiss": "pipelinq/kiss/business-logic/contactverzoek-flow.md:73 \"Binary only (te_verwerken / verwerkt)\" (no SLA clock to pause)"
+				"kiss": "pipelinq/kiss/business-logic/contactverzoek-flow.md:73 \"Binary only (te_verwerken / verwerkt)\" (no SLA clock to pause)",
+				"espocrm": "absent from sources: all 24 pipelinq/espocrm files and competitor_features (id 30) have no mention of pausing a deadline or SLA clock while waiting on the client"
 			}
 		},
 		{
@@ -1637,7 +1696,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "not supported: searched pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) for ticket routing / skills-based assignment / capacity, nothing found; rating inherited unverified",
-				"kiss": "pipelinq/kiss/overview.md:52 \"Internal task routing - forward a contact request to a department/group/employee for follow-up.\" (manual routing by the KCM, no skill or capacity based assignment)"
+				"kiss": "pipelinq/kiss/overview.md:52 \"Internal task routing - forward a contact request to a department/group/employee for follow-up.\" (manual routing by the KCM, no skill or capacity based assignment)",
+				"espocrm": "pipelinq/espocrm/docs/bpm-and-workflows.md:35 \"Auto-assign using round-robin or least-busy\" (paid Advanced Pack workflow action; no skill-based matching)"
 			}
 		},
 		{
@@ -1661,7 +1721,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "competitor_features#2745 \"Ticketing system with knowledge base, customer portal, and SLA management\" (generic tickets; complaint handling with a legal answer term not named)",
-				"kiss": "not supported: searched pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*), concurrentie-analyse.md and competitor_features (ids 34) for klacht, complaint, legal answer term, nothing found; rating inherited unverified"
+				"kiss": "not supported: searched pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*), concurrentie-analyse.md and competitor_features (ids 34) for klacht, complaint, legal answer term, nothing found; rating inherited unverified",
+				"espocrm": "pipelinq/espocrm/business-logic/browser-walkthrough-notes.md:168 \"Standard list view for support case tracking\" (Cases exist; no complaint type or legal answer term described)"
 			}
 		},
 		{
@@ -1685,7 +1746,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "not supported: searched pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) for callback requests / callback promises, nothing found; rating inherited unverified",
-				"kiss": "pipelinq/kiss/business-logic/source-code-analysis.md:409 \"gevraagdeHandeling: string (\"Contact opnemen met betrokkene\")\" (callback task with status te_verwerken/verwerkt; no deadline)"
+				"kiss": "pipelinq/kiss/business-logic/source-code-analysis.md:409 \"gevraagdeHandeling: string (\"Contact opnemen met betrokkene\")\" (callback task with status te_verwerken/verwerkt; no deadline)",
+				"espocrm": "absent from sources: all 24 pipelinq/espocrm files and competitor_features (id 30) have no mention of a callback promise or callback tracking"
 			}
 		},
 		{
@@ -1709,7 +1771,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of counter queue tickets / walk-in visitor calling",
-				"kiss": "pipelinq/kiss/specs/kanalen-channels/spec.md:55 \"- Balie (counter/walk-in)\" (counter is a channel label only, no ticket queue)"
+				"kiss": "pipelinq/kiss/specs/kanalen-channels/spec.md:55 \"- Balie (counter/walk-in)\" (counter is a channel label only, no ticket queue)",
+				"espocrm": "absent from sources: all 24 pipelinq/espocrm files and competitor_features (id 30) have no mention of counter queue numbers or walk-in visitor calling"
 			}
 		},
 		{
@@ -1733,7 +1796,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "competitor_features#2745 \"Ticketing system with knowledge base, customer portal, and SLA management\"",
-				"kiss": "pipelinq/kiss/specs/elasticsearch-knowledge-base/spec.md:10 \"KCMs use this during contactmomenten to find relevant information to help citizens.\""
+				"kiss": "pipelinq/kiss/specs/elasticsearch-knowledge-base/spec.md:10 \"KCMs use this during contactmomenten to find relevant information to help citizens.\"",
+				"espocrm": "pipelinq/espocrm/business-logic/browser-walkthrough-notes.md:176 \"Article-based knowledge base with categories (Category Tree type)\" (a separate module; inline lookup from a case is not described)"
 			}
 		},
 		{
@@ -1757,7 +1821,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "competitor_features#2745 \"Ticketing system with knowledge base, customer portal, and SLA management\"; #2741 \"Custom dashboards...\" (SLA attainment report not named explicitly)",
-				"kiss": "pipelinq/kiss/specs/kanalen-channels/spec.md:65 \"- Average handling time per channel\" (handling time via the management information API for BI; no deadline to measure against)"
+				"kiss": "pipelinq/kiss/specs/kanalen-channels/spec.md:65 \"- Average handling time per channel\" (handling time via the management information API for BI; no deadline to measure against)",
+				"espocrm": "pipelinq/espocrm/specs/reporting-analytics/spec.md:49 \"Any entity type (not just Opportunities)\" in the paid Advanced Pack report builder (no built-in deadline-met metric)"
 			}
 		},
 		{
@@ -1781,7 +1846,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "not supported: searched pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) for NPS / customer satisfaction surveys / feedback, nothing found; rating inherited unverified",
-				"kiss": "pipelinq/kiss/docs/features-overview.md:88 \"KCMs can provide feedback on knowledge articles\" (staff feedback on articles, no client satisfaction measure)"
+				"kiss": "pipelinq/kiss/docs/features-overview.md:88 \"KCMs can provide feedback on knowledge articles\" (staff feedback on articles, no client satisfaction measure)",
+				"espocrm": "absent from sources: all 24 pipelinq/espocrm files and competitor_features (id 30) have no mention of NPS, satisfaction scores or detractor follow-up"
 			}
 		},
 		{
@@ -1805,7 +1871,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "pipelinq/hubspot-crm/hubspot-crm.md:54 \"| My Work queue | Yes (tasks, activities) | Yes |\"; competitor_features#2742 \"Automated email sequences with task queues...\"",
-				"kiss": "pipelinq/kiss/kiss.md:56 \"My Work queue | Yes (KCM work queue)\""
+				"kiss": "pipelinq/kiss/kiss.md:56 \"My Work queue | Yes (KCM work queue)\"",
+				"espocrm": "pipelinq/espocrm/espocrm.md:53 \"| My Work queue | Partial (activities dashboard) | Yes |\""
 			}
 		},
 		{
@@ -1829,7 +1896,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "pipelinq/hubspot-crm/hubspot-crm.md:39 \"Task and activity management\"",
-				"kiss": "pipelinq/kiss/specs/contactverzoek-management/spec.md:90 \"Must support assigning to departments, groups, or individuals\" (contact requests as tasks; no deadline field)"
+				"kiss": "pipelinq/kiss/specs/contactverzoek-management/spec.md:90 \"Must support assigning to departments, groups, or individuals\" (contact requests as tasks; no deadline field)",
+				"espocrm": "pipelinq/espocrm/overview.md:53 \"Action items | name, status, priority, dateStart, dateEnd, parent\" with Assigned User on records; pipelinq/espocrm/business-logic/browser-walkthrough-notes.md:161 Tasks list with Kanban toggle"
 			}
 		},
 		{
@@ -1853,7 +1921,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "not supported: searched pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) for task deadlines in business/working hours, nothing found; rating inherited unverified",
-				"kiss": "pipelinq/kiss/business-logic/contactverzoek-flow.md:73 \"Binary only (te_verwerken / verwerkt)\" (no task deadlines at all)"
+				"kiss": "pipelinq/kiss/business-logic/contactverzoek-flow.md:73 \"Binary only (te_verwerken / verwerkt)\" (no task deadlines at all)",
+				"espocrm": "absent from sources: a working time calendar exists (pipelinq/espocrm/docs/features-and-extensions.md:16 \"Manage work schedules\"), but no corpus file or competitor_features (id 30) ties task deadlines to working hours"
 			}
 		},
 		{
@@ -1877,7 +1946,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "competitor_features#31247 \"iOS/Android app with mobile scanning, calling, notifications.\"; pipelinq/hubspot-crm/hubspot-crm.md:39 \"Task and activity management\" (overdue-task alerts not named)",
-				"kiss": "not supported: searched pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*), concurrentie-analyse.md and competitor_features (ids 34) for overdue, deadline, reminder, herinnering, nothing found; rating inherited unverified"
+				"kiss": "not supported: searched pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*), concurrentie-analyse.md and competitor_features (ids 34) for overdue, deadline, reminder, herinnering, nothing found; rating inherited unverified",
+				"espocrm": "pipelinq/espocrm/docs/bpm-and-workflows.md:36 \"Notify specific users with message (supports placeholders)\" run from a scheduled workflow (pipelinq/espocrm/docs/bpm-and-workflows.md:17) (paid Advanced Pack; no built-in overdue alert described)"
 			}
 		},
 		{
@@ -1901,7 +1971,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "not supported: searched pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) for recurring / repeating tasks, nothing found; rating inherited unverified",
-				"kiss": "absent from sources: pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*) and competitor_features (ids 34) have no mention of recurring tasks"
+				"kiss": "absent from sources: pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*) and competitor_features (ids 34) have no mention of recurring tasks",
+				"espocrm": "pipelinq/espocrm/docs/bpm-and-workflows.md:17 \"Runs on a cron-like schedule; uses a Report to determine which records to process\" with a Create Record action (paid Advanced Pack; no native recurring task)"
 			}
 		},
 		{
@@ -1925,7 +1996,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "pipelinq/hubspot-crm/hubspot-crm.md:59 \"| Nextcloud integration | No | Native |\"",
-				"kiss": "pipelinq/kiss/overview.md:91 \"**No Nextcloud integration** - standalone app, no Nextcloud Contacts sync\" (no Nextcloud dashboard)"
+				"kiss": "pipelinq/kiss/overview.md:91 \"**No Nextcloud integration** - standalone app, no Nextcloud Contacts sync\" (no Nextcloud dashboard)",
+				"espocrm": "pipelinq/espocrm/business-logic/browser-walkthrough-notes.md:317 \"**No Nextcloud integration** -- standalone application\""
 			}
 		},
 		{
@@ -1949,7 +2021,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "competitor_features#31247 \"iOS/Android app with mobile scanning, calling, notifications.\" (assignment notices not named specifically)",
-				"kiss": "not supported: searched pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*), concurrentie-analyse.md and competitor_features (ids 34) for assignment notification, notificatie, e-mail on assignment, nothing found; rating inherited unverified"
+				"kiss": "not supported: searched pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*), concurrentie-analyse.md and competitor_features (ids 34) for assignment notification, notificatie, e-mail on assignment, nothing found; rating inherited unverified",
+				"espocrm": "competitor_features#9518 \"In-app notification about being added as a collaborator\"; notifications bell in the top bar (pipelinq/espocrm/business-logic/browser-walkthrough-notes.md:17)"
 			}
 		},
 		{
@@ -1973,7 +2046,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "not supported: searched pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) for a team activity feed / recent changes stream, nothing found; rating inherited unverified",
-				"kiss": "competitor_features#9485 \"View all the 'Logboek' information belonging to a Contactverzoek (related to ITA) #1104\" (logbook per contact request, not a team-wide feed)"
+				"kiss": "competitor_features#9485 \"View all the 'Logboek' information belonging to a Contactverzoek (related to ITA) #1104\" (logbook per contact request, not a team-wide feed)",
+				"espocrm": "pipelinq/espocrm/business-logic/browser-walkthrough-notes.md:44 \"Stream shows activity feed across the system\" (Stream dashlet on the home dashboard)"
 			}
 		},
 		{
@@ -1997,7 +2071,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "not supported: searched pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) for notification preferences / choosing which notifications to receive, nothing found; rating inherited unverified",
-				"kiss": "absent from sources: pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*) and competitor_features (ids 34) have no mention of notification preferences"
+				"kiss": "absent from sources: pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*) and competitor_features (ids 34) have no mention of notification preferences",
+				"espocrm": "competitor_features#9517 \"Preferences: Parameter to receive notifications about reactions in non-followed records\" (per-user preference toggles; no full per-event matrix described)"
 			}
 		},
 		{
@@ -2021,7 +2096,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "not supported: searched pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) for time tracking / logging hours per client, nothing found; rating inherited unverified",
-				"kiss": "pipelinq/kiss/docs/features-overview.md:17 \"Start/end time (for duration tracking)\" (call duration only, no time entries)"
+				"kiss": "pipelinq/kiss/docs/features-overview.md:17 \"Start/end time (for duration tracking)\" (call duration only, no time entries)",
+				"espocrm": "pipelinq/espocrm/specs/data-model/spec.md:82 \"| duration | Computed from start/end datetime |\" on calls/meetings; but pipelinq/espocrm/specs/project-management/spec.md:52 \"no resource management, time tracking, or sprint planning\" (no timesheet entity)"
 			}
 		},
 		{
@@ -2045,7 +2121,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of time tracking or manager approval of hours",
-				"kiss": "absent from sources: pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*) and competitor_features (ids 34) have no mention of time registration or approval of hours"
+				"kiss": "absent from sources: pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*) and competitor_features (ids 34) have no mention of time registration or approval of hours",
+				"espocrm": "pipelinq/espocrm/specs/project-management/spec.md:52 \"Basic compared to dedicated PM tools (no resource management, time tracking, or sprint planning)\" (no hours, so no approval step)"
 			}
 		},
 		{
@@ -2069,7 +2146,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of sending hours to invoicing; nearest is competitor_features#14431 \"native invoice creation from deals\" (deals, not hours)",
-				"kiss": "absent from sources: pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*) and competitor_features (ids 34) have no mention of invoicing or sending hours to an invoicing app"
+				"kiss": "absent from sources: pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*) and competitor_features (ids 34) have no mention of invoicing or sending hours to an invoicing app",
+				"espocrm": "pipelinq/espocrm/specs/project-management/spec.md:52 \"no resource management, time tracking, or sprint planning\"; invoicing exists only in the paid Sales Pack (pipelinq/espocrm/docs/features-and-extensions.md:80 \"Automate recurring invoices\"), not from hours"
 			}
 		},
 		{
@@ -2093,7 +2171,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "competitor_features#31204 \"Customizable dashboards, forecasting, attribution.\"; #16840 \"Drag-and-drop custom report builder\" (dashboards; a weekly summary digest is not named)",
-				"kiss": "absent from sources: pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*) and competitor_features (ids 34) have no mention of a weekly summary or digest"
+				"kiss": "absent from sources: pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*) and competitor_features (ids 34) have no mention of a weekly summary or digest",
+				"espocrm": "absent from sources: no weekly change digest in any corpus file or competitor_features (id 30); nearest is pipelinq/espocrm/specs/reporting-analytics/spec.md:56 \"Email scheduling (automatic report delivery)\" (paid report emails)"
 			}
 		},
 		{
@@ -2117,7 +2196,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "pipelinq/hubspot-crm/hubspot-crm.md:37 \"Marketing email (free tier: 2,000/month)\"; competitor_features#2737 \"Drag-and-drop email builder with personalization tokens, A/B testing, and analytics\"",
-				"kiss": "pipelinq/kiss/kiss.md:73 \"focused exclusively on customer contact support\" (no marketing: no mailings)"
+				"kiss": "pipelinq/kiss/kiss.md:73 \"focused exclusively on customer contact support\" (no marketing: no mailings)",
+				"espocrm": "pipelinq/espocrm/docs/features-and-extensions.md:22 \"Send emails in bulk to target lists\" (core mass email; pipelinq/espocrm/specs/email-integration/spec.md:94 \"Batch sending via system SMTP\")"
 			}
 		},
 		{
@@ -2141,7 +2221,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "competitor_features#16832 \"Dynamic contact segments that update in real time based on behavior\" (Marketing Hub only in the sources)",
-				"kiss": "pipelinq/kiss/kiss.md:73 \"focused exclusively on customer contact support\" (no marketing: no mailing segments)"
+				"kiss": "pipelinq/kiss/kiss.md:73 \"focused exclusively on customer contact support\" (no marketing: no mailing segments)",
+				"espocrm": "pipelinq/espocrm/specs/campaign-marketing/spec.md:52 \"Audience segments that can contain mixed entity types:\" (target lists are filled by linking records; rule-based dynamic lists are not described)"
 			}
 		},
 		{
@@ -2165,7 +2246,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "pipelinq/hubspot-crm/hubspot-crm.md:33 \"Email tracking and templates\"; competitor_features#19356 \"Templates feature of HubSpot Sales Hub\"",
-				"kiss": "pipelinq/kiss/kiss.md:73 \"focused exclusively on customer contact support\" (no marketing: no mail templates)"
+				"kiss": "pipelinq/kiss/kiss.md:73 \"focused exclusively on customer contact support\" (no marketing: no mail templates)",
+				"espocrm": "pipelinq/espocrm/docs/features-and-extensions.md:21 \"Craft and organize reusable emails with placeholders\""
 			}
 		},
 		{
@@ -2189,7 +2271,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "competitor_features#2737 \"Drag-and-drop email builder with personalization tokens, A/B testing, and analytics\"",
-				"kiss": "pipelinq/kiss/kiss.md:73 \"focused exclusively on customer contact support\" (no marketing: no A/B tests)"
+				"kiss": "pipelinq/kiss/kiss.md:73 \"focused exclusively on customer contact support\" (no marketing: no A/B tests)",
+				"espocrm": "absent from sources: campaign stats are per campaign (pipelinq/espocrm/specs/campaign-marketing/spec.md:34), and no corpus file or competitor_features (id 30) mentions A/B or split testing of mailings"
 			}
 		},
 		{
@@ -2213,7 +2296,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "competitor_features#2737 \"...A/B testing, and analytics\"; pipelinq/hubspot-crm/hubspot-crm.md:33 \"Email tracking and templates\" (opens and clicks not named individually)",
-				"kiss": "pipelinq/kiss/kiss.md:73 \"focused exclusively on customer contact support\" (no marketing: no open/click tracking)"
+				"kiss": "pipelinq/kiss/kiss.md:73 \"focused exclusively on customer contact support\" (no marketing: no open/click tracking)",
+				"espocrm": "pipelinq/espocrm/docs/features-and-extensions.md:37 \"Mass emails, mail merge, tracking (opens/clicks/bounces/opt-outs)\"; per-recipient log records at pipelinq/espocrm/specs/campaign-marketing/spec.md:88"
 			}
 		},
 		{
@@ -2237,7 +2321,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "not supported: searched pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) for unsubscribe / opt-out handling, nothing found; rating inherited unverified",
-				"kiss": "pipelinq/kiss/kiss.md:73 \"focused exclusively on customer contact support\" (no marketing: no unsubscribe handling)"
+				"kiss": "pipelinq/kiss/kiss.md:73 \"focused exclusively on customer contact support\" (no marketing: no unsubscribe handling)",
+				"espocrm": "pipelinq/espocrm/specs/email-integration/spec.md:96 \"Unsubscribe handling (public endpoint, no auth required)\"; per-list optedOut at pipelinq/espocrm/specs/campaign-marketing/spec.md:54"
 			}
 		},
 		{
@@ -2261,7 +2346,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "not supported: searched pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) for subscription preferences / preference centre / subscription types, nothing found; rating inherited unverified",
-				"kiss": "pipelinq/kiss/kiss.md:73 \"focused exclusively on customer contact support\" (no marketing: no a preference centre)"
+				"kiss": "pipelinq/kiss/kiss.md:73 \"focused exclusively on customer contact support\" (no marketing: no a preference centre)",
+				"espocrm": "pipelinq/espocrm/specs/campaign-marketing/spec.md:54 \"`optedOut` column on relationships for per-list opt-out tracking\" (opt-out per list; no subscriber-facing preference page described)"
 			}
 		},
 		{
@@ -2285,7 +2371,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "not supported: searched pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) for consent / GDPR opt-in per channel / send blocking, nothing found; rating inherited unverified",
-				"kiss": "pipelinq/kiss/kiss.md:73 \"focused exclusively on customer contact support\" (no marketing: no consent-based send blocking)"
+				"kiss": "pipelinq/kiss/kiss.md:73 \"focused exclusively on customer contact support\" (no marketing: no consent-based send blocking)",
+				"espocrm": "pipelinq/espocrm/business-logic/browser-walkthrough-notes.md:58 \"Email (multi-value with opt-out/invalid toggles)\" (address-level opt-out only; no per-channel consent record that blocks a send)"
 			}
 		},
 		{
@@ -2309,7 +2396,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "not supported: searched pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) for pre-send list warnings (only #16843 \"Preview emails across 100+ email clients\", which checks rendering, not recipients), nothing found; rating inherited unverified",
-				"kiss": "pipelinq/kiss/kiss.md:73 \"focused exclusively on customer contact support\" (no marketing: no send preflight checks)"
+				"kiss": "pipelinq/kiss/kiss.md:73 \"focused exclusively on customer contact support\" (no marketing: no send preflight checks)",
+				"espocrm": "absent from sources: all 24 pipelinq/espocrm files and competitor_features (id 30) have no mention of a pre-send warning about unmailable recipients"
 			}
 		},
 		{
@@ -2333,7 +2421,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "competitor_features#2738 \"Visual workflow builder for lead nurturing, enrollment triggers, and multi-step campaigns\"",
-				"kiss": "pipelinq/kiss/kiss.md:73 \"focused exclusively on customer contact support\" (no marketing: no marketing journeys)"
+				"kiss": "pipelinq/kiss/kiss.md:73 \"focused exclusively on customer contact support\" (no marketing: no marketing journeys)",
+				"espocrm": "pipelinq/espocrm/docs/bpm-and-workflows.md:121 \"Time-delayed email sequences using BPM\" (drip campaigns only via the paid Advanced Pack BPM)"
 			}
 		},
 		{
@@ -2357,7 +2446,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "competitor_features#2739 \"WYSIWYG landing page builder with templates, forms, and conversion tracking\"",
-				"kiss": "pipelinq/kiss/kiss.md:73 \"focused exclusively on customer contact support\" (no marketing: no landing pages)"
+				"kiss": "pipelinq/kiss/kiss.md:73 \"focused exclusively on customer contact support\" (no marketing: no landing pages)",
+				"espocrm": "pipelinq/espocrm/specs/entity-customization/spec.md:125 \"No form builder for public-facing forms (only Web-to-Lead)\" (no landing pages)"
 			}
 		},
 		{
@@ -2381,7 +2471,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "competitor_features#2741 \"Custom dashboards with attribution reporting, funnel analytics, and revenue reporting\"",
-				"kiss": "pipelinq/kiss/kiss.md:73 \"focused exclusively on customer contact support\" (no marketing: no campaign attribution)"
+				"kiss": "pipelinq/kiss/kiss.md:73 \"focused exclusively on customer contact support\" (no marketing: no campaign attribution)",
+				"espocrm": "pipelinq/espocrm/specs/campaign-marketing/spec.md:23 \"(currency, computed from linked opportunities)\" is campaign-level revenue only; attribution per mailing to a deal is not described"
 			}
 		},
 		{
@@ -2405,7 +2496,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "competitor_features#16361 \"Social media scheduling, publishing and monitoring across platforms\" (Marketing Hub only)",
-				"kiss": "pipelinq/kiss/kiss.md:73 \"focused exclusively on customer contact support\" (no marketing: no social posting)"
+				"kiss": "pipelinq/kiss/kiss.md:73 \"focused exclusively on customer contact support\" (no marketing: no social posting)",
+				"espocrm": "pipelinq/espocrm/docs/features-and-extensions.md:24 \"### Social\" covers only the internal Stream feed (pipelinq/espocrm/docs/features-and-extensions.md:25); no social-network posting in any source or competitor_features (id 30)"
 			}
 		},
 		{
@@ -2429,7 +2521,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "not supported: searched pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) for sending domain authentication / SPF / DKIM / deliverability checks, nothing found; rating inherited unverified",
-				"kiss": "pipelinq/kiss/kiss.md:73 \"focused exclusively on customer contact support\" (no marketing: no sending domain checks)"
+				"kiss": "pipelinq/kiss/kiss.md:73 \"focused exclusively on customer contact support\" (no marketing: no sending domain checks)",
+				"espocrm": "absent from sources: all 24 pipelinq/espocrm files and competitor_features (id 30) have no mention of SPF, DKIM, DMARC or sending-domain checks"
 			}
 		},
 		{
@@ -2453,7 +2546,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "competitor_features#16363 \"SEO optimization tools with keyword tracking and content recommendations\" (Marketing Hub only)",
-				"kiss": "pipelinq/kiss/kiss.md:73 \"focused exclusively on customer contact support\" (no marketing: no search term analysis)"
+				"kiss": "pipelinq/kiss/kiss.md:73 \"focused exclusively on customer contact support\" (no marketing: no search term analysis)",
+				"espocrm": "absent from sources: all 24 pipelinq/espocrm files and competitor_features (id 30) have no mention of search terms, SEO or website analytics"
 			}
 		},
 		{
@@ -2477,7 +2571,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of competitor website or pricing-page monitoring",
-				"kiss": "pipelinq/kiss/kiss.md:73 \"focused exclusively on customer contact support\" (no marketing: no competitor monitoring)"
+				"kiss": "pipelinq/kiss/kiss.md:73 \"focused exclusively on customer contact support\" (no marketing: no competitor monitoring)",
+				"espocrm": "absent from sources: all 24 pipelinq/espocrm files and competitor_features (id 30) have no mention of competitor or web-page change monitoring"
 			}
 		},
 		{
@@ -2501,7 +2596,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "pipelinq/hubspot-crm/hubspot-crm.md:36 \"Form builder and landing pages\"; competitor_features#16368 \"Smart forms and calls-to-action with progressive profiling\"",
-				"kiss": "pipelinq/kiss/kiss.md:73 \"focused exclusively on customer contact support\" (no marketing: no newsletter signup)"
+				"kiss": "pipelinq/kiss/kiss.md:73 \"focused exclusively on customer contact support\" (no marketing: no newsletter signup)",
+				"espocrm": "no dedicated newsletter signup in sources; nearest is lead capture: pipelinq/espocrm/specs/lead-management/spec.md:46 \"Auto-subscribe to target list\" with pipelinq/espocrm/business-logic/browser-walkthrough-notes.md:294 \"Supports email confirmation opt-in\" (creates a Lead, not a subscriber-only signup)"
 			}
 		},
 		{
@@ -2525,7 +2621,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "competitor_features#2745 \"Ticketing system with knowledge base, customer portal, and SLA management\" (customer portal)",
-				"kiss": "pipelinq/kiss/overview.md:9 \"klantcontactmedewerker (KCM) workstation\" (internal staff tool, no client-facing portal: no client login)"
+				"kiss": "pipelinq/kiss/overview.md:9 \"klantcontactmedewerker (KCM) workstation\" (internal staff tool, no client-facing portal: no client login)",
+				"espocrm": "pipelinq/espocrm/business-logic/browser-walkthrough-notes.md:201 \"Allows creating customer-facing portals\" with pipelinq/espocrm/business-logic/browser-walkthrough-notes.md:200 \"Portals, Portal Users, Portal Roles\""
 			}
 		},
 		{
@@ -2549,7 +2646,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "not supported: searched pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) for portal two-factor / MFA, nothing found; rating inherited unverified",
-				"kiss": "pipelinq/kiss/overview.md:9 \"klantcontactmedewerker (KCM) workstation\" (internal staff tool, no client-facing portal: no portal MFA)"
+				"kiss": "pipelinq/kiss/overview.md:9 \"klantcontactmedewerker (KCM) workstation\" (internal staff tool, no client-facing portal: no portal MFA)",
+				"espocrm": "pipelinq/espocrm/specs/api-architecture/spec.md:20 \"TOTP and email-based two-factor authentication\" (2FA exists; that portal users can be required to use it is not stated)"
 			}
 		},
 		{
@@ -2573,7 +2671,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "competitor_features#2745 \"Ticketing system with knowledge base, customer portal, and SLA management\" (tickets plus customer portal; filing and following a ticket in the portal is implied, not spelled out)",
-				"kiss": "pipelinq/kiss/overview.md:9 \"klantcontactmedewerker (KCM) workstation\" (internal staff tool, no client-facing portal: no client-filed requests)"
+				"kiss": "pipelinq/kiss/overview.md:9 \"klantcontactmedewerker (KCM) workstation\" (internal staff tool, no client-facing portal: no client-filed requests)",
+				"espocrm": "pipelinq/espocrm/MERGED-ANALYSIS.md:123 \"Customer-facing access for self-service support and knowledge base\" (portal users work with Cases)"
 			}
 		},
 		{
@@ -2597,7 +2696,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "competitor_features#2745 \"Ticketing system with knowledge base, customer portal, and SLA management\" (replying in the portal not named explicitly)",
-				"kiss": "pipelinq/kiss/overview.md:9 \"klantcontactmedewerker (KCM) workstation\" (internal staff tool, no client-facing portal: no client replies)"
+				"kiss": "pipelinq/kiss/overview.md:9 \"klantcontactmedewerker (KCM) workstation\" (internal staff tool, no client-facing portal: no client replies)",
+				"espocrm": "pipelinq/espocrm/MERGED-ANALYSIS.md:123 \"Customer-facing access for self-service support and knowledge base\" (portal support access; replying to a staff question inside a case thread is not described)"
 			}
 		},
 		{
@@ -2621,7 +2721,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "competitor_features#2745 \"Ticketing system with knowledge base, customer portal, and SLA management\"; #19357 \"Documents feature of HubSpot Sales Hub\" (document download in the portal not named)",
-				"kiss": "pipelinq/kiss/overview.md:9 \"klantcontactmedewerker (KCM) workstation\" (internal staff tool, no client-facing portal: no client document downloads)"
+				"kiss": "pipelinq/kiss/overview.md:9 \"klantcontactmedewerker (KCM) workstation\" (internal staff tool, no client-facing portal: no client document downloads)",
+				"espocrm": "pipelinq/espocrm/docs/features-and-extensions.md:33 \"Upload and organize documents within CRM records\" (Documents exist; exposure to portal users is not described)"
 			}
 		},
 		{
@@ -2645,7 +2746,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "competitor_features#19360 \"E-signatures feature of HubSpot Sales Hub\"",
-				"kiss": "pipelinq/kiss/overview.md:9 \"klantcontactmedewerker (KCM) workstation\" (internal staff tool, no client-facing portal: no document signing)"
+				"kiss": "pipelinq/kiss/overview.md:9 \"klantcontactmedewerker (KCM) workstation\" (internal staff tool, no client-facing portal: no document signing)",
+				"espocrm": "absent from sources: all 24 pipelinq/espocrm files and competitor_features (id 30) have no mention of e-signatures or signing links"
 			}
 		},
 		{
@@ -2669,7 +2771,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "competitor_features#14431 \"Commerce Hub includes native invoice creation from deals...\" (professional tier; invoices in the customer portal not named)",
-				"kiss": "pipelinq/kiss/overview.md:9 \"klantcontactmedewerker (KCM) workstation\" (internal staff tool, no client-facing portal: no invoices)"
+				"kiss": "pipelinq/kiss/overview.md:9 \"klantcontactmedewerker (KCM) workstation\" (internal staff tool, no client-facing portal: no invoices)",
+				"espocrm": "pipelinq/espocrm/docs/features-and-extensions.md:72 \"Issue invoices for sales\" (paid Sales Pack; showing them in the portal is not described)"
 			}
 		},
 		{
@@ -2693,7 +2796,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "not supported: searched pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) for delegated portal access for a third party / bookkeeper, nothing found; rating inherited unverified",
-				"kiss": "pipelinq/kiss/overview.md:9 \"klantcontactmedewerker (KCM) workstation\" (internal staff tool, no client-facing portal: no account delegation)"
+				"kiss": "pipelinq/kiss/overview.md:9 \"klantcontactmedewerker (KCM) workstation\" (internal staff tool, no client-facing portal: no account delegation)",
+				"espocrm": "absent from sources: all 24 pipelinq/espocrm files and competitor_features (id 30) have no mention of a portal user delegating access to a third party"
 			}
 		},
 		{
@@ -2717,7 +2821,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "not supported: searched pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) for self-service data export for portal users, nothing found; rating inherited unverified",
-				"kiss": "pipelinq/kiss/overview.md:9 \"klantcontactmedewerker (KCM) workstation\" (internal staff tool, no client-facing portal: no client data export)"
+				"kiss": "pipelinq/kiss/overview.md:9 \"klantcontactmedewerker (KCM) workstation\" (internal staff tool, no client-facing portal: no client data export)",
+				"espocrm": "pipelinq/espocrm/business-logic/browser-walkthrough-notes.md:260 lists a \"Data Privacy\" permission for staff roles; no self-service data download for portal users in any source"
 			}
 		},
 		{
@@ -2741,7 +2846,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "not supported: searched pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) for self-service portal account closure, nothing found; rating inherited unverified",
-				"kiss": "pipelinq/kiss/overview.md:9 \"klantcontactmedewerker (KCM) workstation\" (internal staff tool, no client-facing portal: no account closing)"
+				"kiss": "pipelinq/kiss/overview.md:9 \"klantcontactmedewerker (KCM) workstation\" (internal staff tool, no client-facing portal: no account closing)",
+				"espocrm": "absent from sources: all 24 pipelinq/espocrm files and competitor_features (id 30) have no mention of portal users closing their own account"
 			}
 		},
 		{
@@ -2765,7 +2871,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "competitor_features#16836 \"Centrally manage multiple HubSpot accounts with data mirroring\" (Marketing Hub; multiple accounts, not multiple branded portals on one install)",
-				"kiss": "pipelinq/kiss/overview.md:9 \"klantcontactmedewerker (KCM) workstation\" (internal staff tool, no client-facing portal: no branded portals)"
+				"kiss": "pipelinq/kiss/overview.md:9 \"klantcontactmedewerker (KCM) workstation\" (internal staff tool, no client-facing portal: no branded portals)",
+				"espocrm": "pipelinq/espocrm/business-logic/browser-walkthrough-notes.md:200 \"Portals, Portal Users, Portal Roles\" and pipelinq/espocrm/specs/custom-fields-layouts/spec.md:89 layout sets \"assigned to teams or portals\" (several portals possible; separately branded portals are not described)"
 			}
 		},
 		{
@@ -2789,7 +2896,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "pipelinq/hubspot-crm/hubspot-crm.md:34 \"Meeting scheduler\"; competitor_features#2743 \"Calendar integration for one-on-one and team meeting scheduling via shareable links\"",
-				"kiss": "pipelinq/kiss/overview.md:9 \"klantcontactmedewerker (KCM) workstation\" (internal staff tool, no client-facing portal: no appointment booking)"
+				"kiss": "pipelinq/kiss/overview.md:9 \"klantcontactmedewerker (KCM) workstation\" (internal staff tool, no client-facing portal: no appointment booking)",
+				"espocrm": "pipelinq/espocrm/docs/features-and-extensions.md:95 \"Online booking pages\" (paid Meeting Scheduler, $210/year, pipelinq/espocrm/docs/features-and-extensions.md:94)"
 			}
 		},
 		{
@@ -2837,7 +2945,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "competitor_features#19359 \"Products feature of HubSpot Sales Hub\"",
-				"kiss": "pipelinq/kiss/overview.md:11 \"specialized call center/service desk application\" (no product catalogue)"
+				"kiss": "pipelinq/kiss/overview.md:11 \"specialized call center/service desk application\" (no product catalogue)",
+				"espocrm": "pipelinq/espocrm/docs/features-and-extensions.md:65 \"**Products** - Item catalog management\" (paid Sales Pack, pipelinq/espocrm/docs/features-and-extensions.md:64 \"### Sales Pack - $260/year\"; not in the free core)"
 			}
 		},
 		{
@@ -2861,7 +2970,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "not supported: searched pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) for volume / tiered pricing, nothing found; rating inherited unverified",
-				"kiss": "pipelinq/kiss/overview.md:11 \"specialized call center/service desk application\" (no price tiers)"
+				"kiss": "pipelinq/kiss/overview.md:11 \"specialized call center/service desk application\" (no price tiers)",
+				"espocrm": "pipelinq/espocrm/docs/features-and-extensions.md:66 \"**Price books** - Differentiated customer pricing\" (paid Sales Pack; per-customer price books, quantity breaks not described)"
 			}
 		},
 		{
@@ -2885,7 +2995,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "not supported: searched pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) for product variants (size, colour), nothing found; rating inherited unverified",
-				"kiss": "pipelinq/kiss/overview.md:11 \"specialized call center/service desk application\" (no product variants)"
+				"kiss": "pipelinq/kiss/overview.md:11 \"specialized call center/service desk application\" (no product variants)",
+				"espocrm": "not supported: searched all 24 pipelinq/espocrm files and competitor_features (id 30) for variant, size, colour, attribute, option on products; only a flat product catalogue (docs/features-and-extensions.md:65); rating inherited unverified"
 			}
 		},
 		{
@@ -2909,7 +3020,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of VAT / BTW rates on products",
-				"kiss": "pipelinq/kiss/overview.md:11 \"specialized call center/service desk application\" (no VAT rates)"
+				"kiss": "pipelinq/kiss/overview.md:11 \"specialized call center/service desk application\" (no VAT rates)",
+				"espocrm": "pipelinq/espocrm/docs/features-and-extensions.md:82 \"**Taxes** - Tax calculation and reporting engine with rules\" (paid Sales Pack; Dutch VAT rates not named)"
 			}
 		},
 		{
@@ -2934,7 +3046,8 @@
 			"note": "The prices and the tiers are built. Producing a quote document from them is specified and not built.",
 			"evidence": {
 				"hubspot-crm": "competitor_features#19358 \"Quotes feature of HubSpot Sales Hub\"; #19359 \"Products feature of HubSpot Sales Hub\"",
-				"kiss": "pipelinq/kiss/overview.md:11 \"specialized call center/service desk application\" (no quotes)"
+				"kiss": "pipelinq/kiss/overview.md:11 \"specialized call center/service desk application\" (no quotes)",
+				"espocrm": "pipelinq/espocrm/docs/features-and-extensions.md:68 \"**Quotes** - Sales proposals\" (paid Sales Pack) with PDF output via \"**PDF Templates**\" in core (pipelinq/espocrm/business-logic/browser-walkthrough-notes.md:204)"
 			}
 		},
 		{
@@ -2958,7 +3071,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of product suppliers or purchase cost",
-				"kiss": "pipelinq/kiss/overview.md:11 \"specialized call center/service desk application\" (no suppliers)"
+				"kiss": "pipelinq/kiss/overview.md:11 \"specialized call center/service desk application\" (no suppliers)",
+				"espocrm": "pipelinq/espocrm/docs/features-and-extensions.md:67 \"**Supplier prices** - Vendor rate management\" (paid Sales Pack)"
 			}
 		},
 		{
@@ -2982,7 +3096,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "not supported: searched pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) for contracts / turning a won deal into a numbered contract (only invoices from deals, #14431), nothing found; rating inherited unverified",
-				"kiss": "pipelinq/kiss/overview.md:11 \"specialized call center/service desk application\" (no contracts)"
+				"kiss": "pipelinq/kiss/overview.md:11 \"specialized call center/service desk application\" (no contracts)",
+				"espocrm": "pipelinq/espocrm/docs/features-and-extensions.md:80 \"**Subscriptions** - Automate recurring invoices\" (paid Sales Pack; no contract entity as such) plus an \"Auto-increment\" field type for numbering (pipelinq/espocrm/business-logic/browser-walkthrough-notes.md:235)"
 			}
 		},
 		{
@@ -3006,7 +3121,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "not supported: searched pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) for contract status transitions, nothing found; rating inherited unverified",
-				"kiss": "pipelinq/kiss/overview.md:11 \"specialized call center/service desk application\" (no contract statuses)"
+				"kiss": "pipelinq/kiss/overview.md:11 \"specialized call center/service desk application\" (no contract statuses)",
+				"espocrm": "pipelinq/espocrm/specs/entity-customization/spec.md:69 \"Filter enum options based on conditions\" (dynamic logic can restrict status options) and competitor_features#47046 \"Formula: Validation exception function\"; no ready-made contract status machine"
 			}
 		},
 		{
@@ -3030,7 +3146,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "not supported: searched pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) for contract end dates / renewal reminders, nothing found; rating inherited unverified",
-				"kiss": "pipelinq/kiss/overview.md:11 \"specialized call center/service desk application\" (no contract renewals)"
+				"kiss": "pipelinq/kiss/overview.md:11 \"specialized call center/service desk application\" (no contract renewals)",
+				"espocrm": "no renewal feature in sources; nearest pipelinq/espocrm/specs/reporting-analytics/spec.md:62 \"Example: \\\"Send notification to customers whose license expires in 7 days\\\"\" (a scheduled workflow you build yourself in the paid Advanced Pack)"
 			}
 		},
 		{
@@ -3054,7 +3171,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of contracts or automatic renewal deals",
-				"kiss": "pipelinq/kiss/overview.md:11 \"specialized call center/service desk application\" (no renewal leads)"
+				"kiss": "pipelinq/kiss/overview.md:11 \"specialized call center/service desk application\" (no renewal leads)",
+				"espocrm": "absent from sources: no automatic renewal opportunity; only a do-it-yourself workflow action pipelinq/espocrm/docs/bpm-and-workflows.md:29 \"Create any entity type; optionally link to target\" (paid Advanced Pack)"
 			}
 		},
 		{
@@ -3101,7 +3219,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "competitor_features#2741 \"...attribution reporting, funnel analytics, and revenue reporting\" (revenue reporting; MRR and renewals not named)",
-				"kiss": "pipelinq/kiss/overview.md:11 \"specialized call center/service desk application\" (no recurring revenue)"
+				"kiss": "pipelinq/kiss/overview.md:11 \"specialized call center/service desk application\" (no recurring revenue)",
+				"espocrm": "absent from sources: all 24 pipelinq/espocrm files and competitor_features (id 30) have no mention of MRR, recurring revenue metrics or a renewals overview"
 			}
 		},
 		{
@@ -3125,7 +3244,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "competitor_features#14431 \"Commerce Hub includes native invoice creation from deals.\" (professional tier; from deals, not contracts); #14432 Xero sync",
-				"kiss": "pipelinq/kiss/overview.md:11 \"specialized call center/service desk application\" (no contract invoicing)"
+				"kiss": "pipelinq/kiss/overview.md:11 \"specialized call center/service desk application\" (no contract invoicing)",
+				"espocrm": "pipelinq/espocrm/docs/features-and-extensions.md:80 \"**Subscriptions** - Automate recurring invoices\" happens inside the paid Sales Pack; sending contracts to a separate invoicing app is not described"
 			}
 		},
 		{
@@ -3149,7 +3269,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of point-of-sale / counter sales",
-				"kiss": "absent from sources: pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*) and competitor_features (ids 34) have no mention of point-of-sale sales"
+				"kiss": "absent from sources: pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*) and competitor_features (ids 34) have no mention of point-of-sale sales",
+				"espocrm": "absent from sources: all 24 pipelinq/espocrm files, pipelinq/concurrentie-analyse.md and competitor_features (id 30) have no mention of a point of sale, till or counter sale"
 			}
 		},
 		{
@@ -3173,7 +3294,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of till totals or VAT calculation at a till",
-				"kiss": "absent from sources: pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*) and competitor_features (ids 34) have no mention of till totals or VAT"
+				"kiss": "absent from sources: pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*) and competitor_features (ids 34) have no mention of till totals or VAT",
+				"espocrm": "absent from sources: all 24 pipelinq/espocrm files, pipelinq/concurrentie-analyse.md and competitor_features (id 30) have no mention of a till computing totals and VAT; tax calculation exists only in the paid Sales Pack (pipelinq/espocrm/docs/features-and-extensions.md:82)"
 			}
 		},
 		{
@@ -3197,7 +3319,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of barcode scanning for sales (#31247 mentions \"mobile scanning\" without saying of what; not a till)",
-				"kiss": "absent from sources: pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*) and competitor_features (ids 34) have no mention of barcode scanning"
+				"kiss": "absent from sources: pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*) and competitor_features (ids 34) have no mention of barcode scanning",
+				"espocrm": "absent from sources: all 24 pipelinq/espocrm files, pipelinq/concurrentie-analyse.md and competitor_features (id 30) have no mention of barcode scanning into a sale; only a \"Barcode\" field type exists (pipelinq/espocrm/business-logic/browser-walkthrough-notes.md:235)"
 			}
 		},
 		{
@@ -3221,7 +3344,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of card payments at a till (#14431 \"Integrated payment processing\" is for invoices, not a till)",
-				"kiss": "absent from sources: pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*) and competitor_features (ids 34) have no mention of card payments"
+				"kiss": "absent from sources: pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*) and competitor_features (ids 34) have no mention of card payments",
+				"espocrm": "absent from sources: all 24 pipelinq/espocrm files, pipelinq/concurrentie-analyse.md and competitor_features (id 30) have no mention of card terminals; payments are \"Stripe payment channel for Sales Pack\" (pipelinq/espocrm/docs/features-and-extensions.md:115), not at a till"
 			}
 		},
 		{
@@ -3245,7 +3369,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of receipts or receipt printing",
-				"kiss": "absent from sources: pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*) and competitor_features (ids 34) have no mention of receipts"
+				"kiss": "absent from sources: pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*) and competitor_features (ids 34) have no mention of receipts",
+				"espocrm": "absent from sources: all 24 pipelinq/espocrm files, pipelinq/concurrentie-analyse.md and competitor_features (id 30) have no mention of till receipts or receipt printers"
 			}
 		},
 		{
@@ -3269,7 +3394,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of converting receipts to invoices",
-				"kiss": "absent from sources: pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*) and competitor_features (ids 34) have no mention of receipt-to-invoice conversion"
+				"kiss": "absent from sources: pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*) and competitor_features (ids 34) have no mention of receipt-to-invoice conversion",
+				"espocrm": "absent from sources: all 24 pipelinq/espocrm files, pipelinq/concurrentie-analyse.md and competitor_features (id 30) have no mention of converting a receipt to an invoice above an amount threshold"
 			}
 		},
 		{
@@ -3293,7 +3419,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of returns or refunds",
-				"kiss": "absent from sources: pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*) and competitor_features (ids 34) have no mention of refunds"
+				"kiss": "absent from sources: pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*) and competitor_features (ids 34) have no mention of refunds",
+				"espocrm": "absent from sources: all 24 pipelinq/espocrm files, pipelinq/concurrentie-analyse.md and competitor_features (id 30) have no mention of till refunds; the paid Sales Pack has \"Handle returned goods\" return orders (pipelinq/espocrm/docs/features-and-extensions.md:74), not a counter refund"
 			}
 		},
 		{
@@ -3317,7 +3444,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of manager approval for refunds",
-				"kiss": "absent from sources: pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*) and competitor_features (ids 34) have no mention of refund approval"
+				"kiss": "absent from sources: pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*) and competitor_features (ids 34) have no mention of refund approval",
+				"espocrm": "absent from sources: all 24 pipelinq/espocrm files, pipelinq/concurrentie-analyse.md and competitor_features (id 30) have no mention of manager approval for refunds above a limit"
 			}
 		},
 		{
@@ -3341,7 +3469,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of cash drawer or till counts",
-				"kiss": "absent from sources: pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*) and competitor_features (ids 34) have no mention of cash drawer handling"
+				"kiss": "absent from sources: pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*) and competitor_features (ids 34) have no mention of cash drawer handling",
+				"espocrm": "absent from sources: all 24 pipelinq/espocrm files, pipelinq/concurrentie-analyse.md and competitor_features (id 30) have no mention of a cash drawer or opening/closing counts"
 			}
 		},
 		{
@@ -3365,7 +3494,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of cash differences or till sign-off",
-				"kiss": "absent from sources: pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*) and competitor_features (ids 34) have no mention of cash differences"
+				"kiss": "absent from sources: pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*) and competitor_features (ids 34) have no mention of cash differences",
+				"espocrm": "absent from sources: all 24 pipelinq/espocrm files, pipelinq/concurrentie-analyse.md and competitor_features (id 30) have no mention of cash differences or manager sign-off of a till"
 			}
 		},
 		{
@@ -3389,7 +3519,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of Z-reports / day closing",
-				"kiss": "absent from sources: pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*) and competitor_features (ids 34) have no mention of Z-reports"
+				"kiss": "absent from sources: pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*) and competitor_features (ids 34) have no mention of Z-reports",
+				"espocrm": "absent from sources: all 24 pipelinq/espocrm files, pipelinq/concurrentie-analyse.md and competitor_features (id 30) have no mention of a Z-report or daily till closing report"
 			}
 		},
 		{
@@ -3413,7 +3544,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of sending till takings to bookkeeping (#14432 Xero sync covers contacts, products, invoices and payments, not till takings)",
-				"kiss": "absent from sources: pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*) and competitor_features (ids 34) have no mention of bookkeeping handoff"
+				"kiss": "absent from sources: pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*) and competitor_features (ids 34) have no mention of bookkeeping handoff",
+				"espocrm": "absent from sources: all 24 pipelinq/espocrm files, pipelinq/concurrentie-analyse.md and competitor_features (id 30) have no mention of handing daily takings to bookkeeping"
 			}
 		},
 		{
@@ -3437,7 +3569,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of signed till / fiscal audit trail",
-				"kiss": "absent from sources: pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*) and competitor_features (ids 34) have no mention of a signed till trail"
+				"kiss": "absent from sources: pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*) and competitor_features (ids 34) have no mention of a signed till trail",
+				"espocrm": "absent from sources: all 24 pipelinq/espocrm files, pipelinq/concurrentie-analyse.md and competitor_features (id 30) have no mention of a signed or fiscal till audit trail"
 			}
 		},
 		{
@@ -3461,7 +3594,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of linking a till sale to a customer",
-				"kiss": "absent from sources: pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*) and competitor_features (ids 34) have no mention of linking sales to clients"
+				"kiss": "absent from sources: pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*) and competitor_features (ids 34) have no mention of linking sales to clients",
+				"espocrm": "absent from sources: all 24 pipelinq/espocrm files, pipelinq/concurrentie-analyse.md and competitor_features (id 30) have no mention of linking a till sale to a client"
 			}
 		},
 		{
@@ -3485,7 +3619,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of loyalty points",
-				"kiss": "absent from sources: pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*) and competitor_features (ids 34) have no mention of loyalty points"
+				"kiss": "absent from sources: pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*) and competitor_features (ids 34) have no mention of loyalty points",
+				"espocrm": "absent from sources: all 24 pipelinq/espocrm files, pipelinq/concurrentie-analyse.md and competitor_features (id 30) have no mention of loyalty points"
 			}
 		},
 		{
@@ -3509,7 +3644,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of redeeming loyalty points",
-				"kiss": "absent from sources: pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*) and competitor_features (ids 34) have no mention of points redemption"
+				"kiss": "absent from sources: pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*) and competitor_features (ids 34) have no mention of points redemption",
+				"espocrm": "absent from sources: all 24 pipelinq/espocrm files, pipelinq/concurrentie-analyse.md and competitor_features (id 30) have no mention of redeeming loyalty points"
 			}
 		},
 		{
@@ -3533,7 +3669,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of loyalty tiers",
-				"kiss": "absent from sources: pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*) and competitor_features (ids 34) have no mention of loyalty tiers"
+				"kiss": "absent from sources: pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*) and competitor_features (ids 34) have no mention of loyalty tiers",
+				"espocrm": "absent from sources: all 24 pipelinq/espocrm files, pipelinq/concurrentie-analyse.md and competitor_features (id 30) have no mention of loyalty or customer tiers"
 			}
 		},
 		{
@@ -3557,7 +3694,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of gift cards",
-				"kiss": "absent from sources: pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*) and competitor_features (ids 34) have no mention of gift cards"
+				"kiss": "absent from sources: pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*) and competitor_features (ids 34) have no mention of gift cards",
+				"espocrm": "absent from sources: all 24 pipelinq/espocrm files, pipelinq/concurrentie-analyse.md and competitor_features (id 30) have no mention of gift cards or vouchers"
 			}
 		},
 		{
@@ -3581,7 +3719,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "pipelinq/hubspot-crm/hubspot-crm.md:38 \"Reporting dashboards\"; competitor_features#2741 \"Custom dashboards with attribution reporting, funnel analytics, and revenue reporting\"",
-				"kiss": "pipelinq/kiss/docs/features-overview.md:85 \"Designed for BI/reporting tools\" (contact-centre data for external BI; no in-app dashboard and no sales data)"
+				"kiss": "pipelinq/kiss/docs/features-overview.md:85 \"Designed for BI/reporting tools\" (contact-centre data for external BI; no in-app dashboard and no sales data)",
+				"espocrm": "pipelinq/espocrm/MERGED-ANALYSIS.md:119 \"Dashboard framework with draggable dashlets, 4 built-in pipeline reports (SalesPipeline, SalesByMonth, ByStage, ByLeadSource)\" (free core)"
 			}
 		},
 		{
@@ -3605,7 +3744,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "competitor_features#31204 \"Customizable dashboards, forecasting, attribution.\"; #2745 Service Hub ticketing (a service dashboard is not named explicitly)",
-				"kiss": "pipelinq/kiss/docs/features-overview.md:81 \"REST API for extracting KCC performance data\" (service data for external BI tools, no in-app dashboard)"
+				"kiss": "pipelinq/kiss/docs/features-overview.md:81 \"REST API for extracting KCC performance data\" (service data for external BI tools, no in-app dashboard)",
+				"espocrm": "pipelinq/espocrm/specs/reports-dashboards/spec.md:44 \"| Cases | Support case list |\" dashlet and pipelinq/espocrm/specs/reports-dashboards/spec.md:18 \"Multiple dashboard tabs supported\" (case lists only; service charts need the paid report builder)"
 			}
 		},
 		{
@@ -3629,7 +3769,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "not supported: searched pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) for period-over-period comparison in reports, nothing found; rating inherited unverified",
-				"kiss": "pipelinq/kiss/business-logic/source-code-analysis.md:73 \"Paginated reporting overview with date range filter\" (date-range pulls for BI; comparison happens outside KISS)"
+				"kiss": "pipelinq/kiss/business-logic/source-code-analysis.md:73 \"Paginated reporting overview with date range filter\" (date-range pulls for BI; comparison happens outside KISS)",
+				"espocrm": "pipelinq/espocrm/specs/reports-dashboards/spec.md:63 \"Line/bar chart showing won revenue per month\" (monthly trend; no side-by-side period comparison described)"
 			}
 		},
 		{
@@ -3653,7 +3794,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "not supported: searched pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) for per-agent / per-rep productivity or handling-time reports, nothing found; rating inherited unverified",
-				"kiss": "pipelinq/kiss/docs/features-overview.md:84 \"Returns contact moment details (question, specific question, result, duration, department, sources consulted)\" (per contact moment incl. KCM email; per-agent aggregation left to BI)"
+				"kiss": "pipelinq/kiss/docs/features-overview.md:84 \"Returns contact moment details (question, specific question, result, duration, department, sources consulted)\" (per contact moment incl. KCM email; per-agent aggregation left to BI)",
+				"espocrm": "pipelinq/espocrm/specs/reporting-analytics/spec.md:51 \"Grouping by fields, date periods\" in the paid Advanced Pack reports (group by assigned user; handling speed is not a built-in measure)"
 			}
 		},
 		{
@@ -3677,7 +3819,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "not supported: searched pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) for scheduled report emails / report subscriptions, nothing found; rating inherited unverified",
-				"kiss": "pipelinq/kiss/business-logic/browser-walkthrough-notes.md:578 \"**Endpoint:** `GET /api/contactmomentendetails`\" (pull API only, no scheduled delivery)"
+				"kiss": "pipelinq/kiss/business-logic/browser-walkthrough-notes.md:578 \"**Endpoint:** `GET /api/contactmomentendetails`\" (pull API only, no scheduled delivery)",
+				"espocrm": "pipelinq/espocrm/specs/reporting-analytics/spec.md:56 \"Email scheduling (automatic report delivery)\" (paid Advanced Pack only)"
 			}
 		},
 		{
@@ -3701,7 +3844,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "competitor_features#2747 \"Comprehensive REST API with OAuth, webhooks, and custom object support\" (reachable via API; no warehouse sync named)",
-				"kiss": "pipelinq/kiss/docs/features-overview.md:85 \"Designed for BI/reporting tools\" (pull API a warehouse can read; no push export)"
+				"kiss": "pipelinq/kiss/docs/features-overview.md:85 \"Designed for BI/reporting tools\" (pull API a warehouse can read; no push export)",
+				"espocrm": "absent from sources: no warehouse or BI connector in any corpus file or competitor_features (id 30); pipelinq/espocrm/specs/api-integration/spec.md:108 \"No batch/bulk API operations\""
 			}
 		},
 		{
@@ -3772,7 +3916,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of metrics endpoints for external monitoring (Prometheus or similar)",
-				"kiss": "pipelinq/kiss/business-logic/browser-walkthrough-detailed.md:653 \"| `/healthz` | GET | Health check |\" (health probe only, no metrics endpoint)"
+				"kiss": "pipelinq/kiss/business-logic/browser-walkthrough-detailed.md:653 \"| `/healthz` | GET | Health check |\" (health probe only, no metrics endpoint)",
+				"espocrm": "absent from sources: all 24 pipelinq/espocrm files and competitor_features (id 30) have no mention of Prometheus, metrics endpoints or monitoring exports"
 			}
 		},
 		{
@@ -3796,7 +3941,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "competitor_features#19350 \"Forecasting feature of HubSpot Sales Hub\" (forecasting exists; exporting it is not named)",
-				"kiss": "pipelinq/kiss/overview.md:87 \"**No lead management** - no concept of leads, opportunities, or deals\" (no forecast to export)"
+				"kiss": "pipelinq/kiss/overview.md:87 \"**No lead management** - no concept of leads, opportunities, or deals\" (no forecast to export)",
+				"espocrm": "pipelinq/espocrm/specs/reports-dashboards/spec.md:122 \"**No data export** from reports (only from list views)\" (free core; no forecast export described)"
 			}
 		},
 		{
@@ -3820,7 +3966,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "competitor_features#2739 \"...landing page builder with templates, forms, and conversion tracking\"; #16367 \"customer journey analytics\" (Marketing Hub). Site traffic analytics not named",
-				"kiss": "absent from sources: pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*) and competitor_features (ids 34) have no mention of website traffic analytics"
+				"kiss": "absent from sources: pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*) and competitor_features (ids 34) have no mention of website traffic analytics",
+				"espocrm": "absent from sources: all 24 pipelinq/espocrm files and competitor_features (id 30) have no mention of website traffic or web analytics"
 			}
 		},
 		{
@@ -3844,7 +3991,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "competitor_features#16840 \"Drag-and-drop custom report builder for marketing and sales data\" (Marketing Hub); #31201 activities auto-logged. Channel/subject report not named",
-				"kiss": "pipelinq/kiss/specs/kanalen-channels/spec.md:63 \"The Management Information API includes the channel in its response\" (with question/subject per contact moment, docs/features-overview.md:84)"
+				"kiss": "pipelinq/kiss/specs/kanalen-channels/spec.md:63 \"The Management Information API includes the channel in its response\" (with question/subject per contact moment, docs/features-overview.md:84)",
+				"espocrm": "pipelinq/espocrm/specs/reporting-analytics/spec.md:49 \"Any entity type (not just Opportunities)\" in the paid Advanced Pack report builder, so calls/meetings/emails can be reported; no built-in channel/subject report"
 			}
 		},
 		{
@@ -3868,7 +4016,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "competitor_features#31203 \"Visual workflow builder across marketing/sales/service.\" (premium tier); #2736 \"stage automation\"",
-				"kiss": "pipelinq/kiss/overview.md:92 \"**No n8n automation** - no workflow automation engine\""
+				"kiss": "pipelinq/kiss/overview.md:92 \"**No n8n automation** - no workflow automation engine\"",
+				"espocrm": "pipelinq/espocrm/docs/bpm-and-workflows.md:9 \"The Workflows tool automates simple business processes using trigger-action rules. Available in the Advanced Pack extension.\" (paid; free core has only before-save formulas, pipelinq/espocrm/specs/formula-engine/spec.md:127)"
 			}
 		},
 		{
@@ -3892,7 +4041,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "competitor_features#2747 \"Comprehensive REST API with OAuth, webhooks, and custom object support\"; #24515 \"Webhook support in HubSpot CRM\"",
-				"kiss": "not supported: searched pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*), concurrentie-analyse.md and competitor_features (ids 34) for webhook, notificaties, event push, nothing found; rating inherited unverified"
+				"kiss": "not supported: searched pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*), concurrentie-analyse.md and competitor_features (ids 34) for webhook, notificaties, event push, nothing found; rating inherited unverified",
+				"espocrm": "pipelinq/espocrm/specs/api-architecture/spec.md:133 \"`{entityType}.create`, `{entityType}.update`, `{entityType}.delete`, etc.\" outgoing webhook events, delivered with retry (pipelinq/espocrm/specs/api-architecture/spec.md:134)"
 			}
 		},
 		{
@@ -3916,7 +4066,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "competitor_features#2747 \"Comprehensive REST API with OAuth, webhooks, and custom object support\"",
-				"kiss": "pipelinq/kiss/docs/features-overview.md:81 \"REST API for extracting KCC performance data\" (read-only reporting API; records themselves live in OpenKlant/OpenZaak APIs)"
+				"kiss": "pipelinq/kiss/docs/features-overview.md:81 \"REST API for extracting KCC performance data\" (read-only reporting API; records themselves live in OpenKlant/OpenZaak APIs)",
+				"espocrm": "pipelinq/espocrm/docs/api-and-developer.md:8 \"All UI operations can be replicated via API calls.\" (REST api/v1 with API key/HMAC auth and OpenAPI spec, competitor_features#9512)"
 			}
 		},
 		{
@@ -3940,7 +4091,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "pipelinq/hubspot-crm/hubspot-crm.md:40 \"1,500+ integrations in marketplace\" (marketplace; a list of connected systems per account not named)",
-				"kiss": "competitor_features#9503 \"Insight into the registers a KISS instance communicates with #1216\" (source suggests a register/connection overview exists, see also /api/connections in source-code-analysis.md; rating kept, flag for review)"
+				"kiss": "competitor_features#9503 \"Insight into the registers a KISS instance communicates with #1216\" (source suggests a register/connection overview exists, see also /api/connections in source-code-analysis.md; rating kept, flag for review)",
+				"espocrm": "pipelinq/espocrm/business-logic/browser-walkthrough-notes.md:273 \"Google Maps, Google reCAPTCHA\" on the Integrations admin page (lists built-in and paid extension integrations; no registry of all outbound connections described)"
 			}
 		},
 		{
@@ -3964,7 +4116,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of sending mailings through an externally configured connector",
-				"kiss": "absent from sources: pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*) and competitor_features (ids 34) have no mention of sending mailings through connectors"
+				"kiss": "absent from sources: pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*) and competitor_features (ids 34) have no mention of sending mailings through connectors",
+				"espocrm": "absent from sources: no sending mailings through a shared connector; nearest is paid MailChimp pipelinq/espocrm/docs/features-and-extensions.md:111 \"Target list sync\""
 			}
 		},
 		{
@@ -3988,7 +4141,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "competitor_features#31199 \"Autonomous AI agents for prospecting, customer success, content (gated to Professional).\" (permission scoping of the agent not named)",
-				"kiss": "pipelinq/kiss/MERGED-ANALYSIS.md:93 \"**MCP/AI** | LLM-friendly API | Not available\""
+				"kiss": "pipelinq/kiss/MERGED-ANALYSIS.md:93 \"**MCP/AI** | LLM-friendly API | Not available\"",
+				"espocrm": "pipelinq/espocrm/docs/api-and-developer.md:122 \"No native MCP (Model Context Protocol) support\"; newer competitor_features#31155 lists a paid Ebla AI addon (chat, admin assistant) with no scoped-permission agent described"
 			}
 		},
 		{
@@ -4012,7 +4166,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "competitor_features#31198 \"Conversational AI assistant for content, research, workflow help.\"",
-				"kiss": "pipelinq/kiss/specs/elasticsearch-knowledge-base/spec.md:84 \"Must provide unified full-text search across multiple content sources\" (keyword search over knowledge sources, no natural-language answers)"
+				"kiss": "pipelinq/kiss/specs/elasticsearch-knowledge-base/spec.md:84 \"Must provide unified full-text search across multiple content sources\" (keyword search over knowledge sources, no natural-language answers)",
+				"espocrm": "pipelinq/espocrm/MERGED-ANALYSIS.md:177 \"No MCP protocol, no intelligent routing, no prediction, no AI-powered insights.\" (2026-03); newer competitor_features#31155 \"Chat, summaries, smart-paste, content generation, admin assistant.\" is a paid addon"
 			}
 		},
 		{
@@ -4036,7 +4191,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "not supported: searched pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) for background / scheduled batch processing, nothing found; rating inherited unverified",
-				"kiss": "pipelinq/kiss/overview.md:43 \"Cronjob-based sync tool that indexes data sources into Elasticsearch\" (scheduled background indexing)"
+				"kiss": "pipelinq/kiss/overview.md:43 \"Cronjob-based sync tool that indexes data sources into Elasticsearch\" (scheduled background indexing)",
+				"espocrm": "pipelinq/espocrm/docs/api-and-developer.md:76 \"Cron-based background processing\" (scheduled jobs in core; mass email and webhooks are queued)"
 			}
 		},
 		{
@@ -4080,7 +4236,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "pipelinq/hubspot-crm/hubspot-crm.md:73 \"No Nextcloud integration; vendor lock-in by design (HubSpot ecosystem pushes its own tools)\"",
-				"kiss": "pipelinq/kiss/overview.md:91 \"**No Nextcloud integration** - standalone app, no Nextcloud Contacts sync\" (no shared workspace to react to)"
+				"kiss": "pipelinq/kiss/overview.md:91 \"**No Nextcloud integration** - standalone app, no Nextcloud Contacts sync\" (no shared workspace to react to)",
+				"espocrm": "pipelinq/espocrm/business-logic/browser-walkthrough-notes.md:317 \"**No Nextcloud integration** -- standalone application\" (no shared workspace with other apps)"
 			}
 		},
 		{
@@ -4104,7 +4261,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of searching an external company wiki from the CRM",
-				"kiss": "pipelinq/kiss/overview.md:64 \"Global search across multiple knowledge sources\" (includes SharePoint pages and website crawls; source suggests wiki-style search exists, rating kept, flag for review)"
+				"kiss": "pipelinq/kiss/overview.md:64 \"Global search across multiple knowledge sources\" (includes SharePoint pages and website crawls; source suggests wiki-style search exists, rating kept, flag for review)",
+				"espocrm": "absent from sources: only the internal knowledge base (pipelinq/espocrm/business-logic/browser-walkthrough-notes.md:176 \"Article-based knowledge base with categories\") exists; no search of an external company wiki in any source"
 			}
 		},
 		{
@@ -4127,7 +4285,8 @@
 				"owner": "pipelinq"
 			},
 			"evidence": {
-				"hubspot-crm": "not supported: searched pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) for sample / demo data on a fresh account, nothing found; rating inherited unverified"
+				"hubspot-crm": "not supported: searched pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) for sample / demo data on a fresh account, nothing found; rating inherited unverified",
+				"espocrm": "not supported: searched all 24 pipelinq/espocrm files and competitor_features (id 30) for demo, sample, example data, seed; nothing found; rating inherited unverified"
 			}
 		},
 		{
@@ -4151,7 +4310,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "not supported: searched pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) for setup wizard / guided onboarding in the product (only paid human onboarding, pipelinq/hubspot-crm/hubspot-crm.md:27 \"Onboarding fees\"), nothing found; rating inherited unverified",
-				"kiss": "pipelinq/kiss/business-logic/browser-walkthrough-detailed.md:100 \"Wilt u KISS vullen met voorbeelddata\" (one sample-data prompt, no setup wizard)"
+				"kiss": "pipelinq/kiss/business-logic/browser-walkthrough-detailed.md:100 \"Wilt u KISS vullen met voorbeelddata\" (one sample-data prompt, no setup wizard)",
+				"espocrm": "not supported: searched all 24 corpus files and competitor_features (id 30) for wizard, onboarding, first-run, setup; only pipelinq/espocrm/docs/documentation-structure.md:15 \"Installation (manual, by script, Docker, Traefik, Caddy)\"; rating inherited unverified"
 			}
 		},
 		{
@@ -4176,7 +4336,8 @@
 			"note": "The 2026-03 KISS research lists this as a pipelinq gap. It has since been built.",
 			"evidence": {
 				"hubspot-crm": "absent from sources: hubspot-crm.md, concurrentie-analyse.md and competitor_features (33, 782, 554) have no mention of BSN or BRP lookup; pipelinq/hubspot-crm/hubspot-crm.md:77 \"HubSpot is not a viable option\" for Dutch government",
-				"kiss": "pipelinq/kiss/business-logic/browser-walkthrough-detailed.md:666 \"`RaadpleegMetBurgerservicenummer` - by BSN\""
+				"kiss": "pipelinq/kiss/business-logic/browser-walkthrough-detailed.md:666 \"`RaadpleegMetBurgerservicenummer` - by BSN\"",
+				"espocrm": "pipelinq/espocrm/MERGED-ANALYSIS.md:173 \"No NL Design theming, no ZGW standards, no WCAG focus, no Dutch government ecosystem integration.\" (no BRP or BSN lookup in any source)"
 			}
 		},
 		{
@@ -4200,7 +4361,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of BSN lookup audit logging",
-				"kiss": "pipelinq/kiss/specs/persoon-search/spec.md:55 \"All BRP lookups are logged in verwerking (processing) log for AVG compliance\""
+				"kiss": "pipelinq/kiss/specs/persoon-search/spec.md:55 \"All BRP lookups are logged in verwerking (processing) log for AVG compliance\"",
+				"espocrm": "absent from sources: no BSN handling anywhere; generic logs only (pipelinq/espocrm/business-logic/browser-walkthrough-notes.md:188 \"Auth Log, Auth Tokens, Action History\")"
 			}
 		},
 		{
@@ -4223,7 +4385,8 @@
 				"owner": "pipelinq"
 			},
 			"evidence": {
-				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of BSN pseudonymisation"
+				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of BSN pseudonymisation",
+				"espocrm": "absent from sources: all 24 pipelinq/espocrm files and competitor_features (id 30) have no mention of BSN storage or pseudonymisation"
 			}
 		},
 		{
@@ -4246,7 +4409,8 @@
 				"owner": "pipelinq"
 			},
 			"evidence": {
-				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of BRP change notifications"
+				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of BRP change notifications",
+				"espocrm": "pipelinq/espocrm/MERGED-ANALYSIS.md:173 \"No NL Design theming, no ZGW standards, no WCAG focus, no Dutch government ecosystem integration.\" (no BRP mutation subscription)"
 			}
 		},
 		{
@@ -4269,7 +4433,8 @@
 				"owner": "pipelinq"
 			},
 			"evidence": {
-				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of retention/deletion rules for register data"
+				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of retention/deletion rules for register data",
+				"espocrm": "absent from sources: all 24 pipelinq/espocrm files and competitor_features (id 30) have no mention of retention periods or purging register data"
 			}
 		},
 		{
@@ -4292,7 +4457,8 @@
 				"owner": "pipelinq"
 			},
 			"evidence": {
-				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of BSN validation (elfproef)"
+				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of BSN validation (elfproef)",
+				"espocrm": "absent from sources: all 24 pipelinq/espocrm files and competitor_features (id 30) have no mention of BSN validation (11-proef) or any BSN field"
 			}
 		},
 		{
@@ -4317,7 +4483,8 @@
 			"note": "Also listed as a pipelinq gap in the 2026-03 research and since built.",
 			"evidence": {
 				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of ZGW APIs / zaaksysteem integration",
-				"kiss": "pipelinq/kiss/specs/zaaksysteem-integration/spec.md:10 \"KCMs can search cases, view case details and documents, and link cases to contactmomenten.\""
+				"kiss": "pipelinq/kiss/specs/zaaksysteem-integration/spec.md:10 \"KCMs can search cases, view case details and documents, and link cases to contactmomenten.\"",
+				"espocrm": "pipelinq/espocrm/MERGED-ANALYSIS.md:173 \"No NL Design theming, no ZGW standards, no WCAG focus, no Dutch government ecosystem integration.\" (no ZGW Zaken API client)"
 			}
 		},
 		{
@@ -4341,7 +4508,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of the national ZGW notification service",
-				"kiss": "pipelinq/kiss/docs/adoption-and-governance.md:39 \"Open Notificaties (notifications)\" (only named as part of the PodiumD stack; no KISS subscription shown)"
+				"kiss": "pipelinq/kiss/docs/adoption-and-governance.md:39 \"Open Notificaties (notifications)\" (only named as part of the PodiumD stack; no KISS subscription shown)",
+				"espocrm": "pipelinq/espocrm/MERGED-ANALYSIS.md:173 \"No NL Design theming, no ZGW standards, no WCAG focus, no Dutch government ecosystem integration.\" (no ZGW Notificaties subscription)"
 			}
 		},
 		{
@@ -4365,7 +4533,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of the VNG Klantinteracties API",
-				"kiss": "competitor_features#31233 \"Reads/writes contactmomenten via OpenKlant 2 (VNG Klantinteracties API).\""
+				"kiss": "competitor_features#31233 \"Reads/writes contactmomenten via OpenKlant 2 (VNG Klantinteracties API).\"",
+				"espocrm": "pipelinq/espocrm/MERGED-ANALYSIS.md:173 \"No NL Design theming, no ZGW standards, no WCAG focus, no Dutch government ecosystem integration.\" (no VNG Klantinteracties API)"
 			}
 		},
 		{
@@ -4389,7 +4558,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of MijnOverheid Berichtenbox",
-				"kiss": "absent from sources: pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*) and competitor_features (ids 34) have no mention of MijnOverheid Berichtenbox"
+				"kiss": "absent from sources: pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*) and competitor_features (ids 34) have no mention of MijnOverheid Berichtenbox",
+				"espocrm": "pipelinq/espocrm/MERGED-ANALYSIS.md:173 \"No NL Design theming, no ZGW standards, no WCAG focus, no Dutch government ecosystem integration.\" (no MijnOverheid Berichtenbox)"
 			}
 		},
 		{
@@ -4413,7 +4583,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of Berichtenbox or fallback delivery",
-				"kiss": "absent from sources: pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*) and competitor_features (ids 34) have no mention of Berichtenbox delivery or email fallback"
+				"kiss": "absent from sources: pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*) and competitor_features (ids 34) have no mention of Berichtenbox delivery or email fallback",
+				"espocrm": "pipelinq/espocrm/MERGED-ANALYSIS.md:173 \"No NL Design theming, no ZGW standards, no WCAG focus, no Dutch government ecosystem integration.\" (no Berichtenbox, so no fallback)"
 			}
 		},
 		{
@@ -4437,7 +4608,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "not supported: searched pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) for GDPR data-subject access or deletion requests; pipelinq/hubspot-crm/hubspot-crm.md:77 instead cites \"GDPR/data sovereignty concerns\", nothing found; rating inherited unverified",
-				"kiss": "pipelinq/kiss/specs/autorisatie/spec.md:62 \"the municipality can query the verwerking logs\" (inzage via access logs only, no deletion workflow)"
+				"kiss": "pipelinq/kiss/specs/autorisatie/spec.md:62 \"the municipality can query the verwerking logs\" (inzage via access logs only, no deletion workflow)",
+				"espocrm": "pipelinq/espocrm/docs/documentation-structure.md:79 \"Data privacy\" is a user-guide topic and pipelinq/espocrm/business-logic/browser-walkthrough-notes.md:260 a staff \"Data Privacy\" permission; no citizen data-request workflow described"
 			}
 		},
 		{
@@ -4460,7 +4632,8 @@
 				"owner": "pipelinq"
 			},
 			"evidence": {
-				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of identity verification of data-subject requests (DigiD or similar)"
+				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of identity verification of data-subject requests (DigiD or similar)",
+				"espocrm": "absent from sources: all 24 pipelinq/espocrm files and competitor_features (id 30) have no mention of verifying the identity of a data requester"
 			}
 		},
 		{
@@ -4484,7 +4657,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "not supported: searched pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) for preferred language per contact / multilingual correspondence, nothing found; rating inherited unverified",
-				"kiss": "pipelinq/kiss/docs/decision-records.md:37 \"`taal=nld`\" (language is hard-coded to Dutch on every klantcontact)"
+				"kiss": "pipelinq/kiss/docs/decision-records.md:37 \"`taal=nld`\" (language is hard-coded to Dutch on every klantcontact)",
+				"espocrm": "not supported: searched all 24 corpus files and competitor_features (id 30) for preferred language, client language, locale on contacts; only UI label translation (pipelinq/espocrm/specs/custom-fields-layouts/spec.md:121); rating inherited unverified"
 			}
 		},
 		{
@@ -4508,7 +4682,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "pipelinq/hubspot-crm/hubspot-crm.md:7 \"- **Self-Hosted:** No (cloud)\"",
-				"kiss": "pipelinq/kiss/kiss.md:7 \"**Self-Hosted:** Yes\""
+				"kiss": "pipelinq/kiss/kiss.md:7 \"**Self-Hosted:** Yes\"",
+				"espocrm": "pipelinq/espocrm/docs/cloud-and-pricing.md:9 \"Download and install on own server\" (Docker images supported, pipelinq/espocrm/docs/cloud-and-pricing.md:11)"
 			}
 		},
 		{
@@ -4532,7 +4707,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "pipelinq/hubspot-crm/hubspot-crm.md:6 \"- **Open Source:** No\"; pipelinq/hubspot-crm/hubspot-crm.md:72 \"no self-hosting, no data sovereignty, no code access\"",
-				"kiss": "pipelinq/kiss/kiss.md:6 \"**Open Source:** Yes (EUPL)\""
+				"kiss": "pipelinq/kiss/kiss.md:6 \"**Open Source:** Yes (EUPL)\"",
+				"espocrm": "pipelinq/espocrm/docs/features-and-extensions.md:125 \"Core: AGPL-3.0 (free, open source)\""
 			}
 		},
 		{
@@ -4556,7 +4732,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "pipelinq/hubspot-crm/hubspot-crm.md:12 \"unlimited users on free tier\"; limit at pipelinq/hubspot-crm/hubspot-crm.md:22 \"Professional CRM:** $50/user/month\" (free tier only; paid tiers charge per seat, and pipelinq/hubspot-crm/hubspot-crm.md:20 says \"up to 2 seats\")",
-				"kiss": "pipelinq/kiss/kiss.md:29 \"No per-user or per-seat licensing\""
+				"kiss": "pipelinq/kiss/kiss.md:29 \"No per-user or per-seat licensing\"",
+				"espocrm": "pipelinq/espocrm/espocrm.md:24 \"**Self-Hosted:** Free (open source, unlimited users)\" (the cloud plans are per user, pipelinq/espocrm/docs/cloud-and-pricing.md:28)"
 			}
 		},
 		{
@@ -4580,7 +4757,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "pipelinq/hubspot-crm/hubspot-crm.md:59 \"| Nextcloud integration | No | Native |\"",
-				"kiss": "pipelinq/kiss/overview.md:97 \"**Not self-hostable on Nextcloud** - requires separate infrastructure\""
+				"kiss": "pipelinq/kiss/overview.md:97 \"**Not self-hostable on Nextcloud** - requires separate infrastructure\"",
+				"espocrm": "pipelinq/espocrm/business-logic/browser-walkthrough-notes.md:317 \"**No Nextcloud integration** -- standalone application\""
 			}
 		},
 		{
@@ -4604,7 +4782,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "not supported: searched pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) for SSO / SAML / login with an existing identity provider (only #24514 \"Google Workspace integration\", which is an integration, not login), nothing found; rating inherited unverified",
-				"kiss": "pipelinq/kiss/specs/authentication-rbac/spec.md:98 \"Must support any OIDC-compatible identity provider\""
+				"kiss": "pipelinq/kiss/specs/authentication-rbac/spec.md:98 \"Must support any OIDC-compatible identity provider\"",
+				"espocrm": "pipelinq/espocrm/docs/api-and-developer.md:105 \"LDAP/Active Directory/OpenLDAP\" and pipelinq/espocrm/docs/api-and-developer.md:106 \"OpenID Connect (SSO)\"; competitor_features#47041 \"OIDC: Support PKCE\""
 			}
 		},
 		{
@@ -4628,7 +4807,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "pipelinq/hubspot-crm/hubspot-crm.md:60 \"| RBAC | Yes (paid tiers) | Yes |\" (paid tiers only)",
-				"kiss": "pipelinq/kiss/overview.md:73 \"OIDC-based with 3 roles: Klantcontactmedewerker, Redacteur, Beheerder (+ Kennisbank)\" (roles gate features, not individual records)"
+				"kiss": "pipelinq/kiss/overview.md:73 \"OIDC-based with 3 roles: Klantcontactmedewerker, Redacteur, Beheerder (+ Kennisbank)\" (roles gate features, not individual records)",
+				"espocrm": "pipelinq/espocrm/business-logic/browser-walkthrough-notes.md:263 \"Matrix of: **Access** (enabled/disabled/team/own) x **Create/Read/Edit/Delete/Stream**\""
 			}
 		},
 		{
@@ -4653,7 +4833,8 @@
 			"note": "EspoCRM does this per role. Ours is all or nothing today.",
 			"evidence": {
 				"hubspot-crm": "not supported: searched pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) for field-level permissions / property visibility per team, nothing found; rating inherited unverified",
-				"kiss": "pipelinq/kiss/business-logic/source-code-analysis.md:841 \"Role-based field filtering: Kennisbank users have fields excluded\" (one fixed role hides search fields; not configurable per group; flag for review)"
+				"kiss": "pipelinq/kiss/business-logic/source-code-analysis.md:841 \"Role-based field filtering: Kennisbank users have fields excluded\" (one fixed role hides search fields; not configurable per group; flag for review)",
+				"espocrm": "pipelinq/espocrm/business-logic/browser-walkthrough-notes.md:266 \"Per-field **Read/Edit** permissions -- extremely granular\""
 			}
 		},
 		{
@@ -4700,7 +4881,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "pipelinq/hubspot-crm/hubspot-crm.md:61 \"| Audit trail | Yes (Enterprise only) | Yes |\" (Enterprise only; logging of outbound register calls not named)",
-				"kiss": "pipelinq/kiss/business-logic/source-code-analysis.md:151 \"Last 10000 API call logs\""
+				"kiss": "pipelinq/kiss/business-logic/source-code-analysis.md:151 \"Last 10000 API call logs\"",
+				"espocrm": "pipelinq/espocrm/business-logic/browser-walkthrough-notes.md:188 \"Users, Teams, Roles, Auth Log, Auth Tokens, Action History, API Users\" (user action and auth logs; a log of outbound register calls is not described)"
 			}
 		},
 		{
@@ -4724,7 +4906,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "not supported: searched pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) for renaming properties with existing records following, nothing found; rating inherited unverified",
-				"kiss": "pipelinq/kiss/specs/kanalen-channels/spec.md:70 \"the channel name is stored as a string value, not a foreign key reference\" (so a rename does not follow into existing records)"
+				"kiss": "pipelinq/kiss/specs/kanalen-channels/spec.md:70 \"the channel name is stored as a string value, not a foreign key reference\" (so a rename does not follow into existing records)",
+				"espocrm": "pipelinq/espocrm/specs/custom-fields-layouts/spec.md:17 \"**Rename** entities (updates all metadata, classes, and references)\" (entity-level rename; field rename not spelled out)"
 			}
 		},
 		{
@@ -4747,7 +4930,8 @@
 				"owner": "pipelinq"
 			},
 			"evidence": {
-				"hubspot-crm": "not supported: searched pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) for integration health check / connection status page, nothing found; rating inherited unverified"
+				"hubspot-crm": "not supported: searched pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) for integration health check / connection status page, nothing found; rating inherited unverified",
+				"espocrm": "pipelinq/espocrm/business-logic/browser-walkthrough-notes.md:185 \"System Requirements\" page in the admin System section (server checks; no per-connection health page described)"
 			}
 		},
 		{
@@ -4771,7 +4955,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "not supported: searched pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) for GDPR delete of a person while keeping financial records, nothing found; rating inherited unverified",
-				"kiss": "pipelinq/kiss/business-logic/browser-walkthrough-notes.md:643 \"KISS delegates all data storage to external APIs (OpenKlant, Open Zaak, Objectenregister)\" (deletion would happen in OpenKlant; KISS itself only has log retention)"
+				"kiss": "pipelinq/kiss/business-logic/browser-walkthrough-notes.md:643 \"KISS delegates all data storage to external APIs (OpenKlant, Open Zaak, Objectenregister)\" (deletion would happen in OpenKlant; KISS itself only has log retention)",
+				"espocrm": "pipelinq/espocrm/docs/documentation-structure.md:79 \"Data privacy\" topic and pipelinq/espocrm/business-logic/browser-walkthrough-notes.md:260 \"Data Privacy\" permission hint at privacy tooling, but no source describes erasing a person while keeping the books intact"
 			}
 		},
 		{
@@ -4815,7 +5000,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "not supported: searched pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) for theming / branding the app itself (only #2744 CMS Hub page builder, which styles websites, not the CRM), nothing found; rating inherited unverified",
-				"kiss": "pipelinq/kiss/business-logic/browser-walkthrough-notes.md:611 \"The entire UI is built with NL Design System components (Utrecht variant)\" (NL Design theming and organisation logo; no admin theming UI shown)"
+				"kiss": "pipelinq/kiss/business-logic/browser-walkthrough-notes.md:611 \"The entire UI is built with NL Design System components (Utrecht variant)\" (NL Design theming and organisation logo; no admin theming UI shown)",
+				"espocrm": "not supported: searched all 24 corpus files and competitor_features (id 30) for theme, logo, colour, branding, CSS; only pipelinq/espocrm/business-logic/browser-walkthrough-notes.md:193 \"Customize all UI labels/translations\" and pipelinq/espocrm/overview.md:109 \"no theming for government use cases\"; rating inherited unverified"
 			}
 		},
 		{
@@ -4839,7 +5025,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "not supported: searched pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) for UI language support / Dutch interface, nothing found; rating inherited unverified",
-				"kiss": "not supported: searched pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*), concurrentie-analyse.md and competitor_features (ids 34) for English, i18n, language switch, taal, nothing found; rating inherited unverified"
+				"kiss": "not supported: searched pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*), concurrentie-analyse.md and competitor_features (ids 34) for English, i18n, language switch, taal, nothing found; rating inherited unverified",
+				"espocrm": "pipelinq/espocrm/specs/custom-fields-layouts/spec.md:121 \"Customize field labels, entity names, and other UI text per language\" (multi-language UI; Dutch not named explicitly)"
 			}
 		},
 		{
@@ -4864,7 +5051,8 @@
 			"note": "The four commercial and open source CRMs all ship a native mobile app. We do not.",
 			"evidence": {
 				"hubspot-crm": "pipelinq/hubspot-crm/hubspot-crm.md:42 \"Mobile app (iOS and Android)\"; competitor_features#31247 \"iOS/Android app with mobile scanning, calling, notifications.\"",
-				"kiss": "pipelinq/kiss/business-logic/browser-walkthrough-detailed.md:739 \"Two-column layout: sidebar (left) + main content (right)\" (desktop two-column layout; no mobile or responsive-phone evidence)"
+				"kiss": "pipelinq/kiss/business-logic/browser-walkthrough-detailed.md:739 \"Two-column layout: sidebar (left) + main content (right)\" (desktop two-column layout; no mobile or responsive-phone evidence)",
+				"espocrm": "competitor_features#31253 \"EspoCRM mobile app (iOS/Android).\" (tier: addon); web UI is responsive (pipelinq/espocrm/business-logic/browser-walkthrough-notes.md:310)"
 			}
 		},
 		{
@@ -4889,7 +5077,8 @@
 			"note": "HubSpot's free tier includes live chat and a chatbot. This is a real gap, not a rating we missed.",
 			"evidence": {
 				"hubspot-crm": "pipelinq/hubspot-crm/hubspot-crm.md:35 \"Live chat and chatbot\"; competitor_features#2740 \"Website live chat with chatbot builder, ticket creation, and meeting scheduling\"",
-				"kiss": "pipelinq/kiss/docs/features-overview.md:11 \"Channel (phone, counter, email, chat, social media)\" (chat is only a channel label for logging, no website chat)"
+				"kiss": "pipelinq/kiss/docs/features-overview.md:11 \"Channel (phone, counter, email, chat, social media)\" (chat is only a channel label for logging, no website chat)",
+				"espocrm": "absent from sources: all 24 pipelinq/espocrm files and competitor_features (id 30) have no mention of website live chat or a chatbot"
 			}
 		},
 		{
@@ -4914,7 +5103,8 @@
 			"note": "HubSpot lists 1,500 integrations and Pipedrive 400. We have connectors, not a shop window.",
 			"evidence": {
 				"hubspot-crm": "pipelinq/hubspot-crm/hubspot-crm.md:40 \"1,500+ integrations in marketplace\"; competitor_features#2746 \"1000+ integrations via app marketplace\"",
-				"kiss": "absent from sources: pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*) and competitor_features (ids 34) have no mention of an integration marketplace (integrations are fixed VNG/Common Ground APIs)"
+				"kiss": "absent from sources: pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*) and competitor_features (ids 34) have no mention of an integration marketplace (integrations are fixed VNG/Common Ground APIs)",
+				"espocrm": "pipelinq/espocrm/docs/cloud-and-pricing.md:47 \"2000+ integrations via Zapier/Make\" but pipelinq/espocrm/MERGED-ANALYSIS.md:167 \"No plugin marketplace, no extension sharing.\" (a vendor extension catalogue plus third-party platforms)"
 			}
 		},
 		{
@@ -4939,7 +5129,8 @@
 			"note": "Ours files mail afterwards by matching the address. Theirs works while you read the mail.",
 			"evidence": {
 				"hubspot-crm": "competitor_features#31202 \"Two-way Gmail/Outlook + meeting scheduler.\"; pipelinq/hubspot-crm/hubspot-crm.md:33 \"Email tracking and templates\" (mail integration; an in-mail add-contact button is not named)",
-				"kiss": "absent from sources: pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*) and competitor_features (ids 34) have no mention of a mail client plugin or add-in"
+				"kiss": "absent from sources: pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*) and competitor_features (ids 34) have no mention of a mail client plugin or add-in",
+				"espocrm": "pipelinq/espocrm/business-logic/browser-walkthrough-notes.md:140 \"Full email client with folder sidebar\" (mail is read inside the CRM itself; no Outlook/Gmail add-in is described, Outlook/Google extensions sync contacts and calendar, pipelinq/espocrm/docs/features-and-extensions.md:103)"
 			}
 		},
 		{
@@ -4964,7 +5155,8 @@
 			"note": "Attio and Pipedrive make this the centre of the product. We edit one record at a time.",
 			"evidence": {
 				"hubspot-crm": "not supported: searched pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) for bulk edit / mass update of records, nothing found; rating inherited unverified",
-				"kiss": "pipelinq/kiss/overview.md:88 \"**No import/export** - no CSV/data import or bulk operations\" (no bulk editing)"
+				"kiss": "pipelinq/kiss/overview.md:88 \"**No import/export** - no CSV/data import or bulk operations\" (no bulk editing)",
+				"espocrm": "pipelinq/espocrm/specs/api-architecture/spec.md:160 \"Mass update (change field values on multiple records)\" with a configurable layout (pipelinq/espocrm/business-logic/browser-walkthrough-notes.md:249 \"Which fields available for bulk edit\"); not inline spreadsheet editing"
 			}
 		},
 		{
@@ -4988,7 +5180,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of stock / inventory levels; nearest is competitor_features#19359 \"Products feature of HubSpot Sales Hub\" (catalogue, no stock)",
-				"kiss": "absent from sources: pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*) and competitor_features (ids 34) have no mention of stock levels or inventory"
+				"kiss": "absent from sources: pipelinq/kiss/ (overview, kiss, MERGED-ANALYSIS, docs/*, specs/*, business-logic/*) and competitor_features (ids 34) have no mention of stock levels or inventory",
+				"espocrm": "pipelinq/espocrm/docs/features-and-extensions.md:83 \"**Inventory management** - Track and manage stock quantity and location\" (paid Sales Pack)"
 			}
 		},
 		{
@@ -5013,7 +5206,8 @@
 			"note": "KISS indexes everything into Elasticsearch and searches it in one box. Ours are separate searches.",
 			"evidence": {
 				"hubspot-crm": "not supported: searched pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) for one search box across knowledge base, articles and CRM records, nothing found; rating inherited unverified",
-				"kiss": "pipelinq/kiss/overview.md:64 \"Global search across multiple knowledge sources\""
+				"kiss": "pipelinq/kiss/overview.md:64 \"Global search across multiple knowledge sources\"",
+				"espocrm": "pipelinq/espocrm/specs/api-architecture/spec.md:88 \"GET  /GlobalSearch\" and pipelinq/espocrm/business-logic/browser-walkthrough-notes.md:17 \"global search\" in the top bar (records searched from one box; whether knowledge base articles are included is not stated, no external wiki)"
 			}
 		},
 		{
@@ -5038,7 +5232,8 @@
 			"note": "KISS calls these werkberichten and filters them per skill. We have the publishing half only.",
 			"evidence": {
 				"hubspot-crm": "competitor_features#2745 \"Ticketing system with knowledge base, customer portal, and SLA management\" (a knowledge base covers publishing; internal work notices pushed per team are not named)",
-				"kiss": "pipelinq/kiss/business-logic/browser-walkthrough-detailed.md:97 \"Shows count of unread/new items (e.g., \"2\")\" (news and work instructions on the home page, filtered per skill)"
+				"kiss": "pipelinq/kiss/business-logic/browser-walkthrough-detailed.md:97 \"Shows count of unread/new items (e.g., \"2\")\" (news and work instructions on the home page, filtered per skill)",
+				"espocrm": "absent from sources: no work-instruction or news publishing in any corpus file or competitor_features (id 30); nearest is pipelinq/espocrm/business-logic/browser-walkthrough-notes.md:44 \"Stream shows activity feed across the system\""
 			}
 		},
 		{
@@ -5063,7 +5258,8 @@
 			"note": "KISS does this because a contact centre needs it. Nobody else in this matrix does.",
 			"evidence": {
 				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of handling or switching between two concurrent phone calls",
-				"kiss": "pipelinq/kiss/business-logic/browser-walkthrough-detailed.md:717 \"Multiple contactmomenten can be open simultaneously (shown as tabs in left sidebar)\""
+				"kiss": "pipelinq/kiss/business-logic/browser-walkthrough-detailed.md:717 \"Multiple contactmomenten can be open simultaneously (shown as tabs in left sidebar)\"",
+				"espocrm": "absent from sources: no multi-call handling in any corpus file or competitor_features (id 30); the paid VoIP pack covers only pipelinq/espocrm/docs/features-and-extensions.md:92 \"Click-to-call, incoming call popup with caller info\""
 			}
 		},
 		{
@@ -5088,7 +5284,8 @@
 			"note": "HubSpot Academy is a real reason buyers pick HubSpot. Written docs are not the same thing.",
 			"evidence": {
 				"hubspot-crm": "pipelinq/hubspot-crm/hubspot-crm.md:66 \"extensive educational resources (HubSpot Academy)\"; pipelinq/hubspot-crm/hubspot-crm.md:12 \"HubSpot Academy certifications\"",
-				"kiss": "pipelinq/kiss/kiss.md:14 \"**Documentation:** https://klantinteractie-servicesysteem.readthedocs.io/\" (written docs only, no vendor-run courses found)"
+				"kiss": "pipelinq/kiss/kiss.md:14 \"**Documentation:** https://klantinteractie-servicesysteem.readthedocs.io/\" (written docs only, no vendor-run courses found)",
+				"espocrm": "pipelinq/espocrm/docs/documentation-structure.md:3 \"**Source:** https://docs.espocrm.com\" (written documentation only; no vendor courses or academy in any source)"
 			}
 		},
 		{
@@ -5112,7 +5309,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "pipelinq/hubspot-crm/hubspot-crm.md:12 \"Additional revenue from onboarding fees, HubSpot Academy certifications, and a partner marketplace.\" (partner marketplace; locality not stated)",
-				"kiss": "pipelinq/kiss/kiss.md:27 \"Through Dimpact membership and partner services\""
+				"kiss": "pipelinq/kiss/kiss.md:27 \"Through Dimpact membership and partner services\"",
+				"espocrm": "not supported: searched all 24 pipelinq/espocrm files and competitor_features (id 30) for partner, reseller, integrator, implementation; nothing found; rating inherited unverified"
 			}
 		},
 		{
@@ -5136,7 +5334,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "pipelinq/hubspot-crm/hubspot-crm.md:57 \"| Import/Export (CSV/vCard) | Yes | Yes |\"; limit at pipelinq/hubspot-crm/hubspot-crm.md:73 \"vendor lock-in by design\" (export exists, lock-in stated)",
-				"kiss": "pipelinq/kiss/business-logic/browser-walkthrough-notes.md:643 \"KISS delegates all data storage to external APIs (OpenKlant, Open Zaak, Objectenregister)\" (data sits in open-standard registers, but KISS has no export itself)"
+				"kiss": "pipelinq/kiss/business-logic/browser-walkthrough-notes.md:643 \"KISS delegates all data storage to external APIs (OpenKlant, Open Zaak, Objectenregister)\" (data sits in open-standard registers, but KISS has no export itself)",
+				"espocrm": "pipelinq/espocrm/docs/features-and-extensions.md:53 \"**Export** - Extract data to spreadsheet or CSV\" plus the Export Import tool (pipelinq/espocrm/docs/documentation-structure.md:116 \"Overview, Export, Import, Compare, Run by code, Customization\")"
 			}
 		},
 		{
@@ -5160,7 +5359,8 @@
 			},
 			"evidence": {
 				"hubspot-crm": "competitor_features#2743 \"Calendar integration for one-on-one and team meeting scheduling via shareable links\"",
-				"kiss": "pipelinq/kiss/overview.md:9 \"klantcontactmedewerker (KCM) workstation\" (internal staff tool, no client-facing portal: no self-service slot booking links)"
+				"kiss": "pipelinq/kiss/overview.md:9 \"klantcontactmedewerker (KCM) workstation\" (internal staff tool, no client-facing portal: no self-service slot booking links)",
+				"espocrm": "pipelinq/espocrm/docs/features-and-extensions.md:95 \"Online booking pages\" and pipelinq/espocrm/docs/features-and-extensions.md:96 \"Round-robin scheduling\" (paid Meeting Scheduler extension, $210/year)"
 			}
 		}
 	],
