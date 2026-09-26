@@ -40,7 +40,7 @@
 			"vendor": "EspoCRM",
 			"readOn": "2026-03-14",
 			"columnAddedOn": "2026-09-24",
-			"note": "Inherited from concurrentie-analyse/pipelinq/espocrm/. The paid Advanced Pack is rated partial, not yes.",
+			"note": "Inherited from concurrentie-analyse/pipelinq/espocrm/. The paid Advanced Pack is rated partial, not yes. The drive on 2026-03-14 predates EspoCRM 10.0.0 (2026-07-02), which shipped multiple pipelines, so pipeline-multiple is due a re-drive. The paid Sales Pack rows (prod-catalogue, prod-quote) are rated yes while the paid Advanced Pack is rated partial; that inconsistency is a re-drive candidate too.",
 			"evidenceGrade": "driven",
 			"unknownReason": "Not reached in the 2026-03-14 Docker drive of EspoCRM (pipelinq/espocrm/business-logic/browser-walkthrough-notes.md) and not settled by the documentation and specs read beside it."
 		},
