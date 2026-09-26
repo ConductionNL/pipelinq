@@ -40,9 +40,9 @@
 			"vendor": "EspoCRM",
 			"readOn": "2026-09-26",
 			"columnAddedOn": "2026-09-24",
-			"note": "Rated on the core product plus paid extensions at partial; see readHow.",
-			"evidenceGrade": "docs-only",
-			"unknownReason": "Source read at 10.0.8, not driven: the one unknown cell (two-calls-at-once) depends on the paid VoIP integration and its telephony provider, which neither the source nor the docs settle.",
+			"note": "Rated on the core product plus paid extensions at partial; source read and lab drive at 10.0.8, see readHow.",
+			"evidenceGrade": "driven",
+			"unknownReason": "Source read and driven at 10.0.8: the one unknown cell (two-calls-at-once) depends on the paid VoIP integration and its telephony provider, which neither the source nor the docs settle.",
 			"sources": {
 				"docs": "https://docs.espocrm.com/",
 				"sourceRepo": "https://github.com/espocrm/espocrm",
@@ -104,7 +104,7 @@
 			},
 			"evidenceGradeBefore": "driven",
 			"version": "EspoCRM 10.0.8 (commit 863109b2a8649b7724e0e6eb7039fcc3afdbe26c)",
-			"readHow": "Source read at 10.0.8, not driven (yet). The previous grade 'driven' was the 2026-03-14 Docker drive of a 9.x release, which predates EspoCRM 10.0.0 (2026-07-02, multiple pipelines); every cell is now rated from the 10.0.8 source with path:line. Paid extensions whose code is not public are rated partial with the vendor documentation URL, consistently: Sales Pack (products, quotes, sales orders, invoices, subscriptions), Advanced Pack (workflows, BPM, reports), Intelligence (AI), Meeting Scheduler, Project Management, Stripe integration and VoIP integration. Five rows are partial only through paid Advanced Pack workflows: lead-aging, req-sla-escalate, work-recurring-task, contract-renewal-warning, contract-renewal-lead."
+			"readHow": "Source read at 10.0.8 and driven at 10.0.8 on 2026-09-26 in the lab (market-intelligence pipelinq/espocrm/lab, image espocrm/espocrm:10.0.8-apache-trixie): the drive settled the two rows the reading flagged, portal-audit and plat-phone; every other cell rests on the source read. The previous grade 'driven' was the 2026-03-14 Docker drive of a 9.x release, which predates EspoCRM 10.0.0 (2026-07-02, multiple pipelines); every cell is now rated from the 10.0.8 source with path:line. Paid extensions whose code is not public are rated partial with the vendor documentation URL, consistently: Sales Pack (products, quotes, sales orders, invoices, subscriptions), Advanced Pack (workflows, BPM, reports), Intelligence (AI), Meeting Scheduler, Project Management, Stripe integration and VoIP integration. Five rows are partial only through paid Advanced Pack workflows: lead-aging, req-sla-escalate, work-recurring-task, contract-renewal-warning, contract-renewal-lead."
 		},
 		{
 			"key": "odoo-crm",
@@ -3341,7 +3341,7 @@
 				"hubspot-crm": "not checked: no article describes a log of portal user actions; https://knowledge.hubspot.com/account-management/view-and-export-account-activity-history covers actions of HubSpot users, not portal members, and https://knowledge.hubspot.com/inbox/set-up-a-support-portal names no activity log (read 2026-09-26).",
 				"kiss": "src/router/index.ts:229 \"path: \\\"/beheer\\\"\" and the other routes are staff screens behind the OIDC login (Kiss.Bff/Config/AuthenticationSetup.cs:204 \"AddOpenIdConnect\"); KISS is the KCC workstation and has no citizen facing route",
 				"odoo-crm": "odoo/addons/base/models/res_device.py:17-27 res.device.log records each session with IP, browser and country (Settings > Users > Devices, res_device_views.xml:5), and portal messages and tracked changes appear with the portal user as author in each record's chatter; there is no single filterable log of every action a portal user took.",
-				"espocrm": "application/Espo/Resources/metadata/entityDefs/ActionHistoryRecord.json fields user, userType, action (read, update, create, delete), target, ipAddress, authToken record every action including portal users, viewed at Administration > Action History (application/Espo/Resources/metadata/app/adminPanel.json:131 \"#Admin/actionHistory\"); logins are in AuthLogRecord"
+				"espocrm": "application/Espo/Resources/metadata/entityDefs/ActionHistoryRecord.json fields user, userType, action (read, update, create, delete), target, ipAddress, authToken record every action including portal users, viewed at Administration > Action History (application/Espo/Resources/metadata/app/adminPanel.json:131 \"#Admin/actionHistory\"); logins are in AuthLogRecord. Driven 2026-09-26 on the 10.0.8 lab (espocrm/espocrm:10.0.8-apache-trixie): a portal user created, read and updated a Case through /api/v1/portal-access/<portal id>, and Administration > Action History (#ActionHistoryRecord) listed each action with the user, user type portal, the target and the IP address."
 			}
 		},
 		{
@@ -5667,7 +5667,7 @@
 			"evidence": {
 				"hubspot-crm": "pipelinq/hubspot-crm/hubspot-crm.md:42 \"Mobile app (iOS and Android)\"; competitor_features#31247 \"iOS/Android app with mobile scanning, calling, notifications.\"",
 				"kiss": "the frontend has a single media query in all of src/ (src/nl-design-system/components/Pagination.vue:184 \"@media (width >= 640px)\"); the layout is a fixed desktop KCC workstation with a sidebar (src/layout/TheSidebar.vue)",
-				"espocrm": "The web client adapts to small screens (client/src/views/site/navbar.js:580 \"const smallScreenWidth = this.getThemeManager().getParam('screenWidthXs')\" collapses the navbar on phones), so it works in a phone browser; no official native mobile app is listed at https://www.espocrm.com/extensions/",
+				"espocrm": "The web client adapts to small screens (client/src/views/site/navbar.js:580 \"const smallScreenWidth = this.getThemeManager().getParam('screenWidthXs')\" collapses the navbar on phones), so it works in a phone browser; no official native mobile app is listed at https://www.espocrm.com/extensions/. Driven 2026-09-26 on the 10.0.8 lab at a 390 by 844 viewport: the navbar collapsed behind a menu button, a Contact record opened, was edited and saved without horizontal scroll (scrollWidth 379 of 390). The phone field defaulted to the +1 country code until a country is configured.",
 				"pipedrive": "competitor_features#2777 \"Native iOS/Android app with caller ID, nearby contacts, and activity logging\"",
 				"odoo-crm": "https://www.odoo.com/documentation/19.0/applications/general/mobile.html \"Two kind of Odoo mobile app exist: the progressive web app (PWA) and store apps\" with push notifications, on Google Play and the App Store; the web client is responsive, so CRM, contacts and activities work from the phone in Community too."
 			}
