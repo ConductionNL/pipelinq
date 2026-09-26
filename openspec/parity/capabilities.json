@@ -193,7 +193,7 @@
 			"evidence": {
 				"hubspot-crm": "pipelinq/hubspot-crm/hubspot-crm.md:48 \"| Client management (persons) | Yes | Yes |\"; also competitor_features#2735 \"Centralized contact database with company associations, lifecycle stages, and activity timeline\"",
 				"kiss": "pipelinq/kiss/kiss.md:50 \"Partial (read-only from BRP)\" (persons are read from the BRP; KISS keeps no editable record of its own)",
-				"espocrm": "pipelinq/espocrm/business-logic/browser-walkthrough-notes.md:76 \"Email (multi-value), Phone (with type: Mobile default, country code)\" (Contact create form, observed in the 2026-03-14 Docker walkthrough)",
+				"espocrm": "application/Espo/Modules/Crm/Resources/metadata/entityDefs/Contact.json:230 \"emailAddress\" and :234 \"phoneNumber\" (multi-value email and phone fields on the Contact entity, plus address fields); reached through the Contacts tab (scopes/Contact.json tab true) and /api/v1/Contact",
 				"pipedrive": "pipelinq/pipedrive/pipedrive.md:45 \"Client management (persons) | Yes\"",
 				"odoo-crm": "competitor_features#14885 \"Centralized database for customers, vendors, and partners\" (Contacts)"
 			}
@@ -220,7 +220,7 @@
 			"evidence": {
 				"hubspot-crm": "pipelinq/hubspot-crm/hubspot-crm.md:49 \"| Organization management | Yes | Yes |\"; pipelinq/hubspot-crm/hubspot-crm.md:31 \"Contact and company management with unlimited records (free tier)\"",
 				"kiss": "pipelinq/kiss/kiss.md:51 \"Partial (read-only from KvK)\" (organisations are read from KvK only, no own record)",
-				"espocrm": "pipelinq/espocrm/overview.md:49 \"| **Account** | Companies/organizations |\"; Accounts are a separate entity from Contacts (pipelinq/espocrm/business-logic/browser-walkthrough-notes.md:47)",
+				"espocrm": "application/Espo/Modules/Crm/Resources/metadata/entityDefs/Account.json:23 \"type\" with website, emailAddress, phoneNumber, billing address; Account is its own entity with a contacts link, reached through the Accounts tab and /api/v1/Account",
 				"pipedrive": "pipelinq/pipedrive/pipedrive.md:46 \"Organization management | Yes\"",
 				"odoo-crm": "pipelinq/odoo-crm/odoo-crm.md:48 \"| Organization management | Yes | Yes |\""
 			}
@@ -247,7 +247,7 @@
 			"evidence": {
 				"hubspot-crm": "pipelinq/hubspot-crm/hubspot-crm.md:50 \"| Contact persons (linked) | Yes | Yes |\"; competitor_features#2735 \"company associations\" (a role on the link is not named)",
 				"kiss": "pipelinq/kiss/kiss.md:52 \"Contact persons (linked) | No\"",
-				"espocrm": "pipelinq/espocrm/specs/data-model/spec.md:34 \"Account hasMany Contacts (M:N with `role` and `isInactive` columns)\"",
+				"espocrm": "application/Espo/Modules/Crm/Resources/metadata/entityDefs/Contact.json:268 \"accounts\" with column \"role\": \"contactRole\" and :279 \"accountRole\"; a contact links to many accounts with a role per link, shown in the Contacts panel of the account detail (clientDefs/Account.json:52 \"contacts\")",
 				"pipedrive": "pipelinq/pipedrive/pipedrive.md:47 \"Contact persons (linked) | Yes\"",
 				"odoo-crm": "competitor_features#15893 \"Link person contacts to company contacts with hierarchy\" (Contacts)"
 			}
@@ -259,7 +259,7 @@
 			"pipelinq": "yes",
 			"hubspot-crm": "yes",
 			"pipedrive": "yes",
-			"espocrm": "partial",
+			"espocrm": "yes",
 			"odoo-crm": "yes",
 			"kiss": "partial",
 			"provider": "pipelinq",
@@ -274,7 +274,7 @@
 			"evidence": {
 				"hubspot-crm": "competitor_features#2735 \"Centralized contact database with company associations, lifecycle stages, and activity timeline\"",
 				"kiss": "pipelinq/kiss/business-logic/browser-walkthrough-notes.md:264 \"View detailed information about a citizen, including their cases and contact history\" (cases, contact moments and contact requests; no leads or client notes)",
-				"espocrm": "pipelinq/espocrm/business-logic/browser-walkthrough-notes.md:66 \"Activities (with quick-add buttons for email/meeting/call), History, Tasks\" in the right sidebar (activities and history on one page; no request concept alongside)",
+				"espocrm": "application/Espo/Modules/Crm/Resources/metadata/clientDefs/Account.json:8 side panels \"activities\", \"history\", \"tasks\" plus relationship panels from entityDefs/Account.json:278 \"opportunities\" and :283 \"cases\", and the stream (scopes/Account.json:10 \"stream\": true); the account detail page shows deals, cases, notes, calls, meetings and emails together",
 				"pipedrive": "https://support.pipedrive.com/en/article/contact-detail-view \"your contact detail view conveniently contains all the data relevant to your person or organization in one place\" (vendor documentation read 2026-09-26)",
 				"odoo-crm": "pipelinq/odoo-crm/odoo-crm.md:34 \"360-degree contact view with communication history\""
 			}
@@ -301,7 +301,7 @@
 			"evidence": {
 				"hubspot-crm": "pipelinq/hubspot-crm/hubspot-crm.md:56 \"| Duplicate detection | Yes (deduplication tools) | Yes |\" (a warning at save time is not named)",
 				"kiss": "pipelinq/kiss/overview.md:90 \"**No duplicate detection** - no deduplication logic for contacts\"",
-				"espocrm": "pipelinq/espocrm/espocrm.md:35 \"Configurable duplicate detection on contacts, leads, and accounts\"",
+				"espocrm": "application/Espo/Modules/Crm/Resources/metadata/scopes/Account.json:16 \"duplicateCheckFieldList\": [\"name\", \"emailAddress\"] with recordDefs/Account.json:2 \"duplicateWhereBuilderClassName\" (same for Contact and Lead); on save the UI shows application/Espo/Resources/i18n/en_US/Global.json:358 \"The record you are creating might already exist\"",
 				"pipedrive": "pipelinq/pipedrive/pipedrive.md:53 \"Duplicate detection | Yes (merge duplicates)\"",
 				"odoo-crm": "competitor_features#14888 \"Detect and merge duplicate contact records\" (Contacts)"
 			}
@@ -328,7 +328,7 @@
 			"evidence": {
 				"hubspot-crm": "pipelinq/hubspot-crm/hubspot-crm.md:56 \"| Duplicate detection | Yes (deduplication tools) | Yes |\" (deduplication tools; merging with both histories kept is not named explicitly)",
 				"kiss": "pipelinq/kiss/overview.md:90 \"**No duplicate detection** - no deduplication logic for contacts\" (no deduplication, so no merge of client records either)",
-				"espocrm": "pipelinq/espocrm/specs/lead-management/spec.md:86 \"If duplicates are found, a `ConflictSilent` exception is thrown with the duplicate list, allowing the user to choose to skip or merge.\" (only in the lead-conversion flow; a general two-record merge is not described)",
+				"espocrm": "client/src/views/record/merge.js:97 action \"merge\" reached from the list mass action client/src/views/record/list-base.ts:401 'merge'; application/Espo/Core/Action/Actions/Merge/Merger.php:151 \"updateNotes\" moves stream notes and :266 \"updateRelations\" moves related records to the kept record",
 				"pipedrive": "pipelinq/pipedrive/pipedrive.md:53 \"Duplicate detection | Yes (merge duplicates)\"",
 				"odoo-crm": "competitor_features#14888 \"Detect and merge duplicate contact records\" (Contacts)"
 			}
@@ -355,7 +355,7 @@
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/account-management/search-within-your-hubspot-account \"The global search bar uses machine learning across multiple parameters to find matches on your records\"; searched: record name, \"Primary email address\", \"The default Phone number property\". All plans (vendor documentation read 2026-09-26)",
 				"kiss": "pipelinq/kiss/docs/features-overview.md:33 \"Person search via Haal Centraal BRP (by BSN, name, date of birth)\" (search pages only work during an active contactmoment, see browser-walkthrough-detailed.md:130; email/phone search covers contact requests)",
-				"espocrm": "pipelinq/espocrm/business-logic/browser-walkthrough-notes.md:17 \"The top bar features: global search, quick-create (+), notifications bell, and a user/settings menu.\"",
+				"espocrm": "application/Espo/Resources/metadata/app/clientNavbar.json:3 \"globalSearch\" mounts views/global-search/global-search in the top bar on every page, backed by application/Espo/Resources/routes.json:82 \"/GlobalSearch\"; it matches the text filter fields (entityDefs/Contact.json:719 \"textFilterFields\": [\"name\", \"emailAddress\"]) and application/Espo/Core/Select/Text/DefaultFilter.php:115 handles phone fields when an admin adds phoneNumber to the text filter fields in the Entity Manager",
 				"pipedrive": "https://support.pipedrive.com/en/article/search-finding-what-you-need \"People Name, phone number, email address, notes and custom fields\" searched from the global search bar (vendor documentation read 2026-09-26)",
 				"odoo-crm": "competitor_features#15902 \"Search contacts by any field including custom fields and tags\" (Contacts)"
 			}
@@ -383,7 +383,7 @@
 			"evidence": {
 				"hubspot-crm": "pipelinq/hubspot-crm/hubspot-crm.md:55 \"| Nextcloud Contacts sync | No | Native |\"; sync is to Gmail/Outlook instead: competitor_features#31202 \"Two-way Gmail/Outlook + meeting scheduler.\"",
 				"kiss": "pipelinq/kiss/overview.md:91 \"**No Nextcloud integration** - standalone app, no Nextcloud Contacts sync\"",
-				"espocrm": "pipelinq/espocrm/MERGED-ANALYSIS.md:214 \"| Nextcloud Contacts sync | No | Native |\"; contact sync exists only via the paid Google/Outlook extensions (pipelinq/espocrm/docs/features-and-extensions.md:106 \"Google Contacts integration\")",
+				"espocrm": "Searched the 10.0.8 application/, client/src and client/modules trees for \"carddav\", \"vcard\" and \"vcf\" (case insensitive): no hits; there is no CardDAV server or address book sync in core. Sync to phone runs through paid Google and Outlook integrations (https://www.espocrm.com/extensions/google-integration/), which are a different address book.",
 				"pipedrive": "pipelinq/pipedrive/pipedrive.md:52 \"Nextcloud Contacts sync | No\" (sync is Gmail/Outlook only, pipelinq/pipedrive/pipedrive.md:31)",
 				"odoo-crm": "pipelinq/odoo-crm/odoo-crm.md:54 \"| Nextcloud Contacts sync | No | Native |\"; competitor_features#14871 \"Bidirectional sync with Google Calendar\" (sync targets Google/Outlook, no CardDAV)"
 			}
@@ -411,7 +411,7 @@
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/import-and-export/set-up-your-import-file an import file must \"Be a .csv, .xlsx, or .xls file.\" vCard (.vcf) is not accepted. The corpus line pipelinq/hubspot-crm/hubspot-crm.md:57 \"| Import/Export (CSV/vCard) | Yes | Yes |\" lumps CSV and vCard in one cell (vendor documentation read 2026-09-26)",
 				"kiss": "pipelinq/kiss/overview.md:88 \"**No import/export** - no CSV/data import or bulk operations\" (no vCard or CSV import)",
-				"espocrm": "pipelinq/espocrm/business-logic/browser-walkthrough-notes.md:207 \"Import (CSV), Attachments, Jobs, ...\" (import is CSV/XLSX only; pipelinq/espocrm/MERGED-ANALYSIS.md:216 lumps \"CSV/vCard\" in one row without any vCard detail)",
+				"espocrm": "Searched application/ and client/src for \"vcard\" and \"vcf\" (case insensitive): no hits; the import wizard parses CSV only (client/src/views/import/step1.js:570 \"csvToArray\").",
 				"pipedrive": "for review: pipelinq/pipedrive/pipedrive.md:54 \"Import/Export (CSV/vCard) | Yes\" reads the other way, but the line is a combined CSV/vCard row with no vCard-specific evidence; rating kept",
 				"odoo-crm": "competitor_features#14889 \"Bulk import and export contacts via CSV/Excel\" (no vCard). For review: pipelinq/odoo-crm/odoo-crm.md:56 \"| Import/Export (CSV/vCard) | Yes | Yes |\" lumps vCard with CSV"
 			}
@@ -439,7 +439,7 @@
 			"evidence": {
 				"hubspot-crm": "pipelinq/hubspot-crm/hubspot-crm.md:57 \"| Import/Export (CSV/vCard) | Yes | Yes |\"",
 				"kiss": "pipelinq/kiss/overview.md:88 \"**No import/export** - no CSV/data import or bulk operations\" (no spreadsheet import)",
-				"espocrm": "pipelinq/espocrm/business-logic/browser-walkthrough-notes.md:207 \"Import (CSV)\" in the Data admin section; import has column mapping and duplicate checks (pipelinq/espocrm/specs/api-architecture/spec.md:168)",
+				"espocrm": "client/src/views/import/step1.js:570 \"csvToArray\" in the Import wizard reached from Administration > Import (application/Espo/Resources/metadata/app/adminPanel.json:321 \"#Admin/import\") and the list menu for importable scopes (scopes/Contact.json:12 \"importable\": true); API application/Espo/Resources/routes.json:279 \"/Import\"",
 				"pipedrive": "pipelinq/pipedrive/pipedrive.md:54 \"Import/Export (CSV/vCard) | Yes\"",
 				"odoo-crm": "competitor_features#14889 \"Bulk import and export contacts via CSV/Excel\" (Contacts)"
 			}
@@ -466,7 +466,7 @@
 			"evidence": {
 				"hubspot-crm": "pipelinq/hubspot-crm/hubspot-crm.md:57 \"| Import/Export (CSV/vCard) | Yes | Yes |\"",
 				"kiss": "pipelinq/kiss/overview.md:88 \"**No import/export** - no CSV/data import or bulk operations\" (no client list export)",
-				"espocrm": "pipelinq/espocrm/docs/features-and-extensions.md:53 \"**Export** - Extract data to spreadsheet or CSV\"",
+				"espocrm": "client/src/views/record/list-base.ts:403 mass action 'export' on every list view; application/Espo/Resources/metadata/app/export.json:3 \"xlsx\" alongside csv as export formats",
 				"pipedrive": "pipelinq/pipedrive/pipedrive.md:54 \"Import/Export (CSV/vCard) | Yes\"",
 				"odoo-crm": "competitor_features#143126 \"Export on every list, CSV or XLSX\" (Project lane, generic list export)"
 			}
@@ -493,7 +493,7 @@
 			"evidence": {
 				"hubspot-crm": "competitor_features#2735 \"Centralized contact database with company associations, lifecycle stages, and activity timeline\" (activity timeline; notes with author and time not named)",
 				"kiss": "pipelinq/kiss/specs/contactmoment-logging/spec.md:96 \"Yes (notitie per vraag)\" (notes sit on the question inside a contact moment, not on a client record)",
-				"espocrm": "pipelinq/espocrm/specs/reports-dashboards/spec.md:104 \"Notes/comments\" in the stream every entity has (pipelinq/espocrm/specs/reports-dashboards/spec.md:102 \"Every entity can have a stream showing:\")",
+				"espocrm": "application/Espo/Resources/metadata/entityDefs/Note.json:3 \"post\" and :154 \"createdBy\"; stream posts on the record's stream panel (scopes/Account.json:10 \"stream\": true) show the author and time of each note",
 				"pipedrive": "https://support.pipedrive.com/en/article/how-can-i-add-notes-to-a-deal-or-contact \"Your saved notes appear in the history section of the detail view.\" (history is dated per user) (vendor documentation read 2026-09-26)",
 				"odoo-crm": "competitor_features#15895 \"Add internal notes applicable to customers or contacts\"; competitor_features#143090 \"Log note in the chatter\" records author and time"
 			}
@@ -505,7 +505,7 @@
 			"pipelinq": "yes",
 			"hubspot-crm": "partial",
 			"pipedrive": "yes",
-			"espocrm": "unknown",
+			"espocrm": "partial",
 			"odoo-crm": "yes",
 			"kiss": "no",
 			"provider": "nextcloud",
@@ -521,7 +521,7 @@
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/object-settings/color-coded-object-tags tags cover Deals, Leads, Tickets and other objects, not contacts or companies (Sales/Service Hub Starter+); contacts are grouped by rule in segments instead, so partial (vendor documentation read 2026-09-26)",
 				"kiss": "pipelinq/kiss/specs/beheer-admin/spec.md:27 \"Skills are tags assigned to employees and werkberichten for filtering.\" (tags cover staff and messages, not clients)",
-				"espocrm": "not checked: the 2026-03-14 drive did not record this; re-drive",
+				"espocrm": "No tag field ships on Account or Contact (entityDefs field lists carry no tags field; grep for '\"tags\"' in application/Espo/Resources/metadata and the Crm module metadata: no hits). An admin can add an Array field in the Field Manager (application/Espo/Resources/metadata/fields/array.json:106 \"filter\": true), which takes free values and is filterable in the list search, so tags are a configuration step",
 				"pipedrive": "https://support.pipedrive.com/en/article/contact-detail-view \"label(s), email address, phone number and linked organization/person\" shown on the contact; list view filters by field (https://support.pipedrive.com/en/article/bulk-editing-and-filtering) (vendor documentation read 2026-09-26)",
 				"odoo-crm": "competitor_features#14887 \"Tag and categorize contacts for easy filtering\" (Contacts)"
 			}
@@ -548,7 +548,7 @@
 			"evidence": {
 				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of KvK / Dutch Chamber of Commerce lookup or company autofill from a Dutch register",
 				"kiss": "pipelinq/kiss/specs/bedrijf-search/spec.md:58 \"KCM selects business, system creates/finds matching \"Partij\" in OpenKlant\" (KvK search by name, KvK number, postcode or vestigingsnummer)",
-				"espocrm": "pipelinq/espocrm/MERGED-ANALYSIS.md:173 \"No NL Design theming, no ZGW standards, no WCAG focus, no Dutch government ecosystem integration.\" (no KvK lookup anywhere in sources)",
+				"espocrm": "Searched application/, client/src and client/modules for \"kvk\", \"opencorporates\" and \"chamber of commerce\" (case insensitive): no hits in 10.0.8; no company register lookup in core.",
 				"pipedrive": "absent from sources: pipelinq/pipedrive/pipedrive.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 40) have no mention of a KvK (Dutch Chamber of Commerce) lookup; pipelinq/pipedrive/pipedrive.md:70 \"No Nextcloud integration or Dutch government ecosystem support\"",
 				"odoo-crm": "pipelinq/odoo-crm/odoo-crm.md:72 \"No Nextcloud integration or Dutch government ecosystem support; Odoo pushes its own ecosystem\"; competitor_features#14685 \"Automatic company data enrichment from IP and email domain\" (enrichment by domain, no KvK-number lookup)"
 			}
@@ -575,7 +575,7 @@
 			"evidence": {
 				"hubspot-crm": "competitor_features#31200 \"AI data enrichment, form optimization, buyer-intent tracking.\" (premium tier; enrichment, not a lookup in an international company register)",
 				"kiss": "pipelinq/kiss/kiss.md:74 \"Limited to Dutch municipal context\" (only the Dutch KvK API is integrated, no international register)",
-				"espocrm": "absent from sources: all 24 pipelinq/espocrm files, pipelinq/concurrentie-analyse.md and competitor_features (id 30) have no mention of any company-register lookup (OpenCorporates or other international register)",
+				"espocrm": "Searched application/, client/src and client/modules for \"opencorporates\" and \"company register\": no hits in 10.0.8; Account has only manual fields (entityDefs/Account.json:23 \"type\", sicCode, industry) and no lookup action.",
 				"pipedrive": "absent from sources: pipelinq/pipedrive/pipedrive.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 40) have no mention of an international company register lookup (OpenCorporates or similar)",
 				"odoo-crm": "absent from sources: pipelinq/odoo-crm/odoo-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (all 22 listed Odoo ids) have no mention of a lookup in an international company register. For review: competitor_features#15420 \"Automatic enrichment of lead data with company information\" (IAP enrichment by name/domain, not a register)"
 			}
@@ -587,7 +587,7 @@
 			"pipelinq": "yes",
 			"hubspot-crm": "partial",
 			"pipedrive": "no",
-			"espocrm": "unknown",
+			"espocrm": "partial",
 			"odoo-crm": "yes",
 			"kiss": "no",
 			"provider": "pipelinq",
@@ -603,7 +603,7 @@
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/records/add-a-parent-or-child-company \"Each parent company can have multiple associated child companies, but a child company can only be associated with one parent company.\" All plans; shown as associations on the record, not a tree view (vendor documentation read 2026-09-26)",
 				"kiss": "pipelinq/kiss/overview.md:94 \"**No organization hierarchy** - flat contact model, no org trees\"",
-				"espocrm": "not checked: the 2026-03-14 drive did not record this; re-drive",
+				"espocrm": "Account links (entityDefs/Account.json links: contacts, opportunities, cases, documents and activities) carry no parent account. application/Espo/Tools/LinkManager/LinkManager.php:289 \"if ($entity === $entityForeign)\" shows the Link Manager accepts a self link, so an admin can add a parent account and a subsidiaries panel without code; no tree view is available for Account (tree lists exist only for category entities)",
 				"pipedrive": "absent from sources: pipelinq/pipedrive/pipedrive.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 40) have no mention of parent/subsidiary organisation hierarchies or an org tree view",
 				"odoo-crm": "competitor_features#14886 \"Link contacts to parent companies with hierarchy\" (Contacts)"
 			}
@@ -630,7 +630,7 @@
 			"evidence": {
 				"hubspot-crm": "competitor_features#2747 \"Comprehensive REST API with OAuth, webhooks, and custom object support\"; #19352 \"Custom objects feature of HubSpot Sales Hub\" (custom objects via Sales Hub; custom properties not named)",
 				"kiss": "pipelinq/kiss/overview.md:95 \"**No custom fields** - data model is fixed by VNG API specs\"",
-				"espocrm": "pipelinq/espocrm/specs/custom-fields-layouts/spec.md:38 \"Add custom fields to any entity\" (no-code Field Manager, ~30 field types)",
+				"espocrm": "application/Espo/Resources/metadata/app/adminPanel.json:149 \"#Admin/entityManager\" leads to the Field Manager (client/src/views/admin/field-manager) where an admin adds fields of any type in application/Espo/Resources/metadata/fields/ (varchar, enum, multiEnum, date, currency, link and more) to Account or Contact, then places them with the Layout Manager (adminPanel.json:156 \"#Admin/layouts\")",
 				"pipedrive": "competitor_features#2771 \"Custom fields on deals, contacts, and organizations with advanced filter views\"",
 				"odoo-crm": "competitor_features#14894 \"Add custom fields to contact records\" (Contacts; Studio 15115 for any model)"
 			}
@@ -657,7 +657,7 @@
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/records/how-to-set-a-record-owner \"Assign records to HubSpot users, using the [Object] owner property for contacts, leads, companies, deals, tickets, and custom object records.\" All products and plans (vendor documentation read 2026-09-26)",
 				"kiss": "pipelinq/kiss/MERGED-ANALYSIS.md:44 \"Contact management | Read-only (via BRP/KvK)\" (no client record to assign an owner to)",
-				"espocrm": "pipelinq/espocrm/business-logic/browser-walkthrough-notes.md:60 \"**Right panel:** Assigned User (select), Teams (multi-select)\" (Account create form)",
+				"espocrm": "application/Espo/Modules/Crm/Resources/metadata/entityDefs/Account.json:198 \"assignedUser\" field and link (Contact has the same) shown on the record and filterable in list views; ACL \"own\" levels key off it",
 				"pipedrive": "https://support.pipedrive.com/en/article/followers \"Since each item in Pipedrive can only have one owner\" (vendor documentation read 2026-09-26)",
 				"odoo-crm": "https://www.odoo.com/documentation/19.0/applications/essentials/contacts.html \"Under the Sales heading, a specific Salesperson can be assigned to a contact.\" (vendor documentation read 2026-09-26)"
 			}
@@ -684,7 +684,7 @@
 			"evidence": {
 				"hubspot-crm": "pipelinq/hubspot-crm/hubspot-crm.md:61 \"| Audit trail | Yes (Enterprise only) | Yes |\" (Enterprise tier only)",
 				"kiss": "pipelinq/kiss/business-logic/source-code-analysis.md:871 \"`{ id, userId, insertedAt, apiEndpoint, method }` (audit trail)\" (logs who called which endpoint, not field-level changes to a client)",
-				"espocrm": "pipelinq/espocrm/specs/custom-fields-layouts/spec.md:47 \"**audited** - Track changes in activity stream\"; pipelinq/espocrm/espocrm.md:60 \"| Audit trail | Yes (stream/changelog) |\"",
+				"espocrm": "client/src/handlers/record/view-audit-log.js:31 \"ViewAuditLogHandler\" opens client/src/views/stream/modals/view-audit-log.js:76 type 'listAuditLog' from the record detail menu; fields flagged audited (entityDefs/Account.json:27 \"audited\": true) record who changed what and when in the stream",
 				"pipedrive": "pipelinq/pipedrive/pipedrive.md:58 \"Audit trail | Partial (activity log)\" (activity log, not a full field change history)",
 				"odoo-crm": "pipelinq/odoo-crm/odoo-crm.md:60 \"| Audit trail | Yes (chatter log) | Yes |\""
 			}
@@ -711,7 +711,7 @@
 			"evidence": {
 				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of a party type (citizen vs business) on a client; nearest is competitor_features#2735 \"lifecycle stages\", which is sales stage, not party kind",
 				"kiss": "pipelinq/kiss/business-logic/source-code-analysis.md:363 \"_typeOfKlant: \"bedrijf\"\" (person vs business only, derived from BRP or KvK; no other kinds)",
-				"espocrm": "pipelinq/espocrm/business-logic/browser-walkthrough-notes.md:59 \"**Details section:** Type (dropdown), Industry (dropdown), Description (textarea)\" (Account type only; person vs company is split by entity, plus a \"B2C mode\" at pipelinq/espocrm/docs/documentation-structure.md:51)",
+				"espocrm": "Persons and organisations are separate entities (Contact and Account); application/Espo/Modules/Crm/Resources/metadata/entityDefs/Account.json:24 \"options\": [\"\", \"Customer\", \"Investor\", \"Partner\", \"Reseller\"] classifies relationship role, not party kind; no citizen versus business classification ships",
 				"pipedrive": "absent from sources: pipelinq/pipedrive/pipedrive.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 40) have no mention of classifying a client as citizen, business or other party kind",
 				"odoo-crm": "competitor_features#143084 \"Contacts: `res.partner` with companies, persons under them\" (only company vs individual, no citizen/business party kinds)"
 			}
@@ -738,7 +738,7 @@
 			"evidence": {
 				"hubspot-crm": "pipelinq/hubspot-crm/hubspot-crm.md:32 \"Deal pipeline with kanban board\"; pipelinq/hubspot-crm/hubspot-crm.md:51 \"| Lead pipeline (kanban) | Yes | Yes |\"",
 				"kiss": "pipelinq/kiss/overview.md:86 \"**No pipeline/kanban** - no visual workflow stages or drag-and-drop\"",
-				"espocrm": "pipelinq/espocrm/business-logic/browser-walkthrough-notes.md:104 \"Cards are draggable between columns (standard Kanban behavior)\" (Opportunities Kanban, 2026-03-14 walkthrough)",
+				"espocrm": "application/Espo/Modules/Crm/Resources/metadata/clientDefs/Opportunity.json:81 \"kanbanViewMode\": true with :11 \"kanban\": \"crm:views/opportunity/record/kanban\"; drag between stage columns in client/src/views/record/kanban.js, reached from the Opportunities list view mode switch",
 				"pipedrive": "competitor_features#2765 \"Intuitive drag-and-drop pipeline with customizable stages and deal rotting indicators\"",
 				"odoo-crm": "pipelinq/odoo-crm/odoo-crm.md:32 \"Visual kanban pipeline with drag-and-drop\""
 			}
@@ -750,7 +750,7 @@
 			"pipelinq": "yes",
 			"hubspot-crm": "yes",
 			"pipedrive": "yes",
-			"espocrm": "partial",
+			"espocrm": "yes",
 			"odoo-crm": "yes",
 			"kiss": "no",
 			"provider": "pipelinq",
@@ -765,7 +765,7 @@
 			"evidence": {
 				"hubspot-crm": "competitor_features#2736 \"Customizable deal pipelines with stage automation, deal scoring, and forecasting\" (plural pipelines)",
 				"kiss": "pipelinq/kiss/overview.md:86 \"**No pipeline/kanban** - no visual workflow stages or drag-and-drop\" (no pipelines at all)",
-				"espocrm": "competitor_features#47030 \"Multiple pipelines\" released in 10.0.0 (2026-07-02); the older corpus says the opposite: pipelinq/espocrm/MERGED-ANALYSIS.md:220 \"| Multi-pipeline support | No (single global pipeline) |\" (2026-03-14)",
+				"espocrm": "New in 10.0: application/Espo/Resources/metadata/entityDefs/Pipeline.json:27 \"entityType\" and PipelineStage.json:17 \"mappedStatus\"; admin page application/Espo/Resources/metadata/app/adminPanel.json:363 \"#Admin/pipelines\" (\"Configure multiple pipelines.\"), enabled per entity in the Entity Manager (application/Espo/Modules/Crm/Resources/metadata/app/entityManagerParams.json:180 \"pipelines\" for Opportunity, also Lead); the kanban switches pipeline with a dropdown (client/src/views/record/kanban.js:406 usePipeline, views/record/kanban/pipeline-dropdown)",
 				"pipedrive": "pipelinq/pipedrive/pipedrive.md:36 \"Customizable fields and pipelines\"",
 				"odoo-crm": "competitor_features#15418 \"Multiple sales teams with separate pipelines, each with custom stages and workflow rules\" (Sales)"
 			}
@@ -777,7 +777,7 @@
 			"pipelinq": "yes",
 			"hubspot-crm": "yes",
 			"pipedrive": "yes",
-			"espocrm": "partial",
+			"espocrm": "yes",
 			"odoo-crm": "yes",
 			"kiss": "no",
 			"provider": "pipelinq",
@@ -792,7 +792,7 @@
 			"evidence": {
 				"hubspot-crm": "competitor_features#2736 \"Customizable deal pipelines with stage automation, deal scoring, and forecasting\" (customisable stages; per-stage win probability not named)",
 				"kiss": "pipelinq/kiss/overview.md:86 \"**No pipeline/kanban** - no visual workflow stages or drag-and-drop\" (no stages or win odds)",
-				"espocrm": "pipelinq/espocrm/specs/sales-pipeline/spec.md:43 \"Stages are fully customizable via the admin Field Manager. The probability map is stored as metadata on the stage field definition.\" Limit: pipelinq/espocrm/specs/sales-pipeline/spec.md:53 \"This only fires on creation\" (odds not re-applied on stage change)",
+				"espocrm": "application/Espo/Modules/Crm/Resources/metadata/entityDefs/Opportunity.json:169 \"probabilityMap\" edited in the Field Manager (:188 \"crm:views/opportunity/admin/field-manager/fields/probability-map\") with stage options renamable there; application/Espo/Modules/Crm/Classes/RecordHooks/Opportunity/BeforeUpdate.php:59 sets probability from the map on stage change; pipeline stages carry their own names (PipelineStage.json:3 \"name\")",
 				"pipedrive": "https://support.pipedrive.com/en/article/probability-in-pipedrive \"The stage probability is the likelihood of closing a deal based on the pipeline stage it's in.\" (vendor documentation read 2026-09-26)",
 				"odoo-crm": "competitor_features#14689 \"Customizable pipeline stages and record fields\"; https://www.odoo.com/documentation/19.0/applications/sales/crm/track_leads/lead_scoring.html \"When an opportunity moves to the next stage, its probability of success automatically increases\" (vendor documentation read 2026-09-26)"
 			}
@@ -819,7 +819,7 @@
 			"evidence": {
 				"hubspot-crm": "competitor_features#2736 \"Customizable deal pipelines with stage automation, deal scoring, and forecasting\" (forecasting implies deal amount and close date; neither named)",
 				"kiss": "pipelinq/kiss/overview.md:87 \"**No lead management** - no concept of leads, opportunities, or deals\"",
-				"espocrm": "pipelinq/espocrm/business-logic/browser-walkthrough-notes.md:109 \"Amount (required, currency with USD)\" and \"Close Date (required)\" on the Opportunity create form",
+				"espocrm": "application/Espo/Modules/Crm/Resources/metadata/entityDefs/Opportunity.json:8 \"amount\" (currency, required) and :212 \"closeDate\" on the Opportunity form",
 				"pipedrive": "https://support.pipedrive.com/en/article/deal-detail-view \"Value and products Revenue metrics (if recurring products are added) Label Probability Expected close date\" (vendor documentation read 2026-09-26)",
 				"odoo-crm": "https://www.odoo.com/documentation/19.0/applications/sales/crm/performance/expected_revenue_report.html \"compiles all active leads in a sales pipeline that have a set expected closing date\" (expected revenue plus closing date per lead) (vendor documentation read 2026-09-26)"
 			}
