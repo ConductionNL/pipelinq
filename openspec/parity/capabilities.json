@@ -18,11 +18,74 @@
 			"key": "hubspot-crm",
 			"name": "HubSpot CRM",
 			"vendor": "HubSpot",
-			"readOn": "2026-04-10",
+			"readOn": "2026-09-26",
 			"columnAddedOn": "2026-09-24",
-			"note": "Inherited from concurrentie-analyse/pipelinq/hubspot-crm/. Nobody drove HubSpot in this pass, so every cell is five months old.",
+			"note": "Docs-only reading of 2026-09-26; see readHow.",
 			"evidenceGrade": "docs-only",
-			"unknownReason": "Not covered by the documentation profile (concurrentie-analyse pipelinq/hubspot-crm/hubspot-crm.md) or the competitor_features rows for HubSpot CRM read for this backfill; nobody drove HubSpot."
+			"unknownReason": "Not settled by HubSpot's public knowledge base, product pages, pricing or developer docs read on 2026-09-26; each unknown cell names what was searched.",
+			"sources": {
+				"docs": "https://knowledge.hubspot.com",
+				"sourceRepo": null,
+				"featurePage": "https://www.hubspot.com/products/crm",
+				"featureRequests": "https://community.hubspot.com/t5/HubSpot-Ideas/idb-p/HubSpot_Ideas",
+				"issueTracker": null,
+				"roadmap": "https://www.hubspot.com/spotlight",
+				"changelog": [
+					"https://developers.hubspot.com/changelog",
+					"https://developers.hubspot.com/changelog/fall-2026-spotlight"
+				],
+				"apiReference": "https://developers.hubspot.com/docs/api-reference/latest/overview",
+				"marketplace": "https://ecosystem.hubspot.com/marketplace/apps",
+				"pricing": [
+					"https://www.hubspot.com/pricing/sales",
+					"https://www.hubspot.com/pricing/crm"
+				],
+				"accessibilityStatement": [
+					"https://legal.hubspot.com/website-accessibility",
+					"https://cdn2.hubspot.net/hubfs/2353984/KnowledgeBase%20Attachments/Voluntary%20Product%20Accessibility%20Template%20(VPAT).pdf"
+				],
+				"securityDocs": [
+					"https://legal.hubspot.com/security",
+					"https://trust.hubspot.com"
+				],
+				"demoInstance": null,
+				"community": "https://community.hubspot.com",
+				"reviews": [
+					"https://www.g2.com/products/hubspot-sales-hub/reviews",
+					"https://www.capterra.com/p/152373/HubSpot-CRM/"
+				],
+				"videos": "https://www.youtube.com/@HubSpot",
+				"caseStudies": "https://www.hubspot.com/case-studies",
+				"partnerDirectory": "https://ecosystem.hubspot.com/marketplace/solutions",
+				"trainingCurriculum": "https://academy.hubspot.com/courses",
+				"jobPostings": "https://www.hubspot.com/careers/jobs",
+				"nullReasons": {
+					"sourceRepo": "Closed source; https://legal.hubspot.com/terms-of-service 2.9 forbids uncovering the source code (checked 2026-09-26).",
+					"issueTracker": "No public bug tracker; searched hubspot.com and developers.hubspot.com, only https://status.hubspot.com for incidents and the Ideas board for requests (checked 2026-09-26).",
+					"demoInstance": "No public demo instance; trying the product needs a free account sign-up, which the rule for closed-source readers excludes (checked 2026-09-26)."
+				},
+				"notes": {
+					"featureRequests": "answered 403 to curl, WebFetch and the browser (Cloudflare check); threads were located through web search.",
+					"community": "answered 403 to curl and the browser (Cloudflare check).",
+					"reviews": "listed, not read (both answered 403).",
+					"videos": "curl answered 404 behind a consent redirect; channel URL kept as listed, not read.",
+					"roadmap": "No public roadmap; the Spotlight release page is the nearest forward-looking source. https://developers.hubspot.com/roadmap answered 404.",
+					"changelog": "The product updates page https://www.hubspot.com/product-updates redirects to the community, which answers 403; the developer changelog answered 200.",
+					"accessibilityStatement": "The statement covers HubSpot's public websites (WCAG 2.1 AA); the VPAT PDF is an older attachment on HubSpot's CDN, product scope and date not confirmed.",
+					"apiReference": "answered 200 (a plain curl is redirected to a login gate; WebSearch and WebFetch read it)."
+				},
+				"tenders": [
+					"intelligence-db tenders#38017 (ES, 2026-03-03, licences for the HubSpot CRM platform): https://contrataciondelestado.es/wps/poc?uri=deeplink:detalle_licitacion&idEvl=uhp3CcNUk1bVGIpKDxgsAQ%3D%3D",
+					"intelligence-db tenders#39106 (ES, 2026-03-16, HubSpot licence supply and support): https://contrataciondelestado.es/wps/poc?uri=deeplink:detalle_licitacion&idEvl=uqSlX7HocEHLIx6q1oPaMg%3D%3D",
+					"intelligence-db tenders#81493 (ES, 2026-04-15, HubSpot online customer service for GIAHSA): https://contrataciondelestado.es/wps/poc?uri=deeplink:detalle_licitacion&idEvl=WOIpFGS0q8%2BTylGzYmBF9Q%3D%3D",
+					"intelligence-db tenders#93950 and #94406 (ES, 2026-07, HubSpot agency and licence services)",
+					"intelligence-db tenders#13954 (BE, 2025-10-27, ULB HubSpot licences): https://www.publicprocurement.be/nl/publication-workspaces/1e2267c9-b0e8-4b34-a2eb-036d1f0f4e14",
+					"intelligence-db tenders#90456 (AT, VERBUND Energy4Customers, HubSpot order): https://opentender.eu/at/tender/ocds-70d2nz-45524c19-3a6d-3008-9b8f-06dd5af9edad",
+					"No Dutch public tender names HubSpot in the intelligence database (word-boundary search, 26 Sep 2026)"
+				]
+			},
+			"evidenceGradeBefore": "docs-only",
+			"readHow": "Closed source, read from public documentation only on 2026-09-26 (knowledge base, product and plan pages, pricing, product updates, developer docs and the app marketplace); no trial account. A paid-tier capability is rated by what a buyer can get, with the Hub and tier (Starter, Professional or Enterprise) named in the cell; a capability only through a marketplace app is partial and names the app. Existing ratings were treated as claims: where the docs are silent a former no became unknown (most of the point of sale and loyalty rows), and no is kept only where a page states the absence."
 		},
 		{
 			"key": "pipedrive",
@@ -3621,7 +3684,7 @@
 			"area": "products",
 			"name": "Draft next year's contract from this year's in one click",
 			"pipelinq": "yes",
-			"hubspot-crm": "unknown",
+			"hubspot-crm": "yes",
 			"pipedrive": "no",
 			"espocrm": "partial",
 			"odoo-crm": "partial",
@@ -3639,7 +3702,8 @@
 				"kiss": "src/router/index.ts:126 \"const router = createRouter(\" lists the only screens: startscherm, afhandeling, contactverzoeken, personen, bedrijven, zaken, links and beheer; no contract, subscription or renewal entity exists in Kiss.Bff/Intern/Data/BeheerDbContext.cs or in the OpenKlant and ZGW services KISS calls",
 				"pipedrive": "absent from sources: pipelinq/pipedrive/pipedrive.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 40) have no mention of drafting a successor contract from an existing one",
 				"odoo-crm": "https://www.odoo.com/documentation/19.0/applications/sales/subscriptions/renewals.html \"When the Renew button is clicked, Odoo instantly presents a new renewal quotation\" carrying the start date and next invoice date; Subscriptions is Enterprise (no addons/sale_subscription in the 19.0 Community source).",
-				"espocrm": "client/src/views/record/detail.ts:974 name 'duplicate' puts a Duplicate action in the record menu that opens a prefilled copy of any record; with no contract entity in core, it applies to a custom contract entity or to paid Sales Pack orders, and Sales Pack subscriptions continue by themselves instead (https://docs.espocrm.com/extensions/sales-pack/subscriptions/)"
+				"espocrm": "client/src/views/record/detail.ts:974 name 'duplicate' puts a Duplicate action in the record menu that opens a prefilled copy of any record; with no contract entity in core, it applies to a custom contract entity or to paid Sales Pack orders, and Sales Pack subscriptions continue by themselves instead (https://docs.espocrm.com/extensions/sales-pack/subscriptions/)",
+				"hubspot-crm": "https://knowledge.hubspot.com/quotes/create-a-renewal-quote-on-a-contract \"When a renewal quote is accepted, a new contract is created and automatically associated with the previous contract\"; renewals can also \"be created directly from a contract (BETA)\" (https://knowledge.hubspot.com/contracts/set-up-contracts). Revenue Hub Professional, Enterprise."
 			}
 		},
 		{
@@ -3647,7 +3711,7 @@
 			"area": "products",
 			"name": "See your monthly recurring revenue and what is up for renewal",
 			"pipelinq": "yes",
-			"hubspot-crm": "partial",
+			"hubspot-crm": "yes",
 			"pipedrive": "partial",
 			"espocrm": "no",
 			"odoo-crm": "partial",
@@ -3662,7 +3726,7 @@
 				"owner": "ConductionNL/pipelinq"
 			},
 			"evidence": {
-				"hubspot-crm": "competitor_features#2741 \"...attribution reporting, funnel analytics, and revenue reporting\" (revenue reporting; MRR and renewals not named)",
+				"hubspot-crm": "https://knowledge.hubspot.com/contracts/understand-contracts-in-hubspot the contract shows \"total contract value (TCV), annual contract value, monthly recurring revenue (MRR), and annual recurring revenue (ARR)\" (Revenue Hub); https://knowledge.hubspot.com/reports/track-recurring-revenue-with-revenue-analytics reports renewals, upgrades and churn (Sales or Service Hub Enterprise).",
 				"kiss": "src/router/index.ts:126 \"const router = createRouter(\" lists the only screens: startscherm, afhandeling, contactverzoeken, personen, bedrijven, zaken, links and beheer; no contract, subscription or renewal entity exists in Kiss.Bff/Intern/Data/BeheerDbContext.cs or in the OpenKlant and ZGW services KISS calls",
 				"espocrm": "No MRR in core; the paid Sales Pack reports page enumerates its reports (Customer balances, Customer aging, Sales revenue, Sales by customer, Sales by product and others) without recurring revenue or renewals: https://docs.espocrm.com/extensions/sales-pack/reports/",
 				"pipedrive": "competitor_features#2770 \"Weighted pipeline forecasting with recurring revenue and subscription tracking\" (subscription tracking on deals, no contract object)",
@@ -3674,7 +3738,7 @@
 			"area": "products",
 			"name": "Send a contract to the invoicing app so it actually gets billed",
 			"pipelinq": "yes",
-			"hubspot-crm": "partial",
+			"hubspot-crm": "yes",
 			"pipedrive": "partial",
 			"espocrm": "partial",
 			"odoo-crm": "yes",
@@ -3689,7 +3753,7 @@
 				"owner": "ConductionNL/shillinq"
 			},
 			"evidence": {
-				"hubspot-crm": "competitor_features#14431 \"Commerce Hub includes native invoice creation from deals.\" (professional tier; from deals, not contracts); #14432 Xero sync",
+				"hubspot-crm": "https://knowledge.hubspot.com/contracts/understand-contracts-in-hubspot \"Create contracts and automatically send invoices due on billing dates. Automatically collect payments due.\" Revenue Hub, with HubSpot invoices; external accounting via the Xero or QuickBooks data sync.",
 				"kiss": "src/router/index.ts:126 \"const router = createRouter(\" lists the only screens: startscherm, afhandeling, contactverzoeken, personen, bedrijven, zaken, links and beheer; no contract, subscription or renewal entity exists in Kiss.Bff/Intern/Data/BeheerDbContext.cs or in the OpenKlant and ZGW services KISS calls",
 				"espocrm": "Paid Sales Pack subscriptions: https://docs.espocrm.com/extensions/sales-pack/subscriptions/ \"The system automatically creates next periods ... and creates invoices and payments for active periods\" and \"Created invoices will be also automatically sent to customers\"; invoicing stays inside EspoCRM, no hand off to an outside invoicing app",
 				"pipedrive": "https://support.pipedrive.com/en/article/invoicing-feature-in-pipedrive \"create invoices that will include pre-configured deal, person and organization details directly from the detail view of a deal\" (needs a third-party invoicing app) (vendor documentation read 2026-09-26)",
@@ -3701,7 +3765,7 @@
 			"area": "pos",
 			"name": "Ring up a sale at the counter",
 			"pipelinq": "yes",
-			"hubspot-crm": "no",
+			"hubspot-crm": "unknown",
 			"pipedrive": "no",
 			"espocrm": "no",
 			"odoo-crm": "yes",
@@ -3716,7 +3780,7 @@
 				"owner": "ConductionNL/pipelinq"
 			},
 			"evidence": {
-				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of point-of-sale / counter sales",
+				"hubspot-crm": "not checked: no knowledge base article describes a till or counter sale; https://knowledge.hubspot.com/payments/understand-how-to-collect-payments-in-hubspot names only \"payment links, invoices, quotes, legacy quotes, and subscriptions\" for collecting payments, and the Square and Lightspeed Retail marketplace apps (https://ecosystem.hubspot.com/marketplace/listing/square-data-sync) sync customers only (read 2026-09-26).",
 				"kiss": "src/router/index.ts:126 \"const router = createRouter(\" lists the only screens: startscherm, afhandeling, contactverzoeken, personen, bedrijven, zaken, links and beheer; KISS has no product, price, till, payment or stock model anywhere in src/ or Kiss.Bff/ (grep for prijs, kassa, factuur, offerte finds nothing)",
 				"espocrm": "No point of sale in core 10.0.8 (searched en_US i18n for \"point of sale\" and \"cash register\": no hits) or in the extension list https://www.espocrm.com/extensions/, whose Sales Pack covers quotes, orders, invoices and payments",
 				"pipedrive": "absent from sources: pipelinq/pipedrive/pipedrive.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 40) have no mention of point of sale (till, receipts, cash drawer, card terminal, refunds); pipelinq/pipedrive/pipedrive.md:16 targets \"Small to mid-sized sales teams\"",
@@ -3728,7 +3792,7 @@
 			"area": "pos",
 			"name": "Have the till work out the totals and the VAT for you",
 			"pipelinq": "yes",
-			"hubspot-crm": "no",
+			"hubspot-crm": "unknown",
 			"pipedrive": "no",
 			"espocrm": "no",
 			"odoo-crm": "yes",
@@ -3743,7 +3807,7 @@
 				"owner": "ConductionNL/pipelinq"
 			},
 			"evidence": {
-				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of till totals or VAT calculation at a till",
+				"hubspot-crm": "not checked: no till exists in the docs to total; the tax library at https://knowledge.hubspot.com/payments/set-up-automated-tax-and-tax-rates applies VAT to line items on quotes and invoices, not to a counter sale (read 2026-09-26).",
 				"kiss": "src/router/index.ts:126 \"const router = createRouter(\" lists the only screens: startscherm, afhandeling, contactverzoeken, personen, bedrijven, zaken, links and beheer; KISS has no product, price, till, payment or stock model anywhere in src/ or Kiss.Bff/ (grep for prijs, kassa, factuur, offerte finds nothing)",
 				"espocrm": "No till exists in 10.0.8 or its extensions (https://www.espocrm.com/extensions/); document totals and VAT are computed only on paid Sales Pack quotes and invoices",
 				"pipedrive": "absent from sources: pipelinq/pipedrive/pipedrive.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 40) have no mention of point of sale (till, receipts, cash drawer, card terminal, refunds); pipelinq/pipedrive/pipedrive.md:16 targets \"Small to mid-sized sales teams\"",
@@ -3755,7 +3819,7 @@
 			"area": "pos",
 			"name": "Scan a barcode to put a product in the sale",
 			"pipelinq": "yes",
-			"hubspot-crm": "no",
+			"hubspot-crm": "unknown",
 			"pipedrive": "no",
 			"espocrm": "no",
 			"odoo-crm": "yes",
@@ -3770,7 +3834,7 @@
 				"owner": "ConductionNL/pipelinq"
 			},
 			"evidence": {
-				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of barcode scanning for sales (#31247 mentions \"mobile scanning\" without saying of what; not a till)",
+				"hubspot-crm": "not checked: searched the knowledge base URL list for barcode and point of sale and found no article; https://knowledge.hubspot.com/properties/hubspots-default-product-properties names SKU but no barcode scanning (read 2026-09-26).",
 				"kiss": "src/router/index.ts:126 \"const router = createRouter(\" lists the only screens: startscherm, afhandeling, contactverzoeken, personen, bedrijven, zaken, links and beheer; KISS has no product, price, till, payment or stock model anywhere in src/ or Kiss.Bff/ (grep for prijs, kassa, factuur, offerte finds nothing)",
 				"espocrm": "application/Espo/Resources/metadata/fields/barcode.json is a field type that renders a barcode, not a scanner input for a sale; there is no sale screen to scan into",
 				"pipedrive": "absent from sources: pipelinq/pipedrive/pipedrive.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 40) have no mention of point of sale (till, receipts, cash drawer, card terminal, refunds); pipelinq/pipedrive/pipedrive.md:16 targets \"Small to mid-sized sales teams\"",
@@ -3782,7 +3846,7 @@
 			"area": "pos",
 			"name": "Take a card payment from the till",
 			"pipelinq": "yes",
-			"hubspot-crm": "no",
+			"hubspot-crm": "partial",
 			"pipedrive": "no",
 			"espocrm": "no",
 			"odoo-crm": "yes",
@@ -3797,7 +3861,7 @@
 				"owner": "ConductionNL/pipelinq"
 			},
 			"evidence": {
-				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of card payments at a till (#14431 \"Integrated payment processing\" is for invoices, not a till)",
+				"hubspot-crm": "https://knowledge.hubspot.com/payments/understand-how-to-collect-payments-in-hubspot \"Collect payments from debit and credit cards and bank debit methods (e.g., ACH, SEPA, BACs)\" through payment links, invoices and quotes; HubSpot payments is \"available to companies based in United States, United Kingdom, and Canada\", Stripe as processor elsewhere. Online card payments only, no card terminal at a till is described.",
 				"kiss": "src/router/index.ts:126 \"const router = createRouter(\" lists the only screens: startscherm, afhandeling, contactverzoeken, personen, bedrijven, zaken, links and beheer; KISS has no product, price, till, payment or stock model anywhere in src/ or Kiss.Bff/ (grep for prijs, kassa, factuur, offerte finds nothing)",
 				"espocrm": "No card terminal support in 10.0.8 or its extensions; the paid Stripe Integration takes online one time payments through payment links (https://docs.espocrm.com/extensions/stripe-integration/ \"allows your customers to make one-time payments using Stripe\"), not at a till",
 				"pipedrive": "absent from sources: pipelinq/pipedrive/pipedrive.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 40) have no mention of point of sale (till, receipts, cash drawer, card terminal, refunds); pipelinq/pipedrive/pipedrive.md:16 targets \"Small to mid-sized sales teams\"",
@@ -3809,7 +3873,7 @@
 			"area": "pos",
 			"name": "Print a receipt on the till printer or mail it instead",
 			"pipelinq": "yes",
-			"hubspot-crm": "no",
+			"hubspot-crm": "partial",
 			"pipedrive": "no",
 			"espocrm": "no",
 			"odoo-crm": "yes",
@@ -3824,7 +3888,7 @@
 				"owner": "ConductionNL/pipelinq"
 			},
 			"evidence": {
-				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of receipts or receipt printing",
+				"hubspot-crm": "https://knowledge.hubspot.com/payments/issue-payment-receipts-and-refunds-for-your-buyers \"After collecting payments in HubSpot, you can send receipts and issue refunds from the payments index page\" with branded receipt emails. All products and plans. Emailed receipts for online payments; no till printer.",
 				"kiss": "src/router/index.ts:126 \"const router = createRouter(\" lists the only screens: startscherm, afhandeling, contactverzoeken, personen, bedrijven, zaken, links and beheer; KISS has no product, price, till, payment or stock model anywhere in src/ or Kiss.Bff/ (grep for prijs, kassa, factuur, offerte finds nothing)",
 				"espocrm": "No till and no receipt printer support in 10.0.8 (searched en_US i18n for \"receipt printer\": no hits); Sales Pack receipt orders are warehouse documents, not sales receipts (https://docs.espocrm.com/extensions/sales-pack/overview/)",
 				"pipedrive": "absent from sources: pipelinq/pipedrive/pipedrive.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 40) have no mention of point of sale (till, receipts, cash drawer, card terminal, refunds); pipelinq/pipedrive/pipedrive.md:16 targets \"Small to mid-sized sales teams\"",
@@ -3836,7 +3900,7 @@
 			"area": "pos",
 			"name": "Turn a receipt into a proper invoice once the amount is high enough",
 			"pipelinq": "yes",
-			"hubspot-crm": "no",
+			"hubspot-crm": "unknown",
 			"pipedrive": "no",
 			"espocrm": "no",
 			"odoo-crm": "partial",
@@ -3851,7 +3915,7 @@
 				"owner": "ConductionNL/pipelinq"
 			},
 			"evidence": {
-				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of converting receipts to invoices",
+				"hubspot-crm": "not checked: HubSpot creates invoices (https://knowledge.hubspot.com/invoices/create-and-manage-invoices) but no article describes turning a receipt into an invoice above an amount; searched the payments and invoices articles (read 2026-09-26).",
 				"kiss": "src/router/index.ts:126 \"const router = createRouter(\" lists the only screens: startscherm, afhandeling, contactverzoeken, personen, bedrijven, zaken, links and beheer; KISS has no product, price, till, payment or stock model anywhere in src/ or Kiss.Bff/ (grep for prijs, kassa, factuur, offerte finds nothing)",
 				"espocrm": "No till receipts exist to convert (see pos-sale); the paid Sales Pack creates invoices from quotes, sales orders or opportunities only (https://docs.espocrm.com/user-guide/invoices/)",
 				"pipedrive": "absent from sources: pipelinq/pipedrive/pipedrive.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 40) have no mention of point of sale (till, receipts, cash drawer, card terminal, refunds); pipelinq/pipedrive/pipedrive.md:16 targets \"Small to mid-sized sales teams\"",
@@ -3863,7 +3927,7 @@
 			"area": "pos",
 			"name": "Take a return and pay the money back",
 			"pipelinq": "yes",
-			"hubspot-crm": "no",
+			"hubspot-crm": "partial",
 			"pipedrive": "no",
 			"espocrm": "partial",
 			"odoo-crm": "yes",
@@ -3878,7 +3942,7 @@
 				"owner": "ConductionNL/pipelinq"
 			},
 			"evidence": {
-				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of returns or refunds",
+				"hubspot-crm": "https://knowledge.hubspot.com/payments/issue-payment-receipts-and-refunds-for-your-buyers \"you can send receipts and issue refunds from the payments index page\" for payments collected in HubSpot. All products and plans. Money back on an online payment; no return of goods at a counter.",
 				"kiss": "src/router/index.ts:126 \"const router = createRouter(\" lists the only screens: startscherm, afhandeling, contactverzoeken, personen, bedrijven, zaken, links and beheer; KISS has no product, price, till, payment or stock model anywhere in src/ or Kiss.Bff/ (grep for prijs, kassa, factuur, offerte finds nothing)",
 				"espocrm": "No counter refund; the paid Sales Pack handles returns and money back as documents: https://docs.espocrm.com/extensions/sales-pack/credit-notes/ \"An outbound payment can be allocated to one or more credit notes. This is typically used when refunding an already paid invoice\" and return orders for returned products",
 				"pipedrive": "absent from sources: pipelinq/pipedrive/pipedrive.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 40) have no mention of point of sale (till, receipts, cash drawer, card terminal, refunds); pipelinq/pipedrive/pipedrive.md:16 targets \"Small to mid-sized sales teams\"",
@@ -3890,7 +3954,7 @@
 			"area": "pos",
 			"name": "Require a manager for a refund above your limit",
 			"pipelinq": "yes",
-			"hubspot-crm": "no",
+			"hubspot-crm": "unknown",
 			"pipedrive": "no",
 			"espocrm": "no",
 			"odoo-crm": "partial",
@@ -3905,7 +3969,7 @@
 				"owner": "ConductionNL/pipelinq"
 			},
 			"evidence": {
-				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of manager approval for refunds",
+				"hubspot-crm": "not checked: https://knowledge.hubspot.com/payments/issue-payment-receipts-and-refunds-for-your-buyers names permissions for branding but no refund limit or manager approval above an amount (read 2026-09-26).",
 				"kiss": "src/router/index.ts:126 \"const router = createRouter(\" lists the only screens: startscherm, afhandeling, contactverzoeken, personen, bedrijven, zaken, links and beheer; KISS has no product, price, till, payment or stock model anywhere in src/ or Kiss.Bff/ (grep for prijs, kassa, factuur, offerte finds nothing)",
 				"espocrm": "No refund approval limit in 10.0.8 or in the Sales Pack credit note docs (https://docs.espocrm.com/extensions/sales-pack/credit-notes/), which describe creation, allocation, PDF and locking only",
 				"pipedrive": "absent from sources: pipelinq/pipedrive/pipedrive.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 40) have no mention of point of sale (till, receipts, cash drawer, card terminal, refunds); pipelinq/pipedrive/pipedrive.md:16 targets \"Small to mid-sized sales teams\"",
@@ -3917,7 +3981,7 @@
 			"area": "pos",
 			"name": "Open the drawer at the start of the day and count it at the end",
 			"pipelinq": "yes",
-			"hubspot-crm": "no",
+			"hubspot-crm": "unknown",
 			"pipedrive": "no",
 			"espocrm": "no",
 			"odoo-crm": "yes",
@@ -3932,7 +3996,7 @@
 				"owner": "ConductionNL/pipelinq"
 			},
 			"evidence": {
-				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of cash drawer or till counts",
+				"hubspot-crm": "not checked: no knowledge base article on a cash drawer or till count; searched the KB URL list for point of sale, till and cash (read 2026-09-26).",
 				"kiss": "src/router/index.ts:126 \"const router = createRouter(\" lists the only screens: startscherm, afhandeling, contactverzoeken, personen, bedrijven, zaken, links and beheer; KISS has no product, price, till, payment or stock model anywhere in src/ or Kiss.Bff/ (grep for prijs, kassa, factuur, offerte finds nothing)",
 				"espocrm": "No cash drawer or till session in 10.0.8 or its extensions (https://www.espocrm.com/extensions/)",
 				"pipedrive": "absent from sources: pipelinq/pipedrive/pipedrive.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 40) have no mention of point of sale (till, receipts, cash drawer, card terminal, refunds); pipelinq/pipedrive/pipedrive.md:16 targets \"Small to mid-sized sales teams\"",
@@ -3944,7 +4008,7 @@
 			"area": "pos",
 			"name": "Have a manager sign off a till that does not add up",
 			"pipelinq": "yes",
-			"hubspot-crm": "no",
+			"hubspot-crm": "unknown",
 			"pipedrive": "no",
 			"espocrm": "no",
 			"odoo-crm": "yes",
@@ -3959,7 +4023,7 @@
 				"owner": "ConductionNL/pipelinq"
 			},
 			"evidence": {
-				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of cash differences or till sign-off",
+				"hubspot-crm": "not checked: no till count exists in the docs to sign off; searched the KB URL list for point of sale, till and cash (read 2026-09-26).",
 				"kiss": "src/router/index.ts:126 \"const router = createRouter(\" lists the only screens: startscherm, afhandeling, contactverzoeken, personen, bedrijven, zaken, links and beheer; KISS has no product, price, till, payment or stock model anywhere in src/ or Kiss.Bff/ (grep for prijs, kassa, factuur, offerte finds nothing)",
 				"espocrm": "No till counts exist in 10.0.8 or its extensions (https://www.espocrm.com/extensions/), so there is no cash difference to sign off",
 				"pipedrive": "absent from sources: pipelinq/pipedrive/pipedrive.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 40) have no mention of point of sale (till, receipts, cash drawer, card terminal, refunds); pipelinq/pipedrive/pipedrive.md:16 targets \"Small to mid-sized sales teams\"",
@@ -3971,7 +4035,7 @@
 			"area": "pos",
 			"name": "Close the day with a report your bookkeeper accepts",
 			"pipelinq": "yes",
-			"hubspot-crm": "no",
+			"hubspot-crm": "unknown",
 			"pipedrive": "no",
 			"espocrm": "no",
 			"odoo-crm": "yes",
@@ -3986,7 +4050,7 @@
 				"owner": "ConductionNL/pipelinq"
 			},
 			"evidence": {
-				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of Z-reports / day closing",
+				"hubspot-crm": "not checked: no end of day or Z report in the docs; https://knowledge.hubspot.com/payments/manage-payouts lists daily payouts \"minus any fees, refunds, or chargebacks\", which is a processor payout, not a till close (read 2026-09-26).",
 				"kiss": "src/router/index.ts:126 \"const router = createRouter(\" lists the only screens: startscherm, afhandeling, contactverzoeken, personen, bedrijven, zaken, links and beheer; KISS has no product, price, till, payment or stock model anywhere in src/ or Kiss.Bff/ (grep for prijs, kassa, factuur, offerte finds nothing)",
 				"espocrm": "No end of day till report in 10.0.8; the paid Sales Pack reports (https://docs.espocrm.com/extensions/sales-pack/reports/) are customer balances, aging, tax summaries and sales revenue, not a Z report",
 				"pipedrive": "absent from sources: pipelinq/pipedrive/pipedrive.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 40) have no mention of point of sale (till, receipts, cash drawer, card terminal, refunds); pipelinq/pipedrive/pipedrive.md:16 targets \"Small to mid-sized sales teams\"",
@@ -3998,7 +4062,7 @@
 			"area": "pos",
 			"name": "Send the day's takings straight into the bookkeeping",
 			"pipelinq": "yes",
-			"hubspot-crm": "no",
+			"hubspot-crm": "partial",
 			"pipedrive": "no",
 			"espocrm": "no",
 			"odoo-crm": "yes",
@@ -4013,7 +4077,7 @@
 				"owner": "ConductionNL/shillinq"
 			},
 			"evidence": {
-				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of sending till takings to bookkeeping (#14432 Xero sync covers contacts, products, invoices and payments, not till takings)",
+				"hubspot-crm": "https://knowledge.hubspot.com/payments/understand-how-to-collect-payments-in-hubspot payouts are \"the funds deposited into your bank account from your collected payments each day\"; invoices sync to QuickBooks or Xero through the accounting integrations (https://knowledge.hubspot.com/invoices/create-and-manage-invoices). Online takings, not a till's day.",
 				"kiss": "src/router/index.ts:126 \"const router = createRouter(\" lists the only screens: startscherm, afhandeling, contactverzoeken, personen, bedrijven, zaken, links and beheer; KISS has no product, price, till, payment or stock model anywhere in src/ or Kiss.Bff/ (grep for prijs, kassa, factuur, offerte finds nothing)",
 				"espocrm": "No till takings exist; the paid Sales Pack has a \"Ledger summary\" report (https://docs.espocrm.com/extensions/sales-pack/reports/) but no export to a bookkeeping package is documented",
 				"pipedrive": "absent from sources: pipelinq/pipedrive/pipedrive.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 40) have no mention of point of sale (till, receipts, cash drawer, card terminal, refunds); pipelinq/pipedrive/pipedrive.md:16 targets \"Small to mid-sized sales teams\"",
@@ -4025,7 +4089,7 @@
 			"area": "pos",
 			"name": "Keep a signed till trail of the kind the tax office asks for",
 			"pipelinq": "yes",
-			"hubspot-crm": "no",
+			"hubspot-crm": "unknown",
 			"pipedrive": "no",
 			"espocrm": "no",
 			"odoo-crm": "partial",
@@ -4040,7 +4104,7 @@
 				"owner": "ConductionNL/pipelinq"
 			},
 			"evidence": {
-				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of signed till / fiscal audit trail",
+				"hubspot-crm": "not checked: no signed till journal or fiscal register in the docs; searched the KB URL list for point of sale, fiscal and till (read 2026-09-26).",
 				"kiss": "src/router/index.ts:126 \"const router = createRouter(\" lists the only screens: startscherm, afhandeling, contactverzoeken, personen, bedrijven, zaken, links and beheer; KISS has no product, price, till, payment or stock model anywhere in src/ or Kiss.Bff/ (grep for prijs, kassa, factuur, offerte finds nothing)",
 				"espocrm": "No fiscal till trail in 10.0.8 or its extensions; Sales Pack \"Issuance locking\" (https://docs.espocrm.com/extensions/sales-pack/overview/) locks issued documents but is not a signed till journal",
 				"pipedrive": "absent from sources: pipelinq/pipedrive/pipedrive.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 40) have no mention of point of sale (till, receipts, cash drawer, card terminal, refunds); pipelinq/pipedrive/pipedrive.md:16 targets \"Small to mid-sized sales teams\"",
@@ -4052,7 +4116,7 @@
 			"area": "pos",
 			"name": "Link the sale to the client who bought it",
 			"pipelinq": "yes",
-			"hubspot-crm": "no",
+			"hubspot-crm": "partial",
 			"pipedrive": "no",
 			"espocrm": "no",
 			"odoo-crm": "yes",
@@ -4067,7 +4131,7 @@
 				"owner": "ConductionNL/pipelinq"
 			},
 			"evidence": {
-				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of linking a till sale to a customer",
+				"hubspot-crm": "https://ecosystem.hubspot.com/marketplace/listing/square-data-sync maps Square \"Customers\" to contacts, \"Items\" to products and \"Payments\" to custom objects; https://ecosystem.hubspot.com/marketplace/listing/lightspeedretailx-data-sync \"this is a customer sync only, it will not sync transactions\". Only via the Square data sync app, and the sale is rung in Square.",
 				"kiss": "src/router/index.ts:126 \"const router = createRouter(\" lists the only screens: startscherm, afhandeling, contactverzoeken, personen, bedrijven, zaken, links and beheer; KISS has no product, price, till, payment or stock model anywhere in src/ or Kiss.Bff/ (grep for prijs, kassa, factuur, offerte finds nothing)",
 				"espocrm": "No till sale entity exists in 10.0.8 or its extensions (https://www.espocrm.com/extensions/), so no sale links to a client at the counter",
 				"pipedrive": "absent from sources: pipelinq/pipedrive/pipedrive.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 40) have no mention of point of sale (till, receipts, cash drawer, card terminal, refunds); pipelinq/pipedrive/pipedrive.md:16 targets \"Small to mid-sized sales teams\"",
@@ -4079,7 +4143,7 @@
 			"area": "pos",
 			"name": "Give a customer points for what they spend",
 			"pipelinq": "yes",
-			"hubspot-crm": "no",
+			"hubspot-crm": "partial",
 			"pipedrive": "no",
 			"espocrm": "no",
 			"odoo-crm": "yes",
@@ -4094,7 +4158,7 @@
 				"owner": "ConductionNL/pipelinq"
 			},
 			"evidence": {
-				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of loyalty points",
+				"hubspot-crm": "https://ecosystem.hubspot.com/marketplace/listing/yotpo-loyalty \"syncs all program-related data (point balances, referral links, VIP tiers, etc.) and events (coupons redeemed ...) with HubSpot\"; Zinrelo (https://ecosystem.hubspot.com/marketplace/apps/zinrelo-integration-346498) likewise. The points are kept in the third-party app.",
 				"kiss": "src/router/index.ts:126 \"const router = createRouter(\" lists the only screens: startscherm, afhandeling, contactverzoeken, personen, bedrijven, zaken, links and beheer; KISS has no product, price, till, payment or stock model anywhere in src/ or Kiss.Bff/ (grep for prijs, kassa, factuur, offerte finds nothing)",
 				"espocrm": "Searched en_US i18n in core and the Crm module for \"loyalty\" and \"gift card\": no hits; no loyalty entity in 10.0.8 or in https://www.espocrm.com/extensions/",
 				"pipedrive": "absent from sources: pipelinq/pipedrive/pipedrive.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 40) have no mention of loyalty points, tiers or gift cards",
@@ -4106,7 +4170,7 @@
 			"area": "pos",
 			"name": "Let a customer pay part of the bill with their points",
 			"pipelinq": "yes",
-			"hubspot-crm": "no",
+			"hubspot-crm": "partial",
 			"pipedrive": "no",
 			"espocrm": "no",
 			"odoo-crm": "yes",
@@ -4121,7 +4185,7 @@
 				"owner": "ConductionNL/pipelinq"
 			},
 			"evidence": {
-				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of redeeming loyalty points",
+				"hubspot-crm": "https://ecosystem.hubspot.com/marketplace/listing/yotpo-loyalty syncs \"coupons redeemed\" events to HubSpot; Zinrelo offers \"flexible rewards redemption\" (https://ecosystem.hubspot.com/marketplace/apps/zinrelo-integration-346498). Redemption happens in the third-party app and shop, not in HubSpot.",
 				"kiss": "src/router/index.ts:126 \"const router = createRouter(\" lists the only screens: startscherm, afhandeling, contactverzoeken, personen, bedrijven, zaken, links and beheer; KISS has no product, price, till, payment or stock model anywhere in src/ or Kiss.Bff/ (grep for prijs, kassa, factuur, offerte finds nothing)",
 				"espocrm": "No loyalty points exist in 10.0.8 or its extensions (searched en_US i18n for \"loyalty\": no hits; https://www.espocrm.com/extensions/ lists none)",
 				"pipedrive": "absent from sources: pipelinq/pipedrive/pipedrive.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 40) have no mention of loyalty points, tiers or gift cards",
@@ -4133,7 +4197,7 @@
 			"area": "pos",
 			"name": "Move a customer up a tier when they spend enough, and down when they stop",
 			"pipelinq": "yes",
-			"hubspot-crm": "no",
+			"hubspot-crm": "partial",
 			"pipedrive": "no",
 			"espocrm": "no",
 			"odoo-crm": "no",
@@ -4148,7 +4212,7 @@
 				"owner": "ConductionNL/pipelinq"
 			},
 			"evidence": {
-				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of loyalty tiers",
+				"hubspot-crm": "https://ecosystem.hubspot.com/marketplace/apps/zinrelo-integration-346498 \"reward tiers for VIP customers\"; https://ecosystem.hubspot.com/marketplace/listing/yotpo-loyalty syncs \"VIP tiers\" as contact properties. Tier logic lives in the third-party app.",
 				"kiss": "src/router/index.ts:126 \"const router = createRouter(\" lists the only screens: startscherm, afhandeling, contactverzoeken, personen, bedrijven, zaken, links and beheer; KISS has no product, price, till, payment or stock model anywhere in src/ or Kiss.Bff/ (grep for prijs, kassa, factuur, offerte finds nothing)",
 				"espocrm": "No loyalty programme in 10.0.8 or its extensions (see loyalty-points search); Account type (entityDefs/Account.json:24) is a manual classification",
 				"pipedrive": "absent from sources: pipelinq/pipedrive/pipedrive.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 40) have no mention of loyalty points, tiers or gift cards",
@@ -4160,7 +4224,7 @@
 			"area": "pos",
 			"name": "Sell a gift card and let somebody spend it later",
 			"pipelinq": "yes",
-			"hubspot-crm": "no",
+			"hubspot-crm": "unknown",
 			"pipedrive": "no",
 			"espocrm": "no",
 			"odoo-crm": "yes",
@@ -4175,7 +4239,7 @@
 				"owner": "ConductionNL/pipelinq"
 			},
 			"evidence": {
-				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of gift cards",
+				"hubspot-crm": "not checked: no knowledge base article on selling or redeeming gift cards; searched the KB URL list for gift and the marketplace search for loyalty apps, which name points and tiers but no gift card sale (read 2026-09-26).",
 				"kiss": "src/router/index.ts:126 \"const router = createRouter(\" lists the only screens: startscherm, afhandeling, contactverzoeken, personen, bedrijven, zaken, links and beheer; KISS has no product, price, till, payment or stock model anywhere in src/ or Kiss.Bff/ (grep for prijs, kassa, factuur, offerte finds nothing)",
 				"espocrm": "Searched en_US i18n in core and the Crm module for \"gift card\": no hits; no voucher entity in 10.0.8 or https://www.espocrm.com/extensions/",
 				"pipedrive": "absent from sources: pipelinq/pipedrive/pipedrive.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 40) have no mention of loyalty points, tiers or gift cards",
@@ -4202,7 +4266,7 @@
 				"owner": "ConductionNL/pipelinq"
 			},
 			"evidence": {
-				"hubspot-crm": "pipelinq/hubspot-crm/hubspot-crm.md:38 \"Reporting dashboards\"; competitor_features#2741 \"Custom dashboards with attribution reporting, funnel analytics, and revenue reporting\"",
+				"hubspot-crm": "https://knowledge.hubspot.com/dashboards/manage-your-dashboards \"Create dashboards in HubSpot to organize your reports into one view\", from scratch or from templates, All products and plans; pre-built pipeline and deal reports come from the sales analytics suite (https://knowledge.hubspot.com/reports/create-sales-reports-in-the-sales-analytics-suite, Sales Hub Starter and up), reached under Reporting > Dashboards.",
 				"kiss": "src/router/index.ts:126 \"const router = createRouter(\" lists the only screens: startscherm, afhandeling, contactverzoeken, personen, bedrijven, zaken, links and beheer; a case-insensitive grep of src/ and Kiss.Bff/ for lead, opportunit, offerte, factuur, nieuwsbrief and campagne finds no sales or marketing code (only the NL Design paragraph modifier \"utrecht-paragraphlead\"); KISS has no dashboard screen at all",
 				"espocrm": "application/Espo/Modules/Crm/Resources/metadata/dashlets/ SalesPipeline.json, SalesByMonth.json, OpportunitiesByStage.json and OpportunitiesByLeadSource.json are chart dashlets users add to the Home dashboard (client/modules/crm/src/views/dashlets/sales-pipeline.js)",
 				"pipedrive": "competitor_features#2775 \"Custom reports and dashboards with deal, activity, and revenue metrics\"",
@@ -4229,7 +4293,7 @@
 				"owner": "ConductionNL/pipelinq"
 			},
 			"evidence": {
-				"hubspot-crm": "competitor_features#31204 \"Customizable dashboards, forecasting, attribution.\"; #2745 Service Hub ticketing (a service dashboard is not named explicitly)",
+				"hubspot-crm": "https://knowledge.hubspot.com/dashboards/manage-your-dashboards names \"a user-specific service dashboard to see how a customer service representative is performing\"; https://knowledge.hubspot.com/reports/create-service-reports-in-the-service-analytics-suite pre-built reports on \"customer satisfaction scores, average ticket response time, and overall support volume\". Service Hub Starter, Professional, Enterprise.",
 				"kiss": "Kiss.Bff/Intern/ContactmomentDetails/Features/ContactmomentDetailsRapportageOverzicht.cs:22 \"[HttpGet(\\\"/api/contactmomentendetails\\\")]\" with from and to parameters, JWT protected for external systems (docs/manual/managementinformatie.md:4) feeds an external BI tool with per contact moment start, end, result, vraag, afdeling and KCM e-mail; KISS itself has no dashboard screen (no such route in src/router/index.ts)",
 				"espocrm": "Dashboards have multiple tabs per user and admin dashboard templates (application/Espo/Resources/metadata/entityDefs/DashboardTemplate.json; https://docs.espocrm.com/administration/dashboards/), but the only core service dashlet is the Cases list (application/Espo/Modules/Crm/Resources/metadata/dashlets/Cases.json); charts on cases need paid Advanced Pack report dashlets (https://docs.espocrm.com/user-guide/reports/ \"Displaying on dashboard\")",
 				"pipedrive": "https://support.pipedrive.com/en/article/insights-dashboards \"Only Premium and higher plans can create multiple dashboards.\" (a second dashboard is possible, but no service desk data to fill it) (vendor documentation read 2026-09-26)",
@@ -4256,7 +4320,7 @@
 				"owner": "ConductionNL/pipelinq"
 			},
 			"evidence": {
-				"hubspot-crm": "https://knowledge.hubspot.com/reports/understand-the-custom-report-builder \"Click and drag a date field to the Compare by section to set a date range for comparing your data.\" Custom report builder: Sales Hub (or other hub) Professional, Enterprise (vendor documentation read 2026-09-26)",
+				"hubspot-crm": "https://knowledge.hubspot.com/reports/compare-date-ranges-in-the-custom-report-builder \"use the Date part and Compare by filters to compare multiple time range types side-by-side. For example, you can compare this year to last year\". Marketing, Sales, Service or Data Hub Professional, Enterprise.",
 				"kiss": "Kiss.Bff/Intern/ContactmomentDetails/Features/ContactmomentDetailsRapportageOverzicht.cs:22 \"[HttpGet(\\\"/api/contactmomentendetails\\\")]\" with from and to parameters, JWT protected for external systems (docs/manual/managementinformatie.md:4) returns any date range, so two periods can be pulled and compared in the consumer; KISS shows no comparison itself",
 				"espocrm": "application/Espo/Modules/Crm/Resources/metadata/dashlets/SalesByMonth.json charts won amounts per month side by side, so months can be compared by eye for sales only; period over period comparison on other data needs paid Advanced Pack grid reports (https://docs.espocrm.com/user-guide/reports/)",
 				"pipedrive": "not checked: rated 2026-04-18 with no recorded source; vendor documentation read 2026-09-26 did not settle it (read: https://support.pipedrive.com/en/article/{insights-dashboards, insights-feature, comparative-insights} and hc article 360008029358)",
@@ -4283,7 +4347,7 @@
 				"owner": "ConductionNL/pipelinq"
 			},
 			"evidence": {
-				"hubspot-crm": "https://knowledge.hubspot.com/reports/create-sales-reports-in-the-sales-analytics-suite Completed activities: \"this report shows the activities completed by your users\"; Lead response time and Deal velocity (\"average number of days deals take to close by user or team\"). Sales Hub Starter+ (vendor documentation read 2026-09-26)",
+				"hubspot-crm": "https://knowledge.hubspot.com/reports/create-sales-reports-in-the-sales-analytics-suite \"Completed activities: this report shows the activities completed by your users. Activities include calls, meetings, tasks, emails and notes\" (Sales Hub Starter and up); https://knowledge.hubspot.com/reports/create-service-reports-in-the-service-analytics-suite adds average ticket response time per team (Service Hub Starter and up).",
 				"kiss": "Kiss.Bff/Intern/ContactmomentDetails/Data/Entities/ContactmomentDetails.cs:13 \"EmailadresKcm\" with Startdatum and Einddatum (lines 8 and 9) per contact moment, exposed through Kiss.Bff/Intern/ContactmomentDetails/Features/ContactmomentDetailsRapportageOverzicht.cs:22 \"[HttpGet(\\\"/api/contactmomentendetails\\\")]\" with from and to parameters, JWT protected for external systems (docs/manual/managementinformatie.md:4); volume and handling time per colleague can be computed outside KISS, no screen shows it",
 				"espocrm": "No per user performance view in core dashlets (application/Espo/Modules/Crm/Resources/metadata/dashlets/ has pipeline, sales and activity lists only); per user volume and speed need Grid reports grouped by user in the paid Advanced Pack: https://docs.espocrm.com/user-guide/reports/ \"An example of grid report results showing revenue grouped by a user\"",
 				"pipedrive": "https://support.pipedrive.com/en/article/insights-reports-activities-performance \"You can see metrics by activity type, status and user performance\" (vendor documentation read 2026-09-26)",
@@ -4310,7 +4374,7 @@
 				"owner": "ConductionNL/pipelinq"
 			},
 			"evidence": {
-				"hubspot-crm": "https://knowledge.hubspot.com/dashboard/email-or-export-reports-and-dashboards recurring emails of a report or dashboard: \"select Daily, Weekly, or Monthly\", with day and time of delivery. All products and plans (vendor documentation read 2026-09-26)",
+				"hubspot-crm": "https://knowledge.hubspot.com/dashboard/email-or-export-reports-and-dashboards \"You can also schedule recurring report emails on a daily, weekly, or monthly basis\", sent by email, Slack or Google Chat. All products and plans.",
 				"kiss": "the management API is pull only (Kiss.Bff/Intern/ContactmomentDetails/Features/ContactmomentDetailsRapportageOverzicht.cs:22 \"[HttpGet(\\\"/api/contactmomentendetails\\\")]\" with from and to parameters, JWT protected for external systems (docs/manual/managementinformatie.md:4)); no scheduled mail or export job exists in Kiss.Bff/ or helm/kiss-chart/templates",
 				"espocrm": "Paid Advanced Pack: https://docs.espocrm.com/user-guide/reports/ \"It's possible to set up the system send report results to certain users on a regular basis according to specified time\"; core exports are on demand only (client/src/views/record/list-base.ts:403 'export')",
 				"pipedrive": "not checked: rated 2026-04-18 with no recorded source; vendor documentation read 2026-09-26 did not settle it (read: https://support.pipedrive.com/en/article/{insights-dashboards, exporting-data-from-insights, insights-feature})",
@@ -4322,7 +4386,7 @@
 			"area": "reporting",
 			"name": "Push your data into the warehouse your analysts already use",
 			"pipelinq": "yes",
-			"hubspot-crm": "partial",
+			"hubspot-crm": "yes",
 			"pipedrive": "no",
 			"espocrm": "no",
 			"odoo-crm": "partial",
@@ -4337,7 +4401,7 @@
 				"owner": "ConductionNL/pipelinq"
 			},
 			"evidence": {
-				"hubspot-crm": "competitor_features#2747 \"Comprehensive REST API with OAuth, webhooks, and custom object support\" (reachable via API; no warehouse sync named)",
+				"hubspot-crm": "https://knowledge.hubspot.com/reports/query-hubspot-data-in-snowflake \"After connecting Snowflake to your HubSpot account, you can use Snowflake's Data Share to query HubSpot data\", with a \"V2_LIVE schema which is updated every 15 minutes\". Data Hub Enterprise.",
 				"kiss": "Kiss.Bff/Intern/ContactmomentDetails/Features/ContactmomentDetailsRapportageOverzicht.cs:22 \"[HttpGet(\\\"/api/contactmomentendetails\\\")]\" with from and to parameters, JWT protected for external systems (docs/manual/managementinformatie.md:4) is a paged pull API (pageSize up to 5000) a warehouse loader can call; there is no push connector",
 				"espocrm": "No warehouse connector or scheduled data push in 10.0.8 (application/Espo/Tools/Export writes CSV or XLSX files on request); data leaves only through the REST API (https://docs.espocrm.com/development/api/) or webhooks",
 				"pipedrive": "absent from sources: pipelinq/pipedrive/pipedrive.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 40) have no mention of pushing data into a data warehouse",
@@ -4364,7 +4428,7 @@
 				"owner": "ConductionNL/pipelinq"
 			},
 			"evidence": {
-				"hubspot-crm": "https://knowledge.hubspot.com/import-and-export/view-a-log-of-your-users-exports-in-your-account \"View a list of the exports from your HubSpot account\"; all plans; a log of manual exports, no scheduled export run status is documented, so partial (vendor documentation read 2026-09-26)",
+				"hubspot-crm": "https://knowledge.hubspot.com/import-and-export/view-a-log-of-your-users-exports-in-your-account export log shows \"when an export occurred, who initiated an export, and which records were exported\" with Processing and Canceled statuses; All products and plans. Covers manual exports; no run log is described for a scheduled report email.",
 				"kiss": "KISS runs no exports, so there is no run status; the Elastic sync jobs are Kubernetes CronJobs whose logs the cluster admin reads (docs/manual/zoeken-in-bronnen.md:2 \"je kan de beheerder van het kubernetescluster vragen om de logging in te zien\")",
 				"odoo-crm": "odoo/addons/base/models/ir_cron.py:119 lastcall \"Last Execution Date\", :121 failure_count and :122 first_failure_date on Settings > Technical > Scheduled Actions (developer mode); Community has no scheduled export job whose run a user could check, only the cron list.",
 				"espocrm": "application/Espo/Resources/metadata/entityDefs/ScheduledJobLogRecord.json status options Success and Failed with executionTime are listed per job at Administration > Scheduled Jobs (application/Espo/Resources/metadata/app/adminPanel.json:27 \"#ScheduledJob\"), and background exports carry application/Espo/Resources/metadata/entityDefs/Export.json:3 \"status\" Pending, Running, Success, Failed with :19 \"notifyOnFinish\""
@@ -4375,7 +4439,7 @@
 			"area": "reporting",
 			"name": "Keep an export working after you add a field",
 			"pipelinq": "yes",
-			"hubspot-crm": "unknown",
+			"hubspot-crm": "yes",
 			"pipedrive": "unknown",
 			"espocrm": "yes",
 			"odoo-crm": "yes",
@@ -4392,7 +4456,8 @@
 			"evidence": {
 				"kiss": "the management API returns a fixed DTO (Kiss.Bff/Intern/ContactmomentDetails/Features/ContactMomentDetailsModel.cs); users cannot add fields, so the capability does not arise",
 				"espocrm": "application/Espo/Tools/Export/Params.php:79 \"fieldList\" is chosen at each export run (all fields or a picked list), and the REST API returns every attribute of the record, so a new field adds a column instead of breaking an export",
-				"odoo-crm": "odoo/addons/base/models/ir_exports.py:8-14 a saved export template stores field names per model (export_fields lines), and the JSON-2 and XML-RPC APIs read by field name, so a new field leaves existing exports and API readers unchanged until someone adds it."
+				"odoo-crm": "odoo/addons/base/models/ir_exports.py:8-14 a saved export template stores field names per model (export_fields lines), and the JSON-2 and XML-RPC APIs read by field name, so a new field leaves existing exports and API readers unchanged until someone adds it.",
+				"hubspot-crm": "https://knowledge.hubspot.com/reports/query-hubspot-data-in-snowflake \"All properties are stored in the Properties column, which is a Snowflake Variant / JSON column\", so a new property arrives in the share without changing the view. Data Hub Enterprise."
 			}
 		},
 		{
@@ -4400,7 +4465,7 @@
 			"area": "reporting",
 			"name": "Let your own monitoring read the app's numbers",
 			"pipelinq": "yes",
-			"hubspot-crm": "no",
+			"hubspot-crm": "unknown",
 			"pipedrive": "no",
 			"espocrm": "no",
 			"odoo-crm": "no",
@@ -4415,7 +4480,7 @@
 				"owner": "ConductionNL/pipelinq"
 			},
 			"evidence": {
-				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of metrics endpoints for external monitoring (Prometheus or similar)",
+				"hubspot-crm": "not checked: no metrics endpoint for outside monitoring is documented; https://knowledge.hubspot.com/integrations/manage-your-connected-apps shows \"app activity, API usage\" inside HubSpot only, and the developer docs searched for monitoring and metrics name none (read 2026-09-26).",
 				"kiss": "Kiss.Bff/Program.cs:145 \"app.MapHealthChecks(\\\"/healthz\\\").AllowAnonymous()\" is a liveness probe only; no metrics endpoint (grep for prometheus and metrics exporter in Kiss.Bff/ finds nothing)",
 				"espocrm": "Searched application/ and client/src for \"prometheus\" and \"/metrics\": no hits; application/Espo/Resources/routes.json has no metrics endpoint in 10.0.8",
 				"pipedrive": "absent from sources: pipelinq/pipedrive/pipedrive.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 40) have no mention of a metrics endpoint for external monitoring (Prometheus or similar)",
@@ -4427,7 +4492,7 @@
 			"area": "reporting",
 			"name": "Export the forecast so finance can work with it",
 			"pipelinq": "yes",
-			"hubspot-crm": "partial",
+			"hubspot-crm": "yes",
 			"pipedrive": "partial",
 			"espocrm": "partial",
 			"odoo-crm": "yes",
@@ -4442,7 +4507,7 @@
 				"owner": "ConductionNL/pipelinq"
 			},
 			"evidence": {
-				"hubspot-crm": "competitor_features#19350 \"Forecasting feature of HubSpot Sales Hub\" (forecasting exists; exporting it is not named)",
+				"hubspot-crm": "https://knowledge.hubspot.com/forecast/use-the-forecast-tool \"Export forecasting data ... Click the report you want to export (e.g., Forecast category). In the upper right, click Actions, then select Export unsummarized data\". Sales Hub or Service Hub Professional, Enterprise.",
 				"kiss": "src/router/index.ts:126 \"const router = createRouter(\" lists the only screens: startscherm, afhandeling, contactverzoeken, personen, bedrijven, zaken, links and beheer; a case-insensitive grep of src/ and Kiss.Bff/ for lead, opportunit, offerte, factuur, nieuwsbrief and campagne finds no sales or marketing code (only the NL Design paragraph modifier \"utrecht-paragraphlead\")",
 				"espocrm": "No forecast object exists (see forecast-commit), but the Opportunities list exports to CSV or XLSX (client/src/views/record/list-base.ts:403 'export') including probability and the weighted amount (application/Espo/Modules/Crm/Resources/metadata/entityDefs/Opportunity.json:19 \"amountWeightedConverted\"), which finance can work from",
 				"pipedrive": "https://support.pipedrive.com/en/article/exporting-data-from-insights \"choose between XLSX and CSV as the file type\" for any report, including the revenue forecast (Growth and up) (vendor documentation read 2026-09-26)",
@@ -4454,7 +4519,7 @@
 			"area": "reporting",
 			"name": "See your website traffic next to your pipeline",
 			"pipelinq": "yes",
-			"hubspot-crm": "partial",
+			"hubspot-crm": "yes",
 			"pipedrive": "partial",
 			"espocrm": "no",
 			"odoo-crm": "partial",
@@ -4469,7 +4534,7 @@
 				"owner": "ConductionNL/pipelinq"
 			},
 			"evidence": {
-				"hubspot-crm": "https://knowledge.hubspot.com/reports/analyze-your-site-traffic-with-the-traffic-analytics-tool \"Use HubSpot's web traffic analytics tool to view website traffic data.\" Requires Marketing Hub or Content Hub Professional, Enterprise; free tools get only a \"Standard web analytics dashboard\" (https://www.hubspot.com/pricing/crm), so partial (vendor documentation read 2026-09-26)",
+				"hubspot-crm": "https://knowledge.hubspot.com/reports/analyze-your-site-traffic-with-the-traffic-analytics-tool \"view website traffic data ... by source, topic cluster, device type, country\" (Marketing Hub or Content Hub Professional, Enterprise); traffic and deal reports sit on one dashboard (https://knowledge.hubspot.com/dashboards/manage-your-dashboards).",
 				"kiss": "src/router/index.ts:126 \"const router = createRouter(\" lists the only screens: startscherm, afhandeling, contactverzoeken, personen, bedrijven, zaken, links and beheer; a case-insensitive grep of src/ and Kiss.Bff/ for lead, opportunit, offerte, factuur, nieuwsbrief and campagne finds no sales or marketing code (only the NL Design paragraph modifier \"utrecht-paragraphlead\"); KISS crawls websites for search but reports no traffic",
 				"espocrm": "Searched en_US i18n for \"google analytics\" and \"traffic\" features: none; no web analytics in 10.0.8, only campaign open and click tracking (Crm EntryPoints CampaignTrackOpened.php, CampaignUrl.php)",
 				"pipedrive": "pipelinq/pipedrive/pipedrive.md:12 \"plus paid add-ons (LeadBooster, Web Visitors, Campaigns, Smart Docs, Projects)\" (website visitor data needs the Web Visitors add-on, pipelinq/pipedrive/pipedrive.md:25)",
@@ -4481,7 +4546,7 @@
 			"area": "reporting",
 			"name": "Report on your contact moments by channel and by subject",
 			"pipelinq": "yes",
-			"hubspot-crm": "partial",
+			"hubspot-crm": "yes",
 			"pipedrive": "no",
 			"espocrm": "partial",
 			"odoo-crm": "partial",
@@ -4496,7 +4561,7 @@
 				"owner": "ConductionNL/pipelinq"
 			},
 			"evidence": {
-				"hubspot-crm": "competitor_features#16840 \"Drag-and-drop custom report builder for marketing and sales data\" (Marketing Hub); #31201 activities auto-logged. Channel/subject report not named",
+				"hubspot-crm": "https://knowledge.hubspot.com/reports/create-custom-single-object-reports lists Calls among the objects to report on, and https://knowledge.hubspot.com/reports/create-reports-with-the-custom-report-builder can \"surface data from marketing and sales activities\" grouped by any property. Marketing, Sales or Service Hub Professional, Enterprise.",
 				"kiss": "Kiss.Bff/Intern/ContactmomentDetails/Features/ContactmomentDetailsRapportageOverzicht.cs:22 \"[HttpGet(\\\"/api/contactmomentendetails\\\")]\" with from and to parameters, JWT protected for external systems (docs/manual/managementinformatie.md:4) returns kanaal, vraag, specifieke vraag, gespreksresultaat and verantwoordelijke afdeling per contact moment (Kiss.Bff/Intern/ContactmomentDetails/Data/Entities/ContactmomentDetails.cs:10 to 14), which is the documented basis for KCC management reporting per channel and subject",
 				"espocrm": "Core offers the Activities and History panels and Calls and Meetings dashlets (application/Espo/Modules/Crm/Resources/metadata/dashlets/Calls.json, Meetings.json) as lists; counting contact moments by channel or subject needs paid Advanced Pack grid reports (https://docs.espocrm.com/user-guide/reports/)",
 				"pipedrive": "absent from sources: pipelinq/pipedrive/pipedrive.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 40) have no mention of reporting contact moments by channel and subject",
@@ -4523,7 +4588,7 @@
 				"owner": "ConductionNL/pipelinq"
 			},
 			"evidence": {
-				"hubspot-crm": "competitor_features#31203 \"Visual workflow builder across marketing/sales/service.\" (premium tier); #2736 \"stage automation\"",
+				"hubspot-crm": "https://knowledge.hubspot.com/workflows/create-workflows \"Create workflows in HubSpot to automate your processes ... add enrollment triggers ... Then, add actions\", built with AI, templates or from scratch, under Automation > Workflows. Marketing, Sales, Service or Data Hub Professional, Enterprise.",
 				"kiss": "no rule or workflow engine in Kiss.Bff/ or src/ (grep for workflow and trigger finds only code comments)",
 				"espocrm": "Core has before save formula scripts per entity (Entity Manager > Formula, functions in application/Espo/Resources/metadata/app/formula.json) and dynamic logic for forms; event rules with actions like notify, create record and send email are the paid Advanced Pack workflows: https://docs.espocrm.com/administration/workflows/ \"The Workflows tool is available in Advanced Pack\"",
 				"pipedrive": "competitor_features#2769 \"Visual workflow automations for deal movement, task creation, and notifications\"",
@@ -4551,7 +4616,7 @@
 				"readOn": "2026-09-26"
 			},
 			"evidence": {
-				"hubspot-crm": "competitor_features#2747 \"Comprehensive REST API with OAuth, webhooks, and custom object support\"; #24515 \"Webhook support in HubSpot CRM\"",
+				"hubspot-crm": "https://developers.hubspot.com/docs/api-reference/latest/webhooks/guide webhook subscriptions send record events to your app's URL; https://knowledge.hubspot.com/workflows/choose-your-workflow-actions \"Send a webhook (Data Hub Professional and Enterprise only) Trigger a webhook to an external application\".",
 				"kiss": "KISS emits no webhooks or notifications (grep for webhook and notificatie in Kiss.Bff/ finds nothing); records land in OpenKlant, whose own notification support is outside KISS",
 				"espocrm": "application/Espo/Resources/metadata/entityDefs/Webhook.json fields event, url, entityType, field, secretKey managed at Administration > Webhooks (application/Espo/Resources/metadata/app/adminPanel.json:297 \"#Admin/webhooks\"); create, update, delete and field update events are queued and sent with a signature (https://docs.espocrm.com/administration/webhooks/)",
 				"pipedrive": "competitor_features#2776 \"Full REST API with webhooks, OAuth, and 400+ marketplace integrations\"",
@@ -4578,7 +4643,7 @@
 				"owner": "ConductionNL/pipelinq"
 			},
 			"evidence": {
-				"hubspot-crm": "competitor_features#2747 \"Comprehensive REST API with OAuth, webhooks, and custom object support\"",
+				"hubspot-crm": "https://developers.hubspot.com/docs/api-reference/latest/webhooks/guide and the HubSpot API reference at https://developers.hubspot.com/docs cover CRM object read and write over REST with OAuth or private app tokens; All products and plans, with API rate limits by tier.",
 				"kiss": "Kiss.Bff/Intern/ContactmomentDetails/Features/ContactmomentDetailsRapportageOverzicht.cs:22 \"[HttpGet(\\\"/api/contactmomentendetails\\\")]\" with from and to parameters, JWT protected for external systems (docs/manual/managementinformatie.md:4) is the only machine API (read only, contact moment details); all other /api routes are session based BFF proxies for the frontend (Kiss.Bff/Config/AuthenticationSetup.cs:204)",
 				"espocrm": "application/Espo/Resources/routes.json:554 \"/:controller\" and :545 \"/:controller/:id\" give CRUD on every entity under /api/v1, with API users and keys at Administration > API Users (application/Espo/Resources/metadata/app/adminPanel.json:137 \"#Admin/apiUsers\"); https://docs.espocrm.com/development/api/",
 				"pipedrive": "competitor_features#2776 \"Full REST API with webhooks, OAuth, and 400+ marketplace integrations\"",
@@ -4590,7 +4655,7 @@
 			"area": "automation",
 			"name": "See every outside system this app talks to in one list",
 			"pipelinq": "yes",
-			"hubspot-crm": "partial",
+			"hubspot-crm": "yes",
 			"pipedrive": "partial",
 			"espocrm": "partial",
 			"odoo-crm": "partial",
@@ -4605,7 +4670,7 @@
 				"owner": "ConductionNL/integriq"
 			},
 			"evidence": {
-				"hubspot-crm": "pipelinq/hubspot-crm/hubspot-crm.md:40 \"1,500+ integrations in marketplace\" (marketplace; a list of connected systems per account not named)",
+				"hubspot-crm": "https://knowledge.hubspot.com/integrations/manage-your-connected-apps \"On the Connections home tab, access an overview of all apps connected to your HubSpot account\", with statuses and \"how apps interact with CRM data\". All products and plans.",
 				"kiss": "Kiss.Bff/Intern/Registry/KissConnectionsController.cs:8 \"[Route(\\\"api/connections\\\")]\" returns every configured klantinteractie, zaaksysteem, Objects API and internetaak register for logged in users (docs/manual/registers.md:2); it is JSON only and leaves out BRP, KvK and Elastic",
 				"espocrm": "application/Espo/Resources/metadata/app/adminPanel.json:48 \"#Admin/integrations\" lists configurable integrations (core ships application/Espo/Resources/metadata/integrations/GoogleMaps.json and GoogleReCaptcha.json; extensions add more), but webhooks (:297), email accounts, OAuth providers and SMS are configured on separate admin pages",
 				"pipedrive": "https://support.pipedrive.com/en/article/adding-apps-to-other-users \"go to Tools and apps > Installed apps, open the app and click Manage users\" (list of installed Marketplace apps, not every connection) (vendor documentation read 2026-09-26)",
@@ -4617,7 +4682,7 @@
 			"area": "automation",
 			"name": "Send a mailing through a connector you already set up elsewhere",
 			"pipelinq": "yes",
-			"hubspot-crm": "no",
+			"hubspot-crm": "unknown",
 			"pipedrive": "no",
 			"espocrm": "partial",
 			"odoo-crm": "partial",
@@ -4632,7 +4697,7 @@
 				"owner": "ConductionNL/integriq"
 			},
 			"evidence": {
-				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of sending mailings through an externally configured connector",
+				"hubspot-crm": "not checked: https://knowledge.hubspot.com/marketing-email/create-and-send-marketing-emails sends from HubSpot's own mail servers or a dedicated IP (https://knowledge.hubspot.com/marketing-email/connect-a-dedicated-ip-address-for-sending-emails); no article describes routing a mailing through an outside connector (read 2026-09-26).",
 				"kiss": "KISS sends no mailings (see mkt rows); the only SMTP use is Kiss.Bff/Intern/Feedback/SendFeedback.cs:43",
 				"espocrm": "application/Espo/Modules/Crm/Resources/metadata/entityDefs/MassEmail.json smtpAccount and inboundEmail fields let a mailing go out through a group email account already configured at Administration > Group Email Accounts (https://docs.espocrm.com/user-guide/mass-email/ \"Group email accounts with Is for Mass Email checked can also be used\"); the paid MailChimp integration syncs target lists (https://www.espocrm.com/extensions/)",
 				"pipedrive": "absent from sources: pipelinq/pipedrive/pipedrive.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 40) have no mention of sending mailings through a connector configured elsewhere",
@@ -4644,7 +4709,7 @@
 			"area": "automation",
 			"name": "Hand a job to an AI assistant and decide what it may touch",
 			"pipelinq": "yes",
-			"hubspot-crm": "partial",
+			"hubspot-crm": "yes",
 			"pipedrive": "partial",
 			"espocrm": "partial",
 			"odoo-crm": "partial",
@@ -4659,7 +4724,7 @@
 				"owner": "ConductionNL/pipelinq"
 			},
 			"evidence": {
-				"hubspot-crm": "competitor_features#31199 \"Autonomous AI agents for prospecting, customer success, content (gated to Professional).\" (permission scoping of the agent not named)",
+				"hubspot-crm": "https://knowledge.hubspot.com/integrations/set-up-and-use-the-hubspot-connector-for-claude the connector can \"Create and update HubSpot CRM records ... Log activities\"; \"During approval, Super Admins select which data permissions the connector can access and who in the account can install it\", and \"Users can access only the data allowed by their existing HubSpot permissions\". All products and plans.",
 				"kiss": "no AI assistant or MCP integration in src/ or Kiss.Bff/; open theme https://github.com/Klantinteractie-Servicesysteem/KISS-frontend/issues/1450 \"Verkenning AI-assistentie voor KCC-medewerkers\"",
 				"espocrm": "No MCP server or agent API in 10.0.8 (searched routes.json and app metadata for \"mcp\": no hits). The paid Intelligence extension (EspoCRM 10.0.3 or later) lets AI classify, extract and summarize inside BPM flows, gated by role scopes: https://docs.espocrm.com/extensions/intelligence/ai-formula-functions/ \"intelligence\\\\classify ... can be utilized in the BPM tool\" and https://docs.espocrm.com/extensions/intelligence/ \"Users with access to the Intelligent Summary role scope\"",
 				"pipedrive": "https://support.pipedrive.com/en/article/mcp \"your AI assistant can access data, perform actions and help automate workflows in Pipedrive, based on the permissions granted to your account\" (scope follows user permissions) (vendor documentation read 2026-09-26)",
@@ -4686,7 +4751,7 @@
 				"owner": "ConductionNL/pipelinq"
 			},
 			"evidence": {
-				"hubspot-crm": "competitor_features#31198 \"Conversational AI assistant for content, research, workflow help.\"",
+				"hubspot-crm": "https://knowledge.hubspot.com/ai/use-breeze-assistant \"Breeze Assistant, HubSpot's conversational AI assistant, to generate content, summarize records, prepare for meetings, and complete tasks across your HubSpot account\". All products and plans.",
 				"kiss": "the header search is keyword search over Elasticsearch indices (Kiss.Bff/Extern/Elasticsearch/QueryBuilder.cs, precision tuning per docs/changelog/changelog.md:36); there is no natural language answer, and AI assistance is still an open theme https://github.com/Klantinteractie-Servicesysteem/KISS-frontend/issues/1450",
 				"espocrm": "The paid Intelligence extension offers Summary, Intelligent Paste, AI Email Composer and AI formula functions only (https://docs.espocrm.com/extensions/intelligence/ \"The extension provides the following AI features\"); no natural language question over data in core or extensions",
 				"pipedrive": "https://support.pipedrive.com/en/article/sales-assistant \"Ask questions about your data The Sales Assistant can access information from your Pipedrive account, such as deals, activities or contacts\" (vendor documentation read 2026-09-26)",
@@ -4713,7 +4778,7 @@
 				"owner": "ConductionNL/pipelinq"
 			},
 			"evidence": {
-				"hubspot-crm": "https://knowledge.hubspot.com/workflows/use-based-on-a-schedule-workflow-enrollment-triggers workflows can run at \"Night\", but \"A Data Hub Professional or Enterprise subscription is required to set the workflow to recur on a monthly, weekly, or daily schedule\"; a nightly run needs a separate hub, so partial (vendor documentation read 2026-09-26)",
+				"hubspot-crm": "https://knowledge.hubspot.com/workflows/use-based-on-a-schedule-workflow-enrollment-triggers \"set a workflow to recur just once, or on an annual, monthly, weekly, or daily schedule\" at a chosen time (Professional hubs); imports and exports run in the background, but no article names deferring slow work to a night queue.",
 				"kiss": "helm/kiss-chart/templates/sync-sharepoint.yaml:11 \"schedule: ... \\\"*/59 * * * *\\\"\" and the sync-kennisbank, sync-vac and sync-smoelenboek CronJobs index sources in the background, plus the Elastic Open Crawler job; no other background work is scheduled",
 				"espocrm": "application/Espo/Resources/metadata/app/scheduledJobs.json keys ProcessJobQueueQ0, ProcessJobQueueQ1, ProcessJobQueueE0 run queued background jobs from cron or daemon.php, and heavy actions such as exports run as jobs (entityDefs/Export.json:3 \"status\")",
 				"pipedrive": "https://support.pipedrive.com/en/article/automations-date-triggers \"The hour and timezone when the automation will be executed\" (scheduled automations at a chosen hour, Growth and up) (vendor documentation read 2026-09-26)",
@@ -4725,7 +4790,7 @@
 			"area": "automation",
 			"name": "Have a failed hand-off retried instead of quietly lost",
 			"pipelinq": "yes",
-			"hubspot-crm": "unknown",
+			"hubspot-crm": "yes",
 			"pipedrive": "unknown",
 			"espocrm": "yes",
 			"odoo-crm": "partial",
@@ -4742,7 +4807,8 @@
 			"evidence": {
 				"kiss": "failed writes are shown to the user and not queued: src/features/contact/contactmoment/ContactmomentAfhandeling.vue:750 returns the save error to the form, the zaak link error is only logged (line 536 \"console.error(e)\"); no retry or outbox exists in Kiss.Bff/ (grep for retry and Polly finds nothing)",
 				"espocrm": "application/Espo/Core/Webhook/Queue.php:59 \"MAX_ATTEMPT_NUMBER = 4\" and :374 increments attempts and reschedules via processAt; application/Espo/Resources/metadata/entityDefs/WebhookQueueItem.json status Pending, Success, Failed, processed by the ProcessWebhookQueue job (app/scheduledJobs.json:65)",
-				"odoo-crm": "odoo/addons/base/models/ir_actions.py:1062-1070 the webhook action is \"send and forget\" with a 1 second timeout and no retry; outgoing mail left in state \"Delivery Failed\" (addons/mail/models/mail_mail.py:73) waits for a manual \"Retry\" (action_retry :173); a failing cron is rerun at its next call and deactivated after 5 failures over 7 days (ir_cron.py:36-37)."
+				"odoo-crm": "odoo/addons/base/models/ir_actions.py:1062-1070 the webhook action is \"send and forget\" with a 1 second timeout and no retry; outgoing mail left in state \"Delivery Failed\" (addons/mail/models/mail_mail.py:73) waits for a manual \"Retry\" (action_retry :173); a failing cron is rerun at its next call and deactivated after 5 failures over 7 days (ir_cron.py:36-37).",
+				"hubspot-crm": "https://developers.hubspot.com/docs/api-reference/latest/webhooks/guide \"HubSpot will attempt to re-send failed notifications up to 10 times. These retries will be spread out over the next 24 hours\"."
 			}
 		},
 		{
@@ -4750,7 +4816,7 @@
 			"area": "automation",
 			"name": "React to a change a colleague made in another app in the same workspace",
 			"pipelinq": "yes",
-			"hubspot-crm": "no",
+			"hubspot-crm": "partial",
 			"pipedrive": "no",
 			"espocrm": "no",
 			"odoo-crm": "yes",
@@ -4765,7 +4831,7 @@
 				"owner": "ConductionNL/openregister"
 			},
 			"evidence": {
-				"hubspot-crm": "pipelinq/hubspot-crm/hubspot-crm.md:73 \"No Nextcloud integration; vendor lock-in by design (HubSpot ecosystem pushes its own tools)\"",
+				"hubspot-crm": "https://knowledge.hubspot.com/workflows/set-slack-event-triggers-with-agent-hub-workflows \"trigger a workflow whenever a Slack user is mentioned or when a message is sent to a specific Slack channel\" (Professional hubs); call events from third-party apps such as Aircall also trigger workflows (https://knowledge.hubspot.com/workflows/set-event-enrollment-triggers). No shared file or calendar workspace.",
 				"kiss": "KISS subscribes to no events from other apps (grep for notificatie and webhook finds nothing in Kiss.Bff/)",
 				"espocrm": "EspoCRM is a standalone application; searched application/ and client/src for \"nextcloud\": no hits, and outside changes reach it only through its REST API (application/Espo/Resources/routes.json:545) called by the other system, not through a shared workspace event bus",
 				"pipedrive": "absent from sources: pipelinq/pipedrive/pipedrive.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 40) have no mention of reacting to changes made in other apps of a shared workspace; pipelinq/pipedrive/pipedrive.md:56 \"Nextcloud integration | No\"",
@@ -4777,7 +4843,7 @@
 			"area": "automation",
 			"name": "Search your company wiki from inside the CRM",
 			"pipelinq": "yes",
-			"hubspot-crm": "no",
+			"hubspot-crm": "yes",
 			"pipedrive": "no",
 			"espocrm": "partial",
 			"odoo-crm": "partial",
@@ -4793,7 +4859,7 @@
 				"readOn": "2026-09-26"
 			},
 			"evidence": {
-				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of searching an external company wiki from the CRM",
+				"hubspot-crm": "https://knowledge.hubspot.com/ai-tools/use-breeze-assistant-with-connected-apps \"Find relevant information from connected apps (e.g., Slack, Gmail) using Breeze Assistant ... Ask questions in plain language and get synthesized answers drawn from your connected tools\", with Google Docs as an example source; All products and plans. Wiki connectors GitBook, Guru and Document360 are sunset on 26 Sept 2026.",
 				"kiss": "Kiss.Elastic.Sync/Sources/SharePointPageSourceClient.cs indexes intranet SharePoint pages (non public ones since v1.4.0, docs/changelog/changelog.md:100 \"Find a page indexed from a not public sharepoint\") and the header search (src/layout/TheHeader.vue:10 \"<global-search\") searches them next to websites and knowledge articles",
 				"espocrm": "The built in knowledge base (application/Espo/Modules/Crm/Resources/metadata/entityDefs/KnowledgeBaseArticle.json fields body, categories, language, portals; https://docs.espocrm.com/user-guide/knowledge-base/) is searchable in the CRM, but no connector searches an outside company wiki",
 				"pipedrive": "absent from sources: pipelinq/pipedrive/pipedrive.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 40) have no mention of searching a company wiki from the CRM",
@@ -4805,7 +4871,7 @@
 			"area": "automation",
 			"name": "Fill a fresh install with example data so you can try it out",
 			"pipelinq": "yes",
-			"hubspot-crm": "unknown",
+			"hubspot-crm": "partial",
 			"pipedrive": "yes",
 			"espocrm": "no",
 			"odoo-crm": "yes",
@@ -4821,7 +4887,7 @@
 				"readOn": "2026-09-26"
 			},
 			"evidence": {
-				"hubspot-crm": "not checked: rated 2026-04-18 with no recorded source; vendor documentation read 2026-09-26 did not settle it (read: https://knowledge.hubspot.com/records/delete-crm-records, https://knowledge.hubspot.com/import-and-export/sample-import-files, https://knowledge.hubspot.com/account-management/deploy-sandbox-changes-to-production)",
+				"hubspot-crm": "https://knowledge.hubspot.com/import-and-export/sample-import-files offers \"Contacts sample spreadsheet: XLSX or CSV\" and other sample files to import; a new account holds one sample contact (Maria Johnson, per https://community.hubspot.com/t5/APIs-Integrations/Best-way-to-populate-test-account-with-sample-data-for/m-p/536437/highlight/true). No one-click example data set.",
 				"espocrm": "install/core/afterInstall/records.php seeds only one email template (\"Case-to-Email auto-reply\"); no demo data loader in the installer or admin panel of 10.0.8; the vendor runs a public demo site instead (https://demo.espocrm.com/)",
 				"pipedrive": "https://support.pipedrive.com/en/article/sample-data \"we'll include sample data for you to test and experiment with, allowing you to see how to use Pipedrive effectively\" (vendor documentation read 2026-09-26)",
 				"odoo-crm": "odoo/tools/config.py:233 the with-demo command line option installs demo data in a new database, and the Settings developer tools show \"Load demo data\" (addons/web/static/src/webclient/settings_form_view/widgets/res_config_dev_tool.xml:11) calling base.demo_force_install_action (odoo/addons/base/models/ir_demo.py:12 install_demo).",
@@ -4849,7 +4915,7 @@
 				"readOn": "2026-09-26"
 			},
 			"evidence": {
-				"hubspot-crm": "https://knowledge.hubspot.com/help-and-resources/use-your-home-page \"From your homepage, you can review the lists of tasks required for onboarding and work through your onboarding plan\"; onboarding plan in Marketing Hub and Sales Hub Professional (vendor documentation read 2026-09-26)",
+				"hubspot-crm": "https://knowledge.hubspot.com/help-and-resources/use-your-home-page \"if this is your first time using HubSpot, you can work through your onboarding plan and access recommended HubSpot Academy videos\" (All products and plans); onboarding checklists at https://knowledge.hubspot.com/help-and-resources/manage-onboarding-to-do-lists-with-checklists (Professional hubs).",
 				"kiss": "no onboarding flow in src/; configuration is done through helm values (helm/kiss-chart/values.yaml) and the only first run aid is the sample data button",
 				"espocrm": "install/core/i18n/en_US/install.json:7 \"License Agreement\", :10 \"Database configuration\", :11 \"Administrator Setup\", :12 \"System settings\", :13 \"SMTP settings for outgoing emails\": a five step web installer runs on first open",
 				"pipedrive": "https://support.pipedrive.com/en/article/sample-data \"Upon signing up, you'll receive a brief questionnaire regarding your company size and industry to better understand your business needs.\" (vendor documentation read 2026-09-26)",
@@ -4861,7 +4927,7 @@
 			"area": "government",
 			"name": "Look up a citizen by their BSN",
 			"pipelinq": "yes",
-			"hubspot-crm": "no",
+			"hubspot-crm": "unknown",
 			"pipedrive": "no",
 			"espocrm": "no",
 			"odoo-crm": "no",
@@ -4877,7 +4943,7 @@
 			},
 			"note": "The 2026-03 KISS research lists this as a pipelinq gap. It has since been built.",
 			"evidence": {
-				"hubspot-crm": "absent from sources: hubspot-crm.md, concurrentie-analyse.md and competitor_features (33, 782, 554) have no mention of BSN or BRP lookup; pipelinq/hubspot-crm/hubspot-crm.md:77 \"HubSpot is not a viable option\" for Dutch government",
+				"hubspot-crm": "not checked: searched the HubSpot knowledge base URL list and the App Marketplace (web search on ecosystem.hubspot.com, 2026-09-26) for BRP, BSN and citizen register lookup and found no article or app.",
 				"kiss": "src/features/persoon/persoon-zoeken/PersoonZoeker.vue:79 \"Bsn\" search calls Kiss.Bff/Extern/HaalCentraal/HaalCentraalProxyConfig.cs:58 \"[HttpPost(\\\"/api/haalcentraal/brp/personen\\\")]\" (Haal Centraal BRP) and src/features/persoon/persoon-details/BrpGegevens.vue shows the result",
 				"espocrm": "Searched application/, client/src and client/modules for \"bsn\", \"brp\", \"digid\" and \"eherkenning\" (case insensitive): no hits in 10.0.8",
 				"pipedrive": "pipelinq/pipedrive/pipedrive.md:70 \"No Nextcloud integration or Dutch government ecosystem support\" (no mention of BRP/BSN citizen lookup anywhere)",
@@ -4889,7 +4955,7 @@
 			"area": "government",
 			"name": "Log every BSN lookup so you can show afterwards it was allowed",
 			"pipelinq": "yes",
-			"hubspot-crm": "no",
+			"hubspot-crm": "unknown",
 			"pipedrive": "no",
 			"espocrm": "no",
 			"odoo-crm": "no",
@@ -4904,7 +4970,7 @@
 				"owner": "ConductionNL/pipelinq"
 			},
 			"evidence": {
-				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of BSN lookup audit logging",
+				"hubspot-crm": "not checked: searched the HubSpot knowledge base URL list and the App Marketplace (web search on ecosystem.hubspot.com, 2026-09-26) for a log of BSN lookups and found no article or app, HubSpot has no BSN lookup to log.",
 				"kiss": "Kiss.Bff/Intern/Verwerking/VerwerkingMiddleware.cs:41 logs user, time, endpoint and method of every external call, but strips the query (line 36 \"query string could contain sensitive data\") and not the POST body, so the BSN and purpose are not recorded; readable via Kiss.Bff/Intern/Verwerking/GetVerwerkingsLogs.cs:18; open epic https://github.com/Klantinteractie-Servicesysteem/KISS-frontend/issues/1550 targets the Logboek Dataverwerkingen standard",
 				"espocrm": "No BSN lookup exists (searched for \"bsn\" and \"brp\": no hits); the generic ActionHistoryRecord (application/Espo/Resources/metadata/entityDefs/ActionHistoryRecord.json) logs record reads but has no lawful basis or purpose field",
 				"pipedrive": "pipelinq/pipedrive/pipedrive.md:70 \"No Nextcloud integration or Dutch government ecosystem support\" (no mention of BSN lookup audit logging anywhere)",
@@ -4916,7 +4982,7 @@
 			"area": "government",
 			"name": "Store a BSN pseudonymised rather than in the clear",
 			"pipelinq": "yes",
-			"hubspot-crm": "no",
+			"hubspot-crm": "unknown",
 			"pipedrive": "no",
 			"espocrm": "no",
 			"odoo-crm": "no",
@@ -4931,7 +4997,7 @@
 				"owner": "ConductionNL/pipelinq"
 			},
 			"evidence": {
-				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of BSN pseudonymisation",
+				"hubspot-crm": "not checked: searched the HubSpot knowledge base URL list and the App Marketplace (web search on ecosystem.hubspot.com, 2026-09-26) for BSN pseudonymisation and found no article or app; https://knowledge.hubspot.com/account-security/store-sensitive-data lets Enterprise hubs store \"Highly Sensitive Data (e.g., social security numbers)\" in special properties, which is protected storage, not pseudonymisation.",
 				"espocrm": "No BSN field or pseudonymisation in 10.0.8 (searched application/ and client/ for \"bsn\" and \"pseudonym\": no hits); personal data fields are stored in the clear and can only be erased (application/Espo/Tools/DataPrivacy/Erasor.php)",
 				"pipedrive": "pipelinq/pipedrive/pipedrive.md:70 \"No Nextcloud integration or Dutch government ecosystem support\" (no mention of BSN pseudonymisation anywhere)",
 				"odoo-crm": "searched odoo/ and addons/ (py, xml, js, outside i18n and vendored libs) for bsn, burgerservice, brp, haal centraal, digid and elfproef: the only hits are inside a base64 image in addons/account/views/report_templates.xml; there is no BSN field to pseudonymise.",
@@ -4943,7 +5009,7 @@
 			"area": "government",
 			"name": "Be told when a citizen's details change in the BRP",
 			"pipelinq": "yes",
-			"hubspot-crm": "no",
+			"hubspot-crm": "unknown",
 			"pipedrive": "no",
 			"espocrm": "no",
 			"odoo-crm": "no",
@@ -4958,7 +5024,7 @@
 				"owner": "ConductionNL/pipelinq"
 			},
 			"evidence": {
-				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of BRP change notifications",
+				"hubspot-crm": "not checked: searched the HubSpot knowledge base URL list and the App Marketplace (web search on ecosystem.hubspot.com, 2026-09-26) for BRP change notifications and found no article or app.",
 				"espocrm": "No BRP connection in 10.0.8 (searched for \"brp\": no hits), so no change subscription",
 				"pipedrive": "pipelinq/pipedrive/pipedrive.md:70 \"No Nextcloud integration or Dutch government ecosystem support\" (no mention of BRP mutation notifications anywhere)",
 				"odoo-crm": "searched odoo/ and addons/ (py, xml, js, outside i18n and vendored libs) for bsn, burgerservice, brp, haal centraal, digid and elfproef: the only hits are inside a base64 image in addons/account/views/report_templates.xml; no BRP mutation subscription exists.",
@@ -4970,7 +5036,7 @@
 			"area": "government",
 			"name": "Throw away register data you are no longer allowed to keep",
 			"pipelinq": "yes",
-			"hubspot-crm": "no",
+			"hubspot-crm": "unknown",
 			"pipedrive": "no",
 			"espocrm": "no",
 			"odoo-crm": "yes",
@@ -4986,7 +5052,7 @@
 				"readOn": "2026-09-26"
 			},
 			"evidence": {
-				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of retention/deletion rules for register data",
+				"hubspot-crm": "not checked: searched the HubSpot knowledge base URL list and the App Marketplace (web search on ecosystem.hubspot.com, 2026-09-26) for retention of register data and found no article or app, apart from GDPR delete.",
 				"espocrm": "No register data and no retention policy engine in 10.0.8: the Cleanup job (application/Espo/Resources/metadata/app/scheduledJobs.json \"Cleanup\") purges deleted records and logs, not data past a legal retention term",
 				"pipedrive": "pipelinq/pipedrive/pipedrive.md:70 \"No Nextcloud integration or Dutch government ecosystem support\" (no mention of register data retention rules anywhere)",
 				"odoo-crm": "addons/data_recycle/models/data_recycle_model.py:28 res_model_id, :44-49 time_field_id with delta and unit, :33-36 recycle_mode \"Automatic\" and :37-40 recycle_action \"Archive\" or \"Delete\", configured under Data Cleaning > Recycle Records (addons/data_recycle/views/data_cleaning_menu.xml:11); a rule removes records of any model once they pass their retention age.",
@@ -4998,7 +5064,7 @@
 			"area": "government",
 			"name": "Refuse a BSN that cannot be real before you send it anywhere",
 			"pipelinq": "yes",
-			"hubspot-crm": "no",
+			"hubspot-crm": "unknown",
 			"pipedrive": "no",
 			"espocrm": "no",
 			"odoo-crm": "no",
@@ -5013,7 +5079,7 @@
 				"owner": "ConductionNL/pipelinq"
 			},
 			"evidence": {
-				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of BSN validation (elfproef)",
+				"hubspot-crm": "not checked: searched the HubSpot knowledge base URL list and the App Marketplace (web search on ecosystem.hubspot.com, 2026-09-26) for BSN eleven-test validation and found no article or app, property validation rules exist but none for a BSN.",
 				"espocrm": "No BSN field or eleven test validator in 10.0.8 (searched application/ for \"bsn\": no hits; application/Espo/Resources/metadata/app/regExpPatterns.json holds generic patterns only)",
 				"pipedrive": "pipelinq/pipedrive/pipedrive.md:70 \"No Nextcloud integration or Dutch government ecosystem support\" (no mention of BSN validation anywhere)",
 				"odoo-crm": "searched odoo/ and addons/ (py, xml, js, outside i18n and vendored libs) for bsn, burgerservice, brp, haal centraal, digid and elfproef: the only hits are inside a base64 image in addons/account/views/report_templates.xml; searched addons/base_vat and l10n_nl for an eleven test: none, only VAT number checks.",
@@ -5025,7 +5091,7 @@
 			"area": "government",
 			"name": "Open and read a case in your zaaksysteem over the national APIs",
 			"pipelinq": "yes",
-			"hubspot-crm": "no",
+			"hubspot-crm": "unknown",
 			"pipedrive": "no",
 			"espocrm": "no",
 			"odoo-crm": "no",
@@ -5041,7 +5107,7 @@
 			},
 			"note": "Also listed as a pipelinq gap in the 2026-03 research and since built.",
 			"evidence": {
-				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of ZGW APIs / zaaksysteem integration",
+				"hubspot-crm": "not checked: searched the HubSpot knowledge base URL list and the App Marketplace (web search on ecosystem.hubspot.com, 2026-09-26) for ZGW or zaaksysteem case APIs and found no article or app.",
 				"kiss": "src/router/index.ts:212 \"path: \\\"/zaken/:zaakId\\\"\" mounts src/views/ZaakDetailView.vue with tabs Algemeen, Documenten and Contactmomenten, read via Kiss.Bff/Extern/ZaakGerichtWerken/Zaaksysteem/ZaaksysteemProxy.cs from the ZGW Zaken, Documenten and Catalogi APIs; search by zaaknummer in src/features/zaaksysteem/ZaakZoeker.vue:7",
 				"espocrm": "Searched application/, client/src and client/modules for \"zgw\", \"zaak\" and \"zaken\": no hits in 10.0.8; Case is an internal entity with no ZGW client",
 				"pipedrive": "pipelinq/pipedrive/pipedrive.md:70 \"No Nextcloud integration or Dutch government ecosystem support\" (no mention of ZGW case APIs anywhere)",
@@ -5053,7 +5119,7 @@
 			"area": "government",
 			"name": "Subscribe to case notifications from the national notification service",
 			"pipelinq": "yes",
-			"hubspot-crm": "no",
+			"hubspot-crm": "unknown",
 			"pipedrive": "no",
 			"espocrm": "no",
 			"odoo-crm": "no",
@@ -5068,7 +5134,7 @@
 				"owner": "ConductionNL/pipelinq"
 			},
 			"evidence": {
-				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of the national ZGW notification service",
+				"hubspot-crm": "not checked: searched the HubSpot knowledge base URL list and the App Marketplace (web search on ecosystem.hubspot.com, 2026-09-26) for the national notification service (Notificaties API) and found no article or app.",
 				"kiss": "KISS registers no abonnement with Open Notificaties and has no notification callback route (grep for notificaties and abonnement in Kiss.Bff/ finds nothing); cases are fetched on demand",
 				"espocrm": "No ZGW Notificaties subscription in 10.0.8 (searched for \"zgw\" and \"notificaties\": no hits); inbound integration is only through the REST API",
 				"pipedrive": "pipelinq/pipedrive/pipedrive.md:70 \"No Nextcloud integration or Dutch government ecosystem support\" (no mention of ZGW notification subscriptions anywhere)",
@@ -5080,7 +5146,7 @@
 			"area": "government",
 			"name": "Publish your contact moments in the VNG Klantinteracties format",
 			"pipelinq": "yes",
-			"hubspot-crm": "no",
+			"hubspot-crm": "unknown",
 			"pipedrive": "no",
 			"espocrm": "no",
 			"odoo-crm": "no",
@@ -5095,7 +5161,7 @@
 				"owner": "ConductionNL/pipelinq"
 			},
 			"evidence": {
-				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of the VNG Klantinteracties API",
+				"hubspot-crm": "not checked: searched the HubSpot knowledge base URL list and the App Marketplace (web search on ecosystem.hubspot.com, 2026-09-26) for the VNG Klantinteracties API and found no article or app.",
 				"kiss": "src/services/openklant2/service.ts:521 \"saveKlantContact\" writes klantcontacten, betrokkenen, digitale adressen, actoren and interne taken to the VNG Klantinteracties API (OpenKlant 2), as the afhandeling steps in src/features/contact/contactmoment/ContactmomentAfhandeling.vue:733 to 857 show; docs/decision-record/klantinteracties-openklant.md records the choice",
 				"espocrm": "Searched application/, client/src and client/modules for \"klantinteracties\" and \"klantcontact\": no hits in 10.0.8; no VNG API implementation",
 				"pipedrive": "pipelinq/pipedrive/pipedrive.md:70 \"No Nextcloud integration or Dutch government ecosystem support\" (no mention of the VNG Klantinteracties API anywhere)",
@@ -5107,7 +5173,7 @@
 			"area": "government",
 			"name": "Send a citizen a message in their MijnOverheid Berichtenbox",
 			"pipelinq": "yes",
-			"hubspot-crm": "no",
+			"hubspot-crm": "unknown",
 			"pipedrive": "no",
 			"espocrm": "no",
 			"odoo-crm": "no",
@@ -5122,7 +5188,7 @@
 				"owner": "ConductionNL/pipelinq"
 			},
 			"evidence": {
-				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of MijnOverheid Berichtenbox",
+				"hubspot-crm": "not checked: searched the HubSpot knowledge base URL list and the App Marketplace (web search on ecosystem.hubspot.com, 2026-09-26) for MijnOverheid Berichtenbox and found no article or app.",
 				"kiss": "no MijnOverheid or Berichtenbox client in Kiss.Bff/Extern (the external clients are HaalCentraal, Kvk, Klantinteracties, ZaakGerichtWerken, InterneTaak, Logboek, Afdelingen, Groepen, Vacs, Elasticsearch)",
 				"espocrm": "Searched application/, client/src and client/modules for \"berichtenbox\" and \"mijnoverheid\": no hits in 10.0.8",
 				"pipedrive": "pipelinq/pipedrive/pipedrive.md:70 \"No Nextcloud integration or Dutch government ecosystem support\" (no mention of MijnOverheid Berichtenbox anywhere)",
@@ -5134,7 +5200,7 @@
 			"area": "government",
 			"name": "Fall back to email when the Berichtenbox cannot deliver",
 			"pipelinq": "yes",
-			"hubspot-crm": "no",
+			"hubspot-crm": "unknown",
 			"pipedrive": "no",
 			"espocrm": "no",
 			"odoo-crm": "no",
@@ -5149,7 +5215,7 @@
 				"owner": "ConductionNL/pipelinq"
 			},
 			"evidence": {
-				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of Berichtenbox or fallback delivery",
+				"hubspot-crm": "not checked: searched the HubSpot knowledge base URL list and the App Marketplace (web search on ecosystem.hubspot.com, 2026-09-26) for a Berichtenbox to email fallback and found no article or app, there is no Berichtenbox channel to fall back from.",
 				"kiss": "no Berichtenbox and no outbound mail to citizens (see gov-berichtenbox)",
 				"espocrm": "No Berichtenbox channel exists in 10.0.8 (see gov-berichtenbox), so there is nothing to fall back from",
 				"pipedrive": "pipelinq/pipedrive/pipedrive.md:70 \"No Nextcloud integration or Dutch government ecosystem support\" (no mention of Berichtenbox email fallback anywhere)",
@@ -5161,7 +5227,7 @@
 			"area": "government",
 			"name": "Handle a request from a citizen to see or delete their own data",
 			"pipelinq": "yes",
-			"hubspot-crm": "partial",
+			"hubspot-crm": "yes",
 			"pipedrive": "partial",
 			"espocrm": "partial",
 			"odoo-crm": "partial",
@@ -5176,7 +5242,7 @@
 				"owner": "ConductionNL/openregister"
 			},
 			"evidence": {
-				"hubspot-crm": "https://knowledge.hubspot.com/privacy-and-consent/manage-data-privacy-requests \"Set up your data privacy request page where contacts can submit requests related to the management of their personal data.\" Requests tracked in the Data Request Manager; all plans; rating kept at partial (vendor documentation read 2026-09-26)",
+				"hubspot-crm": "https://knowledge.hubspot.com/privacy-and-consent/manage-data-privacy-requests \"Set up your data privacy request page where contacts can submit requests ... to request copies of the data you're storing or to have their data permanently deleted\", handled from a request list. All products and plans.",
 				"kiss": "no inzage or deletion request flow in src/ or Kiss.Bff/ (grep for inzage and AVG finds nothing); such a request could only be logged as an ordinary contact moment or contactverzoek",
 				"espocrm": "client/src/views/personal-data/modals/personal-data.js opens View Personal Data from the record menu of Contacts, Leads and Accounts, listing fields marked isPersonalData (application/Espo/Modules/Crm/Resources/metadata/entityDefs/Contact.json:5) and erasing them through application/Espo/Tools/DataPrivacy/Erasor.php; https://docs.espocrm.com/user-guide/data-privacy/. No request intake, deadline tracking or export for the citizen",
 				"pipedrive": "https://support.pipedrive.com/en/article/pipedrive-and-gdpr \"we're therefore ready to respond to data subject requests to delete, modify, or transfer their data\" (vendor-side process, no in-app request workflow) (vendor documentation read 2026-09-26)",
@@ -5188,7 +5254,7 @@
 			"area": "government",
 			"name": "Check who a data request really came from before you answer it",
 			"pipelinq": "yes",
-			"hubspot-crm": "no",
+			"hubspot-crm": "partial",
 			"pipedrive": "no",
 			"espocrm": "no",
 			"odoo-crm": "no",
@@ -5203,7 +5269,7 @@
 				"owner": "ConductionNL/pipelinq"
 			},
 			"evidence": {
-				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of identity verification of data-subject requests (DigiD or similar)",
+				"hubspot-crm": "https://knowledge.hubspot.com/privacy-and-consent/manage-data-privacy-requests the request page sends a \"verification email sent to users\" and can use reCAPTCHA; that proves control of the mailbox, not identity (no DigiD or document check). All products and plans.",
 				"espocrm": "No identity check step in the data privacy tool (https://docs.espocrm.com/user-guide/data-privacy/ describes only view and erase by users with the Data Privacy permission); no DigiD or eHerkenning integration (searched for \"digid\": no hits)",
 				"pipedrive": "absent from sources: pipelinq/pipedrive/pipedrive.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 40) have no mention of identity verification of data requests",
 				"odoo-crm": "addons/privacy_lookup/wizard/privacy_lookup_wizard.py:17-18 takes only a name and email typed by the administrator; searched privacy_lookup and portal for identity checks on a data request: none, and there is no DigiD or eHerkenning login.",
@@ -5231,7 +5297,7 @@
 				"readOn": "2026-09-26"
 			},
 			"evidence": {
-				"hubspot-crm": "https://knowledge.hubspot.com/properties/hubspots-default-contact-properties Preferred language: \"the contact's preferred language for communications. This might be set via import, form, or integration.\" All plans; translated marketing emails need Marketing Hub Professional (vendor documentation read 2026-09-26)",
+				"hubspot-crm": "https://knowledge.hubspot.com/properties/hubspots-default-contact-properties \"Preferred language: the contact's preferred language for communications. This might be set via import, form, or integration\"; the property can drive list filters and workflows for language-specific sends. All products and plans.",
 				"kiss": "src/features/contact/contactmoment/ContactmomentAfhandeling.vue:670 \"voorkeurstaal: \\\"\\\"\" always sends an empty preferred language and no screen captures or shows one; the UI and texts are Dutch only",
 				"espocrm": "Contact has no preferred language field (application/Espo/Modules/Crm/Resources/metadata/entityDefs/Contact.json field list); language exists per portal (entityDefs/Portal.json:66 \"language\") and per knowledge base article (KnowledgeBaseArticle.json:34 \"language\"), and an admin can add a language enum to Contact and pick a template by hand",
 				"pipedrive": "not checked: rated 2026-04-18 with no recorded source; vendor documentation read 2026-09-26 did not settle it (read: https://support.pipedrive.com/en/article/{chatbot, email-templates, how-can-i-change-my-language-or-date-number-format})",
@@ -5258,7 +5324,7 @@
 				"owner": "ConductionNL/pipelinq"
 			},
 			"evidence": {
-				"hubspot-crm": "pipelinq/hubspot-crm/hubspot-crm.md:7 \"- **Self-Hosted:** No (cloud)\"",
+				"hubspot-crm": "https://legal.hubspot.com/terms-of-service defines the \"Subscription Service\" as \"web-based applications ... developed, operated, and maintained by us, accessible via http://hubspot.com\"; https://legal.hubspot.com/security points to \"HubSpot Cloud Infrastructure hosted on AWS\". No self-hosted edition.",
 				"kiss": "helm/kiss-chart/Chart.yaml and docker-compose.deploy.yaml ship the app for self hosting on Kubernetes; docs/installation/installatie.md is the install guide",
 				"espocrm": "install/core/i18n/en_US/install.json:10 \"Database configuration\" web installer plus official Docker images (https://docs.espocrm.com/administration/docker/installation/); the 10.0.8 source runs on your own PHP and MySQL, MariaDB or PostgreSQL server",
 				"pipedrive": "pipelinq/pipedrive/pipedrive.md:7 \"Self-Hosted:** No (cloud)\"",
@@ -5285,7 +5351,7 @@
 				"owner": "ConductionNL/pipelinq"
 			},
 			"evidence": {
-				"hubspot-crm": "pipelinq/hubspot-crm/hubspot-crm.md:6 \"- **Open Source:** No\"; pipelinq/hubspot-crm/hubspot-crm.md:72 \"no self-hosting, no data sovereignty, no code access\"",
+				"hubspot-crm": "https://legal.hubspot.com/terms-of-service 2.9: \"You will not (i) directly or indirectly reverse engineer, decompile, disassemble or otherwise attempt to uncover or discover the source code\" of the service.",
 				"kiss": "LICENSE.md:4 \"Licensed under the EUPL\"; the full frontend and BFF source is public at https://github.com/Klantinteractie-Servicesysteem/KISS-frontend",
 				"espocrm": "LICENSE.txt:1 \"GNU AFFERO GENERAL PUBLIC LICENSE\" Version 3; full source at https://github.com/espocrm/espocrm (tag 10.0.8 read here); paid extensions are closed",
 				"pipedrive": "pipelinq/pipedrive/pipedrive.md:69 \"No open source, fully proprietary, no code access or customization beyond configuration\"",
@@ -5312,7 +5378,7 @@
 				"owner": "ConductionNL/pipelinq"
 			},
 			"evidence": {
-				"hubspot-crm": "pipelinq/hubspot-crm/hubspot-crm.md:12 \"unlimited users on free tier\"; limit at pipelinq/hubspot-crm/hubspot-crm.md:22 \"Professional CRM:** $50/user/month\" (free tier only; paid tiers charge per seat, and pipelinq/hubspot-crm/hubspot-crm.md:20 says \"up to 2 seats\")",
+				"hubspot-crm": "https://www.hubspot.com/pricing/sales Starter \"Starts at $7/mo/seat\", Professional \"$90/mo/seat\", Enterprise \"$150/mo/seat\"; \"View-only Seats are available at no additional cost\"; the free CRM covers \"up to 2 users\". Read-only colleagues are free, working colleagues are not.",
 				"kiss": "LICENSE.md:4 \"Licensed under the EUPL\"; no licence key or seat check in Kiss.Bff/ (users come from the municipality's OIDC provider)",
 				"espocrm": "LICENSE.txt:1 AGPL v3 core with no user limit; https://www.espocrm.com/extensions/ sells extensions as packages, and the cloud offering is priced separately",
 				"pipedrive": "pipelinq/pipedrive/pipedrive.md:12 \"Pure SaaS subscription model with per-seat pricing.\"",
@@ -5324,7 +5390,7 @@
 			"area": "platform",
 			"name": "Use the CRM in the workspace where your files and calendar already are",
 			"pipelinq": "yes",
-			"hubspot-crm": "no",
+			"hubspot-crm": "partial",
 			"pipedrive": "no",
 			"espocrm": "no",
 			"odoo-crm": "partial",
@@ -5339,7 +5405,7 @@
 				"owner": "ConductionNL/pipelinq"
 			},
 			"evidence": {
-				"hubspot-crm": "pipelinq/hubspot-crm/hubspot-crm.md:59 \"| Nextcloud integration | No | Native |\"",
+				"hubspot-crm": "https://knowledge.hubspot.com/connected-email/use-contact-profiles-with-the-hubspot-sales-office-365-add-in \"Access your CRM contact information directly from your Outlook inbox ... log sales activities ... create tasks and associate companies, deals, and tickets\"; Teams integration at https://knowledge.hubspot.com/integrations/connect-hubspot-and-microsoft-teams. All products and plans. Add-ins bring HubSpot into Microsoft 365 or Gmail; the CRM itself stays a separate web app.",
 				"kiss": "KISS is a standalone web app (index.html:11 \"<body class=\\\"kiss-theme\\\">\") with its own BFF; no integration with a files or calendar workspace",
 				"espocrm": "EspoCRM is a standalone web application with its own login, files (Document entity) and calendar (Crm Calendar scope); searched application/ and client/src for \"nextcloud\": no hits, so it does not run inside a file and calendar workspace",
 				"pipedrive": "pipelinq/pipedrive/pipedrive.md:70 \"No Nextcloud integration or Dutch government ecosystem support; expensive at scale\"",
@@ -5366,7 +5432,7 @@
 				"owner": "ConductionNL/pipelinq"
 			},
 			"evidence": {
-				"hubspot-crm": "https://knowledge.hubspot.com/account-security/set-up-single-sign-on-sso \"Single sign-on (SSO) allows you to give your team members one account for all of the systems your business uses.\" SAML SSO in Sales Hub or Smart CRM Professional+; Log in with Google or Microsoft on all plans (vendor documentation read 2026-09-26)",
+				"hubspot-crm": "https://knowledge.hubspot.com/account-security/set-up-single-sign-on-sso single sign-on over SAML for users of the account. Marketing, Sales, Service or Data Hub Professional, Enterprise; Google and Microsoft login on every plan.",
 				"kiss": "Kiss.Bff/Config/AuthenticationSetup.cs:204 \"authBuilder.AddOpenIdConnect(\" with OIDC_AUTHORITY (Kiss.Bff/Program.cs:42) logs users in with the municipality's identity provider (docs/configuration/identity-provider.md covers Azure AD and Keycloak)",
 				"espocrm": "application/Espo/Resources/metadata/authenticationMethods/Oidc.json and LDAP.json (application/Espo/Core/Authentication/Oidc, Ldap/LdapLogin.php) configured at Administration > Authentication (application/Espo/Resources/metadata/app/adminPanel.json:20 \"#Admin/authentication\"); https://docs.espocrm.com/administration/oidc/",
 				"pipedrive": "https://support.pipedrive.com/en/article/what-features-do-the-pipedrive-plans-have \"Single sign-on (SSO) ✔️ ✔️ ✔️ ✔️\" on Lite, Growth, Premium and Ultimate (vendor documentation read 2026-09-26)",
@@ -5378,7 +5444,7 @@
 			"area": "platform",
 			"name": "Say who may see which records",
 			"pipelinq": "yes",
-			"hubspot-crm": "partial",
+			"hubspot-crm": "yes",
 			"pipedrive": "yes",
 			"espocrm": "yes",
 			"odoo-crm": "yes",
@@ -5393,7 +5459,7 @@
 				"owner": "ConductionNL/pipelinq"
 			},
 			"evidence": {
-				"hubspot-crm": "pipelinq/hubspot-crm/hubspot-crm.md:60 \"| RBAC | Yes (paid tiers) | Yes |\" (paid tiers only)",
+				"hubspot-crm": "https://knowledge.hubspot.com/user-management/hubspot-user-permissions-guide \"Super Admins can set user permissions to control what users can view, create, edit, or delete ... you can give a sales rep permission to communicate only with contacts they own\", per object with owned, team or everything scopes. All products and plans; teams and permission sets on Starter and up.",
 				"kiss": "Kiss.Bff/Config/Permissions/PermissionConfiguration.cs:32 \"CreateDefault(string redacteurRole, string beheerderRole, string kcmRole)\" maps OIDC roles to permissions per screen, plus a Kennisbank role (Kiss.Bff/Extern/Elasticsearch/ElasticsearchService.cs:152); rights are per function, not per record",
 				"espocrm": "application/Espo/Resources/metadata/app/adminPanel.json:112 \"#Admin/roles\" roles with per scope levels all, team, own, no for read, edit, delete, create (https://docs.espocrm.com/administration/roles-management/), enforced in application/Espo/Core/Acl",
 				"pipedrive": "pipelinq/pipedrive/pipedrive.md:57 \"RBAC | Yes (permission sets)\"",
@@ -5405,7 +5471,7 @@
 			"area": "platform",
 			"name": "Hide a single field from a group without hiding the whole record",
 			"pipelinq": "partial",
-			"hubspot-crm": "partial",
+			"hubspot-crm": "yes",
 			"pipedrive": "partial",
 			"espocrm": "yes",
 			"odoo-crm": "partial",
@@ -5421,7 +5487,7 @@
 			},
 			"note": "EspoCRM does this per role. Ours is all or nothing today.",
 			"evidence": {
-				"hubspot-crm": "https://knowledge.hubspot.com/properties/restrict-view-edit-access-for-properties \"Restrict a property so that only specific users and teams can view or edit the property's data on records.\" Enterprise only (Sales Hub Enterprise and others); rating kept at partial (never raised) (vendor documentation read 2026-09-26)",
+				"hubspot-crm": "https://knowledge.hubspot.com/properties/restrict-view-edit-access-for-properties \"Restrict a property so that only specific users and teams can view or edit the property's data on records\". Marketing, Sales, Service or Data Hub Enterprise.",
 				"kiss": "Kiss.Bff/Extern/Elasticsearch/ElasticsearchService.cs:34 \"_excludedFieldsForKennisbank\" hides configured fields of knowledge articles from users with only the Kennisbank role (changelog v2.0.0 \"restricted search fields can be filtered\"); no field hiding on client or contact data",
 				"espocrm": "application/Espo/Resources/metadata/entityDefs/Role.json:137 \"fieldData\" holds field level read and edit permissions per role, edited in the field level section of Administration > Roles (adminPanel.json:112); https://docs.espocrm.com/administration/roles-management/",
 				"pipedrive": "https://support.pipedrive.com/en/article/data-fields-in-pipedrive \"you can restrict which users can edit the field based on their permission sets\" (edit restriction and per-pipeline hiding, not hiding from a group) (vendor documentation read 2026-09-26)",
@@ -5448,7 +5514,7 @@
 				"owner": "ConductionNL/pipelinq"
 			},
 			"evidence": {
-				"hubspot-crm": "https://legal.hubspot.com/security \"The physical and virtualized hard drives used by HubSpot product server instances as well as long-term storage solutions like AWS S3 use AES-256 encryption.\" IMAP integration data is \"encrypted at rest at the field level as well as at the database level\" (vendor documentation read 2026-09-26)",
+				"hubspot-crm": "https://legal.hubspot.com/security \"The physical and virtualized hard drives used by HubSpot product server instances as well as long-term storage solutions like AWS S3 use AES-256 encryption\"; connected app tokens are held by HubSpot in that store.",
 				"pipedrive": "https://www.pipedrive.com/en/features/privacy-security \"state-of-the-art encryption for all data, whether at rest or in transit over public networks\" (vendor documentation read 2026-09-26)",
 				"kiss": "helm/kiss-chart/templates/secret.yaml puts register keys, OIDC and SMTP secrets in a Kubernetes Secret; encryption at rest depends on the cluster, KISS does not encrypt them itself",
 				"espocrm": "application/Espo/Classes/Record/AppSecret/ValueInputFilter.php:58 \"$this->crypt->encrypt($value)\" stores App Secrets encrypted (Administration > App Secrets, https://docs.espocrm.com/administration/app-secrets/), and inbound email and OAuth provider passwords pass the same Crypt filter (application/Espo/Classes/Record/InboundEmail/PasswordsInputFilter.php)",
@@ -5475,7 +5541,7 @@
 				"owner": "ConductionNL/pipelinq"
 			},
 			"evidence": {
-				"hubspot-crm": "pipelinq/hubspot-crm/hubspot-crm.md:61 \"| Audit trail | Yes (Enterprise only) | Yes |\" (Enterprise only; logging of outbound register calls not named)",
+				"hubspot-crm": "https://knowledge.hubspot.com/integrations/manage-your-connected-apps Connection insights show \"app activity, API usage ... and record-level interactions\" for apps that call HubSpot; https://knowledge.hubspot.com/account-management/view-and-export-account-activity-history audit logs record \"HubSpot-user based actions\" only. No log of each outgoing call to an outside register.",
 				"kiss": "Kiss.Bff/Intern/Verwerking/VerwerkingMiddleware.cs:25 wraps every outgoing register call and stores user, time, endpoint and method (line 41), readable at Kiss.Bff/Intern/Verwerking/GetVerwerkingsLogs.cs:18 \"api/verwerkingslogs\"; docs/decision-record/logging-voor-verwerking.md:2 describes it",
 				"espocrm": "application/Espo/Resources/metadata/entityDefs/WebhookQueueItem.json keeps each outbound webhook delivery with status and attempts, and Administration > App Log (adminPanel.json:369 \"#Admin/appLog\", AppLogRecord fields message, level, requestUrl) records errors; there is no log of every outbound call to an outside register",
 				"pipedrive": "https://support.pipedrive.com/en/article/security-features-in-pipedrive \"Audit log A log of all of the security-related changes made in your company account by any user in the past two months\" (security changes, not calls to outside registers) (vendor documentation read 2026-09-26)",
@@ -5487,7 +5553,7 @@
 			"area": "platform",
 			"name": "Rename a field and have your existing records follow",
 			"pipelinq": "yes",
-			"hubspot-crm": "partial",
+			"hubspot-crm": "yes",
 			"pipedrive": "partial",
 			"espocrm": "yes",
 			"odoo-crm": "yes",
@@ -5502,7 +5568,7 @@
 				"owner": "ConductionNL/pipelinq"
 			},
 			"evidence": {
-				"hubspot-crm": "https://knowledge.hubspot.com/properties/understand-the-property-editor \"The label can be changed after creating the property.\" \"The internal name cannot be edited after you create the property.\" Records keep their values under a new label, but the key itself cannot be renamed, so partial (vendor documentation read 2026-09-26)",
+				"hubspot-crm": "https://knowledge.hubspot.com/properties/understand-the-property-editor \"Property label ... The label can be changed after creating the property\"; \"Internal name ... used for integration app sync and API calls ... cannot be edited\", so records and integrations keep working after a rename. All products and plans.",
 				"kiss": "users cannot define fields in KISS (fixed forms and DTOs); contactverzoek question sets store their question text with each saved answer, so the capability does not exist",
 				"espocrm": "Field names are fixed after creation and the visible name is a label changed in the Field Manager or Label Manager (application/Espo/Resources/metadata/app/adminPanel.json:162 \"#Admin/labelManager\"), so existing records keep their values when a field is renamed",
 				"pipedrive": "https://support.pipedrive.com/en/article/custom-fields \"You can change the custom field name, group, description, user specification, places where shown and quality rules for your custom field at any time.\" (docs read as fuller than partial; rating kept) (vendor documentation read 2026-09-26)",
@@ -5514,7 +5580,7 @@
 			"area": "platform",
 			"name": "Check from one page that every connection still works",
 			"pipelinq": "yes",
-			"hubspot-crm": "partial",
+			"hubspot-crm": "yes",
 			"pipedrive": "unknown",
 			"espocrm": "partial",
 			"odoo-crm": "partial",
@@ -5529,7 +5595,7 @@
 				"owner": "ConductionNL/pipelinq"
 			},
 			"evidence": {
-				"hubspot-crm": "https://knowledge.hubspot.com/integrations/manage-your-connected-apps \"On the Connections home tab, view at a glance app connection statuses, identify issues that need attention, and understand how apps interact with CRM data.\" All products and plans; rating kept at partial (vendor documentation read 2026-09-26)",
+				"hubspot-crm": "https://knowledge.hubspot.com/integrations/manage-your-connected-apps \"On the Connections home tab, view at a glance app connection statuses, identify issues that need attention\", to \"prevent issues like expired connections or reaching API call limits\". All products and plans.",
 				"espocrm": "application/Espo/Resources/metadata/app/adminPanel.json:60 \"#Admin/systemRequirements\" checks the server, and separate test connection buttons exist per mail and LDAP setting (client/src/views/inbound-email/fields/test-connection.js, email-account/fields/test-connection.js, admin/authentication/fields/test-connection.js); no single page tests every connection",
 				"pipedrive": "not checked: rated 2026-04-18 with no recorded source; vendor documentation read 2026-09-26 did not settle it (read: https://support.pipedrive.com/en/article/{security-features-in-pipedrive, adding-apps-to-other-users, pipedrive-marketplace-apps-integrations})",
 				"odoo-crm": "odoo/addons/base/models/ir_mail_server.py:284 test_smtp_connection and addons/mail/models/fetchmail.py:211 button_confirm_login give a Test Connection button per server; there is no one page that checks every connection at once.",
@@ -5541,7 +5607,7 @@
 			"area": "platform",
 			"name": "Delete a person's details on request and leave the books intact",
 			"pipelinq": "yes",
-			"hubspot-crm": "partial",
+			"hubspot-crm": "yes",
 			"pipedrive": "partial",
 			"espocrm": "yes",
 			"odoo-crm": "partial",
@@ -5556,7 +5622,7 @@
 				"owner": "ConductionNL/pipelinq"
 			},
 			"evidence": {
-				"hubspot-crm": "https://knowledge.hubspot.com/privacy-and-consent/how-do-i-perform-a-gdpr-delete-in-hubspot permanent delete removes the contact plus \"email tracking history, call records, form submissions, and other engagement data and activity\"; all plans; the page does not say deals or invoices stay intact, so partial (vendor documentation read 2026-09-26)",
+				"hubspot-crm": "https://knowledge.hubspot.com/privacy-and-consent/how-do-i-perform-a-gdpr-delete-in-hubspot permanent delete removes the contact \"including email tracking history, call records, form submissions\", while \"anonymized analytics data will remain\"; associated deals and companies are separate records and stay. All products and plans.",
 				"kiss": "KISS has no delete action on persons or contact moments (the only DELETE calls in src/ are for kanalen and contactverzoek forms, src/features/Kanalen/service.ts:32); personal data lives in OpenKlant and is erased there",
 				"espocrm": "application/Espo/Tools/DataPrivacy/Erasor.php:78 \"erase(string $entityType, string $id, array $fieldList)\" blanks the personal data fields and email and phone records (:126, :149) and saves the record (:189), so related opportunities, cases and invoices stay; reached from View Personal Data on the record (https://docs.espocrm.com/user-guide/data-privacy/)",
 				"pipedrive": "https://support.pipedrive.com/en/article/how-can-i-delete-items-in-pipedrive \"Deleting an item in Pipedrive will also delete linked historical information (e.g., invoices, notes, or attachments).\" (deletion exists but takes history with it) (vendor documentation read 2026-09-26)",
@@ -5568,7 +5634,7 @@
 			"area": "platform",
 			"name": "Stop a runaway integration before it costs you money",
 			"pipelinq": "yes",
-			"hubspot-crm": "unknown",
+			"hubspot-crm": "yes",
 			"pipedrive": "unknown",
 			"espocrm": "partial",
 			"odoo-crm": "partial",
@@ -5585,7 +5651,8 @@
 			"evidence": {
 				"kiss": "no rate limiting or budget guard in Kiss.Bff/ (grep for RateLimit finds nothing)",
 				"espocrm": "Only for AI calls, in the paid Intelligence extension: https://docs.espocrm.com/extensions/intelligence/usage-and-quota/ \"The Quota feature allows you to limit AI usage for users ... Once their balance becomes negative, they cannot use AI features\"; no spend cap on other integrations, though webhooks stop after four attempts (application/Espo/Core/Webhook/Queue.php:59)",
-				"odoo-crm": "addons/iap/tools/iap_tools.py:94 \"class InsufficientCreditError\" and addons/crm_iap_enrich/models/crm_lead.py:129 \"Since there are no credits left, there is no point to process the other batches\": paid Odoo services (lead enrichment, lead mining, SMS, snailmail) run on prepaid IAP credits, so an automated run stops when the balance is spent and the admin gets a no credit notice; the balance shows on Settings > Technical > IAP Accounts (addons/iap/views/iap_views.xml:45) and an email alert threshold is kept on the account (addons/iap/models/iap_account.py:42 \"Email Alert Threshold\"). There is no cap or rate limit on outgoing webhooks or custom integrations."
+				"odoo-crm": "addons/iap/tools/iap_tools.py:94 \"class InsufficientCreditError\" and addons/crm_iap_enrich/models/crm_lead.py:129 \"Since there are no credits left, there is no point to process the other batches\": paid Odoo services (lead enrichment, lead mining, SMS, snailmail) run on prepaid IAP credits, so an automated run stops when the balance is spent and the admin gets a no credit notice; the balance shows on Settings > Technical > IAP Accounts (addons/iap/views/iap_views.xml:45) and an email alert threshold is kept on the account (addons/iap/models/iap_account.py:42 \"Email Alert Threshold\"). There is no cap or rate limit on outgoing webhooks or custom integrations.",
+				"hubspot-crm": "https://knowledge.hubspot.com/account-management/understand-hubspot-credits-and-billing \"To manage usage, set a maximum monthly credit limit for your account and for individual HubSpot tools\"; https://knowledge.hubspot.com/account-management/understand-how-to-use-hubspot-credits \"If your usage reaches this limit, any feature requiring credits will be paused\". Starter and up."
 			}
 		},
 		{
@@ -5609,7 +5676,7 @@
 				"readOn": "2026-09-26"
 			},
 			"evidence": {
-				"hubspot-crm": "https://knowledge.hubspot.com/branding/edit-your-logo-favicon-and-brand-colors brand colors \"appear in the content editor, as well as scheduling pages, quotes, and conversations channels\"; all plans; styles customer-facing output, not the CRM interface itself, so partial (vendor documentation read 2026-09-26)",
+				"hubspot-crm": "https://knowledge.hubspot.com/branding/edit-your-logo-favicon-and-brand-colors brand kits (logo, favicon, colors, theme, fonts) are \"applied across HubSpot-hosted content and supported tools, such as the content editor, scheduling pages, quotes, and conversation channels\". All products and plans. Outward content only; the app interface keeps HubSpot's look.",
 				"kiss": "the colours are compiled in from src/assets/design-tokens.scss:1 \":root {\" via src/App.vue:68 \"@use \\\"@/assets/design-tokens\\\"\"; helm/kiss-chart/values.yaml has no theme or logo setting, so a house style needs a code change and rebuild",
 				"espocrm": "application/Espo/Resources/metadata/entityDefs/Settings.json:279 \"companyLogo\", :547 \"theme\" and :552 \"themeParams\" (navbar and colour options) with themes in application/Espo/Resources/metadata/themes/ (Dark, Glass, Hazyblue, Light, Sakura, Violet and more), set at Administration > User Interface; each portal has its own logo and theme (entityDefs/Portal.json)",
 				"pipedrive": "https://support.pipedrive.com/en/article/web-forms \"The Style section lets you customize the appearance of your web forms in four different ways.\" (web forms only, LeadBooster; no app theming) (vendor documentation read 2026-09-26)",
@@ -5637,7 +5704,7 @@
 				"readOn": "2026-09-26"
 			},
 			"evidence": {
-				"hubspot-crm": "https://knowledge.hubspot.com/help-and-resources/hubspot-language-offerings \"The following languages are available in the HubSpot interface.\" Dutch is listed as Yes for the CRM, Sales Hub, Service Hub, Marketing Hub and CMS (vendor documentation read 2026-09-26)",
+				"hubspot-crm": "https://knowledge.hubspot.com/help-and-resources/hubspot-language-offerings lists Nederlands (Dutch) among \"languages ... available in the HubSpot interface\", noting some features may lag. All products and plans.",
 				"kiss": "all UI strings are hard coded Dutch (for example src/views/HomeView.vue:16 \"Startscherm\"); package.json has no i18n library, so there is no English",
 				"espocrm": "application/Espo/Resources/i18n/nl_NL/ (for example nl_NL/Global.json) ships a Dutch translation among 37 languages, selectable per user in Preferences and system wide in Settings",
 				"pipedrive": "https://www.pipedrive.com/en/newsroom/pipedrive-introduces-its-crm-software-platform-in-four-new-languages \"Pipedrive is now available in 22 languages.\" (Dutch is in the page's language list; per-user choice at https://support.pipedrive.com/en/article/how-can-i-change-my-language-or-date-number-format) (vendor documentation read 2026-09-26)",
@@ -5665,7 +5732,7 @@
 			},
 			"note": "The four commercial and open source CRMs all ship a native mobile app. We do not.",
 			"evidence": {
-				"hubspot-crm": "pipelinq/hubspot-crm/hubspot-crm.md:42 \"Mobile app (iOS and Android)\"; competitor_features#31247 \"iOS/Android app with mobile scanning, calling, notifications.\"",
+				"hubspot-crm": "https://knowledge.hubspot.com/account-mangagement/how-to-install-the-hubspot-mobile-application \"view and edit records, make calls, manage marketing emails, and use the conversations inbox directly from your mobile device\" on iOS 17 and Android 11 and up. All products and plans.",
 				"kiss": "the frontend has a single media query in all of src/ (src/nl-design-system/components/Pagination.vue:184 \"@media (width >= 640px)\"); the layout is a fixed desktop KCC workstation with a sidebar (src/layout/TheSidebar.vue)",
 				"espocrm": "The web client adapts to small screens (client/src/views/site/navbar.js:580 \"const smallScreenWidth = this.getThemeManager().getParam('screenWidthXs')\" collapses the navbar on phones), so it works in a phone browser; no official native mobile app is listed at https://www.espocrm.com/extensions/. Driven 2026-09-26 on the 10.0.8 lab at a 390 by 844 viewport: the navbar collapsed behind a menu button, a Contact record opened, was edited and saved without horizontal scroll (scrollWidth 379 of 390). The phone field defaulted to the +1 country code until a country is configured.",
 				"pipedrive": "competitor_features#2777 \"Native iOS/Android app with caller ID, nearby contacts, and activity logging\"",
@@ -5693,7 +5760,7 @@
 			},
 			"note": "HubSpot's free tier includes live chat and a chatbot. This is a real gap, not a rating we missed.",
 			"evidence": {
-				"hubspot-crm": "pipelinq/hubspot-crm/hubspot-crm.md:35 \"Live chat and chatbot\"; competitor_features#2740 \"Website live chat with chatbot builder, ticket creation, and meeting scheduling\"",
+				"hubspot-crm": "https://knowledge.hubspot.com/chatflows/create-a-live-chat \"The live chat will appear as a widget on your website pages, where visitors can start a real-time conversation with someone on your team\". All products and plans.",
 				"kiss": "no chat widget or chat channel intake in src/ or Kiss.Bff/; \"Live chat\" exists only as a channel label (src/features/contact/contactmoment/ContactmomentAfhandeling.vue:348)",
 				"espocrm": "Searched Crm en_US i18n for \"chat\": no hits; no live chat widget in 10.0.8 or in https://www.espocrm.com/extensions/",
 				"pipedrive": "competitor_features#2772 \"Lead generation toolkit with chatbot, web forms, live chat, and prospector\" (LeadBooster, paid add-on per pipelinq/pipedrive/pipedrive.md:25)",
@@ -5721,7 +5788,7 @@
 			},
 			"note": "HubSpot lists 1,500 integrations and Pipedrive 400. We have connectors, not a shop window.",
 			"evidence": {
-				"hubspot-crm": "pipelinq/hubspot-crm/hubspot-crm.md:40 \"1,500+ integrations in marketplace\"; competitor_features#2746 \"1000+ integrations via app marketplace\"",
+				"hubspot-crm": "https://ecosystem.hubspot.com/marketplace/apps is HubSpot's App Marketplace of installable integrations (Square, Lightspeed, Yotpo and others read for this matrix); https://knowledge.hubspot.com/ai-tools/use-breeze-assistant-with-connected-apps \"Navigate to the App Marketplace. Select the app ... click Install\". All products and plans.",
 				"kiss": "integrations are fixed proxy classes in Kiss.Bff/Extern configured through helm values; no marketplace or plugin mechanism",
 				"espocrm": "https://www.espocrm.com/extensions/ lists about a dozen official extensions (Advanced Pack, Sales Pack, Project Management, Intelligence, VoIP, Meeting Scheduler, Outlook, Google, Zoom, Stripe, MailChimp, Real Estate) installed through Administration > Extensions (https://docs.espocrm.com/administration/extensions/); no large third party marketplace",
 				"pipedrive": "pipelinq/pipedrive/pipedrive.md:38 \"400+ integrations via marketplace\"",
@@ -5749,7 +5816,7 @@
 			},
 			"note": "Ours files mail afterwards by matching the address. Theirs works while you read the mail.",
 			"evidence": {
-				"hubspot-crm": "competitor_features#31202 \"Two-way Gmail/Outlook + meeting scheduler.\"; pipelinq/hubspot-crm/hubspot-crm.md:33 \"Email tracking and templates\" (mail integration; an in-mail add-contact button is not named)",
+				"hubspot-crm": "https://knowledge.hubspot.com/connected-email/use-contact-profiles-with-the-hubspot-sales-office-365-add-in \"review contact information and log sales activities in your inbox's task pane\" while reading a mail in Outlook; Gmail has the Sales Chrome extension (https://knowledge.hubspot.com/connected-email/get-started-with-the-hubspot-sales-chrome-extension). All products and plans.",
 				"kiss": "no Outlook or mail add-in in the repository; KISS reads no mail (open epic https://github.com/Klantinteractie-Servicesysteem/KISS-frontend/issues/1446)",
 				"espocrm": "EspoCRM has its own mail client; client/src/views/email/detail.js:65 action 'createLead' and :73 'createContact' create a lead or contact from the sender while reading the email inside EspoCRM. There is no Outlook or Gmail add in; the paid Outlook Integration covers OAuth IMAP and SMTP only (https://docs.espocrm.com/extensions/outlook-integration/email/)",
 				"pipedrive": "https://support.pipedrive.com/en/article/pipedrive-gmail-add-on \"From the Gmail side panel, you can add new contacts, deals and activities that automatically sync to Pipedrive.\" (vendor documentation read 2026-09-26)",
@@ -5761,7 +5828,7 @@
 			"area": "clients",
 			"name": "Change a field on fifty records at once, like a spreadsheet",
 			"pipelinq": "no",
-			"hubspot-crm": "partial",
+			"hubspot-crm": "yes",
 			"pipedrive": "yes",
 			"espocrm": "yes",
 			"odoo-crm": "yes",
@@ -5777,7 +5844,7 @@
 			},
 			"note": "Attio and Pipedrive make this the centre of the product. We edit one record at a time.",
 			"evidence": {
-				"hubspot-crm": "https://knowledge.hubspot.com/records/bulk-edit-records \"In HubSpot, you can edit your records in bulk.\" Select records, click Edit, pick a property and a new value; all products and plans; rating kept at partial (never raised) (vendor documentation read 2026-09-26)",
+				"hubspot-crm": "https://knowledge.hubspot.com/records/bulk-edit-records select records or \"Select all [number] [records]\", then \"Edit: select to edit the values of a specific property in these records. You can also edit property values directly in the table\". All products and plans.",
 				"kiss": "every beheer and contact screen edits one record at a time (for example src/views/Beheer/Kanalen/KanaalBeheer.vue); no multi select edit in src/",
 				"espocrm": "client/src/views/record/list-base.ts:402 mass action 'massUpdate' (also in checkAllResultMassActionList for all filtered results) sets one or more fields on every selected record at once, backed by application/Espo/Resources/metadata/app/massActions.json:14 \"update\"",
 				"pipedrive": "https://support.pipedrive.com/en/article/bulk-editing-and-filtering \"From here, you can filter, sort, and update multiple records at once.\" (vendor documentation read 2026-09-26)",
@@ -5789,7 +5856,7 @@
 			"area": "products",
 			"name": "Know how many you have left before you promise it to somebody",
 			"pipelinq": "partial",
-			"hubspot-crm": "no",
+			"hubspot-crm": "unknown",
 			"pipedrive": "no",
 			"espocrm": "partial",
 			"odoo-crm": "yes",
@@ -5804,7 +5871,7 @@
 				"owner": "ConductionNL/shillinq"
 			},
 			"evidence": {
-				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of stock / inventory levels; nearest is competitor_features#19359 \"Products feature of HubSpot Sales Hub\" (catalogue, no stock)",
+				"hubspot-crm": "not checked: searched the knowledge base URL list for inventory and stock and found no article; https://knowledge.hubspot.com/properties/hubspots-default-product-properties shows no quantity on hand (read 2026-09-26).",
 				"kiss": "src/router/index.ts:126 \"const router = createRouter(\" lists the only screens: startscherm, afhandeling, contactverzoeken, personen, bedrijven, zaken, links and beheer; KISS has no product, price, till, payment or stock model anywhere in src/ or Kiss.Bff/ (grep for prijs, kassa, factuur, offerte finds nothing)",
 				"espocrm": "Not in core; paid Sales Pack: https://docs.espocrm.com/extensions/sales-pack/inventory-management/ \"allows tracking of product quantities, locations in warehouses ... It allows validating product availability before selling it to a customer\"",
 				"pipedrive": "absent from sources: pipelinq/pipedrive/pipedrive.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 40) have no mention of stock or inventory levels",
@@ -5832,7 +5899,7 @@
 			},
 			"note": "KISS indexes everything into Elasticsearch and searches it in one box. Ours are separate searches.",
 			"evidence": {
-				"hubspot-crm": "https://knowledge.hubspot.com/account-management/search-within-your-hubspot-account global search covers \"CRM records, activities, blog posts, website pages, marketing emails, segments, dashboards, workflows, and campaigns\"; the page does not name your own knowledge base articles, so partial (vendor documentation read 2026-09-26)",
+				"hubspot-crm": "https://knowledge.hubspot.com/account-management/search-within-your-hubspot-account global search covers \"CRM records, activities, blog posts, website pages, marketing emails\" and more (All products and plans); a wiki outside HubSpot is reached only through Breeze Assistant connected apps (https://knowledge.hubspot.com/ai-tools/use-breeze-assistant-with-connected-apps), not the same box.",
 				"kiss": "src/features/search/GlobalSearch.vue:23 \"fieldset class=\\\"bronnen\\\"\" searches websites, SharePoint, kennisartikelen, VACs and the smoelenboek in one box (Kiss.Bff/Extern/Elasticsearch/SearchController.cs:22); client records are not in that index and are searched on the separate Personen and Bedrijven screens",
 				"espocrm": "application/Espo/Resources/metadata/app/clientNavbar.json:3 global search covers the entity types in Settings globalSearchEntityList (default application/Espo/Resources/defaults/config.php:92 Account, Contact, Lead, Opportunity; an admin can add KnowledgeBaseArticle and others) with full text search support (application/Espo/Tools/GlobalSearch/Service.php:112); no outside wiki is indexed",
 				"pipedrive": "absent from sources: pipelinq/pipedrive/pipedrive.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 40) have no mention of one search box across wiki, articles and client records",
@@ -5860,7 +5927,7 @@
 			},
 			"note": "KISS calls these werkberichten and filters them per skill. We have the publishing half only.",
 			"evidence": {
-				"hubspot-crm": "competitor_features#2745 \"Ticketing system with knowledge base, customer portal, and SLA management\" (a knowledge base covers publishing; internal work notices pushed per team are not named)",
+				"hubspot-crm": "https://knowledge.hubspot.com/playbooks/use-playbooks \"create interactive content cards displayed in contact, company, deal, and ticket records\" for the team (Sales or Service Hub Professional, Enterprise); knowledge base articles publish self-service content (https://knowledge.hubspot.com/knowledge-base/create-and-customize-knowledge-base-articles). No per-skill news feed that alerts on change.",
 				"kiss": "src/views/HomeView.vue:102 \"header=\\\"Nieuws\\\"\" and :111 \"header=\\\"Werkinstructies\\\"\" publish messages edited at src/router/index.ts:238 \"NieuwsEnWerkinstructies\" (Kiss.Bff/Intern/NieuwsEnWerkinstructies/Features/BerichtenController.cs:10), with an important counter (GetFeaturedCountController.cs:19) and read markers",
 				"espocrm": "application/Espo/Resources/metadata/entityDefs/Note.json:43 \"targetType\" options self, all, teams, users, portals let a user post in the stream to all users or to chosen teams, which notifies them (https://docs.espocrm.com/user-guide/stream/); posts are not versioned work instructions and are not filtered by skill",
 				"pipedrive": "absent from sources: pipelinq/pipedrive/pipedrive.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 40) have no mention of internal work instructions or news for a service desk",
@@ -5872,7 +5939,7 @@
 			"area": "contact-moments",
 			"name": "Handle two phone calls at once and switch between them",
 			"pipelinq": "no",
-			"hubspot-crm": "no",
+			"hubspot-crm": "unknown",
 			"pipedrive": "no",
 			"espocrm": "unknown",
 			"odoo-crm": "partial",
@@ -5888,7 +5955,7 @@
 			},
 			"note": "KISS does this because a contact centre needs it. Nobody else in this matrix does.",
 			"evidence": {
-				"hubspot-crm": "absent from sources: pipelinq/hubspot-crm/hubspot-crm.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 33, 782, 554) have no mention of handling or switching between two concurrent phone calls",
+				"hubspot-crm": "not checked: https://knowledge.hubspot.com/calling/receive-calls-in-hubspot documents \"Place caller on hold\" and transfer for one inbound call but says nothing on a second concurrent call (Sales or Service Hub Starter and up, read 2026-09-26).",
 				"kiss": "src/features/contact/contactmoment/ContactmomentSwitcher.vue:8 \"Actief ({{ moments.length }})\" lists running contact moments and :65 \"contactmomentStore.switchContactmoment(moment)\" switches between them, mounted in src/layout/TheSidebar.vue:10",
 				"espocrm": "not checked: core 10.0.8 has no telephony code, and the paid VoIP Integration docs (https://docs.espocrm.com/extensions/voip-integration/overview/ and customization/) do not say whether an agent can hold and switch between two calls; that behaviour sits in the PBX and the closed extension",
 				"pipedrive": "absent from sources: pipelinq/pipedrive/pipedrive.md, pipelinq/concurrentie-analyse.md and competitor_features (ids 40) have no mention of handling two simultaneous calls",
@@ -5916,7 +5983,7 @@
 			},
 			"note": "HubSpot Academy is a real reason buyers pick HubSpot. Written docs are not the same thing.",
 			"evidence": {
-				"hubspot-crm": "pipelinq/hubspot-crm/hubspot-crm.md:66 \"extensive educational resources (HubSpot Academy)\"; pipelinq/hubspot-crm/hubspot-crm.md:12 \"HubSpot Academy certifications\"",
+				"hubspot-crm": "https://academy.hubspot.com/courses \"Creating a HubSpot Academy account is 100% free and gets you unlimited access to our complete library of education\", with self paced courses and certifications.",
 				"kiss": "not checked: no course catalogue found on https://www.icatt.nl or https://www.dimpact.nl/podiumd on 2026-09-26; the manual at https://kiss-klantinteractie-servicesysteem.readthedocs.io/nl/v3.1.3/manual/manual.html is documentation, not training, and Dimpact member training is not public",
 				"espocrm": "https://www.espocrm.com/video/ \"EspoCRM Video Tutorials\" (Accounts, Leads, Reports and Analytics, Workflow Management, BPM and others) plus docs at https://docs.espocrm.com/ and paid consulting and training on request (https://www.espocrm.com/support/ service option \"Consulting & Training\"); no structured course or certification programme",
 				"pipedrive": "https://learn.pipedrive.com/app \"Pipedrive Academy is a free learning platform designed to help sales professionals, teams and business owners get the most out of Pipedrive CRM through courses, tutorials and tips.\" (vendor documentation read 2026-09-26)",
@@ -5944,7 +6011,7 @@
 				"readOn": "2026-09-26"
 			},
 			"evidence": {
-				"hubspot-crm": "pipelinq/hubspot-crm/hubspot-crm.md:12 \"Additional revenue from onboarding fees, HubSpot Academy certifications, and a partner marketplace.\" (partner marketplace; locality not stated)",
+				"hubspot-crm": "https://ecosystem.hubspot.com/marketplace/solutions \"Browse the directory of partners or get targeted recommendations through our questionnaire ... Connect with HubSpot partners who can help with any business need\", filtered by service and tier; the directory is also served in Dutch.",
 				"kiss": "AUTHORS.md:2 \"Created by [ICATT](https://www.icatt.nl) for [Dimpact](https://www.dimpact.nl/) and [Gemeente Utrecht]\"; ICATT (https://www.icatt.nl, \"common ground-componenten te bouwen, zoals KISS (Podium D)\") implements it and Dimpact supplies it to member municipalities within PodiumD",
 				"espocrm": "No partner directory on espocrm.com (https://www.espocrm.com/partners/ answered 404 on 2026-09-26); the vendor sells implementation services itself (https://www.espocrm.com/services/) and points buyers to community developers through forum signatures (https://www.espocrm.com/community-collaboration/ \"help people who are seeking EspoCRM development or consulting to easily find a CRM expert\")",
 				"pipedrive": "https://www.pipedrive.com/en/marketplace/partners \"Find an expert --> Region Select an option Country Select an option Language\" (partner directory; docs read as fuller than partial, rating kept) (vendor documentation read 2026-09-26)",
@@ -5971,7 +6038,7 @@
 				"owner": "ConductionNL/pipelinq"
 			},
 			"evidence": {
-				"hubspot-crm": "pipelinq/hubspot-crm/hubspot-crm.md:57 \"| Import/Export (CSV/vCard) | Yes | Yes |\"; limit at pipelinq/hubspot-crm/hubspot-crm.md:73 \"vendor lock-in by design\" (export exists, lock-in stated)",
+				"hubspot-crm": "https://knowledge.hubspot.com/account-management/export-your-content-and-data \"export HubSpot content and data from your account, such as pages, contacts, and files\", All products and plans, but \"there is no way to merge all the data between HubSpot accounts ... recreate certain data in the other account\"; records and files leave, automations must be rebuilt.",
 				"kiss": "contact data is stored in the municipality's own standard registers (OpenKlant 2 via src/services/openklant2/service.ts:521, ZGW for cases), so it stays with the buyer; KISS's own database (news, skills, links, forms, management details) has no export beyond Kiss.Bff/Intern/ContactmomentDetails/Features/ContactmomentDetailsRapportageOverzicht.cs:22 \"[HttpGet(\\\"/api/contactmomentendetails\\\")]\" with from and to parameters, JWT protected for external systems (docs/manual/managementinformatie.md:4)",
 				"espocrm": "client/src/views/record/list-base.ts:403 'export' to CSV or XLSX on every list, the REST API (application/Espo/Resources/routes.json:554 \"/:controller\"), and self hosting on your own MySQL, MariaDB or PostgreSQL database under AGPL (LICENSE.txt:1) mean all data can leave; https://docs.espocrm.com/administration/backup-and-restore/",
 				"pipedrive": "https://support.pipedrive.com/en/article/exporting-data-from-pipedrive \"Activities, notes and files linked to deals and contacts must be exported separately.\" (per item type XLSX/CSV, Google Drive files not exported) (vendor documentation read 2026-09-26)",
@@ -5998,7 +6065,7 @@
 				"owner": "ConductionNL/pipelinq"
 			},
 			"evidence": {
-				"hubspot-crm": "competitor_features#2743 \"Calendar integration for one-on-one and team meeting scheduling via shareable links\"",
+				"hubspot-crm": "https://knowledge.hubspot.com/meetings-tool/create-and-edit-scheduling-pages \"Create one-on-one scheduling pages so contacts can book meetings with you\"; contacts \"access these scheduling pages using a meeting link\", synced with Gmail or Office 365. All products and plans.",
 				"kiss": "no appointment or calendar feature in src/ or Kiss.Bff/ (grep for afspraak finds nothing; the smoelenboek only shows the agenda text of a colleague, src/features/search/MedewerkerDetail.vue:19)",
 				"espocrm": "Not in core; the paid Meeting Scheduler extension: https://docs.espocrm.com/extensions/meeting-scheduler/ \"you can create online pages where contacts can book meetings with CRM users. Contacts can choose from time slots when the host is available\", with round robin across hosts",
 				"pipedrive": "https://support.pipedrive.com/en/article/scheduler \"General availability lets our customers choose from a broad set of available times\" (Growth and up; Growth limited to one general link) (vendor documentation read 2026-09-26)",
