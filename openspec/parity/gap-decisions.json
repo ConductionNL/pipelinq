@@ -144,11 +144,139 @@
 		"decidedOn": "2026-09-27"
 	},
 	{
+		"row": "req-saved-replies",
+		"matrix": "pipelinq",
+		"decision": "build",
+		"reason": "Partial, built; the missing half is saved replies on tickets, mail and the portal reply, today only WhatsApp and SMS templates exist. Feature request odoo#120198 and four competitors rate it yes",
+		"change": "messaging-saved-replies-and-resend",
+		"decidedOn": "2026-09-27"
+	},
+	{
+		"row": "cm-failed-send",
+		"matrix": "pipelinq",
+		"decision": "build",
+		"reason": "Partial, built; the missing half is a resend button on a failed message, the Berichtenbox retry API has no caller. Changelog demand (pipedrive) with one competitor yes; it sits in the same Messages section as the saved replies",
+		"change": "messaging-saved-replies-and-resend",
+		"decidedOn": "2026-09-27"
+	},
+	{
+		"row": "cm-social-media",
+		"matrix": "pipelinq",
+		"decision": "build",
+		"reason": "Partial, built; the missing half is inbound social and WhatsApp messages becoming tickets in the Queue next to mail and phone. Tender demand (tenderned 401736)",
+		"change": "requests-inbound-to-queue",
+		"decidedOn": "2026-09-27"
+	},
+	{
+		"row": "req-mail-routing",
+		"matrix": "pipelinq",
+		"decision": "build",
+		"reason": "Rated no; tender demand (tenderned 386888) and three competitors rate it yes; it is the same inbound to ticket intake as cm-social-media, with rules an administrator manages",
+		"change": "requests-inbound-to-queue",
+		"decidedOn": "2026-09-27"
+	},
+	{
+		"row": "chat-on-website",
+		"matrix": "pipelinq",
+		"decision": "build",
+		"reason": "Rated no; two competitors rate it yes (hubspot-crm, odoo-crm)",
+		"change": "requests-web-chat-and-bot",
+		"decidedOn": "2026-09-27"
+	},
+	{
+		"row": "cm-chatbot",
+		"matrix": "pipelinq",
+		"decision": "build",
+		"reason": "Rated no; tender demand (tenderned 418890) and two competitors rate it yes (hubspot-crm, odoo-crm). Archived proposals list chatbots as future scope, not as a no",
+		"change": "requests-web-chat-and-bot",
+		"decidedOn": "2026-09-27"
+	},
+	{
 		"row": "mail-client-plugin",
 		"matrix": "pipelinq",
 		"decision": "build",
 		"reason": "Rated no; four competitors rate it yes (hubspot-crm, pipedrive, espocrm, odoo-crm)",
 		"change": "contact-moments-mail-add-in",
+		"decidedOn": "2026-09-27"
+	},
+	{
+		"row": "mkt-block-editor",
+		"matrix": "pipelinq",
+		"decision": "build",
+		"reason": "Rated no; feature request (espocrm forum 61838) and two competitors rate it yes (hubspot-crm, odoo-crm)",
+		"change": "marketing-block-editor",
+		"decidedOn": "2026-09-27"
+	},
+	{
+		"row": "mkt-events",
+		"matrix": "pipelinq",
+		"decision": "build",
+		"reason": "Partial, built; the missing half is an event with a date, a venue, a capacity and an attendee list, today a sign-up only becomes a lead. Tender demand (tenderned 422277)",
+		"change": "marketing-events",
+		"decidedOn": "2026-09-27"
+	},
+	{
+		"row": "mkt-form-campaign-tags",
+		"matrix": "pipelinq",
+		"decision": "build",
+		"reason": "Partial, built; the missing half is the campaign and landing page on the client record and UTM values on the website enquiry form. Changelog demand (pipedrive) with one competitor yes (odoo-crm)",
+		"change": "marketing-campaign-on-client",
+		"decidedOn": "2026-09-27"
+	},
+	{
+		"row": "plat-record-lock",
+		"matrix": "pipelinq",
+		"decision": "build",
+		"reason": "Partial, built; the missing half is a lock action a user can put on a client, lead or ticket. Changelog demand (espocrm#3592) with one competitor yes (espocrm)",
+		"change": "platform-record-lock",
+		"decidedOn": "2026-09-27"
+	},
+	{
+		"row": "plat-retention-destroy",
+		"matrix": "pipelinq",
+		"decision": "build",
+		"reason": "Partial, built; the missing half is a retention term and anonymisation for client and contact records, which carry no archival block. Tender demand (tenderned 421969)",
+		"change": "platform-client-retention",
+		"decidedOn": "2026-09-27"
+	},
+	{
+		"row": "plat-wcag",
+		"matrix": "pipelinq",
+		"decision": "build",
+		"reason": "Partial, built; the missing half is a published accessibility statement and audit evidence for the back office screens. Tender demand (tenderned 414691). The open change keyboard-accessible-click-toggles fixes four controls and does not cover the statement",
+		"change": "platform-accessibility-statement",
+		"decidedOn": "2026-09-27"
+	},
+	{
+		"row": "portal-visible-fields",
+		"matrix": "pipelinq",
+		"decision": "build",
+		"reason": "Partial, built; the missing half is a preview on the ticket of what the resident reads. Feature request KISS-frontend#1559. The field whitelist lives in pipelinq (lib/Portal/PortalContributionProvider.php), so the preview is pipelinq work under ADR-046",
+		"change": "portal-resident-view-preview",
+		"decidedOn": "2026-09-27"
+	},
+	{
+		"row": "prod-price-lists",
+		"matrix": "pipelinq",
+		"decision": "build",
+		"reason": "Rated no; changelog demand (hubspot fall 2026) and two competitors rate it yes (hubspot-crm, odoo-crm)",
+		"change": "products-price-lists",
+		"decidedOn": "2026-09-27"
+	},
+	{
+		"row": "req-multi-municipality",
+		"matrix": "pipelinq",
+		"decision": "build",
+		"reason": "Partial, built; the missing half is showing on each contact and ticket which municipality it belongs to, so one desk can serve several side by side. Tender demand (tenderned 306049)",
+		"change": "requests-municipality-per-contact",
+		"decidedOn": "2026-09-27"
+	},
+	{
+		"row": "work-letter-template",
+		"matrix": "pipelinq",
+		"decision": "build",
+		"reason": "Partial, built; the missing half is a printable letter for one client. Tender demand (tenderned 414691). filinq generates documents for other apps (filinq matrix con-gen-for-apps, gen-from-record), so the change is the pipelinq side of that call, as dossiq did for decisions",
+		"change": "work-letter-from-filinq-template",
 		"decidedOn": "2026-09-27"
 	},
 	{
