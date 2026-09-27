@@ -171,8 +171,11 @@ class SettingsLoadService {
 		// Customer satisfaction, closed loop (customer-satisfaction-closed-loop).
 		// SurveyDispatchService, SurveyResponseService and
 		// DetractorFollowUpService read the invitation and response keys.
-		'survey',
-		'surveyInvitation',
+		// `survey` and `surveyInvitation` collided with openregister's own
+		// survey schemas and were renamed apart (RenameCollidingSchemaSlugs);
+		// the config keys kept their names, mapped in SCHEMA_CONFIG_KEYS.
+		'satisfactionSurvey',
+		'satisfactionSurveyInvitation',
 		'surveyResponse',
 		// Programme portfolio (programme-portfolio). `deliveryProgramme` maps to
 		// the persisted `programme_schema` key in SCHEMA_CONFIG_KEYS; the
@@ -434,6 +437,13 @@ class SettingsLoadService {
 		// the new slugs, so they worked by fallback; the keys now say so.
 		'channelConversation' => 'conversation_schema',
 		'channelMessage' => 'message_schema',
+		// The satisfaction survey and its invitation. openregister ships a
+		// `survey` and a `surveyInvitation` of its own (a generic questionnaire
+		// with questions and answer sets); this is the KTO survey sent after a
+		// closed ticket, so the two are renamed apart. SurveyDispatchService,
+		// SurveyResponseService and the Settings whitelist read the old keys.
+		'satisfactionSurvey' => 'survey_schema',
+		'satisfactionSurveyInvitation' => 'surveyInvitation_schema',
 	];
 
 	/**
