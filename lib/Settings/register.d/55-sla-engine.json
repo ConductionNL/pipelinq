@@ -485,49 +485,6 @@
         "active": true,
         "justification": "AVG Art. 33 wettelijke meldplicht (seed data).",
         "status": "published"
-      },
-      {
-        "@self": {
-          "register": "sla",
-          "schema": "slaPolicy",
-          "slug": "callback-default-sla"
-        },
-        "name": "Standaard callback-SLA",
-        "description": "Terugbel-verzoeken: 2 bedrijfsuren acknowledgement, 1 bedrijfsdag resolution.",
-        "appliesTo": "callback",
-        "customerTier": "*",
-        "targets": [
-          {
-            "kind": "acknowledgement",
-            "duration": "PT2H",
-            "calendar": "business-hours"
-          },
-          {
-            "kind": "callback",
-            "duration": "P1D",
-            "calendar": "business-hours"
-          }
-        ],
-        "escalationChain": [
-          {
-            "triggerAt": 0.8,
-            "notify": "assignee",
-            "channel": "nextcloud-notification"
-          },
-          {
-            "triggerAt": 1.0,
-            "notify": "team-lead",
-            "channel": "email"
-          }
-        ],
-        "pauseConditions": [
-          "awaiting-customer"
-        ],
-        "holidayCalendar": "nl-feestdagen-rijksoverheid",
-        "priority": 100,
-        "active": true,
-        "justification": "Baseline voor terugbel-verzoeken (seed data).",
-        "status": "published"
       }
     ]
   }
