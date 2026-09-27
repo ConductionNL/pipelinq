@@ -6674,6 +6674,27 @@
         "Zrc": "Zrc",
         "Zrc for this record.": "Zrc voor dit record.",
         "Ztc": "Ztc",
-        "Ztc for this record.": "Ztc voor dit record."
+        "Ztc for this record.": "Ztc voor dit record.",
+        "Background colour (hex)": "Achtergrondkleur (hex)",
+        "Businesses (B2B)": "Bedrijven (B2B)",
+        "Choose what residents and businesses see in the customer portal, how it looks and where it lives, and review its accounts and audit trail.": "Kies wat inwoners en bedrijven in het klantportaal zien, hoe het eruitziet en waar het staat, en bekijk de accounts en het auditspoor.",
+        "Could not load the customer portal configuration.": "De configuratie van het klantportaal kon niet worden geladen.",
+        "Could not save the customer portal configuration.": "De configuratie van het klantportaal kon niet worden opgeslagen.",
+        "Custom domain": "Eigen domein",
+        "Customer portal configuration saved.": "Configuratie van het klantportaal opgeslagen.",
+        "Load": "Laden",
+        "No audit events for this tenant yet.": "Nog geen auditgebeurtenissen voor deze tenant.",
+        "No portal accounts for this tenant yet.": "Nog geen portaalaccounts voor deze tenant.",
+        "Portal accounts": "Portaalaccounts",
+        "Portal name": "Naam van het portaal",
+        "Portal tabs": "Tabbladen in het portaal",
+        "Primary colour (hex)": "Hoofdkleur (hex)",
+        "Profile": "Profiel",
+        "Recent audit events": "Recente auditgebeurtenissen",
+        "Residents (B2C)": "Inwoners (B2C)",
+        "Support email": "Support-e-mail",
+        "Support phone": "Supporttelefoon",
+        "Tenant": "Tenant",
+        "This tenant has no saved configuration yet. The portal uses the defaults shown below until you save.": "Deze tenant heeft nog geen opgeslagen configuratie. Het portaal gebruikt de standaardwaarden hieronder tot je opslaat."
     }
 }
