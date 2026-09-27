@@ -213,7 +213,7 @@ class MainRegisterReader {
 
 	/**
 	 * Read a main-register schema id by slug, under the app-config key the
-	 * install writes ({@see SettingsLoadService::schemaConfigKey()}).
+	 * install writes ({@see SettingsLoadService::SCHEMA_CONFIG_KEYS} pin, `<slug>_schema` otherwise).
 	 *
 	 * @param string $schemaKey The schema slug.
 	 *
@@ -222,7 +222,7 @@ class MainRegisterReader {
 	private function schemaIdFor(string $schemaKey): string {
 		return $this->appConfig->getValueString(
 			Application::APP_ID,
-			SettingsLoadService::schemaConfigKey(slug: $schemaKey),
+			(SettingsLoadService::SCHEMA_CONFIG_KEYS[$schemaKey] ?? $schemaKey . '_schema'),
 			''
 		);
 	}//end schemaIdFor()
