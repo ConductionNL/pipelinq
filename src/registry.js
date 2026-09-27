@@ -806,7 +806,7 @@ const registry = {
 	RoutingSuggestionSection: {
 		kind: 'section',
 		component: RoutingSuggestionSection,
-		_note: 'Suggested colleagues for the TicketDetail page (pipelinq#2039): mounts RoutingSuggestionPanel for @objectId (ranked by skill match on the ticket category, availability and workload, capped per agent by maxConcurrent) and writes the chosen colleague into the ticket assignee through the object store. Leads are not wired: the lead schema has no category, so GET /api/routing/suggestions?entityType=lead always answers noMatch.',
+		_note: 'Suggested colleagues for the TicketDetail and LeadDetail pages (pipelinq#2039, pipelinq#2049): mounts RoutingSuggestionPanel for @objectId (ranked by skill match on the record category, availability and workload, capped per agent by maxConcurrent) and writes the chosen colleague into the record assignee through the object store.',
 	},
 	ContractInvoicingSection: {
 		kind: 'section',

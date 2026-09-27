@@ -1527,7 +1527,7 @@
 			"id": "pipeline-lead-rotation",
 			"area": "pipeline",
 			"name": "Share new leads fairly across the sales team, with a cap per person",
-			"pipelinq": "no",
+			"pipelinq": "partial",
 			"hubspot-crm": "partial",
 			"pipedrive": "partial",
 			"espocrm": "partial",
@@ -1538,10 +1538,10 @@
 			"feature": "Lead pipeline",
 			"featureConfidence": "high",
 			"built": {
-				"state": "none",
-				"evidence": "no round robin or auto assignment of leads (grep of lib for round robin, rotation, auto assign); lib/Service/RoutingService.php:168 knows an agent's maxConcurrent cap and ranks agents, but only as a suggestion, and for a lead it always answers noMatch because the lead schema has no category (lib/Settings/pipelinq_register.json lead properties). The suggestion panel is mounted on tickets only (src/components/RoutingSuggestionSection.vue on TicketDetail)",
+				"state": "built",
+				"evidence": "no round robin or auto assignment of leads (grep of lib for round robin, rotation, auto assign). A handler gets a fair suggestion instead: lib/Service/RoutingService.php:92 getSuggestedAgents ranks colleagues whose skill covers the lead category, drops those unavailable or at their maxConcurrent cap (:427 filterByCapacity) and orders the rest by open workload; the lead schema declares category (lib/Settings/pipelinq_register.json lead properties, pipelinq#2049), LeadForm edits it, and LeadDetail mounts src/components/RoutingSuggestionSection.vue through src/manifest.json bodyWidgets, whose Assign writes the lead assignee (tests/Unit/Service/RoutingServiceTest.php testALeadWithACategoryGetsAMatchingColleague, tests/vitest/routingSuggestionSection.spec.js)",
 				"owner": "ConductionNL/pipelinq",
-				"reachedOn": "nothing",
+				"reachedOn": "LeadDetail Suggested agents (colleagues ranked by skill, availability and workload, capped per person)",
 				"readOn": "2026-09-27"
 			},
 			"evidence": {
@@ -1552,7 +1552,8 @@
 				"kiss": "src/router/index.ts:126 \"const router = createRouter(\" lists the only screens: startscherm, afhandeling, contactverzoeken, personen, bedrijven, zaken, links and beheer; a grep of src/ and Kiss.Bff/ for lead, opportunit, offerte, factuur, nieuwsbrief and campagne finds no sales, marketing or invoicing code"
 			},
 			"origin": "changelog",
-			"originUrl": "https://www.odoo.com/odoo-19-2-release-notes"
+			"originUrl": "https://www.odoo.com/odoo-19-2-release-notes",
+			"note": "a ranked suggestion with a cap per person, not an automatic rotation"
 		},
 		{
 			"id": "pipeline-stage-limit",

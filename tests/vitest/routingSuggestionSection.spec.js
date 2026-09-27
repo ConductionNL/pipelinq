@@ -175,4 +175,84 @@ describe('RoutingSuggestionSection', () => {
 			/RoutingSuggestionSection: \{\n\t\tkind: 'section',\n\t\tcomponent: RoutingSuggestionSection,/,
 		)
 	})
+
+	// pipelinq#2049: the lead half. A lead now carries a category, LeadDetail
+	// mounts the section for it, and an Assign click writes the lead.
+	it('is declared on LeadDetail for the lead and its category', () => {
+		const manifest = JSON.parse(
+			readFileSync(resolve(__dirname, '../../src/manifest.json'), 'utf8'),
+		)
+		const page = manifest.pages.find((p) => p.id === 'LeadDetail')
+		const widget = (page.config.bodyWidgets || []).find(
+			(w) => w.component === 'RoutingSuggestionSection',
+		)
+		expect(widget).toBeTruthy()
+		expect(widget.props).toEqual({
+			objectId: '@objectId',
+			category: '@object.category',
+			entityType: 'lead',
+			objectType: 'lead',
+		})
+	})
+
+	it('asks for lead suggestions and writes the chosen colleague into the lead', async () => {
+		const lead = {
+			id: 'l-1',
+			title: 'Parkeerbeheer',
+			category: 'vergunningen',
+			assignee: '',
+		}
+		storeMock.fetchObject.mockResolvedValue({ ...lead })
+		const wrapper = mount(RoutingSuggestionSection, {
+			props: {
+				objectId: 'l-1',
+				category: 'vergunningen',
+				entityType: 'lead',
+				objectType: 'lead',
+			},
+			global: { mocks: { t: (app, text) => text } },
+		})
+		await flushPromises()
+
+		expect(axiosMock.get).toHaveBeenCalledWith(
+			'/index.php/apps/pipelinq/api/routing/suggestions',
+			{ params: { entityType: 'lead', entityId: 'l-1' } },
+		)
+
+		await wrapper
+			.findAll('button')
+			.find((b) => b.text() === 'Assign')
+			.trigger('click')
+		await flushPromises()
+
+		expect(storeMock.fetchObject).toHaveBeenCalledWith('lead', 'l-1')
+		expect(storeMock.saveObject).toHaveBeenCalledWith('lead', {
+			...lead,
+			assignee: 'anna',
+		})
+	})
+
+	it('lets a lead carry a category on the form and the list', () => {
+		const schema = JSON.parse(
+			readFileSync(
+				resolve(__dirname, '../../lib/Settings/pipelinq_register.json'),
+				'utf8',
+			),
+		).components.schemas.lead
+		expect(schema.properties.category.type).toBe('string')
+		expect(schema.required || []).not.toContain('category')
+
+		const form = readFileSync(
+			resolve(__dirname, '../../src/views/leads/LeadForm.vue'),
+			'utf8',
+		)
+		expect(form).toContain(':modelValue="form.category"')
+		expect(form).toMatch(/category: this\.lead\.category/)
+
+		const manifest = JSON.parse(
+			readFileSync(resolve(__dirname, '../../src/manifest.json'), 'utf8'),
+		)
+		const leads = manifest.pages.find((p) => p.id === 'Leads')
+		expect(leads.config.columns).toContain('category')
+	})
 })
