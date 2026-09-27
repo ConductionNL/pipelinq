@@ -3804,8 +3804,10 @@
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
-				"evidence": "lib/Service/Portal/PortalTenantService.php",
-				"owner": "ConductionNL/pipelinq"
+				"evidence": "lib/Service/Portal/PortalTenantService.php resolves a tenant per custom domain or subdomain and keeps a config record per tenant; src/components/admin/PortalSettings.vue loads and saves any tenant's branding, domain and tabs by tenant id",
+				"owner": "ConductionNL/pipelinq",
+				"reachedOn": "Administration settings, Pipelinq, Customer portal (tenant field)",
+				"readOn": "2026-09-27"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/branding/manage-your-brands-with-hubspot-brands \"manage multiple brands in one HubSpot account\" (Brands add-on on Marketing Hub Enterprise); https://knowledge.hubspot.com/knowledge-base/create-multiple-knowledge-bases \"In accounts with the Brands add-on, each knowledge base is assigned to a brand based on its domain\" (Service Hub Enterprise), and portals are reached through the knowledge base. Note: Was partial; the Brands add-on gives several branded help sites in one account. Whether each brand gets its own ticket portal is not spelled out.",
@@ -8112,17 +8114,17 @@
 			"odoo-crm": "partial",
 			"kiss": "no",
 			"provider": "pipelinq",
-			"providerHow": "read in lib/Service/Portal/PortalTenantService.php:55-80 and :200-214, grep of src for tenant-config",
+			"providerHow": "read in lib/Service/Portal/PortalTenantService.php:55-80 and :200-214, src/components/admin/PortalSettings.vue",
 			"feature": "Customer portal",
 			"featureConfidence": "medium",
 			"built": {
 				"state": "built",
-				"evidence": "each portal tenant carries enabledFeatures (lib/Service/Portal/PortalTenantService.php:62 PUBLIC_FIELDS, :210 isFeatureEnabled) and src/portal/views/PortalDashboard.vue:123 \"all.filter((tab) => this.features.includes(tab.key))\" shows only those tabs; records are scoped to the account's own contact and delegations (PortalScopeResolver). The choice is per tenant, not per client, and is set only through POST /portal/api/admin/tenant-config (appinfo/routes.php:395), which no page in src/ calls",
+				"evidence": "each portal tenant carries enabledFeatures (lib/Service/Portal/PortalTenantService.php:62 PUBLIC_FIELDS, isFeatureEnabled) and src/portal/views/PortalDashboard.vue:123 \"all.filter((tab) => this.features.includes(tab.key))\" shows only those tabs; records are scoped to the account's own contact and delegations (PortalScopeResolver). An admin sets the tabs in the Customer portal section of the Pipelinq admin settings (src/components/admin/PortalSettings.vue, mounted by src/views/settings/Settings.vue), which reads GET /portal/api/admin/tenant-config and saves through POST /portal/api/admin/tenant-config. The choice is per tenant, not per client",
 				"owner": "ConductionNL/pipelinq",
-				"reachedOn": "portal dashboard tabs; no admin screen",
-				"readOn": "2026-09-26"
+				"reachedOn": "portal dashboard tabs; Administration settings, Pipelinq, Customer portal",
+				"readOn": "2026-09-27"
 			},
-			"note": "lead: the portal tenant configuration has an admin API but no settings screen",
+			"note": "the choice is per tenant, not per client",
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/inbox/manage-customer-portal-settings sets \"access permissions\", which contacts see company tickets and which properties show (Service Hub Professional, Enterprise); choosing menu items per client is not described.",
 				"pipedrive": "not checked: searched the Pipedrive knowledge base article list (https://support.pipedrive.com/en-sitemap.xml) and product updates on 2026-09-26 for a client portal and found none.",
