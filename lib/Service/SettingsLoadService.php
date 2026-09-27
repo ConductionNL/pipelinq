@@ -295,9 +295,14 @@ class SettingsLoadService {
 	 *   until a migration ships" TRUE: intent alone does not hold a derived key
 	 *   still, because the key is computed from the very slug that moved.
 	 *
+	 * Public because a reader that looks a schema id up by slug must apply the
+	 * same pin: the customer portal read `crmPortalAccount_schema` while the
+	 * install wrote `portalAccount_schema`, and no resident could log in
+	 * (pipelinq#2037).
+	 *
 	 * @var array<string, string>
 	 */
-	private const SCHEMA_CONFIG_KEYS = [
+	public const SCHEMA_CONFIG_KEYS = [
 		'slaPolicy' => 'sla_policy_schema',
 		'slaBreachEvent' => 'sla_breach_event_schema',
 		'customerLoyaltyAccount' => 'klantLoyaltyAccount_schema',

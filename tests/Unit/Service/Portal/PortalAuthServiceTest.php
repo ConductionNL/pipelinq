@@ -30,6 +30,7 @@ use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\Security\IHasher;
 use OCP\Security\ISecureRandom;
 use PHPUnit\Framework\TestCase;
+use OCP\IAppConfig;
 
 /**
  * Tests for the portal login authority.
@@ -76,7 +77,7 @@ class PortalAuthServiceTest extends TestCase {
 	 * @return void
 	 */
 	protected function setUp(): void {
-		$this->repository = new FakePortalObjectRepository();
+		$this->repository = new FakePortalObjectRepository(InstalledAppConfig::wire($this->createMock(IAppConfig::class)));
 
 		$this->hasher = $this->createMock(IHasher::class);
 		$this->hasher->method('hash')->willReturnCallback(static fn (string $m): string => 'h:' . $m);
