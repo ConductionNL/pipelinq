@@ -48,7 +48,11 @@ vi.mock('@nextcloud/vue', () => ({
 		name: 'NcButton',
 		emits: ['click'],
 		render() {
-			return h('button', { onClick: () => this.$emit('click') }, this.$slots.default?.())
+			return h(
+				'button',
+				{ onClick: () => this.$emit('click') },
+				this.$slots.default?.(),
+			)
 		},
 	},
 	NcLoadingIcon: { name: 'NcLoadingIcon', render: () => h('span') },
@@ -61,9 +65,8 @@ vi.mock('@nextcloud/vue', () => ({
 	},
 }))
 
-const { default: RoutingSuggestionSection } = await import(
-	'../../src/components/RoutingSuggestionSection.vue'
-)
+const { default: RoutingSuggestionSection } =
+	await import('../../src/components/RoutingSuggestionSection.vue')
 
 const ticket = {
 	id: 't-1',
@@ -96,13 +99,21 @@ describe('RoutingSuggestionSection', () => {
 		axiosMock.get.mockResolvedValue({
 			data: {
 				suggestions: [
-					{ userId: 'anna', displayName: 'Anna de Vries', workload: 2, maxConcurrent: 10, matchedSkill: 'Vergunningen' },
+					{
+						userId: 'anna',
+						displayName: 'Anna de Vries',
+						workload: 2,
+						maxConcurrent: 10,
+						matchedSkill: 'Vergunningen',
+					},
 				],
 				atCapacity: 1,
 			},
 		})
 		storeMock.fetchObject.mockResolvedValue({ ...ticket })
-		storeMock.saveObject.mockImplementation((type, data) => Promise.resolve(data))
+		storeMock.saveObject.mockImplementation((type, data) =>
+			Promise.resolve(data),
+		)
 	})
 
 	it('shows the ranked colleagues for the ticket it is mounted on', async () => {
@@ -134,10 +145,15 @@ describe('RoutingSuggestionSection', () => {
 		storeMock.saveObject.mockResolvedValue(null)
 		const wrapper = await mountSection()
 
-		await wrapper.findAll('button').find((b) => b.text() === 'Assign').trigger('click')
+		await wrapper
+			.findAll('button')
+			.find((b) => b.text() === 'Assign')
+			.trigger('click')
 		await flushPromises()
 
-		expect(wrapper.find('.note-error').text()).toContain('Could not save the assignee.')
+		expect(wrapper.find('.note-error').text()).toContain(
+			'Could not save the assignee.',
+		)
 	})
 
 	it('is declared on TicketDetail and resolved by the registry', () => {
@@ -151,7 +167,12 @@ describe('RoutingSuggestionSection', () => {
 		expect(widget).toBeTruthy()
 		expect(widget.props.objectId).toBe('@objectId')
 
-		const registry = readFileSync(resolve(__dirname, '../../src/registry.js'), 'utf8')
-		expect(registry).toMatch(/RoutingSuggestionSection: \{\n\t\tkind: 'section',\n\t\tcomponent: RoutingSuggestionSection,/)
+		const registry = readFileSync(
+			resolve(__dirname, '../../src/registry.js'),
+			'utf8',
+		)
+		expect(registry).toMatch(
+			/RoutingSuggestionSection: \{\n\t\tkind: 'section',\n\t\tcomponent: RoutingSuggestionSection,/,
+		)
 	})
 })

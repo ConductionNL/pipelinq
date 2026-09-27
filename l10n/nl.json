@@ -6695,6 +6695,8 @@
         "Support email": "Support-e-mail",
         "Support phone": "Supporttelefoon",
         "Tenant": "Tenant",
-        "This tenant has no saved configuration yet. The portal uses the defaults shown below until you save.": "Deze tenant heeft nog geen opgeslagen configuratie. Het portaal gebruikt de standaardwaarden hieronder tot je opslaat."
+        "This tenant has no saved configuration yet. The portal uses the defaults shown below until you save.": "Deze tenant heeft nog geen opgeslagen configuratie. Het portaal gebruikt de standaardwaarden hieronder tot je opslaat.",
+        "Assigned to {user}.": "Toegewezen aan {user}.",
+        "Could not save the assignee.": "De behandelaar kon niet worden opgeslagen."
     }
 }
