@@ -58,7 +58,7 @@ class PortalInvoiceServiceTest extends TestCase {
 	 */
 	protected function setUp(): void {
 		$this->portalRepo = new FakePortalObjectRepository(InstalledAppConfig::wire($this->createMock(IAppConfig::class)));
-		$this->reader = new FakeMainRegisterReader();
+		$this->reader = new FakeMainRegisterReader(InstalledAppConfig::wire($this->createMock(IAppConfig::class)));
 
 		$time = $this->createMock(ITimeFactory::class);
 		$time->method('getTime')->willReturn(1000);
