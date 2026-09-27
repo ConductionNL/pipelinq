@@ -354,6 +354,10 @@
 		<DeliverabilitySettings v-if="isAdmin && isConfigured" />
 		<CtiPage v-if="isAdmin && isConfigured" />
 
+		<!-- Customer portal tenant config, accounts and audit trail
+		     (pipelinq#2041). Admin only, like the endpoints it calls. -->
+		<PortalSettings v-if="isAdmin && isConfigured" />
+
 		<!-- Point of Sale configuration. `PaymentSettingsForm` (PSP providers —
 		     who processes the money) and `PosTenderTypeList` (tender types — how
 		     the customer pays at the register) read as duplicates but are two
@@ -403,6 +407,7 @@ import {
 import Refresh from 'vue-material-design-icons/Refresh.vue'
 import AgentProfileSettings from '../../components/admin/AgentProfileSettings.vue'
 import ForecastSettings from '../../components/admin/ForecastSettings.vue'
+import PortalSettings from '../../components/admin/PortalSettings.vue'
 import SkillSettings from '../../components/admin/SkillSettings.vue'
 import CtiPage from './CtiPage.vue'
 // marketing-mail-transports: transport list + SPF/DKIM/DMARC panel.
@@ -438,6 +443,7 @@ export default {
 		PosTenderTypeManager,
 		PosStaffManager,
 		PosRoleManager,
+		PortalSettings,
 		CnRegisterMapping,
 		CnVersionInfoCard,
 		NcButton,
