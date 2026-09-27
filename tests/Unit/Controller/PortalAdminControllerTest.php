@@ -28,6 +28,8 @@ use OCA\Pipelinq\Controller\PortalAdminController;
 use OCA\Pipelinq\Service\Portal\PortalAuditService;
 use OCA\Pipelinq\Service\Portal\PortalTenantService;
 use OCA\Pipelinq\Tests\Unit\Service\Portal\FakePortalObjectRepository;
+use OCP\IAppConfig;
+use OCA\Pipelinq\Tests\Unit\Service\Portal\InstalledAppConfig;
 use OCA\Pipelinq\Util\ContrastRatioCalculator;
 use OCP\AppFramework\Http;
 use OCP\IGroupManager;
@@ -86,7 +88,7 @@ class PortalAdminControllerTest extends TestCase {
 	 * @return void
 	 */
 	protected function setUp(): void {
-		$this->repository = new FakePortalObjectRepository();
+		$this->repository = new FakePortalObjectRepository(InstalledAppConfig::wire($this->createMock(IAppConfig::class)));
 	}//end setUp()
 
 	/**
