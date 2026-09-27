@@ -23,7 +23,9 @@
 		<div class="portal-settings">
 			<div class="portal-row">
 				<div class="portal-field">
-					<label for="portal-tenant-id">{{ t('pipelinq', 'Tenant') }}</label>
+					<label for="portal-tenant-id">{{
+						t('pipelinq', 'Tenant')
+					}}</label>
 					<input
 						id="portal-tenant-id"
 						v-model.trim="tenantId"
@@ -114,7 +116,9 @@
 							placeholder="portaal.example.nl" />
 					</div>
 					<div class="portal-field">
-						<label for="portal-subdomain">{{ t('pipelinq', 'Subdomain') }}</label>
+						<label for="portal-subdomain">{{
+							t('pipelinq', 'Subdomain')
+						}}</label>
 						<input
 							id="portal-subdomain"
 							v-model.trim="form.subdomain"
@@ -152,7 +156,9 @@
 						<template #icon>
 							<NcLoadingIcon v-if="saving" :size="20" />
 						</template>
-						{{ saving ? t('pipelinq', 'Saving…') : t('pipelinq', 'Save') }}
+						{{
+							saving ? t('pipelinq', 'Saving…') : t('pipelinq', 'Save')
+						}}
 					</NcButton>
 				</div>
 
@@ -380,7 +386,10 @@ export default {
 			} catch (error) {
 				this.message =
 					error?.response?.data?.message
-					|| t('pipelinq', 'Could not save the customer portal configuration.')
+					|| t(
+						'pipelinq',
+						'Could not save the customer portal configuration.',
+					)
 				this.messageType = 'error'
 			} finally {
 				this.saving = false
