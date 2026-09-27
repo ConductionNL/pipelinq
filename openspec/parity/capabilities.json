@@ -3588,8 +3588,10 @@
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
-				"evidence": "lib/Service/Portal/PortalRequestService.php:191",
-				"owner": "ConductionNL/pipelinq"
+				"evidence": "lib/Service/Portal/PortalRequestService.php:216 submit writes a ticket with ticketType 'request' and channel 'portal' (pipelinq#2038; it used to write the retired request schema without the required ticketType), and the resident's list reads the same tickets back",
+				"owner": "ConductionNL/pipelinq",
+				"reachedOn": "customer portal, Requests (src/portal/portalRoutes.js:43)",
+				"readOn": "2026-09-27"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/inbox/set-up-a-support-portal \"To create and connect a support form, click Create a basic support form\" in the portal; customers then \"access and manage their support tickets\" and see their status there. Service Hub Professional, Enterprise.",
@@ -3615,8 +3617,10 @@
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
-				"evidence": "lib/Service/Portal/PortalRequestService.php:272",
-				"owner": "ConductionNL/pipelinq"
+				"evidence": "lib/Service/Portal/PortalRequestService.php:298 addReply appends to ticket.portalReplies and moves an awaiting_customer ticket back to in_progress; the handler sets awaiting_customer on TicketDetail (status enum in lib/Settings/register.d/99-unify-ticket-supertype.json), which is the status that shows the reply box (pipelinq#2038)",
+				"owner": "ConductionNL/pipelinq",
+				"reachedOn": "customer portal, Requests detail reply box; back office TicketDetail status",
+				"readOn": "2026-09-27"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/inbox/manage-customer-portal-settings \"When the customer logs in to their customer portal, they can reply to the ticket, and their response will appear in the selected inbox or help desk.\" Service Hub Professional, Enterprise.",
@@ -7068,10 +7072,10 @@
 			"featureConfidence": "high",
 			"built": {
 				"state": "none",
-				"evidence": "no auto close for lack of reply and no warning before it: the only waiting state is the portal's 'awaiting-customer' (lib/Service/Portal/PortalRequestService.php:297), and no background job in lib/BackgroundJob closes or reminds on it",
+				"evidence": "no auto close for lack of reply and no warning before it: the waiting state is the ticket status awaiting_customer (lib/Settings/register.d/99-unify-ticket-supertype.json), and no background job in lib/BackgroundJob closes or reminds on it",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "nothing",
-				"readOn": "2026-09-26"
+				"readOn": "2026-09-27"
 			},
 			"evidence": {
 				"hubspot-crm": "not checked: no article on warning a client before a ticket closes for lack of reply; workflows could send one, but that is not documented (read 2026-09-26).",
@@ -7099,12 +7103,12 @@
 			"featureConfidence": "medium",
 			"built": {
 				"state": "building",
-				"evidence": "a portal reply flips the request back (lib/Service/Portal/PortalRequestService.php:297 \"if (($request['status'] ?? null) === 'awaiting-customer') { $request['status'] = 'in-progress'; }\"), but the ticket status enum (lib/Settings/register.d/99-unify-ticket-supertype.json:220) holds neither 'awaiting-customer' nor 'in-progress' (it has 'in_progress'), and there is no 'client wrote last' marker or list for mail",
+				"evidence": "a portal reply moves an awaiting_customer ticket back to in_progress (lib/Service/Portal/PortalRequestService.php:298, pipelinq#2038), so the status now says the handler is up; there is no 'client wrote last' marker or list, and a reply by mail does not move it",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "nothing",
-				"readOn": "2026-09-26"
+				"readOn": "2026-09-27"
 			},
-			"note": "lead: the portal writes status values ('awaiting-customer', 'in-progress') that the unified ticket schema does not allow, and reads config key 'request' after the request schema was folded into ticket",
+			"note": "lead: the waiting status exists since pipelinq#2038; what is missing is a list or marker of tickets where the client wrote last",
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/help-desk/set-ticket-capacity-limits-for-users-in-help-desk ticket statuses include \"Waiting on internal or Waiting on contact\", and help desk views filter tickets (https://knowledge.hubspot.com/help-desk/customize-views-in-the-left-sidebar-of-help-desk). Service Hub Professional, Enterprise. Status is set by the agent; an automatic last-writer view is not described.",
 				"pipedrive": "not checked: searched the Pipedrive knowledge base article list (https://support.pipedrive.com/en-sitemap.xml) and product updates on 2026-09-26 for a view of threads where the client wrote last and found none; https://www.pipedrive.com/en/product-updates shows thread status for drafts and scheduled mail only.",
@@ -8087,12 +8091,12 @@
 			"featureConfidence": "medium",
 			"built": {
 				"state": "built",
-				"evidence": "lib/Service/Portal/PortalRequestService.php:444 presentSummary and :464 presentDetail fix in code what a resident reads (number, subject, category, status, date, description, assignee only when the tenant allows it, notes with visibility 'customer'); the back office shows no marker or preview of that set on TicketDetail",
+				"evidence": "lib/Service/Portal/PortalRequestService.php presentSummary and presentDetail fix in code what a resident reads (number, subject, category, status, date, description, assignee only when the tenant allows it); :519 customerNotes shows the ticket's customerMessage and the resident's portalReplies and never the internal notes string. On TicketDetail the field 'Message to the customer' says it is shown in the portal; the rest of the set has no marker or preview there",
 				"owner": "ConductionNL/pipelinq",
-				"reachedOn": "portal request detail; nothing in the back office",
-				"readOn": "2026-09-26"
+				"reachedOn": "portal request detail; TicketDetail field 'Message to the customer'",
+				"readOn": "2026-09-27"
 			},
-			"note": "lead: customerNotes() (:486) expects ticket.notes to be an array of notes with a visibility flag, but the ticket schema declares notes as a string (lib/Settings/register.d/99-unify-ticket-supertype.json:346), so no note can ever reach the resident",
+			"note": "lead: since pipelinq#2038 the handler's message to the customer is its own ticket field; the back office still has no preview of the whole resident view",
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/inbox/manage-customer-portal-settings portal settings choose which contacts \"can see company tickets\" and \"Manage contact properties\" shown (Service Hub Professional, Enterprise, legacy portal); a preview for the agent of what the resident sees on a request is not described.",
 				"pipedrive": "not checked: searched the Pipedrive knowledge base article list (https://support.pipedrive.com/en-sitemap.xml) and product updates on 2026-09-26 for a client portal and found none.",

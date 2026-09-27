@@ -6760,6 +6760,15 @@
         "Zrc": "Zrc",
         "Zrc for this record.": "Zrc for this record.",
         "Ztc": "Ztc",
-        "Ztc for this record.": "Ztc for this record."
+        "Ztc for this record.": "Ztc for this record.",
+        "Message to the customer": "Message to the customer",
+        "Shown to the customer on this request in the customer portal. Everything else on the ticket stays internal.": "Shown to the customer on this request in the customer portal. Everything else on the ticket stays internal.",
+        "Customer replies": "Customer replies",
+        "Replies the customer sent from the customer portal, oldest first.": "Replies the customer sent from the customer portal, oldest first.",
+        "Portal account": "Portal account",
+        "The customer portal account that submitted this request.": "The customer portal account that submitted this request.",
+        "Portal attachments": "Portal attachments",
+        "Files the customer attached when submitting this request in the portal.": "Files the customer attached when submitting this request in the portal.",
+        "Waiting for customer": "Waiting for customer"
     }
 }
