@@ -3695,8 +3695,10 @@
 			"featureConfidence": "medium",
 			"built": {
 				"state": "built",
-				"evidence": "lib/Service/Portal/PortalInvoiceService.php:77",
-				"owner": "ConductionNL/shillinq"
+				"evidence": "lib/Service/Portal/PortalInvoiceService.php:77 lists the resident's POS transactions through lib/Service/Portal/MainRegisterReader.php, which since pipelinq#2037 reads the schema id under the key the install writes (posTransaction_schema, applying SettingsLoadService::SCHEMA_CONFIG_KEYS); before that it read a bare 'posTransaction' key nothing writes and the list was always empty",
+				"owner": "ConductionNL/shillinq",
+				"reachedOn": "customer portal, Invoices tab (src/portal/views/PortalDashboard.vue:119)",
+				"readOn": "2026-09-27"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/invoices/share-created-invoices \"share them through an email, using a direct link, downloading a PDF\"; \"a link to view the invoice in their browser\". All plans for the invoices tool. The invoice is reached by a link per invoice; the support portal does not list a client's invoices.",

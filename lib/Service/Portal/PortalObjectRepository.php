@@ -30,6 +30,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\Portal;
 
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Service\SettingsLoadService;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -95,9 +96,11 @@ class PortalObjectRepository {
 	}//end registerId()
 
 	/**
-	 * Resolve a portal schema id from its config key (e.g. portalAccount).
+	 * Resolve a portal schema id by its slug, under the app-config key the
+	 * install writes (a pinned key such as `portalAccount_schema` for
+	 * `crmPortalAccount`, `<slug>_schema` otherwise).
 	 *
-	 * @param string $schemaSlug The schema slug (without the `_schema` suffix).
+	 * @param string $schemaSlug The schema slug (e.g. crmPortalAccount).
 	 *
 	 * @return string The schema id.
 	 *
@@ -108,7 +111,11 @@ class PortalObjectRepository {
 	 *   audit are all unspecified
 	 */
 	public function schemaId(string $schemaSlug): string {
-		$schema = $this->appConfig->getValueString(Application::APP_ID, $schemaSlug . '_schema', '');
+		$schema = $this->appConfig->getValueString(
+			Application::APP_ID,
+			(SettingsLoadService::SCHEMA_CONFIG_KEYS[$schemaSlug] ?? $schemaSlug . '_schema'),
+			''
+		);
 		if ($schema === '') {
 			throw new RuntimeException("Portal schema '{$schemaSlug}' is not configured.");
 		}
