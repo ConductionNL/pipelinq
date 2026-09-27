@@ -379,8 +379,7 @@
           }
         ],
         "pauseConditions": [
-          "awaiting-customer",
-          "on-hold"
+          "awaiting_customer"
         ],
         "holidayCalendar": "nl-feestdagen-rijksoverheid",
         "priority": 100,
@@ -433,7 +432,7 @@
           }
         ],
         "pauseConditions": [
-          "awaiting-customer"
+          "awaiting_customer"
         ],
         "holidayCalendar": "nl-feestdagen-rijksoverheid",
         "priority": 10,
