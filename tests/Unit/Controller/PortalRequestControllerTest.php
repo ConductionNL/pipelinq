@@ -72,35 +72,24 @@ class PortalRequestControllerTest extends TestCase {
 	];
 
 	/**
-	 * A request the account owns, paused awaiting the customer, carrying one
-	 * internal and one customer-visible note.
+	 * A request ticket the account owns, waiting for the customer, carrying
+	 * internal notes and the handler's message to the customer.
 	 *
 	 * @var array<string, mixed>
 	 */
 	private const OWN_REQUEST = [
-		'@self' => ['id' => 'req-own'],
+		'@self' => ['id' => 'req-own', 'updated' => '2026-03-01T09:10:00+00:00'],
+		'ticketType' => 'request',
 		'contact' => 'contact-own',
 		'title' => 'Broken scanner',
 		'description' => 'The scanner stopped reading barcodes.',
 		'caseReference' => 'REQ-0001',
 		'category' => 'cat-hardware',
-		'status' => 'awaiting-customer',
-		'requestedAt' => '2026-03-01T09:00:00+00:00',
+		'status' => 'awaiting_customer',
+		'occurredAt' => '2026-03-01T09:00:00+00:00',
 		'assignee' => 'agent-nine',
-		'notes' => [
-			[
-				'visibility' => 'internal',
-				'author' => 'agent-nine',
-				'message' => 'Customer is on the churn watchlist, handle gently.',
-				'createdAt' => '2026-03-01T09:05:00+00:00',
-			],
-			[
-				'visibility' => 'customer',
-				'author' => 'agent',
-				'message' => 'Could you confirm the serial number?',
-				'createdAt' => '2026-03-01T09:10:00+00:00',
-			],
-		],
+		'notes' => 'Customer is on the churn watchlist, handle gently.',
+		'customerMessage' => 'Could you confirm the serial number?',
 	];
 
 	/**
@@ -110,18 +99,12 @@ class PortalRequestControllerTest extends TestCase {
 	 */
 	private const FOREIGN_REQUEST = [
 		'@self' => ['id' => 'req-foreign'],
+		'ticketType' => 'request',
 		'contact' => 'contact-someone-else',
 		'title' => 'Confidential complaint',
 		'description' => 'Secret complaint body.',
-		'status' => 'awaiting-customer',
-		'notes' => [
-			[
-				'visibility' => 'customer',
-				'author' => 'agent',
-				'message' => 'Another customer conversation.',
-				'createdAt' => '2026-03-01T09:10:00+00:00',
-			],
-		],
+		'status' => 'awaiting_customer',
+		'customerMessage' => 'Another customer conversation.',
 	];
 
 	/**
@@ -251,11 +234,11 @@ class PortalRequestControllerTest extends TestCase {
 
 		$this->assertCount(1, $this->saved);
 		$this->assertSame('req-own', $this->saved[0][0]);
-		$notes = $this->saved[0][1]['notes'];
-		$this->assertCount(3, $notes);
-		$this->assertSame('Serial number is SN-4711.', $notes[2]['message']);
-		$this->assertSame('customer', $notes[2]['visibility']);
-		$this->assertSame('customer', $notes[2]['author']);
+		$replies = $this->saved[0][1]['portalReplies'];
+		$this->assertCount(1, $replies);
+		$this->assertSame('Serial number is SN-4711.', $replies[0]['message']);
+		// The internal notes string is left exactly as it was (pipelinq#2038).
+		$this->assertSame('Customer is on the churn watchlist, handle gently.', $this->saved[0][1]['notes']);
 	}//end testReplyAppendsTheMessageAndReturnsTheDetail()
 
 	/**
@@ -281,8 +264,8 @@ class PortalRequestControllerTest extends TestCase {
 	}//end testReplyResponseStripsInternalNotes()
 
 	/**
-	 * Replying unpauses the case: an awaiting-customer request moves to
-	 * in-progress and the reply affordance closes.
+	 * Replying unpauses the case: an awaiting_customer ticket moves to
+	 * in_progress and the reply affordance closes.
 	 *
 	 * @return void
 	 */
@@ -293,8 +276,8 @@ class PortalRequestControllerTest extends TestCase {
 
 		$body = $this->build()->reply('req-own')->getData();
 
-		$this->assertSame('in-progress', $this->saved[0][1]['status']);
-		$this->assertSame('in-progress', $body['status']);
+		$this->assertSame('in_progress', $this->saved[0][1]['status']);
+		$this->assertSame('in_progress', $body['status']);
 		$this->assertFalse($body['canReply']);
 	}//end testReplyUnpausesAnAwaitingCustomerRequest()
 
@@ -334,7 +317,8 @@ class PortalRequestControllerTest extends TestCase {
 		$this->assertSame('agent-nine', $written['assignee']);
 		$this->assertSame('REQ-0001', $written['caseReference']);
 		$this->assertSame('cat-hardware', $written['category']);
-		$this->assertSame('2026-03-01T09:00:00+00:00', $written['requestedAt']);
+		$this->assertSame('2026-03-01T09:00:00+00:00', $written['occurredAt']);
+		$this->assertSame('request', $written['ticketType']);
 	}//end testReplyPreservesFieldsItDoesNotTouch()
 
 	/**
@@ -431,12 +415,15 @@ class PortalRequestControllerTest extends TestCase {
 			'createdAt' => '2020-01-01T00:00:00+00:00',
 		];
 
-		$this->build()->reply('req-own');
-		$note = $this->saved[0][1]['notes'][2];
+		$body = $this->build()->reply('req-own')->getData();
+		$reply = $this->saved[0][1]['portalReplies'][0];
 
-		$this->assertSame('customer', $note['visibility']);
-		$this->assertSame('customer', $note['author']);
-		$this->assertNotSame('2020-01-01T00:00:00+00:00', $note['createdAt']);
+		// The server writes only the message and its own timestamp.
+		$this->assertSame(['message', 'createdAt'], array_keys($reply));
+		$this->assertNotSame('2020-01-01T00:00:00+00:00', $reply['createdAt']);
+		$authors = array_column($body['notes'], 'author', 'message');
+		$this->assertSame('customer', $authors['Legitimate looking text.']);
+		$this->assertSame('Customer is on the churn watchlist, handle gently.', $this->saved[0][1]['notes']);
 	}//end testReplyIgnoresClientSuppliedNoteMetadata()
 
 	/**

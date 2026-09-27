@@ -9,6 +9,13 @@
  * filtering and the request service's rate-limit / scoping logic are exercised
  * for real.
  *
+ * Only the STORAGE is faked. Whether a schema is configured is the real answer:
+ * the parent's hasSchema() over an app config holding only what the install
+ * writes ({@see InstalledAppConfig}). A service that reads a schema the install
+ * never configures (the retired `request`, pipelinq#2038) finds nothing here,
+ * exactly as it does live. The previous double reported any key it was told
+ * about as configured, which is how that shipped with a green suite.
+ *
  * @category Test
  * @package  OCA\Pipelinq\Tests\Unit\Service\Portal
  *
@@ -25,7 +32,11 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service\Portal;
 
+use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Service\Portal\MainRegisterReader;
+use OCP\IAppConfig;
+use Psr\Log\NullLogger;
+use RuntimeException;
 
 /**
  * Deterministic in-memory main-register reader for tests.
@@ -53,10 +64,14 @@ class FakeMainRegisterReader extends MainRegisterReader {
 	private int $counter = 0;
 
 	/**
-	 * Constructor (bypasses the real DI wiring).
+	 * Constructor.
+	 *
+	 * @param IAppConfig $appConfig An app config holding the installed keys
+	 *                              (build it with InstalledAppConfig::wire()).
 	 */
-	public function __construct() {
-		// Intentionally does not call parent::__construct().
+	public function __construct(IAppConfig $appConfig) {
+		// The OR stub is inert: storage is the in-memory map below.
+		parent::__construct($appConfig, new NullLogger(), new ObjectService());
 	}//end __construct()
 
 	/**
@@ -93,7 +108,7 @@ class FakeMainRegisterReader extends MainRegisterReader {
 	 * @return bool Whether configured.
 	 */
 	public function hasSchema(string $schemaKey): bool {
-		return ($this->configured[$schemaKey] ?? false);
+		return parent::hasSchema(schemaKey: $schemaKey) === true && ($this->configured[$schemaKey] ?? false);
 	}//end hasSchema()
 
 	/**
@@ -105,6 +120,10 @@ class FakeMainRegisterReader extends MainRegisterReader {
 	 * @return array<int, array<string, mixed>> The rows.
 	 */
 	public function findAll(string $schemaKey, array $filters = []): array {
+		if (parent::hasSchema(schemaKey: $schemaKey) === false) {
+			return [];
+		}
+
 		$rows = array_values($this->store[$schemaKey] ?? []);
 		if (empty($filters) === true) {
 			return $rows;
@@ -132,6 +151,10 @@ class FakeMainRegisterReader extends MainRegisterReader {
 	 * @return array<string, mixed>|null The object.
 	 */
 	public function find(string $schemaKey, string $id): ?array {
+		if (parent::hasSchema(schemaKey: $schemaKey) === false) {
+			return null;
+		}
+
 		return ($this->store[$schemaKey][$id] ?? null);
 	}//end find()
 
@@ -145,6 +168,10 @@ class FakeMainRegisterReader extends MainRegisterReader {
 	 * @return array<string, mixed> The saved object.
 	 */
 	public function save(string $schemaKey, array $data, ?string $id = null): array {
+		if (parent::hasSchema(schemaKey: $schemaKey) === false) {
+			throw new RuntimeException("Main register schema '{$schemaKey}' is not configured.");
+		}
+
 		if ($id === null) {
 			$this->counter++;
 			$id = 'req-' . $this->counter;

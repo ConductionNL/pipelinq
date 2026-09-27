@@ -6657,7 +6657,16 @@ OC.L10N.register(
         "Zrc": "Zrc",
         "Zrc for this record.": "Zrc voor dit record.",
         "Ztc": "Ztc",
-        "Ztc for this record.": "Ztc voor dit record."
+        "Ztc for this record.": "Ztc voor dit record.",
+        "Message to the customer": "Bericht aan de klant",
+        "Shown to the customer on this request in the customer portal. Everything else on the ticket stays internal.": "Zichtbaar voor de klant bij dit verzoek in het klantportaal. Al het andere op het ticket blijft intern.",
+        "Customer replies": "Antwoorden van de klant",
+        "Replies the customer sent from the customer portal, oldest first.": "Antwoorden die de klant via het klantportaal stuurde, oudste eerst.",
+        "Portal account": "Portaalaccount",
+        "The customer portal account that submitted this request.": "Het klantportaalaccount dat dit verzoek indiende.",
+        "Portal attachments": "Bijlagen uit het portaal",
+        "Files the customer attached when submitting this request in the portal.": "Bestanden die de klant bij het indienen van dit verzoek in het portaal bijvoegde.",
+        "Waiting for customer": "Wacht op klant"
     },
     "nplurals=2; plural=(n != 1);"
 )
