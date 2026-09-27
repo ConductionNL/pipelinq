@@ -6781,6 +6781,14 @@
         "Support email": "Support email",
         "Support phone": "Support phone",
         "Tenant": "Tenant",
-        "This tenant has no saved configuration yet. The portal uses the defaults shown below until you save.": "This tenant has no saved configuration yet. The portal uses the defaults shown below until you save."
+        "This tenant has no saved configuration yet. The portal uses the defaults shown below until you save.": "This tenant has no saved configuration yet. The portal uses the defaults shown below until you save.",
+        "Add a rate": "Add a rate",
+        "Every rate must be a number above zero.": "Every rate must be a number above zero.",
+        "Exchange rates": "Exchange rates",
+        "How much one unit of each currency is worth in the reporting currency. A deal in a currency without a rate counts at its face value.": "How much one unit of each currency is worth in the reporting currency. A deal in a currency without a rate counts at its face value.",
+        "Remove this rate": "Remove this rate",
+        "Use a three-letter currency code for every rate.": "Use a three-letter currency code for every rate.",
+        "Use a three-letter currency code, such as EUR or USD": "Use a three-letter currency code, such as EUR or USD",
+        "The currency the value is in, as a three-letter code such as EUR or USD. Leave it empty for the reporting currency.": "The currency the value is in, as a three-letter code such as EUR or USD. Leave it empty for the reporting currency."
     }
 }

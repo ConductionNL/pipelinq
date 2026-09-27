@@ -2668,6 +2668,7 @@
 						"widget": "lead-probability"
 					},
 					"value",
+					"currency",
 					{
 						"key": "expectedCloseDate",
 						"label": "Expected close",
