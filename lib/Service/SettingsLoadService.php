@@ -185,6 +185,52 @@ class SettingsLoadService {
 		'estimationScale',
 		'programmeEstimate',
 		'programmeCycle',
+		// The rest of the slugs whose `<slug>_schema` key a service reads. Every
+		// one below was declared in a fragment and imported, and its key was
+		// never written, because the slug was not listed here; measured on
+		// 2026-09-27 as 51 read-but-unwritten keys, 30 of them this block.
+		// SchemaConfigKeysAreWrittenTest keeps the list closed from now on.
+		//
+		// Marketing: articles, campaigns, segments and blasts.
+		'article',
+		'attributionLink',
+		'blastDelivery',
+		'campaign',
+		'campaignTemplate',
+		'journey',
+		'journeyRun',
+		'segment',
+		'subscription',
+		'touchpoint',
+		'weeklyReview',
+		// Marketing: search intelligence and social.
+		'competitor',
+		'competitorWatch',
+		'keywordTarget',
+		'searchQueryDaily',
+		'socialConnection',
+		'socialPublication',
+		'watchEvent',
+		// Marketing: mail transports.
+		'mailTransport',
+		// Messaging channels (whatsapp-sms-channel). `channelConversation` and
+		// `channelMessage` were renamed apart from hermiq's bare slugs; their
+		// readers kept the persisted keys, mapped in SCHEMA_CONFIG_KEYS.
+		'channelConversation',
+		'channelMessage',
+		'channelProvider',
+		'messageSendBudget',
+		'messageTemplate',
+		'messagingConsentRecord',
+		// BRP lookups and the BSN audit trail.
+		'brpLookupVerzoek',
+		'brpPersoon',
+		'bsnAuditRecord',
+		'optOutVlag',
+		// Forecasting and quota.
+		'forecastOverride',
+		'forecastSnapshot',
+		'salesQuota',
 	];
 
 	/**
@@ -374,6 +420,20 @@ class SettingsLoadService {
 		// `programme_schema` is already written on every instance that has the
 		// portfolio, and every reader in this app asks for it by that name.
 		'deliveryProgramme' => 'programme_schema',
+		// The billing time entry. The slug moved from `timeEntry` to
+		// `billingTimeEntry` (RenameTimeEntrySchemaSlug) because humaniq and
+		// planninq declare a `timeEntry` too. TimeEntryWipController,
+		// TimeApprovalListener and TimeBillingHandoffService read
+		// `timeEntry_schema`, and SchemaMapService maps that key to the new
+		// slug; until 2026-09-27 the install wrote `billingTimeEntry_schema`,
+		// which nothing reads, so the WIP endpoint answered 400 on every call.
+		'billingTimeEntry' => 'timeEntry_schema',
+		// The channel pair, renamed apart from hermiq's `conversation` and
+		// `message` (RenameCollidingSchemaSlugs). The adapters and
+		// CostReconciliationService read the persisted keys and fall back to
+		// the new slugs, so they worked by fallback; the keys now say so.
+		'channelConversation' => 'conversation_schema',
+		'channelMessage' => 'message_schema',
 	];
 
 	/**
