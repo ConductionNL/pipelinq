@@ -137,6 +137,7 @@
         }
       },
       "blast": {
+        "slug": "blast",
         "properties": {
           "transportId": {
             "type": "string",

@@ -741,6 +741,7 @@
         "Confidentiality active": "Geheimhouding actief",
         "Configuration": "Configuratie",
         "Configuration re-imported successfully": "Configuratie succesvol opnieuw geïmporteerd",
+        "Configuration re-imported, but OpenRegister rejected %1$s schema(s): %2$s": "Configuratie opnieuw geïmporteerd, maar OpenRegister heeft %1$s schema('s) afgewezen: %2$s",
         "Configuration saved": "Configuratie opgeslagen",
         "Configure how cashiers search for customers, how much history is shown at checkout, and how marketing consent is synced to the linked contact.": "Configureer hoe kassières klanten zoeken, hoeveel geschiedenis aan de kassa getoond wordt en hoe marketingtoestemming wordt gesynchroniseerd naar het gekoppelde contact.",
         "Configure the MCP server endpoint and authentication credentials": "Configureer het MCP-server-eindpunt en de authenticatiegegevens",

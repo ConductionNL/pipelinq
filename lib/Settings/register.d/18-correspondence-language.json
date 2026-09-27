@@ -3,6 +3,7 @@
   "components": {
     "schemas": {
       "client": {
+        "slug": "client",
         "properties": {
           "correspondenceLanguage": {
             "type": "string",
@@ -14,6 +15,7 @@
         }
       },
       "contact": {
+        "slug": "contact",
         "properties": {
           "correspondenceLanguage": {
             "type": "string",

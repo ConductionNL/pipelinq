@@ -2,6 +2,7 @@
   "components": {
     "schemas": {
       "enquiry": {
+        "slug": "enquiry",
         "configuration": {
           "x-openregister-flows": [
             {

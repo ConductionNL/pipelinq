@@ -231,14 +231,30 @@ class SettingsController extends Controller {
 		try {
 			$result = $this->settingsService->loadSettings(force: true);
 
+			// A schema OpenRegister rejects is not an exception here: the
+			// ImportHandler logs it, lists it under `failed.schemas` and
+			// imports the rest. Counting only what arrived turned sixteen
+			// missing schemas into "re-imported successfully" on 2026-09-26
+			// (four fragments shipped without a slug), so the rejections
+			// decide `success` and are named in the message.
+			$rejected = $this->rejectedSchemas(result: $result);
+			$message = $this->l10n->t('Configuration re-imported successfully');
+			if ($rejected !== []) {
+				$message = $this->l10n->t(
+					'Configuration re-imported, but OpenRegister rejected %1$s schema(s): %2$s',
+					[count($rejected), implode(', ', array_column($rejected, 'slug'))]
+				);
+			}
+
 			return new JSONResponse(
 				[
-					'success' => true,
-					'message' => $this->l10n->t('Configuration re-imported successfully'),
+					'success' => ($rejected === []),
+					'message' => $message,
 					'config' => $this->settingsService->getSettings(),
 					'result' => [
 						'registers' => count($result['registers'] ?? []),
 						'schemas' => count($result['schemas'] ?? []),
+						'rejectedSchemas' => $rejected,
 					],
 				]
 			);
@@ -254,6 +270,36 @@ class SettingsController extends Controller {
 			);
 		}//end try
 	}//end reimport()
+
+	/**
+	 * The schemas OpenRegister refused during an import, as slug and reason.
+	 *
+	 * @param array $result The ConfigurationService import result.
+	 *
+	 * @return array<int, array{slug: string, error: string}>
+	 *
+	 * @spec openspec/specs/admin-settings/spec.md
+	 */
+	private function rejectedSchemas(array $result): array {
+		$failed = $result['failed']['schemas'] ?? [];
+		if (is_array($failed) === false) {
+			return [];
+		}
+
+		$rejected = [];
+		foreach ($failed as $entry) {
+			if (is_array($entry) === false) {
+				continue;
+			}
+
+			$rejected[] = [
+				'slug' => (string)($entry['slug'] ?? $entry['key'] ?? ''),
+				'error' => (string)($entry['error'] ?? ''),
+			];
+		}
+
+		return $rejected;
+	}//end rejectedSchemas()
 
 	/**
 	 * Get user settings for the current user.

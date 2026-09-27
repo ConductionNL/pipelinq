@@ -728,6 +728,7 @@ OC.L10N.register(
         "Confidentiality active": "Confidentiality active",
         "Configuration": "Configuration",
         "Configuration re-imported successfully": "Configuration re-imported successfully",
+        "Configuration re-imported, but OpenRegister rejected %1$s schema(s): %2$s": "Configuration re-imported, but OpenRegister rejected %1$s schema(s): %2$s",
         "Configuration saved": "Configuration saved",
         "Configure how cashiers search for customers, how much history is shown at checkout, and how marketing consent is synced to the linked contact.": "Configure how cashiers search for customers, how much history is shown at checkout, and how marketing consent is synced to the linked contact.",
         "Configure the MCP server endpoint and authentication credentials": "Configure the MCP server endpoint and authentication credentials",

@@ -390,6 +390,7 @@ OC.L10N.register(
         "Conditions (optional)": "Bedingungen (optional)",
         "Configuration": "Konfiguration",
         "Configuration re-imported successfully": "Konfiguration erfolgreich neu importiert",
+        "Configuration re-imported, but OpenRegister rejected %1$s schema(s): %2$s": "Konfiguration neu importiert, aber OpenRegister hat %1$s Schema(s) abgelehnt: %2$s",
         "Configuration saved": "Konfiguration gespeichert",
         "Configure how cashiers search for customers, how much history is shown at checkout, and how marketing consent is synced to the linked contact.": "Konfigurieren Sie, wie Kassierer nach Kunden suchen, wie viel Verlauf an der Kasse angezeigt wird und wie die Marketing-Einwilligung mit dem verknüpften Kontakt synchronisiert wird.",
         "Configure the MCP server endpoint and authentication credentials": "Konfigurieren Sie den MCP-Server-Endpunkt und die Authentifizierungsdaten",

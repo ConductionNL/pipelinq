@@ -132,6 +132,7 @@
         "Completed": "Completed",
         "Configuration": "Configuration",
         "Configuration re-imported successfully": "Configuration re-imported successfully",
+        "Configuration re-imported, but OpenRegister rejected %1$s schema(s): %2$s": "Configuration re-imported, but OpenRegister rejected %1$s schema(s): %2$s",
         "Configuration saved": "Configuration saved",
         "Configure which property determines the column placement for each schema, and optionally which property to sum in column totals.": "Configure which property determines the column placement for each schema, and optionally which property to sum in column totals.",
         "Configure your Ideal Customer Profile (ICP) to discover potential leads.": "Configure your Ideal Customer Profile (ICP) to discover potential leads.",
