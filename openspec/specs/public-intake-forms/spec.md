@@ -657,7 +657,7 @@ app via the OpenRegister forms leaf (`integration-forms`) (hydra ADR-022).
 - **GIVEN** the migrate-forms-to-forms-leaf change is applied
 - **THEN** `src/views/forms/FormBuilder.vue`, the `CnFormBuilder` usage, and the
   public-submit controller/route SHALL be removed
-- **AND** the `intakeForm`, `intakeSubmission`, `survey`, and `surveyResponse`
+- **AND** the `intakeForm`, `intakeSubmission`, `satisfactionSurvey`, and `surveyResponse`
   schemas SHALL be retired
 - **AND** form authoring SHALL live in the NC Forms app (responses immutable).
 

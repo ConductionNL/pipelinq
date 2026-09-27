@@ -7,14 +7,14 @@
 
 ### Requirement: Survey Invitation Schema Registration
 
-The system MUST register a `surveyInvitation` schema in the pipelinq register carrying a unique per-invitation response token, survey reference, recipient contact reference (the existing `contact` schema's `contactsUid` — never an app-local customer record), triggering entity linkage, channel, lifecycle status (`scheduled`, `sent`, `responded`, `expired`, `suppressed`, `failed`), timestamps, and suppression reason. The `surveyResponse` schema MUST gain an optional `invitationRef` and the `contact` schema MUST gain a `surveyOptOut` boolean.
+The system MUST register a `satisfactionSurveyInvitation` schema in the pipelinq register carrying a unique per-invitation response token, survey reference, recipient contact reference (the existing `contact` schema's `contactsUid` — never an app-local customer record), triggering entity linkage, channel, lifecycle status (`scheduled`, `sent`, `responded`, `expired`, `suppressed`, `failed`), timestamps, and suppression reason. The `surveyResponse` schema MUST gain an optional `invitationRef` and the `contact` schema MUST gain a `surveyOptOut` boolean.
 
 **Feature tier**: MVP
 
 #### Scenario: Schema registration
 
 - WHEN the repair step runs
-- THEN the `surveyInvitation` schema MUST exist in the pipelinq register with all listed properties
+- THEN the `satisfactionSurveyInvitation` schema MUST exist in the pipelinq register with all listed properties
 - AND `surveyResponse.invitationRef` and `contact.surveyOptOut` MUST be present on the existing schemas
 - @e2e exclude a register import; covered by the fragment and the repair step
 
@@ -37,14 +37,14 @@ Admins MUST be able to configure dispatch rules — trigger (entity type + termi
 
 - GIVEN a dispatch rule that is disabled
 - WHEN a matching interaction completes
-- THEN no `surveyInvitation` MUST be created for that rule
+- THEN no `satisfactionSurveyInvitation` MUST be created for that rule
 - @e2e exclude covered by PHPUnit on `matchingRules()`
 
 ---
 
 ### Requirement: Automated Invitation Dispatch on Interaction Completion
 
-The system MUST create a `surveyInvitation` with a unique token when a tracked interaction (contactmoment, request, complaint) reaches a terminal status matching an enabled dispatch rule, and MUST deliver the personalized response link through the configured channel after the rule's delay. Channel delivery failure MUST mark the invitation `failed` and MUST NOT block or roll back the triggering interaction's save.
+The system MUST create a `satisfactionSurveyInvitation` with a unique token when a tracked interaction (contactmoment, request, complaint) reaches a terminal status matching an enabled dispatch rule, and MUST deliver the personalized response link through the configured channel after the rule's delay. Channel delivery failure MUST mark the invitation `failed` and MUST NOT block or roll back the triggering interaction's save.
 
 **Feature tier**: MVP
 
@@ -53,7 +53,7 @@ The system MUST create a `surveyInvitation` with a unique token when a tracked i
 - GIVEN an enabled rule "contactmoment closed → KTO survey via email, delay 0"
 - AND a contactmoment linked to a contact with an email address
 - WHEN the contactmoment status is set to closed
-- THEN a `surveyInvitation` MUST be created with a unique token, `channel = email`, and the contact's `contactsUid`
+- THEN a `satisfactionSurveyInvitation` MUST be created with a unique token, `channel = email`, and the contact's `contactsUid`
 - AND on the next dispatch run an email containing the link `/apps/pipelinq/survey/i/{token}` MUST be sent
 - AND the invitation status MUST become `sent` with `sentAt` populated
 - @e2e exclude needs a mail transport; covered by PHPUnit on `buildInvitation()` and the job plan
@@ -131,7 +131,7 @@ The system MUST suppress dispatch when the contact was sent any survey invitatio
 
 ### Requirement: Response-Rate Analytics
 
-The survey analytics view MUST report invitations sent, responses received, and response rate per survey, per channel, and per period, computed from `surveyInvitation` objects. Suppressed and failed invitations MUST be excluded from the response-rate denominator but visible as separate counts.
+The survey analytics view MUST report invitations sent, responses received, and response rate per survey, per channel, and per period, computed from `satisfactionSurveyInvitation` objects. Suppressed and failed invitations MUST be excluded from the response-rate denominator but visible as separate counts.
 
 **Feature tier**: MVP
 

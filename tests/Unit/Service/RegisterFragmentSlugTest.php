@@ -126,8 +126,10 @@ class RegisterFragmentSlugTest extends TestCase {
 			'partyFieldSet',
 			'partyIndicator',
 			'partyIndicatorValue',
-			'survey',
-			'surveyInvitation',
+			// `survey` and `surveyInvitation` were renamed apart from openregister's
+			// own survey schemas on 2026-09-27; the config keys kept the old names.
+			'satisfactionSurvey',
+			'satisfactionSurveyInvitation',
 			'surveyResponse',
 			'deliveryProgramme',
 			'programmeTask',
