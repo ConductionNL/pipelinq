@@ -102,6 +102,7 @@ import ChannelDistributionSection from './components/rapportage/ChannelDistribut
 //     once and keeps the in-widget filtering (pipeline selector + win/loss
 //     date-range re-fetch) the legacy view had. ---
 import LeadAnalyticsSection from './components/rapportage/LeadAnalyticsSection.vue'
+import RoutingSuggestionSection from './components/RoutingSuggestionSection.vue'
 // --- Service Hub — cards-collapse landing page (service-group-cards-collapse,
 //     ADR-044). Replaces the expandable Service nav group with a single
 //     top-level menu item linking to this card grid. ---
@@ -795,6 +796,11 @@ const registry = {
 		kind: 'section',
 		component: RequestConversionSection,
 		_note: '"Convert to case" action for the TicketDetail page (semantic-handoff-emit; formerly RequestDetail, retired by unify-ticket-supertype). Self-fetches GET /api/handoff/request/{id}/availability by @objectId; renders the button only when canConvert (an ns#Case implementer is installed AND status is in_progress). On success shows the converted notice + a copyable caseReference — the target app is kind-addressed and unknown to the frontend, so no precise cross-app route can be built.',
+	},
+	RoutingSuggestionSection: {
+		kind: 'section',
+		component: RoutingSuggestionSection,
+		_note: 'Suggested colleagues for the TicketDetail page (pipelinq#2039): mounts RoutingSuggestionPanel for @objectId (ranked by skill match on the ticket category, availability and workload, capped per agent by maxConcurrent) and writes the chosen colleague into the ticket assignee through the object store. Leads are not wired: the lead schema has no category, so GET /api/routing/suggestions?entityType=lead always answers noMatch.',
 	},
 	ContractInvoicingSection: {
 		kind: 'section',

@@ -6782,6 +6782,8 @@
         "Support phone": "Support phone",
         "Tenant": "Tenant",
         "This tenant has no saved configuration yet. The portal uses the defaults shown below until you save.": "This tenant has no saved configuration yet. The portal uses the defaults shown below until you save.",
+        "Assigned to {user}.": "Assigned to {user}.",
+        "Could not save the assignee.": "Could not save the assignee.",
         "Message to the customer": "Message to the customer",
         "Shown to the customer on this request in the customer portal. Everything else on the ticket stays internal.": "Shown to the customer on this request in the customer portal. Everything else on the ticket stays internal.",
         "Customer replies": "Customer replies",
