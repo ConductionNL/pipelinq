@@ -6715,7 +6715,8 @@ OC.L10N.register(
         "Remove this rate": "Deze koers verwijderen",
         "Use a three-letter currency code for every rate.": "Gebruik voor elke koers een valutacode van drie letters.",
         "Use a three-letter currency code, such as EUR or USD": "Gebruik een valutacode van drie letters, zoals EUR of USD",
-        "The currency the value is in, as a three-letter code such as EUR or USD. Leave it empty for the reporting currency.": "De valuta van de waarde, als code van drie letters zoals EUR of USD. Laat leeg voor de rapportagevaluta."
+        "The currency the value is in, as a three-letter code such as EUR or USD. Leave it empty for the reporting currency.": "De valuta van de waarde, als code van drie letters zoals EUR of USD. Laat leeg voor de rapportagevaluta.",
+        "What the lead is about, such as vergunningen. Suggested agents are colleagues with a skill for this category.": "Waar de lead over gaat, zoals vergunningen. Voorgestelde medewerkers zijn collega's met een vaardigheid voor deze categorie."
     },
     "nplurals=2; plural=(n != 1);"
 )

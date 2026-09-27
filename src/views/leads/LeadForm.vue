@@ -18,6 +18,15 @@
 				@update:modelValue="(v) => (form.description = v)" />
 		</div>
 
+		<!-- Category: what the lead is about. Routing suggests colleagues whose
+		     skills cover it (pipelinq#2049). -->
+		<div class="form-group" data-testid="lead-form-category">
+			<NcTextField
+				:modelValue="form.category"
+				:label="t('pipelinq', 'Category')"
+				@update:modelValue="(v) => (form.category = v)" />
+		</div>
+
 		<!-- Value + Probability row -->
 		<div class="form-row">
 			<div class="form-group">
@@ -257,6 +266,7 @@ export default {
 			form: {
 				title: '',
 				description: '',
+				category: '',
 				value: null,
 				// The deal's currency (pipelinq#2040). New deals start in the
 				// reporting currency; the forecast converts any other one.
@@ -431,6 +441,7 @@ export default {
 				id: this.lead.id,
 				title: this.lead.title || '',
 				description: this.lead.description || '',
+				category: this.lead.category || '',
 				value: this.lead.value ?? null,
 				currency: this.lead.currency || reportingCurrency(),
 				probability: this.lead.probability ?? null,
@@ -498,6 +509,7 @@ export default {
 			if (!data.currency) delete data.currency
 			if (data.probability === null) delete data.probability
 			if (!data.source) delete data.source
+			if (!data.category) delete data.category
 			if (!data.expectedCloseDate) delete data.expectedCloseDate
 			if (!data.client) delete data.client
 			if (!data.contact) delete data.contact

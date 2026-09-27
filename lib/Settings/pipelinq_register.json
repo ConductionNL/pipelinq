@@ -709,6 +709,12 @@
             "title": "Source",
             "facetable": true
           },
+          "category": {
+            "type": "string",
+            "title": "Category",
+            "description": "What the lead is about, such as vergunningen. Suggested agents are colleagues with a skill for this category.",
+            "facetable": true
+          },
           "value": {
             "type": "number",
             "description": "Estimated deal value in euros (schema:price)",

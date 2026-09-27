@@ -2684,6 +2684,7 @@
 				"columns": [
 					"title",
 					"stage",
+					"category",
 					"status",
 					"priority",
 					{
@@ -2749,6 +2750,7 @@
 							"columns": 2,
 							"include": [
 								"source",
+								"category",
 								"stage",
 								"stageOrder",
 								"stageEnteredAt",
@@ -3108,6 +3110,21 @@
 						"gridY": 8,
 						"gridWidth": 8,
 						"gridHeight": 7
+					}
+				],
+				"_bodyWidgetsNote": "Suggested colleagues (pipelinq#2049): RoutingSuggestionSection ranks colleagues whose skills cover the lead category, and writes the chosen colleague into the lead assignee.",
+				"bodyWidgets": [
+					{
+						"id": "routing-suggestions",
+						"component": "RoutingSuggestionSection",
+						"title": "Suggested agents",
+						"placement": "end",
+						"props": {
+							"objectId": "@objectId",
+							"category": "@object.category",
+							"entityType": "lead",
+							"objectType": "lead"
+						}
 					}
 				],
 				"lifecycleActions": {
