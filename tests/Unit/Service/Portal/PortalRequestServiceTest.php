@@ -28,6 +28,7 @@ use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\EventDispatcher\IEventDispatcher;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use OCP\IAppConfig;
 
 /**
  * Tests for the portal request surface.
@@ -67,7 +68,7 @@ class PortalRequestServiceTest extends TestCase {
 	 * @return void
 	 */
 	protected function setUp(): void {
-		$this->portalRepo = new FakePortalObjectRepository();
+		$this->portalRepo = new FakePortalObjectRepository(InstalledAppConfig::wire($this->createMock(IAppConfig::class)));
 		$this->reader = new FakeMainRegisterReader();
 		$this->reader->markConfigured('request');
 
