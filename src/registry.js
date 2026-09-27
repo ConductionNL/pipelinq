@@ -71,6 +71,7 @@ import SocialPublicationsSection from './components/marketing/SocialPublications
 //     vocabulary, and because the list view leads with per-state counts that
 //     summaryAggregates cannot express. ---
 import SubscriptionsSection from './components/marketing/SubscriptionsSection.vue'
+import PartyIndicatorPanel from './components/PartyIndicatorPanel.vue'
 import CashShiftActionsSection from './components/pos/CashShiftActionsSection.vue'
 // --- POS refund detail — declarative type:"detail" (pipelinq-pos-mdm-detail-
 //     declarative): refund fields auto-render; the manager-gated confirm/reject
@@ -769,6 +770,11 @@ const registry = {
 		kind: 'section',
 		component: ContactmomentQuickLog,
 		_note: 'Inline contactmoment quick-log form pre-bound to the client (clientId, inline mode). On save it emits @saved; in declarative mode the page is refreshed via the CnDetailPage Refresh action rather than an imperative re-fetch.',
+	},
+	PartyIndicatorPanel: {
+		kind: 'section',
+		component: PartyIndicatorPanel,
+		_note: 'The warnings on a client or contact (pipelinq#2036): every party indicator in force, loudest first, with acknowledgement and an add-warning form. Self-fetches GET /api/leaves/party/{partyId}; rendered before the body on ClientDetail and ContactDetail so it is read before contact is made.',
 	},
 	BrpContactPanel: {
 		kind: 'section',

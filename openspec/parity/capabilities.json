@@ -6353,7 +6353,7 @@
 			"id": "clients-behaviour-flag",
 			"area": "clients",
 			"name": "Flag a client for aggressive or unwanted behaviour so the next colleague is warned before the contact",
-			"pipelinq": "no",
+			"pipelinq": "yes",
 			"hubspot-crm": "partial",
 			"pipedrive": "partial",
 			"espocrm": "partial",
@@ -6365,12 +6365,12 @@
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
-				"evidence": "lib/Settings/register.d/17-party-fields-and-indicators.json:64 indicator codes \"for example overleden, geheimhouding-adres, bewindvoering or agressie-registratie\" with severity info/warning/critical; lib/Service/PartyIndicatorService.php:134 resolve, :197 isBlocked, acknowledge over routes /api/leaves/party/{partyId} and /api/party-indicator-values/{valueId}/acknowledge (appinfo/routes.php:130-132). No page in src/ calls these routes and no manifest page lists partyIndicator or partyIndicatorValue",
+				"evidence": "src/components/PartyIndicatorPanel.vue renders every indicator in force, critical first, with an acknowledge action and an add-warning form, mounted before the body on ClientDetail and ContactDetail (src/manifest.json bodyWidgets 'party-indicators'); it reads lib/Service/PartyIndicatorService.php:134 resolve through GET /api/leaves/party/{partyId}. lib/Settings/register.d/17-party-fields-and-indicators.json seeds the code agressie-registratie (critical, requires acknowledgement), and SettingsLoadService now writes the partyIndicator, partyIndicatorValue and partyFieldSet schema keys the resolver reads (pipelinq#2036)",
 				"owner": "ConductionNL/pipelinq",
-				"reachedOn": "nothing",
-				"readOn": "2026-09-26"
+				"reachedOn": "ClientDetail and ContactDetail, Warnings panel above the fields",
+				"readOn": "2026-09-27"
 			},
-			"note": "lead: the whole indicator model (warning, period, acknowledgement) is built and served as a leaf, but no pipelinq page sets or shows a flag, so the next colleague is never warned",
+			"note": "lead: since pipelinq#2036 a handler sets a warning on a client or contact and the next colleague sees it above the fields and confirms it; pipelinq's own outbound sends do not ask isBlocked (REQ-PFI-004 leaves that to the acting app)",
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/records/pin-an-activity-on-a-record \"You can pin one activity to the top of a record timeline. A pinned activity will appear on the record timeline for all users\" (all plans), so a warning note stays on top; no dedicated behaviour flag or pop-up warning is described.",
 				"pipedrive": "https://support.pipedrive.com/en/article/contact-labels labels on contacts show as a column that can be filtered (all plans), and https://www.pipedrive.com/en/product-updates adds \"pinned notes displayed on deals, leads, people and organizations\"; a warning shown before contact is not described. Note: Read from the web.archive.org copy (contact-labels 2026-04-14) because the live knowledge base answered 429.",

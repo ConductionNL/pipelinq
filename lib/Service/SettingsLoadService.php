@@ -43,6 +43,13 @@ class SettingsLoadService {
 		'client',
 		'contact',
 		'lead',
+		// Party fields and indicators (typed-fields-and-indicators-on-a-party).
+		// PartyIndicatorService and PartyLeafProvider read these three keys;
+		// without the slugs here the install never wrote them and the party
+		// panel answered "no indicators" on every instance (pipelinq#2036).
+		'partyFieldSet',
+		'partyIndicator',
+		'partyIndicatorValue',
 		// Anonymous website intake (website-enquiry). An enquiry is what a
 		// visitor sends before a client exists, so it deliberately does NOT
 		// reuse `lead`: lead requires `client` and `pipeline`, and neither is

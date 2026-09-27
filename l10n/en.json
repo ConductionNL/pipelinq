@@ -6760,6 +6760,24 @@
         "Zrc": "Zrc",
         "Zrc for this record.": "Zrc for this record.",
         "Ztc": "Ztc",
-        "Ztc for this record.": "Ztc for this record."
+        "Ztc for this record.": "Ztc for this record.",
+        "Add a warning": "Add a warning",
+        "Critical": "Critical",
+        "From {from} until {until}": "From {from} until {until}",
+        "I have seen this": "I have seen this",
+        "No warnings on this record.": "No warnings on this record.",
+        "Save warning": "Save warning",
+        "Seen by {user} on {date}": "Seen by {user} on {date}",
+        "Since {from}": "Since {from}",
+        "Source (optional)": "Source (optional)",
+        "Source: {source}": "Source: {source}",
+        "The acknowledgement could not be saved.": "The acknowledgement could not be saved.",
+        "The list of warnings could not be loaded.": "The list of warnings could not be loaded.",
+        "The warning could not be saved.": "The warning could not be saved.",
+        "Valid until (optional)": "Valid until (optional)",
+        "Warning": "Warning",
+        "Warning saved": "Warning saved",
+        "Warnings": "Warnings",
+        "Warnings could not be loaded.": "Warnings could not be loaded."
     }
 }
