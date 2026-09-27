@@ -1495,7 +1495,7 @@
 			"id": "pipeline-multi-currency",
 			"area": "pipeline",
 			"name": "Record a deal in a foreign currency and see it converted at the current rate",
-			"pipelinq": "no",
+			"pipelinq": "partial",
 			"hubspot-crm": "partial",
 			"pipedrive": "yes",
 			"espocrm": "yes",
@@ -1506,13 +1506,13 @@
 			"feature": "Forecasting",
 			"featureConfidence": "high",
 			"built": {
-				"state": "building",
-				"evidence": "lib/Service/ForecastRollupService.php:76 converts \"$deal['currency']\" through lib/Service/ExchangeRateService.php:107 using a manually kept app-config rate table (:32), but the lead schema has no currency property (lead properties in lib/Settings/pipelinq_register.json plus register.d/50-forecast.json and 98-marketing-campaigns.json hold only 'value'), so a deal cannot be recorded in a foreign currency and every deal converts 1:1",
+				"state": "built",
+				"evidence": "lib/Settings/register.d/50-forecast.json declares lead.currency (three-letter code), src/views/leads/LeadForm.vue edits it next to the value, and lib/Service/ForecastRollupService.php:76 converts it through lib/Service/ExchangeRateService.php at the rate table that src/components/admin/ForecastSettings.vue now edits (pipelinq#2040). The rates are kept by hand, not fetched, so 'the current rate' is only as current as the admin keeps it",
 				"owner": "ConductionNL/pipelinq",
-				"reachedOn": "nothing",
-				"readOn": "2026-09-26"
+				"reachedOn": "lead create and edit form; Leads list currency column; admin Forecast settings, Exchange rates",
+				"readOn": "2026-09-27"
 			},
-			"note": "lead: forecast conversion reads a deal currency the lead schema never declares, and rates are a static table, not current",
+			"note": "lead: since pipelinq#2040 a deal carries its currency and the forecast converts it; the rate table is maintained by hand in Forecast settings, not fetched live, hence partial. The forecast and the setup wizard now share one reporting currency (app config 'currency')",
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/account-management/add-and-edit-your-account-currencies \"add currencies to your account and set an exchange rate compared to your primary company currency\" (Starter and up); the rate is set by hand, a live current rate is not described.",
 				"pipedrive": "https://support.pipedrive.com/en/article/how-is-currency-converted-in-pipedrive \"Currency conversion in reporting is calculated through our partner Open Exchange Rates. Pipedrive automatically converts the value of deals won in different currencies to your default currency, excluding custom currencies\"; products carry one price per currency (https://support.pipedrive.com/en/article/products). All plans. Note: Read from the web.archive.org copy (how-is-currency-converted-in-pipedrive 2026-06-17) because the live knowledge base answered 429.",

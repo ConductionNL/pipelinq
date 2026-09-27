@@ -6724,6 +6724,14 @@
         "Warning": "Waarschuwing",
         "Warning saved": "Waarschuwing opgeslagen",
         "Warnings": "Waarschuwingen",
-        "Warnings could not be loaded.": "Waarschuwingen konden niet worden geladen."
+        "Warnings could not be loaded.": "Waarschuwingen konden niet worden geladen.",
+        "Add a rate": "Koers toevoegen",
+        "Every rate must be a number above zero.": "Elke koers moet een getal boven nul zijn.",
+        "Exchange rates": "Wisselkoersen",
+        "How much one unit of each currency is worth in the reporting currency. A deal in a currency without a rate counts at its face value.": "Wat één eenheid van elke valuta waard is in de rapportagevaluta. Een deal in een valuta zonder koers telt mee tegen de nominale waarde.",
+        "Remove this rate": "Deze koers verwijderen",
+        "Use a three-letter currency code for every rate.": "Gebruik voor elke koers een valutacode van drie letters.",
+        "Use a three-letter currency code, such as EUR or USD": "Gebruik een valutacode van drie letters, zoals EUR of USD",
+        "The currency the value is in, as a three-letter code such as EUR or USD. Leave it empty for the reporting currency.": "De valuta van de waarde, als code van drie letters zoals EUR of USD. Laat leeg voor de rapportagevaluta."
     }
 }
