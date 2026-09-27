@@ -481,6 +481,11 @@
 			"key": "external",
 			"name": "A third party service",
 			"kind": "external"
+		},
+		{
+			"key": "portaliq",
+			"name": "Portaliq",
+			"kind": "app"
 		}
 	],
 	"capabilities": [
@@ -1506,13 +1511,13 @@
 			"feature": "Forecasting",
 			"featureConfidence": "high",
 			"built": {
-				"state": "built",
+				"state": "specified",
 				"evidence": "lib/Settings/register.d/50-forecast.json declares lead.currency (three-letter code), src/views/leads/LeadForm.vue edits it next to the value, and lib/Service/ForecastRollupService.php:76 converts it through lib/Service/ExchangeRateService.php at the rate table that src/components/admin/ForecastSettings.vue now edits (pipelinq#2040). The rates are kept by hand, not fetched, so 'the current rate' is only as current as the admin keeps it",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "lead create and edit form; Leads list currency column; admin Forecast settings, Exchange rates",
 				"readOn": "2026-09-27"
 			},
-			"note": "lead: since pipelinq#2040 a deal carries its currency and the forecast converts it; the rate table is maintained by hand in Forecast settings, not fetched live, hence partial. The forecast and the setup wizard now share one reporting currency (app config 'currency')",
+			"note": "lead: since pipelinq#2040 a deal carries its currency and the forecast converts it; the rate table is maintained by hand in Forecast settings, not fetched live, hence partial. The forecast and the setup wizard now share one reporting currency (app config 'currency'). Specified 2026-09-28 in openspec/changes/pipeline-live-exchange-rates (OpenSpec pass).",
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/account-management/add-and-edit-your-account-currencies \"add currencies to your account and set an exchange rate compared to your primary company currency\" (Starter and up); the rate is set by hand, a live current rate is not described.",
 				"pipedrive": "https://support.pipedrive.com/en/article/how-is-currency-converted-in-pipedrive \"Currency conversion in reporting is calculated through our partner Open Exchange Rates. Pipedrive automatically converts the value of deals won in different currencies to your default currency, excluding custom currencies\"; products carry one price per currency (https://support.pipedrive.com/en/article/products). All plans. Note: Read from the web.archive.org copy (how-is-currency-converted-in-pipedrive 2026-06-17) because the live knowledge base answered 429.",
@@ -1538,7 +1543,7 @@
 			"feature": "Lead pipeline",
 			"featureConfidence": "high",
 			"built": {
-				"state": "built",
+				"state": "specified",
 				"evidence": "no round robin or auto assignment of leads (grep of lib for round robin, rotation, auto assign). A handler gets a fair suggestion instead: lib/Service/RoutingService.php:92 getSuggestedAgents ranks colleagues whose skill covers the lead category, drops those unavailable or at their maxConcurrent cap (:427 filterByCapacity) and orders the rest by open workload; the lead schema declares category (lib/Settings/pipelinq_register.json lead properties, pipelinq#2049), LeadForm edits it, and LeadDetail mounts src/components/RoutingSuggestionSection.vue through src/manifest.json bodyWidgets, whose Assign writes the lead assignee (tests/Unit/Service/RoutingServiceTest.php testALeadWithACategoryGetsAMatchingColleague, tests/vitest/routingSuggestionSection.spec.js)",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "LeadDetail Suggested agents (colleagues ranked by skill, availability and workload, capped per person)",
@@ -1553,7 +1558,7 @@
 			},
 			"origin": "changelog",
 			"originUrl": "https://www.odoo.com/odoo-19-2-release-notes",
-			"note": "a ranked suggestion with a cap per person, not an automatic rotation"
+			"note": "a ranked suggestion with a cap per person, not an automatic rotation. Specified 2026-09-28 in openspec/changes/pipeline-lead-rotation (OpenSpec pass)."
 		},
 		{
 			"id": "pipeline-stage-limit",
@@ -1570,7 +1575,7 @@
 			"feature": "Lead pipeline",
 			"featureConfidence": "high",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"evidence": "a pipeline stage carries name, order, deckStackId, probability, isClosed, isWon, isDefault (lib/Settings/pipelinq_register.json:886-935) and no limit; src/views/pipeline/PipelineBoard.vue enforces none",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "nothing",
@@ -1584,7 +1589,8 @@
 				"kiss": "src/router/index.ts:126 \"const router = createRouter(\" lists the only screens: startscherm, afhandeling, contactverzoeken, personen, bedrijven, zaken, links and beheer; a grep of src/ and Kiss.Bff/ for lead, opportunit, offerte, factuur, nieuwsbrief and campagne finds no sales, marketing or invoicing code"
 			},
 			"origin": "featureRequest",
-			"originUrl": "https://github.com/odoo/odoo/issues/141745"
+			"originUrl": "https://github.com/odoo/odoo/issues/141745",
+			"note": "Specified 2026-09-28 in openspec/changes/pipeline-stage-limit (OpenSpec pass)."
 		},
 		{
 			"id": "pipeline-auto-label",
@@ -2844,17 +2850,17 @@
 			"odoo-crm": "yes",
 			"kiss": "no",
 			"provider": "openregister",
-			"providerHow": "saved views are OpenRegister's Views API rendered by nextcloud-vue (read in nextcloud-vue v2.56.0 src/composables/useSavedViewsApi.js), pipelinq pins ^2.56.0 in package.json:39",
+			"providerHow": "saved views are OpenRegister's Views API rendered by nextcloud-vue (read in nextcloud-vue 2.57.1 src/components/CnIndexPage/CnIndexPage.vue), pipelinq pins ^2.57.1 in package.json:39",
 			"feature": "My work",
 			"featureConfidence": "medium",
 			"built": {
 				"state": "built",
-				"evidence": "CnIndexPage keeps filters, search and sort in the route query so a filtered list can be shared as a link; its saved-views control (nextcloud-vue v2.56.0 src/components/CnIndexPage/CnIndexPage.vue:109 CnSavedViewsControl, \"Share with other users (public)\" in CnSaveViewDialog) is opt-in via allowSavedViews, default false (:1650), and no page in src/manifest.json or src/manifest.d sets it. src/services/viewService.js reads OpenRegister views only to pick a pipeline's source in PipelineFormDialog",
+				"evidence": "CnIndexPage keeps filters, search and sort in the route query so a filtered list can be shared as a link; its saved-views control (nextcloud-vue 2.57.1 src/components/CnIndexPage/CnIndexPage.vue:112-117 CnSavedViewsControl) is opt-in via allowSavedViews, default false (:1720-1722), and no page in src/manifest.json or src/manifest.d sets it (grep at development cfe0a0a51). src/services/viewService.js reads OpenRegister views only to pick a pipeline's source in PipelineFormDialog",
 				"owner": "ConductionNL/nextcloud-vue",
 				"reachedOn": "any index page (shareable URL only); save-view control reached on nothing",
-				"readOn": "2026-09-26"
+				"readOn": "2026-09-28"
 			},
-			"note": "lead: the shared saved-views control is one manifest flag away (allowSavedViews) on Clients, Tickets, Leads and Tasks",
+			"note": "lead: the shared saved-views control is one manifest flag away (allowSavedViews) on Clients, Tickets, Leads and Tasks. Re-read 2026-09-28 (OpenSpec pass, wave-5 correction round 6): rating partial holds at nextcloud-vue 2.57.1; evidence refreshed from 2.56.0.",
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/object-settings/set-default-index-page-views \"Manage all saved index page view tabs in one place ... suggest view tabs for all users in the account\"; saved filtered views are shared with users and teams. All products and plans.",
 				"pipedrive": "https://support.pipedrive.com/en/article/filtering \"When creating a new filter in Pipedrive, you can choose whether the filter will be shared with other users or remain private. Shared filters are visible to all users\"; https://www.pipedrive.com/en/product-updates adds sharing quick-filter results by URL. All plans. Note: Read from the web.archive.org copy (filtering 2026-04-18) because the live knowledge base answered 429.",
@@ -2883,7 +2889,7 @@
 			"feature": "Service desk",
 			"featureConfidence": "medium",
 			"built": {
-				"state": "built",
+				"state": "decided-no",
 				"evidence": "an agent sets only their own availability (src/views/werkplek/widgets/WerkplekHeaderActions.vue:6 WerkplekAgentStatus, lib/Service/KccWerkplekService.php:388 setAvailability); lib/Service/RoutingService.php:409 filterByAvailability ranks available colleagues, shown on TicketDetail by src/components/RoutingSuggestionSection.vue (mounted through src/manifest.json TicketDetail bodyWidgets), which lists only colleagues who are available and under their cap. Nextcloud's own user status and absence show in the header contacts menu on every page",
 				"owner": "nextcloud/server",
 				"reachedOn": "KccWerkplek (own status); TicketDetail Suggested agents (available colleagues by skill); Nextcloud header contacts menu for colleagues' status",
@@ -2897,7 +2903,8 @@
 				"kiss": "src/features/search/MedewerkerDetail.vue:37 \"beschikbaar\" shows the fixed morning and afternoon availability of a colleague from the smoelenboek, but no live presence or absence; open issues https://github.com/Klantinteractie-Servicesysteem/KISS-frontend/issues/1434 and https://github.com/Klantinteractie-Servicesysteem/KISS-frontend/issues/1511 (who stands in for an absent colleague)"
 			},
 			"origin": "featureRequest",
-			"originUrl": "https://github.com/Klantinteractie-Servicesysteem/KISS-frontend/issues/1434"
+			"originUrl": "https://github.com/Klantinteractie-Servicesysteem/KISS-frontend/issues/1434",
+			"note": "Decided no 2026-09-28 (OpenSpec pass): Owned by nextcloud/server (platform provided); the addendum sets rows owed to nextcloud/server to decided-no in the matrix that carries them."
 		},
 		{
 			"id": "work-collaborators",
@@ -2945,13 +2952,13 @@
 			"feature": "Appointments",
 			"featureConfidence": "medium",
 			"built": {
-				"state": "built",
+				"state": "decided-no",
 				"evidence": "confirmed bookings are pushed as VEVENTs into the staff member's Nextcloud calendar (lib/Service/AppointmentCalendarLeafProvider.php:218 pushBookingEvent), where the Nextcloud Calendar app also shows subscribed outside feeds (webcal/ICS); inside pipelinq the calendar widget on a record shows only events linked to that record",
 				"owner": "nextcloud/server",
 				"reachedOn": "Nextcloud Calendar app; pipelinq ClientDetail, ContactDetail and LeadDetail calendar widget (linked events only)",
 				"readOn": "2026-09-26"
 			},
-			"note": "works in the Calendar app, not on a pipelinq page",
+			"note": "works in the Calendar app, not on a pipelinq page. Decided no 2026-09-28 (OpenSpec pass): Owned by nextcloud/server (platform provided); the addendum sets rows owed to nextcloud/server to decided-no in the matrix that carries them.",
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/integrations/use-hubspots-integration-with-google-calendar-or-outlook-calendar syncs meetings with the user's Google or Outlook calendar, but \"Calendar sync will only sync with a user's primary calendar\"; an outside calendar feed (ICS) is not described. All products and plans.",
 				"pipedrive": "https://support.pipedrive.com/en/article/calendar-sync syncs Google and Microsoft calendars with Pipedrive activities (all plans per https://support.pipedrive.com/en/article/what-features-do-the-pipedrive-plans-have); an outside ICS feed is not described. Note: Read from the web.archive.org copy (calendar-sync 2026-06-28; what-features-do-the-pipedrive-plans-have 2026-08-24) because the live knowledge base answered 429.",
@@ -3690,22 +3697,22 @@
 			"id": "portal-invoices",
 			"area": "portal",
 			"name": "Let a client see their invoices in the portal",
-			"pipelinq": "yes",
+			"pipelinq": "partial",
 			"hubspot-crm": "partial",
 			"pipedrive": "unknown",
 			"espocrm": "partial",
 			"odoo-crm": "yes",
 			"kiss": "no",
-			"provider": "shillinq",
-			"providerHow": "the invoices live in Shillinq; pipelinq presents them read only at lib/Service/Portal/PortalInvoiceService.php:77",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/Portal/PortalInvoiceService.php and lib/Service/Portal/AbstractPortalReadFacade.php: the Invoices tab lists pipelinq's own posTransaction records, not shillinq invoices",
 			"feature": "Customer portal",
 			"featureConfidence": "medium",
 			"built": {
 				"state": "built",
-				"evidence": "lib/Service/Portal/PortalInvoiceService.php:77 lists the resident's POS transactions through lib/Service/Portal/MainRegisterReader.php, which since pipelinq#2037 reads the schema id under the key the install writes (posTransaction_schema, applying SettingsLoadService::SCHEMA_CONFIG_KEYS); before that it read a bare 'posTransaction' key nothing writes and the list was always empty",
-				"owner": "ConductionNL/shillinq",
+				"evidence": "lib/Service/Portal/PortalInvoiceService.php schemaKey() posTransaction and present() (invoiceNumber, date, amount, status) list the client's POS transactions through lib/Service/Portal/MainRegisterReader.php, reachable since pipelinq#2037 and #2045; lib/Service/Portal/AbstractPortalReadFacade.php getForAccount() filters on ownership only, so draft and parked carts are listed as invoices too, no PDF is offered, and shillinq sales invoices are never read",
+				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "customer portal, Invoices tab (src/portal/views/PortalDashboard.vue:119)",
-				"readOn": "2026-09-27"
+				"readOn": "2026-09-28"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/invoices/share-created-invoices \"share them through an email, using a direct link, downloading a PDF\"; \"a link to view the invoice in their browser\". All plans for the invoices tool. The invoice is reached by a link per invoice; the support portal does not list a client's invoices.",
@@ -3713,7 +3720,8 @@
 				"espocrm": "Invoices exist only in the paid Sales Pack (https://docs.espocrm.com/user-guide/invoices/); its payments doc https://docs.espocrm.com/extensions/sales-pack/payments/ says \"Payment links can be sent to customers. No Espo user account is required to access these links\", and invoices go out by email; the docs do not describe invoices in the portal. Note: Paid Sales Pack; portal access to invoices not documented, payment link pages are.",
 				"pipedrive": "not checked: searched the Pipedrive knowledge base article list (https://support.pipedrive.com/en-sitemap.xml) for portal, client login and customer portal on 2026-09-26; Pipedrive documents no client-facing portal, so a client view of invoices is not described. Note: Was no without a source; the docs do not state the absence.",
 				"odoo-crm": "addons/account/controllers/portal.py:84 \"/my/invoices\" list and :153 \"/my/invoices/<int:invoice_id>\" detail with PDF and online payment, restricted to the customer's own company by rule account_invoice_rule_portal (addons/account/security/account_security.xml:247-250 \"('partner_id','child_of',[user.commercial_partner_id.id])\")."
-			}
+			},
+			"note": "Rating corrected from yes to partial by the OpenSpec pass read of 2026-09-28: the tab lists every POS transaction of the client whatever its status, with no PDF, and no shillinq sales invoice; provider and owner corrected from shillinq to pipelinq, since the code and the schema are pipelinq's."
 		},
 		{
 			"id": "portal-delegation",
@@ -6281,18 +6289,18 @@
 			"espocrm": "no",
 			"odoo-crm": "partial",
 			"kiss": "no",
-			"provider": "pipelinq",
+			"provider": "openregister",
 			"providerHow": "read in lib/Notification/Notifier.php:239-300 and lib/BackgroundJob/BillingHandoffRetryJob.php:80-98",
 			"feature": "Automation",
 			"featureConfidence": "medium",
 			"built": {
-				"state": "built",
+				"state": "decided-no",
 				"evidence": "some integrations tell people when they fail: lib/Notification/Notifier.php:239 'forecast_snapshot_partial_failure', :250 'wip_sync_failed', :261 'billing_handoff_failed', :289 'social_relink_needed', with lib/BackgroundJob/BillingHandoffRetryJob.php:95 re-notifying admins while a batch stays failed; failed export runs show on ExportRuns with a retry (appinfo/routes.php:440). Nothing switches an automation off after repeated failure (grep for circuit breaker, consecutive, auto disable finds only POS PIN lockout)",
-				"owner": "ConductionNL/pipelinq",
+				"owner": "ConductionNL/openregister",
 				"reachedOn": "Nextcloud notifications; ExportRuns, ExportRunDetail",
 				"readOn": "2026-09-26"
 			},
-			"note": "alerts for a few integrations, no automatic switch off; flow failures are OpenRegister's and were not checked",
+			"note": "alerts for a few integrations, no automatic switch off; flow failures are OpenRegister's and were not checked. Decided no 2026-09-28 (OpenSpec pass): Pipelinq stopped owning an automation engine (archived migrate-automation-to-flow-leaf); automations run on the OpenRegister flow engine, so alerting on and switching off a failing flow is that engine's job. The pipelinq integration alerts already cited stay built. Owner corrected to ConductionNL/openregister.",
 			"evidence": {
 				"hubspot-crm": "not checked: https://knowledge.hubspot.com/workflows/troubleshoot-common-workflow-errors explains errors per action in the workflow history (Professional hubs), but alerts on repeated failure and automatic switch-off are not described (read 2026-09-26).",
 				"pipedrive": "https://www.pipedrive.com/en/product-updates \"Automation owners will receive email alerts when workflows fail consistently\" and \"the system will automatically deactivate an automation if failures continue over time\", with an automation overview dashboard showing health.",
@@ -6318,11 +6326,11 @@
 			"feature": "Email",
 			"featureConfidence": "high",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"evidence": "no extension or plugin directory in the repo",
 				"owner": "ConductionNL/pipelinq"
 			},
-			"note": "Ours files mail afterwards by matching the address. Theirs works while you read the mail.",
+			"note": "Ours files mail afterwards by matching the address. Theirs works while you read the mail. Specified 2026-09-28 in openspec/changes/contact-moments-mail-add-in (OpenSpec pass).",
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/connected-email/use-contact-profiles-with-the-hubspot-sales-office-365-add-in \"review contact information and log sales activities in your inbox's task pane\" while reading a mail in Outlook; Gmail has the Sales Chrome extension (https://knowledge.hubspot.com/connected-email/get-started-with-the-hubspot-sales-chrome-extension). All products and plans.",
 				"kiss": "no Outlook or mail add-in in the repository; KISS reads no mail (open epic https://github.com/Klantinteractie-Servicesysteem/KISS-frontend/issues/1446)",
@@ -6346,11 +6354,11 @@
 			"feature": "Client management",
 			"featureConfidence": "medium",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"evidence": "no bulk edit in src/views/clients/ or src/components/",
 				"owner": "ConductionNL/pipelinq"
 			},
-			"note": "Attio and Pipedrive make this the centre of the product. We edit one record at a time.",
+			"note": "Attio and Pipedrive make this the centre of the product. We edit one record at a time. Specified 2026-09-28 in openspec/changes/clients-bulk-edit-and-undo (OpenSpec pass).",
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/records/bulk-edit-records select records or \"Select all [number] [records]\", then \"Edit: select to edit the values of a specific property in these records. You can also edit property values directly in the table\". All products and plans. Note: Was partial; in-table editing is documented.",
 				"kiss": "every beheer and contact screen edits one record at a time (for example src/views/Beheer/Kanalen/KanaalBeheer.vue); no multi select edit in src/",
@@ -6418,13 +6426,13 @@
 			"feature": "Client management",
 			"featureConfidence": "medium",
 			"built": {
-				"state": "built",
+				"state": "specified",
 				"evidence": "no preferred name, roepnaam or nickname property on client or contact (grep of lib/Settings and src for preferred name, roepnaam, nickname, aanspreek); an administrator can add one as a custom field (clients-custom-fields, lib/Service/RegisterResolverService.php) or as a typed party field (lib/Settings/register.d/17-party-fields-and-indicators.json)",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "ClientDetail and ContactDetail forms, only once a custom field is added",
 				"readOn": "2026-09-26"
 			},
-			"note": "not a shipped field; has to be configured",
+			"note": "not a shipped field; has to be configured. Specified 2026-09-28 in openspec/changes/clients-preferred-name (OpenSpec pass).",
 			"evidence": {
 				"hubspot-crm": "not checked: https://knowledge.hubspot.com/properties/hubspots-default-contact-properties was read for other rows and names first and last name; no preferred name default property was found, a custom property would be needed (read 2026-09-26).",
 				"pipedrive": "not checked: https://support.pipedrive.com/en/article/contacts-people-and-organizations names no preferred name field; a custom field would be needed (https://support.pipedrive.com/en/article/custom-fields) (read 2026-09-26). Note: Read from the web.archive.org copy (contacts-people-and-organizations 2026-05-20; custom-fields 2026-06-28) because the live knowledge base answered 429.",
@@ -6450,13 +6458,13 @@
 			"feature": "Client management",
 			"featureConfidence": "medium",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"evidence": "lib/Service/Customer360SummaryService.php (route /api/customer-360/summary, appinfo/routes.php:108) and the ClientDetail stat widgets (src/manifest.json:1801 client-summary-last-activity) give counts and dates, not a written summary; lib/Service/NaviService.php uses a language model only for analytics questions",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "nothing",
 				"readOn": "2026-09-26"
 			},
-			"note": "a numeric 360 summary exists; no prose summary of the history",
+			"note": "a numeric 360 summary exists; no prose summary of the history. Specified 2026-09-28 in openspec/changes/clients-history-summary-and-risk (OpenSpec pass).",
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/records/summarize-records \"Use the Record summary card on record previews and record views. This summary includes information about the currently viewed record's activities, notes, and ownership\". All products and plans.",
 				"pipedrive": "https://support.pipedrive.com/en/article/nova Nova \"generates an AI-powered briefing using deal context, organization information, contact history, and recent activity\" before a meeting (all plans); https://support.pipedrive.com/en/article/ai-email-summarization summarises email threads. A summary of a client's whole history on demand outside a meeting is not described. Note: Read from the web.archive.org copy (ai-email-summarization 2026-07-10) because the live knowledge base answered 429.",
@@ -6482,7 +6490,7 @@
 			"feature": "Client management",
 			"featureConfidence": "medium",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"evidence": "no signature or free text parser in lib/Service or src/ (grep for paste, parseSignature); contact data comes in by form, vCard import (lib/Service/ContactImportService.php:64) or KvK and BRP lookups",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "nothing",
@@ -6496,7 +6504,8 @@
 				"kiss": "no AI, transcription or summarisation code in src/ or Kiss.Bff/; AI assistance is an open theme https://github.com/Klantinteractie-Servicesysteem/KISS-frontend/issues/1450 \"Verkenning AI-assistentie voor KCC-medewerkers\"; KISS also has no client edit form to fill"
 			},
 			"origin": "changelog",
-			"originUrl": "https://docs.espocrm.com/extensions/intelligence/"
+			"originUrl": "https://docs.espocrm.com/extensions/intelligence/",
+			"note": "Specified 2026-09-28 in openspec/changes/clients-contact-capture (OpenSpec pass)."
 		},
 		{
 			"id": "clients-identifiers",
@@ -6513,13 +6522,13 @@
 			"feature": "Client management",
 			"featureConfidence": "high",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"evidence": "the client schema holds name, type, email, phone, address, website, industry, notes, contactsUid (lib/Settings/pipelinq_register.json, schema client) and no register.d fragment adds a KvK, VAT or DUNS number; KvK numbers appear only on prospects (src/components/ProspectCard.vue:34) and receipts; the only number checked is the BSN (lib/Service/BsnValidationService.php)",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "nothing",
 				"readOn": "2026-09-26"
 			},
-			"note": "a custom field could hold a number, but nothing checks it",
+			"note": "a custom field could hold a number, but nothing checks it. Specified 2026-09-28 in openspec/changes/clients-registry-numbers-and-enrichment (OpenSpec pass).",
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/properties/understand-the-property-editor custom properties carry validation rules (\"the rules it adheres to\"), so KvK, VAT and DUNS numbers can be stored as checked fields; no built-in identifier checks against registers. All products and plans.",
 				"pipedrive": "https://support.pipedrive.com/en/article/custom-fields custom fields hold KvK, VAT or DUNS numbers with \"quality rules\" set in Data fields (https://support.pipedrive.com/en/article/data-fields-in-pipedrive); checks against registers are not built in, the KvK one only via the third-party PipeEnrich app (https://cybermatic.nl/en/apps/pipe-enrich/). Note: Read from the web.archive.org copy (custom-fields 2026-06-28; data-fields-in-pipedrive 2026-06-12) because the live knowledge base answered 429.",
@@ -6545,13 +6554,13 @@
 			"feature": "Contracts",
 			"featureConfidence": "medium",
 			"built": {
-				"state": "built",
+				"state": "specified",
 				"evidence": "lib/Service/RenewalEngineService.php:187 marks contracts 'expiring' ahead of their end and :231 'churned' on silent expiry (ContractDetail, Contracts page), and lib/Service/DetractorFollowUpService.php:6 \"an unhappy answer becomes somebody's task\"; there is no churn score or at-risk list across signals",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "Contracts, ContractDetail; tasks in Tasks and MyWork",
 				"readOn": "2026-09-26"
 			},
-			"note": "warning signals exist per contract and per survey answer, not as a client risk view",
+			"note": "warning signals exist per contract and per survey answer, not as a client risk view. Specified 2026-09-28 in openspec/changes/clients-history-summary-and-risk (OpenSpec pass).",
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/ai-tools/use-the-customer-health-agent \"assess the health of an account based on logged CRM activities, call transcripts, and public information ... identify at-risk accounts and prioritize retention efforts\". Service Hub or Smart CRM Professional, Enterprise, with HubSpot Credits.",
 				"pipedrive": "not checked: searched the Pipedrive knowledge base article list (https://support.pipedrive.com/en-sitemap.xml) and product updates on 2026-09-26 for churn or health scoring and found none; Scores rate deals only (\"currently, you can only choose deals\", https://support.pipedrive.com/en/article/scores). Note: Read from the web.archive.org copy (scores 2026-06-10) because the live knowledge base answered 429.",
@@ -6577,13 +6586,13 @@
 			"feature": "Client management",
 			"featureConfidence": "high",
 			"built": {
-				"state": "none",
-				"evidence": "merging runs on OpenRegister's merge (lib/Listener/ObjectsMergedSyncListener.php syncs the Nextcloud contact afterwards); no unmerge exists in pipelinq or in OpenRegister's routes (only objects revert, openregister appinfo/routes.php:1444, for one object's own history)",
+				"state": "specified",
+				"evidence": "OpenRegister reverses a merge (openregister appinfo/routes.php:657 merge#reverse, POST /api/objects/merge/{id}/reverse) only for schemas that declare x-openregister-merge; pipelinq declares it on masterEntity alone (lib/Settings/register.d/90-master-data-management.json:105, reversalWindowDays 30), not on client or contact, so a client merge cannot be undone; lib/Listener/ObjectsMergedSyncListener.php syncs downstream systems after a master entity merge or reversal",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "nothing",
-				"readOn": "2026-09-26"
+				"readOn": "2026-09-28"
 			},
-			"note": "the merged-away record can at best be restored from OpenRegister's deleted objects, with its links not moved back",
+			"note": "the merged-away record can at best be restored from OpenRegister's deleted objects, with its links not moved back. Evidence corrected 2026-09-28 (OpenSpec pass): OpenRegister does have a merge reversal, the gap is that client and contact do not declare the merge dialect. Specified 2026-09-28 in openspec/changes/clients-reversible-merge (OpenSpec pass).",
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/records/merge-records \"once you've merged two records, it is not possible to unmerge them\"; the idea thread is open (community answered 403, listed, not read).",
 				"pipedrive": "not checked: https://support.pipedrive.com/en/article/merge-duplicates describes merging but not undoing it, and https://support.pipedrive.com/en/article/restore-data restores deleted items, bulk deletions and imports; no unmerge is described (read 2026-09-26). Note: Read from the web.archive.org copy (merge-duplicates 2026-01-13; restore-data 2026-03-14) because the live knowledge base answered 429.",
@@ -6609,7 +6618,7 @@
 			"feature": "Client management",
 			"featureConfidence": "high",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"evidence": "pipelinq has no bulk edit (existing row bulk-edit is no), so there is no bulk change to undo; per object, OpenRegister's revert (openregister appinfo/routes.php:1444) rolls back one record's history",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "nothing",
@@ -6623,7 +6632,8 @@
 				"kiss": "KISS has no bulk edit of clients or any record (each beheer screen edits one item, for example src/views/Beheer/Kanalen/KanaalBeheer.vue) and no undo"
 			},
 			"origin": "changelog",
-			"originUrl": "https://www.pipedrive.com/en/product-updates"
+			"originUrl": "https://www.pipedrive.com/en/product-updates",
+			"note": "Specified 2026-09-28 in openspec/changes/clients-bulk-edit-and-undo (OpenSpec pass)."
 		},
 		{
 			"id": "clients-business-card-scan",
@@ -6640,7 +6650,7 @@
 			"feature": "Client management",
 			"featureConfidence": "high",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"evidence": "no camera, OCR or card scan anywhere in src/ or lib/, and no mobile client (plat-phone partial: openspec/specs/time-entry-mobile only)",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "nothing",
@@ -6654,7 +6664,8 @@
 				"kiss": "no camera, OCR or client create form in src/; clients come from BRP, KvK and OpenKlant; the lab drive of 26 Sep 2026 also found the person search and nav off screen at 390 px after starting a contact moment. Note: Phone use is not supported either."
 			},
 			"origin": "changelog",
-			"originUrl": "https://www.pipedrive.com/en/product-updates"
+			"originUrl": "https://www.pipedrive.com/en/product-updates",
+			"note": "Specified 2026-09-28 in openspec/changes/clients-contact-capture (OpenSpec pass)."
 		},
 		{
 			"id": "clients-bulk-enrichment",
@@ -6671,7 +6682,7 @@
 			"feature": "Dutch registries",
 			"featureConfidence": "high",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"evidence": "KvK and OpenCorporates are searched to discover prospects (lib/Service/ProspectDiscoveryService.php:114, ProspectsView) and BRP per person on request (lib/Service/HaalCentraalClient.php:136); no job or action fills missing company or person details for many existing client records at once (grep for enrich finds none)",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "nothing",
@@ -6685,7 +6696,8 @@
 				"kiss": "KISS looks up one person in the BRP (Kiss.Bff/Extern/HaalCentraal/HaalCentraalProxyConfig.cs:58) or one company in the KvK (Kiss.Bff/Extern/Kvk/KvkProxyConfig.cs:22) at a time on demand and stores nothing; no bulk enrichment"
 			},
 			"origin": "changelog",
-			"originUrl": "https://www.pipedrive.com/en/product-updates"
+			"originUrl": "https://www.pipedrive.com/en/product-updates",
+			"note": "Specified 2026-09-28 in openspec/changes/clients-registry-numbers-and-enrichment (OpenSpec pass)."
 		},
 		{
 			"id": "stock-levels",
@@ -6729,7 +6741,7 @@
 			"feature": "Time and billing",
 			"featureConfidence": "medium",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"evidence": "pipelinq only reads invoices from shillinq (lib/Service/ShillinqInvoiceReader.php:175 notes whether one \"is in dunning\") for marketing signals; chasing is shillinq's DunningRunService, itself rated partial in shillinq and not reached from any pipelinq page",
 				"owner": "ConductionNL/shillinq",
 				"reachedOn": "nothing",
@@ -6743,7 +6755,8 @@
 				"kiss": "src/router/index.ts:126 \"const router = createRouter(\" lists the only screens: startscherm, afhandeling, contactverzoeken, personen, bedrijven, zaken, links and beheer; a grep of src/ and Kiss.Bff/ for lead, opportunit, offerte, factuur, nieuwsbrief and campagne finds no sales, marketing or invoicing code"
 			},
 			"origin": "changelog",
-			"originUrl": "https://www.hubspot.com/spotlight"
+			"originUrl": "https://www.hubspot.com/spotlight",
+			"note": "Specified 2026-09-27 by ConductionNL/shillinq change openspec/changes/receivables-automatic-dunning (OpenSpec pass, shillinq lane)."
 		},
 		{
 			"id": "prod-price-lists",
@@ -6982,7 +6995,7 @@
 			"feature": "Telephony",
 			"featureConfidence": "medium",
 			"built": {
-				"state": "built",
+				"state": "specified",
 				"evidence": "lib/Service/CtiContactMatcher.php:132 needles() matches on E.164, digits only and the last 8 or 9 digits, so a caller is found however the number was stored, but only for contacts and clients during a screen pop; CTI tickets store the number normalised (CtiService.php:265). Searching the Tickets list for a request by number is a plain text search on whatever was typed",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "CTI screen pop; Tickets list search (literal)",
@@ -6996,7 +7009,8 @@
 				"kiss": "contactverzoeken are searched on the exact digitaal adres string (src/services/openklant2/service.ts:163 \"searchDigitaleAdressen\" passes adres unchanged); open issues https://github.com/Klantinteractie-Servicesysteem/KISS-frontend/issues/1538 and https://github.com/Klantinteractie-Servicesysteem/KISS-frontend/issues/1555 (normalise to E.164)"
 			},
 			"origin": "featureRequest",
-			"originUrl": "https://github.com/Klantinteractie-Servicesysteem/KISS-frontend/issues/1538"
+			"originUrl": "https://github.com/Klantinteractie-Servicesysteem/KISS-frontend/issues/1538",
+			"note": "Specified 2026-09-28 in openspec/changes/contact-moments-phone-lookup (OpenSpec pass)."
 		},
 		{
 			"id": "req-ai-triage",
@@ -7228,14 +7242,14 @@
 			"espocrm": "partial",
 			"odoo-crm": "unknown",
 			"kiss": "partial",
-			"provider": "pipelinq",
-			"providerHow": "listed the article properties in lib/Settings/register.d/97-marketing-articles.json",
+			"provider": "external",
+			"providerHow": "knowledge articles live in XWiki since the archived change migrate-kennisbank-to-xwiki-leaf; the article schema read before (lib/Settings/register.d/97-marketing-articles.json) holds marketing articles",
 			"feature": "Service desk",
 			"featureConfidence": "high",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"evidence": "the article schema holds title, slug, summary, body, heroImage, links, tags, language, status, author, publishedAt, portalPageRef and timestamps (lib/Settings/register.d/97-marketing-articles.json), no review date, owner reminder or expiry; XWiki pages are read as they are (lib/Service/XWikiService.php)",
-				"owner": "ConductionNL/pipelinq",
+				"owner": "external",
 				"reachedOn": "nothing",
 				"readOn": "2026-09-26"
 			},
@@ -7247,7 +7261,8 @@
 				"kiss": "news and work instructions carry a publication start and end date (Kiss.Bff/Intern/NieuwsEnWerkinstructies/Data/Entities/Bericht.cs:9 \"PublicatieDatum\" and :10 \"PublicatieEinddatum\"), so an item drops off by itself; there is no review date, no owner and no reminder, and knowledge articles and VACs come from outside sources (SDG, Objects API). Note: Expiry date only."
 			},
 			"origin": "featureRequest",
-			"originUrl": "https://community.hubspot.com/t5/HubSpot-Ideas/Knowledge-Base-article-review-dates-and-user-assignments/idi-p/540449"
+			"originUrl": "https://community.hubspot.com/t5/HubSpot-Ideas/Knowledge-Base-article-review-dates-and-user-assignments/idi-p/540449",
+			"note": "Decided no 2026-09-28 (OpenSpec pass): Knowledge articles live in XWiki since the archived migrate-kennisbank-to-xwiki-leaf (\"Knowledge management is not a CRM core competency\"); review dates and owners belong to the wiki. The marketing article schema the matrix read is not the knowledge base. Owner corrected to external."
 		},
 		{
 			"id": "two-calls-at-once",
@@ -7377,7 +7392,7 @@
 			"feature": "Telephony",
 			"featureConfidence": "high",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"evidence": "no transcription or speech service in lib/ or src/; lib/Settings/register.d/70-cti.json:111 keeps only a recording_url (\"audio file never stored in pipelinq\"), and channelMetadata (99-unify-ticket-supertype.json:344) holds at most a \"chat transcript link\"",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "nothing",
@@ -7407,7 +7422,8 @@
 					"originUrl": "https://www.pipedrive.com/en/product-updates",
 					"by": "pipedrive"
 				}
-			]
+			],
+			"note": "Specified 2026-09-28 in openspec/changes/contact-moments-call-review (OpenSpec pass)."
 		},
 		{
 			"id": "cm-quality-review",
@@ -7424,13 +7440,13 @@
 			"feature": "Telephony",
 			"featureConfidence": "medium",
 			"built": {
-				"state": "built",
+				"state": "specified",
 				"evidence": "lib/Service/CtiService.php:359 \"attachRecording\" writes the platform's recording link onto the contact moment ticket, so a recorded call can be listened back from the ticket; there is no scoring form, scorecard or coaching record anywhere in lib/ or src/",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "TicketDetail (recording link on the contact moment)",
 				"readOn": "2026-09-26"
 			},
-			"note": "listen back only; score and coaching points are missing",
+			"note": "listen back only; score and coaching points are missing. Specified 2026-09-28 in openspec/changes/contact-moments-call-review (OpenSpec pass).",
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/calling/review-call-recordings-and-transcripts \"Any user who is recording calls made from HubSpot can review and coach on the call recording\"; https://knowledge.hubspot.com/calling/use-coaching-playlists-to-train-your-team playlists of \"complete or clipped call recordings\" (Sales or Service Hub Professional, Enterprise); AI Quality Assurance scores tickets on tone, clarity and empathy (https://knowledge.hubspot.com/help-desk/use-the-quality-assurance-score-to-analyze-help-desk-tickets, Service Hub Enterprise).",
 				"pipedrive": "https://support.pipedrive.com/en/article/nova Nova transcribes meetings and drafts summaries (all plans); call recording and coaching depend on marketplace calling apps (https://support.pipedrive.com/en/article/how-can-i-make-calls-in-pipedrive). Scoring a conversation and agreeing coaching points is not described. Note: Read from the web.archive.org copy (how-can-i-make-calls-in-pipedrive 2025-11-17) because the live knowledge base answered 429.",
@@ -7460,13 +7476,13 @@
 			"feature": "Contact moments",
 			"featureConfidence": "medium",
 			"built": {
-				"state": "built",
+				"state": "specified",
 				"evidence": "a telephony call creates a pending contact moment server side as soon as it rings (lib/Service/CtiService.php:239 \"Create a pending contactmoment ticket\"), so that record survives a closed browser; the manual form src/components/ContactmomentQuickLog.vue (mounted at src/manifest.json:2144) keeps its input only in component data, with no local or server draft",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "ClientDetail and ContactDetail quick log; CTI screen pop",
 				"readOn": "2026-09-26"
 			},
-			"note": "a half typed manual contact moment is lost when the tab closes or the session expires",
+			"note": "a half typed manual contact moment is lost when the tab closes or the session expires. Specified 2026-09-28 in openspec/changes/contact-moments-keep-draft (OpenSpec pass).",
 			"evidence": {
 				"hubspot-crm": "not checked: https://knowledge.hubspot.com/one-to-one-email/create-and-manage-one-to-one-email-drafts covers saving an email \"as a draft for later\" on purpose; keeping a half finished note or call log after a browser crash is not described (read 2026-09-26).",
 				"pipedrive": "not checked: searched the Pipedrive knowledge base article list (https://support.pipedrive.com/en-sitemap.xml) and product updates on 2026-09-26 for autosaved drafts of notes or activities after a browser crash and found none; email drafts appear in Sales Inbox thread status (https://www.pipedrive.com/en/product-updates \"See if a thread contains a draft\").",
@@ -7524,13 +7540,13 @@
 			"feature": "Telephony",
 			"featureConfidence": "medium",
 			"built": {
-				"state": "built",
+				"state": "specified",
 				"evidence": "every CTI call stores the caller's number in E.164 on its contact moment (lib/Service/CtiService.php:272 \"'from_number' => ($fromE164 ?? $fromNumber)\", declared on ticket in lib/Settings/register.d/70-cti.json:42); the screen pop only matches the number to contacts and clients (lib/Service/CtiContactMatcher.php:88 findByPhoneNumber), and no page lists earlier contact moments for a number that matches nobody",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "Tickets list (from_number on each record); CTI screen pop for known callers",
 				"readOn": "2026-09-26"
 			},
-			"note": "the data is there, the view for an unknown caller is not",
+			"note": "the data is there, the view for an unknown caller is not. Specified 2026-09-28 in openspec/changes/contact-moments-phone-lookup (OpenSpec pass).",
 			"evidence": {
 				"hubspot-crm": "not checked: HubSpot logs calls on the matching contact (https://knowledge.hubspot.com/calling/review-call-recordings-and-transcripts) but no article describes looking up earlier calls from an unmatched number (read 2026-09-26).",
 				"pipedrive": "not checked: searched the Pipedrive knowledge base article list (https://support.pipedrive.com/en-sitemap.xml) and product updates on 2026-09-26 for looking up contact history by an unknown phone number and found none; search covers phone numbers of known people (https://support.pipedrive.com/en/article/search-finding-what-you-need). Note: Read from the web.archive.org copy (search-finding-what-you-need 2026-03-15) because the live knowledge base answered 429.",
@@ -7556,9 +7572,9 @@
 			"feature": "Telephony",
 			"featureConfidence": "high",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"evidence": "pipelinq only records the queue a call came through (lib/Service/CtiService.php:819 \"'queue_name' => ($event->queueName ?? '')\"); menus, queues and routing before pickup are configured in the telephony platform (Asterisk, RingCentral, CallVoip adapters in lib/Service/Cti/Adapter), and no pipelinq page sets them",
-				"owner": "ConductionNL/pipelinq",
+				"owner": "external",
 				"reachedOn": "nothing",
 				"readOn": "2026-09-26"
 			},
@@ -7570,7 +7586,8 @@
 				"kiss": "no telephony integration in src/ or Kiss.Bff/ (grep for telefooncentrale, cti and sip finds nothing); open theme https://github.com/Klantinteractie-Servicesysteem/KISS-frontend/issues/1427 \"Thema: Telefonie-integratie\""
 			},
 			"origin": "changelog",
-			"originUrl": "https://www.odoo.com/odoo-20-release-notes"
+			"originUrl": "https://www.odoo.com/odoo-20-release-notes",
+			"note": "Decided no 2026-09-28 (OpenSpec pass): What a caller hears and where the call goes is configured in the telephony platform, which pipelinq connects to but does not configure (lib/Service/Cti/Adapter). Recorded non-goal: archived queue-management proposal \"Direct telephony/PBX integration (ACD, IVR, CTI)\" and whatsapp-sms-channel-adapter \"Direct telephony integration, separate app\". Owner corrected to external."
 		},
 		{
 			"id": "cm-failed-send",
@@ -7805,18 +7822,18 @@
 			"espocrm": "yes",
 			"odoo-crm": "partial",
 			"kiss": "yes",
-			"provider": "pipelinq",
-			"providerHow": "grep of src/manifest.json, src/manifest.d and src/menu-layout.json for groups, roles and visibleIf",
+			"provider": "external",
+			"providerHow": "the knowledge base is XWiki since the archived change migrate-kennisbank-to-xwiki-leaf; read access there is XWiki's own permission model",
 			"feature": "Service desk",
 			"featureConfidence": "medium",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"evidence": "the knowledge base is reached through the XWiki sidebar tab and widget (src/manifest.json:1394 \"xwiki-knowledge\", :2168 knowledgeBase) and the Articles pages; no manifest page or route is gated by role (only src/manifest.d/97-connection-registry.json:14 uses visibleIf), so there is no search only view for colleagues outside the contact centre",
-				"owner": "ConductionNL/pipelinq",
+				"owner": "external",
 				"reachedOn": "nothing",
 				"readOn": "2026-09-26"
 			},
-			"note": "XWiki's own permissions could give such a view, but outside pipelinq",
+			"note": "XWiki's own permissions could give such a view, but outside pipelinq. Decided no 2026-09-28 (OpenSpec pass): The knowledge base moved to XWiki (archived migrate-kennisbank-to-xwiki-leaf: \"Knowledge management is not a CRM core competency\"); a search only view for colleagues outside the contact centre is XWiki read access. Owner corrected to external.",
 			"evidence": {
 				"hubspot-crm": "https://www.hubspot.com/pricing/sales \"View-only Seats are available at no additional cost\" for read access; knowledge base articles are published pages any colleague can search (https://knowledge.hubspot.com/knowledge-base/create-and-customize-knowledge-base-articles). A role limited to knowledge base search is not described.",
 				"pipedrive": "not checked: searched the Pipedrive knowledge base article list (https://support.pipedrive.com/en-sitemap.xml) and product updates on 2026-09-26 for a knowledge base tool for customers' own articles and found none, so a search-only role for it does not apply.",
@@ -7842,13 +7859,13 @@
 			"feature": "Platform",
 			"featureConfidence": "medium",
 			"built": {
-				"state": "built",
+				"state": "decided-no",
 				"evidence": "rights are Nextcloud group names fixed in the register (lib/Settings/pipelinq_register.json:410 \"authorization\": [...], lib/Settings/register.d/99-unify-ticket-supertype.json:90 \"authorization\": [\"sales\"]) and checked by lib/Lifecycle/ObjectOwnerAccessPolicy.php; group membership can come from a central directory through Nextcloud (LDAP, SAML, OIDC), but which group may do what is written in register JSON, not managed in a central authorisation register",
 				"owner": "nextcloud/server",
 				"reachedOn": "every page (enforced on read and lifecycle actions)",
 				"readOn": "2026-09-26"
 			},
-			"note": "who is in a role can be central; what a role may do cannot",
+			"note": "who is in a role can be central; what a role may do cannot. Decided no 2026-09-28 (OpenSpec pass): Owned by nextcloud/server (platform provided); the addendum sets rows owed to nextcloud/server to decided-no in the matrix that carries them.",
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/user-management/provision-hubspot-users-with-scim-through-okta users are provisioned and deprovisioned from the identity provider over SCIM (Professional, Enterprise), with permission sets assigned centrally (https://knowledge.hubspot.com/user-management/create-permission-sets, Enterprise).",
 				"pipedrive": "https://support.pipedrive.com/en/article/single-sign-on SSO on all plans with Okta and Entra ID guides (https://support.pipedrive.com/en/article/pipedrive-single-sign-on-okta); roles are managed in Pipedrive's own permission sets (https://support.pipedrive.com/en/article/permission-sets), and SCIM provisioning from the central register is not described. Note: Read from the web.archive.org copy (single-sign-on 2026-06-19; pipedrive-single-sign-on-okta 2026-05-08; permission-sets 2026-03-15) because the live knowledge base answered 429.",
@@ -7968,13 +7985,13 @@
 			"feature": "Platform",
 			"featureConfidence": "medium",
 			"built": {
-				"state": "built",
+				"state": "decided-no",
 				"evidence": "all access is Nextcloud group membership named in the register (lib/Settings/register.d/99-unify-ticket-supertype.json:90 \"authorization\": [\"sales\"], lib/Lifecycle/ObjectOwnerAccessPolicy.php), so a new colleague gets a peer's access by being put in the same groups in Nextcloud user management; there is no 'same as this user' action, and POS staff get a posRole separately (/api/pos/staff)",
 				"owner": "nextcloud/server",
 				"reachedOn": "Nextcloud Users admin page",
 				"readOn": "2026-09-26"
 			},
-			"note": "a few group picks, not one step",
+			"note": "a few group picks, not one step. Decided no 2026-09-28 (OpenSpec pass): Owned by nextcloud/server (platform provided); the addendum sets rows owed to nextcloud/server to decided-no in the matrix that carries them.",
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/user-management/create-permission-sets permission sets bundle access and are assigned to new users in one step (Enterprise hubs).",
 				"pipedrive": "https://www.pipedrive.com/en/product-updates \"Copy access settings from another team member ... copying permission sets and default visibility settings from an existing user\" when inviting or updating users.",
@@ -7995,18 +8012,18 @@
 			"espocrm": "yes",
 			"odoo-crm": "yes",
 			"kiss": "no",
-			"provider": "pipelinq",
+			"provider": "openregister",
 			"providerHow": "read in nextcloud-vue v2.56.0 src/utils/schema.js:526-599 and pipelinq package.json:12",
 			"feature": "Platform",
 			"featureConfidence": "medium",
 			"built": {
-				"state": "built",
+				"state": "decided-no",
 				"evidence": "shipped schema titles are English source strings translated at display time (nextcloud-vue v2.56.0 src/utils/schema.js:599 \"label: tr(prop.title || key)\") from pipelinq's l10n files (l10n/nl.json, de.json, guarded by package.json:12 check:schema-l10n); a field an administrator adds has a single title and no per-language labels, so it shows the same text to everyone",
-				"owner": "ConductionNL/pipelinq",
+				"owner": "ConductionNL/openregister",
 				"reachedOn": "every index and detail page",
 				"readOn": "2026-09-26"
 			},
-			"note": "shipped fields yes, your own field names no",
+			"note": "shipped fields yes, your own field names no. Decided no 2026-09-28 (OpenSpec pass): A field an administrator adds is an OpenRegister schema property (matrix row clients-custom-fields, owner openregister) rendered by nextcloud-vue; a label per language needs the property model to carry one, which pipelinq cannot add. Shipped fields are translated already. Owner corrected to ConductionNL/openregister.",
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/object-settings/translate-custom-crm-content \"you can create translations for your custom CRM data, so labels and names appear in the appropriate language\", custom properties and pipelines included. Marketing, Sales, Service or Data Hub Enterprise.",
 				"pipedrive": "not checked: the partner association's request list says \"you can not translate your custom fields\"; https://support.pipedrive.com/en/article/custom-fields names one field name and no translations, but Pipedrive does not state the absence (read 2026-09-26).",
@@ -8054,14 +8071,14 @@
 			"espocrm": "partial",
 			"odoo-crm": "no",
 			"kiss": "no",
-			"provider": "pipelinq",
-			"providerHow": "read in lib/Service/Portal/PortalAuthService.php:130-189 and grep for digid, eherkenning, saml, oidc",
+			"provider": "portaliq",
+			"providerHow": "hydra ADR-046 makes portaliq the one external portal; its matrix rows sig-digid and sig-eherkenning (specified) cover DigiD and eHerkenning login, and pipelinq contributes through lib/Portal/PortalContributionProvider.php",
 			"feature": "Customer portal",
 			"featureConfidence": "high",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"evidence": "lib/Service/Portal/PortalAuthService.php:189 \"$this->hasher->verify($password, ...)\": portal login is an own account with password plus MFA (PortalMfaService); no DigiD, eHerkenning, SAML or OIDC anywhere in lib/Service/Portal, lib/Controller/Portal* or src/portal",
-				"owner": "ConductionNL/pipelinq",
+				"owner": "ConductionNL/portaliq",
 				"reachedOn": "nothing",
 				"readOn": "2026-09-26"
 			},
@@ -8077,7 +8094,8 @@
 			"originRequirements": [
 				"intelligence-db requirements#207282 (Gemeente Midden-Drenthe, 2026-03-05: DigiD en of eHerkenning voor authenticatie)",
 				"intelligence-db requirements#194820 (Kadaster CRM, 2026-04-23: zelfregistratie, authenticatie zoals eHerkenning)"
-			]
+			],
+			"note": "Decided no 2026-09-28 (OpenSpec pass): One shared external portal is portaliq (hydra ADR-046; pipelinq change portal-contribution retires the bespoke portal); DigiD and eHerkenning login are portaliq rows sig-digid and sig-eherkenning, both specified. Owner corrected to ConductionNL/portaliq."
 		},
 		{
 			"id": "portal-visible-fields",
@@ -8121,18 +8139,18 @@
 			"espocrm": "yes",
 			"odoo-crm": "partial",
 			"kiss": "no",
-			"provider": "pipelinq",
-			"providerHow": "read in lib/Service/Portal/PortalTenantService.php:55-80 and :200-214, src/components/admin/PortalSettings.vue",
+			"provider": "portaliq",
+			"providerHow": "hydra ADR-046 makes portaliq the one external portal (menus: portaliq matrix site-menus-layout); the per tenant choice read before lives in the bespoke pipelinq portal that open change portal-contribution retires",
 			"feature": "Customer portal",
 			"featureConfidence": "medium",
 			"built": {
-				"state": "built",
+				"state": "decided-no",
 				"evidence": "each portal tenant carries enabledFeatures (lib/Service/Portal/PortalTenantService.php:62 PUBLIC_FIELDS, isFeatureEnabled) and src/portal/views/PortalDashboard.vue:123 \"all.filter((tab) => this.features.includes(tab.key))\" shows only those tabs; records are scoped to the account's own contact and delegations (PortalScopeResolver). An admin sets the tabs in the Customer portal section of the Pipelinq admin settings (src/components/admin/PortalSettings.vue, mounted by src/views/settings/Settings.vue), which reads GET /portal/api/admin/tenant-config and saves through POST /portal/api/admin/tenant-config. The choice is per tenant, not per client",
-				"owner": "ConductionNL/pipelinq",
+				"owner": "ConductionNL/portaliq",
 				"reachedOn": "portal dashboard tabs; Administration settings, Pipelinq, Customer portal",
 				"readOn": "2026-09-27"
 			},
-			"note": "the choice is per tenant, not per client",
+			"note": "the choice is per tenant, not per client. Decided no 2026-09-28 (OpenSpec pass): The missing half, a menu and record choice per client, belongs to the shared portal (hydra ADR-046, portaliq menus site-menus-layout); the bespoke pipelinq portal that holds today's per tenant choice is due to retire (open change portal-contribution). Owner corrected to ConductionNL/portaliq.",
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/inbox/manage-customer-portal-settings sets \"access permissions\", which contacts see company tickets and which properties show (Service Hub Professional, Enterprise); choosing menu items per client is not described.",
 				"pipedrive": "not checked: searched the Pipedrive knowledge base article list (https://support.pipedrive.com/en-sitemap.xml) and product updates on 2026-09-26 for a client portal and found none.",
