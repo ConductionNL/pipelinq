@@ -2810,13 +2810,13 @@
 			"feature": "Correspondence",
 			"featureConfidence": "medium",
 			"built": {
-				"state": "built",
+				"state": "specified",
 				"evidence": "lib/Service/TemplateRenderer.php:77 \"render(array $template, array $variables)\" fills {{var}} placeholders for mail templates (Templates page, src/manifest.d/75-marketing-blasts.json:16) and lib/Settings/register.d/85-berichtenbox-templates.json holds Berichtenbox message templates; no letter or document (PDF, docx) is produced for one client",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "Templates, TemplateNew, TemplateEdit",
 				"readOn": "2026-09-26"
 			},
-			"note": "templates exist for mail and Berichtenbox, not for a printable letter",
+			"note": "templates exist for mail and Berichtenbox, not for a printable letter. Specified 2026-09-28 in openspec/changes/work-letter-from-filinq-template (OpenSpec pass).",
 			"evidence": {
 				"hubspot-crm": "not checked: HubSpot has email templates, quotes and a documents library (https://knowledge.hubspot.com/documents/use-documents, Sales or Service Hub Starter and up) but no article describes generating a printable letter filled with record data (read 2026-09-26).",
 				"pipedrive": "https://support.pipedrive.com/en/article/what-features-do-the-pipedrive-plans-have Smart Docs creates documents from templates with CRM data from Google Drive, OneDrive or SharePoint (\"Included on Premium and higher plans\", add-on below); https://support.pipedrive.com/en/article/smart-docs covers templates and sharing. A letter from a template is possible; partial by the lane rule for Smart Docs. Note: Read from the web.archive.org copy (what-features-do-the-pipedrive-plans-have 2026-08-24; smart-docs 2026-05-19) because the live knowledge base answered 429.",
@@ -3443,13 +3443,13 @@
 			"feature": "Marketing",
 			"featureConfidence": "medium",
 			"built": {
-				"state": "built",
+				"state": "specified",
 				"evidence": "lib/Settings/register.d/98-marketing-campaigns.json:149 \"The portaliq form bound to the landing page. A submission on this form becomes a lead in this campaign.\" (seed example 'Webinar AI voor gemeenten', :523); lib/Service/LandingPageProvisioningService.php provisions the page. There is no event object: no date, venue, capacity, attendee list or confirmation",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "Campaigns, CampaignNew, CampaignDetail (src/manifest.d/78-marketing-campaigns.json)",
 				"readOn": "2026-09-26"
 			},
-			"note": "an event can be run as a campaign whose landing-page form turns each sign-up into a lead; registrations are not kept as attendees of an event",
+			"note": "an event can be run as a campaign whose landing-page form turns each sign-up into a lead; registrations are not kept as attendees of an event. Specified 2026-09-28 in openspec/changes/marketing-events (OpenSpec pass).",
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/integrations/use-marketing-events \"If you're organizing an in-person event, you can manually create a marketing event in HubSpot and import the list of participants\", with \"Register contacts to marketing events with workflows\" (workflows on Professional); webinar apps sync registrations. All products and plans for events. Registration from a HubSpot form needs a workflow you build.",
 				"pipedrive": "not checked: searched the Pipedrive knowledge base article list (https://support.pipedrive.com/en-sitemap.xml) and product updates on 2026-09-26 for event management and event registration and found none; web forms feed leads and deals (https://support.pipedrive.com/en/article/web-forms, LeadBooster add-on) but an event object is not described. Note: Read from the web.archive.org copy (web-forms 2026-03-11) because the live knowledge base answered 429.",
@@ -3479,7 +3479,7 @@
 			"feature": "Marketing",
 			"featureConfidence": "high",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"evidence": "src/views/templates/TemplateForm.vue:100 \"<textarea id=\\\"template-form-body-html\\\"\": a mailing template is written as HTML in a textarea; articles can be dropped in as an {{articles}} block (lib/Service/ArticleService.php), but there is no drag and drop block designer",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "nothing",
@@ -3493,7 +3493,8 @@
 				"kiss": "src/router/index.ts:126 \"const router = createRouter(\" lists the only screens: startscherm, afhandeling, contactverzoeken, personen, bedrijven, zaken, links and beheer; a grep of src/ and Kiss.Bff/ for lead, opportunit, offerte, factuur, nieuwsbrief and campagne finds no sales, marketing or invoicing code; the only rich text editor is CKEditor for news and work instructions (src/components/ckeditor/CkEditorWrapper.vue), not mailings"
 			},
 			"origin": "featureRequest",
-			"originUrl": "https://forum.espocrm.com/forum/feature-requests/61838-a-drag-and-drop-html-mail-editor-for-messages-and-templates"
+			"originUrl": "https://forum.espocrm.com/forum/feature-requests/61838-a-drag-and-drop-html-mail-editor-for-messages-and-templates",
+			"note": "Specified 2026-09-28 in openspec/changes/marketing-block-editor (OpenSpec pass)."
 		},
 		{
 			"id": "mkt-form-campaign-tags",
@@ -3510,13 +3511,13 @@
 			"feature": "Marketing",
 			"featureConfidence": "medium",
 			"built": {
-				"state": "built",
+				"state": "specified",
 				"evidence": "a portaliq landing-page submission becomes a contact, a lead with campaignId and firstTouch/lastTouch, and a touchpoint carrying the campaign (lib/Listener/LandingPageFormSubmittedListener.php:6 \"Turns a visitor's landing-page form submission into a contact, a lead\", registered at lib/AppInfo/Application.php:285; lead fields in lib/Settings/register.d/98-marketing-campaigns.json:392); nothing puts the campaign or landing page on the client record, no page shows touchpoints, and the website enquiry form (lib/Service/EnquiryIntakeService.php) keeps no UTM values",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "LeadDetail (lead fields), CampaignReportPage; not the client record",
 				"readOn": "2026-09-26"
 			},
-			"note": "kept on the lead and in the attribution log, only for portaliq landing pages",
+			"note": "kept on the lead and in the attribution log, only for portaliq landing pages. Specified 2026-09-28 in openspec/changes/marketing-campaign-on-client (OpenSpec pass).",
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/campaigns/manage-your-campaign-utm-values manages campaign UTM values (listed in the knowledge base), and contacts carry original source properties set on conversion (https://knowledge.hubspot.com/properties/hubspots-default-contact-properties); the landing page per submission sits on the form submission, not read in detail here.",
 				"pipedrive": "https://www.pipedrive.com/en/product-updates \"Capture UTM parameters automatically into hidden form fields\" and \"recording the landing page where a lead converted directly to their CRM record\"; Web Forms belong to the LeadBooster add-on (https://support.pipedrive.com/en/article/web-forms), partial by the lane rule.",
@@ -6238,11 +6239,11 @@
 			"feature": "Request intake",
 			"featureConfidence": "high",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"evidence": "no live chat found anywhere in lib/ or src/",
 				"owner": "ConductionNL/pipelinq"
 			},
-			"note": "HubSpot's free tier includes live chat and a chatbot. This is a real gap, not a rating we missed.",
+			"note": "HubSpot's free tier includes live chat and a chatbot. This is a real gap, not a rating we missed. Specified 2026-09-28 in openspec/changes/requests-web-chat-and-bot (OpenSpec pass).",
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/chatflows/create-a-live-chat \"The live chat will appear as a widget on your website pages, where visitors can start a real-time conversation with someone on your team\". All products and plans.",
 				"kiss": "no chat widget or chat channel intake in src/ or Kiss.Bff/; \"Live chat\" exists only as a channel label (src/features/contact/contactmoment/ContactmomentAfhandeling.vue:348)",
@@ -6773,13 +6774,13 @@
 			"feature": "Products",
 			"featureConfidence": "high",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"evidence": "a product has one base unitPrice, variant overrides and quantity tiers (lib/Service/ProductCatalogService.php:163 resolveTier \"highest minQuantity that is at most the quantity\"); no price list per customer group or country exists in the register (grep for priceList, customerGroup, country)",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "nothing",
 				"readOn": "2026-09-26"
 			},
-			"note": "quantity tiers only; a price list per group or country is missing",
+			"note": "quantity tiers only; a price list per group or country is missing. Specified 2026-09-28 in openspec/changes/products-price-lists (OpenSpec pass).",
 			"evidence": {
 				"hubspot-crm": "https://developers.hubspot.com/changelog/fall-2026-spotlight \"The Price Books API is now generally available for Commerce Hub Professional and Enterprise accounts\", with price books and price book items managed in app and over the API.",
 				"pipedrive": "https://support.pipedrive.com/en/article/products \"The prices tab lets you set a price for the same product in each currency you sell in\", plus price variations; a separate price list per customer group is not described. All plans.",
@@ -6861,13 +6862,13 @@
 			"feature": "Platform",
 			"featureConfidence": "medium",
 			"built": {
-				"state": "built",
+				"state": "specified",
 				"evidence": "the portal resolves a tenant per domain (lib/Service/Portal/PortalTenantService.php:107 \"resolveTenantId\"); the back office relies on OpenRegister organisations (lib/Settings/pipelinq_register.json:2750 \"owning organization for multi-tenant isolation\"), where a colleague switches the active organisation. Tickets carry no municipality field and no list shows which municipality a contact belongs to",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "portal per tenant domain; back office pages scoped by the active OpenRegister organisation",
 				"readOn": "2026-09-26"
 			},
-			"note": "several municipalities can be kept apart, but one desk cannot see them side by side with the municipality shown on each contact",
+			"note": "several municipalities can be kept apart, but one desk cannot see them side by side with the municipality shown on each contact. Specified 2026-09-28 in openspec/changes/requests-municipality-per-contact (OpenSpec pass).",
 			"evidence": {
 				"hubspot-crm": "not checked: HubSpot Brands let one account run separate brand kits (https://knowledge.hubspot.com/branding/edit-your-logo-favicon-and-brand-colors \"If you have the Brands add-on\"), but no article describes serving several organisations from one desk with each contact tagged to its organisation beyond custom properties (read 2026-09-26).",
 				"pipedrive": "not checked: searched the Pipedrive knowledge base article list (https://support.pipedrive.com/en-sitemap.xml) and product updates on 2026-09-26 for serving several organisations from one account and found none beyond visibility groups (https://support.pipedrive.com/en/article/visibility-groups) and custom fields. Note: Read from the web.archive.org copy (visibility-groups 2026-05-21) because the live knowledge base answered 429.",
@@ -6897,7 +6898,7 @@
 			"feature": "Email",
 			"featureConfidence": "medium",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"evidence": "lib/Service/EmailMatchService.php:278 \"matchAndLinkMessage\" links a user's Mail message to the matching client or contact by address or domain; lib/Service/RoutingService.php:92 suggests agents for an existing ticket by skill. Nothing reads a shared mailbox, turns mail into a ticket or routes it to a team by admin-managed rules",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "nothing",
@@ -6915,7 +6916,8 @@
 			"originRequirements": [
 				"intelligence-db requirements#174066 (Kadaster CRM, 2025-07-19: routering op basis van regels zoals e-mailadres, domein of afzendergroep, beheerd door geautoriseerde gebruikers, gelogd)",
 				"intelligence-db requirements#210381 (Gemeente Amsterdam omnichannel, 2022-03-21: inkomende e-mails intelligent doorzetten naar de juiste behandelaarsgroep)"
-			]
+			],
+			"note": "Specified 2026-09-28 in openspec/changes/requests-inbound-to-queue (OpenSpec pass)."
 		},
 		{
 			"id": "req-handover-log",
@@ -7152,13 +7154,13 @@
 			"feature": "Messaging",
 			"featureConfidence": "medium",
 			"built": {
-				"state": "built",
+				"state": "specified",
 				"evidence": "src/modals/SendMessageModal.vue:83 NcSelect \"v-model=\\\"templateId\\\"\" lets an agent answer on WhatsApp or SMS with an approved template (TemplateApprovalSyncService), opened from the Messages section on ClientDetail and ContactDetail; there are no saved replies for tickets, mail or the portal reply",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "ClientDetail and ContactDetail, Messages section, Send message",
 				"readOn": "2026-09-26"
 			},
-			"note": "templates cover messaging channels only",
+			"note": "templates cover messaging channels only. Specified 2026-09-28 in openspec/changes/messaging-saved-replies-and-resend (OpenSpec pass).",
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/conversations/use-snippets \"Snippets are short, reusable text blocks\" for emails, chats and notes (free: 3, paid: up to 5,000); help desk macros are \"prewritten responses that can be quickly applied from the reply editor\" (https://knowledge.hubspot.com/help-desk/create-and-use-macros-in-help-desk, Service Hub Professional, Enterprise).",
 				"pipedrive": "https://support.pipedrive.com/en/article/email-templates \"Email templates are one of the easiest ways to save time as a salesperson by streamlining the process of emailing clients\"; WhatsApp approved templates too (https://support.pipedrive.com/en/article/whatsapp-manage-templates). Growth and up. Note: Read from the web.archive.org copy (email-templates 2026-04-21) because the live knowledge base answered 429.",
@@ -7307,13 +7309,13 @@
 			"feature": "Messaging",
 			"featureConfidence": "medium",
 			"built": {
-				"state": "built",
+				"state": "specified",
 				"evidence": "lib/Service/WhatsAppAdapter.php:602 \"handleInboundWebhook\" stores inbound WhatsApp in channelConversation, shown on contact and client detail by src/views/messaging/MessagingConversationSection.vue (src/manifest.json:2137); a ticket's channel can be set to 'social' by hand (lib/Settings/register.d/99-unify-ticket-supertype.json:235). No inbound reader for Facebook, Instagram, X or LinkedIn messages: lib/Service/Social/ only publishes posts",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "ClientDetail and ContactDetail (Messages section); nothing puts social messages in the Queue page",
 				"readOn": "2026-09-26"
 			},
-			"note": "WhatsApp arrives but lands per contact, not in the shared queue next to mail and phone; social network direct messages are not ingested at all",
+			"note": "WhatsApp arrives but lands per contact, not in the shared queue next to mail and phone; social network direct messages are not ingested at all. Specified 2026-09-28 in openspec/changes/requests-inbound-to-queue (OpenSpec pass).",
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/chatflows/create-a-facebook-messenger-chatflow \"When you connect your Facebook Messenger account to help desk or the conversations inbox\" messages land in the same inbox as email and chat; WhatsApp connects the same way (https://knowledge.hubspot.com/help-desk/connect-a-whatsapp-channel-to-help-desk listed in the knowledge base). All products and plans for Messenger.",
 				"pipedrive": "https://support.pipedrive.com/en/article/whatsapp-send-and-manage-messages WhatsApp conversations linked to deals and contacts are handled in Pipedrive (Growth and up, beta); Facebook, Instagram or other social messaging in the same queue is not described, and the Channels API for messaging apps was deprecated from 1 February 2026 (https://developers.pipedrive.com/changelog).",
@@ -7350,7 +7352,7 @@
 			"feature": "Request intake",
 			"featureConfidence": "medium",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"evidence": "no chatbot in lib/ or src/portal/; lib/Service/NaviService.php is an analytics assistant for colleagues (\"Conversational analytics orchestrator\"), not a client-facing bot with handover",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "nothing",
@@ -7375,7 +7377,8 @@
 					"originUrl": "https://www.hubspot.com/spotlight",
 					"by": "hubspot-crm"
 				}
-			]
+			],
+			"note": "Specified 2026-09-28 in openspec/changes/requests-web-chat-and-bot (OpenSpec pass)."
 		},
 		{
 			"id": "cm-transcribe",
@@ -7604,13 +7607,13 @@
 			"feature": "Messaging",
 			"featureConfidence": "medium",
 			"built": {
-				"state": "built",
+				"state": "specified",
 				"evidence": "a failed WhatsApp or SMS is stored and flagged (lib/Service/WhatsAppAdapter.php:831 persistFailureAndAlert) and shown red on the Messages section (src/views/messaging/MessagingConversationSection.vue:319 \"status === 'failed' || status === 'expired'\"), but there is no resend button; Berichtenbox has a retry API (appinfo/routes.php:556) that no page calls; an email to a client is sent from Nextcloud Mail, whose outbox handles failed sends",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "ClientDetail and ContactDetail Messages section (status only)",
 				"readOn": "2026-09-26"
 			},
-			"note": "the failure is visible, the one click resend is not",
+			"note": "the failure is visible, the one click resend is not. Specified 2026-09-28 in openspec/changes/messaging-saved-replies-and-resend (OpenSpec pass).",
 			"evidence": {
 				"hubspot-crm": "not checked: bounces are explained for marketing email (https://knowledge.hubspot.com/marketing-email/what-is-the-difference-between-a-hard-bounce-and-a-soft-bounce listed), but a one-click resend of a failed one-to-one email is not described in the articles read (read 2026-09-26).",
 				"pipedrive": "https://www.pipedrive.com/en/product-updates \"Failed send visibility and live retry: ... tracking failed email sends and initiating one-click retries directly from deal, person, organization, project and lead detail views\".",
@@ -7719,13 +7722,13 @@
 			"feature": "Privacy",
 			"featureConfidence": "high",
 			"built": {
-				"state": "built",
+				"state": "specified",
 				"evidence": "lib/Settings/pipelinq_register.json:1516 \"x-openregister-archival\" (task, P2Y/P1Y) and lib/Settings/register.d/99-unify-ticket-supertype.json:27 (ticket, contact moments P2Y) are enforced by OpenRegister lib/BackgroundJob/ArchivalRetentionTask.php:77; lib/BackgroundJob/BrpRetentionJob.php:189 \"deleteObject(uuid: $uuid)\" for BRP person data past retentionTo. The client and contact schemas carry no archival block, so client records themselves are never disposed",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "background jobs (no page needed); tickets and tasks are the Tickets, Queue and Tasks pages",
 				"readOn": "2026-09-26"
 			},
-			"note": "contact moments, tasks and BRP data expire by themselves; client and contact records have no retention term, and request/complaint tickets are set to P100Y",
+			"note": "contact moments, tasks and BRP data expire by themselves; client and contact records have no retention term, and request/complaint tickets are set to P100Y. Specified 2026-09-28 in openspec/changes/platform-client-retention (OpenSpec pass).",
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/privacy-and-consent/manage-data-retention-policy-settings \"turn on the setting to automatically delete data\": \"Once a contact is inactive for the defined period of time, it will be deleted with the option to restore it from the recycling bin within 90 days\". All products and plans. Deletion by inactivity for contacts only, not a retention schedule per record type, and no anonymisation.",
 				"pipedrive": "not checked: searched the Pipedrive knowledge base article list (https://support.pipedrive.com/en-sitemap.xml) and product updates on 2026-09-26 for retention periods and automatic deletion or anonymisation of contacts and found none; deletion is manual with a 30 day restore window (https://support.pipedrive.com/en/article/how-can-i-delete-items-in-pipedrive). Note: Read from the web.archive.org copy (how-can-i-delete-items-in-pipedrive 2026-05-08) because the live knowledge base answered 429.",
@@ -7755,13 +7758,13 @@
 			"feature": "Platform",
 			"featureConfidence": "high",
 			"built": {
-				"state": "built",
+				"state": "specified",
 				"evidence": "pages are built on Nextcloud Vue components; tests/e2e/portal-accessibility.spec.ts:5 \"Customer-portal WCAG 2.2 AA structural accessibility checks\" (keyboard, landmarks, live regions) covers the portal only, and says the axe-core sweep is not run; no accessibility statement (toegankelijkheidsverklaring) anywhere in docs/ or the app",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "every page; portal at /apps/pipelinq/portal",
 				"readOn": "2026-09-26"
 			},
-			"note": "no published accessibility statement and no audit evidence for the back office screens",
+			"note": "no published accessibility statement and no audit evidence for the back office screens. Specified 2026-09-28 in openspec/changes/platform-accessibility-statement (OpenSpec pass).",
 			"evidence": {
 				"hubspot-crm": "https://legal.hubspot.com/website-accessibility covers HubSpot's public websites against WCAG 2.1 AA; a product VPAT exists as an older PDF (https://cdn2.hubspot.net/hubfs/2353984/KnowledgeBase%20Attachments/Voluntary%20Product%20Accessibility%20Template%20(VPAT).pdf), date and scope not confirmed. No current statement for the app itself was found.",
 				"pipedrive": "not checked: no accessibility statement or VPAT found; https://www.pipedrive.com/en/accessibility answered 404 and a web search for a Pipedrive VPAT found only third-party widgets (2026-09-26).",
@@ -7891,13 +7894,13 @@
 			"feature": "Platform",
 			"featureConfidence": "medium",
 			"built": {
-				"state": "built",
+				"state": "specified",
 				"evidence": "finished records freeze per type: a contract in a terminal state cannot transition (lib/Service/ContractService.php:152-160), a confirmed POS transaction is guarded (lib/Lifecycle/PosTransactionConfirmGuard.php), and tickets cannot be hard deleted by hand because their schema declares archival (OpenRegister ArchivalRetentionTask.php:9 \"SCHEMA_ARCHIVAL_IMMUTABLE\"). OpenRegister's lock (routes objects#lock) is a temporary edit lock, and no pipelinq page offers a lock action on a client, lead or ticket",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "ContractDetail, PosTransactionDetail, TicketDetail (implicit)",
 				"readOn": "2026-09-26"
 			},
-			"note": "no general 'lock this record' for users",
+			"note": "no general 'lock this record' for users. Specified 2026-09-28 in openspec/changes/platform-record-lock (OpenSpec pass).",
 			"evidence": {
 				"hubspot-crm": "not checked: HubSpot restricts property edit rights (https://knowledge.hubspot.com/properties/restrict-view-edit-access-for-properties, Enterprise) and pipeline rules, but no article describes locking a whole finished record against edit and delete (read 2026-09-26).",
 				"pipedrive": "https://support.pipedrive.com/en/article/read-only-fields makes custom field data \"visible to users without them being able to edit it\", and delete rights are set per permission set (https://support.pipedrive.com/en/article/how-can-i-delete-items-in-pipedrive); locking one finished record is not described. Note: Read from the web.archive.org copy (read-only-fields 2025-09-13; how-can-i-delete-items-in-pipedrive 2026-05-08) because the live knowledge base answered 429.",
@@ -8112,13 +8115,13 @@
 			"feature": "Customer portal",
 			"featureConfidence": "medium",
 			"built": {
-				"state": "built",
+				"state": "specified",
 				"evidence": "lib/Service/Portal/PortalRequestService.php presentSummary and presentDetail fix in code what a resident reads (number, subject, category, status, date, description, assignee only when the tenant allows it); :519 customerNotes shows the ticket's customerMessage and the resident's portalReplies and never the internal notes string. On TicketDetail the field 'Message to the customer' says it is shown in the portal; the rest of the set has no marker or preview there",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "portal request detail; TicketDetail field 'Message to the customer'",
 				"readOn": "2026-09-27"
 			},
-			"note": "lead: since pipelinq#2038 the handler's message to the customer is its own ticket field; the back office still has no preview of the whole resident view",
+			"note": "lead: since pipelinq#2038 the handler's message to the customer is its own ticket field; the back office still has no preview of the whole resident view. Specified 2026-09-28 in openspec/changes/portal-resident-view-preview (OpenSpec pass).",
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/inbox/manage-customer-portal-settings portal settings choose which contacts \"can see company tickets\" and \"Manage contact properties\" shown (Service Hub Professional, Enterprise, legacy portal); a preview for the agent of what the resident sees on a request is not described.",
 				"pipedrive": "not checked: searched the Pipedrive knowledge base article list (https://support.pipedrive.com/en-sitemap.xml) and product updates on 2026-09-26 for a client portal and found none.",
