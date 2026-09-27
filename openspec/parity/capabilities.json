@@ -1539,10 +1539,10 @@
 			"featureConfidence": "high",
 			"built": {
 				"state": "none",
-				"evidence": "no round robin or auto assignment of leads (grep of lib for round robin, rotation, auto assign); lib/Service/RoutingService.php:168 knows an agent's maxConcurrent cap and ranks agents for a lead, but only as a suggestion, and src/components/RoutingSuggestionPanel.vue that shows it is mounted by nothing",
+				"evidence": "no round robin or auto assignment of leads (grep of lib for round robin, rotation, auto assign); lib/Service/RoutingService.php:168 knows an agent's maxConcurrent cap and ranks agents, but only as a suggestion, and for a lead it always answers noMatch because the lead schema has no category (lib/Settings/pipelinq_register.json lead properties). The suggestion panel is mounted on tickets only (src/components/RoutingSuggestionSection.vue on TicketDetail)",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "nothing",
-				"readOn": "2026-09-26"
+				"readOn": "2026-09-27"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/workflows/assign-and-rotate-record-owners-using-workflows \"Rotate record to owner\" with \"load balanced, round robin, and random\" options for tickets and leads (Sales or Service Hub Professional, Enterprise); a cap per person applies to help desk tickets (https://knowledge.hubspot.com/help-desk/set-ticket-capacity-limits-for-users-in-help-desk), not described for leads.",
@@ -2876,17 +2876,16 @@
 			"odoo-crm": "yes",
 			"kiss": "partial",
 			"provider": "nextcloud",
-			"providerHow": "colleague status is Nextcloud user status in the header, not a pipelinq view; pipelinq's colleague list is unreached (grep of src for RoutingSuggestionPanel returns only its own file)",
+			"providerHow": "colleague status is Nextcloud user status in the header, not a pipelinq view; pipelinq ranks available colleagues for a ticket in the Suggested agents section of TicketDetail",
 			"feature": "Service desk",
 			"featureConfidence": "medium",
 			"built": {
 				"state": "built",
-				"evidence": "an agent sets only their own availability (src/views/werkplek/widgets/WerkplekHeaderActions.vue:6 WerkplekAgentStatus, lib/Service/KccWerkplekService.php:388 setAvailability); lib/Service/RoutingService.php:409 filterByAvailability ranks available colleagues, but src/components/RoutingSuggestionPanel.vue, the only caller of /api/routing/suggestions, is mounted by nothing. Nextcloud's own user status and absence show in the header contacts menu on every page",
+				"evidence": "an agent sets only their own availability (src/views/werkplek/widgets/WerkplekHeaderActions.vue:6 WerkplekAgentStatus, lib/Service/KccWerkplekService.php:388 setAvailability); lib/Service/RoutingService.php:409 filterByAvailability ranks available colleagues, shown on TicketDetail by src/components/RoutingSuggestionSection.vue (mounted through src/manifest.json TicketDetail bodyWidgets), which lists only colleagues who are available and under their cap. Nextcloud's own user status and absence show in the header contacts menu on every page",
 				"owner": "nextcloud/server",
-				"reachedOn": "KccWerkplek (own status); Nextcloud header contacts menu for colleagues' status",
-				"readOn": "2026-09-26"
+				"reachedOn": "KccWerkplek (own status); TicketDetail Suggested agents (available colleagues by skill); Nextcloud header contacts menu for colleagues' status",
+				"readOn": "2026-09-27"
 			},
-			"note": "lead: RoutingSuggestionPanel.vue (available colleagues by skill) is built but no page or modal mounts it",
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/help-desk/manage-user-availability-for-help-desk \"a user's availability status ... is set automatically based on their working hours\", with out of office hours \"reflected across both the inbox and help desk\". Service Hub Professional, Enterprise.",
 				"pipedrive": "not checked: searched the Pipedrive knowledge base article list (https://support.pipedrive.com/en-sitemap.xml) and product updates on 2026-09-26 for user availability or out of office status and found none; calendar sync shows a user's own activities (https://support.pipedrive.com/en/article/calendar-sync). Note: Read from the web.archive.org copy (calendar-sync 2026-06-28) because the live knowledge base answered 429.",

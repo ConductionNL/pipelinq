@@ -6781,6 +6781,8 @@
         "Support email": "Support email",
         "Support phone": "Support phone",
         "Tenant": "Tenant",
-        "This tenant has no saved configuration yet. The portal uses the defaults shown below until you save.": "This tenant has no saved configuration yet. The portal uses the defaults shown below until you save."
+        "This tenant has no saved configuration yet. The portal uses the defaults shown below until you save.": "This tenant has no saved configuration yet. The portal uses the defaults shown below until you save.",
+        "Assigned to {user}.": "Assigned to {user}.",
+        "Could not save the assignee.": "Could not save the assignee."
     }
 }
