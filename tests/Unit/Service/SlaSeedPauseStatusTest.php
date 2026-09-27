@@ -61,4 +61,28 @@ class SlaSeedPauseStatusTest extends TestCase {
 		// Positive control: the seeds were found.
 		$this->assertGreaterThan(0, $checked);
 	}//end testRequestPoliciesPauseOnTheTicketWaitingStatus()
+
+	/**
+	 * No seeded request policy pauses on a status the ticket cannot hold.
+	 * 'on-hold' was one: the ticket enum has no hold status, so it could never
+	 * match and only suggested a pause that does not exist.
+	 *
+	 * @return void
+	 */
+	public function testRequestPoliciesPauseOnlyOnTicketStatuses(): void {
+		$settings = dirname(__DIR__, 3) . '/lib/Settings/register.d';
+		$sla = json_decode((string)file_get_contents($settings . '/55-sla-engine.json'), true);
+		$ticket = json_decode((string)file_get_contents($settings . '/99-unify-ticket-supertype.json'), true);
+		$statuses = $ticket['components']['schemas']['ticket']['properties']['status']['enum'];
+
+		foreach ($sla['components']['objects'] as $object) {
+			if (($object['@self']['schema'] ?? '') !== 'slaPolicy' || in_array(($object['appliesTo'] ?? ''), ['request', 'complaint'], true) === false) {
+				continue;
+			}
+
+			foreach (($object['pauseConditions'] ?? []) as $pause) {
+				$this->assertContains($pause, $statuses, "{$object['@self']['slug']} pauses on '{$pause}', which no ticket can hold");
+			}
+		}
+	}//end testRequestPoliciesPauseOnlyOnTicketStatuses()
 }//end class
