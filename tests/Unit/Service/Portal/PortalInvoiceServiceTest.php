@@ -24,6 +24,7 @@ use OCA\Pipelinq\Service\Portal\PortalInvoiceService;
 use OCA\Pipelinq\Service\Portal\PortalScopeResolver;
 use OCP\AppFramework\Utility\ITimeFactory;
 use PHPUnit\Framework\TestCase;
+use OCP\IAppConfig;
 
 /**
  * Tests for the invoice read facade.
@@ -56,8 +57,8 @@ class PortalInvoiceServiceTest extends TestCase {
 	 * @return void
 	 */
 	protected function setUp(): void {
-		$this->portalRepo = new FakePortalObjectRepository();
-		$this->reader = new FakeMainRegisterReader();
+		$this->portalRepo = new FakePortalObjectRepository(InstalledAppConfig::wire($this->createMock(IAppConfig::class)));
+		$this->reader = new FakeMainRegisterReader(InstalledAppConfig::wire($this->createMock(IAppConfig::class)));
 
 		$time = $this->createMock(ITimeFactory::class);
 		$time->method('getTime')->willReturn(1000);

@@ -1539,10 +1539,10 @@
 			"featureConfidence": "high",
 			"built": {
 				"state": "none",
-				"evidence": "no round robin or auto assignment of leads (grep of lib for round robin, rotation, auto assign); lib/Service/RoutingService.php:168 knows an agent's maxConcurrent cap and ranks agents for a lead, but only as a suggestion, and src/components/RoutingSuggestionPanel.vue that shows it is mounted by nothing",
+				"evidence": "no round robin or auto assignment of leads (grep of lib for round robin, rotation, auto assign); lib/Service/RoutingService.php:168 knows an agent's maxConcurrent cap and ranks agents, but only as a suggestion, and for a lead it always answers noMatch because the lead schema has no category (lib/Settings/pipelinq_register.json lead properties). The suggestion panel is mounted on tickets only (src/components/RoutingSuggestionSection.vue on TicketDetail)",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "nothing",
-				"readOn": "2026-09-26"
+				"readOn": "2026-09-27"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/workflows/assign-and-rotate-record-owners-using-workflows \"Rotate record to owner\" with \"load balanced, round robin, and random\" options for tickets and leads (Sales or Service Hub Professional, Enterprise); a cap per person applies to help desk tickets (https://knowledge.hubspot.com/help-desk/set-ticket-capacity-limits-for-users-in-help-desk), not described for leads.",
@@ -2876,17 +2876,16 @@
 			"odoo-crm": "yes",
 			"kiss": "partial",
 			"provider": "nextcloud",
-			"providerHow": "colleague status is Nextcloud user status in the header, not a pipelinq view; pipelinq's colleague list is unreached (grep of src for RoutingSuggestionPanel returns only its own file)",
+			"providerHow": "colleague status is Nextcloud user status in the header, not a pipelinq view; pipelinq ranks available colleagues for a ticket in the Suggested agents section of TicketDetail",
 			"feature": "Service desk",
 			"featureConfidence": "medium",
 			"built": {
 				"state": "built",
-				"evidence": "an agent sets only their own availability (src/views/werkplek/widgets/WerkplekHeaderActions.vue:6 WerkplekAgentStatus, lib/Service/KccWerkplekService.php:388 setAvailability); lib/Service/RoutingService.php:409 filterByAvailability ranks available colleagues, but src/components/RoutingSuggestionPanel.vue, the only caller of /api/routing/suggestions, is mounted by nothing. Nextcloud's own user status and absence show in the header contacts menu on every page",
+				"evidence": "an agent sets only their own availability (src/views/werkplek/widgets/WerkplekHeaderActions.vue:6 WerkplekAgentStatus, lib/Service/KccWerkplekService.php:388 setAvailability); lib/Service/RoutingService.php:409 filterByAvailability ranks available colleagues, shown on TicketDetail by src/components/RoutingSuggestionSection.vue (mounted through src/manifest.json TicketDetail bodyWidgets), which lists only colleagues who are available and under their cap. Nextcloud's own user status and absence show in the header contacts menu on every page",
 				"owner": "nextcloud/server",
-				"reachedOn": "KccWerkplek (own status); Nextcloud header contacts menu for colleagues' status",
-				"readOn": "2026-09-26"
+				"reachedOn": "KccWerkplek (own status); TicketDetail Suggested agents (available colleagues by skill); Nextcloud header contacts menu for colleagues' status",
+				"readOn": "2026-09-27"
 			},
-			"note": "lead: RoutingSuggestionPanel.vue (available colleagues by skill) is built but no page or modal mounts it",
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/help-desk/manage-user-availability-for-help-desk \"a user's availability status ... is set automatically based on their working hours\", with out of office hours \"reflected across both the inbox and help desk\". Service Hub Professional, Enterprise.",
 				"pipedrive": "not checked: searched the Pipedrive knowledge base article list (https://support.pipedrive.com/en-sitemap.xml) and product updates on 2026-09-26 for user availability or out of office status and found none; calendar sync shows a user's own activities (https://support.pipedrive.com/en/article/calendar-sync). Note: Read from the web.archive.org copy (calendar-sync 2026-06-28) because the live knowledge base answered 429.",
@@ -3588,8 +3587,10 @@
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
-				"evidence": "lib/Service/Portal/PortalRequestService.php:191",
-				"owner": "ConductionNL/pipelinq"
+				"evidence": "lib/Service/Portal/PortalRequestService.php:216 submit writes a ticket with ticketType 'request' and channel 'portal' (pipelinq#2038; it used to write the retired request schema without the required ticketType), and the resident's list reads the same tickets back",
+				"owner": "ConductionNL/pipelinq",
+				"reachedOn": "customer portal, Requests (src/portal/portalRoutes.js:43)",
+				"readOn": "2026-09-27"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/inbox/set-up-a-support-portal \"To create and connect a support form, click Create a basic support form\" in the portal; customers then \"access and manage their support tickets\" and see their status there. Service Hub Professional, Enterprise.",
@@ -3615,8 +3616,10 @@
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
-				"evidence": "lib/Service/Portal/PortalRequestService.php:272",
-				"owner": "ConductionNL/pipelinq"
+				"evidence": "lib/Service/Portal/PortalRequestService.php:298 addReply appends to ticket.portalReplies and moves an awaiting_customer ticket back to in_progress; the handler sets awaiting_customer on TicketDetail (status enum in lib/Settings/register.d/99-unify-ticket-supertype.json), which is the status that shows the reply box (pipelinq#2038)",
+				"owner": "ConductionNL/pipelinq",
+				"reachedOn": "customer portal, Requests detail reply box; back office TicketDetail status",
+				"readOn": "2026-09-27"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/inbox/manage-customer-portal-settings \"When the customer logs in to their customer portal, they can reply to the ticket, and their response will appear in the selected inbox or help desk.\" Service Hub Professional, Enterprise.",
@@ -3696,8 +3699,10 @@
 			"featureConfidence": "medium",
 			"built": {
 				"state": "built",
-				"evidence": "lib/Service/Portal/PortalInvoiceService.php:77",
-				"owner": "ConductionNL/shillinq"
+				"evidence": "lib/Service/Portal/PortalInvoiceService.php:77 lists the resident's POS transactions through lib/Service/Portal/MainRegisterReader.php, which since pipelinq#2037 reads the schema id under the key the install writes (posTransaction_schema, applying SettingsLoadService::SCHEMA_CONFIG_KEYS); before that it read a bare 'posTransaction' key nothing writes and the list was always empty",
+				"owner": "ConductionNL/shillinq",
+				"reachedOn": "customer portal, Invoices tab (src/portal/views/PortalDashboard.vue:119)",
+				"readOn": "2026-09-27"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/invoices/share-created-invoices \"share them through an email, using a direct link, downloading a PDF\"; \"a link to view the invoice in their browser\". All plans for the invoices tool. The invoice is reached by a link per invoice; the support portal does not list a client's invoices.",
@@ -3804,8 +3809,10 @@
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
-				"evidence": "lib/Service/Portal/PortalTenantService.php",
-				"owner": "ConductionNL/pipelinq"
+				"evidence": "lib/Service/Portal/PortalTenantService.php resolves a tenant per custom domain or subdomain and keeps a config record per tenant; src/components/admin/PortalSettings.vue loads and saves any tenant's branding, domain and tabs by tenant id",
+				"owner": "ConductionNL/pipelinq",
+				"reachedOn": "Administration settings, Pipelinq, Customer portal (tenant field)",
+				"readOn": "2026-09-27"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/branding/manage-your-brands-with-hubspot-brands \"manage multiple brands in one HubSpot account\" (Brands add-on on Marketing Hub Enterprise); https://knowledge.hubspot.com/knowledge-base/create-multiple-knowledge-bases \"In accounts with the Brands add-on, each knowledge base is assigned to a brand based on its domain\" (Service Hub Enterprise), and portals are reached through the knowledge base. Note: Was partial; the Brands add-on gives several branded help sites in one account. Whether each brand gets its own ticket portal is not spelled out.",
@@ -7066,10 +7073,10 @@
 			"featureConfidence": "high",
 			"built": {
 				"state": "none",
-				"evidence": "no auto close for lack of reply and no warning before it: the only waiting state is the portal's 'awaiting-customer' (lib/Service/Portal/PortalRequestService.php:297), and no background job in lib/BackgroundJob closes or reminds on it",
+				"evidence": "no auto close for lack of reply and no warning before it: the waiting state is the ticket status awaiting_customer (lib/Settings/register.d/99-unify-ticket-supertype.json), and no background job in lib/BackgroundJob closes or reminds on it",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "nothing",
-				"readOn": "2026-09-26"
+				"readOn": "2026-09-27"
 			},
 			"evidence": {
 				"hubspot-crm": "not checked: no article on warning a client before a ticket closes for lack of reply; workflows could send one, but that is not documented (read 2026-09-26).",
@@ -7097,12 +7104,12 @@
 			"featureConfidence": "medium",
 			"built": {
 				"state": "building",
-				"evidence": "a portal reply flips the request back (lib/Service/Portal/PortalRequestService.php:297 \"if (($request['status'] ?? null) === 'awaiting-customer') { $request['status'] = 'in-progress'; }\"), but the ticket status enum (lib/Settings/register.d/99-unify-ticket-supertype.json:220) holds neither 'awaiting-customer' nor 'in-progress' (it has 'in_progress'), and there is no 'client wrote last' marker or list for mail",
+				"evidence": "a portal reply moves an awaiting_customer ticket back to in_progress (lib/Service/Portal/PortalRequestService.php:298, pipelinq#2038), so the status now says the handler is up; there is no 'client wrote last' marker or list, and a reply by mail does not move it",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "nothing",
-				"readOn": "2026-09-26"
+				"readOn": "2026-09-27"
 			},
-			"note": "lead: the portal writes status values ('awaiting-customer', 'in-progress') that the unified ticket schema does not allow, and reads config key 'request' after the request schema was folded into ticket",
+			"note": "lead: the waiting status exists since pipelinq#2038; what is missing is a list or marker of tickets where the client wrote last",
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/help-desk/set-ticket-capacity-limits-for-users-in-help-desk ticket statuses include \"Waiting on internal or Waiting on contact\", and help desk views filter tickets (https://knowledge.hubspot.com/help-desk/customize-views-in-the-left-sidebar-of-help-desk). Service Hub Professional, Enterprise. Status is set by the agent; an automatic last-writer view is not described.",
 				"pipedrive": "not checked: searched the Pipedrive knowledge base article list (https://support.pipedrive.com/en-sitemap.xml) and product updates on 2026-09-26 for a view of threads where the client wrote last and found none; https://www.pipedrive.com/en/product-updates shows thread status for drafts and scheduled mail only.",
@@ -8085,12 +8092,12 @@
 			"featureConfidence": "medium",
 			"built": {
 				"state": "built",
-				"evidence": "lib/Service/Portal/PortalRequestService.php:444 presentSummary and :464 presentDetail fix in code what a resident reads (number, subject, category, status, date, description, assignee only when the tenant allows it, notes with visibility 'customer'); the back office shows no marker or preview of that set on TicketDetail",
+				"evidence": "lib/Service/Portal/PortalRequestService.php presentSummary and presentDetail fix in code what a resident reads (number, subject, category, status, date, description, assignee only when the tenant allows it); :519 customerNotes shows the ticket's customerMessage and the resident's portalReplies and never the internal notes string. On TicketDetail the field 'Message to the customer' says it is shown in the portal; the rest of the set has no marker or preview there",
 				"owner": "ConductionNL/pipelinq",
-				"reachedOn": "portal request detail; nothing in the back office",
-				"readOn": "2026-09-26"
+				"reachedOn": "portal request detail; TicketDetail field 'Message to the customer'",
+				"readOn": "2026-09-27"
 			},
-			"note": "lead: customerNotes() (:486) expects ticket.notes to be an array of notes with a visibility flag, but the ticket schema declares notes as a string (lib/Settings/register.d/99-unify-ticket-supertype.json:346), so no note can ever reach the resident",
+			"note": "lead: since pipelinq#2038 the handler's message to the customer is its own ticket field; the back office still has no preview of the whole resident view",
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/inbox/manage-customer-portal-settings portal settings choose which contacts \"can see company tickets\" and \"Manage contact properties\" shown (Service Hub Professional, Enterprise, legacy portal); a preview for the agent of what the resident sees on a request is not described.",
 				"pipedrive": "not checked: searched the Pipedrive knowledge base article list (https://support.pipedrive.com/en-sitemap.xml) and product updates on 2026-09-26 for a client portal and found none.",
@@ -8112,17 +8119,17 @@
 			"odoo-crm": "partial",
 			"kiss": "no",
 			"provider": "pipelinq",
-			"providerHow": "read in lib/Service/Portal/PortalTenantService.php:55-80 and :200-214, grep of src for tenant-config",
+			"providerHow": "read in lib/Service/Portal/PortalTenantService.php:55-80 and :200-214, src/components/admin/PortalSettings.vue",
 			"feature": "Customer portal",
 			"featureConfidence": "medium",
 			"built": {
 				"state": "built",
-				"evidence": "each portal tenant carries enabledFeatures (lib/Service/Portal/PortalTenantService.php:62 PUBLIC_FIELDS, :210 isFeatureEnabled) and src/portal/views/PortalDashboard.vue:123 \"all.filter((tab) => this.features.includes(tab.key))\" shows only those tabs; records are scoped to the account's own contact and delegations (PortalScopeResolver). The choice is per tenant, not per client, and is set only through POST /portal/api/admin/tenant-config (appinfo/routes.php:395), which no page in src/ calls",
+				"evidence": "each portal tenant carries enabledFeatures (lib/Service/Portal/PortalTenantService.php:62 PUBLIC_FIELDS, isFeatureEnabled) and src/portal/views/PortalDashboard.vue:123 \"all.filter((tab) => this.features.includes(tab.key))\" shows only those tabs; records are scoped to the account's own contact and delegations (PortalScopeResolver). An admin sets the tabs in the Customer portal section of the Pipelinq admin settings (src/components/admin/PortalSettings.vue, mounted by src/views/settings/Settings.vue), which reads GET /portal/api/admin/tenant-config and saves through POST /portal/api/admin/tenant-config. The choice is per tenant, not per client",
 				"owner": "ConductionNL/pipelinq",
-				"reachedOn": "portal dashboard tabs; no admin screen",
-				"readOn": "2026-09-26"
+				"reachedOn": "portal dashboard tabs; Administration settings, Pipelinq, Customer portal",
+				"readOn": "2026-09-27"
 			},
-			"note": "lead: the portal tenant configuration has an admin API but no settings screen",
+			"note": "the choice is per tenant, not per client",
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/inbox/manage-customer-portal-settings sets \"access permissions\", which contacts see company tickets and which properties show (Service Hub Professional, Enterprise); choosing menu items per client is not described.",
 				"pipedrive": "not checked: searched the Pipedrive knowledge base article list (https://support.pipedrive.com/en-sitemap.xml) and product updates on 2026-09-26 for a client portal and found none.",

@@ -2288,6 +2288,21 @@
 						"gridWidth": 6,
 						"gridHeight": 3
 					}
+				],
+				"_bodyWidgetsNote": "Suggested colleagues (pipelinq#2039): RoutingSuggestionSection mounts RoutingSuggestionPanel for this ticket and writes the chosen colleague into its assignee. The panel was built but mounted by nothing, so the skill, availability and workload ranking was reachable only by calling the API by hand.",
+				"bodyWidgets": [
+					{
+						"id": "routing-suggestions",
+						"component": "RoutingSuggestionSection",
+						"title": "Suggested agents",
+						"placement": "end",
+						"props": {
+							"objectId": "@objectId",
+							"category": "@object.category",
+							"entityType": "request",
+							"objectType": "ticket"
+						}
+					}
 				]
 			}
 		},
