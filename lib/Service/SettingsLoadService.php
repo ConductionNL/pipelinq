@@ -295,9 +295,14 @@ class SettingsLoadService {
 	 *   until a migration ships" TRUE: intent alone does not hold a derived key
 	 *   still, because the key is computed from the very slug that moved.
 	 *
+	 * Public because a reader that looks a schema id up by slug must apply the
+	 * same pin: the customer portal read `crmPortalAccount_schema` while the
+	 * install wrote `portalAccount_schema`, and no resident could log in
+	 * (pipelinq#2037).
+	 *
 	 * @var array<string, string>
 	 */
-	private const SCHEMA_CONFIG_KEYS = [
+	public const SCHEMA_CONFIG_KEYS = [
 		'slaPolicy' => 'sla_policy_schema',
 		'slaBreachEvent' => 'sla_breach_event_schema',
 		'customerLoyaltyAccount' => 'klantLoyaltyAccount_schema',
@@ -341,24 +346,6 @@ class SettingsLoadService {
 	];
 
 	/**
-	 * The app-config key the install writes a schema's id under.
-	 *
-	 * The pinned key from {@see SCHEMA_CONFIG_KEYS} where the slug is pinned,
-	 * `<slug>_schema` otherwise. Every reader that looks a schema id up by slug
-	 * goes through here, so a reader cannot drift from what the install wrote
-	 * (the customer portal did, and could not log anyone in: pipelinq#2037).
-	 *
-	 * @param string $slug The schema slug.
-	 *
-	 * @return string The app-config key.
-	 *
-	 * @spec exclude install plumbing: the key contract between the register import and its readers
-	 */
-	public static function schemaConfigKey(string $slug): string {
-		return (self::SCHEMA_CONFIG_KEYS[$slug] ?? "{$slug}_schema");
-	}//end schemaConfigKey()
-
-	/**
 	 * Store the imported schema ids in app config.
 	 *
 	 * Keys come from {@see SCHEMA_CONFIG_KEYS} where the slug is pinned, and are
@@ -375,7 +362,7 @@ class SettingsLoadService {
 				continue;
 			}
 
-			$key = self::schemaConfigKey(slug: $slug);
+			$key = (self::SCHEMA_CONFIG_KEYS[$slug] ?? "{$slug}_schema");
 			$this->appConfig->setValueString(Application::APP_ID, $key, (string)$schemaMap[$slug]);
 		}
 	}//end applySchemaConfig()

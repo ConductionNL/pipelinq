@@ -113,7 +113,7 @@ class PortalObjectRepository {
 	public function schemaId(string $schemaSlug): string {
 		$schema = $this->appConfig->getValueString(
 			Application::APP_ID,
-			SettingsLoadService::schemaConfigKey(slug: $schemaSlug),
+			(SettingsLoadService::SCHEMA_CONFIG_KEYS[$schemaSlug] ?? $schemaSlug . '_schema'),
 			''
 		);
 		if ($schema === '') {
