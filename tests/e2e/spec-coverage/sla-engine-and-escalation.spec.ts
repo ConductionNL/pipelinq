@@ -35,10 +35,11 @@
  *
  * WHAT THE CI INSTANCE HAS. `tests/e2e/ci-seed.sh` force-imports the register,
  * which brings in `lib/Settings/register.d/55-sla-engine.json`: the `sla`
- * register, the `slaPolicy` + `slaBreachEvent` schemas and FOUR seeded policies
+ * register, the `slaPolicy` + `slaBreachEvent` schemas and THREE seeded policies
  * — "Standaard request-SLA" (appliesTo request, tier *, priority 100),
- * "Goud-tier klant-SLA" (request/gold, priority 10), "AVG datalek-klacht SLA"
- * (klacht, priority 5) and "Standaard callback-SLA". Every literal asserted
+ * "Goud-tier klant-SLA" (request/gold, priority 10) and "AVG datalek-klacht SLA"
+ * (klacht, priority 5). The callback policy was dropped with pipelinq#2051: no
+ * register declares a callback schema, so it could never apply. Every literal asserted
  * below was read out of that file and re-measured against a live instance, not
  * guessed. There are NO seeded `slaBreachEvent` rows.
  *
@@ -395,7 +396,6 @@ test('a policy write without a justification is refused and persists nothing', a
 		'Standaard request-SLA',
 		'Goud-tier klant-SLA',
 		'AVG datalek-klacht SLA',
-		'Standaard callback-SLA',
 	]) {
 		expect(names, `seeded SLA policy "${expected}" is missing`).toContain(
 			expected,

@@ -2149,8 +2149,9 @@
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
-				"evidence": "lib/Service/SlaEngineService.php:216",
-				"owner": "ConductionNL/pipelinq"
+				"evidence": "lib/Service/SlaEngineService.php:216; armed on tickets by lib/Listener/SlaObjectCreatedListener.php, which maps the ticket's ticketType to the policy type (tests/Unit/Listener/SlaObjectUpdatedListenerTest.php testACreatedTicketResolvesItsPolicyByTicketType, pipelinq#2051)",
+				"owner": "ConductionNL/pipelinq",
+				"readOn": "2026-09-27"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/help-desk/set-sla-goals-in-help-desk SLA goals for response and resolution times; \"To define specific time zones and scheduled hours for when SLAs should apply\", adding \"Time to Close SLA Due Date\" to each ticket. Service Hub Professional, Enterprise.",
@@ -2203,8 +2204,9 @@
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
-				"evidence": "lib/Service/SlaEngineService.php:334",
-				"owner": "ConductionNL/pipelinq"
+				"evidence": "lib/Service/SlaEngineService.php:334; armed on tickets by lib/Listener/SlaObjectCreatedListener.php, which maps the ticket's ticketType to the policy type (tests/Unit/Listener/SlaObjectUpdatedListenerTest.php testACreatedTicketResolvesItsPolicyByTicketType, pipelinq#2051)",
+				"owner": "ConductionNL/pipelinq",
+				"readOn": "2026-09-27"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/help-desk/set-sla-goals-in-help-desk \"you can create a workflow that notifies users when a ticket is nearing a Due soon or Overdue state\" using the SLA status property as the enrollment trigger, and the workflow can reassign. Service Hub Professional, Enterprise.",
@@ -2230,9 +2232,9 @@
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
-				"evidence": "lib/Service/SlaEngineService.php:404",
+				"evidence": "lib/Service/SlaEngineService.php:404 pauses the clock; lib/Listener/SlaObjectUpdatedListener.php applies it when a ticket (ticketType request or complaint) moves to a policy pause status, the seeded request policies pausing on awaiting_customer and resuming on in_progress (tests/Unit/Listener/SlaObjectUpdatedListenerTest.php testATicketPausesOnAwaitingCustomerAndResumesOnInProgress, pipelinq#2051)",
 				"owner": "ConductionNL/pipelinq",
-				"readOn": "2026-09-26"
+				"readOn": "2026-09-27"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/help-desk/set-sla-goals-in-help-desk \"In the Pausing section, you can set conditions that temporarily pause the SLA timer. For example, you might pause the timer when a ticket is on hold or waiting for a customer response.\" Service Hub Professional, Enterprise. Note: Was partial; pause conditions are documented.",
