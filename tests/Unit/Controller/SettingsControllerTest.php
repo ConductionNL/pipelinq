@@ -138,4 +138,65 @@ class SettingsControllerTest extends TestCase {
 		$this->assertArrayNotHasKey(key: 'apiTokens', array: $data);
 		$this->assertArrayNotHasKey(key: 'oauthConfig', array: $data);
 	}//end testIndexExcludesRemovedTokenAndOauthMaps()
+
+	/**
+	 * A re-import that OpenRegister completed without rejecting anything is a success.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/admin-settings/spec.md
+	 */
+	public function testReimportReportsSuccessWhenNothingWasRejected(): void {
+		$this->settingsService->method('loadSettings')->with(true)->willReturn([
+			'registers' => [['id' => 18]],
+			'schemas' => [['id' => 47], ['id' => 72]],
+			'failed' => ['schemas' => []],
+		]);
+		$this->settingsService->method('getSettings')->willReturn(['register' => '18']);
+
+		$data = $this->controller->reimport()->getData();
+
+		$this->assertTrue(condition: $data['success']);
+		$this->assertSame(expected: 'Configuration re-imported successfully', actual: $data['message']);
+		$this->assertSame(expected: 2, actual: $data['result']['schemas']);
+		$this->assertSame(expected: [], actual: $data['result']['rejectedSchemas']);
+	}//end testReimportReportsSuccessWhenNothingWasRejected()
+
+	/**
+	 * A schema OpenRegister refused is a failed re-import, and the response names it.
+	 *
+	 * Regression for 2026-09-26: sixteen schemas were rejected for a missing
+	 * slug and the endpoint still answered "re-imported successfully".
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/admin-settings/spec.md
+	 */
+	public function testReimportNamesTheSchemasOpenRegisterRejected(): void {
+		$this->settingsService->method('loadSettings')->willReturn([
+			'registers' => [['id' => 18]],
+			'schemas' => [['id' => 47]],
+			'failed' => [
+				'schemas' => [
+					['key' => 'partyFieldSet', 'slug' => 'partyFieldSet', 'error' => "imported schema fragment is missing a 'slug'"],
+					['key' => 'survey', 'slug' => 'survey', 'error' => "imported schema fragment is missing a 'slug'"],
+				],
+			],
+		]);
+		$this->settingsService->method('getSettings')->willReturn([]);
+
+		$response = $this->controller->reimport();
+		$data = $response->getData();
+
+		$this->assertSame(expected: 200, actual: $response->getStatus());
+		$this->assertFalse(condition: $data['success']);
+		// The l10n double returns the untranslated template, so the message is
+		// checked for being the rejection template, not for the substituted slugs.
+		$this->assertStringContainsString(needle: 'rejected %1$s schema(s): %2$s', haystack: $data['message']);
+		$this->assertSame(
+			expected: ['partyFieldSet', 'survey'],
+			actual: array_column($data['result']['rejectedSchemas'], 'slug')
+		);
+		$this->assertStringContainsString(needle: 'missing a', haystack: $data['result']['rejectedSchemas'][0]['error']);
+	}//end testReimportNamesTheSchemasOpenRegisterRejected()
 }//end class

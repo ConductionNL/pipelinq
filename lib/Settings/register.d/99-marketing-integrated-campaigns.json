@@ -424,6 +424,7 @@
 				}
 			},
 			"blast": {
+    "slug": "blast",
 				"version": "1.2.0",
 				"description": "A blast is one campaign send. A journey that sends a mailing records its deliveries against a blast of its own, so the click redirect, the unsubscribe link and the campaign report keep working on a journey send without a second code path. journeyId is empty on every blast a person composed.",
 				"properties": {

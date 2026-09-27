@@ -687,14 +687,19 @@ export default {
 
 				const data = await response.json()
 
+				// The import ran even when a schema was rejected, so the
+				// config it returns is current either way.
+				if (data.config) {
+					this.config = data.config
+				}
 				if (data.success) {
-					this.config = data.config || {}
 					this.message = t(
 						'pipelinq',
 						'Configuration re-imported successfully',
 					)
 					this.messageType = 'success'
 				} else {
+					// The server names the rejected schemas in its message.
 					this.message = data.message || t('pipelinq', 'Re-import failed')
 					this.messageType = 'error'
 				}

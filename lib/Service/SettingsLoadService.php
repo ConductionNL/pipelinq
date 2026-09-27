@@ -50,6 +50,13 @@ class SettingsLoadService {
 		'partyFieldSet',
 		'partyIndicator',
 		'partyIndicatorValue',
+		// The party kind vocabulary (party-kinds-accepted-per-case-type).
+		// PartyKindRegistryService, PartyLinkService and the SeedPartyKinds
+		// repair step read these three keys; until 2026-09-27 nothing wrote
+		// them, because the slugs were not listed here.
+		'partyKind',
+		'partyKindAcceptance',
+		'partyLink',
 		// Anonymous website intake (website-enquiry). An enquiry is what a
 		// visitor sends before a client exists, so it deliberately does NOT
 		// reuse `lead`: lead requires `client` and `pipeline`, and neither is
@@ -161,6 +168,23 @@ class SettingsLoadService {
 		'berichtenboxTemplate',
 		'mailboxResolution',
 		'deliveryAuditLog',
+		// Customer satisfaction, closed loop (customer-satisfaction-closed-loop).
+		// SurveyDispatchService, SurveyResponseService and
+		// DetractorFollowUpService read the invitation and response keys.
+		'survey',
+		'surveyInvitation',
+		'surveyResponse',
+		// Programme portfolio (programme-portfolio). `deliveryProgramme` maps to
+		// the persisted `programme_schema` key in SCHEMA_CONFIG_KEYS; the
+		// ProgrammeController and the portfolio and estimation services read
+		// the task, work item and cycle keys.
+		'deliveryProgramme',
+		'programmeTask',
+		'programmeTeamMember',
+		'programmeWorkItem',
+		'estimationScale',
+		'programmeEstimate',
+		'programmeCycle',
 	];
 
 	/**

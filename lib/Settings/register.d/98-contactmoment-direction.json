@@ -3,6 +3,7 @@
   "components": {
     "schemas": {
       "ticket": {
+        "slug": "ticket",
         "properties": {
           "direction": {
             "type": "string",

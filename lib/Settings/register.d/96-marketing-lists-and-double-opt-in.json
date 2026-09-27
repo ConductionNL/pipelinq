@@ -245,6 +245,7 @@
         }
       },
       "consentRecord": {
+        "slug": "consentRecord",
         "version": "1.1.0",
         "description": "ConsentRecord is the source of truth for whether a Contact may be sent marketing on a given channel. LawfulBasis records the GDPR Art. 6 basis used at capture (consent | legitimate-interest | contract | soft-opt-in); consentSource describes the capture mechanism (web-form, double-opt-in, import, etc.). WithdrawnAt + withdrawnReason close the consent. SoftBounceCount counts consecutive soft bounces (5 triggers automatic withdrawal: member 03 owns the rule). A record with a listId gates sends to that mailing list only; a record without one is the channel-wide record the Segment path consults, so a list subscription and a channel consent share one ledger. One record per (contactId, channel, listId).",
         "properties": {
@@ -312,6 +313,7 @@
         }
       },
       "blast": {
+        "slug": "blast",
         "version": "1.1.0",
         "description": "A Blast is one campaign send. It binds an AUDIENCE (a Segment, which is a saved query over people the tenant already holds, or a mailingList, which is something a person joined) to a CampaignTemplate for a single channel, with optional scheduling, A/B split, and rolling delivery totals. Exactly one of segmentId and listId is set. abVariantOf links a child variant to its parent A blast; abSplitPercent on the parent records the audience split (0-100). totals is an aggregated counter map updated by BlastDelivery state changes. See ADR-000 and the marketing-blast spec.",
         "properties": {
@@ -323,6 +325,7 @@
         }
       },
       "blastDelivery": {
+        "slug": "blastDelivery",
         "version": "1.1.0",
         "description": "A BlastDelivery is one message to one recipient. When the blast targets a mailing list the row carries the first-party unsubscribe link minted for that membership, so the rendered mail points at Pipelinq rather than at the provider. See the marketing-lists spec.",
         "properties": {

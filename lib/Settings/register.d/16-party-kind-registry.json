@@ -3,6 +3,7 @@
   "components": {
     "schemas": {
       "partyKind": {
+        "slug": "partyKind",
         "title": "Party kind",
         "type": "object",
         "description": "One kind of party: aanvrager, gemachtigde, belanghebbende, melder. A consuming app declares none of its own and ships no list of them.",
@@ -55,6 +56,7 @@
         }
       },
       "partyKindAcceptance": {
+        "slug": "partyKindAcceptance",
         "title": "Party kind acceptance",
         "type": "object",
         "description": "Which party kinds one record type of one consuming app accepts, in the order the consuming app declared them. The declaration is the consuming app's policy; the object is pipelinq's.",
@@ -76,6 +78,7 @@
         }
       },
       "partyLink": {
+        "slug": "partyLink",
         "title": "Party link",
         "type": "object",
         "description": "One party on one record under one kind. Where an acceptance exists for the record's type, a kind it does not name is refused on every write path alike: the picker, an import, an API call and a flow. Where no acceptance is declared, nothing is refused, so an app that has declared nothing keeps working.",
