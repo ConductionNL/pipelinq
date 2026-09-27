@@ -145,6 +145,31 @@ class PortalTenantService {
 	}//end getConfig()
 
 	/**
+	 * The full admin view of a tenant's config: the stored record, or the
+	 * defaults the portal applies when no record exists yet.
+	 *
+	 * The admin screen reads this before it saves, because saveConfig()
+	 * replaces the whole record: an admin who could not read the current
+	 * values back would overwrite them blind.
+	 *
+	 * @param string $tenantId The tenant id.
+	 *
+	 * @return array{config: array<string, mixed>, configured: bool} The config and whether it is stored.
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
+	 */
+	public function getAdminConfig(string $tenantId): array {
+		$stored = $this->getConfig(tenantId: $tenantId);
+		if ($stored === null) {
+			return ['config' => $this->defaults(tenantId: $tenantId), 'configured' => false];
+		}
+
+		return ['config' => $stored, 'configured' => true];
+	}//end getAdminConfig()
+
+	/**
 	 * The client-safe public branding for a tenant (no admin/security fields).
 	 *
 	 * @param string $tenantId The tenant id.

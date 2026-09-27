@@ -78,6 +78,25 @@ class PortalAdminController extends Controller {
 	}//end __construct()
 
 	/**
+	 * Read the full tenant config for the admin screen (stored record or defaults).
+	 *
+	 * @auth admin-only Returns admin-only tenant fields (MFA, widget origins, domains); the body additionally enforces it through adminGuarded().
+	 *
+	 * @return JSONResponse `{config, configured}`, or an error.
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
+	 */
+	public function getConfig(): JSONResponse {
+		return $this->adminGuarded(
+			handler: function (): array {
+				return [$this->tenant->getAdminConfig(tenantId: $this->tenantId()), Http::STATUS_OK];
+			}
+		);
+	}//end getConfig()
+
+	/**
 	 * Save tenant config (contrast-validated).
 	 *
 	 * @auth admin-only Writes tenant-wide portal configuration; the body additionally enforces it through adminGuarded().
