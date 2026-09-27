@@ -25,7 +25,7 @@
     "test:e2e:install": "playwright install chromium",
     "check:manifest": "node scripts/check-manifest.js",
     "check:spec-links": "node scripts/check-spec-links.js",
-  "check:e2e-nav": "node scripts/check-e2e-navigation.js",
+    "check:e2e-nav": "node scripts/check-e2e-navigation.js",
     "format": "prettier --check \"**/*.{js,ts,vue,css,scss}\"",
     "format:fix": "prettier --write \"**/*.{js,ts,vue,css,scss}\"",
     "prepare": "git config core.hooksPath .githooks || true",
@@ -36,7 +36,7 @@
     "extends @nextcloud/browserslist-config"
   ],
   "dependencies": {
-    "@conduction/nextcloud-vue": "^2.56.0",
+    "@conduction/nextcloud-vue": "^2.57.1",
     "@nextcloud/axios": "~2.6.0",
     "@nextcloud/capabilities": "^1.2.1",
     "@nextcloud/dialogs": "^7.4.1",
