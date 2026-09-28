@@ -1607,13 +1607,13 @@
 			"feature": "Automation",
 			"featureConfidence": "medium",
 			"built": {
-				"state": "built",
+				"state": "specified",
 				"evidence": "the Flows and FlowDetail pages (src/manifest.json, type flow, OpenRegister flow engine per lib/Flow/PipelinqFlowNodeListener.php:4-9) can trigger on a lead and set a field with OpenRegister's SetFieldsNode; but the lead schema has no label or colour field (title, source, value, probability, priority, stage, status, ...), and system tags (lib/Service/SystemTagService.php:80) are kept for other object types",
 				"owner": "ConductionNL/openregister",
 				"reachedOn": "Flows, FlowDetail",
 				"readOn": "2026-09-26"
 			},
-			"note": "a rule can set priority or another field, not a coloured label",
+			"note": "a rule can set priority or another field, not a coloured label. Specified in ConductionNL/openregister openspec/changes/flow-tag-object-step (openregister lane, OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"hubspot-crm": "https://developers.hubspot.com/changelog/fall-2026-spotlight \"Object tags are colored labels automatically applied to records that match criteria you define, for example a 'Large deal' tag on any deal over $10,000\"; \"Available for Sales Hub and Service Hub Starter and up\".",
 				"pipedrive": "https://support.pipedrive.com/en/article/workflow-automation automations can update a deal when it matches conditions (Growth and up), which can set a deal label (https://support.pipedrive.com/en/article/deal-labels); automatic rule-based labels as a feature are not described. Note: Read from the web.archive.org copy (workflow-automation 2026-07-27; deal-labels 2026-07-27) because the live knowledge base answered 429.",
@@ -2854,13 +2854,13 @@
 			"feature": "My work",
 			"featureConfidence": "medium",
 			"built": {
-				"state": "built",
+				"state": "specified",
 				"evidence": "CnIndexPage keeps filters, search and sort in the route query so a filtered list can be shared as a link; its saved-views control (nextcloud-vue 2.57.1 src/components/CnIndexPage/CnIndexPage.vue:112-117 CnSavedViewsControl) is opt-in via allowSavedViews, default false (:1720-1722), and no page in src/manifest.json or src/manifest.d sets it (grep at development cfe0a0a51). src/services/viewService.js reads OpenRegister views only to pick a pipeline's source in PipelineFormDialog",
 				"owner": "ConductionNL/nextcloud-vue",
 				"reachedOn": "any index page (shareable URL only); save-view control reached on nothing",
 				"readOn": "2026-09-28"
 			},
-			"note": "lead: the shared saved-views control is one manifest flag away (allowSavedViews) on Clients, Tickets, Leads and Tasks. Re-read 2026-09-28 (OpenSpec pass, wave-5 correction round 6): rating partial holds at nextcloud-vue 2.57.1; evidence refreshed from 2.56.0.",
+			"note": "lead: the shared saved-views control is one manifest flag away (allowSavedViews) on Clients, Tickets, Leads and Tasks. Re-read 2026-09-28 (OpenSpec pass, wave-5 correction round 6): rating partial holds at nextcloud-vue 2.57.1; evidence refreshed from 2.56.0. Specified in ConductionNL/nextcloud-vue openspec/changes/saved-views-shared-by-role (nextcloud-vue lane, OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/object-settings/set-default-index-page-views \"Manage all saved index page view tabs in one place ... suggest view tabs for all users in the account\"; saved filtered views are shared with users and teams. All products and plans.",
 				"pipedrive": "https://support.pipedrive.com/en/article/filtering \"When creating a new filter in Pipedrive, you can choose whether the filter will be shared with other users or remain private. Shared filters are visible to all users\"; https://www.pipedrive.com/en/product-updates adds sharing quick-filter results by URL. All plans. Note: Read from the web.archive.org copy (filtering 2026-04-18) because the live knowledge base answered 429.",
@@ -2921,7 +2921,7 @@
 			"feature": "My work",
 			"featureConfidence": "medium",
 			"built": {
-				"state": "built",
+				"state": "specified",
 				"evidence": "a ticket or lead has one assignee (lib/Settings/register.d/99-unify-ticket-supertype.json:210); colleagues can be given work on it through the detail sidebar's Tasks tab (nextcloud-vue CnObjectSidebar, 'Files, Notes, Tags, Tasks, and Audit Trail tabs'), but no followers, watchers or participants field exists, so nobody else is told about updates",
 				"owner": "ConductionNL/openregister",
 				"reachedOn": "TicketDetail, LeadDetail sidebar Tasks tab",
@@ -2935,7 +2935,8 @@
 				"kiss": "a contactverzoek is assigned to one department, group or colleague (src/features/contact/contactverzoek/formulier/ContactverzoekFormulier.vue:13 to 35 ActorType radios); KISS has no followers or co-workers on a case, and zaken are read only"
 			},
 			"origin": "changelog",
-			"originUrl": "https://github.com/espocrm/espocrm/issues/3584"
+			"originUrl": "https://github.com/espocrm/espocrm/issues/3584",
+			"note": "Specified in ConductionNL/openregister openspec/changes/object-watchers (openregister lane, OpenSpec pass 2026-09-27)."
 		},
 		{
 			"id": "work-calendar-feed",
@@ -7794,13 +7795,13 @@
 			"feature": "Platform",
 			"featureConfidence": "medium",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"evidence": "the shared form (nextcloud-vue v2.56.0 src/components/CnFormDialog/CnFormDialog.vue:1908 \"fieldVisible\") hides a field on a condition only when a field descriptor carries condition/visibleWhen, and src/utils/schema.js does not derive one from a schema property (it maps only x-openregister-readonly-when, :688). No pipelinq manifest page declares a condition, and no admin screen lets one be set",
 				"owner": "ConductionNL/nextcloud-vue",
 				"reachedOn": "nothing",
 				"readOn": "2026-09-26"
 			},
-			"note": "conditional read-only exists at schema level (x-openregister-readonly-when); show, hide and validate on another field's value needs a developer",
+			"note": "conditional read-only exists at schema level (x-openregister-readonly-when); show, hide and validate on another field's value needs a developer. Specified in ConductionNL/nextcloud-vue openspec/changes/form-conditions-from-schema (nextcloud-vue lane, OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/properties/set-up-conditional-logic-for-enumeration-properties \"Use conditional property logic to control when additional properties should display or require a value based on a user's previous input\"; https://knowledge.hubspot.com/properties/set-up-conditional-options-for-properties limits options by a controlling property. Marketing, Sales, Service or Data Hub Professional, Enterprise.",
 				"pipedrive": "https://support.pipedrive.com/en/article/required-fields \"you can select which pipelines and stages your field will be required for\" (Premium and up per https://support.pipedrive.com/en/article/what-features-do-the-pipedrive-plans-have, pipeline-specific fields too); showing or hiding a field based on another field's value is not described. Note: Read from the web.archive.org copy (required-fields 2026-05-19; what-features-do-the-pipedrive-plans-have 2026-08-24) because the live knowledge base answered 429.",
@@ -7926,7 +7927,7 @@
 			"feature": "Platform",
 			"featureConfidence": "medium",
 			"built": {
-				"state": "built",
+				"state": "specified",
 				"evidence": "OpenRegister keeps deleted objects and restores them (openregister appinfo/routes.php:1432 'deleted#restore', :1433 'deleted#restoreMultiple', UI in openregister src/store/modules/deleted.js); no pipelinq page reaches it, and restoring what a cascade deleted with the record is a manual multi-select",
 				"owner": "ConductionNL/openregister",
 				"reachedOn": "OpenRegister's deleted objects page, not a pipelinq page",
@@ -7940,7 +7941,8 @@
 				"kiss": "KISS deletes no client or contact data; beheer items (news, links, kanalen, forms) are deleted outright after a confirm (docs/manual/formulieren.md:85 \"Weet u zeker dat u dit contactformulier wilt verwijderen?\"), except skills which are only hidden (docs/manual/voorbeelddata.md:7); no restore screen exists"
 			},
 			"origin": "changelog",
-			"originUrl": "https://github.com/espocrm/espocrm/issues/3603"
+			"originUrl": "https://github.com/espocrm/espocrm/issues/3603",
+			"note": "Specified in ConductionNL/openregister openspec/changes/records-restore-with-cascade (openregister lane, OpenSpec pass 2026-09-27)."
 		},
 		{
 			"id": "plat-work-offline",
