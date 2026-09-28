@@ -59,6 +59,7 @@ use OCA\Pipelinq\Listener\PosTransactionCompletedListener;
 use OCA\Pipelinq\Listener\SchemaChangeListener;
 use OCA\Pipelinq\Listener\SlaObjectCreatedListener;
 use OCA\Pipelinq\Listener\SlaObjectUpdatedListener;
+use OCA\Pipelinq\Listener\SurveyDispatchListener;
 use OCA\Pipelinq\Listener\TimeApprovalListener;
 use OCA\Pipelinq\Mcp\PipelinqScannableServices;
 use OCA\Pipelinq\Service\AppointmentCalendarLeafProvider;
@@ -263,6 +264,19 @@ class Application extends App implements IBootstrap {
 		$context->registerEventListener(
 			event: ObjectUpdatedEvent::class,
 			listener: SlaObjectUpdatedListener::class
+		);
+
+		// Satisfaction surveys (customer-satisfaction-closed-loop): a ticket
+		// that reaches a status an enabled survey rule names gets its
+		// invitations written, in the deferred job (pipelinq#2072). Created as
+		// well as updated, because a ticket can be logged already closed.
+		$context->registerEventListener(
+			event: ObjectCreatedEvent::class,
+			listener: SurveyDispatchListener::class
+		);
+		$context->registerEventListener(
+			event: ObjectUpdatedEvent::class,
+			listener: SurveyDispatchListener::class
 		);
 
 		// MDM: OpenRegister now materialises the golden record on save via its
