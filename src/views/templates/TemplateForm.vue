@@ -480,6 +480,7 @@ export default {
 		 * Create or update the CampaignTemplate.
 		 *
 		 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-api/spec.md#scenario-template-create-validates-compliance
+		 * @spec openspec/changes/marketing-block-editor/specs/mail-block-editor/spec.md#requirement-html-templates-keep-working-req-mbe-004
 		 */
 		async save() {
 			if (!this.canSave) {
@@ -496,6 +497,7 @@ export default {
 				bodyText: this.model.bodyText,
 				senderName: this.model.senderName,
 				senderEmail: this.model.senderEmail,
+				replyTo: this.model.replyTo,
 				footerOverride: this.model.footerOverride,
 				articleIds: this.model.articleIds,
 			}
