@@ -377,6 +377,7 @@
                 }
             },
             "blast": {
+                "slug": "blast",
                 "properties": {
                     "campaignId": {
                         "type": "string",
@@ -388,6 +389,7 @@
                 }
             },
             "lead": {
+                "slug": "lead",
                 "properties": {
                     "firstTouch": {
                         "type": "object",
@@ -473,6 +475,7 @@
                 }
             },
             "attributionLink": {
+                "slug": "attributionLink",
                 "properties": {
                     "campaignId": {
                         "type": "string",

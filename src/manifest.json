@@ -2241,6 +2241,13 @@
 				],
 				"bodyWidgets": [
 					{
+						"id": "party-indicators",
+						"component": "PartyIndicatorPanel",
+						"placement": "before-body",
+						"_note": "The warnings on this party (pipelinq#2036), placed before everything else so an aggression registration or a death is read before contact is made.",
+						"props": { "partyId": "@objectId" }
+					},
+					{
 						"id": "relationships",
 						"component": "ContactRelationships",
 						"title": "Relationships",
@@ -2455,6 +2462,21 @@
 						"gridY": 4,
 						"gridWidth": 6,
 						"gridHeight": 4
+					}
+				],
+				"_bodyWidgetsNote": "Suggested colleagues (pipelinq#2039): RoutingSuggestionSection mounts RoutingSuggestionPanel for this ticket and writes the chosen colleague into its assignee. The panel was built but mounted by nothing, so the skill, availability and workload ranking was reachable only by calling the API by hand.",
+				"bodyWidgets": [
+					{
+						"id": "routing-suggestions",
+						"component": "RoutingSuggestionSection",
+						"title": "Suggested agents",
+						"placement": "end",
+						"props": {
+							"objectId": "@objectId",
+							"category": "@object.category",
+							"entityType": "request",
+							"objectType": "ticket"
+						}
 					}
 				]
 			}
@@ -2831,6 +2853,13 @@
 				],
 				"bodyWidgets": [
 					{
+						"id": "party-indicators",
+						"component": "PartyIndicatorPanel",
+						"placement": "before-body",
+						"_note": "The warnings on this party (pipelinq#2036), placed before everything else so an aggression registration or a death is read before contact is made.",
+						"props": { "partyId": "@objectId" }
+					},
+					{
 						"id": "relationships",
 						"component": "ContactRelationships",
 						"title": "Relationships",
@@ -2929,6 +2958,7 @@
 				"columns": [
 					"title",
 					"stage",
+					"category",
 					"status",
 					"priority",
 					{
@@ -2942,6 +2972,7 @@
 						"widget": "lead-probability"
 					},
 					"value",
+					"currency",
 					{
 						"key": "expectedCloseDate",
 						"label": "Expected close",
@@ -2993,6 +3024,7 @@
 							"columns": 2,
 							"include": [
 								"source",
+								"category",
 								"stage",
 								"stageOrder",
 								"stageEnteredAt",
@@ -3352,6 +3384,21 @@
 						"gridY": 8,
 						"gridWidth": 8,
 						"gridHeight": 7
+					}
+				],
+				"_bodyWidgetsNote": "Suggested colleagues (pipelinq#2049): RoutingSuggestionSection ranks colleagues whose skills cover the lead category, and writes the chosen colleague into the lead assignee.",
+				"bodyWidgets": [
+					{
+						"id": "routing-suggestions",
+						"component": "RoutingSuggestionSection",
+						"title": "Suggested agents",
+						"placement": "end",
+						"props": {
+							"objectId": "@objectId",
+							"category": "@object.category",
+							"entityType": "lead",
+							"objectType": "lead"
+						}
 					}
 				],
 				"lifecycleActions": {

@@ -30,6 +30,14 @@
           }
         },
         "properties": {
+          "currency": {
+            "type": "string",
+            "title": "Currency",
+            "description": "The currency the value is in, as a three-letter code such as EUR or USD. Leave it empty for the reporting currency.",
+            "pattern": "^[A-Z]{3}$",
+            "maxLength": 3,
+            "x-notes": "pipelinq#2040: ForecastRollupService converts a deal's value from this currency to the reporting currency at the rate in Forecast settings. Without the property OpenRegister dropped any currency sent, so every deal counted at face value."
+          },
           "forecast_category": {
             "type": "string",
             "enum": [

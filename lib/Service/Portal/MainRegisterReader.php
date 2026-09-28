@@ -29,6 +29,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\Portal;
 
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Service\SettingsLoadService;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -63,7 +64,7 @@ class MainRegisterReader {
 	/**
 	 * Whether a given main-register schema is configured on this instance.
 	 *
-	 * @param string $schemaKey The app-config schema key (e.g. posTransaction_schema).
+	 * @param string $schemaKey The schema slug (e.g. posTransaction).
 	 *
 	 * @return bool True when both register and schema are configured.
 	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
@@ -73,7 +74,7 @@ class MainRegisterReader {
 	 */
 	public function hasSchema(string $schemaKey): bool {
 		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
+		$schema = $this->schemaIdFor(schemaKey: $schemaKey);
 		return $register !== '' && $schema !== '';
 	}//end hasSchema()
 
@@ -83,7 +84,7 @@ class MainRegisterReader {
 	 * The register and schema are always injected here, never from the caller's
 	 * filters, so the read is constrained to the intended schema.
 	 *
-	 * @param string $schemaKey The app-config schema key.
+	 * @param string $schemaKey The schema slug.
 	 * @param array<string, mixed> $filters Extra equality filters.
 	 *
 	 * @return array<int, array<string, mixed>> The objects as arrays.
@@ -122,7 +123,7 @@ class MainRegisterReader {
 	/**
 	 * Find a single main-register object by id, or null.
 	 *
-	 * @param string $schemaKey The app-config schema key.
+	 * @param string $schemaKey The schema slug.
 	 * @param string $id The object id.
 	 *
 	 * @return array<string, mixed>|null The object, or null.
@@ -156,7 +157,7 @@ class MainRegisterReader {
 	 * for a customer-submitted request; the register and schema are injected so
 	 * a caller can never redirect the write to another schema.
 	 *
-	 * @param string $schemaKey The app-config schema key.
+	 * @param string $schemaKey The schema slug.
 	 * @param array<string, mixed> $data The object payload.
 	 * @param string|null $id The id for an update, or null.
 	 *
@@ -194,7 +195,7 @@ class MainRegisterReader {
 	/**
 	 * Resolve [register, schema] for a schema key.
 	 *
-	 * @param string $schemaKey The app-config schema key.
+	 * @param string $schemaKey The schema slug.
 	 *
 	 * @return array{0: string, 1: string} The register and schema ids.
 	 *
@@ -202,13 +203,29 @@ class MainRegisterReader {
 	 */
 	private function config(string $schemaKey): array {
 		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
+		$schema = $this->schemaIdFor(schemaKey: $schemaKey);
 		if ($register === '' || $schema === '') {
 			throw new RuntimeException("Main register schema '{$schemaKey}' is not configured.");
 		}
 
 		return [$register, $schema];
 	}//end config()
+
+	/**
+	 * Read a main-register schema id by slug, under the app-config key the
+	 * install writes ({@see SettingsLoadService::SCHEMA_CONFIG_KEYS} pin, `<slug>_schema` otherwise).
+	 *
+	 * @param string $schemaKey The schema slug.
+	 *
+	 * @return string The schema id, or '' when not configured.
+	 */
+	private function schemaIdFor(string $schemaKey): string {
+		return $this->appConfig->getValueString(
+			Application::APP_ID,
+			(SettingsLoadService::SCHEMA_CONFIG_KEYS[$schemaKey] ?? $schemaKey . '_schema'),
+			''
+		);
+	}//end schemaIdFor()
 
 	/**
 	 * Normalise an OR object (entity or array) into a plain array.

@@ -3,11 +3,12 @@
 /**
  * Pipelinq PortalRequestService.
  *
- * The portal's request surface: list the customer's own requests (scoped by
- * their linked contact, with `visibility: internal` notes stripped
- * server-side), read one request's customer-safe detail, submit a new request
- * (category must be customer-exposed, ≤25 MB attachments, ≤5 submissions/hour),
- * and add a customer reply that unpauses an awaiting-customer request. A portal
+ * The portal's request surface over the unified `ticket` schema (ticketType
+ * `request`): list the customer's own requests (scoped by their linked
+ * contact; the ticket's internal notes are never shown), read one request's
+ * customer-safe detail, submit a new request (category must be
+ * customer-exposed, ≤25 MB attachments, ≤5 submissions/hour), and add a
+ * customer reply that unpauses an `awaiting_customer` ticket. A portal
  * user can only ever see or act on a request tied to their own contact (or one
  * delegated under `submit-requests`) — never another customer's (ADR-005,
  * REQ-004 / REQ-006).
@@ -53,11 +54,35 @@ use Psr\Log\LoggerInterface;
  */
 class PortalRequestService {
 	/**
-	 * Main-register schema key for requests.
+	 * Main-register schema a portal request lives in. The `request` schema was
+	 * folded into the unified `ticket` on 12 July 2026; a request is a ticket
+	 * with ticketType `request` (pipelinq#2038).
 	 *
 	 * @var string
 	 */
-	private const SCHEMA = 'request';
+	private const SCHEMA = 'ticket';
+
+	/**
+	 * The ticketType a portal request carries.
+	 *
+	 * @var string
+	 */
+	private const TICKET_TYPE = 'request';
+
+	/**
+	 * Ticket status while the handler waits for the customer: the only status
+	 * in which the portal offers a reply.
+	 *
+	 * @var string
+	 */
+	private const STATUS_AWAITING_CUSTOMER = 'awaiting_customer';
+
+	/**
+	 * Ticket status a customer reply moves a waiting ticket back to.
+	 *
+	 * @var string
+	 */
+	private const STATUS_IN_PROGRESS = 'in_progress';
 
 	/**
 	 * Maximum attachment size in bytes (25 MB).
@@ -120,7 +145,7 @@ class PortalRequestService {
 
 		$resolved = $this->scope->resolve($account, 'submit-requests');
 		$rows = [];
-		foreach ($this->reader->findAll(self::SCHEMA) as $request) {
+		foreach ($this->reader->findAll(self::SCHEMA, ['ticketType' => self::TICKET_TYPE]) as $request) {
 			if ($this->visibleTo(resolved: $resolved, request: $request) === false) {
 				continue;
 			}
@@ -158,7 +183,7 @@ class PortalRequestService {
 	 */
 	public function getDetailForAccount(array $account, string $requestId, bool $exposeAssigneeName): ?array {
 		$request = $this->reader->find(self::SCHEMA, $requestId);
-		if ($request === null) {
+		if ($request === null || $this->isRequest(ticket: $request) === false) {
 			return null;
 		}
 
@@ -218,15 +243,16 @@ class PortalRequestService {
 		}
 
 		$record = [
+			'ticketType' => self::TICKET_TYPE,
 			'title' => $subject,
 			'description' => $body,
 			'contact' => $contactId,
 			'client' => $clientId,
 			'category' => $categoryId,
 			'status' => 'new',
-			'submittedVia' => 'portal',
+			'channel' => 'portal',
 			'reporterAccountId' => $accountId,
-			'requestedAt' => $this->time->getDateTime()->format(DATE_ATOM),
+			'occurredAt' => $this->time->getDateTime()->format(DATE_ATOM),
 			'attachmentIds' => $attachmentIds,
 		];
 
@@ -277,25 +303,28 @@ class PortalRequestService {
 
 		$request = $this->reader->find(self::SCHEMA, $requestId);
 		$resolved = $this->scope->resolve($account, 'submit-requests');
-		if ($request === null || $this->visibleTo(resolved: $resolved, request: $request) === false) {
+		if ($request === null
+			|| $this->isRequest(ticket: $request) === false
+			|| $this->visibleTo(resolved: $resolved, request: $request) === false
+		) {
 			throw new PortalException(Http::STATUS_NOT_FOUND, 'notFound', 'Niet gevonden.');
 		}
 
-		$notes = [];
-		if (is_array($request['notes'] ?? null) === true) {
-			$notes = $request['notes'];
+		// Replies go to their own list. The ticket's `notes` is an internal
+		// string and is never read or written here.
+		$replies = [];
+		if (is_array($request['portalReplies'] ?? null) === true) {
+			$replies = array_values($request['portalReplies']);
 		}
 
-		$notes[] = [
-			'visibility' => 'customer',
-			'author' => 'customer',
+		$replies[] = [
 			'message' => $message,
 			'createdAt' => $this->time->getDateTime()->format(DATE_ATOM),
 		];
-		$request['notes'] = $notes;
+		$request['portalReplies'] = $replies;
 
-		if (($request['status'] ?? null) === 'awaiting-customer') {
-			$request['status'] = 'in-progress';
+		if (($request['status'] ?? null) === self::STATUS_AWAITING_CUSTOMER) {
+			$request['status'] = self::STATUS_IN_PROGRESS;
 		}
 
 		$saved = $this->reader->save(self::SCHEMA, $request, $requestId);
@@ -340,8 +369,9 @@ class PortalRequestService {
 	private function assertWithinRateLimit(string $accountId): void {
 		$cutoff = $this->time->getTime() - (self::RATE_WINDOW_MINUTES * 60);
 		$recent = 0;
-		foreach ($this->reader->findAll(self::SCHEMA, ['reporterAccountId' => $accountId]) as $request) {
-			$timestamp = strtotime((string)($request['requestedAt'] ?? ''));
+		$filters = ['ticketType' => self::TICKET_TYPE, 'reporterAccountId' => $accountId];
+		foreach ($this->reader->findAll(self::SCHEMA, $filters) as $request) {
+			$timestamp = strtotime((string)($request['occurredAt'] ?? ''));
 			if ($timestamp !== false && $timestamp >= $cutoff) {
 				$recent++;
 			}
@@ -448,7 +478,7 @@ class PortalRequestService {
 			'subject' => ($request['title'] ?? null),
 			'category' => $this->readId(value: ($request['category'] ?? null)),
 			'status' => ($request['status'] ?? null),
-			'date' => ($request['requestedAt'] ?? null),
+			'date' => ($request['occurredAt'] ?? null),
 		];
 	}//end presentSummary()
 
@@ -465,7 +495,7 @@ class PortalRequestService {
 		$detail = $this->presentSummary(request: $request);
 		$detail['body'] = ($request['description'] ?? null);
 		$detail['notes'] = $this->customerNotes(request: $request);
-		$detail['canReply'] = ($request['status'] ?? null) === 'awaiting-customer';
+		$detail['canReply'] = ($request['status'] ?? null) === self::STATUS_AWAITING_CUSTOMER;
 
 		$detail['assigneeHidden'] = true;
 		if ($exposeAssigneeName === true) {
@@ -477,25 +507,37 @@ class PortalRequestService {
 	}//end presentDetail()
 
 	/**
-	 * Keep only customer-visible notes, oldest-first (server-side filtering).
+	 * What a resident reads of the conversation, oldest first: the handler's
+	 * message to the customer (`customerMessage`) and the resident's own
+	 * portal replies (`portalReplies`). The ticket's `notes` string is
+	 * internal and is never shown.
 	 *
-	 * @param array<string, mixed> $request The request object.
+	 * @param array<string, mixed> $request The request ticket.
 	 *
 	 * @return array<int, array<string, mixed>> The customer-visible notes.
 	 */
 	private function customerNotes(array $request): array {
-		$notes = [];
-		if (is_array($request['notes'] ?? null) === true) {
-			$notes = $request['notes'];
+		$kept = [];
+		$handlerMessage = trim((string)($request['customerMessage'] ?? ''));
+		if ($handlerMessage !== '') {
+			$kept[] = [
+				'author' => 'handler',
+				'message' => $handlerMessage,
+				'createdAt' => ($request['@self']['updated'] ?? null),
+			];
 		}
 
-		$kept = [];
-		foreach ($notes as $note) {
-			if (is_array($note) === true && ($note['visibility'] ?? 'internal') === 'customer') {
+		$replies = [];
+		if (is_array($request['portalReplies'] ?? null) === true) {
+			$replies = $request['portalReplies'];
+		}
+
+		foreach ($replies as $reply) {
+			if (is_array($reply) === true && trim((string)($reply['message'] ?? '')) !== '') {
 				$kept[] = [
-					'author' => ($note['author'] ?? null),
-					'message' => ($note['message'] ?? null),
-					'createdAt' => ($note['createdAt'] ?? null),
+					'author' => 'customer',
+					'message' => $reply['message'],
+					'createdAt' => ($reply['createdAt'] ?? null),
 				];
 			}
 		}
@@ -507,6 +549,17 @@ class PortalRequestService {
 
 		return $kept;
 	}//end customerNotes()
+
+	/**
+	 * Whether a ticket is a request (and not a complaint or a logged interaction).
+	 *
+	 * @param array<string, mixed> $ticket The ticket.
+	 *
+	 * @return bool True for a request ticket.
+	 */
+	private function isRequest(array $ticket): bool {
+		return ($ticket['ticketType'] ?? null) === self::TICKET_TYPE;
+	}//end isRequest()
 
 	/**
 	 * Read a possibly-nested id value into a string, or null.

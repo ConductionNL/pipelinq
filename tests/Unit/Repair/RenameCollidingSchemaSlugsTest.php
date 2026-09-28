@@ -126,13 +126,15 @@ final class RenameCollidingSchemaSlugsTest extends TestCase {
 				'task' => [610],
 				'expense' => [611],
 				'mergeOperation' => [612],
+				'survey' => [613],
+				'surveyInvitation' => [614],
 			]
 		);
 		$statements = &$this->captureStatements();
 
 		$this->step->run($this->createMock(IOutput::class));
 
-		$this->assertCount(12, $statements, 'exactly twelve rows may be rewritten');
+		$this->assertCount(14, $statements, 'exactly fourteen rows may be rewritten');
 		foreach ($statements as $statement) {
 			$this->assertStringContainsString('openregister_schemas', $statement[0]);
 			$this->assertStringContainsString('SET slug', $statement[0]);
@@ -151,6 +153,8 @@ final class RenameCollidingSchemaSlugsTest extends TestCase {
 		$this->assertContains(['crmTask', 610], $written);
 		$this->assertContains(['billableExpense', 611], $written);
 		$this->assertContains(['masterMergeOperation', 612], $written);
+		$this->assertContains(['satisfactionSurvey', 613], $written);
+		$this->assertContains(['satisfactionSurveyInvitation', 614], $written);
 
 	}//end testRenamesEverySlugInPlace()
 

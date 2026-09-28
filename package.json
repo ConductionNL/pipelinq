@@ -37,7 +37,7 @@
     "dexie": "$dexie"
   },
   "dependencies": {
-    "@conduction/nextcloud-vue": "^2.57.0",
+    "@conduction/nextcloud-vue": "^2.57.1",
     "@nextcloud/axios": "~2.6.0",
     "@nextcloud/capabilities": "^1.2.1",
     "@nextcloud/dialogs": "^7.4.1",
@@ -48,7 +48,7 @@
     "@nextcloud/vue": "^9.11.0",
     "@vueuse/core": "^14.3.0",
     "axe-core": "^4.13.0",
-    "dexie": "4.4.5",
+    "dexie": "^4.4.6",
     "dompurify": "^3.4.15",
     "gridstack": "^13.3.0",
     "marked": "^18.0.13",

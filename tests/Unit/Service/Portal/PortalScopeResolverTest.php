@@ -23,6 +23,7 @@ use OCA\Pipelinq\Service\Portal\PortalDelegationService;
 use OCA\Pipelinq\Service\Portal\PortalScopeResolver;
 use OCP\AppFramework\Utility\ITimeFactory;
 use PHPUnit\Framework\TestCase;
+use OCP\IAppConfig;
 
 /**
  * Tests for per-customer + delegated scope resolution.
@@ -48,7 +49,7 @@ class PortalScopeResolverTest extends TestCase {
 	 * @return void
 	 */
 	protected function setUp(): void {
-		$this->repository = new FakePortalObjectRepository();
+		$this->repository = new FakePortalObjectRepository(InstalledAppConfig::wire($this->createMock(IAppConfig::class)));
 
 		$time = $this->createMock(ITimeFactory::class);
 		$time->method('getTime')->willReturn(1000);

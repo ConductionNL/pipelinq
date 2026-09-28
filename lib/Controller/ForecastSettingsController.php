@@ -53,10 +53,12 @@ class ForecastSettingsController extends Controller {
 	 *
 	 * @param IRequest $request The request.
 	 * @param IAppConfig $appConfig The app configuration.
+	 * @param ExchangeRateService $exchangeRate The reporting currency and rate table.
 	 */
 	public function __construct(
 		IRequest $request,
 		private IAppConfig $appConfig,
+		private ExchangeRateService $exchangeRate,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 	}//end __construct()
@@ -77,8 +79,6 @@ class ForecastSettingsController extends Controller {
 		$thresholdValue = ForecastDealService::COMMIT_THRESHOLD_DEFAULT;
 		$atRiskPctKey = QuotaService::AT_RISK_PERCENT_KEY;
 		$atRiskPctValue = QuotaService::AT_RISK_PERCENT_DEFAULT;
-		$currencyKey = ExchangeRateService::REPORTING_CURRENCY_KEY;
-		$currencyValue = ExchangeRateService::REPORTING_CURRENCY_DEFAULT;
 
 		return new JSONResponse(
 			[
@@ -90,7 +90,8 @@ class ForecastSettingsController extends Controller {
 				'accuracy_amber' => $this->appConfig->getValueString($app, ForecastService::ACCURACY_AMBER_KEY, $amberDefault),
 				'at_risk_percent' => $this->appConfig->getValueInt($app, $atRiskPctKey, $atRiskPctValue),
 				'at_risk_days' => $this->appConfig->getValueInt($app, QuotaService::AT_RISK_DAYS_KEY, QuotaService::AT_RISK_DAYS_DEFAULT),
-				'reporting_currency' => $this->appConfig->getValueString($app, $currencyKey, $currencyValue),
+				'reporting_currency' => $this->exchangeRate->getReportingCurrency(),
+				'exchange_rates' => (object)$this->exchangeRate->getRates(),
 				'manager_group' => $this->appConfig->getValueString($app, ForecastAccessPolicy::MANAGER_GROUP_KEY, ''),
 				'team_groups' => $this->appConfig->getValueString($app, SnapshotGenerationService::TEAMS_KEY, ''),
 			]
@@ -163,8 +164,24 @@ class ForecastSettingsController extends Controller {
 		}
 
 		if (isset($params['reporting_currency']) === true) {
-			$currency = strtoupper((string)$params['reporting_currency']);
+			// One reporting currency for the whole app: the setup wizard's
+			// setting, which dashboards format with (pipelinq#2040).
+			$currency = strtoupper(trim((string)$params['reporting_currency']));
+			if (preg_match('/^[A-Z]{3}$/', $currency) !== 1) {
+				return new JSONResponse(['error' => 'reporting_currency must be a three-letter currency code.'], 400);
+			}
+
 			$this->appConfig->setValueString(Application::APP_ID, ExchangeRateService::REPORTING_CURRENCY_KEY, $currency);
+		}
+
+		if (isset($params['exchange_rates']) === true) {
+			try {
+				$rates = $this->exchangeRate->normaliseRates(input: (array)$params['exchange_rates']);
+			} catch (\InvalidArgumentException $e) {
+				return new JSONResponse(['error' => $e->getMessage()], 400);
+			}
+
+			$this->appConfig->setValueString(Application::APP_ID, ExchangeRateService::RATES_KEY, (string)json_encode($rates));
 		}
 
 		if (isset($params['manager_group']) === true) {

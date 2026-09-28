@@ -389,6 +389,7 @@
         "Conditions (optional)": "Conditions (facultatif)",
         "Configuration": "Configuration",
         "Configuration re-imported successfully": "Configuration réimportée avec succès",
+        "Configuration re-imported, but OpenRegister rejected %1$s schema(s): %2$s": "Configuration réimportée, mais OpenRegister a rejeté %1$s schéma(s) : %2$s",
         "Configuration saved": "Configuration enregistrée",
         "Configure how cashiers search for customers, how much history is shown at checkout, and how marketing consent is synced to the linked contact.": "Configurez la manière dont les caissiers recherchent les clients, la quantité d'historique affichée à l'encaissement et la manière dont le consentement marketing est synchronisé avec le contact lié.",
         "Configure the MCP server endpoint and authentication credentials": "Configurez le point de terminaison du serveur MCP et les identifiants d'authentification",

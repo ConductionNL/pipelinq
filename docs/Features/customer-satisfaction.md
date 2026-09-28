@@ -68,7 +68,7 @@ Two new schemas in `pipelinq_register.json`:
 
 | Schema | Key Fields |
 |--------|-----------|
-| `survey` | title, description, questions[], status, targetEntity, period |
+| `satisfactionSurvey` | title, description, questions[], status, targetEntity, period |
 | `surveyResponse` | surveyRef, respondent (optional), answers[], submittedAt, entityRef |
 
 ## Impact

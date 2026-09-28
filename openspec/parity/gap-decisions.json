@@ -1,0 +1,458 @@
+[
+	{
+		"row": "bulk-edit",
+		"matrix": "pipelinq",
+		"decision": "build",
+		"reason": "Rated no; four competitors rate it yes (hubspot-crm, pipedrive, espocrm, odoo-crm) and it is in the core area (clients)",
+		"change": "clients-bulk-edit-and-undo",
+		"decidedOn": "2026-09-27"
+	},
+	{
+		"row": "clients-undo-bulk-change",
+		"matrix": "pipelinq",
+		"decision": "build",
+		"reason": "Rated no; two competitors rate it yes (hubspot-crm, pipedrive), core area (clients); an undo needs the bulk edit it undoes, so both rows share one change",
+		"change": "clients-bulk-edit-and-undo",
+		"decidedOn": "2026-09-27"
+	},
+	{
+		"row": "clients-identifiers",
+		"matrix": "pipelinq",
+		"decision": "build",
+		"reason": "Rated no; core area (clients). KvK numbers exist only on prospects and nothing checks a VAT or DUNS number",
+		"change": "clients-registry-numbers-and-enrichment",
+		"decidedOn": "2026-09-27"
+	},
+	{
+		"row": "clients-bulk-enrichment",
+		"matrix": "pipelinq",
+		"decision": "build",
+		"reason": "Rated no; three competitors rate it yes (hubspot-crm, pipedrive, odoo-crm), core area (clients); enrichment fills the same registry numbers that clients-identifiers adds",
+		"change": "clients-registry-numbers-and-enrichment",
+		"decidedOn": "2026-09-27"
+	},
+	{
+		"row": "clients-ai-summary",
+		"matrix": "pipelinq",
+		"decision": "build",
+		"reason": "Rated no; core area (clients), changelog demand with one competitor yes (hubspot-crm)",
+		"change": "clients-history-summary-and-risk",
+		"decidedOn": "2026-09-27"
+	},
+	{
+		"row": "clients-churn-risk",
+		"matrix": "pipelinq",
+		"decision": "build",
+		"reason": "Partial, built; the missing half is one at-risk view per client that combines the contract and survey signals which exist today only per contract and per answer. Changelog demand (hubspot spotlight) and core area (clients)",
+		"change": "clients-history-summary-and-risk",
+		"decidedOn": "2026-09-27"
+	},
+	{
+		"row": "clients-smart-paste",
+		"matrix": "pipelinq",
+		"decision": "build",
+		"reason": "Rated no; core area (clients), changelog demand (espocrm intelligence)",
+		"change": "clients-contact-capture",
+		"decidedOn": "2026-09-27"
+	},
+	{
+		"row": "clients-business-card-scan",
+		"matrix": "pipelinq",
+		"decision": "build",
+		"reason": "Rated no; core area (clients), changelog demand with one competitor yes (pipedrive); a scanned card and a pasted signature end in the same field parser",
+		"change": "clients-contact-capture",
+		"decidedOn": "2026-09-27"
+	},
+	{
+		"row": "clients-preferred-name",
+		"matrix": "pipelinq",
+		"decision": "build",
+		"reason": "Partial, built; the missing half is a shipped preferred name field, today an administrator has to add one. Feature request KISS-frontend#1469 and core area (clients)",
+		"change": "clients-preferred-name",
+		"decidedOn": "2026-09-27"
+	},
+	{
+		"row": "clients-unmerge",
+		"matrix": "pipelinq",
+		"decision": "build",
+		"reason": "Rated no; core area (clients), feature request (HubSpot idea). OpenRegister reverses merges (merge#reverse) only for schemas that declare x-openregister-merge, and pipelinq declares it on masterEntity alone, never on client or contact",
+		"change": "clients-reversible-merge",
+		"decidedOn": "2026-09-27"
+	},
+	{
+		"row": "pipeline-lead-rotation",
+		"matrix": "pipelinq",
+		"decision": "build",
+		"reason": "Partial, built; the missing half is assigning new leads automatically in turn with a cap per person, today a handler picks from a ranked suggestion. Changelog demand (odoo 19.2) and core area (pipeline)",
+		"change": "pipeline-lead-rotation",
+		"decidedOn": "2026-09-27"
+	},
+	{
+		"row": "pipeline-multi-currency",
+		"matrix": "pipelinq",
+		"decision": "build",
+		"reason": "Partial, built; the missing half is rates that are fetched, today an administrator types them in Forecast settings. Two competitors rate it yes (pipedrive, espocrm), core area (pipeline)",
+		"change": "pipeline-live-exchange-rates",
+		"decidedOn": "2026-09-27"
+	},
+	{
+		"row": "pipeline-stage-limit",
+		"matrix": "pipelinq",
+		"decision": "build",
+		"reason": "Rated no; core area (pipeline), feature request odoo#141745",
+		"change": "pipeline-stage-limit",
+		"decidedOn": "2026-09-27"
+	},
+	{
+		"row": "cm-history-by-phone",
+		"matrix": "pipelinq",
+		"decision": "build",
+		"reason": "Partial, built; the missing half is a list of earlier contact moments for a number that matches no contact. Feature request KISS-frontend#1509",
+		"change": "contact-moments-phone-lookup",
+		"decidedOn": "2026-09-27"
+	},
+	{
+		"row": "req-phone-format",
+		"matrix": "pipelinq",
+		"decision": "build",
+		"reason": "Partial, built; the missing half is a ticket search that normalises the number the way the screen pop already does. Feature request KISS-frontend#1538 with one competitor yes (odoo-crm); same number matcher as cm-history-by-phone",
+		"change": "contact-moments-phone-lookup",
+		"decidedOn": "2026-09-27"
+	},
+	{
+		"row": "cm-quality-review",
+		"matrix": "pipelinq",
+		"decision": "build",
+		"reason": "Partial, built; the missing half is a score and agreed coaching points on a recorded call. Tender demand (tenderned 318074)",
+		"change": "contact-moments-call-review",
+		"decidedOn": "2026-09-27"
+	},
+	{
+		"row": "cm-transcribe",
+		"matrix": "pipelinq",
+		"decision": "build",
+		"reason": "Rated no; tender demand (tenderned 414529) and two competitors rate it yes (hubspot-crm, pipedrive); a transcript is what a reviewer scores, so it shares the review change",
+		"change": "contact-moments-call-review",
+		"decidedOn": "2026-09-27"
+	},
+	{
+		"row": "cm-keep-draft",
+		"matrix": "pipelinq",
+		"decision": "build",
+		"reason": "Partial, built; the missing half is keeping a half typed manual contact moment, only telephony moments survive a closed tab. Feature request KISS-frontend#1558 with one competitor yes (odoo-crm)",
+		"change": "contact-moments-keep-draft",
+		"decidedOn": "2026-09-27"
+	},
+	{
+		"row": "req-saved-replies",
+		"matrix": "pipelinq",
+		"decision": "build",
+		"reason": "Partial, built; the missing half is saved replies on tickets, mail and the portal reply, today only WhatsApp and SMS templates exist. Feature request odoo#120198 and four competitors rate it yes",
+		"change": "messaging-saved-replies-and-resend",
+		"decidedOn": "2026-09-27"
+	},
+	{
+		"row": "cm-failed-send",
+		"matrix": "pipelinq",
+		"decision": "build",
+		"reason": "Partial, built; the missing half is a resend button on a failed message, the Berichtenbox retry API has no caller. Changelog demand (pipedrive) with one competitor yes; it sits in the same Messages section as the saved replies",
+		"change": "messaging-saved-replies-and-resend",
+		"decidedOn": "2026-09-27"
+	},
+	{
+		"row": "cm-social-media",
+		"matrix": "pipelinq",
+		"decision": "build",
+		"reason": "Partial, built; the missing half is inbound social and WhatsApp messages becoming tickets in the Queue next to mail and phone. Tender demand (tenderned 401736)",
+		"change": "requests-inbound-to-queue",
+		"decidedOn": "2026-09-27"
+	},
+	{
+		"row": "req-mail-routing",
+		"matrix": "pipelinq",
+		"decision": "build",
+		"reason": "Rated no; tender demand (tenderned 386888) and three competitors rate it yes; it is the same inbound to ticket intake as cm-social-media, with rules an administrator manages",
+		"change": "requests-inbound-to-queue",
+		"decidedOn": "2026-09-27"
+	},
+	{
+		"row": "chat-on-website",
+		"matrix": "pipelinq",
+		"decision": "build",
+		"reason": "Rated no; two competitors rate it yes (hubspot-crm, odoo-crm)",
+		"change": "requests-web-chat-and-bot",
+		"decidedOn": "2026-09-27"
+	},
+	{
+		"row": "cm-chatbot",
+		"matrix": "pipelinq",
+		"decision": "build",
+		"reason": "Rated no; tender demand (tenderned 418890) and two competitors rate it yes (hubspot-crm, odoo-crm). Archived proposals list chatbots as future scope, not as a no",
+		"change": "requests-web-chat-and-bot",
+		"decidedOn": "2026-09-27"
+	},
+	{
+		"row": "mail-client-plugin",
+		"matrix": "pipelinq",
+		"decision": "build",
+		"reason": "Rated no; four competitors rate it yes (hubspot-crm, pipedrive, espocrm, odoo-crm)",
+		"change": "contact-moments-mail-add-in",
+		"decidedOn": "2026-09-27"
+	},
+	{
+		"row": "mkt-block-editor",
+		"matrix": "pipelinq",
+		"decision": "build",
+		"reason": "Rated no; feature request (espocrm forum 61838) and two competitors rate it yes (hubspot-crm, odoo-crm)",
+		"change": "marketing-block-editor",
+		"decidedOn": "2026-09-27"
+	},
+	{
+		"row": "mkt-events",
+		"matrix": "pipelinq",
+		"decision": "build",
+		"reason": "Partial, built; the missing half is an event with a date, a venue, a capacity and an attendee list, today a sign-up only becomes a lead. Tender demand (tenderned 422277)",
+		"change": "marketing-events",
+		"decidedOn": "2026-09-27"
+	},
+	{
+		"row": "mkt-form-campaign-tags",
+		"matrix": "pipelinq",
+		"decision": "build",
+		"reason": "Partial, built; the missing half is the campaign and landing page on the client record and UTM values on the website enquiry form. Changelog demand (pipedrive) with one competitor yes (odoo-crm)",
+		"change": "marketing-campaign-on-client",
+		"decidedOn": "2026-09-27"
+	},
+	{
+		"row": "plat-record-lock",
+		"matrix": "pipelinq",
+		"decision": "build",
+		"reason": "Partial, built; the missing half is a lock action a user can put on a client, lead or ticket. Changelog demand (espocrm#3592) with one competitor yes (espocrm)",
+		"change": "platform-record-lock",
+		"decidedOn": "2026-09-27"
+	},
+	{
+		"row": "plat-retention-destroy",
+		"matrix": "pipelinq",
+		"decision": "build",
+		"reason": "Partial, built; the missing half is a retention term and anonymisation for client and contact records, which carry no archival block. Tender demand (tenderned 421969)",
+		"change": "platform-client-retention",
+		"decidedOn": "2026-09-27"
+	},
+	{
+		"row": "plat-wcag",
+		"matrix": "pipelinq",
+		"decision": "build",
+		"reason": "Partial, built; the missing half is a published accessibility statement and audit evidence for the back office screens. Tender demand (tenderned 414691). The open change keyboard-accessible-click-toggles fixes four controls and does not cover the statement",
+		"change": "platform-accessibility-statement",
+		"decidedOn": "2026-09-27"
+	},
+	{
+		"row": "portal-visible-fields",
+		"matrix": "pipelinq",
+		"decision": "build",
+		"reason": "Partial, built; the missing half is a preview on the ticket of what the resident reads. Feature request KISS-frontend#1559. The field whitelist lives in pipelinq (lib/Portal/PortalContributionProvider.php), so the preview is pipelinq work under ADR-046",
+		"change": "portal-resident-view-preview",
+		"decidedOn": "2026-09-27"
+	},
+	{
+		"row": "prod-price-lists",
+		"matrix": "pipelinq",
+		"decision": "build",
+		"reason": "Rated no; changelog demand (hubspot fall 2026) and two competitors rate it yes (hubspot-crm, odoo-crm)",
+		"change": "products-price-lists",
+		"decidedOn": "2026-09-27"
+	},
+	{
+		"row": "req-multi-municipality",
+		"matrix": "pipelinq",
+		"decision": "build",
+		"reason": "Partial, built; the missing half is showing on each contact and ticket which municipality it belongs to, so one desk can serve several side by side. Tender demand (tenderned 306049)",
+		"change": "requests-municipality-per-contact",
+		"decidedOn": "2026-09-27"
+	},
+	{
+		"row": "work-letter-template",
+		"matrix": "pipelinq",
+		"decision": "build",
+		"reason": "Partial, built; the missing half is a printable letter for one client. Tender demand (tenderned 414691). filinq generates documents for other apps (filinq matrix con-gen-for-apps, gen-from-record), so the change is the pipelinq side of that call, as dossiq did for decisions",
+		"change": "work-letter-from-filinq-template",
+		"decidedOn": "2026-09-27"
+	},
+	{
+		"row": "cm-call-flow",
+		"matrix": "pipelinq",
+		"decision": "decided-no",
+		"reason": "What a caller hears and where the call goes is configured in the telephony platform, which pipelinq connects to but does not configure (lib/Service/Cti/Adapter). Recorded non-goal: archived queue-management proposal \"Direct telephony/PBX integration (ACD, IVR, CTI)\" and whatsapp-sms-channel-adapter \"Direct telephony integration, separate app\". Owner corrected to external",
+		"change": null,
+		"decidedOn": "2026-09-27"
+	},
+	{
+		"row": "plat-knowledge-only-role",
+		"matrix": "pipelinq",
+		"decision": "decided-no",
+		"reason": "The knowledge base moved to XWiki (archived migrate-kennisbank-to-xwiki-leaf: \"Knowledge management is not a CRM core competency\"); a search only view for colleagues outside the contact centre is XWiki read access. Owner corrected to external",
+		"change": null,
+		"decidedOn": "2026-09-27"
+	},
+	{
+		"row": "req-article-review-date",
+		"matrix": "pipelinq",
+		"decision": "decided-no",
+		"reason": "Knowledge articles live in XWiki since the archived migrate-kennisbank-to-xwiki-leaf (\"Knowledge management is not a CRM core competency\"); review dates and owners belong to the wiki. The marketing article schema the matrix read is not the knowledge base. Owner corrected to external",
+		"change": null,
+		"decidedOn": "2026-09-27"
+	},
+	{
+		"row": "auto-failure-alerts",
+		"matrix": "pipelinq",
+		"decision": "decided-no",
+		"reason": "Pipelinq stopped owning an automation engine (archived migrate-automation-to-flow-leaf); automations run on the OpenRegister flow engine, so alerting on and switching off a failing flow is that engine's job. The pipelinq integration alerts already cited stay built. Owner corrected to ConductionNL/openregister",
+		"change": null,
+		"decidedOn": "2026-09-27"
+	},
+	{
+		"row": "plat-translated-field-names",
+		"matrix": "pipelinq",
+		"decision": "decided-no",
+		"reason": "A field an administrator adds is an OpenRegister schema property (matrix row clients-custom-fields, owner openregister) rendered by nextcloud-vue; a label per language needs the property model to carry one, which pipelinq cannot add. Shipped fields are translated already. Owner corrected to ConductionNL/openregister",
+		"change": null,
+		"decidedOn": "2026-09-27"
+	},
+	{
+		"row": "portal-digid",
+		"matrix": "pipelinq",
+		"decision": "decided-no",
+		"reason": "One shared external portal is portaliq (hydra ADR-046; pipelinq change portal-contribution retires the bespoke portal); DigiD and eHerkenning login are portaliq rows sig-digid and sig-eherkenning, both specified. Owner corrected to ConductionNL/portaliq",
+		"change": null,
+		"decidedOn": "2026-09-27"
+	},
+	{
+		"row": "portal-menu-choice",
+		"matrix": "pipelinq",
+		"decision": "decided-no",
+		"reason": "The missing half, a menu and record choice per client, belongs to the shared portal (hydra ADR-046, portaliq menus site-menus-layout); the bespoke pipelinq portal that holds today's per tenant choice is due to retire (open change portal-contribution). Owner corrected to ConductionNL/portaliq",
+		"change": null,
+		"decidedOn": "2026-09-27"
+	},
+	{
+		"row": "6.2",
+		"matrix": "dossiq",
+		"decision": "existing",
+		"reason": "The open change names this row (gap register row 6.2) and makes channel and direction first class fields on the one contact moment schema a case app reads through a pipelinq leaf",
+		"change": "contact-moments-on-pipelinq-schema",
+		"decidedOn": "2026-09-27"
+	},
+	{
+		"row": "msg-whatsapp",
+		"matrix": "integriq",
+		"decision": "defer",
+		"reason": "Partial, built, no demand; one competitor yes (n8n)",
+		"change": null,
+		"decidedOn": "2026-09-27"
+	},
+	{
+		"row": "6.16",
+		"matrix": "dossiq",
+		"decision": "defer",
+		"reason": "Rated no in the dossiq matrix; no demand row and no competitor rates it yes. Its natural home is the open change customer-satisfaction-closed-loop, whose automatic dispatch has no production caller (SurveyDispatchService::onInteractionCompleted is called only from tests/Unit/Service/SurveyDispatchServiceTest.php), reported to the coordinator",
+		"change": null,
+		"decidedOn": "2026-09-27"
+	},
+	{
+		"row": "plat-work-offline",
+		"matrix": "pipelinq",
+		"decision": "defer",
+		"reason": "Rated no; changelog demand (odoo 20) but no competitor rates it yes, outside the core areas",
+		"change": null,
+		"decidedOn": "2026-09-27"
+	},
+	{
+		"row": "req-ai-triage",
+		"matrix": "pipelinq",
+		"decision": "defer",
+		"reason": "Rated no; feature request but no competitor rates it yes (three partial), outside the core areas",
+		"change": null,
+		"decidedOn": "2026-09-27"
+	},
+	{
+		"row": "req-approval-step",
+		"matrix": "pipelinq",
+		"decision": "defer",
+		"reason": "Rated no; feature request but no competitor rates it yes (three partial), outside the core areas",
+		"change": null,
+		"decidedOn": "2026-09-27"
+	},
+	{
+		"row": "req-close-reminder",
+		"matrix": "pipelinq",
+		"decision": "defer",
+		"reason": "Rated no; changelog demand (odoo 19.1) but no competitor rates it yes, outside the core areas",
+		"change": null,
+		"decidedOn": "2026-09-27"
+	},
+	{
+		"row": "req-similar-answer",
+		"matrix": "pipelinq",
+		"decision": "defer",
+		"reason": "Rated no; changelog demand (odoo 20) but no competitor rates it yes, outside the core areas",
+		"change": null,
+		"decidedOn": "2026-09-27"
+	},
+	{
+		"row": "req-valid-recipient",
+		"matrix": "pipelinq",
+		"decision": "defer",
+		"reason": "Rated no; changelog demand (KISS 3.1.0) with one competitor yes (kiss) meets none of the build tests, outside the core areas",
+		"change": null,
+		"decidedOn": "2026-09-27"
+	},
+	{
+		"row": "two-calls-at-once",
+		"matrix": "pipelinq",
+		"decision": "defer",
+		"reason": "Rated no; no demand row and one competitor yes (kiss), outside the core areas",
+		"change": null,
+		"decidedOn": "2026-09-27"
+	},
+	{
+		"row": "plat-central-authorisation",
+		"matrix": "pipelinq",
+		"decision": "decided-no",
+		"reason": "Owned by nextcloud/server (platform provided); the addendum sets rows owed to nextcloud/server to decided-no in the matrix that carries them",
+		"change": null,
+		"decidedOn": "2026-09-27"
+	},
+	{
+		"row": "plat-copy-access",
+		"matrix": "pipelinq",
+		"decision": "decided-no",
+		"reason": "Owned by nextcloud/server (platform provided); the addendum sets rows owed to nextcloud/server to decided-no in the matrix that carries them",
+		"change": null,
+		"decidedOn": "2026-09-27"
+	},
+	{
+		"row": "work-calendar-feed",
+		"matrix": "pipelinq",
+		"decision": "decided-no",
+		"reason": "Owned by nextcloud/server (platform provided); the addendum sets rows owed to nextcloud/server to decided-no in the matrix that carries them",
+		"change": null,
+		"decidedOn": "2026-09-27"
+	},
+	{
+		"row": "work-colleague-availability",
+		"matrix": "pipelinq",
+		"decision": "decided-no",
+		"reason": "Owned by nextcloud/server (platform provided); the addendum sets rows owed to nextcloud/server to decided-no in the matrix that carries them",
+		"change": null,
+		"decidedOn": "2026-09-27"
+	},
+	{
+		"row": "portal-invoices",
+		"matrix": "pipelinq",
+		"decision": "defer",
+		"reason": "Rating corrected from yes to partial by the code read of 2026-09-27: the portal Invoices tab lists every POS transaction linked to the client whatever its status, with no PDF, and never a shillinq sales invoice. Partial, built, no demand; one competitor yes (odoo-crm)",
+		"change": null,
+		"decidedOn": "2026-09-27"
+	}
+]

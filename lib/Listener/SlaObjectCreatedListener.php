@@ -33,6 +33,7 @@ use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\BackgroundJob\DeferredObjectListenerJob;
 use OCA\Pipelinq\Service\SchemaMapService;
 use OCA\Pipelinq\Service\SlaEngineService;
+use OCA\Pipelinq\Service\TicketService;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use OCP\IAppConfig;
@@ -74,7 +75,21 @@ class SlaObjectCreatedListener implements IEventListener, DeferredObjectWork {
 	 */
 	public const HANDLER_KEY = 'sla-object-created';
 
-	private const TRACKED_TYPES = ['request', 'complaint', 'complaint', 'callback'];
+	/**
+	 * Ticket subtypes that carry SLA tracking, mapped to the SLA type a policy's
+	 * `appliesTo` names. Since unify-ticket-supertype both subtypes live on the
+	 * single `ticket` schema and are told apart by the `ticketType`
+	 * discriminator, so the schema's entity type (`ticket`) is never itself an
+	 * SLA type. Mirrors SlaDeadlineSweepJob::TICKET_TYPE_LABELS.
+	 *
+	 * No register declares a callback schema, so `callback` is not tracked.
+	 *
+	 * @var array<string, string>
+	 */
+	private const TICKET_TYPE_LABELS = [
+		TicketService::TYPE_REQUEST => 'request',
+		TicketService::TYPE_COMPLAINT => 'complaint',
+	];
 
 	/**
 	 * Constructor.
@@ -124,12 +139,14 @@ class SlaObjectCreatedListener implements IEventListener, DeferredObjectWork {
 		try {
 			$entity = $event->getObject();
 			$schemaId = (string)$entity->getSchema();
-			$type = $this->schemaMapService->resolveEntityType($schemaId);
-			if (in_array($type, self::TRACKED_TYPES, true) === false) {
+			$data = $entity->getObject();
+			$type = $this->resolveSlaType(
+				entityType: (string)$this->schemaMapService->resolveEntityType($schemaId),
+				data: $data
+			);
+			if ($type === null) {
 				return;
 			}
-
-			$data = $entity->getObject();
 
 			// Already initialised? Don't recompute (REQ-001 immutability).
 			if (isset($data['slaStatus']) === true && is_array($data['slaStatus']) === true
@@ -227,6 +244,22 @@ class SlaObjectCreatedListener implements IEventListener, DeferredObjectWork {
 			'contractId' => (string)($data['contractId'] ?? ''),
 		];
 	}//end extractMetadata()
+
+	/**
+	 * Resolve the SLA type of an object, or null when it is not SLA-tracked.
+	 *
+	 * @param string $entityType Entity type the object's schema maps to.
+	 * @param array<string, mixed> $data Object data (for the ticket discriminator).
+	 *
+	 * @return string|null The SLA type (`request` / `complaint`), or null.
+	 */
+	private function resolveSlaType(string $entityType, array $data): ?string {
+		if ($entityType !== 'ticket') {
+			return null;
+		}
+
+		return (self::TICKET_TYPE_LABELS[(string)($data['ticketType'] ?? '')] ?? null);
+	}//end resolveSlaType()
 
 	/**
 	 * Read the tracked object's current data.

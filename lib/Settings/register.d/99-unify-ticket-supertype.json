@@ -5,7 +5,7 @@
         "slug": "ticket",
         "title": "Ticket",
         "icon": "TicketOutline",
-        "version": "1.0.0",
+        "version": "1.1.0",
         "summary": "Unified inbound customer matter — request, complaint or contactmoment",
         "description": "The ticket supertype folds the former request, complaint and contactmoment schemas into one object distinguished by a ticketType discriminator (unify-ticket-supertype). A ticket is any inbound customer matter: a request/demand (with pipeline & queue), a complaint/klacht (with SLA & resolution) or a contactmoment (a single logged interaction, optionally hanging off a parent request-ticket). Per-type Schema.org identity is preserved via x-schema-org-by-type.",
         "x-schema-org": "schema:Thing",
@@ -217,7 +217,7 @@
             "type": "string",
             "title": "Status",
             "description": "Unified lifecycle status across all ticket types.",
-            "enum": ["new", "in_progress", "resolved", "completed", "rejected", "converted", "closed"],
+            "enum": ["new", "in_progress", "awaiting_customer", "resolved", "completed", "rejected", "converted", "closed"],
             "default": "new",
             "facetable": true
           },
@@ -347,6 +347,37 @@
             "type": "string",
             "title": "Notes",
             "description": "Free-text notes on the interaction (contactmoment only)."
+          },
+          "customerMessage": {
+            "type": "string",
+            "title": "Message to the customer",
+            "description": "Shown to the customer on this request in the customer portal. Everything else on the ticket stays internal.",
+            "x-notes": "pipelinq#2038: the portal used to read customer-visible notes from `notes`, which is an internal string. Set the status to awaiting_customer to let the customer reply."
+          },
+          "portalReplies": {
+            "type": "array",
+            "title": "Customer replies",
+            "description": "Replies the customer sent from the customer portal, oldest first.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "message": { "type": "string" },
+                "createdAt": { "type": "string", "format": "date-time" }
+              }
+            },
+            "x-notes": "Written by PortalRequestService::addReply() only."
+          },
+          "reporterAccountId": {
+            "type": "string",
+            "title": "Portal account",
+            "description": "The customer portal account that submitted this request.",
+            "x-notes": "Set by the portal on submit; the portal's rate limit counts a customer's requests by it."
+          },
+          "attachmentIds": {
+            "type": "array",
+            "title": "Portal attachments",
+            "description": "Files the customer attached when submitting this request in the portal.",
+            "items": { "type": "string" }
           }
         }
       }

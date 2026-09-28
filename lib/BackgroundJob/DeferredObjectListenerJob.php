@@ -29,6 +29,7 @@ use OCA\Pipelinq\Listener\DeferredWorkGuard;
 use OCA\Pipelinq\Listener\ExpenseApprovalListener;
 use OCA\Pipelinq\Listener\SlaObjectCreatedListener;
 use OCA\Pipelinq\Listener\SlaObjectUpdatedListener;
+use OCA\Pipelinq\Listener\SurveyDispatchListener;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IUserManager;
 use OCP\IUserSession;
@@ -79,6 +80,7 @@ class DeferredObjectListenerJob extends ActorForwardedJob {
 		ExpenseApprovalListener::HANDLER_KEY => ExpenseApprovalListener::class,
 		SlaObjectCreatedListener::HANDLER_KEY => SlaObjectCreatedListener::class,
 		SlaObjectUpdatedListener::HANDLER_KEY => SlaObjectUpdatedListener::class,
+		SurveyDispatchListener::HANDLER_KEY => SurveyDispatchListener::class,
 	];
 
 	/**

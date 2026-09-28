@@ -2,6 +2,7 @@
     "components": {
         "schemas": {
             "billingTimeEntry": {
+                "slug": "billingTimeEntry",
                 "properties": {
                     "timeEntry": {
                         "type": "string",
@@ -35,6 +36,7 @@
                 }
             },
             "client": {
+                "slug": "client",
                 "properties": {
                     "shillinqOrganisationRef": {
                         "type": "string",

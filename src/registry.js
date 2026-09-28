@@ -73,6 +73,7 @@ import SocialPublicationsSection from './components/marketing/SocialPublications
 //     vocabulary, and because the list view leads with per-state counts that
 //     summaryAggregates cannot express. ---
 import SubscriptionsSection from './components/marketing/SubscriptionsSection.vue'
+import PartyIndicatorPanel from './components/PartyIndicatorPanel.vue'
 // --- Cash-shift detail — declarative type:"detail": the closing count is its
 //     actionsComponent; the drops (with Add drop) and the latest/pending
 //     cashDiff variance are grid widgets. ---
@@ -114,6 +115,7 @@ import ChannelDistributionSection from './components/rapportage/ChannelDistribut
 //     once and keeps the in-widget filtering (pipeline selector + win/loss
 //     date-range re-fetch) the legacy view had. ---
 import LeadAnalyticsSection from './components/rapportage/LeadAnalyticsSection.vue'
+import RoutingSuggestionSection from './components/RoutingSuggestionSection.vue'
 // --- Service Hub — cards-collapse landing page (service-group-cards-collapse,
 //     ADR-044). Replaces the expandable Service nav group with a single
 //     top-level menu item linking to this card grid. ---
@@ -819,6 +821,11 @@ const registry = {
 		component: ContactmomentQuickLog,
 		_note: 'Inline contactmoment quick-log form pre-bound to the client (clientId, inline mode). On save it emits @saved; in declarative mode the page is refreshed via the CnDetailPage Refresh action rather than an imperative re-fetch.',
 	},
+	PartyIndicatorPanel: {
+		kind: 'section',
+		component: PartyIndicatorPanel,
+		_note: 'The warnings on a client or contact (pipelinq#2036): every party indicator in force, loudest first, with acknowledgement and an add-warning form. Self-fetches GET /api/leaves/party/{partyId}; rendered before the body on ClientDetail and ContactDetail so it is read before contact is made.',
+	},
 	BrpContactPanel: {
 		kind: 'section',
 		component: BrpContactPanel,
@@ -844,6 +851,11 @@ const registry = {
 		kind: 'section',
 		component: RequestConversionSection,
 		_note: '"Convert to case" action for the TicketDetail page (semantic-handoff-emit; formerly RequestDetail, retired by unify-ticket-supertype). Self-fetches GET /api/handoff/request/{id}/availability by @objectId; renders the button only when canConvert (an ns#Case implementer is installed AND status is in_progress). On success shows the converted notice + a copyable caseReference — the target app is kind-addressed and unknown to the frontend, so no precise cross-app route can be built.',
+	},
+	RoutingSuggestionSection: {
+		kind: 'section',
+		component: RoutingSuggestionSection,
+		_note: 'Suggested colleagues for the TicketDetail and LeadDetail pages (pipelinq#2039, pipelinq#2049): mounts RoutingSuggestionPanel for @objectId (ranked by skill match on the record category, availability and workload, capped per agent by maxConcurrent) and writes the chosen colleague into the record assignee through the object store.',
 	},
 	ContractInvoicingSection: {
 		kind: 'section',
