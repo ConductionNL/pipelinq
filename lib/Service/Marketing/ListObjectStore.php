@@ -224,6 +224,39 @@ class ListObjectStore {
 	}//end save()
 
 	/**
+	 * Delete one object.
+	 *
+	 * @param string $schemaSlug The schema the object belongs to.
+	 * @param string $id Object UUID.
+	 *
+	 * @return boolean True when the object was deleted.
+	 *
+	 * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
+	 */
+	public function delete(string $schemaSlug, string $id): bool {
+		$context = $this->context(schemaSlug: $schemaSlug);
+		if ($context === null || $id === '') {
+			return false;
+		}
+
+		try {
+			return (bool)$context['service']->deleteObject(
+				uuid: $id,
+				register: $context['register'],
+				schema: $context['schema'],
+				_rbac: false,
+				_multitenancy: false,
+			);
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				'ListObjectStore.delete: delete failed',
+				['schema' => $schemaSlug, 'id' => $id, 'exception' => $e->getMessage()]
+			);
+			return false;
+		}
+	}//end delete()
+
+	/**
 	 * Extract the canonical id from an entity payload.
 	 *
 	 * @param array<string, mixed>|null $payload Entity payload.

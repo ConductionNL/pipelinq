@@ -51,6 +51,8 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Service\Marketing\JourneyService;
+use OCA\Pipelinq\Service\Marketing\ListObjectStore;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -174,6 +176,8 @@ class DemoSeedService {
 	 * @param ContainerInterface $container Container for the OpenRegister ObjectService.
 	 * @param ContactVcardService $contactVcardService Contact-first identity provisioning (client.contactsUid).
 	 * @param TicketService $ticketService Unified ticket resolver + write path.
+	 * @param JourneyService $journeyService Journey write path, which compiles each journey into a flow.
+	 * @param ListObjectStore $store Session-free object access for journeys and their runs.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
@@ -181,6 +185,8 @@ class DemoSeedService {
 		private readonly ContainerInterface $container,
 		private readonly ContactVcardService $contactVcardService,
 		private readonly TicketService $ticketService,
+		private readonly JourneyService $journeyService,
+		private readonly ListObjectStore $store,
 		private readonly LoggerInterface $logger,
 	) {
 	}//end __construct()
@@ -235,7 +241,8 @@ class DemoSeedService {
 				// drift apart without this list changing too.
 				'description' => (
 					'A worked CRM: clients and contacts, pipelines, products and leads, requests, '
-					. 'complaints and contact moments, tasks and contracts. It shows the lists, '
+					. 'complaints and contact moments, tasks and contracts, and marketing journeys '
+					. 'that are not switched on. It shows the lists, '
 					. 'detail pages and dashboards working. Safe to run more than once, and '
 					. '`occ pipelinq:demo:remove` takes it away again.'
 				),
@@ -327,6 +334,11 @@ class DemoSeedService {
 			}//end foreach
 		}//end foreach
 
+		$journeys = $this->seedJourneys(definitions: ($definitions['journeys'] ?? []), uuids: $uuids);
+		$created['journeys'] = $journeys['created'];
+		$created['journeyRuns'] = $journeys['runs'];
+		$skipped['journeys'] = $journeys['skipped'];
+
 		return ['success' => true, 'created' => $created, 'skipped' => $skipped];
 	}//end seed()
 
@@ -354,7 +366,8 @@ class DemoSeedService {
 
 		[$objectService, $registerId, $schemaIds, $definitions] = $context;
 
-		$removed = [];
+		$journeys = $this->removeJourneys(definitions: ($definitions['journeys'] ?? []));
+		$removed = ['journeys' => $journeys['journeys'], 'journeyRuns' => $journeys['runs']];
 		$retained = [];
 		$sections = array_reverse(self::SECTIONS, true);
 
@@ -438,6 +451,168 @@ class DemoSeedService {
 			null
 		);
 	}//end saveSeedObject()
+
+	/**
+	 * Seed the demo journeys and the runs that fill their run log.
+	 *
+	 * Journeys go through JourneyService, the write path the journey form uses,
+	 * so each one is compiled into a flow like a real journey: saved around it,
+	 * a journey is stored as "not compiled", which reads as broken on the list.
+	 * The compiler only enables the flow of an ACTIVE journey, so a demo journey
+	 * is held to draft or paused and its flow never runs.
+	 *
+	 * A journey that already exists is skipped with its runs, which keeps a
+	 * re-run from doubling the run log.
+	 *
+	 * @param array<int, array<string, mixed>> $definitions The seed file's `journeys` section.
+	 * @param array<string, string> $uuids Section-local keys mapped to seeded uuids.
+	 *
+	 * @return array{created: int, runs: int, skipped: int} Counts.
+	 *
+	 * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
+	 */
+	private function seedJourneys(array $definitions, array $uuids): array {
+		$counts = ['created' => 0, 'runs' => 0, 'skipped' => 0];
+		if ($definitions === []) {
+			return $counts;
+		}
+
+		$existing = [];
+		foreach ($this->journeyService->listJourneys() as $journey) {
+			$existing[(string)($journey['name'] ?? '')] = true;
+		}
+
+		$runSchema = $this->store->schemaSlug('journeyRun_schema', JourneyService::RUN_SCHEMA);
+
+		foreach ($definitions as $definition) {
+			$data = ($definition['data'] ?? []);
+			if (isset($existing[(string)($data['name'] ?? '')]) === true) {
+				$counts['skipped']++;
+				continue;
+			}
+
+			if (in_array(($data['status'] ?? ''), ['draft', 'paused'], true) === false) {
+				$data['status'] = 'draft';
+			}
+
+			$saved = $this->journeyService->save(payload: $data, createdByUid: '');
+			$journeyId = $this->store->idOf(payload: $saved);
+			if ($journeyId === '') {
+				$this->logger->warning('Pipelinq demo seed: journey not saved', ['name' => ($data['name'] ?? '')]);
+				continue;
+			}
+
+			$counts['created']++;
+
+			foreach (($definition['runs'] ?? []) as $run) {
+				$payload = $this->resolvePlaceholders(data: ($run['data'] ?? []));
+				$payload = $this->linkOneReference(
+					data: $payload,
+					definition: $run,
+					uuids: $uuids,
+					keyName: 'contactKey',
+					section: 'contacts',
+					field: 'contactId',
+				);
+				$payload = $this->linkOneReference(
+					data: $payload,
+					definition: $run,
+					uuids: $uuids,
+					keyName: 'clientKey',
+					section: 'clients',
+					field: 'clientId',
+				);
+				$payload['journeyId'] = $journeyId;
+
+				if ($this->store->save(schemaSlug: $runSchema, payload: $payload) !== null) {
+					$counts['runs']++;
+				}
+			}
+		}//end foreach
+
+		return $counts;
+	}//end seedJourneys()
+
+	/**
+	 * Remove the demo journeys, their runs and the flows they compiled into.
+	 *
+	 * The flow goes first: a journey deleted without it leaves a flow nothing
+	 * points at. Its delete is best effort, because the flow engine only finds
+	 * a flow for the organisation that saved it; one it cannot find is logged
+	 * and left, which is harmless since a demo journey's flow is never enabled.
+	 *
+	 * @param array<int, array<string, mixed>> $definitions The seed file's `journeys` section.
+	 *
+	 * @return array{journeys: int, runs: int} Counts.
+	 *
+	 * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
+	 */
+	private function removeJourneys(array $definitions): array {
+		$counts = ['journeys' => 0, 'runs' => 0];
+
+		$names = [];
+		foreach ($definitions as $definition) {
+			$name = (string)($definition['data']['name'] ?? '');
+			// Guard: only ever delete journeys carrying the demo marker.
+			if (str_starts_with($name, self::DEMO_PREFIX) === true) {
+				$names[$name] = true;
+			}
+		}
+
+		if ($names === []) {
+			return $counts;
+		}
+
+		$journeySchema = $this->store->schemaSlug('journey_schema', JourneyService::JOURNEY_SCHEMA);
+		$runSchema = $this->store->schemaSlug('journeyRun_schema', JourneyService::RUN_SCHEMA);
+
+		foreach ($this->journeyService->listJourneys() as $journey) {
+			if (isset($names[(string)($journey['name'] ?? '')]) === false) {
+				continue;
+			}
+
+			$journeyId = $this->store->idOf(payload: $journey);
+			if ($journeyId === '') {
+				continue;
+			}
+
+			$this->deleteFlow(flowUuid: trim((string)($journey['flowUuid'] ?? '')));
+
+			foreach ($this->journeyService->runsFor(journeyId: $journeyId) as $run) {
+				if ($this->store->delete(schemaSlug: $runSchema, id: $this->store->idOf(payload: $run)) === true) {
+					$counts['runs']++;
+				}
+			}
+
+			if ($this->store->delete(schemaSlug: $journeySchema, id: $journeyId) === true) {
+				$counts['journeys']++;
+			}
+		}//end foreach
+
+		return $counts;
+	}//end removeJourneys()
+
+	/**
+	 * Delete the flow a demo journey compiled into, when the engine can find it.
+	 *
+	 * @param string $flowUuid The flow uuid, or empty when it never compiled.
+	 *
+	 * @return void
+	 */
+	private function deleteFlow(string $flowUuid): void {
+		if ($flowUuid === '') {
+			return;
+		}
+
+		try {
+			$this->container->get(JourneyService::FLOW_SERVICE)->delete($flowUuid);
+		} catch (\Throwable $e) {
+			$this->logger->info(
+				'Pipelinq demo seed: left a demo journey flow in place',
+				['flowUuid' => $flowUuid, 'exception' => $e->getMessage()]
+			);
+		}
+	}//end deleteFlow()
 
 	/**
 	 * Resolve the ObjectService, register id, schema ids and seed definitions.

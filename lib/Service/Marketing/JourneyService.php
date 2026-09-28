@@ -281,7 +281,9 @@ class JourneyService {
 	 * @return string The uuid, empty when it carries none.
 	 */
 	private function uuidOf(mixed $flow): string {
-		if (is_object($flow) === true && method_exists($flow, 'getUuid') === true) {
+		// The Flow entity's getters are magic (__call), so method_exists never
+		// finds getUuid; is_callable does.
+		if (is_object($flow) === true && is_callable([$flow, 'getUuid']) === true) {
 			return (string)$flow->getUuid();
 		}
 

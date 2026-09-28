@@ -34,6 +34,8 @@ use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Service\ContactVcardService;
 use OCA\Pipelinq\Service\DemoSeedService;
+use OCA\Pipelinq\Service\Marketing\JourneyService;
+use OCA\Pipelinq\Service\Marketing\ListObjectStore;
 use OCA\Pipelinq\Service\TicketService;
 use OCP\IAppConfig;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -131,6 +133,20 @@ class DemoSeedServiceTest extends TestCase {
 	private TicketService $ticketService;
 
 	/**
+	 * Mocked journey write path.
+	 *
+	 * @var JourneyService&MockObject
+	 */
+	private JourneyService $journeyService;
+
+	/**
+	 * Mocked session-free object store.
+	 *
+	 * @var ListObjectStore&MockObject
+	 */
+	private ListObjectStore $store;
+
+	/**
 	 * Service under test.
 	 *
 	 * @var DemoSeedService
@@ -150,6 +166,13 @@ class DemoSeedServiceTest extends TestCase {
 		$this->objectService = $this->createMock(ObjectServiceInterface::class);
 		$this->contactVcardService = $this->createMock(ContactVcardService::class);
 		$this->ticketService = $this->createMock(TicketService::class);
+		$this->journeyService = $this->createMock(JourneyService::class);
+		$this->store = $this->createMock(ListObjectStore::class);
+
+		$this->store->method('schemaSlug')
+			->willReturnCallback(static fn (string $configKey, string $default): string => $default);
+		$this->store->method('idOf')
+			->willReturnCallback(static fn (?array $payload): string => (string)($payload['id'] ?? ''));
 
 		$this->container->method('get')
 			->with('OCA\OpenRegister\Service\ObjectService')
@@ -171,6 +194,8 @@ class DemoSeedServiceTest extends TestCase {
 			container: $this->container,
 			contactVcardService: $this->contactVcardService,
 			ticketService: $this->ticketService,
+			journeyService: $this->journeyService,
+			store: $this->store,
 			logger: $this->createMock(LoggerInterface::class),
 		);
 	}//end setUp()
@@ -650,6 +675,8 @@ class DemoSeedServiceTest extends TestCase {
 			container: $this->container,
 			contactVcardService: $failingVcard,
 			ticketService: $this->ticketService,
+			journeyService: $this->journeyService,
+			store: $this->store,
 			logger: $this->createMock(LoggerInterface::class),
 		);
 
@@ -658,4 +685,196 @@ class DemoSeedServiceTest extends TestCase {
 		self::assertFalse($result['success']);
 		self::assertStringContainsString('Contacts', (string)$result['message']);
 	}//end testSeedFailsWhenContactProvisioningUnavailable()
+
+	/**
+	 * Demo journeys are saved through JourneyService, never switched on, and
+	 * their runs name the seeded demo contact and client.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
+	 */
+	public function testSeedSavesDemoJourneysAndLinksTheirRuns(): void {
+		$this->provisionConfig();
+		$this->objectService->method('findAll')->willReturn([]);
+
+		$sequence = 0;
+		$this->objectService->method('saveObject')
+			->willReturnCallback(
+				static function (array $data, array $extend, string $register, string $schema) use (&$sequence): object {
+					$sequence++;
+					return self::savedEntity('uuid-' . $schema . '-' . $sequence);
+				}
+			);
+		$this->ticketService->method('save')
+			->willReturnCallback(
+				static function () use (&$sequence): object {
+					$sequence++;
+					return self::savedEntity('uuid-ticket-' . $sequence);
+				}
+			);
+
+		$this->journeyService->method('listJourneys')->willReturn([]);
+		$journeys = [];
+		$this->journeyService->method('save')
+			->willReturnCallback(
+				static function (array $payload) use (&$journeys): array {
+					$journeys[] = $payload;
+					return ['id' => 'journey-' . count($journeys)] + $payload;
+				}
+			);
+
+		$runs = [];
+		$this->store->method('save')
+			->willReturnCallback(
+				static function (string $schemaSlug, array $payload) use (&$runs): array {
+					$runs[] = ['schema' => $schemaSlug, 'data' => $payload];
+					return ['id' => 'run-' . count($runs)];
+				}
+			);
+
+		$result = $this->service->seed();
+
+		self::assertTrue($result['success']);
+		self::assertSame(count(self::definitions()['journeys']), $result['created']['journeys']);
+		self::assertSame(count($runs), $result['created']['journeyRuns']);
+		self::assertNotSame(0, count($runs));
+
+		foreach ($journeys as $journey) {
+			self::assertStringStartsWith(DemoSeedService::DEMO_PREFIX, $journey['name']);
+			self::assertContains($journey['status'], ['draft', 'paused'], 'A demo journey is never active');
+		}
+
+		foreach ($runs as $run) {
+			self::assertSame('journeyRun', $run['schema']);
+			self::assertStringStartsWith('journey-', $run['data']['journeyId']);
+			self::assertStringStartsWith('uuid-' . self::SCHEMA_IDS['contact_schema'] . '-', $run['data']['contactId']);
+			self::assertStringStartsWith('uuid-' . self::SCHEMA_IDS['client_schema'] . '-', $run['data']['clientId']);
+			self::assertStringStartsNotWith('@', $run['data']['occurredAt']);
+		}
+	}//end testSeedSavesDemoJourneysAndLinksTheirRuns()
+
+	/**
+	 * A demo journey that already exists is skipped, and so are its runs.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
+	 */
+	public function testSeedSkipsDemoJourneysThatAlreadyExist(): void {
+		$this->provisionConfig();
+		$store = self::seededStore();
+		$this->mockFindAllFromStore($store);
+
+		$this->journeyService->method('listJourneys')->willReturn(
+			array_map(
+				static fn (array $definition): array => ['id' => $definition['key'], 'name' => $definition['data']['name']],
+				self::definitions()['journeys']
+			)
+		);
+		$this->journeyService->expects(self::never())->method('save');
+		$this->store->expects(self::never())->method('save');
+
+		$result = $this->service->seed();
+
+		self::assertSame(0, $result['created']['journeys']);
+		self::assertSame(count(self::definitions()['journeys']), $result['skipped']['journeys']);
+	}//end testSeedSkipsDemoJourneysThatAlreadyExist()
+
+	/**
+	 * A journey the seed file marks active is saved as a draft, so its flow
+	 * is never enabled.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
+	 */
+	public function testSeedHoldsAnActiveDemoJourneyToDraft(): void {
+		$this->journeyService->method('listJourneys')->willReturn([]);
+		$saved = [];
+		$this->journeyService->method('save')
+			->willReturnCallback(
+				static function (array $payload) use (&$saved): array {
+					$saved[] = $payload;
+					return ['id' => 'journey-1'];
+				}
+			);
+
+		$method = new \ReflectionMethod(DemoSeedService::class, 'seedJourneys');
+		$method->invoke(
+			$this->service,
+			[['key' => 'active', 'data' => ['name' => '[Demo] Active', 'status' => 'active', 'trigger' => ['kind' => 'listConfirmed'], 'action' => ['kind' => 'createTask']]]],
+			[]
+		);
+
+		self::assertSame('draft', $saved[0]['status']);
+	}//end testSeedHoldsAnActiveDemoJourneyToDraft()
+
+	/**
+	 * Removal deletes each demo journey with its runs and its flow, and never
+	 * touches a journey without the demo marker.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
+	 */
+	public function testRemoveDeletesDemoJourneysWithTheirRunsAndFlows(): void {
+		$this->provisionConfig();
+		$this->objectService->method('findAll')->willReturn([]);
+
+		$flows = new class {
+			/** @var array<int, string> */
+			public array $deleted = [];
+
+			public function delete(string $uuid): void {
+				$this->deleted[] = $uuid;
+			}
+		};
+
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')
+			->willReturnCallback(
+				fn (string $id): object => ($id === JourneyService::FLOW_SERVICE ? $flows : $this->objectService)
+			);
+
+		$journeys = [];
+		foreach (self::definitions()['journeys'] as $i => $definition) {
+			$journeys[] = ['id' => 'journey-' . $i, 'name' => $definition['data']['name'], 'flowUuid' => 'flow-' . $i];
+		}
+		$journeys[] = ['id' => 'journey-real', 'name' => 'Real journey', 'flowUuid' => 'flow-real'];
+
+		$this->journeyService->method('listJourneys')->willReturn($journeys);
+		$this->journeyService->method('runsFor')
+			->willReturnCallback(static fn (string $journeyId): array => [['id' => 'run-of-' . $journeyId]]);
+
+		$deleted = [];
+		$this->store->method('delete')
+			->willReturnCallback(
+				static function (string $schemaSlug, string $id) use (&$deleted): bool {
+					$deleted[] = $id;
+					return true;
+				}
+			);
+
+		$service = new DemoSeedService(
+			appConfig: $this->appConfig,
+			container: $container,
+			contactVcardService: $this->contactVcardService,
+			ticketService: $this->ticketService,
+			journeyService: $this->journeyService,
+			store: $this->store,
+			logger: $this->createMock(LoggerInterface::class),
+		);
+
+		$result = $service->remove();
+
+		$count = count(self::definitions()['journeys']);
+		self::assertTrue($result['success']);
+		self::assertSame($count, $result['removed']['journeys']);
+		self::assertSame($count, $result['removed']['journeyRuns']);
+		self::assertCount($count, $flows->deleted);
+		self::assertNotContains('flow-real', $flows->deleted);
+		self::assertNotContains('journey-real', $deleted);
+		self::assertNotContains('run-of-journey-real', $deleted);
+	}//end testRemoveDeletesDemoJourneysWithTheirRunsAndFlows()
 }//end class

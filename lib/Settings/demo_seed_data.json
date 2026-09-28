@@ -1,5 +1,5 @@
 {
-    "_comment": "Demo dataset for `occ pipelinq:demo:seed` (DemoSeedService). Every object is marked with the '[Demo]' prefix on its lookup field (client.name / contact.name / pipeline.title / product.name / lead.title / ticket.title / task.subject) so the seed is idempotent (exact-match lookup) and removable (--remove deletes exactly this set). Date placeholders: '@days:N' -> Y-m-d today+N, '@datetime:N' -> ISO-8601 today+N. openspec/changes/align-claims-and-first-hour REQ-SETUP-PIP-008.",
+    "_comment": "Demo dataset for `occ pipelinq:demo:seed` (DemoSeedService). Every object is marked with the '[Demo]' prefix on its lookup field (client.name / contact.name / pipeline.title / product.name / lead.title / ticket.title / task.subject / journey.name) so the seed is idempotent (exact-match lookup) and removable (--remove deletes exactly this set). Date placeholders: '@days:N' -> Y-m-d today+N, '@datetime:N' -> ISO-8601 today+N. openspec/changes/align-claims-and-first-hour REQ-SETUP-PIP-008.",
     "_coverageNote": "The contacts / pipelines / products / complaints / tasks sections were added 2026-08-06. Measured on run 31082256226: the CONTACTS, TASKS and PIPELINES index pages had a genuinely empty collection on a fresh install — the base register ships example objects for products (14), clients, leads, tickets and the POS entities, but none at all for contact, task or pipeline — so CnIndexPage rendered `cn-index-page__empty` and no data table, silently, with no console error and no failed request. Every 'the list table renders' assertion in tests/e2e/spec-coverage failed for a reason that pointed at the page rather than at the fixture. Products was NOT empty; the extra rows here exist so the seeded set is coherent (a client has contact persons) rather than to repair that page.",
 
     "clients": [
@@ -69,5 +69,43 @@
         { "key": "task-terugbel", "data": { "subject": "[Demo] Terugbellen over parkeervergunning", "type": "callbackRequest", "status": "open", "priority": "high", "deadline": "@datetime:1", "description": "Demo task: call the applicant back about the parking permit.", "callbackPhoneNumber": "+31612345678" } },
         { "key": "task-opvolg", "data": { "subject": "[Demo] Offerte webshop opvolgen", "type": "followUpTask", "status": "in_progress", "priority": "normal", "deadline": "@datetime:3", "description": "Demo task: follow up on the webshop quotation." } },
         { "key": "task-info", "data": { "subject": "[Demo] Informatievraag afvalkalender", "type": "informationRequest", "status": "completed", "priority": "low", "deadline": "@datetime:-2", "description": "Demo task: answer the waste-calendar question." } }
+    ],
+
+    "_journeysNote": "Journeys are saved through JourneyService so each compiles into a flow, and are held to draft or paused so that flow is never enabled. Each journey's `runs` fill the run log on its detail page; a run names a demo contact (contactKey) and client (clientKey), and its `reason` is one of the codes the run log puts into words.",
+    "journeys": [
+        {
+            "key": "journey-herinnering-verlenging",
+            "data": { "name": "[Demo] Terugbellen bij contractverlenging", "description": "Demo journey: puts a call on the account manager's list three weeks before a contract is up for renewal, unless it was cancelled in the meantime.", "status": "paused", "audienceSegment": "segment-renewing-within-ninety-days", "trigger": { "kind": "contractRenewalWindow" }, "waitFor": "21 days", "condition": { "field": "status", "operator": "notEquals", "value": "cancelled" }, "action": { "kind": "createTask", "taskSubject": "Bellen over de contractverlenging", "taskType": "callbackRequest", "intent": "service" } },
+            "runs": [
+                { "contactKey": "contact-bakker", "clientKey": "bakkerij", "data": { "state": "task-created", "actionKind": "createTask", "occurredAt": "@datetime:-12" } },
+                { "contactKey": "contact-inkoop", "clientKey": "gemeente", "data": { "state": "task-created", "actionKind": "createTask", "occurredAt": "@datetime:-5" } }
+            ]
+        },
+        {
+            "key": "journey-welkom-nieuwsbrief",
+            "data": { "name": "[Demo] Welkom voor nieuwe abonnees", "description": "Demo journey: sends a welcome mail the day after someone confirms their newsletter subscription.", "status": "paused", "trigger": { "kind": "listConfirmed" }, "waitFor": "1 day", "action": { "kind": "sendMailing", "intent": "service" } },
+            "runs": [
+                { "contactKey": "contact-mulder", "clientKey": "bakkerij", "data": { "state": "sent", "actionKind": "sendMailing", "occurredAt": "@datetime:-20" } },
+                { "contactKey": "contact-kcc", "clientKey": "gemeente", "data": { "state": "sent", "actionKind": "sendMailing", "occurredAt": "@datetime:-14" } },
+                { "contactKey": "contact-inkoop", "clientKey": "gemeente", "data": { "state": "refused", "reason": "no_consent", "actionKind": "sendMailing", "occurredAt": "@datetime:-9" } },
+                { "contactKey": "contact-bakker", "clientKey": "bakkerij", "data": { "state": "failed", "reason": "transport_rejected", "actionKind": "sendMailing", "occurredAt": "@datetime:-3" } }
+            ]
+        },
+        {
+            "key": "journey-vastgelopen-leads",
+            "data": { "name": "[Demo] Vastgelopen leads opvolgen", "description": "Demo journey: when a lead moves into Offerte and is still open a month later, a follow-up task goes to the sales team.", "status": "draft", "audienceSegment": "segment-stalled-leads-thirty-days", "trigger": { "kind": "leadStageChanged" }, "waitFor": "30 days", "condition": { "field": "status", "operator": "equals", "value": "open" }, "action": { "kind": "createTask", "taskSubject": "Vastgelopen lead opvolgen", "taskType": "followUpTask" } }
+        },
+        {
+            "key": "journey-klanten-terugwinnen",
+            "data": { "name": "[Demo] Oud-klanten terugwinnen", "description": "Demo journey: each morning, mails customers who have not bought anything in a year with an offer to come back.", "status": "paused", "audienceSegment": "segment-lapsed-customers", "trigger": { "kind": "shillinqSignal", "cron": "0 7 * * *" }, "action": { "kind": "sendMailing", "intent": "promotional" } },
+            "runs": [
+                { "contactKey": "contact-mulder", "clientKey": "bakkerij", "data": { "state": "sent", "actionKind": "sendMailing", "occurredAt": "@datetime:-30" } },
+                { "contactKey": "contact-kcc", "clientKey": "gemeente", "data": { "state": "refused", "reason": "suppressed_dunning", "actionKind": "sendMailing", "occurredAt": "@datetime:-30" } }
+            ]
+        },
+        {
+            "key": "journey-topklanten-bedanken",
+            "data": { "name": "[Demo] Topklanten bedanken", "description": "Demo journey: on the first of each month, thanks the top tier customers with a personal mail.", "status": "draft", "audienceSegment": "segment-top-tier-customers", "trigger": { "kind": "shillinqSignal", "cron": "0 9 1 * *" }, "action": { "kind": "sendMailing", "intent": "promotional" } }
+        }
     ]
 }
