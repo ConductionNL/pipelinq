@@ -20,7 +20,7 @@
 				:clearable="false"
 				:inputLabel="t('pipelinq', 'Period')"
 				label="label"
-				@input="fetchRows" />
+				@update:modelValue="fetchRows" />
 		</header>
 
 		<NcLoadingIcon v-if="loading" :size="32" />
