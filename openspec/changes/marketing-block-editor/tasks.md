@@ -15,7 +15,7 @@
   - Verify: Vitest `tests/vitest/mailBlockEditor.spec.js`: adding, moving by button and removing blocks updates the array; the footer has no Remove; focus follows a moved block
 - [ ] 2.2 Mount the editor in `TemplateForm.vue` with the mode switch, the confirmation on Blocks to HTML, and the preview pane at desktop and phone width fed by `POST /api/templates/render`
   - Verify: Playwright `tests/e2e/template-block-editor.spec.ts`: create a template with a heading, a text, a button and the articles block, save, reopen, and read the same blocks; the preview shows the button label
-- [ ] 2.3 Send the Reply-to field in the save payload
+- [x] 2.3 Send the Reply-to field in the save payload
   - Verify: Vitest asserts `replyTo` in the payload
 
 ## 3. Accessibility, text and docs
