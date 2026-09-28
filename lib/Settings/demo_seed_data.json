@@ -1,5 +1,5 @@
 {
-    "_comment": "Demo dataset for `occ pipelinq:demo:seed` (DemoSeedService). Every object is marked with the '[Demo]' prefix on its lookup field (client.name / contact.name / pipeline.title / product.name / lead.title / ticket.title / task.subject / journey.name) so the seed is idempotent (exact-match lookup) and removable (--remove deletes exactly this set). Date placeholders: '@days:N' -> Y-m-d today+N, '@datetime:N' -> ISO-8601 today+N. openspec/changes/align-claims-and-first-hour REQ-SETUP-PIP-008.",
+    "_comment": "Demo dataset for `occ pipelinq:demo:seed` (DemoSeedService). Every object is marked with the '[Demo]' prefix on its lookup field (client.name / contact.name / pipeline.title / product.name / lead.title / ticket.title / task.subject / journey.name / socialAccount.displayName / socialPost.title) so the seed is idempotent (exact-match lookup) and removable (--remove deletes exactly this set). Date placeholders: '@days:N' -> Y-m-d today+N, '@datetime:N' -> ISO-8601 today+N. openspec/changes/align-claims-and-first-hour REQ-SETUP-PIP-008.",
     "_coverageNote": "The contacts / pipelines / products / complaints / tasks sections were added 2026-08-06. Measured on run 31082256226: the CONTACTS, TASKS and PIPELINES index pages had a genuinely empty collection on a fresh install — the base register ships example objects for products (14), clients, leads, tickets and the POS entities, but none at all for contact, task or pipeline — so CnIndexPage rendered `cn-index-page__empty` and no data table, silently, with no console error and no failed request. Every 'the list table renders' assertion in tests/e2e/spec-coverage failed for a reason that pointed at the page rather than at the fixture. Products was NOT empty; the extra rows here exist so the seeded set is coherent (a client has contact persons) rather than to repair that page.",
 
     "clients": [
@@ -107,5 +107,29 @@
             "key": "journey-topklanten-bedanken",
             "data": { "name": "[Demo] Topklanten bedanken", "description": "Demo journey: on the first of each month, thanks the top tier customers with a personal mail.", "status": "draft", "audienceSegment": "segment-top-tier-customers", "trigger": { "kind": "shillinqSignal", "cron": "0 9 1 * *" }, "action": { "kind": "sendMailing", "intent": "promotional" } }
         }
-    ]
+    ],
+
+    "_socialNote": "Fills the Social performance ranking. The accounts are inactive and hold no credential, so the daily follower refresh leaves their followerCount alone and the composer never offers them; the publications carry no externalId, so the daily metrics pull keeps their numbers and calls no network. Views stay 0: Mastodon and LinkedIn do not report them, and the metrics service never borrows a number. One publication has no metrics yet, which the ranking sorts last.",
+    "social": {
+        "accounts": [
+            { "key": "social-mastodon", "data": { "network": "mastodon", "kind": "organisation", "handle": "@demo@mastodon.example", "displayName": "[Demo] Conduction op Mastodon", "instanceBaseUrl": "https://mastodon.example", "publishMode": "api", "status": "pending", "active": false, "followerCount": 900, "followerCountAt": "@datetime:-1" } },
+            { "key": "social-linkedin", "data": { "network": "linkedin", "kind": "person", "handle": "demo-woordvoerder", "displayName": "[Demo] Woordvoerder op LinkedIn", "publishMode": "api", "status": "pending", "active": false, "followerCount": 4000, "followerCountAt": "@datetime:-1" } },
+            { "key": "social-bluesky", "data": { "network": "bluesky", "kind": "organisation", "handle": "demo.bsky.example", "displayName": "[Demo] Conduction op Bluesky", "publishMode": "api", "status": "pending", "active": false, "followerCount": 1500, "followerCountAt": "@datetime:-1" } }
+        ],
+        "posts": [
+            { "key": "social-post-release", "accountKeys": ["social-mastodon", "social-linkedin", "social-bluesky"], "data": { "title": "[Demo] Nieuwe versie van het klantportaal", "body": "Demo post: de nieuwe versie van het klantportaal staat live. Inwoners volgen hun aanvraag nu stap voor stap.", "status": "published", "publishedAt": "@datetime:-21" } },
+            { "key": "social-post-webinar", "accountKeys": ["social-mastodon", "social-linkedin"], "data": { "title": "[Demo] Webinar zaakgericht werken", "body": "Demo post: doe mee met ons webinar over zaakgericht werken, volgende week donderdag om 15:00.", "status": "published", "publishedAt": "@datetime:-10" } },
+            { "key": "social-post-vacature", "accountKeys": ["social-linkedin", "social-bluesky", "social-mastodon"], "data": { "title": "[Demo] Vacature developer", "body": "Demo post: we zoeken een developer die open source en de overheid net zo leuk vindt als wij.", "status": "published", "publishedAt": "@datetime:-3" } }
+        ],
+        "publications": [
+            { "postKey": "social-post-release", "accountKey": "social-mastodon", "data": { "status": "published", "url": "https://mastodon.example/@demo/1001", "publishedAt": "@datetime:-21", "metrics": { "views": 0, "likes": 48, "comments": 6, "shares": 21, "clicks": 0 }, "metricsAt": "@datetime:-1" } },
+            { "postKey": "social-post-release", "accountKey": "social-linkedin", "data": { "status": "published", "url": "https://www.linkedin.example/feed/update/demo-1001", "publishedAt": "@datetime:-21", "metrics": { "views": 0, "likes": 112, "comments": 14, "shares": 9, "clicks": 63 }, "metricsAt": "@datetime:-1" } },
+            { "postKey": "social-post-release", "accountKey": "social-bluesky", "data": { "status": "published", "url": "https://bsky.example/profile/demo.bsky.example/post/1001", "publishedAt": "@datetime:-21", "metrics": { "views": 0, "likes": 37, "comments": 4, "shares": 11, "clicks": 0 }, "metricsAt": "@datetime:-1" } },
+            { "postKey": "social-post-webinar", "accountKey": "social-mastodon", "data": { "status": "published", "url": "https://mastodon.example/@demo/1002", "publishedAt": "@datetime:-10", "metrics": { "views": 0, "likes": 19, "comments": 2, "shares": 8, "clicks": 0 }, "metricsAt": "@datetime:-1" } },
+            { "postKey": "social-post-webinar", "accountKey": "social-linkedin", "data": { "status": "published", "url": "https://www.linkedin.example/feed/update/demo-1002", "publishedAt": "@datetime:-10", "metrics": { "views": 0, "likes": 86, "comments": 21, "shares": 5, "clicks": 140 }, "metricsAt": "@datetime:-1" } },
+            { "postKey": "social-post-vacature", "accountKey": "social-linkedin", "data": { "status": "published", "url": "https://www.linkedin.example/feed/update/demo-1003", "publishedAt": "@datetime:-3", "metrics": { "views": 0, "likes": 204, "comments": 33, "shares": 41, "clicks": 97 }, "metricsAt": "@datetime:-1" } },
+            { "postKey": "social-post-vacature", "accountKey": "social-bluesky", "data": { "status": "published", "url": "https://bsky.example/profile/demo.bsky.example/post/1003", "publishedAt": "@datetime:-3", "metrics": { "views": 0, "likes": 58, "comments": 7, "shares": 26, "clicks": 0 }, "metricsAt": "@datetime:-1" } },
+            { "postKey": "social-post-vacature", "accountKey": "social-mastodon", "data": { "status": "published", "url": "https://mastodon.example/@demo/1003", "publishedAt": "@datetime:-3" } }
+        ]
+    }
 }

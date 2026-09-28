@@ -735,6 +735,9 @@ class DemoSeedServiceTest extends TestCase {
 
 		$result = $this->service->seed();
 
+		// The social section saves through the same store; only runs matter here.
+		$runs = array_values(array_filter($runs, static fn (array $save): bool => $save['schema'] === 'journeyRun'));
+
 		self::assertTrue($result['success']);
 		self::assertSame(count(self::definitions()['journeys']), $result['created']['journeys']);
 		self::assertSame(count($runs), $result['created']['journeyRuns']);
@@ -773,12 +776,19 @@ class DemoSeedServiceTest extends TestCase {
 			)
 		);
 		$this->journeyService->expects(self::never())->method('save');
-		$this->store->expects(self::never())->method('save');
+		$schemas = [];
+		$this->store->method('save')->willReturnCallback(
+			static function (string $schemaSlug) use (&$schemas): array {
+				$schemas[] = $schemaSlug;
+				return ['id' => 'saved-' . count($schemas)];
+			}
+		);
 
 		$result = $this->service->seed();
 
 		self::assertSame(0, $result['created']['journeys']);
 		self::assertSame(count(self::definitions()['journeys']), $result['skipped']['journeys']);
+		self::assertNotContains('journeyRun', $schemas, 'a skipped journey writes no runs');
 	}//end testSeedSkipsDemoJourneysThatAlreadyExist()
 
 	/**
@@ -877,4 +887,139 @@ class DemoSeedServiceTest extends TestCase {
 		self::assertNotContains('journey-real', $deleted);
 		self::assertNotContains('run-of-journey-real', $deleted);
 	}//end testRemoveDeletesDemoJourneysWithTheirRunsAndFlows()
+
+	/**
+	 * The social section seeds inactive accounts, published posts and
+	 * publications linked to them, none of which the daily jobs will act on.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
+	 */
+	public function testSeedSocialLinksPublicationsToTheSeededPostsAndAccounts(): void {
+		$saves = [];
+		$this->store->method('findAll')->willReturn([]);
+		$this->store->method('save')->willReturnCallback(
+			static function (string $schemaSlug, array $payload) use (&$saves): array {
+				$saves[] = ['schema' => $schemaSlug, 'data' => $payload];
+				return ['id' => $schemaSlug . '-' . count($saves)];
+			}
+		);
+
+		$social = self::definitions()['social'];
+		$counts = (new \ReflectionMethod(DemoSeedService::class, 'seedSocial'))->invoke($this->service, $social);
+
+		self::assertSame(count($social['accounts']), $counts['accounts']);
+		self::assertSame(count($social['posts']), $counts['posts']);
+		self::assertSame(count($social['publications']), $counts['publications']);
+
+		$networks = [];
+		foreach ($saves as $index => $save) {
+			$id = $save['schema'] . '-' . ($index + 1);
+			if ($save['schema'] === 'socialAccount') {
+				self::assertStringStartsWith(DemoSeedService::DEMO_PREFIX, $save['data']['displayName']);
+				self::assertFalse($save['data']['active'], 'the daily follower refresh must skip a demo account');
+				self::assertArrayNotHasKey('credentialRef', $save['data']);
+				$networks[$id] = $save['data']['network'];
+			}
+
+			if ($save['schema'] === 'socialPost') {
+				self::assertSame('published', $save['data']['status'], 'the publish job only acts on scheduled posts');
+				self::assertNotEmpty($save['data']['accountIds']);
+			}
+
+			if ($save['schema'] === 'socialPublication') {
+				self::assertStringStartsWith('socialPost-', $save['data']['postId']);
+				self::assertSame($networks[$save['data']['accountId']], $save['data']['network']);
+				self::assertArrayNotHasKey('externalId', $save['data'], 'the daily metrics pull must skip a demo publication');
+				self::assertStringStartsNotWith('@', $save['data']['publishedAt']);
+			}
+		}
+	}//end testSeedSocialLinksPublicationsToTheSeededPostsAndAccounts()
+
+	/**
+	 * A demo post that already exists is skipped with its publications, so a
+	 * re-run does not double the ranking.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
+	 */
+	public function testSeedSocialSkipsAnExistingPostAndItsPublications(): void {
+		$social = self::definitions()['social'];
+		$this->store->method('findAll')->willReturnCallback(
+			static function (string $schemaSlug) use ($social): array {
+				if ($schemaSlug !== 'socialPost') {
+					return [];
+				}
+
+				return array_map(
+					static fn (array $definition): array => ['id' => $definition['key'], 'title' => $definition['data']['title']],
+					$social['posts']
+				);
+			}
+		);
+		$this->store->method('save')->willReturnCallback(
+			static fn (string $schemaSlug): array => ['id' => $schemaSlug . '-new']
+		);
+
+		$counts = (new \ReflectionMethod(DemoSeedService::class, 'seedSocial'))->invoke($this->service, $social);
+
+		self::assertSame(0, $counts['posts']);
+		self::assertSame(0, $counts['publications']);
+		self::assertSame(count($social['posts']), $counts['skipped']);
+	}//end testSeedSocialSkipsAnExistingPostAndItsPublications()
+
+	/**
+	 * Removal deletes the publications of demo posts, then the posts, then the
+	 * accounts, and leaves every row without the demo marker alone.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
+	 */
+	public function testRemoveSocialDeletesOnlyTheDemoSet(): void {
+		$social = self::definitions()['social'];
+		$rows = [
+			'socialPost' => array_merge(
+				array_map(
+					static fn (array $definition): array => ['id' => $definition['key'], 'title' => $definition['data']['title']],
+					$social['posts']
+				),
+				[['id' => 'real-post', 'title' => 'Real post']]
+			),
+			'socialAccount' => array_merge(
+				array_map(
+					static fn (array $definition): array => ['id' => $definition['key'], 'displayName' => $definition['data']['displayName']],
+					$social['accounts']
+				),
+				[['id' => 'real-account', 'displayName' => 'Real account']]
+			),
+			'socialPublication' => [
+				['id' => 'pub-demo', 'postId' => $social['posts'][0]['key']],
+				['id' => 'pub-real', 'postId' => 'real-post'],
+			],
+		];
+		$this->store->method('findAll')->willReturnCallback(
+			static fn (string $schemaSlug): array => ($rows[$schemaSlug] ?? [])
+		);
+
+		$deleted = [];
+		$this->store->method('delete')->willReturnCallback(
+			static function (string $schemaSlug, string $id) use (&$deleted): bool {
+				$deleted[] = $schemaSlug . ':' . $id;
+				return true;
+			}
+		);
+
+		$counts = (new \ReflectionMethod(DemoSeedService::class, 'removeSocial'))->invoke($this->service, $social);
+
+		self::assertSame(1, $counts['publications']);
+		self::assertSame(count($social['posts']), $counts['posts']);
+		self::assertSame(count($social['accounts']), $counts['accounts']);
+		self::assertSame('socialPublication:pub-demo', $deleted[0], 'publications go before the posts they name');
+		self::assertNotContains('socialPublication:pub-real', $deleted);
+		self::assertNotContains('socialPost:real-post', $deleted);
+		self::assertNotContains('socialAccount:real-account', $deleted);
+	}//end testRemoveSocialDeletesOnlyTheDemoSet()
 }//end class

@@ -53,6 +53,7 @@ use DateTimeInterface;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\Marketing\JourneyService;
 use OCA\Pipelinq\Service\Marketing\ListObjectStore;
+use OCA\Pipelinq\Service\Social\SocialPublicationStore;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -241,8 +242,9 @@ class DemoSeedService {
 				// drift apart without this list changing too.
 				'description' => (
 					'A worked CRM: clients and contacts, pipelines, products and leads, requests, '
-					. 'complaints and contact moments, tasks and contracts, and marketing journeys '
-					. 'that are not switched on. It shows the lists, '
+					. 'complaints and contact moments, tasks and contracts, marketing journeys '
+					. 'that are not switched on, and published social posts with their numbers. '
+					. 'It shows the lists, '
 					. 'detail pages and dashboards working. Safe to run more than once, and '
 					. '`occ pipelinq:demo:remove` takes it away again.'
 				),
@@ -339,6 +341,12 @@ class DemoSeedService {
 		$created['journeyRuns'] = $journeys['runs'];
 		$skipped['journeys'] = $journeys['skipped'];
 
+		$social = $this->seedSocial(social: ($definitions['social'] ?? []));
+		$created['socialAccounts'] = $social['accounts'];
+		$created['socialPosts'] = $social['posts'];
+		$created['socialPublications'] = $social['publications'];
+		$skipped['social'] = $social['skipped'];
+
 		return ['success' => true, 'created' => $created, 'skipped' => $skipped];
 	}//end seed()
 
@@ -367,7 +375,14 @@ class DemoSeedService {
 		[$objectService, $registerId, $schemaIds, $definitions] = $context;
 
 		$journeys = $this->removeJourneys(definitions: ($definitions['journeys'] ?? []));
-		$removed = ['journeys' => $journeys['journeys'], 'journeyRuns' => $journeys['runs']];
+		$social = $this->removeSocial(social: ($definitions['social'] ?? []));
+		$removed = [
+			'journeys' => $journeys['journeys'],
+			'journeyRuns' => $journeys['runs'],
+			'socialPublications' => $social['publications'],
+			'socialPosts' => $social['posts'],
+			'socialAccounts' => $social['accounts'],
+		];
 		$retained = [];
 		$sections = array_reverse(self::SECTIONS, true);
 
@@ -613,6 +628,190 @@ class DemoSeedService {
 			);
 		}
 	}//end deleteFlow()
+
+	/**
+	 * Seed the demo social accounts, published posts and their publications.
+	 *
+	 * Written straight through the object store rather than the publishing
+	 * path, because what is seeded is the aftermath of publishing: the posts
+	 * are already out and the publications already carry the numbers the daily
+	 * pull would have stored. Nothing here touches a network.
+	 *
+	 * A post that already exists is skipped with its publications, which keeps
+	 * a re-run from doubling the ranking.
+	 *
+	 * @param array<string, array<int, array<string, mixed>>> $social The seed file's `social` section.
+	 *
+	 * @return array{accounts: int, posts: int, publications: int, skipped: int} Counts.
+	 *
+	 * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
+	 */
+	private function seedSocial(array $social): array {
+		$counts = ['accounts' => 0, 'posts' => 0, 'publications' => 0, 'skipped' => 0];
+		if ($social === []) {
+			return $counts;
+		}
+
+		[$accountSchema, $postSchema, $publicationSchema] = $this->socialSchemas();
+
+		$accountIds = [];
+		$networks = [];
+		$existingAccounts = $this->idsByField(schemaSlug: $accountSchema, field: 'displayName');
+		foreach (($social['accounts'] ?? []) as $definition) {
+			$data = $this->resolvePlaceholders(data: ($definition['data'] ?? []));
+			$networks[$definition['key']] = (string)($data['network'] ?? '');
+
+			$existing = ($existingAccounts[(string)($data['displayName'] ?? '')] ?? '');
+			if ($existing !== '') {
+				$accountIds[$definition['key']] = $existing;
+				$counts['skipped']++;
+				continue;
+			}
+
+			$id = $this->store->idOf(payload: $this->store->save(schemaSlug: $accountSchema, payload: $data));
+			if ($id !== '') {
+				$accountIds[$definition['key']] = $id;
+				$counts['accounts']++;
+			}
+		}
+
+		$newPostIds = [];
+		$existingPosts = $this->idsByField(schemaSlug: $postSchema, field: 'title');
+		foreach (($social['posts'] ?? []) as $definition) {
+			$data = $this->resolvePlaceholders(data: ($definition['data'] ?? []));
+			if (($existingPosts[(string)($data['title'] ?? '')] ?? '') !== '') {
+				$counts['skipped']++;
+				continue;
+			}
+
+			$data['accountIds'] = array_values(
+				array_filter(
+					array_map(
+						static fn (string $key): string => ($accountIds[$key] ?? ''),
+						($definition['accountKeys'] ?? [])
+					)
+				)
+			);
+
+			$id = $this->store->idOf(payload: $this->store->save(schemaSlug: $postSchema, payload: $data));
+			if ($id !== '') {
+				$newPostIds[$definition['key']] = $id;
+				$counts['posts']++;
+			}
+		}
+
+		foreach (($social['publications'] ?? []) as $definition) {
+			$postId = ($newPostIds[$definition['postKey'] ?? ''] ?? '');
+			$accountId = ($accountIds[$definition['accountKey'] ?? ''] ?? '');
+			if ($postId === '' || $accountId === '') {
+				continue;
+			}
+
+			$payload = $this->resolvePlaceholders(data: ($definition['data'] ?? []));
+			$payload['postId'] = $postId;
+			$payload['accountId'] = $accountId;
+			$payload['network'] = ($networks[$definition['accountKey']] ?? '');
+
+			if ($this->store->save(schemaSlug: $publicationSchema, payload: $payload) !== null) {
+				$counts['publications']++;
+			}
+		}
+
+		return $counts;
+	}//end seedSocial()
+
+	/**
+	 * Remove the demo publications, posts and accounts, in that order.
+	 *
+	 * Only rows whose name carries the demo marker are touched, and only the
+	 * publications of those demo posts.
+	 *
+	 * @param array<string, array<int, array<string, mixed>>> $social The seed file's `social` section.
+	 *
+	 * @return array{accounts: int, posts: int, publications: int} Counts.
+	 *
+	 * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
+	 */
+	private function removeSocial(array $social): array {
+		$counts = ['accounts' => 0, 'posts' => 0, 'publications' => 0];
+		if ($social === []) {
+			return $counts;
+		}
+
+		[$accountSchema, $postSchema, $publicationSchema] = $this->socialSchemas();
+
+		$postIds = [];
+		$posts = $this->idsByField(schemaSlug: $postSchema, field: 'title');
+		foreach (($social['posts'] ?? []) as $definition) {
+			$title = (string)($definition['data']['title'] ?? '');
+			if (str_starts_with($title, self::DEMO_PREFIX) === true && ($posts[$title] ?? '') !== '') {
+				$postIds[] = $posts[$title];
+			}
+		}
+
+		foreach ($this->store->findAll(schemaSlug: $publicationSchema) as $publication) {
+			if (in_array((string)($publication['postId'] ?? ''), $postIds, true) === false) {
+				continue;
+			}
+
+			if ($this->store->delete(schemaSlug: $publicationSchema, id: $this->store->idOf(payload: $publication)) === true) {
+				$counts['publications']++;
+			}
+		}
+
+		foreach ($postIds as $postId) {
+			if ($this->store->delete(schemaSlug: $postSchema, id: $postId) === true) {
+				$counts['posts']++;
+			}
+		}
+
+		$accounts = $this->idsByField(schemaSlug: $accountSchema, field: 'displayName');
+		foreach (($social['accounts'] ?? []) as $definition) {
+			$name = (string)($definition['data']['displayName'] ?? '');
+			if (str_starts_with($name, self::DEMO_PREFIX) === false || ($accounts[$name] ?? '') === '') {
+				continue;
+			}
+
+			if ($this->store->delete(schemaSlug: $accountSchema, id: $accounts[$name]) === true) {
+				$counts['accounts']++;
+			}
+		}
+
+		return $counts;
+	}//end removeSocial()
+
+	/**
+	 * The account, post and publication schema slugs, as their services resolve them.
+	 *
+	 * @return array{0: string, 1: string, 2: string} The three slugs.
+	 */
+	private function socialSchemas(): array {
+		return [
+			$this->store->schemaSlug(SocialAccountService::SCHEMA_CONFIG_KEY, SocialAccountService::SCHEMA),
+			$this->store->schemaSlug(SocialPostService::SCHEMA_CONFIG_KEY, SocialPostService::SCHEMA),
+			$this->store->schemaSlug(SocialPublicationStore::SCHEMA_CONFIG_KEY, SocialPublicationStore::SCHEMA),
+		];
+	}//end socialSchemas()
+
+	/**
+	 * Every row of a schema, indexed by one field's value.
+	 *
+	 * @param string $schemaSlug The schema to read.
+	 * @param string $field The field to index by.
+	 *
+	 * @return array<string, string> Field value => the first row id carrying it.
+	 */
+	private function idsByField(string $schemaSlug, string $field): array {
+		$index = [];
+		foreach ($this->store->findAll(schemaSlug: $schemaSlug) as $row) {
+			$value = (string)($row[$field] ?? '');
+			if ($value !== '' && isset($index[$value]) === false) {
+				$index[$value] = $this->store->idOf(payload: $row);
+			}
+		}
+
+		return $index;
+	}//end idsByField()
 
 	/**
 	 * Resolve the ObjectService, register id, schema ids and seed definitions.
