@@ -10,6 +10,7 @@ The Pipelinq CRM dashboard provides an at-a-glance overview of key performance i
 
 ---
 ## Requirements
+
 ### Requirement: CRM Dashboard Layout
 
 The dashboard MUST use the `CnDashboardPage` component to render a configurable widget grid with a 12-column layout system.
@@ -699,13 +700,7 @@ The default Operational dashboard SHALL NOT include a widget whose data source i
 - WHEN the Operational dashboard renders after removal
 - THEN the KPI row MUST show no empty grid slot where the widget was
 
-## REMOVED Requirements
-
-_(none)_
-
----
-
-### Current Implementation Status
+## Current Implementation Status
 
 **Substantially implemented.** The core dashboard with KPI cards, charts, and My Work preview is fully functional. The delta requirements (Prospect Discovery widget, Product Revenue KPI) are partially implemented.
 
@@ -734,14 +729,14 @@ NOT implemented:
 - **Delta indicators** (trend up/down compared to previous period) -- deferred to V1 per spec.
 - **Lead value auto-calculation from line items** -- the dashboard sums `lead.value` directly, but does not recalculate from LeadProduct line items.
 
-### Standards & References
+## Standards & References
 - Nextcloud Dashboard Widget API (`OCP\Dashboard\IWidget`) -- used for Nextcloud-level dashboard widgets
 - `CnDashboardPage` / `CnStatsBlock` from `@conduction/nextcloud-vue` -- shared dashboard grid and KPI components
 - NL Design System -- CSS custom properties for government theming
 - WCAG AA -- Nextcloud Vue components provide baseline accessibility
 - Schema.org -- no direct standards apply to dashboard layout
 
-### Specificity Assessment
+## Specificity Assessment
 - The spec is clear and specific for implementation. Scenarios are well-defined with concrete values.
 - **Mostly implementable as-is** -- the remaining work is integrating existing components (ProspectWidget, ProductRevenue) into the dashboard layout.
 - **Gap**: The spec does not define the "Products" KPI card calculation -- should it count all products or only `status: active` products?

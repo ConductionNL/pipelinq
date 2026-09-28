@@ -300,17 +300,7 @@ The system MUST handle edge cases around product deletion and data consistency.
 
 ---
 
-## MODIFIED Requirements
-
-_(none)_
-
-## REMOVED Requirements
-
-_(none)_
-
----
-
-### Current Implementation Status
+## Current Implementation Status
 
 **Implemented:**
 - LeadProduct entity is defined in `lib/Settings/pipelinq_register.json` as a `leadProduct` schema within the `pipelinq` register.
@@ -346,14 +336,14 @@ _(none)_
 - The manual override hint wording matches the implementation: "Lead value is manually set to {manual}. Calculated total: {calculated}."
 - Discount calculation is correctly implemented as percentage (previously noted as a bug, now fixed).
 
-### Standards & References
+## Standards & References
 - Schema.org `Offer` type annotation for LeadProduct entity.
 - Schema.org `Product` type for products (referenced entity).
 - OpenRegister object storage pattern -- no custom database tables.
 - Krayin CRM `lead_products` table: quantity, price, amount -- comparable pattern.
 - EspoCRM `OpportunityItem`: product, quantity, unitPrice, discount, listPrice -- more complex model.
 
-### Specificity Assessment
+## Specificity Assessment
 - The spec is comprehensive with 10 requirements covering the complete lifecycle of line items, value calculation, pipeline integration, scoring, and data integrity.
 - **Well-implemented core:** LeadProduct entity, CRUD, and inline editing are fully functional.
 - **Key gaps:** Notes display, auto-value recalculation, bulk operations, and product interest tracking.
