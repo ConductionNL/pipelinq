@@ -24,35 +24,53 @@
   -->
 <template>
 	<div class="social-accounts" data-testid="social-accounts">
-		<h2>{{ t('pipelinq', 'Social accounts') }}</h2>
+		<h2 class="social-accounts__title">
+			{{ t('pipelinq', 'Social accounts') }}
+		</h2>
 
 		<NcNoteCard v-if="error" type="error">{{ error }}</NcNoteCard>
 		<NcNoteCard v-if="notice" type="success">{{ notice }}</NcNoteCard>
 
-		<NcLoadingIcon v-if="loading" :size="24" />
+		<NcLoadingIcon v-if="loading" :size="32" class="social-accounts__loading" />
 
-		<p v-else-if="accounts.length === 0" class="social-accounts__empty">
-			{{ t('pipelinq', 'No social accounts yet.') }}
-		</p>
+		<NcEmptyContent
+			v-else-if="accounts.length === 0"
+			class="social-accounts__empty"
+			:name="t('pipelinq', 'No social accounts yet.')">
+			<template #icon>
+				<ShareVariantOutline :size="20" />
+			</template>
+		</NcEmptyContent>
 
+		<!-- One grid for the whole list, and each row a subgrid of it, so the
+			columns line up across rows whatever each row's content length. -->
 		<ul v-else class="social-accounts__list">
 			<li
 				v-for="account in accounts"
 				:key="accountId(account)"
 				class="social-accounts__row"
 				:data-testid="'social-account-' + account.network">
+				<span class="social-accounts__icon" aria-hidden="true">
+					<component :is="networkIcon(account.network)" :size="24" />
+				</span>
+
 				<div class="social-accounts__identity">
-					<strong>{{ account.displayName || account.handle }}</strong>
-					<span class="social-accounts__handle">{{ account.handle }}</span>
-					<span class="social-accounts__network">{{
-						networkLabel(account.network)
-					}}</span>
+					<strong class="social-accounts__name">
+						{{ account.displayName || account.handle }}
+					</strong>
+					<span class="social-accounts__meta">
+						<template v-if="showHandle(account)">
+							{{ account.handle }} ·
+						</template>
+						{{ networkLabel(account.network) }}
+					</span>
 				</div>
 
 				<div class="social-accounts__state">
-					<span
-						class="social-accounts__chip"
-						:style="{ color: chip(account.status).color }">
+					<span class="social-accounts__chip">
+						<span
+							class="social-accounts__dot"
+							:style="{ background: chip(account.status).color }" />
 						{{ chip(account.status).label }}
 					</span>
 					<span v-if="reasonFor(account)" class="social-accounts__reason">
@@ -82,7 +100,15 @@
 </template>
 
 <script>
-import { NcButton, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
+import { NcButton, NcEmptyContent, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
+import AlphaXBox from 'vue-material-design-icons/AlphaXBox.vue'
+import At from 'vue-material-design-icons/At.vue'
+import ButterflyOutline from 'vue-material-design-icons/ButterflyOutline.vue'
+import Facebook from 'vue-material-design-icons/Facebook.vue'
+import Instagram from 'vue-material-design-icons/Instagram.vue'
+import Linkedin from 'vue-material-design-icons/Linkedin.vue'
+import Mastodon from 'vue-material-design-icons/Mastodon.vue'
+import ShareVariantOutline from 'vue-material-design-icons/ShareVariantOutline.vue'
 import {
 	attachCredential,
 	fetchAccounts,
@@ -92,13 +118,26 @@ import {
 } from '../../services/socialApi.js'
 import { accountStatusChip, networkLimits } from '../../services/socialNetworks.js'
 
+/** Each network's icon; an unknown network falls back to the share icon. */
+const NETWORK_ICONS = {
+	mastodon: Mastodon,
+	bluesky: ButterflyOutline,
+	linkedin: Linkedin,
+	x: AlphaXBox,
+	facebook: Facebook,
+	instagram: Instagram,
+	threads: At,
+}
+
 export default {
 	name: 'SocialAccountsView',
 
 	components: {
 		NcButton,
+		NcEmptyContent,
 		NcLoadingIcon,
 		NcNoteCard,
+		ShareVariantOutline,
 	},
 
 	data() {
@@ -148,6 +187,29 @@ export default {
 		 */
 		networkLabel(network) {
 			return networkLimits(network).label
+		},
+
+		/**
+		 * @param {string} network The network.
+		 * @return {object} Its icon component.
+		 */
+		networkIcon(network) {
+			return NETWORK_ICONS[network] || ShareVariantOutline
+		},
+
+		/**
+		 * Whether the handle adds anything under the name. It does not when the
+		 * name already is the handle, or when there is no separate name.
+		 *
+		 * @param {object} account The account.
+		 * @return {boolean} True when the handle differs from the shown name.
+		 */
+		showHandle(account) {
+			return Boolean(
+				account?.displayName
+				&& account?.handle
+				&& account.handle !== account.displayName,
+			)
 		},
 
 		/**
@@ -312,48 +374,118 @@ export default {
 
 <style scoped>
 .social-accounts {
-	padding: 20px;
+	box-sizing: border-box;
+	width: 100%;
+	max-width: 960px;
+	margin: 0 auto;
+	padding: 24px 20px;
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
 }
 
+.social-accounts__title {
+	margin: 0;
+}
+
+.social-accounts__loading {
+	margin: 32px auto;
+}
+
+/* The edge columns are `auto`, not fixed: a subgrid row's padding is added to
+   its edge tracks, and a fixed 44px track cannot grow to hold it. */
 .social-accounts__list {
-	list-style: none;
+	display: grid;
+	grid-template-columns: auto minmax(160px, 1fr) minmax(0, 2fr) auto;
+	gap: 8px 16px;
+	margin: 0;
 	padding: 0;
+	list-style: none;
 }
 
 .social-accounts__row {
+	grid-column: 1 / -1;
+	display: grid;
+	grid-template-columns: subgrid;
+	align-items: center;
+	padding: 14px 16px;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius-large);
+	background: var(--color-main-background);
+}
+
+.social-accounts__icon {
 	display: flex;
 	align-items: center;
-	justify-content: space-between;
-	gap: 12px;
-	padding: 12px 0;
-	border-bottom: 1px solid var(--color-border);
-	flex-wrap: wrap;
+	justify-content: center;
+	width: 44px;
+	height: 44px;
+	border-radius: 50%;
+	background: var(--color-primary-element-light);
+	color: var(--color-primary-element-light-text);
 }
 
-.social-accounts__identity {
+.social-accounts__identity,
+.social-accounts__state {
 	display: flex;
 	flex-direction: column;
+	gap: 2px;
+	min-width: 0;
 }
 
-.social-accounts__handle,
-.social-accounts__network,
+.social-accounts__name {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.social-accounts__meta,
 .social-accounts__reason {
 	color: var(--color-text-maxcontrast);
 	font-size: 0.9em;
 }
 
-.social-accounts__state {
-	display: flex;
-	flex-direction: column;
-	max-width: 420px;
+.social-accounts__chip {
+	display: inline-flex;
+	align-items: center;
+	align-self: flex-start;
+	gap: 6px;
+	padding: 2px 10px;
+	border-radius: 999px;
+	background: var(--color-background-dark);
+	font-weight: 600;
+	font-size: 0.9em;
 }
 
-.social-accounts__chip {
-	font-weight: bold;
+.social-accounts__dot {
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
 }
 
 .social-accounts__actions {
 	display: flex;
+	justify-content: flex-end;
 	gap: 8px;
+}
+
+/* Narrow screens: name beside the icon, status and actions underneath. */
+@media (max-width: 720px) {
+	.social-accounts__list {
+		grid-template-columns: auto minmax(0, 1fr);
+	}
+
+	.social-accounts__row {
+		row-gap: 10px;
+	}
+
+	.social-accounts__state,
+	.social-accounts__actions {
+		grid-column: 2;
+	}
+
+	.social-accounts__actions {
+		justify-content: flex-start;
+	}
 }
 </style>
