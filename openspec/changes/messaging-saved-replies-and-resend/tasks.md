@@ -25,7 +25,7 @@
 
 ## 4. portaliq shows the answer
 
-- [ ] 4.1 Add `customerMessage` to `clientRequests` and `clientComplaints` `fields` and to the request `detail.fields` in `lib/Portal/PortalContributionProvider.php`
+- [x] 4.1 Add `customerMessage` to `clientRequests` and `clientComplaints` `fields` and to the request `detail.fields` in `lib/Portal/PortalContributionProvider.php`
   - Verify: PHPUnit `tests/Unit/Portal/PortalContributionProviderTest.php` asserts the field is in both whitelists and `notes` is still not
 
 ## 5. Send again
