@@ -17,8 +17,6 @@
 -->
 <template>
 	<section class="journey-runs" data-testid="journey-runs-section">
-		<h3>{{ t('pipelinq', 'What this journey did') }}</h3>
-
 		<NcLoadingIcon v-if="loading" :size="24" />
 
 		<NcEmptyContent

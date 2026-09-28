@@ -152,6 +152,7 @@ import ArticleDetailFormDialog from './dialogs/ArticleDetailFormDialog.vue'
 import BlastWizardDialog from './dialogs/BlastWizardDialog.vue'
 import CampaignFormDialog from './dialogs/CampaignFormDialog.vue'
 import ClientCreateDialog from './dialogs/ClientCreateDialog.vue'
+import JourneyFormDialog from './dialogs/JourneyFormDialog.vue'
 import LeadCreateDialog from './dialogs/LeadCreateDialog.vue'
 import RequestCreateDialog from './dialogs/RequestCreateDialog.vue'
 import SegmentFormDialog from './dialogs/SegmentFormDialog.vue'
@@ -263,7 +264,6 @@ import CampaignReportView from './views/marketing/CampaignReport.vue'
 //     the follow audit. Each is a computed read, not a row list. ---
 import CompetitorWatchesView from './views/marketing/CompetitorWatches.vue'
 import ConnectionAuditView from './views/marketing/ConnectionAudit.vue'
-import JourneyFormView from './views/marketing/JourneyFormView.vue'
 import KeywordIntelligenceView from './views/marketing/KeywordIntelligence.vue'
 // --- Search Console top queries (marketing-campaign-attribution): an
 //     aggregation over searchQueryDaily rows, not a row list. ---
@@ -935,11 +935,6 @@ const registry = {
 		component: SocialPerformanceView,
 		_note: 'Engagement ranking per network (social-publishing). Custom because the ranking divides engagement by the follower count the daily pull recorded onto the account, which no single-schema declarative view expresses. Renders its table shell BEFORE the one request that fills it, which is the pipelinq#1781 rule: never await a per-object fan-out before painting.',
 	},
-	JourneyFormView: {
-		kind: 'page',
-		component: JourneyFormView,
-		_note: "Journey create and edit (marketing-integrated-campaigns); one component serves JourneyNew and JourneyEdit. NOT the declarative create dialog: every write compiles the journey into an OpenRegister flow through POST and PATCH /api/journeys, and a journey saved through the object API would be stored and never compiled, which looks exactly like a journey whose trigger has not fired. It also surfaces the flow engine's own refusal verbatim.",
-	},
 	WeeklyReviewView: {
 		kind: 'page',
 		component: WeeklyReviewView,
@@ -1118,6 +1113,12 @@ const registry = {
 		component: CampaignFormDialog,
 		propsSchema: null,
 		_note: 'Campaign create/edit, mounted in the form-dialog slot of both the Campaigns index page and CampaignDetail. Custom rather than the built-in form: saving must go through POST/PATCH /api/campaigns, because only CampaignService mints the campaign value, freezes it across a rename and refuses a source or medium outside the tenant\'s vocabulary, and the source and medium pickers read GET /api/campaigns/vocabulary, admin-maintained app config that is not a schema enum.',
+	},
+	JourneyFormDialog: {
+		kind: 'modal',
+		component: JourneyFormDialog,
+		propsSchema: null,
+		_note: 'Journey create/edit, mounted in the form-dialog slot of both the Journeys index page and JourneyDetail. Custom rather than the built-in form: every write compiles the journey into an OpenRegister flow through POST and PATCH /api/journeys, and a journey saved through the object API would be stored and never compiled, which looks exactly like a journey whose trigger has not fired. It also surfaces the flow engine\'s own refusal verbatim.',
 	},
 
 	// Contact-aware create for the generic Add button on the Clients index page.
