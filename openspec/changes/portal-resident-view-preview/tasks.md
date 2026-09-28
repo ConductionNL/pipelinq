@@ -6,7 +6,7 @@
   - Verify: PHPUnit asserts `previewDetail()` equals the detail `getDetailForAccount()` returns for the same ticket and tenant setting
 - [ ] 1.2 Add `ResidentViewController::show()` and the route `GET /api/tickets/{id}/resident-view`: read the ticket as the caller through OpenRegister, build the bespoke panel, the portaliq panel when `portaliq` is installed and the ticket has a client, and `internalFields`
   - Verify: PHPUnit covers a readable ticket, an unreadable one (404) and a complaint ticket (bespoke panel null); hydra gates route-auth and no-admin-idor pass
-- [ ] 1.3 Add `customerMessage` to the `clientRequests` fields in `lib/Portal/PortalContributionProvider.php`
+- [x] 1.3 Add `customerMessage` to the `clientRequests` fields in `lib/Portal/PortalContributionProvider.php`
   - Verify: the provider's existing PHPUnit whitelist test is updated and passes
 
 ## 2. Frontend
