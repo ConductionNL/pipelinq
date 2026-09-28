@@ -424,7 +424,7 @@ final class PortalContributionProviderTest extends TestCase {
 		$this->assertSame('ticket', $complaints['schema']);
 		$this->assertSame(['ticketType' => 'complaint'], $complaints['filter']);
 		$this->assertSame(
-			['title', 'complaintCategory', 'status', 'description', 'occurredAt'],
+			['title', 'complaintCategory', 'status', 'description', 'occurredAt', 'customerMessage'],
 			$complaints['fields'],
 			'Only the client-safe complaint facts are projected'
 		);
@@ -456,6 +456,34 @@ final class PortalContributionProviderTest extends TestCase {
 			$this->assertNotContains($field, $complaints['fields'], "Projection must never expose '{$field}'");
 		}
 	}//end testClientComplaintsAreFieldProjected()
+
+	/**
+	 * Scenario: the resident reads the handler's message on a request or complaint.
+	 *
+	 * A handler writes `customerMessage` on a ticket for the resident to read,
+	 * but the portal projections did not carry it, so it never left the
+	 * server (pipelinq#2074). The internal `notes` must still stay behind.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-answers-the-customer-on-the-ticket-req-msr-004
+	 */
+	public function testRequestsAndComplaintsCarryTheCustomerMessage(): void {
+		$manifest = $this->provider->getContribution(self::CLIENT_SUBJECT);
+		$this->assertIsArray($manifest);
+		$collections = $this->indexById($manifest['collections']);
+
+		foreach (['clientRequests', 'clientComplaints'] as $id) {
+			$this->assertContains('customerMessage', $collections[$id]['fields'], "{$id} must project the message to the customer");
+			$this->assertNotContains('notes', $collections[$id]['fields'], "{$id} must keep the internal notes back");
+		}
+
+		$this->assertContains(
+			'customerMessage',
+			$collections['clientRequests']['detail']['fields'],
+			'The request detail must show the message to the customer'
+		);
+	}//end testRequestsAndComplaintsCarryTheCustomerMessage()
 
 	/**
 	 * Scenario: Customer booking ships a customer-safe field projection.

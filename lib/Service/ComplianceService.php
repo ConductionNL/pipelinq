@@ -789,6 +789,7 @@ class ComplianceService {
 	 * @return array{template?: array<string, mixed>, error?: string}
 	 *
 	 * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/tasks.md#templatecontroller-task-2.8-of-giant
+	 * @spec openspec/changes/marketing-block-editor/specs/mail-block-editor/spec.md#requirement-html-templates-keep-working-req-mbe-004
 	 */
 	public function createTemplate(array $payload, string $createdByUid): array {
 		$name = (string)($payload['name'] ?? '');
@@ -845,6 +846,7 @@ class ComplianceService {
 	 * @return array{template?: array<string, mixed>, error?: string}
 	 *
 	 * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/tasks.md#templatecontroller-task-2.8-of-giant
+	 * @spec openspec/changes/marketing-block-editor/specs/mail-block-editor/spec.md#requirement-html-templates-keep-working-req-mbe-004
 	 */
 	public function patchTemplate(string $templateId, array $patch): array {
 		$existing = $this->getTemplateById(templateId: $templateId);

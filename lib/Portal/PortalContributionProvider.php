@@ -186,12 +186,15 @@ class PortalContributionProvider {
 					// `ticket` is a supertype, so it also carries the complaint and
 					// contactmoment properties; this whitelist is what keeps them
 					// out of the request surface.
+					// `customerMessage` is the handler's message to the customer
+					// (pipelinq#2074); the internal `notes` stay behind.
 					'fields' => [
 						'title',
 						'category',
 						'status',
 						'description',
 						'occurredAt',
+						'customerMessage',
 					],
 					// Contribution-manifest-v3 UI (ADR-063), presentation-only:
 					// a column set, a detail layout, and a newest-first sort,
@@ -202,7 +205,7 @@ class PortalContributionProvider {
 						['field' => 'status', 'label' => 'Status', 'render' => 'badge'],
 						['field' => 'occurredAt', 'label' => 'Ingediend', 'render' => 'date'],
 					],
-					'detail' => ['layout' => 'card', 'fields' => ['title', 'category', 'status', 'description', 'occurredAt']],
+					'detail' => ['layout' => 'card', 'fields' => ['title', 'category', 'status', 'description', 'occurredAt', 'customerMessage']],
 					'defaultSort' => ['field' => 'occurredAt', 'direction' => 'desc'],
 				],
 				[
@@ -229,6 +232,7 @@ class PortalContributionProvider {
 						'status',
 						'description',
 						'occurredAt',
+						'customerMessage',
 					],
 				],
 				[
