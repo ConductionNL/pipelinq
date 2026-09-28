@@ -3,8 +3,7 @@
   SPDX-FileCopyrightText: 2026 Conduction B.V.
 
   Journey create and edit (marketing-integrated-campaigns). One component
-  serves both routes; edit mode is the :id param, matching the CampaignNew /
-  CampaignEdit convention.
+  serves both routes; edit mode is the :id param.
 
   🔴 IT IS NOT A DECLARATIVE FORM, AND THAT IS THE WHOLE POINT. Every write
   compiles the journey into an OpenRegister flow, and only POST and PATCH

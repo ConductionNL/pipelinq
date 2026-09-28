@@ -150,6 +150,7 @@ import XWikiWidgetComponent from './components/xwiki/XWikiWidget.vue'
 //     (marketing-segments-ui-repair) on their index pages. ---
 import ArticleDetailFormDialog from './dialogs/ArticleDetailFormDialog.vue'
 import BlastWizardDialog from './dialogs/BlastWizardDialog.vue'
+import CampaignFormDialog from './dialogs/CampaignFormDialog.vue'
 import ClientCreateDialog from './dialogs/ClientCreateDialog.vue'
 import LeadCreateDialog from './dialogs/LeadCreateDialog.vue'
 import RequestCreateDialog from './dialogs/RequestCreateDialog.vue'
@@ -256,7 +257,6 @@ import LoyaltyReportingView from './views/loyalty/LoyaltyReporting.vue'
 // --- Articles new/edit route wrapper (marketing-article-hub): thin host for
 //     ArticleEditModal, the one editing surface the change owns. ---
 import ArticleFormView from './views/marketing/ArticleFormView.vue'
-import CampaignFormView from './views/marketing/CampaignFormView.vue'
 import CampaignReportView from './views/marketing/CampaignReport.vue'
 // --- Search intelligence (marketing-search-intelligence, phase 5): the
 //     four derivations over those same rows, the competitor watches, and
@@ -935,15 +935,10 @@ const registry = {
 		component: SocialPerformanceView,
 		_note: 'Engagement ranking per network (social-publishing). Custom because the ranking divides engagement by the follower count the daily pull recorded onto the account, which no single-schema declarative view expresses. Renders its table shell BEFORE the one request that fills it, which is the pipelinq#1781 rule: never await a per-object fan-out before painting.',
 	},
-	CampaignFormView: {
-		kind: 'page',
-		component: CampaignFormView,
-		_note: "Campaign create and edit (marketing-campaigns); one component serves CampaignNew and CampaignEdit, matching the SegmentNew / SegmentEdit convention. NOT the declarative create dialog: a campaign written through OpenRegister's object API carries whatever utmCampaign the browser sent and stores a source outside the tenant's vocabulary without complaint. Minting the value once, freezing it across a rename, and refusing an unknown source or medium live in CampaignService, which only POST and PATCH /api/campaigns reach. The source and medium pickers read GET /api/campaigns/vocabulary, admin-maintained app config that is not a schema enum.",
-	},
 	JourneyFormView: {
 		kind: 'page',
 		component: JourneyFormView,
-		_note: "Journey create and edit (marketing-integrated-campaigns); one component serves JourneyNew and JourneyEdit, matching the CampaignNew / CampaignEdit convention. NOT the declarative create dialog: every write compiles the journey into an OpenRegister flow through POST and PATCH /api/journeys, and a journey saved through the object API would be stored and never compiled, which looks exactly like a journey whose trigger has not fired. It also surfaces the flow engine's own refusal verbatim.",
+		_note: "Journey create and edit (marketing-integrated-campaigns); one component serves JourneyNew and JourneyEdit. NOT the declarative create dialog: every write compiles the journey into an OpenRegister flow through POST and PATCH /api/journeys, and a journey saved through the object API would be stored and never compiled, which looks exactly like a journey whose trigger has not fired. It also surfaces the flow engine's own refusal verbatim.",
 	},
 	WeeklyReviewView: {
 		kind: 'page',
@@ -1117,6 +1112,12 @@ const registry = {
 		component: TemplateFormDialog,
 		propsSchema: null,
 		_note: 'CampaignTemplate create/edit, mounted in the Templates index page\'s form-dialog slot. Custom rather than the built-in form: the fields depend on the channel, saving must go through POST/PATCH /api/templates, which runs the compliance check, and that check\'s error is placed on the field it is about.',
+	},
+	CampaignFormDialog: {
+		kind: 'modal',
+		component: CampaignFormDialog,
+		propsSchema: null,
+		_note: 'Campaign create/edit, mounted in the form-dialog slot of both the Campaigns index page and CampaignDetail. Custom rather than the built-in form: saving must go through POST/PATCH /api/campaigns, because only CampaignService mints the campaign value, freezes it across a rename and refuses a source or medium outside the tenant\'s vocabulary, and the source and medium pickers read GET /api/campaigns/vocabulary, admin-maintained app config that is not a schema enum.',
 	},
 
 	// Contact-aware create for the generic Add button on the Clients index page.

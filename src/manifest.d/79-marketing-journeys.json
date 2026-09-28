@@ -60,7 +60,7 @@
 		},
 		{
 			"id": "JourneyNew",
-			"_note": "Journey create as a thin route wrapper around JourneyFormView (marketing-integrated-campaigns), matching the CampaignNew convention. Custom rather than declarative: the write path compiles the journey into a flow and surfaces the flow engine's own refusal verbatim, which no declarative form primitive expresses. Missing primitive: a form whose save action returns a compilation result the page has to show.",
+			"_note": "Journey create as a thin route wrapper around JourneyFormView (marketing-integrated-campaigns). Custom rather than declarative: the write path compiles the journey into a flow and surfaces the flow engine's own refusal verbatim, which no declarative form primitive expresses. Missing primitive: a form whose save action returns a compilation result the page has to show.",
 			"route": "/journeys/new",
 			"type": "custom",
 			"title": "New journey",
