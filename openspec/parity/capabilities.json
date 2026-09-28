@@ -2009,7 +2009,7 @@
 			"id": "cm-survey-after",
 			"area": "contact-moments",
 			"name": "Ask the client how it went right after you spoke",
-			"pipelinq": "yes",
+			"pipelinq": "no",
 			"hubspot-crm": "yes",
 			"pipedrive": "unknown",
 			"espocrm": "no",
@@ -2021,7 +2021,7 @@
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
-				"evidence": "lib/Service/SurveyDispatchService.php:336",
+				"evidence": "lib/Service/SurveyDispatchService.php:336. Corrections round 8 (2026-09-28), pipelinq#2072: onInteractionCompleted() (lib/Service/SurveyDispatchService.php:336-366) has no production caller: no class in lib/Listener and nothing in lib/AppInfo/Application.php refers to a survey, so no invitation is ever scheduled and lib/BackgroundJob/SurveyInvitationDispatchJob.php:129 finds nothing to send, at 9a5e95c.",
 				"owner": "ConductionNL/pipelinq"
 			},
 			"evidence": {
@@ -2030,7 +2030,8 @@
 				"espocrm": "Searched application/Espo/Resources/i18n/en_US and the Crm module i18n for \"survey\": no hits; no survey entity in application/Espo/Resources/metadata/entityDefs or the Crm module in 10.0.8, and the extension list https://www.espocrm.com/extensions/ names none",
 				"pipedrive": "not checked: no knowledge base article on customer surveys after a contact; searched the article list for survey, NPS and feedback (read 2026-09-26). Note: Was no without a source.",
 				"odoo-crm": "addons/im_livechat/static/src/embed/common/feedback_panel/feedback_panel.xml:11-12 rating faces shown to the visitor when a live chat ends, and addons/project/models/project_task_type.py:54 \"rating_active = fields.Boolean('Send a customer rating request')\" mails a rating when a task reaches a stage; nothing asks after a phone call or a logged contact moment without an automation rule sending a survey."
-			}
+			},
+			"note": "Own rating yes to no (corrections round 8, 2026-09-28): the survey, its invitation job and its answer page are built, but nothing sends a survey after a contact, pipelinq#2072. built.state stays built because the code shipped with openspec/changes/customer-satisfaction-closed-loop and the missing piece is one listener."
 		},
 		{
 			"id": "cm-campaign-touchpoint",
@@ -7311,12 +7312,12 @@
 			"featureConfidence": "medium",
 			"built": {
 				"state": "specified",
-				"evidence": "lib/Service/WhatsAppAdapter.php:602 \"handleInboundWebhook\" stores inbound WhatsApp in channelConversation, shown on contact and client detail by src/views/messaging/MessagingConversationSection.vue (src/manifest.json:2137); a ticket's channel can be set to 'social' by hand (lib/Settings/register.d/99-unify-ticket-supertype.json:235). No inbound reader for Facebook, Instagram, X or LinkedIn messages: lib/Service/Social/ only publishes posts",
+				"evidence": "lib/Service/WhatsAppAdapter.php:602 \"handleInboundWebhook\" stores inbound WhatsApp in channelConversation, shown on contact and client detail by src/views/messaging/MessagingConversationSection.vue (src/manifest.json:2137); a ticket's channel can be set to 'social' by hand (lib/Settings/register.d/99-unify-ticket-supertype.json:235). No inbound reader for Facebook, Instagram, X or LinkedIn messages: lib/Service/Social/ only publishes posts. Corrections round 8 (2026-09-28), pipelinq#2073: the text of an inbound WhatsApp never shows on the contact, because the Messages section fetches the unregistered type 'message' (src/views/messaging/MessagingConversationSection.vue:409, error swallowed at :418-419); only the conversation, with its last inbound time, is listed (:435), at 9a5e95c.",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "ClientDetail and ContactDetail (Messages section); nothing puts social messages in the Queue page",
 				"readOn": "2026-09-26"
 			},
-			"note": "WhatsApp arrives but lands per contact, not in the shared queue next to mail and phone; social network direct messages are not ingested at all. Specified 2026-09-28 in openspec/changes/requests-inbound-to-queue (OpenSpec pass).",
+			"note": "WhatsApp arrives but lands per contact, not in the shared queue next to mail and phone; social network direct messages are not ingested at all. Specified 2026-09-28 in openspec/changes/requests-inbound-to-queue (OpenSpec pass). Corrections round 8 (2026-09-28): the inbound WhatsApp text is not shown on the contact, pipelinq#2073; rating kept at partial because inbound WhatsApp is still received and stored (lib/Service/WhatsAppAdapter.php:602) and its conversation shows on the contact. The display fix is task 1.1 of openspec/changes/messaging-saved-replies-and-resend.",
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/chatflows/create-a-facebook-messenger-chatflow \"When you connect your Facebook Messenger account to help desk or the conversations inbox\" messages land in the same inbox as email and chat; WhatsApp connects the same way (https://knowledge.hubspot.com/help-desk/connect-a-whatsapp-channel-to-help-desk listed in the knowledge base). All products and plans for Messenger.",
 				"pipedrive": "https://support.pipedrive.com/en/article/whatsapp-send-and-manage-messages WhatsApp conversations linked to deals and contacts are handled in Pipedrive (Growth and up, beta); Facebook, Instagram or other social messaging in the same queue is not described, and the Channels API for messaging apps was deprecated from 1 February 2026 (https://developers.pipedrive.com/changelog).",
@@ -7597,7 +7598,7 @@
 			"id": "cm-failed-send",
 			"area": "contact-moments",
 			"name": "See that an email to a client failed to send and send it again in one click",
-			"pipelinq": "partial",
+			"pipelinq": "no",
 			"hubspot-crm": "unknown",
 			"pipedrive": "yes",
 			"espocrm": "partial",
@@ -7609,12 +7610,12 @@
 			"featureConfidence": "medium",
 			"built": {
 				"state": "specified",
-				"evidence": "a failed WhatsApp or SMS is stored and flagged (lib/Service/WhatsAppAdapter.php:831 persistFailureAndAlert) and shown red on the Messages section (src/views/messaging/MessagingConversationSection.vue:319 \"status === 'failed' || status === 'expired'\"), but there is no resend button; Berichtenbox has a retry API (appinfo/routes.php:556) that no page calls; an email to a client is sent from Nextcloud Mail, whose outbox handles failed sends",
+				"evidence": "a failed WhatsApp or SMS is stored and flagged (lib/Service/WhatsAppAdapter.php:831 persistFailureAndAlert) and shown red on the Messages section (src/views/messaging/MessagingConversationSection.vue:319 \"status === 'failed' || status === 'expired'\"), but there is no resend button; Berichtenbox has a retry API (appinfo/routes.php:556) that no page calls; an email to a client is sent from Nextcloud Mail, whose outbox handles failed sends. Corrections round 8 (2026-09-28), pipelinq#2073: the red failed status never shows, because the Messages section fetches the type 'message' (src/views/messaging/MessagingConversationSection.vue:409), which is no longer registered since the rename to channelMessage (src/config/objectTypes.js:371-376), and the error is swallowed into an empty list (:418-419); the only other trace is a notification to the fixed user id 'admin' (lib/Service/WhatsAppAdapter.php:860-861), at 9a5e95c.",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "ClientDetail and ContactDetail Messages section (status only)",
 				"readOn": "2026-09-26"
 			},
-			"note": "the failure is visible, the one click resend is not. Specified 2026-09-28 in openspec/changes/messaging-saved-replies-and-resend (OpenSpec pass).",
+			"note": "the failure is visible, the one click resend is not. Specified 2026-09-28 in openspec/changes/messaging-saved-replies-and-resend (OpenSpec pass). Own rating partial to no (corrections round 8, 2026-09-28): the partial rested on the failed status shown in the Messages section, and that section is always empty, pipelinq#2073. The fix is task 1.1 of openspec/changes/messaging-saved-replies-and-resend, the change this row is already specified in.",
 			"evidence": {
 				"hubspot-crm": "not checked: bounces are explained for marketing email (https://knowledge.hubspot.com/marketing-email/what-is-the-difference-between-a-hard-bounce-and-a-soft-bounce listed), but a one-click resend of a failed one-to-one email is not described in the articles read (read 2026-09-26).",
 				"pipedrive": "https://www.pipedrive.com/en/product-updates \"Failed send visibility and live retry: ... tracking failed email sends and initiating one-click retries directly from deal, person, organization, project and lead detail views\".",
