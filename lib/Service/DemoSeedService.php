@@ -53,6 +53,8 @@ use DateTimeInterface;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\Marketing\JourneyService;
 use OCA\Pipelinq\Service\Marketing\ListObjectStore;
+use OCA\Pipelinq\Service\Search\KeywordTargetService;
+use OCA\Pipelinq\Service\SearchConsole\SearchQueryDailyStore;
 use OCA\Pipelinq\Service\Social\SocialPublicationStore;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -243,7 +245,8 @@ class DemoSeedService {
 				'description' => (
 					'A worked CRM: clients and contacts, pipelines, products and leads, requests, '
 					. 'complaints and contact moments, tasks and contracts, marketing journeys '
-					. 'that are not switched on, and published social posts with their numbers. '
+					. 'that are not switched on, published social posts with their numbers, and '
+					. 'search queries for the keyword pages. '
 					. 'It shows the lists, '
 					. 'detail pages and dashboards working. Safe to run more than once, and '
 					. '`occ pipelinq:demo:remove` takes it away again.'
@@ -347,6 +350,11 @@ class DemoSeedService {
 		$created['socialPublications'] = $social['publications'];
 		$skipped['social'] = $social['skipped'];
 
+		$search = $this->seedSearch(search: ($definitions['search'] ?? []));
+		$created['searchQueryRows'] = $search['rows'];
+		$created['keywordTargets'] = $search['targets'];
+		$skipped['search'] = $search['skipped'];
+
 		return ['success' => true, 'created' => $created, 'skipped' => $skipped];
 	}//end seed()
 
@@ -376,12 +384,15 @@ class DemoSeedService {
 
 		$journeys = $this->removeJourneys(definitions: ($definitions['journeys'] ?? []));
 		$social = $this->removeSocial(social: ($definitions['social'] ?? []));
+		$search = $this->removeSearch(search: ($definitions['search'] ?? []));
 		$removed = [
 			'journeys' => $journeys['journeys'],
 			'journeyRuns' => $journeys['runs'],
 			'socialPublications' => $social['publications'],
 			'socialPosts' => $social['posts'],
 			'socialAccounts' => $social['accounts'],
+			'searchQueryRows' => $search['rows'],
+			'keywordTargets' => $search['targets'],
 		];
 		$retained = [];
 		$sections = array_reverse(self::SECTIONS, true);
@@ -779,6 +790,159 @@ class DemoSeedService {
 
 		return $counts;
 	}//end removeSocial()
+
+	/**
+	 * Seed the demo Search Console rows and keyword targets.
+	 *
+	 * The rows stand in for an import, so they are written as the import
+	 * writes them (property, date, query, page, clicks, impressions, ctr,
+	 * position), with the click rate derived here so it can never disagree
+	 * with the counts. Query text has to read as real search, so the rows
+	 * carry the demo property and source as their marker instead of a prefix,
+	 * and are seeded as one set: when any demo row exists, none is written.
+	 *
+	 * @param array<string, mixed> $search The seed file's `search` section.
+	 *
+	 * @return array{rows: int, targets: int, skipped: int} Counts.
+	 *
+	 * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
+	 */
+	private function seedSearch(array $search): array {
+		$counts = ['rows' => 0, 'targets' => 0, 'skipped' => 0];
+		$property = (string)($search['property'] ?? '');
+		$source = (string)($search['source'] ?? '');
+		if ($property === '' || $source === '') {
+			return $counts;
+		}
+
+		[$rowSchema, $targetSchema] = $this->searchSchemas();
+		$now = gmdate('Y-m-d\TH:i:s\Z');
+
+		if ($this->searchRows(schemaSlug: $rowSchema, property: $property, source: $source) !== []) {
+			$counts['skipped']++;
+		} else {
+			foreach (($search['rows'] ?? []) as $row) {
+				$row = $this->resolvePlaceholders(data: $row);
+				$clicks = (int)($row['clicks'] ?? 0);
+				$impressions = (int)($row['impressions'] ?? 0);
+				$ctr = 0.0;
+				if ($impressions > 0) {
+					$ctr = round(($clicks / $impressions), 4);
+				}
+
+				$payload = [
+					'property' => $property,
+					'date' => (string)($row['date'] ?? ''),
+					'query' => (string)($row['query'] ?? ''),
+					'page' => (string)($row['page'] ?? ''),
+					'clicks' => $clicks,
+					'impressions' => $impressions,
+					'ctr' => $ctr,
+					'position' => (float)($row['position'] ?? 0),
+					'source' => $source,
+					'importedAt' => $now,
+				];
+
+				if ($this->store->save(schemaSlug: $rowSchema, payload: $payload) !== null) {
+					$counts['rows']++;
+				}
+			}
+		}//end if
+
+		$notes = [];
+		foreach ($this->store->findAll(schemaSlug: $targetSchema) as $target) {
+			$notes[(string)($target['notes'] ?? '')] = true;
+		}
+
+		foreach (($search['targets'] ?? []) as $definition) {
+			$data = ($definition['data'] ?? []);
+			if (isset($notes[(string)($data['notes'] ?? '')]) === true) {
+				$counts['skipped']++;
+				continue;
+			}
+
+			$data['property'] = $property;
+			$data['createdAt'] = $now;
+			if ($this->store->save(schemaSlug: $targetSchema, payload: $data) !== null) {
+				$counts['targets']++;
+			}
+		}
+
+		return $counts;
+	}//end seedSearch()
+
+	/**
+	 * Remove the demo Search Console rows and keyword targets.
+	 *
+	 * A row goes only when it carries both the demo property and the demo
+	 * source, and a target only when it carries the demo property and a note
+	 * with the demo marker, so a real import or a real target is never touched.
+	 *
+	 * @param array<string, mixed> $search The seed file's `search` section.
+	 *
+	 * @return array{rows: int, targets: int} Counts.
+	 *
+	 * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
+	 */
+	private function removeSearch(array $search): array {
+		$counts = ['rows' => 0, 'targets' => 0];
+		$property = (string)($search['property'] ?? '');
+		$source = (string)($search['source'] ?? '');
+		if ($property === '' || $source === '') {
+			return $counts;
+		}
+
+		[$rowSchema, $targetSchema] = $this->searchSchemas();
+
+		foreach ($this->searchRows(schemaSlug: $rowSchema, property: $property, source: $source) as $row) {
+			if ($this->store->delete(schemaSlug: $rowSchema, id: $this->store->idOf(payload: $row)) === true) {
+				$counts['rows']++;
+			}
+		}
+
+		foreach ($this->store->findAll(schemaSlug: $targetSchema) as $target) {
+			if ((string)($target['property'] ?? '') !== $property
+				|| str_starts_with((string)($target['notes'] ?? ''), self::DEMO_PREFIX) === false
+			) {
+				continue;
+			}
+
+			if ($this->store->delete(schemaSlug: $targetSchema, id: $this->store->idOf(payload: $target)) === true) {
+				$counts['targets']++;
+			}
+		}
+
+		return $counts;
+	}//end removeSearch()
+
+	/**
+	 * The Search Console row and keyword target schema slugs, as their services resolve them.
+	 *
+	 * @return array{0: string, 1: string} The two slugs.
+	 */
+	private function searchSchemas(): array {
+		return [
+			$this->store->schemaSlug(SearchQueryDailyStore::SCHEMA . '_schema', SearchQueryDailyStore::SCHEMA),
+			$this->store->schemaSlug(KeywordTargetService::SCHEMA_CONFIG_KEY, KeywordTargetService::SCHEMA_SLUG),
+		];
+	}//end searchSchemas()
+
+	/**
+	 * The Search Console rows carrying both the demo property and the demo source.
+	 *
+	 * Filtered on the server, because a real install can hold far more imported
+	 * rows than a whole-schema scan should read; the store re-checks every
+	 * filter on the returned rows, so a match is exact either way.
+	 *
+	 * @param string $schemaSlug The row schema.
+	 * @param string $property The demo property.
+	 * @param string $source The demo source.
+	 *
+	 * @return array<int, array<string, mixed>> The rows.
+	 */
+	private function searchRows(string $schemaSlug, string $property, string $source): array {
+		return $this->store->findAll(schemaSlug: $schemaSlug, filters: ['property' => $property, 'source' => $source]);
+	}//end searchRows()
 
 	/**
 	 * The account, post and publication schema slugs, as their services resolve them.

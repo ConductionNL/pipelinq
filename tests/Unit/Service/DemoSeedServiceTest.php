@@ -1022,4 +1022,104 @@ class DemoSeedServiceTest extends TestCase {
 		self::assertNotContains('socialPost:real-post', $deleted);
 		self::assertNotContains('socialAccount:real-account', $deleted);
 	}//end testRemoveSocialDeletesOnlyTheDemoSet()
+
+	/**
+	 * The search section writes rows the way the import does, marked by the
+	 * demo property and source, with the click rate derived from the counts.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
+	 */
+	public function testSeedSearchWritesMarkedRowsWithADerivedClickRate(): void {
+		$saves = [];
+		$this->store->method('findAll')->willReturn([]);
+		$this->store->method('save')->willReturnCallback(
+			static function (string $schemaSlug, array $payload) use (&$saves): array {
+				$saves[] = ['schema' => $schemaSlug, 'data' => $payload];
+				return ['id' => 'saved-' . count($saves)];
+			}
+		);
+
+		$search = self::definitions()['search'];
+		$counts = (new \ReflectionMethod(DemoSeedService::class, 'seedSearch'))->invoke($this->service, $search);
+
+		self::assertSame(count($search['rows']), $counts['rows']);
+		self::assertSame(count($search['targets']), $counts['targets']);
+
+		foreach ($saves as $save) {
+			self::assertSame($search['property'], $save['data']['property']);
+			if ($save['schema'] !== 'searchQueryDaily') {
+				continue;
+			}
+
+			$row = $save['data'];
+			self::assertSame($search['source'], $row['source']);
+			self::assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2}$/', $row['date']);
+			self::assertSame(round($row['clicks'] / $row['impressions'], 4), $row['ctr']);
+		}
+	}//end testSeedSearchWritesMarkedRowsWithADerivedClickRate()
+
+	/**
+	 * The rows are one set: when any demo row exists, a re-run writes none.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
+	 */
+	public function testSeedSearchWritesNoRowsWhenTheDemoSetExists(): void {
+		$search = self::definitions()['search'];
+		$this->store->method('findAll')->willReturnCallback(
+			static fn (string $schemaSlug): array => ($schemaSlug === 'searchQueryDaily'
+				? [['id' => 'row-1', 'property' => $search['property'], 'source' => $search['source']]]
+				: [['id' => 'target-1', 'notes' => $search['targets'][0]['data']['notes']]])
+		);
+		$this->store->expects(self::never())->method('save');
+
+		$counts = (new \ReflectionMethod(DemoSeedService::class, 'seedSearch'))->invoke($this->service, $search);
+
+		self::assertSame(0, $counts['rows']);
+		self::assertSame(0, $counts['targets']);
+	}//end testSeedSearchWritesNoRowsWhenTheDemoSetExists()
+
+	/**
+	 * Removal deletes rows with both demo markers and demo-noted targets, and
+	 * never a real import or a real target.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
+	 */
+	public function testRemoveSearchDeletesOnlyTheDemoRowsAndTargets(): void {
+		$search = self::definitions()['search'];
+		$this->store->method('findAll')->willReturnCallback(
+			static function (string $schemaSlug, array $filters = []) use ($search): array {
+				if ($schemaSlug === 'searchQueryDaily') {
+					// The store narrows by the filters it is given.
+					self::assertSame(['property' => $search['property'], 'source' => $search['source']], $filters);
+					return [['id' => 'demo-row', 'property' => $search['property'], 'source' => $search['source']]];
+				}
+
+				return [
+					['id' => 'demo-target', 'property' => $search['property'], 'notes' => '[Demo] seeded'],
+					['id' => 'real-target', 'property' => $search['property'], 'notes' => 'A real decision'],
+					['id' => 'other-property', 'property' => 'https://real.example/', 'notes' => '[Demo] elsewhere'],
+				];
+			}
+		);
+
+		$deleted = [];
+		$this->store->method('delete')->willReturnCallback(
+			static function (string $schemaSlug, string $id) use (&$deleted): bool {
+				$deleted[] = $id;
+				return true;
+			}
+		);
+
+		$counts = (new \ReflectionMethod(DemoSeedService::class, 'removeSearch'))->invoke($this->service, $search);
+
+		self::assertSame(1, $counts['rows']);
+		self::assertSame(1, $counts['targets']);
+		self::assertSame(['demo-row', 'demo-target'], $deleted);
+	}//end testRemoveSearchDeletesOnlyTheDemoRowsAndTargets()
 }//end class
