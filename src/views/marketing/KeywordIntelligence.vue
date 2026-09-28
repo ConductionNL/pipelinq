@@ -24,7 +24,7 @@
 				:clearable="false"
 				:inputLabel="t('pipelinq', 'Period')"
 				label="label"
-				@input="fetchProposals" />
+				@update:modelValue="fetchProposals" />
 		</header>
 
 		<NcLoadingIcon v-if="loading" :size="32" />
