@@ -64,10 +64,17 @@
 						v-for="bucket in buckets"
 						:key="bucket.bucket"
 						class="keyword-intel__bucket">
-						<span class="keyword-intel__bucket-label">{{
-							bucket.bucket
-						}}</span>
-						<strong>{{ bucket.queries }}</strong>
+						<span class="keyword-intel__bucket-label"
+							>#{{ bucketRange(bucket.bucket) }}</span
+						>
+						<span>
+							<strong>{{ bucket.queries }}</strong>
+							{{
+								bucket.queries === 1
+									? t('pipelinq', 'search')
+									: t('pipelinq', 'searches')
+							}}
+						</span>
 						<span class="keyword-intel__bucket-note">
 							{{
 								t(
@@ -137,6 +144,7 @@
 											!isConfirmed(row.query, confirmedTerms)
 										"
 										variant="tertiary"
+										:title="addTargetHint"
 										@click="
 											openConfirm(row, 'striking-distance')
 										">
@@ -164,53 +172,110 @@
 						)
 					}}
 				</p>
-				<ul v-else class="keyword-intel__findings">
-					<li v-for="row in cannibalisation" :key="row.query">
-						<div class="keyword-intel__finding-head">
-							<strong>{{ row.query }}</strong>
-							<span>
+				<template v-else>
+					<p class="keyword-intel__intro">
+						{{
+							t(
+								'pipelinq',
+								'When two of your pages show up for the same search, they split its clicks: together they earn less than the better page would on its own.',
+							)
+						}}
+					</p>
+					<ul class="keyword-intel__findings">
+						<li
+							v-for="row in cannibalisation"
+							:key="row.query"
+							class="keyword-intel__card">
+							<div class="keyword-intel__finding-head">
+								<strong class="keyword-intel__query">{{
+									row.query
+								}}</strong>
+								<NcButton
+									v-if="!isConfirmed(row.query, confirmedTerms)"
+									variant="tertiary"
+									:title="addTargetHint"
+									@click="openConfirm(row, 'cannibalisation')">
+									{{ t('pipelinq', 'Add as target') }}
+								</NcButton>
+							</div>
+							<p class="keyword-intel__summary">
 								{{
 									t(
 										'pipelinq',
-										'Together {combined}, best page alone {best}',
+										'Together these pages are clicked in {combined} of searches. The best page alone is clicked in {best}.',
 										{
 											combined: percent(row.combinedCtr),
 											best: percent(row.bestPageCtr),
 										},
 									)
 								}}
-							</span>
-							<NcButton
-								v-if="!isConfirmed(row.query, confirmedTerms)"
-								variant="tertiary"
-								@click="openConfirm(row, 'cannibalisation')">
-								{{ t('pipelinq', 'Add as target') }}
-							</NcButton>
-						</div>
-						<ul class="keyword-intel__pages">
-							<li v-for="page in row.pages" :key="page.page">
-								<span class="keyword-intel__page-url">{{
-									page.page
-								}}</span>
-								<span>
-									{{
-										t(
-											'pipelinq',
-											'position {position}, {share} of impressions',
-											{
-												position: page.position,
-												share: pageShare(
-													page,
-													row.impressions,
-												),
-											},
-										)
-									}}
-								</span>
-							</li>
-						</ul>
-					</li>
-				</ul>
+							</p>
+							<div class="keyword-intel__scroll">
+								<table class="keyword-intel__table">
+									<thead>
+										<tr>
+											<th scope="col">
+												{{ t('pipelinq', 'Page') }}
+											</th>
+											<th
+												scope="col"
+												class="keyword-intel__num">
+												{{ t('pipelinq', 'Position') }}
+											</th>
+											<th
+												scope="col"
+												class="keyword-intel__num">
+												{{
+													t(
+														'pipelinq',
+														'Share of impressions',
+													)
+												}}
+											</th>
+											<th
+												scope="col"
+												class="keyword-intel__num">
+												{{ t('pipelinq', 'CTR') }}
+											</th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr
+											v-for="page in row.pages"
+											:key="page.page">
+											<td>
+												<a
+													:href="page.page"
+													:title="page.page"
+													class="keyword-intel__page-link"
+													target="_blank"
+													rel="noopener noreferrer"
+													>{{ pagePath(page.page) }}</a
+												>
+												<span
+													v-if="page.page === row.bestPage"
+													class="keyword-intel__best">
+													{{ t('pipelinq', 'Best page') }}
+												</span>
+											</td>
+											<td class="keyword-intel__num">
+												{{ page.position }}
+											</td>
+											<td class="keyword-intel__num">
+												{{
+													pageShare(page, row.impressions)
+												}}
+											</td>
+											<td class="keyword-intel__num">
+												{{ percent(page.ctr) }}
+											</td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+						</li>
+					</ul>
+				</template>
 			</section>
 
 			<section class="keyword-intel__section" data-testid="keyword-intel-gaps">
@@ -264,6 +329,7 @@
 											!isConfirmed(row.query, confirmedTerms)
 										"
 										variant="tertiary"
+										:title="addTargetHint"
 										@click="openConfirm(row, 'content-gap')">
 										{{ t('pipelinq', 'Add as target') }}
 									</NcButton>
@@ -301,9 +367,11 @@ import {
 import KeyVariant from 'vue-material-design-icons/KeyVariant.vue'
 import KeywordTargetConfirmModal from '../../modals/KeywordTargetConfirmModal.vue'
 import {
+	bucketRange,
 	confirmPayload,
 	crawlNotice,
 	isConfirmed,
+	pagePath,
 	pageShare,
 	percent,
 	shortfall,
@@ -342,6 +410,14 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * @return {string} The tooltip on every "Add as target" button.
+		 * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-a-proposal-becomes-a-keyword-target-only-when-a-person-confirms-it
+		 */
+		addTargetHint() {
+			return this.t('pipelinq', 'Save this search as a keyword to work on')
+		},
+
 		/**
 		 * The selectable windows.
 		 *
@@ -392,6 +468,8 @@ export default {
 		percent,
 		shortfall,
 		pageShare,
+		pagePath,
+		bucketRange,
 		isConfirmed,
 		crawlNotice,
 
@@ -564,32 +642,57 @@ export default {
 	color: var(--color-text-maxcontrast);
 }
 
+.keyword-intel__intro {
+	margin: 0 0 12px;
+	color: var(--color-text-maxcontrast);
+}
+
 .keyword-intel__findings {
-	list-style: none;
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	margin: 0;
 	padding: 0;
+	list-style: none;
+}
+
+.keyword-intel__card {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	padding: 14px 16px;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius-large);
 }
 
 .keyword-intel__finding-head {
 	display: flex;
-	gap: 12px;
 	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
 	flex-wrap: wrap;
 }
 
-.keyword-intel__pages {
-	list-style: none;
-	padding: 0 0 12px 16px;
-	color: var(--color-text-maxcontrast);
-
-	li {
-		display: flex;
-		gap: 12px;
-		flex-wrap: wrap;
-	}
+.keyword-intel__query {
+	font-size: 1.05em;
 }
 
-.keyword-intel__page-url {
+.keyword-intel__summary {
+	margin: 0;
+}
+
+.keyword-intel__page-link {
 	word-break: break-all;
+}
+
+.keyword-intel__best {
+	margin-inline-start: 8px;
+	padding: 1px 8px;
+	border-radius: 999px;
+	background: var(--color-primary-element-light);
+	color: var(--color-primary-element-light-text);
+	font-size: 0.85em;
+	white-space: nowrap;
 }
 
 .keyword-intel__error {

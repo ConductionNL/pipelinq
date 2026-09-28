@@ -6813,7 +6813,14 @@ OC.L10N.register(
         "Use a three-letter currency code for every rate.": "Gebruik voor elke koers een valutacode van drie letters.",
         "Use a three-letter currency code, such as EUR or USD": "Gebruik een valutacode van drie letters, zoals EUR of USD",
         "The currency the value is in, as a three-letter code such as EUR or USD. Leave it empty for the reporting currency.": "De valuta van de waarde, als code van drie letters zoals EUR of USD. Laat leeg voor de rapportagevaluta.",
-        "What the lead is about, such as vergunningen. Suggested agents are colleagues with a skill for this category.": "Waar de lead over gaat, zoals vergunningen. Voorgestelde medewerkers zijn collega's met een vaardigheid voor deze categorie."
+        "What the lead is about, such as vergunningen. Suggested agents are colleagues with a skill for this category.": "Waar de lead over gaat, zoals vergunningen. Voorgestelde medewerkers zijn collega's met een vaardigheid voor deze categorie.",
+        "When two of your pages show up for the same search, they split its clicks: together they earn less than the better page would on its own.": "Wanneer twee van uw pagina's voor dezelfde zoekopdracht verschijnen, verdelen ze de klikken: samen leveren ze minder op dan de betere pagina alleen zou doen.",
+        "Together these pages are clicked in {combined} of searches. The best page alone is clicked in {best}.": "Samen worden deze pagina's aangeklikt bij {combined} van de zoekopdrachten. De beste pagina alleen wordt aangeklikt bij {best}.",
+        "Share of impressions": "Aandeel in vertoningen",
+        "Best page": "Beste pagina",
+        "Save this search as a keyword to work on": "Sla deze zoekopdracht op als zoekwoord om aan te werken",
+        "search": "zoekopdracht",
+        "searches": "zoekopdrachten"
     },
     "nplurals=2; plural=(n != 1);"
 )

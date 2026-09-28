@@ -3970,7 +3970,6 @@ OC.L10N.register(
         "To": "To",
         "Today": "Today",
         "Toegewezen aan (gebruikers-UID)": "Toegewezen aan (gebruikers-UID)",
-        "Together {combined}, best page alone {best}": "Together {combined}, best page alone {best}",
         "Toggle closed stage {name}": "Toggle closed stage {name}",
         "Toggle phase {name}": "Toggle phase {name}",
         "Toggle prospect discovery": "Toggle prospect discovery",
@@ -4539,7 +4538,6 @@ OC.L10N.register(
         "p = {p}": "p = {p}",
         "per active opportunity": "per active opportunity",
         "planned": "planned",
-        "position {position}, {share} of impressions": "position {position}, {share} of impressions",
         "redacted": "redacted",
         "register-01": "register-01",
         "requests": "requests",
@@ -6899,7 +6897,14 @@ OC.L10N.register(
         "Use a three-letter currency code for every rate.": "Use a three-letter currency code for every rate.",
         "Use a three-letter currency code, such as EUR or USD": "Use a three-letter currency code, such as EUR or USD",
         "The currency the value is in, as a three-letter code such as EUR or USD. Leave it empty for the reporting currency.": "The currency the value is in, as a three-letter code such as EUR or USD. Leave it empty for the reporting currency.",
-        "What the lead is about, such as vergunningen. Suggested agents are colleagues with a skill for this category.": "What the lead is about, such as vergunningen. Suggested agents are colleagues with a skill for this category."
+        "What the lead is about, such as vergunningen. Suggested agents are colleagues with a skill for this category.": "What the lead is about, such as vergunningen. Suggested agents are colleagues with a skill for this category.",
+        "When two of your pages show up for the same search, they split its clicks: together they earn less than the better page would on its own.": "When two of your pages show up for the same search, they split its clicks: together they earn less than the better page would on its own.",
+        "Together these pages are clicked in {combined} of searches. The best page alone is clicked in {best}.": "Together these pages are clicked in {combined} of searches. The best page alone is clicked in {best}.",
+        "Share of impressions": "Share of impressions",
+        "Best page": "Best page",
+        "Save this search as a keyword to work on": "Save this search as a keyword to work on",
+        "search": "search",
+        "searches": "searches"
     },
     "nplurals=2; plural=(n != 1);"
 )
