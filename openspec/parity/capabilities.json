@@ -2031,7 +2031,7 @@
 				"pipedrive": "not checked: no knowledge base article on customer surveys after a contact; searched the article list for survey, NPS and feedback (read 2026-09-26). Note: Was no without a source.",
 				"odoo-crm": "addons/im_livechat/static/src/embed/common/feedback_panel/feedback_panel.xml:11-12 rating faces shown to the visitor when a live chat ends, and addons/project/models/project_task_type.py:54 \"rating_active = fields.Boolean('Send a customer rating request')\" mails a rating when a task reaches a stage; nothing asks after a phone call or a logged contact moment without an automation rule sending a survey."
 			},
-			"note": "Own rating yes to no (corrections round 8, 2026-09-28): the survey, its invitation job and its answer page are built, but nothing sends a survey after a contact, pipelinq#2072. built.state stays built because the code shipped with openspec/changes/customer-satisfaction-closed-loop and the missing piece is one listener."
+			"note": "Own rating yes to no (corrections round 8, 2026-09-28): the survey, its invitation job and its answer page are built, but nothing sends a survey after a contact, pipelinq#2072. built.state stays built because the code shipped with openspec/changes/customer-satisfaction-closed-loop and the missing piece is one listener. Corrections round 9 (2026-09-28): own rating no next to built.state built is left on purpose. The gap rule (own rating no while built.state is not building, specified or decided-no) re-picks this row in the next pass, which decides the missing listener; no change carries it yet."
 		},
 		{
 			"id": "cm-campaign-touchpoint",
@@ -4014,11 +4014,11 @@
 			"feature": "Products",
 			"featureConfidence": "medium",
 			"built": {
-				"state": "specified",
+				"state": "none",
 				"evidence": "openspec/specs/product-catalog-quoting, with no matching controller in lib/Controller",
 				"owner": "ConductionNL/pipelinq"
 			},
-			"note": "The prices and the tiers are built. Producing a quote document from them is specified and not built.",
+			"note": "The prices and the tiers are built. Producing a quote document from them is specified and not built. Corrections round 9 (2026-09-28): built.state specified to none, because no change carries the quote document. The archived openspec/changes/archive/2026-03-21-product-catalog-quoting left only the main spec openspec/specs/product-catalog-quoting, which says quote generation and PDF export are not implemented (spec.md:9); the open change products-price-lists prices quote lines and does not produce or send a quote; open change beta-surface-alignment (proposal.md:54-60) records that no PDF or template step exists for the quote-as-contract record. No gap-decisions entry names the row.",
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/quotes/create-and-send-quotes quotes built from line items in the product library and sent to the buyer; \"A Revenue Hub seat is required to create quotes\" (Revenue Hub Professional, Enterprise); legacy quotes remain in Sales Hub Starter and up (https://knowledge.hubspot.com/quotes/use-e-signatures-with-quotes).",
 				"kiss": "src/router/index.ts:126 \"const router = createRouter(\" lists the only screens: startscherm, afhandeling, contactverzoeken, personen, bedrijven, zaken, links and beheer; KISS has no product, price, till, payment or stock model anywhere in src/ or Kiss.Bff/ (grep for prijs, kassa, factuur, offerte finds nothing)",
@@ -6297,13 +6297,13 @@
 			"feature": "Automation",
 			"featureConfidence": "medium",
 			"built": {
-				"state": "decided-no",
+				"state": "none",
 				"evidence": "some integrations tell people when they fail: lib/Notification/Notifier.php:239 'forecast_snapshot_partial_failure', :250 'wip_sync_failed', :261 'billing_handoff_failed', :289 'social_relink_needed', with lib/BackgroundJob/BillingHandoffRetryJob.php:95 re-notifying admins while a batch stays failed; failed export runs show on ExportRuns with a retry (appinfo/routes.php:440). Nothing switches an automation off after repeated failure (grep for circuit breaker, consecutive, auto disable finds only POS PIN lockout)",
 				"owner": "ConductionNL/openregister",
 				"reachedOn": "Nextcloud notifications; ExportRuns, ExportRunDetail",
 				"readOn": "2026-09-26"
 			},
-			"note": "alerts for a few integrations, no automatic switch off; flow failures are OpenRegister's and were not checked. Decided no 2026-09-28 (OpenSpec pass): Pipelinq stopped owning an automation engine (archived migrate-automation-to-flow-leaf); automations run on the OpenRegister flow engine, so alerting on and switching off a failing flow is that engine's job. The pipelinq integration alerts already cited stay built. Owner corrected to ConductionNL/openregister.",
+			"note": "alerts for a few integrations, no automatic switch off; flow failures are OpenRegister's and were not checked. Decided no 2026-09-28 (OpenSpec pass): Pipelinq stopped owning an automation engine (archived migrate-automation-to-flow-leaf); automations run on the OpenRegister flow engine, so alerting on and switching off a failing flow is that engine's job. The pipelinq integration alerts already cited stay built. Owner corrected to ConductionNL/openregister. Corrections round 9 (2026-09-28): built.state decided-no to none, deferred by openregister: the owner-moves pass recorded defer in openregister openspec/parity/gap-decisions.json (one competitor yes, outside pipelinq's core area, and no OpenRegister change covers alerting on or switching off a failing flow).",
 			"evidence": {
 				"hubspot-crm": "not checked: https://knowledge.hubspot.com/workflows/troubleshoot-common-workflow-errors explains errors per action in the workflow history (Professional hubs), but alerts on repeated failure and automatic switch-off are not described (read 2026-09-26).",
 				"pipedrive": "https://www.pipedrive.com/en/product-updates \"Automation owners will receive email alerts when workflows fail consistently\" and \"the system will automatically deactivate an automation if failures continue over time\", with an automation overview dashboard showing health.",
@@ -8023,13 +8023,14 @@
 			"feature": "Platform",
 			"featureConfidence": "medium",
 			"built": {
-				"state": "decided-no",
+				"state": "specified",
 				"evidence": "shipped schema titles are English source strings translated at display time (nextcloud-vue v2.56.0 src/utils/schema.js:599 \"label: tr(prop.title || key)\") from pipelinq's l10n files (l10n/nl.json, de.json, guarded by package.json:12 check:schema-l10n); a field an administrator adds has a single title and no per-language labels, so it shows the same text to everyone",
 				"owner": "ConductionNL/openregister",
+				"change": "ConductionNL/openregister openspec/changes/modelling-field-names-per-language",
 				"reachedOn": "every index and detail page",
 				"readOn": "2026-09-26"
 			},
-			"note": "shipped fields yes, your own field names no. Decided no 2026-09-28 (OpenSpec pass): A field an administrator adds is an OpenRegister schema property (matrix row clients-custom-fields, owner openregister) rendered by nextcloud-vue; a label per language needs the property model to carry one, which pipelinq cannot add. Shipped fields are translated already. Owner corrected to ConductionNL/openregister.",
+			"note": "shipped fields yes, your own field names no. Decided no 2026-09-28 (OpenSpec pass): A field an administrator adds is an OpenRegister schema property (matrix row clients-custom-fields, owner openregister) rendered by nextcloud-vue; a label per language needs the property model to carry one, which pipelinq cannot add. Shipped fields are translated already. Owner corrected to ConductionNL/openregister. Corrections round 9 (2026-09-28): built.state decided-no to specified. The owner-moves pass decided the row build in OpenRegister, which carries it in the open change openspec/changes/modelling-field-names-per-language (openregister#4112, recorded in openregister openspec/parity/gap-decisions.json). The decided-no above stands for pipelinq itself.",
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/object-settings/translate-custom-crm-content \"you can create translations for your custom CRM data, so labels and names appear in the appropriate language\", custom properties and pipelines included. Marketing, Sales, Service or Data Hub Enterprise.",
 				"pipedrive": "not checked: the partner association's request list says \"you can not translate your custom fields\"; https://support.pipedrive.com/en/article/custom-fields names one field name and no translations, but Pipedrive does not state the absence (read 2026-09-26).",
@@ -8082,9 +8083,10 @@
 			"feature": "Customer portal",
 			"featureConfidence": "high",
 			"built": {
-				"state": "decided-no",
+				"state": "specified",
 				"evidence": "lib/Service/Portal/PortalAuthService.php:189 \"$this->hasher->verify($password, ...)\": portal login is an own account with password plus MFA (PortalMfaService); no DigiD, eHerkenning, SAML or OIDC anywhere in lib/Service/Portal, lib/Controller/Portal* or src/portal",
 				"owner": "ConductionNL/portaliq",
+				"change": "ConductionNL/portaliq openspec/changes/signin-integriq-broker-login",
 				"reachedOn": "nothing",
 				"readOn": "2026-09-26"
 			},
@@ -8101,7 +8103,7 @@
 				"intelligence-db requirements#207282 (Gemeente Midden-Drenthe, 2026-03-05: DigiD en of eHerkenning voor authenticatie)",
 				"intelligence-db requirements#194820 (Kadaster CRM, 2026-04-23: zelfregistratie, authenticatie zoals eHerkenning)"
 			],
-			"note": "Decided no 2026-09-28 (OpenSpec pass): One shared external portal is portaliq (hydra ADR-046; pipelinq change portal-contribution retires the bespoke portal); DigiD and eHerkenning login are portaliq rows sig-digid and sig-eherkenning, both specified. Owner corrected to ConductionNL/portaliq."
+			"note": "Decided no 2026-09-28 (OpenSpec pass): One shared external portal is portaliq (hydra ADR-046; pipelinq change portal-contribution retires the bespoke portal); DigiD and eHerkenning login are portaliq rows sig-digid and sig-eherkenning, both specified. Owner corrected to ConductionNL/portaliq. Corrections round 9 (2026-09-28): built.state decided-no to specified. The owner-moves pass recorded the open portaliq change as existing: openspec/changes/signin-integriq-broker-login (portaliq#808, recorded in portaliq openspec/parity/gap-decisions.json for this pipelinq row). The decided-no above stands for pipelinq's own portal."
 		},
 		{
 			"id": "portal-visible-fields",
@@ -8150,13 +8152,14 @@
 			"feature": "Customer portal",
 			"featureConfidence": "medium",
 			"built": {
-				"state": "decided-no",
+				"state": "specified",
 				"evidence": "each portal tenant carries enabledFeatures (lib/Service/Portal/PortalTenantService.php:62 PUBLIC_FIELDS, isFeatureEnabled) and src/portal/views/PortalDashboard.vue:123 \"all.filter((tab) => this.features.includes(tab.key))\" shows only those tabs; records are scoped to the account's own contact and delegations (PortalScopeResolver). An admin sets the tabs in the Customer portal section of the Pipelinq admin settings (src/components/admin/PortalSettings.vue, mounted by src/views/settings/Settings.vue), which reads GET /portal/api/admin/tenant-config and saves through POST /portal/api/admin/tenant-config. The choice is per tenant, not per client",
 				"owner": "ConductionNL/portaliq",
+				"change": "ConductionNL/portaliq openspec/changes/operate-pages-per-portal-and-client",
 				"reachedOn": "portal dashboard tabs; Administration settings, Pipelinq, Customer portal",
 				"readOn": "2026-09-27"
 			},
-			"note": "the choice is per tenant, not per client. Decided no 2026-09-28 (OpenSpec pass): The missing half, a menu and record choice per client, belongs to the shared portal (hydra ADR-046, portaliq menus site-menus-layout); the bespoke pipelinq portal that holds today's per tenant choice is due to retire (open change portal-contribution). Owner corrected to ConductionNL/portaliq.",
+			"note": "the choice is per tenant, not per client. Decided no 2026-09-28 (OpenSpec pass): The missing half, a menu and record choice per client, belongs to the shared portal (hydra ADR-046, portaliq menus site-menus-layout); the bespoke pipelinq portal that holds today's per tenant choice is due to retire (open change portal-contribution). Owner corrected to ConductionNL/portaliq. Corrections round 9 (2026-09-28): built.state decided-no to specified. The owner-moves pass decided build in portaliq: openspec/changes/operate-pages-per-portal-and-client (portaliq#808, recorded in portaliq openspec/parity/gap-decisions.json for this pipelinq row). The decided-no above stands for pipelinq's own portal.",
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/inbox/manage-customer-portal-settings sets \"access permissions\", which contacts see company tickets and which properties show (Service Hub Professional, Enterprise); choosing menu items per client is not described.",
 				"pipedrive": "not checked: searched the Pipedrive knowledge base article list (https://support.pipedrive.com/en-sitemap.xml) and product updates on 2026-09-26 for a client portal and found none.",
