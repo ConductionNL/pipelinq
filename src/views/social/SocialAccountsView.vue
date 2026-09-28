@@ -101,13 +101,6 @@
 
 <script>
 import { NcButton, NcEmptyContent, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
-import AlphaXBox from 'vue-material-design-icons/AlphaXBox.vue'
-import At from 'vue-material-design-icons/At.vue'
-import ButterflyOutline from 'vue-material-design-icons/ButterflyOutline.vue'
-import Facebook from 'vue-material-design-icons/Facebook.vue'
-import Instagram from 'vue-material-design-icons/Instagram.vue'
-import Linkedin from 'vue-material-design-icons/Linkedin.vue'
-import Mastodon from 'vue-material-design-icons/Mastodon.vue'
 import ShareVariantOutline from 'vue-material-design-icons/ShareVariantOutline.vue'
 import {
 	attachCredential,
@@ -116,18 +109,8 @@ import {
 	revokeAccount,
 	startBrokerConnection,
 } from '../../services/socialApi.js'
+import { networkIcon } from '../../services/socialNetworkIcons.js'
 import { accountStatusChip, networkLimits } from '../../services/socialNetworks.js'
-
-/** Each network's icon; an unknown network falls back to the share icon. */
-const NETWORK_ICONS = {
-	mastodon: Mastodon,
-	bluesky: ButterflyOutline,
-	linkedin: Linkedin,
-	x: AlphaXBox,
-	facebook: Facebook,
-	instagram: Instagram,
-	threads: At,
-}
 
 export default {
 	name: 'SocialAccountsView',
@@ -194,7 +177,7 @@ export default {
 		 * @return {object} Its icon component.
 		 */
 		networkIcon(network) {
-			return NETWORK_ICONS[network] || ShareVariantOutline
+			return networkIcon(network)
 		},
 
 		/**

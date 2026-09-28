@@ -21,81 +21,96 @@
   -->
 <template>
 	<div class="social-variants" data-testid="social-variants">
-		<NcLoadingIcon v-if="loading" :size="24" />
+		<NcLoadingIcon v-if="loading && !post" :size="24" />
 
 		<NcNoteCard v-else-if="error" type="error">{{ error }}</NcNoteCard>
 
 		<template v-else-if="post">
-			<p v-if="post.agentAuthored" class="social-variants__agent">
+			<NcNoteCard
+				v-if="post.agentAuthored"
+				type="info"
+				class="social-variants__agent">
 				{{
 					t('pipelinq', 'Written by an agent: {agent}', {
 						agent: post.agentAuthoredBy || '',
 					})
 				}}
-			</p>
+			</NcNoteCard>
 
-			<section
+			<article
 				v-for="fit in fits"
 				:key="fit.network"
-				class="social-variants__network">
-				<h3>{{ fit.label }}</h3>
+				class="social-variants__card">
+				<header class="social-variants__card-header">
+					<span class="social-variants__icon" aria-hidden="true">
+						<component :is="networkIcon(fit.network)" :size="20" />
+					</span>
+					<h3 class="social-variants__network">{{ fit.label }}</h3>
+					<span
+						class="social-variants__count"
+						:class="{ 'social-variants__count--over': !fit.fits }">
+						{{ fit.length }} / {{ fit.limit }}
+					</span>
+				</header>
 				<p class="social-variants__body">{{ bodyFor(fit.network) }}</p>
-				<p class="social-variants__count">
-					{{ fit.length }} / {{ fit.limit }}
+			</article>
+
+			<template v-if="fits.length === 0">
+				<!-- With no account chosen there is no network to resolve the text
+					for, so the post's own text is shown as it stands. -->
+				<article v-if="post.body" class="social-variants__card">
+					<header class="social-variants__card-header">
+						<h3 class="social-variants__network">
+							{{ t('pipelinq', 'Text') }}
+						</h3>
+					</header>
+					<p class="social-variants__body">{{ post.body }}</p>
+				</article>
+				<p class="social-variants__hint">
+					{{ t('pipelinq', 'This post names no accounts yet.') }}
 				</p>
+			</template>
+
+			<section v-if="approvals.length > 0" class="social-variants__approvals">
+				<h3 class="social-variants__approvals-title">
+					{{ t('pipelinq', 'Approvals') }}
+				</h3>
+				<ul class="social-variants__approvals-list">
+					<li
+						v-for="(entry, index) in approvals"
+						:key="index"
+						class="social-variants__approval">
+						<span
+							class="social-variants__decision"
+							:class="'social-variants__decision--' + entry.decision">
+							{{ decisionLabel(entry.decision) }}
+						</span>
+						<span class="social-variants__approval-meta">
+							{{ entry.userId }} · {{ formatDate(entry.decidedAt) }}
+						</span>
+						<span
+							v-if="entry.note"
+							class="social-variants__approval-note">
+							{{ entry.note }}
+						</span>
+					</li>
+				</ul>
 			</section>
-
-			<p v-if="fits.length === 0" class="social-variants__count">
-				{{ t('pipelinq', 'This post names no accounts yet.') }}
-			</p>
-
-			<footer class="social-variants__actions">
-				<NcButton
-					v-if="post.status === 'draft'"
-					variant="primary"
-					:disabled="busy"
-					data-testid="social-variants-submit"
-					@click="move('submit')">
-					{{ t('pipelinq', 'Submit for approval') }}
-				</NcButton>
-				<NcButton
-					v-if="post.status === 'approval'"
-					variant="primary"
-					:disabled="busy"
-					data-testid="social-variants-approve"
-					@click="move('approve')">
-					{{ t('pipelinq', 'Approve') }}
-				</NcButton>
-				<NcButton
-					v-if="post.status === 'approval'"
-					variant="secondary"
-					:disabled="busy"
-					data-testid="social-variants-reject"
-					@click="move('reject')">
-					{{ t('pipelinq', 'Reject') }}
-				</NcButton>
-			</footer>
-
-			<ul v-if="approvals.length > 0" class="social-variants__approvals">
-				<li v-for="(entry, index) in approvals" :key="index">
-					{{ entry.userId }} · {{ entry.decision }} ·
-					{{ entry.decidedAt }}
-				</li>
-			</ul>
 		</template>
 	</div>
 </template>
 
 <script>
-import { NcButton, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
-import { fetchAccounts, fetchPost, movePost } from '../../services/socialApi.js'
+import { subscribe, unsubscribe } from '@nextcloud/event-bus'
+import { NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
+import { fetchAccounts, fetchPost } from '../../services/socialApi.js'
 import { fitsForNetworks, resolveVariant } from '../../services/socialComposer.js'
+import { networkIcon } from '../../services/socialNetworkIcons.js'
 
 export default {
 	name: 'SocialPostVariantsSection',
 
 	components: {
-		NcButton,
 		NcLoadingIcon,
 		NcNoteCard,
 	},
@@ -115,7 +130,6 @@ export default {
 	data() {
 		return {
 			loading: false,
-			busy: false,
 			error: '',
 			post: null,
 			accounts: [],
@@ -160,6 +174,13 @@ export default {
 
 	mounted() {
 		this.load()
+		// The approval step lives in the page header, which bumps this after
+		// a move, so the status and the approvals list re-read here.
+		subscribe('cn:page:refresh', this.load)
+	},
+
+	beforeUnmount() {
+		unsubscribe('cn:page:refresh', this.load)
 	},
 
 	methods: {
@@ -215,53 +236,156 @@ export default {
 		},
 
 		/**
-		 * Submit, approve or reject.
+		 * @param {string} network The network.
+		 * @return {object} Its icon component.
+		 */
+		networkIcon(network) {
+			return networkIcon(network)
+		},
+
+		/**
+		 * A decision in words.
 		 *
-		 * @param {string} action One of `submit`, `approve`, `reject`.
-		 * @return {Promise<void>} Resolves once moved.
+		 * @param {string} decision The stored decision.
+		 * @return {string} Its label, or the value itself when unknown.
 		 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
 		 */
-		async move(action) {
-			this.busy = true
-			this.error = ''
-			try {
-				this.post = await movePost(this.effectiveId(), action)
-			} catch (error) {
-				this.error =
-					error?.response?.data?.error
-					|| t('pipelinq', 'That did not work.')
-			} finally {
-				this.busy = false
+		decisionLabel(decision) {
+			const labels = {
+				approved: t('pipelinq', 'Approved'),
+				rejected: t('pipelinq', 'Rejected'),
 			}
+			return labels[decision] || decision
+		},
+
+		/**
+		 * @param {string} value An ISO timestamp.
+		 * @return {string} It in the reader's locale, or as stored when unreadable.
+		 */
+		formatDate(value) {
+			const date = new Date(value)
+			return Number.isNaN(date.getTime()) ? value || '' : date.toLocaleString()
 		},
 	},
 }
 </script>
 
 <style scoped>
+.social-variants {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.social-variants__agent {
+	margin: 0;
+}
+
+.social-variants__card {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	padding: 14px 16px;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius-large);
+	background: var(--color-main-background);
+}
+
+.social-variants__card-header {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+
+.social-variants__icon {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	width: 32px;
+	height: 32px;
+	border-radius: 50%;
+	background: var(--color-primary-element-light);
+	color: var(--color-primary-element-light-text);
+}
+
 .social-variants__network {
-	margin-bottom: 16px;
+	flex: 1;
+	margin: 0;
+	font-size: 1em;
+}
+
+.social-variants__count {
+	padding: 2px 10px;
+	border-radius: 999px;
+	background: var(--color-background-dark);
+	color: var(--color-text-maxcontrast);
+	font-size: 0.85em;
+	font-variant-numeric: tabular-nums;
+}
+
+.social-variants__count--over {
+	background: var(--color-error);
+	color: var(--color-primary-element-text);
 }
 
 .social-variants__body {
+	margin: 0;
 	white-space: pre-wrap;
 }
 
-.social-variants__agent,
-.social-variants__count {
+.social-variants__hint {
+	margin: 0;
 	color: var(--color-text-maxcontrast);
 	font-size: 0.9em;
 }
 
-.social-variants__actions {
+.social-variants__approvals {
 	display: flex;
+	flex-direction: column;
 	gap: 8px;
-	margin-top: 12px;
 }
 
-.social-variants__approvals {
-	margin-top: 12px;
+.social-variants__approvals-title {
+	margin: 0;
+	font-size: 1em;
+}
+
+.social-variants__approvals-list {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.social-variants__approval {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 4px 10px;
+}
+
+.social-variants__decision {
+	font-weight: 600;
+}
+
+.social-variants__decision--approved {
+	color: var(--color-success-text, var(--color-success));
+}
+
+.social-variants__decision--rejected {
+	color: var(--color-error-text, var(--color-error));
+}
+
+.social-variants__approval-meta {
 	color: var(--color-text-maxcontrast);
+	font-size: 0.9em;
+}
+
+.social-variants__approval-note {
+	flex-basis: 100%;
 	font-size: 0.9em;
 }
 </style>
