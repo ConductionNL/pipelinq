@@ -672,8 +672,6 @@ Operations for lead editing and lead-product linking screens MUST tolerate missi
 - THEN it MUST return a safe default or a validation result
 - AND it MUST NOT raise an unhandled exception
 
-## Requirements
-
 ### Requirement: Lead Capture from External Sources [V1]
 
 The system SHOULD support creating leads from external channels beyond manual entry. This includes web form submissions, email parsing, and integration with the prospect discovery module. External lead capture reduces data entry and ensures no potential opportunity is missed.
