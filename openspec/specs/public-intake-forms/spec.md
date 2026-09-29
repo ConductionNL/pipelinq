@@ -17,7 +17,7 @@ Organizations need to capture leads from their website without requiring visitor
 
 **Tender relevance:** Formulieren/intake appears in 61% of government tenders (42/69). The combination with klantinteractie (65%) makes public intake a critical entry point for citizen service workflows.
 
-## ADDED Requirements
+## Requirements
 
 ---
 
@@ -500,68 +500,6 @@ The system MUST provide analytics for form performance monitoring.
 
 ---
 
-## Dependencies
-- Pipelinq contact, lead, and request entities (OpenRegister schemas)
-- Pipeline configuration (for default lead placement)
-- Nextcloud notification system (OCP\Notification\IManager)
-- Nextcloud Files (OCP\Files\IRootFolder) for file uploads
-- CORS configuration for cross-origin form submissions
-- Nextcloud public route system (`#[PublicPage]` attribute on controllers)
-- SystemTag lead sources (for auto-setting source to "website")
-- CRM workflow automation spec (for triggering automations on form-created entities)
-
----
-
-### Current Implementation Status
-
-**Implemented:**
-- Nothing from this spec is implemented. There are no form builder components, public form endpoints, or embed code generation.
-
-**Not yet implemented:**
-- **Form builder UI:** No form builder component or form entity/schema.
-- **Form field types:** No configurable field type system.
-- **Field-to-entity mapping:** No mechanism to map form fields to contact/lead/request properties.
-- **Form submission creates CRM entities:** No public submission endpoint. No contact deduplication by email.
-- **Form embedding:** No iframe or JavaScript embed snippet generation. No public controller routes.
-- **Custom styling:** No form style configuration.
-- **Spam protection:** No honeypot field, rate limiting, or CAPTCHA integration.
-- **Form management:** No form list, submission history, or CSV export.
-- **Public API routes:** No public (non-authenticated) controller endpoints for form rendering or submission.
-- **CORS configuration:** No cross-origin headers for external form submissions.
-- **Form analytics:** No submission statistics or conversion tracking.
-- **File upload for public forms:** No public file upload endpoint.
-- **NL Design System styling:** No design token integration for government forms.
-
-**Partial implementations:**
-- `#[PublicPage]` attribute is available in Nextcloud for creating public routes (used by other apps).
-- OpenRegister API provides the entity creation backend (contacts, leads, requests).
-- SystemTag-based lead sources include "website" (initialized in `InitializeSettings.php`).
-- NotificationService exists and can be reused for form submission notifications.
-- Nextcloud Files integration (IRootFolder) is available for file uploads.
-
-### Standards & References
-- **CORS (Cross-Origin Resource Sharing):** Required for forms embedded on external websites.
-- **hCaptcha / Cloudflare Turnstile:** CAPTCHA providers mentioned in the spec. hCaptcha preferred for GDPR compliance.
-- **HTTPS:** All public form endpoints must be served over HTTPS.
-- **GDPR/AVG:** Public forms collecting personal data must comply with privacy regulations. IP address hashing, data retention policies, and right-to-deletion support are required.
-- **Nextcloud public routes:** Nextcloud supports public (non-authenticated) controller routes via `#[PublicPage]` attribute.
-- **NL Design System:** CSS custom properties (design tokens) for government website integration.
-- **WCAG AA:** All forms must be accessible, including CAPTCHA alternatives.
-- **Shadow DOM:** Used for style isolation in JavaScript embed mode.
-- **Krayin web-forms:** Competitive reference for web-to-lead form patterns (attribute selection, color customization, embed snippet).
-- **EspoCRM Lead Capture:** Competitive reference for webhook-based lead creation from external forms.
-
-### Specificity Assessment
-- The spec now defines 12 requirements with 3-5 scenarios each, covering the form builder, field mapping, entity creation, embedding, styling, spam protection, success/error handling, form management, submission history, public API routes, data storage, and analytics.
-- **Implementable incrementally:** MVP covers the form builder, field mapping, entity creation, embedding (iframe + JS), spam protection (honeypot + rate limiting), success/error handling, form management, public routes, and data storage. V1 adds custom styling (NL Design System), submission history/export, field conditional visibility, and analytics. Enterprise features are not defined (this is a complete feature at V1).
-- **Resolved:** Forms are stored as OpenRegister objects with a form schema.
-- **Resolved:** Public URL structure is `/apps/pipelinq/public/forms/{slug}`.
-- **Resolved:** File uploads use Nextcloud Files with service account ownership.
-- **Resolved:** CORS is configurable per form with default allow-all.
-- **Resolved:** AVG compliance addressed via IP hashing, data retention, and deletion support.
-- **Design decision:** Forms support single-page layout only (no multi-step wizards in MVP/V1). Multi-step forms may be added as Enterprise feature.
-- **Design decision:** Duplicate contact handling uses email as primary dedup key, with phone as secondary soft match (logged but not blocked).
-## Requirements
 ### Requirement: Public survey rendering and submission — documented operations
 
 The public survey display and submission implemented in this app MUST provide the operations enumerated in this change's tasks.md (for example `show`, `submit`). Each listed method realises an observable part of public survey display and submission and MUST behave as implemented in the current codebase.
@@ -712,3 +650,64 @@ performed by this change and SHALL be documented as a separate follow-up
   SHALL be recorded for a one-time export → recreate-as-Forms-response → relink
   pass.
 
+## Dependencies
+- Pipelinq contact, lead, and request entities (OpenRegister schemas)
+- Pipeline configuration (for default lead placement)
+- Nextcloud notification system (OCP\Notification\IManager)
+- Nextcloud Files (OCP\Files\IRootFolder) for file uploads
+- CORS configuration for cross-origin form submissions
+- Nextcloud public route system (`#[PublicPage]` attribute on controllers)
+- SystemTag lead sources (for auto-setting source to "website")
+- CRM workflow automation spec (for triggering automations on form-created entities)
+
+---
+
+### Current Implementation Status
+
+**Implemented:**
+- Nothing from this spec is implemented. There are no form builder components, public form endpoints, or embed code generation.
+
+**Not yet implemented:**
+- **Form builder UI:** No form builder component or form entity/schema.
+- **Form field types:** No configurable field type system.
+- **Field-to-entity mapping:** No mechanism to map form fields to contact/lead/request properties.
+- **Form submission creates CRM entities:** No public submission endpoint. No contact deduplication by email.
+- **Form embedding:** No iframe or JavaScript embed snippet generation. No public controller routes.
+- **Custom styling:** No form style configuration.
+- **Spam protection:** No honeypot field, rate limiting, or CAPTCHA integration.
+- **Form management:** No form list, submission history, or CSV export.
+- **Public API routes:** No public (non-authenticated) controller endpoints for form rendering or submission.
+- **CORS configuration:** No cross-origin headers for external form submissions.
+- **Form analytics:** No submission statistics or conversion tracking.
+- **File upload for public forms:** No public file upload endpoint.
+- **NL Design System styling:** No design token integration for government forms.
+
+**Partial implementations:**
+- `#[PublicPage]` attribute is available in Nextcloud for creating public routes (used by other apps).
+- OpenRegister API provides the entity creation backend (contacts, leads, requests).
+- SystemTag-based lead sources include "website" (initialized in `InitializeSettings.php`).
+- NotificationService exists and can be reused for form submission notifications.
+- Nextcloud Files integration (IRootFolder) is available for file uploads.
+
+### Standards & References
+- **CORS (Cross-Origin Resource Sharing):** Required for forms embedded on external websites.
+- **hCaptcha / Cloudflare Turnstile:** CAPTCHA providers mentioned in the spec. hCaptcha preferred for GDPR compliance.
+- **HTTPS:** All public form endpoints must be served over HTTPS.
+- **GDPR/AVG:** Public forms collecting personal data must comply with privacy regulations. IP address hashing, data retention policies, and right-to-deletion support are required.
+- **Nextcloud public routes:** Nextcloud supports public (non-authenticated) controller routes via `#[PublicPage]` attribute.
+- **NL Design System:** CSS custom properties (design tokens) for government website integration.
+- **WCAG AA:** All forms must be accessible, including CAPTCHA alternatives.
+- **Shadow DOM:** Used for style isolation in JavaScript embed mode.
+- **Krayin web-forms:** Competitive reference for web-to-lead form patterns (attribute selection, color customization, embed snippet).
+- **EspoCRM Lead Capture:** Competitive reference for webhook-based lead creation from external forms.
+
+### Specificity Assessment
+- The spec now defines 12 requirements with 3-5 scenarios each, covering the form builder, field mapping, entity creation, embedding, styling, spam protection, success/error handling, form management, submission history, public API routes, data storage, and analytics.
+- **Implementable incrementally:** MVP covers the form builder, field mapping, entity creation, embedding (iframe + JS), spam protection (honeypot + rate limiting), success/error handling, form management, public routes, and data storage. V1 adds custom styling (NL Design System), submission history/export, field conditional visibility, and analytics. Enterprise features are not defined (this is a complete feature at V1).
+- **Resolved:** Forms are stored as OpenRegister objects with a form schema.
+- **Resolved:** Public URL structure is `/apps/pipelinq/public/forms/{slug}`.
+- **Resolved:** File uploads use Nextcloud Files with service account ownership.
+- **Resolved:** CORS is configurable per form with default allow-all.
+- **Resolved:** AVG compliance addressed via IP hashing, data retention, and deletion support.
+- **Design decision:** Forms support single-page layout only (no multi-step wizards in MVP/V1). Multi-step forms may be added as Enterprise feature.
+- **Design decision:** Duplicate contact handling uses email as primary dedup key, with phone as secondary soft match (logged but not blocked).

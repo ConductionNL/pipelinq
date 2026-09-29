@@ -14,7 +14,7 @@ Add temporal, financial, and analytical context to pipeline views so users can s
 
 ---
 
-## ADDED Requirements
+## Requirements
 
 ### Requirement: Stage Revenue Summary [V1]
 
@@ -365,55 +365,6 @@ The system MUST support comparing performance across multiple pipelines.
 
 ---
 
-## Current Implementation Status
-
-**Implemented:**
-- **Stage Revenue Summary:** Fully implemented in `PipelineBoard.vue`. Column headers show `getStageTotalValue()` which sums `totalsProperty` values per stage. List view includes a Value column with sorting. Uses `propertyMappings` for multi-schema support.
-- **Stale Lead Detection:** Fully implemented via `pipelineUtils.js`:
-  - `isStale(item, entityType)` returns true only for leads with `_dateModified` 14+ days ago.
-  - Stale badge shown on kanban cards and in list view (amber "Stale" badge).
-  - Only leads can be stale (requests return false).
-- **Aging Indicator:** Fully implemented:
-  - `getDaysAge(item)` calculates days since `_dateModified`.
-  - `formatAge(days)` returns "Today", "1d", or "Xd" format.
-  - `getAgingClass(days)` returns `aging-warning` (7+) or `aging-alert` (14+).
-  - Shown on kanban cards and in list view "Age" column with sorting.
-- **Overdue Item Highlighting:** Fully implemented:
-  - Kanban: red left border via `pipeline-card--overdue`, red date via `card-date--overdue`.
-  - List view: `list-row--overdue` background tint, `overdue-date` red text.
-  - Dashboard: overdue items counted in KPI widget, shown in My Work with overdue items sorted first.
-  - Lead overdue: `expectedCloseDate < today`.
-  - Request overdue: `requestedAt` more than 30 days ago and status is new/in_progress.
-- **Pipeline Value KPI:** Dashboard shows total pipeline value via `CnStatsBlock`.
-- **MetricsRepository:** `lib/Service/MetricsRepository.php` provides database-level lead count, lead value, and request count queries for Prometheus metrics.
-
-**Not yet implemented:**
-- **Stale threshold configurability:** Hardcoded to 14 days in `pipelineUtils.js`.
-- **Closed item overdue exclusion on kanban:** `isItemOverdue()` in `PipelineBoard.vue` does not check `stage.isClosed`.
-- **Pipeline Conversion Analytics:** No funnel visualization, stage conversion rates, or win/loss analysis.
-- **Revenue Forecasting:** No weighted pipeline value calculation. No stage probability fields.
-- **Won deals trend widget, Sales velocity widget, Top performers widget:** Not implemented.
-- **Pipeline Activity Timeline in sidebar:** Activity events exist but no timeline UI in pipeline view.
-- **Export and Reporting:** No CSV/PDF export from pipeline views.
-- **Pipeline Comparison:** No multi-pipeline analytics overview.
-
-**Partial implementations:**
-- Aging uses `_dateModified` as proxy for stage duration (matches spec but may not reflect true stage entry date).
-- Dashboard has basic KPI widgets (open leads, open requests, pipeline value, overdue count) but no trend/analytics widgets.
-
-### Standards & References
-- WCAG AA: Color coding supplemented with text labels (badge text, day counts).
-- CRM analytics patterns from EspoCRM (funnel, win/loss, forecast).
-- Prometheus metrics endpoint at `lib/Controller/MetricsController.php` for operational monitoring.
-
-### Specificity Assessment
-- V1 requirements (visual indicators) are well-implemented and specific.
-- Enterprise requirements (analytics, forecasting) need new components and possibly backend analytics endpoints.
-- **Resolved:** Stale threshold should be configurable (new scenario added).
-- **Resolved:** Closed items should be excluded from overdue on kanban (gap identified).
-- **Open question:** Should aging track actual stage entry date (requires new field) or continue using `_dateModified`?
-- **Open question:** Should conversion analytics use OpenRegister audit logs or a separate events table for historical tracking?
-## Requirements
 ### Requirement: Dashboard and pipeline aggregation — documented operations
 
 The dashboard page render and pipeline stage aggregation implemented in this app MUST provide the operations enumerated in this change's tasks.md (for example `page`, `getSalesPipelineData`, `getServiceRequestsPipelineData`). Each listed method realises an observable part of dashboard page render and pipeline stage aggregation and MUST behave as implemented in the current codebase.
@@ -462,3 +413,51 @@ Operations for dashboard page render and pipeline stage aggregation MUST tolerat
 - THEN it MUST return a safe default or a validation result
 - AND it MUST NOT raise an unhandled exception
 
+## Current Implementation Status
+
+**Implemented:**
+- **Stage Revenue Summary:** Fully implemented in `PipelineBoard.vue`. Column headers show `getStageTotalValue()` which sums `totalsProperty` values per stage. List view includes a Value column with sorting. Uses `propertyMappings` for multi-schema support.
+- **Stale Lead Detection:** Fully implemented via `pipelineUtils.js`:
+  - `isStale(item, entityType)` returns true only for leads with `_dateModified` 14+ days ago.
+  - Stale badge shown on kanban cards and in list view (amber "Stale" badge).
+  - Only leads can be stale (requests return false).
+- **Aging Indicator:** Fully implemented:
+  - `getDaysAge(item)` calculates days since `_dateModified`.
+  - `formatAge(days)` returns "Today", "1d", or "Xd" format.
+  - `getAgingClass(days)` returns `aging-warning` (7+) or `aging-alert` (14+).
+  - Shown on kanban cards and in list view "Age" column with sorting.
+- **Overdue Item Highlighting:** Fully implemented:
+  - Kanban: red left border via `pipeline-card--overdue`, red date via `card-date--overdue`.
+  - List view: `list-row--overdue` background tint, `overdue-date` red text.
+  - Dashboard: overdue items counted in KPI widget, shown in My Work with overdue items sorted first.
+  - Lead overdue: `expectedCloseDate < today`.
+  - Request overdue: `requestedAt` more than 30 days ago and status is new/in_progress.
+- **Pipeline Value KPI:** Dashboard shows total pipeline value via `CnStatsBlock`.
+- **MetricsRepository:** `lib/Service/MetricsRepository.php` provides database-level lead count, lead value, and request count queries for Prometheus metrics.
+
+**Not yet implemented:**
+- **Stale threshold configurability:** Hardcoded to 14 days in `pipelineUtils.js`.
+- **Closed item overdue exclusion on kanban:** `isItemOverdue()` in `PipelineBoard.vue` does not check `stage.isClosed`.
+- **Pipeline Conversion Analytics:** No funnel visualization, stage conversion rates, or win/loss analysis.
+- **Revenue Forecasting:** No weighted pipeline value calculation. No stage probability fields.
+- **Won deals trend widget, Sales velocity widget, Top performers widget:** Not implemented.
+- **Pipeline Activity Timeline in sidebar:** Activity events exist but no timeline UI in pipeline view.
+- **Export and Reporting:** No CSV/PDF export from pipeline views.
+- **Pipeline Comparison:** No multi-pipeline analytics overview.
+
+**Partial implementations:**
+- Aging uses `_dateModified` as proxy for stage duration (matches spec but may not reflect true stage entry date).
+- Dashboard has basic KPI widgets (open leads, open requests, pipeline value, overdue count) but no trend/analytics widgets.
+
+### Standards & References
+- WCAG AA: Color coding supplemented with text labels (badge text, day counts).
+- CRM analytics patterns from EspoCRM (funnel, win/loss, forecast).
+- Prometheus metrics endpoint at `lib/Controller/MetricsController.php` for operational monitoring.
+
+### Specificity Assessment
+- V1 requirements (visual indicators) are well-implemented and specific.
+- Enterprise requirements (analytics, forecasting) need new components and possibly backend analytics endpoints.
+- **Resolved:** Stale threshold should be configurable (new scenario added).
+- **Resolved:** Closed items should be excluded from overdue on kanban (gap identified).
+- **Open question:** Should aging track actual stage entry date (requires new field) or continue using `_dateModified`?
+- **Open question:** Should conversion analytics use OpenRegister audit logs or a separate events table for historical tracking?
