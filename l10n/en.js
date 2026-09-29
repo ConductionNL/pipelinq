@@ -6806,7 +6806,20 @@ OC.L10N.register(
         "What the lead is about, such as vergunningen. Suggested agents are colleagues with a skill for this category.": "What the lead is about, such as vergunningen. Suggested agents are colleagues with a skill for this category.",
         "Reply": "Reply",
         "The text the customer wrote.": "The text the customer wrote.",
-        "When the customer sent the reply.": "When the customer sent the reply."
+        "When the customer sent the reply.": "When the customer sent the reply.",
+        "Directions": "Directions",
+        "Follow up on (optional)": "Follow up on (optional)",
+        "Follow up on the visit": "Follow up on the visit",
+        "Follow-ups": "Follow-ups",
+        "Log a visit": "Log a visit",
+        "No follow-ups assigned to you": "No follow-ups assigned to you",
+        "Save visit": "Save visit",
+        "TASK": "TASK",
+        "The visit could not be saved.": "The visit could not be saved.",
+        "The visit is saved, the follow-up task is not. Add it from the task list.": "The visit is saved, the follow-up task is not. Add it from the task list.",
+        "Visit": "Visit",
+        "Visit logged": "Visit logged",
+        "What happened?": "What happened?"
     },
     "nplurals=2; plural=(n != 1);"
 )
