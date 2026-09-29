@@ -1214,9 +1214,10 @@
 			"built": {
 				"state": "building",
 				"evidence": "lib/Service/ProspectScoringService.php:49",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"change": "openspec/changes/pipeline-lead-score-call-first"
 			},
-			"note": "Prospects are scored today. A score on a lead already in the pipeline is specified and not built.",
+			"note": "Corrected 2026-09-28: the score itself is built (lead.configuration x-openregister-calculations.qualificationScore, shown on the lead detail page). What is missing is the list column, the board score, the sort and the explanation; change pipeline-lead-score-call-first.",
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/scoring/understand-the-lead-scoring-tool \"build custom lead scores based on record actions or properties ... to evaluate which leads are likely to become customers\" for contacts, companies and deals. Marketing Hub or Sales Hub Professional, Enterprise.",
 				"kiss": "src/router/index.ts:126 \"const router = createRouter(\" lists the only screens: startscherm, afhandeling, contactverzoeken, personen, bedrijven, zaken, links and beheer; a case-insensitive grep of src/ and Kiss.Bff/ for lead, opportunit, offerte, factuur, nieuwsbrief and campagne finds no sales or marketing code (only the NL Design paragraph modifier \"utrecht-paragraphlead\")",
@@ -1515,7 +1516,8 @@
 				"evidence": "lib/Settings/register.d/50-forecast.json declares lead.currency (three-letter code), src/views/leads/LeadForm.vue edits it next to the value, and lib/Service/ForecastRollupService.php:76 converts it through lib/Service/ExchangeRateService.php at the rate table that src/components/admin/ForecastSettings.vue now edits (pipelinq#2040). The rates are kept by hand, not fetched, so 'the current rate' is only as current as the admin keeps it",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "lead create and edit form; Leads list currency column; admin Forecast settings, Exchange rates",
-				"readOn": "2026-09-27"
+				"readOn": "2026-09-27",
+				"change": "openspec/changes/pipeline-live-exchange-rates"
 			},
 			"note": "lead: since pipelinq#2040 a deal carries its currency and the forecast converts it; the rate table is maintained by hand in Forecast settings, not fetched live, hence partial. The forecast and the setup wizard now share one reporting currency (app config 'currency'). Specified 2026-09-28 in openspec/changes/pipeline-live-exchange-rates (OpenSpec pass).",
 			"evidence": {
@@ -1547,7 +1549,8 @@
 				"evidence": "no round robin or auto assignment of leads (grep of lib for round robin, rotation, auto assign). A handler gets a fair suggestion instead: lib/Service/RoutingService.php:92 getSuggestedAgents ranks colleagues whose skill covers the lead category, drops those unavailable or at their maxConcurrent cap (:427 filterByCapacity) and orders the rest by open workload; the lead schema declares category (lib/Settings/pipelinq_register.json lead properties, pipelinq#2049), LeadForm edits it, and LeadDetail mounts src/components/RoutingSuggestionSection.vue through src/manifest.json bodyWidgets, whose Assign writes the lead assignee (tests/Unit/Service/RoutingServiceTest.php testALeadWithACategoryGetsAMatchingColleague, tests/vitest/routingSuggestionSection.spec.js)",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "LeadDetail Suggested agents (colleagues ranked by skill, availability and workload, capped per person)",
-				"readOn": "2026-09-27"
+				"readOn": "2026-09-27",
+				"change": "openspec/changes/pipeline-lead-rotation"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/workflows/assign-and-rotate-record-owners-using-workflows \"Rotate record to owner\" with \"load balanced, round robin, and random\" options for tickets and leads (Sales or Service Hub Professional, Enterprise); a cap per person applies to help desk tickets (https://knowledge.hubspot.com/help-desk/set-ticket-capacity-limits-for-users-in-help-desk), not described for leads.",
@@ -1579,7 +1582,8 @@
 				"evidence": "a pipeline stage carries name, order, deckStackId, probability, isClosed, isWon, isDefault (lib/Settings/pipelinq_register.json:886-935) and no limit; src/views/pipeline/PipelineBoard.vue enforces none",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "nothing",
-				"readOn": "2026-09-26"
+				"readOn": "2026-09-26",
+				"change": "openspec/changes/pipeline-stage-limit"
 			},
 			"evidence": {
 				"hubspot-crm": "not checked: pipeline rules restrict skipping and moving back (https://knowledge.hubspot.com/object-settings/set-up-pipeline-rules) but no limit on items per stage is described (read 2026-09-26).",
@@ -2815,7 +2819,8 @@
 				"evidence": "lib/Service/TemplateRenderer.php:77 \"render(array $template, array $variables)\" fills {{var}} placeholders for mail templates (Templates page, src/manifest.d/75-marketing-blasts.json:16) and lib/Settings/register.d/85-berichtenbox-templates.json holds Berichtenbox message templates; no letter or document (PDF, docx) is produced for one client",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "Templates, TemplateNew, TemplateEdit",
-				"readOn": "2026-09-26"
+				"readOn": "2026-09-26",
+				"change": "openspec/changes/work-letter-from-filinq-template"
 			},
 			"note": "templates exist for mail and Berichtenbox, not for a printable letter. Specified 2026-09-28 in openspec/changes/work-letter-from-filinq-template (OpenSpec pass).",
 			"evidence": {
@@ -3449,7 +3454,8 @@
 				"evidence": "lib/Settings/register.d/98-marketing-campaigns.json:149 \"The portaliq form bound to the landing page. A submission on this form becomes a lead in this campaign.\" (seed example 'Webinar AI voor gemeenten', :523); lib/Service/LandingPageProvisioningService.php provisions the page. There is no event object: no date, venue, capacity, attendee list or confirmation",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "Campaigns, CampaignNew, CampaignDetail (src/manifest.d/78-marketing-campaigns.json)",
-				"readOn": "2026-09-26"
+				"readOn": "2026-09-26",
+				"change": "openspec/changes/marketing-events"
 			},
 			"note": "an event can be run as a campaign whose landing-page form turns each sign-up into a lead; registrations are not kept as attendees of an event. Specified 2026-09-28 in openspec/changes/marketing-events (OpenSpec pass).",
 			"evidence": {
@@ -3485,7 +3491,8 @@
 				"evidence": "src/views/templates/TemplateForm.vue:100 \"<textarea id=\\\"template-form-body-html\\\"\": a mailing template is written as HTML in a textarea; articles can be dropped in as an {{articles}} block (lib/Service/ArticleService.php), but there is no drag and drop block designer",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "nothing",
-				"readOn": "2026-09-26"
+				"readOn": "2026-09-26",
+				"change": "openspec/changes/marketing-block-editor"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/marketing-email/create-and-send-marketing-emails \"In the marketing email editor ... you can edit its content, appearance, and module locations\" from templates, without HTML. All products and plans.",
@@ -3517,7 +3524,8 @@
 				"evidence": "a portaliq landing-page submission becomes a contact, a lead with campaignId and firstTouch/lastTouch, and a touchpoint carrying the campaign (lib/Listener/LandingPageFormSubmittedListener.php:6 \"Turns a visitor's landing-page form submission into a contact, a lead\", registered at lib/AppInfo/Application.php:285; lead fields in lib/Settings/register.d/98-marketing-campaigns.json:392); nothing puts the campaign or landing page on the client record, no page shows touchpoints, and the website enquiry form (lib/Service/EnquiryIntakeService.php) keeps no UTM values",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "LeadDetail (lead fields), CampaignReportPage; not the client record",
-				"readOn": "2026-09-26"
+				"readOn": "2026-09-26",
+				"change": "openspec/changes/marketing-campaign-on-client"
 			},
 			"note": "kept on the lead and in the attribution log, only for portaliq landing pages. Specified 2026-09-28 in openspec/changes/marketing-campaign-on-client (OpenSpec pass).",
 			"evidence": {
@@ -4014,9 +4022,10 @@
 			"feature": "Products",
 			"featureConfidence": "medium",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"evidence": "openspec/specs/product-catalog-quoting, with no matching controller in lib/Controller",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"change": "openspec/changes/products-quote-from-lead"
 			},
 			"note": "The prices and the tiers are built. Producing a quote document from them is specified and not built. Corrections round 9 (2026-09-28): built.state specified to none, because no change carries the quote document. The archived openspec/changes/archive/2026-03-21-product-catalog-quoting left only the main spec openspec/specs/product-catalog-quoting, which says quote generation and PDF export are not implemented (spec.md:9); the open change products-price-lists prices quote lines and does not produce or send a quote; open change beta-surface-alignment (proposal.md:54-60) records that no PDF or template step exists for the quote-as-contract record. No gap-decisions entry names the row.",
 			"evidence": {
@@ -6215,7 +6224,8 @@
 			"built": {
 				"state": "building",
 				"evidence": "openspec/specs/time-entry-mobile, with no native client in the repo",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"change": "openspec/changes/platform-phone-on-the-road"
 			},
 			"note": "The four commercial and open source CRMs all ship a native mobile app. We do not.",
 			"evidence": {
@@ -6243,7 +6253,8 @@
 			"built": {
 				"state": "specified",
 				"evidence": "no live chat found anywhere in lib/ or src/",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"change": "openspec/changes/requests-web-chat-and-bot"
 			},
 			"note": "HubSpot's free tier includes live chat and a chatbot. This is a real gap, not a rating we missed. Specified 2026-09-28 in openspec/changes/requests-web-chat-and-bot (OpenSpec pass).",
 			"evidence": {
@@ -6331,7 +6342,8 @@
 			"built": {
 				"state": "specified",
 				"evidence": "no extension or plugin directory in the repo",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"change": "openspec/changes/contact-moments-mail-add-in"
 			},
 			"note": "Ours files mail afterwards by matching the address. Theirs works while you read the mail. Specified 2026-09-28 in openspec/changes/contact-moments-mail-add-in (OpenSpec pass).",
 			"evidence": {
@@ -6359,7 +6371,8 @@
 			"built": {
 				"state": "specified",
 				"evidence": "no bulk edit in src/views/clients/ or src/components/",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"change": "openspec/changes/clients-bulk-edit-and-undo"
 			},
 			"note": "Attio and Pipedrive make this the centre of the product. We edit one record at a time. Specified 2026-09-28 in openspec/changes/clients-bulk-edit-and-undo (OpenSpec pass).",
 			"evidence": {
@@ -6433,7 +6446,8 @@
 				"evidence": "no preferred name, roepnaam or nickname property on client or contact (grep of lib/Settings and src for preferred name, roepnaam, nickname, aanspreek); an administrator can add one as a custom field (clients-custom-fields, lib/Service/RegisterResolverService.php) or as a typed party field (lib/Settings/register.d/17-party-fields-and-indicators.json)",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "ClientDetail and ContactDetail forms, only once a custom field is added",
-				"readOn": "2026-09-26"
+				"readOn": "2026-09-26",
+				"change": "openspec/changes/clients-preferred-name"
 			},
 			"note": "not a shipped field; has to be configured. Specified 2026-09-28 in openspec/changes/clients-preferred-name (OpenSpec pass).",
 			"evidence": {
@@ -6465,7 +6479,8 @@
 				"evidence": "lib/Service/Customer360SummaryService.php (route /api/customer-360/summary, appinfo/routes.php:108) and the ClientDetail stat widgets (src/manifest.json:1801 client-summary-last-activity) give counts and dates, not a written summary; lib/Service/NaviService.php uses a language model only for analytics questions",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "nothing",
-				"readOn": "2026-09-26"
+				"readOn": "2026-09-26",
+				"change": "openspec/changes/clients-history-summary-and-risk"
 			},
 			"note": "a numeric 360 summary exists; no prose summary of the history. Specified 2026-09-28 in openspec/changes/clients-history-summary-and-risk (OpenSpec pass).",
 			"evidence": {
@@ -6497,7 +6512,8 @@
 				"evidence": "no signature or free text parser in lib/Service or src/ (grep for paste, parseSignature); contact data comes in by form, vCard import (lib/Service/ContactImportService.php:64) or KvK and BRP lookups",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "nothing",
-				"readOn": "2026-09-26"
+				"readOn": "2026-09-26",
+				"change": "openspec/changes/clients-contact-capture"
 			},
 			"evidence": {
 				"hubspot-crm": "not checked: searched the knowledge base list for signature parsing and smart paste; enrichment fills fields from HubSpot's dataset (https://knowledge.hubspot.com/records/enrich-your-contact-and-company-data), not from pasted text (read 2026-09-26).",
@@ -6529,7 +6545,8 @@
 				"evidence": "the client schema holds name, type, email, phone, address, website, industry, notes, contactsUid (lib/Settings/pipelinq_register.json, schema client) and no register.d fragment adds a KvK, VAT or DUNS number; KvK numbers appear only on prospects (src/components/ProspectCard.vue:34) and receipts; the only number checked is the BSN (lib/Service/BsnValidationService.php)",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "nothing",
-				"readOn": "2026-09-26"
+				"readOn": "2026-09-26",
+				"change": "openspec/changes/clients-registry-numbers-and-enrichment"
 			},
 			"note": "a custom field could hold a number, but nothing checks it. Specified 2026-09-28 in openspec/changes/clients-registry-numbers-and-enrichment (OpenSpec pass).",
 			"evidence": {
@@ -6561,7 +6578,8 @@
 				"evidence": "lib/Service/RenewalEngineService.php:187 marks contracts 'expiring' ahead of their end and :231 'churned' on silent expiry (ContractDetail, Contracts page), and lib/Service/DetractorFollowUpService.php:6 \"an unhappy answer becomes somebody's task\"; there is no churn score or at-risk list across signals",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "Contracts, ContractDetail; tasks in Tasks and MyWork",
-				"readOn": "2026-09-26"
+				"readOn": "2026-09-26",
+				"change": "openspec/changes/clients-history-summary-and-risk"
 			},
 			"note": "warning signals exist per contract and per survey answer, not as a client risk view. Specified 2026-09-28 in openspec/changes/clients-history-summary-and-risk (OpenSpec pass).",
 			"evidence": {
@@ -6593,7 +6611,8 @@
 				"evidence": "OpenRegister reverses a merge (openregister appinfo/routes.php:657 merge#reverse, POST /api/objects/merge/{id}/reverse) only for schemas that declare x-openregister-merge; pipelinq declares it on masterEntity alone (lib/Settings/register.d/90-master-data-management.json:105, reversalWindowDays 30), not on client or contact, so a client merge cannot be undone; lib/Listener/ObjectsMergedSyncListener.php syncs downstream systems after a master entity merge or reversal",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "nothing",
-				"readOn": "2026-09-28"
+				"readOn": "2026-09-28",
+				"change": "openspec/changes/clients-reversible-merge"
 			},
 			"note": "the merged-away record can at best be restored from OpenRegister's deleted objects, with its links not moved back. Evidence corrected 2026-09-28 (OpenSpec pass): OpenRegister does have a merge reversal, the gap is that client and contact do not declare the merge dialect. Specified 2026-09-28 in openspec/changes/clients-reversible-merge (OpenSpec pass).",
 			"evidence": {
@@ -6625,7 +6644,8 @@
 				"evidence": "pipelinq has no bulk edit (existing row bulk-edit is no), so there is no bulk change to undo; per object, OpenRegister's revert (openregister appinfo/routes.php:1444) rolls back one record's history",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "nothing",
-				"readOn": "2026-09-26"
+				"readOn": "2026-09-26",
+				"change": "openspec/changes/clients-bulk-edit-and-undo"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/object-settings/restore-crm-changes \"Restore CRM changes by rolling records back to a previous point within the last 14 days. This allows you to undo updates made by workflows, imports, or manual edits\". Marketing, Sales, Service or Data Hub Starter and up.",
@@ -6657,7 +6677,8 @@
 				"evidence": "no camera, OCR or card scan anywhere in src/ or lib/, and no mobile client (plat-phone partial: openspec/specs/time-entry-mobile only)",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "nothing",
-				"readOn": "2026-09-26"
+				"readOn": "2026-09-26",
+				"change": "openspec/changes/clients-contact-capture"
 			},
 			"evidence": {
 				"hubspot-crm": "not checked: searched the knowledge base list for business card and scanner; https://knowledge.hubspot.com/account-mangagement/how-to-install-the-hubspot-mobile-application names records, calls and email but no card scanner (read 2026-09-26).",
@@ -6689,7 +6710,8 @@
 				"evidence": "KvK and OpenCorporates are searched to discover prospects (lib/Service/ProspectDiscoveryService.php:114, ProspectsView) and BRP per person on request (lib/Service/HaalCentraalClient.php:136); no job or action fills missing company or person details for many existing client records at once (grep for enrich finds none)",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "nothing",
-				"readOn": "2026-09-26"
+				"readOn": "2026-09-26",
+				"change": "openspec/changes/clients-registry-numbers-and-enrichment"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/records/enrich-your-contact-and-company-data \"Enrich contacts and companies using data from HubSpot's commercial dataset. Enrich records individually or in bulk\". Starter and up, with credits.",
@@ -6780,7 +6802,8 @@
 				"evidence": "a product has one base unitPrice, variant overrides and quantity tiers (lib/Service/ProductCatalogService.php:163 resolveTier \"highest minQuantity that is at most the quantity\"); no price list per customer group or country exists in the register (grep for priceList, customerGroup, country)",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "nothing",
-				"readOn": "2026-09-26"
+				"readOn": "2026-09-26",
+				"change": "openspec/changes/products-price-lists"
 			},
 			"note": "quantity tiers only; a price list per group or country is missing. Specified 2026-09-28 in openspec/changes/products-price-lists (OpenSpec pass).",
 			"evidence": {
@@ -6808,11 +6831,11 @@
 			"feature": "Service desk",
 			"featureConfidence": "medium",
 			"built": {
-				"state": "building",
+				"state": "decided-no",
 				"evidence": "two separate search paths, no single index",
 				"owner": "ConductionNL/pipelinq"
 			},
-			"note": "KISS indexes everything into Elasticsearch and searches it in one box. Ours are separate searches.",
+			"note": "KISS indexes everything into Elasticsearch and searches it in one box. Ours are separate searches. Decided no 2026-09-28 (build-all decision pass): No competitor rated yes (HubSpot CRM, EspoCRM, Odoo CRM, KISS partial); no tender, feature request or roadmap row. Outside the core area (requests). Reversible: reopen the row if demand appears. The code already built stays in the tree; it has no screen (see the pull request).",
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/account-management/search-within-your-hubspot-account global search covers \"CRM records, activities, blog posts, website pages, marketing emails\" and more (All products and plans); a wiki outside HubSpot is reached only through Breeze Assistant connected apps (https://knowledge.hubspot.com/ai-tools/use-breeze-assistant-with-connected-apps), not the same box.",
 				"kiss": "src/features/search/GlobalSearch.vue:23 \"fieldset class=\\\"bronnen\\\"\" searches websites, SharePoint, kennisartikelen, VACs and the smoelenboek in one box (Kiss.Bff/Extern/Elasticsearch/SearchController.cs:22); client records are not in that index and are searched on the separate Personen and Bedrijven screens. Note: Wiki and articles yes, clients no.",
@@ -6836,11 +6859,11 @@
 			"feature": "Service desk",
 			"featureConfidence": "medium",
 			"built": {
-				"state": "building",
+				"state": "decided-no",
 				"evidence": "lib/Service/ArticleService.php:333 publishes, with no desk-facing surface",
 				"owner": "ConductionNL/pipelinq"
 			},
-			"note": "KISS calls these werkberichten and filters them per skill. We have the publishing half only.",
+			"note": "KISS calls these werkberichten and filters them per skill. We have the publishing half only. Decided no 2026-09-28 (build-all decision pass): Single competitor, no demand: KISS rated yes; no tender, feature request or roadmap row. Outside the core area (requests). Reversible: reopen the row if demand appears. The code already built stays in the tree; it has no screen (see the pull request).",
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/playbooks/use-playbooks \"create interactive content cards displayed in contact, company, deal, and ticket records\" for the team (Sales or Service Hub Professional, Enterprise); knowledge base articles publish self-service content (https://knowledge.hubspot.com/knowledge-base/create-and-customize-knowledge-base-articles). No per-skill news feed that alerts on change.",
 				"kiss": "src/views/HomeView.vue:102 \"header=\\\"Nieuws\\\"\" and :111 \"header=\\\"Werkinstructies\\\"\" publish messages edited at src/router/index.ts:238 \"NieuwsEnWerkinstructies\" (Kiss.Bff/Intern/NieuwsEnWerkinstructies/Features/BerichtenController.cs:10), with an important counter (GetFeaturedCountController.cs:19) and read markers",
@@ -6868,7 +6891,8 @@
 				"evidence": "the portal resolves a tenant per domain (lib/Service/Portal/PortalTenantService.php:107 \"resolveTenantId\"); the back office relies on OpenRegister organisations (lib/Settings/pipelinq_register.json:2750 \"owning organization for multi-tenant isolation\"), where a colleague switches the active organisation. Tickets carry no municipality field and no list shows which municipality a contact belongs to",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "portal per tenant domain; back office pages scoped by the active OpenRegister organisation",
-				"readOn": "2026-09-26"
+				"readOn": "2026-09-26",
+				"change": "openspec/changes/requests-municipality-per-contact"
 			},
 			"note": "several municipalities can be kept apart, but one desk cannot see them side by side with the municipality shown on each contact. Specified 2026-09-28 in openspec/changes/requests-municipality-per-contact (OpenSpec pass).",
 			"evidence": {
@@ -6904,7 +6928,8 @@
 				"evidence": "lib/Service/EmailMatchService.php:278 \"matchAndLinkMessage\" links a user's Mail message to the matching client or contact by address or domain; lib/Service/RoutingService.php:92 suggests agents for an existing ticket by skill. Nothing reads a shared mailbox, turns mail into a ticket or routes it to a team by admin-managed rules",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "nothing",
-				"readOn": "2026-09-26"
+				"readOn": "2026-09-26",
+				"change": "openspec/changes/requests-inbound-to-queue"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/help-desk/route-tickets-in-help-desk \"set up automatic routing rules so that tickets are automatically routed to specific users and teams\" including \"tickets created manually or via email\", and \"Set up automatic ticket assignment for team email channels\"; skill-based routing too. Service Hub Professional, Enterprise; inbox routing rules on all plans with a paid seat (https://knowledge.hubspot.com/inbox/set-your-conversations-routing-rules).",
@@ -6968,7 +6993,7 @@
 			"feature": "Service desk",
 			"featureConfidence": "medium",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"evidence": "a ticket is passed on only by setting assignee, a Nextcloud UID (lib/Settings/register.d/99-unify-ticket-supertype.json:210 \"Nextcloud UID (or agent) handling the ticket\"); there is no team or department recipient, so no check for a team without a shared mailbox",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "nothing",
@@ -6982,7 +7007,8 @@
 				"kiss": "src/features/contact/contactverzoek/formulier/ContactverzoekFormulier.vue:435 \"an afdeling/groep without a groepsmailbox always needs a linked medewerker\" and :81 \"(verplicht: {{ medewerkerRequiredReason }})\", switched on by Kiss.Bff/Intern/Environment/EnvironmentController.cs:37 \"use-groepsmailbox-verplichting\"; released in v3.1.0 (#1491)"
 			},
 			"origin": "changelog",
-			"originUrl": "https://github.com/Klantinteractie-Servicesysteem/KISS-frontend/releases/tag/v3.1.0"
+			"originUrl": "https://github.com/Klantinteractie-Servicesysteem/KISS-frontend/releases/tag/v3.1.0",
+			"note": "Decided no 2026-09-28 (build-all decision pass): Single competitor, no demand: KISS rated yes; no tender, feature request or roadmap row. Outside the core area (requests). Reversible: reopen the row if demand appears."
 		},
 		{
 			"id": "req-phone-format",
@@ -7003,7 +7029,8 @@
 				"evidence": "lib/Service/CtiContactMatcher.php:132 needles() matches on E.164, digits only and the last 8 or 9 digits, so a caller is found however the number was stored, but only for contacts and clients during a screen pop; CTI tickets store the number normalised (CtiService.php:265). Searching the Tickets list for a request by number is a plain text search on whatever was typed",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "CTI screen pop; Tickets list search (literal)",
-				"readOn": "2026-09-26"
+				"readOn": "2026-09-26",
+				"change": "openspec/changes/contact-moments-phone-lookup"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/workflows/format-phone-numbers-using-workflows normalises phone number formats with a workflow action (Professional hubs), which makes later searches match; search tolerance for any typed format is not described.",
@@ -7031,7 +7058,7 @@
 			"feature": "Request intake",
 			"featureConfidence": "medium",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"evidence": "no mail to ticket intake and no classifier: lib/Service/EmailMatchService.php only links a mail to a client by address, lib/Service/RoutingService.php:92 suggests agents for a ticket that already exists, and nothing sorts incoming mail by subject",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "nothing",
@@ -7045,7 +7072,8 @@
 				"kiss": "KISS reads no mailbox and sends no mail to clients; the only SMTP use is Kiss.Bff/Intern/Feedback/SendFeedback.cs:43 \"SendMailAsync\" for content feedback; open epic https://github.com/Klantinteractie-Servicesysteem/KISS-frontend/issues/1446 \"Inkomende e-mail verwerken in KISS\"; no AI, transcription or summarisation code in src/ or Kiss.Bff/; AI assistance is an open theme https://github.com/Klantinteractie-Servicesysteem/KISS-frontend/issues/1450 \"Verkenning AI-assistentie voor KCC-medewerkers\""
 			},
 			"origin": "featureRequest",
-			"originUrl": "https://forum.espocrm.com/forum/feature-requests/127513-ai-assisted-incoming-email-classification-parent-matching-and-crm-record-creation"
+			"originUrl": "https://forum.espocrm.com/forum/feature-requests/127513-ai-assisted-incoming-email-classification-parent-matching-and-crm-record-creation",
+			"note": "Decided no 2026-09-28 (build-all decision pass): No competitor rated yes (HubSpot CRM, EspoCRM, Odoo CRM partial); a feature request row but the rule needs demand plus one competitor yes. Outside the core area (requests). Reversible: reopen the row if demand appears."
 		},
 		{
 			"id": "req-similar-answer",
@@ -7062,7 +7090,7 @@
 			"feature": "Service desk",
 			"featureConfidence": "medium",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"evidence": "no similarity search or answer suggestion in lib/Service, src/components or src/views (grep for similar, suggested answer); the knowledge base is searched by hand through the XWiki tab",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "nothing",
@@ -7076,7 +7104,8 @@
 				"kiss": "no AI, transcription or summarisation code in src/ or Kiss.Bff/; AI assistance is an open theme https://github.com/Klantinteractie-Servicesysteem/KISS-frontend/issues/1450 \"Verkenning AI-assistentie voor KCC-medewerkers\"; the KCM searches the knowledge base by hand from the header (src/layout/TheHeader.vue:10 \"<global-search\"), nothing is suggested on arrival"
 			},
 			"origin": "changelog",
-			"originUrl": "https://www.odoo.com/odoo-20-release-notes"
+			"originUrl": "https://www.odoo.com/odoo-20-release-notes",
+			"note": "Decided no 2026-09-28 (build-all decision pass): No competitor rated yes (HubSpot CRM, Odoo CRM partial); no tender, feature request or roadmap row. Outside the core area (requests). Reversible: reopen the row if demand appears."
 		},
 		{
 			"id": "req-close-reminder",
@@ -7093,7 +7122,7 @@
 			"feature": "Service desk",
 			"featureConfidence": "high",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"evidence": "no auto close for lack of reply and no warning before it: the waiting state is the ticket status awaiting_customer (lib/Settings/register.d/99-unify-ticket-supertype.json), and no background job in lib/BackgroundJob closes or reminds on it",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "nothing",
@@ -7107,7 +7136,8 @@
 				"kiss": "KISS does not close requests and sends no mail to clients (only Kiss.Bff/Intern/Feedback/SendFeedback.cs:43); status handling of contactverzoeken happens in ITA or the e-Suite, outside KISS"
 			},
 			"origin": "changelog",
-			"originUrl": "https://www.odoo.com/odoo-19-1-release-notes"
+			"originUrl": "https://www.odoo.com/odoo-19-1-release-notes",
+			"note": "Decided no 2026-09-28 (build-all decision pass): No competitor rated yes (EspoCRM, Odoo CRM partial); no tender, feature request or roadmap row. Outside the core area (requests). Reversible: reopen the row if demand appears."
 		},
 		{
 			"id": "req-waiting-on-us",
@@ -7124,13 +7154,13 @@
 			"feature": "Service desk",
 			"featureConfidence": "medium",
 			"built": {
-				"state": "building",
+				"state": "decided-no",
 				"evidence": "a portal reply moves an awaiting_customer ticket back to in_progress (lib/Service/Portal/PortalRequestService.php:298, pipelinq#2038), so the status now says the handler is up; there is no 'client wrote last' marker or list, and a reply by mail does not move it",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "nothing",
 				"readOn": "2026-09-27"
 			},
-			"note": "lead: the waiting status exists since pipelinq#2038; what is missing is a list or marker of tickets where the client wrote last",
+			"note": "lead: the waiting status exists since pipelinq#2038; what is missing is a list or marker of tickets where the client wrote last Decided no 2026-09-28 (build-all decision pass): No competitor rated yes (HubSpot CRM, Odoo CRM partial); no tender, feature request or roadmap row. Outside the core area (requests). Reversible: reopen the row if demand appears. The code already built stays in the tree; it has no screen (see the pull request).",
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/help-desk/set-ticket-capacity-limits-for-users-in-help-desk ticket statuses include \"Waiting on internal or Waiting on contact\", and help desk views filter tickets (https://knowledge.hubspot.com/help-desk/customize-views-in-the-left-sidebar-of-help-desk). Service Hub Professional, Enterprise. Status is set by the agent; an automatic last-writer view is not described.",
 				"pipedrive": "not checked: searched the Pipedrive knowledge base article list (https://support.pipedrive.com/en-sitemap.xml) and product updates on 2026-09-26 for a view of threads where the client wrote last and found none; https://www.pipedrive.com/en/product-updates shows thread status for drafts and scheduled mail only.",
@@ -7160,7 +7190,8 @@
 				"evidence": "src/modals/SendMessageModal.vue:83 NcSelect \"v-model=\\\"templateId\\\"\" lets an agent answer on WhatsApp or SMS with an approved template (TemplateApprovalSyncService), opened from the Messages section on ClientDetail and ContactDetail; there are no saved replies for tickets, mail or the portal reply",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "ClientDetail and ContactDetail, Messages section, Send message",
-				"readOn": "2026-09-26"
+				"readOn": "2026-09-26",
+				"change": "openspec/changes/messaging-saved-replies-and-resend"
 			},
 			"note": "templates cover messaging channels only. Specified 2026-09-28 in openspec/changes/messaging-saved-replies-and-resend (OpenSpec pass).",
 			"evidence": {
@@ -7220,7 +7251,7 @@
 			"feature": "Service desk",
 			"featureConfidence": "high",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"evidence": "the ticket lifecycle (lib/Settings/register.d/99-unify-ticket-supertype.json, x-openregister-lifecycle) has start, complete, convert, resolve, reject and close, each gated only to the assignee or the sales group; no approve transition or approver field. Approval exists for time entries (lib/Listener/TimeApprovalListener.php) and expenses, not for requests",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "nothing",
@@ -7234,7 +7265,8 @@
 				"kiss": "no status workflow or approval in KISS: a contactverzoek is saved once as an internetaak (src/features/contact/contactmoment/ContactmomentAfhandeling.vue:817 \"saveInternetaak(\") and later statuses are set outside KISS"
 			},
 			"origin": "featureRequest",
-			"originUrl": "https://community.hubspot.com/t5/HubSpot-Ideas/Ticket-approval-process/idi-p/998554"
+			"originUrl": "https://community.hubspot.com/t5/HubSpot-Ideas/Ticket-approval-process/idi-p/998554",
+			"note": "Decided no 2026-09-28 (build-all decision pass): No competitor rated yes (HubSpot CRM, EspoCRM, Odoo CRM partial); a feature request row but the rule needs demand plus one competitor yes. Outside the core area (requests). Reversible: reopen the row if demand appears."
 		},
 		{
 			"id": "req-article-review-date",
@@ -7283,11 +7315,11 @@
 			"feature": "Telephony",
 			"featureConfidence": "high",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"evidence": "lib/Service/CtiService.php:252 holds one pending moment at a time",
 				"owner": "ConductionNL/pipelinq"
 			},
-			"note": "KISS does this because a contact centre needs it. Nobody else in this matrix does.",
+			"note": "KISS does this because a contact centre needs it. Nobody else in this matrix does. Decided no 2026-09-28 (build-all decision pass): Single competitor, no demand: KISS rated yes; no tender, feature request or roadmap row. Outside the core area (contact-moments). Reversible: reopen the row if demand appears.",
 			"evidence": {
 				"hubspot-crm": "not checked: https://knowledge.hubspot.com/calling/receive-calls-in-hubspot documents \"Place caller on hold\" and transfer for one inbound call but says nothing on a second concurrent call (Sales or Service Hub Starter and up, read 2026-09-26). Note: Was no without a source.",
 				"kiss": "src/features/contact/contactmoment/ContactmomentSwitcher.vue:8 \"Actief ({{ moments.length }})\" lists running contact moments and :65 \"contactmomentStore.switchContactmoment(moment)\" switches between them, mounted in src/layout/TheSidebar.vue:10",
@@ -7315,7 +7347,8 @@
 				"evidence": "lib/Service/WhatsAppAdapter.php:602 \"handleInboundWebhook\" stores inbound WhatsApp in channelConversation, shown on contact and client detail by src/views/messaging/MessagingConversationSection.vue (src/manifest.json:2137); a ticket's channel can be set to 'social' by hand (lib/Settings/register.d/99-unify-ticket-supertype.json:235). No inbound reader for Facebook, Instagram, X or LinkedIn messages: lib/Service/Social/ only publishes posts. Corrections round 8 (2026-09-28), pipelinq#2073: the text of an inbound WhatsApp never shows on the contact, because the Messages section fetches the unregistered type 'message' (src/views/messaging/MessagingConversationSection.vue:409, error swallowed at :418-419); only the conversation, with its last inbound time, is listed (:435), at 9a5e95c.",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "ClientDetail and ContactDetail (Messages section); nothing puts social messages in the Queue page",
-				"readOn": "2026-09-26"
+				"readOn": "2026-09-26",
+				"change": "openspec/changes/requests-inbound-to-queue"
 			},
 			"note": "WhatsApp arrives but lands per contact, not in the shared queue next to mail and phone; social network direct messages are not ingested at all. Specified 2026-09-28 in openspec/changes/requests-inbound-to-queue (OpenSpec pass). Corrections round 8 (2026-09-28): the inbound WhatsApp text is not shown on the contact, pipelinq#2073; rating kept at partial because inbound WhatsApp is still received and stored (lib/Service/WhatsAppAdapter.php:602) and its conversation shows on the contact. The display fix is task 1.1 of openspec/changes/messaging-saved-replies-and-resend.",
 			"evidence": {
@@ -7358,7 +7391,8 @@
 				"evidence": "no chatbot in lib/ or src/portal/; lib/Service/NaviService.php is an analytics assistant for colleagues (\"Conversational analytics orchestrator\"), not a client-facing bot with handover",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "nothing",
-				"readOn": "2026-09-26"
+				"readOn": "2026-09-26",
+				"change": "openspec/changes/requests-web-chat-and-bot"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/customer-agent/deploy-the-customer-agent-to-channels \"you can assign it to Facebook, WhatsApp, calling (BETA), live chat, form, or email channels\"; the spotlight page says it \"hands off with full context attached\" when a question needs a human. Marketing, Sales or Service Hub Professional, Enterprise.",
@@ -7401,7 +7435,8 @@
 				"evidence": "no transcription or speech service in lib/ or src/; lib/Settings/register.d/70-cti.json:111 keeps only a recording_url (\"audio file never stored in pipelinq\"), and channelMetadata (99-unify-ticket-supertype.json:344) holds at most a \"chat transcript link\"",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "nothing",
-				"readOn": "2026-09-26"
+				"readOn": "2026-09-26",
+				"change": "openspec/changes/contact-moments-call-review"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/calling/review-call-recordings-and-transcripts \"If you're a user with an assigned Sales Hub or Service Hub Professional or Enterprise seat, you can transcribe and analyze recordings\"; call summaries come from the same page's AI analysis and record summaries (https://knowledge.hubspot.com/records/summarize-records).",
@@ -7449,7 +7484,8 @@
 				"evidence": "lib/Service/CtiService.php:359 \"attachRecording\" writes the platform's recording link onto the contact moment ticket, so a recorded call can be listened back from the ticket; there is no scoring form, scorecard or coaching record anywhere in lib/ or src/",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "TicketDetail (recording link on the contact moment)",
-				"readOn": "2026-09-26"
+				"readOn": "2026-09-26",
+				"change": "openspec/changes/contact-moments-call-review"
 			},
 			"note": "listen back only; score and coaching points are missing. Specified 2026-09-28 in openspec/changes/contact-moments-call-review (OpenSpec pass).",
 			"evidence": {
@@ -7485,7 +7521,8 @@
 				"evidence": "a telephony call creates a pending contact moment server side as soon as it rings (lib/Service/CtiService.php:239 \"Create a pending contactmoment ticket\"), so that record survives a closed browser; the manual form src/components/ContactmomentQuickLog.vue (mounted at src/manifest.json:2144) keeps its input only in component data, with no local or server draft",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "ClientDetail and ContactDetail quick log; CTI screen pop",
-				"readOn": "2026-09-26"
+				"readOn": "2026-09-26",
+				"change": "openspec/changes/contact-moments-keep-draft"
 			},
 			"note": "a half typed manual contact moment is lost when the tab closes or the session expires. Specified 2026-09-28 in openspec/changes/contact-moments-keep-draft (OpenSpec pass).",
 			"evidence": {
@@ -7549,7 +7586,8 @@
 				"evidence": "every CTI call stores the caller's number in E.164 on its contact moment (lib/Service/CtiService.php:272 \"'from_number' => ($fromE164 ?? $fromNumber)\", declared on ticket in lib/Settings/register.d/70-cti.json:42); the screen pop only matches the number to contacts and clients (lib/Service/CtiContactMatcher.php:88 findByPhoneNumber), and no page lists earlier contact moments for a number that matches nobody",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "Tickets list (from_number on each record); CTI screen pop for known callers",
-				"readOn": "2026-09-26"
+				"readOn": "2026-09-26",
+				"change": "openspec/changes/contact-moments-phone-lookup"
 			},
 			"note": "the data is there, the view for an unknown caller is not. Specified 2026-09-28 in openspec/changes/contact-moments-phone-lookup (OpenSpec pass).",
 			"evidence": {
@@ -7613,7 +7651,8 @@
 				"evidence": "a failed WhatsApp or SMS is stored and flagged (lib/Service/WhatsAppAdapter.php:831 persistFailureAndAlert) and shown red on the Messages section (src/views/messaging/MessagingConversationSection.vue:319 \"status === 'failed' || status === 'expired'\"), but there is no resend button; Berichtenbox has a retry API (appinfo/routes.php:556) that no page calls; an email to a client is sent from Nextcloud Mail, whose outbox handles failed sends. Corrections round 8 (2026-09-28), pipelinq#2073: the red failed status never shows, because the Messages section fetches the type 'message' (src/views/messaging/MessagingConversationSection.vue:409), which is no longer registered since the rename to channelMessage (src/config/objectTypes.js:371-376), and the error is swallowed into an empty list (:418-419); the only other trace is a notification to the fixed user id 'admin' (lib/Service/WhatsAppAdapter.php:860-861), at 9a5e95c.",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "ClientDetail and ContactDetail Messages section (status only)",
-				"readOn": "2026-09-26"
+				"readOn": "2026-09-26",
+				"change": "openspec/changes/messaging-saved-replies-and-resend"
 			},
 			"note": "the failure is visible, the one click resend is not. Specified 2026-09-28 in openspec/changes/messaging-saved-replies-and-resend (OpenSpec pass). Own rating partial to no (corrections round 8, 2026-09-28): the partial rested on the failed status shown in the Messages section, and that section is always empty, pipelinq#2073. The fix is task 1.1 of openspec/changes/messaging-saved-replies-and-resend, the change this row is already specified in.",
 			"evidence": {
@@ -7643,7 +7682,8 @@
 			"built": {
 				"state": "building",
 				"evidence": "docs/ plus the walkthrough block in src/manifest.json",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"change": "openspec/changes/platform-help-and-partner-directory"
 			},
 			"note": "HubSpot Academy is a real reason buyers pick HubSpot. Written docs are not the same thing.",
 			"evidence": {
@@ -7672,7 +7712,8 @@
 				"state": "building",
 				"evidence": "appinfo/info.xml names one vendor, not a partner network",
 				"owner": "ConductionNL/pipelinq",
-				"readOn": "2026-09-26"
+				"readOn": "2026-09-26",
+				"change": "openspec/changes/platform-help-and-partner-directory"
 			},
 			"evidence": {
 				"hubspot-crm": "https://ecosystem.hubspot.com/marketplace/solutions \"Browse the directory of partners or get targeted recommendations through our questionnaire ... Connect with HubSpot partners who can help with any business need\", filtered by service and tier; the directory is also served in Dutch.",
@@ -7728,7 +7769,8 @@
 				"evidence": "lib/Settings/pipelinq_register.json:1516 \"x-openregister-archival\" (task, P2Y/P1Y) and lib/Settings/register.d/99-unify-ticket-supertype.json:27 (ticket, contact moments P2Y) are enforced by OpenRegister lib/BackgroundJob/ArchivalRetentionTask.php:77; lib/BackgroundJob/BrpRetentionJob.php:189 \"deleteObject(uuid: $uuid)\" for BRP person data past retentionTo. The client and contact schemas carry no archival block, so client records themselves are never disposed",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "background jobs (no page needed); tickets and tasks are the Tickets, Queue and Tasks pages",
-				"readOn": "2026-09-26"
+				"readOn": "2026-09-26",
+				"change": "openspec/changes/platform-client-retention"
 			},
 			"note": "contact moments, tasks and BRP data expire by themselves; client and contact records have no retention term, and request/complaint tickets are set to P100Y. Specified 2026-09-28 in openspec/changes/platform-client-retention (OpenSpec pass).",
 			"evidence": {
@@ -7764,7 +7806,8 @@
 				"evidence": "pages are built on Nextcloud Vue components; tests/e2e/portal-accessibility.spec.ts:5 \"Customer-portal WCAG 2.2 AA structural accessibility checks\" (keyboard, landmarks, live regions) covers the portal only, and says the axe-core sweep is not run; no accessibility statement (toegankelijkheidsverklaring) anywhere in docs/ or the app",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "every page; portal at /apps/pipelinq/portal",
-				"readOn": "2026-09-26"
+				"readOn": "2026-09-26",
+				"change": "openspec/changes/platform-accessibility-statement"
 			},
 			"note": "no published accessibility statement and no audit evidence for the back office screens. Specified 2026-09-28 in openspec/changes/platform-accessibility-statement (OpenSpec pass).",
 			"evidence": {
@@ -7900,7 +7943,8 @@
 				"evidence": "finished records freeze per type: a contract in a terminal state cannot transition (lib/Service/ContractService.php:152-160), a confirmed POS transaction is guarded (lib/Lifecycle/PosTransactionConfirmGuard.php), and tickets cannot be hard deleted by hand because their schema declares archival (OpenRegister ArchivalRetentionTask.php:9 \"SCHEMA_ARCHIVAL_IMMUTABLE\"). OpenRegister's lock (routes objects#lock) is a temporary edit lock, and no pipelinq page offers a lock action on a client, lead or ticket",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "ContractDetail, PosTransactionDetail, TicketDetail (implicit)",
-				"readOn": "2026-09-26"
+				"readOn": "2026-09-26",
+				"change": "openspec/changes/platform-record-lock"
 			},
 			"note": "no general 'lock this record' for users. Specified 2026-09-28 in openspec/changes/platform-record-lock (OpenSpec pass).",
 			"evidence": {
@@ -7960,7 +8004,7 @@
 			"feature": "Platform",
 			"featureConfidence": "high",
 			"built": {
-				"state": "none",
+				"state": "decided-no",
 				"evidence": "no service worker, IndexedDB cache or offline queue in src/ (grep for serviceWorker, workbox, indexedDB, navigator.onLine); every page reads OpenRegister live",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "nothing",
@@ -7974,7 +8018,8 @@
 				"kiss": "running contact moments sit in an in memory store (src/stores/contactmoment/index.ts:212 \"contactmomenten: []\"), no service worker or offline cache exists, and every read goes live through the BFF to BRP, KvK, OpenKlant and ZGW; open issue https://github.com/Klantinteractie-Servicesysteem/KISS-frontend/issues/1558 asks not to lose a half finished contact even on reload"
 			},
 			"origin": "changelog",
-			"originUrl": "https://www.odoo.com/odoo-20-release-notes"
+			"originUrl": "https://www.odoo.com/odoo-20-release-notes",
+			"note": "Decided no 2026-09-28 (build-all decision pass): No competitor rated yes (Pipedrive partial); no tender, feature request or roadmap row. Outside the core area (platform). Reversible: reopen the row if demand appears."
 		},
 		{
 			"id": "plat-copy-access",
@@ -8124,7 +8169,8 @@
 				"evidence": "lib/Service/Portal/PortalRequestService.php presentSummary and presentDetail fix in code what a resident reads (number, subject, category, status, date, description, assignee only when the tenant allows it); :519 customerNotes shows the ticket's customerMessage and the resident's portalReplies and never the internal notes string. On TicketDetail the field 'Message to the customer' says it is shown in the portal; the rest of the set has no marker or preview there",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "portal request detail; TicketDetail field 'Message to the customer'",
-				"readOn": "2026-09-27"
+				"readOn": "2026-09-27",
+				"change": "openspec/changes/portal-resident-view-preview"
 			},
 			"note": "lead: since pipelinq#2038 the handler's message to the customer is its own ticket field; the back office still has no preview of the whole resident view. Specified 2026-09-28 in openspec/changes/portal-resident-view-preview (OpenSpec pass).",
 			"evidence": {
