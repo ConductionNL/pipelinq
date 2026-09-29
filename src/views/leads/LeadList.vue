@@ -18,6 +18,7 @@
 -->
 <template>
 	<CnIndexPage
+		ref="index"
 		:title="t('pipelinq', 'Leads')"
 		:register="register"
 		:schema="schema"
@@ -50,6 +51,15 @@
 					type="checkbox">
 					{{ t('pipelinq', 'Hide closed') }}
 				</NcCheckboxRadioSwitch>
+				<NcCheckboxRadioSwitch
+					:modelValue="callFirst"
+					:aria-label="
+						t('pipelinq', 'Call first: open leads, highest score first')
+					"
+					type="checkbox"
+					@update:modelValue="setCallFirst">
+					{{ t('pipelinq', 'Call first') }}
+				</NcCheckboxRadioSwitch>
 			</div>
 		</template>
 
@@ -67,6 +77,7 @@
 <script>
 import { CnIndexPage } from '@conduction/nextcloud-vue'
 import { NcCheckboxRadioSwitch } from '@nextcloud/vue'
+import { CALL_FIRST_SORT } from '../../services/leadScore.js'
 import {
 	getDaysAge,
 	getOverdueDays,
@@ -94,10 +105,17 @@ export default {
 				'priority',
 				'value',
 				'expectedCloseDate',
+				{
+					key: 'qualificationScore',
+					label: t('pipelinq', 'Score'),
+					sortable: true,
+					widget: 'lead-score',
+				},
 			],
 
 			showStaleOnly: false,
 			hideClosed: true,
+			callFirst: false,
 			stages: [],
 		}
 	},
@@ -143,6 +161,23 @@ export default {
 	methods: {
 		isLeadOverdue,
 		getOverdueDays,
+
+		/**
+		 * Switch "Call first" on or off. On, the list shows open leads only
+		 * and asks OpenRegister for the highest score first, ties broken by
+		 * the lead updated longest ago. Off, it drops that sort.
+		 *
+		 * @param {boolean} on Whether Call first is on.
+		 * @spec openspec/specs/lead-management/spec.md#requirement-the-lead-list-shows-and-sorts-by-score-req-lscore-001
+		 */
+		setCallFirst(on) {
+			this.callFirst = on
+			if (on) {
+				this.hideClosed = true
+			}
+			this.$refs.index?.onSortEvent?.({ keys: on ? CALL_FIRST_SORT : [] })
+		},
+
 		/**
 		 * Open a lead's detail page (CnIndexPage row "View" action).
 		 *
