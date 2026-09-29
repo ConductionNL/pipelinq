@@ -308,6 +308,7 @@ import SocialPostFormView from './views/social/SocialPostFormView.vue'
 //     cannot address (ADR-080). ---
 import StoreGallery from './views/store/StoreGallery.vue'
 import SyncSettingsView from './views/sync/SyncSettings.vue'
+import WerkplekClientSelect from './views/werkplek/widgets/WerkplekClientSelect.vue'
 import WerkplekHeaderActions from './views/werkplek/widgets/WerkplekHeaderActions.vue'
 // --- KCC Werkplek (pipelinq-werkplek-declarative): unified KCC agent workspace
 //     rendered as a declarative type:"dashboard" page. Requests, Tasks, the
@@ -1010,6 +1011,12 @@ const registry = {
 		component: WerkplekHeaderActions,
 		...HEADER_ACTIONS_META,
 		_note: 'Workspace header actionsComponent: agent availability toggle, hydrated from /api/kcc-werkplek/state.',
+	},
+	WerkplekClientSelect: {
+		kind: 'widget',
+		component: WerkplekClientSelect,
+		...HEADER_ACTIONS_META,
+		_note: 'Workspace title-meta slot: the client in focus, written to @workspace.selectedClient.',
 	},
 
 	// --- xWiki integration (xwiki-integration). ---

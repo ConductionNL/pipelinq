@@ -15,6 +15,9 @@
 			"type": "dashboard",
 			"title": "Customer Support",
 			"actionsComponent": "WerkplekHeaderActions",
+			"slots": {
+				"title-meta": "WerkplekClientSelect"
+			},
 			"config": {
 				"description": "Handle requests and tasks, log interactions, and find answers, all in one place.",
 				"documentationUrl": "https://pipelinq.conduction.nl",
@@ -197,7 +200,7 @@
 								"dir": "desc"
 							},
 							"limit": 8,
-							"prompt": "Select a client in the interaction panel to see their open requests.",
+							"prompt": "Choose a client next to the page title to see their requests.",
 							"rowRoute": "TicketDetail",
 							"columns": [
 								{
@@ -232,7 +235,7 @@
 								"dir": "desc"
 							},
 							"limit": 8,
-							"prompt": "Select a client to see their recent contact moments.",
+							"prompt": "Choose a client next to the page title to see their contact moments.",
 							"columns": [
 								{
 									"key": "title",
@@ -281,7 +284,7 @@
 						"gridX": 8,
 						"gridY": 8,
 						"gridWidth": 4,
-						"gridHeight": 6
+						"gridHeight": 5
 					},
 					{
 						"id": "wc",
@@ -289,7 +292,7 @@
 						"gridX": 0,
 						"gridY": 8,
 						"gridWidth": 4,
-						"gridHeight": 6
+						"gridHeight": 5
 					},
 					{
 						"id": "wm",
@@ -297,7 +300,7 @@
 						"gridX": 4,
 						"gridY": 8,
 						"gridWidth": 4,
-						"gridHeight": 6
+						"gridHeight": 5
 					}
 				]
 			}
