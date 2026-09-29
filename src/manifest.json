@@ -2724,6 +2724,11 @@
 						"label": "Win %",
 						"widget": "lead-probability"
 					},
+					{
+						"key": "qualificationScore",
+						"label": "Score",
+						"widget": "lead-score"
+					},
 					"value",
 					"currency",
 					{

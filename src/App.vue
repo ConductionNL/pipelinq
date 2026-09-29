@@ -65,6 +65,7 @@ import { generateUrl } from '@nextcloud/router'
 import { reactive } from 'vue'
 import LeadCloseDateCell from './views/leads/cells/LeadCloseDateCell.vue'
 import LeadProbabilityCell from './views/leads/cells/LeadProbabilityCell.vue'
+import LeadScoreCell from './views/leads/cells/LeadScoreCell.vue'
 import { createConnectionHandlers } from './services/connectionRegistry.js'
 
 export default {
@@ -170,11 +171,13 @@ export default {
 		 * @return {Record<string, object>}
 		 * @spec openspec/specs/customer-360/spec.md
 		 * @spec openspec/specs/lead-scoring-win-probability/spec.md#requirement-win-probability-is-surfaced-on-the-pipeline-list-and-deal-detail
+		 * @spec openspec/specs/lead-management/spec.md#requirement-the-lead-list-shows-and-sorts-by-score-req-lscore-001
 		 */
 		cellWidgets() {
 			return {
 				'lead-close-date': LeadCloseDateCell,
 				'lead-probability': LeadProbabilityCell,
+				'lead-score': LeadScoreCell,
 			}
 		},
 

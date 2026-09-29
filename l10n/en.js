@@ -6819,7 +6819,22 @@ OC.L10N.register(
         "The visit is saved, the follow-up task is not. Add it from the task list.": "The visit is saved, the follow-up task is not. Add it from the task list.",
         "Visit": "Visit",
         "Visit logged": "Visit logged",
-        "What happened?": "What happened?"
+        "What happened?": "What happened?",
+        "Call first": "Call first",
+        "Call first: open leads, highest score first": "Call first: open leads, highest score first",
+        "Highest score first": "Highest score first",
+        "No criterion adds points yet. Add a value, a client or an expected close date to raise the score.": "No criterion adds points yet. Add a value, a client or an expected close date to raise the score.",
+        "Score {score}, {band}": "Score {score}, {band}",
+        "The score changed since it was calculated. Save the lead to recalculate it.": "The score changed since it was calculated. Save the lead to recalculate it.",
+        "Why this score": "Why this score",
+        "Value present": "Value present",
+        "Value above 10,000": "Value above 10,000",
+        "Client linked": "Client linked",
+        "Contact linked": "Contact linked",
+        "Came in through a referral or partner": "Came in through a referral or partner",
+        "Expected close date set": "Expected close date set",
+        "Priority high or urgent": "Priority high or urgent",
+        "Description written": "Description written"
     },
     "nplurals=2; plural=(n != 1);"
 )

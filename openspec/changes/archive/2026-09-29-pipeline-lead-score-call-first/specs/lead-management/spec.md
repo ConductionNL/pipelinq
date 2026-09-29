@@ -14,6 +14,8 @@ The Leads list MUST have a sortable "Score" column showing the stored qualificat
 
 #### Scenario: Old lead without a score
 
+@e2e exclude OpenRegister calculates the score on every save, so no lead without one can be created on a live instance; the dash is asserted in tests/vitest/leadScoreBadge.spec.js (LeadScoreCell shows a dash for a lead saved before the score existed)
+
 - **GIVEN** a lead saved before the score existed has no stored score
 - **WHEN** Sanne views the list
 - **THEN** its Score cell shows a dash
@@ -32,7 +34,7 @@ A lead card on the pipeline board MUST show the score as a number with an access
 
 The score badge MUST open an explanation listing each criterion that added points and how many, and MUST say when the listed total differs from the stored score.
 
-#### Scenario: Explain 45
+#### Scenario: Explain 35
 
 - **GIVEN** a lead with a value, a linked client and a close date has score 35
 - **WHEN** Sanne opens the explanation
