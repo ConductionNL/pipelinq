@@ -43,9 +43,13 @@
 					<div v-if="booking.previousBookingId" class="info-field">
 						<label>{{ t('pipelinq', 'Rescheduled from') }}</label>
 						<span>
-							<a href="#" @click.prevent="openPrevious">
+							<router-link
+								:to="{
+									name: 'BookingDetail',
+									params: { id: booking.previousBookingId },
+								}">
 								{{ booking.previousBookingId }}
-							</a>
+							</router-link>
 						</span>
 					</div>
 				</div>

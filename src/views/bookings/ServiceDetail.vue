@@ -20,7 +20,7 @@
 <template>
 	<div v-if="isNew">
 		<div class="service-detail__header">
-			<NcButton @click="onFormCancel">
+			<NcButton :to="{ name: 'Services' }">
 				{{ t('pipelinq', 'Back to list') }}
 			</NcButton>
 			<h2>

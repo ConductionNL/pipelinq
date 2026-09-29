@@ -20,7 +20,10 @@
   -->
 <template>
 	<div v-if="hasActions" class="pos-tx-header-actions" data-testid="pos-tx-header-actions">
-		<NcButton v-if="canEdit" variant="secondary" @click="edit">
+		<NcButton
+			v-if="canEdit && transactionId"
+			variant="secondary"
+			:to="{ name: 'PosTransactionEdit', params: { id: transactionId } }">
 			<template #icon>
 				<Pencil :size="20" />
 			</template>
@@ -75,9 +78,9 @@
 			{{ t('pipelinq', 'Email Receipt') }}
 		</NcButton>
 		<NcButton
-			v-if="canRegisterReturn"
+			v-if="canRegisterReturn && transactionId"
 			variant="secondary"
-			@click="registerReturn">
+			:to="{ name: 'PosRefundNewFromTransaction', params: { transactionId } }">
 			{{ t('pipelinq', 'Register refund') }}
 		</NcButton>
 		<NcButton
@@ -262,16 +265,6 @@ export default {
 			}
 		},
 
-		edit() {
-			this.$router.push({ name: 'PosTransactionEdit', params: { id: this.transactionId } })
-		},
-
-		registerReturn() {
-			this.$router.push({
-				name: 'PosRefundNewFromTransaction',
-				params: { transactionId: this.transactionId },
-			})
-		},
 
 		/**
 		 * Open the print or email receipt modal, loading the active receipt

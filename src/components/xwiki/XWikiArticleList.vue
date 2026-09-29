@@ -3,8 +3,9 @@
   - SPDX-FileCopyrightText: 2026 Conduction B.V.
   -
   - XWikiArticleList — shared renderer used by XWikiWidget and XWikiSidebarTab.
-  - Accepts an `articles` array prop and emits `select` on click. Stateless;
-  - no store coupling.
+  - Accepts an `articles` array prop. By default an article emits `select` on
+  - click; with `linkExternal` each article is a link to its xWiki page in a
+  - new tab instead. Stateless; no store coupling.
   -->
 <template>
 	<div class="xwiki-article-list">
@@ -12,25 +13,27 @@
 			<li
 				v-for="article in articles"
 				:key="article.id || article.title"
-				class="xwiki-article-list__item"
-				role="button"
-				tabindex="0"
-				@click="$emit('select', article)"
-				@keydown.enter.prevent="$emit('select', article)"
-				@keydown.space.prevent="$emit('select', article)">
-				<div class="xwiki-article-list__title">
-					{{ article.title }}
-				</div>
-				<div class="xwiki-article-list__meta">
-					<span v-if="article.space" class="xwiki-article-list__space">{{
-						article.space
-					}}</span>
-					<span
-						v-if="article.modified"
-						class="xwiki-article-list__modified"
-						>{{ formatDate(article.modified) }}</span
-					>
-				</div>
+				class="xwiki-article-list__item">
+				<component
+					:is="linkExternal && article.url ? 'a' : 'div'"
+					class="xwiki-article-list__body"
+					:class="{ 'xwiki-article-list__body--interactive': !linkExternal || article.url }"
+					v-bind="attrsFor(article)"
+					v-on="listenersFor(article)">
+					<div class="xwiki-article-list__title">
+						{{ article.title }}
+					</div>
+					<div class="xwiki-article-list__meta">
+						<span v-if="article.space" class="xwiki-article-list__space">{{
+							article.space
+						}}</span>
+						<span
+							v-if="article.modified"
+							class="xwiki-article-list__modified"
+							>{{ formatDate(article.modified) }}</span
+						>
+					</div>
+				</component>
 			</li>
 		</ul>
 		<div v-else class="xwiki-article-list__empty">
@@ -40,6 +43,8 @@
 </template>
 
 <script>
+import { safeHref } from '@conduction/nextcloud-vue'
+
 export default {
 	name: 'XWikiArticleList',
 	props: {
@@ -47,10 +52,49 @@ export default {
 			type: Array,
 			required: true,
 		},
+
+		/** Render each article as a link to its xWiki page, opening in a new tab. */
+		linkExternal: {
+			type: Boolean,
+			default: false,
+		},
 	},
 
 	emits: ['select'],
 	methods: {
+		/**
+		 * @param {object} article The article.
+		 * @return {object} Attributes for the article's clickable body.
+		 */
+		attrsFor(article) {
+			if (!this.linkExternal) {
+				return { role: 'button', tabindex: 0 }
+			}
+			// The URL comes from the remote wiki, so its scheme is checked.
+			return article.url
+				? { href: safeHref(article.url), target: '_blank', rel: 'noopener noreferrer' }
+				: {}
+		},
+
+		/**
+		 * @param {object} article The article.
+		 * @return {object} Listeners for the article's clickable body; none for a link.
+		 */
+		listenersFor(article) {
+			if (this.linkExternal) {
+				return {}
+			}
+			return {
+				click: () => this.$emit('select', article),
+				keydown: (event) => {
+					if (event.key === 'Enter' || event.key === ' ') {
+						event.preventDefault()
+						this.$emit('select', article)
+					}
+				},
+			}
+		},
+
 		/**
 		 * Format an article's publication date for the list.
 		 *
@@ -81,12 +125,21 @@ export default {
 }
 
 .xwiki-article-list__item {
-	padding: 8px 12px;
 	border-bottom: 1px solid var(--color-border, #e0e0e0);
+}
+
+.xwiki-article-list__body {
+	display: block;
+	padding: 8px 12px;
+	color: inherit;
+	text-decoration: none;
+}
+
+.xwiki-article-list__body--interactive {
 	cursor: pointer;
 }
 
-.xwiki-article-list__item:hover {
+.xwiki-article-list__body--interactive:hover {
 	background: var(--color-background-hover, #f5f5f5);
 }
 

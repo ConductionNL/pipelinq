@@ -5,8 +5,7 @@
 <template>
 	<CnDetailPage
 		:title="t('pipelinq', 'Export run')"
-		:loading="loading"
-		@back="goBack">
+		:loading="loading">
 		<template #header>
 			<CnStatusBadge :status="badgeStatus" :label="statusLabel" />
 			<NcButton
@@ -236,13 +235,6 @@ export default {
 			} finally {
 				this.busy = false
 			}
-		},
-
-		/**
-		 * Navigate back to the run list.
-		 */
-		goBack() {
-			this.$router.push({ name: 'ExportRuns' })
 		},
 	},
 }

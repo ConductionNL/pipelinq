@@ -116,10 +116,14 @@
 					<NcButton variant="secondary" @click="copyPrepared">
 						{{ t('pipelinq', 'Copy text') }}
 					</NcButton>
+					<!-- The network's own composer, in a new tab.
+						@spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share -->
 					<NcButton
 						v-if="share.composerUrl"
 						variant="secondary"
-						@click="openComposer">
+						:href="share.composerUrl"
+						target="_blank"
+						rel="noopener noreferrer">
 						{{ t('pipelinq', 'Open the composer') }}
 					</NcButton>
 					<NcButton
@@ -328,16 +332,6 @@ export default {
 					'The text could not be copied. Select it and copy it by hand.',
 				)
 			}
-		},
-
-		/**
-		 * Open the network's own composer in a new tab.
-		 *
-		 * @return {void}
-		 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-an-account-no-application-may-post-to-asks-its-owner-to-share
-		 */
-		openComposer() {
-			window.open(this.share?.composerUrl || '', '_blank', 'noopener')
 		},
 
 		/**
