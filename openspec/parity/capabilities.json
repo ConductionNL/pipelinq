@@ -7680,12 +7680,12 @@
 			"feature": "Onboarding",
 			"featureConfidence": "medium",
 			"built": {
-				"state": "building",
+				"state": "decided-no",
 				"evidence": "docs/ plus the walkthrough block in src/manifest.json",
 				"owner": "ConductionNL/pipelinq",
-				"change": "openspec/changes/platform-help-and-partner-directory"
+				"readOn": "2026-09-29"
 			},
-			"note": "HubSpot Academy is a real reason buyers pick HubSpot. Written docs are not the same thing.",
+			"note": "HubSpot Academy is a real reason buyers pick HubSpot. Written docs are not the same thing. Decided no 2026-09-29 by Ruben: courses and a partner list are content, and that content belongs on the website, not in the app. Reversible.",
 			"evidence": {
 				"hubspot-crm": "https://academy.hubspot.com/courses \"Creating a HubSpot Academy account is 100% free and gets you unlimited access to our complete library of education\", with self paced courses and certifications.",
 				"kiss": "not checked: no course catalogue found on https://www.icatt.nl or https://www.dimpact.nl/podiumd on 2026-09-26; the manual at https://kiss-klantinteractie-servicesysteem.readthedocs.io/nl/v3.1.3/manual/manual.html is documentation, not training, and Dimpact member training is not public",
@@ -7709,11 +7709,10 @@
 			"feature": "Platform",
 			"featureConfidence": "medium",
 			"built": {
-				"state": "building",
+				"state": "decided-no",
 				"evidence": "appinfo/info.xml names one vendor, not a partner network",
 				"owner": "ConductionNL/pipelinq",
-				"readOn": "2026-09-26",
-				"change": "openspec/changes/platform-help-and-partner-directory"
+				"readOn": "2026-09-29"
 			},
 			"evidence": {
 				"hubspot-crm": "https://ecosystem.hubspot.com/marketplace/solutions \"Browse the directory of partners or get targeted recommendations through our questionnaire ... Connect with HubSpot partners who can help with any business need\", filtered by service and tier; the directory is also served in Dutch.",
@@ -7721,7 +7720,8 @@
 				"espocrm": "No partner directory on espocrm.com (https://www.espocrm.com/partners/ answered 404 on 2026-09-26); the vendor sells implementation services itself (https://www.espocrm.com/services/) and points buyers to community developers through forum signatures (https://www.espocrm.com/community-collaboration/ \"help people who are seeking EspoCRM development or consulting to easily find a CRM expert\"). Note: Changed from unknown: no directory, vendor services and forum only.",
 				"pipedrive": "https://www.pipedrive.com/en/marketplace/partners \"Explore top-rated partners in your region to help you unlock Pipedrive's full potential. Find an expert\" with Region and Country filters. Note: Was partial; the expert directory filters by country.",
 				"odoo-crm": "https://www.odoo.com/partners is the vendor's partner directory, filterable by country (https://www.odoo.com/partners/country/netherlands-166) with partner level, certified experts and customer references per partner."
-			}
+			},
+			"note": "Decided no 2026-09-29 by Ruben: courses and a partner list are content, and that content belongs on the website, not in the app. Reversible."
 		},
 		{
 			"id": "take-your-data",
