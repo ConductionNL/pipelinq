@@ -6803,7 +6803,10 @@ OC.L10N.register(
         "Use a three-letter currency code for every rate.": "Use a three-letter currency code for every rate.",
         "Use a three-letter currency code, such as EUR or USD": "Use a three-letter currency code, such as EUR or USD",
         "The currency the value is in, as a three-letter code such as EUR or USD. Leave it empty for the reporting currency.": "The currency the value is in, as a three-letter code such as EUR or USD. Leave it empty for the reporting currency.",
-        "What the lead is about, such as vergunningen. Suggested agents are colleagues with a skill for this category.": "What the lead is about, such as vergunningen. Suggested agents are colleagues with a skill for this category."
+        "What the lead is about, such as vergunningen. Suggested agents are colleagues with a skill for this category.": "What the lead is about, such as vergunningen. Suggested agents are colleagues with a skill for this category.",
+        "Reply": "Reply",
+        "The text the customer wrote.": "The text the customer wrote.",
+        "When the customer sent the reply.": "When the customer sent the reply."
     },
     "nplurals=2; plural=(n != 1);"
 )
