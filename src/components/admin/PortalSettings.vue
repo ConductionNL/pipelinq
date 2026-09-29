@@ -134,7 +134,8 @@
 						<input
 							id="portal-support-email"
 							v-model.trim="form.supportEmail"
-							type="email" />
+							type="email"
+							autocomplete="off" />
 					</div>
 					<div class="portal-field">
 						<label for="portal-support-phone">{{
@@ -143,7 +144,8 @@
 						<input
 							id="portal-support-phone"
 							v-model.trim="form.supportPhone"
-							type="tel" />
+							type="tel"
+							autocomplete="off" />
 					</div>
 				</div>
 

@@ -361,8 +361,8 @@
             "items": {
               "type": "object",
               "properties": {
-                "message": { "type": "string" },
-                "createdAt": { "type": "string", "format": "date-time" }
+                "message": { "type": "string", "title": "Reply", "description": "The text the customer wrote." },
+                "createdAt": { "type": "string", "format": "date-time", "title": "Sent at", "description": "When the customer sent the reply." }
               }
             },
             "x-notes": "Written by PortalRequestService::addReply() only."
