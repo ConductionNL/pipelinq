@@ -5322,6 +5322,10 @@
           "id": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c11"
         },
         "userId": "jan.devries",
+        "skills": [
+          "b1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c21",
+          "b1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c23"
+        ],
         "maxConcurrent": 3,
         "isAvailable": true
       },
@@ -5333,6 +5337,9 @@
           "id": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c12"
         },
         "userId": "fatima.elamrani",
+        "skills": [
+          "b1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c22"
+        ],
         "maxConcurrent": 2,
         "isAvailable": false
       },
@@ -5344,6 +5351,10 @@
           "id": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c13"
         },
         "userId": "pieter.bakker",
+        "skills": [
+          "b1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c21",
+          "b1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c22"
+        ],
         "maxConcurrent": 4,
         "isAvailable": true
       },

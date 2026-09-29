@@ -4,66 +4,65 @@
 		class="routing-panel"
 		role="region"
 		:aria-label="t('pipelinq', 'Suggested agents')">
-		<div class="routing-panel__header">
-			<h4>{{ t('pipelinq', 'Suggested agents') }}</h4>
-			<NcButton
-				v-if="!loading"
-				:aria-label="t('pipelinq', 'Refresh')"
-				@click="loadSuggestions">
-				<template #icon>
-					<Refresh :size="16" />
-				</template>
-			</NcButton>
-		</div>
+		<div class="routing-panel__body">
+			<NcLoadingIcon v-if="loading" :size="24" />
 
-		<NcLoadingIcon v-if="loading" :size="24" />
+			<div v-else-if="errorMessage" class="routing-panel__error" role="alert">
+				{{ errorMessage }}
+			</div>
 
-		<div v-else-if="errorMessage" class="routing-panel__error" role="alert">
-			{{ errorMessage }}
-		</div>
+			<div v-else-if="suggestions.length === 0" class="routing-panel__empty">
+				<p>{{ t('pipelinq', 'No agents with matching skills') }}</p>
+			</div>
 
-		<div v-else-if="suggestions.length === 0" class="routing-panel__empty">
-			<p>{{ t('pipelinq', 'No agents with matching skills') }}</p>
-		</div>
-
-		<div v-else class="routing-panel__list">
-			<div
-				v-for="suggestion in suggestions"
-				:key="suggestion.userId"
-				class="agent-suggestion">
-				<div class="agent-suggestion__info">
-					<span class="agent-name">{{
-						suggestion.displayName || suggestion.userId
-					}}</span>
-					<span class="agent-workload" :title="workloadTitle(suggestion)">
-						<span aria-hidden="true">{{
-							workloadIcon(suggestion)
+			<div v-else class="routing-panel__list">
+				<div
+					v-for="suggestion in suggestions"
+					:key="suggestion.userId"
+					class="agent-suggestion">
+					<div class="agent-suggestion__info">
+						<span class="agent-name">{{
+							suggestion.displayName || suggestion.userId
 						}}</span>
-						{{ suggestion.workload }}/{{
-							suggestion.maxConcurrent || 10
-						}}
-						{{ t('pipelinq', 'items') }}
-					</span>
-					<div v-if="suggestion.matchedSkill" class="agent-skills">
-						<span class="skill-tag">{{ suggestion.matchedSkill }}</span>
+						<span class="agent-workload" :title="workloadTitle(suggestion)">
+							<span aria-hidden="true">{{
+								workloadIcon(suggestion)
+							}}</span>
+							{{ suggestion.workload }}/{{
+								suggestion.maxConcurrent || 10
+							}}
+							{{ t('pipelinq', 'items') }}
+						</span>
+						<div v-if="suggestion.matchedSkill" class="agent-skills">
+							<span class="skill-tag">{{ suggestion.matchedSkill }}</span>
+						</div>
 					</div>
+					<NcButton
+						:aria-label="
+							t('pipelinq', 'Assign to {name}', {
+								name: suggestion.displayName || suggestion.userId,
+							})
+						"
+						@click="assign(suggestion)">
+						{{ t('pipelinq', 'Assign') }}
+					</NcButton>
 				</div>
-				<NcButton
-					:aria-label="
-						t('pipelinq', 'Assign to {name}', {
-							name: suggestion.displayName || suggestion.userId,
-						})
-					"
-					@click="assign(suggestion)">
-					{{ t('pipelinq', 'Assign') }}
-				</NcButton>
+			</div>
+
+			<div v-if="atCapacityCount > 0" class="routing-panel__note">
+				{{ atCapacityCount }}
+				{{ t('pipelinq', 'matching agent(s) at capacity') }}
 			</div>
 		</div>
-
-		<div v-if="atCapacityCount > 0" class="routing-panel__note">
-			{{ atCapacityCount }}
-			{{ t('pipelinq', 'matching agent(s) at capacity') }}
-		</div>
+		<NcButton
+			class="routing-panel__refresh"
+			:disabled="loading"
+			:aria-label="t('pipelinq', 'Refresh')"
+			@click="loadSuggestions">
+			<template #icon>
+				<Refresh :size="16" />
+			</template>
+		</NcButton>
 	</div>
 </template>
 
@@ -201,23 +200,22 @@ export default {
 
 <style scoped>
 .routing-panel {
+	display: flex;
+	align-items: flex-start;
+	gap: 8px;
 	border: 1px solid var(--color-border);
 	border-radius: var(--border-radius-large);
 	padding: 12px 16px;
 	background: var(--color-background-hover);
 }
 
-.routing-panel__header {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	margin-bottom: 8px;
+.routing-panel__body {
+	flex: 1;
+	min-width: 0;
 }
 
-.routing-panel__header h4 {
-	margin: 0;
-	font-size: 14px;
-	font-weight: 700;
+.routing-panel__refresh {
+	flex: none;
 }
 
 .routing-panel__empty,

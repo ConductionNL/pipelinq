@@ -2437,30 +2437,30 @@
 						"icon": "Gavel"
 					}
 				],
-				"_layoutNote": "A declared widgets[] replaces the auto-body, and the auto-body was also what used to place them — so without an explicit layout every widget mapped to 0 grid cells (ADR-062 rule 8) and the page rendered its widgets unplaced. One cell per widget, in reading order: the two-column data block spans the full 12-column width, then Related and Besluitvorming sit side by side beneath it.",
+				"_layoutNote": "A declared widgets[] replaces the auto-body, and the auto-body was also what used to place them — so without an explicit layout every widget mapped to 0 grid cells (ADR-062 rule 8) and the page rendered its widgets unplaced. One cell per widget, in reading order: the two-column data block with Related beside it, then Besluitvorming across the full width beneath them.",
 				"layout": [
 					{
 						"id": "1",
 						"widgetId": "ticket-data",
 						"gridX": 0,
 						"gridY": 0,
-						"gridWidth": 12,
-						"gridHeight": 4
+						"gridWidth": 8,
+						"gridHeight": 5
 					},
 					{
 						"id": "2",
 						"widgetId": "ticket-related",
-						"gridX": 0,
-						"gridY": 4,
-						"gridWidth": 6,
-						"gridHeight": 4
+						"gridX": 8,
+						"gridY": 0,
+						"gridWidth": 4,
+						"gridHeight": 5
 					},
 					{
 						"id": "3",
 						"widgetId": "ticket-decisions",
-						"gridX": 6,
-						"gridY": 4,
-						"gridWidth": 6,
+						"gridX": 0,
+						"gridY": 5,
+						"gridWidth": 12,
 						"gridHeight": 4
 					}
 				],
