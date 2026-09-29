@@ -45,7 +45,8 @@
 						v-for="row in sortedBookings"
 						:key="row.id"
 						class="viewTableRow"
-						@click="open(row)">
+						@click="open(row, $event)"
+						@auxclick="open(row, $event)">
 						<td>{{ formatDateTime(row.startAt) }}</td>
 						<td>{{ serviceLabel(row) }}</td>
 						<td>{{ resourceLabel(row) }}</td>
@@ -64,7 +65,7 @@
 </template>
 
 <script>
-import { CnDetailCard } from '@conduction/nextcloud-vue'
+import { CnDetailCard, openRowTarget } from '@conduction/nextcloud-vue'
 import { NcLoadingIcon } from '@nextcloud/vue'
 import { useObjectStore } from '../../store/modules/object.js'
 
@@ -221,8 +222,8 @@ export default {
 			}
 		},
 
-		open(row) {
-			this.$router.push({ name: 'BookingDetail', params: { id: row.id } })
+		open(row, event) {
+			openRowTarget(event, { name: 'BookingDetail', params: { id: row.id } }, this.$router)
 		},
 
 		serviceLabel(row) {

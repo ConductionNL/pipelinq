@@ -75,7 +75,7 @@
 </template>
 
 <script>
-import { CnDataTable, CnDetailCard, CnPagination } from '@conduction/nextcloud-vue'
+import { CnDataTable, CnDetailCard, CnPagination, openRowTarget } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
 import { showError } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
@@ -231,18 +231,16 @@ export default {
 		 * Open a communication-history row on the unified ticket detail page.
 		 *
 		 * @param {object} row The contactmoment row (a `ticket` object).
+		 * @param {MouseEvent} [event] The row click; a modified or middle click opens a new tab.
 		 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-unified-tickets-workspace
 		 */
-		goToContactmoment(row) {
+		goToContactmoment(row, event) {
 			if (!row || !row.id) {
 				return
 			}
 			// A contactmoment is a `ticket` with ticketType=contactmoment
 			// (unify-ticket-supertype) — open the unified detail page.
-			this.$router.push({
-				name: 'TicketDetail',
-				params: { id: row.id },
-			})
+			openRowTarget(event, { name: 'TicketDetail', params: { id: row.id } }, this.$router)
 		},
 
 		formatChannel(value) {

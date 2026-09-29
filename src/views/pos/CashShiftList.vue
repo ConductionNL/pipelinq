@@ -23,11 +23,11 @@
 			:includeColumns="visibleColumns"
 			:emptyTitle="t('pipelinq', 'No shifts found')"
 			:emptyActionLabel="t('pipelinq', 'Open shift')"
+			rowClickToView
 			@add="openShift"
 			@emptyAction="openShift"
 			@refresh="onRefresh"
 			@sort="onSort"
-			rowClickToView
 			@rowClick="openDetail"
 			@view="openDetail"
 			@pageChanged="onPageChange" />
@@ -41,7 +41,7 @@
 </template>
 
 <script>
-import { CnIndexPage, useListView } from '@conduction/nextcloud-vue'
+import { CnIndexPage, openRowTarget, useListView } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
 import { inject } from 'vue'
@@ -108,9 +108,10 @@ export default {
 		 * Navigate to a shift's detail.
 		 *
 		 * @param {object} row The clicked row.
+		 * @param {MouseEvent} [event] The row click; a modified or middle click opens a new tab.
 		 */
-		openDetail(row) {
-			this.$router.push({ name: 'CashShiftDetail', params: { id: row.id } })
+		openDetail(row, event) {
+			openRowTarget(event, { name: 'CashShiftDetail', params: { id: row.id } }, this.$router)
 		},
 
 		/**

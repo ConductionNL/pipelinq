@@ -66,7 +66,7 @@
 </template>
 
 <script>
-import { CnIndexPage } from '@conduction/nextcloud-vue'
+import { CnIndexPage, openRowTarget } from '@conduction/nextcloud-vue'
 import { NcCheckboxRadioSwitch } from '@nextcloud/vue'
 import {
 	getOverdueDays,
@@ -165,9 +165,10 @@ export default {
 		 * Open a lead's detail page (CnIndexPage row "View" action).
 		 *
 		 * @param {object} row The lead row.
+		 * @param {MouseEvent} [event] The row click; a modified or middle click opens a new tab.
 		 */
-		openLead(row) {
-			this.$router.push({ name: 'LeadDetail', params: { id: row.id } })
+		openLead(row, event) {
+			openRowTarget(event, { name: 'LeadDetail', params: { id: row.id } }, this.$router)
 		},
 
 		/**

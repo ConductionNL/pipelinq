@@ -150,7 +150,7 @@
 </template>
 
 <script>
-import { CnDataTable, CnPageHeader, CnPagination, CnStatusBadge } from '@conduction/nextcloud-vue'
+import { CnDataTable, CnPageHeader, CnPagination, CnStatusBadge, openRowTarget } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcDateTimePickerNative, NcLoadingIcon, NcSelect, NcTextField } from '@nextcloud/vue'
@@ -436,13 +436,14 @@ export default {
 		 * Open the detail view for an audit entry.
 		 *
 		 * @param {object} entry The entry to open.
+		 * @param {MouseEvent} [event] The row click; a modified or middle click opens a new tab.
 		 */
-		openDetail(entry) {
+		openDetail(entry, event) {
 			const id = entry.id || entry.uuid
 			if (!id) {
 				return
 			}
-			this.$router.push({ name: 'KassakoppelingAuditDetail', params: { id } })
+			openRowTarget(event, { name: 'KassakoppelingAuditDetail', params: { id } }, this.$router)
 		},
 
 		/**

@@ -76,16 +76,17 @@ export default {
 	methods: {
 		/**
 		 * Navigate to the clicked activity's entity (lead or request),
-		 * routed per row `_entityType` in the same tab.
+		 * routed per row `_entityType`.
 		 *
 		 * @param {object} item The clicked row (a shaped activity item).
+		 * @param {MouseEvent} [event] The row click.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-51
 		 */
-		onShow(item) {
+		onShow(item, event) {
 			// Non-lead activities are `ticket` rows (unify-ticket-supertype) and
 			// open on the unified /tickets detail route.
 			const type = item._entityType === 'lead' ? 'leads' : 'tickets'
-			navigateTo(generateUrl('/apps/pipelinq/' + type + '/' + item._entityId))
+			navigateTo(generateUrl('/apps/pipelinq/' + type + '/' + item._entityId), event)
 		},
 
 		/**

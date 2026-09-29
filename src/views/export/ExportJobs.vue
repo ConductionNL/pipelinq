@@ -22,11 +22,11 @@
 			:includeColumns="visibleColumns"
 			:emptyTitle="t('pipelinq', 'No export jobs yet')"
 			:emptyActionLabel="t('pipelinq', 'New export job')"
+			rowClickToView
 			@add="createNew"
 			@emptyAction="createNew"
 			@refresh="onRefresh"
 			@sort="onSort"
-			rowClickToView
 			@rowClick="openJob"
 			@view="openJob"
 			@pageChanged="onPageChange">
@@ -57,7 +57,7 @@
 </template>
 
 <script>
-import { CnIndexPage, useListView } from '@conduction/nextcloud-vue'
+import { CnIndexPage, openRowTarget, useListView } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { NcButton } from '@nextcloud/vue'
 import { inject } from 'vue'
@@ -125,9 +125,10 @@ export default {
 		 * Navigate to a job's detail/edit form.
 		 *
 		 * @param {object} row The clicked row.
+		 * @param {MouseEvent} [event] The row click; a modified or middle click opens a new tab.
 		 */
-		openJob(row) {
-			this.$router.push({ name: 'ExportJobDetail', params: { id: row.id } })
+		openJob(row, event) {
+			openRowTarget(event, { name: 'ExportJobDetail', params: { id: row.id } }, this.$router)
 		},
 
 		/**

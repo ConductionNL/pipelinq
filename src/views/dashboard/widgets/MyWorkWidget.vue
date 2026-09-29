@@ -40,7 +40,7 @@
 				v-if="total > items.length"
 				variant="tertiary"
 				class="view-all-link"
-				@click="$router.push({ name: 'MyWork' })">
+				:to="{ name: 'MyWork' }">
 				{{ t('pipelinq', 'View all ({count})', { count: total }) }}
 			</NcButton>
 		</template>
@@ -48,7 +48,7 @@
 </template>
 
 <script>
-import { CnDataTable } from '@conduction/nextcloud-vue'
+import { CnDataTable, openRowTarget } from '@conduction/nextcloud-vue'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton } from '@nextcloud/vue'
 import { formatDate } from '../../../services/localeUtils.js'
@@ -166,14 +166,15 @@ export default {
 		 * no longer exists.
 		 *
 		 * @param {object} item - Work item row (lead or ticket).
+		 * @param {MouseEvent} [event] - The row click; a modified or middle click opens a new tab.
 		 * @spec openspec/specs/dashboard/spec.md#requirement-my-work-widget
 		 */
-		openItem(item) {
+		openItem(item, event) {
 			const raw =
 				item.routeName
 				|| (item.entityType === 'lead' ? 'LeadDetail' : 'TicketDetail')
 			const name = LEGACY_ROUTE_MAP[raw] || raw
-			this.$router.push({ name, params: { id: item.id } })
+			openRowTarget(event, { name, params: { id: item.id } }, this.$router)
 		},
 	},
 }

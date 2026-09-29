@@ -9,9 +9,10 @@
 		role="button"
 		tabindex="0"
 		@dragstart="onDragStart"
-		@click="$emit('open', item)"
-		@keydown.enter.prevent="$emit('open', item)"
-		@keydown.space.prevent="$emit('open', item)">
+		@click="$emit('open', item, $event)"
+		@auxclick="$emit('open', item, $event)"
+		@keydown.enter.prevent="$emit('open', item, $event)"
+		@keydown.space.prevent="$emit('open', item, $event)">
 		<!-- Header: what it is and what it is called, with its menu in the row
 		     so nothing can slide underneath it. -->
 		<div class="pipeline-card__header">
@@ -28,7 +29,7 @@
 			<span class="pipeline-card__title">
 				{{ item.title }}
 			</span>
-			<div class="pipeline-card__menu" @click.stop @keydown.stop>
+			<div class="pipeline-card__menu" @click.stop @auxclick.stop @keydown.stop>
 				<NcActions
 					:forceMenu="true"
 					:inline="0"

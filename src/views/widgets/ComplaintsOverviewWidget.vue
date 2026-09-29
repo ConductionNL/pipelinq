@@ -4,15 +4,10 @@
 		role="button"
 		tabindex="0"
 		:aria-label="t('pipelinq', 'Open complaints')"
-		@click="
-			$router.push({ name: 'Tickets', query: { ticketType: 'complaint' } })
-		"
-		@keydown.enter.prevent="
-			$router.push({ name: 'Tickets', query: { ticketType: 'complaint' } })
-		"
-		@keydown.space.prevent="
-			$router.push({ name: 'Tickets', query: { ticketType: 'complaint' } })
-		">
+		@click="open"
+		@auxclick="open"
+		@keydown.enter.prevent="open"
+		@keydown.space.prevent="open">
 		<div v-if="loading" class="widget-loading">
 			{{ t('pipelinq', 'Loading…') }}
 		</div>
@@ -46,6 +41,8 @@
 </template>
 
 <script>
+import { openRowTarget } from '@conduction/nextcloud-vue'
+
 export default {
 	name: 'ComplaintsOverviewWidget',
 	props: {
@@ -119,6 +116,18 @@ export default {
 				if (!c.slaDeadline) return false
 				return new Date(c.slaDeadline) < now
 			}).length
+		},
+	},
+
+	methods: {
+		/**
+		 * Open the complaints list: a plain click or key navigates in place,
+		 * a ctrl/cmd/shift or middle click opens a new tab.
+		 *
+		 * @param {MouseEvent|KeyboardEvent} event The triggering event.
+		 */
+		open(event) {
+			openRowTarget(event, { name: 'Tickets', query: { ticketType: 'complaint' } }, this.$router)
 		},
 	},
 }

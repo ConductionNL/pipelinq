@@ -60,9 +60,10 @@
 					:aria-label="
 						t('pipelinq', 'Open client {name}', { name: client.name })
 					"
-					@click="viewClient(client)"
-					@keydown.enter.prevent="viewClient(client)"
-					@keydown.space.prevent="viewClient(client)">
+					@click="viewClient(client, $event)"
+					@auxclick="viewClient(client, $event)"
+					@keydown.enter.prevent="viewClient(client, $event)"
+					@keydown.space.prevent="viewClient(client, $event)">
 					<span class="client-icon">
 						<AccountGroup
 							v-if="client.type === 'organization'"
@@ -86,7 +87,7 @@
 					<NcButton
 						variant="tertiary"
 						:aria-label="t('pipelinq', 'View client')"
-						@click="viewClient(client)">
+						:href="clientUrl(client)">
 						<template #icon>
 							<Eye :size="18" />
 						</template>
@@ -176,6 +177,7 @@
 </template>
 
 <script>
+import { openRowTarget } from '@conduction/nextcloud-vue'
 import { generateUrl } from '@nextcloud/router'
 import {
 	NcButton,
@@ -333,11 +335,26 @@ export default {
 		},
 
 		/**
+		 * A plain URL, not a router location: the widget also runs on the
+		 * Nextcloud Dashboard, where no vue-router is present.
+		 *
+		 * @param {object} client The client.
+		 * @return {string} The client's detail page URL.
+		 */
+		clientUrl(client) {
+			return generateUrl('/apps/pipelinq/clients/' + client.id)
+		},
+
+		/**
+		 * Open a client from its row: a plain click or key navigates in place,
+		 * a ctrl/cmd/shift or middle click opens a new tab.
+		 *
 		 * @param {object} client The client to open.
+		 * @param {MouseEvent|KeyboardEvent} [event] The triggering event.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-42
 		 */
-		viewClient(client) {
-			window.location.href = generateUrl('/apps/pipelinq/clients/' + client.id)
+		viewClient(client, event) {
+			openRowTarget(event, this.clientUrl(client))
 		},
 
 		/**

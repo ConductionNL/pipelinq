@@ -19,9 +19,9 @@
 			:includeColumns="visibleColumns"
 			:emptyTitle="t('pipelinq', 'No export runs yet')"
 			:showAdd="false"
+			rowClickToView
 			@refresh="onRefresh"
 			@sort="onSort"
-			rowClickToView
 			@rowClick="openRun"
 			@view="openRun"
 			@pageChanged="onPageChange">
@@ -39,7 +39,7 @@
 </template>
 
 <script>
-import { CnIndexPage, useListView } from '@conduction/nextcloud-vue'
+import { CnIndexPage, openRowTarget, useListView } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { NcButton } from '@nextcloud/vue'
 import { inject } from 'vue'
@@ -118,9 +118,10 @@ export default {
 		 * Navigate to a run's detail.
 		 *
 		 * @param {object} row The clicked row.
+		 * @param {MouseEvent} [event] The row click; a modified or middle click opens a new tab.
 		 */
-		openRun(row) {
-			this.$router.push({ name: 'ExportRunDetail', params: { id: row.id } })
+		openRun(row, event) {
+			openRowTarget(event, { name: 'ExportRunDetail', params: { id: row.id } }, this.$router)
 		},
 
 		/**

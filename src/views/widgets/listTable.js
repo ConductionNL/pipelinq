@@ -10,6 +10,8 @@
  * pattern (ADR-049), matching procest and scholiq.
  */
 
+import { openRowTarget } from '@conduction/nextcloud-vue'
+
 /**
  * Columns for a headerless name + trailing-status list. `mainText` and
  * `subText` are the keys produced by each widget's `items` computed; the
@@ -23,16 +25,15 @@ export const LIST_COLUMNS = [
 ]
 
 /**
- * Same-tab navigation used by both a row click and the "View all" footer.
- * A plain `window.location.href` resolves correctly both inside the in-app
- * router and when the widget runs standalone on the Nextcloud Dashboard
- * (where no vue-router is present).
+ * Row-click navigation. A plain URL (not a router location) works both
+ * inside the app and when the widget runs standalone on the Nextcloud
+ * Dashboard, where no vue-router is present. A plain click navigates in
+ * place; a ctrl/cmd/shift or middle click opens a new tab.
  *
  * @param {string} url The (generateUrl-resolved) target URL.
+ * @param {MouseEvent} [event] The row click.
  * @return {void}
  */
-export function navigateTo(url) {
-	if (url) {
-		window.location.href = url
-	}
+export function navigateTo(url, event) {
+	openRowTarget(event, url)
 }
