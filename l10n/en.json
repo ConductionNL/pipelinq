@@ -6823,6 +6823,21 @@
         "What the lead is about, such as vergunningen. Suggested agents are colleagues with a skill for this category.": "What the lead is about, such as vergunningen. Suggested agents are colleagues with a skill for this category.",
         "Reply": "Reply",
         "The text the customer wrote.": "The text the customer wrote.",
-        "When the customer sent the reply.": "When the customer sent the reply."
+        "When the customer sent the reply.": "When the customer sent the reply.",
+        "Call first": "Call first",
+        "Call first: open leads, highest score first": "Call first: open leads, highest score first",
+        "Highest score first": "Highest score first",
+        "No criterion adds points yet. Add a value, a client or an expected close date to raise the score.": "No criterion adds points yet. Add a value, a client or an expected close date to raise the score.",
+        "Score {score}, {band}": "Score {score}, {band}",
+        "The score changed since it was calculated. Save the lead to recalculate it.": "The score changed since it was calculated. Save the lead to recalculate it.",
+        "Why this score": "Why this score",
+        "Value present": "Value present",
+        "Value above 10,000": "Value above 10,000",
+        "Client linked": "Client linked",
+        "Contact linked": "Contact linked",
+        "Came in through a referral or partner": "Came in through a referral or partner",
+        "Expected close date set": "Expected close date set",
+        "Priority high or urgent": "Priority high or urgent",
+        "Description written": "Description written"
     }
 }

@@ -56,6 +56,7 @@
 			<span v-if="item.value" class="card-meta">
 				{{ formatNumber(item.value) }}
 			</span>
+			<LeadScoreBadge v-if="entityType === 'lead'" :lead="item" compact />
 			<span v-if="item.assignee" class="card-assignee">
 				{{ item.assignee }}
 			</span>
@@ -112,6 +113,7 @@ import AccountPlus from 'vue-material-design-icons/AccountPlus.vue'
 import ArrowRightThick from 'vue-material-design-icons/ArrowRightThick.vue'
 import ClockAlert from 'vue-material-design-icons/ClockAlert.vue'
 import Flag from 'vue-material-design-icons/Flag.vue'
+import LeadScoreBadge from '../../components/leadScore/LeadScoreBadge.vue'
 import AssigneePickerDialog from '../../dialogs/AssigneePickerDialog.vue'
 import PriorityPickerDialog from '../../dialogs/PriorityPickerDialog.vue'
 import StagePickerDialog from '../../dialogs/StagePickerDialog.vue'
@@ -145,6 +147,7 @@ export default {
 		StagePickerDialog,
 		AssigneePickerDialog,
 		PriorityPickerDialog,
+		LeadScoreBadge,
 		ArrowRightThick,
 		AccountPlus,
 		Flag,

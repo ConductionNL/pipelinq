@@ -28,7 +28,7 @@ export const MEDIUM_FROM = 40
  * True when a value counts as set, the way the calculation's `ne null`
  * reads it: an absent property resolves to null.
  *
- * @param {*} value The property value.
+ * @param {(string|number|object|null|undefined)} value The property value.
  * @return {boolean}
  */
 function isSet(value) {
@@ -42,20 +42,60 @@ function isSet(value) {
  * @type {Array<{id: string, label: string, points: number, test: function(object): boolean}>}
  */
 export const SCORE_CRITERIA = [
-	{ id: 'value', label: 'Value present', points: 10, test: (l) => Number(l.value) > 0 },
-	{ id: 'largeValue', label: 'Value above 10,000', points: 20, test: (l) => Number(l.value) > 10000 },
-	{ id: 'client', label: 'Client linked', points: 15, test: (l) => isSet(l.client) },
-	{ id: 'contact', label: 'Contact linked', points: 10, test: (l) => isSet(l.contact) },
-	{ id: 'source', label: 'Came in through a referral or partner', points: 15, test: (l) => l.source === 'referral' || l.source === 'partner' },
-	{ id: 'closeDate', label: 'Expected close date set', points: 10, test: (l) => isSet(l.expectedCloseDate) },
-	{ id: 'priority', label: 'Priority high or urgent', points: 10, test: (l) => l.priority === 'high' || l.priority === 'urgent' },
-	{ id: 'description', label: 'Description written', points: 5, test: (l) => isSet(l.description) },
+	{
+		id: 'value',
+		label: 'Value present',
+		points: 10,
+		test: (l) => Number(l.value) > 0,
+	},
+	{
+		id: 'largeValue',
+		label: 'Value above 10,000',
+		points: 20,
+		test: (l) => Number(l.value) > 10000,
+	},
+	{
+		id: 'client',
+		label: 'Client linked',
+		points: 15,
+		test: (l) => isSet(l.client),
+	},
+	{
+		id: 'contact',
+		label: 'Contact linked',
+		points: 10,
+		test: (l) => isSet(l.contact),
+	},
+	{
+		id: 'source',
+		label: 'Came in through a referral or partner',
+		points: 15,
+		test: (l) => l.source === 'referral' || l.source === 'partner',
+	},
+	{
+		id: 'closeDate',
+		label: 'Expected close date set',
+		points: 10,
+		test: (l) => isSet(l.expectedCloseDate),
+	},
+	{
+		id: 'priority',
+		label: 'Priority high or urgent',
+		points: 10,
+		test: (l) => l.priority === 'high' || l.priority === 'urgent',
+	},
+	{
+		id: 'description',
+		label: 'Description written',
+		points: 5,
+		test: (l) => isSet(l.description),
+	},
 ]
 
 /**
  * Read a stored score as a whole number, or null when the lead has none.
  *
- * @param {*} value The raw `qualificationScore`.
+ * @param {(number|string|null|undefined)} value The raw `qualificationScore`.
  * @return {number|null}
  * @spec openspec/changes/pipeline-lead-score-call-first/specs/lead-management/spec.md#requirement-the-lead-list-shows-and-sorts-by-score-req-lscore-001
  */
@@ -71,7 +111,7 @@ export function normaliseScore(value) {
  * The band a score falls in: `high` from 70, `medium` from 40, else `low`.
  * Null for a lead without a score.
  *
- * @param {*} value The raw `qualificationScore`.
+ * @param {(number|string|null|undefined)} value The raw `qualificationScore`.
  * @return {('high'|'medium'|'low'|null)}
  * @spec openspec/changes/pipeline-lead-score-call-first/specs/lead-management/spec.md#requirement-the-lead-list-shows-and-sorts-by-score-req-lscore-001
  */

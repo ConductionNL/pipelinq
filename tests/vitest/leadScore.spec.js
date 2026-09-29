@@ -18,14 +18,17 @@ import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import {
 	CALL_FIRST_SORT,
-	SCORE_CRITERIA,
 	compareCallFirst,
 	explainScore,
+	SCORE_CRITERIA,
 	scoreBand,
 } from '../../src/services/leadScore.js'
 
 const register = JSON.parse(
-	readFileSync(resolve(__dirname, '../../lib/Settings/pipelinq_register.json'), 'utf8'),
+	readFileSync(
+		resolve(__dirname, '../../lib/Settings/pipelinq_register.json'),
+		'utf8',
+	),
 )
 const calculation =
 	register.components.schemas.lead.configuration['x-openregister-calculations']
@@ -67,7 +70,15 @@ function evaluate(node, lead) {
 const FIXTURES = [
 	{ title: 'empty' },
 	{ value: 5000, client: 'c-1', expectedCloseDate: '2026-10-01' },
-	{ value: 25000, client: 'c-1', contact: 'p-1', source: 'referral', expectedCloseDate: '2026-10-01', priority: 'urgent', description: 'Wants a demo' },
+	{
+		value: 25000,
+		client: 'c-1',
+		contact: 'p-1',
+		source: 'referral',
+		expectedCloseDate: '2026-10-01',
+		priority: 'urgent',
+		description: 'Wants a demo',
+	},
 	{ value: 12000, source: 'partner', priority: 'high', description: 'x' },
 	{ value: 0, contact: 'p-2', source: 'website', priority: 'normal' },
 ]
@@ -77,9 +88,14 @@ describe('the explanation matches the register calculation', () => {
 		expect(calculation.expression['+']).toHaveLength(SCORE_CRITERIA.length)
 	})
 
-	it.each(FIXTURES.map((f, i) => [i, f]))('fixture %i totals the same', (_i, lead) => {
-		expect(explainScore(lead).total).toBe(evaluate(calculation.expression, lead))
-	})
+	it.each(FIXTURES.map((f, i) => [i, f]))(
+		'fixture %i totals the same',
+		(_i, lead) => {
+			expect(explainScore(lead).total).toBe(
+				evaluate(calculation.expression, lead),
+			)
+		},
+	)
 
 	it('explains a lead with a value, a client and a close date as 35', () => {
 		const { matched, total } = explainScore(FIXTURES[1])
@@ -128,9 +144,20 @@ describe('call first', () => {
 	})
 
 	it('breaks a tie with the lead updated longest ago', () => {
-		const newer = { id: 'newer', qualificationScore: 50, '@self': { updated: '2026-09-20T10:00:00Z' } }
-		const older = { id: 'older', qualificationScore: 50, '@self': { updated: '2026-09-01T10:00:00Z' } }
-		expect([newer, older].sort(compareCallFirst).map((l) => l.id)).toEqual(['older', 'newer'])
+		const newer = {
+			id: 'newer',
+			qualificationScore: 50,
+			'@self': { updated: '2026-09-20T10:00:00Z' },
+		}
+		const older = {
+			id: 'older',
+			qualificationScore: 50,
+			'@self': { updated: '2026-09-01T10:00:00Z' },
+		}
+		expect([newer, older].sort(compareCallFirst).map((l) => l.id)).toEqual([
+			'older',
+			'newer',
+		])
 	})
 
 	it('asks OpenRegister for score descending, then oldest update', () => {
