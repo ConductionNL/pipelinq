@@ -642,7 +642,7 @@ export default {
 
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-28
-		 * @spec openspec/changes/pipeline-lead-score-call-first/specs/lead-management/spec.md#requirement-the-board-card-shows-the-score-req-lscore-002
+		 * @spec openspec/specs/lead-management/spec.md#requirement-the-board-card-shows-the-score-req-lscore-002
 		 */
 		sortedListItems() {
 			const items = [...this.filteredItems]
@@ -934,7 +934,7 @@ export default {
 		 * @param {string} stageName The stage (column) name
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-12
 		 * @spec openspec/changes/2026-03-20-pipeline/tasks.md#task-1.2
-		 * @spec openspec/changes/pipeline-lead-score-call-first/specs/lead-management/spec.md#requirement-the-board-card-shows-the-score-req-lscore-002
+		 * @spec openspec/specs/lead-management/spec.md#requirement-the-board-card-shows-the-score-req-lscore-002
 		 */
 		getStageItems(stageName) {
 			return this.filteredItems

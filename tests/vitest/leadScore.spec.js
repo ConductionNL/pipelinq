@@ -10,7 +10,7 @@
  * browser explanation lists the same total. When somebody changes a weight in
  * the register and not in src/services/leadScore.js, this fails.
  *
- * @spec openspec/changes/pipeline-lead-score-call-first/specs/lead-management/spec.md#requirement-a-person-can-see-why-a-lead-has-its-score-req-lscore-003
+ * @spec openspec/specs/lead-management/spec.md#requirement-a-person-can-see-why-a-lead-has-its-score-req-lscore-003
  */
 
 import { readFileSync } from 'node:fs'

@@ -1,6 +1,6 @@
 <!-- SPDX-License-Identifier: EUPL-1.2 -->
 <!-- Copyright (C) 2026 Conduction B.V. -->
-<!-- @spec openspec/changes/pipeline-lead-score-call-first/specs/lead-management/spec.md#requirement-a-person-can-see-why-a-lead-has-its-score-req-lscore-003 -->
+<!-- @spec openspec/specs/lead-management/spec.md#requirement-a-person-can-see-why-a-lead-has-its-score-req-lscore-003 -->
 <template>
 	<div class="lead-score-explanation">
 		<p class="lead-score-explanation__title">
@@ -9,18 +9,32 @@
 		<ul v-if="explanation.matched.length" class="lead-score-explanation__list">
 			<li v-for="criterion in explanation.matched" :key="criterion.id">
 				<span>{{ t('pipelinq', criterion.label) }}</span>
-				<span class="lead-score-explanation__points">+{{ criterion.points }}</span>
+				<span class="lead-score-explanation__points"
+					>+{{ criterion.points }}</span
+				>
 			</li>
 		</ul>
 		<p v-else class="lead-score-explanation__empty">
-			{{ t('pipelinq', 'No criterion adds points yet. Add a value, a client or an expected close date to raise the score.') }}
+			{{
+				t(
+					'pipelinq',
+					'No criterion adds points yet. Add a value, a client or an expected close date to raise the score.',
+				)
+			}}
 		</p>
 		<p class="lead-score-explanation__total">
 			<span>{{ t('pipelinq', 'Total') }}</span>
-			<span class="lead-score-explanation__points">{{ explanation.total }}</span>
+			<span class="lead-score-explanation__points">{{
+				explanation.total
+			}}</span>
 		</p>
 		<p v-if="drifted" class="lead-score-explanation__drift">
-			{{ t('pipelinq', 'The score changed since it was calculated. Save the lead to recalculate it.') }}
+			{{
+				t(
+					'pipelinq',
+					'The score changed since it was calculated. Save the lead to recalculate it.',
+				)
+			}}
 		</p>
 	</div>
 </template>
@@ -33,7 +47,7 @@ import { explainScore, normaliseScore } from '../../services/leadScore.js'
  * The stored score stays the number shown; this only annotates it, and
  * says so when the listed total differs from the stored one.
  *
- * @spec openspec/changes/pipeline-lead-score-call-first/specs/lead-management/spec.md#requirement-a-person-can-see-why-a-lead-has-its-score-req-lscore-003
+ * @spec openspec/specs/lead-management/spec.md#requirement-a-person-can-see-why-a-lead-has-its-score-req-lscore-003
  */
 export default {
 	name: 'LeadScoreExplanation',
@@ -49,7 +63,7 @@ export default {
 	computed: {
 		/**
 		 * @return {{matched: Array<object>, total: number}}
-		 * @spec openspec/changes/pipeline-lead-score-call-first/specs/lead-management/spec.md#requirement-a-person-can-see-why-a-lead-has-its-score-req-lscore-003
+		 * @spec openspec/specs/lead-management/spec.md#requirement-a-person-can-see-why-a-lead-has-its-score-req-lscore-003
 		 */
 		explanation() {
 			return explainScore(this.lead)
@@ -59,7 +73,7 @@ export default {
 		 * True when the stored score and the listed total differ.
 		 *
 		 * @return {boolean}
-		 * @spec openspec/changes/pipeline-lead-score-call-first/specs/lead-management/spec.md#requirement-a-person-can-see-why-a-lead-has-its-score-req-lscore-003
+		 * @spec openspec/specs/lead-management/spec.md#requirement-a-person-can-see-why-a-lead-has-its-score-req-lscore-003
 		 */
 		drifted() {
 			const stored = normaliseScore(this.lead.qualificationScore)

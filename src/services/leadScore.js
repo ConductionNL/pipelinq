@@ -15,7 +15,7 @@
  * Imports nothing, so it runs in the node test environment. Labels are
  * translated by the component that shows them.
  *
- * @spec openspec/changes/pipeline-lead-score-call-first/specs/lead-management/spec.md#requirement-a-person-can-see-why-a-lead-has-its-score-req-lscore-003
+ * @spec openspec/specs/lead-management/spec.md#requirement-a-person-can-see-why-a-lead-has-its-score-req-lscore-003
  */
 
 /** Lowest score in the high band. */
@@ -97,7 +97,7 @@ export const SCORE_CRITERIA = [
  *
  * @param {(number|string|null|undefined)} value The raw `qualificationScore`.
  * @return {number|null}
- * @spec openspec/changes/pipeline-lead-score-call-first/specs/lead-management/spec.md#requirement-the-lead-list-shows-and-sorts-by-score-req-lscore-001
+ * @spec openspec/specs/lead-management/spec.md#requirement-the-lead-list-shows-and-sorts-by-score-req-lscore-001
  */
 export function normaliseScore(value) {
 	if (value === null || value === undefined || value === '') {
@@ -113,7 +113,7 @@ export function normaliseScore(value) {
  *
  * @param {(number|string|null|undefined)} value The raw `qualificationScore`.
  * @return {('high'|'medium'|'low'|null)}
- * @spec openspec/changes/pipeline-lead-score-call-first/specs/lead-management/spec.md#requirement-the-lead-list-shows-and-sorts-by-score-req-lscore-001
+ * @spec openspec/specs/lead-management/spec.md#requirement-the-lead-list-shows-and-sorts-by-score-req-lscore-001
  */
 export function scoreBand(value) {
 	const score = normaliseScore(value)
@@ -131,7 +131,7 @@ export function scoreBand(value) {
  *
  * @param {object} lead The lead as the list or board holds it.
  * @return {{matched: Array<{id: string, label: string, points: number}>, total: number}}
- * @spec openspec/changes/pipeline-lead-score-call-first/specs/lead-management/spec.md#requirement-a-person-can-see-why-a-lead-has-its-score-req-lscore-003
+ * @spec openspec/specs/lead-management/spec.md#requirement-a-person-can-see-why-a-lead-has-its-score-req-lscore-003
  */
 export function explainScore(lead) {
 	const matched = SCORE_CRITERIA.filter((c) => c.test(lead || {})).map(
@@ -159,7 +159,7 @@ function updatedAt(lead) {
  * @param {object} a A lead.
  * @param {object} b Another lead.
  * @return {number}
- * @spec openspec/changes/pipeline-lead-score-call-first/specs/lead-management/spec.md#requirement-the-board-card-shows-the-score-req-lscore-002
+ * @spec openspec/specs/lead-management/spec.md#requirement-the-board-card-shows-the-score-req-lscore-002
  */
 export function compareCallFirst(a, b) {
 	const sa = normaliseScore(a?.qualificationScore)

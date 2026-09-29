@@ -1,6 +1,6 @@
 <!-- SPDX-License-Identifier: EUPL-1.2 -->
 <!-- Copyright (C) 2026 Conduction B.V. -->
-<!-- @spec openspec/changes/pipeline-lead-score-call-first/specs/lead-management/spec.md#requirement-the-board-card-shows-the-score-req-lscore-002 -->
+<!-- @spec openspec/specs/lead-management/spec.md#requirement-the-board-card-shows-the-score-req-lscore-002 -->
 <template>
 	<span v-if="band === null" class="lead-score-badge__dash">—</span>
 	<span
@@ -19,7 +19,9 @@
 					:title="accessibleName"
 					aria-haspopup="dialog">
 					<span class="lead-score-badge__value">{{ score }}</span>
-					<span v-if="!compact" class="lead-score-badge__band">{{ bandLabel }}</span>
+					<span v-if="!compact" class="lead-score-badge__band">{{
+						bandLabel
+					}}</span>
 				</button>
 			</template>
 			<LeadScoreExplanation :lead="lead" />
@@ -39,7 +41,7 @@ import { normaliseScore, scoreBand } from '../../services/leadScore.js'
  * saved before the score existed. `compact` hides the band word for the
  * board card; the accessible name still carries it.
  *
- * @spec openspec/changes/pipeline-lead-score-call-first/specs/lead-management/spec.md#requirement-the-board-card-shows-the-score-req-lscore-002
+ * @spec openspec/specs/lead-management/spec.md#requirement-the-board-card-shows-the-score-req-lscore-002
  */
 export default {
 	name: 'LeadScoreBadge',
@@ -65,7 +67,7 @@ export default {
 	computed: {
 		/**
 		 * @return {number|null}
-		 * @spec openspec/changes/pipeline-lead-score-call-first/specs/lead-management/spec.md#requirement-the-lead-list-shows-and-sorts-by-score-req-lscore-001
+		 * @spec openspec/specs/lead-management/spec.md#requirement-the-lead-list-shows-and-sorts-by-score-req-lscore-001
 		 */
 		score() {
 			return normaliseScore(this.lead.qualificationScore)
@@ -73,7 +75,7 @@ export default {
 
 		/**
 		 * @return {('high'|'medium'|'low'|null)}
-		 * @spec openspec/changes/pipeline-lead-score-call-first/specs/lead-management/spec.md#requirement-the-lead-list-shows-and-sorts-by-score-req-lscore-001
+		 * @spec openspec/specs/lead-management/spec.md#requirement-the-lead-list-shows-and-sorts-by-score-req-lscore-001
 		 */
 		band() {
 			return scoreBand(this.score)
@@ -81,7 +83,7 @@ export default {
 
 		/**
 		 * @return {string}
-		 * @spec openspec/changes/pipeline-lead-score-call-first/specs/lead-management/spec.md#requirement-the-lead-list-shows-and-sorts-by-score-req-lscore-001
+		 * @spec openspec/specs/lead-management/spec.md#requirement-the-lead-list-shows-and-sorts-by-score-req-lscore-001
 		 */
 		bandLabel() {
 			if (this.band === 'high') return t('pipelinq', 'High')
@@ -93,7 +95,7 @@ export default {
 		 * "Score 92, high": the number and the band, for screen readers.
 		 *
 		 * @return {string}
-		 * @spec openspec/changes/pipeline-lead-score-call-first/specs/lead-management/spec.md#requirement-the-board-card-shows-the-score-req-lscore-002
+		 * @spec openspec/specs/lead-management/spec.md#requirement-the-board-card-shows-the-score-req-lscore-002
 		 */
 		accessibleName() {
 			return t('pipelinq', 'Score {score}, {band}', {

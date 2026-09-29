@@ -171,7 +171,7 @@ export default {
 		 * @return {Record<string, object>}
 		 * @spec openspec/specs/customer-360/spec.md
 		 * @spec openspec/specs/lead-scoring-win-probability/spec.md#requirement-win-probability-is-surfaced-on-the-pipeline-list-and-deal-detail
-		 * @spec openspec/changes/pipeline-lead-score-call-first/specs/lead-management/spec.md#requirement-the-lead-list-shows-and-sorts-by-score-req-lscore-001
+		 * @spec openspec/specs/lead-management/spec.md#requirement-the-lead-list-shows-and-sorts-by-score-req-lscore-001
 		 */
 		cellWidgets() {
 			return {

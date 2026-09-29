@@ -168,7 +168,7 @@ export default {
 		 * the lead updated longest ago. Off, it drops that sort.
 		 *
 		 * @param {boolean} on Whether Call first is on.
-		 * @spec openspec/changes/pipeline-lead-score-call-first/specs/lead-management/spec.md#requirement-the-lead-list-shows-and-sorts-by-score-req-lscore-001
+		 * @spec openspec/specs/lead-management/spec.md#requirement-the-lead-list-shows-and-sorts-by-score-req-lscore-001
 		 */
 		setCallFirst(on) {
 			this.callFirst = on

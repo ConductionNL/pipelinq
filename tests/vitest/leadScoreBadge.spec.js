@@ -9,7 +9,7 @@
  * toggle, App.vue registers the widget, the board card mounts the badge and
  * the board table sorts by score, so the badge is actually rendered.
  *
- * @spec openspec/changes/pipeline-lead-score-call-first/specs/lead-management/spec.md#requirement-the-board-card-shows-the-score-req-lscore-002
+ * @spec openspec/specs/lead-management/spec.md#requirement-the-board-card-shows-the-score-req-lscore-002
  */
 
 import { mount } from '@vue/test-utils'
@@ -36,9 +36,14 @@ beforeAll(async () => {
 		String(text).replace(/\{(\w+)\}/g, (whole, key) =>
 			vars && key in vars ? String(vars[key]) : whole,
 		)
-	LeadScoreBadge = (await import('../../src/components/leadScore/LeadScoreBadge.vue')).default
-	LeadScoreCell = (await import('../../src/views/leads/cells/LeadScoreCell.vue')).default
-	LeadScoreExplanation = (await import('../../src/components/leadScore/LeadScoreExplanation.vue')).default
+	LeadScoreBadge = (
+		await import('../../src/components/leadScore/LeadScoreBadge.vue')
+	).default
+	LeadScoreCell = (await import('../../src/views/leads/cells/LeadScoreCell.vue'))
+		.default
+	LeadScoreExplanation = (
+		await import('../../src/components/leadScore/LeadScoreExplanation.vue')
+	).default
 })
 
 const globalMixin = {
@@ -105,9 +110,12 @@ describe('LeadScoreExplanation', () => {
 			},
 			global: globalMixin,
 		})
-		const rows = w
-			.findAll('li')
-			.map((li) => li.findAll('span').map((span) => span.text()).join(' '))
+		const rows = w.findAll('li').map((li) =>
+			li
+				.findAll('span')
+				.map((span) => span.text())
+				.join(' '),
+		)
 		expect(rows).toEqual([
 			'Value present +10',
 			'Client linked +15',
@@ -129,24 +137,33 @@ describe('LeadScoreExplanation', () => {
 describe('callers', () => {
 	it('App.vue registers the lead-score cell widget', () => {
 		const app = read('src/App.vue')
-		expect(app).toMatch(/import LeadScoreCell from '\.\/views\/leads\/cells\/LeadScoreCell\.vue'/)
+		expect(app).toMatch(
+			/import LeadScoreCell from '\.\/views\/leads\/cells\/LeadScoreCell\.vue'/,
+		)
 		expect(app).toMatch(/'lead-score': LeadScoreCell/)
 	})
 
 	it('the Leads list has a sortable score column and a Call first toggle', () => {
 		const list = read('src/views/leads/LeadList.vue')
-		expect(list).toMatch(/key: 'qualificationScore',[\s\S]{0,120}widget: 'lead-score'/)
+		expect(list).toMatch(
+			/key: 'qualificationScore',[\s\S]{0,120}widget: 'lead-score'/,
+		)
 		expect(list).toMatch(/Call first/)
 		expect(list).toMatch(/CALL_FIRST_SORT/)
 		const manifest = JSON.parse(read('src/manifest.json'))
 		const leads = manifest.pages.find((p) => p.route === '/leads')
 		expect(leads.config.columns).toContainEqual(
-			expect.objectContaining({ key: 'qualificationScore', widget: 'lead-score' }),
+			expect.objectContaining({
+				key: 'qualificationScore',
+				widget: 'lead-score',
+			}),
 		)
 	})
 
 	it('the board card mounts the badge for a lead, and the board sorts by score', () => {
-		expect(read('src/views/pipeline/PipelineCard.vue')).toMatch(/<LeadScoreBadge/)
+		expect(read('src/views/pipeline/PipelineCard.vue')).toMatch(
+			/<LeadScoreBadge/,
+		)
 		const board = read('src/views/pipeline/PipelineBoard.vue')
 		expect(board).toMatch(/toggleSort\('score'\)/)
 		expect(board).toMatch(/compareCallFirst/)

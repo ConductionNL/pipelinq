@@ -1,6 +1,6 @@
 <!-- SPDX-License-Identifier: EUPL-1.2 -->
 <!-- Copyright (C) 2026 Conduction B.V. -->
-<!-- @spec openspec/changes/pipeline-lead-score-call-first/specs/lead-management/spec.md#requirement-the-lead-list-shows-and-sorts-by-score-req-lscore-001 -->
+<!-- @spec openspec/specs/lead-management/spec.md#requirement-the-lead-list-shows-and-sorts-by-score-req-lscore-001 -->
 <template>
 	<LeadScoreBadge :lead="lead" />
 </template>
@@ -12,7 +12,7 @@ import LeadScoreBadge from '../../../components/leadScore/LeadScoreBadge.vue'
  * Score cell for the Leads list, registered as the `lead-score` cell
  * widget. Shows the stored score with its band word, or a dash.
  *
- * @spec openspec/changes/pipeline-lead-score-call-first/specs/lead-management/spec.md#requirement-the-lead-list-shows-and-sorts-by-score-req-lscore-001
+ * @spec openspec/specs/lead-management/spec.md#requirement-the-lead-list-shows-and-sorts-by-score-req-lscore-001
  */
 export default {
 	name: 'LeadScoreCell',
@@ -40,7 +40,7 @@ export default {
 		 * same number the column shows.
 		 *
 		 * @return {object}
-		 * @spec openspec/changes/pipeline-lead-score-call-first/specs/lead-management/spec.md#requirement-the-lead-list-shows-and-sorts-by-score-req-lscore-001
+		 * @spec openspec/specs/lead-management/spec.md#requirement-the-lead-list-shows-and-sorts-by-score-req-lscore-001
 		 */
 		lead() {
 			return { ...this.row, qualificationScore: this.value }

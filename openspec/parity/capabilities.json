@@ -1201,7 +1201,7 @@
 			"id": "lead-scoring",
 			"area": "pipeline",
 			"name": "Let the app score a lead so you know which one to call first",
-			"pipelinq": "partial",
+			"pipelinq": "yes",
 			"hubspot-crm": "yes",
 			"pipedrive": "yes",
 			"espocrm": "no",
@@ -1212,12 +1212,14 @@
 			"feature": "Lead pipeline",
 			"featureConfidence": "medium",
 			"built": {
-				"state": "building",
-				"evidence": "lib/Service/ProspectScoringService.php:49",
+				"state": "built",
+				"evidence": "lead.configuration x-openregister-calculations.qualificationScore in lib/Settings/pipelinq_register.json computes the score; src/views/leads/cells/LeadScoreCell.vue (lead-score column, sortable, Call first in src/views/leads/LeadList.vue), src/components/leadScore/LeadScoreBadge.vue on the board card and in the board table sort (src/views/pipeline/PipelineBoard.vue), src/components/leadScore/LeadScoreExplanation.vue",
 				"owner": "ConductionNL/pipelinq",
-				"change": "openspec/changes/pipeline-lead-score-call-first"
+				"reachedOn": "Leads list (Score column, Call first); Pipeline board card and list view; the score badge opens the explanation",
+				"readOn": "2026-09-29",
+				"change": "openspec/changes/archive/2026-09-29-pipeline-lead-score-call-first"
 			},
-			"note": "Corrected 2026-09-28: the score itself is built (lead.configuration x-openregister-calculations.qualificationScore, shown on the lead detail page). What is missing is the list column, the board score, the sort and the explanation; change pipeline-lead-score-call-first.",
+			"note": "Built 2026-09-29: the stored qualificationScore shows in the Leads list and on the board, sorts, and explains which criteria added points. Scoring on engagement (mail opens, visits) is not part of it.",
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/scoring/understand-the-lead-scoring-tool \"build custom lead scores based on record actions or properties ... to evaluate which leads are likely to become customers\" for contacts, companies and deals. Marketing Hub or Sales Hub Professional, Enterprise.",
 				"kiss": "src/router/index.ts:126 \"const router = createRouter(\" lists the only screens: startscherm, afhandeling, contactverzoeken, personen, bedrijven, zaken, links and beheer; a case-insensitive grep of src/ and Kiss.Bff/ for lead, opportunit, offerte, factuur, nieuwsbrief and campagne finds no sales or marketing code (only the NL Design paragraph modifier \"utrecht-paragraphlead\")",
