@@ -105,7 +105,7 @@
 						"id": "interaction",
 						"type": "interaction-form",
 						"hideRefresh": true,
-						"title": "Active interaction",
+						"title": "New contact moment",
 						"content": {
 							"register": "pipelinq",
 							"schema": "ticket",
@@ -142,32 +142,12 @@
 									"label": "Letter"
 								}
 							],
-							"outcomes": [
-								{
-									"value": "opgelost",
-									"label": "Resolved"
-								},
-								{
-									"value": "doorverwezen",
-									"label": "Forwarded"
-								},
-								{
-									"value": "terugbelverzoek",
-									"label": "Call back"
-								},
-								{
-									"value": "doorverbonden",
-									"label": "Transferred"
-								},
-								{
-									"value": "vervolgactie",
-									"label": "Follow-up"
-								}
-							],
 							"defaults": {
 								"ticketType": "interaction"
 							},
-							"subjectField": "title"
+							"subjectField": "title",
+							"submitLabel": "Save contact moment",
+							"detailRoute": "TicketDetail"
 						}
 					},
 					{
@@ -178,7 +158,6 @@
 						"content": {
 							"endpoint": "/apps/openregister/api/integrations/xwiki/search",
 							"queryParam": "q",
-							"bindTo": "activeSummary",
 							"minChars": 3,
 							"limit": 8
 						}

@@ -331,6 +331,14 @@
             "title": "Outcome",
             "description": "Disposition of a contactmoment interaction.",
             "enum": ["handled", "transferred", "callbackRequest", "followUpAction", "resolved", "referred"],
+            "x-enum-labels": {
+              "handled": "Handled",
+              "transferred": "Transferred",
+              "callbackRequest": "Callback request",
+              "followUpAction": "Follow-up action",
+              "resolved": "Resolved",
+              "referred": "Referred"
+            },
             "facetable": true
           },
           "duration": {
