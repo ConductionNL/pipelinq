@@ -61,19 +61,15 @@
 					</span>
 				</div>
 				<div class="work-group__items">
-					<div
+					<router-link
 						v-for="item in group.items"
 						:key="item.id"
+						:to="itemRoute(item)"
 						class="work-card"
 						:class="{
 							'work-card--overdue': item.isOverdue,
 							'work-card--completed': item.isClosed,
-						}"
-						role="button"
-						tabindex="0"
-						@click="openItem(item, $event)"
-						@auxclick="openItem(item, $event)"
-						@keydown.enter="openItem(item, $event)">
+						}">
 						<div class="work-card__top">
 							<span
 								class="entity-badge"
@@ -125,7 +121,7 @@
 								{{ t('pipelinq', 'No due date') }}
 							</span>
 						</div>
-					</div>
+					</router-link>
 				</div>
 			</div>
 		</div>
@@ -133,7 +129,6 @@
 </template>
 
 <script>
-import { openRowTarget } from '@conduction/nextcloud-vue'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
 import { formatDateFull, formatNumber } from '../services/localeUtils.js'
@@ -540,19 +535,18 @@ export default {
 		},
 
 		/**
-		 * Navigate to the detail page for a My Work row.
+		 * The detail page a My Work card links to.
 		 *
 		 * @param {object} item The row, carrying its entityType and id.
-		 * @param {MouseEvent|KeyboardEvent} [event] The triggering event; a modified or middle click opens a new tab.
-		 * @return {void}
+		 * @return {object} The route location.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-mywork-ui/tasks.md#task-13
 		 */
-		openItem(item, event) {
+		itemRoute(item) {
 			// Requests are `ticket` rows narrowed by ticketType
 			// (unify-ticket-supertype) — every non-lead work item opens on
 			// the unified TicketDetail page, which reads its own ticketType.
 			const name = item.entityType === 'lead' ? 'LeadDetail' : 'TicketDetail'
-			openRowTarget(event, { name, params: { id: item.id } }, this.$router)
+			return { name, params: { id: item.id } }
 		},
 	},
 }
@@ -560,6 +554,13 @@ export default {
 
 <style scoped>
 .my-work {
+	/* Entity badge palettes, one per type. */
+	--my-work-lead-bg: #dbeafe;
+	--my-work-lead-text: #1d4ed8;
+	--my-work-lead-border: #93c5fd;
+	--my-work-request-bg: #ffedd5;
+	--my-work-request-text: #c2410c;
+	--my-work-request-border: #fdba74;
 	padding: 20px;
 	max-width: 900px;
 }
@@ -613,7 +614,7 @@ export default {
 }
 
 .my-work__error {
-	color: var(--color-error);
+	color: var(--color-element-error);
 }
 
 .my-work__error p {
@@ -638,8 +639,8 @@ export default {
 }
 
 .work-group__header--overdue {
-	color: var(--color-error);
-	border-bottom-color: var(--color-error);
+	color: var(--color-element-error);
+	border-bottom-color: var(--color-element-error);
 }
 
 .group-count {
@@ -650,14 +651,14 @@ export default {
 	border-radius: 10px;
 	font-size: 12px;
 	font-weight: 700;
-	background: var(--color-background-darker, rgba(0, 0, 0, 0.07));
+	background: var(--color-background-dark);
 	color: var(--color-text-maxcontrast);
 	margin-inline-start: 6px;
 }
 
 .group-count--overdue {
 	background: var(--color-error);
-	color: #fff;
+	color: var(--color-element-error);
 }
 
 .work-group__items {
@@ -669,6 +670,9 @@ export default {
 
 /* Work card */
 .work-card {
+	display: block;
+	color: inherit;
+	text-decoration: none;
 	background: var(--color-main-background);
 	border: 1px solid var(--color-border);
 	border-radius: var(--border-radius-large);
@@ -677,14 +681,19 @@ export default {
 	transition: box-shadow 0.15s;
 }
 
+/* Nextcloud's reset puts cursor: default on every div and span. */
+.work-card * {
+	cursor: pointer;
+}
+
 .work-card:hover,
 .work-card:focus-visible {
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+	box-shadow: 0 2px 8px var(--color-box-shadow);
 	outline: none;
 }
 
 .work-card--overdue {
-	border-inline-start: 3px solid var(--color-error);
+	border-inline-start: 3px solid var(--color-element-error);
 }
 
 .work-card--completed {
@@ -708,15 +717,15 @@ export default {
 }
 
 .badge--lead {
-	background: #dbeafe;
-	color: #1d4ed8;
-	border: 1px solid #93c5fd;
+	background: var(--my-work-lead-bg);
+	color: var(--my-work-lead-text);
+	border: 1px solid var(--my-work-lead-border);
 }
 
 .badge--request {
-	background: #ffedd5;
-	color: #c2410c;
-	border: 1px solid #fdba74;
+	background: var(--my-work-request-bg);
+	color: var(--my-work-request-text);
+	border: 1px solid var(--my-work-request-border);
 }
 
 .priority-badge {
@@ -753,12 +762,12 @@ export default {
 }
 
 .overdue-text {
-	color: var(--color-error);
+	color: var(--color-element-error);
 	font-weight: 600;
 }
 
 .due-today-text {
-	color: var(--color-warning);
+	color: var(--color-element-warning);
 	font-weight: 600;
 }
 
@@ -777,9 +786,8 @@ export default {
 	border-radius: 4px;
 	font-size: 10px;
 	font-weight: 700;
-	background: #fff7ed;
-	color: #c2410c;
-	border: 1px solid #fdba74;
+	background: var(--color-warning);
+	color: var(--color-element-warning);
 	margin-inline-start: 6px;
 	vertical-align: middle;
 }
@@ -787,6 +795,29 @@ export default {
 @media (prefers-reduced-motion: reduce) {
 	.work-card {
 		transition: none;
+	}
+}
+</style>
+
+<style>
+/* Dark palettes for the entity badges; unscoped so the body theme attribute can select them. */
+body[data-theme-dark] .my-work {
+	--my-work-lead-bg: rgba(59, 130, 246, 0.18);
+	--my-work-lead-text: #93c5fd;
+	--my-work-lead-border: #1d4ed8;
+	--my-work-request-bg: rgba(249, 115, 22, 0.18);
+	--my-work-request-text: #fdba74;
+	--my-work-request-border: #fdba74;
+}
+
+@media (prefers-color-scheme: dark) {
+	body[data-theme-default] .my-work {
+		--my-work-lead-bg: rgba(59, 130, 246, 0.18);
+		--my-work-lead-text: #93c5fd;
+		--my-work-lead-border: #1d4ed8;
+		--my-work-request-bg: rgba(249, 115, 22, 0.18);
+		--my-work-request-text: #fdba74;
+		--my-work-request-border: #fdba74;
 	}
 }
 </style>
