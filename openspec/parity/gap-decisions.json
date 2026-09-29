@@ -582,5 +582,21 @@
 		"reason": "No competitor rated yes (all six no) and no demand row. The dossiq matrix already records decided-no; not edited here.",
 		"change": null,
 		"decidedOn": "2026-09-28"
+	},
+	{
+		"row": "vendor-training",
+		"matrix": "pipelinq",
+		"decision": "decided-no",
+		"reason": "Ruben, 29 Sep 2026: courses and a partner directory are content, and that content belongs on the Conduction website, not in the app. Supersedes the 2026-09-28 build decision; the change platform-help-and-partner-directory is removed. Reversible.",
+		"change": null,
+		"decidedOn": "2026-09-29"
+	},
+	{
+		"row": "local-partner",
+		"matrix": "pipelinq",
+		"decision": "decided-no",
+		"reason": "Ruben, 29 Sep 2026: courses and a partner directory are content, and that content belongs on the Conduction website, not in the app. Supersedes the 2026-09-28 build decision; the change platform-help-and-partner-directory is removed. Reversible.",
+		"change": null,
+		"decidedOn": "2026-09-29"
 	}
 ]
