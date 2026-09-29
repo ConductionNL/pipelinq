@@ -37,7 +37,15 @@
 							<span class="skill-tag">{{ suggestion.matchedSkill }}</span>
 						</div>
 					</div>
+					<span
+						v-if="suggestion.userId === assignee"
+						class="agent-assigned">
+						<Check :size="14" />
+						{{ t('pipelinq', 'Assigned') }}
+					</span>
 					<NcButton
+						v-else
+						:disabled="assigning"
 						:aria-label="
 							t('pipelinq', 'Assign to {name}', {
 								name: suggestion.displayName || suggestion.userId,
@@ -70,11 +78,13 @@
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
+import Check from 'vue-material-design-icons/Check.vue'
 import Refresh from 'vue-material-design-icons/Refresh.vue'
 
 export default {
 	name: 'RoutingSuggestionPanel',
 	components: {
+		Check,
 		NcButton,
 		NcLoadingIcon,
 		Refresh,
@@ -94,6 +104,18 @@ export default {
 		entityType: {
 			type: String,
 			default: 'request',
+		},
+
+		/** The user id the record is assigned to; that agent shows as assigned. */
+		assignee: {
+			type: String,
+			default: '',
+		},
+
+		/** Whether an assignment is being saved; the Assign buttons wait for it. */
+		assigning: {
+			type: Boolean,
+			default: false,
 		},
 	},
 
@@ -162,13 +184,8 @@ export default {
 		 * @param {object} suggestion The routing suggestion to act on.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-routing-ui/tasks.md#task-1
 		 */
-		async assign(suggestion) {
-			try {
-				this.$emit('assigned', suggestion.userId)
-			} catch (error) {
-				console.error('Error assigning agent:', error)
-				this.errorMessage = this.t('pipelinq', 'Failed to load suggestions')
-			}
+		assign(suggestion) {
+			this.$emit('assigned', suggestion.userId)
 		},
 
 		/**
@@ -276,6 +293,14 @@ export default {
 	font-size: 10px;
 	background: var(--color-primary-element-light);
 	color: var(--color-primary-element-light-text);
+}
+
+.agent-assigned {
+	display: inline-flex;
+	align-items: center;
+	gap: 2px;
+	flex: none;
+	color: var(--color-success-text);
 }
 
 .routing-panel__note {

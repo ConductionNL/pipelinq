@@ -2475,7 +2475,8 @@
 							"objectId": "@objectId",
 							"category": "@object.category",
 							"entityType": "request",
-							"objectType": "ticket"
+							"objectType": "ticket",
+							"assignee": "@object.assignee"
 						}
 					}
 				]
@@ -3397,7 +3398,8 @@
 							"objectId": "@objectId",
 							"category": "@object.category",
 							"entityType": "lead",
-							"objectType": "lead"
+							"objectType": "lead",
+							"assignee": "@object.assignee"
 						}
 					}
 				],
