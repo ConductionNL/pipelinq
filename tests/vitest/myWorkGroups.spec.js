@@ -6,7 +6,7 @@
  * The last spec pins the caller: MyWork.vue groups with this helper, lists
  * follow-up tasks, and has a phone layout.
  *
- * @spec openspec/changes/platform-phone-on-the-road/specs/mobile-experience/spec.md#requirement-my-work-works-as-a-phone-list-req-mob-002
+ * @spec openspec/specs/mobile-experience/spec.md#requirement-my-work-works-as-a-phone-list-req-mob-002
  */
 
 import { readFileSync } from 'node:fs'

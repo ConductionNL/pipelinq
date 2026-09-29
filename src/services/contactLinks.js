@@ -8,7 +8,7 @@
  *
  * Imports nothing, so it runs in the node test environment.
  *
- * @spec openspec/changes/platform-phone-on-the-road/specs/mobile-experience/spec.md#requirement-numbers-addresses-and-mail-are-links-req-mob-001
+ * @spec openspec/specs/mobile-experience/spec.md#requirement-numbers-addresses-and-mail-are-links-req-mob-001
  */
 
 /**
@@ -18,7 +18,7 @@
  *
  * @param {string|null|undefined} value The number as typed.
  * @return {string|null}
- * @spec openspec/changes/platform-phone-on-the-road/specs/mobile-experience/spec.md#requirement-numbers-addresses-and-mail-are-links-req-mob-001
+ * @spec openspec/specs/mobile-experience/spec.md#requirement-numbers-addresses-and-mail-are-links-req-mob-001
  */
 export function telHref(value) {
 	const raw = String(value ?? '').trim()
@@ -39,7 +39,7 @@ export function telHref(value) {
  *
  * @param {string|null|undefined} value The address as typed.
  * @return {string|null}
- * @spec openspec/changes/platform-phone-on-the-road/specs/mobile-experience/spec.md#requirement-numbers-addresses-and-mail-are-links-req-mob-001
+ * @spec openspec/specs/mobile-experience/spec.md#requirement-numbers-addresses-and-mail-are-links-req-mob-001
  */
 export function mailtoHref(value) {
 	const raw = String(value ?? '').trim()
@@ -52,7 +52,7 @@ export function mailtoHref(value) {
  *
  * @param {string|null|undefined} value The postal address as typed.
  * @return {string|null}
- * @spec openspec/changes/platform-phone-on-the-road/specs/mobile-experience/spec.md#requirement-numbers-addresses-and-mail-are-links-req-mob-001
+ * @spec openspec/specs/mobile-experience/spec.md#requirement-numbers-addresses-and-mail-are-links-req-mob-001
  */
 export function mapHref(value) {
 	const raw = String(value ?? '')

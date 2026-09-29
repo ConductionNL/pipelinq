@@ -12,7 +12,7 @@
  * not know, a wrong enum value or a date where a date-time belongs fails here
  * instead of on a live save.
  *
- * @spec openspec/changes/platform-phone-on-the-road/specs/mobile-experience/spec.md#requirement-a-visit-is-logged-in-one-small-sheet-req-mob-003
+ * @spec openspec/specs/mobile-experience/spec.md#requirement-a-visit-is-logged-in-one-small-sheet-req-mob-003
  */
 
 import Ajv from 'ajv'

@@ -4,7 +4,7 @@
 
 ### Requirement: Numbers, addresses and mail are links (REQ-MOB-001)
 
-Phone numbers, email addresses and postal addresses on client, contact and lead pages MUST be links that open the phone dialler, mail app and map app, and MUST keep the text the user typed.
+Phone numbers, email addresses and postal addresses on client and contact pages MUST be links that open the phone dialler, mail app and map app, and MUST keep the text the user typed.
 
 #### Scenario: Tap to call
 
@@ -17,6 +17,8 @@ Phone numbers, email addresses and postal addresses on client, contact and lead 
 - **GIVEN** the client has a postal address
 - **WHEN** Pieter taps the address
 - **THEN** the phone's map app opens with the address
+
+@e2e exclude a Playwright browser has no map app to open; the geo: link and its query are asserted in tests/vitest/phoneOnTheRoad.spec.js (ContactLinks opens the map app with the address) and tests/vitest/visitLog.spec.js (tap links)
 
 ### Requirement: My work works as a phone list (REQ-MOB-002)
 

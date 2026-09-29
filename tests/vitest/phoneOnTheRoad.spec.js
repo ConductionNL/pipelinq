@@ -8,7 +8,7 @@
  * specs pin the callers: the registry resolves both sections and the
  * client, contact and lead pages declare them.
  *
- * @spec openspec/changes/platform-phone-on-the-road/specs/mobile-experience/spec.md#requirement-a-visit-is-logged-in-one-small-sheet-req-mob-003
+ * @spec openspec/specs/mobile-experience/spec.md#requirement-a-visit-is-logged-in-one-small-sheet-req-mob-003
  */
 
 import { flushPromises, mount } from '@vue/test-utils'

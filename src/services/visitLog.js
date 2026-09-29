@@ -12,7 +12,7 @@
  * tests/vitest/visitLog.spec.js validates both payloads against the real
  * schema fragments in lib/Settings.
  *
- * @spec openspec/changes/platform-phone-on-the-road/specs/mobile-experience/spec.md#requirement-a-visit-is-logged-in-one-small-sheet-req-mob-003
+ * @spec openspec/specs/mobile-experience/spec.md#requirement-a-visit-is-logged-in-one-small-sheet-req-mob-003
  */
 
 /** The channel value a logged visit carries. */
@@ -24,7 +24,7 @@ export const VISIT_CHANNEL = 'visit'
  *
  * @param {string|null|undefined} day The picked day.
  * @return {string|null}
- * @spec openspec/changes/platform-phone-on-the-road/specs/mobile-experience/spec.md#requirement-a-visit-is-logged-in-one-small-sheet-req-mob-003
+ * @spec openspec/specs/mobile-experience/spec.md#requirement-a-visit-is-logged-in-one-small-sheet-req-mob-003
  */
 export function followUpDeadline(day) {
 	const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(day ?? ''))
@@ -55,7 +55,7 @@ export function followUpDeadline(day) {
  * @param {string} input.taskSubject Subject for the follow-up task.
  * @param {Date} [input.now] The moment of logging.
  * @return {{ticket: object, task: (object|null)}}
- * @spec openspec/changes/platform-phone-on-the-road/specs/mobile-experience/spec.md#requirement-a-visit-is-logged-in-one-small-sheet-req-mob-003
+ * @spec openspec/specs/mobile-experience/spec.md#requirement-a-visit-is-logged-in-one-small-sheet-req-mob-003
  */
 export function buildVisitPayloads(input) {
 	const note = String(input.note ?? '').trim()

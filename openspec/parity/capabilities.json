@@ -6211,7 +6211,7 @@
 			"id": "plat-phone",
 			"area": "platform",
 			"name": "Work from your phone while you are with a client",
-			"pipelinq": "partial",
+			"pipelinq": "yes",
 			"hubspot-crm": "yes",
 			"pipedrive": "yes",
 			"espocrm": "yes",
@@ -6222,12 +6222,14 @@
 			"feature": "Platform",
 			"featureConfidence": "medium",
 			"built": {
-				"state": "building",
-				"evidence": "openspec/specs/time-entry-mobile, with no native client in the repo",
+				"state": "built",
+				"evidence": "src/components/ContactLinks.vue (tel:, mailto:, geo: links on ClientDetail and ContactDetail), src/components/LogVisitAction.vue with src/dialogs/LogVisitDialog.vue (visit contact moment and follow-up crmTask on ClientDetail and LeadDetail), src/views/MyWork.vue (Today group first, follow-up tasks, phone layout), phone CSS on src/views/pipeline/PipelineBoard.vue",
 				"owner": "ConductionNL/pipelinq",
-				"change": "openspec/changes/platform-phone-on-the-road"
+				"reachedOn": "Client and contact detail (Call, Mail, Directions), client and lead detail (Log a visit), My work, Pipeline board, at phone width in a browser or the Nextcloud mobile apps",
+				"readOn": "2026-09-29",
+				"change": "openspec/changes/archive/2026-09-29-platform-phone-on-the-road"
 			},
-			"note": "The four commercial and open source CRMs all ship a native mobile app. We do not.",
+			"note": "The four commercial and open source CRMs all ship a native mobile app. We do not. Built 2026-09-29 as the responsive web app (no native client, no offline): tap links, a Today-first My work with follow-ups, and Log a visit.",
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/account-mangagement/how-to-install-the-hubspot-mobile-application \"view and edit records, make calls, manage marketing emails, and use the conversations inbox directly from your mobile device\" on iOS 17 and Android 11 and up. All products and plans.",
 				"kiss": "the frontend has a single media query in all of src/ (src/nl-design-system/components/Pagination.vue:184 \"@media (width >= 640px)\"); the layout is a fixed desktop KCC workstation with a sidebar (src/layout/TheSidebar.vue). Driven 2026-09-26 on the v3.1.3 lab (ghcr.io/klantinteractie-servicesysteem/kiss-frontend:3.1.3, commit 276d210e shown in the footer) at a 390 by 844 viewport: the start page fits, but after Nieuw contactmoment the contact moment panel (Notitieblok, Contactverzoek, Afronden) fills the screen and the person search form and every navigation link (Contactverzoeken, Personen, Bedrijven, Zaken, Nieuws en werkinstructies, Links, Uitloggen) sit at x 415 to 713, off screen with no horizontal scroll, so a phone user cannot search a person or navigate during a contact. The stylesheet carries one media query, (width >= 640px).",

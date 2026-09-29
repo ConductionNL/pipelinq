@@ -7,7 +7,7 @@
   - owns the store writes. Its own file because a modal is never written
   - inline in its parent (ADR-004).
   -
-  - @spec openspec/changes/platform-phone-on-the-road/specs/mobile-experience/spec.md#requirement-a-visit-is-logged-in-one-small-sheet-req-mob-003
+  - @spec openspec/specs/mobile-experience/spec.md#requirement-a-visit-is-logged-in-one-small-sheet-req-mob-003
   -->
 <template>
 	<NcDialog
@@ -90,7 +90,7 @@ export default {
 		/**
 		 * Emit the note and the follow-up day when a note is present.
 		 *
-		 * @spec openspec/changes/platform-phone-on-the-road/specs/mobile-experience/spec.md#requirement-a-visit-is-logged-in-one-small-sheet-req-mob-003
+		 * @spec openspec/specs/mobile-experience/spec.md#requirement-a-visit-is-logged-in-one-small-sheet-req-mob-003
 		 */
 		submit() {
 			if (!this.note.trim() || this.saving) return

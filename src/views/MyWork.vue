@@ -463,7 +463,7 @@ export default {
 		 *
 		 * @param {string} entityType lead, request or task.
 		 * @return {string}
-		 * @spec openspec/changes/platform-phone-on-the-road/specs/mobile-experience/spec.md#requirement-my-work-works-as-a-phone-list-req-mob-002
+		 * @spec openspec/specs/mobile-experience/spec.md#requirement-my-work-works-as-a-phone-list-req-mob-002
 		 */
 		badgeText(entityType) {
 			if (entityType === 'lead') return 'LEAD'

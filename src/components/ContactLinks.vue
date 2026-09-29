@@ -1,6 +1,6 @@
 <!-- SPDX-License-Identifier: EUPL-1.2 -->
 <!-- Copyright (C) 2026 Conduction B.V. -->
-<!-- @spec openspec/changes/platform-phone-on-the-road/specs/mobile-experience/spec.md#requirement-numbers-addresses-and-mail-are-links-req-mob-001 -->
+<!-- @spec openspec/specs/mobile-experience/spec.md#requirement-numbers-addresses-and-mail-are-links-req-mob-001 -->
 <template>
 	<ul v-if="links.length" class="contact-links" data-testid="contact-links">
 		<li v-for="link in links" :key="link.kind">
@@ -30,7 +30,7 @@ import { mailtoHref, mapHref, telHref } from '../services/contactLinks.js'
  * keeps the value as the user typed it; only the target is normalised.
  * A value that cannot be a link (no digits, not an address) is left out.
  *
- * @spec openspec/changes/platform-phone-on-the-road/specs/mobile-experience/spec.md#requirement-numbers-addresses-and-mail-are-links-req-mob-001
+ * @spec openspec/specs/mobile-experience/spec.md#requirement-numbers-addresses-and-mail-are-links-req-mob-001
  */
 export default {
 	name: 'ContactLinks',
@@ -58,7 +58,7 @@ export default {
 	computed: {
 		/**
 		 * @return {Array<{kind: string, href: string, label: string, value: string, icon: object}>}
-		 * @spec openspec/changes/platform-phone-on-the-road/specs/mobile-experience/spec.md#requirement-numbers-addresses-and-mail-are-links-req-mob-001
+		 * @spec openspec/specs/mobile-experience/spec.md#requirement-numbers-addresses-and-mail-are-links-req-mob-001
 		 */
 		links() {
 			const out = []

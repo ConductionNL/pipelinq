@@ -1,6 +1,6 @@
 <!-- SPDX-License-Identifier: EUPL-1.2 -->
 <!-- Copyright (C) 2026 Conduction B.V. -->
-<!-- @spec openspec/changes/platform-phone-on-the-road/specs/mobile-experience/spec.md#requirement-a-visit-is-logged-in-one-small-sheet-req-mob-003 -->
+<!-- @spec openspec/specs/mobile-experience/spec.md#requirement-a-visit-is-logged-in-one-small-sheet-req-mob-003 -->
 <template>
 	<div class="log-visit-action">
 		<NcButton
@@ -35,7 +35,7 @@ import { useObjectStore } from '../store/modules/object.js'
  * picked, a follow-up task, both through the object store the rest of the
  * app writes with.
  *
- * @spec openspec/changes/platform-phone-on-the-road/specs/mobile-experience/spec.md#requirement-a-visit-is-logged-in-one-small-sheet-req-mob-003
+ * @spec openspec/specs/mobile-experience/spec.md#requirement-a-visit-is-logged-in-one-small-sheet-req-mob-003
  */
 export default {
 	name: 'LogVisitAction',
@@ -76,7 +76,7 @@ export default {
 		 * @param {object} store The object store.
 		 * @param {object} task The crmTask payload.
 		 * @return {Promise<boolean>}
-		 * @spec openspec/changes/platform-phone-on-the-road/specs/mobile-experience/spec.md#requirement-a-visit-is-logged-in-one-small-sheet-req-mob-003
+		 * @spec openspec/specs/mobile-experience/spec.md#requirement-a-visit-is-logged-in-one-small-sheet-req-mob-003
 		 */
 		async saveTask(store, task) {
 			try {
@@ -91,7 +91,7 @@ export default {
 		 * picked. On a failure the dialog stays open with the error.
 		 *
 		 * @param {{note: string, followUpDate: string}} input From the dialog.
-		 * @spec openspec/changes/platform-phone-on-the-road/specs/mobile-experience/spec.md#requirement-a-visit-is-logged-in-one-small-sheet-req-mob-003
+		 * @spec openspec/specs/mobile-experience/spec.md#requirement-a-visit-is-logged-in-one-small-sheet-req-mob-003
 		 */
 		async save(input) {
 			const store = useObjectStore()

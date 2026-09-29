@@ -8,7 +8,7 @@
  *
  * Imports nothing, so it runs in the node test environment.
  *
- * @spec openspec/changes/platform-phone-on-the-road/specs/mobile-experience/spec.md#requirement-my-work-works-as-a-phone-list-req-mob-002
+ * @spec openspec/specs/mobile-experience/spec.md#requirement-my-work-works-as-a-phone-list-req-mob-002
  */
 
 /** Group keys in display order. */
@@ -28,7 +28,7 @@ export const GROUP_ORDER = [
  * @param {Date} weekEnd End of this week.
  * @param {boolean} isClosed A closed item never counts as due.
  * @return {string} One of GROUP_ORDER.
- * @spec openspec/changes/platform-phone-on-the-road/specs/mobile-experience/spec.md#requirement-my-work-works-as-a-phone-list-req-mob-002
+ * @spec openspec/specs/mobile-experience/spec.md#requirement-my-work-works-as-a-phone-list-req-mob-002
  */
 export function workGroup(due, today, weekEnd, isClosed) {
 	if (!due || isClosed) return 'no-due-date'
