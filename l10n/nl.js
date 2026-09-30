@@ -6858,7 +6858,8 @@ OC.L10N.register(
         "Came in through a referral or partner": "Binnengekomen via een doorverwijzing of partner",
         "Expected close date set": "Verwachte sluitdatum ingevuld",
         "Priority high or urgent": "Prioriteit hoog of urgent",
-        "Description written": "Omschrijving ingevuld"
+        "Description written": "Omschrijving ingevuld",
+        "Records": "Records"
     },
     "nplurals=2; plural=(n != 1);"
 )

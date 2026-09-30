@@ -25,6 +25,7 @@ use OCA\Pipelinq\Service\ArticleService;
 use OCA\Pipelinq\Service\BlastService;
 use OCA\Pipelinq\Service\ComplianceService;
 use OCA\Pipelinq\Service\Marketing\MailTransportService;
+use OCA\Pipelinq\Service\Marketing\PhysicalAddressRenderer;
 use OCA\Pipelinq\Service\SchemaMapService;
 use OCA\Pipelinq\Service\Marketing\SegmentSignalService;
 use OCA\Pipelinq\Service\SegmentService;
@@ -296,6 +297,7 @@ class BlastWorkflowTest extends TestCase {
 			$this->createMock(ArticleService::class),
 			FakeSlugResolver::connectorRegister(),
 			$this->logger,
+			new PhysicalAddressRenderer(),
 		);
 		$blastService = new BlastService($this->container,
 			$this->appConfig,

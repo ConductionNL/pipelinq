@@ -77,7 +77,8 @@ function textInput(tag) {
 			return h(tag, {
 				'data-label': this.label,
 				value: this.modelValue,
-				onInput: (event) => this.$emit('update:modelValue', event.target.value),
+				onInput: (event) =>
+					this.$emit('update:modelValue', event.target.value),
 			})
 		},
 	}

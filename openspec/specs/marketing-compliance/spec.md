@@ -57,10 +57,10 @@ Every email CampaignTemplate SHALL contain the unsubscribe token
 The address tokens `{{physical_address}}`, `{{sender_address}}`,
 `{{company_address}}` and `{{address_block}}` only mark where the address goes;
 they hold no address themselves, so a token without a `footerOverride` does
-not satisfy the rule. `ComplianceService::renderPhysicalAddress()` puts the
-address into the mail, and both the send path (`MailTransportService`) and
-the template preview (`GET /api/templates/{id}/preview`) call it, so the
-preview shows what sends.
+not satisfy the rule. `PhysicalAddressRenderer::render()` puts the address
+into the mail, and both the send path (`MailTransportService`) and the
+template preview (`GET /api/templates/{id}/preview`) call it, so the preview
+shows what sends.
 
 #### Scenario: Save rejected if unsubscribe token missing
 

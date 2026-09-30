@@ -596,6 +596,8 @@ export default {
 		 * @param {number} index The selected tab's position.
 		 *
 		 * @return {void}
+		 *
+		 * @spec openspec/specs/marketing-analytics/spec.md#requirement-attribution-dashboard-sums-revenue-per-blast
 		 */
 		onTabChange(index) {
 			const tab = this.tabs[index]

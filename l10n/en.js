@@ -6942,7 +6942,8 @@ OC.L10N.register(
         "Came in through a referral or partner": "Came in through a referral or partner",
         "Expected close date set": "Expected close date set",
         "Priority high or urgent": "Priority high or urgent",
-        "Description written": "Description written"
+        "Description written": "Description written",
+        "Records": "Records"
     },
     "nplurals=2; plural=(n != 1);"
 )

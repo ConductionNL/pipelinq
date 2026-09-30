@@ -51,7 +51,11 @@
 						{{ row.returnedQuantity }}
 					</td>
 					<td>{{ reasonLabel(row.returnReason) }}</td>
-					<td>{{ row.restock ? t('pipelinq', 'Yes') : t('pipelinq', 'No') }}</td>
+					<td>
+						{{
+							row.restock ? t('pipelinq', 'Yes') : t('pipelinq', 'No')
+						}}
+					</td>
 					<td class="num">
 						{{ formatEur(row.lineTotal) }}
 					</td>
@@ -71,7 +75,10 @@ import { CnIcon, CnWidgetWrapper } from '@conduction/nextcloud-vue'
 import { showError } from '@nextcloud/dialogs'
 import { subscribe, unsubscribe } from '@nextcloud/event-bus'
 import { NcLoadingIcon } from '@nextcloud/vue'
-import { fetchOriginalLines, fetchRefundLines } from '../../services/posRefundLines.js'
+import {
+	fetchOriginalLines,
+	fetchRefundLines,
+} from '../../services/posRefundLines.js'
 import { formatEur } from '../../services/posTotals.js'
 import { useObjectStore } from '../../store/modules/object.js'
 
@@ -112,10 +119,24 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * The refund id, from the prop or the object.
+		 *
+		 * @return {string} The id, or ''.
+		 *
+		 * @spec openspec/specs/pos-refund-return/spec.md#REQ-REF-009
+		 */
 		refundId() {
 			return this.objectId || this.objectData?.id || ''
 		},
 
+		/**
+		 * The id of the transaction this refund reverses.
+		 *
+		 * @return {string} The id, or ''.
+		 *
+		 * @spec openspec/specs/pos-refund-return/spec.md#REQ-REF-009
+		 */
 		originalTransaction() {
 			return this.objectData?.originalTransaction || ''
 		},
@@ -124,10 +145,13 @@ export default {
 		 * Display rows joining each refund line with its original transaction line.
 		 *
 		 * @return {Array<object>} The rows.
+		 *
+		 * @spec openspec/specs/pos-refund-return/spec.md#REQ-REF-009
 		 */
 		lineRows() {
 			return this.lines.map((line) => {
-				const original = this.originalLines.find((o) => o.id === line.originalLine) || {}
+				const original =
+					this.originalLines.find((o) => o.id === line.originalLine) || {}
 				return {
 					id: line.id,
 					description: original.description || '-',
@@ -144,10 +168,20 @@ export default {
 	watch: {
 		// The original transaction arrives with the refund, which can land
 		// after the id; either one changing means a different join.
+		/**
+		 * Reload when the refund changes.
+		 *
+		 * @spec openspec/specs/pos-refund-return/spec.md#REQ-REF-009
+		 */
 		refundId() {
 			this.load()
 		},
 
+		/**
+		 * Reload when the original transaction arrives or changes.
+		 *
+		 * @spec openspec/specs/pos-refund-return/spec.md#REQ-REF-009
+		 */
 		originalTransaction() {
 			this.load()
 		},
@@ -173,6 +207,8 @@ export default {
 		 *
 		 * @param {string} id The reason id.
 		 * @return {string} The label.
+		 *
+		 * @spec openspec/specs/pos-refund-return/spec.md#REQ-REF-004
 		 */
 		reasonLabel(id) {
 			const reason = this.reasons.find((r) => r.id === id)
@@ -187,6 +223,8 @@ export default {
 		 * @param {boolean} [options.silent] Keep the table on screen while
 		 *   reloading.
 		 * @return {Promise<void>}
+		 *
+		 * @spec openspec/specs/pos-refund-return/spec.md#REQ-REF-009
 		 */
 		async load({ silent = false } = {}) {
 			if (!this.refundId) {
@@ -198,16 +236,26 @@ export default {
 				this.lines = await fetchRefundLines(store, this.refundId)
 				await store.fetchCollection('refundReason', { _limit: 100 })
 				this.reasons = store.getCollection('refundReason')?.results || []
-				this.originalLines = await fetchOriginalLines(store, this.originalTransaction)
+				this.originalLines = await fetchOriginalLines(
+					store,
+					this.originalTransaction,
+				)
 			} catch (err) {
-				showError(err?.response?.data?.error || t('pipelinq', 'Could not load refund.'))
+				showError(
+					err?.response?.data?.error
+						|| t('pipelinq', 'Could not load refund.'),
+				)
 			} finally {
 				this.loading = false
 			}
 		},
 
 		/**
+		 * Reload quietly on a page refresh, reporting the work to its sender.
+		 *
 		 * @param {object} [payload] The refresh payload.
+		 *
+		 * @spec openspec/specs/pos-refund-return/spec.md#REQ-REF-009
 		 */
 		onPageRefresh(payload) {
 			const done = this.load({ silent: true })

@@ -57,7 +57,10 @@
 		<p v-else class="segment-rule-group__empty">
 			{{
 				depth === 0
-					? t('pipelinq', 'No conditions yet. Add a condition to decide who belongs to this segment.')
+					? t(
+							'pipelinq',
+							'No conditions yet. Add a condition to decide who belongs to this segment.',
+						)
 					: t('pipelinq', 'This group has no conditions yet.')
 			}}
 		</p>
@@ -82,10 +85,7 @@
 		</div>
 	</div>
 
-	<div
-		v-else
-		class="segment-rule"
-		:class="{ 'segment-rule--error': ownError }">
+	<div v-else class="segment-rule" :class="{ 'segment-rule--error': ownError }">
 		<div class="segment-rule__fields">
 			<NcSelect
 				:modelValue="fieldOption"
@@ -129,7 +129,9 @@
 				hideLabel
 				:disabled="!node.field"
 				class="segment-rule__value"
-				@update:modelValue="onValueChange(toDateInputString($event) || '')" />
+				@update:modelValue="
+					onValueChange(toDateInputString($event) || '')
+				" />
 			<NcTextField
 				v-else
 				:modelValue="textValue"
@@ -156,7 +158,12 @@
 </template>
 
 <script>
-import { NcButton, NcDateTimePickerNative, NcSelect, NcTextField } from '@nextcloud/vue'
+import {
+	NcButton,
+	NcDateTimePickerNative,
+	NcSelect,
+	NcTextField,
+} from '@nextcloud/vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import PlusBoxMultipleOutline from 'vue-material-design-icons/PlusBoxMultipleOutline.vue'
 import TrashCanOutline from 'vue-material-design-icons/TrashCanOutline.vue'
@@ -249,10 +256,24 @@ export default {
 			return Array.isArray(this.node?.children)
 		},
 
+		/**
+		 * The validation error for this node's own path.
+		 *
+		 * @return {string} The message, or ''.
+		 *
+		 * @spec openspec/specs/marketing-segmentation/spec.md#requirement-segment-builder-composes-rule-trees
+		 */
 		ownError() {
 			return this.errors?.[this.path] || ''
 		},
 
+		/**
+		 * The AND / OR choices for a group.
+		 *
+		 * @return {Array<object>} The options.
+		 *
+		 * @spec openspec/specs/marketing-segmentation/spec.md#requirement-segment-builder-composes-rule-trees
+		 */
 		combinatorOptions() {
 			return [
 				{ value: 'AND', label: this.t('pipelinq', 'Match all conditions') },
@@ -260,51 +281,122 @@ export default {
 			]
 		},
 
+		/**
+		 * The selected combinator option, AND when none is set.
+		 *
+		 * @return {object} The option.
+		 *
+		 * @spec openspec/specs/marketing-segmentation/spec.md#requirement-segment-builder-composes-rule-trees
+		 */
 		combinatorOption() {
-			return this.combinatorOptions.find((o) => o.value === this.node.type) || this.combinatorOptions[0]
+			return (
+				this.combinatorOptions.find((o) => o.value === this.node.type)
+				|| this.combinatorOptions[0]
+			)
 		},
 
+		/**
+		 * The word shown between a group's conditions.
+		 *
+		 * @return {string} "or" or "and".
+		 *
+		 * @spec openspec/specs/marketing-segmentation/spec.md#requirement-segment-builder-composes-rule-trees
+		 */
 		connectorLabel() {
-			return this.node.type === 'OR' ? this.t('pipelinq', 'or') : this.t('pipelinq', 'and')
+			return this.node.type === 'OR'
+				? this.t('pipelinq', 'or')
+				: this.t('pipelinq', 'and')
 		},
 
+		/**
+		 * The field options with translated labels.
+		 *
+		 * @return {Array<object>} The options.
+		 *
+		 * @spec openspec/specs/marketing-segmentation/spec.md#requirement-segment-builder-composes-rule-trees
+		 */
 		translatedFieldOptions() {
-			return this.fieldOptions.map((o) => ({ ...o, label: this.t('pipelinq', o.label) }))
+			return this.fieldOptions.map((o) => ({
+				...o,
+				label: this.t('pipelinq', o.label),
+			}))
 		},
 
-		/** @return {Array<object>} The field options, plus a stored field this list does not offer. */
+		/**
+		 * @return {Array<object>} The field options, plus a stored field this list does not offer.
+		 *
+		 * @spec openspec/specs/marketing-segmentation/spec.md#requirement-segment-builder-composes-rule-trees
+		 */
 		fieldSelectOptions() {
 			const options = this.translatedFieldOptions
-			if (this.node.field && !options.some((o) => o.value === this.node.field)) {
-				return [...options, { value: this.node.field, label: this.node.field, type: 'string' }]
+			if (
+				this.node.field
+				&& !options.some((o) => o.value === this.node.field)
+			) {
+				return [
+					...options,
+					{
+						value: this.node.field,
+						label: this.node.field,
+						type: 'string',
+					},
+				]
 			}
 			return options
 		},
 
+		/**
+		 * The option of the node's selected field.
+		 *
+		 * @return {object|null} The option, or null when no field is set.
+		 *
+		 * @spec openspec/specs/marketing-segmentation/spec.md#requirement-segment-builder-composes-rule-trees
+		 */
 		fieldOption() {
-			return this.fieldSelectOptions.find((o) => o.value === this.node.field) || null
+			return (
+				this.fieldSelectOptions.find((o) => o.value === this.node.field)
+				|| null
+			)
 		},
 
 		fieldType() {
 			return this.fieldOption?.type || 'string'
 		},
 
-		/** @return {Array<object>} The operators for the field's type, plus a stored one this list does not offer. */
+		/**
+		 * @return {Array<object>} The operators for the field's type, plus a stored one this list does not offer.
+		 *
+		 * @spec openspec/specs/marketing-segmentation/spec.md#requirement-segment-builder-composes-rule-trees
+		 */
 		operatorOptions() {
-			const base = OPERATORS_BY_TYPE[this.fieldType] || OPERATORS_BY_TYPE.string
-			const list = (this.fieldOption?.format === 'date' ? [...base, ...DATE_OPERATORS] : base)
-				.map((o) => ({ value: o.value, label: this.t('pipelinq', o.label) }))
-			if (this.node.operator && !list.some((o) => o.value === this.node.operator)) {
+			const base =
+				OPERATORS_BY_TYPE[this.fieldType] || OPERATORS_BY_TYPE.string
+			const list = (
+				this.fieldOption?.format === 'date'
+					? [...base, ...DATE_OPERATORS]
+					: base
+			).map((o) => ({ value: o.value, label: this.t('pipelinq', o.label) }))
+			if (
+				this.node.operator
+				&& !list.some((o) => o.value === this.node.operator)
+			) {
 				list.push({ value: this.node.operator, label: this.node.operator })
 			}
 			return list
 		},
 
 		operatorOption() {
-			return this.operatorOptions.find((o) => o.value === this.node.operator) || null
+			return (
+				this.operatorOptions.find((o) => o.value === this.node.operator)
+				|| null
+			)
 		},
 
-		/** @return {string} Which value control fits the field: boolean, date, number or text. */
+		/**
+		 * @return {string} Which value control fits the field: boolean, date, number or text.
+		 *
+		 * @spec openspec/specs/marketing-segmentation/spec.md#requirement-segment-builder-composes-rule-trees
+		 */
 		valueKind() {
 			if (this.fieldType === 'boolean') {
 				return 'boolean'
@@ -318,6 +410,13 @@ export default {
 			return 'text'
 		},
 
+		/**
+		 * The Yes / No choices for a boolean field.
+		 *
+		 * @return {Array<object>} The options.
+		 *
+		 * @spec openspec/specs/marketing-segmentation/spec.md#requirement-segment-builder-composes-rule-trees
+		 */
 		booleanOptions() {
 			return [
 				{ value: true, label: this.t('pipelinq', 'Yes') },
@@ -325,28 +424,60 @@ export default {
 			]
 		},
 
-		/** @return {object|null} The Yes / No option; the validator also accepts 'true', '1' and friends. */
+		/**
+		 * @return {object|null} The Yes / No option; the validator also accepts 'true', '1' and friends.
+		 *
+		 * @spec openspec/specs/marketing-segmentation/spec.md#requirement-segment-builder-composes-rule-trees
+		 */
 		booleanOption() {
 			const v = this.node.value
 			if (v === '' || v === null || v === undefined) {
 				return null
 			}
-			const truthy = v === true || v === 1 || v === '1' || String(v).toLowerCase() === 'true'
+			const truthy =
+				v === true
+				|| v === 1
+				|| v === '1'
+				|| String(v).toLowerCase() === 'true'
 			return this.booleanOptions[truthy ? 0 : 1]
 		},
 
+		/**
+		 * The node's value as a Date, for the date picker.
+		 *
+		 * @return {Date|null} The date, or null.
+		 *
+		 * @spec openspec/specs/marketing-segmentation/spec.md#requirement-segment-builder-composes-rule-trees
+		 */
 		dateValue() {
 			return toDateObject(this.node.value)
 		},
 
+		/**
+		 * The node's value as text, for the text field.
+		 *
+		 * @return {string} The value, or ''.
+		 *
+		 * @spec openspec/specs/marketing-segmentation/spec.md#requirement-segment-builder-composes-rule-trees
+		 */
 		textValue() {
-			return this.node.value === null || this.node.value === undefined ? '' : String(this.node.value)
+			return this.node.value === null || this.node.value === undefined
+				? ''
+				: String(this.node.value)
 		},
 	},
 
 	methods: {
 		toDateInputString,
 
+		/**
+		 * A child's path in the validator's notation.
+		 *
+		 * @param {number} index The child's index.
+		 * @return {string} The path, like `$.children[0]`.
+		 *
+		 * @spec openspec/specs/marketing-segmentation/spec.md#requirement-segment-builder-composes-rule-trees
+		 */
 		childPath(index) {
 			return `${this.path}.children[${index}]`
 		},
@@ -357,19 +488,58 @@ export default {
 			this.emitChange({ ...this.node, children })
 		},
 
+		/**
+		 * Remove a child condition or group.
+		 *
+		 * @param {number} index The child's index.
+		 *
+		 * @spec openspec/specs/marketing-segmentation/spec.md#requirement-segment-builder-composes-rule-trees
+		 */
 		removeChild(index) {
-			this.emitChange({ ...this.node, children: this.node.children.filter((_, i) => i !== index) })
+			this.emitChange({
+				...this.node,
+				children: this.node.children.filter((_, i) => i !== index),
+			})
 		},
 
+		/**
+		 * Append an empty condition to this group.
+		 *
+		 * @spec openspec/specs/marketing-segmentation/spec.md#requirement-segment-builder-composes-rule-trees
+		 */
 		addCondition() {
-			this.emitChange({ ...this.node, children: [...this.node.children, { field: '', operator: '', value: '' }] })
+			this.emitChange({
+				...this.node,
+				children: [
+					...this.node.children,
+					{ field: '', operator: '', value: '' },
+				],
+			})
 		},
 
+		/**
+		 * Append a nested AND group with one empty condition.
+		 *
+		 * @spec openspec/specs/marketing-segmentation/spec.md#requirement-segment-builder-composes-rule-trees
+		 */
 		addGroup() {
-			const group = { type: 'AND', children: [{ field: '', operator: '', value: '' }] }
-			this.emitChange({ ...this.node, children: [...this.node.children, group] })
+			const group = {
+				type: 'AND',
+				children: [{ field: '', operator: '', value: '' }],
+			}
+			this.emitChange({
+				...this.node,
+				children: [...this.node.children, group],
+			})
 		},
 
+		/**
+		 * Switch the group between AND and OR.
+		 *
+		 * @param {object} option The combinator option.
+		 *
+		 * @spec openspec/specs/marketing-segmentation/spec.md#requirement-segment-builder-composes-rule-trees
+		 */
 		onCombinatorChange(option) {
 			this.emitChange({ ...this.node, type: option?.value || 'AND' })
 		},
@@ -380,9 +550,13 @@ export default {
 		 * rarely fits this one.
 		 *
 		 * @param {object} option The field option.
+		 *
+		 * @spec openspec/specs/marketing-segmentation/spec.md#requirement-segment-builder-composes-rule-trees
 		 */
 		onFieldChange(option) {
-			const list = OPERATORS_BY_TYPE[option?.type || 'string'] || OPERATORS_BY_TYPE.string
+			const list =
+				OPERATORS_BY_TYPE[option?.type || 'string']
+				|| OPERATORS_BY_TYPE.string
 			this.emitChange({
 				...this.node,
 				field: option?.value || '',
@@ -391,10 +565,24 @@ export default {
 			})
 		},
 
+		/**
+		 * Pick the condition's operator.
+		 *
+		 * @param {object} option The operator option.
+		 *
+		 * @spec openspec/specs/marketing-segmentation/spec.md#requirement-segment-builder-composes-rule-trees
+		 */
 		onOperatorChange(option) {
 			this.emitChange({ ...this.node, operator: option?.value || '' })
 		},
 
+		/**
+		 * Set the condition's value.
+		 *
+		 * @param {string|number|boolean} value The new value.
+		 *
+		 * @spec openspec/specs/marketing-segmentation/spec.md#requirement-segment-builder-composes-rule-trees
+		 */
 		onValueChange(value) {
 			this.emitChange({ ...this.node, value })
 		},

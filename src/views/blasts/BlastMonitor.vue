@@ -233,6 +233,8 @@ export default {
 		 * Whether messages are going out right now; drives the moving stripes.
 		 *
 		 * @return {boolean}
+		 *
+		 * @spec openspec/specs/marketing-ui/spec.md#scenario-progress-bar-and-totals-update-by-polling
 		 */
 		isSending() {
 			return (
@@ -528,7 +530,9 @@ export default {
 		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 34' preserveAspectRatio='none'%3E%3Cpath d='M0 0H15C28.3 6.1 28.3 10.9 15 17S1.7 27.9 15 34H0Z'/%3E%3C/svg%3E"),
 		linear-gradient(#000, #000);
 	mask-repeat: repeat-y, no-repeat;
-	mask-position: var(--wave-edge) 0, 0 0;
+	mask-position:
+		var(--wave-edge) 0,
+		0 0;
 	mask-size:
 		var(--wave-width) var(--wave-height),
 		max(0px, var(--wave-edge) + 1px) 100%;
@@ -573,11 +577,15 @@ export default {
 
 @keyframes blast-monitor-wave {
 	from {
-		mask-position: var(--wave-edge) 0, 0 0;
+		mask-position:
+			var(--wave-edge) 0,
+			0 0;
 	}
 
 	to {
-		mask-position: var(--wave-edge) var(--wave-height), 0 0;
+		mask-position:
+			var(--wave-edge) var(--wave-height),
+			0 0;
 	}
 }
 

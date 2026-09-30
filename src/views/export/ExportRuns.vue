@@ -19,9 +19,9 @@
 			:includeColumns="visibleColumns"
 			:emptyTitle="t('pipelinq', 'No export runs yet')"
 			:showAdd="false"
+			rowClickToView
 			@refresh="onRefresh"
 			@sort="onSort"
-			rowClickToView
 			@rowClick="openRun"
 			@view="openRun"
 			@pageChanged="onPageChange">

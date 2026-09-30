@@ -33,6 +33,11 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Service\ContactVcardService;
+use OCA\Pipelinq\Service\Demo\DemoJourneySeeder;
+use OCA\Pipelinq\Service\Demo\DemoMarketingSeeder;
+use OCA\Pipelinq\Service\Demo\DemoSearchSeeder;
+use OCA\Pipelinq\Service\Demo\DemoSeedValues;
+use OCA\Pipelinq\Service\Demo\DemoSocialSeeder;
 use OCA\Pipelinq\Service\DemoSeedService;
 use OCA\Pipelinq\Service\Marketing\JourneyService;
 use OCA\Pipelinq\Service\Marketing\ListObjectStore;
@@ -189,16 +194,75 @@ class DemoSeedServiceTest extends TestCase {
 				]
 			);
 
-		$this->service = new DemoSeedService(
+		$this->service = $this->buildService(container: $this->container, contactVcardService: $this->contactVcardService);
+	}//end setUp()
+
+	/**
+	 * Build the service with the real demo seeders over the mocked journey
+	 * service and object store.
+	 *
+	 * @param ContainerInterface $container The container (ObjectService, flow engine).
+	 * @param ContactVcardService $contactVcardService Contact-first identity provisioning.
+	 *
+	 * @return DemoSeedService
+	 */
+	private function buildService(ContainerInterface $container, ContactVcardService $contactVcardService): DemoSeedService {
+		$logger = $this->createMock(LoggerInterface::class);
+		$values = new DemoSeedValues();
+
+		return new DemoSeedService(
 			appConfig: $this->appConfig,
-			container: $this->container,
-			contactVcardService: $this->contactVcardService,
+			container: $container,
+			contactVcardService: $contactVcardService,
 			ticketService: $this->ticketService,
+			marketingSeeder: new DemoMarketingSeeder(
+				journeySeeder: new DemoJourneySeeder(
+					journeyService: $this->journeyService,
+					store: $this->store,
+					container: $container,
+					values: $values,
+					logger: $logger,
+				),
+				socialSeeder: new DemoSocialSeeder(store: $this->store, values: $values),
+				searchSeeder: new DemoSearchSeeder(store: $this->store, values: $values),
+			),
+			values: $values,
+			logger: $logger,
+		);
+	}//end buildService()
+
+	/**
+	 * The journey seeder over the mocked journey service and object store.
+	 *
+	 * @return DemoJourneySeeder
+	 */
+	private function journeySeeder(): DemoJourneySeeder {
+		return new DemoJourneySeeder(
 			journeyService: $this->journeyService,
 			store: $this->store,
+			container: $this->container,
+			values: new DemoSeedValues(),
 			logger: $this->createMock(LoggerInterface::class),
 		);
-	}//end setUp()
+	}//end journeySeeder()
+
+	/**
+	 * The social seeder over the mocked object store.
+	 *
+	 * @return DemoSocialSeeder
+	 */
+	private function socialSeeder(): DemoSocialSeeder {
+		return new DemoSocialSeeder(store: $this->store, values: new DemoSeedValues());
+	}//end socialSeeder()
+
+	/**
+	 * The Search Console seeder over the mocked object store.
+	 *
+	 * @return DemoSearchSeeder
+	 */
+	private function searchSeeder(): DemoSearchSeeder {
+		return new DemoSearchSeeder(store: $this->store, values: new DemoSeedValues());
+	}//end searchSeeder()
 
 	/**
 	 * Configure register + schema ids as provisioned.
@@ -670,15 +734,7 @@ class DemoSeedServiceTest extends TestCase {
 		$failingVcard = $this->createMock(ContactVcardService::class);
 		$failingVcard->method('provisionContactFromForm')->willReturn(null);
 
-		$service = new DemoSeedService(
-			appConfig: $this->appConfig,
-			container: $this->container,
-			contactVcardService: $failingVcard,
-			ticketService: $this->ticketService,
-			journeyService: $this->journeyService,
-			store: $this->store,
-			logger: $this->createMock(LoggerInterface::class),
-		);
+		$service = $this->buildService(container: $this->container, contactVcardService: $failingVcard);
 
 		$result = $service->seed();
 
@@ -810,9 +866,7 @@ class DemoSeedServiceTest extends TestCase {
 				}
 			);
 
-		$method = new \ReflectionMethod(DemoSeedService::class, 'seedJourneys');
-		$method->invoke(
-			$this->service,
+		$this->journeySeeder()->seed(
 			[['key' => 'active', 'data' => ['name' => '[Demo] Active', 'status' => 'active', 'trigger' => ['kind' => 'listConfirmed'], 'action' => ['kind' => 'createTask']]]],
 			[]
 		);
@@ -866,15 +920,7 @@ class DemoSeedServiceTest extends TestCase {
 				}
 			);
 
-		$service = new DemoSeedService(
-			appConfig: $this->appConfig,
-			container: $container,
-			contactVcardService: $this->contactVcardService,
-			ticketService: $this->ticketService,
-			journeyService: $this->journeyService,
-			store: $this->store,
-			logger: $this->createMock(LoggerInterface::class),
-		);
+		$service = $this->buildService(container: $container, contactVcardService: $this->contactVcardService);
 
 		$result = $service->remove();
 
@@ -907,7 +953,7 @@ class DemoSeedServiceTest extends TestCase {
 		);
 
 		$social = self::definitions()['social'];
-		$counts = (new \ReflectionMethod(DemoSeedService::class, 'seedSocial'))->invoke($this->service, $social);
+		$counts = $this->socialSeeder()->seed($social);
 
 		self::assertSame(count($social['accounts']), $counts['accounts']);
 		self::assertSame(count($social['posts']), $counts['posts']);
@@ -963,7 +1009,7 @@ class DemoSeedServiceTest extends TestCase {
 			static fn (string $schemaSlug): array => ['id' => $schemaSlug . '-new']
 		);
 
-		$counts = (new \ReflectionMethod(DemoSeedService::class, 'seedSocial'))->invoke($this->service, $social);
+		$counts = $this->socialSeeder()->seed($social);
 
 		self::assertSame(0, $counts['posts']);
 		self::assertSame(0, $counts['publications']);
@@ -1012,7 +1058,7 @@ class DemoSeedServiceTest extends TestCase {
 			}
 		);
 
-		$counts = (new \ReflectionMethod(DemoSeedService::class, 'removeSocial'))->invoke($this->service, $social);
+		$counts = $this->socialSeeder()->remove($social);
 
 		self::assertSame(1, $counts['publications']);
 		self::assertSame(count($social['posts']), $counts['posts']);
@@ -1042,7 +1088,7 @@ class DemoSeedServiceTest extends TestCase {
 		);
 
 		$search = self::definitions()['search'];
-		$counts = (new \ReflectionMethod(DemoSeedService::class, 'seedSearch'))->invoke($this->service, $search);
+		$counts = $this->searchSeeder()->seed($search);
 
 		self::assertSame(count($search['rows']), $counts['rows']);
 		self::assertSame(count($search['targets']), $counts['targets']);
@@ -1076,7 +1122,7 @@ class DemoSeedServiceTest extends TestCase {
 		);
 		$this->store->expects(self::never())->method('save');
 
-		$counts = (new \ReflectionMethod(DemoSeedService::class, 'seedSearch'))->invoke($this->service, $search);
+		$counts = $this->searchSeeder()->seed($search);
 
 		self::assertSame(0, $counts['rows']);
 		self::assertSame(0, $counts['targets']);
@@ -1116,7 +1162,7 @@ class DemoSeedServiceTest extends TestCase {
 			}
 		);
 
-		$counts = (new \ReflectionMethod(DemoSeedService::class, 'removeSearch'))->invoke($this->service, $search);
+		$counts = $this->searchSeeder()->remove($search);
 
 		self::assertSame(1, $counts['rows']);
 		self::assertSame(1, $counts['targets']);
