@@ -160,7 +160,7 @@ export default {
 		 *
 		 * @return {string} A CnStatusBadge variant.
 		 *
-		 * @spec openspec/changes/archive/2026-06-14-pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-009
+		 * @spec openspec/changes/archive/2026-06-14-pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#requirement-transaction-status-lifecycle-with-payments-req-pay-009
 		 */
 		statusVariant() {
 			const map = {
