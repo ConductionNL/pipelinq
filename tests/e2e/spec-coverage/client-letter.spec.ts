@@ -65,15 +65,23 @@ async function create(page: Page, schema: string, body: object): Promise<string>
 }
 
 /** The templates endpoint's answer. */
-async function letterState(page: Page): Promise<{ available: boolean; templates: Array<{ id: string; name: string }> }> {
+async function letterState(
+	page: Page,
+): Promise<{ available: boolean; templates: Array<{ id: string; name: string }> }> {
 	const res = await api(page, 'GET', LETTERS)
 	expect(res.status, res.text).toBe(200)
-	return { available: res.json?.available === true, templates: res.json?.templates || [] }
+	return {
+		available: res.json?.available === true,
+		templates: res.json?.templates || [],
+	}
 }
 
 /** Open the detail page's Actions menu. */
 async function openActions(page: Page) {
-	const button = page.locator('#content-vue').getByRole('button', { name: 'Actions' }).first()
+	const button = page
+		.locator('#content-vue')
+		.getByRole('button', { name: 'Actions' })
+		.first()
 	await expect(button).toBeVisible({ timeout: 20000 })
 	await button.click()
 }
@@ -91,7 +99,10 @@ test.afterAll(async ({ browser }) => {
 test('Make a letter is offered only when filinq can make one', async ({ page }) => {
 	await gotoAppRoute(page, '/')
 	const state = await letterState(page)
-	const client = await create(page, 'client', { name: `${RUN} Bakkerij De Jong`, type: 'organization' })
+	const client = await create(page, 'client', {
+		name: `${RUN} Bakkerij De Jong`,
+		type: 'organization',
+	})
 	await gotoAppRoute(page, `/clients/${client}`)
 	await openActions(page)
 	const item = page.getByRole('menuitem', { name: 'Make a letter' })
@@ -102,19 +113,32 @@ test('Make a letter is offered only when filinq can make one', async ({ page }) 
 	}
 
 	await expect(item).toHaveCount(0)
-	const res = await api(page, 'POST', `/index.php/apps/pipelinq/api/clients/${client}/letters`, { templateId: 'any' })
+	const res = await api(
+		page,
+		'POST',
+		`/index.php/apps/pipelinq/api/clients/${client}/letters`,
+		{ templateId: 'any' },
+	)
 	expect(res.status).toBe(503)
 	expect(res.text).toContain('filinq')
 })
 
 // @e2e client-letters::an-account-manager-prints-an-appointment-letter
 // @e2e client-letters::the-timeline-shows-the-letter
-test('a letter from a template downloads and is logged on the client', async ({ page }) => {
+test('a letter from a template downloads and is logged on the client', async ({
+	page,
+}) => {
 	await gotoAppRoute(page, '/')
 	const state = await letterState(page)
-	test.skip(!state.available || state.templates.length === 0, 'needs filinq with a template in the pipelinq namespace')
+	test.skip(
+		!state.available || state.templates.length === 0,
+		'needs filinq with a template in the pipelinq namespace',
+	)
 
-	const client = await create(page, 'client', { name: `${RUN} Bakkerij De Jong`, type: 'organization' })
+	const client = await create(page, 'client', {
+		name: `${RUN} Bakkerij De Jong`,
+		type: 'organization',
+	})
 	await gotoAppRoute(page, `/clients/${client}`)
 	await openActions(page)
 	await page.getByRole('menuitem', { name: 'Make a letter' }).click()
@@ -130,9 +154,20 @@ test('a letter from a template downloads and is logged on the client', async ({ 
 	expect((await download).suggestedFilename()).toMatch(/\.pdf$/)
 	await expect(page.locator('[data-testid="letter-result"]')).toBeVisible()
 
-	const moments = await api(page, 'GET', `${OR}/ticket?client=${client}&ticketType=interaction`)
+	const moments = await api(
+		page,
+		'GET',
+		`${OR}/ticket?client=${client}&ticketType=interaction`,
+	)
 	const rows = moments.json?.results || []
-	expect(rows.some((row: any) => row.channel === 'brief' && row.direction === 'outbound' && String(row.title).startsWith('Letter: '))).toBe(true)
+	expect(
+		rows.some(
+			(row: any) =>
+				row.channel === 'brief'
+				&& row.direction === 'outbound'
+				&& String(row.title).startsWith('Letter: '),
+		),
+	).toBe(true)
 	for (const row of rows) created.push(['ticket', idOf(row)])
 })
 
@@ -140,14 +175,29 @@ test('a letter from a template downloads and is logged on the client', async ({ 
 test('a letter from a ticket hangs under that ticket', async ({ page }) => {
 	await gotoAppRoute(page, '/')
 	const state = await letterState(page)
-	test.skip(!state.available || state.templates.length === 0, 'needs filinq with a template in the pipelinq namespace')
+	test.skip(
+		!state.available || state.templates.length === 0,
+		'needs filinq with a template in the pipelinq namespace',
+	)
 
-	const client = await create(page, 'client', { name: `${RUN} Resident`, type: 'person' })
-	const ticket = await create(page, 'ticket', { title: `${RUN} Oven repair`, ticketType: 'request', client })
-	const res = await api(page, 'POST', `/index.php/apps/pipelinq/api/clients/${client}/letters`, {
-		templateId: state.templates[0].id,
-		ticketId: ticket,
+	const client = await create(page, 'client', {
+		name: `${RUN} Resident`,
+		type: 'person',
 	})
+	const ticket = await create(page, 'ticket', {
+		title: `${RUN} Oven repair`,
+		ticketType: 'request',
+		client,
+	})
+	const res = await api(
+		page,
+		'POST',
+		`/index.php/apps/pipelinq/api/clients/${client}/letters`,
+		{
+			templateId: state.templates[0].id,
+			ticketId: ticket,
+		},
+	)
 	expect(res.status, res.text).toBe(200)
 	expect(res.json?.contactMomentId).toBeTruthy()
 	created.push(['ticket', res.json.contactMomentId])

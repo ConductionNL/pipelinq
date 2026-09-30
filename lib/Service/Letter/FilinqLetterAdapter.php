@@ -3,7 +3,7 @@
 /**
  * FilinqLetterAdapter: pipelinq's side of a letter made by filinq.
  *
- * filinq owns document generation for the fleet (hydra ADR-075), so this class
+ * The filinq app owns document generation for the fleet (hydra ADR-075), so this class
  * holds no rendering of its own. It resolves filinq's TemplateService and
  * DocumentService through {@see FleetAppId}, because the id and the namespace
  * both moved when docudesk became filinq, and it hands filinq references to
@@ -224,12 +224,20 @@ class FilinqLetterAdapter
         }
 
         $output = (array) ($result['output'] ?? []);
-        $fileId = $output['fileId'] ?? null;
+        $fileId = null;
+        if (is_numeric($output['fileId'] ?? null) === true) {
+            $fileId = (int) $output['fileId'];
+        }
+
+        $path = null;
+        if (isset($output['path']) === true) {
+            $path = (string) $output['path'];
+        }
 
         return [
             'content'  => $content,
-            'fileId'   => is_numeric($fileId) === true ? (int) $fileId : null,
-            'path'     => isset($output['path']) === true ? (string) $output['path'] : null,
+            'fileId'   => $fileId,
+            'path'     => $path,
             'warnings' => array_values(array_map('strval', (array) ($result['warnings'] ?? []))),
         ];
 
@@ -252,10 +260,13 @@ class FilinqLetterAdapter
         }
 
         $name = trim((string) ($row['name'] ?? ''));
+        if ($name === '') {
+            $name = $id;
+        }
 
         return [
             'id'          => $id,
-            'name'        => $name === '' ? $id : $name,
+            'name'        => $name,
             'description' => (string) ($row['description'] ?? ''),
         ];
 

@@ -29,23 +29,18 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
-use DateTimeImmutable;
-use DateTimeInterface;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
+use OCA\Pipelinq\Service\CallerObjectReader;
 use OCA\Pipelinq\Service\Letter\FilinqLetterAdapter;
-use OCA\Pipelinq\Service\TicketService;
+use OCA\Pipelinq\Service\Letter\LetterLog;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
-use OCP\IAppConfig;
 use OCP\IRequest;
 use OCP\IUserSession;
-use Psr\Container\ContainerInterface;
-use Psr\Log\LoggerInterface;
 use RuntimeException;
-use Throwable;
 
 /**
  * Letter templates and letters for a client.
@@ -55,35 +50,25 @@ use Throwable;
 class LetterController extends Controller
 {
 
-    /**
-     * The channel a letter is logged with, in the contact moment vocabulary.
-     *
-     * @var string
-     */
-    public const LETTER_CHANNEL = 'brief';
 
 
     /**
      * Constructor.
      *
-     * @param IRequest            $request       The request.
-     * @param FilinqLetterAdapter $letters       filinq's side of the letter.
-     * @param TicketService       $tickets       Saves the contact moment.
-     * @param IUserSession        $userSession   The acting user.
-     * @param IAppConfig          $appConfig     The register and schema ids.
-     * @param ContainerInterface      $container     OpenRegister's ObjectService.
-     * @param ObjectOwnerAccessPolicy $accessPolicy  Who may act on a client.
-     * @param LoggerInterface         $logger        Logger.
+     * @param IRequest                $request      The request.
+     * @param FilinqLetterAdapter     $letters      filinq's side of the letter.
+     * @param LetterLog               $log          Logs the letter as a contact moment.
+     * @param IUserSession            $userSession  The acting user.
+     * @param CallerObjectReader      $reader       Reads the client, contact and ticket.
+     * @param ObjectOwnerAccessPolicy $accessPolicy Who may act on a client.
      */
     public function __construct(
         IRequest $request,
         private readonly FilinqLetterAdapter $letters,
-        private readonly TicketService $tickets,
+        private readonly LetterLog $log,
         private readonly IUserSession $userSession,
-        private readonly IAppConfig $appConfig,
-        private readonly ContainerInterface $container,
+        private readonly CallerObjectReader $reader,
         private readonly ObjectOwnerAccessPolicy $accessPolicy,
-        private readonly LoggerInterface $logger,
     ) {
         parent::__construct(appName: Application::APP_ID, request: $request);
 
@@ -180,7 +165,7 @@ class LetterController extends Controller
             return new JSONResponse(['message' => 'filinq could not make the letter.', 'reason' => $e->getMessage()], Http::STATUS_BAD_GATEWAY);
         }
 
-        $contactMomentId = $this->logLetter(
+        $contactMomentId = $this->log->log(
             clientId: $id,
             contactId: $records['contactId'],
             ticketId: $records['ticketId'],
@@ -208,13 +193,12 @@ class LetterController extends Controller
      *
      * @param string $clientId The client id.
      *
-     * @return array{client: array<string, mixed>, contactId: string|null, ticketId: string|null, refs: list<array{register: string, schema: string, id: string}>}|string
-     *         The records and filinq's references, or the not-found message.
+     * @return array<string, mixed>|string The records (`client`, `contactId`, `ticketId`, `refs`: filinq's
+     *         references), or the not-found message.
      */
     private function readRecords(string $clientId): array|string
     {
-        $register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-        $client   = $this->readAs(id: $clientId, register: $register, schemaKey: 'client_schema');
+        $client = $this->reader->read(id: $clientId, schemaKey: 'client_schema');
         // Existence is not authorization: OpenRegister answers a read whatever
         // `_rbac` says (see ActivityTimelineController), so this app decides.
         $uid = (string) $this->userSession->getUser()?->getUID();
@@ -222,175 +206,67 @@ class LetterController extends Controller
             return 'Client not found';
         }
 
-        $refs = [['register' => $register, 'schema' => 'client', 'id' => $clientId]];
+        $register = $this->reader->register();
+        $refs     = [['register' => $register, 'schema' => 'client', 'id' => $clientId]];
 
-        $contactId = trim((string) $this->request->getParam('contactId', ''));
-        if ($contactId !== '') {
-            if ($this->readAs(id: $contactId, register: $register, schemaKey: 'contact_schema') === null) {
+        $contactId = $this->optionalId(name: 'contactId');
+        if ($contactId !== null) {
+            if ($this->reader->read(id: $contactId, schemaKey: 'contact_schema') === null) {
                 return 'Contact not found';
             }
 
             $refs[] = ['register' => $register, 'schema' => 'contact', 'id' => $contactId];
         }
 
-        $ticketId = trim((string) $this->request->getParam('ticketId', ''));
-        if ($ticketId !== '') {
-            $ticket = $this->readAs(id: $ticketId, register: $register, schemaKey: 'ticket_schema');
+        $ticketId = $this->optionalId(name: 'ticketId');
+        if ($ticketId !== null) {
             // A ticket of another client would log the letter on the wrong timeline.
-            if ($ticket === null || (string) ($ticket['client'] ?? '') !== $clientId) {
+            if ($this->ticketOfClient(ticketId: $ticketId, clientId: $clientId) === false) {
                 return 'Ticket not found';
             }
 
             $refs[] = ['register' => $register, 'schema' => 'ticket', 'id' => $ticketId];
         }
 
-        return [
-            'client'    => $client,
-            'contactId' => $contactId === '' ? null : $contactId,
-            'ticketId'  => $ticketId === '' ? null : $ticketId,
-            'refs'      => $refs,
-        ];
+        return ['client' => $client, 'contactId' => $contactId, 'ticketId' => $ticketId, 'refs' => $refs];
 
     }//end readRecords()
 
 
     /**
-     * One object read through OpenRegister with the caller's rights, or null.
+     * A request parameter holding an id, or null when it is absent or blank.
      *
-     * Fails closed: missing configuration or an OpenRegister error reads as
-     * not found.
+     * @param string $name The parameter name.
      *
-     * @param string $id        The object id.
-     * @param string $register  The register id.
-     * @param string $schemaKey The app config key holding the schema id.
-     *
-     * @return array<string, mixed>|null The object's data.
+     * @return string|null The id.
      */
-    private function readAs(string $id, string $register, string $schemaKey): ?array
+    private function optionalId(string $name): ?string
     {
-        $schema = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
-        if ($register === '' || $schema === '' || $id === '') {
+        $value = trim((string) $this->request->getParam($name, ''));
+        if ($value === '') {
             return null;
         }
 
-        try {
-            $objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-            $object        = $objectService->find(id: $id, register: $register, schema: $schema, _rbac: true);
-        } catch (Throwable $e) {
-            $this->logger->warning(
-                'Pipelinq: letter read-guard refused an object',
-                ['app' => Application::APP_ID, 'id' => $id, 'exception' => $e->getMessage()]
-            );
-            return null;
-        }
+        return $value;
 
-        if ($object === null) {
-            return null;
-        }
-
-        if (is_array($object) === true) {
-            return $object;
-        }
-
-        return (array) $object->getObject();
-
-    }//end readAs()
+    }//end optionalId()
 
 
     /**
-     * Log the letter as an outgoing contact moment on the client.
+     * Whether the ticket exists, is readable and belongs to the client.
      *
-     * A failure here does not undo the letter: it is already in the user's
-     * Files. The answer then carries no contact moment id, and the dialog says
-     * so.
+     * @param string $ticketId The ticket id.
+     * @param string $clientId The client id.
      *
-     * @param string      $clientId     The client id.
-     * @param string|null $contactId    The contact person, if one was chosen.
-     * @param string|null $ticketId     The ticket the letter was made from, if any.
-     * @param string      $templateName The template's name.
-     * @param string|null $path         Where filinq filed the copy.
-     *
-     * @return string|null The contact moment id, or null when it could not be saved.
-     *
-     * @spec openspec/specs/client-letters/spec.md#requirement-a-letter-is-logged-on-the-client-req-wlt-002
+     * @return bool True when the letter may hang under it.
      */
-    private function logLetter(string $clientId, ?string $contactId, ?string $ticketId, string $templateName, ?string $path): ?string
+    private function ticketOfClient(string $ticketId, string $clientId): bool
     {
-        $payload = self::contactMomentPayload(
-            clientId: $clientId,
-            contactId: $contactId,
-            ticketId: $ticketId,
-            templateName: $templateName,
-            path: $path,
-            occurredAt: new DateTimeImmutable()
-        );
+        $ticket = $this->reader->read(id: $ticketId, schemaKey: 'ticket_schema');
 
-        try {
-            $saved = $this->tickets->save(ticketType: TicketService::TYPE_CONTACTMOMENT, payload: $payload);
-        } catch (Throwable $e) {
-            $this->logger->error(
-                'Pipelinq: the letter is made but its contact moment was not saved',
-                ['app' => Application::APP_ID, 'clientId' => $clientId, 'exception' => $e->getMessage()]
-            );
-            return null;
-        }
+        return $ticket !== null && (string) ($ticket['client'] ?? '') === $clientId;
 
-        $data = method_exists($saved, 'jsonSerialize') === true ? (array) $saved->jsonSerialize() : (array) $saved;
-        $self = (array) ($data['@self'] ?? []);
-
-        return (string) ($data['id'] ?? ($self['id'] ?? ($data['uuid'] ?? ''))) ?: null;
-
-    }//end logLetter()
-
-
-    /**
-     * The contact moment a letter is logged as, before `ticketType` is forced.
-     *
-     * @param string            $clientId     The client id.
-     * @param string|null       $contactId    The contact person, if one was chosen.
-     * @param string|null       $ticketId     The ticket the letter was made from, if any.
-     * @param string            $templateName The template's name.
-     * @param string|null       $path         Where filinq filed the copy.
-     * @param DateTimeImmutable $occurredAt   When the letter was made.
-     *
-     * @return array<string, string> The payload.
-     *
-     * @spec openspec/specs/client-letters/spec.md#requirement-a-letter-is-logged-on-the-client-req-wlt-002
-     */
-    public static function contactMomentPayload(
-        string $clientId,
-        ?string $contactId,
-        ?string $ticketId,
-        string $templateName,
-        ?string $path,
-        DateTimeImmutable $occurredAt
-    ): array {
-        $description = 'Letter made from the filinq template "'.$templateName.'".';
-        if ($path !== null && $path !== '') {
-            $description .= ' A copy is filed at '.$path.'.';
-        }
-
-        $payload = [
-            'client'      => $clientId,
-            'title'       => mb_substr('Letter: '.$templateName, 0, 255),
-            'direction'   => 'outbound',
-            'channel'     => self::LETTER_CHANNEL,
-            'outcome'     => 'handled',
-            'description' => $description,
-            'occurredAt'  => $occurredAt->format(DateTimeInterface::ATOM),
-        ];
-
-        if ($contactId !== null) {
-            $payload['contact'] = $contactId;
-        }
-
-        if ($ticketId !== null) {
-            $payload['parentTicket'] = $ticketId;
-        }
-
-        return $payload;
-
-    }//end contactMomentPayload()
+    }//end ticketOfClient()
 
 
     /**

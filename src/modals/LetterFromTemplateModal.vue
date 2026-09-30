@@ -22,11 +22,21 @@
 				{{ t('pipelinq', 'Loading templates') }}
 			</p>
 			<p v-else-if="!available" class="letter-modal__error" role="alert">
-				{{ t('pipelinq', 'Letters are made by filinq, and filinq is not available.') }}
+				{{
+					t(
+						'pipelinq',
+						'Letters are made by filinq, and filinq is not available.',
+					)
+				}}
 			</p>
 			<template v-else-if="!result">
 				<p v-if="templates.length === 0">
-					{{ t('pipelinq', 'There are no letter templates yet. An administrator adds them in filinq with the namespace pipelinq.') }}
+					{{
+						t(
+							'pipelinq',
+							'There are no letter templates yet. An administrator adds them in filinq with the namespace pipelinq.',
+						)
+					}}
 				</p>
 				<template v-else>
 					<NcSelect
@@ -46,12 +56,34 @@
 				</template>
 			</template>
 			<div v-else class="letter-modal__result" data-testid="letter-result">
-				<p>{{ t('pipelinq', 'The letter is made and downloaded. A copy is in your Files.') }}</p>
-				<p v-if="!result.contactMomentId" class="letter-modal__error" role="alert">
-					{{ t('pipelinq', 'The letter is not logged on the client. Log it as a contact moment by hand.') }}
+				<p>
+					{{
+						t(
+							'pipelinq',
+							'The letter is made and downloaded. A copy is in your Files.',
+						)
+					}}
+				</p>
+				<p
+					v-if="!result.contactMomentId"
+					class="letter-modal__error"
+					role="alert">
+					{{
+						t(
+							'pipelinq',
+							'The letter is not logged on the client. Log it as a contact moment by hand.',
+						)
+					}}
 				</p>
 				<template v-if="result.warnings && result.warnings.length">
-					<p>{{ t('pipelinq', 'filinq reported something to check in the letter:') }}</p>
+					<p>
+						{{
+							t(
+								'pipelinq',
+								'filinq reported something to check in the letter:',
+							)
+						}}
+					</p>
 					<ul data-testid="letter-warnings">
 						<li v-for="(warning, index) in result.warnings" :key="index">
 							{{ warning }}
@@ -81,7 +113,11 @@
 
 <script>
 import { NcButton, NcDialog, NcSelect } from '@nextcloud/vue'
-import { downloadLetter, fetchLetterTemplates, makeLetter } from '../services/letters.js'
+import {
+	downloadLetter,
+	fetchLetterTemplates,
+	makeLetter,
+} from '../services/letters.js'
 import { useObjectStore } from '../store/modules/object.js'
 
 export default {
@@ -178,7 +214,8 @@ export default {
 				const answer = await fetchLetterTemplates()
 				this.available = answer.available
 				this.templates = answer.templates
-				if (this.templates.length === 1) this.templateId = this.templates[0].id
+				if (this.templates.length === 1)
+					this.templateId = this.templates[0].id
 				if (this.available && this.resolvedClientId) {
 					this.contacts =
 						(await store.fetchCollection('contact', {
@@ -187,10 +224,16 @@ export default {
 						})) || []
 				}
 				if (this.available && !this.resolvedClientId) {
-					this.error = t('pipelinq', 'This ticket has no client, so there is nobody to write to.')
+					this.error = t(
+						'pipelinq',
+						'This ticket has no client, so there is nobody to write to.',
+					)
 				}
 			} catch {
-				this.error = t('pipelinq', 'The letter templates could not be loaded.')
+				this.error = t(
+					'pipelinq',
+					'The letter templates could not be loaded.',
+				)
 			} finally {
 				this.loading = false
 			}

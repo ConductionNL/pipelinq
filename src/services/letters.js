@@ -42,7 +42,9 @@ export async function makeLetter(clientId, input) {
 	if (input.contactId) body.contactId = input.contactId
 	if (input.ticketId) body.ticketId = input.ticketId
 	const { data } = await axios.post(
-		generateUrl(`/apps/pipelinq/api/clients/${encodeURIComponent(clientId)}/letters`),
+		generateUrl(
+			`/apps/pipelinq/api/clients/${encodeURIComponent(clientId)}/letters`,
+		),
 		body,
 	)
 	return data

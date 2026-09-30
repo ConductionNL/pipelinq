@@ -81,8 +81,8 @@ beforeEach(() => {
 const CLIENT = '6f1c1d2e-3b4a-4c5d-8e9f-0a1b2c3d4e5f'
 const TICKET = '7a2b3c4d-5e6f-4a1b-9c2d-3e4f5a6b7c8d'
 
-function mountOn (path, id) {
-  return mount(Modal, {
+function mountOn(path, id) {
+	return mount(Modal, {
 		global: {
 			mixins: [{ methods: { t: (app, text) => text } }],
 			mocks: { $route: { path, params: { id } } },
@@ -96,7 +96,9 @@ describe('LetterFromTemplateModal', () => {
 	it('lists the templates and posts the chosen one for the client on the page', async () => {
 		api.fetchLetterTemplates.mockResolvedValue({
 			available: true,
-			templates: [{ id: 'tpl-1', name: 'Appointment letter', description: '' }],
+			templates: [
+				{ id: 'tpl-1', name: 'Appointment letter', description: '' },
+			],
 		})
 		api.makeLetter.mockResolvedValue({
 			content: 'JVBERg==',
@@ -130,9 +132,15 @@ describe('LetterFromTemplateModal', () => {
 		storeMock.fetchObject.mockResolvedValue({ id: TICKET, client: CLIENT })
 		api.fetchLetterTemplates.mockResolvedValue({
 			available: true,
-			templates: [{ id: 'tpl-1', name: 'Appointment letter', description: '' }],
+			templates: [
+				{ id: 'tpl-1', name: 'Appointment letter', description: '' },
+			],
 		})
-		api.makeLetter.mockResolvedValue({ content: '', warnings: [], contactMomentId: 'cm-1' })
+		api.makeLetter.mockResolvedValue({
+			content: '',
+			warnings: [],
+			contactMomentId: 'cm-1',
+		})
 
 		const w = mountOn(`/tickets/${TICKET}`, TICKET)
 		await flushPromises()
@@ -150,7 +158,9 @@ describe('LetterFromTemplateModal', () => {
 	it('shows the warnings filinq returned after the render', async () => {
 		api.fetchLetterTemplates.mockResolvedValue({
 			available: true,
-			templates: [{ id: 'tpl-1', name: 'Appointment letter', description: '' }],
+			templates: [
+				{ id: 'tpl-1', name: 'Appointment letter', description: '' },
+			],
 		})
 		api.makeLetter.mockResolvedValue({
 			content: 'JVBERg==',
@@ -179,14 +189,18 @@ describe('LetterFromTemplateModal', () => {
 		await flushPromises()
 
 		expect(w.text()).toContain('filinq is not available')
-		expect(w.find('[data-testid="letter-make"]').attributes('disabled')).toBeDefined()
+		expect(
+			w.find('[data-testid="letter-make"]').attributes('disabled'),
+		).toBeDefined()
 		expect(storeMock.fetchCollection).not.toHaveBeenCalled()
 	})
 
 	it('keeps the dialog open with the error when the letter fails', async () => {
 		api.fetchLetterTemplates.mockResolvedValue({
 			available: true,
-			templates: [{ id: 'tpl-1', name: 'Appointment letter', description: '' }],
+			templates: [
+				{ id: 'tpl-1', name: 'Appointment letter', description: '' },
+			],
 		})
 		api.makeLetter.mockRejectedValue({
 			response: { data: { message: 'filinq could not make the letter.' } },

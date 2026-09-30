@@ -27,7 +27,9 @@ namespace OCA\Pipelinq\Tests\Unit\Controller;
 use DateTimeImmutable;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\Pipelinq\Controller\LetterController;
+use OCA\Pipelinq\Service\CallerObjectReader;
 use OCA\Pipelinq\Service\Letter\FilinqLetterAdapter;
+use OCA\Pipelinq\Service\Letter\LetterLog;
 use OCA\Pipelinq\Service\TicketService;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCP\IAppConfig;
@@ -163,15 +165,15 @@ class LetterControllerTest extends TestCase
         $groups = $this->createMock(IGroupManager::class);
         $groups->method('isInGroup')->willReturn($this->privileged);
 
+        $logger = $this->createMock(LoggerInterface::class);
+
         return new LetterController(
             $request,
             $this->letters,
-            $this->tickets,
+            new LetterLog($this->tickets, $logger),
             $session,
-            $config,
-            $container,
-            new ObjectOwnerAccessPolicy($groups, $config),
-            $this->createMock(LoggerInterface::class)
+            new CallerObjectReader($container, $config, $logger),
+            new ObjectOwnerAccessPolicy($groups, $config)
         );
 
     }//end controller()
@@ -441,7 +443,7 @@ class LetterControllerTest extends TestCase
      */
     public function testContactMomentPayloadMatchesTheRealTicketSchema(): void
     {
-        $payload = LetterController::contactMomentPayload(
+        $payload = LetterLog::contactMomentPayload(
             clientId: self::CLIENT,
             contactId: self::CONTACT,
             ticketId: self::TICKET,
