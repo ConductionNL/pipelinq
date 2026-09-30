@@ -1596,6 +1596,16 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "client",
+				"headerActions": [
+					{
+						"id": "make-letter",
+						"label": "Make a letter",
+						"type": "open-modal",
+						"target": "LetterFromTemplateModal",
+						"icon": "FileDocumentOutline",
+						"visibleWhen": { "endpoint": "/apps/pipelinq/api/letters/templates", "field": "available", "op": "eq", "value": true }
+					}
+				],
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"_note": "Customer-360 archetype. A client is the account hub of the CRM: everything (contacts, deals, requests, contracts, complaints, interactions) hangs off it via FK 'client' (contract via 'clientRef'). Projects are the exception and deliberately so: planninq owns them, and this page renders them through the `planninq-projects` leaf declared in the client schema's linkedTypes rather than reading planninq's register itself. A relatedCollections table pointed at another app's register renders empty when that app is absent, which is exactly what a client with no projects renders. ADR-062 rev3: the lead row is a field-split data pair — Identity (name/email/phone/address/website, the read-only NC-contact mirror) 8-wide + a stats-block KPI card top-right (open/won pipeline count & value, new requests, @objectId-scoped) — with the Account data widget (type/industry/notes) and the comms Email/Files leaves below; child relationships stay FK-scoped related-collection tables plus the Relationships/Activity/Bookings/Messages/quick-log app sections. Contracts are a first-class collection because recurring revenue is core to a customer view. summaryAggregates chips retired to the in-grid stats-block (rule 2). Sidebar is audit-only.",
 				"widgets": [
@@ -2254,6 +2264,16 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "ticket",
+				"headerActions": [
+					{
+						"id": "make-letter",
+						"label": "Make a letter",
+						"type": "open-modal",
+						"target": "LetterFromTemplateModal",
+						"icon": "FileDocumentOutline",
+						"visibleWhen": { "endpoint": "/apps/pipelinq/api/letters/templates", "field": "available", "op": "eq", "value": true }
+					}
+				],
 				"hideEmpty": true,
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"_widgetsNote": "Widgets are declared (rather than left to the auto-body) only so the Besluitvorming leaf survives: development added a decidesk-decisions integration widget to RequestDetail (ADR-066) while this change was retiring that page. The relation belongs to the matter, not to whichever of the three names it used to have, so it moves onto the ticket alongside the `decisions` property on the schema. `content.hideEmpty` keeps the data widget type-aware — the page-level `hideEmpty` above only reaches the AUTO-body, which a declared widgets[] replaces.",

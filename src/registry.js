@@ -138,6 +138,9 @@ import XWikiWidgetComponent from './components/xwiki/XWikiWidget.vue'
 import ClientCreateDialog from './dialogs/ClientCreateDialog.vue'
 import LeadCreateDialog from './dialogs/LeadCreateDialog.vue'
 import RequestCreateDialog from './dialogs/RequestCreateDialog.vue'
+// Make a letter from a filinq template (work-letter-from-filinq-template): the
+//     header action on ClientDetail and TicketDetail opens this dialog. ---
+import LetterFromTemplateModal from './modals/LetterFromTemplateModal.vue'
 // --- BRP Monitor (bsn-validatie-en-brp-lookup): admin tile + detailed report
 //     view aggregating the BrpMonitorJob output (lookups / cache-hits / errors /
 //     avg response time) and the mTLS client-certificate expiry countdown. ---
@@ -1044,6 +1047,13 @@ const registry = {
 	//     dialog cannot express. Placement stays declarative; only the form
 	//     body is app-owned. CnAppRoot mounts these and forwards `close`, so
 	//     each dialog routes to its own detail page on success. ---
+	LetterFromTemplateModal: {
+		kind: 'modal',
+		component: LetterFromTemplateModal,
+		propsSchema: null,
+		_note: 'Make a letter. Target of the make-letter header action on ClientDetail and TicketDetail; reads the record id from the route.',
+	},
+
 	LeadCreateDialog: {
 		kind: 'modal',
 		component: LeadCreateDialog,
