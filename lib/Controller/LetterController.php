@@ -22,7 +22,7 @@
  *
  * @link https://github.com/ConductionNL/pipelinq
  *
- * @spec openspec/changes/work-letter-from-filinq-template/specs/client-letters/spec.md#requirement-a-user-makes-a-letter-for-a-client-from-a-filinq-template-req-wlt-001
+ * @spec openspec/specs/client-letters/spec.md#requirement-a-user-makes-a-letter-for-a-client-from-a-filinq-template-req-wlt-001
  */
 
 declare(strict_types=1);
@@ -50,7 +50,7 @@ use Throwable;
 /**
  * Letter templates and letters for a client.
  *
- * @spec openspec/changes/work-letter-from-filinq-template/specs/client-letters/spec.md#requirement-a-user-makes-a-letter-for-a-client-from-a-filinq-template-req-wlt-001
+ * @spec openspec/specs/client-letters/spec.md#requirement-a-user-makes-a-letter-for-a-client-from-a-filinq-template-req-wlt-001
  */
 class LetterController extends Controller
 {
@@ -98,7 +98,7 @@ class LetterController extends Controller
      *
      * @return JSONResponse `{available, reason?, templates}`.
      *
-     * @spec openspec/changes/work-letter-from-filinq-template/specs/client-letters/spec.md#requirement-without-filinq-no-letter-is-offered-or-faked-req-wlt-003
+     * @spec openspec/specs/client-letters/spec.md#requirement-without-filinq-no-letter-is-offered-or-faked-req-wlt-003
      */
     #[NoAdminRequired]
     public function templates(): JSONResponse
@@ -135,9 +135,9 @@ class LetterController extends Controller
      *
      * @return JSONResponse The letter, or an error.
      *
-     * @spec openspec/changes/work-letter-from-filinq-template/specs/client-letters/spec.md#requirement-a-user-makes-a-letter-for-a-client-from-a-filinq-template-req-wlt-001
-     * @spec openspec/changes/work-letter-from-filinq-template/specs/client-letters/spec.md#requirement-a-letter-is-logged-on-the-client-req-wlt-002
-     * @spec openspec/changes/work-letter-from-filinq-template/specs/client-letters/spec.md#requirement-without-filinq-no-letter-is-offered-or-faked-req-wlt-003
+     * @spec openspec/specs/client-letters/spec.md#requirement-a-user-makes-a-letter-for-a-client-from-a-filinq-template-req-wlt-001
+     * @spec openspec/specs/client-letters/spec.md#requirement-a-letter-is-logged-on-the-client-req-wlt-002
+     * @spec openspec/specs/client-letters/spec.md#requirement-without-filinq-no-letter-is-offered-or-faked-req-wlt-003
      */
     #[NoAdminRequired]
     public function create(string $id): JSONResponse
@@ -312,7 +312,7 @@ class LetterController extends Controller
      *
      * @return string|null The contact moment id, or null when it could not be saved.
      *
-     * @spec openspec/changes/work-letter-from-filinq-template/specs/client-letters/spec.md#requirement-a-letter-is-logged-on-the-client-req-wlt-002
+     * @spec openspec/specs/client-letters/spec.md#requirement-a-letter-is-logged-on-the-client-req-wlt-002
      */
     private function logLetter(string $clientId, ?string $contactId, ?string $ticketId, string $templateName, ?string $path): ?string
     {
@@ -355,7 +355,7 @@ class LetterController extends Controller
      *
      * @return array<string, string> The payload.
      *
-     * @spec openspec/changes/work-letter-from-filinq-template/specs/client-letters/spec.md#requirement-a-letter-is-logged-on-the-client-req-wlt-002
+     * @spec openspec/specs/client-letters/spec.md#requirement-a-letter-is-logged-on-the-client-req-wlt-002
      */
     public static function contactMomentPayload(
         string $clientId,

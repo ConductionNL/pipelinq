@@ -16,7 +16,7 @@ import { generateUrl } from '@nextcloud/router'
  * Whether filinq can make a letter, and pipelinq's templates.
  *
  * @return {Promise<{available: boolean, reason?: string, templates: Array<{id: string, name: string, description: string}>}>}
- * @spec openspec/changes/work-letter-from-filinq-template/specs/client-letters/spec.md#requirement-a-user-makes-a-letter-for-a-client-from-a-filinq-template-req-wlt-001
+ * @spec openspec/specs/client-letters/spec.md#requirement-a-user-makes-a-letter-for-a-client-from-a-filinq-template-req-wlt-001
  */
 export async function fetchLetterTemplates() {
 	const { data } = await axios.get(
@@ -35,7 +35,7 @@ export async function fetchLetterTemplates() {
  * @param {string} clientId The client.
  * @param {{templateId: string, contactId?: string, ticketId?: string}} input The choice.
  * @return {Promise<{filename: string, mimeType: string, content: string, fileId: ?number, path: ?string, warnings: string[], contactMomentId: ?string}>}
- * @spec openspec/changes/work-letter-from-filinq-template/specs/client-letters/spec.md#requirement-a-user-makes-a-letter-for-a-client-from-a-filinq-template-req-wlt-001
+ * @spec openspec/specs/client-letters/spec.md#requirement-a-user-makes-a-letter-for-a-client-from-a-filinq-template-req-wlt-001
  */
 export async function makeLetter(clientId, input) {
 	const body = { templateId: input.templateId }
@@ -53,7 +53,7 @@ export async function makeLetter(clientId, input) {
  *
  * @param {{content: string, mimeType?: string}} letter The answer of makeLetter().
  * @return {Blob}
- * @spec openspec/changes/work-letter-from-filinq-template/specs/client-letters/spec.md#requirement-a-user-makes-a-letter-for-a-client-from-a-filinq-template-req-wlt-001
+ * @spec openspec/specs/client-letters/spec.md#requirement-a-user-makes-a-letter-for-a-client-from-a-filinq-template-req-wlt-001
  */
 export function letterBlob(letter) {
 	const binary = atob(letter.content || '')
@@ -67,7 +67,7 @@ export function letterBlob(letter) {
  *
  * @param {{content: string, mimeType?: string, filename?: string}} letter The answer of makeLetter().
  * @return {void}
- * @spec openspec/changes/work-letter-from-filinq-template/specs/client-letters/spec.md#requirement-a-user-makes-a-letter-for-a-client-from-a-filinq-template-req-wlt-001
+ * @spec openspec/specs/client-letters/spec.md#requirement-a-user-makes-a-letter-for-a-client-from-a-filinq-template-req-wlt-001
  */
 export function downloadLetter(letter) {
 	const url = URL.createObjectURL(letterBlob(letter))

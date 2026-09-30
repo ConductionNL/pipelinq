@@ -17,7 +17,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/work-letter-from-filinq-template/tasks.md#task-1.1
+ * @spec openspec/changes/archive/2026-09-30-work-letter-from-filinq-template/tasks.md#task-1.1
  */
 
 declare(strict_types=1);
@@ -42,7 +42,7 @@ use RuntimeException;
  * (filinq development, lib/Service/TemplateService.php:373,
  * lib/Service/DocumentService.php:168).
  *
- * @spec openspec/changes/work-letter-from-filinq-template/specs/client-letters/spec.md#requirement-a-user-makes-a-letter-for-a-client-from-a-filinq-template-req-wlt-001
+ * @spec openspec/specs/client-letters/spec.md#requirement-a-user-makes-a-letter-for-a-client-from-a-filinq-template-req-wlt-001
  */
 class FilinqLetterAdapterTest extends TestCase
 {

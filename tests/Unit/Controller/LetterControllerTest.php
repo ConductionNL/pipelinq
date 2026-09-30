@@ -17,7 +17,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/work-letter-from-filinq-template/tasks.md#task-1.2
+ * @spec openspec/changes/archive/2026-09-30-work-letter-from-filinq-template/tasks.md#task-1.2
  */
 
 declare(strict_types=1);
@@ -45,9 +45,9 @@ use RuntimeException;
 /**
  * Templates, the read guard, the render, the contact moment, and absence.
  *
- * @spec openspec/changes/work-letter-from-filinq-template/specs/client-letters/spec.md#requirement-a-user-makes-a-letter-for-a-client-from-a-filinq-template-req-wlt-001
- * @spec openspec/changes/work-letter-from-filinq-template/specs/client-letters/spec.md#requirement-a-letter-is-logged-on-the-client-req-wlt-002
- * @spec openspec/changes/work-letter-from-filinq-template/specs/client-letters/spec.md#requirement-without-filinq-no-letter-is-offered-or-faked-req-wlt-003
+ * @spec openspec/specs/client-letters/spec.md#requirement-a-user-makes-a-letter-for-a-client-from-a-filinq-template-req-wlt-001
+ * @spec openspec/specs/client-letters/spec.md#requirement-a-letter-is-logged-on-the-client-req-wlt-002
+ * @spec openspec/specs/client-letters/spec.md#requirement-without-filinq-no-letter-is-offered-or-faked-req-wlt-003
  */
 class LetterControllerTest extends TestCase
 {

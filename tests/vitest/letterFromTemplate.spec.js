@@ -8,7 +8,7 @@
  * shows filinq's warnings; the header action is declared on ClientDetail and
  * TicketDetail and hidden when filinq is absent.
  *
- * @spec openspec/changes/work-letter-from-filinq-template/specs/client-letters/spec.md#requirement-a-user-makes-a-letter-for-a-client-from-a-filinq-template-req-wlt-001
+ * @spec openspec/specs/client-letters/spec.md#requirement-a-user-makes-a-letter-for-a-client-from-a-filinq-template-req-wlt-001
  */
 
 import { flushPromises, mount } from '@vue/test-utils'

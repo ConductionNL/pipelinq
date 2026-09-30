@@ -26,7 +26,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/work-letter-from-filinq-template/specs/client-letters/spec.md#requirement-a-user-makes-a-letter-for-a-client-from-a-filinq-template-req-wlt-001
+ * @spec openspec/specs/client-letters/spec.md#requirement-a-user-makes-a-letter-for-a-client-from-a-filinq-template-req-wlt-001
  */
 
 declare(strict_types=1);
@@ -44,7 +44,7 @@ use Throwable;
 /**
  * Lists pipelinq's letter templates in filinq and has filinq render one.
  *
- * @spec openspec/changes/work-letter-from-filinq-template/specs/client-letters/spec.md#requirement-a-user-makes-a-letter-for-a-client-from-a-filinq-template-req-wlt-001
+ * @spec openspec/specs/client-letters/spec.md#requirement-a-user-makes-a-letter-for-a-client-from-a-filinq-template-req-wlt-001
  */
 class FilinqLetterAdapter
 {
@@ -92,7 +92,7 @@ class FilinqLetterAdapter
      *
      * @return string|null The reason, or null when both services resolve.
      *
-     * @spec openspec/changes/work-letter-from-filinq-template/specs/client-letters/spec.md#requirement-without-filinq-no-letter-is-offered-or-faked-req-wlt-003
+     * @spec openspec/specs/client-letters/spec.md#requirement-without-filinq-no-letter-is-offered-or-faked-req-wlt-003
      */
     public function unavailableReason(): ?string
     {
@@ -112,7 +112,7 @@ class FilinqLetterAdapter
      *
      * @throws RuntimeException When filinq is absent or refuses the listing.
      *
-     * @spec openspec/changes/work-letter-from-filinq-template/specs/client-letters/spec.md#requirement-a-user-makes-a-letter-for-a-client-from-a-filinq-template-req-wlt-001
+     * @spec openspec/specs/client-letters/spec.md#requirement-a-user-makes-a-letter-for-a-client-from-a-filinq-template-req-wlt-001
      */
     public function listTemplates(): array
     {
@@ -156,7 +156,7 @@ class FilinqLetterAdapter
      *
      * @throws RuntimeException When filinq is absent.
      *
-     * @spec openspec/changes/work-letter-from-filinq-template/specs/client-letters/spec.md#requirement-a-user-makes-a-letter-for-a-client-from-a-filinq-template-req-wlt-001
+     * @spec openspec/specs/client-letters/spec.md#requirement-a-user-makes-a-letter-for-a-client-from-a-filinq-template-req-wlt-001
      */
     public function findTemplate(string $templateId): ?array
     {
@@ -188,7 +188,7 @@ class FilinqLetterAdapter
      *
      * @throws RuntimeException When filinq is absent, no user acts, or the render fails.
      *
-     * @spec openspec/changes/work-letter-from-filinq-template/specs/client-letters/spec.md#requirement-a-user-makes-a-letter-for-a-client-from-a-filinq-template-req-wlt-001
+     * @spec openspec/specs/client-letters/spec.md#requirement-a-user-makes-a-letter-for-a-client-from-a-filinq-template-req-wlt-001
      */
     public function render(string $templateId, array $dataRefs, string $filename): array
     {

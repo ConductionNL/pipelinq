@@ -2806,7 +2806,7 @@
 			"id": "work-letter-template",
 			"area": "work",
 			"name": "Produce a letter from a template filled with the client's details",
-			"pipelinq": "partial",
+			"pipelinq": "yes",
 			"hubspot-crm": "unknown",
 			"pipedrive": "partial",
 			"espocrm": "yes",
@@ -2817,14 +2817,14 @@
 			"feature": "Correspondence",
 			"featureConfidence": "medium",
 			"built": {
-				"state": "specified",
-				"evidence": "lib/Service/TemplateRenderer.php:77 \"render(array $template, array $variables)\" fills {{var}} placeholders for mail templates (Templates page, src/manifest.d/75-marketing-blasts.json:16) and lib/Settings/register.d/85-berichtenbox-templates.json holds Berichtenbox message templates; no letter or document (PDF, docx) is produced for one client",
+				"state": "built",
+				"evidence": "lib/Service/Letter/FilinqLetterAdapter.php (lists filinq templates in the pipelinq namespace, has filinq render a PDF with a copy in the user's Files), lib/Controller/LetterController.php (GET /api/letters/templates, POST /api/clients/{id}/letters, per-object guard, the letter logged as an outbound interaction ticket with channel brief), src/modals/LetterFromTemplateModal.vue opened by the Make a letter header action on ClientDetail and TicketDetail",
 				"owner": "ConductionNL/pipelinq",
-				"reachedOn": "Templates, TemplateNew, TemplateEdit",
-				"readOn": "2026-09-26",
-				"change": "openspec/changes/work-letter-from-filinq-template"
+				"reachedOn": "Client and ticket detail, Actions menu, Make a letter (when filinq is installed)",
+				"readOn": "2026-09-30",
+				"change": "openspec/changes/archive/2026-09-30-work-letter-from-filinq-template"
 			},
-			"note": "templates exist for mail and Berichtenbox, not for a printable letter. Specified 2026-09-28 in openspec/changes/work-letter-from-filinq-template (OpenSpec pass).",
+			"note": "templates exist for mail and Berichtenbox, not for a printable letter. Specified 2026-09-28 in openspec/changes/work-letter-from-filinq-template (OpenSpec pass). Built 2026-09-30: filinq renders the letter, pipelinq picks the template and logs the letter on the client.",
 			"evidence": {
 				"hubspot-crm": "not checked: HubSpot has email templates, quotes and a documents library (https://knowledge.hubspot.com/documents/use-documents, Sales or Service Hub Starter and up) but no article describes generating a printable letter filled with record data (read 2026-09-26).",
 				"pipedrive": "https://support.pipedrive.com/en/article/what-features-do-the-pipedrive-plans-have Smart Docs creates documents from templates with CRM data from Google Drive, OneDrive or SharePoint (\"Included on Premium and higher plans\", add-on below); https://support.pipedrive.com/en/article/smart-docs covers templates and sharing. A letter from a template is possible; partial by the lane rule for Smart Docs. Note: Read from the web.archive.org copy (what-features-do-the-pipedrive-plans-have 2026-08-24; smart-docs 2026-05-19) because the live knowledge base answered 429.",

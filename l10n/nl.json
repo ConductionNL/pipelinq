@@ -6765,6 +6765,18 @@
         "Came in through a referral or partner": "Binnengekomen via een doorverwijzing of partner",
         "Expected close date set": "Verwachte sluitdatum ingevuld",
         "Priority high or urgent": "Prioriteit hoog of urgent",
-        "Description written": "Omschrijving ingevuld"
+        "Description written": "Omschrijving ingevuld",
+        "Contact person (optional)": "Contactpersoon (optioneel)",
+        "filinq reported something to check in the letter:": "filinq meldt iets om na te kijken in de brief:",
+        "Letters are made by filinq, and filinq is not available.": "Brieven worden gemaakt door filinq, en filinq is niet beschikbaar.",
+        "Loading templates": "Sjablonen laden",
+        "Make a letter": "Brief maken",
+        "Make letter": "Brief maken",
+        "The letter could not be made.": "De brief kon niet worden gemaakt.",
+        "The letter is made and downloaded. A copy is in your Files.": "De brief is gemaakt en gedownload. Een kopie staat in je Bestanden.",
+        "The letter is not logged on the client. Log it as a contact moment by hand.": "De brief is niet vastgelegd bij de klant. Leg hem met de hand vast als contactmoment.",
+        "The letter templates could not be loaded.": "De briefsjablonen konden niet worden geladen.",
+        "There are no letter templates yet. An administrator adds them in filinq with the namespace pipelinq.": "Er zijn nog geen briefsjablonen. Een beheerder voegt ze toe in filinq met de namespace pipelinq.",
+        "This ticket has no client, so there is nobody to write to.": "Dit ticket heeft geen klant, dus er is niemand om aan te schrijven."
     }
 }

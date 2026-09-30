@@ -9,7 +9,7 @@
   - On a ticket page the letter is for the ticket's client and quotes the
   - ticket. filinq renders; pipelinq logs the letter as a contact moment.
   -
-  - @spec openspec/changes/work-letter-from-filinq-template/specs/client-letters/spec.md#requirement-a-user-makes-a-letter-for-a-client-from-a-filinq-template-req-wlt-001
+  - @spec openspec/specs/client-letters/spec.md#requirement-a-user-makes-a-letter-for-a-client-from-a-filinq-template-req-wlt-001
   -->
 <template>
 	<NcDialog
@@ -147,7 +147,7 @@ export default {
 		 * The record ids: the props, else the route this page is on.
 		 *
 		 * @return {{clientId: string, ticketId: string}}
-		 * @spec openspec/changes/work-letter-from-filinq-template/specs/client-letters/spec.md#requirement-a-user-makes-a-letter-for-a-client-from-a-filinq-template-req-wlt-001
+		 * @spec openspec/specs/client-letters/spec.md#requirement-a-user-makes-a-letter-for-a-client-from-a-filinq-template-req-wlt-001
 		 */
 		routeIds() {
 			const path = this.$route?.path || ''
@@ -161,7 +161,7 @@ export default {
 		/**
 		 * Load the templates, the ticket's client and the client's contacts.
 		 *
-		 * @spec openspec/changes/work-letter-from-filinq-template/specs/client-letters/spec.md#requirement-a-user-makes-a-letter-for-a-client-from-a-filinq-template-req-wlt-001
+		 * @spec openspec/specs/client-letters/spec.md#requirement-a-user-makes-a-letter-for-a-client-from-a-filinq-template-req-wlt-001
 		 */
 		async load() {
 			this.loading = true
@@ -199,7 +199,7 @@ export default {
 		/**
 		 * Make the letter, download it and show filinq's warnings.
 		 *
-		 * @spec openspec/changes/work-letter-from-filinq-template/specs/client-letters/spec.md#requirement-a-user-makes-a-letter-for-a-client-from-a-filinq-template-req-wlt-001
+		 * @spec openspec/specs/client-letters/spec.md#requirement-a-user-makes-a-letter-for-a-client-from-a-filinq-template-req-wlt-001
 		 */
 		async make() {
 			if (!this.canMake) return
