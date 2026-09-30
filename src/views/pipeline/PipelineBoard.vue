@@ -1707,6 +1707,36 @@ export default {
 	color: var(--color-text-maxcontrast);
 }
 
+/* Phone: the header wraps and the columns scroll inside the board, so the
+   page itself never scrolls sideways (platform-phone-on-the-road). */
+@media (max-width: 600px) {
+	.pipeline-board {
+		padding: 12px;
+		min-width: 0;
+		max-width: 100%;
+	}
+
+	.pipeline-board__header,
+	.pipeline-board__controls {
+		flex-wrap: wrap;
+		gap: 8px;
+	}
+
+	.pipeline-board__controls,
+	.pipeline-selector,
+	.show-filter,
+	.pipeline-search {
+		width: 100%;
+		min-width: 0;
+	}
+
+	.pipeline-board__columns,
+	.pipeline-board__list {
+		max-width: 100%;
+		min-width: 0;
+	}
+}
+
 @media (prefers-reduced-motion: reduce) {
 	.kanban-closed-column,
 	.list-row {

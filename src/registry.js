@@ -41,6 +41,7 @@ import CommunicationHistory from './components/CommunicationHistory.vue'
 //     page body via `bodyWidgets` (kind:'section'). Each reads the live object
 //     via props (token-resolved `@objectId`) — no page host needed. ---
 import ContactChannelsSection from './components/ContactChannelsSection.vue'
+import ContactLinks from './components/ContactLinks.vue'
 import ContactmomentQuickLog from './components/ContactmomentQuickLog.vue'
 import ContactRelationships from './components/ContactRelationships.vue'
 // --- Billing categories (billable-categories-and-tags): list view with a
@@ -48,6 +49,7 @@ import ContactRelationships from './components/ContactRelationships.vue'
 //     declarative type:"index" page cannot express. Donut widget for the
 //     dashboard (hours per billing category) registered as a slot. ---
 import BillingCategoryWidget from './components/dashboard/BillingCategoryWidget.vue'
+import LogVisitAction from './components/LogVisitAction.vue'
 // --- Articles — the content hub for a mailing and a post (marketing-article-hub).
 //     ArticleDetail is a declarative type:"detail" page; the rendered body, the
 //     hero image, the agent-authored mark, the Edit action and the lifecycle
@@ -771,6 +773,16 @@ const registry = {
 		kind: 'section',
 		component: ContactmomentQuickLog,
 		_note: 'Inline contactmoment quick-log form pre-bound to the client (clientId, inline mode). On save it emits @saved; in declarative mode the page is refreshed via the CnDetailPage Refresh action rather than an imperative re-fetch.',
+	},
+	ContactLinks: {
+		kind: 'section',
+		component: ContactLinks,
+		_note: 'Call, mail and directions links for a client or contact (platform-phone-on-the-road, REQ-MOB-001): tel:, mailto: and geo: links that keep the value as typed. Placed before the body so they are one tap away on a phone.',
+	},
+	LogVisitAction: {
+		kind: 'section',
+		component: LogVisitAction,
+		_note: 'Log a visit on a client or lead (REQ-MOB-003): one note and an optional follow-up day; writes an outbound visit contact moment (ticket) and a follow-up crmTask through the object store.',
 	},
 	PartyIndicatorPanel: {
 		kind: 'section',
