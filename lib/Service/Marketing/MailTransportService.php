@@ -34,7 +34,6 @@ namespace OCA\Pipelinq\Service\Marketing;
 
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\ArticleService;
-use OCA\Pipelinq\Service\ComplianceService;
 use OCA\Pipelinq\Service\ConnectorSourceRegister;
 use OCA\Pipelinq\Service\Marketing\Transport\ConnectorSourceTransport;
 use OCA\Pipelinq\Service\Marketing\Transport\InstanceMailerTransport;
@@ -108,6 +107,7 @@ class MailTransportService {
 	 * @param ArticleService $articleService Article reader and `{{articles}}` renderer.
 	 * @param ConnectorSourceRegister $connectorRegister Which slug the source register answers to here.
 	 * @param LoggerInterface $logger Logger.
+	 * @param PhysicalAddressRenderer $addressRenderer Puts the template's physical address into each body.
 	 */
 	public function __construct(
 		private ContainerInterface $container,
@@ -116,6 +116,7 @@ class MailTransportService {
 		private ArticleService $articleService,
 		private ConnectorSourceRegister $connectorRegister,
 		private LoggerInterface $logger,
+		private PhysicalAddressRenderer $addressRenderer,
 	) {
 	}//end __construct()
 
@@ -235,7 +236,7 @@ class MailTransportService {
 	 * template's own `{{articles}}` marker (when present) is expanded via
 	 * `ArticleService::expandArticlesMarker()`. After them, the template's
 	 * physical address (`footerOverride`) goes in at its address token or at
-	 * the end, via `ComplianceService::renderPhysicalAddress()`. Both are the
+	 * the end, via `PhysicalAddressRenderer::render()`. Both are the
 	 * calls `TemplateController::preview()` makes, so what a marketer saw in
 	 * the preview is what sends. First-party tracking injection (when
 	 * enabled) runs on the HTML body before the mail is handed to any
@@ -266,7 +267,7 @@ class MailTransportService {
 		// The sender's physical address (CAN-SPAM) goes in at its token, or at
 		// the end, the same way the template preview shows it.
 		$footer = (string)($template['footerOverride'] ?? '');
-		$html = ComplianceService::renderPhysicalAddress(
+		$html = $this->addressRenderer->render(
 			body: strtr($this->expandArticles(template: $template, format: ArticleService::FORMAT_HTML), $tokens),
 			footerOverride: $footer,
 			format: ArticleService::FORMAT_HTML,
@@ -283,7 +284,7 @@ class MailTransportService {
 			toEmail: (string)($delivery['email'] ?? ''),
 			subject: strtr((string)($template['subject'] ?? ''), $tokens),
 			html: $html,
-			text: ComplianceService::renderPhysicalAddress(
+			text: $this->addressRenderer->render(
 				body: strtr($this->expandArticles(template: $template, format: ArticleService::FORMAT_TEXT), $tokens),
 				footerOverride: $footer,
 				format: ArticleService::FORMAT_TEXT,

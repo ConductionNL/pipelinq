@@ -32,6 +32,7 @@ namespace OCA\Pipelinq\Tests\Unit\Controller;
 use OCA\Pipelinq\Controller\TemplateController;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\ArticleService;
+use OCA\Pipelinq\Service\Marketing\PhysicalAddressRenderer;
 use OCA\Pipelinq\Service\ComplianceService;
 use OCA\Pipelinq\Service\Marketing\SegmentSignalService;
 use OCA\Pipelinq\Service\SegmentService;
@@ -174,6 +175,7 @@ class TemplateControllerTest extends TestCase {
 			$this->createMock(ArticleService::class),
 			$session,
 			$policy,
+			new PhysicalAddressRenderer(),
 		);
 	}//end controller()
 

@@ -31,6 +31,7 @@ use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\ArticleService;
 use OCA\Pipelinq\Service\ComplianceService;
+use OCA\Pipelinq\Service\Marketing\PhysicalAddressRenderer;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -52,6 +53,7 @@ class TemplateController extends Controller {
 	 * @param ArticleService $articleService Article reader and `{{articles}}` renderer.
 	 * @param IUserSession $userSession Current user session.
 	 * @param ObjectOwnerAccessPolicy $policy Per-object owner access policy.
+	 * @param PhysicalAddressRenderer $addressRenderer Puts the template's physical address into the preview.
 	 */
 	public function __construct(
 		IRequest $request,
@@ -59,6 +61,7 @@ class TemplateController extends Controller {
 		private readonly ArticleService $articleService,
 		private readonly IUserSession $userSession,
 		private readonly ObjectOwnerAccessPolicy $policy,
+		private readonly PhysicalAddressRenderer $addressRenderer,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 	}//end __construct()
@@ -207,7 +210,7 @@ class TemplateController extends Controller {
 
 		return new JSONResponse([
 			'subject' => (string)($template['subject'] ?? ''),
-			'bodyHtml' => ComplianceService::renderPhysicalAddress(
+			'bodyHtml' => $this->addressRenderer->render(
 				body: $this->articleService->expandArticlesMarker(
 					body: (string)($template['bodyHtml'] ?? ''),
 					articles: $articles,
@@ -216,7 +219,7 @@ class TemplateController extends Controller {
 				footerOverride: $footer,
 				format: ArticleService::FORMAT_HTML,
 			),
-			'bodyText' => ComplianceService::renderPhysicalAddress(
+			'bodyText' => $this->addressRenderer->render(
 				body: $this->articleService->expandArticlesMarker(
 					body: (string)($template['bodyText'] ?? ''),
 					articles: $articles,

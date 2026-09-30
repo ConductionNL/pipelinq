@@ -48,14 +48,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use DateTimeImmutable;
-use DateTimeInterface;
 use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Service\Marketing\JourneyService;
-use OCA\Pipelinq\Service\Marketing\ListObjectStore;
-use OCA\Pipelinq\Service\Search\KeywordTargetService;
-use OCA\Pipelinq\Service\SearchConsole\SearchQueryDailyStore;
-use OCA\Pipelinq\Service\Social\SocialPublicationStore;
+use OCA\Pipelinq\Service\Demo\DemoMarketingSeeder;
+use OCA\Pipelinq\Service\Demo\DemoSeedValues;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -179,8 +174,8 @@ class DemoSeedService {
 	 * @param ContainerInterface $container Container for the OpenRegister ObjectService.
 	 * @param ContactVcardService $contactVcardService Contact-first identity provisioning (client.contactsUid).
 	 * @param TicketService $ticketService Unified ticket resolver + write path.
-	 * @param JourneyService $journeyService Journey write path, which compiles each journey into a flow.
-	 * @param ListObjectStore $store Session-free object access for journeys and their runs.
+	 * @param DemoMarketingSeeder $marketingSeeder Journeys, social and Search Console demo data.
+	 * @param DemoSeedValues $values Placeholder and reference resolution.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
@@ -188,8 +183,8 @@ class DemoSeedService {
 		private readonly ContainerInterface $container,
 		private readonly ContactVcardService $contactVcardService,
 		private readonly TicketService $ticketService,
-		private readonly JourneyService $journeyService,
-		private readonly ListObjectStore $store,
+		private readonly DemoMarketingSeeder $marketingSeeder,
+		private readonly DemoSeedValues $values,
 		private readonly LoggerInterface $logger,
 	) {
 	}//end __construct()
@@ -297,7 +292,7 @@ class DemoSeedService {
 			);
 
 			foreach (($definitions[$section] ?? []) as $definition) {
-				$data = $this->resolvePlaceholders(data: $definition['data']);
+				$data = $this->values->resolvePlaceholders(data: $definition['data']);
 				$data = $this->linkReferences(
 					data: $data,
 					definition: $definition,
@@ -339,23 +334,13 @@ class DemoSeedService {
 			}//end foreach
 		}//end foreach
 
-		$journeys = $this->seedJourneys(definitions: ($definitions['journeys'] ?? []), uuids: $uuids);
-		$created['journeys'] = $journeys['created'];
-		$created['journeyRuns'] = $journeys['runs'];
-		$skipped['journeys'] = $journeys['skipped'];
+		$marketing = $this->marketingSeeder->seed(definitions: $definitions, uuids: $uuids);
 
-		$social = $this->seedSocial(social: ($definitions['social'] ?? []));
-		$created['socialAccounts'] = $social['accounts'];
-		$created['socialPosts'] = $social['posts'];
-		$created['socialPublications'] = $social['publications'];
-		$skipped['social'] = $social['skipped'];
-
-		$search = $this->seedSearch(search: ($definitions['search'] ?? []));
-		$created['searchQueryRows'] = $search['rows'];
-		$created['keywordTargets'] = $search['targets'];
-		$skipped['search'] = $search['skipped'];
-
-		return ['success' => true, 'created' => $created, 'skipped' => $skipped];
+		return [
+			'success' => true,
+			'created' => array_merge($created, $marketing['created']),
+			'skipped' => array_merge($skipped, $marketing['skipped']),
+		];
 	}//end seed()
 
 	/**
@@ -382,18 +367,7 @@ class DemoSeedService {
 
 		[$objectService, $registerId, $schemaIds, $definitions] = $context;
 
-		$journeys = $this->removeJourneys(definitions: ($definitions['journeys'] ?? []));
-		$social = $this->removeSocial(social: ($definitions['social'] ?? []));
-		$search = $this->removeSearch(search: ($definitions['search'] ?? []));
-		$removed = [
-			'journeys' => $journeys['journeys'],
-			'journeyRuns' => $journeys['runs'],
-			'socialPublications' => $social['publications'],
-			'socialPosts' => $social['posts'],
-			'socialAccounts' => $social['accounts'],
-			'searchQueryRows' => $search['rows'],
-			'keywordTargets' => $search['targets'],
-		];
+		$removed = $this->marketingSeeder->remove(definitions: $definitions);
 		$retained = [];
 		$sections = array_reverse(self::SECTIONS, true);
 
@@ -479,508 +453,9 @@ class DemoSeedService {
 	}//end saveSeedObject()
 
 	/**
-	 * Seed the demo journeys and the runs that fill their run log.
-	 *
-	 * Journeys go through JourneyService, the write path the journey form uses,
-	 * so each one is compiled into a flow like a real journey: saved around it,
-	 * a journey is stored as "not compiled", which reads as broken on the list.
-	 * The compiler only enables the flow of an ACTIVE journey, so a demo journey
-	 * is held to draft or paused and its flow never runs.
-	 *
-	 * A journey that already exists is skipped with its runs, which keeps a
-	 * re-run from doubling the run log.
-	 *
-	 * @param array<int, array<string, mixed>> $definitions The seed file's `journeys` section.
-	 * @param array<string, string> $uuids Section-local keys mapped to seeded uuids.
-	 *
-	 * @return array{created: int, runs: int, skipped: int} Counts.
-	 *
-	 * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
-	 */
-	private function seedJourneys(array $definitions, array $uuids): array {
-		$counts = ['created' => 0, 'runs' => 0, 'skipped' => 0];
-		if ($definitions === []) {
-			return $counts;
-		}
-
-		$existing = [];
-		foreach ($this->journeyService->listJourneys() as $journey) {
-			$existing[(string)($journey['name'] ?? '')] = true;
-		}
-
-		$runSchema = $this->store->schemaSlug('journeyRun_schema', JourneyService::RUN_SCHEMA);
-
-		foreach ($definitions as $definition) {
-			$data = ($definition['data'] ?? []);
-			if (isset($existing[(string)($data['name'] ?? '')]) === true) {
-				$counts['skipped']++;
-				continue;
-			}
-
-			if (in_array(($data['status'] ?? ''), ['draft', 'paused'], true) === false) {
-				$data['status'] = 'draft';
-			}
-
-			$saved = $this->journeyService->save(payload: $data, createdByUid: '');
-			$journeyId = $this->store->idOf(payload: $saved);
-			if ($journeyId === '') {
-				$this->logger->warning('Pipelinq demo seed: journey not saved', ['name' => ($data['name'] ?? '')]);
-				continue;
-			}
-
-			$counts['created']++;
-
-			foreach (($definition['runs'] ?? []) as $run) {
-				$payload = $this->resolvePlaceholders(data: ($run['data'] ?? []));
-				$payload = $this->linkOneReference(
-					data: $payload,
-					definition: $run,
-					uuids: $uuids,
-					keyName: 'contactKey',
-					section: 'contacts',
-					field: 'contactId',
-				);
-				$payload = $this->linkOneReference(
-					data: $payload,
-					definition: $run,
-					uuids: $uuids,
-					keyName: 'clientKey',
-					section: 'clients',
-					field: 'clientId',
-				);
-				$payload['journeyId'] = $journeyId;
-
-				if ($this->store->save(schemaSlug: $runSchema, payload: $payload) !== null) {
-					$counts['runs']++;
-				}
-			}
-		}//end foreach
-
-		return $counts;
-	}//end seedJourneys()
-
-	/**
-	 * Remove the demo journeys, their runs and the flows they compiled into.
-	 *
-	 * The flow goes first: a journey deleted without it leaves a flow nothing
-	 * points at. Its delete is best effort, because the flow engine only finds
-	 * a flow for the organisation that saved it; one it cannot find is logged
-	 * and left, which is harmless since a demo journey's flow is never enabled.
-	 *
-	 * @param array<int, array<string, mixed>> $definitions The seed file's `journeys` section.
-	 *
-	 * @return array{journeys: int, runs: int} Counts.
-	 *
-	 * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
-	 */
-	private function removeJourneys(array $definitions): array {
-		$counts = ['journeys' => 0, 'runs' => 0];
-
-		$names = [];
-		foreach ($definitions as $definition) {
-			$name = (string)($definition['data']['name'] ?? '');
-			// Guard: only ever delete journeys carrying the demo marker.
-			if (str_starts_with($name, self::DEMO_PREFIX) === true) {
-				$names[$name] = true;
-			}
-		}
-
-		if ($names === []) {
-			return $counts;
-		}
-
-		$journeySchema = $this->store->schemaSlug('journey_schema', JourneyService::JOURNEY_SCHEMA);
-		$runSchema = $this->store->schemaSlug('journeyRun_schema', JourneyService::RUN_SCHEMA);
-
-		foreach ($this->journeyService->listJourneys() as $journey) {
-			if (isset($names[(string)($journey['name'] ?? '')]) === false) {
-				continue;
-			}
-
-			$journeyId = $this->store->idOf(payload: $journey);
-			if ($journeyId === '') {
-				continue;
-			}
-
-			$this->deleteFlow(flowUuid: trim((string)($journey['flowUuid'] ?? '')));
-
-			foreach ($this->journeyService->runsFor(journeyId: $journeyId) as $run) {
-				if ($this->store->delete(schemaSlug: $runSchema, id: $this->store->idOf(payload: $run)) === true) {
-					$counts['runs']++;
-				}
-			}
-
-			if ($this->store->delete(schemaSlug: $journeySchema, id: $journeyId) === true) {
-				$counts['journeys']++;
-			}
-		}//end foreach
-
-		return $counts;
-	}//end removeJourneys()
-
-	/**
-	 * Delete the flow a demo journey compiled into, when the engine can find it.
-	 *
-	 * @param string $flowUuid The flow uuid, or empty when it never compiled.
-	 *
-	 * @return void
-	 */
-	private function deleteFlow(string $flowUuid): void {
-		if ($flowUuid === '') {
-			return;
-		}
-
-		try {
-			$this->container->get(JourneyService::FLOW_SERVICE)->delete($flowUuid);
-		} catch (\Throwable $e) {
-			$this->logger->info(
-				'Pipelinq demo seed: left a demo journey flow in place',
-				['flowUuid' => $flowUuid, 'exception' => $e->getMessage()]
-			);
-		}
-	}//end deleteFlow()
-
-	/**
-	 * Seed the demo social accounts, published posts and their publications.
-	 *
-	 * Written straight through the object store rather than the publishing
-	 * path, because what is seeded is the aftermath of publishing: the posts
-	 * are already out and the publications already carry the numbers the daily
-	 * pull would have stored. Nothing here touches a network.
-	 *
-	 * A post that already exists is skipped with its publications, which keeps
-	 * a re-run from doubling the ranking.
-	 *
-	 * @param array<string, array<int, array<string, mixed>>> $social The seed file's `social` section.
-	 *
-	 * @return array{accounts: int, posts: int, publications: int, skipped: int} Counts.
-	 *
-	 * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
-	 */
-	private function seedSocial(array $social): array {
-		$counts = ['accounts' => 0, 'posts' => 0, 'publications' => 0, 'skipped' => 0];
-		if ($social === []) {
-			return $counts;
-		}
-
-		[$accountSchema, $postSchema, $publicationSchema] = $this->socialSchemas();
-
-		$accountIds = [];
-		$networks = [];
-		$existingAccounts = $this->idsByField(schemaSlug: $accountSchema, field: 'displayName');
-		foreach (($social['accounts'] ?? []) as $definition) {
-			$data = $this->resolvePlaceholders(data: ($definition['data'] ?? []));
-			$networks[$definition['key']] = (string)($data['network'] ?? '');
-
-			$existing = ($existingAccounts[(string)($data['displayName'] ?? '')] ?? '');
-			if ($existing !== '') {
-				$accountIds[$definition['key']] = $existing;
-				$counts['skipped']++;
-				continue;
-			}
-
-			$id = $this->store->idOf(payload: $this->store->save(schemaSlug: $accountSchema, payload: $data));
-			if ($id !== '') {
-				$accountIds[$definition['key']] = $id;
-				$counts['accounts']++;
-			}
-		}
-
-		$newPostIds = [];
-		$existingPosts = $this->idsByField(schemaSlug: $postSchema, field: 'title');
-		foreach (($social['posts'] ?? []) as $definition) {
-			$data = $this->resolvePlaceholders(data: ($definition['data'] ?? []));
-			if (($existingPosts[(string)($data['title'] ?? '')] ?? '') !== '') {
-				$counts['skipped']++;
-				continue;
-			}
-
-			$data['accountIds'] = array_values(
-				array_filter(
-					array_map(
-						static fn (string $key): string => ($accountIds[$key] ?? ''),
-						($definition['accountKeys'] ?? [])
-					)
-				)
-			);
-
-			$id = $this->store->idOf(payload: $this->store->save(schemaSlug: $postSchema, payload: $data));
-			if ($id !== '') {
-				$newPostIds[$definition['key']] = $id;
-				$counts['posts']++;
-			}
-		}
-
-		foreach (($social['publications'] ?? []) as $definition) {
-			$postId = ($newPostIds[$definition['postKey'] ?? ''] ?? '');
-			$accountId = ($accountIds[$definition['accountKey'] ?? ''] ?? '');
-			if ($postId === '' || $accountId === '') {
-				continue;
-			}
-
-			$payload = $this->resolvePlaceholders(data: ($definition['data'] ?? []));
-			$payload['postId'] = $postId;
-			$payload['accountId'] = $accountId;
-			$payload['network'] = ($networks[$definition['accountKey']] ?? '');
-
-			if ($this->store->save(schemaSlug: $publicationSchema, payload: $payload) !== null) {
-				$counts['publications']++;
-			}
-		}
-
-		return $counts;
-	}//end seedSocial()
-
-	/**
-	 * Remove the demo publications, posts and accounts, in that order.
-	 *
-	 * Only rows whose name carries the demo marker are touched, and only the
-	 * publications of those demo posts.
-	 *
-	 * @param array<string, array<int, array<string, mixed>>> $social The seed file's `social` section.
-	 *
-	 * @return array{accounts: int, posts: int, publications: int} Counts.
-	 *
-	 * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
-	 */
-	private function removeSocial(array $social): array {
-		$counts = ['accounts' => 0, 'posts' => 0, 'publications' => 0];
-		if ($social === []) {
-			return $counts;
-		}
-
-		[$accountSchema, $postSchema, $publicationSchema] = $this->socialSchemas();
-
-		$postIds = [];
-		$posts = $this->idsByField(schemaSlug: $postSchema, field: 'title');
-		foreach (($social['posts'] ?? []) as $definition) {
-			$title = (string)($definition['data']['title'] ?? '');
-			if (str_starts_with($title, self::DEMO_PREFIX) === true && ($posts[$title] ?? '') !== '') {
-				$postIds[] = $posts[$title];
-			}
-		}
-
-		foreach ($this->store->findAll(schemaSlug: $publicationSchema) as $publication) {
-			if (in_array((string)($publication['postId'] ?? ''), $postIds, true) === false) {
-				continue;
-			}
-
-			if ($this->store->delete(schemaSlug: $publicationSchema, id: $this->store->idOf(payload: $publication)) === true) {
-				$counts['publications']++;
-			}
-		}
-
-		foreach ($postIds as $postId) {
-			if ($this->store->delete(schemaSlug: $postSchema, id: $postId) === true) {
-				$counts['posts']++;
-			}
-		}
-
-		$accounts = $this->idsByField(schemaSlug: $accountSchema, field: 'displayName');
-		foreach (($social['accounts'] ?? []) as $definition) {
-			$name = (string)($definition['data']['displayName'] ?? '');
-			if (str_starts_with($name, self::DEMO_PREFIX) === false || ($accounts[$name] ?? '') === '') {
-				continue;
-			}
-
-			if ($this->store->delete(schemaSlug: $accountSchema, id: $accounts[$name]) === true) {
-				$counts['accounts']++;
-			}
-		}
-
-		return $counts;
-	}//end removeSocial()
-
-	/**
-	 * Seed the demo Search Console rows and keyword targets.
-	 *
-	 * The rows stand in for an import, so they are written as the import
-	 * writes them (property, date, query, page, clicks, impressions, ctr,
-	 * position), with the click rate derived here so it can never disagree
-	 * with the counts. Query text has to read as real search, so the rows
-	 * carry the demo property and source as their marker instead of a prefix,
-	 * and are seeded as one set: when any demo row exists, none is written.
-	 *
-	 * @param array<string, mixed> $search The seed file's `search` section.
-	 *
-	 * @return array{rows: int, targets: int, skipped: int} Counts.
-	 *
-	 * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
-	 */
-	private function seedSearch(array $search): array {
-		$counts = ['rows' => 0, 'targets' => 0, 'skipped' => 0];
-		$property = (string)($search['property'] ?? '');
-		$source = (string)($search['source'] ?? '');
-		if ($property === '' || $source === '') {
-			return $counts;
-		}
-
-		[$rowSchema, $targetSchema] = $this->searchSchemas();
-		$now = gmdate('Y-m-d\TH:i:s\Z');
-
-		if ($this->searchRows(schemaSlug: $rowSchema, property: $property, source: $source) !== []) {
-			$counts['skipped']++;
-		} else {
-			foreach (($search['rows'] ?? []) as $row) {
-				$row = $this->resolvePlaceholders(data: $row);
-				$clicks = (int)($row['clicks'] ?? 0);
-				$impressions = (int)($row['impressions'] ?? 0);
-				$ctr = 0.0;
-				if ($impressions > 0) {
-					$ctr = round(($clicks / $impressions), 4);
-				}
-
-				$payload = [
-					'property' => $property,
-					'date' => (string)($row['date'] ?? ''),
-					'query' => (string)($row['query'] ?? ''),
-					'page' => (string)($row['page'] ?? ''),
-					'clicks' => $clicks,
-					'impressions' => $impressions,
-					'ctr' => $ctr,
-					'position' => (float)($row['position'] ?? 0),
-					'source' => $source,
-					'importedAt' => $now,
-				];
-
-				if ($this->store->save(schemaSlug: $rowSchema, payload: $payload) !== null) {
-					$counts['rows']++;
-				}
-			}
-		}//end if
-
-		$notes = [];
-		foreach ($this->store->findAll(schemaSlug: $targetSchema) as $target) {
-			$notes[(string)($target['notes'] ?? '')] = true;
-		}
-
-		foreach (($search['targets'] ?? []) as $definition) {
-			$data = ($definition['data'] ?? []);
-			if (isset($notes[(string)($data['notes'] ?? '')]) === true) {
-				$counts['skipped']++;
-				continue;
-			}
-
-			$data['property'] = $property;
-			$data['createdAt'] = $now;
-			if ($this->store->save(schemaSlug: $targetSchema, payload: $data) !== null) {
-				$counts['targets']++;
-			}
-		}
-
-		return $counts;
-	}//end seedSearch()
-
-	/**
-	 * Remove the demo Search Console rows and keyword targets.
-	 *
-	 * A row goes only when it carries both the demo property and the demo
-	 * source, and a target only when it carries the demo property and a note
-	 * with the demo marker, so a real import or a real target is never touched.
-	 *
-	 * @param array<string, mixed> $search The seed file's `search` section.
-	 *
-	 * @return array{rows: int, targets: int} Counts.
-	 *
-	 * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
-	 */
-	private function removeSearch(array $search): array {
-		$counts = ['rows' => 0, 'targets' => 0];
-		$property = (string)($search['property'] ?? '');
-		$source = (string)($search['source'] ?? '');
-		if ($property === '' || $source === '') {
-			return $counts;
-		}
-
-		[$rowSchema, $targetSchema] = $this->searchSchemas();
-
-		foreach ($this->searchRows(schemaSlug: $rowSchema, property: $property, source: $source) as $row) {
-			if ($this->store->delete(schemaSlug: $rowSchema, id: $this->store->idOf(payload: $row)) === true) {
-				$counts['rows']++;
-			}
-		}
-
-		foreach ($this->store->findAll(schemaSlug: $targetSchema) as $target) {
-			if ((string)($target['property'] ?? '') !== $property
-				|| str_starts_with((string)($target['notes'] ?? ''), self::DEMO_PREFIX) === false
-			) {
-				continue;
-			}
-
-			if ($this->store->delete(schemaSlug: $targetSchema, id: $this->store->idOf(payload: $target)) === true) {
-				$counts['targets']++;
-			}
-		}
-
-		return $counts;
-	}//end removeSearch()
-
-	/**
-	 * The Search Console row and keyword target schema slugs, as their services resolve them.
-	 *
-	 * @return array{0: string, 1: string} The two slugs.
-	 */
-	private function searchSchemas(): array {
-		return [
-			$this->store->schemaSlug(SearchQueryDailyStore::SCHEMA . '_schema', SearchQueryDailyStore::SCHEMA),
-			$this->store->schemaSlug(KeywordTargetService::SCHEMA_CONFIG_KEY, KeywordTargetService::SCHEMA_SLUG),
-		];
-	}//end searchSchemas()
-
-	/**
-	 * The Search Console rows carrying both the demo property and the demo source.
-	 *
-	 * Filtered on the server, because a real install can hold far more imported
-	 * rows than a whole-schema scan should read; the store re-checks every
-	 * filter on the returned rows, so a match is exact either way.
-	 *
-	 * @param string $schemaSlug The row schema.
-	 * @param string $property The demo property.
-	 * @param string $source The demo source.
-	 *
-	 * @return array<int, array<string, mixed>> The rows.
-	 */
-	private function searchRows(string $schemaSlug, string $property, string $source): array {
-		return $this->store->findAll(schemaSlug: $schemaSlug, filters: ['property' => $property, 'source' => $source]);
-	}//end searchRows()
-
-	/**
-	 * The account, post and publication schema slugs, as their services resolve them.
-	 *
-	 * @return array{0: string, 1: string, 2: string} The three slugs.
-	 */
-	private function socialSchemas(): array {
-		return [
-			$this->store->schemaSlug(SocialAccountService::SCHEMA_CONFIG_KEY, SocialAccountService::SCHEMA),
-			$this->store->schemaSlug(SocialPostService::SCHEMA_CONFIG_KEY, SocialPostService::SCHEMA),
-			$this->store->schemaSlug(SocialPublicationStore::SCHEMA_CONFIG_KEY, SocialPublicationStore::SCHEMA),
-		];
-	}//end socialSchemas()
-
-	/**
-	 * Every row of a schema, indexed by one field's value.
-	 *
-	 * @param string $schemaSlug The schema to read.
-	 * @param string $field The field to index by.
-	 *
-	 * @return array<string, string> Field value => the first row id carrying it.
-	 */
-	private function idsByField(string $schemaSlug, string $field): array {
-		$index = [];
-		foreach ($this->store->findAll(schemaSlug: $schemaSlug) as $row) {
-			$value = (string)($row[$field] ?? '');
-			if ($value !== '' && isset($index[$value]) === false) {
-				$index[$value] = $this->store->idOf(payload: $row);
-			}
-		}
-
-		return $index;
-	}//end idsByField()
-
-	/**
 	 * Resolve the ObjectService, register id, schema ids and seed definitions.
 	 *
-	 * @return array{0: object, 1: string, 2: array<string, string>, 3: array<string, array<int, array<string, mixed>>>}|null
+	 * @return array{0: object, 1: string, 2: array<string, string>, 3: array<string, mixed>}|null
 	 *         Null when the register/schemas are not provisioned, or the seed
 	 *         file is unreadable.
 	 */
@@ -1029,7 +504,8 @@ class DemoSeedService {
 	/**
 	 * Load and decode lib/Settings/demo_seed_data.json.
 	 *
-	 * @return array<string, array<int, array<string, mixed>>>|null Null when missing or invalid.
+	 * @return array<string, mixed>|null Null when missing or invalid. Most sections are
+	 *                                   lists of definitions; `social` and `search` are maps.
 	 */
 	private function loadDefinitions(): ?array {
 		$path = dirname(__DIR__) . '/Settings/demo_seed_data.json';
@@ -1189,35 +665,6 @@ class DemoSeedService {
 	}//end rowToArray()
 
 	/**
-	 * Resolve `@days:N` / `@datetime:N` placeholders to concrete dates.
-	 *
-	 * @param array<string, mixed> $data Raw definition data.
-	 *
-	 * @return array<string, mixed> Data with date placeholders resolved.
-	 */
-	private function resolvePlaceholders(array $data): array {
-		foreach ($data as $field => $value) {
-			if (is_string($value) === false) {
-				continue;
-			}
-
-			if (preg_match('/^@(days|datetime):(-?\d+)$/', $value, $matches) !== 1) {
-				continue;
-			}
-
-			$offset = (int)$matches[2];
-			$moment = (new DateTimeImmutable())->modify(sprintf('%+d days', $offset));
-
-			$data[$field] = $moment->format(DateTimeInterface::ATOM);
-			if ($matches[1] === 'days') {
-				$data[$field] = $moment->format('Y-m-d');
-			}
-		}
-
-		return $data;
-	}//end resolvePlaceholders()
-
-	/**
 	 * Resolve the contact-first identity for a client/contact payload.
 	 *
 	 * Contact-first unification (register.d/15-unify-client-contact.json): BOTH
@@ -1278,7 +725,7 @@ class DemoSeedService {
 		// everything else calls it `client`. Writing the wrong key is silent —
 		// the object saves, the FK is simply absent — so the map is explicit
 		// rather than assumed.
-		$data = $this->linkOneReference(
+		$data = $this->values->linkReference(
 			data: $data,
 			definition: $definition,
 			uuids: $uuids,
@@ -1287,7 +734,7 @@ class DemoSeedService {
 			field: ($definition['clientField'] ?? 'client'),
 		);
 
-		$data = $this->linkOneReference(
+		$data = $this->values->linkReference(
 			data: $data,
 			definition: $definition,
 			uuids: $uuids,
@@ -1300,7 +747,7 @@ class DemoSeedService {
 		// `pipeline`, so it belongs to no board and every stage column counts
 		// zero — the demo data cannot demonstrate the pipeline it was written
 		// for. `pipelines` is seeded before `leads`, so the uuid is available.
-		$data = $this->linkOneReference(
+		$data = $this->values->linkReference(
 			data: $data,
 			definition: $definition,
 			uuids: $uuids,
@@ -1316,7 +763,7 @@ class DemoSeedService {
 			$requestField = 'parentTicket';
 		}
 
-		$data = $this->linkOneReference(
+		$data = $this->values->linkReference(
 			data: $data,
 			definition: $definition,
 			uuids: $uuids,
@@ -1327,34 +774,4 @@ class DemoSeedService {
 
 		return $data;
 	}//end linkReferences()
-
-	/**
-	 * Set one relation field from the seeded uuid map, when the definition
-	 * names a key and that key has already been seeded.
-	 *
-	 * Extracted from linkReferences() so its four call sites stop each
-	 * contributing two branches to a single method: phpmd measured the
-	 * combined cyclomatic complexity at 10 against a threshold of 10.
-	 *
-	 * @param array<string, mixed> $data Definition data.
-	 * @param array<string, mixed> $definition Full definition.
-	 * @param array<string, string> $uuids Already-seeded uuid map (section:key => uuid).
-	 * @param string $keyName Definition key naming the target (e.g. 'clientKey').
-	 * @param string $section Uuid-map section the key lives in (e.g. 'clients').
-	 * @param string $field Field on $data to set.
-	 *
-	 * @return array<string, mixed> Data with the relation field set when resolvable.
-	 */
-	private function linkOneReference(array $data, array $definition, array $uuids, string $keyName, string $section, string $field): array {
-		if (isset($definition[$keyName]) === false) {
-			return $data;
-		}
-
-		$uuid = ($uuids[$section . ':' . $definition[$keyName]] ?? null);
-		if ($uuid !== null) {
-			$data[$field] = $uuid;
-		}
-
-		return $data;
-	}//end linkOneReference()
 }//end class
