@@ -743,8 +743,10 @@ final class PortalContributionProviderTest extends TestCase {
 	 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-a-resident-asks-a-question-about-a-dossier-they-own-req-qcd-001
 	 */
 	public function testNoAskActionWithoutOpenCatalogi(): void {
+		// Forced false: in the Nextcloud container opencatalogi IS installed,
+		// so the real class_exists probe answers true there and false on a host.
 		foreach ([self::CITIZEN_SUBJECT, self::CLIENT_SUBJECT] as $subject) {
-			$manifest = $this->provider->getContribution($subject);
+			$manifest = $this->withOpenCatalogi(installed: false)->getContribution($subject);
 			$this->assertIsArray($manifest);
 			$actions = $this->indexById($manifest['actions']);
 
@@ -786,22 +788,49 @@ final class PortalContributionProviderTest extends TestCase {
 	}//end testTheAnswerRuleIsDeclaredForBothAudiences()
 
 	/**
-	 * The provider as it answers when opencatalogi is installed.
+	 * The provider with the opencatalogi probe forced, whatever the environment.
+	 *
+	 * The real probe is `class_exists` on opencatalogi's Application class, which
+	 * answers true inside the Nextcloud container and false on a bare host; a test
+	 * that relied on it passed in one place and failed in the other.
+	 *
+	 * @param bool $installed What the probe answers.
 	 *
 	 * @return PortalContributionProvider
 	 */
-	private function withOpenCatalogi(): PortalContributionProvider {
-		return new class extends PortalContributionProvider {
+	private function withOpenCatalogi(bool $installed = true): PortalContributionProvider {
+		return new class($installed) extends PortalContributionProvider {
 			/**
-			 * Opencatalogi is installed.
+			 * Remember the forced answer.
+			 *
+			 * @param bool $installed What the probe answers.
+			 */
+			public function __construct(private readonly bool $installed) {
+			}//end __construct()
+
+			/**
+			 * The forced answer.
 			 *
 			 * @return bool
 			 */
 			protected function isOpenCatalogiInstalled(): bool {
-				return true;
+				return $this->installed;
 			}//end isOpenCatalogiInstalled()
 		};
 	}//end withOpenCatalogi()
+
+	/**
+	 * The default probe is the class_exists check, answering per environment.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-a-resident-asks-a-question-about-a-dossier-they-own-req-qcd-001
+	 */
+	public function testTheDefaultProbeFollowsOpenCatalogisClass(): void {
+		$probe = (new ReflectionClass(PortalContributionProvider::class))->getMethod('isOpenCatalogiInstalled');
+
+		$this->assertSame(class_exists('OCA\\OpenCatalogi\\AppInfo\\Application'), $probe->invoke($this->provider));
+	}//end testTheDefaultProbeFollowsOpenCatalogisClass()
 
 	/**
 	 * Collect schema property names from the main register + fragments.
