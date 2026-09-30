@@ -2306,8 +2306,35 @@
 						"gridHeight": 3
 					}
 				],
-				"_bodyWidgetsNote": "Suggested colleagues (pipelinq#2039): RoutingSuggestionSection mounts RoutingSuggestionPanel for this ticket and writes the chosen colleague into its assignee. The panel was built but mounted by nothing, so the skill, availability and workload ranking was reachable only by calling the API by hand.",
+				"_bodyWidgetsNote": "Woo citizen journey J4 (questions-about-a-citizen-dossier): DossierSnapshotSection shows the dossier a resident asked about, before the body; CustomerReplySection is the answer control (customerMessage, the resident's replies) and WooConversionSection converts a question into a dossiq Woo request, after the data. Each renders nothing when it does not apply. Suggested colleagues (pipelinq#2039): RoutingSuggestionSection mounts RoutingSuggestionPanel for this ticket and writes the chosen colleague into its assignee. The panel was built but mounted by nothing, so the skill, availability and workload ranking was reachable only by calling the API by hand.",
 				"bodyWidgets": [
+					{
+						"id": "dossier-snapshot",
+						"component": "DossierSnapshotSection",
+						"title": "Asked about",
+						"placement": "before-body",
+						"props": {
+							"objectId": "@objectId"
+						}
+					},
+					{
+						"id": "customer-reply",
+						"component": "CustomerReplySection",
+						"title": "Answer to the customer",
+						"placement": "after-data",
+						"props": {
+							"objectId": "@objectId"
+						}
+					},
+					{
+						"id": "woo-conversion",
+						"component": "WooConversionSection",
+						"title": "Woo request",
+						"placement": "after-data",
+						"props": {
+							"objectId": "@objectId"
+						}
+					},
 					{
 						"id": "routing-suggestions",
 						"component": "RoutingSuggestionSection",

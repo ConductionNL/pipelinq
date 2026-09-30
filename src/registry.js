@@ -44,11 +44,13 @@ import ContactChannelsSection from './components/ContactChannelsSection.vue'
 import ContactLinks from './components/ContactLinks.vue'
 import ContactmomentQuickLog from './components/ContactmomentQuickLog.vue'
 import ContactRelationships from './components/ContactRelationships.vue'
+import CustomerReplySection from './components/CustomerReplySection.vue'
 // --- Billing categories (billable-categories-and-tags): list view with a
 //     bespoke color-swatch + DBA / active badge column layout the
 //     declarative type:"index" page cannot express. Donut widget for the
 //     dashboard (hours per billing category) registered as a slot. ---
 import BillingCategoryWidget from './components/dashboard/BillingCategoryWidget.vue'
+import DossierSnapshotSection from './components/DossierSnapshotSection.vue'
 import LogVisitAction from './components/LogVisitAction.vue'
 // --- Articles — the content hub for a mailing and a post (marketing-article-hub).
 //     ArticleDetail is a declarative type:"detail" page; the rendered body, the
@@ -111,6 +113,7 @@ import RoutingSuggestionSection from './components/RoutingSuggestionSection.vue'
 //     top-level menu item linking to this card grid. ---
 import ServiceHubOverview from './components/service/ServiceHubOverview.vue'
 import SlaAttainmentBreakdownSection from './components/sla/SlaAttainmentBreakdownSection.vue'
+import WooConversionSection from './components/WooConversionSection.vue'
 import XWikiArticleViewer from './components/xwiki/XWikiArticleViewer.vue'
 import XWikiSidebarTabComponent from './components/xwiki/XWikiSidebarTab.vue'
 import XWikiWidgetComponent from './components/xwiki/XWikiWidget.vue'
@@ -814,6 +817,21 @@ const registry = {
 		kind: 'section',
 		component: RequestConversionSection,
 		_note: '"Convert to case" action for the TicketDetail page (semantic-handoff-emit; formerly RequestDetail, retired by unify-ticket-supertype). Self-fetches GET /api/handoff/request/{id}/availability by @objectId; renders the button only when canConvert (an ns#Case implementer is installed AND status is in_progress). On success shows the converted notice + a copyable caseReference — the target app is kind-addressed and unknown to the frontend, so no precise cross-app route can be built.',
+	},
+	DossierSnapshotSection: {
+		kind: 'section',
+		component: DossierSnapshotSection,
+		_note: "The dossier a resident asked about, on TicketDetail (questions-about-a-citizen-dossier REQ-QCD-006): reads the ticket's subjectReference snapshot and lists the documents as links to the public publications. Never reads the dossier itself; renders nothing for a ticket without a snapshot.",
+	},
+	CustomerReplySection: {
+		kind: 'section',
+		component: CustomerReplySection,
+		_note: "Answer the customer on a request or complaint (questions-about-a-citizen-dossier REQ-QCD-007, the minimal form of messaging-saved-replies-and-resend D5 without the saved-reply picker): portal replies oldest first, a text area bound to customerMessage, Save answer and Save and wait for a reply (status awaiting_customer). Writes through the object store, so portaliq's change rule pipelinq.question.answered hears the change.",
+	},
+	WooConversionSection: {
+		kind: 'section',
+		component: WooConversionSection,
+		_note: '"Convert to Woo request" on TicketDetail (questions-about-a-citizen-dossier REQ-QCD-008, hydra woo-citizen-journey C5): self-fetches GET /api/tickets/{id}/woo-request/availability and renders only when dossiq\'s WooRequestIntake answers and the ticket is an unconverted question about a dossier.',
 	},
 	RoutingSuggestionSection: {
 		kind: 'section',

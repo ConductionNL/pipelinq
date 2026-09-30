@@ -107,7 +107,7 @@ Three `bodyWidgets`, each rendering nothing when it does not apply:
 - `CustomerReplySection`: the minimal answer control of
   `messaging-saved-replies-and-resend` D5 without the saved-reply picker. The
   resident's replies oldest first, a text area bound to `customerMessage`, and
-  two buttons: "Antwoord opslaan", and "Opslaan en wachten op de inwoner",
+  two buttons: "Antwoord opslaan", and "Opslaan en wachten op een reactie",
   which also sets `awaiting_customer`. It writes through the object store, so
   the change rule fires on save. It renders for `request` and `complaint`.
 - `WooConversionSection`: "Omzetten naar Woo-verzoek", shown only when the
