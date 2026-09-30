@@ -454,5 +454,149 @@
 		"reason": "Rating corrected from yes to partial by the code read of 2026-09-27: the portal Invoices tab lists every POS transaction linked to the client whatever its status, with no PDF, and never a shillinq sales invoice. Partial, built, no demand; one competitor yes (odoo-crm)",
 		"change": null,
 		"decidedOn": "2026-09-27"
+	},
+	{
+		"row": "lead-scoring",
+		"matrix": "pipelinq",
+		"decision": "build",
+		"reason": "Core area pipeline; HubSpot, Pipedrive and Odoo rated yes. The score calculation exists; the list, board, sort and explanation do not.",
+		"change": "pipeline-lead-score-call-first",
+		"decidedOn": "2026-09-28"
+	},
+	{
+		"row": "prod-quote",
+		"matrix": "pipelinq",
+		"decision": "build",
+		"reason": "HubSpot and Odoo rated yes: two competitor yes cells. Prices and lines exist; the quote document and sending do not.",
+		"change": "products-quote-from-lead",
+		"decidedOn": "2026-09-28"
+	},
+	{
+		"row": "plat-phone",
+		"matrix": "pipelinq",
+		"decision": "build",
+		"reason": "HubSpot, Pipedrive, EspoCRM and Odoo rated yes; responsive layout, links and a quick visit note, not a native client.",
+		"change": "platform-phone-on-the-road",
+		"decidedOn": "2026-09-28"
+	},
+	{
+		"row": "unified-search",
+		"matrix": "pipelinq",
+		"decision": "decided-no",
+		"reason": "No competitor rated yes (HubSpot CRM, EspoCRM, Odoo CRM, KISS partial); no tender, feature request or roadmap row. Outside the core area (requests). Reversible: reopen the row if demand appears. The code already built stays in the tree; it has no screen (see the pull request).",
+		"change": null,
+		"decidedOn": "2026-09-28"
+	},
+	{
+		"row": "internal-news",
+		"matrix": "pipelinq",
+		"decision": "decided-no",
+		"reason": "Single competitor, no demand: KISS rated yes; no tender, feature request or roadmap row. Outside the core area (requests). Reversible: reopen the row if demand appears. The code already built stays in the tree; it has no screen (see the pull request).",
+		"change": null,
+		"decidedOn": "2026-09-28"
+	},
+	{
+		"row": "req-valid-recipient",
+		"matrix": "pipelinq",
+		"decision": "decided-no",
+		"reason": "Single competitor, no demand: KISS rated yes; no tender, feature request or roadmap row. Outside the core area (requests). Reversible: reopen the row if demand appears.",
+		"change": null,
+		"decidedOn": "2026-09-28"
+	},
+	{
+		"row": "req-ai-triage",
+		"matrix": "pipelinq",
+		"decision": "decided-no",
+		"reason": "No competitor rated yes (HubSpot CRM, EspoCRM, Odoo CRM partial); a feature request row but the rule needs demand plus one competitor yes. Outside the core area (requests). Reversible: reopen the row if demand appears.",
+		"change": null,
+		"decidedOn": "2026-09-28"
+	},
+	{
+		"row": "req-similar-answer",
+		"matrix": "pipelinq",
+		"decision": "decided-no",
+		"reason": "No competitor rated yes (HubSpot CRM, Odoo CRM partial); no tender, feature request or roadmap row. Outside the core area (requests). Reversible: reopen the row if demand appears.",
+		"change": null,
+		"decidedOn": "2026-09-28"
+	},
+	{
+		"row": "req-close-reminder",
+		"matrix": "pipelinq",
+		"decision": "decided-no",
+		"reason": "No competitor rated yes (EspoCRM, Odoo CRM partial); no tender, feature request or roadmap row. Outside the core area (requests). Reversible: reopen the row if demand appears.",
+		"change": null,
+		"decidedOn": "2026-09-28"
+	},
+	{
+		"row": "req-waiting-on-us",
+		"matrix": "pipelinq",
+		"decision": "decided-no",
+		"reason": "No competitor rated yes (HubSpot CRM, Odoo CRM partial); no tender, feature request or roadmap row. Outside the core area (requests). Reversible: reopen the row if demand appears. The code already built stays in the tree; it has no screen (see the pull request).",
+		"change": null,
+		"decidedOn": "2026-09-28"
+	},
+	{
+		"row": "req-approval-step",
+		"matrix": "pipelinq",
+		"decision": "decided-no",
+		"reason": "No competitor rated yes (HubSpot CRM, EspoCRM, Odoo CRM partial); a feature request row but the rule needs demand plus one competitor yes. Outside the core area (requests). Reversible: reopen the row if demand appears.",
+		"change": null,
+		"decidedOn": "2026-09-28"
+	},
+	{
+		"row": "two-calls-at-once",
+		"matrix": "pipelinq",
+		"decision": "decided-no",
+		"reason": "Single competitor, no demand: KISS rated yes; no tender, feature request or roadmap row. Outside the core area (contact-moments). Reversible: reopen the row if demand appears.",
+		"change": null,
+		"decidedOn": "2026-09-28"
+	},
+	{
+		"row": "vendor-training",
+		"matrix": "pipelinq",
+		"decision": "build",
+		"reason": "HubSpot, Pipedrive and Odoo rated yes. The content is the vendor's; the app gets the page that lists it. Clustered with local-partner.",
+		"change": "platform-help-and-partner-directory",
+		"decidedOn": "2026-09-28"
+	},
+	{
+		"row": "local-partner",
+		"matrix": "pipelinq",
+		"decision": "build",
+		"reason": "HubSpot, Pipedrive, Odoo and KISS rated yes. Clustered with vendor-training.",
+		"change": "platform-help-and-partner-directory",
+		"decidedOn": "2026-09-28"
+	},
+	{
+		"row": "plat-work-offline",
+		"matrix": "pipelinq",
+		"decision": "decided-no",
+		"reason": "No competitor rated yes (Pipedrive partial); no tender, feature request or roadmap row. Outside the core area (platform). Reversible: reopen the row if demand appears.",
+		"change": null,
+		"decidedOn": "2026-09-28"
+	},
+	{
+		"row": "6.16",
+		"matrix": "dossiq",
+		"decision": "decided-no",
+		"reason": "No competitor rated yes (all six no) and no demand row. The dossiq matrix already records decided-no; not edited here.",
+		"change": null,
+		"decidedOn": "2026-09-28"
+	},
+	{
+		"row": "vendor-training",
+		"matrix": "pipelinq",
+		"decision": "decided-no",
+		"reason": "Ruben, 29 Sep 2026: courses and a partner directory are content, and that content belongs on the Conduction website, not in the app. Supersedes the 2026-09-28 build decision; the change platform-help-and-partner-directory is removed. Reversible.",
+		"change": null,
+		"decidedOn": "2026-09-29"
+	},
+	{
+		"row": "local-partner",
+		"matrix": "pipelinq",
+		"decision": "decided-no",
+		"reason": "Ruben, 29 Sep 2026: courses and a partner directory are content, and that content belongs on the Conduction website, not in the app. Supersedes the 2026-09-28 build decision; the change platform-help-and-partner-directory is removed. Reversible.",
+		"change": null,
+		"decidedOn": "2026-09-29"
 	}
 ]

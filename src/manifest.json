@@ -2248,6 +2248,23 @@
 						"props": { "partyId": "@objectId" }
 					},
 					{
+						"id": "contact-links",
+						"component": "ContactLinks",
+						"placement": "before-body",
+						"_note": "Tap to call, mail or get directions on a phone (platform-phone-on-the-road).",
+						"props": {
+							"phone": "@object.phone",
+							"email": "@object.email",
+							"address": "@object.address"
+						}
+					},
+					{
+						"id": "log-visit",
+						"component": "LogVisitAction",
+						"placement": "before-body",
+						"props": { "clientId": "@objectId" }
+					},
+					{
 						"id": "relationships",
 						"component": "ContactRelationships",
 						"title": "Relationships",
@@ -2860,6 +2877,16 @@
 						"props": { "partyId": "@objectId" }
 					},
 					{
+						"id": "contact-links",
+						"component": "ContactLinks",
+						"placement": "before-body",
+						"_note": "Tap to call, mail or get directions on a phone (platform-phone-on-the-road).",
+						"props": {
+							"phone": "@object.phone",
+							"email": "@object.email"
+						}
+					},
+					{
 						"id": "relationships",
 						"component": "ContactRelationships",
 						"title": "Relationships",
@@ -2970,6 +2997,11 @@
 						"key": "winProbability",
 						"label": "Win %",
 						"widget": "lead-probability"
+					},
+					{
+						"key": "qualificationScore",
+						"label": "Score",
+						"widget": "lead-score"
 					},
 					"value",
 					"currency",
@@ -3388,6 +3420,15 @@
 				],
 				"_bodyWidgetsNote": "Suggested colleagues (pipelinq#2049): RoutingSuggestionSection ranks colleagues whose skills cover the lead category, and writes the chosen colleague into the lead assignee.",
 				"bodyWidgets": [
+					{
+						"id": "log-visit",
+						"component": "LogVisitAction",
+						"placement": "before-body",
+						"props": {
+							"leadId": "@objectId",
+							"clientId": "@object.client"
+						}
+					},
 					{
 						"id": "routing-suggestions",
 						"component": "RoutingSuggestionSection",
