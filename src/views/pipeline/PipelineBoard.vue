@@ -31,6 +31,12 @@
 					:aria-label="t('pipelinq', 'Search pipeline…')"
 					class="pipeline-search"
 					@update:modelValue="(v) => (searchQuery = v)" />
+				<NcCheckboxRadioSwitch
+					v-if="viewMode === 'kanban'"
+					v-model="scoreOrder"
+					type="switch">
+					{{ t('pipelinq', 'Highest score first') }}
+				</NcCheckboxRadioSwitch>
 				<div class="view-toggle">
 					<NcButton
 						:variant="viewMode === 'kanban' ? 'primary' : 'tertiary'"
@@ -302,6 +308,15 @@
 								>{{ sortDir === 'asc' ? '▲' : '▼' }}</span
 							>
 						</th>
+						<th
+							scope="col"
+							class="sortable"
+							@click="toggleSort('score')">
+							{{ t('pipelinq', 'Score') }}
+							<span v-if="sortBy === 'score'" class="sort-indicator">{{
+								sortDir === 'asc' ? '▲' : '▼'
+							}}</span>
+						</th>
 						<th scope="col" class="sortable" @click="toggleSort('age')">
 							{{ t('pipelinq', 'Age') }}
 							<span v-if="sortBy === 'age'" class="sort-indicator">{{
@@ -355,6 +370,12 @@
 							</span>
 						</td>
 						<td>
+							<LeadScoreBadge
+								v-if="item._schemaSlug === 'lead'"
+								:lead="item"
+								compact />
+						</td>
+						<td>
 							<span
 								class="aging-badge"
 								:class="getItemAgingClass(item)">
@@ -380,12 +401,20 @@
 <script>
 import { openRowTarget } from '@conduction/nextcloud-vue'
 import { generateUrl } from '@nextcloud/router'
-import { NcButton, NcLoadingIcon, NcSelect, NcTextField } from '@nextcloud/vue'
+import {
+	NcButton,
+	NcCheckboxRadioSwitch,
+	NcLoadingIcon,
+	NcSelect,
+	NcTextField,
+} from '@nextcloud/vue'
 import Cog from 'vue-material-design-icons/Cog.vue'
 import FormatListBulleted from 'vue-material-design-icons/FormatListBulleted.vue'
 import ViewColumn from 'vue-material-design-icons/ViewColumn.vue'
+import LeadScoreBadge from '../../components/leadScore/LeadScoreBadge.vue'
 import PipelineFormDialog from '../../dialogs/PipelineFormDialog.vue'
 import PipelineCard from './PipelineCard.vue'
+import { compareCallFirst } from '../../services/leadScore.js'
 import { formatDate } from '../../services/localeUtils.js'
 import {
 	formatAge,
@@ -406,9 +435,11 @@ export default {
 	name: 'PipelineBoard',
 	components: {
 		NcButton,
+		NcCheckboxRadioSwitch,
 		NcLoadingIcon,
 		NcSelect,
 		NcTextField,
+		LeadScoreBadge,
 		PipelineCard,
 		PipelineFormDialog,
 		ViewColumn,
@@ -432,6 +463,8 @@ export default {
 			viewMode: 'kanban',
 			sortBy: 'title',
 			sortDir: 'asc',
+			/** Order the cards in each column by score, highest first. */
+			scoreOrder: false,
 			/**
 			 * Live-updates handles for the or-collection-{register}-{schema}
 			 * subscriptions of every object type mapped into the selected
@@ -616,6 +649,7 @@ export default {
 
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-28
+		 * @spec openspec/specs/lead-management/spec.md#requirement-the-board-card-shows-the-score-req-lscore-002
 		 */
 		sortedListItems() {
 			const items = [...this.filteredItems]
@@ -655,6 +689,11 @@ export default {
 						valA = getDaysAge(a)
 						valB = getDaysAge(b)
 						break
+					case 'score':
+						// Highest first on the first click; no score always last.
+						return this.sortDir === 'asc'
+							? compareCallFirst(a, b)
+							: -compareCallFirst(a, b)
 					default:
 						return 0
 				}
@@ -860,9 +899,12 @@ export default {
 		 * Returns items in the given stage, filtered by searchQuery via filteredItems.
 		 * Empty columns remain visible even when search is active.
 		 *
+		 * With "Highest score first" on, the cards are ordered by score.
+		 *
 		 * @param {string} stageName The stage (column) name
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-12
 		 * @spec openspec/changes/2026-03-20-pipeline/tasks.md#task-1.2
+		 * @spec openspec/specs/lead-management/spec.md#requirement-the-board-card-shows-the-score-req-lscore-002
 		 */
 		getStageItems(stageName) {
 			return this.filteredItems
@@ -877,7 +919,11 @@ export default {
 						return true
 					return false
 				})
-				.sort((a, b) => (a.stageOrder || 0) - (b.stageOrder || 0))
+				.sort((a, b) =>
+					this.scoreOrder
+						? compareCallFirst(a, b)
+						: (a.stageOrder || 0) - (b.stageOrder || 0),
+				)
 		},
 
 		/**
@@ -1630,6 +1676,36 @@ export default {
 	padding: 40px;
 	text-align: center;
 	color: var(--color-text-maxcontrast);
+}
+
+/* Phone: the header wraps and the columns scroll inside the board, so the
+   page itself never scrolls sideways (platform-phone-on-the-road). */
+@media (max-width: 600px) {
+	.pipeline-board {
+		padding: 12px;
+		min-width: 0;
+		max-width: 100%;
+	}
+
+	.pipeline-board__header,
+	.pipeline-board__controls {
+		flex-wrap: wrap;
+		gap: 8px;
+	}
+
+	.pipeline-board__controls,
+	.pipeline-selector,
+	.show-filter,
+	.pipeline-search {
+		width: 100%;
+		min-width: 0;
+	}
+
+	.pipeline-board__columns,
+	.pipeline-board__list {
+		max-width: 100%;
+		min-width: 0;
+	}
 }
 
 @media (prefers-reduced-motion: reduce) {
