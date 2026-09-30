@@ -159,7 +159,9 @@
 				<ResourceHoursEditor
 					:modelValue="value || []"
 					:error="error || ''"
-					@update:modelValue="(rows) => updateField('workingHours', rows)" />
+					@update:modelValue="
+						(rows) => updateField('workingHours', rows)
+					" />
 			</template>
 			<template #field-vacations="{ value, error, updateField }">
 				<ResourceVacationsEditor
@@ -280,6 +282,13 @@ export default {
 			return skills.length ? skills.join(', ') : '-'
 		},
 
+		/**
+		 * The resource schema, once fetched, for the edit dialog.
+		 *
+		 * @return {object|null}
+		 *
+		 * @spec openspec/specs/appointment-booking/spec.md
+		 */
 		resourceSchema() {
 			return this.objectStore.getSchema('appointmentResource')
 		},
@@ -290,6 +299,8 @@ export default {
 		 * because they are not translated.
 		 *
 		 * @return {object} fieldOverrides for CnFormDialog.
+		 *
+		 * @spec openspec/specs/appointment-booking/spec.md
 		 */
 		editFieldOverrides() {
 			const overrides = {
@@ -314,13 +325,34 @@ export default {
 					},
 				},
 
-				maxConcurrent: { label: t('pipelinq', 'Max concurrent bookings'), order: 4 },
+				maxConcurrent: {
+					label: t('pipelinq', 'Max concurrent bookings'),
+					order: 4,
+				},
+
 				bookable: { label: t('pipelinq', 'Bookable'), order: 5 },
 				skills: { label: t('pipelinq', 'Skills'), order: 6 },
-				userId: { label: t('pipelinq', 'Nextcloud user ID (staff only)'), order: 7 },
-				calendarSyncId: { label: t('pipelinq', 'Calendar sync link (UUID)'), order: 8 },
-				workingHours: { label: t('pipelinq', 'Working hours'), order: 9, widget: 'json' },
-				vacations: { label: t('pipelinq', 'Vacations / unavailable windows'), order: 10, widget: 'json' },
+				userId: {
+					label: t('pipelinq', 'Nextcloud user ID (staff only)'),
+					order: 7,
+				},
+
+				calendarSyncId: {
+					label: t('pipelinq', 'Calendar sync link (UUID)'),
+					order: 8,
+				},
+
+				workingHours: {
+					label: t('pipelinq', 'Working hours'),
+					order: 9,
+					widget: 'json',
+				},
+
+				vacations: {
+					label: t('pipelinq', 'Vacations / unavailable windows'),
+					order: 10,
+					widget: 'json',
+				},
 			}
 			for (const key of Object.keys(overrides)) {
 				overrides[key].description = ''
@@ -350,6 +382,13 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * Fetch the resource schema and open the edit dialog on it.
+		 *
+		 * @return {Promise<void>}
+		 *
+		 * @spec openspec/specs/appointment-booking/spec.md
+		 */
 		async openEditDialog() {
 			await this.objectStore.fetchSchema('appointmentResource')
 			if (!this.resourceSchema) {
@@ -365,6 +404,8 @@ export default {
 		 * offending field.
 		 *
 		 * @param {object} formData The dialog's form data.
+		 *
+		 * @spec openspec/specs/appointment-booking/spec.md
 		 */
 		async onEditConfirm(formData) {
 			const dialog = this.$refs.editDialog
@@ -398,12 +439,18 @@ export default {
 			})
 			if (!saved) {
 				const error = this.objectStore.getError?.('appointmentResource')
-				dialog?.setResult({ error: error?.message || t('pipelinq', 'Failed to save resource.') })
+				dialog?.setResult({
+					error:
+						error?.message || t('pipelinq', 'Failed to save resource.'),
+				})
 				return
 			}
 			dialog?.setResult({ success: true })
 			await this.invalidateAvailability(saved.id || this.resourceId)
-			await this.objectStore.fetchObject('appointmentResource', this.resourceId)
+			await this.objectStore.fetchObject(
+				'appointmentResource',
+				this.resourceId,
+			)
 		},
 
 		async onFormSave(formData) {

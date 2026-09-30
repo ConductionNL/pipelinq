@@ -182,6 +182,11 @@ export default {
 		}
 	},
 
+	/**
+	 * Load the publications and follow page refreshes.
+	 *
+	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
+	 */
 	mounted() {
 		this.load()
 		// An approval in the page header can put the post in line to go out.
@@ -194,8 +199,12 @@ export default {
 
 	methods: {
 		/**
+		 * The icon a publication's network is shown with.
+		 *
 		 * @param {string} network The network.
 		 * @return {object} Its icon component.
+		 *
+		 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
 		 */
 		networkIcon(network) {
 			return networkIcon(network)

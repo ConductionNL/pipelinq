@@ -13,7 +13,10 @@
   - @spec openspec/specs/pos-lifecycle-guard-adoption/spec.md#REQ-PLG-001
   -->
 <template>
-	<div v-if="hasActions" class="pos-refund-header-actions" data-testid="pos-refund-header-actions">
+	<div
+		v-if="hasActions"
+		class="pos-refund-header-actions"
+		data-testid="pos-refund-header-actions">
 		<NcButton
 			v-if="canConfirm"
 			variant="primary"
@@ -73,14 +76,35 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * The refund, or an empty object before it loads.
+		 *
+		 * @return {object} The refund.
+		 *
+		 * @spec openspec/specs/pos-lifecycle-guard-adoption/spec.md#REQ-PLG-001
+		 */
 		refund() {
 			return this.object || {}
 		},
 
+		/**
+		 * The refund id, from the prop or the object.
+		 *
+		 * @return {string} The id, or ''.
+		 *
+		 * @spec openspec/specs/pos-lifecycle-guard-adoption/spec.md#REQ-PLG-001
+		 */
 		refundId() {
 			return this.objectId || this.refund.id || ''
 		},
 
+		/**
+		 * The refund's lifecycle status.
+		 *
+		 * @return {string} The status, pending when unset.
+		 *
+		 * @spec openspec/specs/pos-lifecycle-guard-adoption/spec.md#REQ-PLG-001
+		 */
 		status() {
 			return this.refund.status || 'pending'
 		},
@@ -91,6 +115,8 @@ export default {
 		 * who clearly cannot use them. Nextcloud admins are always managers.
 		 *
 		 * @return {boolean} Whether to show manager-only actions.
+		 *
+		 * @spec openspec/specs/pos-lifecycle-guard-adoption/spec.md#REQ-PLG-004
 		 */
 		isManager() {
 			return typeof window.OC?.isUserAdmin === 'function'
@@ -98,10 +124,24 @@ export default {
 				: false
 		},
 
+		/**
+		 * Whether a manager can confirm this pending refund.
+		 *
+		 * @return {boolean}
+		 *
+		 * @spec openspec/specs/pos-lifecycle-guard-adoption/spec.md#REQ-PLG-004
+		 */
 		canConfirm() {
 			return this.status === 'pending' && this.isManager
 		},
 
+		/**
+		 * Whether a manager can reject this pending refund.
+		 *
+		 * @return {boolean}
+		 *
+		 * @spec openspec/specs/pos-refund-return/spec.md#REQ-REF-007
+		 */
 		canReject() {
 			return this.status === 'pending' && this.isManager
 		},
@@ -119,6 +159,8 @@ export default {
 		 * @param {object} body Optional JSON body.
 		 * @param {string} okMsg Success toast message.
 		 * @return {Promise<boolean>} Whether the action succeeded.
+		 *
+		 * @spec openspec/specs/pos-lifecycle-guard-adoption/spec.md#REQ-PLG-002
 		 */
 		async run(action, body, okMsg) {
 			if (!this.refundId) {
@@ -127,7 +169,9 @@ export default {
 			this.busy = true
 			try {
 				const response = await fetch(
-					generateUrl(`/apps/pipelinq/api/pos-refunds/${this.refundId}/${action}`),
+					generateUrl(
+						`/apps/pipelinq/api/pos-refunds/${this.refundId}/${action}`,
+					),
 					{
 						method: 'POST',
 						headers: {
@@ -159,9 +203,15 @@ export default {
 		 *
 		 * @param {string} reason The rejection reason.
 		 * @return {Promise<void>}
+		 *
+		 * @spec openspec/specs/pos-refund-return/spec.md#REQ-REF-007
 		 */
 		async reject(reason) {
-			const ok = await this.run('reject', { reason }, t('pipelinq', 'Refund rejected.'))
+			const ok = await this.run(
+				'reject',
+				{ reason },
+				t('pipelinq', 'Refund rejected.'),
+			)
 			if (ok) {
 				this.showReject = false
 			}

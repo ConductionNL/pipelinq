@@ -14,7 +14,9 @@
 <template>
 	<NcDialog
 		v-if="show"
-		:name="isEditing ? t('pipelinq', 'Edit journey') : t('pipelinq', 'New journey')"
+		:name="
+			isEditing ? t('pipelinq', 'Edit journey') : t('pipelinq', 'New journey')
+		"
 		:open="true"
 		size="normal"
 		:closeOnClickOutside="false"
@@ -40,7 +42,9 @@
 				<NcTextField
 					v-model="form.description"
 					:label="t('pipelinq', 'Description')"
-					:placeholder="t('pipelinq', 'Who this journey is for, in one sentence')" />
+					:placeholder="
+						t('pipelinq', 'Who this journey is for, in one sentence')
+					" />
 
 				<div class="journey-form__grid">
 					<NcSelect
@@ -65,14 +69,24 @@
 					v-if="triggerKind && triggerKind.value === 'shillinqSignal'"
 					v-model="cron"
 					:label="t('pipelinq', 'Schedule')"
-					:helperText="t('pipelinq', 'A bookkeeping change announces nothing, so this journey looks for it on a schedule.')" />
+					:helperText="
+						t(
+							'pipelinq',
+							'A bookkeeping change announces nothing, so this journey looks for it on a schedule.',
+						)
+					" />
 
 				<div class="journey-form__grid">
 					<NcTextField
 						v-model="form.audienceSegment"
 						data-testid="journey-form-audience"
 						:label="t('pipelinq', 'Audience')"
-						:helperText="t('pipelinq', 'A segment the contact must still match. Leave it empty to reach everyone the trigger delivered.')" />
+						:helperText="
+							t(
+								'pipelinq',
+								'A segment the contact must still match. Leave it empty to reach everyone the trigger delivered.',
+							)
+						" />
 
 					<NcTextField
 						v-model="form.waitFor"
@@ -88,7 +102,12 @@
 					<NcTextField
 						v-model="condition.field"
 						:label="t('pipelinq', 'Field')"
-						:helperText="t('pipelinq', 'Leave it empty and the action always runs.')" />
+						:helperText="
+							t(
+								'pipelinq',
+								'Leave it empty and the action always runs.',
+							)
+						" />
 					<div class="journey-form__grid">
 						<NcSelect
 							v-model="conditionOperator"
@@ -117,7 +136,8 @@
 						label="label"
 						trackBy="value" />
 
-					<template v-if="actionKind && actionKind.value === 'sendMailing'">
+					<template
+						v-if="actionKind && actionKind.value === 'sendMailing'">
 						<div class="journey-form__grid">
 							<NcTextField
 								v-model="action.templateId"
@@ -125,7 +145,12 @@
 							<NcTextField
 								v-model="action.listId"
 								:label="t('pipelinq', 'Mailing list')"
-								:helperText="t('pipelinq', 'Leave it empty and the send is checked against the channel consent instead of a list.')" />
+								:helperText="
+									t(
+										'pipelinq',
+										'Leave it empty and the send is checked against the channel consent instead of a list.',
+									)
+								" />
 						</div>
 						<NcSelect
 							v-model="intent"
@@ -135,7 +160,12 @@
 							label="label"
 							trackBy="value" />
 						<p class="journey-form__hint">
-							{{ t('pipelinq', 'A promotional send skips a customer in dunning. A service message reaches them anyway.') }}
+							{{
+								t(
+									'pipelinq',
+									'A promotional send skips a customer in dunning. A service message reaches them anyway.',
+								)
+							}}
 						</p>
 					</template>
 
@@ -288,10 +318,22 @@ export default {
 		 */
 		triggerOptions() {
 			return [
-				{ value: 'leadStageChanged', label: this.t('pipelinq', 'A lead moved stage') },
-				{ value: 'contractRenewalWindow', label: this.t('pipelinq', 'A contract is up for renewal') },
-				{ value: 'listConfirmed', label: this.t('pipelinq', 'Someone confirmed a subscription') },
-				{ value: 'shillinqSignal', label: this.t('pipelinq', 'A bookkeeping signal changed') },
+				{
+					value: 'leadStageChanged',
+					label: this.t('pipelinq', 'A lead moved stage'),
+				},
+				{
+					value: 'contractRenewalWindow',
+					label: this.t('pipelinq', 'A contract is up for renewal'),
+				},
+				{
+					value: 'listConfirmed',
+					label: this.t('pipelinq', 'Someone confirmed a subscription'),
+				},
+				{
+					value: 'shillinqSignal',
+					label: this.t('pipelinq', 'A bookkeeping signal changed'),
+				},
 			]
 		},
 
@@ -315,7 +357,10 @@ export default {
 		actionOptions() {
 			return [
 				{ value: 'createTask', label: this.t('pipelinq', 'Create a task') },
-				{ value: 'sendMailing', label: this.t('pipelinq', 'Send a mailing') },
+				{
+					value: 'sendMailing',
+					label: this.t('pipelinq', 'Send a mailing'),
+				},
 			]
 		},
 
@@ -346,6 +391,13 @@ export default {
 	watch: {
 		show: {
 			immediate: true,
+			/**
+			 * Load the form each time the dialog opens.
+			 *
+			 * @param {boolean} open Whether the dialog is open.
+			 *
+			 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-journey-is-an-openregister-flow-and-pipelinq-ships-no-scheduler
+			 */
 			handler(open) {
 				if (open) {
 					this.load()
@@ -390,8 +442,14 @@ export default {
 				this.cron = journey.trigger?.cron || this.cron
 				this.condition = { ...this.condition, ...(journey.condition || {}) }
 				this.action = { ...this.action, ...(journey.action || {}) }
-				this.triggerKind = this.pick(this.triggerOptions, journey.trigger?.kind)
-				this.conditionOperator = this.pick(this.operatorOptions, journey.condition?.operator)
+				this.triggerKind = this.pick(
+					this.triggerOptions,
+					journey.trigger?.kind,
+				)
+				this.conditionOperator = this.pick(
+					this.operatorOptions,
+					journey.condition?.operator,
+				)
 				this.actionKind = this.pick(this.actionOptions, journey.action?.kind)
 				this.intent = this.pick(this.intentOptions, journey.action?.intent)
 				this.status = this.pick(this.statusOptions, journey.status)

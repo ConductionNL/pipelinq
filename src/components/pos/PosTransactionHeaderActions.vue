@@ -19,7 +19,10 @@
   - @spec openspec/specs/pos-lifecycle-guard-adoption/spec.md#REQ-PLG-001
   -->
 <template>
-	<div v-if="hasActions" class="pos-tx-header-actions" data-testid="pos-tx-header-actions">
+	<div
+		v-if="hasActions"
+		class="pos-tx-header-actions"
+		data-testid="pos-tx-header-actions">
 		<NcButton v-if="canEdit" variant="secondary" @click="edit">
 			<template #icon>
 				<Pencil :size="20" />
@@ -164,14 +167,35 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * The transaction, or an empty object before it loads.
+		 *
+		 * @return {object} The transaction.
+		 *
+		 * @spec openspec/specs/pos-lifecycle-guard-adoption/spec.md#REQ-PLG-001
+		 */
 		transaction() {
 			return this.object || {}
 		},
 
+		/**
+		 * The transaction id, from the prop or the object.
+		 *
+		 * @return {string} The id, or ''.
+		 *
+		 * @spec openspec/specs/pos-lifecycle-guard-adoption/spec.md#REQ-PLG-001
+		 */
 		transactionId() {
 			return this.objectId || this.transaction.id || ''
 		},
 
+		/**
+		 * The transaction's lifecycle status.
+		 *
+		 * @return {string} The status, draft when unset.
+		 *
+		 * @spec openspec/specs/pos-lifecycle-guard-adoption/spec.md#REQ-PLG-001
+		 */
 		status() {
 			return this.transaction.status || 'draft'
 		},
@@ -182,6 +206,8 @@ export default {
 		 * clearly cannot use it. Nextcloud admins are always managers.
 		 *
 		 * @return {boolean} Whether to show manager-only actions.
+		 *
+		 * @spec openspec/specs/pos-lifecycle-guard-adoption/spec.md#REQ-PLG-004
 		 */
 		isManager() {
 			return typeof window.OC?.isUserAdmin === 'function'
@@ -189,43 +215,112 @@ export default {
 				: false
 		},
 
+		/**
+		 * Whether the transaction can still be edited.
+		 *
+		 * @return {boolean}
+		 *
+		 * @spec openspec/specs/pos-lifecycle-guard-adoption/spec.md#REQ-PLG-001
+		 */
 		canEdit() {
 			return ['draft', 'parked'].includes(this.status)
 		},
 
+		/**
+		 * Whether the transaction can be confirmed.
+		 *
+		 * @return {boolean}
+		 *
+		 * @spec openspec/specs/pos-lifecycle-guard-adoption/spec.md#REQ-PLG-001
+		 */
 		canConfirm() {
 			return ['draft', 'parked'].includes(this.status)
 		},
 
+		/**
+		 * Whether the transaction can be parked.
+		 *
+		 * @return {boolean}
+		 *
+		 * @spec openspec/specs/pos-lifecycle-guard-adoption/spec.md#REQ-PLG-001
+		 */
 		canPark() {
 			return this.status === 'draft'
 		},
 
+		/**
+		 * Whether a parked transaction can be resumed.
+		 *
+		 * @return {boolean}
+		 *
+		 * @spec openspec/specs/pos-lifecycle-guard-adoption/spec.md#REQ-PLG-001
+		 */
 		canResume() {
 			return this.status === 'parked'
 		},
 
+		/**
+		 * Whether the transaction can be settled.
+		 *
+		 * @return {boolean}
+		 *
+		 * @spec openspec/specs/pos-lifecycle-guard-adoption/spec.md#REQ-PLG-001
+		 */
 		canSettle() {
 			return this.status === 'confirmed'
 		},
 
+		/**
+		 * Whether a return can be registered against the transaction.
+		 *
+		 * @return {boolean}
+		 *
+		 * @spec openspec/specs/pos-refund-return/spec.md#REQ-REF-002
+		 */
 		canRegisterReturn() {
 			return ['confirmed', 'settled'].includes(this.status)
 		},
 
+		/**
+		 * Whether a manager can refund the whole transaction.
+		 *
+		 * @return {boolean}
+		 *
+		 * @spec openspec/specs/pos-lifecycle-guard-adoption/spec.md#REQ-PLG-004
+		 */
 		canRefund() {
 			return ['confirmed', 'settled'].includes(this.status) && this.isManager
 		},
 
+		/**
+		 * Whether a receipt can be printed or emailed.
+		 *
+		 * @return {boolean}
+		 *
+		 * @spec openspec/specs/pos-receipt-engine/spec.md#REQ-PRE-003
+		 */
 		canIssueReceipt() {
 			return ['confirmed', 'settled', 'refunded'].includes(this.status)
 		},
 
+		/**
+		 * Whether any header action applies to this transaction.
+		 *
+		 * @return {boolean}
+		 *
+		 * @spec openspec/specs/pos-lifecycle-guard-adoption/spec.md#REQ-PLG-001
+		 */
 		hasActions() {
-			return Boolean(this.object) && (
-				this.canEdit || this.canConfirm || this.canPark || this.canResume
-				|| this.canSettle || this.canRegisterReturn || this.canRefund
-				|| this.canIssueReceipt
+			return (
+				Boolean(this.object)
+				&& (this.canEdit
+					|| this.canConfirm
+					|| this.canPark
+					|| this.canResume
+					|| this.canSettle
+					|| this.canRegisterReturn
+					|| this.canRefund
+					|| this.canIssueReceipt)
 			)
 		},
 	},
@@ -233,6 +328,11 @@ export default {
 	watch: {
 		transactionId: {
 			immediate: true,
+			/**
+			 * Re-count the lines when the transaction changes.
+			 *
+			 * @spec openspec/specs/pos-lifecycle-guard-adoption/spec.md#REQ-PLG-001
+			 */
 			handler() {
 				this.loadLineCount()
 			},
@@ -246,6 +346,8 @@ export default {
 		 * server refuses an empty cart either way.
 		 *
 		 * @return {Promise<void>}
+		 *
+		 * @spec openspec/specs/pos-lifecycle-guard-adoption/spec.md#REQ-PLG-001
 		 */
 		async loadLineCount() {
 			const id = this.transactionId
@@ -254,18 +356,36 @@ export default {
 			}
 			try {
 				const store = useObjectStore()
-				await store.fetchCollection('posTransactionLine', { transaction: id, _limit: 500 })
+				await store.fetchCollection('posTransactionLine', {
+					transaction: id,
+					_limit: 500,
+				})
 				const rows = store.getCollection('posTransactionLine')?.results || []
-				this.lineCount = rows.filter((line) => line.transaction === id).length
+				this.lineCount = rows.filter(
+					(line) => line.transaction === id,
+				).length
 			} catch {
 				this.lineCount = null
 			}
 		},
 
+		/**
+		 * Open the transaction's edit form.
+		 *
+		 * @spec openspec/specs/pos-lifecycle-guard-adoption/spec.md#REQ-PLG-001
+		 */
 		edit() {
-			this.$router.push({ name: 'PosTransactionEdit', params: { id: this.transactionId } })
+			this.$router.push({
+				name: 'PosTransactionEdit',
+				params: { id: this.transactionId },
+			})
 		},
 
+		/**
+		 * Open a new refund for this transaction.
+		 *
+		 * @spec openspec/specs/pos-refund-return/spec.md#REQ-REF-002
+		 */
 		registerReturn() {
 			this.$router.push({
 				name: 'PosRefundNewFromTransaction',
@@ -286,9 +406,14 @@ export default {
 			this.busy = true
 			try {
 				const store = useObjectStore()
-				await store.fetchCollection('receiptTemplate', { status: 'active', _limit: 100 })
+				await store.fetchCollection('receiptTemplate', {
+					status: 'active',
+					_limit: 100,
+				})
 				const rows = store.getCollection('receiptTemplate')?.results || []
-				this.receiptTemplates = rows.filter((tpl) => (tpl.status || 'active') === 'active')
+				this.receiptTemplates = rows.filter(
+					(tpl) => (tpl.status || 'active') === 'active',
+				)
 			} catch {
 				this.receiptTemplates = []
 			} finally {
@@ -297,6 +422,11 @@ export default {
 			this.receiptMode = mode
 		},
 
+		/**
+		 * Close the receipt modal and refresh the page after a receipt went out.
+		 *
+		 * @spec openspec/specs/pos-receipt-engine/spec.md#REQ-PRE-003
+		 */
 		onReceiptIssued() {
 			this.receiptMode = ''
 			emit('cn:page:refresh', {})
@@ -309,6 +439,8 @@ export default {
 		 * @param {object} body Optional JSON body.
 		 * @param {string} okMsg Success toast message.
 		 * @return {Promise<boolean>} Whether the action succeeded.
+		 *
+		 * @spec openspec/specs/pos-lifecycle-guard-adoption/spec.md#REQ-PLG-002
 		 */
 		async run(action, body, okMsg) {
 			if (!this.transactionId) {
@@ -317,7 +449,9 @@ export default {
 			this.busy = true
 			try {
 				const response = await fetch(
-					generateUrl(`/apps/pipelinq/api/pos-transactions/${this.transactionId}/${action}`),
+					generateUrl(
+						`/apps/pipelinq/api/pos-transactions/${this.transactionId}/${action}`,
+					),
 					{
 						method: 'POST',
 						headers: {
@@ -349,9 +483,15 @@ export default {
 		 *
 		 * @param {string} reason The refund reason.
 		 * @return {Promise<void>}
+		 *
+		 * @spec openspec/specs/pos-lifecycle-guard-adoption/spec.md#REQ-PLG-004
 		 */
 		async refund(reason) {
-			const ok = await this.run('refund', { reason }, t('pipelinq', 'Transaction refunded.'))
+			const ok = await this.run(
+				'refund',
+				{ reason },
+				t('pipelinq', 'Transaction refunded.'),
+			)
 			if (ok) {
 				this.showRefund = false
 			}

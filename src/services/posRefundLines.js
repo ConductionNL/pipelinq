@@ -16,14 +16,17 @@
  * @param {object} store The pipelinq object store.
  * @param {string} refundId The refund UUID.
  * @return {Promise<Array<object>>} The refund's posRefundLine rows.
+ *
+ * @spec openspec/specs/pos-refund-return/spec.md#REQ-REF-009
  */
 export async function fetchRefundLines(store, refundId) {
 	if (!refundId) {
 		return []
 	}
 	await store.fetchCollection('posRefundLine', { refund: refundId, _limit: 500 })
-	return (store.getCollection('posRefundLine')?.results || [])
-		.filter((line) => line.refund === refundId)
+	return (store.getCollection('posRefundLine')?.results || []).filter(
+		(line) => line.refund === refundId,
+	)
 }
 
 /**
@@ -32,12 +35,18 @@ export async function fetchRefundLines(store, refundId) {
  * @param {object} store The pipelinq object store.
  * @param {string} transactionId The original transaction UUID.
  * @return {Promise<Array<object>>} Its posTransactionLine rows.
+ *
+ * @spec openspec/specs/pos-refund-return/spec.md#REQ-REF-009
  */
 export async function fetchOriginalLines(store, transactionId) {
 	if (!transactionId) {
 		return []
 	}
-	await store.fetchCollection('posTransactionLine', { transaction: transactionId, _limit: 500 })
-	return (store.getCollection('posTransactionLine')?.results || [])
-		.filter((line) => line.transaction === transactionId)
+	await store.fetchCollection('posTransactionLine', {
+		transaction: transactionId,
+		_limit: 500,
+	})
+	return (store.getCollection('posTransactionLine')?.results || []).filter(
+		(line) => line.transaction === transactionId,
+	)
 }

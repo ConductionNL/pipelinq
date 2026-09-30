@@ -25,7 +25,12 @@
 					<strong>{{ estimatedSize }}</strong>
 				</span>
 				<span v-else-if="status === 'incomplete'">
-					{{ t('pipelinq', 'Complete every condition to see the estimate.') }}
+					{{
+						t(
+							'pipelinq',
+							'Complete every condition to see the estimate.',
+						)
+					}}
 				</span>
 			</div>
 		</div>
@@ -87,12 +92,19 @@ function tally(node) {
 		if (node.children.length === 0) {
 			return { leaves: 0, unfinished: 1 }
 		}
-		return node.children.reduce((sum, child) => {
-			const sub = tally(child)
-			return { leaves: sum.leaves + sub.leaves, unfinished: sum.unfinished + sub.unfinished }
-		}, { leaves: 0, unfinished: 0 })
+		return node.children.reduce(
+			(sum, child) => {
+				const sub = tally(child)
+				return {
+					leaves: sum.leaves + sub.leaves,
+					unfinished: sum.unfinished + sub.unfinished,
+				}
+			},
+			{ leaves: 0, unfinished: 0 },
+		)
 	}
-	const noValue = node?.value === '' || node?.value === null || node?.value === undefined
+	const noValue =
+		node?.value === '' || node?.value === null || node?.value === undefined
 	const unfinished = !node?.field || !node?.operator || noValue
 	return { leaves: 1, unfinished: unfinished ? 1 : 0 }
 }
@@ -141,19 +153,41 @@ export default {
 	},
 
 	watch: {
+		/**
+		 * Take a tree the parent replaced, and re-check it.
+		 *
+		 * @param {object} next The new rule tree.
+		 *
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-segment-builder-ui-composes-rule-trees
+		 */
 		modelValue(next) {
-			if (next !== this.tree && JSON.stringify(next) !== JSON.stringify(this.tree)) {
+			if (
+				next !== this.tree
+				&& JSON.stringify(next) !== JSON.stringify(this.tree)
+			) {
 				this.tree = cloneTree(next)
 				this.evaluate()
 			}
 		},
 
+		/**
+		 * Report the validation status, and whether the tree is valid.
+		 *
+		 * @param {string} next The new status.
+		 *
+		 * @spec openspec/specs/marketing-ui/spec.md#scenario-visual-rule-tree-with-live-validation
+		 */
 		status(next) {
 			this.$emit('statusChange', next)
 			this.$emit('validityChange', next === 'valid')
 		},
 	},
 
+	/**
+	 * Report the starting status and check the initial tree.
+	 *
+	 * @spec openspec/specs/marketing-ui/spec.md#scenario-visual-rule-tree-with-live-validation
+	 */
 	mounted() {
 		this.$emit('statusChange', this.status)
 		this.evaluate()
@@ -164,6 +198,13 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * Take an edited tree from the rule nodes, pass it up and re-check it.
+		 *
+		 * @param {object} updated The edited rule tree.
+		 *
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-segment-builder-ui-composes-rule-trees
+		 */
 		onTreeUpdate(updated) {
 			this.tree = updated
 			this.$emit('update:modelValue', cloneTree(updated))
@@ -193,7 +234,10 @@ export default {
 				return
 			}
 			this.status = 'checking'
-			this.previewTimer = setTimeout(() => this.runPreview(), PREVIEW_DEBOUNCE_MS)
+			this.previewTimer = setTimeout(
+				() => this.runPreview(),
+				PREVIEW_DEBOUNCE_MS,
+			)
 		},
 
 		/**
@@ -206,10 +250,13 @@ export default {
 			const seq = this.requestSeq
 			let data
 			try {
-				const response = await axios.post(generateUrl('/apps/pipelinq/api/segments/preview'), {
-					entityType: this.entityType,
-					rules: this.tree,
-				})
+				const response = await axios.post(
+					generateUrl('/apps/pipelinq/api/segments/preview'),
+					{
+						entityType: this.entityType,
+						rules: this.tree,
+					},
+				)
 				data = response.data
 			} catch {
 				data = null
@@ -236,6 +283,8 @@ export default {
 		 * the rules when the path is missing or points nowhere shown.
 		 *
 		 * @param {string} message The validator's error.
+		 *
+		 * @spec openspec/specs/marketing-ui/spec.md#scenario-visual-rule-tree-with-live-validation
 		 */
 		placeError(message) {
 			const match = ERROR_PATH.exec(message)

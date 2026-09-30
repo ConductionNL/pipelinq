@@ -687,7 +687,7 @@ const registry = {
 		kind: 'widget',
 		component: CashShiftDropsWidget,
 		...PANEL_WIDGET_META,
-		_note: 'CashShiftDetail grid widget: the cashDrop object-list plus Add drop, which POSTs to /api/pos-shifts/{id}/drop (POS-operator, open-shift and positive-amount checks, server-set droppedBy/droppedAt) instead of the object-list\'s generic create.',
+		_note: "CashShiftDetail grid widget: the cashDrop object-list plus Add drop, which POSTs to /api/pos-shifts/{id}/drop (POS-operator, open-shift and positive-amount checks, server-set droppedBy/droppedAt) instead of the object-list's generic create.",
 	},
 	CashShiftVarianceWidget: {
 		kind: 'widget',
@@ -1114,37 +1114,37 @@ const registry = {
 		kind: 'modal',
 		component: BlastWizardDialog,
 		propsSchema: null,
-		_note: 'New-blast wizard in the Blasts index page\'s form-dialog slot: basics, audience, content, delivery, A/B test and review, gated on template validation and a consent preflight before POST /api/blasts, then opens the new blast\'s monitor.',
+		_note: "New-blast wizard in the Blasts index page's form-dialog slot: basics, audience, content, delivery, A/B test and review, gated on template validation and a consent preflight before POST /api/blasts, then opens the new blast's monitor.",
 	},
 	ArticleDetailFormDialog: {
 		kind: 'modal',
 		component: ArticleDetailFormDialog,
 		propsSchema: null,
-		_note: 'The ArticleDetail page\'s Edit form: its schema form without the title and body, plus a button that opens ArticleEditModal, the dedicated editor with the markdown body and Files hero picker, on top.',
+		_note: "The ArticleDetail page's Edit form: its schema form without the title and body, plus a button that opens ArticleEditModal, the dedicated editor with the markdown body and Files hero picker, on top.",
 	},
 	SegmentFormDialog: {
 		kind: 'modal',
 		component: SegmentFormDialog,
 		propsSchema: null,
-		_note: 'Segment create/edit, mounted in the Segments index page\'s form-dialog slot. Custom rather than the built-in form: SegmentBuilder is a recursive rule-tree editor with a debounced preview call, and saving must go through POST/PATCH /api/segments, the only path that validates the rules.',
+		_note: "Segment create/edit, mounted in the Segments index page's form-dialog slot. Custom rather than the built-in form: SegmentBuilder is a recursive rule-tree editor with a debounced preview call, and saving must go through POST/PATCH /api/segments, the only path that validates the rules.",
 	},
 	TemplateFormDialog: {
 		kind: 'modal',
 		component: TemplateFormDialog,
 		propsSchema: null,
-		_note: 'CampaignTemplate create/edit, mounted in the Templates index page\'s form-dialog slot. Custom rather than the built-in form: the fields depend on the channel, saving must go through POST/PATCH /api/templates, which runs the compliance check, and that check\'s error is placed on the field it is about.',
+		_note: "CampaignTemplate create/edit, mounted in the Templates index page's form-dialog slot. Custom rather than the built-in form: the fields depend on the channel, saving must go through POST/PATCH /api/templates, which runs the compliance check, and that check's error is placed on the field it is about.",
 	},
 	CampaignFormDialog: {
 		kind: 'modal',
 		component: CampaignFormDialog,
 		propsSchema: null,
-		_note: 'Campaign create/edit, mounted in the form-dialog slot of both the Campaigns index page and CampaignDetail. Custom rather than the built-in form: saving must go through POST/PATCH /api/campaigns, because only CampaignService mints the campaign value, freezes it across a rename and refuses a source or medium outside the tenant\'s vocabulary, and the source and medium pickers read GET /api/campaigns/vocabulary, admin-maintained app config that is not a schema enum.',
+		_note: "Campaign create/edit, mounted in the form-dialog slot of both the Campaigns index page and CampaignDetail. Custom rather than the built-in form: saving must go through POST/PATCH /api/campaigns, because only CampaignService mints the campaign value, freezes it across a rename and refuses a source or medium outside the tenant's vocabulary, and the source and medium pickers read GET /api/campaigns/vocabulary, admin-maintained app config that is not a schema enum.",
 	},
 	JourneyFormDialog: {
 		kind: 'modal',
 		component: JourneyFormDialog,
 		propsSchema: null,
-		_note: 'Journey create/edit, mounted in the form-dialog slot of both the Journeys index page and JourneyDetail. Custom rather than the built-in form: every write compiles the journey into an OpenRegister flow through POST and PATCH /api/journeys, and a journey saved through the object API would be stored and never compiled, which looks exactly like a journey whose trigger has not fired. It also surfaces the flow engine\'s own refusal verbatim.',
+		_note: "Journey create/edit, mounted in the form-dialog slot of both the Journeys index page and JourneyDetail. Custom rather than the built-in form: every write compiles the journey into an OpenRegister flow through POST and PATCH /api/journeys, and a journey saved through the object API would be stored and never compiled, which looks exactly like a journey whose trigger has not fired. It also surfaces the flow engine's own refusal verbatim.",
 	},
 
 	// Contact-aware create for the generic Add button on the Clients index page.

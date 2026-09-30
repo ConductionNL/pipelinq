@@ -66,6 +66,13 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * The refund id, from the prop or the object.
+		 *
+		 * @return {string} The id, or ''.
+		 *
+		 * @spec openspec/specs/pos-refund-return/spec.md#REQ-REF-009
+		 */
 		refundId() {
 			return this.objectId || this.objectData?.id || ''
 		},
@@ -74,6 +81,11 @@ export default {
 	watch: {
 		refundId: {
 			immediate: true,
+			/**
+			 * Reload the lines when the refund changes.
+			 *
+			 * @spec openspec/specs/pos-refund-return/spec.md#REQ-REF-009
+			 */
 			handler() {
 				this.load()
 			},
@@ -96,6 +108,8 @@ export default {
 		 * @param {boolean} [options.silent] Keep the totals on screen while
 		 *   reloading.
 		 * @return {Promise<void>}
+		 *
+		 * @spec openspec/specs/pos-refund-return/spec.md#REQ-REF-009
 		 */
 		async load({ silent = false } = {}) {
 			if (!this.refundId) {
@@ -112,7 +126,11 @@ export default {
 		},
 
 		/**
+		 * Reload quietly on a page refresh, reporting the work to its sender.
+		 *
 		 * @param {object} [payload] The refresh payload.
+		 *
+		 * @spec openspec/specs/pos-refund-return/spec.md#REQ-REF-009
 		 */
 		onPageRefresh(payload) {
 			const done = this.load({ silent: true })

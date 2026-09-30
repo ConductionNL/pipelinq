@@ -13,7 +13,10 @@
 	<div class="payment-status-card">
 		<header class="payment-status-card__header">
 			<h4>{{ t('pipelinq', 'Payment provider') }}</h4>
-			<CnStatusBadge :label="statusLabel" :variant="statusVariant" size="small" />
+			<CnStatusBadge
+				:label="statusLabel"
+				:variant="statusVariant"
+				size="small" />
 		</header>
 		<dl class="payment-status-card__grid">
 			<template v-if="provider">
@@ -156,6 +159,8 @@ export default {
 		 * keeps the text readable in both light and dark themes.
 		 *
 		 * @return {string} A CnStatusBadge variant.
+		 *
+		 * @spec openspec/changes/archive/2026-06-14-pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#REQ-PAY-009
 		 */
 		statusVariant() {
 			const map = {

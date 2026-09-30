@@ -13,7 +13,10 @@
   - its drops and its variance.
   -->
 <template>
-	<div v-if="canAct" class="cash-shift-header-actions" data-testid="cash-shift-header-actions">
+	<div
+		v-if="canAct"
+		class="cash-shift-header-actions"
+		data-testid="cash-shift-header-actions">
 		<NcButton variant="primary" :disabled="busy" @click="showCount = true">
 			{{ t('pipelinq', 'Close and count shift') }}
 		</NcButton>
@@ -60,11 +63,24 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * The shift's id, from the slot or the shift itself.
+		 *
+		 * @return {string} The shift id, or '' when unknown.
+		 *
+		 * @spec openspec/changes/archive/2026-06-14-pos-cash-management/specs/pos-cash-management/spec.md#req-ccm-003-perform-blind-count-at-close
+		 */
 		shiftId() {
 			return this.objectId || this.object?.id || ''
 		},
 
-		/** @return {boolean} The closing count needs an open shift. */
+		/**
+		 * Whether the closing count can be recorded: it needs an open shift.
+		 *
+		 * @return {boolean} Whether to offer the count.
+		 *
+		 * @spec openspec/changes/archive/2026-06-14-pos-cash-management/specs/pos-cash-management/spec.md#req-ccm-003-perform-blind-count-at-close
+		 */
 		canAct() {
 			return Boolean(this.object) && (this.object.status || 'open') === 'open'
 		},
@@ -76,10 +92,17 @@ export default {
 		 *
 		 * @param {object} payload The count payload (amount, notes).
 		 * @return {Promise<void>}
+		 *
+		 * @spec openspec/changes/archive/2026-06-14-pos-cash-management/specs/pos-cash-management/spec.md#req-ccm-003-perform-blind-count-at-close
 		 */
 		async recordCount(payload) {
 			this.busy = true
-			const ok = await postShiftAction(this.shiftId, 'count', payload, t('pipelinq', 'Count recorded.'))
+			const ok = await postShiftAction(
+				this.shiftId,
+				'count',
+				payload,
+				t('pipelinq', 'Count recorded.'),
+			)
 			this.busy = false
 			if (ok) {
 				this.showCount = false

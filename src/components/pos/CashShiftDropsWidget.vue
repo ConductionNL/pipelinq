@@ -29,7 +29,11 @@
 			     events, so a `title` on the button itself never shows. -->
 			<span
 				class="cash-shift-drops__add"
-				:title="canDrop ? null : t('pipelinq', 'Drops can only be added to an open shift.')">
+				:title="
+					canDrop
+						? null
+						: t('pipelinq', 'Drops can only be added to an open shift.')
+				">
 				<NcButton
 					variant="secondary"
 					:disabled="busy || !canDrop"
@@ -53,7 +57,11 @@
 </template>
 
 <script>
-import { CnIcon, CnObjectListWidget, CnWidgetWrapper } from '@conduction/nextcloud-vue'
+import {
+	CnIcon,
+	CnObjectListWidget,
+	CnWidgetWrapper,
+} from '@conduction/nextcloud-vue'
 import { NcButton } from '@nextcloud/vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import CashShiftDropDialog from '../../modals/CashShiftDropDialog.vue'
@@ -61,7 +69,15 @@ import { postShiftAction } from '../../services/posShiftActions.js'
 
 export default {
 	name: 'CashShiftDropsWidget',
-	components: { CashShiftDropDialog, CnIcon, CnObjectListWidget, CnWidgetWrapper, NcButton, Plus },
+	components: {
+		CashShiftDropDialog,
+		CnIcon,
+		CnObjectListWidget,
+		CnWidgetWrapper,
+		NcButton,
+		Plus,
+	},
+
 	// The host also spreads the content keys and register / schema / store;
 	// none of them belong on the root element.
 	inheritAttrs: false,
@@ -100,16 +116,38 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * The shift's id, from the page or the shift itself.
+		 *
+		 * @return {string} The shift id, or '' when unknown.
+		 *
+		 * @spec openspec/changes/archive/2026-06-14-pos-cash-management/specs/pos-cash-management/spec.md#req-ccm-002-record-mid-shift-drops
+		 */
 		shiftId() {
 			return this.objectId || this.objectData?.id || ''
 		},
 
-		/** @return {boolean} A drop can only be recorded on an open shift. */
+		/**
+		 * Whether a drop can be recorded: only on an open shift.
+		 *
+		 * @return {boolean} Whether to offer Add drop.
+		 *
+		 * @spec openspec/changes/archive/2026-06-14-pos-cash-management/specs/pos-cash-management/spec.md#req-ccm-002-record-mid-shift-drops
+		 */
 		canDrop() {
-			return Boolean(this.objectData) && (this.objectData.status || 'open') === 'open'
+			return (
+				Boolean(this.objectData)
+				&& (this.objectData.status || 'open') === 'open'
+			)
 		},
 
-		/** @return {object} The list content; adding goes through Add drop. */
+		/**
+		 * The list content; adding goes through Add drop.
+		 *
+		 * @return {object} The object-list content.
+		 *
+		 * @spec openspec/changes/archive/2026-06-14-pos-cash-management/specs/pos-cash-management/spec.md#req-ccm-002-record-mid-shift-drops
+		 */
 		listContent() {
 			return { ...this.content, allowCreate: false }
 		},
@@ -121,10 +159,17 @@ export default {
 		 *
 		 * @param {object} payload The drop payload (amount, reason).
 		 * @return {Promise<void>}
+		 *
+		 * @spec openspec/changes/archive/2026-06-14-pos-cash-management/specs/pos-cash-management/spec.md#req-ccm-002-record-mid-shift-drops
 		 */
 		async recordDrop(payload) {
 			this.busy = true
-			const ok = await postShiftAction(this.shiftId, 'drop', payload, t('pipelinq', 'Drop recorded.'))
+			const ok = await postShiftAction(
+				this.shiftId,
+				'drop',
+				payload,
+				t('pipelinq', 'Drop recorded.'),
+			)
 			this.busy = false
 			if (ok) {
 				this.showDrop = false
