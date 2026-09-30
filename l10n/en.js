@@ -6834,7 +6834,20 @@ OC.L10N.register(
         "Came in through a referral or partner": "Came in through a referral or partner",
         "Expected close date set": "Expected close date set",
         "Priority high or urgent": "Priority high or urgent",
-        "Description written": "Description written"
+        "Description written": "Description written",
+        "Portal resident": "Portal resident",
+        "The portal reference of the resident who asked this question. Never a BSN.": "The portal reference of the resident who asked this question. Never a BSN.",
+        "Asked about": "Asked about",
+        "The dossier the resident asked about, as it was when they asked.": "The dossier the resident asked about, as it was when they asked.",
+        "What the question is about.": "What the question is about.",
+        "Dossier": "Dossier",
+        "The id of the resident's dossier.": "The id of the resident's dossier.",
+        "Dossier title": "Dossier title",
+        "The dossier's title when the question was asked.": "The dossier's title when the question was asked.",
+        "The documents in the dossier when the question was asked.": "The documents in the dossier when the question was asked.",
+        "Document": "Document",
+        "The document's title.": "The document's title.",
+        "Where the public document can be read.": "Where the public document can be read."
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -5,7 +5,7 @@
         "slug": "ticket",
         "title": "Ticket",
         "icon": "TicketOutline",
-        "version": "1.1.0",
+        "version": "1.2.0",
         "summary": "Unified inbound customer matter — request, complaint or contactmoment",
         "description": "The ticket supertype folds the former request, complaint and contactmoment schemas into one object distinguished by a ticketType discriminator (unify-ticket-supertype). A ticket is any inbound customer matter: a request/demand (with pipeline & queue), a complaint/klacht (with SLA & resolution) or a contactmoment (a single logged interaction, optionally hanging off a parent request-ticket). Per-type Schema.org identity is preserved via x-schema-org-by-type.",
         "x-schema-org": "schema:Thing",
@@ -378,6 +378,41 @@
             "title": "Portal attachments",
             "description": "Files the customer attached when submitting this request in the portal.",
             "items": { "type": "string" }
+          },
+          "portalSubject": {
+            "type": "string",
+            "title": "Portal resident",
+            "description": "The portal reference of the resident who asked this question. Never a BSN.",
+            "x-notes": "questions-about-a-citizen-dossier (hydra woo-citizen-journey C4): the subjectRef portaliq put in the verified X-Portal-Subject assertion. It is the scope field of the myQuestions portal collection, so the resident reads only their own questions and portaliq's change rule knows whom to tell about an answer. Written by DossierQuestionService::ask() only.",
+            "facetable": false
+          },
+          "subjectReference": {
+            "type": "object",
+            "title": "Asked about",
+            "description": "The dossier the resident asked about, as it was when they asked.",
+            "x-notes": "questions-about-a-citizen-dossier (hydra woo-citizen-journey C4): a snapshot of the resident's opencatalogi collection, taken once by DossierQuestionService::ask(). The KCC employee sees what the resident saw and gets no live access to the dossier afterwards, because a dossier reveals what someone is researching.",
+            "properties": {
+              "type": {
+                "type": "string",
+                "title": "Kind",
+                "description": "What the question is about.",
+                "enum": ["opencatalogi.collection"]
+              },
+              "id": { "type": "string", "title": "Dossier", "description": "The id of the resident's dossier." },
+              "title": { "type": "string", "title": "Dossier title", "description": "The dossier's title when the question was asked." },
+              "items": {
+                "type": "array",
+                "title": "Documents",
+                "description": "The documents in the dossier when the question was asked.",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "title": { "type": "string", "title": "Document", "description": "The document's title." },
+                    "url": { "type": "string", "title": "Public link", "description": "Where the public document can be read." }
+                  }
+                }
+              }
+            }
           }
         }
       }

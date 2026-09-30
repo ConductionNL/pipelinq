@@ -6765,6 +6765,19 @@
         "Came in through a referral or partner": "Binnengekomen via een doorverwijzing of partner",
         "Expected close date set": "Verwachte sluitdatum ingevuld",
         "Priority high or urgent": "Prioriteit hoog of urgent",
-        "Description written": "Omschrijving ingevuld"
+        "Description written": "Omschrijving ingevuld",
+        "Portal resident": "Inwoner in het portaal",
+        "The portal reference of the resident who asked this question. Never a BSN.": "De portaalverwijzing van de inwoner die deze vraag stelde. Nooit een BSN.",
+        "Asked about": "Vraag over",
+        "The dossier the resident asked about, as it was when they asked.": "Het dossier waar de inwoner een vraag over stelde, zoals het was bij het stellen.",
+        "What the question is about.": "Waar de vraag over gaat.",
+        "Dossier": "Dossier",
+        "The id of the resident's dossier.": "Het id van het dossier van de inwoner.",
+        "Dossier title": "Titel van het dossier",
+        "The dossier's title when the question was asked.": "De titel van het dossier toen de vraag werd gesteld.",
+        "The documents in the dossier when the question was asked.": "De documenten in het dossier toen de vraag werd gesteld.",
+        "Document": "Document",
+        "The document's title.": "De titel van het document.",
+        "Where the public document can be read.": "Waar het openbare document te lezen is."
     }
 }
