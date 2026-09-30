@@ -106,8 +106,10 @@ reach the resident through portaliq's notice path" (sender side).
 
 The contribution SHALL declare the change rule `pipelinq.question.answered` on
 `myQuestions` for the field `customerMessage`, so portaliq writes the inbox
-notice and dispatches it by email and Berichtenbox according to the resident's
-preferences. Saving an answer SHALL NOT depend on portaliq being installed.
+notice and dispatches it by email according to the resident's preferences. The
+notice SHALL go to the inbox and by email only, never to Berichtenbox, because
+pipelinq stores no BSN. Saving an answer SHALL NOT depend on portaliq being
+installed.
 
 #### Scenario: The rule is declared for both audiences
 

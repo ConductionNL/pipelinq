@@ -16,9 +16,12 @@
   it compares the field on every OpenRegister update of that collection's
   schema. When it changed, portaliq writes the `portalMessage` to the resident
   named in the record's scope field and dispatches the rule key, so the
-  resident's preferences decide on email and Berichtenbox. A `portalMessage`
-  that pipelinq wrote itself would not be dispatched: portaliq skips its own
-  message schema in that listener. The rule is only kept when its collection is
+  resident's preferences decide on email. The notice goes to the inbox and by
+  email only: Berichtenbox needs the resident's BSN, which this journey does
+  not store (Ruben, 30 Sep; hydra#730). The change rule is one of the two C3
+  paths the settled contract allows; the other is a `portalMessage` the app
+  writes itself with the new optional `ruleKey`. pipelinq uses the change
+  rule, because the answer already lives on the ticket. The rule is only kept when its collection is
   scoped by the subject reference on the record, and its field is projected to
   the resident.
 - **The ticket has no field for the portal subject.** `client` and `contact`
