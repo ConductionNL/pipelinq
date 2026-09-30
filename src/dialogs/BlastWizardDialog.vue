@@ -99,9 +99,13 @@
 							label="name"
 							:loading="segmentsLoading"
 							class="blast-wizard__select" />
-						<p v-if="selectedSegment" class="blast-wizard__hint blast-wizard__audience-hint">
+						<p
+							v-if="selectedSegment"
+							class="blast-wizard__hint blast-wizard__audience-hint">
 							{{ t('pipelinq', 'Estimated audience:') }}
-							<strong>{{ selectedSegment.estimatedSize ?? '—' }}</strong>
+							<strong>{{
+								selectedSegment.estimatedSize ?? '—'
+							}}</strong>
 						</p>
 					</template>
 					<template v-else>
@@ -112,8 +116,15 @@
 							label="name"
 							:loading="mailingListsLoading"
 							class="blast-wizard__select" />
-						<p v-if="selectedList" class="blast-wizard__hint blast-wizard__audience-hint">
-							{{ t('pipelinq', 'Only confirmed subscribers receive this. Anyone still awaiting confirmation is skipped.') }}
+						<p
+							v-if="selectedList"
+							class="blast-wizard__hint blast-wizard__audience-hint">
+							{{
+								t(
+									'pipelinq',
+									'Only confirmed subscribers receive this. Anyone still awaiting confirmation is skipped.',
+								)
+							}}
 						</p>
 					</template>
 				</section>
@@ -127,17 +138,31 @@
 						label="name"
 						:loading="templatesLoading"
 						class="blast-wizard__select" />
-					<p v-if="!templatesLoading && filteredTemplates.length === 0" class="blast-wizard__hint">
-						{{ t('pipelinq', 'There are no templates for this channel yet.') }}
+					<p
+						v-if="!templatesLoading && filteredTemplates.length === 0"
+						class="blast-wizard__hint">
+						{{
+							t(
+								'pipelinq',
+								'There are no templates for this channel yet.',
+							)
+						}}
 					</p>
-					<NcNoteCard v-if="templateValidationError" type="error" class="blast-wizard__note">
+					<NcNoteCard
+						v-if="templateValidationError"
+						type="error"
+						class="blast-wizard__note">
 						{{ templateValidationError }}
 					</NcNoteCard>
 
 					<NcLoadingIcon v-if="previewLoading" :size="24" />
 					<div v-else-if="preview" class="blast-wizard__preview">
-						<p v-if="preview.subject" class="blast-wizard__preview-subject">
-							<span class="blast-wizard__preview-label">{{ t('pipelinq', 'Subject') }}</span>
+						<p
+							v-if="preview.subject"
+							class="blast-wizard__preview-subject">
+							<span class="blast-wizard__preview-label">{{
+								t('pipelinq', 'Subject')
+							}}</span>
 							{{ preview.subject }}
 						</p>
 						<!-- An empty `sandbox` gives the preview an opaque origin and
@@ -151,7 +176,9 @@
 						<ul
 							v-if="preview.articles && preview.articles.length"
 							class="blast-wizard__preview-articles">
-							<li v-for="(article, index) in preview.articles" :key="index">
+							<li
+								v-for="(article, index) in preview.articles"
+								:key="index">
 								<strong>{{ article.title }}</strong>
 								<p v-if="article.summary">
 									{{ article.summary }}
@@ -172,9 +199,17 @@
 							:loading="transportsLoading"
 							class="blast-wizard__select blast-wizard__transport" />
 						<p class="blast-wizard__hint">
-							{{ t('pipelinq', 'Leave empty to send through the default transport.') }}
+							{{
+								t(
+									'pipelinq',
+									'Leave empty to send through the default transport.',
+								)
+							}}
 						</p>
-						<NcNoteCard v-if="transportsError" type="warning" class="blast-wizard__note">
+						<NcNoteCard
+							v-if="transportsError"
+							type="warning"
+							class="blast-wizard__note">
 							{{ transportsError }}
 						</NcNoteCard>
 					</div>
@@ -187,7 +222,10 @@
 							label="label"
 							:loading="connectorSourcesLoading"
 							class="blast-wizard__select" />
-						<NcNoteCard v-if="connectorSourcesError" type="warning" class="blast-wizard__note">
+						<NcNoteCard
+							v-if="connectorSourcesError"
+							type="warning"
+							class="blast-wizard__note">
 							{{ connectorSourcesError }}
 						</NcNoteCard>
 					</div>
@@ -200,7 +238,9 @@
 							name="blast-wizard-schedule"
 							type="radio"
 							@update:modelValue="scheduleMode = $event">
-							{{ t('pipelinq', 'Send as soon as the blast is created') }}
+							{{
+								t('pipelinq', 'Send as soon as the blast is created')
+							}}
 						</NcCheckboxRadioSwitch>
 						<NcCheckboxRadioSwitch
 							:modelValue="scheduleMode"
@@ -227,7 +267,9 @@
 						{{ t('pipelinq', 'Run an A/B variant test') }}
 					</NcCheckboxRadioSwitch>
 					<div v-if="abEnabled" class="blast-wizard__ab">
-						<label class="blast-wizard__ab-label" for="blast-wizard-ab-split">
+						<label
+							class="blast-wizard__ab-label"
+							for="blast-wizard-ab-split">
 							{{ t('pipelinq', 'Variant A share (%)') }}
 						</label>
 						<input
@@ -237,17 +279,35 @@
 							min="0"
 							max="100"
 							step="5"
-							class="blast-wizard__range">
+							class="blast-wizard__range" />
 						<div class="blast-wizard__ab-split">
-							<span>{{ t('pipelinq', 'Variant A') }} <strong>{{ model.abSplitPercent }}%</strong></span>
-							<span>{{ t('pipelinq', 'Variant B') }} <strong>{{ 100 - model.abSplitPercent }}%</strong></span>
+							<span
+								>{{ t('pipelinq', 'Variant A') }}
+								<strong>{{ model.abSplitPercent }}%</strong></span
+							>
+							<span
+								>{{ t('pipelinq', 'Variant B') }}
+								<strong
+									>{{ 100 - model.abSplitPercent }}%</strong
+								></span
+							>
 						</div>
 						<p class="blast-wizard__hint">
-							{{ t('pipelinq', 'Variant B will receive the remaining audience share.') }}
+							{{
+								t(
+									'pipelinq',
+									'Variant B will receive the remaining audience share.',
+								)
+							}}
 						</p>
 					</div>
 					<p v-else class="blast-wizard__hint">
-						{{ t('pipelinq', 'The whole audience receives the same message.') }}
+						{{
+							t(
+								'pipelinq',
+								'The whole audience receives the same message.',
+							)
+						}}
 					</p>
 				</section>
 
@@ -258,7 +318,9 @@
 							<dt>{{ row.label }}</dt>
 							<dd>{{ row.value }}</dd>
 							<dd class="blast-wizard__review-change">
-								<NcButton variant="tertiary" @click="goTo(stepIndex(row.step))">
+								<NcButton
+									variant="tertiary"
+									@click="goTo(stepIndex(row.step))">
 									{{ t('pipelinq', 'Edit') }}
 								</NcButton>
 							</dd>
@@ -266,14 +328,20 @@
 					</dl>
 				</section>
 
-				<NcNoteCard v-if="submitError" type="error" class="blast-wizard__note">
+				<NcNoteCard
+					v-if="submitError"
+					type="error"
+					class="blast-wizard__note">
 					{{ submitError }}
 				</NcNoteCard>
 			</div>
 		</div>
 
 		<template #actions>
-			<NcButton variant="tertiary" class="blast-wizard__cancel" @click="close()">
+			<NcButton
+				variant="tertiary"
+				class="blast-wizard__cancel"
+				@click="close()">
 				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
 			<NcButton v-if="currentStep > 0" variant="secondary" @click="prev">
@@ -443,10 +511,25 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * The wizard's steps, with translated labels.
+		 *
+		 * @return {Array<{key: string, label: string}>}
+		 *
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-blast-creation-wizard-gates-on-compliance
+		 */
 		steps() {
-			return STEPS.map((s) => ({ key: s.key, label: this.t('pipelinq', s.label) }))
+			return STEPS.map((s) => ({
+				key: s.key,
+				label: this.t('pipelinq', s.label),
+			}))
 		},
 
+		/**
+		 * @return {string} The key of the current step.
+		 *
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-blast-creation-wizard-gates-on-compliance
+		 */
 		step() {
 			return STEPS[this.currentStep].key
 		},
@@ -455,6 +538,13 @@ export default {
 			return this.currentStep === STEPS.length - 1
 		},
 
+		/**
+		 * The channels a blast can send on.
+		 *
+		 * @return {Array<{value: string, label: string}>}
+		 *
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-blast-creation-wizard-gates-on-compliance
+		 */
 		channelOptions() {
 			return [
 				{ value: 'email', label: this.t('pipelinq', 'Email') },
@@ -462,9 +552,15 @@ export default {
 			]
 		},
 
-		/** @return {Array<object>} The templates written for the chosen channel. */
+		/**
+		 * @return {Array<object>} The templates written for the chosen channel.
+		 *
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-blast-creation-wizard-gates-on-compliance
+		 */
 		filteredTemplates() {
-			return this.templates.filter((template) => template.channel === this.selectedChannel)
+			return this.templates.filter(
+				(template) => template.channel === this.selectedChannel,
+			)
 		},
 
 		/**
@@ -473,7 +569,9 @@ export default {
 		 * @spec openspec/specs/marketing-blast/spec.md#requirement-a-blast-may-target-a-mailing-list
 		 */
 		hasAudience() {
-			return this.audienceKind === 'list' ? !!this.selectedList : !!this.selectedSegment
+			return this.audienceKind === 'list'
+				? !!this.selectedList
+				: !!this.selectedSegment
 		},
 
 		/**
@@ -484,7 +582,11 @@ export default {
 			return this.stepValid(this.step)
 		},
 
-		/** @return {number} The furthest step the stepper lets you jump to. */
+		/**
+		 * @return {number} The furthest step the stepper lets you jump to.
+		 *
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-blast-creation-wizard-gates-on-compliance
+		 */
 		reachableStep() {
 			const firstInvalid = STEPS.findIndex((s) => !this.stepValid(s.key))
 			return firstInvalid === -1 ? STEPS.length - 1 : firstInvalid
@@ -498,6 +600,11 @@ export default {
 			return STEPS.every((s) => s.key === 'review' || this.stepValid(s.key))
 		},
 
+		/**
+		 * @return {Date|null} The scheduled send time, or null when none is set.
+		 *
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-blast-creation-wizard-gates-on-compliance
+		 */
 		scheduledForDate() {
 			return this.model.scheduledFor ? new Date(this.model.scheduledFor) : null
 		},
@@ -508,37 +615,99 @@ export default {
 		 * sandbox.
 		 *
 		 * @return {string} The preview document.
+		 *
+		 * @spec openspec/changes/marketing-article-hub/specs/marketing-ui/spec.md#scenario-the-blast-preview-shows-the-embedded-articles
 		 */
 		previewDocument() {
-			const csp = "default-src 'none'; style-src 'unsafe-inline'; img-src data: https:; font-src data: https:"
-			return '<!DOCTYPE html><html><head><meta charset="utf-8">'
+			const csp =
+				"default-src 'none'; style-src 'unsafe-inline'; img-src data: https:; font-src data: https:"
+			return (
+				'<!DOCTYPE html><html><head><meta charset="utf-8">'
 				+ `<meta http-equiv="Content-Security-Policy" content="${csp}">`
 				+ '<style>body{margin:16px;font-family:sans-serif;color:#222;background:#fff}</style>'
 				+ `</head><body>${this.preview?.bodyHtml || ''}</body></html>`
+			)
 		},
 
-		/** @return {Array<object>} What the review step lists, each with the step that sets it. */
+		/**
+		 * @return {Array<object>} What the review step lists, each with the step that sets it.
+		 *
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-blast-creation-wizard-gates-on-compliance
+		 */
 		reviewRows() {
 			const none = this.t('pipelinq', 'None')
-			const audience = this.audienceKind === 'list'
-				? this.t('pipelinq', 'Mailing list: {name}', { name: this.selectedList?.name || '' })
-				: this.t('pipelinq', 'Segment: {name}', { name: this.selectedSegment?.name || '' })
-			const channel = this.channelOptions.find((o) => o.value === this.selectedChannel)?.label || ''
-			const when = this.scheduleMode === 'later' && this.scheduledForDate
-				? this.scheduledForDate.toLocaleString()
-				: this.t('pipelinq', 'As soon as the blast is created')
+			const audience =
+				this.audienceKind === 'list'
+					? this.t('pipelinq', 'Mailing list: {name}', {
+							name: this.selectedList?.name || '',
+						})
+					: this.t('pipelinq', 'Segment: {name}', {
+							name: this.selectedSegment?.name || '',
+						})
+			const channel =
+				this.channelOptions.find((o) => o.value === this.selectedChannel)
+					?.label || ''
+			const when =
+				this.scheduleMode === 'later' && this.scheduledForDate
+					? this.scheduledForDate.toLocaleString()
+					: this.t('pipelinq', 'As soon as the blast is created')
 			const ab = this.abEnabled
-				? this.t('pipelinq', 'Variant A {a}%, variant B {b}%', { a: this.model.abSplitPercent, b: 100 - this.model.abSplitPercent })
+				? this.t('pipelinq', 'Variant A {a}%, variant B {b}%', {
+						a: this.model.abSplitPercent,
+						b: 100 - this.model.abSplitPercent,
+					})
 				: this.t('pipelinq', 'Off')
 			return [
-				{ key: 'name', step: 'basics', label: this.t('pipelinq', 'Name'), value: this.model.name.trim() },
-				{ key: 'channel', step: 'basics', label: this.t('pipelinq', 'Channel'), value: channel },
-				{ key: 'audience', step: 'audience', label: this.t('pipelinq', 'Audience'), value: audience },
-				{ key: 'template', step: 'content', label: this.t('pipelinq', 'Template'), value: this.selectedTemplate?.name || none },
-				{ key: 'transport', step: 'delivery', label: this.t('pipelinq', 'Send through'), value: this.selectedTransport?.label || this.t('pipelinq', 'Default transport') },
-				{ key: 'source', step: 'delivery', label: this.t('pipelinq', 'Connector source'), value: this.selectedConnectorSource?.label || none },
-				{ key: 'when', step: 'delivery', label: this.t('pipelinq', 'When'), value: when },
-				{ key: 'ab', step: 'ab', label: this.t('pipelinq', 'A/B test'), value: ab },
+				{
+					key: 'name',
+					step: 'basics',
+					label: this.t('pipelinq', 'Name'),
+					value: this.model.name.trim(),
+				},
+				{
+					key: 'channel',
+					step: 'basics',
+					label: this.t('pipelinq', 'Channel'),
+					value: channel,
+				},
+				{
+					key: 'audience',
+					step: 'audience',
+					label: this.t('pipelinq', 'Audience'),
+					value: audience,
+				},
+				{
+					key: 'template',
+					step: 'content',
+					label: this.t('pipelinq', 'Template'),
+					value: this.selectedTemplate?.name || none,
+				},
+				{
+					key: 'transport',
+					step: 'delivery',
+					label: this.t('pipelinq', 'Send through'),
+					value:
+						this.selectedTransport?.label
+						|| this.t('pipelinq', 'Default transport'),
+				},
+				{
+					key: 'source',
+					step: 'delivery',
+					label: this.t('pipelinq', 'Connector source'),
+					value: this.selectedConnectorSource?.label || none,
+				},
+				{
+					key: 'when',
+					step: 'delivery',
+					label: this.t('pipelinq', 'When'),
+					value: when,
+				},
+				{
+					key: 'ab',
+					step: 'ab',
+					label: this.t('pipelinq', 'A/B test'),
+					value: ab,
+				},
 			]
 		},
 	},
@@ -546,6 +715,13 @@ export default {
 	watch: {
 		show: {
 			immediate: true,
+			/**
+			 * Reset the wizard each time it opens.
+			 *
+			 * @param {boolean} open Whether the wizard is open.
+			 *
+			 * @spec openspec/specs/marketing-ui/spec.md#requirement-blast-creation-wizard-gates-on-compliance
+			 */
 			handler(open) {
 				if (open) {
 					this.reset()
@@ -553,6 +729,11 @@ export default {
 			},
 		},
 
+		/**
+		 * @param {object|null} option The chosen segment, or null.
+		 *
+		 * @spec openspec/specs/marketing-blast/spec.md#requirement-a-blast-may-target-a-mailing-list
+		 */
 		selectedSegment(option) {
 			this.model.segmentId = option?.id || ''
 		},
@@ -598,6 +779,8 @@ export default {
 		 * A template written for the other channel no longer fits.
 		 *
 		 * @param {string} value The channel just picked.
+		 *
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-blast-creation-wizard-gates-on-compliance
 		 */
 		selectedChannel(value) {
 			this.model.channel = value
@@ -606,6 +789,11 @@ export default {
 			}
 		},
 
+		/**
+		 * @param {object|null} option The chosen connector source, or null.
+		 *
+		 * @spec openspec/specs/marketing-blast/spec.md#requirement-send-via-openconnector-with-per-tenant-provider
+		 */
 		selectedConnectorSource(option) {
 			this.model.connectorSourceId = option?.id || ''
 		},
@@ -618,12 +806,26 @@ export default {
 			this.model.transportId = option?.id || ''
 		},
 
+		/**
+		 * Sending now drops any scheduled time.
+		 *
+		 * @param {string} mode Either 'now' or 'later'.
+		 *
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-blast-creation-wizard-gates-on-compliance
+		 */
 		scheduleMode(mode) {
 			if (mode === 'now') {
 				this.model.scheduledFor = ''
 			}
 		},
 
+		/**
+		 * Turning the A/B test on starts from an even split.
+		 *
+		 * @param {boolean} on Whether the A/B test is on.
+		 *
+		 * @spec openspec/specs/marketing-blast/spec.md#requirement-ab-test-splits-segment-deterministically
+		 */
 		abEnabled(on) {
 			if (on && this.model.abSplitPercent === 100) {
 				this.model.abSplitPercent = 50
@@ -635,6 +837,8 @@ export default {
 		/**
 		 * @param {string} key A step key.
 		 * @return {boolean} Whether that step is filled in well enough.
+		 *
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-blast-creation-wizard-gates-on-compliance
 		 */
 		stepValid(key) {
 			switch (key) {
@@ -643,7 +847,11 @@ export default {
 				case 'audience':
 					return this.hasAudience
 				case 'content':
-					return !!this.selectedTemplate && !this.templateValidating && !this.templateValidationError
+					return (
+						!!this.selectedTemplate
+						&& !this.templateValidating
+						&& !this.templateValidationError
+					)
 				case 'delivery':
 					return this.scheduleMode === 'now' || !!this.model.scheduledFor
 				default:
@@ -651,10 +859,23 @@ export default {
 			}
 		},
 
+		/**
+		 * @param {string} key A step key.
+		 * @return {number} That step's position.
+		 *
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-blast-creation-wizard-gates-on-compliance
+		 */
 		stepIndex(key) {
 			return STEPS.findIndex((s) => s.key === key)
 		},
 
+		/**
+		 * Jump to a step, as far as the filled-in steps allow.
+		 *
+		 * @param {number} idx The step's position.
+		 *
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-blast-creation-wizard-gates-on-compliance
+		 */
 		goTo(idx) {
 			if (idx <= this.reachableStep) {
 				this.currentStep = idx
@@ -662,12 +883,22 @@ export default {
 			}
 		},
 
+		/**
+		 * Go to the next step when the current one is filled in.
+		 *
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-blast-creation-wizard-gates-on-compliance
+		 */
 		next() {
 			if (this.canAdvance && !this.isLastStep) {
 				this.currentStep += 1
 			}
 		},
 
+		/**
+		 * Go back one step.
+		 *
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-blast-creation-wizard-gates-on-compliance
+		 */
 		prev() {
 			if (this.currentStep > 0) {
 				this.currentStep -= 1
@@ -675,8 +906,18 @@ export default {
 			this.submitError = ''
 		},
 
+		/**
+		 * Store a picked send time, or clear it for an invalid date.
+		 *
+		 * @param {Date|null} date The picked date.
+		 *
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-blast-creation-wizard-gates-on-compliance
+		 */
 		setScheduledFor(date) {
-			this.model.scheduledFor = date instanceof Date && !isNaN(date.getTime()) ? toLocalInput(date) : ''
+			this.model.scheduledFor =
+				date instanceof Date && !isNaN(date.getTime())
+					? toLocalInput(date)
+					: ''
 		},
 
 		/**
@@ -696,7 +937,10 @@ export default {
 		async loadSegments() {
 			this.segmentsLoading = true
 			try {
-				const { data } = await axios.get(generateUrl('/apps/pipelinq/api/segments'), { params: { limit: 200 } })
+				const { data } = await axios.get(
+					generateUrl('/apps/pipelinq/api/segments'),
+					{ params: { limit: 200 } },
+				)
 				this.segments = data?.data || data?.results || data || []
 			} catch {
 				this.segments = []
@@ -714,7 +958,10 @@ export default {
 			}
 			this.mailingListsLoading = true
 			try {
-				const { data } = await axios.get(generateUrl('/apps/pipelinq/api/mailing-lists'), { params: { limit: 200 } })
+				const { data } = await axios.get(
+					generateUrl('/apps/pipelinq/api/mailing-lists'),
+					{ params: { limit: 200 } },
+				)
 				this.mailingLists = data?.data || data?.results || data || []
 			} catch {
 				this.mailingLists = []
@@ -729,7 +976,10 @@ export default {
 		async loadTemplates() {
 			this.templatesLoading = true
 			try {
-				const { data } = await axios.get(generateUrl('/apps/pipelinq/api/templates'), { params: { limit: 200 } })
+				const { data } = await axios.get(
+					generateUrl('/apps/pipelinq/api/templates'),
+					{ params: { limit: 200 } },
+				)
 				this.templates = data?.data || data?.results || data || []
 			} catch {
 				this.templates = []
@@ -750,9 +1000,11 @@ export default {
 			this.connectorSourcesLoading = true
 			this.connectorSourcesError = ''
 			try {
-				const { data } = await axios.get(generateUrl(
-					'/apps/openregister/api/objects/openconnector/source?type=api&isEnabled=true&_limit=200',
-				))
+				const { data } = await axios.get(
+					generateUrl(
+						'/apps/openregister/api/objects/openconnector/source?type=api&isEnabled=true&_limit=200',
+					),
+				)
 				const list = data?.results || data?.data || data || []
 				this.connectorSources = list.map((src) => ({
 					id: src.id || src.uuid,
@@ -760,7 +1012,10 @@ export default {
 				}))
 			} catch {
 				this.connectorSources = []
-				this.connectorSourcesError = this.t('pipelinq', 'Could not load connector sources. You can still create the blast and set a source later.')
+				this.connectorSourcesError = this.t(
+					'pipelinq',
+					'Could not load connector sources. You can still create the blast and set a source later.',
+				)
 			} finally {
 				this.connectorSourcesLoading = false
 			}
@@ -775,22 +1030,29 @@ export default {
 			this.transportsLoading = true
 			this.transportsError = ''
 			try {
-				const { data } = await axios.get(generateUrl(
-					'/apps/openregister/api/objects/pipelinq/mailTransport?active=true&_limit=200',
-				))
+				const { data } = await axios.get(
+					generateUrl(
+						'/apps/openregister/api/objects/pipelinq/mailTransport?active=true&_limit=200',
+					),
+				)
 				const list = data?.results || data?.data || data || []
 				this.transports = list.map((transport) => ({
 					id: transport.id || transport.uuid,
 					label: transport.displayName || transport.id,
 					default: !!transport.default,
 				}))
-				const defaultTransport = this.transports.find((transport) => transport.default)
+				const defaultTransport = this.transports.find(
+					(transport) => transport.default,
+				)
 				if (defaultTransport) {
 					this.selectedTransport = defaultTransport
 				}
 			} catch {
 				this.transports = []
-				this.transportsError = this.t('pipelinq', 'Could not load mail transports. The blast will send through the default transport.')
+				this.transportsError = this.t(
+					'pipelinq',
+					'Could not load mail transports. The blast will send through the default transport.',
+				)
 			} finally {
 				this.transportsLoading = false
 			}
@@ -811,16 +1073,27 @@ export default {
 			this.templateValidating = true
 			try {
 				const { data } = await axios.post(
-					generateUrl(`/apps/pipelinq/api/templates/${templateId}/validate`),
+					generateUrl(
+						`/apps/pipelinq/api/templates/${templateId}/validate`,
+					),
 					{ channel: this.selectedChannel },
 				)
-				if (this.selectedTemplate?.id === templateId && data?.valid === false) {
-					this.templateValidationError = data?.error
-						|| this.t('pipelinq', 'Template is missing the unsubscribe token or physical address.')
+				if (
+					this.selectedTemplate?.id === templateId
+					&& data?.valid === false
+				) {
+					this.templateValidationError =
+						data?.error
+						|| this.t(
+							'pipelinq',
+							'Template is missing the unsubscribe token or physical address.',
+						)
 				}
 			} catch (e) {
 				if (this.selectedTemplate?.id === templateId) {
-					this.templateValidationError = e?.response?.data?.error || this.t('pipelinq', 'Template validation failed.')
+					this.templateValidationError =
+						e?.response?.data?.error
+						|| this.t('pipelinq', 'Template validation failed.')
 				}
 			} finally {
 				this.templateValidating = false
@@ -861,7 +1134,9 @@ export default {
 			}
 			try {
 				const { data } = await axios.get(
-					generateUrl(`/apps/pipelinq/api/segments/${this.selectedSegment.id}/compliance`),
+					generateUrl(
+						`/apps/pipelinq/api/segments/${this.selectedSegment.id}/compliance`,
+					),
 					{ params: { channel: this.selectedChannel } },
 				)
 				const missing = data?.missingConsent || data?.missing || []
@@ -872,13 +1147,18 @@ export default {
 				this.showConsentModal = true
 				return await this.awaitConsentDecision()
 			} catch {
-				this.submitError = this.t('pipelinq', 'Could not run pre-send compliance check.')
+				this.submitError = this.t(
+					'pipelinq',
+					'Could not run pre-send compliance check.',
+				)
 				return false
 			}
 		},
 
 		/**
 		 * @return {Promise<boolean>} Resolves true when "Skip and send" was chosen.
+		 *
+		 * @spec openspec/specs/marketing-ui/spec.md#scenario-missing-consent-modal-on-send
 		 */
 		awaitConsentDecision() {
 			return new Promise((resolve) => {
@@ -894,6 +1174,11 @@ export default {
 			})
 		},
 
+		/**
+		 * The consent modal was cancelled; the blast is not created.
+		 *
+		 * @spec openspec/specs/marketing-ui/spec.md#scenario-missing-consent-modal-on-send
+		 */
 		onConsentCancel() {
 			this.consentDecision = 'cancel'
 		},
@@ -903,9 +1188,19 @@ export default {
 		 */
 		onConsentRequest() {
 			this.consentDecision = 'request'
-			showInfo(this.t('pipelinq', 'A consent-request flow will be opened for the listed contacts.'))
+			showInfo(
+				this.t(
+					'pipelinq',
+					'A consent-request flow will be opened for the listed contacts.',
+				),
+			)
 		},
 
+		/**
+		 * Send anyway, skipping the contacts without consent.
+		 *
+		 * @spec openspec/specs/marketing-ui/spec.md#scenario-missing-consent-modal-on-send
+		 */
 		onConsentSkip() {
 			this.consentDecision = 'skip'
 		},
@@ -919,7 +1214,7 @@ export default {
 			this.submitError = ''
 			this.submitting = true
 			try {
-				if (!await this.preflightCompliance()) {
+				if (!(await this.preflightCompliance())) {
 					return
 				}
 				const payload = {
@@ -933,14 +1228,22 @@ export default {
 					scheduledFor: this.model.scheduledFor || null,
 					abSplitPercent: this.abEnabled ? this.model.abSplitPercent : 100,
 				}
-				const { data } = await axios.post(generateUrl('/apps/pipelinq/api/blasts'), payload)
+				const { data } = await axios.post(
+					generateUrl('/apps/pipelinq/api/blasts'),
+					payload,
+				)
 				const blastId = data?.id || data?.data?.id
 				this.close()
 				if (blastId) {
-					this.$router.push({ name: 'BlastMonitor', params: { id: blastId } })
+					this.$router.push({
+						name: 'BlastMonitor',
+						params: { id: blastId },
+					})
 				}
 			} catch (e) {
-				this.submitError = e?.response?.data?.error || this.t('pipelinq', 'Failed to create blast.')
+				this.submitError =
+					e?.response?.data?.error
+					|| this.t('pipelinq', 'Failed to create blast.')
 			} finally {
 				this.submitting = false
 			}

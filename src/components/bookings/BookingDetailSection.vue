@@ -160,10 +160,15 @@
 							{ 'booking-timeline__event--upcoming': event.upcoming },
 						]">
 						<span class="booking-timeline__marker" aria-hidden="true">
-							<component :is="event.icon" v-if="event.icon" :size="16" />
+							<component
+								:is="event.icon"
+								v-if="event.icon"
+								:size="16" />
 						</span>
 						<div class="booking-timeline__body">
-							<span class="booking-timeline__text">{{ event.text }}</span>
+							<span class="booking-timeline__text">{{
+								event.text
+							}}</span>
 							<time
 								v-if="event.at"
 								class="booking-timeline__when"
@@ -288,6 +293,13 @@ export default {
 			})
 		},
 
+		/**
+		 * The booking's events in time order, merged from its timestamp fields.
+		 *
+		 * @return {Array<{at: string, kind: string, text: string}>}
+		 *
+		 * @spec openspec/specs/appointment-booking/spec.md
+		 */
 		timeline() {
 			const events = []
 			if (this.booking.startAt) {
@@ -348,6 +360,8 @@ export default {
 		 * events when the booking has both.
 		 *
 		 * @return {Array<{at?: string, kind: string, text: string, icon: object|null, upcoming: boolean}>}
+		 *
+		 * @spec openspec/specs/appointment-booking/spec.md
 		 */
 		timelineWithNow() {
 			const now = Date.now()
@@ -401,6 +415,11 @@ export default {
 		},
 	},
 
+	/**
+	 * Re-read the booking on `cn:page:refresh`, which a header action sends.
+	 *
+	 * @spec openspec/specs/appointment-booking/spec.md
+	 */
 	mounted() {
 		// A header action changed the booking; re-read it without the spinner.
 		this.onPageRefresh = (payload) => {
@@ -453,6 +472,8 @@ export default {
 		 *
 		 * @param {{silent?: boolean}} [opts] `silent` skips the spinner and
 		 *  keeps unsaved note edits (a refresh, not a first load).
+		 *
+		 * @spec openspec/specs/appointment-booking/spec.md
 		 */
 		async load(opts = {}) {
 			if (!this.resolvedId) {
@@ -716,13 +737,21 @@ export default {
 }
 
 .booking-timeline__event--deposit .booking-timeline__marker {
-	background-color: color-mix(in srgb, var(--color-success) 18%, var(--color-main-background));
+	background-color: color-mix(
+		in srgb,
+		var(--color-success) 18%,
+		var(--color-main-background)
+	);
 	color: var(--color-success-text);
 }
 
 .booking-timeline__event--fee .booking-timeline__marker,
 .booking-timeline__event--cancel .booking-timeline__marker {
-	background-color: color-mix(in srgb, var(--color-error) 15%, var(--color-main-background));
+	background-color: color-mix(
+		in srgb,
+		var(--color-error) 15%,
+		var(--color-main-background)
+	);
 	color: var(--color-error-text);
 }
 

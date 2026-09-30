@@ -12,13 +12,20 @@
 <template>
 	<NcDialog
 		v-if="show"
-		:name="isEditing ? t('pipelinq', 'Edit campaign') : t('pipelinq', 'New campaign')"
+		:name="
+			isEditing
+				? t('pipelinq', 'Edit campaign')
+				: t('pipelinq', 'New campaign')
+		"
 		:open="true"
 		size="normal"
 		:closeOnClickOutside="false"
 		@closing="close()">
 		<div class="campaign-form">
-			<NcLoadingIcon v-if="loading" :size="32" class="campaign-form__loading" />
+			<NcLoadingIcon
+				v-if="loading"
+				:size="32"
+				class="campaign-form__loading" />
 
 			<template v-else>
 				<NcTextField
@@ -30,7 +37,12 @@
 				<NcTextField
 					v-model="form.goal"
 					:label="t('pipelinq', 'Goal')"
-					:placeholder="t('pipelinq', 'What this campaign should achieve, in one sentence')" />
+					:placeholder="
+						t(
+							'pipelinq',
+							'What this campaign should achieve, in one sentence',
+						)
+					" />
 
 				<p v-if="form.utmCampaign" class="campaign-form__minted">
 					{{
@@ -80,12 +92,22 @@
 				<NcTextArea
 					v-model="form.articleSummary"
 					:label="t('pipelinq', 'Page summary')"
-					:helperText="t('pipelinq', 'The landing page opens with this. Portaliq refuses a page without it.')" />
+					:helperText="
+						t(
+							'pipelinq',
+							'The landing page opens with this. Portaliq refuses a page without it.',
+						)
+					" />
 
 				<NcTextArea
 					v-model="form.articleBody"
 					:label="t('pipelinq', 'Page body')"
-					:helperText="t('pipelinq', 'Markdown. Headings, lists and links all work.')" />
+					:helperText="
+						t(
+							'pipelinq',
+							'Markdown. Headings, lists and links all work.',
+						)
+					" />
 
 				<NcNoteCard v-if="error" type="error" class="campaign-form__note">
 					{{ error }}
@@ -125,10 +147,7 @@ import {
 	NcTextArea,
 	NcTextField,
 } from '@nextcloud/vue'
-import {
-	fetchCampaignVocabularies,
-	saveCampaign,
-} from '../services/campaignsApi.js'
+import { fetchCampaignVocabularies, saveCampaign } from '../services/campaignsApi.js'
 
 /**
  * @return {object} A blank campaign form.
@@ -228,6 +247,13 @@ export default {
 	watch: {
 		show: {
 			immediate: true,
+			/**
+			 * Load the form each time the dialog opens.
+			 *
+			 * @param {boolean} open Whether the dialog is open.
+			 *
+			 * @spec openspec/changes/marketing-campaigns/specs/marketing-campaigns/spec.md#requirement-a-campaign-owns-its-campaign-value-and-its-channel-vocabulary
+			 */
 			handler(open) {
 				if (open) {
 					this.load()

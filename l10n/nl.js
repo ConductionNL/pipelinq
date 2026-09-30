@@ -6859,6 +6859,7 @@ OC.L10N.register(
         "Expected close date set": "Verwachte sluitdatum ingevuld",
         "Priority high or urgent": "Prioriteit hoog of urgent",
         "Description written": "Omschrijving ingevuld",
+        "Records": "Records",
         "Portal resident": "Inwoner in het portaal",
         "The portal reference of the resident who asked this question. Never a BSN.": "De portaalverwijzing van de inwoner die deze vraag stelde. Nooit een BSN.",
         "Asked about": "Vraag over",

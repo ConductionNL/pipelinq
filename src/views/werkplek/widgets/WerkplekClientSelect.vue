@@ -41,7 +41,13 @@ export default {
 	},
 
 	computed: {
-		// The provided ref may arrive unwrapped or as `{ value }`.
+		/**
+		 * The page's workspace context; the provided ref may arrive unwrapped or as `{ value }`.
+		 *
+		 * @return {object|null}
+		 *
+		 * @spec openspec/specs/kcc-werkplek/spec.md
+		 */
 		workspace() {
 			const c = this.cnWorkspaceContext
 			if (!c || typeof c !== 'object') {
@@ -50,12 +56,24 @@ export default {
 			return 'value' in c ? c.value : c
 		},
 
+		/**
+		 * The id of the client in focus, or an empty string.
+		 *
+		 * @return {string}
+		 *
+		 * @spec openspec/specs/kcc-werkplek/spec.md
+		 */
 		selectedClient() {
 			const id = this.workspace && this.workspace.selectedClient
 			return id ? String(id) : ''
 		},
 	},
 
+	/**
+	 * Preselect a client when the page has none in focus yet.
+	 *
+	 * @spec openspec/specs/kcc-werkplek/spec.md
+	 */
 	created() {
 		if (!this.selectedClient) {
 			this.selectFirstClient()
@@ -67,6 +85,8 @@ export default {
 		 * Preselect the first client, the same one the picker lists first.
 		 *
 		 * @return {Promise<void>}
+		 *
+		 * @spec openspec/specs/kcc-werkplek/spec.md
 		 */
 		async selectFirstClient() {
 			const store = useObjectStore()
@@ -75,7 +95,9 @@ export default {
 			} catch {
 				// Already registered.
 			}
-			const items = await store.fetchCollectionForOptions(TYPE_SLUG, { _limit: 1 })
+			const items = await store.fetchCollectionForOptions(TYPE_SLUG, {
+				_limit: 1,
+			})
 			const first = Array.isArray(items) ? items[0] : null
 			const id = first && (first.id || (first['@self'] && first['@self'].id))
 			if (id && !this.selectedClient) {
@@ -89,6 +111,8 @@ export default {
 		 *
 		 * @param {string} id The client id.
 		 * @return {void}
+		 *
+		 * @spec openspec/specs/kcc-werkplek/spec.md
 		 */
 		onSelect(id) {
 			const holder = this.cnWorkspaceContext

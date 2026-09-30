@@ -24,6 +24,7 @@ namespace OCA\Pipelinq\Tests\Unit\Service\Marketing;
 use OCA\Pipelinq\Service\ArticleService;
 use OCA\Pipelinq\Service\Marketing\ListObjectStore;
 use OCA\Pipelinq\Service\Marketing\MailTransportService;
+use OCA\Pipelinq\Service\Marketing\PhysicalAddressRenderer;
 use OCA\Pipelinq\Tests\Unit\Support\FakeSlugResolver;
 use OCP\IAppConfig;
 use OCP\Mail\IMailer;
@@ -132,6 +133,7 @@ class MailTransportServiceTest extends TestCase {
 			new ArticleService($this->makeArticleStore()),
 			FakeSlugResolver::connectorRegister(),
 			$this->logger,
+			new PhysicalAddressRenderer(),
 		);
 	}//end setUp()
 
@@ -427,6 +429,7 @@ class MailTransportServiceTest extends TestCase {
 			new ArticleService($this->makeArticleStore()),
 			FakeSlugResolver::connectorRegister(),
 			$this->logger,
+			new PhysicalAddressRenderer(),
 		);
 
 		$delivery = ['uuid' => 'd-prov', 'email' => 'user@example.com'];
@@ -518,6 +521,7 @@ class MailTransportServiceTest extends TestCase {
 			new ArticleService($articleStore),
 			FakeSlugResolver::connectorRegister(),
 			$this->logger,
+			new PhysicalAddressRenderer(),
 		);
 
 		$delivery = ['uuid' => 'd-articles', 'email' => 'c1@example.test'];

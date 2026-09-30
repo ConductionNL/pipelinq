@@ -9,7 +9,9 @@
 <template>
 	<NcDialog
 		v-if="show"
-		:name="isEditing ? t('pipelinq', 'Edit segment') : t('pipelinq', 'New segment')"
+		:name="
+			isEditing ? t('pipelinq', 'Edit segment') : t('pipelinq', 'New segment')
+		"
 		:open="true"
 		size="large"
 		:closeOnClickOutside="false"
@@ -33,7 +35,14 @@
 					<div
 						class="segment-form__audience"
 						:class="{ 'segment-form__audience--locked': isEditing }"
-						:title="isEditing ? t('pipelinq', 'The audience of an existing segment cannot be changed.') : null">
+						:title="
+							isEditing
+								? t(
+										'pipelinq',
+										'The audience of an existing segment cannot be changed.',
+									)
+								: null
+						">
 						<NcSelect
 							v-model="entityTypeOption"
 							:options="entityTypeOptions"
@@ -63,7 +72,10 @@
 						@statusChange="rulesStatus = $event" />
 				</section>
 
-				<NcNoteCard v-if="saveError" type="error" class="segment-form__save-error">
+				<NcNoteCard
+					v-if="saveError"
+					type="error"
+					class="segment-form__save-error">
 					{{ saveError }}
 				</NcNoteCard>
 			</template>
@@ -80,7 +92,11 @@
 				<template v-if="saving" #icon>
 					<NcLoadingIcon :size="20" />
 				</template>
-				{{ isEditing ? t('pipelinq', 'Save changes') : t('pipelinq', 'Create segment') }}
+				{{
+					isEditing
+						? t('pipelinq', 'Save changes')
+						: t('pipelinq', 'Create segment')
+				}}
 			</NcButton>
 		</template>
 	</NcDialog>
@@ -90,7 +106,15 @@
 import axios from '@nextcloud/axios'
 import { showSuccess } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
-import { NcButton, NcDialog, NcLoadingIcon, NcNoteCard, NcSelect, NcTextArea, NcTextField } from '@nextcloud/vue'
+import {
+	NcButton,
+	NcDialog,
+	NcLoadingIcon,
+	NcNoteCard,
+	NcSelect,
+	NcTextArea,
+	NcTextField,
+} from '@nextcloud/vue'
 import SegmentBuilder from '../components/SegmentBuilder.vue'
 import { fieldOptionsFor } from '../services/segmentFieldOptions.js'
 
@@ -159,14 +183,30 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * The id of the segment being edited, or null when creating one.
+		 *
+		 * @return {string|null}
+		 *
+		 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-api/spec.md#requirement-segment-update-and-unsaved-tree-preview
+		 */
 		segmentId() {
-			return this.item?.id || this.item?.['@self']?.id || this.item?.uuid || null
+			return (
+				this.item?.id || this.item?.['@self']?.id || this.item?.uuid || null
+			)
 		},
 
 		isEditing() {
 			return this.segmentId !== null
 		},
 
+		/**
+		 * The audiences a segment can target.
+		 *
+		 * @return {Array<{value: string, label: string}>}
+		 *
+		 * @spec openspec/specs/marketing-ui/spec.md#scenario-creating-a-segment-from-the-segments-page
+		 */
 		entityTypeOptions() {
 			return [
 				{ value: 'contact', label: this.t('pipelinq', 'Contacts') },
@@ -175,8 +215,19 @@ export default {
 		},
 
 		entityTypeOption: {
+			/**
+			 * The picked audience option, defaulting to the first.
+			 *
+			 * @return {{value: string, label: string}}
+			 *
+			 * @spec openspec/specs/marketing-ui/spec.md#scenario-creating-a-segment-from-the-segments-page
+			 */
 			get() {
-				return this.entityTypeOptions.find((o) => o.value === this.model.entityType) || this.entityTypeOptions[0]
+				return (
+					this.entityTypeOptions.find(
+						(o) => o.value === this.model.entityType,
+					) || this.entityTypeOptions[0]
+				)
 			},
 
 			/**
@@ -184,6 +235,8 @@ export default {
 			 * belong to the other audience's schema.
 			 *
 			 * @param {object} option The picked option.
+			 *
+			 * @spec openspec/specs/marketing-ui/spec.md#scenario-creating-a-segment-from-the-segments-page
 			 */
 			set(option) {
 				const next = option?.value || 'contact'
@@ -194,6 +247,13 @@ export default {
 			},
 		},
 
+		/**
+		 * Warns that switching audience clears rules already written.
+		 *
+		 * @return {string}
+		 *
+		 * @spec openspec/specs/marketing-ui/spec.md#scenario-creating-a-segment-from-the-segments-page
+		 */
 		audienceHint() {
 			if (!this.isEditing && this.model.rules.children?.length) {
 				return this.t('pipelinq', 'Changing the audience clears the rules.')
@@ -201,6 +261,13 @@ export default {
 			return ''
 		},
 
+		/**
+		 * The fields a rule can test for the picked audience.
+		 *
+		 * @return {Array<object>}
+		 *
+		 * @spec openspec/specs/marketing-ui/spec.md#requirement-segment-builder-ui-composes-rule-trees
+		 */
 		fieldOptions() {
 			return fieldOptionsFor(this.model.entityType)
 		},
@@ -210,10 +277,19 @@ export default {
 		 * @spec openspec/specs/marketing-ui/spec.md#requirement-segment-builder-ui-composes-rule-trees
 		 */
 		canSave() {
-			return this.model.name.trim() !== '' && this.rulesStatus === 'valid' && !this.saving && !this.loading
+			return (
+				this.model.name.trim() !== ''
+				&& this.rulesStatus === 'valid'
+				&& !this.saving
+				&& !this.loading
+			)
 		},
 
-		/** @return {string} Why Save is disabled, when the reason is not already on screen. */
+		/**
+		 * @return {string} Why Save is disabled, when the reason is not already on screen.
+		 *
+		 * @spec openspec/specs/marketing-ui/spec.md#scenario-creating-a-segment-from-the-segments-page
+		 */
 		saveHint() {
 			if (this.loading || this.saving || this.loadError) {
 				return ''
@@ -225,7 +301,10 @@ export default {
 				return this.t('pipelinq', 'Add at least one condition.')
 			}
 			if (this.rulesStatus === 'incomplete') {
-				return this.t('pipelinq', 'Complete or remove the unfinished conditions.')
+				return this.t(
+					'pipelinq',
+					'Complete or remove the unfinished conditions.',
+				)
 			}
 			return ''
 		},
@@ -234,6 +313,13 @@ export default {
 	watch: {
 		show: {
 			immediate: true,
+			/**
+			 * Reset the form each time the dialog opens.
+			 *
+			 * @param {boolean} open Whether the dialog is open.
+			 *
+			 * @spec openspec/specs/marketing-ui/spec.md#scenario-creating-a-segment-from-the-segments-page
+			 */
 			handler(open) {
 				if (open) {
 					this.reset()
@@ -243,6 +329,11 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * Clear the form, and read the segment when editing one.
+		 *
+		 * @spec openspec/specs/marketing-ui/spec.md#scenario-creating-a-segment-from-the-segments-page
+		 */
 		reset() {
 			this.model = blankModel()
 			this.loadError = ''
@@ -253,10 +344,17 @@ export default {
 			}
 		},
 
+		/**
+		 * Read the segment being edited into the form.
+		 *
+		 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-api/spec.md#requirement-segment-update-and-unsaved-tree-preview
+		 */
 		async loadSegment() {
 			this.loading = true
 			try {
-				const { data } = await axios.get(generateUrl(`/apps/pipelinq/api/segments/${this.segmentId}`))
+				const { data } = await axios.get(
+					generateUrl(`/apps/pipelinq/api/segments/${this.segmentId}`),
+				)
 				this.model = {
 					name: data?.name || '',
 					description: data?.description || '',
@@ -264,7 +362,9 @@ export default {
 					rules: data?.rules || { type: 'AND', children: [] },
 				}
 			} catch (e) {
-				this.loadError = e?.response?.data?.error || this.t('pipelinq', 'Could not load this segment.')
+				this.loadError =
+					e?.response?.data?.error
+					|| this.t('pipelinq', 'Could not load this segment.')
 			} finally {
 				this.loading = false
 			}
@@ -287,16 +387,24 @@ export default {
 			}
 			try {
 				if (this.isEditing) {
-					await axios.patch(generateUrl(`/apps/pipelinq/api/segments/${this.segmentId}`), payload)
+					await axios.patch(
+						generateUrl(`/apps/pipelinq/api/segments/${this.segmentId}`),
+						payload,
+					)
 					showSuccess(this.t('pipelinq', 'Segment saved.'))
 				} else {
-					await axios.post(generateUrl('/apps/pipelinq/api/segments'), payload)
+					await axios.post(
+						generateUrl('/apps/pipelinq/api/segments'),
+						payload,
+					)
 					showSuccess(this.t('pipelinq', 'Segment created.'))
 				}
 				this.refresh?.()
 				this.close()
 			} catch (e) {
-				this.saveError = e?.response?.data?.error || this.t('pipelinq', 'Could not save this segment.')
+				this.saveError =
+					e?.response?.data?.error
+					|| this.t('pipelinq', 'Could not save this segment.')
 			} finally {
 				this.saving = false
 			}

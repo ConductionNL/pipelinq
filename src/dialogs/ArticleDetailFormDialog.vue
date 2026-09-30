@@ -26,7 +26,12 @@
 			<template v-if="item" #before-fields>
 				<div class="article-detail-form__editor">
 					<p class="article-detail-form__editor-text">
-						{{ t('pipelinq', 'The title and body are written in the article editor.') }}
+						{{
+							t(
+								'pipelinq',
+								'The title and body are written in the article editor.',
+							)
+						}}
 					</p>
 					<NcButton variant="secondary" @click="editorOpen = true">
 						<template #icon>
@@ -104,6 +109,13 @@ export default {
 	},
 
 	watch: {
+		/**
+		 * Close the article editor along with the form.
+		 *
+		 * @param {boolean} open Whether the form is open.
+		 *
+		 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
+		 */
 		show(open) {
 			if (!open) {
 				this.editorOpen = false
@@ -116,6 +128,8 @@ export default {
 		 * Save through the page, and show a failure in the form.
 		 *
 		 * @param {object} formData The form's values.
+		 *
+		 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
 		 */
 		async onConfirm(formData) {
 			const result = await this.confirm?.(formData)
@@ -124,6 +138,11 @@ export default {
 			}
 		},
 
+		/**
+		 * Close the article editor and have the page re-read the saved article.
+		 *
+		 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
+		 */
 		onEditorSaved() {
 			this.editorOpen = false
 			emit('cn:page:refresh', {})

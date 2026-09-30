@@ -16,7 +16,12 @@
 		<div class="kassakoppeling-audit-list__header">
 			<CnPageHeader
 				:title="t('pipelinq', 'Cash register audit log')"
-				:description="t('pipelinq', 'Immutable, cryptographically signed record of every register action for Belastingdienst audits.')"
+				:description="
+					t(
+						'pipelinq',
+						'Immutable, cryptographically signed record of every register action for Belastingdienst audits.',
+					)
+				"
 				icon="ShieldCheckOutline" />
 			<div class="kassakoppeling-audit-list__actions">
 				<NcButton :disabled="loading" @click="refresh">
@@ -88,7 +93,10 @@
 					</template>
 					{{ t('pipelinq', 'Apply filter') }}
 				</NcButton>
-				<NcButton variant="tertiary" :disabled="!canClear" @click="clearFilters">
+				<NcButton
+					variant="tertiary"
+					:disabled="!canClear"
+					@click="clearFilters">
 					{{ t('pipelinq', 'Clear') }}
 				</NcButton>
 			</div>
@@ -101,7 +109,9 @@
 			:rows="pageEntries"
 			:loading="loading"
 			:loadingText="t('pipelinq', 'Load audit log')"
-			:emptyText="t('pipelinq', 'No audit entries found for the selected filters.')"
+			:emptyText="
+				t('pipelinq', 'No audit entries found for the selected filters.')
+			"
 			rowKey="_rowKey"
 			@rowClick="openDetail">
 			<template #column-timestamp="{ row }">
@@ -129,7 +139,9 @@
 					size="small" />
 			</template>
 			<template #column-chevron>
-				<ChevronRight :size="20" class="kassakoppeling-audit-list__chevron" />
+				<ChevronRight
+					:size="20"
+					class="kassakoppeling-audit-list__chevron" />
 			</template>
 		</CnDataTable>
 
@@ -150,10 +162,22 @@
 </template>
 
 <script>
-import { CnDataTable, CnPageHeader, CnPagination, CnStatusBadge, openRowTarget } from '@conduction/nextcloud-vue'
+import {
+	CnDataTable,
+	CnPageHeader,
+	CnPagination,
+	CnStatusBadge,
+	openRowTarget,
+} from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
-import { NcButton, NcDateTimePickerNative, NcLoadingIcon, NcSelect, NcTextField } from '@nextcloud/vue'
+import {
+	NcButton,
+	NcDateTimePickerNative,
+	NcLoadingIcon,
+	NcSelect,
+	NcTextField,
+} from '@nextcloud/vue'
 import ChevronRight from 'vue-material-design-icons/ChevronRight.vue'
 import Download from 'vue-material-design-icons/Download.vue'
 import FilterOutline from 'vue-material-design-icons/FilterOutline.vue'
@@ -234,7 +258,13 @@ export default {
 	},
 
 	computed: {
-		/** @return {boolean} Whether Clear has anything to clear. */
+		/**
+		 * Whether Clear has anything to clear.
+		 *
+		 * @return {boolean} Whether a filter is set or applied.
+		 *
+		 * @spec openspec/changes/archive/2026-06-14-pos-kassakoppeling-audit/specs.md#req-audit-003-audit-log-list-with-search-and-filtering
+		 */
 		canClear() {
 			return hasAnyFilter(this.filters) || hasAnyFilter(this.appliedFilters)
 		},
@@ -244,6 +274,8 @@ export default {
 		 * presentational only, so it has no label.
 		 *
 		 * @return {Array<object>} CnDataTable column definitions.
+		 *
+		 * @spec openspec/changes/archive/2026-06-14-pos-kassakoppeling-audit/specs.md#req-audit-003-audit-log-list-with-search-and-filtering
 		 */
 		columns() {
 			return [
@@ -251,13 +283,29 @@ export default {
 				{ key: 'operatorId', label: t('pipelinq', 'Operator') },
 				{ key: 'registerNumber', label: t('pipelinq', 'Register') },
 				{ key: 'action', label: t('pipelinq', 'Action') },
-				{ key: 'amount', label: t('pipelinq', 'Amount'), class: 'num', cellClass: 'num' },
+				{
+					key: 'amount',
+					label: t('pipelinq', 'Amount'),
+					class: 'num',
+					cellClass: 'num',
+				},
 				{ key: 'verified', label: t('pipelinq', 'Verification') },
-				{ key: 'chevron', label: '', class: 'chevron-col', cellClass: 'chevron-col' },
+				{
+					key: 'chevron',
+					label: '',
+					class: 'chevron-col',
+					cellClass: 'chevron-col',
+				},
 			]
 		},
 
-		/** @return {Array<{id: string, label: string}>} The action filter choices. */
+		/**
+		 * The action filter choices.
+		 *
+		 * @return {Array<{id: string, label: string}>} The choices, "all" first.
+		 *
+		 * @spec openspec/changes/archive/2026-06-14-pos-kassakoppeling-audit/specs.md#req-audit-003-audit-log-list-with-search-and-filtering
+		 */
 		actionOptions() {
 			return [
 				{ id: '', label: t('pipelinq', 'All actions') },
@@ -269,30 +317,75 @@ export default {
 		},
 
 		actionOption: {
+			/**
+			 * The chosen action filter as a select option.
+			 *
+			 * @return {{id: string, label: string}} The option.
+			 *
+			 * @spec openspec/changes/archive/2026-06-14-pos-kassakoppeling-audit/specs.md#req-audit-003-audit-log-list-with-search-and-filtering
+			 */
 			get() {
-				return this.actionOptions.find((o) => o.id === this.filters.action) || this.actionOptions[0]
+				return (
+					this.actionOptions.find((o) => o.id === this.filters.action)
+					|| this.actionOptions[0]
+				)
 			},
 
+			/**
+			 * Set the action filter from a select option.
+			 *
+			 * @param {{id: string}|null} option The chosen option.
+			 *
+			 * @spec openspec/changes/archive/2026-06-14-pos-kassakoppeling-audit/specs.md#req-audit-003-audit-log-list-with-search-and-filtering
+			 */
 			set(option) {
 				this.filters.action = option?.id || ''
 			},
 		},
 
 		fromDate: {
+			/**
+			 * The From filter as a date.
+			 *
+			 * @return {Date|null} The date, or null when unset.
+			 *
+			 * @spec openspec/changes/archive/2026-06-14-pos-kassakoppeling-audit/specs.md#req-audit-003-audit-log-list-with-search-and-filtering
+			 */
 			get() {
 				return toDateObject(this.filters.from)
 			},
 
+			/**
+			 * Set the From filter from a date.
+			 *
+			 * @param {Date|null} date The chosen date.
+			 *
+			 * @spec openspec/changes/archive/2026-06-14-pos-kassakoppeling-audit/specs.md#req-audit-003-audit-log-list-with-search-and-filtering
+			 */
 			set(date) {
 				this.filters.from = toDateInputString(date) || ''
 			},
 		},
 
 		toDate: {
+			/**
+			 * The To filter as a date.
+			 *
+			 * @return {Date|null} The date, or null when unset.
+			 *
+			 * @spec openspec/changes/archive/2026-06-14-pos-kassakoppeling-audit/specs.md#req-audit-003-audit-log-list-with-search-and-filtering
+			 */
 			get() {
 				return toDateObject(this.filters.to)
 			},
 
+			/**
+			 * Set the To filter from a date.
+			 *
+			 * @param {Date|null} date The chosen date.
+			 *
+			 * @spec openspec/changes/archive/2026-06-14-pos-kassakoppeling-audit/specs.md#req-audit-003-audit-log-list-with-search-and-filtering
+			 */
 			set(date) {
 				this.filters.to = toDateInputString(date) || ''
 			},
@@ -328,6 +421,8 @@ export default {
 		 * Total number of pages at the configured page size.
 		 *
 		 * @return {number} The total page count.
+		 *
+		 * @spec openspec/changes/archive/2026-06-14-pos-kassakoppeling-audit/specs.md#req-audit-003-audit-log-list-with-search-and-filtering
 		 */
 		totalPages() {
 			return Math.max(1, Math.ceil(this.sortedEntries.length / this.pageSize))
@@ -337,6 +432,8 @@ export default {
 		 * Entries to show on the current page.
 		 *
 		 * @return {Array<object>} The page slice.
+		 *
+		 * @spec openspec/changes/archive/2026-06-14-pos-kassakoppeling-audit/specs.md#req-audit-003-audit-log-list-with-search-and-filtering
 		 */
 		pageEntries() {
 			const start = (this.page - 1) * this.pageSize
@@ -344,7 +441,10 @@ export default {
 			// uuid or only its timestamp.
 			return this.sortedEntries
 				.slice(start, start + this.pageSize)
-				.map((entry) => ({ ...entry, _rowKey: entry.id || entry.uuid || entry.timestamp }))
+				.map((entry) => ({
+					...entry,
+					_rowKey: entry.id || entry.uuid || entry.timestamp,
+				}))
 		},
 	},
 
@@ -413,6 +513,8 @@ export default {
 
 		/**
 		 * Clear all filters, and reload only when the list was filtered.
+		 *
+		 * @spec openspec/changes/archive/2026-06-14-pos-kassakoppeling-audit/specs.md#req-audit-003-audit-log-list-with-search-and-filtering
 		 */
 		clearFilters() {
 			const wasFiltered = hasAnyFilter(this.appliedFilters)
@@ -426,6 +528,8 @@ export default {
 		 * Change the page size and go back to the first page.
 		 *
 		 * @param {number} size The new page size.
+		 *
+		 * @spec openspec/changes/archive/2026-06-14-pos-kassakoppeling-audit/specs.md#req-audit-003-audit-log-list-with-search-and-filtering
 		 */
 		onPageSizeChange(size) {
 			this.pageSize = Number(size) || PAGE_SIZE
@@ -505,6 +609,8 @@ export default {
 		 *
 		 * @param {string} action The action enum value.
 		 * @return {string} A CnStatusBadge variant.
+		 *
+		 * @spec openspec/changes/archive/2026-06-14-pos-kassakoppeling-audit/specs.md#req-audit-003-audit-log-list-with-search-and-filtering
 		 */
 		actionVariant(action) {
 			return ACTION_VARIANTS[action] || 'default'
@@ -532,6 +638,8 @@ export default {
 		 *
 		 * @param {boolean|null} verified The flag.
 		 * @return {string} A CnStatusBadge variant.
+		 *
+		 * @spec openspec/changes/archive/2026-06-14-pos-kassakoppeling-audit/specs.md#req-audit-004-audit-entry-detail-view-with-signature-verification-badge
 		 */
 		verifyVariant(verified) {
 			if (verified === true) {

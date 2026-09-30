@@ -17,7 +17,10 @@
   - @spec openspec/specs/appointment-booking/spec.md
   -->
 <template>
-	<div v-if="hasActions" class="booking-header-actions" data-testid="booking-header-actions">
+	<div
+		v-if="hasActions"
+		class="booking-header-actions"
+		data-testid="booking-header-actions">
 		<NcButton
 			v-if="canConfirmDeposit"
 			variant="primary"
@@ -114,53 +117,147 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * The booking the page shows, or an empty object before it loads.
+		 *
+		 * @return {object}
+		 *
+		 * @spec openspec/specs/appointment-booking/spec.md
+		 */
 		booking() {
 			return this.object || {}
 		},
 
+		/**
+		 * Whether the booking has not ended yet.
+		 *
+		 * @return {boolean}
+		 *
+		 * @spec openspec/specs/appointment-booking/spec.md
+		 */
 		isFuture() {
-			return Boolean(this.booking.endAt) && new Date(this.booking.endAt).getTime() > Date.now()
+			return (
+				Boolean(this.booking.endAt)
+				&& new Date(this.booking.endAt).getTime() > Date.now()
+			)
 		},
 
+		/**
+		 * Whether the booking has ended.
+		 *
+		 * @return {boolean}
+		 *
+		 * @spec openspec/specs/appointment-booking/spec.md
+		 */
 		isPast() {
-			return Boolean(this.booking.endAt) && new Date(this.booking.endAt).getTime() <= Date.now()
+			return (
+				Boolean(this.booking.endAt)
+				&& new Date(this.booking.endAt).getTime() <= Date.now()
+			)
 		},
 
+		/**
+		 * Whether the booking starts more than an hour from now.
+		 *
+		 * @return {boolean}
+		 *
+		 * @spec openspec/specs/appointment-booking/spec.md
+		 */
 		hourAway() {
-			return Boolean(this.booking.startAt) && new Date(this.booking.startAt).getTime() - Date.now() > HOUR_MS
+			return (
+				Boolean(this.booking.startAt)
+				&& new Date(this.booking.startAt).getTime() - Date.now() > HOUR_MS
+			)
 		},
 
 		isOpen() {
 			return ['confirmed', 'pending-deposit'].includes(this.booking.status)
 		},
 
+		/**
+		 * Whether Confirm deposit applies: the booking awaits its deposit.
+		 *
+		 * @return {boolean}
+		 *
+		 * @spec openspec/specs/appointment-booking/spec.md
+		 */
 		canConfirmDeposit() {
 			return this.booking.status === 'pending-deposit'
 		},
 
+		/**
+		 * Whether Mark completed applies: a confirmed booking that has ended.
+		 *
+		 * @return {boolean}
+		 *
+		 * @spec openspec/specs/appointment-booking/spec.md
+		 */
 		canMarkCompleted() {
 			return this.booking.status === 'confirmed' && this.isPast
 		},
 
+		/**
+		 * Whether Mark no-show applies: a confirmed booking that has ended.
+		 *
+		 * @return {boolean}
+		 *
+		 * @spec openspec/specs/appointment-booking/spec.md
+		 */
 		canMarkNoShow() {
 			return this.booking.status === 'confirmed' && this.isPast
 		},
 
+		/**
+		 * Whether Reschedule applies: an open booking still ahead.
+		 *
+		 * @return {boolean}
+		 *
+		 * @spec openspec/specs/appointment-booking/spec.md
+		 */
 		canReschedule() {
 			return this.isOpen && this.isFuture
 		},
 
+		/**
+		 * Whether Cancel applies: an open booking still ahead.
+		 *
+		 * @return {boolean}
+		 *
+		 * @spec openspec/specs/appointment-booking/spec.md
+		 */
 		canCancel() {
 			return this.isOpen && this.isFuture
 		},
 
+		/**
+		 * Whether Send reminder applies: a confirmed booking more than an hour away.
+		 *
+		 * @return {boolean}
+		 *
+		 * @spec openspec/specs/appointment-booking/spec.md
+		 */
 		canSendReminder() {
-			return this.booking.status === 'confirmed' && this.isFuture && this.hourAway
+			return (
+				this.booking.status === 'confirmed' && this.isFuture && this.hourAway
+			)
 		},
 
+		/**
+		 * Whether any admin action applies, so the header shows the actions.
+		 *
+		 * @return {boolean}
+		 *
+		 * @spec openspec/specs/appointment-booking/spec.md
+		 */
 		hasActions() {
-			return this.canConfirmDeposit || this.canMarkCompleted || this.canMarkNoShow
-				|| this.canReschedule || this.canCancel || this.canSendReminder
+			return (
+				this.canConfirmDeposit
+				|| this.canMarkCompleted
+				|| this.canMarkNoShow
+				|| this.canReschedule
+				|| this.canCancel
+				|| this.canSendReminder
+			)
 		},
 	},
 
@@ -173,6 +270,8 @@ export default {
 		 * @param {object} body Optional JSON body.
 		 * @param {string} okMsg Success toast message.
 		 * @return {Promise<void>}
+		 *
+		 * @spec openspec/specs/appointment-booking/spec.md
 		 */
 		async run(action, body, okMsg) {
 			const id = this.objectId || this.booking.id
@@ -200,7 +299,10 @@ export default {
 				}
 				showSuccess(okMsg)
 				if (data.bookingId && data.bookingId !== id) {
-					this.$router.push({ name: 'BookingDetail', params: { id: data.bookingId } })
+					this.$router.push({
+						name: 'BookingDetail',
+						params: { id: data.bookingId },
+					})
 					return
 				}
 				emit('cn:page:refresh', {})
@@ -211,14 +313,36 @@ export default {
 			}
 		},
 
+		/**
+		 * Reschedule the booking to the chosen start time.
+		 *
+		 * @param {string} newStartAt The new start, as an ISO date-time.
+		 *
+		 * @spec openspec/specs/appointment-booking/spec.md
+		 */
 		onReschedule(newStartAt) {
 			this.showReschedule = false
-			this.run('reschedule', { newStartAt }, t('pipelinq', 'Booking rescheduled.'))
+			this.run(
+				'reschedule',
+				{ newStartAt },
+				t('pipelinq', 'Booking rescheduled.'),
+			)
 		},
 
+		/**
+		 * Cancel the booking with the reason the dialog collected.
+		 *
+		 * @param {string} reason The cancellation reason, possibly empty.
+		 *
+		 * @spec openspec/specs/appointment-booking/spec.md
+		 */
 		onCancel(reason) {
 			this.showCancel = false
-			this.run('cancel', { reason: reason || '' }, t('pipelinq', 'Booking cancelled.'))
+			this.run(
+				'cancel',
+				{ reason: reason || '' },
+				t('pipelinq', 'Booking cancelled.'),
+			)
 		},
 	},
 }

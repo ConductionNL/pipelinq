@@ -225,6 +225,8 @@ export default {
 		 * @param {boolean} [options.silent] Keep the table on screen while
 		 *   reloading, for a refresh rather than a first load.
 		 * @return {Promise<void>}
+		 *
+		 * @spec openspec/changes/archive/2026-06-14-pos-split-tender/specs.md#req-pst-004-tender-sum-validation-before-settlement-mvp
 		 */
 		async loadTenders({ silent = false } = {}) {
 			this.loading = !silent

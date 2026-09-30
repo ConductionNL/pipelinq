@@ -13,7 +13,12 @@
 		:columns="columns"
 		:newRow="newRow"
 		:labels="labels"
-		:emptyText="t('pipelinq', 'No working hours yet. The resource is unavailable on days without a row.')"
+		:emptyText="
+			t(
+				'pipelinq',
+				'No working hours yet. The resource is unavailable on days without a row.',
+			)
+		"
 		:addLabel="t('pipelinq', 'Add working hours')"
 		:message="error || ruleError"
 		messageType="error"
@@ -83,22 +88,62 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * The working-hours rows, or none when the value is not an array.
+		 *
+		 * @return {Array<object>}
+		 *
+		 * @spec openspec/specs/appointment-booking/spec.md
+		 */
 		rows() {
 			return Array.isArray(this.modelValue) ? this.modelValue : []
 		},
 
+		/**
+		 * The first rule the rows break, or an empty string.
+		 *
+		 * @return {string}
+		 *
+		 * @spec openspec/specs/appointment-booking/spec.md
+		 */
 		ruleError() {
 			return workingHoursError(this.rows)
 		},
 
+		/**
+		 * The row editor's columns: day, opening and closing time.
+		 *
+		 * @return {Array<object>}
+		 *
+		 * @spec openspec/specs/appointment-booking/spec.md
+		 */
 		columns() {
 			return [
-				{ key: 'day', label: t('pipelinq', 'Day'), width: 'minmax(8rem, 1fr)' },
-				{ key: 'openTime', label: t('pipelinq', 'Opening time'), width: 'minmax(6rem, 9rem)' },
-				{ key: 'closeTime', label: t('pipelinq', 'Closing time'), width: 'minmax(6rem, 9rem)' },
+				{
+					key: 'day',
+					label: t('pipelinq', 'Day'),
+					width: 'minmax(8rem, 1fr)',
+				},
+				{
+					key: 'openTime',
+					label: t('pipelinq', 'Opening time'),
+					width: 'minmax(6rem, 9rem)',
+				},
+				{
+					key: 'closeTime',
+					label: t('pipelinq', 'Closing time'),
+					width: 'minmax(6rem, 9rem)',
+				},
 			]
 		},
 
+		/**
+		 * Accessible labels for the row buttons; the rows are not reorderable.
+		 *
+		 * @return {object}
+		 *
+		 * @spec openspec/specs/appointment-booking/spec.md
+		 */
 		labels() {
 			return {
 				moveUp: () => '',
@@ -107,6 +152,13 @@ export default {
 			}
 		},
 
+		/**
+		 * The weekdays a row can be set to.
+		 *
+		 * @return {Array<{value: string, label: string}>}
+		 *
+		 * @spec openspec/specs/appointment-booking/spec.md
+		 */
 		dayOptions() {
 			return [
 				{ value: 'monday', label: t('pipelinq', 'Monday') },
@@ -121,6 +173,13 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * A new working-hours row: Monday, 09:00 to 17:00.
+		 *
+		 * @return {object}
+		 *
+		 * @spec openspec/specs/appointment-booking/spec.md
+		 */
 		newRow() {
 			return { day: 'monday', openTime: '09:00', closeTime: '17:00' }
 		},

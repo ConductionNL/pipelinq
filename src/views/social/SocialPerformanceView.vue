@@ -193,16 +193,24 @@ export default {
 		},
 
 		/**
+		 * The icon a ranked post's network is shown with.
+		 *
 		 * @param {string} network The network.
 		 * @return {object} Its icon component.
+		 *
+		 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
 		 */
 		networkIcon(network) {
 			return networkIcon(network)
 		},
 
 		/**
+		 * Format a publication's timestamp for the reader.
+		 *
 		 * @param {string} value An ISO timestamp.
 		 * @return {string} It in the reader's locale, or as stored when unreadable.
+		 *
+		 * @spec openspec/changes/social-publishing/specs/social-metrics/spec.md#requirement-posts-are-ranked-by-engagement-rate-per-network
 		 */
 		formatDate(value) {
 			const date = new Date(value)

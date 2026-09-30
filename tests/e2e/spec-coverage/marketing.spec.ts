@@ -666,7 +666,10 @@ test.describe('Blasts ledger and wizard', () => {
 	}) => {
 		await openApp(page)
 		await navClick(page, 'Blasts', /\/blasts$/)
-		await page.locator('#content-vue [data-testid="cn-cta-primary"]').first().click()
+		await page
+			.locator('#content-vue [data-testid="cn-cta-primary"]')
+			.first()
+			.click()
 
 		const dialog = page.getByRole('dialog', { name: 'New blast' })
 		await expect(dialog).toBeVisible({ timeout: 20000 })
@@ -729,7 +732,10 @@ test.describe('Segments', () => {
 		// Reached from the Segments index page's own Add button, which is what
 		// proves the page is wired, not only the dialog.
 		await navClick(page, 'Segments', /\/segments$/)
-		await page.locator('#content-vue [data-testid="cn-cta-primary"]').first().click()
+		await page
+			.locator('#content-vue [data-testid="cn-cta-primary"]')
+			.first()
+			.click()
 
 		const dialog = page.getByRole('dialog', { name: 'New segment' })
 		await expect(dialog).toBeVisible({ timeout: 20000 })
@@ -748,7 +754,9 @@ test.describe('Segments', () => {
 		// A condition with no field yet is unfinished: Save stays disabled and
 		// the footer says why, with no error on the row.
 		await builder.getByRole('button', { name: 'Add condition' }).click()
-		await expect(dialog).toContainText('Complete or remove the unfinished conditions.')
+		await expect(dialog).toContainText(
+			'Complete or remove the unfinished conditions.',
+		)
 		await expect(builder.locator('.segment-rule__error')).toHaveCount(0)
 		await expect(saveButton).toBeDisabled()
 
@@ -820,7 +828,10 @@ test.describe('Segments', () => {
 	}) => {
 		await openApp(page)
 		await navClick(page, 'Templates', /\/templates$/)
-		await page.locator('#content-vue [data-testid="cn-cta-primary"]').first().click()
+		await page
+			.locator('#content-vue [data-testid="cn-cta-primary"]')
+			.first()
+			.click()
 
 		const dialog = page.getByRole('dialog', { name: 'New template' })
 		await expect(dialog).toBeVisible({ timeout: 20000 })
@@ -834,9 +845,12 @@ test.describe('Segments', () => {
 
 		// The rejected POST /api/templates lands on the body field itself,
 		// which is this scenario's whole point.
-		await expect(dialog.locator('.template-form__body-html')).toContainText(/unsubscribe/i, {
-			timeout: 10000,
-		})
+		await expect(dialog.locator('.template-form__body-html')).toContainText(
+			/unsubscribe/i,
+			{
+				timeout: 10000,
+			},
+		)
 
 		// A rejected save keeps the modal open, over the list.
 		await expect(dialog).toBeVisible()
@@ -1413,23 +1427,40 @@ test.describe('Marketing API contract', () => {
 			const fetched = await api(page, 'GET', `${APP}/api/templates/${id}`)
 			expect(fetched.json?.subject).toBe('Nieuw onderwerp')
 			expect(fetched.json?.name).toBe('E2E gate-19 partial patch')
-			expect(fetched.json?.bodyHtml).toBe('<p>Afmelden: {{unsubscribe_link}}</p>')
+			expect(fetched.json?.bodyHtml).toBe(
+				'<p>Afmelden: {{unsubscribe_link}}</p>',
+			)
 
 			// The stored template validates, and nothing is saved by asking.
-			const valid = await api(page, 'POST', `${APP}/api/templates/${id}/validate`, {
-				channel: 'email',
-			})
+			const valid = await api(
+				page,
+				'POST',
+				`${APP}/api/templates/${id}/validate`,
+				{
+					channel: 'email',
+				},
+			)
 			expect(valid.status, valid.text).toBe(200)
 			expect(valid.json).toEqual({ valid: true, error: null })
 
 			// Clearing the address is refused on save, because an email must carry one.
-			const noAddress = await api(page, 'PATCH', `${APP}/api/templates/${id}`, {
-				footerOverride: '',
-			})
+			const noAddress = await api(
+				page,
+				'PATCH',
+				`${APP}/api/templates/${id}`,
+				{
+					footerOverride: '',
+				},
+			)
 			expect(noAddress.status, noAddress.text).toBe(400)
 			expect(String(noAddress.json?.error)).toMatch(/address/i)
 
-			const missing = await api(page, 'POST', `${APP}/api/templates/e2e-no-such-template/validate`, {})
+			const missing = await api(
+				page,
+				'POST',
+				`${APP}/api/templates/e2e-no-such-template/validate`,
+				{},
+			)
 			expect(missing.status, missing.text).toBe(404)
 		} finally {
 			await api(

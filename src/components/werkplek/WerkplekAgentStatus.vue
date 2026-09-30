@@ -76,6 +76,8 @@ export default {
 		 * aria label. Routing skips agents marked unavailable.
 		 *
 		 * @return {string}
+		 *
+		 * @spec openspec/specs/kcc-werkplek/spec.md
 		 */
 		description() {
 			return this.isAvailable

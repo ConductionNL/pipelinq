@@ -567,7 +567,8 @@ class ConnectorRegisterResolutionTest extends TestCase {
 			mailer: $this->createMock(\OCP\Mail\IMailer::class),
 			articleService: $this->createMock(\OCA\Pipelinq\Service\ArticleService::class),
 			connectorRegister: FakeSlugResolver::connectorRegister($presentSlugs),
-			logger: $this->createMock(LoggerInterface::class)
+			logger: $this->createMock(LoggerInterface::class),
+			addressRenderer: new \OCA\Pipelinq\Service\Marketing\PhysicalAddressRenderer()
 		);
 
 		return $service->resolveRateLimit(

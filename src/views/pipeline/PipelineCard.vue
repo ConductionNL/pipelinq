@@ -196,10 +196,21 @@ export default {
 	},
 
 	computed: {
-		/** Whether the details row has anything to show. */
+		/**
+		 * Whether the details row has anything to show.
+		 *
+		 * @return {boolean}
+		 *
+		 * @spec openspec/specs/lead-management/spec.md
+		 */
 		hasMeta() {
-			return !!(this.item.value || this.item.assignee || this.daysAge > 0
-				|| this.isStaleItem || this.item.expectedCloseDate)
+			return !!(
+				this.item.value
+				|| this.item.assignee
+				|| this.daysAge > 0
+				|| this.isStaleItem
+				|| this.item.expectedCloseDate
+			)
 		},
 
 		/**

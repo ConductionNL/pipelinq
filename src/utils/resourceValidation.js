@@ -17,17 +17,27 @@ import { translate as t } from '@nextcloud/l10n'
 /**
  * @param {Array<{openTime?: string, closeTime?: string}>} rows The working-hours rows.
  * @return {string} An error message, or '' when every row is valid.
+ *
+ * @spec openspec/specs/appointment-booking/spec.md
  */
 export function workingHoursError(rows) {
-	const bad = (rows || []).find((r) => r.openTime && r.closeTime && r.openTime >= r.closeTime)
+	const bad = (rows || []).find(
+		(r) => r.openTime && r.closeTime && r.openTime >= r.closeTime,
+	)
 	return bad ? t('pipelinq', 'Open time must be before close time.') : ''
 }
 
 /**
  * @param {Array<{startDate?: string, endDate?: string}>} rows The vacation rows.
  * @return {string} An error message, or '' when every row is valid.
+ *
+ * @spec openspec/specs/appointment-booking/spec.md
  */
 export function vacationsError(rows) {
-	const bad = (rows || []).find((r) => r.startDate && r.endDate && r.startDate > r.endDate)
-	return bad ? t('pipelinq', 'Vacation start date must be on or before the end date.') : ''
+	const bad = (rows || []).find(
+		(r) => r.startDate && r.endDate && r.startDate > r.endDate,
+	)
+	return bad
+		? t('pipelinq', 'Vacation start date must be on or before the end date.')
+		: ''
 }

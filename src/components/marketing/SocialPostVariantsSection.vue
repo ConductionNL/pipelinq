@@ -172,6 +172,11 @@ export default {
 		},
 	},
 
+	/**
+	 * Load the post and follow page refreshes.
+	 *
+	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
+	 */
 	mounted() {
 		this.load()
 		// The approval step lives in the page header, which bumps this after
@@ -236,8 +241,12 @@ export default {
 		},
 
 		/**
+		 * The icon a variant's network is shown with.
+		 *
 		 * @param {string} network The network.
 		 * @return {object} Its icon component.
+		 *
+		 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
 		 */
 		networkIcon(network) {
 			return networkIcon(network)
@@ -259,8 +268,12 @@ export default {
 		},
 
 		/**
+		 * Format an approval's timestamp for the reader.
+		 *
 		 * @param {string} value An ISO timestamp.
 		 * @return {string} It in the reader's locale, or as stored when unreadable.
+		 *
+		 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
 		 */
 		formatDate(value) {
 			const date = new Date(value)
