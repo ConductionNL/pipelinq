@@ -225,8 +225,8 @@ class DossierQuestionService {
 	 * The snapshot of a dossier as the resident sees it now (C4).
 	 *
 	 * Each item's publication is read for its title and linked to its public
-	 * page. An item whose publication cannot be read keeps its note, or the
-	 * publication id, as title and gets no link.
+	 * page. An item whose publication cannot be read keeps the title the
+	 * dossier stored for it, its note, or the publication id, and gets no link.
 	 *
 	 * @param string               $collectionId The dossier id.
 	 * @param array<string, mixed> $collection   The dossier object.
@@ -291,7 +291,13 @@ class DossierQuestionService {
 			$publication = $this->read(schema: self::PUBLICATION_SCHEMA, id: $publicationId);
 		}
 
+		// The publication's title now; else the title the dossier kept when the
+		// item was added (C1), else the resident's note.
 		$title = (string)($publication['title'] ?? '');
+		if ($title === '') {
+			$title = (string)($item['title'] ?? '');
+		}
+
 		if ($title === '') {
 			$title = (string)($item['note'] ?? '');
 		}

@@ -113,4 +113,35 @@ class TicketWooRequestControllerTest extends TestCase {
 
 		$this->assertTrue($this->controller(signedIn: true, privileged: true, ticket: ['id' => 't-9'])->availability(id: 't-9')->getData()['canConvert']);
 	}//end testTheConversionAnswerMapsToHttp()
+
+	/**
+	 * An OpenRegister failure answers 503 and converts nothing.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-the-employee-turns-a-question-into-a-woo-request-req-qcd-008
+	 */
+	public function testAnUnreachableRegisterIsUnavailable(): void {
+		$session = $this->createMock(IUserSession::class);
+		$user = $this->createMock(IUser::class);
+		$user->method('getUID')->willReturn('kcc-anna');
+		$session->method('getUser')->willReturn($user);
+		$policy = $this->createMock(ObjectOwnerAccessPolicy::class);
+		$policy->method('isPrivileged')->willReturn(true);
+		$tickets = $this->createMock(MainRegisterReader::class);
+		$tickets->method('find')->willThrowException(new \RuntimeException('Main register schema is not configured.'));
+		$conversion = $this->createMock(WooRequestConversionService::class);
+		$conversion->expects($this->never())->method('convert');
+
+		$controller = new TicketWooRequestController(
+			request: $this->createMock(IRequest::class),
+			conversion: $conversion,
+			tickets: $tickets,
+			userSession: $session,
+			accessPolicy: $policy
+		);
+
+		$this->assertSame(Http::STATUS_SERVICE_UNAVAILABLE, $controller->convert(id: 't-9')->getStatus());
+		$this->assertSame(Http::STATUS_SERVICE_UNAVAILABLE, $controller->availability(id: 't-9')->getStatus());
+	}//end testAnUnreachableRegisterIsUnavailable()
 }//end class

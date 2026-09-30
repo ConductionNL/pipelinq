@@ -132,6 +132,7 @@ export default {
 		 * Whether there is an answer to save.
 		 *
 		 * @return {boolean}
+		 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-the-employee-answers-from-the-ticket-req-qcd-007
 		 */
 		canSave() {
 			return this.message.trim() !== ''
@@ -210,6 +211,8 @@ export default {
 
 		/**
 		 * Tell the employee the answer did not save.
+		 *
+		 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-the-employee-answers-from-the-ticket-req-qcd-007
 		 */
 		fail() {
 			this.notice = t('pipelinq', 'Could not save the answer.')
@@ -221,6 +224,7 @@ export default {
 		 *
 		 * @param {string} value An ISO date-time.
 		 * @return {string} The localised date and time, or the raw value.
+		 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-the-employee-answers-from-the-ticket-req-qcd-007
 		 */
 		formatDate(value) {
 			const date = new Date(value)

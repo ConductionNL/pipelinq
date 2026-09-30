@@ -39,6 +39,7 @@ use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
 use OCP\IUserSession;
+use RuntimeException;
 
 /**
  * Offers and performs the conversion of a question into a Woo request.
@@ -94,12 +95,16 @@ class TicketWooRequestController extends Controller {
 			return new JSONResponse(['status' => 'forbidden'], Http::STATUS_FORBIDDEN);
 		}
 
-		$ticket = $this->tickets->find(schemaKey: self::TICKET, id: $id);
-		if ($ticket === null) {
-			return new JSONResponse(['status' => 'not-found'], Http::STATUS_NOT_FOUND);
-		}
+		try {
+			$ticket = $this->tickets->find(schemaKey: self::TICKET, id: $id);
+			if ($ticket === null) {
+				return new JSONResponse(['status' => 'not-found'], Http::STATUS_NOT_FOUND);
+			}
 
-		return new JSONResponse($this->conversion->availability(ticket: $ticket));
+			return new JSONResponse($this->conversion->availability(ticket: $ticket));
+		} catch (RuntimeException $e) {
+			return new JSONResponse(['status' => 'unavailable'], Http::STATUS_SERVICE_UNAVAILABLE);
+		}
 	}//end availability()
 
 	/**
@@ -125,12 +130,18 @@ class TicketWooRequestController extends Controller {
 			return new JSONResponse(['status' => 'forbidden'], Http::STATUS_FORBIDDEN);
 		}
 
-		$ticket = $this->tickets->find(schemaKey: self::TICKET, id: $id);
-		if ($ticket === null) {
-			return new JSONResponse(['status' => 'not-found'], Http::STATUS_NOT_FOUND);
+		try {
+			$ticket = $this->tickets->find(schemaKey: self::TICKET, id: $id);
+			if ($ticket === null) {
+				return new JSONResponse(['status' => 'not-found'], Http::STATUS_NOT_FOUND);
+			}
+
+			$result = $this->conversion->convert(ticketId: $id, ticket: $ticket);
+		} catch (RuntimeException $e) {
+			// OpenRegister is not configured or not reachable; nothing was written.
+			return new JSONResponse(['status' => 'unavailable'], Http::STATUS_SERVICE_UNAVAILABLE);
 		}
 
-		$result = $this->conversion->convert(ticketId: $id, ticket: $ticket);
 		$status = match ($result['status']) {
 			'not-available', 'not-convertible' => Http::STATUS_CONFLICT,
 			'intake-failed' => Http::STATUS_BAD_GATEWAY,

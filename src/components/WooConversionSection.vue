@@ -74,6 +74,7 @@ export default {
 
 		/**
 		 * @return {boolean} Whether to offer the conversion.
+		 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-the-employee-turns-a-question-into-a-woo-request-req-qcd-008
 		 */
 		showButton() {
 			return this.canConvert && !this.isConverted

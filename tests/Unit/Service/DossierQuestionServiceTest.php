@@ -202,6 +202,23 @@ class DossierQuestionServiceTest extends TestCase {
 	}//end testTheResidentsSubjectLineWins()
 
 	/**
+	 * An unreadable publication falls back to the item's own title snapshot (C1), then its note.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-a-resident-asks-a-question-about-a-dossier-they-own-req-qcd-001
+	 */
+	public function testAnUnreadablePublicationKeepsTheItemsTitle(): void {
+		$dossier = self::dossier();
+		$dossier['items'][2]['title'] = 'Oud besluit windpark';
+		$this->catalogue['collection/' . self::DOSSIER] = $dossier;
+
+		$this->service->ask(subjectRef: self::RESIDENT, collectionId: self::DOSSIER, question: 'Vraag');
+
+		$this->assertSame(['title' => 'Oud besluit windpark', 'url' => ''], $this->saves[0]['data']['subjectReference']['items'][2]);
+	}//end testAnUnreadablePublicationKeepsTheItemsTitle()
+
+	/**
 	 * Scenario: A resident names someone else's dossier.
 	 *
 	 * @return void
