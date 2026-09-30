@@ -542,6 +542,15 @@ return [
         ['name' => 'semanticHandoff#contractAvailability',   'url' => '/api/handoff/contract/{id}/availability',      'verb' => 'GET'],
         ['name' => 'semanticHandoff#sendContractToInvoicing','url' => '/api/handoff/contract/{id}/send-to-invoicing', 'verb' => 'POST'],
 
+        // Woo citizen journey J4 (questions-about-a-citizen-dossier): the two
+        // portal endpoint actions portaliq forwards with a signed
+        // X-Portal-Subject assertion (the only credential), and the employee's
+        // conversion of a question into a dossiq Woo request.
+        ['name' => 'portalQuestion#ask',              'url' => '/api/portal/questions',                     'verb' => 'POST'],
+        ['name' => 'portalQuestion#reply',            'url' => '/api/portal/questions/reply',               'verb' => 'POST'],
+        ['name' => 'ticketWooRequest#availability',   'url' => '/api/tickets/{id}/woo-request/availability', 'verb' => 'GET'],
+        ['name' => 'ticketWooRequest#convert',        'url' => '/api/tickets/{id}/woo-request',              'verb' => 'POST'],
+
         // Shillinq time-intake billing handoff — real emit side of the
         // time-approval-workflow delegation (time-billing-handoff-emit).
         // Manager-gated; the deep-link (shillinq_app_url) stays the fallback
