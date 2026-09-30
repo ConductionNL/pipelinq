@@ -26,6 +26,8 @@ const NETWORK_ICONS = {
  *
  * @param {string} network The network.
  * @return {object} Its icon component.
+ *
+ * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-one-post-carries-per-network-variants
  */
 export function networkIcon(network) {
 	return NETWORK_ICONS[network] || ShareVariantOutline

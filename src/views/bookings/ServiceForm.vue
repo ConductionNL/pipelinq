@@ -275,7 +275,6 @@ export default {
 				{ value: 'always-charge', label: t('pipelinq', 'Always charge') },
 			]
 		},
-
 	},
 
 	watch: {

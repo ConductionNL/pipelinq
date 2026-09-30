@@ -33,7 +33,9 @@
 			</NcButton>
 		</template>
 
-		<div class="pos-tx-payment__body" :class="{ 'pos-tx-payment__body--split': hasPaymentInfo }">
+		<div
+			class="pos-tx-payment__body"
+			:class="{ 'pos-tx-payment__body--split': hasPaymentInfo }">
 			<section class="pos-tx-payment__tenders">
 				<h4 class="pos-tx-payment__heading">
 					{{ t('pipelinq', 'Tenders') }}
@@ -66,7 +68,15 @@ import TenderEntryPanel from './TenderEntryPanel.vue'
 
 export default {
 	name: 'PosTransactionPaymentWidget',
-	components: { CnIcon, CnWidgetWrapper, NcButton, PaymentStatusCard, Plus, TenderEntryPanel },
+	components: {
+		CnIcon,
+		CnWidgetWrapper,
+		NcButton,
+		PaymentStatusCard,
+		Plus,
+		TenderEntryPanel,
+	},
+
 	// The host also hands over register / schema / store and the widget
 	// content; none of them belong on the root element.
 	inheritAttrs: false,
@@ -92,21 +102,51 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * The transaction, or an empty object before it loads.
+		 *
+		 * @return {object} The transaction.
+		 *
+		 * @spec openspec/changes/archive/2026-06-14-pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#requirement-transaction-status-lifecycle-with-payments-req-pay-009
+		 */
 		transaction() {
 			return this.objectData || {}
 		},
 
+		/**
+		 * The transaction's id, from the page or the transaction itself.
+		 *
+		 * @return {string} The transaction id, or '' when unknown.
+		 *
+		 * @spec openspec/changes/archive/2026-06-14-pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#requirement-transaction-status-lifecycle-with-payments-req-pay-009
+		 */
 		transactionId() {
 			return this.objectId || this.transaction.id || ''
 		},
 
+		/**
+		 * The transaction's lifecycle status.
+		 *
+		 * @return {string} The status, `draft` when unset.
+		 *
+		 * @spec openspec/changes/archive/2026-06-14-pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#requirement-transaction-status-lifecycle-with-payments-req-pay-009
+		 */
 		status() {
 			return this.transaction.status || 'draft'
 		},
 
-		/** @return {boolean} Mirrors TenderEntryPanel's own edit gate. */
+		/**
+		 * Whether a tender can be added; mirrors TenderEntryPanel's own edit gate.
+		 *
+		 * @return {boolean} Whether to offer Add tender.
+		 *
+		 * @spec openspec/changes/archive/2026-06-14-pos-split-tender/specs.md#req-pst-002-add-tender-to-transaction-mvp
+		 */
 		canAddTender() {
-			return Boolean(this.transactionId) && !['settled', 'refunded'].includes(this.status)
+			return (
+				Boolean(this.transactionId)
+				&& !['settled', 'refunded'].includes(this.status)
+			)
 		},
 
 		/**
@@ -114,6 +154,8 @@ export default {
 		 * server authorises the provider refund.
 		 *
 		 * @return {boolean} Whether to show manager-only actions.
+		 *
+		 * @spec openspec/changes/archive/2026-06-14-pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#requirement-payment-refund-req-pay-005
 		 */
 		isManager() {
 			return typeof window.OC?.isUserAdmin === 'function'
@@ -126,15 +168,28 @@ export default {
 		 * to a manager: the same gate as the header's Reverse.
 		 *
 		 * @return {boolean} Whether the provider card may offer a refund.
+		 *
+		 * @spec openspec/changes/archive/2026-06-14-pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#requirement-payment-refund-req-pay-005
 		 */
 		canRefundPayment() {
 			return this.isManager && ['confirmed', 'settled'].includes(this.status)
 		},
 
-		/** @return {boolean} Whether a payment provider handled this transaction. */
+		/**
+		 * Whether a payment provider handled this transaction.
+		 *
+		 * @return {boolean} Whether to show the provider card.
+		 *
+		 * @spec openspec/changes/archive/2026-06-14-pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#requirement-transaction-status-lifecycle-with-payments-req-pay-009
+		 */
 		hasPaymentInfo() {
 			const tx = this.transaction
-			return Boolean(tx.paymentProvider || tx.paymentSessionId || tx.paymentStatus || tx.paymentMethod)
+			return Boolean(
+				tx.paymentProvider
+				|| tx.paymentSessionId
+				|| tx.paymentStatus
+				|| tx.paymentMethod,
+			)
 		},
 	},
 
@@ -151,6 +206,8 @@ export default {
 		 * Reload the tenders along with the rest of the page.
 		 *
 		 * @param {object} [payload] The refresh payload.
+		 *
+		 * @spec openspec/changes/archive/2026-06-14-pos-split-tender/specs.md#req-pst-002-add-tender-to-transaction-mvp
 		 */
 		onPageRefresh(payload) {
 			const panel = this.$refs.tenders
@@ -161,7 +218,12 @@ export default {
 			payload?.waitUntil?.(done)
 		},
 
-		/** A provider capture or refund changes the transaction itself. */
+		/**
+		 * Refresh the page: a provider capture or refund changes the
+		 * transaction itself.
+		 *
+		 * @spec openspec/changes/archive/2026-06-14-pos-payment-provider-adapter/specs/pos-payment-provider-adapter/spec.md#requirement-transaction-status-lifecycle-with-payments-req-pay-009
+		 */
 		refreshPage() {
 			emit('cn:page:refresh', {})
 		},

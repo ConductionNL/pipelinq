@@ -692,7 +692,15 @@ test.describe('Declarative detail pages (client 360 + contact)', () => {
 		// list at a time, so each is asserted as a tab rather than as a list.
 		// Projects reads PLANNINQ's register and declares `requiredApp:
 		// planninq` (#1757); CI installs planninq, so its tab is there too.
-		for (const label of ['Contacts', 'Requests', 'Leads', 'Contact moments', 'Complaints', 'Contracts', 'Projects']) {
+		for (const label of [
+			'Contacts',
+			'Requests',
+			'Leads',
+			'Contact moments',
+			'Complaints',
+			'Contracts',
+			'Projects',
+		]) {
 			await expect(
 				content.getByRole('tab', { name: label, exact: true }),
 				`the Records strip must offer a "${label}" tab`,
@@ -758,7 +766,10 @@ test.describe('Declarative detail pages (client 360 + contact)', () => {
 
 		await gotoPage(page, `/clients/${clientId}`)
 		// Leads is a tab of the Records strip; its panel mounts when opened.
-		await page.locator('#content-vue').getByRole('tab', { name: 'Leads', exact: true }).click()
+		await page
+			.locator('#content-vue')
+			.getByRole('tab', { name: 'Leads', exact: true })
+			.click()
 		const row = page.locator('#content-vue').getByText(LEAD_TITLE).first()
 		await expect(row).toBeVisible({ timeout: 25000 })
 		await row.click()

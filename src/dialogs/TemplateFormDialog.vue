@@ -9,13 +9,20 @@
 <template>
 	<NcDialog
 		v-if="show"
-		:name="isEditing ? t('pipelinq', 'Edit template') : t('pipelinq', 'New template')"
+		:name="
+			isEditing
+				? t('pipelinq', 'Edit template')
+				: t('pipelinq', 'New template')
+		"
 		:open="true"
 		size="large"
 		:closeOnClickOutside="false"
 		@closing="close()">
 		<div class="template-form">
-			<NcLoadingIcon v-if="loading" :size="32" class="template-form__loading" />
+			<NcLoadingIcon
+				v-if="loading"
+				:size="32"
+				class="template-form__loading" />
 			<NcNoteCard v-else-if="loadError" type="error">
 				{{ loadError }}
 			</NcNoteCard>
@@ -33,7 +40,14 @@
 					<div
 						class="template-form__channel"
 						:class="{ 'template-form__channel--locked': isEditing }"
-						:title="isEditing ? t('pipelinq', 'The channel of an existing template cannot be changed.') : null">
+						:title="
+							isEditing
+								? t(
+										'pipelinq',
+										'The channel of an existing template cannot be changed.',
+									)
+								: null
+						">
 						<NcSelect
 							v-model="channelOption"
 							:options="channelOptions"
@@ -80,7 +94,11 @@
 								<CodeTags v-if="previewing" :size="20" />
 								<EyeOutline v-else :size="20" />
 							</template>
-							{{ previewing ? t('pipelinq', 'Edit HTML') : t('pipelinq', 'Preview') }}
+							{{
+								previewing
+									? t('pipelinq', 'Edit HTML')
+									: t('pipelinq', 'Preview')
+							}}
 						</NcButton>
 					</div>
 					<NcTextField
@@ -102,7 +120,11 @@
 					<NcTextArea
 						v-else
 						v-model="model.bodyHtml"
-						:label="isEmail ? t('pipelinq', 'HTML body') : t('pipelinq', 'Message body')"
+						:label="
+							isEmail
+								? t('pipelinq', 'HTML body')
+								: t('pipelinq', 'Message body')
+						"
 						:error="Boolean(fieldErrors.bodyHtml)"
 						:helperText="fieldErrors.bodyHtml || bodyHint"
 						rows="10"
@@ -137,18 +159,26 @@
 						:multiple="true"
 						label="title"
 						:loading="articlesLoading"
-						:placeholder="t('pipelinq', 'Pick published articles to embed')"
+						:placeholder="
+							t('pipelinq', 'Pick published articles to embed')
+						"
 						keepOpen
 						class="template-form__articles" />
 					<p class="template-form__hint">
 						{{ articlesHintText }}
 					</p>
-					<NcNoteCard v-if="showMarkerWarning" type="warning" class="template-form__note">
+					<NcNoteCard
+						v-if="showMarkerWarning"
+						type="warning"
+						class="template-form__note">
 						{{ markerWarningText }}
 					</NcNoteCard>
 				</section>
 
-				<NcNoteCard v-if="saveError" type="error" class="template-form__note">
+				<NcNoteCard
+					v-if="saveError"
+					type="error"
+					class="template-form__note">
 					{{ saveError }}
 				</NcNoteCard>
 			</template>
@@ -165,7 +195,11 @@
 				<template v-if="saving" #icon>
 					<NcLoadingIcon :size="20" />
 				</template>
-				{{ isEditing ? t('pipelinq', 'Save changes') : t('pipelinq', 'Create template') }}
+				{{
+					isEditing
+						? t('pipelinq', 'Save changes')
+						: t('pipelinq', 'Create template')
+				}}
 			</NcButton>
 		</template>
 	</NcDialog>
@@ -175,7 +209,15 @@
 import axios from '@nextcloud/axios'
 import { showSuccess } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
-import { NcButton, NcDialog, NcLoadingIcon, NcNoteCard, NcSelect, NcTextArea, NcTextField } from '@nextcloud/vue'
+import {
+	NcButton,
+	NcDialog,
+	NcLoadingIcon,
+	NcNoteCard,
+	NcSelect,
+	NcTextArea,
+	NcTextField,
+} from '@nextcloud/vue'
 import CodeTags from 'vue-material-design-icons/CodeTags.vue'
 import EyeOutline from 'vue-material-design-icons/EyeOutline.vue'
 import { fetchArticles } from '../services/articlesApi.js'
@@ -186,9 +228,14 @@ import {
 	shouldWarnMissingMarker,
 } from '../services/templateArticlePicker.js'
 
-// Where the address goes in an email body; ComplianceService::renderPhysicalAddress()
-// places it the same way on send.
-const ADDRESS_TOKENS = ['{{physical_address}}', '{{sender_address}}', '{{company_address}}', '{{address_block}}']
+// Where the address goes in an email body. Must match PhysicalAddressRenderer::TOKENS,
+// whose render() places it the same way on send.
+const ADDRESS_TOKENS = [
+	'{{physical_address}}',
+	'{{sender_address}}',
+	'{{company_address}}',
+	'{{address_block}}',
+]
 
 /**
  * Put the physical address into an HTML body the way the send path does: at
@@ -207,7 +254,10 @@ function withAddress(html, address) {
 	div.textContent = trimmed
 	const rendered = div.innerHTML.replace(/\n/g, '<br>\n')
 	if (ADDRESS_TOKENS.some((token) => html.includes(token))) {
-		return ADDRESS_TOKENS.reduce((body, token) => body.split(token).join(rendered), html)
+		return ADDRESS_TOKENS.reduce(
+			(body, token) => body.split(token).join(rendered),
+			html,
+		)
 	}
 	const close = html.toLowerCase().lastIndexOf('</body>')
 	return close === -1
@@ -292,8 +342,17 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * The id of the template being edited, or null when creating one.
+		 *
+		 * @return {string|null}
+		 *
+		 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-ui/spec.md#requirement-segments-and-templates-pages-are-reachable-from-the-marketing-menu
+		 */
 		templateId() {
-			return this.item?.id || this.item?.['@self']?.id || this.item?.uuid || null
+			return (
+				this.item?.id || this.item?.['@self']?.id || this.item?.uuid || null
+			)
 		},
 
 		isEditing() {
@@ -304,6 +363,13 @@ export default {
 			return this.model.channel === 'email'
 		},
 
+		/**
+		 * The channels a template can be written for.
+		 *
+		 * @return {Array<{value: string, label: string}>}
+		 *
+		 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-ui/spec.md#requirement-segments-and-templates-pages-are-reachable-from-the-marketing-menu
+		 */
 		channelOptions() {
 			return [
 				{ value: 'email', label: this.t('pipelinq', 'Email') },
@@ -318,10 +384,27 @@ export default {
 		 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-ui/spec.md#requirement-segments-and-templates-pages-are-reachable-from-the-marketing-menu
 		 */
 		channelOption: {
+			/**
+			 * The picked channel option, defaulting to email.
+			 *
+			 * @return {{value: string, label: string}}
+			 *
+			 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-ui/spec.md#requirement-segments-and-templates-pages-are-reachable-from-the-marketing-menu
+			 */
 			get() {
-				return this.channelOptions.find((o) => o.value === this.model.channel) || this.channelOptions[0]
+				return (
+					this.channelOptions.find((o) => o.value === this.model.channel)
+					|| this.channelOptions[0]
+				)
 			},
 
+			/**
+			 * Switch the template's channel.
+			 *
+			 * @param {object} option The picked option.
+			 *
+			 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-ui/spec.md#requirement-segments-and-templates-pages-are-reachable-from-the-marketing-menu
+			 */
 			set(option) {
 				this.model.channel = option?.value || 'email'
 			},
@@ -332,16 +415,28 @@ export default {
 		 * double braces do not parse inside a mustache.
 		 *
 		 * @return {string} The hint under the body.
+		 *
+		 * @spec openspec/specs/marketing-compliance/spec.md#requirement-unsubscribe-footer-enforced-on-email-templates
 		 */
 		bodyHint() {
 			return this.isEmail
-				? this.t('pipelinq', 'Include {{unsubscribe_link}}. Put {{physical_address}} where the address below should appear; without it the address goes at the end.')
+				? this.t(
+						'pipelinq',
+						'Include {{unsubscribe_link}}. Put {{physical_address}} where the address below should appear; without it the address goes at the end.',
+					)
 				: ''
 		},
 
-		/** @return {string} The hint under the address field. */
+		/**
+		 * @return {string} The hint under the address field.
+		 *
+		 * @spec openspec/specs/marketing-compliance/spec.md#scenario-save-rejected-if-physical-address-missing
+		 */
 		footerHint() {
-			return this.t('pipelinq', 'Required for email: the postal address every mail must carry.')
+			return this.t(
+				'pipelinq',
+				'Required for email: the postal address every mail must carry.',
+			)
 		},
 
 		/**
@@ -350,13 +445,18 @@ export default {
 		 * inline styles and images, on top of the sandbox.
 		 *
 		 * @return {string} The preview document.
+		 *
+		 * @spec openspec/specs/marketing-compliance/spec.md#scenario-the-physical-address-renders-where-the-template-marks-it
 		 */
 		previewDocument() {
-			const csp = "default-src 'none'; style-src 'unsafe-inline'; img-src data: https:; font-src data: https:"
-			return '<!DOCTYPE html><html><head><meta charset="utf-8">'
+			const csp =
+				"default-src 'none'; style-src 'unsafe-inline'; img-src data: https:; font-src data: https:"
+			return (
+				'<!DOCTYPE html><html><head><meta charset="utf-8">'
 				+ `<meta http-equiv="Content-Security-Policy" content="${csp}">`
 				+ '<style>body{margin:16px;font-family:sans-serif;color:#222;background:#fff}</style>'
 				+ `</head><body>${withAddress(this.model.bodyHtml, this.model.footerOverride)}</body></html>`
+			)
 		},
 
 		/**
@@ -374,10 +474,24 @@ export default {
 		 * @spec openspec/changes/marketing-article-hub/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
 		 */
 		selectedArticles: {
+			/**
+			 * The picked articles, in embed order.
+			 *
+			 * @return {Array<object>}
+			 *
+			 * @spec openspec/changes/marketing-article-hub/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
+			 */
 			get() {
 				return resolveSelectedArticles(this.model.articleIds, this.articles)
 			},
 
+			/**
+			 * Store the picked articles' ids, in the order picked.
+			 *
+			 * @param {Array<object>} options The picked article options.
+			 *
+			 * @spec openspec/changes/marketing-article-hub/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
+			 */
 			set(options) {
 				this.model.articleIds = orderedArticleIds(options)
 			},
@@ -388,22 +502,55 @@ export default {
 		 * @return {boolean} Articles are picked but the body has no marker to put them at.
 		 */
 		showMarkerWarning() {
-			return shouldWarnMissingMarker(this.model.articleIds, this.model.bodyHtml)
+			return shouldWarnMissingMarker(
+				this.model.articleIds,
+				this.model.bodyHtml,
+			)
 		},
 
+		/**
+		 * @return {string} The hint under the article picker.
+		 *
+		 * @spec openspec/changes/marketing-article-hub/specs/marketing-ui/spec.md#requirement-the-templates-form-lets-a-marketer-pick-articles
+		 */
 		articlesHintText() {
-			return this.t('pipelinq', 'Embedded where the body carries the {{articles}} marker, in the order picked here.')
+			return this.t(
+				'pipelinq',
+				'Embedded where the body carries the {{articles}} marker, in the order picked here.',
+			)
 		},
 
+		/**
+		 * @return {string} The warning when the body has no articles marker.
+		 *
+		 * @spec openspec/changes/marketing-article-hub/specs/marketing-ui/spec.md#scenario-picking-articles-for-a-body-without-the-marker-warns-the-marketer
+		 */
 		markerWarningText() {
-			return this.t('pipelinq', 'The body has no {{articles}} marker, so these articles will not appear until you add one.')
+			return this.t(
+				'pipelinq',
+				'The body has no {{articles}} marker, so these articles will not appear until you add one.',
+			)
 		},
 
+		/**
+		 * @return {boolean} A name and a body, and nothing loading or saving.
+		 *
+		 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-ui/spec.md#requirement-segments-and-templates-pages-are-reachable-from-the-marketing-menu
+		 */
 		canSave() {
-			return this.model.name.trim() !== '' && this.model.bodyHtml.trim() !== '' && !this.saving && !this.loading
+			return (
+				this.model.name.trim() !== ''
+				&& this.model.bodyHtml.trim() !== ''
+				&& !this.saving
+				&& !this.loading
+			)
 		},
 
-		/** @return {string} Why Save is disabled. */
+		/**
+		 * @return {string} Why Save is disabled.
+		 *
+		 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-ui/spec.md#requirement-segments-and-templates-pages-are-reachable-from-the-marketing-menu
+		 */
 		saveHint() {
 			if (this.loading || this.saving || this.loadError) {
 				return ''
@@ -421,6 +568,13 @@ export default {
 	watch: {
 		show: {
 			immediate: true,
+			/**
+			 * Reset the form each time the dialog opens.
+			 *
+			 * @param {boolean} open Whether the dialog is open.
+			 *
+			 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-ui/spec.md#requirement-segments-and-templates-pages-are-reachable-from-the-marketing-menu
+			 */
 			handler(open) {
 				if (open) {
 					this.reset()
@@ -429,20 +583,25 @@ export default {
 		},
 
 		// An error clears once the field it is about is edited.
-		'model.bodyHtml': function() {
+		'model.bodyHtml': function () {
 			this.clearFieldError('bodyHtml')
 		},
 
-		'model.subject': function() {
+		'model.subject': function () {
 			this.clearFieldError('subject')
 		},
 
-		'model.footerOverride': function() {
+		'model.footerOverride': function () {
 			this.clearFieldError('footerOverride')
 		},
 	},
 
 	methods: {
+		/**
+		 * Clear the form, load the articles, and read the template when editing one.
+		 *
+		 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-ui/spec.md#requirement-segments-and-templates-pages-are-reachable-from-the-marketing-menu
+		 */
 		reset() {
 			this.model = blankModel()
 			this.loadError = ''
@@ -455,6 +614,13 @@ export default {
 			}
 		},
 
+		/**
+		 * Drop the error shown on one field.
+		 *
+		 * @param {string} field The field the error is about.
+		 *
+		 * @spec openspec/specs/marketing-ui/spec.md#scenario-template-save-surfaces-a-compliance-error-as-a-field-error
+		 */
 		clearFieldError(field) {
 			if (this.fieldErrors[field]) {
 				const { [field]: _, ...rest } = this.fieldErrors
@@ -476,14 +642,28 @@ export default {
 			}
 		},
 
+		/**
+		 * Read the template being edited into the form.
+		 *
+		 * @spec openspec/changes/marketing-segments-ui-repair/specs/marketing-ui/spec.md#requirement-segments-and-templates-pages-are-reachable-from-the-marketing-menu
+		 */
 		async loadTemplate() {
 			this.loading = true
 			try {
-				const { data } = await axios.get(generateUrl(`/apps/pipelinq/api/templates/${this.templateId}`))
+				const { data } = await axios.get(
+					generateUrl(`/apps/pipelinq/api/templates/${this.templateId}`),
+				)
 				const blank = blankModel()
-				this.model = Object.fromEntries(Object.keys(blank).map((key) => [key, data?.[key] ?? blank[key]]))
+				this.model = Object.fromEntries(
+					Object.keys(blank).map((key) => [
+						key,
+						data?.[key] ?? blank[key],
+					]),
+				)
 			} catch (e) {
-				this.loadError = e?.response?.data?.error || this.t('pipelinq', 'Could not load this template.')
+				this.loadError =
+					e?.response?.data?.error
+					|| this.t('pipelinq', 'Could not load this template.')
 			} finally {
 				this.loading = false
 			}
@@ -536,16 +716,26 @@ export default {
 			}
 			try {
 				if (this.isEditing) {
-					await axios.patch(generateUrl(`/apps/pipelinq/api/templates/${this.templateId}`), payload)
+					await axios.patch(
+						generateUrl(
+							`/apps/pipelinq/api/templates/${this.templateId}`,
+						),
+						payload,
+					)
 					showSuccess(this.t('pipelinq', 'Template saved.'))
 				} else {
-					await axios.post(generateUrl('/apps/pipelinq/api/templates'), payload)
+					await axios.post(
+						generateUrl('/apps/pipelinq/api/templates'),
+						payload,
+					)
 					showSuccess(this.t('pipelinq', 'Template created.'))
 				}
 				this.refresh?.()
 				this.close()
 			} catch (e) {
-				const message = e?.response?.data?.error || this.t('pipelinq', 'Could not save this template.')
+				const message =
+					e?.response?.data?.error
+					|| this.t('pipelinq', 'Could not save this template.')
 				this.fieldErrors = this.parseFieldErrors(message)
 				// The body's error is shown on the editor, not the preview.
 				if (this.fieldErrors.bodyHtml) {

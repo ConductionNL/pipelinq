@@ -966,9 +966,10 @@ export default {
 			}
 
 			const pipeline = this.selectedPipeline
-			const items = pipeline?.propertyMappings && pipeline.propertyMappings.length > 0
-				? await this.fetchItemsViaMappings(pipeline)
-				: await this.fetchItemsBySlug(pipeline)
+			const items =
+				pipeline?.propertyMappings && pipeline.propertyMappings.length > 0
+					? await this.fetchItemsViaMappings(pipeline)
+					: await this.fetchItemsBySlug(pipeline)
 
 			if (seq === this.itemsFetchSeq) {
 				this.items = items
@@ -983,6 +984,8 @@ export default {
 		 * Refresh the items already on the board without a loading state.
 		 *
 		 * @return {Promise<void>}
+		 *
+		 * @spec openspec/specs/lead-management/spec.md
 		 */
 		refreshItems() {
 			return this.fetchPipelineItems({ silent: true })
@@ -1127,14 +1130,16 @@ export default {
 		 */
 		async fetchItemsBySlug(pipeline) {
 			const slugs = pipelineEntitySlugs(pipeline) ?? UNSCOPED_SLUGS
-			const results = await Promise.all(slugs.map(async (slug) => {
-				const rawItems = await this.fetchSchemaItems(slug)
-				return rawItems.map((item) => ({
-					...item,
-					_schemaSlug: slug,
-					_entityType: slug,
-				}))
-			}))
+			const results = await Promise.all(
+				slugs.map(async (slug) => {
+					const rawItems = await this.fetchSchemaItems(slug)
+					return rawItems.map((item) => ({
+						...item,
+						_schemaSlug: slug,
+						_entityType: slug,
+					}))
+				}),
+			)
 			return results.flat()
 		},
 
@@ -1158,7 +1163,9 @@ export default {
 
 			try {
 				const ticketFilter = ticketType ? `ticketType=${ticketType}&` : ''
-				const url = generateUrl(`/apps/openregister/api/objects/${config.register}/${config.schema}?${ticketFilter}pipeline=${this.selectedPipelineId}&_limit=200`)
+				const url = generateUrl(
+					`/apps/openregister/api/objects/${config.register}/${config.schema}?${ticketFilter}pipeline=${this.selectedPipelineId}&_limit=200`,
+				)
 				const response = await fetch(url, {
 					headers: {
 						'Content-Type': 'application/json',

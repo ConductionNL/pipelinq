@@ -25,7 +25,9 @@
 				:modelValue="row.startDate || ''"
 				type="date"
 				labelOutside
-				:aria-label="t('pipelinq', 'Vacation {n} start date', { n: index + 1 })"
+				:aria-label="
+					t('pipelinq', 'Vacation {n} start date', { n: index + 1 })
+				"
 				@update:modelValue="update" />
 		</template>
 		<template #cell-endDate="{ row, index, update }">
@@ -33,7 +35,9 @@
 				:modelValue="row.endDate || ''"
 				type="date"
 				labelOutside
-				:aria-label="t('pipelinq', 'Vacation {n} end date', { n: index + 1 })"
+				:aria-label="
+					t('pipelinq', 'Vacation {n} end date', { n: index + 1 })
+				"
 				@update:modelValue="update" />
 		</template>
 		<template #cell-label="{ row, index, update }">
@@ -73,22 +77,62 @@ export default {
 	emits: ['update:modelValue'],
 
 	computed: {
+		/**
+		 * The vacation rows, or none when the value is not an array.
+		 *
+		 * @return {Array<object>}
+		 *
+		 * @spec openspec/specs/appointment-booking/spec.md
+		 */
 		rows() {
 			return Array.isArray(this.modelValue) ? this.modelValue : []
 		},
 
+		/**
+		 * The first rule the rows break, or an empty string.
+		 *
+		 * @return {string}
+		 *
+		 * @spec openspec/specs/appointment-booking/spec.md
+		 */
 		ruleError() {
 			return vacationsError(this.rows)
 		},
 
+		/**
+		 * The row editor's columns: start date, end date and label.
+		 *
+		 * @return {Array<object>}
+		 *
+		 * @spec openspec/specs/appointment-booking/spec.md
+		 */
 		columns() {
 			return [
-				{ key: 'startDate', label: t('pipelinq', 'Start date'), width: 'minmax(8rem, 11rem)' },
-				{ key: 'endDate', label: t('pipelinq', 'End date'), width: 'minmax(8rem, 11rem)' },
-				{ key: 'label', label: t('pipelinq', 'Label'), width: 'minmax(8rem, 1fr)' },
+				{
+					key: 'startDate',
+					label: t('pipelinq', 'Start date'),
+					width: 'minmax(8rem, 11rem)',
+				},
+				{
+					key: 'endDate',
+					label: t('pipelinq', 'End date'),
+					width: 'minmax(8rem, 11rem)',
+				},
+				{
+					key: 'label',
+					label: t('pipelinq', 'Label'),
+					width: 'minmax(8rem, 1fr)',
+				},
 			]
 		},
 
+		/**
+		 * Accessible labels for the row buttons; the rows are not reorderable.
+		 *
+		 * @return {object}
+		 *
+		 * @spec openspec/specs/appointment-booking/spec.md
+		 */
 		labels() {
 			return {
 				moveUp: () => '',
@@ -99,6 +143,13 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * A new, empty vacation row.
+		 *
+		 * @return {object}
+		 *
+		 * @spec openspec/specs/appointment-booking/spec.md
+		 */
 		newRow() {
 			return { startDate: '', endDate: '', label: '' }
 		},

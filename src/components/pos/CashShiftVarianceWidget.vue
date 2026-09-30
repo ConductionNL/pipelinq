@@ -28,7 +28,12 @@
 
 		<NcLoadingIcon v-if="loading" :size="24" />
 		<p v-else-if="!diff" class="cash-shift-variance__empty">
-			{{ t('pipelinq', 'Not counted yet. The difference appears once the shift is closed and counted.') }}
+			{{
+				t(
+					'pipelinq',
+					'Not counted yet. The difference appears once the shift is closed and counted.',
+				)
+			}}
 		</p>
 		<template v-else>
 			<dl class="cash-shift-variance__grid">
@@ -56,7 +61,10 @@
 				<div>
 					<dt>{{ t('pipelinq', 'Reconciliation') }}</dt>
 					<dd>
-						<CnStatusBadge :label="diffStatusLabel" :variant="diffStatusVariant" size="small" />
+						<CnStatusBadge
+							:label="diffStatusLabel"
+							:variant="diffStatusVariant"
+							size="small" />
 					</dd>
 				</div>
 				<div v-if="diff.approvedBy">
@@ -73,7 +81,10 @@
 				<NcButton variant="primary" :disabled="busy" @click="approve">
 					{{ t('pipelinq', 'Approve') }}
 				</NcButton>
-				<NcButton variant="error" :disabled="busy" @click="showReject = true">
+				<NcButton
+					variant="error"
+					:disabled="busy"
+					@click="showReject = true">
 					{{ t('pipelinq', 'Reject') }}
 				</NcButton>
 			</div>
@@ -111,7 +122,15 @@ const DIFF_STATUS_VARIANTS = {
 
 export default {
 	name: 'CashShiftVarianceWidget',
-	components: { CashShiftRejectDialog, CnIcon, CnStatusBadge, CnWidgetWrapper, NcButton, NcLoadingIcon },
+	components: {
+		CashShiftRejectDialog,
+		CnIcon,
+		CnStatusBadge,
+		CnWidgetWrapper,
+		NcButton,
+		NcLoadingIcon,
+	},
+
 	// The host also hands over register / schema / store and the widget
 	// content; none of them belong on the root element.
 	inheritAttrs: false,
@@ -146,19 +165,47 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * The shift's id, from the page or the shift itself.
+		 *
+		 * @return {string} The shift id, or '' when unknown.
+		 *
+		 * @spec openspec/changes/archive/2026-06-14-pos-cash-management/specs/pos-cash-management/spec.md#req-ccm-004-calculate-and-display-variance
+		 */
 		shiftId() {
 			return this.objectId || this.objectData?.id || ''
 		},
 
+		/**
+		 * The shift's lifecycle status.
+		 *
+		 * @return {string} The status, `open` when unset.
+		 *
+		 * @spec openspec/changes/archive/2026-06-14-pos-cash-management/specs/pos-cash-management/spec.md#req-ccm-005-manager-approval-workflow
+		 */
 		status() {
 			return this.objectData?.status || 'open'
 		},
 
+		/**
+		 * The translated label of the shown diff's approval status.
+		 *
+		 * @return {string} The status label.
+		 *
+		 * @spec openspec/changes/archive/2026-06-14-pos-cash-management/specs/pos-cash-management/spec.md#req-ccm-005-manager-approval-workflow
+		 */
 		diffStatusLabel() {
 			const key = this.diff?.status || 'pending'
 			return t('pipelinq', DIFF_STATUS_LABELS[key] || key)
 		},
 
+		/**
+		 * The badge variant of the shown diff's approval status.
+		 *
+		 * @return {string} The badge variant.
+		 *
+		 * @spec openspec/changes/archive/2026-06-14-pos-cash-management/specs/pos-cash-management/spec.md#req-ccm-005-manager-approval-workflow
+		 */
 		diffStatusVariant() {
 			return DIFF_STATUS_VARIANTS[this.diff?.status || 'pending'] || 'default'
 		},
@@ -169,6 +216,8 @@ export default {
 		 * users who clearly cannot use them. Nextcloud admins are managers.
 		 *
 		 * @return {boolean} Whether to show manager-only actions.
+		 *
+		 * @spec openspec/changes/archive/2026-06-14-pos-cash-management/specs/pos-cash-management/spec.md#req-ccm-005-manager-approval-workflow
 		 */
 		isManager() {
 			return typeof window.OC?.isUserAdmin === 'function'
@@ -176,22 +225,46 @@ export default {
 				: false
 		},
 
+		/**
+		 * Whether a manager can approve or reject the diff now: it is pending
+		 * and the shift is closed.
+		 *
+		 * @return {boolean} Whether to show the reconcile actions.
+		 *
+		 * @spec openspec/changes/archive/2026-06-14-pos-cash-management/specs/pos-cash-management/spec.md#req-ccm-005-manager-approval-workflow
+		 */
 		canReconcile() {
-			return this.diff?.status === 'pending' && this.status === 'closed' && this.isManager
+			return (
+				this.diff?.status === 'pending'
+				&& this.status === 'closed'
+				&& this.isManager
+			)
 		},
 
 		/**
 		 * Human label for the diff percentage (N/A when undefined).
 		 *
 		 * @return {string} The percentage label.
+		 *
+		 * @spec openspec/changes/archive/2026-06-14-pos-cash-management/specs/pos-cash-management/spec.md#req-ccm-004-calculate-and-display-variance
 		 */
 		percentageLabel() {
-			if (this.diff?.diffPercentage === null || this.diff?.diffPercentage === undefined) {
+			if (
+				this.diff?.diffPercentage === null
+				|| this.diff?.diffPercentage === undefined
+			) {
 				return t('pipelinq', 'N/A (expected amount is €0)')
 			}
 			return `${this.diff.diffPercentage}%`
 		},
 
+		/**
+		 * Whether the variance is within the shift's tolerance, as a label.
+		 *
+		 * @return {string} The tolerance label.
+		 *
+		 * @spec openspec/changes/archive/2026-06-14-pos-cash-management/specs/pos-cash-management/spec.md#req-ccm-004-calculate-and-display-variance
+		 */
 		toleranceLabel() {
 			return this.diff?.withinTolerance
 				? t('pipelinq', 'Within tolerance')
@@ -202,6 +275,11 @@ export default {
 	watch: {
 		shiftId: {
 			immediate: true,
+			/**
+			 * Load the diffs of a new shift.
+			 *
+			 * @spec openspec/changes/archive/2026-06-14-pos-cash-management/specs/pos-cash-management/spec.md#req-ccm-004-calculate-and-display-variance
+			 */
 			handler() {
 				this.load()
 			},
@@ -226,6 +304,8 @@ export default {
 		 * @param {boolean} [options.silent] Keep the panel on screen while
 		 *   reloading.
 		 * @return {Promise<void>}
+		 *
+		 * @spec openspec/changes/archive/2026-06-14-pos-cash-management/specs/pos-cash-management/spec.md#req-ccm-004-calculate-and-display-variance
 		 */
 		async load({ silent = false } = {}) {
 			if (!this.shiftId) {
@@ -234,12 +314,19 @@ export default {
 			this.loading = !silent
 			try {
 				const store = useObjectStore()
-				await store.fetchCollection('cashDiff', { shift: this.shiftId, _limit: 100 })
-				const diffs = (store.getCollection('cashDiff')?.results || [])
-					.filter((d) => d.shift === this.shiftId)
+				await store.fetchCollection('cashDiff', {
+					shift: this.shiftId,
+					_limit: 100,
+				})
+				const diffs = (
+					store.getCollection('cashDiff')?.results || []
+				).filter((d) => d.shift === this.shiftId)
 				this.diff = this.latestDiff(diffs)
 			} catch (err) {
-				showError(err?.response?.data?.error || t('pipelinq', 'Could not load cash shift.'))
+				showError(
+					err?.response?.data?.error
+						|| t('pipelinq', 'Could not load cash shift.'),
+				)
 			} finally {
 				this.loading = false
 			}
@@ -250,26 +337,45 @@ export default {
 		 *
 		 * @param {Array<object>} diffs The candidate diffs.
 		 * @return {object|null} The diff to show.
+		 *
+		 * @spec openspec/changes/archive/2026-06-14-pos-cash-management/specs/pos-cash-management/spec.md#req-ccm-004-calculate-and-display-variance
 		 */
 		latestDiff(diffs) {
 			if (diffs.length === 0) {
 				return null
 			}
-			return diffs.find((d) => d.status === 'pending') || diffs[diffs.length - 1]
+			return (
+				diffs.find((d) => d.status === 'pending') || diffs[diffs.length - 1]
+			)
 		},
 
 		/**
+		 * Reload the diff on a page refresh, keeping the panel on screen.
+		 *
 		 * @param {object} [payload] The refresh payload.
+		 *
+		 * @spec openspec/changes/archive/2026-06-14-pos-cash-management/specs/pos-cash-management/spec.md#req-ccm-004-calculate-and-display-variance
 		 */
 		onPageRefresh(payload) {
 			const done = this.load({ silent: true })
 			payload?.waitUntil?.(done)
 		},
 
-		/** Approve the pending variance (manager only). */
+		/**
+		 * Approve the pending variance (manager only).
+		 *
+		 * @return {Promise<void>}
+		 *
+		 * @spec openspec/changes/archive/2026-06-14-pos-cash-management/specs/pos-cash-management/spec.md#req-ccm-005-manager-approval-workflow
+		 */
 		async approve() {
 			this.busy = true
-			await postShiftAction(this.shiftId, 'diff/approve', { diffId: this.diff?.id }, t('pipelinq', 'Cash difference approved.'))
+			await postShiftAction(
+				this.shiftId,
+				'diff/approve',
+				{ diffId: this.diff?.id },
+				t('pipelinq', 'Cash difference approved.'),
+			)
 			this.busy = false
 		},
 
@@ -278,10 +384,17 @@ export default {
 		 *
 		 * @param {string} reason The rejection reason.
 		 * @return {Promise<void>}
+		 *
+		 * @spec openspec/changes/archive/2026-06-14-pos-cash-management/specs/pos-cash-management/spec.md#req-ccm-005-manager-approval-workflow
 		 */
 		async reject(reason) {
 			this.busy = true
-			const ok = await postShiftAction(this.shiftId, 'diff/reject', { diffId: this.diff?.id, reason }, t('pipelinq', 'Cash difference rejected.'))
+			const ok = await postShiftAction(
+				this.shiftId,
+				'diff/reject',
+				{ diffId: this.diff?.id, reason },
+				t('pipelinq', 'Cash difference rejected.'),
+			)
 			this.busy = false
 			if (ok) {
 				this.showReject = false

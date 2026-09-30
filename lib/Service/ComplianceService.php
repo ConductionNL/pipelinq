@@ -96,20 +96,6 @@ class ComplianceService {
 	private const UNSUBSCRIBE_TOKEN = '{{unsubscribe_link}}';
 
 	/**
-	 * Tokens that mark where the physical address goes in an email body.
-	 * They hold no address themselves: renderPhysicalAddress() replaces
-	 * them with the template's `footerOverride` on send and in the preview.
-	 *
-	 * @var array<int, string>
-	 */
-	private const PHYSICAL_ADDRESS_TOKENS = [
-		'{{physical_address}}',
-		'{{sender_address}}',
-		'{{company_address}}',
-		'{{address_block}}',
-	];
-
-	/**
 	 * Lawful-basis values that DO satisfy marketing consent gating.
 	 *
 	 * "imported" is intentionally NOT on this list — ADR-005 fail-safe
@@ -590,9 +576,9 @@ class ComplianceService {
 	 * For email templates the body MUST embed `{{unsubscribe_link}}`
 	 * (token literally present in `bodyHtml` or `bodyText`) AND the
 	 * template MUST carry the sender's physical address in a non-empty
-	 * `footerOverride`. That address is what renderPhysicalAddress() puts
-	 * in the mail, at an address token (see `PHYSICAL_ADDRESS_TOKENS`) or
-	 * at the end of the body, so a token on its own is not enough: it
+	 * `footerOverride`. That address is what PhysicalAddressRenderer puts
+	 * in the mail, at an address token (see `PhysicalAddressRenderer::TOKENS`)
+	 * or at the end of the body, so a token on its own is not enough: it
 	 * would render empty.
 	 *
 	 * Returns `null` on success or a human-readable error string on
@@ -638,58 +624,6 @@ class ComplianceService {
 
 		return null;
 	}//end validateTemplate()
-
-	/**
-	 * Put the template's physical address into one body of an email.
-	 *
-	 * The address is the template's `footerOverride`. Every address token in
-	 * the body (see `PHYSICAL_ADDRESS_TOKENS`) is replaced by it; a body with
-	 * no token gets it as a closing paragraph, inside `</body>` when the body
-	 * is a full HTML document. An empty body stays
-	 * empty, and so does a template without an address, which
-	 * validateTemplate() refuses for email anyway.
-	 *
-	 * Shared by the send path (MailTransportService) and the template
-	 * preview, so the preview shows what will send.
-	 *
-	 * @param string $body The HTML or plain-text body.
-	 * @param string $footerOverride The template's physical address.
-	 * @param string $format `html` or `text`; HTML escapes the address and keeps its line breaks.
-	 *
-	 * @return string The body with the address in place.
-	 *
-	 * @spec openspec/specs/marketing-compliance/spec.md#requirement-unsubscribe-footer-enforced-on-email-templates
-	 */
-	public static function renderPhysicalAddress(string $body, string $footerOverride, string $format): string {
-		$address = trim($footerOverride);
-		if ($address === '' || trim($body) === '') {
-			return $body;
-		}
-
-		$rendered = $address;
-		if ($format === 'html') {
-			$rendered = nl2br(htmlspecialchars($address, ENT_QUOTES | ENT_HTML5, 'UTF-8'), false);
-		}
-
-		foreach (self::PHYSICAL_ADDRESS_TOKENS as $token) {
-			if (str_contains($body, $token) === true) {
-				return strtr($body, array_fill_keys(self::PHYSICAL_ADDRESS_TOKENS, $rendered));
-			}
-		}
-
-		if ($format === 'html') {
-			// A full document keeps the address inside its <body>.
-			$paragraph = '<p>' . $rendered . '</p>';
-			$close = strripos($body, '</body>');
-			if ($close !== false) {
-				return substr($body, 0, $close) . $paragraph . substr($body, $close);
-			}
-
-			return $body . $paragraph;
-		}
-
-		return rtrim($body) . "\n\n" . $rendered;
-	}//end renderPhysicalAddress()
 
 	/**
 	 * List CampaignTemplates with pagination envelope.

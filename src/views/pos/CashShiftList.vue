@@ -23,11 +23,11 @@
 			:includeColumns="visibleColumns"
 			:emptyTitle="t('pipelinq', 'No shifts found')"
 			:emptyActionLabel="t('pipelinq', 'Open shift')"
+			rowClickToView
 			@add="openShift"
 			@emptyAction="openShift"
 			@refresh="onRefresh"
 			@sort="onSort"
-			rowClickToView
 			@rowClick="openDetail"
 			@view="openDetail"
 			@pageChanged="onPageChange" />

@@ -76,23 +76,32 @@
 				</div>
 			</div>
 
-			<NcNoteCard v-if="actionError" type="error" class="article-content__note">
+			<NcNoteCard
+				v-if="actionError"
+				type="error"
+				class="article-content__note">
 				{{ actionError }}
 			</NcNoteCard>
 
 			<!-- The article as a reader will see it, framed as a page of its
 			     own so it does not blend into the app around it. -->
-			<article class="article-preview" :lang="effectiveArticle.language || null">
+			<article
+				class="article-preview"
+				:lang="effectiveArticle.language || null">
 				<template v-if="heroImageUrl">
 					<img
 						v-if="!heroFailed"
 						:src="heroImageUrl"
 						:alt="effectiveArticle.title || ''"
 						class="article-preview__hero"
-						@error="heroFailed = true">
-					<div v-else class="article-preview__hero article-preview__hero--missing">
+						@error="heroFailed = true" />
+					<div
+						v-else
+						class="article-preview__hero article-preview__hero--missing">
 						<ImageOffOutline :size="32" />
-						<span>{{ t('pipelinq', 'The hero image could not be loaded.') }}</span>
+						<span>{{
+							t('pipelinq', 'The hero image could not be loaded.')
+						}}</span>
 						<code>{{ effectiveArticle.heroImage }}</code>
 					</div>
 				</template>
@@ -101,22 +110,33 @@
 					<h1 class="article-preview__title">
 						{{ effectiveArticle.title }}
 					</h1>
-					<p v-if="effectiveArticle.summary" class="article-preview__summary">
+					<p
+						v-if="effectiveArticle.summary"
+						class="article-preview__summary">
 						{{ effectiveArticle.summary }}
 					</p>
 
 					<!-- eslint-disable-next-line vue/no-v-html -- renderedBody comes from cnRenderMarkdown(), which sanitises through DOMPurify -->
-					<div class="article-content__body article-preview__body" v-html="renderedBody" />
+					<div
+						class="article-content__body article-preview__body"
+						v-html="renderedBody" />
 
 					<footer
-						v-if="effectiveArticle.links && effectiveArticle.links.length"
+						v-if="
+							effectiveArticle.links && effectiveArticle.links.length
+						"
 						class="article-preview__links">
 						<h2 class="article-preview__links-title">
 							{{ t('pipelinq', 'Links') }}
 						</h2>
 						<ul>
-							<li v-for="(link, index) in effectiveArticle.links" :key="index">
-								<a :href="link.url" target="_blank" rel="noopener noreferrer">
+							<li
+								v-for="(link, index) in effectiveArticle.links"
+								:key="index">
+								<a
+									:href="link.url"
+									target="_blank"
+									rel="noopener noreferrer">
 									{{ link.label || link.url }}
 								</a>
 							</li>
@@ -282,6 +302,11 @@ export default {
 	},
 
 	watch: {
+		/**
+		 * A new hero image gets a fresh load attempt.
+		 *
+		 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
+		 */
 		heroImageUrl() {
 			this.heroFailed = false
 		},
@@ -386,9 +411,15 @@ export default {
 		 * as the Edit form's article editor.
 		 *
 		 * @param {object} payload The refresh event.
+		 *
+		 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
 		 */
 		onPageRefresh(payload) {
-			if (payload?.source === 'article-content' || this.article || !this.effectiveId()) {
+			if (
+				payload?.source === 'article-content'
+				|| this.article
+				|| !this.effectiveId()
+			) {
 				return
 			}
 			const done = this.load({ silent: true })

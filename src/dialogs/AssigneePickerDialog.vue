@@ -66,7 +66,13 @@ export default {
 	},
 
 	computed: {
-		/** Whether the selection differs from the current assignee. */
+		/**
+		 * Whether the selection differs from the current assignee.
+		 *
+		 * @return {boolean}
+		 *
+		 * @spec openspec/specs/lead-management/spec.md
+		 */
 		changed() {
 			return (this.picked || null) !== (this.assignee || null)
 		},
