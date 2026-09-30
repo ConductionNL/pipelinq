@@ -106,8 +106,10 @@ reach the resident through portaliq's notice path" (sender side).
 
 The contribution SHALL declare the change rule `pipelinq.question.answered` on
 `myQuestions` for the field `customerMessage`, so portaliq writes the inbox
-notice and dispatches it by email and Berichtenbox according to the resident's
-preferences. Saving an answer SHALL NOT depend on portaliq being installed.
+notice and dispatches it by email according to the resident's preferences. The
+notice SHALL go to the inbox and by email only, never to Berichtenbox, because
+pipelinq stores no BSN. Saving an answer SHALL NOT depend on portaliq being
+installed.
 
 #### Scenario: The rule is declared for both audiences
 
@@ -140,14 +142,14 @@ for a ticket without one.
 
 TicketDetail SHALL offer a request or complaint ticket an answer section: the
 resident's replies oldest first, a text field for the message to the resident,
-"Antwoord opslaan", and "Opslaan en wachten op de inwoner", which also sets the
+"Antwoord opslaan", and "Opslaan en wachten op een reactie", which also sets the
 status to awaiting_customer. Saving SHALL write `customerMessage` on the
 ticket.
 
 #### Scenario: An employee answers a question
 
 - GIVEN an open question from a resident
-- WHEN the KCC employee writes the answer and chooses "Opslaan en wachten op de inwoner"
+- WHEN the KCC employee writes the answer and chooses "Opslaan en wachten op een reactie"
 - THEN the ticket's message to the resident holds the answer
 - AND its status is awaiting_customer
 

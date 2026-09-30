@@ -16,9 +16,12 @@
   it compares the field on every OpenRegister update of that collection's
   schema. When it changed, portaliq writes the `portalMessage` to the resident
   named in the record's scope field and dispatches the rule key, so the
-  resident's preferences decide on email and Berichtenbox. A `portalMessage`
-  that pipelinq wrote itself would not be dispatched: portaliq skips its own
-  message schema in that listener. The rule is only kept when its collection is
+  resident's preferences decide on email. The notice goes to the inbox and by
+  email only: Berichtenbox needs the resident's BSN, which this journey does
+  not store (Ruben, 30 Sep; hydra#730). The change rule is one of the two C3
+  paths the settled contract allows; the other is a `portalMessage` the app
+  writes itself with the new optional `ruleKey`. pipelinq uses the change
+  rule, because the answer already lives on the ticket. The rule is only kept when its collection is
   scoped by the subject reference on the record, and its field is projected to
   the resident.
 - **The ticket has no field for the portal subject.** `client` and `contact`
@@ -52,8 +55,11 @@ verified assertion (`PortalAssertionVerifier`, a copy of the petstore
 reference). The controller refuses an audience other than `citizen` or
 `client`.
 
-- `askAboutDossier` takes `collection` and `question` (and an optional
-  `title`). It reads the collection through OpenRegister without RBAC, then
+- `askAboutDossier` takes `collectionId` and `question` (and an optional
+  `title`). It declares `attachTo: {app: opencatalogi, schema: collection}`
+  and `rowField: collectionId`, the attachment the portaliq lane defined for
+  C7 (hydra#727): portaliq shows the action on the resident's dossier page
+  and forwards the dossier id. It reads the collection through OpenRegister without RBAC, then
   compares `owner` with the assertion's `sub`. A missing collection and a
   foreign one both answer 404. It creates a `ticket` with
   `ticketType: request`, `channel: portal`, `status: new`, `portalSubject`,
@@ -76,9 +82,11 @@ and gains the same surface. The surface is:
   `{ticketType: request, channel: portal}`, `scopeField: portalSubject`
   (default subject scoping), fields `title`, `description`, `status`,
   `occurredAt`, `customerMessage`, `portalReplies`, `subjectReference`.
-- actions `askAboutDossier` and `replyToQuestion`, endpoint actions. They are
-  offered only when opencatalogi is installed (`class_exists` on its
-  `Application` class, the duck-typing the contract asks for).
+- actions `askAboutDossier` and `replyToQuestion`, endpoint actions.
+  `askAboutDossier` is offered only when opencatalogi is installed
+  (`class_exists` on its `Application` class, the duck-typing the contract
+  asks for). `replyToQuestion` stays, so questions asked earlier can still be
+  answered by the resident.
 - notification rule `pipelinq.question.answered` on `myQuestions`, field
   `customerMessage`, title field `title`.
 
@@ -105,7 +113,7 @@ Three `bodyWidgets`, each rendering nothing when it does not apply:
 - `CustomerReplySection`: the minimal answer control of
   `messaging-saved-replies-and-resend` D5 without the saved-reply picker. The
   resident's replies oldest first, a text area bound to `customerMessage`, and
-  two buttons: "Antwoord opslaan", and "Opslaan en wachten op de inwoner",
+  two buttons: "Antwoord opslaan", and "Opslaan en wachten op een reactie",
   which also sets `awaiting_customer`. It writes through the object store, so
   the change rule fires on save. It renders for `request` and `complaint`.
 - `WooConversionSection`: "Omzetten naar Woo-verzoek", shown only when the
