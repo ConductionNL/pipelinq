@@ -38,6 +38,14 @@ use DateTimeInterface;
  */
 class DemoSeedValues {
 	/**
+	 * Marker prefix carried by every seeded object's lookup field. Nothing
+	 * without it is ever deleted.
+	 *
+	 * @var string
+	 */
+	public const DEMO_PREFIX = '[Demo]';
+
+	/**
 	 * Resolve `@days:N` / `@datetime:N` placeholders to concrete dates.
 	 *
 	 * @param array<string, mixed> $data Raw definition data.

@@ -824,7 +824,7 @@ export default {
 		 *
 		 * @param {boolean} on Whether the A/B test is on.
 		 *
-		 * @spec openspec/specs/marketing-blast/spec.md#requirement-a-b-test-splits-segment-deterministically
+		 * @spec openspec/specs/marketing-blast/spec.md#requirement-ab-test-splits-segment-deterministically
 		 */
 		abEnabled(on) {
 			if (on && this.model.abSplitPercent === 100) {

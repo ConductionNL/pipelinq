@@ -27,7 +27,6 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Demo;
 
-use OCA\Pipelinq\Service\DemoSeedService;
 use OCA\Pipelinq\Service\Marketing\ListObjectStore;
 use OCA\Pipelinq\Service\Search\KeywordTargetService;
 use OCA\Pipelinq\Service\SearchConsole\SearchQueryDailyStore;
@@ -77,7 +76,6 @@ class DemoSearchSeeder {
 		[$rowSchema, $targetSchema] = $this->schemas();
 		$now = gmdate('Y-m-d\TH:i:s\Z');
 
-		// The rows are seeded as one set: when any demo row exists, none is written.
 		$rowsSeeded = ($this->demoRows(schemaSlug: $rowSchema, property: $property, source: $source) !== []);
 		if ($rowsSeeded === true) {
 			$counts['skipped']++;
@@ -135,7 +133,7 @@ class DemoSearchSeeder {
 
 		foreach ($this->store->findAll(schemaSlug: $targetSchema) as $target) {
 			if ((string)($target['property'] ?? '') !== $property
-				|| str_starts_with((string)($target['notes'] ?? ''), DemoSeedService::DEMO_PREFIX) === false
+				|| str_starts_with((string)($target['notes'] ?? ''), DemoSeedValues::DEMO_PREFIX) === false
 			) {
 				continue;
 			}

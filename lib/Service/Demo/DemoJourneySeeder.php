@@ -27,7 +27,6 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Demo;
 
-use OCA\Pipelinq\Service\DemoSeedService;
 use OCA\Pipelinq\Service\Marketing\JourneyService;
 use OCA\Pipelinq\Service\Marketing\ListObjectStore;
 use Psr\Container\ContainerInterface;
@@ -87,6 +86,8 @@ class DemoJourneySeeder {
 			$existing[(string)($journey['name'] ?? '')] = true;
 		}
 
+		$runSchema = $this->store->schemaSlug('journeyRun_schema', JourneyService::RUN_SCHEMA);
+
 		foreach ($definitions as $definition) {
 			$data = ($definition['data'] ?? []);
 			if (isset($existing[(string)($data['name'] ?? '')]) === true) {
@@ -106,7 +107,12 @@ class DemoJourneySeeder {
 			}
 
 			$counts['created']++;
-			$counts['runs'] += $this->seedRuns(runs: ($definition['runs'] ?? []), journeyId: $journeyId, uuids: $uuids);
+			$counts['runs'] += $this->seedRuns(
+				runs: ($definition['runs'] ?? []),
+				journeyId: $journeyId,
+				uuids: $uuids,
+				runSchema: $runSchema,
+			);
 		}//end foreach
 
 		return $counts;
@@ -134,12 +140,15 @@ class DemoJourneySeeder {
 			return $counts;
 		}
 
+		$journeySchema = $this->store->schemaSlug('journey_schema', JourneyService::JOURNEY_SCHEMA);
+		$runSchema = $this->store->schemaSlug('journeyRun_schema', JourneyService::RUN_SCHEMA);
+
 		foreach ($this->journeyService->listJourneys() as $journey) {
 			if (isset($names[(string)($journey['name'] ?? '')]) === false) {
 				continue;
 			}
 
-			$removed = $this->removeJourney(journey: $journey);
+			$removed = $this->removeJourney(journey: $journey, journeySchema: $journeySchema, runSchema: $runSchema);
 			$counts['journeys'] += $removed['journeys'];
 			$counts['runs'] += $removed['runs'];
 		}
@@ -153,11 +162,11 @@ class DemoJourneySeeder {
 	 * @param array<int, array<string, mixed>> $runs The journey definition's `runs`.
 	 * @param string $journeyId The seeded journey's id.
 	 * @param array<string, string> $uuids Section-local keys mapped to seeded uuids.
+	 * @param string $runSchema The journey run schema.
 	 *
 	 * @return int How many runs were saved.
 	 */
-	private function seedRuns(array $runs, string $journeyId, array $uuids): int {
-		$runSchema = $this->store->schemaSlug('journeyRun_schema', JourneyService::RUN_SCHEMA);
+	private function seedRuns(array $runs, string $journeyId, array $uuids, string $runSchema): int {
 		$saved = 0;
 
 		foreach ($runs as $run) {
@@ -201,7 +210,7 @@ class DemoJourneySeeder {
 		$names = [];
 		foreach ($definitions as $definition) {
 			$name = (string)($definition['data']['name'] ?? '');
-			if (str_starts_with($name, DemoSeedService::DEMO_PREFIX) === true) {
+			if (str_starts_with($name, DemoSeedValues::DEMO_PREFIX) === true) {
 				$names[$name] = true;
 			}
 		}
@@ -213,10 +222,12 @@ class DemoJourneySeeder {
 	 * Delete one demo journey: its flow, its runs, then the journey itself.
 	 *
 	 * @param array<string, mixed> $journey The journey row.
+	 * @param string $journeySchema The journey schema.
+	 * @param string $runSchema The journey run schema.
 	 *
 	 * @return array{journeys: int, runs: int} Counts.
 	 */
-	private function removeJourney(array $journey): array {
+	private function removeJourney(array $journey, string $journeySchema, string $runSchema): array {
 		$counts = ['journeys' => 0, 'runs' => 0];
 		$journeyId = $this->store->idOf(payload: $journey);
 		if ($journeyId === '') {
@@ -225,14 +236,12 @@ class DemoJourneySeeder {
 
 		$this->deleteFlow(flowUuid: trim((string)($journey['flowUuid'] ?? '')));
 
-		$runSchema = $this->store->schemaSlug('journeyRun_schema', JourneyService::RUN_SCHEMA);
 		foreach ($this->journeyService->runsFor(journeyId: $journeyId) as $run) {
 			if ($this->store->delete(schemaSlug: $runSchema, id: $this->store->idOf(payload: $run)) === true) {
 				$counts['runs']++;
 			}
 		}
 
-		$journeySchema = $this->store->schemaSlug('journey_schema', JourneyService::JOURNEY_SCHEMA);
 		if ($this->store->delete(schemaSlug: $journeySchema, id: $journeyId) === true) {
 			$counts['journeys']++;
 		}

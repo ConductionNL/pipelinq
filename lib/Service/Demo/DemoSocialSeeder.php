@@ -27,7 +27,6 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Demo;
 
-use OCA\Pipelinq\Service\DemoSeedService;
 use OCA\Pipelinq\Service\Marketing\ListObjectStore;
 use OCA\Pipelinq\Service\Social\SocialPublicationStore;
 use OCA\Pipelinq\Service\SocialAccountService;
@@ -256,7 +255,7 @@ class DemoSocialSeeder {
 		$ids = [];
 		foreach ($definitions as $definition) {
 			$value = (string)($definition['data'][$field] ?? '');
-			if (str_starts_with($value, DemoSeedService::DEMO_PREFIX) === true && ($rows[$value] ?? '') !== '') {
+			if (str_starts_with($value, DemoSeedValues::DEMO_PREFIX) === true && ($rows[$value] ?? '') !== '') {
 				$ids[] = $rows[$value];
 			}
 		}

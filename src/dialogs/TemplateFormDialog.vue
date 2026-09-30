@@ -228,8 +228,8 @@ import {
 	shouldWarnMissingMarker,
 } from '../services/templateArticlePicker.js'
 
-// Where the address goes in an email body; ComplianceService::renderPhysicalAddress()
-// places it the same way on send.
+// Where the address goes in an email body. Must match PhysicalAddressRenderer::TOKENS,
+// whose render() places it the same way on send.
 const ADDRESS_TOKENS = [
 	'{{physical_address}}',
 	'{{sender_address}}',

@@ -67,7 +67,7 @@ class DemoSeedService {
 	 *
 	 * @var string
 	 */
-	public const DEMO_PREFIX = '[Demo]';
+	public const DEMO_PREFIX = DemoSeedValues::DEMO_PREFIX;
 
 	/**
 	 * App-config key holding the unified ticket schema id.
