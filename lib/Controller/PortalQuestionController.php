@@ -117,7 +117,7 @@ class PortalQuestionController extends Controller {
 			return $subjectRef;
 		}
 
-		$collectionId = $this->text(name: 'collection');
+		$collectionId = $this->text(name: 'collectionId');
 		$question = $this->text(name: 'question');
 		if ($collectionId === '' || $question === '' || mb_strlen($question) > self::MAX_TEXT) {
 			return new JSONResponse(['error' => 'invalid_request'], Http::STATUS_BAD_REQUEST);

@@ -127,7 +127,7 @@ class PortalQuestionControllerTest extends TestCase {
 
 			$response = $this->controller(
 				assertion: $this->assertion(audience: $audience),
-				params: ['collection' => 'dossier-1', 'question' => ' Wanneer valt het besluit? ', 'title' => 'Termijn', 'subjectRef' => 'forged']
+				params: ['collectionId' => 'dossier-1', 'question' => ' Wanneer valt het besluit? ', 'title' => 'Termijn', 'subjectRef' => 'forged']
 			)->ask();
 
 			$this->assertSame(Http::STATUS_CREATED, $response->getStatus(), $audience);
@@ -147,7 +147,7 @@ class PortalQuestionControllerTest extends TestCase {
 		$this->questions->expects($this->never())->method('reply');
 		$this->throttler->expects($this->exactly(3))->method('registerAttempt');
 
-		$params = ['collection' => 'dossier-1', 'question' => 'Vraag', 'ticket' => 't-1', 'message' => 'Hallo'];
+		$params = ['collectionId' => 'dossier-1', 'question' => 'Vraag', 'ticket' => 't-1', 'message' => 'Hallo'];
 		$this->assertSame(Http::STATUS_UNAUTHORIZED, $this->controller(assertion: '', params: $params)->ask()->getStatus());
 		$this->assertSame(Http::STATUS_UNAUTHORIZED, $this->controller(assertion: $this->assertion(secret: 'another-secret-abcdefghijkl'), params: $params)->ask()->getStatus());
 		$this->assertSame(Http::STATUS_UNAUTHORIZED, $this->controller(assertion: 'not.a.jwt', params: $params)->reply()->getStatus());
@@ -162,7 +162,7 @@ class PortalQuestionControllerTest extends TestCase {
 	 */
 	public function testAnotherAudienceIsForbidden(): void {
 		$this->questions->expects($this->never())->method('ask');
-		$params = ['collection' => 'dossier-1', 'question' => 'Vraag', 'ticket' => 't-1', 'message' => 'Hallo'];
+		$params = ['collectionId' => 'dossier-1', 'question' => 'Vraag', 'ticket' => 't-1', 'message' => 'Hallo'];
 
 		$this->assertSame(Http::STATUS_FORBIDDEN, $this->controller(assertion: $this->assertion(audience: 'supplier'), params: $params)->ask()->getStatus());
 		$this->assertSame(Http::STATUS_FORBIDDEN, $this->controller(assertion: $this->assertion(audience: 'customer'), params: $params)->reply()->getStatus());
@@ -178,9 +178,9 @@ class PortalQuestionControllerTest extends TestCase {
 	public function testIncompleteInputIsABadRequest(): void {
 		$this->questions->expects($this->never())->method('ask');
 
-		$this->assertSame(Http::STATUS_BAD_REQUEST, $this->controller(assertion: $this->assertion(), params: ['collection' => 'dossier-1', 'question' => '   '])->ask()->getStatus());
+		$this->assertSame(Http::STATUS_BAD_REQUEST, $this->controller(assertion: $this->assertion(), params: ['collectionId' => 'dossier-1', 'question' => '   '])->ask()->getStatus());
 		$this->assertSame(Http::STATUS_BAD_REQUEST, $this->controller(assertion: $this->assertion(), params: ['question' => 'Vraag'])->ask()->getStatus());
-		$this->assertSame(Http::STATUS_BAD_REQUEST, $this->controller(assertion: $this->assertion(), params: ['collection' => 'dossier-1', 'question' => str_repeat('a', 5001)])->ask()->getStatus());
+		$this->assertSame(Http::STATUS_BAD_REQUEST, $this->controller(assertion: $this->assertion(), params: ['collectionId' => 'dossier-1', 'question' => str_repeat('a', 5001)])->ask()->getStatus());
 		$this->assertSame(Http::STATUS_BAD_REQUEST, $this->controller(assertion: $this->assertion(), params: ['ticket' => 't-1'])->reply()->getStatus());
 	}//end testIncompleteInputIsABadRequest()
 
@@ -195,7 +195,7 @@ class PortalQuestionControllerTest extends TestCase {
 		$this->questions->method('ask')->willReturn(null);
 		$this->throttler->expects($this->once())->method('registerAttempt');
 
-		$response = $this->controller(assertion: $this->assertion(), params: ['collection' => 'dossier-2', 'question' => 'Vraag'])->ask();
+		$response = $this->controller(assertion: $this->assertion(), params: ['collectionId' => 'dossier-2', 'question' => 'Vraag'])->ask();
 
 		$this->assertSame(Http::STATUS_NOT_FOUND, $response->getStatus());
 	}//end testSomeoneElsesDossierIsNotFound()
@@ -232,7 +232,7 @@ class PortalQuestionControllerTest extends TestCase {
 	public function testAFailedSaveIsUnavailable(): void {
 		$this->questions->method('ask')->willThrowException(new RuntimeException('Failed to persist object.'));
 
-		$response = $this->controller(assertion: $this->assertion(), params: ['collection' => 'dossier-1', 'question' => 'Vraag'])->ask();
+		$response = $this->controller(assertion: $this->assertion(), params: ['collectionId' => 'dossier-1', 'question' => 'Vraag'])->ask();
 
 		$this->assertSame(Http::STATUS_SERVICE_UNAVAILABLE, $response->getStatus());
 		$this->assertSame(['error' => 'unavailable'], $response->getData());

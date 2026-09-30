@@ -547,9 +547,14 @@ class PortalContributionProvider {
 				'label' => 'Ask a question about this dossier',
 				'endpoint' => '/index.php/apps/pipelinq/api/portal/questions',
 				'method' => 'POST',
-				'fields' => ['collection', 'question', 'title'],
+				// Shown on the resident's dossier page (hydra woo-citizen-journey
+				// C7): portaliq proves the dossier is the resident's through
+				// opencatalogi's own scope and forwards its id as `collectionId`.
+				// The receiver checks the owner again.
+				'attachTo' => ['app' => 'opencatalogi', 'schema' => 'collection'],
+				'rowField' => 'collectionId',
+				'fields' => ['question', 'title'],
 				'fieldConfigs' => [
-					'collection' => ['visible' => false, 'required' => true],
 					'title' => ['label' => 'Onderwerp', 'size' => 'large', 'placeholder' => 'Waar gaat uw vraag over?'],
 					'question' => [
 						'label' => 'Uw vraag',

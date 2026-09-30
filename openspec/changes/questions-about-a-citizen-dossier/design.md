@@ -52,8 +52,11 @@ verified assertion (`PortalAssertionVerifier`, a copy of the petstore
 reference). The controller refuses an audience other than `citizen` or
 `client`.
 
-- `askAboutDossier` takes `collection` and `question` (and an optional
-  `title`). It reads the collection through OpenRegister without RBAC, then
+- `askAboutDossier` takes `collectionId` and `question` (and an optional
+  `title`). It declares `attachTo: {app: opencatalogi, schema: collection}`
+  and `rowField: collectionId`, the attachment the portaliq lane defined for
+  C7 (hydra#727): portaliq shows the action on the resident's dossier page
+  and forwards the dossier id. It reads the collection through OpenRegister without RBAC, then
   compares `owner` with the assertion's `sub`. A missing collection and a
   foreign one both answer 404. It creates a `ticket` with
   `ticketType: request`, `channel: portal`, `status: new`, `portalSubject`,
