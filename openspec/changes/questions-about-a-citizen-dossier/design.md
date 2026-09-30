@@ -76,9 +76,11 @@ and gains the same surface. The surface is:
   `{ticketType: request, channel: portal}`, `scopeField: portalSubject`
   (default subject scoping), fields `title`, `description`, `status`,
   `occurredAt`, `customerMessage`, `portalReplies`, `subjectReference`.
-- actions `askAboutDossier` and `replyToQuestion`, endpoint actions. They are
-  offered only when opencatalogi is installed (`class_exists` on its
-  `Application` class, the duck-typing the contract asks for).
+- actions `askAboutDossier` and `replyToQuestion`, endpoint actions.
+  `askAboutDossier` is offered only when opencatalogi is installed
+  (`class_exists` on its `Application` class, the duck-typing the contract
+  asks for). `replyToQuestion` stays, so questions asked earlier can still be
+  answered by the resident.
 - notification rule `pipelinq.question.answered` on `myQuestions`, field
   `customerMessage`, title field `title`.
 
