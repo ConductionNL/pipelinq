@@ -57,7 +57,7 @@
 </template>
 
 <script>
-import { CnIndexPage, useListView } from '@conduction/nextcloud-vue'
+import { CnIndexPage, openRowTarget, useListView } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { NcButton } from '@nextcloud/vue'
 import { inject } from 'vue'
@@ -125,9 +125,15 @@ export default {
 		 * Navigate to a job's detail/edit form.
 		 *
 		 * @param {object} row The clicked row.
+		 * @param {MouseEvent} [event] The row click; a modified or middle click opens a new tab.
+		 * @spec exclude row navigation to the job's detail page; no requirement covers the export job list
 		 */
-		openJob(row) {
-			this.$router.push({ name: 'ExportJobDetail', params: { id: row.id } })
+		openJob(row, event) {
+			openRowTarget(
+				event,
+				{ name: 'ExportJobDetail', params: { id: row.id } },
+				this.$router,
+			)
 		},
 
 		/**

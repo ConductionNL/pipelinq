@@ -8,17 +8,22 @@
  *  - XWikiArticleList with `linkExternal` renders each article as a real
  *    `<a href>` to its xWiki page (new tab), so it can be middle-clicked and
  *    copied; without it, the sidebar keeps its in-panel `select`.
+ *  - ComplaintsOverviewWidget stays a card: a plain click routes in place, a
+ *    ctrl/cmd/shift or middle click opens the complaints list in a new tab.
  */
 
 import { mount } from '@vue/test-utils'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('@conduction/nextcloud-vue', async () => ({
+	...(await import('@conduction/nextcloud-vue/src/utils/linkNavigation.js')),
 	...(await import('@conduction/nextcloud-vue/src/utils/safeHref.js')),
 }))
 
 const { default: XWikiArticleList } =
 	await import('../../src/components/xwiki/XWikiArticleList.vue')
+const { default: ComplaintsOverviewWidget } =
+	await import('../../src/views/widgets/ComplaintsOverviewWidget.vue')
 
 const t = (app, text) => text
 
@@ -68,5 +73,63 @@ describe('XWikiArticleList', () => {
 		await items[0].trigger('click')
 		await items[1].trigger('keydown', { key: 'Enter' })
 		expect(wrapper.emitted('select')).toEqual([[ARTICLES[0]], [ARTICLES[1]]])
+	})
+})
+
+describe('ComplaintsOverviewWidget', () => {
+	const target = { name: 'Tickets', query: { ticketType: 'complaint' } }
+
+	const mountWidget = () => {
+		const router = {
+			push: vi.fn(() => Promise.resolve()),
+			resolve: vi.fn(() => ({
+				href: '/index.php/apps/pipelinq/tickets?ticketType=complaint',
+			})),
+		}
+		const wrapper = mount(ComplaintsOverviewWidget, {
+			global: { mocks: { t, $router: router } },
+		})
+		return { wrapper, router }
+	}
+
+	afterEach(() => {
+		vi.restoreAllMocks()
+	})
+
+	it('routes in place on a plain click', async () => {
+		const { wrapper, router } = mountWidget()
+		await wrapper.trigger('click', { button: 0 })
+		expect(router.push).toHaveBeenCalledWith(target)
+	})
+
+	it('opens a new tab on a ctrl click and on a middle click', async () => {
+		const open = vi.spyOn(window, 'open').mockImplementation(() => null)
+		const { wrapper, router } = mountWidget()
+
+		await wrapper.trigger('click', { button: 0, ctrlKey: true })
+		await wrapper.trigger('auxclick', { button: 1 })
+
+		expect(open).toHaveBeenCalledTimes(2)
+		expect(open).toHaveBeenCalledWith(
+			'/index.php/apps/pipelinq/tickets?ticketType=complaint',
+			'_blank',
+			'noopener,noreferrer',
+		)
+		expect(router.push).not.toHaveBeenCalled()
+	})
+
+	it('opens a new tab on ctrl+Enter and ctrl+Space, and Space does not scroll', async () => {
+		const open = vi.spyOn(window, 'open').mockImplementation(() => null)
+		const { wrapper, router } = mountWidget()
+
+		await wrapper.trigger('keydown', { key: 'Enter', ctrlKey: true })
+		await wrapper.trigger('keydown', { key: ' ', ctrlKey: true })
+		expect(open).toHaveBeenCalledTimes(2)
+		expect(router.push).not.toHaveBeenCalled()
+
+		const space = new KeyboardEvent('keydown', { key: ' ', cancelable: true })
+		wrapper.element.dispatchEvent(space)
+		expect(space.defaultPrevented).toBe(true)
+		expect(router.push).toHaveBeenCalledWith(target)
 	})
 })

@@ -331,7 +331,8 @@
 						:key="item.id"
 						class="list-row"
 						:class="{ 'list-row--overdue': isItemOverdue(item) }"
-						@click="openItem(item)">
+						@click="openItem(item, $event)"
+						@auxclick="openItem(item, $event)">
 						<td class="list-title">
 							{{ item.title }}
 							<span v-if="isItemStale(item)" class="stale-badge">
@@ -398,6 +399,7 @@
 </template>
 
 <script>
+import { openRowTarget } from '@conduction/nextcloud-vue'
 import { generateUrl } from '@nextcloud/router'
 import {
 	NcButton,
@@ -1272,16 +1274,25 @@ export default {
 
 		/**
 		 * @param {object} item The board item to open
+		 * @param {MouseEvent|KeyboardEvent} [event] The triggering event; a modified or middle click opens a new tab.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-20
 		 */
-		openItem(item) {
+		openItem(item, event) {
 			if (item._schemaSlug === 'lead') {
-				this.$router.push({ name: 'LeadDetail', params: { id: item.id } })
+				openRowTarget(
+					event,
+					{ name: 'LeadDetail', params: { id: item.id } },
+					this.$router,
+				)
 			} else if (item._schemaSlug === 'request') {
 				// `_schemaSlug` keeps the LOGICAL slug ('request'), but the row is
 				// stored as a `ticket` (unify-ticket-supertype) and opens on the
 				// unified TicketDetail page.
-				this.$router.push({ name: 'TicketDetail', params: { id: item.id } })
+				openRowTarget(
+					event,
+					{ name: 'TicketDetail', params: { id: item.id } },
+					this.$router,
+				)
 			}
 		},
 	},

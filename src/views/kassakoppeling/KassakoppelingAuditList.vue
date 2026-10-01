@@ -167,6 +167,7 @@ import {
 	CnPageHeader,
 	CnPagination,
 	CnStatusBadge,
+	openRowTarget,
 } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
@@ -539,13 +540,19 @@ export default {
 		 * Open the detail view for an audit entry.
 		 *
 		 * @param {object} entry The entry to open.
+		 * @param {MouseEvent} [event] The row click; a modified or middle click opens a new tab.
+		 * @spec openspec/changes/archive/2026-06-14-pos-kassakoppeling-audit/specs.md#req-audit-004-audit-entry-detail-view-with-signature-verification-badge
 		 */
-		openDetail(entry) {
+		openDetail(entry, event) {
 			const id = entry.id || entry.uuid
 			if (!id) {
 				return
 			}
-			this.$router.push({ name: 'KassakoppelingAuditDetail', params: { id } })
+			openRowTarget(
+				event,
+				{ name: 'KassakoppelingAuditDetail', params: { id } },
+				this.$router,
+			)
 		},
 
 		/**

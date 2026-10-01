@@ -43,7 +43,7 @@
 </template>
 
 <script>
-import { CnIndexPage, useListView } from '@conduction/nextcloud-vue'
+import { CnIndexPage, openRowTarget, useListView } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { NcButton } from '@nextcloud/vue'
 import { inject } from 'vue'
@@ -107,12 +107,15 @@ export default {
 		 * Navigate to a destination's edit form.
 		 *
 		 * @param {object} row The clicked row.
+		 * @param {MouseEvent} [event] The row click; a modified or middle click opens a new tab.
+		 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#requirement-destination-configuration-and-validation-req-bie-001
 		 */
-		openDestination(row) {
-			this.$router.push({
-				name: 'ExportDestinationDetail',
-				params: { id: row.id },
-			})
+		openDestination(row, event) {
+			openRowTarget(
+				event,
+				{ name: 'ExportDestinationDetail', params: { id: row.id } },
+				this.$router,
+			)
 		},
 
 		/**

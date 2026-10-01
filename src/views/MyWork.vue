@@ -76,8 +76,9 @@
 						}"
 						role="button"
 						tabindex="0"
-						@click="openItem(item)"
-						@keydown.enter="openItem(item)">
+						@click="openItem(item, $event)"
+						@auxclick="openItem(item, $event)"
+						@keydown.enter="openItem(item, $event)">
 						<div class="work-card__top">
 							<span
 								class="entity-badge"
@@ -137,6 +138,7 @@
 </template>
 
 <script>
+import { openRowTarget } from '@conduction/nextcloud-vue'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
 import { formatDateFull, formatNumber } from '../services/localeUtils.js'
@@ -593,20 +595,22 @@ export default {
 		 * Navigate to the detail page for a My Work row.
 		 *
 		 * @param {object} item The row, carrying its entityType and id.
+		 * @param {MouseEvent|KeyboardEvent} [event] The triggering event; a modified or middle click opens a new tab.
 		 * @return {void}
 		 * @spec openspec/changes/reverse-2026-05-26-fe-mywork-ui/tasks.md#task-13
 		 */
-		openItem(item) {
+		openItem(item, event) {
+			// Requests are `ticket` rows narrowed by ticketType
+			// (unify-ticket-supertype) — every other non-lead, non-task work
+			// item opens on the unified TicketDetail page, which reads its own
+			// ticketType.
+			let name = 'TicketDetail'
 			if (item.entityType === 'lead') {
-				this.$router.push({ name: 'LeadDetail', params: { id: item.id } })
+				name = 'LeadDetail'
 			} else if (item.entityType === 'task') {
-				this.$router.push({ name: 'TaskDetail', params: { id: item.id } })
-			} else {
-				// Requests are `ticket` rows narrowed by ticketType
-				// (unify-ticket-supertype) — every non-lead work item opens on
-				// the unified TicketDetail page, which reads its own ticketType.
-				this.$router.push({ name: 'TicketDetail', params: { id: item.id } })
+				name = 'TaskDetail'
 			}
+			openRowTarget(event, { name, params: { id: item.id } }, this.$router)
 		},
 	},
 }

@@ -9,9 +9,10 @@
 		role="button"
 		tabindex="0"
 		@dragstart="onDragStart"
-		@click="$emit('open', item)"
-		@keydown.enter.prevent="$emit('open', item)"
-		@keydown.space.prevent="$emit('open', item)">
+		@click="$emit('open', item, $event)"
+		@auxclick="$emit('open', item, $event)"
+		@keydown.enter="$emit('open', item, $event)"
+		@keydown.space="openOnSpace">
 		<!-- Header: what it is and what it is called, with its menu in the row
 		     so nothing can slide underneath it. -->
 		<div class="pipeline-card__header">
@@ -28,7 +29,11 @@
 			<span class="pipeline-card__title">
 				{{ item.title }}
 			</span>
-			<div class="pipeline-card__menu" @click.stop @keydown.stop>
+			<div
+				class="pipeline-card__menu"
+				@click.stop
+				@auxclick.stop
+				@keydown.stop>
 				<NcActions
 					:forceMenu="true"
 					:inline="0"
@@ -381,6 +386,18 @@ export default {
 		getPriorityLabel,
 		getPriorityColor,
 		getStatusLabel,
+
+		/**
+		 * Space opens the card like Enter. Its scroll is prevented only after
+		 * the open, so a modified Space still reaches openRowTarget unhandled.
+		 *
+		 * @param {KeyboardEvent} event The keydown.
+		 * @spec openspec/specs/pipeline/spec.md#requirement-kanban-board-view-mvp
+		 */
+		openOnSpace(event) {
+			this.$emit('open', this.item, event)
+			event.preventDefault()
+		},
 
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-41

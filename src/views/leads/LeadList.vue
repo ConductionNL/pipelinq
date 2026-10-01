@@ -76,7 +76,7 @@
 </template>
 
 <script>
-import { CnIndexPage } from '@conduction/nextcloud-vue'
+import { CnIndexPage, openRowTarget } from '@conduction/nextcloud-vue'
 import { NcCheckboxRadioSwitch } from '@nextcloud/vue'
 import { CALL_FIRST_SORT } from '../../services/leadScore.js'
 import {
@@ -200,9 +200,15 @@ export default {
 		 * Open a lead's detail page (CnIndexPage row "View" action).
 		 *
 		 * @param {object} row The lead row.
+		 * @param {MouseEvent} [event] The row click; a modified or middle click opens a new tab.
+		 * @spec openspec/specs/lead-management/spec.md#requirement-lead-list-view-mvp
 		 */
-		openLead(row) {
-			this.$router.push({ name: 'LeadDetail', params: { id: row.id } })
+		openLead(row, event) {
+			openRowTarget(
+				event,
+				{ name: 'LeadDetail', params: { id: row.id } },
+				this.$router,
+			)
 		},
 
 		/**
