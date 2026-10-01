@@ -101,14 +101,10 @@ export default {
 	padding: 2px 8px;
 	border-radius: var(--border-radius-pill, 999px);
 	background: var(--color-warning);
-	color: var(--color-main-background);
+	color: var(--color-warning-text, var(--color-main-text));
 	font-size: 11px;
 	font-weight: 600;
 	line-height: 1.2;
-}
-
-.lead-prob-cell__badge-icon {
-	color: var(--color-main-background);
 }
 
 .lead-prob-cell__dash {

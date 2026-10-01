@@ -274,17 +274,17 @@ export default {
    library's .cn-table-row--selected accent) rather than border-left, which
    would shift the row's content sideways. */
 :deep(.lead-overdue) {
-	box-shadow: inset 3px 0 0 0 var(--color-error);
+	box-shadow: inset 3px 0 0 0 var(--color-element-error);
 }
 
 .overdue-cell {
-	color: var(--color-error);
+	color: var(--color-element-error);
 	font-weight: 600;
 }
 
 .overdue-suffix {
 	display: block;
 	font-size: 11px;
-	color: var(--color-error);
+	color: var(--color-element-error);
 }
 </style>
