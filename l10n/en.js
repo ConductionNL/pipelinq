@@ -6836,7 +6836,7 @@ OC.L10N.register(
         "Priority high or urgent": "Priority high or urgent",
         "Description written": "Description written",
         "Portal resident": "Portal resident",
-        "The portal reference of the resident who asked this question. Never a BSN.": "The portal reference of the resident who asked this question. Never a BSN.",
+        "The portal reference of the resident who asked this question or filed this request or complaint. Never a BSN.": "The portal reference of the resident who asked this question or filed this request or complaint. Never a BSN.",
         "Asked about": "Asked about",
         "The dossier the resident asked about, as it was when they asked.": "The dossier the resident asked about, as it was when they asked.",
         "What the question is about.": "What the question is about.",

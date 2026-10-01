@@ -276,6 +276,7 @@ class PortalContributionProvider {
 					],
 				],
 				$this->questionsCollection(),
+				...$this->ownTicketCollections(),
 			],
 			'actions' => [
 				[
@@ -357,27 +358,32 @@ class PortalContributionProvider {
 					],
 				],
 				...$this->questionActions(),
+				...$this->ownTicketActions(),
 			],
 			// Contribution-manifest-v3 page composition: one screen per surface,
-			// each block resolved within this contribution. The requests page
-			// leads with a short intro, the intake form, then the scoped table.
+			// each block resolved within this contribution. The resident's own
+			// requests and complaints come first: a DigiD resident signs in as
+			// `client` without a `clientId` claim, and the organisation's forms
+			// refuse that write. The organisation's pages follow, unchanged.
 			'pages' => [
+				...$this->ownTicketPages(),
 				[
-					'id' => 'requests',
-					'label' => 'Verzoeken',
-					'icon' => 'MessageText',
+					'id' => 'organisationRequests',
+					'label' => 'Verzoeken van uw organisatie',
+					'icon' => 'OfficeBuilding',
 					'blocks' => [
 						[
 							'type' => 'richText',
-							'markdown' => '## Mijn verzoeken' . "\n" . 'Dien een nieuw verzoek in of bekijk de status van uw lopende verzoeken.',
+							'markdown' => '## Verzoeken van uw organisatie'."\n"
+								.'Dien een verzoek in namens uw organisatie of bekijk de status van haar lopende verzoeken.',
 						],
 						['type' => 'action', 'action' => 'createRequest'],
 						['type' => 'collection', 'collection' => 'clientRequests'],
 					],
 				],
 				[
-					'id' => 'complaints',
-					'label' => 'Klachten',
+					'id' => 'organisationComplaints',
+					'label' => 'Klachten van uw organisatie',
 					'icon' => 'AlertCircle',
 					'blocks' => [
 						['type' => 'action', 'action' => 'createComplaint'],
@@ -488,9 +494,9 @@ class PortalContributionProvider {
 	private function citizenContribution(): array {
 		return [
 			'label' => 'Pipelinq',
-			'collections' => [$this->questionsCollection()],
-			'actions' => $this->questionActions(),
-			'pages' => [$this->questionsPage()],
+			'collections' => [$this->questionsCollection(), ...$this->ownTicketCollections()],
+			'actions' => [...$this->questionActions(), ...$this->ownTicketActions()],
+			'pages' => [...$this->ownTicketPages(), $this->questionsPage()],
 			'notifications' => [$this->answeredRule()],
 		];
 	}//end citizenContribution()
@@ -616,6 +622,148 @@ class PortalContributionProvider {
 			],
 		];
 	}//end questionsPage()
+
+	/**
+	 * The resident's own requests and complaints, scoped on `portalSubject`.
+	 *
+	 * Scoped like `myQuestions`: portaliq stamps the resident's subjectRef on
+	 * create and reads it back, so no claim is needed and a resident without
+	 * an organisation (a DigiD resident, `citizen` or `client` without a
+	 * `clientId` claim) reads exactly what they filed. The own request carries
+	 * `channel: web`, which keeps it apart from a question (`channel: portal`).
+	 * Projected to the same client-safe fields as the organisation's lists.
+	 *
+	 * @return array<int, array<string, mixed>> The two collections.
+	 *
+	 * @spec openspec/changes/portal-contribution/specs/portal-contribution/spec.md
+	 */
+	private function ownTicketCollections(): array {
+		return [
+			[
+				'id' => 'ownRequests',
+				'register' => self::REGISTER,
+				'schema' => 'ticket',
+				'filter' => ['ticketType' => 'request', 'channel' => 'web'],
+				'scopeField' => 'portalSubject',
+				'label' => 'My requests',
+				'listable' => true,
+				'fields' => ['title', 'category', 'status', 'description', 'occurredAt', 'customerMessage'],
+				'columns' => [
+					['field' => 'title', 'label' => 'Onderwerp'],
+					['field' => 'status', 'label' => 'Status', 'render' => 'badge'],
+					['field' => 'occurredAt', 'label' => 'Ingediend', 'render' => 'date'],
+				],
+				'detail' => ['layout' => 'card', 'fields' => ['title', 'category', 'status', 'description', 'occurredAt', 'customerMessage']],
+				'defaultSort' => ['field' => 'occurredAt', 'direction' => 'desc'],
+			],
+			[
+				'id' => 'ownComplaints',
+				'register' => self::REGISTER,
+				'schema' => 'ticket',
+				'filter' => ['ticketType' => 'complaint'],
+				'scopeField' => 'portalSubject',
+				'label' => 'My complaints',
+				'listable' => true,
+				'fields' => ['title', 'complaintCategory', 'status', 'description', 'occurredAt', 'customerMessage'],
+				'columns' => [
+					['field' => 'title', 'label' => 'Onderwerp'],
+					['field' => 'status', 'label' => 'Status', 'render' => 'badge'],
+					['field' => 'occurredAt', 'label' => 'Ingediend', 'render' => 'date'],
+				],
+				'detail' => ['layout' => 'card', 'fields' => ['title', 'complaintCategory', 'status', 'description', 'occurredAt', 'customerMessage']],
+				'defaultSort' => ['field' => 'occurredAt', 'direction' => 'desc'],
+			],
+		];
+	}//end ownTicketCollections()
+
+	/**
+	 * The resident's own intake forms for a request and a complaint.
+	 *
+	 * The scope stamp is the resident's own subjectRef in `portalSubject`
+	 * (no `scopeClaim`), so the write never depends on a claim the resident
+	 * lacks. The kind and the channel are stamped server-side; the client
+	 * only writes the intake fields.
+	 *
+	 * @return array<int, array<string, mixed>> The two create actions.
+	 *
+	 * @spec openspec/changes/portal-contribution/specs/portal-contribution/spec.md
+	 */
+	private function ownTicketActions(): array {
+		return [
+			[
+				'id' => 'createOwnRequest',
+				'type' => 'create',
+				'label' => 'Submit a request',
+				'register' => self::REGISTER,
+				'schema' => 'ticket',
+				'defaults' => ['ticketType' => 'request', 'channel' => 'web'],
+				'scopeField' => 'portalSubject',
+				'fields' => ['title', 'description', 'category'],
+				'fieldConfigs' => [
+					'title' => ['label' => 'Onderwerp', 'required' => true, 'size' => 'large', 'placeholder' => 'Waar gaat uw verzoek over?'],
+					'description' => ['label' => 'Omschrijving', 'required' => true, 'size' => 'full', 'placeholder' => 'Beschrijf uw verzoek zo volledig mogelijk'],
+					'category' => ['label' => 'Categorie'],
+				],
+				'submitLabel' => 'Verzoek indienen',
+				'successMessage' => 'Uw verzoek is ingediend',
+			],
+			[
+				'id' => 'createOwnComplaint',
+				'type' => 'create',
+				'label' => 'File a complaint',
+				'register' => self::REGISTER,
+				'schema' => 'ticket',
+				'defaults' => ['ticketType' => 'complaint', 'channel' => 'web'],
+				'scopeField' => 'portalSubject',
+				'fields' => ['title', 'description', 'complaintCategory'],
+				'fieldConfigs' => [
+					'title' => ['label' => 'Onderwerp', 'required' => true, 'size' => 'large', 'placeholder' => 'Waar gaat uw klacht over?'],
+					'description' => ['label' => 'Omschrijving', 'required' => true, 'size' => 'full', 'placeholder' => 'Wat ging er mis?'],
+					'complaintCategory' => ['label' => 'Soort klacht'],
+				],
+				'submitLabel' => 'Klacht indienen',
+				'successMessage' => 'Uw klacht is ingediend',
+			],
+		];
+	}//end ownTicketActions()
+
+	/**
+	 * The resident's own requests and complaints pages: the form, then the list.
+	 *
+	 * @return array<int, array<string, mixed>> The two pages.
+	 *
+	 * @spec openspec/changes/portal-contribution/specs/portal-contribution/spec.md
+	 */
+	private function ownTicketPages(): array {
+		return [
+			[
+				'id' => 'requests',
+				'label' => 'Verzoeken',
+				'icon' => 'MessageText',
+				'blocks' => [
+					[
+						'type' => 'richText',
+						'markdown' => '## Mijn verzoeken'."\n".'Dien een nieuw verzoek in of bekijk de status van uw lopende verzoeken.',
+					],
+					['type' => 'action', 'action' => 'createOwnRequest'],
+					['type' => 'collection', 'collection' => 'ownRequests'],
+				],
+			],
+			[
+				'id' => 'complaints',
+				'label' => 'Klachten',
+				'icon' => 'AlertCircle',
+				'blocks' => [
+					[
+						'type' => 'richText',
+						'markdown' => '## Mijn klachten'."\n".'Dien een klacht in of bekijk hoe het met uw klachten staat.',
+					],
+					['type' => 'action', 'action' => 'createOwnComplaint'],
+					['type' => 'collection', 'collection' => 'ownComplaints'],
+				],
+			],
+		];
+	}//end ownTicketPages()
 
 	/**
 	 * The change rule that tells a resident there is an answer (C3 sender).
