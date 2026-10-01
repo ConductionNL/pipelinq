@@ -229,7 +229,10 @@ export default {
 			if (answer === last) {
 				return answers
 			}
-			return [...answers, { message: answer, createdAt: new Date().toISOString() }]
+			return [
+				...answers,
+				{ message: answer, createdAt: new Date().toISOString() },
+			]
 		},
 
 		/**

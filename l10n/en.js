@@ -6972,7 +6972,18 @@ OC.L10N.register(
         "Open the Woo request": "Open the Woo request",
         "dossiq could not start the Woo request. Try again later.": "dossiq could not start the Woo request. Try again later.",
         "This question can no longer be converted.": "This question can no longer be converted.",
-        "Woo request": "Woo request"
+        "Woo request": "Woo request",
+        "You asked: %s": "You asked: %s",
+        "Answer: %s": "Answer: %s",
+        "Your reply: %s": "Your reply: %s",
+        "Your question is now a Woo request.": "Your question is now a Woo request.",
+        "Your Woo request": "Your Woo request",
+        "Your question is now this Woo request. Follow it under your cases.": "Your question is now this Woo request. Follow it under your cases.",
+        "Answers to the customer": "Answers to the customer",
+        "Answer": "Answer",
+        "Every answer the handler sent to the customer on this ticket, oldest first, each with when it was sent.": "Every answer the handler sent to the customer on this ticket, oldest first, each with when it was sent.",
+        "The text the customer read.": "The text the customer read.",
+        "When the handler saved the answer.": "When the handler saved the answer."
     },
     "nplurals=2; plural=(n != 1);"
 )
