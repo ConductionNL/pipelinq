@@ -97,11 +97,28 @@ class SlaAttainmentService {
 		$events = $this->loadBreachEventsInRange(start: $start, end: $end);
 		$policyFilter = (string)($params['policy'] ?? '');
 
-		$accumulated = $this->accumulateBreachedEvents(events: $events, policyFilter: $policyFilter, groupBy: $groupBy);
+		// Met objects and breach events are grouped from the same tracked
+		// objects, so a group's met and breached counts describe one set.
+		$trackedRows = $this->loadTrackedRows();
+		$context = $this->buildGroupingContext(groupBy: $groupBy, trackedRows: $trackedRows);
 
-		// For attainment we need the closed-met denominator too — query
-		// tracked objects with all targets met in the period.
-		$withCounts = $this->countWithObjectsInRange(start: $start, end: $end, policyFilter: $policyFilter);
+		$accumulated = $this->accumulateBreachedEvents(
+			events: $events,
+			policyFilter: $policyFilter,
+			groupBy: $groupBy,
+			context: $context
+		);
+
+		// For attainment we need the closed-met denominator too — the tracked
+		// objects with all targets met in the period.
+		$withCounts = $this->countWithObjectsInRange(
+			rows: $trackedRows,
+			start: $start,
+			end: $end,
+			policyFilter: $policyFilter,
+			groupBy: $groupBy,
+			context: $context
+		);
 		$merged = $this->mergeWithCounts(accumulated: $accumulated, withCounts: $withCounts);
 
 		$byTargetOut = $this->buildByTargetOut(byTarget: $merged['byTarget']);
@@ -135,10 +152,11 @@ class SlaAttainmentService {
 	 * @param array<int, array<string, mixed>> $events Breach events.
 	 * @param string $policyFilter Optional policy identity filter.
 	 * @param string $groupBy Grouping mode.
+	 * @param array<string, array<string, mixed>> $context Grouping context (see buildGroupingContext()).
 	 *
 	 * @return array{total: int, breached: int, inFlight: int, closed: int, byTarget: array<string, mixed>, groupAccum: array<string, mixed>}
 	 */
-	private function accumulateBreachedEvents(array $events, string $policyFilter, string $groupBy): array {
+	private function accumulateBreachedEvents(array $events, string $policyFilter, string $groupBy, array $context): array {
 		$total = 0;
 		$breached = 0;
 		$inFlight = 0;
@@ -166,11 +184,22 @@ class SlaAttainmentService {
 			$byTarget[$kind] = ($byTarget[$kind] ?? ['breached' => 0, 'met' => 0]);
 			$byTarget[$kind]['breached']++;
 
-			$groupKey = $this->groupKey(groupBy: $groupBy, event: $event);
-			$groupName = $this->groupName(groupBy: $groupBy, event: $event, key: $groupKey);
-			$groupAccum[$groupKey] = ($groupAccum[$groupKey] ?? ['name' => $groupName, 'total' => 0, 'breached' => 0]);
-			$groupAccum[$groupKey]['total']++;
-			$groupAccum[$groupKey]['breached']++;
+			// The object the breach belongs to supplies its tier, team and customer.
+			$tracked = ($context['tracked'][(string)($event['targetObjectId'] ?? '')] ?? []);
+			$groupKeys = $this->groupKeys(
+				groupBy: $groupBy,
+				policyId: (string)($event['policyId'] ?? ''),
+				kinds: [$kind],
+				tracked: $tracked,
+				event: $event,
+				context: $context
+			);
+			foreach ($groupKeys as $groupKey) {
+				$groupName = $this->groupName(groupBy: $groupBy, key: $groupKey, context: $context);
+				$groupAccum[$groupKey] = ($groupAccum[$groupKey] ?? ['name' => $groupName, 'total' => 0, 'breached' => 0]);
+				$groupAccum[$groupKey]['total']++;
+				$groupAccum[$groupKey]['breached']++;
+			}
 		}//end foreach
 
 		return [
@@ -505,70 +534,87 @@ class SlaAttainmentService {
 	}//end parseBreachEventRow()
 
 	/**
-	 * Count tracked objects that met all targets in the time range.
+	 * Load every SLA-tracked object: the ticket subtypes (request +
+	 * complaint, both on the unified `ticket` schema, narrowed with the
+	 * `ticketType` discriminator) plus the callback schema. Each row is a
+	 * plain array carrying its `id`, which breach events point at.
 	 *
-	 * Walks the SLA-tracked ticket subtypes (request + complaint, both on the
-	 * unified `ticket` schema, narrowed with the `ticketType` discriminator)
-	 * plus the callback schema, and picks the ones with
-	 * slaStatus.targets[*].metAt in range and no breached/at-risk
+	 * @return array<int, array<string, mixed>> Tracked objects.
+	 */
+	private function loadTrackedRows(): array {
+		// The ticket lookup is fail-soft: it yields [] when the ticket surface
+		// is unprovisioned or OpenRegister is unavailable.
+		$raw = [];
+		foreach ([TicketService::TYPE_REQUEST, TicketService::TYPE_COMPLAINT] as $ticketType) {
+			$raw = array_merge($raw, (array)$this->ticketService->findByType($ticketType, [], 5000));
+		}
+
+		$raw = array_merge($raw, $this->findConfiguredObjects(registerKey: 'register', schemaKey: 'callback_schema'));
+
+		return array_map(fn ($row): array => $this->normalise(row: $row), $raw);
+	}//end loadTrackedRows()
+
+	/**
+	 * What grouping needs beyond the rows themselves: tracked objects by id,
+	 * the policies (for their names and tiers) and, when grouping by customer,
+	 * the client names.
+	 *
+	 * @param string $groupBy Grouping mode.
+	 * @param array<int, array<string, mixed>> $trackedRows Tracked objects (see loadTrackedRows()).
+	 *
+	 * @return array{tracked: array<string, array<string, mixed>>, policies: array<string, array<string, mixed>>, clients: array<string, string>}
+	 */
+	private function buildGroupingContext(string $groupBy, array $trackedRows): array {
+		$tracked = [];
+		foreach ($trackedRows as $row) {
+			if (($row['id'] ?? '') !== '') {
+				$tracked[(string)$row['id']] = $row;
+			}
+		}
+
+		$policies = [];
+		if (in_array($groupBy, ['policy', 'tier'], true) === true) {
+			foreach ($this->findConfiguredObjects(registerKey: 'sla_register', schemaKey: 'sla_policy_schema') as $row) {
+				$array = $this->normalise(row: $row);
+				$policies[(string)($array['id'] ?? '')] = $array;
+			}
+		}
+
+		$clients = [];
+		if ($groupBy === 'customer') {
+			foreach ($this->findConfiguredObjects(registerKey: 'register', schemaKey: 'client_schema') as $row) {
+				$array = $this->normalise(row: $row);
+				$clients[(string)($array['id'] ?? '')] = (string)($array['name'] ?? '');
+			}
+		}
+
+		return ['tracked' => $tracked, 'policies' => $policies, 'clients' => $clients];
+	}//end buildGroupingContext()
+
+	/**
+	 * Count tracked objects that met all targets in the time range: the ones
+	 * with slaStatus.targets[*].withAt in range and no breached/at-risk
 	 * targets remaining.
 	 *
+	 * @param array<int, array<string, mixed>> $rows Tracked objects (see loadTrackedRows()).
 	 * @param DateTimeInterface $start Start instant.
 	 * @param DateTimeInterface $end End instant.
 	 * @param string $policyFilter Optional policy identity filter.
+	 * @param string $groupBy Grouping mode.
+	 * @param array<string, array<string, mixed>> $context Grouping context (see buildGroupingContext()).
 	 *
 	 * @return array{total: int, byTarget: array<string, int>, byGroup: array<string, array<string, mixed>>} Counts.
 	 */
 	private function countWithObjectsInRange(
+		array $rows,
 		DateTimeInterface $start,
 		DateTimeInterface $end,
 		string $policyFilter,
+		string $groupBy,
+		array $context,
 	): array {
 		$accumulator = ['total' => 0, 'byTarget' => [], 'byGroup' => []];
 
-		// SLA-tracked ticket subtypes — one schema, two discriminator values.
-		// findByType() is fail-soft: it yields [] when the ticket surface is
-		// unprovisioned or OpenRegister is unavailable.
-		foreach ([TicketService::TYPE_REQUEST, TicketService::TYPE_COMPLAINT] as $ticketType) {
-			$rows = $this->ticketService->findByType($ticketType, [], 5000);
-			$accumulator = $this->accumulateWithRows(
-				rows: $rows,
-				accumulator: $accumulator,
-				start: $start,
-				end: $end,
-				policyFilter: $policyFilter
-			);
-		}
-
-		$accumulator = $this->accumulateWithRows(
-			rows: $this->fetchCallbackRows(),
-			accumulator: $accumulator,
-			start: $start,
-			end: $end,
-			policyFilter: $policyFilter
-		);
-
-		return $accumulator;
-	}//end countMetObjectsInRange()
-
-	/**
-	 * Fold a batch of tracked-object rows into the met-object accumulator.
-	 *
-	 * @param array<int, mixed> $rows Tracked-object rows.
-	 * @param array<string, mixed> $accumulator Running counts.
-	 * @param DateTimeInterface $start Start instant.
-	 * @param DateTimeInterface $end End instant.
-	 * @param string $policyFilter Optional policy identity filter.
-	 *
-	 * @return array{total: int, byTarget: array<string, int>, byGroup: array<string, array<string, mixed>>} Counts.
-	 */
-	private function accumulateWithRows(
-		array $rows,
-		array $accumulator,
-		DateTimeInterface $start,
-		DateTimeInterface $end,
-		string $policyFilter,
-	): array {
 		foreach ($rows as $row) {
 			$result = $this->evaluateTrackedObjectRow(row: $row, start: $start, end: $end, policyFilter: $policyFilter);
 			if ($result === null) {
@@ -580,23 +626,35 @@ class SlaAttainmentService {
 				$accumulator['byTarget'][$kind] = ($accumulator['byTarget'][$kind] ?? 0) + $count;
 			}
 
-			$key = $result['groupKey'];
-
-			$accumulator['byGroup'][$key] = ($accumulator['byGroup'][$key] ?? ['name' => $key, 'total' => 0]);
-			$accumulator['byGroup'][$key]['total']++;
+			$groupKeys = $this->groupKeys(
+				groupBy: $groupBy,
+				policyId: $result['policyId'],
+				kinds: array_keys($result['byTarget']),
+				tracked: $row,
+				event: [],
+				context: $context
+			);
+			foreach ($groupKeys as $key) {
+				$name = $this->groupName(groupBy: $groupBy, key: $key, context: $context);
+				$accumulator['byGroup'][$key] = ($accumulator['byGroup'][$key] ?? ['name' => $name, 'total' => 0]);
+				$accumulator['byGroup'][$key]['total']++;
+			}
 		}//end foreach
 
 		return $accumulator;
-	}//end accumulateMetRows()
+	}//end countWithObjectsInRange()
 
 	/**
-	 * Fetch the callback rows (callbacks keep their own schema).
+	 * Fetch the objects of a register and schema named by two app config keys.
 	 *
-	 * @return array<int, mixed> Callback rows ([] when unconfigured/unavailable).
+	 * @param string $registerKey App config key holding the register id.
+	 * @param string $schemaKey App config key holding the schema id.
+	 *
+	 * @return array<int, mixed> Rows ([] when unconfigured/unavailable).
 	 */
-	private function fetchCallbackRows(): array {
-		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schemaId = $this->appConfig->getValueString(Application::APP_ID, 'callback_schema', '');
+	private function findConfiguredObjects(string $registerKey, string $schemaKey): array {
+		$register = $this->appConfig->getValueString(Application::APP_ID, $registerKey, '');
+		$schemaId = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
 		if ($register === '' || $schemaId === '') {
 			return [];
 		}
@@ -608,7 +666,7 @@ class SlaAttainmentService {
 		}
 
 		return $this->fetchTrackedObjectRows(objectService: $objectService, register: $register, schemaId: $schemaId);
-	}//end fetchCallbackRows()
+	}//end findConfiguredObjects()
 
 	/**
 	 * Fetch tracked-object rows for a schema, tolerating findAll failures.
@@ -647,7 +705,7 @@ class SlaAttainmentService {
 	 * @param DateTimeInterface $end End instant.
 	 * @param string $policyFilter Optional policy identity filter.
 	 *
-	 * @return array{byTarget: array<string, int>, groupKey: string}|null Null when filtered out or not fully-met-in-range.
+	 * @return array{byTarget: array<string, int>, policyId: string}|null Null when filtered out or not fully-met-in-range.
 	 */
 	private function evaluateTrackedObjectRow(mixed $row, DateTimeInterface $start, DateTimeInterface $end, string $policyFilter): ?array {
 		$array = $this->normalise(row: $row);
@@ -667,7 +725,7 @@ class SlaAttainmentService {
 
 		return [
 			'byTarget' => $targets['byTarget'],
-			'groupKey' => (string)($slaStatus['policyId'] ?? 'unknown'),
+			'policyId' => (string)($slaStatus['policyId'] ?? ''),
 		];
 	}//end evaluateTrackedObjectRow()
 
@@ -713,40 +771,99 @@ class SlaAttainmentService {
 	}//end evaluateSlaTargets()
 
 	/**
-	 * Derive a group key for an event according to the requested grouping.
+	 * The groups a met object or a breach event counts in. One group, except
+	 * when grouping by target: a met object counts once per target it met.
+	 *
+	 * A breach event's own fields win; otherwise the values come from the
+	 * tracked object it belongs to, so met and breached rows of one group
+	 * describe the same objects. A tier falls back to the policy's own tier,
+	 * which is how the engine chose the policy.
 	 *
 	 * @param string $groupBy Grouping mode.
-	 * @param array<string, mixed> $event Breach event.
+	 * @param string $policyId The SLA policy identity.
+	 * @param array<int, string> $kinds The target kinds counted.
+	 * @param array<string, mixed> $tracked The tracked object ([] when unknown).
+	 * @param array<string, mixed> $event The breach event ([] for a met object).
+	 * @param array<string, array<string, mixed>> $context Grouping context (see buildGroupingContext()).
 	 *
-	 * @return string Group key.
+	 * @return array<int, string> Group keys.
 	 */
-	private function groupKey(string $groupBy, array $event): string {
+	private function groupKeys(
+		string $groupBy,
+		string $policyId,
+		array $kinds,
+		array $tracked,
+		array $event,
+		array $context,
+	): array {
+		$policyTier = (string)($context['policies'][$policyId]['customerTier'] ?? '');
+		if ($policyTier === '*') {
+			$policyTier = '';
+		}
+
 		return match ($groupBy) {
-			'policy' => (string)($event['policyId'] ?? 'unknown'),
-			'tier' => (string)($event['customerTier'] ?? 'unspecified'),
-			'team' => (string)($event['team'] ?? 'unspecified'),
-			'customer' => (string)($event['organisationId'] ?? 'unspecified'),
-			'target' => (string)($event['targetKind'] ?? 'resolution'),
-			default => 'all',
+			'policy' => [$this->firstFilled(values: [$policyId])],
+			'target' => $kinds,
+			'tier' => [
+				$this->firstFilled(
+					values: [
+						$event['customerTier'] ?? null,
+						$tracked['slaTier'] ?? null,
+						$tracked['customerTier'] ?? null,
+						$policyTier,
+					]
+				),
+			],
+			'team' => [$this->firstFilled(values: [$event['team'] ?? null, $tracked['team'] ?? null])],
+			'customer' => [$this->firstFilled(values: [$event['organisationId'] ?? null, $tracked['client'] ?? null])],
+			default => ['all'],
 		};
-	}//end groupKey()
+	}//end groupKeys()
 
 	/**
-	 * Derive a human-readable name for a group key.
+	 * The first non-empty string, or `unspecified`.
+	 *
+	 * @param array<int, mixed> $values Candidates, in order of preference.
+	 *
+	 * @return string The value.
+	 */
+	private function firstFilled(array $values): string {
+		foreach ($values as $value) {
+			if (is_string($value) === true && $value !== '') {
+				return $value;
+			}
+		}
+
+		return 'unspecified';
+	}//end firstFilled()
+
+	/**
+	 * The display name of a group: the policy's or client's name where the
+	 * key is an id, the key itself otherwise.
 	 *
 	 * @param string $groupBy Grouping mode.
-	 * @param array<string, mixed> $event Breach event.
-	 * @param string $key Resolved group key.
+	 * @param string $key Group key.
+	 * @param array<string, array<string, mixed>> $context Grouping context (see buildGroupingContext()).
 	 *
 	 * @return string Group display name.
 	 */
-	private function groupName(string $groupBy, array $event, string $key): string {
-		unset($groupBy, $event);
-		return $key;
+	private function groupName(string $groupBy, string $key, array $context): string {
+		$name = match ($groupBy) {
+			'policy' => (string)($context['policies'][$key]['name'] ?? ''),
+			'customer' => (string)($context['clients'][$key] ?? ''),
+			default => '',
+		};
+
+		if ($name === '') {
+			return $key;
+		}
+
+		return $name;
 	}//end groupName()
 
 	/**
-	 * Normalise OR row/entity to a plain associative array.
+	 * Normalise OR row/entity to a plain associative array. An entity's data
+	 * leaves out its id, so the id is taken from its uuid.
 	 *
 	 * @param mixed $row Raw row.
 	 *
@@ -757,22 +874,27 @@ class SlaAttainmentService {
 			return $row;
 		}
 
-		if (is_object($row) === true && method_exists($row, 'getObject') === true) {
-			$object = $row->getObject();
-			if (is_array($object) === true) {
-				return $object;
-			}
-		}
-
-		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-			$json = $row->jsonSerialize();
-			if (is_array($json) === true) {
-				return $json;
-			}
-
+		if (is_object($row) === false) {
 			return [];
 		}
 
-		return [];
+		$data = null;
+		if (method_exists($row, 'getObject') === true) {
+			$data = $row->getObject();
+		}
+
+		if (is_array($data) === false && method_exists($row, 'jsonSerialize') === true) {
+			$data = $row->jsonSerialize();
+		}
+
+		if (is_array($data) === false) {
+			return [];
+		}
+
+		if (($data['id'] ?? '') === '' && method_exists($row, 'getUuid') === true) {
+			$data['id'] = (string)$row->getUuid();
+		}
+
+		return $data;
 	}//end normalise()
 }//end class
