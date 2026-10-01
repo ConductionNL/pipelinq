@@ -216,9 +216,46 @@ describe('CustomerReplySection', () => {
 		expect(payload).toEqual({
 			...question,
 			customerMessage: 'Het besluit valt in november.',
+			portalAnswers: [
+				{
+					message: 'Het besluit valt in november.',
+					createdAt: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T/),
+				},
+			],
 			status: 'awaiting_customer',
 		})
 		expect(wrapper.find('.note-success').exists()).toBe(true)
+	})
+
+	it('keeps every answer with its date, and saving the same answer again adds none (REQ-QDP-001)', async () => {
+		storeMock.fetchObject.mockResolvedValue({
+			...question,
+			customerMessage: 'Eerste antwoord',
+			portalAnswers: [
+				{ message: 'Eerste antwoord', createdAt: '2026-09-28T10:00:00Z' },
+			],
+		})
+		const wrapper = await mountFor(CustomerReplySection)
+
+		await wrapper
+			.findAll('button')
+			.find((b) => b.text() === 'Save answer')
+			.trigger('click')
+		await flushPromises()
+		expect(storeMock.saveObject.mock.calls[0][1].portalAnswers).toHaveLength(1)
+
+		await wrapper.find('textarea').setValue('Tweede antwoord')
+		await wrapper
+			.findAll('button')
+			.find((b) => b.text() === 'Save answer')
+			.trigger('click')
+		await flushPromises()
+		const answers = storeMock.saveObject.mock.calls[1][1].portalAnswers
+		expect(answers.map((a) => a.message)).toEqual([
+			'Eerste antwoord',
+			'Tweede antwoord',
+		])
+		expect(answers[0].createdAt).toBe('2026-09-28T10:00:00Z')
 	})
 
 	it('"Save answer" leaves the status alone', async () => {

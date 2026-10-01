@@ -45,6 +45,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Portal;
 
 use OCA\Pipelinq\Portal\PortalContributionProvider;
+use OCA\Pipelinq\Service\Portal\QuestionDetailService;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 
@@ -124,7 +125,8 @@ final class PortalContributionProviderTest extends TestCase {
 		);
 		$this->assertSame([], $reflection->getInterfaceNames(), 'Duck-typed: no implements clause allowed');
 		$this->assertFalse($reflection->getParentClass(), 'Provider must not extend anything');
-		$this->assertNull($reflection->getConstructor(), 'Provider must have no constructor dependencies');
+		$constructor = $reflection->getConstructor();
+		$this->assertSame(0, $constructor?->getNumberOfRequiredParameters() ?? 0, 'Provider must build without any argument');
 
 		$source = (string)file_get_contents((string)$reflection->getFileName());
 		$this->assertStringNotContainsStringIgnoringCase(
@@ -830,12 +832,90 @@ final class PortalContributionProviderTest extends TestCase {
 	}//end testResidentsReadTheirOwnQuestions()
 
 	/**
+	 * Scenario: the resident opens a question and reads it in full.
+	 *
+	 * The Vragen page carries a detail block for the selected question, and
+	 * the collection names the two provider methods that fill it.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/question-detail-on-the-portal/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-question-the-dossier-it-was-about-and-the-answers-req-qdp-001
+	 */
+	public function testTheQuestionsPageShowsTheSelectedQuestion(): void {
+		foreach ([self::CITIZEN_SUBJECT, self::CLIENT_SUBJECT] as $subject) {
+			$manifest = $this->provider->getContribution($subject);
+			$this->assertIsArray($manifest);
+
+			$blocks = $this->indexById($manifest['pages'])['questions']['blocks'];
+			$this->assertSame(['type' => 'detail', 'collection' => 'myQuestions'], end($blocks), 'the detail follows the list it selects from');
+
+			$questions = $this->indexById($manifest['collections'])['myQuestions'];
+			$this->assertSame(['layout' => 'card', 'fields' => ['title', 'status', 'occurredAt']], $questions['detail']);
+			$this->assertSame(['label' => 'Vraag en antwoord', 'provider' => 'questionTimeline'], $questions['timeline']);
+			$this->assertSame(['label' => 'Waar uw vraag over gaat', 'provider' => 'questionDossierItems'], $questions['itemList']);
+			foreach (['questionTimeline', 'questionDossierItems'] as $method) {
+				$this->assertTrue((new ReflectionClass(PortalContributionProvider::class))->getMethod($method)->isPublic(), "{$method} is callable by the portal");
+			}
+		}
+	}//end testTheQuestionsPageShowsTheSelectedQuestion()
+
+	/**
+	 * The two provider methods hand the proven id to the detail service, and
+	 * answer empty when the service cannot be built.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/question-detail-on-the-portal/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-question-the-dossier-it-was-about-and-the-answers-req-qdp-001
+	 */
+	public function testTheDetailMethodsDelegateToTheService(): void {
+		$service = $this->createMock(QuestionDetailService::class);
+		$service->expects($this->once())->method('timeline')->with('t-9')->willReturn([['id' => 'question', 'occurredAt' => '', 'message' => 'x']]);
+		$service->expects($this->once())->method('dossierItems')->with('t-9')->willReturn([['id' => '', 'title' => 'Besluit', 'url' => '', 'note' => '']]);
+
+		// Through the real constructor, as the container builds it.
+		$provider = new PortalContributionProvider($service);
+		$this->assertSame('question', $provider->questionTimeline('t-9')[0]['id']);
+		$this->assertSame('Besluit', $provider->questionDossierItems('t-9')[0]['title']);
+		$this->assertSame([], $this->withDetail(service: null)->questionTimeline('t-9'));
+		$this->assertSame([], $this->withDetail(service: null)->questionDossierItems('t-9'));
+	}//end testTheDetailMethodsDelegateToTheService()
+
+	/**
+	 * The provider with the detail service forced.
+	 *
+	 * @param QuestionDetailService|null $service What the container answers.
+	 *
+	 * @return PortalContributionProvider
+	 */
+	private function withDetail(?QuestionDetailService $service): PortalContributionProvider {
+		return new class($service) extends PortalContributionProvider {
+			/**
+			 * Remember the forced service.
+			 *
+			 * @param QuestionDetailService|null $service The service.
+			 */
+			public function __construct(private readonly ?QuestionDetailService $service) {
+			}//end __construct()
+
+			/**
+			 * The forced service.
+			 *
+			 * @return QuestionDetailService|null
+			 */
+			protected function questionDetail(): ?QuestionDetailService {
+				return $this->service;
+			}//end questionDetail()
+		};
+	}//end withDetail()
+
+	/**
 	 * Scenario: A resident asks about their own dossier, offered to citizen and client.
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-a-resident-asks-a-question-about-a-dossier-they-own-req-qcd-001
 	 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-a-resident-replies-to-an-answer-req-qcd-004
+	 * @spec openspec/changes/question-detail-on-the-portal/specs/dossier-questions/spec.md#requirement-the-reply-is-offered-on-the-question-while-it-waits-for-the-resident-req-qdp-003
 	 */
 	public function testCitizenAndClientMayAskAndReply(): void {
 		foreach ([self::CITIZEN_SUBJECT, self::CLIENT_SUBJECT] as $subject) {
@@ -849,6 +929,11 @@ final class PortalContributionProviderTest extends TestCase {
 			$this->assertSame('collectionId', $actions['askAboutDossier']['rowField']);
 			$this->assertSame('/index.php/apps/pipelinq/api/portal/questions/reply', $actions['replyToQuestion']['endpoint']);
 			$this->assertSame(['ticket', 'message'], $actions['replyToQuestion']['fields']);
+			// On the question's own detail, only while it waits for the resident.
+			$this->assertSame(['app' => 'pipelinq', 'schema' => 'ticket', 'collection' => 'myQuestions'], $actions['replyToQuestion']['attachTo']);
+			$this->assertSame('ticket', $actions['replyToQuestion']['rowField']);
+			$this->assertSame(['field' => 'status', 'in' => ['awaiting_customer']], $actions['replyToQuestion']['rowWhen']);
+			$this->assertSame('Reageren op het antwoord', $actions['replyToQuestion']['label']);
 			foreach ($actions as $action) {
 				$this->assertNotContains('subjectRef', ($action['fields'] ?? []), 'the subject comes from the assertion, never the form');
 				$this->assertNotContains('portalSubject', ($action['fields'] ?? []));
