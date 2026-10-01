@@ -1488,6 +1488,7 @@
         "Failed to load workspace state. Please try again.": "Kon werkplekstatus niet laden. Probeer het opnieuw.",
         "Failed to log callback attempt": "Kan terugbelpoging niet registreren",
         "Failed to move lead. Please try again.": "Verplaatsen van lead mislukt. Probeer het opnieuw.",
+        "Could not move the card to {stage}.": "De kaart kon niet naar {stage} worden verplaatst.",
         "Failed to open shift.": "Shift openen mislukt.",
         "Failed to reach the xWiki status endpoint.": "Het xWiki-status-eindpunt is niet bereikbaar.",
         "Failed to reassign task": "Kan taak niet hertoewijzen",

@@ -75,12 +75,7 @@
 
 		<!-- Kanban view -->
 		<div v-else-if="viewMode === 'kanban'" class="pipeline-board__columns">
-			<div
-				v-for="stage in openStages"
-				:key="stage.name"
-				class="kanban-column"
-				@dragover.prevent
-				@drop="onDrop($event, stage)">
+			<div v-for="stage in openStages" :key="stage.name" class="kanban-column">
 				<div
 					class="kanban-column__header"
 					:style="stage.color ? { borderTopColor: stage.color } : {}">
@@ -177,17 +172,28 @@
 						</div>
 					</div>
 				</div>
-				<div class="kanban-column__body">
-					<PipelineCard
-						v-for="item in getStageItems(stage.name)"
-						:key="item.id"
-						:item="item"
-						:entityType="item._schemaSlug"
-						:stages="sortedStages"
-						:columnProperty="getColumnProperty(item)"
-						@open="openItem"
-						@refresh="refreshItems" />
-				</div>
+				<!-- A column's order is computed (stage order or score), so a card
+				     can move between columns but not within one. The list is never
+				     written back: the drop moves the card by changing its stage. -->
+				<Draggable
+					:modelValue="getStageItems(stage.name)"
+					v-bind="dragOptions"
+					:move="onCardMove"
+					class="kanban-column__body"
+					:class="dropListClass(stage.name)"
+					@start="onDragStart(stage.name)"
+					@end="onDragEnd"
+					@change="onCardDropped($event, stage)">
+					<template #item="{ element: item }">
+						<PipelineCard
+							:item="item"
+							:entityType="item._schemaSlug"
+							:stages="sortedStages"
+							:columnProperty="getColumnProperty(item)"
+							@open="openItem"
+							@refresh="refreshItems" />
+					</template>
+				</Draggable>
 			</div>
 
 			<!-- Collapsed closed stages -->
@@ -207,27 +213,45 @@
 					"
 					@click="toggleClosedStage(stage.name)"
 					@keydown.enter.prevent="toggleClosedStage(stage.name)"
-					@keydown.space.prevent="toggleClosedStage(stage.name)"
-					@dragover.prevent
-					@drop="onDrop($event, stage)">
+					@keydown.space.prevent="toggleClosedStage(stage.name)">
 					<span class="closed-title">{{ stage.name.toUpperCase() }}</span>
 					<span class="closed-count">{{
 						getStageItems(stage.name).length
 					}}</span>
-					<div
+					<Draggable
 						v-if="expandedClosed === stage.name"
+						:modelValue="getStageItems(stage.name)"
+						v-bind="dragOptions"
+						:move="onCardMove"
 						class="closed-items"
-						@click.stop>
-						<PipelineCard
-							v-for="item in getStageItems(stage.name)"
-							:key="item.id"
-							:item="item"
-							:entityType="item._schemaSlug"
-							:stages="sortedStages"
-							:columnProperty="getColumnProperty(item)"
-							@open="openItem"
-							@refresh="refreshItems" />
-					</div>
+						:class="dropListClass(stage.name)"
+						@click.stop
+						@start="onDragStart(stage.name)"
+						@end="onDragEnd"
+						@change="onCardDropped($event, stage)">
+						<template #item="{ element: item }">
+							<PipelineCard
+								:item="item"
+								:entityType="item._schemaSlug"
+								:stages="sortedStages"
+								:columnProperty="getColumnProperty(item)"
+								@open="openItem"
+								@refresh="refreshItems" />
+						</template>
+					</Draggable>
+					<!-- Collapsed, the whole column is the drop target. The list is
+					     empty, so a click still reaches the column and toggles it. -->
+					<Draggable
+						v-else
+						:modelValue="[]"
+						v-bind="dragOptions"
+						class="closed-drop-zone"
+						:class="dropListClass(stage.name)"
+						@change="onCardDropped($event, stage)">
+						<template #item>
+							<span />
+						</template>
+					</Draggable>
 				</div>
 			</div>
 		</div>
@@ -400,6 +424,7 @@
 
 <script>
 import { openRowTarget } from '@conduction/nextcloud-vue'
+import { showError } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
 import {
 	NcButton,
@@ -408,6 +433,7 @@ import {
 	NcSelect,
 	NcTextField,
 } from '@nextcloud/vue'
+import Draggable from 'vuedraggable'
 import Cog from 'vue-material-design-icons/Cog.vue'
 import FormatListBulleted from 'vue-material-design-icons/FormatListBulleted.vue'
 import ViewColumn from 'vue-material-design-icons/ViewColumn.vue'
@@ -431,9 +457,25 @@ import { initializeStores } from '../../store/store.js'
 // What an unscoped pipeline (no propertyMappings, no legacy entityType) boards.
 const UNSCOPED_SLUGS = ['lead', 'request']
 
+// Shared by every column so a card can go from any column to any other. On
+// touch a short hold starts the drag, so a swipe still scrolls the board.
+// Sorting stays on: with `sort: false` Sortable does not let a card back into
+// the column it came from. Reordering within a column is refused in
+// `onCardMove` instead.
+const DRAG_OPTIONS = {
+	itemKey: 'id',
+	group: 'pipeline-cards',
+	animation: 150,
+	delay: 150,
+	delayOnTouchOnly: true,
+	ghostClass: 'pipeline-card--ghost',
+	chosenClass: 'pipeline-card--chosen',
+}
+
 export default {
 	name: 'PipelineBoard',
 	components: {
+		Draggable,
 		NcButton,
 		NcCheckboxRadioSwitch,
 		NcLoadingIcon,
@@ -458,6 +500,10 @@ export default {
 			 */
 			searchQuery: '',
 			expandedClosed: null,
+			// The stage a card is being dragged out of, while a drag is on, and
+			// whether it has been over another column since.
+			dragSourceStage: null,
+			dragLeftSource: false,
 			loading: false,
 			items: [],
 			viewMode: 'kanban',
@@ -509,6 +555,16 @@ export default {
 		 */
 		objectStore() {
 			return useObjectStore()
+		},
+
+		/**
+		 * The vuedraggable options every board column shares.
+		 *
+		 * @return {object}
+		 * @spec exclude static drag configuration — no business logic
+		 */
+		dragOptions() {
+			return DRAG_OPTIONS
 		},
 
 		/**
@@ -1184,39 +1240,118 @@ export default {
 		},
 
 		/**
-		 * @param {DragEvent} event The drop event carrying the dragged item JSON
-		 * @param {object} targetStage The stage the item was dropped on
+		 * A card was picked up in the given column.
+		 *
+		 * @param {string} stageName The column it came from.
+		 * @spec exclude drag bookkeeping — no business logic
+		 */
+		onDragStart(stageName) {
+			this.dragSourceStage = stageName
+			this.dragLeftSource = false
+		},
+
+		/**
+		 * The drag ended, dropped or cancelled.
+		 *
+		 * @spec exclude drag bookkeeping — no business logic
+		 */
+		onDragEnd() {
+			this.dragSourceStage = null
+			this.dragLeftSource = false
+		},
+
+		/**
+		 * vuedraggable's `move` check, run before the placeholder moves. Into
+		 * another column is always allowed. Within the card's own column only
+		 * the way back in is: the column orders itself, so a reorder there has
+		 * nothing to keep.
+		 *
+		 * @param {{from: HTMLElement, to: HTMLElement, dragged: HTMLElement}} evt The Sortable move event.
+		 * @return {boolean} Whether the placeholder may move.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-17
 		 */
-		async onDrop(event, targetStage) {
-			try {
-				const data = JSON.parse(
-					event.dataTransfer.getData('application/json'),
-				)
-				const mapping = this.propertyMappings.find(
-					(m) => m.schemaSlug === data._schemaSlug,
-				)
-				const columnProp = mapping?.columnProperty || 'stage'
-
-				if (data[columnProp] === targetStage.name) return
-
-				const update = { id: data.id }
-				update[columnProp] = targetStage.name
-				update.stageOrder = targetStage.order
-
-				// Resolve the logical slug onto its registered object type; a
-				// request/complaint/contactmoment writes to `ticket` and must carry
-				// its ticketType discriminator (unify-ticket-supertype).
-				const { objectType, ticketType } = resolveObjectType(
-					data._schemaSlug,
-				)
-				if (ticketType) update.ticketType = ticketType
-
-				await this.objectStore.saveObject(objectType, update)
-				await this.refreshItems()
-			} catch {
-				// Invalid drop
+		onCardMove(evt) {
+			if (evt.to !== evt.from) {
+				this.dragLeftSource = true
+				return true
 			}
+			return evt.dragged.parentNode !== evt.to
+		},
+
+		/**
+		 * Classes for a column's card list. The placeholder only shows while
+		 * the card has not left its column, where it marks the card's own
+		 * spot. Anywhere else it would promise a position the column's order
+		 * does not keep, so the column is highlighted instead.
+		 *
+		 * @param {string} stageName The column's stage.
+		 * @return {object} The class map.
+		 * @spec exclude presentational drag-preview helper — no business logic
+		 */
+		dropListClass(stageName) {
+			return {
+				'kanban-drop--target':
+					this.dragSourceStage !== stageName || this.dragLeftSource,
+			}
+		},
+
+		/**
+		 * A column's vuedraggable `change` event. Only `added` matters: the
+		 * column a card left emits `removed`, and a drop back into the card's
+		 * own column emits `moved`, which vuedraggable has already undone on
+		 * screen.
+		 *
+		 * @param {{added?: {element: object}}} event The vuedraggable change event.
+		 * @param {object} targetStage The stage of the column the card landed in.
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-17
+		 */
+		onCardDropped(event, targetStage) {
+			if (event.added) {
+				this.moveItemToStage(event.added.element, targetStage)
+			}
+		},
+
+		/**
+		 * Move a card to another stage. The card moves on screen at once; the
+		 * save sends the whole item, because a PUT with only the changed field
+		 * fails OpenRegister's required-field validation. A failed save puts
+		 * the card back.
+		 *
+		 * @param {object} item The board item that was dropped.
+		 * @param {object} targetStage The stage it was dropped on.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-17
+		 */
+		async moveItemToStage(item, targetStage) {
+			const columnProp = this.getColumnProperty(item)
+			if (item[columnProp] === targetStage.name) return
+
+			const previous = {
+				[columnProp]: item[columnProp],
+				stageOrder: item.stageOrder,
+			}
+			item[columnProp] = targetStage.name
+			if (columnProp === 'stage' && typeof targetStage.order === 'number') {
+				item.stageOrder = targetStage.order
+			}
+
+			// A request/complaint/contactmoment is stored as a `ticket` and must
+			// keep its ticketType discriminator (unify-ticket-supertype).
+			const { objectType, ticketType } = resolveObjectType(item._schemaSlug)
+			const { _entityType, _schemaSlug, ...payload } = item
+			if (ticketType && !payload.ticketType) payload.ticketType = ticketType
+
+			const saved = await this.objectStore.saveObject(objectType, payload)
+			if (!saved) {
+				Object.assign(item, previous)
+				showError(
+					t('pipelinq', 'Could not move the card to {stage}.', {
+						stage: targetStage.name,
+					}),
+				)
+				return
+			}
+			await this.refreshItems()
 		},
 
 		/**
@@ -1519,6 +1654,8 @@ export default {
 	gap: 1px;
 	overflow-y: auto;
 	flex: 1;
+	/* An empty column still needs room to drop a card into. */
+	min-height: 80px;
 }
 
 .kanban-closed {
@@ -1566,6 +1703,37 @@ export default {
 	display: flex;
 	flex-direction: column;
 	gap: 1px;
+}
+
+/* Covers the collapsed column, so a card can land anywhere on it. */
+.kanban-closed-column {
+	position: relative;
+}
+
+.closed-drop-zone {
+	position: absolute;
+	inset: 0;
+}
+
+/* See dropListClass(): where the placeholder would promise a position the
+   column's order does not keep, it is hidden and the column lights up as the
+   target. That includes the card's own column once it has been elsewhere, and
+   dropping there leaves the card where it was. */
+.kanban-drop--target > .pipeline-card--ghost {
+	display: none;
+}
+
+.kanban-column:has(.kanban-drop--target > .pipeline-card--ghost),
+.kanban-closed-column:has(.kanban-drop--target > .pipeline-card--ghost) {
+	background: var(--color-primary-element-light);
+}
+
+.pipeline-card--ghost {
+	opacity: 0.4;
+}
+
+.pipeline-card--chosen {
+	box-shadow: 0 2px 8px var(--color-box-shadow);
 }
 
 .pipeline-board__list {

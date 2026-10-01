@@ -1500,6 +1500,7 @@
         "Failed to load workspace state. Please try again.": "Failed to load workspace state. Please try again.",
         "Failed to log callback attempt": "Failed to log callback attempt",
         "Failed to move lead. Please try again.": "Failed to move lead. Please try again.",
+        "Could not move the card to {stage}.": "Could not move the card to {stage}.",
         "Failed to open shift.": "Failed to open shift.",
         "Failed to reach the xWiki status endpoint.": "Failed to reach the xWiki status endpoint.",
         "Failed to reassign task": "Failed to reassign task",
