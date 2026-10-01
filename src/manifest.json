@@ -3019,24 +3019,28 @@
 					{
 						"key": "probability",
 						"label": "Probability",
-						"widget": "lead-probability"
+						"widget": "lead-probability",
+						"sortable": true
 					},
 					{
 						"key": "winProbability",
 						"label": "Win %",
-						"widget": "lead-probability"
+						"widget": "lead-probability",
+						"sortable": true
 					},
 					{
 						"key": "qualificationScore",
 						"label": "Score",
-						"widget": "lead-score"
+						"widget": "lead-score",
+						"sortable": true
 					},
 					"value",
 					"currency",
 					{
 						"key": "expectedCloseDate",
 						"label": "Expected close",
-						"widget": "lead-close-date"
+						"widget": "lead-close-date",
+						"sortable": true
 					}
 				],
 				"sidebar": {

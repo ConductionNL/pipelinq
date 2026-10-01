@@ -20,6 +20,7 @@ import {
 	CALL_FIRST_SORT,
 	compareCallFirst,
 	explainScore,
+	isCallFirstSort,
 	SCORE_CRITERIA,
 	scoreBand,
 } from '../../src/services/leadScore.js'
@@ -165,5 +166,20 @@ describe('call first', () => {
 			{ key: 'qualificationScore', order: 'desc' },
 			{ key: '@self.updated', order: 'asc' },
 		])
+	})
+
+	it('recognises only its own sort, so the button un-presses on a column sort', () => {
+		expect(isCallFirstSort(CALL_FIRST_SORT)).toBe(true)
+		expect(isCallFirstSort([{ key: 'qualificationScore', order: 'desc' }])).toBe(
+			false,
+		)
+		expect(
+			isCallFirstSort([
+				{ key: 'qualificationScore', order: 'asc' },
+				{ key: '@self.updated', order: 'asc' },
+			]),
+		).toBe(false)
+		expect(isCallFirstSort([])).toBe(false)
+		expect(isCallFirstSort(undefined)).toBe(false)
 	})
 })

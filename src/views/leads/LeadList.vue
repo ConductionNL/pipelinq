@@ -52,15 +52,16 @@
 					type="checkbox">
 					{{ t('pipelinq', 'Hide closed') }}
 				</NcCheckboxRadioSwitch>
-				<NcCheckboxRadioSwitch
-					:modelValue="callFirst"
-					:aria-label="
-						t('pipelinq', 'Call first: open leads, highest score first')
-					"
-					type="checkbox"
-					@update:modelValue="setCallFirst">
+				<NcButton
+					:pressed="callFirst"
+					:title="t('pipelinq', 'Sort by score, highest first')"
+					data-testid="lead-list-call-first"
+					@update:pressed="setCallFirst">
+					<template #icon>
+						<SortDescending :size="20" />
+					</template>
 					{{ t('pipelinq', 'Call first') }}
-				</NcCheckboxRadioSwitch>
+				</NcButton>
 			</div>
 		</template>
 
@@ -77,8 +78,9 @@
 
 <script>
 import { CnIndexPage, openRowTarget } from '@conduction/nextcloud-vue'
-import { NcCheckboxRadioSwitch } from '@nextcloud/vue'
-import { CALL_FIRST_SORT } from '../../services/leadScore.js'
+import { NcButton, NcCheckboxRadioSwitch } from '@nextcloud/vue'
+import SortDescending from 'vue-material-design-icons/SortDescending.vue'
+import { CALL_FIRST_SORT, isCallFirstSort } from '../../services/leadScore.js'
 import {
 	getOverdueDays,
 	getStaleThreshold,
@@ -91,7 +93,9 @@ export default {
 	name: 'LeadList',
 	components: {
 		CnIndexPage,
+		NcButton,
 		NcCheckboxRadioSwitch,
+		SortDescending,
 	},
 
 	data() {
@@ -172,6 +176,15 @@ export default {
 	},
 
 	async mounted() {
+		// Read from the page's own sort, so a column click, a saved view or a
+		// sort restored from the URL all show on the button.
+		this.$watch(
+			() => this.$refs.index?.effectiveSortKeys,
+			(keys) => {
+				this.callFirst = isCallFirstSort(keys)
+			},
+			{ immediate: true },
+		)
 		await this.settingsStore.fetchSettings()
 		await this.loadDefaultPipeline()
 	},
@@ -181,18 +194,14 @@ export default {
 		getOverdueDays,
 
 		/**
-		 * Switch "Call first" on or off. On, the list shows open leads only
-		 * and asks OpenRegister for the highest score first, ties broken by
-		 * the lead updated longest ago. Off, it drops that sort.
+		 * Switch the "Call first" sort on or off. On, OpenRegister returns the
+		 * highest score first, ties broken by the lead updated longest ago.
+		 * Off, it drops that sort. The filters are left as they are.
 		 *
 		 * @param {boolean} on Whether Call first is on.
 		 * @spec openspec/specs/lead-management/spec.md#requirement-the-lead-list-shows-and-sorts-by-score-req-lscore-001
 		 */
 		setCallFirst(on) {
-			this.callFirst = on
-			if (on) {
-				this.hideClosed = true
-			}
 			this.$refs.index?.onSortEvent?.({ keys: on ? CALL_FIRST_SORT : [] })
 		},
 

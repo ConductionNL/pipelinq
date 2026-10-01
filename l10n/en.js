@@ -6929,7 +6929,7 @@ OC.L10N.register(
         "Visit logged": "Visit logged",
         "What happened?": "What happened?",
         "Call first": "Call first",
-        "Call first: open leads, highest score first": "Call first: open leads, highest score first",
+        "Sort by score, highest first": "Sort by score, highest first",
         "Highest score first": "Highest score first",
         "No criterion adds points yet. Add a value, a client or an expected close date to raise the score.": "No criterion adds points yet. Add a value, a client or an expected close date to raise the score.",
         "Score {score}, {band}": "Score {score}, {band}",

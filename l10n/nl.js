@@ -6845,7 +6845,7 @@ OC.L10N.register(
         "Visit logged": "Bezoek vastgelegd",
         "What happened?": "Wat is er besproken?",
         "Call first": "Eerst bellen",
-        "Call first: open leads, highest score first": "Eerst bellen: open leads, hoogste score eerst",
+        "Sort by score, highest first": "Sorteren op score, hoogste eerst",
         "Highest score first": "Hoogste score eerst",
         "No criterion adds points yet. Add a value, a client or an expected close date to raise the score.": "Nog geen criterium levert punten op. Vul een waarde, een klant of een verwachte sluitdatum in om de score te verhogen.",
         "Score {score}, {band}": "Score {score}, {band}",

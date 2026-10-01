@@ -182,3 +182,20 @@ export const CALL_FIRST_SORT = [
 	{ key: 'qualificationScore', order: 'desc' },
 	{ key: '@self.updated', order: 'asc' },
 ]
+
+/**
+ * Whether a list's sort keys are exactly the "Call first" sort.
+ *
+ * @param {Array<{key: string, order: string}>} [keys] The active sort keys.
+ * @return {boolean}
+ * @spec openspec/specs/lead-management/spec.md#requirement-the-lead-list-shows-and-sorts-by-score-req-lscore-001
+ */
+export function isCallFirstSort(keys) {
+	return (
+		Array.isArray(keys)
+		&& keys.length === CALL_FIRST_SORT.length
+		&& CALL_FIRST_SORT.every(
+			(want, i) => keys[i]?.key === want.key && keys[i]?.order === want.order,
+		)
+	)
+}
