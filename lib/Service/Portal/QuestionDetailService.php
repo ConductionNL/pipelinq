@@ -101,37 +101,64 @@ class QuestionDetailService {
 		$question = $this->text(value: ($ticket['description'] ?? ''));
 		if ($question !== '') {
 			$asked = $this->text(value: ($ticket['occurredAt'] ?? ''));
-			$entries[] = $this->entry(id: 'question', at: $asked, message: $this->l10n->t('You asked: %s', [$question]));
+			$entries[] = $this->entry(id: 'question', moment: $asked, message: $this->l10n->t('You asked: %s', [$question]));
 		}
 
+		$entries = array_merge($entries, $this->answers(ticket: $ticket, updated: $updated), $this->replies(ticket: $ticket));
+		if ($this->isConverted(ticket: $ticket) === true) {
+			$entries[] = $this->entry(id: 'converted', moment: $updated, message: $this->l10n->t('Your question is now a Woo request.'));
+		}
+
+		return $entries;
+	}//end timeline()
+
+	/**
+	 * Every answer with its moment, and the current answer when the list does
+	 * not end with it.
+	 *
+	 * @param array<string, mixed> $ticket  The question.
+	 * @param string               $updated The ticket's last change.
+	 *
+	 * @return array<int, array{id: string, occurredAt: string, message: string}>
+	 */
+	private function answers(array $ticket, string $updated): array {
+		$entries = [];
 		$last = '';
 		foreach ($this->listOf(value: ($ticket['portalAnswers'] ?? null)) as $index => $answer) {
 			$last = $this->text(value: ($answer['message'] ?? ''));
 			if ($last !== '') {
 				$sent = $this->text(value: ($answer['createdAt'] ?? ''));
-				$entries[] = $this->entry(id: 'answer-'.$index, at: $sent, message: $this->l10n->t('Answer: %s', [$last]));
+				$entries[] = $this->entry(id: 'answer-'.$index, moment: $sent, message: $this->l10n->t('Answer: %s', [$last]));
 			}
 		}
 
 		$current = $this->text(value: ($ticket['customerMessage'] ?? ''));
 		if ($current !== '' && $current !== $last) {
-			$entries[] = $this->entry(id: 'answer', at: $updated, message: $this->l10n->t('Answer: %s', [$current]));
+			$entries[] = $this->entry(id: 'answer', moment: $updated, message: $this->l10n->t('Answer: %s', [$current]));
 		}
 
+		return $entries;
+	}//end answers()
+
+	/**
+	 * The resident's replies, each with its moment.
+	 *
+	 * @param array<string, mixed> $ticket The question.
+	 *
+	 * @return array<int, array{id: string, occurredAt: string, message: string}>
+	 */
+	private function replies(array $ticket): array {
+		$entries = [];
 		foreach ($this->listOf(value: ($ticket['portalReplies'] ?? null)) as $index => $reply) {
 			$message = $this->text(value: ($reply['message'] ?? ''));
 			if ($message !== '') {
 				$sent = $this->text(value: ($reply['createdAt'] ?? ''));
-				$entries[] = $this->entry(id: 'reply-'.$index, at: $sent, message: $this->l10n->t('Your reply: %s', [$message]));
+				$entries[] = $this->entry(id: 'reply-'.$index, moment: $sent, message: $this->l10n->t('Your reply: %s', [$message]));
 			}
 		}
 
-		if ($this->isConverted(ticket: $ticket) === true) {
-			$entries[] = $this->entry(id: 'converted', at: $updated, message: $this->l10n->t('Your question is now a Woo request.'));
-		}
-
 		return $entries;
-	}//end timeline()
+	}//end replies()
 
 	/**
 	 * What the question is about: the Woo request it became, when it did, and
@@ -205,13 +232,13 @@ class QuestionDetailService {
 	 * One timeline entry.
 	 *
 	 * @param string $id      A stable key within this question.
-	 * @param string $at      The moment, ISO 8601, or '' when unknown.
+	 * @param string $moment  The moment, ISO 8601, or '' when unknown.
 	 * @param string $message What the resident reads.
 	 *
 	 * @return array{id: string, occurredAt: string, message: string}
 	 */
-	private function entry(string $id, string $at, string $message): array {
-		return ['id' => $id, 'occurredAt' => $at, 'message' => $message];
+	private function entry(string $id, string $moment, string $message): array {
+		return ['id' => $id, 'occurredAt' => $moment, 'message' => $message];
 	}//end entry()
 
 	/**
