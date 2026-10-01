@@ -20,7 +20,7 @@
 <template>
 	<div class="performance-dashboard">
 		<header class="performance-dashboard__header">
-			<NcButton variant="tertiary" @click="$router.push({ name: 'Blasts' })">
+			<NcButton variant="tertiary" :to="{ name: 'Blasts' }">
 				{{ t('pipelinq', 'Back to blasts') }}
 			</NcButton>
 			<h2>{{ t('pipelinq', 'Blast performance') }}</h2>

@@ -23,7 +23,11 @@
 		v-if="hasActions"
 		class="pos-tx-header-actions"
 		data-testid="pos-tx-header-actions">
-		<NcButton v-if="canEdit" variant="secondary" @click="edit">
+		<!-- @spec openspec/specs/pos-lifecycle-guard-adoption/spec.md#REQ-PLG-001 -->
+		<NcButton
+			v-if="canEdit && transactionId"
+			variant="secondary"
+			:to="{ name: 'PosTransactionEdit', params: { id: transactionId } }">
 			<template #icon>
 				<Pencil :size="20" />
 			</template>
@@ -77,10 +81,11 @@
 			</template>
 			{{ t('pipelinq', 'Email Receipt') }}
 		</NcButton>
+		<!-- @spec openspec/specs/pos-refund-return/spec.md#REQ-REF-002 -->
 		<NcButton
-			v-if="canRegisterReturn"
+			v-if="canRegisterReturn && transactionId"
 			variant="secondary"
-			@click="registerReturn">
+			:to="{ name: 'PosRefundNewFromTransaction', params: { transactionId } }">
 			{{ t('pipelinq', 'Register refund') }}
 		</NcButton>
 		<NcButton
@@ -367,30 +372,6 @@ export default {
 			} catch {
 				this.lineCount = null
 			}
-		},
-
-		/**
-		 * Open the transaction's edit form.
-		 *
-		 * @spec openspec/specs/pos-lifecycle-guard-adoption/spec.md#REQ-PLG-001
-		 */
-		edit() {
-			this.$router.push({
-				name: 'PosTransactionEdit',
-				params: { id: this.transactionId },
-			})
-		},
-
-		/**
-		 * Open a new refund for this transaction.
-		 *
-		 * @spec openspec/specs/pos-refund-return/spec.md#REQ-REF-002
-		 */
-		registerReturn() {
-			this.$router.push({
-				name: 'PosRefundNewFromTransaction',
-				params: { transactionId: this.transactionId },
-			})
 		},
 
 		/**

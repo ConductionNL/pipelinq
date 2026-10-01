@@ -3,7 +3,7 @@
 <template>
 	<div class="blast-monitor">
 		<header class="blast-monitor__header">
-			<NcButton variant="tertiary" @click="$router.push({ name: 'Blasts' })">
+			<NcButton variant="tertiary" :to="{ name: 'Blasts' }">
 				{{ t('pipelinq', 'Back to blasts') }}
 			</NcButton>
 			<h2>{{ blast?.name || t('pipelinq', 'Blast') }}</h2>
