@@ -675,6 +675,55 @@ final class PortalContributionProviderTest extends TestCase {
 	}//end testTicketSurfacesCarryKindDiscriminator()
 
 	/**
+	 * Scenario: a resident's own request or complaint shows in their list.
+	 *
+	 * portaliq stamps a create action's `scopeField` with its `scopeClaim`
+	 * resolved for the subject, and without a declaration it stamps the
+	 * subjectRef into `subjectRef`. The ticket schema has no `subjectRef`, so an
+	 * undeclared create wrote a ticket with no `client`, and the resident's own
+	 * list (scoped on `client` via `clientId`) never showed it. Every create
+	 * action must therefore stamp the same scope its list reads: the scope of
+	 * each collection over the same schema whose narrowing filter the action's
+	 * server-side defaults satisfy.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/portal-contribution/specs/portal-contribution/spec.md
+	 */
+	public function testCreateActionsStampTheScopeTheirListReads(): void {
+		$schemaProperties = $this->loadRegisterSchemaProperties();
+
+		foreach ([self::CLIENT_SUBJECT, self::CUSTOMER_SUBJECT, self::CITIZEN_SUBJECT] as $subject) {
+			$manifest = $this->withOpenCatalogi()->getContribution($subject);
+			$this->assertIsArray($manifest);
+
+			foreach ($manifest['actions'] as $action) {
+				if (($action['type'] ?? '') !== 'create') {
+					continue;
+				}
+
+				$id = $action['id'];
+				$this->assertArrayHasKey('scopeField', $action, "Create action '{$id}' must declare the field its owner is stamped into");
+				$this->assertContains($action['scopeField'],
+					$schemaProperties[$action['schema']],
+					"scopeField '{$action['scopeField']}' of '{$id}' must exist on schema '{$action['schema']}'"
+				);
+
+				$lists = array_filter(
+					$manifest['collections'],
+					static fn (array $collection): bool => $collection['schema'] === $action['schema']
+						&& array_intersect_assoc(($collection['filter'] ?? []), ($action['defaults'] ?? [])) === ($collection['filter'] ?? [])
+				);
+				$this->assertNotEmpty($lists, "Create action '{$id}' must have a list that shows what it creates");
+				foreach ($lists as $list) {
+					$this->assertSame($list['scopeField'], $action['scopeField'], "'{$id}' must stamp the field '{$list['id']}' is scoped on");
+					$this->assertSame(($list['scopeClaim'] ?? null), ($action['scopeClaim'] ?? null), "'{$id}' must stamp the claim '{$list['id']}' is scoped on");
+				}
+			}
+		}
+	}//end testCreateActionsStampTheScopeTheirListReads()
+
+	/**
 	 * Scenario: A resident reads their questions and the answers (citizen and client).
 	 *
 	 * @return void
