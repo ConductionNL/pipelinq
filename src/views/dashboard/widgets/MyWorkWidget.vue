@@ -21,7 +21,7 @@
 		borderless
 		:emptyText="emptyText"
 		:rowClass="rowClass"
-		@rowClick="openItem">
+		:rowClickRoute="itemRoute">
 		<template #column-entityType="{ row }">
 			<span class="entity-badge" :class="'badge--' + row.entityType">
 				{{ row.entityType === 'lead' ? 'LEAD' : 'REQ' }}
@@ -48,7 +48,7 @@
 </template>
 
 <script>
-import { CnDataTable, openRowTarget } from '@conduction/nextcloud-vue'
+import { CnDataTable } from '@conduction/nextcloud-vue'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton } from '@nextcloud/vue'
 import { formatDate } from '../../../services/localeUtils.js'
@@ -158,23 +158,23 @@ export default {
 		},
 
 		/**
-		 * Navigate to the row's detail page. The route differs per row
-		 * (LeadDetail vs TicketDetail); the server-side worklist row carries
-		 * the destination route name in `routeName`. Rows emitted before the
-		 * ticket-supertype migration still carry a legacy detail-route name,
-		 * so map those onto TicketDetail rather than routing into a page that
-		 * no longer exists.
+		 * The row's detail page, which the table renders as the row's link.
+		 * The route differs per row (LeadDetail vs TicketDetail); the
+		 * server-side worklist row carries the destination route name in
+		 * `routeName`. Rows emitted before the ticket-supertype migration
+		 * still carry a legacy detail-route name, so map those onto
+		 * TicketDetail rather than routing into a page that no longer exists.
 		 *
 		 * @param {object} item - Work item row (lead or ticket).
-		 * @param {MouseEvent} [event] - The row click; a modified or middle click opens a new tab.
+		 * @return {object} The route location.
 		 * @spec openspec/specs/dashboard/spec.md#requirement-my-work-widget
 		 */
-		openItem(item, event) {
+		itemRoute(item) {
 			const raw =
 				item.routeName
 				|| (item.entityType === 'lead' ? 'LeadDetail' : 'TicketDetail')
 			const name = LEGACY_ROUTE_MAP[raw] || raw
-			openRowTarget(event, { name, params: { id: item.id } }, this.$router)
+			return { name, params: { id: item.id } }
 		},
 	},
 }
