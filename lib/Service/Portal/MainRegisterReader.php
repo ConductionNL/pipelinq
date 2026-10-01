@@ -174,12 +174,18 @@ class MainRegisterReader {
 		unset($data['@self']);
 
 		try {
+			// A portal write carries no Nextcloud user: the resident is proven by
+			// the signed portal assertion and the caller's own checks. Under
+			// per-user RBAC it ran as "Anonymous" and every ticket was refused.
+			// The register and schema stay pinned above.
 			$saved = $this->objectService()->saveObject(
 				object: $data,
 				extend: [],
 				register: $register,
 				schema: $schema,
-				uuid: $id
+				uuid: $id,
+				_rbac: false,
+				_multitenancy: false
 			);
 		} catch (\Throwable $e) {
 			$this->logger->error(
