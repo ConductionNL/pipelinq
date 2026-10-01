@@ -17,7 +17,8 @@ vi.mock('@conduction/nextcloud-vue', async () => ({
 	...(await import('@conduction/nextcloud-vue/src/utils/safeHref.js')),
 }))
 
-const { default: XWikiArticleList } = await import('../../src/components/xwiki/XWikiArticleList.vue')
+const { default: XWikiArticleList } =
+	await import('../../src/components/xwiki/XWikiArticleList.vue')
 
 const t = (app, text) => text
 
@@ -34,7 +35,9 @@ describe('XWikiArticleList', () => {
 		})
 		const links = wrapper.findAll('a')
 		expect(links).toHaveLength(1)
-		expect(links[0].attributes('href')).toBe('https://wiki.example/opening-hours')
+		expect(links[0].attributes('href')).toBe(
+			'https://wiki.example/opening-hours',
+		)
 		expect(links[0].attributes('target')).toBe('_blank')
 		expect(links[0].attributes('rel')).toBe('noopener noreferrer')
 		expect(wrapper.find('[role="button"]').exists()).toBe(false)
@@ -45,7 +48,10 @@ describe('XWikiArticleList', () => {
 
 	it('neutralises a javascript: article URL', () => {
 		const wrapper = mount(XWikiArticleList, {
-			props: { articles: [{ id: 'x', title: 'Bad', url: 'javascript:alert(1)' }], linkExternal: true },
+			props: {
+				articles: [{ id: 'x', title: 'Bad', url: 'javascript:alert(1)' }],
+				linkExternal: true,
+			},
 			global: { mocks: { t } },
 		})
 		expect(wrapper.find('a').attributes('href')).toBe('#')

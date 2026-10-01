@@ -17,16 +17,21 @@
 				<component
 					:is="linkExternal && article.url ? 'a' : 'div'"
 					class="xwiki-article-list__body"
-					:class="{ 'xwiki-article-list__body--interactive': !linkExternal || article.url }"
+					:class="{
+						'xwiki-article-list__body--interactive':
+							!linkExternal || article.url,
+					}"
 					v-bind="attrsFor(article)"
 					v-on="listenersFor(article)">
 					<div class="xwiki-article-list__title">
 						{{ article.title }}
 					</div>
 					<div class="xwiki-article-list__meta">
-						<span v-if="article.space" class="xwiki-article-list__space">{{
-							article.space
-						}}</span>
+						<span
+							v-if="article.space"
+							class="xwiki-article-list__space"
+							>{{ article.space }}</span
+						>
 						<span
 							v-if="article.modified"
 							class="xwiki-article-list__modified"
@@ -65,6 +70,8 @@ export default {
 		/**
 		 * @param {object} article The article.
 		 * @return {object} Attributes for the article's clickable body.
+		 * @spec exclude render helper: link or button attributes for one article; no
+		 *   requirement covers the app-local xWiki list, which kennisbank retires
 		 */
 		attrsFor(article) {
 			if (!this.linkExternal) {
@@ -72,13 +79,19 @@ export default {
 			}
 			// The URL comes from the remote wiki, so its scheme is checked.
 			return article.url
-				? { href: safeHref(article.url), target: '_blank', rel: 'noopener noreferrer' }
+				? {
+						href: safeHref(article.url),
+						target: '_blank',
+						rel: 'noopener noreferrer',
+					}
 				: {}
 		},
 
 		/**
 		 * @param {object} article The article.
 		 * @return {object} Listeners for the article's clickable body; none for a link.
+		 * @spec exclude render helper: the select listeners for one article; no
+		 *   requirement covers the app-local xWiki list, which kennisbank retires
 		 */
 		listenersFor(article) {
 			if (this.linkExternal) {
