@@ -104,4 +104,19 @@ describe('ComplaintsOverviewWidget', () => {
 		expect(open).toHaveBeenCalledWith('/index.php/apps/pipelinq/tickets?ticketType=complaint', '_blank', 'noopener,noreferrer')
 		expect(router.push).not.toHaveBeenCalled()
 	})
+
+	it('opens a new tab on ctrl+Enter and ctrl+Space, and Space does not scroll', async () => {
+		const open = vi.spyOn(window, 'open').mockImplementation(() => null)
+		const { wrapper, router } = mountWidget()
+
+		await wrapper.trigger('keydown', { key: 'Enter', ctrlKey: true })
+		await wrapper.trigger('keydown', { key: ' ', ctrlKey: true })
+		expect(open).toHaveBeenCalledTimes(2)
+		expect(router.push).not.toHaveBeenCalled()
+
+		const space = new KeyboardEvent('keydown', { key: ' ', cancelable: true })
+		wrapper.element.dispatchEvent(space)
+		expect(space.defaultPrevented).toBe(true)
+		expect(router.push).toHaveBeenCalledWith(target)
+	})
 })

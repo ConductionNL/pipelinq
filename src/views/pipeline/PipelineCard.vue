@@ -11,8 +11,8 @@
 		@dragstart="onDragStart"
 		@click="$emit('open', item, $event)"
 		@auxclick="$emit('open', item, $event)"
-		@keydown.enter.prevent="$emit('open', item, $event)"
-		@keydown.space.prevent="$emit('open', item, $event)">
+		@keydown.enter="$emit('open', item, $event)"
+		@keydown.space="$emit('open', item, $event); $event.preventDefault()">
 		<!-- Header: what it is and what it is called, with its menu in the row
 		     so nothing can slide underneath it. -->
 		<div class="pipeline-card__header">

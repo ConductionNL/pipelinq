@@ -62,8 +62,8 @@
 					"
 					@click="viewClient(client, $event)"
 					@auxclick="viewClient(client, $event)"
-					@keydown.enter.prevent="viewClient(client, $event)"
-					@keydown.space.prevent="viewClient(client, $event)">
+					@keydown.enter="viewClient(client, $event)"
+					@keydown.space="viewClient(client, $event); $event.preventDefault()">
 					<span class="client-icon">
 						<AccountGroup
 							v-if="client.type === 'organization'"

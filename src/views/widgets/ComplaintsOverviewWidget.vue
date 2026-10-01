@@ -6,8 +6,8 @@
 		:aria-label="t('pipelinq', 'Open complaints')"
 		@click="open"
 		@auxclick="open"
-		@keydown.enter.prevent="open"
-		@keydown.space.prevent="open">
+		@keydown.enter="open"
+		@keydown.space="open($event); $event.preventDefault()">
 		<div v-if="loading" class="widget-loading">
 			{{ t('pipelinq', 'Loading…') }}
 		</div>
