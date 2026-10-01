@@ -9,7 +9,7 @@
  * convention FQCN (`OCA\{Namespace}\Portal\PortalContributionProvider`) and
  * duck-types it via method_exists(), never instanceof. This class is therefore
  * deliberately PLAIN: no portaliq imports, no `implements` clause, no info.xml
- * dependency, no constructor dependencies. Without portaliq installed it is
+ * dependency, no required constructor dependencies. Without portaliq installed it is
  * inert and pipelinq behaves exactly as before.
  *
  * It declares — for the `client` (B2B org contact) and `customer` (B2C)
@@ -40,6 +40,8 @@
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Portal;
+
+use OCA\Pipelinq\Service\Portal\QuestionDetailService;
 
 /**
  * Declares what an external portal subject may see and do in pipelinq.
@@ -78,6 +80,22 @@ class PortalContributionProvider {
 	 * @var string
 	 */
 	private const REGISTER = 'pipelinq';
+
+	/**
+	 * Constructor.
+	 *
+	 * The one dependency is optional, so the provider still builds plain: the
+	 * container hands in the question detail service when it can, and the
+	 * manifest never needs it. Only the two question reads use it.
+	 *
+	 * @param QuestionDetailService|null $questionDetail Reads one question's timeline and items.
+	 *
+	 * @spec openspec/changes/question-detail-on-the-portal/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-question-the-dossier-it-was-about-and-the-answers-req-qdp-001
+	 */
+	public function __construct(
+		private readonly ?QuestionDetailService $questionDetail = null,
+	) {
+	}//end __construct()
 
 	/**
 	 * The audiences this provider contributes to (contract v2, preferred).
@@ -506,6 +524,7 @@ class PortalContributionProvider {
 	 * @return array<string, mixed> The collection declaration.
 	 *
 	 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-questions-and-the-answers-req-qcd-003
+	 * @spec openspec/changes/question-detail-on-the-portal/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-question-the-dossier-it-was-about-and-the-answers-req-qdp-001
 	 */
 	private function questionsCollection(): array {
 		return [
@@ -532,7 +551,15 @@ class PortalContributionProvider {
 				['field' => 'status', 'label' => 'Status', 'render' => 'badge'],
 				['field' => 'occurredAt', 'label' => 'Gesteld', 'render' => 'date'],
 			],
-			'detail' => ['layout' => 'card', 'fields' => ['title', 'description', 'status', 'occurredAt', 'customerMessage', 'portalReplies']],
+			// The detail shows the subject, the status and when it was asked.
+			// The question, the answers with their dates and the replies are
+			// the timeline; the dossier as it was, and the Woo request it
+			// became, are the item list. Both are read per question from the
+			// methods below, after portaliq proved the question is the
+			// resident's (question-detail-on-the-portal).
+			'detail' => ['layout' => 'card', 'fields' => ['title', 'status', 'occurredAt']],
+			'timeline' => ['label' => 'Vraag en antwoord', 'provider' => 'questionTimeline'],
+			'itemList' => ['label' => 'Waar uw vraag over gaat', 'provider' => 'questionDossierItems'],
 			'defaultSort' => ['field' => 'occurredAt', 'direction' => 'desc'],
 		];
 	}//end questionsCollection()
@@ -548,6 +575,7 @@ class PortalContributionProvider {
 	 *
 	 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-a-resident-asks-a-question-about-a-dossier-they-own-req-qcd-001
 	 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-a-resident-replies-to-an-answer-req-qcd-004
+	 * @spec openspec/changes/question-detail-on-the-portal/specs/dossier-questions/spec.md#requirement-the-reply-is-offered-on-the-question-while-it-waits-for-the-resident-req-qdp-003
 	 */
 	private function questionActions(): array {
 		$actions = [];
@@ -580,9 +608,19 @@ class PortalContributionProvider {
 
 		$actions[] = [
 			'id' => 'replyToQuestion',
-			'label' => 'Reply to the answer',
+			'label' => 'Reageren op het antwoord',
 			'endpoint' => '/index.php/apps/pipelinq/api/portal/questions/reply',
 			'method' => 'POST',
+			// ON THE QUESTION'S DETAIL (question-detail-on-the-portal): attached
+			// to pipelinq's own `myQuestions` only, so the form asks the reply
+			// text on the question the resident opened. Portaliq proves the
+			// question is theirs through that collection's scope and stamps its
+			// id into `ticket`; the receiver checks the owner again.
+			'attachTo' => ['app' => 'pipelinq', 'schema' => 'ticket', 'collection' => 'myQuestions'],
+			'rowField' => 'ticket',
+			// Offered only while the employee waits for the resident. Portaliq
+			// leaves it off any other question and refuses it there with 409.
+			'rowWhen' => ['field' => 'status', 'in' => ['awaiting_customer']],
 			'fields' => ['ticket', 'message'],
 			'fieldConfigs' => [
 				'ticket' => ['visible' => false, 'required' => true],
@@ -601,6 +639,7 @@ class PortalContributionProvider {
 	 * @return array<string, mixed> The page declaration.
 	 *
 	 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-questions-and-the-answers-req-qcd-003
+	 * @spec openspec/changes/question-detail-on-the-portal/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-question-the-dossier-it-was-about-and-the-answers-req-qdp-001
 	 */
 	private function questionsPage(): array {
 		return [
@@ -613,6 +652,9 @@ class PortalContributionProvider {
 					'markdown' => '## Mijn vragen'."\n".'Hier leest u de antwoorden op vragen die u over uw dossiers stelde.',
 				],
 				['type' => 'collection', 'collection' => 'myQuestions'],
+				// The question the resident selects in the list above: its
+				// timeline, its dossier and the reply form.
+				['type' => 'detail', 'collection' => 'myQuestions'],
 			],
 		];
 	}//end questionsPage()
@@ -653,4 +695,58 @@ class PortalContributionProvider {
 	protected function isOpenCatalogiInstalled(): bool {
 		return class_exists('OCA\\OpenCatalogi\\AppInfo\\Application');
 	}//end isOpenCatalogiInstalled()
+
+	/**
+	 * The conversation on one question, for the `myQuestions` timeline.
+	 *
+	 * Called by the portal with a question id it already read under the
+	 * resident's own scope. A question that cannot be read answers an empty
+	 * history rather than an error page.
+	 *
+	 * @param string $id The question id.
+	 *
+	 * @return array<int, array<string, mixed>> The entries.
+	 *
+	 * @spec openspec/changes/question-detail-on-the-portal/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-question-the-dossier-it-was-about-and-the-answers-req-qdp-001
+	 */
+	public function questionTimeline(string $id): array {
+		$detail = $this->questionDetail();
+		if ($detail === null) {
+			return [];
+		}
+
+		return $detail->timeline(ticketId: $id);
+	}//end questionTimeline()
+
+	/**
+	 * What one question is about, for the `myQuestions` item list: the Woo
+	 * request it became and the dossier's documents with their links.
+	 *
+	 * @param string $id The question id, already proven to be the resident's.
+	 *
+	 * @return array<int, array<string, mixed>> The items.
+	 *
+	 * @spec openspec/changes/question-detail-on-the-portal/specs/dossier-questions/spec.md#requirement-a-converted-question-links-to-the-woo-request-req-qdp-002
+	 */
+	public function questionDossierItems(string $id): array {
+		$detail = $this->questionDetail();
+		if ($detail === null) {
+			return [];
+		}
+
+		return $detail->dossierItems(ticketId: $id);
+	}//end questionDossierItems()
+
+	/**
+	 * The service behind the question detail, when the container provided it.
+	 *
+	 * Protected so a test can hand in a double.
+	 *
+	 * @return QuestionDetailService|null The service, or null when it cannot be built.
+	 *
+	 * @spec openspec/changes/question-detail-on-the-portal/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-question-the-dossier-it-was-about-and-the-answers-req-qdp-001
+	 */
+	protected function questionDetail(): ?QuestionDetailService {
+		return $this->questionDetail;
+	}//end questionDetail()
 }//end class

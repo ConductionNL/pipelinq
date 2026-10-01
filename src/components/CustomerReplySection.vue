@@ -15,6 +15,8 @@
   - replaces the whole object, so the section re-reads the ticket and sends it
   - back with only these fields changed. Saving changes `customerMessage`,
   - which is what portaliq's change rule `pipelinq.question.answered` hears.
+  - A changed answer is also added to `portalAnswers` with its moment, so the
+  - resident reads every answer and when it came (question-detail-on-the-portal).
   -->
 <template>
 	<section
@@ -189,6 +191,7 @@ export default {
 					...current,
 					id: this.objectId,
 					customerMessage: this.message.trim(),
+					portalAnswers: this.answersAfter(current, this.message.trim()),
 				}
 				if (wait) {
 					next.status = 'awaiting_customer'
@@ -207,6 +210,26 @@ export default {
 			} finally {
 				this.busy = false
 			}
+		},
+
+		/**
+		 * The ticket's answers with this one added, unless it is the answer
+		 * the resident already has. Earlier answers keep their moment.
+		 *
+		 * @param {object} current The ticket as read just now.
+		 * @param {string} answer The answer being saved.
+		 * @return {Array<object>} `{message, createdAt}` per answer, oldest first.
+		 * @spec openspec/changes/question-detail-on-the-portal/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-question-the-dossier-it-was-about-and-the-answers-req-qdp-001
+		 */
+		answersAfter(current, answer) {
+			const answers = Array.isArray(current.portalAnswers)
+				? current.portalAnswers.filter((a) => a && typeof a === 'object')
+				: []
+			const last = answers.length ? answers[answers.length - 1].message : ''
+			if (answer === last) {
+				return answers
+			}
+			return [...answers, { message: answer, createdAt: new Date().toISOString() }]
 		},
 
 		/**
