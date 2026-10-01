@@ -100,6 +100,12 @@ export default {
 	},
 
 	watch: {
+		/**
+		 * Follow the record's assignee when the page re-reads it.
+		 *
+		 * @param {string} next The new assignee.
+		 * @spec openspec/changes/reverse-2026-05-26-fe-routing-ui/tasks.md#task-1
+		 */
 		assignee(next) {
 			this.currentAssignee = next
 		},
@@ -124,10 +130,10 @@ export default {
 				)
 				const saved = current
 					? await this.objectStore.saveObject(this.objectType, {
-						...current,
-						id: this.objectId,
-						assignee: userId,
-					})
+							...current,
+							id: this.objectId,
+							assignee: userId,
+						})
 					: null
 				if (!saved) {
 					this.failed = true

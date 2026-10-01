@@ -134,7 +134,10 @@ describe('RoutingSuggestionSection', () => {
 
 	it('writes the chosen colleague into the assignee and keeps the rest of the ticket', async () => {
 		const setObject = vi.fn()
-		const wrapper = await mountSection({}, { cnSectionContext: ref({ setObject }) })
+		const wrapper = await mountSection(
+			{},
+			{ cnSectionContext: ref({ setObject }) },
+		)
 
 		const assign = wrapper.findAll('button').find((b) => b.text() === 'Assign')
 		await assign.trigger('click')
@@ -146,7 +149,9 @@ describe('RoutingSuggestionSection', () => {
 		expect(type).toBe('ticket')
 		expect(payload).toEqual({ ...ticket, assignee: 'anna' })
 		expect(wrapper.find('.agent-assigned').text()).toBe('Assigned')
-		expect(wrapper.findAll('button').some((b) => b.text() === 'Assign')).toBe(false)
+		expect(wrapper.findAll('button').some((b) => b.text() === 'Assign')).toBe(
+			false,
+		)
 		expect(setObject).toHaveBeenCalledWith({ ...ticket, assignee: 'anna' })
 	})
 
@@ -154,7 +159,9 @@ describe('RoutingSuggestionSection', () => {
 		const wrapper = await mountSection({ assignee: 'anna' })
 
 		expect(wrapper.find('.agent-assigned').text()).toBe('Assigned')
-		expect(wrapper.findAll('button').some((b) => b.text() === 'Assign')).toBe(false)
+		expect(wrapper.findAll('button').some((b) => b.text() === 'Assign')).toBe(
+			false,
+		)
 	})
 
 	it('says so when the assignee does not save', async () => {

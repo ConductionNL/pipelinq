@@ -24,7 +24,9 @@
 						<span class="agent-name">{{
 							suggestion.displayName || suggestion.userId
 						}}</span>
-						<span class="agent-workload" :title="workloadTitle(suggestion)">
+						<span
+							class="agent-workload"
+							:title="workloadTitle(suggestion)">
 							<span aria-hidden="true">{{
 								workloadIcon(suggestion)
 							}}</span>
@@ -34,7 +36,9 @@
 							{{ t('pipelinq', 'items') }}
 						</span>
 						<div v-if="suggestion.matchedSkill" class="agent-skills">
-							<span class="skill-tag">{{ suggestion.matchedSkill }}</span>
+							<span class="skill-tag">{{
+								suggestion.matchedSkill
+							}}</span>
 						</div>
 					</div>
 					<span

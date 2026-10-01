@@ -469,22 +469,12 @@ class RoutingService {
 	 * @return array<string, mixed> Plain payload.
 	 */
 	private function toArray(mixed $value): array {
+		if (is_object($value) === true && method_exists($value, 'jsonSerialize') === true) {
+			$value = $value->jsonSerialize();
+		}
+
 		if (is_array($value) === true) {
 			return $value;
-		}
-
-		if (is_object($value) === true && method_exists($value, 'jsonSerialize') === true) {
-			$serialised = $value->jsonSerialize();
-			if (is_array($serialised) === true) {
-				return $serialised;
-			}
-		}
-
-		if (is_object($value) === true && method_exists($value, 'getObject') === true) {
-			$payload = $value->getObject();
-			if (is_array($payload) === true) {
-				return $payload;
-			}
 		}
 
 		return [];

@@ -175,6 +175,12 @@ export default {
 		},
 	},
 
+	/**
+	 * Keep the Call first button in step with the list's sort, then load the
+	 * settings and the default pipeline's stages.
+	 *
+	 * @spec openspec/specs/lead-management/spec.md#requirement-the-lead-list-shows-and-sorts-by-score-req-lscore-001
+	 */
 	async mounted() {
 		// Read from the page's own sort, so a column click, a saved view or a
 		// sort restored from the URL all show on the button.
