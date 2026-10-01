@@ -24,6 +24,7 @@ namespace OCA\Pipelinq\Service;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use Throwable;
 
 /**
  * Orchestrator for prospect discovery.
@@ -75,6 +76,7 @@ class ProspectDiscoveryService {
 	 * Discover prospects based on configured ICP.
 	 *
 	 * @param bool $refresh Whether to bypass cache.
+	 * @param int  $limit   How many of the best-scored prospects to return; 0 returns all of them.
 	 *
 	 * @return array The discovery results.
 	 *
@@ -83,7 +85,7 @@ class ProspectDiscoveryService {
 	 * @SuppressWarnings(PHPMD.NPathComplexity)      — orchestration method with multiple sources
 	 * @spec                                         openspec/changes/reverse-2026-05-26-be-prospect/tasks.md#task-15
 	 */
-	public function discover(bool $refresh = false): array {
+	public function discover(bool $refresh = false, int $limit = 10): array {
 		if ($this->icpConfig->isConfigured() === false) {
 			return [
 				'error' => 'no_icp_configured',
@@ -98,7 +100,7 @@ class ProspectDiscoveryService {
 		if ($refresh === false && function_exists(function: 'apcu_exists') === true) {
 			$cached = $this->getFromCache(key: $cacheKey);
 			if ($cached !== null) {
-				return $cached;
+				return $this->limitResult(result: $cached, limit: $limit);
 			}
 		}
 
@@ -154,19 +156,38 @@ class ProspectDiscoveryService {
 			);
 		}
 
+		// The cache holds the whole scored list, so every limit is served from it.
 		$result = [
-			'prospects' => array_slice(array: $prospects, offset: 0, length: 10),
+			'prospects' => $prospects,
 			'total' => count($prospects),
-			'displayed' => min(count($prospects), 10),
 			'cachedAt' => date(format: 'c'),
 			'icpHash' => $icpHash,
 		];
 
-		// Store in cache.
 		$this->setInCache(key: $cacheKey, data: $result);
 
-		return $result;
+		return $this->limitResult(result: $result, limit: $limit);
 	}//end discover()
+
+	/**
+	 * Cut a discovery result down to its best-scored prospects.
+	 *
+	 * @param array $result The full discovery result, prospects sorted by score.
+	 * @param int   $limit  How many prospects to keep; 0 keeps all of them.
+	 *
+	 * @return array The result with `prospects` and `displayed` set for the limit.
+	 */
+	private function limitResult(array $result, int $limit): array {
+		$prospects = $result['prospects'] ?? [];
+		if ($limit > 0) {
+			$prospects = array_slice(array: $prospects, offset: 0, length: $limit);
+		}
+
+		$result['prospects'] = $prospects;
+		$result['displayed'] = count($prospects);
+
+		return $result;
+	}//end limitResult()
 
 	/**
 	 * Exclude existing clients from prospect results by matching company names.
@@ -235,14 +256,20 @@ class ProspectDiscoveryService {
 
 			$names = [];
 			foreach ($clients as $client) {
-				$name = $client['name'] ?? $client['tradeName'] ?? '';
+				// OpenRegister's findAll() hands back ObjectEntity instances, not arrays.
+				if (is_object($client) === true && method_exists($client, 'jsonSerialize') === true) {
+					$client = $client->jsonSerialize();
+				}
+
+				$client = (array)$client;
+				$name   = (string)($client['name'] ?? $client['tradeName'] ?? '');
 				if ($name !== '') {
 					$names[] = strtolower(trim($name));
 				}
 			}
 
 			return $names;
-		} catch (\Exception $e) {
+		} catch (Throwable $e) {
 			$this->logger->warning(
 				message: 'Failed to fetch existing clients for exclusion',
 				context: ['error' => $e->getMessage()]

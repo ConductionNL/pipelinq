@@ -3,7 +3,7 @@
 		<div class="prospects-view__header">
 			<h2>{{ t('pipelinq', 'Prospects') }}</h2>
 			<NcButton
-				variant="tertiary"
+				variant="secondary"
 				:disabled="prospectStore.loading"
 				:aria-label="t('pipelinq', 'Refresh prospects')"
 				@click="refresh">
@@ -59,56 +59,74 @@
 		</NcEmptyContent>
 
 		<!-- Scored prospect table -->
-		<table v-else class="prospects-view__table">
-			<thead>
-				<tr>
-					<th scope="col" class="sortable" @click="setSort('fitScore')">
-						{{ t('pipelinq', 'Score') }}{{ sortIndicator('fitScore') }}
-					</th>
-					<th scope="col" class="sortable" @click="setSort('tradeName')">
-						{{ t('pipelinq', 'Company')
-						}}{{ sortIndicator('tradeName') }}
-					</th>
-					<th scope="col">{{ t('pipelinq', 'Industry') }}</th>
-					<th
-						scope="col"
-						class="sortable"
-						@click="setSort('employeeCount')">
-						{{ t('pipelinq', 'Employees')
-						}}{{ sortIndicator('employeeCount') }}
-					</th>
-					<th scope="col">{{ t('pipelinq', 'Location') }}</th>
-					<th scope="col">{{ t('pipelinq', 'Actions') }}</th>
-				</tr>
-			</thead>
-			<tbody>
-				<tr
-					v-for="p in sortedProspects"
-					:key="p.kvkNumber"
-					:data-testid="`prospect-row-${p.kvkNumber}`">
-					<td>
-						<span
-							class="prospects-view__score"
-							:class="scoreClass(p.fitScore)"
-							>{{ p.fitScore }}%</span
-						>
-					</td>
-					<td>{{ p.tradeName }}</td>
-					<td>{{ p.sbiDescription || '—' }}</td>
-					<td>{{ p.employeeCount || '—' }}</td>
-					<td>{{ p.address && p.address.city ? p.address.city : '—' }}</td>
-					<td>
-						<NcButton
-							variant="tertiary"
-							:disabled="addingKvk === p.kvkNumber"
-							:data-testid="`prospect-add-${p.kvkNumber}`"
-							@click="addAsClient(p)">
-							{{ t('pipelinq', 'Add as client') }}
-						</NcButton>
-					</td>
-				</tr>
-			</tbody>
-		</table>
+		<template v-else>
+			<table class="prospects-view__table">
+				<thead>
+					<tr>
+						<th
+							scope="col"
+							class="sortable"
+							@click="setSort('fitScore')">
+							{{ t('pipelinq', 'Score')
+							}}{{ sortIndicator('fitScore') }}
+						</th>
+						<th
+							scope="col"
+							class="sortable"
+							@click="setSort('tradeName')">
+							{{ t('pipelinq', 'Company')
+							}}{{ sortIndicator('tradeName') }}
+						</th>
+						<th scope="col">{{ t('pipelinq', 'Industry') }}</th>
+						<th
+							scope="col"
+							class="sortable"
+							@click="setSort('employeeCount')">
+							{{ t('pipelinq', 'Employees')
+							}}{{ sortIndicator('employeeCount') }}
+						</th>
+						<th scope="col">{{ t('pipelinq', 'Location') }}</th>
+						<th scope="col">{{ t('pipelinq', 'Actions') }}</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr
+						v-for="p in pagedProspects"
+						:key="p.kvkNumber"
+						:data-testid="`prospect-row-${p.kvkNumber}`">
+						<td>
+							<span
+								class="prospects-view__score"
+								:class="scoreClass(p.fitScore)"
+								>{{ p.fitScore }}%</span
+							>
+						</td>
+						<td>{{ p.tradeName }}</td>
+						<td>{{ p.sbiDescription || '—' }}</td>
+						<td>{{ p.employeeCount || '—' }}</td>
+						<td>
+							{{ p.address && p.address.city ? p.address.city : '—' }}
+						</td>
+						<td>
+							<NcButton
+								variant="secondary"
+								:disabled="addingKvk === p.kvkNumber"
+								:data-testid="`prospect-add-${p.kvkNumber}`"
+								@click="addAsClient(p)">
+								{{ t('pipelinq', 'Add as client') }}
+							</NcButton>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+			<CnPagination
+				:currentPage="currentPage"
+				:totalPages="totalPages"
+				:totalItems="sortedProspects.length"
+				:currentPageSize="pageSize"
+				@pageChanged="page = $event"
+				@pageSizeChanged="onPageSizeChanged" />
+		</template>
 	</div>
 </template>
 
@@ -118,6 +136,7 @@
 // action, backed by the shared prospect Pinia store.
 //
 // @spec openspec/changes/refactor-pipelinq-ia-alignment/tasks.md#task-20
+import { CnPagination } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { NcButton, NcEmptyContent, NcLoadingIcon } from '@nextcloud/vue'
 import AlertCircle from 'vue-material-design-icons/AlertCircle.vue'
@@ -129,6 +148,7 @@ import { useProspectStore } from '../../store/modules/prospect.js'
 export default {
 	name: 'ProspectsView',
 	components: {
+		CnPagination,
 		NcButton,
 		NcEmptyContent,
 		NcLoadingIcon,
@@ -152,6 +172,8 @@ export default {
 			sortKey: 'fitScore',
 			sortAsc: false,
 			addingKvk: null,
+			page: 1,
+			pageSize: 20,
 		}
 	},
 
@@ -173,6 +195,42 @@ export default {
 					return (av - bv) * dir
 				return String(av).localeCompare(String(bv)) * dir
 			})
+		},
+
+		/**
+		 * Number of pages at the current page size, at least 1.
+		 *
+		 * @return {number}
+		 * @spec openspec/changes/refactor-pipelinq-ia-alignment/tasks.md#task-20
+		 */
+		totalPages() {
+			return Math.max(
+				1,
+				Math.ceil(this.sortedProspects.length / this.pageSize),
+			)
+		},
+
+		/**
+		 * The page shown, kept in range when a refresh or an added client
+		 * shortens the list.
+		 *
+		 * @return {number}
+		 * @spec openspec/changes/refactor-pipelinq-ia-alignment/tasks.md#task-20
+		 */
+		currentPage() {
+			return Math.min(this.page, this.totalPages)
+		},
+
+		/**
+		 * The sorted prospects on the current page. Sorting runs over all of
+		 * them first, so a column sort orders the whole list.
+		 *
+		 * @return {Array<object>}
+		 * @spec openspec/changes/refactor-pipelinq-ia-alignment/tasks.md#task-20
+		 */
+		pagedProspects() {
+			const start = (this.currentPage - 1) * this.pageSize
+			return this.sortedProspects.slice(start, start + this.pageSize)
 		},
 	},
 
@@ -203,6 +261,18 @@ export default {
 				this.sortKey = key
 				this.sortAsc = false
 			}
+			this.page = 1
+		},
+
+		/**
+		 * Apply a new page size and go back to the first page.
+		 *
+		 * @param {number} size - The new page size.
+		 * @spec openspec/changes/refactor-pipelinq-ia-alignment/tasks.md#task-20
+		 */
+		onPageSizeChanged(size) {
+			this.pageSize = size
+			this.page = 1
 		},
 
 		/**
@@ -320,11 +390,11 @@ export default {
 }
 
 .score--high {
-	color: var(--color-success);
+	color: var(--color-text-success);
 }
 
 .score--medium {
-	color: var(--color-warning);
+	color: var(--color-text-warning);
 }
 
 .score--low {
