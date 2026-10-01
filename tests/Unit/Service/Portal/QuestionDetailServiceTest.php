@@ -188,4 +188,31 @@ final class QuestionDetailServiceTest extends TestCase {
 			$this->assertSame([], $service->dossierItems(ticketId: 't-9'));
 		}
 	}//end testNotAPortalQuestionAnswersNothing()
+
+	/**
+	 * A value that is not text (a number, a list) is left out, never cast:
+	 * the resident reads nothing rather than "Array" or a stray number.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/question-detail-on-the-portal/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-question-the-dossier-it-was-about-and-the-answers-req-qdp-001
+	 */
+	public function testAValueThatIsNotTextIsLeftOut(): void {
+		$service = $this->service(
+			ticket: $this->question(
+				[
+					'customerMessage' => ['x'],
+					'portalAnswers' => [['message' => 42, 'createdAt' => '2026-09-28T10:00:00+00:00'], 'not-an-answer'],
+					'portalReplies' => [['message' => 'Dank u.', 'createdAt' => 7]],
+					'status' => 'converted',
+					'caseReference' => 42,
+				]
+			)
+		);
+
+		$entries = $service->timeline(ticketId: 't-9');
+		$this->assertSame(['question', 'reply-0', 'converted'], array_column($entries, 'id'));
+		$this->assertSame('', $entries[1]['occurredAt']);
+		$this->assertSame('Besluit omgevingsvergunning', $service->dossierItems(ticketId: 't-9')[0]['title'], 'no Woo request item without a case id');
+	}//end testAValueThatIsNotTextIsLeftOut()
 }//end class

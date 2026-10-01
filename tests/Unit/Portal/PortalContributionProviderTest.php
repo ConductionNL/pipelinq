@@ -872,8 +872,10 @@ final class PortalContributionProviderTest extends TestCase {
 		$service->expects($this->once())->method('timeline')->with('t-9')->willReturn([['id' => 'question', 'occurredAt' => '', 'message' => 'x']]);
 		$service->expects($this->once())->method('dossierItems')->with('t-9')->willReturn([['id' => '', 'title' => 'Besluit', 'url' => '', 'note' => '']]);
 
-		$this->assertSame('question', $this->withDetail(service: $service)->questionTimeline('t-9')[0]['id']);
-		$this->assertSame('Besluit', $this->withDetail(service: $service)->questionDossierItems('t-9')[0]['title']);
+		// Through the real constructor, as the container builds it.
+		$provider = new PortalContributionProvider($service);
+		$this->assertSame('question', $provider->questionTimeline('t-9')[0]['id']);
+		$this->assertSame('Besluit', $provider->questionDossierItems('t-9')[0]['title']);
 		$this->assertSame([], $this->withDetail(service: null)->questionTimeline('t-9'));
 		$this->assertSame([], $this->withDetail(service: null)->questionDossierItems('t-9'));
 	}//end testTheDetailMethodsDelegateToTheService()
