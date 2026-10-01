@@ -23,10 +23,12 @@
 			:includeColumns="visibleColumns"
 			:emptyTitle="t('pipelinq', 'No shifts found')"
 			:emptyActionLabel="t('pipelinq', 'Open shift')"
+			rowClickToView
 			@add="openShift"
 			@emptyAction="openShift"
 			@refresh="onRefresh"
 			@sort="onSort"
+			@rowClick="openDetail"
 			@view="openDetail"
 			@pageChanged="onPageChange" />
 
@@ -126,7 +128,7 @@ export default {
 		 *
 		 * @param {object} payload The dialog payload (drawer, floatAmount, reference, notes).
 		 * @spec exclude the cash-shift surface has no owning requirement, see
-		 *   CashShiftActionsSection::lifecycle
+		 *   postShiftAction in services/posShiftActions.js
 		 */
 		async createShift(payload) {
 			this.opening = true

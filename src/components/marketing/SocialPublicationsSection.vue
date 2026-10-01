@@ -22,7 +22,7 @@
   -->
 <template>
 	<div class="social-publications" data-testid="social-publications">
-		<NcLoadingIcon v-if="loading" :size="24" />
+		<NcLoadingIcon v-if="loading && !loaded" :size="24" />
 
 		<NcNoteCard v-else-if="error" type="error">{{ error }}</NcNoteCard>
 
@@ -31,12 +31,18 @@
 				{{ t('pipelinq', 'This post has not gone out yet.') }}
 			</p>
 
+			<!-- One grid for the whole list, each row a subgrid of it, so the
+				columns line up across rows whatever each row's content length. -->
 			<ul v-else class="social-publications__list">
 				<li
 					v-for="row in rows"
 					:key="rowId(row)"
 					class="social-publications__row"
 					data-testid="social-publication-row">
+					<span class="social-publications__icon" aria-hidden="true">
+						<component :is="networkIcon(row.network)" :size="20" />
+					</span>
+
 					<div class="social-publications__identity">
 						<strong>{{ networkLabel(row.network) }}</strong>
 						<a
@@ -49,7 +55,10 @@
 					</div>
 
 					<div class="social-publications__state">
-						<span :style="{ color: chip(row.status).color }">
+						<span class="social-publications__chip">
+							<span
+								class="social-publications__dot"
+								:style="{ background: chip(row.status).color }" />
 							{{ chip(row.status).label }}
 						</span>
 						<span
@@ -126,6 +135,7 @@
 </template>
 
 <script>
+import { subscribe, unsubscribe } from '@nextcloud/event-bus'
 import { NcButton, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
 import {
 	confirmShare,
@@ -133,6 +143,7 @@ import {
 	fetchShare,
 	retryPublication,
 } from '../../services/socialApi.js'
+import { networkIcon } from '../../services/socialNetworkIcons.js'
 import {
 	isRetryable,
 	networkLimits,
@@ -163,6 +174,7 @@ export default {
 	data() {
 		return {
 			loading: false,
+			loaded: false,
 			busy: '',
 			error: '',
 			rows: [],
@@ -170,11 +182,34 @@ export default {
 		}
 	},
 
+	/**
+	 * Load the publications and follow page refreshes.
+	 *
+	 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
+	 */
 	mounted() {
 		this.load()
+		// An approval in the page header can put the post in line to go out.
+		subscribe('cn:page:refresh', this.load)
+	},
+
+	beforeUnmount() {
+		unsubscribe('cn:page:refresh', this.load)
 	},
 
 	methods: {
+		/**
+		 * The icon a publication's network is shown with.
+		 *
+		 * @param {string} network The network.
+		 * @return {object} Its icon component.
+		 *
+		 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-publishing-runs-on-a-timed-job-one-account-at-a-time
+		 */
+		networkIcon(network) {
+			return networkIcon(network)
+		},
+
 		/**
 		 * The id this section is bound to, either the prop or the section
 		 * context the page host provides.
@@ -244,6 +279,7 @@ export default {
 				this.error = t('pipelinq', 'The publications could not be loaded.')
 			} finally {
 				this.loading = false
+				this.loaded = true
 			}
 		},
 
@@ -336,30 +372,74 @@ export default {
 </script>
 
 <style scoped>
+.social-publications {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.social-publications__empty {
+	margin: 0;
+	color: var(--color-text-maxcontrast);
+}
+
+/* The edge columns are `auto`, not fixed: a subgrid row's padding is added to
+   its edge tracks, and a fixed track cannot grow to hold it. */
 .social-publications__list {
-	list-style: none;
+	display: grid;
+	grid-template-columns: auto minmax(140px, 1fr) minmax(0, 2fr) auto;
+	gap: 8px 16px;
+	margin: 0;
 	padding: 0;
+	list-style: none;
 }
 
 .social-publications__row {
+	grid-column: 1 / -1;
+	display: grid;
+	grid-template-columns: subgrid;
+	align-items: center;
+	padding: 12px 16px;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius-large);
+	background: var(--color-main-background);
+}
+
+.social-publications__icon {
 	display: flex;
 	align-items: center;
-	justify-content: space-between;
-	gap: 12px;
-	padding: 10px 0;
-	border-bottom: 1px solid var(--color-border);
-	flex-wrap: wrap;
+	justify-content: center;
+	width: 32px;
+	height: 32px;
+	border-radius: 50%;
+	background: var(--color-primary-element-light);
+	color: var(--color-primary-element-light-text);
 }
 
-.social-publications__identity {
-	display: flex;
-	flex-direction: column;
-}
-
+.social-publications__identity,
 .social-publications__state {
 	display: flex;
 	flex-direction: column;
-	max-width: 480px;
+	gap: 2px;
+	min-width: 0;
+}
+
+.social-publications__chip {
+	display: inline-flex;
+	align-items: center;
+	align-self: flex-start;
+	gap: 6px;
+	padding: 2px 10px;
+	border-radius: 999px;
+	background: var(--color-background-dark);
+	font-weight: 600;
+	font-size: 0.9em;
+}
+
+.social-publications__dot {
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
 }
 
 .social-publications__reason {
@@ -369,16 +449,56 @@ export default {
 
 .social-publications__actions {
 	display: flex;
+	justify-content: flex-end;
+	flex-wrap: wrap;
 	gap: 8px;
 }
 
+.social-publications__share {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	padding: 14px 16px;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius-large);
+}
+
+.social-publications__share h3 {
+	margin: 0;
+	font-size: 1em;
+}
+
+.social-publications__share .social-publications__actions {
+	justify-content: flex-start;
+}
+
 .social-publications__prepared {
+	box-sizing: border-box;
 	width: 100%;
 }
 
 .social-publications__label {
-	font-weight: bold;
 	display: block;
-	margin-top: 8px;
+	font-weight: bold;
+}
+
+/* Narrow screens: name beside the icon, status and actions underneath. */
+@media (max-width: 720px) {
+	.social-publications__list {
+		grid-template-columns: auto minmax(0, 1fr);
+	}
+
+	.social-publications__row {
+		row-gap: 10px;
+	}
+
+	.social-publications__state,
+	.social-publications__actions {
+		grid-column: 2;
+	}
+
+	.social-publications__actions {
+		justify-content: flex-start;
+	}
 }
 </style>

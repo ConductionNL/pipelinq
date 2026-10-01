@@ -58,7 +58,8 @@
 				<NcButton
 					variant="tertiary"
 					:aria-label="t('pipelinq', 'Pipeline settings')"
-					@click="toggleSidebar">
+					:disabled="!selectedPipeline"
+					@click="showPipelineForm = true">
 					<template #icon>
 						<Cog :size="20" />
 					</template>
@@ -185,7 +186,7 @@
 						:stages="sortedStages"
 						:columnProperty="getColumnProperty(item)"
 						@open="openItem"
-						@refresh="fetchPipelineItems" />
+						@refresh="refreshItems" />
 				</div>
 			</div>
 
@@ -225,7 +226,7 @@
 							:stages="sortedStages"
 							:columnProperty="getColumnProperty(item)"
 							@open="openItem"
-							@refresh="fetchPipelineItems" />
+							@refresh="refreshItems" />
 					</div>
 				</div>
 			</div>
@@ -387,10 +388,17 @@
 				{{ t('pipelinq', 'No items in this pipeline') }}
 			</p>
 		</div>
+
+		<PipelineFormDialog
+			v-if="showPipelineForm && selectedPipeline"
+			:pipeline="selectedPipeline"
+			@save="onPipelineSave"
+			@cancel="showPipelineForm = false" />
 	</div>
 </template>
 
 <script>
+import { generateUrl } from '@nextcloud/router'
 import {
 	NcButton,
 	NcCheckboxRadioSwitch,
@@ -402,6 +410,7 @@ import Cog from 'vue-material-design-icons/Cog.vue'
 import FormatListBulleted from 'vue-material-design-icons/FormatListBulleted.vue'
 import ViewColumn from 'vue-material-design-icons/ViewColumn.vue'
 import LeadScoreBadge from '../../components/leadScore/LeadScoreBadge.vue'
+import PipelineFormDialog from '../../dialogs/PipelineFormDialog.vue'
 import PipelineCard from './PipelineCard.vue'
 import { compareCallFirst } from '../../services/leadScore.js'
 import { formatDate } from '../../services/localeUtils.js'
@@ -410,11 +419,15 @@ import {
 	getAgingClass,
 	getDaysAge,
 	isStale,
+	pipelineEntitySlugs,
 	resolveObjectType,
 } from '../../services/pipelineUtils.js'
 import { getPriorityColor, getPriorityLabel } from '../../services/requestStatus.js'
 import { useObjectStore } from '../../store/modules/object.js'
 import { initializeStores } from '../../store/store.js'
+
+// What an unscoped pipeline (no propertyMappings, no legacy entityType) boards.
+const UNSCOPED_SLUGS = ['lead', 'request']
 
 export default {
 	name: 'PipelineBoard',
@@ -426,18 +439,17 @@ export default {
 		NcTextField,
 		LeadScoreBadge,
 		PipelineCard,
+		PipelineFormDialog,
 		ViewColumn,
 		FormatListBulleted,
 		Cog,
 	},
 
-	inject: {
-		pipelineSidebarState: { default: null },
-	},
-
 	data() {
 		return {
 			selectedPipelineId: null,
+			showPipelineForm: false,
+			itemsFetchSeq: 0,
 			showFilter: 'all',
 			/**
 			 * @spec openspec/changes/2026-03-20-pipeline/tasks.md#task-1.1
@@ -538,14 +550,7 @@ export default {
 		liveTypes() {
 			const pipeline = this.selectedPipeline
 			if (!pipeline) return []
-			let slugs = []
-			if (pipeline.propertyMappings && pipeline.propertyMappings.length > 0) {
-				slugs = pipeline.propertyMappings.map((m) => m.schemaSlug)
-			} else if (pipeline.entityType === 'both') {
-				slugs = ['lead', 'request']
-			} else if (pipeline.entityType) {
-				slugs = [pipeline.entityType]
-			}
+			const slugs = pipelineEntitySlugs(pipeline) ?? UNSCOPED_SLUGS
 			const types = new Set()
 			for (const slug of slugs) {
 				const { objectType } = resolveObjectType(slug)
@@ -700,14 +705,6 @@ export default {
 
 	watch: {
 		/**
-		 * @param {object|null} val The newly selected pipeline object
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-25
-		 */
-		selectedPipeline(val) {
-			this.syncSidebarState(val)
-		},
-
-		/**
 		 * Re-scope the live collection subscriptions when the selected
 		 * pipeline (or the async type registration) changes.
 		 *
@@ -733,11 +730,6 @@ export default {
 	 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-15
 	 */
 	async mounted() {
-		if (this.pipelineSidebarState) {
-			this.pipelineSidebarState.active = true
-			this.pipelineSidebarState.onSave = this.onSidebarSave
-		}
-
 		this.loading = true
 
 		// Ensure object types are registered (by slug) before fetching. Shared,
@@ -762,11 +754,6 @@ export default {
 	beforeUnmount() {
 		clearTimeout(this.liveRefetchTimer)
 		this.releaseLiveSubscriptions()
-		if (this.pipelineSidebarState) {
-			this.pipelineSidebarState.active = false
-			this.pipelineSidebarState.pipeline = null
-			this.pipelineSidebarState.onSave = null
-		}
 	},
 
 	methods: {
@@ -860,38 +847,19 @@ export default {
 				if (this.loading) {
 					return
 				}
-				this.fetchPipelineItems()
+				this.refreshItems()
 			}, 500)
-		},
-
-		/**
-		 * @param {object|null} pipeline The pipeline to mirror into the sidebar state
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-30
-		 */
-		syncSidebarState(pipeline) {
-			if (this.pipelineSidebarState) {
-				this.pipelineSidebarState.pipeline = pipeline
-			}
-		},
-
-		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-32
-		 */
-		toggleSidebar() {
-			if (this.pipelineSidebarState) {
-				this.pipelineSidebarState.open = !this.pipelineSidebarState.open
-			}
 		},
 
 		/**
 		 * @param {object} pipelineData The edited pipeline payload to save
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-19
 		 */
-		async onSidebarSave(pipelineData) {
+		async onPipelineSave(pipelineData) {
 			await this.objectStore.saveObject('pipeline', pipelineData)
+			this.showPipelineForm = false
 			await this.objectStore.fetchCollection('pipeline', { _limit: 100 })
-			this.syncSidebarState(this.selectedPipeline)
-			await this.fetchPipelineItems()
+			await this.refreshItems()
 		},
 
 		getMappingForItem(item) {
@@ -984,22 +952,43 @@ export default {
 		},
 
 		/**
+		 * @param {object} [options] Fetch options.
+		 * @param {boolean} [options.silent] Refresh in place, without the loading state.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-7
 		 */
-		async fetchPipelineItems() {
+		async fetchPipelineItems({ silent = false } = {}) {
 			if (!this.selectedPipelineId) return
-			this.loading = true
-
-			const pipeline = this.selectedPipeline
-			if (pipeline?.propertyMappings && pipeline.propertyMappings.length > 0) {
-				await this.fetchItemsViaMappings(pipeline)
-			} else {
-				await this.fetchItemsLegacy(pipeline)
+			// Only the latest fetch may write, so a silent refresh that lands
+			// after a pipeline switch cannot put the old pipeline's items back.
+			const seq = ++this.itemsFetchSeq
+			if (!silent) {
+				this.loading = true
 			}
 
-			await this.fetchLeadProductsForStages()
+			const pipeline = this.selectedPipeline
+			const items =
+				pipeline?.propertyMappings && pipeline.propertyMappings.length > 0
+					? await this.fetchItemsViaMappings(pipeline)
+					: await this.fetchItemsBySlug(pipeline)
 
-			this.loading = false
+			if (seq === this.itemsFetchSeq) {
+				this.items = items
+				await this.fetchLeadProductsForStages()
+			}
+			if (!silent && seq === this.itemsFetchSeq) {
+				this.loading = false
+			}
+		},
+
+		/**
+		 * Refresh the items already on the board without a loading state.
+		 *
+		 * @return {Promise<void>}
+		 *
+		 * @spec openspec/specs/lead-management/spec.md
+		 */
+		refreshItems() {
+			return this.fetchPipelineItems({ silent: true })
 		},
 
 		/**
@@ -1114,6 +1103,7 @@ export default {
 
 		/**
 		 * @param {object} pipeline The pipeline whose propertyMappings drive the fetch
+		 * @return {Promise<Array<object>>} The board items
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-6
 		 */
 		async fetchItemsViaMappings(pipeline) {
@@ -1127,47 +1117,30 @@ export default {
 				}))
 			})
 			const results = await Promise.all(promises)
-			this.items = results.flat()
+			return results.flat()
 		},
 
 		/**
-		 * @param {object|null} pipeline The pipeline whose legacy entityType drives the fetch
+		 * Fetch items for a pipeline without property mappings: the legacy
+		 * `entityType`, or every boardable type when it is unscoped.
+		 *
+		 * @param {object|null} pipeline The selected pipeline
+		 * @return {Promise<Array<object>>} The board items
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-5
 		 */
-		async fetchItemsLegacy(pipeline) {
-			const et = pipeline?.entityType
-			const promises = []
-			let leads = []
-			let requests = []
-
-			if (et === 'lead' || et === 'both') {
-				promises.push(
-					this.fetchSchemaItems('lead').then((items) => {
-						leads = items
-					}),
-				)
-			}
-			if (et === 'request' || et === 'both') {
-				promises.push(
-					this.fetchSchemaItems('request').then((items) => {
-						requests = items
-					}),
-				)
-			}
-
-			await Promise.all(promises)
-			this.items = [
-				...leads.map((l) => ({
-					...l,
-					_schemaSlug: 'lead',
-					_entityType: 'lead',
-				})),
-				...requests.map((r) => ({
-					...r,
-					_schemaSlug: 'request',
-					_entityType: 'request',
-				})),
-			]
+		async fetchItemsBySlug(pipeline) {
+			const slugs = pipelineEntitySlugs(pipeline) ?? UNSCOPED_SLUGS
+			const results = await Promise.all(
+				slugs.map(async (slug) => {
+					const rawItems = await this.fetchSchemaItems(slug)
+					return rawItems.map((item) => ({
+						...item,
+						_schemaSlug: slug,
+						_entityType: slug,
+					}))
+				}),
+			)
+			return results.flat()
 		},
 
 		/**
@@ -1190,7 +1163,9 @@ export default {
 
 			try {
 				const ticketFilter = ticketType ? `ticketType=${ticketType}&` : ''
-				const url = `/apps/openregister/api/objects/${config.register}/${config.schema}?${ticketFilter}pipeline=${this.selectedPipelineId}&_limit=200`
+				const url = generateUrl(
+					`/apps/openregister/api/objects/${config.register}/${config.schema}?${ticketFilter}pipeline=${this.selectedPipelineId}&_limit=200`,
+				)
 				const response = await fetch(url, {
 					headers: {
 						'Content-Type': 'application/json',
@@ -1236,7 +1211,7 @@ export default {
 				if (ticketType) update.ticketType = ticketType
 
 				await this.objectStore.saveObject(objectType, update)
-				await this.fetchPipelineItems()
+				await this.refreshItems()
 			} catch {
 				// Invalid drop
 			}

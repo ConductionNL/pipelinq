@@ -7,8 +7,9 @@
  * showed the field, bound to `model.replyTo`, but its save payload left the
  * field out, so the address a marketer typed never reached the server.
  *
- * The form is mounted with the HTTP layer replaced, the field is filled the
- * way a marketer fills it, and the request body the form sends is read back.
+ * The template dialog is mounted with the HTTP layer replaced, the field is
+ * filled the way a marketer fills it, and the request body it sends is read
+ * back.
  *
  * @spec openspec/changes/marketing-block-editor/specs/mail-block-editor/spec.md#requirement-html-templates-keep-working-req-mbe-004
  */
@@ -27,6 +28,7 @@ vi.mock('@nextcloud/axios', () => ({ default: axiosMock }))
 vi.mock('@nextcloud/router', () => ({
 	generateUrl: (path) => '/index.php' + path,
 }))
+vi.mock('@nextcloud/dialogs', () => ({ showSuccess: vi.fn() }))
 vi.mock('../../src/services/articlesApi.js', () => ({
 	fetchArticles: () => Promise.resolve([]),
 }))
@@ -47,29 +49,59 @@ vi.mock('@nextcloud/vue', () => ({
 			)
 		},
 	},
+	NcDialog: {
+		name: 'NcDialog',
+		render() {
+			return h('div', [this.$slots.default?.(), this.$slots.actions?.()])
+		},
+	},
 	NcLoadingIcon: { name: 'NcLoadingIcon', render: () => h('span') },
+	NcNoteCard: { name: 'NcNoteCard', render: () => h('div') },
 	NcSelect: { name: 'NcSelect', render: () => h('div') },
+	NcTextArea: textInput('textarea'),
+	NcTextField: textInput('input'),
 }))
 
-const { default: TemplateForm } =
-	await import('../../src/views/templates/TemplateForm.vue')
+/**
+ * A text field stub: one native element, found by its label, that carries
+ * `v-model` the way the Nextcloud field does.
+ *
+ * @param {string} tag The native element to render.
+ * @return {object} The stub component.
+ */
+function textInput(tag) {
+	return {
+		props: ['modelValue', 'label'],
+		emits: ['update:modelValue'],
+		render() {
+			return h(tag, {
+				'data-label': this.label,
+				value: this.modelValue,
+				onInput: (event) =>
+					this.$emit('update:modelValue', event.target.value),
+			})
+		},
+	}
+}
+
+const { default: TemplateFormDialog } =
+	await import('../../src/dialogs/TemplateFormDialog.vue')
 
 const compliantBody =
 	'<p>Hello</p><p>{{physical_address}}</p><p>{{unsubscribe_link}}</p>'
 
 /**
- * Mount the form on a route.
+ * Mount the dialog open, as the Templates page's form-dialog slot does.
  *
- * @param {object} params The route params (an `id` means edit mode).
+ * @param {object|null} item The row being edited, or null to create.
  * @return {Promise<object>} The mounted wrapper.
  */
-async function mountForm(params = {}) {
-	const wrapper = mount(TemplateForm, {
+async function mountForm(item = null) {
+	const wrapper = mount(TemplateFormDialog, {
+		props: { show: true, item },
 		global: {
 			mocks: {
 				t: (app, text) => text,
-				$route: { params },
-				$router: { push: vi.fn() },
 			},
 		},
 	})
@@ -77,7 +109,16 @@ async function mountForm(params = {}) {
 	return wrapper
 }
 
-describe('TemplateForm reply-to', () => {
+/**
+ * @param {object} wrapper The mounted dialog.
+ * @param {string} label The field's label.
+ * @return {object} The field's native element.
+ */
+function field(wrapper, label) {
+	return wrapper.find(`[data-label="${label}"]`)
+}
+
+describe('TemplateFormDialog reply-to', () => {
 	beforeEach(() => {
 		axiosMock.get.mockReset()
 		axiosMock.post.mockReset()
@@ -89,9 +130,9 @@ describe('TemplateForm reply-to', () => {
 	it('sends the reply-to a marketer typed on a new template', async () => {
 		const wrapper = await mountForm()
 
-		await wrapper.find('#template-form-name').setValue('Renewal reminder')
-		await wrapper.find('#template-form-body-html').setValue(compliantBody)
-		await wrapper.find('#template-form-reply-to').setValue('reply@example.nl')
+		await field(wrapper, 'Template name').setValue('Renewal reminder')
+		await field(wrapper, 'HTML body').setValue(compliantBody)
+		await field(wrapper, 'Reply-to email').setValue('reply@example.nl')
 		await wrapper.find('button.nc-button--primary').trigger('click')
 		await flushPromises()
 
@@ -112,7 +153,7 @@ describe('TemplateForm reply-to', () => {
 		})
 		const wrapper = await mountForm({ id: 't-1' })
 
-		expect(wrapper.find('#template-form-reply-to').element.value).toBe(
+		expect(field(wrapper, 'Reply-to email').element.value).toBe(
 			'renewals@example.nl',
 		)
 		await wrapper.find('button.nc-button--primary').trigger('click')

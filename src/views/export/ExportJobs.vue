@@ -22,10 +22,12 @@
 			:includeColumns="visibleColumns"
 			:emptyTitle="t('pipelinq', 'No export jobs yet')"
 			:emptyActionLabel="t('pipelinq', 'New export job')"
+			rowClickToView
 			@add="createNew"
 			@emptyAction="createNew"
 			@refresh="onRefresh"
 			@sort="onSort"
+			@rowClick="openJob"
 			@view="openJob"
 			@pageChanged="onPageChange">
 			<template #row-actions="{ row }">

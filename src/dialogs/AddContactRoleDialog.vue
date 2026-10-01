@@ -27,6 +27,7 @@
 				v-model="form.toContact"
 				:options="contactOptions"
 				:aria-label-combobox="t('pipelinq', 'Contact')"
+				labelOutside
 				:placeholder="t('pipelinq', 'Search contacts…')"
 				label="name"
 				:reduce="(opt) => opt.id"
@@ -39,6 +40,7 @@
 				v-model="form.type"
 				:options="roleOptions"
 				:aria-label-combobox="t('pipelinq', 'Role')"
+				labelOutside
 				:placeholder="t('pipelinq', 'Select role…')"
 				label="label"
 				:reduce="(opt) => opt.value" />

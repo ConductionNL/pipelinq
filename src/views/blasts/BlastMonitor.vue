@@ -17,22 +17,37 @@
 
 		<section v-else class="blast-monitor__body">
 			<div class="blast-monitor__progress">
+				<!-- The label is rendered twice: once on the track and once on the
+					fill, which is masked to the progress width with a wavy edge, so
+					the text flips colour exactly along the wave. -->
 				<div
 					class="blast-monitor__bar"
+					:class="{
+						'blast-monitor__bar--active': isSending,
+						'blast-monitor__bar--empty': progressPercent <= 0,
+						'blast-monitor__bar--full': progressPercent >= 100,
+					}"
+					:style="{ '--blast-progress': progressPercent }"
 					role="progressbar"
 					:aria-valuenow="progressPercent"
 					aria-valuemin="0"
 					aria-valuemax="100">
-					<div
-						class="blast-monitor__bar-fill"
-						:style="{ width: progressPercent + '%' }" />
-				</div>
-				<p class="blast-monitor__progress-meta">
-					<strong>{{ progressPercent }}%</strong>
-					{{ t('pipelinq', 'complete') }}
-					<span v-if="etaLabel" class="blast-monitor__eta">
-						· {{ etaLabel }}
+					<span class="blast-monitor__bar-label">
+						<strong>{{ progressPercent }}%</strong>
+						{{ t('pipelinq', 'complete') }}
 					</span>
+					<span class="blast-monitor__bar-wave" aria-hidden="true" />
+					<div
+						class="blast-monitor__bar-fill blast-monitor__bar-wave"
+						aria-hidden="true">
+						<span class="blast-monitor__bar-label">
+							<strong>{{ progressPercent }}%</strong>
+							{{ t('pipelinq', 'complete') }}
+						</span>
+					</div>
+				</div>
+				<p v-if="etaLabel" class="blast-monitor__eta">
+					{{ etaLabel }}
 				</p>
 			</div>
 
@@ -212,6 +227,20 @@ export default {
 			return this.t('pipelinq', 'ETA: ~{seconds}s remaining', {
 				seconds: Math.round(remaining),
 			})
+		},
+
+		/**
+		 * Whether messages are going out right now; drives the moving stripes.
+		 *
+		 * @return {boolean}
+		 *
+		 * @spec openspec/specs/marketing-ui/spec.md#scenario-progress-bar-and-totals-update-by-polling
+		 */
+		isSending() {
+			return (
+				this.blast?.status === 'sending'
+				|| this.blast?.status === 'cancelling'
+			)
 		},
 
 		/**
@@ -425,11 +454,14 @@ export default {
 
 <style scoped>
 .blast-monitor {
-	padding: 20px;
+	box-sizing: border-box;
+	width: 100%;
 	max-width: 980px;
+	margin: 0 auto;
+	padding: 24px 20px;
 	display: flex;
 	flex-direction: column;
-	gap: 16px;
+	gap: 24px;
 }
 
 .blast-monitor__header {
@@ -442,33 +474,126 @@ export default {
 	margin: 0;
 }
 
+.blast-monitor__body {
+	display: flex;
+	flex-direction: column;
+	gap: 24px;
+}
+
 .blast-monitor__progress {
 	display: flex;
 	flex-direction: column;
-	gap: 4px;
+	gap: 8px;
 }
 
 .blast-monitor__bar {
+	position: relative;
 	width: 100%;
-	height: 14px;
-	background: var(--color-background-darker);
-	border-radius: var(--border-radius);
+	height: 34px;
+	background: var(--color-background-dark);
+	border-radius: 999px;
+	box-shadow: inset 0 1px 3px rgba(var(--color-box-shadow-rgb), 0.25);
 	overflow: hidden;
+	/* Lets the wave layers turn the progress number into a length (cqi). */
+	container-type: inline-size;
+	transition: --blast-progress 600ms ease;
+}
+
+.blast-monitor__bar-label {
+	position: absolute;
+	inset: 0;
+	z-index: 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 4px;
+	color: var(--color-main-text);
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+}
+
+/* Both wave layers are full-width and masked by two layers: a solid block up to
+   the wave's start, plus a sine-edged strip that scrolls vertically, so the
+   leading edge ripples. The bare .blast-monitor__bar-wave is the paler, larger
+   wave behind the fill, running the other way. */
+.blast-monitor__bar-wave {
+	--wave-width: 20px;
+	--wave-height: 80px;
+	--wave-shift: 6px;
+	--wave-edge: calc(
+		var(--blast-progress) * 1cqi - var(--wave-width) / 2 + var(--wave-shift)
+	);
+	position: absolute;
+	inset: 0;
+	background: color-mix(in srgb, var(--color-primary-element) 40%, transparent);
+	mask-image:
+		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 34' preserveAspectRatio='none'%3E%3Cpath d='M0 0H15C28.3 6.1 28.3 10.9 15 17S1.7 27.9 15 34H0Z'/%3E%3C/svg%3E"),
+		linear-gradient(#000, #000);
+	mask-repeat: repeat-y, no-repeat;
+	mask-position:
+		var(--wave-edge) 0,
+		0 0;
+	mask-size:
+		var(--wave-width) var(--wave-height),
+		max(0px, var(--wave-edge) + 1px) 100%;
+	animation: blast-monitor-wave 3.6s linear infinite reverse;
 }
 
 .blast-monitor__bar-fill {
-	height: 100%;
+	--wave-width: 15px;
+	--wave-height: 56px;
+	--wave-shift: 0px;
 	background: var(--color-primary-element);
-	transition: width 200ms linear;
+	animation-duration: 2.4s;
+	animation-direction: normal;
 }
 
-.blast-monitor__progress-meta {
-	margin: 0;
-	color: var(--color-text-lighter);
+.blast-monitor__bar-fill .blast-monitor__bar-label {
+	color: var(--color-primary-element-text);
+}
+
+.blast-monitor__bar--active .blast-monitor__bar-wave {
+	animation-duration: 1.4s;
+}
+
+.blast-monitor__bar--active .blast-monitor__bar-fill {
+	animation-duration: 0.9s;
+}
+
+.blast-monitor__bar--empty .blast-monitor__bar-wave {
+	visibility: hidden;
+}
+
+.blast-monitor__bar--full .blast-monitor__bar-wave {
+	mask: none;
+	animation: none;
+}
+
+@property --blast-progress {
+	syntax: '<number>';
+	inherits: true;
+	initial-value: 0;
+}
+
+@keyframes blast-monitor-wave {
+	from {
+		mask-position:
+			var(--wave-edge) 0,
+			0 0;
+	}
+
+	to {
+		mask-position:
+			var(--wave-edge) var(--wave-height),
+			0 0;
+	}
 }
 
 .blast-monitor__eta {
-	margin-inline-start: 6px;
+	margin: 0;
+	text-align: center;
+	color: var(--color-text-maxcontrast);
+	font-size: 0.9em;
 }
 
 .blast-monitor__totals {
@@ -538,8 +663,12 @@ export default {
 }
 
 @media (prefers-reduced-motion: reduce) {
-	.blast-monitor__bar-fill {
+	.blast-monitor__bar {
 		transition: none;
+	}
+
+	.blast-monitor__bar-wave {
+		animation: none;
 	}
 }
 </style>

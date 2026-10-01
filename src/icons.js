@@ -40,6 +40,7 @@ import BookOpenVariantOutline from 'vue-material-design-icons/BookOpenVariantOut
 import BullhornOutline from 'vue-material-design-icons/BullhornOutline.vue'
 import Calendar from 'vue-material-design-icons/Calendar.vue'
 import CalendarCheck from 'vue-material-design-icons/CalendarCheck.vue'
+import CalendarClock from 'vue-material-design-icons/CalendarClock.vue'
 import CalendarClockOutline from 'vue-material-design-icons/CalendarClockOutline.vue'
 import CalendarWeek from 'vue-material-design-icons/CalendarWeek.vue'
 import CardAccountDetails from 'vue-material-design-icons/CardAccountDetails.vue'
@@ -123,8 +124,10 @@ import NewspaperVariantOutline from 'vue-material-design-icons/NewspaperVariantO
 import NoteTextOutline from 'vue-material-design-icons/NoteTextOutline.vue'
 import OfficeBuilding from 'vue-material-design-icons/OfficeBuilding.vue'
 import Package from 'vue-material-design-icons/Package.vue'
+import PackageVariant from 'vue-material-design-icons/PackageVariant.vue'
 import PackageVariantClosed from 'vue-material-design-icons/PackageVariantClosed.vue'
 import PencilOutline from 'vue-material-design-icons/PencilOutline.vue'
+import Phone from 'vue-material-design-icons/Phone.vue'
 import PhoneMessage from 'vue-material-design-icons/PhoneMessage.vue'
 import Pipe from 'vue-material-design-icons/Pipe.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
@@ -189,6 +192,7 @@ export default {
 	BullhornOutline,
 	Calendar,
 	CalendarCheck,
+	CalendarClock,
 	CalendarClockOutline,
 	CalendarWeek,
 	CardAccountDetails,
@@ -272,8 +276,10 @@ export default {
 	NoteTextOutline,
 	OfficeBuilding,
 	Package,
+	PackageVariant,
 	PackageVariantClosed,
 	PencilOutline,
+	Phone,
 	PhoneMessage,
 	Pipe,
 	Plus,

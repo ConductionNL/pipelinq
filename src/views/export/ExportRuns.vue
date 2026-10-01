@@ -19,8 +19,10 @@
 			:includeColumns="visibleColumns"
 			:emptyTitle="t('pipelinq', 'No export runs yet')"
 			:showAdd="false"
+			rowClickToView
 			@refresh="onRefresh"
 			@sort="onSort"
+			@rowClick="openRun"
 			@view="openRun"
 			@pageChanged="onPageChange">
 			<template #row-actions="{ row }">

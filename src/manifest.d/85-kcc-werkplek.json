@@ -15,6 +15,9 @@
 			"type": "dashboard",
 			"title": "Customer Support",
 			"actionsComponent": "WerkplekHeaderActions",
+			"slots": {
+				"title-meta": "WerkplekClientSelect"
+			},
 			"config": {
 				"description": "Handle requests and tasks, log interactions, and find answers, all in one place.",
 				"documentationUrl": "https://pipelinq.conduction.nl",
@@ -33,6 +36,7 @@
 					{
 						"id": "requests",
 						"type": "object-list",
+						"hideRefresh": true,
 						"title": "Requests",
 						"content": {
 							"register": "pipelinq",
@@ -67,6 +71,7 @@
 					{
 						"id": "tasks",
 						"type": "object-list",
+						"hideRefresh": true,
 						"title": "Tasks",
 						"content": {
 							"register": "pipelinq",
@@ -99,7 +104,8 @@
 					{
 						"id": "interaction",
 						"type": "interaction-form",
-						"title": "Active interaction",
+						"hideRefresh": true,
+						"title": "New contact moment",
 						"content": {
 							"register": "pipelinq",
 							"schema": "ticket",
@@ -136,42 +142,22 @@
 									"label": "Letter"
 								}
 							],
-							"outcomes": [
-								{
-									"value": "opgelost",
-									"label": "Resolved"
-								},
-								{
-									"value": "doorverwezen",
-									"label": "Forwarded"
-								},
-								{
-									"value": "terugbelverzoek",
-									"label": "Call back"
-								},
-								{
-									"value": "doorverbonden",
-									"label": "Transferred"
-								},
-								{
-									"value": "vervolgactie",
-									"label": "Follow-up"
-								}
-							],
 							"defaults": {
 								"ticketType": "interaction"
 							},
-							"subjectField": "title"
+							"subjectField": "title",
+							"submitLabel": "Save contact moment",
+							"detailRoute": "TicketDetail"
 						}
 					},
 					{
 						"id": "knowledge",
 						"type": "kb-search",
+						"hideRefresh": true,
 						"title": "Knowledge base",
 						"content": {
 							"endpoint": "/apps/openregister/api/integrations/xwiki/search",
 							"queryParam": "q",
-							"bindTo": "activeSummary",
 							"minChars": 3,
 							"limit": 8
 						}
@@ -179,6 +165,7 @@
 					{
 						"id": "client-cases",
 						"type": "object-list",
+						"hideRefresh": true,
 						"title": "Client requests",
 						"content": {
 							"register": "pipelinq",
@@ -192,7 +179,7 @@
 								"dir": "desc"
 							},
 							"limit": 8,
-							"prompt": "Select a client in the interaction panel to see their open requests.",
+							"prompt": "Choose a client next to the page title to see their requests.",
 							"rowRoute": "TicketDetail",
 							"columns": [
 								{
@@ -213,6 +200,7 @@
 					{
 						"id": "client-contacts",
 						"type": "object-list",
+						"hideRefresh": true,
 						"title": "Recent contact moments",
 						"content": {
 							"register": "pipelinq",
@@ -226,7 +214,7 @@
 								"dir": "desc"
 							},
 							"limit": 8,
-							"prompt": "Select a client to see their recent contact moments.",
+							"prompt": "Choose a client next to the page title to see their contact moments.",
 							"columns": [
 								{
 									"key": "title",
@@ -275,7 +263,7 @@
 						"gridX": 8,
 						"gridY": 8,
 						"gridWidth": 4,
-						"gridHeight": 6
+						"gridHeight": 5
 					},
 					{
 						"id": "wc",
@@ -283,7 +271,7 @@
 						"gridX": 0,
 						"gridY": 8,
 						"gridWidth": 4,
-						"gridHeight": 6
+						"gridHeight": 5
 					},
 					{
 						"id": "wm",
@@ -291,7 +279,7 @@
 						"gridX": 4,
 						"gridY": 8,
 						"gridWidth": 4,
-						"gridHeight": 6
+						"gridHeight": 5
 					}
 				]
 			}

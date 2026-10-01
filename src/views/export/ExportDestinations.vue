@@ -22,10 +22,12 @@
 			:includeColumns="visibleColumns"
 			:emptyTitle="t('pipelinq', 'No destinations yet')"
 			:emptyActionLabel="t('pipelinq', 'New destination')"
+			rowClickToView
 			@add="createNew"
 			@emptyAction="createNew"
 			@refresh="onRefresh"
 			@sort="onSort"
+			@rowClick="openDestination"
 			@view="openDestination"
 			@pageChanged="onPageChange">
 			<template #row-actions="{ row }">

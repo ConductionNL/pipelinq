@@ -18,76 +18,32 @@
 	"pages": [
 		{
 			"id": "Journeys",
-			"_note": "Journey list as a declarative type:index page (marketing-integrated-campaigns), read-only. Create and edit go to JourneyFormView instead of the declarative dialog, and showAdd / showFormDialog / showEditAction are therefore off: every write compiles the journey into an OpenRegister flow, which only POST and PATCH /api/journeys do. A journey written through the object API would be stored and never compiled, and a journey that is never compiled looks exactly like one whose trigger has not fired yet. The flow status column is what makes that difference visible in the list.",
+			"_note": "Journey list as a declarative type:index page (marketing-integrated-campaigns). Add and the row Edit action open JourneyFormDialog in the form-dialog slot instead of the declarative dialog: every write compiles the journey into an OpenRegister flow, which only POST and PATCH /api/journeys do. A journey written through the object API would be stored and never compiled, and a journey that is never compiled looks exactly like one whose trigger has not fired yet. The flow status column is what makes that difference visible in the list.",
 			"route": "/journeys",
 			"type": "index",
 			"title": "Journeys",
+			"slots": {
+				"form-dialog": "JourneyFormDialog"
+			},
 			"config": {
 				"register": "pipelinq",
 				"schema": "journey",
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"includeColumns": ["name", "status", "flowStatus", "waitFor"],
-				"actions": [
-					{
-						"id": "view",
-						"label": "Open",
-						"icon": "Eye",
-						"handler": "navigate",
-						"route": "JourneyDetail"
-					},
-					{
-						"id": "edit",
-						"label": "Edit",
-						"icon": "PencilOutline",
-						"handler": "navigate",
-						"route": "JourneyEdit"
-					}
-				],
-				"showAdd": false,
-				"showFormDialog": false,
-				"showEditAction": false,
-				"showCopyAction": false,
-				"headerActions": [
-					{
-						"id": "create",
-						"label": "New journey",
-						"icon": "Plus",
-						"handler": "navigate",
-						"route": "JourneyNew"
-					}
-				]
-			}
-		},
-		{
-			"id": "JourneyNew",
-			"_note": "Journey create as a thin route wrapper around JourneyFormView (marketing-integrated-campaigns), matching the CampaignNew convention. Custom rather than declarative: the write path compiles the journey into a flow and surfaces the flow engine's own refusal verbatim, which no declarative form primitive expresses. Missing primitive: a form whose save action returns a compilation result the page has to show.",
-			"route": "/journeys/new",
-			"type": "custom",
-			"title": "New journey",
-			"component": "JourneyFormView",
-			"config": {
-				"register": "pipelinq",
-				"schema": "journey"
-			}
-		},
-		{
-			"id": "JourneyEdit",
-			"_note": "Journey edit as a thin route wrapper around JourneyFormView (marketing-integrated-campaigns). Same reason as JourneyNew: a journey saved through the declarative dialog is stored and never compiled.",
-			"route": "/journeys/:id/edit",
-			"type": "custom",
-			"title": "Edit journey",
-			"component": "JourneyFormView",
-			"config": {
-				"register": "pipelinq",
-				"schema": "journey"
+				"addLabel": "New journey",
+				"showEditAction": true,
+				"showCopyAction": false
 			}
 		},
 		{
 			"id": "JourneyDetail",
-			"_note": "Journey record as a declarative type:detail page (ADR-062 grid). The journey's own fields auto-render in the details widget. The run log is a bodyWidgets section rather than a declarative object-list widget because the refusal reason has to be read as words: 'suppressed_dunning' is the answer to the only question a marketer asks here, and a raw enum value does not answer it. Its props carry @objectId, the only token that resolves on a detail page.",
+			"_note": "Journey record as a declarative type:detail page (ADR-062 grid). The journey's own fields auto-render in the details widget. Edit opens JourneyFormDialog in the form-dialog slot, the same dialog as the Journeys index, so an edit here is compiled too. The run log is a bodyWidgets section rather than a declarative object-list widget because the refusal reason has to be read as words: 'suppressed_dunning' is the answer to the only question a marketer asks here, and a raw enum value does not answer it. Its props carry @objectId, the only token that resolves on a detail page.",
 			"route": "/journeys/:id",
 			"type": "detail",
 			"title": "Journey",
+			"slots": {
+				"form-dialog": "JourneyFormDialog"
+			},
 			"config": {
 				"register": "pipelinq",
 				"schema": "journey",
