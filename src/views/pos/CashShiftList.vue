@@ -109,9 +109,15 @@ export default {
 		 *
 		 * @param {object} row The clicked row.
 		 * @param {MouseEvent} [event] The row click; a modified or middle click opens a new tab.
+		 * @spec exclude the cash-shift surface has no owning requirement, see
+		 *   postShiftAction in services/posShiftActions.js
 		 */
 		openDetail(row, event) {
-			openRowTarget(event, { name: 'CashShiftDetail', params: { id: row.id } }, this.$router)
+			openRowTarget(
+				event,
+				{ name: 'CashShiftDetail', params: { id: row.id } },
+				this.$router,
+			)
 		},
 
 		/**

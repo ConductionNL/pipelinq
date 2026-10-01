@@ -201,9 +201,14 @@ export default {
 		 *
 		 * @param {object} row The lead row.
 		 * @param {MouseEvent} [event] The row click; a modified or middle click opens a new tab.
+		 * @spec openspec/specs/lead-management/spec.md#requirement-lead-list-view-mvp
 		 */
 		openLead(row, event) {
-			openRowTarget(event, { name: 'LeadDetail', params: { id: row.id } }, this.$router)
+			openRowTarget(
+				event,
+				{ name: 'LeadDetail', params: { id: row.id } },
+				this.$router,
+			)
 		},
 
 		/**

@@ -7,7 +7,7 @@
 		@click="open"
 		@auxclick="open"
 		@keydown.enter="open"
-		@keydown.space="open($event); $event.preventDefault()">
+		@keydown.space="openOnSpace">
 		<div v-if="loading" class="widget-loading">
 			{{ t('pipelinq', 'Loading…') }}
 		</div>
@@ -125,9 +125,26 @@ export default {
 		 * a ctrl/cmd/shift or middle click opens a new tab.
 		 *
 		 * @param {MouseEvent|KeyboardEvent} event The triggering event.
+		 * @spec openspec/specs/klachtenregistratie/spec.md#requirement-complaint-dashboard-widget
 		 */
 		open(event) {
-			openRowTarget(event, { name: 'Tickets', query: { ticketType: 'complaint' } }, this.$router)
+			openRowTarget(
+				event,
+				{ name: 'Tickets', query: { ticketType: 'complaint' } },
+				this.$router,
+			)
+		},
+
+		/**
+		 * Space opens the list like Enter. Its scroll is prevented only after
+		 * the open, so a modified Space still reaches openRowTarget unhandled.
+		 *
+		 * @param {KeyboardEvent} event The keydown.
+		 * @spec openspec/specs/klachtenregistratie/spec.md#requirement-complaint-dashboard-widget
+		 */
+		openOnSpace(event) {
+			this.open(event)
+			event.preventDefault()
 		},
 	},
 }

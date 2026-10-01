@@ -48,7 +48,10 @@
 										{{ t('pipelinq', 'Active') }}
 									</span>
 								</td>
-								<td class="relationship-actions" @click.stop @auxclick.stop>
+								<td
+									class="relationship-actions"
+									@click.stop
+									@auxclick.stop>
 									<NcButton
 										variant="tertiary"
 										@click="editRelationship(rel)">
@@ -475,7 +478,11 @@ export default {
 		 */
 		navigateToEntity(rel, event) {
 			const type = rel.toType === 'client' ? 'ClientDetail' : 'ContactDetail'
-			openRowTarget(event, { name: type, params: { id: rel.toContact } }, this.$router)
+			openRowTarget(
+				event,
+				{ name: type, params: { id: rel.toContact } },
+				this.$router,
+			)
 		},
 
 		/**

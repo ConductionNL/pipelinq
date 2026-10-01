@@ -86,7 +86,10 @@ export default {
 			// Non-lead activities are `ticket` rows (unify-ticket-supertype) and
 			// open on the unified /tickets detail route.
 			const type = item._entityType === 'lead' ? 'leads' : 'tickets'
-			navigateTo(generateUrl('/apps/pipelinq/' + type + '/' + item._entityId), event)
+			navigateTo(
+				generateUrl('/apps/pipelinq/' + type + '/' + item._entityId),
+				event,
+			)
 		},
 
 		/**

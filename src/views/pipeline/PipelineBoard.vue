@@ -1279,12 +1279,20 @@ export default {
 		 */
 		openItem(item, event) {
 			if (item._schemaSlug === 'lead') {
-				openRowTarget(event, { name: 'LeadDetail', params: { id: item.id } }, this.$router)
+				openRowTarget(
+					event,
+					{ name: 'LeadDetail', params: { id: item.id } },
+					this.$router,
+				)
 			} else if (item._schemaSlug === 'request') {
 				// `_schemaSlug` keeps the LOGICAL slug ('request'), but the row is
 				// stored as a `ticket` (unify-ticket-supertype) and opens on the
 				// unified TicketDetail page.
-				openRowTarget(event, { name: 'TicketDetail', params: { id: item.id } }, this.$router)
+				openRowTarget(
+					event,
+					{ name: 'TicketDetail', params: { id: item.id } },
+					this.$router,
+				)
 			}
 		},
 	},

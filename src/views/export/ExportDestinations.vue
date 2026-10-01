@@ -108,9 +108,14 @@ export default {
 		 *
 		 * @param {object} row The clicked row.
 		 * @param {MouseEvent} [event] The row click; a modified or middle click opens a new tab.
+		 * @spec openspec/specs/bi-export-and-data-warehouse-sink/spec.md#requirement-destination-configuration-and-validation-req-bie-001
 		 */
 		openDestination(row, event) {
-			openRowTarget(event, { name: 'ExportDestinationDetail', params: { id: row.id } }, this.$router)
+			openRowTarget(
+				event,
+				{ name: 'ExportDestinationDetail', params: { id: row.id } },
+				this.$router,
+			)
 		},
 
 		/**

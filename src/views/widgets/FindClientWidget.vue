@@ -63,7 +63,7 @@
 					@click="viewClient(client, $event)"
 					@auxclick="viewClient(client, $event)"
 					@keydown.enter="viewClient(client, $event)"
-					@keydown.space="viewClient(client, $event); $event.preventDefault()">
+					@keydown.space="viewClientOnSpace(client, $event)">
 					<span class="client-icon">
 						<AccountGroup
 							v-if="client.type === 'organization'"
@@ -340,6 +340,7 @@ export default {
 		 *
 		 * @param {object} client The client.
 		 * @return {string} The client's detail page URL.
+		 * @spec openspec/specs/dashboard/spec.md#requirement-nextcloud-dashboard-widget-api-integration
 		 */
 		clientUrl(client) {
 			return generateUrl('/apps/pipelinq/clients/' + client.id)
@@ -355,6 +356,19 @@ export default {
 		 */
 		viewClient(client, event) {
 			openRowTarget(event, this.clientUrl(client))
+		},
+
+		/**
+		 * Space opens the client like Enter. Its scroll is prevented only after
+		 * the open, so a modified Space still reaches openRowTarget unhandled.
+		 *
+		 * @param {object} client The client to open.
+		 * @param {KeyboardEvent} event The keydown.
+		 * @spec openspec/specs/dashboard/spec.md#requirement-nextcloud-dashboard-widget-api-integration
+		 */
+		viewClientOnSpace(client, event) {
+			this.viewClient(client, event)
+			event.preventDefault()
 		},
 
 		/**

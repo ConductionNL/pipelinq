@@ -75,7 +75,12 @@
 </template>
 
 <script>
-import { CnDataTable, CnDetailCard, CnPagination, openRowTarget } from '@conduction/nextcloud-vue'
+import {
+	CnDataTable,
+	CnDetailCard,
+	CnPagination,
+	openRowTarget,
+} from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
 import { showError } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
@@ -240,7 +245,11 @@ export default {
 			}
 			// A contactmoment is a `ticket` with ticketType=contactmoment
 			// (unify-ticket-supertype) — open the unified detail page.
-			openRowTarget(event, { name: 'TicketDetail', params: { id: row.id } }, this.$router)
+			openRowTarget(
+				event,
+				{ name: 'TicketDetail', params: { id: row.id } },
+				this.$router,
+			)
 		},
 
 		formatChannel(value) {
