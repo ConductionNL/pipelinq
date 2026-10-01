@@ -80,12 +80,24 @@ export default {
 	},
 
 	computed: {
-		/** @return {string} The post's status. */
+		/**
+		 * The post's status, which decides the approval actions shown.
+		 *
+		 * @return {string} The status.
+		 *
+		 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
+		 */
 		status() {
 			return this.object?.status || ''
 		},
 
-		/** @return {string} The post id. */
+		/**
+		 * The post's id, from the slot or the post itself.
+		 *
+		 * @return {string} The post id.
+		 *
+		 * @spec openspec/changes/social-publishing/specs/social-posts/spec.md#requirement-nothing-leaves-the-instance-without-a-human-approval
+		 */
 		postId() {
 			return (
 				this.objectId || this.object?.id || this.object?.['@self']?.id || ''

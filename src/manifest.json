@@ -2248,6 +2248,23 @@
 						"props": { "partyId": "@objectId" }
 					},
 					{
+						"id": "contact-links",
+						"component": "ContactLinks",
+						"placement": "before-body",
+						"_note": "Tap to call, mail or get directions on a phone (platform-phone-on-the-road).",
+						"props": {
+							"phone": "@object.phone",
+							"email": "@object.email",
+							"address": "@object.address"
+						}
+					},
+					{
+						"id": "log-visit",
+						"component": "LogVisitAction",
+						"placement": "before-body",
+						"props": { "clientId": "@objectId" }
+					},
+					{
 						"id": "relationships",
 						"component": "ContactRelationships",
 						"title": "Relationships",
@@ -2464,8 +2481,35 @@
 						"gridHeight": 4
 					}
 				],
-				"_bodyWidgetsNote": "Suggested colleagues (pipelinq#2039): RoutingSuggestionSection mounts RoutingSuggestionPanel for this ticket and writes the chosen colleague into its assignee. The panel was built but mounted by nothing, so the skill, availability and workload ranking was reachable only by calling the API by hand.",
+				"_bodyWidgetsNote": "Woo citizen journey J4 (questions-about-a-citizen-dossier): DossierSnapshotSection shows the dossier a resident asked about, before the body; CustomerReplySection is the answer control (customerMessage, the resident's replies) and WooConversionSection converts a question into a dossiq Woo request, after the data. Each renders nothing when it does not apply. Suggested colleagues (pipelinq#2039): RoutingSuggestionSection mounts RoutingSuggestionPanel for this ticket and writes the chosen colleague into its assignee. The panel was built but mounted by nothing, so the skill, availability and workload ranking was reachable only by calling the API by hand.",
 				"bodyWidgets": [
+					{
+						"id": "dossier-snapshot",
+						"component": "DossierSnapshotSection",
+						"title": "Asked about",
+						"placement": "before-body",
+						"props": {
+							"objectId": "@objectId"
+						}
+					},
+					{
+						"id": "customer-reply",
+						"component": "CustomerReplySection",
+						"title": "Answer to the customer",
+						"placement": "after-data",
+						"props": {
+							"objectId": "@objectId"
+						}
+					},
+					{
+						"id": "woo-conversion",
+						"component": "WooConversionSection",
+						"title": "Woo request",
+						"placement": "after-data",
+						"props": {
+							"objectId": "@objectId"
+						}
+					},
 					{
 						"id": "routing-suggestions",
 						"component": "RoutingSuggestionSection",
@@ -2861,6 +2905,16 @@
 						"props": { "partyId": "@objectId" }
 					},
 					{
+						"id": "contact-links",
+						"component": "ContactLinks",
+						"placement": "before-body",
+						"_note": "Tap to call, mail or get directions on a phone (platform-phone-on-the-road).",
+						"props": {
+							"phone": "@object.phone",
+							"email": "@object.email"
+						}
+					},
+					{
 						"id": "relationships",
 						"component": "ContactRelationships",
 						"title": "Relationships",
@@ -2971,6 +3025,11 @@
 						"key": "winProbability",
 						"label": "Win %",
 						"widget": "lead-probability"
+					},
+					{
+						"key": "qualificationScore",
+						"label": "Score",
+						"widget": "lead-score"
 					},
 					"value",
 					"currency",
@@ -3389,6 +3448,15 @@
 				],
 				"_bodyWidgetsNote": "Suggested colleagues (pipelinq#2049): RoutingSuggestionSection ranks colleagues whose skills cover the lead category, and writes the chosen colleague into the lead assignee.",
 				"bodyWidgets": [
+					{
+						"id": "log-visit",
+						"component": "LogVisitAction",
+						"placement": "before-body",
+						"props": {
+							"leadId": "@objectId",
+							"clientId": "@object.client"
+						}
+					},
 					{
 						"id": "routing-suggestions",
 						"component": "RoutingSuggestionSection",

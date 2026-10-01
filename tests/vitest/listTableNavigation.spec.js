@@ -10,7 +10,10 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('@conduction/nextcloud-vue', () => import('@conduction/nextcloud-vue/src/utils/linkNavigation.js'))
+vi.mock(
+	'@conduction/nextcloud-vue',
+	() => import('@conduction/nextcloud-vue/src/utils/linkNavigation.js'),
+)
 
 const { navigateTo } = await import('../../src/views/widgets/listTable.js')
 

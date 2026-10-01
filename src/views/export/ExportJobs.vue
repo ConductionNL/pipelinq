@@ -126,9 +126,14 @@ export default {
 		 *
 		 * @param {object} row The clicked row.
 		 * @param {MouseEvent} [event] The row click; a modified or middle click opens a new tab.
+		 * @spec exclude row navigation to the job's detail page; no requirement covers the export job list
 		 */
 		openJob(row, event) {
-			openRowTarget(event, { name: 'ExportJobDetail', params: { id: row.id } }, this.$router)
+			openRowTarget(
+				event,
+				{ name: 'ExportJobDetail', params: { id: row.id } },
+				this.$router,
+			)
 		},
 
 		/**

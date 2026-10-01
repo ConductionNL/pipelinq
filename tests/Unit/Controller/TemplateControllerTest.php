@@ -33,6 +33,7 @@ use OCA\Pipelinq\Controller\TemplateController;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\ArticleService;
 use OCA\Pipelinq\Service\ComplianceService;
+use OCA\Pipelinq\Service\Marketing\PhysicalAddressRenderer;
 use OCA\Pipelinq\Service\Marketing\SegmentSignalService;
 use OCA\Pipelinq\Service\SegmentService;
 use OCP\AppFramework\Http;
@@ -174,6 +175,7 @@ class TemplateControllerTest extends TestCase {
 			$this->createMock(ArticleService::class),
 			$session,
 			$policy,
+			new PhysicalAddressRenderer(),
 		);
 	}//end controller()
 
@@ -227,4 +229,88 @@ class TemplateControllerTest extends TestCase {
 		$this->assertSame(Http::STATUS_OK, $response->getStatus());
 		$this->assertSame('renewals@example.nl', ($this->objects->store['tpl-1']['replyTo'] ?? null));
 	}//end testUpdateStoresTheReplyTo()
+
+	/**
+	 * A PATCH that carries only the name keeps every field it leaves out.
+	 *
+	 * @return void
+	 */
+	public function testPartialUpdateKeepsTheFieldsItLeavesOut(): void {
+		$this->objects = new TemplateStoreDouble();
+		$this->objects->store['tpl-1'] = [
+			'uuid' => 'tpl-1',
+			'name' => 'Renewal reminder',
+			'channel' => 'email',
+			'bodyHtml' => self::BODY,
+			'footerOverride' => self::ADDRESS,
+			'replyTo' => 'renewals@example.nl',
+		];
+
+		$response = $this->controller(['name' => 'Renewal reminder 2027'])->update('tpl-1');
+
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$stored = $this->objects->store['tpl-1'];
+		$this->assertSame('Renewal reminder 2027', ($stored['name'] ?? null));
+		$this->assertSame(self::BODY, ($stored['bodyHtml'] ?? null));
+		$this->assertSame(self::ADDRESS, ($stored['footerOverride'] ?? null));
+		$this->assertSame('renewals@example.nl', ($stored['replyTo'] ?? null));
+	}//end testPartialUpdateKeepsTheFieldsItLeavesOut()
+
+	/**
+	 * Validating a template that does not exist is a 404.
+	 *
+	 * @return void
+	 */
+	public function testValidateReturnsNotFoundForAnUnknownTemplate(): void {
+		$this->objects = new TemplateStoreDouble();
+
+		$response = $this->controller([])->validate('tpl-missing');
+
+		$this->assertSame(Http::STATUS_NOT_FOUND, $response->getStatus());
+	}//end testValidateReturnsNotFoundForAnUnknownTemplate()
+
+	/**
+	 * An email template without a physical address fails validation, and nothing is saved.
+	 *
+	 * @return void
+	 */
+	public function testValidateRefusesAnEmailTemplateWithoutAnAddress(): void {
+		$this->objects = new TemplateStoreDouble();
+		$this->objects->store['tpl-1'] = [
+			'uuid' => 'tpl-1',
+			'name' => 'Renewal reminder',
+			'channel' => 'email',
+			'bodyHtml' => self::BODY,
+			'footerOverride' => '',
+		];
+
+		$response = $this->controller([])->validate('tpl-1');
+
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$data = $response->getData();
+		$this->assertFalse($data['valid']);
+		$this->assertIsString($data['error']);
+		$this->assertSame([], $this->objects->saved);
+	}//end testValidateRefusesAnEmailTemplateWithoutAnAddress()
+
+	/**
+	 * A compliant email template passes validation.
+	 *
+	 * @return void
+	 */
+	public function testValidateAcceptsACompliantTemplate(): void {
+		$this->objects = new TemplateStoreDouble();
+		$this->objects->store['tpl-1'] = [
+			'uuid' => 'tpl-1',
+			'name' => 'Renewal reminder',
+			'channel' => 'email',
+			'bodyHtml' => self::BODY,
+			'footerOverride' => self::ADDRESS,
+		];
+
+		$response = $this->controller([])->validate('tpl-1');
+
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertSame(['valid' => true, 'error' => null], $response->getData());
+	}//end testValidateAcceptsACompliantTemplate()
 }//end class

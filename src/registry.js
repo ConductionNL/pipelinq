@@ -43,13 +43,17 @@ import CommunicationHistory from './components/CommunicationHistory.vue'
 //     page body via `bodyWidgets` (kind:'section'). Each reads the live object
 //     via props (token-resolved `@objectId`) — no page host needed. ---
 import ContactChannelsSection from './components/ContactChannelsSection.vue'
+import ContactLinks from './components/ContactLinks.vue'
 import ContactmomentQuickLog from './components/ContactmomentQuickLog.vue'
 import ContactRelationships from './components/ContactRelationships.vue'
+import CustomerReplySection from './components/CustomerReplySection.vue'
 // --- Billing categories (billable-categories-and-tags): list view with a
 //     bespoke color-swatch + DBA / active badge column layout the
 //     declarative type:"index" page cannot express. Donut widget for the
 //     dashboard (hours per billing category) registered as a slot. ---
 import BillingCategoryWidget from './components/dashboard/BillingCategoryWidget.vue'
+import DossierSnapshotSection from './components/DossierSnapshotSection.vue'
+import LogVisitAction from './components/LogVisitAction.vue'
 // --- Articles — the content hub for a mailing and a post (marketing-article-hub).
 //     ArticleDetail is a declarative type:"detail" page; the rendered body, the
 //     hero image, the agent-authored mark, the Edit action and the lifecycle
@@ -122,6 +126,7 @@ import RoutingSuggestionSection from './components/RoutingSuggestionSection.vue'
 //     top-level menu item linking to this card grid. ---
 import ServiceHubOverview from './components/service/ServiceHubOverview.vue'
 import SlaAttainmentBreakdownSection from './components/sla/SlaAttainmentBreakdownSection.vue'
+import WooConversionSection from './components/WooConversionSection.vue'
 import XWikiArticleViewer from './components/xwiki/XWikiArticleViewer.vue'
 import XWikiSidebarTabComponent from './components/xwiki/XWikiSidebarTab.vue'
 import XWikiWidgetComponent from './components/xwiki/XWikiWidget.vue'
@@ -685,7 +690,7 @@ const registry = {
 		kind: 'widget',
 		component: CashShiftDropsWidget,
 		...PANEL_WIDGET_META,
-		_note: 'CashShiftDetail grid widget: the cashDrop object-list plus Add drop, which POSTs to /api/pos-shifts/{id}/drop (POS-operator, open-shift and positive-amount checks, server-set droppedBy/droppedAt) instead of the object-list\'s generic create.',
+		_note: "CashShiftDetail grid widget: the cashDrop object-list plus Add drop, which POSTs to /api/pos-shifts/{id}/drop (POS-operator, open-shift and positive-amount checks, server-set droppedBy/droppedAt) instead of the object-list's generic create.",
 	},
 	CashShiftVarianceWidget: {
 		kind: 'widget',
@@ -829,6 +834,16 @@ const registry = {
 		component: ContactmomentQuickLog,
 		_note: 'Inline contactmoment quick-log form pre-bound to the client (clientId, inline mode). On save it emits @saved; in declarative mode the page is refreshed via the CnDetailPage Refresh action rather than an imperative re-fetch.',
 	},
+	ContactLinks: {
+		kind: 'section',
+		component: ContactLinks,
+		_note: 'Call, mail and directions links for a client or contact (platform-phone-on-the-road, REQ-MOB-001): tel:, mailto: and geo: links that keep the value as typed. Placed before the body so they are one tap away on a phone.',
+	},
+	LogVisitAction: {
+		kind: 'section',
+		component: LogVisitAction,
+		_note: 'Log a visit on a client or lead (REQ-MOB-003): one note and an optional follow-up day; writes an outbound visit contact moment (ticket) and a follow-up crmTask through the object store.',
+	},
 	PartyIndicatorPanel: {
 		kind: 'section',
 		component: PartyIndicatorPanel,
@@ -859,6 +874,21 @@ const registry = {
 		kind: 'section',
 		component: RequestConversionSection,
 		_note: '"Convert to case" action for the TicketDetail page (semantic-handoff-emit; formerly RequestDetail, retired by unify-ticket-supertype). Self-fetches GET /api/handoff/request/{id}/availability by @objectId; renders the button only when canConvert (an ns#Case implementer is installed AND status is in_progress). On success shows the converted notice + a copyable caseReference — the target app is kind-addressed and unknown to the frontend, so no precise cross-app route can be built.',
+	},
+	DossierSnapshotSection: {
+		kind: 'section',
+		component: DossierSnapshotSection,
+		_note: "The dossier a resident asked about, on TicketDetail (questions-about-a-citizen-dossier REQ-QCD-006): reads the ticket's subjectReference snapshot and lists the documents as links to the public publications. Never reads the dossier itself; renders nothing for a ticket without a snapshot.",
+	},
+	CustomerReplySection: {
+		kind: 'section',
+		component: CustomerReplySection,
+		_note: "Answer the customer on a request or complaint (questions-about-a-citizen-dossier REQ-QCD-007, the minimal form of messaging-saved-replies-and-resend D5 without the saved-reply picker): portal replies oldest first, a text area bound to customerMessage, Save answer and Save and wait for a reply (status awaiting_customer). Writes through the object store, so portaliq's change rule pipelinq.question.answered hears the change.",
+	},
+	WooConversionSection: {
+		kind: 'section',
+		component: WooConversionSection,
+		_note: '"Convert to Woo request" on TicketDetail (questions-about-a-citizen-dossier REQ-QCD-008, hydra woo-citizen-journey C5): self-fetches GET /api/tickets/{id}/woo-request/availability and renders only when dossiq\'s WooRequestIntake answers and the ticket is an unconverted question about a dossier.',
 	},
 	RoutingSuggestionSection: {
 		kind: 'section',
@@ -1102,37 +1132,37 @@ const registry = {
 		kind: 'modal',
 		component: BlastWizardDialog,
 		propsSchema: null,
-		_note: 'New-blast wizard in the Blasts index page\'s form-dialog slot: basics, audience, content, delivery, A/B test and review, gated on template validation and a consent preflight before POST /api/blasts, then opens the new blast\'s monitor.',
+		_note: "New-blast wizard in the Blasts index page's form-dialog slot: basics, audience, content, delivery, A/B test and review, gated on template validation and a consent preflight before POST /api/blasts, then opens the new blast's monitor.",
 	},
 	ArticleDetailFormDialog: {
 		kind: 'modal',
 		component: ArticleDetailFormDialog,
 		propsSchema: null,
-		_note: 'The ArticleDetail page\'s Edit form: its schema form without the title and body, plus a button that opens ArticleEditModal, the dedicated editor with the markdown body and Files hero picker, on top.',
+		_note: "The ArticleDetail page's Edit form: its schema form without the title and body, plus a button that opens ArticleEditModal, the dedicated editor with the markdown body and Files hero picker, on top.",
 	},
 	SegmentFormDialog: {
 		kind: 'modal',
 		component: SegmentFormDialog,
 		propsSchema: null,
-		_note: 'Segment create/edit, mounted in the Segments index page\'s form-dialog slot. Custom rather than the built-in form: SegmentBuilder is a recursive rule-tree editor with a debounced preview call, and saving must go through POST/PATCH /api/segments, the only path that validates the rules.',
+		_note: "Segment create/edit, mounted in the Segments index page's form-dialog slot. Custom rather than the built-in form: SegmentBuilder is a recursive rule-tree editor with a debounced preview call, and saving must go through POST/PATCH /api/segments, the only path that validates the rules.",
 	},
 	TemplateFormDialog: {
 		kind: 'modal',
 		component: TemplateFormDialog,
 		propsSchema: null,
-		_note: 'CampaignTemplate create/edit, mounted in the Templates index page\'s form-dialog slot. Custom rather than the built-in form: the fields depend on the channel, saving must go through POST/PATCH /api/templates, which runs the compliance check, and that check\'s error is placed on the field it is about.',
+		_note: "CampaignTemplate create/edit, mounted in the Templates index page's form-dialog slot. Custom rather than the built-in form: the fields depend on the channel, saving must go through POST/PATCH /api/templates, which runs the compliance check, and that check's error is placed on the field it is about.",
 	},
 	CampaignFormDialog: {
 		kind: 'modal',
 		component: CampaignFormDialog,
 		propsSchema: null,
-		_note: 'Campaign create/edit, mounted in the form-dialog slot of both the Campaigns index page and CampaignDetail. Custom rather than the built-in form: saving must go through POST/PATCH /api/campaigns, because only CampaignService mints the campaign value, freezes it across a rename and refuses a source or medium outside the tenant\'s vocabulary, and the source and medium pickers read GET /api/campaigns/vocabulary, admin-maintained app config that is not a schema enum.',
+		_note: "Campaign create/edit, mounted in the form-dialog slot of both the Campaigns index page and CampaignDetail. Custom rather than the built-in form: saving must go through POST/PATCH /api/campaigns, because only CampaignService mints the campaign value, freezes it across a rename and refuses a source or medium outside the tenant's vocabulary, and the source and medium pickers read GET /api/campaigns/vocabulary, admin-maintained app config that is not a schema enum.",
 	},
 	JourneyFormDialog: {
 		kind: 'modal',
 		component: JourneyFormDialog,
 		propsSchema: null,
-		_note: 'Journey create/edit, mounted in the form-dialog slot of both the Journeys index page and JourneyDetail. Custom rather than the built-in form: every write compiles the journey into an OpenRegister flow through POST and PATCH /api/journeys, and a journey saved through the object API would be stored and never compiled, which looks exactly like a journey whose trigger has not fired. It also surfaces the flow engine\'s own refusal verbatim.',
+		_note: "Journey create/edit, mounted in the form-dialog slot of both the Journeys index page and JourneyDetail. Custom rather than the built-in form: every write compiles the journey into an OpenRegister flow through POST and PATCH /api/journeys, and a journey saved through the object API would be stored and never compiled, which looks exactly like a journey whose trigger has not fired. It also surfaces the flow engine's own refusal verbatim.",
 	},
 
 	// Contact-aware create for the generic Add button on the Clients index page.

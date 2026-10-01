@@ -137,6 +137,11 @@ export default {
 		},
 	},
 
+	/**
+	 * Load the breakdown, and reload it on the page's Refresh action.
+	 *
+	 * @spec openspec/specs/sla-engine-and-escalation/spec.md
+	 */
 	mounted() {
 		this.fetchAttainment()
 		// The page's Refresh action; `waitUntil` keeps its spinner going until this table reloads.
@@ -163,13 +168,17 @@ export default {
 			this.loading = true
 			this.error = null
 			try {
-				const data = await fetchEndpointSource({
-					url: '/apps/pipelinq/api/sla/attainment',
-					params: {
-						bucket: this.effectiveBucket,
-						groupBy: this.effectiveGroupBy,
+				const data = await fetchEndpointSource(
+					{
+						url: '/apps/pipelinq/api/sla/attainment',
+						params: {
+							bucket: this.effectiveBucket,
+							groupBy: this.effectiveGroupBy,
+						},
 					},
-				}, {}, { force })
+					{},
+					{ force },
+				)
 				this.payload = data || this.payload
 			} catch {
 				this.error = this.t(

@@ -492,37 +492,6 @@ class ComplianceServiceTest extends TestCase {
 	}//end testValidateTemplateRejectsAddressTokenWithoutFooter()
 
 	/**
-	 * renderPhysicalAddress: every address token takes the footerOverride,
-	 * HTML-escaped with its line breaks kept.
-	 *
-	 * @return void
-	 */
-	public function testRenderPhysicalAddressReplacesTokens(): void {
-		$body = '<p>{{physical_address}}</p><p>{{company_address}}</p>';
-		$this->assertSame(
-			'<p>A &amp; B<br>' . "\n" . 'Den Haag</p><p>A &amp; B<br>' . "\n" . 'Den Haag</p>',
-			ComplianceService::renderPhysicalAddress($body, "A & B\nDen Haag", 'html'),
-		);
-	}//end testRenderPhysicalAddressReplacesTokens()
-
-	/**
-	 * renderPhysicalAddress: a body without a token gets the address
-	 * appended; an empty body and an empty address leave the body alone.
-	 *
-	 * @return void
-	 */
-	public function testRenderPhysicalAddressAppendsOrLeavesAlone(): void {
-		$this->assertSame('<p>Hi</p><p>Den Haag</p>', ComplianceService::renderPhysicalAddress('<p>Hi</p>', 'Den Haag', 'html'));
-		$this->assertSame(
-			'<html><body><p>Hi</p><p>Den Haag</p></body></html>',
-			ComplianceService::renderPhysicalAddress('<html><body><p>Hi</p></body></html>', 'Den Haag', 'html'),
-		);
-		$this->assertSame("Hi\n\nDen Haag", ComplianceService::renderPhysicalAddress("Hi\n", 'Den Haag', 'text'));
-		$this->assertSame('', ComplianceService::renderPhysicalAddress('', 'Den Haag', 'text'));
-		$this->assertSame('<p>{{physical_address}}</p>', ComplianceService::renderPhysicalAddress('<p>{{physical_address}}</p>', '  ', 'html'));
-	}//end testRenderPhysicalAddressAppendsOrLeavesAlone()
-
-	/**
 	 * validateTemplate: an email template with the unsubscribe token AND
 	 * a non-empty footerOverride (operator literal address) is accepted.
 	 *

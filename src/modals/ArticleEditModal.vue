@@ -34,11 +34,15 @@
 					id="article-edit-summary"
 					v-model="model.summary"
 					:label="t('pipelinq', 'Summary')"
-					:placeholder="t('pipelinq', 'One or two sentences, shown on the card')"
+					:placeholder="
+						t('pipelinq', 'One or two sentences, shown on the card')
+					"
 					rows="2"
 					resize="vertical" />
 				<div class="article-edit__body">
-					<span class="article-edit__label">{{ t('pipelinq', 'Body') }}</span>
+					<span class="article-edit__label">{{
+						t('pipelinq', 'Body')
+					}}</span>
 					<CnMarkdownEditor
 						v-model="model.body"
 						:aria-label="t('pipelinq', 'Article body')"
@@ -55,7 +59,9 @@
 						id="article-edit-hero"
 						v-model="model.heroImage"
 						:label="t('pipelinq', 'Hero image')"
-						:placeholder="t('pipelinq', 'Files path, or an absolute URL')" />
+						:placeholder="
+							t('pipelinq', 'Files path, or an absolute URL')
+						" />
 					<NcButton variant="secondary" @click="openHeroPicker">
 						<template #icon>
 							<FolderImage :size="20" />
@@ -68,7 +74,9 @@
 						id="article-edit-slug"
 						v-model="model.slug"
 						:label="t('pipelinq', 'Slug')"
-						:placeholder="t('pipelinq', 'Derived from the title when left empty')" />
+						:placeholder="
+							t('pipelinq', 'Derived from the title when left empty')
+						" />
 					<!-- Lines the select up with the text field beside it. -->
 					<div class="article-edit__language">
 						<NcSelect
@@ -84,21 +92,25 @@
 						id="article-edit-tags"
 						v-model="tagsText"
 						:label="t('pipelinq', 'Tags')"
-						:placeholder="t('pipelinq', 'Comma-separated, such as release, product')" />
+						:placeholder="
+							t(
+								'pipelinq',
+								'Comma-separated, such as release, product',
+							)
+						" />
 					<NcTextField
 						id="article-edit-portal-ref"
 						v-model="model.portalPageRef"
 						:label="t('pipelinq', 'Portal page')"
-						:placeholder="t('pipelinq', 'Filled in once the public page exists')" />
+						:placeholder="
+							t('pipelinq', 'Filled in once the public page exists')
+						" />
 				</div>
 			</section>
 		</div>
 
 		<template #actions>
-			<NcButton
-				variant="tertiary"
-				:disabled="saving"
-				@click="$emit('close')">
+			<NcButton variant="tertiary" :disabled="saving" @click="$emit('close')">
 				{{ t('pipelinq', 'Cancel') }}
 			</NcButton>
 			<NcButton
@@ -325,7 +337,9 @@ export default {
 				const payload = this.buildPayload()
 				const saved = this.isEditing
 					? await updateArticle(
-							this.article.id || this.article.uuid || this.article['@self']?.id,
+							this.article.id
+								|| this.article.uuid
+								|| this.article['@self']?.id,
 							payload,
 						)
 					: await createArticle(payload)

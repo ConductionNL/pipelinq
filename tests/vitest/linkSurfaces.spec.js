@@ -20,8 +20,10 @@ vi.mock('@conduction/nextcloud-vue', async () => ({
 	...(await import('@conduction/nextcloud-vue/src/utils/safeHref.js')),
 }))
 
-const { default: XWikiArticleList } = await import('../../src/components/xwiki/XWikiArticleList.vue')
-const { default: ComplaintsOverviewWidget } = await import('../../src/views/widgets/ComplaintsOverviewWidget.vue')
+const { default: XWikiArticleList } =
+	await import('../../src/components/xwiki/XWikiArticleList.vue')
+const { default: ComplaintsOverviewWidget } =
+	await import('../../src/views/widgets/ComplaintsOverviewWidget.vue')
 
 const t = (app, text) => text
 
@@ -38,7 +40,9 @@ describe('XWikiArticleList', () => {
 		})
 		const links = wrapper.findAll('a')
 		expect(links).toHaveLength(1)
-		expect(links[0].attributes('href')).toBe('https://wiki.example/opening-hours')
+		expect(links[0].attributes('href')).toBe(
+			'https://wiki.example/opening-hours',
+		)
 		expect(links[0].attributes('target')).toBe('_blank')
 		expect(links[0].attributes('rel')).toBe('noopener noreferrer')
 		expect(wrapper.find('[role="button"]').exists()).toBe(false)
@@ -49,7 +53,10 @@ describe('XWikiArticleList', () => {
 
 	it('neutralises a javascript: article URL', () => {
 		const wrapper = mount(XWikiArticleList, {
-			props: { articles: [{ id: 'x', title: 'Bad', url: 'javascript:alert(1)' }], linkExternal: true },
+			props: {
+				articles: [{ id: 'x', title: 'Bad', url: 'javascript:alert(1)' }],
+				linkExternal: true,
+			},
 			global: { mocks: { t } },
 		})
 		expect(wrapper.find('a').attributes('href')).toBe('#')
@@ -75,7 +82,9 @@ describe('ComplaintsOverviewWidget', () => {
 	const mountWidget = () => {
 		const router = {
 			push: vi.fn(() => Promise.resolve()),
-			resolve: vi.fn(() => ({ href: '/index.php/apps/pipelinq/tickets?ticketType=complaint' })),
+			resolve: vi.fn(() => ({
+				href: '/index.php/apps/pipelinq/tickets?ticketType=complaint',
+			})),
 		}
 		const wrapper = mount(ComplaintsOverviewWidget, {
 			global: { mocks: { t, $router: router } },
@@ -101,7 +110,26 @@ describe('ComplaintsOverviewWidget', () => {
 		await wrapper.trigger('auxclick', { button: 1 })
 
 		expect(open).toHaveBeenCalledTimes(2)
-		expect(open).toHaveBeenCalledWith('/index.php/apps/pipelinq/tickets?ticketType=complaint', '_blank', 'noopener,noreferrer')
+		expect(open).toHaveBeenCalledWith(
+			'/index.php/apps/pipelinq/tickets?ticketType=complaint',
+			'_blank',
+			'noopener,noreferrer',
+		)
 		expect(router.push).not.toHaveBeenCalled()
+	})
+
+	it('opens a new tab on ctrl+Enter and ctrl+Space, and Space does not scroll', async () => {
+		const open = vi.spyOn(window, 'open').mockImplementation(() => null)
+		const { wrapper, router } = mountWidget()
+
+		await wrapper.trigger('keydown', { key: 'Enter', ctrlKey: true })
+		await wrapper.trigger('keydown', { key: ' ', ctrlKey: true })
+		expect(open).toHaveBeenCalledTimes(2)
+		expect(router.push).not.toHaveBeenCalled()
+
+		const space = new KeyboardEvent('keydown', { key: ' ', cancelable: true })
+		wrapper.element.dispatchEvent(space)
+		expect(space.defaultPrevented).toBe(true)
+		expect(router.push).toHaveBeenCalledWith(target)
 	})
 })

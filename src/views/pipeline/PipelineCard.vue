@@ -11,8 +11,8 @@
 		@dragstart="onDragStart"
 		@click="$emit('open', item, $event)"
 		@auxclick="$emit('open', item, $event)"
-		@keydown.enter.prevent="$emit('open', item, $event)"
-		@keydown.space.prevent="$emit('open', item, $event)">
+		@keydown.enter="$emit('open', item, $event)"
+		@keydown.space="openOnSpace">
 		<!-- Header: what it is and what it is called, with its menu in the row
 		     so nothing can slide underneath it. -->
 		<div class="pipeline-card__header">
@@ -29,7 +29,11 @@
 			<span class="pipeline-card__title">
 				{{ item.title }}
 			</span>
-			<div class="pipeline-card__menu" @click.stop @auxclick.stop @keydown.stop>
+			<div
+				class="pipeline-card__menu"
+				@click.stop
+				@auxclick.stop
+				@keydown.stop>
 				<NcActions
 					:forceMenu="true"
 					:inline="0"
@@ -61,6 +65,7 @@
 			<span v-if="item.value" class="card-meta">
 				{{ formatNumber(item.value) }}
 			</span>
+			<LeadScoreBadge v-if="entityType === 'lead'" :lead="item" compact />
 			<span v-if="item.assignee" class="card-assignee">
 				{{ item.assignee }}
 			</span>
@@ -117,6 +122,7 @@ import AccountPlus from 'vue-material-design-icons/AccountPlus.vue'
 import ArrowRightThick from 'vue-material-design-icons/ArrowRightThick.vue'
 import ClockAlert from 'vue-material-design-icons/ClockAlert.vue'
 import Flag from 'vue-material-design-icons/Flag.vue'
+import LeadScoreBadge from '../../components/leadScore/LeadScoreBadge.vue'
 import AssigneePickerDialog from '../../dialogs/AssigneePickerDialog.vue'
 import PriorityPickerDialog from '../../dialogs/PriorityPickerDialog.vue'
 import StagePickerDialog from '../../dialogs/StagePickerDialog.vue'
@@ -150,6 +156,7 @@ export default {
 		StagePickerDialog,
 		AssigneePickerDialog,
 		PriorityPickerDialog,
+		LeadScoreBadge,
 		ArrowRightThick,
 		AccountPlus,
 		Flag,
@@ -193,10 +200,21 @@ export default {
 	},
 
 	computed: {
-		/** Whether the details row has anything to show. */
+		/**
+		 * Whether the details row has anything to show.
+		 *
+		 * @return {boolean}
+		 *
+		 * @spec openspec/specs/lead-management/spec.md
+		 */
 		hasMeta() {
-			return !!(this.item.value || this.item.assignee || this.daysAge > 0
-				|| this.isStaleItem || this.item.expectedCloseDate)
+			return !!(
+				this.item.value
+				|| this.item.assignee
+				|| this.daysAge > 0
+				|| this.isStaleItem
+				|| this.item.expectedCloseDate
+			)
 		},
 
 		/**
@@ -368,6 +386,18 @@ export default {
 		getPriorityLabel,
 		getPriorityColor,
 		getStatusLabel,
+
+		/**
+		 * Space opens the card like Enter. Its scroll is prevented only after
+		 * the open, so a modified Space still reaches openRowTarget unhandled.
+		 *
+		 * @param {KeyboardEvent} event The keydown.
+		 * @spec openspec/specs/pipeline/spec.md#requirement-kanban-board-view-mvp
+		 */
+		openOnSpace(event) {
+			this.$emit('open', this.item, event)
+			event.preventDefault()
+		},
 
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-41

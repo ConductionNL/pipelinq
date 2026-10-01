@@ -58,7 +58,9 @@
 				<dt>{{ t('pipelinq', 'Subtotal') }}</dt>
 				<dd>{{ formatEur(transaction.subtotal) }}</dd>
 			</div>
-			<div v-if="discountTotal > 0" class="pos-tx-totals__row pos-tx-totals__row--discount">
+			<div
+				v-if="discountTotal > 0"
+				class="pos-tx-totals__row pos-tx-totals__row--discount">
 				<dt>{{ t('pipelinq', 'Discount') }}</dt>
 				<dd>− {{ formatEur(discountTotal) }}</dd>
 			</div>
@@ -70,7 +72,9 @@
 				<dt>{{ t('pipelinq', 'Total') }}</dt>
 				<dd>
 					{{ formatEur(transaction.total) }}
-					<small class="pos-tx-totals__suffix">{{ priceModeSuffix }}</small>
+					<small class="pos-tx-totals__suffix">{{
+						priceModeSuffix
+					}}</small>
 				</dd>
 			</div>
 		</dl>
@@ -127,10 +131,24 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * The transaction, or an empty object before it loads.
+		 *
+		 * @return {object} The transaction.
+		 *
+		 * @spec openspec/specs/pos-transaction-core/spec.md#req-pos-003-real-time-total-calculation
+		 */
 		transaction() {
 			return this.objectData || {}
 		},
 
+		/**
+		 * The transaction's total discount, 0 when unset.
+		 *
+		 * @return {number} The discount total.
+		 *
+		 * @spec openspec/specs/pos-transaction-core/spec.md#req-pos-003-real-time-total-calculation
+		 */
 		discountTotal() {
 			return Number(this.transaction.discountTotal) || 0
 		},
@@ -139,9 +157,13 @@ export default {
 		 * The stored per-rate VAT rows, lowest rate first.
 		 *
 		 * @return {Array<object>} The tax breakdown rows.
+		 *
+		 * @spec openspec/specs/pos-nl-btw-engine/spec.md#req-btw-005-tax-breakdown-display-on-detail-view
 		 */
 		taxBreakdown() {
-			const rows = Array.isArray(this.transaction.taxBreakdown) ? this.transaction.taxBreakdown : []
+			const rows = Array.isArray(this.transaction.taxBreakdown)
+				? this.transaction.taxBreakdown
+				: []
 			return [...rows].sort((a, b) => a.rate - b.rate)
 		},
 
@@ -150,21 +172,40 @@ export default {
 		 * existed gets its descriptions from the tax breakdown instead.
 		 *
 		 * @return {Array<object>} The invoice breakdown rows.
+		 *
+		 * @spec openspec/specs/pos-nl-btw-engine/spec.md#req-btw-003-invoice-breakdown-for-gl-posting
 		 */
 		invoiceBreakdown() {
 			const rows = this.transaction.invoiceBreakdown
 			if (Array.isArray(rows) && rows.length > 0) {
 				return [...rows].sort((a, b) => a.rate - b.rate)
 			}
-			return this.taxBreakdown.map((row) => ({ ...row, description: rateDescription(row.rate) }))
+			return this.taxBreakdown.map((row) => ({
+				...row,
+				description: rateDescription(row.rate),
+			}))
 		},
 
+		/**
+		 * The short VAT suffix for amounts in the transaction's price mode.
+		 *
+		 * @return {string} The suffix.
+		 *
+		 * @spec openspec/specs/pos-nl-btw-engine/spec.md#req-btw-004-price-mode-display-inclusive-vs-exclusive
+		 */
 		priceModeSuffix() {
 			return this.transaction.priceMode === 'incl'
 				? t('pipelinq', 'incl. VAT')
 				: t('pipelinq', 'excl. VAT')
 		},
 
+		/**
+		 * The label of the transaction's price mode.
+		 *
+		 * @return {string} The label.
+		 *
+		 * @spec openspec/specs/pos-nl-btw-engine/spec.md#req-btw-004-price-mode-display-inclusive-vs-exclusive
+		 */
 		priceModeLabel() {
 			return this.transaction.priceMode === 'incl'
 				? t('pipelinq', 'Prices incl. VAT')

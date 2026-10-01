@@ -67,7 +67,10 @@ test.describe('Blast wizard transport step', () => {
 	}) => {
 		await openApp(page)
 		await navClick(page, 'Blasts', /\/blasts$/)
-		await page.locator('#content-vue [data-testid="cn-cta-primary"]').first().click()
+		await page
+			.locator('#content-vue [data-testid="cn-cta-primary"]')
+			.first()
+			.click()
 
 		const dialog = page.getByRole('dialog', { name: 'New blast' })
 		await expect(dialog).toBeVisible({ timeout: 20000 })
@@ -114,9 +117,8 @@ test.describe('Blast wizard transport step', () => {
 			'Leave empty to send through the default transport.',
 			{ timeout: 15000 },
 		)
-		await expect(dialog.locator('.blast-wizard__transport .vs__dropdown-toggle')).toContainText(
-			'Instance mail server',
-			{ timeout: 15000 },
-		)
+		await expect(
+			dialog.locator('.blast-wizard__transport .vs__dropdown-toggle'),
+		).toContainText('Instance mail server', { timeout: 15000 })
 	})
 })

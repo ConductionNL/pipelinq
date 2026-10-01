@@ -222,8 +222,19 @@ export default {
 			}
 		},
 
+		/**
+		 * Open a booking's detail page from its timeline row.
+		 *
+		 * @param {object} row The booking row.
+		 * @param {MouseEvent} [event] The row click; a modified or middle click opens a new tab.
+		 * @spec openspec/specs/appointment-booking/spec.md#requirement-req-apt-014-customer-timeline-integration
+		 */
 		open(row, event) {
-			openRowTarget(event, { name: 'BookingDetail', params: { id: row.id } }, this.$router)
+			openRowTarget(
+				event,
+				{ name: 'BookingDetail', params: { id: row.id } },
+				this.$router,
+			)
 		},
 
 		serviceLabel(row) {

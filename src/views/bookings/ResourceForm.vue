@@ -138,7 +138,14 @@ import { vacationsError, workingHoursError } from '../../utils/resourceValidatio
 
 export default {
 	name: 'ResourceForm',
-	components: { NcButton, NcSelect, NcTextField, ResourceHoursEditor, ResourceVacationsEditor },
+	components: {
+		NcButton,
+		NcSelect,
+		NcTextField,
+		ResourceHoursEditor,
+		ResourceVacationsEditor,
+	},
+
 	props: {
 		resource: { type: Object, default: () => ({}) },
 	},
@@ -185,10 +192,24 @@ export default {
 			]
 		},
 
+		/**
+		 * The first rule the working-hours rows break, or an empty string.
+		 *
+		 * @return {string}
+		 *
+		 * @spec openspec/specs/appointment-booking/spec.md
+		 */
 		hoursError() {
 			return workingHoursError(this.form.workingHours)
 		},
 
+		/**
+		 * The first rule the vacation rows break, or an empty string.
+		 *
+		 * @return {string}
+		 *
+		 * @spec openspec/specs/appointment-booking/spec.md
+		 */
 		vacationError() {
 			return vacationsError(this.form.vacations)
 		},

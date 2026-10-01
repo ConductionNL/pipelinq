@@ -196,8 +196,13 @@
 			<template #field-multiStep="{ value, updateField }">
 				<ServiceStepsEditor
 					:modelValue="value || []"
-					:durationMinutes="$refs.editDialog?.formData?.durationMinutes ?? serviceData.durationMinutes"
-					@update:modelValue="(steps) => updateField('multiStep', steps)" />
+					:durationMinutes="
+						$refs.editDialog?.formData?.durationMinutes
+						?? serviceData.durationMinutes
+					"
+					@update:modelValue="
+						(steps) => updateField('multiStep', steps)
+					" />
 			</template>
 		</CnFormDialog>
 	</CnDetailPage>
@@ -309,6 +314,13 @@ export default {
 			return skills.length ? skills.join(', ') : '-'
 		},
 
+		/**
+		 * The service schema, once fetched, for the edit dialog.
+		 *
+		 * @return {object|null}
+		 *
+		 * @spec openspec/specs/appointment-booking/spec.md
+		 */
 		serviceSchema() {
 			return this.objectStore.getSchema('appointmentService')
 		},
@@ -318,6 +330,8 @@ export default {
 		 * dialog's schema-generated fields (the schema carries no titles).
 		 *
 		 * @return {object} fieldOverrides for CnFormDialog.
+		 *
+		 * @spec openspec/specs/appointment-booking/spec.md
 		 */
 		editFieldOverrides() {
 			return {
@@ -332,21 +346,56 @@ export default {
 					},
 				},
 
-				description: { label: t('pipelinq', 'Description'), order: 3, widget: 'textarea' },
+				description: {
+					label: t('pipelinq', 'Description'),
+					order: 3,
+					widget: 'textarea',
+				},
+
 				durationMinutes: {
 					label: t('pipelinq', 'Duration (minutes)'),
 					order: 4,
 					validation: { minimum: 1, maximum: 1440 },
 				},
 
-				bufferBeforeMinutes: { label: t('pipelinq', 'Buffer before (min)'), order: 5 },
-				bufferAfterMinutes: { label: t('pipelinq', 'Buffer after (min)'), order: 6 },
+				bufferBeforeMinutes: {
+					label: t('pipelinq', 'Buffer before (min)'),
+					order: 5,
+				},
+
+				bufferAfterMinutes: {
+					label: t('pipelinq', 'Buffer after (min)'),
+					order: 6,
+				},
+
 				price: { label: t('pipelinq', 'Price'), order: 7 },
-				currency: { label: t('pipelinq', 'Currency'), order: 8, validation: { maxLength: 3 } },
-				requiredSkills: { label: t('pipelinq', 'Required skills'), order: 9 },
-				multiStep: { label: t('pipelinq', 'Multi-step composition'), order: 10, widget: 'json' },
-				bookableOnline: { label: t('pipelinq', 'Bookable online'), order: 11 },
-				requiresDeposit: { label: t('pipelinq', 'Requires deposit'), order: 12 },
+				currency: {
+					label: t('pipelinq', 'Currency'),
+					order: 8,
+					validation: { maxLength: 3 },
+				},
+
+				requiredSkills: {
+					label: t('pipelinq', 'Required skills'),
+					order: 9,
+				},
+
+				multiStep: {
+					label: t('pipelinq', 'Multi-step composition'),
+					order: 10,
+					widget: 'json',
+				},
+
+				bookableOnline: {
+					label: t('pipelinq', 'Bookable online'),
+					order: 11,
+				},
+
+				requiresDeposit: {
+					label: t('pipelinq', 'Requires deposit'),
+					order: 12,
+				},
+
 				depositAmount: {
 					label: t('pipelinq', 'Deposit amount'),
 					order: 13,
@@ -364,7 +413,10 @@ export default {
 					},
 				},
 
-				cancellationHoursBefore: { label: t('pipelinq', 'Cancellation hours before'), order: 16 },
+				cancellationHoursBefore: {
+					label: t('pipelinq', 'Cancellation hours before'),
+					order: 16,
+				},
 			}
 		},
 
@@ -386,6 +438,13 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * Fetch the service schema and open the edit dialog on it.
+		 *
+		 * @return {Promise<void>}
+		 *
+		 * @spec openspec/specs/appointment-booking/spec.md
+		 */
 		async openEditDialog() {
 			await this.objectStore.fetchSchema('appointmentService')
 			if (!this.serviceSchema) {
@@ -399,16 +458,21 @@ export default {
 		 * Save the edit dialog's data and report the outcome back to it.
 		 *
 		 * @param {object} formData The dialog's form data.
+		 *
+		 * @spec openspec/specs/appointment-booking/spec.md
 		 */
 		async onEditConfirm(formData) {
 			const dialog = this.$refs.editDialog
-			const saved = await this.objectStore.saveObject(
-				'appointmentService',
-				{ ...formData, id: this.serviceId },
-			)
+			const saved = await this.objectStore.saveObject('appointmentService', {
+				...formData,
+				id: this.serviceId,
+			})
 			if (!saved) {
 				const error = this.objectStore.getError?.('appointmentService')
-				dialog?.setResult({ error: error?.message || t('pipelinq', 'Failed to save service.') })
+				dialog?.setResult({
+					error:
+						error?.message || t('pipelinq', 'Failed to save service.'),
+				})
 				return
 			}
 			dialog?.setResult({ success: true })

@@ -27,6 +27,11 @@
 						@click="filter = 'request'">
 						{{ t('pipelinq', 'Requests') }}
 					</NcButton>
+					<NcButton
+						:variant="filter === 'task' ? 'primary' : 'secondary'"
+						@click="filter = 'task'">
+						{{ t('pipelinq', 'Follow-ups') }}
+					</NcButton>
 				</div>
 				<label class="show-completed-toggle">
 					<input v-model="showCompleted" type="checkbox" />
@@ -74,7 +79,7 @@
 							<span
 								class="entity-badge"
 								:class="'badge--' + item.entityType">
-								{{ item.entityType === 'lead' ? 'LEAD' : 'REQ' }}
+								{{ badgeText(item.entityType) }}
 							</span>
 							<span
 								v-if="item.priority && item.priority !== 'normal'"
@@ -132,6 +137,7 @@
 import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
 import { formatDateFull, formatNumber } from '../services/localeUtils.js'
+import { GROUP_ORDER, workGroup } from '../services/myWorkGroups.js'
 import { isStale } from '../services/pipelineUtils.js'
 import {
 	getPriorityColor,
@@ -190,6 +196,7 @@ export default {
 			showCompleted: false,
 			myLeads: [],
 			myRequests: [],
+			myTasks: [],
 			pipelines: [],
 		}
 	},
@@ -309,6 +316,34 @@ export default {
 				})
 			}
 
+			// Follow-up tasks and callbacks assigned to me (crmTask), so the
+			// day's calls and follow-ups sit in the same list as the deals.
+			for (const task of this.myTasks) {
+				const isDone = ['completed', 'expired'].includes(task.status)
+				if (!this.showCompleted && isDone) continue
+
+				const due = task.deadline ? new Date(task.deadline) : null
+				const group = workGroup(due, now, weekEnd, isDone)
+
+				items.push({
+					id: task.id,
+					entityType: 'task',
+					title: task.subject || '-',
+					stageOrStatus: task.status || '',
+					pipelineName: '',
+					priority: task.priority || 'normal',
+					value: null,
+					dueDate: task.deadline,
+					isOverdue: group === 'overdue',
+					isDueToday: group === 'due-today',
+					overdueDays: group === 'overdue' ? daysBetween(due, now) : 0,
+					isClosed: isDone,
+					isStale: false,
+					_dueMs: due ? due.getTime() : Infinity,
+					_group: group,
+				})
+			}
+
 			return items
 		},
 
@@ -346,12 +381,7 @@ export default {
 		 * @spec openspec/changes/reverse-2026-05-26-fe-mywork-ui/tasks.md#task-10
 		 */
 		groupedItems() {
-			const groups = {
-				overdue: [],
-				'due-this-week': [],
-				upcoming: [],
-				'no-due-date': [],
-			}
+			const groups = Object.fromEntries(GROUP_ORDER.map((key) => [key, []]))
 
 			for (const item of this.filteredItems) {
 				const g = groups[item._group]
@@ -376,6 +406,7 @@ export default {
 		 */
 		visibleGroups() {
 			const defs = [
+				{ key: 'due-today', label: t('pipelinq', 'Today') },
 				{ key: 'overdue', label: t('pipelinq', 'Overdue') },
 				{ key: 'due-this-week', label: t('pipelinq', 'Due This Week') },
 				{ key: 'upcoming', label: t('pipelinq', 'Upcoming') },
@@ -394,6 +425,8 @@ export default {
 				return t('pipelinq', 'No leads assigned to you')
 			if (this.filter === 'request')
 				return t('pipelinq', 'No requests assigned to you')
+			if (this.filter === 'task')
+				return t('pipelinq', 'No follow-ups assigned to you')
 			return t('pipelinq', 'No items assigned to you')
 		},
 	},
@@ -419,11 +452,20 @@ export default {
 		 * @spec openspec/changes/reverse-2026-05-26-fe-mywork-ui/tasks.md#task-3
 		 */
 		computeGroup(due, now, weekEnd, isClosed) {
-			if (!due) return 'no-due-date'
-			if (isClosed) return 'no-due-date'
-			if (due < now) return 'overdue'
-			if (due <= weekEnd) return 'due-this-week'
-			return 'upcoming'
+			return workGroup(due, now, weekEnd, isClosed)
+		},
+
+		/**
+		 * The short type badge on a work card.
+		 *
+		 * @param {string} entityType lead, request or task.
+		 * @return {string}
+		 * @spec openspec/specs/mobile-experience/spec.md#requirement-my-work-works-as-a-phone-list-req-mob-002
+		 */
+		badgeText(entityType) {
+			if (entityType === 'lead') return 'LEAD'
+			if (entityType === 'task') return t('pipelinq', 'TASK')
+			return 'REQ'
 		},
 
 		/**
@@ -459,6 +501,16 @@ export default {
 							_limit: 200,
 						}).then((items) => {
 							this.myRequests = items
+						}),
+					)
+				}
+				if (config.crmTask && this.currentUser) {
+					promises.push(
+						this.fetchRaw('crmTask', {
+							assigneeUserId: this.currentUser,
+							_limit: 200,
+						}).then((items) => {
+							this.myTasks = items
 						}),
 					)
 				}
@@ -543,9 +595,15 @@ export default {
 		 */
 		itemRoute(item) {
 			// Requests are `ticket` rows narrowed by ticketType
-			// (unify-ticket-supertype) — every non-lead work item opens on
-			// the unified TicketDetail page, which reads its own ticketType.
-			const name = item.entityType === 'lead' ? 'LeadDetail' : 'TicketDetail'
+			// (unify-ticket-supertype) — every other non-lead, non-task work
+			// item opens on the unified TicketDetail page, which reads its own
+			// ticketType.
+			let name = 'TicketDetail'
+			if (item.entityType === 'lead') {
+				name = 'LeadDetail'
+			} else if (item.entityType === 'task') {
+				name = 'TaskDetail'
+			}
 			return { name, params: { id: item.id } }
 		},
 	},
@@ -728,6 +786,12 @@ export default {
 	border: 1px solid var(--my-work-request-border);
 }
 
+.badge--task {
+	background: var(--color-background-dark);
+	color: var(--color-main-text);
+	border: 1px solid var(--color-border-dark);
+}
+
 .priority-badge {
 	font-size: 11px;
 	font-weight: 600;
@@ -790,6 +854,38 @@ export default {
 	color: var(--color-element-warning);
 	margin-inline-start: 6px;
 	vertical-align: middle;
+}
+
+/* Phone: one column, today's work first (the group order), 44 px targets. */
+@media (max-width: 600px) {
+	.my-work {
+		padding: 12px;
+		max-width: 100%;
+		overflow-x: hidden;
+	}
+
+	.filter-buttons {
+		flex-wrap: wrap;
+	}
+
+	.filter-buttons :deep(button),
+	.show-completed-toggle,
+	.work-card {
+		min-height: 44px;
+	}
+
+	.work-card {
+		padding: 12px;
+	}
+
+	.work-card__meta,
+	.work-card__footer {
+		flex-wrap: wrap;
+	}
+
+	.work-card__title {
+		overflow-wrap: anywhere;
+	}
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -21,12 +21,19 @@
 		<template v-if="rows.length">
 			<div class="booking-rows__columns" aria-hidden="true">
 				<span v-if="numbered" />
-				<span v-for="column in columns" :key="column.key">{{ column.label }}</span>
+				<span v-for="column in columns" :key="column.key">{{
+					column.label
+				}}</span>
 				<span />
 			</div>
 			<ol class="booking-rows__list" :aria-labelledby="headingId">
 				<li v-for="(row, idx) in rows" :key="idx" class="booking-rows__row">
-					<span v-if="numbered" class="booking-rows__index" aria-hidden="true">{{ idx + 1 }}</span>
+					<span
+						v-if="numbered"
+						class="booking-rows__index"
+						aria-hidden="true"
+						>{{ idx + 1 }}</span
+					>
 					<div
 						v-for="column in columns"
 						:key="column.key"
@@ -82,7 +89,11 @@
 				</template>
 				{{ addLabel }}
 			</NcButton>
-			<p v-if="message" class="booking-rows__message" :class="`booking-rows__message--${messageType}`" role="status">
+			<p
+				v-if="message"
+				class="booking-rows__message"
+				:class="`booking-rows__message--${messageType}`"
+				role="status">
 				<AlertOutline :size="16" />
 				{{ message }}
 			</p>
@@ -102,7 +113,14 @@ let instanceCount = 0
 
 export default {
 	name: 'BookingRowsEditor',
-	components: { AlertOutline, ChevronDown, ChevronUp, NcButton, Plus, TrashCanOutline },
+	components: {
+		AlertOutline,
+		ChevronDown,
+		ChevronUp,
+		NcButton,
+		Plus,
+		TrashCanOutline,
+	},
 
 	props: {
 		/** The rows being edited. */
@@ -187,38 +205,90 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * The rows being edited, or none when the value is not an array.
+		 *
+		 * @return {Array<object>}
+		 *
+		 * @spec openspec/specs/appointment-booking/spec.md
+		 */
 		rows() {
 			return Array.isArray(this.modelValue) ? this.modelValue : []
 		},
 
+		/**
+		 * The id of this editor's heading, unique per instance.
+		 *
+		 * @return {string}
+		 *
+		 * @spec openspec/specs/appointment-booking/spec.md
+		 */
 		headingId() {
 			return `booking-rows-heading-${this.uid}`
 		},
 
-		/** Grid tracks: optional number, the host's columns, then a fixed actions track. */
+		/**
+		 * Grid tracks: optional number, the host's columns, then a fixed actions track.
+		 *
+		 * @return {string}
+		 *
+		 * @spec openspec/specs/appointment-booking/spec.md
+		 */
 		gridColumns() {
 			const buttons = this.reorderable ? 3 : 1
 			return [
 				this.numbered ? '24px' : null,
 				...this.columns.map((c) => c.width || 'minmax(0, 1fr)'),
 				`calc(var(--default-clickable-area) * ${buttons})`,
-			].filter(Boolean).join(' ')
+			]
+				.filter(Boolean)
+				.join(' ')
 		},
 	},
 
 	methods: {
+		/**
+		 * Hand the new row list to the host.
+		 *
+		 * @param {Array<object>} rows The rows after the edit.
+		 *
+		 * @spec openspec/specs/appointment-booking/spec.md
+		 */
 		emitRows(rows) {
 			this.$emit('update:modelValue', rows)
 		},
 
+		/**
+		 * Set one field of one row.
+		 *
+		 * @param {number} idx The row index.
+		 * @param {string} key The field.
+		 * @param {string|number|boolean} value The new value.
+		 *
+		 * @spec openspec/specs/appointment-booking/spec.md
+		 */
 		updateRow(idx, key, value) {
-			this.emitRows(this.rows.map((r, i) => (i === idx ? { ...r, [key]: value } : r)))
+			this.emitRows(
+				this.rows.map((r, i) => (i === idx ? { ...r, [key]: value } : r)),
+			)
 		},
 
+		/**
+		 * Append a new row from the host's `newRow` factory.
+		 *
+		 * @spec openspec/specs/appointment-booking/spec.md
+		 */
 		addRow() {
 			this.emitRows([...this.rows, this.newRow()])
 		},
 
+		/**
+		 * Remove one row.
+		 *
+		 * @param {number} idx The row index.
+		 *
+		 * @spec openspec/specs/appointment-booking/spec.md
+		 */
 		removeRow(idx) {
 			this.emitRows(this.rows.filter((_, i) => i !== idx))
 		},
@@ -228,6 +298,8 @@ export default {
 		 *
 		 * @param {number} idx Source index.
 		 * @param {number} delta Direction (+1 = down, -1 = up).
+		 *
+		 * @spec openspec/specs/appointment-booking/spec.md
 		 */
 		moveRow(idx, delta) {
 			const target = idx + delta

@@ -3,10 +3,11 @@
   - SPDX-FileCopyrightText: 2024 Conduction B.V.
 -->
 <template>
-	<CnDetailPage
-		:title="t('pipelinq', 'Export run')"
-		:loading="loading">
+	<CnDetailPage :title="t('pipelinq', 'Export run')" :loading="loading">
 		<template #header>
+			<NcButton variant="tertiary" :to="{ name: 'ExportRuns' }">
+				{{ t('pipelinq', 'Back to list') }}
+			</NcButton>
 			<CnStatusBadge :status="badgeStatus" :label="statusLabel" />
 			<NcButton
 				v-if="canRetry"

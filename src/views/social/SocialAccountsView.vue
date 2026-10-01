@@ -173,8 +173,12 @@ export default {
 		},
 
 		/**
+		 * The icon an account's network is shown with.
+		 *
 		 * @param {string} network The network.
 		 * @return {object} Its icon component.
+		 *
+		 * @spec openspec/changes/social-publishing/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
 		 */
 		networkIcon(network) {
 			return networkIcon(network)
@@ -186,6 +190,8 @@ export default {
 		 *
 		 * @param {object} account The account.
 		 * @return {boolean} True when the handle differs from the shown name.
+		 *
+		 * @spec openspec/changes/social-publishing/specs/social-accounts/spec.md#requirement-a-connected-account-stores-a-reference-never-a-token
 		 */
 		showHandle(account) {
 			return Boolean(

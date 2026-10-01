@@ -7,6 +7,7 @@
     "build": "NODE_ENV=production webpack --config webpack.config.js --progress",
     "check:e2e-nav": "node scripts/check-e2e-navigation.js",
     "check:l10n-js": "node scripts/build-l10n-js.js --check",
+    "check:lib-link": "node scripts/check-lib-link.js",
     "check:manifest": "node scripts/check-manifest.js",
     "check:schema-l10n": "node scripts/check-schema-l10n.js",
     "check:spec-links": "node scripts/check-spec-links.js",
@@ -33,11 +34,10 @@
   ],
   "prettier": "@nextcloud/prettier-config",
   "overrides": {
-    "@nextcloud/axios": "$@nextcloud/axios",
-    "dexie": "$dexie"
+    "@nextcloud/axios": "$@nextcloud/axios"
   },
   "dependencies": {
-    "@conduction/nextcloud-vue": "^2.57.1",
+    "@conduction/nextcloud-vue": "2.56.0-beta.3",
     "@nextcloud/axios": "~2.6.0",
     "@nextcloud/capabilities": "^1.2.1",
     "@nextcloud/dialogs": "^7.4.1",
