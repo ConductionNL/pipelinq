@@ -47,11 +47,14 @@ vi.mock('@nextcloud/vue', () => ({
 }))
 
 let ContactLinks
+let LeadHeaderActions
 let LogVisitAction
 
 beforeAll(async () => {
 	globalThis.t = (app, text) => text
 	ContactLinks = (await import('../../src/components/ContactLinks.vue')).default
+	LeadHeaderActions = (await import('../../src/components/LeadHeaderActions.vue'))
+		.default
 	LogVisitAction = (await import('../../src/components/LogVisitAction.vue'))
 		.default
 })
@@ -177,6 +180,21 @@ describe('callers', () => {
 			expect.arrayContaining(['ContactLinks', 'LogVisitAction']),
 		)
 		expect(widgets('ContactDetail')).toContain('ContactLinks')
-		expect(widgets('LeadDetail')).toContain('LogVisitAction')
+		expect(pages.find((p) => p.id === 'LeadDetail').actionsComponent).toBe(
+			'LeadHeaderActions',
+		)
+	})
+
+	it('the lead header binds the visit to the lead and its client', () => {
+		const w = mount(LeadHeaderActions, {
+			props: { objectId: 'lead-1', object: { client: 'client-1' } },
+			global,
+		})
+		const action = w.findComponent(LogVisitAction)
+		expect(action.props()).toMatchObject({
+			leadId: 'lead-1',
+			clientId: 'client-1',
+			inHeader: true,
+		})
 	})
 })

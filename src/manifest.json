@@ -3050,6 +3050,7 @@
 			"route": "/leads/:id",
 			"type": "detail",
 			"title": "Lead",
+			"actionsComponent": "LeadHeaderActions",
 			"config": {
 				"register": "pipelinq",
 				"schema": "lead",
@@ -3448,15 +3449,6 @@
 				],
 				"_bodyWidgetsNote": "Suggested colleagues (pipelinq#2049): RoutingSuggestionSection ranks colleagues whose skills cover the lead category, and writes the chosen colleague into the lead assignee.",
 				"bodyWidgets": [
-					{
-						"id": "log-visit",
-						"component": "LogVisitAction",
-						"placement": "before-body",
-						"props": {
-							"leadId": "@objectId",
-							"clientId": "@object.client"
-						}
-					},
 					{
 						"id": "routing-suggestions",
 						"component": "RoutingSuggestionSection",

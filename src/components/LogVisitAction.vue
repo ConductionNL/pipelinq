@@ -2,7 +2,7 @@
 <!-- Copyright (C) 2026 Conduction B.V. -->
 <!-- @spec openspec/specs/mobile-experience/spec.md#requirement-a-visit-is-logged-in-one-small-sheet-req-mob-003 -->
 <template>
-	<div class="log-visit-action">
+	<div class="log-visit-action" :class="{ 'log-visit-action--body': !inHeader }">
 		<NcButton
 			variant="secondary"
 			data-testid="log-visit-button"
@@ -56,6 +56,12 @@ export default {
 		leadId: {
 			type: String,
 			default: '',
+		},
+
+		/** Rendered among the page header's buttons instead of in the body. */
+		inHeader: {
+			type: Boolean,
+			default: false,
 		},
 	},
 
@@ -135,11 +141,11 @@ export default {
 </script>
 
 <style scoped>
-.log-visit-action {
+.log-visit-action--body {
 	margin: 0 0 12px;
 }
 
-.log-visit-action :deep(button) {
+.log-visit-action--body :deep(button) {
 	min-height: 44px;
 }
 </style>
