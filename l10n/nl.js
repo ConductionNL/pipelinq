@@ -6861,7 +6861,7 @@ OC.L10N.register(
         "Description written": "Omschrijving ingevuld",
         "Records": "Records",
         "Portal resident": "Inwoner in het portaal",
-        "The portal reference of the resident who asked this question. Never a BSN.": "De portaalverwijzing van de inwoner die deze vraag stelde. Nooit een BSN.",
+        "The portal reference of the resident who asked this question or filed this request or complaint. Never a BSN.": "De portaalverwijzing van de inwoner die deze vraag stelde of dit verzoek of deze klacht indiende. Nooit een BSN.",
         "Asked about": "Vraag over",
         "The dossier the resident asked about, as it was when they asked.": "Het dossier waar de inwoner een vraag over stelde, zoals het was bij het stellen.",
         "What the question is about.": "Waar de vraag over gaat.",
