@@ -101,8 +101,12 @@ class MainRegisterReader {
 		[$register, $schema] = $this->config(schemaKey: $schemaKey);
 
 		try {
+			// No Nextcloud user on a portal read (see save()); callers scope the
+			// rows to the resident themselves.
 			$results = $this->objectService()->findAll(
-				config: ['filters' => array_merge(['register' => $register, 'schema' => $schema], $filters)]
+				config: ['filters' => array_merge(['register' => $register, 'schema' => $schema], $filters)],
+				_rbac: false,
+				_multitenancy: false
 			);
 		} catch (\Throwable $e) {
 			$this->logger->warning(
@@ -140,7 +144,7 @@ class MainRegisterReader {
 		[$register, $schema] = $this->config(schemaKey: $schemaKey);
 
 		try {
-			$object = $this->objectService()->find(id: $id, register: $register, schema: $schema);
+			$object = $this->objectService()->find(id: $id, register: $register, schema: $schema, _rbac: false, _multitenancy: false);
 		} catch (\Throwable $e) {
 			return null;
 		}

@@ -57,4 +57,48 @@ class MainRegisterReaderTest extends TestCase {
 		$reader = new MainRegisterReader($appConfig, $this->createMock(LoggerInterface::class), $objectService);
 		$reader->save(schemaKey: 'ticket', data: ['title' => 'Vraag']);
 	}//end testAPortalWriteIsNotRefusedForHavingNoNextcloudUser()
+
+	/**
+	 * The same holds for reads: a resident's reply looks up their own ticket,
+	 * and under per-user RBAC "Anonymous" found nothing, so every reply
+	 * answered 404 (Woo journey e2e, J4). The callers scope the result to the
+	 * resident themselves.
+	 *
+	 * @return void
+	 */
+	public function testAPortalReadIsNotEmptiedForHavingNoNextcloudUser(): void {
+		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig->method('getValueString')->willReturnCallback(
+			static fn (string $app, string $key, string $default = ''): string => match ($key) {
+				'register' => '7',
+				'ticket_schema' => '42',
+				default => $default,
+			}
+		);
+
+		$found = $this->createMock(\OCA\OpenRegister\Contract\ObjectEntityInterface::class);
+		$found->method('jsonSerialize')->willReturn(['id' => 't-1']);
+
+		$objectService = $this->createMock(ObjectServiceInterface::class);
+		$objectService->expects($this->once())
+			->method('find')
+			->with(
+				$this->equalTo('t-1'),
+				$this->anything(),
+				$this->anything(),
+				$this->equalTo('7'),
+				$this->equalTo('42'),
+				$this->isFalse(),
+				$this->isFalse(),
+			)
+			->willReturn($found);
+		$objectService->expects($this->once())
+			->method('findAll')
+			->with($this->anything(), $this->isFalse(), $this->isFalse())
+			->willReturn([]);
+
+		$reader = new MainRegisterReader($appConfig, $this->createMock(LoggerInterface::class), $objectService);
+		$this->assertNotNull($reader->find(schemaKey: 'ticket', id: 't-1'));
+		$reader->findAll(schemaKey: 'ticket', filters: ['portalSubject' => 's-1']);
+	}//end testAPortalReadIsNotEmptiedForHavingNoNextcloudUser()
 }//end class
