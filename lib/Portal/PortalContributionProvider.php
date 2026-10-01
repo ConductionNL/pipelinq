@@ -289,6 +289,13 @@ class PortalContributionProvider {
 					// request form. `ticketType` is required on the schema and is
 					// deliberately NOT a whitelisted field.
 					'defaults' => ['ticketType' => 'request'],
+					// The owner stamp: portaliq writes the subject's own
+					// `clientId` claim into `client`, the field `clientRequests`
+					// is scoped on. Without it the ticket was saved with no
+					// client and never showed in the resident's own list; a
+					// subject without the claim is now refused instead.
+					'scopeField' => 'client',
+					'scopeClaim' => 'clientId',
 					'fields' => [
 						'title',
 						'description',
@@ -337,6 +344,9 @@ class PortalContributionProvider {
 					'schema' => 'ticket',
 					// Stamped server-side (see createRequest).
 					'defaults' => ['ticketType' => 'complaint'],
+					// The owner stamp `clientComplaints` reads (see createRequest).
+					'scopeField' => 'client',
+					'scopeClaim' => 'clientId',
 					// The complaint's classification is `complaintCategory` on the
 					// unified ticket — the supertype's plain `category` is the
 					// REQUEST's free-text category and is not part of this intake.
