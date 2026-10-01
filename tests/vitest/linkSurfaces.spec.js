@@ -14,7 +14,6 @@ import { mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
 
 vi.mock('@conduction/nextcloud-vue', async () => ({
-	...(await import('@conduction/nextcloud-vue/src/utils/linkNavigation.js')),
 	...(await import('@conduction/nextcloud-vue/src/utils/safeHref.js')),
 }))
 
