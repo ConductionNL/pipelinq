@@ -413,8 +413,8 @@
           "portalSubject": {
             "type": "string",
             "title": "Portal resident",
-            "description": "The portal reference of the resident who asked this question. Never a BSN.",
-            "x-notes": "questions-about-a-citizen-dossier (hydra woo-citizen-journey C4): the subjectRef portaliq put in the verified X-Portal-Subject assertion. It is the scope field of the myQuestions portal collection, so the resident reads only their own questions and portaliq's change rule knows whom to tell about an answer. Written by DossierQuestionService::ask() only.",
+            "description": "The portal reference of the resident who asked this question or filed this request or complaint. Never a BSN.",
+            "x-notes": "questions-about-a-citizen-dossier (hydra woo-citizen-journey C4): the subjectRef portaliq put in the verified X-Portal-Subject assertion. It is the scope field of the myQuestions portal collection, so the resident reads only their own questions and portaliq's change rule knows whom to tell about an answer. Written by DossierQuestionService::ask(), and by portaliq on a resident's own request or complaint (createOwnRequest, createOwnComplaint), which the ownRequests and ownComplaints collections read back. A DigiD resident has no clientId claim, so this is the scope that needs none.",
             "facetable": false
           },
           "subjectReference": {
