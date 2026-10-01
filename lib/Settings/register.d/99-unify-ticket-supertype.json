@@ -5,7 +5,7 @@
         "slug": "ticket",
         "title": "Ticket",
         "icon": "TicketOutline",
-        "version": "1.2.0",
+        "version": "1.3.0",
         "summary": "Unified inbound customer matter — request, complaint or contactmoment",
         "description": "The ticket supertype folds the former request, complaint and contactmoment schemas into one object distinguished by a ticketType discriminator (unify-ticket-supertype). A ticket is any inbound customer matter: a request/demand (with pipeline & queue), a complaint/klacht (with SLA & resolution) or a contactmoment (a single logged interaction, optionally hanging off a parent request-ticket). Per-type Schema.org identity is preserved via x-schema-org-by-type.",
         "x-schema-org": "schema:Thing",
@@ -95,9 +95,19 @@
                 "description": "Resolve a request-type ticket successfully. Authorization: the assignee (per-object owner RBAC)."
               },
               "convert": {
-                "from": ["in_progress"],
+                "from": ["new", "in_progress", "awaiting_customer"],
                 "to": "converted",
                 "description": "Convert a request-type ticket into a case (Procest). Authorization: the assignee (per-object owner RBAC)."
+              },
+              "await": {
+                "from": ["new", "in_progress"],
+                "to": "awaiting_customer",
+                "description": "Answer the customer and wait for their reply. Authorization: the assignee (per-object owner RBAC)."
+              },
+              "resume": {
+                "from": ["awaiting_customer"],
+                "to": "in_progress",
+                "description": "The customer replied; the ticket is back with the handler."
               },
               "resolve": {
                 "from": ["in_progress"],

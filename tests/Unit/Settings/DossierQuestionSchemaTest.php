@@ -136,12 +136,36 @@ class DossierQuestionSchemaTest extends TestCase {
 	 * @return void
 	 */
 	public function testTheVersionsMoved(): void {
-		$this->assertSame('1.2.0', $this->ticket()['version']);
+		$this->assertSame('1.3.0', $this->ticket()['version']);
 
 		$register = json_decode((string)file_get_contents(dirname(__DIR__, 3) . '/lib/Settings/pipelinq_register.json'), true);
-		$this->assertSame('1.7.0', $register['info']['version']);
-		$this->assertStringContainsString('1.7.0:', $register['info']['x-changelog']);
+		$this->assertSame('1.8.0', $register['info']['version']);
+		$this->assertStringContainsString('1.8.0:', $register['info']['x-changelog']);
 	}//end testTheVersionsMoved()
+
+	/**
+	 * The status moves a dossier question makes are all allowed by the
+	 * lifecycle. OpenRegister refuses any other write ("No transition allows
+	 * moving status from new to converted"), and the Woo journey e2e found
+	 * three: an employee converts a question that is still new or waiting for
+	 * the resident, "Opslaan en wachten op een reactie" moves it to
+	 * awaiting_customer, and the resident's reply moves it back to in_progress.
+	 *
+	 * @return void
+	 */
+	public function testTheLifecycleAllowsEveryMoveOfADossierQuestion(): void {
+		$lifecycle = $this->ticket()['configuration']['x-openregister-lifecycle'];
+		$allowed   = [];
+		foreach ($lifecycle['transitions'] as $transition) {
+			foreach ($transition['from'] as $from) {
+				$allowed[] = $from . '>' . $transition['to'];
+			}
+		}
+
+		foreach (['new>converted', 'in_progress>converted', 'awaiting_customer>converted', 'new>awaiting_customer', 'in_progress>awaiting_customer', 'awaiting_customer>in_progress'] as $move) {
+			$this->assertContains($move, $allowed, $move . ' must be an allowed status move');
+		}
+	}//end testTheLifecycleAllowsEveryMoveOfADossierQuestion()
 
 	/**
 	 * A property schema with only the standard JSON Schema keywords.
