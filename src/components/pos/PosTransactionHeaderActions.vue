@@ -23,6 +23,7 @@
 		v-if="hasActions"
 		class="pos-tx-header-actions"
 		data-testid="pos-tx-header-actions">
+		<!-- @spec openspec/specs/pos-lifecycle-guard-adoption/spec.md#REQ-PLG-001 -->
 		<NcButton
 			v-if="canEdit && transactionId"
 			variant="secondary"
@@ -80,6 +81,7 @@
 			</template>
 			{{ t('pipelinq', 'Email Receipt') }}
 		</NcButton>
+		<!-- @spec openspec/specs/pos-refund-return/spec.md#REQ-REF-002 -->
 		<NcButton
 			v-if="canRegisterReturn && transactionId"
 			variant="secondary"

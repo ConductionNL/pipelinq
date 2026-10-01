@@ -785,7 +785,8 @@
         "@self": {
           "register": "pipelinq",
           "schema": "campaignTemplate",
-          "slug": "template-q4-product-launch"
+          "slug": "template-q4-product-launch",
+          "version": "1.0.1"
         },
         "name": "Q4 Product Launch",
         "channel": "email",
@@ -810,7 +811,8 @@
         "@self": {
           "register": "pipelinq",
           "schema": "campaignTemplate",
-          "slug": "template-renewal-reminder"
+          "slug": "template-renewal-reminder",
+          "version": "1.0.1"
         },
         "name": "Renewal Reminder",
         "channel": "email",
