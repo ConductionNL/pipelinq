@@ -287,6 +287,7 @@ class ProspectDiscoveryService {
 	 * @param string $key The cache key.
 	 *
 	 * @return array|null The cached data or null.
+	 * @spec openspec/changes/reverse-2026-05-26-be-prospect/tasks.md#task-15
 	 */
 	protected function getFromCache(string $key): ?array {
 		if (function_exists(function: 'apcu_fetch') === false) {
@@ -310,6 +311,7 @@ class ProspectDiscoveryService {
 	 * @param array $data The data to cache.
 	 *
 	 * @return void
+	 * @spec openspec/changes/reverse-2026-05-26-be-prospect/tasks.md#task-15
 	 */
 	protected function setInCache(string $key, array $data): void {
 		if (function_exists(function: 'apcu_store') === true) {
