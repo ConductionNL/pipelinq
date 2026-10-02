@@ -7001,6 +7001,9 @@
         "Answer": "Answer",
         "Every answer the handler sent to the customer on this ticket, oldest first, each with when it was sent.": "Every answer the handler sent to the customer on this ticket, oldest first, each with when it was sent.",
         "The text the customer read.": "The text the customer read.",
-        "When the handler saved the answer.": "When the handler saved the answer."
+        "When the handler saved the answer.": "When the handler saved the answer.",
+        "Your question has been answered": "Your question has been answered",
+        "There is an answer to your question \"%1$s\".": "There is an answer to your question \"%1$s\".",
+        "Read the answer here: %1$s": "Read the answer here: %1$s"
     }
 }

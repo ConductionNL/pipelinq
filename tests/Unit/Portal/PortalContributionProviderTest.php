@@ -964,36 +964,119 @@ final class PortalContributionProviderTest extends TestCase {
 	}//end testNoAskActionWithoutOpenCatalogi()
 
 	/**
-	 * Scenario: The rule is declared for both audiences.
+	 * The answer notice is pipelinq's own message, so pipelinq declares its key and no change rule.
 	 *
-	 * The rule shape is the one portaliq's NotificationRuleNormaliser keeps:
-	 * its collection is one of this contribution's own, scoped by the subject
-	 * reference on the record, and its field is projected to the resident.
+	 * A change rule on `customerMessage` made portaliq write its generic
+	 * "<question> is bijgewerkt". pipelinq now writes "Uw vraag is
+	 * beantwoord" itself (QuestionAnsweredNotice) and only declares the key,
+	 * so portaliq sends the e-mail for it and writes nothing of its own.
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-the-resident-hears-that-there-is-an-answer-req-qcd-005
+	 * @spec openspec/changes/portal-questions-in-dutch/specs/dossier-questions/spec.md#requirement-the-answer-notice-says-the-question-was-answered
 	 */
-	public function testTheAnswerRuleIsDeclaredForBothAudiences(): void {
+	public function testTheAnswerNoticeIsADeclaredKeyNotAChangeRule(): void {
 		foreach ([self::CITIZEN_SUBJECT, self::CLIENT_SUBJECT] as $subject) {
 			$manifest = $this->provider->getContribution($subject);
-			$this->assertIsArray($manifest);
-
-			$rule = [
-				'ruleKey' => 'pipelinq.question.answered',
-				'collection' => 'myQuestions',
-				'on' => ['field' => 'customerMessage', 'operator' => 'changed'],
-				'titleField' => 'title',
-			];
-			$this->assertContains($rule, $manifest['notifications']);
-
-			$questions = $this->indexById($manifest['collections'])['myQuestions'];
-			$this->assertContains('customerMessage', $questions['fields']);
-			$this->assertContains('title', $questions['fields']);
+			$this->assertSame(['pipelinq.question.answered'], $manifest['notifications']);
 		}
 
 		$this->assertSame([], $this->provider->getContribution(self::CUSTOMER_SUBJECT)['notifications']);
-	}//end testTheAnswerRuleIsDeclaredForBothAudiences()
+	}//end testTheAnswerNoticeIsADeclaredKeyNotAChangeRule()
+
+	/**
+	 * Every page of every audience names its menu group, and every label a resident reads is Dutch.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/portal-questions-in-dutch/specs/dossier-questions/spec.md#requirement-every-portal-page-names-its-menu-group-in-dutch
+	 */
+	public function testEveryPageHasAGroupAndNoLabelIsEnglish(): void {
+		$english = '/\\b(My|Ask|Submit|File|questions?|requests?|complaints?|contracts?|history|account|appointments?)\\b/';
+		foreach ([self::CITIZEN_SUBJECT, self::CLIENT_SUBJECT, self::CUSTOMER_SUBJECT] as $subject) {
+			$manifest = $this->withOpenCatalogi()->getContribution($subject);
+			$this->assertNotSame('Pipelinq', $manifest['label']);
+			$this->assertNotEmpty($manifest['pages'], $subject['audience']);
+
+			foreach ($manifest['pages'] as $page) {
+				$this->assertNotSame('', (string)($page['group'] ?? ''), $page['id']);
+				$this->assertDoesNotMatchRegularExpression($english, $page['label'], $page['id']);
+			}
+
+			foreach ([...$manifest['collections'], ...$manifest['actions']] as $entry) {
+				$this->assertDoesNotMatchRegularExpression($english, (string)($entry['label'] ?? ''), $entry['id']);
+			}
+		}
+	}//end testEveryPageHasAGroupAndNoLabelIsEnglish()
+
+	/**
+	 * The resident's question pages: one group, no duplicate heading, the ask action in Dutch.
+	 *
+	 * A collection named like its page is titled by the page heading alone
+	 * (portaliq ContributionPage showsHeading), so the intro text carries no
+	 * heading of its own.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/portal-questions-in-dutch/specs/dossier-questions/spec.md#requirement-every-portal-page-names-its-menu-group-in-dutch
+	 */
+	public function testTheResidentReadsTheQuestionPagesInDutchUnderOneGroup(): void {
+		$manifest = $this->provider->getContribution(self::CITIZEN_SUBJECT);
+		$pages = $this->indexById($manifest['pages']);
+		$collections = $this->indexById($manifest['collections']);
+
+		$this->assertSame(['requests', 'complaints', 'questions'], array_keys($pages));
+		foreach ($pages as $page) {
+			$this->assertSame('Vragen en contact', $page['group']);
+		}
+
+		$this->assertSame('Mijn vragen', $pages['questions']['label']);
+		$this->assertSame('Mijn vragen', $collections['myQuestions']['label']);
+		$this->assertSame('Mijn verzoeken', $collections['ownRequests']['label']);
+		$this->assertSame('Mijn klachten', $collections['ownComplaints']['label']);
+		foreach ($pages as $page) {
+			foreach ($page['blocks'] as $block) {
+				if ($block['type'] === 'richText') {
+					$this->assertStringNotContainsString('#', $block['markdown'], $page['id']);
+				}
+			}
+		}
+
+		$ask = $this->indexById($this->withOpenCatalogi()->getContribution(self::CITIZEN_SUBJECT)['actions'])['askAboutDossier'];
+		$this->assertSame('Stel een vraag over dit dossier', $ask['label']);
+	}//end testTheResidentReadsTheQuestionPagesInDutchUnderOneGroup()
+
+	/**
+	 * A resident reads a ticket's status in words, never its code.
+	 *
+	 * Every status a ticket can have, on every list that shows one (portaliq
+	 * `columns[].valueLabels`, which the detail card reads as well).
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/portal-questions-in-dutch/specs/dossier-questions/spec.md#requirement-a-status-reads-in-words
+	 */
+	public function testEveryStatusColumnNamesEveryStatusInDutch(): void {
+		$enum = ['new', 'in_progress', 'awaiting_customer', 'resolved', 'completed', 'rejected', 'converted', 'closed'];
+		foreach ([self::CITIZEN_SUBJECT, self::CLIENT_SUBJECT] as $subject) {
+			foreach ($this->provider->getContribution($subject)['collections'] as $collection) {
+				foreach ((array)($collection['columns'] ?? []) as $column) {
+					if (($column['field'] ?? '') !== 'status') {
+						continue;
+					}
+
+					$this->assertSame($enum, array_keys($column['valueLabels']), $collection['id']);
+				}
+			}
+		}
+
+		$questions = $this->indexById($this->provider->getContribution(self::CITIZEN_SUBJECT)['collections'])['myQuestions'];
+		$labels = $questions['columns'][1]['valueLabels'];
+		$this->assertSame('Ontvangen', $labels['new']);
+		$this->assertSame('In behandeling', $labels['in_progress']);
+		$this->assertSame('Wacht op uw reactie', $labels['awaiting_customer']);
+		$this->assertSame('Omgezet in een Woo-verzoek', $labels['converted']);
+	}//end testEveryStatusColumnNamesEveryStatusInDutch()
 
 	/**
 	 * The provider with the opencatalogi probe forced, whatever the environment.

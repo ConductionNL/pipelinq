@@ -14,18 +14,19 @@
   - status a portal reply resumes from. The store's saveObject() is a PUT that
   - replaces the whole object, so the section re-reads the ticket and sends it
   - back with only these fields changed. Saving changes `customerMessage`,
-  - which is what portaliq's change rule `pipelinq.question.answered` hears.
+  - which QuestionAnsweredListener hears: it tells the resident "Uw vraag is
+  - beantwoord" under the rule key `pipelinq.question.answered`.
   - A changed answer is also added to `portalAnswers` with its moment, so the
   - resident reads every answer and when it came (question-detail-on-the-portal).
+  -
+  - No heading of its own: the manifest's bodyWidget title is the heading
+  - CnDetailPage renders above it, so a heading here printed it twice.
   -->
 <template>
 	<section
 		v-if="applies"
 		class="customer-reply-section"
 		:aria-label="t('pipelinq', 'Answer to the customer')">
-		<h3 class="customer-reply-section__title">
-			{{ t('pipelinq', 'Answer to the customer') }}
-		</h3>
 		<ol v-if="replies.length" class="customer-reply-section__replies">
 			<li v-for="(reply, index) in replies" :key="index">
 				<span class="customer-reply-section__meta">{{
@@ -267,11 +268,6 @@ export default {
 	display: flex;
 	flex-direction: column;
 	gap: 8px;
-}
-
-.customer-reply-section__title {
-	margin: 0;
-	font-size: 1.1em;
 }
 
 .customer-reply-section__replies {

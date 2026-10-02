@@ -192,6 +192,16 @@ describe('CustomerReplySection', () => {
 		)
 	})
 
+	it('leaves its title to the widget frame, so the heading shows once', async () => {
+		const wrapper = await mountFor(CustomerReplySection)
+
+		// The manifest's bodyWidget title "Answer to the customer" is the
+		// heading CnDetailPage renders above the section. A heading of the
+		// section's own printed it a second time (Woo round 3).
+		expect(wrapper.find('h1, h2, h3, h4, h5, h6').exists()).toBe(false)
+		expect(wrapper.text()).not.toContain('Answer to the customer')
+	})
+
 	it('lists the portal replies oldest first (REQ-QCD-007)', async () => {
 		const wrapper = await mountFor(CustomerReplySection)
 
@@ -356,6 +366,20 @@ describe('WooConversionSection', () => {
 		expect(wrapper.find('a').attributes('href')).toBe(
 			'/index.php/apps/dossiq/#/cases/c-42',
 		)
+	})
+})
+
+describe('Tickets index', () => {
+	it('opens on the newest tickets first', () => {
+		const manifest = JSON.parse(
+			readFileSync(resolve(__dirname, '../../src/manifest.json'), 'utf8'),
+		)
+		const page = manifest.pages.find((p) => p.id === 'Tickets')
+
+		// Without a default the list came in creation order, oldest first, so
+		// a new ticket sat on the last page (Woo round 3).
+		expect(page.config.sortKey).toBe('occurredAt')
+		expect(page.config.sortOrder).toBe('desc')
 	})
 })
 

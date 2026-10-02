@@ -6917,6 +6917,9 @@
         "Answer": "Antwoord",
         "Every answer the handler sent to the customer on this ticket, oldest first, each with when it was sent.": "Elk antwoord dat de behandelaar de klant op dit ticket stuurde, oudste eerst, elk met het moment van verzenden.",
         "The text the customer read.": "De tekst die de klant las.",
-        "When the handler saved the answer.": "Wanneer de behandelaar het antwoord opsloeg."
+        "When the handler saved the answer.": "Wanneer de behandelaar het antwoord opsloeg.",
+        "Your question has been answered": "Uw vraag is beantwoord",
+        "There is an answer to your question \"%1$s\".": "Er is een antwoord op uw vraag \"%1$s\".",
+        "Read the answer here: %1$s": "Lees het antwoord hier: %1$s"
     }
 }
