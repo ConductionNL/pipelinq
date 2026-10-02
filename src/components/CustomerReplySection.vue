@@ -14,7 +14,8 @@
   - status a portal reply resumes from. The store's saveObject() is a PUT that
   - replaces the whole object, so the section re-reads the ticket and sends it
   - back with only these fields changed. Saving changes `customerMessage`,
-  - which is what portaliq's change rule `pipelinq.question.answered` hears.
+  - which QuestionAnsweredListener hears: it tells the resident "Uw vraag is
+  - beantwoord" under the rule key `pipelinq.question.answered`.
   - A changed answer is also added to `portalAnswers` with its moment, so the
   - resident reads every answer and when it came (question-detail-on-the-portal).
   -

@@ -82,6 +82,66 @@ class PortalContributionProvider {
 	private const REGISTER = 'pipelinq';
 
 	/**
+	 * The rule key pipelinq's answer notice carries (QuestionAnsweredNotice).
+	 *
+	 * @var string
+	 */
+	public const RULE_QUESTION_ANSWERED = 'pipelinq.question.answered';
+
+	/**
+	 * The menu heading over a resident's own questions, requests and complaints (portaliq `group`).
+	 *
+	 * @var string
+	 */
+	public const GROUP_CONTACT = 'Vragen en contact';
+
+	/**
+	 * The menu heading over what a contact person does for their organisation.
+	 *
+	 * @var string
+	 */
+	public const GROUP_ORGANISATION = 'Namens uw organisatie';
+
+	/**
+	 * The menu heading over a customer's appointments and loyalty card.
+	 *
+	 * @var string
+	 */
+	public const GROUP_CUSTOMER = 'Afspraken en klantenkaart';
+
+	/**
+	 * What a resident reads for each ticket status, in the schema's own order.
+	 *
+	 * @var array<string, string>
+	 */
+	public const STATUS_LABELS = [
+		'new' => 'Ontvangen',
+		'in_progress' => 'In behandeling',
+		'awaiting_customer' => 'Wacht op uw reactie',
+		'resolved' => 'Opgelost',
+		'completed' => 'Afgerond',
+		'rejected' => 'Afgewezen',
+		'converted' => 'Omgezet in een zaak',
+		'closed' => 'Gesloten',
+	];
+
+	/**
+	 * A question is converted into a Woo request, so it says so.
+	 *
+	 * @var array<string, string>
+	 */
+	public const QUESTION_STATUS_LABELS = [
+		'new' => 'Ontvangen',
+		'in_progress' => 'In behandeling',
+		'awaiting_customer' => 'Wacht op uw reactie',
+		'resolved' => 'Opgelost',
+		'completed' => 'Afgerond',
+		'rejected' => 'Afgewezen',
+		'converted' => 'Omgezet in een Woo-verzoek',
+		'closed' => 'Gesloten',
+	];
+
+	/**
 	 * Constructor.
 	 *
 	 * The one dependency is optional, so the provider still builds plain: the
@@ -192,7 +252,7 @@ class PortalContributionProvider {
 	 */
 	private function clientContribution(): array {
 		return [
-			'label' => 'Pipelinq',
+			'label' => self::GROUP_CONTACT,
 			'collections' => [
 				[
 					'id' => 'clientRequests',
@@ -204,7 +264,7 @@ class PortalContributionProvider {
 					'filter' => ['ticketType' => 'request'],
 					'scopeField' => 'client',
 					'scopeClaim' => 'clientId',
-					'label' => 'My requests',
+					'label' => 'Verzoeken van uw organisatie',
 					'listable' => true,
 					// Read-side field projection (the DATA authority): only these
 					// client-safe fields (+ identifiers) leave the server. The
@@ -230,7 +290,7 @@ class PortalContributionProvider {
 					'columns' => [
 						['field' => 'title', 'label' => 'Onderwerp'],
 						['field' => 'category', 'label' => 'Categorie'],
-						['field' => 'status', 'label' => 'Status', 'render' => 'badge'],
+						['field' => 'status', 'label' => 'Status', 'render' => 'badge', 'valueLabels' => self::STATUS_LABELS],
 						['field' => 'occurredAt', 'label' => 'Ingediend', 'render' => 'date'],
 					],
 					'detail' => ['layout' => 'card', 'fields' => ['title', 'category', 'status', 'description', 'occurredAt', 'customerMessage']],
@@ -244,7 +304,7 @@ class PortalContributionProvider {
 					'filter' => ['ticketType' => 'complaint'],
 					'scopeField' => 'client',
 					'scopeClaim' => 'clientId',
-					'label' => 'My complaints',
+					'label' => 'Klachten van uw organisatie',
 					'listable' => true,
 					// This collection was UNPROJECTED while it read the narrow
 					// `complaint` schema. `ticket` is a supertype whose property set
@@ -269,7 +329,7 @@ class PortalContributionProvider {
 					'schema' => 'salesContract',
 					'scopeField' => 'clientRef',
 					'scopeClaim' => 'clientId',
-					'label' => 'My contracts',
+					'label' => 'Contracten',
 					'listable' => true,
 				],
 				[
@@ -280,7 +340,7 @@ class PortalContributionProvider {
 					'filter' => ['ticketType' => 'interaction'],
 					'scopeField' => 'client',
 					'scopeClaim' => 'clientId',
-					'label' => 'My contact history',
+					'label' => 'Contactmomenten',
 					'listable' => true,
 					// Client-safe interaction facts only. The internal `notes`, raw
 					// `channelMetadata`, `duration`, `assignee` identity, the
@@ -300,7 +360,7 @@ class PortalContributionProvider {
 				[
 					'id' => 'createRequest',
 					'type' => 'create',
-					'label' => 'Submit a request',
+					'label' => 'Een verzoek indienen namens uw organisatie',
 					'register' => self::REGISTER,
 					'schema' => 'ticket',
 					// Stamped server-side over the whitelisted client payload, so a
@@ -358,7 +418,7 @@ class PortalContributionProvider {
 				[
 					'id' => 'createComplaint',
 					'type' => 'create',
-					'label' => 'File a complaint',
+					'label' => 'Een klacht indienen namens uw organisatie',
 					'register' => self::REGISTER,
 					'schema' => 'ticket',
 					// Stamped server-side (see createRequest).
@@ -388,12 +448,12 @@ class PortalContributionProvider {
 				[
 					'id' => 'organisationRequests',
 					'label' => 'Verzoeken van uw organisatie',
+					'group' => self::GROUP_ORGANISATION,
 					'icon' => 'OfficeBuilding',
 					'blocks' => [
 						[
 							'type' => 'richText',
-							'markdown' => '## Verzoeken van uw organisatie'."\n"
-								.'Dien een verzoek in namens uw organisatie of bekijk de status van haar lopende verzoeken.',
+							'markdown' => 'Dien een verzoek in namens uw organisatie of bekijk de status van haar lopende verzoeken.',
 						],
 						['type' => 'action', 'action' => 'createRequest'],
 						['type' => 'collection', 'collection' => 'clientRequests'],
@@ -402,6 +462,7 @@ class PortalContributionProvider {
 				[
 					'id' => 'organisationComplaints',
 					'label' => 'Klachten van uw organisatie',
+					'group' => self::GROUP_ORGANISATION,
 					'icon' => 'AlertCircle',
 					'blocks' => [
 						['type' => 'action', 'action' => 'createComplaint'],
@@ -411,6 +472,7 @@ class PortalContributionProvider {
 				[
 					'id' => 'contracts',
 					'label' => 'Contracten',
+					'group' => self::GROUP_ORGANISATION,
 					'icon' => 'FileDocument',
 					'blocks' => [
 						['type' => 'collection', 'collection' => 'clientContracts'],
@@ -419,6 +481,7 @@ class PortalContributionProvider {
 				[
 					'id' => 'contactmoments',
 					'label' => 'Contactmomenten',
+					'group' => self::GROUP_ORGANISATION,
 					'icon' => 'Phone',
 					'blocks' => [
 						['type' => 'collection', 'collection' => 'clientContactmoments'],
@@ -426,7 +489,11 @@ class PortalContributionProvider {
 				],
 				$this->questionsPage(),
 			],
-			'notifications' => [$this->answeredRule()],
+			// A declared rule key, not a change rule: pipelinq writes the
+			// answer message itself (QuestionAnsweredNotice), so portaliq
+			// sends its e-mail. A change rule would add a generic
+			// "is bijgewerkt" notice for the same answer.
+			'notifications' => [self::RULE_QUESTION_ANSWERED],
 		];
 	}//end clientContribution()
 
@@ -460,7 +527,27 @@ class PortalContributionProvider {
 		// OpenRegister's own AVG/portal surface. Re-adding a citizen DSAR intake
 		// pointed at OR's register is a portal follow-up, not part of this change.
 		return [
-			'label' => 'Pipelinq',
+			'label' => self::GROUP_CUSTOMER,
+			'pages' => [
+				[
+					'id' => 'customerLoyalty',
+					'label' => 'Mijn klantenkaart',
+					'group' => self::GROUP_CUSTOMER,
+					'blocks' => [
+						['type' => 'collection', 'collection' => 'customerLoyalty'],
+						['type' => 'detail', 'collection' => 'customerLoyalty'],
+					],
+				],
+				[
+					'id' => 'customerBookings',
+					'label' => 'Mijn afspraken',
+					'group' => self::GROUP_CUSTOMER,
+					'blocks' => [
+						['type' => 'collection', 'collection' => 'customerBookings'],
+						['type' => 'detail', 'collection' => 'customerBookings'],
+					],
+				],
+			],
 			'collections' => [
 				[
 					'id' => 'customerLoyalty',
@@ -468,7 +555,7 @@ class PortalContributionProvider {
 					'schema' => 'customerLoyaltyAccount',
 					'scopeField' => 'customerId',
 					'scopeClaim' => 'customerUid',
-					'label' => 'My loyalty account',
+					'label' => 'Mijn klantenkaart',
 					'listable' => true,
 				],
 				[
@@ -477,7 +564,7 @@ class PortalContributionProvider {
 					'schema' => 'appointmentBooking',
 					'scopeField' => 'customerId',
 					'scopeClaim' => 'customerUid',
-					'label' => 'My appointments',
+					'label' => 'Mijn afspraken',
 					'listable' => true,
 					'minTrust' => 'substantial',
 					'fields' => [
@@ -511,11 +598,15 @@ class PortalContributionProvider {
 	 */
 	private function citizenContribution(): array {
 		return [
-			'label' => 'Pipelinq',
+			'label' => self::GROUP_CONTACT,
 			'collections' => [$this->questionsCollection(), ...$this->ownTicketCollections()],
 			'actions' => [...$this->questionActions(), ...$this->ownTicketActions()],
 			'pages' => [...$this->ownTicketPages(), $this->questionsPage()],
-			'notifications' => [$this->answeredRule()],
+			// A declared rule key, not a change rule: pipelinq writes the
+			// answer message itself (QuestionAnsweredNotice), so portaliq
+			// sends its e-mail. A change rule would add a generic
+			// "is bijgewerkt" notice for the same answer.
+			'notifications' => [self::RULE_QUESTION_ANSWERED],
 		];
 	}//end citizenContribution()
 
@@ -541,7 +632,7 @@ class PortalContributionProvider {
 			// scope field below narrows it to the resident's own.
 			'filter' => ['ticketType' => 'request', 'channel' => 'portal'],
 			'scopeField' => 'portalSubject',
-			'label' => 'My questions',
+			'label' => 'Mijn vragen',
 			'listable' => true,
 			'fields' => [
 				'title',
@@ -554,7 +645,7 @@ class PortalContributionProvider {
 			],
 			'columns' => [
 				['field' => 'title', 'label' => 'Onderwerp'],
-				['field' => 'status', 'label' => 'Status', 'render' => 'badge'],
+				['field' => 'status', 'label' => 'Status', 'render' => 'badge', 'valueLabels' => self::QUESTION_STATUS_LABELS],
 				['field' => 'occurredAt', 'label' => 'Gesteld', 'render' => 'date'],
 			],
 			// The detail shows the subject, the status and when it was asked.
@@ -588,7 +679,7 @@ class PortalContributionProvider {
 		if ($this->isOpenCatalogiInstalled() === true) {
 			$actions[] = [
 				'id' => 'askAboutDossier',
-				'label' => 'Ask a question about this dossier',
+				'label' => 'Stel een vraag over dit dossier',
 				'endpoint' => '/index.php/apps/pipelinq/api/portal/questions',
 				'method' => 'POST',
 				// Shown on the resident's dossier page (hydra woo-citizen-journey
@@ -650,12 +741,13 @@ class PortalContributionProvider {
 	private function questionsPage(): array {
 		return [
 			'id' => 'questions',
-			'label' => 'Vragen',
+			'label' => 'Mijn vragen',
+			'group' => self::GROUP_CONTACT,
 			'icon' => 'CommentQuestion',
 			'blocks' => [
 				[
 					'type' => 'richText',
-					'markdown' => '## Mijn vragen'."\n".'Hier leest u de antwoorden op vragen die u over uw dossiers stelde.',
+					'markdown' => 'Hier leest u de antwoorden op vragen die u over uw dossiers stelde.',
 				],
 				['type' => 'collection', 'collection' => 'myQuestions'],
 				// The question the resident selects in the list above: its
@@ -687,12 +779,12 @@ class PortalContributionProvider {
 				'schema' => 'ticket',
 				'filter' => ['ticketType' => 'request', 'channel' => 'web'],
 				'scopeField' => 'portalSubject',
-				'label' => 'My requests',
+				'label' => 'Mijn verzoeken',
 				'listable' => true,
 				'fields' => ['title', 'category', 'status', 'description', 'occurredAt', 'customerMessage'],
 				'columns' => [
 					['field' => 'title', 'label' => 'Onderwerp'],
-					['field' => 'status', 'label' => 'Status', 'render' => 'badge'],
+					['field' => 'status', 'label' => 'Status', 'render' => 'badge', 'valueLabels' => self::STATUS_LABELS],
 					['field' => 'occurredAt', 'label' => 'Ingediend', 'render' => 'date'],
 				],
 				'detail' => ['layout' => 'card', 'fields' => ['title', 'category', 'status', 'description', 'occurredAt', 'customerMessage']],
@@ -704,12 +796,12 @@ class PortalContributionProvider {
 				'schema' => 'ticket',
 				'filter' => ['ticketType' => 'complaint'],
 				'scopeField' => 'portalSubject',
-				'label' => 'My complaints',
+				'label' => 'Mijn klachten',
 				'listable' => true,
 				'fields' => ['title', 'complaintCategory', 'status', 'description', 'occurredAt', 'customerMessage'],
 				'columns' => [
 					['field' => 'title', 'label' => 'Onderwerp'],
-					['field' => 'status', 'label' => 'Status', 'render' => 'badge'],
+					['field' => 'status', 'label' => 'Status', 'render' => 'badge', 'valueLabels' => self::STATUS_LABELS],
 					['field' => 'occurredAt', 'label' => 'Ingediend', 'render' => 'date'],
 				],
 				'detail' => ['layout' => 'card', 'fields' => ['title', 'complaintCategory', 'status', 'description', 'occurredAt', 'customerMessage']],
@@ -735,7 +827,7 @@ class PortalContributionProvider {
 			[
 				'id' => 'createOwnRequest',
 				'type' => 'create',
-				'label' => 'Submit a request',
+				'label' => 'Een verzoek indienen',
 				'register' => self::REGISTER,
 				'schema' => 'ticket',
 				'defaults' => ['ticketType' => 'request', 'channel' => 'web'],
@@ -752,7 +844,7 @@ class PortalContributionProvider {
 			[
 				'id' => 'createOwnComplaint',
 				'type' => 'create',
-				'label' => 'File a complaint',
+				'label' => 'Een klacht indienen',
 				'register' => self::REGISTER,
 				'schema' => 'ticket',
 				'defaults' => ['ticketType' => 'complaint', 'channel' => 'web'],
@@ -780,12 +872,13 @@ class PortalContributionProvider {
 		return [
 			[
 				'id' => 'requests',
-				'label' => 'Verzoeken',
+				'label' => 'Mijn verzoeken',
+				'group' => self::GROUP_CONTACT,
 				'icon' => 'MessageText',
 				'blocks' => [
 					[
 						'type' => 'richText',
-						'markdown' => '## Mijn verzoeken'."\n".'Dien een nieuw verzoek in of bekijk de status van uw lopende verzoeken.',
+						'markdown' => 'Dien een nieuw verzoek in of bekijk de status van uw lopende verzoeken.',
 					],
 					['type' => 'action', 'action' => 'createOwnRequest'],
 					['type' => 'collection', 'collection' => 'ownRequests'],
@@ -793,12 +886,13 @@ class PortalContributionProvider {
 			],
 			[
 				'id' => 'complaints',
-				'label' => 'Klachten',
+				'label' => 'Mijn klachten',
+				'group' => self::GROUP_CONTACT,
 				'icon' => 'AlertCircle',
 				'blocks' => [
 					[
 						'type' => 'richText',
-						'markdown' => '## Mijn klachten'."\n".'Dien een klacht in of bekijk hoe het met uw klachten staat.',
+						'markdown' => 'Dien een klacht in of bekijk hoe het met uw klachten staat.',
 					],
 					['type' => 'action', 'action' => 'createOwnComplaint'],
 					['type' => 'collection', 'collection' => 'ownComplaints'],
@@ -806,29 +900,6 @@ class PortalContributionProvider {
 			],
 		];
 	}//end ownTicketPages()
-
-	/**
-	 * The change rule that tells a resident there is an answer (C3 sender).
-	 *
-	 * The change-rule listener of portaliq compares `customerMessage` on every
-	 * update of a `myQuestions` ticket. When it changed, portaliq writes the
-	 * inbox message to the resident in `portalSubject` and dispatches this
-	 * key, so their preferences decide on email and Berichtenbox. pipelinq
-	 * sends nothing itself; without portaliq nobody listens and the answer is
-	 * saved as usual.
-	 *
-	 * @return array<string, mixed> The rule.
-	 *
-	 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-the-resident-hears-that-there-is-an-answer-req-qcd-005
-	 */
-	private function answeredRule(): array {
-		return [
-			'ruleKey' => 'pipelinq.question.answered',
-			'collection' => 'myQuestions',
-			'on' => ['field' => 'customerMessage', 'operator' => 'changed'],
-			'titleField' => 'title',
-		];
-	}//end answeredRule()
 
 	/**
 	 * Whether opencatalogi, which holds the resident's dossiers, is installed.

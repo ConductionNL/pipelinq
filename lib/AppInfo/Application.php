@@ -54,6 +54,7 @@ use OCA\Pipelinq\Listener\DealUpdatedListener;
 use OCA\Pipelinq\Listener\ExpenseApprovalListener;
 use OCA\Pipelinq\Listener\LandingPageFormSubmittedListener;
 use OCA\Pipelinq\Listener\ObjectEventListener;
+use OCA\Pipelinq\Listener\QuestionAnsweredListener;
 use OCA\Pipelinq\Listener\ObjectsMergedSyncListener;
 use OCA\Pipelinq\Listener\PosTransactionCompletedListener;
 use OCA\Pipelinq\Listener\SchemaChangeListener;
@@ -200,6 +201,12 @@ class Application extends App implements IBootstrap {
 		$context->registerEventListener(
 			event: ObjectUpdatedEvent::class,
 			listener: ObjectEventListener::class
+		);
+		// A saved answer on a resident's portal question tells them, with
+		// pipelinq's own message (portal-questions-in-dutch).
+		$context->registerEventListener(
+			event: ObjectUpdatedEvent::class,
+			listener: QuestionAnsweredListener::class
 		);
 		$context->registerEventListener(
 			event: ObjectCreatedEvent::class,
