@@ -3054,7 +3054,7 @@
 			"route": "/leads/:id",
 			"type": "detail",
 			"title": "Lead",
-			"actionsComponent": "LeadHeaderActions",
+			"actionsComponent": "LogVisitAction",
 			"config": {
 				"register": "pipelinq",
 				"schema": "lead",

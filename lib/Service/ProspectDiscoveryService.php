@@ -42,11 +42,11 @@ class ProspectDiscoveryService {
 	private const DEFAULT_CACHE_TTL = 3600;
 
 	/**
-	 * Cache key prefix.
+	 * Cache key prefix. v2: entries hold the whole scored list, not the top 10.
 	 *
 	 * @var string
 	 */
-	private const CACHE_PREFIX = 'pipelinq_prospects_';
+	private const CACHE_PREFIX = 'pipelinq_prospects_v2_';
 
 	/**
 	 * Constructor.
@@ -100,6 +100,9 @@ class ProspectDiscoveryService {
 		if ($refresh === false && function_exists(function: 'apcu_exists') === true) {
 			$cached = $this->getFromCache(key: $cacheKey);
 			if ($cached !== null) {
+				// A prospect added as a client since the list was cached drops out.
+				$cached['prospects'] = $this->excludeExistingClients(prospects: $cached['prospects'] ?? []);
+				$cached['total'] = count($cached['prospects']);
 				return $this->limitResult(result: $cached, limit: $limit);
 			}
 		}

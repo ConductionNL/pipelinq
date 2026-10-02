@@ -120,6 +120,8 @@ export default {
 			showStaleOnly: false,
 			hideClosed: true,
 			callFirst: false,
+			// The sort Call first replaced, restored when it is switched off.
+			sortBeforeCallFirst: [],
 			stages: [],
 		}
 	},
@@ -202,13 +204,19 @@ export default {
 		/**
 		 * Switch the "Call first" sort on or off. On, OpenRegister returns the
 		 * highest score first, ties broken by the lead updated longest ago.
-		 * Off, it drops that sort. The filters are left as they are.
+		 * Off, it restores the sort it replaced. The filters are left as they are.
 		 *
 		 * @param {boolean} on Whether Call first is on.
 		 * @spec openspec/specs/lead-management/spec.md#requirement-the-lead-list-shows-and-sorts-by-score-req-lscore-001
 		 */
 		setCallFirst(on) {
-			this.$refs.index?.onSortEvent?.({ keys: on ? CALL_FIRST_SORT : [] })
+			const index = this.$refs.index
+			if (on && !isCallFirstSort(index?.effectiveSortKeys)) {
+				this.sortBeforeCallFirst = [...(index?.effectiveSortKeys || [])]
+			}
+			index?.onSortEvent?.({
+				keys: on ? CALL_FIRST_SORT : this.sortBeforeCallFirst,
+			})
 		},
 
 		/**
@@ -285,13 +293,13 @@ export default {
 }
 
 .overdue-cell {
-	color: var(--color-element-error);
+	color: var(--color-text-error);
 	font-weight: 600;
 }
 
 .overdue-suffix {
 	display: block;
 	font-size: 11px;
-	color: var(--color-element-error);
+	color: var(--color-text-error);
 }
 </style>

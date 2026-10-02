@@ -47,14 +47,11 @@ vi.mock('@nextcloud/vue', () => ({
 }))
 
 let ContactLinks
-let LeadHeaderActions
 let LogVisitAction
 
 beforeAll(async () => {
 	globalThis.t = (app, text) => text
 	ContactLinks = (await import('../../src/components/ContactLinks.vue')).default
-	LeadHeaderActions = (await import('../../src/components/LeadHeaderActions.vue'))
-		.default
 	LogVisitAction = (await import('../../src/components/LogVisitAction.vue'))
 		.default
 })
@@ -181,20 +178,29 @@ describe('callers', () => {
 		)
 		expect(widgets('ContactDetail')).toContain('ContactLinks')
 		expect(pages.find((p) => p.id === 'LeadDetail').actionsComponent).toBe(
-			'LeadHeaderActions',
+			'LogVisitAction',
 		)
 	})
 
-	it('the lead header binds the visit to the lead and its client', () => {
-		const w = mount(LeadHeaderActions, {
+	it('the lead header binds the visit to the lead and its client', async () => {
+		storeMock.saveObject.mockResolvedValue({ id: 'saved' })
+		const w = mount(LogVisitAction, {
 			props: { objectId: 'lead-1', object: { client: 'client-1' } },
 			global,
 		})
-		const action = w.findComponent(LogVisitAction)
-		expect(action.props()).toMatchObject({
-			leadId: 'lead-1',
-			clientId: 'client-1',
-			inHeader: true,
+		expect(w.classes()).not.toContain('log-visit-action--body')
+		await w.find('[data-testid="log-visit-button"]').trigger('click')
+		await w.find('#log-visit-note').setValue('wants a quote for two ovens')
+		await w.find('form').trigger('submit')
+		await flushPromises()
+		expect(storeMock.saveObject.mock.calls[0][1]).toMatchObject({
+			lead: 'lead-1',
+			client: 'client-1',
 		})
+	})
+
+	it('a body section keeps its body spacing', () => {
+		const w = mount(LogVisitAction, { props: { clientId: 'client-1' }, global })
+		expect(w.classes()).toContain('log-visit-action--body')
 	})
 })

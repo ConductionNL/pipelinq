@@ -53,7 +53,6 @@ import CustomerReplySection from './components/CustomerReplySection.vue'
 //     dashboard (hours per billing category) registered as a slot. ---
 import BillingCategoryWidget from './components/dashboard/BillingCategoryWidget.vue'
 import DossierSnapshotSection from './components/DossierSnapshotSection.vue'
-import LeadHeaderActions from './components/LeadHeaderActions.vue'
 import LogVisitAction from './components/LogVisitAction.vue'
 // --- Articles — the content hub for a mailing and a post (marketing-article-hub).
 //     ArticleDetail is a declarative type:"detail" page; the rendered body, the
@@ -843,13 +842,7 @@ const registry = {
 	LogVisitAction: {
 		kind: 'section',
 		component: LogVisitAction,
-		_note: 'Log a visit on a client or lead (REQ-MOB-003): one note and an optional follow-up day; writes an outbound visit contact moment (ticket) and a follow-up crmTask through the object store.',
-	},
-	LeadHeaderActions: {
-		kind: 'widget',
-		component: LeadHeaderActions,
-		...HEADER_ACTIONS_META,
-		_note: 'LeadDetail actionsComponent: LogVisitAction in the page header, bound to the lead and its client.',
+		_note: 'Log a visit on a client or lead (REQ-MOB-003): one note and an optional follow-up day; writes an outbound visit contact moment (ticket) and a follow-up crmTask through the object store. Also the LeadDetail actionsComponent, where it binds to the lead and its client from the slot.',
 	},
 	PartyIndicatorPanel: {
 		kind: 'section',

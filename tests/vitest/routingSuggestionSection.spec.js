@@ -155,6 +155,34 @@ describe('RoutingSuggestionSection', () => {
 		expect(setObject).toHaveBeenCalledWith({ ...ticket, assignee: 'anna' })
 	})
 
+	it('confirms the assignment itself when the page cannot take the saved ticket', async () => {
+		const wrapper = await mountSection({}, { cnSectionContext: ref({}) })
+
+		await wrapper
+			.findAll('button')
+			.find((b) => b.text() === 'Assign')
+			.trigger('click')
+		await flushPromises()
+
+		expect(storeMock.saveObject).toHaveBeenCalledTimes(1)
+		expect(wrapper.find('.note-success').text()).toBe('Assigned to anna.')
+	})
+
+	it('leaves the confirmation to the page when it takes the saved ticket', async () => {
+		const wrapper = await mountSection(
+			{},
+			{ cnSectionContext: ref({ setObject: vi.fn() }) },
+		)
+
+		await wrapper
+			.findAll('button')
+			.find((b) => b.text() === 'Assign')
+			.trigger('click')
+		await flushPromises()
+
+		expect(wrapper.find('.note-success').exists()).toBe(false)
+	})
+
 	it('shows the colleague the ticket is already assigned to as assigned', async () => {
 		const wrapper = await mountSection({ assignee: 'anna' })
 

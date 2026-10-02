@@ -43,8 +43,8 @@ const PRIORITY_LABELS = {
 const PRIORITY_COLORS = {
 	low: 'var(--color-text-maxcontrast)',
 	normal: 'var(--color-text-maxcontrast)',
-	high: 'var(--color-element-warning)',
-	urgent: 'var(--color-element-error)',
+	high: 'var(--color-warning-text)',
+	urgent: 'var(--color-text-error)',
 }
 
 const VALID_PRIORITIES = ['low', 'normal', 'high', 'urgent']

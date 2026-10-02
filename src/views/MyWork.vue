@@ -672,7 +672,7 @@ export default {
 }
 
 .my-work__error {
-	color: var(--color-element-error);
+	color: var(--color-text-error);
 }
 
 .my-work__error p {
@@ -697,7 +697,7 @@ export default {
 }
 
 .work-group__header--overdue {
-	color: var(--color-element-error);
+	color: var(--color-text-error);
 	border-bottom-color: var(--color-element-error);
 }
 
@@ -716,7 +716,7 @@ export default {
 
 .group-count--overdue {
 	background: var(--color-error);
-	color: var(--color-element-error);
+	color: var(--color-error-text);
 }
 
 .work-group__items {
@@ -826,12 +826,12 @@ export default {
 }
 
 .overdue-text {
-	color: var(--color-element-error);
+	color: var(--color-text-error);
 	font-weight: 600;
 }
 
 .due-today-text {
-	color: var(--color-element-warning);
+	color: var(--color-warning-text);
 	font-weight: 600;
 }
 
@@ -851,7 +851,7 @@ export default {
 	font-size: 10px;
 	font-weight: 700;
 	background: var(--color-warning);
-	color: var(--color-element-warning);
+	color: var(--color-warning-text);
 	margin-inline-start: 6px;
 	vertical-align: middle;
 }

@@ -21,6 +21,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\Pipelinq\Service\SlaAttainmentService;
 use OCA\Pipelinq\Service\TicketService;
 use OCP\IAppConfig;
@@ -56,36 +57,41 @@ class SlaAttainmentServiceTest extends TestCase {
 
 		$tickets = [
 			'request' => [
-				['id' => 't1', 'client' => 'c1', 'slaStatus' => $met('p1', ['acknowledgement', 'resolution'])],
-				['id' => 't2', 'client' => 'c2', 'slaStatus' => $met('p2', ['acknowledgement'])],
-				[
-					'id' => 't3',
-					'client' => 'c2',
-					'slaStatus' => [
-						'policyId' => 'p2',
-						'targets' => [['kind' => 'acknowledgement', 'status' => 'breached']],
-					],
-				],
+				self::entity('t1', ['client' => 'c1', 'slaStatus' => $met('p1', ['acknowledgement', 'resolution'])]),
+				self::entity('t2', ['client' => 'c2', 'slaStatus' => $met('p2', ['acknowledgement'])]),
+				self::entity(
+					't3',
+					[
+						'client' => 'c2',
+						'slaStatus' => [
+							'policyId' => 'p2',
+							'targets' => [['kind' => 'acknowledgement', 'status' => 'breached']],
+						],
+					]
+				),
 			],
 			'complaint' => [],
 		];
 
 		$objects = [
 			'296' => [
-				[
-					'policyId' => 'p2',
-					'targetKind' => 'acknowledgement',
-					'targetObjectId' => 't3',
-					'breachedAt' => '2026-10-01T08:00:00+00:00',
-				],
+				self::entity(
+					'b1',
+					[
+						'policyId' => 'p2',
+						'targetKind' => 'acknowledgement',
+						'targetObjectId' => 't3',
+						'breachedAt' => '2026-10-01T08:00:00+00:00',
+					]
+				),
 			],
 			'295' => [
-				['id' => 'p1', 'name' => 'Standaard', 'customerTier' => '*'],
-				['id' => 'p2', 'name' => 'Goud', 'customerTier' => 'gold'],
+				self::entity('p1', ['name' => 'Standaard', 'customerTier' => '*']),
+				self::entity('p2', ['name' => 'Goud', 'customerTier' => 'gold']),
 			],
 			'242' => [
-				['id' => 'c1', 'name' => 'Bakkerij De Jong'],
-				['id' => 'c2', 'name' => 'Garage Smit'],
+				self::entity('c1', ['name' => 'Bakkerij De Jong']),
+				self::entity('c2', ['name' => 'Garage Smit']),
 			],
 		];
 
@@ -209,4 +215,20 @@ class SlaAttainmentServiceTest extends TestCase {
 		$this->assertSame(1, $groups['acknowledgement']['breached']);
 		$this->assertSame(1, $groups['resolution']['met']);
 	}//end testGroupsByTargetCountEachMetTarget()
+
+	/**
+	 * Wrap a payload in an ObjectEntity, the shape findAll() returns. The id
+	 * comes only from the uuid, as in production.
+	 *
+	 * @param string               $uuid    The object UUID.
+	 * @param array<string, mixed> $payload The object payload.
+	 *
+	 * @return ObjectEntity The entity.
+	 */
+	private static function entity(string $uuid, array $payload): ObjectEntity {
+		$entity = new ObjectEntity();
+		$entity->setUuid($uuid);
+		$entity->setObject($payload);
+		return $entity;
+	}//end entity()
 }//end class

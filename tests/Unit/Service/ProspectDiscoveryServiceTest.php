@@ -26,6 +26,7 @@ use OCA\Pipelinq\Service\ProspectDiscoveryService;
 use OCA\Pipelinq\Service\ProspectScoringService;
 use OCA\Pipelinq\Service\SettingsService;
 use OCP\App\IAppManager;
+use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -226,4 +227,81 @@ class ProspectDiscoveryServiceTest extends TestCase {
 		$this->assertSame(12, $all['displayed']);
 		$this->assertCount(12, $all['prospects']);
 	}//end testDiscoverLimitsToTheTopTenUnlessAskedForAll()
+
+	/**
+	 * A cached list serves every limit, and a prospect added as a client since
+	 * it was cached drops out without a refresh.
+	 *
+	 * @return void
+	 */
+	#[RunInSeparateProcess]
+	public function testCachedListServesEveryLimitAndDropsNewClients(): void {
+		require_once __DIR__ . '/../Support/apcu-memory.php';
+
+		$icpConfig = $this->createMock(IcpConfigService::class);
+		$icpConfig->method('isConfigured')->willReturn(true);
+		$icpConfig->method('getIcpHash')->willReturn('abc12345');
+		$icpConfig->method('getCriteria')->willReturn(['sbiCodes' => ['62']]);
+		$icpConfig->method('getKvkApiKey')->willReturn('key');
+		$icpConfig->method('getSettings')->willReturn([]);
+
+		$rows = [];
+		for ($i = 1; $i <= 12; $i++) {
+			$rows[] = ['kvkNumber' => (string)$i, 'tradeName' => 'Company ' . $i, 'sbiCode' => '6201', 'isActive' => true];
+		}
+
+		$kvkClient = $this->createMock(KvkApiClient::class);
+		$kvkClient->expects($this->once())->method('search')->willReturn($rows);
+
+		$settings = $this->createMock(SettingsService::class);
+		$settings->method('getConfigValue')->willReturnMap([
+			['register', 'pipelinq'],
+			['client_schema', 'client'],
+		]);
+		$settings->method('getIntValue')->willReturn(3600);
+
+		$objectService = new class {
+			/**
+			 * The clients findAll returns.
+			 *
+			 * @var array
+			 */
+			public array $clients = [];
+
+			/**
+			 * Return the clients.
+			 *
+			 * @param array $config The query config.
+			 *
+			 * @return array
+			 */
+			public function findAll(array $config): array {
+				return $this->clients;
+			}
+		};
+
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')->willReturn($objectService);
+		$appManager = $this->createMock(IAppManager::class);
+		$appManager->method('getInstalledApps')->willReturn(['openregister']);
+
+		$service = new ProspectDiscoveryService(
+			$icpConfig,
+			$kvkClient,
+			$this->createMock(OpenCorporatesApiClient::class),
+			new ProspectScoringService(),
+			$settings,
+			$this->createMock(LoggerInterface::class),
+			$container,
+			$appManager,
+		);
+
+		$this->assertSame(10, $service->discover()['displayed']);
+		$this->assertSame(12, $service->discover(limit: 0)['displayed']);
+
+		$objectService->clients = [['name' => 'Company 3']];
+		$all = $service->discover(limit: 0);
+		$this->assertSame(11, $all['total']);
+		$this->assertNotContains('Company 3', array_column($all['prospects'], 'tradeName'));
+	}//end testCachedListServesEveryLimitAndDropsNewClients()
 }//end class

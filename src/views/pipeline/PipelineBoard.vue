@@ -1313,9 +1313,10 @@ export default {
 
 		/**
 		 * Move a card to another stage. The card moves on screen at once; the
-		 * save sends the whole item, because a PUT with only the changed field
-		 * fails OpenRegister's required-field validation. A failed save puts
-		 * the card back.
+		 * save sends the whole object, because a PUT with only the changed field
+		 * fails OpenRegister's required-field validation. The object is re-read
+		 * first, so a field changed since the board loaded is not written back
+		 * with its old value. A failed save puts the card back.
 		 *
 		 * @param {object} item The board item that was dropped.
 		 * @param {object} targetStage The stage it was dropped on.
@@ -1338,10 +1339,20 @@ export default {
 			// A request/complaint/contactmoment is stored as a `ticket` and must
 			// keep its ticketType discriminator (unify-ticket-supertype).
 			const { objectType, ticketType } = resolveObjectType(item._schemaSlug)
-			const { _entityType, _schemaSlug, ...payload } = item
-			if (ticketType && !payload.ticketType) payload.ticketType = ticketType
-
-			const saved = await this.objectStore.saveObject(objectType, payload)
+			const current = await this.objectStore.fetchObject(objectType, item.id)
+			let saved = null
+			if (current) {
+				const payload = {
+					...current,
+					id: item.id,
+					[columnProp]: item[columnProp],
+				}
+				if (item.stageOrder !== previous.stageOrder)
+					payload.stageOrder = item.stageOrder
+				if (ticketType && !payload.ticketType)
+					payload.ticketType = ticketType
+				saved = await this.objectStore.saveObject(objectType, payload)
+			}
 			if (!saved) {
 				Object.assign(item, previous)
 				showError(

@@ -66,24 +66,36 @@
 						<th
 							scope="col"
 							class="sortable"
-							@click="setSort('fitScore')">
-							{{ t('pipelinq', 'Score')
-							}}{{ sortIndicator('fitScore') }}
+							:aria-sort="ariaSort('fitScore')">
+							<button type="button" @click="setSort('fitScore')">
+								{{ t('pipelinq', 'Score')
+								}}<span aria-hidden="true">{{
+									sortIndicator('fitScore')
+								}}</span>
+							</button>
 						</th>
 						<th
 							scope="col"
 							class="sortable"
-							@click="setSort('tradeName')">
-							{{ t('pipelinq', 'Company')
-							}}{{ sortIndicator('tradeName') }}
+							:aria-sort="ariaSort('tradeName')">
+							<button type="button" @click="setSort('tradeName')">
+								{{ t('pipelinq', 'Company')
+								}}<span aria-hidden="true">{{
+									sortIndicator('tradeName')
+								}}</span>
+							</button>
 						</th>
 						<th scope="col">{{ t('pipelinq', 'Industry') }}</th>
 						<th
 							scope="col"
 							class="sortable"
-							@click="setSort('employeeCount')">
-							{{ t('pipelinq', 'Employees')
-							}}{{ sortIndicator('employeeCount') }}
+							:aria-sort="ariaSort('employeeCount')">
+							<button type="button" @click="setSort('employeeCount')">
+								{{ t('pipelinq', 'Employees')
+								}}<span aria-hidden="true">{{
+									sortIndicator('employeeCount')
+								}}</span>
+							</button>
 						</th>
 						<th scope="col">{{ t('pipelinq', 'Location') }}</th>
 						<th scope="col">{{ t('pipelinq', 'Actions') }}</th>
@@ -276,6 +288,18 @@ export default {
 		},
 
 		/**
+		 * The `aria-sort` value for a column header.
+		 *
+		 * @param {string} key - The column key.
+		 * @return {string} `ascending`, `descending` or `none`.
+		 * @spec exclude presentational sort-state helper — no business logic
+		 */
+		ariaSort(key) {
+			if (this.sortKey !== key) return 'none'
+			return this.sortAsc ? 'ascending' : 'descending'
+		},
+
+		/**
 		 * The sort arrow for a column header.
 		 *
 		 * @param {string} key - The column key.
@@ -378,9 +402,16 @@ export default {
 	border-bottom: 1px solid var(--color-border);
 }
 
-.prospects-view__table th.sortable {
+.prospects-view__table th.sortable button {
+	all: unset;
 	cursor: pointer;
 	user-select: none;
+	font-weight: inherit;
+}
+
+.prospects-view__table th.sortable button:focus-visible {
+	outline: 2px solid var(--color-main-text);
+	outline-offset: 2px;
 }
 
 .prospects-view__score {
@@ -394,7 +425,7 @@ export default {
 }
 
 .score--medium {
-	color: var(--color-text-warning);
+	color: var(--color-warning-text);
 }
 
 .score--low {

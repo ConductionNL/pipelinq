@@ -862,8 +862,7 @@ class SlaAttainmentService {
 	}//end groupName()
 
 	/**
-	 * Normalise OR row/entity to a plain associative array. An entity's data
-	 * leaves out its id, so the id is taken from its uuid.
+	 * Normalise OR row/entity to a plain associative array.
 	 *
 	 * @param mixed $row Raw row.
 	 *
@@ -874,27 +873,22 @@ class SlaAttainmentService {
 			return $row;
 		}
 
-		if (is_object($row) === false) {
+		if (is_object($row) === true && method_exists($row, 'getObject') === true) {
+			$object = $row->getObject();
+			if (is_array($object) === true) {
+				return $object;
+			}
+		}
+
+		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
+			$json = $row->jsonSerialize();
+			if (is_array($json) === true) {
+				return $json;
+			}
+
 			return [];
 		}
 
-		$data = null;
-		if (method_exists($row, 'getObject') === true) {
-			$data = $row->getObject();
-		}
-
-		if (is_array($data) === false && method_exists($row, 'jsonSerialize') === true) {
-			$data = $row->jsonSerialize();
-		}
-
-		if (is_array($data) === false) {
-			return [];
-		}
-
-		if (($data['id'] ?? '') === '' && method_exists($row, 'getUuid') === true) {
-			$data['id'] = (string)$row->getUuid();
-		}
-
-		return $data;
+		return [];
 	}//end normalise()
 }//end class
