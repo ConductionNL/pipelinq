@@ -97,7 +97,7 @@ class ProspectDiscoveryService {
 		$cacheKey = self::CACHE_PREFIX . $icpHash;
 
 		// Check cache.
-		if ($refresh === false && function_exists(function: 'apcu_exists') === true) {
+		if ($refresh === false) {
 			$cached = $this->getFromCache(key: $cacheKey);
 			if ($cached !== null) {
 				// A prospect added as a client since the list was cached drops out.
@@ -288,7 +288,7 @@ class ProspectDiscoveryService {
 	 *
 	 * @return array|null The cached data or null.
 	 */
-	private function getFromCache(string $key): ?array {
+	protected function getFromCache(string $key): ?array {
 		if (function_exists(function: 'apcu_fetch') === false) {
 			return null;
 		}
@@ -311,7 +311,7 @@ class ProspectDiscoveryService {
 	 *
 	 * @return void
 	 */
-	private function setInCache(string $key, array $data): void {
+	protected function setInCache(string $key, array $data): void {
 		if (function_exists(function: 'apcu_store') === true) {
 			$ttl = $this->settings->getIntValue(
 				'prospect_discovery.cache_ttl_seconds',

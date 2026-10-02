@@ -26,7 +26,6 @@ use OCA\Pipelinq\Service\ProspectDiscoveryService;
 use OCA\Pipelinq\Service\ProspectScoringService;
 use OCA\Pipelinq\Service\SettingsService;
 use OCP\App\IAppManager;
-use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -234,10 +233,7 @@ class ProspectDiscoveryServiceTest extends TestCase {
 	 *
 	 * @return void
 	 */
-	#[RunInSeparateProcess]
 	public function testCachedListServesEveryLimitAndDropsNewClients(): void {
-		require_once __DIR__ . '/../Support/apcu-memory.php';
-
 		$icpConfig = $this->createMock(IcpConfigService::class);
 		$icpConfig->method('isConfigured')->willReturn(true);
 		$icpConfig->method('getIcpHash')->willReturn('abc12345');
@@ -258,7 +254,6 @@ class ProspectDiscoveryServiceTest extends TestCase {
 			['register', 'pipelinq'],
 			['client_schema', 'client'],
 		]);
-		$settings->method('getIntValue')->willReturn(3600);
 
 		$objectService = new class {
 			/**
@@ -285,7 +280,8 @@ class ProspectDiscoveryServiceTest extends TestCase {
 		$appManager = $this->createMock(IAppManager::class);
 		$appManager->method('getInstalledApps')->willReturn(['openregister']);
 
-		$service = new ProspectDiscoveryService(
+		// An in-memory cache, so the test does not depend on APCu being enabled for the CLI.
+		$service = new class(
 			$icpConfig,
 			$kvkClient,
 			$this->createMock(OpenCorporatesApiClient::class),
@@ -294,7 +290,37 @@ class ProspectDiscoveryServiceTest extends TestCase {
 			$this->createMock(LoggerInterface::class),
 			$container,
 			$appManager,
-		);
+		) extends ProspectDiscoveryService {
+			/**
+			 * The cached entries by key.
+			 *
+			 * @var array<string, array>
+			 */
+			private array $memory = [];
+
+			/**
+			 * Read an entry from memory.
+			 *
+			 * @param string $key The cache key.
+			 *
+			 * @return array|null
+			 */
+			protected function getFromCache(string $key): ?array {
+				return $this->memory[$key] ?? null;
+			}
+
+			/**
+			 * Write an entry to memory.
+			 *
+			 * @param string $key  The cache key.
+			 * @param array  $data The data.
+			 *
+			 * @return void
+			 */
+			protected function setInCache(string $key, array $data): void {
+				$this->memory[$key] = $data;
+			}
+		};
 
 		$this->assertSame(10, $service->discover()['displayed']);
 		$this->assertSame(12, $service->discover(limit: 0)['displayed']);
