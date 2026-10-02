@@ -2383,6 +2383,9 @@
 				"register": "pipelinq",
 				"schema": "ticket",
 				"documentationUrl": "https://pipelinq.conduction.nl",
+				"_sortNote": "Newest contact first. Without a default the list came in creation order, oldest first, so a new ticket sat on the last page (Woo round 3).",
+				"sortKey": "occurredAt",
+				"sortOrder": "desc",
 				"showViewAction": false,
 				"quickFilters": [
 					{ "label": "All", "filter": {}, "default": true },
