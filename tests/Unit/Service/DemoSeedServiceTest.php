@@ -33,7 +33,14 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Service\ContactVcardService;
+use OCA\Pipelinq\Service\Demo\DemoJourneySeeder;
+use OCA\Pipelinq\Service\Demo\DemoMarketingSeeder;
+use OCA\Pipelinq\Service\Demo\DemoSearchSeeder;
+use OCA\Pipelinq\Service\Demo\DemoSeedValues;
+use OCA\Pipelinq\Service\Demo\DemoSocialSeeder;
 use OCA\Pipelinq\Service\DemoSeedService;
+use OCA\Pipelinq\Service\Marketing\JourneyService;
+use OCA\Pipelinq\Service\Marketing\ListObjectStore;
 use OCA\Pipelinq\Service\TicketService;
 use OCP\IAppConfig;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -131,6 +138,20 @@ class DemoSeedServiceTest extends TestCase {
 	private TicketService $ticketService;
 
 	/**
+	 * Mocked journey write path.
+	 *
+	 * @var JourneyService&MockObject
+	 */
+	private JourneyService $journeyService;
+
+	/**
+	 * Mocked session-free object store.
+	 *
+	 * @var ListObjectStore&MockObject
+	 */
+	private ListObjectStore $store;
+
+	/**
 	 * Service under test.
 	 *
 	 * @var DemoSeedService
@@ -150,6 +171,13 @@ class DemoSeedServiceTest extends TestCase {
 		$this->objectService = $this->createMock(ObjectServiceInterface::class);
 		$this->contactVcardService = $this->createMock(ContactVcardService::class);
 		$this->ticketService = $this->createMock(TicketService::class);
+		$this->journeyService = $this->createMock(JourneyService::class);
+		$this->store = $this->createMock(ListObjectStore::class);
+
+		$this->store->method('schemaSlug')
+			->willReturnCallback(static fn (string $configKey, string $default): string => $default);
+		$this->store->method('idOf')
+			->willReturnCallback(static fn (?array $payload): string => (string)($payload['id'] ?? ''));
 
 		$this->container->method('get')
 			->with('OCA\OpenRegister\Service\ObjectService')
@@ -166,14 +194,75 @@ class DemoSeedServiceTest extends TestCase {
 				]
 			);
 
-		$this->service = new DemoSeedService(
+		$this->service = $this->buildService(container: $this->container, contactVcardService: $this->contactVcardService);
+	}//end setUp()
+
+	/**
+	 * Build the service with the real demo seeders over the mocked journey
+	 * service and object store.
+	 *
+	 * @param ContainerInterface $container The container (ObjectService, flow engine).
+	 * @param ContactVcardService $contactVcardService Contact-first identity provisioning.
+	 *
+	 * @return DemoSeedService
+	 */
+	private function buildService(ContainerInterface $container, ContactVcardService $contactVcardService): DemoSeedService {
+		$logger = $this->createMock(LoggerInterface::class);
+		$values = new DemoSeedValues();
+
+		return new DemoSeedService(
 			appConfig: $this->appConfig,
-			container: $this->container,
-			contactVcardService: $this->contactVcardService,
+			container: $container,
+			contactVcardService: $contactVcardService,
 			ticketService: $this->ticketService,
+			marketingSeeder: new DemoMarketingSeeder(
+				journeySeeder: new DemoJourneySeeder(
+					journeyService: $this->journeyService,
+					store: $this->store,
+					container: $container,
+					values: $values,
+					logger: $logger,
+				),
+				socialSeeder: new DemoSocialSeeder(store: $this->store, values: $values),
+				searchSeeder: new DemoSearchSeeder(store: $this->store, values: $values),
+			),
+			values: $values,
+			logger: $logger,
+		);
+	}//end buildService()
+
+	/**
+	 * The journey seeder over the mocked journey service and object store.
+	 *
+	 * @return DemoJourneySeeder
+	 */
+	private function journeySeeder(): DemoJourneySeeder {
+		return new DemoJourneySeeder(
+			journeyService: $this->journeyService,
+			store: $this->store,
+			container: $this->container,
+			values: new DemoSeedValues(),
 			logger: $this->createMock(LoggerInterface::class),
 		);
-	}//end setUp()
+	}//end journeySeeder()
+
+	/**
+	 * The social seeder over the mocked object store.
+	 *
+	 * @return DemoSocialSeeder
+	 */
+	private function socialSeeder(): DemoSocialSeeder {
+		return new DemoSocialSeeder(store: $this->store, values: new DemoSeedValues());
+	}//end socialSeeder()
+
+	/**
+	 * The Search Console seeder over the mocked object store.
+	 *
+	 * @return DemoSearchSeeder
+	 */
+	private function searchSeeder(): DemoSearchSeeder {
+		return new DemoSearchSeeder(store: $this->store, values: new DemoSeedValues());
+	}//end searchSeeder()
 
 	/**
 	 * Configure register + schema ids as provisioned.
@@ -645,17 +734,438 @@ class DemoSeedServiceTest extends TestCase {
 		$failingVcard = $this->createMock(ContactVcardService::class);
 		$failingVcard->method('provisionContactFromForm')->willReturn(null);
 
-		$service = new DemoSeedService(
-			appConfig: $this->appConfig,
-			container: $this->container,
-			contactVcardService: $failingVcard,
-			ticketService: $this->ticketService,
-			logger: $this->createMock(LoggerInterface::class),
-		);
+		$service = $this->buildService(container: $this->container, contactVcardService: $failingVcard);
 
 		$result = $service->seed();
 
 		self::assertFalse($result['success']);
 		self::assertStringContainsString('Contacts', (string)$result['message']);
 	}//end testSeedFailsWhenContactProvisioningUnavailable()
+
+	/**
+	 * Demo journeys are saved through JourneyService, never switched on, and
+	 * their runs name the seeded demo contact and client.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
+	 */
+	public function testSeedSavesDemoJourneysAndLinksTheirRuns(): void {
+		$this->provisionConfig();
+		$this->objectService->method('findAll')->willReturn([]);
+
+		$sequence = 0;
+		$this->objectService->method('saveObject')
+			->willReturnCallback(
+				static function (array $data, array $extend, string $register, string $schema) use (&$sequence): object {
+					$sequence++;
+					return self::savedEntity('uuid-' . $schema . '-' . $sequence);
+				}
+			);
+		$this->ticketService->method('save')
+			->willReturnCallback(
+				static function () use (&$sequence): object {
+					$sequence++;
+					return self::savedEntity('uuid-ticket-' . $sequence);
+				}
+			);
+
+		$this->journeyService->method('listJourneys')->willReturn([]);
+		$journeys = [];
+		$this->journeyService->method('save')
+			->willReturnCallback(
+				static function (array $payload) use (&$journeys): array {
+					$journeys[] = $payload;
+					return ['id' => 'journey-' . count($journeys)] + $payload;
+				}
+			);
+
+		$runs = [];
+		$this->store->method('save')
+			->willReturnCallback(
+				static function (string $schemaSlug, array $payload) use (&$runs): array {
+					$runs[] = ['schema' => $schemaSlug, 'data' => $payload];
+					return ['id' => 'run-' . count($runs)];
+				}
+			);
+
+		$result = $this->service->seed();
+
+		// The social section saves through the same store; only runs matter here.
+		$runs = array_values(array_filter($runs, static fn (array $save): bool => $save['schema'] === 'journeyRun'));
+
+		self::assertTrue($result['success']);
+		self::assertSame(count(self::definitions()['journeys']), $result['created']['journeys']);
+		self::assertSame(count($runs), $result['created']['journeyRuns']);
+		self::assertNotSame(0, count($runs));
+
+		foreach ($journeys as $journey) {
+			self::assertStringStartsWith(DemoSeedService::DEMO_PREFIX, $journey['name']);
+			self::assertContains($journey['status'], ['draft', 'paused'], 'A demo journey is never active');
+		}
+
+		foreach ($runs as $run) {
+			self::assertSame('journeyRun', $run['schema']);
+			self::assertStringStartsWith('journey-', $run['data']['journeyId']);
+			self::assertStringStartsWith('uuid-' . self::SCHEMA_IDS['contact_schema'] . '-', $run['data']['contactId']);
+			self::assertStringStartsWith('uuid-' . self::SCHEMA_IDS['client_schema'] . '-', $run['data']['clientId']);
+			self::assertStringStartsNotWith('@', $run['data']['occurredAt']);
+		}
+	}//end testSeedSavesDemoJourneysAndLinksTheirRuns()
+
+	/**
+	 * A demo journey that already exists is skipped, and so are its runs.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
+	 */
+	public function testSeedSkipsDemoJourneysThatAlreadyExist(): void {
+		$this->provisionConfig();
+		$store = self::seededStore();
+		$this->mockFindAllFromStore($store);
+
+		$this->journeyService->method('listJourneys')->willReturn(
+			array_map(
+				static fn (array $definition): array => ['id' => $definition['key'], 'name' => $definition['data']['name']],
+				self::definitions()['journeys']
+			)
+		);
+		$this->journeyService->expects(self::never())->method('save');
+		$schemas = [];
+		$this->store->method('save')->willReturnCallback(
+			static function (string $schemaSlug) use (&$schemas): array {
+				$schemas[] = $schemaSlug;
+				return ['id' => 'saved-' . count($schemas)];
+			}
+		);
+
+		$result = $this->service->seed();
+
+		self::assertSame(0, $result['created']['journeys']);
+		self::assertSame(count(self::definitions()['journeys']), $result['skipped']['journeys']);
+		self::assertNotContains('journeyRun', $schemas, 'a skipped journey writes no runs');
+	}//end testSeedSkipsDemoJourneysThatAlreadyExist()
+
+	/**
+	 * A journey the seed file marks active is saved as a draft, so its flow
+	 * is never enabled.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
+	 */
+	public function testSeedHoldsAnActiveDemoJourneyToDraft(): void {
+		$this->journeyService->method('listJourneys')->willReturn([]);
+		$saved = [];
+		$this->journeyService->method('save')
+			->willReturnCallback(
+				static function (array $payload) use (&$saved): array {
+					$saved[] = $payload;
+					return ['id' => 'journey-1'];
+				}
+			);
+
+		$this->journeySeeder()->seed(
+			[['key' => 'active', 'data' => ['name' => '[Demo] Active', 'status' => 'active', 'trigger' => ['kind' => 'listConfirmed'], 'action' => ['kind' => 'createTask']]]],
+			[]
+		);
+
+		self::assertSame('draft', $saved[0]['status']);
+	}//end testSeedHoldsAnActiveDemoJourneyToDraft()
+
+	/**
+	 * Removal deletes each demo journey with its runs and its flow, and never
+	 * touches a journey without the demo marker.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
+	 */
+	public function testRemoveDeletesDemoJourneysWithTheirRunsAndFlows(): void {
+		$this->provisionConfig();
+		$this->objectService->method('findAll')->willReturn([]);
+
+		$flows = new class {
+			/** @var array<int, string> */
+			public array $deleted = [];
+
+			public function delete(string $uuid): void {
+				$this->deleted[] = $uuid;
+			}
+		};
+
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')
+			->willReturnCallback(
+				fn (string $id): object => ($id === JourneyService::FLOW_SERVICE ? $flows : $this->objectService)
+			);
+
+		$journeys = [];
+		foreach (self::definitions()['journeys'] as $i => $definition) {
+			$journeys[] = ['id' => 'journey-' . $i, 'name' => $definition['data']['name'], 'flowUuid' => 'flow-' . $i];
+		}
+		$journeys[] = ['id' => 'journey-real', 'name' => 'Real journey', 'flowUuid' => 'flow-real'];
+
+		$this->journeyService->method('listJourneys')->willReturn($journeys);
+		$this->journeyService->method('runsFor')
+			->willReturnCallback(static fn (string $journeyId): array => [['id' => 'run-of-' . $journeyId]]);
+
+		$deleted = [];
+		$this->store->method('delete')
+			->willReturnCallback(
+				static function (string $schemaSlug, string $id) use (&$deleted): bool {
+					$deleted[] = $id;
+					return true;
+				}
+			);
+
+		$service = $this->buildService(container: $container, contactVcardService: $this->contactVcardService);
+
+		$result = $service->remove();
+
+		$count = count(self::definitions()['journeys']);
+		self::assertTrue($result['success']);
+		self::assertSame($count, $result['removed']['journeys']);
+		self::assertSame($count, $result['removed']['journeyRuns']);
+		self::assertCount($count, $flows->deleted);
+		self::assertNotContains('flow-real', $flows->deleted);
+		self::assertNotContains('journey-real', $deleted);
+		self::assertNotContains('run-of-journey-real', $deleted);
+	}//end testRemoveDeletesDemoJourneysWithTheirRunsAndFlows()
+
+	/**
+	 * The social section seeds inactive accounts, published posts and
+	 * publications linked to them, none of which the daily jobs will act on.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
+	 */
+	public function testSeedSocialLinksPublicationsToTheSeededPostsAndAccounts(): void {
+		$saves = [];
+		$this->store->method('findAll')->willReturn([]);
+		$this->store->method('save')->willReturnCallback(
+			static function (string $schemaSlug, array $payload) use (&$saves): array {
+				$saves[] = ['schema' => $schemaSlug, 'data' => $payload];
+				return ['id' => $schemaSlug . '-' . count($saves)];
+			}
+		);
+
+		$social = self::definitions()['social'];
+		$counts = $this->socialSeeder()->seed($social);
+
+		self::assertSame(count($social['accounts']), $counts['accounts']);
+		self::assertSame(count($social['posts']), $counts['posts']);
+		self::assertSame(count($social['publications']), $counts['publications']);
+
+		$networks = [];
+		foreach ($saves as $index => $save) {
+			$id = $save['schema'] . '-' . ($index + 1);
+			if ($save['schema'] === 'socialAccount') {
+				self::assertStringStartsWith(DemoSeedService::DEMO_PREFIX, $save['data']['displayName']);
+				self::assertFalse($save['data']['active'], 'the daily follower refresh must skip a demo account');
+				self::assertArrayNotHasKey('credentialRef', $save['data']);
+				$networks[$id] = $save['data']['network'];
+			}
+
+			if ($save['schema'] === 'socialPost') {
+				self::assertSame('published', $save['data']['status'], 'the publish job only acts on scheduled posts');
+				self::assertNotEmpty($save['data']['accountIds']);
+			}
+
+			if ($save['schema'] === 'socialPublication') {
+				self::assertStringStartsWith('socialPost-', $save['data']['postId']);
+				self::assertSame($networks[$save['data']['accountId']], $save['data']['network']);
+				self::assertArrayNotHasKey('externalId', $save['data'], 'the daily metrics pull must skip a demo publication');
+				self::assertStringStartsNotWith('@', $save['data']['publishedAt']);
+			}
+		}
+	}//end testSeedSocialLinksPublicationsToTheSeededPostsAndAccounts()
+
+	/**
+	 * A demo post that already exists is skipped with its publications, so a
+	 * re-run does not double the ranking.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
+	 */
+	public function testSeedSocialSkipsAnExistingPostAndItsPublications(): void {
+		$social = self::definitions()['social'];
+		$this->store->method('findAll')->willReturnCallback(
+			static function (string $schemaSlug) use ($social): array {
+				if ($schemaSlug !== 'socialPost') {
+					return [];
+				}
+
+				return array_map(
+					static fn (array $definition): array => ['id' => $definition['key'], 'title' => $definition['data']['title']],
+					$social['posts']
+				);
+			}
+		);
+		$this->store->method('save')->willReturnCallback(
+			static fn (string $schemaSlug): array => ['id' => $schemaSlug . '-new']
+		);
+
+		$counts = $this->socialSeeder()->seed($social);
+
+		self::assertSame(0, $counts['posts']);
+		self::assertSame(0, $counts['publications']);
+		self::assertSame(count($social['posts']), $counts['skipped']);
+	}//end testSeedSocialSkipsAnExistingPostAndItsPublications()
+
+	/**
+	 * Removal deletes the publications of demo posts, then the posts, then the
+	 * accounts, and leaves every row without the demo marker alone.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
+	 */
+	public function testRemoveSocialDeletesOnlyTheDemoSet(): void {
+		$social = self::definitions()['social'];
+		$rows = [
+			'socialPost' => array_merge(
+				array_map(
+					static fn (array $definition): array => ['id' => $definition['key'], 'title' => $definition['data']['title']],
+					$social['posts']
+				),
+				[['id' => 'real-post', 'title' => 'Real post']]
+			),
+			'socialAccount' => array_merge(
+				array_map(
+					static fn (array $definition): array => ['id' => $definition['key'], 'displayName' => $definition['data']['displayName']],
+					$social['accounts']
+				),
+				[['id' => 'real-account', 'displayName' => 'Real account']]
+			),
+			'socialPublication' => [
+				['id' => 'pub-demo', 'postId' => $social['posts'][0]['key']],
+				['id' => 'pub-real', 'postId' => 'real-post'],
+			],
+		];
+		$this->store->method('findAll')->willReturnCallback(
+			static fn (string $schemaSlug): array => ($rows[$schemaSlug] ?? [])
+		);
+
+		$deleted = [];
+		$this->store->method('delete')->willReturnCallback(
+			static function (string $schemaSlug, string $id) use (&$deleted): bool {
+				$deleted[] = $schemaSlug . ':' . $id;
+				return true;
+			}
+		);
+
+		$counts = $this->socialSeeder()->remove($social);
+
+		self::assertSame(1, $counts['publications']);
+		self::assertSame(count($social['posts']), $counts['posts']);
+		self::assertSame(count($social['accounts']), $counts['accounts']);
+		self::assertSame('socialPublication:pub-demo', $deleted[0], 'publications go before the posts they name');
+		self::assertNotContains('socialPublication:pub-real', $deleted);
+		self::assertNotContains('socialPost:real-post', $deleted);
+		self::assertNotContains('socialAccount:real-account', $deleted);
+	}//end testRemoveSocialDeletesOnlyTheDemoSet()
+
+	/**
+	 * The search section writes rows the way the import does, marked by the
+	 * demo property and source, with the click rate derived from the counts.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
+	 */
+	public function testSeedSearchWritesMarkedRowsWithADerivedClickRate(): void {
+		$saves = [];
+		$this->store->method('findAll')->willReturn([]);
+		$this->store->method('save')->willReturnCallback(
+			static function (string $schemaSlug, array $payload) use (&$saves): array {
+				$saves[] = ['schema' => $schemaSlug, 'data' => $payload];
+				return ['id' => 'saved-' . count($saves)];
+			}
+		);
+
+		$search = self::definitions()['search'];
+		$counts = $this->searchSeeder()->seed($search);
+
+		self::assertSame(count($search['rows']), $counts['rows']);
+		self::assertSame(count($search['targets']), $counts['targets']);
+
+		foreach ($saves as $save) {
+			self::assertSame($search['property'], $save['data']['property']);
+			if ($save['schema'] !== 'searchQueryDaily') {
+				continue;
+			}
+
+			$row = $save['data'];
+			self::assertSame($search['source'], $row['source']);
+			self::assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2}$/', $row['date']);
+			self::assertSame(round($row['clicks'] / $row['impressions'], 4), $row['ctr']);
+		}
+	}//end testSeedSearchWritesMarkedRowsWithADerivedClickRate()
+
+	/**
+	 * The rows are one set: when any demo row exists, a re-run writes none.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
+	 */
+	public function testSeedSearchWritesNoRowsWhenTheDemoSetExists(): void {
+		$search = self::definitions()['search'];
+		$this->store->method('findAll')->willReturnCallback(
+			static fn (string $schemaSlug): array => ($schemaSlug === 'searchQueryDaily'
+				? [['id' => 'row-1', 'property' => $search['property'], 'source' => $search['source']]]
+				: [['id' => 'target-1', 'notes' => $search['targets'][0]['data']['notes']]])
+		);
+		$this->store->expects(self::never())->method('save');
+
+		$counts = $this->searchSeeder()->seed($search);
+
+		self::assertSame(0, $counts['rows']);
+		self::assertSame(0, $counts['targets']);
+	}//end testSeedSearchWritesNoRowsWhenTheDemoSetExists()
+
+	/**
+	 * Removal deletes rows with both demo markers and demo-noted targets, and
+	 * never a real import or a real target.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
+	 */
+	public function testRemoveSearchDeletesOnlyTheDemoRowsAndTargets(): void {
+		$search = self::definitions()['search'];
+		$this->store->method('findAll')->willReturnCallback(
+			static function (string $schemaSlug, array $filters = []) use ($search): array {
+				if ($schemaSlug === 'searchQueryDaily') {
+					// The store narrows by the filters it is given.
+					self::assertSame(['property' => $search['property'], 'source' => $search['source']], $filters);
+					return [['id' => 'demo-row', 'property' => $search['property'], 'source' => $search['source']]];
+				}
+
+				return [
+					['id' => 'demo-target', 'property' => $search['property'], 'notes' => '[Demo] seeded'],
+					['id' => 'real-target', 'property' => $search['property'], 'notes' => 'A real decision'],
+					['id' => 'other-property', 'property' => 'https://real.example/', 'notes' => '[Demo] elsewhere'],
+				];
+			}
+		);
+
+		$deleted = [];
+		$this->store->method('delete')->willReturnCallback(
+			static function (string $schemaSlug, string $id) use (&$deleted): bool {
+				$deleted[] = $id;
+				return true;
+			}
+		);
+
+		$counts = $this->searchSeeder()->remove($search);
+
+		self::assertSame(1, $counts['rows']);
+		self::assertSame(1, $counts['targets']);
+		self::assertSame(['demo-row', 'demo-target'], $deleted);
+	}//end testRemoveSearchDeletesOnlyTheDemoRowsAndTargets()
 }//end class

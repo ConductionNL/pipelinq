@@ -31,6 +31,12 @@
 					:aria-label="t('pipelinq', 'Search pipeline…')"
 					class="pipeline-search"
 					@update:modelValue="(v) => (searchQuery = v)" />
+				<NcCheckboxRadioSwitch
+					v-if="viewMode === 'kanban'"
+					v-model="scoreOrder"
+					type="switch">
+					{{ t('pipelinq', 'Highest score first') }}
+				</NcCheckboxRadioSwitch>
 				<div class="view-toggle">
 					<NcButton
 						:variant="viewMode === 'kanban' ? 'primary' : 'tertiary'"
@@ -52,7 +58,8 @@
 				<NcButton
 					variant="tertiary"
 					:aria-label="t('pipelinq', 'Pipeline settings')"
-					@click="toggleSidebar">
+					:disabled="!selectedPipeline"
+					@click="showPipelineForm = true">
 					<template #icon>
 						<Cog :size="20" />
 					</template>
@@ -68,12 +75,7 @@
 
 		<!-- Kanban view -->
 		<div v-else-if="viewMode === 'kanban'" class="pipeline-board__columns">
-			<div
-				v-for="stage in openStages"
-				:key="stage.name"
-				class="kanban-column"
-				@dragover.prevent
-				@drop="onDrop($event, stage)">
+			<div v-for="stage in openStages" :key="stage.name" class="kanban-column">
 				<div
 					class="kanban-column__header"
 					:style="stage.color ? { borderTopColor: stage.color } : {}">
@@ -170,17 +172,28 @@
 						</div>
 					</div>
 				</div>
-				<div class="kanban-column__body">
-					<PipelineCard
-						v-for="item in getStageItems(stage.name)"
-						:key="item.id"
-						:item="item"
-						:entityType="item._schemaSlug"
-						:stages="sortedStages"
-						:columnProperty="getColumnProperty(item)"
-						@open="openItem"
-						@refresh="fetchPipelineItems" />
-				</div>
+				<!-- A column's order is computed (stage order or score), so a card
+				     can move between columns but not within one. The list is never
+				     written back: the drop moves the card by changing its stage. -->
+				<Draggable
+					:modelValue="getStageItems(stage.name)"
+					v-bind="dragOptions"
+					:move="onCardMove"
+					class="kanban-column__body"
+					:class="dropListClass(stage.name)"
+					@start="onDragStart(stage.name)"
+					@end="onDragEnd"
+					@change="onCardDropped($event, stage)">
+					<template #item="{ element: item }">
+						<PipelineCard
+							:item="item"
+							:entityType="item._schemaSlug"
+							:stages="sortedStages"
+							:columnProperty="getColumnProperty(item)"
+							@open="openItem"
+							@refresh="refreshItems" />
+					</template>
+				</Draggable>
 			</div>
 
 			<!-- Collapsed closed stages -->
@@ -200,27 +213,45 @@
 					"
 					@click="toggleClosedStage(stage.name)"
 					@keydown.enter.prevent="toggleClosedStage(stage.name)"
-					@keydown.space.prevent="toggleClosedStage(stage.name)"
-					@dragover.prevent
-					@drop="onDrop($event, stage)">
+					@keydown.space.prevent="toggleClosedStage(stage.name)">
 					<span class="closed-title">{{ stage.name.toUpperCase() }}</span>
 					<span class="closed-count">{{
 						getStageItems(stage.name).length
 					}}</span>
-					<div
+					<Draggable
 						v-if="expandedClosed === stage.name"
+						:modelValue="getStageItems(stage.name)"
+						v-bind="dragOptions"
+						:move="onCardMove"
 						class="closed-items"
-						@click.stop>
-						<PipelineCard
-							v-for="item in getStageItems(stage.name)"
-							:key="item.id"
-							:item="item"
-							:entityType="item._schemaSlug"
-							:stages="sortedStages"
-							:columnProperty="getColumnProperty(item)"
-							@open="openItem"
-							@refresh="fetchPipelineItems" />
-					</div>
+						:class="dropListClass(stage.name)"
+						@click.stop
+						@start="onDragStart(stage.name)"
+						@end="onDragEnd"
+						@change="onCardDropped($event, stage)">
+						<template #item="{ element: item }">
+							<PipelineCard
+								:item="item"
+								:entityType="item._schemaSlug"
+								:stages="sortedStages"
+								:columnProperty="getColumnProperty(item)"
+								@open="openItem"
+								@refresh="refreshItems" />
+						</template>
+					</Draggable>
+					<!-- Collapsed, the whole column is the drop target. The list is
+					     empty, so a click still reaches the column and toggles it. -->
+					<Draggable
+						v-else
+						:modelValue="[]"
+						v-bind="dragOptions"
+						class="closed-drop-zone"
+						:class="dropListClass(stage.name)"
+						@change="onCardDropped($event, stage)">
+						<template #item>
+							<span />
+						</template>
+					</Draggable>
 				</div>
 			</div>
 		</div>
@@ -301,6 +332,15 @@
 								>{{ sortDir === 'asc' ? '▲' : '▼' }}</span
 							>
 						</th>
+						<th
+							scope="col"
+							class="sortable"
+							@click="toggleSort('score')">
+							{{ t('pipelinq', 'Score') }}
+							<span v-if="sortBy === 'score'" class="sort-indicator">{{
+								sortDir === 'asc' ? '▲' : '▼'
+							}}</span>
+						</th>
 						<th scope="col" class="sortable" @click="toggleSort('age')">
 							{{ t('pipelinq', 'Age') }}
 							<span v-if="sortBy === 'age'" class="sort-indicator">{{
@@ -315,7 +355,8 @@
 						:key="item.id"
 						class="list-row"
 						:class="{ 'list-row--overdue': isItemOverdue(item) }"
-						@click="openItem(item)">
+						@click="openItem(item, $event)"
+						@auxclick="openItem(item, $event)">
 						<td class="list-title">
 							{{ item.title }}
 							<span v-if="isItemStale(item)" class="stale-badge">
@@ -353,6 +394,12 @@
 							</span>
 						</td>
 						<td>
+							<LeadScoreBadge
+								v-if="item._schemaSlug === 'lead'"
+								:lead="item"
+								compact />
+						</td>
+						<td>
 							<span
 								class="aging-badge"
 								:class="getItemAgingClass(item)">
@@ -366,58 +413,104 @@
 				{{ t('pipelinq', 'No items in this pipeline') }}
 			</p>
 		</div>
+
+		<PipelineFormDialog
+			v-if="showPipelineForm && selectedPipeline"
+			:pipeline="selectedPipeline"
+			@save="onPipelineSave"
+			@cancel="showPipelineForm = false" />
 	</div>
 </template>
 
 <script>
-import { NcButton, NcLoadingIcon, NcSelect, NcTextField } from '@nextcloud/vue'
+import { openRowTarget } from '@conduction/nextcloud-vue'
+import { showError } from '@nextcloud/dialogs'
+import { generateUrl } from '@nextcloud/router'
+import {
+	NcButton,
+	NcCheckboxRadioSwitch,
+	NcLoadingIcon,
+	NcSelect,
+	NcTextField,
+} from '@nextcloud/vue'
+import Draggable from 'vuedraggable'
 import Cog from 'vue-material-design-icons/Cog.vue'
 import FormatListBulleted from 'vue-material-design-icons/FormatListBulleted.vue'
 import ViewColumn from 'vue-material-design-icons/ViewColumn.vue'
+import LeadScoreBadge from '../../components/leadScore/LeadScoreBadge.vue'
+import PipelineFormDialog from '../../dialogs/PipelineFormDialog.vue'
 import PipelineCard from './PipelineCard.vue'
+import { compareCallFirst } from '../../services/leadScore.js'
 import { formatDate } from '../../services/localeUtils.js'
 import {
 	formatAge,
 	getAgingClass,
 	getDaysAge,
 	isStale,
+	pipelineEntitySlugs,
 	resolveObjectType,
 } from '../../services/pipelineUtils.js'
 import { getPriorityColor, getPriorityLabel } from '../../services/requestStatus.js'
 import { useObjectStore } from '../../store/modules/object.js'
 import { initializeStores } from '../../store/store.js'
 
+// What an unscoped pipeline (no propertyMappings, no legacy entityType) boards.
+const UNSCOPED_SLUGS = ['lead', 'request']
+
+// Shared by every column so a card can go from any column to any other. On
+// touch a short hold starts the drag, so a swipe still scrolls the board.
+// Sorting stays on: with `sort: false` Sortable does not let a card back into
+// the column it came from. Reordering within a column is refused in
+// `onCardMove` instead.
+const DRAG_OPTIONS = {
+	itemKey: 'id',
+	group: 'pipeline-cards',
+	animation: 150,
+	delay: 150,
+	delayOnTouchOnly: true,
+	ghostClass: 'pipeline-card--ghost',
+	chosenClass: 'pipeline-card--chosen',
+}
+
 export default {
 	name: 'PipelineBoard',
 	components: {
+		Draggable,
 		NcButton,
+		NcCheckboxRadioSwitch,
 		NcLoadingIcon,
 		NcSelect,
 		NcTextField,
+		LeadScoreBadge,
 		PipelineCard,
+		PipelineFormDialog,
 		ViewColumn,
 		FormatListBulleted,
 		Cog,
 	},
 
-	inject: {
-		pipelineSidebarState: { default: null },
-	},
-
 	data() {
 		return {
 			selectedPipelineId: null,
+			showPipelineForm: false,
+			itemsFetchSeq: 0,
 			showFilter: 'all',
 			/**
 			 * @spec openspec/changes/2026-03-20-pipeline/tasks.md#task-1.1
 			 */
 			searchQuery: '',
 			expandedClosed: null,
+			// The stage a card is being dragged out of, while a drag is on, and
+			// whether it has been over another column since.
+			dragSourceStage: null,
+			dragLeftSource: false,
 			loading: false,
 			items: [],
 			viewMode: 'kanban',
 			sortBy: 'title',
 			sortDir: 'asc',
+			/** Order the cards in each column by score, highest first. */
+			scoreOrder: false,
 			/**
 			 * Live-updates handles for the or-collection-{register}-{schema}
 			 * subscriptions of every object type mapped into the selected
@@ -465,6 +558,16 @@ export default {
 		},
 
 		/**
+		 * The vuedraggable options every board column shares.
+		 *
+		 * @return {object}
+		 * @spec exclude static drag configuration — no business logic
+		 */
+		dragOptions() {
+			return DRAG_OPTIONS
+		},
+
+		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-23
 		 */
 		pipelines() {
@@ -505,14 +608,7 @@ export default {
 		liveTypes() {
 			const pipeline = this.selectedPipeline
 			if (!pipeline) return []
-			let slugs = []
-			if (pipeline.propertyMappings && pipeline.propertyMappings.length > 0) {
-				slugs = pipeline.propertyMappings.map((m) => m.schemaSlug)
-			} else if (pipeline.entityType === 'both') {
-				slugs = ['lead', 'request']
-			} else if (pipeline.entityType) {
-				slugs = [pipeline.entityType]
-			}
+			const slugs = pipelineEntitySlugs(pipeline) ?? UNSCOPED_SLUGS
 			const types = new Set()
 			for (const slug of slugs) {
 				const { objectType } = resolveObjectType(slug)
@@ -609,6 +705,7 @@ export default {
 
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-28
+		 * @spec openspec/specs/lead-management/spec.md#requirement-the-board-card-shows-the-score-req-lscore-002
 		 */
 		sortedListItems() {
 			const items = [...this.filteredItems]
@@ -648,6 +745,11 @@ export default {
 						valA = getDaysAge(a)
 						valB = getDaysAge(b)
 						break
+					case 'score':
+						// Highest first on the first click; no score always last.
+						return this.sortDir === 'asc'
+							? compareCallFirst(a, b)
+							: -compareCallFirst(a, b)
 					default:
 						return 0
 				}
@@ -660,14 +762,6 @@ export default {
 	},
 
 	watch: {
-		/**
-		 * @param {object|null} val The newly selected pipeline object
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-25
-		 */
-		selectedPipeline(val) {
-			this.syncSidebarState(val)
-		},
-
 		/**
 		 * Re-scope the live collection subscriptions when the selected
 		 * pipeline (or the async type registration) changes.
@@ -694,11 +788,6 @@ export default {
 	 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-15
 	 */
 	async mounted() {
-		if (this.pipelineSidebarState) {
-			this.pipelineSidebarState.active = true
-			this.pipelineSidebarState.onSave = this.onSidebarSave
-		}
-
 		this.loading = true
 
 		// Ensure object types are registered (by slug) before fetching. Shared,
@@ -723,11 +812,6 @@ export default {
 	beforeUnmount() {
 		clearTimeout(this.liveRefetchTimer)
 		this.releaseLiveSubscriptions()
-		if (this.pipelineSidebarState) {
-			this.pipelineSidebarState.active = false
-			this.pipelineSidebarState.pipeline = null
-			this.pipelineSidebarState.onSave = null
-		}
 	},
 
 	methods: {
@@ -821,38 +905,19 @@ export default {
 				if (this.loading) {
 					return
 				}
-				this.fetchPipelineItems()
+				this.refreshItems()
 			}, 500)
-		},
-
-		/**
-		 * @param {object|null} pipeline The pipeline to mirror into the sidebar state
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-30
-		 */
-		syncSidebarState(pipeline) {
-			if (this.pipelineSidebarState) {
-				this.pipelineSidebarState.pipeline = pipeline
-			}
-		},
-
-		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-32
-		 */
-		toggleSidebar() {
-			if (this.pipelineSidebarState) {
-				this.pipelineSidebarState.open = !this.pipelineSidebarState.open
-			}
 		},
 
 		/**
 		 * @param {object} pipelineData The edited pipeline payload to save
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-19
 		 */
-		async onSidebarSave(pipelineData) {
+		async onPipelineSave(pipelineData) {
 			await this.objectStore.saveObject('pipeline', pipelineData)
+			this.showPipelineForm = false
 			await this.objectStore.fetchCollection('pipeline', { _limit: 100 })
-			this.syncSidebarState(this.selectedPipeline)
-			await this.fetchPipelineItems()
+			await this.refreshItems()
 		},
 
 		getMappingForItem(item) {
@@ -890,9 +955,12 @@ export default {
 		 * Returns items in the given stage, filtered by searchQuery via filteredItems.
 		 * Empty columns remain visible even when search is active.
 		 *
+		 * With "Highest score first" on, the cards are ordered by score.
+		 *
 		 * @param {string} stageName The stage (column) name
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-12
 		 * @spec openspec/changes/2026-03-20-pipeline/tasks.md#task-1.2
+		 * @spec openspec/specs/lead-management/spec.md#requirement-the-board-card-shows-the-score-req-lscore-002
 		 */
 		getStageItems(stageName) {
 			return this.filteredItems
@@ -907,7 +975,11 @@ export default {
 						return true
 					return false
 				})
-				.sort((a, b) => (a.stageOrder || 0) - (b.stageOrder || 0))
+				.sort((a, b) =>
+					this.scoreOrder
+						? compareCallFirst(a, b)
+						: (a.stageOrder || 0) - (b.stageOrder || 0),
+				)
 		},
 
 		/**
@@ -938,22 +1010,43 @@ export default {
 		},
 
 		/**
+		 * @param {object} [options] Fetch options.
+		 * @param {boolean} [options.silent] Refresh in place, without the loading state.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-7
 		 */
-		async fetchPipelineItems() {
+		async fetchPipelineItems({ silent = false } = {}) {
 			if (!this.selectedPipelineId) return
-			this.loading = true
-
-			const pipeline = this.selectedPipeline
-			if (pipeline?.propertyMappings && pipeline.propertyMappings.length > 0) {
-				await this.fetchItemsViaMappings(pipeline)
-			} else {
-				await this.fetchItemsLegacy(pipeline)
+			// Only the latest fetch may write, so a silent refresh that lands
+			// after a pipeline switch cannot put the old pipeline's items back.
+			const seq = ++this.itemsFetchSeq
+			if (!silent) {
+				this.loading = true
 			}
 
-			await this.fetchLeadProductsForStages()
+			const pipeline = this.selectedPipeline
+			const items =
+				pipeline?.propertyMappings && pipeline.propertyMappings.length > 0
+					? await this.fetchItemsViaMappings(pipeline)
+					: await this.fetchItemsBySlug(pipeline)
 
-			this.loading = false
+			if (seq === this.itemsFetchSeq) {
+				this.items = items
+				await this.fetchLeadProductsForStages()
+			}
+			if (!silent && seq === this.itemsFetchSeq) {
+				this.loading = false
+			}
+		},
+
+		/**
+		 * Refresh the items already on the board without a loading state.
+		 *
+		 * @return {Promise<void>}
+		 *
+		 * @spec openspec/specs/lead-management/spec.md
+		 */
+		refreshItems() {
+			return this.fetchPipelineItems({ silent: true })
 		},
 
 		/**
@@ -1068,6 +1161,7 @@ export default {
 
 		/**
 		 * @param {object} pipeline The pipeline whose propertyMappings drive the fetch
+		 * @return {Promise<Array<object>>} The board items
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-6
 		 */
 		async fetchItemsViaMappings(pipeline) {
@@ -1081,47 +1175,30 @@ export default {
 				}))
 			})
 			const results = await Promise.all(promises)
-			this.items = results.flat()
+			return results.flat()
 		},
 
 		/**
-		 * @param {object|null} pipeline The pipeline whose legacy entityType drives the fetch
+		 * Fetch items for a pipeline without property mappings: the legacy
+		 * `entityType`, or every boardable type when it is unscoped.
+		 *
+		 * @param {object|null} pipeline The selected pipeline
+		 * @return {Promise<Array<object>>} The board items
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-5
 		 */
-		async fetchItemsLegacy(pipeline) {
-			const et = pipeline?.entityType
-			const promises = []
-			let leads = []
-			let requests = []
-
-			if (et === 'lead' || et === 'both') {
-				promises.push(
-					this.fetchSchemaItems('lead').then((items) => {
-						leads = items
-					}),
-				)
-			}
-			if (et === 'request' || et === 'both') {
-				promises.push(
-					this.fetchSchemaItems('request').then((items) => {
-						requests = items
-					}),
-				)
-			}
-
-			await Promise.all(promises)
-			this.items = [
-				...leads.map((l) => ({
-					...l,
-					_schemaSlug: 'lead',
-					_entityType: 'lead',
-				})),
-				...requests.map((r) => ({
-					...r,
-					_schemaSlug: 'request',
-					_entityType: 'request',
-				})),
-			]
+		async fetchItemsBySlug(pipeline) {
+			const slugs = pipelineEntitySlugs(pipeline) ?? UNSCOPED_SLUGS
+			const results = await Promise.all(
+				slugs.map(async (slug) => {
+					const rawItems = await this.fetchSchemaItems(slug)
+					return rawItems.map((item) => ({
+						...item,
+						_schemaSlug: slug,
+						_entityType: slug,
+					}))
+				}),
+			)
+			return results.flat()
 		},
 
 		/**
@@ -1144,7 +1221,9 @@ export default {
 
 			try {
 				const ticketFilter = ticketType ? `ticketType=${ticketType}&` : ''
-				const url = `/apps/openregister/api/objects/${config.register}/${config.schema}?${ticketFilter}pipeline=${this.selectedPipelineId}&_limit=200`
+				const url = generateUrl(
+					`/apps/openregister/api/objects/${config.register}/${config.schema}?${ticketFilter}pipeline=${this.selectedPipelineId}&_limit=200`,
+				)
 				const response = await fetch(url, {
 					headers: {
 						'Content-Type': 'application/json',
@@ -1161,39 +1240,129 @@ export default {
 		},
 
 		/**
-		 * @param {DragEvent} event The drop event carrying the dragged item JSON
-		 * @param {object} targetStage The stage the item was dropped on
+		 * A card was picked up in the given column.
+		 *
+		 * @param {string} stageName The column it came from.
+		 * @spec exclude drag bookkeeping — no business logic
+		 */
+		onDragStart(stageName) {
+			this.dragSourceStage = stageName
+			this.dragLeftSource = false
+		},
+
+		/**
+		 * The drag ended, dropped or cancelled.
+		 *
+		 * @spec exclude drag bookkeeping — no business logic
+		 */
+		onDragEnd() {
+			this.dragSourceStage = null
+			this.dragLeftSource = false
+		},
+
+		/**
+		 * vuedraggable's `move` check, run before the placeholder moves. Into
+		 * another column is always allowed. Within the card's own column only
+		 * the way back in is: the column orders itself, so a reorder there has
+		 * nothing to keep.
+		 *
+		 * @param {{from: HTMLElement, to: HTMLElement, dragged: HTMLElement}} evt The Sortable move event.
+		 * @return {boolean} Whether the placeholder may move.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-17
 		 */
-		async onDrop(event, targetStage) {
-			try {
-				const data = JSON.parse(
-					event.dataTransfer.getData('application/json'),
-				)
-				const mapping = this.propertyMappings.find(
-					(m) => m.schemaSlug === data._schemaSlug,
-				)
-				const columnProp = mapping?.columnProperty || 'stage'
-
-				if (data[columnProp] === targetStage.name) return
-
-				const update = { id: data.id }
-				update[columnProp] = targetStage.name
-				update.stageOrder = targetStage.order
-
-				// Resolve the logical slug onto its registered object type; a
-				// request/complaint/contactmoment writes to `ticket` and must carry
-				// its ticketType discriminator (unify-ticket-supertype).
-				const { objectType, ticketType } = resolveObjectType(
-					data._schemaSlug,
-				)
-				if (ticketType) update.ticketType = ticketType
-
-				await this.objectStore.saveObject(objectType, update)
-				await this.fetchPipelineItems()
-			} catch {
-				// Invalid drop
+		onCardMove(evt) {
+			if (evt.to !== evt.from) {
+				this.dragLeftSource = true
+				return true
 			}
+			return evt.dragged.parentNode !== evt.to
+		},
+
+		/**
+		 * Classes for a column's card list. The placeholder only shows while
+		 * the card has not left its column, where it marks the card's own
+		 * spot. Anywhere else it would promise a position the column's order
+		 * does not keep, so the column is highlighted instead.
+		 *
+		 * @param {string} stageName The column's stage.
+		 * @return {object} The class map.
+		 * @spec exclude presentational drag-preview helper — no business logic
+		 */
+		dropListClass(stageName) {
+			return {
+				'kanban-drop--target':
+					this.dragSourceStage !== stageName || this.dragLeftSource,
+			}
+		},
+
+		/**
+		 * A column's vuedraggable `change` event. Only `added` matters: the
+		 * column a card left emits `removed`, and a drop back into the card's
+		 * own column emits `moved`, which vuedraggable has already undone on
+		 * screen.
+		 *
+		 * @param {{added?: {element: object}}} event The vuedraggable change event.
+		 * @param {object} targetStage The stage of the column the card landed in.
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-17
+		 */
+		onCardDropped(event, targetStage) {
+			if (event.added) {
+				this.moveItemToStage(event.added.element, targetStage)
+			}
+		},
+
+		/**
+		 * Move a card to another stage. The card moves on screen at once; the
+		 * save sends the whole object, because a PUT with only the changed field
+		 * fails OpenRegister's required-field validation. The object is re-read
+		 * first, so a field changed since the board loaded is not written back
+		 * with its old value. A failed save puts the card back.
+		 *
+		 * @param {object} item The board item that was dropped.
+		 * @param {object} targetStage The stage it was dropped on.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-17
+		 */
+		async moveItemToStage(item, targetStage) {
+			const columnProp = this.getColumnProperty(item)
+			if (item[columnProp] === targetStage.name) return
+
+			const previous = {
+				[columnProp]: item[columnProp],
+				stageOrder: item.stageOrder,
+			}
+			item[columnProp] = targetStage.name
+			if (columnProp === 'stage' && typeof targetStage.order === 'number') {
+				item.stageOrder = targetStage.order
+			}
+
+			// A request/complaint/contactmoment is stored as a `ticket` and must
+			// keep its ticketType discriminator (unify-ticket-supertype).
+			const { objectType, ticketType } = resolveObjectType(item._schemaSlug)
+			const current = await this.objectStore.fetchObject(objectType, item.id)
+			let saved = null
+			if (current) {
+				const payload = {
+					...current,
+					id: item.id,
+					[columnProp]: item[columnProp],
+				}
+				if (item.stageOrder !== previous.stageOrder)
+					payload.stageOrder = item.stageOrder
+				if (ticketType && !payload.ticketType)
+					payload.ticketType = ticketType
+				saved = await this.objectStore.saveObject(objectType, payload)
+			}
+			if (!saved) {
+				Object.assign(item, previous)
+				showError(
+					t('pipelinq', 'Could not move the card to {stage}.', {
+						stage: targetStage.name,
+					}),
+				)
+				return
+			}
+			await this.refreshItems()
 		},
 
 		/**
@@ -1251,16 +1420,25 @@ export default {
 
 		/**
 		 * @param {object} item The board item to open
+		 * @param {MouseEvent|KeyboardEvent} [event] The triggering event; a modified or middle click opens a new tab.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-20
 		 */
-		openItem(item) {
+		openItem(item, event) {
 			if (item._schemaSlug === 'lead') {
-				this.$router.push({ name: 'LeadDetail', params: { id: item.id } })
+				openRowTarget(
+					event,
+					{ name: 'LeadDetail', params: { id: item.id } },
+					this.$router,
+				)
 			} else if (item._schemaSlug === 'request') {
 				// `_schemaSlug` keeps the LOGICAL slug ('request'), but the row is
 				// stored as a `ticket` (unify-ticket-supertype) and opens on the
 				// unified TicketDetail page.
-				this.$router.push({ name: 'TicketDetail', params: { id: item.id } })
+				openRowTarget(
+					event,
+					{ name: 'TicketDetail', params: { id: item.id } },
+					this.$router,
+				)
 			}
 		},
 	},
@@ -1487,6 +1665,8 @@ export default {
 	gap: 1px;
 	overflow-y: auto;
 	flex: 1;
+	/* An empty column still needs room to drop a card into. */
+	min-height: 80px;
 }
 
 .kanban-closed {
@@ -1534,6 +1714,37 @@ export default {
 	display: flex;
 	flex-direction: column;
 	gap: 1px;
+}
+
+/* Covers the collapsed column, so a card can land anywhere on it. */
+.kanban-closed-column {
+	position: relative;
+}
+
+.closed-drop-zone {
+	position: absolute;
+	inset: 0;
+}
+
+/* See dropListClass(): where the placeholder would promise a position the
+   column's order does not keep, it is hidden and the column lights up as the
+   target. That includes the card's own column once it has been elsewhere, and
+   dropping there leaves the card where it was. */
+.kanban-drop--target > .pipeline-card--ghost {
+	display: none;
+}
+
+.kanban-column:has(.kanban-drop--target > .pipeline-card--ghost),
+.kanban-closed-column:has(.kanban-drop--target > .pipeline-card--ghost) {
+	background: var(--color-primary-element-light);
+}
+
+.pipeline-card--ghost {
+	opacity: 0.4;
+}
+
+.pipeline-card--chosen {
+	box-shadow: 0 2px 8px var(--color-box-shadow);
 }
 
 .pipeline-board__list {
@@ -1659,6 +1870,36 @@ export default {
 	padding: 40px;
 	text-align: center;
 	color: var(--color-text-maxcontrast);
+}
+
+/* Phone: the header wraps and the columns scroll inside the board, so the
+   page itself never scrolls sideways (platform-phone-on-the-road). */
+@media (max-width: 600px) {
+	.pipeline-board {
+		padding: 12px;
+		min-width: 0;
+		max-width: 100%;
+	}
+
+	.pipeline-board__header,
+	.pipeline-board__controls {
+		flex-wrap: wrap;
+		gap: 8px;
+	}
+
+	.pipeline-board__controls,
+	.pipeline-selector,
+	.show-filter,
+	.pipeline-search {
+		width: 100%;
+		min-width: 0;
+	}
+
+	.pipeline-board__columns,
+	.pipeline-board__list {
+		max-width: 100%;
+		min-width: 0;
+	}
 }
 
 @media (prefers-reduced-motion: reduce) {

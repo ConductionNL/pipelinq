@@ -18,17 +18,37 @@
 				@update:modelValue="(v) => (form.description = v)" />
 		</div>
 
+		<!-- Category: what the lead is about. Routing suggests colleagues whose
+		     skills cover it (pipelinq#2049). -->
+		<div class="form-group" data-testid="lead-form-category">
+			<NcTextField
+				:modelValue="form.category"
+				:label="t('pipelinq', 'Category')"
+				@update:modelValue="(v) => (form.category = v)" />
+		</div>
+
 		<!-- Value + Probability row -->
 		<div class="form-row">
 			<div class="form-group">
 				<NcTextField
 					:modelValue="form.value === null ? '' : String(form.value)"
-					:label="t('pipelinq', 'Value (EUR)')"
+					:label="t('pipelinq', 'Value')"
 					type="number"
 					:error="!!errors.value"
 					:helperText="errors.value"
 					@update:modelValue="
 						(v) => (form.value = v === '' ? null : Number(v))
+					" />
+			</div>
+			<div class="form-group form-group--currency">
+				<NcTextField
+					:modelValue="form.currency"
+					:label="t('pipelinq', 'Currency')"
+					maxlength="3"
+					:error="!!errors.currency"
+					:helperText="errors.currency"
+					@update:modelValue="
+						(v) => (form.currency = normaliseCurrency(v))
 					" />
 			</div>
 			<div class="form-group">
@@ -54,6 +74,7 @@
 					v-model="form.source"
 					:options="sourceOptions"
 					:aria-label-combobox="t('pipelinq', 'Source')"
+					labelOutside
 					:clearable="true"
 					:placeholder="t('pipelinq', 'Select source')" />
 			</div>
@@ -63,6 +84,7 @@
 					v-model="form.priority"
 					:options="priorityOptions"
 					:aria-label-combobox="t('pipelinq', 'Priority')"
+					labelOutside
 					:clearable="false"
 					:placeholder="t('pipelinq', 'Select priority')" />
 			</div>
@@ -135,6 +157,7 @@
 					v-model="form.pipeline"
 					:options="pipelineOptions"
 					:aria-label-combobox="t('pipelinq', 'Pipeline')"
+					labelOutside
 					:clearable="true"
 					label="label"
 					:reduce="(o) => o.value"
@@ -150,6 +173,7 @@
 					v-model="form.stage"
 					:options="stageOptions"
 					:aria-label-combobox="t('pipelinq', 'Stage')"
+					labelOutside
 					:clearable="true"
 					:disabled="!form.pipeline"
 					:placeholder="
@@ -174,6 +198,7 @@
 
 <script>
 import { CnResourceSelect } from '@conduction/nextcloud-vue'
+import { loadState } from '@nextcloud/initial-state'
 import {
 	NcButton,
 	NcDateTimePickerNative,
@@ -183,10 +208,24 @@ import {
 import ClientCreateDialog from '../../dialogs/ClientCreateDialog.vue'
 import ContactCreateDialog from '../../dialogs/ContactCreateDialog.vue'
 import linkedPartyCascadeMixin from '../../mixins/linkedPartyCascadeMixin.js'
+import { isCurrencyCode, normaliseCurrency } from '../../services/leadCurrency.js'
 import { toDateInputString, toDateObject } from '../../services/localeUtils.js'
 import { pipelineAppliesTo } from '../../services/pipelineUtils.js'
 import { useLeadSourcesStore } from '../../store/modules/leadSources.js'
 import { useObjectStore } from '../../store/modules/object.js'
+
+/**
+ * The app's reporting currency, as the setup wizard stored it.
+ *
+ * @return {string} The currency code.
+ */
+function reportingCurrency() {
+	try {
+		return loadState('pipelinq', 'config', {}).currency || 'EUR'
+	} catch {
+		return 'EUR'
+	}
+}
 
 export default {
 	name: 'LeadForm',
@@ -231,7 +270,11 @@ export default {
 			form: {
 				title: '',
 				description: '',
+				category: '',
 				value: null,
+				// The deal's currency (pipelinq#2040). New deals start in the
+				// reporting currency; the forecast converts any other one.
+				currency: reportingCurrency(),
 				probability: null,
 				source: null,
 				priority: 'normal',
@@ -339,6 +382,12 @@ export default {
 			if (this.form.value !== null && this.form.value < 0) {
 				errors.value = t('pipelinq', 'Value must be non-negative')
 			}
+			if (this.form.currency && !isCurrencyCode(this.form.currency)) {
+				errors.currency = t(
+					'pipelinq',
+					'Use a three-letter currency code, such as EUR or USD',
+				)
+			}
 			if (
 				this.form.probability !== null
 				&& (this.form.probability < 0 || this.form.probability > 100)
@@ -396,7 +445,9 @@ export default {
 				id: this.lead.id,
 				title: this.lead.title || '',
 				description: this.lead.description || '',
+				category: this.lead.category || '',
 				value: this.lead.value ?? null,
+				currency: this.lead.currency || reportingCurrency(),
 				probability: this.lead.probability ?? null,
 				source: this.lead.source || null,
 				priority: this.lead.priority || 'normal',
@@ -413,6 +464,8 @@ export default {
 	},
 
 	methods: {
+		normaliseCurrency,
+
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-41
 		 */
@@ -457,8 +510,10 @@ export default {
 			const data = { ...this.form }
 			// Clean null values
 			if (data.value === null) delete data.value
+			if (!data.currency) delete data.currency
 			if (data.probability === null) delete data.probability
 			if (!data.source) delete data.source
+			if (!data.category) delete data.category
 			if (!data.expectedCloseDate) delete data.expectedCloseDate
 			if (!data.client) delete data.client
 			if (!data.contact) delete data.contact
@@ -495,6 +550,10 @@ export default {
 
 .form-row .form-group {
 	flex: 1;
+}
+
+.form-row .form-group--currency {
+	flex: 0 0 96px;
 }
 
 .field-error {

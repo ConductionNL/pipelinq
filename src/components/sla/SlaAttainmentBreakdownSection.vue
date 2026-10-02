@@ -66,8 +66,8 @@
 </template>
 
 <script>
-import axios from '@nextcloud/axios'
-import { generateUrl } from '@nextcloud/router'
+import { fetchEndpointSource } from '@conduction/nextcloud-vue'
+import { subscribe, unsubscribe } from '@nextcloud/event-bus'
 import { NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
 
 export default {
@@ -137,25 +137,52 @@ export default {
 		},
 	},
 
+	/**
+	 * Load the breakdown, and reload it on the page's Refresh action.
+	 *
+	 * @spec openspec/specs/sla-engine-and-escalation/spec.md
+	 */
 	mounted() {
 		this.fetchAttainment()
+		// The page's Refresh action; `waitUntil` keeps its spinner going until this table reloads.
+		this.onPageRefresh = (payload) => {
+			const done = this.fetchAttainment(true, payload)
+			payload?.waitUntil?.(done)
+		}
+		subscribe('cn:page:refresh', this.onPageRefresh)
+	},
+
+	beforeUnmount() {
+		unsubscribe('cn:page:refresh', this.onPageRefresh)
 	},
 
 	methods: {
 		/**
+		 * Reads through the library's shared endpoint fetch, so this table and
+		 * the page's KPI tiles send one request for the same bucket and grouping.
+		 *
+		 * @param {boolean} [force] Bypass the shared cache (page refresh).
+		 * @param {object} [refresh] The page refresh's event payload. Passing
+		 *   it lets this forced read join the KPI tiles' request for the same
+		 *   refresh instead of sending its own.
 		 * @spec openspec/specs/sla-engine-and-escalation/spec.md#requirement-attainment-reporting
 		 */
-		async fetchAttainment() {
+		async fetchAttainment(force = false, refresh = undefined) {
 			this.loading = true
 			this.error = null
 			try {
-				const url = generateUrl('/apps/pipelinq/api/sla/attainment')
-				const params = {
-					bucket: this.effectiveBucket,
-					groupBy: this.effectiveGroupBy,
-				}
-				const response = await axios.get(url, { params })
-				this.payload = response.data || this.payload
+				const data = await fetchEndpointSource(
+					{
+						url: '/apps/pipelinq/api/sla/attainment',
+						params: {
+							bucket: this.effectiveBucket,
+							groupBy: this.effectiveGroupBy,
+						},
+					},
+					{},
+					{ force, refresh },
+				)
+				this.payload = data || this.payload
 			} catch {
 				this.error = this.t(
 					'pipelinq',

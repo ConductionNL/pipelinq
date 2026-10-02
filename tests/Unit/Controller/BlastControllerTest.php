@@ -38,6 +38,7 @@ use OCA\Pipelinq\Service\BlastService;
 use OCA\Pipelinq\Service\CampaignLinkDecorator;
 use OCA\Pipelinq\Service\CampaignPerformanceService;
 use OCA\Pipelinq\Service\Marketing\MailTransportService;
+use OCA\Pipelinq\Service\Marketing\PhysicalAddressRenderer;
 use OCA\Pipelinq\Service\SegmentService;
 use OCA\Pipelinq\Tests\Unit\Support\FakeSlugResolver;
 use OCP\AppFramework\Http;
@@ -290,6 +291,7 @@ class BlastControllerTest extends TestCase {
 				articleService: $this->createMock(ArticleService::class),
 				connectorRegister: FakeSlugResolver::connectorRegister(),
 				logger: $logger,
+				addressRenderer: new PhysicalAddressRenderer(),
 			),
 			logger: $logger,
 			container: $container,

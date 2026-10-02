@@ -32,7 +32,8 @@
 								:key="rel.id"
 								class="viewTableRow"
 								:class="{ 'relationship--ended': isEnded(rel) }"
-								@click="navigateToEntity(rel)">
+								@click="navigateToEntity(rel, $event)"
+								@auxclick="navigateToEntity(rel, $event)">
 								<td>{{ getEntityName(rel.toContact) }}</td>
 								<td>{{ rel.type }}</td>
 								<td>
@@ -47,7 +48,10 @@
 										{{ t('pipelinq', 'Active') }}
 									</span>
 								</td>
-								<td class="relationship-actions" @click.stop>
+								<td
+									class="relationship-actions"
+									@click.stop
+									@auxclick.stop>
 									<NcButton
 										variant="tertiary"
 										@click="editRelationship(rel)">
@@ -104,6 +108,7 @@
 							v-model="addForm.toContact"
 							:options="entityOptions"
 							:aria-label-combobox="t('pipelinq', 'Related entity')"
+							labelOutside
 							:placeholder="
 								t('pipelinq', 'Search contacts and clients…')
 							"
@@ -117,6 +122,7 @@
 							v-model="addForm.type"
 							:options="typeOptions"
 							:aria-label-combobox="t('pipelinq', 'Relationship type')"
+							labelOutside
 							:placeholder="t('pipelinq', 'Select type…')"
 							label="label"
 							:reduce="(opt) => opt.value"
@@ -157,6 +163,7 @@
 							v-model="addForm.strength"
 							:options="strengthOptions"
 							:aria-label-combobox="t('pipelinq', 'Strength')"
+							labelOutside
 							:placeholder="t('pipelinq', 'Select strength…')"
 							label="label"
 							:reduce="(opt) => opt.value" />
@@ -191,6 +198,7 @@
 </template>
 
 <script>
+import { openRowTarget } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { NcButton, NcEmptyContent, NcLoadingIcon, NcSelect } from '@nextcloud/vue'
 import RemoveRelationshipDialog from '../dialogs/RemoveRelationshipDialog.vue'
@@ -465,11 +473,16 @@ export default {
 
 		/**
 		 * @param {object} rel The relationship row whose entity to open.
+		 * @param {MouseEvent} [event] The row click; a modified or middle click opens a new tab.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-contacts-ui/tasks.md#task-11
 		 */
-		navigateToEntity(rel) {
+		navigateToEntity(rel, event) {
 			const type = rel.toType === 'client' ? 'ClientDetail' : 'ContactDetail'
-			this.$router.push({ name: type, params: { id: rel.toContact } })
+			openRowTarget(
+				event,
+				{ name: type, params: { id: rel.toContact } },
+				this.$router,
+			)
 		},
 
 		/**

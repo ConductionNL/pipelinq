@@ -83,7 +83,7 @@
 			<!-- Prospect list -->
 			<div v-else class="prospect-widget__list">
 				<ProspectCard
-					v-for="prospect in prospectStore.prospects"
+					v-for="prospect in topProspects"
 					:key="prospect.kvkNumber"
 					:prospect="prospect" />
 
@@ -128,6 +128,17 @@ export default {
 		 */
 		prospectStore() {
 			return useProspectStore()
+		},
+
+		/**
+		 * The 10 best-scored prospects. The store holds all of them, in the
+		 * server's score order, for the full Prospects page.
+		 *
+		 * @return {Array<object>}
+		 * @spec openspec/specs/prospect-discovery/spec.md
+		 */
+		topProspects() {
+			return this.prospectStore.prospects.slice(0, 10)
 		},
 	},
 

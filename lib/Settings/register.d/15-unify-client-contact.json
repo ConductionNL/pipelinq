@@ -2,6 +2,7 @@
   "components": {
     "schemas": {
       "client": {
+        "slug": "client",
         "required": [
           "name",
           "type",
@@ -97,6 +98,7 @@
         }
       },
       "contact": {
+        "slug": "contact",
         "required": [
           "name",
           "contactsUid"
@@ -136,6 +138,7 @@
         }
       },
       "ticket": {
+        "slug": "ticket",
         "properties": {
           "contactsUid": {
             "type": "string",

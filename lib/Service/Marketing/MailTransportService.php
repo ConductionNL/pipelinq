@@ -107,6 +107,7 @@ class MailTransportService {
 	 * @param ArticleService $articleService Article reader and `{{articles}}` renderer.
 	 * @param ConnectorSourceRegister $connectorRegister Which slug the source register answers to here.
 	 * @param LoggerInterface $logger Logger.
+	 * @param PhysicalAddressRenderer $addressRenderer Puts the template's physical address into each body.
 	 */
 	public function __construct(
 		private ContainerInterface $container,
@@ -115,6 +116,7 @@ class MailTransportService {
 		private ArticleService $articleService,
 		private ConnectorSourceRegister $connectorRegister,
 		private LoggerInterface $logger,
+		private PhysicalAddressRenderer $addressRenderer,
 	) {
 	}//end __construct()
 
@@ -230,11 +232,12 @@ class MailTransportService {
 	 * Substitution is intentionally minimal: `{{email}}`, `{{contactId}}`, and
 	 * `{{unsubscribe_link}}` when the delivery carries one (a mailing-list
 	 * send always does; a segment send has no membership to unsubscribe from,
-	 * so the token resolves empty) — matching the pre-existing
-	 * `BlastService::renderTemplate()` semantics. Before those tokens are
-	 * substituted, the template's own `{{articles}}` marker (when present)
-	 * is expanded via `ArticleService::expandArticlesMarker()` — the same
-	 * call `TemplateController::preview()` runs, so what a marketer saw in
+	 * so the token resolves empty). Before those tokens are substituted, the
+	 * template's own `{{articles}}` marker (when present) is expanded via
+	 * `ArticleService::expandArticlesMarker()`. After them, the template's
+	 * physical address (`footerOverride`) goes in at its address token or at
+	 * the end, via `PhysicalAddressRenderer::render()`. Both are the
+	 * calls `TemplateController::preview()` makes, so what a marketer saw in
 	 * the preview is what sends. First-party tracking injection (when
 	 * enabled) runs on the HTML body before the mail is handed to any
 	 * transport.
@@ -261,7 +264,14 @@ class MailTransportService {
 			'{{unsubscribe_link}}' => (string)($delivery['unsubscribeUrl'] ?? ''),
 		];
 
-		$html = strtr($this->expandArticles(template: $template, format: ArticleService::FORMAT_HTML), $tokens);
+		// The sender's physical address (CAN-SPAM) goes in at its token, or at
+		// the end, the same way the template preview shows it.
+		$footer = (string)($template['footerOverride'] ?? '');
+		$html = $this->addressRenderer->render(
+			body: strtr($this->expandArticles(template: $template, format: ArticleService::FORMAT_HTML), $tokens),
+			footerOverride: $footer,
+			format: ArticleService::FORMAT_HTML,
+		);
 		$deliveryId = $this->extractId(payload: $delivery);
 		if ($this->firstPartyTrackingEnabled() === true) {
 			$html = $this->injectTrackingLinks(html: $html, blastDeliveryId: $deliveryId);
@@ -274,7 +284,11 @@ class MailTransportService {
 			toEmail: (string)($delivery['email'] ?? ''),
 			subject: strtr((string)($template['subject'] ?? ''), $tokens),
 			html: $html,
-			text: strtr($this->expandArticles(template: $template, format: ArticleService::FORMAT_TEXT), $tokens),
+			text: $this->addressRenderer->render(
+				body: strtr($this->expandArticles(template: $template, format: ArticleService::FORMAT_TEXT), $tokens),
+				footerOverride: $footer,
+				format: ArticleService::FORMAT_TEXT,
+			),
 			headers: [],
 			deliveryId: $deliveryId,
 		);

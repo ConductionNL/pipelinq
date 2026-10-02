@@ -470,6 +470,7 @@
         }
       },
       "contact": {
+        "slug": "contact",
         "properties": {
           "masterEntityRef": {
             "type": "string",
@@ -488,6 +489,7 @@
         }
       },
       "client": {
+        "slug": "client",
         "properties": {
           "masterEntityRef": {
             "type": "string",
@@ -506,6 +508,7 @@
         }
       },
       "product": {
+        "slug": "product",
         "properties": {
           "masterEntityRef": {
             "type": "string",

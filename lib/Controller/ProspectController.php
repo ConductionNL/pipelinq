@@ -78,9 +78,14 @@ class ProspectController extends Controller {
 		}
 
 		$refresh = $this->request->getParam(key: 'refresh', default: 'false') === 'true';
+		// The top 10 by default (the dashboard widget); 0 returns every prospect.
+		$limit = (string)$this->request->getParam(key: 'limit', default: '10');
+		if (ctype_digit($limit) === false) {
+			return new JSONResponse(['error' => 'invalid_limit'], Http::STATUS_BAD_REQUEST);
+		}
 
 		try {
-			$result = $this->discoveryService->discover(refresh: $refresh);
+			$result = $this->discoveryService->discover(refresh: $refresh, limit: (int)$limit);
 
 			if (isset($result['error']) === true) {
 				return new JSONResponse(data: $result, statusCode: 400);

@@ -11,8 +11,7 @@
 		:title="t('pipelinq', 'Knowledge base')"
 		:space="defaultSpace"
 		:limit="5"
-		:showSearch="true"
-		@select="openExternal" />
+		:showSearch="true" />
 </template>
 
 <script>
@@ -33,14 +32,6 @@ export default {
 				return (store.config && store.config.xwiki_default_space) || ''
 			} catch {
 				return ''
-			}
-		},
-	},
-
-	methods: {
-		openExternal(article) {
-			if (article && article.url) {
-				window.open(article.url, '_blank', 'noopener,noreferrer')
 			}
 		},
 	},

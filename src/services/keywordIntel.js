@@ -77,6 +77,35 @@ export function pageShare(page, total) {
 }
 
 /**
+ * A position bucket's range as it reads in a sentence: the server's `1-3`
+ * with a proper range dash, and the open-ended `21+` as it is.
+ *
+ * @param {string} bucket The bucket label the server sent.
+ * @return {string} The range.
+ * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-the-keywords-page-shows-the-four-derivations-and-confirms-one-at-a-time
+ */
+export function bucketRange(bucket) {
+	return String(bucket || '').replace('-', '–')
+}
+
+/**
+ * A page URL shortened to its path, which is what tells two pages of the same
+ * site apart. Anything that is not an absolute URL is returned as it came.
+ *
+ * @param {string} url The page URL.
+ * @return {string} The path with its query string, or the input unchanged.
+ * @spec openspec/changes/marketing-search-intelligence/specs/marketing-keyword-intelligence/spec.md#requirement-cannibalisation-names-two-pages-competing-for-one-query
+ */
+export function pagePath(url) {
+	try {
+		const parsed = new URL(String(url || ''))
+		return parsed.pathname + parsed.search || '/'
+	} catch {
+		return String(url || '')
+	}
+}
+
+/**
  * Whether a term already has a confirmed keyword target, so the page can mark
  * the proposal as taken instead of offering to confirm it twice.
  *

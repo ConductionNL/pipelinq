@@ -4,15 +4,10 @@
 		role="button"
 		tabindex="0"
 		:aria-label="t('pipelinq', 'Open complaints')"
-		@click="
-			$router.push({ name: 'Tickets', query: { ticketType: 'complaint' } })
-		"
-		@keydown.enter.prevent="
-			$router.push({ name: 'Tickets', query: { ticketType: 'complaint' } })
-		"
-		@keydown.space.prevent="
-			$router.push({ name: 'Tickets', query: { ticketType: 'complaint' } })
-		">
+		@click="open"
+		@auxclick="open"
+		@keydown.enter="open"
+		@keydown.space="openOnSpace">
 		<div v-if="loading" class="widget-loading">
 			{{ t('pipelinq', 'Loading…') }}
 		</div>
@@ -46,6 +41,8 @@
 </template>
 
 <script>
+import { openRowTarget } from '@conduction/nextcloud-vue'
+
 export default {
 	name: 'ComplaintsOverviewWidget',
 	props: {
@@ -119,6 +116,35 @@ export default {
 				if (!c.slaDeadline) return false
 				return new Date(c.slaDeadline) < now
 			}).length
+		},
+	},
+
+	methods: {
+		/**
+		 * Open the complaints list: a plain click or key navigates in place,
+		 * a ctrl/cmd/shift or middle click opens a new tab.
+		 *
+		 * @param {MouseEvent|KeyboardEvent} event The triggering event.
+		 * @spec openspec/specs/klachtenregistratie/spec.md#requirement-complaint-dashboard-widget
+		 */
+		open(event) {
+			openRowTarget(
+				event,
+				{ name: 'Tickets', query: { ticketType: 'complaint' } },
+				this.$router,
+			)
+		},
+
+		/**
+		 * Space opens the list like Enter. Its scroll is prevented only after
+		 * the open, so a modified Space still reaches openRowTarget unhandled.
+		 *
+		 * @param {KeyboardEvent} event The keydown.
+		 * @spec openspec/specs/klachtenregistratie/spec.md#requirement-complaint-dashboard-widget
+		 */
+		openOnSpace(event) {
+			this.open(event)
+			event.preventDefault()
 		},
 	},
 }

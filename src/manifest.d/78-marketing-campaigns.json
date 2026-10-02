@@ -18,10 +18,13 @@
 	"pages": [
 		{
 			"id": "Campaigns",
-			"_note": "Campaign list as a declarative type:index page (marketing-campaigns), read-only. Create and edit go to CampaignFormView instead of the declarative dialog, and showAdd / showFormDialog / showEditAction are therefore off: a campaign written through OpenRegister's object API carries whatever utmCampaign the browser sent and stores a source outside the tenant's vocabulary without complaint. Minting the campaign value once, freezing it across a rename, and refusing an unknown source or medium live in CampaignService, which only POST and PATCH /api/campaigns reach. The report is not reachable from here either: it is a card on the Reports page (ADR-112).",
+			"_note": "Campaign list as a declarative type:index page (marketing-campaigns). Add and the row Edit action open CampaignFormDialog in the form-dialog slot instead of the declarative dialog: a campaign written through OpenRegister's object API carries whatever utmCampaign the browser sent and stores a source outside the tenant's vocabulary without complaint. Minting the campaign value once, freezing it across a rename, and refusing an unknown source or medium live in CampaignService, which only POST and PATCH /api/campaigns reach. The report is not reachable from here either: it is a card on the Reports page (ADR-112).",
 			"route": "/campaigns",
 			"type": "index",
 			"title": "Campaigns",
+			"slots": {
+				"form-dialog": "CampaignFormDialog"
+			},
 			"config": {
 				"register": "pipelinq",
 				"schema": "campaign",
@@ -33,67 +36,20 @@
 					"startsAt",
 					"endsAt"
 				],
-				"actions": [
-					{
-						"id": "view",
-						"label": "Open",
-						"icon": "Eye",
-						"handler": "navigate",
-						"route": "CampaignDetail"
-					},
-					{
-						"id": "edit",
-						"label": "Edit",
-						"icon": "PencilOutline",
-						"handler": "navigate",
-						"route": "CampaignEdit"
-					}
-				],
-				"showAdd": false,
-				"showFormDialog": false,
-				"showEditAction": false,
-				"showCopyAction": false,
-				"headerActions": [
-					{
-						"id": "create",
-						"label": "New campaign",
-						"icon": "Plus",
-						"handler": "navigate",
-						"route": "CampaignNew"
-					}
-				]
-			}
-		},
-		{
-			"id": "CampaignNew",
-			"_note": "Campaign create and edit as a thin route wrapper around CampaignFormView (marketing-campaigns), matching the SegmentNew / TemplateNew / BlastNew convention. Custom rather than a declarative form: the create path mints the campaign value from the name and freezes it, and it refuses a source or medium outside the tenant's app-config vocabulary, which no declarative form primitive expresses. Missing primitive: a form whose enum options come from app config rather than from the schema.",
-			"route": "/campaigns/new",
-			"type": "custom",
-			"title": "New campaign",
-			"component": "CampaignFormView",
-			"config": {
-				"register": "pipelinq",
-				"schema": "campaign"
-			}
-		},
-		{
-			"id": "CampaignEdit",
-			"_note": "Campaign create and edit as a thin route wrapper around CampaignFormView (marketing-campaigns), matching the SegmentNew / TemplateNew / BlastNew convention. Custom rather than a declarative form: the create path mints the campaign value from the name and freezes it, and it refuses a source or medium outside the tenant's app-config vocabulary, which no declarative form primitive expresses. Missing primitive: a form whose enum options come from app config rather than from the schema.",
-			"route": "/campaigns/:id/edit",
-			"type": "custom",
-			"title": "Edit campaign",
-			"component": "CampaignFormView",
-			"config": {
-				"register": "pipelinq",
-				"schema": "campaign"
+				"addLabel": "New campaign",
+				"showEditAction": true,
+				"showCopyAction": false
 			}
 		},
 		{
 			"id": "CampaignDetail",
-			"_note": "Campaign record as a declarative type:detail page (ADR-062 grid). The campaign's own fields auto-render in the details widget. The landing page block is a bodyWidgets section rather than a declarative widget for two reasons: it carries an ACTION that dispatches a cross-app event portaliq answers, which no declarative action expresses, and it must surface portaliq's own typed error code verbatim, which a generic write dialog would collapse into a save failure. Its props carry @objectId, the only token that resolves on a detail page.",
+			"_note": "Campaign record as a declarative type:detail page (ADR-062 grid). The campaign's own fields auto-render in the details widget. Edit opens CampaignFormDialog in the form-dialog slot, the same dialog as the Campaigns index, so an edit here also goes through CampaignService. The landing page block is a bodyWidgets section rather than a declarative widget for two reasons: it carries an ACTION that dispatches a cross-app event portaliq answers, which no declarative action expresses, and it must surface portaliq's own typed error code verbatim, which a generic write dialog would collapse into a save failure. Its props carry @objectId, the only token that resolves on a detail page.",
 			"route": "/campaigns/:id",
 			"type": "detail",
 			"title": "Campaign",
+			"slots": {
+				"form-dialog": "CampaignFormDialog"
+			},
 			"config": {
 				"register": "pipelinq",
 				"schema": "campaign",

@@ -392,6 +392,7 @@ return [
         ['name' => 'forecastSettings#update', 'url' => '/api/settings/forecast', 'verb' => 'PUT'],
 
         // Admin / DPO (Nextcloud admin only; no #[PublicPage] — admin-default).
+        ['name' => 'portalAdmin#getConfig',    'url' => '/portal/api/admin/tenant-config', 'verb' => 'GET'],
         ['name' => 'portalAdmin#saveConfig',   'url' => '/portal/api/admin/tenant-config', 'verb' => 'POST'],
         ['name' => 'portalAdmin#accounts',     'url' => '/portal/api/admin/accounts',      'verb' => 'GET'],
         ['name' => 'portalAdmin#auditEvents',  'url' => '/portal/api/admin/audit-events',  'verb' => 'GET'],
@@ -541,6 +542,15 @@ return [
         ['name' => 'semanticHandoff#contractAvailability',   'url' => '/api/handoff/contract/{id}/availability',      'verb' => 'GET'],
         ['name' => 'semanticHandoff#sendContractToInvoicing','url' => '/api/handoff/contract/{id}/send-to-invoicing', 'verb' => 'POST'],
 
+        // Woo citizen journey J4 (questions-about-a-citizen-dossier): the two
+        // portal endpoint actions portaliq forwards with a signed
+        // X-Portal-Subject assertion (the only credential), and the employee's
+        // conversion of a question into a dossiq Woo request.
+        ['name' => 'portalQuestion#ask',              'url' => '/api/portal/questions',                     'verb' => 'POST'],
+        ['name' => 'portalQuestion#reply',            'url' => '/api/portal/questions/reply',               'verb' => 'POST'],
+        ['name' => 'ticketWooRequest#availability',   'url' => '/api/tickets/{id}/woo-request/availability', 'verb' => 'GET'],
+        ['name' => 'ticketWooRequest#convert',        'url' => '/api/tickets/{id}/woo-request',              'verb' => 'POST'],
+
         // Shillinq time-intake billing handoff — real emit side of the
         // time-approval-workflow delegation (time-billing-handoff-emit).
         // Manager-gated; the deep-link (shillinq_app_url) stays the fallback
@@ -586,6 +596,7 @@ return [
         ['name' => 'template#index',   'url' => '/api/templates',          'verb' => 'GET'],
         ['name' => 'template#create',  'url' => '/api/templates',          'verb' => 'POST'],
         ['name' => 'template#preview', 'url' => '/api/templates/{id}/preview', 'verb' => 'GET'],
+        ['name' => 'template#validate', 'url' => '/api/templates/{id}/validate', 'verb' => 'POST'],
         ['name' => 'template#show',    'url' => '/api/templates/{id}',     'verb' => 'GET'],
         ['name' => 'template#update',  'url' => '/api/templates/{id}',     'verb' => 'PATCH'],
 

@@ -54,11 +54,13 @@ use OCA\Pipelinq\Listener\DealUpdatedListener;
 use OCA\Pipelinq\Listener\ExpenseApprovalListener;
 use OCA\Pipelinq\Listener\LandingPageFormSubmittedListener;
 use OCA\Pipelinq\Listener\ObjectEventListener;
+use OCA\Pipelinq\Listener\QuestionAnsweredListener;
 use OCA\Pipelinq\Listener\ObjectsMergedSyncListener;
 use OCA\Pipelinq\Listener\PosTransactionCompletedListener;
 use OCA\Pipelinq\Listener\SchemaChangeListener;
 use OCA\Pipelinq\Listener\SlaObjectCreatedListener;
 use OCA\Pipelinq\Listener\SlaObjectUpdatedListener;
+use OCA\Pipelinq\Listener\SurveyDispatchListener;
 use OCA\Pipelinq\Listener\TimeApprovalListener;
 use OCA\Pipelinq\Mcp\PipelinqScannableServices;
 use OCA\Pipelinq\Service\AppointmentCalendarLeafProvider;
@@ -200,6 +202,12 @@ class Application extends App implements IBootstrap {
 			event: ObjectUpdatedEvent::class,
 			listener: ObjectEventListener::class
 		);
+		// A saved answer on a resident's portal question tells them, with
+		// pipelinq's own message (portal-questions-in-dutch).
+		$context->registerEventListener(
+			event: ObjectUpdatedEvent::class,
+			listener: QuestionAnsweredListener::class
+		);
 		$context->registerEventListener(
 			event: ObjectCreatedEvent::class,
 			listener: DealCreatedListener::class
@@ -263,6 +271,19 @@ class Application extends App implements IBootstrap {
 		$context->registerEventListener(
 			event: ObjectUpdatedEvent::class,
 			listener: SlaObjectUpdatedListener::class
+		);
+
+		// Satisfaction surveys (customer-satisfaction-closed-loop): a ticket
+		// that reaches a status an enabled survey rule names gets its
+		// invitations written, in the deferred job (pipelinq#2072). Created as
+		// well as updated, because a ticket can be logged already closed.
+		$context->registerEventListener(
+			event: ObjectCreatedEvent::class,
+			listener: SurveyDispatchListener::class
+		);
+		$context->registerEventListener(
+			event: ObjectUpdatedEvent::class,
+			listener: SurveyDispatchListener::class
 		);
 
 		// MDM: OpenRegister now materialises the golden record on save via its

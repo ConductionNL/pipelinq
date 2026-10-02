@@ -2,6 +2,7 @@
   "components": {
     "schemas": {
       "client": {
+        "slug": "client",
         "properties": {
           "emails": {
             "type": "array",
@@ -149,6 +150,7 @@
         }
       },
       "contact": {
+        "slug": "contact",
         "properties": {
           "emails": {
             "type": "array",

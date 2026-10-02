@@ -14,6 +14,7 @@ The product catalog allows Pipelinq users to manage the products and services th
 
 ---
 ## Requirements
+
 ### Requirement: Product Entity
 
 The system MUST provide a Product entity stored as an OpenRegister object in the `pipelinq` register, using the `schema:Product` type annotation. The Product schema MUST include the following properties:
@@ -568,17 +569,7 @@ retained so existing relocations and links keep resolving.
 - AND no group labelled exactly "Catalog" MUST be present
 - AND expanding it MUST still show the Products entry under its existing route
 
-## MODIFIED Requirements
-
-_(none)_
-
-## REMOVED Requirements
-
-_(none)_
-
----
-
-### Current Implementation Status
+## Current Implementation Status
 
 **Implemented:**
 - **Product Entity:** Fully defined in `lib/Settings/pipelinq_register.json` as `product` schema with `@type: schema:Product`. Properties include `name`, `description`, `sku`, `unitPrice`, `cost`, `category`, `type` (product/service enum), `status` (active/inactive enum), `unit`, `taxRate`, `image`.
@@ -620,14 +611,14 @@ _(none)_
 - LeadProducts component has discount support but no per-line tax calculation (tax is only on the product entity, not on line items).
 - ProductRevenue widget works but is limited to top 3 products — no configurable count or drill-down.
 
-### Standards & References
+## Standards & References
 - **Schema.org:** `Product` type for products, `DefinedTermSet` for categories, `Offer` for lead-product line items.
 - **OpenRegister:** Object storage pattern for all entities.
 - **Dutch BTW:** Default `taxRate` of 21 in schema definition and ProductForm default.
 - **Krayin CRM:** Lead-product relationship with per-lead pricing, product search for autocomplete, and quote line items with discount/tax (competitor reference).
 - **EspoCRM:** Multi-currency support with `amountConverted` pattern and sales pipeline reports (competitor reference).
 
-### Specificity Assessment
+## Specificity Assessment
 - The spec covers 14 requirements with 42 scenarios providing comprehensive product catalog coverage.
 - **Implementable as-is** for core CRUD, pricing, search, status management, import/export, reporting, API access, currency formatting, and versioning.
 - **Needs design work** for: product bundling (Enterprise tier), hierarchical category UI, and product image upload flow.

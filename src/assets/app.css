@@ -6,14 +6,6 @@
  * enforces that all <style> blocks in .vue files use the `scoped` attribute.
  */
 
-/* Fix KPI card centering inside CnDashboardPage widget wrappers.
-   Overrides library scoped styles. */
-.cn-widget-wrapper__content {
-	display: flex !important;
-	align-items: center !important;
-	padding: 16px !important;
-}
-
 /* Center the NcEmptyContent when OpenRegister is not installed. */
 .open-register-missing {
 	display: flex !important;

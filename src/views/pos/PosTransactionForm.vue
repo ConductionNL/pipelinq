@@ -5,7 +5,7 @@
 <template>
 	<div class="pos-form">
 		<div class="pos-form__header">
-			<NcButton @click="goBack">
+			<NcButton :to="{ name: 'PosTransactions' }">
 				{{ t('pipelinq', 'Back to list') }}
 			</NcButton>
 			<h2>
@@ -806,13 +806,6 @@ export default {
 					t('pipelinq', 'Could not link customer to the transaction.'),
 				)
 			}
-		},
-
-		/**
-		 * Return to the transaction list.
-		 */
-		goBack() {
-			this.$router.push({ name: 'PosTransactions' })
 		},
 	},
 }

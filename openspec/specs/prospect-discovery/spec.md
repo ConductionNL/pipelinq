@@ -14,6 +14,7 @@ The prospect discovery capability enables sales teams to find new potential clie
 
 ---
 ## Requirements
+
 ### Requirement: Ideal Customer Profile Configuration
 
 The system MUST provide an admin-configurable Ideal Customer Profile (ICP) that defines which companies are good prospects. ICP criteria are stored via IAppConfig and used by the prospect discovery service to filter and score results.
@@ -729,17 +730,7 @@ Operations for prospect discovery cards MUST tolerate missing, empty, or malform
 - THEN it MUST return a safe default or a validation result
 - AND it MUST NOT raise an unhandled exception
 
-## MODIFIED Requirements
-
-_(none)_
-
-## REMOVED Requirements
-
-_(none)_
-
----
-
-### Current Implementation Status
+## Current Implementation Status
 
 **Implemented:**
 - **ICP Configuration:** `lib/Service/IcpConfigService.php` stores and retrieves ICP criteria via IAppConfig. Criteria include sbiCodes, employeeCountMin/Max, provinces, cities, legalForms, excludeInactive, keywords.
@@ -793,7 +784,7 @@ _(none)_
 
 **Mock Registers (dependency):** This spec depends on mock KVK registers being available in OpenRegister for development and testing of prospect discovery. These registers are available as JSON files that can be loaded on demand from `openregister/lib/Settings/`. Production deployments should connect to the actual KVK Handelsregister API.
 
-### Using Mock Register Data
+## Using Mock Register Data
 
 This spec depends on the **KVK** mock register for prospect data and existing client exclusion testing.
 
@@ -820,7 +811,7 @@ curl "http://localhost:8080/index.php/apps/openregister/api/objects/{kvk_registe
 curl "http://localhost:8080/index.php/apps/openregister/api/objects/{kvk_register_id}/{vestiging_schema_id}?_search=69599084" -u admin:admin
 ```
 
-### Standards & References
+## Standards & References
 - **KVK Handelsregister Zoeken API:** Primary data source for Dutch company discovery.
 - **OpenCorporates API:** Supplementary international company data.
 - **SBI (Standaard Bedrijfsindeling):** Dutch Standard Industrial Classification codes.
@@ -828,7 +819,7 @@ curl "http://localhost:8080/index.php/apps/openregister/api/objects/{kvk_registe
 - **GDPR / AVG:** General Data Protection Regulation (Art. 6(1)(f) legitimate interest for B2B prospecting with public registry data).
 - **RFC 4180:** CSV format specification for import/export.
 
-### Specificity Assessment
+## Specificity Assessment
 - The spec is highly specific with scoring rules, ICP criteria definitions, and widget behavior.
 - **Mostly implemented** with key gaps in client exclusion execution and SBI scoring granularity.
 - **Major new areas** added: prospect enrichment, deduplication, bulk import, list management, outreach tracking, GDPR compliance, market segment analysis, competitor intelligence.

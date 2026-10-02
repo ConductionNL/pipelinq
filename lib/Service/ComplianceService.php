@@ -96,20 +96,6 @@ class ComplianceService {
 	private const UNSUBSCRIBE_TOKEN = '{{unsubscribe_link}}';
 
 	/**
-	 * Token alternatives the validator will accept for the CAN-SPAM
-	 * physical-address requirement (any one of these in the body OR a
-	 * non-empty footerOverride satisfies the rule).
-	 *
-	 * @var array<int, string>
-	 */
-	private const PHYSICAL_ADDRESS_TOKENS = [
-		'{{physical_address}}',
-		'{{sender_address}}',
-		'{{company_address}}',
-		'{{address_block}}',
-	];
-
-	/**
 	 * Lawful-basis values that DO satisfy marketing consent gating.
 	 *
 	 * "imported" is intentionally NOT on this list — ADR-005 fail-safe
@@ -588,11 +574,12 @@ class ComplianceService {
 	 * Validate a CampaignTemplate payload against the channel's rules.
 	 *
 	 * For email templates the body MUST embed `{{unsubscribe_link}}`
-	 * (token literally present in `bodyHtml` or `bodyText`) AND a
-	 * physical-address indicator — either one of the recognised
-	 * placeholder tokens (see `PHYSICAL_ADDRESS_TOKENS`) or a non-empty
-	 * `footerOverride` (the operator is supplying a literal address
-	 * block in place of the templated one).
+	 * (token literally present in `bodyHtml` or `bodyText`) AND the
+	 * template MUST carry the sender's physical address in a non-empty
+	 * `footerOverride`. That address is what PhysicalAddressRenderer puts
+	 * in the mail, at an address token (see `PhysicalAddressRenderer::TOKENS`)
+	 * or at the end of the body, so a token on its own is not enough: it
+	 * would render empty.
 	 *
 	 * Returns `null` on success or a human-readable error string on
 	 * failure. Callers (controller / save path) surface the error as a
@@ -628,21 +615,11 @@ class ComplianceService {
 			);
 		}
 
-		$hasAddress = (trim($footerOverride) !== '');
-		if ($hasAddress === false) {
-			foreach (self::PHYSICAL_ADDRESS_TOKENS as $token) {
-				if (str_contains($haystack, $token) === true) {
-					$hasAddress = true;
-					break;
-				}
-			}
-		}
-
-		if ($hasAddress === false) {
-			return 'Email templates must include a physical-address block '
-				. '(footerOverride or one of {{physical_address}} / '
-				. '{{sender_address}} / {{company_address}} / '
-				. '{{address_block}}) per CAN-SPAM § 7704(a)(5).';
+		if (trim($footerOverride) === '') {
+			return 'Email templates must include the sender\'s physical address in the footer '
+				. '(footerOverride) per CAN-SPAM § 7704(a)(5). It is placed at '
+				. '{{physical_address}} / {{sender_address}} / {{company_address}} / '
+				. '{{address_block}} when the body has one, and at the end otherwise.';
 		}
 
 		return null;
@@ -746,6 +723,7 @@ class ComplianceService {
 	 * @return array{template?: array<string, mixed>, error?: string}
 	 *
 	 * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/tasks.md#templatecontroller-task-2.8-of-giant
+	 * @spec openspec/changes/marketing-block-editor/specs/mail-block-editor/spec.md#requirement-html-templates-keep-working-req-mbe-004
 	 */
 	public function createTemplate(array $payload, string $createdByUid): array {
 		$name = (string)($payload['name'] ?? '');
@@ -772,6 +750,7 @@ class ComplianceService {
 			'bodyText' => (string)($payload['bodyText'] ?? ''),
 			'senderName' => (string)($payload['senderName'] ?? ''),
 			'senderEmail' => (string)($payload['senderEmail'] ?? ''),
+			'replyTo' => (string)($payload['replyTo'] ?? ''),
 			'footerOverride' => (string)($payload['footerOverride'] ?? ''),
 			'articleIds' => $this->normaliseArticleIds(value: ($payload['articleIds'] ?? [])),
 			'createdBy' => $createdByUid,
@@ -801,6 +780,7 @@ class ComplianceService {
 	 * @return array{template?: array<string, mixed>, error?: string}
 	 *
 	 * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/tasks.md#templatecontroller-task-2.8-of-giant
+	 * @spec openspec/changes/marketing-block-editor/specs/mail-block-editor/spec.md#requirement-html-templates-keep-working-req-mbe-004
 	 */
 	public function patchTemplate(string $templateId, array $patch): array {
 		$existing = $this->getTemplateById(templateId: $templateId);
@@ -808,7 +788,7 @@ class ComplianceService {
 			return ['error' => 'Template not found'];
 		}
 
-		$editable = ['name', 'subject', 'bodyHtml', 'bodyText', 'senderName', 'senderEmail', 'footerOverride'];
+		$editable = ['name', 'subject', 'bodyHtml', 'bodyText', 'senderName', 'senderEmail', 'replyTo', 'footerOverride'];
 		$payload = $existing;
 		foreach ($editable as $field) {
 			if (array_key_exists($field, $patch) === true && is_string($patch[$field]) === true) {

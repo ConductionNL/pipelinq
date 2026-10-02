@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Conduction B.V.
 //
 // Curated segment-rule-builder field options for the "contact" and
-// "customer" audiences, shared by SegmentForm.vue.
+// "customer" audiences, shared by SegmentFormDialog.vue.
 //
 // Kept as static lists rather than a live schema-introspection endpoint --
 // that is a materially larger surface than a UI-repair change warrants; see

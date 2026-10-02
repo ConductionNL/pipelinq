@@ -48,9 +48,9 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service;
 
-use DateTimeImmutable;
-use DateTimeInterface;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Service\Demo\DemoMarketingSeeder;
+use OCA\Pipelinq\Service\Demo\DemoSeedValues;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -67,7 +67,7 @@ class DemoSeedService {
 	 *
 	 * @var string
 	 */
-	public const DEMO_PREFIX = '[Demo]';
+	public const DEMO_PREFIX = DemoSeedValues::DEMO_PREFIX;
 
 	/**
 	 * App-config key holding the unified ticket schema id.
@@ -174,6 +174,8 @@ class DemoSeedService {
 	 * @param ContainerInterface $container Container for the OpenRegister ObjectService.
 	 * @param ContactVcardService $contactVcardService Contact-first identity provisioning (client.contactsUid).
 	 * @param TicketService $ticketService Unified ticket resolver + write path.
+	 * @param DemoMarketingSeeder $marketingSeeder Journeys, social and Search Console demo data.
+	 * @param DemoSeedValues $values Placeholder and reference resolution.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
@@ -181,6 +183,8 @@ class DemoSeedService {
 		private readonly ContainerInterface $container,
 		private readonly ContactVcardService $contactVcardService,
 		private readonly TicketService $ticketService,
+		private readonly DemoMarketingSeeder $marketingSeeder,
+		private readonly DemoSeedValues $values,
 		private readonly LoggerInterface $logger,
 	) {
 	}//end __construct()
@@ -235,7 +239,10 @@ class DemoSeedService {
 				// drift apart without this list changing too.
 				'description' => (
 					'A worked CRM: clients and contacts, pipelines, products and leads, requests, '
-					. 'complaints and contact moments, tasks and contracts. It shows the lists, '
+					. 'complaints and contact moments, tasks and contracts, marketing journeys '
+					. 'that are not switched on, published social posts with their numbers, and '
+					. 'search queries for the keyword pages. '
+					. 'It shows the lists, '
 					. 'detail pages and dashboards working. Safe to run more than once, and '
 					. '`occ pipelinq:demo:remove` takes it away again.'
 				),
@@ -285,7 +292,7 @@ class DemoSeedService {
 			);
 
 			foreach (($definitions[$section] ?? []) as $definition) {
-				$data = $this->resolvePlaceholders(data: $definition['data']);
+				$data = $this->values->resolvePlaceholders(data: $definition['data']);
 				$data = $this->linkReferences(
 					data: $data,
 					definition: $definition,
@@ -327,7 +334,13 @@ class DemoSeedService {
 			}//end foreach
 		}//end foreach
 
-		return ['success' => true, 'created' => $created, 'skipped' => $skipped];
+		$marketing = $this->marketingSeeder->seed(definitions: $definitions, uuids: $uuids);
+
+		return [
+			'success' => true,
+			'created' => array_merge($created, $marketing['created']),
+			'skipped' => array_merge($skipped, $marketing['skipped']),
+		];
 	}//end seed()
 
 	/**
@@ -354,7 +367,7 @@ class DemoSeedService {
 
 		[$objectService, $registerId, $schemaIds, $definitions] = $context;
 
-		$removed = [];
+		$removed = $this->marketingSeeder->remove(definitions: $definitions);
 		$retained = [];
 		$sections = array_reverse(self::SECTIONS, true);
 
@@ -442,7 +455,7 @@ class DemoSeedService {
 	/**
 	 * Resolve the ObjectService, register id, schema ids and seed definitions.
 	 *
-	 * @return array{0: object, 1: string, 2: array<string, string>, 3: array<string, array<int, array<string, mixed>>>}|null
+	 * @return array{0: object, 1: string, 2: array<string, string>, 3: array<string, mixed>}|null
 	 *         Null when the register/schemas are not provisioned, or the seed
 	 *         file is unreadable.
 	 */
@@ -491,7 +504,8 @@ class DemoSeedService {
 	/**
 	 * Load and decode lib/Settings/demo_seed_data.json.
 	 *
-	 * @return array<string, array<int, array<string, mixed>>>|null Null when missing or invalid.
+	 * @return array<string, mixed>|null Null when missing or invalid. Most sections are
+	 *                                   lists of definitions; `social` and `search` are maps.
 	 */
 	private function loadDefinitions(): ?array {
 		$path = dirname(__DIR__) . '/Settings/demo_seed_data.json';
@@ -651,35 +665,6 @@ class DemoSeedService {
 	}//end rowToArray()
 
 	/**
-	 * Resolve `@days:N` / `@datetime:N` placeholders to concrete dates.
-	 *
-	 * @param array<string, mixed> $data Raw definition data.
-	 *
-	 * @return array<string, mixed> Data with date placeholders resolved.
-	 */
-	private function resolvePlaceholders(array $data): array {
-		foreach ($data as $field => $value) {
-			if (is_string($value) === false) {
-				continue;
-			}
-
-			if (preg_match('/^@(days|datetime):(-?\d+)$/', $value, $matches) !== 1) {
-				continue;
-			}
-
-			$offset = (int)$matches[2];
-			$moment = (new DateTimeImmutable())->modify(sprintf('%+d days', $offset));
-
-			$data[$field] = $moment->format(DateTimeInterface::ATOM);
-			if ($matches[1] === 'days') {
-				$data[$field] = $moment->format('Y-m-d');
-			}
-		}
-
-		return $data;
-	}//end resolvePlaceholders()
-
-	/**
 	 * Resolve the contact-first identity for a client/contact payload.
 	 *
 	 * Contact-first unification (register.d/15-unify-client-contact.json): BOTH
@@ -740,7 +725,7 @@ class DemoSeedService {
 		// everything else calls it `client`. Writing the wrong key is silent —
 		// the object saves, the FK is simply absent — so the map is explicit
 		// rather than assumed.
-		$data = $this->linkOneReference(
+		$data = $this->values->linkReference(
 			data: $data,
 			definition: $definition,
 			uuids: $uuids,
@@ -749,7 +734,7 @@ class DemoSeedService {
 			field: ($definition['clientField'] ?? 'client'),
 		);
 
-		$data = $this->linkOneReference(
+		$data = $this->values->linkReference(
 			data: $data,
 			definition: $definition,
 			uuids: $uuids,
@@ -762,7 +747,7 @@ class DemoSeedService {
 		// `pipeline`, so it belongs to no board and every stage column counts
 		// zero — the demo data cannot demonstrate the pipeline it was written
 		// for. `pipelines` is seeded before `leads`, so the uuid is available.
-		$data = $this->linkOneReference(
+		$data = $this->values->linkReference(
 			data: $data,
 			definition: $definition,
 			uuids: $uuids,
@@ -778,7 +763,7 @@ class DemoSeedService {
 			$requestField = 'parentTicket';
 		}
 
-		$data = $this->linkOneReference(
+		$data = $this->values->linkReference(
 			data: $data,
 			definition: $definition,
 			uuids: $uuids,
@@ -789,34 +774,4 @@ class DemoSeedService {
 
 		return $data;
 	}//end linkReferences()
-
-	/**
-	 * Set one relation field from the seeded uuid map, when the definition
-	 * names a key and that key has already been seeded.
-	 *
-	 * Extracted from linkReferences() so its four call sites stop each
-	 * contributing two branches to a single method: phpmd measured the
-	 * combined cyclomatic complexity at 10 against a threshold of 10.
-	 *
-	 * @param array<string, mixed> $data Definition data.
-	 * @param array<string, mixed> $definition Full definition.
-	 * @param array<string, string> $uuids Already-seeded uuid map (section:key => uuid).
-	 * @param string $keyName Definition key naming the target (e.g. 'clientKey').
-	 * @param string $section Uuid-map section the key lives in (e.g. 'clients').
-	 * @param string $field Field on $data to set.
-	 *
-	 * @return array<string, mixed> Data with the relation field set when resolvable.
-	 */
-	private function linkOneReference(array $data, array $definition, array $uuids, string $keyName, string $section, string $field): array {
-		if (isset($definition[$keyName]) === false) {
-			return $data;
-		}
-
-		$uuid = ($uuids[$section . ':' . $definition[$keyName]] ?? null);
-		if ($uuid !== null) {
-			$data[$field] = $uuid;
-		}
-
-		return $data;
-	}//end linkOneReference()
 }//end class

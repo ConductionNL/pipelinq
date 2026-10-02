@@ -2,7 +2,8 @@
   "_note": "customer-satisfaction-closed-loop. A survey that is sent, answered and followed up, rather than a form that exists. The V1 engine's schemas went with the forms-leaf migration, so this fragment declares the three the closed loop needs: the survey, the invitation that carries a per-recipient token, and the response. The detractor notification is a schema rule in the canonical x-openregister-notifications dialect (ADR-031): no imperative dispatch in app code.",
   "components": {
     "schemas": {
-      "survey": {
+      "satisfactionSurvey": {
+        "slug": "satisfactionSurvey",
         "title": "Survey",
         "type": "object",
         "description": "One questionnaire. Questions are held as a list rather than as a schema of their own, because a survey is answered as a whole and never queried question by question.",
@@ -65,7 +66,8 @@
           }
         }
       },
-      "surveyInvitation": {
+      "satisfactionSurveyInvitation": {
+        "slug": "satisfactionSurveyInvitation",
         "title": "Survey invitation",
         "type": "object",
         "description": "One invitation to one recipient, carrying the token their answer comes back on. Suppressed and failed invitations are PERSISTED rather than dropped: a dispatch that decided not to send is a fact worth keeping, and it is what the response rate is computed against.",
@@ -192,6 +194,7 @@
         }
       },
       "surveyResponse": {
+        "slug": "surveyResponse",
         "title": "Survey response",
         "type": "object",
         "description": "One filled-in survey. The classification is written by the follow-up service and is what the detractor notification rule below transitions on, so the notification is a schema rule rather than an imperative dispatch in app code (ADR-031).",
@@ -315,6 +318,7 @@
         }
       },
       "contact": {
+        "slug": "contact",
         "properties": {
           "surveyOptOut": {
             "type": "boolean",

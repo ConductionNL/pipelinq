@@ -110,7 +110,7 @@ test.describe('customer satisfaction, closed loop', () => {
 			contactsUid: `e2e-kto-${STAMP}`,
 		})
 
-		const survey = await seed(page, 'survey', {
+		const survey = await seed(page, 'satisfactionSurvey', {
 			title: `E2E KTO ${STAMP}`,
 			questions: [
 				{ key: 'recommend', label: 'Would you recommend us?', kind: 'nps' },
@@ -120,7 +120,7 @@ test.describe('customer satisfaction, closed loop', () => {
 		})
 
 		const token = `e2e-token-${STAMP}`
-		await seed(page, 'surveyInvitation', {
+		await seed(page, 'satisfactionSurveyInvitation', {
 			token,
 			surveyRef: survey,
 			clientRef: client,

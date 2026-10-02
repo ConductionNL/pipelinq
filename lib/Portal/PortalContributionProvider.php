@@ -9,7 +9,7 @@
  * convention FQCN (`OCA\{Namespace}\Portal\PortalContributionProvider`) and
  * duck-types it via method_exists(), never instanceof. This class is therefore
  * deliberately PLAIN: no portaliq imports, no `implements` clause, no info.xml
- * dependency, no constructor dependencies. Without portaliq installed it is
+ * dependency, no required constructor dependencies. Without portaliq installed it is
  * inert and pipelinq behaves exactly as before.
  *
  * It declares — for the `client` (B2B org contact) and `customer` (B2C)
@@ -40,6 +40,8 @@
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Portal;
+
+use OCA\Pipelinq\Service\Portal\QuestionDetailService;
 
 /**
  * Declares what an external portal subject may see and do in pipelinq.
@@ -80,17 +82,97 @@ class PortalContributionProvider {
 	private const REGISTER = 'pipelinq';
 
 	/**
+	 * The rule key pipelinq's answer notice carries (QuestionAnsweredNotice).
+	 *
+	 * @var string
+	 */
+	public const RULE_QUESTION_ANSWERED = 'pipelinq.question.answered';
+
+	/**
+	 * The menu heading over a resident's own questions, requests and complaints (portaliq `group`).
+	 *
+	 * @var string
+	 */
+	public const GROUP_CONTACT = 'Vragen en contact';
+
+	/**
+	 * The menu heading over what a contact person does for their organisation.
+	 *
+	 * @var string
+	 */
+	public const GROUP_ORGANISATION = 'Namens uw organisatie';
+
+	/**
+	 * The menu heading over a customer's appointments and loyalty card.
+	 *
+	 * @var string
+	 */
+	public const GROUP_CUSTOMER = 'Afspraken en klantenkaart';
+
+	/**
+	 * What a resident reads for each ticket status, in the schema's own order.
+	 *
+	 * @var array<string, string>
+	 */
+	public const STATUS_LABELS = [
+		'new' => 'Ontvangen',
+		'in_progress' => 'In behandeling',
+		'awaiting_customer' => 'Wacht op uw reactie',
+		'resolved' => 'Opgelost',
+		'completed' => 'Afgerond',
+		'rejected' => 'Afgewezen',
+		'converted' => 'Omgezet in een zaak',
+		'closed' => 'Gesloten',
+	];
+
+	/**
+	 * A question is converted into a Woo request, so it says so.
+	 *
+	 * @var array<string, string>
+	 */
+	public const QUESTION_STATUS_LABELS = [
+		'new' => 'Ontvangen',
+		'in_progress' => 'In behandeling',
+		'awaiting_customer' => 'Wacht op uw reactie',
+		'resolved' => 'Opgelost',
+		'completed' => 'Afgerond',
+		'rejected' => 'Afgewezen',
+		'converted' => 'Omgezet in een Woo-verzoek',
+		'closed' => 'Gesloten',
+	];
+
+	/**
+	 * Constructor.
+	 *
+	 * The one dependency is optional, so the provider still builds plain: the
+	 * container hands in the question detail service when it can, and the
+	 * manifest never needs it. Only the two question reads use it.
+	 *
+	 * @param QuestionDetailService|null $questionDetail Reads one question's timeline and items.
+	 *
+	 * @spec openspec/changes/question-detail-on-the-portal/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-question-the-dossier-it-was-about-and-the-answers-req-qdp-001
+	 */
+	public function __construct(
+		private readonly ?QuestionDetailService $questionDetail = null,
+	) {
+	}//end __construct()
+
+	/**
 	 * The audiences this provider contributes to (contract v2, preferred).
 	 *
 	 * The registry probes for this method first. Pipelinq serves B2B client
-	 * organisation contacts (`client`) and B2C customers (`customer`).
+	 * organisation contacts (`client`), B2C customers (`customer`) and
+	 * residents (`citizen`), who ask about their Woo dossier (hydra
+	 * woo-citizen-journey C4; DigiD currently maps to `client`, so the
+	 * question surface is offered to both).
 	 *
 	 * @return array<int, string> The audience identifiers.
 	 *
 	 * @spec openspec/changes/portal-contribution/specs/portal-contribution/spec.md
+	 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-a-resident-asks-a-question-about-a-dossier-they-own-req-qcd-001
 	 */
 	public function getAudiences(): array {
-		return ['client', 'customer'];
+		return ['client', 'customer', 'citizen'];
 	}//end getAudiences()
 
 	/**
@@ -114,14 +196,16 @@ class PortalContributionProvider {
 	 * audience, organisation, trust level low|substantial|high). Returns null
 	 * for any audience pipelinq does not serve (fail-closed; the registry
 	 * already filters by audience, but a provider must not rely on that).
-	 * Wave 1 declares create-actions only — no endpoint actions (receiver-side
-	 * assertion verification does not exist yet).
+	 * The question actions of the Woo journey are endpoint actions: portaliq
+	 * forwards them with a signed assertion that PortalQuestionController
+	 * verifies before it checks who owns the dossier.
 	 *
 	 * @param array<string, mixed> $subject The resolved portal subject.
 	 *
 	 * @return array<string, mixed>|null The manifest, or null when not contributing.
 	 *
 	 * @spec openspec/changes/portal-contribution/specs/portal-contribution/spec.md
+	 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-a-resident-asks-a-question-about-a-dossier-they-own-req-qcd-001
 	 */
 	public function getContribution(array $subject): ?array {
 		$audience = $subject['audience'] ?? '';
@@ -132,6 +216,10 @@ class PortalContributionProvider {
 
 		if ($audience === 'customer') {
 			return $this->customerContribution();
+		}
+
+		if ($audience === 'citizen') {
+			return $this->citizenContribution();
 		}
 
 		return null;
@@ -164,7 +252,7 @@ class PortalContributionProvider {
 	 */
 	private function clientContribution(): array {
 		return [
-			'label' => 'Pipelinq',
+			'label' => self::GROUP_CONTACT,
 			'collections' => [
 				[
 					'id' => 'clientRequests',
@@ -176,7 +264,7 @@ class PortalContributionProvider {
 					'filter' => ['ticketType' => 'request'],
 					'scopeField' => 'client',
 					'scopeClaim' => 'clientId',
-					'label' => 'My requests',
+					'label' => 'Verzoeken van uw organisatie',
 					'listable' => true,
 					// Read-side field projection (the DATA authority): only these
 					// client-safe fields (+ identifiers) leave the server. The
@@ -186,12 +274,15 @@ class PortalContributionProvider {
 					// `ticket` is a supertype, so it also carries the complaint and
 					// contactmoment properties; this whitelist is what keeps them
 					// out of the request surface.
+					// `customerMessage` is the handler's message to the customer
+					// (pipelinq#2074); the internal `notes` stay behind.
 					'fields' => [
 						'title',
 						'category',
 						'status',
 						'description',
 						'occurredAt',
+						'customerMessage',
 					],
 					// Contribution-manifest-v3 UI (ADR-063), presentation-only:
 					// a column set, a detail layout, and a newest-first sort,
@@ -199,10 +290,10 @@ class PortalContributionProvider {
 					'columns' => [
 						['field' => 'title', 'label' => 'Onderwerp'],
 						['field' => 'category', 'label' => 'Categorie'],
-						['field' => 'status', 'label' => 'Status', 'render' => 'badge'],
+						['field' => 'status', 'label' => 'Status', 'render' => 'badge', 'valueLabels' => self::STATUS_LABELS],
 						['field' => 'occurredAt', 'label' => 'Ingediend', 'render' => 'date'],
 					],
-					'detail' => ['layout' => 'card', 'fields' => ['title', 'category', 'status', 'description', 'occurredAt']],
+					'detail' => ['layout' => 'card', 'fields' => ['title', 'category', 'status', 'description', 'occurredAt', 'customerMessage']],
 					'defaultSort' => ['field' => 'occurredAt', 'direction' => 'desc'],
 				],
 				[
@@ -213,7 +304,7 @@ class PortalContributionProvider {
 					'filter' => ['ticketType' => 'complaint'],
 					'scopeField' => 'client',
 					'scopeClaim' => 'clientId',
-					'label' => 'My complaints',
+					'label' => 'Klachten van uw organisatie',
 					'listable' => true,
 					// This collection was UNPROJECTED while it read the narrow
 					// `complaint` schema. `ticket` is a supertype whose property set
@@ -229,6 +320,7 @@ class PortalContributionProvider {
 						'status',
 						'description',
 						'occurredAt',
+						'customerMessage',
 					],
 				],
 				[
@@ -237,7 +329,7 @@ class PortalContributionProvider {
 					'schema' => 'salesContract',
 					'scopeField' => 'clientRef',
 					'scopeClaim' => 'clientId',
-					'label' => 'My contracts',
+					'label' => 'Contracten',
 					'listable' => true,
 				],
 				[
@@ -248,7 +340,7 @@ class PortalContributionProvider {
 					'filter' => ['ticketType' => 'interaction'],
 					'scopeField' => 'client',
 					'scopeClaim' => 'clientId',
-					'label' => 'My contact history',
+					'label' => 'Contactmomenten',
 					'listable' => true,
 					// Client-safe interaction facts only. The internal `notes`, raw
 					// `channelMetadata`, `duration`, `assignee` identity, the
@@ -261,12 +353,14 @@ class PortalContributionProvider {
 						'occurredAt',
 					],
 				],
+				$this->questionsCollection(),
+				...$this->ownTicketCollections(),
 			],
 			'actions' => [
 				[
 					'id' => 'createRequest',
 					'type' => 'create',
-					'label' => 'Submit a request',
+					'label' => 'Een verzoek indienen namens uw organisatie',
 					'register' => self::REGISTER,
 					'schema' => 'ticket',
 					// Stamped server-side over the whitelisted client payload, so a
@@ -274,6 +368,13 @@ class PortalContributionProvider {
 					// request form. `ticketType` is required on the schema and is
 					// deliberately NOT a whitelisted field.
 					'defaults' => ['ticketType' => 'request'],
+					// The owner stamp: portaliq writes the subject's own
+					// `clientId` claim into `client`, the field `clientRequests`
+					// is scoped on. Without it the ticket was saved with no
+					// client and never showed in the resident's own list; a
+					// subject without the claim is now refused instead.
+					'scopeField' => 'client',
+					'scopeClaim' => 'clientId',
 					'fields' => [
 						'title',
 						'description',
@@ -317,11 +418,14 @@ class PortalContributionProvider {
 				[
 					'id' => 'createComplaint',
 					'type' => 'create',
-					'label' => 'File a complaint',
+					'label' => 'Een klacht indienen namens uw organisatie',
 					'register' => self::REGISTER,
 					'schema' => 'ticket',
 					// Stamped server-side (see createRequest).
 					'defaults' => ['ticketType' => 'complaint'],
+					// The owner stamp `clientComplaints` reads (see createRequest).
+					'scopeField' => 'client',
+					'scopeClaim' => 'clientId',
 					// The complaint's classification is `complaintCategory` on the
 					// unified ticket — the supertype's plain `category` is the
 					// REQUEST's free-text category and is not part of this intake.
@@ -331,27 +435,34 @@ class PortalContributionProvider {
 						'complaintCategory',
 					],
 				],
+				...$this->questionActions(),
+				...$this->ownTicketActions(),
 			],
 			// Contribution-manifest-v3 page composition: one screen per surface,
-			// each block resolved within this contribution. The requests page
-			// leads with a short intro, the intake form, then the scoped table.
+			// each block resolved within this contribution. The resident's own
+			// requests and complaints come first: a DigiD resident signs in as
+			// `client` without a `clientId` claim, and the organisation's forms
+			// refuse that write. The organisation's pages follow, unchanged.
 			'pages' => [
+				...$this->ownTicketPages(),
 				[
-					'id' => 'requests',
-					'label' => 'Verzoeken',
-					'icon' => 'MessageText',
+					'id' => 'organisationRequests',
+					'label' => 'Verzoeken van uw organisatie',
+					'group' => self::GROUP_ORGANISATION,
+					'icon' => 'OfficeBuilding',
 					'blocks' => [
 						[
 							'type' => 'richText',
-							'markdown' => '## Mijn verzoeken' . "\n" . 'Dien een nieuw verzoek in of bekijk de status van uw lopende verzoeken.',
+							'markdown' => 'Dien een verzoek in namens uw organisatie of bekijk de status van haar lopende verzoeken.',
 						],
 						['type' => 'action', 'action' => 'createRequest'],
 						['type' => 'collection', 'collection' => 'clientRequests'],
 					],
 				],
 				[
-					'id' => 'complaints',
-					'label' => 'Klachten',
+					'id' => 'organisationComplaints',
+					'label' => 'Klachten van uw organisatie',
+					'group' => self::GROUP_ORGANISATION,
 					'icon' => 'AlertCircle',
 					'blocks' => [
 						['type' => 'action', 'action' => 'createComplaint'],
@@ -361,6 +472,7 @@ class PortalContributionProvider {
 				[
 					'id' => 'contracts',
 					'label' => 'Contracten',
+					'group' => self::GROUP_ORGANISATION,
 					'icon' => 'FileDocument',
 					'blocks' => [
 						['type' => 'collection', 'collection' => 'clientContracts'],
@@ -369,13 +481,19 @@ class PortalContributionProvider {
 				[
 					'id' => 'contactmoments',
 					'label' => 'Contactmomenten',
+					'group' => self::GROUP_ORGANISATION,
 					'icon' => 'Phone',
 					'blocks' => [
 						['type' => 'collection', 'collection' => 'clientContactmoments'],
 					],
 				],
+				$this->questionsPage(),
 			],
-			'notifications' => [],
+			// A declared rule key, not a change rule: pipelinq writes the
+			// answer message itself (QuestionAnsweredNotice), so portaliq
+			// sends its e-mail. A change rule would add a generic
+			// "is bijgewerkt" notice for the same answer.
+			'notifications' => [self::RULE_QUESTION_ANSWERED],
 		];
 	}//end clientContribution()
 
@@ -409,7 +527,27 @@ class PortalContributionProvider {
 		// OpenRegister's own AVG/portal surface. Re-adding a citizen DSAR intake
 		// pointed at OR's register is a portal follow-up, not part of this change.
 		return [
-			'label' => 'Pipelinq',
+			'label' => self::GROUP_CUSTOMER,
+			'pages' => [
+				[
+					'id' => 'customerLoyalty',
+					'label' => 'Mijn klantenkaart',
+					'group' => self::GROUP_CUSTOMER,
+					'blocks' => [
+						['type' => 'collection', 'collection' => 'customerLoyalty'],
+						['type' => 'detail', 'collection' => 'customerLoyalty'],
+					],
+				],
+				[
+					'id' => 'customerBookings',
+					'label' => 'Mijn afspraken',
+					'group' => self::GROUP_CUSTOMER,
+					'blocks' => [
+						['type' => 'collection', 'collection' => 'customerBookings'],
+						['type' => 'detail', 'collection' => 'customerBookings'],
+					],
+				],
+			],
 			'collections' => [
 				[
 					'id' => 'customerLoyalty',
@@ -417,7 +555,7 @@ class PortalContributionProvider {
 					'schema' => 'customerLoyaltyAccount',
 					'scopeField' => 'customerId',
 					'scopeClaim' => 'customerUid',
-					'label' => 'My loyalty account',
+					'label' => 'Mijn klantenkaart',
 					'listable' => true,
 				],
 				[
@@ -426,7 +564,7 @@ class PortalContributionProvider {
 					'schema' => 'appointmentBooking',
 					'scopeField' => 'customerId',
 					'scopeClaim' => 'customerUid',
-					'label' => 'My appointments',
+					'label' => 'Mijn afspraken',
 					'listable' => true,
 					'minTrust' => 'substantial',
 					'fields' => [
@@ -444,4 +582,390 @@ class PortalContributionProvider {
 			'notifications' => [],
 		];
 	}//end customerContribution()
+
+	/**
+	 * Manifest for the `citizen` audience (a resident on the municipal portal).
+	 *
+	 * Only the question surface of the Woo citizen journey (hydra
+	 * woo-citizen-journey C4): the resident asks about their own dossier,
+	 * reads their questions with the answers, and replies. Everything is scoped
+	 * by the subject reference stored on the ticket (`portalSubject`), so a
+	 * resident only ever reads their own questions.
+	 *
+	 * @return array<string, mixed> The citizen manifest.
+	 *
+	 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-questions-and-the-answers-req-qcd-003
+	 */
+	private function citizenContribution(): array {
+		return [
+			'label' => self::GROUP_CONTACT,
+			'collections' => [$this->questionsCollection(), ...$this->ownTicketCollections()],
+			'actions' => [...$this->questionActions(), ...$this->ownTicketActions()],
+			'pages' => [...$this->ownTicketPages(), $this->questionsPage()],
+			// A declared rule key, not a change rule: pipelinq writes the
+			// answer message itself (QuestionAnsweredNotice), so portaliq
+			// sends its e-mail. A change rule would add a generic
+			// "is bijgewerkt" notice for the same answer.
+			'notifications' => [self::RULE_QUESTION_ANSWERED],
+		];
+	}//end citizenContribution()
+
+	/**
+	 * The resident's own questions about a dossier, with the answers.
+	 *
+	 * Default subject scoping on `portalSubject`: portaliq matches it against
+	 * the resident's subject reference, and its change-rule listener uses the
+	 * same field to find whom to tell about an answer. The internal `notes`,
+	 * assignee and pipeline fields stay behind.
+	 *
+	 * @return array<string, mixed> The collection declaration.
+	 *
+	 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-questions-and-the-answers-req-qcd-003
+	 * @spec openspec/changes/question-detail-on-the-portal/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-question-the-dossier-it-was-about-and-the-answers-req-qdp-001
+	 */
+	private function questionsCollection(): array {
+		return [
+			'id' => 'myQuestions',
+			'register' => self::REGISTER,
+			'schema' => 'ticket',
+			// A question is a request ticket filed through the portal; the
+			// scope field below narrows it to the resident's own.
+			'filter' => ['ticketType' => 'request', 'channel' => 'portal'],
+			'scopeField' => 'portalSubject',
+			'label' => 'Mijn vragen',
+			'listable' => true,
+			'fields' => [
+				'title',
+				'description',
+				'status',
+				'occurredAt',
+				'customerMessage',
+				'portalReplies',
+				'subjectReference',
+			],
+			'columns' => [
+				['field' => 'title', 'label' => 'Onderwerp'],
+				['field' => 'status', 'label' => 'Status', 'render' => 'badge', 'valueLabels' => self::QUESTION_STATUS_LABELS],
+				['field' => 'occurredAt', 'label' => 'Gesteld', 'render' => 'date'],
+			],
+			// The detail shows the subject, the status and when it was asked.
+			// The question, the answers with their dates and the replies are
+			// the timeline; the dossier as it was, and the Woo request it
+			// became, are the item list. Both are read per question from the
+			// methods below, after portaliq proved the question is the
+			// resident's (question-detail-on-the-portal).
+			'detail' => ['layout' => 'card', 'fields' => ['title', 'status', 'occurredAt']],
+			'timeline' => ['label' => 'Vraag en antwoord', 'provider' => 'questionTimeline'],
+			'itemList' => ['label' => 'Waar uw vraag over gaat', 'provider' => 'questionDossierItems'],
+			'defaultSort' => ['field' => 'occurredAt', 'direction' => 'desc'],
+		];
+	}//end questionsCollection()
+
+	/**
+	 * The two question actions, both endpoint actions portaliq forwards.
+	 *
+	 * `askAboutDossier` is offered only when opencatalogi, which holds the
+	 * dossier, is installed. `replyToQuestion` stays, so a resident can still
+	 * answer on a question asked earlier.
+	 *
+	 * @return array<int, array<string, mixed>> The action declarations.
+	 *
+	 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-a-resident-asks-a-question-about-a-dossier-they-own-req-qcd-001
+	 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-a-resident-replies-to-an-answer-req-qcd-004
+	 * @spec openspec/changes/question-detail-on-the-portal/specs/dossier-questions/spec.md#requirement-the-reply-is-offered-on-the-question-while-it-waits-for-the-resident-req-qdp-003
+	 */
+	private function questionActions(): array {
+		$actions = [];
+		if ($this->isOpenCatalogiInstalled() === true) {
+			$actions[] = [
+				'id' => 'askAboutDossier',
+				'label' => 'Stel een vraag over dit dossier',
+				'endpoint' => '/index.php/apps/pipelinq/api/portal/questions',
+				'method' => 'POST',
+				// Shown on the resident's dossier page (hydra woo-citizen-journey
+				// C7): portaliq proves the dossier is the resident's through
+				// opencatalogi's own scope and forwards its id as `collectionId`.
+				// The receiver checks the owner again.
+				'attachTo' => ['app' => 'opencatalogi', 'schema' => 'collection'],
+				'rowField' => 'collectionId',
+				'fields' => ['question', 'title'],
+				'fieldConfigs' => [
+					'title' => ['label' => 'Onderwerp', 'size' => 'large', 'placeholder' => 'Waar gaat uw vraag over?'],
+					'question' => [
+						'label' => 'Uw vraag',
+						'required' => true,
+						'size' => 'full',
+						'help' => 'De medewerker ziet welke documenten in uw dossier staan. Uw aantekeningen ziet de medewerker niet.',
+					],
+				],
+				'submitLabel' => 'Vraag versturen',
+				'successMessage' => 'Uw vraag is verstuurd. U krijgt bericht als er een antwoord is.',
+			];
+		}
+
+		$actions[] = [
+			'id' => 'replyToQuestion',
+			'label' => 'Reageren op het antwoord',
+			'endpoint' => '/index.php/apps/pipelinq/api/portal/questions/reply',
+			'method' => 'POST',
+			// ON THE QUESTION'S DETAIL (question-detail-on-the-portal): attached
+			// to pipelinq's own `myQuestions` only, so the form asks the reply
+			// text on the question the resident opened. Portaliq proves the
+			// question is theirs through that collection's scope and stamps its
+			// id into `ticket`; the receiver checks the owner again.
+			'attachTo' => ['app' => 'pipelinq', 'schema' => 'ticket', 'collection' => 'myQuestions'],
+			'rowField' => 'ticket',
+			// Offered only while the employee waits for the resident. Portaliq
+			// leaves it off any other question and refuses it there with 409.
+			'rowWhen' => ['field' => 'status', 'in' => ['awaiting_customer']],
+			'fields' => ['ticket', 'message'],
+			'fieldConfigs' => [
+				'ticket' => ['visible' => false, 'required' => true],
+				'message' => ['label' => 'Uw reactie', 'required' => true, 'size' => 'full'],
+			],
+			'submitLabel' => 'Reactie versturen',
+			'successMessage' => 'Uw reactie is verstuurd.',
+		];
+
+		return $actions;
+	}//end questionActions()
+
+	/**
+	 * The portal page that lists the resident's questions.
+	 *
+	 * @return array<string, mixed> The page declaration.
+	 *
+	 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-questions-and-the-answers-req-qcd-003
+	 * @spec openspec/changes/question-detail-on-the-portal/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-question-the-dossier-it-was-about-and-the-answers-req-qdp-001
+	 */
+	private function questionsPage(): array {
+		return [
+			'id' => 'questions',
+			'label' => 'Mijn vragen',
+			'group' => self::GROUP_CONTACT,
+			'icon' => 'CommentQuestion',
+			'blocks' => [
+				[
+					'type' => 'richText',
+					'markdown' => 'Hier leest u de antwoorden op vragen die u over uw dossiers stelde.',
+				],
+				['type' => 'collection', 'collection' => 'myQuestions'],
+				// The question the resident selects in the list above: its
+				// timeline, its dossier and the reply form.
+				['type' => 'detail', 'collection' => 'myQuestions'],
+			],
+		];
+	}//end questionsPage()
+
+	/**
+	 * The resident's own requests and complaints, scoped on `portalSubject`.
+	 *
+	 * Scoped like `myQuestions`: portaliq stamps the resident's subjectRef on
+	 * create and reads it back, so no claim is needed and a resident without
+	 * an organisation (a DigiD resident, `citizen` or `client` without a
+	 * `clientId` claim) reads exactly what they filed. The own request carries
+	 * `channel: web`, which keeps it apart from a question (`channel: portal`).
+	 * Projected to the same client-safe fields as the organisation's lists.
+	 *
+	 * @return array<int, array<string, mixed>> The two collections.
+	 *
+	 * @spec openspec/changes/portal-contribution/specs/portal-contribution/spec.md
+	 */
+	private function ownTicketCollections(): array {
+		return [
+			[
+				'id' => 'ownRequests',
+				'register' => self::REGISTER,
+				'schema' => 'ticket',
+				'filter' => ['ticketType' => 'request', 'channel' => 'web'],
+				'scopeField' => 'portalSubject',
+				'label' => 'Mijn verzoeken',
+				'listable' => true,
+				'fields' => ['title', 'category', 'status', 'description', 'occurredAt', 'customerMessage'],
+				'columns' => [
+					['field' => 'title', 'label' => 'Onderwerp'],
+					['field' => 'status', 'label' => 'Status', 'render' => 'badge', 'valueLabels' => self::STATUS_LABELS],
+					['field' => 'occurredAt', 'label' => 'Ingediend', 'render' => 'date'],
+				],
+				'detail' => ['layout' => 'card', 'fields' => ['title', 'category', 'status', 'description', 'occurredAt', 'customerMessage']],
+				'defaultSort' => ['field' => 'occurredAt', 'direction' => 'desc'],
+			],
+			[
+				'id' => 'ownComplaints',
+				'register' => self::REGISTER,
+				'schema' => 'ticket',
+				'filter' => ['ticketType' => 'complaint'],
+				'scopeField' => 'portalSubject',
+				'label' => 'Mijn klachten',
+				'listable' => true,
+				'fields' => ['title', 'complaintCategory', 'status', 'description', 'occurredAt', 'customerMessage'],
+				'columns' => [
+					['field' => 'title', 'label' => 'Onderwerp'],
+					['field' => 'status', 'label' => 'Status', 'render' => 'badge', 'valueLabels' => self::STATUS_LABELS],
+					['field' => 'occurredAt', 'label' => 'Ingediend', 'render' => 'date'],
+				],
+				'detail' => ['layout' => 'card', 'fields' => ['title', 'complaintCategory', 'status', 'description', 'occurredAt', 'customerMessage']],
+				'defaultSort' => ['field' => 'occurredAt', 'direction' => 'desc'],
+			],
+		];
+	}//end ownTicketCollections()
+
+	/**
+	 * The resident's own intake forms for a request and a complaint.
+	 *
+	 * The scope stamp is the resident's own subjectRef in `portalSubject`
+	 * (no `scopeClaim`), so the write never depends on a claim the resident
+	 * lacks. The kind and the channel are stamped server-side; the client
+	 * only writes the intake fields.
+	 *
+	 * @return array<int, array<string, mixed>> The two create actions.
+	 *
+	 * @spec openspec/changes/portal-contribution/specs/portal-contribution/spec.md
+	 */
+	private function ownTicketActions(): array {
+		return [
+			[
+				'id' => 'createOwnRequest',
+				'type' => 'create',
+				'label' => 'Een verzoek indienen',
+				'register' => self::REGISTER,
+				'schema' => 'ticket',
+				'defaults' => ['ticketType' => 'request', 'channel' => 'web'],
+				'scopeField' => 'portalSubject',
+				'fields' => ['title', 'description', 'category'],
+				'fieldConfigs' => [
+					'title' => ['label' => 'Onderwerp', 'required' => true, 'size' => 'large', 'placeholder' => 'Waar gaat uw verzoek over?'],
+					'description' => ['label' => 'Omschrijving', 'required' => true, 'size' => 'full', 'placeholder' => 'Beschrijf uw verzoek zo volledig mogelijk'],
+					'category' => ['label' => 'Categorie'],
+				],
+				'submitLabel' => 'Verzoek indienen',
+				'successMessage' => 'Uw verzoek is ingediend',
+			],
+			[
+				'id' => 'createOwnComplaint',
+				'type' => 'create',
+				'label' => 'Een klacht indienen',
+				'register' => self::REGISTER,
+				'schema' => 'ticket',
+				'defaults' => ['ticketType' => 'complaint', 'channel' => 'web'],
+				'scopeField' => 'portalSubject',
+				'fields' => ['title', 'description', 'complaintCategory'],
+				'fieldConfigs' => [
+					'title' => ['label' => 'Onderwerp', 'required' => true, 'size' => 'large', 'placeholder' => 'Waar gaat uw klacht over?'],
+					'description' => ['label' => 'Omschrijving', 'required' => true, 'size' => 'full', 'placeholder' => 'Wat ging er mis?'],
+					'complaintCategory' => ['label' => 'Soort klacht'],
+				],
+				'submitLabel' => 'Klacht indienen',
+				'successMessage' => 'Uw klacht is ingediend',
+			],
+		];
+	}//end ownTicketActions()
+
+	/**
+	 * The resident's own requests and complaints pages: the form, then the list.
+	 *
+	 * @return array<int, array<string, mixed>> The two pages.
+	 *
+	 * @spec openspec/changes/portal-contribution/specs/portal-contribution/spec.md
+	 */
+	private function ownTicketPages(): array {
+		return [
+			[
+				'id' => 'requests',
+				'label' => 'Mijn verzoeken',
+				'group' => self::GROUP_CONTACT,
+				'icon' => 'MessageText',
+				'blocks' => [
+					[
+						'type' => 'richText',
+						'markdown' => 'Dien een nieuw verzoek in of bekijk de status van uw lopende verzoeken.',
+					],
+					['type' => 'action', 'action' => 'createOwnRequest'],
+					['type' => 'collection', 'collection' => 'ownRequests'],
+				],
+			],
+			[
+				'id' => 'complaints',
+				'label' => 'Mijn klachten',
+				'group' => self::GROUP_CONTACT,
+				'icon' => 'AlertCircle',
+				'blocks' => [
+					[
+						'type' => 'richText',
+						'markdown' => 'Dien een klacht in of bekijk hoe het met uw klachten staat.',
+					],
+					['type' => 'action', 'action' => 'createOwnComplaint'],
+					['type' => 'collection', 'collection' => 'ownComplaints'],
+				],
+			],
+		];
+	}//end ownTicketPages()
+
+	/**
+	 * Whether opencatalogi, which holds the resident's dossiers, is installed.
+	 *
+	 * Duck-typed: an enabled app's classes autoload, a missing or disabled one's
+	 * do not. Protected so a test can answer it both ways.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-a-resident-asks-a-question-about-a-dossier-they-own-req-qcd-001
+	 */
+	protected function isOpenCatalogiInstalled(): bool {
+		return class_exists('OCA\\OpenCatalogi\\AppInfo\\Application');
+	}//end isOpenCatalogiInstalled()
+
+	/**
+	 * The conversation on one question, for the `myQuestions` timeline.
+	 *
+	 * Called by the portal with a question id it already read under the
+	 * resident's own scope. A question that cannot be read answers an empty
+	 * history rather than an error page.
+	 *
+	 * @param string $id The question id.
+	 *
+	 * @return array<int, array<string, mixed>> The entries.
+	 *
+	 * @spec openspec/changes/question-detail-on-the-portal/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-question-the-dossier-it-was-about-and-the-answers-req-qdp-001
+	 */
+	public function questionTimeline(string $id): array {
+		$detail = $this->questionDetail();
+		if ($detail === null) {
+			return [];
+		}
+
+		return $detail->timeline(ticketId: $id);
+	}//end questionTimeline()
+
+	/**
+	 * What one question is about, for the `myQuestions` item list: the Woo
+	 * request it became and the dossier's documents with their links.
+	 *
+	 * @param string $id The question id, already proven to be the resident's.
+	 *
+	 * @return array<int, array<string, mixed>> The items.
+	 *
+	 * @spec openspec/changes/question-detail-on-the-portal/specs/dossier-questions/spec.md#requirement-a-converted-question-links-to-the-woo-request-req-qdp-002
+	 */
+	public function questionDossierItems(string $id): array {
+		$detail = $this->questionDetail();
+		if ($detail === null) {
+			return [];
+		}
+
+		return $detail->dossierItems(ticketId: $id);
+	}//end questionDossierItems()
+
+	/**
+	 * The service behind the question detail, when the container provided it.
+	 *
+	 * Protected so a test can hand in a double.
+	 *
+	 * @return QuestionDetailService|null The service, or null when it cannot be built.
+	 *
+	 * @spec openspec/changes/question-detail-on-the-portal/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-question-the-dossier-it-was-about-and-the-answers-req-qdp-001
+	 */
+	protected function questionDetail(): ?QuestionDetailService {
+		return $this->questionDetail;
+	}//end questionDetail()
 }//end class

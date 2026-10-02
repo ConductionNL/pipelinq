@@ -456,12 +456,12 @@ class ComplianceServiceTest extends TestCase {
 		];
 		$error = $this->service->validateTemplate($template, 'email');
 		$this->assertIsString($error);
-		$this->assertStringContainsString('physical-address', (string)$error);
+		$this->assertStringContainsString('physical address', (string)$error);
 	}//end testValidateTemplateRejectsEmailWithoutAddress()
 
 	/**
-	 * validateTemplate: an email template with the unsubscribe token AND
-	 * a recognised physical-address token is accepted (returns null).
+	 * validateTemplate: an email template with the unsubscribe token, an
+	 * address token AND the address in footerOverride is accepted.
 	 *
 	 * @return void
 	 */
@@ -469,10 +469,27 @@ class ComplianceServiceTest extends TestCase {
 		$template = [
 			'bodyHtml' => '<p>Hello. <a href="{{unsubscribe_link}}">Unsubscribe</a>{{physical_address}}</p>',
 			'bodyText' => 'Hello. Unsubscribe: {{unsubscribe_link}}',
-			'footerOverride' => '',
+			'footerOverride' => "Conduction B.V.\nNieuwe Uitleg 56\nDen Haag",
 		];
 		$this->assertNull($this->service->validateTemplate($template, 'email'));
 	}//end testValidateTemplateAcceptsValidEmail()
+
+	/**
+	 * validateTemplate: an address token without a footerOverride is
+	 * rejected, because the token holds no address and would render empty.
+	 *
+	 * @return void
+	 */
+	public function testValidateTemplateRejectsAddressTokenWithoutFooter(): void {
+		$template = [
+			'bodyHtml' => '<p>Hello. <a href="{{unsubscribe_link}}">Unsubscribe</a>{{physical_address}}</p>',
+			'bodyText' => 'Hello. Unsubscribe: {{unsubscribe_link}}',
+			'footerOverride' => '',
+		];
+		$error = $this->service->validateTemplate($template, 'email');
+		$this->assertIsString($error);
+		$this->assertStringContainsString('physical address', (string)$error);
+	}//end testValidateTemplateRejectsAddressTokenWithoutFooter()
 
 	/**
 	 * validateTemplate: an email template with the unsubscribe token AND
@@ -653,6 +670,7 @@ class ComplianceServiceTest extends TestCase {
 		$template = [
 			'bodyHtml' => '<p>{{unsubscribe_link}} {{physical_address}}</p>',
 			'bodyText' => '{{unsubscribe_link}}',
+			'footerOverride' => "Conduction B.V.\nNieuwe Uitleg 56\nDen Haag",
 		];
 		$result = $this->service->preflightBlast('seg-pre', $template, 'email');
 

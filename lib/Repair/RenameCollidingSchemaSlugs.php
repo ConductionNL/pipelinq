@@ -128,6 +128,16 @@ class RenameCollidingSchemaSlugs implements IRepairStep {
 		// (`programmeTask`, `programmeWorkItem`, ...) are not renamed: no
 		// other app declares them.
 		'programme' => ['to' => 'deliveryProgramme', 'with' => 'learniq'],
+		// The satisfaction survey and its invitation. openregister ships a
+		// generic `survey` (questions, answer sets) and a `surveyInvitation` of
+		// its own; this is the KTO survey sent after a closed ticket and the
+		// tokenised invitation to it. They share `title` and a token and
+		// nothing that identifies the record. openregister is the platform, so
+		// its slugs stay bare. `surveyResponse` is not renamed: no other app
+		// declares it. The persisted keys `survey_schema` and
+		// `surveyInvitation_schema` stay, mapped in SettingsLoadService.
+		'survey' => ['to' => 'satisfactionSurvey', 'with' => 'openregister'],
+		'surveyInvitation' => ['to' => 'satisfactionSurveyInvitation', 'with' => 'openregister'],
 	];
 
 	/**
