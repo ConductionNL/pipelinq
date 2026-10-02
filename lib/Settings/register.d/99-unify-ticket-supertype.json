@@ -5,7 +5,7 @@
         "slug": "ticket",
         "title": "Ticket",
         "icon": "TicketOutline",
-        "version": "1.3.0",
+        "version": "1.4.0",
         "summary": "Unified inbound customer matter — request, complaint or contactmoment",
         "description": "The ticket supertype folds the former request, complaint and contactmoment schemas into one object distinguished by a ticketType discriminator (unify-ticket-supertype). A ticket is any inbound customer matter: a request/demand (with pipeline & queue), a complaint/klacht (with SLA & resolution) or a contactmoment (a single logged interaction, optionally hanging off a parent request-ticket). Per-type Schema.org identity is preserved via x-schema-org-by-type.",
         "x-schema-org": "schema:Thing",
@@ -385,6 +385,19 @@
             },
             "x-notes": "Written by PortalRequestService::addReply() only."
           },
+          "portalAnswers": {
+            "type": "array",
+            "title": "Answers to the customer",
+            "description": "Every answer the handler sent to the customer on this ticket, oldest first, each with when it was sent.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "message": { "type": "string", "title": "Answer", "description": "The text the customer read." },
+                "createdAt": { "type": "string", "format": "date-time", "title": "Sent at", "description": "When the handler saved the answer." }
+              }
+            },
+            "x-notes": "question-detail-on-the-portal: customerMessage holds only the latest answer and no date, so the resident could not see when they were answered or what was answered before. Appended by the ticket's answer section (CustomerReplySection) whenever the answer text changes; customerMessage keeps the latest answer, which portaliq's change rule pipelinq.question.answered listens to."
+          },
           "reporterAccountId": {
             "type": "string",
             "title": "Portal account",
@@ -400,8 +413,8 @@
           "portalSubject": {
             "type": "string",
             "title": "Portal resident",
-            "description": "The portal reference of the resident who asked this question. Never a BSN.",
-            "x-notes": "questions-about-a-citizen-dossier (hydra woo-citizen-journey C4): the subjectRef portaliq put in the verified X-Portal-Subject assertion. It is the scope field of the myQuestions portal collection, so the resident reads only their own questions and portaliq's change rule knows whom to tell about an answer. Written by DossierQuestionService::ask() only.",
+            "description": "The portal reference of the resident who asked this question or filed this request or complaint. Never a BSN.",
+            "x-notes": "questions-about-a-citizen-dossier (hydra woo-citizen-journey C4): the subjectRef portaliq put in the verified X-Portal-Subject assertion. It is the scope field of the myQuestions portal collection, so the resident reads only their own questions and portaliq's change rule knows whom to tell about an answer. Written by DossierQuestionService::ask(), and by portaliq on a resident's own request or complaint (createOwnRequest, createOwnComplaint), which the ownRequests and ownComplaints collections read back. A DigiD resident has no clientId claim, so this is the scope that needs none.",
             "facetable": false
           },
           "subjectReference": {

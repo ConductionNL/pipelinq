@@ -9,7 +9,7 @@
  * convention FQCN (`OCA\{Namespace}\Portal\PortalContributionProvider`) and
  * duck-types it via method_exists(), never instanceof. This class is therefore
  * deliberately PLAIN: no portaliq imports, no `implements` clause, no info.xml
- * dependency, no constructor dependencies. Without portaliq installed it is
+ * dependency, no required constructor dependencies. Without portaliq installed it is
  * inert and pipelinq behaves exactly as before.
  *
  * It declares — for the `client` (B2B org contact) and `customer` (B2C)
@@ -40,6 +40,8 @@
 declare(strict_types=1);
 
 namespace OCA\Pipelinq\Portal;
+
+use OCA\Pipelinq\Service\Portal\QuestionDetailService;
 
 /**
  * Declares what an external portal subject may see and do in pipelinq.
@@ -78,6 +80,22 @@ class PortalContributionProvider {
 	 * @var string
 	 */
 	private const REGISTER = 'pipelinq';
+
+	/**
+	 * Constructor.
+	 *
+	 * The one dependency is optional, so the provider still builds plain: the
+	 * container hands in the question detail service when it can, and the
+	 * manifest never needs it. Only the two question reads use it.
+	 *
+	 * @param QuestionDetailService|null $questionDetail Reads one question's timeline and items.
+	 *
+	 * @spec openspec/changes/question-detail-on-the-portal/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-question-the-dossier-it-was-about-and-the-answers-req-qdp-001
+	 */
+	public function __construct(
+		private readonly ?QuestionDetailService $questionDetail = null,
+	) {
+	}//end __construct()
 
 	/**
 	 * The audiences this provider contributes to (contract v2, preferred).
@@ -276,6 +294,7 @@ class PortalContributionProvider {
 					],
 				],
 				$this->questionsCollection(),
+				...$this->ownTicketCollections(),
 			],
 			'actions' => [
 				[
@@ -357,27 +376,32 @@ class PortalContributionProvider {
 					],
 				],
 				...$this->questionActions(),
+				...$this->ownTicketActions(),
 			],
 			// Contribution-manifest-v3 page composition: one screen per surface,
-			// each block resolved within this contribution. The requests page
-			// leads with a short intro, the intake form, then the scoped table.
+			// each block resolved within this contribution. The resident's own
+			// requests and complaints come first: a DigiD resident signs in as
+			// `client` without a `clientId` claim, and the organisation's forms
+			// refuse that write. The organisation's pages follow, unchanged.
 			'pages' => [
+				...$this->ownTicketPages(),
 				[
-					'id' => 'requests',
-					'label' => 'Verzoeken',
-					'icon' => 'MessageText',
+					'id' => 'organisationRequests',
+					'label' => 'Verzoeken van uw organisatie',
+					'icon' => 'OfficeBuilding',
 					'blocks' => [
 						[
 							'type' => 'richText',
-							'markdown' => '## Mijn verzoeken' . "\n" . 'Dien een nieuw verzoek in of bekijk de status van uw lopende verzoeken.',
+							'markdown' => '## Verzoeken van uw organisatie'."\n"
+								.'Dien een verzoek in namens uw organisatie of bekijk de status van haar lopende verzoeken.',
 						],
 						['type' => 'action', 'action' => 'createRequest'],
 						['type' => 'collection', 'collection' => 'clientRequests'],
 					],
 				],
 				[
-					'id' => 'complaints',
-					'label' => 'Klachten',
+					'id' => 'organisationComplaints',
+					'label' => 'Klachten van uw organisatie',
 					'icon' => 'AlertCircle',
 					'blocks' => [
 						['type' => 'action', 'action' => 'createComplaint'],
@@ -488,9 +512,9 @@ class PortalContributionProvider {
 	private function citizenContribution(): array {
 		return [
 			'label' => 'Pipelinq',
-			'collections' => [$this->questionsCollection()],
-			'actions' => $this->questionActions(),
-			'pages' => [$this->questionsPage()],
+			'collections' => [$this->questionsCollection(), ...$this->ownTicketCollections()],
+			'actions' => [...$this->questionActions(), ...$this->ownTicketActions()],
+			'pages' => [...$this->ownTicketPages(), $this->questionsPage()],
 			'notifications' => [$this->answeredRule()],
 		];
 	}//end citizenContribution()
@@ -506,6 +530,7 @@ class PortalContributionProvider {
 	 * @return array<string, mixed> The collection declaration.
 	 *
 	 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-questions-and-the-answers-req-qcd-003
+	 * @spec openspec/changes/question-detail-on-the-portal/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-question-the-dossier-it-was-about-and-the-answers-req-qdp-001
 	 */
 	private function questionsCollection(): array {
 		return [
@@ -532,7 +557,15 @@ class PortalContributionProvider {
 				['field' => 'status', 'label' => 'Status', 'render' => 'badge'],
 				['field' => 'occurredAt', 'label' => 'Gesteld', 'render' => 'date'],
 			],
-			'detail' => ['layout' => 'card', 'fields' => ['title', 'description', 'status', 'occurredAt', 'customerMessage', 'portalReplies']],
+			// The detail shows the subject, the status and when it was asked.
+			// The question, the answers with their dates and the replies are
+			// the timeline; the dossier as it was, and the Woo request it
+			// became, are the item list. Both are read per question from the
+			// methods below, after portaliq proved the question is the
+			// resident's (question-detail-on-the-portal).
+			'detail' => ['layout' => 'card', 'fields' => ['title', 'status', 'occurredAt']],
+			'timeline' => ['label' => 'Vraag en antwoord', 'provider' => 'questionTimeline'],
+			'itemList' => ['label' => 'Waar uw vraag over gaat', 'provider' => 'questionDossierItems'],
 			'defaultSort' => ['field' => 'occurredAt', 'direction' => 'desc'],
 		];
 	}//end questionsCollection()
@@ -548,6 +581,7 @@ class PortalContributionProvider {
 	 *
 	 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-a-resident-asks-a-question-about-a-dossier-they-own-req-qcd-001
 	 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-a-resident-replies-to-an-answer-req-qcd-004
+	 * @spec openspec/changes/question-detail-on-the-portal/specs/dossier-questions/spec.md#requirement-the-reply-is-offered-on-the-question-while-it-waits-for-the-resident-req-qdp-003
 	 */
 	private function questionActions(): array {
 		$actions = [];
@@ -580,9 +614,19 @@ class PortalContributionProvider {
 
 		$actions[] = [
 			'id' => 'replyToQuestion',
-			'label' => 'Reply to the answer',
+			'label' => 'Reageren op het antwoord',
 			'endpoint' => '/index.php/apps/pipelinq/api/portal/questions/reply',
 			'method' => 'POST',
+			// ON THE QUESTION'S DETAIL (question-detail-on-the-portal): attached
+			// to pipelinq's own `myQuestions` only, so the form asks the reply
+			// text on the question the resident opened. Portaliq proves the
+			// question is theirs through that collection's scope and stamps its
+			// id into `ticket`; the receiver checks the owner again.
+			'attachTo' => ['app' => 'pipelinq', 'schema' => 'ticket', 'collection' => 'myQuestions'],
+			'rowField' => 'ticket',
+			// Offered only while the employee waits for the resident. Portaliq
+			// leaves it off any other question and refuses it there with 409.
+			'rowWhen' => ['field' => 'status', 'in' => ['awaiting_customer']],
 			'fields' => ['ticket', 'message'],
 			'fieldConfigs' => [
 				'ticket' => ['visible' => false, 'required' => true],
@@ -601,6 +645,7 @@ class PortalContributionProvider {
 	 * @return array<string, mixed> The page declaration.
 	 *
 	 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-questions-and-the-answers-req-qcd-003
+	 * @spec openspec/changes/question-detail-on-the-portal/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-question-the-dossier-it-was-about-and-the-answers-req-qdp-001
 	 */
 	private function questionsPage(): array {
 		return [
@@ -613,9 +658,154 @@ class PortalContributionProvider {
 					'markdown' => '## Mijn vragen'."\n".'Hier leest u de antwoorden op vragen die u over uw dossiers stelde.',
 				],
 				['type' => 'collection', 'collection' => 'myQuestions'],
+				// The question the resident selects in the list above: its
+				// timeline, its dossier and the reply form.
+				['type' => 'detail', 'collection' => 'myQuestions'],
 			],
 		];
 	}//end questionsPage()
+
+	/**
+	 * The resident's own requests and complaints, scoped on `portalSubject`.
+	 *
+	 * Scoped like `myQuestions`: portaliq stamps the resident's subjectRef on
+	 * create and reads it back, so no claim is needed and a resident without
+	 * an organisation (a DigiD resident, `citizen` or `client` without a
+	 * `clientId` claim) reads exactly what they filed. The own request carries
+	 * `channel: web`, which keeps it apart from a question (`channel: portal`).
+	 * Projected to the same client-safe fields as the organisation's lists.
+	 *
+	 * @return array<int, array<string, mixed>> The two collections.
+	 *
+	 * @spec openspec/changes/portal-contribution/specs/portal-contribution/spec.md
+	 */
+	private function ownTicketCollections(): array {
+		return [
+			[
+				'id' => 'ownRequests',
+				'register' => self::REGISTER,
+				'schema' => 'ticket',
+				'filter' => ['ticketType' => 'request', 'channel' => 'web'],
+				'scopeField' => 'portalSubject',
+				'label' => 'My requests',
+				'listable' => true,
+				'fields' => ['title', 'category', 'status', 'description', 'occurredAt', 'customerMessage'],
+				'columns' => [
+					['field' => 'title', 'label' => 'Onderwerp'],
+					['field' => 'status', 'label' => 'Status', 'render' => 'badge'],
+					['field' => 'occurredAt', 'label' => 'Ingediend', 'render' => 'date'],
+				],
+				'detail' => ['layout' => 'card', 'fields' => ['title', 'category', 'status', 'description', 'occurredAt', 'customerMessage']],
+				'defaultSort' => ['field' => 'occurredAt', 'direction' => 'desc'],
+			],
+			[
+				'id' => 'ownComplaints',
+				'register' => self::REGISTER,
+				'schema' => 'ticket',
+				'filter' => ['ticketType' => 'complaint'],
+				'scopeField' => 'portalSubject',
+				'label' => 'My complaints',
+				'listable' => true,
+				'fields' => ['title', 'complaintCategory', 'status', 'description', 'occurredAt', 'customerMessage'],
+				'columns' => [
+					['field' => 'title', 'label' => 'Onderwerp'],
+					['field' => 'status', 'label' => 'Status', 'render' => 'badge'],
+					['field' => 'occurredAt', 'label' => 'Ingediend', 'render' => 'date'],
+				],
+				'detail' => ['layout' => 'card', 'fields' => ['title', 'complaintCategory', 'status', 'description', 'occurredAt', 'customerMessage']],
+				'defaultSort' => ['field' => 'occurredAt', 'direction' => 'desc'],
+			],
+		];
+	}//end ownTicketCollections()
+
+	/**
+	 * The resident's own intake forms for a request and a complaint.
+	 *
+	 * The scope stamp is the resident's own subjectRef in `portalSubject`
+	 * (no `scopeClaim`), so the write never depends on a claim the resident
+	 * lacks. The kind and the channel are stamped server-side; the client
+	 * only writes the intake fields.
+	 *
+	 * @return array<int, array<string, mixed>> The two create actions.
+	 *
+	 * @spec openspec/changes/portal-contribution/specs/portal-contribution/spec.md
+	 */
+	private function ownTicketActions(): array {
+		return [
+			[
+				'id' => 'createOwnRequest',
+				'type' => 'create',
+				'label' => 'Submit a request',
+				'register' => self::REGISTER,
+				'schema' => 'ticket',
+				'defaults' => ['ticketType' => 'request', 'channel' => 'web'],
+				'scopeField' => 'portalSubject',
+				'fields' => ['title', 'description', 'category'],
+				'fieldConfigs' => [
+					'title' => ['label' => 'Onderwerp', 'required' => true, 'size' => 'large', 'placeholder' => 'Waar gaat uw verzoek over?'],
+					'description' => ['label' => 'Omschrijving', 'required' => true, 'size' => 'full', 'placeholder' => 'Beschrijf uw verzoek zo volledig mogelijk'],
+					'category' => ['label' => 'Categorie'],
+				],
+				'submitLabel' => 'Verzoek indienen',
+				'successMessage' => 'Uw verzoek is ingediend',
+			],
+			[
+				'id' => 'createOwnComplaint',
+				'type' => 'create',
+				'label' => 'File a complaint',
+				'register' => self::REGISTER,
+				'schema' => 'ticket',
+				'defaults' => ['ticketType' => 'complaint', 'channel' => 'web'],
+				'scopeField' => 'portalSubject',
+				'fields' => ['title', 'description', 'complaintCategory'],
+				'fieldConfigs' => [
+					'title' => ['label' => 'Onderwerp', 'required' => true, 'size' => 'large', 'placeholder' => 'Waar gaat uw klacht over?'],
+					'description' => ['label' => 'Omschrijving', 'required' => true, 'size' => 'full', 'placeholder' => 'Wat ging er mis?'],
+					'complaintCategory' => ['label' => 'Soort klacht'],
+				],
+				'submitLabel' => 'Klacht indienen',
+				'successMessage' => 'Uw klacht is ingediend',
+			],
+		];
+	}//end ownTicketActions()
+
+	/**
+	 * The resident's own requests and complaints pages: the form, then the list.
+	 *
+	 * @return array<int, array<string, mixed>> The two pages.
+	 *
+	 * @spec openspec/changes/portal-contribution/specs/portal-contribution/spec.md
+	 */
+	private function ownTicketPages(): array {
+		return [
+			[
+				'id' => 'requests',
+				'label' => 'Verzoeken',
+				'icon' => 'MessageText',
+				'blocks' => [
+					[
+						'type' => 'richText',
+						'markdown' => '## Mijn verzoeken'."\n".'Dien een nieuw verzoek in of bekijk de status van uw lopende verzoeken.',
+					],
+					['type' => 'action', 'action' => 'createOwnRequest'],
+					['type' => 'collection', 'collection' => 'ownRequests'],
+				],
+			],
+			[
+				'id' => 'complaints',
+				'label' => 'Klachten',
+				'icon' => 'AlertCircle',
+				'blocks' => [
+					[
+						'type' => 'richText',
+						'markdown' => '## Mijn klachten'."\n".'Dien een klacht in of bekijk hoe het met uw klachten staat.',
+					],
+					['type' => 'action', 'action' => 'createOwnComplaint'],
+					['type' => 'collection', 'collection' => 'ownComplaints'],
+				],
+			],
+		];
+	}//end ownTicketPages()
 
 	/**
 	 * The change rule that tells a resident there is an answer (C3 sender).
@@ -653,4 +843,58 @@ class PortalContributionProvider {
 	protected function isOpenCatalogiInstalled(): bool {
 		return class_exists('OCA\\OpenCatalogi\\AppInfo\\Application');
 	}//end isOpenCatalogiInstalled()
+
+	/**
+	 * The conversation on one question, for the `myQuestions` timeline.
+	 *
+	 * Called by the portal with a question id it already read under the
+	 * resident's own scope. A question that cannot be read answers an empty
+	 * history rather than an error page.
+	 *
+	 * @param string $id The question id.
+	 *
+	 * @return array<int, array<string, mixed>> The entries.
+	 *
+	 * @spec openspec/changes/question-detail-on-the-portal/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-question-the-dossier-it-was-about-and-the-answers-req-qdp-001
+	 */
+	public function questionTimeline(string $id): array {
+		$detail = $this->questionDetail();
+		if ($detail === null) {
+			return [];
+		}
+
+		return $detail->timeline(ticketId: $id);
+	}//end questionTimeline()
+
+	/**
+	 * What one question is about, for the `myQuestions` item list: the Woo
+	 * request it became and the dossier's documents with their links.
+	 *
+	 * @param string $id The question id, already proven to be the resident's.
+	 *
+	 * @return array<int, array<string, mixed>> The items.
+	 *
+	 * @spec openspec/changes/question-detail-on-the-portal/specs/dossier-questions/spec.md#requirement-a-converted-question-links-to-the-woo-request-req-qdp-002
+	 */
+	public function questionDossierItems(string $id): array {
+		$detail = $this->questionDetail();
+		if ($detail === null) {
+			return [];
+		}
+
+		return $detail->dossierItems(ticketId: $id);
+	}//end questionDossierItems()
+
+	/**
+	 * The service behind the question detail, when the container provided it.
+	 *
+	 * Protected so a test can hand in a double.
+	 *
+	 * @return QuestionDetailService|null The service, or null when it cannot be built.
+	 *
+	 * @spec openspec/changes/question-detail-on-the-portal/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-question-the-dossier-it-was-about-and-the-answers-req-qdp-001
+	 */
+	protected function questionDetail(): ?QuestionDetailService {
+		return $this->questionDetail;
+	}//end questionDetail()
 }//end class
