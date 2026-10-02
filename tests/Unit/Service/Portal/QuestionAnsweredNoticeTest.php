@@ -233,6 +233,29 @@ class QuestionAnsweredNoticeTest extends TestCase {
 	}//end testTheListenerIgnoresEverythingElse()
 
 	/**
+	 * A failure inside the listener is logged, never thrown into the save that triggered it.
+	 *
+	 * @return void
+	 */
+	public function testTheListenerNeverFailsTheSave(): void {
+		$map = $this->createMock(SchemaMapService::class);
+		$map->method('resolveEntityType')->willThrowException(new RuntimeException('settings unreadable'));
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects(self::once())->method('warning')->with(
+			'QuestionAnsweredListener: the answer notice was skipped',
+			['error' => 'settings unreadable']
+		);
+		$listener = new QuestionAnsweredListener(schemaMap: $map, notice: $this->notice, logger: $logger);
+
+		$listener->handle(new ObjectUpdatedEvent(
+			$this->entity(self::QUESTION + ['customerMessage' => 'Hier is het antwoord.']),
+			$this->entity(self::QUESTION)
+		));
+
+		self::assertSame([], $this->saved);
+	}//end testTheListenerNeverFailsTheSave()
+
+	/**
 	 * A schema map that knows the ticket schema.
 	 *
 	 * @return SchemaMapService&MockObject
