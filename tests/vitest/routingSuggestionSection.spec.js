@@ -11,7 +11,8 @@
  * These specs mount the section with the HTTP layer and the object store
  * replaced: the ranked list renders for the record, an Assign click writes
  * the colleague into `assignee` while keeping the rest of the record (the
- * store's save is a PUT that replaces the object), and a failed save says so.
+ * store's save is a PUT that replaces the object), marks the colleague as
+ * assigned and hands the saved record to the page, and a failed save says so.
  * The last spec pins the caller: TicketDetail declares the section and the
  * registry resolves it, so the page actually renders it.
  *
@@ -22,7 +23,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { h } from 'vue'
+import { h, ref } from 'vue'
 
 const axiosMock = vi.hoisted(() => ({ get: vi.fn() }))
 const storeMock = vi.hoisted(() => ({ fetchObject: vi.fn(), saveObject: vi.fn() }))
@@ -42,6 +43,9 @@ vi.mock('../../src/store/modules/object.js', () => ({
 }))
 vi.mock('vue-material-design-icons/Refresh.vue', () => ({
 	default: { name: 'Refresh', render: () => h('span') },
+}))
+vi.mock('vue-material-design-icons/Check.vue', () => ({
+	default: { name: 'Check', render: () => h('span') },
 }))
 vi.mock('@nextcloud/vue', () => ({
 	NcButton: {
@@ -80,12 +84,14 @@ const ticket = {
 /**
  * Mount the section for ticket t-1 and let the suggestions load.
  *
+ * @param {object} [props] Extra props for the section.
+ * @param {object} [provide] What the detail page provides.
  * @return {Promise<object>} The mounted wrapper.
  */
-async function mountSection() {
+async function mountSection(props = {}, provide = {}) {
 	const wrapper = mount(RoutingSuggestionSection, {
-		props: { objectId: 't-1', category: 'vergunningen' },
-		global: { mocks: { t: (app, text) => text } },
+		props: { objectId: 't-1', category: 'vergunningen', ...props },
+		global: { mocks: { t: (app, text) => text }, provide },
 	})
 	await flushPromises()
 	return wrapper
@@ -127,7 +133,11 @@ describe('RoutingSuggestionSection', () => {
 	})
 
 	it('writes the chosen colleague into the assignee and keeps the rest of the ticket', async () => {
-		const wrapper = await mountSection()
+		const setObject = vi.fn()
+		const wrapper = await mountSection(
+			{},
+			{ cnSectionContext: ref({ setObject }) },
+		)
 
 		const assign = wrapper.findAll('button').find((b) => b.text() === 'Assign')
 		await assign.trigger('click')
@@ -138,7 +148,48 @@ describe('RoutingSuggestionSection', () => {
 		const [type, payload] = storeMock.saveObject.mock.calls[0]
 		expect(type).toBe('ticket')
 		expect(payload).toEqual({ ...ticket, assignee: 'anna' })
-		expect(wrapper.text()).toContain('Assigned to anna.')
+		expect(wrapper.find('.agent-assigned').text()).toBe('Assigned')
+		expect(wrapper.findAll('button').some((b) => b.text() === 'Assign')).toBe(
+			false,
+		)
+		expect(setObject).toHaveBeenCalledWith({ ...ticket, assignee: 'anna' })
+	})
+
+	it('confirms the assignment itself when the page cannot take the saved ticket', async () => {
+		const wrapper = await mountSection({}, { cnSectionContext: ref({}) })
+
+		await wrapper
+			.findAll('button')
+			.find((b) => b.text() === 'Assign')
+			.trigger('click')
+		await flushPromises()
+
+		expect(storeMock.saveObject).toHaveBeenCalledTimes(1)
+		expect(wrapper.find('.note-success').text()).toBe('Assigned to anna.')
+	})
+
+	it('leaves the confirmation to the page when it takes the saved ticket', async () => {
+		const wrapper = await mountSection(
+			{},
+			{ cnSectionContext: ref({ setObject: vi.fn() }) },
+		)
+
+		await wrapper
+			.findAll('button')
+			.find((b) => b.text() === 'Assign')
+			.trigger('click')
+		await flushPromises()
+
+		expect(wrapper.find('.note-success').exists()).toBe(false)
+	})
+
+	it('shows the colleague the ticket is already assigned to as assigned', async () => {
+		const wrapper = await mountSection({ assignee: 'anna' })
+
+		expect(wrapper.find('.agent-assigned').text()).toBe('Assigned')
+		expect(wrapper.findAll('button').some((b) => b.text() === 'Assign')).toBe(
+			false,
+		)
 	})
 
 	it('says so when the assignee does not save', async () => {
@@ -192,6 +243,7 @@ describe('RoutingSuggestionSection', () => {
 			category: '@object.category',
 			entityType: 'lead',
 			objectType: 'lead',
+			assignee: '@object.assignee',
 		})
 	})
 

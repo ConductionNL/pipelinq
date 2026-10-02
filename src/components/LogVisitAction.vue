@@ -2,7 +2,7 @@
 <!-- Copyright (C) 2026 Conduction B.V. -->
 <!-- @spec openspec/specs/mobile-experience/spec.md#requirement-a-visit-is-logged-in-one-small-sheet-req-mob-003 -->
 <template>
-	<div class="log-visit-action">
+	<div class="log-visit-action" :class="{ 'log-visit-action--body': !inHeader }">
 		<NcButton
 			variant="secondary"
 			data-testid="log-visit-button"
@@ -45,6 +45,10 @@ export default {
 		MapMarkerCheckOutline,
 	},
 
+	// The actions slot also hands over schema / store / openEditForm; none of
+	// them belong on the root element.
+	inheritAttrs: false,
+
 	props: {
 		/** The client visited (client page, or the lead's client). */
 		clientId: {
@@ -54,6 +58,18 @@ export default {
 
 		/** The lead the visit was about (lead page). */
 		leadId: {
+			type: String,
+			default: '',
+		},
+
+		/** The lead, from CnDetailPage's `#actions` slot (lead page header). */
+		object: {
+			type: Object,
+			default: null,
+		},
+
+		/** The lead id, from CnDetailPage's `#actions` slot (lead page header). */
+		objectId: {
 			type: String,
 			default: '',
 		},
@@ -67,6 +83,35 @@ export default {
 			saving: false,
 			error: '',
 		}
+	},
+
+	computed: {
+		/**
+		 * Only the header's actions slot passes `objectId`; body sections get
+		 * their manifest props alone.
+		 *
+		 * @return {boolean}
+		 * @spec exclude presentational placement flag — no business logic
+		 */
+		inHeader() {
+			return this.objectId !== ''
+		},
+
+		/**
+		 * @return {string} The lead the visit is about.
+		 * @spec openspec/specs/mobile-experience/spec.md#requirement-a-visit-is-logged-in-one-small-sheet-req-mob-003
+		 */
+		visitLeadId() {
+			return this.leadId || this.objectId
+		},
+
+		/**
+		 * @return {string} The client visited.
+		 * @spec openspec/specs/mobile-experience/spec.md#requirement-a-visit-is-logged-in-one-small-sheet-req-mob-003
+		 */
+		visitClientId() {
+			return this.clientId || this.object?.client || ''
+		},
 	},
 
 	methods: {
@@ -97,8 +142,8 @@ export default {
 			const store = useObjectStore()
 			const { ticket, task } = buildVisitPayloads({
 				...input,
-				clientId: this.clientId || undefined,
-				leadId: this.leadId || undefined,
+				clientId: this.visitClientId || undefined,
+				leadId: this.visitLeadId || undefined,
 				userId: window.OC?.getCurrentUser?.()?.uid,
 				title: t('pipelinq', 'Visit'),
 				taskSubject: t('pipelinq', 'Follow up on the visit'),
@@ -135,11 +180,11 @@ export default {
 </script>
 
 <style scoped>
-.log-visit-action {
+.log-visit-action--body {
 	margin: 0 0 12px;
 }
 
-.log-visit-action :deep(button) {
+.log-visit-action--body :deep(button) {
 	min-height: 44px;
 }
 </style>

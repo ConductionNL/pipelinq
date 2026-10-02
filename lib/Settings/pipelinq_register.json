@@ -4709,6 +4709,7 @@
         "probability": 60,
         "expectedCloseDate": "2026-06-30",
         "priority": "high",
+        "assignee": "admin",
         "stage": "Gekwalificeerd",
         "stageOrder": 3,
         "status": "open",
@@ -4727,6 +4728,7 @@
         "probability": 40,
         "expectedCloseDate": "2026-05-15",
         "priority": "urgent",
+        "assignee": "admin",
         "stage": "Voorstel",
         "stageOrder": 4,
         "status": "open",
@@ -4744,6 +4746,7 @@
         "probability": 80,
         "expectedCloseDate": "2026-04-30",
         "priority": "normal",
+        "assignee": "admin",
         "stage": "Onderhandeling",
         "stageOrder": 5,
         "status": "open",
@@ -4761,6 +4764,7 @@
         "probability": 20,
         "expectedCloseDate": "2026-07-15",
         "priority": "low",
+        "assignee": "admin",
         "stage": "Nieuw",
         "stageOrder": 1,
         "status": "open",
@@ -4778,6 +4782,7 @@
         "probability": 100,
         "expectedCloseDate": "2026-03-31",
         "priority": "normal",
+        "assignee": "admin",
         "stage": "Gewonnen",
         "stageOrder": 6,
         "status": "won",
@@ -4795,6 +4800,7 @@
         "probability": 70,
         "expectedCloseDate": "2026-09-30",
         "priority": "high",
+        "assignee": "admin",
         "stage": "Gekwalificeerd",
         "stageOrder": 3,
         "status": "open",
@@ -4813,6 +4819,7 @@
         "probability": 50,
         "expectedCloseDate": "2026-10-15",
         "priority": "normal",
+        "assignee": "admin",
         "stage": "Voorstel",
         "stageOrder": 4,
         "status": "open",
@@ -4831,6 +4838,7 @@
         "probability": 40,
         "expectedCloseDate": "2026-11-30",
         "priority": "low",
+        "assignee": "admin",
         "stage": "Nieuw",
         "stageOrder": 1,
         "status": "open",
@@ -5322,6 +5330,10 @@
           "id": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c11"
         },
         "userId": "jan.devries",
+        "skills": [
+          "b1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c21",
+          "b1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c23"
+        ],
         "maxConcurrent": 3,
         "isAvailable": true
       },
@@ -5333,6 +5345,9 @@
           "id": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c12"
         },
         "userId": "fatima.elamrani",
+        "skills": [
+          "b1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c22"
+        ],
         "maxConcurrent": 2,
         "isAvailable": false
       },
@@ -5344,6 +5359,10 @@
           "id": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c13"
         },
         "userId": "pieter.bakker",
+        "skills": [
+          "b1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c21",
+          "b1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c22"
+        ],
         "maxConcurrent": 4,
         "isAvailable": true
       },
@@ -5457,6 +5476,7 @@
         "client": "994174bf-3e92-4bec-aea2-701b7131201f",
         "status": "new",
         "priority": "normal",
+        "assignee": "admin",
         "channel": "web",
         "occurredAt": "2026-07-10T09:00:00+02:00",
         "category": "vergunningen"
@@ -5525,10 +5545,45 @@
         "client": "5c9f4a52-ed0e-4519-b8d8-b2e1ef1d2554",
         "status": "new",
         "priority": "normal",
+        "assignee": "admin",
         "channel": "email",
         "occurredAt": "2026-07-11T15:00:00+02:00",
         "category": "sales",
         "slaDeadline": "2026-07-13T12:00:00+02:00"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "ticket",
+          "slug": "ticket-gv-verzoek-evenementenvergunning",
+          "id": "3f6d2b8e-7a41-4c9d-9e25-1b8f0c4a7d61"
+        },
+        "ticketType": "request",
+        "title": "Evenementenvergunning buurtfeest Parkstraat",
+        "client": "994174bf-3e92-4bec-aea2-701b7131201f",
+        "status": "in_progress",
+        "priority": "high",
+        "assignee": "admin",
+        "channel": "phone",
+        "occurredAt": "2026-06-02T10:30:00+02:00",
+        "category": "vergunningen"
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "ticket",
+          "slug": "ticket-zr-verzoek-factuurcorrectie",
+          "id": "9c2e5a17-4b8d-4f3a-8d6e-2a7b1c9e5f04"
+        },
+        "ticketType": "request",
+        "title": "Correctie factuur groepsreis",
+        "client": "8f3a99c8-ab44-4dce-b99d-4a695927c5bb",
+        "status": "completed",
+        "priority": "low",
+        "assignee": "admin",
+        "channel": "email",
+        "occurredAt": "2026-07-01T14:00:00+02:00",
+        "category": "facturatie"
       },
       {
         "@self": {

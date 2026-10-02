@@ -177,6 +177,30 @@ describe('callers', () => {
 			expect.arrayContaining(['ContactLinks', 'LogVisitAction']),
 		)
 		expect(widgets('ContactDetail')).toContain('ContactLinks')
-		expect(widgets('LeadDetail')).toContain('LogVisitAction')
+		expect(pages.find((p) => p.id === 'LeadDetail').actionsComponent).toBe(
+			'LogVisitAction',
+		)
+	})
+
+	it('the lead header binds the visit to the lead and its client', async () => {
+		storeMock.saveObject.mockResolvedValue({ id: 'saved' })
+		const w = mount(LogVisitAction, {
+			props: { objectId: 'lead-1', object: { client: 'client-1' } },
+			global,
+		})
+		expect(w.classes()).not.toContain('log-visit-action--body')
+		await w.find('[data-testid="log-visit-button"]').trigger('click')
+		await w.find('#log-visit-note').setValue('wants a quote for two ovens')
+		await w.find('form').trigger('submit')
+		await flushPromises()
+		expect(storeMock.saveObject.mock.calls[0][1]).toMatchObject({
+			lead: 'lead-1',
+			client: 'client-1',
+		})
+	})
+
+	it('a body section keeps its body spacing', () => {
+		const w = mount(LogVisitAction, { props: { clientId: 'client-1' }, global })
+		expect(w.classes()).toContain('log-visit-action--body')
 	})
 })

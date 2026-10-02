@@ -124,8 +124,18 @@ class RoutingServiceTest extends TestCase {
 		$objectService->method('count')->willReturn(0);
 		$objectService->method('findAll')->willReturnCallback(
 			static fn (array $config = []): array => match ($config['filters']['schema'] ?? '') {
-				'skill' => [['id' => 'skill-1', 'title' => 'Vergunningen', 'categories' => ['vergunningen'], 'isActive' => true]],
-				'agentProfile' => [['userId' => 'anna', 'displayName' => 'Anna de Vries', 'skills' => ['skill-1'], 'isAvailable' => true, 'maxConcurrent' => 10]],
+				'skill' => [
+					self::entity(
+						uuid: 'skill-1',
+						payload: ['title' => 'Vergunningen', 'categories' => ['vergunningen'], 'isActive' => true]
+					),
+				],
+				'agentProfile' => [
+					self::entity(
+						uuid: 'profile-1',
+						payload: ['userId' => 'anna', 'displayName' => 'Anna de Vries', 'skills' => ['skill-1'], 'isAvailable' => true, 'maxConcurrent' => 10]
+					),
+				],
 				default => [],
 			}
 		);
@@ -170,4 +180,18 @@ class RoutingServiceTest extends TestCase {
 
 		return $merged;
 	}//end mergedLeadSchema()
+	/**
+	 * Wrap a payload in an ObjectEntity, the shape findAll() returns.
+	 *
+	 * @param string $uuid The object UUID.
+	 * @param array<string, mixed> $payload The object payload.
+	 *
+	 * @return ObjectEntity The entity.
+	 */
+	private static function entity(string $uuid, array $payload): ObjectEntity {
+		$entity = new ObjectEntity();
+		$entity->setUuid($uuid);
+		$entity->setObject($payload);
+		return $entity;
+	}//end entity()
 }//end class

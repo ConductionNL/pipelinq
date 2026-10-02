@@ -52,15 +52,16 @@
 					type="checkbox">
 					{{ t('pipelinq', 'Hide closed') }}
 				</NcCheckboxRadioSwitch>
-				<NcCheckboxRadioSwitch
-					:modelValue="callFirst"
-					:aria-label="
-						t('pipelinq', 'Call first: open leads, highest score first')
-					"
-					type="checkbox"
-					@update:modelValue="setCallFirst">
+				<NcButton
+					:pressed="callFirst"
+					:title="t('pipelinq', 'Sort by score, highest first')"
+					data-testid="lead-list-call-first"
+					@update:pressed="setCallFirst">
+					<template #icon>
+						<SortDescending :size="20" />
+					</template>
 					{{ t('pipelinq', 'Call first') }}
-				</NcCheckboxRadioSwitch>
+				</NcButton>
 			</div>
 		</template>
 
@@ -77,8 +78,9 @@
 
 <script>
 import { CnIndexPage, openRowTarget } from '@conduction/nextcloud-vue'
-import { NcCheckboxRadioSwitch } from '@nextcloud/vue'
-import { CALL_FIRST_SORT } from '../../services/leadScore.js'
+import { NcButton, NcCheckboxRadioSwitch } from '@nextcloud/vue'
+import SortDescending from 'vue-material-design-icons/SortDescending.vue'
+import { CALL_FIRST_SORT, isCallFirstSort } from '../../services/leadScore.js'
 import {
 	getOverdueDays,
 	getStaleThreshold,
@@ -91,7 +93,9 @@ export default {
 	name: 'LeadList',
 	components: {
 		CnIndexPage,
+		NcButton,
 		NcCheckboxRadioSwitch,
+		SortDescending,
 	},
 
 	data() {
@@ -116,6 +120,8 @@ export default {
 			showStaleOnly: false,
 			hideClosed: true,
 			callFirst: false,
+			// The sort Call first replaced, restored when it is switched off.
+			sortBeforeCallFirst: [],
 			stages: [],
 		}
 	},
@@ -171,7 +177,22 @@ export default {
 		},
 	},
 
+	/**
+	 * Keep the Call first button in step with the list's sort, then load the
+	 * settings and the default pipeline's stages.
+	 *
+	 * @spec openspec/specs/lead-management/spec.md#requirement-the-lead-list-shows-and-sorts-by-score-req-lscore-001
+	 */
 	async mounted() {
+		// Read from the page's own sort, so a column click, a saved view or a
+		// sort restored from the URL all show on the button.
+		this.$watch(
+			() => this.$refs.index?.effectiveSortKeys,
+			(keys) => {
+				this.callFirst = isCallFirstSort(keys)
+			},
+			{ immediate: true },
+		)
 		await this.settingsStore.fetchSettings()
 		await this.loadDefaultPipeline()
 	},
@@ -181,19 +202,21 @@ export default {
 		getOverdueDays,
 
 		/**
-		 * Switch "Call first" on or off. On, the list shows open leads only
-		 * and asks OpenRegister for the highest score first, ties broken by
-		 * the lead updated longest ago. Off, it drops that sort.
+		 * Switch the "Call first" sort on or off. On, OpenRegister returns the
+		 * highest score first, ties broken by the lead updated longest ago.
+		 * Off, it restores the sort it replaced. The filters are left as they are.
 		 *
 		 * @param {boolean} on Whether Call first is on.
 		 * @spec openspec/specs/lead-management/spec.md#requirement-the-lead-list-shows-and-sorts-by-score-req-lscore-001
 		 */
 		setCallFirst(on) {
-			this.callFirst = on
-			if (on) {
-				this.hideClosed = true
+			const index = this.$refs.index
+			if (on && !isCallFirstSort(index?.effectiveSortKeys)) {
+				this.sortBeforeCallFirst = [...(index?.effectiveSortKeys || [])]
 			}
-			this.$refs.index?.onSortEvent?.({ keys: on ? CALL_FIRST_SORT : [] })
+			index?.onSortEvent?.({
+				keys: on ? CALL_FIRST_SORT : this.sortBeforeCallFirst,
+			})
 		},
 
 		/**
@@ -263,19 +286,20 @@ export default {
 /* Overdue row highlighting (REQ-LM-004 Scenario 11). Scoped class applied
    via CnIndexPage's row-class prop. Uses an inset box-shadow (matching the
    library's .cn-table-row--selected accent) rather than border-left, which
-   would shift the row's content sideways. */
-:deep(.lead-overdue) {
-	box-shadow: inset 3px 0 0 0 var(--color-error);
+   would shift the row's content sideways. A selected row keeps the
+   selection accent: this scoped rule outranks the library's. */
+:deep(.lead-overdue:not(.cn-table-row--selected)) {
+	box-shadow: inset 3px 0 0 0 var(--color-element-error);
 }
 
 .overdue-cell {
-	color: var(--color-error);
+	color: var(--color-text-error);
 	font-weight: 600;
 }
 
 .overdue-suffix {
 	display: block;
 	font-size: 11px;
-	color: var(--color-error);
+	color: var(--color-text-error);
 }
 </style>

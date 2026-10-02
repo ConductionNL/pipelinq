@@ -147,7 +147,8 @@
 							},
 							"subjectField": "title",
 							"submitLabel": "Save contact moment",
-							"detailRoute": "TicketDetail"
+							"detailRoute": "TicketDetail",
+							"writeWorkspace": false
 						}
 					},
 					{

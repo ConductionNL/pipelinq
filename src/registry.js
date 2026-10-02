@@ -842,7 +842,7 @@ const registry = {
 	LogVisitAction: {
 		kind: 'section',
 		component: LogVisitAction,
-		_note: 'Log a visit on a client or lead (REQ-MOB-003): one note and an optional follow-up day; writes an outbound visit contact moment (ticket) and a follow-up crmTask through the object store.',
+		_note: 'Log a visit on a client or lead (REQ-MOB-003): one note and an optional follow-up day; writes an outbound visit contact moment (ticket) and a follow-up crmTask through the object store. Also the LeadDetail actionsComponent, where it binds to the lead and its client from the slot.',
 	},
 	PartyIndicatorPanel: {
 		kind: 'section',

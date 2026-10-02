@@ -213,7 +213,7 @@ class RoutingService {
 		);
 
 		foreach ($requests as $request) {
-			$status = strtolower((string)($request['status'] ?? ''));
+			$status = strtolower((string)($this->toArray(value: $request)['status'] ?? ''));
 			if (in_array($status, self::TERMINAL_STATUSES, true) === false) {
 				$count++;
 			}
@@ -287,11 +287,11 @@ class RoutingService {
 	 * @param string $skillSchemaId The skill schema ID.
 	 * @param string $category The category (for error context only).
 	 *
-	 * @return iterable<mixed> The active skill objects (empty on error).
+	 * @return array<int, array<string, mixed>> The active skills as plain arrays (empty on error).
 	 */
-	private function loadActiveSkills(string $registerId, string $skillSchemaId, string $category): iterable {
+	private function loadActiveSkills(string $registerId, string $skillSchemaId, string $category): array {
 		try {
-			return $this->getObjectService()->findAll(
+			$skills = $this->getObjectService()->findAll(
 				[
 					'filters' => [
 						'register' => $registerId,
@@ -301,6 +301,7 @@ class RoutingService {
 					'limit' => 999,
 				]
 			);
+			return array_map(fn ($skill): array => $this->toArray(value: $skill), $skills);
 		} catch (\Throwable $e) {
 			$this->logger->error(
 				'RoutingService: failed to load skills',
@@ -313,12 +314,12 @@ class RoutingService {
 	/**
 	 * Index skills that declare the given category by their ID.
 	 *
-	 * @param iterable<mixed> $skills The candidate skills.
+	 * @param array<int, array<string, mixed>> $skills The candidate skills.
 	 * @param string $category The category to match.
 	 *
 	 * @return array<string, mixed> Map of skill ID => skill, for matching skills.
 	 */
-	private function collectMatchingSkills(iterable $skills, string $category): array {
+	private function collectMatchingSkills(array $skills, string $category): array {
 		$matchingSkillsById = [];
 		foreach ($skills as $skill) {
 			$categories = $skill['categories'] ?? [];
@@ -343,11 +344,11 @@ class RoutingService {
 	 * @param string $registerId The configured register ID.
 	 * @param string $agentProfileSchemaId The agent-profile schema ID.
 	 *
-	 * @return iterable<mixed> The agent-profile objects (empty on error).
+	 * @return array<int, array<string, mixed>> The agent profiles as plain arrays (empty on error).
 	 */
-	private function loadAgentProfiles(string $registerId, string $agentProfileSchemaId): iterable {
+	private function loadAgentProfiles(string $registerId, string $agentProfileSchemaId): array {
 		try {
-			return $this->getObjectService()->findAll(
+			$profiles = $this->getObjectService()->findAll(
 				[
 					'filters' => [
 						'register' => $registerId,
@@ -356,6 +357,7 @@ class RoutingService {
 					'limit' => 999,
 				]
 			);
+			return array_map(fn ($profile): array => $this->toArray(value: $profile), $profiles);
 		} catch (\Throwable $e) {
 			$this->logger->error(
 				'RoutingService: failed to load agent profiles',
@@ -368,12 +370,12 @@ class RoutingService {
 	/**
 	 * Match agent profiles against the matching skills and annotate each match.
 	 *
-	 * @param iterable<mixed> $profiles The candidate agent profiles.
+	 * @param array<int, array<string, mixed>> $profiles The candidate agent profiles.
 	 * @param array<string, mixed> $matchingSkillsById Map of skill ID => skill.
 	 *
 	 * @return array<int, array<string, mixed>> The matched, annotated profiles.
 	 */
-	private function matchProfilesToSkills(iterable $profiles, array $matchingSkillsById): array {
+	private function matchProfilesToSkills(array $profiles, array $matchingSkillsById): array {
 		$matchingSkillIds = array_keys($matchingSkillsById);
 
 		$matched = [];
@@ -455,6 +457,28 @@ class RoutingService {
 		$max = (int)($profile['maxConcurrent'] ?? self::DEFAULT_MAX_CONCURRENT);
 		return $workload >= $max;
 	}//end isAgentAtCapacity()
+
+	/**
+	 * Normalise an OpenRegister entity to a plain array.
+	 *
+	 * OpenRegister's findAll() returns ObjectEntity instances, which cannot be read with
+	 * array access.
+	 *
+	 * @param mixed $value Entity or array.
+	 *
+	 * @return array<string, mixed> Plain payload.
+	 */
+	private function toArray(mixed $value): array {
+		if (is_object($value) === true && method_exists($value, 'jsonSerialize') === true) {
+			$value = $value->jsonSerialize();
+		}
+
+		if (is_array($value) === true) {
+			return $value;
+		}
+
+		return [];
+	}//end toArray()
 
 	/**
 	 * Get the injected OpenRegister ObjectService.

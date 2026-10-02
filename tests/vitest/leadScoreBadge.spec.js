@@ -152,12 +152,20 @@ describe('callers', () => {
 		expect(list).toMatch(/CALL_FIRST_SORT/)
 		const manifest = JSON.parse(read('src/manifest.json'))
 		const leads = manifest.pages.find((p) => p.route === '/leads')
+		// The manifest's columns are the ones the page renders. An object
+		// column gets no schema defaults, so it sorts only when it says so.
 		expect(leads.config.columns).toContainEqual(
 			expect.objectContaining({
 				key: 'qualificationScore',
 				widget: 'lead-score',
+				sortable: true,
 			}),
 		)
+		for (const column of leads.config.columns) {
+			if (typeof column === 'object') {
+				expect(column).toMatchObject({ sortable: true })
+			}
+		}
 	})
 
 	it('the board card mounts the badge for a lead, and the board sorts by score', () => {

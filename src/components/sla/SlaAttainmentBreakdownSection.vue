@@ -146,7 +146,7 @@ export default {
 		this.fetchAttainment()
 		// The page's Refresh action; `waitUntil` keeps its spinner going until this table reloads.
 		this.onPageRefresh = (payload) => {
-			const done = this.fetchAttainment(true)
+			const done = this.fetchAttainment(true, payload)
 			payload?.waitUntil?.(done)
 		}
 		subscribe('cn:page:refresh', this.onPageRefresh)
@@ -162,9 +162,12 @@ export default {
 		 * the page's KPI tiles send one request for the same bucket and grouping.
 		 *
 		 * @param {boolean} [force] Bypass the shared cache (page refresh).
+		 * @param {object} [refresh] The page refresh's event payload. Passing
+		 *   it lets this forced read join the KPI tiles' request for the same
+		 *   refresh instead of sending its own.
 		 * @spec openspec/specs/sla-engine-and-escalation/spec.md#requirement-attainment-reporting
 		 */
-		async fetchAttainment(force = false) {
+		async fetchAttainment(force = false, refresh = undefined) {
 			this.loading = true
 			this.error = null
 			try {
@@ -177,7 +180,7 @@ export default {
 						},
 					},
 					{},
-					{ force },
+					{ force, refresh },
 				)
 				this.payload = data || this.payload
 			} catch {

@@ -5,10 +5,8 @@
 	<div
 		class="pipeline-card"
 		:class="{ 'pipeline-card--overdue': isOverdue }"
-		draggable="true"
 		role="button"
 		tabindex="0"
-		@dragstart="onDragStart"
 		@click="$emit('open', item, $event)"
 		@auxclick="$emit('open', item, $event)"
 		@keydown.enter="$emit('open', item, $event)"
@@ -569,20 +567,6 @@ export default {
 		},
 
 		/**
-		 * @param {object} e The dragstart event.
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-44
-		 */
-		onDragStart(e) {
-			const data = {
-				id: this.item.id,
-				_schemaSlug: this.entityType,
-			}
-			data[this.columnProperty] = this.currentColumnValue
-			e.dataTransfer.setData('application/json', JSON.stringify(data))
-			e.dataTransfer.effectAllowed = 'move'
-		},
-
-		/**
 		 * @param {string} dateStr The stored date.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-38
 		 */
@@ -741,7 +725,7 @@ export default {
 }
 
 .card-date--overdue {
-	color: var(--color-error);
+	color: var(--color-text-error);
 	font-weight: 600;
 }
 
