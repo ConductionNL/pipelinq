@@ -19,14 +19,23 @@
   - A changed answer is also added to `portalAnswers` with its moment, so the
   - resident reads every answer and when it came (question-detail-on-the-portal).
   -
-  - No heading of its own: the manifest's bodyWidget title is the heading
-  - CnDetailPage renders above it, so a heading here printed it twice.
+  - The manifest's bodyWidget title ("Customer contact") is the h3 that
+  - CnDetailPage renders above the section, so the section never repeats it.
+  - Inside it two h4 headings keep the two directions apart: "Replies from
+  - the customer" over `portalReplies` (what the resident wrote, see
+  - DossierQuestionService::reply and PortalRequestService::addReply) and
+  - "Answer to the customer" over the employee's own message. A single
+  - "Answer to the customer" frame put the resident's words under the
+  - employee's heading (Woo round 5).
   -->
 <template>
 	<section
 		v-if="applies"
 		class="customer-reply-section"
-		:aria-label="t('pipelinq', 'Answer to the customer')">
+		:aria-label="t('pipelinq', 'Customer contact')">
+		<h4 class="customer-reply-section__heading">
+			{{ t('pipelinq', 'Replies from the customer') }}
+		</h4>
 		<ol v-if="replies.length" class="customer-reply-section__replies">
 			<li v-for="(reply, index) in replies" :key="index">
 				<span class="customer-reply-section__meta">{{
@@ -38,6 +47,9 @@
 		<p v-else class="customer-reply-section__meta">
 			{{ t('pipelinq', 'No replies from the portal yet.') }}
 		</p>
+		<h4 class="customer-reply-section__heading">
+			{{ t('pipelinq', 'Answer to the customer') }}
+		</h4>
 		<NcTextArea
 			v-model="message"
 			:label="t('pipelinq', 'Message to the customer')"
@@ -268,6 +280,12 @@ export default {
 	display: flex;
 	flex-direction: column;
 	gap: 8px;
+}
+
+.customer-reply-section__heading {
+	margin: 8px 0 0;
+	font-size: 1em;
+	font-weight: bold;
 }
 
 .customer-reply-section__replies {

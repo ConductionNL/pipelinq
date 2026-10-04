@@ -39,7 +39,8 @@ vraag is beantwoord", a body that names the question and holds an absolute link 
 
 ### Requirement: The ticket list opens on the newest
 The Tickets index MUST sort on `occurredAt` descending by default, and the ticket detail MUST show the heading
-"Answer to the customer" once.
+"Answer to the customer" once, over the employee's own answer. The resident's `portalReplies` MUST sit under their
+own heading, "Replies from the customer", never under "Answer to the customer".
 
 #### Scenario: A new ticket
 - **GIVEN** a ticket filed today
