@@ -6962,6 +6962,8 @@ OC.L10N.register(
         "This is what the resident saw when they asked.": "This is what the resident saw when they asked.",
         "The dossier held no documents when the question was asked.": "The dossier held no documents when the question was asked.",
         "Answer to the customer": "Answer to the customer",
+        "Customer contact": "Customer contact",
+        "Replies from the customer": "Replies from the customer",
         "No replies from the portal yet.": "No replies from the portal yet.",
         "The customer reads this on the portal. Everything else on the ticket stays internal.": "The customer reads this on the portal. Everything else on the ticket stays internal.",
         "Save answer": "Save answer",

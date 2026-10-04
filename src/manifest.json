@@ -2498,7 +2498,7 @@
 					{
 						"id": "customer-reply",
 						"component": "CustomerReplySection",
-						"title": "Answer to the customer",
+						"title": "Customer contact",
 						"placement": "after-data",
 						"props": {
 							"objectId": "@objectId"

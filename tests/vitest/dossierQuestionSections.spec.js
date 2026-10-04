@@ -192,14 +192,44 @@ describe('CustomerReplySection', () => {
 		)
 	})
 
-	it('leaves its title to the widget frame, so the heading shows once', async () => {
+	it('leaves its frame title to the widget frame, so it shows once', async () => {
 		const wrapper = await mountFor(CustomerReplySection)
 
-		// The manifest's bodyWidget title "Answer to the customer" is the
-		// heading CnDetailPage renders above the section. A heading of the
-		// section's own printed it a second time (Woo round 3).
-		expect(wrapper.find('h1, h2, h3, h4, h5, h6').exists()).toBe(false)
-		expect(wrapper.text()).not.toContain('Answer to the customer')
+		// The manifest's bodyWidget title "Customer contact" is the h3
+		// CnDetailPage renders above the section. A heading of the section's
+		// own printed it a second time (Woo round 3).
+		expect(wrapper.find('h1, h2, h3').exists()).toBe(false)
+		expect(wrapper.text()).not.toContain('Customer contact')
+	})
+
+	it("puts the resident's replies under their own heading, not under the answer (Woo round 5)", async () => {
+		const wrapper = await mountFor(CustomerReplySection)
+
+		// The replies are what the resident wrote (portalReplies), so they
+		// sit under "Replies from the customer". "Answer to the customer"
+		// heads only the employee's own message, after the replies.
+		const headings = wrapper.findAll('h4').map((h) => h.text())
+		expect(headings).toEqual([
+			'Replies from the customer',
+			'Answer to the customer',
+		])
+		const html = wrapper.html()
+		const repliesAt = html.indexOf('Replies from the customer')
+		const replyAt = html.indexOf('Eerste reactie')
+		const answerAt = html.indexOf('Answer to the customer')
+		expect(repliesAt).toBeLessThan(replyAt)
+		expect(replyAt).toBeLessThan(answerAt)
+	})
+
+	it('names the frame "Customer contact" in the manifest', () => {
+		const manifest = JSON.parse(
+			readFileSync(resolve(__dirname, '../../src/manifest.json'), 'utf8'),
+		)
+		const page = manifest.pages.find((p) => p.id === 'TicketDetail')
+		const widget = page.config.bodyWidgets.find(
+			(w) => w.component === 'CustomerReplySection',
+		)
+		expect(widget.title).toBe('Customer contact')
 	})
 
 	it('lists the portal replies oldest first (REQ-QCD-007)', async () => {
