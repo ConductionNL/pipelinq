@@ -154,6 +154,7 @@ class TemplateControllerTest extends TestCase {
 			$this->createMock(SegmentService::class),
 			$this->createMock(LoggerInterface::class),
 			$this->createMock(SegmentSignalService::class),
+			new \OCA\Pipelinq\Service\IntegriqMarketingConsent(\OCA\Pipelinq\Tests\Unit\Support\FakeIntegriq::client($appConfig), new \OCA\Pipelinq\Service\ContactAddressLookup($container, $appConfig, new \Psr\Log\NullLogger())),
 		);
 
 		$request = $this->createMock(IRequest::class);

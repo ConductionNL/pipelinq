@@ -289,6 +289,7 @@ class BlastWorkflowTest extends TestCase {
 			$segmentService,
 			$this->logger,
 			$signals,
+			new \OCA\Pipelinq\Service\IntegriqMarketingConsent(\OCA\Pipelinq\Tests\Unit\Support\FakeIntegriq::client($this->appConfig), new \OCA\Pipelinq\Service\ContactAddressLookup($this->container, $this->appConfig, new \Psr\Log\NullLogger())),
 		);
 		$mailTransportService = new MailTransportService(
 			$this->container,
