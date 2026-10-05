@@ -31,8 +31,8 @@ vi.mock('@nextcloud/l10n', () => ({
 }))
 
 const ROOT = path.resolve(__dirname, '../..')
-function readJson (...parts) {
-  return JSON.parse(fs.readFileSync(path.join(ROOT, ...parts), 'utf8'))
+function readJson(...parts) {
+	return JSON.parse(fs.readFileSync(path.join(ROOT, ...parts), 'utf8'))
 }
 
 const fragments = fs
