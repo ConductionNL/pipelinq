@@ -35,7 +35,9 @@ structure the section leaves the page body and the body shows the conversation
 to read, so an answer is written in one place.
 
 Contact vastleggen opens the ticket form with the type set to contact moment
-and the ticket, client and contact filled in. The new tab Contactmomenten lists
+and the ticket filled in as its parent. Client and contact are not filled in:
+the library leaves a token it cannot resolve in the form as text, so a ticket
+without a contact would save that text as a reference. The new tab Contactmomenten lists
 what was logged.
 
 Convert to case is back on the page. `RequestConversionSection` was written for

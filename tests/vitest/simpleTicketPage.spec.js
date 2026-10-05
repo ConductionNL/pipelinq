@@ -233,7 +233,7 @@ describe('the quick actions and the menu', () => {
 		}
 	})
 
-	it('log a contact moment on this ticket, for the same customer', () => {
+	it('log a contact moment on this ticket, seeded only with what always resolves', () => {
 		const log = actionsById['ticket-log-contact']
 		expect(log).toMatchObject({
 			type: 'open-form',
@@ -245,6 +245,12 @@ describe('the quick actions and the menu', () => {
 		}
 		expect(TYPES).toContain(log.props.ticketType)
 		expect(log.props.parentTicket).toBe('@objectId')
+		// A token the library cannot resolve stays in the form as written. A
+		// ticket without a contact would save `@object.contact` as a foreign
+		// key, so no seed value may read a field of the record.
+		for (const value of Object.values(log.props)) {
+			expect(String(value).startsWith('@object.'), value).toBe(false)
+		}
 	})
 
 	it('group the rest, and hide nothing behind an admin flag', () => {
