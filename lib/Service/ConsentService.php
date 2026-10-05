@@ -488,7 +488,9 @@ class ConsentService {
 	 */
 	public static function legacyRef(array $row, string $id): string {
 		unset($row);
-		return 'pipelinq:messagingConsentRecord:'.$id;
+		// integriq's legacy_uuid column holds 64 characters: the record UUID
+		// alone is unique across pipelinq's schemas and fits.
+		return $id;
 	}//end legacyRef()
 
 	/**

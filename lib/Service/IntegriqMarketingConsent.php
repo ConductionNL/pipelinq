@@ -44,6 +44,13 @@ class IntegriqMarketingConsent {
 	public const BOUNCE_REASONS = ['bounce-hard', 'bounce-soft-x5'];
 
 	/**
+	 * The legacy-ref suffix per state.
+	 *
+	 * @var array<string,string>
+	 */
+	private const STATE_SUFFIX = ['opted-in' => 'in', 'opted-out' => 'out'];
+
+	/**
 	 * Constructor.
 	 *
 	 * @param IntegriqConsentClient $integriq  Asks and records.
@@ -287,7 +294,9 @@ class IntegriqMarketingConsent {
 			'evidence' => $evidence,
 			'source' => (string)($row['consentSource'] ?? ''),
 			'purpose' => IntegriqConsentClient::CATEGORY_MARKETING,
-			'legacyRef' => 'pipelinq:consentRecord:'.$id.':'.$state,
+			// The UUID plus the state, so a later withdrawal of the same record
+			// is a new wish. Fits integriq's 64-character legacy_uuid column.
+			'legacyRef' => $id.':'.self::STATE_SUFFIX[$state],
 		];
 		if ($state === 'opted-in') {
 			$request['lawfulBasis'] = (string)($row['lawfulBasis'] ?? '');

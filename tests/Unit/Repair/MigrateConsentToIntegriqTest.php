@@ -104,8 +104,8 @@ class MigrateConsentToIntegriqTest extends TestCase {
 	private function seedPipelinq(): void {
 		// An older opt-in and a later STOP on sms: the latest wins.
 		$this->store->put('messagingConsentRecord', ['uuid' => 'm-1', 'contactId' => 'c-1', 'channel' => 'sms', 'state' => 'opted-in', 'source' => 'webform', 'legalBasis' => 'consent', 'recordedAt' => '2026-09-01T10:00:00Z']);
-		$this->store->put('messagingConsentRecord', ['uuid' => 'm-2', 'contactId' => 'c-1', 'channel' => 'sms', 'state' => 'opted-out', 'source' => 'keyword-stop', 'recordedAt' => '2026-09-02T10:00:00Z']);
-		$this->store->put('consentRecord', ['uuid' => 'r-1', 'contactId' => 'c-2', 'channel' => 'email', 'listId' => 'nieuws', 'lawfulBasis' => 'consent', 'consentSource' => 'double-opt-in', 'consentedAt' => '2026-09-01T00:00:00Z']);
+		$this->store->put('messagingConsentRecord', ['uuid' => '8340e8aa-445c-4300-a2d0-59a4d37fbd65', 'contactId' => 'c-1', 'channel' => 'sms', 'state' => 'opted-out', 'source' => 'keyword-stop', 'recordedAt' => '2026-09-02T10:00:00Z']);
+		$this->store->put('consentRecord', ['uuid' => '64d957c5-8362-4810-a2bd-9e59395bf50e', 'contactId' => 'c-2', 'channel' => 'email', 'listId' => 'nieuws', 'lawfulBasis' => 'consent', 'consentSource' => 'double-opt-in', 'consentedAt' => '2026-09-01T00:00:00Z']);
 		$this->store->put('consentRecord', ['uuid' => 'r-2', 'contactId' => 'c-1', 'channel' => 'email', 'lawfulBasis' => 'consent', 'consentedAt' => '2026-09-01T00:00:00Z', 'withdrawnAt' => '2026-09-03T00:00:00Z', 'withdrawnReason' => 'bounce-hard']);
 		$this->store->put('messagingConsentRecord', ['uuid' => 'm-3', 'contactId' => 'c-3', 'channel' => 'sms', 'state' => 'opted-out', 'recordedAt' => '2026-09-02T10:00:00Z']);
 	}//end seedPipelinq()
@@ -117,7 +117,7 @@ class MigrateConsentToIntegriqTest extends TestCase {
 		$rows = $this->integriq->rowsFor('+31612345678');
 		self::assertCount(1, $rows);
 		self::assertSame(['opted-out', 'channel', 'sms'], [$rows[0]['state'], $rows[0]['scope'], $rows[0]['channel']]);
-		self::assertSame('pipelinq:messagingConsentRecord:m-2', $rows[0]['legacyRef']);
+		self::assertSame('8340e8aa-445c-4300-a2d0-59a4d37fbd65', $rows[0]['legacyRef']);
 
 		// integriq's own SMS to that number is refused now.
 		$client = FakeIntegriq::client($this->appConfig, $this->integriq);

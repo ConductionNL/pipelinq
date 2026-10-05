@@ -349,7 +349,13 @@ class FakeIntegriq implements IEventDispatcher {
 			return;
 		}
 
-		$event->setRecordId($this->store(request: $request));
+		try {
+			$event->setRecordId($this->store(request: $request));
+		} catch (RuntimeException $e) {
+			// The real listener logs and leaves the event unhandled.
+			return;
+		}
+
 		$event->setHandled(true);
 	}//end answerChange()
 
@@ -361,6 +367,15 @@ class FakeIntegriq implements IEventDispatcher {
 	 * @return int The row id.
 	 */
 	private function store(array $request): int {
+		// integriq_opt_outs column widths (Version2Date20261005...): a longer
+		// value is a database error, which the real listener leaves unhandled.
+		$limits = ['legacyRef' => 64, 'source' => 64, 'lawfulBasis' => 32, 'channel' => 16, 'scope' => 16, 'state' => 16, 'purpose' => 32, 'sourceApp' => 64];
+		foreach ($limits as $field => $max) {
+			if (strlen((string)($request[$field] ?? '')) > $max) {
+				throw new RuntimeException('SQLSTATE[22001]: value too long for '.$field);
+			}
+		}
+
 		$legacyRef = (string)($request['legacyRef'] ?? '');
 		if ($legacyRef !== '') {
 			foreach ($this->rows as $row) {
