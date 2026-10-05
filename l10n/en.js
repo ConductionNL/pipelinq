@@ -7075,7 +7075,9 @@ OC.L10N.register(
         "You have no callbacks to make.": "You have no callbacks to make.",
         "Latest contact": "Latest contact",
         "No contact moments yet.": "No contact moments yet.",
-        "Your customer contact today, then the workplace": "Your customer contact today, then the workplace"
+        "Your customer contact today, then the workplace": "Your customer contact today, then the workplace",
+        "Wilt u deze berichten niet meer ontvangen? Meld u af: %s": "No longer want these messages? Unsubscribe: %s",
+        "De herinnering is niet verstuurd: %s": "The reminder was not sent: %s"
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -64,13 +64,35 @@ class EmailFallbackSender {
 	 * @param IMailer $mailer Nextcloud mailer.
 	 * @param IAppConfig $appConfig App config.
 	 * @param LoggerInterface $logger Logger.
+	 * @param IntegriqConsentClient $integriq Asks integriq before the fallback is sent.
+	 * @param UnsubscribeMail $unsubscribeMail Puts integriq's link in the body and the headers.
 	 */
 	public function __construct(
 		private readonly IMailer $mailer,
 		private readonly IAppConfig $appConfig,
 		private readonly LoggerInterface $logger,
+		private readonly IntegriqConsentClient $integriq,
+		private readonly UnsubscribeMail $unsubscribeMail,
 	) {
 	}//end __construct()
+
+	/**
+	 * Why the last fallback was refused by the opt-out check, or null.
+	 *
+	 * @var array{code:string,reason:string}|null
+	 */
+	private ?array $lastRefusal = null;
+
+	/**
+	 * Why the last fallback was refused by the opt-out check, or null when it was not.
+	 *
+	 * @return array{code:string,reason:string}|null The refusal.
+	 *
+	 * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md#requirement-pipelinq-asks-integriq-before-every-non-exempt-message-req-cii-002
+	 */
+	public function lastRefusal(): ?array {
+		return $this->lastRefusal;
+	}//end lastRefusal()
 
 	/**
 	 * Send a fallback email for the given BerichtenboxMessage payload.
@@ -88,6 +110,7 @@ class EmailFallbackSender {
 	 * @throws RuntimeException If the recipient address is invalid.
 	 *
 	 * @spec openspec/changes/burgerportaal-mijnoverheid-bridge/specs/berichtenbox/spec.md#req-fallback-004
+	 * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md#requirement-pipelinq-asks-integriq-before-every-non-exempt-message-req-cii-002
 	 *
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $appendNotice selects between the
 	 *  two documented fallback modes (5-day notice vs no-mailbox); it is not a
@@ -98,10 +121,34 @@ class EmailFallbackSender {
 			throw new RuntimeException('Invalid recipient address.');
 		}
 
+		// Ask integriq with the category of the message this falls back for
+		// (default service). A refusal is logged; the Berichtenbox status is
+		// left as it is by the caller.
+		$this->lastRefusal = null;
+		$category = trim((string)($message['category'] ?? ''));
+		if ($category === '') {
+			$category = IntegriqConsentClient::CATEGORY_SERVICE;
+		}
+
+		$decision = $this->integriq->decideOne(channel: 'email', category: $category, requiresConsent: false, address: $toEmail);
+		if ($decision['send'] === false) {
+			$this->lastRefusal = ['code' => $decision['code'], 'reason' => $decision['reason']];
+			$this->logger->warning(
+				'Berichtenbox fallback email not sent: integriq refused it.',
+				['messageId' => (string)($message['uuid'] ?? ''), 'code' => $decision['code'], 'category' => $category]
+			);
+			return false;
+		}
+
 		$subject = (string)($message['subject'] ?? '');
 		$body = (string)($message['body'] ?? '');
 		if ($appendNotice === true) {
 			$body = '<p>' . htmlspecialchars(self::FALLBACK_NOTICE, ENT_XHTML, 'UTF-8') . '</p>' . $body;
+		}
+
+		$line = $this->unsubscribeMail->bodyLine(unsubscribe: $decision['unsubscribe']);
+		if ($line !== '') {
+			$body .= '<p>' . htmlspecialchars($line, ENT_XHTML, 'UTF-8') . '</p>';
 		}
 
 		try {
@@ -119,6 +166,8 @@ class EmailFallbackSender {
 			if ($from !== '' && $this->mailer->validateMailAddress($from) === true) {
 				$msg->setFrom([$from]);
 			}
+
+			$this->unsubscribeMail->applyHeaders(message: $msg, unsubscribe: $decision['unsubscribe']);
 
 			$failed = $this->mailer->send($msg);
 			return empty($failed) === true;

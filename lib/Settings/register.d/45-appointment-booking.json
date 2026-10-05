@@ -347,7 +347,7 @@
         "slug": "appointmentBooking",
         "title": "Booking",
         "icon": "CalendarCheck",
-        "version": "1.0.0",
+        "version": "1.1.0",
         "summary": "A scheduled appointment for a customer against one or more resources.",
         "description": "Owns the lifecycle of a single customer appointment: customer link, service, resource assignments, time window, status (pending-deposit / confirmed / completed / no-show / cancelled-by-customer / cancelled-by-business / rescheduled), audit history, and payment hooks.",
         "configuration": {
@@ -564,6 +564,17 @@
             "format": "date-time",
             "description": "Timestamp of the reminder email send (member 07).",
             "title": "Reminder Sent At"
+          },
+          "mailNotSentAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When integriq last refused a confirmation or reminder mail for this booking (opt-out-before-send).",
+            "title": "Mail Not Sent At"
+          },
+          "mailNotSentReason": {
+            "type": "string",
+            "description": "Why integriq refused it, for example opted-out or authority-unavailable.",
+            "title": "Mail Not Sent Reason"
           },
           "depositPaidAt": {
             "type": "string",

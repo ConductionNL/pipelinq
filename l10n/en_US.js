@@ -556,7 +556,9 @@ OC.L10N.register(
         "No projects for this client yet.": "No projects for this client yet.",
         "Projecten": "Projecten",
         "Factureerbaar": "Factureerbaar",
-        "Einddatum": "Einddatum"
+        "Einddatum": "Einddatum",
+        "Wilt u deze berichten niet meer ontvangen? Meld u af: %s": "No longer want these messages? Unsubscribe: %s",
+        "De herinnering is niet verstuurd: %s": "The reminder was not sent: %s"
     },
     "nplurals=2; plural=(n != 1);"
 )
