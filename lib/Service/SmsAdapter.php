@@ -159,7 +159,11 @@ class SmsAdapter {
 			return ['status' => self::STATUS_FAILED, 'error' => 'no recipient phone number'];
 		}
 
-		if ($this->consentService->canSend(contactId: $contactId, channel: 'sms') === false) {
+		// An answer to the contact's own SMS goes to integriq as a reply, so an
+		// opt-out does not stop it (hydra decision 2). Only an inbound SMS of
+		// this contact counts; anything else is a message pipelinq starts.
+		$inReplyTo = $this->verifiedInbound(contactId: $contactId, messageId: (string)($context['inReplyTo'] ?? ''));
+		if ($this->consentService->canSend(contactId: $contactId, channel: 'sms', address: $toNumber, inReplyTo: $inReplyTo) === false) {
 			return ['status' => self::STATUS_CONSENT_MISSING];
 		}
 
@@ -432,6 +436,7 @@ class SmsAdapter {
 				channel: 'sms',
 				source: 'keyword-stop',
 				evidence: sprintf('Inbound SMS body "%s" matched STOP keyword', $body),
+				address: $from,
 			);
 			$optOutRecorded = true;
 		} elseif ($this->consentService->isOptInKeyword(body: $body) === true) {
@@ -440,6 +445,7 @@ class SmsAdapter {
 				channel: 'sms',
 				source: 'chat-reply',
 				evidence: sprintf('Inbound SMS body "%s" matched opt-in keyword', $body),
+				address: $from,
 			);
 		}
 
@@ -597,6 +603,43 @@ class SmsAdapter {
 			],
 		);
 	}//end persistInbound()
+
+	/**
+	 * The inbound SMS a send answers, when it is this contact's own.
+	 *
+	 * @param string $contactId Contact UUID.
+	 * @param string $messageId The inbound message id the agent answers, or empty.
+	 *
+	 * @return string|null The id, or null when the send is no reply.
+	 *
+	 * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md#requirement-every-non-exempt-pipelinq-mail-carries-an-unsubscribe-link-req-cii-004
+	 */
+	private function verifiedInbound(string $contactId, string $messageId): ?string {
+		$objectService = $this->getObjectService();
+		if ($contactId === '' || $messageId === '' || $objectService === null) {
+			return null;
+		}
+
+		try {
+			$found = $objectService->find(
+				id: $messageId,
+				register: $this->getRegisterSlug(),
+				schema: $this->resolveSchemaSlug(key: 'message_schema', default: self::DEFAULT_MESSAGE_SCHEMA_SLUG)
+			);
+		} catch (Throwable $e) {
+			return null;
+		}
+
+		$row = $this->toArray(value: $found);
+		$isOwnInbound = ((string)($row['contactId'] ?? '') === $contactId
+			&& (string)($row['channel'] ?? '') === 'sms'
+			&& (string)($row['direction'] ?? '') === 'inbound');
+		if ($isOwnInbound === false) {
+			return null;
+		}
+
+		return $messageId;
+	}//end verifiedInbound()
 
 	/**
 	 * Persist a message payload via OpenRegister.
