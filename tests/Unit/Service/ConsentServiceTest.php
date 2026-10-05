@@ -22,6 +22,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\Pipelinq\Service\ConsentService;
+use OCA\Pipelinq\Service\ContactAddressLookup;
+use OCA\Pipelinq\Tests\Unit\Support\FakeIntegriq;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -39,6 +41,9 @@ class ConsentServiceTest extends TestCase {
 	private LoggerInterface $logger;
 	private object $objectService;
 	private ConsentService $service;
+	private FakeIntegriq $integriq;
+	private string $store = 'pipelinq';
+	private string $cutoverAt = '0';
 
 	/**
 	 * Build a tiny OR mock — find / findAll / saveObject /
@@ -60,6 +65,25 @@ class ConsentServiceTest extends TestCase {
 
 			/** @var int */
 			public int $deleted = 0;
+
+			/** @var array<string, array<string, mixed>> Contacts by id. */
+			public array $contacts = [];
+
+			/**
+			 * Mock find() for contacts.
+			 *
+			 * @param string $id Id.
+			 * @param mixed $register Register.
+			 * @param mixed $schema Schema.
+			 *
+			 * @return array<string, mixed>|null
+			 */
+			public function find(string $id, $register = null, $schema = null): ?array {
+				if ($schema === 'contact') {
+					return ($this->contacts[$id] ?? null);
+				}
+				return null;
+			}
 
 			/**
 			 * Mock saveObject().
@@ -138,12 +162,16 @@ class ConsentServiceTest extends TestCase {
 				return match ($key) {
 					'register' => 'pipelinq',
 					'messagingConsentRecord_schema' => 'messagingConsentRecord',
+					'consent.store' => $this->store,
+					'consent.cutover_at' => $this->cutoverAt,
 					default => $default,
 				};
 			}
 		);
 
-		$this->service = new ConsentService($this->container, $this->appConfig, $this->logger);
+		$this->integriq = new FakeIntegriq();
+		$this->objectService->contacts['contact-1'] = ['uuid' => 'contact-1', 'phone' => '+31612345678'];
+		$this->service = new ConsentService($this->container, $this->appConfig, $this->logger, FakeIntegriq::client($this->appConfig, $this->integriq), new ContactAddressLookup($this->container, $this->appConfig, $this->logger));
 	}//end setUp()
 
 	/**
@@ -295,4 +323,120 @@ class ConsentServiceTest extends TestCase {
 		$this->assertIsArray($saved);
 		$this->assertSame('legitimate-interest', $saved['legalBasis']);
 	}//end testLegalBasisPersisted()
+	/**
+	 * With the flag on, an opt-out in integriq refuses the send and pipelinq's store is not read.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md#requirement-pipelinq-asks-integriq-before-every-non-exempt-message-req-cii-002
+	 */
+	public function testAfterTheCutoverIntegriqDecides(): void {
+		$this->service->recordOptIn('contact-1', 'sms', 'webform', 'yes', 'consent');
+		$this->store = 'integriq';
+		$this->integriq->seed(['address' => '+31612345678', 'state' => 'opted-out', 'scope' => 'channel', 'channel' => 'sms']);
+
+		$this->assertFalse($this->service->canSend('contact-1', 'sms'));
+		$this->assertSame('pipelinq', $this->integriq->decisionEvents[0]->getSourceApp());
+		$this->assertSame('+31612345678', $this->integriq->decisionEvents[0]->getRecipients()[0]['address']);
+
+		// A reply to the contact's own message passes the opt-out.
+		$this->assertTrue($this->service->canSend('contact-1', 'sms', '', 'inbound-1'));
+		$this->assertSame('reply', $this->integriq->decisionEvents[1]->getCategory());
+	}//end testAfterTheCutoverIntegriqDecides()
+
+	/**
+	 * With the flag off, behaviour is unchanged and integriq is never asked.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md#requirement-pipelinq-asks-integriq-before-every-non-exempt-message-req-cii-002
+	 */
+	public function testBeforeTheCutoverPipelinqDecides(): void {
+		$this->integriq->seed(['address' => '+31612345678', 'state' => 'opted-out', 'scope' => 'channel', 'channel' => 'sms']);
+		$this->assertTrue($this->service->canSend('contact-1', 'sms'));
+		$this->assertSame([], $this->integriq->decisionEvents);
+	}//end testBeforeTheCutoverPipelinqDecides()
+
+	/**
+	 * Without integriq after the cutover, a service SMS is refused.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md#requirement-pipelinq-asks-integriq-before-every-non-exempt-message-req-cii-002
+	 */
+	public function testAfterTheCutoverAnUnansweredQuestionRefuses(): void {
+		$this->store = 'integriq';
+		$this->integriq->mode = FakeIntegriq::MODE_UNHANDLED;
+		$this->assertFalse($this->service->canSend('contact-1', 'sms'));
+		$this->assertFalse($this->service->canSendBusinessInitiated('contact-1', 'whatsapp'));
+	}//end testAfterTheCutoverAnUnansweredQuestionRefuses()
+
+	/**
+	 * latestState() reads each of the three states from the decision.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md#requirement-latest-state-is-derived-from-integriq-s-decision-req-cii-006
+	 */
+	public function testLatestStateIsDerivedFromTheDecision(): void {
+		$this->store = 'integriq';
+		$this->assertSame('unknown', $this->service->latestState('contact-1', 'sms'));
+
+		$this->integriq->seed(['address' => '+31612345678', 'state' => 'opted-in', 'scope' => 'channel', 'channel' => 'whatsapp', 'lawfulBasis' => 'consent']);
+		$this->assertSame('opted-in', $this->service->latestState('contact-1', 'whatsapp'));
+		$this->assertTrue($this->service->canSendBusinessInitiated('contact-1', 'whatsapp'));
+
+		$this->integriq->seed(['address' => '+31612345678', 'state' => 'opted-out', 'scope' => 'channel', 'channel' => 'sms']);
+		$this->assertSame('opted-out', $this->service->latestState('contact-1', 'sms'));
+
+		foreach ($this->integriq->decisionEvents as $event) {
+			$this->assertTrue($event->requiresConsent());
+		}
+	}//end testLatestStateIsDerivedFromTheDecision()
+
+	/**
+	 * STOP after the cutover writes to integriq and not to pipelinq.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md#requirement-pipelinq-writes-every-wish-to-integriq-req-cii-003
+	 */
+	public function testAStopAfterTheCutoverGoesToIntegriqOnly(): void {
+		$this->store = 'integriq';
+		$saved = $this->service->recordOptOut('contact-1', 'sms', 'keyword-stop', 'STOP', 'consent');
+
+		$this->assertSame('integriq', $saved['store']);
+		$this->assertSame([], $this->objectService->store);
+		$rows = $this->integriq->rowsFor('+31612345678');
+		$this->assertCount(1, $rows);
+		$this->assertSame('opted-out', $rows[0]['state']);
+		$this->assertSame('keyword-stop', $rows[0]['source']);
+		$this->assertSame('contact-1', $rows[0]['contactRef']);
+	}//end testAStopAfterTheCutoverGoesToIntegriqOnly()
+
+	/**
+	 * A refused STOP stays in pipelinq and is replayed, before a newer wish.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md#requirement-pipelinq-writes-every-wish-to-integriq-req-cii-003
+	 */
+	public function testARefusedStopIsKeptAndReplayed(): void {
+		$this->store = 'integriq';
+		$this->cutoverAt = (string)(time() - 60);
+		$this->integriq->changeMode = FakeIntegriq::MODE_UNHANDLED;
+
+		$saved = $this->service->recordOptOut('contact-1', 'sms', 'keyword-stop', 'STOP', 'consent');
+		$this->assertSame('opted-out', $saved['state']);
+		$this->assertCount(1, $this->objectService->store);
+		$this->assertSame([], $this->integriq->rows);
+
+		$this->integriq->changeMode = FakeIntegriq::MODE_ANSWER;
+		$this->assertSame(['replayed' => 1, 'failed' => 0], $this->service->replayPending());
+		$this->assertSame('opted-out', $this->integriq->rowsFor('+31612345678')[0]['state']);
+
+		// Replaying again writes nothing new.
+		$this->service->replayPending();
+		$this->assertCount(1, $this->integriq->rows);
+	}//end testARefusedStopIsKeptAndReplayed()
 }//end class

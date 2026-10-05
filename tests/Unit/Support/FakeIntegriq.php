@@ -27,7 +27,12 @@ namespace OCA\Pipelinq\Tests\Unit\Support;
 use OCA\Integriq\Event\OptOutChangeRequestedEvent;
 use OCA\Integriq\Event\OutboundSendDecisionRequestedEvent;
 use OCP\EventDispatcher\Event;
+use OCA\Pipelinq\Service\IntegriqConsentClient;
 use OCP\EventDispatcher\IEventDispatcher;
+use OCP\IAppConfig;
+use OCP\IURLGenerator;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 use RuntimeException;
 
 /**
@@ -59,6 +64,74 @@ class FakeIntegriq implements IEventDispatcher {
 
 	/** @var int */
 	private int $nextId = 1;
+
+	/**
+	 * A client wired to this fake (or a fresh one), reading the flag from $appConfig.
+	 *
+	 * @param IAppConfig           $appConfig The config the flag is read from.
+	 * @param FakeIntegriq|null    $integriq  The fake; a new one when null.
+	 * @param LoggerInterface|null $logger    The logger.
+	 *
+	 * @return IntegriqConsentClient The client.
+	 */
+	public static function client(IAppConfig $appConfig, ?self $integriq = null, ?LoggerInterface $logger = null): IntegriqConsentClient {
+		$urls = new class implements IURLGenerator {
+			public function linkToRoute(string $routeName, array $arguments = []): string {
+				return '/'.$routeName;
+			}
+
+			public function linkToRouteAbsolute(string $routeName, array $arguments = []): string {
+				return 'https://pipelinq.example/'.$routeName;
+			}
+
+			public function linkToOCSRouteAbsolute(string $routeName, array $arguments = []): string {
+				return 'https://pipelinq.example/ocs/'.$routeName;
+			}
+
+			public function linkTo(string $appName, string $file, array $args = []): string {
+				return '/'.$appName.'/'.$file;
+			}
+
+			public function imagePath(string $appName, string $file): string {
+				return '/'.$appName.'/img/'.$file;
+			}
+
+			public function getAbsoluteURL(string $url): string {
+				return 'https://pipelinq.example'.$url;
+			}
+
+			public function linkToDocs(string $key): string {
+				return '';
+			}
+
+			public function linkToDefaultPageUrl(): string {
+				return '/';
+			}
+
+			public function getBaseUrl(): string {
+				return 'https://pipelinq.example';
+			}
+
+			public function getWebroot(): string {
+				return '';
+			}
+
+			public function linkToRemote(string $service): string {
+				return 'https://pipelinq.example/remote.php/'.$service;
+			}
+
+			public function getLogoutUrl(): string {
+				return '/logout';
+			}
+		};
+
+		return new IntegriqConsentClient(
+			dispatcher: ($integriq ?? new self()),
+			appConfig: $appConfig,
+			urlGenerator: $urls,
+			logger: ($logger ?? new NullLogger()),
+		);
+	}//end client()
 
 	/**
 	 * Seed a row as if integriq had recorded it.
