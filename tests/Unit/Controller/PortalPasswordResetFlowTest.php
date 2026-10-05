@@ -579,6 +579,7 @@ class PortalPasswordResetFlowTest extends TestCase {
 	private function assertUnavailableAndUntouched($response): void {
 		$this->assertSame(Http::STATUS_SERVICE_UNAVAILABLE, $response->getStatus());
 		$this->assertSame('portalUnavailable', $response->getData()['errorCode']);
+		$this->assertArrayNotHasKey('reason', $response->getData(), 'An anonymous caller does not learn why.');
 		$this->assertSame([], $this->writes, 'Nothing may be written.');
 		$this->assertSame([], $this->sent, 'No mail may go out.');
 		$this->assertSame('hash:Oud-wachtwoord-123', $this->store[self::ACCOUNT_ID]['passwordHash']);

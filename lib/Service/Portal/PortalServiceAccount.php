@@ -166,11 +166,11 @@ class PortalServiceAccount {
 				'Pipelinq portal: no usable portal service account, the portal refuses every write',
 				['app' => Application::APP_ID, 'userId' => $userId, 'reason' => $reason]
 			);
+			// The reason goes to the log only: the caller is anonymous.
 			throw new PortalException(
 				Http::STATUS_SERVICE_UNAVAILABLE,
 				'portalUnavailable',
-				'Het portaal is tijdelijk niet beschikbaar.',
-				['reason' => $reason]
+				'Het portaal is tijdelijk niet beschikbaar.'
 			);
 		}
 
