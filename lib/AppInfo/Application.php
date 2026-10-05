@@ -296,6 +296,14 @@ class Application extends App implements IBootstrap {
 			listener: ObjectsMergedSyncListener::class
 		);
 
+		// A deleted contact or client erases its consent history and tells
+		// integriq to drop the contact link while keeping the opt-out
+		// (opt-out-before-send REQ-CII-005).
+		$context->registerEventListener(
+			event: \OCA\OpenRegister\Event\ObjectDeletedEvent::class,
+			listener: \OCA\Pipelinq\Listener\ContactErasedListener::class
+		);
+
 		// Marketing: portaliq relays a landing-page form submission by
 		// dispatching PIPELINQ'S OWN event class, which it resolves by the
 		// sourceApp on the form and class_exists()-guards (ADR-041,
