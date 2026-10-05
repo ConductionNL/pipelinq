@@ -21,6 +21,47 @@
 			)
 		">
 		<div class="portal-settings">
+			<fieldset class="portal-group portal-group--stacked">
+				<legend>{{ t('pipelinq', 'Portal service account') }}</legend>
+				<p class="portal-help">
+					{{
+						t(
+							'pipelinq',
+							'Residents do not have a Nextcloud account, so the portal saves logins, password resets and the audit trail as this account. It joins the group {group}, which may only create and change portal records.',
+							{ group: serviceAccount.group },
+						)
+					}}
+				</p>
+				<NcNoteCard v-if="!serviceAccount.usable" type="warning">
+					{{ serviceAccountProblem }}
+				</NcNoteCard>
+				<div class="portal-row">
+					<div class="portal-field">
+						<label for="portal-service-account">{{
+							t('pipelinq', 'Nextcloud user name')
+						}}</label>
+						<input
+							id="portal-service-account"
+							v-model.trim="serviceAccountInput"
+							type="text"
+							autocomplete="off"
+							@keyup.enter="saveServiceAccount" />
+					</div>
+					<div class="portal-field portal-field--action">
+						<NcButton
+							:disabled="savingServiceAccount || !serviceAccountInput"
+							@click="saveServiceAccount">
+							{{ t('pipelinq', 'Use this account') }}
+						</NcButton>
+					</div>
+				</div>
+				<NcNoteCard
+					v-if="serviceAccountMessage"
+					:type="serviceAccountMessageType">
+					{{ serviceAccountMessage }}
+				</NcNoteCard>
+			</fieldset>
+
 			<div class="portal-row">
 				<div class="portal-field">
 					<label for="portal-tenant-id">{{
@@ -256,6 +297,17 @@ export default {
 			events: [],
 			message: '',
 			messageType: 'success',
+			serviceAccount: {
+				userId: '',
+				usable: true,
+				reason: null,
+				group: 'pipelinq-portal-service',
+			},
+
+			serviceAccountInput: '',
+			savingServiceAccount: false,
+			serviceAccountMessage: '',
+			serviceAccountMessageType: 'success',
 		}
 	},
 
@@ -284,9 +336,38 @@ export default {
 		recentEvents() {
 			return this.events.slice(0, RECENT_EVENT_LIMIT)
 		},
+
+		/**
+		 * Why the portal service account cannot be used, in words.
+		 *
+		 * @return {string} The problem.
+		 */
+		serviceAccountProblem() {
+			const reasons = {
+				unknown: t('pipelinq', 'The chosen account does not exist.'),
+				disabled: t('pipelinq', 'The chosen account is disabled.'),
+				'not-in-group': t(
+					'pipelinq',
+					'The chosen account is not in the group {group}.',
+					{ group: this.serviceAccount.group },
+				),
+			}
+			const why =
+				reasons[this.serviceAccount.reason]
+				|| t('pipelinq', 'No account is chosen.')
+			return (
+				why
+				+ ' '
+				+ t(
+					'pipelinq',
+					'Until you choose one, residents cannot log in or reset their password.',
+				)
+			)
+		},
 	},
 
 	mounted() {
+		this.loadServiceAccount()
 		this.loadAll()
 	},
 
@@ -340,6 +421,62 @@ export default {
 				this.messageType = 'error'
 			} finally {
 				this.loading = false
+			}
+		},
+
+		/**
+		 * Load the portal service account and whether it can be used.
+		 *
+		 * @spec exclude the portal admin screen has no owning requirement; customer-portal
+		 *   specifies only the widget-mode origin allow-list (pipelinq#2041)
+		 */
+		async loadServiceAccount() {
+			try {
+				const response = await axios.get(this.adminUrl('service-account'))
+				this.serviceAccount = {
+					...this.serviceAccount,
+					...(response.data || {}),
+				}
+				this.serviceAccountInput = this.serviceAccount.userId || ''
+			} catch {
+				this.serviceAccountMessage = t(
+					'pipelinq',
+					'Could not load the portal service account.',
+				)
+				this.serviceAccountMessageType = 'error'
+			}
+		},
+
+		/**
+		 * Use the typed account as the portal service account.
+		 *
+		 * @spec exclude the portal admin screen has no owning requirement; customer-portal
+		 *   specifies only the widget-mode origin allow-list (pipelinq#2041)
+		 */
+		async saveServiceAccount() {
+			this.savingServiceAccount = true
+			this.serviceAccountMessage = ''
+			try {
+				const response = await axios.put(this.adminUrl('service-account'), {
+					userId: this.serviceAccountInput,
+				})
+				this.serviceAccount = {
+					...this.serviceAccount,
+					...(response.data || {}),
+				}
+				this.serviceAccountMessage = t(
+					'pipelinq',
+					'The portal now saves as {user}.',
+					{ user: this.serviceAccount.userId },
+				)
+				this.serviceAccountMessageType = 'success'
+			} catch (error) {
+				this.serviceAccountMessage =
+					error?.response?.data?.message
+					|| t('pipelinq', 'Could not save the portal service account.')
+				this.serviceAccountMessageType = 'error'
+			} finally {
+				this.savingServiceAccount = false
 			}
 		},
 
@@ -445,6 +582,17 @@ export default {
 	border: 1px solid var(--color-border);
 	border-radius: var(--border-radius);
 	padding: 8px 12px;
+}
+
+.portal-group--stacked {
+	flex-direction: column;
+	flex-wrap: nowrap;
+	gap: 8px;
+}
+
+.portal-help {
+	color: var(--color-text-maxcontrast);
+	margin: 0;
 }
 
 .portal-group legend {

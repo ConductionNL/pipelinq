@@ -7011,6 +7011,22 @@
         "No contact moments yet.": "Nog geen contactmomenten.",
         "Your customer contact today, then the workplace": "Eerst je klantcontact van vandaag, dan de werkplek",
         "Wilt u deze berichten niet meer ontvangen? Meld u af: %s": "Wilt u deze berichten niet meer ontvangen? Meld u af: %s",
-        "De herinnering is niet verstuurd: %s": "De herinnering is niet verstuurd: %s"
+        "De herinnering is niet verstuurd: %s": "De herinnering is niet verstuurd: %s",
+        "Portal service account": "Serviceaccount van het portaal",
+        "Residents do not have a Nextcloud account, so the portal saves logins, password resets and the audit trail as this account. It joins the group {group}, which may only create and change portal records.": "Inwoners hebben geen Nextcloud-account. Daarom slaat het portaal inloggen, wachtwoordherstel en het auditlogboek op als dit account. Het account komt in de groep {group}, die alleen portaalgegevens mag aanmaken en wijzigen.",
+        "Nextcloud user name": "Nextcloud-gebruikersnaam",
+        "Use this account": "Dit account gebruiken",
+        "The chosen account does not exist.": "Het gekozen account bestaat niet.",
+        "The chosen account is disabled.": "Het gekozen account is uitgeschakeld.",
+        "The chosen account is not in the group {group}.": "Het gekozen account zit niet in de groep {group}.",
+        "No account is chosen.": "Er is geen account gekozen.",
+        "Until you choose one, residents cannot log in or reset their password.": "Tot u er een kiest, kunnen inwoners niet inloggen en hun wachtwoord niet herstellen.",
+        "Could not load the portal service account.": "Het serviceaccount van het portaal kon niet worden geladen.",
+        "The portal now saves as {user}.": "Het portaal slaat nu op als {user}.",
+        "Could not save the portal service account.": "Het serviceaccount van het portaal kon niet worden opgeslagen.",
+        "Pipelinq customer portal service account": "Serviceaccount van het Pipelinq-klantportaal",
+        "Customer portal writes run as %s.": "Het klantportaal slaat op als %s.",
+        "The chosen account is not in the group %s.": "Het gekozen account zit niet in de groep %s.",
+        "Until you choose one in the Pipelinq settings, the customer portal cannot save anything: residents cannot log in or reset their password.": "Tot u er een kiest in de Pipelinq-instellingen, kan het klantportaal niets opslaan: inwoners kunnen niet inloggen en hun wachtwoord niet herstellen."
     }
 }

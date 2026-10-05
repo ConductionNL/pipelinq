@@ -7097,6 +7097,22 @@
         "No contact moments yet.": "No contact moments yet.",
         "Your customer contact today, then the workplace": "Your customer contact today, then the workplace",
         "Wilt u deze berichten niet meer ontvangen? Meld u af: %s": "No longer want these messages? Unsubscribe: %s",
-        "De herinnering is niet verstuurd: %s": "The reminder was not sent: %s"
+        "De herinnering is niet verstuurd: %s": "The reminder was not sent: %s",
+        "Portal service account": "Portal service account",
+        "Residents do not have a Nextcloud account, so the portal saves logins, password resets and the audit trail as this account. It joins the group {group}, which may only create and change portal records.": "Residents do not have a Nextcloud account, so the portal saves logins, password resets and the audit trail as this account. It joins the group {group}, which may only create and change portal records.",
+        "Nextcloud user name": "Nextcloud user name",
+        "Use this account": "Use this account",
+        "The chosen account does not exist.": "The chosen account does not exist.",
+        "The chosen account is disabled.": "The chosen account is disabled.",
+        "The chosen account is not in the group {group}.": "The chosen account is not in the group {group}.",
+        "No account is chosen.": "No account is chosen.",
+        "Until you choose one, residents cannot log in or reset their password.": "Until you choose one, residents cannot log in or reset their password.",
+        "Could not load the portal service account.": "Could not load the portal service account.",
+        "The portal now saves as {user}.": "The portal now saves as {user}.",
+        "Could not save the portal service account.": "Could not save the portal service account.",
+        "Pipelinq customer portal service account": "Pipelinq customer portal service account",
+        "Customer portal writes run as %s.": "Customer portal writes run as %s.",
+        "The chosen account is not in the group %s.": "The chosen account is not in the group %s.",
+        "Until you choose one in the Pipelinq settings, the customer portal cannot save anything: residents cannot log in or reset their password.": "Until you choose one in the Pipelinq settings, the customer portal cannot save anything: residents cannot log in or reset their password."
     }
 }
