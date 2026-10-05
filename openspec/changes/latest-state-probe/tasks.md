@@ -7,4 +7,4 @@
   - files: `lib/Service/ConsentService.php`, `tests/Unit/Service/ConsentServiceTest.php`
   - acceptance: the latestState event is a probe, a send's event is not. Red before.
   - test: `vendor/bin/phpunit --no-coverage --filter ConsentServiceTest`
-- [ ] 3 Live: opening a contact's consent writes no row in integriq's opt-out log; a send writes one.
+- [x] 3 Live: opening a contact's consent writes no row in integriq's opt-out log; a send writes one.
