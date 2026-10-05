@@ -84,6 +84,6 @@ The fleet decisions are in hydra's design section 12. The ones that shape this c
 - **Headers through OpenRegister.** `InstanceMailerTransport::applyHeaders()` (`lib/Service/Marketing/Transport/InstanceMailerTransport.php:154`) delegates to OpenRegister's shared `UnsubscribeHeaders` helper (ConductionNL/openregister#4334, REQ-ERO-005). pipelinq keeps no own copy of the guarded path.
 - **The short SMS link** comes from integriq when a provider has no inbound keyword path.
 
-## 9. One open point (pipelinq only)
+## 9. latestState() comes from the decision (approved by Ruben 2026-10-05)
 
-**Delegate `latestState()`?** The UI shows the consent state per channel (`MessagingController.php:242`). The decision event answers "may I send", not "what is the state". Recommended: answer it from the decision code, as in section 2. The alternative is a third, read-only integriq event. Ruben's 2026-10-05 answers do not cover this.
+The UI shows the consent state per channel (`MessagingController.php:242`). `latestState()` derives it from `OutboundSendDecisionRequestedEvent`, with no third integriq event. Refused with `opted-out` reads as `opted-out`. A matching consent reads as `opted-in`. Anything else reads as `unknown`.

@@ -129,3 +129,28 @@ When a contact is erased, pipelinq MUST dispatch `OptOutChangeRequestedEvent` wi
 - **WHEN** a new contact is created later with the same email address
 - **THEN** a `service` email to that address is refused with `opted-out`
 - @e2e exclude event path, covered by PHPUnit
+
+### Requirement: latestState() is derived from integriq's decision (REQ-CII-006)
+
+After the cutover, `ConsentService::latestState()` MUST derive the state from `OutboundSendDecisionRequestedEvent`. A refusal with code `opted-out` MUST read as `opted-out`. A decision where a consent matched MUST read as `opted-in`. Every other answer MUST read as `unknown`. pipelinq MUST NOT use a separate integriq event for this. Approved by Ruben on 2026-10-05.
+
+#### Scenario: An opt-out reads as opted-out
+
+- **GIVEN** integriq holds an `opted-out` row for the contact's number on `sms`
+- **WHEN** the contact page asks `latestState()` for `sms`
+- **THEN** it reads `opted-out`
+- @e2e exclude backend read, covered by PHPUnit
+
+#### Scenario: A matching consent reads as opted-in
+
+- **GIVEN** integriq holds an `opted-in` row for the contact's number on `whatsapp`
+- **WHEN** the contact page asks `latestState()` for `whatsapp`
+- **THEN** it reads `opted-in`
+- @e2e exclude backend read, covered by PHPUnit
+
+#### Scenario: No row reads as unknown
+
+- **GIVEN** integriq holds no row for the contact's number on `sms`
+- **WHEN** the contact page asks `latestState()` for `sms`
+- **THEN** it reads `unknown`
+- @e2e exclude backend read, covered by PHPUnit
