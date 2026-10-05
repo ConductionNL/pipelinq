@@ -395,6 +395,26 @@ class ConsentServiceTest extends TestCase {
 	}//end testLatestStateIsDerivedFromTheDecision()
 
 	/**
+	 * latestState() only shows a state, so it asks as a probe; a send does not.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/latest-state-probe/specs/consent-in-integriq/spec.md#requirement-lateststate-asks-integriq-as-a-probe-req-cii-007
+	 */
+	public function testLatestStateAsksAsAProbe(): void {
+		$this->store = 'integriq';
+		$this->integriq->seed(['address' => '+31612345678', 'state' => 'opted-out', 'scope' => 'channel', 'channel' => 'sms']);
+
+		$this->assertSame('opted-out', $this->service->latestState('contact-1', 'sms'));
+		$probe = end($this->integriq->decisionEvents);
+		$this->assertTrue($probe->isProbe(), 'showing a state is a probe');
+
+		$this->assertFalse($this->service->canSend('contact-1', 'sms'));
+		$send = end($this->integriq->decisionEvents);
+		$this->assertFalse($send->isProbe(), 'a send is asked for real, so it is logged');
+	}//end testLatestStateAsksAsAProbe()
+
+	/**
 	 * STOP after the cutover writes to integriq and not to pipelinq.
 	 *
 	 * @return void

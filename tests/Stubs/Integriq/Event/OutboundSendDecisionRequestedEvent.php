@@ -68,6 +68,7 @@ if (class_exists(OutboundSendDecisionRequestedEvent::class, false) === false) {
 			private readonly string $baseUrl = '',
 			private readonly bool $requiresConsent = false,
 			private readonly ?string $inReplyTo = null,
+			private readonly bool $probe = false,
 		) {
 			parent::__construct();
 
@@ -142,6 +143,16 @@ if (class_exists(OutboundSendDecisionRequestedEvent::class, false) === false) {
 			return $this->requiresConsent;
 
 		}//end requiresConsent()
+
+		/**
+		 * Whether this ask only shows a state (integriq writes no log row).
+		 *
+		 * @return bool True for a probe.
+		 */
+		public function isProbe(): bool {
+			return $this->probe;
+
+		}//end isProbe()
 
 		/**
 		 * The inbound message a reply answers.
