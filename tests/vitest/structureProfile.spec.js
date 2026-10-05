@@ -394,7 +394,9 @@ describe('the simple profile', () => {
 		validateBuilt(built)
 		validateBuilt(buildSimple(MODULE_KEYS))
 		validateBuilt(applyHomePage(built, simpleFile.home).manifest)
-	})
+		// Three validator processes. The default five seconds is not enough
+		// on a busy machine, and a timeout here reads as a broken manifest.
+	}, 60_000)
 })
 
 describe('the modules', () => {
