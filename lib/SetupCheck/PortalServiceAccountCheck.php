@@ -84,6 +84,8 @@ class PortalServiceAccountCheck implements ISetupCheck {
 	 * Success when the account can be used, a warning naming why otherwise.
 	 *
 	 * @return SetupResult The result.
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) SetupResult's named constructors are the only way OCP offers to build one.
 	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
 	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
 	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
@@ -100,12 +102,17 @@ class PortalServiceAccountCheck implements ISetupCheck {
 		$why = match ($status['reason']) {
 			PortalServiceAccount::REASON_UNKNOWN => $this->l10n->t('The chosen account does not exist.'),
 			PortalServiceAccount::REASON_DISABLED => $this->l10n->t('The chosen account is disabled.'),
-			PortalServiceAccount::REASON_NOT_IN_GROUP => $this->l10n->t('The chosen account is not in the group %s.', [PortalServiceAccount::GROUP]),
+			PortalServiceAccount::REASON_NOT_IN_GROUP => $this->l10n->t(
+				'The chosen account is not in the group %s.',
+				[PortalServiceAccount::GROUP]
+			),
 			default => $this->l10n->t('No account is chosen.'),
 		};
 
 		return SetupResult::warning(
-			$why.' '.$this->l10n->t('Until you choose one in the Pipelinq settings, the customer portal cannot save anything: residents cannot log in or reset their password.')
+			$why.' '.$this->l10n->t(
+				'Until you choose one in the Pipelinq settings, the customer portal cannot save anything: residents cannot log in or reset their password.'
+			)
 		);
 	}//end run()
 }//end class

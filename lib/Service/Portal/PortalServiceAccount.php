@@ -52,6 +52,9 @@ use Throwable;
 /**
  * Resolves the portal service account and runs portal writes as it.
  *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Config, users, groups, the session and
+ *  the refusal are the minimal set an acting identity needs; splitting them hides the check.
+ *
  * @spec exclude the portal backend has no owning requirement. customer-portal specifies
  *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
  *   sessions, tokens, delegation, documents, invoices, orders, exports and
@@ -161,7 +164,13 @@ class PortalServiceAccount {
 	public function require(): IUser {
 		$userId = $this->configuredUserId();
 		$reason = $this->problemWith(userId: $userId);
-		if ($reason !== null) {
+		$account = null;
+		if ($reason === null) {
+			$account = $this->userManager->get($userId);
+		}
+
+		if ($account === null) {
+			$reason = ($reason ?? self::REASON_UNKNOWN);
 			$this->logger->error(
 				'Pipelinq portal: no usable portal service account, the portal refuses every write',
 				['app' => Application::APP_ID, 'userId' => $userId, 'reason' => $reason]
@@ -174,7 +183,7 @@ class PortalServiceAccount {
 			);
 		}
 
-		return $this->userManager->get($userId);
+		return $account;
 	}//end require()
 
 	/**

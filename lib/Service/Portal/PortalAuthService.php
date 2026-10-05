@@ -122,6 +122,7 @@ class PortalAuthService {
 	 * @return array{status: string, mfaRequired: bool, accountId: string, token?: string, sessionId?: string}
 	 *
 	 * @throws PortalException On any authentication failure (safe, audited).
+	 *   503 portalUnavailable first, for any address, when the portal cannot write.
 	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
 	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
 	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
@@ -135,10 +136,7 @@ class PortalAuthService {
 		string $ipHash,
 		string $userAgentHash,
 	): array {
-		// A login writes (failure counter, session, audit): refuse first when
-		// the portal cannot write, whatever the address.
 		$this->repository->requireWritable();
-
 		$email = strtolower(trim($email));
 		$account = $this->repository->findOneBy(self::SCHEMA, ['email' => $email, 'tenantId' => $tenantId]);
 
