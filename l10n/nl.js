@@ -6956,7 +6956,23 @@ OC.L10N.register(
         "Modules in the simple menu": "Modules in het eenvoudige menu",
         "Switch on what your organisation uses. A module that is off stays reachable from the Modules page.": "Zet aan wat je organisatie gebruikt. Een module die uit staat blijft bereikbaar via de pagina Modules.",
         "Saved. People see the change the next time they open Pipelinq.": "Opgeslagen. Mensen zien de wijziging als ze Pipelinq opnieuw openen.",
-        "The menu could not be saved. Try again.": "Het menu is niet opgeslagen. Probeer het opnieuw."
+        "The menu could not be saved. Try again.": "Het menu is niet opgeslagen. Probeer het opnieuw.",
+        "Take on": "In behandeling nemen",
+        "Answer the customer": "Beantwoorden",
+        "Log contact": "Contact vastleggen",
+        "Back to in progress": "Terug naar in behandeling",
+        "Close the ticket": "Afsluiten",
+        "Finish": "Afronden",
+        "The ticket is in progress.": "Het ticket is in behandeling.",
+        "The ticket is completed.": "Het ticket is afgerond.",
+        "The complaint is resolved.": "De klacht is opgelost.",
+        "The contact moment is closed.": "Het contactmoment is afgesloten.",
+        "The ticket is rejected.": "Het ticket is afgewezen.",
+        "Converted to a case": "Omgezet naar een zaak",
+        "Linked case": "Gekoppelde zaak",
+        "No contact moments on this ticket yet.": "Nog geen contactmomenten bij dit ticket.",
+        "Employee": "Medewerker",
+        "No messages with the customer yet.": "Nog geen berichten met de klant."
     },
     "nplurals=2; plural=(n != 1);"
 )
