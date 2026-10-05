@@ -12,11 +12,19 @@
  * auditable (ADR-005, ADR-022).
  *
  * Every portal endpoint is a PublicPage, so OpenRegister sees the caller as
- * Anonymous. The portal authenticates its own principals (portal sessions) and
- * scopes every read by tenant and account itself, so this repository asks
- * OpenRegister with `_rbac: false` and `_multitenancy: false`. With the
- * defaults an anonymous caller reads no account and may not save one: the
- * password reset answered 200 and never mailed, and nobody could log in.
+ * Anonymous: it reads no portal account and refuses every save. The password
+ * reset answered 200 and never mailed, and nobody could log in.
+ *
+ * Writes therefore run as the portal service account an admin picks
+ * ({@see PortalServiceAccount}), with OpenRegister's RBAC and organisation
+ * checks ON. The portal schemas grant that account's group create and update
+ * on the portal's own schemas and nothing else. A missing, disabled or
+ * ungrouped account refuses with 503 before anything is written.
+ *
+ * Reads of the portal's own register (accounts, sessions, delegations, audit
+ * events, tenant config) skip RBAC and organisation scoping: the portal's
+ * schemas grant read to nobody, and the portal itself scopes every read by
+ * tenant and account. Reads only: no write ever skips a check.
  *
  * @category Service
  * @package  OCA\Pipelinq\Service\Portal
@@ -69,11 +77,13 @@ class PortalObjectRepository {
 	 * @param IAppConfig $appConfig The app config.
 	 * @param LoggerInterface $logger The logger.
 	 * @param ObjectServiceInterface $objectService OpenRegister's published object service.
+	 * @param PortalServiceAccount $serviceAccount The account every write runs as.
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,
 		private LoggerInterface $logger,
 		private readonly ObjectServiceInterface $objectService,
+		private readonly PortalServiceAccount $serviceAccount,
 	) {
 	}//end __construct()
 
@@ -250,16 +260,23 @@ class PortalObjectRepository {
 		// Never trust a client-derived self envelope.
 		unset($data['@self']);
 
+		$register = $this->registerId();
+		$schema = $this->schemaId(schemaSlug: $schemaSlug);
+
+		// Outside the try: a missing service account is a 503 PortalException,
+		// not a failed save, and nothing has been written.
 		try {
-			$saved = $this->objectService()->saveObject(
-				object: $data,
-				extend: [],
-				register: $this->registerId(),
-				schema: $this->schemaId(schemaSlug: $schemaSlug),
-				uuid: $id,
-				_rbac: false,
-				_multitenancy: false
+			$saved = $this->serviceAccount->runAs(
+				fn (): mixed => $this->objectService()->saveObject(
+					object: $data,
+					extend: [],
+					register: $register,
+					schema: $schema,
+					uuid: $id
+				)
 			);
+		} catch (PortalException $e) {
+			throw $e;
 		} catch (\Throwable $e) {
 			$this->logger->error(
 				'Pipelinq portal: saveObject failed',
@@ -270,6 +287,23 @@ class PortalObjectRepository {
 
 		return $this->toArray(object: $saved);
 	}//end save()
+
+	/**
+	 * Refuse with 503 unless the portal can write. Called first by every flow
+	 * that writes, so a refusal does not depend on what the request looked up
+	 * (a known and an unknown address get the same answer).
+	 *
+	 * @return void
+	 *
+	 * @throws PortalException 503 portalUnavailable.
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
+	 */
+	public function requireWritable(): void {
+		$this->serviceAccount->require();
+	}//end requireWritable()
 
 	/**
 	 * Extract the stable id/uuid from a normalised portal object array.

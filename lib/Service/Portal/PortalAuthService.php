@@ -135,6 +135,10 @@ class PortalAuthService {
 		string $ipHash,
 		string $userAgentHash,
 	): array {
+		// A login writes (failure counter, session, audit): refuse first when
+		// the portal cannot write, whatever the address.
+		$this->repository->requireWritable();
+
 		$email = strtolower(trim($email));
 		$account = $this->repository->findOneBy(self::SCHEMA, ['email' => $email, 'tenantId' => $tenantId]);
 
