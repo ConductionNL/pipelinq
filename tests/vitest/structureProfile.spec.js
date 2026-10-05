@@ -476,14 +476,19 @@ describe('the modules', () => {
 
 	it('have a card on the Modules page for every entry, on or off', () => {
 		const page = modulesPage()
-		// A custom page, not a second reports page: an app has one (ADR-112).
-		expect(page.type).toBe('custom')
-		expect(page.component).toBe('ModulesPage')
-		expect(read('src', 'registry.js')).toContain('component: ModulesPage,')
-		// What the page draws is in modulesPage.spec.js, which mounts it.
+		// The library's typed page of link cards. Not a custom page (gate-69)
+		// and not a second reports page (ADR-112). What it draws is in
+		// modulesPage.spec.js, which mounts it.
+		expect(page.type).toBe('links')
+		expect(page.component).toBeUndefined()
 		expect(
 			buildSimple().pages.filter((item) => item.type === 'reports'),
 		).toHaveLength(1)
+		expect(
+			[...manifest().pages, ...fragments.flatMap((f) => f.pages || [])].filter(
+				(item) => item.type === 'custom' && item.id === 'Modules',
+			),
+		).toEqual([])
 		const cards = page.config.cards
 		const pageIds = new Set(buildSimple().pages.map((item) => item.id))
 		const entries = flat(buildManifest(manifest(), fragments, {}).menu)
