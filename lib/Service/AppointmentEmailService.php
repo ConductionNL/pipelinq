@@ -112,6 +112,8 @@ class AppointmentEmailService {
 	 * @param IL10N $l10n The localisation service.
 	 * @param LoggerInterface $logger The logger.
 	 * @param ObjectServiceInterface $objectService OpenRegister's published object service.
+	 * @param IntegriqConsentClient $integriq Asks integriq before each mail, as `reminder`.
+	 * @param UnsubscribeMail $unsubscribeMail Puts integriq's link in the body and the headers.
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,
@@ -120,8 +122,28 @@ class AppointmentEmailService {
 		private IL10N $l10n,
 		private LoggerInterface $logger,
 		private readonly ObjectServiceInterface $objectService,
+		private readonly IntegriqConsentClient $integriq,
+		private readonly UnsubscribeMail $unsubscribeMail,
 	) {
 	}//end __construct()
+
+	/**
+	 * Why the last send was refused by the opt-out check, or null.
+	 *
+	 * @var array{code:string,reason:string}|null
+	 */
+	private ?array $lastRefusal = null;
+
+	/**
+	 * Why the last send was refused by the opt-out check, or null when it was not.
+	 *
+	 * @return array{code:string,reason:string}|null The refusal.
+	 *
+	 * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md#requirement-pipelinq-asks-integriq-before-every-non-exempt-message-req-cii-002
+	 */
+	public function lastRefusal(): ?array {
+		return $this->lastRefusal;
+	}//end lastRefusal()
 
 	/**
 	 * Send a confirmation email for a booking (member 04 seam).
@@ -156,14 +178,20 @@ class AppointmentEmailService {
 			[(string)($context['service']['name'] ?? ''), $startLocal]
 		);
 
-		$body = $this->composeConfirmationBody(context: $context);
+		$decision = $this->askIntegriq(context: $context);
+		if ($decision['send'] === false) {
+			return false;
+		}
+
+		$body = $this->unsubscribeMail->appendLine(body: $this->composeConfirmationBody(context: $context), unsubscribe: $decision['unsubscribe']);
 		$ics = $this->buildIcs(context: $context);
 
 		$accepted = $this->dispatch(
 			recipient: (string)$context['recipientEmail'],
 			subject: $subject,
 			body: $body,
-			icsContent: $ics
+			icsContent: $ics,
+			unsubscribe: $decision['unsubscribe']
 		);
 		if ($accepted === true) {
 			$this->stamp(bookingId: $bookingId, field: 'confirmationSentAt');
@@ -193,13 +221,19 @@ class AppointmentEmailService {
 
 		$startLocal = $this->formatLocal(iso: (string)($context['booking']['startAt'] ?? ''), pattern: 'H:i');
 		$subject = $this->l10n->t('Herinnering: Uw afspraak morgen om %s', [$startLocal]);
-		$body = $this->composeReminderBody(context: $context);
+		$decision = $this->askIntegriq(context: $context);
+		if ($decision['send'] === false) {
+			return false;
+		}
+
+		$body = $this->unsubscribeMail->appendLine(body: $this->composeReminderBody(context: $context), unsubscribe: $decision['unsubscribe']);
 
 		$accepted = $this->dispatch(
 			recipient: (string)$context['recipientEmail'],
 			subject: $subject,
 			body: $body,
-			icsContent: null
+			icsContent: null,
+			unsubscribe: $decision['unsubscribe']
 		);
 		if ($accepted === true) {
 			$this->stamp(bookingId: $bookingId, field: 'reminderSentAt');
@@ -392,10 +426,11 @@ class AppointmentEmailService {
 	 * @param string $subject Subject line.
 	 * @param string $body Plain-text body.
 	 * @param string|null $icsContent Optional `.ics` attachment body.
+	 * @param array<string,mixed>|null $unsubscribe Integriq's link material for the headers.
 	 *
 	 * @return bool True when accepted for delivery.
 	 */
-	private function dispatch(string $recipient, string $subject, string $body, ?string $icsContent): bool {
+	private function dispatch(string $recipient, string $subject, string $body, ?string $icsContent, ?array $unsubscribe = null): bool {
 		if ($recipient === '' || $this->mailer->validateMailAddress($recipient) === false) {
 			$this->logger->warning(
 				'Pipelinq appointment email: no valid recipient',
@@ -424,6 +459,8 @@ class AppointmentEmailService {
 				$message->setFrom([$sender]);
 			}
 
+			$this->unsubscribeMail->applyHeaders(message: $message, unsubscribe: $unsubscribe);
+
 			$failed = $this->mailer->send($message);
 			return empty($failed) === true;
 		} catch (\Throwable $e) {
@@ -434,6 +471,40 @@ class AppointmentEmailService {
 			return false;
 		}//end try
 	}//end dispatch()
+
+	/**
+	 * Ask integriq whether this appointment mail may go, as `reminder`.
+	 *
+	 * A refusal is logged, kept for the caller, and stamped on the booking
+	 * so it shows the mail as not sent, with the reason.
+	 *
+	 * @param array<string, mixed> $context The composition context.
+	 *
+	 * @return array{send:bool,code:string,reason:string,unsubscribe:array<string,mixed>|null} The decision.
+	 *
+	 * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md#requirement-pipelinq-asks-integriq-before-every-non-exempt-message-req-cii-002
+	 */
+	private function askIntegriq(array $context): array {
+		$this->lastRefusal = null;
+		$decision = $this->integriq->decideOne(
+			channel: 'email',
+			category: IntegriqConsentClient::CATEGORY_REMINDER,
+			requiresConsent: false,
+			address: (string)$context['recipientEmail'],
+			contactRef: (string)($context['booking']['customerId'] ?? ''),
+		);
+		if ($decision['send'] === true) {
+			return $decision;
+		}
+
+		$this->lastRefusal = ['code' => $decision['code'], 'reason' => $decision['reason']];
+		$this->logger->warning(
+			'Pipelinq appointment email: not sent, integriq refused it',
+			['booking' => (string)$context['bookingId'], 'code' => $decision['code']]
+		);
+		$this->stamp(bookingId: (string)$context['bookingId'], field: 'mailNotSentAt', extra: ['mailNotSentReason' => $decision['code']]);
+		return $decision;
+	}//end askIntegriq()
 
 	/**
 	 * Load the composition context (booking + service + customer + links).
@@ -492,11 +563,12 @@ class AppointmentEmailService {
 	 * Stamp a timestamp field on a booking (best-effort).
 	 *
 	 * @param string $bookingId The Booking UUID.
-	 * @param string $field Field name (`confirmationSentAt` or `reminderSentAt`).
+	 * @param string $field Field name (`confirmationSentAt`, `reminderSentAt` or `mailNotSentAt`).
+	 * @param array<string, string> $extra More fields to set with it.
 	 *
 	 * @return void
 	 */
-	private function stamp(string $bookingId, string $field): void {
+	private function stamp(string $bookingId, string $field, array $extra = []): void {
 		$register = $this->registerId();
 		$schema = $this->schemaId(key: self::BOOKING_SCHEMA_KEY);
 		if ($register === '' || $schema === '') {
@@ -520,6 +592,10 @@ class AppointmentEmailService {
 		}
 
 		$data[$field] = $this->nowIso();
+		foreach ($extra as $key => $value) {
+			$data[$key] = $value;
+		}
+
 		if (array_key_exists('@self', $data) === true) {
 			unset($data['@self']);
 		}

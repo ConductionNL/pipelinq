@@ -38,6 +38,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Marketing\Transport;
 
+use OCA\Pipelinq\Service\UnsubscribeMail;
 use OCP\Mail\IMailer;
 use OCP\Mail\IMessage;
 use Psr\Log\LoggerInterface;
@@ -49,15 +50,33 @@ use Throwable;
  * @spec openspec/changes/marketing-mail-transports/specs/marketing-mail-transports/spec.md#requirement-a-tenant-sends-with-zero-configuration
  */
 final class InstanceMailerTransport implements TransportInterface {
+
+	/**
+	 * RFC 2369 header name.
+	 */
+	public const HEADER_UNSUBSCRIBE = 'List-Unsubscribe';
+
+	/**
+	 * RFC 8058 header name.
+	 */
+	public const HEADER_UNSUBSCRIBE_POST = 'List-Unsubscribe-Post';
+
+	/**
+	 * RFC 8058 one-click value.
+	 */
+	public const ONE_CLICK = 'List-Unsubscribe=One-Click';
+
 	/**
 	 * Constructor.
 	 *
 	 * @param IMailer $mailer Nextcloud's own mailer service.
 	 * @param LoggerInterface $logger The logger.
+	 * @param UnsubscribeMail|null $unsubscribeMail Sets List-Unsubscribe through OpenRegister's helper.
 	 */
 	public function __construct(
 		private readonly IMailer $mailer,
 		private readonly LoggerInterface $logger,
+		private readonly ?UnsubscribeMail $unsubscribeMail = null,
 	) {
 	}//end __construct()
 
@@ -150,8 +169,28 @@ final class InstanceMailerTransport implements TransportInterface {
 	 * @return void
 	 *
 	 * @spec openspec/changes/marketing-mail-transports/specs/marketing-mail-transports/spec.md#requirement-header-injection-on-the-instance-mailer-degrades-soft
+	 * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md#requirement-every-non-exempt-pipelinq-mail-carries-an-unsubscribe-link-req-cii-004
 	 */
 	private function applyHeaders(IMessage $message, array $headers): void {
+		// The unsubscribe pair goes through OpenRegister's shared helper
+		// (opt-out-before-send decision 6); pipelinq keeps no copy of it.
+		$unsubscribe = trim((string)($headers[self::HEADER_UNSUBSCRIBE] ?? ''), " <>\t");
+		unset($headers[self::HEADER_UNSUBSCRIBE], $headers[self::HEADER_UNSUBSCRIBE_POST]);
+		if ($unsubscribe !== '') {
+			$set = false;
+			if ($this->unsubscribeMail !== null) {
+				$set = $this->unsubscribeMail->applyHeaders(message: $message, unsubscribe: ['oneClickUrl' => $unsubscribe]);
+			}
+
+			if ($set === false) {
+				$this->logger->info('InstanceMailerTransport.applyHeaders: List-Unsubscribe not set; the body link remains');
+			}
+		}
+
+		if ($headers === []) {
+			return;
+		}
+
 		if (method_exists($message, 'getSymfonyEmail') === false) {
 			$this->logger->info(
 				'InstanceMailerTransport.applyHeaders: getSymfonyEmail() unavailable — sending without extra headers',

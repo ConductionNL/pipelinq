@@ -189,7 +189,15 @@ class WhatsAppAdapter {
 		}
 
 		$isBusinessInitiated = (($templateId ?? '') !== '');
-		if ($this->consentForSend(contactId: $contactId, businessInitiated: $isBusinessInitiated) === false) {
+		$inReplyTo = null;
+		if ($isBusinessInitiated === false) {
+			// A free-form send is an answer inside the session the contact
+			// opened, so integriq is asked about it as a reply (hydra
+			// decision 2). A template send is one pipelinq starts.
+			$inReplyTo = $this->replyTarget(contactId: $contactId, explicit: (string)($context['inReplyTo'] ?? ''));
+		}
+
+		if ($this->consentForSend(contactId: $contactId, businessInitiated: $isBusinessInitiated, address: $toNumber, inReplyTo: $inReplyTo) === false) {
 			return ['status' => self::STATUS_CONSENT_MISSING];
 		}
 
@@ -307,18 +315,96 @@ class WhatsAppAdapter {
 	 *
 	 * @param string $contactId Contact UUID.
 	 * @param bool $businessInitiated Whether this is a template / business-initiated send.
+	 * @param string $address The number the message goes to.
+	 * @param string|null $inReplyTo The inbound message a free-form send answers.
 	 *
 	 * @return bool True when the send may proceed.
 	 *
 	 * @spec openspec/specs/outbound-messaging/spec.md#requirement-req-om-005-consent-gating-and-recording
+	 * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md#requirement-every-non-exempt-pipelinq-mail-carries-an-unsubscribe-link-req-cii-004
 	 */
-	private function consentForSend(string $contactId, bool $businessInitiated): bool {
+	private function consentForSend(string $contactId, bool $businessInitiated, string $address = '', ?string $inReplyTo = null): bool {
 		if ($businessInitiated === true) {
-			return $this->consentService->canSendBusinessInitiated(contactId: $contactId, channel: 'whatsapp');
+			return $this->consentService->canSendBusinessInitiated(contactId: $contactId, channel: 'whatsapp', address: $address);
 		}
 
-		return $this->consentService->canSend(contactId: $contactId, channel: 'whatsapp');
+		return $this->consentService->canSend(contactId: $contactId, channel: 'whatsapp', address: $address, inReplyTo: $inReplyTo);
 	}//end consentForSend()
+
+	/**
+	 * The inbound message a free-form send answers, inside the session window.
+	 *
+	 * An explicit id counts only when it is one of this contact's inbound
+	 * WhatsApp messages inside the window; without one, the latest inbound
+	 * message inside the window is the one answered.
+	 *
+	 * @param string $contactId Contact UUID.
+	 * @param string $explicit  The inbound message id the agent answers, or empty.
+	 *
+	 * @return string|null The message id, or null when the send is no reply.
+	 *
+	 * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md#requirement-every-non-exempt-pipelinq-mail-carries-an-unsubscribe-link-req-cii-004
+	 */
+	private function replyTarget(string $contactId, string $explicit): ?string {
+		$inWindow = $this->inboundInWindow(contactId: $contactId);
+		if ($explicit !== '') {
+			if (isset($inWindow[$explicit]) === true) {
+				return $explicit;
+			}
+
+			return null;
+		}
+
+		if ($inWindow === []) {
+			return null;
+		}
+
+		arsort($inWindow);
+		return (string)array_key_first($inWindow);
+	}//end replyTarget()
+
+	/**
+	 * This contact's inbound WhatsApp messages inside the session window.
+	 *
+	 * @param string $contactId Contact UUID.
+	 *
+	 * @return array<string,int> Message id to its sent time.
+	 */
+	private function inboundInWindow(string $contactId): array {
+		$objectService = $this->getObjectService();
+		if ($contactId === '' || $objectService === null) {
+			return [];
+		}
+
+		try {
+			$rows = $objectService->findAll(
+				config: [
+					'filters' => [
+						'contactId' => $contactId,
+						'channel' => 'whatsapp',
+						'direction' => 'inbound',
+						'register' => $this->getRegisterSlug(),
+						'schema' => $this->resolveSchemaSlug(key: 'message_schema', default: self::DEFAULT_MESSAGE_SCHEMA_SLUG),
+					],
+				]
+			);
+		} catch (Throwable $e) {
+			return [];
+		}
+
+		$found = [];
+		foreach ((array)$rows as $raw) {
+			$row = $this->toArray(value: $raw);
+			$sentAt = (int)strtotime((string)($row['sentAt'] ?? ''));
+			$messageId = $this->extractId(payload: $row);
+			$isOwn = ((string)($row['contactId'] ?? $contactId) === $contactId);
+			if ($messageId !== '' && $isOwn === true && (time() - $sentAt) < self::SESSION_WINDOW_SECONDS) {
+				$found[$messageId] = $sentAt;
+			}
+		}
+
+		return $found;
+	}//end inboundInWindow()
 
 	/**
 	 * Resolve + validate a template send.
@@ -658,6 +744,7 @@ class WhatsAppAdapter {
 				channel: 'whatsapp',
 				source: 'keyword-stop',
 				evidence: sprintf('Inbound WhatsApp body "%s" matched STOP keyword', $body),
+				address: $from,
 			);
 			$optOutRecorded = true;
 			// Auto-acknowledgement: free-form acknowledgement is
@@ -671,6 +758,7 @@ class WhatsAppAdapter {
 				channel: 'whatsapp',
 				source: 'chat-reply',
 				evidence: sprintf('Inbound WhatsApp body "%s" matched opt-in keyword', $body),
+				address: $from,
 			);
 		}//end if
 

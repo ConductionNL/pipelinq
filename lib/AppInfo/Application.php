@@ -24,6 +24,7 @@ namespace OCA\Pipelinq\AppInfo;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Contract\RegisterSlugResolverInterface;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
+use OCA\OpenRegister\Event\ObjectDeletedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCA\OpenRegister\Event\SchemaUpdatedEvent;
 use OCA\Pipelinq\Adapter\AzureDataLakeExportAdapter;
@@ -49,6 +50,7 @@ use OCA\Pipelinq\Lifecycle\PosTransactionAccessGuard;
 use OCA\Pipelinq\Lifecycle\PosTransactionConfirmGuard;
 use OCA\Pipelinq\Lifecycle\PosTransactionRefundGuard;
 use OCA\Pipelinq\Listener\BerichtenboxZaakStatusListener;
+use OCA\Pipelinq\Listener\ContactErasedListener;
 use OCA\Pipelinq\Listener\DealCreatedListener;
 use OCA\Pipelinq\Listener\DealUpdatedListener;
 use OCA\Pipelinq\Listener\ExpenseApprovalListener;
@@ -295,6 +297,8 @@ class Application extends App implements IBootstrap {
 			event: \OCA\OpenRegister\Event\ObjectsMergedEvent::class,
 			listener: ObjectsMergedSyncListener::class
 		);
+		// Contact erasure keeps the opt-out in integriq (opt-out-before-send REQ-CII-005).
+		$context->registerEventListener(event: ObjectDeletedEvent::class, listener: ContactErasedListener::class);
 
 		// Marketing: portaliq relays a landing-page form submission by
 		// dispatching PIPELINQ'S OWN event class, which it resolves by the

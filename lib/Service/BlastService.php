@@ -1044,12 +1044,19 @@ class BlastService {
 		// summary can say "skipped because they owe us money" rather than
 		// reporting a lawful basis that is actually there.
 		$suppressedSet = array_flip($complianceResult['suppressed']);
+		// Integriq's link for each member, so a segment send carries one too
+		// (opt-out-before-send REQ-CII-004). Empty before the cutover.
+		$links = ($complianceResult['unsubscribe'] ?? []);
 
 		$members = [];
 		foreach ($this->segmentService->getMembersForBlast(segmentId: $segmentId) as $member) {
 			$contactId = (string)($member['contactId'] ?? '');
 			if ($contactId === '' || isset($missingSet[$contactId]) === true || isset($suppressedSet[$contactId]) === true) {
 				continue;
+			}
+
+			if ((string)($member['unsubscribeUrl'] ?? '') === '' && (string)($links[$contactId] ?? '') !== '') {
+				$member['unsubscribeUrl'] = (string)$links[$contactId];
 			}
 
 			$members[] = $member;
@@ -1179,11 +1186,19 @@ class BlastService {
 		$missingScalars = $this->contactIdsOf(value: ($result['missingConsent'] ?? []));
 		$suppressedScalars = $this->contactIdsOf(value: ($result['suppressed'] ?? []));
 
+		$links = [];
+		foreach ((array)($result['unsubscribe'] ?? []) as $contactId => $url) {
+			if (is_string($url) === true && $url !== '') {
+				$links[(string)$contactId] = $url;
+			}
+		}
+
 		return [
 			'compliant' => (bool)($result['compliant'] ?? false),
 			'missingConsent' => $missingScalars,
 			'missingCount' => (int)($result['missingCount'] ?? count($missingScalars)),
 			'suppressed' => $suppressedScalars,
+			'unsubscribe' => $links,
 		];
 	}//end checkSegmentCompliance()
 

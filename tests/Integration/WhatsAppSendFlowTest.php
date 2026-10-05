@@ -162,7 +162,7 @@ class WhatsAppSendFlowTest extends TestCase {
 			}
 		);
 
-		$this->consentService = new ConsentService($this->container, $this->appConfig, $this->logger);
+		$this->consentService = new ConsentService($this->container, $this->appConfig, $this->logger, \OCA\Pipelinq\Tests\Unit\Support\FakeIntegriq::client($this->appConfig), new \OCA\Pipelinq\Service\ContactAddressLookup($this->container, $this->appConfig, $this->logger));
 		$this->budgetService = new BudgetService($this->container, $this->appConfig, $this->notificationService, $this->logger);
 
 		$this->adapter = new WhatsAppAdapter($this->container,

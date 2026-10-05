@@ -87,6 +87,7 @@ class MessagingController extends Controller {
 	 * @param array<int, string> $parameters Positional template parameters.
 	 * @param string|null $providerHint Optional pinned vendor.
 	 * @param string $clientId Linked client UUID (audit), or empty.
+	 * @param string $inReplyTo The contact's inbound message this answers, or empty.
 	 *
 	 * @return JSONResponse The sanitised outcome envelope.
 	 *
@@ -101,6 +102,7 @@ class MessagingController extends Controller {
 		array $parameters = [],
 		?string $providerHint = null,
 		string $clientId = '',
+		string $inReplyTo = '',
 	): JSONResponse {
 		$user = $this->userSession->getUser();
 		if ($user === null) {
@@ -132,7 +134,8 @@ class MessagingController extends Controller {
 			parameters: $parameters,
 			providerHint: $providerHint,
 			actor: $user->getUID(),
-			clientId: $clientId
+			clientId: $clientId,
+			inReplyTo: $inReplyTo
 		);
 
 		return new JSONResponse($outcome, $this->httpStatusForOutcome(status: (string)$outcome['status']));

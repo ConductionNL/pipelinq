@@ -400,7 +400,7 @@ class MessagingControllerTest extends TestCase {
 		);
 
 		$logger = $this->createMock(LoggerInterface::class);
-		$consent = new ConsentService($container, $appConfig, $logger);
+		$consent = new ConsentService($container, $appConfig, $logger, \OCA\Pipelinq\Tests\Unit\Support\FakeIntegriq::client($appConfig), new \OCA\Pipelinq\Service\ContactAddressLookup($container, $appConfig, $logger));
 
 		$whatsApp = $this->createMock(\OCA\Pipelinq\Service\WhatsAppAdapter::class);
 		$whatsApp->method('isWithinSessionWindow')->willReturn(false);

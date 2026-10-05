@@ -138,6 +138,8 @@ class AppointmentEmailServiceTest extends TestCase {
 			l10n: $this->l10n,
 			logger: $this->logger,
 			objectService: $this->objectService,
+			integriq: \OCA\Pipelinq\Tests\Unit\Support\FakeIntegriq::client($this->appConfig),
+			unsubscribeMail: new \OCA\Pipelinq\Service\UnsubscribeMail($this->createMock(\Psr\Container\ContainerInterface::class), $this->l10n, $this->logger),
 		);
 	}//end buildService()
 

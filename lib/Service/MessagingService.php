@@ -192,6 +192,7 @@ class MessagingService {
 	 * @param string|null $providerHint Optional pinned vendor.
 	 * @param string $actor Acting user id (audit).
 	 * @param string $clientId Linked client UUID (audit), or empty.
+	 * @param string $inReplyTo The contact's inbound message this answers; the adapter verifies it.
 	 *
 	 * @return array{status: string, messageId?: string, reason?: string} Sanitised outcome.
 	 *
@@ -206,6 +207,7 @@ class MessagingService {
 		?string $providerHint,
 		string $actor,
 		string $clientId = '',
+		string $inReplyTo = '',
 	): array {
 		$client = $clientId;
 		if ($client === '') {
@@ -213,6 +215,9 @@ class MessagingService {
 		}
 
 		$context = ['agent' => $actor, 'clientId' => $client];
+		if ($inReplyTo !== '') {
+			$context['inReplyTo'] = $inReplyTo;
+		}
 
 		if ($channel === 'sms') {
 			$outcome = $this->smsAdapter->send(
