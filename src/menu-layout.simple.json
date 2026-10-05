@@ -664,7 +664,7 @@
 		},
 		{
 			"id": "KccWerkplek",
-			"_note": "The contact centre dashboard in the simple structure (openspec/changes/simple-contact-dashboard). The design's widgets come first and every widget the page had follows, moved down by 15 rows and otherwise untouched: the spec fails when an old widget or an old layout entry differs in anything but `gridY`, or when two cards share a grid cell. EVERY NUMBER IS A FILTER ON REAL FIELDS, and a stat links to the list with the same filter as its query, so the number and the list agree. `Waiting for me` is the same filter as the tickets list view of that name. THE DESIGN SHOWS THINGS A TICKET CANNOT ANSWER and they are left out, not invented: the response time this week (no ticket field holds when the first answer went out), the one named ticket in the attention card (a banner counts, it cannot name a record, so the card says how many are late), the customer's initials and name in the list (a ticket holds its client as a reference without a name) and how long a ticket waits as a duration (the list shows the date it came in, oldest first). `Open` is not one number either: the count endpoint and the list spell a set of statuses differently, so the stats each use one status.",
+			"_note": "The contact centre dashboard in the simple structure (openspec/changes/simple-contact-dashboard). The design's widgets come first and every widget the page had follows, moved down by 15 rows and otherwise untouched: the spec fails when an old widget or an old layout entry differs in anything but `gridY`, or when two cards share a grid cell. EVERY NUMBER IS A FILTER ON REAL FIELDS, and a stat links to the list with the same filter as its query, so the number and the list agree. `Waiting for me` is the same filter as the tickets list view of that name. THE DESIGN SHOWS THINGS A TICKET CANNOT ANSWER and they are left out, not invented: the response time this week (no ticket field holds when the first answer went out), the one named ticket in the attention card (a banner counts, it cannot name a record, so the card says how many are late), the customer's initials and name in the list (a ticket holds its client as a reference without a name) and how long a ticket waits as a duration (the list shows the date it came in, oldest first). `Open` is not one number either: the count endpoint and the list spell a set of statuses differently, so the stats each use one status. THE ATTENTION CARD'S FILTER IS FLAT: `slaDeadline[lt]`, not `slaDeadline: { lt }`. A visibleWhen source is read through the objects list, and the library's query builder writes a nested operator as one JSON value, which OpenRegister answers with a 500 (live check, 5 October 2026). The bar's `occurredAt: { gte }` is nested on purpose: it goes to the aggregation endpoint, whose own flattener reads that shape. DATES IN THE LISTS carry `format: date-time`, or the cell prints the stored ISO text.",
 			"config": {
 				"layout": [
 					{
@@ -842,9 +842,7 @@
 									"filter": {
 										"assignee": "@me",
 										"status": "in_progress",
-										"slaDeadline": {
-											"lt": "@today+1d"
-										}
+										"slaDeadline[lt]": "@today+1d"
 									}
 								},
 								"op": "gt",
@@ -1019,7 +1017,8 @@
 								},
 								{
 									"key": "occurredAt",
-									"label": "Waiting since"
+									"label": "Waiting since",
+									"format": "date-time"
 								}
 							],
 							"emptyText": "Nothing is waiting for you."
@@ -1081,7 +1080,8 @@
 								},
 								{
 									"key": "deadline",
-									"label": "Deadline"
+									"label": "Deadline",
+									"format": "date-time"
 								}
 							],
 							"emptyText": "You have no callbacks to make."
@@ -1115,7 +1115,8 @@
 								},
 								{
 									"key": "occurredAt",
-									"label": "When"
+									"label": "When",
+									"format": "date-time"
 								}
 							],
 							"emptyText": "No contact moments yet."

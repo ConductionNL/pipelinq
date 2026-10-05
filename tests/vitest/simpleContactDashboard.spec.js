@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * SPDX-FileCopyrightText: 2026 Conduction B.V.
  * SPDX-License-Identifier: EUPL-1.2
@@ -15,6 +16,8 @@
  */
 
 import { buildManifest } from '@conduction/nextcloud-vue/src/utils/buildManifest.js'
+import { buildQueryString } from '@conduction/nextcloud-vue/src/utils/headers.js'
+import { resolveFilterTokens } from '@conduction/nextcloud-vue/src/utils/resolveFilterTokens.js'
 import { execFileSync } from 'child_process'
 import fs from 'fs'
 import os from 'os'
@@ -175,7 +178,10 @@ describe('the dashboard', () => {
 			const properties = SCHEMAS[source.schema]
 			expect(properties, `${widget.id}: ${source.schema}`).toBeTruthy()
 			for (const key of [
-				...Object.keys(source.filter || {}),
+				// A flat operator key, `field[lt]`, names the field before the bracket.
+				...Object.keys(source.filter || {}).map((name) =>
+					name.replace(/\[\w+\]$/, ''),
+				),
 				...(source.groupBy ? [source.groupBy] : []),
 				...(content.sort ? [content.sort.field] : []),
 				...(content.columns || []).map((column) => column.key),
@@ -183,7 +189,7 @@ describe('the dashboard', () => {
 				expect(properties[key], `${widget.id}: ${key}`).toBeTruthy()
 			}
 			for (const [key, value] of Object.entries(source.filter || {})) {
-				const allowed = properties[key].enum
+				const allowed = properties[key.replace(/\[\w+\]$/, '')].enum
 				if (allowed && typeof value === 'string') {
 					expect(allowed, `${widget.id}: ${key}=${value}`).toContain(value)
 				}
@@ -242,6 +248,76 @@ describe('the dashboard', () => {
 			expect(nl[label].length, nl[label]).toBeLessThanOrEqual(22)
 			expect(iconsSource, widget.id).toContain(`\n\t${widget.content.icon},\n`)
 		}
+	})
+})
+
+describe('the attention card asks a question OpenRegister can answer', () => {
+	/**
+	 * Every `visibleWhen.source` in a value, however deep.
+	 *
+	 * @param {unknown} value A page config.
+	 * @return {Array<object>} The sources.
+	 */
+	function visibleWhenSources(value) {
+		if (Array.isArray(value)) {
+			return value.flatMap(visibleWhenSources)
+		}
+		if (!value || typeof value !== 'object') {
+			return []
+		}
+		const own = value.visibleWhen?.source ? [value.visibleWhen.source] : []
+		return [...own, ...Object.values(value).flatMap(visibleWhenSources)]
+	}
+
+	it('builds its count request with a flat operator key and no JSON in the address', () => {
+		const source = page(builtSimple, 'KccWerkplek').config.widgets.find(
+			(widget) => widget.id === 'simple-first-today',
+		).content.visibleWhen.source
+		// The two calls the library's own visibleWhen reader makes.
+		const filter = resolveFilterTokens(source.filter, {})
+		const query = buildQueryString({ ...filter, _limit: 1 })
+		const address = decodeURIComponent(query)
+		expect(address).toMatch(/slaDeadline\[lt\]=\d{4}-\d{2}-\d{2}(&|$)/)
+		expect(address).toContain('status=in_progress')
+		expect(address).not.toContain('{')
+		expect(address).not.toContain('@today')
+	})
+
+	it('holds no nested operator in any visibleWhen source, on any page of the simple structure', () => {
+		const sources = builtSimple.pages.flatMap((item) =>
+			visibleWhenSources(item.config || {}),
+		)
+		// The control: there is at least the one this file is about.
+		expect(sources.length).toBeGreaterThan(0)
+		for (const source of sources) {
+			for (const [key, value] of Object.entries(source.filter || {})) {
+				expect(
+					value !== null && typeof value === 'object',
+					`${source.schema}.${key} is nested: the query builder writes it as JSON`,
+				).toBe(false)
+			}
+		}
+	})
+
+	it('shows dates in the lists as dates, not as stored text', () => {
+		const widgets = page(builtSimple, 'KccWerkplek').config.widgets.filter(
+			(widget) =>
+				widget.id.startsWith('simple-') && widget.type === 'object-list',
+		)
+		let dates = 0
+		for (const widget of widgets) {
+			for (const column of widget.content.columns) {
+				if (
+					SCHEMAS[widget.content.schema][column.key].format === 'date-time'
+				) {
+					dates += 1
+					expect(column.format, `${widget.id}: ${column.key}`).toBe(
+						'date-time',
+					)
+				}
+			}
+		}
+		expect(dates).toBe(3)
 	})
 })
 

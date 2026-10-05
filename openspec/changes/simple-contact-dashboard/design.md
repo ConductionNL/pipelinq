@@ -26,3 +26,18 @@ shapes the count endpoint and the list are both known to read the same way.
 
 Today counts as late, on the list's deadline cell and in the attention card's
 filter (`slaDeadline` before tomorrow).
+
+## D-5 Two endpoints, two filter shapes
+
+The attention card's `visibleWhen` source is read through the objects list. The
+library's query builder writes a nested operator (`slaDeadline: { lt }`) as one
+JSON value, and OpenRegister answers that with a 500. So that filter uses the
+flat key `slaDeadline[lt]`. The stacked bar goes to the aggregation endpoint,
+whose own flattener reads the nested shape, so `occurredAt: { gte }` stays
+nested there. The spec builds the card's request with the library's own two
+functions and fails on a `{` in the address.
+
+## D-6 Dates in list cards
+
+A list card's column prints the stored value unless it says `format`. The three
+date columns say `format: date-time`, which renders a relative time.
