@@ -341,6 +341,9 @@ export default {
 		 * Why the portal service account cannot be used, in words.
 		 *
 		 * @return {string} The problem.
+		 *
+		 * @spec exclude the portal admin screen has no owning requirement; customer-portal
+		 *   specifies only the widget-mode origin allow-list (pipelinq#2041)
 		 */
 		serviceAccountProblem() {
 			const reasons = {
@@ -366,6 +369,12 @@ export default {
 		},
 	},
 
+	/**
+	 * Load the service account and the tenant on open.
+	 *
+	 * @spec exclude the portal admin screen has no owning requirement; customer-portal
+	 *   specifies only the widget-mode origin allow-list (pipelinq#2041)
+	 */
 	mounted() {
 		this.loadServiceAccount()
 		this.loadAll()
