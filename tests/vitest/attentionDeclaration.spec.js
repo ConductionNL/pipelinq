@@ -16,13 +16,14 @@
  * number than the app does, and a string without a translation is shown in
  * English. So every one of those is held here.
  *
- * @spec openspec/changes/simple-list-and-dashboard/specs/dashboard/spec.md
+ * @spec openspec/changes/simple-contact-dashboard/specs/kcc-werkplek/spec.md
  */
 
 import { buildManifest } from '@conduction/nextcloud-vue/src/utils/buildManifest.js'
 import fs from 'fs'
 import path from 'path'
 import { describe, expect, it } from 'vitest'
+import { applyMenuModules } from '../../src/utils/menuModules.js'
 import { buildProfiledManifest } from '../../src/utils/structureProfile.js'
 
 const ROOT = path.resolve(__dirname, '../..')
@@ -41,9 +42,10 @@ const builtSimple = buildProfiledManifest(
 	buildManifest,
 	readJson('src', 'manifest.json'),
 	fragments,
-	readJson('src', 'menu-layout.simple.json'),
+	// As src/main.js builds it, with no module switched off.
+	applyMenuModules(readJson('src', 'menu-layout.simple.json'), []),
 )
-// The app's own "First today" card, as the simple dashboard ships it.
+// The app's own "First today" card, as the contact centre dashboard ships it.
 const card = builtSimple.pages
 	.find((page) => page.id === 'KccWerkplek')
 	.config.widgets.find((widget) => widget.id === 'simple-first-today').content
