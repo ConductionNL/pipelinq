@@ -40,6 +40,7 @@ use OCA\Pipelinq\Service\Marketing\Transport\InstanceMailerTransport;
 use OCA\Pipelinq\Service\Marketing\Transport\MailAccountTransport;
 use OCA\Pipelinq\Service\Marketing\Transport\RenderedMail;
 use OCA\Pipelinq\Service\Marketing\Transport\SendResult;
+use OCA\Pipelinq\Service\UnsubscribeMail;
 use OCP\IAppConfig;
 use OCP\Mail\IMailer;
 use Psr\Container\ContainerInterface;
@@ -119,6 +120,25 @@ class MailTransportService {
 		private PhysicalAddressRenderer $addressRenderer,
 	) {
 	}//end __construct()
+
+	/**
+	 * The helper that sets List-Unsubscribe through OpenRegister, or null.
+	 *
+	 * @return UnsubscribeMail|null The helper.
+	 */
+	private function unsubscribeMail(): ?UnsubscribeMail {
+		try {
+			$helper = $this->container->get(UnsubscribeMail::class);
+		} catch (Throwable $e) {
+			return null;
+		}
+
+		if ($helper instanceof UnsubscribeMail) {
+			return $helper;
+		}
+
+		return null;
+	}//end unsubscribeMail()
 
 	/**
 	 * Resolve the `mailTransport` a Blast sends through.
@@ -257,12 +277,22 @@ class MailTransportService {
 			// unsubscribe link, minted by SubscriptionQueryService, because
 			// rule 1 of the marketing architecture says the unsubscribe is
 			// ours and not the provider's (marketing-lists-and-double-opt-in).
-			// A segment send has no membership to unsubscribe
-			// from, so the token resolves empty and the transport's own
-			// unsubscribe mechanism (provider footer, List-Unsubscribe
-			// header) applies as it does today.
+			// A segment send carries integriq's link instead, attached by
+			// BlastService::resolveAudience() after the cutover
+			// (opt-out-before-send REQ-CII-004).
 			'{{unsubscribe_link}}' => (string)($delivery['unsubscribeUrl'] ?? ''),
 		];
+
+		// RFC 8058: the same link as List-Unsubscribe, one-click by POST. Both
+		// pipelinq's list link and integriq's link take that POST.
+		$headers = [];
+		$unsubscribeUrl = trim((string)($delivery['unsubscribeUrl'] ?? ''));
+		if ($unsubscribeUrl !== '') {
+			$headers = [
+				InstanceMailerTransport::HEADER_UNSUBSCRIBE => '<'.$unsubscribeUrl.'>',
+				InstanceMailerTransport::HEADER_UNSUBSCRIBE_POST => InstanceMailerTransport::ONE_CLICK,
+			];
+		}
 
 		// The sender's physical address (CAN-SPAM) goes in at its token, or at
 		// the end, the same way the template preview shows it.
@@ -289,7 +319,7 @@ class MailTransportService {
 				footerOverride: $footer,
 				format: ArticleService::FORMAT_TEXT,
 			),
-			headers: [],
+			headers: $headers,
 			deliveryId: $deliveryId,
 		);
 	}//end buildRenderedMail()
@@ -366,7 +396,7 @@ class MailTransportService {
 		$kind = (string)($transport['kind'] ?? '');
 		try {
 			$adapter = match ($kind) {
-				'instance' => new InstanceMailerTransport(mailer: $this->mailer, logger: $this->logger),
+				'instance' => new InstanceMailerTransport(mailer: $this->mailer, logger: $this->logger, unsubscribeMail: $this->unsubscribeMail()),
 				'mailAccount' => new MailAccountTransport(
 					container: $this->container,
 					logger: $this->logger,
