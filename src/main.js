@@ -37,9 +37,22 @@ import App from './App.vue'
 import appIcons from './icons.js'
 import bundledManifest from './manifest.json'
 import menuLayout from './menu-layout.json'
+import simpleMenuLayout from './menu-layout.simple.json'
 import pinia from './pinia.js'
 import registry from './registry.js'
 import { initializeStores, registerObjectTypes } from './store/store.js'
+import {
+	applyHomePage,
+	applyMenuModules,
+	MODULES_SETTING,
+	resolveMenuModules,
+} from './utils/menuModules.js'
+import {
+	buildProfiledManifest,
+	resolveStructureProfile,
+	STRUCTURE_FULL,
+	STRUCTURE_SETTING,
+} from './utils/structureProfile.js'
 
 // Library CSS — must be explicit import (webpack tree-shakes side-effect imports from aliased packages)
 import '@conduction/nextcloud-vue/css/index.css'
@@ -156,9 +169,30 @@ const fragments = fragmentCtx
 	.keys()
 	.sort()
 	.map((key) => fragmentCtx(key))
-const mergedManifest = seedDashboardAppConfig(
-	buildManifest(bundledManifest, fragments, menuLayout),
+
+// The structure profile (openspec/changes/simple-structure-profile). The page
+// controller provides `menu_structure` and `menu_modules` as initial state, so
+// the choice is known before anything is built and the first render is right.
+// `full` is the layout file as it always was. Anything else is the simple
+// profile, with the modules an administrator switched on.
+const structureProfile = resolveStructureProfile(
+	loadState('pipelinq', STRUCTURE_SETTING, ''),
 )
+const profileFile =
+	structureProfile === STRUCTURE_FULL
+		? menuLayout
+		: applyMenuModules(
+				simpleMenuLayout,
+				resolveMenuModules(
+					loadState('pipelinq', MODULES_SETTING, ''),
+					simpleMenuLayout,
+				),
+			)
+const { manifest: profiledManifest, homePage } = applyHomePage(
+	buildProfiledManifest(buildManifest, bundledManifest, fragments, profileFile),
+	profileFile.home,
+)
+const mergedManifest = seedDashboardAppConfig(profiledManifest)
 
 /**
  * Build the vue-router config from the manifest. Each manifest page
@@ -169,6 +203,8 @@ const mergedManifest = seedDashboardAppConfig(
  *
  * @param {object} manifest The bundled manifest (with `pages[]`).
  * @return {Array<object>} vue-router 3 routes config.
+ *
+ * @spec openspec/changes/simple-structure-profile/specs/navigation-ia/spec.md#REQ-NIA-105
  */
 function routesFromManifest(manifest) {
 	const routes = manifest.pages.map((page) => ({
@@ -185,6 +221,12 @@ function routesFromManifest(manifest) {
 	// its original relative order.
 	const paramCount = (path) => (path.match(/:/g) || []).length
 	routes.sort((a, b) => paramCount(a.path) - paramCount(b.path))
+	// The simple profile opens on its own start page: `applyHomePage` moved the
+	// page that owned `/` to an address of its own, so `/` is free to redirect.
+	// Skipped when a persisted override took the start page away.
+	if (homePage && manifest.pages.some((page) => page.id === homePage)) {
+		routes.push({ path: '/', redirect: { name: homePage } })
+	}
 	// Catch-all redirect to dashboard, preserving prior router behaviour.
 	//
 	// vue-router 4 REMOVED the bare `path: '*'` wildcard. It does not error —

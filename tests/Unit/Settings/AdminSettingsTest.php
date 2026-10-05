@@ -19,6 +19,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Settings;
 
+use OCA\Pipelinq\Service\Settings\MenuStructure;
 use OCA\Pipelinq\Service\SettingsService;
 use OCA\Pipelinq\Settings\AdminSettings;
 use OCP\App\IAppManager;
@@ -47,7 +48,7 @@ class AdminSettingsTest extends TestCase {
 		$appManager = $appManager ?? $this->createMock(IAppManager::class);
 		$initialState = $this->createMock(IInitialState::class);
 
-		return new AdminSettings($settingsService, $appManager, $initialState);
+		return new AdminSettings($settingsService, $appManager, $initialState, new MenuStructure());
 	}//end buildAdminSettings()
 
 	/**

@@ -54,6 +54,10 @@
 			</template>
 		</CnVersionInfoCard>
 
+		<!-- Menu structure: simple (default) or full, and the modules
+		     (simple-structure-profile). -->
+		<MenuStructureSettings v-if="isAdmin" />
+
 		<!-- Register & Schema Mapping -->
 		<CnRegisterMapping
 			:name="t('pipelinq', 'Register Configuration')"
@@ -416,6 +420,7 @@ import ExportConfigurationSettings from './ExportConfigurationSettings.vue'
 import MailingListEmbedSettings from './MailingListEmbedSettings.vue'
 import MarketingIntelSettings from './MarketingIntelSettings.vue'
 import MarketingTrafficSettings from './MarketingTrafficSettings.vue'
+import MenuStructureSettings from './MenuStructureSettings.vue'
 // Configuration surfaces moved off the app nav onto this admin page
 // (nav-ia-cleanup): channels, telephony, and the POS master-data.
 import MessagingSettings from './MessagingSettings.vue'
@@ -464,6 +469,7 @@ export default {
 		MailingListEmbedSettings,
 		MarketingIntelSettings,
 		MarketingTrafficSettings,
+		MenuStructureSettings,
 	},
 
 	data() {
