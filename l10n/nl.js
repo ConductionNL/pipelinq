@@ -6972,7 +6972,24 @@ OC.L10N.register(
         "Linked case": "Gekoppelde zaak",
         "No contact moments on this ticket yet.": "Nog geen contactmomenten bij dit ticket.",
         "Employee": "Medewerker",
-        "No messages with the customer yet.": "Nog geen berichten met de klant."
+        "No messages with the customer yet.": "Nog geen berichten met de klant.",
+        "Greeting": "Begroeting",
+        "First today": "Vandaag eerst",
+        "Tickets past their deadline": "Tickets over de termijn",
+        "{value} of your tickets in progress are past their deadline or end today.": "{value} van je tickets in behandeling zijn over de termijn of lopen vandaag af.",
+        "Open these tickets": "Deze tickets openen",
+        "Open the queue": "Wachtrij openen",
+        "Waiting for me": "Wacht op mij",
+        "Callbacks": "Terugbellen",
+        "Waiting since": "Wacht sinds",
+        "Nothing is waiting for you.": "Er wacht niets op je.",
+        "Contact today per channel": "Contact vandaag per kanaal",
+        "By phone": "Telefoon",
+        "No contact yet today": "Vandaag nog geen contact",
+        "You have no callbacks to make.": "Je hoeft niemand terug te bellen.",
+        "Latest contact": "Laatste contact",
+        "No contact moments yet.": "Nog geen contactmomenten.",
+        "Your customer contact today, then the workplace": "Eerst je klantcontact van vandaag, dan de werkplek"
     },
     "nplurals=2; plural=(n != 1);"
 )
