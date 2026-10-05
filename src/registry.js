@@ -409,7 +409,7 @@ const registry = {
 	ModulesPage: {
 		kind: 'page',
 		component: ModulesPage,
-		_note: 'simple-structure-profile. One card per page the simple menu leaves out, grouped by module. The view hands its manifest config to the library card grid (CnReportsPage). A custom page rather than a second type:"reports" page, because an app has one reports page (ADR-112, gate-104) and these cards are not reports.',
+		_note: 'simple-structure-profile. One card per page the simple menu leaves out, grouped by module. The view draws its manifest config as router links. A custom page rather than a second type:"reports" page, because an app has one reports page (ADR-112, gate-104) and these cards are not reports.',
 	},
 
 	StoreGallery: {

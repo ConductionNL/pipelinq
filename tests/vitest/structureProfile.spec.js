@@ -480,6 +480,7 @@ describe('the modules', () => {
 		expect(page.type).toBe('custom')
 		expect(page.component).toBe('ModulesPage')
 		expect(read('src', 'registry.js')).toContain('component: ModulesPage,')
+		// What the page draws is in modulesPage.spec.js, which mounts it.
 		expect(
 			buildSimple().pages.filter((item) => item.type === 'reports'),
 		).toHaveLength(1)

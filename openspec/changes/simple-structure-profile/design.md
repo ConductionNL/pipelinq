@@ -57,9 +57,10 @@ everything, as before.
 ## D-4 The Modules page
 
 `src/manifest.d/98-modules.json` adds one page, `Modules`, at `/modules`. It is
-a `custom` page. Its component, `src/views/ModulesPage.vue`, hands the page
-config to the library's card grid (`CnReportsPage`): a label, a line and a
-route per card, filtered by category. One category per module, plus "Also in
+a `custom` page. Its component, `src/views/ModulesPage.vue`, draws the page
+config as link cards: a label, a line and a route per card, grouped by
+category. It draws them itself because the library does not export its card
+page (`CnReportsPage` is in the library's source and not in its entry). One category per module, plus "Also in
 Pipelinq" for Tasks, Contact persons and the Operational overview.
 
 It is not a second `type: "reports"` page. ADR-112 allows one per app and
@@ -69,8 +70,7 @@ The page is in the manifest, so it exists in both structures and its address is
 stable. Only the simple menu links to it (`ModulesMenu`, in the footer). The
 full menu is asserted unchanged, so it gets no entry.
 
-This is the smallest thing that keeps every page reachable: one wrapper view of
-thirty lines, no new endpoint, and the no-loss rule can be checked by reading
+This is the smallest thing that keeps every page reachable: one small view, no new endpoint, and the no-loss rule can be checked by reading
 two JSON files.
 
 ## D-4b Rapportages sits in the menu, not in the footer
