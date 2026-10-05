@@ -7058,7 +7058,24 @@ OC.L10N.register(
         "Linked case": "Linked case",
         "No contact moments on this ticket yet.": "No contact moments on this ticket yet.",
         "Employee": "Employee",
-        "No messages with the customer yet.": "No messages with the customer yet."
+        "No messages with the customer yet.": "No messages with the customer yet.",
+        "Greeting": "Greeting",
+        "First today": "First today",
+        "Tickets past their deadline": "Tickets past their deadline",
+        "{value} of your tickets in progress are past their deadline or end today.": "{value} of your tickets in progress are past their deadline or end today.",
+        "Open these tickets": "Open these tickets",
+        "Open the queue": "Open the queue",
+        "Waiting for me": "Waiting for me",
+        "Callbacks": "Callbacks",
+        "Waiting since": "Waiting since",
+        "Nothing is waiting for you.": "Nothing is waiting for you.",
+        "Contact today per channel": "Contact today per channel",
+        "By phone": "By phone",
+        "No contact yet today": "No contact yet today",
+        "You have no callbacks to make.": "You have no callbacks to make.",
+        "Latest contact": "Latest contact",
+        "No contact moments yet.": "No contact moments yet.",
+        "Your customer contact today, then the workplace": "Your customer contact today, then the workplace"
     },
     "nplurals=2; plural=(n != 1);"
 )

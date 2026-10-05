@@ -661,6 +661,570 @@
 					"ticket-conversation"
 				]
 			}
+		},
+		{
+			"id": "KccWerkplek",
+			"_note": "The contact centre dashboard in the simple structure (openspec/changes/simple-contact-dashboard). The design's widgets come first and every widget the page had follows, moved down by 15 rows and otherwise untouched: the spec fails when an old widget or an old layout entry differs in anything but `gridY`, or when two cards share a grid cell. EVERY NUMBER IS A FILTER ON REAL FIELDS, and a stat links to the list with the same filter as its query, so the number and the list agree. `Waiting for me` is the same filter as the tickets list view of that name. THE DESIGN SHOWS THINGS A TICKET CANNOT ANSWER and they are left out, not invented: the response time this week (no ticket field holds when the first answer went out), the one named ticket in the attention card (a banner counts, it cannot name a record, so the card says how many are late), the customer's initials and name in the list (a ticket holds its client as a reference without a name) and how long a ticket waits as a duration (the list shows the date it came in, oldest first). `Open` is not one number either: the count endpoint and the list spell a set of statuses differently, so the stats each use one status. THE ATTENTION CARD'S FILTER IS FLAT: `slaDeadline[lt]`, not `slaDeadline: { lt }`. A visibleWhen source is read through the objects list, and the library's query builder writes a nested operator as one JSON value, which OpenRegister answers with a 500 (live check, 5 October 2026). The bar's `occurredAt: { gte }` is nested on purpose: it goes to the aggregation endpoint, whose own flattener reads that shape. DATES IN THE LISTS carry `format: date-time`, or the cell prints the stored ISO text. THE ATTENTION CARD CARRIES `text` AS WELL AS `title`, with the same words: the dashboard gives up the grid cell of any banner whose `text` is empty before it looks at the condition (nextcloud-vue 2.60.0, CnDashboardPage isCollapsedWidget), so a card with only a title and a reason never rendered (live check, 5 October 2026). The attention layout shows the title and does not repeat the text.",
+			"config": {
+				"layout": [
+					{
+						"id": "s1",
+						"widgetId": "simple-greeting",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 12,
+						"gridHeight": 2,
+						"showTitle": false
+					},
+					{
+						"id": "s2",
+						"widgetId": "simple-first-today",
+						"gridX": 0,
+						"gridY": 2,
+						"gridWidth": 12,
+						"gridHeight": 2,
+						"showTitle": false,
+						"sizeToContent": true
+					},
+					{
+						"id": "s3",
+						"widgetId": "simple-new",
+						"gridX": 0,
+						"gridY": 4,
+						"gridWidth": 3,
+						"gridHeight": 2,
+						"showTitle": false,
+						"dateChip": false
+					},
+					{
+						"id": "s4",
+						"widgetId": "simple-waiting-for-me",
+						"gridX": 3,
+						"gridY": 4,
+						"gridWidth": 3,
+						"gridHeight": 2,
+						"showTitle": false,
+						"dateChip": false
+					},
+					{
+						"id": "s5",
+						"widgetId": "simple-callbacks",
+						"gridX": 6,
+						"gridY": 4,
+						"gridWidth": 3,
+						"gridHeight": 2,
+						"showTitle": false,
+						"dateChip": false
+					},
+					{
+						"id": "s6",
+						"widgetId": "simple-waiting-for-customer",
+						"gridX": 9,
+						"gridY": 4,
+						"gridWidth": 3,
+						"gridHeight": 2,
+						"showTitle": false,
+						"dateChip": false
+					},
+					{
+						"id": "s7",
+						"widgetId": "simple-waiting-list",
+						"gridX": 0,
+						"gridY": 6,
+						"gridWidth": 8,
+						"gridHeight": 5,
+						"showTitle": true
+					},
+					{
+						"id": "s8",
+						"widgetId": "simple-per-channel",
+						"gridX": 8,
+						"gridY": 6,
+						"gridWidth": 4,
+						"gridHeight": 5,
+						"showTitle": true
+					},
+					{
+						"id": "s9",
+						"widgetId": "simple-callback-list",
+						"gridX": 0,
+						"gridY": 11,
+						"gridWidth": 6,
+						"gridHeight": 4,
+						"showTitle": true
+					},
+					{
+						"id": "s10",
+						"widgetId": "simple-latest-contact",
+						"gridX": 6,
+						"gridY": 11,
+						"gridWidth": 6,
+						"gridHeight": 4,
+						"showTitle": true
+					},
+					{
+						"id": "wr",
+						"widgetId": "requests",
+						"gridX": 0,
+						"gridY": 15,
+						"gridWidth": 8,
+						"gridHeight": 4
+					},
+					{
+						"id": "wi",
+						"widgetId": "interaction",
+						"gridX": 8,
+						"gridY": 15,
+						"gridWidth": 4,
+						"gridHeight": 8
+					},
+					{
+						"id": "wt",
+						"widgetId": "tasks",
+						"gridX": 0,
+						"gridY": 19,
+						"gridWidth": 8,
+						"gridHeight": 4
+					},
+					{
+						"id": "wk",
+						"widgetId": "knowledge",
+						"gridX": 8,
+						"gridY": 23,
+						"gridWidth": 4,
+						"gridHeight": 5
+					},
+					{
+						"id": "wc",
+						"widgetId": "client-cases",
+						"gridX": 0,
+						"gridY": 23,
+						"gridWidth": 4,
+						"gridHeight": 5
+					},
+					{
+						"id": "wm",
+						"widgetId": "client-contacts",
+						"gridX": 4,
+						"gridY": 23,
+						"gridWidth": 4,
+						"gridHeight": 5
+					}
+				],
+				"description": "Your customer contact today, then the workplace"
+			},
+			"configAppend": {
+				"widgets": [
+					{
+						"id": "simple-greeting",
+						"type": "header",
+						"title": "Greeting",
+						"content": {
+							"greeting": true,
+							"showDate": true,
+							"plain": true
+						}
+					},
+					{
+						"id": "simple-first-today",
+						"type": "banner",
+						"title": "First today",
+						"content": {
+							"layout": "attention",
+							"variant": "error",
+							"kicker": "First today",
+							"title": "Tickets past their deadline",
+							"text": "Tickets past their deadline",
+							"reason": "{value} of your tickets in progress are past their deadline or end today.",
+							"visibleWhen": {
+								"source": {
+									"register": "pipelinq",
+									"schema": "ticket",
+									"filter": {
+										"assignee": "@me",
+										"status": "in_progress",
+										"slaDeadline[lt]": "@today+1d"
+									}
+								},
+								"op": "gt",
+								"value": 0
+							},
+							"actions": [
+								{
+									"label": "Open these tickets",
+									"route": {
+										"name": "Tickets",
+										"query": {
+											"assignee": "@me",
+											"status": "in_progress",
+											"slaDeadline[lt]": "@today+1d"
+										}
+									}
+								},
+								{
+									"label": "Open the queue",
+									"route": "Queue"
+								}
+							]
+						}
+					},
+					{
+						"id": "simple-new",
+						"type": "stat",
+						"title": "New",
+						"content": {
+							"label": "New",
+							"icon": "TrayFull",
+							"format": {
+								"style": "decimal",
+								"decimals": 0
+							},
+							"source": {
+								"register": "pipelinq",
+								"schema": "ticket",
+								"metric": "count",
+								"filter": {
+									"status": "new"
+								}
+							},
+							"route": {
+								"name": "Tickets",
+								"query": {
+									"status": "new"
+								}
+							}
+						}
+					},
+					{
+						"id": "simple-waiting-for-me",
+						"type": "stat",
+						"title": "Waiting for me",
+						"content": {
+							"label": "Waiting for me",
+							"icon": "ClipboardAccountOutline",
+							"format": {
+								"style": "decimal",
+								"decimals": 0
+							},
+							"source": {
+								"register": "pipelinq",
+								"schema": "ticket",
+								"metric": "count",
+								"filter": {
+									"assignee": "@me",
+									"status": "in_progress"
+								}
+							},
+							"route": {
+								"name": "Tickets",
+								"query": {
+									"assignee": "@me",
+									"status": "in_progress"
+								}
+							},
+							"variant": "warning"
+						}
+					},
+					{
+						"id": "simple-callbacks",
+						"type": "stat",
+						"title": "Callbacks",
+						"content": {
+							"label": "Callbacks",
+							"icon": "Phone",
+							"format": {
+								"style": "decimal",
+								"decimals": 0
+							},
+							"source": {
+								"register": "pipelinq",
+								"schema": "crmTask",
+								"metric": "count",
+								"filter": {
+									"type": "callbackRequest",
+									"status": "open",
+									"assigneeUserId": "@me"
+								}
+							},
+							"route": {
+								"name": "Tasks",
+								"query": {
+									"type": "callbackRequest",
+									"status": "open",
+									"assigneeUserId": "@me"
+								}
+							}
+						}
+					},
+					{
+						"id": "simple-waiting-for-customer",
+						"type": "stat",
+						"title": "Waiting for customer",
+						"content": {
+							"label": "Waiting for customer",
+							"icon": "AccountClock",
+							"format": {
+								"style": "decimal",
+								"decimals": 0
+							},
+							"source": {
+								"register": "pipelinq",
+								"schema": "ticket",
+								"metric": "count",
+								"filter": {
+									"assignee": "@me",
+									"status": "awaiting_customer"
+								}
+							},
+							"route": {
+								"name": "Tickets",
+								"query": {
+									"assignee": "@me",
+									"status": "awaiting_customer"
+								}
+							}
+						}
+					},
+					{
+						"id": "simple-waiting-list",
+						"type": "object-list",
+						"hideRefresh": true,
+						"title": "Waiting for me",
+						"content": {
+							"register": "pipelinq",
+							"schema": "ticket",
+							"filter": {
+								"assignee": "@me",
+								"status": "in_progress"
+							},
+							"sort": {
+								"field": "occurredAt",
+								"dir": "asc"
+							},
+							"limit": 8,
+							"rowRoute": "TicketDetail",
+							"columns": [
+								{
+									"key": "title",
+									"label": "Subject"
+								},
+								{
+									"key": "ticketType",
+									"label": "Type"
+								},
+								{
+									"key": "channel",
+									"label": "Channel"
+								},
+								{
+									"key": "occurredAt",
+									"label": "Waiting since",
+									"format": "date-time"
+								}
+							],
+							"emptyText": "Nothing is waiting for you."
+						}
+					},
+					{
+						"id": "simple-per-channel",
+						"type": "stacked-bar",
+						"title": "Contact today per channel",
+						"content": {
+							"source": {
+								"register": "pipelinq",
+								"schema": "ticket",
+								"groupBy": "channel",
+								"filter": {
+									"occurredAt": {
+										"gte": "@today"
+									}
+								}
+							},
+							"labels": {
+								"telefoon": "By phone",
+								"email": "Email",
+								"balie": "Counter",
+								"chat": "Chat",
+								"social": "Social media",
+								"brief": "Letter"
+							},
+							"emptyText": "No contact yet today"
+						}
+					},
+					{
+						"id": "simple-callback-list",
+						"type": "object-list",
+						"hideRefresh": true,
+						"title": "Callbacks",
+						"content": {
+							"register": "pipelinq",
+							"schema": "crmTask",
+							"filter": {
+								"type": "callbackRequest",
+								"status": "open",
+								"assigneeUserId": "@me"
+							},
+							"sort": {
+								"field": "deadline",
+								"dir": "asc"
+							},
+							"limit": 6,
+							"rowRoute": "TaskDetail",
+							"columns": [
+								{
+									"key": "subject",
+									"label": "Subject"
+								},
+								{
+									"key": "callbackPhoneNumber",
+									"label": "Phone number"
+								},
+								{
+									"key": "deadline",
+									"label": "Deadline",
+									"format": "date-time"
+								}
+							],
+							"emptyText": "You have no callbacks to make."
+						}
+					},
+					{
+						"id": "simple-latest-contact",
+						"type": "object-list",
+						"hideRefresh": true,
+						"title": "Latest contact",
+						"content": {
+							"register": "pipelinq",
+							"schema": "ticket",
+							"filter": {
+								"ticketType": "interaction"
+							},
+							"sort": {
+								"field": "occurredAt",
+								"dir": "desc"
+							},
+							"limit": 6,
+							"rowRoute": "TicketDetail",
+							"columns": [
+								{
+									"key": "title",
+									"label": "Subject"
+								},
+								{
+									"key": "channel",
+									"label": "Channel"
+								},
+								{
+									"key": "occurredAt",
+									"label": "When",
+									"format": "date-time"
+								}
+							],
+							"emptyText": "No contact moments yet."
+						}
+					}
+				]
+			}
+		},
+		{
+			"id": "Tickets",
+			"_note": "The tickets list in the simple structure (openspec/changes/simple-contact-dashboard). No view is dropped: the four the page had keep their filter and gain a count, three join them, five show and the rest sit behind the overflow chip. `Waiting for me`, `New` and `Waiting for customer` use the same filters as the dashboard stats that link here. THE AVATAR IS THE HANDLER'S: `assignee` holds a Nextcloud user id. The design draws the customer's initials, and a ticket holds its client as a reference without a name. THE COLOUR IS ON THE DEADLINE: late or due today is red (`lte 0`), due within two days is amber. How long a ticket has waited cannot be coloured, a date rule counts days until a date and a wait lies in the past.",
+			"config": {
+				"quickFilterMaxVisible": 5,
+				"columns": [
+					"title",
+					{
+						"key": "ticketType",
+						"label": "Type"
+					},
+					{
+						"key": "status",
+						"label": "Status",
+						"widget": "statusBadge"
+					},
+					{
+						"key": "assignee",
+						"label": "Handler",
+						"widget": "avatar",
+						"widgetProps": {
+							"user": true
+						}
+					},
+					"channel",
+					{
+						"key": "slaDeadline",
+						"label": "Deadline",
+						"widget": "date",
+						"widgetProps": {
+							"variantWhen": [
+								{
+									"op": "lte",
+									"value": 0,
+									"variant": "error"
+								},
+								{
+									"op": "lte",
+									"value": 2,
+									"variant": "warning"
+								}
+							]
+						}
+					},
+					"occurredAt"
+				]
+			},
+			"configPatch": {
+				"quickFilters": {
+					"All": {
+						"showCount": true
+					},
+					"Tickets": {
+						"showCount": true
+					},
+					"Complaints": {
+						"showCount": true
+					},
+					"Contactmomenten": {
+						"showCount": true
+					}
+				}
+			},
+			"configAppend": {
+				"quickFilters": [
+					{
+						"label": "Waiting for me",
+						"filter": {
+							"assignee": "@me",
+							"status": "in_progress"
+						},
+						"showCount": true
+					},
+					{
+						"label": "New",
+						"filter": {
+							"status": "new"
+						},
+						"showCount": true
+					},
+					{
+						"label": "Waiting for customer",
+						"filter": {
+							"assignee": "@me",
+							"status": "awaiting_customer"
+						},
+						"showCount": true
+					}
+				]
+			},
+			"configOrder": {
+				"quickFilters": [
+					"All",
+					"Waiting for me",
+					"New",
+					"Tickets",
+					"Complaints"
+				]
+			}
 		}
 	]
 }
