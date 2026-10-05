@@ -80,6 +80,13 @@ class SmsAdapterTest extends TestCase {
 			public array $access = [];
 
 			/**
+			 * Contacts by phone number, for the contact lookup.
+			 *
+			 * @var array<string, string>
+			 */
+			public array $contacts = [];
+
+			/**
 			 * Mock saveObject.
 			 *
 			 * @param array $object Payload.
@@ -107,6 +114,12 @@ class SmsAdapterTest extends TestCase {
 			 */
 			public function findAll(array $config = [], bool $_rbac = true, bool $_multitenancy = true): array {
 				$this->access[] = ['call' => 'findAll', '_rbac' => $_rbac, '_multitenancy' => $_multitenancy];
+				// The contact schema stores the number under `phone`.
+				$phone = (string)($config['filters']['phone'] ?? '');
+				if ($phone !== '' && isset($this->contacts[$phone]) === true) {
+					return [['uuid' => $this->contacts[$phone], 'phone' => $phone]];
+				}
+
 				return [];
 			}
 		};
@@ -359,7 +372,8 @@ class SmsAdapterTest extends TestCase {
 				$this->equalTo('sms'),
 				$this->equalTo('keyword-stop'),
 				$this->stringContains('STOP'),
-			);
+			)
+			->willReturn(['store' => 'integriq']);
 
 		$rawBody = json_encode(['From' => '+31600000000', 'Body' => 'STOP']);
 		$result = $this->adapter->handleInboundWebhook($rawBody, 'sig', 'prov-1');
@@ -367,6 +381,46 @@ class SmsAdapterTest extends TestCase {
 		$this->assertSame('received', $result['status']);
 		$this->assertTrue($result['optOutRecorded']);
 	}//end testHandleInboundWebhookStopKeywordOptsOut()
+
+	/**
+	 * A STOP from a known contact's number is recorded on that contact: the
+	 * lookup asks for the schema's `phone` field.
+	 *
+	 * @return void
+	 */
+	public function testInboundStopFindsTheContactByPhone(): void {
+		$this->objectService->contacts = ['+31611119999' => 'c-gert'];
+		$this->providerRepo->method('findById')->willReturn(['uuid' => 'prov-1', 'kind' => 'sms', 'vendor' => 'messagebird']);
+		$this->providerFactory->method('create')
+			->willReturn($this->buildClient('messagebird', 'success', 'ext-1', true));
+		$this->consentService->method('isOptOutKeyword')->willReturn(true);
+		$this->consentService->expects($this->once())
+			->method('recordOptOut')
+			->with($this->equalTo('c-gert'), $this->equalTo('sms'))
+			->willReturn(['store' => 'integriq']);
+
+		$result = $this->adapter->handleInboundWebhook(json_encode(['from' => '+31611119999', 'body' => 'STOP']), 'sig', 'prov-1');
+
+		$this->assertFalse($result['placeholderCreated']);
+		$this->assertTrue($result['optOutRecorded']);
+	}//end testInboundStopFindsTheContactByPhone()
+
+	/**
+	 * optOutRecorded reports what happened, not that a STOP arrived.
+	 *
+	 * @return void
+	 */
+	public function testAStopThatIsNotRecordedIsNotReportedAsRecorded(): void {
+		$this->providerRepo->method('findById')->willReturn(['uuid' => 'prov-1', 'kind' => 'sms', 'vendor' => 'messagebird']);
+		$this->providerFactory->method('create')
+			->willReturn($this->buildClient('messagebird', 'success', 'ext-1', true));
+		$this->consentService->method('isOptOutKeyword')->willReturn(true);
+		$this->consentService->method('recordOptOut')->willReturn(null);
+
+		$result = $this->adapter->handleInboundWebhook(json_encode(['from' => '+31611119999', 'body' => 'STOP']), 'sig', 'prov-1');
+
+		$this->assertFalse($result['optOutRecorded']);
+	}//end testAStopThatIsNotRecordedIsNotReportedAsRecorded()
 
 	/**
 	 * The provider's webhook is a PublicPage: no user is logged in, so a

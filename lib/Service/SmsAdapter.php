@@ -437,14 +437,13 @@ class SmsAdapter {
 
 		$optOutRecorded = false;
 		if ($this->consentService->isOptOutKeyword(body: $body) === true) {
-			$this->consentService->recordOptOut(
+			$optOutRecorded = $this->consentService->recordOptOut(
 				contactId: $contactId,
 				channel: 'sms',
 				source: 'keyword-stop',
 				evidence: sprintf('Inbound SMS body "%s" matched STOP keyword', $body),
 				address: $from,
-			);
-			$optOutRecorded = true;
+			) !== null;
 		} elseif ($this->consentService->isOptInKeyword(body: $body) === true) {
 			$this->consentService->recordOptIn(
 				contactId: $contactId,
@@ -777,7 +776,8 @@ class SmsAdapter {
 			$rows = $objectService->findAll(
 				config: [
 					'filters' => [
-						'phoneNumber' => $phone,
+						// The contact schema stores the number under `phone`.
+						'phone' => $phone,
 						'register' => $this->getRegisterSlug(),
 						'schema' => $schema,
 					],
