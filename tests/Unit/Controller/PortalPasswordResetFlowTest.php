@@ -4,14 +4,18 @@
  * End-to-end tests for the portal password reset, through the real path.
  *
  * Every portal endpoint is a PublicPage, so OpenRegister sees each request as
- * Anonymous. With OpenRegister's default RBAC and organisation scoping, an
- * anonymous caller reads no portal account and may not save one: the reset
+ * Anonymous: it reads no portal account and refuses every save. The reset
  * answered 200 and no mail ever left, and a resident could not log in at all.
+ * The portal now writes as a configured portal service account, with
+ * OpenRegister's access checks on, and refuses with 503 when that account is
+ * missing, disabled or outside its group.
+ *
  * These tests drive the REAL controller, the REAL reset, auth, session, audit,
- * token and mail services and the REAL PortalObjectRepository over a store that
- * behaves the way OpenRegister does for an anonymous caller. A mocked
- * repository could not show the defect, because the defect lives in the
- * arguments the repository passes to OpenRegister.
+ * token and mail services, the REAL PortalServiceAccount and the REAL
+ * PortalObjectRepository over a store that behaves the way OpenRegister does:
+ * a write with RBAC on is allowed only when the session user is a member of
+ * the service group. Every write is recorded with the acting user and flags,
+ * so a write that switched the checks off, or ran as anybody else, fails.
  *
  * @category Test
  * @package  OCA\Pipelinq\Tests\Unit\Controller
@@ -39,6 +43,7 @@ use OCA\Pipelinq\Service\Portal\PortalMailService;
 use OCA\Pipelinq\Service\Portal\PortalMfaService;
 use OCA\Pipelinq\Service\Portal\PortalObjectRepository;
 use OCA\Pipelinq\Service\Portal\PortalRequestGuard;
+use OCA\Pipelinq\Service\Portal\PortalServiceAccount;
 use OCA\Pipelinq\Service\Portal\PortalSessionManager;
 use OCA\Pipelinq\Service\Portal\PortalTenantService;
 use OCA\Pipelinq\Service\Portal\PortalTokenService;
@@ -46,9 +51,13 @@ use OCA\Pipelinq\Tests\Unit\Service\Portal\InstalledAppConfig;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IAppConfig;
+use OCP\IGroupManager;
 use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IURLGenerator;
+use OCP\IUser;
+use OCP\IUserManager;
+use OCP\IUserSession;
 use OCP\Mail\IMailer;
 use OCP\Mail\IMessage;
 use OCP\Security\IHasher;
@@ -108,6 +117,48 @@ class PortalPasswordResetFlowTest extends TestCase {
 	private int $now = 1800000000;
 
 	/**
+	 * The uid the admin picked as portal service account ('' for none).
+	 *
+	 * @var string
+	 */
+	private string $serviceUid = 'portal-service';
+
+	/**
+	 * Whether the service account is enabled.
+	 *
+	 * @var bool
+	 */
+	private bool $serviceEnabled = true;
+
+	/**
+	 * The members of the portal service group.
+	 *
+	 * @var array<int, string>
+	 */
+	private array $members = ['portal-service'];
+
+	/**
+	 * The user on the session (null: an anonymous portal request).
+	 *
+	 * @var IUser|null
+	 */
+	private ?IUser $sessionUser = null;
+
+	/**
+	 * Every write the store received: the acting uid and the two flags.
+	 *
+	 * @var array<int, array{user: string|null, rbac: bool, multitenancy: bool}>
+	 */
+	private array $writes = [];
+
+	/**
+	 * Whether the store fails every write (a database outage).
+	 *
+	 * @var bool
+	 */
+	private bool $storeDown = false;
+
+	/**
 	 * Seed one active account, created by an administrator.
 	 *
 	 * @return void
@@ -126,16 +177,18 @@ class PortalPasswordResetFlowTest extends TestCase {
 		];
 		$this->sent = [];
 		$this->params = [];
+		$this->writes = [];
 	}//end setUp()
 
 	/**
-	 * A store that answers like OpenRegister does for an anonymous caller:
-	 * with RBAC or organisation scoping on, it reads nothing and refuses every
-	 * save. Both off, it serves the portal register.
+	 * A store that answers like OpenRegister does. Reads: with RBAC or
+	 * organisation scoping on, an anonymous caller reads nothing; both off,
+	 * the portal register is served. Writes: with RBAC on, only a member of the
+	 * portal service group may write.
 	 *
 	 * @return ObjectServiceInterface The store.
 	 */
-	private function anonymousObjectService(): ObjectServiceInterface {
+	private function objectService(): ObjectServiceInterface {
 		$service = $this->createMock(ObjectServiceInterface::class);
 
 		$service->method('findAll')->willReturnCallback(
@@ -179,17 +232,21 @@ class PortalPasswordResetFlowTest extends TestCase {
 
 		$service->method('saveObject')->willReturnCallback(
 			function (array $object, ?array $extend = [], $register = null, $schema = null, ?string $uuid = null, bool $_rbac = true, bool $_multitenancy = true): ObjectEntityInterface {
-				if ($_rbac === true) {
+				$actor = $this->sessionUser?->getUID();
+				$this->writes[] = ['user' => $actor, 'rbac' => $_rbac, 'multitenancy' => $_multitenancy];
+
+				if ($this->storeDown === true) {
+					throw new RuntimeException('The database is not available.');
+				}
+
+				if ($_rbac === true && in_array($actor, $this->members, true) === false) {
 					$action = 'create';
 					if ($uuid !== null) {
 						$action = 'update';
 					}
 
-					throw new RuntimeException("User 'Anonymous' does not have permission to '{$action}' objects in schema '{$schema}'");
-				}
-
-				if ($_multitenancy === true) {
-					throw new RuntimeException('Anonymous belongs to no organisation.');
+					$name = ($actor ?? 'Anonymous');
+					throw new RuntimeException("User '{$name}' does not have permission to '{$action}' objects in schema '{$schema}'");
 				}
 
 				$id = ($uuid ?? bin2hex(random_bytes(16)));
@@ -275,14 +332,76 @@ class PortalPasswordResetFlowTest extends TestCase {
 	}//end mailer()
 
 	/**
+	 * A Nextcloud account.
+	 *
+	 * @param string $uid     The uid.
+	 * @param bool   $enabled Whether it is enabled.
+	 *
+	 * @return IUser The account.
+	 */
+	private function user(string $uid, bool $enabled = true): IUser {
+		$user = $this->createMock(IUser::class);
+		$user->method('getUID')->willReturn($uid);
+		$user->method('isEnabled')->willReturn($enabled);
+		return $user;
+	}//end user()
+
+	/**
+	 * The real service account over a user manager, groups and a session.
+	 *
+	 * @param IAppConfig $appConfig The app config holding the chosen uid.
+	 *
+	 * @return PortalServiceAccount The service account.
+	 */
+	private function serviceAccount(IAppConfig $appConfig): PortalServiceAccount {
+		$users = $this->createMock(IUserManager::class);
+		$users->method('get')->willReturnCallback(
+			fn (string $uid): ?IUser => ($uid === 'portal-service' ? $this->user(uid: $uid, enabled: $this->serviceEnabled) : null)
+		);
+
+		$groups = $this->createMock(IGroupManager::class);
+		$groups->method('isInGroup')->willReturnCallback(
+			fn (string $uid, string $group): bool => $group === PortalServiceAccount::GROUP && in_array($uid, $this->members, true)
+		);
+
+		$session = $this->createMock(IUserSession::class);
+		$session->method('getUser')->willReturnCallback(fn (): ?IUser => $this->sessionUser);
+		$session->method('setVolatileActiveUser')->willReturnCallback(
+			function (?IUser $user): void {
+				$this->sessionUser = $user;
+			}
+		);
+
+		return new PortalServiceAccount($appConfig, $users, $groups, $session, $this->createMock(LoggerInterface::class));
+	}//end serviceAccount()
+
+	/**
+	 * Every write ran as the portal service account with RBAC and organisation
+	 * scoping on, and the session holds the caller again afterwards.
+	 *
+	 * @param string|null $caller The uid that was on the session before.
+	 *
+	 * @return void
+	 */
+	private function assertEveryWriteRanAsTheServiceAccount(?string $caller = null): void {
+		$this->assertNotEmpty($this->writes);
+		foreach ($this->writes as $write) {
+			$this->assertSame(['user' => 'portal-service', 'rbac' => true, 'multitenancy' => true], $write);
+		}
+
+		$this->assertSame($caller, $this->sessionUser?->getUID(), 'The session must hold the caller again.');
+	}//end assertEveryWriteRanAsTheServiceAccount()
+
+	/**
 	 * Build the real controller over the real services and repository.
 	 *
 	 * @return PortalAuthController The controller.
 	 */
 	private function controller(): PortalAuthController {
 		$appConfig = InstalledAppConfig::wire(config: $this->createMock(IAppConfig::class));
+		$appConfig->setValueString('pipelinq', PortalServiceAccount::CONFIG_KEY, $this->serviceUid);
 		$logger = $this->createMock(LoggerInterface::class);
-		$repository = new PortalObjectRepository($appConfig, $logger, $this->anonymousObjectService());
+		$repository = new PortalObjectRepository($appConfig, $logger, $this->objectService(), $this->serviceAccount(appConfig: $appConfig));
 
 		$random = $this->createMock(ISecureRandom::class);
 		$random->method('generate')->willReturnCallback(static fn (int $length): string => random_bytes($length));
@@ -392,6 +511,7 @@ class PortalPasswordResetFlowTest extends TestCase {
 			$account['passwordResetExpiresAt']
 		);
 		$this->assertStringNotContainsString($token, json_encode($account));
+		$this->assertEveryWriteRanAsTheServiceAccount();
 	}//end testTheRequestSavesTheTokenAndMailsTheLink()
 
 	/**
@@ -413,6 +533,7 @@ class PortalPasswordResetFlowTest extends TestCase {
 		$this->assertSame(self::ACCOUNT_ID, $login->getData()['accountId']);
 
 		$this->assertSame(Http::STATUS_UNAUTHORIZED, $this->login(password: 'Oud-wachtwoord-123')->getStatus());
+		$this->assertEveryWriteRanAsTheServiceAccount();
 	}//end testTheLinkSetsANewPasswordAndTheResidentLogsIn()
 
 	/**
@@ -429,6 +550,7 @@ class PortalPasswordResetFlowTest extends TestCase {
 		$this->assertSame(Http::STATUS_BAD_REQUEST, $replay->getStatus());
 		$this->assertSame('invalidToken', $replay->getData()['errorCode']);
 		$this->assertSame('hash:Nieuw-wachtwoord-456', $this->store[self::ACCOUNT_ID]['passwordHash']);
+		$this->assertEveryWriteRanAsTheServiceAccount();
 	}//end testTheLinkWorksOnce()
 
 	/**
@@ -446,4 +568,96 @@ class PortalPasswordResetFlowTest extends TestCase {
 		$this->assertSame('invalidToken', $late->getData()['errorCode']);
 		$this->assertSame('hash:Oud-wachtwoord-123', $this->store[self::ACCOUNT_ID]['passwordHash']);
 	}//end testTheLinkExpiresAfterThirtyMinutes()
+
+	/**
+	 * The refusal every request gets when the portal cannot write.
+	 *
+	 * @param \OCP\AppFramework\Http\JSONResponse $response The response.
+	 *
+	 * @return void
+	 */
+	private function assertUnavailableAndUntouched($response): void {
+		$this->assertSame(Http::STATUS_SERVICE_UNAVAILABLE, $response->getStatus());
+		$this->assertSame('portalUnavailable', $response->getData()['errorCode']);
+		$this->assertSame([], $this->writes, 'Nothing may be written.');
+		$this->assertSame([], $this->sent, 'No mail may go out.');
+		$this->assertSame('hash:Oud-wachtwoord-123', $this->store[self::ACCOUNT_ID]['passwordHash']);
+		$this->assertArrayNotHasKey('passwordResetTokenHash', $this->store[self::ACCOUNT_ID]);
+	}//end assertUnavailableAndUntouched()
+
+	/**
+	 * Without a service account every portal call answers 503 and writes
+	 * nothing, for a known and an unknown address alike (no enumeration).
+	 *
+	 * @return void
+	 */
+	public function testWithoutAServiceAccountThePortalAnswers503AndWritesNothing(): void {
+		$this->serviceUid = '';
+
+		$this->params = ['email' => self::EMAIL];
+		$this->assertUnavailableAndUntouched($this->controller()->passwordResetRequest());
+
+		$this->params = ['email' => 'nobody@example.nl'];
+		$this->assertUnavailableAndUntouched($this->controller()->passwordResetRequest());
+
+		$this->assertUnavailableAndUntouched($this->reset(token: 'any-token', password: 'Nieuw-wachtwoord-456'));
+		$this->assertUnavailableAndUntouched($this->login(password: 'Oud-wachtwoord-123'));
+	}//end testWithoutAServiceAccountThePortalAnswers503AndWritesNothing()
+
+	/**
+	 * A disabled service account answers 503 and writes nothing.
+	 *
+	 * @return void
+	 */
+	public function testADisabledServiceAccountAnswers503(): void {
+		$this->serviceEnabled = false;
+
+		$this->params = ['email' => self::EMAIL];
+		$this->assertUnavailableAndUntouched($this->controller()->passwordResetRequest());
+		$this->assertUnavailableAndUntouched($this->login(password: 'Oud-wachtwoord-123'));
+	}//end testADisabledServiceAccountAnswers503()
+
+	/**
+	 * A service account outside the service group answers 503: the portal
+	 * schemas grant only that group.
+	 *
+	 * @return void
+	 */
+	public function testAServiceAccountOutsideTheGroupAnswers503(): void {
+		$this->members = [];
+
+		$this->params = ['email' => self::EMAIL];
+		$this->assertUnavailableAndUntouched($this->controller()->passwordResetRequest());
+	}//end testAServiceAccountOutsideTheGroupAnswers503()
+
+	/**
+	 * A logged-in Nextcloud user on the request keeps their session: the
+	 * writes run as the service account and the user is back afterwards.
+	 *
+	 * @return void
+	 */
+	public function testTheCallersSessionUserIsRestored(): void {
+		$this->sessionUser = $this->user(uid: 'alice');
+
+		$this->requestResetAndReadTheLink();
+
+		$this->assertEveryWriteRanAsTheServiceAccount(caller: 'alice');
+	}//end testTheCallersSessionUserIsRestored()
+
+	/**
+	 * The caller is restored even when the write fails.
+	 *
+	 * @return void
+	 */
+	public function testTheCallerIsRestoredWhenTheWriteFails(): void {
+		$this->sessionUser = $this->user(uid: 'alice');
+		$this->storeDown = true;
+
+		$this->params = ['email' => self::EMAIL];
+		$response = $this->controller()->passwordResetRequest();
+
+		$this->assertSame(Http::STATUS_INTERNAL_SERVER_ERROR, $response->getStatus());
+		$this->assertSame([], $this->sent);
+		$this->assertSame('alice', $this->sessionUser?->getUID());
+	}//end testTheCallerIsRestoredWhenTheWriteFails()
 }//end class
