@@ -57,20 +57,23 @@ everything, as before.
 ## D-4 The Modules page
 
 `src/manifest.d/98-modules.json` adds one page, `Modules`, at `/modules`. It is
-a `custom` page. Its component, `src/views/ModulesPage.vue`, draws the page
-config as link cards: a label, a line and a route per card, grouped by
-category. It draws them itself because the library does not export its card
-page (`CnReportsPage` is in the library's source and not in its entry). One category per module, plus "Also in
-Pipelinq" for Tasks, Contact persons and the Operational overview.
+a `links` page, the library's typed page of link cards (nextcloud-vue 2.61.0):
+a label, a line and a route per card, grouped by category. One category per
+module, plus "Also in Pipelinq" for Tasks, Contact persons and the Operational
+overview.
 
-It is not a second `type: "reports"` page. ADR-112 allows one per app and
-gate-104 fails on two, and these cards are not reports.
+The page type did not exist when this change started. A second
+`type: "reports"` page fails gate-104, and a `custom` page fails gate-69, so
+the library gained the type first.
+
+The library leaves out a card whose route does not resolve. The spec mounts the
+page and counts all 29.
 
 The page is in the manifest, so it exists in both structures and its address is
 stable. Only the simple menu links to it (`ModulesMenu`, in the footer). The
 full menu is asserted unchanged, so it gets no entry.
 
-This is the smallest thing that keeps every page reachable: one small view, no new endpoint, and the no-loss rule can be checked by reading
+This is the smallest thing that keeps every page reachable: no view of our own, no new endpoint, and the no-loss rule can be checked by reading
 two JSON files.
 
 ## D-4b Rapportages sits in the menu, not in the footer
