@@ -18,11 +18,15 @@
 import { buildManifest } from '@conduction/nextcloud-vue/src/utils/buildManifest.js'
 import { buildQueryString } from '@conduction/nextcloud-vue/src/utils/headers.js'
 import { resolveFilterTokens } from '@conduction/nextcloud-vue/src/utils/resolveFilterTokens.js'
+import {
+	compareVisibleWhen,
+	readVisibleWhenValue,
+} from '@conduction/nextcloud-vue/src/utils/visibleWhen.js'
 import { execFileSync } from 'child_process'
 import fs from 'fs'
 import os from 'os'
 import path from 'path'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { applyMenuModules } from '../../src/utils/menuModules.js'
 import { buildProfiledManifest } from '../../src/utils/structureProfile.js'
 
@@ -297,6 +301,55 @@ describe('the attention card asks a question OpenRegister can answer', () => {
 				).toBe(false)
 			}
 		}
+	})
+
+	const card = () =>
+		page(builtSimple, 'KccWerkplek').config.widgets.find(
+			(widget) => widget.id === 'simple-first-today',
+		).content
+
+	afterEach(() => {
+		vi.unstubAllGlobals()
+	})
+
+	it('carries text, or the dashboard gives up its cell before reading the condition', () => {
+		// nextcloud-vue 2.60.0 collapses a banner whose `text` is empty,
+		// whatever its condition says. The title is what the card shows.
+		expect(card().text).toBeTruthy()
+		expect(card().text).toBe(card().title)
+		expect(card().layout).toBe('attention')
+	})
+
+	it.each([
+		[1, true],
+		[0, false],
+	])('is met with %i late ticket(s): %s', async (total, met) => {
+		const asked = []
+		vi.stubGlobal(
+			'fetch',
+			vi.fn(async (url) => {
+				asked.push(String(url))
+				return {
+					ok: true,
+					status: 200,
+					json: async () => ({
+						results: total > 0 ? [{ id: 'T1' }] : [],
+						total,
+						page: 1,
+						pages: 1,
+						limit: 1,
+					}),
+				}
+			}),
+		)
+		const cond = card().visibleWhen
+		// The library's own reader and comparison, as the dashboard runs them.
+		const actual = await readVisibleWhenValue(cond, {})
+		expect(actual).toBe(total)
+		expect(compareVisibleWhen(actual, cond.op, cond.value, {})).toBe(met)
+		expect(asked).toHaveLength(1)
+		expect(asked[0]).toContain('/apps/openregister/api/objects/pipelinq/ticket?')
+		expect(decodeURIComponent(asked[0])).not.toContain('{')
 	})
 
 	it('shows dates in the lists as dates, not as stored text', () => {

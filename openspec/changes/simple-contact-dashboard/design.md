@@ -41,3 +41,9 @@ functions and fails on a `{` in the address.
 
 A list card's column prints the stored value unless it says `format`. The three
 date columns say `format: date-time`, which renders a relative time.
+
+## D-7 The attention card carries `text`
+
+nextcloud-vue 2.60.0 gives up the grid cell of a banner whose `text` is empty
+before it reads the condition. The card therefore repeats its title as `text`.
+The attention layout shows the title once.
