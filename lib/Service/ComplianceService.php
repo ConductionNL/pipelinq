@@ -198,9 +198,9 @@ class ComplianceService {
 	 */
 	public function permitsSend(string $contactId, string $channel, string $intent = self::INTENT_PROMOTIONAL, ?string $listId = null): array {
 		if ($this->integriq->isActive() === true) {
-			// integriq answers the consent question; a bounce and the dunning
+			// Integriq answers the consent question; a bounce and the dunning
 			// state stay pipelinq's own and are asked after it.
-			[$category, $requiresConsent] = IntegriqMarketingConsent::categoryFor(intent: $intent);
+			[$category, $requiresConsent] = $this->integriq->categoryFor(intent: $intent);
 			$decision = $this->integriq->decide(
 				contactId: $contactId,
 				channel: strtolower(trim($channel)),
@@ -330,33 +330,15 @@ class ComplianceService {
 			];
 		}
 
-		$decisions = null;
 		if ($this->integriq->isActive() === true) {
 			// One question per 500 members, not one per contact.
-			[$category, $requiresConsent] = IntegriqMarketingConsent::categoryFor(intent: $intent);
-			$decisions = $this->integriq->decideMembers(members: $members, channel: $channel, category: $category, requiresConsent: $requiresConsent);
+			return $this->segmentComplianceViaIntegriq(members: $members, channel: $channel, intent: $intent);
 		}
 
 		$missing = [];
 		$suppressed = [];
-		$unsubscribe = [];
 		foreach ($members as $member) {
 			$contactId = (string)($member['contactId'] ?? '');
-			if ($contactId !== '' && $decisions !== null) {
-				$decision = ($decisions[$contactId] ?? ['send' => false, 'unsubscribe' => null]);
-				if ($decision['send'] === false || $this->isBounceWithdrawn(contactId: $contactId, channel: $channel, listId: null) === true) {
-					$missing[] = $contactId;
-					continue;
-				}
-
-				$unsubscribe[$contactId] = (string)($decision['unsubscribe']['url'] ?? '');
-				if ($this->isSuppressed(contactId: $contactId, intent: $intent) === true) {
-					$suppressed[] = $contactId;
-				}
-
-				continue;
-			}//end if
-
 			if ($contactId === '') {
 				// Members without a stable contactId cannot be matched to
 				// a ConsentRecord — fail safe, treat as missing.
@@ -387,9 +369,62 @@ class ComplianceService {
 			'missingCount' => count($missing),
 			'suppressed' => $suppressed,
 			'suppressedCount' => count($suppressed),
-			'unsubscribe' => array_filter($unsubscribe),
 		];
 	}//end checkSegmentCompliance()
+
+	/**
+	 * The segment check after the cutover: one question to integriq per 500 members.
+	 *
+	 * A refusal or a bounce counts as missing consent, dunning as suppressed,
+	 * and every allowed member gets integriq's link for the delivery.
+	 *
+	 * @param array<int, array<string, mixed>> $members The segment members.
+	 * @param string                           $channel "email" or "sms".
+	 * @param string                           $intent  `promotional` or `service`.
+	 *
+	 * @return array{
+	 *     compliant: bool,
+	 *     missingConsent: array<int, string>,
+	 *     missingCount: int,
+	 *     suppressed: array<int, string>,
+	 *     suppressedCount: int,
+	 *     unsubscribe: array<string, string>
+	 * } The segment check plus integriq's link per allowed member.
+	 *
+	 * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md#requirement-pipelinq-asks-integriq-before-every-non-exempt-message-req-cii-002
+	 */
+	private function segmentComplianceViaIntegriq(array $members, string $channel, string $intent): array {
+		[$category, $requiresConsent] = $this->integriq->categoryFor(intent: $intent);
+		$decisions = $this->integriq->decideMembers(members: $members, channel: $channel, category: $category, requiresConsent: $requiresConsent);
+
+		$missing = [];
+		$suppressed = [];
+		$unsubscribe = [];
+		foreach ($members as $member) {
+			$contactId = (string)($member['contactId'] ?? '');
+			$decision = ($decisions[$contactId] ?? ['send' => false, 'unsubscribe' => null]);
+			if ($contactId === '' || $decision['send'] === false || $this->isBounceWithdrawn(contactId: $contactId, channel: $channel) === true) {
+				$missing[] = $contactId;
+				continue;
+			}
+
+			$unsubscribe[$contactId] = (string)($decision['unsubscribe']['url'] ?? '');
+			if ($this->isSuppressed(contactId: $contactId, intent: $intent) === true) {
+				$suppressed[] = $contactId;
+			}
+		}
+
+		$missing = array_values(array_unique($missing));
+		$suppressed = array_values(array_unique($suppressed));
+		return [
+			'compliant' => ($missing === []),
+			'missingConsent' => $missing,
+			'missingCount' => count($missing),
+			'suppressed' => $suppressed,
+			'suppressedCount' => count($suppressed),
+			'unsubscribe' => array_filter($unsubscribe),
+		];
+	}//end segmentComplianceViaIntegriq()
 
 	/**
 	 * Run every pre-send compliance check for one Blast in a single call.
@@ -453,7 +488,12 @@ class ComplianceService {
 		}
 
 		if ($this->integriq->isActive() === true) {
-			$decision = $this->integriq->decide(contactId: $contactId, channel: $channel, category: IntegriqConsentClient::CATEGORY_MARKETING, requiresConsent: true);
+			$decision = $this->integriq->decide(
+				contactId: $contactId,
+				channel: $channel,
+				category: IntegriqConsentClient::CATEGORY_MARKETING,
+				requiresConsent: true
+			);
 			return ($decision['send'] === true && $this->isBounceWithdrawn(contactId: $contactId, channel: $channel, listId: null) === false);
 		}
 
@@ -485,7 +525,13 @@ class ComplianceService {
 		}
 
 		if ($this->integriq->isActive() === true) {
-			$decision = $this->integriq->decide(contactId: $contactId, channel: $channel, category: IntegriqConsentClient::CATEGORY_MARKETING, requiresConsent: true, listId: $listId);
+			$decision = $this->integriq->decide(
+				contactId: $contactId,
+				channel: $channel,
+				category: IntegriqConsentClient::CATEGORY_MARKETING,
+				requiresConsent: true,
+				listId: $listId
+			);
 			return ($decision['send'] === true && $this->isBounceWithdrawn(contactId: $contactId, channel: $channel, listId: $listId) === false);
 		}
 
@@ -504,7 +550,7 @@ class ComplianceService {
 	 *
 	 * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md#requirement-pipelinq-s-consent-records-are-migrated-into-integriq-once-req-cii-001
 	 */
-	public function isBounceWithdrawn(string $contactId, string $channel, ?string $listId = null): bool {
+	private function isBounceWithdrawn(string $contactId, string $channel, ?string $listId = null): bool {
 		$channel = strtolower(trim($channel));
 		$records = [$this->findConsentRecord(contactId: $contactId, channel: $channel, listId: null)];
 		if ($listId !== null && $listId !== '') {
@@ -521,49 +567,6 @@ class ComplianceService {
 
 		return false;
 	}//end isBounceWithdrawn()
-
-	/**
-	 * Every consentRecord, for the migration and the replay.
-	 *
-	 * @return array<int, array<string, mixed>> The records.
-	 *
-	 * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md#requirement-pipelinq-s-consent-records-are-migrated-into-integriq-once-req-cii-001
-	 */
-	public function allConsentRecords(): array {
-		$register = $this->getRegisterSlug();
-		$schema = $this->getConsentRecordSchemaSlug();
-		$objectService = $this->getObjectService();
-		if ($register === '' || $schema === '' || $objectService === null) {
-			return [];
-		}
-
-		try {
-			$rows = $objectService->findAll(config: ['filters' => ['register' => $register, 'schema' => $schema]]);
-		} catch (Throwable $e) {
-			$this->logger->warning('ComplianceService.allConsentRecords: findAll failed', ['exception' => $e->getMessage()]);
-			return [];
-		}
-
-		$out = [];
-		foreach (($rows ?? []) as $row) {
-			$out[] = $this->toArray(value: $row);
-		}
-
-		return $out;
-	}//end allConsentRecords()
-
-	/**
-	 * The UUID of a consentRecord.
-	 *
-	 * @param array<string, mixed> $record The record.
-	 *
-	 * @return string The UUID, or empty.
-	 *
-	 * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md#requirement-pipelinq-s-consent-records-are-migrated-into-integriq-once-req-cii-001
-	 */
-	public function consentRecordId(array $record): string {
-		return (string)$this->extractObjectId(payload: $record);
-	}//end consentRecordId()
 
 	/**
 	 * Whether a ConsentRecord, as stored, permits a marketing send.
@@ -685,7 +688,7 @@ class ComplianceService {
 				evidence: $evidence
 			) === true
 		) {
-			// integriq holds it now; pipelinq writes no consentRecord.
+			// Integriq holds it now; pipelinq writes no consentRecord.
 			return;
 		}
 
@@ -1143,6 +1146,10 @@ class ComplianceService {
 	 * @return void
 	 *
 	 * @spec openspec/specs/marketing-compliance/spec.md#requirement-consent-withdrawal-propagates
+	 * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md#requirement-pipelinq-writes-every-wish-to-integriq-req-cii-003
+	 *
+	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) One branch over: the integriq write-through
+	 *   (opt-out-before-send) returns early before the unchanged local ledger path.
 	 */
 	public function recordConsentWithdrawal(
 		string $contactId,

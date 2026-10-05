@@ -1044,7 +1044,7 @@ class BlastService {
 		// summary can say "skipped because they owe us money" rather than
 		// reporting a lawful basis that is actually there.
 		$suppressedSet = array_flip($complianceResult['suppressed']);
-		// integriq's link for each member, so a segment send carries one too
+		// Integriq's link for each member, so a segment send carries one too
 		// (opt-out-before-send REQ-CII-004). Empty before the cutover.
 		$links = ($complianceResult['unsubscribe'] ?? []);
 

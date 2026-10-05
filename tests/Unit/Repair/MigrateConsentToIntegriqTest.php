@@ -97,7 +97,7 @@ class MigrateConsentToIntegriqTest extends TestCase {
 			$this->createMock(SegmentSignalService::class),
 			$marketing
 		);
-		$migration = new ConsentMigrationService($client, $consent, $compliance, $marketing, $addresses, $this->appConfig, $logger);
+		$migration = new ConsentMigrationService($client, $consent, $this->container, $marketing, $addresses, $this->appConfig, $logger);
 		return new MigrateConsentToIntegriq($migration, $logger);
 	}//end step()
 

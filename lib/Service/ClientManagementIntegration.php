@@ -70,7 +70,7 @@ class ClientManagementIntegration {
 			return 0;
 		}
 
-		// integriq keeps the opt-out under the address and drops the contact
+		// Integriq keeps the opt-out under the address and drops the contact
 		// link and the evidence (Ruben, 2026-10-05, decision 5). pipelinq never
 		// asks integriq to delete an opt-out.
 		$erased = $this->integriq->eraseContact(contactRef: $contactId);

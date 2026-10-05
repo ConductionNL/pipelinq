@@ -346,9 +346,34 @@ class WhatsAppAdapter {
 	 * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md#requirement-every-non-exempt-pipelinq-mail-carries-an-unsubscribe-link-req-cii-004
 	 */
 	private function replyTarget(string $contactId, string $explicit): ?string {
+		$inWindow = $this->inboundInWindow(contactId: $contactId);
+		if ($explicit !== '') {
+			if (isset($inWindow[$explicit]) === true) {
+				return $explicit;
+			}
+
+			return null;
+		}
+
+		if ($inWindow === []) {
+			return null;
+		}
+
+		arsort($inWindow);
+		return (string)array_key_first($inWindow);
+	}//end replyTarget()
+
+	/**
+	 * This contact's inbound WhatsApp messages inside the session window.
+	 *
+	 * @param string $contactId Contact UUID.
+	 *
+	 * @return array<string,int> Message id to its sent time.
+	 */
+	private function inboundInWindow(string $contactId): array {
 		$objectService = $this->getObjectService();
 		if ($contactId === '' || $objectService === null) {
-			return null;
+			return [];
 		}
 
 		try {
@@ -364,36 +389,22 @@ class WhatsAppAdapter {
 				]
 			);
 		} catch (Throwable $e) {
-			return null;
+			return [];
 		}
 
-		$best = null;
-		$bestAt = 0;
+		$found = [];
 		foreach ((array)$rows as $raw) {
 			$row = $this->toArray(value: $raw);
-			$at = strtotime((string)($row['sentAt'] ?? ''));
-			$id = $this->extractId(payload: $row);
-			$inWindow = ($at !== false && (time() - $at) < self::SESSION_WINDOW_SECONDS);
-			if ($id === '' || $inWindow === false || (string)($row['contactId'] ?? $contactId) !== $contactId) {
-				continue;
+			$sentAt = (int)strtotime((string)($row['sentAt'] ?? ''));
+			$messageId = $this->extractId(payload: $row);
+			$isOwn = ((string)($row['contactId'] ?? $contactId) === $contactId);
+			if ($messageId !== '' && $isOwn === true && (time() - $sentAt) < self::SESSION_WINDOW_SECONDS) {
+				$found[$messageId] = $sentAt;
 			}
-
-			if ($explicit !== '' && $id === $explicit) {
-				return $id;
-			}
-
-			if ($at > $bestAt) {
-				$best = $id;
-				$bestAt = $at;
-			}
-		}//end foreach
-
-		if ($explicit !== '') {
-			return null;
 		}
 
-		return $best;
-	}//end replyTarget()
+		return $found;
+	}//end inboundInWindow()
 
 	/**
 	 * Resolve + validate a template send.

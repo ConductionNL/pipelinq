@@ -80,6 +80,25 @@ class UnsubscribeMail {
 	}//end bodyLine()
 
 	/**
+	 * A plain-text body with the link line at the end, or the body unchanged without a link.
+	 *
+	 * @param string                   $body        The body.
+	 * @param array<string,mixed>|null $unsubscribe Integriq's material.
+	 *
+	 * @return string The body.
+	 *
+	 * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md#requirement-every-non-exempt-pipelinq-mail-carries-an-unsubscribe-link-req-cii-004
+	 */
+	public function appendLine(string $body, ?array $unsubscribe): string {
+		$line = $this->bodyLine(unsubscribe: $unsubscribe);
+		if ($line === '') {
+			return $body;
+		}
+
+		return rtrim($body)."\n\n".$line."\n";
+	}//end appendLine()
+
+	/**
 	 * Set both headers through OpenRegister's helper.
 	 *
 	 * @param IMessage                 $message     The message.

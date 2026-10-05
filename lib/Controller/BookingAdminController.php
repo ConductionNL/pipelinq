@@ -251,7 +251,7 @@ class BookingAdminController extends Controller {
 				$sent = $this->emailService->sendReminder(bookingId: $id);
 				$refusal = $this->emailService->lastRefusal();
 				if ($sent === false && $refusal !== null) {
-					// integriq refused it (opt-out-before-send): say so, and why.
+					// Integriq refused it (opt-out-before-send): say so, and why.
 					return [
 						'sent' => false,
 						'reason' => $refusal['code'],

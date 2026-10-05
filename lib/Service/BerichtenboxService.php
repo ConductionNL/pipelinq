@@ -337,7 +337,7 @@ class BerichtenboxService {
 			try {
 				$accepted = $this->emailFallback->send($message, $burgerEmail, true);
 				if ($accepted === false && $this->emailFallback->lastRefusal() !== null) {
-					// integriq refused it (opt-out-before-send): logged by the
+					// Integriq refused it (opt-out-before-send): logged by the
 					// sender, and the message status stays as it is.
 					continue;
 				}
@@ -626,7 +626,7 @@ class BerichtenboxService {
 		try {
 			$accepted = $this->emailFallback->send($message, $burgerEmail, false);
 			if ($accepted === false && $this->emailFallback->lastRefusal() !== null) {
-				// integriq refused it: logged by the sender, status unchanged.
+				// Integriq refused it: logged by the sender, status unchanged.
 				return;
 			}
 		} catch (\Throwable $e) {

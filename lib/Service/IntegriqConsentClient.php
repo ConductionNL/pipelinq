@@ -50,6 +50,9 @@ use Throwable;
  * `authority-unavailable` and an exempt one (besluit, statutory, account,
  * security) is sent without a link.
  *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Every branch is a guard on an event integriq may
+ *   not ship, not answer or answer partly; each one must fail closed on its own.
+ *
  * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md#requirement-pipelinq-asks-integriq-before-every-non-exempt-message-req-cii-002
  */
 class IntegriqConsentClient {
@@ -287,14 +290,10 @@ class IntegriqConsentClient {
 			return $this->unavailable(channel: $channel, category: $category, why: 'the contact has no address on this channel');
 		}
 
-		$recipient = ['address' => $address];
-		if ($contactRef !== '') {
-			$recipient['contactRef'] = $contactRef;
-		}
-
-		if ($listRef !== '') {
-			$recipient['listRef'] = $listRef;
-		}
+		$recipient = array_filter(
+			['address' => $address, 'contactRef' => $contactRef, 'listRef' => $listRef],
+			static fn (string $value): bool => $value !== ''
+		);
 
 		$decisions = $this->decide(
 			channel: $channel,
@@ -324,13 +323,35 @@ class IntegriqConsentClient {
 			return $this->notRecorded(code: self::CODE_UNAVAILABLE, reason: 'integriq or its change event is not installed');
 		}
 
+		try {
+			$event = $this->newChangeEvent(eventClass: $eventClass, request: $request);
+			if ($event === null) {
+				return $this->notRecorded(code: self::CODE_UNAVAILABLE, reason: 'the change event is not an event');
+			}
+
+			$this->dispatcher->dispatchTyped($event);
+		} catch (Throwable $e) {
+			return $this->notRecorded(code: self::CODE_UNAVAILABLE, reason: 'the change failed: '.$e->getMessage());
+		}
+
+		return $this->readChange(event: $event);
+	}//end record()
+
+	/**
+	 * Build integriq's change event from a request, in its constructor order.
+	 *
+	 * @param string              $eventClass The event class.
+	 * @param array<string,mixed> $request    The request.
+	 *
+	 * @return Event|null The event, or null when the class is no event.
+	 */
+	private function newChangeEvent(string $eventClass, array $request): ?Event {
 		$evidence = ($request['evidence'] ?? []);
 		if (is_array($evidence) === false) {
 			$evidence = ['text' => (string)$evidence];
 		}
 
-		try {
-			$event = new $eventClass(
+		$event = new $eventClass(
 				'pipelinq',
 				(string)($request['address'] ?? ''),
 				(string)($request['state'] ?? ''),
@@ -344,16 +365,22 @@ class IntegriqConsentClient {
 				(string)($request['correlationId'] ?? ('pipelinq-'.bin2hex(random_bytes(8)))),
 				(string)($request['legacyRef'] ?? ''),
 				(string)($request['purpose'] ?? ''),
-			);
-			if (($event instanceof Event) === false) {
-				return $this->notRecorded(code: self::CODE_UNAVAILABLE, reason: 'the change event is not an event');
-			}
-
-			$this->dispatcher->dispatchTyped($event);
-		} catch (Throwable $e) {
-			return $this->notRecorded(code: self::CODE_UNAVAILABLE, reason: 'the change failed: '.$e->getMessage());
+		);
+		if (($event instanceof Event) === false) {
+			return null;
 		}
 
+		return $event;
+	}//end newChangeEvent()
+
+	/**
+	 * Read integriq's answer to a change event.
+	 *
+	 * @param Event $event The dispatched event.
+	 *
+	 * @return array{recorded:bool,recordId:int|null,code:string,reason:string} The outcome.
+	 */
+	private function readChange(Event $event): array {
 		if (method_exists($event, 'isHandled') === false || $event->isHandled() !== true) {
 			return $this->notRecorded(code: self::CODE_UNAVAILABLE, reason: 'integriq did not answer');
 		}
@@ -373,7 +400,7 @@ class IntegriqConsentClient {
 		}
 
 		return ['recorded' => true, 'recordId' => $recordId, 'code' => '', 'reason' => ''];
-	}//end record()
+	}//end readChange()
 
 	/**
 	 * Ask integriq to drop a contact's link and evidence and keep the opt-out.
@@ -418,38 +445,14 @@ class IntegriqConsentClient {
 		string $correlationId,
 		?string $inReplyTo,
 	): array {
-		$eventClass = $this->eventClass(relative: $this->decisionEvent);
-		$event = null;
-		$why = '';
-		if ($eventClass === null) {
-			$why = 'integriq or its decision event is not installed';
-		}
-
-		if ($eventClass !== null) {
-			try {
-				$event = new $eventClass(
-					'pipelinq',
-					$channel,
-					$category,
-					$chunk,
-					$correlationId,
-					$this->baseUrl(),
-					$requiresConsent,
-					$inReplyTo,
-				);
-				if (($event instanceof Event) === false) {
-					$event = null;
-					$why = 'the decision event is not an event';
-				}
-
-				if ($event !== null) {
-					$this->dispatcher->dispatchTyped($event);
-				}
-			} catch (Throwable $e) {
-				$event = null;
-				$why = 'the question failed: '.$e->getMessage();
-			}
-		}//end if
+		[$event, $why] = $this->askChunk(
+			channel: $channel,
+			category: $category,
+			requiresConsent: $requiresConsent,
+			chunk: $chunk,
+			correlationId: $correlationId,
+			inReplyTo: $inReplyTo
+		);
 
 		$decisions = [];
 		foreach ($chunk as $recipient) {
@@ -474,6 +477,47 @@ class IntegriqConsentClient {
 
 		return $decisions;
 	}//end decideChunk()
+
+	/**
+	 * Dispatch the decision event for one chunk.
+	 *
+	 * @param string                         $channel         The channel.
+	 * @param string                         $category        The category.
+	 * @param bool                           $requiresConsent Whether consent is required.
+	 * @param array<int,array<string,mixed>> $chunk           The recipients.
+	 * @param string                         $correlationId   The correlation id.
+	 * @param string|null                    $inReplyTo       The inbound message, for a reply.
+	 *
+	 * @return array{0:Event|null,1:string} The dispatched event, or null and why not.
+	 *
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) requiresConsent is integriq's contract field.
+	 */
+	private function askChunk(
+		string $channel,
+		string $category,
+		bool $requiresConsent,
+		array $chunk,
+		string $correlationId,
+		?string $inReplyTo,
+	): array {
+		$eventClass = $this->eventClass(relative: $this->decisionEvent);
+		if ($eventClass === null) {
+			return [null, 'integriq or its decision event is not installed'];
+		}
+
+		try {
+			$event = new $eventClass('pipelinq', $channel, $category, $chunk, $correlationId, $this->baseUrl(), $requiresConsent, $inReplyTo);
+			if (($event instanceof Event) === false) {
+				return [null, 'the decision event is not an event'];
+			}
+
+			$this->dispatcher->dispatchTyped($event);
+		} catch (Throwable $e) {
+			return [null, 'the question failed: '.$e->getMessage()];
+		}
+
+		return [$event, ''];
+	}//end askChunk()
 
 	/**
 	 * Integriq's answer for one address, or null when it gave none.

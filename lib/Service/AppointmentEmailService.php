@@ -183,7 +183,7 @@ class AppointmentEmailService {
 			return false;
 		}
 
-		$body = $this->withLink(body: $this->composeConfirmationBody(context: $context), unsubscribe: $decision['unsubscribe']);
+		$body = $this->unsubscribeMail->appendLine(body: $this->composeConfirmationBody(context: $context), unsubscribe: $decision['unsubscribe']);
 		$ics = $this->buildIcs(context: $context);
 
 		$accepted = $this->dispatch(
@@ -226,7 +226,7 @@ class AppointmentEmailService {
 			return false;
 		}
 
-		$body = $this->withLink(body: $this->composeReminderBody(context: $context), unsubscribe: $decision['unsubscribe']);
+		$body = $this->unsubscribeMail->appendLine(body: $this->composeReminderBody(context: $context), unsubscribe: $decision['unsubscribe']);
 
 		$accepted = $this->dispatch(
 			recipient: (string)$context['recipientEmail'],
@@ -502,38 +502,9 @@ class AppointmentEmailService {
 			'Pipelinq appointment email: not sent, integriq refused it',
 			['booking' => (string)$context['bookingId'], 'code' => $decision['code']]
 		);
-		$this->stampRefusal(bookingId: (string)$context['bookingId'], code: $decision['code']);
+		$this->stamp(bookingId: (string)$context['bookingId'], field: 'mailNotSentAt', extra: ['mailNotSentReason' => $decision['code']]);
 		return $decision;
 	}//end askIntegriq()
-
-	/**
-	 * The body with integriq's link line at the end.
-	 *
-	 * @param string                   $body        The body.
-	 * @param array<string,mixed>|null $unsubscribe Integriq's material.
-	 *
-	 * @return string The body.
-	 */
-	private function withLink(string $body, ?array $unsubscribe): string {
-		$line = $this->unsubscribeMail->bodyLine(unsubscribe: $unsubscribe);
-		if ($line === '') {
-			return $body;
-		}
-
-		return rtrim($body)."\n\n".$line."\n";
-	}//end withLink()
-
-	/**
-	 * Record on the booking that a mail was not sent, and why.
-	 *
-	 * @param string $bookingId The booking.
-	 * @param string $code      The decision code.
-	 *
-	 * @return void
-	 */
-	private function stampRefusal(string $bookingId, string $code): void {
-		$this->stamp(bookingId: $bookingId, field: 'mailNotSentAt', extra: ['mailNotSentReason' => $code]);
-	}//end stampRefusal()
 
 	/**
 	 * Load the composition context (booking + service + customer + links).

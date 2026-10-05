@@ -52,8 +52,8 @@ class ReplayConsentToIntegriqJob extends TimedJob {
 		private readonly ConsentService $consent,
 		private readonly LoggerInterface $logger,
 	) {
-		parent::__construct($time);
-		$this->setInterval(600);
+		parent::__construct(time: $time);
+		$this->setInterval(seconds: 600);
 	}//end __construct()
 
 	/**

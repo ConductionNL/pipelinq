@@ -53,6 +53,8 @@ use Throwable;
  * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#4.1
  *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Consent lifecycle (opt-in/opt-out/erasure/keyword detection) is one cohesive responsibility.
+ * @SuppressWarnings(PHPMD.TooManyPublicMethods) The store's reads, writes, erasure, and the migration and replay into
+ *   integriq (opt-out-before-send) read the same append-only log; splitting them would duplicate its ordering rules.
  */
 class ConsentService {
 	/**
@@ -132,7 +134,14 @@ class ConsentService {
 				$category = IntegriqConsentClient::CATEGORY_REPLY;
 			}
 
-			return $this->ask(contactId: $contactId, channel: $channel, category: $category, requiresConsent: false, address: $address, inReplyTo: $inReplyTo)['send'];
+			return $this->ask(
+				contactId: $contactId,
+				channel: $channel,
+				category: $category,
+				requiresConsent: false,
+				address: $address,
+				inReplyTo: $inReplyTo
+			)['send'];
 		}
 
 		$latest = $this->loadLatestRecord(contactId: $contactId, channel: $channel);
@@ -172,7 +181,13 @@ class ConsentService {
 		}
 
 		if ($this->integriq->isCutover() === true) {
-			return $this->ask(contactId: $contactId, channel: $channel, category: IntegriqConsentClient::CATEGORY_SERVICE, requiresConsent: true, address: $address)['send'];
+			return $this->ask(
+				contactId: $contactId,
+				channel: $channel,
+				category: IntegriqConsentClient::CATEGORY_SERVICE,
+				requiresConsent: true,
+				address: $address
+			)['send'];
 		}
 
 		$latest = $this->loadLatestRecord(contactId: $contactId, channel: $channel);
@@ -467,7 +482,9 @@ class ConsentService {
 			'contactRef' => (string)($row['contactId'] ?? ''),
 			'source' => (string)($row['source'] ?? ''),
 			'evidence' => ['text' => (string)($row['evidence'] ?? ''), 'recordedAt' => (string)($row['recordedAt'] ?? '')],
-			'legacyRef' => self::legacyRef(row: $row, id: $this->extractId(payload: $row)),
+			// The record UUID alone: unique across pipelinq's schemas, and it fits
+			// integriq's 64-character legacy_uuid column.
+			'legacyRef' => $this->extractId(payload: $row),
 		];
 		if ($state === 'opted-in') {
 			$request['lawfulBasis'] = (string)($row['legalBasis'] ?? 'consent');
@@ -475,36 +492,6 @@ class ConsentService {
 
 		return $request;
 	}//end changeRequestFor()
-
-	/**
-	 * The id integriq knows a pipelinq record by, so a second run writes once.
-	 *
-	 * @param array<string, mixed> $row The record.
-	 * @param string               $id  Its UUID.
-	 *
-	 * @return string The legacy ref.
-	 *
-	 * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md#requirement-pipelinq-s-consent-records-are-migrated-into-integriq-once-req-cii-001
-	 */
-	public static function legacyRef(array $row, string $id): string {
-		unset($row);
-		// integriq's legacy_uuid column holds 64 characters: the record UUID
-		// alone is unique across pipelinq's schemas and fits.
-		return $id;
-	}//end legacyRef()
-
-	/**
-	 * The UUID of a record.
-	 *
-	 * @param array<string, mixed> $row The record.
-	 *
-	 * @return string The UUID, or empty.
-	 *
-	 * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md#requirement-pipelinq-s-consent-records-are-migrated-into-integriq-once-req-cii-001
-	 */
-	public function idOf(array $row): string {
-		return $this->extractId(payload: $row);
-	}//end idOf()
 
 	/**
 	 * Replay to integriq the fallback records written after the cutover.
@@ -533,8 +520,8 @@ class ConsentService {
 		$cutoverAt = (int)$this->appConfig->getValueString(Application::APP_ID, IntegriqConsentClient::CONFIG_CUTOVER_AT, '0');
 		$pending = [];
 		foreach ($this->loadRecords(filters: $filters) as $row) {
-			$at = strtotime((string)($row['recordedAt'] ?? ''));
-			if ($at !== false && $at >= $cutoverAt) {
+			$recordedAt = strtotime((string)($row['recordedAt'] ?? ''));
+			if ($recordedAt !== false && $recordedAt >= $cutoverAt) {
 				$pending[] = $row;
 			}
 		}

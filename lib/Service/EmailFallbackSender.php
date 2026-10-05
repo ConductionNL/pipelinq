@@ -95,6 +95,22 @@ class EmailFallbackSender {
 	}//end lastRefusal()
 
 	/**
+	 * The category of the Berichtenbox message this falls back for.
+	 *
+	 * @param array<string,mixed> $message The message.
+	 *
+	 * @return string The category, `service` when it names none.
+	 */
+	private function categoryOf(array $message): string {
+		$category = trim((string)($message['category'] ?? ''));
+		if ($category === '') {
+			return IntegriqConsentClient::CATEGORY_SERVICE;
+		}
+
+		return $category;
+	}//end categoryOf()
+
+	/**
 	 * Send a fallback email for the given BerichtenboxMessage payload.
 	 *
 	 * @param array $message The OR object array form of the message
@@ -125,10 +141,7 @@ class EmailFallbackSender {
 		// (default service). A refusal is logged; the Berichtenbox status is
 		// left as it is by the caller.
 		$this->lastRefusal = null;
-		$category = trim((string)($message['category'] ?? ''));
-		if ($category === '') {
-			$category = IntegriqConsentClient::CATEGORY_SERVICE;
-		}
+		$category = $this->categoryOf(message: $message);
 
 		$decision = $this->integriq->decideOne(channel: 'email', category: $category, requiresConsent: false, address: $toEmail);
 		if ($decision['send'] === false) {

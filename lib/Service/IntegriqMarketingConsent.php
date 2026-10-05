@@ -82,7 +82,7 @@ class IntegriqMarketingConsent {
 	 *
 	 * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md#requirement-pipelinq-asks-integriq-before-every-non-exempt-message-req-cii-002
 	 */
-	public static function categoryFor(string $intent): array {
+	public function categoryFor(string $intent): array {
 		if ($intent === ComplianceService::INTENT_SERVICE) {
 			return [IntegriqConsentClient::CATEGORY_SERVICE, false];
 		}
