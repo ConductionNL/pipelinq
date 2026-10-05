@@ -196,6 +196,10 @@ class Application extends App implements IBootstrap {
 		// conformance sweep.
 		$context->registerNotifierService(\OCA\Pipelinq\Notification\Notifier::class);
 
+		// Tells the admin, in the overview, when the customer portal has no
+		// usable service account and therefore refuses every write.
+		$context->registerSetupCheck(\OCA\Pipelinq\SetupCheck\PortalServiceAccountCheck::class);
+
 		$context->registerEventListener(
 			event: ObjectCreatedEvent::class,
 			listener: ObjectEventListener::class
