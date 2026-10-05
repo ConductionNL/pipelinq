@@ -71,8 +71,10 @@ describe('imports from @conduction/nextcloud-vue', () => {
 		expect(exported.size).toBeGreaterThan(400)
 		expect(exported.has('CnAppRoot')).toBe(true)
 		expect(reexportsNextcloudVue).toBe(true)
-		// The control: the name that shipped the empty page is really absent.
-		expect(exported.has('CnReportsPage')).toBe(false)
+		// The control: a name the library does not have reads as absent.
+		// (`CnReportsPage`, the import that shipped the empty page, was
+		// absent from the entry up to 2.60.0 and is exported since 2.61.0.)
+		expect(exported.has('CnNoSuchComponent')).toBe(false)
 	})
 
 	it('name only what the library exports', () => {
