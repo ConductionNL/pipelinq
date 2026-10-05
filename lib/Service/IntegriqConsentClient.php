@@ -218,10 +218,11 @@ class IntegriqConsentClient {
 	 * @param array<int,array<string,mixed>> $recipients      Each `{address, contactRef?, listRef?, caseRef?}`.
 	 * @param string                         $correlationId   Ties integriq's log to pipelinq's; generated when empty.
 	 * @param string|null                    $inReplyTo       The inbound message a `reply` answers.
+	 * @param bool                           $probe           True to only show a state: integriq answers without logging.
 	 *
 	 * @return array<string,array{send:bool,code:string,reason:string,unsubscribe:array<string,mixed>|null}> By address as given.
 	 *
-	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) requiresConsent is integriq's contract field.
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) requiresConsent and probe are integriq's contract fields.
 	 *
 	 * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md#requirement-pipelinq-asks-integriq-before-every-non-exempt-message-req-cii-002
 	 */
@@ -232,6 +233,7 @@ class IntegriqConsentClient {
 		array $recipients,
 		string $correlationId = '',
 		?string $inReplyTo = null,
+		bool $probe = false,
 	): array {
 		if ($correlationId === '') {
 			$correlationId = 'pipelinq-'.bin2hex(random_bytes(8));
@@ -252,12 +254,59 @@ class IntegriqConsentClient {
 				requiresConsent: $requiresConsent,
 				chunk: $chunk,
 				correlationId: $correlationId,
-				inReplyTo: $inReplyTo
+				inReplyTo: $inReplyTo,
+				probe: $probe
 			);
 		}
 
 		return $decisions;
 	}//end decide()
+
+	/**
+	 * Ask for one recipient only to show their state, never before a send.
+	 *
+	 * integriq answers as it would for a send, without unsubscribe material,
+	 * and writes nothing to its decision log. An older integriq ignores the
+	 * flag and logs the ask, which is the safe way to fail.
+	 *
+	 * @param string $channel         The channel.
+	 * @param string $category        The category.
+	 * @param bool   $requiresConsent Whether consent is required.
+	 * @param string $address         The address.
+	 * @param string $contactRef      The pipelinq contact UUID, or empty.
+	 *
+	 * @return array{send:bool,code:string,reason:string,unsubscribe:array<string,mixed>|null} The decision.
+	 *
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) requiresConsent is integriq's contract field.
+	 *
+	 * @spec openspec/changes/latest-state-probe/specs/consent-in-integriq/spec.md#requirement-lateststate-asks-integriq-as-a-probe-req-cii-007
+	 */
+	public function probeOne(
+		string $channel,
+		string $category,
+		bool $requiresConsent,
+		string $address,
+		string $contactRef = '',
+	): array {
+		if (trim($address) === '') {
+			return $this->unavailable(channel: $channel, category: $category, why: 'the contact has no address on this channel');
+		}
+
+		$recipient = array_filter(
+			['address' => $address, 'contactRef' => $contactRef],
+			static fn (string $value): bool => $value !== ''
+		);
+
+		$decisions = $this->decide(
+			channel: $channel,
+			category: $category,
+			requiresConsent: $requiresConsent,
+			recipients: [$recipient],
+			probe: true
+		);
+
+		return ($decisions[$address] ?? $this->unavailable(channel: $channel, category: $category, why: 'no answer for this recipient'));
+	}//end probeOne()
 
 	/**
 	 * Ask for one recipient.
@@ -432,6 +481,7 @@ class IntegriqConsentClient {
 	 * @param array<int,array<string,mixed>> $chunk           The recipients.
 	 * @param string                         $correlationId   The correlation id.
 	 * @param string|null                    $inReplyTo       The inbound message, for a reply.
+	 * @param bool                           $probe           True to ask without a log row.
 	 *
 	 * @return array<string,array{send:bool,code:string,reason:string,unsubscribe:array<string,mixed>|null}> By address.
 	 *
@@ -444,6 +494,7 @@ class IntegriqConsentClient {
 		array $chunk,
 		string $correlationId,
 		?string $inReplyTo,
+		bool $probe,
 	): array {
 		[$event, $why] = $this->askChunk(
 			channel: $channel,
@@ -451,7 +502,8 @@ class IntegriqConsentClient {
 			requiresConsent: $requiresConsent,
 			chunk: $chunk,
 			correlationId: $correlationId,
-			inReplyTo: $inReplyTo
+			inReplyTo: $inReplyTo,
+			probe: $probe
 		);
 
 		$decisions = [];
@@ -487,6 +539,7 @@ class IntegriqConsentClient {
 	 * @param array<int,array<string,mixed>> $chunk           The recipients.
 	 * @param string                         $correlationId   The correlation id.
 	 * @param string|null                    $inReplyTo       The inbound message, for a reply.
+	 * @param bool                           $probe           True to ask without a log row.
 	 *
 	 * @return array{0:Event|null,1:string} The dispatched event, or null and why not.
 	 *
@@ -499,6 +552,7 @@ class IntegriqConsentClient {
 		array $chunk,
 		string $correlationId,
 		?string $inReplyTo,
+		bool $probe,
 	): array {
 		$eventClass = $this->eventClass(relative: $this->decisionEvent);
 		if ($eventClass === null) {
@@ -506,7 +560,8 @@ class IntegriqConsentClient {
 		}
 
 		try {
-			$event = new $eventClass('pipelinq', $channel, $category, $chunk, $correlationId, $this->baseUrl(), $requiresConsent, $inReplyTo);
+			// The ninth argument, probe, is ignored by an integriq that predates it.
+			$event = new $eventClass('pipelinq', $channel, $category, $chunk, $correlationId, $this->baseUrl(), $requiresConsent, $inReplyTo, $probe);
 			if (($event instanceof Event) === false) {
 				return [null, 'the decision event is not an event'];
 			}
