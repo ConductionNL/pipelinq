@@ -11,6 +11,13 @@
  * deleteObject) in one place and makes per-customer / per-tenant scoping
  * auditable (ADR-005, ADR-022).
  *
+ * Every portal endpoint is a PublicPage, so OpenRegister sees the caller as
+ * Anonymous. The portal authenticates its own principals (portal sessions) and
+ * scopes every read by tenant and account itself, so this repository asks
+ * OpenRegister with `_rbac: false` and `_multitenancy: false`. With the
+ * defaults an anonymous caller reads no account and may not save one: the
+ * password reset answered 200 and never mailed, and nobody could log in.
+ *
  * @category Service
  * @package  OCA\Pipelinq\Service\Portal
  *
@@ -148,7 +155,9 @@ class PortalObjectRepository {
 			$object = $this->objectService()->find(
 				id: $id,
 				register: $this->registerId(),
-				schema: $this->schemaId(schemaSlug: $schemaSlug)
+				schema: $this->schemaId(schemaSlug: $schemaSlug),
+				_rbac: false,
+				_multitenancy: false
 			);
 		} catch (\Throwable $e) {
 			return null;
@@ -185,7 +194,9 @@ class PortalObjectRepository {
 
 		try {
 			$results = $this->objectService()->findAll(
-				config: ['filters' => array_merge($base, $filters)]
+				config: ['filters' => array_merge($base, $filters)],
+				_rbac: false,
+				_multitenancy: false
 			);
 		} catch (\Throwable $e) {
 			$this->logger->warning(
@@ -245,7 +256,9 @@ class PortalObjectRepository {
 				extend: [],
 				register: $this->registerId(),
 				schema: $this->schemaId(schemaSlug: $schemaSlug),
-				uuid: $id
+				uuid: $id,
+				_rbac: false,
+				_multitenancy: false
 			);
 		} catch (\Throwable $e) {
 			$this->logger->error(

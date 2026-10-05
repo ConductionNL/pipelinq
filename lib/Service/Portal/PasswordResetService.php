@@ -110,8 +110,11 @@ class PasswordResetService {
 		$token = $this->tokens->issue(self::TTL_MINUTES);
 		$account['passwordResetTokenHash'] = $token['hash'];
 		$account['passwordResetExpiresAt'] = $token['expiresAt'];
+		// Save first: a link whose token is not stored can never be used.
 		$this->repository->save(self::SCHEMA, $account, $this->repository->idOf(object: $account));
 
+		// Category `account` (IntegriqConsentClient::CATEGORY_ACCOUNT) is exempt
+		// from opt-outs, so the reset mail is never put to integriq.
 		$this->mail->sendTokenLink(
 			$email,
 			'/index.php/apps/pipelinq/portal/password-reset',
