@@ -342,6 +342,20 @@ if (class_exists('\\OCA\\Integriq\\Event\\ConnectionStatusReportedEvent') === fa
 	require_once __DIR__ . '/Stubs/Integriq/Event/ConnectionStatusReportedEvent.php';
 }
 
+// Integriq's opt-out authority (opt-out-before-send). IntegriqConsentClient
+// sends both by string class name behind class_exists(); the stubs copy
+// integriq's real classes and yield to them when integriq is loaded.
+foreach (['OutboundSendDecisionRequestedEvent', 'OptOutChangeRequestedEvent'] as $pipelinqIntegriqEvent) {
+	if (class_exists('\\OCA\\Integriq\\Event\\'.$pipelinqIntegriqEvent) === false) {
+		require_once __DIR__.'/Stubs/Integriq/Event/'.$pipelinqIntegriqEvent.'.php';
+	}
+}
+
+// OpenRegister's shared List-Unsubscribe helper (REQ-ERO-005).
+if (class_exists('\\OCA\\OpenRegister\\Service\\Notification\\UnsubscribeHeaders') === false) {
+	require_once __DIR__.'/Stubs/Service/Notification/UnsubscribeHeaders.php';
+}
+
 // Portal test helpers live in the Tests namespace, which has no PSR-4 mapping
 // in autoload-dev; load the in-memory repository double explicitly so the
 // portal service tests can use it without a composer.json change.
