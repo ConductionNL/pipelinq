@@ -126,6 +126,9 @@ import RoutingSuggestionSection from './components/RoutingSuggestionSection.vue'
 //     top-level menu item linking to this card grid. ---
 import ServiceHubOverview from './components/service/ServiceHubOverview.vue'
 import SlaAttainmentBreakdownSection from './components/sla/SlaAttainmentBreakdownSection.vue'
+// --- Ticket page, simple structure (simple-ticket-page): the conversation to
+//     read, and the Answer dialog that wraps CustomerReplySection. ---
+import TicketConversationSection from './components/TicketConversationSection.vue'
 import WooConversionSection from './components/WooConversionSection.vue'
 import XWikiArticleViewer from './components/xwiki/XWikiArticleViewer.vue'
 import XWikiSidebarTabComponent from './components/xwiki/XWikiSidebarTab.vue'
@@ -163,6 +166,7 @@ import LeadCreateDialog from './dialogs/LeadCreateDialog.vue'
 import RequestCreateDialog from './dialogs/RequestCreateDialog.vue'
 import SegmentFormDialog from './dialogs/SegmentFormDialog.vue'
 import TemplateFormDialog from './dialogs/TemplateFormDialog.vue'
+import TicketAnswerDialog from './dialogs/TicketAnswerDialog.vue'
 // --- BRP Monitor (bsn-validatie-en-brp-lookup): admin tile + detailed report
 //     view aggregating the BrpMonitorJob output (lookups / cache-hits / errors /
 //     avg response time) and the mTLS client-certificate expiry countdown. ---
@@ -880,6 +884,11 @@ const registry = {
 		component: DossierSnapshotSection,
 		_note: "The dossier a resident asked about, on TicketDetail (questions-about-a-citizen-dossier REQ-QCD-006): reads the ticket's subjectReference snapshot and lists the documents as links to the public publications. Never reads the dossier itself; renders nothing for a ticket without a snapshot.",
 	},
+	TicketConversationSection: {
+		kind: 'section',
+		component: TicketConversationSection,
+		_note: "simple-ticket-page. The customer's portal replies and the employee's answers as one thread (library CnConversationThread), read only. It reads the ticket from cnSectionContext. Answers are written in TicketAnswerDialog, so one component saves them.",
+	},
 	CustomerReplySection: {
 		kind: 'section',
 		component: CustomerReplySection,
@@ -1110,6 +1119,13 @@ const registry = {
 		component: LeadCreateDialog,
 		propsSchema: null,
 		_note: "New Lead. Target of the Sales/Operational dashboards' new-lead header action and the Leads index Add button.",
+	},
+
+	TicketAnswerDialog: {
+		kind: 'modal',
+		component: TicketAnswerDialog,
+		propsSchema: null,
+		_note: 'simple-ticket-page. Target of the ticket page Answer action in the simple structure. Wraps CustomerReplySection unchanged and asks the page to reload on close.',
 	},
 
 	RequestCreateDialog: {

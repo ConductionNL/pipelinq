@@ -280,6 +280,387 @@
 					}
 				]
 			}
+		},
+		{
+			"id": "TicketDetail",
+			"_note": "The ticket page in the simple structure (openspec/changes/simple-ticket-page). The full structure has no overlay, so its page is today's page. STAGE: `status`, the ticket's own lifecycle field. EVERY STATUS CHANGE HERE IS A TRANSITION OF THE SCHEMA'S x-openregister-lifecycle, posted to OpenRegister's transition endpoint, which checks the `from` state and the authorization again. `visibleWhen` only hides a button on a status its transition cannot leave; it decides nothing. The spec fails when an action names a transition the schema lacks or shows on a status outside the transition's `from`. THE DESIGN NAMES THREE THINGS PIPELINQ DOES NOT HAVE and they are not invented: a reminder to a customer who does not answer (the waiting stage offers Answer again), a step from answered to closed (resolved, completed, rejected, converted and closed are all final, so a finished ticket has no primary button), and a convert-to-case header action (conversion needs an availability answer first, so it stays the self-hiding section it is). A CONTACT MOMENT HAS NO CUSTOMER TO ANSWER: Answer hides on it, the stage then has no primary button, and Close the ticket is in the More menu. THE ANSWER IS WRITTEN IN ONE PLACE: `customer-reply` leaves the body and opens as a dialog from the Answer button, and the body shows the conversation to read. THE GRID IS ONE TABS WIDGET, full width: beside the side column the grid is narrow, and three cards side by side would stack. LOG CONTACT SEEDS THE TICKET AND NOT THE CUSTOMER: the library leaves a token it cannot resolve in place, so `@object.contact` on a ticket without a contact would be saved as those fifteen characters, a foreign key to nothing. `@objectId` always resolves. The contact moment hangs on the ticket, and the ticket names the customer.",
+			"config": {
+				"stageField": "status",
+				"headerActions": [
+					{
+						"id": "ticket-start",
+						"type": "api-call",
+						"label": "Take on",
+						"icon": "AccountCheckOutline",
+						"url": "/apps/openregister/api/objects/@objectId/transition",
+						"method": "POST",
+						"payload": {
+							"action": "start"
+						},
+						"successMessage": "The ticket is in progress.",
+						"visibleWhen": {
+							"field": "status",
+							"op": "eq",
+							"value": "new"
+						}
+					},
+					{
+						"id": "ticket-answer",
+						"type": "open-modal",
+						"target": "TicketAnswerDialog",
+						"label": "Answer the customer",
+						"icon": "ForumOutline",
+						"visibleWhen": {
+							"field": "ticketType",
+							"op": "neq",
+							"value": "interaction"
+						}
+					},
+					{
+						"id": "ticket-log-contact",
+						"type": "open-form",
+						"label": "Log contact",
+						"formTitle": "Log contact",
+						"icon": "Phone",
+						"register": "pipelinq",
+						"schema": "ticket",
+						"props": {
+							"ticketType": "interaction",
+							"parentTicket": "@objectId"
+						}
+					},
+					{
+						"id": "ticket-resume",
+						"type": "api-call",
+						"label": "Back to in progress",
+						"icon": "AccountCheckOutline",
+						"url": "/apps/openregister/api/objects/@objectId/transition",
+						"method": "POST",
+						"payload": {
+							"action": "resume"
+						},
+						"successMessage": "The ticket is in progress.",
+						"visibleWhen": {
+							"field": "status",
+							"op": "eq",
+							"value": "awaiting_customer"
+						},
+						"group": "Status"
+					},
+					{
+						"id": "ticket-complete",
+						"type": "api-call",
+						"label": "Complete",
+						"icon": "CheckCircle",
+						"url": "/apps/openregister/api/objects/@objectId/transition",
+						"method": "POST",
+						"payload": {
+							"action": "complete"
+						},
+						"successMessage": "The ticket is completed.",
+						"visibleWhen": {
+							"all": [
+								{
+									"field": "status",
+									"op": "eq",
+									"value": "in_progress"
+								},
+								{
+									"field": "ticketType",
+									"op": "eq",
+									"value": "request"
+								}
+							]
+						},
+						"group": "Finish"
+					},
+					{
+						"id": "ticket-resolve",
+						"type": "api-call",
+						"label": "Resolve",
+						"icon": "CheckCircle",
+						"url": "/apps/openregister/api/objects/@objectId/transition",
+						"method": "POST",
+						"payload": {
+							"action": "resolve"
+						},
+						"successMessage": "The complaint is resolved.",
+						"visibleWhen": {
+							"all": [
+								{
+									"field": "status",
+									"op": "eq",
+									"value": "in_progress"
+								},
+								{
+									"field": "ticketType",
+									"op": "eq",
+									"value": "complaint"
+								}
+							]
+						},
+						"group": "Finish"
+					},
+					{
+						"id": "ticket-close",
+						"type": "api-call",
+						"label": "Close the ticket",
+						"icon": "Check",
+						"url": "/apps/openregister/api/objects/@objectId/transition",
+						"method": "POST",
+						"payload": {
+							"action": "close"
+						},
+						"successMessage": "The contact moment is closed.",
+						"visibleWhen": {
+							"all": [
+								{
+									"any": [
+										{
+											"field": "status",
+											"op": "eq",
+											"value": "new"
+										},
+										{
+											"field": "status",
+											"op": "eq",
+											"value": "in_progress"
+										}
+									]
+								},
+								{
+									"field": "ticketType",
+									"op": "eq",
+									"value": "interaction"
+								}
+							]
+						},
+						"group": "Finish"
+					},
+					{
+						"id": "ticket-reject",
+						"type": "api-call",
+						"label": "Reject",
+						"icon": "Check",
+						"url": "/apps/openregister/api/objects/@objectId/transition",
+						"method": "POST",
+						"payload": {
+							"action": "reject"
+						},
+						"successMessage": "The ticket is rejected.",
+						"visibleWhen": {
+							"any": [
+								{
+									"field": "status",
+									"op": "eq",
+									"value": "new"
+								},
+								{
+									"field": "status",
+									"op": "eq",
+									"value": "in_progress"
+								}
+							]
+						},
+						"group": "Finish"
+					}
+				],
+				"primaryActionByStage": {
+					"new": "ticket-start",
+					"in_progress": "ticket-answer",
+					"awaiting_customer": "ticket-answer"
+				},
+				"quickActions": [
+					"ticket-answer",
+					"ticket-log-contact"
+				],
+				"actionsMenu": {
+					"label": "More"
+				},
+				"typePill": {
+					"field": "ticketType",
+					"labels": {
+						"request": "Request",
+						"complaint": "Complaint",
+						"interaction": "Contact moment"
+					}
+				},
+				"statusPill": {
+					"field": "status",
+					"labels": {
+						"new": "New",
+						"in_progress": "In progress",
+						"awaiting_customer": "Waiting for customer",
+						"resolved": "Resolved",
+						"completed": "Completed",
+						"rejected": "Rejected",
+						"converted": "Converted to a case",
+						"closed": "Closed"
+					}
+				},
+				"sideColumn": [
+					{
+						"id": "side-customer",
+						"type": "data",
+						"title": "Customer",
+						"content": {
+							"title": "Customer",
+							"columns": 1,
+							"include": [
+								"client",
+								"contact",
+								"channel"
+							],
+							"hideEmpty": true,
+							"editable": false
+						}
+					},
+					{
+						"id": "side-deadline",
+						"type": "data",
+						"title": "Deadline",
+						"content": {
+							"title": "Deadline",
+							"columns": 1,
+							"include": [
+								"slaDeadline",
+								"priority",
+								"assignee"
+							],
+							"hideEmpty": true,
+							"editable": false
+						}
+					},
+					{
+						"id": "side-case",
+						"type": "data",
+						"title": "Linked case",
+						"content": {
+							"title": "Linked case",
+							"columns": 1,
+							"include": [
+								"caseReference",
+								"primaryCaseReference"
+							],
+							"hideEmpty": true,
+							"editable": false
+						}
+					}
+				],
+				"layout": [
+					{
+						"id": "1",
+						"widgetId": "ticket-panels",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 12,
+						"gridHeight": 8
+					}
+				]
+			},
+			"configPatch": {
+				"bodyWidgets": {
+					"customer-reply": null
+				}
+			},
+			"configAppend": {
+				"widgets": [
+					{
+						"id": "ticket-contactmoments",
+						"type": "object-list",
+						"title": "Contact moments",
+						"icon": "AccountVoice",
+						"content": {
+							"register": "pipelinq",
+							"schema": "ticket",
+							"filter": {
+								"parentTicket": "@objectId",
+								"ticketType": "interaction"
+							},
+							"sort": {
+								"field": "occurredAt",
+								"dir": "desc"
+							},
+							"columns": [
+								{
+									"key": "title",
+									"label": "Subject"
+								},
+								{
+									"key": "channel",
+									"label": "Channel"
+								},
+								{
+									"key": "occurredAt",
+									"label": "When"
+								},
+								{
+									"key": "status",
+									"label": "Status"
+								}
+							],
+							"limit": 25,
+							"rowRoute": "TicketDetail",
+							"emptyText": "No contact moments on this ticket yet."
+						}
+					},
+					{
+						"id": "ticket-panels",
+						"type": "tabs",
+						"title": "Ticket",
+						"icon": "FileDocument",
+						"content": {
+							"ariaLabel": "Ticket details",
+							"maxVisibleTabs": 5,
+							"moreLabel": "More",
+							"tabs": [
+								{
+									"widgetId": "ticket-data",
+									"label": "Overview"
+								},
+								{
+									"widgetId": "ticket-contactmoments",
+									"label": "Contact moments"
+								},
+								{
+									"widgetId": "ticket-related",
+									"label": "Related"
+								},
+								{
+									"widgetId": "ticket-decisions",
+									"label": "Decisions"
+								}
+							]
+						}
+					}
+				],
+				"bodyWidgets": [
+					{
+						"id": "ticket-conversation",
+						"component": "TicketConversationSection",
+						"title": "Conversation",
+						"placement": "after-data",
+						"props": {
+							"objectId": "@objectId"
+						}
+					},
+					{
+						"id": "request-conversion",
+						"component": "RequestConversionSection",
+						"title": "Case",
+						"placement": "after-data",
+						"props": {
+							"requestId": "@objectId"
+						}
+					}
+				]
+			},
+			"configOrder": {
+				"bodyWidgets": [
+					"dossier-snapshot",
+					"ticket-conversation"
+				]
+			}
 		}
 	]
 }

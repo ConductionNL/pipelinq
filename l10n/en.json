@@ -7059,6 +7059,22 @@
         "Modules in the simple menu": "Modules in the simple menu",
         "Switch on what your organisation uses. A module that is off stays reachable from the Modules page.": "Switch on what your organisation uses. A module that is off stays reachable from the Modules page.",
         "Saved. People see the change the next time they open Pipelinq.": "Saved. People see the change the next time they open Pipelinq.",
-        "The menu could not be saved. Try again.": "The menu could not be saved. Try again."
+        "The menu could not be saved. Try again.": "The menu could not be saved. Try again.",
+        "Take on": "Take on",
+        "Answer the customer": "Answer the customer",
+        "Log contact": "Log contact",
+        "Back to in progress": "Back to in progress",
+        "Close the ticket": "Close the ticket",
+        "Finish": "Finish",
+        "The ticket is in progress.": "The ticket is in progress.",
+        "The ticket is completed.": "The ticket is completed.",
+        "The complaint is resolved.": "The complaint is resolved.",
+        "The contact moment is closed.": "The contact moment is closed.",
+        "The ticket is rejected.": "The ticket is rejected.",
+        "Converted to a case": "Converted to a case",
+        "Linked case": "Linked case",
+        "No contact moments on this ticket yet.": "No contact moments on this ticket yet.",
+        "Employee": "Employee",
+        "No messages with the customer yet.": "No messages with the customer yet."
     }
 }
