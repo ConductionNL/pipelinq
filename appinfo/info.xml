@@ -139,6 +139,8 @@ Vrij en open source onder de EUPL-1.2-licentie.
         <job>OCA\Pipelinq\BackgroundJob\SearchConsoleImportJob</job>
         <job>OCA\Pipelinq\BackgroundJob\SocialPublishJob</job>
         <job>OCA\Pipelinq\BackgroundJob\SocialMetricsPullJob</job>
+        <!-- Replays consent wishes integriq did not take (opt-out-before-send). -->
+        <job>OCA\Pipelinq\BackgroundJob\ReplayConsentToIntegriqJob</job>
     </background-jobs>
 
     <repair-steps>
@@ -236,6 +238,12 @@ Vrij en open source onder de EUPL-1.2-licentie.
                 would leave the rest silently reading null.
             -->
             <step>OCA\Pipelinq\Repair\RenameDutchColumns</step>
+            <!--
+                opt-out-before-send: moves both consent stores into integriq and
+                flips consent.store only after a run with no refusal. A no-op
+                without integriq; idempotent by legacyRef.
+            -->
+            <step>OCA\Pipelinq\Repair\MigrateConsentToIntegriq</step>
         </post-migration>
         <!--
             FRESH INSTALL. Nextcloud does NOT run post-migration on a first install:
@@ -268,6 +276,10 @@ Vrij en open source onder de EUPL-1.2-licentie.
             <step>OCA\Pipelinq\Repair\SeedWeeklyReviewAgentTemplate</step>
         </install>
     </repair-steps>
+
+    <commands>
+        <command>OCA\Pipelinq\Command\ConsentMigrateCommand</command>
+    </commands>
 
     <settings>
         <admin>OCA\Pipelinq\Settings\AdminSettings</admin>
