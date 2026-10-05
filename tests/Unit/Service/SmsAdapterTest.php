@@ -73,6 +73,13 @@ class SmsAdapterTest extends TestCase {
 			public array $saved = [];
 
 			/**
+			 * Every call with the access flags it was made with.
+			 *
+			 * @var array<int, array{call: string, _rbac: bool, _multitenancy: bool}>
+			 */
+			public array $access = [];
+
+			/**
 			 * Mock saveObject.
 			 *
 			 * @param array $object Payload.
@@ -82,7 +89,8 @@ class SmsAdapterTest extends TestCase {
 			 *
 			 * @return array<string, mixed>
 			 */
-			public function saveObject(array $object, $register = null, $schema = null, ?string $uuid = null): array {
+			public function saveObject(array $object, $register = null, $schema = null, ?string $uuid = null, bool $_rbac = true, bool $_multitenancy = true): array {
+				$this->access[] = ['call' => 'saveObject', '_rbac' => $_rbac, '_multitenancy' => $_multitenancy];
 				$object['uuid'] = ($uuid ?? ('row-' . count($this->saved)));
 				$this->saved[] = $object;
 				return $object;
@@ -97,7 +105,8 @@ class SmsAdapterTest extends TestCase {
 			 *
 			 * @return array<int, array<string, mixed>>
 			 */
-			public function findAll(array $config = []): array {
+			public function findAll(array $config = [], bool $_rbac = true, bool $_multitenancy = true): array {
+				$this->access[] = ['call' => 'findAll', '_rbac' => $_rbac, '_multitenancy' => $_multitenancy];
 				return [];
 			}
 		};
@@ -358,4 +367,43 @@ class SmsAdapterTest extends TestCase {
 		$this->assertSame('received', $result['status']);
 		$this->assertTrue($result['optOutRecorded']);
 	}//end testHandleInboundWebhookStopKeywordOptsOut()
+
+	/**
+	 * The provider's webhook is a PublicPage: no user is logged in, so a
+	 * read or write under OpenRegister's RBAC finds nothing ("not found in
+	 * any magic table") and the webhook answered providerUnknown to every
+	 * real callback. The provider lookup and every write after the
+	 * signature check run as the system.
+	 *
+	 * @return void
+	 */
+	public function testInboundWebhookReadsAndWritesAsTheSystem(): void {
+		$row = ['uuid' => 'prov-1', 'kind' => 'sms', 'vendor' => 'messagebird'];
+		$this->providerRepo->expects($this->once())
+			->method('findById')
+			->with('prov-1', true)
+			->willReturn($row);
+		$this->providerFactory->method('create')
+			->willReturn($this->buildClient('messagebird', 'success', 'ext-1', true));
+		$this->consentService->method('isOptOutKeyword')->willReturn(true);
+		$this->consentService->expects($this->once())
+			->method('recordOptOut')
+			->with(
+				$this->isType('string'),
+				$this->equalTo('sms'),
+				$this->equalTo('keyword-stop'),
+				$this->stringContains('STOP'),
+				$this->anything(),
+				$this->equalTo('+31611119999'),
+			);
+
+		$result = $this->adapter->handleInboundWebhook(json_encode(['from' => '+31611119999', 'body' => 'STOP']), 'sig', 'prov-1');
+
+		$this->assertSame('received', $result['status']);
+		$this->assertNotSame([], $this->objectService->access);
+		foreach ($this->objectService->access as $access) {
+			$this->assertFalse($access['_rbac'], $access['call'] . ' ran under RBAC');
+			$this->assertFalse($access['_multitenancy'], $access['call'] . ' ran under multitenancy');
+		}
+	}//end testInboundWebhookReadsAndWritesAsTheSystem()
 }//end class

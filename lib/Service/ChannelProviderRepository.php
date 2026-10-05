@@ -133,12 +133,18 @@ class ChannelProviderRepository {
 	/**
 	 * Load one provider row by id.
 	 *
+	 * A provider's inbound webhook is a PublicPage with no user, so under
+	 * OpenRegister's RBAC the row is never found. The webhook asks with
+	 * `asSystem` to read the row whose secret then verifies the callback;
+	 * the row is used in-process and never returned to the caller.
+	 *
 	 * @param string $id Provider UUID / slug.
+	 * @param bool $asSystem Read without RBAC and multitenancy (signed webhooks only).
 	 *
 	 * @return array<string, mixed>|null Row or null.
 	 * @spec openspec/specs/outbound-messaging/spec.md#REQ-OM-004
 	 */
-	public function findById(string $id): ?array {
+	public function findById(string $id, bool $asSystem = false): ?array {
 		if ($id === '') {
 			return null;
 		}
@@ -153,6 +159,8 @@ class ChannelProviderRepository {
 				id: $id,
 				register: $this->getRegisterSlug(),
 				schema: $this->getSchemaSlug(),
+				_rbac: $asSystem === false,
+				_multitenancy: $asSystem === false,
 			);
 		} catch (Throwable $e) {
 			$this->logger->info(

@@ -386,7 +386,11 @@ class SmsAdapter {
 	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#3.5
 	 */
 	public function handleInboundWebhook(string $rawBody, string $signature, string $providerId): array {
-		$row = $this->providerRepo->findById(id: $providerId);
+		// The webhook is a PublicPage: no user is logged in, so every
+		// OpenRegister read and write below runs as the system. Only the
+		// provider lookup precedes the signature check, and its row stays
+		// in-process.
+		$row = $this->providerRepo->findById(id: $providerId, asSystem: true);
 		if ($row === null) {
 			return ['status' => 'providerUnknown'];
 		}
@@ -412,7 +416,7 @@ class SmsAdapter {
 			return ['status' => 'invalidPayload'];
 		}
 
-		$contactInfo = $this->findOrCreatePlaceholderContact(phone: $from);
+		$contactInfo = $this->findOrCreatePlaceholderContact(phone: $from, asSystem: true);
 		$contactId = $contactInfo['contactId'];
 		$placeholder = $contactInfo['created'];
 
@@ -420,6 +424,7 @@ class SmsAdapter {
 			contactId: $contactId,
 			providerId: $providerId,
 			channel: 'sms',
+			asSystem: true,
 		);
 
 		$persisted = $this->persistInbound(
@@ -427,6 +432,7 @@ class SmsAdapter {
 			providerId: $providerId,
 			conversationId: $conversationId,
 			body: $body,
+			asSystem: true,
 		);
 
 		$optOutRecorded = false;
@@ -581,6 +587,7 @@ class SmsAdapter {
 	 * @param string $providerId Provider UUID.
 	 * @param string $conversationId Conversation UUID.
 	 * @param string $body Body.
+	 * @param bool $asSystem Write without RBAC (the signed public webhook).
 	 *
 	 * @return array<string, mixed>|null Saved row.
 	 */
@@ -589,6 +596,7 @@ class SmsAdapter {
 		string $providerId,
 		string $conversationId,
 		string $body,
+		bool $asSystem = false,
 	): ?array {
 		return $this->persistMessage(
 			payload: [
@@ -601,6 +609,7 @@ class SmsAdapter {
 				'deliveryStatus' => 'delivered',
 				'sentAt' => $this->nowIso(),
 			],
+			asSystem: $asSystem,
 		);
 	}//end persistInbound()
 
@@ -645,10 +654,11 @@ class SmsAdapter {
 	 * Persist a message payload via OpenRegister.
 	 *
 	 * @param array<string, mixed> $payload Payload.
+	 * @param bool $asSystem Write without RBAC (the signed public webhook).
 	 *
 	 * @return array<string, mixed>|null Saved row.
 	 */
-	private function persistMessage(array $payload): ?array {
+	private function persistMessage(array $payload, bool $asSystem = false): ?array {
 		$objectService = $this->getObjectService();
 		if ($objectService === null) {
 			return null;
@@ -660,6 +670,8 @@ class SmsAdapter {
 				register: $this->getRegisterSlug(),
 				schema: $this->resolveSchemaSlug(key: 'message_schema', default: self::DEFAULT_MESSAGE_SCHEMA_SLUG),
 				uuid: null,
+				_rbac: $asSystem === false,
+				_multitenancy: $asSystem === false,
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(
@@ -679,10 +691,11 @@ class SmsAdapter {
 	 * @param string $contactId Contact UUID.
 	 * @param string $providerId Provider UUID.
 	 * @param string $channel Channel.
+	 * @param bool $asSystem Read and write without RBAC (the signed public webhook).
 	 *
 	 * @return string Conversation UUID.
 	 */
-	private function findOrOpenConversation(string $contactId, string $providerId, string $channel): string {
+	private function findOrOpenConversation(string $contactId, string $providerId, string $channel, bool $asSystem = false): string {
 		$objectService = $this->getObjectService();
 		if ($objectService === null) {
 			return '';
@@ -701,7 +714,9 @@ class SmsAdapter {
 						'register' => $this->getRegisterSlug(),
 						'schema' => $schema,
 					],
-				]
+				],
+				_rbac: $asSystem === false,
+				_multitenancy: $asSystem === false,
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(
@@ -727,6 +742,8 @@ class SmsAdapter {
 				register: $this->getRegisterSlug(),
 				schema: $schema,
 				uuid: null,
+				_rbac: $asSystem === false,
+				_multitenancy: $asSystem === false,
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(
@@ -744,10 +761,11 @@ class SmsAdapter {
 	 * no match exists. Returns {contactId, created}.
 	 *
 	 * @param string $phone Sender phone number (E.164).
+	 * @param bool $asSystem Read and write without RBAC (the signed public webhook).
 	 *
 	 * @return array{contactId: string, created: bool} Contact handle.
 	 */
-	private function findOrCreatePlaceholderContact(string $phone): array {
+	private function findOrCreatePlaceholderContact(string $phone, bool $asSystem = false): array {
 		$objectService = $this->getObjectService();
 		if ($objectService === null) {
 			return ['contactId' => '', 'created' => false];
@@ -763,7 +781,9 @@ class SmsAdapter {
 						'register' => $this->getRegisterSlug(),
 						'schema' => $schema,
 					],
-				]
+				],
+				_rbac: $asSystem === false,
+				_multitenancy: $asSystem === false,
 			);
 		} catch (Throwable $e) {
 			$rows = [];
@@ -787,6 +807,8 @@ class SmsAdapter {
 				register: $this->getRegisterSlug(),
 				schema: $schema,
 				uuid: null,
+				_rbac: $asSystem === false,
+				_multitenancy: $asSystem === false,
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(
