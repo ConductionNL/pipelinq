@@ -265,8 +265,8 @@ class IntegriqConsentClient {
 	/**
 	 * Ask for one recipient only to show their state, never before a send.
 	 *
-	 * integriq answers as it would for a send, without unsubscribe material,
-	 * and writes nothing to its decision log. An older integriq ignores the
+	 * The answer is the one a send would get, without unsubscribe material,
+	 * and integriq writes nothing to its decision log. An older integriq ignores the
 	 * flag and logs the ask, which is the safe way to fail.
 	 *
 	 * @param string $channel         The channel.
