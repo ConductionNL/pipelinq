@@ -285,9 +285,6 @@ import WeeklyReviewView from './views/marketing/WeeklyReview.vue'
 //     composer. Same self-fetching-by-props pattern as the sections above. ---
 import MessagingConversationSection from './views/messaging/MessagingConversationSection.vue'
 // --- MyWork — bespoke per-user surface mixing tasks + leads + requests. ---
-// --- Modules page (simple-structure-profile): the cards that open every page
-//     the simple menu leaves out. ---
-import ModulesPage from './views/ModulesPage.vue'
 import MyWorkView from './views/MyWork.vue'
 // Bespoke kanban board with in-memory search (REQ-PIPE-022).
 // See openspec/changes/2026-03-20-pipeline/design.md.
@@ -404,12 +401,6 @@ const registry = {
 		kind: 'page',
 		component: FeaturesRoadmapView,
 		_note: 'Wraps the library\'s CnFeaturesAndRoadmapPage so the page can carry a second section, the help desk capability comparison. The library component declares no slots, so the comparison cannot be added from the manifest; the page moved from type:"roadmap" to type:"custom" for that reason and should move back the day the library grows a slot. Ported from dossiq, which hit the same wall first.',
-	},
-
-	ModulesPage: {
-		kind: 'page',
-		component: ModulesPage,
-		_note: 'simple-structure-profile. One card per page the simple menu leaves out, grouped by module. The view draws its manifest config as router links. A custom page rather than a second type:"reports" page, because an app has one reports page (ADR-112, gate-104) and these cards are not reports.',
 	},
 
 	StoreGallery: {

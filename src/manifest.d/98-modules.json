@@ -2,16 +2,14 @@
 	"_meta": {
 		"spdx-license": "EUPL-1.2",
 		"spdx-copyright": "2026 Conduction B.V.",
-		"description": "The Modules page (openspec/changes/simple-structure-profile). One page of cards that opens every page the simple menu leaves out: the six modules (Sales, Marketing, Point of sale, Products, Contracts, Loyalty) and three pages that belong to no module. It is a `custom` page whose component (src/views/ModulesPage.vue) draws this config as link cards. It is NOT a second `type: \"reports\"` page: an app has one of those (ADR-112, gate-104), and these cards are not reports. The page exists in both structure profiles so its address is stable; only the simple menu links to it (`ModulesMenu` in src/menu-layout.simple.json). tests/vitest/structureProfile.spec.js fails when a module entry in the simple profile has no card here."
+		"description": "The Modules page (openspec/changes/simple-structure-profile). One page of link cards that opens every page the simple menu leaves out: the six modules (Sales, Marketing, Point of sale, Products, Contracts, Loyalty) and three pages that belong to no module. It is a `links` page, the library's typed page of link cards (nextcloud-vue 2.61.0). The library leaves out a card whose route does not resolve, so tests/vitest/modulesPage.spec.js mounts the page and counts all 29. The page exists in both structure profiles so its address is stable; only the simple menu links to it (`ModulesMenu` in src/menu-layout.simple.json). tests/vitest/structureProfile.spec.js fails when a module entry in the simple profile has no card here."
 	},
 	"menu": [],
 	"pages": [
 		{
 			"id": "Modules",
-			"_note": "simple-structure-profile. A page of link cards, one per page the simple menu leaves out, grouped by module. No declarative page type is a page of links to other pages: `reports` is the nearest and an app has exactly one of those (ADR-112, gate-104), `dashboard` renders data widgets, and `index` lists objects of one schema. ModulesPage.vue draws them as router links.",
 			"route": "/modules",
-			"type": "custom",
-			"component": "ModulesPage",
+			"type": "links",
 			"title": "Modules and more",
 			"config": {
 				"description": "Every page that is not in the daily menu. An administrator can add a module to the menu in the admin settings.",

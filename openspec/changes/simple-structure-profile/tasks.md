@@ -3,15 +3,15 @@
 Kind: code. Follows the dossiq pilot (`PATTERN-simple-structure.md`).
 
 - [x] 0.1 Move `@conduction/nextcloud-vue` from the exact pin `2.56.0-beta.5`
-  to `^2.60.0`.
+  to `^2.61.0`.
 - [x] 1.1 `src/utils/structureProfile.js`, copied from dossiq (design D-1).
 - [x] 1.2 `src/menu-layout.simple.json`: the simple menu, the moves to
   settings, the modules, the start page, the Reports card (design D-1, D-3,
   D-5, D-6).
 - [x] 1.3 `src/utils/menuModules.js`: `resolveMenuModules`, `applyMenuModules`,
   `applyHomePage` (design D-3, D-5).
-- [x] 1.4 `src/manifest.d/98-modules.json` and `src/views/ModulesPage.vue`: the
-  Modules page (design D-4).
+- [x] 1.4 `src/manifest.d/98-modules.json`: the Modules page, a `links` page
+  (design D-4).
 - [x] 1.5 `src/main.js` picks the layout file and the modules from initial
   state, and redirects `/` to the start page.
 - [x] 1.5b `holdUnreachableTours`: the sales tour does not start in the simple

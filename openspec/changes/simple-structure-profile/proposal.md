@@ -110,7 +110,8 @@ New from pipelinq:
 Every instance flips to the simple menu on update. To go back: admin settings,
 Menu structure, Full. Or `occ config:app:set pipelinq menu_structure --value=full`.
 
-The library moves from the exact pin `2.56.0-beta.5` to `^2.60.0`. The pin was
+The library moves from the exact pin `2.56.0-beta.5` to `^2.61.0`. The pin was
 set on 1 October (`02ec94910`, then `d547db8af`) to get nextcloud-vue#1297
 (table rows as real links, `cnSectionContext.setObject`) before it reached a
-stable release. 2.60.0 contains both.
+stable release. 2.60.0 contains both, and 2.61.0 adds the `links` page type
+the Modules page uses.
