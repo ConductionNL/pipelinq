@@ -43,7 +43,7 @@ On upgrade, pipelinq MUST migrate every `messagingConsentRecord` and `consentRec
 
 ### Requirement: pipelinq asks integriq before every non-exempt message (REQ-CII-002)
 
-After the cutover, pipelinq MUST decide every SMS, WhatsApp message, blast, journey send, appointment mail and Berichtenbox email fallback through `OutboundSendDecisionRequestedEvent`. A marketing send MUST set `requiresConsent`. A WhatsApp business-initiated send MUST set `requiresConsent`. An appointment mail MUST use category `reminder`. Dunning suppression MUST still apply after integriq allows a promotional send. Without an answer from integriq, pipelinq MUST refuse the message with `authority-unavailable`, except account and security mail.
+After the cutover, pipelinq MUST decide every SMS, WhatsApp message, blast, journey send, appointment mail and Berichtenbox email fallback through `OutboundSendDecisionRequestedEvent`. A marketing send MUST set `requiresConsent`. A WhatsApp business-initiated send MUST set `requiresConsent`. An appointment mail MUST use category `reminder`. Dunning suppression MUST still apply after integriq allows a promotional send. Without an answer from integriq, pipelinq MUST refuse the message with `authority-unavailable` and MUST log the refusal, except account and security mail. An answer inside a conversation the contact started MUST be sent as `reply` with the inbound message as `inReplyTo`, and an opt-out MUST NOT stop it.
 
 #### Scenario: A blast skips a contact who opted out elsewhere
 
@@ -110,3 +110,22 @@ A segment blast, an appointment mail and a fallback mail MUST carry integriq's u
 - **WHEN** pipelinq sends a segment blast email
 - **THEN** `{{unsubscribe_link}}` resolves to integriq's link and is not empty
 - @e2e exclude mail rendering, covered by PHPUnit
+
+#### Scenario: An answer in the contact's own conversation is sent
+
+- **GIVEN** a contact with a channel opt-out on `whatsapp`
+- **AND** the contact sent a WhatsApp question within the session window
+- **WHEN** an agent answers that question
+- **THEN** the answer is sent as `reply`
+- @e2e exclude provider send path, covered by PHPUnit
+
+### Requirement: Contact erasure keeps the opt-out in integriq (REQ-CII-005)
+
+When a contact is erased, pipelinq MUST dispatch `OptOutChangeRequestedEvent` with state `erase-contact` and the contact UUID. pipelinq MUST NOT ask integriq to delete the opt-out. integriq keeps the address and the state and drops the contact link and the evidence. Approved by Ruben on 2026-10-05.
+
+#### Scenario: An erased contact is still not mailed
+
+- **GIVEN** a contact who opted out of email and is then erased
+- **WHEN** a new contact is created later with the same email address
+- **THEN** a `service` email to that address is refused with `opted-out`
+- @e2e exclude event path, covered by PHPUnit

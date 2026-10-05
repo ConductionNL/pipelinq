@@ -56,7 +56,7 @@ Spec only until Ruben approves ConductionNL/hydra#739. Build after integriq ship
 
 ## 6. The link
 
-- [ ] 6.1 Segment blasts get integriq's link. List blasts keep pipelinq's list link. Headers through `applyHeaders()`.
+- [ ] 6.1 Segment blasts get integriq's link. List blasts keep pipelinq's list link. `applyHeaders()` delegates to OpenRegister's `UnsubscribeHeaders`.
   - spec_ref: `#requirement-every-non-exempt-pipelinq-mail-carries-an-unsubscribe-link-req-cii-004`
   - files: `lib/Service/Marketing/MailTransportService.php`, `lib/Service/Marketing/Transport/InstanceMailerTransport.php`
   - test: `vendor/bin/phpunit --no-coverage --filter MailTransportService`
@@ -66,8 +66,13 @@ Spec only until Ruben approves ConductionNL/hydra#739. Build after integriq ship
 
 ## 7. Erasure
 
-- [ ] 7.1 After Ruben's answer to hydra open decision 5: `onContactDeleted()` asks integriq to drop `contactRef` and evidence instead of deleting the opt-out.
-  - files: `lib/Service/ClientManagementIntegration.php`
+- [ ] 7.1 `onContactDeleted()` dispatches `erase-contact` to integriq instead of deleting the opt-out (Ruben, 2026-10-05).
+  - spec_ref: `specs/consent-in-integriq/spec.md#requirement-contact-erasure-keeps-the-opt-out-in-integriq-req-cii-005`
+  - files: `lib/Service/ClientManagementIntegration.php`, its test
+  - test: `vendor/bin/phpunit --no-coverage --filter ClientManagementIntegration`
+- [ ] 7.2 Conversation answers go out as `reply` with `inReplyTo`.
+  - files: `lib/Service/SmsAdapter.php`, `lib/Service/WhatsAppAdapter.php`, `lib/Service/MessagingService.php`
+  - test: `vendor/bin/phpunit --no-coverage --filter "SmsAdapter|WhatsAppAdapter"`
 
 ## 8. Verify
 

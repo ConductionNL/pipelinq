@@ -1,6 +1,6 @@
 # Keep consent in integriq and ask integriq before you send
 
-Part of the hydra change `opt-out-before-send` (ConductionNL/hydra#739). That change holds the fleet contract, the sender table and the open decisions. integriq's side is ConductionNL/integriq#2530. This is pipelinq's share.
+Part of the hydra change `opt-out-before-send` (ConductionNL/hydra#739). That change holds the fleet contract, the sender table and Ruben's decisions of 2026-10-05. integriq's side is ConductionNL/integriq#2530. This is pipelinq's share.
 
 ## Why
 
@@ -33,7 +33,7 @@ Ruben decided on 2026-10-05: one store, in integriq. pipelinq asks integriq.
 
 - `lib/Service/ConsentService.php`, `lib/Service/ComplianceService.php`, `lib/Service/SubscriptionService.php`, `lib/Controller/MessagingController.php`, `lib/Controller/ListPublicController.php`
 - `lib/Service/SmsAdapter.php`, `lib/Service/WhatsAppAdapter.php`, `lib/Service/AppointmentEmailService.php`, `lib/Service/EmailFallbackSender.php`, `lib/Service/Marketing/MailTransportService.php`
-- `lib/Service/ClientManagementIntegration.php` (contact erasure, see hydra open decision 5)
+- `lib/Service/ClientManagementIntegration.php` (contact erasure keeps the opt-out, Ruben 2026-10-05)
 - A new repair step `lib/Repair/MigrateConsentToIntegriq.php`
 - **pipelinq now needs integriq for every message that is not exempt.** Without integriq, marketing, SMS, WhatsApp and reminders stop. Password reset and account mail (`lib/Service/Portal/PortalMailService.php:111`) keep working.
 - The `marketing-lists-and-double-opt-in` change (#1770) is fully ticked. Its list consent moves with the rest. Its public endpoints stay on pipelinq, because old mail names them in `List-Unsubscribe` headers.

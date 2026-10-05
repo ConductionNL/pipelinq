@@ -1,6 +1,6 @@
 # Design: keep consent in integriq and ask integriq before you send
 
-The fleet contract, the mapping of consent types (section 7), the category list, the fail mode and the open decisions live in hydra's `openspec/changes/opt-out-before-send/design.md` (ConductionNL/hydra#739). This file covers pipelinq. Lines are at `development` `59f93beb`.
+The fleet contract, the mapping of consent types (section 7), the category list, the fail mode and Ruben's decisions of 2026-10-05 live in hydra's `openspec/changes/opt-out-before-send/design.md` (ConductionNL/hydra#739). This file covers pipelinq. Lines are at `development` `59f93beb`.
 
 ## 1. One client for integriq
 
@@ -66,15 +66,24 @@ Not changed: `PortalMailService` (`lib/Service/Portal/PortalMailService.php:111`
 
 ## 6. The link
 
-- **Email.** `MailTransportService` fills `{{unsubscribe_link}}` from the delivery's `unsubscribeUrl` (`lib/Service/Marketing/MailTransportService.php:264`). For a list send, pipelinq's own list link stays: it is named in older mail and in `List-Unsubscribe` headers, and its POST now writes to integriq. For a segment send, which has none today (`:233-235`), the link is integriq's. `InstanceMailerTransport::applyHeaders()` (`lib/Service/Marketing/Transport/InstanceMailerTransport.php:154`) sets the headers from integriq's material.
+- **Email.** `MailTransportService` fills `{{unsubscribe_link}}` from the delivery's `unsubscribeUrl` (`lib/Service/Marketing/MailTransportService.php:264`). For a list send, pipelinq's own list link stays: it is named in older mail and in `List-Unsubscribe` headers, and its POST now writes to integriq. For a segment send, which has none today (`:233-235`), the link is integriq's. `InstanceMailerTransport::applyHeaders()` (`lib/Service/Marketing/Transport/InstanceMailerTransport.php:154`) sets the headers from integriq's material through OpenRegister's `UnsubscribeHeaders` helper.
 - **SMS and WhatsApp.** The STOP keyword stays. pipelinq already handles it. The SMS footer adds integriq's `smsText` only when the provider has no inbound path.
 - **Appointment and fallback mail.** integriq's link line in the body.
 
 ## 7. Contact erasure
 
-`ClientManagementIntegration::onContactDeleted()` (`lib/Service/ClientManagementIntegration.php:65`) calls `ConsentService::deleteForContact()` (`:71`, `ConsentService.php:292`). After the cutover it no longer deletes integriq's opt-out. It asks integriq to drop the `contactRef` and the evidence and to keep the opt-out under the address. This follows hydra's open decision 5 and waits for Ruben's answer.
+`ClientManagementIntegration::onContactDeleted()` (`lib/Service/ClientManagementIntegration.php:65`) calls `ConsentService::deleteForContact()` (`:71`, `ConsentService.php:292`). After the cutover it no longer deletes integriq's opt-out. It dispatches `OptOutChangeRequestedEvent` with state `erase-contact` and the contact UUID. integriq clears `contact_ref` and the evidence and keeps the opt-out under the address (Ruben, 2026-10-05, decision 5). pipelinq's own history records for the contact are still deleted, as now.
 
-## 8. Open decisions (pipelinq)
+## 8. Decisions (approved by Ruben 2026-10-05)
 
-1. **Delegate `latestState()`?** The UI shows the consent state per channel (`MessagingController.php:242`). The decision event answers "may I send", not "what is the state". Recommended: answer it from the decision code, as in the table above. The alternative is a third, read-only integriq event.
-2. The fleet decisions in hydra's design section 12 also bind this change, especially 1 (fail closed without integriq) and 5 (erasure).
+The fleet decisions are in hydra's design section 12. The ones that shape this change:
+
+- **Fail closed.** Without integriq, every non-exempt send is refused with `authority-unavailable` and logged at warning level with the channel and the category. Account and security mail is sent.
+- **Replies pass an opt-out.** An SMS or WhatsApp answer inside a conversation the contact started is sent as `reply` with the inbound message id as `inReplyTo`. Messages pipelinq starts, including business-initiated WhatsApp templates, are not replies.
+- **Erasure keeps the opt-out** (section 7).
+- **Headers through OpenRegister.** `InstanceMailerTransport::applyHeaders()` (`lib/Service/Marketing/Transport/InstanceMailerTransport.php:154`) delegates to OpenRegister's shared `UnsubscribeHeaders` helper (ConductionNL/openregister#4334, REQ-ERO-005). pipelinq keeps no own copy of the guarded path.
+- **The short SMS link** comes from integriq when a provider has no inbound keyword path.
+
+## 9. One open point (pipelinq only)
+
+**Delegate `latestState()`?** The UI shows the consent state per channel (`MessagingController.php:242`). The decision event answers "may I send", not "what is the state". Recommended: answer it from the decision code, as in section 2. The alternative is a third, read-only integriq event. Ruben's 2026-10-05 answers do not cover this.
