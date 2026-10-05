@@ -20,7 +20,10 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use OCA\Pipelinq\Controller\DashboardController;
+use OCA\Pipelinq\Service\Settings\MenuStructure;
 use OCP\AppFramework\Http\TemplateResponse;
+use OCP\AppFramework\Services\IInitialState;
+use OCP\IAppConfig;
 use OCP\IRequest;
 use PHPUnit\Framework\TestCase;
 
@@ -35,7 +38,12 @@ class DashboardControllerTest extends TestCase {
 	 */
 	public function testPageReturnsTemplateResponse(): void {
 		$request = $this->createMock(IRequest::class);
-		$controller = new DashboardController($request);
+		$controller = new DashboardController(
+			$request,
+			$this->createMock(IInitialState::class),
+			$this->createMock(IAppConfig::class),
+			new MenuStructure(),
+		);
 
 		$response = $controller->page();
 

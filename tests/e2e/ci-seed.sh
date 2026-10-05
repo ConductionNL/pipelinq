@@ -136,6 +136,37 @@ else
 	echo "::warning::No occ in $(pwd) — skipping the pretty-URL setting."
 fi
 
+# ── 0b. The suite runs against the FULL structure ───────────────────────────
+# Pipelinq ships two structures from one manifest (simple-structure-profile).
+# `simple` is the default: nine menu entries for a contact centre. The specs
+# here were written against the full menu and reach pages through it (the
+# Sales group, Marketing, Point of Sale), so the CI instance is put on `full`,
+# the same switch an administrator has. `simple-structure-menu.spec.ts` covers
+# the simple menu without touching this setting: it rewrites the initial state
+# on its own page, because six workers share this one instance.
+#
+# Only here, never in global-setup: this script runs on a throwaway CI
+# instance, and global-setup also runs against a shared instance people use.
+#
+# A failure is fatal. Without the setting the suite runs against the simple
+# menu, and every spec that walks the full navigation fails naming a missing
+# entry rather than this step.
+if [ -f "./occ" ]; then
+	if ! php occ config:app:set pipelinq menu_structure --value=full; then
+		echo "::error::could not set pipelinq menu_structure=full. The suite would run against the simple menu."
+		exit 1
+	fi
+	STRUCTURE="$(php occ config:app:get pipelinq menu_structure || echo '<unset>')"
+	echo "[ci-seed] read-back: menu_structure=${STRUCTURE}"
+	if [ "$STRUCTURE" != "full" ]; then
+		echo "::error::menu_structure reads '${STRUCTURE}' after it was set to full."
+		exit 1
+	fi
+else
+	echo "::error::No occ in $(pwd): cannot put the instance on the full menu structure."
+	exit 1
+fi
+
 # Small helper: POST JSON as the admin, echo the status, dump the body.
 # Basic auth without a session cookie skips Nextcloud's CSRF check, which is
 # why these admin-only endpoints are reachable from curl at all.

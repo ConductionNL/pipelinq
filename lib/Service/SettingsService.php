@@ -185,6 +185,11 @@ class SettingsService {
 		// Where a programme's progress figure comes from by default, with a
 		// per-programme override.
 		'programme_progress_mode',
+		// Which structure the app shows, and which modules join the simple
+		// menu (simple-structure-profile). Read through
+		// Service\Settings\MenuStructure, which decides what a stored value means.
+		'menu_structure',
+		'menu_modules',
 	];
 
 	/**
