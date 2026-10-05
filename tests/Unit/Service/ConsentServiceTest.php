@@ -376,7 +376,7 @@ class ConsentServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md#requirement-latest-state-is-derived-from-integriq-s-decision-req-cii-006
+	 * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md#requirement-lateststate-is-derived-from-integriq-s-decision-req-cii-006
 	 */
 	public function testLatestStateIsDerivedFromTheDecision(): void {
 		$this->store = 'integriq';

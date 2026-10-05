@@ -55,6 +55,8 @@ class ConsentMigrateCommand extends Command {
 	 * Name and description.
 	 *
 	 * @return void
+	 *
+	 * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md#requirement-pipelinq-s-consent-records-are-migrated-into-integriq-once-req-cii-001
 	 */
 	protected function configure(): void {
 		$this->setName(name: 'pipelinq:consent:migrate')
@@ -70,6 +72,8 @@ class ConsentMigrateCommand extends Command {
 	 * @return int The exit code: 0 on a clean run, 1 when integriq is missing or refused a record.
 	 *
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) $input is part of the Command::execute() contract.
+	 *
+	 * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md#requirement-pipelinq-s-consent-records-are-migrated-into-integriq-once-req-cii-001
 	 */
 	protected function execute(InputInterface $input, OutputInterface $output): int {
 		$counts = $this->migration->run();

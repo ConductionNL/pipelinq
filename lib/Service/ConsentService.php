@@ -217,7 +217,7 @@ class ConsentService {
 	 * @return string `opted-in` / `opted-out` / `unknown`.
 	 *
 	 * @spec openspec/specs/outbound-messaging/spec.md#requirement-req-om-005-consent-gating-and-recording
-	 * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md#requirement-latest-state-is-derived-from-integriq-s-decision-req-cii-006
+	 * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md#requirement-lateststate-is-derived-from-integriq-s-decision-req-cii-006
 	 */
 	public function latestState(string $contactId, string $channel): string {
 		if ($contactId === '' || $channel === '') {
