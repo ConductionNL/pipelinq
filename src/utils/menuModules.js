@@ -136,3 +136,55 @@ export function applyHomePage(manifest, home) {
 		homePage: target.id,
 	}
 }
+
+/**
+ * Hold back a tour the built menu cannot carry.
+ *
+ * A walkthrough step of kind `nav-item` points at a menu entry and waits for
+ * the reader to click it. The getting-started tour is a sales journey: it
+ * sends the reader to Products, Contacts, Leads and Contracts in the menu. The
+ * simple menu has none of those, so the tour would start on a first visit and
+ * stop at its second step with nothing to click.
+ *
+ * So a tour stays only when every route it points at is opened by an entry of
+ * the built menu. The tour itself is not deleted: the manifest keeps it, and the full
+ * structure offers it as before.
+ *
+ * @param {object} manifest The built manifest.
+ * @return {object} The manifest, with the tours it cannot carry taken out.
+ *
+ * @spec openspec/changes/simple-structure-profile/specs/navigation-ia/spec.md#REQ-NIA-106
+ */
+export function holdUnreachableTours(manifest) {
+	const tours = manifest?.walkthrough?.tours
+	if (!Array.isArray(tours)) {
+		return manifest
+	}
+	const inMenu = new Set()
+	const collect = (entries) => {
+		for (const entry of entries || []) {
+			// The tour finds a menu entry by the route it opens
+			// (`data-cn-route`), so that is what has to be in the menu.
+			inMenu.add(entry.route)
+			collect(entry.children)
+		}
+	}
+	collect(manifest.menu)
+	const kept = tours.filter((tour) =>
+		(tour.steps || []).every(
+			(step) =>
+				step?.target?.kind !== 'nav-item' || inMenu.has(step.target.ref),
+		),
+	)
+	if (kept.length === tours.length) {
+		return manifest
+	}
+	return {
+		...manifest,
+		walkthrough: {
+			...manifest.walkthrough,
+			enabled: kept.length > 0 && manifest.walkthrough.enabled !== false,
+			tours: kept,
+		},
+	}
+}

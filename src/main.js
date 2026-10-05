@@ -44,6 +44,7 @@ import { initializeStores, registerObjectTypes } from './store/store.js'
 import {
 	applyHomePage,
 	applyMenuModules,
+	holdUnreachableTours,
 	MODULES_SETTING,
 	resolveMenuModules,
 } from './utils/menuModules.js'
@@ -192,7 +193,13 @@ const { manifest: profiledManifest, homePage } = applyHomePage(
 	buildProfiledManifest(buildManifest, bundledManifest, fragments, profileFile),
 	profileFile.home,
 )
-const mergedManifest = seedDashboardAppConfig(profiledManifest)
+// The getting-started tour sends the reader to menu entries the simple menu
+// does not have, so it is held back there. The full structure keeps it.
+const mergedManifest = seedDashboardAppConfig(
+	structureProfile === STRUCTURE_FULL
+		? profiledManifest
+		: holdUnreachableTours(profiledManifest),
+)
 
 /**
  * Build the vue-router config from the manifest. Each manifest page

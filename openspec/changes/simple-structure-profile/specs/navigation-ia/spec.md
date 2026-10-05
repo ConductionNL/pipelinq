@@ -123,3 +123,15 @@ keep the app root as it was.
 - **GIVEN** the full structure
 - **WHEN** somebody opens `/apps/pipelinq/`
 - **THEN** the Sales overview MUST show, at `/`
+
+### Requirement: A tour only starts where the menu can carry it (REQ-NIA-106)
+A walkthrough tour that sends the reader to a menu entry MUST NOT start in a
+structure whose menu does not have that entry. The tour MUST stay in the
+manifest, and MUST start as before in a structure that has every entry.
+
+#### Scenario: The sales tour in the simple structure
+@e2e exclude Asserted in structureProfile.spec.js on the built manifest: the tour names four entries the simple menu lacks and is held back; the existing e2e helpers dismiss the tour on the full structure, where it still starts.
+- **GIVEN** the simple structure
+- **WHEN** somebody opens pipelinq for the first time
+- **THEN** the getting-started tour MUST NOT start
+- **AND** in the full structure it MUST start as before

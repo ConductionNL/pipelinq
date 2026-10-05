@@ -54,6 +54,11 @@ Two additions pipelinq needs and dossiq did not:
    simple structure `/` redirects to the contact centre dashboard, and the
    Sales overview moves to `/sales-overview`.
 
+3. **The first-visit tour.** The getting-started tour walks a sales journey
+   through menu entries the simple menu does not have. It is held back in the
+   simple structure and unchanged in the full one. The contact centre has no
+   tour of its own yet.
+
 Rapportages is one entry. The Reports page already carries cards for Reporting,
 Contact reporting, Channel analytics and Agent performance. The simple
 structure adds a card for SLA attainment.

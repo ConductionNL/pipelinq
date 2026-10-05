@@ -57,16 +57,30 @@ everything, as before.
 ## D-4 The Modules page
 
 `src/manifest.d/98-modules.json` adds one page, `Modules`, at `/modules`. It is
-a `reports` page, the library's card page: a label, a line and a route per
-card, filtered by category. One category per module, plus "Also in Pipelinq"
-for Tasks, Contact persons and the Operational overview.
+a `custom` page. Its component, `src/views/ModulesPage.vue`, hands the page
+config to the library's card grid (`CnReportsPage`): a label, a line and a
+route per card, filtered by category. One category per module, plus "Also in
+Pipelinq" for Tasks, Contact persons and the Operational overview.
+
+It is not a second `type: "reports"` page. ADR-112 allows one per app and
+gate-104 fails on two, and these cards are not reports.
 
 The page is in the manifest, so it exists in both structures and its address is
 stable. Only the simple menu links to it (`ModulesMenu`, in the footer). The
 full menu is asserted unchanged, so it gets no entry.
 
-This is the smallest thing that keeps every page reachable: no new component,
-no new endpoint, and the no-loss rule can be checked by reading two JSON files.
+This is the smallest thing that keeps every page reachable: one wrapper view of
+thirty lines, no new endpoint, and the no-loss rule can be checked by reading
+two JSON files.
+
+## D-4b Rapportages sits in the menu, not in the footer
+
+ADR-112 Decision 3 puts the Reports entry in the footer, and the full structure
+keeps it there. The Zuiddrecht design puts Rapportages under Meer in the main
+menu, and Ruben approved that menu. The simple structure follows the design.
+Gate-104 reads `src/menu-layout.json` only, so it does not see this. It is a
+deliberate difference between the two structures, named here so it is not found
+later as drift.
 
 ## D-5 The start page
 
@@ -78,6 +92,17 @@ it, and it has an address that survives a reload.
 
 In the simple structure a bookmark of `/` now opens the contact centre
 dashboard. That is the point. The full structure has no `home` and keeps `/`.
+
+## D-5b The getting-started tour
+
+The manifest's one tour is a sales journey. It starts on a first visit and
+tells the reader to click Products, Contacts, Leads and Contracts in the menu.
+The simple menu has none of those, so the tour would stop at its second step.
+
+`holdUnreachableTours` takes a tour out of the BUILT manifest when it points at
+a menu entry the built menu lacks. The manifest keeps the tour, and the full
+structure starts it as before. A tour for the contact centre does not exist
+yet; the simple structure has none.
 
 ## D-6 Views, not pages
 

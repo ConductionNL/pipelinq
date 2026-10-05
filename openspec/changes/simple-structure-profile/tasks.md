@@ -10,9 +10,12 @@ Kind: code. Follows the dossiq pilot (`PATTERN-simple-structure.md`).
   D-5, D-6).
 - [x] 1.3 `src/utils/menuModules.js`: `resolveMenuModules`, `applyMenuModules`,
   `applyHomePage` (design D-3, D-5).
-- [x] 1.4 `src/manifest.d/98-modules.json`: the Modules page (design D-4).
+- [x] 1.4 `src/manifest.d/98-modules.json` and `src/views/ModulesPage.vue`: the
+  Modules page (design D-4).
 - [x] 1.5 `src/main.js` picks the layout file and the modules from initial
   state, and redirects `/` to the start page.
+- [x] 1.5b `holdUnreachableTours`: the sales tour does not start in the simple
+  structure (design D-5b).
 - [x] 1.6 `lib/Service/Settings/MenuStructure.php`, both keys in
   `SettingsService::CONFIG_KEYS`, initial state from `DashboardController` and
   `AdminSettings` (design D-2).

@@ -34,6 +34,7 @@ import { saveMenuStructure } from '../../src/services/menuStructureSetting.js'
 import {
 	applyHomePage,
 	applyMenuModules,
+	holdUnreachableTours,
 	MODULES_SETTING,
 	resolveMenuModules,
 } from '../../src/utils/menuModules.js'
@@ -473,7 +474,13 @@ describe('the modules', () => {
 
 	it('have a card on the Modules page for every entry, on or off', () => {
 		const page = modulesPage()
-		expect(page.type).toBe('reports')
+		// A custom page, not a second reports page: an app has one (ADR-112).
+		expect(page.type).toBe('custom')
+		expect(page.component).toBe('ModulesPage')
+		expect(read('src', 'registry.js')).toContain('component: ModulesPage,')
+		expect(
+			buildSimple().pages.filter((item) => item.type === 'reports'),
+		).toHaveLength(1)
 		const cards = page.config.cards
 		const pageIds = new Set(buildSimple().pages.map((item) => item.id))
 		const entries = flat(buildManifest(manifest(), fragments, {}).menu)
@@ -566,6 +573,46 @@ describe('the start page', () => {
 		expect(mainSource).toContain(
 			"routes.push({ path: '/', redirect: { name: homePage } })",
 		)
+	})
+})
+
+describe('the getting-started tour', () => {
+	const navTargets = (source) =>
+		source.walkthrough.tours.flatMap((tour) =>
+			tour.steps
+				.filter((step) => step.target?.kind === 'nav-item')
+				.map((step) => step.target.ref),
+		)
+
+	it('is a sales journey that the simple menu cannot carry, so it is held back there', () => {
+		const built = buildSimple()
+		// The library finds a `nav-item` by the route its entry opens.
+		const shown = new Set(flat(built.menu).map((entry) => entry.route))
+		const missing = navTargets(built).filter((ref) => !shown.has(ref))
+		// The control: the tour really points at entries the simple menu lacks.
+		expect(missing).toEqual(['Products', 'Contacts', 'Leads', 'Contracts'])
+
+		const held = holdUnreachableTours(built)
+		expect(held.walkthrough.tours).toEqual([])
+		expect(held.walkthrough.enabled).toBe(false)
+		// Held back, not deleted: the manifest and the built input keep it.
+		expect(built.walkthrough.tours).toHaveLength(1)
+		expect(manifest().walkthrough.tours).toHaveLength(1)
+		validateBuilt(held)
+	})
+
+	it('stays in the full structure, where every entry it points at is in the menu', () => {
+		const full = build(fullFile)
+		expect(holdUnreachableTours(full)).toBe(full)
+		expect(full.walkthrough.enabled).toBe(true)
+		expect(mainSource).toMatch(
+			/structureProfile === STRUCTURE_FULL\s+\? profiledManifest\s+: holdUnreachableTours\(profiledManifest\)/,
+		)
+	})
+
+	it('leaves a manifest without tours alone', () => {
+		const bare = { menu: [], pages: [] }
+		expect(holdUnreachableTours(bare)).toBe(bare)
 	})
 })
 
