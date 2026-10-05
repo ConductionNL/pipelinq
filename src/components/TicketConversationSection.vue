@@ -16,7 +16,7 @@ page when it reloads after an answer.
 Hidden for a contact moment: that is a logged interaction, with nobody to
 answer.
 
-@spec openspec/changes/simple-ticket-page/specs/request-management/spec.md#REQ-RM-203
+@spec openspec/changes/simple-ticket-page/specs/ticket-detail-page/spec.md#REQ-TDP-003
 -->
 <template>
 	<CnConversationThread
@@ -37,7 +37,7 @@ import { ticketConversation } from '../utils/ticketConversation.js'
 /**
  * The conversation on a ticket.
  *
- * @spec openspec/changes/simple-ticket-page/specs/request-management/spec.md#REQ-RM-203
+ * @spec openspec/changes/simple-ticket-page/specs/ticket-detail-page/spec.md#REQ-TDP-003
  */
 export default {
 	name: 'TicketConversationSection',
@@ -52,7 +52,7 @@ export default {
 		 * The ticket the page holds.
 		 *
 		 * @return {object|null} The ticket, or null while the page loads.
-		 * @spec openspec/changes/simple-ticket-page/specs/request-management/spec.md#REQ-RM-203
+		 * @spec openspec/changes/simple-ticket-page/specs/ticket-detail-page/spec.md#REQ-TDP-003
 		 */
 		ticket() {
 			// Vue unwraps an injected ref on `this`; unref covers both shapes.
@@ -64,7 +64,7 @@ export default {
 		 * Whether this ticket has a customer to talk to.
 		 *
 		 * @return {boolean} False for a contact moment and while loading.
-		 * @spec openspec/changes/simple-ticket-page/specs/request-management/spec.md#REQ-RM-203
+		 * @spec openspec/changes/simple-ticket-page/specs/ticket-detail-page/spec.md#REQ-TDP-003
 		 */
 		applies() {
 			return !!this.ticket && this.ticket.ticketType !== 'interaction'
@@ -74,7 +74,7 @@ export default {
 		 * The thread, oldest first.
 		 *
 		 * @return {Array<object>} The messages.
-		 * @spec openspec/changes/simple-ticket-page/specs/request-management/spec.md#REQ-RM-203
+		 * @spec openspec/changes/simple-ticket-page/specs/ticket-detail-page/spec.md#REQ-TDP-003
 		 */
 		messages() {
 			return ticketConversation(this.ticket)

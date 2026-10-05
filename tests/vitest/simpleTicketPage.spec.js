@@ -12,7 +12,7 @@
  * properties, the registry, the icons and the translations. The stage, the
  * menu groups and the pills are resolved with the library's own functions.
  *
- * @spec openspec/changes/simple-ticket-page/specs/request-management/spec.md
+ * @spec openspec/changes/simple-ticket-page/specs/ticket-detail-page/spec.md
  */
 
 import { buildManifest } from '@conduction/nextcloud-vue/src/utils/buildManifest.js'

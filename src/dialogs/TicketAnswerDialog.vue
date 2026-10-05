@@ -12,7 +12,7 @@ An `open-modal` action carries no object context, so the route names the
 ticket. When the dialog closes the page is asked to reload, so its status
 pill, its primary button and its conversation show what was just saved.
 
-@spec openspec/changes/simple-ticket-page/specs/request-management/spec.md#REQ-RM-201
+@spec openspec/changes/simple-ticket-page/specs/ticket-detail-page/spec.md#REQ-TDP-001
 -->
 <template>
 	<NcDialog
@@ -39,7 +39,7 @@ import CustomerReplySection from '../components/CustomerReplySection.vue'
 /**
  * The Answer dialog on a ticket.
  *
- * @spec openspec/changes/simple-ticket-page/specs/request-management/spec.md#REQ-RM-201
+ * @spec openspec/changes/simple-ticket-page/specs/ticket-detail-page/spec.md#REQ-TDP-001
  */
 export default {
 	name: 'TicketAnswerDialog',
@@ -52,7 +52,7 @@ export default {
 		 * The ticket the page is on.
 		 *
 		 * @return {string} The id from the route, or an empty string.
-		 * @spec openspec/changes/simple-ticket-page/specs/request-management/spec.md#REQ-RM-201
+		 * @spec openspec/changes/simple-ticket-page/specs/ticket-detail-page/spec.md#REQ-TDP-001
 		 */
 		ticketId() {
 			const id = this.$route?.params?.id
@@ -66,7 +66,7 @@ export default {
 		/**
 		 * Close, and have the page read the ticket again.
 		 *
-		 * @spec openspec/changes/simple-ticket-page/specs/request-management/spec.md#REQ-RM-201
+		 * @spec openspec/changes/simple-ticket-page/specs/ticket-detail-page/spec.md#REQ-TDP-001
 		 */
 		close() {
 			emit('cn:page:refresh', {})

@@ -22,7 +22,7 @@
  *   The messages, oldest first. `side` is `them` for the customer and `us`
  *   for the employee.
  *
- * @spec openspec/changes/simple-ticket-page/specs/request-management/spec.md#REQ-RM-203
+ * @spec openspec/changes/simple-ticket-page/specs/ticket-detail-page/spec.md#REQ-TDP-003
  */
 export function ticketConversation(ticket) {
 	const entries = (list, side) =>
