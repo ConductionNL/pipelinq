@@ -5214,5 +5214,63 @@
 			"sidebarComponent": "FlowDetailSidebar",
 			"_note": "The shared CnFlowDetail canvas over the same single engine. Controls render in the NC app sidebar (sidebarComponent) so the canvas keeps full width; canvas and sidebar share useFlowStore. The _note claimed this before the field existed, so #/flows/new -- and every #/flows/:id -- rendered a bare canvas with no way to name, describe, trigger or step-edit the flow. Mirrors procest/src/manifest.json:FlowDetail."
 		}
-	]
+	],
+	"discovery": {
+		"public": true,
+		"standards": [
+			{
+				"id": "zgw-notificaties",
+				"name": "ZGW Notificaties API subscriber (NRC callback inbox)",
+				"role": "consumes",
+				"access": "token",
+				"endpoint": "/apps/pipelinq/api/zgw/notificaties/inbox",
+				"specUrl": "https://vng-realisatie.github.io/gemma-zaken/standaard/notificaties/"
+			},
+			{
+				"id": "zgw-zaken",
+				"name": "ZGW Zaken API client",
+				"role": "consumes",
+				"access": "authenticated",
+				"specUrl": "https://vng-realisatie.github.io/gemma-zaken/standaard/zaken/"
+			},
+			{
+				"id": "zgw-catalogi",
+				"name": "ZGW Catalogi API client",
+				"role": "consumes",
+				"access": "authenticated",
+				"specUrl": "https://vng-realisatie.github.io/gemma-zaken/standaard/catalogi/"
+			},
+			{
+				"id": "haal-centraal-brp",
+				"name": "Haal Centraal BRP Personen bevragen",
+				"version": "2.0",
+				"role": "consumes",
+				"access": "authenticated",
+				"specUrl": "https://brp-api.github.io/Haal-Centraal-BRP-bevragen/"
+			},
+			{
+				"id": "kvk",
+				"name": "KvK Handelsregister Zoeken API",
+				"version": "1",
+				"role": "consumes",
+				"access": "authenticated",
+				"specUrl": "https://developers.kvk.nl/"
+			},
+			{
+				"id": "berichtenbox",
+				"name": "MijnOverheid Berichtenbox koppelvlak (BBK)",
+				"version": "1.7",
+				"role": "consumes",
+				"access": "authenticated"
+			},
+			{
+				"id": "cloudevents",
+				"name": "CloudEvents (POS payment and refund events)",
+				"version": "1.0",
+				"role": "provides",
+				"access": "authenticated",
+				"specUrl": "https://github.com/cloudevents/spec"
+			}
+		]
+	}
 }

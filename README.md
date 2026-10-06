@@ -235,6 +235,22 @@ Full documentation is available at **[pipelinq.app](https://pipelinq.app)**
 | [Architecture](docs/ARCHITECTURE.md) | Technical architecture and design decisions |
 | [Development](docs/development.md) | Developer setup and contribution guide |
 
+<!-- discovery:start -->
+## Standards & federation
+
+| Standard | Role | Access |
+|---|---|---|
+| [ZGW Notificaties API subscriber (NRC callback inbox)](https://vng-realisatie.github.io/gemma-zaken/standaard/notificaties/) | Uses | — |
+| [ZGW Zaken API client](https://vng-realisatie.github.io/gemma-zaken/standaard/zaken/) | Uses | — |
+| [ZGW Catalogi API client](https://vng-realisatie.github.io/gemma-zaken/standaard/catalogi/) | Uses | — |
+| [Haal Centraal BRP Personen bevragen](https://brp-api.github.io/Haal-Centraal-BRP-bevragen/) 2.0 | Uses | — |
+| [KvK Handelsregister Zoeken API](https://developers.kvk.nl/) 1 | Uses | — |
+| MijnOverheid Berichtenbox koppelvlak (BBK) 1.7 | Uses | — |
+| [CloudEvents (POS payment and refund events)](https://github.com/cloudevents/spec) 1.0 | Provides | Nextcloud login |
+
+Other servers can read this list without logging in, from the Nextcloud capabilities endpoint (published by OpenRegister). Details, federation and admin switches: [docs/standards-and-federation.md](docs/standards-and-federation.md).
+<!-- discovery:end -->
+
 ## Standards & Compliance
 
 - **Data standard:** Schema.org + vCard (RFC 6350)

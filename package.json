@@ -3,6 +3,8 @@
   "version": "0.1.0",
   "license": "EUPL-1.2",
   "scripts": {
+    "docs:standards": "node scripts/generate-standards-docs.cjs",
+    "check:standards-docs": "node scripts/generate-standards-docs.cjs --check",
     "prebuild": "node scripts/check-vue-demi.js",
     "build": "NODE_ENV=production webpack --config webpack.config.js --progress",
     "check:e2e-nav": "node scripts/check-e2e-navigation.js",
