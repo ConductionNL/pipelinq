@@ -17,11 +17,13 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service\Demo;
 
+use OCA\OpenRegister\Db\SchemaMapper;
+use OCA\OpenRegister\Service\ConfigurationService;
+use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Service\Demo\DemoRegisterImporter;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -57,57 +59,58 @@ class DemoRegisterImporterTest extends TestCase {
 			static fn (string $app, string $key): string => ($key === 'register') ? '7' : ''
 		);
 
+		// softDeleteAppImports() exists only on OpenRegister since 2026-09-27, so the
+		// stub leaves it out and the importer guards it with method_exists(). This
+		// subclass is an OpenRegister new enough to have it.
 		$test = $this;
-		$services = [
-			'OCA\OpenRegister\Service\ConfigurationService' => new class($test) {
-				public function __construct(private DemoRegisterImporterTest $test) {
+		$configuration = new class($test) extends ConfigurationService {
+			public function __construct(private DemoRegisterImporterTest $test) {
+			}
+
+			public function importFromApp(string $appId, array $data, string $version, bool $force = false): array {
+				$this->test->record(['importFromApp', $appId, count($data['components']['objects']), $version, $force]);
+				return ['objects' => array_fill(0, 3, 'x'), 'skipped' => ['objects' => 1]];
+			}
+
+			public function softDeleteAppImports(string $appId): array {
+				$this->test->record(['softDeleteAppImports', $appId]);
+				return ['softDeleted' => 2];
+			}
+		};
+
+		$schema = new class {
+			public function getId(): int {
+				return 42;
+			}
+		};
+		$schemaMapper = $this->createMock(SchemaMapper::class);
+		$schemaMapper->method('find')->willReturnCallback(
+			static function (string|int $slug) use ($schema): object {
+				if ($slug !== 'product') {
+					throw new \RuntimeException('not found');
 				}
 
-				public function importFromApp(string $appId, array $data, string $version, bool $force = false): array {
-					$this->test->record(['importFromApp', $appId, count($data['components']['objects']), $version, $force]);
-					return ['objects' => array_fill(0, 3, 'x'), 'skipped' => ['objects' => 1]];
-				}
+				return $schema;
+			}
+		);
 
-				public function softDeleteAppImports(string $appId): array {
-					$this->test->record(['softDeleteAppImports', $appId]);
-					return ['softDeleted' => 2];
-				}
-			},
-			'OCA\OpenRegister\Db\SchemaMapper' => new class {
-				public function find(string $slug, bool $_rbac = true, bool $_multitenancy = true): object {
-					if ($slug !== 'product') {
-						throw new \RuntimeException('not found');
-					}
-
-					return new class {
-						public function getId(): int {
-							return 42;
-						}
-					};
-				}
-			},
-			'OCA\OpenRegister\Service\ObjectService' => new class($test) {
-				public function __construct(private DemoRegisterImporterTest $test) {
-				}
-
-				public function findAll(array $config): array {
-					return $this->test->storedFor((string)$config['filters']['schema']);
-				}
-
-				public function deleteObject(string $uuid, string $register, string $schema): bool {
-					$this->test->record(['deleteObject', $uuid, $register, $schema]);
-					return true;
-				}
-			},
-		];
-
-		$container = $this->createMock(ContainerInterface::class);
-		$container->method('get')->willReturnCallback(static fn (string $id): object => $services[$id]);
+		$objectService = $this->createMock(ObjectService::class);
+		$objectService->method('findAll')->willReturnCallback(
+			fn (array $config): array => $this->storedFor((string)$config['filters']['schema'])
+		);
+		$objectService->method('deleteObject')->willReturnCallback(
+			function (string $uuid, $register = null, $schemaId = null): bool {
+				$this->record(['deleteObject', $uuid, (string)$register, (string)$schemaId]);
+				return true;
+			}
+		);
 
 		return new DemoRegisterImporter(
 			appManager: $appManager,
 			appConfig: $appConfig,
-			container: $container,
+			configurationService: $configuration,
+			schemaMapper: $schemaMapper,
+			objectService: $objectService,
 			logger: $this->createMock(LoggerInterface::class),
 		);
 	}//end importer()
