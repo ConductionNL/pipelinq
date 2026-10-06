@@ -24,11 +24,18 @@ contact before there was a client to put it on.
   columns read `subject`, `assigneeUserId` and `deadline`.
 - D1, D7: `x-allow-create` on contact.client, lead.client, lead.contact and
   leadProduct.product.
-- D2: `correspondenceLanguage` is `format: language` with `x-default:
-  current-language`.
-- D3: every timezone is `format: timezone`.
-- D4: every property that holds a Nextcloud user id is `format: nc-user`;
-  crmTask.assigneeGroupId is `format: nc-group`.
+- D2: `correspondenceLanguage` carries `x-default: current-language` and the
+  client and contact pages ask for it with `fieldOverrides.<key>.widget:
+  language`.
+- D3: timezone uses `fieldOverrides.timezone.widget: timezone` on the same pages.
+- D4: every property that holds a Nextcloud user id is `format: user` (a
+  user picker in today's nextcloud-vue); the Tasks page asks for
+  crmTask.assigneeGroupId with `widget: group`.
+
+OpenRegister refuses a schema whose `format` it does not list (measured: the
+import rejected 40 schemas on `nc-user`, `nc-group`, `language`, `timezone`).
+So only `format: user` lives in the schema; the other pickers are surface
+presentation in the manifest.
 - D5: `language` is hidden from the forms; the repair step
   `NormalisePartyFormFields` copies it into an empty `correspondenceLanguage`.
 - D6: `client.industry` is a list of sectors. The same repair step wraps a
@@ -42,17 +49,19 @@ contact before there was a client to put it on.
 - C2: the tour creates a client first, then a contact on that client, then a
   product and a lead. The create client dialog tells the tour it created one.
 
-All presentation keys (`order`, `x-help`, picker formats, `x-default`,
+The schema presentation keys (`order`, `x-help`, `format: user`, `x-default`,
 `x-allow-create`) live in one fragment,
 `lib/Settings/register.d/99-zz-form-presentation.json`.
 
 ## Waiting on nextcloud-vue
 
-`x-help`, `x-allow-create`, `x-default` and the `nc-user`, `nc-group`,
-`language` and `timezone` pickers are read by the nextcloud-vue release the
+`x-help`, `x-allow-create`, `x-default` and the `group`, `language` and
+`timezone` widgets are read by the nextcloud-vue release the
 parallel library lanes are building. Until pipelinq installs it these keys are
-inert: the fields render as before (text inputs), and nothing breaks.
-OpenRegister's validator ignores formats it does not know.
+inert: the fields render as text inputs, and nothing breaks. The
+`loadAction` key on the example data step is refused by the manifest schema of
+the installed nextcloud-vue, so the manifest validation tests stay red until
+pipelinq installs the release that adds it.
 
 ## Risk
 

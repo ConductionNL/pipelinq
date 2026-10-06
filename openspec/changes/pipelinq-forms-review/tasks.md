@@ -8,7 +8,7 @@
   - **spec_ref**: `specs/client-management/spec.md#requirement-req-cm-forms-002-master-data-fields-explain-themselves`
 - [x] 1.3 VAT wording, `x-enum-labels` with rates, no EUR in price descriptions (B3, B4)
   - **spec_ref**: `specs/product-catalog/spec.md#requirement-req-pc-vat-001-vat-classes-with-configurable-rates`
-- [x] 1.4 Pickers: `nc-user`, `nc-group`, `language` with `x-default`, `timezone`; `x-allow-create` on references (D1-D4, D7)
+- [x] 1.4 Pickers: `format: user` in the schemas, group/language/timezone widgets in manifest fieldOverrides, `x-default`, `x-allow-create` on references (D1-D4, D7)
   - **spec_ref**: `specs/client-management/spec.md#requirement-req-cm-forms-003-pickers-instead-of-typed-ids`
 - [x] 1.5 One language field; industry as a list; repair step and readers (D5, D6)
   - **spec_ref**: `specs/client-management/spec.md#requirement-req-cm-forms-004-one-language-field-and-industry-as-a-list`

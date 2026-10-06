@@ -30,7 +30,7 @@ The product, client, contact, lead, leadProduct and crmTask schemas SHALL give e
 
 ### Requirement: REQ-CM-FORMS-003 — Pickers instead of typed ids
 
-Every property that holds a Nextcloud user id SHALL declare `format: nc-user`, and every property that holds a group id `format: nc-group`. `correspondenceLanguage` SHALL declare `format: language` and `x-default: current-language`; `timezone` SHALL declare `format: timezone`. The references contact.client, lead.client, lead.contact and leadProduct.product SHALL declare `x-allow-create: true`. `client.parentOrganisation` SHALL be a `$ref` to client. The hand-written create client form SHALL offer industry as a multi-select, the account owner as a user search defaulting to the current user, the correspondence language defaulting to the user's language, and the timezone as a list.
+Every property that holds a Nextcloud user id SHALL declare `format: user`. Because OpenRegister refuses formats it does not list, the group, language and timezone pickers SHALL be asked for by the pages: `fieldOverrides.assigneeGroupId.widget: group` on Tasks, and `fieldOverrides.correspondenceLanguage.widget: language` and `fieldOverrides.timezone.widget: timezone` on Clients and Contacts. `correspondenceLanguage` SHALL declare `x-default: current-language`. The references contact.client, lead.client, lead.contact and leadProduct.product SHALL declare `x-allow-create: true`. `client.parentOrganisation` SHALL be a `$ref` to client. The hand-written create client form SHALL offer industry as a multi-select, the account owner as a user search defaulting to the current user, the correspondence language defaulting to the user's language, and the timezone as a list.
 
 #### Scenario: Assign a task to a colleague
 
@@ -38,7 +38,7 @@ Every property that holds a Nextcloud user id SHALL declare `format: nc-user`, a
 - WHEN the user opens Assignee
 - THEN a searchable list of Nextcloud users SHALL open instead of a text box
 
-@e2e exclude rendered by nextcloud-vue once it maps `nc-user`; the schema half is a static property.
+@e2e exclude checked live on the review instance: the create task Assignee field renders as a searchable combobox with nextcloud-vue 2.61.
 
 #### Scenario: A new client is written to in my language
 
