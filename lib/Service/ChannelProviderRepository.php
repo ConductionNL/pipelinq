@@ -131,20 +131,43 @@ class ChannelProviderRepository {
 	}//end listActive()
 
 	/**
-	 * Load one provider row by id.
-	 *
-	 * A provider's inbound webhook is a PublicPage with no user, so under
-	 * OpenRegister's RBAC the row is never found. The webhook asks with
-	 * `asSystem` to read the row whose secret then verifies the callback;
-	 * the row is used in-process and never returned to the caller.
+	 * Load one provider row by id, under the caller's RBAC.
 	 *
 	 * @param string $id Provider UUID / slug.
-	 * @param bool $asSystem Read without RBAC and multitenancy (signed webhooks only).
 	 *
 	 * @return array<string, mixed>|null Row or null.
 	 * @spec openspec/specs/outbound-messaging/spec.md#REQ-OM-004
 	 */
-	public function findById(string $id, bool $asSystem = false): ?array {
+	public function findById(string $id): ?array {
+		return $this->lookup(id: $id, scope: []);
+	}//end findById()
+
+	/**
+	 * Load one provider row by id as the system, for a signed inbound webhook.
+	 *
+	 * A provider's inbound webhook is a PublicPage with no user, so under
+	 * OpenRegister's RBAC the row is never found. The webhook reads the row
+	 * whose secret then verifies the callback; the row stays in-process and
+	 * is never returned to the caller.
+	 *
+	 * @param string $id Provider UUID / slug.
+	 *
+	 * @return array<string, mixed>|null Row or null.
+	 * @spec openspec/specs/outbound-messaging/spec.md#REQ-OM-004
+	 */
+	public function findByIdForWebhook(string $id): ?array {
+		return $this->lookup(id: $id, scope: ['_rbac' => false, '_multitenancy' => false]);
+	}//end findByIdForWebhook()
+
+	/**
+	 * Load one provider row by id with the given OpenRegister access scope.
+	 *
+	 * @param string $id Provider UUID / slug.
+	 * @param array<string, bool> $scope Named `_rbac` / `_multitenancy` arguments.
+	 *
+	 * @return array<string, mixed>|null Row or null.
+	 */
+	private function lookup(string $id, array $scope): ?array {
 		if ($id === '') {
 			return null;
 		}
@@ -159,8 +182,8 @@ class ChannelProviderRepository {
 				id: $id,
 				register: $this->getRegisterSlug(),
 				schema: $this->getSchemaSlug(),
-				_rbac: $asSystem === false,
-				_multitenancy: $asSystem === false,
+				_rbac: ($scope['_rbac'] ?? true),
+				_multitenancy: ($scope['_multitenancy'] ?? true),
 			);
 		} catch (Throwable $e) {
 			$this->logger->info(
@@ -175,7 +198,7 @@ class ChannelProviderRepository {
 		}
 
 		return $this->toArray(value: $entity);
-	}//end findById()
+	}//end lookup()
 
 	/**
 	 * First active row matching kind + vendor.

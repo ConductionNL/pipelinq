@@ -77,7 +77,7 @@ class ChannelProviderRepositoryTest extends TestCase {
 	 * @return void
 	 */
 	public function testASystemLookupFindsTheProviderWithoutAUser(): void {
-		$row = $this->repositoryForAnAnonymousRequest()->findById(id: 'prov-1', asSystem: true);
+		$row = $this->repositoryForAnAnonymousRequest()->findByIdForWebhook(id: 'prov-1');
 
 		$this->assertSame('prov-1', $row['uuid'] ?? null);
 	}//end testASystemLookupFindsTheProviderWithoutAUser()

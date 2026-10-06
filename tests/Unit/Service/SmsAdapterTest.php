@@ -322,7 +322,7 @@ class SmsAdapterTest extends TestCase {
 	 */
 	public function testHandleInboundWebhookInvalidSignature(): void {
 		$row = ['uuid' => 'prov-1', 'kind' => 'sms', 'vendor' => 'twilio'];
-		$this->providerRepo->method('findById')->willReturn($row);
+		$this->providerRepo->method('findByIdForWebhook')->willReturn($row);
 		$this->providerFactory->method('create')
 			->willReturn($this->buildClient('twilio', 'success', 'ext-1', false));
 
@@ -340,7 +340,7 @@ class SmsAdapterTest extends TestCase {
 	 */
 	public function testHandleInboundWebhookPersistsAndRoutes(): void {
 		$row = ['uuid' => 'prov-1', 'kind' => 'sms', 'vendor' => 'twilio'];
-		$this->providerRepo->method('findById')->willReturn($row);
+		$this->providerRepo->method('findByIdForWebhook')->willReturn($row);
 		$this->providerFactory->method('create')
 			->willReturn($this->buildClient('twilio', 'success', 'ext-1', true));
 
@@ -361,7 +361,7 @@ class SmsAdapterTest extends TestCase {
 	 */
 	public function testHandleInboundWebhookStopKeywordOptsOut(): void {
 		$row = ['uuid' => 'prov-1', 'kind' => 'sms', 'vendor' => 'twilio'];
-		$this->providerRepo->method('findById')->willReturn($row);
+		$this->providerRepo->method('findByIdForWebhook')->willReturn($row);
 		$this->providerFactory->method('create')
 			->willReturn($this->buildClient('twilio', 'success', 'ext-1', true));
 
@@ -390,7 +390,7 @@ class SmsAdapterTest extends TestCase {
 	 */
 	public function testInboundStopFindsTheContactByPhone(): void {
 		$this->objectService->contacts = ['+31611119999' => 'c-gert'];
-		$this->providerRepo->method('findById')->willReturn(['uuid' => 'prov-1', 'kind' => 'sms', 'vendor' => 'messagebird']);
+		$this->providerRepo->method('findByIdForWebhook')->willReturn(['uuid' => 'prov-1', 'kind' => 'sms', 'vendor' => 'messagebird']);
 		$this->providerFactory->method('create')
 			->willReturn($this->buildClient('messagebird', 'success', 'ext-1', true));
 		$this->consentService->method('isOptOutKeyword')->willReturn(true);
@@ -411,7 +411,7 @@ class SmsAdapterTest extends TestCase {
 	 * @return void
 	 */
 	public function testAStopThatIsNotRecordedIsNotReportedAsRecorded(): void {
-		$this->providerRepo->method('findById')->willReturn(['uuid' => 'prov-1', 'kind' => 'sms', 'vendor' => 'messagebird']);
+		$this->providerRepo->method('findByIdForWebhook')->willReturn(['uuid' => 'prov-1', 'kind' => 'sms', 'vendor' => 'messagebird']);
 		$this->providerFactory->method('create')
 			->willReturn($this->buildClient('messagebird', 'success', 'ext-1', true));
 		$this->consentService->method('isOptOutKeyword')->willReturn(true);
@@ -434,8 +434,8 @@ class SmsAdapterTest extends TestCase {
 	public function testInboundWebhookReadsAndWritesAsTheSystem(): void {
 		$row = ['uuid' => 'prov-1', 'kind' => 'sms', 'vendor' => 'messagebird'];
 		$this->providerRepo->expects($this->once())
-			->method('findById')
-			->with('prov-1', true)
+			->method('findByIdForWebhook')
+			->with('prov-1')
 			->willReturn($row);
 		$this->providerFactory->method('create')
 			->willReturn($this->buildClient('messagebird', 'success', 'ext-1', true));

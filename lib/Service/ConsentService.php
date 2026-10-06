@@ -607,7 +607,7 @@ class ConsentService {
 		string $legalBasis,
 		string $address,
 	): ?array {
-		// integriq keys an opt-out on the address, so a STOP from a number
+		// The integriq store keys an opt-out on the address, so a STOP from a number
 		// with no contact behind it is still recorded (contactRef stays empty).
 		if ($channel === '' || ($contactId === '' && $address === '')) {
 			return null;

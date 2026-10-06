@@ -128,6 +128,7 @@ class MessagingOptOutWiringTest extends TestCase {
 
 		$this->providerRepo = $this->createMock(ChannelProviderRepository::class);
 		$this->providerRepo->method('findById')->willReturn(['uuid' => 'prov-1', 'kind' => 'sms', 'vendor' => 'twilio']);
+		$this->providerRepo->method('findByIdForWebhook')->willReturn(['uuid' => 'prov-1', 'kind' => 'sms', 'vendor' => 'twilio']);
 		$this->providerRepo->method('listActive')->willReturnCallback(
 			static fn (string $kind) => [['uuid' => 'prov-'.$kind, 'kind' => $kind, 'vendor' => 'twilio', 'priority' => 1]]
 		);

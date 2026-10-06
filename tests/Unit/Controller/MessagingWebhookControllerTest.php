@@ -196,6 +196,7 @@ class MessagingWebhookControllerTest extends TestCase {
 
 		$providerRepo = $this->createMock(ChannelProviderRepository::class);
 		$providerRepo->method('findById')->willReturn($providerRow);
+		$providerRepo->method('findByIdForWebhook')->willReturn($providerRow);
 
 		$whatsApp = new WhatsAppAdapter($container,
 			$appConfig,
