@@ -191,7 +191,6 @@ test.describe('First-time setup contract', () => {
 			'a second provision run duplicated the default pipelines',
 		).toBe(middle)
 		expect(after).toBeGreaterThan(0)
-
 	})
 
 	// @e2e openspec/specs/first-time-setup/spec.md#organisation-details-persist
