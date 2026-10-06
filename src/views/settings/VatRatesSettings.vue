@@ -7,7 +7,7 @@
   - with these rates and the POS catalogue prices with them.
   -->
 <template>
-	<CnSettingsSection
+	<NcSettingsSection
 		:name="t('pipelinq', 'VAT rates')"
 		:description="
 			t(
@@ -36,14 +36,19 @@
 		<NcNoteCard v-if="message" :type="messageType">
 			{{ message }}
 		</NcNoteCard>
-	</CnSettingsSection>
+	</NcSettingsSection>
 </template>
 
 <script>
-import { CnSettingsSection } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
-import { NcButton, NcLoadingIcon, NcNoteCard, NcTextField } from '@nextcloud/vue'
+import {
+	NcButton,
+	NcLoadingIcon,
+	NcNoteCard,
+	NcSettingsSection,
+	NcTextField,
+} from '@nextcloud/vue'
 
 const DEFAULT_RATES = { high: 21, low: 9, zero: 0, exempt: 0 }
 
@@ -74,7 +79,7 @@ export function parseVatRates(stored) {
 export default {
 	name: 'VatRatesSettings',
 	components: {
-		CnSettingsSection,
+		NcSettingsSection,
 		NcButton,
 		NcLoadingIcon,
 		NcNoteCard,

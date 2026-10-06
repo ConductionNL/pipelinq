@@ -8,7 +8,7 @@
   - `detected_integrations` initial state.
   -->
 <template>
-	<CnSettingsSection
+	<NcSettingsSection
 		:name="t('pipelinq', 'Detected integrations')"
 		:description="
 			t(
@@ -35,18 +35,17 @@
 		<NcNoteCard :type="xwiki.available ? 'success' : 'info'">
 			{{ xwikiText }}
 		</NcNoteCard>
-	</CnSettingsSection>
+	</NcSettingsSection>
 </template>
 
 <script>
-import { CnSettingsSection } from '@conduction/nextcloud-vue'
 import { loadState } from '@nextcloud/initial-state'
-import { NcNoteCard } from '@nextcloud/vue'
+import { NcNoteCard, NcSettingsSection } from '@nextcloud/vue'
 
 export default {
 	name: 'DetectedIntegrations',
 	components: {
-		CnSettingsSection,
+		NcSettingsSection,
 		NcNoteCard,
 	},
 

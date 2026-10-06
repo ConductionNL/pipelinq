@@ -8,7 +8,7 @@
   - creates the default pipelines and skills. Safe to run more than once.
   -->
 <template>
-	<CnSettingsSection
+	<NcSettingsSection
 		:name="t('pipelinq', 'Provision data')"
 		:description="
 			t(
@@ -30,20 +30,24 @@
 		<NcNoteCard v-if="message" :type="messageType">
 			{{ message }}
 		</NcNoteCard>
-	</CnSettingsSection>
+	</NcSettingsSection>
 </template>
 
 <script>
-import { CnSettingsSection } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
-import { NcButton, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
+import {
+	NcButton,
+	NcLoadingIcon,
+	NcNoteCard,
+	NcSettingsSection,
+} from '@nextcloud/vue'
 import DatabaseRefreshOutline from 'vue-material-design-icons/DatabaseRefreshOutline.vue'
 
 export default {
 	name: 'ProvisionDataSection',
 	components: {
-		CnSettingsSection,
+		NcSettingsSection,
 		DatabaseRefreshOutline,
 		NcButton,
 		NcLoadingIcon,

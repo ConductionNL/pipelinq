@@ -77,7 +77,7 @@ section says so, because a setting that seems to do nothing gets changed back.
 				v-model="modules"
 				:value="module.key"
 				name="menu_modules"
-				type="switch"
+				type="checkbox"
 				:data-testid="`menu-module-${module.key}`"
 				@update:modelValue="save">
 				{{ t('pipelinq', module.label) }}
