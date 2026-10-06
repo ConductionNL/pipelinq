@@ -13,12 +13,14 @@
 // vue-material-design-icons.
 
 import Account from 'vue-material-design-icons/Account.vue'
+import AccountArrowLeftOutline from 'vue-material-design-icons/AccountArrowLeftOutline.vue'
 import AccountArrowRightOutline from 'vue-material-design-icons/AccountArrowRightOutline.vue'
 import AccountBox from 'vue-material-design-icons/AccountBox.vue'
 import AccountBoxOutline from 'vue-material-design-icons/AccountBoxOutline.vue'
 import AccountCheckOutline from 'vue-material-design-icons/AccountCheckOutline.vue'
 import AccountClock from 'vue-material-design-icons/AccountClock.vue'
 import AccountCog from 'vue-material-design-icons/AccountCog.vue'
+import AccountDetailsOutline from 'vue-material-design-icons/AccountDetailsOutline.vue'
 import AccountGroup from 'vue-material-design-icons/AccountGroup.vue'
 import AccountGroupOutline from 'vue-material-design-icons/AccountGroupOutline.vue'
 import AccountKey from 'vue-material-design-icons/AccountKey.vue'
@@ -44,6 +46,8 @@ import CalendarClock from 'vue-material-design-icons/CalendarClock.vue'
 import CalendarClockOutline from 'vue-material-design-icons/CalendarClockOutline.vue'
 import CalendarWeek from 'vue-material-design-icons/CalendarWeek.vue'
 import CardAccountDetails from 'vue-material-design-icons/CardAccountDetails.vue'
+import CardAccountDetailsOutline from 'vue-material-design-icons/CardAccountDetailsOutline.vue'
+import CardAccountPhoneOutline from 'vue-material-design-icons/CardAccountPhoneOutline.vue'
 import CartArrowDown from 'vue-material-design-icons/CartArrowDown.vue'
 import CartOutline from 'vue-material-design-icons/CartOutline.vue'
 import Cash from 'vue-material-design-icons/Cash.vue'
@@ -166,12 +170,14 @@ import WalletOutline from 'vue-material-design-icons/WalletOutline.vue'
 
 export default {
 	Account,
+	AccountArrowLeftOutline,
 	AccountArrowRightOutline,
 	AccountBox,
 	AccountBoxOutline,
 	AccountCheckOutline,
 	AccountClock,
 	AccountCog,
+	AccountDetailsOutline,
 	AccountGroup,
 	AccountGroupOutline,
 	AccountKey,
@@ -197,6 +203,8 @@ export default {
 	CalendarClockOutline,
 	CalendarWeek,
 	CardAccountDetails,
+	CardAccountDetailsOutline,
+	CardAccountPhoneOutline,
 	CartArrowDown,
 	CartOutline,
 	Cash,

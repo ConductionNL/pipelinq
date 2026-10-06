@@ -1606,6 +1606,7 @@
 						"title": "Identity",
 						"icon": "Account",
 						"content": {
+							"title": "Identity",
 							"columns": 2,
 							"include": [
 								"name",
@@ -1622,6 +1623,7 @@
 						"title": "Account",
 						"icon": "OfficeBuilding",
 						"content": {
+							"title": "Account",
 							"columns": 2,
 							"include": [
 								"type",
@@ -2435,6 +2437,18 @@
 				"register": "pipelinq",
 				"schema": "ticket",
 				"hideEmpty": true,
+				"headerActions": [
+					{
+						"id": "assign-to-me",
+						"type": "api-call",
+						"label": "Assign to me",
+						"icon": "AccountArrowLeftOutline",
+						"url": "/apps/pipelinq/api/tickets/@objectId/assign-to-me",
+						"method": "POST",
+						"successMessage": "Assigned to you. It is on your My Work now.",
+						"errorMessage": "Could not assign this ticket to you."
+					}
+				],
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"_widgetsNote": "Widgets are declared (rather than left to the auto-body) only so the Besluitvorming leaf survives: development added a decidesk-decisions integration widget to RequestDetail (ADR-066) while this change was retiring that page. The relation belongs to the matter, not to whichever of the three names it used to have, so it moves onto the ticket alongside the `decisions` property on the schema. `content.hideEmpty` keeps the data widget type-aware — the page-level `hideEmpty` above only reaches the AUTO-body, which a declared widgets[] replaces.",
 				"widgets": [
@@ -2443,7 +2457,7 @@
 						"type": "data",
 						"title": "Ticket details",
 						"icon": "FileDocument",
-						"content": { "columns": 2, "hideEmpty": true }
+						"content": { "title": "Ticket details", "columns": 2, "hideEmpty": true }
 					},
 					{
 						"id": "ticket-related",
@@ -2573,7 +2587,7 @@
 				"register": "pipelinq",
 				"schema": "contact",
 				"documentationUrl": "https://pipelinq.conduction.nl",
-				"_note": "Contact record as a declarative type:detail page. Layout, top to bottom: the contact's fields with a Deals KPI card beside them; a Records tab strip (deals, requests, contact moments, bookings) with the Related graph beside it, so the person and their graph stay on screen together; a Communication tab strip (mail, meetings, files); then the app sections as cards in a two-column grid. The former relatedCollections are object-list widgets so they can live in the Records strip. MessagingConversationSection and BrpContactPanel draw their own heading (and BRP its own card), so neither carries a section title and BRP has no `card`.",
+				"_note": "Contact record as a declarative type:detail page. Layout, top to bottom, all inside the grid (pipelinq review E2): the contact's fields with one Open deals KPI and the Related graph beside them; a Records tab strip (deals, requests, contact moments, bookings) with a Profile tab strip beside it (relationships, subscriptions, BSN and BRP); then a Communication tab strip (channels, mail, messages, meetings, files). The former body sections (relationships, channels, messaging, subscriptions, BRP) are grid widgets now, through the sectionWidget() wrappers in registry.js, so nothing renders below the grid. Children of a tabs widget stay out of `layout`, or the tabs widget and the grid would each render them once.",
 				"widgets": [
 					{
 						"id": "contact-data",
@@ -2581,39 +2595,35 @@
 						"title": "Contact details",
 						"icon": "AccountBoxOutline",
 						"content": {
+							"title": "Contact details",
 							"columns": 2
 						}
 					},
 					{
 						"id": "contact-kpis-deals",
-						"type": "stats-block",
-						"title": "Deals",
+						"type": "stat",
+						"title": "Open deals",
 						"icon": "HandshakeOutline",
+						"_note": "One KPI for the person's open deals: the value in the reporting currency, the count as its caption. It used to be a stats block with the count and an unformatted amount, read as Open deals twice (pipelinq review E2). The endpoint reads under the user's RBAC.",
 						"content": {
-							"entries": [
-								{
-									"title": "Open deals",
-									"register": "pipelinq",
-									"schema": "lead",
-									"metric": "count",
-									"filter": {
-										"contact": "@objectId",
-										"status": "open"
-									}
-								},
-								{
-									"title": "Open deal value",
-									"register": "pipelinq",
-									"schema": "lead",
-									"metric": "sum",
-									"field": "value",
-									"format": "currency",
-									"filter": {
-										"contact": "@objectId",
-										"status": "open"
-									}
+							"label": "Open deals",
+							"icon": "HandshakeOutline",
+							"caption": "{openDealCount} open deals",
+							"format": {
+								"style": "currency",
+								"currency": "@config.currency",
+								"decimals": 0
+							},
+							"endpointSource": {
+								"url": "/apps/pipelinq/api/analytics/open-deals",
+								"params": {
+									"contact": "@objectId"
 								}
-							]
+							},
+							"valueField": "openDealValue",
+							"route": {
+								"name": "Leads"
+							}
 						}
 					},
 					{
@@ -2809,13 +2819,21 @@
 						"type": "tabs",
 						"title": "Communication",
 						"icon": "Email",
-						"_note": "Mail, meetings and files for this person behind one strip. Children stay out of `layout` for the same reason as contact-records.",
+						"_note": "Channels, mail, messages, meetings and files for this person behind one strip. Children stay out of `layout` for the same reason as contact-records.",
 						"content": {
 							"ariaLabel": "Contact communication",
 							"tabs": [
 								{
+									"widgetId": "contact-channels",
+									"label": "Channels"
+								},
+								{
 									"widgetId": "contact-email",
 									"label": "Mail"
+								},
+								{
+									"widgetId": "contact-messages",
+									"label": "Messages"
 								},
 								{
 									"widgetId": "contact-calendar",
@@ -2848,6 +2866,71 @@
 						"integrationId": "files",
 						"title": "Files",
 						"icon": "FolderOutline"
+					},
+					{
+						"id": "contact-profile",
+						"type": "tabs",
+						"title": "Profile",
+						"icon": "AccountDetailsOutline",
+						"_note": "Who this person is connected to and what they signed up for. Children stay out of `layout`.",
+						"content": {
+							"ariaLabel": "Contact profile",
+							"tabs": [
+								{
+									"widgetId": "contact-relationships",
+									"label": "Relationships"
+								},
+								{
+									"widgetId": "contact-subscriptions",
+									"label": "Subscriptions"
+								},
+								{
+									"widgetId": "contact-brp",
+									"label": "BSN and BRP"
+								}
+							]
+						}
+					},
+					{
+						"id": "contact-relationships",
+						"type": "ContactRelationshipsWidget",
+						"title": "Relationships",
+						"icon": "AccountMultipleOutline",
+						"content": {
+							"entityType": "contact"
+						}
+					},
+					{
+						"id": "contact-subscriptions",
+						"type": "SubscriptionsWidget",
+						"title": "Subscriptions",
+						"icon": "EmailMultipleOutline",
+						"content": {}
+					},
+					{
+						"id": "contact-brp",
+						"type": "BrpContactWidget",
+						"title": "BSN and BRP",
+						"icon": "CardAccountDetailsOutline",
+						"content": {}
+					},
+					{
+						"id": "contact-channels",
+						"type": "ContactChannelsWidget",
+						"title": "Contact channels",
+						"icon": "CardAccountPhoneOutline",
+						"content": {
+							"entityType": "contact"
+						}
+					},
+					{
+						"id": "contact-messages",
+						"type": "MessagingConversationWidget",
+						"title": "Messages",
+						"icon": "MessageTextOutline",
+						"content": {
+							"entityType": "contact"
+						}
 					}
 				],
 				"layout": [
@@ -2857,7 +2940,7 @@
 						"gridX": 0,
 						"gridY": 0,
 						"gridWidth": 8,
-						"gridHeight": 4
+						"gridHeight": 5
 					},
 					{
 						"id": "2",
@@ -2865,21 +2948,29 @@
 						"gridX": 8,
 						"gridY": 0,
 						"gridWidth": 4,
-						"gridHeight": 4
-					},
-					{
-						"id": "3",
-						"widgetId": "contact-records",
-						"gridX": 0,
-						"gridY": 4,
-						"gridWidth": 8,
-						"gridHeight": 7
+						"gridHeight": 2
 					},
 					{
 						"id": "4",
 						"widgetId": "contact-related",
 						"gridX": 8,
-						"gridY": 4,
+						"gridY": 2,
+						"gridWidth": 4,
+						"gridHeight": 3
+					},
+					{
+						"id": "3",
+						"widgetId": "contact-records",
+						"gridX": 0,
+						"gridY": 5,
+						"gridWidth": 8,
+						"gridHeight": 7
+					},
+					{
+						"id": "6",
+						"widgetId": "contact-profile",
+						"gridX": 8,
+						"gridY": 5,
 						"gridWidth": 4,
 						"gridHeight": 7
 					},
@@ -2887,9 +2978,9 @@
 						"id": "5",
 						"widgetId": "contact-communication",
 						"gridX": 0,
-						"gridY": 11,
+						"gridY": 12,
 						"gridWidth": 12,
-						"gridHeight": 6
+						"gridHeight": 7
 					}
 				],
 				"relationLinks": [
@@ -2919,63 +3010,6 @@
 							"phone": "@object.phone",
 							"email": "@object.email"
 						}
-					},
-					{
-						"id": "relationships",
-						"component": "ContactRelationships",
-						"title": "Relationships",
-						"placement": "end",
-						"props": {
-							"entityId": "@objectId",
-							"entityType": "contact",
-							"entityName": "@object.name"
-						},
-						"colSpan": 6,
-						"card": true
-					},
-					{
-						"id": "channels",
-						"component": "ContactChannelsSection",
-						"title": "Contact channels",
-						"placement": "end",
-						"props": {
-							"entityId": "@objectId",
-							"entityType": "contact"
-						},
-						"colSpan": 6,
-						"card": true
-					},
-					{
-						"id": "messaging-conversation",
-						"component": "MessagingConversationSection",
-						"placement": "end",
-						"props": {
-							"entityId": "@objectId",
-							"entityType": "contact"
-						},
-						"colSpan": 6,
-						"card": true
-					},
-					{
-						"id": "contact-subscriptions",
-						"component": "SubscriptionsSection",
-						"title": "Subscriptions",
-						"placement": "end",
-						"_note": "Which mailing lists this person is on and the state of each (marketing-lists-and-double-opt-in). Appended here rather than declared in a src/manifest.d fragment because mergePages REPLACES a page whose id a fragment repeats: adding one bodyWidget from a fragment would mean restating the whole ContactDetail page, and anything added to it later would be lost without a word.",
-						"props": {
-							"contactId": "@objectId"
-						},
-						"colSpan": 6,
-						"card": true
-					},
-					{
-						"id": "brp",
-						"component": "BrpContactPanel",
-						"placement": "end",
-						"props": {
-							"contactId": "@objectId"
-						},
-						"colSpan": 12
 					}
 				],
 				"sidebar": {
@@ -3053,46 +3087,37 @@
 				"register": "pipelinq",
 				"schema": "lead",
 				"documentationUrl": "https://pipelinq.conduction.nl",
-				"_note": "Opportunity/deal archetype. The main body surfaces what a salesperson looks at every visit — the deal fields (value, probability, stage, expected close), the related graph (client, contact, pipeline) and the comms leaves (Email / Files / Meetings — a deal is actively worked over correspondence). ADR-062 rev3: the data widget is field-split into Deal (title/value/probability/expectedClose/priority/status) and Qualification (source/stage/stageOrder/qualificationScore/assignee/description/notes); the two KPIs render as INDIVIDUAL single-entry stats-block widgets stacked top-right (design review 2026-07-09: one KPI per widget cell so grid spacing stays controllable), @objectId-scoped; deal-value sum carries its unit in countLabel (entries have no currency formatting). A full-width object-list of the deal's line items (leadProduct, FK 'lead', allowCreate ON so a line pre-links the deal) shows what is being quoted. lifecycleActions drives the OR-authoritative pipeline status (open -> won/lost). Generic Deck/Flow/Time/Knowledge/Forms leaves dropped from the sidebar per the audit-only rule.",
+				"_note": "Opportunity/deal archetype. The main body surfaces what a salesperson looks at every visit — the deal fields (value, probability, stage, expected close), the related graph (client, contact, pipeline) and the comms leaves (Email / Files / Meetings — a deal is actively worked over correspondence). One Deal data widget carries every deal field, titled through content.title (pipelinq review E3); the two KPIs render as INDIVIDUAL single-entry stats-block widgets stacked top-right (design review 2026-07-09: one KPI per widget cell so grid spacing stays controllable), @objectId-scoped; the deal value is a stat widget formatted in the reporting currency (@config.currency). A full-width object-list of the deal's line items (leadProduct, FK 'lead', allowCreate ON so a line pre-links the deal) shows what is being quoted. lifecycleActions drives the OR-authoritative pipeline status (open -> won/lost). Generic Deck/Flow/Time/Knowledge/Forms leaves dropped from the sidebar per the audit-only rule.",
 				"widgets": [
 					{
 						"id": "lead-deal",
 						"type": "data",
 						"title": "Deal",
 						"icon": "HandshakeOutline",
+						"_note": "One data block with every deal field (pipelinq review E3: the page had two blocks, both titled Data, because the library reads a data widget's title from content.title). Win chance is the qualification score (pipeline-numbers-tell-the-truth); the hidden probability field is left out.",
 						"content": {
+							"title": "Deal",
 							"columns": 2,
 							"include": [
 								"title",
 								"value",
-								"probability",
-								"winProbability",
+								"status",
+								"stage",
+								"qualificationScore",
 								"expectedCloseDate",
 								"priority",
-								"status"
-							],
-							"overrides": { "status": { "editable": false } }
-						}
-					},
-					{
-						"id": "lead-qualification",
-						"type": "data",
-						"title": "Qualification",
-						"icon": "FilterVariant",
-						"content": {
-							"columns": 2,
-							"include": [
 								"source",
 								"category",
-								"stage",
-								"stageOrder",
-								"stageEnteredAt",
-								"qualificationScore",
 								"assignee",
+								"stageEnteredAt",
 								"description",
 								"notes"
 							],
-							"overrides": { "stageEnteredAt": { "editable": false } }
+							"overrides": {
+								"status": { "editable": false },
+								"stageEnteredAt": { "editable": false },
+								"qualificationScore": { "label": "Win chance" }
+							}
 						}
 					},
 					{
@@ -3103,21 +3128,24 @@
 					},
 					{
 						"id": "lead-kpi-value",
-						"type": "stats-block",
+						"type": "stat",
 						"title": "Deal value",
 						"icon": "Cash",
 						"content": {
-							"entries": [
-								{
-									"title": "Deal value",
-									"countLabel": "EUR",
-									"register": "pipelinq",
-									"schema": "lead",
-									"metric": "sum",
-									"field": "value",
-									"filter": { "id": "@objectId" }
-								}
-							]
+							"label": "Deal value",
+							"icon": "Cash",
+							"format": {
+								"style": "currency",
+								"currency": "@config.currency",
+								"decimals": 0
+							},
+							"source": {
+								"register": "pipelinq",
+								"schema": "lead",
+								"metric": "sum",
+								"field": "value",
+								"filter": { "id": "@objectId" }
+							}
 						}
 					},
 					{
@@ -3394,7 +3422,7 @@
 						"gridX": 0,
 						"gridY": 0,
 						"gridWidth": 8,
-						"gridHeight": 4
+						"gridHeight": 8
 					},
 					{
 						"id": "7",
@@ -3411,14 +3439,6 @@
 						"gridY": 3,
 						"gridWidth": 4,
 						"gridHeight": 3
-					},
-					{
-						"id": "2",
-						"widgetId": "lead-qualification",
-						"gridX": 0,
-						"gridY": 4,
-						"gridWidth": 8,
-						"gridHeight": 4
 					},
 					{
 						"id": "3",
@@ -4678,6 +4698,12 @@
 					}
 				],
 				"actions": [
+					{
+						"id": "assign-to-me",
+						"label": "Assign to me",
+						"icon": "AccountArrowLeftOutline",
+						"handler": "assignTicketToMe"
+					},
 					{
 						"id": "view",
 						"label": "View",
