@@ -480,6 +480,12 @@ export default {
 		 */
 		steps: {
 			immediate: true,
+			/**
+			 * Fetch the names of the products the changed steps name.
+			 *
+			 * @param {Array<object>} steps The service's steps.
+			 * @spec openspec/changes/booking-and-service-pages/specs/appointment-booking/spec.md
+			 */
 			handler(steps) {
 				this.loadProductNames(steps)
 			},
