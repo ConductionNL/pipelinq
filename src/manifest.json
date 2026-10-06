@@ -3025,7 +3025,7 @@
 					{
 						"key": "qualificationScore",
 						"label": "Win chance",
-						"widget": "lead-probability",
+						"widget": "lead-score",
 						"sortable": true
 					},
 					"value",

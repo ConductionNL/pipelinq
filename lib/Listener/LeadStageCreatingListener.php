@@ -94,7 +94,7 @@ class LeadStageCreatingListener implements IEventListener {
 			return;
 		}
 
-		$lead = array_merge(($entity->getObject() ?? []), $event->getModifiedData());
+		$lead = array_merge($entity->getObject(), $event->getModifiedData());
 		$pipelines = $this->readPipelines(register: $register);
 		$patch = $this->placer->forNewLead(lead: $lead, pipelines: $pipelines);
 		if ($patch === []) {
