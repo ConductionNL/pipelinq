@@ -160,7 +160,7 @@
 		},
 		{
 			"id": "BookingDetail",
-			"_note": "Booking record as a declarative type:detail page (pipelinq-pos-mdm-detail-declarative). The booking's flat identity fields (status / source / startAt / endAt / depositAmount / notes / …) auto-render in the body via CnObjectDataWidget. Everything the auto-body + relatedCollections cannot express lives in one kind:'section' bodyWidget (BookingDetailSection, after-data): the inline notes/internalNotes editor, the resourceAssignments + statusHistory ARRAY-on-object tables (with cross-schema resource id->name resolution), the computed Timeline, and the Service/Customer name resolution. KEPT-AS-NOTE: lifecycleActions is NOT wired even though booking HAS an x-openregister-lifecycle — the real transitions POST to bespoke /api/bookings/{id}/{action} endpoints in BookingService with side-effects (confirmation/reminder emails, no-show fees) and TIME-WINDOW gating, and Reschedule CREATES A NEW booking UUID and navigates to it; OR's /transition would only flip status and bypass those side-effects. So the six admin actions are the page's actionsComponent (BookingHeaderActions), beside Edit in the header. Missing primitive: a declarative action that POSTs to a host-app endpoint (not OR /transition) with time-window gating + a 'returns a new object id, navigate to it' reload mode.",
+			"_note": "Booking record as a declarative type:detail page (pipelinq-pos-mdm-detail-declarative). The booking's flat identity fields (status / source / startAt / endAt / depositAmount / notes / …) auto-render in the body via CnObjectDataWidget. What the auto-body cannot express is split over grid widgets built from BookingDetailSection parts (booking-and-service-pages): the Service/Customer name context, the resourceAssignments table and the computed Timeline (timestamps plus statusHistory). Notes are the notes leaf; the audit table is dropped, OpenRegister's activity is in the actions menu. KEPT-AS-NOTE: lifecycleActions is NOT wired even though booking HAS an x-openregister-lifecycle — the real transitions POST to bespoke /api/bookings/{id}/{action} endpoints in BookingService with side-effects (confirmation/reminder emails, no-show fees) and TIME-WINDOW gating, and Reschedule CREATES A NEW booking UUID and navigates to it; OR's /transition would only flip status and bypass those side-effects. So the six admin actions are the page's actionsComponent (BookingHeaderActions), beside Edit in the header. Missing primitive: a declarative action that POSTs to a host-app endpoint (not OR /transition) with time-window gating + a 'returns a new object id, navigate to it' reload mode.",
 			"route": "/bookings/:id",
 			"type": "detail",
 			"title": "Booking",
@@ -172,24 +172,37 @@
 				"excludeFields": ["resourceAssignments", "statusHistory"],
 				"_note": "Booking archetype (bespoke-detail-pages). An appointment booking is a scheduled service slot, so the body opens with the booking fields (status, source, startAt/endAt, customerId, serviceId, depositAmount, confirmation/reminder timestamps, cancellationReason) 8-wide beside a right column holding the deposit KPI stat above the related graph (service, resource, customer, previousBookingId reschedule chain), with Documents full-width for any signed intake / deposit receipt. IMPORTANT: no calendar body widget or tab — although a booking is time-bound, the booking schema declares NO calendar linkedType, and per the hard rule comms/scheduling leaves only appear when the schema declares them; the real schedule, the resourceAssignments/statusHistory arrays-on-object and the computed Timeline stay in the PRESERVED BookingDetailSection bodyWidget (after-data); the six TIME-WINDOW-gated admin actions are the page's actionsComponent, whose registry note explains why lifecycleActions cannot be wired (bespoke endpoints, side-effects, reschedule mints a new UUID).",
 				"widgets": [
-					{ "id": "booking-deposit", "type": "stat", "title": "Deposit", "icon": "Cash", "content": { "label": "Deposit", "format": "currency", "source": { "register": "pipelinq", "schema": "appointmentBooking", "metric": "sum", "field": "depositAmount", "filter": { "id": "@objectId" } } } },
-					{ "id": "booking-data", "type": "data", "title": "Booking", "icon": "Calendar", "content": { "columns": 2, "include": ["status", "source", "startAt", "endAt", "customerId", "serviceId", "depositAmount", "confirmationSentAt", "reminderSentAt", "cancellationReason", "notes"], "overrides": { "status": { "editable": false }, "startAt": { "editable": false }, "endAt": { "editable": false }, "confirmationSentAt": { "editable": false }, "reminderSentAt": { "editable": false } } } },
+					{ "id": "booking-deposit", "type": "stat", "title": "Deposit", "icon": "Cash", "content": { "label": "Deposit", "format": { "style": "currency", "currency": "@config.currency", "decimals": 2 }, "source": { "register": "pipelinq", "schema": "appointmentBooking", "metric": "sum", "field": "depositAmount", "filter": { "id": "@objectId" } } } },
+					{ "id": "booking-data", "type": "data", "title": "Booking", "icon": "Calendar", "content": { "title": "Booking", "columns": 2, "include": ["status", "source", "startAt", "endAt", "customerId", "serviceId", "depositAmount", "confirmationSentAt", "reminderSentAt", "cancellationReason", "notes", "internalNotes"], "overrides": { "status": { "editable": false }, "startAt": { "editable": false }, "endAt": { "editable": false }, "confirmationSentAt": { "editable": false }, "reminderSentAt": { "editable": false }, "notes": { "label": "Note for the customer" }, "internalNotes": { "label": "Internal note (earlier)", "editable": false } } } },
+					{ "id": "booking-context", "type": "BookingContextWidget", "title": "Service and customer", "icon": "AccountClockOutline", "content": {} },
 					{ "id": "booking-related", "type": "related", "title": "Related", "icon": "LinkVariant" },
+					{
+						"id": "booking-tabs",
+						"type": "tabs",
+						"title": "Booking",
+						"icon": "ViewDashboard",
+						"_note": "The working surface of a booking, one tab at a time (pipelinq review E7). Timeline: the booking's own events and status changes, from BookingDetailSection part 'timeline' until the library's `timeline` widget type is released (nextcloud-vue lane), then this tab swaps to `type: timeline`. Notes: the notes leaf, as on LeadDetail, instead of the hand-written notes editor. The audit table is gone: OpenRegister's activity is in the actions menu (E6). Children stay out of `layout`.",
+						"content": {
+							"ariaLabel": "Booking",
+							"tabs": [
+								{ "widgetId": "booking-timeline", "label": "Timeline" },
+								{ "widgetId": "booking-assignments", "label": "Resources" },
+								{ "widgetId": "booking-notes", "label": "Notes" },
+								{ "widgetId": "booking-files", "label": "Documents" }
+							]
+						}
+					},
+					{ "id": "booking-timeline", "type": "BookingTimelineWidget", "title": "Timeline", "icon": "Timeline", "content": {} },
+					{ "id": "booking-assignments", "type": "BookingAssignmentsWidget", "title": "Resource assignments", "icon": "AccountGroup", "content": {} },
+					{ "id": "booking-notes", "type": "integration", "integrationId": "notes", "title": "Notes", "icon": "NoteTextOutline" },
 					{ "id": "booking-files", "type": "integration", "integrationId": "files", "title": "Documents", "icon": "FolderOutline" }
 				],
 				"layout": [
-					{ "id": "1", "widgetId": "booking-deposit", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 2 },
 					{ "id": "2", "widgetId": "booking-data",    "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 6 },
-					{ "id": "3", "widgetId": "booking-related", "gridX": 8, "gridY": 2, "gridWidth": 4, "gridHeight": 4 },
-					{ "id": "4", "widgetId": "booking-files",   "gridX": 0, "gridY": 6, "gridWidth": 12, "gridHeight": 3 }
-				],
-				"bodyWidgets": [
-					{
-						"id": "booking-detail",
-						"component": "BookingDetailSection",
-						"placement": "after-data",
-						"props": { "bookingId": "@objectId" }
-					}
+					{ "id": "1", "widgetId": "booking-deposit", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 2 },
+					{ "id": "5", "widgetId": "booking-context", "gridX": 8, "gridY": 2, "gridWidth": 4, "gridHeight": 2 },
+					{ "id": "3", "widgetId": "booking-related", "gridX": 8, "gridY": 4, "gridWidth": 4, "gridHeight": 3 },
+					{ "id": "4", "widgetId": "booking-tabs",    "gridX": 0, "gridY": 6, "gridWidth": 8, "gridHeight": 7 }
 				],
 				"sidebar": {
 					"enabled": true,

@@ -19,6 +19,7 @@ import AccountBox from 'vue-material-design-icons/AccountBox.vue'
 import AccountBoxOutline from 'vue-material-design-icons/AccountBoxOutline.vue'
 import AccountCheckOutline from 'vue-material-design-icons/AccountCheckOutline.vue'
 import AccountClock from 'vue-material-design-icons/AccountClock.vue'
+import AccountClockOutline from 'vue-material-design-icons/AccountClockOutline.vue'
 import AccountCog from 'vue-material-design-icons/AccountCog.vue'
 import AccountDetailsOutline from 'vue-material-design-icons/AccountDetailsOutline.vue'
 import AccountGroup from 'vue-material-design-icons/AccountGroup.vue'
@@ -158,6 +159,7 @@ import Tag from 'vue-material-design-icons/Tag.vue'
 import TagOutline from 'vue-material-design-icons/TagOutline.vue'
 import ThumbsUpDown from 'vue-material-design-icons/ThumbsUpDown.vue'
 import TicketOutline from 'vue-material-design-icons/TicketOutline.vue'
+import Timeline from 'vue-material-design-icons/Timeline.vue'
 import Timer from 'vue-material-design-icons/Timer.vue'
 import Tray from 'vue-material-design-icons/Tray.vue'
 import TrayFull from 'vue-material-design-icons/TrayFull.vue'
@@ -176,6 +178,7 @@ export default {
 	AccountBoxOutline,
 	AccountCheckOutline,
 	AccountClock,
+	AccountClockOutline,
 	AccountCog,
 	AccountDetailsOutline,
 	AccountGroup,
@@ -315,6 +318,7 @@ export default {
 	TagOutline,
 	ThumbsUpDown,
 	TicketOutline,
+	Timeline,
 	Timer,
 	Tray,
 	TrayFull,
