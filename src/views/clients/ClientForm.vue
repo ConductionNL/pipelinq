@@ -319,10 +319,15 @@ export default {
 			} catch {
 				names = null
 			}
-			return this.languages.map((tag) => ({
-				id: tag,
-				label: names?.of(tag) || tag,
-			}))
+			return this.languages.map((tag) => {
+				let label = tag
+				try {
+					label = names?.of(tag.replace('_', '-')) || tag
+				} catch {
+					// A tag Intl does not know keeps its code as the label.
+				}
+				return { id: tag, label }
+			})
 		},
 	},
 

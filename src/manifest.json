@@ -3688,7 +3688,7 @@
 						"widget": "fkResolve",
 						"widgetProps": {
 							"register": "pipelinq",
-							"schema": "productCategory",
+							"schema": "productcategory",
 							"labelField": "name"
 						}
 					},
