@@ -7101,7 +7101,20 @@ OC.L10N.register(
         "Mail Not Sent At": "Mail Not Sent At",
         "Mail Not Sent Reason": "Mail Not Sent Reason",
         "When integriq last refused a confirmation or reminder mail for this booking (opt-out-before-send).": "When integriq last refused a confirmation or reminder mail for this booking (opt-out-before-send).",
-        "Why integriq refused it, for example opted-out or authority-unavailable.": "Why integriq refused it, for example opted-out or authority-unavailable."
+        "Why integriq refused it, for example opted-out or authority-unavailable.": "Why integriq refused it, for example opted-out or authority-unavailable.",
+        "What now? Step 1: new": "What now? Step 1: new",
+        "What now? Step 2: in progress": "What now? Step 2: in progress",
+        "What now? Step 3: waiting for the customer": "What now? Step 3: waiting for the customer",
+        "What now?": "What now?",
+        "A handler is assigned": "A handler is assigned",
+        "Take on puts you on it": "Take on puts you on it",
+        "The customer is known": "The customer is known",
+        "The deadline is set": "The deadline is set",
+        "The customer has replied": "The customer has replied",
+        "Replies from the portal land on the ticket": "Replies from the portal land on the ticket",
+        "Then: step 2, in progress": "Then: step 2, in progress",
+        "Then: answer the customer, or finish": "Then: answer the customer, or finish",
+        "Then: back to in progress, or finish": "Then: back to in progress, or finish"
     },
     "nplurals=2; plural=(n != 1);"
 )

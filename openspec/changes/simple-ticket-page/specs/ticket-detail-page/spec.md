@@ -55,3 +55,25 @@ contact moment MUST show no thread.
 - **WHEN** a handler opens the ticket in the simple structure
 - **THEN** the thread MUST show reply, answer, reply in that order
 - **AND** the page body MUST NOT show an answer text area
+
+### Requirement: The ticket page says what the step still needs (REQ-TDP-004)
+In the simple structure the ticket page MUST show a what-now card for a ticket
+that is new, in progress or waiting for the customer: a title that names the
+step, a checklist of what the step still needs, the stage's primary button and
+one line naming what comes next. Every checklist item MUST be read from a field
+the ticket has (`assignee`, `client`, `slaDeadline`, `portalReplies`); an item is
+done when its field holds a value. A finished ticket MUST show no card.
+
+#### Scenario: A new ticket without a handler
+@e2e exclude Asserted in tests/vitest/simpleTicketPage.spec.js with the library's own resolver on tickets of every status.
+- **GIVEN** a new request with a customer and no handler
+- **WHEN** a handler opens it in the simple structure
+- **THEN** the card MUST be titled for step 1
+- **AND** "The customer is known" MUST be done and "A handler is assigned" not
+- **AND** the card's button MUST be Take on
+
+#### Scenario: A completed ticket
+@e2e exclude Same test file; a final status has no stage entry.
+- **GIVEN** a completed request
+- **WHEN** a handler opens it in the simple structure
+- **THEN** the page MUST show no what-now card

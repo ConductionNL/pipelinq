@@ -32,6 +32,12 @@
  *           that order. A name is the item's `id`, else its `key`, else its
  *           `label`. `slots` adds entries to the page's slot map. An overlay never
  *           adds a page and never removes one.
+ *   nav     Merged over the manifest's `nav` (the brand block and the primary
+ *           action CnAppNav draws). A string value `@theming.<key>` is read
+ *           from the instance's theming capabilities (`name`, `logo`, ...),
+ *           so a profile can show the municipality's own name and logo
+ *           without naming one. A placeholder the instance cannot answer is
+ *           left empty, never invented.
  *
  * Nothing here deletes anything. The pages, the routes and the fragments are
  * the same in both profiles, which is what keeps every deep link working.
@@ -143,13 +149,56 @@ export function overlayItemName(item) {
 	return item?.id ?? item?.key ?? item?.label
 }
 
+/** The prefix of a `nav` value the instance's theming capabilities answer. */
+const THEMING_PLACEHOLDER = '@theming.'
+
+/**
+ * Resolve the `nav` block of a profile: `@theming.<key>` strings become the
+ * instance's own theming values, one level deep (`brand.caption`,
+ * `primaryAction.label`), so no municipality is written into the app.
+ *
+ * A placeholder the capabilities do not answer resolves to an empty string,
+ * which CnAppNav reads as "nothing to draw" for that field. The profile is
+ * not the place to guess an instance's name.
+ *
+ * @param {object} nav The profile's `nav` block.
+ * @param {object|null} theming The theming capabilities (`name`, `logo`, ...).
+ * @return {object} A new nav block with every placeholder resolved.
+ *
+ * @spec openspec/changes/simple-structure-profile/specs/navigation-ia/spec.md#REQ-NIA-107
+ */
+export function resolveNavPlaceholders(nav, theming) {
+	const resolveValue = (value) => {
+		if (typeof value !== 'string' || !value.startsWith(THEMING_PLACEHOLDER)) {
+			return value
+		}
+		const key = value.slice(THEMING_PLACEHOLDER.length)
+		const answer =
+			theming && typeof theming === 'object' ? theming[key] : undefined
+		return typeof answer === 'string' ? answer : ''
+	}
+	const out = {}
+	for (const [key, value] of Object.entries(nav || {})) {
+		out[key] =
+			value && typeof value === 'object' && !Array.isArray(value)
+				? Object.fromEntries(
+						Object.entries(value).map(([inner, innerValue]) => [
+							inner,
+							resolveValue(innerValue),
+						]),
+					)
+				: resolveValue(value)
+	}
+	return out
+}
+
 /**
  * Build the manifest for one structure profile.
  *
  * `buildManifest` is passed in rather than imported, so this module stays free
  * of the library barrel and a spec can hand it the real implementation.
  *
- * A profile file without `menu` and `pages` (the full one) goes through
+ * A profile file without `menu`, `pages` and `nav` (the full one) goes through
  * unchanged: the result is exactly `buildManifest(base, fragments, layout)`.
  *
  * An overlay that names a page the manifest does not have is skipped and
@@ -161,11 +210,20 @@ export function overlayItemName(item) {
  * @param {object} base The bundled manifest.
  * @param {Array<object>} fragments The `manifest.d` fragments, in order.
  * @param {object} profileFile The profile's layout file.
+ * @param {object} [context] `{ theming }`: the instance's theming
+ *   capabilities, for the placeholders a profile's `nav` block may carry.
  * @return {object} The built manifest.
  *
  * @spec openspec/changes/simple-structure-profile/specs/navigation-ia/spec.md#REQ-NIA-102
+ * @spec openspec/changes/simple-structure-profile/specs/navigation-ia/spec.md#REQ-NIA-107
  */
-export function buildProfiledManifest(buildManifest, base, fragments, profileFile) {
+export function buildProfiledManifest(
+	buildManifest,
+	base,
+	fragments,
+	profileFile,
+	context = {},
+) {
 	const file = profileFile || {}
 	const layout = {}
 	for (const key of LAYOUT_KEYS) {
@@ -188,7 +246,17 @@ export function buildProfiledManifest(buildManifest, base, fragments, profileFil
 				}
 			: base
 
-	const built = buildManifest(profiledBase, fragments, layout)
+	const builtPages = buildManifest(profiledBase, fragments, layout)
+	const built =
+		file.nav && typeof file.nav === 'object'
+			? {
+					...builtPages,
+					nav: {
+						...(builtPages.nav || {}),
+						...resolveNavPlaceholders(file.nav, context.theming ?? null),
+					},
+				}
+			: builtPages
 
 	const overlays = Array.isArray(file.pages) ? file.pages : []
 	if (overlays.length === 0) {

@@ -41,6 +41,7 @@ import {
 import {
 	applyPageOverlay,
 	buildProfiledManifest,
+	resolveNavPlaceholders,
 	resolveStructureProfile,
 	STRUCTURE_FULL,
 	STRUCTURE_SETTING,
@@ -399,6 +400,55 @@ describe('the simple profile', () => {
 	}, 60_000)
 })
 
+describe('the brand block', () => {
+	const theming = { name: 'Gemeente Zuiddrecht', logo: '/core/img/logo/logo.svg' }
+	const withTheming = () =>
+		buildProfiledManifest(
+			buildManifest,
+			manifest(),
+			fragments,
+			applyMenuModules(simpleFile, []),
+			{ theming },
+		)
+
+	it('names the app over the instance the theming capabilities answer, and the full profile declares none', () => {
+		expect(simpleFile.nav.brand).toEqual({
+			name: 'pipelinq',
+			caption: '@theming.name',
+			logo: '@theming.logo',
+		})
+		expect(fullFile.nav).toBeUndefined()
+		expect(withTheming().nav.brand).toEqual({
+			name: 'pipelinq',
+			caption: 'Gemeente Zuiddrecht',
+			logo: '/core/img/logo/logo.svg',
+		})
+		expect(build(fullFile).nav?.brand).toBeUndefined()
+	})
+
+	it('shows the app alone on an instance that answers nothing, and never a placeholder', () => {
+		for (const answer of [null, {}, { name: '', logo: 7 }]) {
+			expect(resolveNavPlaceholders(simpleFile.nav, answer).brand).toEqual({
+				name: 'pipelinq',
+				caption: '',
+				logo: '',
+			})
+		}
+		expect(JSON.stringify(buildSimple().nav)).not.toContain('@theming')
+	})
+
+	it('is what main.js hands the theming capabilities to', () => {
+		expect(mainSource).toContain(
+			"import { getCapabilities } from '@nextcloud/capabilities'",
+		)
+		expect(mainSource).toContain('theming: getCapabilities()?.theming ?? null')
+	})
+
+	it('validates against the manifest schema with the brand resolved', () => {
+		validateBuilt(withTheming())
+	}, 60_000)
+})
+
 describe('the modules', () => {
 	const modulesPage = () =>
 		buildSimple().pages.find((page) => page.id === 'Modules')
@@ -709,8 +759,8 @@ describe('the structure setting', () => {
 		expect(mainSource).toMatch(
 			/structureProfile === STRUCTURE_FULL\s+\? menuLayout\s+: applyMenuModules\(/,
 		)
-		expect(mainSource).toContain(
-			'buildProfiledManifest(buildManifest, bundledManifest, fragments, profileFile)',
+		expect(mainSource).toMatch(
+			/buildProfiledManifest\(buildManifest, bundledManifest, fragments, profileFile, \{\s+theming:/,
 		)
 	})
 

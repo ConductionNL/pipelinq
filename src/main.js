@@ -23,6 +23,7 @@ import { registerLeafIntegrations } from '@conduction/nextcloud-vue/integrations
 // `undefined` across the chunk boundary (components, used directly, are fine).
 import { installIntegrationRegistry } from '@conduction/nextcloud-vue/integrations/registry.js'
 import axios from '@nextcloud/axios'
+import { getCapabilities } from '@nextcloud/capabilities'
 import { loadState } from '@nextcloud/initial-state'
 import {
 	loadTranslations,
@@ -189,8 +190,13 @@ const profileFile =
 					simpleMenuLayout,
 				),
 			)
+// The simple profile's brand block names the instance through its theming
+// capabilities (`@theming.name`, `@theming.logo`), so the navigation shows the
+// municipality the instance belongs to without the app naming one.
 const { manifest: profiledManifest, homePage } = applyHomePage(
-	buildProfiledManifest(buildManifest, bundledManifest, fragments, profileFile),
+	buildProfiledManifest(buildManifest, bundledManifest, fragments, profileFile, {
+		theming: getCapabilities()?.theming ?? null,
+	}),
 	profileFile.home,
 )
 // The getting-started tour sends the reader to menu entries the simple menu
