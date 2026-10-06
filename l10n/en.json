@@ -7115,6 +7115,17 @@
         "The chosen account is not in the group %s.": "The chosen account is not in the group %s.",
         "Until you choose one in the Pipelinq settings, the customer portal cannot save anything: residents cannot log in or reset their password.": "Until you choose one in the Pipelinq settings, the customer portal cannot save anything: residents cannot log in or reset their password.",
         "SMS from unknown number %s": "SMS from unknown number %s",
-        "WhatsApp message from unknown number %s": "WhatsApp message from unknown number %s"
+        "WhatsApp message from unknown number %s": "WhatsApp message from unknown number %s",
+        "Pipelinq SMS and WhatsApp service account": "Pipelinq SMS and WhatsApp service account",
+        "Incoming SMS and WhatsApp messages are saved as %s.": "Incoming SMS and WhatsApp messages are saved as %s.",
+        "Until you choose one in the Pipelinq settings, incoming SMS and WhatsApp messages are not saved, and a STOP reply is not recorded.": "Until you choose one in the Pipelinq settings, incoming SMS and WhatsApp messages are not saved, and a STOP reply is not recorded.",
+        "Incoming messages": "Incoming messages",
+        "SMS and WhatsApp providers call Pipelinq without a Nextcloud login. After the signature checks out, Pipelinq saves what they send as the account below.": "SMS and WhatsApp providers call Pipelinq without a Nextcloud login. After the signature checks out, Pipelinq saves what they send as the account below.",
+        "SMS and WhatsApp service account": "SMS and WhatsApp service account",
+        "Incoming messages, conversations, STOP replies and messages from unknown numbers are saved as this account. It joins the group {group}, which may create and change messages, conversations and contact moments.": "Incoming messages, conversations, STOP replies and messages from unknown numbers are saved as this account. It joins the group {group}, which may create and change messages, conversations and contact moments.",
+        "Until you choose one, incoming SMS and WhatsApp messages are not saved, and a STOP reply is not recorded.": "Until you choose one, incoming SMS and WhatsApp messages are not saved, and a STOP reply is not recorded.",
+        "Incoming messages are now saved as {user}.": "Incoming messages are now saved as {user}.",
+        "Could not load the SMS and WhatsApp service account.": "Could not load the SMS and WhatsApp service account.",
+        "Could not save the SMS and WhatsApp service account.": "Could not save the SMS and WhatsApp service account."
     }
 }

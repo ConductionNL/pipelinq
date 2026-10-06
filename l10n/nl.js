@@ -7012,7 +7012,18 @@ OC.L10N.register(
         "The chosen account is not in the group %s.": "Het gekozen account zit niet in de groep %s.",
         "Until you choose one in the Pipelinq settings, the customer portal cannot save anything: residents cannot log in or reset their password.": "Tot u er een kiest in de Pipelinq-instellingen, kan het klantportaal niets opslaan: inwoners kunnen niet inloggen en hun wachtwoord niet herstellen.",
         "SMS from unknown number %s": "Sms van onbekend nummer %s",
-        "WhatsApp message from unknown number %s": "WhatsApp-bericht van onbekend nummer %s"
+        "WhatsApp message from unknown number %s": "WhatsApp-bericht van onbekend nummer %s",
+        "Pipelinq SMS and WhatsApp service account": "Pipelinq-serviceaccount voor sms en WhatsApp",
+        "Incoming SMS and WhatsApp messages are saved as %s.": "Binnenkomende sms- en WhatsApp-berichten worden opgeslagen als %s.",
+        "Until you choose one in the Pipelinq settings, incoming SMS and WhatsApp messages are not saved, and a STOP reply is not recorded.": "Tot u er een kiest in de Pipelinq-instellingen, worden binnenkomende sms- en WhatsApp-berichten niet opgeslagen en wordt een STOP-antwoord niet vastgelegd.",
+        "Incoming messages": "Binnenkomende berichten",
+        "SMS and WhatsApp providers call Pipelinq without a Nextcloud login. After the signature checks out, Pipelinq saves what they send as the account below.": "Sms- en WhatsApp-providers roepen Pipelinq aan zonder Nextcloud-login. Als de handtekening klopt, slaat Pipelinq op wat ze sturen als het account hieronder.",
+        "SMS and WhatsApp service account": "Serviceaccount voor sms en WhatsApp",
+        "Incoming messages, conversations, STOP replies and messages from unknown numbers are saved as this account. It joins the group {group}, which may create and change messages, conversations and contact moments.": "Binnenkomende berichten, gesprekken, STOP-antwoorden en berichten van onbekende nummers worden als dit account opgeslagen. Het komt in de groep {group}, die berichten, gesprekken en contactmomenten mag aanmaken en wijzigen.",
+        "Until you choose one, incoming SMS and WhatsApp messages are not saved, and a STOP reply is not recorded.": "Tot u er een kiest, worden binnenkomende sms- en WhatsApp-berichten niet opgeslagen en wordt een STOP-antwoord niet vastgelegd.",
+        "Incoming messages are now saved as {user}.": "Binnenkomende berichten worden nu opgeslagen als {user}.",
+        "Could not load the SMS and WhatsApp service account.": "Kon het serviceaccount voor sms en WhatsApp niet laden.",
+        "Could not save the SMS and WhatsApp service account.": "Kon het serviceaccount voor sms en WhatsApp niet opslaan."
     },
     "nplurals=2; plural=(n != 1);"
 )
