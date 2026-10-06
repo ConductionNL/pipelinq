@@ -3,6 +3,7 @@
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use OCA\Pipelinq\Controller\SetupController;
+use OCA\Pipelinq\Service\Demo\DemoRegisterImporter;
 use OCA\Pipelinq\Service\DemoSeedService;
 use OCA\Pipelinq\Service\SettingsService;
 use OCP\App\IAppManager;
@@ -34,11 +35,14 @@ class SetupControllerDemoDataTest extends TestCase {
 	private array $written = [];
 	private array $config = [];
 	private DemoSeedService $demoSeed;
+	private DemoRegisterImporter $importer;
 
 	protected function setUp(): void {
 		$this->written = [];
 		$this->config = [];
 		$this->demoSeed = $this->createMock(DemoSeedService::class);
+		$this->importer = $this->createMock(DemoRegisterImporter::class);
+		$this->importer->method('import')->willReturn(['imported' => 0, 'skipped' => 0]);
 	}
 
 	private function controller(array $params = []): SetupController {
@@ -72,7 +76,8 @@ class SetupControllerDemoDataTest extends TestCase {
 			$this->createMock(SettingsService::class),
 			$this->demoSeed,
 			$this->createMock(IAppManager::class),
-			new NullLogger()
+			new NullLogger(),
+			$this->importer
 		);
 	}
 
@@ -145,6 +150,31 @@ class SetupControllerDemoDataTest extends TestCase {
 		$this->assertTrue($data['success']);
 		$this->assertSame('demo', $this->written['demo_dataset'] ?? null);
 		$this->assertSame('seeded', $this->written['demo_data_decided'] ?? null);
+	}
+
+	public function testLoadingNoneImportsNoExampleRecords(): void {
+		// 🔴 THE REPORTED BUG. An administrator picked None and still got example
+		// records. The register no longer carries them; this guards the other
+		// half, that None never reaches the descriptor import either.
+		$this->config['demo_dataset'] = 'none';
+		$this->demoSeed->expects($this->never())->method('seed');
+		$this->importer->expects($this->never())->method('import');
+
+		$data = $this->controller()->runAction('load-demo-data')->getData();
+
+		$this->assertTrue($data['success']);
+	}
+
+	public function testLoadingExampleDataImportsTheExampleRecordsToo(): void {
+		$this->config['demo_dataset'] = 'demo';
+		$this->demoSeed->method('seed')->willReturn(['success' => true, 'created' => ['deal' => 3], 'skipped' => []]);
+		$this->importer = $this->createMock(DemoRegisterImporter::class);
+		$this->importer->expects($this->once())->method('import')->willReturn(['imported' => 250, 'skipped' => 6]);
+
+		$data = $this->controller()->runAction('load-demo-data')->getData();
+
+		$this->assertTrue($data['success']);
+		$this->assertStringContainsString('Seeded 253 demo object(s) (6 already present)', $data['message']);
 	}
 
 	public function testLoadingWithoutAChoiceRefusesRatherThanGuessing(): void {

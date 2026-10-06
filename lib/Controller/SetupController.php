@@ -30,6 +30,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Service\Demo\DemoRegisterImporter;
 use OCA\Pipelinq\Service\DemoSeedService;
 use OCA\Pipelinq\Service\SettingsService;
 use OCA\Pipelinq\Settings\AdminSettings;
@@ -109,6 +110,7 @@ class SetupController extends Controller {
 	 * @param DemoSeedService $demoSeedService Optional demo-data seeding (same write path as occ).
 	 * @param IAppManager $appManager App installed/enabled lookup for integration detection.
 	 * @param LoggerInterface $logger Logger.
+	 * @param DemoRegisterImporter $registerImporter The example records descriptor, imported with the seed.
 	 */
 	public function __construct(
 		string $appName,
@@ -118,6 +120,7 @@ class SetupController extends Controller {
 		private readonly DemoSeedService $demoSeedService,
 		private readonly IAppManager $appManager,
 		private readonly LoggerInterface $logger,
+		private readonly DemoRegisterImporter $registerImporter,
 	) {
 		parent::__construct(appName: $appName, request: $request);
 	}//end __construct()
@@ -434,8 +437,11 @@ class SetupController extends Controller {
 			$this->appConfig->setValueString(Application::APP_ID, self::DATASET_KEY, DemoSeedService::DEMO_DATASET);
 			$this->appConfig->setValueString(Application::APP_ID, self::DEMO_DATA_DECIDED_KEY, 'seeded');
 
-			$created = array_sum($result['created']);
-			$skipped = array_sum($result['skipped']);
+			// The example records that used to ship inside the register descriptor.
+			$example = $this->registerImporter->import();
+
+			$created = (array_sum($result['created']) + $example['imported']);
+			$skipped = (array_sum($result['skipped']) + $example['skipped']);
 			$message = sprintf(
 				'Seeded %d demo object(s) (%d already present). Remove them any time with `occ pipelinq:demo:seed --remove`.',
 				$created,
