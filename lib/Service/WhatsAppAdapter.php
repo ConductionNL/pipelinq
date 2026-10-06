@@ -374,11 +374,19 @@ class WhatsAppAdapter {
 	}//end replyTarget()
 
 	/**
-	 * This contact's inbound WhatsApp messages inside the session window.
+	 * This contact's answerable inbound WhatsApp messages inside the session
+	 * window.
+	 *
+	 * A STOP is the contact's last word: it and everything before it are not
+	 * answerable. Integriq lets a reply through an opt-out, and the STOP opens
+	 * the session itself, so without this the next free-form send after a
+	 * STOP went out as an answer to it.
 	 *
 	 * @param string $contactId Contact UUID.
 	 *
 	 * @return array<string,int> Message id to its sent time.
+	 *
+	 * @spec openspec/specs/outbound-messaging/spec.md#requirement-req-om-005-consent-gating-and-recording
 	 */
 	private function inboundInWindow(string $contactId): array {
 		$objectService = $this->getObjectService();
@@ -403,6 +411,7 @@ class WhatsAppAdapter {
 		}
 
 		$found = [];
+		$lastStop = 0;
 		foreach ((array)$rows as $raw) {
 			$row = $this->toArray(value: $raw);
 			$sentAt = (int)strtotime((string)($row['sentAt'] ?? ''));
@@ -410,10 +419,13 @@ class WhatsAppAdapter {
 			$isOwn = ((string)($row['contactId'] ?? $contactId) === $contactId);
 			if ($messageId !== '' && $isOwn === true && (time() - $sentAt) < self::SESSION_WINDOW_SECONDS) {
 				$found[$messageId] = $sentAt;
+				if ($this->consentService->isOptOutKeyword(body: (string)($row['body'] ?? '')) === true) {
+					$lastStop = max($lastStop, $sentAt);
+				}
 			}
 		}
 
-		return $found;
+		return array_filter($found, static fn (int $sentAt): bool => $sentAt > $lastStop);
 	}//end inboundInWindow()
 
 	/**
