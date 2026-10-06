@@ -27,6 +27,7 @@ use OCA\Pipelinq\Service\ConsentService;
 use OCA\Pipelinq\Service\ContactmomentService;
 use OCA\Pipelinq\Service\NotificationService;
 use OCA\Pipelinq\Service\PhoneNormaliser;
+use OCA\Pipelinq\Tests\Unit\Support\FakeMessagingAccount;
 use OCA\Pipelinq\Service\Provider\PermanentSmsProviderException;
 use OCA\Pipelinq\Service\Provider\SmsProviderClientInterface;
 use OCA\Pipelinq\Service\Provider\TransientSmsProviderException;
@@ -53,6 +54,7 @@ class SmsAdapterTest extends TestCase {
 	private NotificationService $notificationService;
 	private LoggerInterface $logger;
 	private ContactmomentService $contactmoments;
+	private FakeMessagingAccount $messaging;
 	private object $objectService;
 	private SmsAdapter $adapter;
 
@@ -71,6 +73,7 @@ class SmsAdapterTest extends TestCase {
 		$this->notificationService = $this->createMock(NotificationService::class);
 		$this->logger = $this->createMock(LoggerInterface::class);
 		$this->contactmoments = $this->createMock(ContactmomentService::class);
+		$this->messaging = (new FakeMessagingAccount($this))->usable();
 
 		$this->objectService = new class {
 			/** @var array<int, array<string, mixed>> */
@@ -82,6 +85,13 @@ class SmsAdapterTest extends TestCase {
 			 * @var array<int, array{call: string, _rbac: bool, _multitenancy: bool}>
 			 */
 			public array $access = [];
+
+			/**
+			 * The messaging account world, to stamp each call with the acting user.
+			 *
+			 * @var FakeMessagingAccount|null
+			 */
+			public ?FakeMessagingAccount $world = null;
 
 			/**
 			 * Contacts by phone number, for the contact lookup.
@@ -101,7 +111,7 @@ class SmsAdapterTest extends TestCase {
 			 * @return array<string, mixed>
 			 */
 			public function saveObject(array $object, $register = null, $schema = null, ?string $uuid = null, bool $_rbac = true, bool $_multitenancy = true): array {
-				$this->access[] = ['call' => 'saveObject', '_rbac' => $_rbac, '_multitenancy' => $_multitenancy];
+				$this->access[] = ['call' => 'saveObject', '_rbac' => $_rbac, '_multitenancy' => $_multitenancy, 'as' => $this->world?->actingUid()];
 				$object['uuid'] = ($uuid ?? ('row-' . count($this->saved)));
 				$this->saved[] = $object;
 				return $object;
@@ -117,7 +127,7 @@ class SmsAdapterTest extends TestCase {
 			 * @return array<int, array<string, mixed>>
 			 */
 			public function findAll(array $config = [], bool $_rbac = true, bool $_multitenancy = true): array {
-				$this->access[] = ['call' => 'findAll', '_rbac' => $_rbac, '_multitenancy' => $_multitenancy];
+				$this->access[] = ['call' => 'findAll', '_rbac' => $_rbac, '_multitenancy' => $_multitenancy, 'as' => $this->world?->actingUid()];
 				// The contact schema stores the number under `phone`.
 				$phone = (string)($config['filters']['phone'] ?? '');
 				if ($phone !== '' && isset($this->contacts[$phone]) === true) {
@@ -128,6 +138,8 @@ class SmsAdapterTest extends TestCase {
 			}
 		};
 
+		$this->objectService->world = $this->messaging;
+
 		$this->container->method('get')->willReturnCallback(
 			function (string $id) {
 				if ($id === 'OCA\\OpenRegister\\Service\\ObjectService') {
@@ -135,6 +147,9 @@ class SmsAdapterTest extends TestCase {
 				}
 				if ($id === 'OCA\\Pipelinq\\Service\\ContactmomentService') {
 					return $this->contactmoments;
+				}
+				if ($id === 'OCA\\Pipelinq\\Service\\MessagingServiceAccount') {
+					return $this->messaging->account;
 				}
 				throw new \RuntimeException('not registered: ' . $id);
 			}
@@ -439,7 +454,7 @@ class SmsAdapterTest extends TestCase {
 	 *
 	 * @return void
 	 */
-	public function testInboundWebhookReadsAndWritesAsTheSystem(): void {
+	public function testInboundWebhookWritesAsTheMessagingServiceAccount(): void {
 		$row = ['uuid' => 'prov-1', 'kind' => 'sms', 'vendor' => 'messagebird'];
 		$this->providerRepo->expects($this->once())
 			->method('findByIdForWebhook')
@@ -463,11 +478,22 @@ class SmsAdapterTest extends TestCase {
 
 		$this->assertSame('received', $result['status']);
 		$this->assertNotSame([], $this->objectService->access);
+		$writes = 0;
 		foreach ($this->objectService->access as $access) {
-			$this->assertFalse($access['_rbac'], $access['call'] . ' ran under RBAC');
-			$this->assertFalse($access['_multitenancy'], $access['call'] . ' ran under multitenancy');
+			if ($access['call'] !== 'saveObject') {
+				// A lookup is a read and may skip RBAC.
+				continue;
+			}
+
+			$writes++;
+			$this->assertTrue($access['_rbac'], 'a webhook write skipped RBAC');
+			$this->assertTrue($access['_multitenancy'], 'a webhook write skipped multitenancy');
+			$this->assertSame(FakeMessagingAccount::UID, $access['as'], 'a webhook write ran as somebody else');
 		}
-	}//end testInboundWebhookReadsAndWritesAsTheSystem()
+
+		$this->assertGreaterThan(0, $writes);
+		$this->assertNull($this->messaging->actingUid(), 'the caller was not restored');
+	}//end testInboundWebhookWritesAsTheMessagingServiceAccount()
 
 	/**
 	 * A STOP from a number that matches no contact is recorded in integriq on
@@ -552,4 +578,27 @@ class SmsAdapterTest extends TestCase {
 
 		$this->assertFalse($result['unknownSender']);
 	}//end testAnSmsFromAKnownContactIsNotLoggedAsUnknown()
+
+	/**
+	 * Without a usable messaging service account the webhook answers
+	 * serviceUnavailable (503, so the provider retries) and writes nothing:
+	 * no message, no conversation, no opt-out, no contact moment.
+	 *
+	 * @return void
+	 */
+	public function testWithoutAServiceAccountNothingIsWritten(): void {
+		$this->messaging->config = [];
+		$this->providerRepo->method('findByIdForWebhook')->willReturn(['uuid' => 'prov-1', 'kind' => 'sms', 'vendor' => 'messagebird']);
+		$this->providerFactory->method('create')->willReturn($this->buildClient('messagebird', 'success', 'ext-1', true));
+		$this->consentService->method('isOptOutKeyword')->willReturn(true);
+		$this->consentService->expects($this->never())->method('recordOptOut');
+		$this->contactmoments->expects($this->never())->method('recordInboundFromUnknownNumber');
+
+		$result = $this->adapter->handleInboundWebhook(json_encode(['from' => '+31611119999', 'body' => 'STOP']), 'sha256=ok', 'prov-1');
+
+		$this->assertSame('serviceUnavailable', $result['status']);
+		foreach ($this->objectService->access as $access) {
+			$this->assertNotSame('saveObject', $access['call'], 'something was written without the service account');
+		}
+	}//end testWithoutAServiceAccountNothingIsWritten()
 }//end class

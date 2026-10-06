@@ -359,8 +359,9 @@ class ContactmomentServiceTest extends TestCase {
 	/**
 	 * A WhatsApp message from a number that matches no contact becomes a new,
 	 * unassigned contact moment for a person to pick up. It follows the
-	 * outbound convention (WhatsApp is channel chat, platform whatsapp), and is
-	 * written as the system because the provider webhook has no user.
+	 * outbound convention (WhatsApp is channel chat, platform whatsapp). It is
+	 * written with OpenRegister's checks on: the webhook runs it as the
+	 * messaging service account.
 	 *
 	 * @return void
 	 */
@@ -377,8 +378,8 @@ class ContactmomentServiceTest extends TestCase {
 		$this->assertSame('ticket-uuid-2', $uuid);
 		$this->assertCount(1, $this->saves);
 		$save = $this->saves[0];
-		$this->assertFalse($save['_rbac']);
-		$this->assertFalse($save['_multitenancy']);
+		$this->assertTrue($save['_rbac'], 'the contact moment skipped RBAC');
+		$this->assertTrue($save['_multitenancy'], 'the contact moment skipped multitenancy');
 		$this->assertSame('reg-123', $save['register']);
 		$this->assertSame('ticket-456', $save['schema']);
 

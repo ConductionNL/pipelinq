@@ -27,6 +27,7 @@ use OCA\Pipelinq\Service\ConsentService;
 use OCA\Pipelinq\Service\ContactmomentService;
 use OCA\Pipelinq\Service\NotificationService;
 use OCA\Pipelinq\Service\PhoneNormaliser;
+use OCA\Pipelinq\Tests\Unit\Support\FakeMessagingAccount;
 use OCA\Pipelinq\Service\WhatsAppAdapter;
 use OCA\Pipelinq\Service\WhatsAppProviderClient;
 use OCP\IAppConfig;
@@ -51,6 +52,7 @@ class WhatsAppAdapterTest extends TestCase {
 	private NotificationService $notificationService;
 	private LoggerInterface $logger;
 	private ContactmomentService $contactmoments;
+	private FakeMessagingAccount $messaging;
 	private object $objectService;
 	private WhatsAppAdapter $adapter;
 
@@ -69,6 +71,7 @@ class WhatsAppAdapterTest extends TestCase {
 		$this->notificationService = $this->createMock(NotificationService::class);
 		$this->logger = $this->createMock(LoggerInterface::class);
 		$this->contactmoments = $this->createMock(ContactmomentService::class);
+		$this->messaging = (new FakeMessagingAccount($this))->usable();
 
 		$this->objectService = new class {
 			/** @var array<string, array<string, mixed>> */
@@ -83,6 +86,13 @@ class WhatsAppAdapterTest extends TestCase {
 			 * @var array<int, array{call: string, _rbac: bool, _multitenancy: bool}>
 			 */
 			public array $access = [];
+
+			/**
+			 * The messaging account world, to stamp each call with the acting user.
+			 *
+			 * @var FakeMessagingAccount|null
+			 */
+			public ?FakeMessagingAccount $world = null;
 
 			/**
 			 * Contacts by phone number, for the contact lookup.
@@ -102,7 +112,7 @@ class WhatsAppAdapterTest extends TestCase {
 			 * @return array<string, mixed>
 			 */
 			public function saveObject(array $object, $register = null, $schema = null, ?string $uuid = null, bool $_rbac = true, bool $_multitenancy = true): array {
-				$this->access[] = ['call' => 'saveObject', '_rbac' => $_rbac, '_multitenancy' => $_multitenancy];
+				$this->access[] = ['call' => 'saveObject', '_rbac' => $_rbac, '_multitenancy' => $_multitenancy, 'as' => $this->world?->actingUid()];
 				if ($uuid === null || $uuid === '') {
 					$uuid = (string)($object['uuid'] ?? '');
 				}
@@ -124,7 +134,7 @@ class WhatsAppAdapterTest extends TestCase {
 			 * @return array<string, mixed>|null
 			 */
 			public function find(string $id, $register = null, $schema = null, bool $_rbac = true, bool $_multitenancy = true): ?array {
-				$this->access[] = ['call' => 'find', '_rbac' => $_rbac, '_multitenancy' => $_multitenancy];
+				$this->access[] = ['call' => 'find', '_rbac' => $_rbac, '_multitenancy' => $_multitenancy, 'as' => $this->world?->actingUid()];
 				return ($this->store[$id] ?? null);
 			}
 
@@ -140,7 +150,7 @@ class WhatsAppAdapterTest extends TestCase {
 			 * @return array<int, array<string, mixed>>
 			 */
 			public function findAll(array $config = [], bool $_rbac = true, bool $_multitenancy = true): array {
-				$this->access[] = ['call' => 'findAll', '_rbac' => $_rbac, '_multitenancy' => $_multitenancy];
+				$this->access[] = ['call' => 'findAll', '_rbac' => $_rbac, '_multitenancy' => $_multitenancy, 'as' => $this->world?->actingUid()];
 				$filters = $config['filters'] ?? [];
 				// The contact schema stores the number under `phone`.
 				$phone = (string)($filters['phone'] ?? '');
@@ -154,6 +164,8 @@ class WhatsAppAdapterTest extends TestCase {
 			}
 		};
 
+		$this->objectService->world = $this->messaging;
+
 		$this->container->method('get')->willReturnCallback(
 			function (string $id) {
 				if ($id === 'OCA\\OpenRegister\\Service\\ObjectService') {
@@ -161,6 +173,9 @@ class WhatsAppAdapterTest extends TestCase {
 				}
 				if ($id === 'OCA\\Pipelinq\\Service\\ContactmomentService') {
 					return $this->contactmoments;
+				}
+				if ($id === 'OCA\\Pipelinq\\Service\\MessagingServiceAccount') {
+					return $this->messaging->account;
 				}
 				throw new \RuntimeException('not registered: ' . $id);
 			}
@@ -401,7 +416,7 @@ class WhatsAppAdapterTest extends TestCase {
 	 *
 	 * @return void
 	 */
-	public function testInboundWebhookReadsAndWritesAsTheSystem(): void {
+	public function testInboundWebhookWritesAsTheMessagingServiceAccount(): void {
 		$this->objectService->contacts = ['+31611119999' => 'c-gert'];
 		$this->providerRepo->expects($this->once())
 			->method('findByIdForWebhook')
@@ -416,11 +431,22 @@ class WhatsAppAdapterTest extends TestCase {
 
 		$this->assertSame('received', $result['status']);
 		$this->assertNotSame([], $this->objectService->access);
+		$writes = 0;
 		foreach ($this->objectService->access as $access) {
-			$this->assertFalse($access['_rbac'], $access['call'] . ' ran under RBAC');
-			$this->assertFalse($access['_multitenancy'], $access['call'] . ' ran under multitenancy');
+			if ($access['call'] !== 'saveObject') {
+				// A lookup is a read and may skip RBAC.
+				continue;
+			}
+
+			$writes++;
+			$this->assertTrue($access['_rbac'], 'a webhook write skipped RBAC');
+			$this->assertTrue($access['_multitenancy'], 'a webhook write skipped multitenancy');
+			$this->assertSame(FakeMessagingAccount::UID, $access['as'], 'a webhook write ran as somebody else');
 		}
-	}//end testInboundWebhookReadsAndWritesAsTheSystem()
+
+		$this->assertGreaterThan(0, $writes);
+		$this->assertNull($this->messaging->actingUid(), 'the caller was not restored');
+	}//end testInboundWebhookWritesAsTheMessagingServiceAccount()
 
 	/**
 	 * A STOP from a known contact is recorded on that contact for the WhatsApp
@@ -648,4 +674,26 @@ class WhatsAppAdapterTest extends TestCase {
 
 		$this->assertSame('m-later', $this->replyTargetOfAFreeFormSend());
 	}//end testAMessageAfterTheStopIsAReplyTarget()
+
+	/**
+	 * Without a usable messaging service account the webhook answers
+	 * serviceUnavailable (503, so the provider retries) and writes nothing:
+	 * no message, no conversation, no opt-out, no contact moment.
+	 *
+	 * @return void
+	 */
+	public function testWithoutAServiceAccountNothingIsWritten(): void {
+		$this->messaging->config = [];
+		$this->stubSignedProvider();
+		$this->consentService->method('isOptOutKeyword')->willReturn(true);
+		$this->consentService->expects($this->never())->method('recordOptOut');
+		$this->contactmoments->expects($this->never())->method('recordInboundFromUnknownNumber');
+
+		$result = $this->adapter->handleInboundWebhook($this->metaMessage('31611119999', 'STOP'), 'sha256=ok', 'prov-1');
+
+		$this->assertSame('serviceUnavailable', $result['status']);
+		foreach ($this->objectService->access as $access) {
+			$this->assertNotSame('saveObject', $access['call'], 'something was written without the service account');
+		}
+	}//end testWithoutAServiceAccountNothingIsWritten()
 }//end class
