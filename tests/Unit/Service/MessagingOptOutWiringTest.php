@@ -106,7 +106,11 @@ class MessagingOptOutWiringTest extends TestCase {
 		};
 
 		$container = $this->createMock(ContainerInterface::class);
-		$container->method('get')->willReturnCallback(fn (string $id) => $this->store);
+		// The SMS webhook writes as the messaging service account.
+		$messaging = (new \OCA\Pipelinq\Tests\Unit\Support\FakeMessagingAccount($this))->usable();
+		$container->method('get')->willReturnCallback(
+			fn (string $id) => ($id === \OCA\Pipelinq\Service\MessagingServiceAccount::class ? $messaging->account : $this->store)
+		);
 
 		$appConfig = $this->createMock(IAppConfig::class);
 		$appConfig->method('getValueString')->willReturnCallback(

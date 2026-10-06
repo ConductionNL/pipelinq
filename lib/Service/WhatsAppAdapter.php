@@ -70,13 +70,16 @@ use Throwable;
  * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#2.1
  */
 class WhatsAppAdapter {
+	use WritesAsMessagingAccount;
+
 	/**
-	 * OpenRegister access scope for the signed public webhook, which has no
-	 * user: read and write without RBAC and multitenancy (as the SMS webhook).
+	 * OpenRegister access scope for the webhook's LOOKUPS (contact,
+	 * conversation): reads without RBAC. Every write runs as the messaging
+	 * service account with the checks on (as the SMS webhook).
 	 *
 	 * @var array<string, bool>
 	 */
-	private const SYSTEM_SCOPE = ['_rbac' => false, '_multitenancy' => false];
+	private const LOOKUP_SCOPE = ['_rbac' => false, '_multitenancy' => false];
 
 	/**
 	 * Default register slug.
@@ -725,10 +728,9 @@ class WhatsAppAdapter {
 	 * @spec openspec/specs/outbound-messaging/spec.md#requirement-req-om-005-consent-gating-and-recording
 	 */
 	public function handleInboundWebhook(string $rawBody, string $signature, string $providerId): array {
-		// The webhook is a PublicPage: no user is logged in, so every
-		// OpenRegister read and write below runs as the system. Only the
-		// provider lookup precedes the signature check, and its row stays
-		// in-process.
+		// The webhook is a PublicPage with no user. The provider lookup is a
+		// read without RBAC and its row stays in-process; after the signature
+		// check every write runs as the messaging service account.
 		$row = $this->providerRepo->findByIdForWebhook(id: $providerId);
 		if ($row === null) {
 			return ['status' => 'providerUnknown'];
@@ -744,12 +746,29 @@ class WhatsAppAdapter {
 
 		$extracted = $this->extractMetaMessage(rawBody: $rawBody);
 		$from = $this->phoneNormaliser->normaliseInbound(rawNumber: $extracted['from']);
-		$body = $extracted['body'];
 
 		if ($from === '') {
 			return ['status' => 'invalidPayload'];
 		}
 
+		return $this->asMessagingAccount(
+			writes: fn (): array => $this->ingestInbound(providerRow: $row, providerId: $providerId, extracted: $extracted, from: $from)
+		);
+	}//end handleInboundWebhook()
+
+	/**
+	 * Persist a verified inbound WhatsApp message and act on it, as the
+	 * messaging account.
+	 *
+	 * @param array<string, mixed> $providerRow Provider row.
+	 * @param string               $providerId  channelProvider UUID.
+	 * @param array<string, mixed> $extracted   The Meta message (from, body, raw).
+	 * @param string               $from        Sender in E.164.
+	 *
+	 * @return array<string, mixed> Outcome envelope.
+	 */
+	private function ingestInbound(array $providerRow, string $providerId, array $extracted, string $from): array {
+		$body = (string)$extracted['body'];
 		$contactId = $this->findContactByPhone(phone: $from);
 
 		// An unknown number has no conversation to join: every unknown number
@@ -760,7 +779,7 @@ class WhatsAppAdapter {
 				contactId: $contactId,
 				providerId: $providerId,
 				channel: 'whatsapp',
-				scope: self::SYSTEM_SCOPE,
+				scope: self::LOOKUP_SCOPE,
 			);
 		}
 
@@ -779,7 +798,6 @@ class WhatsAppAdapter {
 				'windowExpiresAt' => $windowExpiresAt,
 				'metadata' => ['raw' => $extracted],
 			],
-			scope: self::SYSTEM_SCOPE,
 		);
 
 		$this->touchConversationWindow(conversationId: $conversationId, windowExpiresAt: $windowExpiresAt);
@@ -795,9 +813,9 @@ class WhatsAppAdapter {
 			contactId: $contactId,
 			from: $from,
 			body: $body,
-			providerRow: $row,
+			providerRow: $providerRow,
 		);
-	}//end handleInboundWebhook()
+	}//end ingestInbound()
 
 	/**
 	 * Act on a persisted inbound message: a STOP opts the sender out (the
@@ -1167,55 +1185,12 @@ class WhatsAppAdapter {
 	}//end extractMetaMessage()
 
 	/**
-	 * Look up the contact behind a phone number; '' when none matches.
-	 *
-	 * No placeholder contact is created for an unknown number: a STOP is
-	 * recorded on the number itself and any other message is logged for a
-	 * person, who decides who it is.
-	 *
-	 * Called only from the signed public webhook, so it reads as the system.
-	 *
-	 * @param string $phone Sender phone number (E.164).
-	 *
-	 * @return string Contact UUID, or '' when no contact has this number.
-	 */
-	private function findContactByPhone(string $phone): string {
-		$objectService = $this->getObjectService();
-		if ($objectService === null) {
-			return '';
-		}
-
-		try {
-			$rows = $objectService->findAll(
-				config: [
-					'filters' => [
-						// The contact schema stores the number under `phone`.
-						'phone' => $phone,
-						'register' => $this->getRegisterSlug(),
-						'schema' => $this->resolveSchemaSlug(key: 'contact_schema', default: self::DEFAULT_CONTACT_SCHEMA_SLUG),
-					],
-				],
-				_rbac: self::SYSTEM_SCOPE['_rbac'],
-				_multitenancy: self::SYSTEM_SCOPE['_multitenancy'],
-			);
-		} catch (Throwable $e) {
-			return '';
-		}
-
-		if (is_array($rows) === false || $rows === []) {
-			return '';
-		}
-
-		return $this->extractId(payload: $this->toArray(value: $rows[0]));
-	}//end findContactByPhone()
-
-	/**
 	 * Find or open a conversation row for (contact, provider, channel).
 	 *
 	 * @param string $contactId Contact UUID.
 	 * @param string $providerId Provider UUID.
 	 * @param string $channel Channel.
-	 * @param array<string, bool> $scope OpenRegister access scope (SYSTEM_SCOPE for the webhook).
+	 * @param array<string, bool> $scope OpenRegister access scope for the lookup (LOOKUP_SCOPE from the webhook); the open runs as the caller.
 	 *
 	 * @return string Conversation UUID.
 	 */
@@ -1261,8 +1236,6 @@ class WhatsAppAdapter {
 				register: $this->getRegisterSlug(),
 				schema: $schema,
 				uuid: null,
-				_rbac: ($scope['_rbac'] ?? true),
-				_multitenancy: ($scope['_multitenancy'] ?? true),
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(
@@ -1281,7 +1254,8 @@ class WhatsAppAdapter {
 	 * @param string $conversationId Conversation UUID.
 	 * @param string $windowExpiresAt ISO 8601 expiry.
 	 *
-	 * Called only from the signed public webhook, so it reads and writes as the system.
+	 * Called only from the signed public webhook: the read is a lookup without
+	 * RBAC, the save runs as the messaging account.
 	 *
 	 * @return void
 	 */
@@ -1302,8 +1276,8 @@ class WhatsAppAdapter {
 				id: $conversationId,
 				register: $this->getRegisterSlug(),
 				schema: $schema,
-				_rbac: self::SYSTEM_SCOPE['_rbac'],
-				_multitenancy: self::SYSTEM_SCOPE['_multitenancy'],
+				_rbac: self::LOOKUP_SCOPE['_rbac'],
+				_multitenancy: self::LOOKUP_SCOPE['_multitenancy'],
 			);
 		} catch (Throwable $e) {
 			return;
@@ -1323,8 +1297,6 @@ class WhatsAppAdapter {
 				register: $this->getRegisterSlug(),
 				schema: $schema,
 				uuid: $conversationId,
-				_rbac: self::SYSTEM_SCOPE['_rbac'],
-				_multitenancy: self::SYSTEM_SCOPE['_multitenancy'],
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(
@@ -1338,11 +1310,10 @@ class WhatsAppAdapter {
 	 * Persist a message payload.
 	 *
 	 * @param array<string, mixed> $payload Payload.
-	 * @param array<string, bool> $scope OpenRegister access scope (SYSTEM_SCOPE for the webhook).
 	 *
 	 * @return array<string, mixed>|null Saved row.
 	 */
-	private function persistMessage(array $payload, array $scope = []): ?array {
+	private function persistMessage(array $payload): ?array {
 		$objectService = $this->getObjectService();
 		if ($objectService === null) {
 			return null;
@@ -1354,8 +1325,6 @@ class WhatsAppAdapter {
 				register: $this->getRegisterSlug(),
 				schema: $this->resolveSchemaSlug(key: 'message_schema', default: self::DEFAULT_MESSAGE_SCHEMA_SLUG),
 				uuid: null,
-				_rbac: ($scope['_rbac'] ?? true),
-				_multitenancy: ($scope['_multitenancy'] ?? true),
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(

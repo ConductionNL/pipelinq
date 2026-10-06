@@ -52,13 +52,14 @@ use Throwable;
  * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#3.1
  */
 class SmsAdapter {
+	use WritesAsMessagingAccount;
+
 	/**
-	 * OpenRegister access scope for the signed public webhook, which has no
-	 * user: read and write without RBAC and multitenancy.
+	 * Scope for the webhook's LOOKUPS only: reads without RBAC. Writes run as the messaging account.
 	 *
 	 * @var array<string, bool>
 	 */
-	private const SYSTEM_SCOPE = ['_rbac' => false, '_multitenancy' => false];
+	private const LOOKUP_SCOPE = ['_rbac' => false, '_multitenancy' => false];
 
 	/**
 	 * Default pipelinq register slug.
@@ -416,10 +417,8 @@ class SmsAdapter {
 	 * @spec openspec/specs/outbound-messaging/spec.md#requirement-req-om-005-consent-gating-and-recording
 	 */
 	public function handleInboundWebhook(string $rawBody, string $signature, string $providerId): array {
-		// The webhook is a PublicPage: no user is logged in, so every
-		// OpenRegister read and write below runs as the system. Only the
-		// provider lookup precedes the signature check, and its row stays
-		// in-process.
+		// A PublicPage with no user: the provider lookup is a read without RBAC; after the
+		// signature check every write runs as the messaging service account.
 		$row = $this->providerRepo->findByIdForWebhook(id: $providerId);
 		if ($row === null) {
 			return ['status' => 'providerUnknown'];
@@ -448,18 +447,31 @@ class SmsAdapter {
 			return ['status' => 'invalidPayload'];
 		}
 
+		return $this->asMessagingAccount(
+			writes: fn (): array => $this->ingestInbound(providerId: $providerId, from: $from, body: $body)
+		);
+	}//end handleInboundWebhook()
+
+	/**
+	 * Persist a verified inbound SMS and act on it, as the messaging account.
+	 * @param string $providerId channelProvider UUID.
+	 * @param string $from       Sender in E.164.
+	 * @param string $body       Message text.
+	 *
+	 * @return array<string, mixed> Outcome envelope.
+	 */
+	private function ingestInbound(string $providerId, string $from, string $body): array {
 		$contactId = $this->findContactByPhone(phone: $from);
 		$unknownSender = ($contactId === '');
 
-		// An unknown number has no conversation to join: every unknown number
-		// would share the one keyed on an empty contact.
+		// An unknown number joins no conversation (they would all share the empty-contact one).
 		$conversationId = '';
 		if ($unknownSender === false) {
 			$conversationId = $this->findOrOpenConversation(
 				contactId: $contactId,
 				providerId: $providerId,
 				channel: 'sms',
-				scope: self::SYSTEM_SCOPE,
+				scope: self::LOOKUP_SCOPE,
 			);
 		}
 
@@ -482,7 +494,7 @@ class SmsAdapter {
 			from: $from,
 			body: $body,
 		);
-	}//end handleInboundWebhook()
+	}//end ingestInbound()
 
 	/**
 	 * Act on a persisted inbound SMS: a STOP opts out the contact, or the
@@ -655,7 +667,7 @@ class SmsAdapter {
 	 * @param string $conversationId Conversation UUID.
 	 * @param string $body Body.
 	 *
-	 * Called only from the signed public webhook, so it writes as the system.
+	 * Called only from the signed public webhook, inside the messaging account.
 	 *
 	 * @return array<string, mixed>|null Saved row.
 	 */
@@ -676,7 +688,6 @@ class SmsAdapter {
 				'deliveryStatus' => 'delivered',
 				'sentAt' => $this->nowIso(),
 			],
-			scope: self::SYSTEM_SCOPE,
 		);
 	}//end persistInbound()
 
@@ -721,11 +732,10 @@ class SmsAdapter {
 	 * Persist a message payload via OpenRegister.
 	 *
 	 * @param array<string, mixed> $payload Payload.
-	 * @param array<string, bool> $scope OpenRegister access scope (SYSTEM_SCOPE for the webhook).
 	 *
 	 * @return array<string, mixed>|null Saved row.
 	 */
-	private function persistMessage(array $payload, array $scope = []): ?array {
+	private function persistMessage(array $payload): ?array {
 		$objectService = $this->getObjectService();
 		if ($objectService === null) {
 			return null;
@@ -737,8 +747,6 @@ class SmsAdapter {
 				register: $this->getRegisterSlug(),
 				schema: $this->resolveSchemaSlug(key: 'message_schema', default: self::DEFAULT_MESSAGE_SCHEMA_SLUG),
 				uuid: null,
-				_rbac: ($scope['_rbac'] ?? true),
-				_multitenancy: ($scope['_multitenancy'] ?? true),
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(
@@ -758,7 +766,7 @@ class SmsAdapter {
 	 * @param string $contactId Contact UUID.
 	 * @param string $providerId Provider UUID.
 	 * @param string $channel Channel.
-	 * @param array<string, bool> $scope OpenRegister access scope (SYSTEM_SCOPE for the webhook).
+	 * @param array<string, bool> $scope OpenRegister access scope for the lookup (LOOKUP_SCOPE from the webhook); the open runs as the caller.
 	 *
 	 * @return string Conversation UUID.
 	 */
@@ -809,8 +817,6 @@ class SmsAdapter {
 				register: $this->getRegisterSlug(),
 				schema: $schema,
 				uuid: null,
-				_rbac: ($scope['_rbac'] ?? true),
-				_multitenancy: ($scope['_multitenancy'] ?? true),
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(
@@ -822,45 +828,6 @@ class SmsAdapter {
 
 		return $this->extractId(payload: $this->toArray(value: $saved));
 	}//end findOrOpenConversation()
-
-	/**
-	 * Look up the contact behind a phone number; '' when none matches. No
-	 * placeholder is created. Called only from the signed public webhook, so
-	 * it reads as the system.
-	 *
-	 * @param string $phone Sender phone number (E.164).
-	 *
-	 * @return string Contact UUID, or '' when no contact has this number.
-	 */
-	private function findContactByPhone(string $phone): string {
-		$objectService = $this->getObjectService();
-		if ($objectService === null) {
-			return '';
-		}
-
-		try {
-			$rows = $objectService->findAll(
-				config: [
-					'filters' => [
-						// The contact schema stores the number under `phone`.
-						'phone' => $phone,
-						'register' => $this->getRegisterSlug(),
-						'schema' => $this->resolveSchemaSlug(key: 'contact_schema', default: self::DEFAULT_CONTACT_SCHEMA_SLUG),
-					],
-				],
-				_rbac: self::SYSTEM_SCOPE['_rbac'],
-				_multitenancy: self::SYSTEM_SCOPE['_multitenancy'],
-			);
-		} catch (Throwable $e) {
-			return '';
-		}
-
-		if (is_array($rows) === false || $rows === []) {
-			return '';
-		}
-
-		return $this->extractId(payload: $this->toArray(value: $rows[0]));
-	}//end findContactByPhone()
 
 	/**
 	 * Decode an inbound webhook body — accepts JSON or form-encoded.

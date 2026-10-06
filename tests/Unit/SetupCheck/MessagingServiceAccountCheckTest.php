@@ -37,6 +37,7 @@ class MessagingServiceAccountCheckTest extends TestCase {
 	private function check(array $status): SetupResult {
 		$account = $this->createMock(MessagingServiceAccount::class);
 		$account->method('status')->willReturn($status);
+		$account->method('group')->willReturn(MessagingServiceAccount::GROUP);
 		$l10n = $this->createMock(IL10N::class);
 		$l10n->method('t')->willReturnCallback(
 			static fn (string $text, array $parameters = []): string => vsprintf($text, $parameters)

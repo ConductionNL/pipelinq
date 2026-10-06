@@ -189,12 +189,11 @@ class Application extends App implements IBootstrap {
 		// Preferences / repair plumbing stays bespoke.
 		$this->registerAppHost(context: $context);
 
-		// Notifier registration. Previously declared via a <notification>
-		// element in info.xml, which Nextcloud core never reads (and which
-		// app-info.xsd rejects) — the IBootstrap registration below is the
-		// canonical path, fixed with the align-claims-and-first-hour conformance sweep.
+		// Notifier registration. A <notification> element in info.xml is never read by core
+		// (and app-info.xsd rejects it); the IBootstrap registration below is the canonical path.
 		$context->registerNotifierService(\OCA\Pipelinq\Notification\Notifier::class);
 		$context->registerSetupCheck(\OCA\Pipelinq\SetupCheck\PortalServiceAccountCheck::class);
+		$context->registerSetupCheck(\OCA\Pipelinq\SetupCheck\MessagingServiceAccountCheck::class);
 
 		$context->registerEventListener(
 			event: ObjectCreatedEvent::class,

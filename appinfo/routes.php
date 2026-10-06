@@ -536,6 +536,9 @@ return [
         ['name' => 'messaging#preflight',    'url' => '/api/messaging/preflight/{contactId}',   'verb' => 'GET'],
         ['name' => 'messaging#consent',      'url' => '/api/messaging/consent',                 'verb' => 'POST'],
         ['name' => 'messaging#testProvider', 'url' => '/api/messaging/providers/{id}/test',     'verb' => 'POST'],
+        // The account the SMS and WhatsApp webhooks write as (admin only).
+        ['name' => 'messagingAdmin#getServiceAccount',  'url' => '/api/messaging/service-account', 'verb' => 'GET'],
+        ['name' => 'messagingAdmin#saveServiceAccount', 'url' => '/api/messaging/service-account', 'verb' => 'PUT'],
         // Semantic object handoff emit (ADR-051 / semantic-handoff-emit):
         // request -> ns#Case, active contract -> ns#Invoice. Kind-addressed via
         // OpenRegister's handoff engine; actions hide when no app implements the kind.

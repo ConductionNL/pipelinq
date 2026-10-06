@@ -178,7 +178,7 @@ class ContactmomentService {
 			$payload['assignee'] = $agent;
 		}
 
-		return $this->saveTicket(payload: $payload, config: $config, scope: []);
+		return $this->saveTicket(payload: $payload, config: $config);
 	}//end recordOutboundMessage()
 
 	/**
@@ -188,10 +188,11 @@ class ContactmomentService {
 	 * The message lands as a new, unassigned contact moment in the tickets
 	 * list, in the same shape as the outbound audit (WhatsApp is channel
 	 * `chat` with platform `whatsapp`, SMS is channel `sms`). No contact is
-	 * created: the person who picks it up decides who it is. The provider
-	 * webhook has no user, so the write runs as the system; it is reached only
-	 * after the webhook verified the provider's signature. Log-and-continue:
-	 * a failure answers null and never fails the webhook.
+	 * created: the person who picks it up decides who it is. The write runs
+	 * with OpenRegister's checks on, as whoever acts: the provider webhook
+	 * calls it as the messaging service account, after it verified the
+	 * provider's signature. Log-and-continue: a failure answers null and never
+	 * fails the webhook.
 	 *
 	 * @param string $platform `sms` or `whatsapp`.
 	 * @param string $phone Sender in E.164.
@@ -241,11 +242,7 @@ class ContactmomentService {
 			],
 		];
 
-		return $this->saveTicket(
-			payload: $payload,
-			config: $config,
-			scope: ['_rbac' => false, '_multitenancy' => false],
-		);
+		return $this->saveTicket(payload: $payload, config: $config);
 	}//end recordInboundFromUnknownNumber()
 
 	/**
@@ -258,19 +255,16 @@ class ContactmomentService {
 	 *
 	 * @param array<string, mixed> $payload Ticket fields.
 	 * @param array{register: string, schema: string} $config Register and schema ids.
-	 * @param array<string, bool> $scope Named `_rbac` / `_multitenancy` arguments.
 	 *
 	 * @return string|null The ticket UUID, or null when the save failed.
 	 */
-	private function saveTicket(array $payload, array $config, array $scope): ?string {
+	private function saveTicket(array $payload, array $config): ?string {
 		try {
 			$saved = $this->objectService->saveObject(
 				object: $payload,
 				register: $config['register'],
 				schema: $config['schema'],
 				uuid: null,
-				_rbac: ($scope['_rbac'] ?? true),
-				_multitenancy: ($scope['_multitenancy'] ?? true),
 			);
 		} catch (\Throwable $e) {
 			$this->logger->warning(
