@@ -790,8 +790,8 @@ class SmsAdapter {
 						'schema' => $schema,
 					],
 				],
-				_rbac: (self::SYSTEM_SCOPE['_rbac'] ?? true),
-				_multitenancy: (self::SYSTEM_SCOPE['_multitenancy'] ?? true),
+				_rbac: self::SYSTEM_SCOPE['_rbac'],
+				_multitenancy: self::SYSTEM_SCOPE['_multitenancy'],
 			);
 		} catch (Throwable $e) {
 			$rows = [];
@@ -815,8 +815,8 @@ class SmsAdapter {
 				register: $this->getRegisterSlug(),
 				schema: $schema,
 				uuid: null,
-				_rbac: (self::SYSTEM_SCOPE['_rbac'] ?? true),
-				_multitenancy: (self::SYSTEM_SCOPE['_multitenancy'] ?? true),
+				_rbac: self::SYSTEM_SCOPE['_rbac'],
+				_multitenancy: self::SYSTEM_SCOPE['_multitenancy'],
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(
