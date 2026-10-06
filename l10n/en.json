@@ -7114,6 +7114,10 @@
         "Pipelinq customer portal service account": "Pipelinq customer portal service account",
         "Customer portal writes run as %s.": "Customer portal writes run as %s.",
         "The chosen account is not in the group %s.": "The chosen account is not in the group %s.",
-        "Until you choose one in the Pipelinq settings, the customer portal cannot save anything: residents cannot log in or reset their password.": "Until you choose one in the Pipelinq settings, the customer portal cannot save anything: residents cannot log in or reset their password."
+        "Until you choose one in the Pipelinq settings, the customer portal cannot save anything: residents cannot log in or reset their password.": "Until you choose one in the Pipelinq settings, the customer portal cannot save anything: residents cannot log in or reset their password.",
+        "Mail Not Sent At": "Mail Not Sent At",
+        "Mail Not Sent Reason": "Mail Not Sent Reason",
+        "When integriq last refused a confirmation or reminder mail for this booking (opt-out-before-send).": "When integriq last refused a confirmation or reminder mail for this booking (opt-out-before-send).",
+        "Why integriq refused it, for example opted-out or authority-unavailable.": "Why integriq refused it, for example opted-out or authority-unavailable."
     }
 }

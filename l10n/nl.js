@@ -7011,7 +7011,11 @@ OC.L10N.register(
         "Pipelinq customer portal service account": "Serviceaccount van het Pipelinq-klantportaal",
         "Customer portal writes run as %s.": "Het klantportaal slaat op als %s.",
         "The chosen account is not in the group %s.": "Het gekozen account zit niet in de groep %s.",
-        "Until you choose one in the Pipelinq settings, the customer portal cannot save anything: residents cannot log in or reset their password.": "Tot u er een kiest in de Pipelinq-instellingen, kan het klantportaal niets opslaan: inwoners kunnen niet inloggen en hun wachtwoord niet herstellen."
+        "Until you choose one in the Pipelinq settings, the customer portal cannot save anything: residents cannot log in or reset their password.": "Tot u er een kiest in de Pipelinq-instellingen, kan het klantportaal niets opslaan: inwoners kunnen niet inloggen en hun wachtwoord niet herstellen.",
+        "Mail Not Sent At": "Mail niet verzonden op",
+        "Mail Not Sent Reason": "Reden mail niet verzonden",
+        "When integriq last refused a confirmation or reminder mail for this booking (opt-out-before-send).": "Wanneer integriq voor het laatst een bevestigings- of herinneringsmail voor deze afspraak weigerde (opt-out vóór verzending).",
+        "Why integriq refused it, for example opted-out or authority-unavailable.": "Waarom integriq de mail weigerde, bijvoorbeeld afgemeld of grondslag niet beschikbaar."
     },
     "nplurals=2; plural=(n != 1);"
 )
