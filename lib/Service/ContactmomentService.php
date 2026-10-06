@@ -280,7 +280,7 @@ class ContactmomentService {
 			return null;
 		}
 
-		// getUuid() on a Db\ObjectEntity is served by Entity::__call, so
+		// The getUuid() of a Db\ObjectEntity is served by Entity::__call, so
 		// method_exists() is FALSE for it (pipelinq#807); readEntityValue()
 		// is what handles that.
 		$uuid = $this->readEntityValue(entity: $saved, getter: 'getUuid');

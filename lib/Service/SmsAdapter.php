@@ -470,18 +470,34 @@ class SmsAdapter {
 			body: $body,
 		);
 
-		$messageId = $this->extractId(payload: $persisted ?? []);
-		$result = [
-			'status' => 'received',
-			'messageId' => $messageId,
-			'conversationId' => $conversationId,
-			'unknownSender' => $unknownSender,
-			'optOutRecorded' => false,
-		];
+		return $this->actOnInbound(
+			result: [
+				'status' => 'received',
+				'messageId' => $this->extractId(payload: $persisted ?? []),
+				'conversationId' => $conversationId,
+				'unknownSender' => $unknownSender,
+				'optOutRecorded' => false,
+			],
+			contactId: $contactId,
+			from: $from,
+			body: $body,
+		);
+	}//end handleInboundWebhook()
 
+	/**
+	 * Act on a persisted inbound SMS: a STOP opts out the contact, or the
+	 * number alone when unknown; an unknown number's other messages are
+	 * logged for a person; an opt-in keyword opts a known contact in.
+	 *
+	 * @param array<string, mixed> $result Outcome envelope so far.
+	 * @param string $contactId Contact UUID, or '' for an unknown number.
+	 * @param string $from Sender in E.164.
+	 * @param string $body Message text.
+	 *
+	 * @return array<string, mixed> The completed envelope.
+	 */
+	private function actOnInbound(array $result, string $contactId, string $from, string $body): array {
 		if ($this->consentService->isOptOutKeyword(body: $body) === true) {
-			// An unknown number is opted out on the address alone, so it is
-			// never texted again.
 			$result['optOutRecorded'] = $this->consentService->recordOptOut(
 				contactId: $contactId,
 				channel: 'sms',
@@ -492,12 +508,12 @@ class SmsAdapter {
 			return $result;
 		}
 
-		if ($unknownSender === true) {
+		if ($contactId === '') {
 			$result['contactMomentId'] = (string)$this->contactmoments()?->recordInboundFromUnknownNumber(
 				platform: 'sms',
 				phone: $from,
 				body: $body,
-				messageId: $messageId,
+				messageId: (string)$result['messageId'],
 			);
 			return $result;
 		}
@@ -513,7 +529,7 @@ class SmsAdapter {
 		}
 
 		return $result;
-	}//end handleInboundWebhook()
+	}//end actOnInbound()
 
 	/**
 	 * Producer of the ordered provider list for an outbound send.
@@ -808,13 +824,9 @@ class SmsAdapter {
 	}//end findOrOpenConversation()
 
 	/**
-	 * Look up the contact behind a phone number; '' when none matches.
-	 *
-	 * No placeholder contact is created for an unknown number: a STOP is
-	 * recorded on the number itself and any other message is logged for a
-	 * person, who decides who it is.
-	 *
-	 * Called only from the signed public webhook, so it reads as the system.
+	 * Look up the contact behind a phone number; '' when none matches. No
+	 * placeholder is created. Called only from the signed public webhook, so
+	 * it reads as the system.
 	 *
 	 * @param string $phone Sender phone number (E.164).
 	 *
