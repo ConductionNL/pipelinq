@@ -8,7 +8,10 @@
 
 import { describe, expect, it, vi } from 'vitest'
 import manifest from '../../src/manifest.json'
-import { assignToMePath, createTicketHandlers } from '../../src/services/ticketAssign.js'
+import {
+	assignToMePath,
+	createTicketHandlers,
+} from '../../src/services/ticketAssign.js'
 
 function deps(post) {
 	return {
@@ -25,18 +28,29 @@ describe('assignTicketToMe', () => {
 	it('posts to the assign endpoint, then opens the ticket', async () => {
 		const post = vi.fn().mockResolvedValue({ data: {} })
 		const d = deps(post)
-		const ok = await createTicketHandlers(d).assignTicketToMe({ item: { id: 't-1' } })
+		const ok = await createTicketHandlers(d).assignTicketToMe({
+			item: { id: 't-1' },
+		})
 
 		expect(ok).toBe(true)
-		expect(post).toHaveBeenCalledWith('/index.php/apps/pipelinq/api/tickets/t-1/assign-to-me')
-		expect(d.router.push).toHaveBeenCalledWith({ name: 'TicketDetail', params: { id: 't-1' } })
+		expect(post).toHaveBeenCalledWith(
+			'/index.php/apps/pipelinq/api/tickets/t-1/assign-to-me',
+		)
+		expect(d.router.push).toHaveBeenCalledWith({
+			name: 'TicketDetail',
+			params: { id: 't-1' },
+		})
 		expect(d.showSuccess).toHaveBeenCalled()
 	})
 
 	it('reports a refusal and stays on the Queue', async () => {
-		const post = vi.fn().mockRejectedValue({ response: { data: { error: 'You cannot change this ticket' } } })
+		const post = vi.fn().mockRejectedValue({
+			response: { data: { error: 'You cannot change this ticket' } },
+		})
 		const d = deps(post)
-		const ok = await createTicketHandlers(d).assignTicketToMe({ item: { id: 't-2' } })
+		const ok = await createTicketHandlers(d).assignTicketToMe({
+			item: { id: 't-2' },
+		})
 
 		expect(ok).toBe(false)
 		expect(d.showError).toHaveBeenCalledWith('You cannot change this ticket')
@@ -45,12 +59,16 @@ describe('assignTicketToMe', () => {
 
 	it('does nothing without a row id', async () => {
 		const post = vi.fn()
-		expect(await createTicketHandlers(deps(post)).assignTicketToMe({})).toBe(false)
+		expect(await createTicketHandlers(deps(post)).assignTicketToMe({})).toBe(
+			false,
+		)
 		expect(post).not.toHaveBeenCalled()
 	})
 
 	it('escapes the id in the path', () => {
-		expect(assignToMePath('a/b')).toBe('/apps/pipelinq/api/tickets/a%2Fb/assign-to-me')
+		expect(assignToMePath('a/b')).toBe(
+			'/apps/pipelinq/api/tickets/a%2Fb/assign-to-me',
+		)
 	})
 })
 
@@ -60,7 +78,10 @@ describe('the bundled manifest', () => {
 	it('offers Assign to me on every Queue row', () => {
 		const queue = manifest.pages.filter((p) => p.id === 'Queue').at(-1)
 		expect(queue.config.actions).toContainEqual(
-			expect.objectContaining({ id: 'assign-to-me', handler: 'assignTicketToMe' }),
+			expect.objectContaining({
+				id: 'assign-to-me',
+				handler: 'assignTicketToMe',
+			}),
 		)
 	})
 
