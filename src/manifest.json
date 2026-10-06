@@ -2608,7 +2608,7 @@
 						"content": {
 							"label": "Open deals",
 							"icon": "HandshakeOutline",
-							"caption": "{openDealCount} open deals",
+							"caption": "{openDealCount} open",
 							"format": {
 								"style": "currency",
 								"currency": "@config.currency",
