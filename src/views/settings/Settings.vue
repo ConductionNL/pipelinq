@@ -61,6 +61,9 @@
 		<!-- Shillinq and XWiki, detected rather than typed. -->
 		<DetectedIntegrations v-if="isAdmin" />
 
+		<!-- The VAT rate per VAT class (pipelinq-forms-review). -->
+		<VatRatesSettings v-if="isAdmin" :config="config" />
+
 		<!-- Menu structure: simple (default) or full, and the modules
 		     (simple-structure-profile). -->
 		<MenuStructureSettings v-if="isAdmin" />
@@ -431,6 +434,7 @@ import ProductCategoryManager from './ProductCategoryManager.vue'
 import ProspectSettings from './ProspectSettings.vue'
 import ProvisionDataSection from './ProvisionDataSection.vue'
 import TagManager from './TagManager.vue'
+import VatRatesSettings from './VatRatesSettings.vue'
 import { objectTypeGroups, objectTypes } from '../../config/objectTypes.js'
 import { useLeadSourcesStore } from '../../store/modules/leadSources.js'
 import { useObjectStore } from '../../store/modules/object.js'
@@ -471,6 +475,7 @@ export default {
 		MenuStructureSettings,
 		DetectedIntegrations,
 		ProvisionDataSection,
+		VatRatesSettings,
 	},
 
 	data() {

@@ -54,6 +54,7 @@ import {
 	STRUCTURE_FULL,
 	STRUCTURE_SETTING,
 } from './utils/structureProfile.js'
+import { seedVatClassLabels } from './utils/vatClassLabels.js'
 
 // Library CSS — must be explicit import (webpack tree-shakes side-effect imports from aliased packages)
 import '@conduction/nextcloud-vue/css/index.css'
@@ -195,10 +196,14 @@ const { manifest: profiledManifest, homePage } = applyHomePage(
 )
 // The getting-started tour sends the reader to menu entries the simple menu
 // does not have, so it is held back there. The full structure keeps it.
-const mergedManifest = seedDashboardAppConfig(
-	structureProfile === STRUCTURE_FULL
-		? profiledManifest
-		: holdUnreachableTours(profiledManifest),
+const mergedManifest = seedVatClassLabels(
+	seedDashboardAppConfig(
+		structureProfile === STRUCTURE_FULL
+			? profiledManifest
+			: holdUnreachableTours(profiledManifest),
+	),
+	loadState('pipelinq', 'config', {}).vat_rates,
+	(text) => t('pipelinq', text),
 )
 
 /**

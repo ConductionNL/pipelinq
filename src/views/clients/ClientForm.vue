@@ -71,6 +71,68 @@
 			</div>
 		</div>
 
+		<div class="form-row">
+			<div class="form-group">
+				<label for="client-industry">{{ t('pipelinq', 'Industry') }}</label>
+				<NcSelect
+					v-model="form.industry"
+					inputId="client-industry"
+					:inputLabel="t('pipelinq', 'Industry')"
+					labelOutside
+					multiple
+					taggable
+					:options="industryOptions"
+					:placeholder="t('pipelinq', 'Pick or type sectors')"
+					data-testid="client-industry-select" />
+			</div>
+			<div class="form-group">
+				<label for="client-account-owner">{{
+					t('pipelinq', 'Account owner')
+				}}</label>
+				<NcSelect
+					v-model="form.accountOwner"
+					inputId="client-account-owner"
+					:inputLabel="t('pipelinq', 'Account owner')"
+					labelOutside
+					:options="userOptions"
+					:reduce="(option) => option.id"
+					label="displayName"
+					:filterable="false"
+					:loading="searchingUsers"
+					:placeholder="t('pipelinq', 'Search a user')"
+					data-testid="client-account-owner-select"
+					@search="searchUsers" />
+			</div>
+		</div>
+
+		<div class="form-row">
+			<div class="form-group">
+				<label for="client-language">{{
+					t('pipelinq', 'Correspondence language')
+				}}</label>
+				<NcSelect
+					v-model="form.correspondenceLanguage"
+					inputId="client-language"
+					:inputLabel="t('pipelinq', 'Correspondence language')"
+					labelOutside
+					:options="languageOptions"
+					:reduce="(option) => option.id"
+					label="label"
+					data-testid="client-language-select" />
+			</div>
+			<div class="form-group">
+				<label for="client-timezone">{{ t('pipelinq', 'Timezone') }}</label>
+				<NcSelect
+					v-model="form.timezone"
+					inputId="client-timezone"
+					:inputLabel="t('pipelinq', 'Timezone')"
+					labelOutside
+					:options="timezoneOptions"
+					:placeholder="t('pipelinq', 'Select a timezone')"
+					data-testid="client-timezone-select" />
+			</div>
+		</div>
+
 		<div class="form-group">
 			<label for="client-address">{{ t('pipelinq', 'Address') }}</label>
 			<NcTextField
@@ -107,7 +169,15 @@
 </template>
 
 <script>
+import axios from '@nextcloud/axios'
+import { getLanguage } from '@nextcloud/l10n'
+import { generateOcsUrl, generateUrl } from '@nextcloud/router'
 import { NcButton, NcSelect, NcTextField } from '@nextcloud/vue'
+import {
+	defaultLanguage,
+	INDUSTRY_SECTORS,
+	industryList,
+} from '../../utils/clientFormFields.js'
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const PHONE_REGEX = /^[+]?[\d\s\-().]{7,20}$/
@@ -116,6 +186,16 @@ const URL_REGEX = /^https?:\/\/.+\..+/
 /**
  * @spec openspec/changes/2026-03-20-client-management/tasks.md#task-3.1
  */
+/**
+ * The signed-in user, or null.
+ *
+ * @return {{uid: string, displayName: string}|null} The user.
+ * @spec exclude reads the session user, no behaviour of its own.
+ */
+function currentUser() {
+	return window.OC?.getCurrentUser?.() || null
+}
+
 const TYPE_MAPPING = {
 	person: 'schema:Person',
 	organization: 'schema:Organization',
@@ -163,9 +243,30 @@ export default {
 				website: '',
 				address: '',
 				notes: '',
+				industry: [],
+				accountOwner: currentUser()?.uid || null,
+				correspondenceLanguage: '',
+				timezone: null,
 			},
 
 			typeOptions: ['person', 'organization'],
+			industryOptions: INDUSTRY_SECTORS,
+			languages: [],
+			userOptions: currentUser()
+				? [
+						{
+							id: currentUser().uid,
+							displayName:
+								currentUser().displayName || currentUser().uid,
+						},
+					]
+				: [],
+
+			searchingUsers: false,
+			timezoneOptions:
+				typeof Intl.supportedValuesOf === 'function'
+					? Intl.supportedValuesOf('timeZone')
+					: [],
 		}
 	},
 
@@ -204,6 +305,25 @@ export default {
 		isValid() {
 			return Object.keys(this.errors).length === 0
 		},
+
+		/**
+		 * The instance's languages, labelled in the user's own language.
+		 *
+		 * @return {Array<{id: string, label: string}>} The options.
+		 * @spec openspec/changes/pipelinq-forms-review/specs/client-management/spec.md
+		 */
+		languageOptions() {
+			let names = null
+			try {
+				names = new Intl.DisplayNames([getLanguage()], { type: 'language' })
+			} catch {
+				names = null
+			}
+			return this.languages.map((tag) => ({
+				id: tag,
+				label: names?.of(tag) || tag,
+			}))
+		},
 	},
 
 	watch: {
@@ -230,6 +350,10 @@ export default {
 		},
 	},
 
+	mounted() {
+		this.loadLanguages()
+	},
+
 	methods: {
 		/**
 		 * @param {object} data The contact to load into the form.
@@ -244,6 +368,69 @@ export default {
 				website: data.website || '',
 				address: data.address || '',
 				notes: data.notes || '',
+				industry: industryList(data.industry),
+				accountOwner: data.accountOwner || null,
+				correspondenceLanguage: data.correspondenceLanguage || '',
+				timezone: data.timezone || null,
+			}
+		},
+
+		/**
+		 * Load the languages the instance can write in, and preselect one
+		 * for a new client (D2).
+		 *
+		 * @spec openspec/changes/pipelinq-forms-review/specs/client-management/spec.md
+		 */
+		async loadLanguages() {
+			try {
+				const { data } = await axios.get(
+					generateUrl('/apps/pipelinq/api/correspondence-languages'),
+				)
+				this.languages = Array.isArray(data?.languages) ? data.languages : []
+				if (!this.form.correspondenceLanguage && !this.client?.id) {
+					this.form.correspondenceLanguage = defaultLanguage(
+						this.languages,
+						data?.instanceDefault || '',
+						getLanguage(),
+					)
+				}
+			} catch {
+				this.languages = []
+			}
+		},
+
+		/**
+		 * Search Nextcloud users for the account owner picker (D4).
+		 *
+		 * @param {string} query What the user typed.
+		 * @spec openspec/changes/pipelinq-forms-review/specs/client-management/spec.md
+		 */
+		async searchUsers(query) {
+			if (!query || query.length < 2) {
+				return
+			}
+			this.searchingUsers = true
+			try {
+				const { data } = await axios.get(
+					generateOcsUrl('core/autocomplete/get'),
+					{
+						params: {
+							search: query,
+							itemType: 'pipelinq',
+							itemId: 'client',
+							'shareTypes[]': 0,
+							limit: 20,
+						},
+					},
+				)
+				this.userOptions = (data?.ocs?.data || []).map((user) => ({
+					id: user.id,
+					displayName: user.label || user.id,
+				}))
+			} catch {
+				// Keep the options there were; the picker stays usable.
+			} finally {
+				this.searchingUsers = false
 			}
 		},
 

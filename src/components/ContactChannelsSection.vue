@@ -393,8 +393,12 @@ export default {
 			if (this.entity.timezone) {
 				parts.push(this.entity.timezone)
 			}
-			if (this.entity.language) {
-				parts.push(this.entity.language.toUpperCase())
+			// correspondenceLanguage replaced `language` in the forms
+			// (pipelinq-forms-review); an older record may only have the latter.
+			const language =
+				this.entity.correspondenceLanguage || this.entity.language
+			if (language) {
+				parts.push(language.toUpperCase())
 			}
 			return parts.join(' · ')
 		},

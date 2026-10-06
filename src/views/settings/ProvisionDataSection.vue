@@ -16,10 +16,7 @@
 				'Create or repair the Pipelinq register, schemas, default pipelines and skills. Run it after you enable OpenRegister, or to repair a partial install. Running it twice creates no duplicates.',
 			)
 		">
-		<NcButton
-			variant="secondary"
-			:disabled="running"
-			@click="provision">
+		<NcButton variant="secondary" :disabled="running" @click="provision">
 			<template #icon>
 				<NcLoadingIcon v-if="running" :size="20" />
 				<DatabaseRefreshOutline v-else :size="20" />
@@ -72,7 +69,9 @@ export default {
 			this.message = ''
 			try {
 				const { data } = await axios.post(
-					generateUrl('/apps/pipelinq/api/setup/action/provision-register'),
+					generateUrl(
+						'/apps/pipelinq/api/setup/action/provision-register',
+					),
 				)
 				this.message = data?.message || t('pipelinq', 'Data provisioned.')
 				this.messageType = data?.success ? 'success' : 'error'

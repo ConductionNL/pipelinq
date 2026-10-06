@@ -237,6 +237,9 @@ class SettingsService {
 		'receipt_company_country' => '',
 		'receipt_company_email' => '',
 		'receipt_company_website' => '',
+		// The VAT rate per VAT class as JSON, e.g. {"high":21,"low":9,"zero":0,"exempt":0}
+		// (VatRates, pipelinq-forms-review). Empty means the Dutch defaults.
+		'vat_rates' => '',
 		'receipt_email_sender' => '',
 		'receipt_printer_host' => '',
 		'receipt_printer_port' => '9100',

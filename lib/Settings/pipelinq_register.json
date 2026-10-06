@@ -142,9 +142,32 @@
             "title": "Website"
           },
           "industry": {
-            "type": "string",
-            "description": "Industry or sector (schema:industry)",
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The sectors this client works in. Pick one or more, or type your own (schema:industry).",
             "title": "Industry",
+            "examples": [
+              [
+                "Agriculture",
+                "Construction",
+                "Consultancy",
+                "Education",
+                "Energy",
+                "Finance and insurance",
+                "Healthcare",
+                "Hospitality",
+                "ICT",
+                "Logistics",
+                "Manufacturing",
+                "Non-profit",
+                "Public sector",
+                "Real estate",
+                "Retail",
+                "Wholesale"
+              ]
+            ],
             "facetable": true
           },
           "notes": {
@@ -717,7 +740,7 @@
           },
           "value": {
             "type": "number",
-            "description": "Estimated deal value in euros (schema:price)",
+            "description": "Estimated deal value, in the lead currency or else the reporting currency (schema:price)",
             "default": 0,
             "title": "Lead Value"
           },
@@ -1008,7 +1031,7 @@
           },
           "unitPrice": {
             "type": "number",
-            "description": "Default selling price per unit in EUR (schema:price)",
+            "description": "Default selling price per unit, in the reporting currency (schema:price)",
             "minimum": 0,
             "title": "Unit Price"
           },
@@ -1057,7 +1080,7 @@
           },
           "taxRate": {
             "type": "number",
-            "description": "Tax percentage (0-100). Default: 21 (Dutch BTW). Auto-populated from btwClass when set.",
+            "description": "VAT percentage (0-100). Default 21. Filled in from the VAT class when one is set.",
             "minimum": 0,
             "maximum": 100,
             "default": 21,
@@ -1066,14 +1089,20 @@
           },
           "vatClass": {
             "type": "string",
-            "description": "Dutch BTW class. Governs receipt printing and invoice BTW labels and drives taxRate: hoog (21%), laag (9%), nul (0%), vrijgesteld (exempt, 0%).",
+            "description": "The VAT class sets the VAT rate on receipts and invoices. An administrator sets the rate per class on the admin settings page.",
             "enum": [
               "high",
               "low",
               "zero",
               "exempt"
             ],
-            "title": "BTW Class",
+            "x-enum-labels": {
+              "high": "High (21%)",
+              "low": "Low (9%)",
+              "zero": "Zero (0%)",
+              "exempt": "Exempt"
+            },
+            "title": "VAT class",
             "facetable": true
           },
           "barcode": {
@@ -1115,7 +1144,7 @@
                 },
                 "unitPrice": {
                   "type": "number",
-                  "description": "Per-variant selling price in EUR. Defaults to the parent product unitPrice.",
+                  "description": "Per-variant selling price, in the reporting currency. Defaults to the parent product unitPrice.",
                   "minimum": 0,
                   "title": "Unit Price"
                 },
@@ -1192,7 +1221,7 @@
                       },
                       "priceAdjustment": {
                         "type": "number",
-                        "description": "Amount added to (or subtracted from) the line price in EUR",
+                        "description": "Amount added to (or subtracted from) the line price, in the reporting currency",
                         "default": 0,
                         "title": "Price Adjustment"
                       }
@@ -1219,7 +1248,7 @@
                 },
                 "unitPrice": {
                   "type": "number",
-                  "description": "Per-unit price in EUR when the tier applies",
+                  "description": "Per-unit price, in the reporting currency, when the tier applies",
                   "minimum": 0,
                   "title": "Unit Price"
                 },
@@ -1898,7 +1927,7 @@
         "icon": "ReceiptText",
         "version": "1.0.0",
         "summary": "A point-of-sale transaction (kassabon) with lifecycle, totals and tax breakdown",
-        "description": "Represents a POS cart / receipt from open (draft) through payment (confirmed -> settled) or cancellation (refunded). The taxBreakdown array captures tax per BTW rate so receipts can show 9% and 21% lines separately. Totals are server-computed by PosTransactionService and must never be trusted from the client. Mapped to Schema.org Order.",
+        "description": "Represents a POS cart / receipt from open (draft) through payment (confirmed -> settled) or cancellation (refunded). The taxBreakdown array captures tax per VAT rate so receipts can show 9% and 21% lines separately. Totals are server-computed by PosTransactionService and must never be trusted from the client. Mapped to Schema.org Order.",
         "x-schema-org": "schema:Order",
         "configuration": {
           "x-openregister-lifecycle": {
@@ -2256,7 +2285,7 @@
           },
           "unitPrice": {
             "type": "number",
-            "description": "Price per unit in EUR (pre-filled from product.unitPrice)",
+            "description": "Price per unit, in the reporting currency (pre-filled from product.unitPrice)",
             "minimum": 0,
             "title": "Unit Price"
           },
@@ -2270,7 +2299,7 @@
           },
           "taxRate": {
             "type": "number",
-            "description": "BTW rate percentage. Default 21 (Dutch standard rate). Common values: 0, 9, 21",
+            "description": "VAT rate percentage. Default 21 (Dutch standard rate). Common values: 0, 9, 21",
             "minimum": 0,
             "maximum": 100,
             "default": 21,
@@ -2694,7 +2723,7 @@
         "icon": "ReceiptText",
         "version": "1.0.0",
         "summary": "A customizable POS receipt template (header/footer/company/layout)",
-        "description": "Configures how a POS receipt is rendered: company header/footer, layout width and whether the legal-invoice (BTW) variant applies. The body is a safe placeholder template ({{ placeholder }} tokens only: no expression evaluation), so a malicious template cannot execute code or trigger SSRF.",
+        "description": "Configures how a POS receipt is rendered: company header/footer, layout width and whether the legal-invoice (VAT) variant applies. The body is a safe placeholder template ({{ placeholder }} tokens only: no expression evaluation), so a malicious template cannot execute code or trigger SSRF.",
         "x-schema-org": "schema:CreativeWork",
         "required": [
           "name"
@@ -2735,7 +2764,7 @@
           },
           "isInvoiceMode": {
             "type": "boolean",
-            "description": "When true, always render the legal-invoice (BTW breakdown + compliance footer) variant. Transactions >= EUR 100 render as an invoice regardless of this flag.",
+            "description": "When true, always render the legal-invoice (VAT breakdown + compliance footer) variant. Transactions >= EUR 100 render as an invoice regardless of this flag.",
             "default": false,
             "title": "Invoice Mode"
           },

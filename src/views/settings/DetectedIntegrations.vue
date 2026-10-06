@@ -18,11 +18,18 @@
 		">
 		<NcNoteCard :type="shillinq.installed ? 'success' : 'info'">
 			<template v-if="shillinq.installed">
-				{{ t('pipelinq', 'Shillinq is installed. Billing hands off to it.') }}
+				{{
+					t('pipelinq', 'Shillinq is installed. Billing hands off to it.')
+				}}
 				<a :href="shillinq.url">{{ t('pipelinq', 'Open Shillinq') }}</a>
 			</template>
 			<template v-else>
-				{{ t('pipelinq', 'Shillinq is not installed. Billing hand-off stays off.') }}
+				{{
+					t(
+						'pipelinq',
+						'Shillinq is not installed. Billing hand-off stays off.',
+					)
+				}}
 			</template>
 		</NcNoteCard>
 		<NcNoteCard :type="xwiki.available ? 'success' : 'info'">
@@ -63,9 +70,15 @@ export default {
 				return t('pipelinq', 'XWiki is connected through the XWiki app.')
 			}
 			if (this.xwiki.source === 'openregister') {
-				return t('pipelinq', 'XWiki is connected through OpenRegister and integriq.')
+				return t(
+					'pipelinq',
+					'XWiki is connected through OpenRegister and integriq.',
+				)
 			}
-			return t('pipelinq', 'XWiki is not connected. Install the XWiki app, or integriq with an XWiki source.')
+			return t(
+				'pipelinq',
+				'XWiki is not connected. Install the XWiki app, or integriq with an XWiki source.',
+			)
 		},
 	},
 }

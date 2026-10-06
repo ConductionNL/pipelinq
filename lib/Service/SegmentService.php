@@ -1371,6 +1371,18 @@ class SegmentService {
 			return (strcasecmp((string)$left, (string)$right) === 0);
 		}
 
+		// A list field (client.industry became one) equals a scalar when any
+		// item does, so a rule written while the field was a string still holds.
+		if (is_array($left) === true && array_is_list($left) === true && is_scalar($right) === true) {
+			foreach ($left as $item) {
+				if (is_scalar($item) === true && strcasecmp((string)$item, (string)$right) === 0) {
+					return true;
+				}
+			}
+
+			return false;
+		}
+
 		return ($left === $right);
 	}//end looseEquals()
 

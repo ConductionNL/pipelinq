@@ -112,7 +112,7 @@
 					:disabled="!!form.vatClass"
 					:helperText="
 						form.vatClass
-							? t('pipelinq', 'Derived from the selected BTW class')
+							? t('pipelinq', 'Derived from the selected VAT class')
 							: ''
 					"
 					type="number"
@@ -123,15 +123,15 @@
 		<div class="form-row">
 			<div class="form-group">
 				<label for="product-btwClass">{{
-					t('pipelinq', 'BTW Class')
+					t('pipelinq', 'VAT class')
 				}}</label>
 				<NcSelect
 					v-model="form.vatClass"
 					inputId="product-btwClass"
-					:inputLabel="t('pipelinq', 'BTW Class')"
-					:aria-label-combobox="t('pipelinq', 'BTW Class')"
+					:inputLabel="t('pipelinq', 'VAT class')"
+					:aria-label-combobox="t('pipelinq', 'VAT class')"
 					:options="btwClassOptions"
-					:placeholder="t('pipelinq', 'Select BTW class')"
+					:placeholder="t('pipelinq', 'Select VAT class')"
 					label="label"
 					:reduce="(opt) => opt.id"
 					@update:modelValue="onBtwClassChange" />
@@ -251,7 +251,7 @@ export default {
 				{ id: 'exempt', label: t('pipelinq', 'Exempt') },
 			],
 
-			btwRateMap: { hoog: 21, laag: 9, nul: 0, vrijgesteld: 0 },
+			btwRateMap: { high: 21, low: 9, zero: 0, exempt: 0 },
 			categories: [],
 		}
 	},
@@ -333,7 +333,7 @@ export default {
 		},
 
 		/**
-		 * Sync taxRate from the selected BTW class (server re-derives on lookup).
+		 * Sync taxRate from the selected VAT class (server re-derives on lookup).
 		 *
 		 * @spec openspec/changes/reverse-2026-05-26-fe-products-ui/tasks.md#task-18
 		 */

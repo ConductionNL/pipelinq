@@ -173,6 +173,13 @@ Vrij en open source onder de EUPL-1.2-licentie.
             <step>OCA\Pipelinq\Repair\RenameCollidingSchemaSlugs</step>
             <step>OCA\Pipelinq\Repair\InitializeSettings</step>
             <!--
+                Right after the import that turns client.industry into a list:
+                every later step that saves a client would otherwise fail
+                validation on a client still holding an industry string.
+                Also copies a party's `language` into correspondenceLanguage.
+            -->
+            <step>OCA\Pipelinq\Repair\NormalisePartyFormFields</step>
+            <!--
                 After InitializeSettings imports the register: the schema edit
                 changes the DECLARATION, but every row already written still
                 holds the Dutch string, and a filter on the new value returns

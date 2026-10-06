@@ -37,7 +37,7 @@ use OCP\IURLGenerator;
 /**
  * Reports which optional integrations this instance has.
  *
- * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-006-detected-integrations
+ * @spec openspec/changes/pipelinq-setup-wizard-review/specs/first-time-setup/spec.md#requirement-req-setup-pip-006-detected-integrations
  */
 class IntegrationDetector {
 	/**

@@ -74,6 +74,7 @@ use OCA\Pipelinq\Service\BsnValidationService;
 use OCA\Pipelinq\Service\Gdpr\PipelinqApRegulatorEscalateProvider;
 use OCA\Pipelinq\Service\Gdpr\PipelinqBsnIdentityVerifyProvider;
 use OCA\Pipelinq\Service\HaalCentraalClient;
+use OCA\Pipelinq\Service\VatRates;
 use OCP\App\IAppManager;
 use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
@@ -732,9 +733,14 @@ class Application extends App implements IBootstrap {
 			// as `initial-state-pipelinq-config` and read in main.js via
 			// loadState('pipelinq', 'config').
 			$appConfig = $this->getContainer()->get(IAppConfig::class);
+			// `vat_rates` labels the product form's VAT class options with
+			// the configured rate (pipelinq-forms-review).
 			$initialState->provideInitialState(
 				'config',
-				['currency' => $appConfig->getValueString(self::APP_ID, 'currency', 'EUR')]
+				[
+					'currency' => $appConfig->getValueString(self::APP_ID, 'currency', 'EUR'),
+					'vat_rates' => VatRates::fromConfig(appConfig: $appConfig),
+				]
 			);
 		} catch (\Exception $e) {
 			// Initial state unavailable — Features tab will fall back to [].
