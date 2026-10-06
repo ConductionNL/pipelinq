@@ -239,12 +239,12 @@ class DemoSeedService {
 				// drift apart without this list changing too.
 				'description' => (
 					'A worked CRM: clients and contacts, pipelines, products and leads, requests, '
-					. 'complaints and contact moments, tasks and contracts, marketing journeys '
-					. 'that are not switched on, published social posts with their numbers, and '
-					. 'search queries for the keyword pages. '
+					. 'complaints and contact moments, tasks and contracts, point of sale and '
+					. 'bookings, marketing journeys that are not switched on, published social '
+					. 'posts with their numbers, and search queries for the keyword pages. '
 					. 'It shows the lists, '
 					. 'detail pages and dashboards working. Safe to run more than once, and '
-					. '`occ pipelinq:demo:remove` takes it away again.'
+					. '`occ pipelinq:demo:seed --remove` takes it away again.'
 				),
 				'objectCount' => 0,
 				'icon'        => 'DatabaseOutline',

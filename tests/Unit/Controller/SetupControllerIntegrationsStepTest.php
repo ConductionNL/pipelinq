@@ -86,7 +86,8 @@ class SetupControllerIntegrationsStepTest extends TestCase {
 			$this->createMock(SettingsService::class),
 			$demoSeed,
 			$appManager,
-			new NullLogger()
+			new NullLogger(),
+			$this->createMock(\OCA\Pipelinq\Service\Demo\DemoRegisterImporter::class)
 		);
 	}
 
