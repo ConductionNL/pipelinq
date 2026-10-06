@@ -318,6 +318,7 @@
           },
           "userId": {
             "type": "string",
+            "format": "user",
             "description": "Optional Nextcloud user id for staff resources (for self-management of working hours).",
             "title": "User ID"
           },

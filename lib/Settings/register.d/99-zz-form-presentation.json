@@ -1,5 +1,5 @@
 {
-  "_note": "Form presentation for pipelinq-forms-review, kept in one place: field order, the (i) help on master data fields, Nextcloud user and group pickers, language and timezone pickers with their defaults, and create-from-picker on references. Every key here is presentation: none constrains what a record may hold. `format: user` (a Nextcloud user picker) and the `x-*` keys are read by nextcloud-vue's fieldsFromSchema. OpenRegister refuses a schema whose `format` it does not list, so the group, language and timezone pickers are NOT formats here: the manifest pages ask for them through `fieldOverrides.<key>.widget`. `language` is hidden because correspondenceLanguage replaces it in the forms (NormalisePartyFormFields copies it over). Named 99-zz so it merges last.",
+  "_note": "Form presentation for pipelinq-forms-review, kept in one place: field order, the (i) help on master data fields, Nextcloud user and group pickers, language and timezone pickers with their defaults, and create-from-picker on references. Every key here is presentation (`format: user` lives on the property's own definition, so this overlay declares nothing): none constrains what a record may hold. The `x-*` keys are read by nextcloud-vue's fieldsFromSchema. OpenRegister refuses a schema whose `format` it does not list, so the group, language and timezone pickers are NOT formats here: the manifest pages ask for them through `fieldOverrides.<key>.widget`. `language` is hidden because correspondenceLanguage replaces it in the forms (NormalisePartyFormFields copies it over). Named 99-zz so it merges last.",
   "components": {
     "schemas": {
       "product": {
@@ -83,8 +83,7 @@
             "order": 7
           },
           "accountOwner": {
-            "order": 8,
-            "format": "user"
+            "order": 8
           },
           "lifecycleStage": {
             "order": 9
@@ -226,8 +225,7 @@
             "order": 10
           },
           "assignee": {
-            "order": 11,
-            "format": "user"
+            "order": 11
           },
           "source": {
             "order": 12
@@ -313,8 +311,7 @@
             "order": 5
           },
           "assigneeUserId": {
-            "order": 6,
-            "format": "user"
+            "order": 6
           },
           "assigneeGroupId": {
             "order": 7
@@ -338,278 +335,7 @@
             "order": 13
           },
           "createdBy": {
-            "order": 14,
-            "format": "user"
-          }
-        }
-      },
-      "ticket": {
-        "slug": "ticket",
-        "properties": {
-          "assignee": {
-            "format": "user"
-          }
-        }
-      },
-      "agentProfile": {
-        "slug": "agentProfile",
-        "properties": {
-          "userId": {
-            "format": "user"
-          }
-        }
-      },
-      "posTransaction": {
-        "slug": "posTransaction",
-        "properties": {
-          "cashier": {
-            "format": "user"
-          }
-        }
-      },
-      "posRefund": {
-        "slug": "posRefund",
-        "properties": {
-          "cashier": {
-            "format": "user"
-          }
-        }
-      },
-      "posStaff": {
-        "slug": "posStaff",
-        "properties": {
-          "userId": {
-            "format": "user"
-          }
-        }
-      },
-      "receiptPrintLog": {
-        "slug": "receiptPrintLog",
-        "properties": {
-          "actor": {
-            "format": "user"
-          }
-        }
-      },
-      "bsnValidatie": {
-        "slug": "bsnValidatie",
-        "properties": {
-          "initiatedBy": {
-            "format": "user"
-          }
-        }
-      },
-      "brpLookupVerzoek": {
-        "slug": "brpLookupVerzoek",
-        "properties": {
-          "requestedBy": {
-            "format": "user"
-          }
-        }
-      },
-      "bsnAuditRecord": {
-        "slug": "bsnAuditRecord",
-        "properties": {
-          "actor": {
-            "format": "user"
-          }
-        }
-      },
-      "optOutVlag": {
-        "slug": "optOutVlag",
-        "properties": {
-          "localEnteredBy": {
-            "format": "user"
-          }
-        }
-      },
-      "enquiry": {
-        "slug": "enquiry",
-        "properties": {
-          "handledBy": {
-            "format": "user"
-          }
-        }
-      },
-      "billableExpense": {
-        "slug": "billableExpense",
-        "properties": {
-          "approvedBy": {
-            "format": "user"
-          }
-        }
-      },
-      "exportJob": {
-        "slug": "exportJob",
-        "properties": {
-          "createdBy": {
-            "format": "user"
-          }
-        }
-      },
-      "cashShift": {
-        "slug": "cashShift",
-        "properties": {
-          "operator": {
-            "format": "user"
-          },
-          "managedBy": {
-            "format": "user"
-          }
-        }
-      },
-      "cashDrop": {
-        "slug": "cashDrop",
-        "properties": {
-          "droppedBy": {
-            "format": "user"
-          }
-        }
-      },
-      "posCashCount": {
-        "slug": "posCashCount",
-        "properties": {
-          "countedBy": {
-            "format": "user"
-          }
-        }
-      },
-      "cashDiff": {
-        "slug": "cashDiff",
-        "properties": {
-          "approvedBy": {
-            "format": "user"
-          }
-        }
-      },
-      "appointmentResource": {
-        "slug": "appointmentResource",
-        "properties": {
-          "userId": {
-            "format": "user"
-          }
-        }
-      },
-      "forecastOverride": {
-        "slug": "forecastOverride",
-        "properties": {
-          "owner_id": {
-            "format": "user"
-          },
-          "created_by": {
-            "format": "user"
-          }
-        }
-      },
-      "salesQuota": {
-        "slug": "salesQuota",
-        "properties": {
-          "set_by": {
-            "format": "user"
-          }
-        }
-      },
-      "ctiAgentPresence": {
-        "slug": "ctiAgentPresence",
-        "properties": {
-          "user_id": {
-            "format": "user"
-          }
-        }
-      },
-      "channelConversation": {
-        "slug": "channelConversation",
-        "properties": {
-          "assignedTo": {
-            "format": "user"
-          }
-        }
-      },
-      "vngActor": {
-        "slug": "vngActor",
-        "properties": {
-          "nextcloudUserId": {
-            "format": "user"
-          }
-        }
-      },
-      "billingTimeEntry": {
-        "slug": "billingTimeEntry",
-        "properties": {
-          "approvedBy": {
-            "format": "user"
-          }
-        }
-      },
-      "mailTransport": {
-        "slug": "mailTransport",
-        "properties": {
-          "mailAccountUserId": {
-            "format": "user"
-          }
-        }
-      },
-      "blast": {
-        "slug": "blast",
-        "properties": {
-          "createdBy": {
-            "format": "user"
-          }
-        }
-      },
-      "segment": {
-        "slug": "segment",
-        "properties": {
-          "createdBy": {
-            "format": "user"
-          }
-        }
-      },
-      "campaignTemplate": {
-        "slug": "campaignTemplate",
-        "properties": {
-          "createdBy": {
-            "format": "user"
-          }
-        }
-      },
-      "mailingList": {
-        "slug": "mailingList",
-        "properties": {
-          "createdBy": {
-            "format": "user"
-          }
-        }
-      },
-      "salesContract": {
-        "slug": "salesContract",
-        "properties": {
-          "ownerId": {
-            "format": "user"
-          }
-        }
-      },
-      "article": {
-        "slug": "article",
-        "properties": {
-          "author": {
-            "format": "user"
-          }
-        }
-      },
-      "socialAccount": {
-        "slug": "socialAccount",
-        "properties": {
-          "ownerUserId": {
-            "format": "user"
-          }
-        }
-      },
-      "socialPost": {
-        "slug": "socialPost",
-        "properties": {
-          "createdBy": {
-            "format": "user"
+            "order": 14
           }
         }
       }

@@ -760,6 +760,7 @@
           },
           "assignee": {
             "type": "string",
+            "format": "user",
             "description": "Nextcloud user UID of the assigned sales representative",
             "title": "Assignee",
             "facetable": true
@@ -1630,6 +1631,7 @@
           },
           "assigneeUserId": {
             "type": "string",
+            "format": "user",
             "description": "Nextcloud user UID of the assigned handler (VNG toegewezenAanMedewerker)",
             "title": "Assignee",
             "facetable": true
@@ -1673,6 +1675,7 @@
           },
           "createdBy": {
             "type": "string",
+            "format": "user",
             "description": "Nextcloud user UID of the agent who created this task",
             "title": "Created by",
             "facetable": true
@@ -1889,6 +1892,7 @@
         "properties": {
           "userId": {
             "type": "string",
+            "format": "user",
             "description": "Nextcloud user UID",
             "maxLength": 255,
             "minLength": 1,
@@ -2008,6 +2012,7 @@
           },
           "cashier": {
             "type": "string",
+            "format": "user",
             "description": "Nextcloud user UID of the logged-in cashier",
             "maxLength": 255,
             "title": "Cashier",
@@ -2445,6 +2450,7 @@
           },
           "cashier": {
             "type": "string",
+            "format": "user",
             "description": "Nextcloud user UID of the cashier processing the return",
             "maxLength": 255,
             "title": "Cashier",
@@ -2671,6 +2677,7 @@
           },
           "userId": {
             "type": "string",
+            "format": "user",
             "description": "Optional Nextcloud user UID linking this operator to an NC account",
             "maxLength": 64,
             "title": "Nextcloud user",
@@ -2842,6 +2849,7 @@
           },
           "actor": {
             "type": "string",
+            "format": "user",
             "description": "Nextcloud user UID of the user who performed the action",
             "maxLength": 255,
             "facetable": true,
@@ -3026,6 +3034,7 @@
           },
           "initiatedBy": {
             "type": "string",
+            "format": "user",
             "description": "Nextcloud user UID die de validatie initieerde",
             "maxLength": 128,
             "title": "Initiated by"
@@ -3097,6 +3106,7 @@
           },
           "requestedBy": {
             "type": "string",
+            "format": "user",
             "description": "Nextcloud user UID van behandelaar",
             "maxLength": 128,
             "title": "Requested by"
@@ -3361,6 +3371,7 @@
           },
           "actor": {
             "type": "string",
+            "format": "user",
             "description": "Nextcloud user UID van uitvoerder",
             "maxLength": 128,
             "title": "Actor",
@@ -3516,6 +3527,7 @@
           },
           "localEnteredBy": {
             "type": "string",
+            "format": "user",
             "description": "Nextcloud user UID van wie de opt-out lokaal registreerde",
             "maxLength": 128,
             "visible": false,
