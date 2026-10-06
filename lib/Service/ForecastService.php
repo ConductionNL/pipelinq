@@ -41,6 +41,14 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
  */
 class ForecastService {
 	/**
+	 * App-config key for the open-pipeline target the dashboard gauge
+	 * measures against, in the reporting currency. 0 means no target.
+	 *
+	 * @var string
+	 */
+	public const PIPELINE_TARGET_KEY = 'pipeline_target';
+
+	/**
 	 * App-config key for the accuracy green band threshold.
 	 *
 	 * @var string

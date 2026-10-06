@@ -51,7 +51,7 @@
 						"id": "Pipeline",
 						"label": "Pipeline",
 						"description": "Deals as cards on a board, one column per stage.",
-						"icon": "Domain",
+						"icon": "ViewColumnOutline",
 						"category": "sales",
 						"route": "Pipeline"
 					},

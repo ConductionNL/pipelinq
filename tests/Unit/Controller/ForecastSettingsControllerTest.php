@@ -25,6 +25,7 @@ namespace OCA\Pipelinq\Tests\Unit\Controller;
 use ArrayObject;
 use OCA\Pipelinq\Controller\ForecastSettingsController;
 use OCA\Pipelinq\Service\ExchangeRateService;
+use OCA\Pipelinq\Service\ForecastService;
 use OCP\IAppConfig;
 use OCP\IRequest;
 use PHPUnit\Framework\TestCase;
@@ -59,6 +60,12 @@ class ForecastSettingsControllerTest extends TestCase {
 		$config->method('setValueString')->willReturnCallback(
 			static function (string $app, string $key, string $value) use ($store): bool {
 				$store[$key] = $value;
+				return true;
+			}
+		);
+		$config->method('setValueInt')->willReturnCallback(
+			static function (string $app, string $key, int $value) use ($store): bool {
+				$store[$key] = (string)$value;
 				return true;
 			}
 		);
@@ -116,6 +123,33 @@ class ForecastSettingsControllerTest extends TestCase {
 		$this->assertArrayNotHasKey('forecast_reporting_currency', $this->store->getArrayCopy());
 		$this->assertSame('USD', $this->controller()->index()->getData()['reporting_currency']);
 	}//end testReportingCurrencyIsTheOneAppSetting()
+
+	/**
+	 * The open-pipeline target is stored under the key the dashboard gauge reads.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/pipeline-numbers-tell-the-truth/specs/commercial-dashboard/spec.md
+	 */
+	public function testPipelineTargetRoundTrips(): void {
+		$this->assertSame(0, $this->controller()->index()->getData()['pipeline_target']);
+
+		$response = $this->controller(['pipeline_target' => '750000'])->update();
+		$this->assertSame(200, $response->getStatus());
+		$this->assertSame('750000', $this->store[ForecastService::PIPELINE_TARGET_KEY]);
+		$this->assertSame(750000, $this->controller()->index()->getData()['pipeline_target']);
+	}//end testPipelineTargetRoundTrips()
+
+	/**
+	 * A negative target is refused and nothing is stored.
+	 *
+	 * @return void
+	 */
+	public function testNegativePipelineTargetRefused(): void {
+		$response = $this->controller(['pipeline_target' => -5])->update();
+		$this->assertSame(400, $response->getStatus());
+		$this->assertArrayNotHasKey(ForecastService::PIPELINE_TARGET_KEY, $this->store->getArrayCopy());
+	}//end testNegativePipelineTargetRefused()
 
 	/**
 	 * An app config double reading the shared store.

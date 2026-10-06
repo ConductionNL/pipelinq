@@ -48,6 +48,7 @@ import {
 	MODULES_SETTING,
 	resolveMenuModules,
 } from './utils/menuModules.js'
+import { seedPageAppConfig } from './utils/pageAppConfig.js'
 import {
 	buildProfiledManifest,
 	resolveStructureProfile,
@@ -133,32 +134,6 @@ function tryLoadTranslations() {
 // making the component definition itself reactive inside the route record.
 const RoutePageRenderer = markRaw({ ...CnPageRenderer })
 
-/**
- * Seed the page-level app config onto every `type: "dashboard"` page's
- * `config.appConfig`. CnPageRenderer forwards each `config.*` key to the
- * dispatched page component's props, so this lands on CnDashboardPage's
- * `appConfig` prop — the source the library's `@config.<key>` token resolver
- * reads (via the `cnAppConfig` inject it provides to descendant stat widgets).
- * Backed by the `config` initial state the app's Application::boot() provides
- * (currently the reporting `currency` captured by the setup wizard, default
- * EUR). With this seed a manifest widget's `format: { style: "currency",
- * currency: "@config.currency" }` formats with the configured currency instead
- * of the literal EUR fallback. An explicit per-page `config.appConfig` (none
- * today) still wins.
- *
- * @param {object} manifest The merged manifest (with `pages[]`).
- * @return {object} The same manifest, with dashboard pages' appConfig seeded.
- */
-function seedDashboardAppConfig(manifest) {
-	const appConfig = loadState('pipelinq', 'config', {})
-	for (const page of manifest.pages || []) {
-		if (page.type === 'dashboard') {
-			page.config = { appConfig, ...(page.config || {}) }
-		}
-	}
-	return manifest
-}
-
 // `require.context` is a WEBPACK build-time API, not CommonJS `require`: the
 // bundler rewrites this call at compile time and no `require` exists at
 // runtime. eslint's browser globals therefore report `no-undef` correctly —
@@ -195,10 +170,13 @@ const { manifest: profiledManifest, homePage } = applyHomePage(
 )
 // The getting-started tour sends the reader to menu entries the simple menu
 // does not have, so it is held back there. The full structure keeps it.
-const mergedManifest = seedDashboardAppConfig(
+// Dashboard and detail pages read `@config.<key>` tokens (the reporting
+// currency, the pipeline target) from the `config` initial state.
+const mergedManifest = seedPageAppConfig(
 	structureProfile === STRUCTURE_FULL
 		? profiledManifest
 		: holdUnreachableTours(profiledManifest),
+	loadState('pipelinq', 'config', {}),
 )
 
 /**
