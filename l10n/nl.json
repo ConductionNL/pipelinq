@@ -7032,6 +7032,27 @@
         "Mail Not Sent At": "Mail niet verzonden op",
         "Mail Not Sent Reason": "Reden mail niet verzonden",
         "When integriq last refused a confirmation or reminder mail for this booking (opt-out-before-send).": "Wanneer integriq voor het laatst een bevestigings- of herinneringsmail voor deze afspraak weigerde (opt-out vóór verzending).",
-        "Why integriq refused it, for example opted-out or authority-unavailable.": "Waarom integriq de mail weigerde, bijvoorbeeld afgemeld of grondslag niet beschikbaar."
+        "Why integriq refused it, for example opted-out or authority-unavailable.": "Waarom integriq de mail weigerde, bijvoorbeeld afgemeld of grondslag niet beschikbaar.",
+        "Example data fills the lists, dashboards and the client view, so you see the app working straight away. Each card has its own Load button. Pick \"None\" on a production install. Every example record is marked [Demo], and `occ pipelinq:demo:seed --remove` takes it away again.": "Voorbeelddata vult de lijsten, dashboards en de klantweergave, zodat u de app meteen ziet werken. Elke kaart heeft een eigen knop Laden. Kies \"Geen\" op een productie-installatie. Elk voorbeeldrecord is gemarkeerd met [Demo], en `occ pipelinq:demo:seed --remove` haalt het weer weg.",
+        "Your organisation details. They appear on receipts and reports. Every field is optional, so leave one blank to skip it.": "De gegevens van uw organisatie. Ze staan op kassabonnen en rapporten. Elk veld is optioneel, dus laat een veld leeg om het over te slaan.",
+        "Street and number": "Straat en huisnummer",
+        "Postcode": "Postcode",
+        "City": "Plaats",
+        "Country": "Land",
+        "Create or repair the Pipelinq register, schemas, default pipelines and skills. Run it after you enable OpenRegister, or to repair a partial install. Running it twice creates no duplicates.": "Maak of herstel het Pipelinq-register, de schema's, de standaardpijplijnen en de vaardigheden. Voer het uit nadat u OpenRegister hebt ingeschakeld, of om een onvolledige installatie te herstellen. Twee keer uitvoeren maakt geen dubbelen.",
+        "Provisioning…": "Bezig met inrichten…",
+        "Data provisioned.": "Gegevens ingericht.",
+        "Provisioning failed.": "Inrichten mislukt.",
+        "Detected integrations": "Gevonden koppelingen",
+        "Pipelinq finds these apps on this server by itself. Install or remove an app to change what you see here.": "Pipelinq vindt deze apps zelf op deze server. Installeer of verwijder een app om te veranderen wat u hier ziet.",
+        "Shillinq is installed. Billing hands off to it.": "Shillinq is geïnstalleerd. Facturatie gaat naar Shillinq.",
+        "Open Shillinq": "Shillinq openen",
+        "Shillinq is not installed. Billing hand-off stays off.": "Shillinq is niet geïnstalleerd. Doorgeven aan facturatie staat uit.",
+        "XWiki is connected through the XWiki app.": "XWiki is gekoppeld via de XWiki-app.",
+        "XWiki is connected through OpenRegister and integriq.": "XWiki is gekoppeld via OpenRegister en integriq.",
+        "XWiki is not connected. Install the XWiki app, or integriq with an XWiki source.": "XWiki is niet gekoppeld. Installeer de XWiki-app, of integriq met een XWiki-bron.",
+        "Configure the xWiki knowledge base proxy used by the dashboard widget and the detail sidebar tabs. Pipelinq finds xWiki through the xWiki app or through OpenRegister.": "Stel de xWiki-kennisbankproxy in die de dashboardwidget en de zijbalktabbladen gebruiken. Pipelinq vindt xWiki via de xWiki-app of via OpenRegister.",
+        "xWiki not reachable. Install the xWiki app, or connect xWiki through OpenRegister and integriq.": "xWiki niet bereikbaar. Installeer de xWiki-app, of koppel xWiki via OpenRegister en integriq.",
+        "The optional xWiki Nextcloud app is not installed. Pipelinq searches xWiki through OpenRegister instead.": "De optionele xWiki Nextcloud-app is niet geïnstalleerd. Pipelinq zoekt in xWiki via OpenRegister."
     }
 }

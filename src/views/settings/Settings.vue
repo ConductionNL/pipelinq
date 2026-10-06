@@ -54,6 +54,13 @@
 			</template>
 		</CnVersionInfoCard>
 
+		<!-- Provisioning is an admin action, never a wizard step
+		     (pipelinq-setup-wizard-review). -->
+		<ProvisionDataSection v-if="isAdmin" />
+
+		<!-- Shillinq and XWiki, detected rather than typed. -->
+		<DetectedIntegrations v-if="isAdmin" />
+
 		<!-- Menu structure: simple (default) or full, and the modules
 		     (simple-structure-profile). -->
 		<MenuStructureSettings v-if="isAdmin" />
@@ -259,7 +266,7 @@
 			:description="
 				t(
 					'pipelinq',
-					'Configure the xWiki knowledge base proxy used by the dashboard widget and the detail sidebar tabs. When the xWiki Nextcloud app is installed its settings take precedence over the fallback URL below.',
+					'Configure the xWiki knowledge base proxy used by the dashboard widget and the detail sidebar tabs. Pipelinq finds xWiki through the xWiki app or through OpenRegister.',
 				)
 			">
 			<NcNoteCard
@@ -283,7 +290,7 @@
 					{{
 						t(
 							'pipelinq',
-							'xWiki not reachable. The xWiki Nextcloud app is not installed and the direct URL is empty or unreachable.',
+							'xWiki not reachable. Install the xWiki app, or connect xWiki through OpenRegister and integriq.',
 						)
 					}}
 				</span>
@@ -292,7 +299,7 @@
 				{{
 					t(
 						'pipelinq',
-						'The optional xWiki Nextcloud app is not installed. Pipelinq is falling back to the configured direct URL.',
+						'The optional xWiki Nextcloud app is not installed. Pipelinq searches xWiki through OpenRegister instead.',
 					)
 				}}
 			</NcNoteCard>
@@ -315,16 +322,6 @@
 					t(
 						'pipelinq',
 						'How long search and page results are cached server-side. Default: 300.',
-					)
-				" />
-			<NcTextField
-				v-model="config.xwiki_direct_url"
-				:label="t('pipelinq', 'Direct xWiki URL (fallback)')"
-				placeholder="http://xwiki:8080/xwiki"
-				:helperText="
-					t(
-						'pipelinq',
-						'Used only when the xWiki Nextcloud app is unavailable. Should point at the xWiki base URL without trailing slash.',
 					)
 				" />
 			<div class="xwiki-actions">
@@ -416,6 +413,7 @@ import SkillSettings from '../../components/admin/SkillSettings.vue'
 import CtiPage from './CtiPage.vue'
 // marketing-mail-transports: transport list + SPF/DKIM/DMARC panel.
 import DeliverabilitySettings from './DeliverabilitySettings.vue'
+import DetectedIntegrations from './DetectedIntegrations.vue'
 import ExportConfigurationSettings from './ExportConfigurationSettings.vue'
 import MailingListEmbedSettings from './MailingListEmbedSettings.vue'
 import MarketingIntelSettings from './MarketingIntelSettings.vue'
@@ -431,6 +429,7 @@ import PosStaffManager from './PosStaffManager.vue'
 import PosTenderTypeManager from './PosTenderTypeManager.vue'
 import ProductCategoryManager from './ProductCategoryManager.vue'
 import ProspectSettings from './ProspectSettings.vue'
+import ProvisionDataSection from './ProvisionDataSection.vue'
 import TagManager from './TagManager.vue'
 import { objectTypeGroups, objectTypes } from '../../config/objectTypes.js'
 import { useLeadSourcesStore } from '../../store/modules/leadSources.js'
@@ -470,6 +469,8 @@ export default {
 		MarketingIntelSettings,
 		MarketingTrafficSettings,
 		MenuStructureSettings,
+		DetectedIntegrations,
+		ProvisionDataSection,
 	},
 
 	data() {
@@ -951,7 +952,6 @@ export default {
 						this.config.xwiki_default_space || ''
 					).trim(),
 					xwiki_cache_ttl: String(this.config.xwiki_cache_ttl || 300),
-					xwiki_direct_url: (this.config.xwiki_direct_url || '').trim(),
 				})
 				if (result) {
 					this.config = this.settingsStore.config || result

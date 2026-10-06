@@ -94,10 +94,8 @@ test.describe('First-time setup contract', () => {
 		for (const id of [
 			'welcome',
 			'currency',
-			'provision',
 			'demo-data',
 			'organisation',
-			'integrations',
 			'done',
 		]) {
 			expect(
@@ -113,10 +111,9 @@ test.describe('First-time setup contract', () => {
 		// The optional steps reflect their OWN state rather than the app's,
 		// and completion is true regardless — which is the whole scenario:
 		// only currency gates completion.
-		expect(
-			res.json.steps.provision.done,
-			'ci-seed reimported the register',
-		).toBe(true)
+		// Provisioning and the integrations are not wizard steps any more.
+		expect(res.json.steps.provision).toBeUndefined()
+		expect(res.json.steps.integrations).toBeUndefined()
 		expect(
 			res.json.steps['demo-data'].done,
 			'ci-seed recorded the demo-data decision',
@@ -195,9 +192,6 @@ test.describe('First-time setup contract', () => {
 		).toBe(middle)
 		expect(after).toBeGreaterThan(0)
 
-		// And the step still reports done.
-		const status = await api(page, 'GET', `${APP}/api/setup/status`)
-		expect(status.json?.steps?.provision?.done).toBe(true)
 	})
 
 	// @e2e openspec/specs/first-time-setup/spec.md#organisation-details-persist

@@ -555,7 +555,7 @@ return [
 
         // Shillinq time-intake billing handoff — real emit side of the
         // time-approval-workflow delegation (time-billing-handoff-emit).
-        // Manager-gated; the deep-link (shillinq_app_url) stays the fallback
+        // Manager-gated; the deep-link to the detected Shillinq app stays the fallback
         // when unavailable.
         ['name' => 'billingHandoff#availability', 'url' => '/api/billing/handoff/{clientId}/availability', 'verb' => 'GET'],
         ['name' => 'billingHandoff#trigger',      'url' => '/api/billing/handoff/{clientId}',              'verb' => 'POST'],

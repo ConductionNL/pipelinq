@@ -27,16 +27,10 @@
 				"display": "cards",
 				"optionsSource": "datasets",
 				"configKey": "demo_dataset",
+				"loadAction": "load-demo-data",
 				"required": false,
 				"title": "Load example data?",
-				"body": "Example data fills the lists, dashboards and the 360 degree client view so you can see the app working straight away. Pick \"None\" on a production install."
-			},
-			{
-				"id": "load-demo-data",
-				"type": "run-action",
-				"action": "load-demo-data",
-				"title": "Load the example data",
-				"body": "Loads what you picked. Every object is marked [Demo], it is safe to run more than once, and `occ pipelinq:demo:seed --remove` takes it away again."
+				"body": "Example data fills the lists, dashboards and the client view, so you see the app working straight away. Each card has its own Load button. Pick \"None\" on a production install. Every example record is marked [Demo], and `occ pipelinq:demo:seed --remove` takes it away again."
 			},
 			{
 				"id": "currency",
@@ -53,50 +47,64 @@
 				]
 			},
 			{
-				"id": "provision",
-				"type": "run-action",
-				"title": "Provision data",
-				"action": "provision-register",
-				"body": "Create the Pipelinq OpenRegister register and schemas, plus the default sales pipeline and stages, agent skills, lead sources and request channels. This normally runs automatically on install; run it here if OpenRegister was enabled after Pipelinq, or to repair a partial install. It is safe to run more than once."
-			},
-			{
 				"id": "organisation",
 				"type": "config-fields",
 				"title": "Organisation",
-				"body": "Your organisation details, printed on POS receipts and shown on reports. Optional: leave blank to skip.",
+				"body": "Your organisation details. They appear on receipts and reports. Every field is optional, so leave one blank to skip it.",
 				"schema": {
 					"type": "object",
 					"properties": {
 						"receipt_company_name": {
 							"type": "string",
-							"title": "Organisation name"
-						},
-						"receipt_company_vat": {
-							"type": "string",
-							"title": "VAT number"
+							"title": "Organisation name",
+							"order": 1
 						},
 						"receipt_company_kvk": {
 							"type": "string",
-							"title": "Chamber of Commerce (KvK) number"
-						}
-					}
-				}
-			},
-			{
-				"id": "integrations",
-				"type": "config-fields",
-				"title": "Integrations",
-				"body": "Optional connections to other Conduction apps. Set the Shillinq base URL to surface recurring-revenue metrics and route billing/ledger entries; set the XWiki URL to embed the knowledge base. Leave blank to disable.",
-				"schema": {
-					"type": "object",
-					"properties": {
-						"shillinq_app_url": {
-							"type": "string",
-							"title": "Shillinq base URL"
+							"title": "Chamber of Commerce (KvK) number",
+							"order": 2
 						},
-						"xwiki_direct_url": {
+						"receipt_company_vat": {
 							"type": "string",
-							"title": "XWiki base URL"
+							"title": "VAT number",
+							"order": 3
+						},
+						"receipt_company_street": {
+							"type": "string",
+							"title": "Street and number",
+							"order": 4
+						},
+						"receipt_company_postcode": {
+							"type": "string",
+							"title": "Postcode",
+							"order": 5
+						},
+						"receipt_company_city": {
+							"type": "string",
+							"title": "City",
+							"order": 6
+						},
+						"receipt_company_country": {
+							"type": "string",
+							"title": "Country",
+							"order": 7
+						},
+						"receipt_company_email": {
+							"type": "string",
+							"format": "email",
+							"title": "Email address",
+							"order": 8
+						},
+						"receipt_company_phone": {
+							"type": "string",
+							"title": "Phone number",
+							"order": 9
+						},
+						"receipt_company_website": {
+							"type": "string",
+							"format": "uri",
+							"title": "Website",
+							"order": 10
 						}
 					}
 				}
