@@ -14,6 +14,7 @@
  * @spec openspec/changes/detail-pages-read-at-a-glance/specs/client-management/spec.md
  */
 
+import { CnDetailCard } from '@conduction/nextcloud-vue'
 import { h } from 'vue'
 
 /**
@@ -23,11 +24,14 @@ import { h } from 'vue'
  * @param {object} section The section component to render.
  * @param {(ctx: {objectId: string, objectData: object, content: object}) => object} mapProps
  *   The section's props from the page context.
+ * @param {{card?: boolean}} [options] `card` wraps the section in a titled
+ *   card (title from `content.title`), for a widget that sits in the grid on
+ *   its own rather than inside a tab, which already names it.
  * @return {object} A Vue component.
  *
  * @spec openspec/changes/detail-pages-read-at-a-glance/specs/client-management/spec.md
  */
-export function sectionWidget(name, section, mapProps) {
+export function sectionWidget(name, section, mapProps, options = {}) {
 	return {
 		name,
 		// The host also passes register, schema, store and the content keys;
@@ -43,13 +47,21 @@ export function sectionWidget(name, section, mapProps) {
 			if (!objectId) {
 				return null
 			}
-			return h(
+			const inner = h(
 				section,
 				mapProps({
 					objectId,
 					objectData: this.objectData || {},
 					content: this.content || {},
 				}),
+			)
+			if (!options.card) {
+				return inner
+			}
+			return h(
+				CnDetailCard,
+				{ title: this.content?.title || '' },
+				{ default: () => inner },
 			)
 		},
 	}

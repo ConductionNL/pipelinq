@@ -1113,6 +1113,7 @@ const registry = {
 			'BookingContextWidget',
 			BookingDetailSection,
 			({ objectId }) => ({ bookingId: objectId, part: 'context' }),
+			{ card: true },
 		),
 		...PANEL_WIDGET_META,
 		_note: 'BookingDetail: the service and customer names and the deposit state, resolved across schemas.',

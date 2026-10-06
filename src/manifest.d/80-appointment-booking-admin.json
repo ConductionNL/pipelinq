@@ -174,7 +174,7 @@
 				"widgets": [
 					{ "id": "booking-deposit", "type": "stat", "title": "Deposit", "icon": "Cash", "content": { "label": "Deposit", "format": { "style": "currency", "currency": "@config.currency", "decimals": 2 }, "source": { "register": "pipelinq", "schema": "appointmentBooking", "metric": "sum", "field": "depositAmount", "filter": { "id": "@objectId" } } } },
 					{ "id": "booking-data", "type": "data", "title": "Booking", "icon": "Calendar", "content": { "title": "Booking", "columns": 2, "include": ["status", "source", "startAt", "endAt", "customerId", "serviceId", "depositAmount", "confirmationSentAt", "reminderSentAt", "cancellationReason", "notes", "internalNotes"], "overrides": { "status": { "editable": false }, "startAt": { "editable": false }, "endAt": { "editable": false }, "confirmationSentAt": { "editable": false }, "reminderSentAt": { "editable": false }, "notes": { "label": "Note for the customer" }, "internalNotes": { "label": "Internal note (earlier)", "editable": false } } } },
-					{ "id": "booking-context", "type": "BookingContextWidget", "title": "Service and customer", "icon": "AccountClockOutline", "content": {} },
+					{ "id": "booking-context", "type": "BookingContextWidget", "title": "Service and customer", "icon": "AccountClockOutline", "content": { "title": "Service and customer" } },
 					{ "id": "booking-related", "type": "related", "title": "Related", "icon": "LinkVariant" },
 					{
 						"id": "booking-tabs",
@@ -200,8 +200,8 @@
 				"layout": [
 					{ "id": "2", "widgetId": "booking-data",    "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 6 },
 					{ "id": "1", "widgetId": "booking-deposit", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 2 },
-					{ "id": "5", "widgetId": "booking-context", "gridX": 8, "gridY": 2, "gridWidth": 4, "gridHeight": 2 },
-					{ "id": "3", "widgetId": "booking-related", "gridX": 8, "gridY": 4, "gridWidth": 4, "gridHeight": 3 },
+					{ "id": "5", "widgetId": "booking-context", "gridX": 8, "gridY": 2, "gridWidth": 4, "gridHeight": 4 },
+					{ "id": "3", "widgetId": "booking-related", "gridX": 8, "gridY": 6, "gridWidth": 4, "gridHeight": 3 },
 					{ "id": "4", "widgetId": "booking-tabs",    "gridX": 0, "gridY": 6, "gridWidth": 8, "gridHeight": 7 }
 				],
 				"sidebar": {
