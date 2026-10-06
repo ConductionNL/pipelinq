@@ -24,7 +24,9 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 use OCA\Pipelinq\Service\BudgetService;
 use OCA\Pipelinq\Service\ChannelProviderRepository;
 use OCA\Pipelinq\Service\ConsentService;
+use OCA\Pipelinq\Service\ContactmomentService;
 use OCA\Pipelinq\Service\NotificationService;
+use OCA\Pipelinq\Service\PhoneNormaliser;
 use OCA\Pipelinq\Service\Provider\PermanentSmsProviderException;
 use OCA\Pipelinq\Service\Provider\SmsProviderClientInterface;
 use OCA\Pipelinq\Service\Provider\TransientSmsProviderException;
@@ -50,6 +52,7 @@ class SmsAdapterTest extends TestCase {
 	private BudgetService $budgetService;
 	private NotificationService $notificationService;
 	private LoggerInterface $logger;
+	private ContactmomentService $contactmoments;
 	private object $objectService;
 	private SmsAdapter $adapter;
 
@@ -67,6 +70,7 @@ class SmsAdapterTest extends TestCase {
 		$this->budgetService = $this->createMock(BudgetService::class);
 		$this->notificationService = $this->createMock(NotificationService::class);
 		$this->logger = $this->createMock(LoggerInterface::class);
+		$this->contactmoments = $this->createMock(ContactmomentService::class);
 
 		$this->objectService = new class {
 			/** @var array<int, array<string, mixed>> */
@@ -129,6 +133,9 @@ class SmsAdapterTest extends TestCase {
 				if ($id === 'OCA\\OpenRegister\\Service\\ObjectService') {
 					return $this->objectService;
 				}
+				if ($id === 'OCA\\Pipelinq\\Service\\ContactmomentService') {
+					return $this->contactmoments;
+				}
 				throw new \RuntimeException('not registered: ' . $id);
 			}
 		);
@@ -151,6 +158,7 @@ class SmsAdapterTest extends TestCase {
 			$this->budgetService,
 			$this->notificationService,
 			$this->logger,
+			new PhoneNormaliser($this->appConfig, $this->logger),
 		);
 	}//end setUp()
 
@@ -332,9 +340,8 @@ class SmsAdapterTest extends TestCase {
 	}//end testHandleInboundWebhookInvalidSignature()
 
 	/**
-	 * Inbound webhook with valid signature persists the message and
-	 * fires placeholder creation (the OR mock returns no existing
-	 * contact).
+	 * Inbound webhook with valid signature persists the message. The OR mock
+	 * holds no contact, so the sender is unknown and no contact is created.
 	 *
 	 * @return void
 	 */
@@ -351,7 +358,8 @@ class SmsAdapterTest extends TestCase {
 		$result = $this->adapter->handleInboundWebhook($rawBody, 'sig', 'prov-1');
 
 		$this->assertSame('received', $result['status']);
-		$this->assertTrue($result['placeholderCreated']);
+		$this->assertTrue($result['unknownSender']);
+		$this->assertArrayNotHasKey('placeholderCreated', $result);
 	}//end testHandleInboundWebhookPersistsAndRoutes()
 
 	/**
@@ -401,7 +409,7 @@ class SmsAdapterTest extends TestCase {
 
 		$result = $this->adapter->handleInboundWebhook(json_encode(['from' => '+31611119999', 'body' => 'STOP']), 'sig', 'prov-1');
 
-		$this->assertFalse($result['placeholderCreated']);
+		$this->assertFalse($result['unknownSender']);
 		$this->assertTrue($result['optOutRecorded']);
 	}//end testInboundStopFindsTheContactByPhone()
 
@@ -460,4 +468,88 @@ class SmsAdapterTest extends TestCase {
 			$this->assertFalse($access['_multitenancy'], $access['call'] . ' ran under multitenancy');
 		}
 	}//end testInboundWebhookReadsAndWritesAsTheSystem()
+
+	/**
+	 * A STOP from a number that matches no contact is recorded in integriq on
+	 * the number itself, in E.164 (MessageBird sends it without '+'). No
+	 * contact is created and nothing is logged for a person.
+	 *
+	 * @return void
+	 */
+	public function testAStopFromAnUnknownNumberIsRecordedOnTheNumber(): void {
+		$this->providerRepo->method('findByIdForWebhook')->willReturn(['uuid' => 'prov-1', 'kind' => 'sms', 'vendor' => 'messagebird']);
+		$this->providerFactory->method('create')
+			->willReturn($this->buildClient('messagebird', 'success', 'ext-1', true));
+		$this->consentService->method('isOptOutKeyword')->willReturn(true);
+		$this->consentService->expects($this->once())
+			->method('recordOptOut')
+			->with(
+				$this->equalTo(''),
+				$this->equalTo('sms'),
+				$this->equalTo('keyword-stop'),
+				$this->anything(),
+				$this->anything(),
+				$this->equalTo('+31699990000'),
+			)
+			->willReturn(['store' => 'integriq']);
+		$this->contactmoments->expects($this->never())->method('recordInboundFromUnknownNumber');
+
+		$result = $this->adapter->handleInboundWebhook(json_encode(['from' => '31699990000', 'body' => 'STOP']), 'sig', 'prov-1');
+
+		$this->assertTrue($result['optOutRecorded']);
+		$this->assertTrue($result['unknownSender']);
+		foreach ($this->objectService->saved as $row) {
+			$this->assertArrayNotHasKey('placeholder', $row, 'a placeholder contact was created');
+		}
+	}//end testAStopFromAnUnknownNumberIsRecordedOnTheNumber()
+
+	/**
+	 * Any other SMS from an unknown number is logged as a new contact moment
+	 * for a person to pick up; no contact is created.
+	 *
+	 * @return void
+	 */
+	public function testAnotherSmsFromAnUnknownNumberIsLoggedForAPerson(): void {
+		$this->providerRepo->method('findByIdForWebhook')->willReturn(['uuid' => 'prov-1', 'kind' => 'sms', 'vendor' => 'messagebird']);
+		$this->providerFactory->method('create')
+			->willReturn($this->buildClient('messagebird', 'success', 'ext-1', true));
+		$this->consentService->method('isOptOutKeyword')->willReturn(false);
+		$this->consentService->method('isOptInKeyword')->willReturn(false);
+		$this->contactmoments->expects($this->once())
+			->method('recordInboundFromUnknownNumber')
+			->with(
+				$this->equalTo('sms'),
+				$this->equalTo('+31699990000'),
+				$this->equalTo('Wie is dit?'),
+				$this->isType('string'),
+			)
+			->willReturn('cm-1');
+
+		$result = $this->adapter->handleInboundWebhook(json_encode(['from' => '+31699990000', 'body' => 'Wie is dit?']), 'sig', 'prov-1');
+
+		$this->assertTrue($result['unknownSender']);
+		$this->assertSame('cm-1', $result['contactMomentId']);
+		foreach ($this->objectService->saved as $row) {
+			$this->assertArrayNotHasKey('placeholder', $row, 'a placeholder contact was created');
+		}
+	}//end testAnotherSmsFromAnUnknownNumberIsLoggedForAPerson()
+
+	/**
+	 * A message from a known contact is not logged as an unknown sender.
+	 *
+	 * @return void
+	 */
+	public function testAnSmsFromAKnownContactIsNotLoggedAsUnknown(): void {
+		$this->objectService->contacts = ['+31611119999' => 'c-gert'];
+		$this->providerRepo->method('findByIdForWebhook')->willReturn(['uuid' => 'prov-1', 'kind' => 'sms', 'vendor' => 'messagebird']);
+		$this->providerFactory->method('create')
+			->willReturn($this->buildClient('messagebird', 'success', 'ext-1', true));
+		$this->consentService->method('isOptOutKeyword')->willReturn(false);
+		$this->consentService->method('isOptInKeyword')->willReturn(false);
+		$this->contactmoments->expects($this->never())->method('recordInboundFromUnknownNumber');
+
+		$result = $this->adapter->handleInboundWebhook(json_encode(['from' => '31611119999', 'body' => 'hallo']), 'sig', 'prov-1');
+
+		$this->assertFalse($result['unknownSender']);
+	}//end testAnSmsFromAKnownContactIsNotLoggedAsUnknown()
 }//end class
