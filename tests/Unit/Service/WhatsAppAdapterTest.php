@@ -568,4 +568,84 @@ class WhatsAppAdapterTest extends TestCase {
 
 		$this->assertFalse($result['unknownSender']);
 	}//end testAMessageFromAKnownContactIsNotLoggedAsUnknown()
+
+	/**
+	 * Seed the contact's inbound WhatsApp messages.
+	 *
+	 * @param array<string, array{0: string, 1: int}> $messages Message id => [body, seconds ago].
+	 *
+	 * @return void
+	 */
+	private function seedInbound(array $messages): void {
+		$this->objectService->inboundMessages = [];
+		foreach ($messages as $id => [$body, $ago]) {
+			$this->objectService->inboundMessages[] = [
+				'uuid' => $id,
+				'contactId' => 'contact-1',
+				'channel' => 'whatsapp',
+				'direction' => 'inbound',
+				'body' => $body,
+				'sentAt' => gmdate('Y-m-d\TH:i:s\Z', (time() - $ago)),
+			];
+		}
+
+		$this->consentService->method('isOptOutKeyword')->willReturnCallback(
+			static fn (string $body): bool => strtoupper(trim($body)) === 'STOP'
+		);
+	}//end seedInbound()
+
+	/**
+	 * The free-form send answers which inbound message, as integriq is asked.
+	 *
+	 * @return string|null The inReplyTo handed to ConsentService::canSend().
+	 */
+	private function replyTargetOfAFreeFormSend(): ?string {
+		$asked = 'not asked';
+		$this->consentService->method('canSend')->willReturnCallback(
+			static function (string $contactId, string $channel, string $address = '', ?string $inReplyTo = null) use (&$asked): bool {
+				$asked = $inReplyTo;
+				return false;
+			}
+		);
+
+		$this->adapter->send(['uuid' => 'contact-1', 'phoneNumber' => '+31611111111'], 'Herinnering');
+
+		return $asked;
+	}//end replyTargetOfAFreeFormSend()
+
+	/**
+	 * A free-form send after the contact answered STOP is no reply. Integriq
+	 * lets a reply through an opt-out, and the STOP itself opened the session,
+	 * so live the next WhatsApp after a STOP was sent as an "answer" to it.
+	 *
+	 * @return void
+	 */
+	public function testASendAfterAStopIsNoReplyToIt(): void {
+		$this->seedInbound(['m-stop' => ['STOP', 60]]);
+
+		$this->assertNull($this->replyTargetOfAFreeFormSend());
+	}//end testASendAfterAStopIsNoReplyToIt()
+
+	/**
+	 * A question the contact asked before answering STOP is not answerable
+	 * as a reply either: the STOP is their latest word.
+	 *
+	 * @return void
+	 */
+	public function testAMessageBeforeTheStopIsNoReplyTarget(): void {
+		$this->seedInbound(['m-question' => ['Hoe laat is de afspraak?', 600], 'm-stop' => ['STOP', 60]]);
+
+		$this->assertNull($this->replyTargetOfAFreeFormSend());
+	}//end testAMessageBeforeTheStopIsNoReplyTarget()
+
+	/**
+	 * A message the contact sends after their STOP is a reply target again.
+	 *
+	 * @return void
+	 */
+	public function testAMessageAfterTheStopIsAReplyTarget(): void {
+		$this->seedInbound(['m-stop' => ['STOP', 600], 'm-later' => ['Ik heb toch een vraag', 60]]);
+
+		$this->assertSame('m-later', $this->replyTargetOfAFreeFormSend());
+	}//end testAMessageAfterTheStopIsAReplyTarget()
 }//end class
