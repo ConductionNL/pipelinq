@@ -968,9 +968,6 @@ class Application extends App implements IBootstrap {
 	 * @param array<int, string> $dependencies Dependency app IDs.
 	 *
 	 * @return array<string, array{installed: bool, enabled: bool, category: string}>
-	 *
-	 * @SuppressWarnings(PHPMD.StaticAccess) \OC_App::getAppInfo() is the only
-	 *  API exposing an on-disk app's category; no OCP equivalent exists.
 	 */
 	private function resolveDependencyStatuses(IBootContext $context, array $dependencies): array {
 		// Cached per app version, exactly as loadRoadmapFeatures() is. Without
@@ -999,7 +996,10 @@ class Application extends App implements IBootstrap {
 			try {
 				$appManager->getAppPath($depId);
 				$onDisk = true;
-				$appInfo = \OC_App::getAppInfo($depId);
+				// Public IAppManager::getAppInfo(): the private \OC_App::getAppInfo()
+				// used here before no longer exists, so the category always fell
+				// through to the app-store lookup below.
+				$appInfo = $appManager->getAppInfo($depId);
 				if (is_array($appInfo) === true && empty($appInfo['category']) === false) {
 					$category = (string)((array)$appInfo['category'])[0];
 				}
