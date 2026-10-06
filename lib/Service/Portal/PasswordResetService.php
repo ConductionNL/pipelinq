@@ -101,6 +101,10 @@ class PasswordResetService {
 	 *   audit are all unspecified
 	 */
 	public function requestReset(string $email, string $tenantId): void {
+		// First, before any lookup: without a service account nothing can be
+		// saved, and the answer must not depend on whether the address exists.
+		$this->repository->requireWritable();
+
 		$email = strtolower(trim($email));
 		$account = $this->repository->findOneBy(self::SCHEMA, ['email' => $email, 'tenantId' => $tenantId]);
 		if ($account === null || ($account['status'] ?? 'active') === 'closed') {
@@ -110,8 +114,11 @@ class PasswordResetService {
 		$token = $this->tokens->issue(self::TTL_MINUTES);
 		$account['passwordResetTokenHash'] = $token['hash'];
 		$account['passwordResetExpiresAt'] = $token['expiresAt'];
+		// Save first: a link whose token is not stored can never be used.
 		$this->repository->save(self::SCHEMA, $account, $this->repository->idOf(object: $account));
 
+		// Category `account` (IntegriqConsentClient::CATEGORY_ACCOUNT) is exempt
+		// from opt-outs, so the reset mail is never put to integriq.
 		$this->mail->sendTokenLink(
 			$email,
 			'/index.php/apps/pipelinq/portal/password-reset',
@@ -137,6 +144,8 @@ class PasswordResetService {
 	 *   audit are all unspecified
 	 */
 	public function resetPassword(string $token, string $newPassword, string $tenantId): void {
+		$this->repository->requireWritable();
+
 		if (strlen($newPassword) < self::MIN_PASSWORD_LENGTH) {
 			throw new PortalException(
 				Http::STATUS_UNPROCESSABLE_ENTITY,

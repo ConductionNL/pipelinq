@@ -26,6 +26,7 @@ namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use OCA\Pipelinq\Controller\PortalAdminController;
 use OCA\Pipelinq\Service\Portal\PortalAuditService;
+use OCA\Pipelinq\Service\Portal\PortalServiceAccount;
 use OCA\Pipelinq\Service\Portal\PortalTenantService;
 use OCA\Pipelinq\Tests\Unit\Service\Portal\FakePortalObjectRepository;
 use OCP\IAppConfig;
@@ -52,6 +53,20 @@ class PortalAdminControllerTest extends TestCase {
 	private FakePortalObjectRepository $repository;
 
 	/**
+	 * The service account the controller picks with.
+	 *
+	 * @var PortalServiceAccount&\PHPUnit\Framework\MockObject\MockObject
+	 */
+	private $serviceAccount;
+
+	/**
+	 * Request parameters the mocked IRequest serves.
+	 *
+	 * @var array<string, mixed>
+	 */
+	private array $params = [];
+
+	/**
 	 * Build a controller for a user who is (or is not) a Nextcloud admin.
 	 *
 	 * @param bool $isAdmin Whether the current user is an admin.
@@ -61,7 +76,7 @@ class PortalAdminControllerTest extends TestCase {
 	private function controller(bool $isAdmin): PortalAdminController {
 		$request = $this->createMock(IRequest::class);
 		$request->method('getParam')->willReturnCallback(
-			static fn (string $key, mixed $default = null): mixed => $default
+			fn (string $key, mixed $default = null): mixed => ($this->params[$key] ?? $default)
 		);
 
 		$user = $this->createMock(IUser::class);
@@ -78,7 +93,8 @@ class PortalAdminControllerTest extends TestCase {
 			$this->repository,
 			$session,
 			$groups,
-			$this->createMock(LoggerInterface::class)
+			$this->createMock(LoggerInterface::class),
+			$this->serviceAccount
 		);
 	}//end controller()
 
@@ -89,6 +105,8 @@ class PortalAdminControllerTest extends TestCase {
 	 */
 	protected function setUp(): void {
 		$this->repository = new FakePortalObjectRepository(InstalledAppConfig::wire($this->createMock(IAppConfig::class)));
+		$this->serviceAccount = $this->createMock(PortalServiceAccount::class);
+		$this->params = [];
 	}//end setUp()
 
 	/**
@@ -147,4 +165,52 @@ class PortalAdminControllerTest extends TestCase {
 		$this->assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
 		$this->assertArrayNotHasKey('config', $response->getData());
 	}//end testGetConfigRefusesANonAdmin()
+
+	/**
+	 * A non-admin can neither read nor pick the portal service account.
+	 *
+	 * @return void
+	 */
+	public function testServiceAccountEndpointsRefuseANonAdmin(): void {
+		$this->serviceAccount->expects($this->never())->method('assign');
+		$this->serviceAccount->expects($this->never())->method('status');
+		$this->params = ['userId' => 'mallory'];
+
+		$this->assertSame(Http::STATUS_FORBIDDEN, $this->controller(isAdmin: false)->getServiceAccount()->getStatus());
+		$this->assertSame(Http::STATUS_FORBIDDEN, $this->controller(isAdmin: false)->saveServiceAccount()->getStatus());
+	}//end testServiceAccountEndpointsRefuseANonAdmin()
+
+	/**
+	 * An admin picks the account; the answer names its group.
+	 *
+	 * @return void
+	 */
+	public function testAnAdminPicksTheServiceAccount(): void {
+		$this->serviceAccount->expects($this->once())->method('assign')->with(userId: 'portal-service')
+			->willReturn(['userId' => 'portal-service', 'usable' => true, 'reason' => null]);
+		$this->params = ['userId' => 'portal-service'];
+
+		$response = $this->controller(isAdmin: true)->saveServiceAccount();
+
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertSame(
+			['userId' => 'portal-service', 'usable' => true, 'reason' => null, 'group' => PortalServiceAccount::GROUP],
+			$response->getData()
+		);
+	}//end testAnAdminPicksTheServiceAccount()
+
+	/**
+	 * An account that cannot be used is refused with 400 and its reason.
+	 *
+	 * @return void
+	 */
+	public function testAnUnusableServiceAccountIsRefused(): void {
+		$this->serviceAccount->method('assign')->willThrowException(new \InvalidArgumentException('No account "ghost" exists.'));
+		$this->params = ['userId' => 'ghost'];
+
+		$response = $this->controller(isAdmin: true)->saveServiceAccount();
+
+		$this->assertSame(Http::STATUS_BAD_REQUEST, $response->getStatus());
+		$this->assertSame('No account "ghost" exists.', $response->getData()['message']);
+	}//end testAnUnusableServiceAccountIsRefused()
 }//end class
