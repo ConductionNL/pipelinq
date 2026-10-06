@@ -121,10 +121,9 @@ class Application extends App implements IBootstrap {
 	 * @SuppressWarnings(PHPMD.ExcessiveMethodLength) A flat DI registration
 	 *  manifest — one linear list of service/listener wirings, not branching logic.
 	 *
-	 * @SuppressWarnings(PHPMD.StaticAccess) OC_App is Nextcloud's legacy
-	 *  bootstrap class. There is no OCP interface for registering another app's
-	 *  autoloader, and this runs at the composition root where no container is
-	 *  available to resolve an adapter from. The alternative,
+	 * @SuppressWarnings(PHPMD.StaticAccess) OpenRegisterAutoloader::register()
+	 *  is static because it runs at the composition root, before any container
+	 *  exists to resolve an instance from. The alternative,
 	 *  IAppManager::loadApp(), would mark OpenRegister loaded and boot it before
 	 *  its own register() had run — the load-order hazard the prelude exists to
 	 *  avoid.
@@ -167,21 +166,16 @@ class Application extends App implements IBootstrap {
 		);
 
 		// LOAD-ORDER HAZARD: OC_App::getEnabledApps() sort()s the app list and
-		// Coordinator::registerApps() calls registerAutoloading() then register()
-		// one app at a time, so an app's register() runs before the PSR-4 prefix
-		// of every alphabetically-LATER app exists. This app happens to sort AFTER
-		// `openregister`, so the AppHost class_exists() probes below answer TRUE
-		// today — by alphabet alone. Registering OpenRegister's prefix ourselves
-		// makes that independent of the app id: registerAutoloading() touches only
-		// the autoloader and is idempotent ($alreadyRegistered key guard).
-		// Deliberately NOT IAppManager::loadApp(), which would mark OpenRegister
-		// loaded and boot it before its own register() had run.
-		try {
-			$openRegisterPath = \OCP\Server::get(\OCP\App\IAppManager::class)->getAppPath('openregister');
-			\OC_App::registerAutoloading('openregister', $openRegisterPath);
-		} catch (\Throwable) {
-			// OpenRegister absent/disabled — fall through to the degraded path.
-		}
+		// Coordinator::registerApps() registers each app's autoloader then calls
+		// register() one app at a time, so an app's register() runs before the
+		// PSR-4 prefix of every alphabetically-LATER app exists. This app happens
+		// to sort AFTER `openregister`, so the AppHost class_exists() probes below
+		// answer TRUE today — by alphabet alone. Registering OpenRegister's prefix
+		// ourselves makes that independent of the app id. See
+		// OpenRegisterAutoloader: public API only (Nextcloud 35 removed the private
+		// OC_App::registerAutoloading() this used to call), idempotent, and it
+		// never throws — a false return means the degraded path below applies.
+		OpenRegisterAutoloader::register();
 
 		// AppHost (ADR-040): offload the mechanical observability + deep-link
 		// ceremony to OpenRegister's shared engine. Scoped to the parity-safe,
@@ -974,9 +968,6 @@ class Application extends App implements IBootstrap {
 	 * @param array<int, string> $dependencies Dependency app IDs.
 	 *
 	 * @return array<string, array{installed: bool, enabled: bool, category: string}>
-	 *
-	 * @SuppressWarnings(PHPMD.StaticAccess) \OC_App::getAppInfo() is the only
-	 *  API exposing an on-disk app's category; no OCP equivalent exists.
 	 */
 	private function resolveDependencyStatuses(IBootContext $context, array $dependencies): array {
 		// Cached per app version, exactly as loadRoadmapFeatures() is. Without
@@ -1005,7 +996,10 @@ class Application extends App implements IBootstrap {
 			try {
 				$appManager->getAppPath($depId);
 				$onDisk = true;
-				$appInfo = \OC_App::getAppInfo($depId);
+				// Public IAppManager::getAppInfo(): the private \OC_App::getAppInfo()
+				// used here before no longer exists, so the category always fell
+				// through to the app-store lookup below.
+				$appInfo = $appManager->getAppInfo($depId);
 				if (is_array($appInfo) === true && empty($appInfo['category']) === false) {
 					$category = (string)((array)$appInfo['category'])[0];
 				}
