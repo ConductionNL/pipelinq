@@ -396,6 +396,8 @@ return [
         ['name' => 'portalAdmin#saveConfig',   'url' => '/portal/api/admin/tenant-config', 'verb' => 'POST'],
         ['name' => 'portalAdmin#accounts',     'url' => '/portal/api/admin/accounts',      'verb' => 'GET'],
         ['name' => 'portalAdmin#auditEvents',  'url' => '/portal/api/admin/audit-events',  'verb' => 'GET'],
+        ['name' => 'portalAdmin#getServiceAccount',  'url' => '/portal/api/admin/service-account', 'verb' => 'GET'],
+        ['name' => 'portalAdmin#saveServiceAccount', 'url' => '/portal/api/admin/service-account', 'verb' => 'PUT'],
 
         // Appointment booking portal (anonymous customer self-booking; ADR-005 /
         // ADR-016). Lives under /portal/api/booking/* so the portalPage SPA
