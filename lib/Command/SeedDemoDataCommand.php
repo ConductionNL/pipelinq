@@ -31,6 +31,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Command;
 
+use OCA\Pipelinq\Service\Demo\DemoRegisterImporter;
 use OCA\Pipelinq\Service\DemoSeedService;
 use OCP\IGroupManager;
 use OCP\IUserSession;
@@ -51,11 +52,13 @@ class SeedDemoDataCommand extends Command {
 	 * @param DemoSeedService $demoSeedService Demo dataset seeder.
 	 * @param IUserSession $userSession Session used to impersonate an admin.
 	 * @param IGroupManager $groupManager Resolves an admin to impersonate.
+	 * @param DemoRegisterImporter $registerImporter The example records descriptor.
 	 */
 	public function __construct(
 		private readonly DemoSeedService $demoSeedService,
 		private readonly IUserSession $userSession,
 		private readonly IGroupManager $groupManager,
+		private readonly DemoRegisterImporter $registerImporter,
 	) {
 		parent::__construct();
 	}//end __construct()
@@ -143,10 +146,25 @@ class SeedDemoDataCommand extends Command {
 	 */
 	private function runMode(bool $remove): array {
 		if ($remove === true) {
-			return $this->demoSeedService->remove();
+			$result = $this->demoSeedService->remove();
+			if ($result['success'] === true) {
+				$example = $this->registerImporter->remove();
+				$result['removed']['example-records'] = $example['removed'];
+				$result['retained']['example-records'] = $example['retained'];
+			}
+
+			return $result;
 		}
 
-		return $this->demoSeedService->seed();
+		$result = $this->demoSeedService->seed();
+		if ($result['success'] === true) {
+			// The example records that used to ship inside the register descriptor.
+			$example = $this->registerImporter->import();
+			$result['created']['example-records'] = $example['imported'];
+			$result['skipped']['example-records'] = $example['skipped'];
+		}
+
+		return $result;
 	}//end runMode()
 
 	/**

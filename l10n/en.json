@@ -83,6 +83,7 @@
         "A token is currently configured — leave empty to keep it; type a new value to replace it.": "A token is currently configured — leave empty to keep it; type a new value to replace it.",
         "A verification link has been sent to {email}.": "A verification link has been sent to {email}.",
         "A worked CRM: clients and contacts, pipelines, products and leads, requests, complaints and contact moments, tasks and contracts. It shows the lists, detail pages and dashboards working. Safe to run more than once, and `occ pipelinq:demo:remove` takes it away again.": "A worked CRM: clients and contacts, pipelines, products and leads, requests, complaints and contact moments, tasks and contracts. It shows the lists, detail pages and dashboards working. Safe to run more than once, and `occ pipelinq:demo:remove` takes it away again.",
+        "A worked CRM: clients and contacts, pipelines, products and leads, requests, complaints and contact moments, tasks and contracts, point of sale and bookings, marketing journeys that are not switched on, published social posts with their numbers, and search queries for the keyword pages. It shows the lists, detail pages and dashboards working. Safe to run more than once, and `occ pipelinq:demo:seed --remove` takes it away again.": "A worked CRM: clients and contacts, pipelines, products and leads, requests, complaints and contact moments, tasks and contracts, point of sale and bookings, marketing journeys that are not switched on, published social posts with their numbers, and search queries for the keyword pages. It shows the lists, detail pages and dashboards working. Safe to run more than once, and `occ pipelinq:demo:seed --remove` takes it away again.",
         "A/B split": "A/B split",
         "A/B testing": "A/B testing",
         "AP complaint procedure URL": "AP complaint procedure URL",
@@ -7113,6 +7114,10 @@
         "Pipelinq customer portal service account": "Pipelinq customer portal service account",
         "Customer portal writes run as %s.": "Customer portal writes run as %s.",
         "The chosen account is not in the group %s.": "The chosen account is not in the group %s.",
-        "Until you choose one in the Pipelinq settings, the customer portal cannot save anything: residents cannot log in or reset their password.": "Until you choose one in the Pipelinq settings, the customer portal cannot save anything: residents cannot log in or reset their password."
+        "Until you choose one in the Pipelinq settings, the customer portal cannot save anything: residents cannot log in or reset their password.": "Until you choose one in the Pipelinq settings, the customer portal cannot save anything: residents cannot log in or reset their password.",
+        "Mail Not Sent At": "Mail Not Sent At",
+        "Mail Not Sent Reason": "Mail Not Sent Reason",
+        "When integriq last refused a confirmation or reminder mail for this booking (opt-out-before-send).": "When integriq last refused a confirmation or reminder mail for this booking (opt-out-before-send).",
+        "Why integriq refused it, for example opted-out or authority-unavailable.": "Why integriq refused it, for example opted-out or authority-unavailable."
     }
 }
