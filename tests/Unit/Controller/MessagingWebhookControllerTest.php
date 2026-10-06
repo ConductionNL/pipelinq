@@ -206,6 +206,7 @@ class MessagingWebhookControllerTest extends TestCase {
 			$this->createMock(BudgetService::class),
 			$this->createMock(NotificationService::class),
 			$logger,
+			new \OCA\Pipelinq\Service\PhoneNormaliser($appConfig, $logger),
 		);
 
 		$sms = new SmsAdapter($container,
@@ -216,6 +217,7 @@ class MessagingWebhookControllerTest extends TestCase {
 			$this->createMock(BudgetService::class),
 			$this->createMock(NotificationService::class),
 			$logger,
+			new \OCA\Pipelinq\Service\PhoneNormaliser($appConfig, $logger),
 		);
 
 		return new MessagingWebhookController($this->request(), $whatsApp, $sms, $logger);

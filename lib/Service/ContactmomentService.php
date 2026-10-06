@@ -28,6 +28,7 @@ use OCA\Pipelinq\Util\EntityAccessorTrait;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\Files\NotPermittedException;
 use OCP\IGroupManager;
+use OCP\IL10N;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
@@ -56,12 +57,14 @@ class ContactmomentService {
 	 * @param IGroupManager $groupManager The group manager.
 	 * @param LoggerInterface $logger The logger.
 	 * @param ObjectServiceInterface $objectService OpenRegister's published object service.
+	 * @param IL10N $l10n Translator for the titles this service writes.
 	 */
 	public function __construct(
 		private TicketService $ticketService,
 		private IGroupManager $groupManager,
 		private LoggerInterface $logger,
 		private readonly ObjectServiceInterface $objectService,
+		private IL10N $l10n,
 	) {
 	}//end __construct()
 
@@ -154,20 +157,6 @@ class ContactmomentService {
 			return null;
 		}
 
-		// The write is issued directly against the injected ObjectService rather
-		// than through TicketService::save(), because this is a best-effort audit
-		// side-channel; TicketService still owns the schema resolution and the
-		// ticketType discriminator.
-		//
-		// This used to go through a duck-typed `objectServiceLoose()` that
-		// resolved the service from the container and returned null when
-		// OpenRegister was absent. The service is now a constructor-injected,
-		// non-nullable ObjectServiceInterface, so that helper's try block had
-		// been emptied — leaving a dead catch and a read of an undefined
-		// `$service` (phpstan/psalm/phpmd all flagged it). Container-absence is
-		// now a construction-time failure, so there is nothing to degrade to.
-		$objectService = $this->objectService;
-
 		$payload = [
 			'ticketType' => TicketService::TYPE_CONTACTMOMENT,
 			'title' => $subject,
@@ -189,35 +178,118 @@ class ContactmomentService {
 			$payload['assignee'] = $agent;
 		}
 
+		return $this->saveTicket(payload: $payload, config: $config, scope: []);
+	}//end recordOutboundMessage()
+
+	/**
+	 * Log an inbound SMS or WhatsApp message from a number that matches no
+	 * contact, for a person to pick up.
+	 *
+	 * The message lands as a new, unassigned contact moment in the tickets
+	 * list, in the same shape as the outbound audit (WhatsApp is channel
+	 * `chat` with platform `whatsapp`, SMS is channel `sms`). No contact is
+	 * created: the person who picks it up decides who it is. The provider
+	 * webhook has no user, so the write runs as the system; it is reached only
+	 * after the webhook verified the provider's signature. Log-and-continue:
+	 * a failure answers null and never fails the webhook.
+	 *
+	 * @param string $platform `sms` or `whatsapp`.
+	 * @param string $phone Sender in E.164.
+	 * @param string $body Message text.
+	 * @param string $messageId Persisted inbound message UUID, or empty.
+	 *
+	 * @return string|null The contact moment ticket UUID, or null when skipped/failed.
+	 *
+	 * @spec openspec/specs/outbound-messaging/spec.md#requirement-req-om-005-consent-gating-and-recording
+	 */
+	public function recordInboundFromUnknownNumber(
+		string $platform,
+		string $phone,
+		string $body,
+		string $messageId,
+	): ?string {
 		try {
-			$saved = $objectService->saveObject(
-				object: $payload,
-				register: $config['register'],
-				schema: $config['schema'],
-				uuid: null,
-			);
+			$config = $this->getConfig();
 		} catch (\Throwable $e) {
-			$this->logger->warning(
-				'ContactmomentService.recordOutboundMessage: save failed',
-				['channel' => $channel, 'exception' => $e->getMessage()]
+			$this->logger->info(
+				'ContactmomentService.recordInboundFromUnknownNumber: skipped (ticket schema unconfigured)',
+				['exception' => $e->getMessage()]
 			);
 			return null;
 		}
 
-		// The saveObject() contract returns an ObjectEntityInterface, so the array
-		// arm was dead (phpstan: "Call to function is_array() with
-		// ObjectEntityInterface will always evaluate to false"). Note that
-		// getUuid() on a Db\ObjectEntity is
-		// served by Entity::__call, so method_exists() is FALSE for it — the
-		// outbound message row was persisted and this still returned null
-		// (pipelinq#807); readEntityValue() is what handles that.
+		$channel = 'sms';
+		$title = $this->l10n->t('SMS from unknown number %s', [$phone]);
+		if ($platform === 'whatsapp') {
+			$channel = 'chat';
+			$title = $this->l10n->t('WhatsApp message from unknown number %s', [$phone]);
+		}
+
+		$payload = [
+			'ticketType' => TicketService::TYPE_CONTACTMOMENT,
+			'title' => $title,
+			'description' => $body,
+			'channel' => $channel,
+			'direction' => 'inbound',
+			'status' => 'new',
+			'occurredAt' => gmdate('Y-m-d\TH:i:s\Z'),
+			'channelMetadata' => [
+				'platform' => $platform,
+				'direction' => 'inbound',
+				'from' => $phone,
+				'messageId' => $messageId,
+			],
+		];
+
+		return $this->saveTicket(
+			payload: $payload,
+			config: $config,
+			scope: ['_rbac' => false, '_multitenancy' => false],
+		);
+	}//end recordInboundFromUnknownNumber()
+
+	/**
+	 * Write a contact moment ticket, log-and-continue.
+	 *
+	 * The write is issued directly against the injected ObjectService rather
+	 * than through TicketService::save(), because this is a best-effort audit
+	 * side-channel; TicketService still owns the schema resolution and the
+	 * ticketType discriminator.
+	 *
+	 * @param array<string, mixed> $payload Ticket fields.
+	 * @param array{register: string, schema: string} $config Register and schema ids.
+	 * @param array<string, bool> $scope Named `_rbac` / `_multitenancy` arguments.
+	 *
+	 * @return string|null The ticket UUID, or null when the save failed.
+	 */
+	private function saveTicket(array $payload, array $config, array $scope): ?string {
+		try {
+			$saved = $this->objectService->saveObject(
+				object: $payload,
+				register: $config['register'],
+				schema: $config['schema'],
+				uuid: null,
+				_rbac: ($scope['_rbac'] ?? true),
+				_multitenancy: ($scope['_multitenancy'] ?? true),
+			);
+		} catch (\Throwable $e) {
+			$this->logger->warning(
+				'ContactmomentService: contact moment save failed',
+				['channel' => (string)($payload['channel'] ?? ''), 'exception' => $e->getMessage()]
+			);
+			return null;
+		}
+
+		// getUuid() on a Db\ObjectEntity is served by Entity::__call, so
+		// method_exists() is FALSE for it (pipelinq#807); readEntityValue()
+		// is what handles that.
 		$uuid = $this->readEntityValue(entity: $saved, getter: 'getUuid');
 		if ($uuid !== '') {
 			return $uuid;
 		}
 
 		return null;
-	}//end recordOutboundMessage()
+	}//end saveTicket()
 
 	/**
 	 * Delete a contactmoment with permission checking.

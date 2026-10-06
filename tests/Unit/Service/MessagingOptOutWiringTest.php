@@ -145,6 +145,7 @@ class MessagingOptOutWiringTest extends TestCase {
 			$budget,
 			$this->createMock(NotificationService::class),
 			$logger,
+			new \OCA\Pipelinq\Service\PhoneNormaliser($appConfig, $logger),
 		);
 
 		$this->whatsAppClient = $this->createMock(WhatsAppProviderClient::class);
@@ -158,6 +159,7 @@ class MessagingOptOutWiringTest extends TestCase {
 			$budget,
 			$this->createMock(NotificationService::class),
 			$logger,
+			new \OCA\Pipelinq\Service\PhoneNormaliser($appConfig, $logger),
 		);
 	}//end setUp()
 

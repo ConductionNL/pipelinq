@@ -7010,7 +7010,9 @@ OC.L10N.register(
         "Pipelinq customer portal service account": "Serviceaccount van het Pipelinq-klantportaal",
         "Customer portal writes run as %s.": "Het klantportaal slaat op als %s.",
         "The chosen account is not in the group %s.": "Het gekozen account zit niet in de groep %s.",
-        "Until you choose one in the Pipelinq settings, the customer portal cannot save anything: residents cannot log in or reset their password.": "Tot u er een kiest in de Pipelinq-instellingen, kan het klantportaal niets opslaan: inwoners kunnen niet inloggen en hun wachtwoord niet herstellen."
+        "Until you choose one in the Pipelinq settings, the customer portal cannot save anything: residents cannot log in or reset their password.": "Tot u er een kiest in de Pipelinq-instellingen, kan het klantportaal niets opslaan: inwoners kunnen niet inloggen en hun wachtwoord niet herstellen.",
+        "SMS from unknown number %s": "Sms van onbekend nummer %s",
+        "WhatsApp message from unknown number %s": "WhatsApp-bericht van onbekend nummer %s"
     },
     "nplurals=2; plural=(n != 1);"
 )

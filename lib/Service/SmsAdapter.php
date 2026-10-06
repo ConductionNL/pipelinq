@@ -118,6 +118,7 @@ class SmsAdapter {
 	 * @param BudgetService $budgetService Budget gate.
 	 * @param NotificationService $notificationService Admin notifications.
 	 * @param LoggerInterface $logger Logger.
+	 * @param PhoneNormaliser $phoneNormaliser Normalises an inbound sender to E.164.
 	 *
 	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#3.1
 	 */
@@ -130,6 +131,7 @@ class SmsAdapter {
 		private BudgetService $budgetService,
 		private NotificationService $notificationService,
 		private LoggerInterface $logger,
+		private PhoneNormaliser $phoneNormaliser,
 	) {
 	}//end __construct()
 
@@ -345,13 +347,8 @@ class SmsAdapter {
 		string $body,
 		array $context,
 	): void {
-		try {
-			$auditor = $this->container->get('OCA\\Pipelinq\\Service\\ContactmomentService');
-		} catch (Throwable $e) {
-			return;
-		}
-
-		if (($auditor instanceof ContactmomentService) === false) {
+		$auditor = $this->contactmoments();
+		if ($auditor === null) {
 			return;
 		}
 
@@ -372,6 +369,25 @@ class SmsAdapter {
 	}//end auditOutbound()
 
 	/**
+	 * The contact moment service, resolved lazily; null when it is absent.
+	 *
+	 * @return ContactmomentService|null The service or null.
+	 */
+	private function contactmoments(): ?ContactmomentService {
+		try {
+			$service = $this->container->get('OCA\\Pipelinq\\Service\\ContactmomentService');
+		} catch (Throwable $e) {
+			return null;
+		}
+
+		if (($service instanceof ContactmomentService) === false) {
+			return null;
+		}
+
+		return $service;
+	}//end contactmoments()
+
+	/**
 	 * Handle an inbound SMS webhook.
 	 *
 	 * Verifies the signature using the channelProvider.webhookSecret,
@@ -386,12 +402,18 @@ class SmsAdapter {
 	 *     status: string,
 	 *     messageId?: string,
 	 *     conversationId?: string,
-	 *     placeholderCreated?: bool,
+	 *     unknownSender?: bool,
+	 *     contactMomentId?: string,
 	 *     optOutRecorded?: bool,
 	 *     error?: string
 	 * } Outcome envelope.
 	 *
+	 * A number that matches no contact gets no placeholder contact: a STOP is
+	 * recorded on the number itself, anything else is logged as a contact
+	 * moment for a person to pick up.
+	 *
 	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#3.5
+	 * @spec openspec/specs/outbound-messaging/spec.md#requirement-req-om-005-consent-gating-and-recording
 	 */
 	public function handleInboundWebhook(string $rawBody, string $signature, string $providerId): array {
 		// The webhook is a PublicPage: no user is logged in, so every
@@ -418,22 +440,28 @@ class SmsAdapter {
 
 		$decoded = $this->decodeBody(rawBody: $rawBody);
 		$body = (string)($decoded['body'] ?? ($decoded['Body'] ?? ''));
-		$from = (string)($decoded['from'] ?? ($decoded['From'] ?? ''));
+		$from = $this->phoneNormaliser->normaliseInbound(
+			rawNumber: (string)($decoded['from'] ?? ($decoded['From'] ?? ''))
+		);
 
 		if ($from === '' || $body === '') {
 			return ['status' => 'invalidPayload'];
 		}
 
-		$contactInfo = $this->findOrCreatePlaceholderContact(phone: $from);
-		$contactId = $contactInfo['contactId'];
-		$placeholder = $contactInfo['created'];
+		$contactId = $this->findContactByPhone(phone: $from);
+		$unknownSender = ($contactId === '');
 
-		$conversationId = $this->findOrOpenConversation(
-			contactId: $contactId,
-			providerId: $providerId,
-			channel: 'sms',
-			scope: self::SYSTEM_SCOPE,
-		);
+		// An unknown number has no conversation to join: every unknown number
+		// would share the one keyed on an empty contact.
+		$conversationId = '';
+		if ($unknownSender === false) {
+			$conversationId = $this->findOrOpenConversation(
+				contactId: $contactId,
+				providerId: $providerId,
+				channel: 'sms',
+				scope: self::SYSTEM_SCOPE,
+			);
+		}
 
 		$persisted = $this->persistInbound(
 			contactId: $contactId,
@@ -442,16 +470,39 @@ class SmsAdapter {
 			body: $body,
 		);
 
-		$optOutRecorded = false;
+		$messageId = $this->extractId(payload: $persisted ?? []);
+		$result = [
+			'status' => 'received',
+			'messageId' => $messageId,
+			'conversationId' => $conversationId,
+			'unknownSender' => $unknownSender,
+			'optOutRecorded' => false,
+		];
+
 		if ($this->consentService->isOptOutKeyword(body: $body) === true) {
-			$optOutRecorded = $this->consentService->recordOptOut(
+			// An unknown number is opted out on the address alone, so it is
+			// never texted again.
+			$result['optOutRecorded'] = $this->consentService->recordOptOut(
 				contactId: $contactId,
 				channel: 'sms',
 				source: 'keyword-stop',
 				evidence: sprintf('Inbound SMS body "%s" matched STOP keyword', $body),
 				address: $from,
 			) !== null;
-		} elseif ($this->consentService->isOptInKeyword(body: $body) === true) {
+			return $result;
+		}
+
+		if ($unknownSender === true) {
+			$result['contactMomentId'] = (string)$this->contactmoments()?->recordInboundFromUnknownNumber(
+				platform: 'sms',
+				phone: $from,
+				body: $body,
+				messageId: $messageId,
+			);
+			return $result;
+		}
+
+		if ($this->consentService->isOptInKeyword(body: $body) === true) {
 			$this->consentService->recordOptIn(
 				contactId: $contactId,
 				channel: 'sms',
@@ -461,13 +512,7 @@ class SmsAdapter {
 			);
 		}
 
-		return [
-			'status' => 'received',
-			'messageId' => $this->extractId(payload: $persisted ?? []),
-			'conversationId' => $conversationId,
-			'placeholderCreated' => $placeholder,
-			'optOutRecorded' => $optOutRecorded,
-		];
+		return $result;
 	}//end handleInboundWebhook()
 
 	/**
@@ -763,22 +808,23 @@ class SmsAdapter {
 	}//end findOrOpenConversation()
 
 	/**
-	 * Look up a contact by phone number, creating a placeholder when
-	 * no match exists. Returns {contactId, created}.
+	 * Look up the contact behind a phone number; '' when none matches.
+	 *
+	 * No placeholder contact is created for an unknown number: a STOP is
+	 * recorded on the number itself and any other message is logged for a
+	 * person, who decides who it is.
+	 *
+	 * Called only from the signed public webhook, so it reads as the system.
 	 *
 	 * @param string $phone Sender phone number (E.164).
 	 *
-	 * Called only from the signed public webhook, so it reads and writes as the system.
-	 *
-	 * @return array{contactId: string, created: bool} Contact handle.
+	 * @return string Contact UUID, or '' when no contact has this number.
 	 */
-	private function findOrCreatePlaceholderContact(string $phone): array {
+	private function findContactByPhone(string $phone): string {
 		$objectService = $this->getObjectService();
 		if ($objectService === null) {
-			return ['contactId' => '', 'created' => false];
+			return '';
 		}
-
-		$schema = $this->resolveSchemaSlug(key: 'contact_schema', default: self::DEFAULT_CONTACT_SCHEMA_SLUG);
 
 		try {
 			$rows = $objectService->findAll(
@@ -787,50 +833,22 @@ class SmsAdapter {
 						// The contact schema stores the number under `phone`.
 						'phone' => $phone,
 						'register' => $this->getRegisterSlug(),
-						'schema' => $schema,
+						'schema' => $this->resolveSchemaSlug(key: 'contact_schema', default: self::DEFAULT_CONTACT_SCHEMA_SLUG),
 					],
 				],
 				_rbac: self::SYSTEM_SCOPE['_rbac'],
 				_multitenancy: self::SYSTEM_SCOPE['_multitenancy'],
 			);
 		} catch (Throwable $e) {
-			$rows = [];
+			return '';
 		}
 
-		if (is_array($rows) === true && $rows !== []) {
-			return [
-				'contactId' => $this->extractId(payload: $this->toArray(value: $rows[0])),
-				'created' => false,
-			];
+		if (is_array($rows) === false || $rows === []) {
+			return '';
 		}
 
-		try {
-			$saved = $objectService->saveObject(
-				object: [
-					'phoneNumber' => $phone,
-					'displayName' => 'Unknown (' . $phone . ')',
-					'source' => 'sms-inbound',
-					'placeholder' => true,
-				],
-				register: $this->getRegisterSlug(),
-				schema: $schema,
-				uuid: null,
-				_rbac: self::SYSTEM_SCOPE['_rbac'],
-				_multitenancy: self::SYSTEM_SCOPE['_multitenancy'],
-			);
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'SmsAdapter.findOrCreatePlaceholderContact: create failed',
-				['phone' => $phone, 'exception' => $e->getMessage()]
-			);
-			return ['contactId' => '', 'created' => false];
-		}
-
-		return [
-			'contactId' => $this->extractId(payload: $this->toArray(value: $saved)),
-			'created' => true,
-		];
-	}//end findOrCreatePlaceholderContact()
+		return $this->extractId(payload: $this->toArray(value: $rows[0]));
+	}//end findContactByPhone()
 
 	/**
 	 * Decode an inbound webhook body — accepts JSON or form-encoded.

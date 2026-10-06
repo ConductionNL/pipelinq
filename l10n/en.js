@@ -7096,7 +7096,9 @@ OC.L10N.register(
         "Pipelinq customer portal service account": "Pipelinq customer portal service account",
         "Customer portal writes run as %s.": "Customer portal writes run as %s.",
         "The chosen account is not in the group %s.": "The chosen account is not in the group %s.",
-        "Until you choose one in the Pipelinq settings, the customer portal cannot save anything: residents cannot log in or reset their password.": "Until you choose one in the Pipelinq settings, the customer portal cannot save anything: residents cannot log in or reset their password."
+        "Until you choose one in the Pipelinq settings, the customer portal cannot save anything: residents cannot log in or reset their password.": "Until you choose one in the Pipelinq settings, the customer portal cannot save anything: residents cannot log in or reset their password.",
+        "SMS from unknown number %s": "SMS from unknown number %s",
+        "WhatsApp message from unknown number %s": "WhatsApp message from unknown number %s"
     },
     "nplurals=2; plural=(n != 1);"
 )
