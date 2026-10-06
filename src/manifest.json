@@ -1599,7 +1599,9 @@
 				"fieldOverrides": {
 					"name": { "readOnly": false },
 					"email": { "readOnly": false },
-					"phone": { "readOnly": false }
+					"phone": { "readOnly": false },
+					"correspondenceLanguage": { "widget": "language" },
+					"timezone": { "widget": "timezone" }
 				},
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"showViewAction": false,
@@ -2573,7 +2575,9 @@
 				"fieldOverrides": {
 					"name": { "readOnly": false },
 					"email": { "readOnly": false },
-					"phone": { "readOnly": false }
+					"phone": { "readOnly": false },
+					"correspondenceLanguage": { "widget": "language" },
+					"timezone": { "widget": "timezone" }
 				},
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"showViewAction": false,
@@ -3543,6 +3547,9 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "crmTask",
+				"fieldOverrides": {
+					"assigneeGroupId": { "widget": "group" }
+				},
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"showViewAction": false,
 				"actions": [

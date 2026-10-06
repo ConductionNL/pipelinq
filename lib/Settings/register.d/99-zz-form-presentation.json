@@ -1,5 +1,5 @@
 {
-  "_note": "Form presentation for pipelinq-forms-review, kept in one place: field order, the (i) help on master data fields, Nextcloud user and group pickers, language and timezone pickers with their defaults, and create-from-picker on references. Every key here is presentation: none constrains what a record may hold. `format: nc-user | nc-group | language | timezone` and `x-*` keys are read by nextcloud-vue's fieldsFromSchema; OpenRegister's validator ignores formats it does not know. `language` is hidden because correspondenceLanguage replaces it in the forms (NormalisePartyFormFields copies it over). Named 99-zz so it merges last.",
+  "_note": "Form presentation for pipelinq-forms-review, kept in one place: field order, the (i) help on master data fields, Nextcloud user and group pickers, language and timezone pickers with their defaults, and create-from-picker on references. Every key here is presentation: none constrains what a record may hold. `format: user` (a Nextcloud user picker) and the `x-*` keys are read by nextcloud-vue's fieldsFromSchema. OpenRegister refuses a schema whose `format` it does not list, so the group, language and timezone pickers are NOT formats here: the manifest pages ask for them through `fieldOverrides.<key>.widget`. `language` is hidden because correspondenceLanguage replaces it in the forms (NormalisePartyFormFields copies it over). Named 99-zz so it merges last.",
   "components": {
     "schemas": {
       "product": {
@@ -84,7 +84,7 @@
           },
           "accountOwner": {
             "order": 8,
-            "format": "nc-user"
+            "format": "user"
           },
           "lifecycleStage": {
             "order": 9
@@ -100,12 +100,10 @@
           },
           "correspondenceLanguage": {
             "order": 13,
-            "format": "language",
             "x-default": "current-language"
           },
           "timezone": {
-            "order": 14,
-            "format": "timezone"
+            "order": 14
           },
           "preferredChannel": {
             "order": 15
@@ -153,12 +151,10 @@
           },
           "correspondenceLanguage": {
             "order": 6,
-            "format": "language",
             "x-default": "current-language"
           },
           "timezone": {
-            "order": 7,
-            "format": "timezone"
+            "order": 7
           },
           "preferredChannel": {
             "order": 8
@@ -231,7 +227,7 @@
           },
           "assignee": {
             "order": 11,
-            "format": "nc-user"
+            "format": "user"
           },
           "source": {
             "order": 12
@@ -318,11 +314,10 @@
           },
           "assigneeUserId": {
             "order": 6,
-            "format": "nc-user"
+            "format": "user"
           },
           "assigneeGroupId": {
-            "order": 7,
-            "format": "nc-group"
+            "order": 7
           },
           "clientId": {
             "order": 8
@@ -344,7 +339,7 @@
           },
           "createdBy": {
             "order": 14,
-            "format": "nc-user"
+            "format": "user"
           }
         }
       },
@@ -352,7 +347,7 @@
         "slug": "ticket",
         "properties": {
           "assignee": {
-            "format": "nc-user"
+            "format": "user"
           }
         }
       },
@@ -360,7 +355,7 @@
         "slug": "agentProfile",
         "properties": {
           "userId": {
-            "format": "nc-user"
+            "format": "user"
           }
         }
       },
@@ -368,7 +363,7 @@
         "slug": "posTransaction",
         "properties": {
           "cashier": {
-            "format": "nc-user"
+            "format": "user"
           }
         }
       },
@@ -376,7 +371,7 @@
         "slug": "posRefund",
         "properties": {
           "cashier": {
-            "format": "nc-user"
+            "format": "user"
           }
         }
       },
@@ -384,7 +379,7 @@
         "slug": "posStaff",
         "properties": {
           "userId": {
-            "format": "nc-user"
+            "format": "user"
           }
         }
       },
@@ -392,7 +387,7 @@
         "slug": "receiptPrintLog",
         "properties": {
           "actor": {
-            "format": "nc-user"
+            "format": "user"
           }
         }
       },
@@ -400,7 +395,7 @@
         "slug": "bsnValidatie",
         "properties": {
           "initiatedBy": {
-            "format": "nc-user"
+            "format": "user"
           }
         }
       },
@@ -408,7 +403,7 @@
         "slug": "brpLookupVerzoek",
         "properties": {
           "requestedBy": {
-            "format": "nc-user"
+            "format": "user"
           }
         }
       },
@@ -416,7 +411,7 @@
         "slug": "bsnAuditRecord",
         "properties": {
           "actor": {
-            "format": "nc-user"
+            "format": "user"
           }
         }
       },
@@ -424,7 +419,7 @@
         "slug": "optOutVlag",
         "properties": {
           "localEnteredBy": {
-            "format": "nc-user"
+            "format": "user"
           }
         }
       },
@@ -432,7 +427,7 @@
         "slug": "enquiry",
         "properties": {
           "handledBy": {
-            "format": "nc-user"
+            "format": "user"
           }
         }
       },
@@ -440,7 +435,7 @@
         "slug": "billableExpense",
         "properties": {
           "approvedBy": {
-            "format": "nc-user"
+            "format": "user"
           }
         }
       },
@@ -448,7 +443,7 @@
         "slug": "exportJob",
         "properties": {
           "createdBy": {
-            "format": "nc-user"
+            "format": "user"
           }
         }
       },
@@ -456,10 +451,10 @@
         "slug": "cashShift",
         "properties": {
           "operator": {
-            "format": "nc-user"
+            "format": "user"
           },
           "managedBy": {
-            "format": "nc-user"
+            "format": "user"
           }
         }
       },
@@ -467,7 +462,7 @@
         "slug": "cashDrop",
         "properties": {
           "droppedBy": {
-            "format": "nc-user"
+            "format": "user"
           }
         }
       },
@@ -475,7 +470,7 @@
         "slug": "posCashCount",
         "properties": {
           "countedBy": {
-            "format": "nc-user"
+            "format": "user"
           }
         }
       },
@@ -483,7 +478,7 @@
         "slug": "cashDiff",
         "properties": {
           "approvedBy": {
-            "format": "nc-user"
+            "format": "user"
           }
         }
       },
@@ -491,7 +486,7 @@
         "slug": "appointmentResource",
         "properties": {
           "userId": {
-            "format": "nc-user"
+            "format": "user"
           }
         }
       },
@@ -499,10 +494,10 @@
         "slug": "forecastOverride",
         "properties": {
           "owner_id": {
-            "format": "nc-user"
+            "format": "user"
           },
           "created_by": {
-            "format": "nc-user"
+            "format": "user"
           }
         }
       },
@@ -510,7 +505,7 @@
         "slug": "salesQuota",
         "properties": {
           "set_by": {
-            "format": "nc-user"
+            "format": "user"
           }
         }
       },
@@ -518,7 +513,7 @@
         "slug": "ctiAgentPresence",
         "properties": {
           "user_id": {
-            "format": "nc-user"
+            "format": "user"
           }
         }
       },
@@ -526,7 +521,7 @@
         "slug": "channelConversation",
         "properties": {
           "assignedTo": {
-            "format": "nc-user"
+            "format": "user"
           }
         }
       },
@@ -534,7 +529,7 @@
         "slug": "vngActor",
         "properties": {
           "nextcloudUserId": {
-            "format": "nc-user"
+            "format": "user"
           }
         }
       },
@@ -542,7 +537,7 @@
         "slug": "billingTimeEntry",
         "properties": {
           "approvedBy": {
-            "format": "nc-user"
+            "format": "user"
           }
         }
       },
@@ -550,7 +545,7 @@
         "slug": "mailTransport",
         "properties": {
           "mailAccountUserId": {
-            "format": "nc-user"
+            "format": "user"
           }
         }
       },
@@ -558,7 +553,7 @@
         "slug": "blast",
         "properties": {
           "createdBy": {
-            "format": "nc-user"
+            "format": "user"
           }
         }
       },
@@ -566,7 +561,7 @@
         "slug": "segment",
         "properties": {
           "createdBy": {
-            "format": "nc-user"
+            "format": "user"
           }
         }
       },
@@ -574,7 +569,7 @@
         "slug": "campaignTemplate",
         "properties": {
           "createdBy": {
-            "format": "nc-user"
+            "format": "user"
           }
         }
       },
@@ -582,7 +577,7 @@
         "slug": "mailingList",
         "properties": {
           "createdBy": {
-            "format": "nc-user"
+            "format": "user"
           }
         }
       },
@@ -590,7 +585,7 @@
         "slug": "salesContract",
         "properties": {
           "ownerId": {
-            "format": "nc-user"
+            "format": "user"
           }
         }
       },
@@ -598,7 +593,7 @@
         "slug": "article",
         "properties": {
           "author": {
-            "format": "nc-user"
+            "format": "user"
           }
         }
       },
@@ -606,7 +601,7 @@
         "slug": "socialAccount",
         "properties": {
           "ownerUserId": {
-            "format": "nc-user"
+            "format": "user"
           }
         }
       },
@@ -614,7 +609,7 @@
         "slug": "socialPost",
         "properties": {
           "createdBy": {
-            "format": "nc-user"
+            "format": "user"
           }
         }
       }
