@@ -53,6 +53,14 @@ use Throwable;
  */
 class SmsAdapter {
 	/**
+	 * OpenRegister access scope for the signed public webhook, which has no
+	 * user: read and write without RBAC and multitenancy.
+	 *
+	 * @var array<string, bool>
+	 */
+	private const SYSTEM_SCOPE = ['_rbac' => false, '_multitenancy' => false];
+
+	/**
 	 * Default pipelinq register slug.
 	 */
 	private const DEFAULT_REGISTER_SLUG = 'pipelinq';
@@ -386,7 +394,11 @@ class SmsAdapter {
 	 * @spec openspec/changes/whatsapp-sms-channel-adapter/tasks.md#3.5
 	 */
 	public function handleInboundWebhook(string $rawBody, string $signature, string $providerId): array {
-		$row = $this->providerRepo->findById(id: $providerId);
+		// The webhook is a PublicPage: no user is logged in, so every
+		// OpenRegister read and write below runs as the system. Only the
+		// provider lookup precedes the signature check, and its row stays
+		// in-process.
+		$row = $this->providerRepo->findByIdForWebhook(id: $providerId);
 		if ($row === null) {
 			return ['status' => 'providerUnknown'];
 		}
@@ -420,6 +432,7 @@ class SmsAdapter {
 			contactId: $contactId,
 			providerId: $providerId,
 			channel: 'sms',
+			scope: self::SYSTEM_SCOPE,
 		);
 
 		$persisted = $this->persistInbound(
@@ -431,14 +444,13 @@ class SmsAdapter {
 
 		$optOutRecorded = false;
 		if ($this->consentService->isOptOutKeyword(body: $body) === true) {
-			$this->consentService->recordOptOut(
+			$optOutRecorded = $this->consentService->recordOptOut(
 				contactId: $contactId,
 				channel: 'sms',
 				source: 'keyword-stop',
 				evidence: sprintf('Inbound SMS body "%s" matched STOP keyword', $body),
 				address: $from,
-			);
-			$optOutRecorded = true;
+			) !== null;
 		} elseif ($this->consentService->isOptInKeyword(body: $body) === true) {
 			$this->consentService->recordOptIn(
 				contactId: $contactId,
@@ -582,6 +594,8 @@ class SmsAdapter {
 	 * @param string $conversationId Conversation UUID.
 	 * @param string $body Body.
 	 *
+	 * Called only from the signed public webhook, so it writes as the system.
+	 *
 	 * @return array<string, mixed>|null Saved row.
 	 */
 	private function persistInbound(
@@ -601,6 +615,7 @@ class SmsAdapter {
 				'deliveryStatus' => 'delivered',
 				'sentAt' => $this->nowIso(),
 			],
+			scope: self::SYSTEM_SCOPE,
 		);
 	}//end persistInbound()
 
@@ -645,10 +660,11 @@ class SmsAdapter {
 	 * Persist a message payload via OpenRegister.
 	 *
 	 * @param array<string, mixed> $payload Payload.
+	 * @param array<string, bool> $scope OpenRegister access scope (SYSTEM_SCOPE for the webhook).
 	 *
 	 * @return array<string, mixed>|null Saved row.
 	 */
-	private function persistMessage(array $payload): ?array {
+	private function persistMessage(array $payload, array $scope = []): ?array {
 		$objectService = $this->getObjectService();
 		if ($objectService === null) {
 			return null;
@@ -660,6 +676,8 @@ class SmsAdapter {
 				register: $this->getRegisterSlug(),
 				schema: $this->resolveSchemaSlug(key: 'message_schema', default: self::DEFAULT_MESSAGE_SCHEMA_SLUG),
 				uuid: null,
+				_rbac: ($scope['_rbac'] ?? true),
+				_multitenancy: ($scope['_multitenancy'] ?? true),
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(
@@ -679,10 +697,11 @@ class SmsAdapter {
 	 * @param string $contactId Contact UUID.
 	 * @param string $providerId Provider UUID.
 	 * @param string $channel Channel.
+	 * @param array<string, bool> $scope OpenRegister access scope (SYSTEM_SCOPE for the webhook).
 	 *
 	 * @return string Conversation UUID.
 	 */
-	private function findOrOpenConversation(string $contactId, string $providerId, string $channel): string {
+	private function findOrOpenConversation(string $contactId, string $providerId, string $channel, array $scope = []): string {
 		$objectService = $this->getObjectService();
 		if ($objectService === null) {
 			return '';
@@ -701,7 +720,9 @@ class SmsAdapter {
 						'register' => $this->getRegisterSlug(),
 						'schema' => $schema,
 					],
-				]
+				],
+				_rbac: ($scope['_rbac'] ?? true),
+				_multitenancy: ($scope['_multitenancy'] ?? true),
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(
@@ -727,6 +748,8 @@ class SmsAdapter {
 				register: $this->getRegisterSlug(),
 				schema: $schema,
 				uuid: null,
+				_rbac: ($scope['_rbac'] ?? true),
+				_multitenancy: ($scope['_multitenancy'] ?? true),
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(
@@ -745,6 +768,8 @@ class SmsAdapter {
 	 *
 	 * @param string $phone Sender phone number (E.164).
 	 *
+	 * Called only from the signed public webhook, so it reads and writes as the system.
+	 *
 	 * @return array{contactId: string, created: bool} Contact handle.
 	 */
 	private function findOrCreatePlaceholderContact(string $phone): array {
@@ -759,11 +784,14 @@ class SmsAdapter {
 			$rows = $objectService->findAll(
 				config: [
 					'filters' => [
-						'phoneNumber' => $phone,
+						// The contact schema stores the number under `phone`.
+						'phone' => $phone,
 						'register' => $this->getRegisterSlug(),
 						'schema' => $schema,
 					],
-				]
+				],
+				_rbac: self::SYSTEM_SCOPE['_rbac'],
+				_multitenancy: self::SYSTEM_SCOPE['_multitenancy'],
 			);
 		} catch (Throwable $e) {
 			$rows = [];
@@ -787,6 +815,8 @@ class SmsAdapter {
 				register: $this->getRegisterSlug(),
 				schema: $schema,
 				uuid: null,
+				_rbac: self::SYSTEM_SCOPE['_rbac'],
+				_multitenancy: self::SYSTEM_SCOPE['_multitenancy'],
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(

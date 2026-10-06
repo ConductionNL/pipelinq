@@ -607,7 +607,9 @@ class ConsentService {
 		string $legalBasis,
 		string $address,
 	): ?array {
-		if ($contactId === '' || $channel === '') {
+		// The integriq store keys an opt-out on the address, so a STOP from a number
+		// with no contact behind it is still recorded (contactRef stays empty).
+		if ($channel === '' || ($contactId === '' && $address === '')) {
 			return null;
 		}
 
@@ -615,7 +617,9 @@ class ConsentService {
 			$address = $this->addresses->addressFor(contactId: $contactId, channel: $channel);
 		}
 
-		$this->replayPending(contactId: $contactId);
+		if ($contactId !== '') {
+			$this->replayPending(contactId: $contactId);
+		}
 
 		$request = [
 			'address' => $address,

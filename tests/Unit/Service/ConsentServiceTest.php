@@ -435,6 +435,27 @@ class ConsentServiceTest extends TestCase {
 	}//end testAStopAfterTheCutoverGoesToIntegriqOnly()
 
 	/**
+	 * A STOP from a number that matches no contact still reaches integriq.
+	 * integriq keys the opt-out on the address, so the number is opted out
+	 * even with no contact behind it (an SMS STOP must always be honoured).
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md#requirement-pipelinq-writes-every-wish-to-integriq-req-cii-003
+	 */
+	public function testAStopFromAnUnknownNumberGoesToIntegriqByAddress(): void {
+		$this->store = 'integriq';
+		$saved = $this->service->recordOptOut('', 'sms', 'keyword-stop', 'STOP', 'consent', '+31699990000');
+
+		$this->assertSame('integriq', $saved['store'] ?? null);
+		$rows = $this->integriq->rowsFor('+31699990000');
+		$this->assertCount(1, $rows);
+		$this->assertSame('opted-out', $rows[0]['state']);
+		$this->assertSame('', $rows[0]['contactRef']);
+		$this->assertSame([], $this->objectService->store);
+	}//end testAStopFromAnUnknownNumberGoesToIntegriqByAddress()
+
+	/**
 	 * A refused STOP stays in pipelinq and is replayed, before a newer wish.
 	 *
 	 * @return void

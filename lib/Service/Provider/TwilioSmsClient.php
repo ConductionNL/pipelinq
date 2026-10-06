@@ -97,6 +97,9 @@ class TwilioSmsClient implements SmsProviderClientInterface {
 			source: (string)($this->sourceId ?? ''),
 			body: $payload,
 			path: self::SEND_PATH,
+			// Twilio's Messages API takes form fields; without this the
+			// OpenRegister leaf sends the array body as JSON.
+			headers: ['Content-Type' => 'application/x-www-form-urlencoded'],
 		);
 		$sid = (string)($result['sid'] ?? ($result['externalMessageId'] ?? ''));
 

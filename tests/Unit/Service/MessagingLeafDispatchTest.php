@@ -122,6 +122,9 @@ class MessagingLeafDispatchTest extends TestCase {
 		$this->assertSame('+31600000000', $call['body']['From']);
 		$this->assertSame('+31611111111', $call['body']['To']);
 		$this->assertSame('hi', $call['body']['Body']);
+		// Twilio's Messages API takes form fields, not JSON: the leaf sends an
+		// array body as JSON unless the caller names the form content type.
+		$this->assertSame('application/x-www-form-urlencoded', $call['headers']['Content-Type'] ?? null);
 	}//end testTwilioSendRoutesThroughLeaf()
 
 	/**
