@@ -7,11 +7,18 @@
   - identity fields (status / source / startAt / endAt / depositAmount / …)
   - auto-render in the detail-page body via CnObjectDataWidget; this section adds
   - the parts the auto-body + relatedCollections cannot express:
-  -   1. the inline notes / internalNotes editor (objectStore save);
-  -   2. resourceAssignments + statusHistory — ARRAY fields ON the booking (not FK
-  -      children), with cross-schema id->name resolution for resources;
-  -   3. the computed Timeline (a merge of timestamp fields);
-  -   4. human-readable Service / Customer names resolved across other schemas.
+  -   1. human-readable Service / Customer names resolved across other schemas
+  -      (part "context");
+  -   2. resourceAssignments, an ARRAY field ON the booking, with cross-schema
+  -      id->name resolution for resources (part "assignments");
+  -   3. the computed Timeline, a merge of the timestamp fields and the
+  -      statusHistory entries (part "timeline").
+  -
+  - The `part` prop renders one of them, so each can be its own grid widget or
+  - tab. Notes are the notes leaf on the page, and the record history is
+  - OpenRegister's activity in the actions menu, so this section no longer
+  - carries a notes editor or an audit table. The timeline stays here until
+  - the library's `timeline` widget type is released.
   -
   - The admin actions live in the page header (BookingHeaderActions).
   -
@@ -25,8 +32,8 @@
 	<div class="booking-section">
 		<NcLoadingIcon v-if="loading" :size="24" />
 		<template v-else>
-			<section class="booking-section__block">
-				<h4>{{ t('pipelinq', 'Context') }}</h4>
+			<section v-if="shows('context')" class="booking-section__block">
+				<h4 v-if="part === 'all'">{{ t('pipelinq', 'Context') }}</h4>
 				<div class="info-grid">
 					<div class="info-field">
 						<label>{{ t('pipelinq', 'Service') }}</label>
@@ -55,40 +62,10 @@
 				</div>
 			</section>
 
-			<section class="booking-section__block">
-				<h4>{{ t('pipelinq', 'Notes') }}</h4>
-				<div class="form-group">
-					<label for="booking-notes">{{
-						t('pipelinq', 'Customer-facing notes')
-					}}</label>
-					<textarea
-						id="booking-notes"
-						v-model="editableNotes"
-						rows="3"
-						maxlength="4000" />
-				</div>
-				<div class="form-group">
-					<label for="booking-internal-notes">{{
-						t('pipelinq', 'Internal staff notes')
-					}}</label>
-					<textarea
-						id="booking-internal-notes"
-						v-model="editableInternalNotes"
-						rows="3"
-						maxlength="4000" />
-				</div>
-				<div class="notes-actions">
-					<NcButton
-						variant="primary"
-						:disabled="busy || !notesDirty"
-						@click="saveNotes">
-						{{ t('pipelinq', 'Save notes') }}
-					</NcButton>
-				</div>
-			</section>
-
-			<section class="booking-section__block">
-				<h4>{{ t('pipelinq', 'Resource assignments') }}</h4>
+			<section v-if="shows('assignments')" class="booking-section__block">
+				<h4 v-if="part === 'all'">
+					{{ t('pipelinq', 'Resource assignments') }}
+				</h4>
 				<div v-if="!assignments.length" class="section-empty">
 					<p>{{ t('pipelinq', 'No resource assignments recorded.') }}</p>
 				</div>
@@ -114,39 +91,8 @@
 				</div>
 			</section>
 
-			<section class="booking-section__block">
-				<h4>{{ t('pipelinq', 'Audit trail') }}</h4>
-				<div v-if="!history.length" class="section-empty">
-					<p>{{ t('pipelinq', 'No status changes recorded.') }}</p>
-				</div>
-				<div v-else class="viewTableContainer">
-					<table class="viewTable">
-						<thead>
-							<tr>
-								<th scope="col">{{ t('pipelinq', 'Status') }}</th>
-								<th scope="col">
-									{{ t('pipelinq', 'Changed at') }}
-								</th>
-								<th scope="col">
-									{{ t('pipelinq', 'Changed by') }}
-								</th>
-								<th scope="col">{{ t('pipelinq', 'Reason') }}</th>
-							</tr>
-						</thead>
-						<tbody>
-							<tr v-for="(entry, idx) in history" :key="idx">
-								<td>{{ statusLabel(entry.status) }}</td>
-								<td>{{ formatDateTime(entry.changedAt) }}</td>
-								<td>{{ entry.changedBy || '-' }}</td>
-								<td>{{ entry.reason || '-' }}</td>
-							</tr>
-						</tbody>
-					</table>
-				</div>
-			</section>
-
-			<section class="booking-section__block">
-				<h4>{{ t('pipelinq', 'Timeline') }}</h4>
+			<section v-if="shows('timeline')" class="booking-section__block">
+				<h4 v-if="part === 'all'">{{ t('pipelinq', 'Timeline') }}</h4>
 				<p v-if="!timeline.length" class="section-empty">
 					{{ t('pipelinq', 'No events yet.') }}
 				</p>
@@ -184,15 +130,16 @@
 </template>
 
 <script>
-import { showError, showSuccess } from '@nextcloud/dialogs'
+import { showError } from '@nextcloud/dialogs'
 import { subscribe, unsubscribe } from '@nextcloud/event-bus'
-import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
+import { NcLoadingIcon } from '@nextcloud/vue'
 import CalendarRemove from 'vue-material-design-icons/CalendarRemove.vue'
 import CashCheck from 'vue-material-design-icons/CashCheck.vue'
 import CashRemove from 'vue-material-design-icons/CashRemove.vue'
 import ClockEnd from 'vue-material-design-icons/ClockEnd.vue'
 import ClockStart from 'vue-material-design-icons/ClockStart.vue'
 import EmailCheckOutline from 'vue-material-design-icons/EmailCheckOutline.vue'
+import ProgressCheck from 'vue-material-design-icons/ProgressCheck.vue'
 import { useObjectStore } from '../../store/modules/object.js'
 
 const TIMELINE_ICONS = {
@@ -202,7 +149,11 @@ const TIMELINE_ICONS = {
 	deposit: CashCheck,
 	fee: CashRemove,
 	cancel: CalendarRemove,
+	status: ProgressCheck,
 }
+
+/** The parts this section can render on its own. */
+const PARTS = ['all', 'context', 'assignments', 'timeline']
 
 const STATUS_LABELS = {
 	'pending-deposit': 'Awaiting deposit',
@@ -217,7 +168,6 @@ const STATUS_LABELS = {
 export default {
 	name: 'BookingDetailSection',
 	components: {
-		NcButton,
 		NcLoadingIcon,
 	},
 
@@ -231,17 +181,22 @@ export default {
 			type: String,
 			default: '',
 		},
+
+		/**
+		 * Which part to render: `context`, `assignments`, `timeline`, or
+		 * `all` (each under its own heading).
+		 */
+		part: {
+			type: String,
+			default: 'all',
+			validator: (v) => PARTS.includes(v),
+		},
 	},
 
 	data() {
 		return {
 			booking: {},
 			loading: false,
-			busy: false,
-			editableNotes: '',
-			editableInternalNotes: '',
-			savedNotes: '',
-			savedInternalNotes: '',
 			resourceLookup: {},
 			service: null,
 			customer: null,
@@ -282,19 +237,23 @@ export default {
 				: []
 		},
 
-		history() {
+		/**
+		 * The booking's status changes that carry a time and a status.
+		 *
+		 * @return {Array<{status: string, changedAt: string}>}
+		 *
+		 * @spec openspec/changes/booking-and-service-pages/specs/appointment-booking/spec.md
+		 */
+		statusHistory() {
 			const raw = Array.isArray(this.booking.statusHistory)
 				? this.booking.statusHistory
 				: []
-			return [...raw].sort((a, b) => {
-				const ta = a?.changedAt ? Date.parse(a.changedAt) : 0
-				const tb = b?.changedAt ? Date.parse(b.changedAt) : 0
-				return ta - tb
-			})
+			return raw.filter((entry) => entry && entry.changedAt && entry.status)
 		},
 
 		/**
-		 * The booking's events in time order, merged from its timestamp fields.
+		 * The booking's events in time order, merged from its timestamp fields
+		 * and its status changes.
 		 *
 		 * @return {Array<{at: string, kind: string, text: string}>}
 		 *
@@ -351,6 +310,16 @@ export default {
 					text: t('pipelinq', 'Cancelled'),
 				})
 			}
+			// Status changes, which the dropped audit table used to list.
+			for (const entry of this.statusHistory) {
+				events.push({
+					at: entry.changedAt,
+					kind: 'status',
+					text: t('pipelinq', 'Status: {status}', {
+						status: this.statusLabel(entry.status),
+					}),
+				})
+			}
 			return events.sort((a, b) => Date.parse(a.at) - Date.parse(b.at))
 		},
 
@@ -397,13 +366,6 @@ export default {
 					})
 				: t('pipelinq', '{amount} (pending)', { amount: formatted })
 		},
-
-		notesDirty() {
-			return (
-				this.editableNotes !== this.savedNotes
-				|| this.editableInternalNotes !== this.savedInternalNotes
-			)
-		},
 	},
 
 	watch: {
@@ -434,6 +396,18 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * Whether a block belongs to the requested part.
+		 *
+		 * @param {string} block The block: context, assignments or timeline.
+		 * @return {boolean}
+		 *
+		 * @spec openspec/changes/booking-and-service-pages/specs/appointment-booking/spec.md
+		 */
+		shows(block) {
+			return this.part === 'all' || this.part === block
+		},
+
 		statusLabel(status) {
 			return t('pipelinq', STATUS_LABELS[status] || status || '-')
 		},
@@ -467,11 +441,11 @@ export default {
 		},
 
 		/**
-		 * Load the booking and seed the notes editor, then resolve the linked
-		 * Service / Customer / Resource names.
+		 * Load the booking, then resolve the linked Service / Customer /
+		 * Resource names.
 		 *
-		 * @param {{silent?: boolean}} [opts] `silent` skips the spinner and
-		 *  keeps unsaved note edits (a refresh, not a first load).
+		 * @param {{silent?: boolean}} [opts] `silent` skips the spinner (a
+		 *  refresh, not a first load).
 		 *
 		 * @spec openspec/specs/appointment-booking/spec.md
 		 */
@@ -480,7 +454,6 @@ export default {
 				return
 			}
 			const silent = opts.silent === true
-			const keepNotes = silent && this.notesDirty
 			if (!silent) {
 				this.loading = true
 			}
@@ -490,12 +463,6 @@ export default {
 						'appointmentBooking',
 						this.resolvedId,
 					)) || {}
-				if (!keepNotes) {
-					this.editableNotes = this.booking.notes || ''
-					this.editableInternalNotes = this.booking.internalNotes || ''
-				}
-				this.savedNotes = this.booking.notes || ''
-				this.savedInternalNotes = this.booking.internalNotes || ''
 				await this.loadContext()
 			} catch (err) {
 				showError(
@@ -572,30 +539,6 @@ export default {
 				this.contextLoading = false
 			}
 		},
-
-		async saveNotes() {
-			this.busy = true
-			try {
-				const payload = {
-					id: this.resolvedId,
-					notes: this.editableNotes,
-					internalNotes: this.editableInternalNotes,
-				}
-				const saved = await this.objectStore.saveObject(
-					'appointmentBooking',
-					payload,
-				)
-				if (saved) {
-					this.savedNotes = this.editableNotes
-					this.savedInternalNotes = this.editableInternalNotes
-					showSuccess(t('pipelinq', 'Notes saved.'))
-				} else {
-					showError(t('pipelinq', 'Failed to save notes.'))
-				}
-			} finally {
-				this.busy = false
-			}
-		},
 	},
 }
 </script>
@@ -628,29 +571,6 @@ export default {
 	margin-bottom: 2px;
 	color: var(--color-text-maxcontrast);
 	font-size: 13px;
-}
-
-.form-group {
-	margin-bottom: 12px;
-}
-
-.form-group label {
-	display: block;
-	font-weight: bold;
-	margin-bottom: 4px;
-}
-
-.form-group textarea {
-	width: 100%;
-	padding: 8px;
-	border: 1px solid var(--color-border);
-	border-radius: var(--border-radius);
-	resize: vertical;
-}
-
-.notes-actions {
-	display: flex;
-	justify-content: flex-end;
 }
 
 .viewTableContainer {
