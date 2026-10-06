@@ -86,15 +86,23 @@ class VatRates {
 	}//end parse()
 
 	/**
-	 * The configured rates.
+	 * Constructor.
 	 *
-	 * @param IAppConfig $appConfig The app config.
+	 * @param IAppConfig $appConfig The app config holding `vat_rates`.
+	 */
+	public function __construct(
+		private readonly IAppConfig $appConfig,
+	) {
+	}//end __construct()
+
+	/**
+	 * The configured rates.
 	 *
 	 * @return array<string,float> Rate per class.
 	 *
 	 * @spec openspec/changes/pipelinq-forms-review/specs/product-catalog/spec.md
 	 */
-	public static function fromConfig(IAppConfig $appConfig): array {
-		return self::parse(stored: $appConfig->getValueString(Application::APP_ID, self::CONFIG_KEY, ''));
-	}//end fromConfig()
+	public function rates(): array {
+		return self::parse(stored: $this->appConfig->getValueString(Application::APP_ID, self::CONFIG_KEY, ''));
+	}//end rates()
 }//end class

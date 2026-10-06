@@ -739,7 +739,7 @@ class Application extends App implements IBootstrap {
 				'config',
 				[
 					'currency' => $appConfig->getValueString(self::APP_ID, 'currency', 'EUR'),
-					'vat_rates' => VatRates::fromConfig(appConfig: $appConfig),
+					'vat_rates' => (new VatRates(appConfig: $appConfig))->rates(),
 				]
 			);
 		} catch (\Exception $e) {

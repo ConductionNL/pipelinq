@@ -98,7 +98,7 @@ class ProductCatalogService {
 	public function btwClassToRate(?string $vatClass): int|float {
 		// The rate per class is a setting (VatRates, pipelinq-forms-review);
 		// BTW_CLASS_RATES only names the classes and holds the Dutch defaults.
-		$rates = VatRates::fromConfig(appConfig: $this->appConfig);
+		$rates = (new VatRates(appConfig: $this->appConfig))->rates();
 		$rate = $rates['high'];
 		if ($this->isValidBtwClass(vatClass: $vatClass) === true) {
 			$rate = $rates[$vatClass];
