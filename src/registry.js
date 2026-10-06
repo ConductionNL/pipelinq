@@ -319,6 +319,7 @@ import StoreGallery from './views/store/StoreGallery.vue'
 import SyncSettingsView from './views/sync/SyncSettings.vue'
 import WerkplekClientSelect from './views/werkplek/widgets/WerkplekClientSelect.vue'
 import WerkplekHeaderActions from './views/werkplek/widgets/WerkplekHeaderActions.vue'
+import { sectionWidget } from './components/widgets/sectionWidget.js'
 // --- KCC Werkplek (pipelinq-werkplek-declarative): unified KCC agent workspace
 //     rendered as a declarative type:"dashboard" page. Requests, Tasks, the
 //     active-interaction form, the summary-driven knowledge base and the client
@@ -852,6 +853,73 @@ const registry = {
 		kind: 'section',
 		component: PartyIndicatorPanel,
 		_note: 'The warnings on a client or contact (pipelinq#2036): every party indicator in force, loudest first, with acknowledgement and an add-warning form. Self-fetches GET /api/leaves/party/{partyId}; rendered before the body on ClientDetail and ContactDetail so it is read before contact is made.',
+	},
+	// --- Contact page sections as grid widgets (detail-pages-read-at-a-glance).
+	//     The same components as the section entries above, wrapped so they
+	//     sit in the grid and in tab strips instead of a tail below the grid. ---
+	ContactRelationshipsWidget: {
+		kind: 'widget',
+		component: sectionWidget(
+			'ContactRelationshipsWidget',
+			ContactRelationships,
+			({ objectId, objectData, content }) => ({
+				entityId: objectId,
+				entityType: content.entityType || 'contact',
+				entityName: objectData.name || '',
+			}),
+		),
+		...PANEL_WIDGET_META,
+		_note: 'ContactRelationships as a grid widget: entityId from the page object, entityType from content (default contact).',
+	},
+	ContactChannelsWidget: {
+		kind: 'widget',
+		component: sectionWidget(
+			'ContactChannelsWidget',
+			ContactChannelsSection,
+			({ objectId, content }) => ({
+				entityId: objectId,
+				entityType: content.entityType || 'contact',
+			}),
+		),
+		...PANEL_WIDGET_META,
+		_note: 'ContactChannelsSection as a grid widget.',
+	},
+	MessagingConversationWidget: {
+		kind: 'widget',
+		component: sectionWidget(
+			'MessagingConversationWidget',
+			MessagingConversationSection,
+			({ objectId, content }) => ({
+				entityId: objectId,
+				entityType: content.entityType || 'contact',
+			}),
+		),
+		...PANEL_WIDGET_META,
+		_note: 'MessagingConversationSection as a grid widget.',
+	},
+	SubscriptionsWidget: {
+		kind: 'widget',
+		component: sectionWidget(
+			'SubscriptionsWidget',
+			SubscriptionsSection,
+			({ objectId }) => ({
+				contactId: objectId,
+			}),
+		),
+		...PANEL_WIDGET_META,
+		_note: 'SubscriptionsSection bound to the page contact, as a grid widget.',
+	},
+	BrpContactWidget: {
+		kind: 'widget',
+		component: sectionWidget(
+			'BrpContactWidget',
+			BrpContactPanel,
+			({ objectId }) => ({
+				contactId: objectId,
+			}),
+		),
+		...PANEL_WIDGET_META,
+		_note: 'BrpContactPanel as a grid widget, for the Profile tab of ContactDetail.',
 	},
 	BrpContactPanel: {
 		kind: 'section',

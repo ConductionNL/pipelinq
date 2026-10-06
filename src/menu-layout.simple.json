@@ -288,6 +288,17 @@
 				"stageField": "status",
 				"headerActions": [
 					{
+						"id": "assign-to-me",
+						"type": "api-call",
+						"group": "Status",
+						"label": "Assign to me",
+						"icon": "AccountArrowLeftOutline",
+						"url": "/apps/pipelinq/api/tickets/@objectId/assign-to-me",
+						"method": "POST",
+						"successMessage": "Assigned to you. It is on your My Work now.",
+						"errorMessage": "Could not assign this ticket to you."
+					},
+					{
 						"id": "ticket-start",
 						"type": "api-call",
 						"label": "Take on",

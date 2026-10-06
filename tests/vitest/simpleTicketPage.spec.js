@@ -118,15 +118,29 @@ describe('the full structure', () => {
 		expect(full).toEqual(
 			manifest().pages.find((page) => page.id === 'TicketDetail'),
 		)
-		expect(full.config.headerActions).toBeUndefined()
+		// The one header action on the full page is Assign to me
+		// (detail-pages-read-at-a-glance), which sets the assignee and changes
+		// no status.
+		expect(full.config.headerActions.map((action) => action.id)).toEqual([
+			'assign-to-me',
+		])
 		expect(full.config.sideColumn).toBeUndefined()
 	})
 })
 
 describe('the status actions', () => {
+	// Status changes only: Assign to me is an api-call too, but it sets the
+	// assignee through pipelinq's own endpoint and leaves the status alone.
 	const transitions = simple.headerActions.filter(
-		(action) => action.type === 'api-call',
+		(action) => action.type === 'api-call' && action.url.endsWith('/transition'),
 	)
+
+	it('include Assign to me, which changes no status', () => {
+		expect(actionsById['assign-to-me']).toMatchObject({
+			type: 'api-call',
+			url: '/apps/pipelinq/api/tickets/@objectId/assign-to-me',
+		})
+	})
 
 	it('are transitions of the ticket lifecycle, posted to the transition endpoint', () => {
 		expect(transitions.length).toBeGreaterThan(4)
