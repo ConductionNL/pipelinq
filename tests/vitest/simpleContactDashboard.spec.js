@@ -166,6 +166,66 @@ describe('the dashboard', () => {
 		expect(stats.map((entry) => entry.gridWidth)).toEqual([3, 3, 3, 3])
 	})
 
+	it("draws the reader's own work in two thirds and what the reader looks up in the right third", () => {
+		const at = (id) => simple.layout.find((entry) => entry.widgetId === id)
+		expect(at('simple-waiting-list')).toMatchObject({
+			gridX: 0,
+			gridY: 6,
+			gridWidth: 8,
+		})
+		expect(at('simple-per-channel')).toMatchObject({
+			gridX: 0,
+			gridY: 11,
+			gridWidth: 8,
+		})
+		expect(at('simple-callback-list')).toMatchObject({
+			gridX: 8,
+			gridY: 6,
+			gridWidth: 4,
+		})
+		expect(at('simple-latest-contact')).toMatchObject({
+			gridX: 8,
+			gridY: 11,
+			gridWidth: 4,
+		})
+		// The cards the page had start at row 15; the design's end above it.
+		for (const id of ['simple-per-channel', 'simple-latest-contact']) {
+			expect(at(id).gridY + at(id).gridHeight, id).toBeLessThanOrEqual(15)
+		}
+	})
+
+	it('offers one primary action on the attention card: the late tickets', () => {
+		const card = byId['simple-first-today'].content
+		expect(
+			card.actions.filter((action) => action.primary === true),
+		).toHaveLength(1)
+		expect(card.actions[0].primary).toBe(true)
+		expect(card.actions[0].route.query).toEqual(card.visibleWhen.source.filter)
+	})
+
+	it('shows the type of a waiting ticket as a pill with the labels the ticket page uses', () => {
+		const column = byId['simple-waiting-list'].content.columns.find(
+			(item) => item.key === 'ticketType',
+		)
+		expect(column.enum).toEqual(SCHEMAS.ticket.ticketType.enum)
+		expect(column.enumLabels).toEqual(
+			page(builtSimple, 'TicketDetail').config.typePill.labels,
+		)
+		for (const label of Object.values(column.enumLabels)) {
+			expect(en[label], `en "${label}"`).toBeTruthy()
+			expect(nl[label], `nl "${label}"`).toBeTruthy()
+		}
+	})
+
+	it('links Waiting for me to the whole list with the filter it counts by', () => {
+		const list = byId['simple-waiting-list'].content
+		expect(pageIds.has(list.viewAllRoute)).toBe(true)
+		expect(list.viewAllQuery).toEqual(list.filter)
+		expect(list.viewAllQuery).toEqual(
+			byId['simple-waiting-for-me'].content.source.filter,
+		)
+	})
+
 	it('counts only on fields the schema has', () => {
 		let sources = 0
 		for (const widget of added) {

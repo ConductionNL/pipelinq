@@ -41,6 +41,8 @@ import {
 import {
 	applyPageOverlay,
 	buildProfiledManifest,
+	navTheming,
+	resolveNavPlaceholders,
 	resolveStructureProfile,
 	STRUCTURE_FULL,
 	STRUCTURE_SETTING,
@@ -399,6 +401,92 @@ describe('the simple profile', () => {
 	}, 60_000)
 })
 
+describe('the brand block', () => {
+	const theming = {
+		name: 'Gemeente Zuiddrecht',
+		logo: '/core/img/logo/logo.svg',
+		emblem: '/apps/thematiq/img/emblem.svg',
+	}
+	const withTheming = () =>
+		buildProfiledManifest(
+			buildManifest,
+			manifest(),
+			fragments,
+			applyMenuModules(simpleFile, []),
+			{ theming },
+		)
+
+	it('names the app over the instance the theming capabilities answer, and the full profile declares none', () => {
+		expect(simpleFile.nav.brand).toEqual({
+			name: 'pipelinq',
+			caption: '@theming.name',
+			logo: '@theming.emblem|@theming.logo',
+		})
+		expect(fullFile.nav).toBeUndefined()
+		// The set's emblem, never the wordmark beside the app's own name.
+		expect(withTheming().nav.brand).toEqual({
+			name: 'pipelinq',
+			caption: 'Gemeente Zuiddrecht',
+			logo: '/apps/thematiq/img/emblem.svg',
+		})
+		expect(build(fullFile).nav?.brand).toBeUndefined()
+	})
+
+	it('falls back to the wordmark on a set without an emblem', () => {
+		for (const emblem of ['', undefined]) {
+			expect(
+				resolveNavPlaceholders(simpleFile.nav, { ...theming, emblem }).brand
+					.logo,
+			).toBe('/core/img/logo/logo.svg')
+		}
+	})
+
+	it('reads the emblem from thematiq and the rest from Nextcloud theming', () => {
+		expect(
+			navTheming({
+				theming: { name: 'Gemeente Zuiddrecht', logo: '/logo.svg' },
+				nldesign: { logos: { emblem: '/emblem.svg' } },
+			}),
+		).toEqual({
+			name: 'Gemeente Zuiddrecht',
+			logo: '/logo.svg',
+			emblem: '/emblem.svg',
+		})
+		expect(navTheming(null)).toEqual({ emblem: '' })
+		expect(
+			navTheming({
+				theming: { name: 'X' },
+				nldesign: { logos: { emblem: 7 } },
+			}),
+		).toEqual({ name: 'X', emblem: '' })
+	})
+
+	it('shows the app alone on an instance that answers nothing, and never a placeholder', () => {
+		for (const answer of [null, {}, { name: '', logo: 7 }]) {
+			expect(resolveNavPlaceholders(simpleFile.nav, answer).brand).toEqual({
+				name: 'pipelinq',
+				caption: '',
+				logo: '',
+			})
+		}
+		expect(JSON.stringify(buildSimple().nav)).not.toContain('@theming')
+	})
+
+	it('is what main.js hands the theming capabilities to', () => {
+		expect(mainSource).toContain(
+			"import { getCapabilities } from '@nextcloud/capabilities'",
+		)
+		expect(mainSource).toContain('theming: navTheming(getCapabilities())')
+		expect(mainSource).toMatch(
+			/import \{[^}]*\bnavTheming,[^}]*\} from '\.\/utils\/structureProfile\.js'/,
+		)
+	})
+
+	it('validates against the manifest schema with the brand resolved', () => {
+		validateBuilt(withTheming())
+	}, 60_000)
+})
+
 describe('the modules', () => {
 	const modulesPage = () =>
 		buildSimple().pages.find((page) => page.id === 'Modules')
@@ -709,8 +797,8 @@ describe('the structure setting', () => {
 		expect(mainSource).toMatch(
 			/structureProfile === STRUCTURE_FULL\s+\? menuLayout\s+: applyMenuModules\(/,
 		)
-		expect(mainSource).toContain(
-			'buildProfiledManifest(buildManifest, bundledManifest, fragments, profileFile)',
+		expect(mainSource).toMatch(
+			/buildProfiledManifest\(buildManifest, bundledManifest, fragments, profileFile, \{\s+theming:/,
 		)
 	})
 

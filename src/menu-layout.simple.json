@@ -2,7 +2,7 @@
 	"_meta": {
 		"spdx-license": "EUPL-1.2",
 		"spdx-copyright": "2026 Conduction B.V.",
-		"description": "The SIMPLE structure profile, and the default one (openspec/changes/simple-structure-profile). `menu-layout.json` is the FULL profile and is untouched: an administrator brings it back with the setting `menu_structure`. Both profiles are built from the same manifest and the same fragments, so nothing is deleted and every page stays routable; this file only decides what the navigation offers first. THE STANDARD KEYS (`removals`, `settingsSection`) go to the library's buildManifest exactly as the full file's do. `relocations` is ABSENT on purpose, and must stay absent rather than become `{}`: the simple menu is flat, and the library's relocation step ends by dropping every entry that has no route, no href, no action and no children, which is what a caption is. THE PROFILE KEYS `menu` and `pages` are read by src/utils/structureProfile.js. `menu` is merged BEFORE the manifest's own menu; buildManifest merges entries by id and the FIRST definition of a key wins, so an entry here that carries only `id` and `order` keeps its label, icon and route from the manifest, and an entry the manifest does not know (the captions, Contact moments, Appointments, Organisations, Modules and more) is added as written. `pages` holds page overlays. THE PIPELINQ KEYS `modules`, `modulesCaption` and `home` are read by src/utils/menuModules.js.",
+		"description": "The SIMPLE structure profile, and the default one (openspec/changes/simple-structure-profile). `menu-layout.json` is the FULL profile and is untouched: an administrator brings it back with the setting `menu_structure`. Both profiles are built from the same manifest and the same fragments, so nothing is deleted and every page stays routable; this file only decides what the navigation offers first. THE STANDARD KEYS (`removals`, `settingsSection`) go to the library's buildManifest exactly as the full file's do. `relocations` is ABSENT on purpose, and must stay absent rather than become `{}`: the simple menu is flat, and the library's relocation step ends by dropping every entry that has no route, no href, no action and no children, which is what a caption is. THE PROFILE KEYS `menu`, `pages` and `nav` are read by src/utils/structureProfile.js. `nav` is merged over the manifest's own `nav`: the brand block at the top of the navigation (PqDashboard, AppZijbalk) names the app, and the instance's name comes from its theming capabilities through `@theming.name` and its mark through `@theming.emblem|@theming.logo` (the active set's emblem from thematiq, the wordmark when the set ships none), so no municipality is written here; an instance that answers nothing shows the app's name alone. `menu` is merged BEFORE the manifest's own menu; buildManifest merges entries by id and the FIRST definition of a key wins, so an entry here that carries only `id` and `order` keeps its label, icon and route from the manifest, and an entry the manifest does not know (the captions, Contact moments, Appointments, Organisations, Modules and more) is added as written. `pages` holds page overlays. THE PIPELINQ KEYS `modules`, `modulesCaption` and `home` are read by src/utils/menuModules.js.",
 		"removalsNote": "The first six are the full profile's own removals, repeated because buildManifest takes ONE list; the spec fails when the two drift. The rest leave the simple menu and stay one step away: `Contacts`, `Tasks` and `OperationalDashboard` have a card on the Modules page, `SlaAttainment` a card on Reports, and `Bookings` is replaced by `AppointmentsMenu`, which opens the same page from the top level. `PointOfSale` and `SettingsIntegrationsCaption` are empty shells in the manifest (a label and no route). The full profile loses the second to the relocation step's clean-up and fills the first with children; this profile has no relocation step, so both are removed by name. The ids of a module that is switched off are added to this list at boot, by applyMenuModules.",
 		"settingsNote": "The first three are the full profile's. `Services` and `Resources` join them: what can be booked and with whom is set-up, the bookings themselves are daily work.",
 		"viewsNote": "`ContactMomentsMenu` opens the tickets list narrowed to ticketType `interaction`, and `OrganisationsMenu` the clients list narrowed to type `organization`. Both values are enum members of the seeded schema (register.d/99-unify-ticket-supertype.json, pipelinq_register.json), so they are the same on every instance. A filtered list is a view, not a page. Known gap: CnAppNav decides `active` by route name and ignores `query`, so each pair lights up together.",
@@ -44,6 +44,13 @@
 		"Services",
 		"Resources"
 	],
+	"nav": {
+		"brand": {
+			"name": "pipelinq",
+			"caption": "@theming.name",
+			"logo": "@theming.emblem|@theming.logo"
+		}
+	},
 	"home": {
 		"page": "KccWerkplek",
 		"rootMovesTo": "/sales-overview"
@@ -283,7 +290,7 @@
 		},
 		{
 			"id": "TicketDetail",
-			"_note": "The ticket page in the simple structure (openspec/changes/simple-ticket-page). The full structure has no overlay, so its page is today's page. STAGE: `status`, the ticket's own lifecycle field. EVERY STATUS CHANGE HERE IS A TRANSITION OF THE SCHEMA'S x-openregister-lifecycle, posted to OpenRegister's transition endpoint, which checks the `from` state and the authorization again. `visibleWhen` only hides a button on a status its transition cannot leave; it decides nothing. The spec fails when an action names a transition the schema lacks or shows on a status outside the transition's `from`. THE DESIGN NAMES THREE THINGS PIPELINQ DOES NOT HAVE and they are not invented: a reminder to a customer who does not answer (the waiting stage offers Answer again), a step from answered to closed (resolved, completed, rejected, converted and closed are all final, so a finished ticket has no primary button), and a convert-to-case header action (conversion needs an availability answer first, so it stays the self-hiding section it is). A CONTACT MOMENT HAS NO CUSTOMER TO ANSWER: Answer hides on it, the stage then has no primary button, and Close the ticket is in the More menu. THE ANSWER IS WRITTEN IN ONE PLACE: `customer-reply` leaves the body and opens as a dialog from the Answer button, and the body shows the conversation to read. THE GRID IS ONE TABS WIDGET, full width: beside the side column the grid is narrow, and three cards side by side would stack. LOG CONTACT SEEDS THE TICKET AND NOT THE CUSTOMER: the library leaves a token it cannot resolve in place, so `@object.contact` on a ticket without a contact would be saved as those fifteen characters, a foreign key to nothing. `@objectId` always resolves. The contact moment hangs on the ticket, and the ticket names the customer.",
+			"_note": "The ticket page in the simple structure (openspec/changes/simple-ticket-page). The full structure has no overlay, so its page is today's page. STAGE: `status`, the ticket's own lifecycle field. EVERY STATUS CHANGE HERE IS A TRANSITION OF THE SCHEMA'S x-openregister-lifecycle, posted to OpenRegister's transition endpoint, which checks the `from` state and the authorization again. `visibleWhen` only hides a button on a status its transition cannot leave; it decides nothing. The spec fails when an action names a transition the schema lacks or shows on a status outside the transition's `from`. THE DESIGN NAMES THREE THINGS PIPELINQ DOES NOT HAVE and they are not invented: a reminder to a customer who does not answer (the waiting stage offers Answer again), a step from answered to closed (resolved, completed, rejected, converted and closed are all final, so a finished ticket has no primary button), and a convert-to-case header action (conversion needs an availability answer first, so it stays the self-hiding section it is). A CONTACT MOMENT HAS NO CUSTOMER TO ANSWER: Answer hides on it, the stage then has no primary button, and Close the ticket is in the More menu. THE ANSWER IS WRITTEN IN ONE PLACE: `customer-reply` leaves the body and opens as a dialog from the Answer button, and the body shows the conversation to read. THE GRID IS ONE TABS WIDGET, full width: beside the side column the grid is narrow, and three cards side by side would stack. LOG CONTACT SEEDS THE TICKET AND NOT THE CUSTOMER: the library leaves a token it cannot resolve in place, so `@object.contact` on a ticket without a contact would be saved as those fifteen characters, a foreign key to nothing. `@objectId` always resolves. The contact moment hangs on the ticket, and the ticket names the customer. THE WHAT-NOW CARD (DqZaak, Acties: one next-step button inside a card that lists what the step still needs): `nextStep` names a checklist per stage on fields the ticket has (assignee, client, slaDeadline, portalReplies), and the stage's primary button sits in the card. A finished ticket has no stage entry, so it shows no card. Nothing in the checklist is a guess: an item is done when its field holds a value.",
 			"config": {
 				"stageField": "status",
 				"headerActions": [
@@ -481,6 +488,55 @@
 					"in_progress": "ticket-answer",
 					"awaiting_customer": "ticket-answer"
 				},
+				"nextStep": {
+					"title": "What now?",
+					"stages": {
+						"new": {
+							"title": "What now? Step 1: new",
+							"checklist": [
+								{
+									"label": "A handler is assigned",
+									"doneField": "assignee",
+									"hint": "Take on puts you on it"
+								},
+								{
+									"label": "The customer is known",
+									"doneField": "client"
+								}
+							],
+							"after": "Then: step 2, in progress"
+						},
+						"in_progress": {
+							"title": "What now? Step 2: in progress",
+							"checklist": [
+								{
+									"label": "A handler is assigned",
+									"doneField": "assignee"
+								},
+								{
+									"label": "The customer is known",
+									"doneField": "client"
+								},
+								{
+									"label": "The deadline is set",
+									"doneField": "slaDeadline"
+								}
+							],
+							"after": "Then: answer the customer, or finish"
+						},
+						"awaiting_customer": {
+							"title": "What now? Step 3: waiting for the customer",
+							"checklist": [
+								{
+									"label": "The customer has replied",
+									"doneField": "portalReplies",
+									"hint": "Replies from the portal land on the ticket"
+								}
+							],
+							"after": "Then: back to in progress, or finish"
+						}
+					}
+				},
 				"quickActions": [
 					"ticket-answer",
 					"ticket-log-contact"
@@ -675,7 +731,7 @@
 		},
 		{
 			"id": "KccWerkplek",
-			"_note": "The contact centre dashboard in the simple structure (openspec/changes/simple-contact-dashboard). The design's widgets come first and every widget the page had follows, moved down by 15 rows and otherwise untouched: the spec fails when an old widget or an old layout entry differs in anything but `gridY`, or when two cards share a grid cell. EVERY NUMBER IS A FILTER ON REAL FIELDS, and a stat links to the list with the same filter as its query, so the number and the list agree. `Waiting for me` is the same filter as the tickets list view of that name. THE DESIGN SHOWS THINGS A TICKET CANNOT ANSWER and they are left out, not invented: the response time this week (no ticket field holds when the first answer went out), the one named ticket in the attention card (a banner counts, it cannot name a record, so the card says how many are late), the customer's initials and name in the list (a ticket holds its client as a reference without a name) and how long a ticket waits as a duration (the list shows the date it came in, oldest first). `Open` is not one number either: the count endpoint and the list spell a set of statuses differently, so the stats each use one status. THE ATTENTION CARD'S FILTER IS FLAT: `slaDeadline[lt]`, not `slaDeadline: { lt }`. A visibleWhen source is read through the objects list, and the library's query builder writes a nested operator as one JSON value, which OpenRegister answers with a 500 (live check, 5 October 2026). The bar's `occurredAt: { gte }` is nested on purpose: it goes to the aggregation endpoint, whose own flattener reads that shape. DATES IN THE LISTS carry `format: date-time`, or the cell prints the stored ISO text. THE ATTENTION CARD CARRIES `text` AS WELL AS `title`, with the same words: the dashboard gives up the grid cell of any banner whose `text` is empty before it looks at the condition (nextcloud-vue 2.60.0, CnDashboardPage isCollapsedWidget), so a card with only a title and a reason never rendered (live check, 5 October 2026). The attention layout shows the title and does not repeat the text.",
+			"_note": "The contact centre dashboard in the simple structure (openspec/changes/simple-contact-dashboard). The design's widgets come first and every widget the page had follows, moved down by 15 rows and otherwise untouched: the spec fails when an old widget or an old layout entry differs in anything but `gridY`, or when two cards share a grid cell. EVERY NUMBER IS A FILTER ON REAL FIELDS, and a stat links to the list with the same filter as its query, so the number and the list agree. `Waiting for me` is the same filter as the tickets list view of that name. THE DESIGN SHOWS THINGS A TICKET CANNOT ANSWER and they are left out, not invented: the response time this week (no ticket field holds when the first answer went out), the one named ticket in the attention card (a banner counts, it cannot name a record, so the card says how many are late), the customer's initials and name in the list (a ticket holds its client as a reference without a name) and how long a ticket waits as a duration (the list shows the date it came in, oldest first). `Open` is not one number either: the count endpoint and the list spell a set of statuses differently, so the stats each use one status. THE ATTENTION CARD'S FILTER IS FLAT: `slaDeadline[lt]`, not `slaDeadline: { lt }`. A visibleWhen source is read through the objects list, and the library's query builder writes a nested operator as one JSON value, which OpenRegister answers with a 500 (live check, 5 October 2026). The bar's `occurredAt: { gte }` is nested on purpose: it goes to the aggregation endpoint, whose own flattener reads that shape. DATES IN THE LISTS carry `format: date-time`, or the cell prints the stored ISO text. THE ATTENTION CARD CARRIES `text` AS WELL AS `title`, with the same words: the dashboard gives up the grid cell of any banner whose `text` is empty before it looks at the condition (nextcloud-vue 2.60.0, CnDashboardPage isCollapsedWidget), so a card with only a title and a reason never rendered (live check, 5 October 2026). The attention layout shows the title and does not repeat the text. THE BOARD (PqDashboard, 6 October 2026): the attention card's first action is the primary one; the two lists that are the reader's own work (Waiting for me, Contact today per channel) take two thirds of the row and the two the reader looks up (Callbacks, Latest contact) the right third; the type of a waiting ticket is a pill, drawn by the cell renderer from the column's enum with the same labels the ticket page's type pill uses; and Waiting for me links to the whole list with the filter it counts by. The customer's initials and name and the waiting time as a duration stay out, as above.",
 			"config": {
 				"layout": [
 					{
@@ -749,6 +805,15 @@
 					{
 						"id": "s8",
 						"widgetId": "simple-per-channel",
+						"gridX": 0,
+						"gridY": 11,
+						"gridWidth": 8,
+						"gridHeight": 4,
+						"showTitle": true
+					},
+					{
+						"id": "s9",
+						"widgetId": "simple-callback-list",
 						"gridX": 8,
 						"gridY": 6,
 						"gridWidth": 4,
@@ -756,20 +821,11 @@
 						"showTitle": true
 					},
 					{
-						"id": "s9",
-						"widgetId": "simple-callback-list",
-						"gridX": 0,
-						"gridY": 11,
-						"gridWidth": 6,
-						"gridHeight": 4,
-						"showTitle": true
-					},
-					{
 						"id": "s10",
 						"widgetId": "simple-latest-contact",
-						"gridX": 6,
+						"gridX": 8,
 						"gridY": 11,
-						"gridWidth": 6,
+						"gridWidth": 4,
 						"gridHeight": 4,
 						"showTitle": true
 					},
@@ -870,7 +926,8 @@
 											"status": "in_progress",
 											"slaDeadline[lt]": "@today+1d"
 										}
-									}
+									},
+									"primary": true
 								},
 								{
 									"label": "Open the queue",
@@ -1021,7 +1078,17 @@
 								},
 								{
 									"key": "ticketType",
-									"label": "Type"
+									"label": "Type",
+									"enum": [
+										"request",
+										"complaint",
+										"interaction"
+									],
+									"enumLabels": {
+										"request": "Request",
+										"complaint": "Complaint",
+										"interaction": "Contact moment"
+									}
 								},
 								{
 									"key": "channel",
@@ -1033,7 +1100,12 @@
 									"format": "date-time"
 								}
 							],
-							"emptyText": "Nothing is waiting for you."
+							"emptyText": "Nothing is waiting for you.",
+							"viewAllRoute": "Tickets",
+							"viewAllQuery": {
+								"assignee": "@me",
+								"status": "in_progress"
+							}
 						}
 					},
 					{
