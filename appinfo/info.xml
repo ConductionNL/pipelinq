@@ -93,7 +93,7 @@ Vrij en open source onder de EUPL-1.2-licentie.
         OpenRegister, and this app does not depend on that value — the floor here
         rests on the interface fact, not on OpenRegister's declaration.
         -->
-        <nextcloud min-version="32" max-version="34"/>
+        <nextcloud min-version="32" max-version="35"/>
         <!-- App dependency (not expressible in app-info.xsd): OpenRegister
              (all Pipelinq data — clients, contacts, leads, requests, contracts,
              contactmomenten — is stored as OpenRegister registers/schemas; see
