@@ -41,6 +41,7 @@ import {
 import {
 	applyPageOverlay,
 	buildProfiledManifest,
+	navTheming,
 	resolveNavPlaceholders,
 	resolveStructureProfile,
 	STRUCTURE_FULL,
@@ -401,7 +402,11 @@ describe('the simple profile', () => {
 })
 
 describe('the brand block', () => {
-	const theming = { name: 'Gemeente Zuiddrecht', logo: '/core/img/logo/logo.svg' }
+	const theming = {
+		name: 'Gemeente Zuiddrecht',
+		logo: '/core/img/logo/logo.svg',
+		emblem: '/apps/thematiq/img/emblem.svg',
+	}
 	const withTheming = () =>
 		buildProfiledManifest(
 			buildManifest,
@@ -415,15 +420,45 @@ describe('the brand block', () => {
 		expect(simpleFile.nav.brand).toEqual({
 			name: 'pipelinq',
 			caption: '@theming.name',
-			logo: '@theming.logo',
+			logo: '@theming.emblem|@theming.logo',
 		})
 		expect(fullFile.nav).toBeUndefined()
+		// The set's emblem, never the wordmark beside the app's own name.
 		expect(withTheming().nav.brand).toEqual({
 			name: 'pipelinq',
 			caption: 'Gemeente Zuiddrecht',
-			logo: '/core/img/logo/logo.svg',
+			logo: '/apps/thematiq/img/emblem.svg',
 		})
 		expect(build(fullFile).nav?.brand).toBeUndefined()
+	})
+
+	it('falls back to the wordmark on a set without an emblem', () => {
+		for (const emblem of ['', undefined]) {
+			expect(
+				resolveNavPlaceholders(simpleFile.nav, { ...theming, emblem }).brand
+					.logo,
+			).toBe('/core/img/logo/logo.svg')
+		}
+	})
+
+	it('reads the emblem from thematiq and the rest from Nextcloud theming', () => {
+		expect(
+			navTheming({
+				theming: { name: 'Gemeente Zuiddrecht', logo: '/logo.svg' },
+				nldesign: { logos: { emblem: '/emblem.svg' } },
+			}),
+		).toEqual({
+			name: 'Gemeente Zuiddrecht',
+			logo: '/logo.svg',
+			emblem: '/emblem.svg',
+		})
+		expect(navTheming(null)).toEqual({ emblem: '' })
+		expect(
+			navTheming({
+				theming: { name: 'X' },
+				nldesign: { logos: { emblem: 7 } },
+			}),
+		).toEqual({ name: 'X', emblem: '' })
 	})
 
 	it('shows the app alone on an instance that answers nothing, and never a placeholder', () => {
@@ -441,7 +476,10 @@ describe('the brand block', () => {
 		expect(mainSource).toContain(
 			"import { getCapabilities } from '@nextcloud/capabilities'",
 		)
-		expect(mainSource).toContain('theming: getCapabilities()?.theming ?? null')
+		expect(mainSource).toContain('theming: navTheming(getCapabilities())')
+		expect(mainSource).toMatch(
+			/import \{[^}]*\bnavTheming,[^}]*\} from '\.\/utils\/structureProfile\.js'/,
+		)
 	})
 
 	it('validates against the manifest schema with the brand resolved', () => {

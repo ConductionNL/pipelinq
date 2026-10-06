@@ -155,7 +155,9 @@ const THEMING_PLACEHOLDER = '@theming.'
 /**
  * Resolve the `nav` block of a profile: `@theming.<key>` strings become the
  * instance's own theming values, one level deep (`brand.caption`,
- * `primaryAction.label`), so no municipality is written into the app.
+ * `primaryAction.label`), so no municipality is written into the app. A
+ * value may list fallbacks with `|` (`@theming.emblem|@theming.logo`): the
+ * first placeholder the instance answers wins.
  *
  * A placeholder the capabilities do not answer resolves to an empty string,
  * which CnAppNav reads as "nothing to draw" for that field. The profile is
@@ -168,14 +170,25 @@ const THEMING_PLACEHOLDER = '@theming.'
  * @spec openspec/changes/simple-structure-profile/specs/navigation-ia/spec.md#REQ-NIA-107
  */
 export function resolveNavPlaceholders(nav, theming) {
+	const resolveOne = (placeholder) => {
+		const key = placeholder.slice(THEMING_PLACEHOLDER.length)
+		const answer =
+			theming && typeof theming === 'object' ? theming[key] : undefined
+		return typeof answer === 'string' ? answer : ''
+	}
 	const resolveValue = (value) => {
 		if (typeof value !== 'string' || !value.startsWith(THEMING_PLACEHOLDER)) {
 			return value
 		}
-		const key = value.slice(THEMING_PLACEHOLDER.length)
-		const answer =
-			theming && typeof theming === 'object' ? theming[key] : undefined
-		return typeof answer === 'string' ? answer : ''
+		// `@theming.emblem|@theming.logo`: a set with an emblem shows it, one
+		// without falls back to its wordmark.
+		const answer = value
+			.split('|')
+			.map((part) => part.trim())
+			.filter((part) => part.startsWith(THEMING_PLACEHOLDER))
+			.map(resolveOne)
+			.find((part) => part !== '')
+		return answer ?? ''
 	}
 	const out = {}
 	for (const [key, value] of Object.entries(nav || {})) {
@@ -190,6 +203,27 @@ export function resolveNavPlaceholders(nav, theming) {
 				: resolveValue(value)
 	}
 	return out
+}
+
+/**
+ * The theming values the simple profile's nav placeholders read.
+ *
+ * The brand block names the instance through its theming capabilities, so
+ * the navigation shows the municipality without the app naming one. The
+ * emblem is what thematiq exposes for the active set (`nldesign.logos.emblem`,
+ * the shield of the workplace boards); without one the wordmark from
+ * Nextcloud's theming stands in.
+ *
+ * @param {object|null} capabilities `getCapabilities()`.
+ * @return {object} Nextcloud's theming block plus `emblem`, '' when the set
+ *   ships none.
+ *
+ * @spec openspec/changes/simple-structure-profile/specs/navigation-ia/spec.md#REQ-NIA-107
+ */
+export function navTheming(capabilities) {
+	const theming = capabilities?.theming ?? {}
+	const emblem = capabilities?.nldesign?.logos?.emblem
+	return { ...theming, emblem: typeof emblem === 'string' ? emblem : '' }
 }
 
 /**

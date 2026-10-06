@@ -51,6 +51,7 @@ import {
 } from './utils/menuModules.js'
 import {
 	buildProfiledManifest,
+	navTheming,
 	resolveStructureProfile,
 	STRUCTURE_FULL,
 	STRUCTURE_SETTING,
@@ -190,12 +191,9 @@ const profileFile =
 					simpleMenuLayout,
 				),
 			)
-// The simple profile's brand block names the instance through its theming
-// capabilities (`@theming.name`, `@theming.logo`), so the navigation shows the
-// municipality the instance belongs to without the app naming one.
 const { manifest: profiledManifest, homePage } = applyHomePage(
 	buildProfiledManifest(buildManifest, bundledManifest, fragments, profileFile, {
-		theming: getCapabilities()?.theming ?? null,
+		theming: navTheming(getCapabilities()),
 	}),
 	profileFile.home,
 )

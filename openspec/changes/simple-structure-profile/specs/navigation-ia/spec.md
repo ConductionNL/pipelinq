@@ -138,17 +138,23 @@ manifest, and MUST start as before in a structure that has every entry.
 
 ### Requirement: The simple navigation names the instance it belongs to (REQ-NIA-107)
 The simple profile MUST declare a brand block (`nav.brand`) at the top of the
-navigation: the app's name over the instance's own name and logo. The instance's
-name and logo MUST come from its theming capabilities through the placeholders
-`@theming.name` and `@theming.logo`, resolved by `structureProfile.js`; the app
-MUST NOT name a municipality. The full profile MUST stay as it is.
+navigation: the app's name over the instance's own name, beside the instance's
+mark. The name MUST come from the theming capabilities through `@theming.name`.
+The mark MUST be the active set's emblem (`nldesign.logos.emblem`) and fall back
+to the theming logo only when the set ships no emblem
+(`@theming.emblem|@theming.logo`), so the brand block never draws a wordmark next
+to the app's own name when an emblem exists. `structureProfile.js` resolves the
+placeholders; the app MUST NOT name a municipality. The full profile MUST stay
+as it is.
 
 #### Scenario: A municipality's instance
 @e2e exclude The e2e instance carries no theming name worth asserting; structureProfile.spec.js drives the resolver with a theming answer and without one.
-- **GIVEN** an instance whose theming capabilities answer `name` and `logo`
+- **GIVEN** an instance whose theming capabilities answer `name` and `logo`,
+  and whose design set ships an emblem
 - **WHEN** somebody opens pipelinq in the simple structure
 - **THEN** the navigation MUST open with the app's name, the instance's name
-  under it and the instance's logo beside it
+  under it and the set's emblem beside it, not the wordmark
+- **AND** on a set without an emblem the theming logo MUST stand in
 
 #### Scenario: An instance that answers nothing
 @e2e exclude A unit rule on the resolver, covered by structureProfile.spec.js.
