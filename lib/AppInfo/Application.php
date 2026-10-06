@@ -24,6 +24,7 @@ namespace OCA\Pipelinq\AppInfo;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Contract\RegisterSlugResolverInterface;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
+use OCA\OpenRegister\Event\ObjectCreatingEvent;
 use OCA\OpenRegister\Event\ObjectDeletedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCA\OpenRegister\Event\SchemaUpdatedEvent;
@@ -55,6 +56,7 @@ use OCA\Pipelinq\Listener\DealCreatedListener;
 use OCA\Pipelinq\Listener\DealUpdatedListener;
 use OCA\Pipelinq\Listener\ExpenseApprovalListener;
 use OCA\Pipelinq\Listener\LandingPageFormSubmittedListener;
+use OCA\Pipelinq\Listener\LeadStageCreatingListener;
 use OCA\Pipelinq\Listener\ObjectEventListener;
 use OCA\Pipelinq\Listener\QuestionAnsweredListener;
 use OCA\Pipelinq\Listener\ObjectsMergedSyncListener;
@@ -71,6 +73,7 @@ use OCA\Pipelinq\Service\AppointmentPaymentProvider;
 use OCA\Pipelinq\Service\AvailabilityService;
 use OCA\Pipelinq\Service\BookingService;
 use OCA\Pipelinq\Service\BsnValidationService;
+use OCA\Pipelinq\Service\ForecastService;
 use OCA\Pipelinq\Service\Gdpr\PipelinqApRegulatorEscalateProvider;
 use OCA\Pipelinq\Service\Gdpr\PipelinqBsnIdentityVerifyProvider;
 use OCA\Pipelinq\Service\HaalCentraalClient;
@@ -207,6 +210,11 @@ class Application extends App implements IBootstrap {
 		$context->registerEventListener(
 			event: ObjectCreatedEvent::class,
 			listener: DealCreatedListener::class
+		);
+		// Every new lead sits in a pipeline stage (pipeline-numbers-tell-the-truth).
+		$context->registerEventListener(
+			event: ObjectCreatingEvent::class,
+			listener: LeadStageCreatingListener::class
 		);
 		$context->registerEventListener(
 			event: ObjectUpdatedEvent::class,
@@ -726,15 +734,15 @@ class Application extends App implements IBootstrap {
 			$dependencyStatus = $this->resolveDependencyStatuses(context: $context, dependencies: $dependencies);
 			$initialState->provideInitialState('dependency_statuses', $dependencyStatus);
 
-			// Reporting currency (persisted by the setup wizard, default EUR)
-			// seeds the SPA's `config` initial state so manifest dashboards can
-			// format currency KPIs via the `@config.currency` token. Serialized
-			// as `initial-state-pipelinq-config` and read in main.js via
-			// loadState('pipelinq', 'config').
+			// Reporting currency and open-pipeline target (0 = none) seed the
+			// SPA's `config` state: `@config.currency`, `@config.pipelineTarget`.
 			$appConfig = $this->getContainer()->get(IAppConfig::class);
 			$initialState->provideInitialState(
 				'config',
-				['currency' => $appConfig->getValueString(self::APP_ID, 'currency', 'EUR')]
+				[
+					'currency' => $appConfig->getValueString(self::APP_ID, 'currency', 'EUR'),
+					'pipelineTarget' => $appConfig->getValueInt(self::APP_ID, ForecastService::PIPELINE_TARGET_KEY, 0),
+				]
 			);
 		} catch (\Exception $e) {
 			// Initial state unavailable — Features tab will fall back to [].

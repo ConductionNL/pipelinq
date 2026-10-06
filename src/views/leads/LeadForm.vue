@@ -467,10 +467,16 @@ export default {
 		normaliseCurrency,
 
 		/**
+		 * Put a new lead on the default lead pipeline, or the first one when
+		 * none is marked default, in its first open stage. Every lead sits in
+		 * a stage; the server fills one in too, this shows it in the form.
+		 *
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-41
+		 * @spec openspec/changes/pipeline-numbers-tell-the-truth/specs/lead-management/spec.md
 		 */
 		autoAssignDefaultPipeline() {
-			const defaultPipeline = this.leadPipelines.find((p) => p.isDefault)
+			const defaultPipeline =
+				this.leadPipelines.find((p) => p.isDefault) || this.leadPipelines[0]
 			if (defaultPipeline) {
 				this.form.pipeline = defaultPipeline.id
 				const stages = [...(defaultPipeline.stages || [])].sort(
@@ -502,6 +508,29 @@ export default {
 		},
 
 		/**
+		 * The stage order of the chosen stage, and a fresh entry time when the
+		 * stage changed, so the board and the aging figures stay consistent.
+		 *
+		 * @param {string|undefined} stage The chosen stage name.
+		 * @return {object} The fields to add to the saved lead.
+		 * @spec openspec/changes/pipeline-numbers-tell-the-truth/specs/lead-management/spec.md
+		 */
+		stagePlacement(stage) {
+			if (!stage) return {}
+			const placement = {}
+			const match = (this.selectedPipeline?.stages || []).find(
+				(s) => s.name === stage,
+			)
+			if (match && match.order !== undefined && match.order !== null) {
+				placement.stageOrder = Number(match.order)
+			}
+			if (!this.lead || this.lead.stage !== stage) {
+				placement.stageEnteredAt = new Date().toISOString()
+			}
+			return placement
+		},
+
+		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-50
 		 */
 		onSave() {
@@ -519,6 +548,7 @@ export default {
 			if (!data.contact) delete data.contact
 			if (!data.pipeline) delete data.pipeline
 			if (!data.stage) delete data.stage
+			Object.assign(data, this.stagePlacement(data.stage))
 
 			this.$emit('save', data)
 		},

@@ -451,7 +451,7 @@
 		{
 			"id": "Pipeline",
 			"label": "Pipeline",
-			"icon": "Domain",
+			"icon": "ViewColumnOutline",
 			"route": "Pipeline",
 			"order": 100
 		},
@@ -508,7 +508,7 @@
 		{
 			"id": "Pipelines",
 			"label": "Pipelines",
-			"icon": "Domain",
+			"icon": "ViewColumnOutline",
 			"route": "Pipelines",
 			"order": 200
 		},
@@ -739,7 +739,7 @@
 							"dataSource": {
 								"register": "pipelinq",
 								"schema": "lead",
-								"filter": {},
+								"filter": { "status": "won" },
 								"bucket": {
 									"field": "expectedCloseDate",
 									"interval": "month",
@@ -758,7 +758,7 @@
 							"dataSource": {
 								"register": "pipelinq",
 								"schema": "lead",
-								"filter": {},
+								"filter": { "status": "open" },
 								"groupBy": {
 									"field": "stage",
 									"metric": "sum",
@@ -777,7 +777,7 @@
 							"dataSource": {
 								"register": "pipelinq",
 								"schema": "lead",
-								"filter": {},
+								"filter": { "status": "won" },
 								"groupBy": {
 									"field": "source",
 									"metric": "sum",
@@ -796,7 +796,7 @@
 							"dataSource": {
 								"register": "pipelinq",
 								"schema": "lead",
-								"filter": {},
+								"filter": { "status": "won" },
 								"groupBy": {
 									"field": "client",
 									"metric": "sum",
@@ -922,10 +922,11 @@
 						"title": "Pipeline coverage",
 						"content": {
 							"label": "Open pipeline vs target",
+							"labelWithoutTarget": "Open pipeline (no target set)",
 							"route": { "name": "Pipeline" },
 							"format": {
 								"style": "currency",
-								"currency": "EUR",
+								"currency": "@config.currency",
 								"decimals": 0
 							},
 							"source": {
@@ -935,7 +936,7 @@
 								"field": "value",
 								"filter": { "status": "open" }
 							},
-							"target": { "kind": "static", "value": 500000 },
+							"target": { "kind": "static", "value": "@config.pipelineTarget" },
 							"thresholds": {
 								"warn": 60,
 								"danger": 90,
@@ -1939,8 +1940,9 @@
 									"label": "Value"
 								},
 								{
-									"key": "probability",
-									"label": "Probability"
+									"key": "qualificationScore",
+									"label": "Win chance",
+									"widget": "lead-probability"
 								},
 								{
 									"key": "expectedCloseDate",
@@ -2677,8 +2679,9 @@
 									"label": "Value"
 								},
 								{
-									"key": "probability",
-									"label": "Probability"
+									"key": "qualificationScore",
+									"label": "Win chance",
+									"widget": "lead-probability"
 								},
 								{
 									"key": "status",
@@ -3020,21 +3023,9 @@
 					"status",
 					"priority",
 					{
-						"key": "probability",
-						"label": "Probability",
-						"widget": "lead-probability",
-						"sortable": true
-					},
-					{
-						"key": "winProbability",
-						"label": "Win %",
-						"widget": "lead-probability",
-						"sortable": true
-					},
-					{
 						"key": "qualificationScore",
-						"label": "Score",
-						"widget": "lead-score",
+						"label": "Win chance",
+						"widget": "lead-probability",
 						"sortable": true
 					},
 					"value",

@@ -656,7 +656,7 @@ class AnalyticsService {
 	 *   - wonValue:          sum of won-lead value closed in window
 	 *   - winRate:           won / (won + lost) leads closed in window (0-100, null if none)
 	 *   - avgDealSize:       mean won-lead value in window (null if none)
-	 *   - weightedForecast:  sum over OPEN leads of value * probability/100 (forward-looking)
+	 *   - weightedForecast:  sum over OPEN leads of value * win chance (qualification score / 100)
 	 *   - openPipelineValue: sum of value over OPEN leads (forward-looking)
 	 *   - previousPeriod:    windowed figures for the preceding equal-length window
 	 *
@@ -794,6 +794,7 @@ class AnalyticsService {
 	 * @return array{weightedForecast: float, openPipelineValue: float}
 	 *
 	 * @spec openspec/specs/commercial-dashboard/spec.md
+	 * @spec openspec/changes/pipeline-numbers-tell-the-truth/specs/commercial-dashboard/spec.md
 	 */
 	private function aggregateOpenPipeline(array $leads): array {
 		$weightedForecast = 0.0;
@@ -803,10 +804,8 @@ class AnalyticsService {
 				continue;
 			}
 
-			$value = (float)($lead['value'] ?? 0);
-			$probability = (float)($lead['probability'] ?? 0);
-			$openPipelineValue += $value;
-			$weightedForecast += ($value * ($probability / 100.0));
+			$openPipelineValue += (float)($lead['value'] ?? 0);
+			$weightedForecast += $this->winChanceWeightedValue(lead: $lead);
 		}
 
 		return [
@@ -814,6 +813,30 @@ class AnalyticsService {
 			'openPipelineValue' => round($openPipelineValue, 2),
 		];
 	}//end aggregateOpenPipeline()
+
+	/**
+	 * A lead's value weighted by its win chance.
+	 *
+	 * The win chance is the lead's qualification score read as a percentage,
+	 * clamped to 0-100; a lead without a score counts as 0 (decided by Ruben,
+	 * 2026-10-06). The `probability` field is hidden on the lead form and
+	 * empty on real installs, so it never feeds a forecast. RapportageService
+	 * applies the same rule; keep the two in step.
+	 *
+	 * @param array<string, mixed> $lead The lead row.
+	 *
+	 * @return float The weighted value.
+	 *
+	 * @spec openspec/changes/pipeline-numbers-tell-the-truth/specs/commercial-dashboard/spec.md
+	 */
+	private function winChanceWeightedValue(array $lead): float {
+		$score = ($lead['qualificationScore'] ?? null);
+		if (is_numeric($score) === false) {
+			return 0.0;
+		}
+
+		return ((float)($lead['value'] ?? 0) * (max(0.0, min(100.0, (float)$score)) / 100.0));
+	}//end winChanceWeightedValue()
 
 	/**
 	 * Time-bucketed revenue series: settled-POS turnover + won-deal value.

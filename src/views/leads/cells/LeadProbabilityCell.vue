@@ -9,7 +9,7 @@
 			<span
 				v-if="isLow"
 				class="lead-prob-cell__badge"
-				:aria-label="t('pipelinq', 'Low probability')">
+				:aria-label="t('pipelinq', 'Low win chance')">
 				<AlertCircleOutline :size="14" class="lead-prob-cell__badge-icon" />
 				<span class="lead-prob-cell__badge-label">{{
 					t('pipelinq', 'Low')
