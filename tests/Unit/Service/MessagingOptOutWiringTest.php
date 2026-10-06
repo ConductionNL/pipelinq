@@ -63,7 +63,7 @@ class MessagingOptOutWiringTest extends TestCase {
 			/** @var array<string, array{schema: string, row: array<string, mixed>}> */
 			public array $rows = [];
 
-			public function saveObject(array $object, $register = null, $schema = null, ?string $uuid = null): array {
+			public function saveObject(array $object, $register = null, $schema = null, ?string $uuid = null, bool $_rbac = true, bool $_multitenancy = true): array {
 				$uuid = ($uuid ?? ($object['uuid'] ?? ('obj-'.count($this->rows))));
 				$object['uuid'] = $uuid;
 				$this->rows[$uuid] = ['schema' => (string)$schema, 'row' => $object];
@@ -78,7 +78,7 @@ class MessagingOptOutWiringTest extends TestCase {
 				return $hit['row'];
 			}
 
-			public function findAll(array $config = []): array {
+			public function findAll(array $config = [], bool $_rbac = true, bool $_multitenancy = true): array {
 				$filters = ($config['filters'] ?? []);
 				$schema = ($filters['schema'] ?? null);
 				unset($filters['register'], $filters['schema']);
@@ -128,6 +128,7 @@ class MessagingOptOutWiringTest extends TestCase {
 
 		$this->providerRepo = $this->createMock(ChannelProviderRepository::class);
 		$this->providerRepo->method('findById')->willReturn(['uuid' => 'prov-1', 'kind' => 'sms', 'vendor' => 'twilio']);
+		$this->providerRepo->method('findByIdForWebhook')->willReturn(['uuid' => 'prov-1', 'kind' => 'sms', 'vendor' => 'twilio']);
 		$this->providerRepo->method('listActive')->willReturnCallback(
 			static fn (string $kind) => [['uuid' => 'prov-'.$kind, 'kind' => $kind, 'vendor' => 'twilio', 'priority' => 1]]
 		);

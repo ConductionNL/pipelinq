@@ -73,6 +73,20 @@ class SmsAdapterTest extends TestCase {
 			public array $saved = [];
 
 			/**
+			 * Every call with the access flags it was made with.
+			 *
+			 * @var array<int, array{call: string, _rbac: bool, _multitenancy: bool}>
+			 */
+			public array $access = [];
+
+			/**
+			 * Contacts by phone number, for the contact lookup.
+			 *
+			 * @var array<string, string>
+			 */
+			public array $contacts = [];
+
+			/**
 			 * Mock saveObject.
 			 *
 			 * @param array $object Payload.
@@ -82,7 +96,8 @@ class SmsAdapterTest extends TestCase {
 			 *
 			 * @return array<string, mixed>
 			 */
-			public function saveObject(array $object, $register = null, $schema = null, ?string $uuid = null): array {
+			public function saveObject(array $object, $register = null, $schema = null, ?string $uuid = null, bool $_rbac = true, bool $_multitenancy = true): array {
+				$this->access[] = ['call' => 'saveObject', '_rbac' => $_rbac, '_multitenancy' => $_multitenancy];
 				$object['uuid'] = ($uuid ?? ('row-' . count($this->saved)));
 				$this->saved[] = $object;
 				return $object;
@@ -97,7 +112,14 @@ class SmsAdapterTest extends TestCase {
 			 *
 			 * @return array<int, array<string, mixed>>
 			 */
-			public function findAll(array $config = []): array {
+			public function findAll(array $config = [], bool $_rbac = true, bool $_multitenancy = true): array {
+				$this->access[] = ['call' => 'findAll', '_rbac' => $_rbac, '_multitenancy' => $_multitenancy];
+				// The contact schema stores the number under `phone`.
+				$phone = (string)($config['filters']['phone'] ?? '');
+				if ($phone !== '' && isset($this->contacts[$phone]) === true) {
+					return [['uuid' => $this->contacts[$phone], 'phone' => $phone]];
+				}
+
 				return [];
 			}
 		};
@@ -300,7 +322,7 @@ class SmsAdapterTest extends TestCase {
 	 */
 	public function testHandleInboundWebhookInvalidSignature(): void {
 		$row = ['uuid' => 'prov-1', 'kind' => 'sms', 'vendor' => 'twilio'];
-		$this->providerRepo->method('findById')->willReturn($row);
+		$this->providerRepo->method('findByIdForWebhook')->willReturn($row);
 		$this->providerFactory->method('create')
 			->willReturn($this->buildClient('twilio', 'success', 'ext-1', false));
 
@@ -318,7 +340,7 @@ class SmsAdapterTest extends TestCase {
 	 */
 	public function testHandleInboundWebhookPersistsAndRoutes(): void {
 		$row = ['uuid' => 'prov-1', 'kind' => 'sms', 'vendor' => 'twilio'];
-		$this->providerRepo->method('findById')->willReturn($row);
+		$this->providerRepo->method('findByIdForWebhook')->willReturn($row);
 		$this->providerFactory->method('create')
 			->willReturn($this->buildClient('twilio', 'success', 'ext-1', true));
 
@@ -339,7 +361,7 @@ class SmsAdapterTest extends TestCase {
 	 */
 	public function testHandleInboundWebhookStopKeywordOptsOut(): void {
 		$row = ['uuid' => 'prov-1', 'kind' => 'sms', 'vendor' => 'twilio'];
-		$this->providerRepo->method('findById')->willReturn($row);
+		$this->providerRepo->method('findByIdForWebhook')->willReturn($row);
 		$this->providerFactory->method('create')
 			->willReturn($this->buildClient('twilio', 'success', 'ext-1', true));
 
@@ -350,7 +372,8 @@ class SmsAdapterTest extends TestCase {
 				$this->equalTo('sms'),
 				$this->equalTo('keyword-stop'),
 				$this->stringContains('STOP'),
-			);
+			)
+			->willReturn(['store' => 'integriq']);
 
 		$rawBody = json_encode(['From' => '+31600000000', 'Body' => 'STOP']);
 		$result = $this->adapter->handleInboundWebhook($rawBody, 'sig', 'prov-1');
@@ -358,4 +381,83 @@ class SmsAdapterTest extends TestCase {
 		$this->assertSame('received', $result['status']);
 		$this->assertTrue($result['optOutRecorded']);
 	}//end testHandleInboundWebhookStopKeywordOptsOut()
+
+	/**
+	 * A STOP from a known contact's number is recorded on that contact: the
+	 * lookup asks for the schema's `phone` field.
+	 *
+	 * @return void
+	 */
+	public function testInboundStopFindsTheContactByPhone(): void {
+		$this->objectService->contacts = ['+31611119999' => 'c-gert'];
+		$this->providerRepo->method('findByIdForWebhook')->willReturn(['uuid' => 'prov-1', 'kind' => 'sms', 'vendor' => 'messagebird']);
+		$this->providerFactory->method('create')
+			->willReturn($this->buildClient('messagebird', 'success', 'ext-1', true));
+		$this->consentService->method('isOptOutKeyword')->willReturn(true);
+		$this->consentService->expects($this->once())
+			->method('recordOptOut')
+			->with($this->equalTo('c-gert'), $this->equalTo('sms'))
+			->willReturn(['store' => 'integriq']);
+
+		$result = $this->adapter->handleInboundWebhook(json_encode(['from' => '+31611119999', 'body' => 'STOP']), 'sig', 'prov-1');
+
+		$this->assertFalse($result['placeholderCreated']);
+		$this->assertTrue($result['optOutRecorded']);
+	}//end testInboundStopFindsTheContactByPhone()
+
+	/**
+	 * optOutRecorded reports what happened, not that a STOP arrived.
+	 *
+	 * @return void
+	 */
+	public function testAStopThatIsNotRecordedIsNotReportedAsRecorded(): void {
+		$this->providerRepo->method('findByIdForWebhook')->willReturn(['uuid' => 'prov-1', 'kind' => 'sms', 'vendor' => 'messagebird']);
+		$this->providerFactory->method('create')
+			->willReturn($this->buildClient('messagebird', 'success', 'ext-1', true));
+		$this->consentService->method('isOptOutKeyword')->willReturn(true);
+		$this->consentService->method('recordOptOut')->willReturn(null);
+
+		$result = $this->adapter->handleInboundWebhook(json_encode(['from' => '+31611119999', 'body' => 'STOP']), 'sig', 'prov-1');
+
+		$this->assertFalse($result['optOutRecorded']);
+	}//end testAStopThatIsNotRecordedIsNotReportedAsRecorded()
+
+	/**
+	 * The provider's webhook is a PublicPage: no user is logged in, so a
+	 * read or write under OpenRegister's RBAC finds nothing ("not found in
+	 * any magic table") and the webhook answered providerUnknown to every
+	 * real callback. The provider lookup and every write after the
+	 * signature check run as the system.
+	 *
+	 * @return void
+	 */
+	public function testInboundWebhookReadsAndWritesAsTheSystem(): void {
+		$row = ['uuid' => 'prov-1', 'kind' => 'sms', 'vendor' => 'messagebird'];
+		$this->providerRepo->expects($this->once())
+			->method('findByIdForWebhook')
+			->with('prov-1')
+			->willReturn($row);
+		$this->providerFactory->method('create')
+			->willReturn($this->buildClient('messagebird', 'success', 'ext-1', true));
+		$this->consentService->method('isOptOutKeyword')->willReturn(true);
+		$this->consentService->expects($this->once())
+			->method('recordOptOut')
+			->with(
+				$this->isType('string'),
+				$this->equalTo('sms'),
+				$this->equalTo('keyword-stop'),
+				$this->stringContains('STOP'),
+				$this->anything(),
+				$this->equalTo('+31611119999'),
+			);
+
+		$result = $this->adapter->handleInboundWebhook(json_encode(['from' => '+31611119999', 'body' => 'STOP']), 'sig', 'prov-1');
+
+		$this->assertSame('received', $result['status']);
+		$this->assertNotSame([], $this->objectService->access);
+		foreach ($this->objectService->access as $access) {
+			$this->assertFalse($access['_rbac'], $access['call'] . ' ran under RBAC');
+			$this->assertFalse($access['_multitenancy'], $access['call'] . ' ran under multitenancy');
+		}
+	}//end testInboundWebhookReadsAndWritesAsTheSystem()
 }//end class
