@@ -4516,6 +4516,7 @@ OC.L10N.register(
         "none": "geen",
         "noreply@example.org, mailer@example.org": "noreply@voorbeeld.nl, mailer@voorbeeld.nl",
         "on this deal": "op deze deal",
+        "per interval": "per termijn",
         "open": "open",
         "open opportunities": "open kansen",
         "opportunities": "kansen",

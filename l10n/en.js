@@ -4575,6 +4575,7 @@ OC.L10N.register(
         "none": "none",
         "noreply@example.org, mailer@example.org": "noreply@example.org, mailer@example.org",
         "on this deal": "on this deal",
+        "per interval": "per interval",
         "open": "open",
         "open opportunities": "open opportunities",
         "opportunities": "opportunities",
