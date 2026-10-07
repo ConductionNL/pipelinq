@@ -300,7 +300,10 @@ class Application extends App implements IBootstrap {
 			listener: ObjectsMergedSyncListener::class
 		);
 		// Contact erasure keeps the opt-out in integriq (opt-out-before-send REQ-CII-005).
+		// An API delete is a soft delete, which OpenRegister reports as an update
+		// (erase-on-soft-delete REQ-CII-008); the purge is the deleted event.
 		$context->registerEventListener(event: ObjectDeletedEvent::class, listener: ContactErasedListener::class);
+		$context->registerEventListener(event: ObjectUpdatedEvent::class, listener: ContactErasedListener::class);
 
 		// Marketing: portaliq relays a landing-page form submission by
 		// dispatching PIPELINQ'S OWN event class, which it resolves by the

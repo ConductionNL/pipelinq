@@ -164,6 +164,16 @@ class ObjectEntity extends Entity implements JsonSerializable, ObjectEntityInter
 	protected ?array $object = null;
 
 	/**
+	 * Deletion details when the object is in the trash.
+	 *
+	 * Mirrors production (lib/Db/ObjectEntity.php:317): defaults to `[]`, not
+	 * `null`, so only {@see self::isSoftDeleted()} answers "in the trash".
+	 *
+	 * @var array<string,mixed>|null
+	 */
+	protected ?array $deleted = [];
+
+	/**
 	 * Register the field types, as the production entity does.
 	 */
 	public function __construct() {
@@ -173,8 +183,20 @@ class ObjectEntity extends Entity implements JsonSerializable, ObjectEntityInter
 		$this->addType('organisation', 'string');
 		$this->addType('owner', 'string');
 		$this->addType('object', 'json');
+		$this->addType('deleted', 'json');
 
 	}//end __construct()
+
+	/**
+	 * Whether this object is in the trash.
+	 *
+	 * Mirrors production (lib/Db/ObjectEntity.php:2046-2048).
+	 *
+	 * @return bool True when the object carries deletion metadata.
+	 */
+	public function isSoftDeleted(): bool {
+		return $this->deleted !== null && $this->deleted !== [];
+	}//end isSoftDeleted()
 
 	/**
 	 * Return the object data with 'id' injected from the UUID.
