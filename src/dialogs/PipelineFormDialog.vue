@@ -347,6 +347,7 @@ import ChevronDown from 'vue-material-design-icons/ChevronDown.vue'
 import ChevronUp from 'vue-material-design-icons/ChevronUp.vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
+import { pipelineMappingsPayload, pipelineStagesPayload } from '../services/pipelinePayload.js'
 import { getViews } from '../services/viewService.js'
 
 export default {
@@ -597,26 +598,15 @@ export default {
 
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-37
+		 * @spec openspec/changes/review-finish/specs/pipeline/spec.md
 		 */
 		onSave() {
 			if (!this.isValid) return
 
 			const data = {
 				...this.form,
-				propertyMappings: this.form.propertyMappings.map((m) => ({
-					schemaSlug: m.schemaSlug,
-					columnProperty: m.columnProperty,
-					totalsProperty: m.totalsProperty || null,
-				})),
-
-				stages: this.form.stages.map((s) => ({
-					name: s.name,
-					order: s.order,
-					probability: s.probability,
-					isClosed: !!s.isClosed,
-					isWon: !!s.isWon,
-					color: s.color || null,
-				})),
+				propertyMappings: pipelineMappingsPayload(this.form.propertyMappings),
+				stages: pipelineStagesPayload(this.form.stages),
 			}
 
 			this.$emit('save', data)

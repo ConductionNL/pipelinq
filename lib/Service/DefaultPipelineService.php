@@ -98,7 +98,10 @@ class DefaultPipelineService {
 				objectService: $objectService,
 				registerId: $registerId,
 				schemaId: $pipelineSchemaId,
-				data: $this->stageData->getSalesPipelineData(viewId: $viewId)
+				data: $this->stageData->getSalesPipelineData(
+					viewId: $viewId,
+					currency: $this->appConfig->getValueString(Application::APP_ID, 'currency', 'EUR')
+				)
 			);
 
 			$this->savePipeline(
