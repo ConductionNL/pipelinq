@@ -34,6 +34,8 @@ use Psr\Log\LoggerInterface;
 
 /**
  * @covers \OCA\Pipelinq\Service\Demo\DemoRegisterImporter
+ * @uses   \OCA\Pipelinq\Service\ConfigFileLoaderService
+ * @uses   \OCA\Pipelinq\Service\Demo\DemoUserFields
  */
 class DemoRegisterImporterTest extends TestCase {
 	/**
