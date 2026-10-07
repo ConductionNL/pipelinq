@@ -1,7 +1,7 @@
 # first-time-setup Specification
 
 ## Purpose
-TBD - created by archiving change pipelinq-setup-wizard-complete. Update Purpose after archive.
+The first-time setup wizard gets a fresh pipelinq install usable in a few steps. Only the reporting currency is required; example data and organisation details are optional choices the administrator can change later. Provisioning the register is a repair action on the admin settings page, integrations are detected from the instance rather than asked for, and the wizard refuses to continue while a required app is missing.
 
 ## Requirements
 
