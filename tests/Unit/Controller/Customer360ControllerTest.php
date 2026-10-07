@@ -52,6 +52,8 @@ class Customer360ControllerTest extends TestCase {
 	 * @param string|null $uid The authenticated user's UID (null = unauthenticated).
 	 * @param mixed $summaryOrThrow The summary array to return, or a \Throwable to throw.
 	 * @param LoggerInterface|null $logger Optional pre-built logger mock (for asserting calls).
+	 * @param array|null $findCalls Receives the arguments of every ObjectService::find() call.
+	 * @param bool $privileged Whether the caller is in a privileged group.
 	 *
 	 * @return Customer360Controller
 	 */
@@ -61,6 +63,8 @@ class Customer360ControllerTest extends TestCase {
 		?string $uid,
 		mixed $summaryOrThrow,
 		?LoggerInterface $logger = null,
+		?array &$findCalls = null,
+		bool $privileged = true,
 	): Customer360Controller {
 		$request = $this->createMock(IRequest::class);
 		$request->method('getParam')->willReturnCallback(
@@ -103,7 +107,12 @@ class Customer360ControllerTest extends TestCase {
 		}
 
 		$objectService = $this->createMock(\OCA\OpenRegister\Service\ObjectService::class);
-		$objectService->method('find')->willReturn($foundEntity);
+		$objectService->method('find')->willReturnCallback(
+			static function (...$args) use ($foundEntity, &$findCalls) {
+				$findCalls[] = $args;
+				return $foundEntity;
+			}
+		);
 
 		$container = $this->createMock(ContainerInterface::class);
 		$container->method('get')->willReturn($objectService);
@@ -119,7 +128,7 @@ class Customer360ControllerTest extends TestCase {
 			$summaryService,
 			$userSession,
 			$appConfig,
-			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
+			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => $privileged, 'mayAccess' => $privileged]),
 			$container,
 			$logger ?? $this->createMock(LoggerInterface::class),
 		);
@@ -186,33 +195,9 @@ class Customer360ControllerTest extends TestCase {
 	/**
 	 * A readable client returns the summary payload as-is.
 	 *
-	 * INCOMPLETE, DELIBERATELY — see ConductionNL/pipelinq#805. This endpoint has
-	 * never returned data to anybody: `canReadClient()` calls
-	 * `ObjectService::find($clientId, $register, $schema)` POSITIONALLY, so
-	 * `$register` lands in `?array $_extend`, the TypeError is swallowed by the
-	 * method's own `catch (Throwable)`, and the guard denies unconditionally.
-	 *
-	 * The one-line repair is NOT ours to make: the predicate behind the guard is
-	 * `return $object !== null` — an EXISTENCE test, on a `client` schema with no
-	 * owner field and no authorization block — so repairing the call converts an
-	 * endpoint that denies everyone into one that grants every authenticated
-	 * caller a full customer-360 read of any clientId. #805 records this
-	 * explicitly: the crash is load-bearing, and what "may read this client"
-	 * means is an open product decision.
-	 *
-	 * The assertions below are left intact and unedited: they are the spec this
-	 * endpoint must meet once #805 lands. Delete the marker then, not before.
-	 * Retargeting them at the current 404 would convert a product gap into a
-	 * fixed-looking test.
-	 *
 	 * @return void
 	 */
 	public function testSummaryReturnsPayloadForReadableClient(): void {
-		$this->markTestIncomplete(
-			'pipelinq#805: Customer 360 read guard is a dead fail-closed call; '
-			. 'repairing it without an authorisation model is an IDOR.'
-		);
-
 		$controller = $this->buildController(
 			clientId: 'client-1',
 			foundClient: ['name' => 'Client', '@self' => ['id' => 'client-1']],
@@ -230,17 +215,9 @@ class Customer360ControllerTest extends TestCase {
 	 * Doelbinding: a successful access is logged with the acting user and the
 	 * client id (design.md — reuses the app's existing logging facility).
 	 *
-	 * INCOMPLETE, DELIBERATELY — see pipelinq#805 and the note on
-	 * testSummaryReturnsPayloadForReadableClient(). There is no successful access
-	 * to log while the read guard denies every caller. Assertions left intact.
-	 *
 	 * @return void
 	 */
 	public function testSuccessfulAccessIsLogged(): void {
-		$this->markTestIncomplete(
-			'pipelinq#805: no access can succeed while the read guard is dead.'
-		);
-
 		$logger = $this->createMock(LoggerInterface::class);
 		$logger->expects($this->once())
 			->method('info')
@@ -290,17 +267,9 @@ class Customer360ControllerTest extends TestCase {
 	 * A service-level failure (e.g. OR outage mid-aggregation) is a 500, not
 	 * a leaked stack trace, and is not logged as a successful access.
 	 *
-	 * INCOMPLETE, DELIBERATELY — see pipelinq#805 and the note on
-	 * testSummaryReturnsPayloadForReadableClient(). The summary service is never
-	 * reached, so its failure mode cannot be exercised. Assertions left intact.
-	 *
 	 * @return void
 	 */
 	public function testSummaryReturns500OnServiceFailure(): void {
-		$this->markTestIncomplete(
-			'pipelinq#805: the summary service is unreachable behind the dead guard.'
-		);
-
 		$logger = $this->createMock(LoggerInterface::class);
 		$logger->expects($this->never())->method('info');
 
@@ -318,41 +287,63 @@ class Customer360ControllerTest extends TestCase {
 	}//end testSummaryReturns500OnServiceFailure()
 
 	/**
-	 * TRIPWIRE for pipelinq#805 — do not "fix" this test.
+	 * The read guard reaches OpenRegister with the register and schema in
+	 * their own parameters, RBAC and multitenancy on.
 	 *
-	 * Pins the endpoint's CURRENT, deliberate state: even a privileged caller
-	 * asking for a client that exists and that the ObjectService double resolves
-	 * is answered 404, because `canReadClient()`'s positional `find()` call
-	 * raises a TypeError that its own `catch (Throwable)` swallows.
-	 *
-	 * This is NOT an endorsement of that behaviour. It exists so that repairing
-	 * the call — which is a one-line change any drive-by cleanup would make —
-	 * turns this test RED and forces the author to read #805 first. Behind the
-	 * guard sits `return $object !== null`, an existence test on a schema with
-	 * no owner field, so the repair alone would grant every authenticated caller
-	 * a full customer-360 read of any clientId.
-	 *
-	 * When #805 lands an authorisation model: delete this test and remove the
-	 * markTestIncomplete() calls above.
+	 * The old guard called `find($clientId, $register, $schema)` positionally:
+	 * the register landed in `?array $_extend`, the TypeError was swallowed and
+	 * every caller got 404, so every Customer 360 widget on the client page
+	 * read "Request failed with status code 404" (pipelinq#805). This test fails
+	 * on that code: the mock declares the real signature, so the positional call
+	 * throws before the expectation is met.
 	 *
 	 * @return void
+	 *
+	 * @spec openspec/changes/review-audit-fixes-b/specs/customer-360/spec.md#requirement-the-customer-360-summary-answers-privileged-users-req-raf-030
 	 */
-	public function testReadGuardDeniesEvenAResolvableClientPendingIssue805(): void {
+	public function testReadGuardPassesRegisterAndSchemaByName(): void {
+		$calls = [];
 		$controller = $this->buildController(
 			clientId: 'client-1',
 			foundClient: ['name' => 'Client', '@self' => ['id' => 'client-1']],
 			uid: 'agent-1',
 			summaryOrThrow: ['clientId' => 'client-1', 'openTicketCount' => 4],
+			findCalls: $calls,
 		);
 
 		$response = $controller->summary();
 
-		$this->assertSame(
-			404,
-			$response->getStatus(),
-			'pipelinq#805: the Customer 360 read guard is a dead fail-closed call. '
-			. 'If this is now 200, the positional find() was repaired without an '
-			. 'authorisation model — read #805 before going further.'
+		$this->assertSame(200, $response->getStatus());
+		$this->assertCount(1, $calls);
+		$this->assertSame('client-1', $calls[0][0]);
+		$this->assertSame([], $calls[0][1], 'No extend directives.');
+		$this->assertSame('pipelinq', $calls[0][3], 'Register in the register parameter.');
+		$this->assertSame('client', $calls[0][4], 'Schema in the schema parameter.');
+		$this->assertTrue($calls[0][5], 'RBAC stays on.');
+		$this->assertTrue($calls[0][6], 'Multitenancy stays on.');
+	}//end testReadGuardPassesRegisterAndSchemaByName()
+
+	/**
+	 * A caller outside the privileged groups gets 403 and nothing is read.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/review-audit-fixes-b/specs/customer-360/spec.md#requirement-the-customer-360-summary-answers-privileged-users-req-raf-030
+	 */
+	public function testNonPrivilegedCallerIsForbidden(): void {
+		$calls = [];
+		$controller = $this->buildController(
+			clientId: 'client-1',
+			foundClient: ['name' => 'Client', '@self' => ['id' => 'client-1']],
+			uid: 'agent-2',
+			summaryOrThrow: ['clientId' => 'client-1'],
+			findCalls: $calls,
+			privileged: false,
 		);
-	}//end testReadGuardDeniesEvenAResolvableClientPendingIssue805()
+
+		$response = $controller->summary();
+
+		$this->assertSame(403, $response->getStatus());
+		$this->assertSame([], $calls);
+	}//end testNonPrivilegedCallerIsForbidden()
 }//end class
