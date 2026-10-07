@@ -1218,7 +1218,7 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "Leads list (Score column, Call first); Pipeline board card and list view; the score badge opens the explanation",
 				"readOn": "2026-09-29",
-				"change": "openspec/changes/archive/2026-09-29-pipeline-lead-score-call-first"
+				"change": "archive/2026-09-29-pipeline-lead-score-call-first"
 			},
 			"note": "Built 2026-09-29: the stored qualificationScore shows in the Leads list and on the board, sorts, and explains which criteria added points. Scoring on engagement (mail opens, visits) is not part of it.",
 			"evidence": {
@@ -1520,7 +1520,7 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "lead create and edit form; Leads list currency column; admin Forecast settings, Exchange rates",
 				"readOn": "2026-09-27",
-				"change": "openspec/changes/pipeline-live-exchange-rates"
+				"change": "pipeline-live-exchange-rates"
 			},
 			"note": "lead: since pipelinq#2040 a deal carries its currency and the forecast converts it; the rate table is maintained by hand in Forecast settings, not fetched live, hence partial. The forecast and the setup wizard now share one reporting currency (app config 'currency'). Specified 2026-09-28 in openspec/changes/pipeline-live-exchange-rates (OpenSpec pass).",
 			"evidence": {
@@ -1553,7 +1553,7 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "LeadDetail Suggested agents (colleagues ranked by skill, availability and workload, capped per person)",
 				"readOn": "2026-09-27",
-				"change": "openspec/changes/pipeline-lead-rotation"
+				"change": "pipeline-lead-rotation"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/workflows/assign-and-rotate-record-owners-using-workflows \"Rotate record to owner\" with \"load balanced, round robin, and random\" options for tickets and leads (Sales or Service Hub Professional, Enterprise); a cap per person applies to help desk tickets (https://knowledge.hubspot.com/help-desk/set-ticket-capacity-limits-for-users-in-help-desk), not described for leads.",
@@ -1586,7 +1586,7 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "nothing",
 				"readOn": "2026-09-26",
-				"change": "openspec/changes/pipeline-stage-limit"
+				"change": "pipeline-stage-limit"
 			},
 			"evidence": {
 				"hubspot-crm": "not checked: pipeline rules restrict skipping and moving back (https://knowledge.hubspot.com/object-settings/set-up-pipeline-rules) but no limit on items per stage is described (read 2026-09-26).",
@@ -2824,7 +2824,7 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "Templates, TemplateNew, TemplateEdit",
 				"readOn": "2026-09-26",
-				"change": "openspec/changes/work-letter-from-filinq-template"
+				"change": "work-letter-from-filinq-template"
 			},
 			"note": "templates exist for mail and Berichtenbox, not for a printable letter. Specified 2026-09-28 in openspec/changes/work-letter-from-filinq-template (OpenSpec pass).",
 			"evidence": {
@@ -3461,7 +3461,7 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "Campaigns, CampaignNew, CampaignDetail (src/manifest.d/78-marketing-campaigns.json)",
 				"readOn": "2026-09-26",
-				"change": "openspec/changes/marketing-events"
+				"change": "marketing-events"
 			},
 			"note": "an event can be run as a campaign whose landing-page form turns each sign-up into a lead; registrations are not kept as attendees of an event. Specified 2026-09-28 in openspec/changes/marketing-events (OpenSpec pass).",
 			"evidence": {
@@ -3498,7 +3498,7 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "nothing",
 				"readOn": "2026-09-26",
-				"change": "openspec/changes/marketing-block-editor"
+				"change": "marketing-block-editor"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/marketing-email/create-and-send-marketing-emails \"In the marketing email editor ... you can edit its content, appearance, and module locations\" from templates, without HTML. All products and plans.",
@@ -3531,7 +3531,7 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "LeadDetail (lead fields), CampaignReportPage; not the client record",
 				"readOn": "2026-09-26",
-				"change": "openspec/changes/marketing-campaign-on-client"
+				"change": "marketing-campaign-on-client"
 			},
 			"note": "kept on the lead and in the attribution log, only for portaliq landing pages. Specified 2026-09-28 in openspec/changes/marketing-campaign-on-client (OpenSpec pass).",
 			"evidence": {
@@ -4031,7 +4031,7 @@
 				"state": "specified",
 				"evidence": "openspec/specs/product-catalog-quoting, with no matching controller in lib/Controller",
 				"owner": "ConductionNL/pipelinq",
-				"change": "openspec/changes/products-quote-from-lead"
+				"change": "products-quote-from-lead"
 			},
 			"note": "The prices and the tiers are built. Producing a quote document from them is specified and not built. Corrections round 9 (2026-09-28): built.state specified to none, because no change carries the quote document. The archived openspec/changes/archive/2026-03-21-product-catalog-quoting left only the main spec openspec/specs/product-catalog-quoting, which says quote generation and PDF export are not implemented (spec.md:9); the open change products-price-lists prices quote lines and does not produce or send a quote; open change beta-surface-alignment (proposal.md:54-60) records that no PDF or template step exists for the quote-as-contract record. No gap-decisions entry names the row.",
 			"evidence": {
@@ -6234,7 +6234,7 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "Client and contact detail (Call, Mail, Directions), client and lead detail (Log a visit), My work, Pipeline board, at phone width in a browser or the Nextcloud mobile apps",
 				"readOn": "2026-09-29",
-				"change": "openspec/changes/archive/2026-09-29-platform-phone-on-the-road"
+				"change": "archive/2026-09-29-platform-phone-on-the-road"
 			},
 			"note": "The four commercial and open source CRMs all ship a native mobile app. We do not. Built 2026-09-29 as the responsive web app (no native client, no offline): tap links, a Today-first My work with follow-ups, and Log a visit.",
 			"evidence": {
@@ -6263,7 +6263,7 @@
 				"state": "specified",
 				"evidence": "no live chat found anywhere in lib/ or src/",
 				"owner": "ConductionNL/pipelinq",
-				"change": "openspec/changes/requests-web-chat-and-bot"
+				"change": "requests-web-chat-and-bot"
 			},
 			"note": "HubSpot's free tier includes live chat and a chatbot. This is a real gap, not a rating we missed. Specified 2026-09-28 in openspec/changes/requests-web-chat-and-bot (OpenSpec pass).",
 			"evidence": {
@@ -6354,7 +6354,7 @@
 				"state": "specified",
 				"evidence": "no extension or plugin directory in the repo",
 				"owner": "ConductionNL/pipelinq",
-				"change": "openspec/changes/contact-moments-mail-add-in"
+				"change": "contact-moments-mail-add-in"
 			},
 			"note": "Ours files mail afterwards by matching the address. Theirs works while you read the mail. Specified 2026-09-28 in openspec/changes/contact-moments-mail-add-in (OpenSpec pass).",
 			"evidence": {
@@ -6383,7 +6383,7 @@
 				"state": "specified",
 				"evidence": "no bulk edit in src/views/clients/ or src/components/",
 				"owner": "ConductionNL/pipelinq",
-				"change": "openspec/changes/clients-bulk-edit-and-undo"
+				"change": "clients-bulk-edit-and-undo"
 			},
 			"note": "Attio and Pipedrive make this the centre of the product. We edit one record at a time. Specified 2026-09-28 in openspec/changes/clients-bulk-edit-and-undo (OpenSpec pass).",
 			"evidence": {
@@ -6458,7 +6458,7 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "ClientDetail and ContactDetail forms, only once a custom field is added",
 				"readOn": "2026-09-26",
-				"change": "openspec/changes/clients-preferred-name"
+				"change": "clients-preferred-name"
 			},
 			"note": "not a shipped field; has to be configured. Specified 2026-09-28 in openspec/changes/clients-preferred-name (OpenSpec pass).",
 			"evidence": {
@@ -6491,7 +6491,7 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "nothing",
 				"readOn": "2026-09-26",
-				"change": "openspec/changes/clients-history-summary-and-risk"
+				"change": "clients-history-summary-and-risk"
 			},
 			"note": "a numeric 360 summary exists; no prose summary of the history. Specified 2026-09-28 in openspec/changes/clients-history-summary-and-risk (OpenSpec pass).",
 			"evidence": {
@@ -6524,7 +6524,7 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "nothing",
 				"readOn": "2026-09-26",
-				"change": "openspec/changes/clients-contact-capture"
+				"change": "clients-contact-capture"
 			},
 			"evidence": {
 				"hubspot-crm": "not checked: searched the knowledge base list for signature parsing and smart paste; enrichment fills fields from HubSpot's dataset (https://knowledge.hubspot.com/records/enrich-your-contact-and-company-data), not from pasted text (read 2026-09-26).",
@@ -6557,7 +6557,7 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "nothing",
 				"readOn": "2026-09-26",
-				"change": "openspec/changes/clients-registry-numbers-and-enrichment"
+				"change": "clients-registry-numbers-and-enrichment"
 			},
 			"note": "a custom field could hold a number, but nothing checks it. Specified 2026-09-28 in openspec/changes/clients-registry-numbers-and-enrichment (OpenSpec pass).",
 			"evidence": {
@@ -6590,7 +6590,7 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "Contracts, ContractDetail; tasks in Tasks and MyWork",
 				"readOn": "2026-09-26",
-				"change": "openspec/changes/clients-history-summary-and-risk"
+				"change": "clients-history-summary-and-risk"
 			},
 			"note": "warning signals exist per contract and per survey answer, not as a client risk view. Specified 2026-09-28 in openspec/changes/clients-history-summary-and-risk (OpenSpec pass).",
 			"evidence": {
@@ -6623,7 +6623,7 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "nothing",
 				"readOn": "2026-09-28",
-				"change": "openspec/changes/clients-reversible-merge"
+				"change": "clients-reversible-merge"
 			},
 			"note": "the merged-away record can at best be restored from OpenRegister's deleted objects, with its links not moved back. Evidence corrected 2026-09-28 (OpenSpec pass): OpenRegister does have a merge reversal, the gap is that client and contact do not declare the merge dialect. Specified 2026-09-28 in openspec/changes/clients-reversible-merge (OpenSpec pass).",
 			"evidence": {
@@ -6656,7 +6656,7 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "nothing",
 				"readOn": "2026-09-26",
-				"change": "openspec/changes/clients-bulk-edit-and-undo"
+				"change": "clients-bulk-edit-and-undo"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/object-settings/restore-crm-changes \"Restore CRM changes by rolling records back to a previous point within the last 14 days. This allows you to undo updates made by workflows, imports, or manual edits\". Marketing, Sales, Service or Data Hub Starter and up.",
@@ -6689,7 +6689,7 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "nothing",
 				"readOn": "2026-09-26",
-				"change": "openspec/changes/clients-contact-capture"
+				"change": "clients-contact-capture"
 			},
 			"evidence": {
 				"hubspot-crm": "not checked: searched the knowledge base list for business card and scanner; https://knowledge.hubspot.com/account-mangagement/how-to-install-the-hubspot-mobile-application names records, calls and email but no card scanner (read 2026-09-26).",
@@ -6722,7 +6722,7 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "nothing",
 				"readOn": "2026-09-26",
-				"change": "openspec/changes/clients-registry-numbers-and-enrichment"
+				"change": "clients-registry-numbers-and-enrichment"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/records/enrich-your-contact-and-company-data \"Enrich contacts and companies using data from HubSpot's commercial dataset. Enrich records individually or in bulk\". Starter and up, with credits.",
@@ -6816,7 +6816,7 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "nothing",
 				"readOn": "2026-09-26",
-				"change": "openspec/changes/products-price-lists"
+				"change": "products-price-lists"
 			},
 			"note": "quantity tiers only; a price list per group or country is missing. Specified 2026-09-28 in openspec/changes/products-price-lists (OpenSpec pass).",
 			"evidence": {
@@ -6905,7 +6905,7 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "portal per tenant domain; back office pages scoped by the active OpenRegister organisation",
 				"readOn": "2026-09-26",
-				"change": "openspec/changes/requests-municipality-per-contact"
+				"change": "requests-municipality-per-contact"
 			},
 			"note": "several municipalities can be kept apart, but one desk cannot see them side by side with the municipality shown on each contact. Specified 2026-09-28 in openspec/changes/requests-municipality-per-contact (OpenSpec pass).",
 			"evidence": {
@@ -6942,7 +6942,7 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "nothing",
 				"readOn": "2026-09-26",
-				"change": "openspec/changes/requests-inbound-to-queue"
+				"change": "requests-inbound-to-queue"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/help-desk/route-tickets-in-help-desk \"set up automatic routing rules so that tickets are automatically routed to specific users and teams\" including \"tickets created manually or via email\", and \"Set up automatic ticket assignment for team email channels\"; skill-based routing too. Service Hub Professional, Enterprise; inbox routing rules on all plans with a paid seat (https://knowledge.hubspot.com/inbox/set-your-conversations-routing-rules).",
@@ -7043,7 +7043,7 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "CTI screen pop; Tickets list search (literal)",
 				"readOn": "2026-09-26",
-				"change": "openspec/changes/contact-moments-phone-lookup"
+				"change": "contact-moments-phone-lookup"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/workflows/format-phone-numbers-using-workflows normalises phone number formats with a workflow action (Professional hubs), which makes later searches match; search tolerance for any typed format is not described.",
@@ -7204,7 +7204,7 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "ClientDetail and ContactDetail, Messages section, Send message",
 				"readOn": "2026-09-26",
-				"change": "openspec/changes/messaging-saved-replies-and-resend"
+				"change": "messaging-saved-replies-and-resend"
 			},
 			"note": "templates cover messaging channels only. Specified 2026-09-28 in openspec/changes/messaging-saved-replies-and-resend (OpenSpec pass).",
 			"evidence": {
@@ -7361,7 +7361,7 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "ClientDetail and ContactDetail (Messages section); nothing puts social messages in the Queue page",
 				"readOn": "2026-09-26",
-				"change": "openspec/changes/requests-inbound-to-queue"
+				"change": "requests-inbound-to-queue"
 			},
 			"note": "WhatsApp arrives but lands per contact, not in the shared queue next to mail and phone; social network direct messages are not ingested at all. Specified 2026-09-28 in openspec/changes/requests-inbound-to-queue (OpenSpec pass). Corrections round 8 (2026-09-28): the inbound WhatsApp text is not shown on the contact, pipelinq#2073; rating kept at partial because inbound WhatsApp is still received and stored (lib/Service/WhatsAppAdapter.php:602) and its conversation shows on the contact. The display fix is task 1.1 of openspec/changes/messaging-saved-replies-and-resend.",
 			"evidence": {
@@ -7405,7 +7405,7 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "nothing",
 				"readOn": "2026-09-26",
-				"change": "openspec/changes/requests-web-chat-and-bot"
+				"change": "requests-web-chat-and-bot"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/customer-agent/deploy-the-customer-agent-to-channels \"you can assign it to Facebook, WhatsApp, calling (BETA), live chat, form, or email channels\"; the spotlight page says it \"hands off with full context attached\" when a question needs a human. Marketing, Sales or Service Hub Professional, Enterprise.",
@@ -7449,7 +7449,7 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "nothing",
 				"readOn": "2026-09-26",
-				"change": "openspec/changes/contact-moments-call-review"
+				"change": "contact-moments-call-review"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/calling/review-call-recordings-and-transcripts \"If you're a user with an assigned Sales Hub or Service Hub Professional or Enterprise seat, you can transcribe and analyze recordings\"; call summaries come from the same page's AI analysis and record summaries (https://knowledge.hubspot.com/records/summarize-records).",
@@ -7498,7 +7498,7 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "TicketDetail (recording link on the contact moment)",
 				"readOn": "2026-09-26",
-				"change": "openspec/changes/contact-moments-call-review"
+				"change": "contact-moments-call-review"
 			},
 			"note": "listen back only; score and coaching points are missing. Specified 2026-09-28 in openspec/changes/contact-moments-call-review (OpenSpec pass).",
 			"evidence": {
@@ -7535,7 +7535,7 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "ClientDetail and ContactDetail quick log; CTI screen pop",
 				"readOn": "2026-09-26",
-				"change": "openspec/changes/contact-moments-keep-draft"
+				"change": "contact-moments-keep-draft"
 			},
 			"note": "a half typed manual contact moment is lost when the tab closes or the session expires. Specified 2026-09-28 in openspec/changes/contact-moments-keep-draft (OpenSpec pass).",
 			"evidence": {
@@ -7600,7 +7600,7 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "Tickets list (from_number on each record); CTI screen pop for known callers",
 				"readOn": "2026-09-26",
-				"change": "openspec/changes/contact-moments-phone-lookup"
+				"change": "contact-moments-phone-lookup"
 			},
 			"note": "the data is there, the view for an unknown caller is not. Specified 2026-09-28 in openspec/changes/contact-moments-phone-lookup (OpenSpec pass).",
 			"evidence": {
@@ -7665,7 +7665,7 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "ClientDetail and ContactDetail Messages section (status only)",
 				"readOn": "2026-09-26",
-				"change": "openspec/changes/messaging-saved-replies-and-resend"
+				"change": "messaging-saved-replies-and-resend"
 			},
 			"note": "the failure is visible, the one click resend is not. Specified 2026-09-28 in openspec/changes/messaging-saved-replies-and-resend (OpenSpec pass). Own rating partial to no (corrections round 8, 2026-09-28): the partial rested on the failed status shown in the Messages section, and that section is always empty, pipelinq#2073. The fix is task 1.1 of openspec/changes/messaging-saved-replies-and-resend, the change this row is already specified in.",
 			"evidence": {
@@ -7783,7 +7783,7 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "background jobs (no page needed); tickets and tasks are the Tickets, Queue and Tasks pages",
 				"readOn": "2026-09-26",
-				"change": "openspec/changes/platform-client-retention"
+				"change": "platform-client-retention"
 			},
 			"note": "contact moments, tasks and BRP data expire by themselves; client and contact records have no retention term, and request/complaint tickets are set to P100Y. Specified 2026-09-28 in openspec/changes/platform-client-retention (OpenSpec pass).",
 			"evidence": {
@@ -7820,7 +7820,7 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "every page; portal at /apps/pipelinq/portal",
 				"readOn": "2026-09-26",
-				"change": "openspec/changes/platform-accessibility-statement"
+				"change": "platform-accessibility-statement"
 			},
 			"note": "no published accessibility statement and no audit evidence for the back office screens. Specified 2026-09-28 in openspec/changes/platform-accessibility-statement (OpenSpec pass).",
 			"evidence": {
@@ -7958,7 +7958,7 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "ContractDetail, PosTransactionDetail, TicketDetail (implicit)",
 				"readOn": "2026-09-26",
-				"change": "openspec/changes/platform-record-lock"
+				"change": "platform-record-lock"
 			},
 			"note": "no general 'lock this record' for users. Specified 2026-09-28 in openspec/changes/platform-record-lock (OpenSpec pass).",
 			"evidence": {
@@ -8086,7 +8086,7 @@
 				"state": "specified",
 				"evidence": "shipped schema titles are English source strings translated at display time (nextcloud-vue v2.56.0 src/utils/schema.js:599 \"label: tr(prop.title || key)\") from pipelinq's l10n files (l10n/nl.json, de.json, guarded by package.json:12 check:schema-l10n); a field an administrator adds has a single title and no per-language labels, so it shows the same text to everyone",
 				"owner": "ConductionNL/openregister",
-				"change": "ConductionNL/openregister openspec/changes/modelling-field-names-per-language",
+				"change": "openregister/modelling-field-names-per-language",
 				"reachedOn": "every index and detail page",
 				"readOn": "2026-09-26"
 			},
@@ -8146,7 +8146,7 @@
 				"state": "specified",
 				"evidence": "lib/Service/Portal/PortalAuthService.php:189 \"$this->hasher->verify($password, ...)\": portal login is an own account with password plus MFA (PortalMfaService); no DigiD, eHerkenning, SAML or OIDC anywhere in lib/Service/Portal, lib/Controller/Portal* or src/portal",
 				"owner": "ConductionNL/portaliq",
-				"change": "ConductionNL/portaliq openspec/changes/signin-integriq-broker-login",
+				"change": "portaliq/2026-09-29-signin-integriq-broker-login",
 				"reachedOn": "nothing",
 				"readOn": "2026-09-26"
 			},
@@ -8185,7 +8185,7 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "portal request detail; TicketDetail field 'Message to the customer'",
 				"readOn": "2026-09-27",
-				"change": "openspec/changes/portal-resident-view-preview"
+				"change": "portal-resident-view-preview"
 			},
 			"note": "lead: since pipelinq#2038 the handler's message to the customer is its own ticket field; the back office still has no preview of the whole resident view. Specified 2026-09-28 in openspec/changes/portal-resident-view-preview (OpenSpec pass).",
 			"evidence": {
@@ -8216,7 +8216,7 @@
 				"state": "specified",
 				"evidence": "each portal tenant carries enabledFeatures (lib/Service/Portal/PortalTenantService.php:62 PUBLIC_FIELDS, isFeatureEnabled) and src/portal/views/PortalDashboard.vue:123 \"all.filter((tab) => this.features.includes(tab.key))\" shows only those tabs; records are scoped to the account's own contact and delegations (PortalScopeResolver). An admin sets the tabs in the Customer portal section of the Pipelinq admin settings (src/components/admin/PortalSettings.vue, mounted by src/views/settings/Settings.vue), which reads GET /portal/api/admin/tenant-config and saves through POST /portal/api/admin/tenant-config. The choice is per tenant, not per client",
 				"owner": "ConductionNL/portaliq",
-				"change": "ConductionNL/portaliq openspec/changes/operate-pages-per-portal-and-client",
+				"change": "portaliq/operate-pages-per-portal-and-client",
 				"reachedOn": "portal dashboard tabs; Administration settings, Pipelinq, Customer portal",
 				"readOn": "2026-09-27"
 			},
