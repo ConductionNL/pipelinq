@@ -46,6 +46,7 @@ use OCA\Pipelinq\Service\SmsProviderFactory;
 use OCA\Pipelinq\Service\TicketService;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
+use OCP\IL10N;
 use OCP\IUser;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -201,6 +202,7 @@ class OutboundMessagingContractTest extends TestCase {
 			$this->createMock(IGroupManager::class),
 			$logger,
 			objectService: $this->objectService,
+			l10n: $this->createMock(IL10N::class),
 		);
 
 		$this->container->method('get')->willReturnCallback(
@@ -228,6 +230,7 @@ class OutboundMessagingContractTest extends TestCase {
 			new BudgetService($this->container, $appConfig, $this->createMock(NotificationService::class), $logger),
 			$this->createMock(NotificationService::class),
 			$logger,
+			new \OCA\Pipelinq\Service\PhoneNormaliser($appConfig, $logger),
 		);
 	}//end setUp()
 
@@ -340,6 +343,7 @@ class OutboundMessagingContractTest extends TestCase {
 			$this->createMock(IGroupManager::class),
 			$logger,
 			objectService: $this->createMock(ObjectServiceInterface::class),
+			l10n: $this->createMock(IL10N::class),
 		);
 		$container->method('get')->willReturnCallback(
 			function (string $id) use ($store, $contactmomentService) {
@@ -363,6 +367,7 @@ class OutboundMessagingContractTest extends TestCase {
 			new BudgetService($container, $appConfig, $this->createMock(NotificationService::class), $logger),
 			$this->createMock(NotificationService::class),
 			$logger,
+			new \OCA\Pipelinq\Service\PhoneNormaliser($appConfig, $logger),
 		);
 
 		$this->providerRepo->method('listActive')->willReturn([

@@ -29,10 +29,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Repair;
 
-use InvalidArgumentException;
 use OCA\Pipelinq\Service\Portal\PortalServiceAccount;
-use OCP\Migration\IOutput;
-use OCP\Migration\IRepairStep;
 
 /**
  * Creates the portal service group and enrols the configured account.
@@ -42,19 +39,18 @@ use OCP\Migration\IRepairStep;
  *   sessions, tokens, delegation, documents, invoices, orders, exports and
  *   audit are all unspecified
  */
-class CreatePortalServiceGroup implements IRepairStep {
+class CreatePortalServiceGroup extends CreateServiceGroup {
 	/**
 	 * Constructor.
 	 *
 	 * @param PortalServiceAccount $serviceAccount Creates the group and enrols the account.
 	 */
-	public function __construct(
-		private readonly PortalServiceAccount $serviceAccount,
-	) {
+	public function __construct(PortalServiceAccount $serviceAccount) {
+		parent::__construct(serviceAccount: $serviceAccount);
 	}//end __construct()
 
 	/**
-	 * The repair step name.
+	 * The repair step's name.
 	 *
 	 * @return string The name.
 	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
@@ -67,35 +63,12 @@ class CreatePortalServiceGroup implements IRepairStep {
 	}//end getName()
 
 	/**
-	 * Create the group, then enrol the configured account when there is one.
+	 * The warning while no account is picked yet.
 	 *
-	 * @param IOutput $output The repair output.
-	 *
-	 * @return void
+	 * @return string The warning.
 	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
-	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
-	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
-	 *   audit are all unspecified
 	 */
-	public function run(IOutput $output): void {
-		if ($this->serviceAccount->ensureGroup() === null) {
-			$output->warning('Could not create group '.PortalServiceAccount::GROUP.'.');
-			return;
-		}
-
-		$userId = $this->serviceAccount->configuredUserId();
-		if ($userId === '') {
-			$output->warning(
-				'The customer portal has no service account yet, so it refuses every write. Pick one in the Pipelinq admin settings.'
-			);
-			return;
-		}
-
-		try {
-			$this->serviceAccount->assign(userId: $userId);
-			$output->info('The portal service account '.$userId.' is in group '.PortalServiceAccount::GROUP.'.');
-		} catch (InvalidArgumentException $e) {
-			$output->warning('The portal service account cannot be used: '.$e->getMessage());
-		}
-	}//end run()
+	protected function noAccountWarning(): string {
+		return 'The customer portal has no service account yet, so it refuses every write. Pick one in the Pipelinq admin settings.';
+	}//end noAccountWarning()
 }//end class

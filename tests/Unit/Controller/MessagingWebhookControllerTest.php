@@ -206,6 +206,7 @@ class MessagingWebhookControllerTest extends TestCase {
 			$this->createMock(BudgetService::class),
 			$this->createMock(NotificationService::class),
 			$logger,
+			new \OCA\Pipelinq\Service\PhoneNormaliser($appConfig, $logger),
 		);
 
 		$sms = new SmsAdapter($container,
@@ -216,6 +217,7 @@ class MessagingWebhookControllerTest extends TestCase {
 			$this->createMock(BudgetService::class),
 			$this->createMock(NotificationService::class),
 			$logger,
+			new \OCA\Pipelinq\Service\PhoneNormaliser($appConfig, $logger),
 		);
 
 		return new MessagingWebhookController($this->request(), $whatsApp, $sms, $logger);
@@ -566,4 +568,25 @@ class MessagingWebhookControllerTest extends TestCase {
 			);
 		}
 	}//end testEveryVendorClientComparesTheWebhookSecretInConstantTime()
+
+	/**
+	 * Without a usable messaging service account the webhook writes nothing
+	 * and answers 503, so the provider retries the delivery later. The answer
+	 * names no reason: the caller is the internet.
+	 *
+	 * @return void
+	 */
+	public function testBothWebhooksAnswer503WhenTheServiceAccountIsUnusable(): void {
+		$whatsApp = $this->createMock(WhatsAppAdapter::class);
+		$whatsApp->method('handleInboundWebhook')->willReturn(['status' => 'serviceUnavailable']);
+		$sms = $this->createMock(SmsAdapter::class);
+		$sms->method('handleInboundWebhook')->willReturn(['status' => 'serviceUnavailable']);
+
+		$controller = new MessagingWebhookController($this->request(), $whatsApp, $sms, $this->createMock(LoggerInterface::class));
+
+		foreach ([$controller->whatsapp('provider-1'), $controller->sms('provider-1')] as $response) {
+			$this->assertSame(Http::STATUS_SERVICE_UNAVAILABLE, $response->getStatus());
+			$this->assertSame(['error' => 'serviceUnavailable'], $response->getData());
+		}
+	}//end testBothWebhooksAnswer503WhenTheServiceAccountIsUnusable()
 }//end class
