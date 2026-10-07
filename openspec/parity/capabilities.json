@@ -1076,9 +1076,11 @@
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
-				"evidence": "lib/Lifecycle/ObjectOwnerAccessPolicy.php",
+				"evidence": "client.accountOwner, a user-format field (lib/Settings/register.d/15-unify-client-contact.json); the Clients create dialog offers an 'Account owner' user search defaulting to the creator (src/views/clients/ClientForm.vue:88-103, :255); the client detail page shows it. Ownership labels the client, it does not restrict access",
 				"owner": "ConductionNL/pipelinq",
-				"spec": "none"
+				"spec": "openspec/specs/unify-client-contact",
+				"reachedOn": "Clients -> New client -> Account owner; client detail page",
+				"readOn": "2026-10-07"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/records/how-to-set-a-record-owner \"Assign records to HubSpot users, using the [Object] owner property for contacts, leads, companies, deals, tickets, and custom object records.\" All products and plans.",
@@ -7081,7 +7083,7 @@
 				"state": "built",
 				"evidence": "lib/Lifecycle/ObjectOwnerAccessPolicy.php",
 				"owner": "ConductionNL/pipelinq",
-				"spec": "none"
+				"spec": "openspec/specs/crm-access-groups"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/user-management/hubspot-user-permissions-guide \"Super Admins can set user permissions to control what users can view, create, edit, or delete ... you can give a sales rep permission to communicate only with contacts they own\", per object with owned, team or everything scopes. All products and plans; teams and permission sets on Starter and up. Note: Was partial for paid tiers; basic view and edit scopes are on every plan.",
@@ -7210,7 +7212,7 @@
 				"state": "built",
 				"evidence": "lib/Repair/RenameDutchColumns.php",
 				"owner": "ConductionNL/pipelinq",
-				"spec": "none"
+				"spec": "openspec/specs/renames-keep-stored-data"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/properties/understand-the-property-editor \"Property label ... The label can be changed after creating the property\"; \"Internal name ... used for integration app sync and API calls ... cannot be edited\", so records and integrations keep working after a rename. All products and plans. Note: Was partial; renaming the label is safe by design.",
