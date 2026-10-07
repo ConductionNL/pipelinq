@@ -2809,7 +2809,7 @@
 				"state": "built",
 				"evidence": "lib/Controller/TimeEntryWipController.php",
 				"owner": "ConductionNL/pipelinq",
-				"change": "2026-06-14-pipelinq-time-to-shillinq-wip"
+				"spec": "openspec/specs/time-entry-core"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/records/manually-log-activities-on-records logged meetings carry a duration, but \"call duration is not editable in the Log call widget\" and a custom property is suggested (all plans). Hours per client need a marketplace app, for example StopWatch by Thread Integrations: https://ecosystem.hubspot.com/marketplace/listing/hubclock-by-thread-integrations-552213 \"track time directly against HubSpot CRM records\".",
@@ -3430,7 +3430,7 @@
 				"state": "built",
 				"evidence": "lib/Service/AttributionService.php:154",
 				"owner": "ConductionNL/pipelinq",
-				"spec": "openspec/specs/marketing-blast"
+				"spec": "openspec/specs/marketing-analytics"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/reports/create-attribution-reports report types \"Deal Attribution\", \"Deal Create Attribution\" and \"Revenue Attribution\" credit marketing emails and other interactions with deals and their amount. Marketing Hub or Content Hub Professional, Enterprise.",
