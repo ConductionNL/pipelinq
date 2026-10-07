@@ -23,6 +23,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\Pipelinq\Service\LeadStagePlacer;
+use OCA\Pipelinq\Service\OrphanedLeadPlacer;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -144,7 +145,7 @@ class LeadStagePlacerTest extends TestCase {
 	 * @spec openspec/changes/review-audit-fixes-b/specs/lead-management/spec.md#requirement-a-repair-step-moves-leads-off-a-deleted-pipeline-req-raf-011
 	 */
 	public function testOpenLeadOnADeletedPipelineMovesToTheFirstOpenStage(): void {
-		$patch = (new LeadStagePlacer())->forOrphanedLead(
+		$patch = (new OrphanedLeadPlacer())->forOrphanedLead(
 			lead: ['pipeline' => 'p-gone', 'stage' => 'Qualified', 'status' => 'open'],
 			pipelines: [$this->sales()],
 			now: '2026-10-07T10:00:00+00:00',
@@ -164,7 +165,7 @@ class LeadStagePlacerTest extends TestCase {
 	 * @spec openspec/changes/review-audit-fixes-b/specs/lead-management/spec.md#requirement-a-repair-step-moves-leads-off-a-deleted-pipeline-req-raf-011
 	 */
 	public function testWonLeadOnADeletedPipelineMovesToTheWonStage(): void {
-		$patch = (new LeadStagePlacer())->forOrphanedLead(
+		$patch = (new OrphanedLeadPlacer())->forOrphanedLead(
 			lead: ['pipeline' => 'p-gone', 'status' => 'won'],
 			pipelines: [$this->sales()],
 			now: '2026-10-07T10:00:00+00:00',
@@ -182,7 +183,7 @@ class LeadStagePlacerTest extends TestCase {
 	 * @spec openspec/changes/review-audit-fixes-b/specs/lead-management/spec.md#requirement-a-repair-step-moves-leads-off-a-deleted-pipeline-req-raf-011
 	 */
 	public function testLeadOnALivePipelineOrNoneIsNotMoved(): void {
-		$placer = new LeadStagePlacer();
+		$placer = new OrphanedLeadPlacer();
 		$this->assertSame([], $placer->forOrphanedLead(lead: ['pipeline' => 'p-sales', 'stage' => 'Odd'], pipelines: [$this->sales()]));
 		$this->assertSame([], $placer->forOrphanedLead(lead: ['title' => 'No pipeline'], pipelines: [$this->sales()]));
 	}//end testLeadOnALivePipelineOrNoneIsNotMoved()

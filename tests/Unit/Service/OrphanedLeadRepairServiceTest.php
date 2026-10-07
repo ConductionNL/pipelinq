@@ -23,7 +23,7 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
-use OCA\Pipelinq\Service\LeadStagePlacer;
+use OCA\Pipelinq\Service\OrphanedLeadPlacer;
 use OCA\Pipelinq\Service\OrphanedLeadRepairService;
 use OCA\Pipelinq\Service\SystemServiceAccount;
 use OCP\IAppConfig;
@@ -89,7 +89,7 @@ class OrphanedLeadRepairServiceTest extends TestCase {
 			appConfig: $appConfig,
 			objectService: $objectService,
 			systemAccount: new SystemServiceAccount(userManager: $users, userSession: $session, random: $this->createMock(ISecureRandom::class)),
-			placer: new LeadStagePlacer(),
+			placer: new OrphanedLeadPlacer(),
 			logger: $this->createMock(LoggerInterface::class),
 		);
 	}//end service()

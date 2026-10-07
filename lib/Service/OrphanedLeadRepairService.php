@@ -5,7 +5,7 @@
  *
  * Moves leads off a pipeline that no longer exists. Such a lead is on no
  * board, yet counts in the open pipeline and the forecast (pipelinq review
- * F1). Each one goes to the default lead pipeline; LeadStagePlacer decides the
+ * F1). Each one goes to the default lead pipeline; OrphanedLeadPlacer decides the
  * stage. The writes run as the signed-in user, or as the pipelinq system
  * account during a repair, always with OpenRegister's access checks on.
  *
@@ -50,14 +50,14 @@ class OrphanedLeadRepairService {
 	 * @param IAppConfig             $appConfig     Register and schema ids.
 	 * @param ObjectServiceInterface $objectService OpenRegister's published object service.
 	 * @param SystemServiceAccount   $systemAccount The account the writes run as when nobody is signed in.
-	 * @param LeadStagePlacer        $placer        Decides the pipeline and stage.
+	 * @param OrphanedLeadPlacer     $placer        Decides the pipeline and stage.
 	 * @param LoggerInterface        $logger        The logger.
 	 */
 	public function __construct(
 		private readonly IAppConfig $appConfig,
 		private readonly ObjectServiceInterface $objectService,
 		private readonly SystemServiceAccount $systemAccount,
-		private readonly LeadStagePlacer $placer,
+		private readonly OrphanedLeadPlacer $placer,
 		private readonly LoggerInterface $logger,
 	) {
 	}//end __construct()
