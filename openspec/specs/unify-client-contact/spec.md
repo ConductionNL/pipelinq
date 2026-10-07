@@ -122,3 +122,22 @@ The system SHALL keep the three top-level nav entries `Clients` (order 20), `Con
 - THEN all three nav entries MUST remain present with routes `/clients`, `/contacts`, `/contactmomenten`
 - AND each detail page (`/clients/:id`, `/contacts/:id`, `/contactmomenten/:id`) MUST remain routable for deep links
 
+
+### Requirement: REQ-PUCC-008 — Every client SHALL name the colleague who owns it
+
+The `client` schema SHALL carry `accountOwner`, a Nextcloud user id (`format: user`, declared facetable) holding the colleague responsible for the client (`lib/Settings/register.d/15-unify-client-contact.json`, presented as "The colleague responsible for this client." at form position 8 by `lib/Settings/register.d/99-zz-form-presentation.json`). The create dialog the Clients page opens (`src/manifest.json` page `Clients`, `createModal: ClientCreateDialog`) SHALL offer an "Account owner" user search (`src/views/clients/ClientForm.vue:88-103`) and SHALL default it to the user creating the client (`ClientForm.vue:255`). The client detail page SHALL show the owner with the client's other fields. Ownership is a label for colleagues; it SHALL NOT restrict who may read or edit the client (that is the `crm-access-groups` spec).
+
+@e2e exclude after-the-fact spec of shipped behaviour (spec round 2026-10-07).
+
+#### Scenario: A new client is owned by the person who creates it
+- WHEN a user opens Clients, chooses to add a client and saves without touching "Account owner"
+- THEN the saved client's `accountOwner` MUST be that user's Nextcloud user id
+
+#### Scenario: A client is handed to a colleague
+- WHEN a user picks a colleague in the "Account owner" search of the client form and saves
+- THEN the client's `accountOwner` MUST hold that colleague's user id
+- AND the client detail page MUST show that colleague as the account owner
+
+#### Scenario: Owning a client does not hide it
+- WHEN a client is owned by one colleague and another authenticated user opens the Clients list
+- THEN the client MUST still be listed for the other user

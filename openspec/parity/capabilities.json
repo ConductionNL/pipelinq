@@ -806,11 +806,13 @@
 			"featureConfidence": "medium",
 			"built": {
 				"state": "building",
-				"evidence": "lib/Service/ContactImportService.php holds no CSV reader",
+				"evidence": "The Clients page (src/manifest.json page Clients, type index, register pipelinq, schema client) does not set showMassImport, and nextcloud-vue 2.69.0 defaults it to true (CnActionsBar.vue:504-506), so the page's actions menu shows Import. CnMassImportDialog accepts .json, .xlsx, .xls and .csv (CnMassImportDialog.vue:250); selfModeIO.js:82-102 posts the file to openregister /api/registers/pipelinq/import?schema=client, which reads CSV and Excel (openregister lib/Controller/RegistersController.php:1418-1426). Two limits: the import needs manage permission on the register (RegistersController.php:1406-1415, admin only unless a manage rule exists), and there is no column mapping or duplicate preview, so the file's headers must match the schema's property names",
 				"owner": "ConductionNL/openregister",
-				"change": "openregister/import-preview-and-conflict-policy"
+				"change": "openregister/import-preview-and-conflict-policy",
+				"reachedOn": "Clients -> actions menu -> Import (register managers only)",
+				"readOn": "2026-10-07"
 			},
-			"note": "Reachable through Open Register, not from a pipelinq page. That is why this is partial and not yes.",
+			"note": "Re-read 2026-10-07: reachable from a pipelinq page after all, not only through Open Register. It stays partial: only a register manager can import, and without column mapping or a preview a spreadsheet exported from another CRM does not import as it is. Mapping and preview are openregister's import-preview-and-conflict-policy (open). The client-management spec's 'Client Import from CSV with Column Mapping' asks for more than this.",
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/import-and-export/set-up-your-import-file accepts \".csv, .xlsx, or .xls\"; https://knowledge.hubspot.com/import-and-export/import-objects \"Import records for multiple objects to add or update data\", with associations between contacts and companies. All products and plans.",
 				"kiss": "grep for csv and import screens finds nothing in src/views or src/features; the beheer menu (src/router/index.ts:229) only manages news, skills, links, gespreksresultaten, forms, kanalen and VACs",
@@ -1074,9 +1076,11 @@
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
-				"evidence": "lib/Lifecycle/ObjectOwnerAccessPolicy.php",
+				"evidence": "client.accountOwner, a user-format field (lib/Settings/register.d/15-unify-client-contact.json); the Clients create dialog offers an 'Account owner' user search defaulting to the creator (src/views/clients/ClientForm.vue:88-103, :255); the client detail page shows it. Ownership labels the client, it does not restrict access",
 				"owner": "ConductionNL/pipelinq",
-				"spec": "none"
+				"spec": "openspec/specs/unify-client-contact",
+				"reachedOn": "Clients -> New client -> Account owner; client detail page",
+				"readOn": "2026-10-07"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/records/how-to-set-a-record-owner \"Assign records to HubSpot users, using the [Object] owner property for contacts, leads, companies, deals, tickets, and custom object records.\" All products and plans.",
@@ -3467,10 +3471,10 @@
 			"featureConfidence": "medium",
 			"built": {
 				"state": "specified",
-				"evidence": "a ticket or lead has one assignee (lib/Settings/register.d/99-unify-ticket-supertype.json:210); colleagues can be given work on it through the detail sidebar's Tasks tab (nextcloud-vue CnObjectSidebar, 'Files, Notes, Tags, Tasks, and Audit Trail tabs'), but no followers, watchers or participants field exists, so nobody else is told about updates",
+				"evidence": "openregister built the backend (archived 2026-10-05-object-watchers, PR #3707): appinfo/routes.php:142-161 objectWatchers#watch/unwatch/index/add, lib/Service/Interaction/WatcherService.php, @self.watching and a `watchers` notification recipient kind. Nothing a user reaches uses it: nextcloud-vue on development has no follow or watchers control (no caller of /watch in src/), and no pipelinq schema names `watchers` in its x-openregister-notifications (lib/Settings/register.d/98-update-notifications.json tells only client.accountOwner, lead.assignee, ticket.assignee, crmTask.assigneeUserId). A ticket or lead still has one assignee (lib/Settings/register.d/99-unify-ticket-supertype.json:210); colleagues can only be given work through the detail sidebar's Tasks tab",
 				"owner": "ConductionNL/openregister",
 				"reachedOn": "TicketDetail, LeadDetail sidebar Tasks tab",
-				"readOn": "2026-09-26",
+				"readOn": "2026-10-07",
 				"change": "openregister/2026-10-05-object-watchers"
 			},
 			"evidence": {
@@ -3482,7 +3486,7 @@
 			},
 			"origin": "changelog",
 			"originUrl": "https://github.com/espocrm/espocrm/issues/3584",
-			"note": "Specified in ConductionNL/openregister openspec/changes/object-watchers (openregister lane, OpenSpec pass 2026-09-27).",
+			"note": "Re-read 2026-10-07: the openregister change is archived and its backend is built, but the user-facing half is missing: a Follow button on the detail page (nextcloud-vue, not specified there yet) and a `watchers: true` recipient on the ticket and lead notification rules in pipelinq. Stays specified and partial.",
 			"screen": {
 				"canvas": "5NkFW28vZUUij43xzxHg5a",
 				"board": "PqTicket"
@@ -7079,7 +7083,7 @@
 				"state": "built",
 				"evidence": "lib/Lifecycle/ObjectOwnerAccessPolicy.php",
 				"owner": "ConductionNL/pipelinq",
-				"spec": "none"
+				"spec": "openspec/specs/crm-access-groups"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/user-management/hubspot-user-permissions-guide \"Super Admins can set user permissions to control what users can view, create, edit, or delete ... you can give a sales rep permission to communicate only with contacts they own\", per object with owned, team or everything scopes. All products and plans; teams and permission sets on Starter and up. Note: Was partial for paid tiers; basic view and edit scopes are on every plan.",
@@ -7208,7 +7212,7 @@
 				"state": "built",
 				"evidence": "lib/Repair/RenameDutchColumns.php",
 				"owner": "ConductionNL/pipelinq",
-				"spec": "none"
+				"spec": "openspec/specs/renames-keep-stored-data"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/properties/understand-the-property-editor \"Property label ... The label can be changed after creating the property\"; \"Internal name ... used for integration app sync and API calls ... cannot be edited\", so records and integrations keep working after a rename. All products and plans. Note: Was partial; renaming the label is safe by design.",
@@ -7467,12 +7471,14 @@
 			"feature": "Platform",
 			"featureConfidence": "medium",
 			"built": {
-				"state": "building",
-				"evidence": "lib/Service/ConnectorSourceRegister.php exposes connectors but no catalogue",
+				"state": "built",
+				"evidence": "integriq's Store page is built (archived 2026-07-14-connector-catalog-ui, then connectors-catalogue-expansion): integriq src/manifest.json page Store, route /store, a card grid over catalog_item with kind filters; lib/Service/CatalogRegistryService.php collects adapters (PDOK, Digikoppeling, Berichtenbox, DSO, SharePoint and others), seeded sources (BRP, KVK, xWiki) and the templates in lib/Settings/connector-templates/ (Google Sheets, Slack, Salesforce, Alfresco); src/dialogs/CatalogItemDetailDialog.vue enables or instantiates one; appinfo/routes.php:586-587 catalog#status, catalog#instantiate",
 				"owner": "ConductionNL/integriq",
-				"change": "integriq/2026-07-14-connector-catalog-ui"
+				"change": "integriq/2026-07-14-connector-catalog-ui",
+				"reachedOn": "integriq: Store in the footer menu -> a card -> Enable or Instantiate",
+				"readOn": "2026-10-07"
 			},
-			"note": "HubSpot lists 1,500 integrations and Pipedrive 400. We have connectors, not a shop window.",
+			"note": "Re-read 2026-10-07: there is now a shop window, in integriq rather than in pipelinq. It stays partial because the Store holds a short list of adapters, seeded sources and four templates, not hundreds; growing the library is integriq's row con-library-size (building). HubSpot lists 1,500 integrations and Pipedrive 400.",
 			"evidence": {
 				"hubspot-crm": "https://ecosystem.hubspot.com/marketplace/apps is HubSpot's App Marketplace of installable integrations (Square, Lightspeed, Yotpo and others read for this matrix); https://knowledge.hubspot.com/ai-tools/use-breeze-assistant-with-connected-apps \"Navigate to the App Marketplace. Select the app ... click Install\". All products and plans.",
 				"kiss": "integrations are fixed proxy classes in Kiss.Bff/Extern configured through helm values; no marketplace or plugin mechanism",
@@ -9554,12 +9560,12 @@
 			"feature": "Customer portal",
 			"featureConfidence": "high",
 			"built": {
-				"state": "specified",
-				"evidence": "lib/Service/Portal/PortalAuthService.php:189 \"$this->hasher->verify($password, ...)\": portal login is an own account with password plus MFA (PortalMfaService); no DigiD, eHerkenning, SAML or OIDC anywhere in lib/Service/Portal, lib/Controller/Portal* or src/portal",
+				"state": "building",
+				"evidence": "portaliq's half is built (archived 2026-09-29-signin-integriq-broker-login, 13 of 13 tasks): portaliq lib/Controller/BrokerSessionController.php start and callback, lib/Service/Signin/BrokerLogin.php, the Sign-in widget's route per provider (src/widgets/PortalSignin.vue). integriq's broker routes exist (appinfo/routes.php:397-404 idpBroker#start, #callback, #exchange), but no vendor SAML Service Provider or OIDC Relying Party sits behind its GovernmentIdpAdapterInterface, so a DigiD start on a live instance ends on integriq's error page. pipelinq's own portal login stays a password plus MFA (lib/Service/Portal/PortalAuthService.php:189)",
 				"owner": "ConductionNL/portaliq",
 				"change": "portaliq/2026-09-29-signin-integriq-broker-login",
-				"reachedOn": "nothing",
-				"readOn": "2026-09-26"
+				"reachedOn": "nothing (portaliq's re-read of 2026-10-07: a live start ends on integriq's error page)",
+				"readOn": "2026-10-07"
 			},
 			"evidence": {
 				"hubspot-crm": "not checked: searched the HubSpot knowledge base list for DigiD, eHerkenning and SAML login for portal members; https://knowledge.hubspot.com/inbox/manage-customer-portal-settings describes portal access by email login only (read 2026-09-26).",
@@ -9574,7 +9580,7 @@
 				"intelligence-db requirements#207282 (Gemeente Midden-Drenthe, 2026-03-05: DigiD en of eHerkenning voor authenticatie)",
 				"intelligence-db requirements#194820 (Kadaster CRM, 2026-04-23: zelfregistratie, authenticatie zoals eHerkenning)"
 			],
-			"note": "Decided no 2026-09-28 (OpenSpec pass): One shared external portal is portaliq (hydra ADR-046; pipelinq change portal-contribution retires the bespoke portal); DigiD and eHerkenning login are portaliq rows sig-digid and sig-eherkenning, both specified. Owner corrected to ConductionNL/portaliq. Corrections round 9 (2026-09-28): built.state decided-no to specified. The owner-moves pass recorded the open portaliq change as existing: openspec/changes/signin-integriq-broker-login (portaliq#808, recorded in portaliq openspec/parity/gap-decisions.json for this pipelinq row). The decided-no above stands for pipelinq's own portal.",
+			"note": "Decided no 2026-09-28 (OpenSpec pass): One shared external portal is portaliq (hydra ADR-046; pipelinq change portal-contribution retires the bespoke portal); DigiD and eHerkenning login are portaliq rows sig-digid and sig-eherkenning, both specified. Owner corrected to ConductionNL/portaliq. Corrections round 9 (2026-09-28): built.state decided-no to specified. The owner-moves pass recorded the open portaliq change as existing: openspec/changes/signin-integriq-broker-login (portaliq#808, recorded in portaliq openspec/parity/gap-decisions.json for this pipelinq row). The decided-no above stands for pipelinq's own portal. Re-read 2026-10-07: portaliq rates its rows sig-digid and sig-eherkenning building and partial. For pipelinq this stays no until a DigiD login completes; the missing piece is the broker vendor behind integriq (Open Decision D1 in portaliq).",
 			"screen": {
 				"board": null,
 				"reason": "no screen in pipelinq: portal login belongs to portaliq"
