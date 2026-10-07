@@ -40,8 +40,11 @@ use OCA\OpenRegister\Db\SchemaMapper;
 use OCA\OpenRegister\Service\ConfigurationService;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Service\ConfigFileLoaderService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
+use OCP\IUserManager;
+use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -83,6 +86,10 @@ class DemoRegisterImporter {
 	 * @param SchemaMapper         $schemaMapper         Resolves a schema slug to its id.
 	 * @param ObjectService        $objectService        Finds and deletes stored records.
 	 * @param LoggerInterface      $logger               Records what was imported or removed.
+	 * @param IUserSession         $userSession          Who loads the examples, for their user fields.
+	 * @param IUserManager         $userManager          Tells a real account from a demo name.
+	 * @param ConfigFileLoaderService $configLoader      The merged schemas, to find the user fields.
+	 * @param DemoUserFields       $userFields           Points user fields at existing users.
 	 */
 	public function __construct(
 		private readonly IAppManager $appManager,
@@ -91,6 +98,10 @@ class DemoRegisterImporter {
 		private readonly SchemaMapper $schemaMapper,
 		private readonly ObjectService $objectService,
 		private readonly LoggerInterface $logger,
+		private readonly IUserSession $userSession,
+		private readonly IUserManager $userManager,
+		private readonly ConfigFileLoaderService $configLoader,
+		private readonly DemoUserFields $userFields,
 	) {
 	}//end __construct()
 
@@ -106,6 +117,8 @@ class DemoRegisterImporter {
 		if ($data === null) {
 			return ['imported' => 0, 'skipped' => 0];
 		}
+
+		$data['components']['objects'] = $this->withRealUsers(objects: $data['components']['objects']);
 
 		$result = $this->configurationService->importFromApp(
 			appId: self::CONFIG_APP_ID,
@@ -240,6 +253,30 @@ class DemoRegisterImporter {
 
 		return true;
 	}//end sameLabel()
+
+	/**
+	 * Point the example records' user fields at accounts that exist here.
+	 *
+	 * OpenRegister refuses a `format: user` value that is not a real account
+	 * and skips the whole record, so a demo name (`jan.smit`) cost the record.
+	 *
+	 * @param array<int, array<string, mixed>> $objects The example records.
+	 *
+	 * @return array<int, array<string, mixed>> The records, importable.
+	 *
+	 * @spec openspec/changes/pipelinq-audit-admin-forms-pos/specs/example-data/spec.md#requirement-every-example-record-imports
+	 */
+	private function withRealUsers(array $objects): array {
+		$schemas = (array)($this->configLoader->loadConfigurationFile()['components']['schemas'] ?? []);
+		$acting = $this->userSession->getUser()?->getUID();
+
+		return $this->userFields->assign(
+			objects: $objects,
+			schemas: $schemas,
+			userExists: fn (string $uid): bool => $this->userManager->userExists($uid),
+			actingUid: $acting
+		);
+	}//end withRealUsers()
 
 	/**
 	 * Read the descriptor, or null when it is missing or unreadable.

@@ -28,3 +28,9 @@
   - **spec_ref**: `specs/client-forms/spec.md#requirement-no-conflicting-language-on-a-new-party`
 - [x] 3.5 Plain help in the client, contact, task and product forms; technical text kept in `x-notes`
   - **spec_ref**: `specs/client-forms/spec.md#requirement-forms-show-plain-help`
+
+## Phase 4: Example data
+
+- [x] 4.1 Example records' user fields point at existing users, so none are skipped
+  - **spec_ref**: `specs/example-data/spec.md#requirement-every-example-record-imports`
+- [ ] 4.2 Reference records that read as example data (A6): waiting on Ruben, see the PR body

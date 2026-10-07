@@ -22,7 +22,12 @@ use OCA\OpenRegister\Service\ConfigurationService;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Service\Demo\DemoRegisterImporter;
 use OCP\App\IAppManager;
+use OCA\Pipelinq\Service\ConfigFileLoaderService;
+use OCA\Pipelinq\Service\Demo\DemoUserFields;
 use OCP\IAppConfig;
+use OCP\IUser;
+use OCP\IUserManager;
+use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 
@@ -45,11 +50,18 @@ class DemoRegisterImporterTest extends TestCase {
 	private array $stored = [];
 
 	/**
+	 * The descriptor the fake OpenRegister received on import.
+	 *
+	 * @var array<string, mixed>
+	 */
+	public array $importedData = [];
+
+	/**
 	 * Build the importer over the real descriptor and fake OpenRegister services.
 	 *
 	 * @return DemoRegisterImporter
 	 */
-	private function importer(): DemoRegisterImporter {
+	private function importer(?string $actingUid = null): DemoRegisterImporter {
 		$appManager = $this->createMock(IAppManager::class);
 		$appManager->method('getAppPath')->willReturn(dirname(__DIR__, 4));
 		$appManager->method('getAppVersion')->willReturn('0.5.12');
@@ -69,6 +81,7 @@ class DemoRegisterImporterTest extends TestCase {
 
 			public function importFromApp(string $appId, array $data, string $version, bool $force = false): array {
 				$this->test->record(['importFromApp', $appId, count($data['components']['objects']), $version, $force]);
+				$this->test->importedData = $data;
 				return ['objects' => array_fill(0, 3, 'x'), 'skipped' => ['objects' => 1]];
 			}
 
@@ -112,8 +125,107 @@ class DemoRegisterImporterTest extends TestCase {
 			schemaMapper: $schemaMapper,
 			objectService: $objectService,
 			logger: $this->createMock(LoggerInterface::class),
+			userSession: $this->userSession(uid: $actingUid),
+			userManager: $this->userManager(),
+			configLoader: new ConfigFileLoaderService($appManager),
+			userFields: new DemoUserFields(),
 		);
 	}//end importer()
+
+	/**
+	 * A session with the given user signed in, or nobody.
+	 *
+	 * @param string|null $uid The signed-in uid.
+	 *
+	 * @return IUserSession
+	 */
+	private function userSession(?string $uid): IUserSession {
+		$session = $this->createMock(IUserSession::class);
+		$user = null;
+		if ($uid !== null) {
+			$user = $this->createMock(IUser::class);
+			$user->method('getUID')->willReturn($uid);
+		}
+
+		$session->method('getUser')->willReturn($user);
+		return $session;
+	}//end userSession()
+
+	/**
+	 * A server whose only account is `admin`.
+	 *
+	 * @return IUserManager
+	 */
+	private function userManager(): IUserManager {
+		$users = $this->createMock(IUserManager::class);
+		$users->method('userExists')->willReturnCallback(static fn (string $uid): bool => $uid === 'admin');
+		return $users;
+	}//end userManager()
+
+	/**
+	 * Every user field the example records hand to OpenRegister, as [where, value].
+	 *
+	 * @return array<int, array{0: string, 1: mixed}>
+	 */
+	private function userValues(): array {
+		$appManager = $this->createMock(IAppManager::class);
+		$appManager->method('getAppPath')->willReturn(dirname(__DIR__, 4));
+		$schemas = (new ConfigFileLoaderService($appManager))->loadConfigurationFile()['components']['schemas'];
+
+		$isUser = static fn (array $p): bool => in_array(($p['format'] ?? ''), ['user', 'username'], true)
+			|| ($p['referenceType'] ?? '') === 'nextcloud-user';
+
+		$found = [];
+		foreach ($this->importedData['components']['objects'] as $object) {
+			foreach ((array)($schemas[$object['@self']['schema']]['properties'] ?? []) as $key => $property) {
+				if (array_key_exists($key, $object) === false) {
+					continue;
+				}
+
+				$where = $object['@self']['slug'] . '.' . $key;
+				if ($object[$key] === null || $object[$key] === '') {
+					// Empty is a valid "nobody", not a demo name.
+					continue;
+				}
+
+				if ($isUser($property) === true) {
+					$found[] = [$where, $object[$key]];
+				} else if (($property['type'] ?? '') === 'array' && $isUser((array)($property['items'] ?? [])) === true) {
+					foreach ((array)$object[$key] as $value) {
+						$found[] = [$where, $value];
+					}
+				}
+			}
+		}
+
+		return $found;
+	}//end userValues()
+
+	/**
+	 * Every user field points at a real account: the one who loads the examples.
+	 *
+	 * @return void
+	 */
+	public function testUserFieldsPointAtTheAdminWhoLoadsThem(): void {
+		$this->importer(actingUid: 'admin')->import();
+
+		$values = $this->userValues();
+		$this->assertGreaterThan(30, count($values), 'the descriptor has user fields to fix');
+		foreach ($values as [$where, $value]) {
+			$this->assertSame('admin', $value, $where . ' names a user that does not exist');
+		}
+	}//end testUserFieldsPointAtTheAdminWhoLoadsThem()
+
+	/**
+	 * Without anyone signed in (occ), a demo user is left out rather than invented.
+	 *
+	 * @return void
+	 */
+	public function testWithoutASignedInUserDemoUsersAreLeftOut(): void {
+		$this->importer(actingUid: null)->import();
+
+		$this->assertSame([], array_filter($this->userValues(), static fn (array $pair): bool => $pair[1] !== 'admin'));
+	}//end testWithoutASignedInUserDemoUsersAreLeftOut()
 
 	/**
 	 * Record a call a fake service received.
