@@ -16,3 +16,21 @@ When the example records are loaded, every user field (`format: user`, `format: 
 - AND OpenRegister SHALL skip no record for a `format: user` mismatch
 
 @e2e exclude asserted against the real descriptor and the merged schemas in tests/Unit/Service/Demo/DemoRegisterImporterTest.php.
+
+### Requirement: Example-looking reference records are example data
+
+The skills "Vergunningen" and "WMO / Zorg", the SLA policy "Goud-tier klant-SLA" and the segment "Advice customers without a product" SHALL live in `pipelinq_example_register.json` with their slugs unchanged, and SHALL NOT be in the register descriptor or among the default skills. A fresh install that chose no example data SHALL NOT receive them. An existing install SHALL keep the stored records it already has.
+
+#### Scenario: A fresh install without example data
+
+- GIVEN a fresh install whose administrator chose "None" for example data
+- WHEN the register is imported and the default skills are created
+- THEN none of these four records SHALL exist
+
+@e2e exclude a property of the descriptors and of DefaultSkillService, asserted by tests/Unit/Settings/RegisterCarriesNoExampleDataTest.php and tests/Unit/Service/DefaultSkillServiceTest.php.
+
+#### Scenario: Loading the example data
+
+- GIVEN the same install
+- WHEN the administrator loads the example data
+- THEN the four records SHALL arrive under their old slugs

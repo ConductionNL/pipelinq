@@ -3,7 +3,7 @@
 ## 1. Schemas and standard audiences
 
 - [x] 1.1 `journey`, `journeyRun` and `weeklyReview` schemas, `journeyId` on `blast`, and the five seeded standard audiences
-  - **spec_ref**: `specs/marketing-integrated-campaigns/spec.md#requirement-five-standard-audiences-ship-as-segments-a-marketer-copies`
+  - **spec_ref**: `specs/marketing-integrated-campaigns/spec.md#requirement-four-standard-audiences-ship-as-segments-a-marketer-copies`
   - **files**: `lib/Settings/register.d/99-marketing-integrated-campaigns.json`, `src/config/objectTypes.js`
 - [x] 1.2 Dutch and English catalogue entries for every new schema string, so the l10n ratchet holds
   - **files**: `l10n/en.json`, `l10n/nl.json`, `l10n/nl.js`

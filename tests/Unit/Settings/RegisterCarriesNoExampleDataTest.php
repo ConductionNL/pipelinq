@@ -56,6 +56,20 @@ class RegisterCarriesNoExampleDataTest extends TestCase {
 	];
 
 	/**
+	 * Records that read as example data although their schema is reference
+	 * data (pipelinq-audit-admin-forms-pos, Ruben 7 October). They live in the
+	 * example descriptor, slugs unchanged, and never in the register.
+	 *
+	 * @var array<string, string> slug => name
+	 */
+	private const EXAMPLE_ONLY = [
+		'skill-vergunningen'              => 'Vergunningen',
+		'skill-wmo-zorg'                  => 'WMO / Zorg',
+		'goud-tier-request-sla'           => 'Goud-tier klant-SLA',
+		'segment-service-without-product' => 'Advice customers without a product',
+	];
+
+	/**
 	 * The merged register configuration.
 	 *
 	 * @var array<string, mixed>
@@ -108,6 +122,29 @@ class RegisterCarriesNoExampleDataTest extends TestCase {
 	}//end testTheRegisterSeedsReferenceDataOnly()
 
 	/**
+	 * The example-looking reference records are example data only.
+	 *
+	 * @return void
+	 */
+	public function testExampleLookingReferenceRecordsAreExampleDataOnly(): void {
+		$inRegister = [];
+		foreach (($this->config['components']['objects'] ?? []) as $object) {
+			$inRegister[$object['@self']['slug']] = (string)($object['title'] ?? $object['name'] ?? '');
+		}
+
+		$inExample = [];
+		foreach ($this->example['components']['objects'] as $object) {
+			$inExample[$object['@self']['slug']] = (string)($object['title'] ?? $object['name'] ?? '');
+		}
+
+		foreach (self::EXAMPLE_ONLY as $slug => $name) {
+			$this->assertArrayNotHasKey($slug, $inRegister, $slug . ' must not ship on every install');
+			$this->assertNotContains($name, $inRegister, $name . ' must not ship on every install');
+			$this->assertSame($name, $inExample[$slug] ?? null, $slug . ' belongs in pipelinq_example_register.json');
+		}
+	}//end testExampleLookingReferenceRecordsAreExampleDataOnly()
+
+	/**
 	 * The example descriptor is a mock, which OpenRegister never imports by itself.
 	 *
 	 * @return void
@@ -129,12 +166,15 @@ class RegisterCarriesNoExampleDataTest extends TestCase {
 	 */
 	public function testEveryExampleRecordCanBeImported(): void {
 		$schemas = $this->config['components']['schemas'];
+		$registers = array_merge(['pipelinq'], array_keys((array)($this->config['components']['registers'] ?? [])));
 		$slugs = [];
 
 		foreach ($this->example['components']['objects'] as $object) {
 			$self = $object['@self'];
 			$this->assertNotEmpty($self['slug'] ?? null, 'an example record has no slug');
-			$this->assertSame('pipelinq', $self['register'] ?? null, $self['slug'] . ' targets another register');
+			// A register the app's own descriptor declares (pipelinq, or a
+			// fragment's own register such as `sla`), never a foreign one.
+			$this->assertContains($self['register'] ?? null, $registers, $self['slug'] . ' targets another register');
 			$this->assertArrayHasKey($self['schema'], $schemas, $self['slug'] . ' names an unknown schema');
 
 			foreach (($schemas[$self['schema']]['required'] ?? []) as $field) {

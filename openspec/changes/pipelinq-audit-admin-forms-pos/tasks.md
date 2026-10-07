@@ -35,4 +35,10 @@
 
 - [x] 4.1 Example records' user fields point at existing users, so none are skipped
   - **spec_ref**: `specs/example-data/spec.md#requirement-every-example-record-imports`
-- [ ] 4.2 Reference records that read as example data (A6): waiting on Ruben, see the PR body
+- [x] 4.2 Move Vergunningen, WMO / Zorg, Goud-tier klant-SLA and the advice segment to the example data; drop the two skills from DefaultSkillService; four standard audiences (A6, Ruben 7 October)
+  - **spec_ref**: `specs/example-data/spec.md#requirement-example-looking-reference-records-are-example-data`
+
+## Phase 5: Identity write-back
+
+- [x] 5.1 Record in unify-client-contact that name, email and phone are edited on the client page and written back (Ruben 7 October)
+  - **spec_ref**: `specs/unify-client-contact/spec.md#requirement-req-pucc-004-the-system-shall-reuse-the-existing-contact-sync-pattern-and-keep-the-nextcloud-contact-authoritative`

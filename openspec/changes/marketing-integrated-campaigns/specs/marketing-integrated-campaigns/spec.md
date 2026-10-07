@@ -91,17 +91,17 @@ This rule is not defensive tidiness. `SegmentService`'s numeric comparison retur
 - **WHEN** shillinq is absent and a segment's rule is `shillinqValueTier isNull`
 - **THEN** every customer matches
 
-### Requirement: Five standard audiences ship as segments a marketer copies
+### Requirement: Four standard audiences ship as segments a marketer copies
 
-The register fragment MUST seed five `segment` objects: lapsed customers, top-tier customers, customers of one product without another, contracts renewing within ninety days, and leads stalled in a stage for thirty days.
+The register fragment MUST seed four `segment` objects: lapsed customers, top-tier customers, contracts renewing within ninety days, and leads stalled in a stage for thirty days. The audience of customers of one product without another names two demo items in its rule tree, so it ships with the example data (`pipelinq_example_register.json`, slug `segment-service-without-product`) and never on a fresh install (pipelinq-audit-admin-forms-pos).
 
 Each MUST satisfy the segment schema's required list of `name`, `rules` and `entityType`, because OpenRegister refuses an object that does not and the import drops it without an error.
 
 Each description MUST say whether the audience reads shillinq, and therefore whether it resolves to nobody on an instance without it. An example audience that silently matches nothing teaches the marketer that the feature is broken.
 
-#### Scenario: The five audiences are listed and each one names its source
+#### Scenario: The four audiences are listed and each one names its source
 - **WHEN** a marketer opens the Segments page
-- **THEN** the five seeded audiences are listed, and the three that read shillinq say so in their description
+- **THEN** the four seeded audiences are listed, and the two that read shillinq say so in their description
 
 #### Scenario: The two pipelinq audiences resolve against the demo data
 

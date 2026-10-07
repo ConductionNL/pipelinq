@@ -484,37 +484,6 @@
 				"@self": {
 					"register": "pipelinq",
 					"schema": "segment",
-					"slug": "segment-service-without-product"
-				},
-				"name": "Advice customers without a product",
-				"description": "Customers invoiced for the demo advice hour and never for the demo coffee. Copy it and swap the two item names for your own catalogue. Reads shillinq, and is empty where shillinq is absent.",
-				"entityType": "customer",
-				"rules": {
-					"type": "AND",
-					"children": [
-						{
-							"field": "shillinqPurchasedServices",
-							"operator": "contains",
-							"value": "[demo] adviesuur"
-						},
-						{
-							"type": "NOT",
-							"children": [
-								{
-									"field": "shillinqPurchasedProducts",
-									"operator": "contains",
-									"value": "[demo] koffie zwart"
-								}
-							]
-						}
-					]
-				},
-				"estimatedSize": 0
-			},
-			{
-				"@self": {
-					"register": "pipelinq",
-					"schema": "segment",
 					"slug": "segment-renewing-within-ninety-days"
 				},
 				"name": "Contracts renewing within ninety days",

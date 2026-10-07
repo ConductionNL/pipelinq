@@ -33,6 +33,8 @@ the reference data:
   webhook URL fields and their app-config keys are gone. The admin page shows
   the Shillinq options only when Shillinq is installed; otherwise the
   Detected integrations card says it is not installed.
+- The skills Vergunningen and WMO / Zorg, the SLA policy Goud-tier klant-SLA and the segment Advice customers without a product move to the example data (A6); DefaultSkillService no longer creates the two skills; the marketing change ships four standard audiences.
+- Client name, email and phone are edited on the client page and written back to the Nextcloud Contact (unify-client-contact REQ-PUCC-004).
 - See `tasks.md` for the full list per audit item.
 
 ## Out of scope

@@ -1,7 +1,7 @@
 <?php
 
 /**
- * The five standard audiences, evaluated against the demo data.
+ * The four standard audiences, evaluated against the demo data.
  *
  * 🔴 IT READS BOTH SIDES RATHER THAN RESTATING EITHER. The rule trees come out
  * of `lib/Settings/register.d/99-marketing-integrated-campaigns.json` and the
@@ -20,7 +20,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-five-standard-audiences-ship-as-segments-a-marketer-copies
+ * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-four-standard-audiences-ship-as-segments-a-marketer-copies
  */
 
 declare(strict_types=1);
@@ -42,19 +42,19 @@ use Psr\Log\LoggerInterface;
 /**
  * Tests that each seeded audience is a rule tree that actually resolves.
  *
- * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-five-standard-audiences-ship-as-segments-a-marketer-copies
+ * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-four-standard-audiences-ship-as-segments-a-marketer-copies
  */
 class StandardAudiencesTest extends TestCase {
 
 	/**
-	 * The five slugs the register fragment seeds.
+	 * The four slugs the register fragment seeds. The one-product-without-another
+	 * audience ships with the example data (pipelinq-audit-admin-forms-pos).
 	 *
 	 * @var array<int, string>
 	 */
 	private const SLUGS = [
 		'segment-lapsed-customers',
 		'segment-top-tier-customers',
-		'segment-service-without-product',
 		'segment-renewing-within-ninety-days',
 		'segment-stalled-leads-thirty-days',
 	];
@@ -102,7 +102,7 @@ class StandardAudiencesTest extends TestCase {
 	}//end setUp()
 
 	/**
-	 * All five audiences are seeded, and each one satisfies the segment
+	 * All four audiences are seeded, and each one satisfies the segment
 	 * schema's required list. OpenRegister refuses an object that does not
 	 * and the import drops it without an error, so a missing key here is a
 	 * standard audience nobody would ever see.
@@ -165,7 +165,7 @@ class StandardAudiencesTest extends TestCase {
 	}//end testStalledLeadAudienceEvaluates()
 
 	/**
-	 * The three bookkeeping audiences match NOBODY against the demo data,
+	 * The two bookkeeping audiences match NOBODY against the demo data,
 	 * and that is the correct answer rather than a defect: every seeded
 	 * client's shillinqOrganisationRef is a nil-UUID placeholder, and CI
 	 * installs no shillinq at all. The assertion exists so the day that
@@ -174,7 +174,7 @@ class StandardAudiencesTest extends TestCase {
 	 * @return void
 	 */
 	public function testTheBookkeepingAudiencesAreEmptyAgainstTheDemoData(): void {
-		foreach (['segment-lapsed-customers', 'segment-top-tier-customers', 'segment-service-without-product'] as $slug) {
+		foreach (['segment-lapsed-customers', 'segment-top-tier-customers'] as $slug) {
 			$this->assertSame([], $this->matchesOf(slug: $slug), $slug . ' should resolve to nobody here');
 		}
 	}//end testTheBookkeepingAudiencesAreEmptyAgainstTheDemoData()
