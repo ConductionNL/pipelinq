@@ -20,6 +20,53 @@
 <template>
 	<div class="messaging-settings">
 		<NcSettingsSection
+			:name="t('pipelinq', 'Incoming messages')"
+			:description="
+				t(
+					'pipelinq',
+					'SMS and WhatsApp providers call Pipelinq without a Nextcloud login. After the signature checks out, Pipelinq saves what they send as the account below.',
+				)
+			">
+			<ServiceAccountPicker
+				:url="serviceAccountUrl"
+				inputId="messaging-service-account"
+				:legend="t('pipelinq', 'SMS and WhatsApp service account')"
+				:help="
+					(group) =>
+						t(
+							'pipelinq',
+							'Incoming messages, conversations, STOP replies and messages from unknown numbers are saved as this account. It joins the group {group}, which may create and change messages, conversations and contact moments.',
+							{ group },
+						)
+				"
+				:consequence="
+					t(
+						'pipelinq',
+						'Until you choose one, incoming SMS and WhatsApp messages are not saved, and a STOP reply is not recorded.',
+					)
+				"
+				:savedMessage="
+					(user) =>
+						t('pipelinq', 'Incoming messages are now saved as {user}.', {
+							user,
+						})
+				"
+				:loadError="
+					t(
+						'pipelinq',
+						'Could not load the SMS and WhatsApp service account.',
+					)
+				"
+				:saveError="
+					t(
+						'pipelinq',
+						'Could not save the SMS and WhatsApp service account.',
+					)
+				"
+				defaultGroup="pipelinq-messaging-service" />
+		</NcSettingsSection>
+
+		<NcSettingsSection
 			:name="t('pipelinq', 'Providers')"
 			:description="
 				t(
@@ -487,6 +534,7 @@ import {
 	NcTextField,
 } from '@nextcloud/vue'
 import ContentCopy from 'vue-material-design-icons/ContentCopy.vue'
+import ServiceAccountPicker from '../../components/admin/ServiceAccountPicker.vue'
 import ConfirmDialog from '../../dialogs/ConfirmDialog.vue'
 import { useObjectStore } from '../../store/modules/object.js'
 
@@ -556,6 +604,7 @@ export default {
 		NcSettingsSection,
 		NcTextField,
 		ContentCopy,
+		ServiceAccountPicker,
 	},
 
 	data() {
@@ -582,6 +631,16 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * The admin endpoint for the SMS and WhatsApp service account.
+		 *
+		 * @return {string} The url.
+		 * @spec openspec/specs/outbound-messaging/spec.md#requirement-req-om-005-consent-gating-and-recording
+		 */
+		serviceAccountUrl() {
+			return generateUrl('/apps/pipelinq/api/messaging/service-account')
+		},
+
 		/**
 		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.1
 		 */

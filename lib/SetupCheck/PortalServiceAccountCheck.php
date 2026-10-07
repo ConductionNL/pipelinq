@@ -30,45 +30,28 @@ namespace OCA\Pipelinq\SetupCheck;
 
 use OCA\Pipelinq\Service\Portal\PortalServiceAccount;
 use OCP\IL10N;
-use OCP\SetupCheck\ISetupCheck;
-use OCP\SetupCheck\SetupResult;
 
 /**
- * Warns when the portal service account is unset or unusable.
+ * Warns while the portal service account is unset, unknown, disabled or outside its group.
  *
  * @spec exclude the portal backend has no owning requirement. customer-portal specifies
  *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
  *   sessions, tokens, delegation, documents, invoices, orders, exports and
  *   audit are all unspecified
  */
-class PortalServiceAccountCheck implements ISetupCheck {
+class PortalServiceAccountCheck extends ServiceAccountCheck {
 	/**
 	 * Constructor.
 	 *
 	 * @param PortalServiceAccount $serviceAccount The account to check.
 	 * @param IL10N                $l10n           The localisation service.
 	 */
-	public function __construct(
-		private readonly PortalServiceAccount $serviceAccount,
-		private readonly IL10N $l10n,
-	) {
+	public function __construct(PortalServiceAccount $serviceAccount, IL10N $l10n) {
+		parent::__construct(serviceAccount: $serviceAccount, l10n: $l10n);
 	}//end __construct()
 
 	/**
-	 * The overview category.
-	 *
-	 * @return string The category.
-	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
-	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
-	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
-	 *   audit are all unspecified
-	 */
-	public function getCategory(): string {
-		return 'system';
-	}//end getCategory()
-
-	/**
-	 * The check's name.
+	 * The name in the administration overview.
 	 *
 	 * @return string The name.
 	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
@@ -81,38 +64,24 @@ class PortalServiceAccountCheck implements ISetupCheck {
 	}//end getName()
 
 	/**
-	 * Success when the account can be used, a warning naming why otherwise.
+	 * What a usable account does.
 	 *
-	 * @return SetupResult The result.
+	 * @param string $userId The account.
 	 *
-	 * @SuppressWarnings(PHPMD.StaticAccess) SetupResult's named constructors are the only way OCP offers to build one.
-	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
-	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
-	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
-	 *   audit are all unspecified
+	 * @return string The sentence.
 	 */
-	public function run(): SetupResult {
-		$status = $this->serviceAccount->status();
-		if ($status['usable'] === true) {
-			return SetupResult::success(
-				$this->l10n->t('Customer portal writes run as %s.', [$status['userId']])
-			);
-		}
+	protected function usableText(string $userId): string {
+		return $this->l10n->t('Customer portal writes run as %s.', [$userId]);
+	}//end usableText()
 
-		$why = match ($status['reason']) {
-			PortalServiceAccount::REASON_UNKNOWN => $this->l10n->t('The chosen account does not exist.'),
-			PortalServiceAccount::REASON_DISABLED => $this->l10n->t('The chosen account is disabled.'),
-			PortalServiceAccount::REASON_NOT_IN_GROUP => $this->l10n->t(
-				'The chosen account is not in the group %s.',
-				[PortalServiceAccount::GROUP]
-			),
-			default => $this->l10n->t('No account is chosen.'),
-		};
-
-		return SetupResult::warning(
-			$why.' '.$this->l10n->t(
-				'Until you choose one in the Pipelinq settings, the customer portal cannot save anything: residents cannot log in or reset their password.'
-			)
+	/**
+	 * What stops working until an admin picks an account.
+	 *
+	 * @return string The sentence.
+	 */
+	protected function consequenceText(): string {
+		return $this->l10n->t(
+			'Until you choose one in the Pipelinq settings, the customer portal cannot save anything: residents cannot log in or reset their password.'
 		);
-	}//end run()
+	}//end consequenceText()
 }//end class
