@@ -7125,6 +7125,11 @@
         "Shillinq is installed on this server. Pipelinq hands approved hours and expenses to it.": "Shillinq is op deze server geïnstalleerd. Pipelinq geeft goedgekeurde uren en declaraties eraan door.",
         "Setup wizard": "Installatiewizard",
         "Go through the first-time setup again, for example to load example data or change your organisation details.": "Doorloop de eerste installatie opnieuw, bijvoorbeeld om voorbeeldgegevens te laden of uw organisatiegegevens te wijzigen.",
-        "Run the setup wizard again": "Installatiewizard opnieuw starten"
+        "Run the setup wizard again": "Installatiewizard opnieuw starten",
+        "Zero rate (0%)": "Nultarief (0%)",
+        "Reduced rate (9%)": "Verlaagd tarief (9%)",
+        "Standard rate (21%)": "Standaardtarief (21%)",
+        "{rate}% VAT": "{rate}% BTW",
+        "Refund amount (excl. VAT)": "Retourbedrag (excl. BTW)"
     }
 }

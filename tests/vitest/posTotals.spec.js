@@ -15,6 +15,7 @@ import {
 	formatEur,
 	normalizePriceMode,
 	rateDescription,
+	rateLabel,
 	recalculateLine,
 	refundLineAmounts,
 } from '../../src/services/posTotals.js'
@@ -154,11 +155,27 @@ describe('computeRefundTotals', () => {
 describe('formatEur', () => {
 	it('formats nl-NL EUR with two decimals', () => {
 		// Use a non-breaking-space-tolerant assertion: strip whitespace + currency symbol position.
-		const formatted = formatEur(1234.5)
+		const formatted = formatEur(1234.5, 'EUR', 'nl-NL')
 		expect(formatted.replace(/ /g, ' ')).toMatch(/€\s?1\.234,50/)
 	})
 
 	it('coerces non-numeric input to zero', () => {
-		expect(formatEur('nope').replace(/ /g, ' ')).toMatch(/€\s?0,00/)
+		expect(formatEur('nope', 'EUR', 'nl-NL').replace(/ /g, ' ')).toMatch(
+			/€\s?0,00/,
+		)
+	})
+
+	it('follows the setup currency and the user locale (pipelinq-audit-admin-forms-pos)', () => {
+		expect(formatEur(1234.5, 'USD', 'en-US')).toBe('$1,234.50')
+		expect(formatEur(1234.5, 'GBP', 'en-GB')).toBe('£1,234.50')
+	})
+})
+
+describe('rateLabel', () => {
+	it('names the VAT rates in English, not in Dutch', () => {
+		expect(rateLabel(0)).toBe('Zero rate (0%)')
+		expect(rateLabel(9)).toBe('Reduced rate (9%)')
+		expect(rateLabel(21)).toBe('Standard rate (21%)')
+		expect(rateLabel(6)).toBe('6% VAT')
 	})
 })

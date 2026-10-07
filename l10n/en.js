@@ -1946,8 +1946,8 @@ OC.L10N.register(
         "Kaart": "Kaart",
         "Kanban view": "Kanban view",
         "Kassa": "Register",
-        "Kassabon": "Kassabon",
-        "Kassakoppeling audit": "Kassakoppeling audit",
+        "Kassabon": "Receipts",
+        "Kassakoppeling audit": "Cash register audit",
         "Kassakoppeling audit log": "Kassakoppeling audit log",
         "Kassalade": "Cash drawer",
         "Kassamedewerker": "Cashier",
@@ -4055,7 +4055,7 @@ OC.L10N.register(
         "Touchpoints": "Touchpoints",
         "Track and manage sales leads": "Track and manage sales leads",
         "Trade name is required": "Trade name is required",
-        "Transactie": "Transactie",
+        "Transactie": "Transaction",
         "Transactie bewerken": "Transactie bewerken",
         "Transaction": "Transaction",
         "Transaction confirmed.": "Transaction confirmed.",
@@ -7194,7 +7194,12 @@ OC.L10N.register(
         "Shillinq is installed on this server. Pipelinq hands approved hours and expenses to it.": "Shillinq is installed on this server. Pipelinq hands approved hours and expenses to it.",
         "Setup wizard": "Setup wizard",
         "Go through the first-time setup again, for example to load example data or change your organisation details.": "Go through the first-time setup again, for example to load example data or change your organisation details.",
-        "Run the setup wizard again": "Run the setup wizard again"
+        "Run the setup wizard again": "Run the setup wizard again",
+        "Zero rate (0%)": "Zero rate (0%)",
+        "Reduced rate (9%)": "Reduced rate (9%)",
+        "Standard rate (21%)": "Standard rate (21%)",
+        "{rate}% VAT": "{rate}% VAT",
+        "Refund amount (excl. VAT)": "Refund amount (excl. VAT)"
     },
     "nplurals=2; plural=(n != 1);"
 )

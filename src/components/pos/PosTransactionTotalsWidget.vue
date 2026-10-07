@@ -97,7 +97,7 @@
 						<td>{{ row.rate }}%</td>
 						<td class="num">{{ formatEur(row.base) }}</td>
 						<td class="num">{{ formatEur(row.tax) }}</td>
-						<td>{{ row.description }}</td>
+						<td>{{ rateLabel(row.rate) }}</td>
 					</tr>
 				</tbody>
 			</table>
@@ -107,7 +107,7 @@
 
 <script>
 import { CnIcon, CnWidgetWrapper } from '@conduction/nextcloud-vue'
-import { formatEur, rateDescription } from '../../services/posTotals.js'
+import { formatEur, rateLabel } from '../../services/posTotals.js'
 
 export default {
 	name: 'PosTransactionTotalsWidget',
@@ -169,7 +169,8 @@ export default {
 
 		/**
 		 * The GL posting rows. A record from before the invoice breakdown
-		 * existed gets its descriptions from the tax breakdown instead.
+		 * existed uses the tax breakdown instead. The Description column shows
+		 * the translated rate name, not the stored Dutch GL text.
 		 *
 		 * @return {Array<object>} The invoice breakdown rows.
 		 *
@@ -180,10 +181,7 @@ export default {
 			if (Array.isArray(rows) && rows.length > 0) {
 				return [...rows].sort((a, b) => a.rate - b.rate)
 			}
-			return this.taxBreakdown.map((row) => ({
-				...row,
-				description: rateDescription(row.rate),
-			}))
+			return this.taxBreakdown
 		},
 
 		/**
@@ -215,6 +213,7 @@ export default {
 
 	methods: {
 		formatEur,
+		rateLabel,
 	},
 }
 </script>

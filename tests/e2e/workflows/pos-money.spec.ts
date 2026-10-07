@@ -63,7 +63,7 @@ async function setNum(page: Page, input: Locator, value: string): Promise<void> 
  * the menu is opened, and Playwright waited for it forever.
  */
 async function openPosForm(page: Page): Promise<void> {
-	await navClick(page, 'Kassabon', /pos/)
+	await navClick(page, 'Receipts', /pos/)
 	await page.waitForTimeout(800)
 	await clickHeaderAction(page, /Nieuwe transactie/i)
 	await page.waitForURL(/pos\/new/, { timeout: 10000 })

@@ -3718,7 +3718,13 @@
 						"type": "data",
 						"title": "Product",
 						"icon": "Package",
-						"content": { "columns": 2 }
+						"content": {
+							"columns": 2,
+							"overrides": {
+								"unitPrice": { "formatter": "objectCurrency" },
+								"cost": { "formatter": "objectCurrency" }
+							}
+						}
 					},
 					{
 						"id": "product-related",
@@ -3753,7 +3759,12 @@
 							"schema": "leadProduct",
 							"filter": { "product": "@objectId" },
 							"columns": [
-								{ "key": "lead", "label": "Lead" },
+								{
+									"key": "lead",
+									"label": "Lead",
+									"widget": "fkResolve",
+									"widgetProps": { "register": "pipelinq", "schema": "lead", "labelField": "title" }
+								},
 								{ "key": "quantity", "label": "Qty" },
 								{ "key": "unitPrice", "label": "Unit price", "format": { "style": "currency", "currency": "@config.currency" } },
 								{ "key": "discount", "label": "Discount %" },
