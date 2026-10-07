@@ -77,6 +77,7 @@ use OCA\Pipelinq\Service\ForecastService;
 use OCA\Pipelinq\Service\Gdpr\PipelinqApRegulatorEscalateProvider;
 use OCA\Pipelinq\Service\Gdpr\PipelinqBsnIdentityVerifyProvider;
 use OCA\Pipelinq\Service\HaalCentraalClient;
+use OCA\Pipelinq\Service\RoadmapFeatureCatalog;
 use OCA\Pipelinq\Service\VatRates;
 use OCP\App\IAppManager;
 use OCP\AppFramework\App;
@@ -582,122 +583,6 @@ class Application extends App implements IBootstrap {
 	}//end registerPosLifecycleGuards()
 
 	/**
-	 * Build the Features & Roadmap list from openspec/specs at runtime so the
-	 * surface stays current with the specs without depending on a committed
-	 * docs/features.json (which can drift). Cached per app version — the specs
-	 * only change when the app updates — with the committed docs/features.json
-	 * as a fallback for deploys that ship without openspec/.
-	 *
-	 * @return array<int, array{slug:string, title:string, summary:string, docsUrl:string}>
-	 */
-	private function loadRoadmapFeatures(): array {
-		$container = $this->getContainer();
-		$version = (string)$container->get(IAppManager::class)->getAppVersion('pipelinq');
-		$cache = $container->get(ICacheFactory::class)->createLocal('pipelinq_features');
-		$cacheKey = 'v' . $version;
-
-		$cached = $cache->get($cacheKey);
-		if (is_array($cached) === true) {
-			return $cached;
-		}
-
-		$features = $this->extractFeaturesFromSpecs(specsDir: __DIR__ . '/../../openspec/specs');
-		if ($features === []) {
-			$path = __DIR__ . '/../../docs/features.json';
-			if (is_file($path) === true) {
-				$decoded = json_decode((string)file_get_contents($path), associative: true);
-				if (is_array($decoded) === true) {
-					$features = $decoded;
-				}
-			}
-		}
-
-		$cache->set($cacheKey, $features, 86400);
-		return $features;
-	}//end loadRoadmapFeatures()
-
-	/**
-	 * Parse `status: done` capability specs into feature entries. Mirrors the
-	 * org-wide extract-features.py and the docusaurus extractFeatures.js: the
-	 * status is read straight off the frontmatter line (resilient to YAML
-	 * typos in sibling fields), the title is the H1 minus a trailing
-	 * "Specification", and the summary is the first paragraph under `## Purpose`.
-	 *
-	 * @param string $specsDir Absolute path to openspec/specs.
-	 *
-	 * @return array<int, array{slug:string, title:string, summary:string, docsUrl:string}>
-	 */
-	private function extractFeaturesFromSpecs(string $specsDir): array {
-		if (is_dir($specsDir) === false) {
-			return [];
-		}
-
-		$paths = glob($specsDir . '/*/spec.md');
-		if ($paths === false) {
-			return [];
-		}
-
-		$entries = [];
-		foreach ($paths as $specPath) {
-			$text = (string)file_get_contents($specPath);
-			if (preg_match('/^---\s*\n(.*?\n)---\s*\n(.*)$/s', $text, $matches) !== 1) {
-				continue;
-			}
-
-			$front = $matches[1];
-			$body = $matches[2];
-			if (preg_match('/^status:\s*(.+?)\s*$/m', $front, $statusMatch) !== 1) {
-				continue;
-			}
-
-			if (strtolower(trim($statusMatch[1], " \t\"'")) !== 'done') {
-				continue;
-			}
-
-			$slug = basename(dirname($specPath));
-			$title = $slug;
-			if (preg_match('/^#\s+(.+?)\s*$/m', $body, $titleMatch) === 1) {
-				$title = trim((string)preg_replace('/\s+specification\s*$/i', '', trim($titleMatch[1])));
-			}
-
-			$entries[] = [
-				'slug' => $slug,
-				'title' => $title,
-				'summary' => $this->extractSummary(body: $body),
-				'docsUrl' => 'openspec/specs/' . $slug . '/spec.md',
-			];
-		}//end foreach
-
-		// Sort by slug (not full path) to match extract-features.py and
-		// extractFeatures.js, which order by the capability slug.
-		usort($entries, static fn (array $a, array $b): int => strcmp($a['slug'], $b['slug']));
-		return $entries;
-	}//end extractFeaturesFromSpecs()
-
-	/**
-	 * Extract the first paragraph under `## Purpose` as the feature summary.
-	 *
-	 * @param string $body Spec markdown body (frontmatter stripped).
-	 *
-	 * @return string Collapsed single-line summary, or empty when absent.
-	 */
-	private function extractSummary(string $body): string {
-		if (preg_match('/^##\s+Purpose\s*$/m', $body, $purposeMatch, PREG_OFFSET_CAPTURE) !== 1) {
-			return '';
-		}
-
-		$rest = substr($body, ($purposeMatch[0][1] + strlen($purposeMatch[0][0])));
-		$nextPos = strlen($rest);
-		if (preg_match('/\n##\s/', $rest, $nextMatch, PREG_OFFSET_CAPTURE) === 1) {
-			$nextPos = $nextMatch[0][1];
-		}
-
-		$section = trim(substr($rest, 0, $nextPos));
-		$para = (preg_split('/\n\s*\n/', $section)[0] ?? '');
-		return trim((string)preg_replace('/\s+/', ' ', $para));
-	}//end extractSummary()
-
-	/**
 	 * Boot the application and register comment display name resolvers.
 	 *
 	 * @param IBootContext $context The boot context
@@ -711,7 +596,7 @@ class Application extends App implements IBootstrap {
 
 		// Hand the Features & Roadmap surface its feature list, derived from
 		// openspec/specs at runtime so it always reflects the current specs
-		// (cached per app version; see loadRoadmapFeatures). Pull IInitialState
+		// (cached per app version; see RoadmapFeatureCatalog::load). Pull IInitialState
 		// from the per-app container so the serialized key is correctly
 		// namespaced as `initial-state-pipelinq-<key>`.
 		// Initial state exists for PAGE loads. An API request — an object
@@ -728,7 +613,7 @@ class Application extends App implements IBootstrap {
 			$initialState = $this->getContainer()->get(IInitialState::class);
 			$initialState->provideInitialState(
 				'features_roadmap_features',
-				$this->loadRoadmapFeatures()
+				$this->getContainer()->get(RoadmapFeatureCatalog::class)->load()
 			);
 
 			$dependencies = $this->readManifestDependencies();
@@ -982,7 +867,7 @@ class Application extends App implements IBootstrap {
 	 * @return array<string, array{installed: bool, enabled: bool, category: string}>
 	 */
 	private function resolveDependencyStatuses(IBootContext $context, array $dependencies): array {
-		// Cached per app version, exactly as loadRoadmapFeatures() is. Without
+		// Cached per app version, exactly as RoadmapFeatureCatalog::load() is. Without
 		// this, buildAppStoreLookup() below iterates the whole Nextcloud
 		// appstore catalogue (3.4 MB of apps.json on the 2026-07-30 dev
 		// instance) every time this runs. It is free there only because

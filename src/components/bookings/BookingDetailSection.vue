@@ -17,8 +17,9 @@
   - The `part` prop renders one of them, so each can be its own grid widget or
   - tab. Notes are the notes leaf on the page, and the record history is
   - OpenRegister's activity in the actions menu, so this section no longer
-  - carries a notes editor or an audit table. The timeline stays here until
-  - the library's `timeline` widget type is released.
+  - carries a notes editor or an audit table. The booking page shows its
+  - timeline through the library's `timeline` widget (review-part-two); the
+  - timeline part here only renders in the combined `all` section.
   -
   - The admin actions live in the page header (BookingHeaderActions).
   -

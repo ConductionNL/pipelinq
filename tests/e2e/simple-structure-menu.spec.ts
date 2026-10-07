@@ -45,11 +45,7 @@ const ENTRIES = [
 	'OrganisationsMenu',
 ]
 
-const CAPTIONS = [
-	'StartCaption',
-	'ContactCaption',
-	'RelationsCaption',
-]
+const CAPTIONS = ['StartCaption', 'ContactCaption', 'RelationsCaption']
 
 /**
  * Serve this page the given structure settings, whatever the instance stores.

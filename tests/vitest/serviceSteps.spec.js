@@ -3,10 +3,12 @@
 
 /**
  * Unit tests for src/services/serviceSteps.js and the booking page manifest
- * (openspec/changes/booking-and-service-pages, pipelinq review E5-E7).
+ * (openspec/changes/booking-and-service-pages, pipelinq review E5-E7; the
+ * library timeline widget: openspec/changes/review-part-two).
  */
 
 import { describe, expect, it } from 'vitest'
+import bookingRegister from '../../lib/Settings/register.d/45-appointment-booking.json'
 import bookings from '../../src/manifest.d/80-appointment-booking-admin.json'
 import {
 	STEP_UNITS,
@@ -49,6 +51,38 @@ describe('the booking page', () => {
 		expect(page.config.bodyWidgets).toBeUndefined()
 	})
 
+	it('shows the timeline through the library timeline widget', () => {
+		const timeline = widget('booking-timeline')
+		expect(timeline.type).toBe('timeline')
+		const fields = timeline.content.fields.map((f) => f.field)
+		for (const field of [
+			'@self.created',
+			'depositPaidAt',
+			'confirmationSentAt',
+			'startAt',
+			'endAt',
+		]) {
+			expect(fields).toContain(field)
+		}
+		// Status changes come from the audit trail and the statusHistory list.
+		expect(timeline.content.auditTrail).toBe(true)
+		const [history] = timeline.content.lists
+		const item =
+			bookingRegister.components.schemas.appointmentBooking.properties
+				.statusHistory.items.properties
+		expect(history.field).toBe('statusHistory')
+		for (const key of ['dateField', 'labelField', 'detailField']) {
+			expect(item[history[key]], key).toBeDefined()
+		}
+		expect(item[history.dateField].format).toBe('date-time')
+		// Every date field exists on the booking schema.
+		const schema =
+			bookingRegister.components.schemas.appointmentBooking.properties
+		for (const field of fields.filter((f) => !f.startsWith('@self.'))) {
+			expect(schema[field]?.format).toBe('date-time')
+		}
+	})
+
 	it('keeps tab children out of the grid', () => {
 		const placed = page.config.layout.map((l) => l.widgetId)
 		for (const id of [
@@ -58,6 +92,26 @@ describe('the booking page', () => {
 			'booking-files',
 		]) {
 			expect(placed).not.toContain(id)
+		}
+	})
+})
+
+describe('example bookings', () => {
+	it('point at customers that exist in the example data', async () => {
+		const { default: example } =
+			await import('../../lib/Settings/pipelinq_example_register.json')
+		const objects = example.components.objects
+		const slugs = new Set(
+			objects
+				.filter((o) => ['client', 'contact'].includes(o['@self'].schema))
+				.map((o) => o['@self'].slug),
+		)
+		const bookings = objects.filter(
+			(o) => o['@self'].schema === 'appointmentBooking',
+		)
+		expect(bookings.length).toBeGreaterThan(0)
+		for (const booking of bookings) {
+			expect(slugs.has(booking.customerId), booking['@self'].slug).toBe(true)
 		}
 	})
 })
