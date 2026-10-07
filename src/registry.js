@@ -433,7 +433,7 @@ const registry = {
 		kind: 'widget',
 		component: PipelineValueKpiWidget,
 		...KPI_WIDGET_META,
-		_note: 'KPI card for total open-lead value in EUR. Renders <CnStatsBlock>.',
+		_note: 'KPI card for total open-lead value in the reporting currency. Renders <CnStatsBlock>.',
 	},
 	OverdueKpiWidget: {
 		kind: 'widget',
