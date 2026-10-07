@@ -103,7 +103,6 @@ class ContactDataBuilder {
 			'phones' => $phones,
 			'socialProfiles' => $this->extractSocialProfiles(value: ($ncContact['X-SOCIALPROFILE'] ?? null)),
 			'website' => $this->extractFirstValue(value: ($ncContact['URL'] ?? '')),
-			'industry' => $industry,
 			'contactsUid' => $uid,
 		];
 
@@ -115,6 +114,12 @@ class ContactDataBuilder {
 		$data = array_filter($data, fn ($v) => $v !== '');
 		$data['name'] = $name;
 		$data['type'] = $clientType;
+
+		// `industry` is a list of sectors (pipelinq-forms-review); written only
+		// when there is one, like the scalars above.
+		if ($industry !== '') {
+			$data['industry'] = [$industry];
+		}
 
 		return $data;
 	}//end buildClientImportData()

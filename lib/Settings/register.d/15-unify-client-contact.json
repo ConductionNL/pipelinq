@@ -79,6 +79,7 @@
           },
           "accountOwner": {
             "type": "string",
+            "format": "user",
             "title": "Account owner",
             "description": "Nextcloud user UID of the account owner / responsible sales agent.",
             "facetable": true

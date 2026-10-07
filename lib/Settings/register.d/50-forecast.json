@@ -186,6 +186,7 @@
           },
           "owner_id": {
             "type": "string",
+            "format": "user",
             "description": "NC user UID of the manager who owns the override.",
             "title": "Owner ID"
           },
@@ -230,6 +231,7 @@
           },
           "created_by": {
             "type": "string",
+            "format": "user",
             "description": "NC user UID of the manager who created the override.",
             "title": "Created By"
           },
@@ -302,6 +304,7 @@
           },
           "set_by": {
             "type": "string",
+            "format": "user",
             "description": "NC user UID of the person who set this quota.",
             "title": "Set By"
           },

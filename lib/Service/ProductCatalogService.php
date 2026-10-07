@@ -82,7 +82,7 @@ class ProductCatalogService {
 	}//end __construct()
 
 	/**
-	 * Map a Dutch BTW class to its authoritative tax rate.
+	 * Map a VAT class to its configured tax rate.
 	 *
 	 * The class is the source of truth for the rate on a POS receipt /
 	 * invoice; an unknown or empty class falls back to the standard 21% high
@@ -90,16 +90,27 @@ class ProductCatalogService {
 	 *
 	 * @param string|null $vatClass The BTW class (hoog/laag/nul/vrijgesteld).
 	 *
-	 * @return int The tax rate percentage.
+	 * @return int|float The tax rate percentage.
 	 *
 	 * @spec openspec/specs/pos-product-catalogue/spec.md
+	 * @spec openspec/changes/pipelinq-forms-review/specs/product-catalog/spec.md
 	 */
-	public function btwClassToRate(?string $vatClass): int {
-		if ($this->isValidBtwClass(vatClass: $vatClass) === false) {
-			return self::BTW_CLASS_RATES['high'];
+	public function btwClassToRate(?string $vatClass): int|float {
+		// The rate per class is a setting (VatRates, pipelinq-forms-review);
+		// BTW_CLASS_RATES only names the classes and holds the Dutch defaults.
+		$rates = (new VatRates(appConfig: $this->appConfig))->rates();
+		$rate = $rates['high'];
+		if ($this->isValidBtwClass(vatClass: $vatClass) === true) {
+			$rate = $rates[$vatClass];
 		}
 
-		return self::BTW_CLASS_RATES[$vatClass];
+		// Whole rates stay integers so existing receipts and payloads keep
+		// printing `21`, not `21.0`.
+		if ($rate === floor($rate)) {
+			return (int)$rate;
+		}
+
+		return $rate;
 	}//end btwClassToRate()
 
 	/**

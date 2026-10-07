@@ -135,3 +135,30 @@ manifest, and MUST start as before in a structure that has every entry.
 - **WHEN** somebody opens pipelinq for the first time
 - **THEN** the getting-started tour MUST NOT start
 - **AND** in the full structure it MUST start as before
+
+### Requirement: The simple navigation names the instance it belongs to (REQ-NIA-107)
+The simple profile MUST declare a brand block (`nav.brand`) at the top of the
+navigation: the app's name over the instance's own name, beside the instance's
+mark. The name MUST come from the theming capabilities through `@theming.name`.
+The mark MUST be the active set's emblem (`nldesign.logos.emblem`) and fall back
+to the theming logo only when the set ships no emblem
+(`@theming.emblem|@theming.logo`), so the brand block never draws a wordmark next
+to the app's own name when an emblem exists. `structureProfile.js` resolves the
+placeholders; the app MUST NOT name a municipality. The full profile MUST stay
+as it is.
+
+#### Scenario: A municipality's instance
+@e2e exclude The e2e instance carries no theming name worth asserting; structureProfile.spec.js drives the resolver with a theming answer and without one.
+- **GIVEN** an instance whose theming capabilities answer `name` and `logo`,
+  and whose design set ships an emblem
+- **WHEN** somebody opens pipelinq in the simple structure
+- **THEN** the navigation MUST open with the app's name, the instance's name
+  under it and the set's emblem beside it, not the wordmark
+- **AND** on a set without an emblem the theming logo MUST stand in
+
+#### Scenario: An instance that answers nothing
+@e2e exclude A unit rule on the resolver, covered by structureProfile.spec.js.
+- **GIVEN** an instance whose theming capabilities hold no `name` and no `logo`
+- **WHEN** somebody opens pipelinq in the simple structure
+- **THEN** the brand block MUST show the app's name alone
+- **AND** no placeholder text MUST reach the screen

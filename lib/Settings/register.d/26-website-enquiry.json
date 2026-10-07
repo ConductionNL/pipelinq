@@ -220,6 +220,7 @@
           },
           "handledBy": {
             "type": "string",
+            "format": "user",
             "description": "Nextcloud user who converted, closed or rejected the enquiry",
             "maxLength": 255,
             "title": "Handled by"

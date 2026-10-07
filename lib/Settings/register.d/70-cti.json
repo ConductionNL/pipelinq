@@ -295,6 +295,7 @@
         "properties": {
           "user_id": {
             "type": "string",
+            "format": "user",
             "description": "Nextcloud user UID of the agent.",
             "title": "User ID"
           },

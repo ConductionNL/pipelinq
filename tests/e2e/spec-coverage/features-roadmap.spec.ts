@@ -8,8 +8,8 @@
  *
  * The screen under test is manifest page `FeaturesRoadmap`, rendered by
  * `FeaturesRoadmapView` (src/views/FeaturesRoadmapView.vue). That component
- * wraps the library's product page and owns the capability comparison beside
- * it, so both sections are driven here.
+ * wraps the library's product page and adds one link to the help desk
+ * comparison on the docs site.
  */
 import { expect, test } from '@playwright/test'
 import {
@@ -75,16 +75,16 @@ test('Features & roadmap: Show roadmap reveals roadmap content', async ({
 })
 
 /*
- * The capability comparison. The page carries a second section beside the
- * product one, and everything below drives it in the browser. The four caveats
- * are ALSO asserted against the mounted component in
- * tests/vitest/capabilityComparison.spec.js, which runs in seconds on a laptop;
- * these tests prove the section is reachable and populated on a real instance,
- * which a mounted component cannot.
+ * The help desk comparison left this page for pipelinq.conduction.nl/compare
+ * on 2026-10-07 (Ruben: how an app compares belongs on its public site). Its
+ * caveats are asserted in tests/vitest/capabilityComparisonCopy.spec.js and its
+ * data in tests/vitest/capabilityComparison.spec.js. This test pins the two
+ * things only a browser can: the section is gone, and the link to its new
+ * home is on the page.
  */
 
-// @e2e openspec/specs/features-roadmap/spec.md#areas-summarise-before-they-expand
-test('Features & roadmap: the comparison lists areas with a score, rows collapsed', async ({
+// @e2e openspec/specs/features-roadmap/spec.md#the-comparison-is-one-link-away
+test('Features & roadmap: links to the comparison instead of carrying it', async ({
 	page,
 }) => {
 	await openApp(page)
@@ -92,47 +92,18 @@ test('Features & roadmap: the comparison lists areas with a score, rows collapse
 	await dismissSupportDialog(page)
 
 	const content = page.locator('#content-vue')
-	await content.getByRole('button', { name: 'How pipelinq compares' }).click()
+	const link = content.getByRole('link', {
+		name: 'How pipelinq compares to other help desks',
+	})
+	await expect(link).toBeVisible()
+	await expect(link).toHaveAttribute('href', /\/compare$/)
+	await expect(link).toHaveAttribute('target', '_blank')
 
-	// Every area states its size and our score before it is opened.
-	const areas = content.locator('.features-roadmap__area')
-	await expect(areas.first()).toBeVisible()
-	await expect(areas.first().locator('summary')).toContainText('Pipelinq has')
-
-	// Closed means closed. NOT toHaveCount(0): an area is a `<details>`, and a
-	// closed `<details>` keeps every child in the DOM, so a count matcher
-	// passes on a shut panel and reads it as an empty one. CI caught exactly
-	// that here, returning 13. Visibility is the question being asked.
-	const firstRow = areas.first().locator('.features-roadmap__cap').first()
-	await expect(firstRow).toBeHidden()
-
-	await areas.first().locator('summary').click()
-	await expect(firstRow).toBeVisible()
-
-	await assertNoHardError(page)
-})
-
-// @e2e openspec/specs/features-roadmap/spec.md#the-panel-advises-the-reader-to-test-for-themselves
-// @e2e openspec/specs/features-roadmap/spec.md#a-reader-can-date-the-claim
-// @e2e openspec/specs/features-roadmap/spec.md#the-panel-says-only-our-own-column-is-corrected
-test('Features & roadmap: the comparison states its limits before its scores', async ({
-	page,
-}) => {
-	await openApp(page)
-	await navClick(page, 'Features & roadmap', /\/features-roadmap/)
-	await dismissSupportDialog(page)
-
-	const content = page.locator('#content-vue')
-	await content.getByRole('button', { name: 'How pipelinq compares' }).click()
-
-	const panel = content.locator('.features-roadmap__comparison')
-	await expect(panel).toContainText('run your own evaluation')
-	await expect(panel).toContainText(
-		'does not replace testing against your own requirements',
-	)
-	await expect(panel).toContainText('already out of date')
-	await expect(panel).toContainText('September 9, 2026')
-	await expect(panel).toContainText('we correct our own column only')
+	await expect(
+		content.getByRole('button', { name: 'How pipelinq compares' }),
+	).toHaveCount(0)
+	await expect(content.locator('.features-roadmap__comparison')).toHaveCount(0)
+	await expect(content.getByText('Before you use this table')).toHaveCount(0)
 
 	await assertNoHardError(page)
 })

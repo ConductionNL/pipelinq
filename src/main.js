@@ -23,6 +23,7 @@ import { registerLeafIntegrations } from '@conduction/nextcloud-vue/integrations
 // `undefined` across the chunk boundary (components, used directly, are fine).
 import { installIntegrationRegistry } from '@conduction/nextcloud-vue/integrations/registry.js'
 import axios from '@nextcloud/axios'
+import { getCapabilities } from '@nextcloud/capabilities'
 import { loadState } from '@nextcloud/initial-state'
 import {
 	loadTranslations,
@@ -51,10 +52,12 @@ import {
 import { seedPageAppConfig } from './utils/pageAppConfig.js'
 import {
 	buildProfiledManifest,
+	navTheming,
 	resolveStructureProfile,
 	STRUCTURE_FULL,
 	STRUCTURE_SETTING,
 } from './utils/structureProfile.js'
+import { seedVatClassLabels } from './utils/vatClassLabels.js'
 
 // Library CSS — must be explicit import (webpack tree-shakes side-effect imports from aliased packages)
 import '@conduction/nextcloud-vue/css/index.css'
@@ -165,18 +168,25 @@ const profileFile =
 				),
 			)
 const { manifest: profiledManifest, homePage } = applyHomePage(
-	buildProfiledManifest(buildManifest, bundledManifest, fragments, profileFile),
+	buildProfiledManifest(buildManifest, bundledManifest, fragments, profileFile, {
+		theming: navTheming(getCapabilities()),
+	}),
 	profileFile.home,
 )
 // The getting-started tour sends the reader to menu entries the simple menu
 // does not have, so it is held back there. The full structure keeps it.
 // Dashboard and detail pages read `@config.<key>` tokens (the reporting
-// currency, the pipeline target) from the `config` initial state.
-const mergedManifest = seedPageAppConfig(
-	structureProfile === STRUCTURE_FULL
-		? profiledManifest
-		: holdUnreachableTours(profiledManifest),
-	loadState('pipelinq', 'config', {}),
+// currency, the pipeline target) from the `config` initial state; the VAT
+// class labels follow the rates set on the admin page.
+const mergedManifest = seedVatClassLabels(
+	seedPageAppConfig(
+		structureProfile === STRUCTURE_FULL
+			? profiledManifest
+			: holdUnreachableTours(profiledManifest),
+		loadState('pipelinq', 'config', {}),
+	),
+	loadState('pipelinq', 'config', {}).vat_rates,
+	(text) => t('pipelinq', text),
 )
 
 /**

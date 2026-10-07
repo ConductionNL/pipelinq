@@ -228,6 +228,18 @@ class SettingsService {
 		'receipt_company_phone' => '',
 		'receipt_company_vat' => '',
 		'receipt_company_kvk' => '',
+		// The organisation step's address and contact details
+		// (pipelinq-setup-wizard-review). `receipt_company_address` stays the
+		// one-line override; when it is empty the receipt composes these.
+		'receipt_company_street' => '',
+		'receipt_company_postcode' => '',
+		'receipt_company_city' => '',
+		'receipt_company_country' => '',
+		'receipt_company_email' => '',
+		'receipt_company_website' => '',
+		// The VAT rate per VAT class as JSON, e.g. {"high":21,"low":9,"zero":0,"exempt":0}
+		// (VatRates, pipelinq-forms-review). Empty means the Dutch defaults.
+		'vat_rates' => '',
 		'receipt_email_sender' => '',
 		'receipt_printer_host' => '',
 		'receipt_printer_port' => '9100',
@@ -241,13 +253,9 @@ class SettingsService {
 		// webhook URL; empty or non-HTTPS disables the integration. Replaces the
 		// retired hard-coded pos_eod.shillinq_endpoint POST to /api/JournalEntry.
 		'shillinq_journal_webhook_url' => '',
-		// Base URL of the configured shillinq deployment, used to resolve the
-		// "Timesheet approval" billing entry point through the registry instead of
-		// the hard-coded /index.php/apps/shillinq/ path (REQ-PBTS-003).
-		'shillinq_app_url' => '',
 		// Gates the real shillinq time-intake emit (time-billing-handoff-emit).
-		// Default off: an unconfigured install keeps today's deep-link-only
-		// handoff (shillinq_app_url) unchanged. The manager group allowed to
+		// Default off: an unconfigured install keeps the deep-link-only handoff
+		// to the detected Shillinq app (IntegrationDetector). The manager group allowed to
 		// trigger "Send to billing" (empty = NC admins only).
 		'shillinq_time_intake_enabled' => 'false',
 		'billing_handoff_manager_group' => '',
@@ -267,12 +275,10 @@ class SettingsService {
 		'pos_eod.z_report_time' => '23:59',
 		'pos_eod.alert_email' => '',
 		'pos_eod.max_retry_attempts' => '5',
-		// XWiki integration (xwiki-integration). The default direct URL points at
-		// the dev compose stack so a fresh install renders content without manual
-		// configuration; admins can override or clear it to disable the fallback.
+		// XWiki integration (xwiki-integration). The XWiki base URL is detected,
+		// never typed (IntegrationDetector, pipelinq-setup-wizard-review).
 		'xwiki_default_space' => '',
 		'xwiki_cache_ttl' => '300',
-		'xwiki_direct_url' => '',
 		// SLA engine (sla-engine-and-escalation) — admin settings.
 		// @spec openspec/specs/sla-engine-and-escalation/spec.md .
 		'sla_sweep_interval_seconds' => '300',

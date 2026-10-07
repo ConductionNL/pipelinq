@@ -1224,8 +1224,8 @@ class SegmentService {
 	 */
 	private function operatorHandlers(): array {
 		return [
-			'equals' => fn (mixed $actual, mixed $value): bool => $this->looseEquals(left: $actual, right: $value),
-			'notEquals' => fn (mixed $actual, mixed $value): bool => ($this->looseEquals(left: $actual, right: $value) === false),
+			'equals' => fn (mixed $actual, mixed $value): bool => $this->ruleEquals(actual: $actual, value: $value),
+			'notEquals' => fn (mixed $actual, mixed $value): bool => ($this->ruleEquals(actual: $actual, value: $value) === false),
 			'gt' => fn (mixed $actual, mixed $value): bool => ($this->compareNumeric(left: $actual, right: $value) === 1),
 			'greaterThan' => fn (mixed $actual, mixed $value): bool => ($this->compareNumeric(left: $actual, right: $value) === 1),
 			'gte' => fn (mixed $actual, mixed $value): bool => ($this->compareNumeric(left: $actual, right: $value) >= 0),
@@ -1373,6 +1373,32 @@ class SegmentService {
 
 		return ($left === $right);
 	}//end looseEquals()
+
+	/**
+	 * `equals` for a rule: a list field (client.industry became one) equals a
+	 * scalar when any item does, so a rule written while the field was a
+	 * string still holds. Everything else is looseEquals().
+	 *
+	 * @param mixed $actual The entity's field value.
+	 * @param mixed $value The rule value.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/changes/pipelinq-forms-review/specs/client-management/spec.md
+	 */
+	private function ruleEquals(mixed $actual, mixed $value): bool {
+		if (is_array($actual) === false || array_is_list($actual) === false || is_scalar($value) === false) {
+			return $this->looseEquals(left: $actual, right: $value);
+		}
+
+		foreach ($actual as $entry) {
+			if (is_scalar($entry) === true && strcasecmp((string)$entry, (string)$value) === 0) {
+				return true;
+			}
+		}
+
+		return false;
+	}//end ruleEquals()
 
 	/**
 	 * Numeric comparison returning -1, 0, or 1. Returns 0 when either

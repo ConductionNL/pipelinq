@@ -6,8 +6,8 @@
  * Thin proxy/service layer that wraps the xWiki REST API for the Pipelinq
  * frontend (xwiki-integration change). When the optional `OCA\Xwiki` Nextcloud
  * app is installed its `SettingsManager` is used to discover the configured
- * xWiki instance; otherwise the service falls back to the admin-configured
- * `xwiki_direct_url` from Pipelinq settings. Responses are parsed from XML to
+ * xWiki instance; otherwise search goes through OpenRegister's xwiki
+ * integration and nobody types a base URL. Responses are parsed from XML to
  * arrays, sanitised, and cached via ICacheFactory for the configured TTL.
  *
  * @category Service
@@ -54,13 +54,6 @@ class XWikiService {
 	 * @var int
 	 */
 	private const DEFAULT_CACHE_TTL = 300;
-
-	/**
-	 * Default xWiki REST API endpoint used by the dev docker stack.
-	 *
-	 * @var string
-	 */
-	private const DEFAULT_DIRECT_URL = 'http://xwiki:8080/xwiki';
 
 	/**
 	 * In-memory marker for "xWiki unreachable" status checks so repeated calls
@@ -457,8 +450,8 @@ class XWikiService {
 	}//end getStatus()
 
 	/**
-	 * Resolve the xWiki base URL. Tries the `OCA\Xwiki` app's SettingsManager
-	 * first when present, then falls back to admin-configured direct URL.
+	 * Resolve the xWiki base URL from the `OCA\Xwiki` app's SettingsManager.
+	 * There is no typed fallback: nobody is asked for a base URL.
 	 *
 	 * @return string Base URL without trailing slash, or '' when unavailable.
 	 */
@@ -476,11 +469,12 @@ class XWikiService {
 				}
 			}
 		} catch (Throwable $e) {
-			$this->logger->debug('xWiki SettingsManager unavailable, using direct URL', ['exception' => $e]);
+			$this->logger->debug('xWiki SettingsManager unavailable', ['exception' => $e]);
 		}
 
-		$direct = $this->appConfig->getValueString(Application::APP_ID, 'xwiki_direct_url', self::DEFAULT_DIRECT_URL);
-		return rtrim($direct, '/');
+		// No typed fallback URL any more (pipelinq-setup-wizard-review): without
+		// the XWiki app, search goes through OpenRegister's xwiki integration.
+		return '';
 	}//end getBaseUrl()
 
 	/**
