@@ -2984,7 +2984,8 @@
 						"gridX": 8,
 						"gridY": 0,
 						"gridWidth": 4,
-						"gridHeight": 2
+						"gridHeight": 2,
+						"showTitle": false
 					},
 					{
 						"id": "4",
@@ -2992,7 +2993,7 @@
 						"gridX": 8,
 						"gridY": 2,
 						"gridWidth": 4,
-						"gridHeight": 3
+						"gridHeight": 5
 					},
 					{
 						"id": "3",
@@ -3006,9 +3007,9 @@
 						"id": "6",
 						"widgetId": "contact-profile",
 						"gridX": 8,
-						"gridY": 5,
+						"gridY": 7,
 						"gridWidth": 4,
-						"gridHeight": 7
+						"gridHeight": 5
 					},
 					{
 						"id": "5",
@@ -3017,16 +3018,6 @@
 						"gridY": 12,
 						"gridWidth": 12,
 						"gridHeight": 7
-					}
-				],
-				"relationLinks": [
-					{
-						"label": "Link to Organisation",
-						"title": "Link to Organisation",
-						"register": "pipelinq",
-						"schema": "client",
-						"fkField": "client",
-						"labelField": "name"
 					}
 				],
 				"bodyWidgets": [
@@ -3233,7 +3224,16 @@
 							"schema": "leadProduct",
 							"filter": { "lead": "@objectId" },
 							"columns": [
-								{ "key": "product", "label": "Product" },
+								{
+									"key": "product",
+									"label": "Product",
+									"widget": "fkResolve",
+									"widgetProps": {
+										"register": "pipelinq",
+										"schema": "product",
+										"labelField": "name"
+									}
+								},
 								{ "key": "quantity", "label": "Qty" },
 								{
 									"key": "unitPrice",
@@ -3466,7 +3466,8 @@
 						"gridX": 8,
 						"gridY": 0,
 						"gridWidth": 4,
-						"gridHeight": 3
+						"gridHeight": 3,
+						"showTitle": false
 					},
 					{
 						"id": "9",
@@ -3474,7 +3475,8 @@
 						"gridX": 8,
 						"gridY": 3,
 						"gridWidth": 4,
-						"gridHeight": 3
+						"gridHeight": 3,
+						"showTitle": false
 					},
 					{
 						"id": "3",

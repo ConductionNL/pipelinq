@@ -77,6 +77,17 @@ class DemoSeedService {
 	private const TICKET_SCHEMA_KEY = 'ticket_schema';
 
 	/**
+	 * Reference fields a reseed re-points on an existing demo object.
+	 *
+	 * The seed is idempotent by lookup field, so a demo lead that already
+	 * exists is reused as it is. When its pipeline was deleted and the reseed
+	 * created a new demo pipeline, the lead kept the dead id and showed on no
+	 * board while still counting in the open pipeline (pipelinq review F1).
+	 * A reseed therefore re-points these fields at the objects it resolved.
+	 */
+	private const RELINK_FIELDS = ['pipeline'];
+
+	/**
 	 * Entity sections in seed order: section => [schemaConfigKey, lookupField, ticketType].
 	 *
 	 * `ticketType` is null for sections that own their own schema, and one of
@@ -256,7 +267,7 @@ class DemoSeedService {
 	/**
 	 * Seed the demo dataset (idempotent: existing demo objects are reused).
 	 *
-	 * @return array{success: bool, message?: string, created: array<string, int>, skipped: array<string, int>}
+	 * @return array{success: bool, message?: string, created: array<string, int>, skipped: array<string, int>, relinked?: array<string, int>}
 	 *
 	 * @spec openspec/specs/first-time-setup/spec.md#requirement-req-setup-pip-008-optional-demo-data-seed
 	 */
@@ -275,20 +286,25 @@ class DemoSeedService {
 
 		$created = [];
 		$skipped = [];
+		$relinked = [];
 		// Maps section-local keys (e.g. clientKey "bakkerij") to saved uuids.
 		$uuids = [];
 
 		foreach (self::SECTIONS as $section => [$schemaKey, $lookupField, $ticketType]) {
 			$created[$section] = 0;
 			$skipped[$section] = 0;
+			$relinked[$section] = 0;
 
-			// One scan per schema: value => [uuid, ...] index for idempotency.
+			// One scan per schema: value => [uuid, ...] index for idempotency,
+			// plus the scanned rows by uuid for the relink check.
+			$rows = [];
 			$index = $this->buildLookupIndex(
 				objectService: $objectService,
 				registerId: $registerId,
 				schemaId: $schemaIds[$schemaKey],
 				lookupField: $lookupField,
 				ticketType: $ticketType,
+				rows: $rows,
 			);
 
 			foreach (($definitions[$section] ?? []) as $definition) {
@@ -305,6 +321,17 @@ class DemoSeedService {
 				if ($existingUuid !== null) {
 					$uuids[$section . ':' . $definition['key']] = $existingUuid;
 					$skipped[$section]++;
+					$didRelink = $this->relinkExisting(
+						objectService: $objectService,
+						target: ['register' => $registerId, 'schema' => $schemaIds[$schemaKey], 'ticketType' => $ticketType],
+						existing: ($rows[$existingUuid] ?? []),
+						data: $data,
+						uuid: $existingUuid,
+					);
+					if ($didRelink === true) {
+						$relinked[$section]++;
+					}
+
 					continue;
 				}
 
@@ -340,8 +367,52 @@ class DemoSeedService {
 			'success' => true,
 			'created' => array_merge($created, $marketing['created']),
 			'skipped' => array_merge($skipped, $marketing['skipped']),
+			'relinked' => $relinked,
 		];
 	}//end seed()
+
+	/**
+	 * Re-point an existing demo object's references at this run's objects.
+	 *
+	 * Only the fields in self::RELINK_FIELDS are compared, and only when this
+	 * run resolved a value for them. Everything else the user changed on the
+	 * demo object stays as it is.
+	 *
+	 * @param object $objectService The OpenRegister object service.
+	 * @param array{register: string, schema: string, ticketType: string|null} $target Where the object lives.
+	 * @param array<string, mixed> $existing The stored object, as scanned.
+	 * @param array<string, mixed> $data The resolved seed payload.
+	 * @param string $uuid The stored object's uuid.
+	 *
+	 * @return bool True when the object was re-pointed.
+	 *
+	 * @spec openspec/changes/review-audit-fixes-b/specs/lead-management/spec.md#requirement-a-reseed-re-links-demo-leads-to-the-new-pipeline-req-raf-010
+	 */
+	private function relinkExisting(object $objectService, array $target, array $existing, array $data, string $uuid): bool {
+		$patch = [];
+		foreach (self::RELINK_FIELDS as $field) {
+			$wanted = (string)($data[$field] ?? '');
+			if ($wanted !== '' && (string)($existing[$field] ?? '') !== $wanted) {
+				$patch[$field] = $wanted;
+			}
+		}
+
+		if ($patch === [] || $existing === []) {
+			return false;
+		}
+
+		$payload = $existing;
+		unset($payload['@self']);
+		$payload = array_merge($payload, $patch);
+
+		if ($target['ticketType'] !== null) {
+			$this->ticketService->save(ticketType: $target['ticketType'], payload: $payload, uuid: $uuid);
+			return true;
+		}
+
+		$objectService->saveObject($payload, [], $target['register'], $target['schema'], $uuid);
+		return true;
+	}//end relinkExisting()
 
 	/**
 	 * Remove exactly the seeded demo set (lookup-field exact match, [Demo] prefix guarded).
@@ -537,6 +608,7 @@ class DemoSeedService {
 	 * @param string $schemaId Schema id.
 	 * @param string $lookupField Field used as the stable demo identifier.
 	 * @param string|null $ticketType Ticket subtype to narrow on, or null for own-schema sections.
+	 * @param array<string, array<string, mixed>>|null $rows Receives the scanned rows by uuid.
 	 *
 	 * @return array<string, array<int, string>> Map of lookup value => uuids.
 	 */
@@ -546,6 +618,7 @@ class DemoSeedService {
 		string $schemaId,
 		string $lookupField,
 		?string $ticketType = null,
+		?array &$rows = null,
 	): array {
 		$existing = $objectService->findAll(
 			[
@@ -579,6 +652,7 @@ class DemoSeedService {
 			}
 
 			$index[$value][] = $uuid;
+			$rows[$uuid] = $data;
 		}
 
 		return $index;

@@ -7207,6 +7207,16 @@
         "Then: back to in progress, or finish": "Then: back to in progress, or finish",
         "How pipelinq compares to other help desks": "How pipelinq compares to other help desks",
         "Opens {host} in a new tab.": "Opens {host} in a new tab.",
+        "%n lead is on no board, because its pipeline or stage no longer exists.": [
+            "%n lead is on no board, because its pipeline or stage no longer exists.",
+            "%n leads are on no board, because their pipeline or stage no longer exists."
+        ],
+        "%n leads are on no board, because their pipeline or stage no longer exists.": "%n leads are on no board, because their pipeline or stage no longer exists.",
+        "Show these leads": "Show these leads",
+        "Hide these leads": "Hide these leads",
+        "Its pipeline no longer exists.": "Its pipeline no longer exists.",
+        "Its stage {stage} is not a stage of its pipeline.": "Its stage {stage} is not a stage of its pipeline.",
+        "Calculated when the lead is saved, from its value, client, contact, source, close date, priority and description. You cannot change it by hand.": "Calculated when the lead is saved, from its value, client, contact, source, close date, priority and description. You cannot change it by hand.",
         "System": "System",
         "{total} capabilities. Pipelinq has {yes}, partly has {partial}, is missing {no}.": "{total} capabilities. Pipelinq has {yes}, partly has {partial}, is missing {no}.",
         "A rating is our reading of software we did not write. It is not proof that a product does or does not have a capability.": "A rating is our reading of software we did not write. It is not proof that a product does or does not have a capability.",

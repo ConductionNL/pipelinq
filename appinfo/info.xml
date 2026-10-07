@@ -197,6 +197,8 @@ Vrij en open source onder de EUPL-1.2-licentie.
                 is itself a valid save, so running after the import is safe.
             -->
             <step>OCA\Pipelinq\Repair\BackfillLeadRelations</step>
+            <!-- After the backfill: a lead on a deleted pipeline goes to the default pipeline (review F1). -->
+            <step>OCA\Pipelinq\Repair\RelinkOrphanedLeads</step>
             <step>OCA\Pipelinq\Repair\NormaliseCtiPhoneNumbers</step>
             <step>OCA\Pipelinq\Repair\NormaliseTicketTitle</step>
             <!--

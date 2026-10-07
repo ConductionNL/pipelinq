@@ -152,7 +152,7 @@ export default {
 		},
 	},
 
-	emits: ['update:modelValue'],
+	emits: ['update:modelValue', 'catalogue'],
 
 	data() {
 		instanceCount += 1
@@ -309,9 +309,11 @@ export default {
 	},
 
 	/**
-	 * Load the product catalogue for the step product picker.
+	 * Load the product catalogue for the step product picker, and hand it to
+	 * the parent, which shows the saved steps by product name.
 	 *
 	 * @spec openspec/changes/booking-and-service-pages/specs/appointment-booking/spec.md
+	 * @spec openspec/changes/review-audit-fixes-b/specs/appointment-booking/spec.md#requirement-a-saved-composition-step-shows-its-product-name-req-raf-040
 	 */
 	async mounted() {
 		this.productsLoading = true
@@ -320,6 +322,7 @@ export default {
 				_limit: 500,
 			})
 			this.products = Array.isArray(rows) ? rows : []
+			this.$emit('catalogue', this.products)
 		} catch {
 			this.products = []
 		} finally {
