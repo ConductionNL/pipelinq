@@ -70,6 +70,9 @@ class InitializeSettings implements IRepairStep {
 		'campaign',
 		'social_media',
 		'event',
+		// A public tender: how a government or other buyer invites offers.
+		// The demo and example data use it (pipelinq review audit).
+		'tender',
 		'other',
 	];
 
