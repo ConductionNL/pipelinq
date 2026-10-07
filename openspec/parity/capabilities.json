@@ -3475,7 +3475,7 @@
 				"owner": "ConductionNL/openregister",
 				"reachedOn": "TicketDetail, LeadDetail sidebar Tasks tab",
 				"readOn": "2026-10-07",
-				"change": "openregister/2026-10-05-object-watchers"
+				"change": "notify-the-followers-of-tickets-and-leads"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/records/add-collaborators-to-a-deal \"If multiple users in your HubSpot account work together on a deal, you can add them as collaborators ... Each collaborator can access a default view that lists all deals they're included on\". All products and plans.",
@@ -3486,7 +3486,7 @@
 			},
 			"origin": "changelog",
 			"originUrl": "https://github.com/espocrm/espocrm/issues/3584",
-			"note": "Re-read 2026-10-07: the openregister change is archived and its backend is built, but the user-facing half is missing: a Follow button on the detail page (nextcloud-vue, not specified there yet) and a `watchers: true` recipient on the ticket and lead notification rules in pipelinq. Stays specified and partial.",
+			"note": "Re-read 2026-10-07: the openregister change is archived and its backend is built, but the user-facing half is missing: a Follow button on the detail page (nextcloud-vue, not specified there yet) and a `watchers: true` recipient on the ticket and lead notification rules in pipelinq. Stays specified and partial. Spec round part 3 (2026-10-07): pipelinq's half (a watchers recipient on ticketUpdated, leadUpdated, leadWon and leadLost) is specified in change notify-the-followers-of-tickets-and-leads; the delivered backend is openregister/2026-10-05-object-watchers; the Follow control on the detail page is nextcloud-vue's, not specified yet.",
 			"screen": {
 				"canvas": "5NkFW28vZUUij43xzxHg5a",
 				"board": "PqTicket"
