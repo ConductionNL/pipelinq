@@ -224,7 +224,7 @@ class CashLiveAggregationRunner extends AggregationRunner {
 	 *
 	 * @return array<string, mixed> The result envelope.
 	 */
-	public function runAdhocByRef(string $registerRef, string $schemaRef, AggregationQuery $query): array {
+	public function runAdhocByRef(string $registerRef, string $schemaRef, AggregationQuery $query, bool $bypassRbac=false): array {
 		$runner = new FakeAggregationRunner(
 			array_values($this->objects->store['posTransaction_schema'] ?? [])
 		);
