@@ -69,7 +69,9 @@ import LeadProbabilityCell from './views/leads/cells/LeadProbabilityCell.vue'
 import LeadScoreCell from './views/leads/cells/LeadScoreCell.vue'
 import { CELL_FORMATTERS } from './services/cellFormatters.js'
 import { createConnectionHandlers } from './services/connectionRegistry.js'
+import { createNameFormatter } from './services/nameFormatters.js'
 import { createTicketHandlers } from './services/ticketAssign.js'
+import { useObjectStore } from './store/modules/object.js'
 
 export default {
 	name: 'App',
@@ -169,14 +171,28 @@ export default {
 
 		/**
 		 * Cell-formatter registry for CnAppRoot, keyed by the `formatter` id a
-		 * manifest column references. `objectCurrency` shows an amount in the
-		 * row's own currency, or the reporting currency.
+		 * manifest column (or a data widget override) references.
+		 * `objectCurrency` shows an amount in the row's own currency, or the
+		 * reporting currency; the `booking*Name` formatters show names, not ids.
 		 *
 		 * @return {Record<string, (value: unknown) => string>}
 		 * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
 		 */
 		cellFormatters() {
-			return CELL_FORMATTERS
+			const store = useObjectStore()
+			return {
+				...CELL_FORMATTERS,
+				// The booking data block names the customer (a contact, or a
+				// client) and the service instead of showing their ids.
+				bookingCustomerName: createNameFormatter([
+					(id) => store.fetchObject('contact', id),
+					(id) => store.fetchObject('client', id),
+				]),
+
+				bookingServiceName: createNameFormatter([
+					(id) => store.fetchObject('appointmentService', id),
+				]),
+			}
 		},
 
 		/**
