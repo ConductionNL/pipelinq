@@ -50,9 +50,8 @@ vi.mock('vue-material-design-icons/AutoFix.vue', () => ({
 	default: { name: 'AutoFix', render: () => null },
 }))
 
-const { default: SetupWizardSection } = await import(
-	'../../src/views/settings/SetupWizardSection.vue'
-)
+const { default: SetupWizardSection } =
+	await import('../../src/views/settings/SetupWizardSection.vue')
 
 describe('run the setup wizard again', () => {
 	it('opens the manifest wizard from the admin card and closes it again', async () => {
