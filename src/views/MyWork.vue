@@ -104,7 +104,7 @@
 							<span
 								v-if="item.entityType === 'lead' && item.value"
 								class="meta-value">
-								EUR {{ formatNumber(item.value) }}
+								{{ formatCurrency(item.value, currencyOr(item.currency)) }}
 							</span>
 						</div>
 						<div class="work-card__footer">
@@ -136,9 +136,10 @@
 <script>
 import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
-import { formatDateFull, formatNumber } from '../services/localeUtils.js'
+import { formatCurrency, formatDateFull } from '../services/localeUtils.js'
 import { GROUP_ORDER, workGroup } from '../services/myWorkGroups.js'
 import { isStale } from '../services/pipelineUtils.js'
+import { currencyOr } from '../services/reportingCurrency.js'
 import {
 	getPriorityColor,
 	getPriorityLabel,
@@ -284,6 +285,7 @@ export default {
 						: '',
 					priority: l.priority || 'normal',
 					value: l.value,
+					currency: l.currency || null,
 					dueDate: l.expectedCloseDate,
 					isOverdue,
 					isDueToday,
@@ -445,7 +447,8 @@ export default {
 	},
 
 	methods: {
-		formatNumber,
+		formatCurrency,
+		currencyOr,
 		getPriorityLabel,
 		getPriorityColor,
 

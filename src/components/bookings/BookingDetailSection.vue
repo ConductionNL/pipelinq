@@ -140,6 +140,7 @@ import ClockEnd from 'vue-material-design-icons/ClockEnd.vue'
 import ClockStart from 'vue-material-design-icons/ClockStart.vue'
 import EmailCheckOutline from 'vue-material-design-icons/EmailCheckOutline.vue'
 import ProgressCheck from 'vue-material-design-icons/ProgressCheck.vue'
+import { currencyOr } from '../../services/reportingCurrency.js'
 import { useObjectStore } from '../../store/modules/object.js'
 
 const TIMELINE_ICONS = {
@@ -357,7 +358,7 @@ export default {
 			const paid = !!this.booking.depositPaidAt
 			const formatted = this.formatCurrency(
 				amount,
-				this.service?.currency || 'EUR',
+				currencyOr(this.service?.currency),
 			)
 			return paid
 				? t('pipelinq', '{amount} (paid {when})', {
@@ -422,7 +423,7 @@ export default {
 		},
 
 		formatCurrency(value, currency) {
-			const code = currency || 'EUR'
+			const code = currencyOr(currency)
 			const n = Number(value) || 0
 			try {
 				return new Intl.NumberFormat('nl-NL', {

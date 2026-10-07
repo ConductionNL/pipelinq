@@ -30,7 +30,7 @@
 	"pages": [
 		{
 			"id": "Services",
-			"_note": "Service catalogue as a declarative type:index page (pipelinq-views-to-declarative-r2). price→EUR currency, durationMinutes→duration format, status→badge, bookableOnline→boolean. 'New service' navigates to the bespoke ServiceDetail create form (id:'new'); row open navigates to ServiceDetail. ServiceDetail stays custom (multiStep sub-table editor + policy cards + cache-invalidation hook).",
+			"_note": "Service catalogue as a declarative type:index page (pipelinq-views-to-declarative-r2). price→the service's own currency (reporting currency when unset; objectCurrency formatter), durationMinutes→duration format, status→badge, bookableOnline→boolean. 'New service' navigates to the bespoke ServiceDetail create form (id:'new'); row open navigates to ServiceDetail. ServiceDetail stays custom (multiStep sub-table editor + policy cards + cache-invalidation hook).",
 			"route": "/services",
 			"type": "index",
 			"title": "Services",
@@ -53,7 +53,7 @@
 				"columns": [
 					"name",
 					{ "key": "durationMinutes", "label": "Duration", "format": { "style": "duration", "unit": "minutes" } },
-					{ "key": "price", "label": "Price", "format": { "style": "currency", "currency": "EUR", "decimals": 2 } },
+					{ "key": "price", "label": "Price", "formatter": "objectCurrency", "formatterOptions": { "decimals": 2 } },
 					{ "key": "bookableOnline", "label": "Online", "type": "boolean" },
 					{ "key": "status", "label": "Status", "widget": "badge", "widgetProps": { "colorMap": { "active": "success", "draft": "default", "archived": "default" } } }
 				],

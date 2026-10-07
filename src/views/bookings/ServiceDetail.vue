@@ -257,6 +257,7 @@ import { computed } from 'vue'
 import ServiceStepsEditor from '../../components/bookings/ServiceStepsEditor.vue'
 import DeleteServiceDialog from '../../dialogs/DeleteServiceDialog.vue'
 import ServiceForm from './ServiceForm.vue'
+import { currencyOr } from '../../services/reportingCurrency.js'
 import { stepAmount } from '../../services/serviceSteps.js'
 import { useObjectStore } from '../../store/modules/object.js'
 
@@ -733,7 +734,7 @@ export default {
 		},
 
 		formatCurrency(value, currency) {
-			const code = currency || 'EUR'
+			const code = currencyOr(currency)
 			const n = Number(value) || 0
 			try {
 				return new Intl.NumberFormat('nl-NL', {

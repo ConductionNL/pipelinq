@@ -99,7 +99,7 @@
 				<NcTextField
 					id="service-currency"
 					:label="t('pipelinq', 'Currency')"
-					:modelValue="form.currency || 'EUR'"
+					:modelValue="form.currency || reportingCurrency()"
 					:maxlength="3"
 					@update:modelValue="
 						(v) => (form.currency = (v || '').toUpperCase())
@@ -224,6 +224,7 @@
 <script>
 import { NcButton, NcSelect, NcTextField } from '@nextcloud/vue'
 import ServiceStepsEditor from '../../components/bookings/ServiceStepsEditor.vue'
+import { reportingCurrency } from '../../services/reportingCurrency.js'
 
 export default {
 	name: 'ServiceForm',
@@ -297,7 +298,7 @@ export default {
 				bufferBeforeMinutes: 0,
 				bufferAfterMinutes: 0,
 				price: 0,
-				currency: 'EUR',
+				currency: reportingCurrency(),
 				requiredSkills: [],
 				multiStep: [],
 				bookableOnline: true,
