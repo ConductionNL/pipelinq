@@ -24,7 +24,10 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 use OCA\Pipelinq\Service\BudgetService;
 use OCA\Pipelinq\Service\ChannelProviderRepository;
 use OCA\Pipelinq\Service\ConsentService;
+use OCA\Pipelinq\Service\ContactmomentService;
 use OCA\Pipelinq\Service\NotificationService;
+use OCA\Pipelinq\Service\PhoneNormaliser;
+use OCA\Pipelinq\Tests\Unit\Support\FakeMessagingAccount;
 use OCA\Pipelinq\Service\WhatsAppAdapter;
 use OCA\Pipelinq\Service\WhatsAppProviderClient;
 use OCP\IAppConfig;
@@ -48,6 +51,8 @@ class WhatsAppAdapterTest extends TestCase {
 	private BudgetService $budgetService;
 	private NotificationService $notificationService;
 	private LoggerInterface $logger;
+	private ContactmomentService $contactmoments;
+	private FakeMessagingAccount $messaging;
 	private object $objectService;
 	private WhatsAppAdapter $adapter;
 
@@ -65,6 +70,8 @@ class WhatsAppAdapterTest extends TestCase {
 		$this->budgetService = $this->createMock(BudgetService::class);
 		$this->notificationService = $this->createMock(NotificationService::class);
 		$this->logger = $this->createMock(LoggerInterface::class);
+		$this->contactmoments = $this->createMock(ContactmomentService::class);
+		$this->messaging = (new FakeMessagingAccount($this))->usable();
 
 		$this->objectService = new class {
 			/** @var array<string, array<string, mixed>> */
@@ -72,6 +79,27 @@ class WhatsAppAdapterTest extends TestCase {
 
 			/** @var array<int, array<string, mixed>> */
 			public array $inboundMessages = [];
+
+			/**
+			 * Every call with the access flags it was made with.
+			 *
+			 * @var array<int, array{call: string, _rbac: bool, _multitenancy: bool}>
+			 */
+			public array $access = [];
+
+			/**
+			 * The messaging account world, to stamp each call with the acting user.
+			 *
+			 * @var FakeMessagingAccount|null
+			 */
+			public ?FakeMessagingAccount $world = null;
+
+			/**
+			 * Contacts by phone number, for the contact lookup.
+			 *
+			 * @var array<string, string>
+			 */
+			public array $contacts = [];
 
 			/**
 			 * Mock saveObject.
@@ -83,7 +111,8 @@ class WhatsAppAdapterTest extends TestCase {
 			 *
 			 * @return array<string, mixed>
 			 */
-			public function saveObject(array $object, $register = null, $schema = null, ?string $uuid = null): array {
+			public function saveObject(array $object, $register = null, $schema = null, ?string $uuid = null, bool $_rbac = true, bool $_multitenancy = true): array {
+				$this->access[] = ['call' => 'saveObject', '_rbac' => $_rbac, '_multitenancy' => $_multitenancy, 'as' => $this->world?->actingUid()];
 				if ($uuid === null || $uuid === '') {
 					$uuid = (string)($object['uuid'] ?? '');
 				}
@@ -104,7 +133,8 @@ class WhatsAppAdapterTest extends TestCase {
 			 *
 			 * @return array<string, mixed>|null
 			 */
-			public function find(string $id, $register = null, $schema = null): ?array {
+			public function find(string $id, $register = null, $schema = null, bool $_rbac = true, bool $_multitenancy = true): ?array {
+				$this->access[] = ['call' => 'find', '_rbac' => $_rbac, '_multitenancy' => $_multitenancy, 'as' => $this->world?->actingUid()];
 				return ($this->store[$id] ?? null);
 			}
 
@@ -119,8 +149,14 @@ class WhatsAppAdapterTest extends TestCase {
 			 *
 			 * @return array<int, array<string, mixed>>
 			 */
-			public function findAll(array $config = []): array {
+			public function findAll(array $config = [], bool $_rbac = true, bool $_multitenancy = true): array {
+				$this->access[] = ['call' => 'findAll', '_rbac' => $_rbac, '_multitenancy' => $_multitenancy, 'as' => $this->world?->actingUid()];
 				$filters = $config['filters'] ?? [];
+				// The contact schema stores the number under `phone`.
+				$phone = (string)($filters['phone'] ?? '');
+				if ($phone !== '' && isset($this->contacts[$phone]) === true) {
+					return [['uuid' => $this->contacts[$phone], 'phone' => $phone]];
+				}
 				if (($filters['direction'] ?? '') === 'inbound') {
 					return $this->inboundMessages;
 				}
@@ -128,10 +164,18 @@ class WhatsAppAdapterTest extends TestCase {
 			}
 		};
 
+		$this->objectService->world = $this->messaging;
+
 		$this->container->method('get')->willReturnCallback(
 			function (string $id) {
 				if ($id === 'OCA\\OpenRegister\\Service\\ObjectService') {
 					return $this->objectService;
+				}
+				if ($id === 'OCA\\Pipelinq\\Service\\ContactmomentService') {
+					return $this->contactmoments;
+				}
+				if ($id === 'OCA\\Pipelinq\\Service\\MessagingServiceAccount') {
+					return $this->messaging->account;
 				}
 				throw new \RuntimeException('not registered: ' . $id);
 			}
@@ -156,6 +200,7 @@ class WhatsAppAdapterTest extends TestCase {
 			$this->budgetService,
 			$this->notificationService,
 			$this->logger,
+			new PhoneNormaliser($this->appConfig, $this->logger),
 		);
 	}//end setUp()
 
@@ -318,7 +363,7 @@ class WhatsAppAdapterTest extends TestCase {
 	 * @return void
 	 */
 	public function testInboundWebhookInvalidSignature(): void {
-		$this->providerRepo->method('findById')->willReturn(['uuid' => 'prov-1', 'webhookSecret' => 'secret']);
+		$this->providerRepo->method('findByIdForWebhook')->willReturn(['uuid' => 'prov-1', 'webhookSecret' => 'secret']);
 		$this->providerClient->method('verifySignature')->willReturn(false);
 
 		$result = $this->adapter->handleInboundWebhook('{}', 'sha256=bad', 'prov-1');
@@ -327,25 +372,22 @@ class WhatsAppAdapterTest extends TestCase {
 	}//end testInboundWebhookInvalidSignature()
 
 	/**
-	 * Inbound webhook with a valid signature persists + creates a
-	 * placeholder contact when the phone is unknown.
+	 * A Meta `messages` callback from the given number with the given text.
 	 *
-	 * @return void
+	 * @param string $from Sender as Meta sends it (international, no '+').
+	 * @param string $text Message text.
+	 *
+	 * @return string Raw body.
 	 */
-	public function testInboundWebhookCreatesPlaceholderForUnknownContact(): void {
-		$this->providerRepo->method('findById')->willReturn(['uuid' => 'prov-1', 'webhookSecret' => 'secret']);
-		$this->providerClient->method('verifySignature')->willReturn(true);
-		$this->consentService->method('isOptOutKeyword')->willReturn(false);
-		$this->consentService->method('isOptInKeyword')->willReturn(false);
-
-		$body = json_encode([
+	private function metaMessage(string $from, string $text): string {
+		return (string)json_encode([
 			'entry' => [
 				[
 					'changes' => [
 						[
 							'value' => [
 								'messages' => [
-									['from' => '+31600000000', 'text' => ['body' => 'hello']],
+									['from' => $from, 'text' => ['body' => $text]],
 								],
 							],
 						],
@@ -353,10 +395,305 @@ class WhatsAppAdapterTest extends TestCase {
 				],
 			],
 		]);
+	}//end metaMessage()
 
-		$result = $this->adapter->handleInboundWebhook($body, 'sha256=ok', 'prov-1');
+	/**
+	 * Stub a signed callback for provider prov-1, found by the webhook lookup.
+	 *
+	 * @return void
+	 */
+	private function stubSignedProvider(): void {
+		$this->providerRepo->method('findByIdForWebhook')->willReturn(['uuid' => 'prov-1', 'webhookSecret' => 'secret']);
+		$this->providerClient->method('verifySignature')->willReturn(true);
+	}//end stubSignedProvider()
+
+	/**
+	 * The webhook is a PublicPage with no user. Under OpenRegister's RBAC the
+	 * provider lookup found nothing, so every real Meta callback, STOP
+	 * included, answered providerUnknown. The provider lookup and every read
+	 * and write after the signature check run as the system, as the SMS
+	 * webhook does since pipelinq#2169.
+	 *
+	 * @return void
+	 */
+	public function testInboundWebhookWritesAsTheMessagingServiceAccount(): void {
+		$this->objectService->contacts = ['+31611119999' => 'c-gert'];
+		$this->providerRepo->expects($this->once())
+			->method('findByIdForWebhook')
+			->with('prov-1')
+			->willReturn(['uuid' => 'prov-1', 'webhookSecret' => 'secret']);
+		$this->providerRepo->expects($this->never())->method('findById');
+		$this->providerClient->method('verifySignature')->willReturn(true);
+		$this->consentService->method('isOptOutKeyword')->willReturn(false);
+		$this->consentService->method('isOptInKeyword')->willReturn(false);
+
+		$result = $this->adapter->handleInboundWebhook($this->metaMessage('31611119999', 'hallo'), 'sha256=ok', 'prov-1');
 
 		$this->assertSame('received', $result['status']);
-		$this->assertTrue($result['placeholderCreated']);
-	}//end testInboundWebhookCreatesPlaceholderForUnknownContact()
+		$this->assertNotSame([], $this->objectService->access);
+		$writes = 0;
+		foreach ($this->objectService->access as $access) {
+			if ($access['call'] !== 'saveObject') {
+				// A lookup is a read and may skip RBAC.
+				continue;
+			}
+
+			$writes++;
+			$this->assertTrue($access['_rbac'], 'a webhook write skipped RBAC');
+			$this->assertTrue($access['_multitenancy'], 'a webhook write skipped multitenancy');
+			$this->assertSame(FakeMessagingAccount::UID, $access['as'], 'a webhook write ran as somebody else');
+		}
+
+		$this->assertGreaterThan(0, $writes);
+		$this->assertNull($this->messaging->actingUid(), 'the caller was not restored');
+	}//end testInboundWebhookWritesAsTheMessagingServiceAccount()
+
+	/**
+	 * A STOP from a known contact is recorded on that contact for the WhatsApp
+	 * channel. Meta sends the sender without '+', the lookup asks the schema's
+	 * `phone` field for the E.164 form, and optOutRecorded reports the
+	 * outcome.
+	 *
+	 * @return void
+	 */
+	public function testAStopFromAKnownContactIsRecordedOnTheContact(): void {
+		$this->objectService->contacts = ['+31611119999' => 'c-gert'];
+		$this->stubSignedProvider();
+		$this->consentService->method('isOptOutKeyword')->willReturn(true);
+		$this->consentService->expects($this->once())
+			->method('recordOptOut')
+			->with(
+				$this->equalTo('c-gert'),
+				$this->equalTo('whatsapp'),
+				$this->equalTo('keyword-stop'),
+				$this->stringContains('STOP'),
+				$this->anything(),
+				$this->equalTo('+31611119999'),
+			)
+			->willReturn(['store' => 'integriq']);
+		$this->contactmoments->expects($this->never())->method('recordInboundFromUnknownNumber');
+
+		$result = $this->adapter->handleInboundWebhook($this->metaMessage('31611119999', 'STOP'), 'sha256=ok', 'prov-1');
+
+		$this->assertSame('received', $result['status']);
+		$this->assertTrue($result['optOutRecorded']);
+		$this->assertFalse($result['unknownSender']);
+	}//end testAStopFromAKnownContactIsRecordedOnTheContact()
+
+	/**
+	 * optOutRecorded reports what happened, not that a STOP arrived.
+	 *
+	 * @return void
+	 */
+	public function testAStopThatIsNotRecordedIsNotReportedAsRecorded(): void {
+		$this->objectService->contacts = ['+31611119999' => 'c-gert'];
+		$this->stubSignedProvider();
+		$this->consentService->method('isOptOutKeyword')->willReturn(true);
+		$this->consentService->method('recordOptOut')->willReturn(null);
+
+		$result = $this->adapter->handleInboundWebhook($this->metaMessage('31611119999', 'STOP'), 'sha256=ok', 'prov-1');
+
+		$this->assertFalse($result['optOutRecorded']);
+	}//end testAStopThatIsNotRecordedIsNotReportedAsRecorded()
+
+	/**
+	 * The opt-out acknowledgement goes to the number that sent the STOP.
+	 *
+	 * @return void
+	 */
+	public function testTheOptOutAcknowledgementGoesToTheSender(): void {
+		$this->objectService->contacts = ['+31611119999' => 'c-gert'];
+		$this->stubSignedProvider();
+		$this->consentService->method('isOptOutKeyword')->willReturn(true);
+		$this->consentService->method('recordOptOut')->willReturn(['store' => 'integriq']);
+		$this->providerClient->expects($this->once())
+			->method('sendFreeForm')
+			->with($this->anything(), $this->equalTo('+31611119999'), $this->anything());
+
+		$this->adapter->handleInboundWebhook($this->metaMessage('31611119999', 'STOP'), 'sha256=ok', 'prov-1');
+	}//end testTheOptOutAcknowledgementGoesToTheSender()
+
+	/**
+	 * A STOP from a number that matches no contact is recorded in integriq on
+	 * the number itself (E.164, WhatsApp channel), so it is never messaged
+	 * again. No contact is created for it.
+	 *
+	 * @return void
+	 */
+	public function testAStopFromAnUnknownNumberIsRecordedOnTheNumber(): void {
+		$this->stubSignedProvider();
+		$this->consentService->method('isOptOutKeyword')->willReturn(true);
+		$this->consentService->expects($this->once())
+			->method('recordOptOut')
+			->with(
+				$this->equalTo(''),
+				$this->equalTo('whatsapp'),
+				$this->equalTo('keyword-stop'),
+				$this->anything(),
+				$this->anything(),
+				$this->equalTo('+31699990000'),
+			)
+			->willReturn(['store' => 'integriq']);
+		$this->contactmoments->expects($this->never())->method('recordInboundFromUnknownNumber');
+
+		$result = $this->adapter->handleInboundWebhook($this->metaMessage('31699990000', 'STOP'), 'sha256=ok', 'prov-1');
+
+		$this->assertSame('received', $result['status']);
+		$this->assertTrue($result['optOutRecorded']);
+		$this->assertTrue($result['unknownSender']);
+		$this->assertArrayNotHasKey('placeholderCreated', $result);
+		foreach ($this->objectService->store as $row) {
+			$this->assertArrayNotHasKey('placeholder', $row, 'a placeholder contact was created');
+		}
+	}//end testAStopFromAnUnknownNumberIsRecordedOnTheNumber()
+
+	/**
+	 * Any other message from an unknown number is logged as a new contact
+	 * moment for a person to pick up; no contact is created.
+	 *
+	 * @return void
+	 */
+	public function testAnotherMessageFromAnUnknownNumberIsLoggedForAPerson(): void {
+		$this->stubSignedProvider();
+		$this->consentService->method('isOptOutKeyword')->willReturn(false);
+		$this->consentService->method('isOptInKeyword')->willReturn(false);
+		$this->consentService->expects($this->never())->method('recordOptOut');
+		$this->contactmoments->expects($this->once())
+			->method('recordInboundFromUnknownNumber')
+			->with(
+				$this->equalTo('whatsapp'),
+				$this->equalTo('+31699990000'),
+				$this->equalTo('Hallo, wie is dit?'),
+				$this->isType('string'),
+			)
+			->willReturn('cm-1');
+
+		$result = $this->adapter->handleInboundWebhook($this->metaMessage('31699990000', 'Hallo, wie is dit?'), 'sha256=ok', 'prov-1');
+
+		$this->assertSame('received', $result['status']);
+		$this->assertTrue($result['unknownSender']);
+		$this->assertSame('cm-1', $result['contactMomentId']);
+		foreach ($this->objectService->store as $row) {
+			$this->assertArrayNotHasKey('placeholder', $row, 'a placeholder contact was created');
+		}
+	}//end testAnotherMessageFromAnUnknownNumberIsLoggedForAPerson()
+
+	/**
+	 * A message from a known contact is not logged as an unknown sender.
+	 *
+	 * @return void
+	 */
+	public function testAMessageFromAKnownContactIsNotLoggedAsUnknown(): void {
+		$this->objectService->contacts = ['+31611119999' => 'c-gert'];
+		$this->stubSignedProvider();
+		$this->consentService->method('isOptOutKeyword')->willReturn(false);
+		$this->consentService->method('isOptInKeyword')->willReturn(false);
+		$this->contactmoments->expects($this->never())->method('recordInboundFromUnknownNumber');
+
+		$result = $this->adapter->handleInboundWebhook($this->metaMessage('31611119999', 'hallo'), 'sha256=ok', 'prov-1');
+
+		$this->assertFalse($result['unknownSender']);
+	}//end testAMessageFromAKnownContactIsNotLoggedAsUnknown()
+
+	/**
+	 * Seed the contact's inbound WhatsApp messages.
+	 *
+	 * @param array<string, array{0: string, 1: int}> $messages Message id => [body, seconds ago].
+	 *
+	 * @return void
+	 */
+	private function seedInbound(array $messages): void {
+		$this->objectService->inboundMessages = [];
+		foreach ($messages as $id => [$body, $ago]) {
+			$this->objectService->inboundMessages[] = [
+				'uuid' => $id,
+				'contactId' => 'contact-1',
+				'channel' => 'whatsapp',
+				'direction' => 'inbound',
+				'body' => $body,
+				'sentAt' => gmdate('Y-m-d\TH:i:s\Z', (time() - $ago)),
+			];
+		}
+
+		$this->consentService->method('isOptOutKeyword')->willReturnCallback(
+			static fn (string $body): bool => strtoupper(trim($body)) === 'STOP'
+		);
+	}//end seedInbound()
+
+	/**
+	 * The free-form send answers which inbound message, as integriq is asked.
+	 *
+	 * @return string|null The inReplyTo handed to ConsentService::canSend().
+	 */
+	private function replyTargetOfAFreeFormSend(): ?string {
+		$asked = 'not asked';
+		$this->consentService->method('canSend')->willReturnCallback(
+			static function (string $contactId, string $channel, string $address = '', ?string $inReplyTo = null) use (&$asked): bool {
+				$asked = $inReplyTo;
+				return false;
+			}
+		);
+
+		$this->adapter->send(['uuid' => 'contact-1', 'phoneNumber' => '+31611111111'], 'Herinnering');
+
+		return $asked;
+	}//end replyTargetOfAFreeFormSend()
+
+	/**
+	 * A free-form send after the contact answered STOP is no reply. Integriq
+	 * lets a reply through an opt-out, and the STOP itself opened the session,
+	 * so live the next WhatsApp after a STOP was sent as an "answer" to it.
+	 *
+	 * @return void
+	 */
+	public function testASendAfterAStopIsNoReplyToIt(): void {
+		$this->seedInbound(['m-stop' => ['STOP', 60]]);
+
+		$this->assertNull($this->replyTargetOfAFreeFormSend());
+	}//end testASendAfterAStopIsNoReplyToIt()
+
+	/**
+	 * A question the contact asked before answering STOP is not answerable
+	 * as a reply either: the STOP is their latest word.
+	 *
+	 * @return void
+	 */
+	public function testAMessageBeforeTheStopIsNoReplyTarget(): void {
+		$this->seedInbound(['m-question' => ['Hoe laat is de afspraak?', 600], 'm-stop' => ['STOP', 60]]);
+
+		$this->assertNull($this->replyTargetOfAFreeFormSend());
+	}//end testAMessageBeforeTheStopIsNoReplyTarget()
+
+	/**
+	 * A message the contact sends after their STOP is a reply target again.
+	 *
+	 * @return void
+	 */
+	public function testAMessageAfterTheStopIsAReplyTarget(): void {
+		$this->seedInbound(['m-stop' => ['STOP', 600], 'm-later' => ['Ik heb toch een vraag', 60]]);
+
+		$this->assertSame('m-later', $this->replyTargetOfAFreeFormSend());
+	}//end testAMessageAfterTheStopIsAReplyTarget()
+
+	/**
+	 * Without a usable messaging service account the webhook answers
+	 * serviceUnavailable (503, so the provider retries) and writes nothing:
+	 * no message, no conversation, no opt-out, no contact moment.
+	 *
+	 * @return void
+	 */
+	public function testWithoutAServiceAccountNothingIsWritten(): void {
+		$this->messaging->config = [];
+		$this->stubSignedProvider();
+		$this->consentService->method('isOptOutKeyword')->willReturn(true);
+		$this->consentService->expects($this->never())->method('recordOptOut');
+		$this->contactmoments->expects($this->never())->method('recordInboundFromUnknownNumber');
+
+		$result = $this->adapter->handleInboundWebhook($this->metaMessage('31611119999', 'STOP'), 'sha256=ok', 'prov-1');
+
+		$this->assertSame('serviceUnavailable', $result['status']);
+		foreach ($this->objectService->access as $access) {
+			$this->assertNotSame('saveObject', $access['call'], 'something was written without the service account');
+		}
+	}//end testWithoutAServiceAccountNothingIsWritten()
 }//end class

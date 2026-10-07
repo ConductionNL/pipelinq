@@ -137,6 +137,35 @@ class PhoneNormaliser {
 	}//end normaliseForOrg()
 
 	/**
+	 * Normalise the sender of an inbound SMS or WhatsApp callback to E.164.
+	 *
+	 * Providers name the sender internationally, and Meta and MessageBird
+	 * leave out the '+' (31611119999). Read as a national number that would
+	 * get the country prefix twice, so bare digits that do not start with 0
+	 * are taken as international. A sender that is not a phone number is
+	 * returned trimmed, so the caller still has an address to record.
+	 *
+	 * @param string $rawNumber Sender as the provider sent it.
+	 *
+	 * @return string E.164 number, or the trimmed input when it is none.
+	 *
+	 * @spec openspec/specs/outbound-messaging/spec.md#requirement-req-om-005-consent-gating-and-recording
+	 */
+	public function normaliseInbound(string $rawNumber): string {
+		$raw = trim($rawNumber);
+		if ($raw === '') {
+			return '';
+		}
+
+		$candidate = $raw;
+		if (preg_match('/^[1-9][0-9 ]*$/', $raw) === 1) {
+			$candidate = '+' . $raw;
+		}
+
+		return ($this->normaliseForOrg(rawNumber: $candidate)['e164'] ?? $raw);
+	}//end normaliseInbound()
+
+	/**
 	 * Resolve the default ISO-3166 country code for normalisation.
 	 *
 	 * @return string ISO-3166-1 alpha-2 code in upper-case.

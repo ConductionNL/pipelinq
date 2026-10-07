@@ -1,0 +1,27 @@
+{
+  "_meta": {
+    "spdx-license": "EUPL-1.2",
+    "spdx-copyright": "2026 Conduction B.V.",
+    "description": "Two fixes from the 7 October audit (openspec change review-audit-fixes-b). (1) A line item (leadProduct) is named after its product: OpenRegister resolves the product uuid in `objectNameField` to the product's name on save, so the Related widget on a lead lists 'Adviesuur' instead of an unnamed 'Lead Product'. Existing line items get their name on their next save. (2) The qualification score is calculated by `x-openregister-calculations` on every save, so the form must not offer it: `readOnly` keeps it out of the edit dialog, and the description says it is calculated. No property changes type and none becomes required."
+  },
+  "components": {
+    "schemas": {
+      "leadProduct": {
+        "slug": "leadProduct",
+        "configuration": {
+          "objectNameField": "product"
+        }
+      },
+      "lead": {
+        "slug": "lead",
+        "properties": {
+          "qualificationScore": {
+            "readOnly": true,
+            "description": "Calculated when the lead is saved, from its value, client, contact, source, close date, priority and description. You cannot change it by hand.",
+            "x-notes": "Materialised by the x-openregister-calculations.qualificationScore annotation on every save; never written by service code or the form. readOnly keeps it out of the edit dialog (fieldsFromSchema skips readOnly properties), because the backend overwrote any value typed there."
+          }
+        }
+      }
+    }
+  }
+}
