@@ -139,8 +139,9 @@ class AttributionService {
 	 *
 	 * Loads the BlastDelivery and the Deal (Lead), then writes a fresh
 	 * AttributionLink with `blastId` / `contactId` / `dealId` /
-	 * `firstClickAt` / `closedWonAt` / `attributedValue` (EUR, taken from
-	 * the Lead's `value` field). Idempotent: when an AttributionLink for
+	 * `firstClickAt` / `closedWonAt` / `attributedValue` (taken from the
+	 * Lead's `value` field, in the Lead's own currency or else the reporting
+	 * currency). Idempotent: when an AttributionLink for
 	 * the same (blastId, contactId, dealId) triple already exists we
 	 * skip without raising.
 	 *
@@ -150,6 +151,7 @@ class AttributionService {
 	 * @return void
 	 *
 	 * @spec openspec/changes/marketing-segmentation-and-blast-04-blast-attribution-services/tasks.md#task-2.4
+	 * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
 	 */
 	public function linkBlastToDeal(string $blastDeliveryId, string $dealId): void {
 		$delivery = $this->loadDelivery(id: $blastDeliveryId);
@@ -182,7 +184,7 @@ class AttributionService {
 			'firstClickAt' => (string)($delivery['firstClickAt'] ?? ''),
 			'closedWonAt' => $closedWonAt,
 			'attributedValue' => $value,
-			'currency' => 'EUR',
+			'currency' => $this->currencyOf(deal: $deal),
 			'createdAt' => $this->nowIso(),
 		];
 
@@ -226,6 +228,7 @@ class AttributionService {
 	 * @return array{blastId: string, dealCount: int, attributedValue: float, currency: string}
 	 *
 	 * @spec openspec/changes/marketing-segmentation-and-blast-08-performance-dashboard/tasks.md#performancedashboard-vue-task-3-4-of-giant
+	 * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
 	 */
 	public function getBlastAttributionSummary(string $blastId): array {
 		$rows = $this->loadAttributionLinks(filters: ['blastId' => $blastId]);
@@ -247,7 +250,7 @@ class AttributionService {
 			'blastId' => $blastId,
 			'dealCount' => count($deals),
 			'attributedValue' => $total,
-			'currency' => 'EUR',
+			'currency' => $this->reportingCurrency(),
 		];
 	}//end getBlastAttributionSummary()
 
@@ -330,11 +333,45 @@ class AttributionService {
 	}//end extractClosedWonAt()
 
 	/**
-	 * Extract the EUR value to attribute from a Lead payload.
+	 * The reporting currency chosen in setup (`currency` app config).
+	 *
+	 * @return string An upper-case three-letter code, EUR when unset.
+	 *
+	 * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
+	 */
+	private function reportingCurrency(): string {
+		$code = strtoupper(trim($this->appConfig->getValueString(Application::APP_ID, 'currency', 'EUR')));
+		if (preg_match('/^[A-Z]{3}$/', $code) === 1) {
+			return $code;
+		}
+
+		return 'EUR';
+	}//end reportingCurrency()
+
+	/**
+	 * The currency of a Lead's value: its own when valid, else the reporting currency.
 	 *
 	 * @param array<string, mixed>|null $deal Lead payload.
 	 *
-	 * @return float Value in EUR (0 when unknown).
+	 * @return string An upper-case three-letter code.
+	 *
+	 * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
+	 */
+	private function currencyOf(?array $deal): string {
+		$code = strtoupper(trim((string)($deal['currency'] ?? '')));
+		if (preg_match('/^[A-Z]{3}$/', $code) === 1) {
+			return $code;
+		}
+
+		return $this->reportingCurrency();
+	}//end currencyOf()
+
+	/**
+	 * Extract the value to attribute from a Lead payload.
+	 *
+	 * @param array<string, mixed>|null $deal Lead payload.
+	 *
+	 * @return float The Lead's value (0 when unknown).
 	 */
 	private function extractDealValue(?array $deal): float {
 		if ($deal === null) {

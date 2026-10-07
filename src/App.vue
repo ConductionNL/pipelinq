@@ -16,6 +16,7 @@
 		:manifest="manifest"
 		:registry="appRegistry"
 		:cellWidgets="cellWidgets"
+		:formatters="cellFormatters"
 		:pageTypes="pageTypes"
 		appId="pipelinq"
 		:translate="translateForApp"
@@ -66,8 +67,10 @@ import { reactive } from 'vue'
 import LeadCloseDateCell from './views/leads/cells/LeadCloseDateCell.vue'
 import LeadProbabilityCell from './views/leads/cells/LeadProbabilityCell.vue'
 import LeadScoreCell from './views/leads/cells/LeadScoreCell.vue'
+import { createAppFormatters } from './services/cellFormatters.js'
 import { createConnectionHandlers } from './services/connectionRegistry.js'
 import { createTicketHandlers } from './services/ticketAssign.js'
+import { useObjectStore } from './store/modules/object.js'
 
 export default {
 	name: 'App',
@@ -163,6 +166,19 @@ export default {
 		 */
 		permissions() {
 			return window.OC?.currentUser?.permissions ?? []
+		},
+
+		/**
+		 * Cell-formatter registry for CnAppRoot, keyed by the `formatter` id a
+		 * manifest column (or a data widget override) references.
+		 * `objectCurrency` shows an amount in the row's own currency, or the
+		 * reporting currency; the `booking*Name` formatters show names, not ids.
+		 *
+		 * @return {Record<string, (value: unknown) => string>}
+		 * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
+		 */
+		cellFormatters() {
+			return createAppFormatters(useObjectStore())
 		},
 
 		/**

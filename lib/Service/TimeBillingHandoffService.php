@@ -134,7 +134,7 @@ class TimeBillingHandoffService {
 	 *
 	 * True only when the `shillinq_time_intake_enabled` flag is on AND the
 	 * shillinq app is installed and enabled for the acting user. When false,
-	 * callers keep offering today's deep-link handoff (`shillinq_app_url`)
+	 * callers keep offering the deep-link handoff to the detected Shillinq app
 	 * unchanged.
 	 *
 	 * @return bool Whether the intake emit may be attempted.

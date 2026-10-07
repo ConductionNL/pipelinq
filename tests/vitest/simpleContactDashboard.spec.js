@@ -65,10 +65,16 @@ function propertiesOf(schema) {
 			.filter((name) => name.endsWith('.json'))
 			.map((name) => readJson('lib', 'Settings', 'register.d', name)),
 	]
-	return Object.assign(
-		{},
-		...files.map((file) => file.components?.schemas?.[schema]?.properties || {}),
-	)
+	// Per property, like the loader's deep merge: a fragment that adds only
+	// `order` to a property must not drop the rest of its definition.
+	const merged = {}
+	for (const file of files) {
+		const properties = file.components?.schemas?.[schema]?.properties || {}
+		for (const [key, definition] of Object.entries(properties)) {
+			merged[key] = { ...(merged[key] || {}), ...definition }
+		}
+	}
+	return merged
 }
 const SCHEMAS = { ticket: propertiesOf('ticket'), crmTask: propertiesOf('crmTask') }
 

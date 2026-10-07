@@ -257,6 +257,7 @@ import { computed } from 'vue'
 import ServiceStepsEditor from '../../components/bookings/ServiceStepsEditor.vue'
 import DeleteServiceDialog from '../../dialogs/DeleteServiceDialog.vue'
 import ServiceForm from './ServiceForm.vue'
+import { currencyOr } from '../../services/reportingCurrency.js'
 import { stepAmount } from '../../services/serviceSteps.js'
 import { useObjectStore } from '../../store/modules/object.js'
 
@@ -732,8 +733,16 @@ export default {
 				: t('pipelinq', '{h}h {m}min', { h, m })
 		},
 
+		/**
+		 * An amount in the given currency, or the reporting currency.
+		 *
+		 * @param {number|string} value The amount.
+		 * @param {string} [currency] The currency code.
+		 * @return {string} The formatted amount.
+		 * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
+		 */
 		formatCurrency(value, currency) {
-			const code = currency || 'EUR'
+			const code = currencyOr(currency)
 			const n = Number(value) || 0
 			try {
 				return new Intl.NumberFormat('nl-NL', {

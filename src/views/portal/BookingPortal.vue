@@ -223,6 +223,7 @@ import {
 	fetchServiceBySlug,
 	submitBooking,
 } from '../../services/bookingPortalApi.js'
+import { currencyOr } from '../../services/reportingCurrency.js'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -299,7 +300,7 @@ export default {
 		 * @spec exclude display formatter: amount and currency to a localised price string
 		 */
 		priceLabel() {
-			const cur = (this.service && this.service.currency) || 'EUR'
+			const cur = currencyOr(this.service && this.service.currency)
 			const amount = Number(this.service ? this.service.price : 0)
 			try {
 				return new Intl.NumberFormat(undefined, {

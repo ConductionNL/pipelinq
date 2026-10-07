@@ -68,6 +68,24 @@ export default {
 		},
 
 		/**
+		 * Tell the getting-started tour a client was created, so its
+		 * `create-client` step advances. This dialog saves through the
+		 * contact-first endpoint, not through the index page, so the page's
+		 * own `cn-walkthrough:object-created` dispatch never runs for it.
+		 *
+		 * @param {object} created The created client.
+		 * @return {void}
+		 * @spec openspec/changes/pipelinq-forms-review/specs/walkthrough/spec.md
+		 */
+		notifyWalkthrough(created) {
+			window.dispatchEvent(
+				new CustomEvent('cn-walkthrough:object-created', {
+					detail: { ...created, register: 'pipelinq', schema: 'client' },
+				}),
+			)
+		},
+
+		/**
 		 * Trigger the form's own validate-then-emit flow; `@save` fires onSave.
 		 *
 		 * @spec openspec/specs/unify-client-contact/spec.md
@@ -95,6 +113,7 @@ export default {
 				const created = await createWithContact('client', formData)
 				const id = created?.id ?? created?.['@self']?.id
 				if (id) {
+					this.notifyWalkthrough({ ...created, id })
 					this.$emit('created', id)
 					this.goToDetail('ClientDetail', id)
 					return

@@ -27,7 +27,8 @@
 				@update:modelValue="(v) => (form.category = v)" />
 		</div>
 
-		<!-- Value + Probability row -->
+		<!-- Value + currency row. The win chance is the qualification score
+		     (pipeline-numbers-tell-the-truth), so there is no probability input. -->
 		<div class="form-row">
 			<div class="form-group">
 				<NcTextField
@@ -49,19 +50,6 @@
 					:helperText="errors.currency"
 					@update:modelValue="
 						(v) => (form.currency = normaliseCurrency(v))
-					" />
-			</div>
-			<div class="form-group">
-				<NcTextField
-					:modelValue="
-						form.probability === null ? '' : String(form.probability)
-					"
-					:label="t('pipelinq', 'Probability %')"
-					type="number"
-					:error="!!errors.probability"
-					:helperText="errors.probability"
-					@update:modelValue="
-						(v) => (form.probability = v === '' ? null : Number(v))
 					" />
 			</div>
 		</div>
@@ -198,7 +186,6 @@
 
 <script>
 import { CnResourceSelect } from '@conduction/nextcloud-vue'
-import { loadState } from '@nextcloud/initial-state'
 import {
 	NcButton,
 	NcDateTimePickerNative,
@@ -211,21 +198,9 @@ import linkedPartyCascadeMixin from '../../mixins/linkedPartyCascadeMixin.js'
 import { isCurrencyCode, normaliseCurrency } from '../../services/leadCurrency.js'
 import { toDateInputString, toDateObject } from '../../services/localeUtils.js'
 import { pipelineAppliesTo } from '../../services/pipelineUtils.js'
+import { reportingCurrency } from '../../services/reportingCurrency.js'
 import { useLeadSourcesStore } from '../../store/modules/leadSources.js'
 import { useObjectStore } from '../../store/modules/object.js'
-
-/**
- * The app's reporting currency, as the setup wizard stored it.
- *
- * @return {string} The currency code.
- */
-function reportingCurrency() {
-	try {
-		return loadState('pipelinq', 'config', {}).currency || 'EUR'
-	} catch {
-		return 'EUR'
-	}
-}
 
 export default {
 	name: 'LeadForm',
@@ -275,7 +250,6 @@ export default {
 				// The deal's currency (pipelinq#2040). New deals start in the
 				// reporting currency; the forecast converts any other one.
 				currency: reportingCurrency(),
-				probability: null,
 				source: null,
 				priority: 'normal',
 				expectedCloseDate: null,
@@ -388,15 +362,6 @@ export default {
 					'Use a three-letter currency code, such as EUR or USD',
 				)
 			}
-			if (
-				this.form.probability !== null
-				&& (this.form.probability < 0 || this.form.probability > 100)
-			) {
-				errors.probability = t(
-					'pipelinq',
-					'Probability must be between 0 and 100',
-				)
-			}
 
 			// A lead belongs to a pipeline and to a client; the schema requires
 			// both. Catching it here means the user sees which field is missing,
@@ -448,6 +413,7 @@ export default {
 				category: this.lead.category || '',
 				value: this.lead.value ?? null,
 				currency: this.lead.currency || reportingCurrency(),
+				// Not editable any more; carried so a full save keeps the stored value.
 				probability: this.lead.probability ?? null,
 				source: this.lead.source || null,
 				priority: this.lead.priority || 'normal',

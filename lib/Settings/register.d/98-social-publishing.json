@@ -82,6 +82,7 @@
           },
           "ownerUserId": {
             "type": "string",
+            "format": "user",
             "description": "The Nextcloud user this account belongs to. For a personal account it is the authorization boundary: only this user or an administrator may publish as them, request a share from them or revoke the connection. Stamped by the connect path from the session and never taken from a request body.",
             "maxLength": 255,
             "title": "Owner"
@@ -306,6 +307,7 @@
           },
           "createdBy": {
             "type": "string",
+            "format": "user",
             "description": "The Nextcloud user who created the post, stamped from the session.",
             "maxLength": 255,
             "title": "Created By"

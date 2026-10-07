@@ -175,18 +175,6 @@
 			"order": 44
 		},
 		{
-			"id": "MoreCaption",
-			"type": "caption",
-			"label": "More",
-			"order": 200
-		},
-		{
-			"id": "ReportsMenu",
-			"section": "main",
-			"order": 202,
-			"icon": "ChartBar"
-		},
-		{
 			"id": "ModulesMenu",
 			"label": "Modules and more",
 			"icon": "ViewGridOutline",
