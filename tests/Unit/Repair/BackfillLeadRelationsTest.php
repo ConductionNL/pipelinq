@@ -320,6 +320,44 @@ class BackfillLeadRelationsTest extends TestCase {
 	}//end testReusesAClientCreatedEarlierInTheSameRun()
 
 	/**
+	 * A lead on a pipeline without a stage is put in the first open stage.
+	 *
+	 * Its entry time is the lead's creation, so the repair does not restart aging.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/pipeline-numbers-tell-the-truth/specs/lead-management/spec.md
+	 */
+	public function testPlacesAStagelessLeadInTheFirstOpenStage(): void {
+		$step = $this->makeStep(
+			leads: [[
+				'id' => 'l1',
+				'title' => 'Acme deal',
+				'client' => 'c1',
+				'pipeline' => 'p1',
+				'@self' => ['created' => '2026-09-01T08:00:00+00:00'],
+			]],
+			clients: [['id' => 'c1', 'name' => 'Acme']],
+			pipelines: [[
+				'id' => 'p1',
+				'title' => 'Sales',
+				'stages' => [
+					['name' => 'Lost', 'order' => 0, 'isClosed' => true],
+					['name' => 'Qualified', 'order' => 3],
+					['name' => 'New', 'order' => 1],
+				],
+			]]
+		);
+
+		$step->run($this->createMock(IOutput::class));
+
+		$saved = $this->saved('l1');
+		$this->assertSame('New', $saved['stage'] ?? null);
+		$this->assertSame(1, $saved['stageOrder'] ?? null);
+		$this->assertSame('2026-09-01T08:00:00+00:00', $saved['stageEnteredAt'] ?? null);
+	}//end testPlacesAStagelessLeadInTheFirstOpenStage()
+
+	/**
 	 * A complete lead is not rewritten, so a re-run is a no-op.
 	 *
 	 * @return void

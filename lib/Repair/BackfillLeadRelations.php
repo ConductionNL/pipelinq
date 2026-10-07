@@ -52,6 +52,7 @@ namespace OCA\Pipelinq\Repair;
 
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\LeadClientResolver;
+use OCA\Pipelinq\Service\LeadStagePlacer;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
 use OCP\IUser;
@@ -83,6 +84,7 @@ class BackfillLeadRelations implements IRepairStep {
 	 * @param LeadClientResolver $clientResolver Matches or creates the client a lead belongs to.
 	 * @param IGroupManager      $groupManager Group manager, used to resolve an acting admin.
 	 * @param LoggerInterface    $logger      PSR logger.
+	 * @param LeadStagePlacer    $placer      Puts a stage-less lead in its pipeline's first open stage.
 	 */
 	public function __construct(
 		private readonly IAppConfig $appConfig,
@@ -90,6 +92,7 @@ class BackfillLeadRelations implements IRepairStep {
 		private readonly LeadClientResolver $clientResolver,
 		private readonly IGroupManager $groupManager,
 		private readonly LoggerInterface $logger,
+		private readonly LeadStagePlacer $placer = new LeadStagePlacer(),
 	) {
 	}//end __construct()
 
@@ -101,7 +104,7 @@ class BackfillLeadRelations implements IRepairStep {
 	 * @spec openspec/specs/repair-steps/spec.md
 	 */
 	public function getName(): string {
-		return 'Backfill the pipeline and client every lead now requires';
+		return 'Backfill the pipeline, stage and client every lead now requires';
 	}//end getName()
 
 	/**
@@ -254,14 +257,15 @@ class BackfillLeadRelations implements IRepairStep {
 	/**
 	 * Compute the fields one lead is missing.
 	 *
-	 * @param array<string,mixed>             $lead     The lead row.
-	 * @param string|null                     $pipeline The pipeline to assign, or null when none exists.
-	 * @param array<int,array<string,mixed>> $clients  Stored clients, extended in place.
+	 * @param array<string,mixed>             $lead      The lead row.
+	 * @param string|null                     $pipeline  The pipeline to assign, or null when none exists.
+	 * @param array<int,array<string,mixed>> $clients   Stored clients, extended in place.
+	 * @param array<int,array<string,mixed>> $pipelines Stored pipelines, to place the lead in a stage.
 	 *
 	 * @return array<string,mixed>|null The fields to merge, [] when already complete,
 	 *                                  or null when the lead cannot be resolved.
 	 */
-	private function missingFor(array $lead, ?string $pipeline, array &$clients): ?array {
+	private function missingFor(array $lead, ?string $pipeline, array &$clients, array $pipelines = []): ?array {
 		$patch = [];
 
 		if (trim((string)($lead['pipeline'] ?? '')) === '') {
@@ -301,7 +305,15 @@ class BackfillLeadRelations implements IRepairStep {
 			$patch['client'] = $client;
 		}
 
-		return $patch;
+		// Every lead sits in a stage (pipeline-numbers-tell-the-truth). The
+		// entry time is the lead's creation, not now, so aging stays honest.
+		$placement = $this->placer->forStoredLead(
+			lead: array_merge($lead, $patch),
+			pipelines: $pipelines,
+			enteredAt: (string)($lead['@self']['created'] ?? ''),
+		);
+
+		return array_merge($patch, $placement);
 	}//end missingFor()
 
 	/**
@@ -375,7 +387,8 @@ class BackfillLeadRelations implements IRepairStep {
 				clients: $clients,
 				context: $context,
 				actingAdmin: $actingAdmin,
-				output: $output
+				output: $output,
+				pipelines: $pipelines
 			);
 			$counts[$outcome]++;
 		}
@@ -392,8 +405,11 @@ class BackfillLeadRelations implements IRepairStep {
 	 * @param array<string,string>            $context     Register and schema ids.
 	 * @param mixed                           $actingAdmin User to save as.
 	 * @param IOutput                         $output      Output.
+	 * @param array<int,array<string,mixed>> $pipelines   Stored pipelines, to place the lead in a stage.
 	 *
 	 * @return string One of 'fixed', 'skipped' or 'stuck'.
+	 *
+	 * @spec openspec/changes/pipeline-numbers-tell-the-truth/specs/lead-management/spec.md
 	 */
 	private function backfillOne(
 		array $lead,
@@ -402,13 +418,14 @@ class BackfillLeadRelations implements IRepairStep {
 		array $context,
 		mixed $actingAdmin,
 		IOutput $output,
+		array $pipelines = [],
 	): string {
 		$uuid = (string)($lead['id'] ?? '');
 		if ($uuid === '') {
 			return 'skipped';
 		}
 
-		$patch = $this->missingFor(lead: $lead, pipeline: $pipeline, clients: $clients);
+		$patch = $this->missingFor(lead: $lead, pipeline: $pipeline, clients: $clients, pipelines: $pipelines);
 		if ($patch === null) {
 			$output->warning(
 				sprintf(

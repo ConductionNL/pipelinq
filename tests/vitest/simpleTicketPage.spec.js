@@ -19,6 +19,7 @@ import { buildManifest } from '@conduction/nextcloud-vue/src/utils/buildManifest
 import {
 	groupMenuEntries,
 	normalisePinnedAction,
+	resolveNextStep,
 	resolvePill,
 	stageEntry,
 	stageOf,
@@ -118,15 +119,29 @@ describe('the full structure', () => {
 		expect(full).toEqual(
 			manifest().pages.find((page) => page.id === 'TicketDetail'),
 		)
-		expect(full.config.headerActions).toBeUndefined()
+		// The one header action on the full page is Assign to me
+		// (detail-pages-read-at-a-glance), which sets the assignee and changes
+		// no status.
+		expect(full.config.headerActions.map((action) => action.id)).toEqual([
+			'assign-to-me',
+		])
 		expect(full.config.sideColumn).toBeUndefined()
 	})
 })
 
 describe('the status actions', () => {
+	// Status changes only: Assign to me is an api-call too, but it sets the
+	// assignee through pipelinq's own endpoint and leaves the status alone.
 	const transitions = simple.headerActions.filter(
-		(action) => action.type === 'api-call',
+		(action) => action.type === 'api-call' && action.url.endsWith('/transition'),
 	)
+
+	it('include Assign to me, which changes no status', () => {
+		expect(actionsById['assign-to-me']).toMatchObject({
+			type: 'api-call',
+			url: '/apps/pipelinq/api/tickets/@objectId/assign-to-me',
+		})
+	})
 
 	it('are transitions of the ticket lifecycle, posted to the transition endpoint', () => {
 		expect(transitions.length).toBeGreaterThan(4)
@@ -222,6 +237,60 @@ describe('the primary button', () => {
 			'<CustomerReplySection v-if="ticketId" :objectId="ticketId" />',
 		)
 		expect(dialog).toContain("emit('cn:page:refresh', {})")
+	})
+})
+
+describe('the what-now card', () => {
+	const card = (ticket) =>
+		resolveNextStep(simple.nextStep, ticket, simple.stageField)
+
+	it('names a checklist for every stage that has a primary button, on fields the ticket has', () => {
+		expect(Object.keys(simple.nextStep.stages).sort()).toEqual(
+			Object.keys(simple.primaryActionByStage).sort(),
+		)
+		for (const [stage, entry] of Object.entries(simple.nextStep.stages)) {
+			expect(STATUSES, stage).toContain(stage)
+			expect(lifecycle.final, stage).not.toContain(stage)
+			expect(entry.title, stage).toBeTruthy()
+			expect(entry.after, stage).toBeTruthy()
+			expect(entry.checklist.length, stage).toBeGreaterThan(0)
+			for (const item of entry.checklist) {
+				// Done is read from a field, never written as a literal or a guess.
+				expect(
+					Object.keys(item).filter((key) =>
+						['done', 'doneWhen', 'doneField'].includes(key),
+					),
+					item.label,
+				).toEqual(['doneField'])
+				expect(ticketProperties[item.doneField], item.doneField).toBeTruthy()
+			}
+		}
+	})
+
+	it('ticks what the ticket already holds and leaves the rest to the button', () => {
+		const fresh = card({ status: 'new', ticketType: 'request', client: 'c1' })
+		expect(fresh.title).toBe('What now? Step 1: new')
+		expect(fresh.items.map((item) => [item.label, item.done])).toEqual([
+			['A handler is assigned', false],
+			['The customer is known', true],
+		])
+		expect(primaryFor({ status: 'new', ticketType: 'request' }).id).toBe(
+			'ticket-start',
+		)
+		const waiting = (portalReplies) =>
+			card({
+				status: 'awaiting_customer',
+				ticketType: 'request',
+				portalReplies,
+			})
+		expect(waiting([]).items[0].done).toBe(false)
+		expect(waiting([{ text: 'Yes, that is right.' }]).items[0].done).toBe(true)
+	})
+
+	it('is absent on a finished ticket', () => {
+		for (const status of lifecycle.final) {
+			expect(card({ status, ticketType: 'request' }), status).toBeNull()
+		}
 	})
 })
 
@@ -409,6 +478,8 @@ describe('the words', () => {
 					'moreLabel',
 					'ariaLabel',
 					'emptyText',
+					'after',
+					'hint',
 				].includes(key)
 			) {
 				words.add(value)

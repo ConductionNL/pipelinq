@@ -146,9 +146,9 @@ class CommercialAnalyticsServiceTest extends TestCase {
 				['id' => 'A', 'status' => 'won',  'value' => 1000, 'client' => 'c1', 'stageEnteredAt' => $this->daysAgo(5)],
 				['id' => 'B', 'status' => 'won',  'value' => 3000, 'client' => 'c2', 'stageEnteredAt' => $this->daysAgo(10)],
 				['id' => 'C', 'status' => 'lost', 'value' => 500,  'client' => 'c1', 'stageEnteredAt' => $this->daysAgo(7)],
-				['id' => 'D', 'status' => 'open', 'value' => 2000, 'client' => 'c1', 'probability' => 50, 'stage' => 'Qualification', 'stageOrder' => 2],
-				['id' => 'E', 'status' => 'open', 'value' => 4000, 'client' => 'c2', 'probability' => 25, 'stage' => 'Proposal',      'stageOrder' => 3],
-				['id' => 'F', 'status' => 'open', 'value' => 1000, 'client' => 'c1', 'probability' => 75, 'stage' => 'Qualification', 'stageOrder' => 2],
+				['id' => 'D', 'status' => 'open', 'value' => 2000, 'client' => 'c1', 'qualificationScore' => 50, 'stage' => 'Qualification', 'stageOrder' => 2],
+				['id' => 'E', 'status' => 'open', 'value' => 4000, 'client' => 'c2', 'qualificationScore' => 25, 'stage' => 'Proposal',      'stageOrder' => 3],
+				['id' => 'F', 'status' => 'open', 'value' => 1000, 'client' => 'c1', 'qualificationScore' => 75, 'stage' => 'Qualification', 'stageOrder' => 2],
 			],
 			'posTransaction_schema' => [
 				['id' => 't1', 'status' => 'settled',   'total' => 250, 'client' => 'c2', 'settledAt' => $this->daysAgo(3)],
@@ -188,10 +188,34 @@ class CommercialAnalyticsServiceTest extends TestCase {
 		$this->assertSame(2000.0, $overview['avgDealSize']);
 		// open value 2000+4000+1000 = 7000.
 		$this->assertSame(7000.0, $overview['openPipelineValue']);
-		// weighted: 2000*0.5 + 4000*0.25 + 1000*0.75 = 2750.
+		// weighted on the qualification score: 2000*0.5 + 4000*0.25 + 1000*0.75 = 2750.
 		$this->assertSame(2750.0, $overview['weightedForecast']);
 		$this->assertArrayHasKey('previousPeriod', $overview);
 		$this->assertSame('month', $overview['period']);
+	}
+
+	/**
+	 * The weighted forecast reads the qualification score, never the hidden probability field.
+	 *
+	 * The lead form hides `probability`, so on a real install it is empty and the
+	 * forecast read EUR 0 for a 250000 lead with score 65 (pipelinq review F3).
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/pipeline-numbers-tell-the-truth/specs/commercial-dashboard/spec.md
+	 */
+	public function testWeightedForecastUsesQualificationScoreNotProbability(): void {
+		$data = $this->fixture();
+		$data['lead_schema'] = [
+			['id' => 'R', 'status' => 'open', 'value' => 250000, 'client' => 'c1', 'qualificationScore' => 65],
+			['id' => 'S', 'status' => 'open', 'value' => 1000, 'client' => 'c1', 'probability' => 90],
+			['id' => 'T', 'status' => 'open', 'value' => 1000, 'client' => 'c1', 'qualificationScore' => 140],
+		];
+
+		$overview = $this->buildService($data)->getCommercialOverview(period: 'month');
+
+		// 250000*0.65 + 0 (no score) + 1000*1.0 (score capped at 100) = 163500.
+		$this->assertSame(163500.0, $overview['weightedForecast']);
 	}
 
 	/**

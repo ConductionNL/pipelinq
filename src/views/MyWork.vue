@@ -6,7 +6,7 @@
 				<h2>{{ t('pipelinq', 'My Work') }}</h2>
 				<span v-if="totalCount > 0" class="my-work__counts">
 					{{ t('pipelinq', 'Leads') }} ({{ leadCount }}) ·
-					{{ t('pipelinq', 'Requests') }} ({{ requestCount }}) —
+					{{ t('pipelinq', 'Tickets') }} ({{ requestCount }}) ·
 					{{ totalCount }} {{ t('pipelinq', 'items total') }}
 				</span>
 			</div>
@@ -25,7 +25,7 @@
 					<NcButton
 						:variant="filter === 'request' ? 'primary' : 'secondary'"
 						@click="filter = 'request'">
-						{{ t('pipelinq', 'Requests') }}
+						{{ t('pipelinq', 'Tickets') }}
 					</NcButton>
 					<NcButton
 						:variant="filter === 'task' ? 'primary' : 'secondary'"
@@ -79,7 +79,7 @@
 							<span
 								class="entity-badge"
 								:class="'badge--' + item.entityType">
-								{{ badgeText(item.entityType) }}
+								{{ badgeText(item.entityType, item.ticketType) }}
 							</span>
 							<span
 								v-if="item.priority && item.priority !== 'normal'"
@@ -147,6 +147,16 @@ import {
 import { useObjectStore } from '../store/modules/object.js'
 
 const PRIORITY_ORDER = { urgent: 0, high: 1, normal: 2, low: 3 }
+
+// The closed half of the unified ticket lifecycle, the same list the Queue
+// page excludes. A closed ticket of any type is done, not work.
+const TERMINAL_TICKET_STATUSES = [
+	'resolved',
+	'completed',
+	'rejected',
+	'converted',
+	'closed',
+]
 
 /**
  *
@@ -286,9 +296,7 @@ export default {
 			}
 
 			for (const r of this.myRequests) {
-				const isTerminal = ['completed', 'rejected', 'converted'].includes(
-					r.status,
-				)
+				const isTerminal = TERMINAL_TICKET_STATUSES.includes(r.status)
 				if (!this.showCompleted && isTerminal) continue
 
 				const due = r.occurredAt ? new Date(r.occurredAt) : null
@@ -298,6 +306,7 @@ export default {
 				items.push({
 					id: r.id,
 					entityType: 'request',
+					ticketType: r.ticketType || 'request',
 					title: r.title || '-',
 					stageOrStatus: getStatusLabel(r.status),
 					pipelineName: r.pipeline
@@ -424,7 +433,7 @@ export default {
 			if (this.filter === 'lead')
 				return t('pipelinq', 'No leads assigned to you')
 			if (this.filter === 'request')
-				return t('pipelinq', 'No requests assigned to you')
+				return t('pipelinq', 'No tickets assigned to you')
 			if (this.filter === 'task')
 				return t('pipelinq', 'No follow-ups assigned to you')
 			return t('pipelinq', 'No items assigned to you')
@@ -458,18 +467,22 @@ export default {
 		/**
 		 * The short type badge on a work card.
 		 *
-		 * @param {string} entityType lead, request or task.
+		 * @param {string} entityType lead, request (any ticket) or task.
+		 * @param {string} [ticketType] The ticket type, for a ticket.
 		 * @return {string}
 		 * @spec openspec/specs/mobile-experience/spec.md#requirement-my-work-works-as-a-phone-list-req-mob-002
 		 */
-		badgeText(entityType) {
+		badgeText(entityType, ticketType) {
 			if (entityType === 'lead') return 'LEAD'
 			if (entityType === 'task') return t('pipelinq', 'TASK')
+			if (ticketType === 'complaint') return t('pipelinq', 'COMPLAINT')
+			if (ticketType === 'interaction') return t('pipelinq', 'CONTACT')
 			return 'REQ'
 		},
 
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-mywork-ui/tasks.md#task-6
+		 * @spec openspec/changes/detail-pages-read-at-a-glance/specs/my-work/spec.md
 		 */
 		async fetchAll() {
 			this.loading = true
@@ -489,14 +502,13 @@ export default {
 						}),
 					)
 				}
-				// A request is a `ticket` narrowed by ticketType (unify-ticket-supertype).
-				// Without the filter, complaints and contactmomenten would leak into
-				// "my requests". Held in local state, never read from the shared
+				// Every ticket assigned to me, whatever its type: an assigned
+				// complaint or contact moment is my work too (pipelinq review G1).
+				// Held in local state, never read from the shared
 				// collections.ticket bucket.
 				if (config.ticket && this.currentUser) {
 					promises.push(
 						this.fetchRaw('ticket', {
-							ticketType: 'request',
 							assignee: this.currentUser,
 							_limit: 200,
 						}).then((items) => {

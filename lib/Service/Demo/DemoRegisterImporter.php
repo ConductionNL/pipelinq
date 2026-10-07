@@ -36,10 +36,12 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Demo;
 
+use OCA\OpenRegister\Db\SchemaMapper;
+use OCA\OpenRegister\Service\ConfigurationService;
+use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\AppInfo\Application;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -72,15 +74,22 @@ class DemoRegisterImporter {
 	/**
 	 * Constructor.
 	 *
-	 * @param IAppManager        $appManager Resolves this app's path and version.
-	 * @param IAppConfig         $appConfig  Holds the provisioned register id.
-	 * @param ContainerInterface $container  Resolves OpenRegister's services.
-	 * @param LoggerInterface    $logger     Records what was imported or removed.
+	 * OpenRegister's services are injected, not looked up (ADR-083): pipelinq
+	 * requires OpenRegister, and only the setup and occ paths construct this class.
+	 *
+	 * @param IAppManager          $appManager           Resolves this app's path and version.
+	 * @param IAppConfig           $appConfig            Holds the provisioned register id.
+	 * @param ConfigurationService $configurationService Imports the descriptor and removes recorded imports.
+	 * @param SchemaMapper         $schemaMapper         Resolves a schema slug to its id.
+	 * @param ObjectService        $objectService        Finds and deletes stored records.
+	 * @param LoggerInterface      $logger               Records what was imported or removed.
 	 */
 	public function __construct(
 		private readonly IAppManager $appManager,
 		private readonly IAppConfig $appConfig,
-		private readonly ContainerInterface $container,
+		private readonly ConfigurationService $configurationService,
+		private readonly SchemaMapper $schemaMapper,
+		private readonly ObjectService $objectService,
 		private readonly LoggerInterface $logger,
 	) {
 	}//end __construct()
@@ -98,7 +107,7 @@ class DemoRegisterImporter {
 			return ['imported' => 0, 'skipped' => 0];
 		}
 
-		$result = $this->container->get('OCA\OpenRegister\Service\ConfigurationService')->importFromApp(
+		$result = $this->configurationService->importFromApp(
 			appId: self::CONFIG_APP_ID,
 			data: $data,
 			version: $this->appManager->getAppVersion(Application::APP_ID),
@@ -132,9 +141,8 @@ class DemoRegisterImporter {
 	public function remove(): array {
 		$summary = ['removed' => 0, 'retained' => 0];
 
-		$configurationService = $this->container->get('OCA\OpenRegister\Service\ConfigurationService');
-		if (method_exists($configurationService, 'softDeleteAppImports') === true) {
-			$jobs = $configurationService->softDeleteAppImports(self::CONFIG_APP_ID);
+		if (method_exists($this->configurationService, 'softDeleteAppImports') === true) {
+			$jobs = $this->configurationService->softDeleteAppImports(self::CONFIG_APP_ID);
 			$summary['removed'] += (int)($jobs['softDeleted'] ?? 0);
 		}
 
@@ -173,14 +181,13 @@ class DemoRegisterImporter {
 		$counts = ['removed' => 0, 'retained' => 0];
 
 		try {
-			$schema = $this->container->get('OCA\OpenRegister\Db\SchemaMapper')->find($schemaSlug, _rbac: false, _multitenancy: false);
+			$schema = $this->schemaMapper->find($schemaSlug, _rbac: false, _multitenancy: false);
 		} catch (\Throwable $e) {
 			// A schema this instance never had holds none of these records.
 			return $counts;
 		}
 
-		$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-		$rows = $objectService->findAll(
+		$rows = $this->objectService->findAll(
 			[
 				'filters' => ['register' => $registerId, 'schema' => (string)$schema->getId()],
 				'limit'   => 5000,
@@ -199,7 +206,7 @@ class DemoRegisterImporter {
 			}
 
 			try {
-				$objectService->deleteObject((string)$data['id'], $registerId, (string)$schema->getId());
+				$this->objectService->deleteObject((string)$data['id'], $registerId, (string)$schema->getId());
 				$counts['removed']++;
 			} catch (\Throwable $e) {
 				if (str_contains($e->getMessage(), 'SCHEMA_ARCHIVAL_IMMUTABLE') === false) {

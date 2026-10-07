@@ -79,7 +79,6 @@
                 "taxBreakdown": [],
                 "totalTax": 0,
                 "total": 0,
-                "paymentProvider": null,
                 "paymentStatus": "pending"
             },
             {
@@ -173,7 +172,6 @@
                 ],
                 "totalTax": 2.06,
                 "total": 24.95,
-                "paymentProvider": null,
                 "paymentStatus": "pending",
                 "parkedAt": "2026-05-20T11:02:00+02:00",
                 "notes": "Klant even weg -- terugkomen (prijzen incl. BTW)"
@@ -3806,8 +3804,7 @@
                 "billingCategory": "billing-category-declarabel",
                 "approvedBy": "admin",
                 "approvedAt": "2026-05-20T11:00:00Z",
-                "wipSyncStatus": "pending",
-                "wipSyncedAt": null
+                "wipSyncStatus": "pending"
             },
             {
                 "@self": {
@@ -3823,8 +3820,7 @@
                 "billingCategory": "billing-category-dba",
                 "approvedBy": "admin",
                 "approvedAt": "2026-05-19T10:00:00Z",
-                "wipSyncStatus": "failed",
-                "wipSyncedAt": null
+                "wipSyncStatus": "failed"
             },
             {
                 "@self": {
@@ -4239,7 +4235,6 @@
                 "scheduledFor": "2026-10-15T08:00:00+00:00",
                 "sentAt": "2026-10-15T08:02:18+00:00",
                 "status": "sent",
-                "abVariantOf": null,
                 "abSplitPercent": 50,
                 "totals": {
                     "queued": 0,
@@ -4333,7 +4328,6 @@
                 "sentAt": "2026-10-15T08:02:20+00:00",
                 "providerId": "sg-abc123xyz003",
                 "openedAt": "2026-10-15T11:32:00+00:00",
-                "firstClickAt": null,
                 "clickedUrls": []
             },
             {
@@ -4929,7 +4923,7 @@
                 },
                 "contactId": "contact-gemeente-utrecht-bakker",
                 "channel": "email",
-                "lawfulBasis": "soft-opt-in",
+                "lawfulBasis": "legitimate-interest",
                 "consentSource": "soft-opt-in-import",
                 "consentedAt": "2026-06-04T10:00:00+00:00",
                 "listId": "mailing-list-klantupdates",
@@ -4951,7 +4945,7 @@
                 },
                 "contactId": "contact-gemeente-eindhoven-mulder",
                 "channel": "email",
-                "lawfulBasis": "soft-opt-in",
+                "lawfulBasis": "legitimate-interest",
                 "consentSource": "soft-opt-in-import",
                 "consentedAt": "2026-06-04T10:00:00+00:00",
                 "listId": "mailing-list-klantupdates",
