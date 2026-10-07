@@ -1243,7 +1243,7 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "Leads list (Score column, Call first); Pipeline board card and list view; the score badge opens the explanation",
 				"readOn": "2026-09-29",
-				"change": "archive/2026-09-29-pipeline-lead-score-call-first"
+				"change": "2026-09-29-pipeline-lead-score-call-first"
 			},
 			"note": "Built 2026-09-29: the stored qualificationScore shows in the Leads list and on the board, sorts, and explains which criteria added points. Scoring on engagement (mail opens, visits) is not part of it.",
 			"evidence": {
@@ -1666,6 +1666,28 @@
 			},
 			"origin": "changelog",
 			"originUrl": "https://developers.hubspot.com/changelog/fall-2026-spotlight"
+		},
+		{
+			"id": "lead-win-probability",
+			"area": "pipeline",
+			"name": "See how likely you are to win a lead, judged by how recently it moved",
+			"pipelinq": "partial",
+			"hubspot-crm": "unchecked",
+			"pipedrive": "unchecked",
+			"espocrm": "unchecked",
+			"odoo-crm": "unchecked",
+			"kiss": "unchecked",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Settings/pipelinq_register.json:658 and lib/Service/LeadService.php",
+			"feature": "Pipeline",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "specified",
+				"evidence": "lib/Settings/pipelinq_register.json:658 declares winProbability on lead and lib/Service/LeadService.php derives it; no page shows it (grep of src for winProbability is empty). The Win chance column on Leads shows qualificationScore, the lead score",
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/lead-scoring-win-probability"
+			},
+			"source": "spec-round-2026-10-07"
 		},
 		{
 			"id": "cm-log",
@@ -3059,6 +3081,28 @@
 			},
 			"origin": "featureRequest",
 			"originUrl": "https://forum.espocrm.com/forum/feature-requests/127276-import-or-subscribe-to-external-icalendar-calendars"
+		},
+		{
+			"id": "work-time-on-phone",
+			"area": "work",
+			"name": "Write down your hours on your phone, also without a connection",
+			"pipelinq": "no",
+			"hubspot-crm": "unchecked",
+			"pipedrive": "unchecked",
+			"espocrm": "unchecked",
+			"odoo-crm": "unchecked",
+			"kiss": "unchecked",
+			"provider": "pipelinq",
+			"providerHow": "read in openspec/specs/time-entry-mobile (status not-implemented); hour capture is the time-tracker leaf",
+			"feature": "Time and billing",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "specified",
+				"evidence": "openspec/specs/time-entry-mobile carries status not-implemented; no PWA shell or offline buffer in src/",
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/time-entry-mobile"
+			},
+			"source": "spec-round-2026-10-07"
 		},
 		{
 			"id": "mkt-blast",
@@ -6425,7 +6469,7 @@
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "Client and contact detail (Call, Mail, Directions), client and lead detail (Log a visit), My work, Pipeline board, at phone width in a browser or the Nextcloud mobile apps",
 				"readOn": "2026-09-29",
-				"change": "archive/2026-09-29-platform-phone-on-the-road"
+				"change": "2026-09-29-platform-phone-on-the-road"
 			},
 			"note": "The four commercial and open source CRMs all ship a native mobile app. We do not. Built 2026-09-29 as the responsive web app (no native client, no offline): tap links, a Today-first My work with follow-ups, and Log a visit.",
 			"evidence": {
@@ -6928,6 +6972,28 @@
 			"note": "Specified 2026-09-28 in openspec/changes/clients-registry-numbers-and-enrichment (OpenSpec pass)."
 		},
 		{
+			"id": "clients-relationships",
+			"area": "clients",
+			"name": "Record how two contacts relate to each other and the role each plays in a deal",
+			"pipelinq": "yes",
+			"hubspot-crm": "unchecked",
+			"pipedrive": "unchecked",
+			"espocrm": "unchecked",
+			"odoo-crm": "unchecked",
+			"kiss": "unchecked",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Settings/pipelinq_register.json:1725 (schema relationship) and src/components/ContactRelationships.vue",
+			"feature": "Client management",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Settings/pipelinq_register.json:1725 declares the relationship schema; src/components/ContactRelationships.vue renders it in the Relationships section of the client and contact detail pages (src/manifest.json:2314)",
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/contact-relationship-mapping"
+			},
+			"source": "spec-round-2026-10-07"
+		},
+		{
 			"id": "stock-levels",
 			"area": "products",
 			"name": "Know how many you have left before you promise it to somebody",
@@ -7020,6 +7086,28 @@
 			},
 			"origin": "changelog",
 			"originUrl": "https://developers.hubspot.com/changelog/fall-2026-spotlight"
+		},
+		{
+			"id": "prod-service-catalogue",
+			"area": "products",
+			"name": "Publish the services you offer, with their fees, in a catalogue residents can read",
+			"pipelinq": "no",
+			"hubspot-crm": "unchecked",
+			"pipedrive": "unchecked",
+			"espocrm": "unchecked",
+			"odoo-crm": "unchecked",
+			"kiss": "unchecked",
+			"provider": "pipelinq",
+			"providerHow": "read in openspec/specs/product-service-catalog and the product schema in lib/Settings/pipelinq_register.json",
+			"feature": "Products",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "specified",
+				"evidence": "the product schema has no SDG audience, UPL reference, tariff table (leges) or publication date (grep of lib/Settings for sdg, upl, leges, publication); openspec/specs/product-service-catalog says done but the fields are not there",
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/product-service-catalog"
+			},
+			"source": "spec-round-2026-10-07"
 		},
 		{
 			"id": "unified-search",
