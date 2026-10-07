@@ -28,6 +28,8 @@
   - **spec_ref**: `specs/client-forms/spec.md#requirement-no-conflicting-language-on-a-new-party`
 - [x] 3.5 Plain help in the client, contact, task and product forms; technical text kept in `x-notes`
   - **spec_ref**: `specs/client-forms/spec.md#requirement-forms-show-plain-help`
+- [x] 3.6 New client and New lead show errors only after a change or a save attempt
+  - **spec_ref**: `specs/client-forms/spec.md#requirement-errors-wait-for-the-user`
 
 ## Phase 4: Example data
 

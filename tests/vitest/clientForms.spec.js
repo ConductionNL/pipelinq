@@ -63,10 +63,11 @@ vi.mock('@nextcloud/vue', () => {
 		},
 		NcTextField: {
 			name: 'NcTextField',
-			props: ['modelValue', 'label'],
+			props: ['modelValue', 'label', 'helperText'],
 			render() {
 				return h('input', {
 					'data-label': this.label,
+					'data-helper': this.helperText || '',
 					value: this.modelValue,
 				})
 			},
@@ -123,6 +124,36 @@ describe('New client dialog opened from a picker', () => {
 			name: 'ClientDetail',
 			params: { id: 'c-2' },
 		})
+	})
+})
+
+describe('errors wait for the user', () => {
+	const nameHelper = (wrapper) =>
+		wrapper.find('input[data-label="Name"]').attributes('data-helper')
+
+	it('shows no "Name is required" on a freshly opened form', async () => {
+		const { wrapper } = mountDialog({})
+		await flushPromises()
+		expect(nameHelper(wrapper)).toBe('')
+	})
+
+	it('shows it once the name was typed and cleared', async () => {
+		const { wrapper } = mountDialog({})
+		await flushPromises()
+		const form = wrapper.findComponent({ name: 'ClientForm' })
+		form.vm.form.name = 'A'
+		await flushPromises()
+		form.vm.form.name = ''
+		await flushPromises()
+		expect(nameHelper(wrapper)).toBe('Name is required')
+	})
+
+	it('shows it after a save attempt', async () => {
+		const { wrapper } = mountDialog({})
+		await flushPromises()
+		wrapper.findComponent({ name: 'ClientForm' }).vm.onSave()
+		await flushPromises()
+		expect(nameHelper(wrapper)).toBe('Name is required')
 	})
 })
 

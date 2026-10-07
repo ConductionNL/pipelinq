@@ -7,8 +7,8 @@
 				labelOutside
 				:label="t('pipelinq', 'Name')"
 				:modelValue="form.name"
-				:error="!!errors.name"
-				:helperText="errors.name"
+				:error="!!shownErrors.name"
+				:helperText="shownErrors.name"
 				:maxlength="255"
 				data-testid="client-name-input"
 				@update:modelValue="(v) => (form.name = v)" />
@@ -25,8 +25,8 @@
 					:options="typeOptions"
 					:placeholder="t('pipelinq', 'Select type')"
 					data-testid="client-type-select" />
-				<p v-if="errors.type" class="field-error" role="alert">
-					{{ errors.type }}
+				<p v-if="shownErrors.type" class="field-error" role="alert">
+					{{ shownErrors.type }}
 				</p>
 			</div>
 			<div class="form-group">
@@ -36,8 +36,8 @@
 					labelOutside
 					:label="t('pipelinq', 'Email')"
 					:modelValue="form.email"
-					:error="!!errors.email"
-					:helperText="errors.email"
+					:error="!!shownErrors.email"
+					:helperText="shownErrors.email"
 					type="email"
 					data-testid="client-email-input"
 					@update:modelValue="(v) => (form.email = v)" />
@@ -52,8 +52,8 @@
 					labelOutside
 					:label="t('pipelinq', 'Phone')"
 					:modelValue="form.phone"
-					:error="!!errors.phone"
-					:helperText="errors.phone"
+					:error="!!shownErrors.phone"
+					:helperText="shownErrors.phone"
 					data-testid="client-phone-input"
 					@update:modelValue="(v) => (form.phone = v)" />
 			</div>
@@ -64,8 +64,8 @@
 					labelOutside
 					:label="t('pipelinq', 'Website')"
 					:modelValue="form.website"
-					:error="!!errors.website"
-					:helperText="errors.website"
+					:error="!!shownErrors.website"
+					:helperText="shownErrors.website"
 					data-testid="client-website-input"
 					@update:modelValue="(v) => (form.website = v)" />
 			</div>
@@ -172,6 +172,7 @@ import axios from '@nextcloud/axios'
 import { getLanguage } from '@nextcloud/l10n'
 import { generateOcsUrl, generateUrl } from '@nextcloud/router'
 import { NcButton, NcSelect, NcTextField } from '@nextcloud/vue'
+import touchedErrorsMixin from '../../mixins/touchedErrorsMixin.js'
 import {
 	defaultLanguage,
 	INDUSTRY_SECTORS,
@@ -207,6 +208,8 @@ export default {
 		NcTextField,
 		NcSelect,
 	},
+
+	mixins: [touchedErrorsMixin],
 
 	props: {
 		client: {
@@ -449,6 +452,7 @@ export default {
 		 * @spec openspec/changes/2026-03-20-client-management/tasks.md#task-3.1
 		 */
 		onSave() {
+			this.markSaveAttempted()
 			if (!this.isValid) {
 				return
 			}

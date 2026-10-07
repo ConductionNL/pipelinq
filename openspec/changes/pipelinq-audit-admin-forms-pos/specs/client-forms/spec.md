@@ -61,3 +61,23 @@ The create and edit forms for clients, contact persons, tasks, products and deal
 - THEN its help SHALL read "The client this person works for." and not "UUID reference to the parent client object"
 
 @e2e exclude schema text, asserted on the merged register by tests/Unit/Settings/PlainFormHelpTest.php.
+
+### Requirement: Errors wait for the user
+
+The New client and New lead forms SHALL NOT show a validation error for a field until the user changed that field or tried to save. Validity itself (and with it the disabled Save button) SHALL not change.
+
+#### Scenario: A fresh form
+
+- GIVEN a user who opens New client or New lead
+- WHEN nothing has been typed yet
+- THEN no "Name is required", "Title is required" or "Client is required" SHALL show
+
+@e2e exclude asserted with the real forms in tests/vitest/clientForms.spec.js and tests/vitest/leadFormErrorTiming.spec.js.
+
+#### Scenario: A save attempt
+
+- GIVEN a New lead form with no title
+- WHEN the user tries to save
+- THEN "Title is required" SHALL show and nothing SHALL be saved
+
+@e2e exclude asserted in tests/vitest/leadFormErrorTiming.spec.js.
