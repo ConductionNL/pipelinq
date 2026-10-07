@@ -160,7 +160,7 @@
 		},
 		{
 			"id": "BookingDetail",
-			"_note": "Booking record as a declarative type:detail page (pipelinq-pos-mdm-detail-declarative). The booking's flat identity fields (status / source / startAt / endAt / depositAmount / notes / …) auto-render in the body via CnObjectDataWidget. What the auto-body cannot express is split over grid widgets built from BookingDetailSection parts (booking-and-service-pages): the Service/Customer name context, the resourceAssignments table and the computed Timeline (timestamps plus statusHistory). Notes are the notes leaf; the audit table is dropped, OpenRegister's activity is in the actions menu. KEPT-AS-NOTE: lifecycleActions is NOT wired even though booking HAS an x-openregister-lifecycle — the real transitions POST to bespoke /api/bookings/{id}/{action} endpoints in BookingService with side-effects (confirmation/reminder emails, no-show fees) and TIME-WINDOW gating, and Reschedule CREATES A NEW booking UUID and navigates to it; OR's /transition would only flip status and bypass those side-effects. So the six admin actions are the page's actionsComponent (BookingHeaderActions), beside Edit in the header. Missing primitive: a declarative action that POSTs to a host-app endpoint (not OR /transition) with time-window gating + a 'returns a new object id, navigate to it' reload mode.",
+			"_note": "Booking record as a declarative type:detail page (pipelinq-pos-mdm-detail-declarative). The booking's flat identity fields (status / source / startAt / endAt / depositAmount / notes / …) auto-render in the body via CnObjectDataWidget. What the auto-body cannot express is split over grid widgets built from BookingDetailSection parts (booking-and-service-pages): the Service/Customer name context and the resourceAssignments table. The Timeline tab is the library `timeline` widget: dated fields plus the audit trail. Notes are the notes leaf; the audit table is dropped, OpenRegister's activity is in the actions menu. KEPT-AS-NOTE: lifecycleActions is NOT wired even though booking HAS an x-openregister-lifecycle — the real transitions POST to bespoke /api/bookings/{id}/{action} endpoints in BookingService with side-effects (confirmation/reminder emails, no-show fees) and TIME-WINDOW gating, and Reschedule CREATES A NEW booking UUID and navigates to it; OR's /transition would only flip status and bypass those side-effects. So the six admin actions are the page's actionsComponent (BookingHeaderActions), beside Edit in the header. Missing primitive: a declarative action that POSTs to a host-app endpoint (not OR /transition) with time-window gating + a 'returns a new object id, navigate to it' reload mode.",
 			"route": "/bookings/:id",
 			"type": "detail",
 			"title": "Booking",
@@ -181,7 +181,7 @@
 						"type": "tabs",
 						"title": "Booking",
 						"icon": "ViewDashboard",
-						"_note": "The working surface of a booking, one tab at a time (pipelinq review E7). Timeline: the booking's own events and status changes, from BookingDetailSection part 'timeline' until the library's `timeline` widget type is released (nextcloud-vue lane), then this tab swaps to `type: timeline`. Notes: the notes leaf, as on LeadDetail, instead of the hand-written notes editor. The audit table is gone: OpenRegister's activity is in the actions menu (E6). Children stay out of `layout`.",
+						"_note": "The working surface of a booking, one tab at a time (pipelinq review E7). Timeline: the library `timeline` widget (nextcloud-vue 2.65): the booking's dated fields plus its audit trail, so every status change shows as a dated change with who made it (review E6). Notes: the notes leaf, as on LeadDetail, instead of the hand-written notes editor. The audit table is gone: OpenRegister's activity is in the actions menu (E6). Children stay out of `layout`.",
 						"content": {
 							"ariaLabel": "Booking",
 							"tabs": [
@@ -192,7 +192,7 @@
 							]
 						}
 					},
-					{ "id": "booking-timeline", "type": "BookingTimelineWidget", "title": "Timeline", "icon": "Timeline", "content": {} },
+					{ "id": "booking-timeline", "type": "timeline", "title": "Timeline", "icon": "Timeline", "content": { "title": "Timeline", "fields": [ { "field": "@self.created", "label": "Booking created" }, { "field": "depositPaidAt", "label": "Deposit cleared" }, { "field": "confirmationSentAt", "label": "Confirmation mail sent" }, { "field": "reminderSentAt", "label": "Reminder sent" }, { "field": "startAt", "label": "Starts" }, { "field": "endAt", "label": "Ends" }, { "field": "cancelledAt", "label": "Cancelled" }, { "field": "noShowFeeChargedAt", "label": "No-show fee charged" } ], "auditTrail": true, "order": "asc" } },
 					{ "id": "booking-assignments", "type": "BookingAssignmentsWidget", "title": "Resource assignments", "icon": "AccountGroup", "content": {} },
 					{ "id": "booking-notes", "type": "integration", "integrationId": "notes", "title": "Notes", "icon": "NoteTextOutline" },
 					{ "id": "booking-files", "type": "integration", "integrationId": "files", "title": "Documents", "icon": "FolderOutline" }

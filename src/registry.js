@@ -1105,8 +1105,8 @@ const registry = {
 	},
 	// --- Booking page parts as grid widgets (booking-and-service-pages). Each
 	//     renders one part of BookingDetailSection, so the page can put them in
-	//     its grid and its tab strip. The timeline moves to the library's
-	//     `timeline` widget type once nextcloud-vue releases it. ---
+	//     its grid and its tab strip. The timeline is the library's `timeline`
+	//     widget type (review-part-two). ---
 	BookingContextWidget: {
 		kind: 'widget',
 		component: sectionWidget(
@@ -1127,16 +1127,6 @@ const registry = {
 		),
 		...PANEL_WIDGET_META,
 		_note: 'BookingDetail: the resourceAssignments array-on-object table, with resource names.',
-	},
-	BookingTimelineWidget: {
-		kind: 'widget',
-		component: sectionWidget(
-			'BookingTimelineWidget',
-			BookingDetailSection,
-			({ objectId }) => ({ bookingId: objectId, part: 'timeline' }),
-		),
-		...PANEL_WIDGET_META,
-		_note: 'BookingDetail: the computed timeline (timestamps plus statusHistory). Interim until the library timeline widget type lands.',
 	},
 	BookingHeaderActions: {
 		kind: 'widget',
