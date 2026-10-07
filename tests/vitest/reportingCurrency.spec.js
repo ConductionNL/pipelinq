@@ -87,3 +87,21 @@ describe('formatters follow the reporting currency', () => {
 		expect(objectCurrency('n/a', {}, null, {})).toBe('n/a')
 	})
 })
+
+describe('price columns in the manifest', () => {
+	it('format product and service prices as money, not bare numbers', async () => {
+		const { default: manifest } = await import('../../src/manifest.json')
+		const { default: bookings } =
+			await import('../../src/manifest.d/80-appointment-booking-admin.json')
+		const column = (pages, pageRoute, key) =>
+			pages
+				.find((p) => p.route === pageRoute)
+				.config.columns.find((c) => c.key === key)
+		expect(column(manifest.pages, '/products', 'unitPrice').formatter).toBe(
+			'objectCurrency',
+		)
+		expect(column(bookings.pages, '/services', 'price').formatter).toBe(
+			'objectCurrency',
+		)
+	})
+})
