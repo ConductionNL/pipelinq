@@ -32,3 +32,16 @@ Pipelinq SHALL hand approved hours (WIP) and approved expenses (AP) to Shillinq 
 - THEN the message SHALL point at the xWiki app or OpenRegister with integriq, never at a direct URL
 
 @e2e exclude a static message, asserted by tests/vitest/adminSettingsNoServiceUrls.spec.js.
+
+### Requirement: The setup wizard can run again from the admin page
+
+The pipelinq admin settings page SHALL offer a "Run the setup wizard again" action that opens the setup wizard with the manifest's own `setup.steps`. Closing or finishing the wizard SHALL return to the admin page.
+
+#### Scenario: Reopen the wizard
+
+- GIVEN an administrator who closed the setup wizard earlier
+- WHEN the administrator clicks Run the setup wizard again on the admin settings page
+- THEN the setup wizard SHALL open with the same steps as the first run
+- AND closing it SHALL leave the administrator on the admin settings page
+
+@e2e exclude the card is a button over nextcloud-vue's CnSetupWizard, asserted by tests/vitest/setupWizardRerun.spec.js.

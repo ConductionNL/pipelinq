@@ -58,6 +58,9 @@
 		     (pipelinq-setup-wizard-review). -->
 		<ProvisionDataSection v-if="isAdmin" />
 
+		<!-- Reopen the first-time setup (pipelinq-audit-admin-forms-pos, A1). -->
+		<SetupWizardSection v-if="isAdmin" />
+
 		<!-- Shillinq and XWiki, detected rather than typed. -->
 		<DetectedIntegrations v-if="isAdmin" />
 
@@ -388,6 +391,7 @@ import PosTenderTypeManager from './PosTenderTypeManager.vue'
 import ProductCategoryManager from './ProductCategoryManager.vue'
 import ProspectSettings from './ProspectSettings.vue'
 import ProvisionDataSection from './ProvisionDataSection.vue'
+import SetupWizardSection from './SetupWizardSection.vue'
 import TagManager from './TagManager.vue'
 import VatRatesSettings from './VatRatesSettings.vue'
 import { objectTypeGroups, objectTypes } from '../../config/objectTypes.js'
@@ -441,6 +445,7 @@ export default {
 		MenuStructureSettings,
 		DetectedIntegrations,
 		ProvisionDataSection,
+		SetupWizardSection,
 		VatRatesSettings,
 	},
 

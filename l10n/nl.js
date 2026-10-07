@@ -7105,7 +7105,10 @@ OC.L10N.register(
         "How pipelinq compares to other help desks": "Hoe pipelinq zich verhoudt tot andere helpdesks",
         "Opens {host} in a new tab.": "Opent {host} in een nieuw tabblad.",
         "Shillinq integration": "Shillinq-integratie",
-        "Shillinq is installed on this server. Pipelinq hands approved hours and expenses to it.": "Shillinq is op deze server geïnstalleerd. Pipelinq geeft goedgekeurde uren en declaraties eraan door."
+        "Shillinq is installed on this server. Pipelinq hands approved hours and expenses to it.": "Shillinq is op deze server geïnstalleerd. Pipelinq geeft goedgekeurde uren en declaraties eraan door.",
+        "Setup wizard": "Installatiewizard",
+        "Go through the first-time setup again, for example to load example data or change your organisation details.": "Doorloop de eerste installatie opnieuw, bijvoorbeeld om voorbeeldgegevens te laden of uw organisatiegegevens te wijzigen.",
+        "Run the setup wizard again": "Installatiewizard opnieuw starten"
     },
     "nplurals=2; plural=(n != 1);"
 )
