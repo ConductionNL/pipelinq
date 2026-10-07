@@ -27,6 +27,17 @@ it as the `timeline` widget type. Pipelinq kept an interim
   who made it, which covers status changes.
 - The interim `BookingTimelineWidget` registry entry is removed.
 
+Also in this change:
+
+- **R5, second cause.** The repair step runs with nobody signed in, so
+  OpenRegister refused the default pipelines as an Anonymous write. They are
+  now written as a dedicated, disabled `pipelinq-system` account with
+  OpenRegister's checks on, never with `_rbac: false`.
+- The empty `/tasks/new` page is gone; new tasks use the Tasks create dialog.
+- nextcloud-vue 2.66.0; the product category column uses `productCategory`.
+- The roadmap feature list moves out of `Application` (phpmd class length).
+- Example bookings point at example clients instead of placeholder ids.
+
 ## Out of scope
 
 - The `statusHistory` reasons do not show in the library widget, which reads

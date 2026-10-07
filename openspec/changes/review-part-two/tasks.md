@@ -17,3 +17,17 @@
 ## 3. Library 2.66.0
 
 - [x] 3.1 Bump nextcloud-vue to 2.66.0; the product category column uses the real `productCategory` slug
+
+## 4. Default pipelines on repair (R5, second cause)
+
+- [x] 4.1 Add `SystemServiceAccount` (disabled `pipelinq-system`, random password, volatile active user, previous user restored)
+  - Verify: `SystemServiceAccountTest`
+- [x] 4.2 `DefaultPipelineService` writes as the system account when nobody is signed in
+  - Verify: `DefaultPipelineServiceTest::testRepairWithoutAUserWritesAsTheSystemAccount`; live, `occ maintenance:repair` creates the pipelines
+
+## 5. Housekeeping
+
+- [x] 5.1 Move the roadmap feature list out of Application into `RoadmapFeatureCatalog` (phpmd class length)
+  - Verify: `RoadmapFeatureCatalogTest`
+- [x] 5.2 Example bookings point at example clients
+  - Verify: `tests/vitest/serviceSteps.spec.js`; gate 101 0 fail
