@@ -153,3 +153,14 @@
 .cn-object-list-widget table.cn-data-table:not(:has(thead)) td:not(:first-of-type) {
 	white-space: nowrap;
 }
+
+/* A borderless card on the simple dashboard (layout `borderless`: the
+ * actions moved out of the hidden page header) sits on the page ground.
+ * A theme rule that gives every element with "widget" in its class a solid
+ * background (thematiq's nldesign element-overrides, specificity 1,2,0)
+ * painted it white, a box the board does not have. The two `:not(#…)`
+ * lift this rule above that one. */
+.cn-dashboard-grid .cn-widget-wrapper.cn-widget-wrapper--borderless:not(#cn-ground-a):not(#cn-ground-b),
+.cn-dashboard-grid .cn-widget-wrapper--borderless .cn-widget-wrapper__content:not(#cn-ground-a):not(#cn-ground-b) {
+	background: transparent;
+}
