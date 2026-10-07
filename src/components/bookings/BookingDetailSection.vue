@@ -140,6 +140,7 @@ import ClockEnd from 'vue-material-design-icons/ClockEnd.vue'
 import ClockStart from 'vue-material-design-icons/ClockStart.vue'
 import EmailCheckOutline from 'vue-material-design-icons/EmailCheckOutline.vue'
 import ProgressCheck from 'vue-material-design-icons/ProgressCheck.vue'
+import { currencyOr } from '../../services/reportingCurrency.js'
 import { useObjectStore } from '../../store/modules/object.js'
 
 const TIMELINE_ICONS = {
@@ -351,13 +352,18 @@ export default {
 			return events
 		},
 
+		/**
+		 * The deposit, in the service's currency or the reporting currency.
+		 *
+		 * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
+		 */
 		depositLabel() {
 			const amount = Number(this.booking.depositAmount || 0)
 			if (!amount) return t('pipelinq', 'None')
 			const paid = !!this.booking.depositPaidAt
 			const formatted = this.formatCurrency(
 				amount,
-				this.service?.currency || 'EUR',
+				currencyOr(this.service?.currency),
 			)
 			return paid
 				? t('pipelinq', '{amount} (paid {when})', {
@@ -421,8 +427,16 @@ export default {
 			}
 		},
 
+		/**
+		 * An amount in the given currency, or the reporting currency.
+		 *
+		 * @param {number|string} value The amount.
+		 * @param {string} [currency] The currency code.
+		 * @return {string} The formatted amount.
+		 * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
+		 */
 		formatCurrency(value, currency) {
-			const code = currency || 'EUR'
+			const code = currencyOr(currency)
 			const n = Number(value) || 0
 			try {
 				return new Intl.NumberFormat('nl-NL', {

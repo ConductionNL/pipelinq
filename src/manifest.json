@@ -320,7 +320,7 @@
 			{
 				"name": "leads_value_total",
 				"type": "gauge",
-				"help": "Total pipeline value in EUR",
+				"help": "Total pipeline value in the reporting currency",
 				"source": {
 					"kind": "objectSum",
 					"register": "pipelinq",

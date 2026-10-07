@@ -30,7 +30,7 @@
 	"pages": [
 		{
 			"id": "Services",
-			"_note": "Service catalogue as a declarative type:index page (pipelinq-views-to-declarative-r2). price→EUR currency, durationMinutes→duration format, status→badge, bookableOnline→boolean. 'New service' navigates to the bespoke ServiceDetail create form (id:'new'); row open navigates to ServiceDetail. ServiceDetail stays custom (multiStep sub-table editor + policy cards + cache-invalidation hook).",
+			"_note": "Service catalogue as a declarative type:index page (pipelinq-views-to-declarative-r2). price→the service's own currency (reporting currency when unset; objectCurrency formatter), durationMinutes→duration format, status→badge, bookableOnline→boolean. 'New service' navigates to the bespoke ServiceDetail create form (id:'new'); row open navigates to ServiceDetail. ServiceDetail stays custom (multiStep sub-table editor + policy cards + cache-invalidation hook).",
 			"route": "/services",
 			"type": "index",
 			"title": "Services",
@@ -53,7 +53,7 @@
 				"columns": [
 					"name",
 					{ "key": "durationMinutes", "label": "Duration", "format": { "style": "duration", "unit": "minutes" } },
-					{ "key": "price", "label": "Price", "format": { "style": "currency", "currency": "EUR", "decimals": 2 } },
+					{ "key": "price", "label": "Price", "formatter": "objectCurrency", "formatterOptions": { "decimals": 2 } },
 					{ "key": "bookableOnline", "label": "Online", "type": "boolean" },
 					{ "key": "status", "label": "Status", "widget": "badge", "widgetProps": { "colorMap": { "active": "success", "draft": "default", "archived": "default" } } }
 				],
@@ -173,7 +173,7 @@
 				"_note": "Booking archetype (bespoke-detail-pages). An appointment booking is a scheduled service slot, so the body opens with the booking fields (status, source, startAt/endAt, customerId, serviceId, depositAmount, confirmation/reminder timestamps, cancellationReason) 8-wide beside a right column holding the deposit KPI stat above the related graph (service, resource, customer, previousBookingId reschedule chain), with Documents full-width for any signed intake / deposit receipt. IMPORTANT: no calendar body widget or tab — although a booking is time-bound, the booking schema declares NO calendar linkedType, and per the hard rule comms/scheduling leaves only appear when the schema declares them; the real schedule, the resourceAssignments/statusHistory arrays-on-object and the computed Timeline stay in the PRESERVED BookingDetailSection bodyWidget (after-data); the six TIME-WINDOW-gated admin actions are the page's actionsComponent, whose registry note explains why lifecycleActions cannot be wired (bespoke endpoints, side-effects, reschedule mints a new UUID).",
 				"widgets": [
 					{ "id": "booking-deposit", "type": "stat", "title": "Deposit", "icon": "Cash", "content": { "label": "Deposit", "format": { "style": "currency", "currency": "@config.currency", "decimals": 2 }, "source": { "register": "pipelinq", "schema": "appointmentBooking", "metric": "sum", "field": "depositAmount", "filter": { "id": "@objectId" } } } },
-					{ "id": "booking-data", "type": "data", "title": "Booking", "icon": "Calendar", "content": { "title": "Booking", "columns": 2, "include": ["status", "source", "startAt", "endAt", "customerId", "serviceId", "depositAmount", "confirmationSentAt", "reminderSentAt", "cancellationReason", "notes", "internalNotes"], "overrides": { "status": { "editable": false }, "startAt": { "editable": false }, "endAt": { "editable": false }, "confirmationSentAt": { "editable": false }, "reminderSentAt": { "editable": false }, "notes": { "label": "Note for the customer" }, "internalNotes": { "label": "Internal note (earlier)", "editable": false } } } },
+					{ "id": "booking-data", "type": "data", "title": "Booking", "icon": "Calendar", "content": { "title": "Booking", "columns": 2, "include": ["status", "source", "startAt", "endAt", "customerId", "serviceId", "depositAmount", "confirmationSentAt", "reminderSentAt", "cancellationReason", "notes", "internalNotes"], "overrides": { "customerId": { "label": "Customer", "formatter": "bookingCustomerName" }, "serviceId": { "label": "Service", "formatter": "bookingServiceName" }, "status": { "editable": false }, "startAt": { "editable": false }, "endAt": { "editable": false }, "confirmationSentAt": { "editable": false }, "reminderSentAt": { "editable": false }, "notes": { "label": "Note for the customer" }, "internalNotes": { "label": "Internal note (earlier)", "editable": false } } } },
 					{ "id": "booking-context", "type": "BookingContextWidget", "title": "Service and customer", "icon": "AccountClockOutline", "content": { "title": "Service and customer" } },
 					{ "id": "booking-related", "type": "related", "title": "Related", "icon": "LinkVariant" },
 					{
