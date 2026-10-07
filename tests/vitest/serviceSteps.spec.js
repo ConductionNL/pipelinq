@@ -95,3 +95,23 @@ describe('the booking page', () => {
 		}
 	})
 })
+
+describe('example bookings', () => {
+	it('point at customers that exist in the example data', async () => {
+		const { default: example } =
+			await import('../../lib/Settings/pipelinq_example_register.json')
+		const objects = example.components.objects
+		const slugs = new Set(
+			objects
+				.filter((o) => ['client', 'contact'].includes(o['@self'].schema))
+				.map((o) => o['@self'].slug),
+		)
+		const bookings = objects.filter(
+			(o) => o['@self'].schema === 'appointmentBooking',
+		)
+		expect(bookings.length).toBeGreaterThan(0)
+		for (const booking of bookings) {
+			expect(slugs.has(booking.customerId), booking['@self'].slug).toBe(true)
+		}
+	})
+})
