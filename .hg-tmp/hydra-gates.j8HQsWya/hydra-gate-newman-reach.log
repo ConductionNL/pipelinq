@@ -1,0 +1,5 @@
+[gate-112] newman-reach: 3 finding(s). 32 of 103 committed request(s) run.
+  V2  tests/integration/analytics.postman_collection.json holds 6 request(s) and sits outside newman-collection-path ('tests/newman'), so CI never runs it. Move it under 'tests/newman', repoint that input, or delete it.
+  V2  tests/integration/navi.postman_collection.json holds 3 request(s) and sits outside newman-collection-path ('tests/newman'), so CI never runs it. Move it under 'tests/newman', repoint that input, or delete it.
+  V2  tests/integration/pipelinq.postman_collection.json holds 62 request(s) and sits outside newman-collection-path ('tests/newman'), so CI never runs it. Move it under 'tests/newman', repoint that input, or delete it.
+  Fix: move the collection under newman-collection-path, repoint that input, delete it, or put `@newman exclude <reason>` in the collection's info.description.

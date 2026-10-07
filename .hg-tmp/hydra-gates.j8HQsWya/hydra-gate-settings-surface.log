@@ -1,0 +1,3 @@
+WARN src/manifest.json: app ships an in-app type:settings page AND a lib/Settings/*Admin.php section — two homes for one concern; delete the in-app page (ADR-079 D1).
+
+checked 21 manifest(s): 0 failure(s), 1 warning(s).

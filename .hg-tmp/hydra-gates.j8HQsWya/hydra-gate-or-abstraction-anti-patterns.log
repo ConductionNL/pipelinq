@@ -1,0 +1,7 @@
+❌ OR-owned capability duplication (ADR-051 §4; BLOCK mode after 2026-10-03):
+  [or-capability:mdm-surface (ADR-045)] app-local MDM sync-queue — consume the OR MDM surface
+    lib/Repair/DrainMdmSyncQueue.php
+  [or-capability:semantic-handoffs (ADR-051)] app-local handoff/conversion engine — consume OR HandoffService + the x-openregister-handoff dialect
+    lib/Service/SemanticHandoffService.php
+    lib/Service/TimeBillingHandoffService.php
+or_abstraction_findings=2 app_id=pipelinq mode=BLOCK

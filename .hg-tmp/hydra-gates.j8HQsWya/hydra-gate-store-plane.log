@@ -1,0 +1,3 @@
+WARN src/manifest.d/75-marketing-blasts.json: 'Templates' entry renders 'FileDocumentOutline' rather than 'FileReplaceOutline'.
+
+checked 21 manifest(s): 0 failure(s), 1 warning(s).

@@ -1,0 +1,12 @@
+WARN appinfo/info.xml:9 <description>: em-dash
+     Pipelinq is a lightweight CRM for Nextcloud. Manage clients, track leads through visual pipelines, handle incoming re...
+WARN appinfo/info.xml:32 <description>: em-dash
+     Pipelinq is een lichtgewicht CRM voor Nextcloud. Beheer klanten, volg leads door visuele pipelines, handel binnenkome...
+
+The App Store description breaks voice.md §8. This is ADVISORY:
+it does not fail the gate yet, because 20 of 21 fleet apps carry
+the same debt (204 findings, measured 2026-09-09) and this
+repository resolves at @main for all of them. Fix it anyway: this
+is the first prose a stranger reads about the app.
+warned 4 app-store string(s)
+checked 827 manifest string(s)

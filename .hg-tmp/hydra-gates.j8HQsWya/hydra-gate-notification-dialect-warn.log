@@ -1,0 +1,2 @@
+lib/Service/NotificationService.php: class named *NotificationService (declare x-openregister-notifications instead of imperative dispatch — ADR-031)
+lib/Notification/Notifier.php: implements INotifier (declare x-openregister-notifications instead of imperative dispatch — ADR-031)

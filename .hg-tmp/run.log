@@ -1,0 +1,242 @@
+[hydra-gates] findings logs: /home/rubenlinde/memcap-work/pipelinq-review/pq-hg/.hg-tmp/hydra-gates.j8HQsWya
+[hydra-gates] gate package: 5fc6e06baea00a2281f6f0679c9723280f7f4508 (git checkout at /home/rubenlinde/memcap-work/pipelinq-review/hg/hydra-gates/scripts)
+[hydra-gates] App dir: /home/rubenlinde/memcap-work/pipelinq-review/pq-hg (absolute)
+[hydra-gates] SCOPE-MODE: full
+[hydra-gates] File scope: the ENTIRE tracked tree — the default. A gate added or tightened after this code was written WILL surface its inherited debt here, and that is the point (hydra-gates/ADR-020-SUPERSEDED.md).
+[hydra-gates] Scope: full repo
+[hydra-gates] Delta base: origin/beta = ece379d0 — 1014 changed file(s).
+[hydra-gates] The DELTA gates (16, 29, 47, 48, 61) judge that change set, and gate 19 counts only the scenarios in spec files it touched. Every other gate reads the whole tree.
+[gate-1] spdx-headers: PASS
+[gate-2] forbidden-patterns: PASS
+[gate-3] stub-scan: PASS
+[gate-4] composer-audit: PASS
+[gate-5] route-auth: PASS
+[gate-6] orphan-auth: PASS
+[gate-7] no-admin-idor: PASS
+[gate-8] unsafe-auth-resolver: PASS
+[gate-9] semantic-auth: PASS
+[gate-10] initial-state: PASS
+[gate-11] admin-router: PASS
+[gate-12] nc-input-labels: PASS
+[gate-13] modal-isolation: PASS
+[gate-14] route-reachability: PASS
+[gate-15] dashboard-antipattern: PASS
+[gate-16] spec-coverage: FAIL — 9 changed method(s) missing @spec — see /home/rubenlinde/memcap-work/pipelinq-review/pq-hg/.hg-tmp/hydra-gates.j8HQsWya/hydra-gate-spec-coverage.log
+[gate-17] redundant-controller: PASS
+[gate-18] notification-dialect: PASS
+[gate-18] notification-dialect: WARNING — 2 imperative-dispatch site(s) (advisory, non-blocking) — see /home/rubenlinde/memcap-work/pipelinq-review/pq-hg/.hg-tmp/hydra-gates.j8HQsWya/hydra-gate-notification-dialect-warn.log
+[gate-19] e2e-coverage: WARNING — 815 scenario(s) missing @e2e; 668 of them NEW scenario(s) without a test — this change adds them, and an @e2e exclude does not satisfy a scenario it adds (advisory, non-blocking — see .github#477) — see /home/rubenlinde/memcap-work/pipelinq-review/pq-hg/.hg-tmp/hydra-gates.j8HQsWya/hydra-gate-e2e-coverage.log
+[gate-20] or-objectservice-api: PASS
+[gate-21] conflict-markers: PASS
+[gate-22] manifest-validation: PASS
+[gate-23] or-abstraction-anti-patterns: FAIL — 2 OR-abstraction match(es) — see /home/rubenlinde/memcap-work/pipelinq-review/pq-hg/.hg-tmp/hydra-gates.j8HQsWya/hydra-gate-or-abstraction-anti-patterns.log
+[gate-24] integration-parity: NOT APPLICABLE — no scripts/check-integration-parity.sh, and this repo registers no integration leaves at all — no `new LeafDescriptor(` in lib/ and neither `registerIntegration(` nor `integrations.register(` in src/. There is no server↔JS pair for parity to correlate.
+[gate-25] contract-coverage: PASS
+[gate-26] visual-coverage: FAIL — 2 new page component(s) missing a visual baseline — see /home/rubenlinde/memcap-work/pipelinq-review/pq-hg/.hg-tmp/hydra-gates.j8HQsWya/hydra-gate-visual-coverage.log
+[gate-27] no-phantom-cross-app-rpc: PASS
+[gate-28] license-triangle: PASS
+[gate-29] gitignore-then-commit: NOT APPLICABLE — the diff against 'origin/beta' adds no non-comment line to .gitignore, so there is no new ignore rule whose path could already be tracked. Diff-scoped out under ADR-020.
+[hydra-gates] gate-30 public-monitoring: 2 monitoring endpoint(s) inspected of 2 name-matched candidate(s); 2 scrape target(s). See /home/rubenlinde/memcap-work/pipelinq-review/pq-hg/.hg-tmp/hydra-gates.j8HQsWya/hydra-gate-public-monitoring-notes.log for every candidate this run did NOT judge, and why.
+[gate-30] public-monitoring: PASS
+[hydra-gates] gate-31 img-alt: 273 markup file(s) inspected, 0 unlabelled <img>.
+[gate-31] img-alt: PASS
+[hydra-gates] gate-32 semantic-controls: 273 markup file(s) inspected, 0 mouse-only click target.
+[gate-32] semantic-controls: PASS
+[gate-33] axe-core: NOT APPLICABLE — no tests/axe/report.json, and the caller did not set enable-axe — this repo has not opted into runtime accessibility enforcement. Runtime a11y (contrast / landmark / ARIA-validity / live-region) is therefore NOT enforced here, by a choice recorded in the caller's workflow rather than in this run. To enforce it, set `enable-axe: true` on ConductionNL/.github's quality.yml; this gate then becomes blocking and its absence becomes a failure.
+[gate-34] window-confirm: PASS
+[hydra-gates] gate-35 img-alt-empty-only: 273 markup file(s) inspected, 0 content image silenced with alt="".
+[gate-35] img-alt-empty-only: PASS
+[hydra-gates] gate-36 tabindex-positive: 378 file(s) inspected, 0 positive tabindex.
+[gate-36] tabindex-positive: PASS
+[gate-37] aria-hidden-focusable: PASS
+[gate-38] skip-link: PASS
+[gate-39] button-name: PASS
+[gate-40] form-label-association: PASS
+[gate-41] html-lang: PASS
+[gate-42] link-text-quality: PASS
+[gate-43] table-headers: PASS
+[gate-44] autocomplete-attr: PASS
+[gate-45] prefers-reduced-motion: PASS
+[gate-46] spec-anchor-existence: WARNING — 40 unresolved @e2e finding(s) from 40 distinct target(s) — fix the TARGET, not each tag. Report-only: set HYDRA_GATE_SPEC_ANCHOR_E2E_BLOCKING=1 for this repo once they are worked down. See /home/rubenlinde/memcap-work/pipelinq-review/pq-hg/.hg-tmp/hydra-gates.j8HQsWya/hydra-gate-spec-anchor-existence.log
+[gate-47] security-change-has-tests: PASS
+[gate-48] csrf-cochange: PASS
+[gate-49] controller-exception-translation: PASS
+[gate-50] security-config-fail-mode: PASS
+[gate-51] schema-property-titles: FAIL — 28 schema property(ies) missing a human-friendly title/description — see /home/rubenlinde/memcap-work/pipelinq-review/pq-hg/.hg-tmp/hydra-gates.j8HQsWya/hydra-gate-schema-property-titles.log
+[hydra-gates] gate-52 custom-widget-ratchet: the RATCHET half was NOT computed — the helper printed no base/head/delta counts, which it does only when it has a base ref to compare against. The JUSTIFICATION half (every custom kind:"widget" entry needs a `_note`) did run over 375 file(s). A PASS below covers that half only.
+[gate-52] custom-widget-ratchet: PASS
+[gate-53] effective-manifest-crossref: 15 WARN finding(s) (non-blocking) — see /home/rubenlinde/memcap-work/pipelinq-review/pq-hg/.hg-tmp/hydra-gates.j8HQsWya/hydra-gate-effective-manifest-crossref.log
+[gate-53] effective-manifest-crossref: PASS
+[gate-54] relation-dialect: PASS
+[gate-55] detail-page-discipline: PASS
+[gate-56] register-handler-resolution: PASS
+[gate-57] orphaned-write-capability: PASS
+[gate-58] e2e-networkidle: PASS
+[gate-59] unclosable-gate: PASS
+WARN  lib/Settings/pipelinq_register.json: Lead: concept "lead" must use "AccountArrowRightOutline", found "CashMultiple" (ADR-077 Tier B — SHOULD).
+[gate-60] icon-vocabulary: PASS
+[gate-61] NOTE: this run reads the whole tree, but gate-61 is always diff-scoped and judged this tree against the delta base 'origin/beta' (named by --base or $HYDRA_GATE_BASE_REF, or resolved from the remote's default branch). Read its verdict as a statement about that diff, not about the whole tree.
+[gate-61] listener-work-placement: PASS
+[gate-62] store-plane: PASS
+[gate-63] settings-surface: PASS
+[gate-64] apphost-autoload-prelude: PASS
+[gate-65] coding-standard-adoption: PASS
+[gate-66] openregister-dependency-shape: PASS
+[gate-67] openregister-contract-parity: NOT APPLICABLE — no lib/Contract/ — this repo does not own the OpenRegister contract, so it has nothing to keep in step.
+[gate-68] duplicate-index-pages: 1 WARN pair(s) (non-blocking; ADR-097 Decision 5 backlog) — see /home/rubenlinde/memcap-work/pipelinq-review/pq-hg/.hg-tmp/hydra-gates.j8HQsWya/hydra-gate-duplicate-index-pages.log
+[hydra-gates] gate-68 duplicate-index-pages: the RATCHET half was NOT computed — this run is full-scope (no --scope-to-diff), so every >1 pair above is reported WARN regardless of whether THIS change grew it. Re-run with --scope-to-diff (and a resolvable base) to have growth judged.
+[gate-68] duplicate-index-pages: PASS
+[gate-104] reports-one-page: PASS
+[gate-107] at .: app-chrome: 5 of 5 declared chrome items present and correctly placed.
+[gate-107] app-chrome: PASS
+[gate-69] page-type-discipline: PASS
+[gate-82] public-endpoint-throttling: PASS
+[gate-84] npm-supply-chain-config: PASS
+[gate-93] composer-cooldown-config: PASS
+[gate-94] retired-git-host-metadata: PASS
+[gate-95] adr-number-collision: PASS
+[gate-96] manifest-copy-style: WARNING — 2 App Store description string(s) break voice.md §8 (advisory, non-blocking; 204 fleet-wide as of 2026-09-09) — see /home/rubenlinde/memcap-work/pipelinq-review/pq-hg/.hg-tmp/hydra-gates.j8HQsWya/hydra-gate-manifest-copy-style.log
+[gate-96] manifest-copy-style: PASS
+[gate-102] manifest-l10n-coverage: PASS
+[gate-103] locale-duplication: PASS
+[gate-105] duplicate-page-refresh: PASS
+[gate-106] cross-app-schema-slug: PASS
+[gate-97] system-elevation-reachability: PASS
+[gate-100] setup-demo-data-first: PASS
+[gate-101] demo-data-coverage: PASS
+[gate-109] seed-required-slugs: NOT APPLICABLE — this repo ships no tests/e2e/ci-seed.sh with a required-schema list, so NO slug was inspected. Saying so is not the same as passing.
+[gate-108] shipped-object-properties: PASS
+[gate-98] repair-step-registration: FAIL — 1 repair step(s) written but never registered in appinfo/info.xml, so Nextcloud will not run them — see /home/rubenlinde/memcap-work/pipelinq-review/pq-hg/.hg-tmp/hydra-gates.j8HQsWya/hydra-gate-repair-registration.log
+[gate-110] migration-version-bump: PASS
+[gate-111] flow-node-taxonomy: NOT APPLICABLE — this repo ships no lib/Service/Flow/Nodes/, so it contributes no flow node of its own. A node it contributes from ANOTHER repository is deliberately not this gate's business — 38 of 65 step types on a measured instance are, and firing on them would be unfixable from the PR it fired on. See /home/rubenlinde/memcap-work/pipelinq-review/pq-hg/.hg-tmp/hydra-gates.j8HQsWya/hydra-gate-flow-node-taxonomy.log.
+[gate-70] walkthrough-flows-stop: PASS
+[gate-113] exclusion-evidence: 1052 exclusion(s) — 277 name a test that is here, 1 name one in another repository, 358 claim a tier without naming a member of it, 416 name no evidence at all.
+[gate-113] exclusion-evidence: PASS
+[gate-115] stale-fleet-app-id: 0 cross-app lookup(s) naming a retired id or namespace
+[gate-115] stale-fleet-app-id: this gate reads NAMES only. It cannot see whether a method or route you point at exists on the other side, and a repoint that lands on a missing method fails exactly as silently as the stale name did. Closing that half needs cross-repo surface reading (gate-67's model). This is not it.
+[gate-115] stale-fleet-app-id: 2 finding(s) recorded with a reason-bearing @stale-fleet-app-id exclude marker — read the reason beside each before trusting it, and re-check it against the other app's tree when that app changes
+[gate-115] stale-fleet-app-id: PASS
+[gate-112] newman-reach: 3 finding(s). 32 of 103 committed request(s) run.
+  V2  tests/integration/analytics.postman_collection.json holds 6 request(s) and sits outside newman-collection-path ('tests/newman'), so CI never runs it. Move it under 'tests/newman', repoint that input, or delete it.
+  V2  tests/integration/navi.postman_collection.json holds 3 request(s) and sits outside newman-collection-path ('tests/newman'), so CI never runs it. Move it under 'tests/newman', repoint that input, or delete it.
+  V2  tests/integration/pipelinq.postman_collection.json holds 62 request(s) and sits outside newman-collection-path ('tests/newman'), so CI never runs it. Move it under 'tests/newman', repoint that input, or delete it.
+  Fix: move the collection under newman-collection-path, repoint that input, delete it, or put `@newman exclude <reason>` in the collection's info.description.
+[gate-112] newman-reach: WARNING — 3 committed Postman collection(s) that CI never runs, or that run without asserting anything. Report-only: set HYDRA_GATE_NEWMAN_REACH_BLOCKING=1 for this repo once they are worked down. See /home/rubenlinde/memcap-work/pipelinq-review/pq-hg/.hg-tmp/hydra-gates.j8HQsWya/hydra-gate-newman-reach.log
+[gate-114] [header-action-budget] pages=96 with-actions=11 total=13 max=2 on OperationalDashboard
+[gate-114] header-action-budget: base=17 head=13 delta=-4
+[gate-114] header-action-budget: WARNING — 1 page(s) whose header actions bar grew against the base. Advisory while the fleet's bars are measured (dossiq's case page carries 12, the fleet's longest as of 2026-09-09); this does not block the merge. Check first whether the page already reaches the same gesture through a sidebar tab, a panel's own Add control or a widget button. Set HYDRA_GATE_HEADER_ACTION_BUDGET_BLOCKING=1 for this repo to make it block. See /home/rubenlinde/memcap-work/pipelinq-review/pq-hg/.hg-tmp/hydra-gates.j8HQsWya/hydra-gate-header-action-budget.log
+[gate-116] [connections-declaration] checked 1 declaration file(s), 0 finding(s)
+[gate-116] connections-declaration: PASS
+
+[gate-83] contract-surface-shift: NOT APPLICABLE — no lib/Contract/ — this repo publishes no contract interface, so it exposes no method surface whose magic-versus-declared shape consumers could have doubled.
+[hydra-gates] COVERAGE: 89 of 96 declared gates reported a result (7 not applicable to this repo/diff; 89 of 89 applicable gates ran).
+[hydra-gates] NOT APPLICABLE — subject matter absent from this repo or this diff.
+[hydra-gates] These do NOT count against coverage. Each stated its own reason above:
+[hydra-gates]   gate-24 integration-parity
+[hydra-gates]   gate-29 gitignore-then-commit
+[hydra-gates]   gate-33 axe-core
+[hydra-gates]   gate-67 openregister-contract-parity
+[hydra-gates]   gate-83 contract-surface-shift
+[hydra-gates]   gate-109 seed-required-slugs
+[hydra-gates]   gate-111 flow-node-taxonomy
+[hydra-gates] TIMING: 170.29 s of gate time across 96 verdict(s); one TIMING line per gate follows, slowest first (wall clock between consecutive verdict lines; the clock starts at gate 1).
+[hydra-gates] TIMING gate-3 stub-scan: 29.85s
+[hydra-gates] TIMING gate-20 or-objectservice-api: 29.54s
+[hydra-gates] TIMING gate-5 route-auth: 16.00s
+[hydra-gates] TIMING gate-21 conflict-markers: 14.92s
+[hydra-gates] TIMING gate-13 modal-isolation: 7.93s
+[hydra-gates] TIMING gate-45 prefers-reduced-motion: 7.68s
+[hydra-gates] TIMING gate-14 route-reachability: 5.41s
+[hydra-gates] TIMING gate-16 spec-coverage: 5.02s
+[hydra-gates] TIMING gate-66 openregister-dependency-shape: 4.53s
+[hydra-gates] TIMING gate-7 no-admin-idor: 4.42s
+[hydra-gates] TIMING gate-46 spec-anchor-existence: 3.45s
+[hydra-gates] TIMING gate-47 security-change-has-tests: 2.99s
+[hydra-gates] TIMING gate-101 demo-data-coverage: 2.83s
+[hydra-gates] TIMING gate-57 orphaned-write-capability: 2.52s
+[hydra-gates] TIMING gate-115 stale-fleet-app-id: 2.49s
+[hydra-gates] TIMING gate-6 orphan-auth: 2.01s
+[hydra-gates] TIMING gate-18 notification-dialect: 1.94s
+[hydra-gates] TIMING gate-2 forbidden-patterns: 1.85s
+[hydra-gates] TIMING gate-59 unclosable-gate: 1.83s
+[hydra-gates] TIMING gate-25 contract-coverage: 1.57s
+[hydra-gates] TIMING gate-22 manifest-validation: 1.50s
+[hydra-gates] TIMING gate-30 public-monitoring: 1.46s
+[hydra-gates] TIMING gate-27 no-phantom-cross-app-rpc: 1.43s
+[hydra-gates] TIMING gate-50 security-config-fail-mode: 1.40s
+[hydra-gates] TIMING gate-10 initial-state: 1.21s
+[hydra-gates] TIMING gate-17 redundant-controller: 1.06s
+[hydra-gates] TIMING gate-53 effective-manifest-crossref: 1.00s
+[hydra-gates] TIMING gate-62 store-plane: 0.92s
+[hydra-gates] TIMING gate-8 unsafe-auth-resolver: 0.84s
+[hydra-gates] TIMING gate-34 window-confirm: 0.71s
+[hydra-gates] TIMING gate-113 exclusion-evidence: 0.71s
+[hydra-gates] TIMING gate-26 visual-coverage: 0.60s
+[hydra-gates] TIMING gate-9 semantic-auth: 0.59s
+[hydra-gates] TIMING gate-4 composer-audit: 0.56s
+[hydra-gates] TIMING gate-61 listener-work-placement: 0.51s
+[hydra-gates] TIMING gate-11 admin-router: 0.41s
+[hydra-gates] TIMING gate-36 tabindex-positive: 0.40s
+[hydra-gates] TIMING gate-54 relation-dialect: 0.38s
+[hydra-gates] TIMING gate-28 license-triangle: 0.37s
+[hydra-gates] TIMING gate-51 schema-property-titles: 0.36s
+[hydra-gates] TIMING gate-12 nc-input-labels: 0.35s
+[hydra-gates] TIMING gate-35 img-alt-empty-only: 0.35s
+[hydra-gates] TIMING gate-31 img-alt: 0.33s
+[hydra-gates] TIMING gate-32 semantic-controls: 0.30s
+[hydra-gates] TIMING gate-49 controller-exception-translation: 0.30s
+[hydra-gates] TIMING gate-116 connections-declaration: 0.22s
+[hydra-gates] TIMING gate-82 public-endpoint-throttling: 0.21s
+[hydra-gates] TIMING gate-112 newman-reach: 0.21s
+[hydra-gates] TIMING gate-40 form-label-association: 0.19s
+[hydra-gates] TIMING gate-23 or-abstraction-anti-patterns: 0.18s
+[hydra-gates] TIMING gate-52 custom-widget-ratchet: 0.18s
+[hydra-gates] TIMING gate-55 detail-page-discipline: 0.18s
+[hydra-gates] TIMING gate-37 aria-hidden-focusable: 0.17s
+[hydra-gates] TIMING gate-114 header-action-budget: 0.17s
+[hydra-gates] TIMING gate-39 button-name: 0.15s
+[hydra-gates] TIMING gate-44 autocomplete-attr: 0.15s
+[hydra-gates] TIMING gate-58 e2e-networkidle: 0.15s
+[hydra-gates] TIMING gate-94 retired-git-host-metadata: 0.15s
+[hydra-gates] TIMING gate-42 link-text-quality: 0.14s
+[hydra-gates] TIMING gate-43 table-headers: 0.14s
+[hydra-gates] TIMING gate-60 icon-vocabulary: 0.13s
+[hydra-gates] TIMING gate-15 dashboard-antipattern: 0.10s
+[hydra-gates] TIMING gate-110 migration-version-bump: 0.10s
+[hydra-gates] TIMING gate-56 register-handler-resolution: 0.09s
+[hydra-gates] TIMING gate-63 settings-surface: 0.09s
+[hydra-gates] TIMING gate-64 apphost-autoload-prelude: 0.09s
+[hydra-gates] TIMING gate-70 walkthrough-flows-stop: 0.09s
+[hydra-gates] TIMING gate-107 app-chrome: 0.09s
+[hydra-gates] TIMING gate-38 skip-link: 0.08s
+[hydra-gates] TIMING gate-48 csrf-cochange: 0.08s
+[hydra-gates] TIMING gate-69 page-type-discipline: 0.08s
+[hydra-gates] TIMING gate-103 locale-duplication: 0.08s
+[hydra-gates] TIMING gate-108 shipped-object-properties: 0.08s
+[hydra-gates] TIMING gate-1 spdx-headers: 0.07s
+[hydra-gates] TIMING gate-68 duplicate-index-pages: 0.07s
+[hydra-gates] TIMING gate-102 manifest-l10n-coverage: 0.07s
+[hydra-gates] TIMING gate-104 reports-one-page: 0.07s
+[hydra-gates] TIMING gate-105 duplicate-page-refresh: 0.07s
+[hydra-gates] TIMING gate-106 cross-app-schema-slug: 0.07s
+[hydra-gates] TIMING gate-41 html-lang: 0.06s
+[hydra-gates] TIMING gate-65 coding-standard-adoption: 0.06s
+[hydra-gates] TIMING gate-67 openregister-contract-parity: 0.06s
+[hydra-gates] TIMING gate-84 npm-supply-chain-config: 0.06s
+[hydra-gates] TIMING gate-93 composer-cooldown-config: 0.06s
+[hydra-gates] TIMING gate-95 adr-number-collision: 0.06s
+[hydra-gates] TIMING gate-96 manifest-copy-style: 0.06s
+[hydra-gates] TIMING gate-98 repair-step-registration: 0.06s
+[hydra-gates] TIMING gate-109 seed-required-slugs: 0.06s
+[hydra-gates] TIMING gate-111 flow-node-taxonomy: 0.06s
+[hydra-gates] TIMING gate-100 setup-demo-data-first: 0.05s
+[hydra-gates] TIMING gate-24 integration-parity: 0.04s
+[hydra-gates] TIMING gate-83 contract-surface-shift: 0.03s
+[hydra-gates] TIMING gate-29 gitignore-then-commit: 0.02s
+[hydra-gates] TIMING gate-33 axe-core: 0.01s
+[hydra-gates] TIMING gate-19 e2e-coverage: -0.47s
+[hydra-gates] TIMING gate-97 system-elevation-reachability: -1.01s
+[hydra-gates] 4 gate(s) reported ADVISORY findings — real, measured, and NOT blocking this run.
+[hydra-gates] They are named WARNING above, each with its count and its tracking issue.
+[hydra-gates] A green verdict below means 'nothing BLOCKING failed', not 'nothing was found'.
+[hydra-gates] 5 gate(s) failed

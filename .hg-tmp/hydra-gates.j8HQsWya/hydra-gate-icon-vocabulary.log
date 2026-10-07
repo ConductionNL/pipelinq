@@ -1,0 +1,3 @@
+WARN  lib/Settings/pipelinq_register.json: Lead: concept "lead" must use "AccountArrowRightOutline", found "CashMultiple" (ADR-077 Tier B — SHOULD).
+
+checked 77 manifest(s): 0 failure(s), 1 warning(s)

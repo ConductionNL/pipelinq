@@ -1,0 +1,3 @@
+at .: app-chrome: 5 of 5 declared chrome items present and correctly placed.
+{"status":"passed","checked":5,"failed":0,"warned":0}
+[app-chrome] findings=0 warnings=0

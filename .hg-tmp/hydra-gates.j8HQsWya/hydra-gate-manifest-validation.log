@@ -1,0 +1,6 @@
+[check_manifest] base schema: /home/rubenlinde/memcap-work/pipelinq-review/hg/hydra-gates/scripts/schemas/app-manifest-v2.schema.json
+[check_manifest] AppHost blocks (observability, deepLinks) validated against the hydra-vendored canonical ADR-040 schema
+[check_manifest] Ajv validation against merged canonical schema: PASS
+{"status":"passed","checked":1,"failed":0}
+--- advisory: the app's own `npm run check:manifest` (NOT the gate verdict) ---
+Manifest OK: v1.1.0 | 53 pages | 28 menu items | deps: openregister, [object Object], [object Object], [object Object], [object Object], [object Object], [object Object]

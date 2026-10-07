@@ -1,0 +1,209 @@
+<?php
+
+   
+                                       
+  
+                                                                       
+                                                                           
+                                            
+  
+                       
+                                    
+  
+                                             
+                                  
+                                                                                    
+  
+                         
+  
+                                                 
+  
+                                                                                 
+   
+
+declare(strict_types=1);
+
+namespace OCA\Pipelinq\Controller;
+
+use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Lifecycle\ForecastAccessPolicy;
+use OCA\Pipelinq\Service\ExchangeRateService;
+use OCA\Pipelinq\Service\ForecastDealService;
+use OCA\Pipelinq\Service\ForecastService;
+use OCA\Pipelinq\Service\QuotaService;
+use OCA\Pipelinq\Service\SnapshotGenerationService;
+use OCP\AppFramework\Controller;
+use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
+use OCP\AppFramework\Http\JSONResponse;
+use OCP\IAppConfig;
+use OCP\IRequest;
+
+   
+                                                      
+  
+                                                                           
+                                                                    
+  
+                                                                                        
+                                                     
+   
+class ForecastSettingsController extends Controller {
+	   
+                
+   
+                                         
+                                                       
+                                                                                   
+    
+	public function __construct(
+		IRequest $request,
+		private IAppConfig $appConfig,
+		private ExchangeRateService $exchangeRate,
+	) {
+		parent::__construct(appName: Application::APP_ID, request: $request);
+	}                   
+
+	   
+                                            
+   
+                                                  
+   
+                                                                                  
+                                                                                             
+    
+	#[AuthorizedAdminSetting(Application::APP_ID)]
+	public function index(): JSONResponse {
+		$app = Application::APP_ID;
+		$greenDefault = (string)ForecastService::ACCURACY_GREEN_DEFAULT;
+		$amberDefault = (string)ForecastService::ACCURACY_AMBER_DEFAULT;
+		$thresholdKey = ForecastDealService::COMMIT_THRESHOLD_KEY;
+		$thresholdValue = ForecastDealService::COMMIT_THRESHOLD_DEFAULT;
+		$atRiskPctKey = QuotaService::AT_RISK_PERCENT_KEY;
+		$atRiskPctValue = QuotaService::AT_RISK_PERCENT_DEFAULT;
+
+		return new JSONResponse(
+			[
+				'commit_threshold' => $this->appConfig->getValueInt($app, $thresholdKey, $thresholdValue),
+				'pipeline_target' => $this->appConfig->getValueInt($app, ForecastService::PIPELINE_TARGET_KEY, 0),
+				'generation_timezone' => $this->appConfig->getValueString($app, 'forecast_generation_timezone', 'UTC'),
+				'generation_day' => $this->appConfig->getValueInt($app, 'forecast_generation_day', 1),
+				'generation_hour' => $this->appConfig->getValueInt($app, 'forecast_generation_hour', 6),
+				'accuracy_green' => $this->appConfig->getValueString($app, ForecastService::ACCURACY_GREEN_KEY, $greenDefault),
+				'accuracy_amber' => $this->appConfig->getValueString($app, ForecastService::ACCURACY_AMBER_KEY, $amberDefault),
+				'at_risk_percent' => $this->appConfig->getValueInt($app, $atRiskPctKey, $atRiskPctValue),
+				'at_risk_days' => $this->appConfig->getValueInt($app, QuotaService::AT_RISK_DAYS_KEY, QuotaService::AT_RISK_DAYS_DEFAULT),
+				'reporting_currency' => $this->exchangeRate->getReportingCurrency(),
+				'exchange_rates' => (object)$this->exchangeRate->getRates(),
+				'manager_group' => $this->appConfig->getValueString($app, ForecastAccessPolicy::MANAGER_GROUP_KEY, ''),
+				'team_groups' => $this->appConfig->getValueString($app, SnapshotGenerationService::TEAMS_KEY, ''),
+			]
+		);
+	}             
+
+	   
+                                           
+   
+                                                                             
+   
+                                         
+   
+                                                                                  
+                                                                                             
+   
+                                                                                        
+                                                                                              
+                                                                                             
+                                                                       
+    
+	#[AuthorizedAdminSetting(Application::APP_ID)]
+	public function update(): JSONResponse {
+		$params = $this->request->getParams();
+
+		if (isset($params['commit_threshold']) === true) {
+			$threshold = (int)$params['commit_threshold'];
+			if ($threshold < 0) {
+				return new JSONResponse(['error' => 'commit_threshold must be non-negative.'], 400);
+			}
+
+			$this->appConfig->setValueInt(Application::APP_ID, ForecastDealService::COMMIT_THRESHOLD_KEY, $threshold);
+		}
+
+		if (isset($params['pipeline_target']) === true) {
+			$target = (int)$params['pipeline_target'];
+			if ($target < 0) {
+				return new JSONResponse(['error' => 'pipeline_target must be non-negative.'], 400);
+			}
+
+			$this->appConfig->setValueInt(Application::APP_ID, ForecastService::PIPELINE_TARGET_KEY, $target);
+		}
+
+		if (isset($params['generation_timezone']) === true) {
+			$this->appConfig->setValueString(Application::APP_ID, 'forecast_generation_timezone', (string)$params['generation_timezone']);
+		}
+
+		if (isset($params['generation_day']) === true) {
+			$day = (int)$params['generation_day'];
+			if ($day < 1 || $day > 7) {
+				return new JSONResponse(['error' => 'generation_day must be 1-7.'], 400);
+			}
+
+			$this->appConfig->setValueInt(Application::APP_ID, 'forecast_generation_day', $day);
+		}
+
+		if (isset($params['generation_hour']) === true) {
+			$hour = (int)$params['generation_hour'];
+			if ($hour < 0 || $hour > 23) {
+				return new JSONResponse(['error' => 'generation_hour must be 0-23.'], 400);
+			}
+
+			$this->appConfig->setValueInt(Application::APP_ID, 'forecast_generation_hour', $hour);
+		}
+
+		if (isset($params['accuracy_green']) === true) {
+			$this->appConfig->setValueString(Application::APP_ID, ForecastService::ACCURACY_GREEN_KEY, (string)(float)$params['accuracy_green']);
+		}
+
+		if (isset($params['accuracy_amber']) === true) {
+			$this->appConfig->setValueString(Application::APP_ID, ForecastService::ACCURACY_AMBER_KEY, (string)(float)$params['accuracy_amber']);
+		}
+
+		if (isset($params['at_risk_percent']) === true) {
+			$this->appConfig->setValueInt(Application::APP_ID, QuotaService::AT_RISK_PERCENT_KEY, (int)$params['at_risk_percent']);
+		}
+
+		if (isset($params['at_risk_days']) === true) {
+			$this->appConfig->setValueInt(Application::APP_ID, QuotaService::AT_RISK_DAYS_KEY, (int)$params['at_risk_days']);
+		}
+
+		if (isset($params['reporting_currency']) === true) {
+			                                                               
+			                                                         
+			$currency = strtoupper(trim((string)$params['reporting_currency']));
+			if (preg_match('/^[A-Z]{3}$/', $currency) !== 1) {
+				return new JSONResponse(['error' => 'reporting_currency must be a three-letter currency code.'], 400);
+			}
+
+			$this->appConfig->setValueString(Application::APP_ID, ExchangeRateService::REPORTING_CURRENCY_KEY, $currency);
+		}
+
+		if (isset($params['exchange_rates']) === true) {
+			try {
+				$rates = $this->exchangeRate->normaliseRates(input: (array)$params['exchange_rates']);
+			} catch (\InvalidArgumentException $e) {
+				return new JSONResponse(['error' => $e->getMessage()], 400);
+			}
+
+			$this->appConfig->setValueString(Application::APP_ID, ExchangeRateService::RATES_KEY, (string)json_encode($rates));
+		}
+
+		if (isset($params['manager_group']) === true) {
+			$this->appConfig->setValueString(Application::APP_ID, ForecastAccessPolicy::MANAGER_GROUP_KEY, (string)$params['manager_group']);
+		}
+
+		if (isset($params['team_groups']) === true) {
+			$this->appConfig->setValueString(Application::APP_ID, SnapshotGenerationService::TEAMS_KEY, (string)$params['team_groups']);
+		}
+
+		return new JSONResponse(['status' => 'saved']);
+	}              
+}           

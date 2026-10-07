@@ -1,0 +1,4 @@
+[gate-26] tests/e2e/visual/** is NOT credited: tests/e2e/playwright.config.ts: no project collects tests/e2e/visual (ignored or outside its testDir). Only executed e2e tests and @visual exclude count.
+src/views/FeaturesRoadmapView.vue — new page component missing visual-regression baseline that CI runs (tests/e2e/visual/**) / e2e test / @visual exclude
+src/views/store/StoreGallery.vue — new page component missing visual-regression baseline that CI runs (tests/e2e/visual/**) / e2e test / @visual exclude
+[gate-26] visual-coverage: FAIL — 2 new page component(s) without a visual baseline

@@ -1,0 +1,2 @@
+FAIL lib/Repair/CreateServiceGroup.php: CreateServiceGroup implements IRepairStep and is named nowhere in appinfo/info.xml <repair-steps>, so Nextcloud will never run it. Add <step>OCA\Pipelinq\Repair\CreateServiceGroup</step> to <post-migration> and, if it should also run on a fresh install, to <install>. If it is withheld ON PURPOSE, record that in info.xml as `hydra-gate-98 held: OCA\Pipelinq\Repair\CreateServiceGroup — <why, and what would let it be wired up>`.
+checked 7 repair step(s)

@@ -1,0 +1,40 @@
+tests/e2e/spec-coverage/loyalty.spec.ts: @e2e anchor not found in openspec/changes/loyalty-program/specs.md → #loyalty-reporting-page
+tests/e2e/spec-coverage/loyalty.spec.ts: @e2e anchor not found in openspec/changes/loyalty-program/specs.md → #loyalty-reporting-content
+tests/e2e/spec-coverage/features-roadmap.spec.ts: @e2e anchor not found in openspec/specs/notifications-activity/spec.md → #features-roadmap-page
+tests/e2e/spec-coverage/features-roadmap.spec.ts: @e2e anchor not found in openspec/specs/notifications-activity/spec.md → #features-roadmap-actions
+tests/e2e/spec-coverage/features-roadmap.spec.ts: @e2e anchor not found in openspec/specs/notifications-activity/spec.md → #features-roadmap-roadmap-toggle
+tests/e2e/spec-coverage/billing-categories.spec.ts: @e2e anchor not found in openspec/specs/pos-transaction-core/spec.md → #billing-categories-page
+tests/e2e/spec-coverage/billing-categories.spec.ts: @e2e anchor not found in openspec/specs/pos-transaction-core/spec.md → #billing-categories-create
+tests/e2e/spec-coverage/billing-categories.spec.ts: @e2e anchor not found in openspec/specs/pos-transaction-core/spec.md → #billing-categories-list
+tests/e2e/spec-coverage/bi-export-jobs-bug.spec.ts: @e2e anchor not found in openspec/changes/bi-export-and-data-warehouse-sink/specs.md → #REQ-BIE-002-ui-shell
+tests/e2e/spec-coverage/bi-export-jobs-bug.spec.ts: @e2e anchor not found in openspec/changes/bi-export-and-data-warehouse-sink/specs.md → #REQ-BIE-002-ui-list
+tests/e2e/spec-coverage/complaints.spec.ts: @e2e anchor not found in openspec/specs/klachtenregistratie/spec.md → #complaints-index
+tests/e2e/spec-coverage/complaints.spec.ts: @e2e anchor not found in openspec/specs/klachtenregistratie/spec.md → #complaints-list-table
+tests/e2e/spec-coverage/complaints.spec.ts: @e2e anchor not found in openspec/specs/klachtenregistratie/spec.md → #complaints-create-modal
+tests/e2e/spec-coverage/my-work.spec.ts: @e2e anchor not found in openspec/specs/my-work/spec.md → #quick-action-buttons-displayed
+tests/e2e/spec-coverage/my-work.spec.ts: @e2e anchor not found in openspec/specs/my-work/spec.md → #manual-refresh
+tests/e2e/spec-coverage/my-work.spec.ts: @e2e anchor not found in openspec/specs/my-work/spec.md → #display-personal-kpi-tiles
+tests/e2e/spec-coverage/my-work.spec.ts: @e2e anchor not found in openspec/specs/my-work/spec.md → #view-assigned-leads--requests-and-tasks
+tests/e2e/spec-coverage/contacts.spec.ts: @e2e anchor not found in openspec/specs/contacts-sync/spec.md → #contacts-index
+tests/e2e/spec-coverage/contacts.spec.ts: @e2e anchor not found in openspec/specs/contacts-sync/spec.md → #contacts-list-table
+tests/e2e/spec-coverage/contacts.spec.ts: @e2e anchor not found in openspec/specs/contacts-sync/spec.md → #contacts-create-modal
+tests/e2e/spec-coverage/returns.spec.ts: @e2e anchor not found in openspec/specs/pos-refund-return/spec.md → #returns-page
+tests/e2e/spec-coverage/returns.spec.ts: @e2e anchor not found in openspec/specs/pos-refund-return/spec.md → #returns-add-item
+tests/e2e/spec-coverage/returns.spec.ts: @e2e anchor not found in openspec/specs/pos-refund-return/spec.md → #returns-list
+tests/e2e/spec-coverage/products.spec.ts: @e2e anchor not found in openspec/specs/product-service-catalog/spec.md → #products-index
+tests/e2e/spec-coverage/products.spec.ts: @e2e anchor not found in openspec/specs/product-service-catalog/spec.md → #products-list-table
+tests/e2e/spec-coverage/products.spec.ts: @e2e anchor not found in openspec/specs/product-service-catalog/spec.md → #products-create-modal
+tests/e2e/spec-coverage/cti-integration.spec.ts: @e2e target file not found → openspec/changes/cti-screenpop-adapter/specs.md#cti-settings-page
+tests/e2e/spec-coverage/cti-integration.spec.ts: @e2e target file not found → openspec/changes/cti-screenpop-adapter/specs.md#cti-settings-actions
+tests/e2e/spec-coverage/cti-integration.spec.ts: @e2e target file not found → openspec/changes/cti-screenpop-adapter/specs.md#cti-event-log-page
+tests/e2e/spec-coverage/cti-integration.spec.ts: @e2e target file not found → openspec/changes/cti-screenpop-adapter/specs.md#cti-event-log-reload
+tests/e2e/spec-coverage/pipelines.spec.ts: @e2e anchor not found in openspec/specs/pipeline/spec.md → #pipelines-index
+tests/e2e/spec-coverage/pipelines.spec.ts: @e2e anchor not found in openspec/specs/pipeline/spec.md → #pipelines-list-table
+tests/e2e/spec-coverage/pipelines.spec.ts: @e2e anchor not found in openspec/specs/pipeline/spec.md → #pipelines-create-modal
+tests/e2e/spec-coverage/forecast.spec.ts: @e2e anchor not found in openspec/changes/forecast-roll-up-and-categories/specs.md → #forecast-page
+tests/e2e/spec-coverage/forecast.spec.ts: @e2e anchor not found in openspec/changes/forecast-roll-up-and-categories/specs.md → #forecast-export
+tests/e2e/spec-coverage/barcode-lookup.spec.ts: @e2e anchor not found in openspec/specs/pos-barcode-scan/spec.md → #barcode-lookup-page
+tests/e2e/spec-coverage/barcode-lookup.spec.ts: @e2e anchor not found in openspec/specs/pos-barcode-scan/spec.md → #barcode-lookup-input
+tests/e2e/spec-coverage/tasks.spec.ts: @e2e anchor not found in openspec/specs/task-background-jobs/spec.md → #tasks-index
+tests/e2e/spec-coverage/tasks.spec.ts: @e2e anchor not found in openspec/specs/task-background-jobs/spec.md → #tasks-list-table
+tests/e2e/spec-coverage/tasks.spec.ts: @e2e anchor not found in openspec/specs/task-background-jobs/spec.md → #tasks-create-modal

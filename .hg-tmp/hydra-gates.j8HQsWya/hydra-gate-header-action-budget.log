@@ -1,0 +1,16 @@
+[header-action-budget] Dashboard: 2
+[header-action-budget] OperationalDashboard: 2
+[header-action-budget] Articles: 1
+[header-action-budget] Integrations: 1
+[header-action-budget] KccWerkplek: 1
+[header-action-budget] PosRefunds: 1
+[header-action-budget] PosTransactions: 1
+[header-action-budget] Resources: 1
+[header-action-budget] Services: 1
+[header-action-budget] SocialPosts: 1
+[header-action-budget] TicketDetail: 1
+[header-action-budget] pages=96 with-actions=11 total=13 max=2 on OperationalDashboard
+[header-action-budget] base=17 head=13 delta=-4
+WARN TicketDetail: header actions went 0 to 1 (+1). An actions bar grows one button at a time and nobody reads twelve. Before adding one, check whether the page already reaches it: a sidebar tab, a panel's own Add control, or a widget button is the same gesture one click deeper, and a second copy in the header is the duplication this ratchet is here to catch. If the button belongs in the bar, say in the page's _note which one it replaces.
+[header-action-budget] findings=1
+checked 96 page(s) in the effective manifest
