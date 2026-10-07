@@ -41,23 +41,45 @@ class DefaultPipelineService {
 	 * @param PipelineStageData $stageData The stage data provider.
 	 * @param LoggerInterface $logger The logger.
 	 * @param ObjectServiceInterface $objectService OpenRegister's published object service.
+	 * @param SystemServiceAccount $systemAccount The account the writes run as when nobody is signed in.
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,
 		private PipelineStageData $stageData,
 		private LoggerInterface $logger,
 		private readonly ObjectServiceInterface $objectService,
+		private readonly SystemServiceAccount $systemAccount,
 	) {
 	}//end __construct()
 
 	/**
 	 * Create default pipelines if none exist.
 	 *
+	 * A repair step (`occ upgrade`, app install) runs with nobody signed in,
+	 * and OpenRegister refuses an Anonymous write. Then the pipelines are
+	 * written as the pipelinq system account, with OpenRegister's checks on.
+	 *
 	 * @return void
 	 *
 	 * @spec openspec/specs/admin-settings/spec.md
+	 * @spec openspec/changes/review-part-two/specs/pipeline/spec.md
 	 */
 	public function createDefaultPipelines(): void {
+		try {
+			$this->systemAccount->runAsCurrentOrSystem(fn () => $this->createDefaultPipelinesAsCaller());
+		} catch (\Exception $e) {
+			$this->logger->error('Pipelinq: Failed to create default pipelines', ['exception' => $e->getMessage()]);
+		}
+	}//end createDefaultPipelines()
+
+	/**
+	 * Create default pipelines if none exist, as the active user.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/review-part-two/specs/pipeline/spec.md
+	 */
+	private function createDefaultPipelinesAsCaller(): void {
 		$registerId = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
 		$pipelineSchemaId = $this->appConfig->getValueString(Application::APP_ID, 'pipeline_schema', '');
 
@@ -113,7 +135,7 @@ class DefaultPipelineService {
 		} catch (\Exception $e) {
 			$this->logger->error('Pipelinq: Failed to create default pipelines', ['exception' => $e->getMessage()]);
 		}//end try
-	}//end createDefaultPipelines()
+	}//end createDefaultPipelinesAsCaller()
 
 	/**
 	 * Save a pipeline object.

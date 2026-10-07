@@ -2641,7 +2641,7 @@
                     "schema": "appointmentBooking",
                     "slug": "booking-001-completed"
                 },
-                "customerId": "00000000-0000-0000-0000-000000000001",
+                "customerId": "client-bakker-bv",
                 "serviceId": "service-haircut-simple",
                 "resourceAssignments": [
                     {
@@ -2681,7 +2681,7 @@
                     "schema": "appointmentBooking",
                     "slug": "booking-002-confirmed"
                 },
-                "customerId": "00000000-0000-0000-0000-000000000002",
+                "customerId": "client-zonnereizen",
                 "serviceId": "service-color-and-cut",
                 "resourceAssignments": [
                     {

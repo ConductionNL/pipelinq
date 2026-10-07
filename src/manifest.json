@@ -3587,17 +3587,6 @@
 			}
 		},
 		{
-			"id": "TaskNew",
-			"route": "/tasks/new",
-			"type": "custom",
-			"title": "New task",
-			"component": "CnWizardDialog",
-			"config": {
-				"register": "pipelinq",
-				"schema": "crmTask"
-			}
-		},
-		{
 			"id": "TaskDetail",
 			"route": "/tasks/:id",
 			"type": "detail",
@@ -3699,13 +3688,13 @@
 						"widget": "fkResolve",
 						"widgetProps": {
 							"register": "pipelinq",
-							"schema": "productcategory",
+							"schema": "productCategory",
 							"labelField": "name"
 						}
 					},
 					{ "key": "type", "label": "Type" },
 					{ "key": "status", "label": "Status" },
-					{ "key": "unitPrice", "label": "Price" }
+					{ "key": "unitPrice", "label": "Price", "formatter": "objectCurrency", "formatterOptions": { "decimals": 2 } }
 				],
 				"sidebar": {
 					"enabled": true,
@@ -3766,9 +3755,9 @@
 							"columns": [
 								{ "key": "lead", "label": "Lead" },
 								{ "key": "quantity", "label": "Qty" },
-								{ "key": "unitPrice", "label": "Unit price" },
+								{ "key": "unitPrice", "label": "Unit price", "format": { "style": "currency", "currency": "@config.currency" } },
 								{ "key": "discount", "label": "Discount %" },
-								{ "key": "total", "label": "Line total" }
+								{ "key": "total", "label": "Line total", "format": { "style": "currency", "currency": "@config.currency" } }
 							],
 							"limit": 25,
 							"allowCreate": false,
