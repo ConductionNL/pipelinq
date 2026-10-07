@@ -27,7 +27,8 @@
 				@update:modelValue="(v) => (form.category = v)" />
 		</div>
 
-		<!-- Value + Probability row -->
+		<!-- Value + currency row. The win chance is the qualification score
+		     (pipeline-numbers-tell-the-truth), so there is no probability input. -->
 		<div class="form-row">
 			<div class="form-group">
 				<NcTextField
@@ -49,19 +50,6 @@
 					:helperText="errors.currency"
 					@update:modelValue="
 						(v) => (form.currency = normaliseCurrency(v))
-					" />
-			</div>
-			<div class="form-group">
-				<NcTextField
-					:modelValue="
-						form.probability === null ? '' : String(form.probability)
-					"
-					:label="t('pipelinq', 'Probability %')"
-					type="number"
-					:error="!!errors.probability"
-					:helperText="errors.probability"
-					@update:modelValue="
-						(v) => (form.probability = v === '' ? null : Number(v))
 					" />
 			</div>
 		</div>
@@ -198,7 +186,6 @@
 
 <script>
 import { CnResourceSelect } from '@conduction/nextcloud-vue'
-import { loadState } from '@nextcloud/initial-state'
 import {
 	NcButton,
 	NcDateTimePickerNative,
@@ -211,21 +198,9 @@ import linkedPartyCascadeMixin from '../../mixins/linkedPartyCascadeMixin.js'
 import { isCurrencyCode, normaliseCurrency } from '../../services/leadCurrency.js'
 import { toDateInputString, toDateObject } from '../../services/localeUtils.js'
 import { pipelineAppliesTo } from '../../services/pipelineUtils.js'
+import { reportingCurrency } from '../../services/reportingCurrency.js'
 import { useLeadSourcesStore } from '../../store/modules/leadSources.js'
 import { useObjectStore } from '../../store/modules/object.js'
-
-/**
- * The app's reporting currency, as the setup wizard stored it.
- *
- * @return {string} The currency code.
- */
-function reportingCurrency() {
-	try {
-		return loadState('pipelinq', 'config', {}).currency || 'EUR'
-	} catch {
-		return 'EUR'
-	}
-}
 
 export default {
 	name: 'LeadForm',
@@ -275,7 +250,6 @@ export default {
 				// The deal's currency (pipelinq#2040). New deals start in the
 				// reporting currency; the forecast converts any other one.
 				currency: reportingCurrency(),
-				probability: null,
 				source: null,
 				priority: 'normal',
 				expectedCloseDate: null,
@@ -388,15 +362,6 @@ export default {
 					'Use a three-letter currency code, such as EUR or USD',
 				)
 			}
-			if (
-				this.form.probability !== null
-				&& (this.form.probability < 0 || this.form.probability > 100)
-			) {
-				errors.probability = t(
-					'pipelinq',
-					'Probability must be between 0 and 100',
-				)
-			}
 
 			// A lead belongs to a pipeline and to a client; the schema requires
 			// both. Catching it here means the user sees which field is missing,
@@ -448,6 +413,7 @@ export default {
 				category: this.lead.category || '',
 				value: this.lead.value ?? null,
 				currency: this.lead.currency || reportingCurrency(),
+				// Not editable any more; carried so a full save keeps the stored value.
 				probability: this.lead.probability ?? null,
 				source: this.lead.source || null,
 				priority: this.lead.priority || 'normal',
@@ -467,10 +433,16 @@ export default {
 		normaliseCurrency,
 
 		/**
+		 * Put a new lead on the default lead pipeline, or the first one when
+		 * none is marked default, in its first open stage. Every lead sits in
+		 * a stage; the server fills one in too, this shows it in the form.
+		 *
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-41
+		 * @spec openspec/changes/pipeline-numbers-tell-the-truth/specs/lead-management/spec.md
 		 */
 		autoAssignDefaultPipeline() {
-			const defaultPipeline = this.leadPipelines.find((p) => p.isDefault)
+			const defaultPipeline =
+				this.leadPipelines.find((p) => p.isDefault) || this.leadPipelines[0]
 			if (defaultPipeline) {
 				this.form.pipeline = defaultPipeline.id
 				const stages = [...(defaultPipeline.stages || [])].sort(
@@ -502,6 +474,29 @@ export default {
 		},
 
 		/**
+		 * The stage order of the chosen stage, and a fresh entry time when the
+		 * stage changed, so the board and the aging figures stay consistent.
+		 *
+		 * @param {string|undefined} stage The chosen stage name.
+		 * @return {object} The fields to add to the saved lead.
+		 * @spec openspec/changes/pipeline-numbers-tell-the-truth/specs/lead-management/spec.md
+		 */
+		stagePlacement(stage) {
+			if (!stage) return {}
+			const placement = {}
+			const match = (this.selectedPipeline?.stages || []).find(
+				(s) => s.name === stage,
+			)
+			if (match && match.order !== undefined && match.order !== null) {
+				placement.stageOrder = Number(match.order)
+			}
+			if (!this.lead || this.lead.stage !== stage) {
+				placement.stageEnteredAt = new Date().toISOString()
+			}
+			return placement
+		},
+
+		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-50
 		 */
 		onSave() {
@@ -519,6 +514,7 @@ export default {
 			if (!data.contact) delete data.contact
 			if (!data.pipeline) delete data.pipeline
 			if (!data.stage) delete data.stage
+			Object.assign(data, this.stagePlacement(data.stage))
 
 			this.$emit('save', data)
 		},

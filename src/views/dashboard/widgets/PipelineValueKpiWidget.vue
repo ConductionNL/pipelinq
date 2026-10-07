@@ -4,8 +4,8 @@
 		:count="count"
 		:loading="loading"
 		:error="error"
-		countLabel="EUR"
-		:icon="CurrencyEur"
+		:countLabel="currency"
+		:icon="Cash"
 		variant="success"
 		horizontal
 		:route="{ name: 'Pipelines' }" />
@@ -13,12 +13,13 @@
 
 <script>
 import { CnStatsBlock } from '@conduction/nextcloud-vue'
-import CurrencyEur from 'vue-material-design-icons/CurrencyEur.vue'
+import Cash from 'vue-material-design-icons/Cash.vue'
 import {
 	getClosedStageNames,
 	getLeads,
 	getPipelines,
 } from '../../../services/dashboardData.js'
+import { reportingCurrency } from '../../../services/reportingCurrency.js'
 import dashboardRefreshMixin from './dashboardRefreshMixin.js'
 
 export default {
@@ -30,7 +31,9 @@ export default {
 	mixins: [dashboardRefreshMixin],
 	data() {
 		return {
-			CurrencyEur,
+			Cash,
+			// Open pipeline value is shown in the reporting currency.
+			currency: reportingCurrency(),
 			count: 0,
 		}
 	},

@@ -238,8 +238,8 @@ import ExportRunDetailView from './views/export/ExportRunDetail.vue'
 import ExportRunsView from './views/export/ExportRuns.vue'
 // --- Features & roadmap page. Was type:"roadmap", dispatched straight to
 //     the library's CnFeaturesAndRoadmapPage, which renders two tabs and
-//     declares no slots. FeaturesRoadmapView renders that page unchanged as
-//     its first section and adds the help desk comparison as a second. ---
+//     declares no slots. FeaturesRoadmapView renders that page unchanged and
+//     adds one link to the help desk comparison on pipelinq.conduction.nl. ---
 import FeaturesRoadmapView from './views/FeaturesRoadmapView.vue'
 // --- Flows (ADR-110 Decision 4). The list and the canvas are the shared
 //     `flows` / `flow-detail` manifest page types; only the SIDEBAR is an
@@ -319,6 +319,7 @@ import StoreGallery from './views/store/StoreGallery.vue'
 import SyncSettingsView from './views/sync/SyncSettings.vue'
 import WerkplekClientSelect from './views/werkplek/widgets/WerkplekClientSelect.vue'
 import WerkplekHeaderActions from './views/werkplek/widgets/WerkplekHeaderActions.vue'
+import { sectionWidget } from './components/widgets/sectionWidget.js'
 // --- KCC Werkplek (pipelinq-werkplek-declarative): unified KCC agent workspace
 //     rendered as a declarative type:"dashboard" page. Requests, Tasks, the
 //     active-interaction form, the summary-driven knowledge base and the client
@@ -400,7 +401,7 @@ const registry = {
 	FeaturesRoadmapView: {
 		kind: 'page',
 		component: FeaturesRoadmapView,
-		_note: 'Wraps the library\'s CnFeaturesAndRoadmapPage so the page can carry a second section, the help desk capability comparison. The library component declares no slots, so the comparison cannot be added from the manifest; the page moved from type:"roadmap" to type:"custom" for that reason and should move back the day the library grows a slot. Ported from dossiq, which hit the same wall first.',
+		_note: 'Wraps the library\'s CnFeaturesAndRoadmapPage and adds one link to the help desk capability comparison on pipelinq.conduction.nl/compare. The library component declares no slots, so the link cannot be added from the manifest; the page moves back to type:"roadmap" the day the library can carry it.',
 	},
 
 	StoreGallery: {
@@ -432,7 +433,7 @@ const registry = {
 		kind: 'widget',
 		component: PipelineValueKpiWidget,
 		...KPI_WIDGET_META,
-		_note: 'KPI card for total open-lead value in EUR. Renders <CnStatsBlock>.',
+		_note: 'KPI card for total open-lead value in the reporting currency. Renders <CnStatsBlock>.',
 	},
 	OverdueKpiWidget: {
 		kind: 'widget',
@@ -853,6 +854,73 @@ const registry = {
 		component: PartyIndicatorPanel,
 		_note: 'The warnings on a client or contact (pipelinq#2036): every party indicator in force, loudest first, with acknowledgement and an add-warning form. Self-fetches GET /api/leaves/party/{partyId}; rendered before the body on ClientDetail and ContactDetail so it is read before contact is made.',
 	},
+	// --- Contact page sections as grid widgets (detail-pages-read-at-a-glance).
+	//     The same components as the section entries above, wrapped so they
+	//     sit in the grid and in tab strips instead of a tail below the grid. ---
+	ContactRelationshipsWidget: {
+		kind: 'widget',
+		component: sectionWidget(
+			'ContactRelationshipsWidget',
+			ContactRelationships,
+			({ objectId, objectData, content }) => ({
+				entityId: objectId,
+				entityType: content.entityType || 'contact',
+				entityName: objectData.name || '',
+			}),
+		),
+		...PANEL_WIDGET_META,
+		_note: 'ContactRelationships as a grid widget: entityId from the page object, entityType from content (default contact).',
+	},
+	ContactChannelsWidget: {
+		kind: 'widget',
+		component: sectionWidget(
+			'ContactChannelsWidget',
+			ContactChannelsSection,
+			({ objectId, content }) => ({
+				entityId: objectId,
+				entityType: content.entityType || 'contact',
+			}),
+		),
+		...PANEL_WIDGET_META,
+		_note: 'ContactChannelsSection as a grid widget.',
+	},
+	MessagingConversationWidget: {
+		kind: 'widget',
+		component: sectionWidget(
+			'MessagingConversationWidget',
+			MessagingConversationSection,
+			({ objectId, content }) => ({
+				entityId: objectId,
+				entityType: content.entityType || 'contact',
+			}),
+		),
+		...PANEL_WIDGET_META,
+		_note: 'MessagingConversationSection as a grid widget.',
+	},
+	SubscriptionsWidget: {
+		kind: 'widget',
+		component: sectionWidget(
+			'SubscriptionsWidget',
+			SubscriptionsSection,
+			({ objectId }) => ({
+				contactId: objectId,
+			}),
+		),
+		...PANEL_WIDGET_META,
+		_note: 'SubscriptionsSection bound to the page contact, as a grid widget.',
+	},
+	BrpContactWidget: {
+		kind: 'widget',
+		component: sectionWidget(
+			'BrpContactWidget',
+			BrpContactPanel,
+			({ objectId }) => ({
+				contactId: objectId,
+			}),
+		),
+		...PANEL_WIDGET_META,
+		_note: 'BrpContactPanel as a grid widget, for the Profile tab of ContactDetail.',
+	},
 	BrpContactPanel: {
 		kind: 'section',
 		component: BrpContactPanel,
@@ -1034,6 +1102,31 @@ const registry = {
 		kind: 'section',
 		component: BookingDetailSection,
 		_note: 'Booking in-body section for the declarative type:"detail" BookingDetail page. Self-fetches by @objectId and re-reads on cn:page:refresh.',
+	},
+	// --- Booking page parts as grid widgets (booking-and-service-pages). Each
+	//     renders one part of BookingDetailSection, so the page can put them in
+	//     its grid and its tab strip. The timeline is the library's `timeline`
+	//     widget type (review-part-two). ---
+	BookingContextWidget: {
+		kind: 'widget',
+		component: sectionWidget(
+			'BookingContextWidget',
+			BookingDetailSection,
+			({ objectId }) => ({ bookingId: objectId, part: 'context' }),
+			{ card: true },
+		),
+		...PANEL_WIDGET_META,
+		_note: 'BookingDetail: the service and customer names and the deposit state, resolved across schemas.',
+	},
+	BookingAssignmentsWidget: {
+		kind: 'widget',
+		component: sectionWidget(
+			'BookingAssignmentsWidget',
+			BookingDetailSection,
+			({ objectId }) => ({ bookingId: objectId, part: 'assignments' }),
+		),
+		...PANEL_WIDGET_META,
+		_note: 'BookingDetail: the resourceAssignments array-on-object table, with resource names.',
 	},
 	BookingHeaderActions: {
 		kind: 'widget',

@@ -97,6 +97,25 @@ class WorklistService {
 	public const TERMINAL_REQUEST_STATUSES = ['completed', 'rejected', 'converted'];
 
 	/**
+	 * Statuses that close a ticket of any type: the closed half of the
+	 * unified lifecycle, the same list the Queue page excludes.
+	 *
+	 * @var array<int, string>
+	 */
+	public const TERMINAL_TICKET_STATUSES = ['resolved', 'completed', 'rejected', 'converted', 'closed'];
+
+	/**
+	 * The ticket types that can be assigned and so belong on a worklist.
+	 *
+	 * @var array<int, string>
+	 */
+	private const WORK_TICKET_TYPES = [
+		TicketService::TYPE_REQUEST,
+		TicketService::TYPE_COMPLAINT,
+		TicketService::TYPE_CONTACTMOMENT,
+	];
+
+	/**
 	 * A request counts as overdue when its occurredAt (the ticket-schema name
 	 * of the request's requestedAt) is older than this (30 days;
 	 * MyWorkWidget.vue:99).
@@ -185,6 +204,7 @@ class WorklistService {
 	 * @throws RuntimeException When OpenRegister is unreachable.
 	 *
 	 * @spec openspec/specs/dashboard/spec.md#requirement-my-work-widget
+	 * @spec openspec/changes/detail-pages-read-at-a-glance/specs/my-work/spec.md
 	 */
 	public function getMine(string $userId, ?int $limit = null): array {
 		$leads = $this->findObjects(
@@ -192,11 +212,20 @@ class WorklistService {
 			filters: ['assignee' => $userId],
 			limit: self::LEAD_FETCH_LIMIT
 		);
-		$requests = $this->findTickets(
-			ticketType: TicketService::TYPE_REQUEST,
-			filters: ['assignee' => $userId],
-			limit: self::REQUEST_FETCH_LIMIT
-		);
+		// Every ticket type assigned to the user, not only requests: an
+		// assigned complaint or contact moment is work too (pipelinq review G1).
+		$requests = [];
+		foreach (self::WORK_TICKET_TYPES as $ticketType) {
+			$requests = array_merge(
+				$requests,
+				$this->findTickets(
+					ticketType: $ticketType,
+					filters: ['assignee' => $userId],
+					limit: self::REQUEST_FETCH_LIMIT
+				)
+			);
+		}
+
 		$pipelines = $this->findObjects(
 			schemaKey: 'pipeline_schema',
 			filters: [],
@@ -320,7 +349,7 @@ class WorklistService {
 		$rows = [];
 		foreach ($requests as $request) {
 			$status = (string)($request['status'] ?? '');
-			if (in_array($status, self::TERMINAL_REQUEST_STATUSES, true) === true) {
+			if (in_array($status, self::TERMINAL_TICKET_STATUSES, true) === true) {
 				// Terminal requests are done — not work (MyWorkWidget.vue:90).
 				continue;
 			}
@@ -341,6 +370,7 @@ class WorklistService {
 
 			$rows[] = [
 				'entityType' => 'request',
+				'ticketType' => (string)($request['ticketType'] ?? TicketService::TYPE_REQUEST),
 				'id' => (string)($request['id'] ?? ''),
 				'title' => (string)($request['title'] ?? ''),
 				'stageOrStatus' => $this->statusLabel(status: $status),

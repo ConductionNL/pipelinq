@@ -52,7 +52,7 @@ Vrij en open source onder de EUPL-1.2-licentie.
 
 **Ondersteuning:** Voor ondersteuning, neem contact op via support@conduction.nl. Voor een Service Level Agreement (SLA), neem contact op via sales@conduction.nl.
     ]]></description>
-    <version>0.5.7-unstable.20261006200000</version>
+    <version>0.5.7-unstable.20261007170000</version>
     <licence>EUPL-1.2</licence>
     <author mail="info@conduction.nl" homepage="https://www.conduction.nl/">Conduction</author>
     <namespace>Pipelinq</namespace>
@@ -172,6 +172,13 @@ Vrij en open source onder de EUPL-1.2-licentie.
             -->
             <step>OCA\Pipelinq\Repair\RenameCollidingSchemaSlugs</step>
             <step>OCA\Pipelinq\Repair\InitializeSettings</step>
+            <!--
+                Right after the import that turns client.industry into a list:
+                every later step that saves a client would otherwise fail
+                validation on a client still holding an industry string.
+                Also copies a party's `language` into correspondenceLanguage.
+            -->
+            <step>OCA\Pipelinq\Repair\NormalisePartyFormFields</step>
             <!--
                 After InitializeSettings imports the register: the schema edit
                 changes the DECLARATION, but every row already written still

@@ -219,6 +219,7 @@
           },
           "assignee": {
             "type": "string",
+            "format": "user",
             "title": "Assignee",
             "description": "Nextcloud UID (or agent) handling the ticket.",
             "facetable": true

@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  *
- * The simple structure, in a browser: nine entries under four captions, the
+ * The simple structure, in a browser: eight entries under three captions, the
  * contact centre dashboard as the start page, and the pages that left the
  * menu one card away.
  *
@@ -23,7 +23,7 @@
  * that matched nothing would leave the page on whatever the instance is set
  * to, so the rewrite throws when the input is not in the page. And a menu that
  * failed to build renders nothing, where "the module entries are absent"
- * holds, so the nine entries are asserted PRESENT and in order first.
+ * holds, so the eight entries are asserted PRESENT and in order first.
  */
 
 import type { Page } from '@playwright/test'
@@ -33,7 +33,7 @@ import { dismissSupportDialog, dismissWalkthrough } from './helpers/pipelinq.ts'
 
 const LOAD_TIMEOUT = 45_000
 
-/** The nine entries, in order, by menu entry id. Ids are not translated. */
+/** The eight entries, in order, by menu entry id. Ids are not translated. */
 const ENTRIES = [
 	'KccWerkplek',
 	'MyWork',
@@ -43,15 +43,9 @@ const ENTRIES = [
 	'AppointmentsMenu',
 	'Clients',
 	'OrganisationsMenu',
-	'ReportsMenu',
 ]
 
-const CAPTIONS = [
-	'StartCaption',
-	'ContactCaption',
-	'RelationsCaption',
-	'MoreCaption',
-]
+const CAPTIONS = ['StartCaption', 'ContactCaption', 'RelationsCaption']
 
 /**
  * Serve this page the given structure settings, whatever the instance stores.
@@ -92,6 +86,7 @@ const BELOW_MAIN = [
 	'ModulesMenu',
 	'StoreMenu',
 	'FeaturesRoadmapMenu',
+	'ReportsMenu',
 	'FlowsMenu',
 	'Pipelines',
 	'ConnectionsMenu',
@@ -133,7 +128,7 @@ async function mainMenuIds(page: Page): Promise<string[]> {
 
 test.describe('The simple structure', () => {
 	// @e2e navigation-ia::a-contact-centre-agent-opens-pipelinq-on-a-new-instance
-	test('the menu shows nine entries under four captions, and the app opens on the contact centre dashboard', async ({
+	test('the menu shows eight entries under three captions, and the app opens on the contact centre dashboard', async ({
 		page,
 	}) => {
 		await withStructure(page, { menu_structure: 'simple', menu_modules: '' })
@@ -142,7 +137,7 @@ test.describe('The simple structure', () => {
 		const ids = await mainMenuIds(page)
 		expect(
 			ids.filter((id) => !CAPTIONS.includes(id)),
-			'the main menu must hold exactly the nine entries, in order',
+			'the main menu must hold exactly the eight entries, in order',
 		).toEqual(ENTRIES)
 		expect(ids.filter((id) => CAPTIONS.includes(id))).toEqual(CAPTIONS)
 
@@ -189,7 +184,6 @@ test.describe('The simple structure', () => {
 		expect(at('ModulesCaption')).toBeGreaterThan(at('OrganisationsMenu'))
 		for (const id of ['Dashboard', 'Leads', 'Prospects', 'Pipeline']) {
 			expect(at(id), id).toBeGreaterThan(at('ModulesCaption'))
-			expect(at(id), id).toBeLessThan(at('MoreCaption'))
 		}
 		// The other modules stay out.
 		expect(ids).not.toContain('Products')

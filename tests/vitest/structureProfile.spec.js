@@ -12,8 +12,8 @@
  *
  * What has to stay true:
  *   - the full profile is exactly what it was before profiles existed;
- *   - the simple menu is the nine entries of the design, in order, under
- *     four captions;
+ *   - the simple menu is the eight entries of the design, in order, under
+ *     three captions;
  *   - a module that is off is out of the menu, a module that is on is in it;
  *   - nothing is lost: every entry the full menu offers is in the simple menu
  *     or its settings, or a page the simple menu opens has a card for it.
@@ -39,8 +39,11 @@ import {
 	resolveMenuModules,
 } from '../../src/utils/menuModules.js'
 import {
+	applyPageDefaults,
 	applyPageOverlay,
 	buildProfiledManifest,
+	navTheming,
+	resolveNavPlaceholders,
 	resolveStructureProfile,
 	STRUCTURE_FULL,
 	STRUCTURE_SETTING,
@@ -120,9 +123,25 @@ function validateBuilt(built) {
 }
 
 describe('the full profile', () => {
-	it('is exactly what buildManifest made before profiles existed', () => {
+	it('is exactly what buildManifest made before profiles existed, with the newer index header controls held back', () => {
 		const before = buildManifest(manifest(), fragments, fullFile)
-		expect(build(fullFile)).toEqual(before)
+		expect(build(fullFile)).toEqual(
+			applyPageDefaults(before, fullFile.pageDefaults),
+		)
+		// The only difference: every index page that did not choose shows
+		// the plain header row it had on nextcloud-vue ^2.61.0.
+		const after = build(fullFile)
+		for (const page of before.pages) {
+			const now = after.pages.find((item) => item.id === page.id)
+			if (page.type === 'index' && page.config?.headerFilters === undefined) {
+				expect(now, page.id).toEqual({
+					...page,
+					config: { ...page.config, headerFilters: false },
+				})
+			} else {
+				expect(now, page.id).toEqual(page)
+			}
+		}
 		// And the module step leaves a file without modules alone.
 		expect(applyMenuModules(fullFile, MODULE_KEYS)).toBe(fullFile)
 		expect(applyHomePage(before, fullFile.home)).toEqual({
@@ -131,15 +150,44 @@ describe('the full profile', () => {
 		})
 	})
 
-	it('still counts 47 entries: 39 main, 4 footer, 4 settings, 0 integrations', () => {
+	it('still counts 47 entries: 39 main, 3 footer, 5 settings, 0 integrations', () => {
 		const menu = build(fullFile).menu
 		const count = (name) =>
 			flat(menu.filter((entry) => (entry.section || 'main') === name)).length
 		expect(flat(menu)).toHaveLength(47)
 		expect(count('main')).toBe(39)
-		expect(count('footer')).toBe(4)
-		expect(count('settings')).toBe(4)
+		expect(count('footer')).toBe(3)
+		expect(count('settings')).toBe(5)
 		expect(count('integrations')).toBe(0)
+	})
+
+	it('holds the header controls back on index pages only, and the simple profile keeps the library default', () => {
+		expect(fullFile.pageDefaults).toEqual({ index: { headerFilters: false } })
+		expect(simpleFile.pageDefaults).toBeUndefined()
+		const simpleIndex = buildSimple().pages.filter(
+			(page) => page.type === 'index',
+		)
+		expect(simpleIndex.length).toBeGreaterThan(0)
+		for (const page of simpleIndex) {
+			const own = buildManifest(manifest(), fragments, {}).pages.find(
+				(item) => item.id === page.id,
+			)
+			expect(page.config?.headerFilters, page.id).toBe(
+				own?.config?.headerFilters,
+			)
+		}
+		const unchanged = { pages: [{ id: 'x', type: 'detail', config: {} }] }
+		expect(applyPageDefaults(unchanged, undefined)).toBe(unchanged)
+		expect(
+			applyPageDefaults(
+				{
+					pages: [
+						{ id: 'y', type: 'index', config: { headerFilters: true } },
+					],
+				},
+				fullFile.pageDefaults,
+			).pages[0].config.headerFilters,
+		).toBe(true)
 	})
 
 	it('does not link to the Modules page, which only the simple menu needs', () => {
@@ -152,9 +200,10 @@ describe('the simple profile', () => {
 	const built = buildSimple()
 	const main = section(built.menu, 'main')
 
-	it('shows nine entries under four captions, in the order of the design', () => {
+	it('shows eight entries under two captions, in the order of the design', () => {
+		// PqDashboard: Dashboard, My work and Queue sit at the top with no
+		// caption above them; the board's first caption is Klantcontact.
 		expect(main.map((entry) => entry.id)).toEqual([
-			'StartCaption',
 			'KccWerkplek',
 			'MyWork',
 			'Queue',
@@ -165,18 +214,14 @@ describe('the simple profile', () => {
 			'RelationsCaption',
 			'Clients',
 			'OrganisationsMenu',
-			'MoreCaption',
-			'ReportsMenu',
 		])
 		const captions = main.filter((entry) => entry.type === 'caption')
 		expect(captions.map((entry) => nl[entry.label])).toEqual([
-			'Start',
 			'Klantcontact',
 			'Relaties',
-			'Meer',
 		])
 		const entries = main.filter((entry) => entry.type !== 'caption')
-		expect(entries).toHaveLength(9)
+		expect(entries).toHaveLength(8)
 		expect(entries.map((entry) => nl[entry.label])).toEqual([
 			'Dashboard',
 			'Mijn werk',
@@ -186,7 +231,6 @@ describe('the simple profile', () => {
 			'Afspraken',
 			'Inwoners en bedrijven',
 			'Organisaties',
-			'Rapportages',
 		])
 	})
 
@@ -251,7 +295,10 @@ describe('the simple profile', () => {
 			const shown = main.find((entry) => entry.id === id)
 			expect(shown.route, id).toBe(original.route)
 		}
-		const reports = main.find((entry) => entry.id === 'ReportsMenu')
+		// Reports sits in the Advanced foldout, as in every app.
+		const reports = section(built.menu, 'settings').find(
+			(entry) => entry.id === 'ReportsMenu',
+		)
 		expect(reports).toMatchObject({ label: 'Reports', route: 'Reports' })
 	})
 
@@ -301,7 +348,7 @@ describe('the simple profile', () => {
 			'StoreMenu',
 			'FeaturesRoadmapMenu',
 		])
-		// Reports moved up into the menu; nothing else left the footer.
+		// Reports moved into the Advanced foldout; nothing else left the footer.
 		expect(
 			ids(build(fullFile).menu).filter((id) => id !== 'ReportsMenu'),
 		).toEqual(ids(built.menu).filter((id) => id !== 'ModulesMenu'))
@@ -380,11 +427,11 @@ describe('the simple profile', () => {
 		expect(routes).toHaveLength(fullReports.config.cards.length + 1)
 	})
 
-	it('builds the same 97 pages as the full profile, so every route stays', () => {
+	it('builds the same 96 pages as the full profile, so every route stays', () => {
 		const ids = (source) => source.pages.map((page) => page.id)
 		const full = build(fullFile)
 		expect(ids(built)).toEqual(ids(full))
-		expect(built.pages).toHaveLength(97)
+		expect(built.pages).toHaveLength(96)
 		expect(built.pages.map((page) => page.route)).toEqual(
 			full.pages.map((page) => page.route),
 		)
@@ -396,6 +443,92 @@ describe('the simple profile', () => {
 		validateBuilt(applyHomePage(built, simpleFile.home).manifest)
 		// Three validator processes. The default five seconds is not enough
 		// on a busy machine, and a timeout here reads as a broken manifest.
+	}, 60_000)
+})
+
+describe('the brand block', () => {
+	const theming = {
+		name: 'Gemeente Zuiddrecht',
+		logo: '/core/img/logo/logo.svg',
+		emblem: '/apps/thematiq/img/emblem.svg',
+	}
+	const withTheming = () =>
+		buildProfiledManifest(
+			buildManifest,
+			manifest(),
+			fragments,
+			applyMenuModules(simpleFile, []),
+			{ theming },
+		)
+
+	it('names the app over the instance the theming capabilities answer, and the full profile declares none', () => {
+		expect(simpleFile.nav.brand).toEqual({
+			name: 'pipelinq',
+			caption: '@theming.name',
+			logo: '@theming.emblem|@theming.logo',
+		})
+		expect(fullFile.nav).toBeUndefined()
+		// The set's emblem, never the wordmark beside the app's own name.
+		expect(withTheming().nav.brand).toEqual({
+			name: 'pipelinq',
+			caption: 'Gemeente Zuiddrecht',
+			logo: '/apps/thematiq/img/emblem.svg',
+		})
+		expect(build(fullFile).nav?.brand).toBeUndefined()
+	})
+
+	it('falls back to the wordmark on a set without an emblem', () => {
+		for (const emblem of ['', undefined]) {
+			expect(
+				resolveNavPlaceholders(simpleFile.nav, { ...theming, emblem }).brand
+					.logo,
+			).toBe('/core/img/logo/logo.svg')
+		}
+	})
+
+	it('reads the emblem from thematiq and the rest from Nextcloud theming', () => {
+		expect(
+			navTheming({
+				theming: { name: 'Gemeente Zuiddrecht', logo: '/logo.svg' },
+				nldesign: { logos: { emblem: '/emblem.svg' } },
+			}),
+		).toEqual({
+			name: 'Gemeente Zuiddrecht',
+			logo: '/logo.svg',
+			emblem: '/emblem.svg',
+		})
+		expect(navTheming(null)).toEqual({ emblem: '' })
+		expect(
+			navTheming({
+				theming: { name: 'X' },
+				nldesign: { logos: { emblem: 7 } },
+			}),
+		).toEqual({ name: 'X', emblem: '' })
+	})
+
+	it('shows the app alone on an instance that answers nothing, and never a placeholder', () => {
+		for (const answer of [null, {}, { name: '', logo: 7 }]) {
+			expect(resolveNavPlaceholders(simpleFile.nav, answer).brand).toEqual({
+				name: 'pipelinq',
+				caption: '',
+				logo: '',
+			})
+		}
+		expect(JSON.stringify(buildSimple().nav)).not.toContain('@theming')
+	})
+
+	it('is what main.js hands the theming capabilities to', () => {
+		expect(mainSource).toContain(
+			"import { getCapabilities } from '@nextcloud/capabilities'",
+		)
+		expect(mainSource).toContain('theming: navTheming(getCapabilities())')
+		expect(mainSource).toMatch(
+			/import \{[^}]*\bnavTheming,[^}]*\} from '\.\/utils\/structureProfile\.js'/,
+		)
+	})
+
+	it('validates against the manifest schema with the brand resolved', () => {
+		validateBuilt(withTheming())
 	}, 60_000)
 })
 
@@ -456,20 +589,18 @@ describe('the modules', () => {
 					expect(shown.has(id), `${other}: ${id}`).toBe(false)
 				}
 			}
-			// Between Relations and More, under the one caption.
+			// After Relations, under the one caption.
 			const order = section(menu, 'main').map((entry) => entry.id)
 			const at = (id) => order.indexOf(id)
 			expect(at('ModulesCaption')).toBeGreaterThan(at('OrganisationsMenu'))
-			expect(at('MoreCaption')).toBeGreaterThan(at('ModulesCaption'))
 			for (const entry of simpleFile.modules[key].menu) {
 				expect(at(entry.id), entry.id).toBeGreaterThan(at('ModulesCaption'))
-				expect(at(entry.id), entry.id).toBeLessThan(at('MoreCaption'))
 			}
-			// The nine daily entries do not move.
+			// The eight daily entries do not move.
 			expect(order.slice(0, at('ModulesCaption'))).toEqual(
 				section(buildSimple().menu, 'main')
 					.map((entry) => entry.id)
-					.slice(0, 11),
+					.slice(0, 10),
 			)
 		},
 	)
@@ -598,7 +729,7 @@ describe('the getting-started tour', () => {
 		const shown = new Set(flat(built.menu).map((entry) => entry.route))
 		const missing = navTargets(built).filter((ref) => !shown.has(ref))
 		// The control: the tour really points at entries the simple menu lacks.
-		expect(missing).toEqual(['Products', 'Contacts', 'Leads', 'Contracts'])
+		expect(missing).toEqual(['Contacts', 'Products', 'Leads', 'Contracts'])
 
 		const held = holdUnreachableTours(built)
 		expect(held.walkthrough.tours).toEqual([])
@@ -709,8 +840,8 @@ describe('the structure setting', () => {
 		expect(mainSource).toMatch(
 			/structureProfile === STRUCTURE_FULL\s+\? menuLayout\s+: applyMenuModules\(/,
 		)
-		expect(mainSource).toContain(
-			'buildProfiledManifest(buildManifest, bundledManifest, fragments, profileFile)',
+		expect(mainSource).toMatch(
+			/buildProfiledManifest\(buildManifest, bundledManifest, fragments, profileFile, \{\s+theming:/,
 		)
 	})
 

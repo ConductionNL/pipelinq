@@ -3,8 +3,10 @@
 <!--
   Service detail + edit page — appointment-booking member 11.
 
-  View mode uses CnDetailPage with cards for the headline info, multi-step
-  composition and policies. Edit opens the schema-driven CnFormDialog, with
+  View mode uses CnDetailPage: Service information and Policies side by side,
+  the composition full width below them. The composition card edits its own
+  steps in place (Edit steps), and a step can name a product with a quantity
+  and a unit. Edit opens the schema-driven CnFormDialog, with
   ServiceStepsEditor in its multiStep slot; creating a service (id "new")
   still uses the full-page ServiceForm.
 
@@ -53,50 +55,123 @@
 			</NcButton>
 		</template>
 
-		<CnDetailCard :title="t('pipelinq', 'Service information')">
-			<div class="info-grid">
-				<div class="info-field">
-					<label>{{ t('pipelinq', 'Name') }}</label>
-					<span>{{ serviceData.name || '-' }}</span>
+		<div class="service-detail__pair">
+			<CnDetailCard :title="t('pipelinq', 'Service information')">
+				<div class="info-grid">
+					<div class="info-field">
+						<label>{{ t('pipelinq', 'Name') }}</label>
+						<span>{{ serviceData.name || '-' }}</span>
+					</div>
+					<div class="info-field">
+						<label>{{ t('pipelinq', 'Status') }}</label>
+						<span>{{ statusLabel(serviceData.status) }}</span>
+					</div>
+					<div class="info-field">
+						<label>{{ t('pipelinq', 'Duration') }}</label>
+						<span>{{
+							formatDuration(serviceData.durationMinutes)
+						}}</span>
+					</div>
+					<div class="info-field">
+						<label>{{ t('pipelinq', 'Price') }}</label>
+						<span>{{
+							formatCurrency(serviceData.price, serviceData.currency)
+						}}</span>
+					</div>
+					<div class="info-field">
+						<label>{{ t('pipelinq', 'Buffer before / after') }}</label>
+						<span
+							>{{ serviceData.bufferBeforeMinutes || 0 }} /
+							{{ serviceData.bufferAfterMinutes || 0 }} min</span
+						>
+					</div>
+					<div class="info-field">
+						<label>{{ t('pipelinq', 'Bookable online') }}</label>
+						<span>{{
+							serviceData.bookableOnline
+								? t('pipelinq', 'Yes')
+								: t('pipelinq', 'No')
+						}}</span>
+					</div>
 				</div>
-				<div class="info-field">
-					<label>{{ t('pipelinq', 'Status') }}</label>
-					<span>{{ statusLabel(serviceData.status) }}</span>
+				<div
+					v-if="serviceData.description"
+					class="info-field info-field--full">
+					<label>{{ t('pipelinq', 'Description') }}</label>
+					<p>{{ serviceData.description }}</p>
 				</div>
-				<div class="info-field">
-					<label>{{ t('pipelinq', 'Duration') }}</label>
-					<span>{{ formatDuration(serviceData.durationMinutes) }}</span>
+			</CnDetailCard>
+			<CnDetailCard :title="t('pipelinq', 'Policies')">
+				<div class="info-grid">
+					<div class="info-field">
+						<label>{{ t('pipelinq', 'Requires deposit') }}</label>
+						<span>{{
+							serviceData.requiresDeposit
+								? t('pipelinq', 'Yes')
+								: t('pipelinq', 'No')
+						}}</span>
+					</div>
+					<div class="info-field">
+						<label>{{ t('pipelinq', 'Deposit amount') }}</label>
+						<span>{{
+							formatCurrency(
+								serviceData.depositAmount,
+								serviceData.currency,
+							)
+						}}</span>
+					</div>
+					<div class="info-field">
+						<label>{{ t('pipelinq', 'No-show fee') }}</label>
+						<span>{{
+							formatCurrency(
+								serviceData.noShowFee,
+								serviceData.currency,
+							)
+						}}</span>
+					</div>
+					<div class="info-field">
+						<label>{{ t('pipelinq', 'Cancellation policy') }}</label>
+						<span>{{ serviceData.cancellationPolicy || 'free' }}</span>
+					</div>
+					<div class="info-field">
+						<label>{{ t('pipelinq', 'Cancellation window') }}</label>
+						<span
+							>{{ serviceData.cancellationHoursBefore || 0 }}
+							{{ t('pipelinq', 'hours') }}</span
+						>
+					</div>
+					<div class="info-field">
+						<label>{{ t('pipelinq', 'Required skills') }}</label>
+						<span>{{ requiredSkillsLabel }}</span>
+					</div>
 				</div>
-				<div class="info-field">
-					<label>{{ t('pipelinq', 'Price') }}</label>
-					<span>{{
-						formatCurrency(serviceData.price, serviceData.currency)
-					}}</span>
-				</div>
-				<div class="info-field">
-					<label>{{ t('pipelinq', 'Buffer before / after') }}</label>
-					<span
-						>{{ serviceData.bufferBeforeMinutes || 0 }} /
-						{{ serviceData.bufferAfterMinutes || 0 }} min</span
-					>
-				</div>
-				<div class="info-field">
-					<label>{{ t('pipelinq', 'Bookable online') }}</label>
-					<span>{{
-						serviceData.bookableOnline
-							? t('pipelinq', 'Yes')
-							: t('pipelinq', 'No')
-					}}</span>
-				</div>
-			</div>
-			<div v-if="serviceData.description" class="info-field info-field--full">
-				<label>{{ t('pipelinq', 'Description') }}</label>
-				<p>{{ serviceData.description }}</p>
-			</div>
-		</CnDetailCard>
+			</CnDetailCard>
+		</div>
 
-		<CnDetailCard :title="t('pipelinq', 'Multi-step composition')">
-			<div v-if="!steps.length" class="section-empty">
+		<CnDetailCard
+			:title="t('pipelinq', 'Multi-step composition')"
+			data-testid="service-composition">
+			<template #actions>
+				<template v-if="editingSteps">
+					<NcButton :disabled="savingSteps" @click="cancelEditSteps">
+						{{ t('pipelinq', 'Cancel') }}
+					</NcButton>
+					<NcButton
+						variant="primary"
+						:disabled="savingSteps"
+						@click="saveSteps">
+						{{ t('pipelinq', 'Save steps') }}
+					</NcButton>
+				</template>
+				<NcButton v-else @click="startEditSteps">
+					{{ t('pipelinq', 'Edit steps') }}
+				</NcButton>
+			</template>
+			<ServiceStepsEditor
+				v-if="editingSteps"
+				v-model="draftSteps"
+				:durationMinutes="serviceData.durationMinutes" />
+			<div v-else-if="!steps.length" class="section-empty">
 				<p>{{ t('pipelinq', 'Single-step service — no composition.') }}</p>
 			</div>
 			<div v-else class="viewTableContainer">
@@ -104,6 +179,8 @@
 					<thead>
 						<tr>
 							<th scope="col">{{ t('pipelinq', '#') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Product') }}</th>
+							<th scope="col">{{ t('pipelinq', 'Quantity') }}</th>
 							<th scope="col">{{ t('pipelinq', 'Duration') }}</th>
 							<th scope="col">{{ t('pipelinq', 'Resource type') }}</th>
 							<th scope="col">{{ t('pipelinq', 'Skill') }}</th>
@@ -113,6 +190,8 @@
 					<tbody>
 						<tr v-for="(step, idx) in steps" :key="idx">
 							<td>{{ idx + 1 }}</td>
+							<td>{{ productName(step.productId) }}</td>
+							<td>{{ stepAmount(step) || '-' }}</td>
 							<td>{{ step.durationMinutes }} min</td>
 							<td>{{ step.resourceType || '-' }}</td>
 							<td>{{ step.skillRequired || '-' }}</td>
@@ -126,49 +205,6 @@
 						</tr>
 					</tbody>
 				</table>
-			</div>
-		</CnDetailCard>
-
-		<CnDetailCard :title="t('pipelinq', 'Policies')">
-			<div class="info-grid">
-				<div class="info-field">
-					<label>{{ t('pipelinq', 'Requires deposit') }}</label>
-					<span>{{
-						serviceData.requiresDeposit
-							? t('pipelinq', 'Yes')
-							: t('pipelinq', 'No')
-					}}</span>
-				</div>
-				<div class="info-field">
-					<label>{{ t('pipelinq', 'Deposit amount') }}</label>
-					<span>{{
-						formatCurrency(
-							serviceData.depositAmount,
-							serviceData.currency,
-						)
-					}}</span>
-				</div>
-				<div class="info-field">
-					<label>{{ t('pipelinq', 'No-show fee') }}</label>
-					<span>{{
-						formatCurrency(serviceData.noShowFee, serviceData.currency)
-					}}</span>
-				</div>
-				<div class="info-field">
-					<label>{{ t('pipelinq', 'Cancellation policy') }}</label>
-					<span>{{ serviceData.cancellationPolicy || 'free' }}</span>
-				</div>
-				<div class="info-field">
-					<label>{{ t('pipelinq', 'Cancellation window') }}</label>
-					<span
-						>{{ serviceData.cancellationHoursBefore || 0 }}
-						{{ t('pipelinq', 'hours') }}</span
-					>
-				</div>
-				<div class="info-field">
-					<label>{{ t('pipelinq', 'Required skills') }}</label>
-					<span>{{ requiredSkillsLabel }}</span>
-				</div>
 			</div>
 		</CnDetailCard>
 
@@ -221,6 +257,8 @@ import { computed } from 'vue'
 import ServiceStepsEditor from '../../components/bookings/ServiceStepsEditor.vue'
 import DeleteServiceDialog from '../../dialogs/DeleteServiceDialog.vue'
 import ServiceForm from './ServiceForm.vue'
+import { currencyOr } from '../../services/reportingCurrency.js'
+import { stepAmount } from '../../services/serviceSteps.js'
 import { useObjectStore } from '../../store/modules/object.js'
 
 const STATUS_LABELS = {
@@ -275,6 +313,10 @@ export default {
 		return {
 			showEditDialog: false,
 			showDelete: false,
+			editingSteps: false,
+			savingSteps: false,
+			draftSteps: [],
+			productNames: {},
 		}
 	},
 
@@ -431,6 +473,26 @@ export default {
 		},
 	},
 
+	watch: {
+		/**
+		 * Resolve the product names of the steps whenever they change.
+		 *
+		 * @spec openspec/changes/booking-and-service-pages/specs/appointment-booking/spec.md
+		 */
+		steps: {
+			immediate: true,
+			/**
+			 * Fetch the names of the products the changed steps name.
+			 *
+			 * @param {Array<object>} steps The service's steps.
+			 * @spec openspec/changes/booking-and-service-pages/specs/appointment-booking/spec.md
+			 */
+			handler(steps) {
+				this.loadProductNames(steps)
+			},
+		},
+	},
+
 	async mounted() {
 		if (!this.isNew) {
 			await this.objectStore.fetchObject('appointmentService', this.serviceId)
@@ -438,6 +500,100 @@ export default {
 	},
 
 	methods: {
+		stepAmount,
+
+		/**
+		 * The name of a step's product, '-' without one, the id when unknown.
+		 *
+		 * @param {string} id The product id.
+		 * @return {string}
+		 *
+		 * @spec openspec/changes/booking-and-service-pages/specs/appointment-booking/spec.md
+		 */
+		productName(id) {
+			if (!id) return '-'
+			return this.productNames[id] || id
+		},
+
+		/**
+		 * Fetch the names of the products the steps name, once per id.
+		 *
+		 * @param {Array<object>} steps The steps.
+		 * @return {Promise<void>}
+		 *
+		 * @spec openspec/changes/booking-and-service-pages/specs/appointment-booking/spec.md
+		 */
+		async loadProductNames(steps) {
+			const ids = [
+				...new Set((steps || []).map((s) => s?.productId).filter(Boolean)),
+			].filter((id) => !(id in this.productNames))
+			for (const id of ids) {
+				const product = await this.objectStore.fetchObject('product', id)
+				this.productNames = {
+					...this.productNames,
+					[id]: product?.name || product?.title || id,
+				}
+			}
+		},
+
+		/**
+		 * Edit the composition in its own card, on a copy of the steps.
+		 *
+		 * @spec openspec/changes/booking-and-service-pages/specs/appointment-booking/spec.md
+		 */
+		startEditSteps() {
+			this.draftSteps = this.steps.map((step) => ({ ...step }))
+			this.editingSteps = true
+		},
+
+		/**
+		 * Leave the composition editor without saving.
+		 *
+		 * @spec openspec/changes/booking-and-service-pages/specs/appointment-booking/spec.md
+		 */
+		cancelEditSteps() {
+			this.editingSteps = false
+			this.draftSteps = []
+		},
+
+		/**
+		 * Save the edited steps, then expire the cached availability, as
+		 * every service save does.
+		 *
+		 * @return {Promise<void>}
+		 *
+		 * @spec openspec/changes/booking-and-service-pages/specs/appointment-booking/spec.md
+		 */
+		async saveSteps() {
+			this.savingSteps = true
+			try {
+				const saved = await this.objectStore.saveObject(
+					'appointmentService',
+					{
+						...this.serviceData,
+						multiStep: this.draftSteps,
+						id: this.serviceId,
+					},
+				)
+				if (!saved) {
+					const error = this.objectStore.getError?.('appointmentService')
+					showError(
+						error?.message || t('pipelinq', 'Failed to save service.'),
+					)
+					return
+				}
+				showSuccess(t('pipelinq', 'Steps saved.'))
+				this.editingSteps = false
+				await this.invalidateAvailability(this.serviceId)
+				await this.objectStore.fetchObject(
+					'appointmentService',
+					this.serviceId,
+				)
+			} finally {
+				this.savingSteps = false
+			}
+		},
+
 		/**
 		 * Fetch the service schema and open the edit dialog on it.
 		 *
@@ -577,8 +733,16 @@ export default {
 				: t('pipelinq', '{h}h {m}min', { h, m })
 		},
 
+		/**
+		 * An amount in the given currency, or the reporting currency.
+		 *
+		 * @param {number|string} value The amount.
+		 * @param {string} [currency] The currency code.
+		 * @return {string} The formatted amount.
+		 * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
+		 */
 		formatCurrency(value, currency) {
-			const code = currency || 'EUR'
+			const code = currencyOr(currency)
 			const n = Number(value) || 0
 			try {
 				return new Intl.NumberFormat('nl-NL', {
@@ -605,6 +769,14 @@ export default {
 	gap: 16px;
 	margin-bottom: 20px;
 	padding: 20px 20px 0;
+}
+
+/* Service information and Policies side by side; one column on a phone. */
+.service-detail__pair {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
+	gap: 16px;
+	align-items: start;
 }
 
 .info-grid {

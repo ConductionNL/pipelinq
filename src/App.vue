@@ -16,6 +16,7 @@
 		:manifest="manifest"
 		:registry="appRegistry"
 		:cellWidgets="cellWidgets"
+		:formatters="cellFormatters"
 		:pageTypes="pageTypes"
 		appId="pipelinq"
 		:translate="translateForApp"
@@ -59,13 +60,17 @@ import {
 	CnObjectSidebar,
 } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
+import { showError, showSuccess } from '@nextcloud/dialogs'
 import { translate as ncT } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
 import { reactive } from 'vue'
 import LeadCloseDateCell from './views/leads/cells/LeadCloseDateCell.vue'
 import LeadProbabilityCell from './views/leads/cells/LeadProbabilityCell.vue'
 import LeadScoreCell from './views/leads/cells/LeadScoreCell.vue'
+import { createAppFormatters } from './services/cellFormatters.js'
 import { createConnectionHandlers } from './services/connectionRegistry.js'
+import { createTicketHandlers } from './services/ticketAssign.js'
+import { useObjectStore } from './store/modules/object.js'
 
 export default {
 	name: 'App',
@@ -164,6 +169,19 @@ export default {
 		},
 
 		/**
+		 * Cell-formatter registry for CnAppRoot, keyed by the `formatter` id a
+		 * manifest column (or a data widget override) references.
+		 * `objectCurrency` shows an amount in the row's own currency, or the
+		 * reporting currency; the `booking*Name` formatters show names, not ids.
+		 *
+		 * @return {Record<string, (value: unknown) => string>}
+		 * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
+		 */
+		cellFormatters() {
+			return createAppFormatters(useObjectStore())
+		},
+
+		/**
 		 * Cell-widget registry for CnAppRoot, keyed by the `widget` id a
 		 * manifest column references (ADR-036).
 		 *
@@ -189,10 +207,22 @@ export default {
 		 * @spec openspec/changes/adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-131-an-admin-reads-pipelinqs-connections-on-an-integrations-page-over-integriqs-registry
 		 */
 		appRegistry() {
-			const handlers = createConnectionHandlers({
-				generateUrl,
-				assign: (url) => window.location.assign(url),
-			})
+			const handlers = {
+				...createConnectionHandlers({
+					generateUrl,
+					assign: (url) => window.location.assign(url),
+				}),
+
+				// "Assign to me" on the Queue rows (detail-pages-read-at-a-glance).
+				...createTicketHandlers({
+					generateUrl,
+					http: axios,
+					router: this.$router,
+					showSuccess,
+					showError,
+					translate: ncT,
+				}),
+			}
 			const entries = {}
 			for (const [name, handler] of Object.entries(handlers)) {
 				entries[name] = { kind: 'handler', handler }

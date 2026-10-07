@@ -6,31 +6,43 @@ status: done
 
 ## Purpose
 
-The Features & roadmap page answers two different questions, and it keeps them
-apart. "What can pipelinq do, and is it stable" is the feature list and the
-roadmap. "How does pipelinq compare to the alternatives" is the capability
-comparison. Losing either one to the other is a regression: the first is what a
-user checks before relying on a capability, the second is what a buyer checks
-before choosing a system at all.
+Two different questions, kept apart. "What can pipelinq do, and is it stable"
+is the feature list and the roadmap, on the in-app Features & roadmap page.
+"How does pipelinq compare to the alternatives" is the capability comparison,
+on the public docs site. Losing either one to the other is a regression: the
+first is what a user checks before relying on a capability, the second is what
+a buyer checks before choosing a system at all.
+
+The comparison was a second section on the in-app page until 2026-10-07. Ruben
+ruled that how an app compares belongs on its public site and not in the app,
+for every app. The in-app page links to it, so it stays one click away.
 
 The comparison is a vendor-authored comparison of other people's software, so
-the page states its own limits before it states a score.
+the comparison page states its own limits before it states a score.
 
 **The subject is the help desk.** Pipelinq is compared against two open source
 help desks, on questions a service desk answers. That boundary is the point:
 pipelinq also does CRM, marketing and point of sale, and a table that mixed
 those in would compare products nobody puts side by side.
 
-**Surface**: `src/manifest.json#FeaturesRoadmap` (`type: "custom"`,
-`component: "FeaturesRoadmapView"`, registered in `src/registry.js`), route
-`/features-roadmap`, reachable from the footer menu entry
-`FeaturesRoadmapMenu`.
+**Surfaces**:
+
+- In the app: `src/manifest.json#FeaturesRoadmap` (`type: "custom"`,
+  `component: "FeaturesRoadmapView"`, registered in `src/registry.js`), route
+  `/features-roadmap`, reachable from the footer menu entry
+  `FeaturesRoadmapMenu`.
+- On the docs site: `docs/src/pages/compare.js`, served in English at
+  `https://pipelinq.conduction.nl/compare` and in Dutch at `/nl/compare`, and
+  linked from the navbar. It renders `docs/src/components/CapabilityComparison`,
+  which imports `src/data/capabilityComparison.json` and
+  `src/utils/capabilityComparison.js` directly. Nothing is copied at build
+  time, so the docs page and the data cannot drift.
 
 ## Requirements
 
 ### Requirement: The page MUST keep the shipped feature list and the roadmap
 
-The page SHALL render the library's `CnFeaturesAndRoadmapPage`. Adding the
+The page SHALL render the library's `CnFeaturesAndRoadmapPage`. Linking to the
 comparison SHALL NOT remove or replace the features tab or the roadmap tab.
 
 #### Scenario: Features page renders controls
@@ -41,11 +53,26 @@ comparison SHALL NOT remove or replace the features tab or the roadmap tab.
 - **AND** the shipped feature cards MUST be visible
 - **AND** the roadmap toggle and the suggest-a-feature link MUST be reachable
 
+### Requirement: The page MUST link to the comparison on the public site
+
+The in-app page SHALL NOT render the capability comparison. It SHALL carry one
+link to the comparison page on the docs site, so the surface that left the app
+stays reachable from where a user used to find it. The link SHALL open in a new
+tab, SHALL say so in text tied to the link, and SHALL point a Dutch reader at
+the Dutch page.
+
+#### Scenario: The comparison is one link away
+
+- **GIVEN** a user opens `/features-roadmap`
+- **WHEN** the page loads
+- **THEN** the page MUST NOT render the comparison tables or its caveats
+- **AND** a link reading "How pipelinq compares to other help desks" MUST point at `/compare` on the docs site
+- **AND** the link MUST open in a new tab
+
 ### Requirement: The page MUST present the capability comparison by area
 
-The page SHALL offer a second section that compares pipelinq against the
-systems in `src/data/capabilityComparison.json` across every capability in that
-file. Capabilities SHALL be grouped by their area, and an area SHALL open to
+The comparison page on the docs site SHALL compare pipelinq against the systems
+in `src/data/capabilityComparison.json` across every capability in that file. Capabilities SHALL be grouped by their area, and an area SHALL open to
 reveal its rows. Each row SHALL show its number, the capability, and a rating
 for every system.
 
@@ -56,6 +83,12 @@ other rating rather than left blank. A later round can add a capability row
 without re-reading the products an earlier round rated, and the honest cell for
 those products is one that says nobody looked. Hiding it would show a reader a
 rival scored over fewer rows than ours with nothing to explain the difference.
+
+A reader SHALL be able to search the rows by name or number and filter them by
+pipelinq's rating. The totals SHALL stay over the whole list while a filter is
+on, because a total over a filtered list reads as a different score.
+
+@e2e exclude The comparison renders on the Docusaurus site, which the app's Playwright suite does not drive. The grouping and tallies are asserted in tests/vitest/capabilityComparison.spec.js, and `npm run build` in docs/ prerenders the page.
 
 #### Scenario: Areas summarise before they expand
 
@@ -85,7 +118,7 @@ answer travels with the question and not with the wording.
 
 ### Requirement: The comparison MUST state its own limits
 
-The comparison section SHALL state, before any score:
+The comparison page SHALL state, before any score:
 
 1. That only open source software the team could install and run itself was
    compared, that the named systems are the whole field, and that a product's
@@ -122,6 +155,8 @@ The comparison section SHALL state, before any score:
    worth less than no total. And without the growth clause, a reader who
    watches the totals fall between two releases has no way to tell a growing
    denominator from a regressing product.
+
+@e2e exclude The comparison renders on the Docusaurus site, which the app's Playwright suite does not drive. Every caveat is asserted against the module the page renders from in tests/vitest/capabilityComparisonCopy.spec.js.
 
 #### Scenario: The panel advises the reader to test for themselves
 
@@ -167,11 +202,12 @@ row that understates our score for free. And a row carrying a rival `unknown`
 SHALL carry `addedOn`, while a row carrying `addedOn` SHALL be `unknown` for
 every rival. That pins the value to its only honest cause.
 
-The four caveats SHALL additionally be asserted against the rendered component,
-not only end to end. Each one is a plain paragraph inside a note card, and
+The four caveats SHALL additionally be asserted against the module the docs
+page renders from (`docs/src/components/CapabilityComparison/comparisonCopy.js`),
+not only by building the site. Each one is a plain paragraph inside a note card, and
 deleting one while editing the panel around it breaks nothing a build can see.
 
-@e2e exclude Guarded by assertions over the committed data file in tests/vitest/capabilityComparison.spec.js and by a mounted-component spec in tests/vitest/featuresRoadmapComparison.spec.js, neither of which a browser can reach: the failure mode is an edited JSON row or a deleted paragraph, not a broken screen.
+@e2e exclude Guarded by assertions over the committed data file in tests/vitest/capabilityComparison.spec.js and by tests/vitest/capabilityComparisonCopy.spec.js over the docs page's copy module, neither of which a browser can reach: the failure mode is an edited JSON row or a deleted paragraph, not a broken screen.
 
 #### Scenario: An edited row changes a total and fails
 
@@ -190,7 +226,9 @@ deleting one while editing the panel around it breaks nothing a build can see.
 Capability names and area names SHALL carry a Dutch variant beside the English
 one (`name_nl` beside `name`). The page SHALL render the Dutch variant for a
 Dutch locale and fall back to English when a Dutch variant is absent or blank.
-Page chrome SHALL be translated through `t('pipelinq', …)` and `l10n/nl.json`.
+The docs page SHALL render Dutch under the site's `nl` locale, with its sentences
+from the `NL` table in `docs/src/components/CapabilityComparison/comparisonCopy.js`.
+The in-app link SHALL be translated through `t('pipelinq', …)` and `l10n/nl.json`.
 
 @e2e exclude The e2e instance runs one locale, so a Dutch render cannot be driven there. The locale selection is asserted directly in tests/vitest/capabilityComparison.spec.js (groupByArea with nl).
 

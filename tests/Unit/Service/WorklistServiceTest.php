@@ -510,16 +510,48 @@ class WorklistServiceTest extends TestCase {
 
 		// The request query narrows the unified ticket schema on ticketType and
 		// still pushes the assignee filter + the 200-row cap into OpenRegister.
-		$this->assertSame(
-			[
-				[
-					'ticketType' => TicketService::TYPE_REQUEST,
-					'filters' => ['assignee' => 'alice'],
-					'limit' => 200,
-				],
+		// Every ticket type is queried, each narrowed on ticketType, each
+		// with the assignee filter + the 200-row cap (pipelinq review G1).
+		$expected = [];
+		foreach ([TicketService::TYPE_REQUEST, TicketService::TYPE_COMPLAINT, TicketService::TYPE_CONTACTMOMENT] as $type) {
+			$expected[] = [
+				'ticketType' => $type,
+				'filters' => ['assignee' => 'alice'],
+				'limit' => 200,
+			];
+		}
+
+		$this->assertSame($expected, $this->ticketCalls);
+	}
+
+	/**
+	 * An assigned complaint and contact moment are on the worklist; a resolved one is not.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/detail-pages-read-at-a-glance/specs/my-work/spec.md
+	 */
+	public function testEveryAssignedTicketTypeIsWork(): void {
+		$service = $this->buildService(byCollection: [
+			'ticket_schema:complaint' => [
+				['id' => 'k1', 'ticketType' => 'complaint', 'title' => 'Late delivery', 'status' => 'new'],
+				['id' => 'k2', 'ticketType' => 'complaint', 'title' => 'Done', 'status' => 'resolved'],
 			],
-			$this->ticketCalls
-		);
+			'ticket_schema:interaction' => [
+				['id' => 'i1', 'ticketType' => 'interaction', 'title' => 'Call back', 'status' => 'in_progress'],
+			],
+		]);
+
+		$result = $service->getMine(userId: 'alice');
+
+		$byId = [];
+		foreach ($result['items'] as $item) {
+			$byId[$item['id']] = $item;
+		}
+
+		$this->assertSame(['k1', 'i1'], array_keys($byId));
+		$this->assertSame('complaint', $byId['k1']['ticketType']);
+		$this->assertSame('TicketDetail', $byId['i1']['routeName']);
 	}
 
 	/**

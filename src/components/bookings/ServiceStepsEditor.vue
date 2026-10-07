@@ -7,6 +7,10 @@
   Warns when the step total disagrees with the service duration
   (REQ-APT-001 "duration sums to multi-step total").
 
+  A step can name a product from the catalogue with a quantity and a unit,
+  so a service such as "OpenWoo app" is composed of, say, 8 hours of
+  implementation, monthly hosting and an SLA (booking-and-service-pages).
+
   @spec openspec/specs/appointment-booking/spec.md
 -->
 <template>
@@ -35,6 +39,45 @@
 					duration: durationMinutes || 0,
 				})
 			}}
+		</template>
+		<template #cell-productId="{ row, index, update }">
+			<NcSelect
+				:modelValue="productOption(row.productId)"
+				:inputId="`service-step-product-${uid}-${index}`"
+				:aria-label-combobox="
+					t('pipelinq', 'Step {n} product', { n: index + 1 })
+				"
+				labelOutside
+				:placeholder="t('pipelinq', 'No product')"
+				:options="productOptions"
+				:loading="productsLoading"
+				label="label"
+				@update:modelValue="(o) => update(o ? o.value : undefined)" />
+		</template>
+		<template #cell-quantity="{ row, index, update }">
+			<NcTextField
+				:modelValue="row.quantity == null ? '' : String(row.quantity)"
+				type="number"
+				min="0"
+				step="any"
+				labelOutside
+				:aria-label="t('pipelinq', 'Step {n} quantity', { n: index + 1 })"
+				@update:modelValue="
+					(v) => update(v === '' ? undefined : Number(v))
+				" />
+		</template>
+		<template #cell-unit="{ row, index, update }">
+			<NcSelect
+				:modelValue="row.unit || null"
+				:inputId="`service-step-unit-${uid}-${index}`"
+				:aria-label-combobox="
+					t('pipelinq', 'Step {n} unit', { n: index + 1 })
+				"
+				labelOutside
+				:options="unitOptions"
+				:reduce="(o) => o.value"
+				label="label"
+				@update:modelValue="(v) => update(v || undefined)" />
 		</template>
 		<template #cell-durationMinutes="{ row, index, update }">
 			<NcTextField
@@ -86,6 +129,8 @@
 <script>
 import { NcCheckboxRadioSwitch, NcSelect, NcTextField } from '@nextcloud/vue'
 import BookingRowsEditor from './BookingRowsEditor.vue'
+import { STEP_UNITS, unitLabel } from '../../services/serviceSteps.js'
+import { useObjectStore } from '../../store/modules/object.js'
 
 let instanceCount = 0
 
@@ -111,7 +156,7 @@ export default {
 
 	data() {
 		instanceCount += 1
-		return { uid: instanceCount }
+		return { uid: instanceCount, products: [], productsLoading: false }
 	},
 
 	computed: {
@@ -135,6 +180,21 @@ export default {
 		 */
 		columns() {
 			return [
+				{
+					key: 'productId',
+					label: t('pipelinq', 'Product'),
+					width: 'minmax(10rem, 1.5fr)',
+				},
+				{
+					key: 'quantity',
+					label: t('pipelinq', 'Quantity'),
+					width: 'minmax(4.5rem, 6rem)',
+				},
+				{
+					key: 'unit',
+					label: t('pipelinq', 'Unit'),
+					width: 'minmax(6rem, 8rem)',
+				},
 				{
 					key: 'durationMinutes',
 					label: t('pipelinq', 'Duration (min)'),
@@ -171,6 +231,33 @@ export default {
 				moveDown: (n) => t('pipelinq', 'Move step {n} down', { n }),
 				remove: (n) => t('pipelinq', 'Remove step {n}', { n }),
 			}
+		},
+
+		/**
+		 * The catalogue's products as picker options.
+		 *
+		 * @return {Array<{value: string, label: string}>}
+		 *
+		 * @spec openspec/changes/booking-and-service-pages/specs/appointment-booking/spec.md
+		 */
+		productOptions() {
+			return this.products
+				.filter((p) => p && p.id)
+				.map((p) => ({
+					value: p.id,
+					label: p.name || p.title || p.id,
+				}))
+		},
+
+		/**
+		 * The units a step's quantity can be in.
+		 *
+		 * @return {Array<{value: string, label: string}>}
+		 *
+		 * @spec openspec/changes/booking-and-service-pages/specs/appointment-booking/spec.md
+		 */
+		unitOptions() {
+			return STEP_UNITS.map((value) => ({ value, label: unitLabel(value) }))
 		},
 
 		/**
@@ -221,7 +308,47 @@ export default {
 		},
 	},
 
+	/**
+	 * Load the product catalogue for the step product picker.
+	 *
+	 * @spec openspec/changes/booking-and-service-pages/specs/appointment-booking/spec.md
+	 */
+	async mounted() {
+		this.productsLoading = true
+		try {
+			const rows = await useObjectStore().fetchCollection('product', {
+				_limit: 500,
+			})
+			this.products = Array.isArray(rows) ? rows : []
+		} catch {
+			this.products = []
+		} finally {
+			this.productsLoading = false
+		}
+	},
+
 	methods: {
+		/**
+		 * The picker option for a product id, or null when none is set.
+		 * An id the catalogue does not know still shows, as the id.
+		 *
+		 * @param {string} id The product id.
+		 * @return {{value: string, label: string}|null}
+		 *
+		 * @spec openspec/changes/booking-and-service-pages/specs/appointment-booking/spec.md
+		 */
+		productOption(id) {
+			if (!id) {
+				return null
+			}
+			return (
+				this.productOptions.find((o) => o.value === id) || {
+					value: id,
+					label: id,
+				}
+			)
+		},
+
 		/**
 		 * A new step: staff, no duration, no skill, no gap.
 		 *

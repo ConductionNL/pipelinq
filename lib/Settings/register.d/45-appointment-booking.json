@@ -17,7 +17,7 @@
         "slug": "appointmentService",
         "title": "Service",
         "icon": "Tag",
-        "version": "1.0.0",
+        "version": "1.1.0",
         "summary": "A bookable service offered by the business (haircut, oil change, consultation).",
         "description": "Defines a bookable service with duration, pricing, skill/resource requirements, multi-step composition, and booking policies (online bookability, deposit, cancellation rules). Consumed by availability and booking services..",
         "required": [
@@ -132,6 +132,29 @@
                   "description": "When true, the resource is free during this step (e.g. Hair-colour processing: chair is occupied, stylist is not).",
                   "default": false,
                   "title": "Allow Gap"
+                },
+                "productId": {
+                  "type": "string",
+                  "description": "The catalogue product this step delivers, such as implementation hours, hosting or an SLA.",
+                  "title": "Product"
+                },
+                "quantity": {
+                  "type": "number",
+                  "description": "How much of the product this step delivers, in the step's unit.",
+                  "minimum": 0,
+                  "title": "Quantity"
+                },
+                "unit": {
+                  "type": "string",
+                  "description": "Unit of the quantity.",
+                  "enum": [
+                    "hour",
+                    "day",
+                    "month",
+                    "year",
+                    "piece"
+                  ],
+                  "title": "Unit"
                 }
               }
             },
@@ -318,6 +341,7 @@
           },
           "userId": {
             "type": "string",
+            "format": "user",
             "description": "Optional Nextcloud user id for staff resources (for self-management of working hours).",
             "title": "User ID"
           },

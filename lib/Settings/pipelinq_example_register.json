@@ -79,7 +79,6 @@
                 "taxBreakdown": [],
                 "totalTax": 0,
                 "total": 0,
-                "paymentProvider": null,
                 "paymentStatus": "pending"
             },
             {
@@ -173,7 +172,6 @@
                 ],
                 "totalTax": 2.06,
                 "total": 24.95,
-                "paymentProvider": null,
                 "paymentStatus": "pending",
                 "parkedAt": "2026-05-20T11:02:00+02:00",
                 "notes": "Klant even weg -- terugkomen (prijzen incl. BTW)"
@@ -1153,7 +1151,7 @@
                 "name": "Gemeente Amsterdam",
                 "type": "organization",
                 "contactsUid": "example-client-gemeente-amsterdam",
-                "industry": "Lokale overheid"
+                "industry": ["Lokale overheid"]
             },
             {
                 "@self": {
@@ -1165,7 +1163,7 @@
                 "name": "Provincie Zuid-Holland",
                 "type": "organization",
                 "contactsUid": "example-client-provincie-zuid-holland",
-                "industry": "Provinciale overheid"
+                "industry": ["Provinciale overheid"]
             },
             {
                 "@self": {
@@ -1177,7 +1175,7 @@
                 "name": "Rijkswaterstaat",
                 "type": "organization",
                 "contactsUid": "example-client-rijkswaterstaat",
-                "industry": "Rijksoverheid"
+                "industry": ["Rijksoverheid"]
             },
             {
                 "@self": {
@@ -1189,7 +1187,7 @@
                 "name": "GGD Rotterdam-Rijnmond",
                 "type": "organization",
                 "contactsUid": "example-client-ggd-rotterdam-rijnmond",
-                "industry": "Zorg"
+                "industry": ["Zorg"]
             },
             {
                 "@self": {
@@ -1201,7 +1199,7 @@
                 "name": "Waterschap Hollandse Delta",
                 "type": "organization",
                 "contactsUid": "example-client-waterschap-hollandse-delta",
-                "industry": "Waterschap"
+                "industry": ["Waterschap"]
             },
             {
                 "@self": {
@@ -1213,7 +1211,7 @@
                 "name": "Bakker BV",
                 "type": "organization",
                 "contactsUid": "example-client-bakker-bv",
-                "industry": "Bouw"
+                "industry": ["Bouw"]
             },
             {
                 "@self": {
@@ -1225,7 +1223,7 @@
                 "name": "Van der Berg Groep",
                 "type": "organization",
                 "contactsUid": "example-client-van-der-berg-groep",
-                "industry": "Groothandel"
+                "industry": ["Groothandel"]
             },
             {
                 "@self": {
@@ -1237,7 +1235,7 @@
                 "name": "Gemeente Arnhem",
                 "type": "organization",
                 "contactsUid": "example-client-gemeente-arnhem",
-                "industry": "Lokale overheid"
+                "industry": ["Lokale overheid"]
             },
             {
                 "@self": {
@@ -1413,7 +1411,7 @@
                 "contactsUid": "demo-gemeente-001",
                 "email": "info@gemeente-demo.nl",
                 "phone": "085-9999999",
-                "industry": "Lokale overheid",
+                "industry": ["Lokale overheid"],
                 "notes": "Demonstration client for the entity-notes change. Used as the target for the five contactmoment-001..005 seed objects so the Communication History panel is populated on first install."
             },
             {
@@ -1878,7 +1876,7 @@
                 "email": "kcc@gemeente-voorbeeld.nl",
                 "phone": "0800-1234500",
                 "address": "Raadhuisplein 1, 1234 AB Voorbeeldstad",
-                "industry": "Lokale overheid",
+                "industry": ["Lokale overheid"],
                 "notes": "Seed client for klantbeeld-360-activation (municipality archetype).",
                 "shillinqOrganisationRef": "00000000-0000-0000-0000-000000000000"
             },
@@ -1896,7 +1894,7 @@
                 "email": "info@meridiaan-advies.nl",
                 "phone": "020-5551234",
                 "address": "Zuidas 88, 1082 MS Amsterdam",
-                "industry": "Consultancy",
+                "industry": ["Consultancy"],
                 "notes": "Seed client for klantbeeld-360-activation (consultancy archetype).",
                 "shillinqOrganisationRef": "00000000-0000-0000-0000-000000000000"
             },
@@ -1914,7 +1912,7 @@
                 "email": "klantenservice@zonnereizen.nl",
                 "phone": "030-7778899",
                 "address": "Reiskade 12, 3511 ZZ Utrecht",
-                "industry": "Reisbranche",
+                "industry": ["Reisbranche"],
                 "notes": "Seed client for klantbeeld-360-activation (travel agency archetype)."
             },
             {
@@ -2643,7 +2641,7 @@
                     "schema": "appointmentBooking",
                     "slug": "booking-001-completed"
                 },
-                "customerId": "00000000-0000-0000-0000-000000000001",
+                "customerId": "client-bakker-bv",
                 "serviceId": "service-haircut-simple",
                 "resourceAssignments": [
                     {
@@ -2683,7 +2681,7 @@
                     "schema": "appointmentBooking",
                     "slug": "booking-002-confirmed"
                 },
-                "customerId": "00000000-0000-0000-0000-000000000002",
+                "customerId": "client-zonnereizen",
                 "serviceId": "service-color-and-cut",
                 "resourceAssignments": [
                     {
@@ -3806,8 +3804,7 @@
                 "billingCategory": "billing-category-declarabel",
                 "approvedBy": "admin",
                 "approvedAt": "2026-05-20T11:00:00Z",
-                "wipSyncStatus": "pending",
-                "wipSyncedAt": null
+                "wipSyncStatus": "pending"
             },
             {
                 "@self": {
@@ -3823,8 +3820,7 @@
                 "billingCategory": "billing-category-dba",
                 "approvedBy": "admin",
                 "approvedAt": "2026-05-19T10:00:00Z",
-                "wipSyncStatus": "failed",
-                "wipSyncedAt": null
+                "wipSyncStatus": "failed"
             },
             {
                 "@self": {
@@ -4239,7 +4235,6 @@
                 "scheduledFor": "2026-10-15T08:00:00+00:00",
                 "sentAt": "2026-10-15T08:02:18+00:00",
                 "status": "sent",
-                "abVariantOf": null,
                 "abSplitPercent": 50,
                 "totals": {
                     "queued": 0,
@@ -4333,7 +4328,6 @@
                 "sentAt": "2026-10-15T08:02:20+00:00",
                 "providerId": "sg-abc123xyz003",
                 "openedAt": "2026-10-15T11:32:00+00:00",
-                "firstClickAt": null,
                 "clickedUrls": []
             },
             {
@@ -4929,7 +4923,7 @@
                 },
                 "contactId": "contact-gemeente-utrecht-bakker",
                 "channel": "email",
-                "lawfulBasis": "soft-opt-in",
+                "lawfulBasis": "legitimate-interest",
                 "consentSource": "soft-opt-in-import",
                 "consentedAt": "2026-06-04T10:00:00+00:00",
                 "listId": "mailing-list-klantupdates",
@@ -4951,7 +4945,7 @@
                 },
                 "contactId": "contact-gemeente-eindhoven-mulder",
                 "channel": "email",
-                "lawfulBasis": "soft-opt-in",
+                "lawfulBasis": "legitimate-interest",
                 "consentSource": "soft-opt-in-import",
                 "consentedAt": "2026-06-04T10:00:00+00:00",
                 "listId": "mailing-list-klantupdates",

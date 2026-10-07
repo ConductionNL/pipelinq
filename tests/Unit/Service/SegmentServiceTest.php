@@ -572,6 +572,24 @@ class SegmentServiceTest extends TestCase {
 	}//end testEvaluateRulesLeafMatchAndNonMatch()
 
 	/**
+	 * evaluateRules: an `equals` rule written while industry was a string
+	 * still matches now that industry is a list (pipelinq-forms-review).
+	 *
+	 * @return void
+	 */
+	public function testEqualsMatchesAnItemOfAListField(): void {
+		$rule = [
+			'field' => 'industry',
+			'operator' => 'equals',
+			'value' => 'Public sector',
+		];
+
+		$this->assertTrue($this->service->evaluateRules($rule, ['industry' => ['Retail', 'public sector']]));
+		$this->assertFalse($this->service->evaluateRules($rule, ['industry' => ['Retail']]));
+		$this->assertFalse($this->service->evaluateRules($rule, ['industry' => []]));
+	}//end testEqualsMatchesAnItemOfAListField()
+
+	/**
 	 * evaluateRules: AND tree returns true only when every child matches.
 	 *
 	 * @return void

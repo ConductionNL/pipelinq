@@ -23,6 +23,7 @@ import { registerLeafIntegrations } from '@conduction/nextcloud-vue/integrations
 // `undefined` across the chunk boundary (components, used directly, are fine).
 import { installIntegrationRegistry } from '@conduction/nextcloud-vue/integrations/registry.js'
 import axios from '@nextcloud/axios'
+import { getCapabilities } from '@nextcloud/capabilities'
 import { loadState } from '@nextcloud/initial-state'
 import {
 	loadTranslations,
@@ -48,12 +49,15 @@ import {
 	MODULES_SETTING,
 	resolveMenuModules,
 } from './utils/menuModules.js'
+import { seedPageAppConfig } from './utils/pageAppConfig.js'
 import {
 	buildProfiledManifest,
+	navTheming,
 	resolveStructureProfile,
 	STRUCTURE_FULL,
 	STRUCTURE_SETTING,
 } from './utils/structureProfile.js'
+import { seedVatClassLabels } from './utils/vatClassLabels.js'
 
 // Library CSS — must be explicit import (webpack tree-shakes side-effect imports from aliased packages)
 import '@conduction/nextcloud-vue/css/index.css'
@@ -133,32 +137,6 @@ function tryLoadTranslations() {
 // making the component definition itself reactive inside the route record.
 const RoutePageRenderer = markRaw({ ...CnPageRenderer })
 
-/**
- * Seed the page-level app config onto every `type: "dashboard"` page's
- * `config.appConfig`. CnPageRenderer forwards each `config.*` key to the
- * dispatched page component's props, so this lands on CnDashboardPage's
- * `appConfig` prop — the source the library's `@config.<key>` token resolver
- * reads (via the `cnAppConfig` inject it provides to descendant stat widgets).
- * Backed by the `config` initial state the app's Application::boot() provides
- * (currently the reporting `currency` captured by the setup wizard, default
- * EUR). With this seed a manifest widget's `format: { style: "currency",
- * currency: "@config.currency" }` formats with the configured currency instead
- * of the literal EUR fallback. An explicit per-page `config.appConfig` (none
- * today) still wins.
- *
- * @param {object} manifest The merged manifest (with `pages[]`).
- * @return {object} The same manifest, with dashboard pages' appConfig seeded.
- */
-function seedDashboardAppConfig(manifest) {
-	const appConfig = loadState('pipelinq', 'config', {})
-	for (const page of manifest.pages || []) {
-		if (page.type === 'dashboard') {
-			page.config = { appConfig, ...(page.config || {}) }
-		}
-	}
-	return manifest
-}
-
 // `require.context` is a WEBPACK build-time API, not CommonJS `require`: the
 // bundler rewrites this call at compile time and no `require` exists at
 // runtime. eslint's browser globals therefore report `no-undef` correctly —
@@ -190,15 +168,25 @@ const profileFile =
 				),
 			)
 const { manifest: profiledManifest, homePage } = applyHomePage(
-	buildProfiledManifest(buildManifest, bundledManifest, fragments, profileFile),
+	buildProfiledManifest(buildManifest, bundledManifest, fragments, profileFile, {
+		theming: navTheming(getCapabilities()),
+	}),
 	profileFile.home,
 )
 // The getting-started tour sends the reader to menu entries the simple menu
 // does not have, so it is held back there. The full structure keeps it.
-const mergedManifest = seedDashboardAppConfig(
-	structureProfile === STRUCTURE_FULL
-		? profiledManifest
-		: holdUnreachableTours(profiledManifest),
+// Dashboard and detail pages read `@config.<key>` tokens (the reporting
+// currency, the pipeline target) from the `config` initial state; the VAT
+// class labels follow the rates set on the admin page.
+const mergedManifest = seedVatClassLabels(
+	seedPageAppConfig(
+		structureProfile === STRUCTURE_FULL
+			? profiledManifest
+			: holdUnreachableTours(profiledManifest),
+		loadState('pipelinq', 'config', {}),
+	),
+	loadState('pipelinq', 'config', {}).vat_rates,
+	(text) => t('pipelinq', text),
 )
 
 /**

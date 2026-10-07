@@ -69,6 +69,7 @@ class ForecastSettingsController extends Controller {
 	 * @return JSONResponse The configuration values.
 	 *
 	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-003-05
+	 * @spec openspec/changes/pipeline-numbers-tell-the-truth/specs/commercial-dashboard/spec.md
 	 */
 	#[AuthorizedAdminSetting(Application::APP_ID)]
 	public function index(): JSONResponse {
@@ -83,6 +84,7 @@ class ForecastSettingsController extends Controller {
 		return new JSONResponse(
 			[
 				'commit_threshold' => $this->appConfig->getValueInt($app, $thresholdKey, $thresholdValue),
+				'pipeline_target' => $this->appConfig->getValueInt($app, ForecastService::PIPELINE_TARGET_KEY, 0),
 				'generation_timezone' => $this->appConfig->getValueString($app, 'forecast_generation_timezone', 'UTC'),
 				'generation_day' => $this->appConfig->getValueInt($app, 'forecast_generation_day', 1),
 				'generation_hour' => $this->appConfig->getValueInt($app, 'forecast_generation_hour', 6),
@@ -106,6 +108,7 @@ class ForecastSettingsController extends Controller {
 	 * @return JSONResponse The save result.
 	 *
 	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-003-05
+	 * @spec openspec/changes/pipeline-numbers-tell-the-truth/specs/commercial-dashboard/spec.md
 	 *
 	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Linear sequence of independent per-key
 	 *   `isset` guards — each validates one optional field before persistence; not nested logic.
@@ -123,6 +126,15 @@ class ForecastSettingsController extends Controller {
 			}
 
 			$this->appConfig->setValueInt(Application::APP_ID, ForecastDealService::COMMIT_THRESHOLD_KEY, $threshold);
+		}
+
+		if (isset($params['pipeline_target']) === true) {
+			$target = (int)$params['pipeline_target'];
+			if ($target < 0) {
+				return new JSONResponse(['error' => 'pipeline_target must be non-negative.'], 400);
+			}
+
+			$this->appConfig->setValueInt(Application::APP_ID, ForecastService::PIPELINE_TARGET_KEY, $target);
 		}
 
 		if (isset($params['generation_timezone']) === true) {

@@ -34,6 +34,27 @@
 						min="0" />
 				</div>
 				<div class="forecast-field">
+					<label for="forecast-pipeline-target">{{
+						t('pipelinq', 'Open pipeline target (in reporting currency)')
+					}}</label>
+					<input
+						id="forecast-pipeline-target"
+						v-model.number="form.pipeline_target"
+						type="number"
+						min="0"
+						aria-describedby="forecast-pipeline-target-hint" />
+					<p
+						id="forecast-pipeline-target-hint"
+						class="forecast-field__hint">
+						{{
+							t(
+								'pipelinq',
+								'The dashboard compares your open pipeline with this amount. Leave 0 for no target.',
+							)
+						}}
+					</p>
+				</div>
+				<div class="forecast-field">
 					<label for="forecast-currency">{{
 						t('pipelinq', 'Reporting currency')
 					}}</label>
@@ -244,6 +265,7 @@ export default {
 			rateRows: [],
 			form: {
 				commit_threshold: 50000,
+				pipeline_target: 0,
 				generation_timezone: 'UTC',
 				generation_day: 1,
 				generation_hour: 6,
@@ -362,6 +384,12 @@ export default {
 	padding: 6px 8px;
 	border: 1px solid var(--color-border);
 	border-radius: var(--border-radius);
+}
+
+.forecast-field__hint {
+	margin: 0;
+	color: var(--color-text-maxcontrast);
+	font-size: 12px;
 }
 
 .forecast-rates {

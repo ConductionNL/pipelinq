@@ -1,0 +1,344 @@
+{
+  "_note": "Form presentation for pipelinq-forms-review, kept in one place: field order, the (i) help on master data fields, Nextcloud user and group pickers, language and timezone pickers with their defaults, and create-from-picker on references. Every key here is presentation (`format: user` lives on the property's own definition, so this overlay declares nothing): none constrains what a record may hold. The `x-*` keys are read by nextcloud-vue's fieldsFromSchema. OpenRegister refuses a schema whose `format` it does not list, so the group, language and timezone pickers are NOT formats here: the manifest pages ask for them through `fieldOverrides.<key>.widget`. `language` is hidden because correspondenceLanguage replaces it in the forms (NormalisePartyFormFields copies it over). Named 99-zz so it merges last.",
+  "components": {
+    "schemas": {
+      "product": {
+        "slug": "product",
+        "properties": {
+          "name": {
+            "order": 1
+          },
+          "description": {
+            "order": 2,
+            "visible": true
+          },
+          "type": {
+            "order": 3
+          },
+          "category": {
+            "order": 4
+          },
+          "status": {
+            "order": 5
+          },
+          "unitPrice": {
+            "order": 6
+          },
+          "vatClass": {
+            "order": 7
+          },
+          "unit": {
+            "order": 8
+          },
+          "sku": {
+            "order": 9
+          },
+          "barcode": {
+            "order": 10
+          },
+          "cost": {
+            "order": 11
+          },
+          "vendor": {
+            "order": 12
+          },
+          "taxRate": {
+            "order": 13
+          },
+          "duration": {
+            "order": 14
+          },
+          "isMasterRecord": {
+            "order": 90,
+            "x-help": "A master record is the one trusted version of a party or product. When the same one exists in several apps or sources, the others follow the master record. Switch it on only for the record your organisation treats as the source of truth."
+          },
+          "masterEntityRef": {
+            "order": 91,
+            "x-help": "The master entity this record belongs to. Records in different apps that describe the same party or product share one master entity. You rarely set this by hand: matching links it."
+          }
+        }
+      },
+      "client": {
+        "slug": "client",
+        "properties": {
+          "name": {
+            "order": 1
+          },
+          "type": {
+            "order": 2
+          },
+          "industry": {
+            "order": 3
+          },
+          "email": {
+            "order": 4
+          },
+          "phone": {
+            "order": 5
+          },
+          "website": {
+            "order": 6
+          },
+          "address": {
+            "order": 7
+          },
+          "accountOwner": {
+            "order": 8
+          },
+          "lifecycleStage": {
+            "order": 9
+          },
+          "accountStatus": {
+            "order": 10
+          },
+          "segment": {
+            "order": 11
+          },
+          "parentOrganisation": {
+            "order": 12
+          },
+          "correspondenceLanguage": {
+            "order": 13,
+            "x-default": "current-language"
+          },
+          "timezone": {
+            "order": 14
+          },
+          "preferredChannel": {
+            "order": 15
+          },
+          "organisationPath": {
+            "order": 16
+          },
+          "notes": {
+            "order": 17
+          },
+          "shillinqOrganisationRef": {
+            "order": 18
+          },
+          "isMasterRecord": {
+            "order": 90,
+            "x-help": "A master record is the one trusted version of a party or product. When the same one exists in several apps or sources, the others follow the master record. Switch it on only for the record your organisation treats as the source of truth."
+          },
+          "masterEntityRef": {
+            "order": 91,
+            "x-help": "The master entity this record belongs to. Records in different apps that describe the same party or product share one master entity. You rarely set this by hand: matching links it."
+          },
+          "language": {
+            "visible": false
+          }
+        }
+      },
+      "contact": {
+        "slug": "contact",
+        "properties": {
+          "name": {
+            "order": 1
+          },
+          "client": {
+            "order": 2,
+            "x-allow-create": true
+          },
+          "role": {
+            "order": 3
+          },
+          "email": {
+            "order": 4
+          },
+          "phone": {
+            "order": 5
+          },
+          "correspondenceLanguage": {
+            "order": 6,
+            "x-default": "current-language"
+          },
+          "timezone": {
+            "order": 7
+          },
+          "preferredChannel": {
+            "order": 8
+          },
+          "marketingConsent": {
+            "order": 9
+          },
+          "doNotContact": {
+            "order": 10
+          },
+          "surveyOptOut": {
+            "order": 11
+          },
+          "leads": {
+            "order": 12
+          },
+          "secrecy": {
+            "order": 13
+          },
+          "verifiedBSN": {
+            "order": 14
+          },
+          "isMasterRecord": {
+            "order": 90,
+            "x-help": "A master record is the one trusted version of a party or product. When the same one exists in several apps or sources, the others follow the master record. Switch it on only for the record your organisation treats as the source of truth."
+          },
+          "masterEntityRef": {
+            "order": 91,
+            "x-help": "The master entity this record belongs to. Records in different apps that describe the same party or product share one master entity. You rarely set this by hand: matching links it."
+          },
+          "language": {
+            "visible": false
+          }
+        }
+      },
+      "lead": {
+        "slug": "lead",
+        "properties": {
+          "title": {
+            "order": 1
+          },
+          "client": {
+            "order": 2,
+            "x-allow-create": true
+          },
+          "contact": {
+            "order": 3,
+            "x-allow-create": true
+          },
+          "value": {
+            "order": 4
+          },
+          "currency": {
+            "order": 5
+          },
+          "expectedCloseDate": {
+            "order": 6
+          },
+          "pipeline": {
+            "order": 7
+          },
+          "stage": {
+            "order": 8
+          },
+          "status": {
+            "order": 9
+          },
+          "priority": {
+            "order": 10
+          },
+          "assignee": {
+            "order": 11
+          },
+          "source": {
+            "order": 12
+          },
+          "category": {
+            "order": 13
+          },
+          "campaignId": {
+            "order": 14
+          },
+          "qualificationScore": {
+            "order": 15
+          },
+          "forecast_category": {
+            "order": 16
+          },
+          "commit_justification": {
+            "order": 17
+          },
+          "message": {
+            "order": 18
+          },
+          "decisions": {
+            "order": 19
+          },
+          "firstTouch": {
+            "order": 20
+          },
+          "lastTouch": {
+            "order": 21
+          }
+        }
+      },
+      "leadProduct": {
+        "slug": "leadProduct",
+        "properties": {
+          "lead": {
+            "order": 1
+          },
+          "product": {
+            "order": 2,
+            "x-allow-create": true
+          },
+          "quantity": {
+            "order": 3
+          },
+          "unit": {
+            "order": 4
+          },
+          "unitPrice": {
+            "order": 5
+          },
+          "discount": {
+            "order": 6
+          },
+          "discountType": {
+            "order": 7
+          },
+          "total": {
+            "order": 8
+          },
+          "notes": {
+            "order": 9
+          }
+        }
+      },
+      "crmTask": {
+        "slug": "crmTask",
+        "properties": {
+          "subject": {
+            "order": 1
+          },
+          "type": {
+            "order": 2
+          },
+          "status": {
+            "order": 3
+          },
+          "priority": {
+            "order": 4
+          },
+          "deadline": {
+            "order": 5
+          },
+          "assigneeUserId": {
+            "order": 6
+          },
+          "assigneeGroupId": {
+            "order": 7
+          },
+          "clientId": {
+            "order": 8
+          },
+          "lead": {
+            "order": 9
+          },
+          "requestId": {
+            "order": 10
+          },
+          "callbackPhoneNumber": {
+            "order": 11
+          },
+          "preferredTimeSlot": {
+            "order": 12
+          },
+          "description": {
+            "order": 13
+          },
+          "createdBy": {
+            "order": 14
+          }
+        }
+      }
+    }
+  }
+}
