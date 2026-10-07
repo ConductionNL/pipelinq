@@ -9,7 +9,7 @@ widget. The timeline SHALL list the moments the booking holds: created,
 deposit cleared, confirmation mail sent, reminder sent, starts, ends,
 cancelled and no-show fee charged, each only when set. It SHALL include the
 booking's audit trail, so a status change shows as a dated change with who
-made it. A moment in the future SHALL be marked as upcoming.
+made it, and each `statusHistory` entry with its status and reason. A moment in the future SHALL be marked as upcoming.
 
 #### Scenario: A confirmed booking
 

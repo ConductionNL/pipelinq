@@ -64,8 +64,17 @@ describe('the booking page', () => {
 		]) {
 			expect(fields).toContain(field)
 		}
-		// Status changes come from the audit trail.
+		// Status changes come from the audit trail and the statusHistory list.
 		expect(timeline.content.auditTrail).toBe(true)
+		const [history] = timeline.content.lists
+		const item =
+			bookingRegister.components.schemas.appointmentBooking.properties
+				.statusHistory.items.properties
+		expect(history.field).toBe('statusHistory')
+		for (const key of ['dateField', 'labelField', 'detailField']) {
+			expect(item[history[key]], key).toBeDefined()
+		}
+		expect(item[history.dateField].format).toBe('date-time')
 		// Every date field exists on the booking schema.
 		const schema =
 			bookingRegister.components.schemas.appointmentBooking.properties
