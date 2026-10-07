@@ -58,6 +58,7 @@ class CreateMessagingServiceGroup extends CreateServiceGroup {
 	 * The warning while no account is picked yet.
 	 *
 	 * @return string The warning.
+	 * @spec openspec/specs/outbound-messaging/spec.md#requirement-req-om-005-consent-gating-and-recording
 	 */
 	protected function noAccountWarning(): string {
 		return 'The SMS and WhatsApp webhooks have no service account yet, so they save nothing. Pick one in the Pipelinq messaging settings.';

@@ -635,6 +635,7 @@ export default {
 		 * The admin endpoint for the SMS and WhatsApp service account.
 		 *
 		 * @return {string} The url.
+		 * @spec openspec/specs/outbound-messaging/spec.md#requirement-req-om-005-consent-gating-and-recording
 		 */
 		serviceAccountUrl() {
 			return generateUrl('/apps/pipelinq/api/messaging/service-account')

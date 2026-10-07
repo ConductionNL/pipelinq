@@ -66,6 +66,7 @@ class CreatePortalServiceGroup extends CreateServiceGroup {
 	 * The warning while no account is picked yet.
 	 *
 	 * @return string The warning.
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
 	 */
 	protected function noAccountWarning(): string {
 		return 'The customer portal has no service account yet, so it refuses every write. Pick one in the Pipelinq admin settings.';

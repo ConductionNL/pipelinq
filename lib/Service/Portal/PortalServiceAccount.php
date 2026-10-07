@@ -72,6 +72,7 @@ class PortalServiceAccount extends ServiceAccount {
 	 * The app-config key holding the uid.
 	 *
 	 * @return string The key.
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
 	 */
 	protected function configKey(): string {
 		return self::CONFIG_KEY;
@@ -99,6 +100,7 @@ class PortalServiceAccount extends ServiceAccount {
 	 * @return never
 	 *
 	 * @throws PortalException 503 portalUnavailable.
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
 	 */
 	protected function refuse(string $userId, string $reason): never {
 		$this->logger->error(

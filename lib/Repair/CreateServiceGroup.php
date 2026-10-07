@@ -50,6 +50,7 @@ abstract class CreateServiceGroup implements IRepairStep {
 	 * The warning while no account is picked yet.
 	 *
 	 * @return string The warning.
+	 * @spec exclude shared plumbing of the portal and messaging service accounts; no requirement owns the acting identity
 	 */
 	abstract protected function noAccountWarning(): string;
 

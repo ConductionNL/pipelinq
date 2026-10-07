@@ -56,6 +56,7 @@ class MessagingServiceAccount extends ServiceAccount {
 	 * The app-config key holding the uid.
 	 *
 	 * @return string The key.
+	 * @spec openspec/specs/outbound-messaging/spec.md#requirement-req-om-005-consent-gating-and-recording
 	 */
 	protected function configKey(): string {
 		return self::CONFIG_KEY;
@@ -80,6 +81,7 @@ class MessagingServiceAccount extends ServiceAccount {
 	 * @return never
 	 *
 	 * @throws ServiceAccountUnavailableException Always.
+	 * @spec openspec/specs/outbound-messaging/spec.md#requirement-req-om-005-consent-gating-and-recording
 	 */
 	protected function refuse(string $userId, string $reason): never {
 		$this->logger->error(

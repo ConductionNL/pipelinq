@@ -104,6 +104,7 @@ abstract class ServiceAccount {
 	 * The app-config key holding the uid.
 	 *
 	 * @return string The key.
+	 * @spec exclude shared plumbing of the portal and messaging service accounts; no requirement owns the acting identity
 	 */
 	abstract protected function configKey(): string;
 
@@ -122,6 +123,7 @@ abstract class ServiceAccount {
 	 * @param string $reason One of the REASON_* constants.
 	 *
 	 * @return never
+	 * @spec exclude shared plumbing of the portal and messaging service accounts; no requirement owns the acting identity
 	 */
 	abstract protected function refuse(string $userId, string $reason): never;
 
