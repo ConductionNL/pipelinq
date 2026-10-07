@@ -315,6 +315,12 @@ class DemoSeedServiceTest extends TestCase {
 					$row['ticketType'] = $ticketType;
 				}
 
+				// A consistent store: every seeded object already points at the
+				// seeded pipeline its definition names.
+				if (isset($definition['pipelineKey']) === true) {
+					$row['pipeline'] = self::seededPipelineUuid(key: (string)$definition['pipelineKey']);
+				}
+
 				$rows[] = $row;
 			}
 
@@ -340,6 +346,23 @@ class DemoSeedServiceTest extends TestCase {
 
 		return $store;
 	}//end seededStore()
+
+	/**
+	 * The uuid seededStore() gives the demo pipeline with the given key.
+	 *
+	 * @param string $key The pipeline definition key.
+	 *
+	 * @return string The uuid.
+	 */
+	private static function seededPipelineUuid(string $key): string {
+		foreach (self::definitions()['pipelines'] as $i => $definition) {
+			if ($definition['key'] === $key) {
+				return 'pipelines-uuid-' . $i;
+			}
+		}
+
+		return '';
+	}//end seededPipelineUuid()
 
 	/**
 	 * Wire findAll to serve rows from a mutable store keyed by schema id.
@@ -596,6 +619,59 @@ class DemoSeedServiceTest extends TestCase {
 		self::assertSame(0, array_sum($result['created']));
 		self::assertSame(48, array_sum($result['skipped']));
 	}//end testSeedIsIdempotentOnRerun()
+
+	/**
+	 * A reseed re-points demo leads whose pipeline was deleted at the demo
+	 * pipeline it resolved, and touches nothing else (pipelinq review F1).
+	 *
+	 * On the old code the lead was reused as it was, so it kept the dead id:
+	 * saveObject was never called and this test fails.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/review-audit-fixes-b/specs/lead-management/spec.md#requirement-a-reseed-re-links-demo-leads-to-the-new-pipeline-req-raf-010
+	 */
+	public function testReseedRelinksDemoLeadsOnADeletedPipeline(): void {
+		$this->provisionConfig();
+
+		$store = self::seededStore();
+		$deadPipeline = '44c997c9-dead-pipeline';
+		$leadSchema = self::SECTION_SCHEMAS['leads'][0];
+		$orphaned = 0;
+		foreach ($store[$leadSchema] as $i => $row) {
+			if (isset($row['pipeline']) === true) {
+				$store[$leadSchema][$i]['pipeline'] = $deadPipeline;
+				$store[$leadSchema][$i]['stage'] = 'Qualified';
+				$orphaned++;
+			}
+		}
+
+		self::assertGreaterThan(0, $orphaned);
+		$this->mockFindAllFromStore($store);
+
+		$saved = [];
+		$this->objectService->method('saveObject')->willReturnCallback(
+			static function (array $object, ...$rest) use (&$saved): ObjectEntity {
+				$saved[] = ['object' => $object, 'schema' => $rest[2] ?? null, 'uuid' => $rest[3] ?? null];
+				return self::savedEntity((string)($rest[3] ?? 'new'));
+			}
+		);
+		$this->ticketService->expects(self::never())->method('save');
+
+		$result = $this->service->seed();
+
+		self::assertTrue($result['success']);
+		self::assertSame(0, array_sum($result['created']));
+		self::assertSame($orphaned, $result['relinked']['leads']);
+		self::assertCount($orphaned, $saved);
+		foreach ($saved as $write) {
+			self::assertSame($leadSchema, $write['schema']);
+			self::assertStringStartsWith('leads-uuid-', (string)$write['uuid']);
+			self::assertStringStartsWith('pipelines-uuid-', $write['object']['pipeline']);
+			// The rest of the stored lead is kept as it was.
+			self::assertSame('Qualified', $write['object']['stage']);
+		}
+	}//end testReseedRelinksDemoLeadsOnADeletedPipeline()
 
 	/**
 	 * Removal deletes exactly the seeded set — never the non-demo decoys.
