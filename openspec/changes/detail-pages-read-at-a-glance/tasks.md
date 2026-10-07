@@ -1,5 +1,7 @@
 # Tasks: detail-pages-read-at-a-glance
 
+> Archive pass 2026-10-07: code done (#2178), every task ticked; not archived. The main spec `openspec/specs/my-work/spec.md` holds the whole document twice (two `# My Work` titles, three `## Requirements` headers, eight requirement names repeated), so `openspec archive` refuses to write into it. Its delta headers were corrected from MODIFIED to ADDED (none of REQ-DPG-* existed in a main spec). Archive after my-work is collapsed to one copy.
+
 ## 1. Contact page (E2)
 
 - [x] 1.1 Add `src/components/widgets/sectionWidget.js` and register the contact sections as widget types in `src/registry.js`

@@ -1,5 +1,7 @@
 # Tasks: Pipelinq IA Alignment
 
+> Archive pass 2026-10-07: not archived. Tasks are a numbered list, not checkboxes; the menu restructure (1-18, 24-27) is marked superseded and only the Prospects page (19-23) was built. The deltas sit in a non-standard `specs.md`, so `openspec validate` finds none. Needs a decision: shrink to the Prospects page and archive, or retire.
+
 **Status (2026-06-15): PARTIALLY SUPERSEDED.** The bulk of this proposal — the
 6-wrapper Dutch menu restructure (Mijn werk / Contacten / Pipeline / Klachten &
 Verzoeken / Catalogus / Beheer with relabels) — was written against a flat,

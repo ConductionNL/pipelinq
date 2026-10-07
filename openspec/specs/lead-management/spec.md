@@ -1095,6 +1095,107 @@ The score badge MUST open an explanation listing each criterion that added point
 - **WHEN** Sanne opens the explanation
 - **THEN** it lists "Value present +10", "Client linked +15", "Expected close date set +10" and totals 35
 
+### Requirement: Every lead sits in a pipeline stage (REQ-PNT-010)
+
+When a lead is created without a stage, the system SHALL place it in the first
+stage that is not closed, by stage order, of its pipeline. When it also has no
+pipeline, the system SHALL use the default lead pipeline, or the first lead
+pipeline when none is marked default. The system SHALL set `stageOrder` and
+`stageEnteredAt` with the stage. This SHALL hold for every way a lead is
+created: the form, the API, flows and imports. A repair step SHALL place the
+stored leads that have no stage, with their creation time as entry time.
+
+#### Scenario: A website enquiry becomes a lead in the first stage
+
+- GIVEN the default sales pipeline has the stages New, Contacted and Won
+- WHEN the enquiry flow creates a lead with that pipeline and no stage
+- THEN the lead is stored in stage New with stage order 1
+
+#### Scenario: Stored leads without a stage are repaired
+
+- GIVEN a stored lead on the sales pipeline without a stage, created on 1 September
+- WHEN the administrator runs the maintenance repair
+- THEN the lead is in stage New, entered on 1 September
+
+#### Scenario: A lead keeps the stage it was given
+
+- GIVEN a new lead created in stage Contacted
+- WHEN it is saved
+- THEN it stays in Contacted and gets that stage's order
+
+### Requirement: A reseed re-links demo leads to the new pipeline (REQ-RAF-010)
+
+When the demo seed finds a demo object that already exists, it SHALL keep it,
+and SHALL point its `pipeline` at the demo pipeline this run resolved when the
+two differ. Nothing else on the object SHALL change.
+
+#### Scenario: The demo pipeline was deleted
+
+- GIVEN six demo leads on a deleted demo pipeline
+- WHEN the administrator loads the demo data again
+- THEN a new demo pipeline exists and the six leads sit on it, in their own stage
+
+### Requirement: A repair step moves leads off a deleted pipeline (REQ-RAF-011)
+
+A repair step SHALL move every lead whose `pipeline` names no existing pipeline
+to the default lead pipeline. An open lead SHALL go to the first open stage, a
+won lead to the won stage and a lost lead to the closed stage that is not won.
+The step SHALL write as the signed-in user, or as the pipelinq system account
+when nobody is signed in, with OpenRegister's access checks on. When no
+pipeline can be read, the step SHALL move nothing.
+
+#### Scenario: An open lead on a deleted pipeline
+
+- GIVEN an open lead on a pipeline that was deleted
+- WHEN the maintenance repair runs
+- THEN the lead is on the default pipeline in its first open stage
+
+#### Scenario: A won lead stays won
+
+- GIVEN a won lead on a pipeline that was deleted
+- WHEN the maintenance repair runs
+- THEN the lead is in the default pipeline's won stage
+
+### Requirement: Tender is a default lead source (REQ-RAF-012)
+
+The default lead sources SHALL include `tender`, and every lead source the demo
+data uses SHALL be a default lead source.
+
+#### Scenario: A tender lead is edited
+
+- GIVEN the demo lead "Intranet migratie Zonnedael" with source tender
+- WHEN a user opens its edit form
+- THEN tender is one of the offered sources
+
+### Requirement: The qualification score is calculated, not typed (REQ-RAF-013)
+
+The lead edit dialog SHALL NOT offer the qualification score. The lead page
+SHALL show it read-only, with a description that says it is calculated when the
+lead is saved.
+
+#### Scenario: A user edits a lead
+
+- GIVEN a lead with score 65
+- WHEN the user opens Edit
+- THEN the form has no qualification score field
+
+### Requirement: The lead form has no probability input (REQ-RF-030)
+
+The lead form SHALL NOT offer a probability input, because the win chance
+is the qualification score. Editing a lead that has a stored probability
+SHALL keep that value.
+
+#### Scenario: A new lead form
+
+- WHEN the user opens the create lead form
+- THEN there is no probability field
+
+#### Scenario: Editing keeps a stored probability
+
+- GIVEN a lead with probability 40
+- WHEN the user edits and saves it
+- THEN the lead still has probability 40
+
 ## UI Reference
 
 ### Lead List View

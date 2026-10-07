@@ -1,6 +1,6 @@
 # lead-management Specification (delta)
 
-## MODIFIED Requirements
+## ADDED Requirements
 
 ### Requirement: The lead page has one deal block (REQ-DPG-010)
 

@@ -1,6 +1,6 @@
 # commercial-dashboard Specification (delta)
 
-## MODIFIED Requirements
+## ADDED Requirements
 
 ### Requirement: The weighted forecast uses each lead's win chance (REQ-PNT-001)
 
