@@ -4020,7 +4020,7 @@
 									"schema": "posRefund",
 									"metric": "sum",
 									"field": "refundAmount",
-									"countLabel": "EUR",
+									"currency": "EUR",
 									"filter": { "id": "@objectId" }
 								}
 							]
@@ -4039,7 +4039,7 @@
 									"schema": "posRefund",
 									"metric": "sum",
 									"field": "totalTax",
-									"countLabel": "EUR",
+									"currency": "EUR",
 									"filter": { "id": "@objectId" }
 								}
 							]
@@ -4202,7 +4202,7 @@
 									"schema": "cashShift",
 									"metric": "sum",
 									"field": "floatAmount",
-									"countLabel": "EUR",
+									"currency": "EUR",
 									"filter": { "id": "@objectId" }
 								}
 							]
@@ -4414,7 +4414,7 @@
 									"schema": "posZReport",
 									"metric": "sum",
 									"field": "total",
-									"countLabel": "EUR",
+									"currency": "EUR",
 									"filter": { "id": "@objectId" }
 								}
 							]
@@ -4433,7 +4433,7 @@
 									"schema": "posZReport",
 									"metric": "sum",
 									"field": "totalTax",
-									"countLabel": "EUR",
+									"currency": "EUR",
 									"filter": { "id": "@objectId" }
 								}
 							]
