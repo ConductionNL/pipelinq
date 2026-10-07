@@ -7103,7 +7103,14 @@ OC.L10N.register(
         "Then: answer the customer, or finish": "Daarna: de klant beantwoorden, of afronden",
         "Then: back to in progress, or finish": "Daarna: terug naar in behandeling, of afronden",
         "How pipelinq compares to other help desks": "Hoe pipelinq zich verhoudt tot andere helpdesks",
-        "Opens {host} in a new tab.": "Opent {host} in een nieuw tabblad."
+        "Opens {host} in a new tab.": "Opent {host} in een nieuw tabblad.",
+        "%n lead is on no board, because its pipeline or stage no longer exists.": ["%n lead staat op geen enkel bord, omdat de pijplijn of fase niet meer bestaat.","%n leads staan op geen enkel bord, omdat hun pijplijn of fase niet meer bestaat."],
+        "%n leads are on no board, because their pipeline or stage no longer exists.": "%n leads staan op geen enkel bord, omdat hun pijplijn of fase niet meer bestaat.",
+        "Show these leads": "Toon deze leads",
+        "Hide these leads": "Verberg deze leads",
+        "Its pipeline no longer exists.": "De pijplijn bestaat niet meer.",
+        "Its stage {stage} is not a stage of its pipeline.": "De fase {stage} hoort niet bij de pijplijn.",
+        "Calculated when the lead is saved, from its value, client, contact, source, close date, priority and description. You cannot change it by hand.": "Berekend bij het opslaan van de lead, uit de waarde, klant, contactpersoon, bron, verwachte sluitdatum, prioriteit en beschrijving. Je kunt de score niet zelf aanpassen."
     },
     "nplurals=2; plural=(n != 1);"
 )

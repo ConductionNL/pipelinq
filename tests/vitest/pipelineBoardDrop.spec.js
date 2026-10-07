@@ -21,6 +21,7 @@ vi.mock('@nextcloud/vue', () => ({
 	NcButton: {},
 	NcCheckboxRadioSwitch: {},
 	NcLoadingIcon: {},
+	NcNoteCard: {},
 	NcSelect: {},
 	NcTextField: {},
 }))

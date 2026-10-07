@@ -67,6 +67,57 @@
 			</div>
 		</div>
 
+		<!-- Leads no column shows: their pipeline was deleted or their stage
+		     is not one of its stages. They still count in the open pipeline
+		     and the forecast, so the board names them (pipelinq review F1). -->
+		<NcNoteCard
+			v-if="orphanedLeads.length > 0"
+			type="warning"
+			class="pipeline-board__orphans"
+			data-testid="pipeline-orphaned-leads">
+			<p>
+				{{
+					n(
+						'pipelinq',
+						'%n lead is on no board, because its pipeline or stage no longer exists.',
+						'%n leads are on no board, because their pipeline or stage no longer exists.',
+						orphanedLeads.length,
+					)
+				}}
+			</p>
+			<NcButton
+				variant="tertiary"
+				:aria-expanded="String(showOrphans)"
+				@click="showOrphans = !showOrphans">
+				{{
+					showOrphans
+						? t('pipelinq', 'Hide these leads')
+						: t('pipelinq', 'Show these leads')
+				}}
+			</NcButton>
+			<ul v-if="showOrphans" class="pipeline-board__orphan-list">
+				<li v-for="entry in orphanedLeads" :key="entry.lead.id">
+					<router-link
+						:to="{ name: 'LeadDetail', params: { id: entry.lead.id } }">
+						{{ entry.lead.title || entry.lead.id }}
+					</router-link>
+					<span class="pipeline-board__orphan-reason">
+						{{
+							entry.reason === 'pipeline'
+								? t('pipelinq', 'Its pipeline no longer exists.')
+								: t(
+										'pipelinq',
+										'Its stage {stage} is not a stage of its pipeline.',
+										{
+											stage: entry.lead.stage,
+										},
+									)
+						}}
+					</span>
+				</li>
+			</ul>
+		</NcNoteCard>
+
 		<NcLoadingIcon v-if="loading" />
 
 		<div v-else-if="!selectedPipeline" class="pipeline-board__empty">
@@ -430,6 +481,7 @@ import {
 	NcButton,
 	NcCheckboxRadioSwitch,
 	NcLoadingIcon,
+	NcNoteCard,
 	NcSelect,
 	NcTextField,
 } from '@nextcloud/vue'
@@ -442,6 +494,7 @@ import PipelineFormDialog from '../../dialogs/PipelineFormDialog.vue'
 import PipelineCard from './PipelineCard.vue'
 import { compareCallFirst } from '../../services/leadScore.js'
 import { formatDate } from '../../services/localeUtils.js'
+import { choosePipeline, findOrphanedLeads } from '../../services/pipelineOrphans.js'
 import {
 	formatAge,
 	getAgingClass,
@@ -479,6 +532,7 @@ export default {
 		NcButton,
 		NcCheckboxRadioSwitch,
 		NcLoadingIcon,
+		NcNoteCard,
 		NcSelect,
 		NcTextField,
 		LeadScoreBadge,
@@ -493,6 +547,10 @@ export default {
 		return {
 			selectedPipelineId: null,
 			showPipelineForm: false,
+			// Every lead, whatever its pipeline: for the opening choice and
+			// for the leads no board shows.
+			allLeads: [],
+			showOrphans: false,
 			itemsFetchSeq: 0,
 			showFilter: 'all',
 			/**
@@ -587,6 +645,16 @@ export default {
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-25
 		 */
+		/**
+		 * The leads no board column shows, with the reason.
+		 *
+		 * @return {Array<{lead: object, reason: string}>}
+		 * @spec openspec/changes/review-audit-fixes-b/specs/pipeline/spec.md#requirement-the-board-names-leads-that-are-on-no-board-req-raf-020
+		 */
+		orphanedLeads() {
+			return findOrphanedLeads(this.allLeads, this.pipelines)
+		},
+
 		selectedPipeline() {
 			if (!this.selectedPipelineId) return null
 			return (
@@ -797,9 +865,10 @@ export default {
 		await this.objectStore.fetchCollection('pipeline', { _limit: 100 })
 
 		if (this.pipelines.length > 0) {
-			const defaultPipeline =
-				this.pipelines.find((p) => p.isDefault) || this.pipelines[0]
-			this.selectedPipelineId = defaultPipeline.id
+			// Open where the open leads are: the default pipeline when it has
+			// any, else the pipeline with the most (see choosePipeline).
+			this.allLeads = await this.fetchAllLeads()
+			this.selectedPipelineId = choosePipeline(this.pipelines, this.allLeads)
 			await this.fetchPipelineItems()
 		}
 		this.loading = false
@@ -1202,6 +1271,36 @@ export default {
 		},
 
 		/**
+		 * Every lead, whatever its pipeline, for the opening choice and the
+		 * leads no board shows. A failed read yields none, so the board still
+		 * opens on the default pipeline.
+		 *
+		 * @return {Promise<Array<object>>} The leads.
+		 * @spec openspec/changes/review-audit-fixes-b/specs/pipeline/spec.md#requirement-the-board-opens-where-the-open-leads-are-req-raf-021
+		 */
+		async fetchAllLeads() {
+			const config = this.objectStore.objectTypeRegistry.lead
+			if (!config) return []
+			try {
+				const url = generateUrl(
+					`/apps/openregister/api/objects/${config.register}/${config.schema}?_limit=500`,
+				)
+				const response = await fetch(url, {
+					headers: {
+						'Content-Type': 'application/json',
+						requesttoken: OC.requestToken,
+						'OCS-APIREQUEST': 'true',
+					},
+				})
+				if (!response.ok) return []
+				const data = await response.json()
+				return Array.isArray(data.results) ? data.results : []
+			} catch {
+				return []
+			}
+		},
+
+		/**
 		 * Fetch the pipeline's items for one logical schema slug.
 		 *
 		 * `schemaSlug` is a *logical* type — it comes from a pipeline's stored
@@ -1484,6 +1583,21 @@ export default {
 	display: flex;
 	gap: 2px;
 	margin-inline-start: 8px;
+}
+
+.pipeline-board__orphans {
+	margin: 0 0 12px;
+}
+
+.pipeline-board__orphan-list {
+	margin: 8px 0 0;
+	padding-inline-start: 20px;
+	list-style: disc;
+}
+
+.pipeline-board__orphan-reason {
+	margin-inline-start: 8px;
+	color: var(--color-text-maxcontrast);
 }
 
 .pipeline-board__empty {
