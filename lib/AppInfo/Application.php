@@ -77,6 +77,7 @@ use OCA\Pipelinq\Service\ForecastService;
 use OCA\Pipelinq\Service\Gdpr\PipelinqApRegulatorEscalateProvider;
 use OCA\Pipelinq\Service\Gdpr\PipelinqBsnIdentityVerifyProvider;
 use OCA\Pipelinq\Service\HaalCentraalClient;
+use OCA\Pipelinq\Service\VatRates;
 use OCP\App\IAppManager;
 use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
@@ -737,10 +738,13 @@ class Application extends App implements IBootstrap {
 			// Reporting currency and open-pipeline target (0 = none) seed the
 			// SPA's `config` state: `@config.currency`, `@config.pipelineTarget`.
 			$appConfig = $this->getContainer()->get(IAppConfig::class);
+			// `vat_rates` labels the product form's VAT class options with
+			// the configured rate (pipelinq-forms-review).
 			$initialState->provideInitialState(
 				'config',
 				[
 					'currency' => $appConfig->getValueString(self::APP_ID, 'currency', 'EUR'),
+					'vat_rates' => (new VatRates(appConfig: $appConfig))->rates(),
 					'pipelineTarget' => $appConfig->getValueInt(self::APP_ID, ForecastService::PIPELINE_TARGET_KEY, 0),
 				]
 			);

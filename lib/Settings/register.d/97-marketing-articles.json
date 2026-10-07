@@ -144,6 +144,7 @@
           },
           "author": {
             "type": "string",
+            "format": "user",
             "description": "Nextcloud user id of the person who owns the article. Stamped from the session and never taken from the request body.",
             "title": "Author"
           },

@@ -27,16 +27,10 @@
 				"display": "cards",
 				"optionsSource": "datasets",
 				"configKey": "demo_dataset",
+				"loadAction": "load-demo-data",
 				"required": false,
 				"title": "Load example data?",
-				"body": "Example data fills the lists, dashboards and the 360 degree client view so you can see the app working straight away. Pick \"None\" on a production install."
-			},
-			{
-				"id": "load-demo-data",
-				"type": "run-action",
-				"action": "load-demo-data",
-				"title": "Load the example data",
-				"body": "Loads what you picked. Every object is marked [Demo], it is safe to run more than once, and `occ pipelinq:demo:seed --remove` takes it away again."
+				"body": "Example data fills the lists, dashboards and the client view, so you see the app working straight away. Each card has its own Load button. Pick \"None\" on a production install. Every example record is marked [Demo], and `occ pipelinq:demo:seed --remove` takes it away again."
 			},
 			{
 				"id": "currency",
@@ -53,50 +47,64 @@
 				]
 			},
 			{
-				"id": "provision",
-				"type": "run-action",
-				"title": "Provision data",
-				"action": "provision-register",
-				"body": "Create the Pipelinq OpenRegister register and schemas, plus the default sales pipeline and stages, agent skills, lead sources and request channels. This normally runs automatically on install; run it here if OpenRegister was enabled after Pipelinq, or to repair a partial install. It is safe to run more than once."
-			},
-			{
 				"id": "organisation",
 				"type": "config-fields",
 				"title": "Organisation",
-				"body": "Your organisation details, printed on POS receipts and shown on reports. Optional: leave blank to skip.",
+				"body": "Your organisation details. They appear on receipts and reports. Every field is optional, so leave one blank to skip it.",
 				"schema": {
 					"type": "object",
 					"properties": {
 						"receipt_company_name": {
 							"type": "string",
-							"title": "Organisation name"
-						},
-						"receipt_company_vat": {
-							"type": "string",
-							"title": "VAT number"
+							"title": "Organisation name",
+							"order": 1
 						},
 						"receipt_company_kvk": {
 							"type": "string",
-							"title": "Chamber of Commerce (KvK) number"
-						}
-					}
-				}
-			},
-			{
-				"id": "integrations",
-				"type": "config-fields",
-				"title": "Integrations",
-				"body": "Optional connections to other Conduction apps. Set the Shillinq base URL to surface recurring-revenue metrics and route billing/ledger entries; set the XWiki URL to embed the knowledge base. Leave blank to disable.",
-				"schema": {
-					"type": "object",
-					"properties": {
-						"shillinq_app_url": {
-							"type": "string",
-							"title": "Shillinq base URL"
+							"title": "Chamber of Commerce (KvK) number",
+							"order": 2
 						},
-						"xwiki_direct_url": {
+						"receipt_company_vat": {
 							"type": "string",
-							"title": "XWiki base URL"
+							"title": "VAT number",
+							"order": 3
+						},
+						"receipt_company_street": {
+							"type": "string",
+							"title": "Street and number",
+							"order": 4
+						},
+						"receipt_company_postcode": {
+							"type": "string",
+							"title": "Postcode",
+							"order": 5
+						},
+						"receipt_company_city": {
+							"type": "string",
+							"title": "City",
+							"order": 6
+						},
+						"receipt_company_country": {
+							"type": "string",
+							"title": "Country",
+							"order": 7
+						},
+						"receipt_company_email": {
+							"type": "string",
+							"format": "email",
+							"title": "Email address",
+							"order": 8
+						},
+						"receipt_company_phone": {
+							"type": "string",
+							"title": "Phone number",
+							"order": 9
+						},
+						"receipt_company_website": {
+							"type": "string",
+							"format": "uri",
+							"title": "Website",
+							"order": 10
 						}
 					}
 				}
@@ -126,15 +134,63 @@
 						"placement": "center",
 						"sinceVersion": "1.0.0",
 						"title": "Welcome to Pipelinq",
-						"body": "Let's walk the core sales journey together, from a product to a billed contract. You'll create each record yourself, in your own workspace.",
+						"body": "Let's walk the core sales journey together, from a client to a billed contract. You'll create each record yourself, in your own workspace.",
 						"target": { "kind": "page", "ref": "Dashboard" },
 						"advanceOn": { "type": "manual" }
+					},
+					{
+						"id": "go-clients",
+						"sinceVersion": "1.1.0",
+						"placement": "right",
+						"body": "Start with the customer. Open Clients.",
+						"task": "Click Clients in the menu",
+						"target": { "kind": "nav-item", "ref": "Clients" },
+						"advanceOn": { "type": "route-match", "route": "Clients" }
+					},
+					{
+						"id": "create-client",
+						"sinceVersion": "1.1.0",
+						"placement": "bottom",
+						"allowManualNext": true,
+						"body": "Add the organisation or person you sell to.",
+						"task": "Click New and save a client",
+						"target": { "kind": "element", "ref": "index-add" },
+						"advanceOn": {
+							"type": "object-created",
+							"register": "pipelinq",
+							"schema": "client",
+							"capture": { "clientId": ":id" }
+						}
+					},
+					{
+						"id": "go-contacts",
+						"sinceVersion": "1.0.0",
+						"placement": "right",
+						"body": "Now the person you talk to. Open Contacts.",
+						"task": "Click Contacts in the menu",
+						"target": { "kind": "nav-item", "ref": "Contacts" },
+						"advanceOn": { "type": "route-match", "route": "Contacts" }
+					},
+					{
+						"id": "create-contact",
+						"sinceVersion": "1.0.0",
+						"placement": "bottom",
+						"allowManualNext": true,
+						"body": "Add your contact person and pick the client you just made.",
+						"task": "Click New and save a contact",
+						"target": { "kind": "element", "ref": "index-add" },
+						"advanceOn": {
+							"type": "object-created",
+							"register": "pipelinq",
+							"schema": "contact",
+							"capture": { "contactId": ":id" }
+						}
 					},
 					{
 						"id": "go-products",
 						"sinceVersion": "1.0.0",
 						"placement": "right",
-						"body": "First, your catalogue. Open Products from the menu.",
+						"body": "Next, your catalogue. Open Products from the menu.",
 						"task": "Click Products in the menu",
 						"target": { "kind": "nav-item", "ref": "Products" },
 						"advanceOn": { "type": "route-match", "route": "Products" }
@@ -155,30 +211,6 @@
 						}
 					},
 					{
-						"id": "go-contacts",
-						"sinceVersion": "1.0.0",
-						"placement": "right",
-						"body": "Now the customer. Open Contacts.",
-						"task": "Click Contacts in the menu",
-						"target": { "kind": "nav-item", "ref": "Contacts" },
-						"advanceOn": { "type": "route-match", "route": "Contacts" }
-					},
-					{
-						"id": "create-contact",
-						"sinceVersion": "1.0.0",
-						"placement": "bottom",
-						"allowManualNext": true,
-						"body": "Add the person or organisation you're selling to.",
-						"task": "Click New and save a contact",
-						"target": { "kind": "element", "ref": "index-add" },
-						"advanceOn": {
-							"type": "object-created",
-							"register": "pipelinq",
-							"schema": "contact",
-							"capture": { "contactId": ":id" }
-						}
-					},
-					{
 						"id": "go-leads",
 						"sinceVersion": "1.0.0",
 						"placement": "right",
@@ -192,7 +224,7 @@
 						"sinceVersion": "1.0.0",
 						"placement": "bottom",
 						"allowManualNext": true,
-						"body": "Create a lead for this opportunity and link the contact you just made.",
+						"body": "Create a lead for this opportunity. Link the client and contact you just made.",
 						"task": "Click New and save a lead",
 						"target": { "kind": "element", "ref": "index-add" },
 						"advanceOn": {
@@ -1568,7 +1600,9 @@
 				"fieldOverrides": {
 					"name": { "readOnly": false },
 					"email": { "readOnly": false },
-					"phone": { "readOnly": false }
+					"phone": { "readOnly": false },
+					"correspondenceLanguage": { "widget": "language" },
+					"timezone": { "widget": "timezone" }
 				},
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"showViewAction": false,
@@ -2557,7 +2591,9 @@
 				"fieldOverrides": {
 					"name": { "readOnly": false },
 					"email": { "readOnly": false },
-					"phone": { "readOnly": false }
+					"phone": { "readOnly": false },
+					"correspondenceLanguage": { "widget": "language" },
+					"timezone": { "widget": "timezone" }
 				},
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"showViewAction": false,
@@ -3522,6 +3558,9 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "crmTask",
+				"fieldOverrides": {
+					"assigneeGroupId": { "widget": "group" }
+				},
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"showViewAction": false,
 				"actions": [
@@ -3534,12 +3573,12 @@
 					}
 				],
 				"columns": [
-					{ "key": "title", "label": "Title" },
+					{ "key": "subject", "label": "Subject" },
 					{ "key": "type", "label": "Type" },
 					{ "key": "status", "label": "Status" },
 					{ "key": "priority", "label": "Priority" },
-					{ "key": "assignee", "label": "Assignee" },
-					{ "key": "dueDate", "label": "Due date" }
+					{ "key": "assigneeUserId", "label": "Assignee" },
+					{ "key": "deadline", "label": "Deadline" }
 				],
 				"sidebar": {
 					"enabled": true,
@@ -3654,10 +3693,19 @@
 				"columns": [
 					{ "key": "name", "label": "Name" },
 					{ "key": "barcode", "label": "Barcode" },
-					{ "key": "category", "label": "Category" },
+					{
+						"key": "category",
+						"label": "Category",
+						"widget": "fkResolve",
+						"widgetProps": {
+							"register": "pipelinq",
+							"schema": "productcategory",
+							"labelField": "name"
+						}
+					},
 					{ "key": "type", "label": "Type" },
 					{ "key": "status", "label": "Status" },
-					{ "key": "price", "label": "Price" }
+					{ "key": "unitPrice", "label": "Price" }
 				],
 				"sidebar": {
 					"enabled": true,

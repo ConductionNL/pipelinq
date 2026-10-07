@@ -254,6 +254,7 @@
           },
           "ownerId": {
             "type": "string",
+            "format": "user",
             "description": "Owning account-manager user ID; defaults to the client's owner.",
             "title": "Owner ID"
           },

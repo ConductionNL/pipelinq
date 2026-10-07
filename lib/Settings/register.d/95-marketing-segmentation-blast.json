@@ -61,6 +61,7 @@
           },
           "createdBy": {
             "type": "string",
+            "format": "user",
             "description": "Nextcloud user id that created the segment.",
             "title": "Created By"
           },
@@ -160,6 +161,7 @@
           },
           "createdBy": {
             "type": "string",
+            "format": "user",
             "description": "Nextcloud user id that created the template.",
             "title": "Created By"
           },
@@ -313,6 +315,7 @@
           },
           "createdBy": {
             "type": "string",
+            "format": "user",
             "description": "Nextcloud user id that created the blast.",
             "title": "Created By"
           },

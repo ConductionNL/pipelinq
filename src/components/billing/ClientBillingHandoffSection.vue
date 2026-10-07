@@ -8,7 +8,7 @@
   - GET /api/billing/handoff/{clientId}/availability on mount so the button
   - renders ONLY when shillinq's time-intake integration is enabled AND the
   - acting user is a billing-handoff manager; the existing Shillinq deep-link
-  - (shillinq_app_url) stays offered as the fallback otherwise — the deep-link
+  - (to the detected Shillinq app) stays offered as the fallback otherwise, the deep-link
   - handoff itself is unchanged (same pattern as ContractInvoicingSection's
   - hidden-without-implementer rule from semantic-handoff-emit).
   -

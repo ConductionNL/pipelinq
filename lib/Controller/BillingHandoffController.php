@@ -32,12 +32,12 @@ namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Lifecycle\BillingHandoffAccessPolicy;
+use OCA\Pipelinq\Service\IntegrationDetector;
 use OCA\Pipelinq\Service\TimeBillingHandoffService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
-use OCP\IAppConfig;
 use OCP\IRequest;
 use OCP\IUserSession;
 
@@ -58,14 +58,14 @@ class BillingHandoffController extends Controller {
 	 * @param IRequest $request The request.
 	 * @param TimeBillingHandoffService $handoffService The billing handoff service.
 	 * @param BillingHandoffAccessPolicy $accessPolicy The manager access policy.
-	 * @param IAppConfig $appConfig The app configuration.
+	 * @param IntegrationDetector $integrations Detects Shillinq for the deep-link fallback.
 	 * @param IUserSession $userSession The user session.
 	 */
 	public function __construct(
 		IRequest $request,
 		private TimeBillingHandoffService $handoffService,
 		private BillingHandoffAccessPolicy $accessPolicy,
-		private IAppConfig $appConfig,
+		private IntegrationDetector $integrations,
 		private IUserSession $userSession,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
@@ -75,12 +75,13 @@ class BillingHandoffController extends Controller {
 	 * Whether the "Send to billing" action is available.
 	 *
 	 * The frontend uses this to decide between the real trigger and the
-	 * existing deep-link fallback (`shillinq_app_url`) — unchanged when
-	 * shillinq is absent/disabled or the flag is off.
+	 * deep-link fallback: the detected Shillinq app on this server, or none
+	 * when Shillinq is not installed. Nobody types a base URL for it.
 	 *
 	 * @return JSONResponse {available, deepLinkUrl, isManager}.
 	 *
 	 * @spec openspec/specs/time-approval-workflow/spec.md
+	 * @spec openspec/changes/pipelinq-setup-wizard-review/specs/first-time-setup/spec.md
 	 */
 	#[NoAdminRequired]
 	public function availability(): JSONResponse {
@@ -92,7 +93,7 @@ class BillingHandoffController extends Controller {
 		return new JSONResponse(
 			[
 				'available' => $this->handoffService->handoffAvailable(),
-				'deepLinkUrl' => $this->appConfig->getValueString(Application::APP_ID, 'shillinq_app_url', ''),
+				'deepLinkUrl' => $this->integrations->shillinq()['url'],
 				'isManager' => $this->accessPolicy->isManager(userId: $user->getUID()),
 			]
 		);

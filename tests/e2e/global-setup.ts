@@ -152,8 +152,8 @@ async function globalSetup(config: FullConfig): Promise<void> {
 	// Stand the non-gating setup wizard down for every spec.
 	//
 	// CnAppRoot opens it whenever the server reports an OPTIONAL setup step
-	// as outstanding, and pipelinq declares five actionable ones (currency,
-	// provision, demo-data, organisation, integrations). It renders over the
+	// as outstanding, and pipelinq declares three actionable ones (currency,
+	// demo-data, organisation). It renders over the
 	// shell, so a click on anything behind it does not fail fast — it waits
 	// out the full timeout. That surfaces as scattered 'did not mount' and
 	// 'not reachable' failures across unrelated specs rather than one cause.

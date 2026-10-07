@@ -57,6 +57,7 @@ import {
 	STRUCTURE_FULL,
 	STRUCTURE_SETTING,
 } from './utils/structureProfile.js'
+import { seedVatClassLabels } from './utils/vatClassLabels.js'
 
 // Library CSS — must be explicit import (webpack tree-shakes side-effect imports from aliased packages)
 import '@conduction/nextcloud-vue/css/index.css'
@@ -175,12 +176,17 @@ const { manifest: profiledManifest, homePage } = applyHomePage(
 // The getting-started tour sends the reader to menu entries the simple menu
 // does not have, so it is held back there. The full structure keeps it.
 // Dashboard and detail pages read `@config.<key>` tokens (the reporting
-// currency, the pipeline target) from the `config` initial state.
-const mergedManifest = seedPageAppConfig(
-	structureProfile === STRUCTURE_FULL
-		? profiledManifest
-		: holdUnreachableTours(profiledManifest),
-	loadState('pipelinq', 'config', {}),
+// currency, the pipeline target) from the `config` initial state; the VAT
+// class labels follow the rates set on the admin page.
+const mergedManifest = seedVatClassLabels(
+	seedPageAppConfig(
+		structureProfile === STRUCTURE_FULL
+			? profiledManifest
+			: holdUnreachableTours(profiledManifest),
+		loadState('pipelinq', 'config', {}),
+	),
+	loadState('pipelinq', 'config', {}).vat_rates,
+	(text) => t('pipelinq', text),
 )
 
 /**

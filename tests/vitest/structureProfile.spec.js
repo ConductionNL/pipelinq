@@ -686,7 +686,7 @@ describe('the getting-started tour', () => {
 		const shown = new Set(flat(built.menu).map((entry) => entry.route))
 		const missing = navTargets(built).filter((ref) => !shown.has(ref))
 		// The control: the tour really points at entries the simple menu lacks.
-		expect(missing).toEqual(['Products', 'Contacts', 'Leads', 'Contracts'])
+		expect(missing).toEqual(['Contacts', 'Products', 'Leads', 'Contracts'])
 
 		const held = holdUnreachableTours(built)
 		expect(held.walkthrough.tours).toEqual([])
