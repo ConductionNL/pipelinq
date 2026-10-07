@@ -3587,17 +3587,6 @@
 			}
 		},
 		{
-			"id": "TaskNew",
-			"route": "/tasks/new",
-			"type": "custom",
-			"title": "New task",
-			"component": "CnWizardDialog",
-			"config": {
-				"register": "pipelinq",
-				"schema": "crmTask"
-			}
-		},
-		{
 			"id": "TaskDetail",
 			"route": "/tasks/:id",
 			"type": "detail",
