@@ -128,17 +128,6 @@
 			"order": 44
 		},
 		{
-			"id": "MoreCaption",
-			"type": "caption",
-			"label": "More",
-			"order": 200
-		},
-		{
-			"id": "ReportsMenu",
-			"section": "main",
-			"order": 202
-		},
-		{
 			"id": "ModulesMenu",
 			"label": "Modules and more",
 			"icon": "ViewGridOutline",
