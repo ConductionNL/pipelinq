@@ -1,6 +1,6 @@
 # navigation-ia Specification (delta)
 
-## MODIFIED Requirements
+## ADDED Requirements
 
 ### Requirement: The Pipeline menu item shows a board icon (REQ-PNT-020)
 

@@ -1,6 +1,6 @@
 # my-work Specification (delta)
 
-## MODIFIED Requirements
+## ADDED Requirements
 
 ### Requirement: A user takes a ticket with one action (REQ-DPG-020)
 

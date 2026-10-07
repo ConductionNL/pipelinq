@@ -6,7 +6,9 @@ status: done
 
 ## Purpose
 Provides end-to-end appointment booking with services, resources, and availability computation, plus a public self-service portal where customers book, reschedule, and cancel without logging in. Handles deposits, reminders, no-show tracking, walk-in queues, and bi-directional calendar sync, with confirmation emails, AVG-compliant retention, and admin management of services and bookings.
+
 ## Requirements
+
 ### Requirement: REQ-APT-001 Service Entity Schema
 
 @e2e exclude register-schema persistence invariants — "the Service MUST be queryable" and "the multiStep array MUST be persisted" are stored-shape assertions about OpenRegister, with no browser surface that reveals the stored shape; asserted by tests/Integration/AppointmentBookingRegisterTest.php (testNamedServiceSeedsAreResolvable, testMultiStepServiceSeedRoundTrip).
@@ -616,3 +618,49 @@ English and Dutch translations. No hardcoded strings.
 - **WHEN** the files are compared
 - **THEN** they MUST have identical key sets (no missing keys) and no component MUST contain hardcoded user-visible strings
 
+### Requirement: A saved composition step shows its product name (REQ-RAF-040)
+
+After a user saves a service's composition steps, every step with a product
+SHALL show the product's name at once. A product whose name could not be read
+SHALL be asked for again on the next change, not shown as its uuid until reload.
+
+#### Scenario: A step is saved with a product
+
+- GIVEN a service in step editing
+- WHEN the user picks "Knipbeurt" for a step and saves
+- THEN the step table shows "Knipbeurt"
+
+### Requirement: The booking page names the customer and the service (REQ-RF-020)
+
+The booking page's data block SHALL show the customer's name and the
+service's name, not their ids. The customer SHALL be looked up as a contact
+first and as a client second. While a name loads the block SHALL show a
+placeholder. When no object is found the id SHALL stay visible.
+
+#### Scenario: A booking shows names
+
+- GIVEN a booking for contact Jan Jansen and service Haircut
+- WHEN the user opens the booking
+- THEN the data block shows "Jan Jansen" as customer and "Haircut" as service
+
+### Requirement: The booking timeline is the library timeline widget (REQ-RP2-001)
+
+The booking page SHALL show its timeline through the nextcloud-vue `timeline`
+widget. The timeline SHALL list the moments the booking holds: created,
+deposit cleared, confirmation mail sent, reminder sent, starts, ends,
+cancelled and no-show fee charged, each only when set. It SHALL include the
+booking's audit trail, so a status change shows as a dated change with who
+made it, and each `statusHistory` entry with its status and reason. A moment in the future SHALL be marked as upcoming.
+
+#### Scenario: A confirmed booking
+
+- GIVEN a booking created on 1 May, deposit cleared on 2 May and starting on 10 May
+- WHEN the user opens the Timeline tab on 5 May
+- THEN the timeline lists created, deposit cleared and starts in that order
+- AND starts is marked upcoming
+
+#### Scenario: A status change
+
+- GIVEN a user cancels a booking
+- WHEN the user opens the Timeline tab
+- THEN the change shows with its time and the user who made it

@@ -1,5 +1,7 @@
 # Tasks: pipelinq-setup-wizard-review
 
+> Archive pass 2026-10-07: code done (#2177), every task ticked; not archived. Its MODIFIED blocks for REQ-SETUP-PIP-004, 005, 007 and 008 omit eight scenarios the main spec carries. Six still hold (provision blocked without OpenRegister, organisation details persist, optional steps report done, seed on a clean install, idempotent re-run, removal deletes exactly the seed) and two contradict the new wizard (provision from the wizard step, demo data as one optional action). Refresh the delta: copy the six, rewrite or drop the two, then archive.
+
 ## Phase 1: Wizard
 
 - [x] 1.1 Merge the `demo-data` choice and the `load-demo-data` run-action into one choice step with `loadAction` (A1)

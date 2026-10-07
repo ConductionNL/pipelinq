@@ -1,6 +1,6 @@
 # client-management Specification (delta)
 
-## MODIFIED Requirements
+## ADDED Requirements
 
 ### Requirement: The contact page shows the person and their deals above the fold (REQ-DPG-001)
 
