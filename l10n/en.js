@@ -7189,7 +7189,9 @@ OC.L10N.register(
         "Then: answer the customer, or finish": "Then: answer the customer, or finish",
         "Then: back to in progress, or finish": "Then: back to in progress, or finish",
         "How pipelinq compares to other help desks": "How pipelinq compares to other help desks",
-        "Opens {host} in a new tab.": "Opens {host} in a new tab."
+        "Opens {host} in a new tab.": "Opens {host} in a new tab.",
+        "Shillinq integration": "Shillinq integration",
+        "Shillinq is installed on this server. Pipelinq hands approved hours and expenses to it.": "Shillinq is installed on this server. Pipelinq hands approved hours and expenses to it."
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -244,9 +244,8 @@ class SettingsService {
 		'receipt_printer_host' => '',
 		'receipt_printer_port' => '9100',
 		'receipt_default_template' => '',
-		'shillinq_wip_webhook_url' => '',
-		// Shillinq AP webhook for expense voucher dispatch (REQ-AP-004). Empty disables the integration.
-		'shillinq_ap_webhook_url' => '',
+		// No Shillinq WIP or AP webhook URL: both hand-offs follow the detected
+		// Shillinq app (IntegrationDetector, pipelinq-audit-admin-forms-pos).
 		// Shillinq journal-entry registry endpoint for the POS-day journal raise
 		// (pipelinq-bookkeeping-to-shillinq / REQ-PBTS-001). The ADR-019 integration
 		// registry resolves the shillinq.JournalEntry.raise dispatch through this

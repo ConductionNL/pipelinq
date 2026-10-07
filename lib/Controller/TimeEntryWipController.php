@@ -81,7 +81,7 @@ class TimeEntryWipController extends Controller {
 	#[AuthorizedAdminSetting(Application::APP_ID)]
 	public function retry(string $uuid): JSONResponse {
 		if ($this->wipService->shouldDispatch() === false) {
-			return new JSONResponse(['error' => 'Shillinq WIP integration is not configured.'], 400);
+			return new JSONResponse(['error' => 'Shillinq is not installed.'], 400);
 		}
 
 		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
