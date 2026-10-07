@@ -135,21 +135,15 @@ class ContactErasedListener implements IEventListener {
 	/**
 	 * Whether an object is in the trash.
 	 *
-	 * OpenRegister's own answer when it has one (ObjectEntity::isSoftDeleted(),
+	 * OpenRegister's own answer (ObjectEntity::isSoftDeleted(),
 	 * lib/Db/ObjectEntity.php:2046). The raw `deleted` field defaults to `[]`,
-	 * so only a non-empty value means trashed.
+	 * so reading it directly would call every object trashed.
 	 *
 	 * @param ObjectEntity $object The object.
 	 *
 	 * @return bool True when it carries deletion metadata.
 	 */
 	private function isTrashed(ObjectEntity $object): bool {
-		if (method_exists($object, 'isSoftDeleted') === true) {
-			return $object->isSoftDeleted();
-		}
-
-		$deleted = $object->getDeleted();
-
-		return is_array($deleted) === true && $deleted !== [];
+		return $object->isSoftDeleted();
 	}//end isTrashed()
 }//end class
