@@ -506,7 +506,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "src/views/clients/ClientForm.vue",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/client-management"
 			},
 			"note": "KISS reads a person from the BRP and keeps no editable record of its own.",
 			"evidence": {
@@ -534,7 +535,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/PartyKindRegistryService.php:86",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"change": "party-kinds-accepted-per-case-type"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/records/understand-objects companies are a separate foundational object, \"deduplicated ... by domain name for companies\", associated with contacts as a separate record; https://knowledge.hubspot.com/properties/hubspot-crm-default-company-properties lists company properties. All products and plans, CRM > Companies.",
@@ -561,7 +563,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/PartyLinkService.php:72",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"change": "party-kinds-accepted-per-case-type"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/object-settings/create-and-use-association-labels \"you can label new or existing associations to further define the relationship between them (e.g., a contact is labeled Buyer ...)\". The contact to company association is on all plans; the role label needs Sales, Service or Marketing Hub Professional or Enterprise.",
@@ -588,7 +591,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Controller/Customer360Controller.php:93",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/customer-360"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/records/understand-the-default-record-layout the record page for contacts and companies shows \"properties, associations, and activities\" in tabs with an \"activity timeline\" card and associated deals, tickets and revenue. All products and plans.",
@@ -615,7 +619,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/Mdm/OpenRegisterSyncService.php:100",
-				"owner": "ConductionNL/openregister"
+				"owner": "ConductionNL/openregister",
+				"spec": "openspec/specs/master-data-management"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/records/deduplication-of-records \"if you try to manually create a contact with the same email address as an existing contact, HubSpot will alert you that a contact already exists\"; the same for a company with the same domain. All products and plans. The duplicates manager for fuzzy matches (https://knowledge.hubspot.com/records/manage-duplicate-records) needs a Professional hub.",
@@ -642,7 +647,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Listener/ObjectsMergedSyncListener.php",
-				"owner": "ConductionNL/openregister"
+				"owner": "ConductionNL/openregister",
+				"spec": "openspec/specs/master-data-management"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/records/merge-records \"merge two records of the same object into one record. The remaining record combines activities, associations, and most property values from both records\"; \"all timeline activities of both records included in the merge will appear on the new record\". All products and plans; a merge cannot be undone.",
@@ -669,7 +675,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Dashboard/FindClientWidget.php",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/dashboard"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/account-management/search-within-your-hubspot-account global search bar at the top of every page searches CRM records; https://knowledge.hubspot.com/records/search-your-crm lists searched properties \"First Name\", \"Last Name\", \"Primary Email\" and phone. All products and plans.",
@@ -696,7 +703,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/ContactSyncService.php:224",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/contacts-sync"
 			},
 			"note": "The four CRMs sync with Google and Outlook instead, which is a different address book.",
 			"evidence": {
@@ -724,7 +732,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/ContactImportService.php:64",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/contacts-sync"
 			},
 			"note": "All four commercial and open source CRMs import CSV. None of them reads vCard directly.",
 			"evidence": {
@@ -781,7 +790,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/Export/ExportDataService.php",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/bi-export-and-data-warehouse-sink"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/import-and-export/export-records \"You can export your records (e.g., contacts, deals) ... This downloads their current property values and associations\"; a File format dropdown offers CSV, XLS or XLSX. All products and plans.",
@@ -808,7 +818,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/NotesService.php:112",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/entity-notes"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/records/manually-log-activities-on-records notes are one of the activities you create on a record and they \"appear on the record's timeline\"; https://knowledge.hubspot.com/properties/hubspots-default-activity-properties \"Activity created by: the user that created the activity\" and \"Create date\". All products and plans.",
@@ -836,7 +847,8 @@
 				"state": "built",
 				"evidence": "lib/Service/SystemTagService.php:80",
 				"owner": "ConductionNL/pipelinq",
-				"readOn": "2026-09-26"
+				"readOn": "2026-09-26",
+				"spec": "openspec/specs/client-management"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/object-settings/color-coded-object-tags \"Supported objects include: Appointments, App objects, Courses, Deals, Leads, Listings, Orders, Projects, Services, Tickets, Users\"; contacts and companies are not listed, so a client is grouped by a custom property or a segment instead. Sales or Service Hub Starter and up.",
@@ -863,7 +875,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/KvkApiClient.php:95",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/prospect-discovery"
 			},
 			"evidence": {
 				"hubspot-crm": "Only through a third party marketplace app: https://ecosystem.hubspot.com/marketplace/apps/kvk-scanner-by-leapforce-1678680 (KvK Scanner by Leapforce) enriches records with \"KVK-nummer, Rechtsvorm, RSIN, SBI-activiteiten, Vestigingsnummer\" from the KvK register; paid credits after 10 free lookups. HubSpot's own enrichment (https://knowledge.hubspot.com/records/how-data-enrichment-works-in-hubspot) uses its commercial dataset, not the KvK. Note: Was no; a marketplace app provides it.",
@@ -890,7 +903,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/OpenCorporatesApiClient.php:96",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/prospect-discovery"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/records/how-data-enrichment-works-in-hubspot enrichment fills company records \"from HubSpot's commercial dataset, third-party providers, and publicly available information\"; Marketing, Sales or Service Hub Starter and up. It is enrichment from a commercial dataset, not a lookup in an official international company register.",
@@ -918,7 +932,8 @@
 				"state": "built",
 				"evidence": "lib/Service/PartyOrganisationTreeService.php:182",
 				"owner": "ConductionNL/pipelinq",
-				"readOn": "2026-09-26"
+				"readOn": "2026-09-26",
+				"change": "typed-fields-and-indicators-on-a-party"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/records/add-a-parent-or-child-company \"associate companies with the default Parent company and Child company association labels ... Each parent company can have multiple associated child companies\". All products and plans. Shown as associations on the company record; the article describes no tree view of the hierarchy.",
@@ -945,7 +960,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/RegisterResolverService.php",
-				"owner": "ConductionNL/openregister"
+				"owner": "ConductionNL/openregister",
+				"spec": "none"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/properties/create-and-edit-properties \"There are default properties included for each object, but you can create custom properties to store unique data for your business\", in Settings > Properties without code. All products and plans. Note: Was partial; custom properties are on every plan.",
@@ -972,7 +988,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Lifecycle/ObjectOwnerAccessPolicy.php",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "none"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/records/how-to-set-a-record-owner \"Assign records to HubSpot users, using the [Object] owner property for contacts, leads, companies, deals, tickets, and custom object records.\" All products and plans.",
@@ -999,7 +1016,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/ObjectUpdateDiffService.php",
-				"owner": "ConductionNL/openregister"
+				"owner": "ConductionNL/openregister",
+				"spec": "openspec/specs/client-management"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/records/view-record-property-history \"Review the past property values for an individual record, either for a single property or for all properties\", each value with its date and change source. All products and plans, from the record's left sidebar. Note: Was partial (Enterprise audit trail); the per record property history is on every plan.",
@@ -1026,7 +1044,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/PartyKindRegistryService.php:112",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"change": "party-kinds-accepted-per-case-type"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/properties/hubspot-crm-default-company-properties \"Type: the company's relationship to you (e.g., prospect, partner, reseller, vendor, or other)\"; persons and organisations are separate objects (https://knowledge.hubspot.com/records/understand-objects). No citizen or party kind value exists by default; a custom property would carry it. Note: Was no; the person versus organisation split and a company type exist, a citizen kind does not.",
@@ -1053,7 +1072,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "src/views/pipeline/PipelineBoard.vue",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/pipeline"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/records/manage-records-in-board-view \"objects with pipelines also have an updated board view, where records are shown as cards moving through stages in a pipeline\"; cards are dragged between stages. All products and plans.",
@@ -1080,7 +1100,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/DefaultPipelineService.php:60",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/pipeline"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/object-settings/set-up-and-customize-pipelines \"If your account has more than one unique process, you can create additional pipelines\", each with its own stages; the number of pipelines depends on the subscription (Sales Hub Starter and up for more than one deal pipeline).",
@@ -1107,7 +1128,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/PipelineStageData.php",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/pipeline"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/object-settings/set-up-and-customize-pipelines stages are renamed and \"click the Deal probability dropdown menu and select a probability. To use a custom probability, enter a custom value\"; the default pipeline carries a probability per stage. All products and plans.",
@@ -1134,7 +1156,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/LeadService.php:131",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/lead-management"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/properties/hubspots-default-deal-properties \"Amount: the total value of the deal in the deal's currency\" and \"Close date: the day the deal is expected to close\". All products and plans.",
@@ -1161,7 +1184,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/LeadClientResolver.php:148",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/lead-management"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/records/associate-records on a contact or company record, in the Deals card, \"Click the Create new tab\" to create a deal already associated with that client. All products and plans.",
@@ -1188,7 +1212,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "src/views/rapportage/SourcePerformanceWidget.vue",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/lead-management"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/reports/create-sales-reports-in-the-sales-analytics-suite \"Deal revenue by source: this report shows the total amount from deals by owner or team, split by the deal's original source\" (Sales Hub Starter, Professional, Enterprise); the source itself is set automatically, https://knowledge.hubspot.com/properties/understand-traffic-source-properties \"The Original Traffic Source property displays the first known web source\" (all plans).",
@@ -1246,7 +1271,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/ForecastService.php:100",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"change": "2026-06-14-forecast-roll-up-and-categories"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/forecast/use-the-forecast-tool \"As a manager, you can use the forecast tool to keep track of your team's progress\"; \"To review your forecast by team, click the team name\", with \"Forecast Submission: the sum of forecast submissions for your team\". Sales Hub or Service Hub Professional, Enterprise.",
@@ -1273,7 +1299,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/ForecastService.php:160",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"change": "2026-06-14-forecast-roll-up-and-categories"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/forecast/use-the-forecast-tool managers submit forecasts on a submission schedule and \"view all past forecast submission history\"; https://knowledge.hubspot.com/forecast/track-the-accuracy-of-forecasts \"measure the reliability of your forecasts\" against closed revenue. Sales Hub or Service Hub Professional, Enterprise. Note: Was partial; submissions plus forecast accuracy tracking cover commit versus actual.",
@@ -1300,7 +1327,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/ForecastDealService.php:268",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"change": "2026-06-14-forecast-roll-up-and-categories"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/forecast/set-up-the-forecast-tool categories \"Pipeline\", \"Best case\" and \"Commit: deals that have a high likelihood of closing\", set per deal; https://knowledge.hubspot.com/reports/create-sales-reports-in-the-sales-analytics-suite shows \"Forecast Moved Backward\" and \"Close Date Pushed\". Sales Hub Professional, Enterprise. No slip reason field is documented; a custom property would carry the why.",
@@ -1327,7 +1355,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/BackgroundJob/ForecastSnapshotJob.php",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"change": "2026-06-14-forecast-roll-up-and-categories"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/forecast/use-the-forecast-tool \"Click View submissions over time to view the history of Forecast submissions in Sales analytics\"; https://knowledge.hubspot.com/reports/create-sales-reports-in-the-sales-analytics-suite \"Deal pipeline waterfall: revenue changes in the deal pipeline between two periods of time\". Sales Hub Professional, Enterprise.",
@@ -1354,7 +1383,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "src/views/rapportage/WinLossWidget.vue",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/lead-management"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/reports/create-sales-reports-in-the-sales-analytics-suite \"Deal loss reasons: this report shows the number of deals in a closed-lost stage and the respective value in each deal's Closed lost reason property\" and \"Deals won & lost\" by user or team over a chosen date range. Sales Hub Starter, Professional, Enterprise.",
@@ -1381,7 +1411,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "src/views/rapportage/LeadAgingWidget.vue",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/pipeline-insights"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/prospecting/create-and-manage-deals-in-the-sales-workspace \"Stalled Deals: deals that have been in a stage longer than average ... at least 20% longer than the average time spent in that specific stage\". Sales Hub Professional, Enterprise; the time in stage properties are on all plans (https://knowledge.hubspot.com/properties/stage-calculated-properties).",
@@ -1408,7 +1439,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/AnalyticsService.php:613",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/pipeline-insights"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/reports/create-sales-reports-in-the-sales-analytics-suite \"Deal funnel: deal funnel reports show the number of deals in the deal stages of the pipeline you selected ... conversion rates, and time spent in each deal stage\". Sales Hub Starter, Professional, Enterprise.",
@@ -1436,7 +1468,8 @@
 				"state": "built",
 				"evidence": "lib/Service/ProspectDiscoveryService.php",
 				"owner": "ConductionNL/pipelinq",
-				"readOn": "2026-09-26"
+				"readOn": "2026-09-26",
+				"spec": "openspec/specs/prospect-discovery"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/prospecting/use-the-prospecting-agent \"Use the prospecting agent to identify good fit companies based on real-world triggers and to source the right contacts at those companies\", with a \"Reason to Reach Out\" per company and plays per target segment. Marketing, Sales or Service Hub Starter and up (uses HubSpot credits). Note: Was partial; the prospecting agent finds and ranks new fit companies.",
@@ -1463,7 +1496,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/ProductCatalogService.php:207",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/lead-product-link"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/records/use-line-items-with-deals \"add or edit line items associated with the deal using the line item editor. Add line items pulled from existing products\"; on save you \"select whether you want to update the deal amount to reflect your new line items\". All products and plans.",
@@ -1490,7 +1524,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Listener/DealUpdatedListener.php",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/notifications-activity"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/user-management/how-to-set-up-user-notifications-in-hubspot \"Deals: receive notifications when a deal is assigned to you, when a deal you own or follow moves to a different deal stage\". All products and plans.",
@@ -1649,7 +1684,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/ContactmomentService.php:139",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/omnichannel-registratie"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/records/manually-log-activities-on-records \"you can also manually create new calls, emails, meetings, and messages, or log activities that occurred outside of HubSpot (e.g., a meeting with a client that wasn't booked ...)\", from the record's activity buttons. All products and plans.",
@@ -1676,7 +1712,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/ActivityTimelineService.php:149",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/activity-timeline"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/records/filter-activities-on-a-record-timeline activities are viewed \"individually on a record's timeline under the default Activities tab. Activities include notes, emails, calls, tasks, meetings, and other communications\", with filters. All products and plans.",
@@ -1703,7 +1740,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/ReportingService.php:150",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/contactmomenten-rapportage"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/inbox/hubspots-conversations-properties \"Channel: the channel type (e.g., email, live chat, Facebook Messenger, or WhatsApp)\", usable \"when creating reports\"; https://knowledge.hubspot.com/help-desk/analyze-help-desk \"Today's tickets by channel\" (Service Hub Professional, Enterprise). Activities are also typed as call, email, meeting and so on. Note: Was partial; channel is stored per conversation and ticket and reported on.",
@@ -1730,7 +1768,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/CtiService.php:219",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/cti-screenpop-adapter"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/calling/receive-calls-in-hubspot on an inbound call \"The inbound phone name, contact's name, phone number, company name, photo, and a link to the contact record may be displayed\". Sales Hub or Service Hub Starter, Professional, Enterprise. Note: Was partial only because it is a paid hub; the buyer gets it in Starter.",
@@ -1757,7 +1796,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/CtiService.php:404",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/cti-screenpop-adapter"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/calling/make-calls-in-the-hubspot-browser \"make calls directly from the Contacts index page, a contact record, the calling remote, or the conversations inbox\" with a HubSpot number or a third party provider. Sales Hub or Service Hub Starter, Professional, Enterprise.",
@@ -1784,7 +1824,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/CtiService.php:359",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/cti-screenpop-adapter"
 			},
 			"note": "Whether EspoCRM and Odoo attach a recording was not settled by the 2026-04 research.",
 			"evidence": {
@@ -1812,7 +1853,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/CtiDispositionService.php:96",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/cti-screenpop-adapter"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/calling/create-custom-call-and-meeting-outcomes \"You can require call outcomes when setting up calling ... create up to 30 custom call outcomes\", usable in reports and filters. Sales Hub or Service Hub Professional, Enterprise. Note: Was partial because of the tier; the buyer gets it in Professional.",
@@ -1839,7 +1881,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/EmailMatchService.php:278",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/email-calendar-sync"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/connected-email/manage-contact-email-logging-rules \"Log all emails (from known contacts): log all emails to and from existing contacts for users with connected individual work emails. This is the default logging option\". All products and plans, after connecting an inbox.",
@@ -1866,7 +1909,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/EmailMatchService.php:172",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/email-calendar-sync"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/object-settings/automatically-create-and-associate-companies-with-contacts \"Automatically associate contacts with companies by matching the domain in the Email value of a contact with the Company domain name value of a company.\" All products and plans.",
@@ -1893,7 +1937,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/WhatsAppAdapter.php:177",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"change": "2026-06-14-whatsapp-sms-channel-adapter"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/inbox/connect-whatsapp-to-the-conversations-inbox \"You can start a WhatsApp conversation with individual contacts in HubSpot from the contact record\" and incoming messages open a thread in the inbox. Marketing Hub or Service Hub Professional, Enterprise, with a WhatsApp Business account. Note: Was partial for the tier; rated by what a buyer can get.",
@@ -1920,7 +1965,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/SmsAdapter.php:154",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"change": "2026-06-14-whatsapp-sms-channel-adapter"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/sms/set-up-sms-messaging needs the Marketing SMS Add-On on Marketing Hub Professional or Enterprise and lists as \"Eligible countries to contact\" only \"United States\" and \"United States & Canada\"; support SMS in help desk needs Service Hub Professional (https://knowledge.hubspot.com/help-desk/set-up-sms-messaging-for-support-communications). A paid add-on that the docs limit to North American recipients.",
@@ -1948,7 +1994,8 @@
 				"state": "built",
 				"evidence": "lib/Service/ContactmomentService.php:139",
 				"owner": "ConductionNL/pipelinq",
-				"readOn": "2026-09-26"
+				"readOn": "2026-09-26",
+				"spec": "openspec/specs/outbound-messaging"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/connected-email/manage-contact-email-logging-rules \"Emails sent from outside of the CRM (e.g., an email client or mobile app) to existing contact records log to the CRM\"; calls placed in HubSpot are saved to the call index and the record (https://knowledge.hubspot.com/calling/review-calls-in-the-call-index). All products and plans.",
@@ -1975,7 +2022,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/ContactMomentFilingService.php:137",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"change": "one-contact-moment-on-several-cases"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/records/manually-log-activities-on-records \"Association with records: add, edit, or remove relationships between records (e.g., log a note with two ticket records, remove a company from a logged call)\". All products and plans. Note: Was no; an activity can be associated with several tickets.",
@@ -2003,7 +2051,8 @@
 				"state": "built",
 				"evidence": "lib/Service/KccWerkplekService.php:388",
 				"owner": "ConductionNL/pipelinq",
-				"readOn": "2026-09-26"
+				"readOn": "2026-09-26",
+				"spec": "openspec/specs/kcc-werkplek"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/help-desk/manage-user-availability-for-help-desk \"click the User status dropdown menu, then click Available or Away\"; away users \"will not be eligible for automatic assignment\" (Service Hub Professional, Enterprise); calls go to \"another available team member\" outside working hours (https://knowledge.hubspot.com/calling/configure-call-routing-work-hours-and-voicemail).",
@@ -2030,7 +2079,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/SurveyDispatchService.php:336. Corrections round 8 (2026-09-28), pipelinq#2072: onInteractionCompleted() (lib/Service/SurveyDispatchService.php:336-366) has no production caller: no class in lib/Listener and nothing in lib/AppInfo/Application.php refers to a survey, so no invitation is ever scheduled and lib/BackgroundJob/SurveyInvitationDispatchJob.php:129 finds nothing to send, at 9a5e95c.",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"change": "customer-satisfaction-closed-loop"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/customer-feedback/how-do-i-send-a-customer-support-survey a Customer Effort Score survey is sent per pipeline and ticket status, \"Immediately: the survey will be sent immediately after the ticket is closed\". Service Hub Professional, Enterprise. Note: Was partial for the tier; rated by what a buyer can get.",
@@ -2058,7 +2108,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/TouchpointService.php:164",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"change": "marketing-campaigns"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/campaigns/review-and-manage-campaign-associations-using-crm-cards the Campaigns card on a contact, deal or ticket record shows its campaigns, and \"Influenced contacts refer to contacts that have engaged with assets related to a campaign\" (https://knowledge.hubspot.com/campaigns/campaign-influenced-contacts). Marketing Hub Professional, Enterprise.",
@@ -2085,7 +2136,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/TicketService.php:285",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"change": "unify-ticket-supertype"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/help-desk/create-respond-and-manage-tickets-in-help-desk \"Connect chat, email, form, calling, custom, WhatsApp and Facebook Messenger channels\" so incoming requests land in one workspace; conversations in the inbox can be answered before a ticket exists (https://knowledge.hubspot.com/inbox/hubspots-conversations-properties). Service Hub Professional, Enterprise for help desk; the conversations inbox is on all plans.",
@@ -2112,7 +2164,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/EnquiryIntakeService.php:134",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"change": "2026-09-19-website-enquiry-intake"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/forms/create-forms \"select the Support template to create tickets from form submissions. This will connect the form to your conversations inbox or help desk\"; forms embed on HubSpot pages \"or external site\". Forms on all plans; tickets from forms through help desk.",
@@ -2139,7 +2192,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/SemanticHandoffService.php:128",
-				"owner": "ConductionNL/dossiq"
+				"owner": "ConductionNL/dossiq",
+				"spec": "openspec/specs/request-management"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/integrations/install-and-use-hubspots-integration-with-jira \"create a new Jira issue from a ticket record, attach an existing Jira issue to a ticket\", with the association kept (all plans, Jira Cloud only); inside HubSpot a conversation becomes a ticket record associated with the contact (https://knowledge.hubspot.com/help-desk/create-respond-and-manage-tickets-in-help-desk, Service Hub Professional). Note: Was partial; an external case system link is only as good as its integration, Jira is the documented one.",
@@ -2167,7 +2221,8 @@
 				"state": "built",
 				"evidence": "lib/Service/SlaEngineService.php:216; armed on tickets by lib/Listener/SlaObjectCreatedListener.php, which maps the ticket's ticketType to the policy type (tests/Unit/Listener/SlaObjectUpdatedListenerTest.php testACreatedTicketResolvesItsPolicyByTicketType, pipelinq#2051)",
 				"owner": "ConductionNL/pipelinq",
-				"readOn": "2026-09-27"
+				"readOn": "2026-09-27",
+				"spec": "openspec/specs/sla-engine-and-escalation"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/help-desk/set-sla-goals-in-help-desk SLA goals for response and resolution times; \"To define specific time zones and scheduled hours for when SLAs should apply\", adding \"Time to Close SLA Due Date\" to each ticket. Service Hub Professional, Enterprise.",
@@ -2194,7 +2249,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/DutchHolidayCalendar.php",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/sla-engine-and-escalation"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/help-desk/set-sla-goals-in-help-desk SLAs follow weekly \"scheduled hours\" and pause conditions; the article names no holiday calendar (Service Hub Professional, Enterprise). Open community ideas ask for it: https://community.hubspot.com/t5/HubSpot-Ideas/Allow-me-to-exclude-local-holidays-from-Help-Desk-SLA-schedule/idi-p/1140817 (listed by web search, not read: the community answers 403 to scripts and to the browser). Holidays can only be worked around by pause conditions or editing hours.",
@@ -2222,7 +2278,8 @@
 				"state": "built",
 				"evidence": "lib/Service/SlaEngineService.php:334; armed on tickets by lib/Listener/SlaObjectCreatedListener.php, which maps the ticket's ticketType to the policy type (tests/Unit/Listener/SlaObjectUpdatedListenerTest.php testACreatedTicketResolvesItsPolicyByTicketType, pipelinq#2051)",
 				"owner": "ConductionNL/pipelinq",
-				"readOn": "2026-09-27"
+				"readOn": "2026-09-27",
+				"spec": "openspec/specs/sla-engine-and-escalation"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/help-desk/set-sla-goals-in-help-desk \"you can create a workflow that notifies users when a ticket is nearing a Due soon or Overdue state\" using the SLA status property as the enrollment trigger, and the workflow can reassign. Service Hub Professional, Enterprise.",
@@ -2250,7 +2307,8 @@
 				"state": "built",
 				"evidence": "lib/Service/SlaEngineService.php:404 pauses the clock; lib/Listener/SlaObjectUpdatedListener.php applies it when a ticket (ticketType request or complaint) moves to a policy pause status, the seeded request policies pausing on awaiting_customer and resuming on in_progress (tests/Unit/Listener/SlaObjectUpdatedListenerTest.php testATicketPausesOnAwaitingCustomerAndResumesOnInProgress, pipelinq#2051)",
 				"owner": "ConductionNL/pipelinq",
-				"readOn": "2026-09-27"
+				"readOn": "2026-09-27",
+				"spec": "openspec/specs/sla-engine-and-escalation"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/help-desk/set-sla-goals-in-help-desk \"In the Pausing section, you can set conditions that temporarily pause the SLA timer. For example, you might pause the timer when a ticket is on hold or waiting for a customer response.\" Service Hub Professional, Enterprise. Note: Was partial; pause conditions are documented.",
@@ -2277,7 +2335,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/RoutingService.php:92",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/skill-routing"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/help-desk/route-tickets-in-help-desk-based-on-agent-skills-in-your-account \"route help desk tickets to users based on their skills\" (Service Hub Enterprise); https://knowledge.hubspot.com/help-desk/set-ticket-capacity-limits-for-users-in-help-desk \"users who reach their capacity limit will no longer receive tickets automatically\" (Service Hub Professional, Enterprise). Note: Was partial for the tier; skills plus capacity is the whole row.",
@@ -2305,7 +2364,8 @@
 				"state": "built",
 				"evidence": "lib/Service/ComplaintSlaService.php:112",
 				"owner": "ConductionNL/pipelinq",
-				"readOn": "2026-09-26"
+				"readOn": "2026-09-26",
+				"spec": "openspec/specs/klachtenregistratie"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/properties/hubspots-default-ticket-properties \"Category: main reason customer reached out for help\" and https://knowledge.hubspot.com/help-desk/set-sla-goals-in-help-desk SLA goals \"based on specific ticket properties\" let a complaint category carry its own answer term (Service Hub Professional). No complaint type or statutory term is built in; it is configured on a generic ticket.",
@@ -2332,7 +2392,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/CallbackService.php:130",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/callback-management"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/tasks/create-tasks a task of \"Type: select Call\" with \"Due date: select the date and time the task is due\" associated with the contact, with reminders; all plans. A call back is a task with a reminder, there is no callback promise object or callback SLA.",
@@ -2359,7 +2420,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/WalkInQueueService.php:216",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/appointment-booking"
 			},
 			"evidence": {
 				"hubspot-crm": "not checked: no queue ticket or counter calling feature in the HubSpot knowledge base (searched the KB sitemap for queue, walk-in, counter, kiosk and check-in, 2026-09-26); the marketplace was not searched for a queue management app; the docs do not state an absence. Note: Was no without a source.",
@@ -2386,7 +2448,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/ArticleService.php:185",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"change": "marketing-article-hub"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/help-desk/use-the-updated-reply-editor-in-help-desk \"To add a document, snippet, meeting link, knowledge base article, quote, or video in your response, click Insert\" inside the ticket reply. Service Hub Professional, Enterprise (the knowledge base itself: https://knowledge.hubspot.com/knowledge-base/create-and-customize-knowledge-base-articles).",
@@ -2413,7 +2476,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/SlaAttainmentService.php",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/sla-engine-and-escalation"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/help-desk/analyze-help-desk pre-built reports \"to monitor key metrics such as response times, SLA compliance\", with \"tickets that met SLA goals\" and \"SLA progress\" (Overdue, Due soon). Service Hub Professional, Enterprise.",
@@ -2440,7 +2504,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/SatisfactionAggregationService.php:97",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"change": "customer-satisfaction-closed-loop"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/customer-feedback/how-do-i-send-a-customer-loyalty-survey \"Customer loyalty (NPS) surveys track how likely your customers are to recommend your company\"; responses land on the contact and drive workflows to follow up detractors (https://knowledge.hubspot.com/customer-feedback/analyze-survey-responses). Service Hub Professional, Enterprise. Note: Was partial for the tier.",
@@ -2467,7 +2532,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/WorklistService.php:189",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/my-work"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/help-and-resources/use-your-home-page \"From the homepage, you can review upcoming meetings, tasks, frequently visited HubSpot tools and records, recent activity\" (all plans); task views and shared task queues (https://knowledge.hubspot.com/tasks/use-task-queues, Sales or Service Hub Starter and up) give one list of what waits on you.",
@@ -2494,7 +2560,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/ScheduledTaskService.php:309",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/task-background-jobs"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/tasks/create-tasks \"Tasks are reminders for work you need to complete and can be associated with specific records\"; each has \"Due date: select the date and time the task is due\" and an assignee. All products and plans.",
@@ -2521,7 +2588,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/TaskService.php:168",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/task-background-jobs"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/tasks/create-tasks tasks take a calendar \"date and time the task is due\" (all plans); working hours only drive ticket SLAs: https://knowledge.hubspot.com/help-desk/set-sla-goals-in-help-desk \"define specific time zones and scheduled hours for when SLAs should apply\" (Service Hub Professional, Enterprise). No working hours deadline for a task.",
@@ -2549,7 +2617,8 @@
 				"state": "built",
 				"evidence": "lib/BackgroundJob/TaskEscalationJob.php",
 				"owner": "ConductionNL/pipelinq",
-				"readOn": "2026-09-26"
+				"readOn": "2026-09-26",
+				"spec": "openspec/specs/task-background-jobs"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/user-management/how-to-set-up-user-notifications-in-hubspot \"Tasks: receive notifications when you're assigned a task, when a task assigned to you is due\"; https://knowledge.hubspot.com/tasks/task-reminders-and-daily-digest reminder emails and \"a summary of your tasks due each weekday\". All products and plans.",
@@ -2576,7 +2645,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/BackgroundJob/ScheduledTaskJob.php",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"change": "2026-05-11-task-background-jobs"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/tasks/create-tasks \"To make the task recurring, select the Set to repeat checkbox ... select days, weeks, months, or years as the interval\". The page marks seats as required for certain features; recurring tasks are documented for users with a Core, Sales or Service seat. Note: Was partial; the feature is documented and available to paid seats.",
@@ -2603,7 +2673,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Dashboard/MyLeadsWidget.php",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/dashboard"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/help-and-resources/use-your-home-page the HubSpot home page shows \"upcoming meetings, tasks ... records, recent activity\" next to each other, with meetings from the connected calendar (all plans). It is HubSpot's own home page; there is no widget for a Nextcloud or other workspace dashboard (KB sitemap searched for nextcloud, 2026-09-26). Note: Was no; rated as the market capability, the leads sit beside calendar items only inside HubSpot.",
@@ -2631,7 +2702,8 @@
 				"state": "built",
 				"evidence": "lib/Notification/Notifier.php",
 				"owner": "ConductionNL/pipelinq",
-				"readOn": "2026-09-26"
+				"readOn": "2026-09-26",
+				"spec": "openspec/specs/notifications-activity"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/user-management/how-to-set-up-user-notifications-in-hubspot \"User notifications keep you informed ... such as when you are assigned a record\", by email, desktop and mobile. All products and plans.",
@@ -2658,7 +2730,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Activity/Provider.php",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/notifications-activity"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/reports/create-sales-reports-in-the-sales-analytics-suite \"Team activity timeline: this report shows the activities done by your team chronologically\" (Sales Hub Starter and up); https://knowledge.hubspot.com/account-management/view-and-export-account-activity-history audit logs of user actions (any hub Starter and up).",
@@ -2685,7 +2758,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Activity/Setting/AssignmentSetting.php",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/notifications-activity"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/user-management/how-to-set-up-user-notifications-in-hubspot \"Customize which notifications you receive and how you receive them across email, desktop, and mobile\"; \"Each notification type can be configured independently\". All products and plans.",
@@ -2712,7 +2786,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Controller/TimeEntryWipController.php",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"change": "2026-06-14-pipelinq-time-to-shillinq-wip"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/records/manually-log-activities-on-records logged meetings carry a duration, but \"call duration is not editable in the Log call widget\" and a custom property is suggested (all plans). Hours per client need a marketplace app, for example StopWatch by Thread Integrations: https://ecosystem.hubspot.com/marketplace/listing/hubclock-by-thread-integrations-552213 \"track time directly against HubSpot CRM records\".",
@@ -2739,7 +2814,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Listener/TimeApprovalListener.php",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/time-approval-workflow"
 			},
 			"evidence": {
 				"hubspot-crm": "Only through a third party app: PSOhub https://www.psohub.com/en/hubspot-time-tracking \"Timesheet approval ... spend minimal time approving timesheets\", a HubSpot based professional services app. The HubSpot knowledge base has no time tracking or approval article (KB sitemap searched for time, timesheet and hours, 2026-09-26). Note: Was no; a HubSpot add-on vendor provides it.",
@@ -2766,7 +2842,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/TimeBillingHandoffService.php:252",
-				"owner": "ConductionNL/shillinq"
+				"owner": "ConductionNL/shillinq",
+				"spec": "openspec/specs/time-approval-workflow"
 			},
 			"evidence": {
 				"hubspot-crm": "Only through a third party app: https://ecosystem.hubspot.com/marketplace/listing/hubclock-by-thread-integrations-552213 StopWatch \"Automatically Calculated Billings Based on Tracked Time\" (Unlimited plan) and PSOhub \"Import your automated timesheets and expense reports directly into invoices\" (https://www.psohub.com/en/hubspot-time-tracking). No native time to invoice flow in the knowledge base. Note: Was no; marketplace apps provide it.",
@@ -2794,7 +2871,8 @@
 				"state": "built",
 				"evidence": "lib/Service/Marketing/WeeklyReviewService.php",
 				"owner": "ConductionNL/pipelinq",
-				"readOn": "2026-09-26"
+				"readOn": "2026-09-26",
+				"change": "marketing-integrated-campaigns"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/dashboard/email-or-export-reports-and-dashboards \"schedule recurring report emails on a daily, weekly, or monthly basis\" for any report or dashboard, such as the deal pipeline waterfall or push rate (all plans); https://knowledge.hubspot.com/prospecting/receive-a-summary-of-your-sales-activity-every-weekday a daily digest for Sales Hub Professional seats. Note: Was partial; a weekly emailed dashboard covers it, set up by the user.",
@@ -2999,7 +3077,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/BlastService.php:166",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/marketing-blast"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/marketing-email/create-and-send-marketing-emails \"Marketing emails are sent through HubSpot's sending network and are intended for bulk marketing communication, such as newsletters\", to selected segments. All products and plans (free tools capped at 2,000 sends a month with HubSpot branding).",
@@ -3026,7 +3105,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/SegmentService.php:242",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/marketing-segmentation"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/segments/create-active-or-static-lists \"Create segments (previously called lists) to group records based on property values and other characteristics. For example, create a segment of good-fit leads to send a marketing email\"; active segments update by rule. All products and plans.",
@@ -3053,7 +3133,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/TemplateRenderer.php",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/marketing-ui"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/marketing-email/save-marketing-emails-as-templates \"If you want to use the layout of a regular marketing email ... multiple times, you can save it as a template\". Marketing Hub Professional, Enterprise; sales email templates are on all plans.",
@@ -3080,7 +3161,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/BlastService.php:413",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/marketing-blast"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/marketing-email/run-a-b-tests-on-marketing-email-subject-lines \"An A/B test measures engagement for different versions of the same email with a sample of your recipients. The best performing version is then sent to the rest\". Marketing Hub Professional, Enterprise.",
@@ -3107,7 +3189,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/TrackingLinkService.php:243",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/marketing-email-tracking"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/marketing-email/analyze-your-marketing-email-campaign-performance \"Analyze metrics such as opens, clicks, bounces, and unsubscribes\" and \"analyze an individual email's sending information, performance, and recipients on the post-send details page\". All products and plans.",
@@ -3134,7 +3217,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/SubscriptionService.php:349",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/marketing-lists"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/marketing-email/insert-subscription-links-into-marketing-emails \"all marketing emails include at least one link in the email footer\" and a one click \"link to unsubscribe from that email's subscription type above the email\"; \"Unsubscribe all\" opts out of all; later sends are blocked (https://knowledge.hubspot.com/marketing-email/email-error-when-sending-to-contact). All products and plans.",
@@ -3161,7 +3245,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/Marketing/PreferenceCentreService.php:137",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/marketing-lists"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/marketing-email/set-up-email-subscription-types \"Contacts can manage their email preferences so they're only opted in to email subscription types they want to receive\" (Marketing Hub Starter and up); the preferences page is customised in https://knowledge.hubspot.com/marketing-email/customize-email-subscription-pages (Marketing Hub Professional). Note: Was partial for the tier.",
@@ -3188,7 +3273,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/ComplianceService.php:211",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/marketing-compliance"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/marketing-email/email-error-when-sending-to-contact \"The system will only block emails from sending if ... it would be illegal to send an email to that particular contact\", including \"there isn't GDPR-compliant legal basis for sending to them\" and per subscription type opt outs. All products and plans; SMS and WhatsApp consent are checked per channel too. Note: Was partial; the block per subscription type and legal basis is documented.",
@@ -3215,7 +3301,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/ComplianceService.php:387",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"change": "marketing-integrated-campaigns"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/segments/review-segment-predicted-email-recipients-and-engagement \"Prior to sending a marketing email to a segment of contacts, review how many included contacts are eligible to get marketing emails\", with the reasons for ineligible contacts. All products and plans. Note: Was partial; this is the documented pre send check.",
@@ -3242,7 +3329,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/Marketing/JourneyService.php:156",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"change": "marketing-integrated-campaigns"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/workflows/use-journeys journeys with \"Wait: add a delay\", \"Wait until activity\" and branches (Marketing Hub Enterprise); workflows with delays and if/then branches in Marketing Hub Professional (https://knowledge.hubspot.com/workflows/create-workflows).",
@@ -3269,7 +3357,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/LandingPageProvisioningService.php:119",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"change": "marketing-campaigns"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/website-and-landing-pages/create-and-customize-pages \"Create website and landing pages for your site\" with forms added from the forms tool; all products and plans for basic landing pages, more with Content Hub or Marketing Hub Starter and up.",
@@ -3296,7 +3385,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/AttributionService.php:154",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/marketing-blast"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/reports/create-attribution-reports report types \"Deal Attribution\", \"Deal Create Attribution\" and \"Revenue Attribution\" credit marketing emails and other interactions with deals and their amount. Marketing Hub or Content Hub Professional, Enterprise.",
@@ -3323,7 +3413,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/SocialPostService.php:251",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"change": "social-publishing"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/social/create-and-publish-social-posts \"create and publish social posts across multiple networks simultaneously ... before scheduling it for peak engagement times\". Marketing Hub Professional, Enterprise. Note: Was partial for the tier.",
@@ -3350,7 +3441,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/Marketing/DeliverabilityCheckService.php:92",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"change": "marketing-mail-transports"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/domains-and-urls/connect-your-email-sending-domain \"Manage your email authentication\" with DKIM, SPF and DMARC status per sending domain. Marketing, Sales, Service or Content Hub Starter and up.",
@@ -3377,7 +3469,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/Search/KeywordTargetService.php:144",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"change": "marketing-search-intelligence"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/integrations/enable-the-google-search-console-integration-for-your-content-strategy-tool \"Top search queries: these are the search terms where your content appears in Google search results\", shown in the page editor's Optimization panel to act on. Marketing Hub or Content Hub Professional, Enterprise. Note: Was partial for the tier.",
@@ -3404,7 +3497,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/Competitor/CompetitorWatchService.php:225",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"change": "marketing-search-intelligence"
 			},
 			"evidence": {
 				"hubspot-crm": "Only through a third party tool: Klue https://klue.com/product/integrations \"Hubspot: Enables sellers with the latest competitive insights directly within Hubspot\", where Klue does the website monitoring. HubSpot's own AEO tool compares answer engine visibility with competitors (https://knowledge.hubspot.com/ai/optimize-content-and-improve-brand-visibility-for-ai), not pricing page changes. Note: Was no; an integrated competitive intelligence product provides it.",
@@ -3431,7 +3525,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/MailingListService.php:240",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/marketing-lists"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/forms/how-can-i-share-a-hubspot-form-if-im-using-an-external-site forms can be shared \"on your external, non-HubSpot-hosted site by ... Embedding the form code onto an existing page\", with subscription fields (https://knowledge.hubspot.com/forms/add-a-blog-subscription-field-in-a-form). All products and plans.",
@@ -3561,7 +3656,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/Portal/PortalAuthService.php:130",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"change": "2026-06-14-customer-portal"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/inbox/set-up-a-support-portal \"A support portal is a login-protected space where customers can access and manage their support tickets\". Service Hub Professional, Enterprise.",
@@ -3588,7 +3684,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/Portal/PortalMfaService.php:173",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"change": "2026-06-14-customer-portal"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/website-pages/manage-private-content-settings portal members sign in with a password, a password-less code or \"social sign-on\" (Google or Microsoft), and https://knowledge.hubspot.com/website-pages/set-up-single-sign-on-sso-to-access-private-content SSO through an identity provider such as Okta \"for knowledge base articles and customer portals\" (Service Hub or Content Hub Professional). A second factor comes only from the external identity provider; the portal itself documents none.",
@@ -3617,7 +3714,8 @@
 				"evidence": "lib/Service/Portal/PortalRequestService.php:216 submit writes a ticket with ticketType 'request' and channel 'portal' (pipelinq#2038; it used to write the retired request schema without the required ticketType), and the resident's list reads the same tickets back",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "customer portal, Requests (src/portal/portalRoutes.js:43)",
-				"readOn": "2026-09-27"
+				"readOn": "2026-09-27",
+				"change": "2026-06-14-customer-portal"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/inbox/set-up-a-support-portal \"To create and connect a support form, click Create a basic support form\" in the portal; customers then \"access and manage their support tickets\" and see their status there. Service Hub Professional, Enterprise.",
@@ -3646,7 +3744,8 @@
 				"evidence": "lib/Service/Portal/PortalRequestService.php:298 addReply appends to ticket.portalReplies and moves an awaiting_customer ticket back to in_progress; the handler sets awaiting_customer on TicketDetail (status enum in lib/Settings/register.d/99-unify-ticket-supertype.json), which is the status that shows the reply box (pipelinq#2038)",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "customer portal, Requests detail reply box; back office TicketDetail status",
-				"readOn": "2026-09-27"
+				"readOn": "2026-09-27",
+				"change": "2026-06-14-customer-portal"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/inbox/manage-customer-portal-settings \"When the customer logs in to their customer portal, they can reply to the ticket, and their response will appear in the selected inbox or help desk.\" Service Hub Professional, Enterprise.",
@@ -3673,7 +3772,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Controller/PortalDocumentController.php",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"change": "2026-06-14-customer-portal"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/inbox/set-up-a-support-portal ticket attachments are visible in the portal unless \"Sensitive Data settings\" block them (\"customers won't be able to view sensitive files in the support portal\"); Service Hub Professional. There is no document library per client in the portal, only files on their tickets.",
@@ -3700,7 +3800,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/Portal/DocumentSigningService.php:88",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"change": "2026-06-14-customer-portal"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/quotes/use-e-signatures-with-quotes \"Use e-signatures to gain acceptance of a quote or legacy quote from a buyer\", the buyer signs from the quote link. Sales Hub Starter, Professional, Enterprise or Revenue Hub Professional, Enterprise. Limited to quotes.",
@@ -3729,7 +3830,8 @@
 				"evidence": "lib/Service/Portal/PortalInvoiceService.php schemaKey() posTransaction and present() (invoiceNumber, date, amount, status) list the client's POS transactions through lib/Service/Portal/MainRegisterReader.php, reachable since pipelinq#2037 and #2045; lib/Service/Portal/AbstractPortalReadFacade.php getForAccount() filters on ownership only, so draft and parked carts are listed as invoices too, no PDF is offered, and shillinq sales invoices are never read",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "customer portal, Invoices tab (src/portal/views/PortalDashboard.vue:119)",
-				"readOn": "2026-09-28"
+				"readOn": "2026-09-28",
+				"change": "2026-06-14-customer-portal"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/invoices/share-created-invoices \"share them through an email, using a direct link, downloading a PDF\"; \"a link to view the invoice in their browser\". All plans for the invoices tool. The invoice is reached by a link per invoice; the support portal does not list a client's invoices.",
@@ -3757,7 +3859,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/Portal/PortalDelegationService.php:95",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"change": "2026-06-14-customer-portal"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/inbox/manage-customer-portal-settings \"All tickets from their company\" or \"Selected customers can see company tickets\" by contact property; Service Hub Professional. Access is set by the company, the client cannot grant a third party such as a bookkeeper access themselves.",
@@ -3784,7 +3887,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/Portal/PortalExportService.php:86",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"change": "2026-06-14-customer-portal"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/privacy-and-consent/manage-data-privacy-requests \"Set up your data privacy request page where contacts can submit requests related to the management of their personal data\", handled by an admin in the data request manager. All plans. A request, not a self service download.",
@@ -3811,7 +3915,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/Portal/PortalAccountService.php:89",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"change": "2026-06-14-customer-portal"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/privacy-and-consent/manage-data-privacy-requests contacts can request deletion of their personal data through the privacy request page; a Super Admin carries it out. All plans. No self service account closure in the portal is documented.",
@@ -3840,7 +3945,8 @@
 				"evidence": "lib/Service/Portal/PortalTenantService.php resolves a tenant per custom domain or subdomain and keeps a config record per tenant; src/components/admin/PortalSettings.vue loads and saves any tenant's branding, domain and tabs by tenant id",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "Administration settings, Pipelinq, Customer portal (tenant field)",
-				"readOn": "2026-09-27"
+				"readOn": "2026-09-27",
+				"change": "2026-06-14-customer-portal"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/branding/manage-your-brands-with-hubspot-brands \"manage multiple brands in one HubSpot account\" (Brands add-on on Marketing Hub Enterprise); https://knowledge.hubspot.com/knowledge-base/create-multiple-knowledge-bases \"In accounts with the Brands add-on, each knowledge base is assigned to a brand based on its domain\" (Service Hub Enterprise), and portals are reached through the knowledge base. Note: Was partial; the Brands add-on gives several branded help sites in one account. Whether each brand gets its own ticket portal is not spelled out.",
@@ -3867,7 +3973,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/BookingService.php:329",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/appointment-booking"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/meetings-tool/create-and-edit-scheduling-pages \"Create one-on-one scheduling pages so contacts can book meetings with you\", synced with the connected Gmail or Office 365 calendar. All products and plans.",
@@ -3894,7 +4001,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/Portal/PortalAuditService.php",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"change": "2026-06-14-customer-portal"
 			},
 			"evidence": {
 				"hubspot-crm": "not checked: no article describes a log of portal user actions; https://knowledge.hubspot.com/account-management/view-and-export-account-activity-history covers actions of HubSpot users, not portal members, and https://knowledge.hubspot.com/inbox/set-up-a-support-portal names no activity log (read 2026-09-26). Note: Was partial with an Enterprise audit trail source that covers internal users only.",
@@ -3921,7 +4029,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/ProductCatalogService.php:207",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/pos-product-catalogue"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/products/create-and-manage-products \"Create a product library of the goods and services to sell in HubSpot, and associate them as line items to ... deals, invoices, payment links, quotes\", priced at a flat rate. All products and plans.",
@@ -3948,7 +4057,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/ProductCatalogService.php:168",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/pos-product-catalogue"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/products/create-and-manage-products products \"priced at a flat rate or tiered. For example, you may want to assign volume-based discounts, or graduated or stair-step pricing\"; \"A Revenue Hub subscription is required to use tiered pricing.\". Note: Was partial for the hub; rated by what a buyer can get (Revenue Hub).",
@@ -3976,7 +4086,8 @@
 				"state": "built",
 				"evidence": "lib/Service/ProductCatalogService.php:293",
 				"owner": "ConductionNL/pipelinq",
-				"readOn": "2026-09-26"
+				"readOn": "2026-09-26",
+				"spec": "openspec/specs/pos-product-catalogue"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/integrations/sync-shopify-product-variants-to-hubspot \"If your Shopify products have multiple variants, you can sync each variant to HubSpot as an individual product record that is linked to their base product\"; https://knowledge.hubspot.com/properties/hubspots-default-product-properties lists no variant or attribute property. Native products have no variants; only synced Shopify variants are linked.",
@@ -4003,7 +4114,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/ProductCatalogService.php:97",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/product-catalog"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/payments/set-up-automated-tax-and-tax-rates \"Create taxes in a tax library: add taxes to the products and services you sell ... applying them to your line items across ... invoices ... quotes\", \"for example ... VAT in the U.K.\"; a Dutch 21 or 9 percent rate is entered the same way. All products and plans for the tax library; automated tax is US and Canada only. Note: Was no without a source; the tax library holds any VAT rate, entered by hand.",
@@ -4059,7 +4171,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/ProductVendorProviderService.php",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/product-vendor-master"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/properties/hubspots-default-product-properties \"Unit cost: the cost of the product to you\" is a default product property (all plans); there is no default supplier property, so the supplier needs a custom property or an association to a company. Note: Was no; the purchase cost is built in, the supplier is not.",
@@ -4086,7 +4199,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/ContractService.php:208",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/contract-renewal-tracking"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/contracts/set-up-contracts \"Contracts are created when a quote is accepted\", inheriting line items and terms, or created directly (beta); each contract is its own record with a Record ID, linked to the deal (https://knowledge.hubspot.com/contracts/understand-contracts-in-hubspot). Revenue Hub. Note: Was partial for the hub; the contract is its own record.",
@@ -4113,7 +4227,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/ContractService.php:152",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/contract-renewal-tracking"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/contracts/view-and-manage-contracts statuses are set by the system: \"when a contract is created with a future effective date, the status is set to Scheduled. On the effective date, the status is set to Active\", Terminated only through termination (Revenue Hub); pipeline rules can \"Restrict skipping stages\" and \"Restrict moving records backwards\" (https://knowledge.hubspot.com/object-settings/set-up-pipeline-rules, Professional hubs). Note: Was partial for the hub.",
@@ -4140,7 +4255,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/RenewalEngineService.php:118",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/contract-renewal-tracking"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/contracts/set-up-contracts \"Set up renewal alerts to highlight when contracts are nearing renewal\" with \"[x] days: number of days before the contract end date that the alert appears\", plus a renewal workflow on the Renewal date. Revenue Hub; workflows need a Professional hub. Note: Was partial for the hub.",
@@ -4167,7 +4283,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/RenewalEngineService.php:167",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/contract-renewal-tracking"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/contracts/set-up-contracts \"Configure automatic deal creation when creating change and renewal quotes\" and a renewal workflow that triggers \"the number of days before the renewal\" and can create a deal. Revenue Hub Professional, Enterprise with workflows. Note: Was no without a source; the docs describe renewal deal creation.",
@@ -4194,7 +4311,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/ContractService.php:245",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/contract-renewal-tracking"
 			},
 			"evidence": {
 				"kiss": "src/router/index.ts:126 \"const router = createRouter(\" lists the only screens: startscherm, afhandeling, contactverzoeken, personen, bedrijven, zaken, links and beheer; no contract, subscription or renewal entity exists in Kiss.Bff/Intern/Data/BeheerDbContext.cs or in the OpenKlant and ZGW services KISS calls",
@@ -4221,7 +4339,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/RecurringRevenueService.php:103",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/contract-renewal-tracking"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/contracts/understand-contracts-in-hubspot the contract shows \"total contract value (TCV), annual contract value, monthly recurring revenue (MRR), and annual recurring revenue (ARR)\" (Revenue Hub); https://knowledge.hubspot.com/reports/track-recurring-revenue-with-revenue-analytics reports renewals, upgrades and churn (Sales or Service Hub Enterprise). Note: Was partial.",
@@ -4248,7 +4367,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/Marketing/ShillinqInvoiceProjection.php",
-				"owner": "ConductionNL/shillinq"
+				"owner": "ConductionNL/shillinq",
+				"spec": "openspec/specs/contract-renewal-tracking"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/contracts/understand-contracts-in-hubspot \"Create contracts and automatically send invoices due on billing dates. Automatically collect payments due.\" Revenue Hub, with HubSpot invoices; external accounting via the Xero or QuickBooks data sync. Note: Was partial; billing from a contract is native.",
@@ -4275,7 +4395,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/PosTransactionService.php:262",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/pos-transaction-core"
 			},
 			"evidence": {
 				"hubspot-crm": "not checked: no knowledge base article describes a till or counter sale; https://knowledge.hubspot.com/payments/understand-how-to-collect-payments-in-hubspot names only \"payment links, invoices, quotes, legacy quotes, and subscriptions\" for collecting payments, and the Square and Lightspeed Retail marketplace apps (https://ecosystem.hubspot.com/marketplace/listing/square-data-sync) sync customers only (read 2026-09-26). Note: Was no without a source; the docs never state the absence of a till.",
@@ -4302,7 +4423,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/PosTransactionService.php:316",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/pos-nl-btw-engine"
 			},
 			"evidence": {
 				"hubspot-crm": "not checked: no till exists in the docs to total; the tax library at https://knowledge.hubspot.com/payments/set-up-automated-tax-and-tax-rates applies VAT to line items on quotes and invoices, not to a counter sale (read 2026-09-26). Note: Was no without a source.",
@@ -4329,7 +4451,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Controller/ProductCatalogController.php:89",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/pos-barcode-scan"
 			},
 			"evidence": {
 				"hubspot-crm": "not checked: searched the knowledge base URL list for barcode and point of sale and found no article; https://knowledge.hubspot.com/properties/hubspots-default-product-properties names SKU but no barcode scanning (read 2026-09-26). Note: Was no without a source.",
@@ -4356,7 +4479,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/PosPaymentService.php:450",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"change": "2026-06-14-pos-payment-provider-adapter"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/payments/understand-how-to-collect-payments-in-hubspot \"Collect payments from debit and credit cards and bank debit methods (e.g., ACH, SEPA, BACs)\" through payment links, invoices and quotes; HubSpot payments is \"available to companies based in United States, United Kingdom, and Canada\", Stripe as processor elsewhere. Online card payments only, no card terminal at a till is described. Note: Was no; cards are taken online, not at a counter.",
@@ -4383,7 +4507,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/ReceiptService.php:389",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/pos-receipt-engine"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/payments/issue-payment-receipts-and-refunds-for-your-buyers \"After collecting payments in HubSpot, you can send receipts and issue refunds from the payments index page\" with branded receipt emails. All products and plans. Emailed receipts for online payments; no till printer. Note: Was no; the mailed receipt exists, the printed one does not.",
@@ -4410,7 +4535,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/ReceiptService.php:147",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/pos-receipt-engine"
 			},
 			"evidence": {
 				"hubspot-crm": "not checked: HubSpot creates invoices (https://knowledge.hubspot.com/invoices/create-and-manage-invoices) but no article describes turning a receipt into an invoice above an amount; searched the payments and invoices articles (read 2026-09-26). Note: Was no without a source.",
@@ -4437,7 +4563,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/PosRefundService.php",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/pos-refund-return"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/payments/issue-payment-receipts-and-refunds-for-your-buyers \"you can send receipts and issue refunds from the payments index page\" for payments collected in HubSpot. All products and plans. Money back on an online payment; no return of goods at a counter. Note: Was no; refunds exist for online payments.",
@@ -4464,7 +4591,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Lifecycle/PosRefundManagerGuard.php",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/pos-lifecycle-guard-adoption"
 			},
 			"evidence": {
 				"hubspot-crm": "not checked: https://knowledge.hubspot.com/payments/issue-payment-receipts-and-refunds-for-your-buyers names permissions for branding but no refund limit or manager approval above an amount (read 2026-09-26). Note: Was no without a source.",
@@ -4491,7 +4619,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/CashShiftService.php:151",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"change": "2026-06-14-pos-cash-management"
 			},
 			"evidence": {
 				"hubspot-crm": "not checked: no knowledge base article on a cash drawer or till count; searched the KB URL list for point of sale, till and cash (read 2026-09-26). Note: Was no without a source.",
@@ -4518,7 +4647,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/CashShiftService.php:353",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"change": "2026-06-14-pos-cash-management"
 			},
 			"evidence": {
 				"hubspot-crm": "not checked: no till count exists in the docs to sign off; searched the KB URL list for point of sale, till and cash (read 2026-09-26). Note: Was no without a source.",
@@ -4545,7 +4675,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/PosBookkeepingService.php:183",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"change": "2026-06-15-pipelinq-bookkeeping-to-shillinq"
 			},
 			"evidence": {
 				"hubspot-crm": "not checked: no end of day or Z report in the docs; https://knowledge.hubspot.com/payments/manage-payouts lists daily payouts \"minus any fees, refunds, or chargebacks\", which is a processor payout, not a till close (read 2026-09-26). Note: Was no without a source.",
@@ -4572,7 +4703,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/PosBookkeepingService.php:437",
-				"owner": "ConductionNL/shillinq"
+				"owner": "ConductionNL/shillinq",
+				"change": "2026-06-15-pipelinq-bookkeeping-to-shillinq"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/payments/understand-how-to-collect-payments-in-hubspot payouts are \"the funds deposited into your bank account from your collected payments each day\"; invoices sync to QuickBooks or Xero through the accounting integrations (https://knowledge.hubspot.com/invoices/create-and-manage-invoices). Online takings, not a till's day. Note: Was no; the bookkeeping sync exists for invoices and payments, not for counter takings.",
@@ -4599,7 +4731,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/KassakoppelingSignatureService.php",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"change": "2026-06-14-pos-kassakoppeling-audit"
 			},
 			"evidence": {
 				"hubspot-crm": "not checked: no signed till journal or fiscal register in the docs; searched the KB URL list for point of sale, fiscal and till (read 2026-09-26). Note: Was no without a source.",
@@ -4626,7 +4759,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/PosCustomerLinkService.php",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"change": "2026-06-14-pos-customer-link"
 			},
 			"evidence": {
 				"hubspot-crm": "https://ecosystem.hubspot.com/marketplace/listing/square-data-sync maps Square \"Customers\" to contacts, \"Items\" to products and \"Payments\" to custom objects; https://ecosystem.hubspot.com/marketplace/listing/lightspeedretailx-data-sync \"this is a customer sync only, it will not sync transactions\". Only via the Square data sync app, and the sale is rung in Square. Note: Was no; a third-party marketplace app links till customers.",
@@ -4653,7 +4787,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/LoyaltyEngineService.php:92",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"change": "2026-06-14-loyalty-program"
 			},
 			"evidence": {
 				"hubspot-crm": "https://ecosystem.hubspot.com/marketplace/listing/yotpo-loyalty \"syncs all program-related data (point balances, referral links, VIP tiers, etc.) and events (coupons redeemed ...) with HubSpot\"; Zinrelo (https://ecosystem.hubspot.com/marketplace/apps/zinrelo-integration-346498) likewise. The points are kept in the third-party app. Note: Was no; only via the Yotpo Loyalty or Zinrelo marketplace app.",
@@ -4680,7 +4815,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/RedemptionService.php",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"change": "2026-06-14-loyalty-program"
 			},
 			"evidence": {
 				"hubspot-crm": "https://ecosystem.hubspot.com/marketplace/listing/yotpo-loyalty syncs \"coupons redeemed\" events to HubSpot; Zinrelo offers \"flexible rewards redemption\" (https://ecosystem.hubspot.com/marketplace/apps/zinrelo-integration-346498). Redemption happens in the third-party app and shop, not in HubSpot. Note: Was no; only via a marketplace loyalty app.",
@@ -4707,7 +4843,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/BackgroundJob/TierDowngradeJob.php",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"change": "2026-06-14-loyalty-program"
 			},
 			"evidence": {
 				"hubspot-crm": "https://ecosystem.hubspot.com/marketplace/apps/zinrelo-integration-346498 \"reward tiers for VIP customers\"; https://ecosystem.hubspot.com/marketplace/listing/yotpo-loyalty syncs \"VIP tiers\" as contact properties. Tier logic lives in the third-party app. Note: Was no; only via a marketplace loyalty app.",
@@ -4734,7 +4871,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/GiftCardService.php:188",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"change": "2026-06-14-loyalty-program"
 			},
 			"evidence": {
 				"hubspot-crm": "not checked: no knowledge base article on selling or redeeming gift cards; searched the KB URL list for gift and the marketplace search for loyalty apps, which name points and tiers but no gift card sale (read 2026-09-26). Note: Was no without a source.",
@@ -4761,7 +4899,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/AnalyticsService.php:285",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/commercial-dashboard"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/dashboards/manage-your-dashboards \"Create dashboards in HubSpot to organize your reports into one view\", from scratch or from templates, All products and plans; pre-built pipeline and deal reports come from the sales analytics suite (https://knowledge.hubspot.com/reports/create-sales-reports-in-the-sales-analytics-suite, Sales Hub Starter and up), reached under Reporting > Dashboards.",
@@ -4788,7 +4927,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/ReportingService.php:90",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/contactmomenten-rapportage"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/dashboards/manage-your-dashboards names \"a user-specific service dashboard to see how a customer service representative is performing\"; https://knowledge.hubspot.com/reports/create-service-reports-in-the-service-analytics-suite pre-built reports on \"customer satisfaction scores, average ticket response time, and overall support volume\". Service Hub Starter, Professional, Enterprise.",
@@ -4815,7 +4955,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/AnalyticsService.php:465",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/commercial-dashboard"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/reports/compare-date-ranges-in-the-custom-report-builder \"use the Date part and Compare by filters to compare multiple time range types side-by-side. For example, you can compare this year to last year\". Marketing, Sales, Service or Data Hub Professional, Enterprise.",
@@ -4842,7 +4983,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/ReportingService.php:215",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/contactmomenten-rapportage"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/reports/create-sales-reports-in-the-sales-analytics-suite \"Completed activities: this report shows the activities completed by your users. Activities include calls, meetings, tasks, emails and notes\" (Sales Hub Starter and up); https://knowledge.hubspot.com/reports/create-service-reports-in-the-service-analytics-suite adds average ticket response time per team (Service Hub Starter and up).",
@@ -4869,7 +5011,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/BackgroundJob/ExportSchedulerJob.php",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/bi-export-and-data-warehouse-sink"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/dashboard/email-or-export-reports-and-dashboards \"You can also schedule recurring report emails on a daily, weekly, or monthly basis\", sent by email, Slack or Google Chat. All products and plans.",
@@ -4896,7 +5039,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Adapter/ExportSinkRegistry.php",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/bi-export-and-data-warehouse-sink"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/reports/query-hubspot-data-in-snowflake \"After connecting Snowflake to your HubSpot account, you can use Snowflake's Data Share to query HubSpot data\", with a \"V2_LIVE schema which is updated every 15 minutes\". Data Hub Enterprise. Note: Was partial for the API only; the Snowflake data share is a warehouse sync on the top tier.",
@@ -4923,7 +5067,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/Export/ExportRunService.php",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/bi-export-and-data-warehouse-sink"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/import-and-export/view-a-log-of-your-users-exports-in-your-account export log shows \"when an export occurred, who initiated an export, and which records were exported\" with Processing and Canceled statuses; All products and plans. Covers manual exports; no run log is described for a scheduled report email.",
@@ -4950,7 +5095,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/Export/SchemaEvolutionService.php",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/bi-export-and-data-warehouse-sink"
 			},
 			"evidence": {
 				"kiss": "the management API returns a fixed DTO (Kiss.Bff/Intern/ContactmomentDetails/Features/ContactMomentDetailsModel.cs); users cannot add fields, so the capability does not arise",
@@ -4977,7 +5123,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Controller/MetricsController.php",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/prometheus-metrics"
 			},
 			"evidence": {
 				"hubspot-crm": "not checked: no metrics endpoint for outside monitoring is documented; https://knowledge.hubspot.com/integrations/manage-your-connected-apps shows \"app activity, API usage\" inside HubSpot only, and the developer docs searched for monitoring and metrics name none (read 2026-09-26). Note: Was no without a source.",
@@ -5004,7 +5151,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/ForecastExportService.php",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"change": "2026-06-14-forecast-roll-up-and-categories"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/forecast/use-the-forecast-tool \"Export forecasting data ... Click the report you want to export (e.g., Forecast category). In the upper right, click Actions, then select Export unsummarized data\". Sales Hub or Service Hub Professional, Enterprise. Note: Was partial; the forecast export is documented.",
@@ -5031,7 +5179,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/Matomo/MatomoReportService.php",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"change": "marketing-search-intelligence"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/reports/analyze-your-site-traffic-with-the-traffic-analytics-tool \"view website traffic data ... by source, topic cluster, device type, country\" (Marketing Hub or Content Hub Professional, Enterprise); traffic and deal reports sit on one dashboard (https://knowledge.hubspot.com/dashboards/manage-your-dashboards). Note: Was partial; with Marketing Hub Professional both sit on one dashboard.",
@@ -5058,7 +5207,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/RapportageService.php",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/contactmomenten-rapportage"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/reports/create-custom-single-object-reports lists Calls among the objects to report on, and https://knowledge.hubspot.com/reports/create-reports-with-the-custom-report-builder can \"surface data from marketing and sales activities\" grouped by any property. Marketing, Sales or Service Hub Professional, Enterprise. Note: Was partial; activity reports by type and property need a Professional hub.",
@@ -5085,7 +5235,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Flow/PipelinqFlowNodeListener.php",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/crm-workflow-automation"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/workflows/create-workflows \"Create workflows in HubSpot to automate your processes ... add enrollment triggers ... Then, add actions\", built with AI, templates or from scratch, under Automation > Workflows. Marketing, Sales, Service or Data Hub Professional, Enterprise.",
@@ -5113,7 +5264,8 @@
 				"state": "built",
 				"evidence": "lib/Service/WebhookProcessorService.php",
 				"owner": "ConductionNL/pipelinq",
-				"readOn": "2026-09-26"
+				"readOn": "2026-09-26",
+				"change": "2026-06-14-marketing-segmentation-and-blast-05-jobs-and-webhooks"
 			},
 			"evidence": {
 				"hubspot-crm": "https://developers.hubspot.com/docs/api-reference/latest/webhooks/guide webhook subscriptions send record events to your app's URL; https://knowledge.hubspot.com/workflows/choose-your-workflow-actions \"Send a webhook (Data Hub Professional and Enterprise only) Trigger a webhook to an external application\".",
@@ -5140,7 +5292,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "appinfo/routes.php",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/marketing-api"
 			},
 			"evidence": {
 				"hubspot-crm": "https://developers.hubspot.com/docs/api-reference/latest/webhooks/guide and the HubSpot API reference at https://developers.hubspot.com/docs cover CRM object read and write over REST with OAuth or private app tokens; All products and plans, with API rate limits by tier.",
@@ -5167,7 +5320,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/ConnectionReportService.php",
-				"owner": "ConductionNL/integriq"
+				"owner": "ConductionNL/integriq",
+				"change": "adopt-connection-registry"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/integrations/manage-your-connected-apps \"On the Connections home tab, access an overview of all apps connected to your HubSpot account\", with statuses and \"how apps interact with CRM data\". All products and plans. Note: Was partial; the Connected Apps page is that list.",
@@ -5194,7 +5348,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/Marketing/Transport/ConnectorSourceTransport.php",
-				"owner": "ConductionNL/integriq"
+				"owner": "ConductionNL/integriq",
+				"change": "marketing-mail-transports"
 			},
 			"evidence": {
 				"hubspot-crm": "not checked: https://knowledge.hubspot.com/marketing-email/create-and-send-marketing-emails sends from HubSpot's own mail servers or a dedicated IP (https://knowledge.hubspot.com/marketing-email/connect-a-dedicated-ip-address-for-sending-emails); no article describes routing a mailing through an outside connector (read 2026-09-26). Note: Was no without a source.",
@@ -5221,7 +5376,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Mcp/PipelinqScannableServices.php:58",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/crm-mcp-tool-surface"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/integrations/set-up-and-use-the-hubspot-connector-for-claude the connector can \"Create and update HubSpot CRM records ... Log activities\"; \"During approval, Super Admins select which data permissions the connector can access and who in the account can install it\", and \"Users can access only the data allowed by their existing HubSpot permissions\". All products and plans. Note: Was partial; admin-scoped permissions for an AI assistant are documented.",
@@ -5248,7 +5404,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/NaviService.php",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/dashboard"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/ai/use-breeze-assistant \"Breeze Assistant, HubSpot's conversational AI assistant, to generate content, summarize records, prepare for meetings, and complete tasks across your HubSpot account\". All products and plans.",
@@ -5275,7 +5432,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/BackgroundJob/SlaDeadlineSweepJob.php",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/sla-engine-and-escalation"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/workflows/use-based-on-a-schedule-workflow-enrollment-triggers \"set a workflow to recur just once, or on an annual, monthly, weekly, or daily schedule\" at a chosen time (Professional hubs); imports and exports run in the background, but no article names deferring slow work to a night queue.",
@@ -5302,7 +5460,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/BackgroundJob/BillingHandoffRetryJob.php",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/time-approval-workflow"
 			},
 			"evidence": {
 				"kiss": "failed writes are shown to the user and not queued: src/features/contact/contactmoment/ContactmomentAfhandeling.vue:750 returns the save error to the form, the zaak link error is only logged (line 536 \"console.error(e)\"); no retry or outbox exists in Kiss.Bff/ (grep for retry and Polly finds nothing)",
@@ -5329,7 +5488,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Listener/ObjectEventListener.php",
-				"owner": "ConductionNL/openregister"
+				"owner": "ConductionNL/openregister",
+				"spec": "openspec/specs/notifications-activity"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/workflows/set-slack-event-triggers-with-agent-hub-workflows \"trigger a workflow whenever a Slack user is mentioned or when a message is sent to a specific Slack channel\" (Professional hubs); call events from third-party apps such as Aircall also trigger workflows (https://knowledge.hubspot.com/workflows/set-event-enrollment-triggers). No shared file or calendar workspace. Note: Was no; Slack and calling events can trigger workflows.",
@@ -5357,7 +5517,8 @@
 				"state": "built",
 				"evidence": "lib/Service/XWikiService.php:118",
 				"owner": "ConductionNL/pipelinq",
-				"readOn": "2026-09-26"
+				"readOn": "2026-09-26",
+				"spec": "openspec/specs/xwiki-proxy"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/ai-tools/use-breeze-assistant-with-connected-apps \"Find relevant information from connected apps (e.g., Slack, Gmail) using Breeze Assistant ... Ask questions in plain language and get synthesized answers drawn from your connected tools\", with Google Docs as an example source; All products and plans. Wiki connectors GitBook, Guru and Document360 are sunset on 26 Sept 2026. Note: Was no; Breeze Assistant searches connected document tools.",
@@ -5385,7 +5546,8 @@
 				"state": "built",
 				"evidence": "lib/Command/SeedDemoDataCommand.php",
 				"owner": "ConductionNL/pipelinq",
-				"readOn": "2026-09-26"
+				"readOn": "2026-09-26",
+				"spec": "openspec/specs/first-time-setup"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/import-and-export/sample-import-files offers \"Contacts sample spreadsheet: XLSX or CSV\" and other sample files to import; a new account holds one sample contact (Maria Johnson, per https://community.hubspot.com/t5/APIs-Integrations/Best-way-to-populate-test-account-with-sample-data-for/m-p/536437/highlight/true). No one-click example data set. Note: Was unknown.",
@@ -5413,7 +5575,8 @@
 				"state": "built",
 				"evidence": "lib/Controller/SetupController.php",
 				"owner": "ConductionNL/pipelinq",
-				"readOn": "2026-09-26"
+				"readOn": "2026-09-26",
+				"spec": "openspec/specs/first-time-setup"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/help-and-resources/use-your-home-page \"if this is your first time using HubSpot, you can work through your onboarding plan and access recommended HubSpot Academy videos\" (All products and plans); onboarding checklists at https://knowledge.hubspot.com/help-and-resources/manage-onboarding-to-do-lists-with-checklists (Professional hubs).",
@@ -5440,7 +5603,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/HaalCentraalClient.php:136",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/brp-lookup"
 			},
 			"note": "The 2026-03 KISS research lists this as a pipelinq gap. It has since been built.",
 			"evidence": {
@@ -5468,7 +5632,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/BsnAuditService.php:104",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"change": "2026-06-14-bsn-validatie-en-brp-lookup"
 			},
 			"evidence": {
 				"hubspot-crm": "not checked: searched the HubSpot knowledge base URL list and the App Marketplace (web search on ecosystem.hubspot.com, 2026-09-26) for a log of BSN lookups and found no article or app, HubSpot has no BSN lookup to log. Note: Was no without a source; the docs do not state the absence.",
@@ -5495,7 +5660,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/BsnAuditService.php:246",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"change": "2026-06-14-bsn-validatie-en-brp-lookup"
 			},
 			"evidence": {
 				"hubspot-crm": "not checked: searched the HubSpot knowledge base URL list and the App Marketplace (web search on ecosystem.hubspot.com, 2026-09-26) for BSN pseudonymisation and found no article or app; https://knowledge.hubspot.com/account-security/store-sensitive-data lets Enterprise hubs store \"Highly Sensitive Data (e.g., social security numbers)\" in special properties, which is protected storage, not pseudonymisation. Note: Was no without a source; the docs do not state the absence.",
@@ -5522,7 +5688,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Listener/BrpMutationWebhookListener.php",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"change": "2026-06-14-bsn-validatie-en-brp-lookup"
 			},
 			"evidence": {
 				"hubspot-crm": "not checked: searched the HubSpot knowledge base URL list and the App Marketplace (web search on ecosystem.hubspot.com, 2026-09-26) for BRP change notifications and found no article or app. Note: Was no without a source; the docs do not state the absence.",
@@ -5550,7 +5717,8 @@
 				"state": "built",
 				"evidence": "lib/BackgroundJob/BrpRetentionJob.php",
 				"owner": "ConductionNL/pipelinq",
-				"readOn": "2026-09-26"
+				"readOn": "2026-09-26",
+				"change": "2026-06-14-bsn-validatie-en-brp-lookup"
 			},
 			"evidence": {
 				"hubspot-crm": "not checked: searched the HubSpot knowledge base URL list and the App Marketplace (web search on ecosystem.hubspot.com, 2026-09-26) for retention of register data and found no article or app, apart from GDPR delete. Note: Was no without a source; the docs do not state the absence.",
@@ -5577,7 +5745,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/BsnValidationService.php",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"change": "2026-06-14-bsn-validatie-en-brp-lookup"
 			},
 			"evidence": {
 				"hubspot-crm": "not checked: searched the HubSpot knowledge base URL list and the App Marketplace (web search on ecosystem.hubspot.com, 2026-09-26) for BSN eleven-test validation and found no article or app, property validation rules exist but none for a BSN. Note: Was no without a source; the docs do not state the absence.",
@@ -5604,7 +5773,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/Zgw/ZgwApiClient.php:155",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"change": "2026-06-14-zgw-api-bridge"
 			},
 			"note": "Also listed as a pipelinq gap in the 2026-03 research and since built.",
 			"evidence": {
@@ -5632,7 +5802,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/Zgw/NrcSubscriptionService.php",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"change": "2026-06-14-zgw-api-bridge"
 			},
 			"evidence": {
 				"hubspot-crm": "not checked: searched the HubSpot knowledge base URL list and the App Marketplace (web search on ecosystem.hubspot.com, 2026-09-26) for the national notification service (Notificaties API) and found no article or app. Note: Was no without a source; the docs do not state the absence.",
@@ -5659,7 +5830,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Integration/ContactMomentLeafProvider.php",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/vng-klantinteracties-leaf"
 			},
 			"evidence": {
 				"hubspot-crm": "not checked: searched the HubSpot knowledge base URL list and the App Marketplace (web search on ecosystem.hubspot.com, 2026-09-26) for the VNG Klantinteracties API and found no article or app. Note: Was no without a source; the docs do not state the absence.",
@@ -5686,7 +5858,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/BerichtenboxService.php:143",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"change": "2026-06-14-burgerportaal-mijnoverheid-bridge"
 			},
 			"evidence": {
 				"hubspot-crm": "not checked: searched the HubSpot knowledge base URL list and the App Marketplace (web search on ecosystem.hubspot.com, 2026-09-26) for MijnOverheid Berichtenbox and found no article or app. Note: Was no without a source; the docs do not state the absence.",
@@ -5713,7 +5886,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/BerichtenboxService.php:307",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"change": "2026-06-14-burgerportaal-mijnoverheid-bridge"
 			},
 			"evidence": {
 				"hubspot-crm": "not checked: searched the HubSpot knowledge base URL list and the App Marketplace (web search on ecosystem.hubspot.com, 2026-09-26) for a Berichtenbox to email fallback and found no article or app, there is no Berichtenbox channel to fall back from. Note: Was no without a source; the docs do not state the absence.",
@@ -5740,7 +5914,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Repair/MigrateAvgVerzoekenToOrDsar.php",
-				"owner": "ConductionNL/openregister"
+				"owner": "ConductionNL/openregister",
+				"spec": "openspec/specs/avg-verzoeken-workflow"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/privacy-and-consent/manage-data-privacy-requests \"Set up your data privacy request page where contacts can submit requests ... to request copies of the data you're storing or to have their data permanently deleted\", handled from a request list. All products and plans. Note: Was partial; the request page and handling list are native on every plan.",
@@ -5767,7 +5942,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/Gdpr/PipelinqBsnIdentityVerifyProvider.php:125",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"change": "avg-consume-or-workflow"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/privacy-and-consent/manage-data-privacy-requests the request page sends a \"verification email sent to users\" and can use reCAPTCHA; that proves control of the mailbox, not identity (no DigiD or document check). All products and plans. Note: Was no; email verification exists.",
@@ -5795,7 +5971,8 @@
 				"state": "built",
 				"evidence": "lib/Service/CorrespondenceLanguageService.php",
 				"owner": "ConductionNL/pipelinq",
-				"readOn": "2026-09-26"
+				"readOn": "2026-09-26",
+				"change": "correspondence-language-per-party"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/properties/hubspots-default-contact-properties \"Preferred language: the contact's preferred language for communications. This might be set via import, form, or integration\"; the property can drive list filters and workflows for language-specific sends. All products and plans.",
@@ -5822,7 +5999,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "appinfo/info.xml",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "none"
 			},
 			"evidence": {
 				"hubspot-crm": "https://legal.hubspot.com/terms-of-service defines the \"Subscription Service\" as \"web-based applications ... developed, operated, and maintained by us, accessible via http://hubspot.com\"; https://legal.hubspot.com/security points to \"HubSpot Cloud Infrastructure hosted on AWS\". No self-hosted edition.",
@@ -5849,7 +6027,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "LICENSE",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "none"
 			},
 			"evidence": {
 				"hubspot-crm": "https://legal.hubspot.com/terms-of-service 2.9: \"You will not (i) directly or indirectly reverse engineer, decompile, disassemble or otherwise attempt to uncover or discover the source code\" of the service.",
@@ -5876,7 +6055,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "appinfo/info.xml declares no licensing tier",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "none"
 			},
 			"evidence": {
 				"hubspot-crm": "https://www.hubspot.com/pricing/sales Starter \"Starts at $7/mo/seat\", Professional \"$90/mo/seat\", Enterprise \"$150/mo/seat\"; \"View-only Seats are available at no additional cost\"; the free CRM covers \"up to 2 users\". Read-only colleagues are free, working colleagues are not. Note: Evidence refreshed: the free tier is now two users, not unlimited.",
@@ -5903,7 +6083,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/AppInfo/Application.php",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "none"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/connected-email/use-contact-profiles-with-the-hubspot-sales-office-365-add-in \"Access your CRM contact information directly from your Outlook inbox ... log sales activities ... create tasks and associate companies, deals, and tickets\"; Teams integration at https://knowledge.hubspot.com/integrations/connect-hubspot-and-microsoft-teams. All products and plans. Add-ins bring HubSpot into Microsoft 365 or Gmail; the CRM itself stays a separate web app. Note: Was no; the Outlook add-in and Teams app put the CRM beside mail and calendar.",
@@ -5930,7 +6111,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "appinfo/routes.php",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "none"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/account-security/set-up-single-sign-on-sso single sign-on over SAML for users of the account. Marketing, Sales, Service or Data Hub Professional, Enterprise; Google and Microsoft login on every plan.",
@@ -5957,7 +6139,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Lifecycle/ObjectOwnerAccessPolicy.php",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "none"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/user-management/hubspot-user-permissions-guide \"Super Admins can set user permissions to control what users can view, create, edit, or delete ... you can give a sales rep permission to communicate only with contacts they own\", per object with owned, team or everything scopes. All products and plans; teams and permission sets on Starter and up. Note: Was partial for paid tiers; basic view and edit scopes are on every plan.",
@@ -6013,7 +6196,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/EncryptionService.php",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"change": "2026-06-14-burgerportaal-mijnoverheid-bridge"
 			},
 			"evidence": {
 				"hubspot-crm": "https://legal.hubspot.com/security \"The physical and virtualized hard drives used by HubSpot product server instances as well as long-term storage solutions like AWS S3 use AES-256 encryption\"; connected app tokens are held by HubSpot in that store.",
@@ -6040,7 +6224,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/Social/ConnectionAuditService.php",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"change": "marketing-search-intelligence"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/integrations/manage-your-connected-apps Connection insights show \"app activity, API usage ... and record-level interactions\" for apps that call HubSpot; https://knowledge.hubspot.com/account-management/view-and-export-account-activity-history audit logs record \"HubSpot-user based actions\" only. No log of each outgoing call to an outside register. Note: Was partial; kept with fresh sources.",
@@ -6067,7 +6252,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Repair/RenameDutchColumns.php",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "none"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/properties/understand-the-property-editor \"Property label ... The label can be changed after creating the property\"; \"Internal name ... used for integration app sync and API calls ... cannot be edited\", so records and integrations keep working after a rename. All products and plans. Note: Was partial; renaming the label is safe by design.",
@@ -6094,7 +6280,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Controller/HealthController.php",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/prometheus-metrics"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/integrations/manage-your-connected-apps \"On the Connections home tab, view at a glance app connection statuses, identify issues that need attention\", to \"prevent issues like expired connections or reaching API call limits\". All products and plans. Note: Was partial; the Connections home is that page.",
@@ -6121,7 +6308,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/DataDeletionService.php:110",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/avg-verzoeken-workflow"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/privacy-and-consent/how-do-i-perform-a-gdpr-delete-in-hubspot permanent delete removes the contact \"including email tracking history, call records, form submissions\", while \"anonymized analytics data will remain\"; associated deals and companies are separate records and stay. All products and plans. Note: Was partial; the delete keeps the other records intact.",
@@ -6148,7 +6336,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/BudgetService.php",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"change": "2026-06-14-whatsapp-sms-channel-adapter"
 			},
 			"evidence": {
 				"kiss": "no rate limiting or budget guard in Kiss.Bff/ (grep for RateLimit finds nothing)",
@@ -6176,7 +6365,8 @@
 				"state": "built",
 				"evidence": "css/dashboardWidgets.css",
 				"owner": "ConductionNL/pipelinq",
-				"readOn": "2026-09-26"
+				"readOn": "2026-09-26",
+				"spec": "none"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/branding/edit-your-logo-favicon-and-brand-colors brand kits (logo, favicon, colors, theme, fonts) are \"applied across HubSpot-hosted content and supported tools, such as the content editor, scheduling pages, quotes, and conversation channels\". All products and plans. Outward content only; the app interface keeps HubSpot's look.",
@@ -6204,7 +6394,8 @@
 				"state": "built",
 				"evidence": "l10n/nl.json",
 				"owner": "ConductionNL/pipelinq",
-				"readOn": "2026-09-26"
+				"readOn": "2026-09-26",
+				"spec": "openspec/specs/register-i18n"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/help-and-resources/hubspot-language-offerings lists Nederlands (Dutch) among \"languages ... available in the HubSpot interface\", noting some features may lag. All products and plans.",
@@ -6413,7 +6604,8 @@
 				"evidence": "src/components/PartyIndicatorPanel.vue renders every indicator in force, critical first, with an acknowledge action and an add-warning form, mounted before the body on ClientDetail and ContactDetail (src/manifest.json bodyWidgets 'party-indicators'); it reads lib/Service/PartyIndicatorService.php:134 resolve through GET /api/leaves/party/{partyId}. lib/Settings/register.d/17-party-fields-and-indicators.json seeds the code agressie-registratie (critical, requires acknowledgement), and SettingsLoadService now writes the partyIndicator, partyIndicatorValue and partyFieldSet schema keys the resolver reads (pipelinq#2036)",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "ClientDetail and ContactDetail, Warnings panel above the fields",
-				"readOn": "2026-09-27"
+				"readOn": "2026-09-27",
+				"change": "typed-fields-and-indicators-on-a-party"
 			},
 			"note": "lead: since pipelinq#2036 a handler sets a warning on a client or contact and the next colleague sees it above the fields and confirms it; pipelinq's own outbound sends do not ask isBlocked (REQ-PFI-004 leaves that to the acting app)",
 			"evidence": {
@@ -6978,7 +7170,8 @@
 				"evidence": "TicketDetail (src/manifest.json, config without sidebar tabs) opens the host CnObjectSidebar (src/App.vue:34) whose default tabs include the Audit Trail (nextcloud-vue v2.56.0 CnObjectSidebar.vue:146 \"Audit Trail Tab\"), listing every later change to status, assignee and notes; the ticket's assignee is a field (lib/Settings/register.d/99-unify-ticket-supertype.json:210)",
 				"owner": "ConductionNL/openregister",
 				"reachedOn": "TicketDetail sidebar, History / Audit trail tab",
-				"readOn": "2026-09-26"
+				"readOn": "2026-09-26",
+				"spec": "none"
 			},
 			"note": "no list of 'requests I passed on'; you open each ticket to see its history",
 			"evidence": {
@@ -7236,7 +7429,8 @@
 				"evidence": "an export job picks any source schemas (lib/Settings/register.d/40-bi-export.json:135 \"sourceSchemas\", so ticket and channelMessage) and ships them on a schedule (lib/BackgroundJob/ExportSchedulerJob.php) to S3, SFTP, GCS, Azure Data Lake, BigQuery, Snowflake or Postgres (lib/Adapter/*ExportAdapter.php via lib/Adapter/ExportSinkRegistry.php)",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "ExportJobs, ExportJobNew, ExportDestinations, ExportRuns",
-				"readOn": "2026-09-26"
+				"readOn": "2026-09-26",
+				"spec": "openspec/specs/bi-export-and-data-warehouse-sink"
 			},
 			"note": "contact moments, tickets and WhatsApp/SMS messages export; mail bodies stay in Nextcloud Mail and are only linked",
 			"evidence": {
@@ -7567,7 +7761,8 @@
 				"evidence": "src/components/ContactmomentQuickLog.vue:100 \"Request → ticket.parentTicket (a request-type ticket)\" with an NcSelect of request tickets fetched at :285 (ticketType 'request'), so a new contact moment is filed on an existing request instead of opening a new one; a contact moment can also be filed on further cases (lib/Settings/register.d/97-contact-moment-several-cases.json caseReferences)",
 				"owner": "ConductionNL/pipelinq",
 				"reachedOn": "ClientDetail and ContactDetail quick log (src/manifest.json:2144)",
-				"readOn": "2026-09-26"
+				"readOn": "2026-09-26",
+				"change": "one-contact-moment-on-several-cases"
 			},
 			"note": "the request picker lists every request ticket, not only open ones",
 			"evidence": {
@@ -7753,7 +7948,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Adapter/ExportSinkRegistry.php",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/bi-export-and-data-warehouse-sink"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/account-management/export-your-content-and-data \"export HubSpot content and data from your account, such as pages, contacts, and files\", All products and plans, but \"there is no way to merge all the data between HubSpot accounts ... recreate certain data in the other account\"; records and files leave, automations must be rebuilt.",
@@ -8118,7 +8314,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/AvailabilityService.php:174",
-				"owner": "ConductionNL/pipelinq"
+				"owner": "ConductionNL/pipelinq",
+				"spec": "openspec/specs/appointment-booking"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/meetings-tool/create-and-edit-scheduling-pages \"Create one-on-one scheduling pages so contacts can book meetings with you\"; contacts \"access these scheduling pages using a meeting link\", synced with Gmail or Office 365. All products and plans.",
