@@ -39,6 +39,7 @@ import {
 	resolveMenuModules,
 } from '../../src/utils/menuModules.js'
 import {
+	applyPageDefaults,
 	applyPageOverlay,
 	buildProfiledManifest,
 	navTheming,
@@ -122,9 +123,25 @@ function validateBuilt(built) {
 }
 
 describe('the full profile', () => {
-	it('is exactly what buildManifest made before profiles existed', () => {
+	it('is exactly what buildManifest made before profiles existed, with the newer index header controls held back', () => {
 		const before = buildManifest(manifest(), fragments, fullFile)
-		expect(build(fullFile)).toEqual(before)
+		expect(build(fullFile)).toEqual(
+			applyPageDefaults(before, fullFile.pageDefaults),
+		)
+		// The only difference: every index page that did not choose shows
+		// the plain header row it had on nextcloud-vue ^2.61.0.
+		const after = build(fullFile)
+		for (const page of before.pages) {
+			const now = after.pages.find((item) => item.id === page.id)
+			if (page.type === 'index' && page.config?.headerFilters === undefined) {
+				expect(now, page.id).toEqual({
+					...page,
+					config: { ...page.config, headerFilters: false },
+				})
+			} else {
+				expect(now, page.id).toEqual(page)
+			}
+		}
 		// And the module step leaves a file without modules alone.
 		expect(applyMenuModules(fullFile, MODULE_KEYS)).toBe(fullFile)
 		expect(applyHomePage(before, fullFile.home)).toEqual({
@@ -144,6 +161,35 @@ describe('the full profile', () => {
 		expect(count('integrations')).toBe(0)
 	})
 
+	it('holds the header controls back on index pages only, and the simple profile keeps the library default', () => {
+		expect(fullFile.pageDefaults).toEqual({ index: { headerFilters: false } })
+		expect(simpleFile.pageDefaults).toBeUndefined()
+		const simpleIndex = buildSimple().pages.filter(
+			(page) => page.type === 'index',
+		)
+		expect(simpleIndex.length).toBeGreaterThan(0)
+		for (const page of simpleIndex) {
+			const own = buildManifest(manifest(), fragments, {}).pages.find(
+				(item) => item.id === page.id,
+			)
+			expect(page.config?.headerFilters, page.id).toBe(
+				own?.config?.headerFilters,
+			)
+		}
+		const unchanged = { pages: [{ id: 'x', type: 'detail', config: {} }] }
+		expect(applyPageDefaults(unchanged, undefined)).toBe(unchanged)
+		expect(
+			applyPageDefaults(
+				{
+					pages: [
+						{ id: 'y', type: 'index', config: { headerFilters: true } },
+					],
+				},
+				fullFile.pageDefaults,
+			).pages[0].config.headerFilters,
+		).toBe(true)
+	})
+
 	it('does not link to the Modules page, which only the simple menu needs', () => {
 		const routes = flat(build(fullFile).menu).map((entry) => entry.route)
 		expect(routes).not.toContain('Modules')
@@ -154,9 +200,10 @@ describe('the simple profile', () => {
 	const built = buildSimple()
 	const main = section(built.menu, 'main')
 
-	it('shows eight entries under three captions, in the order of the design', () => {
+	it('shows eight entries under two captions, in the order of the design', () => {
+		// PqDashboard: Dashboard, My work and Queue sit at the top with no
+		// caption above them; the board's first caption is Klantcontact.
 		expect(main.map((entry) => entry.id)).toEqual([
-			'StartCaption',
 			'KccWerkplek',
 			'MyWork',
 			'Queue',
@@ -170,7 +217,6 @@ describe('the simple profile', () => {
 		])
 		const captions = main.filter((entry) => entry.type === 'caption')
 		expect(captions.map((entry) => nl[entry.label])).toEqual([
-			'Start',
 			'Klantcontact',
 			'Relaties',
 		])
@@ -554,7 +600,7 @@ describe('the modules', () => {
 			expect(order.slice(0, at('ModulesCaption'))).toEqual(
 				section(buildSimple().menu, 'main')
 					.map((entry) => entry.id)
-					.slice(0, 11),
+					.slice(0, 10),
 			)
 		},
 	)

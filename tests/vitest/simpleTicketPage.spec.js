@@ -129,6 +129,23 @@ describe('the full structure', () => {
 	})
 })
 
+describe('the header, as DqZaak draws it', () => {
+	it('reads the list as a text breadcrumb, has no type eyebrow, sits in a card and shows the tabs as a segmented control', () => {
+		expect(simple.breadcrumb).toEqual({
+			label: 'Questions and reports',
+			route: 'Tickets',
+		})
+		expect(simple.showTypeEyebrow).toBe(false)
+		expect(simple.headerCard).toBe(true)
+		const tabs = simple.widgets.find((widget) => widget.id === 'ticket-panels')
+		expect(tabs.content.variant).toBe('segmented')
+		// The full page declares none of it, so it renders as before.
+		for (const key of ['breadcrumb', 'showTypeEyebrow', 'headerCard']) {
+			expect(full.config[key], key).toBeUndefined()
+		}
+	})
+})
+
 describe('the status actions', () => {
 	// Status changes only: Assign to me is an api-call too, but it sets the
 	// assignee through pipelinq's own endpoint and leaves the status alone.

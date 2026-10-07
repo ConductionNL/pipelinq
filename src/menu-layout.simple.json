@@ -49,7 +49,26 @@
 			"name": "pipelinq",
 			"caption": "@theming.name",
 			"logo": "@theming.emblem|@theming.logo"
-		}
+		},
+		"primaryAction": {
+			"label": "New request",
+			"icon": "Plus",
+			"action": {
+				"id": "nav-new-request",
+				"label": "New request",
+				"icon": "Plus",
+				"type": "open-modal",
+				"target": "RequestCreateDialog"
+			}
+		},
+		"help": {
+			"label": "Help and explanation",
+			"href": "https://pipelinq.conduction.nl"
+		},
+		"footer": [
+			"settings",
+			"help"
+		]
 	},
 	"home": {
 		"page": "KccWerkplek",
@@ -57,24 +76,52 @@
 	},
 	"menu": [
 		{
-			"id": "StartCaption",
-			"type": "caption",
-			"label": "Home",
-			"order": 5
-		},
-		{
 			"id": "KccWerkplek",
 			"label": "Dashboard",
-			"icon": "ViewDashboard",
+			"icon": "HomeOutline",
 			"order": 10
 		},
 		{
 			"id": "MyWork",
-			"order": 12
+			"order": 12,
+			"icon": "InboxOutline",
+			"count": {
+				"register": "pipelinq",
+				"schema": "ticket",
+				"filter": {
+					"assignee": "@me",
+					"status": {
+						"notIn": [
+							"resolved",
+							"completed",
+							"rejected",
+							"converted",
+							"closed"
+						]
+					}
+				}
+			}
 		},
 		{
 			"id": "Queue",
-			"order": 14
+			"order": 14,
+			"icon": "FormatListBulleted",
+			"count": {
+				"register": "pipelinq",
+				"schema": "ticket",
+				"filter": {
+					"assignee": "IS NULL",
+					"status": {
+						"notIn": [
+							"resolved",
+							"completed",
+							"rejected",
+							"converted",
+							"closed"
+						]
+					}
+				}
+			}
 		},
 		{
 			"id": "ContactCaption",
@@ -85,13 +132,13 @@
 		{
 			"id": "Tickets",
 			"label": "Questions and reports",
-			"icon": "ForumOutline",
+			"icon": "MessageOutline",
 			"order": 22
 		},
 		{
 			"id": "ContactMomentsMenu",
 			"label": "Contact moments",
-			"icon": "Phone",
+			"icon": "PhoneOutline",
 			"route": "Tickets",
 			"query": {
 				"ticketType": "interaction"
@@ -101,7 +148,7 @@
 		{
 			"id": "AppointmentsMenu",
 			"label": "Appointments",
-			"icon": "CalendarClockOutline",
+			"icon": "CalendarBlankOutline",
 			"route": "Bookings",
 			"order": 26
 		},
@@ -120,7 +167,7 @@
 		{
 			"id": "OrganisationsMenu",
 			"label": "Organisations",
-			"icon": "Domain",
+			"icon": "OfficeBuildingOutline",
 			"route": "Clients",
 			"query": {
 				"type": "organization"
@@ -612,7 +659,13 @@
 						"gridWidth": 12,
 						"gridHeight": 8
 					}
-				]
+				],
+				"breadcrumb": {
+					"label": "Questions and reports",
+					"route": "Tickets"
+				},
+				"showTypeEyebrow": false,
+				"headerCard": true
 			},
 			"configPatch": {
 				"bodyWidgets": {
@@ -686,7 +739,8 @@
 									"widgetId": "ticket-decisions",
 									"label": "Decisions"
 								}
-							]
+							],
+							"variant": "segmented"
 						}
 					}
 				],
@@ -728,15 +782,27 @@
 						"widgetId": "simple-greeting",
 						"gridX": 0,
 						"gridY": 0,
-						"gridWidth": 12,
-						"gridHeight": 2,
-						"showTitle": false
+						"gridWidth": 9,
+						"gridHeight": 1,
+						"showTitle": false,
+						"sizeToContent": true
+					},
+					{
+						"id": "s0",
+						"widgetId": "simple-availability",
+						"gridX": 9,
+						"gridY": 0,
+						"gridWidth": 3,
+						"gridHeight": 1,
+						"showTitle": false,
+						"borderless": true,
+						"sizeToContent": true
 					},
 					{
 						"id": "s2",
 						"widgetId": "simple-first-today",
 						"gridX": 0,
-						"gridY": 2,
+						"gridY": 1,
 						"gridWidth": 12,
 						"gridHeight": 2,
 						"showTitle": false,
@@ -746,65 +812,74 @@
 						"id": "s3",
 						"widgetId": "simple-new",
 						"gridX": 0,
-						"gridY": 4,
+						"gridY": 3,
 						"gridWidth": 3,
 						"gridHeight": 2,
 						"showTitle": false,
-						"dateChip": false
+						"dateChip": false,
+						"sizeToContent": true
 					},
 					{
 						"id": "s4",
 						"widgetId": "simple-waiting-for-me",
 						"gridX": 3,
-						"gridY": 4,
+						"gridY": 3,
 						"gridWidth": 3,
 						"gridHeight": 2,
 						"showTitle": false,
-						"dateChip": false
+						"dateChip": false,
+						"sizeToContent": true
 					},
 					{
 						"id": "s5",
 						"widgetId": "simple-callbacks",
 						"gridX": 6,
-						"gridY": 4,
+						"gridY": 3,
 						"gridWidth": 3,
 						"gridHeight": 2,
 						"showTitle": false,
-						"dateChip": false
+						"dateChip": false,
+						"sizeToContent": true
 					},
 					{
 						"id": "s6",
 						"widgetId": "simple-waiting-for-customer",
 						"gridX": 9,
-						"gridY": 4,
+						"gridY": 3,
 						"gridWidth": 3,
 						"gridHeight": 2,
 						"showTitle": false,
-						"dateChip": false
+						"dateChip": false,
+						"sizeToContent": true
 					},
 					{
 						"id": "s7",
 						"widgetId": "simple-waiting-list",
 						"gridX": 0,
-						"gridY": 6,
+						"gridY": 5,
 						"gridWidth": 8,
 						"gridHeight": 5,
-						"showTitle": true
+						"showTitle": true,
+						"headerLink": {
+							"label": "Whole queue",
+							"route": "Queue"
+						}
 					},
 					{
 						"id": "s8",
 						"widgetId": "simple-per-channel",
 						"gridX": 0,
-						"gridY": 11,
+						"gridY": 10,
 						"gridWidth": 8,
 						"gridHeight": 4,
-						"showTitle": true
+						"showTitle": true,
+						"sizeToContent": true
 					},
 					{
 						"id": "s9",
 						"widgetId": "simple-callback-list",
 						"gridX": 8,
-						"gridY": 6,
+						"gridY": 5,
 						"gridWidth": 4,
 						"gridHeight": 5,
 						"showTitle": true
@@ -813,10 +888,20 @@
 						"id": "s10",
 						"widgetId": "simple-latest-contact",
 						"gridX": 8,
-						"gridY": 11,
+						"gridY": 10,
 						"gridWidth": 4,
 						"gridHeight": 4,
 						"showTitle": true
+					},
+					{
+						"id": "s11",
+						"widgetId": "simple-client-in-focus",
+						"gridX": 0,
+						"gridY": 14,
+						"gridWidth": 12,
+						"gridHeight": 1,
+						"showTitle": false,
+						"borderless": true
 					},
 					{
 						"id": "wr",
@@ -867,18 +952,25 @@
 						"gridHeight": 5
 					}
 				],
-				"description": "Your customer contact today, then the workplace"
+				"description": "Your customer contact today, then the workplace",
+				"showHeader": false,
+				"showWidgetActions": false
 			},
 			"configAppend": {
 				"widgets": [
+					{
+						"id": "simple-availability",
+						"type": "custom",
+						"title": "Availability"
+					},
 					{
 						"id": "simple-greeting",
 						"type": "header",
 						"title": "Greeting",
 						"content": {
-							"greeting": true,
+							"title": "My customer contact",
 							"showDate": true,
-							"plain": true
+							"ground": true
 						}
 					},
 					{
@@ -949,7 +1041,8 @@
 								"query": {
 									"status": "new"
 								}
-							}
+							},
+							"layout": "stacked"
 						}
 					},
 					{
@@ -979,7 +1072,8 @@
 									"status": "in_progress"
 								}
 							},
-							"variant": "warning"
+							"variant": "warning",
+							"layout": "stacked"
 						}
 					},
 					{
@@ -1010,7 +1104,8 @@
 									"status": "open",
 									"assigneeUserId": "@me"
 								}
-							}
+							},
+							"layout": "stacked"
 						}
 					},
 					{
@@ -1039,7 +1134,8 @@
 									"assignee": "@me",
 									"status": "awaiting_customer"
 								}
-							}
+							},
+							"layout": "stacked"
 						}
 					},
 					{
@@ -1063,7 +1159,8 @@
 							"columns": [
 								{
 									"key": "title",
-									"label": "Subject"
+									"label": "Subject",
+									"secondary": "channel"
 								},
 								{
 									"key": "ticketType",
@@ -1080,10 +1177,6 @@
 									}
 								},
 								{
-									"key": "channel",
-									"label": "Channel"
-								},
-								{
 									"key": "occurredAt",
 									"label": "Waiting since",
 									"format": "date-time"
@@ -1094,7 +1187,9 @@
 							"viewAllQuery": {
 								"assignee": "@me",
 								"status": "in_progress"
-							}
+							},
+							"hideHeader": true,
+							"allowCreate": false
 						}
 					},
 					{
@@ -1145,11 +1240,8 @@
 							"columns": [
 								{
 									"key": "subject",
-									"label": "Subject"
-								},
-								{
-									"key": "callbackPhoneNumber",
-									"label": "Phone number"
+									"label": "Subject",
+									"secondary": "callbackPhoneNumber"
 								},
 								{
 									"key": "deadline",
@@ -1157,7 +1249,9 @@
 									"format": "date-time"
 								}
 							],
-							"emptyText": "You have no callbacks to make."
+							"emptyText": "You have no callbacks to make.",
+							"hideHeader": true,
+							"allowCreate": false
 						}
 					},
 					{
@@ -1180,11 +1274,8 @@
 							"columns": [
 								{
 									"key": "title",
-									"label": "Subject"
-								},
-								{
-									"key": "channel",
-									"label": "Channel"
+									"label": "Subject",
+									"secondary": "channel"
 								},
 								{
 									"key": "occurredAt",
@@ -1192,10 +1283,21 @@
 									"format": "date-time"
 								}
 							],
-							"emptyText": "No contact moments yet."
+							"emptyText": "No contact moments yet.",
+							"hideHeader": true,
+							"allowCreate": false
 						}
+					},
+					{
+						"id": "simple-client-in-focus",
+						"type": "custom",
+						"title": "Client in focus"
 					}
 				]
+			},
+			"slots": {
+				"widget-simple-availability": "WerkplekHeaderActions",
+				"widget-simple-client-in-focus": "WerkplekClientSelect"
 			}
 		},
 		{

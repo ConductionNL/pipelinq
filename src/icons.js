@@ -42,6 +42,7 @@ import BookOpenPageVariant from 'vue-material-design-icons/BookOpenPageVariant.v
 import BookOpenVariantOutline from 'vue-material-design-icons/BookOpenVariantOutline.vue'
 import BullhornOutline from 'vue-material-design-icons/BullhornOutline.vue'
 import Calendar from 'vue-material-design-icons/Calendar.vue'
+import CalendarBlankOutline from 'vue-material-design-icons/CalendarBlankOutline.vue'
 import CalendarCheck from 'vue-material-design-icons/CalendarCheck.vue'
 import CalendarClock from 'vue-material-design-icons/CalendarClock.vue'
 import CalendarClockOutline from 'vue-material-design-icons/CalendarClockOutline.vue'
@@ -114,6 +115,8 @@ import Gavel from 'vue-material-design-icons/Gavel.vue'
 import HandshakeOutline from 'vue-material-design-icons/HandshakeOutline.vue'
 import Heart from 'vue-material-design-icons/Heart.vue'
 import History from 'vue-material-design-icons/History.vue'
+import HomeOutline from 'vue-material-design-icons/HomeOutline.vue'
+import InboxOutline from 'vue-material-design-icons/InboxOutline.vue'
 import InformationOutline from 'vue-material-design-icons/InformationOutline.vue'
 import Key from 'vue-material-design-icons/Key.vue'
 import KeyVariant from 'vue-material-design-icons/KeyVariant.vue'
@@ -128,12 +131,14 @@ import MessageTextOutline from 'vue-material-design-icons/MessageTextOutline.vue
 import NewspaperVariantOutline from 'vue-material-design-icons/NewspaperVariantOutline.vue'
 import NoteTextOutline from 'vue-material-design-icons/NoteTextOutline.vue'
 import OfficeBuilding from 'vue-material-design-icons/OfficeBuilding.vue'
+import OfficeBuildingOutline from 'vue-material-design-icons/OfficeBuildingOutline.vue'
 import Package from 'vue-material-design-icons/Package.vue'
 import PackageVariant from 'vue-material-design-icons/PackageVariant.vue'
 import PackageVariantClosed from 'vue-material-design-icons/PackageVariantClosed.vue'
 import PencilOutline from 'vue-material-design-icons/PencilOutline.vue'
 import Phone from 'vue-material-design-icons/Phone.vue'
 import PhoneMessage from 'vue-material-design-icons/PhoneMessage.vue'
+import PhoneOutline from 'vue-material-design-icons/PhoneOutline.vue'
 import Pipe from 'vue-material-design-icons/Pipe.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import PowerPlugOutline from 'vue-material-design-icons/PowerPlugOutline.vue'
@@ -201,6 +206,7 @@ export default {
 	BookOpenVariantOutline,
 	BullhornOutline,
 	Calendar,
+	CalendarBlankOutline,
 	CalendarCheck,
 	CalendarClock,
 	CalendarClockOutline,
@@ -273,6 +279,8 @@ export default {
 	HandshakeOutline,
 	Heart,
 	History,
+	HomeOutline,
+	InboxOutline,
 	InformationOutline,
 	Key,
 	KeyVariant,
@@ -287,12 +295,14 @@ export default {
 	NewspaperVariantOutline,
 	NoteTextOutline,
 	OfficeBuilding,
+	OfficeBuildingOutline,
 	Package,
 	PackageVariant,
 	PackageVariantClosed,
 	PencilOutline,
 	Phone,
 	PhoneMessage,
+	PhoneOutline,
 	Pipe,
 	Plus,
 	PowerPlugOutline,
