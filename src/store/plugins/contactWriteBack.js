@@ -44,6 +44,12 @@ export function needsWriteBack(type, data) {
 export function contactWriteBackPlugin(write = writeBack) {
 	return {
 		name: 'contactWriteBack',
+		/**
+		 * Subscribe to the store's saves.
+		 *
+		 * @param {object} store The object store.
+		 * @spec openspec/specs/client-forms/spec.md#requirement-client-edit-asks-for-name-and-email
+		 */
 		setup(store) {
 			// Detached: the first store use may sit inside a component, and the
 			// subscription must outlive that component.

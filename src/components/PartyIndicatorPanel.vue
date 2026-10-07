@@ -154,6 +154,12 @@ export default {
 	watch: {
 		partyId: {
 			immediate: true,
+			/**
+			 * Load the warnings of the party now shown.
+			 *
+			 * @param {string} value The party uuid.
+			 * @spec openspec/changes/typed-fields-and-indicators-on-a-party/specs/contactmomenten/spec.md#requirement-the-contact-moment-panel-shall-show-the-partys-indicators-req-cmi-001
+			 */
 			handler(value) {
 				if (value) {
 					this.load()
