@@ -10,24 +10,40 @@
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { pipelineMappingsPayload, pipelineStagesPayload } from '../../src/services/pipelinePayload.js'
+import {
+	pipelineMappingsPayload,
+	pipelineStagesPayload,
+} from '../../src/services/pipelinePayload.js'
 
-const register = JSON.parse(readFileSync(resolve(__dirname, '../../lib/Settings/pipelinq_register.json'), 'utf8'))
+const register = JSON.parse(
+	readFileSync(
+		resolve(__dirname, '../../lib/Settings/pipelinq_register.json'),
+		'utf8',
+	),
+)
 const schema = register.components.schemas.pipeline.properties
 
-function typeOk (value, type) {
-  return {
-	string: typeof value === 'string',
-	integer: Number.isInteger(value),
-	boolean: typeof value === 'boolean',
-	null: value === null,
-}[type] ?? true
+function typeOk(value, type) {
+	return (
+		{
+			string: typeof value === 'string',
+			integer: Number.isInteger(value),
+			boolean: typeof value === 'boolean',
+			null: value === null,
+		}[type] ?? true
+	)
 }
 
-function violations (rows, itemSchema) {
-  return rows.flatMap((row, i) => Object.entries(row)
-	.filter(([key, value]) => itemSchema.properties[key] && !typeOk(value, itemSchema.properties[key].type))
-	.map(([key, value]) => `${i}.${key} ${JSON.stringify(value)}`))
+function violations(rows, itemSchema) {
+	return rows.flatMap((row, i) =>
+		Object.entries(row)
+			.filter(
+				([key, value]) =>
+					itemSchema.properties[key]
+					&& !typeOk(value, itemSchema.properties[key].type),
+			)
+			.map(([key, value]) => `${i}.${key} ${JSON.stringify(value)}`),
+	)
 }
 
 describe('pipeline form payload', () => {

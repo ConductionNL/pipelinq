@@ -14,18 +14,20 @@ vi.mock('@nextcloud/initial-state', () => ({
 	loadState: (_app, _key, fallback) => state ?? fallback,
 }))
 
-const { currencyOr, reportingCurrency } = await import('../../src/services/reportingCurrency.js')
+const { currencyOr, reportingCurrency } =
+	await import('../../src/services/reportingCurrency.js')
 const { objectCurrency } = await import('../../src/services/cellFormatters.js')
-const { formatEur, formatEurCompact } = await import('../../src/services/commercialFormat.js')
+const { formatEur, formatEurCompact } =
+	await import('../../src/services/commercialFormat.js')
 const { formatCurrency } = await import('../../src/services/localeUtils.js')
 
-function intl (value, currency, digits) {
-  return new Intl.NumberFormat(undefined, {
-	style: 'currency',
-	currency,
-	minimumFractionDigits: digits,
-	maximumFractionDigits: digits,
-}).format(value)
+function intl(value, currency, digits) {
+	return new Intl.NumberFormat(undefined, {
+		style: 'currency',
+		currency,
+		minimumFractionDigits: digits,
+		maximumFractionDigits: digits,
+	}).format(value)
 }
 
 describe('reportingCurrency', () => {
@@ -63,7 +65,10 @@ describe('formatters follow the reporting currency', () => {
 
 	it('formatEurCompact uses the reporting currency', () => {
 		const expected = new Intl.NumberFormat(undefined, {
-			style: 'currency', currency: 'USD', notation: 'compact', maximumFractionDigits: 1,
+			style: 'currency',
+			currency: 'USD',
+			notation: 'compact',
+			maximumFractionDigits: 1,
 		}).format(1500000)
 		expect(formatEurCompact(1500000)).toBe(expected)
 	})
@@ -74,7 +79,9 @@ describe('formatters follow the reporting currency', () => {
 	})
 
 	it('objectCurrency uses the row currency, else the reporting currency', () => {
-		expect(objectCurrency(25, { currency: 'GBP' }, null, { decimals: 2 })).toBe(intl(25, 'GBP', 2))
+		expect(objectCurrency(25, { currency: 'GBP' }, null, { decimals: 2 })).toBe(
+			intl(25, 'GBP', 2),
+		)
 		expect(objectCurrency(25, {}, null, {})).toBe(intl(25, 'USD', 2))
 		expect(objectCurrency('', {}, null, {})).toBe('')
 		expect(objectCurrency('n/a', {}, null, {})).toBe('n/a')

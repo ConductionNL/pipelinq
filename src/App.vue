@@ -67,9 +67,8 @@ import { reactive } from 'vue'
 import LeadCloseDateCell from './views/leads/cells/LeadCloseDateCell.vue'
 import LeadProbabilityCell from './views/leads/cells/LeadProbabilityCell.vue'
 import LeadScoreCell from './views/leads/cells/LeadScoreCell.vue'
-import { CELL_FORMATTERS } from './services/cellFormatters.js'
+import { createAppFormatters } from './services/cellFormatters.js'
 import { createConnectionHandlers } from './services/connectionRegistry.js'
-import { createNameFormatter } from './services/nameFormatters.js'
 import { createTicketHandlers } from './services/ticketAssign.js'
 import { useObjectStore } from './store/modules/object.js'
 
@@ -179,20 +178,7 @@ export default {
 		 * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
 		 */
 		cellFormatters() {
-			const store = useObjectStore()
-			return {
-				...CELL_FORMATTERS,
-				// The booking data block names the customer (a contact, or a
-				// client) and the service instead of showing their ids.
-				bookingCustomerName: createNameFormatter([
-					(id) => store.fetchObject('contact', id),
-					(id) => store.fetchObject('client', id),
-				]),
-
-				bookingServiceName: createNameFormatter([
-					(id) => store.fetchObject('appointmentService', id),
-				]),
-			}
+			return createAppFormatters(useObjectStore())
 		},
 
 		/**

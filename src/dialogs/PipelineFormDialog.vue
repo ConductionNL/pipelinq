@@ -347,7 +347,10 @@ import ChevronDown from 'vue-material-design-icons/ChevronDown.vue'
 import ChevronUp from 'vue-material-design-icons/ChevronUp.vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
-import { pipelineMappingsPayload, pipelineStagesPayload } from '../services/pipelinePayload.js'
+import {
+	pipelineMappingsPayload,
+	pipelineStagesPayload,
+} from '../services/pipelinePayload.js'
 import { getViews } from '../services/viewService.js'
 
 export default {
@@ -605,7 +608,10 @@ export default {
 
 			const data = {
 				...this.form,
-				propertyMappings: pipelineMappingsPayload(this.form.propertyMappings),
+				propertyMappings: pipelineMappingsPayload(
+					this.form.propertyMappings,
+				),
+
 				stages: pipelineStagesPayload(this.form.stages),
 			}
 

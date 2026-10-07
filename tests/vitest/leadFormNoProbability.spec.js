@@ -21,14 +21,27 @@ const storeMock = vi.hoisted(() => ({
 	objects: {},
 }))
 
-vi.mock('@nextcloud/initial-state', () => ({ loadState: () => ({ currency: 'USD' }) }))
-vi.mock('../../src/store/modules/object.js', () => ({ useObjectStore: () => storeMock }))
-vi.mock('../../src/store/modules/leadSources.js', () => ({
-	useLeadSourcesStore: () => ({ fetchSources: vi.fn(async () => []), sources: [] }),
+vi.mock('@nextcloud/initial-state', () => ({
+	loadState: () => ({ currency: 'USD' }),
 }))
-vi.mock('../../src/dialogs/ClientCreateDialog.vue', () => ({ default: { name: 'ClientCreateDialog', render: () => null } }))
-vi.mock('../../src/dialogs/ContactCreateDialog.vue', () => ({ default: { name: 'ContactCreateDialog', render: () => null } }))
-vi.mock('@conduction/nextcloud-vue', () => ({ CnResourceSelect: { name: 'CnResourceSelect', render: () => null } }))
+vi.mock('../../src/store/modules/object.js', () => ({
+	useObjectStore: () => storeMock,
+}))
+vi.mock('../../src/store/modules/leadSources.js', () => ({
+	useLeadSourcesStore: () => ({
+		fetchSources: vi.fn(async () => []),
+		sources: [],
+	}),
+}))
+vi.mock('../../src/dialogs/ClientCreateDialog.vue', () => ({
+	default: { name: 'ClientCreateDialog', render: () => null },
+}))
+vi.mock('../../src/dialogs/ContactCreateDialog.vue', () => ({
+	default: { name: 'ContactCreateDialog', render: () => null },
+}))
+vi.mock('@conduction/nextcloud-vue', () => ({
+	CnResourceSelect: { name: 'CnResourceSelect', render: () => null },
+}))
 vi.mock('@nextcloud/vue', () => {
 	const field = (name) => ({
 		name,
@@ -38,7 +51,12 @@ vi.mock('@nextcloud/vue', () => {
 		},
 	})
 	return {
-		NcButton: { name: 'NcButton', render() { return h('button', this.$slots.default?.()) } },
+		NcButton: {
+			name: 'NcButton',
+			render() {
+				return h('button', this.$slots.default?.())
+			},
+		},
 		NcDateTimePickerNative: field('NcDateTimePickerNative'),
 		NcSelect: field('NcSelect'),
 		NcTextField: field('NcTextField'),
@@ -50,18 +68,20 @@ globalThis.n = (_app, s) => s
 
 const { default: LeadForm } = await import('../../src/views/leads/LeadForm.vue')
 
-function mountForm (props = {}) {
-  return mount(LeadForm, {
-	props,
-	global: { mocks: { t: (_app, text) => text, n: (_app, s) => s } },
-})
+function mountForm(props = {}) {
+	return mount(LeadForm, {
+		props,
+		global: { mocks: { t: (_app, text) => text, n: (_app, s) => s } },
+	})
 }
 
 describe('LeadForm without a probability input', () => {
 	it('renders no probability field', async () => {
 		const wrapper = mountForm()
 		await flushPromises()
-		const labels = wrapper.findAll('[data-label]').map((el) => el.attributes('data-label'))
+		const labels = wrapper
+			.findAll('[data-label]')
+			.map((el) => el.attributes('data-label'))
 		expect(labels).toContain('Value')
 		expect(labels.some((label) => /probability/i.test(label))).toBe(false)
 	})
@@ -75,7 +95,13 @@ describe('LeadForm without a probability input', () => {
 
 	it('keeps a stored probability when an existing lead is saved', async () => {
 		const wrapper = mountForm({
-			lead: { id: 'l1', title: 'Tender', probability: 40, pipeline: 'p1', client: 'c1' },
+			lead: {
+				id: 'l1',
+				title: 'Tender',
+				probability: 40,
+				pipeline: 'p1',
+				client: 'c1',
+			},
 		})
 		await flushPromises()
 		wrapper.vm.onSave()

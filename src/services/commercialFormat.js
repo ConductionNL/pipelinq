@@ -19,7 +19,11 @@ import { reportingCurrency } from './reportingCurrency.js'
  * @spec openspec/specs/commercial-dashboard/spec.md
  * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
  */
-export function formatEur(value, maximumFractionDigits = 0, currency = reportingCurrency()) {
+export function formatEur(
+	value,
+	maximumFractionDigits = 0,
+	currency = reportingCurrency(),
+) {
 	if (value === null || value === undefined || Number.isNaN(Number(value))) {
 		return '—'
 	}

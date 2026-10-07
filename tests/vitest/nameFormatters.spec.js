@@ -8,7 +8,11 @@
 
 import { describe, expect, it, vi } from 'vitest'
 import { computed } from 'vue'
-import { createNameFormatter, objectLabel, PENDING_LABEL } from '../../src/services/nameFormatters.js'
+import {
+	createNameFormatter,
+	objectLabel,
+	PENDING_LABEL,
+} from '../../src/services/nameFormatters.js'
 
 const flush = () => new Promise((resolve) => setTimeout(resolve, 0))
 
@@ -42,7 +46,11 @@ describe('createNameFormatter', () => {
 	})
 
 	it('shows the id when nothing is found, and nothing for an empty value', async () => {
-		const format = createNameFormatter([async () => { throw new Error('404') }])
+		const format = createNameFormatter([
+			async () => {
+				throw new Error('404')
+			},
+		])
 		format('gone')
 		await flush()
 		expect(format('gone')).toBe('gone')
@@ -54,7 +62,9 @@ describe('objectLabel', () => {
 	it('reads name, full name, title or first plus last name', () => {
 		expect(objectLabel({ fullName: 'A B' })).toBe('A B')
 		expect(objectLabel({ title: 'T' })).toBe('T')
-		expect(objectLabel({ firstName: 'Piet', lastName: 'Klaas' })).toBe('Piet Klaas')
+		expect(objectLabel({ firstName: 'Piet', lastName: 'Klaas' })).toBe(
+			'Piet Klaas',
+		)
 		expect(objectLabel(null)).toBe('')
 	})
 })

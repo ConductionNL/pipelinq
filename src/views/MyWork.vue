@@ -104,7 +104,12 @@
 							<span
 								v-if="item.entityType === 'lead' && item.value"
 								class="meta-value">
-								{{ formatCurrency(item.value, currencyOr(item.currency)) }}
+								{{
+									formatCurrency(
+										item.value,
+										currencyOr(item.currency),
+									)
+								}}
 							</span>
 						</div>
 						<div class="work-card__footer">
