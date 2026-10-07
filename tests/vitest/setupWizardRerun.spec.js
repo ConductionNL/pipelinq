@@ -71,6 +71,26 @@ describe('run the setup wizard again', () => {
 		expect(wrapper.find('[data-wizard]').exists()).toBe(false)
 	})
 
+	// setup-wizard-close-on-server: the close is now recorded on the server
+	// and in localStorage, and CnAppRoot no longer opens the wizard by itself.
+	// The admin card must not read either record, or it could never reopen.
+	it('opens the wizard again after it was closed on the server', async () => {
+		window.localStorage.setItem('cn-setup-wizard-dismissed:pipelinq:1', '1')
+		const wrapper = mount(SetupWizardSection, {
+			global: { mocks: { t: (_app, text) => text } },
+		})
+
+		await wrapper.find('button').trigger('click')
+		expect(wrapper.find('[data-wizard]').exists()).toBe(true)
+
+		const source = readFileSync(
+			resolve(__dirname, '../../src/views/settings/SetupWizardSection.vue'),
+			'utf8',
+		)
+		expect(source).not.toMatch(/dismissed|localStorage|setup\/status/)
+		window.localStorage.removeItem('cn-setup-wizard-dismissed:pipelinq:1')
+	})
+
 	it('is on the admin settings page', () => {
 		const source = readFileSync(
 			resolve(__dirname, '../../src/views/settings/Settings.vue'),

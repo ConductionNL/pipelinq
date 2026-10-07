@@ -14,6 +14,7 @@
 		"enabled": true,
 		"version": 1,
 		"completionConfigKey": "setup_completed_version",
+		"dismissAction": "dismiss-setup",
 		"steps": [
 			{
 				"id": "welcome",
