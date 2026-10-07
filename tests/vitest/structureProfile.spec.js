@@ -12,8 +12,8 @@
  *
  * What has to stay true:
  *   - the full profile is exactly what it was before profiles existed;
- *   - the simple menu is the nine entries of the design, in order, under
- *     four captions;
+ *   - the simple menu is the eight entries of the design, in order, under
+ *     three captions;
  *   - a module that is off is out of the menu, a module that is on is in it;
  *   - nothing is lost: every entry the full menu offers is in the simple menu
  *     or its settings, or a page the simple menu opens has a card for it.
@@ -133,14 +133,14 @@ describe('the full profile', () => {
 		})
 	})
 
-	it('still counts 47 entries: 39 main, 4 footer, 4 settings, 0 integrations', () => {
+	it('still counts 47 entries: 39 main, 3 footer, 5 settings, 0 integrations', () => {
 		const menu = build(fullFile).menu
 		const count = (name) =>
 			flat(menu.filter((entry) => (entry.section || 'main') === name)).length
 		expect(flat(menu)).toHaveLength(47)
 		expect(count('main')).toBe(39)
-		expect(count('footer')).toBe(4)
-		expect(count('settings')).toBe(4)
+		expect(count('footer')).toBe(3)
+		expect(count('settings')).toBe(5)
 		expect(count('integrations')).toBe(0)
 	})
 
@@ -154,7 +154,7 @@ describe('the simple profile', () => {
 	const built = buildSimple()
 	const main = section(built.menu, 'main')
 
-	it('shows nine entries under four captions, in the order of the design', () => {
+	it('shows eight entries under three captions, in the order of the design', () => {
 		expect(main.map((entry) => entry.id)).toEqual([
 			'StartCaption',
 			'KccWerkplek',
@@ -167,18 +167,15 @@ describe('the simple profile', () => {
 			'RelationsCaption',
 			'Clients',
 			'OrganisationsMenu',
-			'MoreCaption',
-			'ReportsMenu',
 		])
 		const captions = main.filter((entry) => entry.type === 'caption')
 		expect(captions.map((entry) => nl[entry.label])).toEqual([
 			'Start',
 			'Klantcontact',
 			'Relaties',
-			'Meer',
 		])
 		const entries = main.filter((entry) => entry.type !== 'caption')
-		expect(entries).toHaveLength(9)
+		expect(entries).toHaveLength(8)
 		expect(entries.map((entry) => nl[entry.label])).toEqual([
 			'Dashboard',
 			'Mijn werk',
@@ -188,7 +185,6 @@ describe('the simple profile', () => {
 			'Afspraken',
 			'Inwoners en bedrijven',
 			'Organisaties',
-			'Rapportages',
 		])
 	})
 
@@ -253,7 +249,10 @@ describe('the simple profile', () => {
 			const shown = main.find((entry) => entry.id === id)
 			expect(shown.route, id).toBe(original.route)
 		}
-		const reports = main.find((entry) => entry.id === 'ReportsMenu')
+		// Reports sits in the Advanced foldout, as in every app.
+		const reports = section(built.menu, 'settings').find(
+			(entry) => entry.id === 'ReportsMenu',
+		)
 		expect(reports).toMatchObject({ label: 'Reports', route: 'Reports' })
 	})
 
@@ -303,7 +302,7 @@ describe('the simple profile', () => {
 			'StoreMenu',
 			'FeaturesRoadmapMenu',
 		])
-		// Reports moved up into the menu; nothing else left the footer.
+		// Reports moved into the Advanced foldout; nothing else left the footer.
 		expect(
 			ids(build(fullFile).menu).filter((id) => id !== 'ReportsMenu'),
 		).toEqual(ids(built.menu).filter((id) => id !== 'ModulesMenu'))
@@ -544,16 +543,14 @@ describe('the modules', () => {
 					expect(shown.has(id), `${other}: ${id}`).toBe(false)
 				}
 			}
-			// Between Relations and More, under the one caption.
+			// After Relations, under the one caption.
 			const order = section(menu, 'main').map((entry) => entry.id)
 			const at = (id) => order.indexOf(id)
 			expect(at('ModulesCaption')).toBeGreaterThan(at('OrganisationsMenu'))
-			expect(at('MoreCaption')).toBeGreaterThan(at('ModulesCaption'))
 			for (const entry of simpleFile.modules[key].menu) {
 				expect(at(entry.id), entry.id).toBeGreaterThan(at('ModulesCaption'))
-				expect(at(entry.id), entry.id).toBeLessThan(at('MoreCaption'))
 			}
-			// The nine daily entries do not move.
+			// The eight daily entries do not move.
 			expect(order.slice(0, at('ModulesCaption'))).toEqual(
 				section(buildSimple().menu, 'main')
 					.map((entry) => entry.id)
