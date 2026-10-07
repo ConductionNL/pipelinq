@@ -238,8 +238,8 @@ import ExportRunDetailView from './views/export/ExportRunDetail.vue'
 import ExportRunsView from './views/export/ExportRuns.vue'
 // --- Features & roadmap page. Was type:"roadmap", dispatched straight to
 //     the library's CnFeaturesAndRoadmapPage, which renders two tabs and
-//     declares no slots. FeaturesRoadmapView renders that page unchanged as
-//     its first section and adds the help desk comparison as a second. ---
+//     declares no slots. FeaturesRoadmapView renders that page unchanged and
+//     adds one link to the help desk comparison on pipelinq.conduction.nl. ---
 import FeaturesRoadmapView from './views/FeaturesRoadmapView.vue'
 // --- Flows (ADR-110 Decision 4). The list and the canvas are the shared
 //     `flows` / `flow-detail` manifest page types; only the SIDEBAR is an
@@ -401,7 +401,7 @@ const registry = {
 	FeaturesRoadmapView: {
 		kind: 'page',
 		component: FeaturesRoadmapView,
-		_note: 'Wraps the library\'s CnFeaturesAndRoadmapPage so the page can carry a second section, the help desk capability comparison. The library component declares no slots, so the comparison cannot be added from the manifest; the page moved from type:"roadmap" to type:"custom" for that reason and should move back the day the library grows a slot. Ported from dossiq, which hit the same wall first.',
+		_note: 'Wraps the library\'s CnFeaturesAndRoadmapPage and adds one link to the help desk capability comparison on pipelinq.conduction.nl/compare. The library component declares no slots, so the link cannot be added from the manifest; the page moves back to type:"roadmap" the day the library can carry it.',
 	},
 
 	StoreGallery: {

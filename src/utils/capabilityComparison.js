@@ -2,11 +2,15 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V.
  * SPDX-License-Identifier: EUPL-1.2
  *
- * Presentation logic for the help desk comparison on the Features & roadmap
- * page. Pure functions over `src/data/capabilityComparison.json`, kept out of
- * the .vue file so the grouping and the tallies are unit-testable in the node
- * environment (vitest.config.js runs `node` by default; only the component
- * spec opts into jsdom).
+ * Presentation logic for the help desk comparison. Pure functions over
+ * `src/data/capabilityComparison.json`, unit-testable in the node environment
+ * (vitest.config.js runs `node` by default).
+ *
+ * THE APP BUNDLE DOES NOT IMPORT THIS ANY MORE. The comparison was a section
+ * on the in-app Features & roadmap page until 2026-10-07 and is now the
+ * "How pipelinq compares" page on pipelinq.conduction.nl, which imports this
+ * file and the data from `docs/src/components/CapabilityComparison`. Both stay
+ * under src/, beside their tests, so the docs page has one set of helpers.
  *
  * The tallies are DERIVED here rather than stored in the JSON on purpose. A
  * stored total is a second copy of the truth that goes stale the moment a row

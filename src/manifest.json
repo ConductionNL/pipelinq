@@ -5113,7 +5113,7 @@
 			"type": "custom",
 			"component": "FeaturesRoadmapView",
 			"title": "Features & roadmap",
-			"_note": "Was type:\"roadmap\". The library's CnFeaturesAndRoadmapPage renders exactly two tabs and declares zero slots, so the help desk capability comparison could not be added from the manifest. FeaturesRoadmapView renders that library page unchanged as its default section and adds the comparison as a second one. Revert to type:\"roadmap\" the day the library grows a slot or a comparison tab. Same wall dossiq hit, same fix.",
+			"_note": "Was type:\"roadmap\". The library's CnFeaturesAndRoadmapPage renders exactly two tabs and declares zero slots. FeaturesRoadmapView renders that library page unchanged and adds one link above it: how pipelinq compares, on pipelinq.conduction.nl/compare. The comparison itself left the app on 2026-10-07 (Ruben: how an app compares belongs on its public site, for every app); the docs page reads src/data/capabilityComparison.json, the same file the in-app section read. Revert to type:\"roadmap\" the day the library page can carry that link.",
 			"config": {
 				"documentationUrl": "https://pipelinq.conduction.nl"
 			}
