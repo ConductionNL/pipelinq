@@ -27,6 +27,7 @@ See [ARCHITECTURE.md](../../docs/ARCHITECTURE.md) for full entity definitions. T
 - `leadProduct` -- Line item linking a product to a lead (schema:Offer)
 
 Note: Stages are stored as an embedded array within the `pipeline` schema (`stages: [{ name, order, probability?, isClosed?, isWon?, color? }]`), not as a separate `stage` schema. This simplifies the data model while maintaining all stage configuration capabilities.
+
 ## Requirements
 
 ---
@@ -1624,8 +1625,6 @@ FG-DPO / admin), and per-edge authorization would change that contract.
   with the service. The migration that carries the existing values across is
   covered by `tests/Unit/Repair/MigrateAvgVerzoekenToOrDsarTest.php`.
 
-## Requirements
-
 ---
 
 ### Requirement: Register Configuration Visibility Annotations
@@ -1734,6 +1733,304 @@ The settings endpoint MUST distinguish between regular users and admin users, an
 - AND it MUST use `Content-Type: application/json`
 
 ---
+
+### Requirement: The appointment booking is namespaced (REQ-ORI-045)
+
+The customer appointment schema SHALL be `appointmentBooking` and SHALL NOT be
+`booking`. shillinq's bookings subsystem is the larger claimant and keeps the
+bare slug.
+
+The rename SHALL NOT touch `booking` where it is a log-context key, a template
+context key in `AppointmentEmailService`, or the `booking-deposit` widget id.
+
+A repair step SHALL rename the row IN PLACE before the register import, scoped
+to this app's own rows.
+
+The config key SHALL remain `booking_schema`.
+
+#### Scenario: The slug is renamed in place
+
+- **GIVEN** an install carrying a pipelinq-owned `booking` schema
+- **WHEN** the repair step runs
+- **THEN** the row keeps its schema id, and so its shard table and objects.
+
+#### Scenario: The email template context is untouched
+
+- **WHEN** an appointment email is rendered
+- **THEN** it still reads `$context['booking']['startAt']`.
+
+### Requirement: The appointment resource is namespaced (REQ-ORI-043)
+
+The bookable resource schema SHALL be `appointmentResource` and SHALL NOT be
+`resource`.
+
+A schema slug is global per organisation and `SchemaMapper::find()` matches
+`LOWER(slug)`, so a bare `resource` was answered for by shillinq's as readily as
+by this app's. shillinq's bookings subsystem is the larger claimant and keeps
+the bare slug.
+
+The rename SHALL NOT touch `resource` where it is a log-context key, nor the
+ZGW NRC notification field `$notification['resource']`. The latter names a ZGW
+resource type and is part of the NRC contract.
+
+A repair step SHALL rename the row IN PLACE before the register import, scoped
+to this app's own rows.
+
+The config key SHALL remain `resource_schema`.
+
+#### Scenario: The slug is renamed in place
+
+- **GIVEN** an install carrying a pipelinq-owned `resource` schema
+- **WHEN** the repair step runs
+- **THEN** the row keeps its schema id, and so its shard table and objects.
+
+#### Scenario: The NRC notification field is untouched
+
+- **WHEN** an NRC notification is handled
+- **THEN** its `resource` field is still read under that name.
+
+### Requirement: The appointment service is namespaced (REQ-ORI-046)
+
+The bookable service schema SHALL be `appointmentService` and SHALL NOT be
+`service`. shillinq keeps the bare slug; stackiq uses `catalogService`.
+
+The three claiming schemas share `name` alone, so all three are renamed apart
+rather than folded onto one owner.
+
+The rename SHALL NOT touch `service` where it is a DI container key, a template
+context key, a product type, a complaint category, a GDPR processing intent, or
+a journey message type.
+
+A repair step SHALL rename the row IN PLACE before the register import, scoped
+to this app's own rows.
+
+The config key SHALL remain `service_schema`.
+
+#### Scenario: The slug is renamed in place
+
+- **GIVEN** an install carrying a pipelinq-owned `service` schema
+- **WHEN** the repair step runs
+- **THEN** the row keeps its schema id, and so its shard table and objects.
+
+#### Scenario: A product typed as a service is untouched
+
+- **WHEN** catalogue items are classified by type
+- **THEN** a product of type `service` is still recognised.
+
+### Requirement: The channel message is namespaced (REQ-ORI-044)
+
+The channel message schema SHALL be `channelMessage` and SHALL NOT be
+`message`. hermiq is the messaging app and keeps the bare slug.
+
+A schema slug is global per organisation and `SchemaMapper::find()` matches
+`LOWER(slug)`, so a bare `message` was answered for by hermiq's as readily as by
+this app's.
+
+The rename SHALL NOT touch `messageTemplate` or `messageSendBudget`. Neither is
+claimed by another app, and a prefix match would take both.
+
+The rename SHALL NOT touch `message` where it is an exception message, a log
+line, an i18n string, a notification body, or the lead schema's free-text
+`message` property.
+
+A repair step SHALL rename the row IN PLACE before the register import, scoped
+to this app's own rows.
+
+#### Scenario: The slug is renamed in place
+
+- **GIVEN** an install carrying a pipelinq-owned `message` schema
+- **WHEN** the repair step runs
+- **THEN** the row keeps its schema id, and so its shard table and objects.
+
+#### Scenario: The sibling slugs are untouched
+
+- **WHEN** the object-type map is read
+- **THEN** `messageTemplate` and `messageSendBudget` still carry their slugs.
+
+### Requirement: This app's colliding slugs are namespaced (REQ-ORI-040)
+
+The POS cash count SHALL be `posCashCount` and the channel thread SHALL be
+`channelConversation`. Neither SHALL be `cashCount` or `conversation`.
+
+A schema slug is global per organisation and `SchemaMapper::find()` matches
+`LOWER(slug)`, so a bare `cashCount` was answered for by shillinq's
+kasadministratie Z-report as readily as by this app's drawer count, and a bare
+`conversation` by hermiq's agent chat thread. Each pair shares zero declared
+fields, so they are renamed apart rather than folded.
+
+A repair step SHALL rename each row IN PLACE before the register import. The
+import matches an existing schema by `(application, slug)` and CREATES a new
+one when that misses, so a slug change in the shipped fragment alone does not
+rename anything: it creates a second schema and orphans the first together with
+every object on it, and nothing errors.
+
+The step SHALL refuse a pair when both spellings exist, and when the old slug
+is duplicated. Either case would decide which set of objects to abandon.
+
+A refusal on one slug SHALL NOT stop the other rename. Otherwise an instance
+that hand-resolved one collision would silently never get the second, and that
+slug would keep answering for another app.
+
+The app-config keys SHALL NOT move. `cashCount_schema` stays pinned to the new
+slug through `SettingsLoadService::SCHEMA_CONFIG_KEYS`, because the key is live
+persisted state.
+
+#### Scenario: Both slugs are renamed in place
+
+- **GIVEN** an install carrying `cashCount` and `conversation`
+- **WHEN** the repair step runs
+- **THEN** each row keeps its schema id, and so its shard table and objects.
+
+#### Scenario: An already-namespaced install is untouched
+
+- **GIVEN** an install already on `posCashCount` and `channelConversation`
+- **WHEN** the step runs
+- **THEN** it writes nothing.
+
+#### Scenario: An ambiguous pair is refused
+
+- **GIVEN** both `cashCount` and `posCashCount` exist
+- **WHEN** the step runs
+- **THEN** it warns and renames neither of that pair.
+
+#### Scenario: A refusal does not block the other slug
+
+- **GIVEN** `cashCount` is ambiguous and `conversation` is not
+- **WHEN** the step runs
+- **THEN** `cashCount` is refused and `conversation` is still renamed.
+
+### Requirement: The CRM portal slugs are namespaced (REQ-ORI-042)
+
+The portal account schema SHALL be `crmPortalAccount` and the portal session
+schema SHALL be `crmPortalSession`. Neither SHALL be `portalAccount` or
+`portalSession`.
+
+A schema slug is global per organisation and `SchemaMapper::find()` matches
+`LOWER(slug)`, so both were answered for by portaliq's schemas as readily as by
+this app's. portaliq owns the portal and keeps the bare slugs.
+
+They SHALL be renamed apart and SHALL NOT be folded onto portaliq's. The two
+account schemas describe different records about one person: portaliq's is an
+OIDC identity projection, this app's is a local credential store. A shared email
+address is a contact attribute, not an identifier of the record type.
+
+A repair step SHALL rename each row IN PLACE before the register import, scoped
+to this app's own rows.
+
+The config keys SHALL remain `portalAccount_schema` and `portalSession_schema`.
+They are live persisted state.
+
+#### Scenario: Both slugs are renamed in place
+
+- **GIVEN** an install carrying `portalAccount` and `portalSession`
+- **WHEN** the repair step runs
+- **THEN** each row keeps its schema id, and so its shard table and objects.
+
+#### Scenario: The config keys do not move
+
+- **WHEN** the imported schema ids are stored
+- **THEN** they are written under `portalAccount_schema` and
+  `portalSession_schema`.
+
+### Requirement: The CRM task is namespaced (REQ-ORI-047)
+
+The CRM task schema SHALL be `crmTask` and SHALL NOT be `task`. planninq's
+project task keeps the bare slug; dossiq uses `caseTask`.
+
+The three claiming schemas share `description`, `priority` and `status` alone,
+so all three are renamed apart rather than folded onto one owner.
+
+The rename SHALL NOT touch `task` where it is an activity type in
+`ActivityTimelineService` or a notification entity type or object type in
+`NotificationService`. Those are internal vocabularies: `interaction` and
+`emailLink` sit beside `task` in the first, and neither is a schema.
+
+A repair step SHALL rename the row IN PLACE before the register import, scoped
+to this app's own rows.
+
+The config key SHALL remain `task_schema`.
+
+#### Scenario: The slug is renamed in place
+
+- **GIVEN** an install carrying a pipelinq-owned `task` schema
+- **WHEN** the repair step runs
+- **THEN** the row keeps its schema id, and so its shard table and objects.
+
+#### Scenario: The activity timeline still classifies a task
+
+- **WHEN** a task-sourced timeline entry is classified
+- **THEN** its activity type is still `task`.
+
+### Requirement: The last two colliding slugs are namespaced (REQ-ORI-048)
+
+The billable expense schema SHALL be `billableExpense` and SHALL NOT be
+`expense`. humaniq's employee reimbursement claim keeps the bare slug.
+
+The master-entity merge schema SHALL be `masterMergeOperation` and SHALL NOT be
+`mergeOperation`. openregister's object merge keeps the bare slug.
+
+Neither pair SHALL be folded. `expense` shares eight fields with humaniq's, but
+all eight are generic expense attributes and there is no receipt or expense
+number to say the two rows are the same expense. `mergeOperation` shares its
+merge mechanics with openregister's while recording a different id space:
+uuids there, master ids here.
+
+The rename SHALL NOT touch `expense` where it is a Nextcloud notification
+`objectType`. `ExpenseApprovalListener` SHALL move, because it compares against
+`SchemaMapService::resolveEntityType()`, whose value follows the slug.
+
+#### Scenario: Both slugs are renamed in place
+
+- **GIVEN** an install carrying `expense` and `mergeOperation`
+- **WHEN** the repair step runs
+- **THEN** each row keeps its schema id, and so its shard table and objects.
+
+#### Scenario: The approval listener still recognises an expense
+
+- **WHEN** an object on the billable expense schema is approved
+- **THEN** the listener resolves its entity type and acts on it.
+
+### Requirement: The sales contract points at the shillinq contract (REQ-ORI-041)
+
+The sales contract schema's slug SHALL be `salesContract` and SHALL NOT be
+`contract`.
+
+Three apps declared a `contract` and all three carry `contractNumber`, so they
+describe one contract from three sides. shillinq owns the lifecycle (ADR-066);
+this schema owns the sales facet.
+
+The schema SHALL carry a `contract` property holding the UUID of the shillinq
+`Contract`. It SHALL be a plain uuid string and SHALL NOT be a `$ref`, because
+shillinq's register is a different register and ADR-062 rule 7 gives a
+cross-register target no `$ref`.
+
+The reference MAY be empty, in which case the record stands alone on
+`contractNumber` and single-app operation is unchanged.
+
+The app-config key SHALL remain `contract_schema`. It is live persisted state.
+
+The rename SHALL NOT touch `contract` where it is a GDPR Article 6 lawful
+basis. That value appears in three register fragments and in
+`ComplianceService`, and rewriting it would change the legal ground a consent
+record claims.
+
+#### Scenario: The slug is renamed in place
+
+- **GIVEN** an install carrying a pipelinq-owned `contract` schema
+- **WHEN** the repair step runs
+- **THEN** the row keeps its schema id, and so its shard table and objects.
+
+#### Scenario: The lawful basis is untouched
+
+- **WHEN** the register fragments are read after the rename
+- **THEN** every `lawfulBasis` and `legalBasis` enum still offers `contract`.
+
+#### Scenario: The sales facet points at its owner
+
+- **WHEN** the merged fragment is read
+- **THEN** `salesContract` carries a `contract` property targeting shillinq.
+
+## Implementation Notes
 
 ### Current Implementation Status
 

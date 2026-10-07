@@ -49,6 +49,13 @@ consumer has to learn two shapes at once.
 - **AND** the set is unchanged.
 - @e2e exclude server validation; covered by PHPUnit on `TicketService::save()`
 
+#### Scenario: A contact moment on a dossiq case resolves
+
+- **GIVEN** dossiq supplies the `case` semantic type and a contact moment with `caseReference` = a case id
+- **WHEN** the reference is resolved
+- **THEN** the case's title renders on the contact moment without pipelinq naming dossiq
+- @e2e exclude resolver contract; covered by PHPUnit with a stub provider
+
 ## ADDED Requirements
 
 ### Requirement: One reference is the primary one, and it is named (REQ-CMS-002)
