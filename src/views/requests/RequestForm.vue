@@ -109,6 +109,8 @@
 
 		<ClientCreateDialog
 			v-if="clientDialogOpen"
+			:name="pendingName"
+			stayOnPage
 			@created="onClientCreated"
 			@close="closeClientDialog" />
 		<ContactCreateDialog

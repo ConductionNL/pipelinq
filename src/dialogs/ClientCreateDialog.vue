@@ -7,6 +7,7 @@
 		@closing="$emit('close')">
 		<ClientForm
 			ref="form"
+			:initialName="prefillName"
 			:showActions="false"
 			@save="onSave"
 			@update:valid="(v) => (valid = v)" />
@@ -39,12 +40,60 @@ export default {
 		ClientForm,
 	},
 
+	props: {
+		/** The name typed into a client picker, prefilled in the form. */
+		name: {
+			type: String,
+			default: '',
+		},
+
+		/**
+		 * Initial values from nextcloud-vue's select-or-create picker
+		 * (`{ name: term }`). Its presence means a form opened this dialog.
+		 */
+		initialData: {
+			type: Object,
+			default: null,
+		},
+
+		/**
+		 * Stay on the page that opened the dialog and hand the new client
+		 * back, instead of opening the client. Set by every picker.
+		 */
+		stayOnPage: {
+			type: Boolean,
+			default: false,
+		},
+	},
+
 	emits: ['created', 'close'],
 	data() {
 		return {
 			valid: false,
 			saving: false,
 		}
+	},
+
+	computed: {
+		/**
+		 * The name to start the form with.
+		 *
+		 * @return {string} The typed name, or ''.
+		 * @spec openspec/changes/pipelinq-audit-admin-forms-pos/specs/client-forms/spec.md#requirement-one-client-dialog-that-returns-to-the-form-that-opened-it
+		 */
+		prefillName() {
+			return this.name || this.initialData?.name || ''
+		},
+
+		/**
+		 * Whether a form opened this dialog, so the new client goes back to it.
+		 *
+		 * @return {boolean} True when opened from a picker.
+		 * @spec openspec/changes/pipelinq-audit-admin-forms-pos/specs/client-forms/spec.md#requirement-one-client-dialog-that-returns-to-the-form-that-opened-it
+		 */
+		returnsToForm() {
+			return this.stayOnPage || this.initialData !== null
+		},
 	},
 
 	methods: {
@@ -103,9 +152,13 @@ export default {
 		 * NC contact via ContactVcardService and saves the client with the
 		 * resolved contactsUid + the denormalised name/email/phone mirror.
 		 *
+		 * Opened from a picker, it hands the new client back and stays on the
+		 * page; opened from the Clients index, it opens the new client.
+		 *
 		 * @param {object} formData The raw create-form fields.
 		 * @spec openspec/specs/unify-client-contact/spec.md
 		 * @spec openspec/changes/reverse-2026-05-26-fe-clients-ui/tasks.md#task-2
+		 * @spec openspec/changes/pipelinq-audit-admin-forms-pos/specs/client-forms/spec.md#requirement-one-client-dialog-that-returns-to-the-form-that-opened-it
 		 */
 		async onSave(formData) {
 			this.saving = true
@@ -114,7 +167,12 @@ export default {
 				const id = created?.id ?? created?.['@self']?.id
 				if (id) {
 					this.notifyWalkthrough({ ...created, id })
-					this.$emit('created', id)
+					this.$emit('created', id, { ...created, id })
+					if (this.returnsToForm) {
+						// A picker opened this dialog: the form behind it stays.
+						this.$emit('close')
+						return
+					}
 					this.goToDetail('ClientDetail', id)
 					return
 				}

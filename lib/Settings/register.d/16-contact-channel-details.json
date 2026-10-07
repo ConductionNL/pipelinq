@@ -144,7 +144,6 @@
             "title": "Language",
             "description": "ISO 639-1 language code this client prefers for communication (e.g. \"nl\", \"en\").",
             "maxLength": 5,
-            "default": "nl",
             "facetable": true
           }
         }
@@ -292,7 +291,6 @@
             "title": "Language",
             "description": "ISO 639-1 language code this contact person prefers for communication (e.g. \"nl\", \"en\").",
             "maxLength": 5,
-            "default": "nl",
             "facetable": true
           }
         }

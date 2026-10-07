@@ -15,3 +15,16 @@
   - **spec_ref**: `specs/pos-display/spec.md#requirement-pos-amounts-and-labels-follow-the-user`
 - [x] 2.3 English POS menu and page titles; tender type by name; lead name on Used on deals
   - **spec_ref**: `specs/pos-display/spec.md#requirement-pos-amounts-and-labels-follow-the-user`
+
+## Phase 3: Client and other forms
+
+- [x] 3.1 The New client dialog prefills the typed name and returns to the form that opened it (D7)
+  - **spec_ref**: `specs/client-forms/spec.md#requirement-one-client-dialog-that-returns-to-the-form-that-opened-it`
+- [x] 3.2 Pickers in generic forms open the New client dialog (drop the Clients `createOverride`)
+  - **spec_ref**: `specs/client-forms/spec.md#requirement-one-client-dialog-that-returns-to-the-form-that-opened-it`
+- [x] 3.3 Client edit asks for name, email and phone and writes them back to the contact; industry from the list
+  - **spec_ref**: `specs/client-forms/spec.md#requirement-client-edit-asks-for-name-and-email`
+- [x] 3.4 No `language: 'nl'` default on client and contact
+  - **spec_ref**: `specs/client-forms/spec.md#requirement-no-conflicting-language-on-a-new-party`
+- [x] 3.5 Plain help in the client, contact, task and product forms; technical text kept in `x-notes`
+  - **spec_ref**: `specs/client-forms/spec.md#requirement-forms-show-plain-help`

@@ -80,9 +80,8 @@
 					:inputLabel="t('pipelinq', 'Industry')"
 					labelOutside
 					multiple
-					taggable
 					:options="industryOptions"
-					:placeholder="t('pipelinq', 'Pick or type sectors')"
+					:placeholder="t('pipelinq', 'Pick sectors')"
 					data-testid="client-industry-select" />
 			</div>
 			<div class="form-group">
@@ -224,6 +223,12 @@ export default {
 		 * opts OUT. Inverting the name would make every ordinary use pass a
 		 * negative prop just to get the normal form.
 		 */
+		/** A name to start a new client with, e.g. what was typed in a picker. */
+		initialName: {
+			type: String,
+			default: '',
+		},
+
 		showActions: {
 			type: Boolean,
 			// eslint-disable-next-line vue/no-boolean-default
@@ -236,7 +241,7 @@ export default {
 	data() {
 		return {
 			form: {
-				name: '',
+				name: this.initialName || '',
 				type: null,
 				email: '',
 				phone: '',

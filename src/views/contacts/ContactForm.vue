@@ -60,6 +60,8 @@
 
 		<ClientCreateDialog
 			v-if="clientDialogOpen"
+			:name="pendingClientName"
+			stayOnPage
 			@created="onClientCreated"
 			@close="closeClientDialog" />
 
@@ -174,6 +176,7 @@ export default {
 			// Inline-create plumbing: the picker hands control to the full
 			// client dialog and resumes with whatever it resolves.
 			clientDialogOpen: false,
+			pendingClientName: '',
 			resolveCreate: null,
 			searchTimeout: null,
 		}
@@ -265,10 +268,13 @@ export default {
 		 * and it is minted server-side, so the typed name opens the full create
 		 * dialog rather than being saved on its own.
 		 *
+		 * @param {string} term The name typed into the picker, prefilled in the dialog.
 		 * @return {Promise<object|null>} The created client, or null if cancelled.
 		 * @spec openspec/specs/lead-management/spec.md#requirement-linked-party-selection-on-the-create-form-mvp
+		 * @spec openspec/changes/pipelinq-audit-admin-forms-pos/specs/client-forms/spec.md#requirement-one-client-dialog-that-returns-to-the-form-that-opened-it
 		 */
-		createClient() {
+		createClient(term) {
+			this.pendingClientName = term || ''
 			return new Promise((resolve) => {
 				this.resolveCreate = resolve
 				this.clientDialogOpen = true
@@ -277,14 +283,15 @@ export default {
 
 		/**
 		 * @param {string} id The created client's uuid.
+		 * @param {object} [created] The created client, when the dialog hands it over.
 		 * @return {void}
 		 * @spec openspec/specs/lead-management/spec.md#requirement-linked-party-selection-on-the-create-form-mvp
 		 */
-		onClientCreated(id) {
+		onClientCreated(id, created) {
 			this.clientDialogOpen = false
 			const resolve = this.resolveCreate
 			this.resolveCreate = null
-			if (resolve) resolve(id ? { id } : null)
+			if (resolve) resolve(id ? { ...(created || {}), id } : null)
 		},
 
 		/**
