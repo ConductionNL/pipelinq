@@ -9,8 +9,8 @@
 
 - [x] 2.1 Demo reseed re-links existing demo objects' `pipeline`
   - Verify: `DemoSeedServiceTest::testReseedRelinksDemoLeadsOnADeletedPipeline` fails on the old code
-- [x] 2.2 `LeadStagePlacer::forOrphanedLead()`, `OrphanedLeadRepairService`, repair step `RelinkOrphanedLeads` in info.xml
-  - Verify: `LeadStagePlacerTest`, `OrphanedLeadRepairServiceTest` (new code paths; absent on the old code)
+- [x] 2.2 `OrphanedLeadPlacer::forOrphanedLead()`, `OrphanedLeadRepairService`, repair step `RelinkOrphanedLeads` in info.xml
+  - Verify: `LeadStagePlacerTest` (orphan cases), `OrphanedLeadRepairServiceTest` (new code paths; absent on the old code)
 - [x] 2.3 Board notice for leads on no board, and the opening rule
   - Verify: `tests/vitest/pipelineOrphans.spec.js` (the opening test fails on the old code)
 

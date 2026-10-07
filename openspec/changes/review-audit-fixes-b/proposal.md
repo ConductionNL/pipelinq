@@ -51,7 +51,7 @@ The audit (`audit/audit-3`, coordinator ledger AUDIT-3) found:
   multitenancy on; the #805 tripwire test becomes a test of the fixed call.
 - `DemoSeedService::seed()` re-points an existing demo object's `pipeline`
   at the pipeline this run resolved, and reports it as `relinked`.
-- New `LeadStagePlacer::forOrphanedLead()`, `OrphanedLeadRepairService` and
+- New `OrphanedLeadPlacer::forOrphanedLead()`, `OrphanedLeadRepairService` and
   repair step `RelinkOrphanedLeads`: a lead on a deleted pipeline goes to the
   default lead pipeline, an open lead to its first open stage, a won or lost
   lead to the matching closed stage. Writes run as the user or the pipelinq
