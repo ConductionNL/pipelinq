@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service\Demo;
 
+use OCA\OpenRegister\Db\Schema;
 use OCA\OpenRegister\Db\SchemaMapper;
 use OCA\OpenRegister\Service\ConfigurationService;
 use OCA\OpenRegister\Service\ObjectService;
@@ -91,10 +92,25 @@ class DemoRegisterImporterTest extends TestCase {
 			}
 		};
 
-		$schema = new class {
+		// A Schema, not any object: the real SchemaMapper::find() is typed to
+		// return one, so a mock built from the real class throws a TypeError
+		// on anything else, the importer reads that as "no such schema" and
+		// removes nothing. The local stub's untyped find() hid that.
+		$schema = new class extends Schema {
+			/**
+			 * Skip the entity's field registration; the test reads only the id.
+			 */
+			public function __construct() {
+			}//end __construct()
+
+			/**
+			 * The schema id the test's records are stored under.
+			 *
+			 * @return int
+			 */
 			public function getId(): int {
 				return 42;
-			}
+			}//end getId()
 		};
 		$schemaMapper = $this->createMock(SchemaMapper::class);
 		$schemaMapper->method('find')->willReturnCallback(
