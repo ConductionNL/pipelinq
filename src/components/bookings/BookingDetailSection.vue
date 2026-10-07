@@ -352,6 +352,11 @@ export default {
 			return events
 		},
 
+		/**
+		 * The deposit, in the service's currency or the reporting currency.
+		 *
+		 * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
+		 */
 		depositLabel() {
 			const amount = Number(this.booking.depositAmount || 0)
 			if (!amount) return t('pipelinq', 'None')
@@ -422,6 +427,14 @@ export default {
 			}
 		},
 
+		/**
+		 * An amount in the given currency, or the reporting currency.
+		 *
+		 * @param {number|string} value The amount.
+		 * @param {string} [currency] The currency code.
+		 * @return {string} The formatted amount.
+		 * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
+		 */
 		formatCurrency(value, currency) {
 			const code = currencyOr(currency)
 			const n = Number(value) || 0

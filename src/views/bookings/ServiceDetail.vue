@@ -733,6 +733,14 @@ export default {
 				: t('pipelinq', '{h}h {m}min', { h, m })
 		},
 
+		/**
+		 * An amount in the given currency, or the reporting currency.
+		 *
+		 * @param {number|string} value The amount.
+		 * @param {string} [currency] The currency code.
+		 * @return {string} The formatted amount.
+		 * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
+		 */
 		formatCurrency(value, currency) {
 			const code = currencyOr(currency)
 			const n = Number(value) || 0

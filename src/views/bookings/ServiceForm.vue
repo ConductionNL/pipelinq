@@ -290,6 +290,11 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * A blank service, priced in the reporting currency.
+		 *
+		 * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
+		 */
 		emptyForm() {
 			return {
 				name: '',
