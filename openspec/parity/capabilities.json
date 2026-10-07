@@ -752,7 +752,8 @@
 			"built": {
 				"state": "building",
 				"evidence": "lib/Service/ContactImportService.php holds no CSV reader",
-				"owner": "ConductionNL/openregister"
+				"owner": "ConductionNL/openregister",
+				"change": "openregister/import-preview-and-conflict-policy"
 			},
 			"note": "Reachable through Open Register, not from a pipelinq page. That is why this is partial and not yes.",
 			"evidence": {
@@ -1617,7 +1618,8 @@
 				"evidence": "the Flows and FlowDetail pages (src/manifest.json, type flow, OpenRegister flow engine per lib/Flow/PipelinqFlowNodeListener.php:4-9) can trigger on a lead and set a field with OpenRegister's SetFieldsNode; but the lead schema has no label or colour field (title, source, value, probability, priority, stage, status, ...), and system tags (lib/Service/SystemTagService.php:80) are kept for other object types",
 				"owner": "ConductionNL/openregister",
 				"reachedOn": "Flows, FlowDetail",
-				"readOn": "2026-09-26"
+				"readOn": "2026-09-26",
+				"change": "openregister/flow-tag-object-step"
 			},
 			"note": "a rule can set priority or another field, not a coloured label. Specified in ConductionNL/openregister openspec/changes/flow-tag-object-step (openregister lane, OpenSpec pass 2026-09-27).",
 			"evidence": {
@@ -2866,7 +2868,8 @@
 				"evidence": "CnIndexPage keeps filters, search and sort in the route query so a filtered list can be shared as a link; its saved-views control (nextcloud-vue 2.57.1 src/components/CnIndexPage/CnIndexPage.vue:112-117 CnSavedViewsControl) is opt-in via allowSavedViews, default false (:1720-1722), and no page in src/manifest.json or src/manifest.d sets it (grep at development cfe0a0a51). src/services/viewService.js reads OpenRegister views only to pick a pipeline's source in PipelineFormDialog",
 				"owner": "ConductionNL/nextcloud-vue",
 				"reachedOn": "any index page (shareable URL only); save-view control reached on nothing",
-				"readOn": "2026-09-28"
+				"readOn": "2026-09-28",
+				"change": "nextcloud-vue/saved-views-shared-by-role"
 			},
 			"note": "lead: the shared saved-views control is one manifest flag away (allowSavedViews) on Clients, Tickets, Leads and Tasks. Re-read 2026-09-28 (OpenSpec pass, wave-5 correction round 6): rating partial holds at nextcloud-vue 2.57.1; evidence refreshed from 2.56.0. Specified in ConductionNL/nextcloud-vue openspec/changes/saved-views-shared-by-role (nextcloud-vue lane, OpenSpec pass 2026-09-27).",
 			"evidence": {
@@ -2933,7 +2936,8 @@
 				"evidence": "a ticket or lead has one assignee (lib/Settings/register.d/99-unify-ticket-supertype.json:210); colleagues can be given work on it through the detail sidebar's Tasks tab (nextcloud-vue CnObjectSidebar, 'Files, Notes, Tags, Tasks, and Audit Trail tabs'), but no followers, watchers or participants field exists, so nobody else is told about updates",
 				"owner": "ConductionNL/openregister",
 				"reachedOn": "TicketDetail, LeadDetail sidebar Tasks tab",
-				"readOn": "2026-09-26"
+				"readOn": "2026-09-26",
+				"change": "openregister/2026-10-05-object-watchers"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/records/add-collaborators-to-a-deal \"If multiple users in your HubSpot account work together on a deal, you can add them as collaborators ... Each collaborator can access a default view that lists all deals they're included on\". All products and plans.",
@@ -5980,7 +5984,8 @@
 			"built": {
 				"state": "building",
 				"evidence": "no per-group field rule found in lib/Lifecycle/",
-				"owner": "ConductionNL/openregister"
+				"owner": "ConductionNL/openregister",
+				"change": "openregister/modelling-field-access-editor"
 			},
 			"note": "EspoCRM does this per role. Ours is all or nothing today.",
 			"evidence": {
@@ -6286,7 +6291,8 @@
 			"built": {
 				"state": "building",
 				"evidence": "lib/Service/ConnectorSourceRegister.php exposes connectors but no catalogue",
-				"owner": "ConductionNL/integriq"
+				"owner": "ConductionNL/integriq",
+				"change": "integriq/2026-07-14-connector-catalog-ui"
 			},
 			"note": "HubSpot lists 1,500 integrations and Pipedrive 400. We have connectors, not a shop window.",
 			"evidence": {
@@ -6312,11 +6318,12 @@
 			"feature": "Automation",
 			"featureConfidence": "medium",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"evidence": "some integrations tell people when they fail: lib/Notification/Notifier.php:239 'forecast_snapshot_partial_failure', :250 'wip_sync_failed', :261 'billing_handoff_failed', :289 'social_relink_needed', with lib/BackgroundJob/BillingHandoffRetryJob.php:95 re-notifying admins while a batch stays failed; failed export runs show on ExportRuns with a retry (appinfo/routes.php:440). Nothing switches an automation off after repeated failure (grep for circuit breaker, consecutive, auto disable finds only POS PIN lockout)",
 				"owner": "ConductionNL/openregister",
 				"reachedOn": "Nextcloud notifications; ExportRuns, ExportRunDetail",
-				"readOn": "2026-09-26"
+				"readOn": "2026-09-26",
+				"change": "exports-switch-off-after-repeated-failure"
 			},
 			"note": "alerts for a few integrations, no automatic switch off; flow failures are OpenRegister's and were not checked. Decided no 2026-09-28 (OpenSpec pass): Pipelinq stopped owning an automation engine (archived migrate-automation-to-flow-leaf); automations run on the OpenRegister flow engine, so alerting on and switching off a failing flow is that engine's job. The pipelinq integration alerts already cited stay built. Owner corrected to ConductionNL/openregister. Corrections round 9 (2026-09-28): built.state decided-no to none, deferred by openregister: the owner-moves pass recorded defer in openregister openspec/parity/gap-decisions.json (one competitor yes, outside pipelinq's core area, and no OpenRegister change covers alerting on or switching off a failing flow).",
 			"evidence": {
@@ -6745,7 +6752,8 @@
 			"built": {
 				"state": "building",
 				"evidence": "lib/Service/PosTransactionService.php:692 emits the event, no stock page exists here",
-				"owner": "ConductionNL/shillinq"
+				"owner": "ConductionNL/shillinq",
+				"change": "products-stock-on-hand"
 			},
 			"evidence": {
 				"hubspot-crm": "not checked: searched the knowledge base URL list for inventory and stock and found no article; https://knowledge.hubspot.com/properties/hubspots-default-product-properties shows no quantity on hand (read 2026-09-26). Note: Was no without a source.",
@@ -6774,7 +6782,8 @@
 				"evidence": "pipelinq only reads invoices from shillinq (lib/Service/ShillinqInvoiceReader.php:175 notes whether one \"is in dunning\") for marketing signals; chasing is shillinq's DunningRunService, itself rated partial in shillinq and not reached from any pipelinq page",
 				"owner": "ConductionNL/shillinq",
 				"reachedOn": "nothing",
-				"readOn": "2026-09-26"
+				"readOn": "2026-09-26",
+				"change": "shillinq/receivables-automatic-dunning"
 			},
 			"evidence": {
 				"hubspot-crm": "https://www.hubspot.com/spotlight \"Automates collections, so every overdue invoice gets a personalized nudge, and follows up as the conversation unfolds\"; tier not stated on the page.",
@@ -7847,7 +7856,8 @@
 				"evidence": "the shared form (nextcloud-vue v2.56.0 src/components/CnFormDialog/CnFormDialog.vue:1908 \"fieldVisible\") hides a field on a condition only when a field descriptor carries condition/visibleWhen, and src/utils/schema.js does not derive one from a schema property (it maps only x-openregister-readonly-when, :688). No pipelinq manifest page declares a condition, and no admin screen lets one be set",
 				"owner": "ConductionNL/nextcloud-vue",
 				"reachedOn": "nothing",
-				"readOn": "2026-09-26"
+				"readOn": "2026-09-26",
+				"change": "nextcloud-vue/form-conditions-from-schema"
 			},
 			"note": "conditional read-only exists at schema level (x-openregister-readonly-when); show, hide and validate on another field's value needs a developer. Specified in ConductionNL/nextcloud-vue openspec/changes/form-conditions-from-schema (nextcloud-vue lane, OpenSpec pass 2026-09-27).",
 			"evidence": {
@@ -7980,7 +7990,8 @@
 				"evidence": "OpenRegister keeps deleted objects and restores them (openregister appinfo/routes.php:1432 'deleted#restore', :1433 'deleted#restoreMultiple', UI in openregister src/store/modules/deleted.js); no pipelinq page reaches it, and restoring what a cascade deleted with the record is a manual multi-select",
 				"owner": "ConductionNL/openregister",
 				"reachedOn": "OpenRegister's deleted objects page, not a pipelinq page",
-				"readOn": "2026-09-26"
+				"readOn": "2026-09-26",
+				"change": "openregister/records-restore-with-cascade"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/privacy-and-consent/manage-data-retention-policy-settings deleted contacts sit in \"the recycling bin within 90 days\"; https://knowledge.hubspot.com/object-settings/restore-crm-changes rolls records back \"to a previous point within the last 14 days\" including changes by workflows and imports (Starter and up).",
