@@ -1,6 +1,6 @@
 # Tasks: pipelinq-setup-wizard-review
 
-> Archive pass 2026-10-07: code done (#2177), every task ticked; not archived. Its MODIFIED blocks for REQ-SETUP-PIP-004, 005, 007 and 008 omit eight scenarios the main spec carries. Six still hold (provision blocked without OpenRegister, organisation details persist, optional steps report done, seed on a clean install, idempotent re-run, removal deletes exactly the seed) and two contradict the new wizard (provision from the wizard step, demo data as one optional action). Refresh the delta: copy the six, rewrite or drop the two, then archive.
+> Archive pass 2026-10-07: code done (#2177), every task ticked. Delta fix-up 2026-10-07: the MODIFIED blocks now carry every main-spec scenario that still holds; the two that described the old wizard (provision from a wizard step, demo data as a separate action step) are rewritten to the admin-page card and the card step under their original names.
 
 ## Phase 1: Wizard
 
