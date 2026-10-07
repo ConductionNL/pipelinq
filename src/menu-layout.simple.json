@@ -672,7 +672,13 @@
 						"gridWidth": 12,
 						"gridHeight": 8
 					}
-				]
+				],
+				"breadcrumb": {
+					"label": "Questions and reports",
+					"route": "Tickets"
+				},
+				"showTypeEyebrow": false,
+				"headerCard": true
 			},
 			"configPatch": {
 				"bodyWidgets": {
@@ -746,7 +752,8 @@
 									"widgetId": "ticket-decisions",
 									"label": "Decisions"
 								}
-							]
+							],
+							"variant": "segmented"
 						}
 					}
 				],
