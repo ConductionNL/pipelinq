@@ -355,6 +355,25 @@ class Customer360ControllerTest extends TestCase {
 	}//end testCallerWithoutReadAccessIsForbidden()
 
 	/**
+	 * A client OpenRegister reports as not existing is a 404, not a 500.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/review-audit-fixes-b/specs/customer-360/spec.md#requirement-the-customer-360-summary-follows-the-clients-read-rights-req-raf-030
+	 */
+	public function testMissingClientIsNotFound(): void {
+		$controller = $this->buildController(
+			clientId: 'client-gone',
+			foundClient: null,
+			uid: 'agent-2',
+			summaryOrThrow: [],
+			findThrows: new \OCP\AppFramework\Db\DoesNotExistException('gone'),
+		);
+
+		$this->assertSame(404, $controller->summary()->getStatus());
+	}//end testMissingClientIsNotFound()
+
+	/**
 	 * An unexpected read failure fails closed as a 500, never as a grant.
 	 *
 	 * @return void

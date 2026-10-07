@@ -3,7 +3,7 @@
 ## 1. Customer 360
 
 - [x] 1.1 `Customer360Controller` reads the client with `find()` by name, RBAC and multitenancy on; no privileged-group check; NotAuthorizedException is 403, missing is 404, other failures 500
-  - Verify: `Customer360ControllerTest` (10 tests; on the old code the payload, access log, 500 path and named call tests fail, and the 403 test cannot construct the old controller)
+  - Verify: `Customer360ControllerTest` (11 tests; on the old code the payload, access log, 500 path and named call tests fail, and the 403 test cannot construct the old controller)
 
 ## 2. Leads on a deleted pipeline (F1)
 

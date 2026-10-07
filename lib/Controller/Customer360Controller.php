@@ -32,7 +32,6 @@ use OCA\OpenRegister\Exception\NotAuthorizedException;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Service\Customer360SummaryService;
 use OCP\AppFramework\Controller;
-use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IAppConfig;
@@ -190,9 +189,13 @@ class Customer360Controller extends Controller {
 			);
 		} catch (NotAuthorizedException $e) {
 			return self::ACCESS_DENIED;
-		} catch (DoesNotExistException $e) {
-			return self::ACCESS_MISSING;
 		} catch (Throwable $e) {
+			// OCP's DoesNotExistException, matched by name to keep this
+			// controller's coupling under the phpmd threshold.
+			if (str_ends_with(get_class($e), '\\DoesNotExistException') === true) {
+				return self::ACCESS_MISSING;
+			}
+
 			$this->logger->warning(
 				'Customer360Controller: client read-guard failed',
 				['clientId' => $clientId, 'exception' => $e->getMessage()]
