@@ -78,6 +78,20 @@ class SetupController extends Controller {
 	private const DATASET_KEY = 'demo_dataset';
 
 	/**
+	 * App-config key holding the setup version at which an administrator
+	 * closed or finished the setup wizard.
+	 *
+	 * Written by the `dismiss-setup` action (manifest `setup.dismissAction`)
+	 * and reported as `dismissed` by `status()`, so the wizard stays closed in
+	 * every browser instead of only the one that closed it. It answers no
+	 * step: an open optional step stays open, and the admin card can still
+	 * run the wizard again.
+	 *
+	 * @var string
+	 */
+	private const DISMISSED_VERSION_KEY = 'setup_dismissed_version';
+
+	/**
 	 * Constructor.
 	 *
 	 * @param string $appName The app id.
@@ -131,10 +145,16 @@ class SetupController extends Controller {
 	 * nextcloud-vue also filters non-actionable steps out of the unmet lists,
 	 * but reporting them keeps this contract true for any consumer version.
 	 *
-	 * @return DataResponse `{ version, completed, steps: { <id>: { done } } }`.
+	 * `dismissed` carries the setup version the wizard was closed at, or false
+	 * when nobody closed it. nextcloud-vue keeps the wizard closed while that
+	 * version is at least the manifest's `setup.version`, so a version bump
+	 * opens it again.
+	 *
+	 * @return DataResponse `{ version, completed, dismissed, steps: { <id>: { done } } }`.
 	 *
 	 * @spec openspec/changes/first-time-setup/specs/first-time-setup/spec.md
 	 * @spec openspec/changes/pipelinq-setup-wizard-review/specs/first-time-setup/spec.md
+	 * @spec openspec/changes/setup-wizard-close-on-server/specs/first-time-setup/spec.md
 	 */
 	#[AuthorizedAdminSetting(AdminSettings::class)]
 	public function status(): DataResponse {
@@ -160,6 +180,7 @@ class SetupController extends Controller {
 			[
 				'version' => self::SETUP_VERSION,
 				'completed' => $currencyDone,
+				'dismissed' => $this->dismissedVersion(),
 				// The choice step reads its options from here: it declares
 				// `optionsSource: datasets` and no options of its own, so a
 				// dataset missing from this list is a dataset nobody can pick.
@@ -273,6 +294,7 @@ class SetupController extends Controller {
 	 * @return DataResponse `{ success, message }`.
 	 *
 	 * @spec openspec/changes/first-time-setup/specs/first-time-setup/spec.md
+	 * @spec openspec/changes/setup-wizard-close-on-server/specs/first-time-setup/spec.md
 	 */
 	#[AuthorizedAdminSetting(AdminSettings::class)]
 	public function runAction(string $actionId): DataResponse {
@@ -293,6 +315,10 @@ class SetupController extends Controller {
 
 		if ($actionId === 'skip-demo-data') {
 			return $this->skipDemoData();
+		}
+
+		if ($actionId === 'dismiss-setup') {
+			return $this->dismissSetup();
 		}
 
 		return new DataResponse(
@@ -440,6 +466,44 @@ class SetupController extends Controller {
 			);
 		}//end try
 	}//end seedDemoData()
+
+	/**
+	 * Record that an administrator closed or finished the setup wizard.
+	 *
+	 * CnAppRoot posts this once (`{ finished }`) when the wizard is closed or
+	 * finished. Only the setup version is stored: the open optional steps keep
+	 * their state, because closing the wizard is not a choice of example data
+	 * or an organisation name.
+	 *
+	 * @return DataResponse `{ success, dismissed }`.
+	 *
+	 * @spec openspec/changes/setup-wizard-close-on-server/specs/first-time-setup/spec.md
+	 */
+	private function dismissSetup(): DataResponse {
+		$this->appConfig->setValueString(
+			Application::APP_ID,
+			self::DISMISSED_VERSION_KEY,
+			(string)self::SETUP_VERSION
+		);
+
+		return new DataResponse(['success' => true, 'dismissed' => self::SETUP_VERSION]);
+	}//end dismissSetup()
+
+	/**
+	 * The setup version the wizard was closed at, or false when it never was.
+	 *
+	 * @return int|false The stored version, or false.
+	 *
+	 * @spec openspec/changes/setup-wizard-close-on-server/specs/first-time-setup/spec.md
+	 */
+	private function dismissedVersion(): int|false {
+		$stored = $this->config(key: self::DISMISSED_VERSION_KEY);
+		if ($stored === '' || ctype_digit($stored) === false) {
+			return false;
+		}
+
+		return (int)$stored;
+	}//end dismissedVersion()
 
 	/**
 	 * Read a pipelinq app-config string value.
