@@ -134,4 +134,56 @@ class LeadStagePlacerTest extends TestCase {
 		$this->assertNull($placer->firstOpenStage(['stages' => [['name' => 'Lost', 'order' => 1, 'isClosed' => true]]]));
 		$this->assertSame('p-any', $placer->defaultPipeline([['id' => 'p-any', 'stages' => []]])['id']);
 	}//end testClosedStagesAreSkippedAndUnscopedPipelinesCount()
+
+	/**
+	 * An open lead on a deleted pipeline goes to the default pipeline's first
+	 * open stage (pipelinq review F1).
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/review-audit-fixes-b/specs/lead-management/spec.md#requirement-a-repair-step-moves-leads-off-a-deleted-pipeline-req-raf-011
+	 */
+	public function testOpenLeadOnADeletedPipelineMovesToTheFirstOpenStage(): void {
+		$patch = (new LeadStagePlacer())->forOrphanedLead(
+			lead: ['pipeline' => 'p-gone', 'stage' => 'Qualified', 'status' => 'open'],
+			pipelines: [$this->sales()],
+			now: '2026-10-07T10:00:00+00:00',
+		);
+
+		$this->assertSame(
+			['pipeline' => 'p-sales', 'stage' => 'New', 'stageOrder' => 1, 'stageEnteredAt' => '2026-10-07T10:00:00+00:00'],
+			$patch
+		);
+	}//end testOpenLeadOnADeletedPipelineMovesToTheFirstOpenStage()
+
+	/**
+	 * A won lead on a deleted pipeline goes to the won stage, so it stays closed.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/review-audit-fixes-b/specs/lead-management/spec.md#requirement-a-repair-step-moves-leads-off-a-deleted-pipeline-req-raf-011
+	 */
+	public function testWonLeadOnADeletedPipelineMovesToTheWonStage(): void {
+		$patch = (new LeadStagePlacer())->forOrphanedLead(
+			lead: ['pipeline' => 'p-gone', 'status' => 'won'],
+			pipelines: [$this->sales()],
+			now: '2026-10-07T10:00:00+00:00',
+		);
+
+		$this->assertSame('p-sales', $patch['pipeline']);
+		$this->assertSame('Won', $patch['stage']);
+	}//end testWonLeadOnADeletedPipelineMovesToTheWonStage()
+
+	/**
+	 * A lead on an existing pipeline, or on none, is not moved.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/review-audit-fixes-b/specs/lead-management/spec.md#requirement-a-repair-step-moves-leads-off-a-deleted-pipeline-req-raf-011
+	 */
+	public function testLeadOnALivePipelineOrNoneIsNotMoved(): void {
+		$placer = new LeadStagePlacer();
+		$this->assertSame([], $placer->forOrphanedLead(lead: ['pipeline' => 'p-sales', 'stage' => 'Odd'], pipelines: [$this->sales()]));
+		$this->assertSame([], $placer->forOrphanedLead(lead: ['title' => 'No pipeline'], pipelines: [$this->sales()]));
+	}//end testLeadOnALivePipelineOrNoneIsNotMoved()
 }//end class
