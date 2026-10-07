@@ -3699,7 +3699,7 @@
 						"widget": "fkResolve",
 						"widgetProps": {
 							"register": "pipelinq",
-							"schema": "productcategory",
+							"schema": "productCategory",
 							"labelField": "name"
 						}
 					},
