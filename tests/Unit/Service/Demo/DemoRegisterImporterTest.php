@@ -125,10 +125,11 @@ class DemoRegisterImporterTest extends TestCase {
 			schemaMapper: $schemaMapper,
 			objectService: $objectService,
 			logger: $this->createMock(LoggerInterface::class),
-			userSession: $this->userSession(uid: $actingUid),
-			userManager: $this->userManager(),
-			configLoader: new ConfigFileLoaderService($appManager),
-			userFields: new DemoUserFields(),
+			userFields: new DemoUserFields(
+				userSession: $this->userSession(uid: $actingUid),
+				userManager: $this->userManager(),
+				configLoader: new ConfigFileLoaderService($appManager),
+			),
 		);
 	}//end importer()
 

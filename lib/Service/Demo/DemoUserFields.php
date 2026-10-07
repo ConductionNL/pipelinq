@@ -32,12 +32,52 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Service\Demo;
 
+use OCA\Pipelinq\Service\ConfigFileLoaderService;
+use OCP\IUserManager;
+use OCP\IUserSession;
+
 /**
  * Rewrites user fields in example records to existing users.
  *
  * @spec openspec/changes/pipelinq-audit-admin-forms-pos/specs/example-data/spec.md#requirement-every-example-record-imports
  */
 class DemoUserFields {
+	/**
+	 * Constructor.
+	 *
+	 * @param IUserSession            $userSession  Who loads the examples.
+	 * @param IUserManager            $userManager  Tells a real account from a demo name.
+	 * @param ConfigFileLoaderService $configLoader The merged schemas, to find the user fields.
+	 */
+	public function __construct(
+		private readonly IUserSession $userSession,
+		private readonly IUserManager $userManager,
+		private readonly ConfigFileLoaderService $configLoader,
+	) {
+	}//end __construct()
+
+	/**
+	 * Point the example records' user fields at accounts that exist here.
+	 *
+	 * OpenRegister refuses a `format: user` value that is not a real account
+	 * and skips the whole record, so a demo name (`jan.smit`) cost the record.
+	 *
+	 * @param array<int, array<string, mixed>> $objects The example records.
+	 *
+	 * @return array<int, array<string, mixed>> The records, importable.
+	 *
+	 * @spec openspec/changes/pipelinq-audit-admin-forms-pos/specs/example-data/spec.md#requirement-every-example-record-imports
+	 */
+	public function withRealUsers(array $objects): array {
+		$schemas = (array)($this->configLoader->loadConfigurationFile()['components']['schemas'] ?? []);
+
+		return $this->assign(
+			objects: $objects,
+			schemas: $schemas,
+			userExists: fn (string $uid): bool => $this->userManager->userExists($uid),
+			actingUid: $this->userSession->getUser()?->getUID()
+		);
+	}//end withRealUsers()
 	/**
 	 * Point every user field at an existing user, or leave it out.
 	 *
