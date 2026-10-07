@@ -131,7 +131,10 @@ describe('the full structure', () => {
 
 describe('the header, as DqZaak draws it', () => {
 	it('reads the list as a text breadcrumb, has no type eyebrow, sits in a card and shows the tabs as a segmented control', () => {
-		expect(simple.breadcrumb).toEqual({ label: 'Questions and reports', route: 'Tickets' })
+		expect(simple.breadcrumb).toEqual({
+			label: 'Questions and reports',
+			route: 'Tickets',
+		})
 		expect(simple.showTypeEyebrow).toBe(false)
 		expect(simple.headerCard).toBe(true)
 		const tabs = simple.widgets.find((widget) => widget.id === 'ticket-panels')

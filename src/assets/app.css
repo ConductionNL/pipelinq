@@ -127,7 +127,10 @@
  * first child, and the library's widget wrapper fills the cell
  * (`height: 100%`), so without this a card never shrank to an empty or
  * one-row list and kept its authored rows of white. */
-.cn-dashboard-grid .grid-stack-item[gs-size-to-content] > .grid-stack-item-content > .cn-widget-wrapper {
+.cn-dashboard-grid
+	.grid-stack-item[gs-size-to-content]
+	> .grid-stack-item-content
+	> .cn-widget-wrapper {
 	height: auto;
 }
 
@@ -160,7 +163,12 @@
  * background (thematiq's nldesign element-overrides, specificity 1,2,0)
  * painted it white, a box the board does not have. The two `:not(#…)`
  * lift this rule above that one. */
-.cn-dashboard-grid .cn-widget-wrapper.cn-widget-wrapper--borderless:not(#cn-ground-a):not(#cn-ground-b),
-.cn-dashboard-grid .cn-widget-wrapper--borderless .cn-widget-wrapper__content:not(#cn-ground-a):not(#cn-ground-b) {
+.cn-dashboard-grid
+	.cn-widget-wrapper.cn-widget-wrapper--borderless:not(#cn-ground-a):not(
+		#cn-ground-b
+	),
+.cn-dashboard-grid
+	.cn-widget-wrapper--borderless
+	.cn-widget-wrapper__content:not(#cn-ground-a):not(#cn-ground-b) {
 	background: transparent;
 }

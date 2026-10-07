@@ -125,14 +125,19 @@ function validateBuilt(built) {
 describe('the full profile', () => {
 	it('is exactly what buildManifest made before profiles existed, with the newer index header controls held back', () => {
 		const before = buildManifest(manifest(), fragments, fullFile)
-		expect(build(fullFile)).toEqual(applyPageDefaults(before, fullFile.pageDefaults))
+		expect(build(fullFile)).toEqual(
+			applyPageDefaults(before, fullFile.pageDefaults),
+		)
 		// The only difference: every index page that did not choose shows
 		// the plain header row it had on nextcloud-vue ^2.61.0.
 		const after = build(fullFile)
 		for (const page of before.pages) {
 			const now = after.pages.find((item) => item.id === page.id)
 			if (page.type === 'index' && page.config?.headerFilters === undefined) {
-				expect(now, page.id).toEqual({ ...page, config: { ...page.config, headerFilters: false } })
+				expect(now, page.id).toEqual({
+					...page,
+					config: { ...page.config, headerFilters: false },
+				})
 			} else {
 				expect(now, page.id).toEqual(page)
 			}
@@ -159,15 +164,30 @@ describe('the full profile', () => {
 	it('holds the header controls back on index pages only, and the simple profile keeps the library default', () => {
 		expect(fullFile.pageDefaults).toEqual({ index: { headerFilters: false } })
 		expect(simpleFile.pageDefaults).toBeUndefined()
-		const simpleIndex = buildSimple().pages.filter((page) => page.type === 'index')
+		const simpleIndex = buildSimple().pages.filter(
+			(page) => page.type === 'index',
+		)
 		expect(simpleIndex.length).toBeGreaterThan(0)
 		for (const page of simpleIndex) {
-			const own = buildManifest(manifest(), fragments, {}).pages.find((item) => item.id === page.id)
-			expect(page.config?.headerFilters, page.id).toBe(own?.config?.headerFilters)
+			const own = buildManifest(manifest(), fragments, {}).pages.find(
+				(item) => item.id === page.id,
+			)
+			expect(page.config?.headerFilters, page.id).toBe(
+				own?.config?.headerFilters,
+			)
 		}
 		const unchanged = { pages: [{ id: 'x', type: 'detail', config: {} }] }
 		expect(applyPageDefaults(unchanged, undefined)).toBe(unchanged)
-		expect(applyPageDefaults({ pages: [{ id: 'y', type: 'index', config: { headerFilters: true } }] }, fullFile.pageDefaults).pages[0].config.headerFilters).toBe(true)
+		expect(
+			applyPageDefaults(
+				{
+					pages: [
+						{ id: 'y', type: 'index', config: { headerFilters: true } },
+					],
+				},
+				fullFile.pageDefaults,
+			).pages[0].config.headerFilters,
+		).toBe(true)
 	})
 
 	it('does not link to the Modules page, which only the simple menu needs', () => {

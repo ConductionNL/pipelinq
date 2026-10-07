@@ -165,11 +165,22 @@ describe('the dashboard', () => {
 			.filter((entry) => entry.gridY < 5)
 			.sort((a, b) => a.gridY - b.gridY || a.gridX - b.gridX)
 			.map((entry) => byId[entry.widgetId].type)
-		expect(top).toEqual(['header', 'custom', 'banner', 'stat', 'stat', 'stat', 'stat'])
+		expect(top).toEqual([
+			'header',
+			'custom',
+			'banner',
+			'stat',
+			'stat',
+			'stat',
+			'stat',
+		])
 		// PqDashboard has one header: the page header is hidden and the
 		// greeting row carries the kicker date and the heading on the ground.
 		expect(simple.showHeader).toBe(false)
-		expect(byId['simple-greeting'].content).toMatchObject({ ground: true, showDate: true })
+		expect(byId['simple-greeting'].content).toMatchObject({
+			ground: true,
+			showDate: true,
+		})
 		const stats = simple.layout.filter(
 			(entry) => byId[entry.widgetId].type === 'stat' && entry.gridY === 3,
 		)
@@ -563,7 +574,8 @@ describe('the words', () => {
 describe('the hidden page header loses nothing', () => {
 	const simple = page(builtSimple, 'KccWerkplek')
 	const full = page(builtFull, 'KccWerkplek')
-	const layoutOf = (widgetId) => simple.config.layout.find((entry) => entry.widgetId === widgetId)
+	const layoutOf = (widgetId) =>
+		simple.config.layout.find((entry) => entry.widgetId === widgetId)
 
 	it('hides the header in the simple structure only', () => {
 		expect(simple.config.showHeader).toBe(false)
@@ -573,19 +585,35 @@ describe('the hidden page header loses nothing', () => {
 	})
 
 	it('moves New request to the navigation, as the same dialog', () => {
-		const headerAction = full.config.headerActions.find((action) => action.id === 'new-request')
+		const headerAction = full.config.headerActions.find(
+			(action) => action.id === 'new-request',
+		)
 		const primary = simpleFile.nav.primaryAction
-		expect(primary.action).toMatchObject({ type: 'open-modal', target: headerAction.target })
+		expect(primary.action).toMatchObject({
+			type: 'open-modal',
+			target: headerAction.target,
+		})
 		expect(fullFile.nav?.primaryAction).toBeUndefined()
 	})
 
 	it('keeps the availability switch in the greeting row and the client in focus above the cards that use it', () => {
-		expect(simple.slots['widget-simple-availability']).toBe(full.actionsComponent)
-		expect(simple.slots['widget-simple-client-in-focus']).toBe(full.slots['title-meta'])
-		expect(layoutOf('simple-availability')).toMatchObject({ gridY: 0, borderless: true })
+		expect(simple.slots['widget-simple-availability']).toBe(
+			full.actionsComponent,
+		)
+		expect(simple.slots['widget-simple-client-in-focus']).toBe(
+			full.slots['title-meta'],
+		)
+		expect(layoutOf('simple-availability')).toMatchObject({
+			gridY: 0,
+			borderless: true,
+		})
 		const client = layoutOf('simple-client-in-focus')
 		const clientBound = full.config.widgets
-			.filter((widget) => JSON.stringify(widget.content || {}).includes('@workspace.selectedClient'))
+			.filter((widget) =>
+				JSON.stringify(widget.content || {}).includes(
+					'@workspace.selectedClient',
+				),
+			)
 			.map((widget) => layoutOf(widget.id))
 		expect(clientBound.length).toBeGreaterThan(0)
 		for (const entry of clientBound) {

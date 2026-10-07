@@ -327,7 +327,11 @@ export function buildProfiledManifest(
  * @spec openspec/changes/simple-structure-profile/specs/navigation-ia/spec.md#REQ-NIA-101
  */
 export function applyPageDefaults(built, defaults) {
-	if (!defaults || typeof defaults !== 'object' || Object.keys(defaults).length === 0) {
+	if (
+		!defaults
+		|| typeof defaults !== 'object'
+		|| Object.keys(defaults).length === 0
+	) {
 		return built
 	}
 	const pages = (built.pages || []).map((page) => {
