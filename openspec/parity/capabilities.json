@@ -3551,6 +3551,188 @@
 			}
 		},
 		{
+			"id": "work-my-week-stats",
+			"area": "work",
+			"name": "See how your own week is going: answered, within the deadline, answer time",
+			"pipelinq": "no",
+			"hubspot-crm": "unknown",
+			"pipedrive": "unknown",
+			"espocrm": "unknown",
+			"odoo-crm": "unknown",
+			"kiss": "unknown",
+			"provider": "pipelinq",
+			"providerHow": "read in src/views/MyWork.vue and openspec/changes/my-work-roadmap",
+			"feature": "My work",
+			"featureConfidence": "high",
+			"built": {
+				"state": "specified",
+				"evidence": "src/views/MyWork.vue has no tiles; REQ-MW-090",
+				"owner": "ConductionNL/pipelinq",
+				"change": "my-work-roadmap"
+			},
+			"source": "spec-round-2026-10-07",
+			"screen": {
+				"canvas": "5NkFW28vZUUij43xzxHg5a",
+				"board": "PqMijnWerk"
+			}
+		},
+		{
+			"id": "work-quick-create",
+			"area": "work",
+			"name": "Create a ticket, lead or contact from your work list without leaving it",
+			"pipelinq": "no",
+			"hubspot-crm": "unknown",
+			"pipedrive": "unknown",
+			"espocrm": "unknown",
+			"odoo-crm": "unknown",
+			"kiss": "unknown",
+			"provider": "pipelinq",
+			"providerHow": "read in src/views/MyWork.vue and openspec/changes/my-work-roadmap",
+			"feature": "My work",
+			"featureConfidence": "high",
+			"built": {
+				"state": "specified",
+				"evidence": "src/views/MyWork.vue has no create buttons; REQ-MW-100",
+				"owner": "ConductionNL/pipelinq",
+				"change": "my-work-roadmap"
+			},
+			"source": "spec-round-2026-10-07",
+			"screen": {
+				"board": null,
+				"reason": "not designed: no board draws create buttons on My work"
+			}
+		},
+		{
+			"id": "work-upcoming-meetings",
+			"area": "work",
+			"name": "See your meetings with clients this week next to your work",
+			"pipelinq": "no",
+			"hubspot-crm": "unknown",
+			"pipedrive": "unknown",
+			"espocrm": "unknown",
+			"odoo-crm": "unknown",
+			"kiss": "unknown",
+			"provider": "pipelinq",
+			"providerHow": "read in src/views/MyWork.vue and openspec/changes/my-work-roadmap",
+			"feature": "My work",
+			"featureConfidence": "high",
+			"built": {
+				"state": "specified",
+				"evidence": "no calendar read in src/views/MyWork.vue or lib/Service/WorklistService.php; REQ-MW-130",
+				"owner": "ConductionNL/pipelinq",
+				"change": "my-work-roadmap"
+			},
+			"source": "spec-round-2026-10-07",
+			"screen": {
+				"board": null,
+				"reason": "not designed: no board draws meetings on My work"
+			}
+		},
+		{
+			"id": "work-layout",
+			"area": "work",
+			"name": "Choose which sections your work page shows and in what order",
+			"pipelinq": "no",
+			"hubspot-crm": "unknown",
+			"pipedrive": "unknown",
+			"espocrm": "unknown",
+			"odoo-crm": "unknown",
+			"kiss": "unknown",
+			"provider": "pipelinq",
+			"providerHow": "read in src/views/MyWork.vue and openspec/changes/my-work-roadmap",
+			"feature": "My work",
+			"featureConfidence": "high",
+			"built": {
+				"state": "specified",
+				"evidence": "src/views/MyWork.vue has a fixed layout; REQ-MW-160",
+				"owner": "ConductionNL/pipelinq",
+				"change": "my-work-roadmap"
+			},
+			"source": "spec-round-2026-10-07",
+			"screen": {
+				"board": null,
+				"reason": "not designed: no board draws a layout panel"
+			}
+		},
+		{
+			"id": "work-team-view",
+			"area": "work",
+			"name": "Look at your team's open work as a manager, and at one member's",
+			"pipelinq": "no",
+			"hubspot-crm": "unknown",
+			"pipedrive": "unknown",
+			"espocrm": "unknown",
+			"odoo-crm": "unknown",
+			"kiss": "unknown",
+			"provider": "pipelinq",
+			"providerHow": "read in src/views/MyWork.vue and openspec/changes/my-work-roadmap",
+			"feature": "My work",
+			"featureConfidence": "high",
+			"built": {
+				"state": "specified",
+				"evidence": "lib/Service/WorklistService.php:209 getMine() reads one user only; REQ-MW-180",
+				"owner": "ConductionNL/pipelinq",
+				"change": "my-work-roadmap"
+			},
+			"source": "spec-round-2026-10-07",
+			"screen": {
+				"canvas": "5NkFW28vZUUij43xzxHg5a",
+				"board": "PqMijnWerk"
+			}
+		},
+		{
+			"id": "work-auto-refresh",
+			"area": "work",
+			"name": "See new work arrive without reloading the page",
+			"pipelinq": "no",
+			"hubspot-crm": "unknown",
+			"pipedrive": "unknown",
+			"espocrm": "unknown",
+			"odoo-crm": "unknown",
+			"kiss": "unknown",
+			"provider": "pipelinq",
+			"providerHow": "read in src/views/MyWork.vue and openspec/changes/my-work-roadmap",
+			"feature": "My work",
+			"featureConfidence": "high",
+			"built": {
+				"state": "specified",
+				"evidence": "src/views/MyWork.vue fetches once on load and has no refresh button; REQ-MW-190",
+				"owner": "ConductionNL/pipelinq",
+				"change": "my-work-roadmap"
+			},
+			"source": "spec-round-2026-10-07",
+			"screen": {
+				"board": null,
+				"reason": "not designed: no board draws a refresh control on My work"
+			}
+		},
+		{
+			"id": "work-filter-priority-pipeline",
+			"area": "work",
+			"name": "Narrow your work list to urgent items or to one pipeline",
+			"pipelinq": "no",
+			"hubspot-crm": "unknown",
+			"pipedrive": "unknown",
+			"espocrm": "unknown",
+			"odoo-crm": "unknown",
+			"kiss": "unknown",
+			"provider": "pipelinq",
+			"providerHow": "read in src/views/MyWork.vue and openspec/changes/my-work-roadmap",
+			"feature": "My work",
+			"featureConfidence": "high",
+			"built": {
+				"state": "specified",
+				"evidence": "src/views/MyWork.vue filters by type only; REQ-MW-200",
+				"owner": "ConductionNL/pipelinq",
+				"change": "my-work-roadmap"
+			},
+			"source": "spec-round-2026-10-07",
+			"screen": {
+				"board": null,
+				"reason": "not designed: PqMijnWerk draws the type filter and Sort, not a priority or pipeline filter"
+			}
+		},
+		{
 			"id": "mkt-blast",
 			"area": "marketing",
 			"name": "Send one mailing to a list of clients",
