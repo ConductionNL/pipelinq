@@ -81,7 +81,7 @@ class ShillinqApController extends Controller {
 	#[AuthorizedAdminSetting(Application::APP_ID)]
 	public function retry(string $id): JSONResponse {
 		if ($this->apService->shouldDispatch() === false) {
-			return new JSONResponse(['error' => 'Shillinq AP integration is not configured.'], 400);
+			return new JSONResponse(['error' => 'Shillinq is not installed.'], 400);
 		}
 
 		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');

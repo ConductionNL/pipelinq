@@ -231,9 +231,8 @@ class Application extends App implements IBootstrap {
 		);
 
 		// Shillinq WIP integration: time-entry approval dispatches a CloudEvent
-		// to the configured shillinq webhook (pipelinq-time-to-shillinq-wip /
-		// REQ-WIP-001). The listener is idempotent and a no-op when the
-		// shillinq_wip_webhook_url app-config value is unset.
+		// to Shillinq (pipelinq-time-to-shillinq-wip / REQ-WIP-001). The listener
+		// is idempotent and a no-op when the Shillinq app is not installed.
 		$context->registerEventListener(
 			event: TimeEntryApprovedEvent::class,
 			listener: TimeApprovalListener::class

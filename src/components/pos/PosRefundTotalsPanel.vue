@@ -5,7 +5,7 @@
 <template>
 	<div class="pos-refund-totals">
 		<div class="pos-refund-totals__row">
-			<span>{{ t('pipelinq', 'Refund amount (excl. BTW)') }}</span>
+			<span>{{ t('pipelinq', 'Refund amount (excl. VAT)') }}</span>
 			<span>{{ formatEur(totals.refundAmount) }}</span>
 		</div>
 		<div class="pos-refund-totals__row pos-refund-totals__row--tax">

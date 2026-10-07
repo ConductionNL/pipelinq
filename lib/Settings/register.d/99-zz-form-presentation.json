@@ -6,23 +6,31 @@
         "slug": "product",
         "properties": {
           "name": {
-            "order": 1
+            "order": 1,
+            "description": "The name of the product or service.",
+            "x-notes": "Product or service name (schema:name)"
           },
           "description": {
             "order": 2,
-            "visible": true
+            "visible": true,
+            "description": "What the product or service is.",
+            "x-notes": "Detailed product description (schema:description)"
           },
           "type": {
             "order": 3
           },
           "category": {
-            "order": 4
+            "order": 4,
+            "description": "The product category.",
+            "x-notes": "UUID reference to a ProductCategory object"
           },
           "status": {
             "order": 5
           },
           "unitPrice": {
-            "order": 6
+            "order": 6,
+            "description": "The default selling price per unit, in the reporting currency.",
+            "x-notes": "Default selling price per unit, in the reporting currency (schema:price)"
           },
           "vatClass": {
             "order": 7
@@ -31,10 +39,14 @@
             "order": 8
           },
           "sku": {
-            "order": 9
+            "order": 9,
+            "description": "Your own product code.",
+            "x-notes": "Stock keeping unit or product code (schema:sku)"
           },
           "barcode": {
-            "order": 10
+            "order": 10,
+            "description": "The EAN-13 or UPC-A barcode, for scanning at the till.",
+            "x-notes": "EAN-13 / UPC-A barcode for scanner lookup (schema:gtin)"
           },
           "cost": {
             "order": 11
@@ -54,7 +66,9 @@
           },
           "masterEntityRef": {
             "order": 91,
-            "x-help": "The master entity this record belongs to. Records in different apps that describe the same party or product share one master entity. You rarely set this by hand: matching links it."
+            "x-help": "The master entity this record belongs to. Records in different apps that describe the same party or product share one master entity. You rarely set this by hand: matching links it.",
+            "description": "",
+            "x-notes": "UUID of the Master Entity this product maps to (MDM). Null for legacy / un-linked products."
           }
         }
       },
@@ -62,47 +76,73 @@
         "slug": "client",
         "properties": {
           "name": {
-            "order": 1
+            "order": 1,
+            "description": "",
+            "x-notes": "Denormalised read-only mirror of the NC contact name (vCard FN). The Nextcloud Contact is authoritative; refreshed on every sync by ContactVcardService. Edit identity in the addressbook."
           },
           "type": {
-            "order": 2
+            "order": 2,
+            "description": "A person or an organisation.",
+            "x-notes": "Entity type: person or organization (maps to schema:Person or schema:Organization)"
           },
           "industry": {
-            "order": 3
+            "order": 3,
+            "description": "The sectors this client works in.",
+            "x-notes": "The sectors this client works in. Pick one or more, or type your own (schema:industry)."
           },
           "email": {
-            "order": 4
+            "order": 4,
+            "description": "",
+            "x-notes": "Denormalised read-only mirror of the NC contact email (vCard EMAIL). The Nextcloud Contact is authoritative."
           },
           "phone": {
-            "order": 5
+            "order": 5,
+            "description": "",
+            "x-notes": "Denormalised read-only mirror of the NC contact phone (vCard TEL). The Nextcloud Contact is authoritative."
           },
           "website": {
-            "order": 6
+            "order": 6,
+            "description": "",
+            "x-notes": "Denormalised read-only mirror of the NC contact website (vCard URL). The Nextcloud Contact is authoritative."
           },
           "address": {
-            "order": 7
+            "order": 7,
+            "description": "",
+            "x-notes": "Denormalised read-only mirror of the NC contact postal address. The Nextcloud Contact is authoritative."
           },
           "accountOwner": {
-            "order": 8
+            "order": 8,
+            "description": "The colleague responsible for this client.",
+            "x-notes": "Nextcloud user UID of the account owner / responsible sales agent."
           },
           "lifecycleStage": {
-            "order": 9
+            "order": 9,
+            "description": "How far this client is in the relationship, from lead to customer.",
+            "x-notes": "CRM relationship lifecycle stage of this account."
           },
           "accountStatus": {
-            "order": 10
+            "order": 10,
+            "description": "Whether you work with this client now.",
+            "x-notes": "Lifecycle status of the CRM relationship/account record (distinct from the contact identity)."
           },
           "segment": {
-            "order": 11
+            "order": 11,
+            "description": "A group for sales priority, for example small business, enterprise or public sector.",
+            "x-notes": "Account segment / tier for sales prioritisation (e.g. SMB, enterprise, public-sector)."
           },
           "parentOrganisation": {
             "order": 12
           },
           "correspondenceLanguage": {
             "order": 13,
-            "x-default": "current-language"
+            "x-default": "current-language",
+            "description": "The language this client asked to be written in. Leave it empty when they did not say.",
+            "x-notes": "The BCP 47 language tag this party asked to be written in. Optional and unset by default, and unset means unset: a party with a Dutch name and a Dutch address who has stated nothing carries nothing here. The resolver answers what would be used instead."
           },
           "timezone": {
-            "order": 14
+            "order": 14,
+            "description": "The client's timezone, so messages go out at a sensible local time.",
+            "x-notes": "IANA timezone name for this client (e.g. \"Europe/Amsterdam\"), used to schedule sends at a sensible local time."
           },
           "preferredChannel": {
             "order": 15
@@ -122,7 +162,9 @@
           },
           "masterEntityRef": {
             "order": 91,
-            "x-help": "The master entity this record belongs to. Records in different apps that describe the same party or product share one master entity. You rarely set this by hand: matching links it."
+            "x-help": "The master entity this record belongs to. Records in different apps that describe the same party or product share one master entity. You rarely set this by hand: matching links it.",
+            "description": "",
+            "x-notes": "UUID of the Master Entity this account maps to (MDM). Null for legacy / un-linked accounts."
           },
           "language": {
             "visible": false
@@ -133,27 +175,41 @@
         "slug": "contact",
         "properties": {
           "name": {
-            "order": 1
+            "order": 1,
+            "description": "",
+            "x-notes": "Denormalised read-only mirror of the NC contact name (vCard FN). The Nextcloud Contact is authoritative; refreshed on every sync by ContactVcardService. Edit identity in the addressbook."
           },
           "client": {
             "order": 2,
-            "x-allow-create": true
+            "x-allow-create": true,
+            "description": "The client this person works for.",
+            "x-notes": "UUID reference to the parent client object"
           },
           "role": {
-            "order": 3
+            "order": 3,
+            "description": "Job title or role in the organisation.",
+            "x-notes": "Job title or role within the organization (vCard ROLE)"
           },
           "email": {
-            "order": 4
+            "order": 4,
+            "description": "",
+            "x-notes": "Denormalised read-only mirror of the NC contact email (vCard EMAIL). The Nextcloud Contact is authoritative."
           },
           "phone": {
-            "order": 5
+            "order": 5,
+            "description": "",
+            "x-notes": "Denormalised read-only mirror of the NC contact phone (vCard TEL). The Nextcloud Contact is authoritative."
           },
           "correspondenceLanguage": {
             "order": 6,
-            "x-default": "current-language"
+            "x-default": "current-language",
+            "description": "The language this person asked to be written in. Leave it empty when they did not say.",
+            "x-notes": "The BCP 47 language tag this party asked to be written in. Optional and unset by default; nothing infers it."
           },
           "timezone": {
-            "order": 7
+            "order": 7,
+            "description": "This person's timezone, so messages go out at a sensible local time.",
+            "x-notes": "IANA timezone name for this contact person (e.g. \"Europe/Amsterdam\"), used to schedule sends at a sensible local time."
           },
           "preferredChannel": {
             "order": 8
@@ -182,7 +238,9 @@
           },
           "masterEntityRef": {
             "order": 91,
-            "x-help": "The master entity this record belongs to. Records in different apps that describe the same party or product share one master entity. You rarely set this by hand: matching links it."
+            "x-help": "The master entity this record belongs to. Records in different apps that describe the same party or product share one master entity. You rarely set this by hand: matching links it.",
+            "description": "",
+            "x-notes": "UUID of the Master Entity this contact maps to (MDM). Null for legacy / un-linked contacts."
           },
           "language": {
             "visible": false
@@ -296,13 +354,19 @@
         "slug": "crmTask",
         "properties": {
           "subject": {
-            "order": 1
+            "order": 1,
+            "description": "What needs to be done.",
+            "x-notes": "Task subject line (VNG gevraagdeHandeling / schema:name)"
           },
           "type": {
-            "order": 2
+            "order": 2,
+            "description": "A callback, a follow-up or an information request.",
+            "x-notes": "Task type: terugbelverzoek (callback), opvolgtaak (follow-up), or informatievraag (information request)"
           },
           "status": {
-            "order": 3
+            "order": 3,
+            "description": "Where the task stands.",
+            "x-notes": "Task lifecycle status (VNG status)"
           },
           "priority": {
             "order": 4
@@ -311,19 +375,29 @@
             "order": 5
           },
           "assigneeUserId": {
-            "order": 6
+            "order": 6,
+            "description": "The colleague who handles this task.",
+            "x-notes": "Nextcloud user UID of the assigned handler (VNG toegewezenAanMedewerker)"
           },
           "assigneeGroupId": {
-            "order": 7
+            "order": 7,
+            "description": "The team that handles this task.",
+            "x-notes": "Nextcloud group ID for team/department assignment"
           },
           "clientId": {
-            "order": 8
+            "order": 8,
+            "description": "The client this task is about.",
+            "x-notes": "UUID reference to the associated client"
           },
           "lead": {
-            "order": 9
+            "order": 9,
+            "description": "The deal this task belongs to.",
+            "x-notes": "UUID reference to the deal this task belongs to. Set automatically when the task is created from the Tasks tab on a lead — the object-list widget merges its resolved filter into the create payload, so the deal is pre-linked without the user picking it. A task may hang off a client, a request or a deal; the three are independent."
           },
           "requestId": {
-            "order": 10
+            "order": 10,
+            "description": "The request this task belongs to.",
+            "x-notes": "UUID reference to the associated request. Requests were folded into the `ticket` supertype by 99-unify-ticket-supertype, so this resolves to a ticket; the property keeps its stored name because renaming it would be a data migration."
           },
           "callbackPhoneNumber": {
             "order": 11
@@ -335,7 +409,9 @@
             "order": 13
           },
           "createdBy": {
-            "order": 14
+            "order": 14,
+            "description": "The colleague who created this task.",
+            "x-notes": "Nextcloud user UID of the agent who created this task"
           }
         }
       }

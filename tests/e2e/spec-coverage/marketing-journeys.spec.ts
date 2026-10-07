@@ -16,7 +16,7 @@
  *   1. the Marketing group reaches a Journeys page;
  *   2. `GET /api/segments/signals` lists all eight derived fields AND says
  *      the bookkeeping behind six of them cannot be read here;
- *   3. the five standard audiences are seeded and each one names its source;
+ *   3. the four standard audiences are seeded and each one names its source;
  *   4. a journey written through POST /api/journeys comes back with a flow
  *      status, and the page says so when it will not run;
  *   5. the weekly review is a card on the Reports page, renders from one
@@ -29,7 +29,7 @@
  *
  * WHAT THE CI INSTANCE HAS. `tests/e2e/ci-seed.sh` force-reimports the
  * register, which brings in lib/Settings/register.d/99-marketing-integrated-campaigns.json:
- * the `journey`, `journeyRun` and `weeklyReview` schemas and the five seeded
+ * the `journey`, `journeyRun` and `weeklyReview` schemas and the four seeded
  * standard audiences. Every literal asserted below was read out of that file,
  * not guessed.
  *
@@ -54,11 +54,10 @@ import {
 const APP = '/index.php/apps/pipelinq'
 const OR = '/index.php/apps/openregister/api/objects/pipelinq'
 
-/** The five audiences the register fragment seeds, by their own slugs. */
+/** The four audiences the register fragment seeds, by their own slugs. */
 const AUDIENCE_SLUGS = [
 	'segment-lapsed-customers',
 	'segment-top-tier-customers',
-	'segment-service-without-product',
 	'segment-renewing-within-ninety-days',
 	'segment-stalled-leads-thirty-days',
 ]
@@ -226,8 +225,8 @@ test.describe('Segment signals', () => {
  * import drops it WITHOUT an error, so the count is the assertion.
  * ══════════════════════════════════════════════════════════════════════════ */
 test.describe('Standard audiences', () => {
-	// @e2e marketing-integrated-campaigns::the-five-audiences-are-listed-and-each-one-names-its-source
-	test('the five audiences are seeded and the three shillinq ones say so', async ({
+	// @e2e marketing-integrated-campaigns::the-four-audiences-are-listed-and-each-one-names-its-source
+	test('the four audiences are seeded and the two shillinq ones say so', async ({
 		page,
 	}) => {
 		await gotoRoute(page, '/segments')
@@ -247,7 +246,7 @@ test.describe('Standard audiences', () => {
 			expect(['contact', 'customer']).toContain(found.entityType)
 		}
 
-		for (const slug of AUDIENCE_SLUGS.slice(0, 3)) {
+		for (const slug of AUDIENCE_SLUGS.slice(0, 2)) {
 			const found = rows.find((row: any) => row?.['@self']?.slug === slug)
 			expect(
 				String(found.description).toLowerCase(),

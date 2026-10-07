@@ -83,6 +83,7 @@ class DemoRegisterImporter {
 	 * @param SchemaMapper         $schemaMapper         Resolves a schema slug to its id.
 	 * @param ObjectService        $objectService        Finds and deletes stored records.
 	 * @param LoggerInterface      $logger               Records what was imported or removed.
+	 * @param DemoUserFields       $userFields           Points user fields at existing users.
 	 */
 	public function __construct(
 		private readonly IAppManager $appManager,
@@ -91,6 +92,7 @@ class DemoRegisterImporter {
 		private readonly SchemaMapper $schemaMapper,
 		private readonly ObjectService $objectService,
 		private readonly LoggerInterface $logger,
+		private readonly DemoUserFields $userFields,
 	) {
 	}//end __construct()
 
@@ -106,6 +108,8 @@ class DemoRegisterImporter {
 		if ($data === null) {
 			return ['imported' => 0, 'skipped' => 0];
 		}
+
+		$data['components']['objects'] = $this->userFields->withRealUsers(objects: $data['components']['objects']);
 
 		$result = $this->configurationService->importFromApp(
 			appId: self::CONFIG_APP_ID,

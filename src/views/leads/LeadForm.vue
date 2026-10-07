@@ -5,8 +5,8 @@
 			<NcTextField
 				:modelValue="form.title"
 				:label="t('pipelinq', 'Title')"
-				:error="!!errors.title"
-				:helperText="errors.title"
+				:error="!!shownErrors.title"
+				:helperText="shownErrors.title"
 				@update:modelValue="(v) => (form.title = v)" />
 		</div>
 
@@ -35,8 +35,8 @@
 					:modelValue="form.value === null ? '' : String(form.value)"
 					:label="t('pipelinq', 'Value')"
 					type="number"
-					:error="!!errors.value"
-					:helperText="errors.value"
+					:error="!!shownErrors.value"
+					:helperText="shownErrors.value"
 					@update:modelValue="
 						(v) => (form.value = v === '' ? null : Number(v))
 					" />
@@ -46,8 +46,8 @@
 					:modelValue="form.currency"
 					:label="t('pipelinq', 'Currency')"
 					maxlength="3"
-					:error="!!errors.currency"
-					:helperText="errors.currency"
+					:error="!!shownErrors.currency"
+					:helperText="shownErrors.currency"
 					@update:modelValue="
 						(v) => (form.currency = normaliseCurrency(v))
 					" />
@@ -102,8 +102,8 @@
 					:preload="true"
 					:createHandler="createClient"
 					@update:modelValue="onClientChange" />
-				<p v-if="errors.client" class="field-error" role="alert">
-					{{ errors.client }}
+				<p v-if="shownErrors.client" class="field-error" role="alert">
+					{{ shownErrors.client }}
 				</p>
 			</div>
 			<div class="form-group" data-testid="lead-form-contact">
@@ -128,6 +128,8 @@
 
 		<ClientCreateDialog
 			v-if="clientDialogOpen"
+			:name="pendingName"
+			stayOnPage
 			@created="onClientCreated"
 			@close="closeClientDialog" />
 		<ContactCreateDialog
@@ -151,8 +153,8 @@
 					:reduce="(o) => o.value"
 					:placeholder="t('pipelinq', 'Select pipeline')"
 					@update:modelValue="onPipelineChange" />
-				<p v-if="errors.pipeline" class="field-error" role="alert">
-					{{ errors.pipeline }}
+				<p v-if="shownErrors.pipeline" class="field-error" role="alert">
+					{{ shownErrors.pipeline }}
 				</p>
 			</div>
 			<div class="form-group" data-testid="lead-form-stage">
@@ -195,6 +197,7 @@ import {
 import ClientCreateDialog from '../../dialogs/ClientCreateDialog.vue'
 import ContactCreateDialog from '../../dialogs/ContactCreateDialog.vue'
 import linkedPartyCascadeMixin from '../../mixins/linkedPartyCascadeMixin.js'
+import touchedErrorsMixin from '../../mixins/touchedErrorsMixin.js'
 import { isCurrencyCode, normaliseCurrency } from '../../services/leadCurrency.js'
 import { toDateInputString, toDateObject } from '../../services/localeUtils.js'
 import { pipelineAppliesTo } from '../../services/pipelineUtils.js'
@@ -214,7 +217,7 @@ export default {
 		NcTextField,
 	},
 
-	mixins: [linkedPartyCascadeMixin],
+	mixins: [linkedPartyCascadeMixin, touchedErrorsMixin],
 
 	props: {
 		lead: {
@@ -500,6 +503,7 @@ export default {
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-50
 		 */
 		onSave() {
+			this.markSaveAttempted()
 			if (!this.isValid) return
 
 			const data = { ...this.form }

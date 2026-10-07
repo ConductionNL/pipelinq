@@ -24,6 +24,7 @@ import {
 	registerMappingPlugin,
 	relationsPlugin,
 } from '@conduction/nextcloud-vue'
+import { contactWriteBackPlugin } from '../plugins/contactWriteBack.js'
 
 export const useObjectStore = createObjectStore('object', {
 	plugins: [
@@ -31,6 +32,8 @@ export const useObjectStore = createObjectStore('object', {
 		auditTrailsPlugin(),
 		relationsPlugin(),
 		registerMappingPlugin(),
+		// Name, email and phone edits reach the linked Nextcloud Contact too.
+		contactWriteBackPlugin(),
 	],
 	// tenantContext: useTenantContext, // Activate once nc-vue multi-tenancy-context ships.
 })

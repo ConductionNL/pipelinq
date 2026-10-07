@@ -28,19 +28,16 @@ namespace OCA\Pipelinq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
-use OCA\Pipelinq\AppInfo\Application;
 use OCP\EventDispatcher\Event;
-use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
  * Builds and dispatches Shillinq AP voucher CloudEvents.
  *
- * The shillinq_ap_webhook_url app-config value is the integration toggle: an
- * empty or non-HTTPS value disables dispatch ({@see self::shouldDispatch()}).
- * When configured, expense approvals are emitted as CloudEvents 1.0 envelopes
- * through OpenRegister's WebhookService.
+ * The detected Shillinq app is the integration toggle: without it dispatch is
+ * off ({@see self::shouldDispatch()}). With it, expense approvals are emitted
+ * as CloudEvents 1.0 envelopes through OpenRegister's WebhookService.
  *
  * @spec openspec/changes/pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-003
  */
@@ -62,12 +59,12 @@ class ShillinqApService {
 	/**
 	 * Constructor.
 	 *
-	 * @param IAppConfig $appConfig The app configuration.
+	 * @param IntegrationDetector $integrations Detects the Shillinq app on this server.
 	 * @param ContainerInterface $container The DI container (OpenRegister WebhookService lookup).
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
-		private IAppConfig $appConfig,
+		private IntegrationDetector $integrations,
 		private ContainerInterface $container,
 		private LoggerInterface $logger,
 	) {
@@ -76,25 +73,17 @@ class ShillinqApService {
 	/**
 	 * Whether AP dispatch is enabled.
 	 *
-	 * Returns true only when shillinq_ap_webhook_url is a non-empty,
-	 * well-formed HTTPS URL. An unconfigured or malformed value disables the
-	 * integration so listeners no-op silently (REQ-AP-002 Scenario 6).
+	 * True when the Shillinq app is installed on this server. Nobody types a
+	 * webhook URL: the event travels internally through OpenRegister's
+	 * WebhookService, so detecting Shillinq is all the configuration there is.
+	 * Without Shillinq the listeners no-op silently.
 	 *
-	 * @return bool True when a valid HTTPS webhook URL is configured.
+	 * @return bool True when Shillinq is installed.
 	 *
-	 * @spec openspec/changes/pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-003
+	 * @spec openspec/changes/pipelinq-audit-admin-forms-pos/specs/admin-settings/spec.md#requirement-shillinq-hand-offs-follow-the-detected-app
 	 */
 	public function shouldDispatch(): bool {
-		$url = $this->webhookUrl();
-		if ($url === '') {
-			return false;
-		}
-
-		if (filter_var($url, FILTER_VALIDATE_URL) === false) {
-			return false;
-		}
-
-		return str_starts_with($url, 'https://');
+		return $this->integrations->shillinq()['installed'] === true;
 	}//end shouldDispatch()
 
 	/**
@@ -198,15 +187,6 @@ class ShillinqApService {
 			return false;
 		}//end try
 	}//end dispatch()
-
-	/**
-	 * Read the configured Shillinq AP webhook URL.
-	 *
-	 * @return string The configured URL, or an empty string when unset.
-	 */
-	private function webhookUrl(): string {
-		return trim($this->appConfig->getValueString(Application::APP_ID, 'shillinq_ap_webhook_url', ''));
-	}//end webhookUrl()
 
 	/**
 	 * Current UTC timestamp in ISO 8601 format.

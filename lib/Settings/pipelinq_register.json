@@ -3746,37 +3746,6 @@
         "@self": {
           "register": "pipelinq",
           "schema": "skill",
-          "slug": "skill-vergunningen",
-          "id": "b1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c21"
-        },
-        "title": "Vergunningen",
-        "description": "Behandeling van omgevingsvergunningen en meldingen op basis van de Wabo",
-        "categories": [
-          "vergunningen",
-          "omgeving"
-        ],
-        "isActive": true
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "skill",
-          "slug": "skill-wmo-zorg",
-          "id": "b1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c22"
-        },
-        "title": "WMO / Zorg",
-        "description": "Begeleiding bij Wmo-aanvragen, hulpmiddelen en zorgvragen",
-        "categories": [
-          "wmo",
-          "zorg",
-          "hulpmiddelen"
-        ],
-        "isActive": true
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "skill",
           "slug": "skill-algemene-dienstverlening",
           "id": "b1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c23"
         },
