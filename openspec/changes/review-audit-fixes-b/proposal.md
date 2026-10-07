@@ -23,9 +23,9 @@ The audit (`audit/audit-3`, coordinator ledger AUDIT-3) found:
   activity" on the client page showed "Request failed with status code 404".
   `Customer360Controller::canReadClient()` called `ObjectService::find()`
   positionally, so the register landed in `?array $_extend`; the TypeError was
-  swallowed and every caller got 404 (pipelinq#805). The privileged-group check
-  added in front of the guard since #805 was filed is now the authorisation
-  decision, so the existence check behind it no longer opens an IDOR.
+  swallowed and every caller got 404 (pipelinq#805). Ruben decided on 7 October
+  that access follows the client's own read rights: whoever may read the client
+  sees its 360 widgets, and the privileged-group check goes.
 - **F1.** Six demo leads pointed at a deleted pipeline. The demo seed is
   idempotent by title, so a reseed made a new pipeline and left the leads on
   the dead id. They counted in the open pipeline and the forecast and showed on
@@ -48,7 +48,9 @@ The audit (`audit/audit-3`, coordinator ledger AUDIT-3) found:
 ## What changes
 
 - `Customer360Controller` calls `find()` with named arguments, RBAC and
-  multitenancy on; the #805 tripwire test becomes a test of the fixed call.
+  multitenancy on, and drops the privileged-group check. OpenRegister's
+  `NotAuthorizedException` is a 403, a missing client a 404, any other failure
+  a 500. The #805 tripwire test becomes a test of the fixed call.
 - `DemoSeedService::seed()` re-points an existing demo object's `pipeline`
   at the pipeline this run resolved, and reports it as `relinked`.
 - New `OrphanedLeadPlacer::forOrphanedLead()`, `OrphanedLeadRepairService` and
@@ -69,9 +71,8 @@ The audit (`audit/audit-3`, coordinator ledger AUDIT-3) found:
   names saved steps from it; a failed product read is no longer cached as
   the uuid.
 - `tender` joins the default lead sources.
-
-## Out of scope
-
-- **E1, update notifications.** OpenRegister's notification rules cannot
-  exclude the person who made the change, which Ruben's decision requires.
-  Reported to the coordinator; no rule is added until OpenRegister can say it.
+- E1: `x-openregister-notifications` update rules (`trigger.type: updated`,
+  `field` recipients) on client, contact, lead, ticket, crmTask,
+  appointmentService and appointmentBooking, addressed to the object's owner
+  and assignee fields. Ruben accepted on 7 October that the person who made
+  the change may be notified too, because OpenRegister cannot leave them out.
