@@ -170,7 +170,8 @@
 			<ServiceStepsEditor
 				v-if="editingSteps"
 				v-model="draftSteps"
-				:durationMinutes="serviceData.durationMinutes" />
+				:durationMinutes="serviceData.durationMinutes"
+				@catalogue="rememberProductNames" />
 			<div v-else-if="!steps.length" class="section-empty">
 				<p>{{ t('pipelinq', 'Single-step service — no composition.') }}</p>
 			</div>
@@ -529,11 +530,34 @@ export default {
 			].filter((id) => !(id in this.productNames))
 			for (const id of ids) {
 				const product = await this.objectStore.fetchObject('product', id)
-				this.productNames = {
-					...this.productNames,
-					[id]: product?.name || product?.title || id,
+				const name = product?.name || product?.title
+				// A failed read is not remembered: the id stays unknown, so the
+				// next change of the steps asks again instead of showing the
+				// uuid until a reload.
+				if (name) {
+					this.productNames = { ...this.productNames, [id]: name }
 				}
 			}
+		},
+
+		/**
+		 * Remember the names of the products the step editor loaded, so a
+		 * step saved with a product shows its name at once.
+		 *
+		 * @param {Array<object>} products The catalogue rows.
+		 * @return {void}
+		 *
+		 * @spec openspec/changes/review-audit-fixes-b/specs/appointment-booking/spec.md#requirement-a-saved-composition-step-shows-its-product-name-req-raf-040
+		 */
+		rememberProductNames(products) {
+			const names = { ...this.productNames }
+			for (const product of products || []) {
+				const name = product?.name || product?.title
+				if (product?.id && name) {
+					names[product.id] = name
+				}
+			}
+			this.productNames = names
 		},
 
 		/**
