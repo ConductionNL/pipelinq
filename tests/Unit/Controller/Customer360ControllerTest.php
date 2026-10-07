@@ -25,8 +25,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Exception\NotAuthorizedException;
 use OCA\Pipelinq\Controller\Customer360Controller;
-use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\Customer360SummaryService;
 use OCP\IAppConfig;
 use OCP\IRequest;
@@ -53,7 +53,7 @@ class Customer360ControllerTest extends TestCase {
 	 * @param mixed $summaryOrThrow The summary array to return, or a \Throwable to throw.
 	 * @param LoggerInterface|null $logger Optional pre-built logger mock (for asserting calls).
 	 * @param array|null $findCalls Receives the arguments of every ObjectService::find() call.
-	 * @param bool $privileged Whether the caller is in a privileged group.
+	 * @param \Throwable|null $findThrows What ObjectService::find() throws, if anything.
 	 *
 	 * @return Customer360Controller
 	 */
@@ -64,7 +64,7 @@ class Customer360ControllerTest extends TestCase {
 		mixed $summaryOrThrow,
 		?LoggerInterface $logger = null,
 		?array &$findCalls = null,
-		bool $privileged = true,
+		?\Throwable $findThrows = null,
 	): Customer360Controller {
 		$request = $this->createMock(IRequest::class);
 		$request->method('getParam')->willReturnCallback(
@@ -108,8 +108,12 @@ class Customer360ControllerTest extends TestCase {
 
 		$objectService = $this->createMock(\OCA\OpenRegister\Service\ObjectService::class);
 		$objectService->method('find')->willReturnCallback(
-			static function (...$args) use ($foundEntity, &$findCalls) {
+			static function (...$args) use ($foundEntity, &$findCalls, $findThrows) {
 				$findCalls[] = $args;
+				if ($findThrows !== null) {
+					throw $findThrows;
+				}
+
 				return $foundEntity;
 			}
 		);
@@ -128,7 +132,6 @@ class Customer360ControllerTest extends TestCase {
 			$summaryService,
 			$userSession,
 			$appConfig,
-			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => $privileged, 'mayAccess' => $privileged]),
 			$container,
 			$logger ?? $this->createMock(LoggerInterface::class),
 		);
@@ -171,9 +174,9 @@ class Customer360ControllerTest extends TestCase {
 	}//end testSummaryReturns400WhenClientIdMissing()
 
 	/**
-	 * IDOR guard: when the client does not resolve through the RBAC-scoped
-	 * ObjectService::find() (hidden, wrong tenant, or genuinely absent), the
-	 * endpoint 404s and never calls the summary service.
+	 * When the client does not resolve through the RBAC-scoped
+	 * ObjectService::find() (absent, or in another tenant), the endpoint 404s
+	 * and never calls the summary service.
 	 *
 	 * @return void
 	 */
@@ -299,7 +302,7 @@ class Customer360ControllerTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/review-audit-fixes-b/specs/customer-360/spec.md#requirement-the-customer-360-summary-answers-privileged-users-req-raf-030
+	 * @spec openspec/changes/review-audit-fixes-b/specs/customer-360/spec.md#requirement-the-customer-360-summary-follows-the-clients-read-rights-req-raf-030
 	 */
 	public function testReadGuardPassesRegisterAndSchemaByName(): void {
 		$calls = [];
@@ -324,26 +327,51 @@ class Customer360ControllerTest extends TestCase {
 	}//end testReadGuardPassesRegisterAndSchemaByName()
 
 	/**
-	 * A caller outside the privileged groups gets 403 and nothing is read.
+	 * A caller OpenRegister will not let read the client gets 403, and the
+	 * summary service is never reached. Access follows the client's own read
+	 * rights, not a group list (Ruben, 7 October).
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/review-audit-fixes-b/specs/customer-360/spec.md#requirement-the-customer-360-summary-answers-privileged-users-req-raf-030
+	 * @spec openspec/changes/review-audit-fixes-b/specs/customer-360/spec.md#requirement-the-customer-360-summary-follows-the-clients-read-rights-req-raf-030
 	 */
-	public function testNonPrivilegedCallerIsForbidden(): void {
-		$calls = [];
+	public function testCallerWithoutReadAccessIsForbidden(): void {
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->never())->method('info');
+
 		$controller = $this->buildController(
 			clientId: 'client-1',
 			foundClient: ['name' => 'Client', '@self' => ['id' => 'client-1']],
 			uid: 'agent-2',
-			summaryOrThrow: ['clientId' => 'client-1'],
-			findCalls: $calls,
-			privileged: false,
+			summaryOrThrow: ['clientId' => 'client-1', 'openTicketCount' => 99],
+			logger: $logger,
+			findThrows: new NotAuthorizedException('no read'),
 		);
 
 		$response = $controller->summary();
 
 		$this->assertSame(403, $response->getStatus());
-		$this->assertSame([], $calls);
-	}//end testNonPrivilegedCallerIsForbidden()
+		$this->assertNotSame(99, $response->getData()['openTicketCount'] ?? null);
+	}//end testCallerWithoutReadAccessIsForbidden()
+
+	/**
+	 * An unexpected read failure fails closed as a 500, never as a grant.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/review-audit-fixes-b/specs/customer-360/spec.md#requirement-the-customer-360-summary-follows-the-clients-read-rights-req-raf-030
+	 */
+	public function testUnexpectedReadFailureIsAnError(): void {
+		$controller = $this->buildController(
+			clientId: 'client-1',
+			foundClient: ['name' => 'Client', '@self' => ['id' => 'client-1']],
+			uid: 'agent-2',
+			summaryOrThrow: ['clientId' => 'client-1', 'openTicketCount' => 99],
+			findThrows: new \RuntimeException('OpenRegister unreachable'),
+		);
+
+		$response = $controller->summary();
+
+		$this->assertSame(500, $response->getStatus());
+	}//end testUnexpectedReadFailureIsAnError()
 }//end class

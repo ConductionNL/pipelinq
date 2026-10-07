@@ -28,10 +28,11 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Controller;
 
 use DateTimeImmutable;
+use OCA\OpenRegister\Exception\NotAuthorizedException;
 use OCA\Pipelinq\AppInfo\Application;
-use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\Customer360SummaryService;
 use OCP\AppFramework\Controller;
+use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IAppConfig;
@@ -48,13 +49,32 @@ use Throwable;
  */
 class Customer360Controller extends Controller {
 	/**
+	 * The caller may read the client.
+	 */
+	private const ACCESS_GRANTED = 'granted';
+
+	/**
+	 * OpenRegister refused the read.
+	 */
+	private const ACCESS_DENIED = 'denied';
+
+	/**
+	 * The client does not exist.
+	 */
+	private const ACCESS_MISSING = 'missing';
+
+	/**
+	 * The read failed or the app is not configured.
+	 */
+	private const ACCESS_FAILED = 'failed';
+
+	/**
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
 	 * @param Customer360SummaryService $summaryService The customer 360 summary aggregator.
 	 * @param IUserSession $userSession Current user.
 	 * @param IAppConfig $appConfig App config (register/schema resolution for the read guard).
-	 * @param ObjectOwnerAccessPolicy $accessPolicy Per-object owner access policy.
 	 * @param ContainerInterface $container DI container (OpenRegister ObjectService).
 	 * @param LoggerInterface $logger Logger — also the doelbinding access-log sink
 	 *                                (MVP).
@@ -64,7 +84,6 @@ class Customer360Controller extends Controller {
 		private Customer360SummaryService $summaryService,
 		private IUserSession $userSession,
 		private IAppConfig $appConfig,
-		private ObjectOwnerAccessPolicy $accessPolicy,
 		private ContainerInterface $container,
 		private LoggerInterface $logger,
 	) {
@@ -75,10 +94,10 @@ class Customer360Controller extends Controller {
 	 * GET /api/customer-360/summary?clientId=... — the consolidated customer 360 summary.
 	 *
 	 * Per-object read guard (no IDOR): the caller must be able to READ the
-	 * client object itself — resolved through OpenRegister's ObjectService,
-	 * which applies the caller's RBAC. A client the caller cannot read (hidden,
-	 * wrong tenant, deleted) 404s exactly like any other RBAC-denied read,
-	 * never leaking whether the id exists. On success, every access is logged
+	 * client object itself, resolved through OpenRegister's ObjectService with
+	 * the caller's RBAC and multitenancy. A client the caller may not read is
+	 * a 403; a client that does not exist (or is in another tenant) is a 404.
+	 * On success, every access is logged
 	 * (doelbinding, MVP) with the acting user, the client id, and the time,
 	 * reusing the app's existing audit/logging facility (design.md's
 	 * provisional resolution — no new OR schema for the MVP).
@@ -89,6 +108,7 @@ class Customer360Controller extends Controller {
 	 *
 	 * @spec openspec/specs/customer-360/spec.md#requirement-consolidated-customer-360-summary
 	 * @spec openspec/specs/customer-360/spec.md#requirement-customer-360-access-is-logged-doelbinding-mvp
+	 * @spec openspec/changes/review-audit-fixes-b/specs/customer-360/spec.md#requirement-the-customer-360-summary-follows-the-clients-read-rights-req-raf-030
 	 */
 	public function summary(): JSONResponse {
 		$user = $this->userSession->getUser();
@@ -96,22 +116,24 @@ class Customer360Controller extends Controller {
 			return new JSONResponse(['message' => 'Authentication required'], Http::STATUS_UNAUTHORIZED);
 		}
 
-		// Who may read a customer 360: the privileged groups (admin, sales and
-		// the configured CRM group). ObjectOwnerAccessPolicy::mayAccess() lets
-		// exactly these groups read any record, so after this check the read
-		// guard below only has to establish that the client exists and is
-		// visible to the caller under OpenRegister's RBAC (pipelinq#805).
-		if ($this->accessPolicy->isPrivileged(uid: $user->getUID()) === false) {
-			return new JSONResponse(['message' => 'Forbidden'], Http::STATUS_FORBIDDEN);
-		}
-
 		$clientId = (string)$this->request->getParam('clientId', '');
 		if ($clientId === '') {
 			return new JSONResponse(['message' => 'Missing required parameter: clientId'], Http::STATUS_BAD_REQUEST);
 		}
 
-		if ($this->canReadClient(clientId: $clientId) === false) {
+		// Access follows the client's own read rights in OpenRegister (Ruben,
+		// 7 October): whoever may read the client sees its 360 summary.
+		$access = $this->clientAccess(clientId: $clientId);
+		if ($access === self::ACCESS_DENIED) {
+			return new JSONResponse(['message' => 'Forbidden'], Http::STATUS_FORBIDDEN);
+		}
+
+		if ($access === self::ACCESS_MISSING) {
 			return new JSONResponse(['message' => 'Client not found'], Http::STATUS_NOT_FOUND);
+		}
+
+		if ($access === self::ACCESS_FAILED) {
+			return new JSONResponse(['message' => 'Operation failed'], Http::STATUS_INTERNAL_SERVER_ERROR);
 		}
 
 		try {
@@ -130,30 +152,31 @@ class Customer360Controller extends Controller {
 	}//end summary()
 
 	/**
-	 * Per-object read guard: true only when the client object resolves through
-	 * OpenRegister's ObjectService::find() with RBAC and multitenancy on, as
-	 * the caller. It runs after summary()'s privileged-group check, which is
-	 * the authorisation decision; this guard adds the existence and
-	 * visibility test. Fails closed: an OpenRegister outage or missing config
-	 * denies the read.
+	 * Whether the caller may read the client, through OpenRegister.
+	 *
+	 * The read runs as the caller with RBAC and multitenancy on, so the
+	 * client schema's own read rights decide. OpenRegister refuses a read
+	 * the caller may not do with NotAuthorizedException (403 here); a client
+	 * that does not exist comes back as null or DoesNotExistException (404).
+	 * Anything else fails closed as an error (500), never as a grant.
 	 *
 	 * The call uses named arguments. The positional form
 	 * `find($clientId, $register, $schema)` put the register into
-	 * `?array $_extend`, raised a TypeError that the catch below swallowed,
-	 * and so denied every caller, which is why every Customer 360 widget
-	 * showed a 404 (pipelinq#805).
+	 * `?array $_extend`, raised a TypeError that the old catch swallowed, and
+	 * so denied every caller, which is why every Customer 360 widget showed a
+	 * 404 (pipelinq#805).
 	 *
 	 * @param string $clientId The client UUID.
 	 *
-	 * @return bool True when the client exists and the caller may see it.
+	 * @return string One of the ACCESS_* constants.
 	 *
-	 * @spec openspec/changes/review-audit-fixes-b/specs/customer-360/spec.md#requirement-the-customer-360-summary-answers-privileged-users-req-raf-030
+	 * @spec openspec/changes/review-audit-fixes-b/specs/customer-360/spec.md#requirement-the-customer-360-summary-follows-the-clients-read-rights-req-raf-030
 	 */
-	private function canReadClient(string $clientId): bool {
+	private function clientAccess(string $clientId): string {
 		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
 		$schema = $this->appConfig->getValueString(Application::APP_ID, 'client_schema', '');
 		if ($register === '' || $schema === '') {
-			return false;
+			return self::ACCESS_FAILED;
 		}
 
 		try {
@@ -165,16 +188,24 @@ class Customer360Controller extends Controller {
 				_rbac: true,
 				_multitenancy: true,
 			);
+		} catch (NotAuthorizedException $e) {
+			return self::ACCESS_DENIED;
+		} catch (DoesNotExistException $e) {
+			return self::ACCESS_MISSING;
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'Customer360Controller: client read-guard failed',
 				['clientId' => $clientId, 'exception' => $e->getMessage()]
 			);
-			return false;
+			return self::ACCESS_FAILED;
 		}
 
-		return $object !== null;
-	}//end canReadClient()
+		if ($object === null) {
+			return self::ACCESS_MISSING;
+		}
+
+		return self::ACCESS_GRANTED;
+	}//end clientAccess()
 
 	/**
 	 * Log a customer 360 access (doelbinding, MVP) via the app's standard
