@@ -28,7 +28,7 @@
  *
  * @link https://pipelinq.nl
  *
- * @spec openspec/changes/erase-on-soft-delete/specs/consent-in-integriq/spec.md#requirement-a-soft-delete-erases-the-contact-in-integriq-req-cii-006
+ * @spec openspec/changes/erase-on-soft-delete/specs/consent-in-integriq/spec.md#requirement-a-soft-delete-erases-the-contact-in-integriq-req-cii-008
  */
 
 declare(strict_types=1);
