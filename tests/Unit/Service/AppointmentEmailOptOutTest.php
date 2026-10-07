@@ -96,7 +96,7 @@ class AppointmentEmailOptOutTest extends TestCase {
 		);
 
 		$container = $this->createMock(ContainerInterface::class);
-		$container->method('get')->willReturnCallback(static fn (string $id) => new UnsubscribeHeaders());
+		$container->method('get')->willReturnCallback(static fn (string $id) => new UnsubscribeHeaders(new NullLogger()));
 
 		$service = new AppointmentEmailService(
 			appConfig: $appConfig,

@@ -55,7 +55,7 @@ class EmailFallbackSenderTest extends TestCase {
 		$l10n = $this->createMock(IL10N::class);
 		$l10n->method('t')->willReturnCallback(static fn (string $text, array $p = []) => vsprintf($text, $p));
 		$container = $this->createMock(ContainerInterface::class);
-		$container->method('get')->willReturn(new UnsubscribeHeaders());
+		$container->method('get')->willReturn(new UnsubscribeHeaders(new NullLogger()));
 
 		return new EmailFallbackSender(
 			$mailer,

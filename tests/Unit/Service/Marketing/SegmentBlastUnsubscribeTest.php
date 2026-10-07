@@ -82,7 +82,7 @@ class SegmentBlastUnsubscribeTest extends TestCase {
 				return match ($id) {
 					ComplianceService::class => $compliance,
 					UnsubscribeMail::class => $unsubscribeMail,
-					UnsubscribeMail::HEADER_HELPER => new UnsubscribeHeaders(),
+					UnsubscribeMail::HEADER_HELPER => new UnsubscribeHeaders(new NullLogger()),
 					default => $store,
 				};
 			}
