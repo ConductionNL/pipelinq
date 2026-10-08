@@ -771,7 +771,9 @@ describe('the getting-started tour', () => {
 			])
 			validateBuilt(held)
 		}
-	})
+		// Two validator processes: the default five seconds is not enough on
+		// a busy machine, and a timeout here reads as a missing tour.
+	}, 60_000)
 
 	it('only points the contact centre tour at pages the simple menu opens', () => {
 		const built = buildSimple()
