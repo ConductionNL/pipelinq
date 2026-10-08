@@ -24,6 +24,7 @@ use OCA\Pipelinq\Service\Portal\PortalTokenService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\Security\ISecureRandom;
 use PHPUnit\Framework\TestCase;
+use OCP\IAppConfig;
 
 /**
  * Tests for session lifecycle + validation.
@@ -56,7 +57,7 @@ class PortalSessionManagerTest extends TestCase {
 	 * @return void
 	 */
 	protected function setUp(): void {
-		$this->repository = new FakePortalObjectRepository();
+		$this->repository = new FakePortalObjectRepository(InstalledAppConfig::wire($this->createMock(IAppConfig::class)));
 
 		$counter = 0;
 		$random = $this->createMock(ISecureRandom::class);

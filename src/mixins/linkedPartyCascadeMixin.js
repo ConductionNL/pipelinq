@@ -79,10 +79,13 @@ export default {
 		 * the typed term opens the full create dialog instead of being saved
 		 * directly.
 		 *
+		 * @param {string} term The name typed into the picker, prefilled in the dialog.
 		 * @return {Promise<object|null>} The created client, or null if cancelled.
 		 * @spec openspec/specs/lead-management/spec.md#requirement-linked-party-selection-on-the-create-form-mvp
+		 * @spec openspec/changes/pipelinq-audit-admin-forms-pos/specs/client-forms/spec.md#requirement-one-client-dialog-that-returns-to-the-form-that-opened-it
 		 */
-		createClient() {
+		createClient(term) {
+			this.pendingName = term || ''
 			return new Promise((resolve) => {
 				this.resolveCreate = resolve
 				this.clientDialogOpen = true
@@ -121,13 +124,14 @@ export default {
 
 		/**
 		 * @param {string} id The created client's uuid (ClientCreateDialog emits an id).
+		 * @param {object} [created] The created client, when the dialog hands it over.
 		 * @return {void}
 		 * @spec openspec/specs/lead-management/spec.md#requirement-linked-party-selection-on-the-create-form-mvp
 		 */
-		onClientCreated(id) {
+		onClientCreated(id, created) {
 			this.clientDialogOpen = false
 			this.form.contact = null
-			this.settleCreate(id ? { id } : null)
+			this.settleCreate(id ? { ...(created || {}), id } : null)
 		},
 
 		/**

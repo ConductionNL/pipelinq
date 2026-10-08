@@ -402,6 +402,7 @@ class PosPaymentService {
 			new BrokerHttpTransport(
 				credentialId: $credentialId,
 				logger: $this->logger,
+				container: $this->container,
 				actingUserId: $this->currentUid()
 			)
 		);

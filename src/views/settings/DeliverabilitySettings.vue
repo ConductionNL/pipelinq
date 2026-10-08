@@ -13,7 +13,7 @@
   - @spec openspec/changes/marketing-mail-transports/specs/marketing-mail-transports/spec.md#requirement-the-deliverability-panel-shows-spf-dkim-and-dmarc-status-per-sender-domain
   -->
 <template>
-	<div class="deliverability-settings">
+	<div id="section-mail-transports" class="deliverability-settings">
 		<NcSettingsSection
 			:name="t('pipelinq', 'Mail transports')"
 			:description="

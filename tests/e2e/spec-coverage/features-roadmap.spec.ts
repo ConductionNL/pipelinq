@@ -4,7 +4,12 @@
  *
  * Gate-19 behavioral e2e coverage for the Features & roadmap page
  * (/features-roadmap). Maps to openspec/specs/notifications-activity/spec.md
- * (closest in-app surface; the page is a static product-marketing view).
+ * (closest in-app surface) and to openspec/specs/features-roadmap/spec.md.
+ *
+ * The screen under test is manifest page `FeaturesRoadmap`, rendered by
+ * `FeaturesRoadmapView` (src/views/FeaturesRoadmapView.vue). That component
+ * wraps the library's product page and adds one link to the help desk
+ * comparison on the docs site.
  */
 import { expect, test } from '@playwright/test'
 import {
@@ -16,6 +21,7 @@ import {
 } from '../helpers/pipelinq.ts'
 
 // @e2e openspec/specs/notifications-activity/spec.md#features-roadmap-page
+// @e2e openspec/specs/features-roadmap/spec.md#features-page-renders-controls
 test('Features & roadmap: navigates from sidebar and shows the features surface', async ({
 	page,
 }) => {
@@ -66,6 +72,40 @@ test('Features & roadmap: Show roadmap reveals roadmap content', async ({
 	// After toggling, the view should still be intact and not error.
 	await assertNoHardError(page)
 	await expect(page.locator('#content-vue').first()).toBeVisible()
+})
+
+/*
+ * The help desk comparison left this page for pipelinq.conduction.nl/compare
+ * on 2026-10-07 (Ruben: how an app compares belongs on its public site). Its
+ * caveats are asserted in tests/vitest/capabilityComparisonCopy.spec.js and its
+ * data in tests/vitest/capabilityComparison.spec.js. This test pins the two
+ * things only a browser can: the section is gone, and the link to its new
+ * home is on the page.
+ */
+
+// @e2e openspec/specs/features-roadmap/spec.md#the-comparison-is-one-link-away
+test('Features & roadmap: links to the comparison instead of carrying it', async ({
+	page,
+}) => {
+	await openApp(page)
+	await navClick(page, 'Features & roadmap', /\/features-roadmap/)
+	await dismissSupportDialog(page)
+
+	const content = page.locator('#content-vue')
+	const link = content.getByRole('link', {
+		name: 'How pipelinq compares to other help desks',
+	})
+	await expect(link).toBeVisible()
+	await expect(link).toHaveAttribute('href', /\/compare$/)
+	await expect(link).toHaveAttribute('target', '_blank')
+
+	await expect(
+		content.getByRole('button', { name: 'How pipelinq compares' }),
+	).toHaveCount(0)
+	await expect(content.locator('.features-roadmap__comparison')).toHaveCount(0)
+	await expect(content.getByText('Before you use this table')).toHaveCount(0)
+
+	await assertNoHardError(page)
 })
 
 /*

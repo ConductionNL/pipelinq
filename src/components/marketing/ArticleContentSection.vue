@@ -31,73 +31,119 @@
 		</NcNoteCard>
 
 		<template v-else-if="effectiveArticle">
-			<div class="article-content__header">
-				<span
-					class="article-content__chip"
-					:style="{ borderColor: statusChip.color }">
+			<div class="article-content__toolbar">
+				<div class="article-content__meta">
 					<span
-						class="article-content__swatch"
-						:style="{ backgroundColor: statusChip.color }"
-						aria-hidden="true" />
-					{{ statusLabel }}
-				</span>
-				<span
-					v-if="effectiveArticle.agentAuthored"
-					class="article-content__agent-mark">
-					{{
-						t('pipelinq', 'Drafted by {agent}', {
-							agent:
-								effectiveArticle.agentAuthoredBy
-								|| t('pipelinq', 'an agent'),
-						})
-					}}
-				</span>
+						class="article-content__chip"
+						:style="{ borderColor: statusChip.color }">
+						<span
+							class="article-content__swatch"
+							:style="{ backgroundColor: statusChip.color }"
+							aria-hidden="true" />
+						{{ statusLabel }}
+					</span>
+					<span
+						v-if="effectiveArticle.agentAuthored"
+						class="article-content__agent-mark">
+						{{
+							t('pipelinq', 'Drafted by {agent}', {
+								agent:
+									effectiveArticle.agentAuthoredBy
+									|| t('pipelinq', 'an agent'),
+							})
+						}}
+					</span>
+				</div>
+				<div class="article-content__actions">
+					<NcButton
+						v-for="action in transitions"
+						:key="action.id"
+						variant="tertiary"
+						:disabled="busy"
+						:data-testid="'article-action-' + action.id"
+						@click="runTransition(action)">
+						{{ actionLabel(action.id) }}
+					</NcButton>
+					<NcButton
+						variant="secondary"
+						data-testid="article-edit"
+						@click="showEdit = true">
+						<template #icon>
+							<PencilOutline :size="20" />
+						</template>
+						{{ t('pipelinq', 'Edit') }}
+					</NcButton>
+				</div>
 			</div>
 
-			<img
-				v-if="heroImageUrl"
-				:src="heroImageUrl"
-				:alt="effectiveArticle.title || ''"
-				class="article-content__hero" />
-
-			<p v-if="effectiveArticle.summary" class="article-content__summary">
-				{{ effectiveArticle.summary }}
-			</p>
-
-			<!-- eslint-disable-next-line vue/no-v-html -- renderedBody comes from cnRenderMarkdown(), which sanitises through DOMPurify -->
-			<div class="article-content__body" v-html="renderedBody" />
-
-			<ul
-				v-if="effectiveArticle.links && effectiveArticle.links.length"
-				class="article-content__links">
-				<li v-for="(link, index) in effectiveArticle.links" :key="index">
-					<a :href="link.url" target="_blank" rel="noopener noreferrer">
-						{{ link.label || link.url }}
-					</a>
-				</li>
-			</ul>
-
-			<p v-if="actionError" class="article-content__error" role="alert">
+			<NcNoteCard
+				v-if="actionError"
+				type="error"
+				class="article-content__note">
 				{{ actionError }}
-			</p>
+			</NcNoteCard>
 
-			<div class="article-content__actions">
-				<NcButton
-					variant="secondary"
-					data-testid="article-edit"
-					@click="showEdit = true">
-					{{ t('pipelinq', 'Edit') }}
-				</NcButton>
-				<NcButton
-					v-for="action in transitions"
-					:key="action.id"
-					variant="tertiary"
-					:disabled="busy"
-					:data-testid="'article-action-' + action.id"
-					@click="runTransition(action)">
-					{{ actionLabel(action.id) }}
-				</NcButton>
-			</div>
+			<!-- The article as a reader will see it, framed as a page of its
+			     own so it does not blend into the app around it. -->
+			<article
+				class="article-preview"
+				:lang="effectiveArticle.language || null">
+				<template v-if="heroImageUrl">
+					<img
+						v-if="!heroFailed"
+						:src="heroImageUrl"
+						:alt="effectiveArticle.title || ''"
+						class="article-preview__hero"
+						@error="heroFailed = true" />
+					<div
+						v-else
+						class="article-preview__hero article-preview__hero--missing">
+						<ImageOffOutline :size="32" />
+						<span>{{
+							t('pipelinq', 'The hero image could not be loaded.')
+						}}</span>
+						<code>{{ effectiveArticle.heroImage }}</code>
+					</div>
+				</template>
+
+				<div class="article-preview__page">
+					<h1 class="article-preview__title">
+						{{ effectiveArticle.title }}
+					</h1>
+					<p
+						v-if="effectiveArticle.summary"
+						class="article-preview__summary">
+						{{ effectiveArticle.summary }}
+					</p>
+
+					<!-- eslint-disable-next-line vue/no-v-html -- renderedBody comes from cnRenderMarkdown(), which sanitises through DOMPurify -->
+					<div
+						class="article-content__body article-preview__body"
+						v-html="renderedBody" />
+
+					<footer
+						v-if="
+							effectiveArticle.links && effectiveArticle.links.length
+						"
+						class="article-preview__links">
+						<h2 class="article-preview__links-title">
+							{{ t('pipelinq', 'Links') }}
+						</h2>
+						<ul>
+							<li
+								v-for="(link, index) in effectiveArticle.links"
+								:key="index">
+								<a
+									:href="link.url"
+									target="_blank"
+									rel="noopener noreferrer">
+									{{ link.label || link.url }}
+								</a>
+							</li>
+						</ul>
+					</footer>
+				</div>
+			</article>
 		</template>
 
 		<ArticleEditModal
@@ -109,10 +155,13 @@
 </template>
 
 <script>
-import { cnRenderMarkdown } from '@conduction/nextcloud-vue'
+import { cnRenderMarkdown, resolveImageUrl } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
+import { emit, subscribe, unsubscribe } from '@nextcloud/event-bus'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
+import ImageOffOutline from 'vue-material-design-icons/ImageOffOutline.vue'
+import PencilOutline from 'vue-material-design-icons/PencilOutline.vue'
 import ArticleEditModal from '../../modals/ArticleEditModal.vue'
 import {
 	archiveArticle,
@@ -126,9 +175,11 @@ export default {
 
 	components: {
 		ArticleEditModal,
+		ImageOffOutline,
 		NcButton,
 		NcLoadingIcon,
 		NcNoteCard,
+		PencilOutline,
 	},
 
 	inject: {
@@ -159,6 +210,7 @@ export default {
 			busy: false,
 			showEdit: false,
 			resolvedArticle: null,
+			heroFailed: false,
 		}
 	},
 
@@ -225,9 +277,11 @@ export default {
 		},
 
 		/**
-		 * A Files path renders through Nextcloud's legacy `file=`-addressed
-		 * preview endpoint; an absolute URL (an image hosted elsewhere) is
-		 * used as-is.
+		 * An absolute URL (an image hosted elsewhere) is used as-is, and an
+		 * `app:<app>/<file>` reference (an image the app ships, as the seed
+		 * articles use) resolves through the library's resolveImageUrl().
+		 * Anything else is a Files path, rendered through Nextcloud's
+		 * `file=`-addressed preview endpoint.
 		 *
 		 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
 		 * @return {string} The hero image URL, or an empty string.
@@ -240,11 +294,23 @@ export default {
 			if (/^https?:\/\//.test(path)) {
 				return path
 			}
+			if (path.startsWith('app:')) {
+				return resolveImageUrl(path)
+			}
 			return `${generateUrl('/core/preview.png')}?file=${encodeURIComponent(path)}&x=1200&y=630&a=1`
 		},
 	},
 
 	watch: {
+		/**
+		 * A new hero image gets a fresh load attempt.
+		 *
+		 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
+		 */
+		heroImageUrl() {
+			this.heroFailed = false
+		},
+
 		articleId: {
 			immediate: true,
 			/**
@@ -260,6 +326,14 @@ export default {
 				}
 			},
 		},
+	},
+
+	mounted() {
+		subscribe('cn:page:refresh', this.onPageRefresh)
+	},
+
+	beforeUnmount() {
+		unsubscribe('cn:page:refresh', this.onPageRefresh)
 	},
 
 	methods: {
@@ -294,11 +368,15 @@ export default {
 		/**
 		 * Load the article when only its id is known.
 		 *
+		 * @param {object} [options] Load options.
+		 * @param {boolean} [options.silent] Keep the current content on screen while loading.
 		 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
 		 * @return {Promise<void>} Resolves when the article is in place.
 		 */
-		async load() {
-			this.loading = true
+		async load({ silent = false } = {}) {
+			if (!silent) {
+				this.loading = true
+			}
 			this.error = ''
 			try {
 				const { data } = await axios.get(
@@ -322,8 +400,30 @@ export default {
 		async refresh() {
 			this.$emit('refresh')
 			if (!this.article) {
-				await this.load()
+				await this.load({ silent: true })
 			}
+			// The page's other widgets show the same article.
+			emit('cn:page:refresh', { source: 'article-content' })
+		},
+
+		/**
+		 * Re-read the article when something else on the page saved it, such
+		 * as the Edit form's article editor.
+		 *
+		 * @param {object} payload The refresh event.
+		 *
+		 * @spec openspec/changes/marketing-article-hub/specs/marketing-articles/spec.md#requirement-a-marketer-writes-and-reads-an-article-in-the-interface
+		 */
+		onPageRefresh(payload) {
+			if (
+				payload?.source === 'article-content'
+				|| this.article
+				|| !this.effectiveId()
+			) {
+				return
+			}
+			const done = this.load({ silent: true })
+			payload?.waitUntil?.(done)
 		},
 
 		/**
@@ -397,29 +497,38 @@ export default {
 .article-content {
 	display: flex;
 	flex-direction: column;
-	gap: 1rem;
+	gap: 16px;
 }
 
-.article-content__header {
+.article-content__toolbar {
 	display: flex;
-	align-items: center;
-	gap: 0.75rem;
 	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px 16px;
+}
+
+.article-content__meta,
+.article-content__actions {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
 }
 
 .article-content__chip {
 	display: inline-flex;
 	align-items: center;
-	gap: 0.35rem;
-	padding: 0.1rem 0.5rem;
+	gap: 6px;
+	padding: 2px 10px;
 	border: 1px solid var(--color-border);
-	border-radius: var(--border-radius-pill, 1rem);
+	border-radius: var(--border-radius-pill, 16px);
 }
 
 .article-content__swatch {
 	display: inline-block;
-	width: 0.6rem;
-	height: 0.6rem;
+	width: 10px;
+	height: 10px;
 	border-radius: 50%;
 }
 
@@ -428,37 +537,195 @@ export default {
 	font-style: italic;
 }
 
-.article-content__hero {
-	width: 100%;
-	max-height: 320px;
-	object-fit: cover;
-	border-radius: var(--border-radius-large, 8px);
+.article-content__note {
+	margin: 0;
 }
 
-.article-content__summary {
+.article-preview {
+	width: 100%;
+	max-width: 800px;
+	margin: 0 auto;
+	overflow: hidden;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius-container-large, 12px);
+	background: var(--color-main-background);
+	box-shadow: 0 2px 12px var(--color-box-shadow);
+}
+
+.article-preview__hero {
+	display: block;
+	width: 100%;
+	aspect-ratio: 1200 / 630;
+	object-fit: cover;
+}
+
+.article-preview__hero--missing {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	padding: 16px;
+	background: var(--color-background-dark);
+	color: var(--color-text-maxcontrast);
+	text-align: center;
+}
+
+.article-preview__hero--missing code {
+	font-size: 0.85em;
+	word-break: break-all;
+}
+
+.article-preview__page {
+	padding: 32px 40px 40px;
+	line-height: 1.6;
+}
+
+.article-preview__title {
+	margin: 0 0 12px;
+	font-size: 2em;
+	font-weight: 700;
+	line-height: 1.25;
+}
+
+.article-preview__summary {
+	margin: 0 0 24px;
+	color: var(--color-text-maxcontrast);
+	font-size: 1.15em;
+}
+
+/* Nextcloud resets headings, lists and links, so the article's own
+   typography is restored here. */
+.article-preview__body :deep(h1),
+.article-preview__body :deep(h2),
+.article-preview__body :deep(h3),
+.article-preview__body :deep(h4) {
+	margin: 1.5em 0 0.5em;
+	font-weight: 700;
+	line-height: 1.3;
+}
+
+.article-preview__body :deep(h1) {
+	font-size: 1.6em;
+}
+
+.article-preview__body :deep(h2) {
+	font-size: 1.35em;
+}
+
+.article-preview__body :deep(h3) {
+	font-size: 1.15em;
+}
+
+.article-preview__body :deep(p),
+.article-preview__body :deep(ul),
+.article-preview__body :deep(ol),
+.article-preview__body :deep(blockquote),
+.article-preview__body :deep(pre) {
+	margin: 0 0 1em;
+}
+
+.article-preview__body :deep(ul),
+.article-preview__body :deep(ol) {
+	padding-inline-start: 1.5em;
+}
+
+.article-preview__body :deep(ul) {
+	list-style: disc;
+}
+
+.article-preview__body :deep(ol) {
+	list-style: decimal;
+}
+
+.article-preview__body :deep(li) {
+	margin-bottom: 0.25em;
+}
+
+.article-preview__body :deep(a),
+.article-preview__links a {
+	color: var(--color-primary-element);
+	text-decoration: underline;
+}
+
+.article-preview__body :deep(blockquote) {
+	padding-inline-start: 1em;
+	border-inline-start: 4px solid var(--color-border-dark);
 	color: var(--color-text-maxcontrast);
 }
 
-.article-content__body :deep(h1),
-.article-content__body :deep(h2),
-.article-content__body :deep(h3) {
-	margin-block-start: 1rem;
+.article-preview__body :deep(code) {
+	padding: 1px 4px;
+	border-radius: var(--border-radius);
+	background: var(--color-background-dark);
+	font-family: var(--font-face-monospace, monospace);
+	font-size: 0.9em;
 }
 
-.article-content__links {
+.article-preview__body :deep(pre) {
+	padding: 12px;
+	overflow-x: auto;
+	border-radius: var(--border-radius-large);
+	background: var(--color-background-dark);
+}
+
+.article-preview__body :deep(pre code) {
+	padding: 0;
+	background: none;
+}
+
+.article-preview__body :deep(img) {
+	max-width: 100%;
+	height: auto;
+	border-radius: var(--border-radius-large);
+}
+
+.article-preview__body :deep(hr) {
+	margin: 2em 0;
+	border: 0;
+	border-top: 1px solid var(--color-border);
+}
+
+.article-preview__body :deep(table) {
+	margin: 0 0 1em;
+	border-collapse: collapse;
+}
+
+.article-preview__body :deep(th),
+.article-preview__body :deep(td) {
+	padding: 6px 10px;
+	border: 1px solid var(--color-border);
+}
+
+.article-preview__body > :deep(:last-child) {
+	margin-bottom: 0;
+}
+
+.article-preview__links {
+	margin-top: 32px;
+	padding-top: 16px;
+	border-top: 1px solid var(--color-border);
+}
+
+.article-preview__links-title {
+	margin: 0 0 8px;
+	font-size: 1em;
+	font-weight: 700;
+}
+
+.article-preview__links ul {
 	margin: 0;
-	padding-inline-start: 1.25rem;
+	padding-inline-start: 1.5em;
+	list-style: disc;
 }
 
-.article-content__error {
-	color: var(--color-error);
-	font-weight: 600;
-	margin: 0;
-}
+@media (max-width: 720px) {
+	.article-preview__page {
+		padding: 20px 16px 24px;
+	}
 
-.article-content__actions {
-	display: flex;
-	gap: 0.5rem;
-	flex-wrap: wrap;
+	.article-preview__title {
+		font-size: 1.6em;
+	}
 }
 </style>

@@ -25,6 +25,7 @@ namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
+use OCA\Pipelinq\Service\ConnectionReportService;
 use OCA\Pipelinq\Service\CtiService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -67,6 +68,7 @@ class CtiController extends Controller {
 	 * @param ObjectOwnerAccessPolicy $policy Per-object owner access policy.
 	 * @param IGroupManager $groupManager The group manager.
 	 * @param LoggerInterface $logger The logger.
+	 * @param ConnectionReportService $connectionReports Reports the CTI check to integriq's connection registry.
 	 */
 	public function __construct(
 		IRequest $request,
@@ -75,6 +77,7 @@ class CtiController extends Controller {
 		private ObjectOwnerAccessPolicy $policy,
 		private IGroupManager $groupManager,
 		private LoggerInterface $logger,
+		private ConnectionReportService $connectionReports,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 	}//end __construct()
@@ -394,6 +397,11 @@ class CtiController extends Controller {
 	 *
 	 * Admin-only — see {@see self::getConfig()} for the auth model.
 	 *
+	 * A save that stored something runs the CTI check once and reports it to
+	 * integriq, because the platform lives on an OpenRegister object integriq
+	 * cannot read (adopt-connection-registry design D2). The check makes no
+	 * network call, and the report never changes this response.
+	 *
 	 * @auth admin-only Writes the instance-wide CTI platform configuration and
 	 *       credentials reference; the body additionally enforces it with an
 	 *       isAdmin() check.
@@ -401,6 +409,7 @@ class CtiController extends Controller {
 	 * @return JSONResponse The saved configuration.
 	 *
 	 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-4.1
+	 * @spec openspec/changes/adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-132-pipelinq-reports-what-its-own-checks-observe
 	 */
 	public function updateConfig(): JSONResponse {
 		$user = $this->userSession->getUser();
@@ -435,6 +444,10 @@ class CtiController extends Controller {
 			['user' => $user->getUID(), 'fields' => array_keys($payload)]
 		);
 
+		if ($saved !== []) {
+			$this->connectionReports->reportCtiCheck(outcome: $this->ctiService->testConnection());
+		}
+
 		unset($saved['webhook_secret']);
 		return new JSONResponse($saved);
 	}//end updateConfig()
@@ -444,9 +457,13 @@ class CtiController extends Controller {
 	 *
 	 * @auth admin-only Opens an outbound connection using the stored CTI credentials; the body additionally enforces it with an isAdmin() check.
 	 *
+	 * The outcome is also reported to integriq's connection registry for the
+	 * `cti` row. The report never changes this response.
+	 *
 	 * @return JSONResponse Test outcome.
 	 *
 	 * @spec openspec/changes/cti-screenpop-adapter/tasks.md#task-4.1
+	 * @spec openspec/changes/adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-132-pipelinq-reports-what-its-own-checks-observe
 	 */
 	public function testConnection(): JSONResponse {
 		$user = $this->userSession->getUser();
@@ -454,7 +471,10 @@ class CtiController extends Controller {
 			return new JSONResponse(['error' => 'Admin required'], Http::STATUS_FORBIDDEN);
 		}
 
-		return new JSONResponse($this->ctiService->testConnection());
+		$outcome = $this->ctiService->testConnection();
+		$this->connectionReports->reportCtiCheck(outcome: $outcome);
+
+		return new JSONResponse($outcome);
 	}//end testConnection()
 
 	/**

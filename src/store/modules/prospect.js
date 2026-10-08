@@ -24,8 +24,9 @@ export const useProspectStore = defineStore('prospect', {
 			this.error = null
 
 			try {
+				// Every prospect: the page paginates them and the widget shows the top 10.
 				const url = generateUrl(
-					`/apps/pipelinq/api/prospects${refresh ? '?refresh=true' : ''}`,
+					`/apps/pipelinq/api/prospects?limit=0${refresh ? '&refresh=true' : ''}`,
 				)
 				const response = await fetch(url, {
 					headers: {

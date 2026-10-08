@@ -64,6 +64,7 @@
           },
           "mailAccountUserId": {
             "type": "string",
+            "format": "user",
             "description": "The Nextcloud user id that owns mailAccountRef. The Mail app scopes account lookups per user (AccountService::find(userId, id)), so this is required alongside mailAccountRef when kind=mailAccount: it is not optional metadata, it is the IDOR guard.",
             "title": "Mail Account Owner"
           },
@@ -137,6 +138,7 @@
         }
       },
       "blast": {
+        "slug": "blast",
         "properties": {
           "transportId": {
             "type": "string",
@@ -163,44 +165,6 @@
         "active": true,
         "default": true,
         "mock": false
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "mailTransport",
-          "slug": "sender-mail-account"
-        },
-        "kind": "mailAccount",
-        "displayName": "Advies & Zo, sender's Mail account",
-        "mailAccountRef": "1",
-        "mailAccountUserId": "advies-en-zo-sender",
-        "senderDomain": "advieszo.example.nl",
-        "dailyLimit": 100,
-        "sentToday": 0,
-        "dkimVerified": false,
-        "dmarcStatus": "unknown",
-        "active": true,
-        "default": false,
-        "mock": false
-      },
-      {
-        "@self": {
-          "register": "pipelinq",
-          "schema": "mailTransport",
-          "slug": "sendgrid-bulk"
-        },
-        "kind": "provider",
-        "provider": "sendgrid",
-        "displayName": "Zonnig Reizen, SendGrid bulk newsletter",
-        "connectorSourceId": "openconnector-sendgrid-prod",
-        "senderDomain": "zonnigreizen.example.nl",
-        "dailyLimit": 5000,
-        "sentToday": 0,
-        "dkimVerified": true,
-        "dmarcStatus": "found",
-        "active": false,
-        "default": false,
-        "mock": true
       }
     ]
   }

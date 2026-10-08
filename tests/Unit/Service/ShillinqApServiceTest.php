@@ -3,7 +3,7 @@
 /**
  * Unit tests for ShillinqApService.
  *
- * Asserts the should-dispatch gate (HTTPS-only), the CloudEvents 1.0 payload
+ * Asserts the should-dispatch gate (the detected Shillinq app), the CloudEvents 1.0 payload
  * shape for an approved expense (REQ-AP-003 Scenario 7), the billable +
  * project routing in Scenario 8, and the success / failure return contract
  * against a capturing WebhookService double.
@@ -27,8 +27,10 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
+use OCA\Pipelinq\Service\IntegrationDetector;
 use OCA\Pipelinq\Service\ShillinqApService;
-use OCP\IAppConfig;
+use OCP\App\IAppManager;
+use OCP\IURLGenerator;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -81,24 +83,18 @@ class ShillinqApServiceTest extends TestCase {
 	private FakeApWebhookService $webhooks;
 
 	/**
-	 * Build a service whose app-config returns the given webhook URL.
+	 * Build a service on a server with or without the Shillinq app.
 	 *
-	 * @param string $webhookUrl The configured shillinq_ap_webhook_url value.
+	 * @param bool $shillinqInstalled Whether the Shillinq app is installed.
 	 *
 	 * @return ShillinqApService The service under test.
 	 */
-	private function makeService(string $webhookUrl): ShillinqApService {
+	private function makeService(bool $shillinqInstalled): ShillinqApService {
 		$this->webhooks = new FakeApWebhookService();
 
-		$appConfig = $this->createMock(IAppConfig::class);
-		$appConfig->method('getValueString')->willReturnCallback(
-			function (string $app, string $key, string $default = '') use ($webhookUrl): string {
-				if ($key === 'shillinq_ap_webhook_url') {
-					return $webhookUrl;
-				}
-
-				return $default;
-			}
+		$appManager = $this->createMock(IAppManager::class);
+		$appManager->method('isInstalled')->willReturnCallback(
+			fn (string $appId): bool => $appId === 'shillinq' && $shillinqInstalled === true
 		);
 
 		$container = $this->createMock(ContainerInterface::class);
@@ -113,43 +109,29 @@ class ShillinqApServiceTest extends TestCase {
 		);
 
 		return new ShillinqApService(
-			appConfig: $appConfig,
+			integrations: new IntegrationDetector($appManager, $this->createMock(IURLGenerator::class)),
 			container: $container,
 			logger: $this->createMock(LoggerInterface::class),
 		);
 	}//end makeService()
 
 	/**
-	 * A valid HTTPS URL enables dispatch (REQ-AP-004 Scenario 14).
+	 * An installed Shillinq enables dispatch without any URL (pipelinq-audit-admin-forms-pos).
 	 *
 	 * @return void
 	 */
-	public function testShouldDispatchTrueForHttpsUrl(): void {
-		$service = $this->makeService('https://shillinq.example.com/ap-webhook');
-		$this->assertTrue($service->shouldDispatch());
-	}//end testShouldDispatchTrueForHttpsUrl()
+	public function testShouldDispatchTrueWhenShillinqIsInstalled(): void {
+		$this->assertTrue($this->makeService(true)->shouldDispatch());
+	}//end testShouldDispatchTrueWhenShillinqIsInstalled()
 
 	/**
-	 * An empty URL disables dispatch (REQ-AP-002 Scenario 6).
+	 * Without Shillinq there is no dispatch.
 	 *
 	 * @return void
 	 */
-	public function testShouldDispatchFalseForEmptyUrl(): void {
-		$service = $this->makeService('');
-		$this->assertFalse($service->shouldDispatch());
-	}//end testShouldDispatchFalseForEmptyUrl()
-
-	/**
-	 * A non-HTTPS or malformed URL disables dispatch (REQ-AP-004 Scenario 13).
-	 *
-	 * @return void
-	 */
-	public function testShouldDispatchFalseForNonHttpsOrInvalidUrl(): void {
-		$this->assertFalse($this->makeService('http://shillinq.example.com')->shouldDispatch());
-		$this->assertFalse($this->makeService('not-a-url')->shouldDispatch());
-		$this->assertFalse($this->makeService('http://')->shouldDispatch());
-		$this->assertFalse($this->makeService('ftp://example.com')->shouldDispatch());
-	}//end testShouldDispatchFalseForNonHttpsOrInvalidUrl()
+	public function testShouldDispatchFalseWhenShillinqIsMissing(): void {
+		$this->assertFalse($this->makeService(false)->shouldDispatch());
+	}//end testShouldDispatchFalseWhenShillinqIsMissing()
 
 	/**
 	 * An approved expense builds the documented CloudEvents payload (REQ-AP-003 Scenario 7).
@@ -157,7 +139,7 @@ class ShillinqApServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testDispatchApEventPayload(): void {
-		$service = $this->makeService('https://shillinq.example.com/ap-webhook');
+		$service = $this->makeService(true);
 		$expense = [
 			'uuid' => 'abc123',
 			'amount' => 125.50,
@@ -201,7 +183,7 @@ class ShillinqApServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testDispatchApEventIncludesBillableProjectReference(): void {
-		$service = $this->makeService('https://shillinq.example.com/ap-webhook');
+		$service = $this->makeService(true);
 		$expense = [
 			'uuid' => 'def456',
 			'amount' => 595.00,
@@ -221,12 +203,12 @@ class ShillinqApServiceTest extends TestCase {
 	}//end testDispatchApEventIncludesBillableProjectReference()
 
 	/**
-	 * An unconfigured webhook URL means no dispatch and a false return.
+	 * Without Shillinq there is no dispatch and a false return.
 	 *
 	 * @return void
 	 */
 	public function testDispatchNoopWhenUnconfigured(): void {
-		$service = $this->makeService('');
+		$service = $this->makeService(false);
 		$this->assertFalse($service->dispatchApEvent(['uuid' => 'x'], 'alice', '2026-01-01T00:00:00Z'));
 		$this->assertCount(0, $this->webhooks->events);
 	}//end testDispatchNoopWhenUnconfigured()
@@ -237,7 +219,7 @@ class ShillinqApServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testDispatchReturnsFalseOnWebhookFailure(): void {
-		$service = $this->makeService('https://shillinq.example.com/ap-webhook');
+		$service = $this->makeService(true);
 		$this->webhooks->throw = true;
 		$this->assertFalse($service->dispatchApEvent(['uuid' => 'x', 'amount' => 1.0], 'alice', '2026-01-01T00:00:00Z')
 		);
@@ -249,7 +231,7 @@ class ShillinqApServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testNowFormat(): void {
-		$service = $this->makeService('https://shillinq.example.com/ap-webhook');
+		$service = $this->makeService(true);
 		$this->assertMatchesRegularExpression(
 			'/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/',
 			$service->now()

@@ -119,6 +119,25 @@ class RenameCollidingSchemaSlugs implements IRepairStep {
 		// master entities by masterId, which are different id spaces.
 		'expense' => ['to' => 'billableExpense', 'with' => 'humaniq'],
 		'mergeOperation' => ['to' => 'masterMergeOperation', 'with' => 'openregister'],
+		// The head of the programme portfolio. learniq's `programme` is an
+		// education programme with a curriculum and enrolments; this one is
+		// the delivery programme above the zaken, with work items, a team and
+		// a progress mode. They share `name` and `status` and nothing that
+		// identifies the record, so they are renamed apart. learniq is the
+		// earlier claimant, so its slug stays bare. The children
+		// (`programmeTask`, `programmeWorkItem`, ...) are not renamed: no
+		// other app declares them.
+		'programme' => ['to' => 'deliveryProgramme', 'with' => 'learniq'],
+		// The satisfaction survey and its invitation. openregister ships a
+		// generic `survey` (questions, answer sets) and a `surveyInvitation` of
+		// its own; this is the KTO survey sent after a closed ticket and the
+		// tokenised invitation to it. They share `title` and a token and
+		// nothing that identifies the record. openregister is the platform, so
+		// its slugs stay bare. `surveyResponse` is not renamed: no other app
+		// declares it. The persisted keys `survey_schema` and
+		// `surveyInvitation_schema` stay, mapped in SettingsLoadService.
+		'survey' => ['to' => 'satisfactionSurvey', 'with' => 'openregister'],
+		'surveyInvitation' => ['to' => 'satisfactionSurveyInvitation', 'with' => 'openregister'],
 	];
 
 	/**

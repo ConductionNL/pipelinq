@@ -147,6 +147,49 @@ class SettingsService {
 		'contract_schema',
 		// Renewal engine tuning (contract-renewal-tracking).
 		'renewal_default_lead_time_days',
+		// Typed fields and standing indicators on a party
+		// (typed-fields-and-indicators-on-a-party).
+		'partyFieldSet_schema',
+		'partyIndicator_schema',
+		'partyIndicatorValue_schema',
+		// How deep a customer organisation tree may go. Administered rather
+		// than fixed: a breadcrumb past this depth is unreadable and the
+		// queries under it are slow, and where that line sits is a customer's.
+		'party_organisation_max_depth',
+		// The party kind vocabulary and the acceptance per record type
+		// (party-kinds-accepted-per-case-type).
+		'partyKind_schema',
+		'partyKindAcceptance_schema',
+		'partyLink_schema',
+		// Customer satisfaction, closed loop (customer-satisfaction-closed-loop).
+		'survey_schema',
+		'surveyInvitation_schema',
+		'surveyResponse_schema',
+		// The dispatch rules, as a JSON array, so an administrator adds a rule
+		// without a release.
+		'survey_dispatch_rules',
+		// At or below this 1 to 5 rating a response counts as a detractor.
+		'survey_detractor_rating_threshold',
+		// Who follows up when the client has no owner. Without it an ownerless
+		// client's unhappy response reaches nobody, which looks exactly like
+		// one that was followed up.
+		'survey_default_assignee',
+		// The programme above the cases (the-project-above-the-cases).
+		'programme_schema',
+		'programmeTask_schema',
+		'programmeTeamMember_schema',
+		'programmeWorkItem_schema',
+		'programmeCycle_schema',
+		'programmeEstimate_schema',
+		'estimationScale_schema',
+		// Where a programme's progress figure comes from by default, with a
+		// per-programme override.
+		'programme_progress_mode',
+		// Which structure the app shows, and which modules join the simple
+		// menu (simple-structure-profile). Read through
+		// Service\Settings\MenuStructure, which decides what a stored value means.
+		'menu_structure',
+		'menu_modules',
 	];
 
 	/**
@@ -185,26 +228,33 @@ class SettingsService {
 		'receipt_company_phone' => '',
 		'receipt_company_vat' => '',
 		'receipt_company_kvk' => '',
+		// The organisation step's address and contact details
+		// (pipelinq-setup-wizard-review). `receipt_company_address` stays the
+		// one-line override; when it is empty the receipt composes these.
+		'receipt_company_street' => '',
+		'receipt_company_postcode' => '',
+		'receipt_company_city' => '',
+		'receipt_company_country' => '',
+		'receipt_company_email' => '',
+		'receipt_company_website' => '',
+		// The VAT rate per VAT class as JSON, e.g. {"high":21,"low":9,"zero":0,"exempt":0}
+		// (VatRates, pipelinq-forms-review). Empty means the Dutch defaults.
+		'vat_rates' => '',
 		'receipt_email_sender' => '',
 		'receipt_printer_host' => '',
 		'receipt_printer_port' => '9100',
 		'receipt_default_template' => '',
-		'shillinq_wip_webhook_url' => '',
-		// Shillinq AP webhook for expense voucher dispatch (REQ-AP-004). Empty disables the integration.
-		'shillinq_ap_webhook_url' => '',
+		// No Shillinq WIP or AP webhook URL: both hand-offs follow the detected
+		// Shillinq app (IntegrationDetector, pipelinq-audit-admin-forms-pos).
 		// Shillinq journal-entry registry endpoint for the POS-day journal raise
 		// (pipelinq-bookkeeping-to-shillinq / REQ-PBTS-001). The ADR-019 integration
 		// registry resolves the shillinq.JournalEntry.raise dispatch through this
 		// webhook URL; empty or non-HTTPS disables the integration. Replaces the
 		// retired hard-coded pos_eod.shillinq_endpoint POST to /api/JournalEntry.
 		'shillinq_journal_webhook_url' => '',
-		// Base URL of the configured shillinq deployment, used to resolve the
-		// "Timesheet approval" billing entry point through the registry instead of
-		// the hard-coded /index.php/apps/shillinq/ path (REQ-PBTS-003).
-		'shillinq_app_url' => '',
 		// Gates the real shillinq time-intake emit (time-billing-handoff-emit).
-		// Default off: an unconfigured install keeps today's deep-link-only
-		// handoff (shillinq_app_url) unchanged. The manager group allowed to
+		// Default off: an unconfigured install keeps the deep-link-only handoff
+		// to the detected Shillinq app (IntegrationDetector). The manager group allowed to
 		// trigger "Send to billing" (empty = NC admins only).
 		'shillinq_time_intake_enabled' => 'false',
 		'billing_handoff_manager_group' => '',
@@ -224,12 +274,10 @@ class SettingsService {
 		'pos_eod.z_report_time' => '23:59',
 		'pos_eod.alert_email' => '',
 		'pos_eod.max_retry_attempts' => '5',
-		// XWiki integration (xwiki-integration). The default direct URL points at
-		// the dev compose stack so a fresh install renders content without manual
-		// configuration; admins can override or clear it to disable the fallback.
+		// XWiki integration (xwiki-integration). The XWiki base URL is detected,
+		// never typed (IntegrationDetector, pipelinq-setup-wizard-review).
 		'xwiki_default_space' => '',
 		'xwiki_cache_ttl' => '300',
-		'xwiki_direct_url' => '',
 		// SLA engine (sla-engine-and-escalation) — admin settings.
 		// @spec openspec/specs/sla-engine-and-escalation/spec.md .
 		'sla_sweep_interval_seconds' => '300',

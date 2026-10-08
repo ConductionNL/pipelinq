@@ -291,6 +291,10 @@ class EntityActivityService {
 				'id' => (string)($object['id'] ?? $object['uuid'] ?? ''),
 				'subject' => (string)($object['title'] ?? ''),
 				'channel' => (string)($object['channel'] ?? ''),
+				// The direction the contact ran in, so the panel rendering this
+				// feed can facet on it rather than digging through the free-form
+				// channelMetadata envelope it used to live in.
+				'direction' => (string)($object['direction'] ?? ''),
 				'agent' => (string)($object['assignee'] ?? ''),
 				'timestamp' => (string)($object['occurredAt'] ?? ''),
 				'summary' => (string)($object['description'] ?? ''),

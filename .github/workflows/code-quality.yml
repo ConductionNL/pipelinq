@@ -169,29 +169,8 @@ jobs:
     uses: ConductionNL/.github/.github/workflows/quality.yml@main
     with:
       app-name: pipelinq
-      # Pinned, because the shared workflow's DEFAULT is '["stable31", "stable32"]'
-      # and stable31 CANNOT WORK here. `additional-apps` below installs
-      # openregister, which declares min-version="32" (its
-      # lib/ContextChat/ContentProvider.php implements
-      # OCP\ContextChat\IContentProvider, absent from core before NC32). On NC31
-      # the install step logs
-      #   App "Open Register" cannot be installed because it is not compatible
-      #   with this version of the server.
-      # and then continues, because the enable failure is only a ::warning::. The
-      # run therefore proceeded without its data layer and every
-      # /apps/openregister/... call returned Nextcloud's HTML 404 page.
-      #
-      # Order matters as much as membership: newman, playwright and
-      # journeydoc-capture all check out `fromJSON(nextcloud-test-refs)[0]` as
-      # their single server, so with the inherited default those three jobs ran
-      # entirely on the version openregister cannot load.
-      #
-      # THE LIST IS THE WHOLE DECLARED RANGE. appinfo/info.xml declares
-      # <nextcloud min-version="32" max-version="34"/>, so 32, 33 and 34 each get
-      # a leg. Adopting NC 34 by REPLACING the list left 32 and 33 advertised to
-      # the App Store with no job touching them — the declared floor became the
-      # untested end, which is the same drift as never testing 34, reversed.
-      nextcloud-test-refs: '["stable34", "stable32", "stable33"]'
+      # No `nextcloud-test-refs` override: the shared quality.yml derives the
+      # Nextcloud test matrix from appinfo/info.xml's declared range.
       # Strict static-analysis gate suite (composer check:strict equivalent).
       # These mirror the shared-workflow defaults (all true) but are pinned
       # here explicitly so the strict-gate posture is self-documenting and
@@ -413,7 +392,14 @@ jobs:
       # directory name, so `app` must be the id from appinfo/info.xml or the
       # checkout lands in a directory nothing enables — silently, since a
       # missing app is exactly what "the leaf did not render" looks like.
-      additional-apps: '[{"repo":"ConductionNL/openregister","app":"openregister","ref":"development"},{"repo":"ConductionNL/planix","app":"planninq","ref":"development"}]'
+      #
+      # integriq is here because the Integrations page reads integriq's
+      # `app_connection` rows. Without it the page shows the missing-dependency
+      # screen, the Connections menu entry is hidden by its `visibleIf`, the
+      # objects endpoint answers 404, and all six tests in
+      # `tests/e2e/integrations-page.spec.ts` fail. `app` is `integriq`, the id
+      # in its appinfo/info.xml on `development`.
+      additional-apps: '[{"repo":"ConductionNL/openregister","app":"openregister","ref":"development"},{"repo":"ConductionNL/planix","app":"planninq","ref":"development"},{"repo":"ConductionNL/integriq","app":"integriq","ref":"development"}]'
       # The old seed was `php occ app:disable pipelinq && php occ app:enable
       # pipelinq`. It reported success on every run and provisioned nothing
       # reliable: the repair step it triggers runs with NO user session (OR RBAC
@@ -491,7 +477,9 @@ jobs:
       # renders the English source inside an otherwise translated form, silently.
       # The fleet had 30,459 such strings, so this records the current count and
       # fails only when it GROWS — burning it down stays an ordinary PR.
-      frontend-checks: '["check:manifest", "check:vue-demi", "test:l10n", "format", "check:schema-l10n", "check:l10n-js"]'
+      # `check:lib-link` fails when package.json or the lockfile still links
+      # @conduction/nextcloud-vue to a local checkout (`npm i ../nextcloud-vue/`).
+      frontend-checks: '["check:manifest", "check:vue-demi", "test:l10n", "format", "check:schema-l10n", "check:l10n-js", "check:e2e-nav", "check:lib-link"]'
 
       # ── Coverage ratchet ─────────────────────────────────────────────────
       # `enable-coverage-guard` defaults to FALSE, which is why both
@@ -508,3 +496,14 @@ jobs:
       # duplicate key in a `with:` block is accepted by every YAML parser
       # involved, last-one-wins, and is precisely the kind of thing that reads
       # as configured while being decided somewhere else in the file.)
+      # ── Cost controls (see ConductionNL/.github#596, #599) ───────────────
+      # Run PHPUnit and Playwright only when the diff could change their
+      # verdict. Fails safe TOWARDS running: an unreadable diff, a force-push,
+      # a branch creation or a dispatch all run everything, and a filtered
+      # skip is a declared state in the Quality Report, not a missing one.
+      enable-path-filtering: true
+      # PR-time PHPUnit runs the primary PHP against the newest declared
+      # Nextcloud; the full matrix still runs on every push to a default
+      # branch and on the release PR into beta. Breadth moves from
+      # per-commit to per-merge, it is not dropped.
+      reduce-pr-matrix: true

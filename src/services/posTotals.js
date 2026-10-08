@@ -9,7 +9,16 @@
  * uses them only for a real-time preview while editing a cart; the backend
  * always recomputes the persisted totals on confirm, so client-side figures are
  * never trusted.
+ *
+ * Amounts show in the setup currency and the user's own locale, and the VAT
+ * rate names shown on screen are translated (pipelinq-audit-admin-forms-pos).
+ * The Dutch GL descriptions stay: they mirror what the server stores for
+ * bookkeeping.
  */
+
+import { translate as t } from '@nextcloud/l10n'
+import { getUserLocale } from './localeUtils.js'
+import { reportingCurrency } from './reportingCurrency.js'
 
 /**
  * Round a number to 2 decimals (cents).
@@ -25,7 +34,8 @@ const PRICE_MODES = ['excl', 'incl']
 
 /**
  * Dutch GL descriptions per common BTW rate, mirroring the PHP
- * PosTransactionService::RATE_DESCRIPTIONS map.
+ * PosTransactionService::RATE_DESCRIPTIONS map. These are bookkeeping data
+ * stored on the record, never a screen label: use rateLabel() for that.
  */
 const RATE_DESCRIPTIONS = {
 	0: 'Nultarief (0%)',
@@ -56,6 +66,30 @@ export function rateDescription(rate) {
 		return RATE_DESCRIPTIONS[intRate]
 	}
 	return `${rate}% BTW`
+}
+
+/**
+ * The translated name of a VAT rate, for the screen.
+ *
+ * English reads "Standard rate (21%)", Dutch keeps "Standaardtarief (21%)".
+ * Rates without a name read "6% VAT".
+ *
+ * @param {number} rate The VAT rate percentage.
+ * @return {string} The translated rate name.
+ * @spec openspec/changes/pipelinq-audit-admin-forms-pos/specs/pos-display/spec.md#requirement-pos-amounts-and-labels-follow-the-user
+ */
+export function rateLabel(rate) {
+	const intRate = Math.round(Number(rate) || 0)
+	if (intRate === 0) {
+		return t('pipelinq', 'Zero rate (0%)')
+	}
+	if (intRate === 9) {
+		return t('pipelinq', 'Reduced rate (9%)')
+	}
+	if (intRate === 21) {
+		return t('pipelinq', 'Standard rate (21%)')
+	}
+	return t('pipelinq', '{rate}% VAT', { rate: String(rate) })
 }
 
 /**
@@ -229,15 +263,24 @@ export function computeRefundTotals(lines) {
 }
 
 /**
- * Format a number as a Dutch-locale EUR amount, e.g. "€ 1.234,56".
+ * Format an amount in the setup currency and the user's locale.
+ *
+ * The name predates the currency setting and is kept so callers do not churn.
  *
  * @param {number} value The amount.
+ * @param {string} [currency] Currency code (defaults to the setup currency).
+ * @param {string} [locale] BCP 47 locale (defaults to the user's locale).
  * @return {string} The formatted amount.
+ * @spec openspec/changes/pipelinq-audit-admin-forms-pos/specs/pos-display/spec.md#requirement-pos-amounts-and-labels-follow-the-user
  */
-export function formatEur(value) {
-	return new Intl.NumberFormat('nl-NL', {
+export function formatEur(
+	value,
+	currency = reportingCurrency(),
+	locale = getUserLocale(),
+) {
+	return new Intl.NumberFormat(locale, {
 		style: 'currency',
-		currency: 'EUR',
+		currency,
 		minimumFractionDigits: 2,
 		maximumFractionDigits: 2,
 	}).format(Number(value) || 0)

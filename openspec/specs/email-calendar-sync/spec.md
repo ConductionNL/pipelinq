@@ -23,7 +23,7 @@ Email and calendar sync metadata is stored as OpenRegister objects in the `pipel
 - **CalendarLink**: calendar event UID, title, start datetime, end datetime, attendees (array), linked entity type, linked entity UUID, status (scheduled/completed/cancelled), created from (pipelinq/calendar)
 - **SyncConfig**: per-user configuration stored via `IConfig` (user preferences) -- enabled accounts, sync scope, visibility settings
 
-## ADDED Requirements
+## Requirements
 
 ---
 
@@ -355,60 +355,6 @@ The system MUST support configuring email domains to organizations for automatic
 
 ---
 
-## Appendix
-
-### Current Implementation Status
-
-**NOT implemented.** No email or calendar sync functionality exists in the codebase.
-
-- No integration with Nextcloud Mail app (`OCA\Mail`).
-- No integration with Nextcloud Calendar app (`OCA\DAV`).
-- No email-to-contact matching logic.
-- No email sync configuration UI.
-- No calendar event creation from Pipelinq.
-- No follow-up/meeting scheduling from entity detail views.
-- No domain-based organization matching (no `domains` property on client schema).
-- No "Link to Pipelinq" action in Nextcloud Mail.
-- No mail account selection or sync scope configuration.
-- No sync frequency or conflict handling.
-- The `ContactSyncService` exists for Nextcloud Contacts sync (address book sync) but is separate from email/calendar sync.
-- The `ActivityService` exists for logging CRM activities and could be extended for email/calendar events.
-- The `NotificationService` and `Notifier.php` exist for push notifications.
-- The client schema has `email` and `contactsUid` properties but no `domains` array for domain-based matching.
-
-### Competitor Comparison
-
-- **Twenty**: Full email/calendar sync with Google, Microsoft, and generic providers. Three visibility levels (metadata only, subject, full). Auto-contact creation from interactions. Domain-based company linking. Sync speed ~400 msgs/min, 5-minute update cycle. No HTML signatures, attachments planned for H1 2026.
-- **EspoCRM**: Email integration via IMAP/SMTP with auto-linking to contacts, accounts, and cases. Mass email campaigns. Email templates with merge fields. Group email accounts. Real-time email receiving via web hooks.
-- **Krayin**: Built-in email client with IMAP and SendGrid webhook support. Email-to-lead/person linking. Threading via References header. Folder management (inbox, sent, drafts, trash). Attachments supported.
-- **Pipelinq advantage**: Native Nextcloud Mail and Calendar integration eliminates the need for separate IMAP/SMTP configuration. Users already have their mail in Nextcloud Mail; Pipelinq adds CRM context on top. CalDAV integration provides standards-based calendar sync. No need to manage mail credentials in the CRM -- Nextcloud handles authentication.
-
-### Standards & References
-- Nextcloud Mail API -- `OCA\Mail\Service\MailManager` for accessing email accounts and messages
-- Nextcloud Calendar/DAV API -- `OCA\DAV\CalDAV\CalDavBackend` for calendar event creation
-- CalDAV (RFC 4791) -- calendar protocol used by Nextcloud Calendar
-- iCalendar (RFC 5545) -- event format for calendar entries
-- IMAP (RFC 3501) -- email retrieval protocol
-- vCard RFC 6350 -- for contact matching via email addresses
-- GDPR/AVG -- privacy considerations for email content indexing and storage
-
-### Specificity Assessment
-- The spec covers the full sync lifecycle: automatic matching, manual linking, calendar bidirectional sync, privacy controls, and configuration.
-- **NOT fully implementable as-is** due to Nextcloud Mail API dependencies:
-- **Resolved design decisions:**
-  - Sync mechanism: **Nextcloud `ITimedJob` background job** running every 5 minutes, querying Nextcloud Mail's database for new messages matching CRM contacts.
-  - Email content storage: Pipelinq stores **metadata only** in `EmailLink` objects (subject, sender, date, direction). Full email body is accessed on-demand from Nextcloud Mail.
-  - Calendar sync: Uses **`CalDavBackend`** for creating/reading events. Events are created in a dedicated "Pipelinq" calendar (auto-created per user).
-  - "Link to Pipelinq" in Mail: Implemented as a **Nextcloud Mail integration** via the Mail app's action menu extension point (if available) or as a separate browser action.
-- **Significant risks:**
-  - Nextcloud Mail's internal API is not stable for third-party integration. The `MailManager` service may change between Mail app versions.
-  - Deep calendar integration requires understanding CalDAV internals and proper iCalendar event generation.
-  - Initial sync of large mailboxes needs careful batching to avoid memory/timeout issues.
-- **Open questions:**
-  - Does Nextcloud Mail expose events (hooks) for new email arrival? If not, polling the Mail database is required. Recommendation: poll `oc_mail_messages` table via `ITimedJob`.
-  - Should calendar sync use a dedicated "Pipelinq" calendar or the user's default? Recommendation: dedicated calendar named "Pipelinq" for clarity.
-  - How should email thread tracking work across multiple contacts (CC'd contacts, forwarded emails)? Recommendation: create `EmailLink` per matching contact, use thread ID grouping.
-## Requirements
 ### Requirement: Enable email + calendar leaves on CRM detail pages
 
 The app manifest MUST add `email` and `calendar` to the `linkedTypes` of the `client`, `contact`, `lead`, and `request` schemas so that the leaves' tabs and cards render on those detail pages. The system MUST NOT define pipelinq-local `emailLink` or `calendarLink` schemas.
@@ -602,3 +548,56 @@ All user-visible strings in the sync-settings UI MUST have `en.json` and `nl.jso
 - **THEN** all labels, buttons, empty states, and error messages MUST display in Dutch
 - **AND** no raw English string MUST appear in Dutch locale
 
+## Appendix
+
+### Current Implementation Status
+
+**NOT implemented.** No email or calendar sync functionality exists in the codebase.
+
+- No integration with Nextcloud Mail app (`OCA\Mail`).
+- No integration with Nextcloud Calendar app (`OCA\DAV`).
+- No email-to-contact matching logic.
+- No email sync configuration UI.
+- No calendar event creation from Pipelinq.
+- No follow-up/meeting scheduling from entity detail views.
+- No domain-based organization matching (no `domains` property on client schema).
+- No "Link to Pipelinq" action in Nextcloud Mail.
+- No mail account selection or sync scope configuration.
+- No sync frequency or conflict handling.
+- The `ContactSyncService` exists for Nextcloud Contacts sync (address book sync) but is separate from email/calendar sync.
+- The `ActivityService` exists for logging CRM activities and could be extended for email/calendar events.
+- The `NotificationService` and `Notifier.php` exist for push notifications.
+- The client schema has `email` and `contactsUid` properties but no `domains` array for domain-based matching.
+
+### Competitor Comparison
+
+- **Twenty**: Full email/calendar sync with Google, Microsoft, and generic providers. Three visibility levels (metadata only, subject, full). Auto-contact creation from interactions. Domain-based company linking. Sync speed ~400 msgs/min, 5-minute update cycle. No HTML signatures, attachments planned for H1 2026.
+- **EspoCRM**: Email integration via IMAP/SMTP with auto-linking to contacts, accounts, and cases. Mass email campaigns. Email templates with merge fields. Group email accounts. Real-time email receiving via web hooks.
+- **Krayin**: Built-in email client with IMAP and SendGrid webhook support. Email-to-lead/person linking. Threading via References header. Folder management (inbox, sent, drafts, trash). Attachments supported.
+- **Pipelinq advantage**: Native Nextcloud Mail and Calendar integration eliminates the need for separate IMAP/SMTP configuration. Users already have their mail in Nextcloud Mail; Pipelinq adds CRM context on top. CalDAV integration provides standards-based calendar sync. No need to manage mail credentials in the CRM -- Nextcloud handles authentication.
+
+### Standards & References
+- Nextcloud Mail API -- `OCA\Mail\Service\MailManager` for accessing email accounts and messages
+- Nextcloud Calendar/DAV API -- `OCA\DAV\CalDAV\CalDavBackend` for calendar event creation
+- CalDAV (RFC 4791) -- calendar protocol used by Nextcloud Calendar
+- iCalendar (RFC 5545) -- event format for calendar entries
+- IMAP (RFC 3501) -- email retrieval protocol
+- vCard RFC 6350 -- for contact matching via email addresses
+- GDPR/AVG -- privacy considerations for email content indexing and storage
+
+### Specificity Assessment
+- The spec covers the full sync lifecycle: automatic matching, manual linking, calendar bidirectional sync, privacy controls, and configuration.
+- **NOT fully implementable as-is** due to Nextcloud Mail API dependencies:
+- **Resolved design decisions:**
+  - Sync mechanism: **Nextcloud `ITimedJob` background job** running every 5 minutes, querying Nextcloud Mail's database for new messages matching CRM contacts.
+  - Email content storage: Pipelinq stores **metadata only** in `EmailLink` objects (subject, sender, date, direction). Full email body is accessed on-demand from Nextcloud Mail.
+  - Calendar sync: Uses **`CalDavBackend`** for creating/reading events. Events are created in a dedicated "Pipelinq" calendar (auto-created per user).
+  - "Link to Pipelinq" in Mail: Implemented as a **Nextcloud Mail integration** via the Mail app's action menu extension point (if available) or as a separate browser action.
+- **Significant risks:**
+  - Nextcloud Mail's internal API is not stable for third-party integration. The `MailManager` service may change between Mail app versions.
+  - Deep calendar integration requires understanding CalDAV internals and proper iCalendar event generation.
+  - Initial sync of large mailboxes needs careful batching to avoid memory/timeout issues.
+- **Open questions:**
+  - Does Nextcloud Mail expose events (hooks) for new email arrival? If not, polling the Mail database is required. Recommendation: poll `oc_mail_messages` table via `ITimedJob`.
+  - Should calendar sync use a dedicated "Pipelinq" calendar or the user's default? Recommendation: dedicated calendar named "Pipelinq" for clarity.
+  - How should email thread tracking work across multiple contacts (CC'd contacts, forwarded emails)? Recommendation: create `EmailLink` per matching contact, use thread ID grouping.

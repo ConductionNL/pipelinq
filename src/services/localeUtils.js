@@ -5,6 +5,8 @@
  * currency, date, and number formatting across all components.
  */
 
+import { reportingCurrency } from './reportingCurrency.js'
+
 /**
  * Get the user's Nextcloud locale, falling back to 'nl-NL'.
  *
@@ -26,14 +28,17 @@ export function getUserLocale() {
 }
 
 /**
- * Format a numeric value as EUR currency using the user's locale.
+ * Format a numeric value as currency using the user's locale.
+ *
+ * Without a currency it uses the reporting currency chosen in setup.
  *
  * @param {number|string} value The numeric value to format
- * @param {string} [currency] The currency code
- * @return {string} Formatted currency string (e.g., "EUR 12.500,50" or "EUR 12,500.50")
+ * @param {string} [currency] The currency code (defaults to the reporting currency)
+ * @return {string} Formatted currency string (e.g., "EUR 12.500,50" or "USD 12,500.50")
  * @spec openspec/changes/reverse-2026-05-26-fe-services/tasks.md#task-23
+ * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
  */
-export function formatCurrency(value, currency = 'EUR') {
+export function formatCurrency(value, currency = reportingCurrency()) {
 	if (value === null || value === undefined || value === '') return currency + ' 0'
 	const num = Number(value)
 	if (isNaN(num)) return currency + ' 0'

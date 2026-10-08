@@ -23,10 +23,12 @@
 			:includeColumns="visibleColumns"
 			:emptyTitle="t('pipelinq', 'No shifts found')"
 			:emptyActionLabel="t('pipelinq', 'Open shift')"
+			rowClickToView
 			@add="openShift"
 			@emptyAction="openShift"
 			@refresh="onRefresh"
 			@sort="onSort"
+			@rowClick="openDetail"
 			@view="openDetail"
 			@pageChanged="onPageChange" />
 
@@ -39,7 +41,7 @@
 </template>
 
 <script>
-import { CnIndexPage, useListView } from '@conduction/nextcloud-vue'
+import { CnIndexPage, openRowTarget, useListView } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
 import { inject } from 'vue'
@@ -106,9 +108,16 @@ export default {
 		 * Navigate to a shift's detail.
 		 *
 		 * @param {object} row The clicked row.
+		 * @param {MouseEvent} [event] The row click; a modified or middle click opens a new tab.
+		 * @spec exclude the cash-shift surface has no owning requirement, see
+		 *   postShiftAction in services/posShiftActions.js
 		 */
-		openDetail(row) {
-			this.$router.push({ name: 'CashShiftDetail', params: { id: row.id } })
+		openDetail(row, event) {
+			openRowTarget(
+				event,
+				{ name: 'CashShiftDetail', params: { id: row.id } },
+				this.$router,
+			)
 		},
 
 		/**
@@ -126,7 +135,7 @@ export default {
 		 *
 		 * @param {object} payload The dialog payload (drawer, floatAmount, reference, notes).
 		 * @spec exclude the cash-shift surface has no owning requirement, see
-		 *   CashShiftActionsSection::lifecycle
+		 *   postShiftAction in services/posShiftActions.js
 		 */
 		async createShift(payload) {
 			this.opening = true

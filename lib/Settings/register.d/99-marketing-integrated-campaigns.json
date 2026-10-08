@@ -424,6 +424,7 @@
 				}
 			},
 			"blast": {
+    "slug": "blast",
 				"version": "1.2.0",
 				"description": "A blast is one campaign send. A journey that sends a mailing records its deliveries against a blast of its own, so the click redirect, the unsubscribe link and the campaign report keep working on a journey send without a second code path. journeyId is empty on every blast a person composed.",
 				"properties": {
@@ -474,37 +475,6 @@
 							"field": "shillinqValueTier",
 							"operator": "equals",
 							"value": "top"
-						}
-					]
-				},
-				"estimatedSize": 0
-			},
-			{
-				"@self": {
-					"register": "pipelinq",
-					"schema": "segment",
-					"slug": "segment-service-without-product"
-				},
-				"name": "Advice customers without a product",
-				"description": "Customers invoiced for the demo advice hour and never for the demo coffee. Copy it and swap the two item names for your own catalogue. Reads shillinq, and is empty where shillinq is absent.",
-				"entityType": "customer",
-				"rules": {
-					"type": "AND",
-					"children": [
-						{
-							"field": "shillinqPurchasedServices",
-							"operator": "contains",
-							"value": "[demo] adviesuur"
-						},
-						{
-							"type": "NOT",
-							"children": [
-								{
-									"field": "shillinqPurchasedProducts",
-									"operator": "contains",
-									"value": "[demo] koffie zwart"
-								}
-							]
 						}
 					]
 				},

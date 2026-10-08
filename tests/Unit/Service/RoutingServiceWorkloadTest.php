@@ -20,6 +20,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Service\RoutingService;
 use OCA\Pipelinq\Service\TicketService;
@@ -109,7 +110,7 @@ class RoutingServiceWorkloadTest extends TestCase {
 						}
 					}
 
-					$out[] = $row;
+					$out[] = self::entity(uuid: (string)($row['id'] ?? ''), payload: $row);
 				}
 
 				return $out;
@@ -243,4 +244,18 @@ class RoutingServiceWorkloadTest extends TestCase {
 
 		$this->assertSame(0, $service->getAgentWorkload(userId: ''));
 	}//end testGetAgentWorkloadEmptyUserReturnsZero()
+	/**
+	 * Wrap a payload in an ObjectEntity, the shape findByType() returns.
+	 *
+	 * @param string $uuid The object UUID.
+	 * @param array<string, mixed> $payload The object payload.
+	 *
+	 * @return ObjectEntity The entity.
+	 */
+	private static function entity(string $uuid, array $payload): ObjectEntity {
+		$entity = new ObjectEntity();
+		$entity->setUuid($uuid);
+		$entity->setObject($payload);
+		return $entity;
+	}//end entity()
 }//end class

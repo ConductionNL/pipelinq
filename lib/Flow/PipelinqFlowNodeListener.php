@@ -74,6 +74,10 @@ class PipelinqFlowNodeListener implements IEventListener {
 	private const NODES = [
 		CompetitorWatchRunNode::class,
 		JourneyActionNode::class,
+		// Without this line the node is a class nobody can reach: the flow
+		// builder never offers it, and a flow declaring its type is refused at
+		// save with "the node does not exist on this instance".
+		ProvisionContactIdentityNode::class,
 	];
 
 	/**

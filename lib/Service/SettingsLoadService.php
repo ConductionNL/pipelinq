@@ -43,6 +43,28 @@ class SettingsLoadService {
 		'client',
 		'contact',
 		'lead',
+		// Party fields and indicators (typed-fields-and-indicators-on-a-party).
+		// PartyIndicatorService and PartyLeafProvider read these three keys;
+		// without the slugs here the install never wrote them and the party
+		// panel answered "no indicators" on every instance (pipelinq#2036).
+		'partyFieldSet',
+		'partyIndicator',
+		'partyIndicatorValue',
+		// The party kind vocabulary (party-kinds-accepted-per-case-type).
+		// PartyKindRegistryService, PartyLinkService and the SeedPartyKinds
+		// repair step read these three keys; until 2026-09-27 nothing wrote
+		// them, because the slugs were not listed here.
+		'partyKind',
+		'partyKindAcceptance',
+		'partyLink',
+		// Anonymous website intake (website-enquiry). An enquiry is what a
+		// visitor sends before a client exists, so it deliberately does NOT
+		// reuse `lead`: lead requires `client` and `pipeline`, and neither is
+		// knowable at intake. Without this slug the `enquiry_schema` app-config
+		// key is never written on import and EnquiryIntakeService cannot
+		// resolve the schema, which is the same failure the posTenderType
+		// comment below records.
+		'enquiry',
 		// Unified inbound-matter supertype (unify-ticket-supertype). It replaced
 		// the retired `request`, `complaint` and `contactmoment` schemas; a
 		// subtype is selected with the `ticketType` discriminator.
@@ -146,6 +168,72 @@ class SettingsLoadService {
 		'berichtenboxTemplate',
 		'mailboxResolution',
 		'deliveryAuditLog',
+		// Customer satisfaction, closed loop (customer-satisfaction-closed-loop).
+		// SurveyDispatchService, SurveyResponseService and
+		// DetractorFollowUpService read the invitation and response keys.
+		// `survey` and `surveyInvitation` collided with openregister's own
+		// survey schemas and were renamed apart (RenameCollidingSchemaSlugs);
+		// the config keys kept their names, mapped in SCHEMA_CONFIG_KEYS.
+		'satisfactionSurvey',
+		'satisfactionSurveyInvitation',
+		'surveyResponse',
+		// Programme portfolio (programme-portfolio). `deliveryProgramme` maps to
+		// the persisted `programme_schema` key in SCHEMA_CONFIG_KEYS; the
+		// ProgrammeController and the portfolio and estimation services read
+		// the task, work item and cycle keys.
+		'deliveryProgramme',
+		'programmeTask',
+		'programmeTeamMember',
+		'programmeWorkItem',
+		'estimationScale',
+		'programmeEstimate',
+		'programmeCycle',
+		// The rest of the slugs whose `<slug>_schema` key a service reads. Every
+		// one below was declared in a fragment and imported, and its key was
+		// never written, because the slug was not listed here; measured on
+		// 2026-09-27 as 51 read-but-unwritten keys, 30 of them this block.
+		// SchemaConfigKeysAreWrittenTest keeps the list closed from now on.
+		//
+		// Marketing: articles, campaigns, segments and blasts.
+		'article',
+		'attributionLink',
+		'blastDelivery',
+		'campaign',
+		'campaignTemplate',
+		'journey',
+		'journeyRun',
+		'segment',
+		'subscription',
+		'touchpoint',
+		'weeklyReview',
+		// Marketing: search intelligence and social.
+		'competitor',
+		'competitorWatch',
+		'keywordTarget',
+		'searchQueryDaily',
+		'socialConnection',
+		'socialPublication',
+		'watchEvent',
+		// Marketing: mail transports.
+		'mailTransport',
+		// Messaging channels (whatsapp-sms-channel). `channelConversation` and
+		// `channelMessage` were renamed apart from hermiq's bare slugs; their
+		// readers kept the persisted keys, mapped in SCHEMA_CONFIG_KEYS.
+		'channelConversation',
+		'channelMessage',
+		'channelProvider',
+		'messageSendBudget',
+		'messageTemplate',
+		'messagingConsentRecord',
+		// BRP lookups and the BSN audit trail.
+		'brpLookupVerzoek',
+		'brpPersoon',
+		'bsnAuditRecord',
+		'optOutVlag',
+		// Forecasting and quota.
+		'forecastOverride',
+		'forecastSnapshot',
+		'salesQuota',
 	];
 
 	/**
@@ -287,9 +375,14 @@ class SettingsLoadService {
 	 *   until a migration ships" TRUE: intent alone does not hold a derived key
 	 *   still, because the key is computed from the very slug that moved.
 	 *
+	 * Public because a reader that looks a schema id up by slug must apply the
+	 * same pin: the customer portal read `crmPortalAccount_schema` while the
+	 * install wrote `portalAccount_schema`, and no resident could log in
+	 * (pipelinq#2037).
+	 *
 	 * @var array<string, string>
 	 */
-	private const SCHEMA_CONFIG_KEYS = [
+	public const SCHEMA_CONFIG_KEYS = [
 		'slaPolicy' => 'sla_policy_schema',
 		'slaBreachEvent' => 'sla_breach_event_schema',
 		'customerLoyaltyAccount' => 'klantLoyaltyAccount_schema',
@@ -324,6 +417,33 @@ class SettingsLoadService {
 		// The last two colliding slugs; keys stay as persisted.
 		'billableExpense' => 'expense_schema',
 		'masterMergeOperation' => 'mergeOperation_schema',
+		// The programme portfolio's head schema. learniq's `programme` is the
+		// education programme; this one is the delivery programme above the
+		// zaken, so the slug moved to `deliveryProgramme`. The key did not:
+		// `programme_schema` is already written on every instance that has the
+		// portfolio, and every reader in this app asks for it by that name.
+		'deliveryProgramme' => 'programme_schema',
+		// The billing time entry. The slug moved from `timeEntry` to
+		// `billingTimeEntry` (RenameTimeEntrySchemaSlug) because humaniq and
+		// planninq declare a `timeEntry` too. TimeEntryWipController,
+		// TimeApprovalListener and TimeBillingHandoffService read
+		// `timeEntry_schema`, and SchemaMapService maps that key to the new
+		// slug; until 2026-09-27 the install wrote `billingTimeEntry_schema`,
+		// which nothing reads, so the WIP endpoint answered 400 on every call.
+		'billingTimeEntry' => 'timeEntry_schema',
+		// The channel pair, renamed apart from hermiq's `conversation` and
+		// `message` (RenameCollidingSchemaSlugs). The adapters and
+		// CostReconciliationService read the persisted keys and fall back to
+		// the new slugs, so they worked by fallback; the keys now say so.
+		'channelConversation' => 'conversation_schema',
+		'channelMessage' => 'message_schema',
+		// The satisfaction survey and its invitation. openregister ships a
+		// `survey` and a `surveyInvitation` of its own (a generic questionnaire
+		// with questions and answer sets); this is the KTO survey sent after a
+		// closed ticket, so the two are renamed apart. SurveyDispatchService,
+		// SurveyResponseService and the Settings whitelist read the old keys.
+		'satisfactionSurvey' => 'survey_schema',
+		'satisfactionSurveyInvitation' => 'surveyInvitation_schema',
 	];
 
 	/**

@@ -1,0 +1,1487 @@
+{
+	"_comment": "Help desk capability comparison shown on the Features & roadmap page. Written once, offline. The GLPI and Zammad columns come from round 3 of the competitor reading in the private repo concurrentie-analyse (procest/_round3/compare/ plus procest/glpi/round3/M1-column.md and procest/zammad/round3/M1-column.md), where both products were installed and driven locally on 2026-09-09 and every cell carries a file-and-line citation. Every row here names the question it came from in `source`, so a rival cell can be traced back to the reading that produced it. The pipelinq column was read from this repository at the revision in `pipelinqRevision`. Rows are reworded for a help desk audience; the QUESTION each row asks is unchanged, which is what makes the rival ratings still true. NEVER re-rate a rival here without installing that product again: set `addedOn` on the row and leave the rival cells `unknown` instead. Eight candidate rows were parked because all three systems answered `no` to them, and a row nobody passes measures a specification rather than a product: file versions with restore, office editing in the browser, ticket files in the platform file manager, search from the platform search bar, widgets driven by a saved view, an export area with expiry and download counts, a message broker, and an access list on a single ticket. Put one back the day a system in this table answers it.",
+	"comparedOn": "2026-09-09",
+	"pipelinqRevision": "6ad3642",
+	"_rerated": [],
+	"systems": [
+		{
+			"key": "pipelinq",
+			"name": "Pipelinq",
+			"isSelf": true
+		},
+		{
+			"key": "glpi",
+			"name": "GLPI 11.0.8",
+			"vendor": "GLPI Project"
+		},
+		{
+			"key": "zammad",
+			"name": "Zammad 7.1.3",
+			"vendor": "Zammad GmbH"
+		}
+	],
+	"areas": [
+		{
+			"key": "intake",
+			"name": "Intake and channels",
+			"name_nl": "Aanmelding en kanalen"
+		},
+		{
+			"key": "ticket-core",
+			"name": "Ticket core",
+			"name_nl": "Ticketbeheer"
+		},
+		{
+			"key": "agent-workflow",
+			"name": "Agent workflow",
+			"name_nl": "Werkstroom voor behandelaars"
+		},
+		{
+			"key": "service-levels",
+			"name": "Service levels and deadlines",
+			"name_nl": "Serviceniveaus en termijnen"
+		},
+		{
+			"key": "communication",
+			"name": "Communication",
+			"name_nl": "Communicatie"
+		},
+		{
+			"key": "self-service",
+			"name": "Self service and knowledge",
+			"name_nl": "Selfservice en kennisbank"
+		},
+		{
+			"key": "attachments",
+			"name": "Attachments and files",
+			"name_nl": "Bijlagen en bestanden"
+		},
+		{
+			"key": "search-and-views",
+			"name": "Search and views",
+			"name_nl": "Zoeken en overzichten"
+		},
+		{
+			"key": "reporting",
+			"name": "Reporting and workload",
+			"name_nl": "Rapportage en werkvoorraad"
+		},
+		{
+			"key": "configuration",
+			"name": "Configuration",
+			"name_nl": "Inrichting"
+		},
+		{
+			"key": "integrations",
+			"name": "Integrations",
+			"name_nl": "Koppelingen"
+		},
+		{
+			"key": "access",
+			"name": "Access and privacy",
+			"name_nl": "Toegang en privacy"
+		}
+	],
+	"capabilities": [
+		{
+			"id": "1.1",
+			"area": "intake",
+			"name": "Customer web form that opens a ticket",
+			"name_nl": "Webformulier waarmee een klant een ticket opent",
+			"source": "1.1",
+			"pipelinq": "no",
+			"glpi": "yes",
+			"zammad": "partial"
+		},
+		{
+			"id": "1.2",
+			"area": "intake",
+			"name": "Agent dialog to raise a ticket with type, requester and fields",
+			"name_nl": "Dialoog waarin een behandelaar een ticket opvoert met type, melder en velden",
+			"source": "1.2",
+			"pipelinq": "yes",
+			"glpi": "yes",
+			"zammad": "yes"
+		},
+		{
+			"id": "1.3",
+			"area": "intake",
+			"name": "Raise a ticket from a customer or contact record",
+			"name_nl": "Ticket starten vanaf een klant- of contactkaart",
+			"source": "1.3",
+			"pipelinq": "yes",
+			"glpi": "partial",
+			"zammad": "yes"
+		},
+		{
+			"id": "1.4",
+			"area": "intake",
+			"name": "E-mail intake from a mailbox",
+			"name_nl": "E-mailintake vanuit een mailbox",
+			"source": "1.5",
+			"pipelinq": "no",
+			"glpi": "yes",
+			"zammad": "yes"
+		},
+		{
+			"id": "1.5",
+			"area": "intake",
+			"name": "API ticket creation for external systems",
+			"name_nl": "Tickets aanmaken via de API voor externe systemen",
+			"source": "1.7",
+			"pipelinq": "yes",
+			"glpi": "yes",
+			"zammad": "yes"
+		},
+		{
+			"id": "1.6",
+			"area": "intake",
+			"name": "Scheduled or recurring tickets",
+			"name_nl": "Geplande of terugkerende tickets",
+			"source": "1.8",
+			"pipelinq": "no",
+			"glpi": "yes",
+			"zammad": "no"
+		},
+		{
+			"id": "1.7",
+			"area": "intake",
+			"name": "Intake routing to a queue, team or role",
+			"name_nl": "Routering bij binnenkomst naar wachtrij, team of rol",
+			"source": "1.12",
+			"pipelinq": "partial",
+			"glpi": "yes",
+			"zammad": "yes"
+		},
+		{
+			"id": "1.8",
+			"area": "intake",
+			"name": "Raise a ticket from a dashboard action",
+			"name_nl": "Ticket starten vanaf een actie op het dashboard",
+			"source": "1.13",
+			"pipelinq": "yes",
+			"glpi": "yes",
+			"zammad": "no"
+		},
+		{
+			"id": "1.9",
+			"area": "intake",
+			"name": "Duplicate detection while the ticket is being raised",
+			"name_nl": "Duplicaatdetectie tijdens het opvoeren van een ticket",
+			"source": "2.24",
+			"pipelinq": "no",
+			"glpi": "partial",
+			"zammad": "yes"
+		},
+		{
+			"id": "1.10",
+			"area": "intake",
+			"name": "Shared mailbox or message inbox with assign to ticket",
+			"name_nl": "Gedeelde postbus of berichteninbox met toewijzen aan een ticket",
+			"source": "6.5",
+			"pipelinq": "no",
+			"glpi": "partial",
+			"zammad": "partial"
+		},
+		{
+			"id": "1.11",
+			"area": "intake",
+			"name": "Chat conversation captured onto the ticket",
+			"name_nl": "Chatgesprek vastgelegd op het ticket",
+			"source": "6.12",
+			"pipelinq": "partial",
+			"glpi": "no",
+			"zammad": "partial"
+		},
+		{
+			"id": "1.12",
+			"area": "intake",
+			"name": "Telephony panel for the service desk",
+			"name_nl": "Telefoniepaneel voor de servicedesk",
+			"source": "6.13",
+			"pipelinq": "partial",
+			"glpi": "no",
+			"zammad": "yes"
+		},
+		{
+			"id": "1.13",
+			"area": "intake",
+			"name": "Take a payment during intake",
+			"name_nl": "Betaling innen tijdens de aanmelding",
+			"source": "1.11",
+			"pipelinq": "partial",
+			"glpi": "no",
+			"zammad": "no"
+		},
+		{
+			"id": "2.1",
+			"area": "ticket-core",
+			"name": "Ticket number from a mask or sequence",
+			"name_nl": "Ticketnummer uit een masker of reeks",
+			"source": "2.1",
+			"pipelinq": "no",
+			"glpi": "no",
+			"zammad": "yes"
+		},
+		{
+			"id": "2.2",
+			"area": "ticket-core",
+			"name": "Assign to an agent, claim, unassign",
+			"name_nl": "Toewijzen aan een behandelaar, oppakken, vrijgeven",
+			"source": "2.4",
+			"pipelinq": "partial",
+			"glpi": "yes",
+			"zammad": "yes"
+		},
+		{
+			"id": "2.3",
+			"area": "ticket-core",
+			"name": "Assign to a team or queue with a role",
+			"name_nl": "Toewijzen aan een team of wachtrij met een rol",
+			"source": "2.5",
+			"pipelinq": "no",
+			"glpi": "yes",
+			"zammad": "partial"
+		},
+		{
+			"id": "2.4",
+			"area": "ticket-core",
+			"name": "Bulk actions on a ticket list",
+			"name_nl": "Bulkacties op een ticketlijst",
+			"source": "2.6",
+			"pipelinq": "partial",
+			"glpi": "yes",
+			"zammad": "yes"
+		},
+		{
+			"id": "2.5",
+			"area": "ticket-core",
+			"name": "Configurable status vocabulary with colour and order",
+			"name_nl": "Instelbare statuslijst met kleur en volgorde",
+			"source": "2.7",
+			"pipelinq": "no",
+			"glpi": "no",
+			"zammad": "partial"
+		},
+		{
+			"id": "2.6",
+			"area": "ticket-core",
+			"name": "Tags or labels on a ticket",
+			"name_nl": "Labels of tags op een ticket",
+			"source": "2.8",
+			"pipelinq": "no",
+			"glpi": "no",
+			"zammad": "yes"
+		},
+		{
+			"id": "2.7",
+			"area": "ticket-core",
+			"name": "Copy a ticket",
+			"name_nl": "Ticket kopieren",
+			"source": "2.9",
+			"pipelinq": "no",
+			"glpi": "yes",
+			"zammad": "no"
+		},
+		{
+			"id": "2.8",
+			"area": "ticket-core",
+			"name": "Sub-tickets, related tickets, hierarchy",
+			"name_nl": "Subtickets, gerelateerde tickets, hierarchie",
+			"source": "2.10",
+			"pipelinq": "partial",
+			"glpi": "yes",
+			"zammad": "partial"
+		},
+		{
+			"id": "2.9",
+			"area": "ticket-core",
+			"name": "Typed links between tickets with a declared inverse",
+			"name_nl": "Getypeerde koppelingen tussen tickets met een vastgelegde omkering",
+			"source": "2.26",
+			"pipelinq": "no",
+			"glpi": "yes",
+			"zammad": "partial"
+		},
+		{
+			"id": "2.10",
+			"area": "ticket-core",
+			"name": "Merge two tickets into one",
+			"name_nl": "Twee tickets samenvoegen tot een",
+			"source": "2.23",
+			"pipelinq": "no",
+			"glpi": "yes",
+			"zammad": "yes"
+		},
+		{
+			"id": "2.11",
+			"area": "ticket-core",
+			"name": "Pause and resume with a recorded reason",
+			"name_nl": "Pauzeren en hervatten met een vastgelegde reden",
+			"source": "2.11",
+			"pipelinq": "no",
+			"glpi": "yes",
+			"zammad": "partial"
+		},
+		{
+			"id": "2.12",
+			"area": "ticket-core",
+			"name": "Automatic chasing while a ticket waits on the requester",
+			"name_nl": "Automatisch rappelleren zolang een ticket op de melder wacht",
+			"source": "2.25",
+			"pipelinq": "no",
+			"glpi": "yes",
+			"zammad": "partial"
+		},
+		{
+			"id": "2.13",
+			"area": "ticket-core",
+			"name": "Reopen a closed ticket",
+			"name_nl": "Een gesloten ticket heropenen",
+			"source": "2.12",
+			"pipelinq": "no",
+			"glpi": "yes",
+			"zammad": "yes"
+		},
+		{
+			"id": "2.14",
+			"area": "ticket-core",
+			"name": "Close reason or outcome from a configured list",
+			"name_nl": "Afsluitreden of uitkomst uit een ingerichte lijst",
+			"source": "7.1",
+			"pipelinq": "partial",
+			"glpi": "partial",
+			"zammad": "partial"
+		},
+		{
+			"id": "2.15",
+			"area": "ticket-core",
+			"name": "Field-level change history on the ticket",
+			"name_nl": "Wijzigingshistorie per veld op het ticket",
+			"source": "2.16",
+			"pipelinq": "partial",
+			"glpi": "partial",
+			"zammad": "partial"
+		},
+		{
+			"id": "2.16",
+			"area": "ticket-core",
+			"name": "Delete a ticket behind a guard",
+			"name_nl": "Een ticket verwijderen achter een waarborg",
+			"source": "2.17",
+			"pipelinq": "partial",
+			"glpi": "partial",
+			"zammad": "yes"
+		},
+		{
+			"id": "2.17",
+			"area": "ticket-core",
+			"name": "Favourites and recently viewed tickets",
+			"name_nl": "Favorieten en recent bekeken tickets",
+			"source": "2.19",
+			"pipelinq": "no",
+			"glpi": "no",
+			"zammad": "partial"
+		},
+		{
+			"id": "2.18",
+			"area": "ticket-core",
+			"name": "Live updates on the ticket page",
+			"name_nl": "Live bijwerken van de ticketpagina",
+			"source": "2.20",
+			"pipelinq": "no",
+			"glpi": "no",
+			"zammad": "yes"
+		},
+		{
+			"id": "2.19",
+			"area": "ticket-core",
+			"name": "Edit lock on a ticket, with the holder named",
+			"name_nl": "Bewerkslot op een ticket, met de houder erbij",
+			"source": "2.27",
+			"pipelinq": "no",
+			"glpi": "yes",
+			"zammad": "partial"
+		},
+		{
+			"id": "2.20",
+			"area": "ticket-core",
+			"name": "Watchers on a ticket, separate from the assignee",
+			"name_nl": "Volgers op een ticket, los van de toegewezen behandelaar",
+			"source": "13.18",
+			"pipelinq": "no",
+			"glpi": "yes",
+			"zammad": "yes"
+		},
+		{
+			"id": "2.21",
+			"area": "ticket-core",
+			"name": "Raw ticket inspection for administrators",
+			"name_nl": "Ruwe ticketinspectie voor beheerders",
+			"source": "2.22",
+			"pipelinq": "partial",
+			"glpi": "partial",
+			"zammad": "partial"
+		},
+		{
+			"id": "3.1",
+			"area": "agent-workflow",
+			"name": "Macro that makes several changes and sets what the agent sees next",
+			"name_nl": "Macro die meerdere wijzigingen doet en bepaalt wat de behandelaar daarna ziet",
+			"source": "3.20",
+			"pipelinq": "no",
+			"glpi": "partial",
+			"zammad": "yes"
+		},
+		{
+			"id": "3.2",
+			"area": "agent-workflow",
+			"name": "Rules engine turning conditions into field values or actions",
+			"name_nl": "Regelengine die voorwaarden omzet in veldwaarden of acties",
+			"source": "3.11",
+			"pipelinq": "partial",
+			"glpi": "yes",
+			"zammad": "yes"
+		},
+		{
+			"id": "3.3",
+			"area": "agent-workflow",
+			"name": "Actions that run automatically on a state change",
+			"name_nl": "Acties die automatisch draaien bij een statuswijziging",
+			"source": "3.9",
+			"pipelinq": "yes",
+			"glpi": "partial",
+			"zammad": "partial"
+		},
+		{
+			"id": "3.4",
+			"area": "agent-workflow",
+			"name": "Work list with My, Unassigned, Team and All",
+			"name_nl": "Werklijst met Mijn, Niet toegewezen, Team en Alles",
+			"source": "3.5",
+			"pipelinq": "partial",
+			"glpi": "partial",
+			"zammad": "partial"
+		},
+		{
+			"id": "3.5",
+			"area": "agent-workflow",
+			"name": "Tasks that can be assigned, claimed or handed to a team",
+			"name_nl": "Taken die toegewezen, opgepakt of aan een team gegeven kunnen worden",
+			"source": "3.7",
+			"pipelinq": "yes",
+			"glpi": "yes",
+			"zammad": "no"
+		},
+		{
+			"id": "3.6",
+			"area": "agent-workflow",
+			"name": "Due date on a task",
+			"name_nl": "Uiterste datum op een taak",
+			"source": "3.6",
+			"pipelinq": "yes",
+			"glpi": "partial",
+			"zammad": "partial"
+		},
+		{
+			"id": "3.7",
+			"area": "agent-workflow",
+			"name": "Tasks assigned to the ticket owner automatically",
+			"name_nl": "Taken automatisch toewijzen aan de eigenaar van het ticket",
+			"source": "3.8",
+			"pipelinq": "partial",
+			"glpi": "partial",
+			"zammad": "partial"
+		},
+		{
+			"id": "3.8",
+			"area": "agent-workflow",
+			"name": "Checklist items the agent works through",
+			"name_nl": "Checklistpunten die de behandelaar afloopt",
+			"source": "3.3",
+			"pipelinq": "no",
+			"glpi": "no",
+			"zammad": "partial"
+		},
+		{
+			"id": "3.9",
+			"area": "agent-workflow",
+			"name": "Tasks that carry their own form",
+			"name_nl": "Taken met een eigen formulier",
+			"source": "3.4",
+			"pipelinq": "no",
+			"glpi": "partial",
+			"zammad": "no"
+		},
+		{
+			"id": "3.10",
+			"area": "agent-workflow",
+			"name": "Review or approval step before something goes out",
+			"name_nl": "Beoordelings- of goedkeuringsstap voordat iets uitgaat",
+			"source": "3.13",
+			"pipelinq": "yes",
+			"glpi": "partial",
+			"zammad": "no"
+		},
+		{
+			"id": "3.11",
+			"area": "agent-workflow",
+			"name": "Save a half-filled form and come back to it",
+			"name_nl": "Een half ingevuld formulier bewaren en later afmaken",
+			"source": "3.14",
+			"pipelinq": "partial",
+			"glpi": "partial",
+			"zammad": "yes"
+		},
+		{
+			"id": "3.12",
+			"area": "agent-workflow",
+			"name": "Multi-step forms with conditional steps",
+			"name_nl": "Formulieren in meerdere stappen met voorwaardelijke stappen",
+			"source": "3.12",
+			"pipelinq": "yes",
+			"glpi": "yes",
+			"zammad": "no"
+		},
+		{
+			"id": "3.13",
+			"area": "agent-workflow",
+			"name": "Fields filled by a formula or a date calculation",
+			"name_nl": "Velden gevuld door een formule of een datumberekening",
+			"source": "3.17",
+			"pipelinq": "yes",
+			"glpi": "partial",
+			"zammad": "no"
+		},
+		{
+			"id": "3.14",
+			"area": "agent-workflow",
+			"name": "Hand a task to a supplier or partner outside the team",
+			"name_nl": "Een taak beleggen bij een leverancier of partner buiten het team",
+			"source": "3.19",
+			"pipelinq": "no",
+			"glpi": "partial",
+			"zammad": "no"
+		},
+		{
+			"id": "3.15",
+			"area": "agent-workflow",
+			"name": "Task panel beside the ticket tabs",
+			"name_nl": "Takenpaneel naast de tabbladen van het ticket",
+			"source": "3.18",
+			"pipelinq": "partial",
+			"glpi": "partial",
+			"zammad": "partial"
+		},
+		{
+			"id": "4.1",
+			"area": "service-levels",
+			"name": "A service level target on the ticket",
+			"name_nl": "Een serviceniveaudoel op het ticket",
+			"source": "8.1",
+			"pipelinq": "yes",
+			"glpi": "partial",
+			"zammad": "partial"
+		},
+		{
+			"id": "4.2",
+			"area": "service-levels",
+			"name": "Overdue or urgency indicator on the ticket and in the list",
+			"name_nl": "Indicator voor te laat of urgent op het ticket en in de lijst",
+			"source": "8.2",
+			"pipelinq": "partial",
+			"glpi": "yes",
+			"zammad": "yes"
+		},
+		{
+			"id": "4.3",
+			"area": "service-levels",
+			"name": "One business-hours calendar, administered in one place",
+			"name_nl": "Een kalender met openingstijden, op een plek beheerd",
+			"source": "8.12",
+			"pipelinq": "partial",
+			"glpi": "yes",
+			"zammad": "yes"
+		},
+		{
+			"id": "4.4",
+			"area": "service-levels",
+			"name": "A target date moved off a weekend or public holiday",
+			"name_nl": "Een streefdatum die van een weekend of feestdag af schuift",
+			"source": "8.11",
+			"pipelinq": "yes",
+			"glpi": "yes",
+			"zammad": "yes"
+		},
+		{
+			"id": "4.5",
+			"area": "service-levels",
+			"name": "Pausing gives the paused time back to the target",
+			"name_nl": "Pauzeren geeft de gepauzeerde tijd terug aan het doel",
+			"source": "8.13",
+			"pipelinq": "yes",
+			"glpi": "yes",
+			"zammad": "yes"
+		},
+		{
+			"id": "4.6",
+			"area": "service-levels",
+			"name": "Escalation ladder with more than one step when a target is breached",
+			"name_nl": "Escalatieladder met meer dan een trede als een doel overschreden wordt",
+			"source": "8.14",
+			"pipelinq": "yes",
+			"glpi": "yes",
+			"zammad": "partial"
+		},
+		{
+			"id": "4.7",
+			"area": "service-levels",
+			"name": "A target that ends on a day rather than at a moment",
+			"name_nl": "Een doel dat op een dag afloopt in plaats van op een moment",
+			"source": "8.15",
+			"pipelinq": "no",
+			"glpi": "yes",
+			"zammad": "no"
+		},
+		{
+			"id": "4.8",
+			"area": "service-levels",
+			"name": "Deadline notifications by e-mail",
+			"name_nl": "Termijnmeldingen per e-mail",
+			"source": "8.6",
+			"pipelinq": "no",
+			"glpi": "yes",
+			"zammad": "yes"
+		},
+		{
+			"id": "4.9",
+			"area": "service-levels",
+			"name": "Reminders on a ticket with a responsible user",
+			"name_nl": "Herinneringen op een ticket met een verantwoordelijke",
+			"source": "8.4",
+			"pipelinq": "partial",
+			"glpi": "partial",
+			"zammad": "yes"
+		},
+		{
+			"id": "4.10",
+			"area": "service-levels",
+			"name": "Extend or change a target with a reason",
+			"name_nl": "Een doel verlengen of wijzigen met een reden",
+			"source": "8.5",
+			"pipelinq": "partial",
+			"glpi": "partial",
+			"zammad": "partial"
+		},
+		{
+			"id": "4.11",
+			"area": "service-levels",
+			"name": "Suspension that resumes on its own",
+			"name_nl": "Opschorting die vanzelf weer doorloopt",
+			"source": "8.10",
+			"pipelinq": "partial",
+			"glpi": "partial",
+			"zammad": "partial"
+		},
+		{
+			"id": "4.12",
+			"area": "service-levels",
+			"name": "Timer events inside the process",
+			"name_nl": "Tijdgebeurtenissen in het proces",
+			"source": "8.9",
+			"pipelinq": "partial",
+			"glpi": "partial",
+			"zammad": "partial"
+		},
+		{
+			"id": "4.13",
+			"area": "service-levels",
+			"name": "Due dates on the tasks under a ticket",
+			"name_nl": "Uiterste data op de taken onder een ticket",
+			"source": "8.3",
+			"pipelinq": "partial",
+			"glpi": "partial",
+			"zammad": "partial"
+		},
+		{
+			"id": "5.1",
+			"area": "communication",
+			"name": "One timeline per ticket holding notes, mail and messages",
+			"name_nl": "Een tijdlijn per ticket met notities, mail en berichten",
+			"source": "6.4",
+			"pipelinq": "partial",
+			"glpi": "yes",
+			"zammad": "yes"
+		},
+		{
+			"id": "5.2",
+			"area": "communication",
+			"name": "Internal or public visibility per timeline entry",
+			"name_nl": "Interne of publieke zichtbaarheid per tijdlijnregel",
+			"source": "6.15",
+			"pipelinq": "partial",
+			"glpi": "yes",
+			"zammad": "yes"
+		},
+		{
+			"id": "5.3",
+			"area": "communication",
+			"name": "Notes on a ticket",
+			"name_nl": "Notities op een ticket",
+			"source": "6.1",
+			"pipelinq": "partial",
+			"glpi": "yes",
+			"zammad": "yes"
+		},
+		{
+			"id": "5.4",
+			"area": "communication",
+			"name": "Send e-mail from the ticket with templates and attachments",
+			"name_nl": "E-mail versturen vanaf het ticket met sjablonen en bijlagen",
+			"source": "6.3",
+			"pipelinq": "no",
+			"glpi": "partial",
+			"zammad": "yes"
+		},
+		{
+			"id": "5.5",
+			"area": "communication",
+			"name": "Contact moments with a channel and a direction",
+			"name_nl": "Contactmomenten met een kanaal en een richting",
+			"source": "6.2",
+			"pipelinq": "partial",
+			"glpi": "partial",
+			"zammad": "yes"
+		},
+		{
+			"id": "5.6",
+			"area": "communication",
+			"name": "In-app notifications",
+			"name_nl": "Meldingen in de app",
+			"source": "6.8",
+			"pipelinq": "yes",
+			"glpi": "partial",
+			"zammad": "yes"
+		},
+		{
+			"id": "5.7",
+			"area": "communication",
+			"name": "Scheduled or planned e-mail",
+			"name_nl": "Geplande e-mail",
+			"source": "6.9",
+			"pipelinq": "partial",
+			"glpi": "partial",
+			"zammad": "partial"
+		},
+		{
+			"id": "5.8",
+			"area": "communication",
+			"name": "Import a .msg or .eml file onto a ticket",
+			"name_nl": "Een .msg- of .eml-bestand op een ticket importeren",
+			"source": "6.10",
+			"pipelinq": "no",
+			"glpi": "partial",
+			"zammad": "partial"
+		},
+		{
+			"id": "5.9",
+			"area": "communication",
+			"name": "Webhooks or an event outbox on ticket events",
+			"name_nl": "Webhooks of een gebeurtenissenuitgang op ticketgebeurtenissen",
+			"source": "6.11",
+			"pipelinq": "no",
+			"glpi": "yes",
+			"zammad": "yes"
+		},
+		{
+			"id": "5.10",
+			"area": "communication",
+			"name": "Satisfaction survey after a ticket closes",
+			"name_nl": "Tevredenheidsonderzoek nadat een ticket sluit",
+			"source": "6.16",
+			"pipelinq": "no",
+			"glpi": "yes",
+			"zammad": "no"
+		},
+		{
+			"id": "5.11",
+			"area": "communication",
+			"name": "E-mail template library",
+			"name_nl": "Bibliotheek met e-mailsjablonen",
+			"source": "11.12",
+			"pipelinq": "yes",
+			"glpi": "yes",
+			"zammad": "partial"
+		},
+		{
+			"id": "6.1",
+			"area": "self-service",
+			"name": "Knowledge base with visibility per role",
+			"name_nl": "Kennisbank met zichtbaarheid per rol",
+			"source": "11.26",
+			"pipelinq": "partial",
+			"glpi": "yes",
+			"zammad": "yes"
+		},
+		{
+			"id": "6.2",
+			"area": "self-service",
+			"name": "Messaging with customers through a portal",
+			"name_nl": "Berichten met klanten via een portaal",
+			"source": "6.7",
+			"pipelinq": "yes",
+			"glpi": "yes",
+			"zammad": "yes"
+		},
+		{
+			"id": "6.3",
+			"area": "self-service",
+			"name": "Portal access rights per ticket",
+			"name_nl": "Portaalrechten per ticket",
+			"source": "13.13",
+			"pipelinq": "yes",
+			"glpi": "partial",
+			"zammad": "partial"
+		},
+		{
+			"id": "6.4",
+			"area": "self-service",
+			"name": "Publish a file to the customer portal",
+			"name_nl": "Een bestand publiceren naar het klantportaal",
+			"source": "4.21",
+			"pipelinq": "no",
+			"glpi": "partial",
+			"zammad": "partial"
+		},
+		{
+			"id": "7.1",
+			"area": "attachments",
+			"name": "Upload with drag and drop",
+			"name_nl": "Uploaden met slepen en neerzetten",
+			"source": "4.22",
+			"pipelinq": "partial",
+			"glpi": "yes",
+			"zammad": "yes"
+		},
+		{
+			"id": "7.2",
+			"area": "attachments",
+			"name": "Preview an attachment in the browser",
+			"name_nl": "Voorbeeld van een bijlage in de browser",
+			"source": "4.16",
+			"pipelinq": "no",
+			"glpi": "partial",
+			"zammad": "yes"
+		},
+		{
+			"id": "7.3",
+			"area": "attachments",
+			"name": "Search inside the content of an attachment",
+			"name_nl": "Zoeken in de inhoud van een bijlage",
+			"source": "4.17",
+			"pipelinq": "no",
+			"glpi": "no",
+			"zammad": "yes"
+		},
+		{
+			"id": "7.4",
+			"area": "attachments",
+			"name": "A file record carrying metadata, not just a blob",
+			"name_nl": "Een bestandsrecord met metagegevens, niet alleen een blob",
+			"source": "4.1",
+			"pipelinq": "no",
+			"glpi": "yes",
+			"zammad": "no"
+		},
+		{
+			"id": "7.5",
+			"area": "attachments",
+			"name": "Generate a file from a template with merge fields",
+			"name_nl": "Een bestand genereren uit een sjabloon met samenvoegvelden",
+			"source": "4.4",
+			"pipelinq": "no",
+			"glpi": "partial",
+			"zammad": "no"
+		},
+		{
+			"id": "7.6",
+			"area": "attachments",
+			"name": "Lock a file while someone is editing it",
+			"name_nl": "Een bestand vergrendelen terwijl iemand het bewerkt",
+			"source": "4.11",
+			"pipelinq": "no",
+			"glpi": "partial",
+			"zammad": "no"
+		},
+		{
+			"id": "7.7",
+			"area": "attachments",
+			"name": "Trash and restore for files",
+			"name_nl": "Prullenbak en herstel voor bestanden",
+			"source": "4.15",
+			"pipelinq": "no",
+			"glpi": "yes",
+			"zammad": "no"
+		},
+		{
+			"id": "7.8",
+			"area": "attachments",
+			"name": "Virus scan and integrity check on upload",
+			"name_nl": "Virusscan en integriteitscontrole bij uploaden",
+			"source": "4.19",
+			"pipelinq": "no",
+			"glpi": "partial",
+			"zammad": "no"
+		},
+		{
+			"id": "8.1",
+			"area": "search-and-views",
+			"name": "Global quick search",
+			"name_nl": "Globale snelzoekfunctie",
+			"source": "9.1",
+			"pipelinq": "no",
+			"glpi": "yes",
+			"zammad": "yes"
+		},
+		{
+			"id": "8.2",
+			"area": "search-and-views",
+			"name": "Advanced search over ticket fields",
+			"name_nl": "Uitgebreid zoeken over ticketvelden",
+			"source": "9.2",
+			"pipelinq": "partial",
+			"glpi": "partial",
+			"zammad": "partial"
+		},
+		{
+			"id": "8.3",
+			"area": "search-and-views",
+			"name": "Personal saved searches",
+			"name_nl": "Persoonlijke opgeslagen zoekopdrachten",
+			"source": "9.3",
+			"pipelinq": "no",
+			"glpi": "yes",
+			"zammad": "no"
+		},
+		{
+			"id": "8.4",
+			"area": "search-and-views",
+			"name": "Saved views shared with a team or role",
+			"name_nl": "Opgeslagen overzichten gedeeld met een team of rol",
+			"source": "9.4",
+			"pipelinq": "no",
+			"glpi": "partial",
+			"zammad": "yes"
+		},
+		{
+			"id": "8.5",
+			"area": "search-and-views",
+			"name": "A shared saved view that carries its own column set",
+			"name_nl": "Een gedeeld opgeslagen overzicht met een eigen kolomindeling",
+			"source": "R3-9.13",
+			"pipelinq": "no",
+			"glpi": "yes",
+			"zammad": "yes"
+		},
+		{
+			"id": "8.6",
+			"area": "search-and-views",
+			"name": "List columns configurable per ticket type",
+			"name_nl": "Lijstkolommen instelbaar per tickettype",
+			"source": "11.9",
+			"pipelinq": "no",
+			"glpi": "partial",
+			"zammad": "partial"
+		},
+		{
+			"id": "8.7",
+			"area": "search-and-views",
+			"name": "Column chooser on a list",
+			"name_nl": "Kolomkiezer op een lijst",
+			"source": "9.5",
+			"pipelinq": "yes",
+			"glpi": "yes",
+			"zammad": "partial"
+		},
+		{
+			"id": "8.8",
+			"area": "search-and-views",
+			"name": "Alert when a saved view crosses a count threshold",
+			"name_nl": "Waarschuwing als een opgeslagen overzicht een aantalgrens passeert",
+			"source": "9.13",
+			"pipelinq": "no",
+			"glpi": "yes",
+			"zammad": "partial"
+		},
+		{
+			"id": "8.9",
+			"area": "search-and-views",
+			"name": "Search results filtered by access rights",
+			"name_nl": "Zoekresultaten gefilterd op toegangsrechten",
+			"source": "9.7",
+			"pipelinq": "partial",
+			"glpi": "yes",
+			"zammad": "yes"
+		},
+		{
+			"id": "8.10",
+			"area": "search-and-views",
+			"name": "Search over customers and contacts",
+			"name_nl": "Zoeken over klanten en contacten",
+			"source": "9.9",
+			"pipelinq": "yes",
+			"glpi": "yes",
+			"zammad": "yes"
+		},
+		{
+			"id": "8.11",
+			"area": "search-and-views",
+			"name": "Search over tasks",
+			"name_nl": "Zoeken over taken",
+			"source": "9.11",
+			"pipelinq": "yes",
+			"glpi": "yes",
+			"zammad": "no"
+		},
+		{
+			"id": "9.1",
+			"area": "reporting",
+			"name": "Configurable KPI dashboards",
+			"name_nl": "Instelbare KPI-dashboards",
+			"source": "10.1",
+			"pipelinq": "partial",
+			"glpi": "yes",
+			"zammad": "partial"
+		},
+		{
+			"id": "9.2",
+			"area": "reporting",
+			"name": "Personal dashboard with widgets the user picks",
+			"name_nl": "Persoonlijk dashboard met zelfgekozen widgets",
+			"source": "10.2",
+			"pipelinq": "yes",
+			"glpi": "yes",
+			"zammad": "no"
+		},
+		{
+			"id": "9.3",
+			"area": "reporting",
+			"name": "Export a list to CSV or XLSX",
+			"name_nl": "Een lijst exporteren naar CSV of XLSX",
+			"source": "10.3",
+			"pipelinq": "yes",
+			"glpi": "yes",
+			"zammad": "partial"
+		},
+		{
+			"id": "9.4",
+			"area": "reporting",
+			"name": "Reporting or statistics API",
+			"name_nl": "Rapportage- of statistiek-API",
+			"source": "10.6",
+			"pipelinq": "yes",
+			"glpi": "yes",
+			"zammad": "partial"
+		},
+		{
+			"id": "9.5",
+			"area": "reporting",
+			"name": "Throughput and duration analytics",
+			"name_nl": "Analyses van doorlooptijd en doorstroom",
+			"source": "10.4",
+			"pipelinq": "yes",
+			"glpi": "partial",
+			"zammad": "partial"
+		},
+		{
+			"id": "9.6",
+			"area": "reporting",
+			"name": "Time booked against a ticket",
+			"name_nl": "Tijd geboekt op een ticket",
+			"source": "10.11",
+			"pipelinq": "partial",
+			"glpi": "yes",
+			"zammad": "yes"
+		},
+		{
+			"id": "9.7",
+			"area": "reporting",
+			"name": "Audit or event log viewer with filters and export",
+			"name_nl": "Audit- of gebeurtenissenlog met filters en export",
+			"source": "10.5",
+			"pipelinq": "partial",
+			"glpi": "yes",
+			"zammad": "partial"
+		},
+		{
+			"id": "9.8",
+			"area": "reporting",
+			"name": "Audit timeline on the ticket page",
+			"name_nl": "Audittijdlijn op de ticketpagina",
+			"source": "10.9",
+			"pipelinq": "partial",
+			"glpi": "yes",
+			"zammad": "yes"
+		},
+		{
+			"id": "9.9",
+			"area": "reporting",
+			"name": "Timeline export per ticket or customer",
+			"name_nl": "Tijdlijnexport per ticket of klant",
+			"source": "10.8",
+			"pipelinq": "no",
+			"glpi": "partial",
+			"zammad": "partial"
+		},
+		{
+			"id": "10.1",
+			"area": "configuration",
+			"name": "Form builder in the interface",
+			"name_nl": "Formulierbouwer in de interface",
+			"source": "11.4",
+			"pipelinq": "no",
+			"glpi": "yes",
+			"zammad": "partial"
+		},
+		{
+			"id": "10.2",
+			"area": "configuration",
+			"name": "Custom fields per ticket type",
+			"name_nl": "Eigen velden per tickettype",
+			"source": "11.3",
+			"pipelinq": "partial",
+			"glpi": "no",
+			"zammad": "partial"
+		},
+		{
+			"id": "10.3",
+			"area": "configuration",
+			"name": "Fields hidden, required or read only by role and state",
+			"name_nl": "Velden verborgen, verplicht of alleen-lezen op rol en status",
+			"source": "11.25",
+			"pipelinq": "partial",
+			"glpi": "yes",
+			"zammad": "yes"
+		},
+		{
+			"id": "10.4",
+			"area": "configuration",
+			"name": "Code lists and choice fields",
+			"name_nl": "Codelijsten en keuzevelden",
+			"source": "11.10",
+			"pipelinq": "yes",
+			"glpi": "yes",
+			"zammad": "yes"
+		},
+		{
+			"id": "10.5",
+			"area": "configuration",
+			"name": "Rules per ticket type with conditions and actions",
+			"name_nl": "Regels per tickettype met voorwaarden en acties",
+			"source": "11.20",
+			"pipelinq": "yes",
+			"glpi": "partial",
+			"zammad": "partial"
+		},
+		{
+			"id": "10.6",
+			"area": "configuration",
+			"name": "User, role and team administration inside the app",
+			"name_nl": "Beheer van gebruikers, rollen en teams in de app",
+			"source": "11.19",
+			"pipelinq": "partial",
+			"glpi": "yes",
+			"zammad": "yes"
+		},
+		{
+			"id": "10.7",
+			"area": "configuration",
+			"name": "Integration configuration with secrets",
+			"name_nl": "Koppelingen instellen met geheimen",
+			"source": "11.16",
+			"pipelinq": "yes",
+			"glpi": "yes",
+			"zammad": "yes"
+		},
+		{
+			"id": "10.8",
+			"area": "configuration",
+			"name": "Instance configuration in the interface",
+			"name_nl": "Instellingen van de installatie in de interface",
+			"source": "11.24",
+			"pipelinq": "yes",
+			"glpi": "partial",
+			"zammad": "yes"
+		},
+		{
+			"id": "10.9",
+			"area": "configuration",
+			"name": "Translation management in the interface",
+			"name_nl": "Vertaalbeheer in de interface",
+			"source": "11.13",
+			"pipelinq": "partial",
+			"glpi": "yes",
+			"zammad": "yes"
+		},
+		{
+			"id": "10.10",
+			"area": "configuration",
+			"name": "Branding and theming",
+			"name_nl": "Huisstijl en thema",
+			"source": "11.14",
+			"pipelinq": "partial",
+			"glpi": "yes",
+			"zammad": "yes"
+		},
+		{
+			"id": "10.11",
+			"area": "configuration",
+			"name": "Feature toggles",
+			"name_nl": "Functieschakelaars",
+			"source": "11.15",
+			"pipelinq": "partial",
+			"glpi": "partial",
+			"zammad": "yes"
+		},
+		{
+			"id": "10.12",
+			"area": "configuration",
+			"name": "Configuration issue detection",
+			"name_nl": "Detectie van inrichtingsproblemen",
+			"source": "11.18",
+			"pipelinq": "partial",
+			"glpi": "yes",
+			"zammad": "partial"
+		},
+		{
+			"id": "10.13",
+			"area": "configuration",
+			"name": "Configuration as code, import and export",
+			"name_nl": "Inrichting als code, import en export",
+			"source": "11.2",
+			"pipelinq": "partial",
+			"glpi": "partial",
+			"zammad": "partial"
+		},
+		{
+			"id": "10.14",
+			"area": "configuration",
+			"name": "Custom object type management",
+			"name_nl": "Beheer van eigen objecttypen",
+			"source": "11.17",
+			"pipelinq": "partial",
+			"glpi": "partial",
+			"zammad": "no"
+		},
+		{
+			"id": "11.1",
+			"area": "integrations",
+			"name": "Staff single sign-on",
+			"name_nl": "Eenmalige aanmelding voor medewerkers",
+			"source": "12.7",
+			"pipelinq": "yes",
+			"glpi": "partial",
+			"zammad": "yes"
+		},
+		{
+			"id": "11.2",
+			"area": "integrations",
+			"name": "OpenAPI documentation",
+			"name_nl": "OpenAPI-documentatie",
+			"source": "12.18",
+			"pipelinq": "no",
+			"glpi": "yes",
+			"zammad": "no"
+		},
+		{
+			"id": "11.3",
+			"area": "integrations",
+			"name": "Public API with keys or certificates",
+			"name_nl": "Publieke API met sleutels of certificaten",
+			"source": "12.19",
+			"pipelinq": "partial",
+			"glpi": "partial",
+			"zammad": "partial"
+		},
+		{
+			"id": "11.4",
+			"area": "integrations",
+			"name": "Plugin or connector framework",
+			"name_nl": "Raamwerk voor plug-ins of connectoren",
+			"source": "12.17",
+			"pipelinq": "partial",
+			"glpi": "yes",
+			"zammad": "partial"
+		},
+		{
+			"id": "11.5",
+			"area": "integrations",
+			"name": "Search engine (Elasticsearch, OpenSearch, Tika)",
+			"name_nl": "Zoekmachine (Elasticsearch, OpenSearch, Tika)",
+			"source": "12.15",
+			"pipelinq": "no",
+			"glpi": "no",
+			"zammad": "yes"
+		},
+		{
+			"id": "11.6",
+			"area": "integrations",
+			"name": "Object storage",
+			"name_nl": "Objectopslag",
+			"source": "12.20",
+			"pipelinq": "yes",
+			"glpi": "no",
+			"zammad": "yes"
+		},
+		{
+			"id": "11.7",
+			"area": "integrations",
+			"name": "AI assistant that can carry out actions",
+			"name_nl": "AI-assistent die acties kan uitvoeren",
+			"source": "12.23",
+			"pipelinq": "yes",
+			"glpi": "no",
+			"zammad": "yes"
+		},
+		{
+			"id": "11.8",
+			"area": "integrations",
+			"name": "Inbound cloud events",
+			"name_nl": "Binnenkomende cloud events",
+			"source": "12.22",
+			"pipelinq": "partial",
+			"glpi": "no",
+			"zammad": "no"
+		},
+		{
+			"id": "11.9",
+			"area": "integrations",
+			"name": "Payment provider",
+			"name_nl": "Betaalprovider",
+			"source": "12.12",
+			"pipelinq": "yes",
+			"glpi": "no",
+			"zammad": "no"
+		},
+		{
+			"id": "12.1",
+			"area": "access",
+			"name": "Application roles",
+			"name_nl": "Rollen in de applicatie",
+			"source": "13.1",
+			"pipelinq": "partial",
+			"glpi": "yes",
+			"zammad": "yes"
+		},
+		{
+			"id": "12.2",
+			"area": "access",
+			"name": "Visibility by team or queue",
+			"name_nl": "Zichtbaarheid per team of wachtrij",
+			"source": "13.6",
+			"pipelinq": "no",
+			"glpi": "yes",
+			"zammad": "yes"
+		},
+		{
+			"id": "12.3",
+			"area": "access",
+			"name": "Access decided by conditions on the data",
+			"name_nl": "Toegang bepaald door voorwaarden op de gegevens",
+			"source": "13.2",
+			"pipelinq": "partial",
+			"glpi": "partial",
+			"zammad": "partial"
+		},
+		{
+			"id": "12.4",
+			"area": "access",
+			"name": "Field-level permissions",
+			"name_nl": "Rechten op veldniveau",
+			"source": "13.8",
+			"pipelinq": "partial",
+			"glpi": "no",
+			"zammad": "yes"
+		},
+		{
+			"id": "12.5",
+			"area": "access",
+			"name": "Restricted tickets shown as locked rows in a list",
+			"name_nl": "Afgeschermde tickets als vergrendelde regels in een lijst",
+			"source": "13.14",
+			"pipelinq": "no",
+			"glpi": "no",
+			"zammad": "partial"
+		},
+		{
+			"id": "12.6",
+			"area": "access",
+			"name": "Out of office with a stand-in who sees the work",
+			"name_nl": "Afwezigheid met een vervanger die het werk ziet",
+			"source": "13.17",
+			"pipelinq": "no",
+			"glpi": "partial",
+			"zammad": "yes"
+		},
+		{
+			"id": "12.7",
+			"area": "access",
+			"name": "Delegation and substitutes",
+			"name_nl": "Delegatie en vervanging",
+			"source": "13.12",
+			"pipelinq": "partial",
+			"glpi": "yes",
+			"zammad": "partial"
+		},
+		{
+			"id": "12.8",
+			"area": "access",
+			"name": "Audit trail that records reads as well as writes",
+			"name_nl": "Auditspoor dat ook raadplegingen vastlegt",
+			"source": "13.9",
+			"pipelinq": "partial",
+			"glpi": "partial",
+			"zammad": "no"
+		},
+		{
+			"id": "12.9",
+			"area": "access",
+			"name": "Retention and automatic deletion",
+			"name_nl": "Bewaartermijn en automatische verwijdering",
+			"source": "13.10",
+			"pipelinq": "yes",
+			"glpi": "partial",
+			"zammad": "partial"
+		},
+		{
+			"id": "12.10",
+			"area": "access",
+			"name": "Two-factor authentication and login history",
+			"name_nl": "Tweefactorauthenticatie en aanmeldgeschiedenis",
+			"source": "13.15",
+			"pipelinq": "yes",
+			"glpi": "yes",
+			"zammad": "yes"
+		},
+		{
+			"id": "12.11",
+			"area": "access",
+			"name": "Access-control administration screen",
+			"name_nl": "Beheerscherm voor toegangsrechten",
+			"source": "13.16",
+			"pipelinq": "partial",
+			"glpi": "yes",
+			"zammad": "yes"
+		},
+		{
+			"id": "12.12",
+			"area": "access",
+			"name": "Per-file access override",
+			"name_nl": "Afwijkende toegang per bestand",
+			"source": "13.5",
+			"pipelinq": "no",
+			"glpi": "partial",
+			"zammad": "partial"
+		}
+	]
+}

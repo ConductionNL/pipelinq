@@ -5,7 +5,7 @@
         "slug": "ticket",
         "title": "Ticket",
         "icon": "TicketOutline",
-        "version": "1.0.0",
+        "version": "1.4.0",
         "summary": "Unified inbound customer matter — request, complaint or contactmoment",
         "description": "The ticket supertype folds the former request, complaint and contactmoment schemas into one object distinguished by a ticketType discriminator (unify-ticket-supertype). A ticket is any inbound customer matter: a request/demand (with pipeline & queue), a complaint/klacht (with SLA & resolution) or a contactmoment (a single logged interaction, optionally hanging off a parent request-ticket). Per-type Schema.org identity is preserved via x-schema-org-by-type.",
         "x-schema-org": "schema:Thing",
@@ -95,9 +95,19 @@
                 "description": "Resolve a request-type ticket successfully. Authorization: the assignee (per-object owner RBAC)."
               },
               "convert": {
-                "from": ["in_progress"],
+                "from": ["new", "in_progress", "awaiting_customer"],
                 "to": "converted",
                 "description": "Convert a request-type ticket into a case (Procest). Authorization: the assignee (per-object owner RBAC)."
+              },
+              "await": {
+                "from": ["new", "in_progress"],
+                "to": "awaiting_customer",
+                "description": "Answer the customer and wait for their reply. Authorization: the assignee (per-object owner RBAC)."
+              },
+              "resume": {
+                "from": ["awaiting_customer"],
+                "to": "in_progress",
+                "description": "The customer replied; the ticket is back with the handler."
               },
               "resolve": {
                 "from": ["in_progress"],
@@ -209,6 +219,7 @@
           },
           "assignee": {
             "type": "string",
+            "format": "user",
             "title": "Assignee",
             "description": "Nextcloud UID (or agent) handling the ticket.",
             "facetable": true
@@ -217,7 +228,7 @@
             "type": "string",
             "title": "Status",
             "description": "Unified lifecycle status across all ticket types.",
-            "enum": ["new", "in_progress", "resolved", "completed", "rejected", "converted", "closed"],
+            "enum": ["new", "in_progress", "awaiting_customer", "resolved", "completed", "rejected", "converted", "closed"],
             "default": "new",
             "facetable": true
           },
@@ -295,9 +306,12 @@
           "caseReference": {
             "type": "string",
             "title": "Case Reference",
-            "description": "UUID of the Procest case this request converted into (request only).",
+            "description": "The case this ticket belongs to, as an ADR-048 semantic reference to https://openregister.app/ns#Case. On a request it is the single case the request converted into. On a contact moment it mirrors primaryCaseReference, and the full ordered set lives in caseReferences. No app id and no concrete slug: whichever installed app implements the case type answers it.",
             "format": "uuid",
-            "x-external-register": "procest"
+            "referenceSemanticType": "https://openregister.app/ns#Case",
+            "x-external-register": "openregister",
+            "x-notes": "ADR-048 semantic reference, resolved by OpenRegister rather than by a schema key in pipelinq's own register set: the target is whichever installed app implements https://openregister.app/ns#Case, which is not knowable at author time. Marked x-external-register so gate-54 reads it as the cross-register reference it is; a $ref here would name a schema this register does not hold, and OpenRegister could never resolve it.",
+            "facetable": true
           },
           "complaintCategory": {
             "type": "string",
@@ -328,6 +342,14 @@
             "title": "Outcome",
             "description": "Disposition of a contactmoment interaction.",
             "enum": ["handled", "transferred", "callbackRequest", "followUpAction", "resolved", "referred"],
+            "x-enum-labels": {
+              "handled": "Handled",
+              "transferred": "Transferred",
+              "callbackRequest": "Callback request",
+              "followUpAction": "Follow-up action",
+              "resolved": "Resolved",
+              "referred": "Referred"
+            },
             "facetable": true
           },
           "duration": {
@@ -344,6 +366,85 @@
             "type": "string",
             "title": "Notes",
             "description": "Free-text notes on the interaction (contactmoment only)."
+          },
+          "customerMessage": {
+            "type": "string",
+            "title": "Message to the customer",
+            "description": "Shown to the customer on this request in the customer portal. Everything else on the ticket stays internal.",
+            "x-notes": "pipelinq#2038: the portal used to read customer-visible notes from `notes`, which is an internal string. Set the status to awaiting_customer to let the customer reply."
+          },
+          "portalReplies": {
+            "type": "array",
+            "title": "Customer replies",
+            "description": "Replies the customer sent from the customer portal, oldest first.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "message": { "type": "string", "title": "Reply", "description": "The text the customer wrote." },
+                "createdAt": { "type": "string", "format": "date-time", "title": "Sent at", "description": "When the customer sent the reply." }
+              }
+            },
+            "x-notes": "Written by PortalRequestService::addReply() only."
+          },
+          "portalAnswers": {
+            "type": "array",
+            "title": "Answers to the customer",
+            "description": "Every answer the handler sent to the customer on this ticket, oldest first, each with when it was sent.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "message": { "type": "string", "title": "Answer", "description": "The text the customer read." },
+                "createdAt": { "type": "string", "format": "date-time", "title": "Sent at", "description": "When the handler saved the answer." }
+              }
+            },
+            "x-notes": "question-detail-on-the-portal: customerMessage holds only the latest answer and no date, so the resident could not see when they were answered or what was answered before. Appended by the ticket's answer section (CustomerReplySection) whenever the answer text changes; customerMessage keeps the latest answer, which portaliq's change rule pipelinq.question.answered listens to."
+          },
+          "reporterAccountId": {
+            "type": "string",
+            "title": "Portal account",
+            "description": "The customer portal account that submitted this request.",
+            "x-notes": "Set by the portal on submit; the portal's rate limit counts a customer's requests by it."
+          },
+          "attachmentIds": {
+            "type": "array",
+            "title": "Portal attachments",
+            "description": "Files the customer attached when submitting this request in the portal.",
+            "items": { "type": "string" }
+          },
+          "portalSubject": {
+            "type": "string",
+            "title": "Portal resident",
+            "description": "The portal reference of the resident who asked this question or filed this request or complaint. Never a BSN.",
+            "x-notes": "questions-about-a-citizen-dossier (hydra woo-citizen-journey C4): the subjectRef portaliq put in the verified X-Portal-Subject assertion. It is the scope field of the myQuestions portal collection, so the resident reads only their own questions and portaliq's change rule knows whom to tell about an answer. Written by DossierQuestionService::ask(), and by portaliq on a resident's own request or complaint (createOwnRequest, createOwnComplaint), which the ownRequests and ownComplaints collections read back. A DigiD resident has no clientId claim, so this is the scope that needs none.",
+            "facetable": false
+          },
+          "subjectReference": {
+            "type": "object",
+            "title": "Asked about",
+            "description": "The dossier the resident asked about, as it was when they asked.",
+            "x-notes": "questions-about-a-citizen-dossier (hydra woo-citizen-journey C4): a snapshot of the resident's opencatalogi collection, taken once by DossierQuestionService::ask(). The KCC employee sees what the resident saw and gets no live access to the dossier afterwards, because a dossier reveals what someone is researching.",
+            "properties": {
+              "type": {
+                "type": "string",
+                "title": "Kind",
+                "description": "What the question is about.",
+                "enum": ["opencatalogi.collection"]
+              },
+              "id": { "type": "string", "title": "Dossier", "description": "The id of the resident's dossier." },
+              "title": { "type": "string", "title": "Dossier title", "description": "The dossier's title when the question was asked." },
+              "items": {
+                "type": "array",
+                "title": "Documents",
+                "description": "The documents in the dossier when the question was asked.",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "title": { "type": "string", "title": "Document", "description": "The document's title." },
+                    "url": { "type": "string", "title": "Public link", "description": "Where the public document can be read." }
+                  }
+                }
+              }
+            }
           }
         }
       }

@@ -6,14 +6,6 @@
  * enforces that all <style> blocks in .vue files use the `scoped` attribute.
  */
 
-/* Fix KPI card centering inside CnDashboardPage widget wrappers.
-   Overrides library scoped styles. */
-.cn-widget-wrapper__content {
-	display: flex !important;
-	align-items: center !important;
-	padding: 16px !important;
-}
-
 /* Center the NcEmptyContent when OpenRegister is not installed. */
 .open-register-missing {
 	display: flex !important;
@@ -106,4 +98,77 @@
  * light themes). */
 .app-navigation .icon-settings {
 	filter: var(--background-invert-if-dark);
+}
+
+/* ---------------------------------------------------------------------
+ * The stacked bar on the simple dashboard (PqDashboard, "Contact today per
+ * channel"). nextcloud-vue 2.65.0's CnStackedBarWidget has no inline padding
+ * of its own, so its bar, legend and empty line sat flush against the card
+ * edge, and its empty state is a bare paragraph rather than the library's
+ * CnWidgetEmptyState. Until the library pads it, the card's inner edge
+ * (16px, the widget title's) is set here, and the empty line takes the
+ * compact empty-state look: muted, centred, with room around it. Only the
+ * simple profile places a stacked bar, so the full profile is unchanged.
+ * --------------------------------------------------------------------- */
+.cn-stacked-bar {
+	box-sizing: border-box;
+	padding: 4px 16px 16px;
+}
+
+.cn-stacked-bar__state {
+	justify-content: center;
+	padding: 12px;
+	font-size: 14px;
+	text-align: center;
+}
+
+/* A card that sizes to its content (layout `sizeToContent`, simple profile
+ * only) has to be measured at its own height: GridStack measures the cell's
+ * first child, and the library's widget wrapper fills the cell
+ * (`height: 100%`), so without this a card never shrank to an empty or
+ * one-row list and kept its authored rows of white. */
+.cn-dashboard-grid
+	.grid-stack-item[gs-size-to-content]
+	> .grid-stack-item-content
+	> .cn-widget-wrapper {
+	height: auto;
+}
+
+/* The availability switch moved out of the hidden page header into the
+ * greeting row of the simple dashboard: it sits at the row's right edge. */
+.cn-dashboard-grid .werkplek-header-actions {
+	display: flex;
+	justify-content: flex-end;
+}
+
+/* A headerless list on the simple dashboard (`hideHeader`, simple profile
+ * only) reads as rows: the first column takes the room that is left and
+ * ends in an ellipsis, so the narrow cards keep their date and type columns
+ * whole instead of clipping them at the card edge. */
+.cn-object-list-widget table.cn-data-table:not(:has(thead)) td:first-of-type {
+	width: 100%;
+	max-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.cn-object-list-widget table.cn-data-table:not(:has(thead)) td:not(:first-of-type) {
+	white-space: nowrap;
+}
+
+/* A borderless card on the simple dashboard (layout `borderless`: the
+ * actions moved out of the hidden page header) sits on the page ground.
+ * A theme rule that gives every element with "widget" in its class a solid
+ * background (thematiq's nldesign element-overrides, specificity 1,2,0)
+ * painted it white, a box the board does not have. The two `:not(#…)`
+ * lift this rule above that one. */
+.cn-dashboard-grid
+	.cn-widget-wrapper.cn-widget-wrapper--borderless:not(#cn-ground-a):not(
+		#cn-ground-b
+	),
+.cn-dashboard-grid
+	.cn-widget-wrapper--borderless
+	.cn-widget-wrapper__content:not(#cn-ground-a):not(#cn-ground-b) {
+	background: transparent;
 }

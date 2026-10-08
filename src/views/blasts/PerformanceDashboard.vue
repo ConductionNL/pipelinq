@@ -20,308 +20,325 @@
 <template>
 	<div class="performance-dashboard">
 		<header class="performance-dashboard__header">
-			<NcButton variant="tertiary" @click="$router.push({ name: 'Blasts' })">
+			<NcButton variant="tertiary" :to="{ name: 'Blasts' }">
 				{{ t('pipelinq', 'Back to blasts') }}
 			</NcButton>
 			<h2>{{ t('pipelinq', 'Blast performance') }}</h2>
 		</header>
 
-		<nav class="performance-dashboard__tabs" role="tablist">
-			<button
-				v-for="tab in tabs"
-				:key="tab.id"
-				type="button"
-				role="tab"
-				:aria-selected="activeTab === tab.id"
-				class="performance-dashboard__tab"
-				:class="[
-					{ 'performance-dashboard__tab--active': activeTab === tab.id },
-				]"
-				@click="onTabClick(tab.id)">
-				{{ tab.label }}
-			</button>
-		</nav>
+		<CnTabs
+			:ariaLabel="t('pipelinq', 'Blast performance')"
+			contentClass="performance-dashboard__body"
+			@update:activeIndex="onTabChange">
+			<NcLoadingIcon v-if="loading" :size="32" />
 
-		<NcLoadingIcon v-if="loading" :size="32" />
-
-		<section v-else class="performance-dashboard__body">
 			<!-- Tab 1: Overview -->
-			<section
-				v-if="activeTab === 'overview'"
-				class="performance-dashboard__pane">
-				<p v-if="blasts.length === 0" class="performance-dashboard__empty">
-					{{ t('pipelinq', 'No blasts yet.') }}
-				</p>
-				<table v-else class="performance-dashboard__table">
-					<thead>
-						<tr>
-							<th
-								v-for="col in overviewColumns"
-								:key="col.key"
-								scope="col"
-								:aria-sort="ariaSort(col.key)"
-								@click="onSort(col.key)">
-								{{ col.label }}
-								<span
-									v-if="overviewSortKey === col.key"
-									class="performance-dashboard__sort-indicator">
-									{{ overviewSortOrder === 'asc' ? '▲' : '▼' }}
-								</span>
-							</th>
-						</tr>
-					</thead>
-					<tbody>
-						<tr v-for="row in sortedOverviewRows" :key="row.id">
-							<td>{{ row.name }}</td>
-							<td>{{ row.segmentName }}</td>
-							<td>
-								<CnStatusBadge
-									:status="row.status"
-									:label="statusLabel(row.status)" />
-							</td>
-							<td class="performance-dashboard__num">
-								{{ row.sent }}
-							</td>
-							<td class="performance-dashboard__num">
-								{{ row.delivered }}
-							</td>
-							<td class="performance-dashboard__num">
-								{{ formatPercent(row.openRate) }}
-							</td>
-							<td class="performance-dashboard__num">
-								{{ formatPercent(row.clickRate) }}
-							</td>
-							<td class="performance-dashboard__num">
-								{{ row.unsubscribed }}
-							</td>
-						</tr>
-					</tbody>
-				</table>
-			</section>
-
-			<!-- Tab 2: A/B Testing -->
-			<section v-if="activeTab === 'ab'" class="performance-dashboard__pane">
-				<p v-if="abPairs.length === 0" class="performance-dashboard__empty">
-					{{ t('pipelinq', 'No A/B variant blasts found.') }}
-				</p>
-				<article
-					v-for="pair in abPairs"
-					:key="pair.id"
-					class="performance-dashboard__ab-card">
-					<h3 class="performance-dashboard__ab-title">
-						{{ pair.parentName }}
-					</h3>
-					<div class="performance-dashboard__ab-grid">
-						<div class="performance-dashboard__ab-variant">
-							<h4>{{ t('pipelinq', 'Variant A') }}</h4>
-							<dl>
-								<div>
-									<dt>{{ t('pipelinq', 'Delivered') }}</dt>
-									<dd>{{ pair.a.delivered }}</dd>
-								</div>
-								<div>
-									<dt>{{ t('pipelinq', 'Clicked') }}</dt>
-									<dd>{{ pair.a.clicked }}</dd>
-								</div>
-								<div>
-									<dt>{{ t('pipelinq', 'Click rate') }}</dt>
-									<dd>{{ formatPercent(pair.a.clickRate) }}</dd>
-								</div>
-							</dl>
-						</div>
-						<div class="performance-dashboard__ab-variant">
-							<h4>{{ t('pipelinq', 'Variant B') }}</h4>
-							<dl>
-								<div>
-									<dt>{{ t('pipelinq', 'Delivered') }}</dt>
-									<dd>{{ pair.b.delivered }}</dd>
-								</div>
-								<div>
-									<dt>{{ t('pipelinq', 'Clicked') }}</dt>
-									<dd>{{ pair.b.clicked }}</dd>
-								</div>
-								<div>
-									<dt>{{ t('pipelinq', 'Click rate') }}</dt>
-									<dd>{{ formatPercent(pair.b.clickRate) }}</dd>
-								</div>
-							</dl>
-						</div>
-					</div>
+			<CnTab :title="tabs[0].label" :active="activeTab === 'overview'">
+				<section
+					v-if="!loading && activeTab === 'overview'"
+					class="performance-dashboard__pane">
 					<p
-						v-if="!pair.eligible"
-						class="performance-dashboard__ab-pending"
-						role="status">
-						{{
-							t(
-								'pipelinq',
-								'Results not yet available (need >=500 delivered per variant and 24h since send).',
-							)
-						}}
-						<br />
-						{{
-							t(
-								'pipelinq',
-								'Currently A: {a} delivered, B: {b} delivered.',
-								{ a: pair.a.delivered, b: pair.b.delivered },
-							)
-						}}
-					</p>
-					<p
-						v-else
-						class="performance-dashboard__ab-verdict"
-						:class="{
-							'performance-dashboard__ab-verdict--significant':
-								pair.significant,
-						}"
-						role="status">
-						<strong>{{ pair.verdictLabel }}</strong>
-						<span class="performance-dashboard__ab-pvalue">
-							{{ t('pipelinq', 'p = {p}', { p: pair.pValueLabel }) }}
-						</span>
-					</p>
-				</article>
-			</section>
-
-			<!-- Tab 3: Attribution -->
-			<section
-				v-if="activeTab === 'attribution'"
-				class="performance-dashboard__pane">
-				<p
-					v-if="attributionRows.length === 0"
-					class="performance-dashboard__empty">
-					{{ t('pipelinq', 'No attribution data yet.') }}
-				</p>
-				<table v-else class="performance-dashboard__table">
-					<thead>
-						<tr>
-							<th scope="col">
-								{{ t('pipelinq', 'Blast') }}
-							</th>
-							<th scope="col" class="performance-dashboard__num">
-								{{ t('pipelinq', 'Attributed deals') }}
-							</th>
-							<th scope="col" class="performance-dashboard__num">
-								{{ t('pipelinq', 'Attributed value') }}
-							</th>
-						</tr>
-					</thead>
-					<tbody>
-						<tr v-for="row in attributionRows" :key="row.id">
-							<td>{{ row.name }}</td>
-							<td class="performance-dashboard__num">
-								{{ row.dealCount }}
-							</td>
-							<td class="performance-dashboard__num">
-								{{ formatEur(row.attributedValue) }}
-							</td>
-						</tr>
-					</tbody>
-				</table>
-
-				<!-- Site traffic per campaign (marketing-campaign-attribution):
-				     the sessions Portaliq attributed to each blast's campaign. -->
-				<div
-					class="performance-dashboard__traffic"
-					data-testid="campaign-traffic">
-					<h3>{{ t('pipelinq', 'Site traffic from this campaign') }}</h3>
-					<p
-						v-if="trafficState === 'loading'"
-						class="performance-dashboard__empty"
-						data-testid="campaign-traffic-loading">
-						{{ t('pipelinq', 'Loading site traffic') }}
-					</p>
-					<p
-						v-else-if="trafficState === 'no-blasts'"
-						class="performance-dashboard__empty"
-						data-testid="campaign-traffic-no-blasts">
-						{{ t('pipelinq', 'No blasts yet.') }}
-						{{
-							t(
-								'pipelinq',
-								'Send a blast, and the sessions its campaign brought in appear here.',
-							)
-						}}
-					</p>
-					<p
-						v-else-if="trafficState === 'unreadable'"
-						class="performance-dashboard__empty"
-						data-testid="campaign-traffic-unreadable">
-						{{ t('pipelinq', 'Site traffic could not be read.') }}
-						{{
-							t(
-								'pipelinq',
-								'Every performance request failed. Reload the page, and check the server log if it keeps happening.',
-							)
-						}}
-					</p>
-					<p
-						v-else-if="trafficConnected === false"
-						class="performance-dashboard__empty"
-						data-testid="campaign-traffic-unconnected">
-						{{ t('pipelinq', 'Not connected to a portal.') }}
-						{{
-							t(
-								'pipelinq',
-								'Set the Portaliq portal under Settings, Marketing traffic, to see the site sessions each campaign brought in.',
-							)
-						}}
-					</p>
-					<p
-						v-else-if="
-							trafficConnected === true && trafficRows.length === 0
-						"
+						v-if="blasts.length === 0"
 						class="performance-dashboard__empty">
-						{{
-							t(
-								'pipelinq',
-								'No site sessions attributed to a blast yet.',
-							)
-						}}
+						{{ t('pipelinq', 'No blasts yet.') }}
 					</p>
-					<table
-						v-else-if="trafficConnected === true"
-						class="performance-dashboard__table"
-						data-testid="campaign-traffic-table">
+					<table v-else class="performance-dashboard__table">
 						<thead>
 							<tr>
-								<th scope="col">{{ t('pipelinq', 'Blast') }}</th>
-								<th scope="col">{{ t('pipelinq', 'Campaign') }}</th>
-								<th scope="col" class="performance-dashboard__num">
-									{{ t('pipelinq', 'Opens') }}
-								</th>
-								<th scope="col" class="performance-dashboard__num">
-									{{ t('pipelinq', 'Clicks') }}
-								</th>
-								<th scope="col" class="performance-dashboard__num">
-									{{ t('pipelinq', 'Site sessions') }}
-								</th>
-								<th scope="col" class="performance-dashboard__num">
-									{{ t('pipelinq', 'Attributed deals') }}
+								<th
+									v-for="col in overviewColumns"
+									:key="col.key"
+									scope="col"
+									:aria-sort="ariaSort(col.key)"
+									@click="onSort(col.key)">
+									{{ col.label }}
+									<span
+										v-if="overviewSortKey === col.key"
+										class="performance-dashboard__sort-indicator">
+										{{ overviewSortOrder === 'asc' ? '▲' : '▼' }}
+									</span>
 								</th>
 							</tr>
 						</thead>
 						<tbody>
-							<tr v-for="row in trafficRows" :key="row.id">
+							<tr v-for="row in sortedOverviewRows" :key="row.id">
 								<td>{{ row.name }}</td>
-								<td>{{ row.campaign }}</td>
-								<td class="performance-dashboard__num">
-									{{ row.opened }}
+								<td>{{ row.segmentName }}</td>
+								<td>
+									<CnStatusBadge
+										:status="row.status"
+										:label="statusLabel(row.status)" />
 								</td>
 								<td class="performance-dashboard__num">
-									{{ row.clicked }}
+									{{ row.sent }}
 								</td>
 								<td class="performance-dashboard__num">
-									{{ row.sessions }}
+									{{ row.delivered }}
 								</td>
 								<td class="performance-dashboard__num">
-									{{ row.dealCount }}
+									{{ formatPercent(row.openRate) }}
+								</td>
+								<td class="performance-dashboard__num">
+									{{ formatPercent(row.clickRate) }}
+								</td>
+								<td class="performance-dashboard__num">
+									{{ row.unsubscribed }}
 								</td>
 							</tr>
 						</tbody>
 					</table>
-				</div>
-			</section>
-		</section>
+				</section>
+			</CnTab>
+
+			<!-- Tab 2: A/B Testing -->
+			<CnTab :title="tabs[1].label" :active="activeTab === 'ab'">
+				<section
+					v-if="!loading && activeTab === 'ab'"
+					class="performance-dashboard__pane">
+					<p
+						v-if="abPairs.length === 0"
+						class="performance-dashboard__empty">
+						{{ t('pipelinq', 'No A/B variant blasts found.') }}
+					</p>
+					<article
+						v-for="pair in abPairs"
+						:key="pair.id"
+						class="performance-dashboard__ab-card">
+						<h3 class="performance-dashboard__ab-title">
+							{{ pair.parentName }}
+						</h3>
+						<div class="performance-dashboard__ab-grid">
+							<div class="performance-dashboard__ab-variant">
+								<h4>{{ t('pipelinq', 'Variant A') }}</h4>
+								<dl>
+									<div>
+										<dt>{{ t('pipelinq', 'Delivered') }}</dt>
+										<dd>{{ pair.a.delivered }}</dd>
+									</div>
+									<div>
+										<dt>{{ t('pipelinq', 'Clicked') }}</dt>
+										<dd>{{ pair.a.clicked }}</dd>
+									</div>
+									<div>
+										<dt>{{ t('pipelinq', 'Click rate') }}</dt>
+										<dd>
+											{{ formatPercent(pair.a.clickRate) }}
+										</dd>
+									</div>
+								</dl>
+							</div>
+							<div class="performance-dashboard__ab-variant">
+								<h4>{{ t('pipelinq', 'Variant B') }}</h4>
+								<dl>
+									<div>
+										<dt>{{ t('pipelinq', 'Delivered') }}</dt>
+										<dd>{{ pair.b.delivered }}</dd>
+									</div>
+									<div>
+										<dt>{{ t('pipelinq', 'Clicked') }}</dt>
+										<dd>{{ pair.b.clicked }}</dd>
+									</div>
+									<div>
+										<dt>{{ t('pipelinq', 'Click rate') }}</dt>
+										<dd>
+											{{ formatPercent(pair.b.clickRate) }}
+										</dd>
+									</div>
+								</dl>
+							</div>
+						</div>
+						<p
+							v-if="!pair.eligible"
+							class="performance-dashboard__ab-pending"
+							role="status">
+							{{
+								t(
+									'pipelinq',
+									'Results not yet available (need >=500 delivered per variant and 24h since send).',
+								)
+							}}
+							<br />
+							{{
+								t(
+									'pipelinq',
+									'Currently A: {a} delivered, B: {b} delivered.',
+									{ a: pair.a.delivered, b: pair.b.delivered },
+								)
+							}}
+						</p>
+						<p
+							v-else
+							class="performance-dashboard__ab-verdict"
+							:class="{
+								'performance-dashboard__ab-verdict--significant':
+									pair.significant,
+							}"
+							role="status">
+							<strong>{{ pair.verdictLabel }}</strong>
+							<span class="performance-dashboard__ab-pvalue">
+								{{
+									t('pipelinq', 'p = {p}', { p: pair.pValueLabel })
+								}}
+							</span>
+						</p>
+					</article>
+				</section>
+			</CnTab>
+
+			<!-- Tab 3: Attribution -->
+			<CnTab :title="tabs[2].label" :active="activeTab === 'attribution'">
+				<section
+					v-if="!loading && activeTab === 'attribution'"
+					class="performance-dashboard__pane">
+					<p
+						v-if="attributionRows.length === 0"
+						class="performance-dashboard__empty">
+						{{ t('pipelinq', 'No attribution data yet.') }}
+					</p>
+					<table v-else class="performance-dashboard__table">
+						<thead>
+							<tr>
+								<th scope="col">
+									{{ t('pipelinq', 'Blast') }}
+								</th>
+								<th scope="col" class="performance-dashboard__num">
+									{{ t('pipelinq', 'Attributed deals') }}
+								</th>
+								<th scope="col" class="performance-dashboard__num">
+									{{ t('pipelinq', 'Attributed value') }}
+								</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr v-for="row in attributionRows" :key="row.id">
+								<td>{{ row.name }}</td>
+								<td class="performance-dashboard__num">
+									{{ row.dealCount }}
+								</td>
+								<td class="performance-dashboard__num">
+									{{ formatEur(row.attributedValue) }}
+								</td>
+							</tr>
+						</tbody>
+					</table>
+
+					<!-- Site traffic per campaign (marketing-campaign-attribution):
+				     the sessions Portaliq attributed to each blast's campaign. -->
+					<div
+						class="performance-dashboard__traffic"
+						data-testid="campaign-traffic">
+						<h3>
+							{{ t('pipelinq', 'Site traffic from this campaign') }}
+						</h3>
+						<p
+							v-if="trafficState === 'loading'"
+							class="performance-dashboard__empty"
+							data-testid="campaign-traffic-loading">
+							{{ t('pipelinq', 'Loading site traffic') }}
+						</p>
+						<p
+							v-else-if="trafficState === 'no-blasts'"
+							class="performance-dashboard__empty"
+							data-testid="campaign-traffic-no-blasts">
+							{{ t('pipelinq', 'No blasts yet.') }}
+							{{
+								t(
+									'pipelinq',
+									'Send a blast, and the sessions its campaign brought in appear here.',
+								)
+							}}
+						</p>
+						<p
+							v-else-if="trafficState === 'unreadable'"
+							class="performance-dashboard__empty"
+							data-testid="campaign-traffic-unreadable">
+							{{ t('pipelinq', 'Site traffic could not be read.') }}
+							{{
+								t(
+									'pipelinq',
+									'Every performance request failed. Reload the page, and check the server log if it keeps happening.',
+								)
+							}}
+						</p>
+						<p
+							v-else-if="trafficConnected === false"
+							class="performance-dashboard__empty"
+							data-testid="campaign-traffic-unconnected">
+							{{ t('pipelinq', 'Not connected to a portal.') }}
+							{{
+								t(
+									'pipelinq',
+									'Set the Portaliq portal under Settings, Marketing traffic, to see the site sessions each campaign brought in.',
+								)
+							}}
+						</p>
+						<p
+							v-else-if="
+								trafficConnected === true && trafficRows.length === 0
+							"
+							class="performance-dashboard__empty">
+							{{
+								t(
+									'pipelinq',
+									'No site sessions attributed to a blast yet.',
+								)
+							}}
+						</p>
+						<table
+							v-else-if="trafficConnected === true"
+							class="performance-dashboard__table"
+							data-testid="campaign-traffic-table">
+							<thead>
+								<tr>
+									<th scope="col">{{ t('pipelinq', 'Blast') }}</th>
+									<th scope="col">
+										{{ t('pipelinq', 'Campaign') }}
+									</th>
+									<th
+										scope="col"
+										class="performance-dashboard__num">
+										{{ t('pipelinq', 'Opens') }}
+									</th>
+									<th
+										scope="col"
+										class="performance-dashboard__num">
+										{{ t('pipelinq', 'Clicks') }}
+									</th>
+									<th
+										scope="col"
+										class="performance-dashboard__num">
+										{{ t('pipelinq', 'Site sessions') }}
+									</th>
+									<th
+										scope="col"
+										class="performance-dashboard__num">
+										{{ t('pipelinq', 'Attributed deals') }}
+									</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr v-for="row in trafficRows" :key="row.id">
+									<td>{{ row.name }}</td>
+									<td>{{ row.campaign }}</td>
+									<td class="performance-dashboard__num">
+										{{ row.opened }}
+									</td>
+									<td class="performance-dashboard__num">
+										{{ row.clicked }}
+									</td>
+									<td class="performance-dashboard__num">
+										{{ row.sessions }}
+									</td>
+									<td class="performance-dashboard__num">
+										{{ row.dealCount }}
+									</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</section>
+			</CnTab>
+		</CnTabs>
 
 		<p v-if="error" class="performance-dashboard__error" role="alert">
 			{{ error }}
@@ -330,7 +347,7 @@
 </template>
 
 <script>
-import { CnStatusBadge } from '@conduction/nextcloud-vue'
+import { CnStatusBadge, CnTab, CnTabs } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
@@ -349,6 +366,8 @@ export default {
 		NcButton,
 		NcLoadingIcon,
 		CnStatusBadge,
+		CnTab,
+		CnTabs,
 	},
 
 	data() {
@@ -380,6 +399,13 @@ export default {
 			trafficState: 'loading',
 			/** Whether the Attribution tab's per-blast reads have been started. */
 			attributionRequested: false,
+			/**
+			 * The in-flight page load, so a tab that needs the blast list can
+			 * wait for it rather than race it.
+			 *
+			 * @type {Promise<void>|null}
+			 */
+			pageLoad: null,
 			overviewSortKey: 'sent',
 			overviewSortOrder: 'desc',
 		}
@@ -387,7 +413,7 @@ export default {
 
 	computed: {
 		/**
-		 * Tab definitions surfaced in the role="tablist" nav.
+		 * Tab definitions, in the order the CnTab panels are declared.
 		 *
 		 * @return {Array<{id: string, label: string}>}
 		 */
@@ -504,8 +530,20 @@ export default {
 		},
 	},
 
+	/**
+	 * Start the page load, and HOLD it.
+	 *
+	 * The Attribution tab's fan-out iterates the blast list this fetches, so
+	 * it has to be able to wait for it rather than race it. Firing and
+	 * forgetting is what let the tab settle on "No blasts yet" about an
+	 * instance with plenty; see loadAttribution().
+	 *
+	 * @return {void}
+	 *
+	 * @spec openspec/specs/marketing-analytics/spec.md#requirement-attribution-dashboard-sums-revenue-per-blast
+	 */
 	mounted() {
-		this.fetchAll()
+		this.pageLoad = this.fetchAll()
 	},
 
 	methods: {
@@ -553,6 +591,22 @@ export default {
 		},
 
 		/**
+		 * CnTabs reports the selected tab by index, for clicks and keyboard alike.
+		 *
+		 * @param {number} index The selected tab's position.
+		 *
+		 * @return {void}
+		 *
+		 * @spec openspec/specs/marketing-analytics/spec.md#requirement-attribution-dashboard-sums-revenue-per-blast
+		 */
+		onTabChange(index) {
+			const tab = this.tabs[index]
+			if (tab) {
+				this.onTabClick(tab.id)
+			}
+		},
+
+		/**
 		 * Load the Attribution tab's two per-blast blocks, once.
 		 *
 		 * Both cost one request per blast, so they are deliberately not part
@@ -563,13 +617,27 @@ export default {
 		 *
 		 * @spec openspec/specs/marketing-analytics/spec.md#requirement-attribution-dashboard-sums-revenue-per-blast
 		 */
-		loadAttribution() {
+		async loadAttribution() {
 			if (this.attributionRequested) {
 				return
 			}
 			this.attributionRequested = true
-			this.fetchAttributionRows()
-			this.fetchTrafficRows()
+
+			// 🔴 THE LIST HAS TO BE THERE FIRST. Both fan-outs iterate
+			// `this.blasts`, and a reader who reaches the Attribution tab
+			// before the page load lands iterates nothing: zero requests go
+			// out, and the blocks settle on "No blasts yet" about an instance
+			// that has plenty. `attributionRequested` then latches, so the
+			// wrong answer is the final one.
+			//
+			// Measured on the development run of 2026-09-07: the page read
+			// `GET /api/blasts?limit=50` and got a full list, made ZERO
+			// `/performance` calls, and reported no blasts. It is a race, so
+			// it fails the way races do, which is why the earlier fix for the
+			// spinner did not surface it.
+			await this.pageLoad
+
+			await Promise.all([this.fetchAttributionRows(), this.fetchTrafficRows()])
 		},
 
 		/**
@@ -1003,8 +1071,11 @@ export default {
 
 <style scoped>
 .performance-dashboard {
-	padding: 20px;
+	box-sizing: border-box;
+	width: 100%;
 	max-width: 1240px;
+	margin: 0 auto;
+	padding: 24px 20px;
 	display: flex;
 	flex-direction: column;
 	gap: 16px;
@@ -1020,30 +1091,8 @@ export default {
 	margin: 0;
 }
 
-.performance-dashboard__tabs {
-	display: flex;
-	gap: 0;
-	border-bottom: 1px solid var(--color-border);
-}
-
-.performance-dashboard__tab {
-	background: transparent;
-	border: 0;
-	padding: 10px 16px;
-	font-weight: 500;
-	color: var(--color-text-lighter);
-	cursor: pointer;
-	border-bottom: 2px solid transparent;
-}
-
-.performance-dashboard__tab--active {
-	color: var(--color-main-text);
-	border-bottom-color: var(--color-primary-element);
-}
-
-.performance-dashboard__body {
-	display: flex;
-	flex-direction: column;
+.performance-dashboard :deep(.performance-dashboard__body) {
+	padding-top: 16px;
 }
 
 .performance-dashboard__pane {
@@ -1082,6 +1131,10 @@ export default {
 .performance-dashboard__table th {
 	color: var(--color-text-lighter);
 	font-weight: 500;
+}
+
+/* Only the Overview headers sort; they carry aria-sort. */
+.performance-dashboard__table th[aria-sort] {
 	cursor: pointer;
 	user-select: none;
 }

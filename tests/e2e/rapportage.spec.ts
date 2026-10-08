@@ -3,40 +3,65 @@
 //
 // REQ-CR-001: Reporting dashboard loads with KPI cards visible.
 // @spec openspec/changes/contactmomenten-rapportage/tasks.md#task-6
+import type { Page } from '@playwright/test'
+
 import { expect, test } from '@playwright/test'
-import { openApp } from './helpers/pipelinq.ts'
+import { gotoAppRoute } from './helpers/pipelinq.ts'
 
 test.describe('Rapportage (Reporting)', () => {
-	// ⚠️ 60s is not enough for these four. Each one runs openApp() — which boots
-	// the shell and dismisses the walkthrough and support dialogs — then a full
-	// navigation, and the Reports page is a lazy chunk
-	// (CnPageRenderer maps `type:"reports"` through defineAsyncComponent), so
-	// the first of them also pays for fetching it.
+	// This raise was taken when every test here ran openApp() — booting the
+	// shell and dismissing both overlays — and THEN navigated, two full
+	// document loads before the first assertion, with the Reports page a lazy
+	// chunk (CnPageRenderer maps `type:"reports"` through
+	// defineAsyncComponent) on top. At 13 to 23 s a load on the CI runner that
+	// did not fit 60 s, and the failure carried no assertion error at all,
+	// just the timeout, which reads as "the page is broken" rather than "this
+	// test is too slow".
 	//
-	// They were failing on `cn-report-card` resolving to 0, which was a real
-	// defect: CnReportsPage read `page.config.cards` while CnPageRenderer
-	// spreads config keys as top-level props, so the page rendered its empty
-	// state for every consumer. nextcloud-vue#920 fixed that and 2.30.0 ships
-	// it. With the cards actually rendering, what is left is that the tests run
-	// out of budget — the failure carries no assertion error at all, just the
-	// timeout, which reads as "the page is broken" rather than "this test is
-	// too slow".
+	// The second load is gone from all six tests now, so the raise is headroom
+	// rather than a requirement. It is kept rather than tuned because nobody
+	// has measured what this file costs post-change on the CI runner, and a
+	// number picked without one is the thing this comment exists to warn about.
+	//
+	// (Historical: these were failing on `cn-report-card` resolving to 0,
+	// which was a real defect — CnReportsPage read `page.config.cards` while
+	// CnPageRenderer spreads config keys as top-level props, so the page
+	// rendered its empty state for every consumer. nextcloud-vue#920 fixed
+	// that and 2.30.0 ships it.)
 	test.setTimeout(180_000)
 
-	test.beforeEach(async ({ page }) => {
-		// The contactmomenten Reporting Dashboard (KPI cards) lives at the
-		// `/rapportage/contactmomenten` page (manifest id RapportageContactmomenten
-		// → RapportageDashboard.vue). The "Reporting" sidebar link now points at
-		// the Lead-analytics page (`/rapportage`), so deep-link the dashboard
-		// route directly by PATH. This said the opposite until #1684 — that a
-		// path goto boots the shell at the Dashboard and only a hash goto mounts
-		// the target view — which stopped being true when the shell moved to
-		// createWebHistory(routerBase()). The reload stays: it makes the view
-		// re-query its KPI data after the navigation.
-		await page.goto('/apps/pipelinq/rapportage/contactmomenten')
+	/**
+	 * The contactmomenten Reporting Dashboard (KPI cards) lives at the
+	 * `/rapportage/contactmomenten` page (manifest id RapportageContactmomenten
+	 * → RapportageDashboard.vue). The "Reporting" sidebar link now points at the
+	 * Lead-analytics page (`/rapportage`), so deep-link the dashboard route
+	 * directly by PATH. This said the opposite until #1684 — that a path goto
+	 * boots the shell at the Dashboard and only a hash goto mounts the target
+	 * view — which stopped being true when the shell moved to
+	 * createWebHistory(routerBase()).
+	 *
+	 * This used to be a `beforeEach`, and it used to end with a `reload()`.
+	 * Both were waste, and between them they cost every test in this file two
+	 * full document loads:
+	 *
+	 *   • Only the test below looks at this dashboard. The other five navigate
+	 *     to the Reports page or to one of the two analytics pages, so for them
+	 *     the beforeEach loaded a page they never asserted against and then
+	 *     threw it away.
+	 *   • The `reload()` was justified as making the view "re-query its KPI
+	 *     data after the navigation". After a full-document `goto` there is
+	 *     nothing to re-query: the view has only just mounted and fetched. It
+	 *     is the same stale reload that spec-coverage/declarative-view-system.ts
+	 *     already documents and guards, left over from hash routing where the
+	 *     goto did NOT remount.
+	 *
+	 * CI runs 6 workers against one `php -S`, so a load is 13 to 23 s. Ten
+	 * loads came out of this file for that reason.
+	 */
+	async function gotoContactmomentenDashboard(page: Page): Promise<void> {
+		await gotoAppRoute(page, '/rapportage/contactmomenten')
 		await expect(page.locator('body')).not.toContainText('Internal Server Error')
-		await page.reload()
-	})
+	}
 
 	/**
 	 * REQ-CR-001: Dashboard loads with KPI cards.
@@ -49,6 +74,8 @@ test.describe('Rapportage (Reporting)', () => {
 	test('REQ-CR-001: rapportage dashboard loads with KPI cards', async ({
 		page,
 	}) => {
+		await gotoContactmomentenDashboard(page)
+
 		// Retargeted onto the declarative dashboard that replaced the bespoke
 		// RapportageDashboard.vue (change `pipelinq-dashboards-declarative`).
 		// The old assertions named that component's private CSS — `.kpi-grid`,
@@ -110,8 +137,9 @@ test.describe('Rapportage (Reporting)', () => {
 	test('a reader reaches channel analytics from the reports page', async ({
 		page,
 	}) => {
-		await openApp(page)
-		await page.goto('/apps/pipelinq/reports')
+		// One load, not two: openApp() booted the Dashboard and the next
+		// line navigated straight off it.
+		await gotoAppRoute(page, '/reports')
 
 		await page
 			.getByTestId('cn-report-card')
@@ -128,8 +156,9 @@ test.describe('Rapportage (Reporting)', () => {
 	test('a reader reaches agent performance from the reports page', async ({
 		page,
 	}) => {
-		await openApp(page)
-		await page.goto('/apps/pipelinq/reports')
+		// One load, not two: openApp() booted the Dashboard and the next
+		// line navigated straight off it.
+		await gotoAppRoute(page, '/reports')
 
 		await page
 			.getByTestId('cn-report-card')
@@ -168,8 +197,9 @@ test.describe('Rapportage (Reporting)', () => {
 			'Weekly review',
 		]
 
-		await openApp(page)
-		await page.goto('/apps/pipelinq/reports')
+		// One load, not two: openApp() booted the Dashboard and the next
+		// line navigated straight off it.
+		await gotoAppRoute(page, '/reports')
 
 		const cards = page.getByTestId('cn-report-card')
 		await expect(cards).toHaveCount(EXPECTED.length)
@@ -195,16 +225,14 @@ test.describe('Rapportage (Reporting)', () => {
 		// path-form goto boots the shell at the Dashboard and the route has to
 		// travel in the hash — which was true until #1684 moved the shell to
 		// createWebHistory(routerBase()).
-		await page.goto('/apps/pipelinq/rapportage/channels')
-		await page.reload()
+		await gotoAppRoute(page, '/rapportage/channels')
 		await expect(
 			page.getByRole('heading', { name: /Channel Analytics|Kanaalanalyse/i }),
 		).toBeVisible({ timeout: 15000 })
 	})
 
 	test('agent performance page loads', async ({ page }) => {
-		await page.goto('/apps/pipelinq/rapportage/agents')
-		await page.reload()
+		await gotoAppRoute(page, '/rapportage/agents')
 		await expect(
 			page.getByRole('heading', {
 				name: /Agent Performance|Agentprestaties/i,

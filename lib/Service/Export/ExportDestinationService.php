@@ -32,6 +32,7 @@ namespace OCA\Pipelinq\Service\Export;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\Adapter\ExportSinkRegistry;
+use OCA\Pipelinq\Service\ConnectorSourceRegister;
 use OCP\AppFramework\OCS\OCSBadRequestException;
 use OCP\AppFramework\OCS\OCSNotFoundException;
 use OCP\IAppConfig;
@@ -67,16 +68,13 @@ class ExportDestinationService extends AbstractExportService {
 	];
 
 	/**
-	 * OpenConnector's own OpenRegister register slug. Source objects
-	 * (formerly served by the now-removed `SourceService`) live here, not
-	 * in pipelinq's own `register` app-config register.
+	 * OpenConnector's Source schema slug.
 	 *
-	 * @var string
-	 */
-	private const OPENCONNECTOR_REGISTER_SLUG = 'openconnector';
-
-	/**
-	 * OpenConnector's Source schema slug within {@see OPENCONNECTOR_REGISTER_SLUG}.
+	 * The register this schema lives in used to be pinned here as
+	 * `openconnector`. It is not a constant of the estate: Integriq renames that
+	 * register per instance, so the slug to read with is asked for at call time
+	 * through {@see ConnectorSourceRegister}. Schema slugs were not renamed, so
+	 * this one stays a literal.
 	 *
 	 * @var string
 	 */
@@ -99,6 +97,7 @@ class ExportDestinationService extends AbstractExportService {
 	 * @param IAppConfig $appConfig The app config.
 	 * @param ObjectServiceInterface $objectService The published OpenRegister contract.
 	 * @param ExportSinkRegistry $sinks The sink adapter registry.
+	 * @param ConnectorSourceRegister $connectorRegister Which slug the source register answers to here.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
@@ -106,6 +105,7 @@ class ExportDestinationService extends AbstractExportService {
 		IAppConfig $appConfig,
 		ObjectServiceInterface $objectService,
 		private ExportSinkRegistry $sinks,
+		private ConnectorSourceRegister $connectorRegister,
 		private LoggerInterface $logger,
 	) {
 		parent::__construct(
@@ -371,10 +371,23 @@ class ExportDestinationService extends AbstractExportService {
 			return [];
 		}
 
+		// The register is asked for, never assumed. Reading with a slug this
+		// instance does not carry returns no source, and this method's empty
+		// return then reads as "the destination has no credentials" rather than
+		// "the register those credentials live in is not here".
+		// ConnectorSourceRegister logs which it was.
+		$registerSlug = $this->connectorRegister->slugOrNull(
+			operation: 'ExportDestinationService.resolveCredentials',
+			sourceId: $sourceId
+		);
+		if ($registerSlug === null) {
+			return [];
+		}
+
 		try {
 			$source = $this->getObjectService()->find(
 				id: $sourceId,
-				register: self::OPENCONNECTOR_REGISTER_SLUG,
+				register: $registerSlug,
 				schema: self::OPENCONNECTOR_SOURCE_SCHEMA_SLUG,
 				_rbac: true,
 				_multitenancy: true,

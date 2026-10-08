@@ -1,0 +1,107 @@
+{
+  "_meta": {
+    "spdx-license": "EUPL-1.2",
+    "spdx-copyright": "2026 Conduction B.V.",
+    "description": "Update notifications (audit item E1, openspec change review-audit-fixes-b). When a client, lead, ticket or task changes, its owner and assignee are told, through the user-format fields each schema has: client.accountOwner, lead.assignee, ticket.assignee and crmTask.assigneeUserId. Ruben decided on 7 October to add these now and accept that the person who made the change may be told too: OpenRegister's notification rules cannot leave out the actor yet. Schemas without an owner or assignee field (contact, appointmentService, appointmentBooking) get no rule; their only user links are not fields the `field` recipient kind can read. Canonical x-openregister-notifications dialect (ADR-031, gate-18)."
+  },
+  "components": {
+    "schemas": {
+      "client": {
+        "slug": "client",
+        "x-openregister-notifications": {
+          "clientUpdated": {
+            "trigger": {
+              "type": "updated"
+            },
+            "enabled": true,
+            "channels": [
+              "nc-notification"
+            ],
+            "recipients": [
+              {
+                "kind": "field",
+                "field": "accountOwner"
+              }
+            ],
+            "subject": {
+              "nl": "Klant gewijzigd: {{name}}",
+              "en": "Client changed: {{name}}"
+            }
+          }
+        }
+      },
+      "lead": {
+        "slug": "lead",
+        "x-openregister-notifications": {
+          "leadUpdated": {
+            "trigger": {
+              "type": "updated"
+            },
+            "enabled": true,
+            "channels": [
+              "nc-notification"
+            ],
+            "recipients": [
+              {
+                "kind": "field",
+                "field": "assignee"
+              }
+            ],
+            "subject": {
+              "nl": "Lead gewijzigd: {{title}}",
+              "en": "Lead changed: {{title}}"
+            }
+          }
+        }
+      },
+      "ticket": {
+        "slug": "ticket",
+        "x-openregister-notifications": {
+          "ticketUpdated": {
+            "trigger": {
+              "type": "updated"
+            },
+            "enabled": true,
+            "channels": [
+              "nc-notification"
+            ],
+            "recipients": [
+              {
+                "kind": "field",
+                "field": "assignee"
+              }
+            ],
+            "subject": {
+              "nl": "Ticket gewijzigd: {{title}}",
+              "en": "Ticket changed: {{title}}"
+            }
+          }
+        }
+      },
+      "crmTask": {
+        "slug": "crmTask",
+        "x-openregister-notifications": {
+          "taskUpdated": {
+            "trigger": {
+              "type": "updated"
+            },
+            "enabled": true,
+            "channels": [
+              "nc-notification"
+            ],
+            "recipients": [
+              {
+                "kind": "field",
+                "field": "assigneeUserId"
+              }
+            ],
+            "subject": {
+              "nl": "Taak gewijzigd: {{subject}}",
+              "en": "Task changed: {{subject}}"
+            }
+          }
+        }
+      }
+    }
+  }
+}

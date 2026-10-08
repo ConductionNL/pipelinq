@@ -26,6 +26,7 @@
 					v-model="form.status"
 					:options="availableStatuses"
 					:aria-label-combobox="t('pipelinq', 'Status')"
+					labelOutside
 					:clearable="false"
 					:placeholder="t('pipelinq', 'Status')" />
 			</div>
@@ -35,6 +36,7 @@
 					v-model="form.priority"
 					:options="priorityOptions"
 					:aria-label-combobox="t('pipelinq', 'Priority')"
+					labelOutside
 					:clearable="false"
 					:placeholder="t('pipelinq', 'Priority')" />
 			</div>
@@ -48,6 +50,7 @@
 					v-model="form.channel"
 					:options="channelOptions"
 					:aria-label-combobox="t('pipelinq', 'Channel')"
+					labelOutside
 					:clearable="true"
 					:placeholder="t('pipelinq', 'Select channel')" />
 			</div>
@@ -106,6 +109,8 @@
 
 		<ClientCreateDialog
 			v-if="clientDialogOpen"
+			:name="pendingName"
+			stayOnPage
 			@created="onClientCreated"
 			@close="closeClientDialog" />
 		<ContactCreateDialog
@@ -123,6 +128,7 @@
 					v-model="form.pipeline"
 					:options="pipelineOptions"
 					:aria-label-combobox="t('pipelinq', 'Pipeline')"
+					labelOutside
 					:clearable="true"
 					label="label"
 					:reduce="(o) => o.value"
@@ -135,6 +141,7 @@
 					v-model="form.stage"
 					:options="stageOptions"
 					:aria-label-combobox="t('pipelinq', 'Stage')"
+					labelOutside
 					:clearable="true"
 					:disabled="!form.pipeline"
 					:placeholder="

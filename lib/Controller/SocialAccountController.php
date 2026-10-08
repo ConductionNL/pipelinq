@@ -42,6 +42,7 @@ namespace OCA\Pipelinq\Controller;
 
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
+use OCA\Pipelinq\Service\ConnectionReportService;
 use OCA\Pipelinq\Service\SocialAccountService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -63,6 +64,7 @@ class SocialAccountController extends Controller {
 	 * @param SocialAccountService $accounts The account lifecycle.
 	 * @param IUserSession $userSession Current user session.
 	 * @param ObjectOwnerAccessPolicy $policy Privileged-group policy, for the list routes.
+	 * @param ConnectionReportService $connectionReports Reports each network's readiness to integriq's connection registry.
 	 *
 	 * @return void
 	 */
@@ -71,6 +73,7 @@ class SocialAccountController extends Controller {
 		private readonly SocialAccountService $accounts,
 		private readonly IUserSession $userSession,
 		private readonly ObjectOwnerAccessPolicy $policy,
+		private readonly ConnectionReportService $connectionReports,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 	}//end __construct()
@@ -78,9 +81,14 @@ class SocialAccountController extends Controller {
 	/**
 	 * GET /api/social-accounts — every account, with each network's readiness.
 	 *
+	 * The readiness this page already computes is also reported to integriq's
+	 * connection registry, one `social-*` row per network. The report never
+	 * changes this response.
+	 *
 	 * @return JSONResponse `{data[], readiness{}}`.
 	 *
 	 * @spec openspec/changes/social-publishing/specs/social-accounts/spec.md#requirement-a-network-with-no-filing-says-so-instead-of-failing-quietly
+	 * @spec openspec/changes/adopt-connection-registry/specs/admin-settings/spec.md#requirement-req-as-132-pipelinq-reports-what-its-own-checks-observe
 	 */
 	#[NoAdminRequired]
 	public function index(): JSONResponse {
@@ -89,7 +97,10 @@ class SocialAccountController extends Controller {
 			return $this->refuse();
 		}
 
-		return new JSONResponse($this->accounts->listAccounts());
+		$result = $this->accounts->listAccounts();
+		$this->connectionReports->reportSocialReadiness(readiness: $result['readiness']);
+
+		return new JSONResponse($result);
 	}//end index()
 
 	/**

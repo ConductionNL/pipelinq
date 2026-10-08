@@ -29,6 +29,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\Portal;
 
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Service\SettingsLoadService;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -63,7 +64,7 @@ class MainRegisterReader {
 	/**
 	 * Whether a given main-register schema is configured on this instance.
 	 *
-	 * @param string $schemaKey The app-config schema key (e.g. posTransaction_schema).
+	 * @param string $schemaKey The schema slug (e.g. posTransaction).
 	 *
 	 * @return bool True when both register and schema are configured.
 	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
@@ -73,7 +74,7 @@ class MainRegisterReader {
 	 */
 	public function hasSchema(string $schemaKey): bool {
 		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
+		$schema = $this->schemaIdFor(schemaKey: $schemaKey);
 		return $register !== '' && $schema !== '';
 	}//end hasSchema()
 
@@ -83,7 +84,7 @@ class MainRegisterReader {
 	 * The register and schema are always injected here, never from the caller's
 	 * filters, so the read is constrained to the intended schema.
 	 *
-	 * @param string $schemaKey The app-config schema key.
+	 * @param string $schemaKey The schema slug.
 	 * @param array<string, mixed> $filters Extra equality filters.
 	 *
 	 * @return array<int, array<string, mixed>> The objects as arrays.
@@ -100,8 +101,12 @@ class MainRegisterReader {
 		[$register, $schema] = $this->config(schemaKey: $schemaKey);
 
 		try {
+			// No Nextcloud user on a portal read (see save()); callers scope the
+			// rows to the resident themselves.
 			$results = $this->objectService()->findAll(
-				config: ['filters' => array_merge(['register' => $register, 'schema' => $schema], $filters)]
+				config: ['filters' => array_merge(['register' => $register, 'schema' => $schema], $filters)],
+				_rbac: false,
+				_multitenancy: false
 			);
 		} catch (\Throwable $e) {
 			$this->logger->warning(
@@ -122,7 +127,7 @@ class MainRegisterReader {
 	/**
 	 * Find a single main-register object by id, or null.
 	 *
-	 * @param string $schemaKey The app-config schema key.
+	 * @param string $schemaKey The schema slug.
 	 * @param string $id The object id.
 	 *
 	 * @return array<string, mixed>|null The object, or null.
@@ -139,7 +144,7 @@ class MainRegisterReader {
 		[$register, $schema] = $this->config(schemaKey: $schemaKey);
 
 		try {
-			$object = $this->objectService()->find(id: $id, register: $register, schema: $schema);
+			$object = $this->objectService()->find(id: $id, register: $register, schema: $schema, _rbac: false, _multitenancy: false);
 		} catch (\Throwable $e) {
 			return null;
 		}
@@ -156,7 +161,7 @@ class MainRegisterReader {
 	 * for a customer-submitted request; the register and schema are injected so
 	 * a caller can never redirect the write to another schema.
 	 *
-	 * @param string $schemaKey The app-config schema key.
+	 * @param string $schemaKey The schema slug.
 	 * @param array<string, mixed> $data The object payload.
 	 * @param string|null $id The id for an update, or null.
 	 *
@@ -173,12 +178,18 @@ class MainRegisterReader {
 		unset($data['@self']);
 
 		try {
+			// A portal write carries no Nextcloud user: the resident is proven by
+			// the signed portal assertion and the caller's own checks. Under
+			// per-user RBAC it ran as "Anonymous" and every ticket was refused.
+			// The register and schema stay pinned above.
 			$saved = $this->objectService()->saveObject(
 				object: $data,
 				extend: [],
 				register: $register,
 				schema: $schema,
-				uuid: $id
+				uuid: $id,
+				_rbac: false,
+				_multitenancy: false
 			);
 		} catch (\Throwable $e) {
 			$this->logger->error(
@@ -194,7 +205,7 @@ class MainRegisterReader {
 	/**
 	 * Resolve [register, schema] for a schema key.
 	 *
-	 * @param string $schemaKey The app-config schema key.
+	 * @param string $schemaKey The schema slug.
 	 *
 	 * @return array{0: string, 1: string} The register and schema ids.
 	 *
@@ -202,13 +213,29 @@ class MainRegisterReader {
 	 */
 	private function config(string $schemaKey): array {
 		$register = $this->appConfig->getValueString(Application::APP_ID, 'register', '');
-		$schema = $this->appConfig->getValueString(Application::APP_ID, $schemaKey, '');
+		$schema = $this->schemaIdFor(schemaKey: $schemaKey);
 		if ($register === '' || $schema === '') {
 			throw new RuntimeException("Main register schema '{$schemaKey}' is not configured.");
 		}
 
 		return [$register, $schema];
 	}//end config()
+
+	/**
+	 * Read a main-register schema id by slug, under the app-config key the
+	 * install writes ({@see SettingsLoadService::SCHEMA_CONFIG_KEYS} pin, `<slug>_schema` otherwise).
+	 *
+	 * @param string $schemaKey The schema slug.
+	 *
+	 * @return string The schema id, or '' when not configured.
+	 */
+	private function schemaIdFor(string $schemaKey): string {
+		return $this->appConfig->getValueString(
+			Application::APP_ID,
+			(SettingsLoadService::SCHEMA_CONFIG_KEYS[$schemaKey] ?? $schemaKey . '_schema'),
+			''
+		);
+	}//end schemaIdFor()
 
 	/**
 	 * Normalise an OR object (entity or array) into a plain array.

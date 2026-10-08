@@ -61,6 +61,17 @@ class ProspectControllerTest extends TestCase {
 	 */
 	protected function setUp(): void {
 		$this->request = $this->createMock(IRequest::class);
+		$this->setUpController($this->request);
+	}//end setUp()
+
+	/**
+	 * Build the controller over a request, with a fresh discovery service mock.
+	 *
+	 * @param IRequest $request The request.
+	 *
+	 * @return void
+	 */
+	private function setUpController(IRequest $request): void {
 		$this->discoveryService = $this->createMock(ProspectDiscoveryService::class);
 		$userSession = $this->createMock(IUserSession::class);
 		$user = $this->createMock(IUser::class);
@@ -69,13 +80,13 @@ class ProspectControllerTest extends TestCase {
 		$l10n = $this->createMock(IL10N::class);
 		$l10n->method('t')->willReturnArgument(0);
 
-		$this->controller = new ProspectController($this->request,
+		$this->controller = new ProspectController($request,
 			$this->discoveryService,
 			$userSession,
 			$l10n,
 			$this->createConfiguredMock(ObjectOwnerAccessPolicy::class, ['isPrivileged' => true, 'mayAccess' => true]),
 		);
-	}//end setUp()
+	}//end setUpController()
 
 	/**
 	 * Test index returns discovery results.
@@ -83,7 +94,7 @@ class ProspectControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testIndexReturnsResults(): void {
-		$this->request->method('getParam')->willReturn('false');
+		$this->request->method('getParam')->willReturnArgument(1);
 		$this->discoveryService->method('discover')->willReturn([
 			'prospects' => [],
 			'total' => 0,
@@ -101,7 +112,7 @@ class ProspectControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testIndexReturns400OnError(): void {
-		$this->request->method('getParam')->willReturn('false');
+		$this->request->method('getParam')->willReturnArgument(1);
 		$this->discoveryService->method('discover')->willReturn([
 			'error' => 'no_icp_configured',
 		]);
@@ -117,7 +128,7 @@ class ProspectControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testIndexReturns503OnException(): void {
-		$this->request->method('getParam')->willReturn('false');
+		$this->request->method('getParam')->willReturnArgument(1);
 		$this->discoveryService->method('discover')
 			->willThrowException(new \RuntimeException('API error'));
 
@@ -125,4 +136,38 @@ class ProspectControllerTest extends TestCase {
 
 		$this->assertSame(503, $response->getStatus());
 	}//end testIndexReturns503OnException()
+
+	/**
+	 * A limit that is not a whole number of 0 or more is refused, rather than read as 0 (all).
+	 *
+	 * @return void
+	 */
+	public function testIndexRefusesAMalformedLimit(): void {
+		foreach (['abc', '-5', ''] as $limit) {
+			$request = $this->createMock(IRequest::class);
+			$request->method('getParam')->willReturnCallback(
+				static fn (string $key, mixed $default = null): mixed => $key === 'limit' ? $limit : $default
+			);
+			$this->setUpController($request);
+			$this->discoveryService->expects($this->never())->method('discover');
+
+			$this->assertSame(400, $this->controller->index()->getStatus(), "limit '$limit'");
+		}
+	}//end testIndexRefusesAMalformedLimit()
+
+	/**
+	 * Limit 0 reaches discovery as 0, which returns every prospect.
+	 *
+	 * @return void
+	 */
+	public function testIndexPassesLimitZeroThrough(): void {
+		$this->request->method('getParam')->willReturnCallback(
+			static fn (string $key, mixed $default = null): mixed => $key === 'limit' ? '0' : $default
+		);
+		$this->discoveryService->expects($this->once())->method('discover')
+			->with(false, 0)
+			->willReturn(['prospects' => [], 'total' => 0]);
+
+		$this->assertSame(200, $this->controller->index()->getStatus());
+	}//end testIndexPassesLimitZeroThrough()
 }//end class

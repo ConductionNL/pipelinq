@@ -34,6 +34,7 @@ namespace OCA\Pipelinq\Tests\Integration;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\Pipelinq\Mcp\McpAnswer;
 use OCA\Pipelinq\Service\BudgetService;
 use OCA\Pipelinq\Service\ChannelProviderRepository;
 use OCA\Pipelinq\Service\ConsentService;
@@ -45,10 +46,12 @@ use OCA\Pipelinq\Service\SmsProviderFactory;
 use OCA\Pipelinq\Service\TicketService;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
+use OCP\IL10N;
 use OCP\IUser;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 
 /**
  * Outbound messaging contract ring (network-free, mock vendor shapes).
@@ -194,10 +197,12 @@ class OutboundMessagingContractTest extends TestCase {
 		$contactmomentService = new ContactmomentService(
 			new TicketService($appConfig, $logger,
 				objectService: $this->objectService,
+				mcp: new McpAnswer(new NullLogger()),
 			),
 			$this->createMock(IGroupManager::class),
 			$logger,
 			objectService: $this->objectService,
+			l10n: $this->createMock(IL10N::class),
 		);
 
 		$this->container->method('get')->willReturnCallback(
@@ -221,10 +226,11 @@ class OutboundMessagingContractTest extends TestCase {
 			$appConfig,
 			$this->providerRepo,
 			$this->providerFactory,
-			new ConsentService($this->container, $appConfig, $logger),
+			new ConsentService($this->container, $appConfig, $logger, \OCA\Pipelinq\Tests\Unit\Support\FakeIntegriq::client($appConfig), new \OCA\Pipelinq\Service\ContactAddressLookup($this->container, $appConfig, $logger)),
 			new BudgetService($this->container, $appConfig, $this->createMock(NotificationService::class), $logger),
 			$this->createMock(NotificationService::class),
 			$logger,
+			new \OCA\Pipelinq\Service\PhoneNormaliser($appConfig, $logger),
 		);
 	}//end setUp()
 
@@ -332,10 +338,12 @@ class OutboundMessagingContractTest extends TestCase {
 		$contactmomentService = new ContactmomentService(
 			new TicketService($appConfig, $logger,
 				objectService: $this->createMock(ObjectServiceInterface::class),
+				mcp: new McpAnswer(new NullLogger()),
 			),
 			$this->createMock(IGroupManager::class),
 			$logger,
 			objectService: $this->createMock(ObjectServiceInterface::class),
+			l10n: $this->createMock(IL10N::class),
 		);
 		$container->method('get')->willReturnCallback(
 			function (string $id) use ($store, $contactmomentService) {
@@ -355,10 +363,11 @@ class OutboundMessagingContractTest extends TestCase {
 			$appConfig,
 			$this->providerRepo,
 			$this->providerFactory,
-			new ConsentService($container, $appConfig, $logger),
+			new ConsentService($container, $appConfig, $logger, \OCA\Pipelinq\Tests\Unit\Support\FakeIntegriq::client($appConfig), new \OCA\Pipelinq\Service\ContactAddressLookup($container, $appConfig, $logger)),
 			new BudgetService($container, $appConfig, $this->createMock(NotificationService::class), $logger),
 			$this->createMock(NotificationService::class),
 			$logger,
+			new \OCA\Pipelinq\Service\PhoneNormaliser($appConfig, $logger),
 		);
 
 		$this->providerRepo->method('listActive')->willReturn([

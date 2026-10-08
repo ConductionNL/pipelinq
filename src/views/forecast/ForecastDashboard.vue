@@ -150,6 +150,7 @@ import {
 	NcSelect,
 } from '@nextcloud/vue'
 import ForecastOverrideModal from '../../modals/ForecastOverrideModal.vue'
+import { formatEur } from '../../services/commercialFormat.js'
 import { csvExportUrl, fetchSnapshots } from '../../services/forecastApi.js'
 import {
 	attainmentPercent,
@@ -275,9 +276,15 @@ export default {
 			})
 		},
 
+		/**
+		 * Forecast amounts are in the reporting currency.
+		 *
+		 * @param {number} value The amount.
+		 * @return {string} The amount, formatted.
+		 * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
+		 */
 		formatMoney(value) {
-			const num = Number(value || 0)
-			return '€' + num.toLocaleString('nl-NL', { maximumFractionDigits: 0 })
+			return formatEur(Number(value || 0))
 		},
 
 		/**

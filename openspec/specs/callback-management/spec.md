@@ -6,7 +6,7 @@ status: done
 
 Manage callback requests (terugbelverzoeken), follow-up tasks (opvolgtaken), and information requests (informatievragen) in Pipelinq via a `task` schema mapped to VNG `InterneTaak` and Schema.org `Action`. The capability lets agents register, assign, schedule, and track these tasks through to completion.
 
-## ADDED Requirements
+## Requirements
 
 @e2e exclude backend schema/register config — task schema registration is a PHP repair-step; covered by PHPUnit
 
@@ -290,8 +290,6 @@ The system MUST send Nextcloud notifications for task assignment, completion, an
 - AND the notification MUST include the task subject and deadline
 # Delta Spec: callback-management
 
-## ADDED Requirements
-
 ### Requirement: Callback Controller API
 
 The system MUST provide a `CallbackController` with endpoints for callback-specific operations: logging callback attempts, claiming group tasks, completing callbacks, and reassigning tasks.
@@ -516,7 +514,7 @@ The system MUST calculate task deadlines respecting business hours and MUST supp
 - **THEN** all 5 tasks MUST be reassigned to Mark de Groot
 - AND Mark MUST receive a single notification summarizing all reassigned tasks
 - AND each task's attempts array MUST record the reassignment with result "hertoegewezen" and an optional reason (e.g., "Afwezigheid collega")
-## Requirements
+
 ### Requirement: Callback UI — documented operations
 
 The callback call-timer component implemented in this app MUST provide the operations enumerated in this change's tasks.md (for example `formattedTime`, `isoDuration`, `reset`, `start`, `stop`). Each listed method realises an observable part of callback call-timer component and MUST behave as implemented in the current codebase.
@@ -558,4 +556,3 @@ Operations for callback call-timer component MUST tolerate missing, empty, or ma
 - WHEN it executes
 - THEN it MUST return a safe default or a validation result
 - AND it MUST NOT raise an unhandled exception
-

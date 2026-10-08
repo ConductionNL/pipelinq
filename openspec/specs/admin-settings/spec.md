@@ -13,7 +13,9 @@ The admin settings page provides a Nextcloud admin panel for configuring Pipelin
 **Feature tier**: MVP (admin page, version info, register mapping, pipeline CRUD, stage CRUD, default pipeline, re-import), V1 (lead source config, request channel config, product categories, prospect discovery ICP)
 
 ---
+
 ## Requirements
+
 ### Requirement: Nextcloud Admin Panel Registration [MVP]
 
 The system MUST register a settings page in the Nextcloud admin panel under "Administration". Only users with Nextcloud admin privileges MUST be able to access this page. The implementation uses `OCP\Settings\ISettings` (`AdminSettings.php`) and `OCP\Settings\IIconSection` (`SettingsSection.php`) to register the "Pipelinq" section with priority 10.
@@ -158,8 +160,6 @@ as Pipelinq application config. The `ApiAuthService` class MUST NOT exist.
 - THEN there MUST be no route named `settings#listTokens`, `settings#generateToken`, `settings#revokeToken`, or `settings#saveOAuth`
 - AND `SettingsController` MUST NOT define `listTokens`, `generateToken`, `revokeToken`, or `saveOAuth`
 - AND the `ApiAuthService` class MUST NOT exist
-
-## Requirements
 
 ### Requirement: REQ-AS-011: Version Information Display [MVP]
 
@@ -722,6 +722,48 @@ The admin settings page MUST comply with WCAG AA accessibility standards for all
 - AND destructive actions MUST use `var(--color-error)` for visual distinction
 
 ---
+
+### Requirement: Shillinq hand-offs follow the detected app
+
+Pipelinq SHALL hand approved hours (WIP) and approved expenses (AP) to Shillinq only when the Shillinq app is installed on the same server, and SHALL reach it internally through OpenRegister. The admin settings page SHALL NOT ask for a Shillinq webhook URL. The Shillinq options section SHALL only show when Shillinq is installed; otherwise the Detected integrations card SHALL say Shillinq is not installed.
+
+#### Scenario: Shillinq installed, no address typed
+
+- GIVEN the Shillinq app is installed
+- WHEN a time entry or an expense is approved
+- THEN pipelinq SHALL dispatch the CloudEvent without any configured URL
+
+@e2e exclude backend dispatch, asserted by tests/Unit/Service/ShillinqWipServiceTest.php and tests/Unit/Service/ShillinqApServiceTest.php.
+
+#### Scenario: Shillinq not installed
+
+- GIVEN the Shillinq app is not installed
+- WHEN an administrator opens the pipelinq admin settings
+- THEN no Shillinq webhook URL field SHALL show
+- AND the Detected integrations card SHALL say Shillinq is not installed
+
+@e2e tests/e2e/spec-coverage/expense-shillinq-ap.spec.ts
+
+#### Scenario: The xWiki test names no direct URL
+
+- GIVEN xWiki is not reachable
+- WHEN the administrator tests the xWiki connection
+- THEN the message SHALL point at the xWiki app or OpenRegister with integriq, never at a direct URL
+
+@e2e exclude a static message, asserted by tests/vitest/adminSettingsNoServiceUrls.spec.js.
+
+### Requirement: The setup wizard can run again from the admin page
+
+The pipelinq admin settings page SHALL offer a "Run the setup wizard again" action that opens the setup wizard with the manifest's own `setup.steps`. Closing or finishing the wizard SHALL return to the admin page.
+
+#### Scenario: Reopen the wizard
+
+- GIVEN an administrator who closed the setup wizard earlier
+- WHEN the administrator clicks Run the setup wizard again on the admin settings page
+- THEN the setup wizard SHALL open with the same steps as the first run
+- AND closing it SHALL leave the administrator on the admin settings page
+
+@e2e exclude the card is a button over nextcloud-vue's CnSetupWizard, asserted by tests/vitest/setupWizardRerun.spec.js.
 
 ## UI Layout Reference
 

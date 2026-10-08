@@ -37,6 +37,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Support;
 
 use OCP\App\IAppManager;
+use Psr\Container\ContainerInterface;
 use Throwable;
 
 /**
@@ -179,6 +180,106 @@ final class FleetAppId
         return $path;
 
     }//end appPath()
+
+
+    /**
+     * Candidate PHP namespaces per canonical app, NEWEST FIRST.
+     *
+     * The rename moved each app's PSR-4 root as well as its id, and the two
+     * halves break differently. A stale id makes `isInstalled()` answer false;
+     * a stale namespace makes `class_exists()` answer false and
+     * `ContainerInterface::get()` throw. Both fail into the same silent no-op,
+     * because every cross-app binding in this app is wrapped in a catch that
+     * exists so the app stays installable without its optional peer.
+     *
+     * `resolve()` and `appPath()` above cover the id half. This map covers the
+     * class half, and the two are NOT interchangeable: an app can be installed
+     * under its new id while a consumer still names its old namespace, which
+     * is exactly the state that took thirteen filinq bindings across five apps
+     * dark in August 2026 without a single error being logged.
+     *
+     * Every pair below was read out of that app's own composer.json history,
+     * not inferred from its id — `openbuild` shipped `OCA\OpenBuilt`, which no
+     * naming rule would have produced.
+     *
+     * Order is the contract, as it is for CANDIDATES: newest first, old names
+     * retained. Dropping an old name here re-breaks every instance still
+     * running a release from before that app's rename.
+     *
+     * @var array<string, list<string>>
+     */
+    private const NAMESPACES = [
+        'integriq' => ['OCA\Integriq', 'OCA\OpenConnector'],
+        'filinq'   => ['OCA\Filinq', 'OCA\DocuDesk'],
+        'thematiq' => ['OCA\Thematiq', 'OCA\NLDesign'],
+        'stackiq'  => ['OCA\Stackiq', 'OCA\SoftwareCatalog'],
+        'larpinq'  => ['OCA\Larpinq', 'OCA\LarpingApp'],
+        'dossiq'   => ['OCA\Dossiq', 'OCA\Procest'],
+        'learniq'  => ['OCA\Learniq', 'OCA\Scholiq'],
+        'decidiq'  => ['OCA\Decidiq', 'OCA\Decidesk'],
+        'buildiq'  => ['OCA\Buildiq', 'OCA\OpenBuilt'],
+        'keepiq'   => ['OCA\Keepiq', 'OCA\Doriath'],
+    ];
+
+
+    /**
+     * Every fully-qualified name a class could have, newest namespace first.
+     *
+     * @param string $canonical Canonical (new) app name, e.g. 'integriq'.
+     * @param string $relative  Class name below the app root, e.g. 'Service\CallService'.
+     *
+     * @return list<string> Candidate FQCNs, newest first; empty when unknown.
+     * @spec exclude infrastructure utility with no feature requirement of its own; it is
+     *   exercised through the features that call it
+     */
+    public static function classCandidates(string $canonical, string $relative): array
+    {
+        $relative   = ltrim($relative, '\\');
+        $candidates = [];
+
+        foreach ((self::NAMESPACES[$canonical] ?? []) as $namespace) {
+            $candidates[] = $namespace.'\\'.$relative;
+        }
+
+        return $candidates;
+
+    }//end classCandidates()
+
+
+    /**
+     * Fetch a service from another fleet app, whatever namespace it ships under.
+     *
+     * Replaces `$container->get('OCA\SomeOldName\Service\Thing')`, which throws
+     * when that app has renamed and — because every call site of that shape is
+     * wrapped in a try/catch that degrades gracefully — turns a rename into a
+     * feature that quietly stops working rather than an error anybody sees.
+     *
+     * @param ContainerInterface $container The service container.
+     * @param string             $canonical Canonical (new) app name, e.g. 'integriq'.
+     * @param string             $relative  Class name below the app root, e.g. 'Service\CallService'.
+     *
+     * @return object|null The service, or null when no candidate resolves.
+     * @spec exclude infrastructure utility with no feature requirement of its own; it is
+     *   exercised through the features that call it
+     */
+    public static function getService(ContainerInterface $container, string $canonical, string $relative): ?object
+    {
+        foreach (self::classCandidates(canonical: $canonical, relative: $relative) as $fqcn) {
+            try {
+                $service = $container->get($fqcn);
+                if (is_object($service) === true) {
+                    return $service;
+                }
+            } catch (Throwable $e) {
+                // This candidate is not registered — try the next name before
+                // concluding the app is absent.
+                continue;
+            }
+        }
+
+        return null;
+
+    }//end getService()
 
 
 }//end class

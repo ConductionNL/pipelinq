@@ -20,7 +20,7 @@
 				:clearable="false"
 				:inputLabel="t('pipelinq', 'Period')"
 				label="label"
-				@input="fetchRows" />
+				@update:modelValue="fetchRows" />
 		</header>
 
 		<NcLoadingIcon v-if="loading" :size="32" />
@@ -51,46 +51,20 @@
 					}}
 				</span>
 			</p>
-			<div class="search-queries__scroll">
-				<table
-					class="search-queries__table"
-					data-testid="search-queries-table">
-					<thead>
-						<tr>
-							<th scope="col">{{ t('pipelinq', 'Query') }}</th>
-							<th scope="col" class="search-queries__num">
-								{{ t('pipelinq', 'Clicks') }}
-							</th>
-							<th scope="col" class="search-queries__num">
-								{{ t('pipelinq', 'Impressions') }}
-							</th>
-							<th scope="col" class="search-queries__num">
-								{{ t('pipelinq', 'CTR') }}
-							</th>
-							<th scope="col" class="search-queries__num">
-								{{ t('pipelinq', 'Position') }}
-							</th>
-							<th scope="col" class="search-queries__num">
-								{{ t('pipelinq', 'Pages') }}
-							</th>
-						</tr>
-					</thead>
-					<tbody>
-						<tr v-for="row in rows" :key="row.query">
-							<td>{{ row.query }}</td>
-							<td class="search-queries__num">{{ row.clicks }}</td>
-							<td class="search-queries__num">
-								{{ row.impressions }}
-							</td>
-							<td class="search-queries__num">
-								{{ percent(row.ctr) }}
-							</td>
-							<td class="search-queries__num">{{ row.position }}</td>
-							<td class="search-queries__num">{{ row.pages }}</td>
-						</tr>
-					</tbody>
-				</table>
-			</div>
+			<!-- CnDataTable only reports header clicks; the sorting itself is
+				done here, over the rows the one request brought in. -->
+			<CnDataTable
+				data-testid="search-queries-table"
+				:columns="columns"
+				:rows="sortedRows"
+				:sortKey="sortKey"
+				:sortOrder="sortOrder"
+				rowKey="query"
+				@sort="onSort">
+				<template #column-ctr="{ row }">
+					{{ percent(row.ctr) }}
+				</template>
+			</CnDataTable>
 		</section>
 
 		<p v-if="error" class="search-queries__error" role="alert">
@@ -100,6 +74,7 @@
 </template>
 
 <script>
+import { CnDataTable } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
 import { NcEmptyContent, NcLoadingIcon, NcSelect } from '@nextcloud/vue'
@@ -110,6 +85,7 @@ const DAY = 24 * 60 * 60 * 1000
 export default {
 	name: 'SearchQueries',
 	components: {
+		CnDataTable,
 		Magnify,
 		NcEmptyContent,
 		NcLoadingIcon,
@@ -127,10 +103,57 @@ export default {
 			configured: false,
 			lastImportAt: '',
 			window: null,
+			// The server's own order, until a header is clicked.
+			sortKey: 'clicks',
+			sortOrder: 'desc',
 		}
 	},
 
 	computed: {
+		/**
+		 * @return {Array<object>} The columns, every one sortable.
+		 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-queries-page-lists-top-queries
+		 */
+		columns() {
+			const number = (key, label) => ({
+				key,
+				label,
+				sortable: true,
+				class: 'search-queries__num',
+			})
+			return [
+				{ key: 'query', label: this.t('pipelinq', 'Query'), sortable: true },
+				number('clicks', this.t('pipelinq', 'Clicks')),
+				number('impressions', this.t('pipelinq', 'Impressions')),
+				number('ctr', this.t('pipelinq', 'CTR')),
+				number('position', this.t('pipelinq', 'Position')),
+				number('pages', this.t('pipelinq', 'Pages')),
+			]
+		},
+
+		/**
+		 * The rows in the chosen order.
+		 *
+		 * @return {Array<object>} The sorted rows.
+		 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-queries-page-lists-top-queries
+		 */
+		sortedRows() {
+			if (!this.sortKey) {
+				return this.rows
+			}
+
+			const key = this.sortKey
+			const direction = this.sortOrder === 'desc' ? -1 : 1
+			return [...this.rows].sort((left, right) => {
+				const a = left[key]
+				const b = right[key]
+				if (key === 'query') {
+					return String(a ?? '').localeCompare(String(b ?? '')) * direction
+				}
+				return (Number(a || 0) - Number(b || 0)) * direction
+			})
+		},
+
 		/**
 		 * The selectable windows.
 		 *
@@ -175,6 +198,15 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * @param {object} event The table's `{key, order}` sort event.
+		 * @spec openspec/changes/marketing-campaign-attribution/specs/marketing-campaign-attribution/spec.md#requirement-search-queries-page-lists-top-queries
+		 */
+		onSort(event) {
+			this.sortKey = event?.key || null
+			this.sortOrder = event?.order || 'asc'
+		},
+
 		/**
 		 * GET /api/marketing/search-queries for the chosen window.
 		 *
@@ -260,27 +292,8 @@ export default {
 	flex-wrap: wrap;
 }
 
-.search-queries__scroll {
-	overflow-x: auto;
-}
-
-.search-queries__table {
-	width: 100%;
-	border-collapse: collapse;
-
-	th,
-	td {
-		padding: 8px 12px;
-		border-bottom: 1px solid var(--color-border);
-		text-align: start;
-	}
-
-	th {
-		font-weight: bold;
-	}
-}
-
-.search-queries__num {
+// The parent compound outranks the table's own left alignment.
+.search-queries :deep(.cn-data-table .search-queries__num) {
 	text-align: end;
 }
 

@@ -11,7 +11,7 @@ Provides the marketing blast user interface: a SegmentBuilder for visually compo
 ## Requirements
 ### Requirement: Segment Builder UI Composes Rule Trees
 
-`src/components/SegmentBuilder.vue` and `src/components/SegmentRuleNode.vue` are mounted by `SegmentFormView` (`src/views/segments/SegmentForm.vue`), reachable at `/segments/new` (`SegmentNew`) and `/segments/:id` (`SegmentEdit`), both linked from the Marketing menu's Segments entry (marketing-segments-ui-repair, pipelinq#773). Both scenarios below are exercised end to end by `tests/e2e/spec-coverage/marketing.spec.ts` ("the Segment builder blocks save on an invalid predicate, then validates and estimates once fixed").
+`src/components/SegmentBuilder.vue` and `src/components/SegmentRuleNode.vue` are mounted by `SegmentFormDialog` (`src/dialogs/SegmentFormDialog.vue`), the modal the Segments index page opens from its Add action and its row Edit action (marketing-segments-ui-repair, pipelinq#773). Both scenarios below are exercised end to end by `tests/e2e/spec-coverage/marketing.spec.ts` ("the Segment builder holds save until the rules are complete and valid, then estimates").
 
 The SegmentBuilder Vue component SHALL allow marketers to construct rule
 trees visually using AND/OR logic with leaf predicates, validate them, and
@@ -20,8 +20,8 @@ show a live size estimate before commit.
 #### Scenario: Visual rule tree with live validation
 
 - **GIVEN** a marketer opens SegmentBuilder for entityType "contact"
-- **WHEN** they add a predicate with an invalid operator for the field type
-- **THEN** the component SHALL display a field-level error and disable save until resolved
+- **WHEN** a predicate is unfinished, or the backend validator rejects it
+- **THEN** the component SHALL disable save until resolved, and SHALL display a rejection as an error on the predicate it names
 
 #### Scenario: Live size estimate shown
 
@@ -31,8 +31,11 @@ show a live size estimate before commit.
 
 ### Requirement: Blast Creation Wizard Gates on Compliance
 
-The BlastForm Vue component SHALL walk the marketer through name → segment →
-template → channel → schedule → A/B and SHALL check compliance before send.
+The new-blast wizard (`BlastWizardDialog`, a modal the Blasts index page's Add
+opens) SHALL walk the marketer through basics (name and channel) → audience →
+content (template) → delivery (transport, connector source, schedule) → A/B →
+review, and SHALL check compliance before send. The channel comes before the
+template because the templates offered are the channel's own.
 
 #### Scenario: Missing-consent modal on send
 
@@ -40,13 +43,13 @@ template → channel → schedule → A/B and SHALL check compliance before send
 
 - **GIVEN** a segment with contacts lacking email consent
 - **WHEN** the marketer attempts to send
-- **THEN** the form SHALL show a modal listing missing contacts with options "Skip and send", "Request consent", "Cancel"
+- **THEN** the wizard SHALL show a modal listing missing contacts with options "Skip and send", "Request consent", "Cancel"
 
 #### Scenario: Email template validated before save
 
 - **GIVEN** an email channel blast
 - **WHEN** the selected template is checked
-- **THEN** the form SHALL call the template validation endpoint and surface errors for missing unsubscribe token or address
+- **THEN** the wizard SHALL call the template validation endpoint and surface errors for missing unsubscribe token or address
 
 ### Requirement: Live Send Monitor
 
@@ -69,14 +72,17 @@ counts and an event timeline.
 
 The Marketing menu group SHALL list Segments and Templates ahead of Blasts
 and Blast performance. The Segments page SHALL be a declarative `type:
-"index"` page over the `segment` schema whose Add action and row action both
-navigate to a custom `SegmentFormView` page (`SegmentNew` / `SegmentEdit`,
-one component, edit mode driven by a route `:id` param) that mounts
-SegmentBuilder. The Templates page SHALL be a declarative `type: "index"`
-page over the `campaignTemplate` schema whose Add action and row action both
-navigate to a custom `TemplateFormView` page (`TemplateNew` / `TemplateEdit`)
-whose fields are conditional on the selected channel (email adds subject,
-sender, reply-to and footer fields; SMS does not).
+"index"` page over the `segment` schema whose Add action and row Edit action
+both open `SegmentFormDialog`, a modal in the index page's `form-dialog` slot
+that mounts SegmentBuilder and saves through `POST` / `PATCH /api/segments`.
+The index has no row selection, and a row click opens nothing.
+The Templates page SHALL be a declarative `type: "index"` page over the
+`campaignTemplate` schema whose Add action and row Edit action both open
+`TemplateFormDialog`, a modal in the index page's `form-dialog` slot that
+saves through `POST` / `PATCH /api/templates`, and whose fields are
+conditional on the selected channel (email adds subject, sender, reply-to and
+footer fields; SMS does not). That index likewise has no row selection, and
+a row click opens nothing.
 
 #### Scenario: Marketing menu lists Segments and Templates first
 
@@ -87,11 +93,11 @@ sender, reply-to and footer fields; SMS does not).
 
 - **GIVEN** a marketer on the Segments index page
 - **WHEN** they choose "New segment"
-- **THEN** they SHALL land on `SegmentFormView`, choose an audience (contact or customer), compose a rule tree with SegmentBuilder, and SHALL NOT be able to save until the tree is valid
+- **THEN** a `SegmentFormDialog` modal SHALL open in which they choose an audience (contact or customer), compose a rule tree with SegmentBuilder, and SHALL NOT be able to save until the tree is valid
 
 #### Scenario: Template save surfaces a compliance error as a field error
 
-- **GIVEN** a marketer on the Templates New page for an email channel
+- **GIVEN** a marketer in the new-template modal for an email channel
 - **WHEN** they submit a body with no `{{unsubscribe_link}}` token
-- **THEN** the page SHALL call `POST /api/templates`, which rejects the save, and SHALL render the returned error against the body field rather than only a page-level banner
+- **THEN** the modal SHALL call `POST /api/templates`, which rejects the save, SHALL render the returned error against the body field rather than only a banner, and SHALL stay open
 

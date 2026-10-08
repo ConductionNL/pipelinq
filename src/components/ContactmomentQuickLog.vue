@@ -35,6 +35,7 @@
 					v-model="form.channel"
 					:options="channelOptions"
 					:aria-label-combobox="t('pipelinq', 'Channel')"
+					labelOutside
 					:clearable="false"
 					:placeholder="t('pipelinq', 'Select channel')" />
 			</div>
@@ -44,6 +45,7 @@
 					v-model="form.outcome"
 					:options="outcomeOptions"
 					:aria-label-combobox="t('pipelinq', 'Outcome')"
+					labelOutside
 					:clearable="true"
 					:placeholder="t('pipelinq', 'Select outcome')" />
 			</div>
@@ -88,6 +90,8 @@
 
 		<ClientCreateDialog
 			v-if="clientDialogOpen"
+			:name="pendingName"
+			stayOnPage
 			@created="onClientCreated"
 			@close="closeClientDialog" />
 		<ContactCreateDialog
@@ -104,6 +108,7 @@
 				v-model="form.parentTicket"
 				:options="requestSelectOptions"
 				:aria-label-combobox="t('pipelinq', 'Request')"
+				labelOutside
 				:clearable="true"
 				label="label"
 				:reduce="(o) => o.value"

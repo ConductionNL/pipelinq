@@ -73,6 +73,7 @@ SPDX-FileCopyrightText: 2026 Conduction B.V.
 
 <script>
 import { fetchBooking } from '../../services/bookingPortalApi.js'
+import { currencyOr } from '../../services/reportingCurrency.js'
 
 export default {
 	name: 'BookingConfirmationPage',
@@ -142,7 +143,7 @@ export default {
 		 * @spec exclude display formatter: amount and currency to a localised price string
 		 */
 		priceLabel() {
-			const cur = (this.booking && this.booking.currency) || 'EUR'
+			const cur = currencyOr(this.booking && this.booking.currency)
 			const amount = Number(this.booking ? this.booking.price : 0)
 			try {
 				return new Intl.NumberFormat(undefined, {

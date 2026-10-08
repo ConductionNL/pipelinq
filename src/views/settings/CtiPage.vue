@@ -13,7 +13,7 @@
   - @spec openspec/changes/pipelinq-cti-and-catalog-ia/tasks.md
   -->
 <template>
-	<div class="cti-page">
+	<div id="section-cti" class="cti-page">
 		<CtiSettings />
 		<CtiEventLog />
 	</div>

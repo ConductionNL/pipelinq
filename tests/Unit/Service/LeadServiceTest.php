@@ -19,10 +19,11 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
-use OCA\OpenRegister\Mcp\Attribute\McpTool;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Mcp\Attribute\McpTool;
+use OCA\Pipelinq\Mcp\McpAnswer;
 use OCA\Pipelinq\Service\LeadService;
 use OCP\IAppConfig;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -91,7 +92,7 @@ class LeadServiceTest extends TestCase {
 		return new LeadService(
 			container: $this->container,
 			appConfig: $this->appConfig,
-			logger: $this->logger,
+			mcp: new McpAnswer($this->logger),
 		);
 	}//end buildService()
 

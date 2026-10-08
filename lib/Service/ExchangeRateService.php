@@ -24,6 +24,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\AppInfo\Application;
+use InvalidArgumentException;
 use OCP\IAppConfig;
 
 /**
@@ -41,9 +42,21 @@ class ExchangeRateService {
 	/**
 	 * App-config key for the org reporting currency.
 	 *
+	 * The one the setup wizard stores and manifest dashboards format with
+	 * (`@config.currency`). The forecast used to keep a second setting for the
+	 * same thing (pipelinq#2040); that key is still read as a fallback.
+	 *
 	 * @var string
 	 */
-	public const REPORTING_CURRENCY_KEY = 'forecast_reporting_currency';
+	public const REPORTING_CURRENCY_KEY = 'currency';
+
+	/**
+	 * The forecast's former reporting-currency key, read only when the setup
+	 * wizard's key is unset so an instance that set it keeps its value.
+	 *
+	 * @var string
+	 */
+	public const LEGACY_REPORTING_CURRENCY_KEY = 'forecast_reporting_currency';
 
 	/**
 	 * Default reporting currency when none is configured.
@@ -77,21 +90,14 @@ class ExchangeRateService {
 	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-004-05
 	 */
 	public function getReportingCurrency(): string {
-		$currency = strtoupper(
-			trim(
-				$this->appConfig->getValueString(
-					Application::APP_ID,
-					self::REPORTING_CURRENCY_KEY,
-					self::REPORTING_CURRENCY_DEFAULT
-				)
-			)
-		);
-
-		if ($currency === '') {
-			return self::REPORTING_CURRENCY_DEFAULT;
+		foreach ([self::REPORTING_CURRENCY_KEY, self::LEGACY_REPORTING_CURRENCY_KEY] as $key) {
+			$currency = strtoupper(trim($this->appConfig->getValueString(Application::APP_ID, $key, '')));
+			if ($currency !== '') {
+				return $currency;
+			}
 		}
 
-		return $currency;
+		return self::REPORTING_CURRENCY_DEFAULT;
 	}//end getReportingCurrency()
 
 	/**
@@ -114,6 +120,61 @@ class ExchangeRateService {
 		$rate = $this->rateFor(currency: $source);
 		return round($amount * $rate, 2);
 	}//end toReportingCurrency()
+
+	/**
+	 * The rate table: units of reporting currency per 1 unit of each currency.
+	 *
+	 * @return array<string, float> Currency code => rate, sorted by code.
+	 *
+	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-004-05
+	 */
+	public function getRates(): array {
+		$raw = $this->appConfig->getValueString(Application::APP_ID, self::RATES_KEY, '');
+		$table = json_decode($raw, true);
+		if (is_array($table) === false) {
+			return [];
+		}
+
+		$rates = [];
+		foreach ($table as $code => $rate) {
+			if (is_numeric($rate) === true && (float)$rate > 0) {
+				$rates[strtoupper(trim((string)$code))] = (float)$rate;
+			}
+		}
+
+		ksort($rates);
+		return $rates;
+	}//end getRates()
+
+	/**
+	 * Validate a rate table an administrator submits.
+	 *
+	 * @param array<mixed, mixed> $input Currency code => rate.
+	 *
+	 * @return array<string, float> The table, codes upper-cased and sorted.
+	 *
+	 * @throws InvalidArgumentException When a code is not ISO 4217 shaped or a rate is not positive.
+	 *
+	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-004-05
+	 */
+	public function normaliseRates(array $input): array {
+		$rates = [];
+		foreach ($input as $code => $rate) {
+			$currency = strtoupper(trim((string)$code));
+			if (preg_match('/^[A-Z]{3}$/', $currency) !== 1) {
+				throw new InvalidArgumentException("'{$code}' is not a three-letter currency code.");
+			}
+
+			if (is_numeric($rate) === false || (float)$rate <= 0) {
+				throw new InvalidArgumentException("The rate for {$currency} must be a number above zero.");
+			}
+
+			$rates[$currency] = (float)$rate;
+		}
+
+		ksort($rates);
+		return $rates;
+	}//end normaliseRates()
 
 	/**
 	 * Resolve the conversion rate for a source currency.

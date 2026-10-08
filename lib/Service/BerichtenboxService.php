@@ -335,7 +335,12 @@ class BerichtenboxService {
 			}
 
 			try {
-				$this->emailFallback->send($message, $burgerEmail, true);
+				$accepted = $this->emailFallback->send($message, $burgerEmail, true);
+				if ($accepted === false && $this->emailFallback->lastRefusal() !== null) {
+					// Integriq refused it (opt-out-before-send): logged by the
+					// sender, and the message status stays as it is.
+					continue;
+				}
 			} catch (\Throwable $e) {
 				$this->logger->warning(
 					'5-day fallback email send failed.',
@@ -619,7 +624,11 @@ class BerichtenboxService {
 		}
 
 		try {
-			$this->emailFallback->send($message, $burgerEmail, false);
+			$accepted = $this->emailFallback->send($message, $burgerEmail, false);
+			if ($accepted === false && $this->emailFallback->lastRefusal() !== null) {
+				// Integriq refused it: logged by the sender, status unchanged.
+				return;
+			}
 		} catch (\Throwable $e) {
 			$this->markFailedOrRetry(message: $message, reason: $e->getMessage(), bodyHash: $bodyHash);
 			return;
@@ -931,6 +940,10 @@ class BerichtenboxService {
 			'title' => 'Re: ' . ((string)($parent['subject'] ?? '')),
 			'description' => (string)($reply['bodyText'] ?? ''),
 			'channel' => 'berichtenbox',
+			// A Berichtenbox reply is the citizen writing to us, so the
+			// direction is fixed rather than passed in: there is no path
+			// through this method that records an outbound message.
+			'direction' => 'inbound',
 			'outcome' => 'opvolging-nodig',
 			'caseId' => (string)($parent['caseId'] ?? ''),
 			'parentMessageId' => (string)($parent['uuid'] ?? ''),

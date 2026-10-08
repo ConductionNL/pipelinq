@@ -31,6 +31,7 @@ use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\ArticleService;
 use OCA\Pipelinq\Service\ComplianceService;
+use OCA\Pipelinq\Service\Marketing\PhysicalAddressRenderer;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -52,6 +53,7 @@ class TemplateController extends Controller {
 	 * @param ArticleService $articleService Article reader and `{{articles}}` renderer.
 	 * @param IUserSession $userSession Current user session.
 	 * @param ObjectOwnerAccessPolicy $policy Per-object owner access policy.
+	 * @param PhysicalAddressRenderer $addressRenderer Puts the template's physical address into the preview.
 	 */
 	public function __construct(
 		IRequest $request,
@@ -59,6 +61,7 @@ class TemplateController extends Controller {
 		private readonly ArticleService $articleService,
 		private readonly IUserSession $userSession,
 		private readonly ObjectOwnerAccessPolicy $policy,
+		private readonly PhysicalAddressRenderer $addressRenderer,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 	}//end __construct()
@@ -169,9 +172,9 @@ class TemplateController extends Controller {
 	/**
 	 * GET /api/templates/:id/preview — the bodies as they will be sent.
 	 *
-	 * The preview runs the same `{{articles}}` expansion the send path runs,
-	 * so what a marketer reads before sending is produced by the code that
-	 * will do the sending. Per-recipient tokens are deliberately left in
+	 * The preview runs the same `{{articles}}` expansion and physical-address
+	 * placement the send path runs, so what a marketer reads before sending
+	 * is produced by the code that will do the sending. Per-recipient tokens are deliberately left in
 	 * place: a preview showing one recipient's address would say nothing
 	 * about whether the token is there at all.
 	 *
@@ -203,17 +206,26 @@ class TemplateController extends Controller {
 		}
 
 		$articles = $this->articleService->loadArticlesByIds(articleIds: $ids);
+		$footer = (string)($template['footerOverride'] ?? '');
 
 		return new JSONResponse([
 			'subject' => (string)($template['subject'] ?? ''),
-			'bodyHtml' => $this->articleService->expandArticlesMarker(
-				body: (string)($template['bodyHtml'] ?? ''),
-				articles: $articles,
+			'bodyHtml' => $this->addressRenderer->render(
+				body: $this->articleService->expandArticlesMarker(
+					body: (string)($template['bodyHtml'] ?? ''),
+					articles: $articles,
+					format: ArticleService::FORMAT_HTML,
+				),
+				footerOverride: $footer,
 				format: ArticleService::FORMAT_HTML,
 			),
-			'bodyText' => $this->articleService->expandArticlesMarker(
-				body: (string)($template['bodyText'] ?? ''),
-				articles: $articles,
+			'bodyText' => $this->addressRenderer->render(
+				body: $this->articleService->expandArticlesMarker(
+					body: (string)($template['bodyText'] ?? ''),
+					articles: $articles,
+					format: ArticleService::FORMAT_TEXT,
+				),
+				footerOverride: $footer,
 				format: ArticleService::FORMAT_TEXT,
 			),
 			'articles' => array_map(
@@ -225,6 +237,42 @@ class TemplateController extends Controller {
 			),
 		]);
 	}//end preview()
+
+	/**
+	 * POST /api/templates/:id/validate — run the compliance check on a stored
+	 * template without saving anything, so the blast wizard can refuse a
+	 * non-compliant template before a blast is created from it.
+	 *
+	 * The channel comes from the request, falling back to the template's own.
+	 * SMS templates always pass: the footer rule is email-specific.
+	 *
+	 * @param string $id Template UUID or slug.
+	 *
+	 * @return JSONResponse `{valid, error}`, or 404.
+	 *
+	 * @spec openspec/specs/marketing-ui/spec.md#scenario-email-template-validated-before-save
+	 */
+	#[NoAdminRequired]
+	public function validate(string $id): JSONResponse {
+		$uid = $this->requireUser();
+		if ($uid === null) {
+			return $this->unauthorized();
+		}
+
+		if ($this->policy->isPrivileged(uid: $uid) === false) {
+			return $this->forbidden();
+		}
+
+		$template = $this->complianceService->getTemplateById(templateId: $id);
+		if ($template === null) {
+			return $this->notFound();
+		}
+
+		$channel = (string)$this->request->getParam('channel', (string)($template['channel'] ?? 'email'));
+		$error = $this->complianceService->validateTemplate(templateData: $template, channel: $channel);
+
+		return new JSONResponse(['valid' => ($error === null), 'error' => $error]);
+	}//end validate()
 
 	/**
 	 * Authenticated user id, or null.
@@ -241,23 +289,41 @@ class TemplateController extends Controller {
 	}//end requireUser()
 
 	/**
-	 * Collect a sanitised template body. Drops any client-supplied
-	 * `createdBy` / `createdAt` so the server stamp wins.
+	 * Collect a sanitised template body from the fields the request carries.
+	 * A field it leaves out is left out here too, so a partial PATCH keeps
+	 * the template's value instead of blanking it; create fills the gaps with
+	 * its own defaults. Any client-supplied `createdBy` / `createdAt` is
+	 * dropped so the server stamp wins.
 	 *
 	 * @return array<string, mixed> Sanitised payload.
 	 */
 	private function collectTemplateBody(): array {
-		return [
-			'name' => (string)$this->request->getParam('name', ''),
-			'channel' => (string)$this->request->getParam('channel', ''),
-			'subject' => (string)$this->request->getParam('subject', ''),
-			'bodyHtml' => (string)$this->request->getParam('bodyHtml', ''),
-			'bodyText' => (string)$this->request->getParam('bodyText', ''),
-			'senderName' => (string)$this->request->getParam('senderName', ''),
-			'senderEmail' => (string)$this->request->getParam('senderEmail', ''),
-			'footerOverride' => (string)$this->request->getParam('footerOverride', ''),
-			'articleIds' => $this->request->getParam('articleIds', []),
+		$fields = [
+			'name',
+			'channel',
+			'subject',
+			'bodyHtml',
+			'bodyText',
+			'senderName',
+			'senderEmail',
+			'replyTo',
+			'footerOverride',
 		];
+
+		$body = [];
+		foreach ($fields as $field) {
+			$value = $this->request->getParam($field);
+			if ($value !== null) {
+				$body[$field] = (string)$value;
+			}
+		}
+
+		$articleIds = $this->request->getParam('articleIds');
+		if ($articleIds !== null) {
+			$body['articleIds'] = $articleIds;
+		}
+
+		return $body;
 	}//end collectTemplateBody()
 
 	/**

@@ -8,7 +8,7 @@ Run the periodic background jobs that keep task state current without user inter
 
 The deadline sweep is owned by `ScheduledTaskJob` (registered in `appinfo/info.xml`), which delegates to `ScheduledTaskService::processScheduledTasks()`. A separate `TaskExpiryJob` was registered historically but its `run()` only logged — it never expired anything — and it was removed in `money-and-bridge-fixes` (2026-07-16) in favour of the path that actually runs.
 
-## ADDED Requirements
+## Requirements
 
 @e2e exclude backend background job — task expiry TimedJob runs in PHP cron; no UI surface; covered by PHPUnit
 
@@ -61,7 +61,7 @@ The system MUST send escalation notifications when task deadlines are approachin
 - **THEN** the system MUST send an escalation notification to the assignee via `NotificationService::notifyTaskExpired()`
 - AND the notification MUST indicate that the task has expired and requires attention
 - AND a notification failure MUST be logged and swallowed so it never aborts the batch run
-## Requirements
+
 ### Requirement: Background job execution — documented operations
 
 The scheduled CRM background jobs implemented in this app MUST provide the operations enumerated in this change's tasks.md (for example `run`, `run`). Each listed method realises an observable part of scheduled CRM background jobs and MUST behave as implemented in the current codebase.
@@ -145,4 +145,3 @@ Operations for task validation and deadline calculation MUST tolerate missing, e
 - WHEN it executes
 - THEN it MUST return a safe default or a validation result
 - AND it MUST NOT raise an unhandled exception
-

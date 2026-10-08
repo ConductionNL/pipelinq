@@ -160,6 +160,7 @@ class MessagingWebhookController extends Controller {
 	 * - `received` → 200 OK.
 	 * - `invalidSignature` → 400 BAD_REQUEST (pipelinq Hydra gate
 	 *   for webhook signature failures).
+	 * - `serviceUnavailable` → 503, no messaging service account.
 	 * - everything else → 422 UNPROCESSABLE_ENTITY.
 	 *
 	 * @param array<string, mixed> $result Adapter result.
@@ -174,6 +175,12 @@ class MessagingWebhookController extends Controller {
 
 		if ($status === 'invalidSignature') {
 			return new JSONResponse(['error' => 'invalidSignature'], Http::STATUS_BAD_REQUEST);
+		}
+
+		if ($status === 'serviceUnavailable') {
+			// No usable messaging service account: nothing was written, and
+			// the provider retries. The reason stays in the log.
+			return new JSONResponse(['error' => 'serviceUnavailable'], Http::STATUS_SERVICE_UNAVAILABLE);
 		}
 
 		return new JSONResponse($result, Http::STATUS_UNPROCESSABLE_ENTITY);

@@ -32,6 +32,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Adapter;
 
+use OCA\Pipelinq\Support\FleetAppId;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -165,6 +166,12 @@ abstract class AbstractOpenConnectorSink implements ExportSinkInterface {
 			throw new RuntimeException('OpenConnector CallService is not available for export upload.');
 		}
 
+		// VERIFIED 2026-09-09 against integriq development: the published
+		// CallService surface is call()/callAsync() and there is no put(), under
+		// either namespace. Resolving the class correctly does not conjure the
+		// method, so this branch is reached on a fully migrated instance — and
+		// unlike the name half it fails LOUD, which is why it is left as a
+		// throw rather than a silent skip.
 		if (method_exists($callService, 'put') === false) {
 			throw new RuntimeException('OpenConnector CallService does not support file uploads.');
 		}
@@ -178,15 +185,24 @@ abstract class AbstractOpenConnectorSink implements ExportSinkInterface {
 	}//end transfer()
 
 	/**
-	 * Resolve the OpenConnector CallService, or null when OC is absent.
+	 * Resolve the CallService, or null when the connector app is absent.
+	 *
+	 * Asked for by CANONICAL app name, never by a literal FQCN: the connector
+	 * app renamed its PSR-4 root from `OCA\OpenConnector` to `OCA\Integriq`
+	 * with no compatibility alias, and both roots are in the field at once.
+	 * A container lookup on the wrong one throws, and a thrown lookup is
+	 * indistinguishable from the optional app not being installed — the export
+	 * then reports "CallService is not available" for an instance that has it.
+	 * {@see FleetAppId::getService()} tries every spelling, newest first, and
+	 * returns null only when none of them resolves.
 	 *
 	 * @return object|null The CallService instance, or null.
 	 */
 	protected function getCallService(): ?object {
-		try {
-			return $this->container->get('OCA\OpenConnector\Service\CallService');
-		} catch (\Throwable $e) {
-			return null;
-		}
+		return FleetAppId::getService(
+			container: $this->container,
+			canonical: 'integriq',
+			relative: 'Service\CallService'
+		);
 	}//end getCallService()
 }//end class

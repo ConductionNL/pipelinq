@@ -231,14 +231,23 @@ class FakeFlowService {
 		$this->lastDocument = $data;
 		$this->uuidsSeen[] = (string)$uuid;
 
+		// Like OpenRegister's Flow entity, the getter is magic: there is no
+		// getUuid() method to find, only __call.
 		return new class {
 			/**
-			 * The flow's uuid.
+			 * Resolve a Nextcloud-entity-style magic getter.
 			 *
-			 * @return string The uuid.
+			 * @param string $name The method called.
+			 * @param array<int, mixed> $args Its arguments.
+			 *
+			 * @return string|null The uuid for getUuid(), null otherwise.
 			 */
-			public function getUuid(): string {
-				return 'flow-1';
+			public function __call(string $name, array $args): ?string {
+				if ($name === 'getUuid') {
+					return 'flow-1';
+				}
+
+				return null;
 			}
 		};
 	}//end save()

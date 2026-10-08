@@ -109,6 +109,7 @@
 
 <script>
 import { NcEmptyContent, NcLoadingIcon, NcTextField } from '@nextcloud/vue'
+import { formatEur } from '../../services/commercialFormat.js'
 import { fetchSnapshots } from '../../services/forecastApi.js'
 import { accuracyBand } from '../../services/forecastMath.js'
 
@@ -211,13 +212,15 @@ export default {
 			return accuracyBand(score)
 		},
 
+		/**
+		 * Forecast amounts are in the reporting currency.
+		 *
+		 * @param {number} value The amount.
+		 * @return {string} The amount, formatted.
+		 * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
+		 */
 		formatMoney(value) {
-			return (
-				'€'
-				+ Number(value || 0).toLocaleString('nl-NL', {
-					maximumFractionDigits: 0,
-				})
-			)
+			return formatEur(Number(value || 0))
 		},
 	},
 }

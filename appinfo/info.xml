@@ -52,7 +52,7 @@ Vrij en open source onder de EUPL-1.2-licentie.
 
 **Ondersteuning:** Voor ondersteuning, neem contact op via support@conduction.nl. Voor een Service Level Agreement (SLA), neem contact op via sales@conduction.nl.
     ]]></description>
-    <version>0.4.18-unstable.20260905153554</version>
+    <version>0.5.7-unstable.20261007170000</version>
     <licence>EUPL-1.2</licence>
     <author mail="info@conduction.nl" homepage="https://www.conduction.nl/">Conduction</author>
     <namespace>Pipelinq</namespace>
@@ -93,7 +93,7 @@ Vrij en open source onder de EUPL-1.2-licentie.
         OpenRegister, and this app does not depend on that value — the floor here
         rests on the interface fact, not on OpenRegister's declaration.
         -->
-        <nextcloud min-version="32" max-version="34"/>
+        <nextcloud min-version="32" max-version="35"/>
         <!-- App dependency (not expressible in app-info.xsd): OpenRegister
              (all Pipelinq data — clients, contacts, leads, requests, contracts,
              contactmomenten — is stored as OpenRegister registers/schemas; see
@@ -117,6 +117,7 @@ Vrij en open source onder de EUPL-1.2-licentie.
         <job>OCA\Pipelinq\BackgroundJob\CtiEventLogCleanupJob</job>
         <job>OCA\Pipelinq\BackgroundJob\BlastSendJob</job>
         <job>OCA\Pipelinq\BackgroundJob\ReminderDispatchJob</job>
+        <job>OCA\Pipelinq\BackgroundJob\SurveyInvitationDispatchJob</job>
         <job>OCA\Pipelinq\BackgroundJob\AvailabilityCacheRefreshJob</job>
         <job>OCA\Pipelinq\BackgroundJob\AppointmentDepositTimeoutJob</job>
         <job>OCA\Pipelinq\BackgroundJob\GenerateZReportJob</job>
@@ -138,6 +139,8 @@ Vrij en open source onder de EUPL-1.2-licentie.
         <job>OCA\Pipelinq\BackgroundJob\SearchConsoleImportJob</job>
         <job>OCA\Pipelinq\BackgroundJob\SocialPublishJob</job>
         <job>OCA\Pipelinq\BackgroundJob\SocialMetricsPullJob</job>
+        <!-- Replays consent wishes integriq did not take (opt-out-before-send). -->
+        <job>OCA\Pipelinq\BackgroundJob\ReplayConsentToIntegriqJob</job>
     </background-jobs>
 
     <repair-steps>
@@ -170,6 +173,13 @@ Vrij en open source onder de EUPL-1.2-licentie.
             <step>OCA\Pipelinq\Repair\RenameCollidingSchemaSlugs</step>
             <step>OCA\Pipelinq\Repair\InitializeSettings</step>
             <!--
+                Right after the import that turns client.industry into a list:
+                every later step that saves a client would otherwise fail
+                validation on a client still holding an industry string.
+                Also copies a party's `language` into correspondenceLanguage.
+            -->
+            <step>OCA\Pipelinq\Repair\NormalisePartyFormFields</step>
+            <!--
                 After InitializeSettings imports the register: the schema edit
                 changes the DECLARATION, but every row already written still
                 holds the Dutch string, and a filter on the new value returns
@@ -187,8 +197,31 @@ Vrij en open source onder de EUPL-1.2-licentie.
                 is itself a valid save, so running after the import is safe.
             -->
             <step>OCA\Pipelinq\Repair\BackfillLeadRelations</step>
+            <!-- After the backfill: a lead on a deleted pipeline goes to the default pipeline (review F1). -->
+            <step>OCA\Pipelinq\Repair\RelinkOrphanedLeads</step>
             <step>OCA\Pipelinq\Repair\NormaliseCtiPhoneNumbers</step>
             <step>OCA\Pipelinq\Repair\NormaliseTicketTitle</step>
+            <!--
+                After NormaliseTicketTitle, and for the same reason it runs after
+                the import: this step rewrites rows, and the `direction` property
+                it writes only exists once the register fragment has landed.
+                Idempotent — a contact moment that already carries a direction is
+                left untouched, so a second run writes nothing.
+            -->
+            <step>OCA\Pipelinq\Repair\MigrateContactMomentDirection</step>
+            <!--
+                After MigrateContactMomentDirection, and both after the import:
+                the set this step writes only exists once the register fragment
+                has landed. Idempotent — a contact moment that already carries a
+                set is left alone.
+            -->
+            <step>OCA\Pipelinq\Repair\WidenContactMomentCaseReference</step>
+            <!--
+                After the import, like every other row-writing step: the
+                partyKind schema the seed writes into only exists once the
+                register fragment has landed. Idempotent by code.
+            -->
+            <step>OCA\Pipelinq\Repair\SeedPartyKinds</step>
             <step>OCA\Pipelinq\Repair\InitSlaStatus</step>
             <step>OCA\Pipelinq\Repair\IngestProductVendorMaster</step>
             <step>OCA\Pipelinq\Repair\MigratePosBookkeepingToShillinq</step>
@@ -214,6 +247,22 @@ Vrij en open source onder de EUPL-1.2-licentie.
                 would leave the rest silently reading null.
             -->
             <step>OCA\Pipelinq\Repair\RenameDutchColumns</step>
+            <!--
+                opt-out-before-send: moves both consent stores into integriq and
+                flips consent.store only after a run with no refusal. A no-op
+                without integriq; idempotent by legacyRef.
+            -->
+            <step>OCA\Pipelinq\Repair\MigrateConsentToIntegriq</step>
+            <!-- The group the portal schemas grant; never picks an account. -->
+            <step>OCA\Pipelinq\Repair\CreatePortalServiceGroup</step>
+            <!-- The group the SMS and WhatsApp webhooks write with; never picks an account. -->
+            <step>OCA\Pipelinq\Repair\CreateMessagingServiceGroup</step>
+            <!--
+                hydra-gate-98 held: OCA\Pipelinq\Repair\CreateServiceGroup : it is the abstract
+                base of the two steps above and cannot be instantiated, so naming it here would
+                make Nextcloud's repair fail. It runs through CreatePortalServiceGroup and
+                CreateMessagingServiceGroup. RepairStepRegistrationTest keeps it that way.
+            -->
         </post-migration>
         <!--
             FRESH INSTALL. Nextcloud does NOT run post-migration on a first install:
@@ -244,8 +293,14 @@ Vrij en open source onder de EUPL-1.2-licentie.
             <step>OCA\Pipelinq\Repair\SeedTrustConfigurationRows</step>
             <!-- Hermiq is an optional peer: the step is a silent no-op without it. -->
             <step>OCA\Pipelinq\Repair\SeedWeeklyReviewAgentTemplate</step>
+            <step>OCA\Pipelinq\Repair\CreatePortalServiceGroup</step>
+            <step>OCA\Pipelinq\Repair\CreateMessagingServiceGroup</step>
         </install>
     </repair-steps>
+
+    <commands>
+        <command>OCA\Pipelinq\Command\ConsentMigrateCommand</command>
+    </commands>
 
     <settings>
         <admin>OCA\Pipelinq\Settings\AdminSettings</admin>

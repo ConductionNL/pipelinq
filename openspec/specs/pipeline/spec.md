@@ -39,7 +39,9 @@ See [ARCHITECTURE.md](../../../docs/ARCHITECTURE.md) for the full Pipeline and S
 | `isWon` | boolean | No | false | MUST only be true if isClosed is also true |
 
 ---
+
 ## Requirements
+
 ### Requirement: Pipeline CRUD [MVP]
 
 The system MUST support creating, reading, updating, and deleting pipelines. Pipelines are managed by admins via the Nextcloud admin settings page (see DESIGN-REFERENCES.md Section 3.7).
@@ -747,8 +749,6 @@ plus declarative business logic, NOT a parallel board engine (ADR-031).
 - **AND** no bespoke board-engine code SHALL re-implement Deck's column/card
   mechanics.
 
-## Requirements
-
 ### Requirement: Multiple Pipelines per Organization [V1] (REQ-PIPE-019)
 
 Organizations MUST be able to maintain multiple active pipelines simultaneously, each targeting different workflows or teams. This enables separate sales processes (e.g., government deals vs. commercial, inbound vs. outbound) and prevents forcing all leads through a single funnel. Inspired by EspoCRM's multi-pipeline opportunities and Krayin's pipeline-per-team model.
@@ -1241,6 +1241,74 @@ The system MUST calculate and display weighted pipeline values to provide a real
 - AND leads without an expected close date MUST be grouped separately as "Unscheduled"
 
 ---
+
+### Requirement: The board names leads that are on no board (REQ-RAF-020)
+
+The pipeline board SHALL list, in a notice above the columns, every lead whose
+pipeline does not exist or whose stage is not a stage of its pipeline, with a
+link to the lead and the reason.
+
+#### Scenario: Leads on a deleted pipeline
+
+- GIVEN six leads on a pipeline that was deleted
+- WHEN a user opens the pipeline board
+- THEN a notice says six leads are on no board, and lists them on request
+
+### Requirement: The board opens where the open leads are (REQ-RAF-021)
+
+The board SHALL open on the default pipeline when it has open leads. Otherwise
+it SHALL open on the pipeline with the most open leads. Without open leads it
+SHALL open on the default pipeline, or the first pipeline.
+
+#### Scenario: The default pipeline is empty
+
+- GIVEN a default pipeline without open leads and another pipeline with seven
+- WHEN a user opens the pipeline board
+- THEN the board shows the pipeline with seven leads
+
+### Requirement: Pipelines are saved without null optional fields (REQ-RF-010)
+
+The default pipelines and the pipeline form SHALL leave an empty optional
+field out of the saved pipeline rather than sending null. A mapping without
+a stage total SHALL have no `totalsProperty`. A stage without a probability
+SHALL have no `probability`. The default sales pipeline's totals label SHALL
+be the reporting currency.
+
+#### Scenario: A fresh install gets its default pipelines
+
+- GIVEN a fresh install with the pipeline schema configured
+- WHEN the default pipelines are created
+- THEN OpenRegister accepts the Sales Pipeline and the Service Requests pipeline
+
+#### Scenario: A pipeline without a totals property saves
+
+- GIVEN an admin adds a mapping and leaves the totals property empty
+- WHEN they save the pipeline
+- THEN the pipeline is stored
+
+### Requirement: A repair step creates the default pipelines as the system account (REQ-RP2-010)
+
+When the default pipelines are created with nobody signed in, as in the
+repair step of `occ upgrade` or an app install, the system SHALL write them as
+the dedicated `pipelinq-system` account with OpenRegister's access checks on.
+It SHALL NOT write with `_rbac: false`. The account SHALL be created on first
+use, disabled, with a random password, so nobody can sign in with it. The
+previously active user SHALL be restored afterwards, also when the write
+fails. When a user is signed in, as in the setup action, the pipelines SHALL
+be written as that user.
+
+#### Scenario: A fresh install
+
+- GIVEN a fresh install where no user is signed in during the repair step
+- WHEN the repair step creates the default pipelines
+- THEN the Sales Pipeline and the Service Requests pipeline exist
+- AND they were written as `pipelinq-system`
+
+#### Scenario: The setup action
+
+- GIVEN an admin runs the setup action
+- WHEN the default pipelines are created
+- THEN they are written as that admin
 
 ## UI Reference
 

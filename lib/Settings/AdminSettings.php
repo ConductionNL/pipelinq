@@ -24,6 +24,8 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Settings;
 
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Service\IntegrationDetector;
+use OCA\Pipelinq\Service\Settings\MenuStructure;
 use OCA\Pipelinq\Service\SettingsService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Http\TemplateResponse;
@@ -45,11 +47,15 @@ class AdminSettings implements IDelegatedSettings {
 	 * @param SettingsService $settingsService The settings service.
 	 * @param IAppManager $appManager The app manager.
 	 * @param IInitialState $initialState The initial state service.
+	 * @param MenuStructure $menuStructure How the stored structure settings read.
+	 * @param IntegrationDetector $integrations Detects Shillinq and XWiki for the read-only integrations card.
 	 */
 	public function __construct(
 		private SettingsService $settingsService,
 		private IAppManager $appManager,
 		private IInitialState $initialState,
+		private MenuStructure $menuStructure,
+		private IntegrationDetector $integrations,
 	) {
 	}//end __construct()
 
@@ -59,12 +65,25 @@ class AdminSettings implements IDelegatedSettings {
 	 * @return TemplateResponse The settings form template.
 	 *
 	 * @spec openspec/specs/admin-settings/spec.md
+	 * @spec openspec/changes/simple-structure-profile/specs/navigation-ia/spec.md#REQ-NIA-101
+	 * @spec openspec/changes/pipelinq-setup-wizard-review/specs/first-time-setup/spec.md
 	 */
 	public function getForm(): TemplateResponse {
 		$config = $this->settingsService->getSettings();
 		$version = $this->appManager->getAppVersion(appId: Application::APP_ID);
 
 		$this->initialState->provideInitialState('version', $version);
+		$this->initialState->provideInitialState(
+			MenuStructure::KEY,
+			$this->menuStructure->normalise(stored: (string)($config[MenuStructure::KEY] ?? ''))
+		);
+		$this->initialState->provideInitialState(
+			MenuStructure::MODULES_KEY,
+			$this->menuStructure->normaliseModules(stored: (string)($config[MenuStructure::MODULES_KEY] ?? ''))
+		);
+
+		// Detected, never typed: the admin page shows what this instance has.
+		$this->initialState->provideInitialState('detected_integrations', $this->integrations->all());
 
 		return new TemplateResponse(
 			Application::APP_ID,

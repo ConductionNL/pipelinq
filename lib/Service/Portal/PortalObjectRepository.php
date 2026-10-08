@@ -11,6 +11,21 @@
  * deleteObject) in one place and makes per-customer / per-tenant scoping
  * auditable (ADR-005, ADR-022).
  *
+ * Every portal endpoint is a PublicPage, so OpenRegister sees the caller as
+ * Anonymous: it reads no portal account and refuses every save. The password
+ * reset answered 200 and never mailed, and nobody could log in.
+ *
+ * Writes therefore run as the portal service account an admin picks
+ * ({@see PortalServiceAccount}), with OpenRegister's RBAC and organisation
+ * checks ON. The portal schemas grant that account's group create and update
+ * on the portal's own schemas and nothing else. A missing, disabled or
+ * ungrouped account refuses with 503 before anything is written.
+ *
+ * Reads of the portal's own register (accounts, sessions, delegations, audit
+ * events, tenant config) skip RBAC and organisation scoping: the portal's
+ * schemas grant read to nobody, and the portal itself scopes every read by
+ * tenant and account. Reads only: no write ever skips a check.
+ *
  * @category Service
  * @package  OCA\Pipelinq\Service\Portal
  *
@@ -30,6 +45,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service\Portal;
 
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Service\SettingsLoadService;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -61,11 +77,13 @@ class PortalObjectRepository {
 	 * @param IAppConfig $appConfig The app config.
 	 * @param LoggerInterface $logger The logger.
 	 * @param ObjectServiceInterface $objectService OpenRegister's published object service.
+	 * @param PortalServiceAccount $serviceAccount The account every write runs as.
 	 */
 	public function __construct(
 		private IAppConfig $appConfig,
 		private LoggerInterface $logger,
 		private readonly ObjectServiceInterface $objectService,
+		private readonly PortalServiceAccount $serviceAccount,
 	) {
 	}//end __construct()
 
@@ -95,9 +113,11 @@ class PortalObjectRepository {
 	}//end registerId()
 
 	/**
-	 * Resolve a portal schema id from its config key (e.g. portalAccount).
+	 * Resolve a portal schema id by its slug, under the app-config key the
+	 * install writes (a pinned key such as `portalAccount_schema` for
+	 * `crmPortalAccount`, `<slug>_schema` otherwise).
 	 *
-	 * @param string $schemaSlug The schema slug (without the `_schema` suffix).
+	 * @param string $schemaSlug The schema slug (e.g. crmPortalAccount).
 	 *
 	 * @return string The schema id.
 	 *
@@ -108,7 +128,11 @@ class PortalObjectRepository {
 	 *   audit are all unspecified
 	 */
 	public function schemaId(string $schemaSlug): string {
-		$schema = $this->appConfig->getValueString(Application::APP_ID, $schemaSlug . '_schema', '');
+		$schema = $this->appConfig->getValueString(
+			Application::APP_ID,
+			(SettingsLoadService::SCHEMA_CONFIG_KEYS[$schemaSlug] ?? $schemaSlug . '_schema'),
+			''
+		);
 		if ($schema === '') {
 			throw new RuntimeException("Portal schema '{$schemaSlug}' is not configured.");
 		}
@@ -141,7 +165,9 @@ class PortalObjectRepository {
 			$object = $this->objectService()->find(
 				id: $id,
 				register: $this->registerId(),
-				schema: $this->schemaId(schemaSlug: $schemaSlug)
+				schema: $this->schemaId(schemaSlug: $schemaSlug),
+				_rbac: false,
+				_multitenancy: false
 			);
 		} catch (\Throwable $e) {
 			return null;
@@ -178,7 +204,9 @@ class PortalObjectRepository {
 
 		try {
 			$results = $this->objectService()->findAll(
-				config: ['filters' => array_merge($base, $filters)]
+				config: ['filters' => array_merge($base, $filters)],
+				_rbac: false,
+				_multitenancy: false
 			);
 		} catch (\Throwable $e) {
 			$this->logger->warning(
@@ -232,14 +260,23 @@ class PortalObjectRepository {
 		// Never trust a client-derived self envelope.
 		unset($data['@self']);
 
+		$register = $this->registerId();
+		$schema = $this->schemaId(schemaSlug: $schemaSlug);
+
+		// Outside the try: a missing service account is a 503 PortalException,
+		// not a failed save, and nothing has been written.
 		try {
-			$saved = $this->objectService()->saveObject(
-				object: $data,
-				extend: [],
-				register: $this->registerId(),
-				schema: $this->schemaId(schemaSlug: $schemaSlug),
-				uuid: $id
+			$saved = $this->serviceAccount->runAs(
+				fn (): mixed => $this->objectService()->saveObject(
+					object: $data,
+					extend: [],
+					register: $register,
+					schema: $schema,
+					uuid: $id
+				)
 			);
+		} catch (PortalException $e) {
+			throw $e;
 		} catch (\Throwable $e) {
 			$this->logger->error(
 				'Pipelinq portal: saveObject failed',
@@ -250,6 +287,23 @@ class PortalObjectRepository {
 
 		return $this->toArray(object: $saved);
 	}//end save()
+
+	/**
+	 * Refuse with 503 unless the portal can write. Called first by every flow
+	 * that writes, so a refusal does not depend on what the request looked up
+	 * (a known and an unknown address get the same answer).
+	 *
+	 * @return void
+	 *
+	 * @throws PortalException 503 portalUnavailable.
+	 * @spec exclude the portal backend has no owning requirement. customer-portal specifies
+	 *   ONLY the widget-mode origin allow-list (REQ-PORTAL-ORIGIN); auth, MFA,
+	 *   sessions, tokens, delegation, documents, invoices, orders, exports and
+	 *   audit are all unspecified
+	 */
+	public function requireWritable(): void {
+		$this->serviceAccount->require();
+	}//end requireWritable()
 
 	/**
 	 * Extract the stable id/uuid from a normalised portal object array.

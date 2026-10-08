@@ -45,8 +45,10 @@ namespace OCA\Pipelinq\Service;
 use DateTimeImmutable;
 use DateTimeInterface;
 use Exception;
+use InvalidArgumentException;
 use OCA\OpenRegister\Mcp\Attribute\McpTool;
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Mcp\McpAnswer;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -105,6 +107,37 @@ class TicketService {
 	];
 
 	/**
+	 * The directions a contact moment can run in.
+	 *
+	 * Kept in step with `direction` in
+	 * lib/Settings/register.d/98-contactmoment-direction.json.
+	 *
+	 * @var array<int, string>
+	 */
+	public const DIRECTIONS = [
+		'inbound',
+		'outbound',
+		'internal',
+	];
+
+	/**
+	 * Properties that are required on one facet of the ticket supertype only.
+	 *
+	 * OpenRegister validates `required` per schema, and `ticket` holds three
+	 * facets under one schema, so a schema-level `required: [direction]` would
+	 * refuse every request and every complaint as well. The per-facet guard
+	 * therefore lives on the write path, which is the only place that knows
+	 * which facet it is writing.
+	 *
+	 * @var array<string, array<int, string>>
+	 *
+	 * @spec openspec/changes/contact-moments-on-pipelinq-schema/specs/contactmomenten/spec.md#requirement-direction-is-a-first-class-field-req-cmd-001
+	 */
+	public const FACET_REQUIRED = [
+		self::TYPE_CONTACTMOMENT => ['direction'],
+	];
+
+	/**
 	 * The words a user writes when they mean one of the ticket subtypes,
 	 * bilingual NL/EN, keyed by the subtype they name. Consumed by
 	 * detectTypeInText(); the subtype vocabulary lives with the subtype.
@@ -122,11 +155,13 @@ class TicketService {
 	 * @param IAppConfig $appConfig The app config.
 	 * @param LoggerInterface $logger The logger.
 	 * @param ObjectServiceInterface $objectService The OpenRegister object service.
+	 * @param McpAnswer $mcp Shapes what the MCP tools on this service answer.
 	 */
 	public function __construct(
 		private readonly IAppConfig $appConfig,
 		private readonly LoggerInterface $logger,
 		private readonly ObjectServiceInterface $objectService,
+		private readonly McpAnswer $mcp,
 	) {
 	}//end __construct()
 
@@ -288,6 +323,11 @@ class TicketService {
 	 *   and would have broken any alternative entity implementation.
 	 *
 	 * @throws RuntimeException If the ticket surface is unconfigured.
+	 * @throws InvalidArgumentException When assertFacetFields() refuses the
+	 *   payload: a required facet field is missing, the direction is not one
+	 *   this app offers, or the case set holds a duplicate. Declared here
+	 *   because callers catch it to answer 400, and without the tag static
+	 *   analysis reads that catch as dead.
 	 *
 	 * @spec openspec/changes/unify-ticket-supertype/specs/unify-ticket-supertype/spec.md#requirement-create-surfaces-write-tickets
 	 */
@@ -298,6 +338,8 @@ class TicketService {
 
 		$payload = $this->sanitizeForSave(payload: $payload);
 
+		$this->assertFacetFields(ticketType: $ticketType, payload: $payload);
+
 		$payload['ticketType'] = $ticketType;
 
 		return $this->getObjectService()->saveObject(
@@ -307,6 +349,93 @@ class TicketService {
 			uuid: $uuid,
 		);
 	}//end save()
+
+	/**
+	 * Refuse a write that omits a property its facet requires.
+	 *
+	 * Only fields listed in FACET_REQUIRED for the facet being written are
+	 * checked, and the refusal names the property, so a caller reads what it
+	 * left out rather than a generic validation failure. An update that does
+	 * not carry the field at all is treated the same as a create that omits
+	 * it: every ticket write in this app is a full-object write.
+	 *
+	 * @param string $ticketType One of the TYPE_* constants.
+	 * @param array<string, mixed> $payload The ticket fields.
+	 *
+	 * @return void
+	 *
+	 * @throws InvalidArgumentException When a required facet field is missing
+	 *   or carries a value the schema does not offer.
+	 *
+	 * @spec openspec/changes/contact-moments-on-pipelinq-schema/specs/contactmomenten/spec.md#requirement-direction-is-a-first-class-field-req-cmd-001
+	 */
+	public function assertFacetFields(string $ticketType, array $payload): void {
+		foreach ((self::FACET_REQUIRED[$ticketType] ?? []) as $field) {
+			$value = ($payload[$field] ?? null);
+			if (is_string($value) === false || trim($value) === '') {
+				throw new InvalidArgumentException(
+					"A {$ticketType} ticket requires {$field}."
+				);
+			}
+		}
+
+		$direction = ($payload['direction'] ?? null);
+		if (is_string($direction) === true && $direction !== ''
+			&& in_array($direction, self::DIRECTIONS, true) === false
+		) {
+			throw new InvalidArgumentException(
+				'direction must be one of ' . implode(', ', self::DIRECTIONS) . "; got {$direction}."
+			);
+		}
+
+		$this->assertCaseSet(payload: $payload);
+	}//end assertFacetFields()
+
+	/**
+	 * Refuse a case set that is not a set, or a primary outside it.
+	 *
+	 * Checked on EVERY write rather than only in the filing acts, because an
+	 * import, an API call and a flow write through here too, and a duplicate
+	 * that lands silently is a set that has stopped being one.
+	 *
+	 * @param array<string, mixed> $payload The ticket fields.
+	 *
+	 * @return void
+	 *
+	 * @throws InvalidArgumentException When the set holds a duplicate, or the
+	 *   primary is not a member of it.
+	 *
+	 * @spec openspec/changes/one-contact-moment-on-several-cases/specs/contactmomenten/spec.md#requirement-one-reference-is-the-primary-one-and-it-is-named-req-cms-002
+	 */
+	private function assertCaseSet(array $payload): void {
+		$set = ($payload['caseReferences'] ?? null);
+		if (is_array($set) === false || $set === []) {
+			return;
+		}
+
+		$seen = [];
+		foreach ($set as $reference) {
+			$reference = trim((string)$reference);
+			if ($reference === '') {
+				continue;
+			}
+
+			if (in_array($reference, $seen, true) === true) {
+				throw new InvalidArgumentException(
+					"caseReferences already holds {$reference}; a contact moment is filed on a case once."
+				);
+			}
+
+			$seen[] = $reference;
+		}
+
+		$primary = trim((string)($payload['primaryCaseReference'] ?? ''));
+		if ($primary !== '' && in_array($primary, $seen, true) === false) {
+			throw new InvalidArgumentException(
+				"primaryCaseReference {$primary} is not one of the cases this contact moment is filed on."
+			);
+		}
+	}//end assertCaseSet()
 
 	/**
 	 * Repair OpenRegister's read-side artefacts before a write.
@@ -345,6 +474,21 @@ class TicketService {
 		return $payload;
 	}//end sanitizeForSave()
 
+	// The attribute sits ABOVE the docblock, which is the other way round
+	// from everywhere else in this app. A multi-line PHP attribute breaks the
+	// line-walk gate-16 uses to find a method's docblock, so with the usual
+	// order the @spec tag below is invisible to it and the method reads as
+	// unlinked. The tag is real either way; this makes it checkable.
+	#[McpTool(
+		name: 'logContactmoment',
+		subject: 'contactMoment',
+		action: 'create',
+		description: 'Log a client interaction as a contactmoment (client, channel, title and direction are required; outcome and notes are optional).',
+		readOnlyHint: false,
+		destructiveHint: false,
+		idempotentHint: false,
+		scope: 'create'
+	)]
 	/**
 	 * Log a client interaction as a contactmoment (client, channel and title
 	 * are required; outcome and notes are optional).
@@ -360,48 +504,59 @@ class TicketService {
 	 * @param string $client The client UUID this interaction is with.
 	 * @param string $channel The interaction channel (e.g. telefoon, email, balie, chat).
 	 * @param string $title A short summary of the interaction.
+	 * @param string $direction Which way the contact ran: inbound, outbound or internal.
 	 * @param string|null $outcome Optional outcome (e.g. afgehandeld, doorverbonden, terugbelverzoek).
 	 * @param string|null $notes Optional free-text notes about the interaction.
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/specs/crm-mcp-tool-surface/spec.md
-	 *   (Requirement: MCP provider exposes RBAC-guarded CRM write tools)
+	 * @spec openspec/specs/crm-mcp-tool-surface/spec.md#requirement-mcp-provider-exposes-rbac-guarded-crm-write-tools
 	 */
-	#[McpTool(
-		name: 'logContactmoment',
-		subject: 'contactMoment',
-		action: 'create',
-		description: 'Log a client interaction as a contactmoment (client, channel and title are required; outcome and notes are optional).',
-		readOnlyHint: false,
-		destructiveHint: false,
-		idempotentHint: false,
-		scope: 'create'
-	)]
 	public function logContactmoment(
 		string $client,
 		string $channel,
 		string $title,
+		string $direction = '',
 		?string $outcome = null,
 		?string $notes = null,
 	): array {
 		$client = trim($client);
 		if ($client === '') {
-			return $this->mcpErrorEnvelope(code: 'invalid_arguments', message: 'Required argument client is missing.');
+			return $this->mcp->error(code: 'invalid_arguments', message: 'Required argument client is missing.');
 		}
 
 		$channel = trim($channel);
 		if ($channel === '') {
-			return $this->mcpErrorEnvelope(code: 'invalid_arguments', message: 'Required argument channel is missing.');
+			return $this->mcp->error(code: 'invalid_arguments', message: 'Required argument channel is missing.');
 		}
 
 		$title = trim($title);
 		if ($title === '') {
-			return $this->mcpErrorEnvelope(code: 'invalid_arguments', message: 'Required argument title is missing.');
+			return $this->mcp->error(code: 'invalid_arguments', message: 'Required argument title is missing.');
+		}
+
+		// Direction is required on a contactmoment (REQ-CMD-001) and is
+		// deliberately NOT defaulted: a tool that guessed `inbound` would
+		// assert who reached out to whom, silently and often wrongly. The
+		// parameter is optional in the SIGNATURE only, so an existing caller
+		// gets a named refusal instead of a TypeError.
+		$direction = trim($direction);
+		if ($direction === '') {
+			return $this->mcp->error(
+				code: 'invalid_arguments',
+				message: 'Required argument direction is missing.'
+			);
+		}
+
+		if (in_array($direction, self::DIRECTIONS, true) === false) {
+			return $this->mcp->error(
+				code: 'invalid_arguments',
+				message: 'Argument direction must be one of ' . implode(', ', self::DIRECTIONS) . '.'
+			);
 		}
 
 		if ($this->isConfigured() === false) {
-			return $this->mcpErrorEnvelope(
+			return $this->mcp->error(
 				code: 'not_configured',
 				message: 'Pipelinq is not fully configured: the OpenRegister register or ticket schema is missing.'
 			);
@@ -411,6 +566,7 @@ class TicketService {
 			'client' => $client,
 			'channel' => $channel,
 			'title' => $title,
+			'direction' => $direction,
 			'occurredAt' => (new DateTimeImmutable())->format(DateTimeInterface::ATOM),
 		];
 
@@ -425,10 +581,10 @@ class TicketService {
 		try {
 			$saved = $this->save(ticketType: self::TYPE_CONTACTMOMENT, payload: $payload);
 		} catch (\Exception $e) {
-			return $this->mapMcpServiceException(operation: 'log contactmoment', exception: $e);
+			return $this->mcp->fromException(operation: 'log contactmoment', exception: $e);
 		}
 
-		$data = $this->mcpToArray(item: $saved);
+		$data = $this->mcp->toArray(item: $saved);
 
 		return [
 			'ticketId' => (string)($data['id'] ?? $data['uuid'] ?? ''),
@@ -436,75 +592,4 @@ class TicketService {
 
 	}//end logContactmoment()
 
-	/**
-	 * Map an exception raised by OpenRegister into a structured MCP error envelope.
-	 *
-	 * OpenRegister's PermissionHandler raises a plain exception whose message
-	 * mentions "permission" when the caller is not authorised; we surface that as
-	 * `forbidden`. Everything else is an `internal_error` (logged for the operator).
-	 *
-	 * @param string $operation Short label of the failed operation (for the log).
-	 * @param \Exception $exception The caught exception.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function mapMcpServiceException(string $operation, \Exception $exception): array {
-		$message = $exception->getMessage();
-
-		if (stripos($message, 'permission') !== false || stripos($message, 'not authoriz') !== false) {
-			return $this->mcpErrorEnvelope(code: 'forbidden', message: 'You are not allowed to access this resource.');
-		}
-
-		$this->logger->error(
-			"Pipelinq MCP: failed to {$operation}",
-			['exception' => $message]
-		);
-
-		return $this->mcpErrorEnvelope(
-			code: 'internal_error',
-			message: "Failed to {$operation}. See server log for details."
-		);
-
-	}//end mapMcpServiceException()
-
-	/**
-	 * Build a structured MCP error envelope.
-	 *
-	 * @param string $code Machine-readable error code.
-	 * @param string $message Human-readable message for the LLM.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function mcpErrorEnvelope(string $code, string $message): array {
-		return [
-			'error' => [
-				'code' => $code,
-				'message' => $message,
-			],
-		];
-
-	}//end mcpErrorEnvelope()
-
-	/**
-	 * Normalise an OpenRegister object to a plain PHP array.
-	 *
-	 * @param mixed $item Raw item from ObjectService.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function mcpToArray(mixed $item): array {
-		if (is_array(value: $item) === true) {
-			return $item;
-		}
-
-		if (is_object(value: $item) === true && method_exists($item, 'getObject') === true) {
-			return $item->getObject();
-		}
-
-		if (is_object(value: $item) === true && method_exists($item, 'jsonSerialize') === true) {
-			return $item->jsonSerialize();
-		}
-
-		return (array)$item;
-	}//end mcpToArray()
 }//end class

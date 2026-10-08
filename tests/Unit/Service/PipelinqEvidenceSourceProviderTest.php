@@ -28,6 +28,7 @@ namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\ObjectService;
+use OCA\Pipelinq\Mcp\McpAnswer;
 use OCA\Pipelinq\Service\PipelinqEvidenceSourceProvider;
 use OCA\Pipelinq\Service\TicketService;
 use OCP\IAppConfig;
@@ -127,6 +128,7 @@ final class PipelinqEvidenceSourceProviderTest extends TestCase {
 				appConfig: $this->appConfig,
 				logger: new NullLogger(),
 			objectService: $this->objectService,
+			mcp: new McpAnswer(new NullLogger()),
 		),
 		);
 	}//end setUp()

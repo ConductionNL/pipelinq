@@ -5,7 +5,7 @@
 <template>
 	<div class="pos-refund-form">
 		<div class="pos-refund-form__header">
-			<NcButton @click="goBack">
+			<NcButton :to="{ name: 'PosRefunds' }">
 				{{ t('pipelinq', 'Back to list') }}
 			</NcButton>
 			<h2>
@@ -529,13 +529,6 @@ export default {
 			} finally {
 				this.saving = false
 			}
-		},
-
-		/**
-		 * Return to the refund list.
-		 */
-		goBack() {
-			this.$router.push({ name: 'PosRefunds' })
 		},
 	},
 }

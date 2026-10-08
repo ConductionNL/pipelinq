@@ -480,12 +480,36 @@ class ReceiptService {
 	public function companyDetails(): array {
 		return [
 			'name' => $this->appConfig->getValueString(Application::APP_ID, 'receipt_company_name', 'Conduction B.V.'),
-			'address' => $this->appConfig->getValueString(Application::APP_ID, 'receipt_company_address', ''),
+			'address' => $this->companyAddress(),
 			'phone' => $this->appConfig->getValueString(Application::APP_ID, 'receipt_company_phone', ''),
 			'vatId' => $this->appConfig->getValueString(Application::APP_ID, 'receipt_company_vat', ''),
 			'kvk' => $this->appConfig->getValueString(Application::APP_ID, 'receipt_company_kvk', ''),
 		];
 	}//end companyDetails()
+
+	/**
+	 * The company address for the receipt: the one-line address when an admin
+	 * set it, else the address fields of the setup wizard's organisation step.
+	 *
+	 * @return string The address on one line, or '' when nothing is set.
+	 *
+	 * @spec openspec/changes/pipelinq-setup-wizard-review/specs/first-time-setup/spec.md
+	 */
+	public function companyAddress(): string {
+		$oneLine = $this->appConfig->getValueString(Application::APP_ID, 'receipt_company_address', '');
+		if (trim($oneLine) !== '') {
+			return $oneLine;
+		}
+
+		$read = fn (string $key): string => trim($this->appConfig->getValueString(Application::APP_ID, $key, ''));
+		$town = trim($read('receipt_company_postcode') . ' ' . $read('receipt_company_city'));
+		$parts = array_filter(
+			[$read('receipt_company_street'), $town, $read('receipt_company_country')],
+			static fn (string $part): bool => $part !== ''
+		);
+
+		return implode(', ', $parts);
+	}//end companyAddress()
 
 	/**
 	 * Resolve the layout width from the template, transaction or default.

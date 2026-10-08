@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Conduction B.V.
 //
 // Curated segment-rule-builder field options for the "contact" and
-// "customer" audiences, shared by SegmentForm.vue.
+// "customer" audiences, shared by SegmentFormDialog.vue.
 //
 // Kept as static lists rather than a live schema-introspection endpoint --
 // that is a materially larger surface than a UI-repair change warrants; see
@@ -57,7 +57,7 @@ export const CUSTOMER_FIELD_OPTIONS = [
 	{ value: 'phone', label: 'Phone', type: 'string' },
 	{ value: 'address', label: 'Address', type: 'string' },
 	{ value: 'website', label: 'Website', type: 'string' },
-	{ value: 'industry', label: 'Industry', type: 'string' },
+	{ value: 'industry', label: 'Industry', type: 'array' },
 	...CHANNEL_FIELD_OPTIONS,
 ]
 

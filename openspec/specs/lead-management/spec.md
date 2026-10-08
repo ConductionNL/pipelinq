@@ -38,7 +38,9 @@ See [ARCHITECTURE.md](../../../docs/ARCHITECTURE.md) for the full Lead entity de
 | `qualificationScore` | integer | No | -- | MUST be 0--100 inclusive |
 
 ---
+
 ## Requirements
+
 ### Requirement: Lead CRUD [MVP]
 
 The system MUST support creating, reading, updating, and deleting lead records. Each lead MUST have a `title`, a `pipeline` and a `client`. All leads are stored as OpenRegister objects in the `pipelinq` register using the `lead` schema.
@@ -672,8 +674,6 @@ Operations for lead editing and lead-product linking screens MUST tolerate missi
 - THEN it MUST return a safe default or a validation result
 - AND it MUST NOT raise an unhandled exception
 
-## Requirements
-
 ### Requirement: Lead Capture from External Sources [V1]
 
 The system SHOULD support creating leads from external channels beyond manual entry. This includes web form submissions, email parsing, and integration with the prospect discovery module. External lead capture reduces data entry and ensures no potential opportunity is missed.
@@ -1056,6 +1056,158 @@ The system MUST support attaching products as line items to leads to detail the 
 - AND if value auto-sync is enabled, the lead's `value` MUST update to EUR 7,000
 
 ---
+
+### Requirement: The lead list shows and sorts by score (REQ-LSCORE-001)
+
+The Leads list MUST have a sortable "Score" column showing the stored qualification score with a text band label, and a "Call first" quick filter that orders open leads by score descending.
+
+#### Scenario: Call first
+
+- **GIVEN** three open leads score 85, 40 and 10
+- **WHEN** Sanne opens Leads and chooses "Call first"
+- **THEN** the leads appear in the order 85, 40, 10 and the labels read High, Medium, Low
+
+#### Scenario: Old lead without a score
+
+@e2e exclude OpenRegister calculates the score on every save, so no lead without one can be created on a live instance; the dash is asserted in tests/vitest/leadScoreBadge.spec.js (LeadScoreCell shows a dash for a lead saved before the score existed)
+
+- **GIVEN** a lead saved before the score existed has no stored score
+- **WHEN** Sanne views the list
+- **THEN** its Score cell shows a dash
+
+### Requirement: The board card shows the score (REQ-LSCORE-002)
+
+A lead card on the pipeline board MUST show the score as a number with an accessible name that includes its band, and the board table MUST be sortable by score.
+
+#### Scenario: Card badge
+
+- **GIVEN** a lead has a score of 92
+- **WHEN** Pieter views the board
+- **THEN** its card shows "92" and a screen reader announces "Score 92, high"
+
+### Requirement: A person can see why a lead has its score (REQ-LSCORE-003)
+
+The score badge MUST open an explanation listing each criterion that added points and how many, and MUST say when the listed total differs from the stored score.
+
+#### Scenario: Explain 35
+
+- **GIVEN** a lead with a value, a linked client and a close date has score 35
+- **WHEN** Sanne opens the explanation
+- **THEN** it lists "Value present +10", "Client linked +15", "Expected close date set +10" and totals 35
+
+### Requirement: Every lead sits in a pipeline stage (REQ-PNT-010)
+
+When a lead is created without a stage, the system SHALL place it in the first
+stage that is not closed, by stage order, of its pipeline. When it also has no
+pipeline, the system SHALL use the default lead pipeline, or the first lead
+pipeline when none is marked default. The system SHALL set `stageOrder` and
+`stageEnteredAt` with the stage. This SHALL hold for every way a lead is
+created: the form, the API, flows and imports. A repair step SHALL place the
+stored leads that have no stage, with their creation time as entry time.
+
+#### Scenario: A website enquiry becomes a lead in the first stage
+
+- GIVEN the default sales pipeline has the stages New, Contacted and Won
+- WHEN the enquiry flow creates a lead with that pipeline and no stage
+- THEN the lead is stored in stage New with stage order 1
+
+#### Scenario: Stored leads without a stage are repaired
+
+- GIVEN a stored lead on the sales pipeline without a stage, created on 1 September
+- WHEN the administrator runs the maintenance repair
+- THEN the lead is in stage New, entered on 1 September
+
+#### Scenario: A lead keeps the stage it was given
+
+- GIVEN a new lead created in stage Contacted
+- WHEN it is saved
+- THEN it stays in Contacted and gets that stage's order
+
+### Requirement: A reseed re-links demo leads to the new pipeline (REQ-RAF-010)
+
+When the demo seed finds a demo object that already exists, it SHALL keep it,
+and SHALL point its `pipeline` at the demo pipeline this run resolved when the
+two differ. Nothing else on the object SHALL change.
+
+#### Scenario: The demo pipeline was deleted
+
+- GIVEN six demo leads on a deleted demo pipeline
+- WHEN the administrator loads the demo data again
+- THEN a new demo pipeline exists and the six leads sit on it, in their own stage
+
+### Requirement: A repair step moves leads off a deleted pipeline (REQ-RAF-011)
+
+A repair step SHALL move every lead whose `pipeline` names no existing pipeline
+to the default lead pipeline. An open lead SHALL go to the first open stage, a
+won lead to the won stage and a lost lead to the closed stage that is not won.
+The step SHALL write as the signed-in user, or as the pipelinq system account
+when nobody is signed in, with OpenRegister's access checks on. When no
+pipeline can be read, the step SHALL move nothing.
+
+#### Scenario: An open lead on a deleted pipeline
+
+- GIVEN an open lead on a pipeline that was deleted
+- WHEN the maintenance repair runs
+- THEN the lead is on the default pipeline in its first open stage
+
+#### Scenario: A won lead stays won
+
+- GIVEN a won lead on a pipeline that was deleted
+- WHEN the maintenance repair runs
+- THEN the lead is in the default pipeline's won stage
+
+### Requirement: Tender is a default lead source (REQ-RAF-012)
+
+The default lead sources SHALL include `tender`, and every lead source the demo
+data uses SHALL be a default lead source.
+
+#### Scenario: A tender lead is edited
+
+- GIVEN the demo lead "Intranet migratie Zonnedael" with source tender
+- WHEN a user opens its edit form
+- THEN tender is one of the offered sources
+
+### Requirement: The qualification score is calculated, not typed (REQ-RAF-013)
+
+The lead edit dialog SHALL NOT offer the qualification score. The lead page
+SHALL show it read-only, with a description that says it is calculated when the
+lead is saved.
+
+#### Scenario: A user edits a lead
+
+- GIVEN a lead with score 65
+- WHEN the user opens Edit
+- THEN the form has no qualification score field
+
+### Requirement: The lead form has no probability input (REQ-RF-030)
+
+The lead form SHALL NOT offer a probability input, because the win chance
+is the qualification score. Editing a lead that has a stored probability
+SHALL keep that value.
+
+#### Scenario: A new lead form
+
+- WHEN the user opens the create lead form
+- THEN there is no probability field
+
+#### Scenario: Editing keeps a stored probability
+
+- GIVEN a lead with probability 40
+- WHEN the user edits and saves it
+- THEN the lead still has probability 40
+
+### Requirement: The lead page has one deal block (REQ-DPG-010)
+
+LeadDetail SHALL show the lead's fields in one data widget titled "Deal",
+the win chance (the qualification score) among them. The deal value KPI
+SHALL format in the reporting currency.
+
+#### Scenario: A salesperson opens a lead
+
+- GIVEN a lead worth 250000 with score 55
+- WHEN the salesperson opens it
+- THEN one block titled "Deal" shows the value, stage, win chance, close date and owner
+- AND the deal value KPI reads "€250,000"
 
 ## UI Reference
 

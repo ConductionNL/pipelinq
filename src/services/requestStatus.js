@@ -5,8 +5,11 @@
  */
 
 const STATUS_TRANSITIONS = {
-	new: ['in_progress', 'rejected', 'completed'],
-	in_progress: ['completed', 'rejected', 'converted'],
+	new: ['in_progress', 'awaiting_customer', 'rejected', 'completed'],
+	in_progress: ['awaiting_customer', 'completed', 'rejected', 'converted'],
+	// Waiting for the customer: the customer portal offers a reply only here,
+	// and a reply moves the ticket back to in_progress (pipelinq#2038).
+	awaiting_customer: ['in_progress', 'completed', 'rejected'],
 	completed: [],
 	rejected: [],
 	converted: [],
@@ -15,6 +18,7 @@ const STATUS_TRANSITIONS = {
 const STATUS_LABELS = {
 	new: t('pipelinq', 'New'),
 	in_progress: t('pipelinq', 'In progress'),
+	awaiting_customer: t('pipelinq', 'Waiting for customer'),
 	completed: t('pipelinq', 'Completed'),
 	rejected: t('pipelinq', 'Rejected'),
 	converted: t('pipelinq', 'Converted to case'),
@@ -23,6 +27,7 @@ const STATUS_LABELS = {
 const STATUS_COLORS = {
 	new: '#0082c9',
 	in_progress: '#e9a400',
+	awaiting_customer: '#a06900',
 	completed: '#46ba61',
 	rejected: '#e9322d',
 	converted: '#745bca',
@@ -36,10 +41,10 @@ const PRIORITY_LABELS = {
 }
 
 const PRIORITY_COLORS = {
-	low: '#999',
+	low: 'var(--color-text-maxcontrast)',
 	normal: 'var(--color-text-maxcontrast)',
-	high: '#e9a400',
-	urgent: '#e9322d',
+	high: 'var(--color-warning-text)',
+	urgent: 'var(--color-text-error)',
 }
 
 const VALID_PRIORITIES = ['low', 'normal', 'high', 'urgent']

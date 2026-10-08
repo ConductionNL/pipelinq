@@ -28,12 +28,14 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Pipelinq\Mcp\McpAnswer;
 use OCA\Pipelinq\Service\KccWerkplekService;
 use OCA\Pipelinq\Service\TicketService;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 
 /**
  * Behaviour-preservation tests for the Batch-3 KccWerkplek pushdown.
@@ -284,6 +286,7 @@ class QueryPushdownBatch3Test extends TestCase {
 			appConfig: $appConfig,
 			logger: $logger,
 			objectService: $objectService,
+			mcp: new McpAnswer(new NullLogger()),
 		);
 
 		$service = new KccWerkplekService(

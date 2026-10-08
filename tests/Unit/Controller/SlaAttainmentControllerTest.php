@@ -29,6 +29,7 @@ namespace OCA\Pipelinq\Tests\Unit\Controller;
 
 use OCA\Pipelinq\Controller\SlaAttainmentController;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
+use OCA\Pipelinq\Mcp\McpAnswer;
 use OCA\Pipelinq\Service\SlaAttainmentService;
 use OCA\Pipelinq\Service\TicketService;
 use OCP\AppFramework\Http;
@@ -39,6 +40,7 @@ use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 
 /**
  * SlaAttainmentController contract coverage.
@@ -236,6 +238,7 @@ class SlaAttainmentControllerTest extends TestCase {
 					appConfig: $appConfig,
 					logger: $logger,
 					objectService: $this->objects,
+					mcp: new McpAnswer(new NullLogger()),
 				),
 				logger: $logger,
 				container: $container,

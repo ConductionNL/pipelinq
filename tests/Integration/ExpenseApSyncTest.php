@@ -49,11 +49,14 @@ use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCA\Pipelinq\Event\ExpenseApprovedEvent;
 use OCA\Pipelinq\Listener\ExpenseApprovalListener;
 use OCA\Pipelinq\Service\ApSyncNotifier;
+use OCA\Pipelinq\Service\IntegrationDetector;
 use OCA\Pipelinq\Service\SchemaMapService;
 use OCA\Pipelinq\Service\ShillinqApService;
+use OCP\App\IAppManager;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\IAppConfig;
+use OCP\IURLGenerator;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -303,7 +306,7 @@ class ExpenseApSyncTest extends TestCase {
 	 * @param IntegrationFakeWebhookService $webhooks The fake WebhookService.
 	 * @param IntegrationFakeEventDispatcher $dispatcher The fake event dispatcher.
 	 * @param ApSyncNotifier|null $notifier Optional notifier override.
-	 * @param string $webhookUrl The configured webhook URL ('' disables).
+	 * @param bool $shillinqInstalled Whether the Shillinq app is installed (false disables).
 	 *
 	 * @return ExpenseApprovalListener The listener under test.
 	 */
@@ -312,21 +315,18 @@ class ExpenseApSyncTest extends TestCase {
 		IntegrationFakeWebhookService $webhooks,
 		IntegrationFakeEventDispatcher $dispatcher,
 		?ApSyncNotifier $notifier = null,
-		string $webhookUrl = 'https://shillinq.example.com/ap/webhook',
+		bool $shillinqInstalled = true,
 	): ExpenseApprovalListener {
 		$logger = $this->createMock(LoggerInterface::class);
 
 		$appConfig = $this->createMock(IAppConfig::class);
 		$appConfig->method('getValueString')->willReturnCallback(
-			function (string $app, string $key, string $default = '') use ($webhookUrl): string {
+			function (string $app, string $key, string $default = ''): string {
 				if ($key === 'register') {
 					return 'reg-pipelinq';
 				}
 				if ($key === 'expense_schema') {
 					return 'schema-expense';
-				}
-				if ($key === 'shillinq_ap_webhook_url') {
-					return $webhookUrl;
 				}
 				return $default;
 			}
@@ -345,8 +345,13 @@ class ExpenseApSyncTest extends TestCase {
 			}
 		);
 
+		$appManager = $this->createMock(IAppManager::class);
+		$appManager->method('isInstalled')->willReturnCallback(
+			fn (string $appId): bool => $appId === 'shillinq' && $shillinqInstalled === true
+		);
+
 		$apService = new ShillinqApService(
-			appConfig: $appConfig,
+			integrations: new IntegrationDetector($appManager, $this->createMock(IURLGenerator::class)),
 			container: $container,
 			logger: $logger,
 		);
@@ -540,7 +545,7 @@ class ExpenseApSyncTest extends TestCase {
 	}//end testWebhookFailureMarksFailedAndNotifies()
 
 	/**
-	 * Unconfigured webhook silently no-ops (REQ-AP-002 Scenario 6 + REQ-AP-003).
+	 * Without Shillinq the listener silently no-ops (REQ-AP-002 Scenario 6 + REQ-AP-003).
 	 *
 	 * @return void
 	 */
@@ -549,7 +554,7 @@ class ExpenseApSyncTest extends TestCase {
 		$webhooks = new IntegrationFakeWebhookService();
 		$dispatcher = new IntegrationFakeEventDispatcher();
 
-		$listener = $this->buildListener($objects, $webhooks, $dispatcher, webhookUrl: '');
+		$listener = $this->buildListener($objects, $webhooks, $dispatcher, shillinqInstalled: false);
 
 		$listener->handle(new ObjectCreatedEvent($this->expenseEntity([
 			'uuid' => 'exp-int-4',

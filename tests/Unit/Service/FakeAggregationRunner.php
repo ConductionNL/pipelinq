@@ -61,7 +61,7 @@ class FakeAggregationRunner extends AggregationRunner {
 	 *
 	 * @return array<string, mixed> The result envelope (mirrors the real shape).
 	 */
-	public function runAdhocByRef(string $registerRef, string $schemaRef, AggregationQuery $query): array {
+	public function runAdhocByRef(string $registerRef, string $schemaRef, AggregationQuery $query, bool $bypassRbac=false): array {
 		$matched = array_values(
 			array_filter($this->rows, fn (array $row): bool => $this->matches(row: $row, filter: $query->filter))
 		);

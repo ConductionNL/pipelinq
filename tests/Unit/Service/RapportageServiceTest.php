@@ -125,7 +125,7 @@ class RapportageServiceTest extends TestCase {
 			[
 				'stage' => 'Nieuw',
 				'value' => 1000,
-				'probability' => 20,
+				'qualificationScore' => 20,
 				'source' => 'referral',
 				'status' => 'open',
 				'_dateModified' => date('Y-m-d', (time() - 86400 * 3)),
@@ -134,7 +134,7 @@ class RapportageServiceTest extends TestCase {
 			[
 				'stage' => 'Voorstel',
 				'value' => 5000,
-				'probability' => 50,
+				'qualificationScore' => 50,
 				'source' => 'referral',
 				'status' => 'won',
 				'_dateModified' => date('Y-m-d', (time() - 86400 * 10)),
@@ -143,7 +143,7 @@ class RapportageServiceTest extends TestCase {
 			[
 				'stage' => 'Voorstel',
 				'value' => 2000,
-				'probability' => 30,
+				'qualificationScore' => 30,
 				'source' => 'website',
 				'status' => 'lost',
 				'_dateModified' => date('Y-m-d', (time() - 86400 * 35)),
@@ -176,7 +176,7 @@ class RapportageServiceTest extends TestCase {
 		$this->assertSame(2, $byStage['Voorstel']['count']);
 		$this->assertSame(1000.0, $byStage['Nieuw']['totalValue']);
 		$this->assertSame(7000.0, $byStage['Voorstel']['totalValue']);
-		// Weighted: (1000*0.2) = 200 for Nieuw, (5000*0.5)+(2000*0.3)=3100 for Voorstel.
+		// Weighted on the qualification score: (1000*0.2) = 200 for Nieuw, (5000*0.5)+(2000*0.3)=3100 for Voorstel.
 		$this->assertSame(200.0, $byStage['Nieuw']['weightedValue']);
 		$this->assertSame(3100.0, $byStage['Voorstel']['weightedValue']);
 

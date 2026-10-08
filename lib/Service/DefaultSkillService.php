@@ -37,6 +37,10 @@ class DefaultSkillService {
 	/**
 	 * Default skill definitions.
 	 *
+	 * Vergunningen and WMO / Zorg are example skills now, loaded with the
+	 * example data on request (pipelinq-audit-admin-forms-pos): a fresh install
+	 * that chose no example data does not get them.
+	 *
 	 * @var array<int, array<string, mixed>>
 	 */
 	private const DEFAULT_SKILLS = [
@@ -47,21 +51,9 @@ class DefaultSkillService {
 			'isActive' => true,
 		],
 		[
-			'title' => 'Vergunningen',
-			'description' => 'Permits and environmental law',
-			'categories' => ['vergunningen', 'omgevingsrecht'],
-			'isActive' => true,
-		],
-		[
 			'title' => 'Belastingen',
 			'description' => 'Municipal taxes',
 			'categories' => ['belastingen'],
-			'isActive' => true,
-		],
-		[
-			'title' => 'WMO / Zorg',
-			'description' => 'Social support and care',
-			'categories' => ['wmo', 'zorg'],
 			'isActive' => true,
 		],
 		[

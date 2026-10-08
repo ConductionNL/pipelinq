@@ -48,6 +48,44 @@ if ($autoloader instanceof \Composer\Autoload\ClassLoader) {
 	$autoloader->addPsr4('OC\\', __DIR__ . '/Stubs/OC/');
 }
 
+// OpenRegister's PUBLISHED register-slug contracts, loaded from the hydra-gates
+// package rather than copied into this tree.
+//
+// `RegisterSlugResolution` and `RegisterSlugResolverInterface` are the pair
+// behind the register-slug resolution ADR-084 settled for `ObjectServiceInterface`.
+// Unlike the two `Object*` contracts, this repository keeps no copy of them under
+// tests/Stubs/, so the `OCA\OpenRegister\` prefix registered above finds nothing
+// and a test naming either type would die with "class not found". Deliberately no
+// copy: a contract copied here drags OpenRegister's own `@spec` annotations with
+// it, and gate 46 (`spec-anchor-existence`) resolves every `@spec` target against
+// THIS repository, where that spec does not exist. Measured: the two files
+// produced seven blocking findings before they were removed.
+//
+// They ship in conduction/hydra-gates from v1.18.0 (ConductionNL/.github#739,
+// which merged after v1.17.0 was cut), which is why composer.json asks for
+// ^1.18.0 rather than ^1.17.0. Verified 2026-09-10: the vendored copies are byte
+// identical to openregister's own `lib/Contract/`, which is what gate 67
+// (`openregister-contract-parity`) exists to keep true.
+//
+// The guard asks BOTH questions on purpose. `RegisterSlugResolution` is a CLASS
+// and `RegisterSlugResolverInterface` an INTERFACE, and `interface_exists()`
+// answers false for a loaded class. Asking only that would re-require a file
+// already in memory, and a duplicate declaration is a fatal, not a no-op.
+foreach (['RegisterSlugResolution', 'RegisterSlugResolverInterface'] as $pipelinqContract) {
+	$pipelinqContractFqcn = '\\OCA\\OpenRegister\\Contract\\' . $pipelinqContract;
+	if (interface_exists($pipelinqContractFqcn) === true || class_exists($pipelinqContractFqcn) === true) {
+		continue;
+	}
+
+	$pipelinqContractFile = __DIR__ . '/../vendor/conduction/hydra-gates/hydra-gates/contracts/'
+		. $pipelinqContract . '.php';
+	if (file_exists($pipelinqContractFile) === true) {
+		require_once $pipelinqContractFile;
+	}
+}
+
+unset($pipelinqContract, $pipelinqContractFqcn, $pipelinqContractFile);
+
 // Register OCP\ and NCU\ namespaces.
 // vendor/nextcloud/ocp/OCP is a symlink to the live NC server (/var/www/html/lib/public)
 // that resolves on a deployed instance but is broken in the bare php:8.3-cli CI container.
@@ -97,16 +135,97 @@ foreach ([
 	}
 }
 
-// Bootstrap Nextcloud when a full server environment is available.
-// Wrapped in try/catch so that unit tests can run in standalone mode
-// (bare container without an installed NC).
-if (file_exists(__DIR__ . '/../../../lib/base.php') === true) {
-	try {
-		require_once __DIR__ . '/../../../lib/base.php';
-	} catch (\Throwable $e) {
-		// NC not fully installed — unit tests continue with vendor stubs only.
+/**
+ * Tell whether a Nextcloud root is an INSTALLED instance, not just a source tree.
+ *
+ * `lib/base.php` from a source tree that was never installed (the workspace
+ * checkout above apps-extra/ has a 0-byte config/config.php) still declares
+ * `OC` and builds `\OC::$server` before it throws "Not installed". That server
+ * cannot be undone (`OC::$server` is a typed static), so from then on every
+ * `\OC::$server->get()` in the code under test hits a container that knows
+ * none of this app's registrations and autowires from scratch; constructor
+ * cycles then recurse until memory runs out (19 GB and 6 GB of swap in one
+ * openregister run on 2026-09-08). So the decision has to be made BEFORE
+ * base.php is loaded, and the only cheap signal is the `installed` flag in
+ * config/config.php.
+ *
+ * @param string $ncRoot Candidate Nextcloud root.
+ *
+ * @return bool True when config/config.php declares `installed => true`.
+ */
+function pipelinq_nc_root_is_installed(string $ncRoot): bool
+{
+	$configFile = $ncRoot . '/config/config.php';
+	if (is_file($configFile) === false || filesize($configFile) === 0) {
+		return false;
+	}
+
+	// The config file is a plain `$CONFIG = [...]` script; including it in a
+	// closure keeps `$CONFIG` out of the global scope.
+	$config = (static function () use ($configFile): array {
+		$CONFIG = [];
+		try {
+			include $configFile;
+		} catch (\Throwable) {
+			return [];
+		}
+
+		if (is_array($CONFIG) === false) {
+			return [];
+		}
+
+		return $CONFIG;
+	})();
+
+	return ($config['installed'] ?? false) === true;
+}//end pipelinq_nc_root_is_installed()
+
+// Bootstrap Nextcloud when an INSTALLED server is above apps-extra/. A bare
+// source tree is reported once and the suite runs in standalone mode with the
+// vendor stubs only.
+$pipelinqNcRoot = realpath(__DIR__ . '/../../..');
+if ($pipelinqNcRoot !== false && file_exists($pipelinqNcRoot . '/lib/base.php') === true) {
+	if (pipelinq_nc_root_is_installed($pipelinqNcRoot) === true) {
+		try {
+			require_once $pipelinqNcRoot . '/lib/base.php';
+		} catch (\Throwable $e) {
+			// The tree IS installed, so the dangerous case this guard exists for
+			// (loading a bare source tree) did not happen. base.php still failed
+			// part-way.
+			//
+			// This does NOT abort. `OC::$server` is a typed static, so a half-built
+			// container cannot be unset, and aborting was tried: it turned all six
+			// PHPUnit legs red on a suite that passes (humaniq, 2026-09-08). The
+			// runaway this guard exists for needs an autowiring lookup to reach the
+			// poisoned container, this app has none in lib, and phpunit.xml's 2G cap
+			// bounds one anyway.
+			//
+			// So: say plainly that the container is unreliable, and let the pure unit
+			// tests run. A container-bound test failing loudly is the intended outcome.
+			fwrite(
+				STDERR,
+				sprintf(
+					"[pipelinq/tests/bootstrap-unit] Nextcloud at %s could not finish booting (%s).\n"
+					. "  \\OC::\$server now holds a HALF-BUILT container and cannot be unset. Pure unit tests\n"
+					. "  continue; anything resolving a service from that container is UNVERIFIED by this run.\n",
+					$pipelinqNcRoot,
+					$e->getMessage()
+				)
+			);
+		}
+	} else {
+		fwrite(
+			STDERR,
+			sprintf(
+				"[pipelinq/tests/bootstrap-unit] Nextcloud root at %s is not an installed instance (config/config.php lacks installed => true); "
+				. "skipping lib/base.php and running with composer autoload and stubs only (pure-unit mode).\n",
+				$pipelinqNcRoot
+			)
+		);
 	}
 }
+
+unset($pipelinqNcRoot);
 
 // Register Test\ namespace for NC test classes (only when NC server is present).
 $serverTestsLib = __DIR__ . '/../../../tests/lib/';

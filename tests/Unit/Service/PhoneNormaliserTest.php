@@ -118,4 +118,39 @@ class PhoneNormaliserTest extends TestCase {
 		$result = $this->normaliser->normaliseForOrg('');
 		$this->assertNull($result['e164']);
 	}//end testEmptyStringReturnsNull()
+
+	/**
+	 * A provider callback names the sender internationally, often without the
+	 * '+': Meta and MessageBird send 31611119999. That is +31611119999, not a
+	 * national number to prefix with the country code again.
+	 *
+	 * @return void
+	 */
+	public function testInboundSenderWithoutPlusIsInternational(): void {
+		$this->assertSame('+31611119999', $this->normaliser->normaliseInbound('31611119999'));
+	}//end testInboundSenderWithoutPlusIsInternational()
+
+	/**
+	 * An inbound sender already in E.164, in 00-form or national form ends up
+	 * in the same E.164 string, so an opt-out on the number matches every
+	 * later send to it.
+	 *
+	 * @return void
+	 */
+	public function testInboundSenderFormsMeetInOneE164(): void {
+		$this->assertSame('+31611119999', $this->normaliser->normaliseInbound('+31 6 1111 9999'));
+		$this->assertSame('+31611119999', $this->normaliser->normaliseInbound('0031611119999'));
+		$this->assertSame('+31611119999', $this->normaliser->normaliseInbound('0611119999'));
+	}//end testInboundSenderFormsMeetInOneE164()
+
+	/**
+	 * A sender that is not a phone number is kept as it came, trimmed, rather
+	 * than dropped: the caller still has an address to record.
+	 *
+	 * @return void
+	 */
+	public function testInboundSenderThatIsNoNumberIsKept(): void {
+		$this->assertSame('???', $this->normaliser->normaliseInbound(' ??? '));
+		$this->assertSame('', $this->normaliser->normaliseInbound(''));
+	}//end testInboundSenderThatIsNoNumberIsKept()
 }//end class

@@ -86,6 +86,8 @@ return [
         ['name' => 'analytics#funnels',  'url' => '/api/analytics/funnels',  'verb' => 'GET'],
         // Commercial dashboard KPI overview (openspec/changes/commercial-dashboard).
         ['name' => 'analytics#commercial', 'url' => '/api/analytics/commercial', 'verb' => 'GET'],
+        // Open deals of one contact or client, for its KPI (detail-pages-read-at-a-glance).
+        ['name' => 'openDeals#index', 'url' => '/api/analytics/open-deals', 'verb' => 'GET'],
         // My-work worklist — canonical server-side union of the current user's
         // leads + requests (replaces the MyWorkWidget/MyWork client-side union).
         ['name' => 'worklist#mine', 'url' => '/api/worklist/mine', 'verb' => 'GET'],
@@ -112,6 +114,59 @@ return [
         // Contactmomenten (permission-checked delete)
         ['name' => 'contactmoment#destroy', 'url' => '/api/contactmomenten/{id}', 'verb' => 'DELETE'],
 
+        // The contact moments leaf a host app renders on its own object
+        // (contact-moments-on-pipelinq-schema, REQ-CMD-003). `hostId` is the
+        // host's uuid and stays opaque to pipelinq.
+        ['name' => 'contactMomentLeaf#index',  'url' => '/api/leaves/contact-moments/{hostId}', 'verb' => 'GET'],
+        ['name' => 'contactMomentLeaf#create', 'url' => '/api/leaves/contact-moments/{hostId}', 'verb' => 'POST'],
+        // Filing an EXISTING contact moment onto a further case, and taking it
+        // off one. Both are acts on the contact moment, so they are keyed by
+        // its id and not by a host.
+        ['name' => 'contactMomentLeaf#fileOnAlsoCase', 'url' => '/api/contact-moments/{momentId}/cases', 'verb' => 'POST'],
+        ['name' => 'contactMomentLeaf#unfileFromCase', 'url' => '/api/contact-moments/{momentId}/cases/{caseId}', 'verb' => 'DELETE'],
+
+        // The party panel a host app renders on its own object, the blocking
+        // question it asks before it acts, the acknowledgement a handler
+        // records, and the guarded organisation tree
+        // (typed-fields-and-indicators-on-a-party).
+        ['name' => 'partyLeaf#panel',       'url' => '/api/leaves/party/{partyId}',                   'verb' => 'GET'],
+        ['name' => 'partyLeaf#blocked',     'url' => '/api/parties/{partyId}/blocked/{act}',          'verb' => 'GET'],
+        ['name' => 'partyLeaf#acknowledge', 'url' => '/api/party-indicator-values/{valueId}/acknowledge', 'verb' => 'POST'],
+        ['name' => 'partyLeaf#setParent',   'url' => '/api/parties/{partyId}/parent',                 'verb' => 'PUT'],
+
+        // The party kind registry and the one write path for a party link
+        // (party-kinds-accepted-per-case-type). `recordType` is an opaque
+        // `<app>:<schema>:<type>` literal and is passed as a query or body
+        // parameter rather than in the path, because it holds colons.
+        ['name' => 'partyKind#index',   'url' => '/api/party-kinds',                  'verb' => 'GET'],
+        ['name' => 'partyKind#link',    'url' => '/api/party-links',                  'verb' => 'POST'],
+        ['name' => 'partyKind#import',  'url' => '/api/party-links/import',           'verb' => 'POST'],
+        ['name' => 'partyKind#endLink', 'url' => '/api/party-links/{linkId}',         'verb' => 'DELETE'],
+
+        // The language a party asked to be written in, and the published
+        // resolver a consuming app calls instead of reading the property
+        // (correspondence-language-per-party).
+        ['name' => 'correspondenceLanguage#available',     'url' => '/api/correspondence-languages',                  'verb' => 'GET'],
+        ['name' => 'correspondenceLanguage#resolve',       'url' => '/api/parties/{partyId}/correspondence-language', 'verb' => 'GET'],
+        ['name' => 'correspondenceLanguage#setPreference', 'url' => '/api/parties/{partyId}/correspondence-language', 'verb' => 'PUT'],
+
+        // Customer satisfaction, closed loop (customer-satisfaction-closed-loop).
+        // The two public token routes carry no session: the token IS the
+        // authorisation, so both are rate limited per anonymous caller.
+        ['name' => 'publicSurvey#showInvitation',   'url' => '/survey/i/{token}',            'verb' => 'GET'],
+        ['name' => 'publicSurvey#submitInvitation', 'url' => '/survey/i/{token}',            'verb' => 'POST'],
+        ['name' => 'satisfaction#clientPanel',      'url' => '/api/satisfaction/client/{clientId}', 'verb' => 'GET'],
+        ['name' => 'satisfaction#responseRate',     'url' => '/api/satisfaction/response-rate',     'verb' => 'GET'],
+
+        // The programme above the cases (the-project-above-the-cases). The
+        // slug is `programme` rather than `project`, because `project` is
+        // planninq's and a schema slug is global per organisation.
+        ['name' => 'programme#workItems',  'url' => '/api/programmes/{programmeId}/work-items', 'verb' => 'GET'],
+        ['name' => 'programme#linkWork',   'url' => '/api/programmes/{programmeId}/work-items', 'verb' => 'POST'],
+        ['name' => 'programme#progress',   'url' => '/api/programmes/{programmeId}/progress',   'verb' => 'GET'],
+        ['name' => 'programme#cycleChart', 'url' => '/api/programme-cycles/{cycleId}/chart',    'verb' => 'GET'],
+        ['name' => 'programme#closeCycle', 'url' => '/api/programme-cycles/{cycleId}/close',    'verb' => 'POST'],
+
         // CTI screen-pop / click-to-dial adapter endpoints (cti-screenpop-adapter).
         // Routes are listed BEFORE the SPA / wildcard catch-alls (ADR-016).
         ['name' => 'cti#webhook',          'url' => '/api/cti/webhook/{platform}',         'verb' => 'POST'],
@@ -134,6 +189,14 @@ return [
         ['name' => 'metrics#index', 'url' => '/api/metrics', 'verb' => 'GET'],
         // Health check endpoint.
         ['name' => 'health#index', 'url' => '/api/health', 'verb' => 'GET'],
+
+        // Public website enquiry intake (website-enquiry-intake). Anonymous and
+        // cross-origin: the conduction.nl forms post here. It exists instead of
+        // letting the browser POST straight at OpenRegister's object API
+        // because OpenRegister cannot scope which PROPERTIES a public create
+        // may set, so a direct create would let a visitor write `status` and
+        // `handledBy`. See EnquiryIntakeService's class docblock.
+        ['name' => 'enquiry#submit', 'url' => '/api/enquiry', 'verb' => 'POST'],
 
         // Schedules API — pending MUST appear before {id} so the slug does not catch "pending".
         ['name' => 'schedules#index',   'url' => '/api/schedules',         'verb' => 'GET'],
@@ -331,9 +394,12 @@ return [
         ['name' => 'forecastSettings#update', 'url' => '/api/settings/forecast', 'verb' => 'PUT'],
 
         // Admin / DPO (Nextcloud admin only; no #[PublicPage] — admin-default).
+        ['name' => 'portalAdmin#getConfig',    'url' => '/portal/api/admin/tenant-config', 'verb' => 'GET'],
         ['name' => 'portalAdmin#saveConfig',   'url' => '/portal/api/admin/tenant-config', 'verb' => 'POST'],
         ['name' => 'portalAdmin#accounts',     'url' => '/portal/api/admin/accounts',      'verb' => 'GET'],
         ['name' => 'portalAdmin#auditEvents',  'url' => '/portal/api/admin/audit-events',  'verb' => 'GET'],
+        ['name' => 'portalAdmin#getServiceAccount',  'url' => '/portal/api/admin/service-account', 'verb' => 'GET'],
+        ['name' => 'portalAdmin#saveServiceAccount', 'url' => '/portal/api/admin/service-account', 'verb' => 'PUT'],
 
         // Appointment booking portal (anonymous customer self-booking; ADR-005 /
         // ADR-016). Lives under /portal/api/booking/* so the portalPage SPA
@@ -472,6 +538,9 @@ return [
         ['name' => 'messaging#preflight',    'url' => '/api/messaging/preflight/{contactId}',   'verb' => 'GET'],
         ['name' => 'messaging#consent',      'url' => '/api/messaging/consent',                 'verb' => 'POST'],
         ['name' => 'messaging#testProvider', 'url' => '/api/messaging/providers/{id}/test',     'verb' => 'POST'],
+        // The account the SMS and WhatsApp webhooks write as (admin only).
+        ['name' => 'messagingAdmin#getServiceAccount',  'url' => '/api/messaging/service-account', 'verb' => 'GET'],
+        ['name' => 'messagingAdmin#saveServiceAccount', 'url' => '/api/messaging/service-account', 'verb' => 'PUT'],
         // Semantic object handoff emit (ADR-051 / semantic-handoff-emit):
         // request -> ns#Case, active contract -> ns#Invoice. Kind-addressed via
         // OpenRegister's handoff engine; actions hide when no app implements the kind.
@@ -480,9 +549,20 @@ return [
         ['name' => 'semanticHandoff#contractAvailability',   'url' => '/api/handoff/contract/{id}/availability',      'verb' => 'GET'],
         ['name' => 'semanticHandoff#sendContractToInvoicing','url' => '/api/handoff/contract/{id}/send-to-invoicing', 'verb' => 'POST'],
 
+        // Woo citizen journey J4 (questions-about-a-citizen-dossier): the two
+        // portal endpoint actions portaliq forwards with a signed
+        // X-Portal-Subject assertion (the only credential), and the employee's
+        // conversion of a question into a dossiq Woo request.
+        ['name' => 'portalQuestion#ask',              'url' => '/api/portal/questions',                     'verb' => 'POST'],
+        ['name' => 'portalQuestion#reply',            'url' => '/api/portal/questions/reply',               'verb' => 'POST'],
+        ['name' => 'ticketWooRequest#availability',   'url' => '/api/tickets/{id}/woo-request/availability', 'verb' => 'GET'],
+        ['name' => 'ticketWooRequest#convert',        'url' => '/api/tickets/{id}/woo-request',              'verb' => 'POST'],
+        // "Assign to me" on TicketDetail and the Queue (detail-pages-read-at-a-glance).
+        ['name' => 'ticketAssign#assignToMe',         'url' => '/api/tickets/{id}/assign-to-me',             'verb' => 'POST'],
+
         // Shillinq time-intake billing handoff — real emit side of the
         // time-approval-workflow delegation (time-billing-handoff-emit).
-        // Manager-gated; the deep-link (shillinq_app_url) stays the fallback
+        // Manager-gated; the deep-link to the detected Shillinq app stays the fallback
         // when unavailable.
         ['name' => 'billingHandoff#availability', 'url' => '/api/billing/handoff/{clientId}/availability', 'verb' => 'GET'],
         ['name' => 'billingHandoff#trigger',      'url' => '/api/billing/handoff/{clientId}',              'verb' => 'POST'],
@@ -525,6 +605,7 @@ return [
         ['name' => 'template#index',   'url' => '/api/templates',          'verb' => 'GET'],
         ['name' => 'template#create',  'url' => '/api/templates',          'verb' => 'POST'],
         ['name' => 'template#preview', 'url' => '/api/templates/{id}/preview', 'verb' => 'GET'],
+        ['name' => 'template#validate', 'url' => '/api/templates/{id}/validate', 'verb' => 'POST'],
         ['name' => 'template#show',    'url' => '/api/templates/{id}',     'verb' => 'GET'],
         ['name' => 'template#update',  'url' => '/api/templates/{id}',     'verb' => 'PATCH'],
 

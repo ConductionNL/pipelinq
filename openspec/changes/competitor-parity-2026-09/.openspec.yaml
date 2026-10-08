@@ -1,0 +1,13 @@
+schema: spec-driven
+created: 2026-09-14
+
+# This change is an umbrella. It records where the three wave-3 changes beside it
+# came from and which decision each rests on; it states no requirement of pipelinq's
+# own, which is why `specs/` is empty. An empty `specs/` is what `openspec validate`
+# refuses without this flag ("Change must have at least one delta"), because the far
+# commoner cause is an author who forgot to write the delta.
+#
+# Declaring it here rather than inventing a delta: a spec written only to satisfy a
+# validator states a requirement nobody agreed to, and archiving would promote it
+# into openspec/specs/ where it reads as binding.
+skip_specs: true
