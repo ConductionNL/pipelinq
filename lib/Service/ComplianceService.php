@@ -96,20 +96,6 @@ class ComplianceService {
 	private const UNSUBSCRIBE_TOKEN = '{{unsubscribe_link}}';
 
 	/**
-	 * Token alternatives the validator will accept for the CAN-SPAM
-	 * physical-address requirement (any one of these in the body OR a
-	 * non-empty footerOverride satisfies the rule).
-	 *
-	 * @var array<int, string>
-	 */
-	private const PHYSICAL_ADDRESS_TOKENS = [
-		'{{physical_address}}',
-		'{{sender_address}}',
-		'{{company_address}}',
-		'{{address_block}}',
-	];
-
-	/**
 	 * Lawful-basis values that DO satisfy marketing consent gating.
 	 *
 	 * "imported" is intentionally NOT on this list — ADR-005 fail-safe
@@ -176,6 +162,7 @@ class ComplianceService {
 	 * @param SegmentService $segmentService Segment member projection.
 	 * @param LoggerInterface $logger Logger.
 	 * @param SegmentSignalService $signals Derived signals, for the dunning state.
+	 * @param IntegriqMarketingConsent $integriq The consent question after the cutover.
 	 *
 	 * @spec openspec/specs/marketing-compliance/spec.md#requirement-blast-cannot-send-without-lawful-basis
 	 */
@@ -185,6 +172,7 @@ class ComplianceService {
 		private SegmentService $segmentService,
 		private LoggerInterface $logger,
 		private SegmentSignalService $signals,
+		private IntegriqMarketingConsent $integriq,
 	) {
 	}//end __construct()
 
@@ -209,6 +197,28 @@ class ComplianceService {
 	 * @spec openspec/changes/marketing-integrated-campaigns/specs/marketing-integrated-campaigns/spec.md#requirement-a-promotional-send-skips-a-customer-in-dunning
 	 */
 	public function permitsSend(string $contactId, string $channel, string $intent = self::INTENT_PROMOTIONAL, ?string $listId = null): array {
+		if ($this->integriq->isActive() === true) {
+			// Integriq answers the consent question; a bounce and the dunning
+			// state stay pipelinq's own and are asked after it.
+			[$category, $requiresConsent] = $this->integriq->categoryFor(intent: $intent);
+			$decision = $this->integriq->decide(
+				contactId: $contactId,
+				channel: strtolower(trim($channel)),
+				category: $category,
+				requiresConsent: $requiresConsent,
+				listId: $listId
+			);
+			if ($decision['send'] === false || $this->isBounceWithdrawn(contactId: $contactId, channel: $channel, listId: $listId) === true) {
+				return ['allowed' => false, 'reason' => self::REASON_NO_CONSENT];
+			}
+
+			if ($this->isSuppressed(contactId: $contactId, intent: $intent) === true) {
+				return ['allowed' => false, 'reason' => self::REASON_SUPPRESSED];
+			}
+
+			return ['allowed' => true, 'reason' => ''];
+		}//end if
+
 		$hasConsent = $this->hasConsentForChannel(contactId: $contactId, channel: $channel);
 		if ($listId !== null && $listId !== '') {
 			$hasConsent = $this->hasConsentForList(contactId: $contactId, listId: $listId, channel: $channel);
@@ -320,6 +330,11 @@ class ComplianceService {
 			];
 		}
 
+		if ($this->integriq->isActive() === true) {
+			// One question per 500 members, not one per contact.
+			return $this->segmentComplianceViaIntegriq(members: $members, channel: $channel, intent: $intent);
+		}
+
 		$missing = [];
 		$suppressed = [];
 		foreach ($members as $member) {
@@ -356,6 +371,60 @@ class ComplianceService {
 			'suppressedCount' => count($suppressed),
 		];
 	}//end checkSegmentCompliance()
+
+	/**
+	 * The segment check after the cutover: one question to integriq per 500 members.
+	 *
+	 * A refusal or a bounce counts as missing consent, dunning as suppressed,
+	 * and every allowed member gets integriq's link for the delivery.
+	 *
+	 * @param array<int, array<string, mixed>> $members The segment members.
+	 * @param string                           $channel "email" or "sms".
+	 * @param string                           $intent  `promotional` or `service`.
+	 *
+	 * @return array{
+	 *     compliant: bool,
+	 *     missingConsent: array<int, string>,
+	 *     missingCount: int,
+	 *     suppressed: array<int, string>,
+	 *     suppressedCount: int,
+	 *     unsubscribe: array<string, string>
+	 * } The segment check plus integriq's link per allowed member.
+	 *
+	 * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md#requirement-pipelinq-asks-integriq-before-every-non-exempt-message-req-cii-002
+	 */
+	private function segmentComplianceViaIntegriq(array $members, string $channel, string $intent): array {
+		[$category, $requiresConsent] = $this->integriq->categoryFor(intent: $intent);
+		$decisions = $this->integriq->decideMembers(members: $members, channel: $channel, category: $category, requiresConsent: $requiresConsent);
+
+		$missing = [];
+		$suppressed = [];
+		$unsubscribe = [];
+		foreach ($members as $member) {
+			$contactId = (string)($member['contactId'] ?? '');
+			$decision = ($decisions[$contactId] ?? ['send' => false, 'unsubscribe' => null]);
+			if ($contactId === '' || $decision['send'] === false || $this->isBounceWithdrawn(contactId: $contactId, channel: $channel) === true) {
+				$missing[] = $contactId;
+				continue;
+			}
+
+			$unsubscribe[$contactId] = (string)($decision['unsubscribe']['url'] ?? '');
+			if ($this->isSuppressed(contactId: $contactId, intent: $intent) === true) {
+				$suppressed[] = $contactId;
+			}
+		}
+
+		$missing = array_values(array_unique($missing));
+		$suppressed = array_values(array_unique($suppressed));
+		return [
+			'compliant' => ($missing === []),
+			'missingConsent' => $missing,
+			'missingCount' => count($missing),
+			'suppressed' => $suppressed,
+			'suppressedCount' => count($suppressed),
+			'unsubscribe' => array_filter($unsubscribe),
+		];
+	}//end segmentComplianceViaIntegriq()
 
 	/**
 	 * Run every pre-send compliance check for one Blast in a single call.
@@ -418,6 +487,16 @@ class ComplianceService {
 			return false;
 		}
 
+		if ($this->integriq->isActive() === true) {
+			$decision = $this->integriq->decide(
+				contactId: $contactId,
+				channel: $channel,
+				category: IntegriqConsentClient::CATEGORY_MARKETING,
+				requiresConsent: true
+			);
+			return ($decision['send'] === true && $this->isBounceWithdrawn(contactId: $contactId, channel: $channel, listId: null) === false);
+		}
+
 		$record = $this->findConsentRecord(contactId: $contactId, channel: $channel, listId: null);
 		return $this->recordPermitsSend(record: $record, contactId: $contactId, channel: $channel);
 	}//end hasConsentForChannel()
@@ -445,9 +524,49 @@ class ComplianceService {
 			return false;
 		}
 
+		if ($this->integriq->isActive() === true) {
+			$decision = $this->integriq->decide(
+				contactId: $contactId,
+				channel: $channel,
+				category: IntegriqConsentClient::CATEGORY_MARKETING,
+				requiresConsent: true,
+				listId: $listId
+			);
+			return ($decision['send'] === true && $this->isBounceWithdrawn(contactId: $contactId, channel: $channel, listId: $listId) === false);
+		}
+
 		$record = $this->findConsentRecord(contactId: $contactId, channel: $channel, listId: $listId);
 		return $this->recordPermitsSend(record: $record, contactId: $contactId, channel: $channel);
 	}//end hasConsentForList()
+
+	/**
+	 * Whether pipelinq withdrew the contact for a bounce. A bounce stays pipelinq's own.
+	 *
+	 * @param string      $contactId Contact UUID / slug.
+	 * @param string      $channel   The channel.
+	 * @param string|null $listId    The list, when the send is list-scoped.
+	 *
+	 * @return bool True when a channel or list record was withdrawn for a bounce.
+	 *
+	 * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md#requirement-pipelinq-s-consent-records-are-migrated-into-integriq-once-req-cii-001
+	 */
+	private function isBounceWithdrawn(string $contactId, string $channel, ?string $listId = null): bool {
+		$channel = strtolower(trim($channel));
+		$records = [$this->findConsentRecord(contactId: $contactId, channel: $channel, listId: null)];
+		if ($listId !== null && $listId !== '') {
+			$records[] = $this->findConsentRecord(contactId: $contactId, channel: $channel, listId: $listId);
+		}
+
+		foreach ($records as $record) {
+			$withdrawn = trim((string)($record['withdrawnAt'] ?? ''));
+			$reason = (string)($record['withdrawnReason'] ?? '');
+			if ($withdrawn !== '' && in_array($reason, IntegriqMarketingConsent::BOUNCE_REASONS, true) === true) {
+				return true;
+			}
+		}
+
+		return false;
+	}//end isBounceWithdrawn()
 
 	/**
 	 * Whether a ConsentRecord, as stored, permits a marketing send.
@@ -559,6 +678,20 @@ class ComplianceService {
 			return;
 		}
 
+		if ($this->integriq->isActive() === true
+			&& $this->integriq->recordListConsent(
+				contactId: $contactId,
+				listId: $listId,
+				channel: $channel,
+				lawfulBasis: $lawfulBasis,
+				source: $consentSource,
+				evidence: $evidence
+			) === true
+		) {
+			// Integriq holds it now; pipelinq writes no consentRecord.
+			return;
+		}
+
 		$now = gmdate('Y-m-d\TH:i:s\Z');
 		$record = $this->findConsentRecord(contactId: $contactId, channel: $channel, listId: $listId);
 		$payload = ($record ?? ['softBounceCount' => 0]);
@@ -588,11 +721,12 @@ class ComplianceService {
 	 * Validate a CampaignTemplate payload against the channel's rules.
 	 *
 	 * For email templates the body MUST embed `{{unsubscribe_link}}`
-	 * (token literally present in `bodyHtml` or `bodyText`) AND a
-	 * physical-address indicator — either one of the recognised
-	 * placeholder tokens (see `PHYSICAL_ADDRESS_TOKENS`) or a non-empty
-	 * `footerOverride` (the operator is supplying a literal address
-	 * block in place of the templated one).
+	 * (token literally present in `bodyHtml` or `bodyText`) AND the
+	 * template MUST carry the sender's physical address in a non-empty
+	 * `footerOverride`. That address is what PhysicalAddressRenderer puts
+	 * in the mail, at an address token (see `PhysicalAddressRenderer::TOKENS`)
+	 * or at the end of the body, so a token on its own is not enough: it
+	 * would render empty.
 	 *
 	 * Returns `null` on success or a human-readable error string on
 	 * failure. Callers (controller / save path) surface the error as a
@@ -628,21 +762,11 @@ class ComplianceService {
 			);
 		}
 
-		$hasAddress = (trim($footerOverride) !== '');
-		if ($hasAddress === false) {
-			foreach (self::PHYSICAL_ADDRESS_TOKENS as $token) {
-				if (str_contains($haystack, $token) === true) {
-					$hasAddress = true;
-					break;
-				}
-			}
-		}
-
-		if ($hasAddress === false) {
-			return 'Email templates must include a physical-address block '
-				. '(footerOverride or one of {{physical_address}} / '
-				. '{{sender_address}} / {{company_address}} / '
-				. '{{address_block}}) per CAN-SPAM § 7704(a)(5).';
+		if (trim($footerOverride) === '') {
+			return 'Email templates must include the sender\'s physical address in the footer '
+				. '(footerOverride) per CAN-SPAM § 7704(a)(5). It is placed at '
+				. '{{physical_address}} / {{sender_address}} / {{company_address}} / '
+				. '{{address_block}} when the body has one, and at the end otherwise.';
 		}
 
 		return null;
@@ -746,6 +870,7 @@ class ComplianceService {
 	 * @return array{template?: array<string, mixed>, error?: string}
 	 *
 	 * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/tasks.md#templatecontroller-task-2.8-of-giant
+	 * @spec openspec/changes/marketing-block-editor/specs/mail-block-editor/spec.md#requirement-html-templates-keep-working-req-mbe-004
 	 */
 	public function createTemplate(array $payload, string $createdByUid): array {
 		$name = (string)($payload['name'] ?? '');
@@ -772,6 +897,7 @@ class ComplianceService {
 			'bodyText' => (string)($payload['bodyText'] ?? ''),
 			'senderName' => (string)($payload['senderName'] ?? ''),
 			'senderEmail' => (string)($payload['senderEmail'] ?? ''),
+			'replyTo' => (string)($payload['replyTo'] ?? ''),
 			'footerOverride' => (string)($payload['footerOverride'] ?? ''),
 			'articleIds' => $this->normaliseArticleIds(value: ($payload['articleIds'] ?? [])),
 			'createdBy' => $createdByUid,
@@ -801,6 +927,7 @@ class ComplianceService {
 	 * @return array{template?: array<string, mixed>, error?: string}
 	 *
 	 * @spec openspec/changes/marketing-segmentation-and-blast-06-rest-controllers/tasks.md#templatecontroller-task-2.8-of-giant
+	 * @spec openspec/changes/marketing-block-editor/specs/mail-block-editor/spec.md#requirement-html-templates-keep-working-req-mbe-004
 	 */
 	public function patchTemplate(string $templateId, array $patch): array {
 		$existing = $this->getTemplateById(templateId: $templateId);
@@ -808,7 +935,7 @@ class ComplianceService {
 			return ['error' => 'Template not found'];
 		}
 
-		$editable = ['name', 'subject', 'bodyHtml', 'bodyText', 'senderName', 'senderEmail', 'footerOverride'];
+		$editable = ['name', 'subject', 'bodyHtml', 'bodyText', 'senderName', 'senderEmail', 'replyTo', 'footerOverride'];
 		$payload = $existing;
 		foreach ($editable as $field) {
 			if (array_key_exists($field, $patch) === true && is_string($patch[$field]) === true) {
@@ -1019,6 +1146,10 @@ class ComplianceService {
 	 * @return void
 	 *
 	 * @spec openspec/specs/marketing-compliance/spec.md#requirement-consent-withdrawal-propagates
+	 * @spec openspec/changes/opt-out-before-send/specs/consent-in-integriq/spec.md#requirement-pipelinq-writes-every-wish-to-integriq-req-cii-003
+	 *
+	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) One branch over: the integriq write-through
+	 *   (opt-out-before-send) returns early before the unchanged local ledger path.
 	 */
 	public function recordConsentWithdrawal(
 		string $contactId,
@@ -1033,6 +1164,19 @@ class ComplianceService {
 		}
 
 		$now = gmdate('Y-m-d\TH:i:s\Z');
+
+		// After the cutover a wish goes to integriq. A bounce is not a wish
+		// and stays in pipelinq, as does a wish integriq did not take.
+		if ($this->integriq->isActive() === true
+			&& $this->integriq->recordWithdrawal(contactId: $contactId, channel: $channel, reason: $reason, listId: $listId) === true
+		) {
+			$this->transitionQueuedDeliveries(contactId: $contactId, sourceBlastId: $sourceBlastId);
+			$this->logger->info(
+				'ComplianceService.recordConsentWithdrawal: withdrawal recorded in integriq',
+				['contactId' => $contactId, 'channel' => $channel, 'listId' => $listId, 'reason' => $reason]
+			);
+			return;
+		}
 
 		$record = $this->findConsentRecord(contactId: $contactId, channel: $channel, listId: $listId);
 		if ($record === null) {

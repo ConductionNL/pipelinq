@@ -2,6 +2,7 @@
   "components": {
     "schemas": {
       "client": {
+        "slug": "client",
         "properties": {
           "emails": {
             "type": "array",
@@ -143,12 +144,12 @@
             "title": "Language",
             "description": "ISO 639-1 language code this client prefers for communication (e.g. \"nl\", \"en\").",
             "maxLength": 5,
-            "default": "nl",
             "facetable": true
           }
         }
       },
       "contact": {
+        "slug": "contact",
         "properties": {
           "emails": {
             "type": "array",
@@ -290,7 +291,6 @@
             "title": "Language",
             "description": "ISO 639-1 language code this contact person prefers for communication (e.g. \"nl\", \"en\").",
             "maxLength": 5,
-            "default": "nl",
             "facetable": true
           }
         }

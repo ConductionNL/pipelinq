@@ -26,6 +26,7 @@ Contactmomenten (contact moments) provide the core CRUD, list/detail views, quic
 | `duration` | string (ISO 8601 duration) | `schema:duration` | Contactmoment.gespreksduur | No | -- |
 | `channelMetadata` | object | -- | -- | No | `{}` |
 | `notes` | string | `schema:text` | Contactmoment.notitie | No | -- |
+
 ## Requirements
 
 ---
@@ -405,3 +406,296 @@ Operations for contact detail, relationships and quick-log screens MUST tolerate
 - THEN it MUST return a safe default or a validation result
 - AND it MUST NOT raise an unhandled exception
 
+### Requirement: Inbound Contactmoment notification carries a distinct body and covers the chat channel
+
+The inbound-Contactmoment notification rules on the `contactmoment` schema SHALL declare a distinct notification body (`message`) in addition to the title (`subject`), and SHALL cover the `chat` inbound channel in addition to `telefoon` and `email`. The `subject` SHALL state the event (the notification TITLE) and the `message` SHALL state the context plus the open-in-Nextcloud call-to-action (the notification BODY), both as i18n nl/en strings. The rules SHALL be expressed purely in the schema-register JSON (`kind: config`, ADR-031) and SHALL use the `message` field defined by the `openregister-notification-body` change, with the `incomingChat` rule mirroring `incomingEmail` (same `originApp: "pipelinq"`, `["nc-notification", "web-push"]` channels, agent + `sales`-group recipients, and the relation-resolved `object-detail` "Open client" action).
+
+**Standards**: VNG Klantinteracties (`Contactmoment` → `KlantContactmoment` → `Klant`), Schema.org (`CommunicateAction`)
+**Feature tier**: V1 (notification on inbound interaction)
+
+#### Scenario: Notification title and body are distinct
+
+- **WHEN** an inbound `telefoon` `contactmoment` is created and the `incomingCall` rule dispatches a notification
+- **THEN** the notification title is rendered from `subject` ("Incoming call from {{client}}") and the notification body is rendered from `message` ("{{client}} is a contact in Pipelinq. Open it in Nextcloud?"), so the two lines are not identical
+
+#### Scenario: Incoming email notification has its own body wording
+
+- **WHEN** an inbound `email` `contactmoment` is created
+- **THEN** the `incomingEmail` notification title is "Incoming email from {{client}}" and its body is the email-specific `message` ("{{client}} is a contact in Pipelinq. Open the email in Nextcloud?")
+
+#### Scenario: Incoming chat notifies the agent with an Open-client button
+
+- **WHEN** a `contactmoment` object is created with `channel == "chat"` and a populated `client` relation and `agent` field
+- **THEN** the engine dispatches the `incomingChat` notification to the `agent` user and the `sales` group on the `nc-notification` and `web-push` channels, with `originApp: "pipelinq"`, the title "Incoming chat from {{client}}", the body "{{client}} is a contact in Pipelinq. Open the conversation in Nextcloud?", and a single primary "Open client" / "Klant openen" action whose `object-detail` target resolves to the related Client object server-side
+
+#### Scenario: Body falls back to the title when no message is declared
+
+- **WHEN** a rule (e.g. another schema's rule) without a `message` field dispatches a notification under the `openregister-notification-body` engine
+- **THEN** the body falls back to the `subject`, so rules that have not adopted `message` keep working unchanged
+
+#### Scenario: Unrouted inbound chat still reaches the sales team
+
+- **WHEN** an inbound `chat` `contactmoment` is created with no `agent` set (e.g. by a chat-widget integration before routing)
+- **THEN** the `field: agent` recipient resolves to nobody but the `groups: sales` fallback recipient still receives the `incomingChat` notification, so the inbound chat is not silently dropped
+
+#### Scenario: i18n present on every title, body, and action label
+
+- **WHEN** the `contactmoment` notification block is saved
+- **THEN** each of `incomingCall`, `incomingEmail`, and `incomingChat` declares an nl/en `subject`, an nl/en `message`, and at most 2 `actions` whose labels carry nl/en text
+
+### Requirement: Direction is a first-class field (REQ-CMD-001)
+
+The contact moment facet of `ticket` MUST carry `direction` (enum
+`inbound`, `outbound`, `internal`, facetable), required when `ticketType =
+contactmoment`. A repair step MUST fill it from `channelMetadata.direction`
+or `channelMetadata.richting` on existing rows, mapping `inkomend` to
+`inbound` and `uitgaand` to `outbound`, else `internal`, idempotently.
+
+**Feature tier**: V1
+
+#### Scenario: A contact moment without a direction is refused
+
+- **WHEN** a contact moment is created with channel `telefoon` and no `direction`
+- **THEN** OpenRegister rejects it naming `direction`
+- @e2e exclude server validation; covered by PHPUnit on the register import
+
+#### Scenario: Existing rows are migrated once
+
+- **GIVEN** a contact moment with `channelMetadata.richting = inkomend` and no `direction`
+- **WHEN** the repair step runs twice
+- **THEN** the row carries `direction = inbound` after the first run and is unchanged by the second
+- @e2e exclude repair step; covered by PHPUnit on `MigrateContactMomentDirection`
+
+### Requirement: A contact moment references a case semantically (REQ-CMD-002)
+
+A contact moment MUST hold an ordered set of ADR-048 semantic references to the `case`
+type. The set MUST hold at least one entry and MUST NOT hold the same reference twice.
+An existing single value MUST migrate to a one-element set without loss, and the
+migration MUST be idempotent. The `request` facet MUST keep the single reference.
+
+The set is carried by `ticket.caseReferences` rather than by widening
+`ticket.caseReference` in place. `caseReference` is ONE property on ONE schema that
+three facets share, and `request` must keep it a single string, so a property that is
+a string for one facet and an array for another cannot be declared. On a contact
+moment `caseReference` therefore stays readable as the primary reference and is kept
+in step with it on every write, so every existing reader keeps working and no
+consumer has to learn two shapes at once.
+
+**Feature tier**: V1
+
+#### Scenario: One call about three cases is one record
+
+- **GIVEN** a contact moment recording one telephone call
+- **WHEN** it is filed on three cases
+- **THEN** one contact moment exists
+- **AND** its `caseReferences` set holds the three references.
+- e2e: `tests/e2e/contact-moment-several-cases.spec.ts`
+
+#### Scenario: An existing contact moment migrates without loss
+
+- **GIVEN** a contact moment whose `caseReference` is a single reference
+- **WHEN** the migration runs
+- **THEN** its `caseReferences` is a set holding that one reference
+- **AND** running the migration again changes nothing.
+- @e2e exclude repair step; covered by PHPUnit on `WidenContactMomentCaseReference`
+
+#### Scenario: A duplicate reference is refused
+
+- **GIVEN** a contact moment already filed on a case
+- **WHEN** a write adds the same reference again
+- **THEN** the write is refused
+- **AND** the set is unchanged.
+- @e2e exclude server validation; covered by PHPUnit on `TicketService::save()`
+
+#### Scenario: A contact moment on a dossiq case resolves
+
+- **GIVEN** dossiq supplies the `case` semantic type and a contact moment with `caseReference` = a case id
+- **WHEN** the reference is resolved
+- **THEN** the case's title renders on the contact moment without pipelinq naming dossiq
+- @e2e exclude resolver contract; covered by PHPUnit with a stub provider
+
+### Requirement: Contact moments are a data-provider leaf with append (REQ-CMD-003)
+
+Pipelinq MUST register `pipelinq-contact-moments` (kind `data-provider`,
+storage `app-local`) through `RegisterLeafProvidersEvent`. `list` MUST
+return the host object's contact moments newest first with subject,
+channel, direction, agent, time, outcome and summary. `create` MUST
+append one through `TicketService` with the host as `caseReference` and
+the caller as `agent`, MUST require `direction`, MUST refuse a caller
+without read on the host, and MUST NOT call any action in the consuming
+app (ADR-066 decision 2).
+
+**Feature tier**: V1
+
+#### Scenario: A handler logs a call on a case
+
+- **GIVEN** dossiq places the leaf and a handler opens a case
+- **WHEN** the handler logs an `inbound` `telefoon` contact moment
+- **THEN** one contact moment ticket exists with `caseReference` = the case, `agent` = the handler, `direction = inbound`, and `list` returns it first
+- e2e: `tests/e2e/contact-moments-leaf.spec.ts`
+
+#### Scenario: A caller without read on the case is refused
+
+- **GIVEN** a user who may not read the case
+- **WHEN** that user calls `create`
+- **THEN** the provider answers 403 and no ticket exists
+- @e2e exclude authorization guard; covered by PHPUnit on `ContactMomentLeafProvider::create()`
+
+### Requirement: A panel renders the contact moments on the host (REQ-CMD-004)
+
+Pipelinq MUST register `pipelinq-contact-moments-panel` (kind
+`render-surface`, `widget` and `tab` under one id). The tab MUST be the
+contact moment list filtered to the host with Channel and Direction
+facets; the widget MUST show the latest five and the quick-log form with
+`direction` as a required choice. The `contactmomenten` list view MUST
+gain a Direction facet.
+
+**Feature tier**: V1
+
+#### Scenario: The Communication tab shows both directions
+
+- **GIVEN** a case with one `inbound` and one `outbound` contact moment
+- **WHEN** a handler opens the tab and picks the `outbound` facet
+- **THEN** only the outbound one is listed
+- e2e: `tests/e2e/contact-moments-leaf.spec.ts`
+
+#### Scenario: Descriptor and JS registration agree
+
+- **GIVEN** both leaves are registered
+- **WHEN** gate-24 inspects the app
+- **THEN** each id has a descriptor and a JS registration with the complete render pair
+- @e2e exclude parity is checked mechanically by gate-24
+
+### Requirement: The contact moment panel SHALL show the party's indicators (REQ-CMI-001)
+
+The panel that renders contact moments on a host object SHALL also render the
+indicators held by the party those contact moments belong to, resolved live per
+REQ-PFI-003. Indicators SHALL be shown before the moments, so a KCC agent taking a
+call reads the flag before they speak.
+
+An indicator declaring `requiresAcknowledgement` SHALL be presented so that the
+handler confirms they have seen it, and the confirmation SHALL be recorded with the
+handler and the time.
+
+This extends the panel specified by `contact-moments-on-pipelinq-schema`, which is a
+declared dependency of this change. Its four existing requirements are unchanged.
+
+#### Scenario: An aggression flag is read before the call
+- **GIVEN** a party carrying "agressie-registratie" and three contact moments
+- **WHEN** the panel renders
+- **THEN** the indicator appears above the moments
+- @e2e exclude covered by PHPUnit on the panel and the indicator resolution
+
+#### Scenario: An acknowledgement is recorded
+- **GIVEN** an indicator declaring `requiresAcknowledgement`
+- **WHEN** a handler confirms it
+- **THEN** the confirmation is stored with the handler and the time
+- @e2e exclude covered by PHPUnit on `PartyIndicatorService::acknowledge()`
+
+#### Scenario: A blocked party is said at the point of writing
+- **GIVEN** a party carrying an indicator asserting `blocksOutbound`
+- **WHEN** a handler starts an outbound contact moment from the panel
+- **THEN** the panel reports the block and names the indicator, and the append is
+  refused
+- @e2e exclude covered by PHPUnit on the blocking answer
+
+### Requirement: One reference is the primary one, and it is named (REQ-CMS-002)
+
+A contact moment MUST carry `primaryCaseReference`, and its value MUST be a member of
+its `caseReferences` set. A surface that can show only one case MUST show the primary.
+The app MUST NOT answer that question by position in the set.
+
+**Feature tier**: V1
+
+#### Scenario: The primary survives a reorder
+
+- **GIVEN** a contact moment on three cases with the second as primary
+- **WHEN** the set is reordered
+- **THEN** the primary is still the same case.
+- @e2e exclude a reorder is a write shape, not a surface; covered by PHPUnit on `ContactMomentFilingService::primaryOf()`
+
+#### Scenario: A primary outside the set is refused
+
+- **GIVEN** a contact moment on cases A and B
+- **WHEN** a write sets the primary to case C
+- **THEN** the write is refused.
+- @e2e exclude server validation; covered by PHPUnit on `TicketService::save()`
+
+### Requirement: A case lists the contact moments it is a member of (REQ-CMS-003)
+
+The contact moments leaf MUST answer, for a host case, every contact moment whose
+`caseReferences` set contains that case. The query MUST be bounded per ADR-058 and MUST
+NOT scan every ticket.
+
+**Feature tier**: V1
+
+#### Scenario: Each of three cases sees the one call
+
+- **GIVEN** one contact moment filed on cases A, B and C
+- **WHEN** the leaf renders on case B
+- **THEN** it lists that contact moment once.
+- e2e: `tests/e2e/contact-moment-several-cases.spec.ts`
+
+### Requirement: Filing onto a further case is an act, not a copy (REQ-CMS-004)
+
+The app MUST offer an act that appends a case reference to an existing contact moment,
+and it MUST record who performed it and when. The act MUST NOT create a second contact
+moment and MUST NOT alter the contact moment's content.
+
+**Feature tier**: V1
+
+#### Scenario: Filing a call onto a second case creates no second record
+
+- **GIVEN** a contact moment on case A
+- **WHEN** a handler files it onto case B
+- **THEN** the number of contact moments is unchanged
+- **AND** the set holds A and B
+- **AND** the append names the handler and the moment it happened.
+- e2e: `tests/e2e/contact-moment-several-cases.spec.ts`
+
+### Requirement: A shared contact moment says so before it is edited (REQ-CMS-005)
+
+Where a contact moment is on more than one case, the surface rendering it MUST say so
+and MUST name the other cases. A case the reader is not permitted to see MUST be
+reported as a count rather than by title.
+
+**Feature tier**: V1
+
+#### Scenario: The reader is warned before editing
+
+- **GIVEN** a contact moment on cases A and B
+- **WHEN** a handler opens it from case A
+- **THEN** the surface says it is also on case B.
+- e2e: `tests/e2e/contact-moment-several-cases.spec.ts`
+
+#### Scenario: A case the reader may not see is counted, not named
+
+- **GIVEN** a contact moment on case A and on case B, which the reader may not see
+- **WHEN** the handler opens it from case A
+- **THEN** the surface says it is also on one other case
+- **AND** it does not render case B's title.
+- @e2e exclude a second reader is needed; covered by PHPUnit on `ContactMomentFilingService::sharedMarker()`
+
+### Requirement: A contact moment cannot be left with no case (REQ-CMS-006)
+
+The act that removes a case reference MUST refuse when it would empty the set, and MUST
+refuse to remove the primary unless the same call names a new primary from the
+remaining members.
+
+**Feature tier**: V1
+
+#### Scenario: The last reference cannot be removed
+
+- **GIVEN** a contact moment on one case
+- **WHEN** a handler tries to unfile it
+- **THEN** the act is refused
+- **AND** the refusal says a contact moment has to stay on at least one case.
+- e2e: `tests/e2e/contact-moment-several-cases.spec.ts`
+
+#### Scenario: Removing the primary requires naming the next one
+
+- **GIVEN** a contact moment on cases A and B with A as primary
+- **WHEN** a handler unfiles A without naming a new primary
+- **THEN** the act is refused
+- **AND** the same call naming B as primary succeeds.
+- @e2e exclude two acts in one call; covered by PHPUnit on `ContactMomentFilingService::unfileFromCase()`

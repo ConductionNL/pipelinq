@@ -4,8 +4,8 @@
   -
   - MessagingConversationSection is the client/contact-detail in-body section
   - (kind:'section' bodyWidget) for the outbound WhatsApp/SMS feature
-  - (outbound-messaging-provider-wiring). It self-fetches `conversation` /
-  - `message` OpenRegister rows filtered by contactId and the composer
+  - (outbound-messaging-provider-wiring). It self-fetches `channelConversation` /
+  - `channelMessage` OpenRegister rows filtered by contactId and the composer
   - preflight facts from GET /api/messaging/preflight/{contactId}.
   -
   - The message/conversation schemas only carry a contactId FK (there is no
@@ -14,7 +14,7 @@
   - contactId is the page object id directly. When mounted on ClientDetail
   - (entityType 'client') there is no single contactId, so this section
   - resolves the client's linked contacts client-side (the same cross-schema
-  - join pattern already used by PosRefundActionsSection / ProjectDetail,
+  - join pattern already used by PosRefundItemsWidget / ProjectDetail,
   - since OpenRegister has no native cross-schema join) and lets the agent
   - pick which contact person to converse with via a picker.
   -
@@ -397,6 +397,7 @@ export default {
 
 		/**
 		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
+		 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-the-messages-section-lists-the-contacts-messages-req-msr-001
 		 */
 		async fetchMessages() {
 			if (!this.effectiveContactId) {
@@ -406,7 +407,7 @@ export default {
 			this.loading = true
 			try {
 				const rows =
-					(await this.objectStore.fetchCollection('message', {
+					(await this.objectStore.fetchCollection('channelMessage', {
 						contactId: this.effectiveContactId,
 						_limit: 200,
 					})) || []

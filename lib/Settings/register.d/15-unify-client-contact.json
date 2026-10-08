@@ -2,6 +2,7 @@
   "components": {
     "schemas": {
       "client": {
+        "slug": "client",
         "required": [
           "name",
           "type",
@@ -78,6 +79,7 @@
           },
           "accountOwner": {
             "type": "string",
+            "format": "user",
             "title": "Account owner",
             "description": "Nextcloud user UID of the account owner / responsible sales agent.",
             "facetable": true
@@ -97,6 +99,7 @@
         }
       },
       "contact": {
+        "slug": "contact",
         "required": [
           "name",
           "contactsUid"
@@ -136,6 +139,7 @@
         }
       },
       "ticket": {
+        "slug": "ticket",
         "properties": {
           "contactsUid": {
             "type": "string",

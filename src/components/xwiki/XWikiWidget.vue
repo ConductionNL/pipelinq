@@ -28,7 +28,7 @@
 			{{ t('pipelinq', 'xWiki integration unavailable') }}
 		</div>
 		<NcLoadingIcon v-else-if="store.loading" />
-		<XWikiArticleList v-else :articles="visibleArticles" @select="onSelect" />
+		<XWikiArticleList v-else :articles="visibleArticles" linkExternal />
 		<a
 			v-if="hasMore"
 			class="xwiki-widget__more"
@@ -79,7 +79,7 @@ export default {
 		},
 	},
 
-	emits: ['select', 'viewMore'],
+	emits: ['viewMore'],
 	setup() {
 		return { store: useXwikiStore() }
 	},
@@ -114,10 +114,6 @@ export default {
 				tags: this.tags,
 				limit: this.limit + 1,
 			})
-		},
-
-		onSelect(article) {
-			this.$emit('select', article)
 		},
 
 		onSearchInput() {

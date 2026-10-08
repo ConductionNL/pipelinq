@@ -1,0 +1,262 @@
+{
+	"_meta": {
+		"spdx-license": "EUPL-1.2",
+		"spdx-copyright": "2026 Conduction B.V.",
+		"description": "The Modules page (openspec/changes/simple-structure-profile). One page of link cards that opens every page the simple menu leaves out: the six modules (Sales, Marketing, Point of sale, Products, Contracts, Loyalty) and three pages that belong to no module. It is a `links` page, the library's typed page of link cards (nextcloud-vue 2.61.0). The library leaves out a card whose route does not resolve, so tests/vitest/modulesPage.spec.js mounts the page and counts all 29. The page exists in both structure profiles so its address is stable; only the simple menu links to it (`ModulesMenu` in src/menu-layout.simple.json). tests/vitest/structureProfile.spec.js fails when a module entry in the simple profile has no card here."
+	},
+	"menu": [],
+	"pages": [
+		{
+			"id": "Modules",
+			"route": "/modules",
+			"type": "links",
+			"title": "Modules and more",
+			"config": {
+				"description": "Every page that is not in the daily menu. An administrator can add a module to the menu in the admin settings.",
+				"categories": {
+					"sales": "Sales",
+					"marketing": "Marketing",
+					"pos": "Point of Sale",
+					"products": "Products",
+					"contracts": "Contracts",
+					"loyalty": "Loyalty",
+					"other": "Also in Pipelinq"
+				},
+				"cards": [
+					{
+						"id": "Dashboard",
+						"label": "Sales overview",
+						"description": "Open deals, pipeline value and what needs a follow-up.",
+						"icon": "CartOutline",
+						"category": "sales",
+						"route": "Dashboard"
+					},
+					{
+						"id": "Leads",
+						"label": "Leads",
+						"description": "Every deal you are working on, from first contact to won or lost.",
+						"icon": "CashMultiple",
+						"category": "sales",
+						"route": "Leads"
+					},
+					{
+						"id": "Prospects",
+						"label": "Prospects",
+						"description": "Companies that fit your customer profile and are not customers yet.",
+						"icon": "AccountSearchOutline",
+						"category": "sales",
+						"route": "Prospects"
+					},
+					{
+						"id": "Pipeline",
+						"label": "Pipeline",
+						"description": "Deals as cards on a board, one column per stage.",
+						"icon": "ViewColumnOutline",
+						"category": "sales",
+						"route": "Pipeline"
+					},
+					{
+						"id": "Segments",
+						"label": "Segments",
+						"description": "Groups of contacts picked by rules, ready to mail.",
+						"icon": "AccountGroup",
+						"category": "marketing",
+						"route": "Segments"
+					},
+					{
+						"id": "Templates",
+						"label": "Templates",
+						"description": "Reusable layouts for your mailings.",
+						"icon": "FileDocumentOutline",
+						"category": "marketing",
+						"route": "Templates"
+					},
+					{
+						"id": "Articles",
+						"label": "Articles",
+						"description": "Texts you write once and use in several mailings.",
+						"icon": "NewspaperVariantOutline",
+						"category": "marketing",
+						"route": "Articles"
+					},
+					{
+						"id": "MailingLists",
+						"label": "Mailing lists",
+						"description": "Lists people sign up for, with their opt-in.",
+						"icon": "EmailMultiple",
+						"category": "marketing",
+						"route": "MailingLists"
+					},
+					{
+						"id": "Blasts",
+						"label": "Blasts",
+						"description": "One mailing to one segment, planned or sent.",
+						"icon": "Email",
+						"category": "marketing",
+						"route": "Blasts"
+					},
+					{
+						"id": "Campaigns",
+						"label": "Campaigns",
+						"description": "Mailings, posts and articles that belong together.",
+						"icon": "BullhornOutline",
+						"category": "marketing",
+						"route": "Campaigns"
+					},
+					{
+						"id": "BlastPerformance",
+						"label": "Blast performance",
+						"description": "Opens, clicks and bounces per mailing.",
+						"icon": "ChartLine",
+						"category": "marketing",
+						"route": "BlastPerformance"
+					},
+					{
+						"id": "Journeys",
+						"label": "Journeys",
+						"description": "A series of messages a contact walks through step by step.",
+						"icon": "MapMarkerPath",
+						"category": "marketing",
+						"route": "Journeys"
+					},
+					{
+						"id": "SocialAccounts",
+						"label": "Social accounts",
+						"description": "The social media accounts you publish from.",
+						"icon": "AccountBoxOutline",
+						"category": "marketing",
+						"route": "SocialAccounts"
+					},
+					{
+						"id": "SocialPosts",
+						"label": "Social posts",
+						"description": "Posts you plan, review and publish.",
+						"icon": "BullhornOutline",
+						"category": "marketing",
+						"route": "SocialPosts"
+					},
+					{
+						"id": "SocialPerformance",
+						"label": "Social performance",
+						"description": "Reach and engagement per post and per account.",
+						"icon": "ChartLine",
+						"category": "marketing",
+						"route": "SocialPerformance"
+					},
+					{
+						"id": "KeywordIntelligence",
+						"label": "Keywords",
+						"description": "The search terms you want to be found on, and where you rank.",
+						"icon": "KeyVariant",
+						"category": "marketing",
+						"route": "KeywordIntelligence"
+					},
+					{
+						"id": "CompetitorWatches",
+						"label": "Competitors",
+						"description": "What changed on the sites you keep an eye on.",
+						"icon": "AccountGroupOutline",
+						"category": "marketing",
+						"route": "CompetitorWatches"
+					},
+					{
+						"id": "ConnectionAudit",
+						"label": "Connection audit",
+						"description": "Who connected which social account, and when.",
+						"icon": "AccountArrowRightOutline",
+						"category": "marketing",
+						"route": "ConnectionAudit"
+					},
+					{
+						"id": "SearchQueries",
+						"label": "Search queries",
+						"description": "What people typed into a search engine before they reached you.",
+						"icon": "Magnify",
+						"category": "marketing",
+						"route": "SearchQueries"
+					},
+					{
+						"id": "PosTransactions",
+						"label": "Kassabon",
+						"description": "Every sale at the counter, with its receipt.",
+						"icon": "ChartLine",
+						"category": "pos",
+						"route": "PosTransactions"
+					},
+					{
+						"id": "PosRefunds",
+						"label": "Retouren",
+						"description": "Goods and money that went back to a customer.",
+						"icon": "ClockCheckOutline",
+						"category": "pos",
+						"route": "PosRefunds"
+					},
+					{
+						"id": "CashShifts",
+						"label": "Kassalade",
+						"description": "Open and close the cash drawer, and count it.",
+						"icon": "FormatListBulleted",
+						"category": "pos",
+						"route": "CashShifts"
+					},
+					{
+						"id": "KassakoppelingAuditList",
+						"label": "Kassakoppeling audit",
+						"description": "Every message between the till and the bookkeeping.",
+						"icon": "Check",
+						"category": "pos",
+						"route": "KassakoppelingAuditList"
+					},
+					{
+						"id": "Products",
+						"label": "Products",
+						"description": "What you sell or deliver, with prices and categories.",
+						"icon": "PackageVariantClosed",
+						"category": "products",
+						"route": "Products"
+					},
+					{
+						"id": "Contracts",
+						"label": "Contracts",
+						"description": "Agreements with customers, their term and their renewal.",
+						"icon": "FileSign",
+						"category": "contracts",
+						"route": "Contracts"
+					},
+					{
+						"id": "Loyalty",
+						"label": "Loyalty reporting",
+						"description": "Points, tiers and redemptions per loyalty programme.",
+						"icon": "Star",
+						"category": "loyalty",
+						"route": "LoyaltyReporting"
+					},
+					{
+						"id": "Tasks",
+						"label": "Tasks",
+						"description": "Every task and callback request, for the whole team.",
+						"icon": "FormatListChecks",
+						"category": "other",
+						"route": "Tasks"
+					},
+					{
+						"id": "Contacts",
+						"label": "Contact persons",
+						"description": "The people you speak to at a resident, business or organisation.",
+						"icon": "AccountMultipleOutline",
+						"category": "other",
+						"route": "Contacts"
+					},
+					{
+						"id": "OperationalDashboard",
+						"label": "Operational overview",
+						"description": "Bookings, hours and workload at a glance.",
+						"icon": "ViewDashboard",
+						"category": "other",
+						"route": "OperationalDashboard"
+					}
+				]
+			}
+		}
+	]
+}

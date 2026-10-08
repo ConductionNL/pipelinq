@@ -86,6 +86,8 @@ return [
         ['name' => 'analytics#funnels',  'url' => '/api/analytics/funnels',  'verb' => 'GET'],
         // Commercial dashboard KPI overview (openspec/changes/commercial-dashboard).
         ['name' => 'analytics#commercial', 'url' => '/api/analytics/commercial', 'verb' => 'GET'],
+        // Open deals of one contact or client, for its KPI (detail-pages-read-at-a-glance).
+        ['name' => 'openDeals#index', 'url' => '/api/analytics/open-deals', 'verb' => 'GET'],
         // My-work worklist — canonical server-side union of the current user's
         // leads + requests (replaces the MyWorkWidget/MyWork client-side union).
         ['name' => 'worklist#mine', 'url' => '/api/worklist/mine', 'verb' => 'GET'],
@@ -392,9 +394,12 @@ return [
         ['name' => 'forecastSettings#update', 'url' => '/api/settings/forecast', 'verb' => 'PUT'],
 
         // Admin / DPO (Nextcloud admin only; no #[PublicPage] — admin-default).
+        ['name' => 'portalAdmin#getConfig',    'url' => '/portal/api/admin/tenant-config', 'verb' => 'GET'],
         ['name' => 'portalAdmin#saveConfig',   'url' => '/portal/api/admin/tenant-config', 'verb' => 'POST'],
         ['name' => 'portalAdmin#accounts',     'url' => '/portal/api/admin/accounts',      'verb' => 'GET'],
         ['name' => 'portalAdmin#auditEvents',  'url' => '/portal/api/admin/audit-events',  'verb' => 'GET'],
+        ['name' => 'portalAdmin#getServiceAccount',  'url' => '/portal/api/admin/service-account', 'verb' => 'GET'],
+        ['name' => 'portalAdmin#saveServiceAccount', 'url' => '/portal/api/admin/service-account', 'verb' => 'PUT'],
 
         // Appointment booking portal (anonymous customer self-booking; ADR-005 /
         // ADR-016). Lives under /portal/api/booking/* so the portalPage SPA
@@ -533,6 +538,9 @@ return [
         ['name' => 'messaging#preflight',    'url' => '/api/messaging/preflight/{contactId}',   'verb' => 'GET'],
         ['name' => 'messaging#consent',      'url' => '/api/messaging/consent',                 'verb' => 'POST'],
         ['name' => 'messaging#testProvider', 'url' => '/api/messaging/providers/{id}/test',     'verb' => 'POST'],
+        // The account the SMS and WhatsApp webhooks write as (admin only).
+        ['name' => 'messagingAdmin#getServiceAccount',  'url' => '/api/messaging/service-account', 'verb' => 'GET'],
+        ['name' => 'messagingAdmin#saveServiceAccount', 'url' => '/api/messaging/service-account', 'verb' => 'PUT'],
         // Semantic object handoff emit (ADR-051 / semantic-handoff-emit):
         // request -> ns#Case, active contract -> ns#Invoice. Kind-addressed via
         // OpenRegister's handoff engine; actions hide when no app implements the kind.
@@ -541,9 +549,20 @@ return [
         ['name' => 'semanticHandoff#contractAvailability',   'url' => '/api/handoff/contract/{id}/availability',      'verb' => 'GET'],
         ['name' => 'semanticHandoff#sendContractToInvoicing','url' => '/api/handoff/contract/{id}/send-to-invoicing', 'verb' => 'POST'],
 
+        // Woo citizen journey J4 (questions-about-a-citizen-dossier): the two
+        // portal endpoint actions portaliq forwards with a signed
+        // X-Portal-Subject assertion (the only credential), and the employee's
+        // conversion of a question into a dossiq Woo request.
+        ['name' => 'portalQuestion#ask',              'url' => '/api/portal/questions',                     'verb' => 'POST'],
+        ['name' => 'portalQuestion#reply',            'url' => '/api/portal/questions/reply',               'verb' => 'POST'],
+        ['name' => 'ticketWooRequest#availability',   'url' => '/api/tickets/{id}/woo-request/availability', 'verb' => 'GET'],
+        ['name' => 'ticketWooRequest#convert',        'url' => '/api/tickets/{id}/woo-request',              'verb' => 'POST'],
+        // "Assign to me" on TicketDetail and the Queue (detail-pages-read-at-a-glance).
+        ['name' => 'ticketAssign#assignToMe',         'url' => '/api/tickets/{id}/assign-to-me',             'verb' => 'POST'],
+
         // Shillinq time-intake billing handoff — real emit side of the
         // time-approval-workflow delegation (time-billing-handoff-emit).
-        // Manager-gated; the deep-link (shillinq_app_url) stays the fallback
+        // Manager-gated; the deep-link to the detected Shillinq app stays the fallback
         // when unavailable.
         ['name' => 'billingHandoff#availability', 'url' => '/api/billing/handoff/{clientId}/availability', 'verb' => 'GET'],
         ['name' => 'billingHandoff#trigger',      'url' => '/api/billing/handoff/{clientId}',              'verb' => 'POST'],
@@ -586,6 +605,7 @@ return [
         ['name' => 'template#index',   'url' => '/api/templates',          'verb' => 'GET'],
         ['name' => 'template#create',  'url' => '/api/templates',          'verb' => 'POST'],
         ['name' => 'template#preview', 'url' => '/api/templates/{id}/preview', 'verb' => 'GET'],
+        ['name' => 'template#validate', 'url' => '/api/templates/{id}/validate', 'verb' => 'POST'],
         ['name' => 'template#show',    'url' => '/api/templates/{id}',     'verb' => 'GET'],
         ['name' => 'template#update',  'url' => '/api/templates/{id}',     'verb' => 'PATCH'],
 

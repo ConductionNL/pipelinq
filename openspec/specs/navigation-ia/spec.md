@@ -2,6 +2,7 @@
 
 ## Purpose
 TBD - created by archiving change pipelinq-hr-moveout-and-admin-dedupe. Update Purpose after archive.
+
 ## Requirements
 
 @e2e exclude ⚠️ EVERY SCENARIO BELOW DESCRIBES NAVIGATION THAT NO LONGER EXISTS,
@@ -69,3 +70,14 @@ a top-level group.
 - AND `AVG-verzoeken`, `Master data`, `Data quality` and `Duplicates` MUST appear in the Settings foldout
 - AND `Marketing` MUST remain a top-level navigation group
 
+### Requirement: The Pipeline menu item shows a board icon (REQ-PNT-020)
+
+The Pipeline menu item, the Pipelines settings item and the Pipeline module
+card SHALL use a column board icon (`ViewColumnOutline`), so the icon matches
+the board the item opens.
+
+#### Scenario: A user finds the pipeline board
+
+- GIVEN the full menu structure
+- WHEN a user scans the navigation
+- THEN the Pipeline item shows a column board icon

@@ -1,5 +1,7 @@
 # Tasks: unify-ticket-supertype
 
+> Archive pass 2026-10-07: code done except 1.1, 1.2. The cited `lib/Repair/MigrateToTicketSupertype.php` never existed in the tree: the 79 records were migrated once on the dev instance (commit 91558d968, "no production instance existed"). Archive once that one-off migration is accepted as the delivery, or ship the repair step.
+
 ## Phase 0 — Additive schema
 
 - [x] 0.1 Register the `ticket` schema in the pipelinq register
@@ -20,7 +22,7 @@
 
 ## Phase 1 — Migration
 
-- [x] 1.1 Implement `Repair\MigrateToTicketSupertype` (copy + map)
+- [ ] 1.1 Implement `Repair\MigrateToTicketSupertype` (copy + map)
   - **spec_ref**: `specs/unify-ticket-supertype/spec.md#requirement-lossless-migration-of-existing-records`
   - **files**: `lib/Repair/MigrateToTicketSupertype.php`, `appinfo/info.xml`
   - **acceptance_criteria**:
@@ -29,7 +31,7 @@
     - Dry-run count logged before writes; aborts cleanly if OpenRegister absent
     - Old objects left intact
 
-- [x] 1.2 Remap intra-CRM references
+- [ ] 1.2 Remap intra-CRM references
   - **spec_ref**: `specs/unify-ticket-supertype/spec.md#scenario-contactmoment-parent-linkage-preserved`
   - **files**: `lib/Repair/MigrateToTicketSupertype.php`
   - **acceptance_criteria**:

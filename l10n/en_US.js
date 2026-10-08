@@ -133,6 +133,7 @@ OC.L10N.register(
         "Completed": "Completed",
         "Configuration": "Configuration",
         "Configuration re-imported successfully": "Configuration re-imported successfully",
+        "Configuration re-imported, but OpenRegister rejected %1$s schema(s): %2$s": "Configuration re-imported, but OpenRegister rejected %1$s schema(s): %2$s",
         "Configuration saved": "Configuration saved",
         "Configure which property determines the column placement for each schema, and optionally which property to sum in column totals.": "Configure which property determines the column placement for each schema, and optionally which property to sum in column totals.",
         "Configure your Ideal Customer Profile (ICP) to discover potential leads.": "Configure your Ideal Customer Profile (ICP) to discover potential leads.",
@@ -523,9 +524,9 @@ OC.L10N.register(
         "VAT {rate}%": "VAT {rate}%",
         "Vul een reden in voor de terugboeking": "Vul een reden in voor de terugboeking",
         "base": "base",
-        "Kassabon": "Kassabon",
+        "Kassabon": "Receipts",
         "Transactie bewerken": "Transactie bewerken",
-        "Transactie": "Transactie",
+        "Transactie": "Transaction",
         "Concept": "Concept",
         "Geparkeerd": "Geparkeerd",
         "Bevestigd": "Bevestigd",
@@ -555,7 +556,9 @@ OC.L10N.register(
         "No projects for this client yet.": "No projects for this client yet.",
         "Projecten": "Projecten",
         "Factureerbaar": "Factureerbaar",
-        "Einddatum": "Einddatum"
+        "Einddatum": "Einddatum",
+        "Wilt u deze berichten niet meer ontvangen? Meld u af: %s": "No longer want these messages? Unsubscribe: %s",
+        "De herinnering is niet verstuurd: %s": "The reminder was not sent: %s"
     },
     "nplurals=2; plural=(n != 1);"
 )

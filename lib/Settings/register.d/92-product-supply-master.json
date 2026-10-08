@@ -5,6 +5,7 @@
     },
     "schemas": {
       "product": {
+        "slug": "product",
         "properties": {
           "productId": {
             "type": "string",

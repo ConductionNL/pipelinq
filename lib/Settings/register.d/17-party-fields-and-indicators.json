@@ -3,6 +3,7 @@
   "components": {
     "schemas": {
       "partyFieldSet": {
+        "slug": "partyFieldSet",
         "title": "Party field set",
         "type": "object",
         "description": "Declares which typed properties a kind of party carries. An administrator adds a field without a schema release; OpenRegister does the typing, so this is a declaration and not a second field engine.",
@@ -53,6 +54,7 @@
         }
       },
       "partyIndicator": {
+        "slug": "partyIndicator",
         "title": "Party indicator",
         "type": "object",
         "description": "The vocabulary: what an indicator means and what it asserts about handling. An indicator is not a boolean per concern, because every new concern would then be a schema change, and it is not a tag, because a tag has no severity, no period, no source and no declared effect.",
@@ -109,6 +111,7 @@
         }
       },
       "partyIndicatorValue": {
+        "slug": "partyIndicatorValue",
         "title": "Party indicator value",
         "type": "object",
         "description": "One indicator held on one party, with a period and the source that set it. There is no copy of this on a case, a contact moment, a task or a message: an indicator set today has to show on work opened at any earlier date, and one lifted today has to stop showing everywhere at once.",
@@ -159,6 +162,7 @@
         }
       },
       "client": {
+        "slug": "client",
         "properties": {
           "fieldValues": {
             "type": "object",
@@ -171,6 +175,7 @@
             "title": "Parent organisation",
             "description": "The organisation this one sits under. The CUSTOMER organisation, not the internal one: a gemeente's own afdelingen are org units, and a housing corporation with six regional offices is a customer tree. A parent that would close a cycle is refused on the write.",
             "format": "uuid",
+            "$ref": "client",
             "facetable": true
           },
           "organisationPath": {
@@ -182,6 +187,7 @@
         }
       },
       "contact": {
+        "slug": "contact",
         "properties": {
           "fieldValues": {
             "type": "object",
@@ -191,6 +197,68 @@
           }
         }
       }
-    }
+    },
+    "objects": [
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "partyIndicator",
+          "slug": "party-indicator-agressie-registratie"
+        },
+        "code": "agressie-registratie",
+        "label": "Agressie geregistreerd",
+        "description": "Er is een agressie-incident met deze partij vastgelegd. Neem de afspraken over contact in acht.",
+        "severity": "critical",
+        "blocksOutbound": false,
+        "blocksAddressPublication": false,
+        "requiresAcknowledgement": true,
+        "active": true
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "partyIndicator",
+          "slug": "party-indicator-overleden"
+        },
+        "code": "overleden",
+        "label": "Overleden",
+        "description": "Deze persoon is overleden. Stuur geen post of berichten meer aan deze persoon.",
+        "severity": "critical",
+        "blocksOutbound": true,
+        "blocksAddressPublication": false,
+        "requiresAcknowledgement": false,
+        "active": true
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "partyIndicator",
+          "slug": "party-indicator-geheimhouding-adres"
+        },
+        "code": "geheimhouding-adres",
+        "label": "Geheimhouding adres",
+        "description": "Het adres van deze partij mag niet worden gedeeld of gepubliceerd.",
+        "severity": "warning",
+        "blocksOutbound": false,
+        "blocksAddressPublication": true,
+        "requiresAcknowledgement": false,
+        "active": true
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "partyIndicator",
+          "slug": "party-indicator-bewindvoering"
+        },
+        "code": "bewindvoering",
+        "label": "Onder bewind",
+        "description": "Deze partij staat onder bewind. Afspraken over geld lopen via de bewindvoerder.",
+        "severity": "warning",
+        "blocksOutbound": false,
+        "blocksAddressPublication": false,
+        "requiresAcknowledgement": false,
+        "active": true
+      }
+    ]
   }
 }

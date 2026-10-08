@@ -7,7 +7,7 @@
   -
   - The whole component IS the dialog, so it lives here rather than under
   - src/views/settings/ — a modal must never be written inline inside its
-  - parent (ADR-004), and PipelineManager.vue is its only caller.
+  - parent (ADR-004), and PipelineManager.vue and the pipeline board open it.
   -->
 <template>
 	<NcDialog
@@ -42,6 +42,7 @@
 							v-model="form.viewId"
 							:options="viewOptions"
 							:aria-label-combobox="t('pipelinq', 'View')"
+							labelOutside
 							:clearable="true"
 							label="label"
 							:reduce="(o) => o.value"
@@ -346,6 +347,10 @@ import ChevronDown from 'vue-material-design-icons/ChevronDown.vue'
 import ChevronUp from 'vue-material-design-icons/ChevronUp.vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
+import {
+	pipelineMappingsPayload,
+	pipelineStagesPayload,
+} from '../services/pipelinePayload.js'
 import { getViews } from '../services/viewService.js'
 
 export default {
@@ -596,26 +601,18 @@ export default {
 
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-settings-ui/tasks.md#task-37
+		 * @spec openspec/changes/review-finish/specs/pipeline/spec.md
 		 */
 		onSave() {
 			if (!this.isValid) return
 
 			const data = {
 				...this.form,
-				propertyMappings: this.form.propertyMappings.map((m) => ({
-					schemaSlug: m.schemaSlug,
-					columnProperty: m.columnProperty,
-					totalsProperty: m.totalsProperty || null,
-				})),
+				propertyMappings: pipelineMappingsPayload(
+					this.form.propertyMappings,
+				),
 
-				stages: this.form.stages.map((s) => ({
-					name: s.name,
-					order: s.order,
-					probability: s.probability,
-					isClosed: !!s.isClosed,
-					isWon: !!s.isWon,
-					color: s.color || null,
-				})),
+				stages: pipelineStagesPayload(this.form.stages),
 			}
 
 			this.$emit('save', data)

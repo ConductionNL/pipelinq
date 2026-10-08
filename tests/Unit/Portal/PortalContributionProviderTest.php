@@ -45,6 +45,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Tests\Unit\Portal;
 
 use OCA\Pipelinq\Portal\PortalContributionProvider;
+use OCA\Pipelinq\Service\Portal\QuestionDetailService;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 
@@ -74,6 +75,18 @@ final class PortalContributionProviderTest extends TestCase {
 	private const CUSTOMER_SUBJECT = [
 		'subjectRef' => '00000000-0000-0000-0000-000000000003',
 		'audience' => 'customer',
+		'organisation' => '00000000-0000-0000-0000-000000000002',
+		'trust' => 'substantial',
+	];
+
+	/**
+	 * Server-derived subject fixture for the citizen audience (nil UUIDs).
+	 *
+	 * @var array<string, mixed>
+	 */
+	private const CITIZEN_SUBJECT = [
+		'subjectRef' => '00000000-0000-0000-0000-000000000004',
+		'audience' => 'citizen',
 		'organisation' => '00000000-0000-0000-0000-000000000002',
 		'trust' => 'substantial',
 	];
@@ -112,7 +125,8 @@ final class PortalContributionProviderTest extends TestCase {
 		);
 		$this->assertSame([], $reflection->getInterfaceNames(), 'Duck-typed: no implements clause allowed');
 		$this->assertFalse($reflection->getParentClass(), 'Provider must not extend anything');
-		$this->assertNull($reflection->getConstructor(), 'Provider must have no constructor dependencies');
+		$constructor = $reflection->getConstructor();
+		$this->assertSame(0, $constructor?->getNumberOfRequiredParameters() ?? 0, 'Provider must build without any argument');
 
 		$source = (string)file_get_contents((string)$reflection->getFileName());
 		$this->assertStringNotContainsStringIgnoringCase(
@@ -130,7 +144,7 @@ final class PortalContributionProviderTest extends TestCase {
 	 * @spec openspec/changes/portal-contribution/specs/portal-contribution/spec.md
 	 */
 	public function testAudiencesOnBothContractVersions(): void {
-		$this->assertSame(['client', 'customer'], $this->provider->getAudiences());
+		$this->assertSame(['client', 'customer', 'citizen'], $this->provider->getAudiences());
 		$this->assertSame('client', $this->provider->getAudience(), 'v1 fallback must return the primary audience');
 	}//end testAudiencesOnBothContractVersions()
 
@@ -147,9 +161,9 @@ final class PortalContributionProviderTest extends TestCase {
 
 		$collections = $this->indexById($manifest['collections']);
 		$this->assertSame(
-			['clientComplaints', 'clientContactmoments', 'clientContracts', 'clientRequests'],
+			['clientComplaints', 'clientContactmoments', 'clientContracts', 'clientRequests', 'myQuestions', 'ownComplaints', 'ownRequests'],
 			$this->sortedKeys($collections),
-			'Client audience exposes request, complaint, contract and (field-projected) contactmoment'
+			'Client audience exposes request, complaint, contract, (field-projected) contactmoment, the resident\'s own questions about a dossier, and their own requests and complaints'
 		);
 
 		// Requests, complaints and contactmomenten are now all `ticket` rows; the
@@ -182,9 +196,12 @@ final class PortalContributionProviderTest extends TestCase {
 		// The three ticket surfaces must narrow to three DISTINCT kinds — if two
 		// ever collapsed onto the same discriminator (or one dropped its filter),
 		// a client would see other kinds' tickets in the wrong list.
+		// Only the org-scoped ticket collections: `myQuestions` is scoped by the
+		// resident's own subject reference, not by the client organisation, and
+		// has its own test below.
 		$ticketTypes = array_column(
 			array_column(
-				array_filter($manifest['collections'], static fn (array $c): bool => $c['schema'] === 'ticket'),
+				array_filter($manifest['collections'], static fn (array $c): bool => $c['schema'] === 'ticket' && ($c['scopeField'] ?? '') === 'client'),
 				'filter'
 			),
 			'ticketType'
@@ -212,8 +229,10 @@ final class PortalContributionProviderTest extends TestCase {
 		$manifest = $this->provider->getContribution(self::CLIENT_SUBJECT);
 		$this->assertIsArray($manifest);
 
-		$actions = $this->indexById($manifest['actions']);
-		$this->assertSame(['createComplaint', 'createRequest'], $this->sortedKeys($actions));
+		// The create actions only; the Woo question endpoint actions have their
+		// own tests below.
+		$actions = $this->indexById(array_filter($manifest['actions'], static fn (array $a): bool => ($a['type'] ?? '') === 'create'));
+		$this->assertSame(['createComplaint', 'createOwnComplaint', 'createOwnRequest', 'createRequest'], $this->sortedKeys($actions));
 
 		// Both intakes write the unified `ticket` schema. The kind is stamped
 		// server-side from `defaults` — never taken from the client — and the
@@ -223,6 +242,11 @@ final class PortalContributionProviderTest extends TestCase {
 			'createRequest' => ['request', ['title', 'description', 'category']],
 			'createComplaint' => ['complaint', ['title', 'description', 'complaintCategory']],
 		];
+		foreach (['createRequest', 'createComplaint'] as $id) {
+			$this->assertSame('client', $actions[$id]['scopeField'], "'{$id}' keeps the organisation's scope");
+			$this->assertSame('clientId', $actions[$id]['scopeClaim'], "'{$id}' keeps the organisation's scope");
+		}
+
 		foreach ($expected as $id => [$ticketType, $fields]) {
 			$this->assertSame('create', $actions[$id]['type']);
 			$this->assertSame('pipelinq', $actions[$id]['register']);
@@ -333,21 +357,36 @@ final class PortalContributionProviderTest extends TestCase {
 	}//end testUnknownAudienceYieldsNull()
 
 	/**
-	 * Scenario: No endpoint actions in Wave 1 — create only.
+	 * Scenario: every action is a create action or a pipelinq endpoint action.
+	 *
+	 * Wave 1 shipped create actions only. The Woo question actions are endpoint
+	 * actions, because the dossier owner check needs server code; each points
+	 * at pipelinq's own verified receiver and never names a register or schema
+	 * portaliq would write to directly.
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/changes/portal-contribution/specs/portal-contribution/spec.md
+	 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-a-resident-asks-a-question-about-a-dossier-they-own-req-qcd-001
 	 */
-	public function testAllActionsAreCreateOnly(): void {
-		foreach ([self::CLIENT_SUBJECT, self::CUSTOMER_SUBJECT] as $subject) {
-			$manifest = $this->provider->getContribution($subject);
+	public function testActionsAreCreateOrOwnEndpointActions(): void {
+		foreach ([self::CLIENT_SUBJECT, self::CUSTOMER_SUBJECT, self::CITIZEN_SUBJECT] as $subject) {
+			$manifest = $this->withOpenCatalogi()->getContribution($subject);
 			$this->assertIsArray($manifest);
 			foreach ($manifest['actions'] as $action) {
-				$this->assertSame('create', $action['type'], 'Wave 1 forbids endpoint actions');
+				if (array_key_exists('endpoint', $action) === false) {
+					$this->assertSame('create', $action['type']);
+					continue;
+				}
+
+				$this->assertStringStartsWith('/index.php/apps/pipelinq/api/portal/questions', $action['endpoint']);
+				$this->assertSame('POST', $action['method']);
+				$this->assertArrayNotHasKey('register', $action, 'an endpoint action never lets portaliq write directly');
+				$this->assertArrayNotHasKey('schema', $action);
+				$this->assertArrayNotHasKey('type', $action);
 			}
 		}
-	}//end testAllActionsAreCreateOnly()
+	}//end testActionsAreCreateOrOwnEndpointActions()
 
 	/**
 	 * Scenario: Client contactmoment ships a client-safe field projection.
@@ -424,7 +463,7 @@ final class PortalContributionProviderTest extends TestCase {
 		$this->assertSame('ticket', $complaints['schema']);
 		$this->assertSame(['ticketType' => 'complaint'], $complaints['filter']);
 		$this->assertSame(
-			['title', 'complaintCategory', 'status', 'description', 'occurredAt'],
+			['title', 'complaintCategory', 'status', 'description', 'occurredAt', 'customerMessage'],
 			$complaints['fields'],
 			'Only the client-safe complaint facts are projected'
 		);
@@ -456,6 +495,34 @@ final class PortalContributionProviderTest extends TestCase {
 			$this->assertNotContains($field, $complaints['fields'], "Projection must never expose '{$field}'");
 		}
 	}//end testClientComplaintsAreFieldProjected()
+
+	/**
+	 * Scenario: the resident reads the handler's message on a request or complaint.
+	 *
+	 * A handler writes `customerMessage` on a ticket for the resident to read,
+	 * but the portal projections did not carry it, so it never left the
+	 * server (pipelinq#2074). The internal `notes` must still stay behind.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-answers-the-customer-on-the-ticket-req-msr-004
+	 */
+	public function testRequestsAndComplaintsCarryTheCustomerMessage(): void {
+		$manifest = $this->provider->getContribution(self::CLIENT_SUBJECT);
+		$this->assertIsArray($manifest);
+		$collections = $this->indexById($manifest['collections']);
+
+		foreach (['clientRequests', 'clientComplaints'] as $id) {
+			$this->assertContains('customerMessage', $collections[$id]['fields'], "{$id} must project the message to the customer");
+			$this->assertNotContains('notes', $collections[$id]['fields'], "{$id} must keep the internal notes back");
+		}
+
+		$this->assertContains(
+			'customerMessage',
+			$collections['clientRequests']['detail']['fields'],
+			'The request detail must show the message to the customer'
+		);
+	}//end testRequestsAndComplaintsCarryTheCustomerMessage()
 
 	/**
 	 * Scenario: Customer booking ships a customer-safe field projection.
@@ -512,8 +579,8 @@ final class PortalContributionProviderTest extends TestCase {
 	public function testManifestMatchesShippedRegisterSchemas(): void {
 		$schemaProperties = $this->loadRegisterSchemaProperties();
 
-		foreach ([self::CLIENT_SUBJECT, self::CUSTOMER_SUBJECT] as $subject) {
-			$manifest = $this->provider->getContribution($subject);
+		foreach ([self::CLIENT_SUBJECT, self::CUSTOMER_SUBJECT, self::CITIZEN_SUBJECT] as $subject) {
+			$manifest = $this->withOpenCatalogi()->getContribution($subject);
 			$this->assertIsArray($manifest);
 
 			foreach ($manifest['collections'] as $collection) {
@@ -544,6 +611,12 @@ final class PortalContributionProviderTest extends TestCase {
 			}
 
 			foreach ($manifest['actions'] as $action) {
+				if (array_key_exists('schema', $action) === false) {
+					// An endpoint action: its fields are the receiver's request
+					// parameters, not schema properties.
+					continue;
+				}
+
 				$schema = $action['schema'];
 				$this->assertArrayHasKey($schema, $schemaProperties);
 				foreach ($action['fields'] as $field) {
@@ -579,7 +652,7 @@ final class PortalContributionProviderTest extends TestCase {
 	public function testTicketSurfacesCarryKindDiscriminator(): void {
 		$kinds = ['request', 'complaint', 'interaction'];
 
-		foreach ([self::CLIENT_SUBJECT, self::CUSTOMER_SUBJECT] as $subject) {
+		foreach ([self::CLIENT_SUBJECT, self::CUSTOMER_SUBJECT, self::CITIZEN_SUBJECT] as $subject) {
 			$manifest = $this->provider->getContribution($subject);
 			$this->assertIsArray($manifest);
 
@@ -607,6 +680,448 @@ final class PortalContributionProviderTest extends TestCase {
 			}
 		}
 	}//end testTicketSurfacesCarryKindDiscriminator()
+
+	/**
+	 * Scenario: a resident's own request or complaint shows in their list.
+	 *
+	 * portaliq stamps a create action's `scopeField` with its `scopeClaim`
+	 * resolved for the subject, and without a declaration it stamps the
+	 * subjectRef into `subjectRef`. The ticket schema has no `subjectRef`, so an
+	 * undeclared create wrote a ticket with no `client`, and the resident's own
+	 * list (scoped on `client` via `clientId`) never showed it. Every create
+	 * action must therefore stamp the same scope its list reads: the scope of
+	 * each collection over the same schema whose narrowing filter the action's
+	 * server-side defaults satisfy.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/portal-contribution/specs/portal-contribution/spec.md
+	 */
+	public function testCreateActionsStampTheScopeTheirListReads(): void {
+		$schemaProperties = $this->loadRegisterSchemaProperties();
+
+		foreach ([self::CLIENT_SUBJECT, self::CUSTOMER_SUBJECT, self::CITIZEN_SUBJECT] as $subject) {
+			$manifest = $this->withOpenCatalogi()->getContribution($subject);
+			$this->assertIsArray($manifest);
+
+			foreach ($manifest['actions'] as $action) {
+				if (($action['type'] ?? '') !== 'create') {
+					continue;
+				}
+
+				$id = $action['id'];
+				$this->assertArrayHasKey('scopeField', $action, "Create action '{$id}' must declare the field its owner is stamped into");
+				$this->assertContains($action['scopeField'],
+					$schemaProperties[$action['schema']],
+					"scopeField '{$action['scopeField']}' of '{$id}' must exist on schema '{$action['schema']}'"
+				);
+
+				$lists = array_filter(
+					$manifest['collections'],
+					static fn (array $collection): bool => $collection['schema'] === $action['schema']
+						&& array_intersect_assoc(($collection['filter'] ?? []), ($action['defaults'] ?? [])) === ($collection['filter'] ?? [])
+				);
+				// At least one of them reads the same scope the action stamps. A
+				// list over the same kind with ANOTHER scope may exist beside it
+				// (the organisation's list beside the resident's own); it simply
+				// never matches a ticket the other action wrote.
+				$readers = array_filter(
+					$lists,
+					static fn (array $list): bool => $list['scopeField'] === $action['scopeField']
+						&& ($list['scopeClaim'] ?? null) === ($action['scopeClaim'] ?? null)
+				);
+				$this->assertNotEmpty($readers, "Create action '{$id}' must have a list scoped on what it stamps ({$action['scopeField']})");
+			}
+		}
+	}//end testCreateActionsStampTheScopeTheirListReads()
+
+	/**
+	 * Scenario: a resident without an organisation files a request and a
+	 * complaint and reads them back.
+	 *
+	 * A DigiD resident signs in as `client` without a `clientId` claim, or as
+	 * `citizen`. The organisation's forms stamp `client` from that claim and
+	 * refuse the write without it, so both audiences also get the resident's
+	 * own forms and lists, scoped on `portalSubject` like `myQuestions` (the
+	 * subjectRef portaliq stamps, no claim needed). The own request carries
+	 * `channel: web`, so it never shows among the questions (`channel:
+	 * portal`) and a question never shows among the requests.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/portal-contribution/specs/portal-contribution/spec.md
+	 */
+	public function testAResidentWithoutAnOrganisationFilesAndReadsTheirOwn(): void {
+		foreach ([self::CLIENT_SUBJECT, self::CITIZEN_SUBJECT] as $subject) {
+			$manifest = $this->withOpenCatalogi()->getContribution($subject);
+			$this->assertIsArray($manifest);
+			$audience = $subject['audience'];
+			$actions = $this->indexById($manifest['actions']);
+			$collections = $this->indexById($manifest['collections']);
+
+			$expected = [
+				'createOwnRequest' => [['ticketType' => 'request', 'channel' => 'web'], ['title', 'description', 'category'], 'ownRequests'],
+				'createOwnComplaint' => [['ticketType' => 'complaint', 'channel' => 'web'], ['title', 'description', 'complaintCategory'], 'ownComplaints'],
+			];
+			foreach ($expected as $id => [$defaults, $fields, $listId]) {
+				$this->assertArrayHasKey($id, $actions, "{$audience}: '{$id}' must be offered");
+				$action = $actions[$id];
+				$this->assertSame('create', $action['type']);
+				$this->assertSame('ticket', $action['schema']);
+				$this->assertSame('portalSubject', $action['scopeField'], "{$audience}: '{$id}' stamps the resident's own reference");
+				$this->assertArrayNotHasKey('scopeClaim', $action, "{$audience}: '{$id}' must not need a claim the resident lacks");
+				$this->assertSame($defaults, $action['defaults']);
+				$this->assertSame($fields, $action['fields']);
+
+				$this->assertArrayHasKey($listId, $collections, "{$audience}: '{$listId}' must list what '{$id}' files");
+				$list = $collections[$listId];
+				$this->assertSame('portalSubject', $list['scopeField']);
+				$this->assertArrayNotHasKey('scopeClaim', $list);
+				$this->assertNotContains('portalSubject', $list['fields'], 'the scope value itself is not shown');
+			}
+
+			$this->assertSame(['ticketType' => 'request', 'channel' => 'web'], $collections['ownRequests']['filter']);
+			$this->assertNotSame($collections['ownRequests']['filter'], $collections['myQuestions']['filter'], 'own requests and questions must not list together');
+
+			$pages = $this->indexById($manifest['pages']);
+			$this->assertContains(['type' => 'action', 'action' => 'createOwnRequest'], $pages['requests']['blocks']);
+			$this->assertContains(['type' => 'collection', 'collection' => 'ownRequests'], $pages['requests']['blocks']);
+			$this->assertContains(['type' => 'action', 'action' => 'createOwnComplaint'], $pages['complaints']['blocks']);
+			$this->assertContains(['type' => 'collection', 'collection' => 'ownComplaints'], $pages['complaints']['blocks']);
+		}
+
+		// The organisation's path from the client audience stays whole, on its own pages.
+		$client = $this->withOpenCatalogi()->getContribution(self::CLIENT_SUBJECT);
+		$pages = $this->indexById($client['pages']);
+		$this->assertContains(['type' => 'action', 'action' => 'createRequest'], $pages['organisationRequests']['blocks']);
+		$this->assertContains(['type' => 'collection', 'collection' => 'clientRequests'], $pages['organisationRequests']['blocks']);
+		$this->assertContains(['type' => 'action', 'action' => 'createComplaint'], $pages['organisationComplaints']['blocks']);
+		$this->assertContains(['type' => 'collection', 'collection' => 'clientComplaints'], $pages['organisationComplaints']['blocks']);
+	}//end testAResidentWithoutAnOrganisationFilesAndReadsTheirOwn()
+
+	/**
+	 * Scenario: A resident reads their questions and the answers (citizen and client).
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-questions-and-the-answers-req-qcd-003
+	 */
+	public function testResidentsReadTheirOwnQuestions(): void {
+		foreach ([self::CITIZEN_SUBJECT, self::CLIENT_SUBJECT] as $subject) {
+			$manifest = $this->withOpenCatalogi()->getContribution($subject);
+			$this->assertIsArray($manifest);
+			$questions = $this->indexById($manifest['collections'])['myQuestions'];
+
+			$this->assertSame('ticket', $questions['schema']);
+			$this->assertSame('portalSubject', $questions['scopeField']);
+			$this->assertArrayNotHasKey('scopeClaim', $questions, 'default subject scoping, so the change rule can find the resident on the record');
+			$this->assertArrayNotHasKey('via', $questions);
+			$this->assertSame(['ticketType' => 'request', 'channel' => 'portal'], $questions['filter']);
+			$this->assertSame(
+				['title', 'description', 'status', 'occurredAt', 'customerMessage', 'portalReplies', 'subjectReference'],
+				$questions['fields']
+			);
+			foreach (['notes', 'assignee', 'pipeline', 'stage', 'priority', 'portalSubject', 'client', 'contact'] as $internal) {
+				$this->assertNotContains($internal, $questions['fields'], "'{$internal}' stays behind");
+			}
+
+			$pages = $this->indexById($manifest['pages']);
+			$this->assertArrayHasKey('questions', $pages);
+			$this->assertContains(['type' => 'collection', 'collection' => 'myQuestions'], $pages['questions']['blocks']);
+		}
+	}//end testResidentsReadTheirOwnQuestions()
+
+	/**
+	 * Scenario: the resident opens a question and reads it in full.
+	 *
+	 * The Vragen page carries a detail block for the selected question, and
+	 * the collection names the two provider methods that fill it.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/question-detail-on-the-portal/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-question-the-dossier-it-was-about-and-the-answers-req-qdp-001
+	 */
+	public function testTheQuestionsPageShowsTheSelectedQuestion(): void {
+		foreach ([self::CITIZEN_SUBJECT, self::CLIENT_SUBJECT] as $subject) {
+			$manifest = $this->provider->getContribution($subject);
+			$this->assertIsArray($manifest);
+
+			$blocks = $this->indexById($manifest['pages'])['questions']['blocks'];
+			$this->assertSame(['type' => 'detail', 'collection' => 'myQuestions'], end($blocks), 'the detail follows the list it selects from');
+
+			$questions = $this->indexById($manifest['collections'])['myQuestions'];
+			$this->assertSame(['layout' => 'card', 'fields' => ['title', 'status', 'occurredAt']], $questions['detail']);
+			$this->assertSame(['label' => 'Vraag en antwoord', 'provider' => 'questionTimeline'], $questions['timeline']);
+			$this->assertSame(['label' => 'Waar uw vraag over gaat', 'provider' => 'questionDossierItems'], $questions['itemList']);
+			foreach (['questionTimeline', 'questionDossierItems'] as $method) {
+				$this->assertTrue((new ReflectionClass(PortalContributionProvider::class))->getMethod($method)->isPublic(), "{$method} is callable by the portal");
+			}
+		}
+	}//end testTheQuestionsPageShowsTheSelectedQuestion()
+
+	/**
+	 * The two provider methods hand the proven id to the detail service, and
+	 * answer empty when the service cannot be built.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/question-detail-on-the-portal/specs/dossier-questions/spec.md#requirement-a-resident-reads-their-question-the-dossier-it-was-about-and-the-answers-req-qdp-001
+	 */
+	public function testTheDetailMethodsDelegateToTheService(): void {
+		$service = $this->createMock(QuestionDetailService::class);
+		$service->expects($this->once())->method('timeline')->with('t-9')->willReturn([['id' => 'question', 'occurredAt' => '', 'message' => 'x']]);
+		$service->expects($this->once())->method('dossierItems')->with('t-9')->willReturn([['id' => '', 'title' => 'Besluit', 'url' => '', 'note' => '']]);
+
+		// Through the real constructor, as the container builds it.
+		$provider = new PortalContributionProvider($service);
+		$this->assertSame('question', $provider->questionTimeline('t-9')[0]['id']);
+		$this->assertSame('Besluit', $provider->questionDossierItems('t-9')[0]['title']);
+		$this->assertSame([], $this->withDetail(service: null)->questionTimeline('t-9'));
+		$this->assertSame([], $this->withDetail(service: null)->questionDossierItems('t-9'));
+	}//end testTheDetailMethodsDelegateToTheService()
+
+	/**
+	 * The provider with the detail service forced.
+	 *
+	 * @param QuestionDetailService|null $service What the container answers.
+	 *
+	 * @return PortalContributionProvider
+	 */
+	private function withDetail(?QuestionDetailService $service): PortalContributionProvider {
+		return new class($service) extends PortalContributionProvider {
+			/**
+			 * Remember the forced service.
+			 *
+			 * @param QuestionDetailService|null $service The service.
+			 */
+			public function __construct(private readonly ?QuestionDetailService $service) {
+			}//end __construct()
+
+			/**
+			 * The forced service.
+			 *
+			 * @return QuestionDetailService|null
+			 */
+			protected function questionDetail(): ?QuestionDetailService {
+				return $this->service;
+			}//end questionDetail()
+		};
+	}//end withDetail()
+
+	/**
+	 * Scenario: A resident asks about their own dossier, offered to citizen and client.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-a-resident-asks-a-question-about-a-dossier-they-own-req-qcd-001
+	 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-a-resident-replies-to-an-answer-req-qcd-004
+	 * @spec openspec/changes/question-detail-on-the-portal/specs/dossier-questions/spec.md#requirement-the-reply-is-offered-on-the-question-while-it-waits-for-the-resident-req-qdp-003
+	 */
+	public function testCitizenAndClientMayAskAndReply(): void {
+		foreach ([self::CITIZEN_SUBJECT, self::CLIENT_SUBJECT] as $subject) {
+			$manifest = $this->withOpenCatalogi()->getContribution($subject);
+			$this->assertIsArray($manifest);
+			$actions = $this->indexById($manifest['actions']);
+
+			$this->assertSame('/index.php/apps/pipelinq/api/portal/questions', $actions['askAboutDossier']['endpoint']);
+			$this->assertSame(['question', 'title'], $actions['askAboutDossier']['fields']);
+			$this->assertSame(['app' => 'opencatalogi', 'schema' => 'collection'], $actions['askAboutDossier']['attachTo'], 'shown on the dossier page (C7)');
+			$this->assertSame('collectionId', $actions['askAboutDossier']['rowField']);
+			$this->assertSame('/index.php/apps/pipelinq/api/portal/questions/reply', $actions['replyToQuestion']['endpoint']);
+			$this->assertSame(['ticket', 'message'], $actions['replyToQuestion']['fields']);
+			// On the question's own detail, only while it waits for the resident.
+			$this->assertSame(['app' => 'pipelinq', 'schema' => 'ticket', 'collection' => 'myQuestions'], $actions['replyToQuestion']['attachTo']);
+			$this->assertSame('ticket', $actions['replyToQuestion']['rowField']);
+			$this->assertSame(['field' => 'status', 'in' => ['awaiting_customer']], $actions['replyToQuestion']['rowWhen']);
+			$this->assertSame('Reageren op het antwoord', $actions['replyToQuestion']['label']);
+			foreach ($actions as $action) {
+				$this->assertNotContains('subjectRef', ($action['fields'] ?? []), 'the subject comes from the assertion, never the form');
+				$this->assertNotContains('portalSubject', ($action['fields'] ?? []));
+			}
+		}
+
+		$this->assertNull($this->withOpenCatalogi()->getContribution(self::CUSTOMER_SUBJECT)['actions'][0] ?? null, 'customer is not a Woo audience');
+	}//end testCitizenAndClientMayAskAndReply()
+
+	/**
+	 * Scenario: opencatalogi is not installed.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-a-resident-asks-a-question-about-a-dossier-they-own-req-qcd-001
+	 */
+	public function testNoAskActionWithoutOpenCatalogi(): void {
+		// Forced false: in the Nextcloud container opencatalogi IS installed,
+		// so the real class_exists probe answers true there and false on a host.
+		foreach ([self::CITIZEN_SUBJECT, self::CLIENT_SUBJECT] as $subject) {
+			$manifest = $this->withOpenCatalogi(installed: false)->getContribution($subject);
+			$this->assertIsArray($manifest);
+			$actions = $this->indexById($manifest['actions']);
+
+			$this->assertArrayNotHasKey('askAboutDossier', $actions);
+			$this->assertArrayHasKey('replyToQuestion', $actions, 'questions asked earlier can still be answered');
+		}
+	}//end testNoAskActionWithoutOpenCatalogi()
+
+	/**
+	 * The answer notice is pipelinq's own message, so pipelinq declares its key and no change rule.
+	 *
+	 * A change rule on `customerMessage` made portaliq write its generic
+	 * "<question> is bijgewerkt". pipelinq now writes "Uw vraag is
+	 * beantwoord" itself (QuestionAnsweredNotice) and only declares the key,
+	 * so portaliq sends the e-mail for it and writes nothing of its own.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/portal-questions-in-dutch/specs/dossier-questions/spec.md#requirement-the-answer-notice-says-the-question-was-answered
+	 */
+	public function testTheAnswerNoticeIsADeclaredKeyNotAChangeRule(): void {
+		foreach ([self::CITIZEN_SUBJECT, self::CLIENT_SUBJECT] as $subject) {
+			$manifest = $this->provider->getContribution($subject);
+			$this->assertSame(['pipelinq.question.answered'], $manifest['notifications']);
+		}
+
+		$this->assertSame([], $this->provider->getContribution(self::CUSTOMER_SUBJECT)['notifications']);
+	}//end testTheAnswerNoticeIsADeclaredKeyNotAChangeRule()
+
+	/**
+	 * Every page of every audience names its menu group, and every label a resident reads is Dutch.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/portal-questions-in-dutch/specs/dossier-questions/spec.md#requirement-every-portal-page-names-its-menu-group-in-dutch
+	 */
+	public function testEveryPageHasAGroupAndNoLabelIsEnglish(): void {
+		$english = '/\\b(My|Ask|Submit|File|questions?|requests?|complaints?|contracts?|history|account|appointments?)\\b/';
+		foreach ([self::CITIZEN_SUBJECT, self::CLIENT_SUBJECT, self::CUSTOMER_SUBJECT] as $subject) {
+			$manifest = $this->withOpenCatalogi()->getContribution($subject);
+			$this->assertNotSame('Pipelinq', $manifest['label']);
+			$this->assertNotEmpty($manifest['pages'], $subject['audience']);
+
+			foreach ($manifest['pages'] as $page) {
+				$this->assertNotSame('', (string)($page['group'] ?? ''), $page['id']);
+				$this->assertDoesNotMatchRegularExpression($english, $page['label'], $page['id']);
+			}
+
+			foreach ([...$manifest['collections'], ...$manifest['actions']] as $entry) {
+				$this->assertDoesNotMatchRegularExpression($english, (string)($entry['label'] ?? ''), $entry['id']);
+			}
+		}
+	}//end testEveryPageHasAGroupAndNoLabelIsEnglish()
+
+	/**
+	 * The resident's question pages: one group, no duplicate heading, the ask action in Dutch.
+	 *
+	 * A collection named like its page is titled by the page heading alone
+	 * (portaliq ContributionPage showsHeading), so the intro text carries no
+	 * heading of its own.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/portal-questions-in-dutch/specs/dossier-questions/spec.md#requirement-every-portal-page-names-its-menu-group-in-dutch
+	 */
+	public function testTheResidentReadsTheQuestionPagesInDutchUnderOneGroup(): void {
+		$manifest = $this->provider->getContribution(self::CITIZEN_SUBJECT);
+		$pages = $this->indexById($manifest['pages']);
+		$collections = $this->indexById($manifest['collections']);
+
+		$this->assertSame(['requests', 'complaints', 'questions'], array_keys($pages));
+		foreach ($pages as $page) {
+			$this->assertSame('Vragen en contact', $page['group']);
+		}
+
+		$this->assertSame('Mijn vragen', $pages['questions']['label']);
+		$this->assertSame('Mijn vragen', $collections['myQuestions']['label']);
+		$this->assertSame('Mijn verzoeken', $collections['ownRequests']['label']);
+		$this->assertSame('Mijn klachten', $collections['ownComplaints']['label']);
+		foreach ($pages as $page) {
+			foreach ($page['blocks'] as $block) {
+				if ($block['type'] === 'richText') {
+					$this->assertStringNotContainsString('#', $block['markdown'], $page['id']);
+				}
+			}
+		}
+
+		$ask = $this->indexById($this->withOpenCatalogi()->getContribution(self::CITIZEN_SUBJECT)['actions'])['askAboutDossier'];
+		$this->assertSame('Stel een vraag over dit dossier', $ask['label']);
+	}//end testTheResidentReadsTheQuestionPagesInDutchUnderOneGroup()
+
+	/**
+	 * A resident reads a ticket's status in words, never its code.
+	 *
+	 * Every status a ticket can have, on every list that shows one (portaliq
+	 * `columns[].valueLabels`, which the detail card reads as well).
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/portal-questions-in-dutch/specs/dossier-questions/spec.md#requirement-a-status-reads-in-words
+	 */
+	public function testEveryStatusColumnNamesEveryStatusInDutch(): void {
+		$enum = ['new', 'in_progress', 'awaiting_customer', 'resolved', 'completed', 'rejected', 'converted', 'closed'];
+		foreach ([self::CITIZEN_SUBJECT, self::CLIENT_SUBJECT] as $subject) {
+			foreach ($this->provider->getContribution($subject)['collections'] as $collection) {
+				foreach ((array)($collection['columns'] ?? []) as $column) {
+					if (($column['field'] ?? '') !== 'status') {
+						continue;
+					}
+
+					$this->assertSame($enum, array_keys($column['valueLabels']), $collection['id']);
+				}
+			}
+		}
+
+		$questions = $this->indexById($this->provider->getContribution(self::CITIZEN_SUBJECT)['collections'])['myQuestions'];
+		$labels = $questions['columns'][1]['valueLabels'];
+		$this->assertSame('Ontvangen', $labels['new']);
+		$this->assertSame('In behandeling', $labels['in_progress']);
+		$this->assertSame('Wacht op uw reactie', $labels['awaiting_customer']);
+		$this->assertSame('Omgezet in een Woo-verzoek', $labels['converted']);
+	}//end testEveryStatusColumnNamesEveryStatusInDutch()
+
+	/**
+	 * The provider with the opencatalogi probe forced, whatever the environment.
+	 *
+	 * The real probe is `class_exists` on opencatalogi's Application class, which
+	 * answers true inside the Nextcloud container and false on a bare host; a test
+	 * that relied on it passed in one place and failed in the other.
+	 *
+	 * @param bool $installed What the probe answers.
+	 *
+	 * @return PortalContributionProvider
+	 */
+	private function withOpenCatalogi(bool $installed = true): PortalContributionProvider {
+		return new class($installed) extends PortalContributionProvider {
+			/**
+			 * Remember the forced answer.
+			 *
+			 * @param bool $installed What the probe answers.
+			 */
+			public function __construct(private readonly bool $installed) {
+			}//end __construct()
+
+			/**
+			 * The forced answer.
+			 *
+			 * @return bool
+			 */
+			protected function isOpenCatalogiInstalled(): bool {
+				return $this->installed;
+			}//end isOpenCatalogiInstalled()
+		};
+	}//end withOpenCatalogi()
+
+	/**
+	 * The default probe is the class_exists check, answering per environment.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/questions-about-a-citizen-dossier/specs/dossier-questions/spec.md#requirement-a-resident-asks-a-question-about-a-dossier-they-own-req-qcd-001
+	 */
+	public function testTheDefaultProbeFollowsOpenCatalogisClass(): void {
+		$probe = (new ReflectionClass(PortalContributionProvider::class))->getMethod('isOpenCatalogiInstalled');
+
+		$this->assertSame(class_exists('OCA\\OpenCatalogi\\AppInfo\\Application'), $probe->invoke($this->provider));
+	}//end testTheDefaultProbeFollowsOpenCatalogisClass()
 
 	/**
 	 * Collect schema property names from the main register + fragments.

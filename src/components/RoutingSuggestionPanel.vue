@@ -4,66 +4,77 @@
 		class="routing-panel"
 		role="region"
 		:aria-label="t('pipelinq', 'Suggested agents')">
-		<div class="routing-panel__header">
-			<h4>{{ t('pipelinq', 'Suggested agents') }}</h4>
-			<NcButton
-				v-if="!loading"
-				:aria-label="t('pipelinq', 'Refresh')"
-				@click="loadSuggestions">
-				<template #icon>
-					<Refresh :size="16" />
-				</template>
-			</NcButton>
-		</div>
+		<div class="routing-panel__body">
+			<NcLoadingIcon v-if="loading" :size="24" />
 
-		<NcLoadingIcon v-if="loading" :size="24" />
+			<div v-else-if="errorMessage" class="routing-panel__error" role="alert">
+				{{ errorMessage }}
+			</div>
 
-		<div v-else-if="errorMessage" class="routing-panel__error" role="alert">
-			{{ errorMessage }}
-		</div>
+			<div v-else-if="suggestions.length === 0" class="routing-panel__empty">
+				<p>{{ t('pipelinq', 'No agents with matching skills') }}</p>
+			</div>
 
-		<div v-else-if="suggestions.length === 0" class="routing-panel__empty">
-			<p>{{ t('pipelinq', 'No agents with matching skills') }}</p>
-		</div>
-
-		<div v-else class="routing-panel__list">
-			<div
-				v-for="suggestion in suggestions"
-				:key="suggestion.userId"
-				class="agent-suggestion">
-				<div class="agent-suggestion__info">
-					<span class="agent-name">{{
-						suggestion.displayName || suggestion.userId
-					}}</span>
-					<span class="agent-workload" :title="workloadTitle(suggestion)">
-						<span aria-hidden="true">{{
-							workloadIcon(suggestion)
+			<div v-else class="routing-panel__list">
+				<div
+					v-for="suggestion in suggestions"
+					:key="suggestion.userId"
+					class="agent-suggestion">
+					<div class="agent-suggestion__info">
+						<span class="agent-name">{{
+							suggestion.displayName || suggestion.userId
 						}}</span>
-						{{ suggestion.workload }}/{{
-							suggestion.maxConcurrent || 10
-						}}
-						{{ t('pipelinq', 'items') }}
-					</span>
-					<div v-if="suggestion.matchedSkill" class="agent-skills">
-						<span class="skill-tag">{{ suggestion.matchedSkill }}</span>
+						<span
+							class="agent-workload"
+							:title="workloadTitle(suggestion)">
+							<span aria-hidden="true">{{
+								workloadIcon(suggestion)
+							}}</span>
+							{{ suggestion.workload }}/{{
+								suggestion.maxConcurrent || 10
+							}}
+							{{ t('pipelinq', 'items') }}
+						</span>
+						<div v-if="suggestion.matchedSkill" class="agent-skills">
+							<span class="skill-tag">{{
+								suggestion.matchedSkill
+							}}</span>
+						</div>
 					</div>
+					<span
+						v-if="suggestion.userId === assignee"
+						class="agent-assigned">
+						<Check :size="14" />
+						{{ t('pipelinq', 'Assigned') }}
+					</span>
+					<NcButton
+						v-else
+						:disabled="assigning"
+						:aria-label="
+							t('pipelinq', 'Assign to {name}', {
+								name: suggestion.displayName || suggestion.userId,
+							})
+						"
+						@click="assign(suggestion)">
+						{{ t('pipelinq', 'Assign') }}
+					</NcButton>
 				</div>
-				<NcButton
-					:aria-label="
-						t('pipelinq', 'Assign to {name}', {
-							name: suggestion.displayName || suggestion.userId,
-						})
-					"
-					@click="assign(suggestion)">
-					{{ t('pipelinq', 'Assign') }}
-				</NcButton>
+			</div>
+
+			<div v-if="atCapacityCount > 0" class="routing-panel__note">
+				{{ atCapacityCount }}
+				{{ t('pipelinq', 'matching agent(s) at capacity') }}
 			</div>
 		</div>
-
-		<div v-if="atCapacityCount > 0" class="routing-panel__note">
-			{{ atCapacityCount }}
-			{{ t('pipelinq', 'matching agent(s) at capacity') }}
-		</div>
+		<NcButton
+			class="routing-panel__refresh"
+			:disabled="loading"
+			:aria-label="t('pipelinq', 'Refresh')"
+			@click="loadSuggestions">
+			<template #icon>
+				<Refresh :size="16" />
+			</template>
+		</NcButton>
 	</div>
 </template>
 
@@ -71,11 +82,13 @@
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
+import Check from 'vue-material-design-icons/Check.vue'
 import Refresh from 'vue-material-design-icons/Refresh.vue'
 
 export default {
 	name: 'RoutingSuggestionPanel',
 	components: {
+		Check,
 		NcButton,
 		NcLoadingIcon,
 		Refresh,
@@ -95,6 +108,18 @@ export default {
 		entityType: {
 			type: String,
 			default: 'request',
+		},
+
+		/** The user id the record is assigned to; that agent shows as assigned. */
+		assignee: {
+			type: String,
+			default: '',
+		},
+
+		/** Whether an assignment is being saved; the Assign buttons wait for it. */
+		assigning: {
+			type: Boolean,
+			default: false,
 		},
 	},
 
@@ -163,13 +188,8 @@ export default {
 		 * @param {object} suggestion The routing suggestion to act on.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-routing-ui/tasks.md#task-1
 		 */
-		async assign(suggestion) {
-			try {
-				this.$emit('assigned', suggestion.userId)
-			} catch (error) {
-				console.error('Error assigning agent:', error)
-				this.errorMessage = this.t('pipelinq', 'Failed to load suggestions')
-			}
+		assign(suggestion) {
+			this.$emit('assigned', suggestion.userId)
 		},
 
 		/**
@@ -201,23 +221,22 @@ export default {
 
 <style scoped>
 .routing-panel {
+	display: flex;
+	align-items: flex-start;
+	gap: 8px;
 	border: 1px solid var(--color-border);
 	border-radius: var(--border-radius-large);
 	padding: 12px 16px;
 	background: var(--color-background-hover);
 }
 
-.routing-panel__header {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	margin-bottom: 8px;
+.routing-panel__body {
+	flex: 1;
+	min-width: 0;
 }
 
-.routing-panel__header h4 {
-	margin: 0;
-	font-size: 14px;
-	font-weight: 700;
+.routing-panel__refresh {
+	flex: none;
 }
 
 .routing-panel__empty,
@@ -278,6 +297,14 @@ export default {
 	font-size: 10px;
 	background: var(--color-primary-element-light);
 	color: var(--color-primary-element-light-text);
+}
+
+.agent-assigned {
+	display: inline-flex;
+	align-items: center;
+	gap: 2px;
+	flex: none;
+	color: var(--color-success-text);
 }
 
 .routing-panel__note {

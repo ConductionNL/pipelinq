@@ -1,0 +1,1404 @@
+{
+	"_meta": {
+		"spdx-license": "EUPL-1.2",
+		"spdx-copyright": "2026 Conduction B.V.",
+		"description": "The SIMPLE structure profile, and the default one (openspec/changes/simple-structure-profile). `menu-layout.json` is the FULL profile and is untouched: an administrator brings it back with the setting `menu_structure`. Both profiles are built from the same manifest and the same fragments, so nothing is deleted and every page stays routable; this file only decides what the navigation offers first. THE STANDARD KEYS (`removals`, `settingsSection`) go to the library's buildManifest exactly as the full file's do. `relocations` is ABSENT on purpose, and must stay absent rather than become `{}`: the simple menu is flat, and the library's relocation step ends by dropping every entry that has no route, no href, no action and no children, which is what a caption is. THE PROFILE KEYS `menu`, `pages` and `nav` are read by src/utils/structureProfile.js. `nav` is merged over the manifest's own `nav`: the brand block at the top of the navigation (PqDashboard, AppZijbalk) names the app, and the instance's name comes from its theming capabilities through `@theming.name` and its mark through `@theming.emblem|@theming.logo` (the active set's emblem from thematiq, the wordmark when the set ships none), so no municipality is written here; an instance that answers nothing shows the app's name alone. `menu` is merged BEFORE the manifest's own menu; buildManifest merges entries by id and the FIRST definition of a key wins, so an entry here that carries only `id` and `order` keeps its label, icon and route from the manifest, and an entry the manifest does not know (the captions, Contact moments, Appointments, Organisations, Modules and more) is added as written. `pages` holds page overlays. THE PIPELINQ KEYS `modules`, `modulesCaption` and `home` are read by src/utils/menuModules.js.",
+		"removalsNote": "The first six are the full profile's own removals, repeated because buildManifest takes ONE list; the spec fails when the two drift. The rest leave the simple menu and stay one step away: `Contacts`, `Tasks` and `OperationalDashboard` have a card on the Modules page, `SlaAttainment` a card on Reports, and `Bookings` is replaced by `AppointmentsMenu`, which opens the same page from the top level. `PointOfSale` and `SettingsIntegrationsCaption` are empty shells in the manifest (a label and no route). The full profile loses the second to the relocation step's clean-up and fills the first with children; this profile has no relocation step, so both are removed by name. The ids of a module that is switched off are added to this list at boot, by applyMenuModules.",
+		"settingsNote": "The first three are the full profile's. `Services` and `Resources` join them: what can be booked and with whom is set-up, the bookings themselves are daily work.",
+		"viewsNote": "`ContactMomentsMenu` opens the tickets list narrowed to ticketType `interaction`, and `OrganisationsMenu` the clients list narrowed to type `organization`. Both values are enum members of the seeded schema (register.d/99-unify-ticket-supertype.json, pipelinq_register.json), so they are the same on every instance. A filtered list is a view, not a page. Known gap: CnAppNav decides `active` by route name and ignores `query`, so each pair lights up together.",
+		"modulesNote": "A module is a set of menu entries that a municipality does not need and a business does. Every module is OFF in the simple menu until an administrator names it in the setting `menu_modules` (a comma separated list of the keys below). `ids` are the manifest entries that leave the menu while the module is off. `menu` is what joins the profile menu when it is on, under the one caption `modulesCaption` declares. Off or on, every entry has a card on the Modules page (src/manifest.d/98-modules.json), which the footer entry `ModulesMenu` opens. The full profile ignores modules: it shows everything, as before.",
+		"homeNote": "The app opens on `/`, and `/` is the Sales overview. In the simple profile the contact centre dashboard is the start page: `/` redirects to `home.page`, and the page that owned `/` moves to `home.rootMovesTo` so it keeps an address of its own. The full profile has no `home` and keeps `/` as it was."
+	},
+	"removals": [
+		"Rapportage",
+		"RapportageContactmomenten",
+		"ChannelAnalyticsView",
+		"AgentPerformanceView",
+		"Forecast",
+		"Loyalty",
+		"Contacts",
+		"Tasks",
+		"OperationalDashboard",
+		"SlaAttainment",
+		"Bookings",
+		"PointOfSale",
+		"SettingsIntegrationsCaption"
+	],
+	"removalsReplacedBy": {
+		"Rapportage": "Reports",
+		"RapportageContactmomenten": "Reports",
+		"ChannelAnalyticsView": "Reports",
+		"AgentPerformanceView": "Reports",
+		"Forecast": "Reports",
+		"Loyalty": "Reports",
+		"Contacts": "Modules",
+		"Tasks": "Modules",
+		"OperationalDashboard": "Modules",
+		"SlaAttainment": "Reports",
+		"Bookings": "AppointmentsMenu"
+	},
+	"settingsSection": [
+		"Pipelines",
+		"SettingsIntegrationsCaption",
+		"ExportJobs",
+		"Services",
+		"Resources"
+	],
+	"nav": {
+		"brand": {
+			"name": "pipelinq",
+			"caption": "@theming.name",
+			"logo": "@theming.emblem|@theming.logo"
+		},
+		"primaryAction": {
+			"label": "New request",
+			"icon": "Plus",
+			"action": {
+				"id": "nav-new-request",
+				"label": "New request",
+				"icon": "Plus",
+				"type": "open-modal",
+				"target": "RequestCreateDialog"
+			}
+		},
+		"help": {
+			"label": "Help and explanation",
+			"href": "https://pipelinq.conduction.nl"
+		},
+		"footer": [
+			"settings",
+			"help"
+		]
+	},
+	"home": {
+		"page": "KccWerkplek",
+		"rootMovesTo": "/sales-overview"
+	},
+	"menu": [
+		{
+			"id": "KccWerkplek",
+			"label": "Dashboard",
+			"icon": "HomeOutline",
+			"order": 10
+		},
+		{
+			"id": "MyWork",
+			"order": 12,
+			"icon": "InboxOutline",
+			"count": {
+				"register": "pipelinq",
+				"schema": "ticket",
+				"filter": {
+					"assignee": "@me",
+					"status": {
+						"notIn": [
+							"resolved",
+							"completed",
+							"rejected",
+							"converted",
+							"closed"
+						]
+					}
+				}
+			}
+		},
+		{
+			"id": "Queue",
+			"order": 14,
+			"icon": "FormatListBulleted",
+			"count": {
+				"register": "pipelinq",
+				"schema": "ticket",
+				"filter": {
+					"assignee": "IS NULL",
+					"status": {
+						"notIn": [
+							"resolved",
+							"completed",
+							"rejected",
+							"converted",
+							"closed"
+						]
+					}
+				}
+			}
+		},
+		{
+			"id": "ContactCaption",
+			"type": "caption",
+			"label": "Contact centre",
+			"order": 20
+		},
+		{
+			"id": "Tickets",
+			"label": "Questions and reports",
+			"icon": "MessageOutline",
+			"order": 22
+		},
+		{
+			"id": "ContactMomentsMenu",
+			"label": "Contact moments",
+			"icon": "PhoneOutline",
+			"route": "Tickets",
+			"query": {
+				"ticketType": "interaction"
+			},
+			"order": 24
+		},
+		{
+			"id": "AppointmentsMenu",
+			"label": "Appointments",
+			"icon": "CalendarBlankOutline",
+			"route": "Bookings",
+			"order": 26
+		},
+		{
+			"id": "RelationsCaption",
+			"type": "caption",
+			"label": "Relations",
+			"order": 40
+		},
+		{
+			"id": "Clients",
+			"label": "Residents and businesses",
+			"icon": "AccountMultipleOutline",
+			"order": 42
+		},
+		{
+			"id": "OrganisationsMenu",
+			"label": "Organisations",
+			"icon": "OfficeBuildingOutline",
+			"route": "Clients",
+			"query": {
+				"type": "organization"
+			},
+			"order": 44
+		},
+		{
+			"id": "ModulesMenu",
+			"label": "Modules and more",
+			"icon": "ViewGridOutline",
+			"route": "Modules",
+			"section": "footer",
+			"order": 170
+		}
+	],
+	"modulesCaption": {
+		"id": "ModulesCaption",
+		"type": "caption",
+		"label": "Modules",
+		"order": 100
+	},
+	"modules": {
+		"sales": {
+			"label": "Sales",
+			"ids": [
+				"Dashboard",
+				"Leads",
+				"Prospects",
+				"Pipeline"
+			],
+			"menu": [
+				{
+					"id": "Dashboard",
+					"label": "Sales overview",
+					"order": 110
+				},
+				{
+					"id": "Leads",
+					"order": 111
+				},
+				{
+					"id": "Prospects",
+					"order": 112
+				},
+				{
+					"id": "Pipeline",
+					"order": 113
+				}
+			]
+		},
+		"marketing": {
+			"label": "Marketing",
+			"ids": [
+				"Segments",
+				"Templates",
+				"Articles",
+				"MailingLists",
+				"Blasts",
+				"Campaigns",
+				"BlastPerformance",
+				"Journeys",
+				"SocialAccounts",
+				"SocialPosts",
+				"SocialPerformance",
+				"KeywordIntelligence",
+				"CompetitorWatches",
+				"ConnectionAudit",
+				"SearchQueries"
+			],
+			"menu": [
+				{
+					"id": "MarketingGroup",
+					"order": 120
+				}
+			]
+		},
+		"pos": {
+			"label": "Point of Sale",
+			"ids": [
+				"PosTransactions",
+				"PosRefunds",
+				"CashShifts",
+				"KassakoppelingAuditList"
+			],
+			"menu": [
+				{
+					"id": "PosTransactions",
+					"order": 130
+				},
+				{
+					"id": "PosRefunds",
+					"order": 131
+				},
+				{
+					"id": "CashShifts",
+					"order": 132
+				},
+				{
+					"id": "KassakoppelingAuditList",
+					"order": 133
+				}
+			]
+		},
+		"products": {
+			"label": "Products",
+			"ids": [
+				"Products"
+			],
+			"menu": [
+				{
+					"id": "Products",
+					"order": 140
+				}
+			]
+		},
+		"contracts": {
+			"label": "Contracts",
+			"ids": [
+				"Contracts"
+			],
+			"menu": [
+				{
+					"id": "Contracts",
+					"order": 150
+				}
+			]
+		},
+		"loyalty": {
+			"label": "Loyalty",
+			"ids": [
+				"Loyalty"
+			],
+			"menu": [
+				{
+					"id": "Loyalty",
+					"order": 160
+				}
+			]
+		}
+	},
+	"pages": [
+		{
+			"id": "Reports",
+			"configAppend": {
+				"cards": [
+					{
+						"id": "SlaAttainment",
+						"label": "SLA attainment",
+						"description": "How many tickets were answered within their deadline.",
+						"icon": "ChartLine",
+						"category": "people",
+						"route": "SlaAttainment"
+					}
+				]
+			}
+		},
+		{
+			"id": "TicketDetail",
+			"_note": "The ticket page in the simple structure (openspec/changes/simple-ticket-page). The full structure has no overlay, so its page is today's page. STAGE: `status`, the ticket's own lifecycle field. EVERY STATUS CHANGE HERE IS A TRANSITION OF THE SCHEMA'S x-openregister-lifecycle, posted to OpenRegister's transition endpoint, which checks the `from` state and the authorization again. `visibleWhen` only hides a button on a status its transition cannot leave; it decides nothing. The spec fails when an action names a transition the schema lacks or shows on a status outside the transition's `from`. THE DESIGN NAMES THREE THINGS PIPELINQ DOES NOT HAVE and they are not invented: a reminder to a customer who does not answer (the waiting stage offers Answer again), a step from answered to closed (resolved, completed, rejected, converted and closed are all final, so a finished ticket has no primary button), and a convert-to-case header action (conversion needs an availability answer first, so it stays the self-hiding section it is). A CONTACT MOMENT HAS NO CUSTOMER TO ANSWER: Answer hides on it, the stage then has no primary button, and Close the ticket is in the More menu. THE ANSWER IS WRITTEN IN ONE PLACE: `customer-reply` leaves the body and opens as a dialog from the Answer button, and the body shows the conversation to read. THE GRID IS ONE TABS WIDGET, full width: beside the side column the grid is narrow, and three cards side by side would stack. LOG CONTACT SEEDS THE TICKET AND NOT THE CUSTOMER: the library leaves a token it cannot resolve in place, so `@object.contact` on a ticket without a contact would be saved as those fifteen characters, a foreign key to nothing. `@objectId` always resolves. The contact moment hangs on the ticket, and the ticket names the customer. THE WHAT-NOW CARD (DqZaak, Acties: one next-step button inside a card that lists what the step still needs): `nextStep` names a checklist per stage on fields the ticket has (assignee, client, slaDeadline, portalReplies), and the stage's primary button sits in the card. A finished ticket has no stage entry, so it shows no card. Nothing in the checklist is a guess: an item is done when its field holds a value.",
+			"config": {
+				"stageField": "status",
+				"headerActions": [
+					{
+						"id": "assign-to-me",
+						"type": "api-call",
+						"group": "Status",
+						"label": "Assign to me",
+						"icon": "AccountArrowLeftOutline",
+						"url": "/apps/pipelinq/api/tickets/@objectId/assign-to-me",
+						"method": "POST",
+						"successMessage": "Assigned to you. It is on your My Work now.",
+						"errorMessage": "Could not assign this ticket to you."
+					},
+					{
+						"id": "ticket-start",
+						"type": "api-call",
+						"label": "Take on",
+						"icon": "AccountCheckOutline",
+						"url": "/apps/openregister/api/objects/@objectId/transition",
+						"method": "POST",
+						"payload": {
+							"action": "start"
+						},
+						"successMessage": "The ticket is in progress.",
+						"visibleWhen": {
+							"field": "status",
+							"op": "eq",
+							"value": "new"
+						}
+					},
+					{
+						"id": "ticket-answer",
+						"type": "open-modal",
+						"target": "TicketAnswerDialog",
+						"label": "Answer the customer",
+						"icon": "ForumOutline",
+						"visibleWhen": {
+							"field": "ticketType",
+							"op": "neq",
+							"value": "interaction"
+						}
+					},
+					{
+						"id": "ticket-log-contact",
+						"type": "open-form",
+						"label": "Log contact",
+						"formTitle": "Log contact",
+						"icon": "Phone",
+						"register": "pipelinq",
+						"schema": "ticket",
+						"props": {
+							"ticketType": "interaction",
+							"parentTicket": "@objectId"
+						}
+					},
+					{
+						"id": "ticket-resume",
+						"type": "api-call",
+						"label": "Back to in progress",
+						"icon": "AccountCheckOutline",
+						"url": "/apps/openregister/api/objects/@objectId/transition",
+						"method": "POST",
+						"payload": {
+							"action": "resume"
+						},
+						"successMessage": "The ticket is in progress.",
+						"visibleWhen": {
+							"field": "status",
+							"op": "eq",
+							"value": "awaiting_customer"
+						},
+						"group": "Status"
+					},
+					{
+						"id": "ticket-complete",
+						"type": "api-call",
+						"label": "Complete",
+						"icon": "CheckCircle",
+						"url": "/apps/openregister/api/objects/@objectId/transition",
+						"method": "POST",
+						"payload": {
+							"action": "complete"
+						},
+						"successMessage": "The ticket is completed.",
+						"visibleWhen": {
+							"all": [
+								{
+									"field": "status",
+									"op": "eq",
+									"value": "in_progress"
+								},
+								{
+									"field": "ticketType",
+									"op": "eq",
+									"value": "request"
+								}
+							]
+						},
+						"group": "Finish"
+					},
+					{
+						"id": "ticket-resolve",
+						"type": "api-call",
+						"label": "Resolve",
+						"icon": "CheckCircle",
+						"url": "/apps/openregister/api/objects/@objectId/transition",
+						"method": "POST",
+						"payload": {
+							"action": "resolve"
+						},
+						"successMessage": "The complaint is resolved.",
+						"visibleWhen": {
+							"all": [
+								{
+									"field": "status",
+									"op": "eq",
+									"value": "in_progress"
+								},
+								{
+									"field": "ticketType",
+									"op": "eq",
+									"value": "complaint"
+								}
+							]
+						},
+						"group": "Finish"
+					},
+					{
+						"id": "ticket-close",
+						"type": "api-call",
+						"label": "Close the ticket",
+						"icon": "Check",
+						"url": "/apps/openregister/api/objects/@objectId/transition",
+						"method": "POST",
+						"payload": {
+							"action": "close"
+						},
+						"successMessage": "The contact moment is closed.",
+						"visibleWhen": {
+							"all": [
+								{
+									"any": [
+										{
+											"field": "status",
+											"op": "eq",
+											"value": "new"
+										},
+										{
+											"field": "status",
+											"op": "eq",
+											"value": "in_progress"
+										}
+									]
+								},
+								{
+									"field": "ticketType",
+									"op": "eq",
+									"value": "interaction"
+								}
+							]
+						},
+						"group": "Finish"
+					},
+					{
+						"id": "ticket-reject",
+						"type": "api-call",
+						"label": "Reject",
+						"icon": "Check",
+						"url": "/apps/openregister/api/objects/@objectId/transition",
+						"method": "POST",
+						"payload": {
+							"action": "reject"
+						},
+						"successMessage": "The ticket is rejected.",
+						"visibleWhen": {
+							"any": [
+								{
+									"field": "status",
+									"op": "eq",
+									"value": "new"
+								},
+								{
+									"field": "status",
+									"op": "eq",
+									"value": "in_progress"
+								}
+							]
+						},
+						"group": "Finish"
+					}
+				],
+				"primaryActionByStage": {
+					"new": "ticket-start",
+					"in_progress": "ticket-answer",
+					"awaiting_customer": "ticket-answer"
+				},
+				"nextStep": {
+					"title": "What now?",
+					"stages": {
+						"new": {
+							"title": "What now? Step 1: new",
+							"checklist": [
+								{
+									"label": "A handler is assigned",
+									"doneField": "assignee",
+									"hint": "Take on puts you on it"
+								},
+								{
+									"label": "The customer is known",
+									"doneField": "client"
+								}
+							],
+							"after": "Then: step 2, in progress"
+						},
+						"in_progress": {
+							"title": "What now? Step 2: in progress",
+							"checklist": [
+								{
+									"label": "A handler is assigned",
+									"doneField": "assignee"
+								},
+								{
+									"label": "The customer is known",
+									"doneField": "client"
+								},
+								{
+									"label": "The deadline is set",
+									"doneField": "slaDeadline"
+								}
+							],
+							"after": "Then: answer the customer, or finish"
+						},
+						"awaiting_customer": {
+							"title": "What now? Step 3: waiting for the customer",
+							"checklist": [
+								{
+									"label": "The customer has replied",
+									"doneField": "portalReplies",
+									"hint": "Replies from the portal land on the ticket"
+								}
+							],
+							"after": "Then: back to in progress, or finish"
+						}
+					}
+				},
+				"quickActions": [
+					"ticket-answer",
+					"ticket-log-contact"
+				],
+				"actionsMenu": {
+					"label": "More"
+				},
+				"typePill": {
+					"field": "ticketType",
+					"labels": {
+						"request": "Request",
+						"complaint": "Complaint",
+						"interaction": "Contact moment"
+					}
+				},
+				"statusPill": {
+					"field": "status",
+					"labels": {
+						"new": "New",
+						"in_progress": "In progress",
+						"awaiting_customer": "Waiting for customer",
+						"resolved": "Resolved",
+						"completed": "Completed",
+						"rejected": "Rejected",
+						"converted": "Converted to a case",
+						"closed": "Closed"
+					}
+				},
+				"sideColumn": [
+					{
+						"id": "side-customer",
+						"type": "data",
+						"title": "Customer",
+						"content": {
+							"title": "Customer",
+							"columns": 1,
+							"include": [
+								"client",
+								"contact",
+								"channel"
+							],
+							"hideEmpty": true,
+							"editable": false
+						}
+					},
+					{
+						"id": "side-deadline",
+						"type": "data",
+						"title": "Deadline",
+						"content": {
+							"title": "Deadline",
+							"columns": 1,
+							"include": [
+								"slaDeadline",
+								"priority",
+								"assignee"
+							],
+							"hideEmpty": true,
+							"editable": false
+						}
+					},
+					{
+						"id": "side-case",
+						"type": "data",
+						"title": "Linked case",
+						"content": {
+							"title": "Linked case",
+							"columns": 1,
+							"include": [
+								"caseReference",
+								"primaryCaseReference"
+							],
+							"hideEmpty": true,
+							"editable": false
+						}
+					}
+				],
+				"layout": [
+					{
+						"id": "1",
+						"widgetId": "ticket-panels",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 12,
+						"gridHeight": 8
+					}
+				],
+				"breadcrumb": {
+					"label": "Questions and reports",
+					"route": "Tickets"
+				},
+				"showTypeEyebrow": false,
+				"headerCard": true
+			},
+			"configPatch": {
+				"bodyWidgets": {
+					"customer-reply": null
+				}
+			},
+			"configAppend": {
+				"widgets": [
+					{
+						"id": "ticket-contactmoments",
+						"type": "object-list",
+						"title": "Contact moments",
+						"icon": "AccountVoice",
+						"content": {
+							"register": "pipelinq",
+							"schema": "ticket",
+							"filter": {
+								"parentTicket": "@objectId",
+								"ticketType": "interaction"
+							},
+							"sort": {
+								"field": "occurredAt",
+								"dir": "desc"
+							},
+							"columns": [
+								{
+									"key": "title",
+									"label": "Subject"
+								},
+								{
+									"key": "channel",
+									"label": "Channel"
+								},
+								{
+									"key": "occurredAt",
+									"label": "When"
+								},
+								{
+									"key": "status",
+									"label": "Status"
+								}
+							],
+							"limit": 25,
+							"rowRoute": "TicketDetail",
+							"emptyText": "No contact moments on this ticket yet."
+						}
+					},
+					{
+						"id": "ticket-panels",
+						"type": "tabs",
+						"title": "Ticket",
+						"icon": "FileDocument",
+						"content": {
+							"ariaLabel": "Ticket details",
+							"maxVisibleTabs": 5,
+							"moreLabel": "More",
+							"tabs": [
+								{
+									"widgetId": "ticket-data",
+									"label": "Overview"
+								},
+								{
+									"widgetId": "ticket-contactmoments",
+									"label": "Contact moments"
+								},
+								{
+									"widgetId": "ticket-related",
+									"label": "Related"
+								},
+								{
+									"widgetId": "ticket-decisions",
+									"label": "Decisions"
+								}
+							],
+							"variant": "segmented"
+						}
+					}
+				],
+				"bodyWidgets": [
+					{
+						"id": "ticket-conversation",
+						"component": "TicketConversationSection",
+						"title": "Conversation",
+						"placement": "after-data",
+						"props": {
+							"objectId": "@objectId"
+						}
+					},
+					{
+						"id": "request-conversion",
+						"component": "RequestConversionSection",
+						"title": "Case",
+						"placement": "after-data",
+						"props": {
+							"requestId": "@objectId"
+						}
+					}
+				]
+			},
+			"configOrder": {
+				"bodyWidgets": [
+					"dossier-snapshot",
+					"ticket-conversation"
+				]
+			}
+		},
+		{
+			"id": "KccWerkplek",
+			"_note": "The contact centre dashboard in the simple structure (openspec/changes/simple-contact-dashboard). The design's widgets come first and every widget the page had follows, moved down by 15 rows and otherwise untouched: the spec fails when an old widget or an old layout entry differs in anything but `gridY`, or when two cards share a grid cell. EVERY NUMBER IS A FILTER ON REAL FIELDS, and a stat links to the list with the same filter as its query, so the number and the list agree. `Waiting for me` is the same filter as the tickets list view of that name. THE DESIGN SHOWS THINGS A TICKET CANNOT ANSWER and they are left out, not invented: the response time this week (no ticket field holds when the first answer went out), the one named ticket in the attention card (a banner counts, it cannot name a record, so the card says how many are late), the customer's initials and name in the list (a ticket holds its client as a reference without a name) and how long a ticket waits as a duration (the list shows the date it came in, oldest first). `Open` is not one number either: the count endpoint and the list spell a set of statuses differently, so the stats each use one status. THE ATTENTION CARD'S FILTER IS FLAT: `slaDeadline[lt]`, not `slaDeadline: { lt }`. A visibleWhen source is read through the objects list, and the library's query builder writes a nested operator as one JSON value, which OpenRegister answers with a 500 (live check, 5 October 2026). The bar's `occurredAt: { gte }` is nested on purpose: it goes to the aggregation endpoint, whose own flattener reads that shape. DATES IN THE LISTS carry `format: date-time`, or the cell prints the stored ISO text. THE ATTENTION CARD CARRIES `text` AS WELL AS `title`, with the same words: the dashboard gives up the grid cell of any banner whose `text` is empty before it looks at the condition (nextcloud-vue 2.60.0, CnDashboardPage isCollapsedWidget), so a card with only a title and a reason never rendered (live check, 5 October 2026). The attention layout shows the title and does not repeat the text. THE BOARD (PqDashboard, 6 October 2026): the attention card's first action is the primary one; the two lists that are the reader's own work (Waiting for me, Contact today per channel) take two thirds of the row and the two the reader looks up (Callbacks, Latest contact) the right third; the type of a waiting ticket is a pill, drawn by the cell renderer from the column's enum with the same labels the ticket page's type pill uses; and Waiting for me links to the whole list with the filter it counts by. The customer's initials and name and the waiting time as a duration stay out, as above.",
+			"config": {
+				"layout": [
+					{
+						"id": "s1",
+						"widgetId": "simple-greeting",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 9,
+						"gridHeight": 1,
+						"showTitle": false,
+						"sizeToContent": true
+					},
+					{
+						"id": "s0",
+						"widgetId": "simple-availability",
+						"gridX": 9,
+						"gridY": 0,
+						"gridWidth": 3,
+						"gridHeight": 1,
+						"showTitle": false,
+						"borderless": true,
+						"sizeToContent": true
+					},
+					{
+						"id": "s2",
+						"widgetId": "simple-first-today",
+						"gridX": 0,
+						"gridY": 1,
+						"gridWidth": 12,
+						"gridHeight": 2,
+						"showTitle": false,
+						"sizeToContent": true
+					},
+					{
+						"id": "s3",
+						"widgetId": "simple-new",
+						"gridX": 0,
+						"gridY": 3,
+						"gridWidth": 3,
+						"gridHeight": 2,
+						"showTitle": false,
+						"dateChip": false,
+						"sizeToContent": true
+					},
+					{
+						"id": "s4",
+						"widgetId": "simple-waiting-for-me",
+						"gridX": 3,
+						"gridY": 3,
+						"gridWidth": 3,
+						"gridHeight": 2,
+						"showTitle": false,
+						"dateChip": false,
+						"sizeToContent": true
+					},
+					{
+						"id": "s5",
+						"widgetId": "simple-callbacks",
+						"gridX": 6,
+						"gridY": 3,
+						"gridWidth": 3,
+						"gridHeight": 2,
+						"showTitle": false,
+						"dateChip": false,
+						"sizeToContent": true
+					},
+					{
+						"id": "s6",
+						"widgetId": "simple-waiting-for-customer",
+						"gridX": 9,
+						"gridY": 3,
+						"gridWidth": 3,
+						"gridHeight": 2,
+						"showTitle": false,
+						"dateChip": false,
+						"sizeToContent": true
+					},
+					{
+						"id": "s7",
+						"widgetId": "simple-waiting-list",
+						"gridX": 0,
+						"gridY": 5,
+						"gridWidth": 8,
+						"gridHeight": 5,
+						"showTitle": true,
+						"headerLink": {
+							"label": "Whole queue",
+							"route": "Queue"
+						}
+					},
+					{
+						"id": "s8",
+						"widgetId": "simple-per-channel",
+						"gridX": 0,
+						"gridY": 10,
+						"gridWidth": 8,
+						"gridHeight": 4,
+						"showTitle": true,
+						"sizeToContent": true
+					},
+					{
+						"id": "s9",
+						"widgetId": "simple-callback-list",
+						"gridX": 8,
+						"gridY": 5,
+						"gridWidth": 4,
+						"gridHeight": 5,
+						"showTitle": true
+					},
+					{
+						"id": "s10",
+						"widgetId": "simple-latest-contact",
+						"gridX": 8,
+						"gridY": 10,
+						"gridWidth": 4,
+						"gridHeight": 4,
+						"showTitle": true
+					},
+					{
+						"id": "s11",
+						"widgetId": "simple-client-in-focus",
+						"gridX": 0,
+						"gridY": 14,
+						"gridWidth": 12,
+						"gridHeight": 1,
+						"showTitle": false,
+						"borderless": true
+					},
+					{
+						"id": "wr",
+						"widgetId": "requests",
+						"gridX": 0,
+						"gridY": 15,
+						"gridWidth": 8,
+						"gridHeight": 4
+					},
+					{
+						"id": "wi",
+						"widgetId": "interaction",
+						"gridX": 8,
+						"gridY": 15,
+						"gridWidth": 4,
+						"gridHeight": 8
+					},
+					{
+						"id": "wt",
+						"widgetId": "tasks",
+						"gridX": 0,
+						"gridY": 19,
+						"gridWidth": 8,
+						"gridHeight": 4
+					},
+					{
+						"id": "wk",
+						"widgetId": "knowledge",
+						"gridX": 8,
+						"gridY": 23,
+						"gridWidth": 4,
+						"gridHeight": 5
+					},
+					{
+						"id": "wc",
+						"widgetId": "client-cases",
+						"gridX": 0,
+						"gridY": 23,
+						"gridWidth": 4,
+						"gridHeight": 5
+					},
+					{
+						"id": "wm",
+						"widgetId": "client-contacts",
+						"gridX": 4,
+						"gridY": 23,
+						"gridWidth": 4,
+						"gridHeight": 5
+					}
+				],
+				"description": "Your customer contact today, then the workplace",
+				"showHeader": false,
+				"showWidgetActions": false
+			},
+			"configAppend": {
+				"widgets": [
+					{
+						"id": "simple-availability",
+						"type": "custom",
+						"title": "Availability"
+					},
+					{
+						"id": "simple-greeting",
+						"type": "header",
+						"title": "Greeting",
+						"content": {
+							"title": "My customer contact",
+							"showDate": true,
+							"ground": true
+						}
+					},
+					{
+						"id": "simple-first-today",
+						"type": "banner",
+						"title": "First today",
+						"content": {
+							"layout": "attention",
+							"variant": "error",
+							"kicker": "First today",
+							"title": "Tickets past their deadline",
+							"text": "Tickets past their deadline",
+							"reason": "{value} of your tickets in progress are past their deadline or end today.",
+							"visibleWhen": {
+								"source": {
+									"register": "pipelinq",
+									"schema": "ticket",
+									"filter": {
+										"assignee": "@me",
+										"status": "in_progress",
+										"slaDeadline[lt]": "@today+1d"
+									}
+								},
+								"op": "gt",
+								"value": 0
+							},
+							"actions": [
+								{
+									"label": "Open these tickets",
+									"route": {
+										"name": "Tickets",
+										"query": {
+											"assignee": "@me",
+											"status": "in_progress",
+											"slaDeadline[lt]": "@today+1d"
+										}
+									},
+									"primary": true
+								},
+								{
+									"label": "Open the queue",
+									"route": "Queue"
+								}
+							]
+						}
+					},
+					{
+						"id": "simple-new",
+						"type": "stat",
+						"title": "New",
+						"content": {
+							"label": "New",
+							"icon": "TrayFull",
+							"format": {
+								"style": "decimal",
+								"decimals": 0
+							},
+							"source": {
+								"register": "pipelinq",
+								"schema": "ticket",
+								"metric": "count",
+								"filter": {
+									"status": "new"
+								}
+							},
+							"route": {
+								"name": "Tickets",
+								"query": {
+									"status": "new"
+								}
+							},
+							"layout": "stacked"
+						}
+					},
+					{
+						"id": "simple-waiting-for-me",
+						"type": "stat",
+						"title": "Waiting for me",
+						"content": {
+							"label": "Waiting for me",
+							"icon": "ClipboardAccountOutline",
+							"format": {
+								"style": "decimal",
+								"decimals": 0
+							},
+							"source": {
+								"register": "pipelinq",
+								"schema": "ticket",
+								"metric": "count",
+								"filter": {
+									"assignee": "@me",
+									"status": "in_progress"
+								}
+							},
+							"route": {
+								"name": "Tickets",
+								"query": {
+									"assignee": "@me",
+									"status": "in_progress"
+								}
+							},
+							"variant": "warning",
+							"layout": "stacked"
+						}
+					},
+					{
+						"id": "simple-callbacks",
+						"type": "stat",
+						"title": "Callbacks",
+						"content": {
+							"label": "Callbacks",
+							"icon": "Phone",
+							"format": {
+								"style": "decimal",
+								"decimals": 0
+							},
+							"source": {
+								"register": "pipelinq",
+								"schema": "crmTask",
+								"metric": "count",
+								"filter": {
+									"type": "callbackRequest",
+									"status": "open",
+									"assigneeUserId": "@me"
+								}
+							},
+							"route": {
+								"name": "Tasks",
+								"query": {
+									"type": "callbackRequest",
+									"status": "open",
+									"assigneeUserId": "@me"
+								}
+							},
+							"layout": "stacked"
+						}
+					},
+					{
+						"id": "simple-waiting-for-customer",
+						"type": "stat",
+						"title": "Waiting for customer",
+						"content": {
+							"label": "Waiting for customer",
+							"icon": "AccountClock",
+							"format": {
+								"style": "decimal",
+								"decimals": 0
+							},
+							"source": {
+								"register": "pipelinq",
+								"schema": "ticket",
+								"metric": "count",
+								"filter": {
+									"assignee": "@me",
+									"status": "awaiting_customer"
+								}
+							},
+							"route": {
+								"name": "Tickets",
+								"query": {
+									"assignee": "@me",
+									"status": "awaiting_customer"
+								}
+							},
+							"layout": "stacked"
+						}
+					},
+					{
+						"id": "simple-waiting-list",
+						"type": "object-list",
+						"hideRefresh": true,
+						"title": "Waiting for me",
+						"content": {
+							"register": "pipelinq",
+							"schema": "ticket",
+							"filter": {
+								"assignee": "@me",
+								"status": "in_progress"
+							},
+							"sort": {
+								"field": "occurredAt",
+								"dir": "asc"
+							},
+							"limit": 8,
+							"rowRoute": "TicketDetail",
+							"columns": [
+								{
+									"key": "title",
+									"label": "Subject",
+									"secondary": "channel"
+								},
+								{
+									"key": "ticketType",
+									"label": "Type",
+									"enum": [
+										"request",
+										"complaint",
+										"interaction"
+									],
+									"enumLabels": {
+										"request": "Request",
+										"complaint": "Complaint",
+										"interaction": "Contact moment"
+									}
+								},
+								{
+									"key": "occurredAt",
+									"label": "Waiting since",
+									"format": "date-time"
+								}
+							],
+							"emptyText": "Nothing is waiting for you.",
+							"viewAllRoute": "Tickets",
+							"viewAllQuery": {
+								"assignee": "@me",
+								"status": "in_progress"
+							},
+							"hideHeader": true,
+							"allowCreate": false
+						}
+					},
+					{
+						"id": "simple-per-channel",
+						"type": "stacked-bar",
+						"title": "Contact today per channel",
+						"content": {
+							"source": {
+								"register": "pipelinq",
+								"schema": "ticket",
+								"groupBy": "channel",
+								"filter": {
+									"occurredAt": {
+										"gte": "@today"
+									}
+								}
+							},
+							"labels": {
+								"telefoon": "By phone",
+								"email": "Email",
+								"balie": "Counter",
+								"chat": "Chat",
+								"social": "Social media",
+								"brief": "Letter"
+							},
+							"emptyText": "No contact yet today"
+						}
+					},
+					{
+						"id": "simple-callback-list",
+						"type": "object-list",
+						"hideRefresh": true,
+						"title": "Callbacks",
+						"content": {
+							"register": "pipelinq",
+							"schema": "crmTask",
+							"filter": {
+								"type": "callbackRequest",
+								"status": "open",
+								"assigneeUserId": "@me"
+							},
+							"sort": {
+								"field": "deadline",
+								"dir": "asc"
+							},
+							"limit": 6,
+							"rowRoute": "TaskDetail",
+							"columns": [
+								{
+									"key": "subject",
+									"label": "Subject",
+									"secondary": "callbackPhoneNumber"
+								},
+								{
+									"key": "deadline",
+									"label": "Deadline",
+									"format": "date-time"
+								}
+							],
+							"emptyText": "You have no callbacks to make.",
+							"hideHeader": true,
+							"allowCreate": false
+						}
+					},
+					{
+						"id": "simple-latest-contact",
+						"type": "object-list",
+						"hideRefresh": true,
+						"title": "Latest contact",
+						"content": {
+							"register": "pipelinq",
+							"schema": "ticket",
+							"filter": {
+								"ticketType": "interaction"
+							},
+							"sort": {
+								"field": "occurredAt",
+								"dir": "desc"
+							},
+							"limit": 6,
+							"rowRoute": "TicketDetail",
+							"columns": [
+								{
+									"key": "title",
+									"label": "Subject",
+									"secondary": "channel"
+								},
+								{
+									"key": "occurredAt",
+									"label": "When",
+									"format": "date-time"
+								}
+							],
+							"emptyText": "No contact moments yet.",
+							"hideHeader": true,
+							"allowCreate": false
+						}
+					},
+					{
+						"id": "simple-client-in-focus",
+						"type": "custom",
+						"title": "Client in focus"
+					}
+				]
+			},
+			"slots": {
+				"widget-simple-availability": "WerkplekHeaderActions",
+				"widget-simple-client-in-focus": "WerkplekClientSelect"
+			}
+		},
+		{
+			"id": "Tickets",
+			"_note": "The tickets list in the simple structure (openspec/changes/simple-contact-dashboard). No view is dropped: the four the page had keep their filter and gain a count, three join them, five show and the rest sit behind the overflow chip. `Waiting for me`, `New` and `Waiting for customer` use the same filters as the dashboard stats that link here. THE AVATAR IS THE HANDLER'S: `assignee` holds a Nextcloud user id. The design draws the customer's initials, and a ticket holds its client as a reference without a name. THE COLOUR IS ON THE DEADLINE: late or due today is red (`lte 0`), due within two days is amber. How long a ticket has waited cannot be coloured, a date rule counts days until a date and a wait lies in the past.",
+			"config": {
+				"quickFilterMaxVisible": 5,
+				"columns": [
+					"title",
+					{
+						"key": "ticketType",
+						"label": "Type"
+					},
+					{
+						"key": "status",
+						"label": "Status",
+						"widget": "statusBadge"
+					},
+					{
+						"key": "assignee",
+						"label": "Handler",
+						"widget": "avatar",
+						"widgetProps": {
+							"user": true
+						}
+					},
+					"channel",
+					{
+						"key": "slaDeadline",
+						"label": "Deadline",
+						"widget": "date",
+						"widgetProps": {
+							"variantWhen": [
+								{
+									"op": "lte",
+									"value": 0,
+									"variant": "error"
+								},
+								{
+									"op": "lte",
+									"value": 2,
+									"variant": "warning"
+								}
+							]
+						}
+					},
+					"occurredAt"
+				]
+			},
+			"configPatch": {
+				"quickFilters": {
+					"All": {
+						"showCount": true
+					},
+					"Tickets": {
+						"showCount": true
+					},
+					"Complaints": {
+						"showCount": true
+					},
+					"Contactmomenten": {
+						"showCount": true
+					}
+				}
+			},
+			"configAppend": {
+				"quickFilters": [
+					{
+						"label": "Waiting for me",
+						"filter": {
+							"assignee": "@me",
+							"status": "in_progress"
+						},
+						"showCount": true
+					},
+					{
+						"label": "New",
+						"filter": {
+							"status": "new"
+						},
+						"showCount": true
+					},
+					{
+						"label": "Waiting for customer",
+						"filter": {
+							"assignee": "@me",
+							"status": "awaiting_customer"
+						},
+						"showCount": true
+					}
+				]
+			},
+			"configOrder": {
+				"quickFilters": [
+					"All",
+					"Waiting for me",
+					"New",
+					"Tickets",
+					"Complaints"
+				]
+			}
+		}
+	]
+}

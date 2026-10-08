@@ -124,7 +124,13 @@ class CorrespondenceLanguageService {
 		$tags = [];
 		foreach ($languages as $language) {
 			$tag = trim((string)$language);
-			if ($tag !== '' && in_array($tag, $tags, true) === false) {
+			// Nextcloud lists every l10n/*.json, and pipelinq keeps a
+			// `.schema-l10n-baseline.json` there that is not a language.
+			if (preg_match('/^[a-z]{2,3}(?:[_-][A-Za-z0-9]{2,8})*$/', $tag) !== 1) {
+				continue;
+			}
+
+			if (in_array($tag, $tags, true) === false) {
 				$tags[] = $tag;
 			}
 		}

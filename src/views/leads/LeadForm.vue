@@ -5,8 +5,8 @@
 			<NcTextField
 				:modelValue="form.title"
 				:label="t('pipelinq', 'Title')"
-				:error="!!errors.title"
-				:helperText="errors.title"
+				:error="!!shownErrors.title"
+				:helperText="shownErrors.title"
 				@update:modelValue="(v) => (form.title = v)" />
 		</div>
 
@@ -18,30 +18,38 @@
 				@update:modelValue="(v) => (form.description = v)" />
 		</div>
 
-		<!-- Value + Probability row -->
+		<!-- Category: what the lead is about. Routing suggests colleagues whose
+		     skills cover it (pipelinq#2049). -->
+		<div class="form-group" data-testid="lead-form-category">
+			<NcTextField
+				:modelValue="form.category"
+				:label="t('pipelinq', 'Category')"
+				@update:modelValue="(v) => (form.category = v)" />
+		</div>
+
+		<!-- Value + currency row. The win chance is the qualification score
+		     (pipeline-numbers-tell-the-truth), so there is no probability input. -->
 		<div class="form-row">
 			<div class="form-group">
 				<NcTextField
 					:modelValue="form.value === null ? '' : String(form.value)"
-					:label="t('pipelinq', 'Value (EUR)')"
+					:label="t('pipelinq', 'Value')"
 					type="number"
-					:error="!!errors.value"
-					:helperText="errors.value"
+					:error="!!shownErrors.value"
+					:helperText="shownErrors.value"
 					@update:modelValue="
 						(v) => (form.value = v === '' ? null : Number(v))
 					" />
 			</div>
-			<div class="form-group">
+			<div class="form-group form-group--currency">
 				<NcTextField
-					:modelValue="
-						form.probability === null ? '' : String(form.probability)
-					"
-					:label="t('pipelinq', 'Probability %')"
-					type="number"
-					:error="!!errors.probability"
-					:helperText="errors.probability"
+					:modelValue="form.currency"
+					:label="t('pipelinq', 'Currency')"
+					maxlength="3"
+					:error="!!shownErrors.currency"
+					:helperText="shownErrors.currency"
 					@update:modelValue="
-						(v) => (form.probability = v === '' ? null : Number(v))
+						(v) => (form.currency = normaliseCurrency(v))
 					" />
 			</div>
 		</div>
@@ -54,6 +62,7 @@
 					v-model="form.source"
 					:options="sourceOptions"
 					:aria-label-combobox="t('pipelinq', 'Source')"
+					labelOutside
 					:clearable="true"
 					:placeholder="t('pipelinq', 'Select source')" />
 			</div>
@@ -63,6 +72,7 @@
 					v-model="form.priority"
 					:options="priorityOptions"
 					:aria-label-combobox="t('pipelinq', 'Priority')"
+					labelOutside
 					:clearable="false"
 					:placeholder="t('pipelinq', 'Select priority')" />
 			</div>
@@ -92,8 +102,8 @@
 					:preload="true"
 					:createHandler="createClient"
 					@update:modelValue="onClientChange" />
-				<p v-if="errors.client" class="field-error" role="alert">
-					{{ errors.client }}
+				<p v-if="shownErrors.client" class="field-error" role="alert">
+					{{ shownErrors.client }}
 				</p>
 			</div>
 			<div class="form-group" data-testid="lead-form-contact">
@@ -118,6 +128,8 @@
 
 		<ClientCreateDialog
 			v-if="clientDialogOpen"
+			:name="pendingName"
+			stayOnPage
 			@created="onClientCreated"
 			@close="closeClientDialog" />
 		<ContactCreateDialog
@@ -135,13 +147,14 @@
 					v-model="form.pipeline"
 					:options="pipelineOptions"
 					:aria-label-combobox="t('pipelinq', 'Pipeline')"
+					labelOutside
 					:clearable="true"
 					label="label"
 					:reduce="(o) => o.value"
 					:placeholder="t('pipelinq', 'Select pipeline')"
 					@update:modelValue="onPipelineChange" />
-				<p v-if="errors.pipeline" class="field-error" role="alert">
-					{{ errors.pipeline }}
+				<p v-if="shownErrors.pipeline" class="field-error" role="alert">
+					{{ shownErrors.pipeline }}
 				</p>
 			</div>
 			<div class="form-group" data-testid="lead-form-stage">
@@ -150,6 +163,7 @@
 					v-model="form.stage"
 					:options="stageOptions"
 					:aria-label-combobox="t('pipelinq', 'Stage')"
+					labelOutside
 					:clearable="true"
 					:disabled="!form.pipeline"
 					:placeholder="
@@ -183,8 +197,11 @@ import {
 import ClientCreateDialog from '../../dialogs/ClientCreateDialog.vue'
 import ContactCreateDialog from '../../dialogs/ContactCreateDialog.vue'
 import linkedPartyCascadeMixin from '../../mixins/linkedPartyCascadeMixin.js'
+import touchedErrorsMixin from '../../mixins/touchedErrorsMixin.js'
+import { isCurrencyCode, normaliseCurrency } from '../../services/leadCurrency.js'
 import { toDateInputString, toDateObject } from '../../services/localeUtils.js'
 import { pipelineAppliesTo } from '../../services/pipelineUtils.js'
+import { reportingCurrency } from '../../services/reportingCurrency.js'
 import { useLeadSourcesStore } from '../../store/modules/leadSources.js'
 import { useObjectStore } from '../../store/modules/object.js'
 
@@ -200,7 +217,7 @@ export default {
 		NcTextField,
 	},
 
-	mixins: [linkedPartyCascadeMixin],
+	mixins: [linkedPartyCascadeMixin, touchedErrorsMixin],
 
 	props: {
 		lead: {
@@ -231,8 +248,11 @@ export default {
 			form: {
 				title: '',
 				description: '',
+				category: '',
 				value: null,
-				probability: null,
+				// The deal's currency (pipelinq#2040). New deals start in the
+				// reporting currency; the forecast converts any other one.
+				currency: reportingCurrency(),
 				source: null,
 				priority: 'normal',
 				expectedCloseDate: null,
@@ -339,13 +359,10 @@ export default {
 			if (this.form.value !== null && this.form.value < 0) {
 				errors.value = t('pipelinq', 'Value must be non-negative')
 			}
-			if (
-				this.form.probability !== null
-				&& (this.form.probability < 0 || this.form.probability > 100)
-			) {
-				errors.probability = t(
+			if (this.form.currency && !isCurrencyCode(this.form.currency)) {
+				errors.currency = t(
 					'pipelinq',
-					'Probability must be between 0 and 100',
+					'Use a three-letter currency code, such as EUR or USD',
 				)
 			}
 
@@ -396,7 +413,10 @@ export default {
 				id: this.lead.id,
 				title: this.lead.title || '',
 				description: this.lead.description || '',
+				category: this.lead.category || '',
 				value: this.lead.value ?? null,
+				currency: this.lead.currency || reportingCurrency(),
+				// Not editable any more; carried so a full save keeps the stored value.
 				probability: this.lead.probability ?? null,
 				source: this.lead.source || null,
 				priority: this.lead.priority || 'normal',
@@ -413,11 +433,19 @@ export default {
 	},
 
 	methods: {
+		normaliseCurrency,
+
 		/**
+		 * Put a new lead on the default lead pipeline, or the first one when
+		 * none is marked default, in its first open stage. Every lead sits in
+		 * a stage; the server fills one in too, this shows it in the form.
+		 *
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-41
+		 * @spec openspec/changes/pipeline-numbers-tell-the-truth/specs/lead-management/spec.md
 		 */
 		autoAssignDefaultPipeline() {
-			const defaultPipeline = this.leadPipelines.find((p) => p.isDefault)
+			const defaultPipeline =
+				this.leadPipelines.find((p) => p.isDefault) || this.leadPipelines[0]
 			if (defaultPipeline) {
 				this.form.pipeline = defaultPipeline.id
 				const stages = [...(defaultPipeline.stages || [])].sort(
@@ -449,21 +477,48 @@ export default {
 		},
 
 		/**
+		 * The stage order of the chosen stage, and a fresh entry time when the
+		 * stage changed, so the board and the aging figures stay consistent.
+		 *
+		 * @param {string|undefined} stage The chosen stage name.
+		 * @return {object} The fields to add to the saved lead.
+		 * @spec openspec/changes/pipeline-numbers-tell-the-truth/specs/lead-management/spec.md
+		 */
+		stagePlacement(stage) {
+			if (!stage) return {}
+			const placement = {}
+			const match = (this.selectedPipeline?.stages || []).find(
+				(s) => s.name === stage,
+			)
+			if (match && match.order !== undefined && match.order !== null) {
+				placement.stageOrder = Number(match.order)
+			}
+			if (!this.lead || this.lead.stage !== stage) {
+				placement.stageEnteredAt = new Date().toISOString()
+			}
+			return placement
+		},
+
+		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-leads-ui/tasks.md#task-50
 		 */
 		onSave() {
+			this.markSaveAttempted()
 			if (!this.isValid) return
 
 			const data = { ...this.form }
 			// Clean null values
 			if (data.value === null) delete data.value
+			if (!data.currency) delete data.currency
 			if (data.probability === null) delete data.probability
 			if (!data.source) delete data.source
+			if (!data.category) delete data.category
 			if (!data.expectedCloseDate) delete data.expectedCloseDate
 			if (!data.client) delete data.client
 			if (!data.contact) delete data.contact
 			if (!data.pipeline) delete data.pipeline
 			if (!data.stage) delete data.stage
+			Object.assign(data, this.stagePlacement(data.stage))
 
 			this.$emit('save', data)
 		},
@@ -495,6 +550,10 @@ export default {
 
 .form-row .form-group {
 	flex: 1;
+}
+
+.form-row .form-group--currency {
+	flex: 0 0 96px;
 }
 
 .field-error {

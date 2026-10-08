@@ -24,6 +24,8 @@ namespace OCA\Pipelinq\AppInfo;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Contract\RegisterSlugResolverInterface;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
+use OCA\OpenRegister\Event\ObjectCreatingEvent;
+use OCA\OpenRegister\Event\ObjectDeletedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCA\OpenRegister\Event\SchemaUpdatedEvent;
 use OCA\Pipelinq\Adapter\AzureDataLakeExportAdapter;
@@ -49,16 +51,20 @@ use OCA\Pipelinq\Lifecycle\PosTransactionAccessGuard;
 use OCA\Pipelinq\Lifecycle\PosTransactionConfirmGuard;
 use OCA\Pipelinq\Lifecycle\PosTransactionRefundGuard;
 use OCA\Pipelinq\Listener\BerichtenboxZaakStatusListener;
+use OCA\Pipelinq\Listener\ContactErasedListener;
 use OCA\Pipelinq\Listener\DealCreatedListener;
 use OCA\Pipelinq\Listener\DealUpdatedListener;
 use OCA\Pipelinq\Listener\ExpenseApprovalListener;
 use OCA\Pipelinq\Listener\LandingPageFormSubmittedListener;
+use OCA\Pipelinq\Listener\LeadStageCreatingListener;
 use OCA\Pipelinq\Listener\ObjectEventListener;
+use OCA\Pipelinq\Listener\QuestionAnsweredListener;
 use OCA\Pipelinq\Listener\ObjectsMergedSyncListener;
 use OCA\Pipelinq\Listener\PosTransactionCompletedListener;
 use OCA\Pipelinq\Listener\SchemaChangeListener;
 use OCA\Pipelinq\Listener\SlaObjectCreatedListener;
 use OCA\Pipelinq\Listener\SlaObjectUpdatedListener;
+use OCA\Pipelinq\Listener\SurveyDispatchListener;
 use OCA\Pipelinq\Listener\TimeApprovalListener;
 use OCA\Pipelinq\Mcp\PipelinqScannableServices;
 use OCA\Pipelinq\Service\AppointmentCalendarLeafProvider;
@@ -67,9 +73,12 @@ use OCA\Pipelinq\Service\AppointmentPaymentProvider;
 use OCA\Pipelinq\Service\AvailabilityService;
 use OCA\Pipelinq\Service\BookingService;
 use OCA\Pipelinq\Service\BsnValidationService;
+use OCA\Pipelinq\Service\ForecastService;
 use OCA\Pipelinq\Service\Gdpr\PipelinqApRegulatorEscalateProvider;
 use OCA\Pipelinq\Service\Gdpr\PipelinqBsnIdentityVerifyProvider;
 use OCA\Pipelinq\Service\HaalCentraalClient;
+use OCA\Pipelinq\Service\RoadmapFeatureCatalog;
+use OCA\Pipelinq\Service\VatRates;
 use OCP\App\IAppManager;
 use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
@@ -117,10 +126,9 @@ class Application extends App implements IBootstrap {
 	 * @SuppressWarnings(PHPMD.ExcessiveMethodLength) A flat DI registration
 	 *  manifest — one linear list of service/listener wirings, not branching logic.
 	 *
-	 * @SuppressWarnings(PHPMD.StaticAccess) OC_App is Nextcloud's legacy
-	 *  bootstrap class. There is no OCP interface for registering another app's
-	 *  autoloader, and this runs at the composition root where no container is
-	 *  available to resolve an adapter from. The alternative,
+	 * @SuppressWarnings(PHPMD.StaticAccess) OpenRegisterAutoloader::register()
+	 *  is static because it runs at the composition root, before any container
+	 *  exists to resolve an instance from. The alternative,
 	 *  IAppManager::loadApp(), would mark OpenRegister loaded and boot it before
 	 *  its own register() had run — the load-order hazard the prelude exists to
 	 *  avoid.
@@ -163,21 +171,16 @@ class Application extends App implements IBootstrap {
 		);
 
 		// LOAD-ORDER HAZARD: OC_App::getEnabledApps() sort()s the app list and
-		// Coordinator::registerApps() calls registerAutoloading() then register()
-		// one app at a time, so an app's register() runs before the PSR-4 prefix
-		// of every alphabetically-LATER app exists. This app happens to sort AFTER
-		// `openregister`, so the AppHost class_exists() probes below answer TRUE
-		// today — by alphabet alone. Registering OpenRegister's prefix ourselves
-		// makes that independent of the app id: registerAutoloading() touches only
-		// the autoloader and is idempotent ($alreadyRegistered key guard).
-		// Deliberately NOT IAppManager::loadApp(), which would mark OpenRegister
-		// loaded and boot it before its own register() had run.
-		try {
-			$openRegisterPath = \OCP\Server::get(\OCP\App\IAppManager::class)->getAppPath('openregister');
-			\OC_App::registerAutoloading('openregister', $openRegisterPath);
-		} catch (\Throwable) {
-			// OpenRegister absent/disabled — fall through to the degraded path.
-		}
+		// Coordinator::registerApps() registers each app's autoloader then calls
+		// register() one app at a time, so an app's register() runs before the
+		// PSR-4 prefix of every alphabetically-LATER app exists. This app happens
+		// to sort AFTER `openregister`, so the AppHost class_exists() probes below
+		// answer TRUE today — by alphabet alone. Registering OpenRegister's prefix
+		// ourselves makes that independent of the app id. See
+		// OpenRegisterAutoloader: public API only (Nextcloud 35 removed the private
+		// OC_App::registerAutoloading() this used to call), idempotent, and it
+		// never throws — a false return means the degraded path below applies.
+		OpenRegisterAutoloader::register();
 
 		// AppHost (ADR-040): offload the mechanical observability + deep-link
 		// ceremony to OpenRegister's shared engine. Scoped to the parity-safe,
@@ -185,12 +188,11 @@ class Application extends App implements IBootstrap {
 		// Preferences / repair plumbing stays bespoke.
 		$this->registerAppHost(context: $context);
 
-		// Notifier registration. Previously declared via a <notification>
-		// element in info.xml, which Nextcloud core never reads (and which
-		// app-info.xsd rejects) — the IBootstrap registration below is the
-		// canonical path, fixed with the align-claims-and-first-hour
-		// conformance sweep.
+		// Notifier registration. A <notification> element in info.xml is never read by core
+		// (and app-info.xsd rejects it); the IBootstrap registration below is the canonical path.
 		$context->registerNotifierService(\OCA\Pipelinq\Notification\Notifier::class);
+		$context->registerSetupCheck(\OCA\Pipelinq\SetupCheck\PortalServiceAccountCheck::class);
+		$context->registerSetupCheck(\OCA\Pipelinq\SetupCheck\MessagingServiceAccountCheck::class);
 
 		$context->registerEventListener(
 			event: ObjectCreatedEvent::class,
@@ -200,9 +202,20 @@ class Application extends App implements IBootstrap {
 			event: ObjectUpdatedEvent::class,
 			listener: ObjectEventListener::class
 		);
+		// A saved answer on a resident's portal question tells them, with
+		// pipelinq's own message (portal-questions-in-dutch).
+		$context->registerEventListener(
+			event: ObjectUpdatedEvent::class,
+			listener: QuestionAnsweredListener::class
+		);
 		$context->registerEventListener(
 			event: ObjectCreatedEvent::class,
 			listener: DealCreatedListener::class
+		);
+		// Every new lead sits in a pipeline stage (pipeline-numbers-tell-the-truth).
+		$context->registerEventListener(
+			event: ObjectCreatingEvent::class,
+			listener: LeadStageCreatingListener::class
 		);
 		$context->registerEventListener(
 			event: ObjectUpdatedEvent::class,
@@ -218,9 +231,8 @@ class Application extends App implements IBootstrap {
 		);
 
 		// Shillinq WIP integration: time-entry approval dispatches a CloudEvent
-		// to the configured shillinq webhook (pipelinq-time-to-shillinq-wip /
-		// REQ-WIP-001). The listener is idempotent and a no-op when the
-		// shillinq_wip_webhook_url app-config value is unset.
+		// to Shillinq (pipelinq-time-to-shillinq-wip / REQ-WIP-001). The listener
+		// is idempotent and a no-op when the Shillinq app is not installed.
 		$context->registerEventListener(
 			event: TimeEntryApprovedEvent::class,
 			listener: TimeApprovalListener::class
@@ -265,6 +277,19 @@ class Application extends App implements IBootstrap {
 			listener: SlaObjectUpdatedListener::class
 		);
 
+		// Satisfaction surveys (customer-satisfaction-closed-loop): a ticket
+		// that reaches a status an enabled survey rule names gets its
+		// invitations written, in the deferred job (pipelinq#2072). Created as
+		// well as updated, because a ticket can be logged already closed.
+		$context->registerEventListener(
+			event: ObjectCreatedEvent::class,
+			listener: SurveyDispatchListener::class
+		);
+		$context->registerEventListener(
+			event: ObjectUpdatedEvent::class,
+			listener: SurveyDispatchListener::class
+		);
+
 		// MDM: OpenRegister now materialises the golden record on save via its
 		// SurvivorshipRecomputeListener (x-openregister-survivorship), so the
 		// app-side recompute-on-source-change listener is retired. Instead we
@@ -274,6 +299,11 @@ class Application extends App implements IBootstrap {
 			event: \OCA\OpenRegister\Event\ObjectsMergedEvent::class,
 			listener: ObjectsMergedSyncListener::class
 		);
+		// Contact erasure keeps the opt-out in integriq (opt-out-before-send REQ-CII-005).
+		// An API delete is a soft delete, which OpenRegister reports as an update
+		// (erase-on-soft-delete REQ-CII-008); the purge is the deleted event.
+		$context->registerEventListener(event: ObjectDeletedEvent::class, listener: ContactErasedListener::class);
+		$context->registerEventListener(event: ObjectUpdatedEvent::class, listener: ContactErasedListener::class);
 
 		// Marketing: portaliq relays a landing-page form submission by
 		// dispatching PIPELINQ'S OWN event class, which it resolves by the
@@ -554,122 +584,6 @@ class Application extends App implements IBootstrap {
 	}//end registerPosLifecycleGuards()
 
 	/**
-	 * Build the Features & Roadmap list from openspec/specs at runtime so the
-	 * surface stays current with the specs without depending on a committed
-	 * docs/features.json (which can drift). Cached per app version — the specs
-	 * only change when the app updates — with the committed docs/features.json
-	 * as a fallback for deploys that ship without openspec/.
-	 *
-	 * @return array<int, array{slug:string, title:string, summary:string, docsUrl:string}>
-	 */
-	private function loadRoadmapFeatures(): array {
-		$container = $this->getContainer();
-		$version = (string)$container->get(IAppManager::class)->getAppVersion('pipelinq');
-		$cache = $container->get(ICacheFactory::class)->createLocal('pipelinq_features');
-		$cacheKey = 'v' . $version;
-
-		$cached = $cache->get($cacheKey);
-		if (is_array($cached) === true) {
-			return $cached;
-		}
-
-		$features = $this->extractFeaturesFromSpecs(specsDir: __DIR__ . '/../../openspec/specs');
-		if ($features === []) {
-			$path = __DIR__ . '/../../docs/features.json';
-			if (is_file($path) === true) {
-				$decoded = json_decode((string)file_get_contents($path), associative: true);
-				if (is_array($decoded) === true) {
-					$features = $decoded;
-				}
-			}
-		}
-
-		$cache->set($cacheKey, $features, 86400);
-		return $features;
-	}//end loadRoadmapFeatures()
-
-	/**
-	 * Parse `status: done` capability specs into feature entries. Mirrors the
-	 * org-wide extract-features.py and the docusaurus extractFeatures.js: the
-	 * status is read straight off the frontmatter line (resilient to YAML
-	 * typos in sibling fields), the title is the H1 minus a trailing
-	 * "Specification", and the summary is the first paragraph under `## Purpose`.
-	 *
-	 * @param string $specsDir Absolute path to openspec/specs.
-	 *
-	 * @return array<int, array{slug:string, title:string, summary:string, docsUrl:string}>
-	 */
-	private function extractFeaturesFromSpecs(string $specsDir): array {
-		if (is_dir($specsDir) === false) {
-			return [];
-		}
-
-		$paths = glob($specsDir . '/*/spec.md');
-		if ($paths === false) {
-			return [];
-		}
-
-		$entries = [];
-		foreach ($paths as $specPath) {
-			$text = (string)file_get_contents($specPath);
-			if (preg_match('/^---\s*\n(.*?\n)---\s*\n(.*)$/s', $text, $matches) !== 1) {
-				continue;
-			}
-
-			$front = $matches[1];
-			$body = $matches[2];
-			if (preg_match('/^status:\s*(.+?)\s*$/m', $front, $statusMatch) !== 1) {
-				continue;
-			}
-
-			if (strtolower(trim($statusMatch[1], " \t\"'")) !== 'done') {
-				continue;
-			}
-
-			$slug = basename(dirname($specPath));
-			$title = $slug;
-			if (preg_match('/^#\s+(.+?)\s*$/m', $body, $titleMatch) === 1) {
-				$title = trim((string)preg_replace('/\s+specification\s*$/i', '', trim($titleMatch[1])));
-			}
-
-			$entries[] = [
-				'slug' => $slug,
-				'title' => $title,
-				'summary' => $this->extractSummary(body: $body),
-				'docsUrl' => 'openspec/specs/' . $slug . '/spec.md',
-			];
-		}//end foreach
-
-		// Sort by slug (not full path) to match extract-features.py and
-		// extractFeatures.js, which order by the capability slug.
-		usort($entries, static fn (array $a, array $b): int => strcmp($a['slug'], $b['slug']));
-		return $entries;
-	}//end extractFeaturesFromSpecs()
-
-	/**
-	 * Extract the first paragraph under `## Purpose` as the feature summary.
-	 *
-	 * @param string $body Spec markdown body (frontmatter stripped).
-	 *
-	 * @return string Collapsed single-line summary, or empty when absent.
-	 */
-	private function extractSummary(string $body): string {
-		if (preg_match('/^##\s+Purpose\s*$/m', $body, $purposeMatch, PREG_OFFSET_CAPTURE) !== 1) {
-			return '';
-		}
-
-		$rest = substr($body, ($purposeMatch[0][1] + strlen($purposeMatch[0][0])));
-		$nextPos = strlen($rest);
-		if (preg_match('/\n##\s/', $rest, $nextMatch, PREG_OFFSET_CAPTURE) === 1) {
-			$nextPos = $nextMatch[0][1];
-		}
-
-		$section = trim(substr($rest, 0, $nextPos));
-		$para = (preg_split('/\n\s*\n/', $section)[0] ?? '');
-		return trim((string)preg_replace('/\s+/', ' ', $para));
-	}//end extractSummary()
-
-	/**
 	 * Boot the application and register comment display name resolvers.
 	 *
 	 * @param IBootContext $context The boot context
@@ -683,7 +597,7 @@ class Application extends App implements IBootstrap {
 
 		// Hand the Features & Roadmap surface its feature list, derived from
 		// openspec/specs at runtime so it always reflects the current specs
-		// (cached per app version; see loadRoadmapFeatures). Pull IInitialState
+		// (cached per app version; see RoadmapFeatureCatalog::load). Pull IInitialState
 		// from the per-app container so the serialized key is correctly
 		// namespaced as `initial-state-pipelinq-<key>`.
 		// Initial state exists for PAGE loads. An API request — an object
@@ -700,22 +614,25 @@ class Application extends App implements IBootstrap {
 			$initialState = $this->getContainer()->get(IInitialState::class);
 			$initialState->provideInitialState(
 				'features_roadmap_features',
-				$this->loadRoadmapFeatures()
+				$this->getContainer()->get(RoadmapFeatureCatalog::class)->load()
 			);
 
 			$dependencies = $this->readManifestDependencies();
 			$dependencyStatus = $this->resolveDependencyStatuses(context: $context, dependencies: $dependencies);
 			$initialState->provideInitialState('dependency_statuses', $dependencyStatus);
 
-			// Reporting currency (persisted by the setup wizard, default EUR)
-			// seeds the SPA's `config` initial state so manifest dashboards can
-			// format currency KPIs via the `@config.currency` token. Serialized
-			// as `initial-state-pipelinq-config` and read in main.js via
-			// loadState('pipelinq', 'config').
+			// Reporting currency and open-pipeline target (0 = none) seed the
+			// SPA's `config` state: `@config.currency`, `@config.pipelineTarget`.
 			$appConfig = $this->getContainer()->get(IAppConfig::class);
+			// `vat_rates` labels the product form's VAT class options with
+			// the configured rate (pipelinq-forms-review).
 			$initialState->provideInitialState(
 				'config',
-				['currency' => $appConfig->getValueString(self::APP_ID, 'currency', 'EUR')]
+				[
+					'currency' => $appConfig->getValueString(self::APP_ID, 'currency', 'EUR'),
+					'vat_rates' => (new VatRates(appConfig: $appConfig))->rates(),
+					'pipelineTarget' => $appConfig->getValueInt(self::APP_ID, ForecastService::PIPELINE_TARGET_KEY, 0),
+				]
 			);
 		} catch (\Exception $e) {
 			// Initial state unavailable — Features tab will fall back to [].
@@ -949,12 +866,9 @@ class Application extends App implements IBootstrap {
 	 * @param array<int, string> $dependencies Dependency app IDs.
 	 *
 	 * @return array<string, array{installed: bool, enabled: bool, category: string}>
-	 *
-	 * @SuppressWarnings(PHPMD.StaticAccess) \OC_App::getAppInfo() is the only
-	 *  API exposing an on-disk app's category; no OCP equivalent exists.
 	 */
 	private function resolveDependencyStatuses(IBootContext $context, array $dependencies): array {
-		// Cached per app version, exactly as loadRoadmapFeatures() is. Without
+		// Cached per app version, exactly as RoadmapFeatureCatalog::load() is. Without
 		// this, buildAppStoreLookup() below iterates the whole Nextcloud
 		// appstore catalogue (3.4 MB of apps.json on the 2026-07-30 dev
 		// instance) every time this runs. It is free there only because
@@ -980,7 +894,10 @@ class Application extends App implements IBootstrap {
 			try {
 				$appManager->getAppPath($depId);
 				$onDisk = true;
-				$appInfo = \OC_App::getAppInfo($depId);
+				// Public IAppManager::getAppInfo(): the private \OC_App::getAppInfo()
+				// used here before no longer exists, so the category always fell
+				// through to the app-store lookup below.
+				$appInfo = $appManager->getAppInfo($depId);
 				if (is_array($appInfo) === true && empty($appInfo['category']) === false) {
 					$category = (string)((array)$appInfo['category'])[0];
 				}

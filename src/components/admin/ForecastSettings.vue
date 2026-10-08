@@ -34,6 +34,27 @@
 						min="0" />
 				</div>
 				<div class="forecast-field">
+					<label for="forecast-pipeline-target">{{
+						t('pipelinq', 'Open pipeline target (in reporting currency)')
+					}}</label>
+					<input
+						id="forecast-pipeline-target"
+						v-model.number="form.pipeline_target"
+						type="number"
+						min="0"
+						aria-describedby="forecast-pipeline-target-hint" />
+					<p
+						id="forecast-pipeline-target-hint"
+						class="forecast-field__hint">
+						{{
+							t(
+								'pipelinq',
+								'The dashboard compares your open pipeline with this amount. Leave 0 for no target.',
+							)
+						}}
+					</p>
+				</div>
+				<div class="forecast-field">
 					<label for="forecast-currency">{{
 						t('pipelinq', 'Reporting currency')
 					}}</label>
@@ -151,6 +172,52 @@
 				</div>
 			</div>
 
+			<fieldset class="forecast-rates" data-testid="forecast-exchange-rates">
+				<legend>{{ t('pipelinq', 'Exchange rates') }}</legend>
+				<p class="forecast-rates__hint">
+					{{
+						t(
+							'pipelinq',
+							'How much one unit of each currency is worth in the reporting currency. A deal in a currency without a rate counts at its face value.',
+						)
+					}}
+				</p>
+				<div
+					v-for="(row, index) in rateRows"
+					:key="index"
+					class="forecast-rates__row">
+					<div class="forecast-field">
+						<label :for="`forecast-rate-currency-${index}`">{{
+							t('pipelinq', 'Currency')
+						}}</label>
+						<input
+							:id="`forecast-rate-currency-${index}`"
+							v-model="row.currency"
+							type="text"
+							maxlength="3" />
+					</div>
+					<div class="forecast-field">
+						<label :for="`forecast-rate-value-${index}`">{{
+							t('pipelinq', 'Rate')
+						}}</label>
+						<input
+							:id="`forecast-rate-value-${index}`"
+							v-model="row.rate"
+							type="number"
+							min="0"
+							step="any" />
+					</div>
+					<NcButton
+						:aria-label="t('pipelinq', 'Remove this rate')"
+						@click="rateRows.splice(index, 1)">
+						{{ t('pipelinq', 'Remove') }}
+					</NcButton>
+				</div>
+				<NcButton @click="rateRows.push({ currency: '', rate: '' })">
+					{{ t('pipelinq', 'Add a rate') }}
+				</NcButton>
+			</fieldset>
+
 			<NcNoteCard v-if="message" :type="messageType">
 				{{ message }}
 			</NcNoteCard>
@@ -176,6 +243,7 @@ import {
 	NcNoteCard,
 	NcSettingsSection,
 } from '@nextcloud/vue'
+import { ratesFromRows, rowsFromRates } from '../../services/leadCurrency.js'
 
 export default {
 	name: 'ForecastSettings',
@@ -192,8 +260,12 @@ export default {
 			saving: false,
 			message: '',
 			messageType: 'success',
+			// The rate table as editable rows (pipelinq#2040); it used to be
+			// settable only with occ.
+			rateRows: [],
 			form: {
 				commit_threshold: 50000,
+				pipeline_target: 0,
 				generation_timezone: 'UTC',
 				generation_day: 1,
 				generation_hour: 6,
@@ -202,6 +274,7 @@ export default {
 				at_risk_percent: 90,
 				at_risk_days: 30,
 				reporting_currency: 'EUR',
+				exchange_rates: {},
 				manager_group: '',
 				team_groups: '',
 			},
@@ -227,6 +300,7 @@ export default {
 					generateUrl('/apps/pipelinq/api/settings/forecast'),
 				)
 				this.form = { ...this.form, ...response.data }
+				this.rateRows = rowsFromRates(this.form.exchange_rates)
 			} catch {
 				this.message = t(
 					'pipelinq',
@@ -245,12 +319,24 @@ export default {
 		 *   in either pipeline-insights or admin-settings
 		 */
 		async save() {
+			const { rates, error } = ratesFromRows(this.rateRows)
+			if (error) {
+				this.message =
+					error === 'code'
+						? t(
+								'pipelinq',
+								'Use a three-letter currency code for every rate.',
+							)
+						: t('pipelinq', 'Every rate must be a number above zero.')
+				this.messageType = 'error'
+				return
+			}
 			this.saving = true
 			this.message = ''
 			try {
 				await axios.put(
 					generateUrl('/apps/pipelinq/api/settings/forecast'),
-					this.form,
+					{ ...this.form, exchange_rates: rates },
 				)
 				this.message = t('pipelinq', 'Forecast configuration saved.')
 				this.messageType = 'success'
@@ -298,6 +384,32 @@ export default {
 	padding: 6px 8px;
 	border: 1px solid var(--color-border);
 	border-radius: var(--border-radius);
+}
+
+.forecast-field__hint {
+	margin: 0;
+	color: var(--color-text-maxcontrast);
+	font-size: 12px;
+}
+
+.forecast-rates {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	padding: 8px 12px;
+	border: 1px solid var(--color-border);
+	border-radius: var(--border-radius);
+}
+
+.forecast-rates__hint {
+	color: var(--color-text-maxcontrast);
+}
+
+.forecast-rates__row {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 16px;
+	align-items: flex-end;
 }
 
 .forecast-actions {

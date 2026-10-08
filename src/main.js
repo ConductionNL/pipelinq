@@ -23,6 +23,7 @@ import { registerLeafIntegrations } from '@conduction/nextcloud-vue/integrations
 // `undefined` across the chunk boundary (components, used directly, are fine).
 import { installIntegrationRegistry } from '@conduction/nextcloud-vue/integrations/registry.js'
 import axios from '@nextcloud/axios'
+import { getCapabilities } from '@nextcloud/capabilities'
 import { loadState } from '@nextcloud/initial-state'
 import {
 	loadTranslations,
@@ -37,9 +38,26 @@ import App from './App.vue'
 import appIcons from './icons.js'
 import bundledManifest from './manifest.json'
 import menuLayout from './menu-layout.json'
+import simpleMenuLayout from './menu-layout.simple.json'
 import pinia from './pinia.js'
 import registry from './registry.js'
 import { initializeStores, registerObjectTypes } from './store/store.js'
+import {
+	applyHomePage,
+	applyMenuModules,
+	holdUnreachableTours,
+	MODULES_SETTING,
+	resolveMenuModules,
+} from './utils/menuModules.js'
+import { seedPageAppConfig } from './utils/pageAppConfig.js'
+import {
+	buildProfiledManifest,
+	navTheming,
+	resolveStructureProfile,
+	STRUCTURE_FULL,
+	STRUCTURE_SETTING,
+} from './utils/structureProfile.js'
+import { seedVatClassLabels } from './utils/vatClassLabels.js'
 
 // Library CSS — must be explicit import (webpack tree-shakes side-effect imports from aliased packages)
 import '@conduction/nextcloud-vue/css/index.css'
@@ -119,32 +137,6 @@ function tryLoadTranslations() {
 // making the component definition itself reactive inside the route record.
 const RoutePageRenderer = markRaw({ ...CnPageRenderer })
 
-/**
- * Seed the page-level app config onto every `type: "dashboard"` page's
- * `config.appConfig`. CnPageRenderer forwards each `config.*` key to the
- * dispatched page component's props, so this lands on CnDashboardPage's
- * `appConfig` prop — the source the library's `@config.<key>` token resolver
- * reads (via the `cnAppConfig` inject it provides to descendant stat widgets).
- * Backed by the `config` initial state the app's Application::boot() provides
- * (currently the reporting `currency` captured by the setup wizard, default
- * EUR). With this seed a manifest widget's `format: { style: "currency",
- * currency: "@config.currency" }` formats with the configured currency instead
- * of the literal EUR fallback. An explicit per-page `config.appConfig` (none
- * today) still wins.
- *
- * @param {object} manifest The merged manifest (with `pages[]`).
- * @return {object} The same manifest, with dashboard pages' appConfig seeded.
- */
-function seedDashboardAppConfig(manifest) {
-	const appConfig = loadState('pipelinq', 'config', {})
-	for (const page of manifest.pages || []) {
-		if (page.type === 'dashboard') {
-			page.config = { appConfig, ...(page.config || {}) }
-		}
-	}
-	return manifest
-}
-
 // `require.context` is a WEBPACK build-time API, not CommonJS `require`: the
 // bundler rewrites this call at compile time and no `require` exists at
 // runtime. eslint's browser globals therefore report `no-undef` correctly —
@@ -156,8 +148,45 @@ const fragments = fragmentCtx
 	.keys()
 	.sort()
 	.map((key) => fragmentCtx(key))
-const mergedManifest = seedDashboardAppConfig(
-	buildManifest(bundledManifest, fragments, menuLayout),
+
+// The structure profile (openspec/changes/simple-structure-profile). The page
+// controller provides `menu_structure` and `menu_modules` as initial state, so
+// the choice is known before anything is built and the first render is right.
+// `full` is the layout file as it always was. Anything else is the simple
+// profile, with the modules an administrator switched on.
+const structureProfile = resolveStructureProfile(
+	loadState('pipelinq', STRUCTURE_SETTING, ''),
+)
+const profileFile =
+	structureProfile === STRUCTURE_FULL
+		? menuLayout
+		: applyMenuModules(
+				simpleMenuLayout,
+				resolveMenuModules(
+					loadState('pipelinq', MODULES_SETTING, ''),
+					simpleMenuLayout,
+				),
+			)
+const { manifest: profiledManifest, homePage } = applyHomePage(
+	buildProfiledManifest(buildManifest, bundledManifest, fragments, profileFile, {
+		theming: navTheming(getCapabilities()),
+	}),
+	profileFile.home,
+)
+// The getting-started tour sends the reader to menu entries the simple menu
+// does not have, so it is held back there. The full structure keeps it.
+// Dashboard and detail pages read `@config.<key>` tokens (the reporting
+// currency, the pipeline target) from the `config` initial state; the VAT
+// class labels follow the rates set on the admin page.
+const mergedManifest = seedVatClassLabels(
+	seedPageAppConfig(
+		structureProfile === STRUCTURE_FULL
+			? profiledManifest
+			: holdUnreachableTours(profiledManifest),
+		loadState('pipelinq', 'config', {}),
+	),
+	loadState('pipelinq', 'config', {}).vat_rates,
+	(text) => t('pipelinq', text),
 )
 
 /**
@@ -169,6 +198,8 @@ const mergedManifest = seedDashboardAppConfig(
  *
  * @param {object} manifest The bundled manifest (with `pages[]`).
  * @return {Array<object>} vue-router 3 routes config.
+ *
+ * @spec openspec/changes/simple-structure-profile/specs/navigation-ia/spec.md#REQ-NIA-105
  */
 function routesFromManifest(manifest) {
 	const routes = manifest.pages.map((page) => ({
@@ -185,6 +216,12 @@ function routesFromManifest(manifest) {
 	// its original relative order.
 	const paramCount = (path) => (path.match(/:/g) || []).length
 	routes.sort((a, b) => paramCount(a.path) - paramCount(b.path))
+	// The simple profile opens on its own start page: `applyHomePage` moved the
+	// page that owned `/` to an address of its own, so `/` is free to redirect.
+	// Skipped when a persisted override took the start page away.
+	if (homePage && manifest.pages.some((page) => page.id === homePage)) {
+		routes.push({ path: '/', redirect: { name: homePage } })
+	}
 	// Catch-all redirect to dashboard, preserving prior router behaviour.
 	//
 	// vue-router 4 REMOVED the bare `path: '*'` wildcard. It does not error —
@@ -236,10 +273,14 @@ async function loadPersistedOverrides(manifest) {
 			return merged
 		}
 	} catch (error) {
-		console.warn(
-			'[pipelinq] Could not load persisted manifest overrides — using the bundled manifest.',
-			error,
-		)
+		// A 404 is the ordinary "buildiq is not installed" answer, not a fault —
+		// warning on it puts an AxiosError in every console on every boot.
+		if (error?.response?.status !== 404) {
+			console.warn(
+				'[pipelinq] Could not load persisted manifest overrides — using the bundled manifest.',
+				error,
+			)
+		}
 	}
 	return manifest
 }

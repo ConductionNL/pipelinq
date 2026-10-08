@@ -25,6 +25,7 @@ use OCA\Pipelinq\Service\ArticleService;
 use OCA\Pipelinq\Service\BlastService;
 use OCA\Pipelinq\Service\ComplianceService;
 use OCA\Pipelinq\Service\Marketing\MailTransportService;
+use OCA\Pipelinq\Service\Marketing\PhysicalAddressRenderer;
 use OCA\Pipelinq\Service\SchemaMapService;
 use OCA\Pipelinq\Service\Marketing\SegmentSignalService;
 use OCA\Pipelinq\Service\SegmentService;
@@ -288,6 +289,7 @@ class BlastWorkflowTest extends TestCase {
 			$segmentService,
 			$this->logger,
 			$signals,
+			new \OCA\Pipelinq\Service\IntegriqMarketingConsent(\OCA\Pipelinq\Tests\Unit\Support\FakeIntegriq::client($this->appConfig), new \OCA\Pipelinq\Service\ContactAddressLookup($this->container, $this->appConfig, new \Psr\Log\NullLogger())),
 		);
 		$mailTransportService = new MailTransportService(
 			$this->container,
@@ -296,6 +298,7 @@ class BlastWorkflowTest extends TestCase {
 			$this->createMock(ArticleService::class),
 			FakeSlugResolver::connectorRegister(),
 			$this->logger,
+			new PhysicalAddressRenderer(),
 		);
 		$blastService = new BlastService($this->container,
 			$this->appConfig,
@@ -377,6 +380,7 @@ class BlastWorkflowTest extends TestCase {
 				'subject' => 'Hi {{firstName}}',
 				'bodyHtml' => '<p>{{unsubscribe_link}} {{physical_address}}</p>',
 				'bodyText' => 'Unsubscribe: {{unsubscribe_link}}',
+				'footerOverride' => "Pipelinq B.V.\nTurfmarkt 147\nDen Haag",
 				'senderName' => 'Pipelinq',
 				'senderEmail' => 'pipelinq@example.test',
 			],

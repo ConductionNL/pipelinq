@@ -53,10 +53,12 @@ class ForecastSettingsController extends Controller {
 	 *
 	 * @param IRequest $request The request.
 	 * @param IAppConfig $appConfig The app configuration.
+	 * @param ExchangeRateService $exchangeRate The reporting currency and rate table.
 	 */
 	public function __construct(
 		IRequest $request,
 		private IAppConfig $appConfig,
+		private ExchangeRateService $exchangeRate,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 	}//end __construct()
@@ -67,6 +69,7 @@ class ForecastSettingsController extends Controller {
 	 * @return JSONResponse The configuration values.
 	 *
 	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-003-05
+	 * @spec openspec/changes/pipeline-numbers-tell-the-truth/specs/commercial-dashboard/spec.md
 	 */
 	#[AuthorizedAdminSetting(Application::APP_ID)]
 	public function index(): JSONResponse {
@@ -77,12 +80,11 @@ class ForecastSettingsController extends Controller {
 		$thresholdValue = ForecastDealService::COMMIT_THRESHOLD_DEFAULT;
 		$atRiskPctKey = QuotaService::AT_RISK_PERCENT_KEY;
 		$atRiskPctValue = QuotaService::AT_RISK_PERCENT_DEFAULT;
-		$currencyKey = ExchangeRateService::REPORTING_CURRENCY_KEY;
-		$currencyValue = ExchangeRateService::REPORTING_CURRENCY_DEFAULT;
 
 		return new JSONResponse(
 			[
 				'commit_threshold' => $this->appConfig->getValueInt($app, $thresholdKey, $thresholdValue),
+				'pipeline_target' => $this->appConfig->getValueInt($app, ForecastService::PIPELINE_TARGET_KEY, 0),
 				'generation_timezone' => $this->appConfig->getValueString($app, 'forecast_generation_timezone', 'UTC'),
 				'generation_day' => $this->appConfig->getValueInt($app, 'forecast_generation_day', 1),
 				'generation_hour' => $this->appConfig->getValueInt($app, 'forecast_generation_hour', 6),
@@ -90,7 +92,8 @@ class ForecastSettingsController extends Controller {
 				'accuracy_amber' => $this->appConfig->getValueString($app, ForecastService::ACCURACY_AMBER_KEY, $amberDefault),
 				'at_risk_percent' => $this->appConfig->getValueInt($app, $atRiskPctKey, $atRiskPctValue),
 				'at_risk_days' => $this->appConfig->getValueInt($app, QuotaService::AT_RISK_DAYS_KEY, QuotaService::AT_RISK_DAYS_DEFAULT),
-				'reporting_currency' => $this->appConfig->getValueString($app, $currencyKey, $currencyValue),
+				'reporting_currency' => $this->exchangeRate->getReportingCurrency(),
+				'exchange_rates' => (object)$this->exchangeRate->getRates(),
 				'manager_group' => $this->appConfig->getValueString($app, ForecastAccessPolicy::MANAGER_GROUP_KEY, ''),
 				'team_groups' => $this->appConfig->getValueString($app, SnapshotGenerationService::TEAMS_KEY, ''),
 			]
@@ -105,6 +108,7 @@ class ForecastSettingsController extends Controller {
 	 * @return JSONResponse The save result.
 	 *
 	 * @spec openspec/changes/forecast-roll-up-and-categories/specs.md#REQ-FRC-003-05
+	 * @spec openspec/changes/pipeline-numbers-tell-the-truth/specs/commercial-dashboard/spec.md
 	 *
 	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Linear sequence of independent per-key
 	 *   `isset` guards — each validates one optional field before persistence; not nested logic.
@@ -122,6 +126,15 @@ class ForecastSettingsController extends Controller {
 			}
 
 			$this->appConfig->setValueInt(Application::APP_ID, ForecastDealService::COMMIT_THRESHOLD_KEY, $threshold);
+		}
+
+		if (isset($params['pipeline_target']) === true) {
+			$target = (int)$params['pipeline_target'];
+			if ($target < 0) {
+				return new JSONResponse(['error' => 'pipeline_target must be non-negative.'], 400);
+			}
+
+			$this->appConfig->setValueInt(Application::APP_ID, ForecastService::PIPELINE_TARGET_KEY, $target);
 		}
 
 		if (isset($params['generation_timezone']) === true) {
@@ -163,8 +176,24 @@ class ForecastSettingsController extends Controller {
 		}
 
 		if (isset($params['reporting_currency']) === true) {
-			$currency = strtoupper((string)$params['reporting_currency']);
+			// One reporting currency for the whole app: the setup wizard's
+			// setting, which dashboards format with (pipelinq#2040).
+			$currency = strtoupper(trim((string)$params['reporting_currency']));
+			if (preg_match('/^[A-Z]{3}$/', $currency) !== 1) {
+				return new JSONResponse(['error' => 'reporting_currency must be a three-letter currency code.'], 400);
+			}
+
 			$this->appConfig->setValueString(Application::APP_ID, ExchangeRateService::REPORTING_CURRENCY_KEY, $currency);
+		}
+
+		if (isset($params['exchange_rates']) === true) {
+			try {
+				$rates = $this->exchangeRate->normaliseRates(input: (array)$params['exchange_rates']);
+			} catch (\InvalidArgumentException $e) {
+				return new JSONResponse(['error' => $e->getMessage()], 400);
+			}
+
+			$this->appConfig->setValueString(Application::APP_ID, ExchangeRateService::RATES_KEY, (string)json_encode($rates));
 		}
 
 		if (isset($params['manager_group']) === true) {

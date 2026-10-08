@@ -84,7 +84,7 @@ class WhatsAppSendFlowTest extends TestCase {
 			 *
 			 * @return array<string, mixed>
 			 */
-			public function saveObject(array $object, $register = null, $schema = null, ?string $uuid = null): array {
+			public function saveObject(array $object, $register = null, $schema = null, ?string $uuid = null, bool $_rbac = true, bool $_multitenancy = true): array {
 				if ($uuid === null || $uuid === '') {
 					$uuid = (string)($object['uuid'] ?? '');
 				}
@@ -122,7 +122,7 @@ class WhatsAppSendFlowTest extends TestCase {
 			 *
 			 * @return array<int, array<string, mixed>>
 			 */
-			public function findAll(array $config = []): array {
+			public function findAll(array $config = [], bool $_rbac = true, bool $_multitenancy = true): array {
 				$filters = $config['filters'] ?? [];
 				unset($filters['register'], $filters['schema']);
 
@@ -162,7 +162,7 @@ class WhatsAppSendFlowTest extends TestCase {
 			}
 		);
 
-		$this->consentService = new ConsentService($this->container, $this->appConfig, $this->logger);
+		$this->consentService = new ConsentService($this->container, $this->appConfig, $this->logger, \OCA\Pipelinq\Tests\Unit\Support\FakeIntegriq::client($this->appConfig), new \OCA\Pipelinq\Service\ContactAddressLookup($this->container, $this->appConfig, $this->logger));
 		$this->budgetService = new BudgetService($this->container, $this->appConfig, $this->notificationService, $this->logger);
 
 		$this->adapter = new WhatsAppAdapter($this->container,
@@ -173,6 +173,7 @@ class WhatsAppSendFlowTest extends TestCase {
 			$this->budgetService,
 			$this->notificationService,
 			$this->logger,
+			new \OCA\Pipelinq\Service\PhoneNormaliser($this->appConfig, $this->logger),
 		);
 	}//end setUp()
 

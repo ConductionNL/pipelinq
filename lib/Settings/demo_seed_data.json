@@ -1,10 +1,10 @@
 {
-    "_comment": "Demo dataset for `occ pipelinq:demo:seed` (DemoSeedService). Every object is marked with the '[Demo]' prefix on its lookup field (client.name / contact.name / pipeline.title / product.name / lead.title / ticket.title / task.subject) so the seed is idempotent (exact-match lookup) and removable (--remove deletes exactly this set). Date placeholders: '@days:N' -> Y-m-d today+N, '@datetime:N' -> ISO-8601 today+N. openspec/changes/align-claims-and-first-hour REQ-SETUP-PIP-008.",
+    "_comment": "Demo dataset for `occ pipelinq:demo:seed` (DemoSeedService). Every object is marked with the '[Demo]' prefix on its lookup field (client.name / contact.name / pipeline.title / product.name / lead.title / ticket.title / task.subject / journey.name / socialAccount.displayName / socialPost.title; search rows carry the demo property and source instead, and a keyword target a '[Demo]' note) so the seed is idempotent (exact-match lookup) and removable (--remove deletes exactly this set). Date placeholders: '@days:N' -> Y-m-d today+N, '@datetime:N' -> ISO-8601 today+N. openspec/changes/align-claims-and-first-hour REQ-SETUP-PIP-008.",
     "_coverageNote": "The contacts / pipelines / products / complaints / tasks sections were added 2026-08-06. Measured on run 31082256226: the CONTACTS, TASKS and PIPELINES index pages had a genuinely empty collection on a fresh install — the base register ships example objects for products (14), clients, leads, tickets and the POS entities, but none at all for contact, task or pipeline — so CnIndexPage rendered `cn-index-page__empty` and no data table, silently, with no console error and no failed request. Every 'the list table renders' assertion in tests/e2e/spec-coverage failed for a reason that pointed at the page rather than at the fixture. Products was NOT empty; the extra rows here exist so the seeded set is coherent (a client has contact persons) rather than to repair that page.",
 
     "clients": [
-        { "key": "bakkerij", "data": { "name": "[Demo] Bakkerij De Gouden Korst", "type": "organization", "email": "info@goudenkorst.example", "phone": "+31201234567", "address": "Nieuwstraat 12, 1012 AB Amsterdam", "website": "https://goudenkorst.example", "industry": "Retail", "notes": "Demo organisation seeded by pipelinq:demo:seed." } },
-        { "key": "gemeente", "data": { "name": "[Demo] Gemeente Zonnedael", "type": "organization", "email": "kcc@zonnedael.example", "phone": "+31702345678", "address": "Raadhuisplein 1, 2513 AA Den Haag", "industry": "Government", "notes": "Demo organisation seeded by pipelinq:demo:seed." } },
+        { "key": "bakkerij", "data": { "name": "[Demo] Bakkerij De Gouden Korst", "type": "organization", "email": "info@goudenkorst.example", "phone": "+31201234567", "address": "Nieuwstraat 12, 1012 AB Amsterdam", "website": "https://goudenkorst.example", "industry": ["Retail"], "notes": "Demo organisation seeded by pipelinq:demo:seed." } },
+        { "key": "gemeente", "data": { "name": "[Demo] Gemeente Zonnedael", "type": "organization", "email": "kcc@zonnedael.example", "phone": "+31702345678", "address": "Raadhuisplein 1, 2513 AA Den Haag", "industry": ["Government"], "notes": "Demo organisation seeded by pipelinq:demo:seed." } },
         { "key": "jansen", "data": { "name": "[Demo] Anna Jansen", "type": "person", "email": "anna.jansen@example.com", "phone": "+31612345678", "address": "Dorpsstraat 8, 3511 BB Utrecht", "notes": "Demo person seeded by pipelinq:demo:seed.", "emails": [ { "kind": "work", "value": "anna.jansen@example.com", "primary": true, "verified": false } ], "phones": [ { "kind": "mobile", "value": "+31612345678", "primary": true, "verified": false } ], "socialProfiles": [ { "network": "linkedin", "handle": "anna-jansen", "url": "https://www.linkedin.com/in/anna-jansen-demo", "verified": false, "followedByUs": true, "followsUs": false } ], "preferredChannel": "linkedin", "timezone": "Europe/Amsterdam", "language": "nl" } },
         { "key": "devries", "data": { "name": "[Demo] Pieter de Vries", "type": "person", "email": "p.devries@example.com", "phone": "+31687654321", "address": "Kerkweg 21, 6511 CC Nijmegen", "notes": "Demo person seeded by pipelinq:demo:seed.", "emails": [ { "kind": "work", "value": "p.devries@example.com", "primary": true, "verified": false } ], "phones": [ { "kind": "mobile", "value": "+31687654321", "primary": true, "verified": false } ], "socialProfiles": [ { "network": "mastodon", "handle": "@pdevries@mastodon.social", "url": "https://mastodon.social/@pdevries", "verified": false, "followedByUs": false, "followsUs": true } ], "preferredChannel": "email", "timezone": "Europe/Amsterdam", "language": "nl" } },
         { "key": "elharrak", "data": { "name": "[Demo] Samira El Harrak", "type": "person", "email": "s.elharrak@example.com", "phone": "+31699887766", "address": "Havenkade 3, 3011 DD Rotterdam", "notes": "Demo person seeded by pipelinq:demo:seed." } }
@@ -69,5 +69,96 @@
         { "key": "task-terugbel", "data": { "subject": "[Demo] Terugbellen over parkeervergunning", "type": "callbackRequest", "status": "open", "priority": "high", "deadline": "@datetime:1", "description": "Demo task: call the applicant back about the parking permit.", "callbackPhoneNumber": "+31612345678" } },
         { "key": "task-opvolg", "data": { "subject": "[Demo] Offerte webshop opvolgen", "type": "followUpTask", "status": "in_progress", "priority": "normal", "deadline": "@datetime:3", "description": "Demo task: follow up on the webshop quotation." } },
         { "key": "task-info", "data": { "subject": "[Demo] Informatievraag afvalkalender", "type": "informationRequest", "status": "completed", "priority": "low", "deadline": "@datetime:-2", "description": "Demo task: answer the waste-calendar question." } }
-    ]
+    ],
+
+    "_journeysNote": "Journeys are saved through JourneyService so each compiles into a flow, and are held to draft or paused so that flow is never enabled. Each journey's `runs` fill the run log on its detail page; a run names a demo contact (contactKey) and client (clientKey), and its `reason` is one of the codes the run log puts into words.",
+    "journeys": [
+        {
+            "key": "journey-herinnering-verlenging",
+            "data": { "name": "[Demo] Terugbellen bij contractverlenging", "description": "Demo journey: puts a call on the account manager's list three weeks before a contract is up for renewal, unless it was cancelled in the meantime.", "status": "paused", "audienceSegment": "segment-renewing-within-ninety-days", "trigger": { "kind": "contractRenewalWindow" }, "waitFor": "21 days", "condition": { "field": "status", "operator": "notEquals", "value": "cancelled" }, "action": { "kind": "createTask", "taskSubject": "Bellen over de contractverlenging", "taskType": "callbackRequest", "intent": "service" } },
+            "runs": [
+                { "contactKey": "contact-bakker", "clientKey": "bakkerij", "data": { "state": "task-created", "actionKind": "createTask", "occurredAt": "@datetime:-12" } },
+                { "contactKey": "contact-inkoop", "clientKey": "gemeente", "data": { "state": "task-created", "actionKind": "createTask", "occurredAt": "@datetime:-5" } }
+            ]
+        },
+        {
+            "key": "journey-welkom-nieuwsbrief",
+            "data": { "name": "[Demo] Welkom voor nieuwe abonnees", "description": "Demo journey: sends a welcome mail the day after someone confirms their newsletter subscription.", "status": "paused", "trigger": { "kind": "listConfirmed" }, "waitFor": "1 day", "action": { "kind": "sendMailing", "intent": "service" } },
+            "runs": [
+                { "contactKey": "contact-mulder", "clientKey": "bakkerij", "data": { "state": "sent", "actionKind": "sendMailing", "occurredAt": "@datetime:-20" } },
+                { "contactKey": "contact-kcc", "clientKey": "gemeente", "data": { "state": "sent", "actionKind": "sendMailing", "occurredAt": "@datetime:-14" } },
+                { "contactKey": "contact-inkoop", "clientKey": "gemeente", "data": { "state": "refused", "reason": "no_consent", "actionKind": "sendMailing", "occurredAt": "@datetime:-9" } },
+                { "contactKey": "contact-bakker", "clientKey": "bakkerij", "data": { "state": "failed", "reason": "transport_rejected", "actionKind": "sendMailing", "occurredAt": "@datetime:-3" } }
+            ]
+        },
+        {
+            "key": "journey-vastgelopen-leads",
+            "data": { "name": "[Demo] Vastgelopen leads opvolgen", "description": "Demo journey: when a lead moves into Offerte and is still open a month later, a follow-up task goes to the sales team.", "status": "draft", "audienceSegment": "segment-stalled-leads-thirty-days", "trigger": { "kind": "leadStageChanged" }, "waitFor": "30 days", "condition": { "field": "status", "operator": "equals", "value": "open" }, "action": { "kind": "createTask", "taskSubject": "Vastgelopen lead opvolgen", "taskType": "followUpTask" } }
+        },
+        {
+            "key": "journey-klanten-terugwinnen",
+            "data": { "name": "[Demo] Oud-klanten terugwinnen", "description": "Demo journey: each morning, mails customers who have not bought anything in a year with an offer to come back.", "status": "paused", "audienceSegment": "segment-lapsed-customers", "trigger": { "kind": "shillinqSignal", "cron": "0 7 * * *" }, "action": { "kind": "sendMailing", "intent": "promotional" } },
+            "runs": [
+                { "contactKey": "contact-mulder", "clientKey": "bakkerij", "data": { "state": "sent", "actionKind": "sendMailing", "occurredAt": "@datetime:-30" } },
+                { "contactKey": "contact-kcc", "clientKey": "gemeente", "data": { "state": "refused", "reason": "suppressed_dunning", "actionKind": "sendMailing", "occurredAt": "@datetime:-30" } }
+            ]
+        },
+        {
+            "key": "journey-topklanten-bedanken",
+            "data": { "name": "[Demo] Topklanten bedanken", "description": "Demo journey: on the first of each month, thanks the top tier customers with a personal mail.", "status": "draft", "audienceSegment": "segment-top-tier-customers", "trigger": { "kind": "shillinqSignal", "cron": "0 9 1 * *" }, "action": { "kind": "sendMailing", "intent": "promotional" } }
+        }
+    ],
+
+    "_socialNote": "Fills the Social performance ranking. The accounts are inactive and hold no credential, so the daily follower refresh leaves their followerCount alone and the composer never offers them; the publications carry no externalId, so the daily metrics pull keeps their numbers and calls no network. Views stay 0: Mastodon and LinkedIn do not report them, and the metrics service never borrows a number. One publication has no metrics yet, which the ranking sorts last.",
+    "social": {
+        "accounts": [
+            { "key": "social-mastodon", "data": { "network": "mastodon", "kind": "organisation", "handle": "@demo@mastodon.example", "displayName": "[Demo] Conduction op Mastodon", "instanceBaseUrl": "https://mastodon.example", "publishMode": "api", "status": "pending", "active": false, "followerCount": 900, "followerCountAt": "@datetime:-1" } },
+            { "key": "social-linkedin", "data": { "network": "linkedin", "kind": "person", "handle": "demo-woordvoerder", "displayName": "[Demo] Woordvoerder op LinkedIn", "publishMode": "api", "status": "pending", "active": false, "followerCount": 4000, "followerCountAt": "@datetime:-1" } },
+            { "key": "social-bluesky", "data": { "network": "bluesky", "kind": "organisation", "handle": "demo.bsky.example", "displayName": "[Demo] Conduction op Bluesky", "publishMode": "api", "status": "pending", "active": false, "followerCount": 1500, "followerCountAt": "@datetime:-1" } }
+        ],
+        "posts": [
+            { "key": "social-post-release", "accountKeys": ["social-mastodon", "social-linkedin", "social-bluesky"], "data": { "title": "[Demo] Nieuwe versie van het klantportaal", "body": "Demo post: de nieuwe versie van het klantportaal staat live. Inwoners volgen hun aanvraag nu stap voor stap.", "status": "published", "publishedAt": "@datetime:-21" } },
+            { "key": "social-post-webinar", "accountKeys": ["social-mastodon", "social-linkedin"], "data": { "title": "[Demo] Webinar zaakgericht werken", "body": "Demo post: doe mee met ons webinar over zaakgericht werken, volgende week donderdag om 15:00.", "status": "published", "publishedAt": "@datetime:-10" } },
+            { "key": "social-post-vacature", "accountKeys": ["social-linkedin", "social-bluesky", "social-mastodon"], "data": { "title": "[Demo] Vacature developer", "body": "Demo post: we zoeken een developer die open source en de overheid net zo leuk vindt als wij.", "status": "published", "publishedAt": "@datetime:-3" } }
+        ],
+        "publications": [
+            { "postKey": "social-post-release", "accountKey": "social-mastodon", "data": { "status": "published", "url": "https://mastodon.example/@demo/1001", "publishedAt": "@datetime:-21", "metrics": { "views": 0, "likes": 48, "comments": 6, "shares": 21, "clicks": 0 }, "metricsAt": "@datetime:-1" } },
+            { "postKey": "social-post-release", "accountKey": "social-linkedin", "data": { "status": "published", "url": "https://www.linkedin.example/feed/update/demo-1001", "publishedAt": "@datetime:-21", "metrics": { "views": 0, "likes": 112, "comments": 14, "shares": 9, "clicks": 63 }, "metricsAt": "@datetime:-1" } },
+            { "postKey": "social-post-release", "accountKey": "social-bluesky", "data": { "status": "published", "url": "https://bsky.example/profile/demo.bsky.example/post/1001", "publishedAt": "@datetime:-21", "metrics": { "views": 0, "likes": 37, "comments": 4, "shares": 11, "clicks": 0 }, "metricsAt": "@datetime:-1" } },
+            { "postKey": "social-post-webinar", "accountKey": "social-mastodon", "data": { "status": "published", "url": "https://mastodon.example/@demo/1002", "publishedAt": "@datetime:-10", "metrics": { "views": 0, "likes": 19, "comments": 2, "shares": 8, "clicks": 0 }, "metricsAt": "@datetime:-1" } },
+            { "postKey": "social-post-webinar", "accountKey": "social-linkedin", "data": { "status": "published", "url": "https://www.linkedin.example/feed/update/demo-1002", "publishedAt": "@datetime:-10", "metrics": { "views": 0, "likes": 86, "comments": 21, "shares": 5, "clicks": 140 }, "metricsAt": "@datetime:-1" } },
+            { "postKey": "social-post-vacature", "accountKey": "social-linkedin", "data": { "status": "published", "url": "https://www.linkedin.example/feed/update/demo-1003", "publishedAt": "@datetime:-3", "metrics": { "views": 0, "likes": 204, "comments": 33, "shares": 41, "clicks": 97 }, "metricsAt": "@datetime:-1" } },
+            { "postKey": "social-post-vacature", "accountKey": "social-bluesky", "data": { "status": "published", "url": "https://bsky.example/profile/demo.bsky.example/post/1003", "publishedAt": "@datetime:-3", "metrics": { "views": 0, "likes": 58, "comments": 7, "shares": 26, "clicks": 0 }, "metricsAt": "@datetime:-1" } },
+            { "postKey": "social-post-vacature", "accountKey": "social-mastodon", "data": { "status": "published", "url": "https://mastodon.example/@demo/1003", "publishedAt": "@datetime:-3" } }
+        ]
+    },
+
+    "_searchNote": "Fills the Keyword intelligence page. The rows stand in for a Search Console import: each query/page is split over two days inside the page's default 28-day window, and they are shaped to land in every derivation — all four position buckets, three striking-distance queries (positions 8-20 with a click rate under the expected curve), one cannibalisation (two pages sharing a query, the combined rate well below the better page's) and one query under the 100-impression floor. The query text has to read as real search, so the rows are marked by `property` and `source` rather than a [Demo] prefix, and removal deletes exactly the rows carrying both. The content gap check needs a crawl source, so it keeps saying none is configured.",
+    "search": {
+        "property": "https://www.demo.example/",
+        "source": "demo",
+        "rows": [
+            { "query": "crm software gemeente", "page": "https://www.demo.example/oplossingen/crm", "position": 2.1, "clicks": 90, "impressions": 600, "date": "@days:-4" },
+            { "query": "crm software gemeente", "page": "https://www.demo.example/oplossingen/crm", "position": 2.1, "clicks": 90, "impressions": 600, "date": "@days:-12" },
+            { "query": "klantcontactcentrum systeem", "page": "https://www.demo.example/oplossingen/kcc", "position": 6.5, "clicks": 20, "impressions": 320, "date": "@days:-4" },
+            { "query": "klantcontactcentrum systeem", "page": "https://www.demo.example/oplossingen/kcc", "position": 6.5, "clicks": 20, "impressions": 320, "date": "@days:-12" },
+            { "query": "zaakgericht werken uitleg", "page": "https://www.demo.example/kennisbank/zaakgericht-werken", "position": 11.8, "clicks": 3, "impressions": 410, "date": "@days:-4" },
+            { "query": "zaakgericht werken uitleg", "page": "https://www.demo.example/kennisbank/zaakgericht-werken", "position": 11.8, "clicks": 3, "impressions": 410, "date": "@days:-12" },
+            { "query": "common ground crm", "page": "https://www.demo.example/oplossingen/crm", "position": 9.4, "clicks": 2, "impressions": 205, "date": "@days:-4" },
+            { "query": "common ground crm", "page": "https://www.demo.example/oplossingen/crm", "position": 9.4, "clicks": 1, "impressions": 205, "date": "@days:-12" },
+            { "query": "open source klantvolgsysteem", "page": "https://www.demo.example/blog/open-source-klantvolgsysteem", "position": 14.2, "clicks": 1, "impressions": 130, "date": "@days:-4" },
+            { "query": "open source klantvolgsysteem", "page": "https://www.demo.example/blog/open-source-klantvolgsysteem", "position": 14.2, "clicks": 0, "impressions": 130, "date": "@days:-12" },
+            { "query": "crm koppelen openregister", "page": "https://www.demo.example/oplossingen/crm", "position": 7.0, "clicks": 15, "impressions": 150, "date": "@days:-4" },
+            { "query": "crm koppelen openregister", "page": "https://www.demo.example/oplossingen/crm", "position": 7.0, "clicks": 15, "impressions": 150, "date": "@days:-12" },
+            { "query": "crm koppelen openregister", "page": "https://www.demo.example/blog/openregister-koppelen", "position": 12.0, "clicks": 1, "impressions": 125, "date": "@days:-4" },
+            { "query": "crm koppelen openregister", "page": "https://www.demo.example/blog/openregister-koppelen", "position": 12.0, "clicks": 1, "impressions": 125, "date": "@days:-12" },
+            { "query": "wat is een klantreis", "page": "https://www.demo.example/blog/klantreis", "position": 27.0, "clicks": 0, "impressions": 75, "date": "@days:-4" },
+            { "query": "wat is een klantreis", "page": "https://www.demo.example/blog/klantreis", "position": 27.0, "clicks": 0, "impressions": 75, "date": "@days:-12" },
+            { "query": "pipelinq demo", "page": "https://www.demo.example/demo", "position": 1.2, "clicks": 20, "impressions": 45, "date": "@days:-4" },
+            { "query": "pipelinq demo", "page": "https://www.demo.example/demo", "position": 1.2, "clicks": 20, "impressions": 45, "date": "@days:-12" }
+        ],
+        "targets": [
+            { "data": { "term": "common ground crm", "status": "use-more", "intent": "commercial", "proposalKind": "striking-distance", "targetPageRef": "https://www.demo.example/oplossingen/crm", "notes": "[Demo] Confirmed from the striking-distance list, so the page shows a proposal already taken up." } }
+        ]
+    }
 }

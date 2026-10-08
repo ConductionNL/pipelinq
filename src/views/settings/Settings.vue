@@ -54,6 +54,23 @@
 			</template>
 		</CnVersionInfoCard>
 
+		<!-- Provisioning is an admin action, never a wizard step
+		     (pipelinq-setup-wizard-review). -->
+		<ProvisionDataSection v-if="isAdmin" />
+
+		<!-- Reopen the first-time setup (pipelinq-audit-admin-forms-pos, A1). -->
+		<SetupWizardSection v-if="isAdmin" />
+
+		<!-- Shillinq and XWiki, detected rather than typed. -->
+		<DetectedIntegrations v-if="isAdmin" />
+
+		<!-- The VAT rate per VAT class (pipelinq-forms-review). -->
+		<VatRatesSettings v-if="isAdmin" :config="config" />
+
+		<!-- Menu structure: simple (default) or full, and the modules
+		     (simple-structure-profile). -->
+		<MenuStructureSettings v-if="isAdmin" />
+
 		<!-- Register & Schema Mapping -->
 		<CnRegisterMapping
 			:name="t('pipelinq', 'Register Configuration')"
@@ -157,26 +174,18 @@
 		<!-- Mailing list signup embed (marketing-lists-and-double-opt-in) -->
 		<MailingListEmbedSettings v-if="isConfigured" />
 
-		<!-- Shillinq Integration -->
+		<!-- Shillinq integration. Nobody types a webhook URL: the hand-offs
+		     follow the detected Shillinq app (pipelinq-audit-admin-forms-pos).
+		     Without Shillinq, DetectedIntegrations says it is not installed. -->
 		<NcSettingsSection
-			v-if="isAdmin"
-			:name="t('pipelinq', 'Shillinq Integration')"
+			v-if="isAdmin && shillinqInstalled"
+			:name="t('pipelinq', 'Shillinq integration')"
 			:description="
 				t(
 					'pipelinq',
-					'The HTTPS endpoint Shillinq receives approved hours on. Leave empty to disable the handoff.',
+					'Shillinq is installed on this server. Pipelinq hands approved hours and expenses to it.',
 				)
 			">
-			<NcTextField
-				v-model="config.shillinq_wip_webhook_url"
-				:label="t('pipelinq', 'Shillinq WIP webhook URL')"
-				placeholder="https://shillinq.example.com/api/wip/events"
-				:error="wipUrlInvalid"
-				:helperText="
-					wipUrlInvalid
-						? t('pipelinq', 'Please enter a valid HTTPS URL')
-						: ''
-				" />
 			<!-- Real time-intake emit (time-billing-handoff-emit). Default off — an
 			     unconfigured install keeps the deep-link-only handoff unchanged. -->
 			<NcCheckboxRadioSwitch v-model="shillinqTimeIntakeEnabled" type="switch">
@@ -199,7 +208,7 @@
 				" />
 			<NcButton
 				variant="primary"
-				:disabled="savingShillinq || wipUrlInvalid"
+				:disabled="savingShillinq"
 				@click="saveShillinq">
 				<template #icon>
 					<NcLoadingIcon v-if="savingShillinq" :size="16" />
@@ -211,43 +220,6 @@
 			</NcNoteCard>
 		</NcSettingsSection>
 
-		<!-- Integraties — Shillinq AP webhook (REQ-AP-004) -->
-		<NcSettingsSection
-			v-if="isAdmin"
-			:name="t('pipelinq', 'Integrations')"
-			:description="
-				t(
-					'pipelinq',
-					'Enter the webhook URL for the Shillinq AP integration. Leave empty to keep it disabled.',
-				)
-			">
-			<NcTextField
-				v-model="config.shillinq_ap_webhook_url"
-				:label="t('pipelinq', 'Shillinq AP webhook URL')"
-				placeholder="https://shillinq.example.com/ap-webhook"
-				:error="shillinqApUrlInvalid"
-				:helperText="
-					shillinqApUrlInvalid
-						? t(
-								'pipelinq',
-								'Enter a valid HTTPS URL, e.g. https://shillinq.example.com/webhook',
-							)
-						: ''
-				" />
-			<NcButton
-				variant="primary"
-				:disabled="savingShillinqAp || shillinqApUrlInvalid"
-				@click="saveShillinqAp">
-				<template #icon>
-					<NcLoadingIcon v-if="savingShillinqAp" :size="16" />
-				</template>
-				{{ t('pipelinq', 'Save Shillinq AP Configuration') }}
-			</NcButton>
-			<NcNoteCard v-if="shillinqApMessage" :type="shillinqApMessageType">
-				{{ shillinqApMessage }}
-			</NcNoteCard>
-		</NcSettingsSection>
-
 		<!-- xWiki Integration (xwiki-integration) -->
 		<NcSettingsSection
 			v-if="isAdmin"
@@ -255,7 +227,7 @@
 			:description="
 				t(
 					'pipelinq',
-					'Configure the xWiki knowledge base proxy used by the dashboard widget and the detail sidebar tabs. When the xWiki Nextcloud app is installed its settings take precedence over the fallback URL below.',
+					'Configure the xWiki knowledge base proxy used by the dashboard widget and the detail sidebar tabs. Pipelinq finds xWiki through the xWiki app or through OpenRegister.',
 				)
 			">
 			<NcNoteCard
@@ -279,7 +251,7 @@
 					{{
 						t(
 							'pipelinq',
-							'xWiki not reachable. The xWiki Nextcloud app is not installed and the direct URL is empty or unreachable.',
+							'xWiki not reachable. Install the xWiki app, or connect xWiki through OpenRegister and integriq.',
 						)
 					}}
 				</span>
@@ -288,7 +260,7 @@
 				{{
 					t(
 						'pipelinq',
-						'The optional xWiki Nextcloud app is not installed. Pipelinq is falling back to the configured direct URL.',
+						'The optional xWiki Nextcloud app is not installed. Pipelinq searches xWiki through OpenRegister instead.',
 					)
 				}}
 			</NcNoteCard>
@@ -311,16 +283,6 @@
 					t(
 						'pipelinq',
 						'How long search and page results are cached server-side. Default: 300.',
-					)
-				" />
-			<NcTextField
-				v-model="config.xwiki_direct_url"
-				:label="t('pipelinq', 'Direct xWiki URL (fallback)')"
-				placeholder="http://xwiki:8080/xwiki"
-				:helperText="
-					t(
-						'pipelinq',
-						'Used only when the xWiki Nextcloud app is unavailable. Should point at the xWiki base URL without trailing slash.',
 					)
 				" />
 			<div class="xwiki-actions">
@@ -353,6 +315,10 @@
 		<MessagingSettings v-if="isAdmin && isConfigured" />
 		<DeliverabilitySettings v-if="isAdmin && isConfigured" />
 		<CtiPage v-if="isAdmin && isConfigured" />
+
+		<!-- Customer portal tenant config, accounts and audit trail
+		     (pipelinq#2041). Admin only, like the endpoints it calls. -->
+		<PortalSettings v-if="isAdmin && isConfigured" />
 
 		<!-- Point of Sale configuration. `PaymentSettingsForm` (PSP providers —
 		     who processes the money) and `PosTenderTypeList` (tender types — how
@@ -403,14 +369,17 @@ import {
 import Refresh from 'vue-material-design-icons/Refresh.vue'
 import AgentProfileSettings from '../../components/admin/AgentProfileSettings.vue'
 import ForecastSettings from '../../components/admin/ForecastSettings.vue'
+import PortalSettings from '../../components/admin/PortalSettings.vue'
 import SkillSettings from '../../components/admin/SkillSettings.vue'
 import CtiPage from './CtiPage.vue'
 // marketing-mail-transports: transport list + SPF/DKIM/DMARC panel.
 import DeliverabilitySettings from './DeliverabilitySettings.vue'
+import DetectedIntegrations from './DetectedIntegrations.vue'
 import ExportConfigurationSettings from './ExportConfigurationSettings.vue'
 import MailingListEmbedSettings from './MailingListEmbedSettings.vue'
 import MarketingIntelSettings from './MarketingIntelSettings.vue'
 import MarketingTrafficSettings from './MarketingTrafficSettings.vue'
+import MenuStructureSettings from './MenuStructureSettings.vue'
 // Configuration surfaces moved off the app nav onto this admin page
 // (nav-ia-cleanup): channels, telephony, and the POS master-data.
 import MessagingSettings from './MessagingSettings.vue'
@@ -421,12 +390,26 @@ import PosStaffManager from './PosStaffManager.vue'
 import PosTenderTypeManager from './PosTenderTypeManager.vue'
 import ProductCategoryManager from './ProductCategoryManager.vue'
 import ProspectSettings from './ProspectSettings.vue'
+import ProvisionDataSection from './ProvisionDataSection.vue'
+import SetupWizardSection from './SetupWizardSection.vue'
 import TagManager from './TagManager.vue'
+import VatRatesSettings from './VatRatesSettings.vue'
 import { objectTypeGroups, objectTypes } from '../../config/objectTypes.js'
 import { useLeadSourcesStore } from '../../store/modules/leadSources.js'
 import { useObjectStore } from '../../store/modules/object.js'
 import { useRequestChannelsStore } from '../../store/modules/requestChannels.js'
 import { useSettingsStore } from '../../store/modules/settings.js'
+
+/**
+ * Whether the server detected the Shillinq app (IntegrationDetector).
+ *
+ * @spec openspec/changes/pipelinq-audit-admin-forms-pos/specs/admin-settings/spec.md#requirement-shillinq-hand-offs-follow-the-detected-app
+ * @return {boolean} True when Shillinq is installed.
+ */
+function shillinqDetected() {
+	const detected = loadState('pipelinq', 'detected_integrations', {})
+	return detected?.shillinq?.installed === true
+}
 
 export default {
 	name: 'PipelinqAdminSettings',
@@ -438,6 +421,7 @@ export default {
 		PosTenderTypeManager,
 		PosStaffManager,
 		PosRoleManager,
+		PortalSettings,
 		CnRegisterMapping,
 		CnVersionInfoCard,
 		NcButton,
@@ -458,6 +442,11 @@ export default {
 		MailingListEmbedSettings,
 		MarketingIntelSettings,
 		MarketingTrafficSettings,
+		MenuStructureSettings,
+		DetectedIntegrations,
+		ProvisionDataSection,
+		SetupWizardSection,
+		VatRatesSettings,
 	},
 
 	data() {
@@ -473,10 +462,8 @@ export default {
 			savingShillinq: false,
 			shillinqMessage: '',
 			shillinqMessageType: 'success',
-			// Shillinq AP integration (REQ-AP-004).
-			savingShillinqAp: false,
-			shillinqApMessage: '',
-			shillinqApMessageType: 'success',
+			// Shillinq is detected, never configured (pipelinq-audit-admin-forms-pos).
+			shillinqInstalled: shillinqDetected(),
 			// Lead management — stale threshold (REQ-LM-002).
 			staleThresholdInput: 14,
 			savingStale: false,
@@ -543,42 +530,6 @@ export default {
 					shillinq_time_intake_enabled: value ? 'true' : 'false',
 				}
 			},
-		},
-
-		/**
-		 * Whether the entered Shillinq WIP webhook URL is present but not a valid HTTPS URL.
-		 * An empty value is valid (disables the integration).
-		 *
-		 * @spec openspec/changes/archive/2026-06-14-pipelinq-time-to-shillinq-wip/specs/pipelinq-time-to-shillinq-wip/spec.md#REQ-WIP-004
-		 */
-		wipUrlInvalid() {
-			const url = (this.config.shillinq_wip_webhook_url || '').trim()
-			if (url === '') {
-				return false
-			}
-			try {
-				return new URL(url).protocol !== 'https:'
-			} catch {
-				return true
-			}
-		},
-
-		/**
-		 * Whether the entered Shillinq AP webhook URL is present but not a valid HTTPS URL.
-		 * An empty value is valid (disables the integration). REQ-AP-004 Scenario 13.
-		 *
-		 * @spec openspec/changes/pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-004
-		 */
-		shillinqApUrlInvalid() {
-			const url = (this.config.shillinq_ap_webhook_url || '').trim()
-			if (url === '') {
-				return false
-			}
-			try {
-				return new URL(url).protocol !== 'https:'
-			} catch {
-				return true
-			}
 		},
 
 		/**
@@ -681,14 +632,19 @@ export default {
 
 				const data = await response.json()
 
+				// The import ran even when a schema was rejected, so the
+				// config it returns is current either way.
+				if (data.config) {
+					this.config = data.config
+				}
 				if (data.success) {
-					this.config = data.config || {}
 					this.message = t(
 						'pipelinq',
 						'Configuration re-imported successfully',
 					)
 					this.messageType = 'success'
 				} else {
+					// The server names the rejected schemas in its message.
 					this.message = data.message || t('pipelinq', 'Re-import failed')
 					this.messageType = 'error'
 				}
@@ -801,22 +757,16 @@ export default {
 		},
 
 		/**
-		 * Persist the Shillinq ledger webhook URL through the standard settings endpoint.
+		 * Persist the Shillinq hand-off options through the standard settings endpoint.
 		 *
-		 * @spec openspec/changes/archive/2026-06-14-pipelinq-time-to-shillinq-wip/specs/pipelinq-time-to-shillinq-wip/spec.md#REQ-WIP-003
+		 * @spec openspec/changes/pipelinq-audit-admin-forms-pos/specs/admin-settings/spec.md#requirement-shillinq-hand-offs-follow-the-detected-app
 		 */
 		async saveShillinq() {
-			if (this.wipUrlInvalid) {
-				return
-			}
 			this.savingShillinq = true
 			this.shillinqMessage = ''
 			try {
 				const result = await this.settingsStore.saveSettings({
 					...this.config,
-					shillinq_wip_webhook_url: (
-						this.config.shillinq_wip_webhook_url || ''
-					).trim(),
 				})
 				if (result) {
 					this.config = this.settingsStore.config || result
@@ -842,42 +792,6 @@ export default {
 		onExportConfigSaved(updated) {
 			if (updated && typeof updated === 'object') {
 				this.config = { ...this.config, ...updated }
-			}
-		},
-
-		/**
-		 * Persist the Shillinq AP webhook URL through the standard settings endpoint.
-		 *
-		 * @spec openspec/changes/pipelinq-expense-to-shillinq-ap/specs.md#REQ-AP-004
-		 */
-		async saveShillinqAp() {
-			if (this.shillinqApUrlInvalid) {
-				return
-			}
-			this.savingShillinqAp = true
-			this.shillinqApMessage = ''
-			try {
-				const result = await this.settingsStore.saveSettings({
-					...this.config,
-					shillinq_ap_webhook_url: (
-						this.config.shillinq_ap_webhook_url || ''
-					).trim(),
-				})
-				if (result) {
-					this.config = this.settingsStore.config || result
-				}
-				this.shillinqApMessage = t(
-					'pipelinq',
-					'Shillinq AP configuration saved.',
-				)
-				this.shillinqApMessageType = 'success'
-			} catch (e) {
-				this.shillinqApMessage =
-					e.response?.data?.message
-					|| t('pipelinq', 'Failed to save Shillinq AP configuration.')
-				this.shillinqApMessageType = 'error'
-			} finally {
-				this.savingShillinqAp = false
 			}
 		},
 
@@ -934,7 +848,6 @@ export default {
 						this.config.xwiki_default_space || ''
 					).trim(),
 					xwiki_cache_ttl: String(this.config.xwiki_cache_ttl || 300),
-					xwiki_direct_url: (this.config.xwiki_direct_url || '').trim(),
 				})
 				if (result) {
 					this.config = this.settingsStore.config || result
@@ -981,7 +894,7 @@ export default {
 				} else {
 					this.xwikiMessage = t(
 						'pipelinq',
-						'xWiki connection failed. Check the direct URL or install the xWiki Nextcloud app.',
+						'xWiki not reachable. Install the xWiki app, or connect xWiki through OpenRegister and integriq.',
 					)
 					this.xwikiMessageType = 'warning'
 				}

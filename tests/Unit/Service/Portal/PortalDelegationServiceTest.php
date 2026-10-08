@@ -25,6 +25,7 @@ use OCA\Pipelinq\Service\Portal\PortalException;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Utility\ITimeFactory;
 use PHPUnit\Framework\TestCase;
+use OCP\IAppConfig;
 
 /**
  * Tests for B2B delegation grant/revoke + scope hygiene.
@@ -50,7 +51,7 @@ class PortalDelegationServiceTest extends TestCase {
 	 * @return void
 	 */
 	protected function setUp(): void {
-		$this->repository = new FakePortalObjectRepository();
+		$this->repository = new FakePortalObjectRepository(InstalledAppConfig::wire($this->createMock(IAppConfig::class)));
 		$time = $this->createMock(ITimeFactory::class);
 		$time->method('getTime')->willReturn(1000);
 		$time->method('getDateTime')->willReturn((new \DateTime())->setTimestamp(1000));

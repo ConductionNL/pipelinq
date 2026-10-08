@@ -80,15 +80,6 @@
             "handler": "navigate",
             "route": "SocialPostNew"
           }
-        ],
-        "actions": [
-          {
-            "id": "view",
-            "label": "Open",
-            "icon": "Eye",
-            "handler": "navigate",
-            "route": "SocialPostDetail"
-          }
         ]
       }
     },
@@ -106,10 +97,11 @@
     },
     {
       "id": "SocialPostDetail",
-      "_note": "Post record as a declarative type:detail page (ADR-062 grid). The post's own metadata auto-renders in the data widget. The RESOLVED text per network and the approval step live in SocialPostVariantsSection (placement before-body, because what the post says is the reason a marketer opened the page), and the per-account outcomes with their retry and share actions live in SocialPublicationsSection (placement end). Neither is lifecycleActions: an approval has to record WHO decided, which the transition grammar has no field for.",
+      "_note": "Post record as a declarative type:detail page (ADR-062 grid). The post's own metadata auto-renders in the data widget. The approval step is the header's actionsComponent (SocialPostHeaderActions), beside Edit. The RESOLVED text per network and the approvals taken live in SocialPostVariantsSection (placement before-body, because what the post says is the reason a marketer opened the page), and the per-account outcomes with their retry and share actions live in SocialPublicationsSection (placement end). The approval is not lifecycleActions: it has to record WHO decided, which the transition grammar has no field for.",
       "route": "/social-posts/:id",
       "type": "detail",
       "title": "Social post",
+      "actionsComponent": "SocialPostHeaderActions",
       "config": {
         "register": "pipelinq",
         "schema": "socialPost",

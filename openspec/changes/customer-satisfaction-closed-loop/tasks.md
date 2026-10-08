@@ -1,5 +1,7 @@
 # Tasks: customer-satisfaction-closed-loop
 
+> Archive pass 2026-10-07: backend done (#1977: dispatch, tokens, follow-up, aggregation, response-rate endpoint); open: 4.2, 5.2, 5.3, 6.3. No public survey form with the opt-out checkbox, no response-rate block and no customer-360 satisfaction panel exist in `src/` (the cited `src/views/surveys/*` and `surveyStore.js` are not in the tree), so the UI tasks and their Playwright coverage are not done.
+
 ## 1. Data Layer
 
 - [x] 1.1 Register `surveyInvitation` schema in OpenRegister
@@ -78,7 +80,7 @@
     - Submission creates `surveyResponse` with invitationRef + entity/contact linkage and flips invitation to `responded`
     - V1 per-survey token routes unchanged
 
-- [x] 4.2 Opt-out control on the public form
+- [ ] 4.2 Opt-out control on the public form
   - **spec_ref**: `specs/customer-satisfaction/spec.md#requirement-survey-fatigue-throttling-and-opt-out`
   - **files**: `src/views/surveys/PublicSurveyForm.vue`
   - **acceptance_criteria**:
@@ -96,13 +98,13 @@
     - No imperative notification dispatch (ADR-031 rule covers notification)
     - Promoter/passive responses produce no task
 
-- [x] 5.2 Response-rate block in SurveyAnalytics
+- [ ] 5.2 Response-rate block in SurveyAnalytics
   - **spec_ref**: `specs/customer-satisfaction/spec.md#requirement-response-rate-analytics`
   - **files**: `src/views/surveys/SurveyAnalytics.vue`, `src/store/modules/surveyStore.js`
   - **acceptance_criteria**:
     - Sent / responded / response-rate per survey, channel, period; suppressed + failed shown separately, excluded from denominator
 
-- [x] 5.3 SatisfactionAggregationService + customer-360 panel
+- [ ] 5.3 SatisfactionAggregationService + customer-360 panel
   - **spec_ref**: `specs/customer-360/spec.md#requirement-per-client-satisfaction-panel`
   - **files**: `lib/Service/SatisfactionAggregationService.php`, customer-360 client view component
   - **acceptance_criteria**:
@@ -124,7 +126,7 @@
     - customer-satisfaction.md: V1 marked implemented, closed-loop scope described with actual status
     - terugbel-taakbeheer.md re-pointed at `callback-management`
 
-- [x] 6.3 Tests + gates
+- [ ] 6.3 Tests + gates
   - **spec_ref**: all
   - **files**: `tests/unit/`, `tests/e2e/`, `tests/integration/`
   - **acceptance_criteria**:

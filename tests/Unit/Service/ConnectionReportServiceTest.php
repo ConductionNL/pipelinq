@@ -46,6 +46,7 @@ require_once __DIR__ . '/../../Stubs/Integriq/Event/ConnectionStatusReportedEven
  * Unit tests for ConnectionReportService.
  *
  * @covers \OCA\Pipelinq\Service\ConnectionReportService
+ * @uses   \OCA\Pipelinq\AppInfo\OpenRegisterAutoloader
  */
 class ConnectionReportServiceTest extends TestCase {
 

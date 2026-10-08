@@ -3,6 +3,7 @@
   "components": {
     "schemas": {
       "deliveryProgramme": {
+        "slug": "deliveryProgramme",
         "title": "Programme",
         "type": "object",
         "description": "The work above the cases. A record with its own identity, never a tag, a label or a field on another record.",
@@ -37,6 +38,7 @@
         }
       },
       "programmeTask": {
+        "slug": "programmeTask",
         "title": "Programme task",
         "type": "object",
         "description": "One task under one programme. Its own record, because a programme's plan is not a case and does not belong on one.",
@@ -51,6 +53,7 @@
         }
       },
       "programmeTeamMember": {
+        "slug": "programmeTeamMember",
         "title": "Programme team member",
         "type": "object",
         "description": "One person in one role on one programme.",
@@ -62,6 +65,7 @@
         }
       },
       "programmeWorkItem": {
+        "slug": "programmeWorkItem",
         "title": "Programme work item",
         "type": "object",
         "description": "A piece of work owned by any app, hanging under a programme by reference. The referenced object is never copied, and deleting a programme deletes its references and nothing else. One work item belongs to at most ONE programme, so effort and progress roll up unambiguously.",
@@ -84,6 +88,7 @@
         }
       },
       "estimationScale": {
+        "slug": "estimationScale",
         "title": "Estimation scale",
         "type": "object",
         "description": "An ordered set of estimate points with a label and a numeric weight. At most one scale is active per scope; a second activation in one scope is refused. A scale set inactive keeps resolving on estimates already written, so a historic figure keeps its meaning.",
@@ -107,6 +112,7 @@
         }
       },
       "programmeEstimate": {
+        "slug": "programmeEstimate",
         "title": "Programme estimate",
         "type": "object",
         "description": "One role's estimate of one work item, on the active scale. A work item carries one estimate per role, and the total is DERIVED on read as the sum of the parts. No total is stored: a stored total drifts from its parts the first time one changes, silently.",
@@ -119,6 +125,7 @@
         }
       },
       "programmeCycle": {
+        "slug": "programmeCycle",
         "title": "Programme cycle",
         "type": "object",
         "description": "A named time box under a programme. Closing it writes a versioned progress snapshot, and a chart of a closed cycle reads the snapshot, so a later edit to the work beneath it cannot rewrite what the chart showed. The live figures stay readable beside it.",

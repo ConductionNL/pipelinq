@@ -6,7 +6,9 @@ status: done
 
 ## Purpose
 Keys the `client` and `contact` records to a Nextcloud Contact via a required `contactsUid`, demoting their identity fields to denormalised read-only mirrors while keeping CRM and governance fields authoritative, and links `contactmoment` interactions to the party by `contactsUid`. Refreshes the mirrors through the existing contact-sync flow with the Nextcloud Contact as the source of truth, and provides an idempotent, non-destructive repair that resolves or creates contacts and re-keys existing objects while preserving all three people-surface nav entries and routes.
+
 ## Requirements
+
 ### Requirement: REQ-PUCC-001 — The system SHALL key the `client` relationship record by a Nextcloud Contact and demote its identity fields to denormalised mirrors
 
 The system SHALL make `contactsUid` a REQUIRED property on the existing `client` schema (identity = the linked Nextcloud Contact) and SHALL flag `name`, `email`, `phone`, `address`, `website` as denormalised read-only mirrors sourced from that contact, via the override fragment `lib/Settings/register.d/15-unify-client-contact.json` targeting the existing `client` slug. It MUST keep the CRM-specific fields (`type`, `industry`, `notes`) authoritative, add the relationship fields (`lifecycleStage`, `segment`, `accountOwner`, `accountStatus`), and MUST NOT create a second register or a new party/customer schema.
@@ -55,16 +57,21 @@ The system SHALL add a `contactsUid` property to the existing `contactmoment` sc
 
 ### Requirement: REQ-PUCC-004 — The system SHALL reuse the existing contact-sync pattern and keep the Nextcloud Contact authoritative
 
-The system SHALL keep the Nextcloud Contact authoritative for `name`/`email`/`phone`/`address`/`org` and SHALL refresh the pipelinq denormalised mirror fields from it using the EXISTING `ContactVcardService`/`ContactSyncService::syncToContacts()` flow — without adding a new sync service or a new identity key. It SHALL resolve/match an existing Nextcloud Contact through the OpenRegister `contacts-actions` integration provider (ADR-019) before creating one, and MUST NOT hard-code a cross-app HTTP call (ADR-022).
+The system SHALL keep the Nextcloud Contact authoritative for `name`/`email`/`phone`/`address`/`org` and SHALL refresh the pipelinq denormalised mirror fields from it using the EXISTING `ContactVcardService`/`ContactSyncService::syncToContacts()` flow — without adding a new sync service or a new identity key. A user MAY edit `name`, `email` and `phone` on the client or contact edit form; the system SHALL then write the change back to the linked Nextcloud Contact through the same `syncToContacts()` flow (`POST /api/contacts-sync/write-back`), so the contact stays authoritative and the next refresh does not undo the edit. It SHALL resolve/match an existing Nextcloud Contact through the OpenRegister `contacts-actions` integration provider (ADR-019) before creating one, and MUST NOT hard-code a cross-app HTTP call (ADR-022).
 
-@e2e exclude reuse of an implemented service — verified by PHPUnit asserting the existing ContactVcardService is invoked and no new sync class is introduced.
+@e2e exclude reuse of an implemented service — verified by PHPUnit asserting the existing ContactVcardService is invoked and no new sync class is introduced; the write-back after an edit is asserted by tests/vitest/clientForms.spec.js.
 
 #### Scenario: Mirror fields refresh from the authoritative contact
 - GIVEN a `client` linked to a Nextcloud Contact by `contactsUid`
 - WHEN the contact's name or email changes and the object is synced
 - THEN the pipelinq `client.name`/`client.email` mirror MUST be refreshed from the contact via the existing `ContactVcardService`
-- AND the mirror MUST be read-only in the UI (editing identity deep-links to the addressbook)
 - AND no new sync service and no new identity key MUST be introduced
+
+#### Scenario: Identity edited on the client page is written back
+- GIVEN a `client` linked to a Nextcloud Contact by `contactsUid`
+- WHEN a user changes the client's name, email or phone in the edit form and saves
+- THEN the client SHALL carry the new value
+- AND the system SHALL write it back to the linked Nextcloud Contact
 
 #### Scenario: An existing contact is matched, not duplicated, via the registry
 - GIVEN a `client`/`contact` whose email already matches a Nextcloud addressbook contact
@@ -122,3 +129,21 @@ The system SHALL keep the three top-level nav entries `Clients` (order 20), `Con
 - THEN all three nav entries MUST remain present with routes `/clients`, `/contacts`, `/contactmomenten`
 - AND each detail page (`/clients/:id`, `/contacts/:id`, `/contactmomenten/:id`) MUST remain routable for deep links
 
+### Requirement: REQ-PUCC-008 — Every client SHALL name the colleague who owns it
+
+The `client` schema SHALL carry `accountOwner`, a Nextcloud user id (`format: user`, declared facetable) holding the colleague responsible for the client (`lib/Settings/register.d/15-unify-client-contact.json`, presented as "The colleague responsible for this client." at form position 8 by `lib/Settings/register.d/99-zz-form-presentation.json`). The create dialog the Clients page opens (`src/manifest.json` page `Clients`, `createModal: ClientCreateDialog`) SHALL offer an "Account owner" user search (`src/views/clients/ClientForm.vue:88-103`) and SHALL default it to the user creating the client (`ClientForm.vue:255`). The client detail page SHALL show the owner with the client's other fields. Ownership is a label for colleagues; it SHALL NOT restrict who may read or edit the client (that is the `crm-access-groups` spec).
+
+@e2e exclude after-the-fact spec of shipped behaviour (spec round 2026-10-07).
+
+#### Scenario: A new client is owned by the person who creates it
+- WHEN a user opens Clients, chooses to add a client and saves without touching "Account owner"
+- THEN the saved client's `accountOwner` MUST be that user's Nextcloud user id
+
+#### Scenario: A client is handed to a colleague
+- WHEN a user picks a colleague in the "Account owner" search of the client form and saves
+- THEN the client's `accountOwner` MUST hold that colleague's user id
+- AND the client detail page MUST show that colleague as the account owner
+
+#### Scenario: Owning a client does not hide it
+- WHEN a client is owned by one colleague and another authenticated user opens the Clients list
+- THEN the client MUST still be listed for the other user

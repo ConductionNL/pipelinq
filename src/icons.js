@@ -13,12 +13,15 @@
 // vue-material-design-icons.
 
 import Account from 'vue-material-design-icons/Account.vue'
+import AccountArrowLeftOutline from 'vue-material-design-icons/AccountArrowLeftOutline.vue'
 import AccountArrowRightOutline from 'vue-material-design-icons/AccountArrowRightOutline.vue'
 import AccountBox from 'vue-material-design-icons/AccountBox.vue'
 import AccountBoxOutline from 'vue-material-design-icons/AccountBoxOutline.vue'
 import AccountCheckOutline from 'vue-material-design-icons/AccountCheckOutline.vue'
 import AccountClock from 'vue-material-design-icons/AccountClock.vue'
+import AccountClockOutline from 'vue-material-design-icons/AccountClockOutline.vue'
 import AccountCog from 'vue-material-design-icons/AccountCog.vue'
+import AccountDetailsOutline from 'vue-material-design-icons/AccountDetailsOutline.vue'
 import AccountGroup from 'vue-material-design-icons/AccountGroup.vue'
 import AccountGroupOutline from 'vue-material-design-icons/AccountGroupOutline.vue'
 import AccountKey from 'vue-material-design-icons/AccountKey.vue'
@@ -39,10 +42,14 @@ import BookOpenPageVariant from 'vue-material-design-icons/BookOpenPageVariant.v
 import BookOpenVariantOutline from 'vue-material-design-icons/BookOpenVariantOutline.vue'
 import BullhornOutline from 'vue-material-design-icons/BullhornOutline.vue'
 import Calendar from 'vue-material-design-icons/Calendar.vue'
+import CalendarBlankOutline from 'vue-material-design-icons/CalendarBlankOutline.vue'
 import CalendarCheck from 'vue-material-design-icons/CalendarCheck.vue'
+import CalendarClock from 'vue-material-design-icons/CalendarClock.vue'
 import CalendarClockOutline from 'vue-material-design-icons/CalendarClockOutline.vue'
 import CalendarWeek from 'vue-material-design-icons/CalendarWeek.vue'
 import CardAccountDetails from 'vue-material-design-icons/CardAccountDetails.vue'
+import CardAccountDetailsOutline from 'vue-material-design-icons/CardAccountDetailsOutline.vue'
+import CardAccountPhoneOutline from 'vue-material-design-icons/CardAccountPhoneOutline.vue'
 import CartArrowDown from 'vue-material-design-icons/CartArrowDown.vue'
 import CartOutline from 'vue-material-design-icons/CartOutline.vue'
 import Cash from 'vue-material-design-icons/Cash.vue'
@@ -108,6 +115,8 @@ import Gavel from 'vue-material-design-icons/Gavel.vue'
 import HandshakeOutline from 'vue-material-design-icons/HandshakeOutline.vue'
 import Heart from 'vue-material-design-icons/Heart.vue'
 import History from 'vue-material-design-icons/History.vue'
+import HomeOutline from 'vue-material-design-icons/HomeOutline.vue'
+import InboxOutline from 'vue-material-design-icons/InboxOutline.vue'
 import InformationOutline from 'vue-material-design-icons/InformationOutline.vue'
 import Key from 'vue-material-design-icons/Key.vue'
 import KeyVariant from 'vue-material-design-icons/KeyVariant.vue'
@@ -122,10 +131,14 @@ import MessageTextOutline from 'vue-material-design-icons/MessageTextOutline.vue
 import NewspaperVariantOutline from 'vue-material-design-icons/NewspaperVariantOutline.vue'
 import NoteTextOutline from 'vue-material-design-icons/NoteTextOutline.vue'
 import OfficeBuilding from 'vue-material-design-icons/OfficeBuilding.vue'
+import OfficeBuildingOutline from 'vue-material-design-icons/OfficeBuildingOutline.vue'
 import Package from 'vue-material-design-icons/Package.vue'
+import PackageVariant from 'vue-material-design-icons/PackageVariant.vue'
 import PackageVariantClosed from 'vue-material-design-icons/PackageVariantClosed.vue'
 import PencilOutline from 'vue-material-design-icons/PencilOutline.vue'
+import Phone from 'vue-material-design-icons/Phone.vue'
 import PhoneMessage from 'vue-material-design-icons/PhoneMessage.vue'
+import PhoneOutline from 'vue-material-design-icons/PhoneOutline.vue'
 import Pipe from 'vue-material-design-icons/Pipe.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import PowerPlugOutline from 'vue-material-design-icons/PowerPlugOutline.vue'
@@ -151,23 +164,28 @@ import Tag from 'vue-material-design-icons/Tag.vue'
 import TagOutline from 'vue-material-design-icons/TagOutline.vue'
 import ThumbsUpDown from 'vue-material-design-icons/ThumbsUpDown.vue'
 import TicketOutline from 'vue-material-design-icons/TicketOutline.vue'
+import Timeline from 'vue-material-design-icons/Timeline.vue'
 import Timer from 'vue-material-design-icons/Timer.vue'
 import Tray from 'vue-material-design-icons/Tray.vue'
 import TrayFull from 'vue-material-design-icons/TrayFull.vue'
 import TrendingUp from 'vue-material-design-icons/TrendingUp.vue'
 import Trophy from 'vue-material-design-icons/Trophy.vue'
+import ViewColumnOutline from 'vue-material-design-icons/ViewColumnOutline.vue'
 import ViewDashboard from 'vue-material-design-icons/ViewDashboard.vue'
 import ViewGridOutline from 'vue-material-design-icons/ViewGridOutline.vue'
 import WalletOutline from 'vue-material-design-icons/WalletOutline.vue'
 
 export default {
 	Account,
+	AccountArrowLeftOutline,
 	AccountArrowRightOutline,
 	AccountBox,
 	AccountBoxOutline,
 	AccountCheckOutline,
 	AccountClock,
+	AccountClockOutline,
 	AccountCog,
+	AccountDetailsOutline,
 	AccountGroup,
 	AccountGroupOutline,
 	AccountKey,
@@ -188,10 +206,14 @@ export default {
 	BookOpenVariantOutline,
 	BullhornOutline,
 	Calendar,
+	CalendarBlankOutline,
 	CalendarCheck,
+	CalendarClock,
 	CalendarClockOutline,
 	CalendarWeek,
 	CardAccountDetails,
+	CardAccountDetailsOutline,
+	CardAccountPhoneOutline,
 	CartArrowDown,
 	CartOutline,
 	Cash,
@@ -257,6 +279,8 @@ export default {
 	HandshakeOutline,
 	Heart,
 	History,
+	HomeOutline,
+	InboxOutline,
 	InformationOutline,
 	Key,
 	KeyVariant,
@@ -271,10 +295,14 @@ export default {
 	NewspaperVariantOutline,
 	NoteTextOutline,
 	OfficeBuilding,
+	OfficeBuildingOutline,
 	Package,
+	PackageVariant,
 	PackageVariantClosed,
 	PencilOutline,
+	Phone,
 	PhoneMessage,
+	PhoneOutline,
 	Pipe,
 	Plus,
 	PowerPlugOutline,
@@ -300,11 +328,13 @@ export default {
 	TagOutline,
 	ThumbsUpDown,
 	TicketOutline,
+	Timeline,
 	Timer,
 	Tray,
 	TrayFull,
 	TrendingUp,
 	Trophy,
+	ViewColumnOutline,
 	ViewDashboard,
 	ViewGridOutline,
 	WalletOutline,

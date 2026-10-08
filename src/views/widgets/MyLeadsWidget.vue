@@ -10,13 +10,7 @@
 		:emptyText="t('pipelinq', 'No leads assigned to you')"
 		@rowClick="onShow">
 		<template #footer>
-			<a
-				class="cn-data-table__view-all"
-				role="button"
-				tabindex="0"
-				@click.prevent="onViewAll"
-				@keydown.enter.prevent="onViewAll"
-				@keydown.space.prevent="onViewAll">
+			<a class="cn-data-table__view-all" :href="leadsUrl">
 				{{ t('pipelinq', 'View all') }} →
 			</a>
 		</template>
@@ -58,6 +52,7 @@ export default {
 			loading: false,
 			leads: [],
 			columns: LIST_COLUMNS,
+			leadsUrl: generateUrl('/apps/pipelinq/leads'),
 		}
 	},
 
@@ -97,22 +92,14 @@ export default {
 
 	methods: {
 		/**
-		 * Navigate to the clicked lead in the same tab.
+		 * Navigate to the clicked lead.
 		 *
 		 * @param {object} item The clicked row (a shaped lead item).
+		 * @param {MouseEvent} [event] The row click.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-widgets-ui/tasks.md#task-46
 		 */
-		onShow(item) {
-			navigateTo(generateUrl('/apps/pipelinq/leads/' + item.id))
-		},
-
-		/**
-		 * Navigate to the full leads list.
-		 *
-		 * @return {void}
-		 */
-		onViewAll() {
-			navigateTo(generateUrl('/apps/pipelinq/leads'))
+		onShow(item, event) {
+			navigateTo(generateUrl('/apps/pipelinq/leads/' + item.id), event)
 		},
 
 		/**

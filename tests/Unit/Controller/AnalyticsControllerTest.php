@@ -547,7 +547,7 @@ class AnalyticsControllerTest extends TestCase {
 		$store->seed('lead-open', 'pipelinq', 'lead', [
 			'status' => 'open',
 			'value' => 10000,
-			'probability' => 25,
+			'qualificationScore' => 25,
 		]);
 		$store->seed('pos-1', 'pipelinq', 'posTransaction', [
 			'status' => 'settled',

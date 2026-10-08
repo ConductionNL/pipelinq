@@ -24,6 +24,7 @@ namespace OCA\Pipelinq\Tests\Unit\Service\Marketing;
 use OCA\Pipelinq\Service\ArticleService;
 use OCA\Pipelinq\Service\Marketing\ListObjectStore;
 use OCA\Pipelinq\Service\Marketing\MailTransportService;
+use OCA\Pipelinq\Service\Marketing\PhysicalAddressRenderer;
 use OCA\Pipelinq\Tests\Unit\Support\FakeSlugResolver;
 use OCP\IAppConfig;
 use OCP\Mail\IMailer;
@@ -132,6 +133,7 @@ class MailTransportServiceTest extends TestCase {
 			new ArticleService($this->makeArticleStore()),
 			FakeSlugResolver::connectorRegister(),
 			$this->logger,
+			new PhysicalAddressRenderer(),
 		);
 	}//end setUp()
 
@@ -427,6 +429,7 @@ class MailTransportServiceTest extends TestCase {
 			new ArticleService($this->makeArticleStore()),
 			FakeSlugResolver::connectorRegister(),
 			$this->logger,
+			new PhysicalAddressRenderer(),
 		);
 
 		$delivery = ['uuid' => 'd-prov', 'email' => 'user@example.com'];
@@ -518,6 +521,7 @@ class MailTransportServiceTest extends TestCase {
 			new ArticleService($articleStore),
 			FakeSlugResolver::connectorRegister(),
 			$this->logger,
+			new PhysicalAddressRenderer(),
 		);
 
 		$delivery = ['uuid' => 'd-articles', 'email' => 'c1@example.test'];
@@ -576,6 +580,56 @@ class MailTransportServiceTest extends TestCase {
 		$this->assertTrue($result);
 		$this->assertSame('<p>hi, no marker here</p>', $html);
 	}//end testSendOneDeliveryLeavesATemplateWithNoMarkerUnchanged()
+
+	/**
+	 * The template's physical address (`footerOverride`) reaches the sent
+	 * mail: at its token in the HTML body, escaped with its line breaks kept,
+	 * and appended to a plain-text body that has no token.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/marketing-compliance/spec.md#requirement-unsubscribe-footer-enforced-on-email-templates
+	 */
+	public function testSendOneDeliveryRendersThePhysicalAddress(): void {
+		$transport = ['uuid' => 't-address', 'kind' => 'instance', 'dailyLimit' => 0, 'sentToday' => 0];
+		$this->objectService->store['t-address'] = $transport;
+
+		$message = $this->createMock(IMessage::class);
+		$message->method('setFrom')->willReturn($message);
+		$message->method('setTo')->willReturn($message);
+		$message->method('setReplyTo')->willReturn($message);
+		$message->method('setSubject')->willReturn($message);
+		$html = null;
+		$text = null;
+		$message->method('setHtmlBody')->willReturnCallback(
+			function (string $value) use ($message, &$html) {
+				$html = $value;
+				return $message;
+			}
+		);
+		$message->method('setPlainBody')->willReturnCallback(
+			function (string $value) use ($message, &$text) {
+				$text = $value;
+				return $message;
+			}
+		);
+		$this->mailer->method('createMessage')->willReturn($message);
+		$this->mailer->method('send')->willReturn([]);
+
+		$delivery = ['uuid' => 'd-address', 'email' => 'user@example.com'];
+		$template = [
+			'subject' => 'Hi',
+			'bodyHtml' => '<p>Hi</p><p>{{physical_address}}</p>',
+			'bodyText' => 'Hi',
+			'footerOverride' => "Conduction B.V. & Co\nTurfmarkt 147",
+		];
+
+		$result = $this->service->sendOneDelivery($delivery, $template, $transport);
+
+		$this->assertTrue($result);
+		$this->assertSame('<p>Hi</p><p>Conduction B.V. &amp; Co<br>' . "\n" . 'Turfmarkt 147</p>', $html);
+		$this->assertSame("Hi\n\nConduction B.V. & Co\nTurfmarkt 147", $text);
+	}//end testSendOneDeliveryRendersThePhysicalAddress()
 
 	/**
 	 * Build an in-memory {@see ListObjectStore} double for {@see ArticleService}.

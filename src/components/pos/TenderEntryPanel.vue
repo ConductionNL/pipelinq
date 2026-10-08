@@ -5,9 +5,10 @@
   - Per-transaction tender entry panel (pos-split-tender REQ-PST-002..005).
   -
   - Shows: list of tenders for the transaction, server-authoritative
-  - validation summary (sum / total / remaining / balanced), an Add Tender
-  - action that opens AddTenderDialog and a per-row Remove action. Read-only
-  - when the transaction is `settled`.
+  - validation summary (sum / total / remaining / balanced) and a per-row
+  - Remove action. It draws no heading or Add button of its own: the widget
+  - hosting it puts both in its header and calls `openAddDialog()`. Read-only
+  - when the transaction is `settled` or `refunded`.
   -
   - @spec openspec/changes/pos-split-tender/tasks.md#7.2
   - @spec openspec/changes/pos-split-tender/tasks.md#7.5
@@ -15,17 +16,6 @@
   -->
 <template>
 	<div class="tender-panel">
-		<div class="tender-panel__header">
-			<h3>{{ t('pipelinq', 'Tenders') }}</h3>
-			<NcButton
-				v-if="canEdit"
-				variant="primary"
-				:disabled="loading"
-				@click="openAddDialog">
-				{{ t('pipelinq', 'Add tender') }}
-			</NcButton>
-		</div>
-
 		<NcLoadingIcon v-if="loading" :size="32" />
 
 		<template v-else>
@@ -145,6 +135,9 @@ export default {
 		return {
 			tenders: [],
 			tenderTypes: [],
+			// Tender type names looked up one by one, keyed by id, for a
+			// tender whose type is not in the list (pipelinq-audit-admin-forms-pos).
+			typeNames: {},
 			validation: {
 				tenderSum: 0,
 				transactionTotal: 0,
@@ -199,8 +192,14 @@ export default {
 		},
 	},
 
+	/**
+	 * Load the tenders and the tender types, then name every tender's type.
+	 *
+	 * @spec openspec/specs/pos-display/spec.md#requirement-pos-amounts-and-labels-follow-the-user
+	 */
 	async mounted() {
 		await Promise.all([this.loadTenders(), this.loadTenderTypes()])
+		await this.resolveTypeNames()
 	},
 
 	methods: {
@@ -212,13 +211,57 @@ export default {
 			return tender?.id || tender?.uuid || ''
 		},
 
+		/**
+		 * The tender type's name, never its uuid.
+		 *
+		 * @param {object} tender The tender.
+		 * @return {string} The name, or a placeholder while it loads.
+		 * @spec openspec/changes/pipelinq-audit-admin-forms-pos/specs/pos-display/spec.md#requirement-pos-amounts-and-labels-follow-the-user
+		 */
 		tenderTypeLabel(tender) {
 			const id = tender?.tenderType || ''
 			const found = this.tenderTypes.find((t) => this.idOf(t) === id)
 			if (found) {
-				return found.name || found.code || id
+				return found.name || found.code || t('pipelinq', 'Unknown')
 			}
-			return id || t('pipelinq', 'Unknown')
+			if (id && this.typeNames[id] !== undefined) {
+				return this.typeNames[id] || t('pipelinq', 'Unknown')
+			}
+			return id ? '…' : t('pipelinq', 'Unknown')
+		},
+
+		/**
+		 * Look up the name of every tender type the list did not bring, one
+		 * request per type. A failed lookup reads Unknown.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/pipelinq-audit-admin-forms-pos/specs/pos-display/spec.md#requirement-pos-amounts-and-labels-follow-the-user
+		 */
+		async resolveTypeNames() {
+			const known = new Set(this.tenderTypes.map((type) => this.idOf(type)))
+			const missing = [
+				...new Set(this.tenders.map((tender) => tender?.tenderType || '')),
+			].filter(
+				(id) => id && !known.has(id) && this.typeNames[id] === undefined,
+			)
+			await Promise.all(
+				missing.map(async (id) => {
+					const url = generateUrl(
+						'/apps/pipelinq/api/pos/tender-types/{id}',
+						{
+							id,
+						},
+					)
+					const name = await axios
+						.get(url)
+						.then(
+							(response) =>
+								response?.data?.name || response?.data?.code || '',
+						)
+						.catch(() => '')
+					this.typeNames = { ...this.typeNames, [id]: name }
+				}),
+			)
 		},
 
 		idOf(type) {
@@ -228,8 +271,18 @@ export default {
 			return type?.id || type?.uuid || ''
 		},
 
-		async loadTenders() {
-			this.loading = true
+		/**
+		 * Load the tenders and the server's validation summary.
+		 *
+		 * @param {object} [options] Options.
+		 * @param {boolean} [options.silent] Keep the table on screen while
+		 *   reloading, for a refresh rather than a first load.
+		 * @return {Promise<void>}
+		 *
+		 * @spec openspec/changes/archive/2026-06-14-pos-split-tender/specs.md#req-pst-004-tender-sum-validation-before-settlement-mvp
+		 */
+		async loadTenders({ silent = false } = {}) {
+			this.loading = !silent
 			this.errorMessage = ''
 			try {
 				const url = generateUrl(
@@ -273,9 +326,15 @@ export default {
 			this.showAdd = true
 		},
 
+		/**
+		 * Close the dialog, reload the tenders and name a new tender's type.
+		 *
+		 * @spec openspec/specs/pos-display/spec.md#requirement-pos-amounts-and-labels-follow-the-user
+		 */
 		async onTenderAdded() {
 			this.showAdd = false
 			await this.loadTenders()
+			await this.resolveTypeNames()
 			this.$emit('changed')
 		},
 
@@ -334,16 +393,6 @@ export default {
 	display: flex;
 	flex-direction: column;
 	gap: 12px;
-}
-
-.tender-panel__header {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-}
-
-.tender-panel__header h3 {
-	margin: 0;
 }
 
 .tender-panel__table {

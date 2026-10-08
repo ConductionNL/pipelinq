@@ -335,7 +335,12 @@ class BerichtenboxService {
 			}
 
 			try {
-				$this->emailFallback->send($message, $burgerEmail, true);
+				$accepted = $this->emailFallback->send($message, $burgerEmail, true);
+				if ($accepted === false && $this->emailFallback->lastRefusal() !== null) {
+					// Integriq refused it (opt-out-before-send): logged by the
+					// sender, and the message status stays as it is.
+					continue;
+				}
 			} catch (\Throwable $e) {
 				$this->logger->warning(
 					'5-day fallback email send failed.',
@@ -619,7 +624,11 @@ class BerichtenboxService {
 		}
 
 		try {
-			$this->emailFallback->send($message, $burgerEmail, false);
+			$accepted = $this->emailFallback->send($message, $burgerEmail, false);
+			if ($accepted === false && $this->emailFallback->lastRefusal() !== null) {
+				// Integriq refused it: logged by the sender, status unchanged.
+				return;
+			}
 		} catch (\Throwable $e) {
 			$this->markFailedOrRetry(message: $message, reason: $e->getMessage(), bodyHash: $bodyHash);
 			return;

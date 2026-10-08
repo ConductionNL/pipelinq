@@ -9,6 +9,13 @@
  * including equality filtering and id minting, so the tests exercise the real
  * service logic (scoping, expiry, rate limits) rather than rigged mocks.
  *
+ * Only the STORAGE is faked. The schema lookup is the real one: every read and
+ * write first resolves the slug through the parent's schemaId() over an app
+ * config holding only what the install writes ({@see InstalledAppConfig}), so a
+ * service that asks for a schema the install does not configure fails here the
+ * way it fails live. The previous double answered any slug, which let
+ * pipelinq#2037 (no resident could log in) ship with a green suite.
+ *
  * @category Test
  * @package  OCA\Pipelinq\Tests\Unit\Service\Portal
  *
@@ -25,7 +32,11 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Tests\Unit\Service\Portal;
 
+use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Service\Portal\PortalObjectRepository;
+use OCA\Pipelinq\Service\Portal\PortalServiceAccount;
+use OCP\IAppConfig;
+use Psr\Log\NullLogger;
 
 /**
  * Deterministic in-memory portal repository for tests.
@@ -46,10 +57,16 @@ class FakePortalObjectRepository extends PortalObjectRepository {
 	private int $counter = 0;
 
 	/**
-	 * Constructor (bypasses the real DI wiring).
+	 * Constructor.
+	 *
+	 * @param IAppConfig $appConfig An app config holding the installed keys
+	 *                              (build it with InstalledAppConfig::wire()).
 	 */
-	public function __construct() {
-		// Intentionally does not call parent::__construct(): no OR needed.
+	public function __construct(IAppConfig $appConfig) {
+		// The OR stub is inert: storage is the in-memory map below.
+		// The service account is never consulted: save() is overridden below.
+		$serviceAccount = (new \ReflectionClass(PortalServiceAccount::class))->newInstanceWithoutConstructor();
+		parent::__construct($appConfig, new NullLogger(), new ObjectService(), $serviceAccount);
 	}//end __construct()
 
 	/**
@@ -62,6 +79,7 @@ class FakePortalObjectRepository extends PortalObjectRepository {
 	 * @return array<string, mixed> The stored object (with @self.id).
 	 */
 	public function seed(string $schema, string $id, array $data): array {
+		$this->schemaId(schemaSlug: $schema);
 		$data['@self'] = ['id' => $id];
 		$this->store[$schema][$id] = $data;
 		return $data;
@@ -76,6 +94,13 @@ class FakePortalObjectRepository extends PortalObjectRepository {
 	 * @return array<string, mixed>|null The object, or null.
 	 */
 	public function find(string $schemaSlug, string $id): ?array {
+		// The real find() swallows the lookup failure into "not found".
+		try {
+			$this->schemaId(schemaSlug: $schemaSlug);
+		} catch (\RuntimeException $e) {
+			return null;
+		}
+
 		return ($this->store[$schemaSlug][$id] ?? null);
 	}//end find()
 
@@ -88,6 +113,9 @@ class FakePortalObjectRepository extends PortalObjectRepository {
 	 * @return array<int, array<string, mixed>> The matches.
 	 */
 	public function findAll(string $schemaSlug, array $filters = []): array {
+		// The real findAll() resolves the schema OUTSIDE its try block, so an
+		// unconfigured schema throws to the caller; so does this.
+		$this->schemaId(schemaSlug: $schemaSlug);
 		$rows = array_values($this->store[$schemaSlug] ?? []);
 		if (empty($filters) === true) {
 			return $rows;
@@ -120,6 +148,14 @@ class FakePortalObjectRepository extends PortalObjectRepository {
 	}//end findOneBy()
 
 	/**
+	 * The in-memory store can always write.
+	 *
+	 * @return void
+	 */
+	public function requireWritable(): void {
+	}//end requireWritable()
+
+	/**
 	 * {@inheritDoc}
 	 *
 	 * @param string $schemaSlug The schema slug.
@@ -129,6 +165,7 @@ class FakePortalObjectRepository extends PortalObjectRepository {
 	 * @return array<string, mixed> The saved object.
 	 */
 	public function save(string $schemaSlug, array $data, ?string $id = null): array {
+		$this->schemaId(schemaSlug: $schemaSlug);
 		if ($id === null) {
 			$this->counter++;
 			$id = 'id-' . $this->counter;

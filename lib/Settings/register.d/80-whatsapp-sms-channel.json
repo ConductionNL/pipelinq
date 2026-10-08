@@ -489,6 +489,7 @@
           },
           "assignedTo": {
             "type": "string",
+            "format": "user",
             "description": "Nextcloud user id of the assigned agent.",
             "title": "Assigned To"
           },

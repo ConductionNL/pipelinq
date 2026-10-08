@@ -6,7 +6,7 @@
 				<h2>{{ t('pipelinq', 'My Work') }}</h2>
 				<span v-if="totalCount > 0" class="my-work__counts">
 					{{ t('pipelinq', 'Leads') }} ({{ leadCount }}) ·
-					{{ t('pipelinq', 'Requests') }} ({{ requestCount }}) —
+					{{ t('pipelinq', 'Tickets') }} ({{ requestCount }}) ·
 					{{ totalCount }} {{ t('pipelinq', 'items total') }}
 				</span>
 			</div>
@@ -25,7 +25,12 @@
 					<NcButton
 						:variant="filter === 'request' ? 'primary' : 'secondary'"
 						@click="filter = 'request'">
-						{{ t('pipelinq', 'Requests') }}
+						{{ t('pipelinq', 'Tickets') }}
+					</NcButton>
+					<NcButton
+						:variant="filter === 'task' ? 'primary' : 'secondary'"
+						@click="filter = 'task'">
+						{{ t('pipelinq', 'Follow-ups') }}
 					</NcButton>
 				</div>
 				<label class="show-completed-toggle">
@@ -61,23 +66,20 @@
 					</span>
 				</div>
 				<div class="work-group__items">
-					<div
+					<router-link
 						v-for="item in group.items"
 						:key="item.id"
+						:to="itemRoute(item)"
 						class="work-card"
 						:class="{
 							'work-card--overdue': item.isOverdue,
 							'work-card--completed': item.isClosed,
-						}"
-						role="button"
-						tabindex="0"
-						@click="openItem(item)"
-						@keydown.enter="openItem(item)">
+						}">
 						<div class="work-card__top">
 							<span
 								class="entity-badge"
 								:class="'badge--' + item.entityType">
-								{{ item.entityType === 'lead' ? 'LEAD' : 'REQ' }}
+								{{ badgeText(item.entityType, item.ticketType) }}
 							</span>
 							<span
 								v-if="item.priority && item.priority !== 'normal'"
@@ -102,7 +104,12 @@
 							<span
 								v-if="item.entityType === 'lead' && item.value"
 								class="meta-value">
-								EUR {{ formatNumber(item.value) }}
+								{{
+									formatCurrency(
+										item.value,
+										currencyOr(item.currency),
+									)
+								}}
 							</span>
 						</div>
 						<div class="work-card__footer">
@@ -124,7 +131,7 @@
 								{{ t('pipelinq', 'No due date') }}
 							</span>
 						</div>
-					</div>
+					</router-link>
 				</div>
 			</div>
 		</div>
@@ -134,8 +141,10 @@
 <script>
 import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
-import { formatDateFull, formatNumber } from '../services/localeUtils.js'
+import { formatCurrency, formatDateFull } from '../services/localeUtils.js'
+import { GROUP_ORDER, workGroup } from '../services/myWorkGroups.js'
 import { isStale } from '../services/pipelineUtils.js'
+import { currencyOr } from '../services/reportingCurrency.js'
 import {
 	getPriorityColor,
 	getPriorityLabel,
@@ -144,6 +153,16 @@ import {
 import { useObjectStore } from '../store/modules/object.js'
 
 const PRIORITY_ORDER = { urgent: 0, high: 1, normal: 2, low: 3 }
+
+// The closed half of the unified ticket lifecycle, the same list the Queue
+// page excludes. A closed ticket of any type is done, not work.
+const TERMINAL_TICKET_STATUSES = [
+	'resolved',
+	'completed',
+	'rejected',
+	'converted',
+	'closed',
+]
 
 /**
  *
@@ -193,6 +212,7 @@ export default {
 			showCompleted: false,
 			myLeads: [],
 			myRequests: [],
+			myTasks: [],
 			pipelines: [],
 		}
 	},
@@ -270,6 +290,7 @@ export default {
 						: '',
 					priority: l.priority || 'normal',
 					value: l.value,
+					currency: l.currency || null,
 					dueDate: l.expectedCloseDate,
 					isOverdue,
 					isDueToday,
@@ -282,9 +303,7 @@ export default {
 			}
 
 			for (const r of this.myRequests) {
-				const isTerminal = ['completed', 'rejected', 'converted'].includes(
-					r.status,
-				)
+				const isTerminal = TERMINAL_TICKET_STATUSES.includes(r.status)
 				if (!this.showCompleted && isTerminal) continue
 
 				const due = r.occurredAt ? new Date(r.occurredAt) : null
@@ -294,6 +313,7 @@ export default {
 				items.push({
 					id: r.id,
 					entityType: 'request',
+					ticketType: r.ticketType || 'request',
 					title: r.title || '-',
 					stageOrStatus: getStatusLabel(r.status),
 					pipelineName: r.pipeline
@@ -309,6 +329,34 @@ export default {
 					isStale: false,
 					_dueMs: due ? due.getTime() : Infinity,
 					_group: isOverdue ? 'overdue' : 'no-due-date',
+				})
+			}
+
+			// Follow-up tasks and callbacks assigned to me (crmTask), so the
+			// day's calls and follow-ups sit in the same list as the deals.
+			for (const task of this.myTasks) {
+				const isDone = ['completed', 'expired'].includes(task.status)
+				if (!this.showCompleted && isDone) continue
+
+				const due = task.deadline ? new Date(task.deadline) : null
+				const group = workGroup(due, now, weekEnd, isDone)
+
+				items.push({
+					id: task.id,
+					entityType: 'task',
+					title: task.subject || '-',
+					stageOrStatus: task.status || '',
+					pipelineName: '',
+					priority: task.priority || 'normal',
+					value: null,
+					dueDate: task.deadline,
+					isOverdue: group === 'overdue',
+					isDueToday: group === 'due-today',
+					overdueDays: group === 'overdue' ? daysBetween(due, now) : 0,
+					isClosed: isDone,
+					isStale: false,
+					_dueMs: due ? due.getTime() : Infinity,
+					_group: group,
 				})
 			}
 
@@ -349,12 +397,7 @@ export default {
 		 * @spec openspec/changes/reverse-2026-05-26-fe-mywork-ui/tasks.md#task-10
 		 */
 		groupedItems() {
-			const groups = {
-				overdue: [],
-				'due-this-week': [],
-				upcoming: [],
-				'no-due-date': [],
-			}
+			const groups = Object.fromEntries(GROUP_ORDER.map((key) => [key, []]))
 
 			for (const item of this.filteredItems) {
 				const g = groups[item._group]
@@ -379,6 +422,7 @@ export default {
 		 */
 		visibleGroups() {
 			const defs = [
+				{ key: 'due-today', label: t('pipelinq', 'Today') },
 				{ key: 'overdue', label: t('pipelinq', 'Overdue') },
 				{ key: 'due-this-week', label: t('pipelinq', 'Due This Week') },
 				{ key: 'upcoming', label: t('pipelinq', 'Upcoming') },
@@ -396,7 +440,9 @@ export default {
 			if (this.filter === 'lead')
 				return t('pipelinq', 'No leads assigned to you')
 			if (this.filter === 'request')
-				return t('pipelinq', 'No requests assigned to you')
+				return t('pipelinq', 'No tickets assigned to you')
+			if (this.filter === 'task')
+				return t('pipelinq', 'No follow-ups assigned to you')
 			return t('pipelinq', 'No items assigned to you')
 		},
 	},
@@ -406,7 +452,8 @@ export default {
 	},
 
 	methods: {
-		formatNumber,
+		formatCurrency,
+		currencyOr,
 		getPriorityLabel,
 		getPriorityColor,
 
@@ -422,15 +469,28 @@ export default {
 		 * @spec openspec/changes/reverse-2026-05-26-fe-mywork-ui/tasks.md#task-3
 		 */
 		computeGroup(due, now, weekEnd, isClosed) {
-			if (!due) return 'no-due-date'
-			if (isClosed) return 'no-due-date'
-			if (due < now) return 'overdue'
-			if (due <= weekEnd) return 'due-this-week'
-			return 'upcoming'
+			return workGroup(due, now, weekEnd, isClosed)
+		},
+
+		/**
+		 * The short type badge on a work card.
+		 *
+		 * @param {string} entityType lead, request (any ticket) or task.
+		 * @param {string} [ticketType] The ticket type, for a ticket.
+		 * @return {string}
+		 * @spec openspec/specs/mobile-experience/spec.md#requirement-my-work-works-as-a-phone-list-req-mob-002
+		 */
+		badgeText(entityType, ticketType) {
+			if (entityType === 'lead') return 'LEAD'
+			if (entityType === 'task') return t('pipelinq', 'TASK')
+			if (ticketType === 'complaint') return t('pipelinq', 'COMPLAINT')
+			if (ticketType === 'interaction') return t('pipelinq', 'CONTACT')
+			return 'REQ'
 		},
 
 		/**
 		 * @spec openspec/changes/reverse-2026-05-26-fe-mywork-ui/tasks.md#task-6
+		 * @spec openspec/changes/detail-pages-read-at-a-glance/specs/my-work/spec.md
 		 */
 		async fetchAll() {
 			this.loading = true
@@ -450,18 +510,27 @@ export default {
 						}),
 					)
 				}
-				// A request is a `ticket` narrowed by ticketType (unify-ticket-supertype).
-				// Without the filter, complaints and contactmomenten would leak into
-				// "my requests". Held in local state, never read from the shared
+				// Every ticket assigned to me, whatever its type: an assigned
+				// complaint or contact moment is my work too (pipelinq review G1).
+				// Held in local state, never read from the shared
 				// collections.ticket bucket.
 				if (config.ticket && this.currentUser) {
 					promises.push(
 						this.fetchRaw('ticket', {
-							ticketType: 'request',
 							assignee: this.currentUser,
 							_limit: 200,
 						}).then((items) => {
 							this.myRequests = items
+						}),
+					)
+				}
+				if (config.crmTask && this.currentUser) {
+					promises.push(
+						this.fetchRaw('crmTask', {
+							assigneeUserId: this.currentUser,
+							_limit: 200,
+						}).then((items) => {
+							this.myTasks = items
 						}),
 					)
 				}
@@ -538,21 +607,24 @@ export default {
 		},
 
 		/**
-		 * Navigate to the detail page for a My Work row.
+		 * The detail page a My Work card links to.
 		 *
 		 * @param {object} item The row, carrying its entityType and id.
-		 * @return {void}
+		 * @return {object} The route location.
 		 * @spec openspec/changes/reverse-2026-05-26-fe-mywork-ui/tasks.md#task-13
 		 */
-		openItem(item) {
+		itemRoute(item) {
+			// Requests are `ticket` rows narrowed by ticketType
+			// (unify-ticket-supertype) — every other non-lead, non-task work
+			// item opens on the unified TicketDetail page, which reads its own
+			// ticketType.
+			let name = 'TicketDetail'
 			if (item.entityType === 'lead') {
-				this.$router.push({ name: 'LeadDetail', params: { id: item.id } })
-			} else {
-				// Requests are `ticket` rows narrowed by ticketType
-				// (unify-ticket-supertype) — every non-lead work item opens on
-				// the unified TicketDetail page, which reads its own ticketType.
-				this.$router.push({ name: 'TicketDetail', params: { id: item.id } })
+				name = 'LeadDetail'
+			} else if (item.entityType === 'task') {
+				name = 'TaskDetail'
 			}
+			return { name, params: { id: item.id } }
 		},
 	},
 }
@@ -560,6 +632,13 @@ export default {
 
 <style scoped>
 .my-work {
+	/* Entity badge palettes, one per type. */
+	--my-work-lead-bg: #dbeafe;
+	--my-work-lead-text: #1d4ed8;
+	--my-work-lead-border: #93c5fd;
+	--my-work-request-bg: #ffedd5;
+	--my-work-request-text: #c2410c;
+	--my-work-request-border: #fdba74;
 	padding: 20px;
 	max-width: 900px;
 }
@@ -613,7 +692,7 @@ export default {
 }
 
 .my-work__error {
-	color: var(--color-error);
+	color: var(--color-text-error);
 }
 
 .my-work__error p {
@@ -638,8 +717,8 @@ export default {
 }
 
 .work-group__header--overdue {
-	color: var(--color-error);
-	border-bottom-color: var(--color-error);
+	color: var(--color-text-error);
+	border-bottom-color: var(--color-element-error);
 }
 
 .group-count {
@@ -650,14 +729,14 @@ export default {
 	border-radius: 10px;
 	font-size: 12px;
 	font-weight: 700;
-	background: var(--color-background-darker, rgba(0, 0, 0, 0.07));
+	background: var(--color-background-dark);
 	color: var(--color-text-maxcontrast);
 	margin-inline-start: 6px;
 }
 
 .group-count--overdue {
 	background: var(--color-error);
-	color: #fff;
+	color: var(--color-error-text);
 }
 
 .work-group__items {
@@ -669,6 +748,9 @@ export default {
 
 /* Work card */
 .work-card {
+	display: block;
+	color: inherit;
+	text-decoration: none;
 	background: var(--color-main-background);
 	border: 1px solid var(--color-border);
 	border-radius: var(--border-radius-large);
@@ -677,14 +759,19 @@ export default {
 	transition: box-shadow 0.15s;
 }
 
+/* Nextcloud's reset puts cursor: default on every div and span. */
+.work-card * {
+	cursor: pointer;
+}
+
 .work-card:hover,
 .work-card:focus-visible {
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+	box-shadow: 0 2px 8px var(--color-box-shadow);
 	outline: none;
 }
 
 .work-card--overdue {
-	border-inline-start: 3px solid var(--color-error);
+	border-inline-start: 3px solid var(--color-element-error);
 }
 
 .work-card--completed {
@@ -708,15 +795,21 @@ export default {
 }
 
 .badge--lead {
-	background: #dbeafe;
-	color: #1d4ed8;
-	border: 1px solid #93c5fd;
+	background: var(--my-work-lead-bg);
+	color: var(--my-work-lead-text);
+	border: 1px solid var(--my-work-lead-border);
 }
 
 .badge--request {
-	background: #ffedd5;
-	color: #c2410c;
-	border: 1px solid #fdba74;
+	background: var(--my-work-request-bg);
+	color: var(--my-work-request-text);
+	border: 1px solid var(--my-work-request-border);
+}
+
+.badge--task {
+	background: var(--color-background-dark);
+	color: var(--color-main-text);
+	border: 1px solid var(--color-border-dark);
 }
 
 .priority-badge {
@@ -753,12 +846,12 @@ export default {
 }
 
 .overdue-text {
-	color: var(--color-error);
+	color: var(--color-text-error);
 	font-weight: 600;
 }
 
 .due-today-text {
-	color: var(--color-warning);
+	color: var(--color-warning-text);
 	font-weight: 600;
 }
 
@@ -777,16 +870,70 @@ export default {
 	border-radius: 4px;
 	font-size: 10px;
 	font-weight: 700;
-	background: #fff7ed;
-	color: #c2410c;
-	border: 1px solid #fdba74;
+	background: var(--color-warning);
+	color: var(--color-warning-text);
 	margin-inline-start: 6px;
 	vertical-align: middle;
+}
+
+/* Phone: one column, today's work first (the group order), 44 px targets. */
+@media (max-width: 600px) {
+	.my-work {
+		padding: 12px;
+		max-width: 100%;
+		overflow-x: hidden;
+	}
+
+	.filter-buttons {
+		flex-wrap: wrap;
+	}
+
+	.filter-buttons :deep(button),
+	.show-completed-toggle,
+	.work-card {
+		min-height: 44px;
+	}
+
+	.work-card {
+		padding: 12px;
+	}
+
+	.work-card__meta,
+	.work-card__footer {
+		flex-wrap: wrap;
+	}
+
+	.work-card__title {
+		overflow-wrap: anywhere;
+	}
 }
 
 @media (prefers-reduced-motion: reduce) {
 	.work-card {
 		transition: none;
+	}
+}
+</style>
+
+<style>
+/* Dark palettes for the entity badges; unscoped so the body theme attribute can select them. */
+body[data-theme-dark] .my-work {
+	--my-work-lead-bg: rgba(59, 130, 246, 0.18);
+	--my-work-lead-text: #93c5fd;
+	--my-work-lead-border: #1d4ed8;
+	--my-work-request-bg: rgba(249, 115, 22, 0.18);
+	--my-work-request-text: #fdba74;
+	--my-work-request-border: #fdba74;
+}
+
+@media (prefers-color-scheme: dark) {
+	body[data-theme-default] .my-work {
+		--my-work-lead-bg: rgba(59, 130, 246, 0.18);
+		--my-work-lead-text: #93c5fd;
+		--my-work-lead-border: #1d4ed8;
+		--my-work-request-bg: rgba(249, 115, 22, 0.18);
+		--my-work-request-text: #fdba74;
+		--my-work-request-border: #fdba74;
 	}
 }
 </style>

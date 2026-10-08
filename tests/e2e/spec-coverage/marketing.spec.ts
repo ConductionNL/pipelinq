@@ -31,7 +31,6 @@ import type { Page } from '@playwright/test'
 import { expect, test } from '@playwright/test'
 import {
 	assertNoHardError,
-	clickHeaderAction,
 	gotoAppRoute,
 	navClick,
 	openApp,
@@ -662,44 +661,34 @@ test.describe('Blasts ledger and wizard', () => {
 	})
 
 	// @e2e openspec/specs/marketing-ui/spec.md#email-template-validated-before-save
-	test('the New-blast wizard walks name to segment to template', async ({
+	test('the new-blast wizard walks basics to audience to content', async ({
 		page,
 	}) => {
-		// One load, not two: openApp() booted the Dashboard and the next
-		// line navigated straight off it.
-		await gotoAppRoute(page, '/blasts/new')
+		await openApp(page)
+		await navClick(page, 'Blasts', /\/blasts$/)
+		await page
+			.locator('#content-vue [data-testid="cn-cta-primary"]')
+			.first()
+			.click()
 
-		const form = page.locator('.blast-form')
-		await expect(form.getByRole('heading', { name: 'New blast' })).toBeVisible({
-			timeout: 20000,
-		})
+		const dialog = page.getByRole('dialog', { name: 'New blast' })
+		await expect(dialog).toBeVisible({ timeout: 20000 })
 
-		// The seven declared steps are rendered as an ordered progress list.
-		// marketing-mail-transports added a "Transport" step between Channel
-		// and Schedule (six steps before that change).
-		await expect(form.locator('.blast-form__steps li')).toHaveCount(7)
-		await expect(form.locator('.blast-form__steps li.is-current')).toHaveCount(1)
+		// The six steps render as a stepper with exactly one current step.
+		await expect(dialog.locator('.blast-wizard__step')).toHaveCount(6)
+		await expect(dialog.locator('.blast-wizard__step--current')).toHaveCount(1)
 
-		// Step 1 — name. `canAdvance` gates Next until it is filled.
-		const name = form.locator('#blast-form-name')
-		await expect(name).toBeVisible()
-		await name.fill('E2E gate-19 draft')
+		// Basics. Next stays disabled until the name is filled in.
+		const next = dialog.getByRole('button', { name: 'Next' })
+		await expect(next).toBeDisabled()
+		await dialog.locator('#blast-wizard-name').fill('E2E gate-19 draft')
+		await next.click()
 
-		// Step 2 — the segment picker is fed from the seeded Segments.
-		//
-		// The previous form of this assertion looked for the option text INSIDE
-		// `.blast-form`, and could never pass. `<NcSelect :options="segments">`
-		// paints no option until its combobox is opened, and @nextcloud/vue 9's
-		// NcSelect defaults `appendToBody: true`, so vue-select renders the open
-		// menu at the END OF <body> — outside `.blast-form` even when it is open.
-		// Run 31473685688 recorded it as "element(s) not found" after 20s.
-		// So: open the combobox, then match the option page-wide, the same way
-		// spec-coverage/appointment-booking.spec.ts drives its NcSelect.
-		await form.getByRole('button', { name: 'Next' }).first().click()
-		const segmentPicker = form.locator('.vs__dropdown-toggle').first()
+		// Audience. NcSelect appends its open menu to <body>, so the option is
+		// matched page-wide.
+		const segmentPicker = dialog.locator('.vs__dropdown-toggle').first()
 		await expect(segmentPicker).toBeVisible({ timeout: 20000 })
 		await segmentPicker.click()
-
 		const segmentOption = page
 			.locator('li[role="option"], .vs__dropdown-option')
 			.filter({ hasText: 'Gemeente Contact Blast' })
@@ -708,14 +697,18 @@ test.describe('Blasts ledger and wizard', () => {
 			segmentOption,
 			'the seeded Segment must be offered as a pickable option',
 		).toBeVisible({ timeout: 20000 })
-
-		// Picking it advances the form's own state — the estimated-audience hint
-		// is `v-if="selectedSegment"`, so it can only appear once the picker has
-		// bound a real Segment object.
 		await segmentOption.click()
-		await expect(form.locator('.blast-form__hint')).toBeVisible({
+
+		// The estimated-audience hint only renders once a real Segment is bound.
+		await expect(dialog.locator('.blast-wizard__audience-hint')).toBeVisible({
 			timeout: 20000,
 		})
+		await next.click()
+
+		// Content. Only the channel's templates are offered, and picking one
+		// runs the template validation the scenario names.
+		const templatePicker = dialog.locator('.vs__dropdown-toggle').first()
+		await expect(templatePicker).toBeVisible({ timeout: 20000 })
 
 		await assertNoHardError(page)
 	})
@@ -724,85 +717,66 @@ test.describe('Blasts ledger and wizard', () => {
 /* ══════════════════════════════════════════════════════════════════════════
  * Segments and Templates — marketing-segments-ui-repair (pipelinq#773).
  *
- * `SegmentBuilder.vue` / `SegmentRuleNode.vue` were imported by nothing
- * before this change (the only occurrence of either identifier outside
- * those two files was a prose comment in src/registry.js), so this is the
- * FIRST browser exercise of the rule-tree editor. `SegmentForm.vue` mounts
- * it at `/segments/new` (route id `SegmentNew`), reachable from the
- * Marketing menu's "Segments" entry.
+ * `SegmentFormDialog.vue` hosts the rule-tree editor (`SegmentBuilder.vue` /
+ * `SegmentRuleNode.vue`) as a modal in the Segments index page's form-dialog
+ * slot, opened by the page's Add button and its row Edit action.
  * ══════════════════════════════════════════════════════════════════════════ */
 test.describe('Segments', () => {
 	// @e2e openspec/specs/marketing-ui/spec.md#visual-rule-tree-with-live-validation
 	// @e2e openspec/specs/marketing-ui/spec.md#live-size-estimate-shown
 	// @e2e openspec/specs/marketing-ui/spec.md#creating-a-segment-from-the-segments-page
-	test('the Segment builder blocks save on an invalid predicate, then validates and estimates once fixed', async ({
+	test('the Segment builder holds save until the rules are complete and valid, then estimates', async ({
 		page,
 	}) => {
 		await openApp(page)
-		// Reach SegmentFormView the way the scenario describes it: from the
-		// Segments index page's "New segment" action, not a direct deep link —
-		// that action is what proves the Segments page (not just the target
-		// route) is reachable and wired.
+		// Reached from the Segments index page's own Add button, which is what
+		// proves the page is wired, not only the dialog.
 		await navClick(page, 'Segments', /\/segments$/)
-		await clickHeaderAction(page, 'New segment')
-		await expect(page).toHaveURL(/\/segments\/new$/, { timeout: 10000 })
+		await page
+			.locator('#content-vue [data-testid="cn-cta-primary"]')
+			.first()
+			.click()
 
-		const form = page.locator('.segment-form')
-		await expect(form.getByRole('heading', { name: 'New segment' })).toBeVisible(
-			{ timeout: 20000 },
-		)
+		const dialog = page.getByRole('dialog', { name: 'New segment' })
+		await expect(dialog).toBeVisible({ timeout: 20000 })
+		// A modal over the list, not a page of its own.
+		await expect(page).toHaveURL(/\/segments$/)
 
-		await form.locator('#segment-form-name').fill('E2E gate-19 segment')
+		await dialog.getByLabel('Segment name').fill('E2E gate-19 segment')
 
-		// The audience defaults to "contact"; SegmentBuilder mounts once an
-		// audience is chosen and starts as an empty AND group with no leaf —
-		// "Add condition" is the group's own action, not part of a leaf row.
-		const builder = form.locator('.segment-builder')
+		const builder = dialog.locator('.segment-builder')
 		await expect(builder).toBeVisible({ timeout: 20000 })
-		await builder.getByRole('button', { name: 'Add condition' }).click()
+		const saveButton = dialog.getByRole('button', { name: 'Create segment' })
 
-		// Field / operator are NcSelect (vue-select). @nextcloud/vue defaults
-		// `appendToBody: true`, so the open dropdown paints at the end of
-		// <body> — matched page-wide, the same way the Blast wizard's
-		// segment picker is driven above.
-		const fieldToggle = builder.locator('.rule-node__field .vs__dropdown-toggle')
-		await fieldToggle.click()
+		// An empty tree cannot be saved.
+		await expect(saveButton).toBeDisabled()
+
+		// A condition with no field yet is unfinished: Save stays disabled and
+		// the footer says why, with no error on the row.
+		await builder.getByRole('button', { name: 'Add condition' }).click()
+		await expect(dialog).toContainText(
+			'Complete or remove the unfinished conditions.',
+		)
+		await expect(builder.locator('.segment-rule__error')).toHaveCount(0)
+		await expect(saveButton).toBeDisabled()
+
+		// NcSelect (vue-select) appends its dropdown to <body>, so the option
+		// is matched page-wide.
+		await builder.locator('.segment-rule__field .vs__dropdown-toggle').click()
 		await page
 			.locator('li[role="option"], .vs__dropdown-option')
 			.filter({ hasText: 'Marketing consent' })
 			.first()
 			.click()
 
-		// "Marketing consent" is a boolean field. The operator list SegmentRuleNode
-		// now offers is already filtered to what SegmentService::OPERATOR_TYPE_MATRIX
-		// allows for a boolean field (equals / not-equals only) — an
-		// operator/type mismatch can no longer be composed through the UI by
-		// construction. What remains reachable, and is exercised here, is a
-		// VALUE that does not coerce to the field's type: typing a non-boolean
-		// string into the value input.
-		const valueInput = builder.locator('.rule-node__value')
-		await valueInput.fill('not-a-boolean')
-
-		// The debounced validator (250ms) reports the coercion failure and the
-		// component disables Save via its validityChange event.
-		await expect(builder.locator('.builder-error')).toBeVisible({
-			timeout: 10000,
-		})
-		const saveButton = form.getByRole('button', { name: 'Create segment' })
-		await expect(saveButton).toBeDisabled()
-
-		// Fix it: a boolean-coercible value ("true") passes validation, the
-		// error clears, and the debounced estimate (400ms) resolves to a
-		// number rendered as "Estimated members: N".
-		await valueInput.fill('true')
-		await expect(builder.locator('.builder-error')).toHaveCount(0, {
-			timeout: 10000,
-		})
-		await expect(saveButton).toBeEnabled({ timeout: 10000 })
-		await expect(builder.locator('.builder-estimate')).toContainText(
+		// A boolean field defaults to Yes, so the condition is complete. The
+		// debounced preview (400ms) validates it, Save enables, and the estimate
+		// renders as "Estimated members: N".
+		await expect(builder.locator('.segment-builder__estimate')).toContainText(
 			'Estimated members:',
 			{ timeout: 10000 },
 		)
+		await expect(saveButton).toBeEnabled({ timeout: 10000 })
 
 		await assertNoHardError(page)
 	})
@@ -849,39 +823,38 @@ test.describe('Segments', () => {
 	})
 
 	// @e2e openspec/specs/marketing-ui/spec.md#template-save-surfaces-a-compliance-error-as-a-field-error
-	test('the Templates New page renders a rejected save as a body field error', async ({
+	test('the new-template modal renders a rejected save as a body field error', async ({
 		page,
 	}) => {
 		await openApp(page)
 		await navClick(page, 'Templates', /\/templates$/)
-		await clickHeaderAction(page, 'New template')
-		await expect(page).toHaveURL(/\/templates\/new$/, { timeout: 10000 })
+		await page
+			.locator('#content-vue [data-testid="cn-cta-primary"]')
+			.first()
+			.click()
 
-		const form = page.locator('.template-form')
-		await expect(
-			form.getByRole('heading', { name: 'New template' }),
-		).toBeVisible({ timeout: 20000 })
+		const dialog = page.getByRole('dialog', { name: 'New template' })
+		await expect(dialog).toBeVisible({ timeout: 20000 })
 
-		// Channel defaults to email, so the subject/sender/body-html fields
-		// this scenario needs are already present.
-		await form.locator('#template-form-name').fill('E2E gate-19 field error')
-		await form
-			.locator('#template-form-body-html')
-			.fill('<p>Geen afmeldlink hier.</p>')
+		// Channel defaults to email, so the fields this scenario needs are
+		// already present.
+		await dialog.getByLabel('Template name').fill('E2E gate-19 field error')
+		await dialog.getByLabel('HTML body').fill('<p>Geen afmeldlink hier.</p>')
 
-		await form.getByRole('button', { name: 'Create template' }).click()
+		await dialog.getByRole('button', { name: 'Create template' }).click()
 
-		// The rejected POST /api/templates lands as a field-level error under
-		// the body, not only the page-level banner — this scenario's whole
-		// point.
-		const bodyFieldError = form.locator(
-			'#template-form-body-html + .template-form__field-error',
+		// The rejected POST /api/templates lands on the body field itself,
+		// which is this scenario's whole point.
+		await expect(dialog.locator('.template-form__body-html')).toContainText(
+			/unsubscribe/i,
+			{
+				timeout: 10000,
+			},
 		)
-		await expect(bodyFieldError).toBeVisible({ timeout: 10000 })
-		await expect(bodyFieldError).toContainText(/unsubscribe/i)
 
-		// Still on the New page — a rejected save does not navigate away.
-		await expect(page).toHaveURL(/\/templates\/new$/)
+		// A rejected save keeps the modal open, over the list.
+		await expect(dialog).toBeVisible()
+		await expect(page).toHaveURL(/\/templates$/)
 
 		await assertNoHardError(page)
 	})
@@ -1423,6 +1396,77 @@ test.describe('Marketing API contract', () => {
 				page,
 				'DELETE',
 				`/index.php/apps/openregister/api/objects/pipelinq/campaignTemplate/${smsId}`,
+			)
+		}
+	})
+
+	// @e2e openspec/specs/marketing-api/spec.md#template-update-keeps-the-fields-the-request-leaves-out
+	// @e2e openspec/specs/marketing-api/spec.md#a-stored-template-can-be-validated-without-saving
+	test('PATCH /api/templates keeps untouched fields, and /validate checks a stored template', async ({
+		page,
+	}) => {
+		await openApp(page)
+
+		const created = await api(page, 'POST', `${APP}/api/templates`, {
+			name: 'E2E gate-19 partial patch',
+			channel: 'email',
+			subject: 'Hoi',
+			bodyHtml: '<p>Afmelden: {{unsubscribe_link}}</p>',
+			footerOverride: 'Conduction B.V.\nTurfmarkt 147\n2511 DP Den Haag',
+		})
+		expect(created.status, created.text).toBe(201)
+		const id = created.json?.id || created.json?.['@self']?.id
+		expect(id, 'the created template must carry an id').toBeTruthy()
+
+		try {
+			// A PATCH naming one field leaves every other field as stored.
+			const patched = await api(page, 'PATCH', `${APP}/api/templates/${id}`, {
+				subject: 'Nieuw onderwerp',
+			})
+			expect(patched.status, patched.text).toBe(200)
+			const fetched = await api(page, 'GET', `${APP}/api/templates/${id}`)
+			expect(fetched.json?.subject).toBe('Nieuw onderwerp')
+			expect(fetched.json?.name).toBe('E2E gate-19 partial patch')
+			expect(fetched.json?.bodyHtml).toBe(
+				'<p>Afmelden: {{unsubscribe_link}}</p>',
+			)
+
+			// The stored template validates, and nothing is saved by asking.
+			const valid = await api(
+				page,
+				'POST',
+				`${APP}/api/templates/${id}/validate`,
+				{
+					channel: 'email',
+				},
+			)
+			expect(valid.status, valid.text).toBe(200)
+			expect(valid.json).toEqual({ valid: true, error: null })
+
+			// Clearing the address is refused on save, because an email must carry one.
+			const noAddress = await api(
+				page,
+				'PATCH',
+				`${APP}/api/templates/${id}`,
+				{
+					footerOverride: '',
+				},
+			)
+			expect(noAddress.status, noAddress.text).toBe(400)
+			expect(String(noAddress.json?.error)).toMatch(/address/i)
+
+			const missing = await api(
+				page,
+				'POST',
+				`${APP}/api/templates/e2e-no-such-template/validate`,
+				{},
+			)
+			expect(missing.status, missing.text).toBe(404)
+		} finally {
+			await api(
+				page,
+				'DELETE',
+				`/index.php/apps/openregister/api/objects/pipelinq/campaignTemplate/${id}`,
 			)
 		}
 	})

@@ -555,7 +555,7 @@ class LoyaltyGroupedCountRunnerFake extends AggregationRunner {
 	 *
 	 * @return array<string, mixed>
 	 */
-	public function runAdhocByRef(string $registerRef, string $schemaRef, AggregationQuery $query): array {
+	public function runAdhocByRef(string $registerRef, string $schemaRef, AggregationQuery $query, bool $bypassRbac=false): array {
 		return ['groups' => $this->groups, 'backend' => 'fake', 'cached' => false];
 	}//end runAdhocByRef()
 }//end class

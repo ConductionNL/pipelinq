@@ -60,7 +60,7 @@ class ContactDataBuilderTest extends TestCase {
 		$this->assertSame('John Doe', $result['name']);
 		$this->assertSame('person', $result['type']);
 		$this->assertSame('john@example.com', $result['email']);
-		$this->assertSame('Acme Corp', $result['industry']);
+		$this->assertSame(['Acme Corp'], $result['industry']);
 		$this->assertSame('uid-123', $result['contactsUid']);
 	}//end testBuildClientImportDataPerson()
 

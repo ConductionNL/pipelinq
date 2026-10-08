@@ -249,6 +249,16 @@ class BookingAdminController extends Controller {
 			label: 'sendReminder',
 			handler: function () use ($id): array {
 				$sent = $this->emailService->sendReminder(bookingId: $id);
+				$refusal = $this->emailService->lastRefusal();
+				if ($sent === false && $refusal !== null) {
+					// Integriq refused it (opt-out-before-send): say so, and why.
+					return [
+						'sent' => false,
+						'reason' => $refusal['code'],
+						'message' => $this->l10n->t('De herinnering is niet verstuurd: %s', [$refusal['code']]),
+					];
+				}
+
 				return ['sent' => $sent];
 			}
 		);

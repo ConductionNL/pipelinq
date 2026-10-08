@@ -67,6 +67,13 @@ module.exports = {
 		environment: 'node',
 		globals: false,
 		include: ['tests/vitest/**/*.spec.{js,ts}'],
+		// Run the two component-library scopes through Vite instead of handing
+		// them to Node. Their built modules import their own `.css` files,
+		// which Node cannot load, so a spec that mounts a real library page
+		// (modulesPage.spec.js mounts the page renderer) died on "Unknown file
+		// extension .css" before its first test. Inlined, those imports reach
+		// the CSS no-op plugin above.
+		server: { deps: { inline: [/@nextcloud\//, /@conduction\//] } },
 		exclude: [
 			'tests/e2e/**',
 			'tests/integration/**',
