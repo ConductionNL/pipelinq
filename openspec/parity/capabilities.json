@@ -2582,6 +2582,34 @@
 			}
 		},
 		{
+			"id": "req-decisions",
+			"area": "requests",
+			"name": "See the formal decisions on a request and prepare one from it",
+			"pipelinq": "partial",
+			"hubspot-crm": "unknown",
+			"pipedrive": "unknown",
+			"espocrm": "unknown",
+			"odoo-crm": "unknown",
+			"kiss": "unknown",
+			"provider": "pipelinq",
+			"providerHow": "read in src/manifest.json:2512 (ticket-decisions widget) and decidiq src/integrations/CnDecisionsWidget.vue",
+			"feature": "Requests",
+			"featureConfidence": "high",
+			"built": {
+				"state": "specified",
+				"evidence": "src/manifest.json:2512 mounts decidiq's decidesk-decisions leaf on TicketDetail as a widget under the overview (decidiq lib/Listener/RegisterDecisionsLeafListener.php, src/integrations/CnDecisionsWidget.vue: lists decisions with subjectId = the ticket, Create proposal for this object, Open in decidiq); ticket.decisions in lib/Settings/register.d/99-unify-ticket-supertype.json:262. Missing: the Decisions tab the board draws, and decisions on the case the ticket became (caseReference) do not show",
+				"owner": "ConductionNL/pipelinq",
+				"readOn": "2026-10-08",
+				"change": "ticket-decisions-tab"
+			},
+			"note": "Decision 99 (8 Oct): board PqTicketBesluitvorming draws it and no row had it. decidiq owns the decisions, the leaf and the create-proposal action (decidiq openspec/specs/decidesk-contract-decision-hub REQ-DCDH-001, REQ-DCDH-008), all built; nothing new in decidiq. pipelinq places it as a tab and adds the linked case's decisions.",
+			"source": "spec-round-2026-10-08",
+			"screen": {
+				"canvas": "5NkFW28vZUUij43xzxHg5a",
+				"board": "PqTicketBesluitvorming"
+			}
+		},
+		{
 			"id": "req-sla-deadline",
 			"area": "requests",
 			"name": "Give every request a deadline that counts only your working hours",
@@ -4849,6 +4877,100 @@
 			"screen": {
 				"board": null,
 				"reason": "no screen in pipelinq: the public booking pages belong to the portal row"
+			}
+		},
+		{
+			"id": "portal-booking-services",
+			"area": "portal",
+			"name": "Set up the services clients can book, with duration, buffers, price, policies and steps",
+			"pipelinq": "yes",
+			"hubspot-crm": "unknown",
+			"pipedrive": "unknown",
+			"espocrm": "unknown",
+			"odoo-crm": "unknown",
+			"kiss": "unknown",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Settings/register.d/45-appointment-booking.json:15 and src/views/bookings/ServiceDetail.vue",
+			"feature": "Appointments",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Settings/register.d/45-appointment-booking.json:15 appointmentService (durationMinutes, buffers, price, requiredSkills, requiredResourceTypes, multiStep, policies, status); src/manifest.d/80-appointment-booking-admin.json:32 Services index and :69 ServiceDetail; src/views/bookings/ServiceDetail.vue:104 Policies, :152 Multi-step composition with Edit steps",
+				"owner": "ConductionNL/pipelinq",
+				"readOn": "2026-10-08",
+				"spec": "openspec/specs/appointment-booking"
+			},
+			"note": "Decision 99 (8 Oct): boards PqServices and PqService draw it and no row had it. Built; the board details still missing (buffer and Booked on columns, matching resources, bookings figure) are in services-and-resources-at-a-glance under portal-booking-capacity.",
+			"source": "spec-round-2026-10-08",
+			"screen": {
+				"canvas": "5NkFW28vZUUij43xzxHg5a",
+				"board": [
+					"PqServices",
+					"PqService"
+				]
+			}
+		},
+		{
+			"id": "portal-booking-resources",
+			"area": "portal",
+			"name": "Keep the people, rooms and equipment a service is booked on, with their skills, working hours and holidays",
+			"pipelinq": "yes",
+			"hubspot-crm": "unknown",
+			"pipedrive": "unknown",
+			"espocrm": "unknown",
+			"odoo-crm": "unknown",
+			"kiss": "unknown",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Settings/register.d/45-appointment-booking.json:220 and src/views/bookings/ResourceDetail.vue",
+			"feature": "Appointments",
+			"featureConfidence": "high",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Settings/register.d/45-appointment-booking.json:220 appointmentResource (type, skills, workingHours, vacations, calendarSyncId, bookable, userId, maxConcurrent, status); src/manifest.d/80-appointment-booking-admin.json:81 Resources index and :117 ResourceDetail; src/views/bookings/ResourceDetail.vue:92 Working hours, :116 Vacations",
+				"owner": "ConductionNL/pipelinq",
+				"readOn": "2026-10-08",
+				"spec": "openspec/specs/appointment-booking"
+			},
+			"note": "Decision 99 (8 Oct): board PqResource draws it and no row had it. Built; the utilisation figure the board adds is in services-and-resources-at-a-glance under portal-booking-capacity.",
+			"source": "spec-round-2026-10-08",
+			"screen": {
+				"canvas": "5NkFW28vZUUij43xzxHg5a",
+				"board": [
+					"PqResource",
+					"PqServices"
+				]
+			}
+		},
+		{
+			"id": "portal-booking-capacity",
+			"area": "portal",
+			"name": "See per service which resources can do it and how busy each service and resource is",
+			"pipelinq": "partial",
+			"hubspot-crm": "unknown",
+			"pipedrive": "unknown",
+			"espocrm": "unknown",
+			"odoo-crm": "unknown",
+			"kiss": "unknown",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/EligibilityService.php:100, src/views/bookings/ServiceDetail.vue and ResourceDetail.vue",
+			"feature": "Appointments",
+			"featureConfidence": "high",
+			"built": {
+				"state": "specified",
+				"evidence": "lib/Service/EligibilityService.php:100 getEligibleResources() computes the matching resources for booking, but no page shows the result: src/manifest.d/80-appointment-booking-admin.json:32 Services columns are name, durationMinutes, price, bookableOnline, status; ServiceDetail.vue has no bookings figure, appointment list or matching-resource list; ResourceDetail.vue has no bookings or utilisation figure",
+				"owner": "ConductionNL/pipelinq",
+				"readOn": "2026-10-08",
+				"change": "services-and-resources-at-a-glance"
+			},
+			"note": "Decision 99 (8 Oct): boards PqServices, PqService and PqResource draw the match line, the bookings figures and the resources per service. The matching rule is built for booking; showing it and the busy figures is specified.",
+			"source": "spec-round-2026-10-08",
+			"screen": {
+				"canvas": "5NkFW28vZUUij43xzxHg5a",
+				"board": [
+					"PqServices",
+					"PqService",
+					"PqResource"
+				]
 			}
 		},
 		{
@@ -7446,35 +7568,30 @@
 		},
 		{
 			"id": "plat-connection-audit",
-			"area": "platform",
-			"name": "Keep a log of every call you made to an outside register",
+			"area": "marketing",
+			"name": "See which of a client's social accounts you follow and which follow you back",
 			"pipelinq": "yes",
-			"hubspot-crm": "partial",
-			"pipedrive": "partial",
-			"espocrm": "partial",
-			"odoo-crm": "partial",
-			"kiss": "yes",
+			"hubspot-crm": "unknown",
+			"pipedrive": "unknown",
+			"espocrm": "unknown",
+			"odoo-crm": "unknown",
+			"kiss": "unknown",
 			"provider": "pipelinq",
-			"providerHow": "read in lib/Service/Social/ConnectionAuditService.php and lib/Service/BsnAuditService.php:104",
-			"feature": "Platform",
+			"providerHow": "read in lib/Service/Social/ConnectionAuditService.php and lib/Command/ConnectionAuditCommand.php",
+			"feature": "Marketing",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
-				"evidence": "lib/Service/Social/ConnectionAuditService.php",
+				"evidence": "lib/Service/Social/ConnectionAuditService.php: per client handle, whether we follow them and they follow us on Mastodon and Bluesky, unknown with the reason on networks without a follower API; lib/Command/ConnectionAuditCommand.php; lib/Settings/register.d/97-marketing-search-intelligence.json",
 				"owner": "ConductionNL/pipelinq",
-				"change": "marketing-search-intelligence"
-			},
-			"evidence": {
-				"hubspot-crm": "https://knowledge.hubspot.com/integrations/manage-your-connected-apps Connection insights show \"app activity, API usage ... and record-level interactions\" for apps that call HubSpot; https://knowledge.hubspot.com/account-management/view-and-export-account-activity-history audit logs record \"HubSpot-user based actions\" only. No log of each outgoing call to an outside register. Note: Was partial; kept with fresh sources.",
-				"kiss": "Kiss.Bff/Intern/Verwerking/VerwerkingMiddleware.cs:25 wraps every outgoing register call and stores user, time, endpoint and method (line 41), readable at Kiss.Bff/Intern/Verwerking/GetVerwerkingsLogs.cs:18 \"api/verwerkingslogs\"; docs/decision-record/logging-voor-verwerking.md:2 describes it",
-				"espocrm": "application/Espo/Resources/metadata/entityDefs/WebhookQueueItem.json keeps each outbound webhook delivery with status and attempts, and Administration > App Log (adminPanel.json:369 \"#Admin/appLog\", AppLogRecord fields message, level, requestUrl) records errors; there is no log of every outbound call to an outside register. Note: Webhook deliveries and errors only.",
-				"pipedrive": "https://support.pipedrive.com/en/article/security-features-in-pipedrive \"All security alerts can be tracked in the security dashboard under the audit log\"; \"Device history and audit log\" on all plans (https://support.pipedrive.com/en/article/what-features-do-the-pipedrive-plans-have). It logs user and security events, not each outbound call to an outside register. Note: Read from the web.archive.org copy (security-features-in-pipedrive 2026-04-19; what-features-do-the-pipedrive-plans-have 2026-08-24) because the live knowledge base answered 429.",
-				"odoo-crm": "odoo/addons/base/models/ir_actions.py:1059 \"_logger.info(\\\"Webhook call to %s\\\", url)\" writes outbound webhook calls to the server log only, and odoo/addons/base/models/ir_logging.py:6 ir.logging holds server action logs under Settings > Technical > Logging; there is no per connection call log a user can filter."
+				"change": "marketing-search-intelligence",
+				"readOn": "2026-10-08"
 			},
 			"screen": {
 				"board": null,
-				"reason": "not designed: no board draws the connection audit"
-			}
+				"reason": "not designed: no board draws the social connection audit"
+			},
+			"note": "Renamed 8 Oct: the old name \"Keep a log of every call you made to an outside register\" did not match its evidence, which is the social follower audit of marketing-search-intelligence. The name now says what the code does; area moved to marketing, the id is kept for stable links. The competitor cells were rated against the old name (a log of outgoing register calls) and are reset to unknown. That other capability is real: KISS logs every outgoing register call (Kiss.Bff/Intern/Verwerking/VerwerkingMiddleware.cs:25). pipelinq covers its BRP half in gov-bsn-audit (lib/Service/BsnAuditService.php:104); KvK and other outside calls are not logged, and no row tracks that."
 		},
 		{
 			"id": "plat-rename-safe",
