@@ -19,4 +19,4 @@ label, never the stored code.
 @e2e exclude Asserted in tests/vitest/taskEnumLabels.spec.js.
 - **GIVEN** a task of type `callbackRequest`, status `in_progress`, priority `normal`
 - **WHEN** a Dutch user reads the task list
-- **THEN** the row MUST read "Terugbelverzoek", "Bezig" and "Normaal"
+- **THEN** the row MUST read "Terugbelverzoek", "In behandeling" and "Normaal"
