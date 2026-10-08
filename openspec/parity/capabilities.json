@@ -590,7 +590,11 @@
 			},
 			"screen": {
 				"canvas": "5NkFW28vZUUij43xzxHg5a",
-				"board": "PqOrganisatie"
+				"board": [
+					"PqOrganisatie",
+					"PqContacten",
+					"PqContactpersoon"
+				]
 			}
 		},
 		{
@@ -754,7 +758,11 @@
 			},
 			"screen": {
 				"canvas": "5NkFW28vZUUij43xzxHg5a",
-				"board": "PqKlant"
+				"board": [
+					"PqKlant",
+					"PqContacten",
+					"PqContactenImporteren"
+				]
 			}
 		},
 		{
@@ -786,8 +794,8 @@
 				"odoo-crm": "addons/base_import/models/base_import.py:45-50 MIMETYPE_TO_READER lists text/csv, xls, xlsx and ods only; the Import records menu (addons/base_import/static/src/import_records/import_records.js:11) goes through that reader, and vcard.py in addons/web only exports."
 			},
 			"screen": {
-				"board": null,
-				"reason": "not on the canvas yet: PqContactenImporteren is drawn locally but not placed on the canvas"
+				"canvas": "5NkFW28vZUUij43xzxHg5a",
+				"board": "PqContactenImporteren"
 			}
 		},
 		{
@@ -1438,7 +1446,10 @@
 			},
 			"screen": {
 				"canvas": "5NkFW28vZUUij43xzxHg5a",
-				"board": "PqVerkoopoverzicht"
+				"board": [
+					"PqVerkoopoverzicht",
+					"PqForecast"
+				]
 			}
 		},
 		{
@@ -1470,7 +1481,10 @@
 			},
 			"screen": {
 				"canvas": "5NkFW28vZUUij43xzxHg5a",
-				"board": "PqVerkoopoverzicht"
+				"board": [
+					"PqVerkoopoverzicht",
+					"PqForecast"
+				]
 			}
 		},
 		{
@@ -1534,7 +1548,10 @@
 			},
 			"screen": {
 				"canvas": "5NkFW28vZUUij43xzxHg5a",
-				"board": "PqVerkoopoverzicht"
+				"board": [
+					"PqVerkoopoverzicht",
+					"PqForecast"
+				]
 			}
 		},
 		{
@@ -1666,7 +1683,10 @@
 			},
 			"screen": {
 				"canvas": "5NkFW28vZUUij43xzxHg5a",
-				"board": "PqProspects"
+				"board": [
+					"PqProspects",
+					"PqBeheerMarketing"
+				]
 			}
 		},
 		{
@@ -1730,7 +1750,7 @@
 			},
 			"screen": {
 				"board": null,
-				"reason": "no screen: a Nextcloud notification; preferences belong to personal settings, whose board PqPersoonlijk is not on the canvas yet"
+				"reason": "no screen: a Nextcloud notification; which notifications reach you is chosen on PqPersoonlijk (row work-notification-choice)"
 			}
 		},
 		{
@@ -2051,7 +2071,10 @@
 			},
 			"screen": {
 				"canvas": "5NkFW28vZUUij43xzxHg5a",
-				"board": "PqInkomendGesprek"
+				"board": [
+					"PqInkomendGesprek",
+					"PqGesprekNieuwContact"
+				]
 			}
 		},
 		{
@@ -2147,8 +2170,8 @@
 				"odoo-crm": "addons/mail/models/mail_activity.py:482 \"def action_feedback(self, feedback=False\" behind \"Mark Done\" (addons/mail/static/src/core/web/activity.xml:53) closes a call activity with free text feedback, and activity types can chain a next activity; searched mail and crm models for a call result or outcome code: none. https://www.odoo.com/documentation/19.0/applications/productivity/phone/sales_calls.html says the ended call \"is logged in the opportunity's chatter\" with no result code (Enterprise Phone)."
 			},
 			"screen": {
-				"board": null,
-				"reason": "not on the canvas yet: PqGesprekAfronden is drawn locally but not placed on the canvas"
+				"canvas": "5NkFW28vZUUij43xzxHg5a",
+				"board": "PqGesprekAfronden"
 			}
 		},
 		{
@@ -2182,7 +2205,8 @@
 				"canvas": "5NkFW28vZUUij43xzxHg5a",
 				"board": [
 					"PqKlant",
-					"PqOrganisatie"
+					"PqOrganisatie",
+					"PqSynchronisatie"
 				]
 			}
 		},
@@ -2347,7 +2371,10 @@
 			},
 			"screen": {
 				"canvas": "5NkFW28vZUUij43xzxHg5a",
-				"board": "PqTicketContactLoggen"
+				"board": [
+					"PqTicketContactLoggen",
+					"PqTicketContactmomenten"
+				]
 			}
 		},
 		{
@@ -2547,7 +2574,11 @@
 			},
 			"screen": {
 				"canvas": "5NkFW28vZUUij43xzxHg5a",
-				"board": "PqTicketOmzetten"
+				"board": [
+					"PqTicketOmzetten",
+					"PqTicketGerelateerd",
+					"PqTicketMeer"
+				]
 			}
 		},
 		{
@@ -2783,7 +2814,8 @@
 				"canvas": "5NkFW28vZUUij43xzxHg5a",
 				"board": [
 					"PqTaken",
-					"PqWerkplekKlant"
+					"PqWerkplekKlant",
+					"PqTaak"
 				]
 			}
 		},
@@ -2848,7 +2880,11 @@
 			},
 			"screen": {
 				"canvas": "5NkFW28vZUUij43xzxHg5a",
-				"board": "PqWerkplekKlant"
+				"board": [
+					"PqWerkplekKlant",
+					"PqArtikel",
+					"PqArtikelen"
+				]
 			}
 		},
 		{
@@ -2976,7 +3012,10 @@
 			},
 			"screen": {
 				"canvas": "5NkFW28vZUUij43xzxHg5a",
-				"board": "PqTaken"
+				"board": [
+					"PqTaken",
+					"PqTaak"
+				]
 			}
 		},
 		{
@@ -3201,8 +3240,8 @@
 				"odoo-crm": "addons/mail/static/src/core/web/follower_subtype_dialog.xml:7-9 per record the follower ticks which subtypes (for example Stage Changed, Won, Lost) notify them, and addons/mail/models/res_users.py:29 notification_type chooses mail or Odoo inbox in the user preferences (addons/mail/views/res_users_views.xml:26); Discuss channels can be muted."
 			},
 			"screen": {
-				"board": null,
-				"reason": "not on the canvas yet: PqPersoonlijk (personal settings) is drawn locally but not placed on the canvas"
+				"canvas": "5NkFW28vZUUij43xzxHg5a",
+				"board": "PqPersoonlijk"
 			}
 		},
 		{
@@ -3330,8 +3369,8 @@
 				"odoo-crm": "addons/digest/models/digest.py:28-29 periodicity \"Daily\" or \"Weekly\" KPI mail, with CRM KPIs kpi_crm_lead_created (\"New Leads\") and kpi_crm_opportunities_won (addons/crm/models/digest.py:11-13), managed under Settings > Digest Emails (digest_views.xml:100); it reports counts that moved, not the leads that sat still."
 			},
 			"screen": {
-				"board": null,
-				"reason": "not designed: no board draws the weekly summary"
+				"canvas": "5NkFW28vZUUij43xzxHg5a",
+				"board": "PqWeekoverzicht"
 			}
 		},
 		{
@@ -3763,7 +3802,8 @@
 				"canvas": "5NkFW28vZUUij43xzxHg5a",
 				"board": [
 					"PqNieuwsbriefWizard",
-					"PqNieuwsbrieven"
+					"PqNieuwsbrieven",
+					"PqVerzendmonitor"
 				]
 			}
 		},
@@ -3828,7 +3868,10 @@
 			},
 			"screen": {
 				"canvas": "5NkFW28vZUUij43xzxHg5a",
-				"board": "PqNieuwsbriefWizard"
+				"board": [
+					"PqNieuwsbriefWizard",
+					"PqSjablonen"
+				]
 			}
 		},
 		{
@@ -4054,8 +4097,11 @@
 				"odoo-crm": "https://www.odoo.com/documentation/19.0/applications/marketing/marketing_automation.html \"create dynamic campaigns with actions that automatically occur within a defined duration, such as sending a series of timed mass emails\"; Marketing Automation is Enterprise (no addons/marketing_automation in the 19.0 Community source). Note: Enterprise only."
 			},
 			"screen": {
-				"board": null,
-				"reason": "not designed: no board draws the journey builder"
+				"canvas": "5NkFW28vZUUij43xzxHg5a",
+				"board": [
+					"PqJourney",
+					"PqJourneys"
+				]
 			}
 		},
 		{
@@ -4086,8 +4132,11 @@
 				"odoo-crm": "addons/website_crm/data/ir_model_data.xml:4-8 the website builder form snippet can post to crm.lead (\"Create an Opportunity\"), and the Website app (Community) publishes pages with that form; mass_mailing adds a newsletter signup block."
 			},
 			"screen": {
-				"board": null,
-				"reason": "not designed: the landing page belongs to the portal row; no pipelinq board draws it"
+				"canvas": "5NkFW28vZUUij43xzxHg5a",
+				"board": [
+					"PqCampagne",
+					"PqCampagnes"
+				]
 			}
 		},
 		{
@@ -4119,7 +4168,10 @@
 			},
 			"screen": {
 				"canvas": "5NkFW28vZUUij43xzxHg5a",
-				"board": "PqNieuwsbriefPrestaties"
+				"board": [
+					"PqNieuwsbriefPrestaties",
+					"PqCampagne"
+				]
 			}
 		},
 		{
@@ -4150,8 +4202,11 @@
 				"odoo-crm": "https://www.odoo.com/documentation/19.0/applications/marketing/social_marketing.html \"helps content marketers create and schedule posts, manage various social media accounts\"; Social Marketing is Enterprise (no addons/social in the 19.0 Community source). Note: Enterprise only."
 			},
 			"screen": {
-				"board": null,
-				"reason": "not designed: no board draws social publishing"
+				"canvas": "5NkFW28vZUUij43xzxHg5a",
+				"board": [
+					"PqSocial",
+					"PqSocialBericht"
+				]
 			}
 		},
 		{
@@ -4182,8 +4237,8 @@
 				"odoo-crm": "https://www.odoo.com/documentation/19.0/applications/general/email_communication/email_domain.html explains SPF, DKIM and DMARC and says \"Check the SPF record using a tool like MXToolbox\"; in the source only the from filter mismatch is warned on a mailing (addons/mass_mailing/models/mailing.py:390), and searched mail and mass_mailing for spf, dkim and dmarc checks: none. Note: The checking is done in an outside tool; Odoo does not test the domain itself."
 			},
 			"screen": {
-				"board": null,
-				"reason": "not designed: no board draws the sending domain check"
+				"canvas": "5NkFW28vZUUij43xzxHg5a",
+				"board": "PqBeheerMarketing"
 			}
 		},
 		{
@@ -4214,8 +4269,11 @@
 				"odoo-crm": "addons/website/controllers/main.py:810 \"/website/seo_suggest\" feeds keyword suggestions into the page SEO dialog (addons/website/static/src/components/dialog/seo.js), and addons/website/models/website.py:185-186 store a Google Analytics key and Search Console key; the search terms themselves are read in Google tools, not in Odoo."
 			},
 			"screen": {
-				"board": null,
-				"reason": "not designed: no board draws search terms"
+				"canvas": "5NkFW28vZUUij43xzxHg5a",
+				"board": [
+					"PqBeheerMarketing",
+					"PqZoekinzicht"
+				]
 			}
 		},
 		{
@@ -4246,8 +4304,8 @@
 				"odoo-crm": "searched the 19.0 source (addons, odoo) for competitor, price watch and page change monitoring: nothing; no module watches an outside web page."
 			},
 			"screen": {
-				"board": null,
-				"reason": "not designed: no board draws competitor watch"
+				"canvas": "5NkFW28vZUUij43xzxHg5a",
+				"board": "PqZoekinzicht"
 			}
 		},
 		{
@@ -4279,7 +4337,10 @@
 			},
 			"screen": {
 				"canvas": "5NkFW28vZUUij43xzxHg5a",
-				"board": "PqMailinglijst"
+				"board": [
+					"PqMailinglijst",
+					"PqBeheerMarketing"
+				]
 			}
 		},
 		{
@@ -4951,7 +5012,10 @@
 			},
 			"screen": {
 				"canvas": "5NkFW28vZUUij43xzxHg5a",
-				"board": "PqProduct"
+				"board": [
+					"PqProduct",
+					"PqBeheerKassa"
+				]
 			}
 		},
 		{
@@ -5277,8 +5341,8 @@
 				"odoo-crm": "addons/point_of_sale/static/src/app/screens/product_screen/product_screen.js the Point of Sale product screen rings up products into an order stored as pos.order (addons/point_of_sale/models/pos_order.py); the Point of Sale app is Community."
 			},
 			"screen": {
-				"board": null,
-				"reason": "not designed: the till (PqKassa) was briefed but not delivered"
+				"canvas": "5NkFW28vZUUij43xzxHg5a",
+				"board": "PqKassa"
 			}
 		},
 		{
@@ -5309,8 +5373,8 @@
 				"odoo-crm": "addons/point_of_sale/models/pos_order.py:313-314 amount_tax and amount_total, computed from the line taxes (:537-538 \"order.amount_tax = refund_factor * tax_totals['tax_amount_currency']\"); the till shows totals and VAT per order as lines are added."
 			},
 			"screen": {
-				"board": null,
-				"reason": "not designed: the till (PqKassa) was briefed but not delivered"
+				"canvas": "5NkFW28vZUUij43xzxHg5a",
+				"board": "PqKassa"
 			}
 		},
 		{
@@ -5342,7 +5406,10 @@
 			},
 			"screen": {
 				"canvas": "5NkFW28vZUUij43xzxHg5a",
-				"board": "PqProduct"
+				"board": [
+					"PqProduct",
+					"PqKassa"
+				]
 			}
 		},
 		{
@@ -5373,8 +5440,11 @@
 				"odoo-crm": "addons/point_of_sale/models/pos_payment_method.py:55 \"use_payment_terminal = fields.Selection(\" with \"Terminal\" (:15) and terminal integrations in Community modules pos_adyen, pos_mollie, pos_stripe, pos_viva_com and others (git ls-tree addons/pos_*); the payment screen sends the amount to the terminal."
 			},
 			"screen": {
-				"board": null,
-				"reason": "not designed: the till (PqKassa) was briefed but not delivered"
+				"canvas": "5NkFW28vZUUij43xzxHg5a",
+				"board": [
+					"PqBeheerKassa",
+					"PqKassa"
+				]
 			}
 		},
 		{
@@ -5405,8 +5475,11 @@
 				"odoo-crm": "addons/point_of_sale/static/src/app/screens/receipt_screen/receipt_screen.xml:23-24 \"Print Full Receipt\" and addons/point_of_sale/models/pos_order.py:1480 \"def action_send_receipt(self, email, ticket_image, basic_image)\" mails it from the same receipt screen."
 			},
 			"screen": {
-				"board": null,
-				"reason": "not designed: receipts and refunds (PqKassaRetour) were briefed but not delivered"
+				"canvas": "5NkFW28vZUUij43xzxHg5a",
+				"board": [
+					"PqKassabon",
+					"PqKassabonnen"
+				]
 			}
 		},
 		{
@@ -5437,8 +5510,8 @@
 				"odoo-crm": "addons/point_of_sale/static/src/app/screens/payment_screen/payment_screen.xml:122-123 an \"Invoice\" toggle (toggleIsToInvoice) and addons/point_of_sale/models/pos_order.py:1173 action_pos_order_invoice turn any sale into an invoice on request; searched point_of_sale models for an amount threshold: none (only the Spanish l10n_es_pos adds a simplified invoice rule)."
 			},
 			"screen": {
-				"board": null,
-				"reason": "not designed: receipts and refunds (PqKassaRetour) were briefed but not delivered"
+				"canvas": "5NkFW28vZUUij43xzxHg5a",
+				"board": "PqKassabon"
 			}
 		},
 		{
@@ -5469,8 +5542,12 @@
 				"odoo-crm": "addons/point_of_sale/static/src/app/screens/ticket_screen/ticket_screen.xml:158-159 \"Select the product(s) to refund and set the quantity\" on a past order, creating a negative order paid back through the payment screen (refund_factor in pos_order.py:537)."
 			},
 			"screen": {
-				"board": null,
-				"reason": "not designed: receipts and refunds (PqKassaRetour) were briefed but not delivered"
+				"canvas": "5NkFW28vZUUij43xzxHg5a",
+				"board": [
+					"PqKassaRetour",
+					"PqKassabon",
+					"PqKassabonnen"
+				]
 			}
 		},
 		{
@@ -5501,8 +5578,11 @@
 				"odoo-crm": "addons/pos_hr/static/src/app/screens/ticket_screen/ticket_screen.xml shows the refund pad only with \"t-if\" \"!this.pos.config.module_pos_hr or this.pos.cashier._role !== 'minimal'\", with roles from addons/pos_hr/models/pos_config.py:11-18 (minimal, basic and manager access; read with git show); refunds can be denied per role, but no amount limit makes a manager approve a large refund."
 			},
 			"screen": {
-				"board": null,
-				"reason": "not designed: receipts and refunds (PqKassaRetour) were briefed but not delivered"
+				"canvas": "5NkFW28vZUUij43xzxHg5a",
+				"board": [
+					"PqBeheerKassa",
+					"PqKassaRetour"
+				]
 			}
 		},
 		{
@@ -5533,8 +5613,11 @@
 				"odoo-crm": "addons/point_of_sale/models/pos_config.py:120 cash_control \"Check the amount of the cashbox at opening and closing\", with the opening_control_popup and closing_popup components (addons/point_of_sale/static/src/app/components/popups/) where the cashier counts the drawer; pos_session.py:654 post_closing_cash_details stores the count."
 			},
 			"screen": {
-				"board": null,
-				"reason": "not designed: the till (PqKassa) was briefed but not delivered"
+				"canvas": "5NkFW28vZUUij43xzxHg5a",
+				"board": [
+					"PqKassadienst",
+					"PqKassadiensten"
+				]
 			}
 		},
 		{
@@ -5565,8 +5648,8 @@
 				"odoo-crm": "addons/point_of_sale/models/pos_config.py:166 \"amount_authorized_diff\" is \"the maximum difference allowed ... for non-POS managers\", and the closing popup blocks with \"Please contact your manager to accept the closing difference\" (addons/point_of_sale/static/src/app/components/popups/closing_popup/closing_popup.js:120, :183 \"return this.props.is_manager || this.allowedDifference()\"). Note: Changed from partial: a manager must close a till that is off by more than the set amount."
 			},
 			"screen": {
-				"board": null,
-				"reason": "not designed: the till (PqKassa) was briefed but not delivered"
+				"canvas": "5NkFW28vZUUij43xzxHg5a",
+				"board": "PqKassadienst"
 			}
 		},
 		{
@@ -5597,8 +5680,11 @@
 				"odoo-crm": "addons/point_of_sale/models/report_sale_details.py:12 report_saledetails printed from Point of Sale > Reporting > Sales Details (addons/point_of_sale/views/pos_order_report_view.xml:107) per session with totals per payment method and tax; the session close posts it to accounting."
 			},
 			"screen": {
-				"board": null,
-				"reason": "not designed: the till (PqKassa) was briefed but not delivered"
+				"canvas": "5NkFW28vZUUij43xzxHg5a",
+				"board": [
+					"PqZRapport",
+					"PqZRapporten"
+				]
 			}
 		},
 		{
@@ -5629,8 +5715,8 @@
 				"odoo-crm": "addons/point_of_sale/models/pos_session.py:424 _validate_session calls :872 _create_account_move when the session is closed, posting the day's sales, taxes and payments as journal entries in Community Invoicing/Accounting with no export."
 			},
 			"screen": {
-				"board": null,
-				"reason": "no screen: the handoff to shillinq runs in the background"
+				"canvas": "5NkFW28vZUUij43xzxHg5a",
+				"board": "PqZRapporten"
 			}
 		},
 		{
@@ -5661,8 +5747,8 @@
 				"odoo-crm": "addons/account/models/account_journal.py:145 \"restrict_mode_hash_table = fields.Boolean(string=\\\"Secure Posted Entries with Hash\\\"\" chains a hash over posted entries including POS session moves; a certified till trail exists only for France (addons/l10n_fr_pos_cert) and Belgium (Enterprise blackbox), none for the Netherlands. Note: The Dutch tax office asks for an unalterable record, not a certified device; the hash covers entries, not each till event."
 			},
 			"screen": {
-				"board": null,
-				"reason": "no screen: the signed till trail is kept in the background"
+				"canvas": "5NkFW28vZUUij43xzxHg5a",
+				"board": "PqKassaAudit"
 			}
 		},
 		{
@@ -5693,8 +5779,11 @@
 				"odoo-crm": "addons/point_of_sale/models/pos_order.py:325 \"partner_id = fields.Many2one('res.partner', string='Customer'\" set from the customer list on the till (addons/point_of_sale/static/src/app/screens/partner_list/partner_list.js); it is the same contact record as in CRM and invoicing."
 			},
 			"screen": {
-				"board": null,
-				"reason": "not designed: the till (PqKassa) was briefed but not delivered"
+				"canvas": "5NkFW28vZUUij43xzxHg5a",
+				"board": [
+					"PqKassa",
+					"PqKassaKlantzoeken"
+				]
 			}
 		},
 		{
@@ -5725,8 +5814,8 @@
 				"odoo-crm": "addons/loyalty/models/loyalty_program.py:95-101 program_type with \"Loyalty Cards\", \"Gift Card\" and \"eWallet\", applied at the till by pos_loyalty and on web orders by sale_loyalty; points accrue per rule on each order."
 			},
 			"screen": {
-				"board": null,
-				"reason": "not designed: no board draws the loyalty programme"
+				"canvas": "5NkFW28vZUUij43xzxHg5a",
+				"board": "PqLoyaliteit"
 			}
 		},
 		{
@@ -5758,7 +5847,7 @@
 			},
 			"screen": {
 				"board": null,
-				"reason": "not designed: no board draws the loyalty programme"
+				"reason": "not designed: PqLoyaliteit draws points, tiers and enrolment, and PqKassa takes card payment; no board draws paying with points"
 			}
 		},
 		{
@@ -5789,8 +5878,8 @@
 				"odoo-crm": "addons/loyalty/models/loyalty_program.py:95-101 program types are coupons, gift card, loyalty cards, eWallet and similar, and searched addons/loyalty/models for tier and level: no hit; a card holds a points balance only, so no automatic move up or down a tier exists. Note: A shop can run separate programs by hand, which is not a tier."
 			},
 			"screen": {
-				"board": null,
-				"reason": "not designed: no board draws the loyalty programme"
+				"canvas": "5NkFW28vZUUij43xzxHg5a",
+				"board": "PqLoyaliteit"
 			}
 		},
 		{
@@ -5822,7 +5911,7 @@
 			},
 			"screen": {
 				"board": null,
-				"reason": "not designed: no board draws the loyalty programme"
+				"reason": "not designed: PqLoyaliteit and PqKassa draw no gift card sale or balance"
 			}
 		},
 		{
@@ -5886,7 +5975,10 @@
 			},
 			"screen": {
 				"canvas": "5NkFW28vZUUij43xzxHg5a",
-				"board": "PqReports"
+				"board": [
+					"PqReports",
+					"PqOperationeel"
+				]
 			}
 		},
 		{
@@ -5918,7 +6010,10 @@
 			},
 			"screen": {
 				"canvas": "5NkFW28vZUUij43xzxHg5a",
-				"board": "PqVerkoopoverzicht"
+				"board": [
+					"PqVerkoopoverzicht",
+					"PqOperationeel"
+				]
 			}
 		},
 		{
@@ -6174,7 +6269,10 @@
 			},
 			"screen": {
 				"canvas": "5NkFW28vZUUij43xzxHg5a",
-				"board": "PqNieuwsbriefPrestaties"
+				"board": [
+					"PqNieuwsbriefPrestaties",
+					"PqBeheerMarketing"
+				]
 			}
 		},
 		{
@@ -6240,7 +6338,8 @@
 				"canvas": "5NkFW28vZUUij43xzxHg5a",
 				"board": [
 					"PqFlows",
-					"PqFlow"
+					"PqFlow",
+					"PqFlowRun"
 				]
 			}
 		},
@@ -6628,8 +6727,8 @@
 				"odoo-crm": "addons/crm/data/crm_tour.xml:3 web_tour.tour \"crm_tour\" guides a new user through the first lead in the CRM app and ends with a rainbow message; each app ships such a tour through addons/web_tour.. Driven 2026-09-26 on the Odoo 19.0 Community lab (odoo:19.0 image 400a621198ea, build 19.0-20260908, database with demo data, modules crm, contacts, project): a new salesperson opening CRM saw no tour, also after res.users.switch_tour_enabled(true); addons/web_tour/models/res_users.py:11 _compute_tour_enabled turns onboarding on only for an admin on a database without demo modules, and the user menu shows no Onboarding switch, so most users are never walked through."
 			},
 			"screen": {
-				"board": null,
-				"reason": "not on the canvas yet: PqInstellen (setup wizard) is drawn locally but not placed on the canvas"
+				"canvas": "5NkFW28vZUUij43xzxHg5a",
+				"board": "PqInstellen"
 			}
 		},
 		{
@@ -6664,7 +6763,8 @@
 				"canvas": "5NkFW28vZUUij43xzxHg5a",
 				"board": [
 					"PqNieuwVerzoek",
-					"PqWerkplekKlant"
+					"PqWerkplekKlant",
+					"PqBrpMonitor"
 				]
 			}
 		},
@@ -8189,7 +8289,8 @@
 				"canvas": "5NkFW28vZUUij43xzxHg5a",
 				"board": [
 					"PqKlant",
-					"PqOrganisatie"
+					"PqOrganisatie",
+					"PqContactpersoon"
 				]
 			}
 		},
@@ -9130,7 +9231,10 @@
 			"originUrl": "https://github.com/Klantinteractie-Servicesysteem/KISS-frontend/issues/1300",
 			"screen": {
 				"canvas": "5NkFW28vZUUij43xzxHg5a",
-				"board": "PqTicketContactLoggen"
+				"board": [
+					"PqTicketContactLoggen",
+					"PqTicketContactmomenten"
+				]
 			}
 		},
 		{
@@ -9724,7 +9828,11 @@
 			},
 			"screen": {
 				"canvas": "5NkFW28vZUUij43xzxHg5a",
-				"board": "PqAfspraken"
+				"board": [
+					"PqAfspraken",
+					"PqAfspraak",
+					"PqAfspraakVerplaatsen"
+				]
 			}
 		},
 		{
