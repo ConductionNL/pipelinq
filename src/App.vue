@@ -20,6 +20,7 @@
 		:pageTypes="pageTypes"
 		appId="pipelinq"
 		:translate="translateForApp"
+		:notificationLabels="notificationLabels"
 		:permissions="permissions"
 		:persistManifestDelta="persistManifestDelta"
 		:requiresApps="[]">
@@ -69,6 +70,7 @@ import LeadProbabilityCell from './views/leads/cells/LeadProbabilityCell.vue'
 import LeadScoreCell from './views/leads/cells/LeadScoreCell.vue'
 import { createAppFormatters } from './services/cellFormatters.js'
 import { createConnectionHandlers } from './services/connectionRegistry.js'
+import { notificationLabels as buildNotificationLabels } from './services/notificationLabels.js'
 import { createTicketHandlers } from './services/ticketAssign.js'
 import { useObjectStore } from './store/modules/object.js'
 
@@ -179,6 +181,18 @@ export default {
 		 */
 		cellFormatters() {
 			return createAppFormatters(useObjectStore())
+		},
+
+		/**
+		 * Labels for pipelinq's notification rules, keyed `<schema>.<rule>`.
+		 * The notification pane in the user settings shows them instead of
+		 * the rule keys (`newLead`, `clientUpdated`).
+		 *
+		 * @return {Record<string, string>}
+		 * @spec openspec/changes/simple-tour-and-readable-labels/specs/notifications/spec.md
+		 */
+		notificationLabels() {
+			return buildNotificationLabels(ncT)
 		},
 
 		/**
