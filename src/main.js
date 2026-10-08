@@ -9,6 +9,7 @@ import {
 	registerBuiltinDashboardWidgets,
 	registerIcons,
 	registerTranslations,
+	useObjectStore as useLibraryObjectStore,
 } from '@conduction/nextcloud-vue'
 // The `import/no-unresolved` disables on these subpath imports are gone: the
 // flat config does not register that rule, so each comment was itself an
@@ -42,6 +43,7 @@ import simpleMenuLayout from './menu-layout.simple.json'
 import pinia from './pinia.js'
 import registry from './registry.js'
 import { installPageRefreshOnCreate } from './services/pageRefreshOnCreate.js'
+import { contactWriteBackPlugin } from './store/plugins/contactWriteBack.js'
 import { initializeStores, registerObjectTypes } from './store/store.js'
 import {
 	applyHomePage,
@@ -304,6 +306,13 @@ const registryProp = { ...registry }
 // the store be used before the Vue instance exists.
 setActivePinia(pinia)
 registerObjectTypes()
+// Manifest detail pages save through the library's default object store, not
+// pipelinq's own, so the contact write-back listens there too: a client's
+// name, email or phone edited in its Edit dialog reaches the Nextcloud Contact
+// (round3-review-points).
+if (typeof useLibraryObjectStore === 'function') {
+	contactWriteBackPlugin().setup(useLibraryObjectStore())
+}
 
 /**
  * The router base for THIS page load.

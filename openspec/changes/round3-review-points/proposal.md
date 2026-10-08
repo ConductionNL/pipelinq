@@ -22,7 +22,7 @@ user:
 
 | Item | Change |
 | --- | --- |
-| 1 | Register fragment `98-party-identity-editable.json` drops `readOnly` on `name`, `email` and `phone` of `client` and `contact`. The write-back to the Nextcloud Contact stays as it is. |
+| 1 | Register fragment `98-party-identity-editable.json` drops `readOnly` on `name`, `email` and `phone` of `client` and `contact`. The write-back to the Nextcloud Contact now also runs from the client page: the manifest Edit dialog saves through the library's default store as `pipelinq-client`, which the #2214 plugin never listened to. |
 | 2 | A `userDisplayName` cell formatter shows a user's display name. Every user field in a list column or a data widget of the manifest uses it. A pre-save listener fills `createdBy` of a new task with the user who creates it. |
 | 3 | The service create form keeps a step's product, quantity and unit. |
 | 4 | `leadProduct.configuration.objectNameField` becomes the template `{{ product }}`, which OpenRegister's MetadataHydrationHandler resolves to the product's name. A line item that is created on any page refreshes the page's widgets, so the count follows. |

@@ -2,6 +2,7 @@
 
 - [ ] 1.1 `lib/Settings/register.d/98-party-identity-editable.json`: name, email and phone of client and contact are not read-only.
 - [ ] 1.2 `tests/Unit/Settings/ReviewRound3RegisterTest.php` on the merged register; the e2e round trip expects the rename to take effect.
+- [ ] 1.3 The contact write-back also listens on the library's default object store and knows its `pipelinq-client` type, so the client page's Edit dialog reaches the Nextcloud Contact; `tests/vitest/contactWriteBackDetailPage.spec.js`.
 - [ ] 2.1 `src/services/userDisplayName.js`: the `userDisplayName` formatter, registered in `createAppFormatters`.
 - [ ] 2.2 Manifest: every user-field column and data widget field uses the formatter; `tests/vitest/userDisplayName.spec.js` walks the manifest against the merged register.
 - [ ] 2.3 `lib/Listener/TaskCreatedByCreatingListener.php` fills `createdBy` of a new task; unit test.
