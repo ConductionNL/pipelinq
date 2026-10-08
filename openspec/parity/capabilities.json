@@ -454,13 +454,18 @@
 			"area": "clients",
 			"overlay": "client-management",
 			"specs": [
+				"client-forms",
 				"client-management",
 				"clients-history-summary-and-risk",
 				"clients-preferred-name",
+				"contact-channel-details",
 				"contact-relationship-mapping",
 				"customer-360",
 				"dashboard",
+				"detail-pages",
 				"entity-notes",
+				"parties",
+				"party-fields-and-indicators",
 				"unify-client-contact"
 			]
 		},
@@ -475,7 +480,8 @@
 				"clients-contact-capture",
 				"clients-registry-numbers-and-enrichment",
 				"clients-reversible-merge",
-				"master-data-management"
+				"master-data-management",
+				"party-kind-registry"
 			]
 		},
 		{
@@ -535,6 +541,7 @@
 			"specs": [
 				"activity-timeline",
 				"contact-moments-keep-draft",
+				"contactmomenten",
 				"contactmomenten-rapportage",
 				"marketing-campaigns",
 				"omnichannel-registratie",
@@ -551,8 +558,10 @@
 				"appointment-booking",
 				"callback-management",
 				"kcc-werkplek",
+				"kennisbank",
 				"marketing-article-hub",
 				"requests-municipality-per-contact",
+				"retire-queue-concept",
 				"skill-routing",
 				"xwiki-proxy"
 			]
@@ -613,6 +622,7 @@
 			"area": "requests",
 			"overlay": "public-intake-forms",
 			"specs": [
+				"public-intake-forms",
 				"website-enquiry-intake"
 			]
 		},
@@ -667,6 +677,8 @@
 			"overlay": null,
 			"specs": [
 				"customer-portal",
+				"dossier-questions",
+				"portal-contribution",
 				"portal-resident-view-preview"
 			]
 		},
@@ -714,6 +726,7 @@
 			"overlay": "product-catalog-quoting",
 			"specs": [
 				"lead-product-link",
+				"product-catalog-quoting",
 				"products-quote-from-lead"
 			]
 		},
@@ -735,7 +748,9 @@
 			"area": "pos",
 			"overlay": "point-of-sale",
 			"specs": [
+				"pipelinq-pos-grouping",
 				"pos-barcode-scan",
+				"pos-display",
 				"pos-lifecycle-guard-adoption",
 				"pos-nl-btw-engine",
 				"pos-receipt-engine",
@@ -781,6 +796,7 @@
 			"overlay": "marketing-campaigns",
 			"specs": [
 				"marketing-analytics",
+				"marketing-campaign-attribution",
 				"marketing-campaign-on-client",
 				"marketing-campaigns",
 				"marketing-events",
@@ -795,6 +811,7 @@
 			"overlay": "marketing-lists-and-mailings",
 			"specs": [
 				"marketing-blast",
+				"marketing-blast-delivery",
 				"marketing-block-editor",
 				"marketing-compliance",
 				"marketing-email-tracking",
@@ -821,7 +838,11 @@
 			"title_nl": "Zoek- en concurrentie-inzicht",
 			"area": "marketing",
 			"overlay": "search-and-competitor-intelligence",
-			"specs": []
+			"specs": [
+				"marketing-analytics-connectors",
+				"marketing-competitor-watches",
+				"marketing-keyword-intelligence"
+			]
 		},
 		{
 			"slug": "crm-workflow-automation",
@@ -849,6 +870,7 @@
 				"my-work",
 				"my-work-roadmap",
 				"notify-the-followers-of-tickets-and-leads",
+				"project-portfolio",
 				"task-background-jobs",
 				"work-letter-from-filinq-template"
 			]
@@ -860,7 +882,10 @@
 			"area": "work",
 			"overlay": null,
 			"specs": [
-				"notifications-activity"
+				"activity-stream-publishing",
+				"notifications",
+				"notifications-activity",
+				"realtime-updates-ui"
 			]
 		},
 		{
@@ -870,7 +895,8 @@
 			"area": "platform",
 			"overlay": "self-hosted-open-source",
 			"specs": [
-				"bi-export-and-data-warehouse-sink"
+				"bi-export-and-data-warehouse-sink",
+				"features-roadmap"
 			]
 		},
 		{
@@ -880,7 +906,15 @@
 			"area": "automation",
 			"overlay": null,
 			"specs": [
-				"first-time-setup"
+				"admin-settings",
+				"admin-settings-duplicate-prevention",
+				"example-data",
+				"first-time-setup",
+				"nav-ia-cleanup",
+				"navigation-ia",
+				"pipelinq-navigation",
+				"pipelinq-store-surface",
+				"walkthrough"
 			]
 		},
 		{
@@ -902,6 +936,7 @@
 			"overlay": null,
 			"specs": [
 				"register-i18n",
+				"register-i18n-locale-formatting",
 				"renames-keep-stored-data"
 			]
 		},
@@ -912,6 +947,7 @@
 			"area": "platform",
 			"overlay": null,
 			"specs": [
+				"mobile-experience",
 				"platform-accessibility-statement"
 			]
 		},
@@ -929,6 +965,20 @@
 				"prometheus-metrics"
 			]
 		}
+	],
+	"internalSpecs": [
+		"beta-alignment",
+		"consent-in-integriq",
+		"declarative-view-system",
+		"docs-product-pages-conformance",
+		"event-listener-work-placement",
+		"marketing-docs",
+		"marketing-testing",
+		"marketing-verification",
+		"openregister-integration",
+		"pipelinq-or-adoption",
+		"repair-steps",
+		"test-harness"
 	],
 	"providers": [
 		{
@@ -1177,7 +1227,7 @@
 			},
 			"screen": {
 				"board": null,
-				"reason": "not designed: the merge wizard is OpenRegister's steward surface (ADR-045); pipelinq has no merge screen"
+				"reason": "no screen in pipelinq: the merge wizard is OpenRegister's steward surface (ADR-045)"
 			}
 		},
 		{
@@ -3930,8 +3980,8 @@
 				}
 			],
 			"screen": {
-				"board": null,
-				"reason": "not designed: no board draws the letter from a template"
+				"canvas": "design-system",
+				"board": "PqBriefOpstellen"
 			}
 		},
 		{
@@ -4149,8 +4199,8 @@
 			},
 			"source": "spec-round-2026-10-07",
 			"screen": {
-				"board": null,
-				"reason": "not designed: no board draws create buttons on My work"
+				"canvas": "design-system",
+				"board": "PqMijnWerkIndelen"
 			}
 		},
 		{
@@ -4175,8 +4225,8 @@
 			},
 			"source": "spec-round-2026-10-07",
 			"screen": {
-				"board": null,
-				"reason": "not designed: no board draws meetings on My work"
+				"canvas": "design-system",
+				"board": "PqMijnWerkIndelen"
 			}
 		},
 		{
@@ -4201,8 +4251,8 @@
 			},
 			"source": "spec-round-2026-10-07",
 			"screen": {
-				"board": null,
-				"reason": "not designed: no board draws a layout panel"
+				"canvas": "design-system",
+				"board": "PqMijnWerkIndelen"
 			}
 		},
 		{
@@ -4253,8 +4303,8 @@
 			},
 			"source": "spec-round-2026-10-07",
 			"screen": {
-				"board": null,
-				"reason": "not designed: no board draws a refresh control on My work"
+				"canvas": "design-system",
+				"board": "PqMijnWerkIndelen"
 			}
 		},
 		{
@@ -4279,8 +4329,36 @@
 			},
 			"source": "spec-round-2026-10-07",
 			"screen": {
-				"board": null,
-				"reason": "not designed: PqMijnWerk draws the type filter and Sort, not a priority or pipeline filter"
+				"canvas": "design-system",
+				"board": "PqMijnWerkIndelen"
+			}
+		},
+		{
+			"id": "work-project-portfolio",
+			"area": "work",
+			"name": "Run a project above your cases with a plan, a team, tasks and cycles",
+			"pipelinq": "partial",
+			"hubspot-crm": "unknown",
+			"pipedrive": "unknown",
+			"espocrm": "unknown",
+			"odoo-crm": "unknown",
+			"kiss": "unknown",
+			"provider": "pipelinq",
+			"providerHow": "read in lib/Service/ProgrammePortfolioService.php, lib/Service/ProgrammeEstimationService.php and lib/Controller/ProgrammeController.php",
+			"feature": "my-work",
+			"featureConfidence": "medium",
+			"built": {
+				"state": "built",
+				"evidence": "lib/Service/ProgrammePortfolioService.php and lib/Service/ProgrammeEstimationService.php keep the programme, programmeTask and programmeTeamMember records with progress, estimates and cycles behind lib/Controller/ProgrammeController.php; src/manifest.json and src/manifest.d/ declare no page for them, so it is reachable through the API only",
+				"owner": "ConductionNL/pipelinq",
+				"readOn": "2026-10-08",
+				"spec": "openspec/specs/project-portfolio"
+			},
+			"note": "Rated partial: the records, progress and cycles are built, but no pipelinq page shows a project yet. Board PqProject draws the detail page the spec implies.",
+			"source": "screens-round-2026-10-08",
+			"screen": {
+				"canvas": "design-system",
+				"board": "PqProject"
 			}
 		},
 		{
@@ -4892,8 +4970,8 @@
 				"intelligence-db requirements#75222 (Senzer, 2025-08-13: evenementenmodule)"
 			],
 			"screen": {
-				"board": null,
-				"reason": "not designed: no board draws events and registrations"
+				"canvas": "design-system",
+				"board": "PqEvenement"
 			}
 		},
 		{
@@ -5327,8 +5405,8 @@
 				"odoo-crm": "addons/website/models/website.py:116-124 each website has its own name, domain and company, with :173 logo and :210 theme_id, enabled by the multi website setting (addons/website/views/res_config_settings_views.xml:74 group_multi_website); the portal \"/my\" is served under each website's domain and look."
 			},
 			"screen": {
-				"board": null,
-				"reason": "not designed: no board draws the portal tenant settings"
+				"canvas": "design-system",
+				"board": "PqBeheerPortaal"
 			}
 		},
 		{
@@ -5485,8 +5563,8 @@
 				"pipedrive": "not checked: searched the Pipedrive knowledge base article list (https://support.pipedrive.com/en-sitemap.xml) for portal, client login and customer portal on 2026-09-26; Pipedrive documents no client-facing portal, so a log of portal user actions is not described. Note: Was no without a source; the docs do not state the absence."
 			},
 			"screen": {
-				"board": null,
-				"reason": "not designed: no board draws the portal audit log"
+				"canvas": "design-system",
+				"board": "PqBeheerPortaal"
 			}
 		},
 		{
@@ -6452,8 +6530,8 @@
 				"odoo-crm": "addons/loyalty/models/loyalty_reward.py:131 \"required_points = fields.Float(string=\\\"Points needed\\\"\" with :63 reward_type (discount, product); at the till the Reward button of pos_loyalty (addons/pos_loyalty/static/src/app/screens/product_screen/control_buttons/control_buttons.xml:29) spends the points as a discount on the bill."
 			},
 			"screen": {
-				"board": null,
-				"reason": "not designed: PqLoyaliteit draws points, tiers and enrolment, and PqKassa takes card payment; no board draws paying with points"
+				"canvas": "design-system",
+				"board": "PqKassaAfrekenen"
 			}
 		},
 		{
@@ -6516,8 +6594,8 @@
 				"odoo-crm": "addons/loyalty/models/loyalty_program.py:98 \"('gift_card', \\\"Gift Card\\\")\" sold as a product and redeemed later at the till (pos_loyalty) or online (sale_loyalty), with the remaining balance on the card."
 			},
 			"screen": {
-				"board": null,
-				"reason": "not designed: PqLoyaliteit and PqKassa draw no gift card sale or balance"
+				"canvas": "design-system",
+				"board": "PqKassaAfrekenen"
 			}
 		},
 		{
@@ -8072,8 +8150,8 @@
 				"readOn": "2026-10-08"
 			},
 			"screen": {
-				"board": null,
-				"reason": "not designed: no board draws the social connection audit"
+				"canvas": "design-system",
+				"board": "PqVerbindingscontrole"
 			},
 			"note": "Renamed 8 Oct: the old name \"Keep a log of every call you made to an outside register\" did not match its evidence, which is the social follower audit of marketing-search-intelligence. The name now says what the code does; area moved to marketing, the id is kept for stable links. The competitor cells were rated against the old name (a log of outgoing register calls) and are reset to unknown. That other capability is real: KISS logs every outgoing register call (Kiss.Bff/Intern/Verwerking/VerwerkingMiddleware.cs:25). pipelinq covers its BRP half in gov-bsn-audit (lib/Service/BsnAuditService.php:104); KvK and other outside calls are not logged, and no row tracks that."
 		},
@@ -8335,8 +8413,8 @@
 				"odoo-crm": "addons/website_livechat/__manifest__.py:5 \"'summary': 'Chat with your website visitors'\" (LGPL, Community) puts the im_livechat widget on the website; operators answer in Discuss, can send a proactive chat request to a visitor (addons/website_livechat/views/website_visitor_views.xml:112 website_livechat_send_chat_request_action_server) and crm_livechat turns a chat into a lead with /lead."
 			},
 			"screen": {
-				"board": null,
-				"reason": "not designed: no board draws the web chat"
+				"canvas": "design-system",
+				"board": "PqWebchat"
 			}
 		},
 		{
@@ -8441,7 +8519,7 @@
 			},
 			"screen": {
 				"board": null,
-				"reason": "not designed: the add-in lives in the mail client; no board draws it"
+				"reason": "no screen in pipelinq: the add-in lives in the mail client"
 			}
 		},
 		{
@@ -8751,7 +8829,7 @@
 			"originUrl": "https://community.hubspot.com/t5/HubSpot-Ideas/Un-merging-contacts/idi-p/321397",
 			"screen": {
 				"board": null,
-				"reason": "not designed: the merge wizard is OpenRegister's steward surface; no pipelinq board draws undo"
+				"reason": "no screen in pipelinq: undoing a merge happens in OpenRegister's steward surface (ADR-045)"
 			}
 		},
 		{
@@ -8861,8 +8939,8 @@
 			"originUrl": "https://www.pipedrive.com/en/product-updates",
 			"note": "Specified 2026-09-28 in openspec/changes/clients-registry-numbers-and-enrichment (OpenSpec pass).",
 			"screen": {
-				"board": null,
-				"reason": "not designed: no board draws bulk enrichment"
+				"canvas": "design-system",
+				"board": "PqOrganisatiesVerrijken"
 			}
 		},
 		{
@@ -9123,8 +9201,8 @@
 				"intelligence-db requirements#16305 (SED Organisatie, 2021-12-24: bij elk proces duidelijk bij welke gemeente het hoort)"
 			],
 			"screen": {
-				"board": null,
-				"reason": "not designed: no board shows the municipality per contact"
+				"canvas": "design-system",
+				"board": "PqWebchat"
 			}
 		},
 		{
@@ -9663,8 +9741,8 @@
 			],
 			"note": "Specified 2026-09-28 in openspec/changes/requests-web-chat-and-bot (OpenSpec pass).",
 			"screen": {
-				"board": null,
-				"reason": "not designed: no board draws the chatbot"
+				"canvas": "design-system",
+				"board": "PqWebchat"
 			}
 		},
 		{
@@ -10072,7 +10150,7 @@
 			],
 			"screen": {
 				"board": null,
-				"reason": "not designed: no board draws retention terms"
+				"reason": "no screen in pipelinq: retention terms are set on the schema in OpenRegister and carried out by its background job"
 			}
 		},
 		{
@@ -10697,5 +10775,165 @@
 			"kiss": "unknown",
 			"note": "Not settled. The 2026-03 research calls them complementary. No buyer has been asked."
 		}
-	]
+	],
+	"specScreens": {
+		"activity-stream-publishing": {
+			"board": null,
+			"reason": "no screen: activities appear in the Nextcloud Activity app, outside pipelinq"
+		},
+		"beta-alignment": {
+			"board": null,
+			"reason": "no screen: keeps the app store listing, the website and info.xml honest about what ships"
+		},
+		"client-forms": {
+			"board": [
+				"PqKlantNieuw",
+				"PqKlant"
+			]
+		},
+		"consent-in-integriq": {
+			"board": null,
+			"reason": "no screen: how pipelinq asks integriq for a consent state, a call between apps"
+		},
+		"contact-channel-details": {
+			"board": [
+				"PqContactpersoon",
+				"PqKlant"
+			]
+		},
+		"declarative-view-system": {
+			"board": null,
+			"reason": "no screen of its own: list pages are rendered from the manifest, a way of building pages"
+		},
+		"detail-pages": {
+			"board": [
+				"PqKlant",
+				"PqLead",
+				"PqProduct"
+			]
+		},
+		"docs-product-pages-conformance": {
+			"board": null,
+			"reason": "no screen in pipelinq: the documentation site"
+		},
+		"dossier-questions": {
+			"board": [
+				"PqTicketAntwoord",
+				"BerichtDetail"
+			]
+		},
+		"event-listener-work-placement": {
+			"board": null,
+			"reason": "no screen: background work on object events"
+		},
+		"example-data": {
+			"board": "PqBeheer"
+		},
+		"marketing-analytics-connectors": {
+			"board": [
+				"PqBeheerMarketing",
+				"PqZoekinzicht"
+			]
+		},
+		"marketing-campaign-attribution": {
+			"board": [
+				"PqNieuwsbriefPrestaties",
+				"PqCampagne"
+			]
+		},
+		"marketing-competitor-watches": {
+			"board": "PqZoekinzicht"
+		},
+		"marketing-docs": {
+			"board": null,
+			"reason": "no screen: the changelog and the user guide"
+		},
+		"marketing-keyword-intelligence": {
+			"board": "PqZoekinzicht"
+		},
+		"marketing-testing": {
+			"board": null,
+			"reason": "no screen: test coverage of the marketing services"
+		},
+		"marketing-verification": {
+			"board": null,
+			"reason": "no screen: the verification checklist before merging"
+		},
+		"nav-ia-cleanup": {
+			"board": [
+				"PqModules",
+				"PqDashboard"
+			]
+		},
+		"navigation-ia": {
+			"board": "PqModules"
+		},
+		"notifications": {
+			"board": "PqPersoonlijk"
+		},
+		"openregister-integration": {
+			"board": null,
+			"reason": "no screen: storage in OpenRegister, under every page"
+		},
+		"parties": {
+			"board": "PqKlant"
+		},
+		"party-fields-and-indicators": {
+			"board": "PqKlant"
+		},
+		"party-kind-registry": {
+			"board": "PqKlantNieuw"
+		},
+		"pipelinq-or-adoption": {
+			"board": null,
+			"reason": "no screen: moves constants into admin configuration and adopts the shared manifest"
+		},
+		"pipelinq-store-surface": {
+			"board": "PqStore"
+		},
+		"portal-contribution": {
+			"board": "PqBeheerPortaal"
+		},
+		"pos-display": {
+			"board": [
+				"PqKassa",
+				"PqKassabon"
+			]
+		},
+		"project-portfolio": {
+			"board": "PqProject"
+		},
+		"realtime-updates-ui": {
+			"board": [
+				"PqMijnWerkIndelen",
+				"PqPipeline"
+			]
+		},
+		"register-i18n-locale-formatting": {
+			"board": [
+				"PqVerkoopoverzicht",
+				"PqKassabon"
+			]
+		},
+		"repair-steps": {
+			"board": null,
+			"reason": "no screen: runs during occ upgrade"
+		},
+		"retire-queue-concept": {
+			"board": [
+				"PqWachtrij",
+				"PqTickets"
+			]
+		},
+		"test-harness": {
+			"board": null,
+			"reason": "no screen: the unit test suite"
+		},
+		"walkthrough": {
+			"board": [
+				"PqPersoonlijk",
+				"PqKlantNieuw"
+			]
+		}
+	}
 }
