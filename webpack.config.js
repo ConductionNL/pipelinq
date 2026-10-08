@@ -5,10 +5,8 @@ const webpack = require('webpack')
 const TerserPlugin = require('terser-webpack-plugin')
 const webpackConfig = require('@nextcloud/webpack-vue-config')
 const { VueLoaderPlugin } = require('vue-loader')
-const {
-	appVersionDefine,
-	readInfoXmlVersion,
-} = require('./scripts/appVersionDefine.js')
+const { appVersionDefine } = require('@conduction/nextcloud-vue/webpack')
+const { readInfoXmlVersion } = require('./scripts/readInfoXmlVersion.js')
 
 // ⚠️ `node-polyfill-webpack-plugin` and `terser-webpack-plugin` are BUILD-TIME
 // requirements of `@nextcloud/webpack-vue-config@7` that this app must declare
@@ -165,7 +163,8 @@ webpackConfig.plugins = [
 		// The installed version, read in the browser from the `version` initial
 		// state; the info.xml version on a page without it. `package.json`
 		// says 0.1.0 and the release workflow bumps info.xml after this build,
-		// so neither can be pasted in as a literal (scripts/appVersionDefine.js).
+		// so neither can be pasted in as a literal (`appVersionDefine` in
+		// @conduction/nextcloud-vue/webpack).
 		appVersion: appVersionDefine(appId, readInfoXmlVersion()),
 		// Replacing `plugins` also drops the base config's DefinePlugin, which is
 		// the only place these are set — without them Vue logs a feature-flag
