@@ -65,6 +65,7 @@ use OCA\Pipelinq\Listener\SchemaChangeListener;
 use OCA\Pipelinq\Listener\SlaObjectCreatedListener;
 use OCA\Pipelinq\Listener\SlaObjectUpdatedListener;
 use OCA\Pipelinq\Listener\SurveyDispatchListener;
+use OCA\Pipelinq\Listener\TaskCreatedByCreatingListener;
 use OCA\Pipelinq\Listener\TimeApprovalListener;
 use OCA\Pipelinq\Mcp\PipelinqScannableServices;
 use OCA\Pipelinq\Service\AppointmentCalendarLeafProvider;
@@ -216,6 +217,11 @@ class Application extends App implements IBootstrap {
 		$context->registerEventListener(
 			event: ObjectCreatingEvent::class,
 			listener: LeadStageCreatingListener::class
+		);
+		// A new task records who created it (round3-review-points).
+		$context->registerEventListener(
+			event: ObjectCreatingEvent::class,
+			listener: TaskCreatedByCreatingListener::class
 		);
 		$context->registerEventListener(
 			event: ObjectUpdatedEvent::class,

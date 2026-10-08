@@ -11,6 +11,7 @@
 
 import { createNameFormatter } from './nameFormatters.js'
 import { currencyOr } from './reportingCurrency.js'
+import { createUserDisplayNameFormatter } from './userDisplayName.js'
 
 /**
  * Format an amount in the row's own currency (`row.currency`), or in the
@@ -70,5 +71,8 @@ export function createAppFormatters(store) {
 		bookingServiceName: createNameFormatter([
 			(id) => store.fetchObject('appointmentService', id),
 		]),
+		// A user field shows the user's display name, not the uid
+		// (round3-review-points).
+		userDisplayName: createUserDisplayNameFormatter(),
 	}
 }

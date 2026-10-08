@@ -225,6 +225,7 @@
 import { NcButton, NcSelect, NcTextField } from '@nextcloud/vue'
 import ServiceStepsEditor from '../../components/bookings/ServiceStepsEditor.vue'
 import { reportingCurrency } from '../../services/reportingCurrency.js'
+import { serializeStep } from '../../services/serviceSteps.js'
 
 export default {
 	name: 'ServiceForm',
@@ -379,17 +380,19 @@ export default {
 				.filter((s) => s.length > 0)
 		},
 
+		/**
+		 * Validate and emit the service, steps included.
+		 *
+		 * @spec openspec/changes/round3-review-points/specs/appointment-booking/spec.md
+		 */
 		onSave() {
 			if (!this.validateAll()) {
 				return
 			}
 			const data = { ...this.form }
-			data.multiStep = (this.form.multiStep || []).map((s) => ({
-				durationMinutes: Number(s.durationMinutes) || 0,
-				resourceType: s.resourceType || 'staff',
-				skillRequired: (s.skillRequired || '').trim(),
-				allowGap: !!s.allowGap,
-			}))
+			// serializeStep keeps the product, quantity and unit of a step
+			// (round3-review-points).
+			data.multiStep = (this.form.multiStep || []).map(serializeStep)
 			data.requiredSkills = [...(this.form.requiredSkills || [])]
 			if (this.service?.id) {
 				data.id = this.service.id

@@ -1,0 +1,39 @@
+{
+  "_meta": {
+    "spdx-license": "EUPL-1.2",
+    "spdx-copyright": "2026 Conduction B.V.",
+    "description": "Round 3 review point 1 (openspec change round3-review-points). Ruben decided that a client's and a contact person's name, email and phone are edited on the client page and written back to the Nextcloud Contact (#2214, src/store/plugins/contactWriteBack.js). 15-unify-client-contact.json still declared them readOnly, and OpenRegister refuses any change to a readOnly property on update, so the Edit dialog failed with 'Cannot modify readOnly property: phone'. This fragment lifts readOnly on those three fields only. Address and website stay read-only mirrors: no form edits them. No property changes type and none becomes required."
+  },
+  "components": {
+    "schemas": {
+      "client": {
+        "slug": "client",
+        "properties": {
+          "name": {
+            "readOnly": false
+          },
+          "email": {
+            "readOnly": false
+          },
+          "phone": {
+            "readOnly": false
+          }
+        }
+      },
+      "contact": {
+        "slug": "contact",
+        "properties": {
+          "name": {
+            "readOnly": false
+          },
+          "email": {
+            "readOnly": false
+          },
+          "phone": {
+            "readOnly": false
+          }
+        }
+      }
+    }
+  }
+}

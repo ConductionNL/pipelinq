@@ -25,6 +25,7 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "mailingList",
+				"columnOverrides": { "createdBy": { "formatter": "userDisplayName" } },
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"showViewAction": false,
 				"includeColumns": ["name", "optInMode", "publicSignup", "status"],
@@ -60,7 +61,8 @@
 						"title": "List details",
 						"icon": "EmailMultipleOutline",
 						"content": {
-							"columns": 2
+							"columns": 2,
+							"overrides": { "createdBy": { "formatter": "userDisplayName" } }
 						}
 					}
 				],

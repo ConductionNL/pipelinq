@@ -41,6 +41,7 @@ import menuLayout from './menu-layout.json'
 import simpleMenuLayout from './menu-layout.simple.json'
 import pinia from './pinia.js'
 import registry from './registry.js'
+import { installPageRefreshOnCreate } from './services/pageRefreshOnCreate.js'
 import { initializeStores, registerObjectTypes } from './store/store.js'
 import {
 	applyHomePage,
@@ -340,6 +341,9 @@ function mountApp(manifest) {
 		history: createWebHistory(routerBase()),
 		routes: routesFromManifest(manifest),
 	})
+	// A new deal line item refreshes the page, so the Line items count follows
+	// (round3-review-points).
+	installPageRefreshOnCreate(window)
 	// Vue 3: `createApp(...).mount()` replaces `new Vue(...).$mount()`, and
 	// `h()` takes props as a FLAT second argument — the Vue 2 `{ props: { … } }`
 	// nesting is silently ignored, which would leave CnAppRoot with no manifest
