@@ -2,14 +2,14 @@
   "_meta": {
     "spdx-license": "EUPL-1.2",
     "spdx-copyright": "2026 Conduction B.V.",
-    "description": "Two fixes from the 7 October audit (openspec change review-audit-fixes-b). (1) A line item (leadProduct) is named after its product: OpenRegister resolves the product uuid in `objectNameField` to the product's name on save, so the Related widget on a lead lists 'Adviesuur' instead of an unnamed 'Lead Product'. Existing line items get their name on their next save. (2) The qualification score is calculated by `x-openregister-calculations` on every save, so the form must not offer it: `readOnly` keeps it out of the edit dialog, and the description says it is calculated. No property changes type and none becomes required."
+    "description": "Two fixes from the 7 October audit (openspec change review-audit-fixes-b). (1) A line item (leadProduct) is named after its product, so the Related widget on a lead lists 'Adviesuur' instead of an unnamed 'Lead Product'. The name field is the TEMPLATE `{{ product }}`, not the bare field `product`: OpenRegister's MetadataHydrationHandler only resolves a relation uuid to the related object's name inside a template (processTwigLikeTemplate calls resolveRelationValue); a bare field path returns the raw uuid (round3-review-points, review point 4). Existing line items get their name on their next save. (2) The qualification score is calculated by `x-openregister-calculations` on every save, so the form must not offer it: `readOnly` keeps it out of the edit dialog, and the description says it is calculated. No property changes type and none becomes required."
   },
   "components": {
     "schemas": {
       "leadProduct": {
         "slug": "leadProduct",
         "configuration": {
-          "objectNameField": "product"
+          "objectNameField": "{{ product }}"
         }
       },
       "lead": {

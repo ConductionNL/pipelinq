@@ -2029,7 +2029,8 @@
 								},
 								{
 									"key": "assignee",
-									"label": "Agent"
+									"label": "Agent",
+									"formatter": "userDisplayName"
 								},
 								{
 									"key": "outcome",
@@ -2500,7 +2501,7 @@
 						"type": "data",
 						"title": "Ticket details",
 						"icon": "FileDocument",
-						"content": { "title": "Ticket details", "columns": 2, "hideEmpty": true }
+						"content": { "title": "Ticket details", "columns": 2, "hideEmpty": true, "overrides": { "assignee": { "formatter": "userDisplayName" } } }
 					},
 					{
 						"id": "ticket-related",
@@ -3150,6 +3151,7 @@
 								"notes"
 							],
 							"overrides": {
+								"assignee": { "formatter": "userDisplayName" },
 								"status": { "editable": false },
 								"stageEnteredAt": { "editable": false },
 								"qualificationScore": { "label": "Win chance" }
@@ -3588,7 +3590,7 @@
 					{ "key": "type", "label": "Type" },
 					{ "key": "status", "label": "Status" },
 					{ "key": "priority", "label": "Priority" },
-					{ "key": "assigneeUserId", "label": "Assignee" },
+					{ "key": "assigneeUserId", "label": "Assignee", "formatter": "userDisplayName" },
 					{ "key": "deadline", "label": "Deadline" }
 				],
 				"sidebar": {
@@ -3613,7 +3615,7 @@
 						"type": "data",
 						"title": "Task",
 						"icon": "ClipboardCheckOutline",
-						"content": { "columns": 2 }
+						"content": { "columns": 2, "overrides": { "assigneeUserId": { "formatter": "userDisplayName" }, "createdBy": { "formatter": "userDisplayName" } } }
 					},
 					{
 						"id": "task-related",
@@ -3859,6 +3861,7 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "posTransaction",
+				"columnOverrides": { "cashier": { "formatter": "userDisplayName" } },
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"showAdd": false,
 				"showFormDialog": false,
@@ -3933,6 +3936,7 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "posRefund",
+				"columnOverrides": { "cashier": { "formatter": "userDisplayName" } },
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"showAdd": false,
 				"showFormDialog": false,
@@ -4027,7 +4031,7 @@
 						"type": "data",
 						"title": "Refund",
 						"icon": "FileDocument",
-						"content": { "columns": 2 }
+						"content": { "columns": 2, "overrides": { "cashier": { "formatter": "userDisplayName" } } }
 					},
 					{
 						"id": "pos-refund-kpis-refund-amount",
@@ -4209,7 +4213,7 @@
 						"type": "data",
 						"title": "Shift",
 						"icon": "FileDocument",
-						"content": { "columns": 2 }
+						"content": { "columns": 2, "overrides": { "operator": { "formatter": "userDisplayName" }, "managedBy": { "formatter": "userDisplayName" } } }
 					},
 					{
 						"id": "shift-kpis-opening-float",
@@ -4597,7 +4601,7 @@
 						"type": "data",
 						"title": "Transaction",
 						"icon": "FileDocument",
-						"content": { "columns": 2 }
+						"content": { "columns": 2, "overrides": { "cashier": { "formatter": "userDisplayName" } } }
 					},
 					{
 						"id": "pos-tx-kpis-line-items",

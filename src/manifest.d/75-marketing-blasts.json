@@ -49,6 +49,7 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "segment",
+				"columnOverrides": { "createdBy": { "formatter": "userDisplayName" } },
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"selectable": false,
 				"addLabel": "New segment",
@@ -80,6 +81,7 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "campaignTemplate",
+				"columnOverrides": { "createdBy": { "formatter": "userDisplayName" } },
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"selectable": false,
 				"addLabel": "New template",
@@ -106,6 +108,7 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "blast",
+				"columnOverrides": { "createdBy": { "formatter": "userDisplayName" } },
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"selectable": false,
 				"rowRoute": "BlastMonitor",
