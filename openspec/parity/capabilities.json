@@ -9745,7 +9745,7 @@
 				"state": "building",
 				"evidence": "portaliq's half is built (archived 2026-09-29-signin-integriq-broker-login, 13 of 13 tasks): portaliq lib/Controller/BrokerSessionController.php start and callback, lib/Service/Signin/BrokerLogin.php, the Sign-in widget's route per provider (src/widgets/PortalSignin.vue). integriq's broker routes exist (appinfo/routes.php:397-404 idpBroker#start, #callback, #exchange), but no vendor SAML Service Provider or OIDC Relying Party sits behind its GovernmentIdpAdapterInterface, so a DigiD start on a live instance ends on integriq's error page. pipelinq's own portal login stays a password plus MFA (lib/Service/Portal/PortalAuthService.php:189)",
 				"owner": "ConductionNL/portaliq",
-				"change": "portaliq/2026-09-29-signin-integriq-broker-login",
+				"change": "integriq/portal-idp-broker-config",
 				"reachedOn": "nothing (portaliq's re-read of 2026-10-07: a live start ends on integriq's error page)",
 				"readOn": "2026-10-07"
 			},
@@ -9762,7 +9762,7 @@
 				"intelligence-db requirements#207282 (Gemeente Midden-Drenthe, 2026-03-05: DigiD en of eHerkenning voor authenticatie)",
 				"intelligence-db requirements#194820 (Kadaster CRM, 2026-04-23: zelfregistratie, authenticatie zoals eHerkenning)"
 			],
-			"note": "Decided no 2026-09-28 (OpenSpec pass): One shared external portal is portaliq (hydra ADR-046; pipelinq change portal-contribution retires the bespoke portal); DigiD and eHerkenning login are portaliq rows sig-digid and sig-eherkenning, both specified. Owner corrected to ConductionNL/portaliq. Corrections round 9 (2026-09-28): built.state decided-no to specified. The owner-moves pass recorded the open portaliq change as existing: openspec/changes/signin-integriq-broker-login (portaliq#808, recorded in portaliq openspec/parity/gap-decisions.json for this pipelinq row). The decided-no above stands for pipelinq's own portal. Re-read 2026-10-07: portaliq rates its rows sig-digid and sig-eherkenning building and partial. For pipelinq this stays no until a DigiD login completes; the missing piece is the broker vendor behind integriq (Open Decision D1 in portaliq).",
+			"note": "Decided no 2026-09-28 (OpenSpec pass): One shared external portal is portaliq (hydra ADR-046; pipelinq change portal-contribution retires the bespoke portal); DigiD and eHerkenning login are portaliq rows sig-digid and sig-eherkenning, both specified. Owner corrected to ConductionNL/portaliq. Corrections round 9 (2026-09-28): built.state decided-no to specified. The owner-moves pass recorded the open portaliq change as existing: openspec/changes/signin-integriq-broker-login (portaliq#808, recorded in portaliq openspec/parity/gap-decisions.json for this pipelinq row). The decided-no above stands for pipelinq's own portal. Re-read 2026-10-07: portaliq rates its rows sig-digid and sig-eherkenning building and partial. For pipelinq this stays no until a DigiD login completes; the missing piece is the broker vendor behind integriq (Open Decision D1 in portaliq). Missing half specified in integriq/portal-idp-broker-config (spec round part 3, 2026-10-07); delivered half: portaliq/2026-09-29-signin-integriq-broker-login.",
 			"screen": {
 				"board": null,
 				"reason": "no screen in pipelinq: portal login belongs to portaliq"
