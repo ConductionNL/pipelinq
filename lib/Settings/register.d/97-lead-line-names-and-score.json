@@ -16,6 +16,7 @@
         "slug": "lead",
         "properties": {
           "qualificationScore": {
+            "title": "Qualification Score",
             "readOnly": true,
             "description": "Calculated when the lead is saved, from its value, client, contact, source, close date, priority and description. You cannot change it by hand.",
             "x-notes": "Materialised by the x-openregister-calculations.qualificationScore annotation on every save; never written by service code or the form. readOnly keeps it out of the edit dialog (fieldsFromSchema skips readOnly properties), because the backend overwrote any value typed there."

@@ -296,6 +296,8 @@ export default {
 		 * The portal tabs an admin can switch on, keyed as PortalTenantService stores them.
 		 *
 		 * @return {Array<{key: string, label: string}>} The options.
+		 * @spec exclude the portal admin screen has no owning requirement; customer-portal
+		 *   specifies only the widget-mode origin allow-list (pipelinq#2041)
 		 */
 		featureOptions() {
 			return [
@@ -312,6 +314,8 @@ export default {
 		 * The most recent audit events (the API returns them newest first).
 		 *
 		 * @return {Array<object>} The events to show.
+		 * @spec exclude the portal admin screen has no owning requirement; customer-portal
+		 *   specifies only the widget-mode origin allow-list (pipelinq#2041)
 		 */
 		recentEvents() {
 			return this.events.slice(0, RECENT_EVENT_LIMIT)
@@ -336,6 +340,8 @@ export default {
 		 *
 		 * @param {string} path The path below /portal/api/admin/.
 		 * @return {string} The url.
+		 * @spec exclude the portal admin screen has no owning requirement; customer-portal
+		 *   specifies only the widget-mode origin allow-list (pipelinq#2041)
 		 */
 		adminUrl(path) {
 			return generateUrl('/apps/pipelinq/portal/api/admin/' + path)
@@ -386,6 +392,8 @@ export default {
 		 *
 		 * @param {string} key The feature key.
 		 * @return {boolean} True when enabled.
+		 * @spec exclude the portal admin screen has no owning requirement; customer-portal
+		 *   specifies only the widget-mode origin allow-list (pipelinq#2041)
 		 */
 		hasFeature(key) {
 			return (this.form?.enabledFeatures || []).includes(key)
@@ -396,6 +404,8 @@ export default {
 		 *
 		 * @param {string} key The feature key.
 		 * @param {boolean} enabled Whether it should be on.
+		 * @spec exclude the portal admin screen has no owning requirement; customer-portal
+		 *   specifies only the widget-mode origin allow-list (pipelinq#2041)
 		 */
 		toggleFeature(key, enabled) {
 			const current = (this.form.enabledFeatures || []).filter(

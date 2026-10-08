@@ -192,6 +192,11 @@ export default {
 		},
 	},
 
+	/**
+	 * Load the tenders and the tender types, then name every tender's type.
+	 *
+	 * @spec openspec/specs/pos-display/spec.md#requirement-pos-amounts-and-labels-follow-the-user
+	 */
 	async mounted() {
 		await Promise.all([this.loadTenders(), this.loadTenderTypes()])
 		await this.resolveTypeNames()
@@ -321,6 +326,11 @@ export default {
 			this.showAdd = true
 		},
 
+		/**
+		 * Close the dialog, reload the tenders and name a new tender's type.
+		 *
+		 * @spec openspec/specs/pos-display/spec.md#requirement-pos-amounts-and-labels-follow-the-user
+		 */
 		async onTenderAdded() {
 			this.showAdd = false
 			await this.loadTenders()

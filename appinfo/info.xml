@@ -257,6 +257,12 @@ Vrij en open source onder de EUPL-1.2-licentie.
             <step>OCA\Pipelinq\Repair\CreatePortalServiceGroup</step>
             <!-- The group the SMS and WhatsApp webhooks write with; never picks an account. -->
             <step>OCA\Pipelinq\Repair\CreateMessagingServiceGroup</step>
+            <!--
+                hydra-gate-98 held: OCA\Pipelinq\Repair\CreateServiceGroup : it is the abstract
+                base of the two steps above and cannot be instantiated, so naming it here would
+                make Nextcloud's repair fail. It runs through CreatePortalServiceGroup and
+                CreateMessagingServiceGroup. RepairStepRegistrationTest keeps it that way.
+            -->
         </post-migration>
         <!--
             FRESH INSTALL. Nextcloud does NOT run post-migration on a first install:

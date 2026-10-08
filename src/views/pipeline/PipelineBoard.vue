@@ -643,9 +643,6 @@ export default {
 		},
 
 		/**
-		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-25
-		 */
-		/**
 		 * The leads no board column shows, with the reason.
 		 *
 		 * @return {Array<{lead: object, reason: string}>}
@@ -655,6 +652,9 @@ export default {
 			return findOrphanedLeads(this.allLeads, this.pipelines)
 		},
 
+		/**
+		 * @spec openspec/changes/reverse-2026-05-26-fe-pipeline-ui/tasks.md#task-25
+		 */
 		selectedPipeline() {
 			if (!this.selectedPipelineId) return null
 			return (
