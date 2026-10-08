@@ -30,6 +30,8 @@ user:
 
 ## Out of scope
 
-OpenRegister sets no `link` on the notification itself: AnnotationNotifier only
-adds action buttons. Clicking the notification text needs that link; the
-report names what OpenRegister would have to add.
+OpenRegister's aggregation cache is not evicted by an object write:
+`AggregationCacheInvalidationListener` bumps the version for the register and
+schema ids, while `AggregationCache` keys on their slugs. Until OpenRegister
+fixes that, a count can lag up to its 60 second cache after the page refresh
+this change sends. The fix belongs to OpenRegister.

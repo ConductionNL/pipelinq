@@ -16,9 +16,6 @@
  * @spec openspec/changes/round3-review-points/specs/user-fields/spec.md
  */
 
-import { getCurrentUser } from '@nextcloud/auth'
-import axios from '@nextcloud/axios'
-import { generateOcsUrl } from '@nextcloud/router'
 import { reactive } from 'vue'
 
 /** Shown while a name is still being looked up; never the raw uid. */
@@ -32,6 +29,15 @@ export const PENDING_LABEL = '…'
  * @spec openspec/changes/round3-review-points/specs/user-fields/spec.md
  */
 export async function fetchUserDisplayName(uid) {
+	// Loaded on first use: @nextcloud/auth reads browser storage when it is
+	// imported, which breaks every node-environment spec that imports the
+	// cell formatters.
+	const [{ getCurrentUser }, { default: axios }, { generateOcsUrl }] =
+		await Promise.all([
+			import('@nextcloud/auth'),
+			import('@nextcloud/axios'),
+			import('@nextcloud/router'),
+		])
 	let me
 	try {
 		me = getCurrentUser()
