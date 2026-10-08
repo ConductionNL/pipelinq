@@ -446,6 +446,490 @@
 			"name_nl": "Platform, privacy en beheer"
 		}
 	],
+	"features": [
+		{
+			"slug": "client-management",
+			"title": "Client and contact management",
+			"title_nl": "Klant- en contactbeheer",
+			"area": "clients",
+			"overlay": "client-management",
+			"specs": [
+				"client-management",
+				"clients-history-summary-and-risk",
+				"clients-preferred-name",
+				"contact-relationship-mapping",
+				"customer-360",
+				"dashboard",
+				"entity-notes",
+				"unify-client-contact"
+			]
+		},
+		{
+			"slug": "master-data-management",
+			"title": "Master data management",
+			"title_nl": "Masterdatabeheer",
+			"area": "clients",
+			"overlay": "master-data-management",
+			"specs": [
+				"clients-bulk-edit-and-undo",
+				"clients-contact-capture",
+				"clients-registry-numbers-and-enrichment",
+				"clients-reversible-merge",
+				"master-data-management"
+			]
+		},
+		{
+			"slug": "contacts-sync",
+			"title": "Nextcloud Contacts sync",
+			"title_nl": "Synchroniseren met Contacten",
+			"area": "clients",
+			"overlay": "contacts-sync",
+			"specs": [
+				"contacts-sync"
+			]
+		},
+		{
+			"slug": "prospect-discovery",
+			"title": "Prospect discovery",
+			"title_nl": "Prospects ontdekken",
+			"area": "clients",
+			"overlay": "prospect-discovery",
+			"specs": [
+				"prospect-discovery"
+			]
+		},
+		{
+			"slug": "pipeline",
+			"title": "Sales pipeline",
+			"title_nl": "Verkooppijplijn",
+			"area": "pipeline",
+			"overlay": "pipeline",
+			"specs": [
+				"lead-management",
+				"lead-scoring-win-probability",
+				"pipeline",
+				"pipeline-insights",
+				"pipeline-lead-rotation",
+				"pipeline-stage-limit"
+			]
+		},
+		{
+			"slug": "commercial-dashboard",
+			"title": "Commercial dashboard and forecast",
+			"title_nl": "Commercieel dashboard en forecast",
+			"area": "pipeline",
+			"overlay": "commercial-dashboard",
+			"specs": [
+				"commercial-dashboard",
+				"lead-management",
+				"pipeline-insights",
+				"pipeline-live-exchange-rates"
+			]
+		},
+		{
+			"slug": "contactmomenten-rapportage",
+			"title": "Contactmomenten and reporting",
+			"title_nl": "Contactmomenten en rapportage",
+			"area": "contact-moments",
+			"overlay": "contactmomenten-rapportage",
+			"specs": [
+				"activity-timeline",
+				"contact-moments-keep-draft",
+				"contactmomenten-rapportage",
+				"marketing-campaigns",
+				"omnichannel-registratie",
+				"outbound-messaging"
+			]
+		},
+		{
+			"slug": "kcc-werkplek",
+			"title": "KCC werkplek",
+			"title_nl": "KCC-werkplek",
+			"area": "requests",
+			"overlay": "kcc-werkplek",
+			"specs": [
+				"appointment-booking",
+				"callback-management",
+				"kcc-werkplek",
+				"marketing-article-hub",
+				"requests-municipality-per-contact",
+				"skill-routing",
+				"xwiki-proxy"
+			]
+		},
+		{
+			"slug": "telephony",
+			"title": "Phone calls from the client record",
+			"title_nl": "Bellen vanuit het klantdossier",
+			"area": "contact-moments",
+			"overlay": null,
+			"specs": [
+				"contact-moments-call-review",
+				"contact-moments-phone-lookup",
+				"cti-screenpop-adapter"
+			]
+		},
+		{
+			"slug": "omnichannel-registratie",
+			"title": "Omnichannel messaging",
+			"title_nl": "Omnichannel berichten",
+			"area": "contact-moments",
+			"overlay": "omnichannel-registratie",
+			"specs": [
+				"messaging-saved-replies-and-resend",
+				"requests-inbound-to-queue",
+				"requests-web-chat-and-bot"
+			]
+		},
+		{
+			"slug": "email-calendar-sync",
+			"title": "Email and calendar sync",
+			"title_nl": "E-mail- en agendakoppeling",
+			"area": "contact-moments",
+			"overlay": "email-calendar-sync",
+			"specs": [
+				"contact-moments-mail-add-in",
+				"email-calendar-sync",
+				"requests-inbound-to-queue"
+			]
+		},
+		{
+			"slug": "request-management",
+			"title": "Verzoek and klacht intake",
+			"title_nl": "Verzoek- en klachtafhandeling",
+			"area": "requests",
+			"overlay": "request-management",
+			"specs": [
+				"klachtenregistratie",
+				"request-management",
+				"ticket-decisions-tab",
+				"unify-ticket-supertype"
+			]
+		},
+		{
+			"slug": "public-intake-forms",
+			"title": "Self-service intake forms",
+			"title_nl": "Zelfservice-intakeformulieren",
+			"area": "requests",
+			"overlay": "public-intake-forms",
+			"specs": [
+				"website-enquiry-intake"
+			]
+		},
+		{
+			"slug": "sla-engine-and-escalation",
+			"title": "SLA and escalation",
+			"title_nl": "SLA en escalatie",
+			"area": "requests",
+			"overlay": "sla-engine-and-escalation",
+			"specs": [
+				"sla-engine-and-escalation"
+			]
+		},
+		{
+			"slug": "customer-satisfaction",
+			"title": "Customer satisfaction surveys",
+			"title_nl": "Klanttevredenheid meten",
+			"area": "contact-moments",
+			"overlay": null,
+			"specs": [
+				"customer-satisfaction-closed-loop"
+			]
+		},
+		{
+			"slug": "avg-verzoeken-workflow",
+			"title": "AVG request tracking",
+			"title_nl": "AVG-verzoeken volgen",
+			"area": "government",
+			"overlay": "avg-verzoeken-workflow",
+			"specs": [
+				"avg-consume-or-workflow",
+				"avg-verzoeken-workflow",
+				"platform-client-retention"
+			]
+		},
+		{
+			"slug": "dutch-government-interop",
+			"title": "Dutch government interop",
+			"title_nl": "Koppelen aan de overheid",
+			"area": "government",
+			"overlay": "dutch-government-interop",
+			"specs": [
+				"brp-lookup",
+				"vng-klantinteracties-leaf"
+			]
+		},
+		{
+			"slug": "customer-portal",
+			"title": "Customer portal",
+			"title_nl": "Klantportaal",
+			"area": "portal",
+			"overlay": null,
+			"specs": [
+				"customer-portal",
+				"portal-resident-view-preview"
+			]
+		},
+		{
+			"slug": "appointment-booking",
+			"title": "Appointment booking",
+			"title_nl": "Afspraken inplannen",
+			"area": "portal",
+			"overlay": "appointment-booking",
+			"specs": [
+				"appointment-booking",
+				"services-and-resources-at-a-glance"
+			]
+		},
+		{
+			"slug": "public-booking-portal",
+			"title": "Public booking portal",
+			"title_nl": "Publiek afsprakenportaal",
+			"area": "portal",
+			"overlay": "public-booking-portal",
+			"specs": [
+				"appointment-booking"
+			]
+		},
+		{
+			"slug": "product-service-catalog",
+			"title": "Product and service catalogue",
+			"title_nl": "Product- en dienstencatalogus",
+			"area": "products",
+			"overlay": "product-service-catalog",
+			"specs": [
+				"pos-product-catalogue",
+				"product-catalog",
+				"product-service-catalog",
+				"product-vendor-master",
+				"products-price-lists",
+				"products-stock-on-hand"
+			]
+		},
+		{
+			"slug": "product-catalog-quoting",
+			"title": "Quoting",
+			"title_nl": "Offertes maken",
+			"area": "pipeline",
+			"overlay": "product-catalog-quoting",
+			"specs": [
+				"lead-product-link",
+				"products-quote-from-lead"
+			]
+		},
+		{
+			"slug": "contract-renewal-tracking",
+			"title": "Contract and renewal tracking",
+			"title_nl": "Contract- en verlengingsbeheer",
+			"area": "products",
+			"overlay": "contract-renewal-tracking",
+			"specs": [
+				"clients-history-summary-and-risk",
+				"contract-renewal-tracking"
+			]
+		},
+		{
+			"slug": "point-of-sale",
+			"title": "Point of sale",
+			"title_nl": "Kassa",
+			"area": "pos",
+			"overlay": "point-of-sale",
+			"specs": [
+				"pos-barcode-scan",
+				"pos-lifecycle-guard-adoption",
+				"pos-nl-btw-engine",
+				"pos-receipt-engine",
+				"pos-refund-return",
+				"pos-transaction-core"
+			]
+		},
+		{
+			"slug": "loyalty-programme",
+			"title": "Loyalty programme",
+			"title_nl": "Loyaliteitsprogramma",
+			"area": "pos",
+			"overlay": "loyalty-programme",
+			"specs": []
+		},
+		{
+			"slug": "time-entry-core",
+			"title": "Time capture",
+			"title_nl": "Urenregistratie",
+			"area": "work",
+			"overlay": "time-entry-core",
+			"specs": [
+				"time-approval-workflow",
+				"time-entry-core",
+				"time-entry-mobile"
+			]
+		},
+		{
+			"slug": "warehouse-export",
+			"title": "Warehouse export",
+			"title_nl": "Datawarehouse-export",
+			"area": "reporting",
+			"overlay": "warehouse-export",
+			"specs": [
+				"bi-export-and-data-warehouse-sink"
+			]
+		},
+		{
+			"slug": "marketing-campaigns",
+			"title": "Marketing campaigns",
+			"title_nl": "Marketingcampagnes",
+			"area": "marketing",
+			"overlay": "marketing-campaigns",
+			"specs": [
+				"marketing-analytics",
+				"marketing-campaign-on-client",
+				"marketing-campaigns",
+				"marketing-events",
+				"marketing-integrated-campaigns"
+			]
+		},
+		{
+			"slug": "marketing-lists-and-mailings",
+			"title": "Mailing lists and newsletters",
+			"title_nl": "Mailinglijsten en nieuwsbrieven",
+			"area": "marketing",
+			"overlay": "marketing-lists-and-mailings",
+			"specs": [
+				"marketing-blast",
+				"marketing-block-editor",
+				"marketing-compliance",
+				"marketing-email-tracking",
+				"marketing-integrated-campaigns",
+				"marketing-lists",
+				"marketing-mail-transports",
+				"marketing-segmentation",
+				"marketing-ui"
+			]
+		},
+		{
+			"slug": "social-publishing",
+			"title": "Social publishing",
+			"title_nl": "Social media publiceren",
+			"area": "marketing",
+			"overlay": "social-publishing",
+			"specs": [
+				"social-publishing"
+			]
+		},
+		{
+			"slug": "search-and-competitor-intelligence",
+			"title": "Search and competitor intelligence",
+			"title_nl": "Zoek- en concurrentie-inzicht",
+			"area": "marketing",
+			"overlay": "search-and-competitor-intelligence",
+			"specs": []
+		},
+		{
+			"slug": "crm-workflow-automation",
+			"title": "Workflow automation",
+			"title_nl": "Workflowautomatisering",
+			"area": "automation",
+			"overlay": "crm-workflow-automation",
+			"specs": [
+				"crm-workflow-automation",
+				"exports-switch-off-after-repeated-failure",
+				"notifications-activity",
+				"sla-engine-and-escalation",
+				"time-approval-workflow"
+			]
+		},
+		{
+			"slug": "my-work",
+			"title": "My work and tasks",
+			"title_nl": "Mijn werk en taken",
+			"area": "work",
+			"overlay": null,
+			"specs": [
+				"dashboard",
+				"marketing-integrated-campaigns",
+				"my-work",
+				"my-work-roadmap",
+				"notify-the-followers-of-tickets-and-leads",
+				"task-background-jobs",
+				"work-letter-from-filinq-template"
+			]
+		},
+		{
+			"slug": "notifications-and-activity",
+			"title": "Notifications and the activity feed",
+			"title_nl": "Meldingen en de activiteitenstroom",
+			"area": "work",
+			"overlay": null,
+			"specs": [
+				"notifications-activity"
+			]
+		},
+		{
+			"slug": "self-hosted-open-source",
+			"title": "Self-hosted and open-source",
+			"title_nl": "Zelf gehost en open source",
+			"area": "platform",
+			"overlay": "self-hosted-open-source",
+			"specs": [
+				"bi-export-and-data-warehouse-sink"
+			]
+		},
+		{
+			"slug": "setup-and-getting-started",
+			"title": "Setup and getting started",
+			"title_nl": "Inrichten en aan de slag",
+			"area": "automation",
+			"overlay": null,
+			"specs": [
+				"first-time-setup"
+			]
+		},
+		{
+			"slug": "access-and-data-safety",
+			"title": "Access rights and data safety",
+			"title_nl": "Toegangsrechten en gegevensveiligheid",
+			"area": "platform",
+			"overlay": null,
+			"specs": [
+				"crm-access-groups",
+				"platform-record-lock"
+			]
+		},
+		{
+			"slug": "fields-languages-and-house-style",
+			"title": "Fields, languages and house style",
+			"title_nl": "Velden, talen en huisstijl",
+			"area": "platform",
+			"overlay": null,
+			"specs": [
+				"register-i18n",
+				"renames-keep-stored-data"
+			]
+		},
+		{
+			"slug": "mobile-offline-and-accessible",
+			"title": "Mobile, offline and accessible",
+			"title_nl": "Mobiel, offline en toegankelijk",
+			"area": "platform",
+			"overlay": null,
+			"specs": [
+				"platform-accessibility-statement"
+			]
+		},
+		{
+			"slug": "integrations-and-ai-assistant",
+			"title": "Integrations, API and AI assistant",
+			"title_nl": "Koppelingen, API en AI-assistent",
+			"area": "automation",
+			"overlay": null,
+			"specs": [
+				"adopt-connection-registry",
+				"crm-mcp-tool-surface",
+				"dashboard",
+				"marketing-api",
+				"prometheus-metrics"
+			]
+		}
+	],
 	"providers": [
 		{
 			"key": "pipelinq",
@@ -501,7 +985,7 @@
 			"kiss": "partial",
 			"provider": "pipelinq",
 			"providerHow": "read in src/manifest.json, pages Clients and ClientDetail, with the form in src/views/clients/ClientForm.vue",
-			"feature": "Client management",
+			"feature": "client-management",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -538,7 +1022,7 @@
 			"kiss": "partial",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/PartyKindRegistryService.php:86, which vocabularies person and organisation apart",
-			"feature": "Client management",
+			"feature": "client-management",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -573,7 +1057,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/PartyLinkService.php:72, which links a record to a party under a kind",
-			"feature": "Client management",
+			"feature": "client-management",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -609,7 +1093,7 @@
 			"kiss": "partial",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Controller/Customer360Controller.php:93 and lib/Service/Customer360SummaryService.php",
-			"feature": "Client management",
+			"feature": "client-management",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -644,8 +1128,8 @@
 			"kiss": "no",
 			"provider": "openregister",
 			"providerHow": "Open Register holds the master record and flags the match; pipelinq syncs into it at lib/Service/Mdm/OpenRegisterSyncService.php:100",
-			"feature": "Client management",
-			"featureConfidence": "medium",
+			"feature": "master-data-management",
+			"featureConfidence": "high",
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/Mdm/OpenRegisterSyncService.php:100",
@@ -676,8 +1160,8 @@
 			"kiss": "no",
 			"provider": "openregister",
 			"providerHow": "the merge happens in Open Register; pipelinq repoints its own references at lib/Listener/ObjectsMergedSyncListener.php",
-			"feature": "Client management",
-			"featureConfidence": "medium",
+			"feature": "master-data-management",
+			"featureConfidence": "high",
 			"built": {
 				"state": "built",
 				"evidence": "lib/Listener/ObjectsMergedSyncListener.php",
@@ -708,7 +1192,7 @@
 			"kiss": "partial",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/ContactSyncService.php:159 and the find widget at lib/Dashboard/FindClientWidget.php",
-			"feature": "Client management",
+			"feature": "client-management",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -740,7 +1224,7 @@
 			"kiss": "no",
 			"provider": "nextcloud",
 			"providerHow": "pipelinq writes the card and Nextcloud serves it over CardDAV; read in lib/Service/ContactSyncService.php:224",
-			"feature": "Contacts sync",
+			"feature": "contacts-sync",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -777,7 +1261,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/ContactImportService.php:64, which turns a Nextcloud contact card into a client",
-			"feature": "Contacts sync",
+			"feature": "contacts-sync",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -810,7 +1294,7 @@
 			"kiss": "no",
 			"provider": "openregister",
 			"providerHow": "Open Register owns bulk object import; pipelinq itself ships only the vCard path in lib/Service/ContactImportService.php",
-			"feature": "Contacts sync",
+			"feature": "master-data-management",
 			"featureConfidence": "medium",
 			"built": {
 				"state": "building",
@@ -845,7 +1329,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/Export/ExportDataService.php and the export pages in src/views/export/",
-			"feature": "Reporting",
+			"feature": "warehouse-export",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -877,7 +1361,7 @@
 			"kiss": "partial",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/NotesService.php:112, which stamps the author on every note",
-			"feature": "Client management",
+			"feature": "client-management",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -912,7 +1396,7 @@
 			"kiss": "no",
 			"provider": "nextcloud",
 			"providerHow": "pipelinq uses Nextcloud system tags; read in lib/Service/SystemTagService.php:80",
-			"feature": "Client management",
+			"feature": "client-management",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -948,7 +1432,7 @@
 			"kiss": "yes",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/KvkApiClient.php:95 with the mapping in lib/Service/KvkResultMapper.php",
-			"feature": "Dutch registries",
+			"feature": "prospect-discovery",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -983,8 +1467,8 @@
 			"kiss": "no",
 			"provider": "external",
 			"providerHow": "the register is OpenCorporates; pipelinq calls it at lib/Service/OpenCorporatesApiClient.php:96",
-			"feature": "Dutch registries",
-			"featureConfidence": "medium",
+			"feature": "prospect-discovery",
+			"featureConfidence": "high",
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/OpenCorporatesApiClient.php:96",
@@ -1015,7 +1499,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/PartyOrganisationTreeService.php:182, which sets a parent and keeps the path",
-			"feature": "Client management",
+			"feature": "client-management",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -1048,8 +1532,8 @@
 			"kiss": "no",
 			"provider": "openregister",
 			"providerHow": "the schema lives in Open Register; pipelinq resolves it at lib/Service/RegisterResolverService.php",
-			"feature": "Platform",
-			"featureConfidence": "medium",
+			"feature": "fields-languages-and-house-style",
+			"featureConfidence": "high",
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/RegisterResolverService.php",
@@ -1080,7 +1564,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Lifecycle/ObjectOwnerAccessPolicy.php, which scopes a record to its owner",
-			"feature": "Client management",
+			"feature": "client-management",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -1117,8 +1601,8 @@
 			"kiss": "partial",
 			"provider": "openregister",
 			"providerHow": "Open Register writes the audit trail on every object; pipelinq reads the diff at lib/Service/ObjectUpdateDiffService.php",
-			"feature": "Platform",
-			"featureConfidence": "medium",
+			"feature": "client-management",
+			"featureConfidence": "high",
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/ObjectUpdateDiffService.php",
@@ -1152,7 +1636,7 @@
 			"kiss": "yes",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/PartyKindRegistryService.php:112, seeded by lib/Repair/SeedPartyKinds.php",
-			"feature": "Client management",
+			"feature": "client-management",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -1187,7 +1671,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in src/views/pipeline/PipelineBoard.vue and src/views/pipeline/PipelineCard.vue",
-			"feature": "Lead pipeline",
+			"feature": "pipeline",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -1219,7 +1703,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/DefaultPipelineService.php:60 and the Pipelines page in src/manifest.json",
-			"feature": "Lead pipeline",
+			"feature": "pipeline",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -1254,7 +1738,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/PipelineStageData.php and lib/Service/DefaultPipelineService.php:60",
-			"feature": "Lead pipeline",
+			"feature": "pipeline",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -1286,7 +1770,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/LeadService.php:131, which takes both on create",
-			"feature": "Lead pipeline",
+			"feature": "pipeline",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -1321,7 +1805,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/LeadClientResolver.php:148, which matches a lead title to an existing client",
-			"feature": "Lead pipeline",
+			"feature": "pipeline",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -1356,7 +1840,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Controller/LeadSourceController.php:70 and src/views/rapportage/SourcePerformanceWidget.vue",
-			"feature": "Lead pipeline",
+			"feature": "pipeline",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -1391,8 +1875,8 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "prospects are scored at lib/Service/ProspectScoringService.php:49; openspec/specs/lead-scoring-win-probability has no matching service",
-			"feature": "Lead pipeline",
-			"featureConfidence": "medium",
+			"feature": "pipeline",
+			"featureConfidence": "high",
 			"built": {
 				"state": "built",
 				"evidence": "lead.configuration x-openregister-calculations.qualificationScore in lib/Settings/pipelinq_register.json computes the score; src/views/leads/cells/LeadScoreCell.vue (lead-score column, sortable, Call first in src/views/leads/LeadList.vue), src/components/leadScore/LeadScoreBadge.vue on the board card and in the board table sort (src/views/pipeline/PipelineBoard.vue), src/components/leadScore/LeadScoreExplanation.vue",
@@ -1429,7 +1913,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/ForecastService.php:100 and src/views/forecast/ForecastDashboard.vue",
-			"feature": "Forecasting",
+			"feature": "commercial-dashboard",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -1464,7 +1948,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/ForecastOverrideService.php:125 and lib/Service/ForecastService.php:160",
-			"feature": "Forecasting",
+			"feature": "commercial-dashboard",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -1499,7 +1983,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/ForecastDealService.php:234 and :268, which demand a justification",
-			"feature": "Forecasting",
+			"feature": "commercial-dashboard",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -1531,7 +2015,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in src/views/forecast/ForecastTrend.vue and lib/BackgroundJob/ForecastSnapshotJob.php",
-			"feature": "Forecasting",
+			"feature": "commercial-dashboard",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -1566,7 +2050,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in src/views/rapportage/WinLossWidget.vue",
-			"feature": "Reporting",
+			"feature": "commercial-dashboard",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -1598,8 +2082,8 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in src/views/rapportage/LeadAgingWidget.vue",
-			"feature": "Reporting",
-			"featureConfidence": "high",
+			"feature": "pipeline",
+			"featureConfidence": "medium",
 			"built": {
 				"state": "built",
 				"evidence": "src/views/rapportage/LeadAgingWidget.vue",
@@ -1633,7 +2117,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/AnalyticsService.php:613 and src/views/rapportage/PipelineFunnelWidget.vue",
-			"feature": "Reporting",
+			"feature": "commercial-dashboard",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -1665,7 +2149,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/ProspectDiscoveryService.php with the profile in lib/Service/IcpConfigService.php",
-			"feature": "Prospecting",
+			"feature": "prospect-discovery",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -1701,8 +2185,8 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in openspec/specs/lead-product-link and lib/Service/ProductCatalogService.php:207",
-			"feature": "Lead pipeline",
-			"featureConfidence": "medium",
+			"feature": "product-catalog-quoting",
+			"featureConfidence": "high",
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/ProductCatalogService.php:207",
@@ -1733,7 +2217,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Listener/DealUpdatedListener.php and lib/Notification/Notifier.php",
-			"feature": "Lead pipeline",
+			"feature": "notifications-and-activity",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -1765,7 +2249,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/ExchangeRateService.php:28-40 and :125-141, lead properties listed from every register file",
-			"feature": "Forecasting",
+			"feature": "commercial-dashboard",
 			"featureConfidence": "high",
 			"built": {
 				"state": "specified",
@@ -1805,7 +2289,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/RoutingService.php:92 and :419-455",
-			"feature": "Lead pipeline",
+			"feature": "pipeline",
 			"featureConfidence": "high",
 			"built": {
 				"state": "specified",
@@ -1842,7 +2326,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read the pipeline stages item schema in lib/Settings/pipelinq_register.json:886",
-			"feature": "Lead pipeline",
+			"feature": "pipeline",
 			"featureConfidence": "high",
 			"built": {
 				"state": "specified",
@@ -1882,8 +2366,8 @@
 			"kiss": "no",
 			"provider": "openregister",
 			"providerHow": "the rule runs on OpenRegister's flow engine (openregister lib/Service/Flow/Nodes/SetFieldsNode.php); read the lead properties in lib/Settings/pipelinq_register.json",
-			"feature": "Automation",
-			"featureConfidence": "medium",
+			"feature": "pipeline",
+			"featureConfidence": "high",
 			"built": {
 				"state": "specified",
 				"evidence": "the Flows and FlowDetail pages (src/manifest.json, type flow, OpenRegister flow engine per lib/Flow/PipelinqFlowNodeListener.php:4-9) can trigger on a lead and set a field with OpenRegister's SetFieldsNode; but the lead schema has no label or colour field (title, source, value, probability, priority, stage, status, ...), and system tags (lib/Service/SystemTagService.php:80) are kept for other object types",
@@ -1919,8 +2403,8 @@
 			"kiss": "unknown",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Settings/pipelinq_register.json:658 and lib/Service/LeadService.php",
-			"feature": "Pipeline",
-			"featureConfidence": "medium",
+			"feature": "pipeline",
+			"featureConfidence": "high",
 			"built": {
 				"state": "specified",
 				"evidence": "lib/Settings/pipelinq_register.json:658 declares winProbability on lead and lib/Service/LeadService.php derives it; no page shows it (grep of src for winProbability is empty). The Win chance column on Leads shows qualificationScore, the lead score",
@@ -1949,7 +2433,7 @@
 			"kiss": "yes",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/ContactmomentService.php:139 and lib/Controller/ContactmomentController.php",
-			"feature": "Contact moments",
+			"feature": "contactmomenten-rapportage",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -1984,7 +2468,7 @@
 			"kiss": "partial",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/ActivityTimelineService.php:149",
-			"feature": "Contact moments",
+			"feature": "contactmomenten-rapportage",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -2019,7 +2503,7 @@
 			"kiss": "yes",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Controller/RequestChannelController.php and lib/Service/ReportingService.php:150",
-			"feature": "Contact moments",
+			"feature": "contactmomenten-rapportage",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -2054,7 +2538,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/CtiService.php:219 with the match in lib/Service/CtiContactMatcher.php:88",
-			"feature": "Telephony",
+			"feature": "telephony",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -2089,7 +2573,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/CtiService.php:404, with adapters for Asterisk, RingCentral and CallVoip",
-			"feature": "Telephony",
+			"feature": "telephony",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -2121,7 +2605,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/CtiService.php:359, which stores the recording url with an expiry",
-			"feature": "Telephony",
+			"feature": "telephony",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -2154,7 +2638,7 @@
 			"kiss": "yes",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/CtiDispositionService.php:96",
-			"feature": "Telephony",
+			"feature": "telephony",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -2186,7 +2670,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/EmailMatchService.php:278, driven by lib/BackgroundJob/EmailMatchJob.php",
-			"feature": "Email",
+			"feature": "email-calendar-sync",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -2222,7 +2706,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/EmailMatchService.php:172, which skips public domains at :248",
-			"feature": "Email",
+			"feature": "email-calendar-sync",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -2254,7 +2738,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/WhatsAppAdapter.php:177 for sending and :602 for the inbound webhook",
-			"feature": "Messaging",
+			"feature": "omnichannel-registratie",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -2286,7 +2770,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/SmsAdapter.php:154, with Twilio, MessageBird and CM.com clients",
-			"feature": "Messaging",
+			"feature": "omnichannel-registratie",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -2318,7 +2802,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/ContactmomentService.php:139, called from the messaging send path",
-			"feature": "Contact moments",
+			"feature": "contactmomenten-rapportage",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -2354,7 +2838,7 @@
 			"kiss": "partial",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/ContactMomentFilingService.php:137",
-			"feature": "Contact moments",
+			"feature": "contactmomenten-rapportage",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -2389,7 +2873,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/KccWerkplekService.php:388",
-			"feature": "Service desk",
+			"feature": "kcc-werkplek",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -2422,7 +2906,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/SurveyDispatchService.php:336",
-			"feature": "Satisfaction",
+			"feature": "customer-satisfaction",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -2455,7 +2939,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/TouchpointService.php:164",
-			"feature": "Contact moments",
+			"feature": "contactmomenten-rapportage",
 			"featureConfidence": "medium",
 			"built": {
 				"state": "built",
@@ -2487,7 +2971,7 @@
 			"kiss": "yes",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/TicketService.php:285 and the Tickets pages in src/manifest.json",
-			"feature": "Request intake",
+			"feature": "request-management",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -2522,7 +3006,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/EnquiryIntakeService.php:134 and lib/Controller/EnquiryController.php",
-			"feature": "Request intake",
+			"feature": "public-intake-forms",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -2557,7 +3041,7 @@
 			"kiss": "partial",
 			"provider": "dossiq",
 			"providerHow": "pipelinq emits the hand-off and Dossiq receives it; read in lib/Service/SemanticHandoffService.php:128",
-			"feature": "Request intake",
+			"feature": "request-management",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -2593,7 +3077,7 @@
 			"kiss": "unknown",
 			"provider": "pipelinq",
 			"providerHow": "read in src/manifest.json:2512 (ticket-decisions widget) and decidiq src/integrations/CnDecisionsWidget.vue",
-			"feature": "Requests",
+			"feature": "request-management",
 			"featureConfidence": "high",
 			"built": {
 				"state": "specified",
@@ -2621,7 +3105,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/SlaEngineService.php:216 with the clock in lib/Service/BusinessHoursCalculator.php:85",
-			"feature": "Service levels",
+			"feature": "sla-engine-and-escalation",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -2654,7 +3138,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/DutchHolidayCalendar.php, reached from lib/Service/SlaEngineService.php:103",
-			"feature": "Service levels",
+			"feature": "sla-engine-and-escalation",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -2686,7 +3170,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/SlaEngineService.php:334, swept by lib/BackgroundJob/SlaDeadlineSweepJob.php",
-			"feature": "Service levels",
+			"feature": "sla-engine-and-escalation",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -2719,7 +3203,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/SlaEngineService.php:404",
-			"feature": "Service levels",
+			"feature": "sla-engine-and-escalation",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -2752,7 +3236,7 @@
 			"kiss": "partial",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/RoutingService.php:92, with capacity checked at :427",
-			"feature": "Service desk",
+			"feature": "kcc-werkplek",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -2787,7 +3271,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/ComplaintSlaService.php:112 and openspec/specs/klachtenregistratie",
-			"feature": "Service desk",
+			"feature": "request-management",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -2823,7 +3307,7 @@
 			"kiss": "partial",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/CallbackService.php:130 and lib/BackgroundJob/CallbackOverdueJob.php",
-			"feature": "Service desk",
+			"feature": "kcc-werkplek",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -2859,8 +3343,8 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/WalkInQueueService.php:216 and the Queue page in src/manifest.json",
-			"feature": "Service desk",
-			"featureConfidence": "high",
+			"feature": "kcc-werkplek",
+			"featureConfidence": "medium",
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/WalkInQueueService.php:216",
@@ -2891,7 +3375,7 @@
 			"kiss": "yes",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/ArticleService.php:185 and lib/Service/XWikiService.php:118",
-			"feature": "Service desk",
+			"feature": "kcc-werkplek",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -2927,7 +3411,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/SlaAttainmentService.php and the SLA page in src/manifest.d/55-sla-engine.json",
-			"feature": "Service levels",
+			"feature": "sla-engine-and-escalation",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -2959,7 +3443,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/SatisfactionAggregationService.php:97 and lib/Service/DetractorFollowUpService.php",
-			"feature": "Satisfaction",
+			"feature": "customer-satisfaction",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -2991,7 +3475,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/WorklistService.php:189 and src/views/MyWork.vue",
-			"feature": "My work",
+			"feature": "my-work",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -3023,7 +3507,7 @@
 			"kiss": "partial",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/ScheduledTaskService.php:309 and the Tasks pages in src/manifest.json",
-			"feature": "My work",
+			"feature": "my-work",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -3058,7 +3542,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/TaskService.php:168",
-			"feature": "My work",
+			"feature": "my-work",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -3090,7 +3574,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/ScheduledTaskService.php:443 and lib/BackgroundJob/TaskEscalationJob.php",
-			"feature": "My work",
+			"feature": "my-work",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -3123,8 +3607,8 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/Export/CronExpressionHelper.php, used by lib/BackgroundJob/ScheduledTaskJob.php",
-			"feature": "My work",
-			"featureConfidence": "medium",
+			"feature": "my-work",
+			"featureConfidence": "high",
 			"built": {
 				"state": "built",
 				"evidence": "lib/BackgroundJob/ScheduledTaskJob.php",
@@ -3155,7 +3639,7 @@
 			"kiss": "no",
 			"provider": "nextcloud",
 			"providerHow": "pipelinq registers Nextcloud dashboard widgets; read in lib/Dashboard/MyLeadsWidget.php",
-			"feature": "My work",
+			"feature": "my-work",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -3187,7 +3671,7 @@
 			"kiss": "no",
 			"provider": "nextcloud",
 			"providerHow": "pipelinq pushes through the Nextcloud notifier; read in lib/Notification/Notifier.php",
-			"feature": "My work",
+			"feature": "notifications-and-activity",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -3220,7 +3704,7 @@
 			"kiss": "partial",
 			"provider": "nextcloud",
 			"providerHow": "pipelinq publishes to the Nextcloud activity stream; read in lib/Activity/Provider.php",
-			"feature": "My work",
+			"feature": "notifications-and-activity",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -3252,7 +3736,7 @@
 			"kiss": "no",
 			"provider": "nextcloud",
 			"providerHow": "read in lib/Activity/Setting/AssignmentSetting.php and its three siblings",
-			"feature": "My work",
+			"feature": "notifications-and-activity",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -3284,7 +3768,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in openspec/specs/time-entry-core and lib/Controller/TimeEntryWipController.php",
-			"feature": "Time and billing",
+			"feature": "time-entry-core",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -3316,7 +3800,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Listener/TimeApprovalListener.php and lib/Event/TimeEntryApprovedEvent.php",
-			"feature": "Time and billing",
+			"feature": "time-entry-core",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -3348,7 +3832,7 @@
 			"kiss": "no",
 			"provider": "shillinq",
 			"providerHow": "Shillinq raises the invoice; pipelinq selects and sends the batch at lib/Service/TimeBillingHandoffService.php:252",
-			"feature": "Time and billing",
+			"feature": "time-entry-core",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -3380,7 +3864,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/Marketing/WeeklyReviewService.php and lib/Service/Marketing/WeeklyReviewNumbers.php",
-			"feature": "My work",
+			"feature": "my-work",
 			"featureConfidence": "medium",
 			"built": {
 				"state": "built",
@@ -3413,7 +3897,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/TemplateRenderer.php:12-150 and grep of lib/Service for letter, pdf, docx",
-			"feature": "Correspondence",
+			"feature": "my-work",
 			"featureConfidence": "medium",
 			"built": {
 				"state": "specified",
@@ -3462,8 +3946,8 @@
 			"kiss": "no",
 			"provider": "openregister",
 			"providerHow": "saved views are OpenRegister's Views API rendered by nextcloud-vue (read in nextcloud-vue 2.57.1 src/components/CnIndexPage/CnIndexPage.vue), pipelinq pins ^2.57.1 in package.json:39",
-			"feature": "My work",
-			"featureConfidence": "medium",
+			"feature": "my-work",
+			"featureConfidence": "high",
 			"built": {
 				"state": "specified",
 				"evidence": "CnIndexPage keeps filters, search and sort in the route query so a filtered list can be shared as a link; its saved-views control (nextcloud-vue 2.57.1 src/components/CnIndexPage/CnIndexPage.vue:112-117 CnSavedViewsControl) is opt-in via allowSavedViews, default false (:1720-1722), and no page in src/manifest.json or src/manifest.d sets it (grep at development cfe0a0a51). src/services/viewService.js reads OpenRegister views only to pick a pipeline's source in PipelineFormDialog",
@@ -3502,7 +3986,7 @@
 			"kiss": "partial",
 			"provider": "nextcloud",
 			"providerHow": "colleague status is Nextcloud user status in the header, not a pipelinq view; pipelinq ranks available colleagues for a ticket in the Suggested agents section of TicketDetail",
-			"feature": "Service desk",
+			"feature": "kcc-werkplek",
 			"featureConfidence": "medium",
 			"built": {
 				"state": "decided-no",
@@ -3534,8 +4018,8 @@
 			"kiss": "no",
 			"provider": "openregister",
 			"providerHow": "object tasks are OpenRegister's, rendered by nextcloud-vue CnObjectSidebar (read in CnObjectSidebar.vue:4); grep of lib/Settings for followers, watchers, collaborators, participants is empty",
-			"feature": "My work",
-			"featureConfidence": "medium",
+			"feature": "my-work",
+			"featureConfidence": "high",
 			"built": {
 				"state": "specified",
 				"evidence": "openregister built the backend (archived 2026-10-05-object-watchers, PR #3707): appinfo/routes.php:142-161 objectWatchers#watch/unwatch/index/add, lib/Service/Interaction/WatcherService.php, @self.watching and a `watchers` notification recipient kind. Nothing a user reaches uses it: nextcloud-vue on development has no follow or watchers control (no caller of /watch in src/), and no pipelinq schema names `watchers` in its x-openregister-notifications (lib/Settings/register.d/98-update-notifications.json tells only client.accountOwner, lead.assignee, ticket.assignee, crmTask.assigneeUserId). A ticket or lead still has one assignee (lib/Settings/register.d/99-unify-ticket-supertype.json:210); colleagues can only be given work through the detail sidebar's Tasks tab",
@@ -3571,7 +4055,7 @@
 			"kiss": "no",
 			"provider": "nextcloud",
 			"providerHow": "the side by side view is Nextcloud Calendar's subscription support; pipelinq writes into it (read in lib/Service/AppointmentCalendarLeafProvider.php:4-9)",
-			"feature": "Appointments",
+			"feature": "email-calendar-sync",
 			"featureConfidence": "medium",
 			"built": {
 				"state": "decided-no",
@@ -3603,8 +4087,8 @@
 			"kiss": "unknown",
 			"provider": "pipelinq",
 			"providerHow": "read in openspec/specs/time-entry-mobile (status not-implemented); hour capture is the time-tracker leaf",
-			"feature": "Time and billing",
-			"featureConfidence": "medium",
+			"feature": "time-entry-core",
+			"featureConfidence": "high",
 			"built": {
 				"state": "specified",
 				"evidence": "openspec/specs/time-entry-mobile carries status not-implemented; no PWA shell or offline buffer in src/",
@@ -3629,7 +4113,7 @@
 			"kiss": "unknown",
 			"provider": "pipelinq",
 			"providerHow": "read in src/views/MyWork.vue and openspec/changes/my-work-roadmap",
-			"feature": "My work",
+			"feature": "my-work",
 			"featureConfidence": "high",
 			"built": {
 				"state": "specified",
@@ -3655,7 +4139,7 @@
 			"kiss": "unknown",
 			"provider": "pipelinq",
 			"providerHow": "read in src/views/MyWork.vue and openspec/changes/my-work-roadmap",
-			"feature": "My work",
+			"feature": "my-work",
 			"featureConfidence": "high",
 			"built": {
 				"state": "specified",
@@ -3681,7 +4165,7 @@
 			"kiss": "unknown",
 			"provider": "pipelinq",
 			"providerHow": "read in src/views/MyWork.vue and openspec/changes/my-work-roadmap",
-			"feature": "My work",
+			"feature": "my-work",
 			"featureConfidence": "high",
 			"built": {
 				"state": "specified",
@@ -3707,7 +4191,7 @@
 			"kiss": "unknown",
 			"provider": "pipelinq",
 			"providerHow": "read in src/views/MyWork.vue and openspec/changes/my-work-roadmap",
-			"feature": "My work",
+			"feature": "my-work",
 			"featureConfidence": "high",
 			"built": {
 				"state": "specified",
@@ -3733,7 +4217,7 @@
 			"kiss": "unknown",
 			"provider": "pipelinq",
 			"providerHow": "read in src/views/MyWork.vue and openspec/changes/my-work-roadmap",
-			"feature": "My work",
+			"feature": "my-work",
 			"featureConfidence": "high",
 			"built": {
 				"state": "specified",
@@ -3759,7 +4243,7 @@
 			"kiss": "unknown",
 			"provider": "pipelinq",
 			"providerHow": "read in src/views/MyWork.vue and openspec/changes/my-work-roadmap",
-			"feature": "My work",
+			"feature": "my-work",
 			"featureConfidence": "high",
 			"built": {
 				"state": "specified",
@@ -3785,7 +4269,7 @@
 			"kiss": "unknown",
 			"provider": "pipelinq",
 			"providerHow": "read in src/views/MyWork.vue and openspec/changes/my-work-roadmap",
-			"feature": "My work",
+			"feature": "my-work",
 			"featureConfidence": "high",
 			"built": {
 				"state": "specified",
@@ -3811,7 +4295,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/BlastService.php:166 and lib/BackgroundJob/BlastSendJob.php",
-			"feature": "Marketing",
+			"feature": "marketing-lists-and-mailings",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -3847,7 +4331,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/SegmentService.php:242 and src/dialogs/SegmentFormDialog.vue",
-			"feature": "Marketing",
+			"feature": "marketing-lists-and-mailings",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -3879,7 +4363,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/TemplateRenderer.php and the Templates pages in src/manifest.d/75-marketing-blasts.json",
-			"feature": "Marketing",
+			"feature": "marketing-lists-and-mailings",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -3914,7 +4398,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/BlastService.php:413",
-			"feature": "Marketing",
+			"feature": "marketing-lists-and-mailings",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -3949,7 +4433,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/TrackingLinkService.php:243 and :279",
-			"feature": "Marketing",
+			"feature": "marketing-lists-and-mailings",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -3981,7 +4465,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/SubscriptionService.php:349 and lib/Service/OptOutService.php",
-			"feature": "Marketing",
+			"feature": "marketing-lists-and-mailings",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -4013,7 +4497,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/Marketing/PreferenceCentreService.php:137",
-			"feature": "Marketing",
+			"feature": "marketing-lists-and-mailings",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -4045,7 +4529,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/ComplianceService.php:211 and lib/Service/ConsentService.php:114",
-			"feature": "Marketing",
+			"feature": "marketing-lists-and-mailings",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -4077,7 +4561,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/ComplianceService.php:387",
-			"feature": "Marketing",
+			"feature": "marketing-lists-and-mailings",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -4109,7 +4593,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/Marketing/JourneyService.php:156 and lib/Service/Marketing/JourneyStepRunner.php",
-			"feature": "Marketing",
+			"feature": "marketing-campaigns",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -4144,7 +4628,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/LandingPageProvisioningService.php:119",
-			"feature": "Marketing",
+			"feature": "marketing-campaigns",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -4179,7 +4663,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/AttributionService.php:154 and :205",
-			"feature": "Marketing",
+			"feature": "marketing-campaigns",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -4214,7 +4698,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/SocialPostService.php:251, with adapters for LinkedIn, Bluesky and Mastodon",
-			"feature": "Marketing",
+			"feature": "social-publishing",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -4249,7 +4733,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/Marketing/DeliverabilityCheckService.php:92",
-			"feature": "Marketing",
+			"feature": "marketing-lists-and-mailings",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -4281,7 +4765,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/SearchConsole/SearchConsoleImportService.php and lib/Service/Search/KeywordTargetService.php:144",
-			"feature": "Marketing",
+			"feature": "search-and-competitor-intelligence",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -4316,7 +4800,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/Competitor/CompetitorWatchService.php:225, with readers for feeds, sitemaps and pages",
-			"feature": "Marketing",
+			"feature": "search-and-competitor-intelligence",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -4348,7 +4832,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/MailingListService.php:240 and lib/Controller/ListPublicController.php",
-			"feature": "Marketing",
+			"feature": "marketing-lists-and-mailings",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -4383,8 +4867,8 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Settings/register.d/98-marketing-campaigns.json:24, the landing page is rendered by portaliq (ADR-086)",
-			"feature": "Marketing",
-			"featureConfidence": "medium",
+			"feature": "marketing-campaigns",
+			"featureConfidence": "high",
 			"built": {
 				"state": "specified",
 				"evidence": "lib/Settings/register.d/98-marketing-campaigns.json:149 \"The portaliq form bound to the landing page. A submission on this form becomes a lead in this campaign.\" (seed example 'Webinar AI voor gemeenten', :523); lib/Service/LandingPageProvisioningService.php provisions the page. There is no event object: no date, venue, capacity, attendee list or confirmation",
@@ -4424,7 +4908,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in src/views/templates/TemplateForm.vue:93-140",
-			"feature": "Marketing",
+			"feature": "marketing-lists-and-mailings",
 			"featureConfidence": "high",
 			"built": {
 				"state": "specified",
@@ -4461,7 +4945,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Listener/LandingPageFormSubmittedListener.php:115-175 and grep of src/manifest.json for touchpoint",
-			"feature": "Marketing",
+			"feature": "marketing-campaigns",
 			"featureConfidence": "medium",
 			"built": {
 				"state": "specified",
@@ -4498,7 +4982,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/Portal/PortalAuthService.php:130",
-			"feature": "Customer portal",
+			"feature": "customer-portal",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -4530,7 +5014,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/Portal/PortalMfaService.php:173",
-			"feature": "Customer portal",
+			"feature": "customer-portal",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -4562,7 +5046,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/Portal/PortalRequestService.php:191 and :117",
-			"feature": "Customer portal",
+			"feature": "customer-portal",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -4596,7 +5080,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/Portal/PortalRequestService.php:272",
-			"feature": "Customer portal",
+			"feature": "customer-portal",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -4630,7 +5114,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Controller/PortalDocumentController.php",
-			"feature": "Customer portal",
+			"feature": "customer-portal",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -4662,7 +5146,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/Portal/DocumentSigningService.php:88",
-			"feature": "Customer portal",
+			"feature": "customer-portal",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -4694,8 +5178,8 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/Portal/PortalInvoiceService.php and lib/Service/Portal/AbstractPortalReadFacade.php: the Invoices tab lists pipelinq's own posTransaction records, not shillinq invoices",
-			"feature": "Customer portal",
-			"featureConfidence": "medium",
+			"feature": "customer-portal",
+			"featureConfidence": "high",
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/Portal/PortalInvoiceService.php schemaKey() posTransaction and present() (invoiceNumber, date, amount, status) list the client's POS transactions through lib/Service/Portal/MainRegisterReader.php, reachable since pipelinq#2037 and #2045; lib/Service/Portal/AbstractPortalReadFacade.php getForAccount() filters on ownership only, so draft and parked carts are listed as invoices too, no PDF is offered, and shillinq sales invoices are never read",
@@ -4729,7 +5213,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/Portal/PortalDelegationService.php:95",
-			"feature": "Customer portal",
+			"feature": "customer-portal",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -4761,7 +5245,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/Portal/PortalExportService.php:86",
-			"feature": "Privacy",
+			"feature": "customer-portal",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -4793,7 +5277,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/Portal/PortalAccountService.php:89 and :121",
-			"feature": "Privacy",
+			"feature": "customer-portal",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -4825,7 +5309,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/Portal/PortalTenantService.php and lib/Controller/PortalTenantController.php",
-			"feature": "Customer portal",
+			"feature": "customer-portal",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -4859,7 +5343,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/BookingService.php:329 and src/views/portal/BookingPortal.vue",
-			"feature": "Appointments",
+			"feature": "public-booking-portal",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -4891,7 +5375,7 @@
 			"kiss": "unknown",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Settings/register.d/45-appointment-booking.json:15 and src/views/bookings/ServiceDetail.vue",
-			"feature": "Appointments",
+			"feature": "appointment-booking",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -4922,7 +5406,7 @@
 			"kiss": "unknown",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Settings/register.d/45-appointment-booking.json:220 and src/views/bookings/ResourceDetail.vue",
-			"feature": "Appointments",
+			"feature": "appointment-booking",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -4953,7 +5437,7 @@
 			"kiss": "unknown",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/EligibilityService.php:100, src/views/bookings/ServiceDetail.vue and ResourceDetail.vue",
-			"feature": "Appointments",
+			"feature": "appointment-booking",
 			"featureConfidence": "high",
 			"built": {
 				"state": "specified",
@@ -4985,7 +5469,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/Portal/PortalAuditService.php and lib/Controller/PortalAuditController.php",
-			"feature": "Customer portal",
+			"feature": "customer-portal",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -5017,7 +5501,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/ProductCatalogService.php:207 and the Products pages in src/manifest.json",
-			"feature": "Products",
+			"feature": "product-service-catalog",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -5052,7 +5536,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/ProductCatalogService.php:168",
-			"feature": "Products",
+			"feature": "product-service-catalog",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -5084,7 +5568,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/ProductCatalogService.php:293",
-			"feature": "Products",
+			"feature": "product-service-catalog",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -5117,7 +5601,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/ProductCatalogService.php:97 and openspec/specs/pos-nl-btw-engine",
-			"feature": "Products",
+			"feature": "product-service-catalog",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -5152,8 +5636,8 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "openspec/specs/product-catalog-quoting describes it; lib/Controller holds no quote controller, so only the pricing half is built",
-			"feature": "Products",
-			"featureConfidence": "medium",
+			"feature": "product-catalog-quoting",
+			"featureConfidence": "high",
 			"built": {
 				"state": "specified",
 				"evidence": "openspec/specs/product-catalog-quoting, with no matching controller in lib/Controller",
@@ -5188,7 +5672,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/ProductVendorProviderService.php and lib/Repair/IngestProductVendorMaster.php",
-			"feature": "Products",
+			"feature": "product-service-catalog",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -5220,7 +5704,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/ContractService.php:208",
-			"feature": "Contracts",
+			"feature": "contract-renewal-tracking",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -5252,7 +5736,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/ContractService.php:152",
-			"feature": "Contracts",
+			"feature": "contract-renewal-tracking",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -5284,7 +5768,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/RenewalEngineService.php:118 and lib/BackgroundJob/RenewalWindowJob.php",
-			"feature": "Contracts",
+			"feature": "contract-renewal-tracking",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -5319,7 +5803,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/RenewalEngineService.php:167",
-			"feature": "Contracts",
+			"feature": "contract-renewal-tracking",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -5351,7 +5835,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/ContractService.php:245",
-			"feature": "Contracts",
+			"feature": "contract-renewal-tracking",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -5383,7 +5867,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/RecurringRevenueService.php:103 and :167",
-			"feature": "Contracts",
+			"feature": "contract-renewal-tracking",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -5415,7 +5899,7 @@
 			"kiss": "no",
 			"provider": "shillinq",
 			"providerHow": "Shillinq raises the invoice; pipelinq projects the contract at lib/Service/Marketing/ShillinqInvoiceProjection.php",
-			"feature": "Contracts",
+			"feature": "contract-renewal-tracking",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -5447,7 +5931,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/PosTransactionService.php:262 and src/views/pos/PosTransactionForm.vue",
-			"feature": "Point of sale",
+			"feature": "point-of-sale",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -5479,7 +5963,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/PosTransactionService.php:316 and :428",
-			"feature": "Point of sale",
+			"feature": "point-of-sale",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -5511,7 +5995,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Controller/ProductCatalogController.php:89",
-			"feature": "Point of sale",
+			"feature": "point-of-sale",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -5546,7 +6030,7 @@
 			"kiss": "no",
 			"provider": "external",
 			"providerHow": "the payment runs at Adyen, Mollie, Stripe or CCV; pipelinq drives it at lib/Service/PosPaymentService.php:450",
-			"feature": "Point of sale",
+			"feature": "point-of-sale",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -5581,7 +6065,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/ReceiptService.php:389 and lib/Service/ReceiptDeliveryService.php",
-			"feature": "Point of sale",
+			"feature": "point-of-sale",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -5616,7 +6100,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/ReceiptService.php:147 and :160",
-			"feature": "Point of sale",
+			"feature": "point-of-sale",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -5648,7 +6132,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/PosRefundService.php and src/views/pos/PosRefundForm.vue",
-			"feature": "Point of sale",
+			"feature": "point-of-sale",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -5684,7 +6168,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Lifecycle/PosRefundManagerGuard.php",
-			"feature": "Point of sale",
+			"feature": "point-of-sale",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -5719,7 +6203,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/CashShiftService.php:151 and :242",
-			"feature": "Point of sale",
+			"feature": "point-of-sale",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -5754,7 +6238,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/CashShiftService.php:296 and :353",
-			"feature": "Point of sale",
+			"feature": "point-of-sale",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -5786,7 +6270,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/PosBookkeepingService.php:183",
-			"feature": "Point of sale",
+			"feature": "point-of-sale",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -5821,7 +6305,7 @@
 			"kiss": "no",
 			"provider": "shillinq",
 			"providerHow": "Shillinq books the journal entry; pipelinq dispatches it at lib/Service/PosBookkeepingService.php:437",
-			"feature": "Point of sale",
+			"feature": "point-of-sale",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -5853,7 +6337,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/KassakoppelingSignatureService.php and lib/Service/KassakoppelingAuditService.php",
-			"feature": "Point of sale",
+			"feature": "point-of-sale",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -5885,7 +6369,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/PosCustomerLinkService.php and lib/Controller/PosCustomerController.php",
-			"feature": "Point of sale",
+			"feature": "point-of-sale",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -5920,7 +6404,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/LoyaltyEngineService.php:92 and lib/Service/PointsRuleEngine.php",
-			"feature": "Loyalty",
+			"feature": "loyalty-programme",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -5952,7 +6436,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/RedemptionService.php and lib/Service/PointsLedgerService.php",
-			"feature": "Loyalty",
+			"feature": "loyalty-programme",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -5984,7 +6468,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/TierService.php and lib/BackgroundJob/TierDowngradeJob.php",
-			"feature": "Loyalty",
+			"feature": "loyalty-programme",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -6016,7 +6500,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/GiftCardService.php:73 and :188",
-			"feature": "Loyalty",
+			"feature": "loyalty-programme",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -6048,7 +6532,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/AnalyticsService.php:285 and the Dashboard page in src/manifest.json",
-			"feature": "Reporting",
+			"feature": "commercial-dashboard",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -6080,7 +6564,7 @@
 			"kiss": "partial",
 			"provider": "pipelinq",
 			"providerHow": "read in the OperationalDashboard page in src/manifest.json and lib/Service/ReportingService.php:90",
-			"feature": "Reporting",
+			"feature": "contactmomenten-rapportage",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -6115,7 +6599,7 @@
 			"kiss": "partial",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/AnalyticsService.php:465",
-			"feature": "Reporting",
+			"feature": "commercial-dashboard",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -6150,7 +6634,7 @@
 			"kiss": "partial",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/ReportingService.php:215",
-			"feature": "Reporting",
+			"feature": "contactmomenten-rapportage",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -6182,7 +6666,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/BackgroundJob/ExportSchedulerJob.php and lib/Service/Export/ExportJobService.php",
-			"feature": "Reporting",
+			"feature": "warehouse-export",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -6214,7 +6698,7 @@
 			"kiss": "partial",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Adapter/ExportSinkRegistry.php, with sinks for BigQuery, Snowflake, S3, Azure and Postgres",
-			"feature": "Reporting",
+			"feature": "warehouse-export",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -6246,7 +6730,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/Export/ExportRunService.php and src/views/export/ExportRuns.vue",
-			"feature": "Reporting",
+			"feature": "warehouse-export",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -6278,8 +6762,8 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/Export/SchemaEvolutionService.php",
-			"feature": "Reporting",
-			"featureConfidence": "medium",
+			"feature": "warehouse-export",
+			"featureConfidence": "high",
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/Export/SchemaEvolutionService.php",
@@ -6310,7 +6794,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Controller/MetricsController.php and openspec/specs/prometheus-metrics",
-			"feature": "Reporting",
+			"feature": "integrations-and-ai-assistant",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -6342,7 +6826,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/ForecastExportService.php",
-			"feature": "Reporting",
+			"feature": "commercial-dashboard",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -6374,7 +6858,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/Matomo/MatomoReportService.php",
-			"feature": "Reporting",
+			"feature": "search-and-competitor-intelligence",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -6409,7 +6893,7 @@
 			"kiss": "yes",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/RapportageService.php and openspec/specs/contactmomenten-rapportage",
-			"feature": "Reporting",
+			"feature": "contactmomenten-rapportage",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -6441,7 +6925,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Flow/PipelinqFlowNodeListener.php and the Flows pages in src/manifest.json",
-			"feature": "Automation",
+			"feature": "crm-workflow-automation",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -6477,7 +6961,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/WebhookProcessorService.php and lib/BackgroundJob/WebhookProcessorJob.php",
-			"feature": "Automation",
+			"feature": "crm-workflow-automation",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -6510,7 +6994,7 @@
 			"kiss": "partial",
 			"provider": "pipelinq",
 			"providerHow": "read in appinfo/routes.php and openspec/specs/marketing-api",
-			"feature": "Platform",
+			"feature": "integrations-and-ai-assistant",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -6542,7 +7026,7 @@
 			"kiss": "partial",
 			"provider": "integriq",
 			"providerHow": "Integriq owns the connection registry; pipelinq reports into it at lib/Service/ConnectionReportService.php",
-			"feature": "Platform",
+			"feature": "integrations-and-ai-assistant",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -6574,7 +7058,7 @@
 			"kiss": "no",
 			"provider": "integriq",
 			"providerHow": "the connector lives in Integriq; pipelinq sends through it at lib/Service/Marketing/Transport/ConnectorSourceTransport.php",
-			"feature": "Automation",
+			"feature": "marketing-lists-and-mailings",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -6606,7 +7090,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Mcp/PipelinqScannableServices.php:58 and openspec/specs/crm-mcp-tool-surface",
-			"feature": "Automation",
+			"feature": "integrations-and-ai-assistant",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -6638,8 +7122,8 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/NaviService.php and lib/Controller/NaviController.php",
-			"feature": "Automation",
-			"featureConfidence": "high",
+			"feature": "integrations-and-ai-assistant",
+			"featureConfidence": "medium",
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/NaviService.php",
@@ -6670,7 +7154,7 @@
 			"kiss": "partial",
 			"provider": "nextcloud",
 			"providerHow": "Nextcloud runs the cron; pipelinq registers dozens of jobs, for example lib/BackgroundJob/SlaDeadlineSweepJob.php",
-			"feature": "Platform",
+			"feature": "crm-workflow-automation",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -6702,8 +7186,8 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/BackgroundJob/BillingHandoffRetryJob.php and lib/BackgroundJob/PosRetryBackoffJob.php",
-			"feature": "Platform",
-			"featureConfidence": "medium",
+			"feature": "crm-workflow-automation",
+			"featureConfidence": "high",
 			"built": {
 				"state": "built",
 				"evidence": "lib/BackgroundJob/BillingHandoffRetryJob.php",
@@ -6734,7 +7218,7 @@
 			"kiss": "no",
 			"provider": "openregister",
 			"providerHow": "Open Register raises the object event; pipelinq handles it at lib/Listener/ObjectEventListener.php",
-			"feature": "Platform",
+			"feature": "crm-workflow-automation",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -6766,8 +7250,8 @@
 			"kiss": "yes",
 			"provider": "external",
 			"providerHow": "the wiki is XWiki; pipelinq queries it at lib/Service/XWikiService.php:118",
-			"feature": "Service desk",
-			"featureConfidence": "medium",
+			"feature": "kcc-werkplek",
+			"featureConfidence": "high",
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/XWikiService.php:118",
@@ -6799,7 +7283,7 @@
 			"kiss": "yes",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/DemoSeedService.php and lib/Command/SeedDemoDataCommand.php",
-			"feature": "Onboarding",
+			"feature": "setup-and-getting-started",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -6832,7 +7316,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Controller/SetupController.php and the setup and walkthrough blocks in src/manifest.json",
-			"feature": "Onboarding",
+			"feature": "setup-and-getting-started",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -6865,7 +7349,7 @@
 			"kiss": "yes",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/HaalCentraalClient.php:136 and lib/Controller/BrpController.php",
-			"feature": "Dutch registries",
+			"feature": "dutch-government-interop",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -6902,7 +7386,7 @@
 			"kiss": "partial",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/BsnAuditService.php:104",
-			"feature": "Dutch registries",
+			"feature": "dutch-government-interop",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -6934,7 +7418,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/BsnAuditService.php:246",
-			"feature": "Dutch registries",
+			"feature": "dutch-government-interop",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -6966,7 +7450,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Listener/BrpMutationWebhookListener.php and lib/BackgroundJob/BrpMonitorJob.php",
-			"feature": "Dutch registries",
+			"feature": "dutch-government-interop",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -6998,8 +7482,8 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/BackgroundJob/BrpRetentionJob.php",
-			"feature": "Privacy",
-			"featureConfidence": "high",
+			"feature": "avg-verzoeken-workflow",
+			"featureConfidence": "medium",
 			"built": {
 				"state": "built",
 				"evidence": "lib/BackgroundJob/BrpRetentionJob.php",
@@ -7031,7 +7515,7 @@
 			"kiss": "yes",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/BsnValidationService.php",
-			"feature": "Dutch registries",
+			"feature": "dutch-government-interop",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -7063,7 +7547,7 @@
 			"kiss": "yes",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/Zgw/ZgwApiClient.php:155 with lib/Service/Zgw/ZrcClient.php and ZtcClient.php",
-			"feature": "Dutch registries",
+			"feature": "dutch-government-interop",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -7096,7 +7580,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/Zgw/NrcSubscriptionService.php and lib/Listener/NrcNotificationListener.php",
-			"feature": "Dutch registries",
+			"feature": "dutch-government-interop",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -7128,7 +7612,7 @@
 			"kiss": "yes",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Integration/ContactMomentLeafProvider.php and openspec/specs/vng-klantinteracties-leaf",
-			"feature": "Dutch registries",
+			"feature": "dutch-government-interop",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -7160,7 +7644,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/BerichtenboxService.php:143 and lib/Service/LogiusConnector.php",
-			"feature": "Dutch registries",
+			"feature": "dutch-government-interop",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -7192,7 +7676,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/BerichtenboxService.php:307 and lib/BackgroundJob/FallbackEmailJob.php",
-			"feature": "Dutch registries",
+			"feature": "dutch-government-interop",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -7224,8 +7708,8 @@
 			"kiss": "no",
 			"provider": "openregister",
 			"providerHow": "Open Register holds the request record; pipelinq migrated its own into it at lib/Repair/MigrateAvgVerzoekenToOrDsar.php",
-			"feature": "Privacy",
-			"featureConfidence": "medium",
+			"feature": "avg-verzoeken-workflow",
+			"featureConfidence": "high",
 			"built": {
 				"state": "built",
 				"evidence": "lib/Repair/MigrateAvgVerzoekenToOrDsar.php",
@@ -7256,7 +7740,7 @@
 			"kiss": "partial",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/Gdpr/PipelinqBsnIdentityVerifyProvider.php:125",
-			"feature": "Privacy",
+			"feature": "avg-verzoeken-workflow",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -7288,8 +7772,8 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/CorrespondenceLanguageService.php and lib/Controller/CorrespondenceLanguageController.php",
-			"feature": "Correspondence",
-			"featureConfidence": "high",
+			"feature": "client-management",
+			"featureConfidence": "medium",
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/CorrespondenceLanguageService.php",
@@ -7321,7 +7805,7 @@
 			"kiss": "yes",
 			"provider": "nextcloud",
 			"providerHow": "pipelinq ships as a Nextcloud app you install yourself; read in appinfo/info.xml",
-			"feature": "Platform",
+			"feature": "self-hosted-open-source",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -7353,7 +7837,7 @@
 			"kiss": "yes",
 			"provider": "pipelinq",
 			"providerHow": "read in LICENSE and the licence element of appinfo/info.xml, both EUPL-1.2",
-			"feature": "Platform",
+			"feature": "self-hosted-open-source",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -7385,7 +7869,7 @@
 			"kiss": "yes",
 			"provider": "pipelinq",
 			"providerHow": "there is no seat count anywhere in lib/; users come from Nextcloud",
-			"feature": "Platform",
+			"feature": "self-hosted-open-source",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -7417,7 +7901,7 @@
 			"kiss": "no",
 			"provider": "nextcloud",
 			"providerHow": "read in lib/AppInfo/Application.php, which registers the app into Nextcloud",
-			"feature": "Platform",
+			"feature": "self-hosted-open-source",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -7449,7 +7933,7 @@
 			"kiss": "yes",
 			"provider": "nextcloud",
 			"providerHow": "authentication is Nextcloud's; pipelinq declares its posture per route in appinfo/routes.php",
-			"feature": "Platform",
+			"feature": "self-hosted-open-source",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -7481,7 +7965,7 @@
 			"kiss": "partial",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Lifecycle/ObjectOwnerAccessPolicy.php, lib/Lifecycle/PosAccessPolicy.php and lib/Service/Export/ExportAccessPolicy.php",
-			"feature": "Platform",
+			"feature": "access-and-data-safety",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -7513,8 +7997,8 @@
 			"kiss": "partial",
 			"provider": "openregister",
 			"providerHow": "visibility is a property of the Open Register schema and it hides the field for everyone, not per group",
-			"feature": "Platform",
-			"featureConfidence": "medium",
+			"feature": "access-and-data-safety",
+			"featureConfidence": "high",
 			"built": {
 				"state": "building",
 				"evidence": "no per-group field rule found in lib/Lifecycle/",
@@ -7546,7 +8030,7 @@
 			"kiss": "partial",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/EncryptionService.php, used by lib/Service/PosPaymentService.php:215",
-			"feature": "Platform",
+			"feature": "access-and-data-safety",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -7578,8 +8062,8 @@
 			"kiss": "unknown",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/Social/ConnectionAuditService.php and lib/Command/ConnectionAuditCommand.php",
-			"feature": "Marketing",
-			"featureConfidence": "high",
+			"feature": "social-publishing",
+			"featureConfidence": "medium",
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/Social/ConnectionAuditService.php: per client handle, whether we follow them and they follow us on Mastodon and Bluesky, unknown with the reason on networks without a follower API; lib/Command/ConnectionAuditCommand.php; lib/Settings/register.d/97-marketing-search-intelligence.json",
@@ -7605,7 +8089,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Repair/RenameDutchColumns.php and lib/Repair/RenameCollidingSchemaSlugs.php",
-			"feature": "Platform",
+			"feature": "fields-languages-and-house-style",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -7637,7 +8121,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Controller/HealthController.php and lib/Command/ConnectionAuditCommand.php",
-			"feature": "Platform",
+			"feature": "integrations-and-ai-assistant",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -7669,7 +8153,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/DataDeletionService.php:110, which pseudonymises rather than dropping the row",
-			"feature": "Privacy",
+			"feature": "avg-verzoeken-workflow",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -7701,7 +8185,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/QuotaService.php, lib/Service/BudgetService.php and lib/BackgroundJob/BudgetPeriodResetJob.php",
-			"feature": "Platform",
+			"feature": "integrations-and-ai-assistant",
 			"featureConfidence": "medium",
 			"built": {
 				"state": "built",
@@ -7733,8 +8217,8 @@
 			"kiss": "no",
 			"provider": "nextcloud",
 			"providerHow": "pipelinq styles from Nextcloud theme variables; read in css/dashboardWidgets.css",
-			"feature": "Platform",
-			"featureConfidence": "medium",
+			"feature": "fields-languages-and-house-style",
+			"featureConfidence": "high",
 			"built": {
 				"state": "built",
 				"evidence": "css/dashboardWidgets.css",
@@ -7766,7 +8250,7 @@
 			"kiss": "partial",
 			"provider": "pipelinq",
 			"providerHow": "read in l10n/nl.json, beside seven other locales in l10n/",
-			"feature": "Platform",
+			"feature": "fields-languages-and-house-style",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -7799,8 +8283,8 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "there is no mobile client in the repo; the web pages are responsive and openspec/specs/time-entry-mobile is the only mobile work",
-			"feature": "Platform",
-			"featureConfidence": "medium",
+			"feature": "mobile-offline-and-accessible",
+			"featureConfidence": "high",
 			"built": {
 				"state": "built",
 				"evidence": "src/components/ContactLinks.vue (tel:, mailto:, geo: links on ClientDetail and ContactDetail), src/components/LogVisitAction.vue with src/dialogs/LogVisitDialog.vue (visit contact moment and follow-up crmTask on ClientDetail and LeadDetail), src/views/MyWork.vue (Today group first, follow-up tasks, phone layout), phone CSS on src/views/pipeline/PipelineBoard.vue",
@@ -7834,8 +8318,8 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "nothing in lib/ or src/ matches live chat or a chatbot; the only web intake is the form at lib/Service/EnquiryIntakeService.php:134",
-			"feature": "Request intake",
-			"featureConfidence": "high",
+			"feature": "omnichannel-registratie",
+			"featureConfidence": "medium",
 			"built": {
 				"state": "specified",
 				"evidence": "no live chat found anywhere in lib/ or src/",
@@ -7867,8 +8351,8 @@
 			"kiss": "no",
 			"provider": "integriq",
 			"providerHow": "Integriq supplies the connectors; there is no marketplace a user browses, only lib/Service/ConnectorSourceRegister.php",
-			"feature": "Platform",
-			"featureConfidence": "medium",
+			"feature": "integrations-and-ai-assistant",
+			"featureConfidence": "high",
 			"built": {
 				"state": "built",
 				"evidence": "integriq's Store page is built (archived 2026-07-14-connector-catalog-ui, then connectors-catalogue-expansion): integriq src/manifest.json page Store, route /store, a card grid over catalog_item with kind filters; lib/Service/CatalogRegistryService.php collects adapters (PDOK, Digikoppeling, Berichtenbox, DSO, SharePoint and others), seeded sources (BRP, KVK, xWiki) and the templates in lib/Settings/connector-templates/ (Google Sheets, Slack, Salesforce, Alfresco); src/dialogs/CatalogItemDetailDialog.vue enables or instantiates one; appinfo/routes.php:586-587 catalog#status, catalog#instantiate",
@@ -7902,8 +8386,8 @@
 			"kiss": "no",
 			"provider": "openregister",
 			"providerHow": "read in lib/Notification/Notifier.php:239-300 and lib/BackgroundJob/BillingHandoffRetryJob.php:80-98",
-			"feature": "Automation",
-			"featureConfidence": "medium",
+			"feature": "crm-workflow-automation",
+			"featureConfidence": "high",
 			"built": {
 				"state": "specified",
 				"evidence": "some integrations tell people when they fail: lib/Notification/Notifier.php:239 'forecast_snapshot_partial_failure', :250 'wip_sync_failed', :261 'billing_handoff_failed', :289 'social_relink_needed', with lib/BackgroundJob/BillingHandoffRetryJob.php:95 re-notifying admins while a batch stays failed; failed export runs show on ExportRuns with a retry (appinfo/routes.php:440). Nothing switches an automation off after repeated failure (grep for circuit breaker, consecutive, auto disable finds only POS PIN lockout)",
@@ -7939,7 +8423,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "there is no browser extension or mail plugin in this repo; filing happens after the fact at lib/Service/EmailMatchService.php:278",
-			"feature": "Email",
+			"feature": "email-calendar-sync",
 			"featureConfidence": "high",
 			"built": {
 				"state": "specified",
@@ -7972,8 +8456,8 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "no bulk edit was found in src/views or src/components; the only multi-select is on a refund form",
-			"feature": "Client management",
-			"featureConfidence": "medium",
+			"feature": "master-data-management",
+			"featureConfidence": "high",
 			"built": {
 				"state": "specified",
 				"evidence": "no bulk edit in src/views/clients/ or src/components/",
@@ -8005,7 +8489,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Integration/PartyLeafProvider.php:146 and grep of src/ for party-leaf, party-indicator and partyIndicator",
-			"feature": "Client management",
+			"feature": "client-management",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -8054,8 +8538,8 @@
 			"kiss": "no",
 			"provider": "openregister",
 			"providerHow": "custom fields are OpenRegister schema properties (read in the existing clients-custom-fields row and lib/Service/RegisterResolverService.php)",
-			"feature": "Client management",
-			"featureConfidence": "medium",
+			"feature": "client-management",
+			"featureConfidence": "high",
 			"built": {
 				"state": "specified",
 				"evidence": "no preferred name, roepnaam or nickname property on client or contact (grep of lib/Settings and src for preferred name, roepnaam, nickname, aanspreek); an administrator can add one as a custom field (clients-custom-fields, lib/Service/RegisterResolverService.php) or as a typed party field (lib/Settings/register.d/17-party-fields-and-indicators.json)",
@@ -8094,8 +8578,8 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/Customer360SummaryService.php:4-5 and lib/Service/NaviService.php:4-12",
-			"feature": "Client management",
-			"featureConfidence": "medium",
+			"feature": "client-management",
+			"featureConfidence": "high",
 			"built": {
 				"state": "specified",
 				"evidence": "lib/Service/Customer360SummaryService.php (route /api/customer-360/summary, appinfo/routes.php:108) and the ClientDetail stat widgets (src/manifest.json:1801 client-summary-last-activity) give counts and dates, not a written summary; lib/Service/NaviService.php uses a language model only for analytics questions",
@@ -8131,8 +8615,8 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "grep of src and lib/Service for paste and signature parsing",
-			"feature": "Client management",
-			"featureConfidence": "medium",
+			"feature": "master-data-management",
+			"featureConfidence": "high",
 			"built": {
 				"state": "specified",
 				"evidence": "no signature or free text parser in lib/Service or src/ (grep for paste, parseSignature); contact data comes in by form, vCard import (lib/Service/ContactImportService.php:64) or KvK and BRP lookups",
@@ -8168,7 +8652,7 @@
 			"kiss": "partial",
 			"provider": "pipelinq",
 			"providerHow": "listed client properties across every register file and grepped lib for kvkNumber, vat, duns",
-			"feature": "Client management",
+			"feature": "master-data-management",
 			"featureConfidence": "high",
 			"built": {
 				"state": "specified",
@@ -8205,7 +8689,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/RenewalEngineService.php:11 and :187-276, lib/Service/DetractorFollowUpService.php:6-17",
-			"feature": "Contracts",
+			"feature": "contract-renewal-tracking",
 			"featureConfidence": "medium",
 			"built": {
 				"state": "specified",
@@ -8245,7 +8729,7 @@
 			"kiss": "no",
 			"provider": "openregister",
 			"providerHow": "merge is OpenRegister's; grep of pipelinq lib and openregister routes for unmerge is empty",
-			"feature": "Client management",
+			"feature": "master-data-management",
 			"featureConfidence": "high",
 			"built": {
 				"state": "specified",
@@ -8282,7 +8766,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "grep of src/views/clients and src/components for bulk actions, and the existing bulk-edit row",
-			"feature": "Client management",
+			"feature": "master-data-management",
 			"featureConfidence": "high",
 			"built": {
 				"state": "specified",
@@ -8319,7 +8803,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "grep of src and lib for scan, ocr, camera",
-			"feature": "Client management",
+			"feature": "master-data-management",
 			"featureConfidence": "high",
 			"built": {
 				"state": "specified",
@@ -8356,7 +8840,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/ProspectDiscoveryService.php:110-130, grep of lib and src for enrich",
-			"feature": "Dutch registries",
+			"feature": "master-data-management",
 			"featureConfidence": "high",
 			"built": {
 				"state": "specified",
@@ -8393,8 +8877,8 @@
 			"kiss": "unknown",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Settings/pipelinq_register.json:1725 (schema relationship) and src/components/ContactRelationships.vue",
-			"feature": "Client management",
-			"featureConfidence": "medium",
+			"feature": "client-management",
+			"featureConfidence": "high",
 			"built": {
 				"state": "built",
 				"evidence": "lib/Settings/pipelinq_register.json:1725 declares the relationship schema; src/components/ContactRelationships.vue renders it in the Relationships section of the client and contact detail pages (src/manifest.json:2314)",
@@ -8423,8 +8907,8 @@
 			"kiss": "no",
 			"provider": "shillinq",
 			"providerHow": "pipelinq emits a stock movement at lib/Service/PosTransactionService.php:692 and Shillinq keeps the count, so no pipelinq page shows a level",
-			"feature": "Products",
-			"featureConfidence": "medium",
+			"feature": "product-service-catalog",
+			"featureConfidence": "high",
 			"built": {
 				"state": "building",
 				"evidence": "lib/Service/PosTransactionService.php:692 emits the event, no stock page exists here",
@@ -8455,7 +8939,7 @@
 			"kiss": "no",
 			"provider": "shillinq",
 			"providerHow": "dunning belongs to shillinq (rec-reminders partial in ~/memcap-work/w5-pipelinq/shillinq-caps.json); pipelinq has no reminder path",
-			"feature": "Time and billing",
+			"feature": "contract-renewal-tracking",
 			"featureConfidence": "medium",
 			"built": {
 				"state": "specified",
@@ -8492,7 +8976,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/ProductCatalogService.php:150-200",
-			"feature": "Products",
+			"feature": "product-service-catalog",
 			"featureConfidence": "high",
 			"built": {
 				"state": "specified",
@@ -8529,8 +9013,8 @@
 			"kiss": "unknown",
 			"provider": "pipelinq",
 			"providerHow": "read in openspec/specs/product-service-catalog and the product schema in lib/Settings/pipelinq_register.json",
-			"feature": "Products",
-			"featureConfidence": "medium",
+			"feature": "product-service-catalog",
+			"featureConfidence": "high",
 			"built": {
 				"state": "specified",
 				"evidence": "the product schema has no SDG audience, UPL reference, tariff table (leges) or publication date (grep of lib/Settings for sdg, upl, leges, publication); openspec/specs/product-service-catalog says done but the fields are not there",
@@ -8558,7 +9042,7 @@
 			"kiss": "partial",
 			"provider": "pipelinq",
 			"providerHow": "the wiki and the articles are searched separately at lib/Service/XWikiService.php:118 and lib/Service/ArticleService.php:185",
-			"feature": "Service desk",
+			"feature": "kcc-werkplek",
 			"featureConfidence": "medium",
 			"built": {
 				"state": "decided-no",
@@ -8586,7 +9070,7 @@
 			"kiss": "yes",
 			"provider": "pipelinq",
 			"providerHow": "lib/Service/ArticleService.php:333 publishes articles, but they are marketing articles rather than desk instructions",
-			"feature": "Service desk",
+			"feature": "kcc-werkplek",
 			"featureConfidence": "medium",
 			"built": {
 				"state": "decided-no",
@@ -8614,7 +9098,7 @@
 			"kiss": "partial",
 			"provider": "openregister",
 			"providerHow": "multi-tenancy is OpenRegister's organisation scoping (read in lib/Settings/pipelinq_register.json:2750), the portal part is pipelinq's PortalTenantService",
-			"feature": "Platform",
+			"feature": "kcc-werkplek",
 			"featureConfidence": "medium",
 			"built": {
 				"state": "specified",
@@ -8655,7 +9139,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/EmailMatchService.php:4-9 and lib/Service/RoutingService.php:4-6",
-			"feature": "Email",
+			"feature": "email-calendar-sync",
 			"featureConfidence": "medium",
 			"built": {
 				"state": "specified",
@@ -8696,8 +9180,8 @@
 			"kiss": "yes",
 			"provider": "openregister",
 			"providerHow": "the change log is OpenRegister's audit trail rendered by nextcloud-vue CnAuditTrailTab (read in CnObjectSidebar.vue:146-157)",
-			"feature": "Service desk",
-			"featureConfidence": "medium",
+			"feature": "kcc-werkplek",
+			"featureConfidence": "high",
 			"built": {
 				"state": "built",
 				"evidence": "TicketDetail (src/manifest.json, config without sidebar tabs) opens the host CnObjectSidebar (src/App.vue:34) whose default tabs include the Audit Trail (nextcloud-vue v2.56.0 CnObjectSidebar.vue:146 \"Audit Trail Tab\"), listing every later change to status, assignee and notes; the ticket's assignee is a field (lib/Settings/register.d/99-unify-ticket-supertype.json:210)",
@@ -8733,8 +9217,8 @@
 			"kiss": "yes",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Settings/register.d/99-unify-ticket-supertype.json:205-215, no team field in the ticket schema",
-			"feature": "Service desk",
-			"featureConfidence": "medium",
+			"feature": "kcc-werkplek",
+			"featureConfidence": "high",
 			"built": {
 				"state": "decided-no",
 				"evidence": "a ticket is passed on only by setting assignee, a Nextcloud UID (lib/Settings/register.d/99-unify-ticket-supertype.json:210 \"Nextcloud UID (or agent) handling the ticket\"); there is no team or department recipient, so no check for a team without a shared mailbox",
@@ -8765,8 +9249,8 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/CtiContactMatcher.php:34-41 and :125-145",
-			"feature": "Telephony",
-			"featureConfidence": "medium",
+			"feature": "telephony",
+			"featureConfidence": "high",
 			"built": {
 				"state": "specified",
 				"evidence": "lib/Service/CtiContactMatcher.php:132 needles() matches on E.164, digits only and the last 8 or 9 digits, so a caller is found however the number was stored, but only for contacts and clients during a screen pop; CTI tickets store the number normalised (CtiService.php:265). Searching the Tickets list for a request by number is a plain text search on whatever was typed",
@@ -8802,8 +9286,8 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/EmailMatchService.php:4-9, grep of lib/Service for classify and triage",
-			"feature": "Request intake",
-			"featureConfidence": "medium",
+			"feature": "request-management",
+			"featureConfidence": "high",
 			"built": {
 				"state": "decided-no",
 				"evidence": "no mail to ticket intake and no classifier: lib/Service/EmailMatchService.php only links a mail to a client by address, lib/Service/RoutingService.php:92 suggests agents for a ticket that already exists, and nothing sorts incoming mail by subject",
@@ -8834,8 +9318,8 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "grep of lib/Service and src for similar and suggestion",
-			"feature": "Service desk",
-			"featureConfidence": "medium",
+			"feature": "kcc-werkplek",
+			"featureConfidence": "high",
 			"built": {
 				"state": "decided-no",
 				"evidence": "no similarity search or answer suggestion in lib/Service, src/components or src/views (grep for similar, suggested answer); the knowledge base is searched by hand through the XWiki tab",
@@ -8866,7 +9350,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read lib/BackgroundJob/ listing and grep of lib for auto close and awaiting-customer",
-			"feature": "Service desk",
+			"feature": "request-management",
 			"featureConfidence": "high",
 			"built": {
 				"state": "decided-no",
@@ -8898,8 +9382,8 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/Portal/PortalRequestService.php:272-300 against the ticket schema enum",
-			"feature": "Service desk",
-			"featureConfidence": "medium",
+			"feature": "request-management",
+			"featureConfidence": "high",
 			"built": {
 				"state": "decided-no",
 				"evidence": "a portal reply moves an awaiting_customer ticket back to in_progress (lib/Service/Portal/PortalRequestService.php:298, pipelinq#2038), so the status now says the handler is up; there is no 'client wrote last' marker or list, and a reply by mail does not move it",
@@ -8930,8 +9414,8 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in src/modals/SendMessageModal.vue:8-13 and :83-90",
-			"feature": "Messaging",
-			"featureConfidence": "medium",
+			"feature": "omnichannel-registratie",
+			"featureConfidence": "high",
 			"built": {
 				"state": "specified",
 				"evidence": "src/modals/SendMessageModal.vue:83 NcSelect \"v-model=\\\"templateId\\\"\" lets an agent answer on WhatsApp or SMS with an approved template (TemplateApprovalSyncService), opened from the Messages section on ClientDetail and ContactDetail; there are no saved replies for tickets, mail or the portal reply",
@@ -8970,7 +9454,7 @@
 			"kiss": "partial",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/Export/ExportJobService.php:221-240 and the lib/Adapter listing",
-			"feature": "Reporting",
+			"feature": "warehouse-export",
 			"featureConfidence": "medium",
 			"built": {
 				"state": "built",
@@ -9007,7 +9491,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read the ticket x-openregister-lifecycle transitions",
-			"feature": "Service desk",
+			"feature": "request-management",
 			"featureConfidence": "high",
 			"built": {
 				"state": "decided-no",
@@ -9039,7 +9523,7 @@
 			"kiss": "partial",
 			"provider": "external",
 			"providerHow": "knowledge articles live in XWiki since the archived change migrate-kennisbank-to-xwiki-leaf; the article schema read before (lib/Settings/register.d/97-marketing-articles.json) holds marketing articles",
-			"feature": "Service desk",
+			"feature": "kcc-werkplek",
 			"featureConfidence": "high",
 			"built": {
 				"state": "decided-no",
@@ -9071,7 +9555,7 @@
 			"kiss": "yes",
 			"provider": "pipelinq",
 			"providerHow": "lib/Service/CtiService.php:252 opens one pending contact moment per user, with no switching",
-			"feature": "Telephony",
+			"feature": "telephony",
 			"featureConfidence": "high",
 			"built": {
 				"state": "decided-no",
@@ -9099,8 +9583,8 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Controller/MessagingWebhookController.php:94 and lib/Service/Social/*Adapter.php (publish only)",
-			"feature": "Messaging",
-			"featureConfidence": "medium",
+			"feature": "omnichannel-registratie",
+			"featureConfidence": "high",
 			"built": {
 				"state": "specified",
 				"evidence": "lib/Service/WhatsAppAdapter.php:602 \"handleInboundWebhook\" stores inbound WhatsApp in channelConversation, shown on contact and client detail by src/views/messaging/MessagingConversationSection.vue (src/manifest.json:2137); a ticket's channel can be set to 'social' by hand (lib/Settings/register.d/99-unify-ticket-supertype.json:235). No inbound reader for Facebook, Instagram, X or LinkedIn messages: lib/Service/Social/ only publishes posts. Corrections round 8 (2026-09-28), pipelinq#2073: the text of an inbound WhatsApp never shows on the contact, because the Messages section fetches the unregistered type 'message' (src/views/messaging/MessagingConversationSection.vue:409, error swallowed at :418-419); only the conversation, with its last inbound time, is listed (:435), at 9a5e95c.",
@@ -9147,7 +9631,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/NaviService.php:4 and searched lib, src for chatbot/handoff",
-			"feature": "Request intake",
+			"feature": "omnichannel-registratie",
 			"featureConfidence": "medium",
 			"built": {
 				"state": "specified",
@@ -9195,7 +9679,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "grep of lib and src for transcri, speech, whisper",
-			"feature": "Telephony",
+			"feature": "telephony",
 			"featureConfidence": "high",
 			"built": {
 				"state": "specified",
@@ -9248,8 +9732,8 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/CtiService.php:205 and :359, grep for coaching, scorecard, quality review",
-			"feature": "Telephony",
-			"featureConfidence": "medium",
+			"feature": "telephony",
+			"featureConfidence": "high",
 			"built": {
 				"state": "specified",
 				"evidence": "lib/Service/CtiService.php:359 \"attachRecording\" writes the platform's recording link onto the contact moment ticket, so a recorded call can be listened back from the ticket; there is no scoring form, scorecard or coaching record anywhere in lib/ or src/",
@@ -9289,8 +9773,8 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/CtiService.php:92 and :239, grep of src for localStorage and draft",
-			"feature": "Contact moments",
-			"featureConfidence": "medium",
+			"feature": "contactmomenten-rapportage",
+			"featureConfidence": "high",
 			"built": {
 				"state": "specified",
 				"evidence": "a telephony call creates a pending contact moment server side as soon as it rings (lib/Service/CtiService.php:239 \"Create a pending contactmoment ticket\"), so that record survives a closed browser; the manual form src/components/ContactmomentQuickLog.vue (mounted at src/manifest.json:2144) keeps its input only in component data, with no local or server draft",
@@ -9326,7 +9810,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in src/components/ContactmomentQuickLog.vue:100-110 and :280-320",
-			"feature": "Contact moments",
+			"feature": "contactmomenten-rapportage",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -9366,8 +9850,8 @@
 			"kiss": "partial",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/CtiService.php:252-280 and lib/Service/CtiContactMatcher.php:34-41",
-			"feature": "Telephony",
-			"featureConfidence": "medium",
+			"feature": "telephony",
+			"featureConfidence": "high",
 			"built": {
 				"state": "specified",
 				"evidence": "every CTI call stores the caller's number in E.164 on its contact moment (lib/Service/CtiService.php:272 \"'from_number' => ($fromE164 ?? $fromNumber)\", declared on ticket in lib/Settings/register.d/70-cti.json:42); the screen pop only matches the number to contacts and clients (lib/Service/CtiContactMatcher.php:88 findByPhoneNumber), and no page lists earlier contact moments for a number that matches nobody",
@@ -9403,7 +9887,7 @@
 			"kiss": "no",
 			"provider": "external",
 			"providerHow": "call flow lives in the PBX that lib/Settings/connections.json 'cti' connects to; pipelinq does not configure it",
-			"feature": "Telephony",
+			"feature": "telephony",
 			"featureConfidence": "high",
 			"built": {
 				"state": "decided-no",
@@ -9435,8 +9919,8 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in src/views/messaging/MessagingConversationSection.vue:314-325 and appinfo/routes.php:555-556",
-			"feature": "Messaging",
-			"featureConfidence": "medium",
+			"feature": "omnichannel-registratie",
+			"featureConfidence": "high",
 			"built": {
 				"state": "specified",
 				"evidence": "a failed WhatsApp or SMS is stored and flagged (lib/Service/WhatsAppAdapter.php:831 persistFailureAndAlert) and shown red on the Messages section (src/views/messaging/MessagingConversationSection.vue:319 \"status === 'failed' || status === 'expired'\"), but there is no resend button; Berichtenbox has a retry API (appinfo/routes.php:556) that no page calls; an email to a client is sent from Nextcloud Mail, whose outbox handles failed sends. Corrections round 8 (2026-09-28), pipelinq#2073: the red failed status never shows, because the Messages section fetches the type 'message' (src/views/messaging/MessagingConversationSection.vue:409), which is no longer registered since the rename to channelMessage (src/config/objectTypes.js:371-376), and the error is swallowed into an empty list (:418-419); the only other trace is a notification to the fixed user id 'admin' (lib/Service/WhatsAppAdapter.php:860-861), at 9a5e95c.",
@@ -9472,8 +9956,8 @@
 			"kiss": "unknown",
 			"provider": "pipelinq",
 			"providerHow": "the app ships written documentation in docs/ and an in-app walkthrough, not a course",
-			"feature": "Onboarding",
-			"featureConfidence": "medium",
+			"feature": "setup-and-getting-started",
+			"featureConfidence": "high",
 			"built": {
 				"state": "decided-no",
 				"evidence": "docs/ plus the walkthrough block in src/manifest.json",
@@ -9501,8 +9985,8 @@
 			"kiss": "yes",
 			"provider": "pipelinq",
 			"providerHow": "appinfo/info.xml points at Conduction for support and an SLA, and names no partner network",
-			"feature": "Platform",
-			"featureConfidence": "medium",
+			"feature": "setup-and-getting-started",
+			"featureConfidence": "high",
 			"built": {
 				"state": "decided-no",
 				"evidence": "appinfo/info.xml names one vendor, not a partner network",
@@ -9530,8 +10014,8 @@
 			"kiss": "partial",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/Export/ExportDataService.php and lib/Adapter/ExportSinkRegistry.php, which write whole registers out",
-			"feature": "Platform",
-			"featureConfidence": "high",
+			"feature": "self-hosted-open-source",
+			"featureConfidence": "medium",
 			"built": {
 				"state": "built",
 				"evidence": "lib/Adapter/ExportSinkRegistry.php",
@@ -9562,8 +10046,8 @@
 			"kiss": "no",
 			"provider": "openregister",
 			"providerHow": "the disposal sweep is OpenRegister's ArchivalRetentionTask reading pipelinq's x-openregister-archival blocks (read in openregister lib/BackgroundJob/ArchivalRetentionTask.php:77); BRP data is pipelinq's own BrpRetentionJob",
-			"feature": "Privacy",
-			"featureConfidence": "high",
+			"feature": "avg-verzoeken-workflow",
+			"featureConfidence": "medium",
 			"built": {
 				"state": "specified",
 				"evidence": "lib/Settings/pipelinq_register.json:1516 \"x-openregister-archival\" (task, P2Y/P1Y) and lib/Settings/register.d/99-unify-ticket-supertype.json:27 (ticket, contact moments P2Y) are enforced by OpenRegister lib/BackgroundJob/ArchivalRetentionTask.php:77; lib/BackgroundJob/BrpRetentionJob.php:189 \"deleteObject(uuid: $uuid)\" for BRP person data past retentionTo. The client and contact schemas carry no archival block, so client records themselves are never disposed",
@@ -9603,7 +10087,7 @@
 			"kiss": "partial",
 			"provider": "pipelinq",
 			"providerHow": "read in tests/e2e/portal-accessibility.spec.ts:5-24 and searched the repo for an accessibility statement",
-			"feature": "Platform",
+			"feature": "mobile-offline-and-accessible",
 			"featureConfidence": "high",
 			"built": {
 				"state": "specified",
@@ -9644,8 +10128,8 @@
 			"kiss": "partial",
 			"provider": "pipelinq",
 			"providerHow": "read in nextcloud-vue v2.56.0 CnFormDialog.md:268 and src/utils/schema.js:683-688, grep of src/manifest.json for visibleWhen and condition",
-			"feature": "Platform",
-			"featureConfidence": "medium",
+			"feature": "fields-languages-and-house-style",
+			"featureConfidence": "high",
 			"built": {
 				"state": "specified",
 				"evidence": "the shared form (nextcloud-vue v2.56.0 src/components/CnFormDialog/CnFormDialog.vue:1908 \"fieldVisible\") hides a field on a condition only when a field descriptor carries condition/visibleWhen, and src/utils/schema.js does not derive one from a schema property (it maps only x-openregister-readonly-when, :688). No pipelinq manifest page declares a condition, and no admin screen lets one be set",
@@ -9685,8 +10169,8 @@
 			"kiss": "yes",
 			"provider": "external",
 			"providerHow": "the knowledge base is XWiki since the archived change migrate-kennisbank-to-xwiki-leaf; read access there is XWiki's own permission model",
-			"feature": "Service desk",
-			"featureConfidence": "medium",
+			"feature": "kcc-werkplek",
+			"featureConfidence": "high",
 			"built": {
 				"state": "decided-no",
 				"evidence": "the knowledge base is reached through the XWiki sidebar tab and widget (src/manifest.json:1394 \"xwiki-knowledge\", :2168 knowledgeBase) and the Articles pages; no manifest page or route is gated by role (only src/manifest.d/97-connection-registry.json:14 uses visibleIf), so there is no search only view for colleagues outside the contact centre",
@@ -9717,8 +10201,8 @@
 			"kiss": "no",
 			"provider": "nextcloud",
 			"providerHow": "membership is Nextcloud groups, read in lib/Lifecycle/ObjectOwnerAccessPolicy.php:4-5 and the authorization blocks in the register",
-			"feature": "Platform",
-			"featureConfidence": "medium",
+			"feature": "access-and-data-safety",
+			"featureConfidence": "high",
 			"built": {
 				"state": "decided-no",
 				"evidence": "rights are Nextcloud group names fixed in the register (lib/Settings/pipelinq_register.json:410 \"authorization\": [...], lib/Settings/register.d/99-unify-ticket-supertype.json:90 \"authorization\": [\"sales\"]) and checked by lib/Lifecycle/ObjectOwnerAccessPolicy.php; group membership can come from a central directory through Nextcloud (LDAP, SAML, OIDC), but which group may do what is written in register JSON, not managed in a central authorisation register",
@@ -9749,8 +10233,8 @@
 			"kiss": "partial",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/ContractService.php:140-165 and lib/Lifecycle/PosTransactionConfirmGuard.php:4-12",
-			"feature": "Platform",
-			"featureConfidence": "medium",
+			"feature": "access-and-data-safety",
+			"featureConfidence": "high",
 			"built": {
 				"state": "specified",
 				"evidence": "finished records freeze per type: a contract in a terminal state cannot transition (lib/Service/ContractService.php:152-160), a confirmed POS transaction is guarded (lib/Lifecycle/PosTransactionConfirmGuard.php), and tickets cannot be hard deleted by hand because their schema declares archival (OpenRegister ArchivalRetentionTask.php:9 \"SCHEMA_ARCHIVAL_IMMUTABLE\"). OpenRegister's lock (routes objects#lock) is a temporary edit lock, and no pipelinq page offers a lock action on a client, lead or ticket",
@@ -9790,8 +10274,8 @@
 			"kiss": "no",
 			"provider": "openregister",
 			"providerHow": "read in openregister appinfo/routes.php:1432-1433",
-			"feature": "Platform",
-			"featureConfidence": "medium",
+			"feature": "access-and-data-safety",
+			"featureConfidence": "high",
 			"built": {
 				"state": "specified",
 				"evidence": "OpenRegister keeps deleted objects and restores them (openregister appinfo/routes.php:1432 'deleted#restore', :1433 'deleted#restoreMultiple', UI in openregister src/store/modules/deleted.js); no pipelinq page reaches it, and restoring what a cascade deleted with the record is a manual multi-select",
@@ -9827,7 +10311,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "grep of src for offline mechanisms",
-			"feature": "Platform",
+			"feature": "mobile-offline-and-accessible",
 			"featureConfidence": "high",
 			"built": {
 				"state": "decided-no",
@@ -9859,8 +10343,8 @@
 			"kiss": "partial",
 			"provider": "nextcloud",
 			"providerHow": "group membership is managed in Nextcloud, read in the authorization blocks of the pipelinq register",
-			"feature": "Platform",
-			"featureConfidence": "medium",
+			"feature": "access-and-data-safety",
+			"featureConfidence": "high",
 			"built": {
 				"state": "decided-no",
 				"evidence": "all access is Nextcloud group membership named in the register (lib/Settings/register.d/99-unify-ticket-supertype.json:90 \"authorization\": [\"sales\"], lib/Lifecycle/ObjectOwnerAccessPolicy.php), so a new colleague gets a peer's access by being put in the same groups in Nextcloud user management; there is no 'same as this user' action, and POS staff get a posRole separately (/api/pos/staff)",
@@ -9891,8 +10375,8 @@
 			"kiss": "no",
 			"provider": "openregister",
 			"providerHow": "read in nextcloud-vue v2.56.0 src/utils/schema.js:526-599 and pipelinq package.json:12",
-			"feature": "Platform",
-			"featureConfidence": "medium",
+			"feature": "fields-languages-and-house-style",
+			"featureConfidence": "high",
 			"built": {
 				"state": "specified",
 				"evidence": "shipped schema titles are English source strings translated at display time (nextcloud-vue v2.56.0 src/utils/schema.js:599 \"label: tr(prop.title || key)\") from pipelinq's l10n files (l10n/nl.json, de.json, guarded by package.json:12 check:schema-l10n); a field an administrator adds has a single title and no per-language labels, so it shows the same text to everyone",
@@ -9928,7 +10412,7 @@
 			"kiss": "no",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/AvailabilityService.php:174 and lib/Service/BookingService.php:329",
-			"feature": "Appointments",
+			"feature": "public-booking-portal",
 			"featureConfidence": "high",
 			"built": {
 				"state": "built",
@@ -9964,7 +10448,7 @@
 			"kiss": "no",
 			"provider": "portaliq",
 			"providerHow": "hydra ADR-046 makes portaliq the one external portal; its matrix rows sig-digid and sig-eherkenning (specified) cover DigiD and eHerkenning login, and pipelinq contributes through lib/Portal/PortalContributionProvider.php",
-			"feature": "Customer portal",
+			"feature": "customer-portal",
 			"featureConfidence": "high",
 			"built": {
 				"state": "building",
@@ -10005,8 +10489,8 @@
 			"kiss": "partial",
 			"provider": "pipelinq",
 			"providerHow": "read in lib/Service/Portal/PortalRequestService.php:444-510",
-			"feature": "Customer portal",
-			"featureConfidence": "medium",
+			"feature": "customer-portal",
+			"featureConfidence": "high",
 			"built": {
 				"state": "specified",
 				"evidence": "lib/Service/Portal/PortalRequestService.php presentSummary and presentDetail fix in code what a resident reads (number, subject, category, status, date, description, assignee only when the tenant allows it); :519 customerNotes shows the ticket's customerMessage and the resident's portalReplies and never the internal notes string. On TicketDetail the field 'Message to the customer' says it is shown in the portal; the rest of the set has no marker or preview there",
@@ -10042,8 +10526,8 @@
 			"kiss": "no",
 			"provider": "portaliq",
 			"providerHow": "hydra ADR-046 makes portaliq the one external portal (menus: portaliq matrix site-menus-layout); the per tenant choice read before lives in the bespoke pipelinq portal that open change portal-contribution retires",
-			"feature": "Customer portal",
-			"featureConfidence": "medium",
+			"feature": "customer-portal",
+			"featureConfidence": "high",
 			"built": {
 				"state": "specified",
 				"evidence": "each portal tenant carries enabledFeatures (lib/Service/Portal/PortalTenantService.php:62 PUBLIC_FIELDS, isFeatureEnabled) and src/portal/views/PortalDashboard.vue:123 \"all.filter((tab) => this.features.includes(tab.key))\" shows only those tabs; records are scoped to the account's own contact and delegations (PortalScopeResolver). An admin sets the tabs in the Customer portal section of the Pipelinq admin settings (src/components/admin/PortalSettings.vue, mounted by src/views/settings/Settings.vue), which reads GET /portal/api/admin/tenant-config and saves through POST /portal/api/admin/tenant-config. The choice is per tenant, not per client",
