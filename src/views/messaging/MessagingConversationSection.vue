@@ -606,7 +606,7 @@ export default {
 			}
 			this.resending = message.id
 			this.resendErrors = { ...this.resendErrors, [message.id]: '' }
-			let status = 'failed'
+			let status
 			try {
 				const { data } = await axios.post(
 					generateUrl('/apps/pipelinq/api/messaging/messages/{id}/resend', {

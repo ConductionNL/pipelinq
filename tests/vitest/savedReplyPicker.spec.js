@@ -43,7 +43,8 @@ vi.mock('../../src/store/modules/object.js', () => ({
 	useObjectStore: () => storeMock,
 }))
 
-const stub = (name, tag = 'div') => ({
+function stub (name, tag = 'div') {
+  return {
 	name,
 	inheritAttrs: false,
 	props: ['modelValue', 'options', 'label', 'inputLabel'],
@@ -51,7 +52,8 @@ const stub = (name, tag = 'div') => ({
 	render() {
 		return h(tag, { 'data-stub': name }, this.$slots.default?.())
 	},
-})
+}
+}
 
 vi.mock('@nextcloud/vue', () => ({
 	NcButton: stub('NcButton', 'button'),
@@ -161,6 +163,7 @@ describe('SendMessageModal with saved replies', () => {
 
 	it('fills the message from a picked reply on SMS and sends nothing', async () => {
 		const wrapper = mount(SendMessageModal, {
+			global: { mocks: { t: (app, text) => text } },
 			props: {
 				contactId: 'c-1',
 				preflight,
@@ -182,6 +185,7 @@ describe('SendMessageModal with saved replies', () => {
 
 	it('shows no saved reply picker when WhatsApp needs an approved template', async () => {
 		const wrapper = mount(SendMessageModal, {
+			global: { mocks: { t: (app, text) => text } },
 			props: { contactId: 'c-1', preflight, initialChannel: 'whatsapp' },
 		})
 		await flushPromises()

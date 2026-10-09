@@ -114,7 +114,7 @@ export default {
 		 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-starts-an-email-from-a-saved-reply-req-msr-005
 		 */
 		mailEnabled() {
-			let statuses = {}
+			let statuses
 			try {
 				statuses = loadState('pipelinq', 'dependency_statuses', {}) || {}
 			} catch {

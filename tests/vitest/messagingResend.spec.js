@@ -68,7 +68,8 @@ globalThis.t = (app, text) => text
 const { default: MessagingConversationSection } =
 	await import('../../src/views/messaging/MessagingConversationSection.vue')
 
-const row = (id, extra) => ({
+function row (id, extra) {
+  return {
 	id,
 	contactId: 'contact-1',
 	channel: 'sms',
@@ -77,7 +78,8 @@ const row = (id, extra) => ({
 	deliveryStatus: 'failed',
 	sentAt: '2026-10-08T10:00:00Z',
 	...extra,
-})
+}
+}
 
 let rows = []
 
@@ -95,8 +97,9 @@ async function mountOnContact() {
 	return wrapper
 }
 
-const resendButtons = (wrapper) =>
-	wrapper.findAll('button').filter((b) => b.text() === 'Send again')
+function resendButtons (wrapper) {
+  return wrapper.findAll('button').filter((b) => b.text() === 'Send again')
+}
 
 describe('Send again in the Messages section', () => {
 	beforeEach(() => {

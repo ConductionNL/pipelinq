@@ -75,7 +75,7 @@ export function fillPlaceholders(body, values = {}) {
  * @param {string} subject The subject.
  * @param {string} body The text.
  * @param {boolean} mailEnabled Whether the Nextcloud Mail app is enabled.
- * @param {Function} generateUrl `@nextcloud/router`'s generateUrl.
+ * @param {(path: string) => string} generateUrl `@nextcloud/router`'s generateUrl.
  * @return {string} The URL to open.
  * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-starts-an-email-from-a-saved-reply-req-msr-005
  */
