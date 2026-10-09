@@ -30,9 +30,8 @@ vi.mock('@nextcloud/l10n', () => ({
 		),
 }))
 
-const { default: ProductSupplyWidget } = await import(
-	'../../src/components/products/ProductSupplyWidget.vue'
-)
+const { default: ProductSupplyWidget } =
+	await import('../../src/components/products/ProductSupplyWidget.vue')
 
 /**
  * Mount the card on a product and let the stock read settle.
@@ -100,7 +99,9 @@ describe('ProductSupplyWidget', () => {
 		})
 
 		expect(stockLine(wrapper).text()).toBe('Yes, 70')
-		expect(wrapper.find('[data-testid="product-stock-locations"]').exists()).toBe(false)
+		expect(
+			wrapper.find('[data-testid="product-stock-locations"]').exists(),
+		).toBe(false)
 	})
 
 	it('says No for an untracked product', async () => {

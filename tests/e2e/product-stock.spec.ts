@@ -92,7 +92,9 @@ async function seed(
 test.describe('stock on the product page', () => {
 	test.setTimeout(120000)
 
-	test('a tracked product shows what the stock route answers', async ({ page }) => {
+	test('a tracked product shows what the stock route answers', async ({
+		page,
+	}) => {
 		await openApp(page)
 		const id = await seed(page, 'product', {
 			name: `Toner HP 83A ${STAMP}`,
@@ -102,7 +104,11 @@ test.describe('stock on the product page', () => {
 			unitOfMeasure: 'stuks',
 			stockTracked: true,
 		})
-		const stock = await api(page, 'GET', `/index.php/apps/pipelinq/api/products/${id}/stock`)
+		const stock = await api(
+			page,
+			'GET',
+			`/index.php/apps/pipelinq/api/products/${id}/stock`,
+		)
 		expect(stock.status).toBe(200)
 		expect(stock.body.tracked).toBe(true)
 
@@ -113,7 +119,9 @@ test.describe('stock on the product page', () => {
 			await expect(line).toContainText(/^(Yes|Ja), /)
 			const locations = stock.body.locations as unknown[]
 			if (locations.length >= 2) {
-				await expect(page.getByTestId('product-stock-locations')).toContainText('·')
+				await expect(
+					page.getByTestId('product-stock-locations'),
+				).toContainText('·')
 			}
 		} else {
 			expect(stock.body.state).toBe('no-shillinq')
@@ -130,10 +138,17 @@ test.describe('stock on the product page', () => {
 			type: 'service',
 			stockTracked: false,
 		})
-		const stock = await api(page, 'GET', `/index.php/apps/pipelinq/api/products/${id}/stock`)
+		const stock = await api(
+			page,
+			'GET',
+			`/index.php/apps/pipelinq/api/products/${id}/stock`,
+		)
 		expect(stock.body.state).toBe('untracked')
 
 		await gotoAppRoute(page, `/products/${id}`)
-		await expect(page.getByTestId('product-stock')).toHaveText(/^\s*(No|Nee)\s*$/, { timeout: 30000 })
+		await expect(page.getByTestId('product-stock')).toHaveText(
+			/^\s*(No|Nee)\s*$/,
+			{ timeout: 30000 },
+		)
 	})
 })

@@ -82,10 +82,29 @@ export default {
 		rows() {
 			const product = this.objectData || {}
 			const rows = [
-				{ key: 'manufacturer', label: t('pipelinq', 'Manufacturer'), value: product.manufacturer || '' },
-				{ key: 'unit', label: t('pipelinq', 'Unit of measure'), value: product.unitOfMeasure || product.unit || '' },
-				{ key: 'weight', label: t('pipelinq', 'Weight'), value: typeof product.weight === 'number' ? `${this.number(product.weight)} kg` : '' },
-				{ key: 'dimensions', label: t('pipelinq', 'Dimensions'), value: this.dimensions(product.dimensions) },
+				{
+					key: 'manufacturer',
+					label: t('pipelinq', 'Manufacturer'),
+					value: product.manufacturer || '',
+				},
+				{
+					key: 'unit',
+					label: t('pipelinq', 'Unit of measure'),
+					value: product.unitOfMeasure || product.unit || '',
+				},
+				{
+					key: 'weight',
+					label: t('pipelinq', 'Weight'),
+					value:
+						typeof product.weight === 'number'
+							? `${this.number(product.weight)} kg`
+							: '',
+				},
+				{
+					key: 'dimensions',
+					label: t('pipelinq', 'Dimensions'),
+					value: this.dimensions(product.dimensions),
+				},
 			]
 			return rows.filter((row) => row.value !== '')
 		},
@@ -102,7 +121,10 @@ export default {
 				return t('pipelinq', 'No')
 			}
 			if (stock.state === 'no-shillinq') {
-				return t('pipelinq', 'Stock is kept in shillinq, which is not installed')
+				return t(
+					'pipelinq',
+					'Stock is kept in shillinq, which is not installed',
+				)
 			}
 			if (stock.state === 'no-access') {
 				return t('pipelinq', 'No access to stock in shillinq')
@@ -136,12 +158,17 @@ export default {
 		 * @spec openspec/changes/products-stock-on-hand/specs/product-stock/spec.md#requirement-the-product-page-shows-the-available-stock-req-pst-001
 		 */
 		locationsLine() {
-			const locations = (this.stock && this.stock.state === 'ok' && this.stock.locations) || []
+			const locations =
+				(this.stock && this.stock.state === 'ok' && this.stock.locations)
+				|| []
 			if (locations.length < 2) {
 				return ''
 			}
 			return locations
-				.map((location) => `${location.name} ${this.number(location.available)}`)
+				.map(
+					(location) =>
+						`${location.name} ${this.number(location.available)}`,
+				)
 				.join(' · ')
 		},
 
@@ -184,7 +211,9 @@ export default {
 			this.loading = true
 			try {
 				const { data } = await axios.get(
-					generateUrl('/apps/pipelinq/api/products/{id}/stock', { id: this.objectId }),
+					generateUrl('/apps/pipelinq/api/products/{id}/stock', {
+						id: this.objectId,
+					}),
 				)
 				this.stock = data
 			} catch (error) {
