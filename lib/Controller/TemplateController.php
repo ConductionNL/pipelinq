@@ -31,11 +31,13 @@ use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Lifecycle\ObjectOwnerAccessPolicy;
 use OCA\Pipelinq\Service\ArticleService;
 use OCA\Pipelinq\Service\ComplianceService;
+use OCA\Pipelinq\Service\Marketing\MailBlockRenderer;
 use OCA\Pipelinq\Service\Marketing\PhysicalAddressRenderer;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\Defaults;
 use OCP\IRequest;
 use OCP\IUserSession;
 
@@ -62,6 +64,8 @@ class TemplateController extends Controller {
 		private readonly IUserSession $userSession,
 		private readonly ObjectOwnerAccessPolicy $policy,
 		private readonly PhysicalAddressRenderer $addressRenderer,
+		private readonly MailBlockRenderer $blockRenderer = new MailBlockRenderer(),
+		private readonly ?Defaults $defaults = null,
 	) {
 		parent::__construct(appName: Application::APP_ID, request: $request);
 	}//end __construct()
@@ -239,6 +243,66 @@ class TemplateController extends Controller {
 	}//end preview()
 
 	/**
+	 * POST /api/templates/render: what unsaved blocks will send.
+	 *
+	 * The Blocks editor's preview. It renders with the same renderer the save
+	 * uses, then runs the articles expansion and the physical-address
+	 * placement the send path runs, so the marketer sees what will be sent.
+	 *
+	 * @return JSONResponse `{bodyHtml, bodyText}`, or 401 / 403.
+	 *
+	 * @spec openspec/changes/marketing-block-editor/specs/mail-block-editor/spec.md#requirement-the-preview-shows-what-will-be-sent-req-mbe-002
+	 */
+	#[NoAdminRequired]
+	public function render(): JSONResponse {
+		$uid = $this->requireUser();
+		if ($uid === null) {
+			return $this->unauthorized();
+		}
+
+		if ($this->policy->isPrivileged(uid: $uid) === false) {
+			return $this->forbidden();
+		}
+
+		$blocks = $this->request->getParam('blocks');
+		if (is_array($blocks) === false) {
+			$blocks = [];
+		}
+
+		$ids = $this->request->getParam('articleIds');
+		if (is_array($ids) === false) {
+			$ids = [];
+		}
+
+		$rendered = $this->blockRenderer->render(blocks: $blocks, options: $this->renderOptions());
+		$articles = $this->articleService->loadArticlesByIds(articleIds: $ids);
+		$footer   = (string)$this->request->getParam('footerOverride', '');
+
+		return new JSONResponse(
+			[
+				'bodyHtml' => $this->addressRenderer->render(
+					body: $this->articleService->expandArticlesMarker(
+						body: $rendered['html'],
+						articles: $articles,
+						format: ArticleService::FORMAT_HTML,
+					),
+					footerOverride: $footer,
+					format: ArticleService::FORMAT_HTML,
+				),
+				'bodyText' => $this->addressRenderer->render(
+					body: $this->articleService->expandArticlesMarker(
+						body: $rendered['text'],
+						articles: $articles,
+						format: ArticleService::FORMAT_TEXT,
+					),
+					footerOverride: $footer,
+					format: ArticleService::FORMAT_TEXT,
+				),
+			]
+		);
+	}//end render()
+
+	/**
 	 * POST /api/templates/:id/validate — run the compliance check on a stored
 	 * template without saving anything, so the blast wizard can refuse a
 	 * non-compliant template before a blast is created from it.
@@ -323,8 +387,56 @@ class TemplateController extends Controller {
 			$body['articleIds'] = $articleIds;
 		}
 
-		return $body;
+		return $this->withRenderedBlocks(body: $body);
 	}//end collectTemplateBody()
+
+	/**
+	 * In Blocks mode, render the blocks into the bodies that are stored and sent.
+	 *
+	 * The server renders on every save, so the HTML that is sent is always
+	 * the HTML the blocks make; a body the browser sent alongside is ignored.
+	 *
+	 * @param array<string, mixed> $body The collected body.
+	 *
+	 * @return array<string, mixed> The body, with bodyHtml and bodyText rendered in Blocks mode.
+	 *
+	 * @spec openspec/changes/marketing-block-editor/specs/mail-block-editor/spec.md#requirement-saved-blocks-become-mail-safe-html-req-mbe-003
+	 */
+	private function withRenderedBlocks(array $body): array {
+		$mode = $this->request->getParam('editorMode');
+		if ($mode !== null) {
+			$body['editorMode'] = ($mode === 'blocks') ? 'blocks' : 'html';
+		}
+
+		if (($body['editorMode'] ?? null) !== 'blocks') {
+			return $body;
+		}
+
+		$blocks = $this->request->getParam('blocks');
+		if (is_array($blocks) === false) {
+			$blocks = [];
+		}
+
+		$body['blocks'] = $this->blockRenderer->normalise(blocks: $blocks);
+		$rendered       = $this->blockRenderer->render(blocks: $body['blocks'], options: $this->renderOptions());
+		$body['bodyHtml'] = $rendered['html'];
+		$body['bodyText'] = $rendered['text'];
+
+		return $body;
+	}//end withRenderedBlocks()
+
+	/**
+	 * The renderer options: the theming colour for buttons.
+	 *
+	 * @return array<string, string> The options.
+	 */
+	private function renderOptions(): array {
+		if ($this->defaults === null) {
+			return [];
+		}
+
+		return ['primaryColor' => $this->defaults->getColorPrimary()];
+	}//end renderOptions()
 
 	/**
 	 * Map a service result to a JSONResponse with the right status.

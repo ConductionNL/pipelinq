@@ -718,6 +718,40 @@ class ComplianceService {
 	}//end recordListConsent()
 
 	/**
+	 * The editor mode a template is stored with: `blocks` or `html`.
+	 *
+	 * @param mixed $value The mode asked for.
+	 *
+	 * @return string The mode; anything unknown is `html`, as before blocks existed.
+	 *
+	 * @spec openspec/changes/marketing-block-editor/specs/mail-block-editor/spec.md#requirement-html-templates-keep-working-req-mbe-004
+	 */
+	private function editorModeOf(mixed $value): string {
+		if ($value === 'blocks') {
+			return 'blocks';
+		}
+
+		return 'html';
+	}//end editorModeOf()
+
+	/**
+	 * The blocks a template is stored with: a list, or none.
+	 *
+	 * @param mixed $value The blocks asked for.
+	 *
+	 * @return array<int, mixed> The blocks.
+	 *
+	 * @spec openspec/changes/marketing-block-editor/specs/mail-block-editor/spec.md#requirement-a-marketer-builds-an-email-template-from-blocks-req-mbe-001
+	 */
+	private function blocksOf(mixed $value): array {
+		if (is_array($value) === false) {
+			return [];
+		}
+
+		return array_values($value);
+	}//end blocksOf()
+
+	/**
 	 * Validate a CampaignTemplate payload against the channel's rules.
 	 *
 	 * For email templates the body MUST embed `{{unsubscribe_link}}`
@@ -900,6 +934,8 @@ class ComplianceService {
 			'replyTo' => (string)($payload['replyTo'] ?? ''),
 			'footerOverride' => (string)($payload['footerOverride'] ?? ''),
 			'articleIds' => $this->normaliseArticleIds(value: ($payload['articleIds'] ?? [])),
+			'editorMode' => $this->editorModeOf(value: ($payload['editorMode'] ?? null)),
+			'blocks' => $this->blocksOf(value: ($payload['blocks'] ?? null)),
 			'createdBy' => $createdByUid,
 			'createdAt' => $now,
 			'updatedAt' => $now,
@@ -945,6 +981,14 @@ class ComplianceService {
 
 		if (array_key_exists('articleIds', $patch) === true) {
 			$payload['articleIds'] = $this->normaliseArticleIds(value: $patch['articleIds']);
+		}
+
+		if (array_key_exists('editorMode', $patch) === true) {
+			$payload['editorMode'] = $this->editorModeOf(value: $patch['editorMode']);
+		}
+
+		if (array_key_exists('blocks', $patch) === true) {
+			$payload['blocks'] = $this->blocksOf(value: $patch['blocks']);
 		}
 
 		$channel = strtolower((string)($existing['channel'] ?? 'email'));
