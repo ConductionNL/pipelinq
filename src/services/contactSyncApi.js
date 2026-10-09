@@ -13,6 +13,8 @@
 // contactsUid + the denormalised name/email/phone mirror.
 
 import axios from '@nextcloud/axios'
+import { showError } from '@nextcloud/dialogs'
+import { translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
 
 const base = (path) => generateUrl('/apps/pipelinq' + path)
@@ -36,23 +38,35 @@ export async function createWithContact(objectType, form) {
 
 /**
  * Write-back sync of an existing client/contact to its linked Nextcloud
- * Contact vCard (contacts-sync spec, write-back requirement). Best-effort:
- * a failure here must never block the caller's own save flow, since the
- * Pipelinq object is already persisted by the time this runs.
+ * Contact vCard (contacts-sync spec, write-back requirement). A failure never
+ * blocks the caller's own save flow, since the Pipelinq object is already
+ * persisted by the time this runs. It is no longer silent either: the user is
+ * told that Nextcloud Contacts still has the old details (round4, item 1).
  *
  * @param {string} objectType The object type ('client' or 'contact').
  * @param {string} objectId The saved object's id.
+ * @param {(message: string) => void} [notify] Shows the failure (injectable for tests).
  * @return {Promise<string|null>} The contacts UID on success, or null.
- * @spec openspec/changes/contact-channel-details/specs/contacts-sync/spec.md
+ * @spec openspec/changes/round4-contact-write-back/specs/contacts-sync/spec.md#requirement-a-failed-write-back-is-shown-to-the-user
  */
-export async function writeBack(objectType, objectId) {
+export async function writeBack(objectType, objectId, notify = showError) {
+	let uid
 	try {
 		const { data } = await axios.post(base('/api/contacts-sync/write-back'), {
 			objectType,
 			objectId,
 		})
-		return data?.contactsUid || null
+		uid = data?.contactsUid || null
 	} catch {
-		return null
+		uid = null
 	}
+	if (uid === null) {
+		notify(
+			t(
+				'pipelinq',
+				'Your changes are saved here, but not in Nextcloud Contacts. The contact there still has the old details.',
+			),
+		)
+	}
+	return uid
 }
