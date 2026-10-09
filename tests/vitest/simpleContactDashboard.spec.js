@@ -476,15 +476,15 @@ describe('the tickets list', () => {
 	})
 
 	it('shows five views first and keeps the rest behind the overflow', () => {
-		expect(simple.quickFilterMaxVisible).toBe(5)
+		expect(simple.quickFilterMaxVisible).toBe(6)
 		expect(simple.quickFilters.map((item) => item.label)).toEqual([
 			'All',
 			'Waiting for me',
 			'New',
-			'Tickets',
+			'Waiting for customer',
+			'Requests',
 			'Complaints',
 			'Contactmomenten',
-			'Waiting for customer',
 		])
 		expect(simple.quickFilters.filter((item) => item.default)).toHaveLength(1)
 	})
@@ -522,7 +522,7 @@ describe('the tickets list', () => {
 		}
 	})
 
-	it('shows the handler as an avatar and colours a deadline that is today or past', () => {
+	it('shows the handler as an avatar, last, as the board draws it', () => {
 		const column = (key) =>
 			simple.columns.find(
 				(item) => typeof item === 'object' && item.key === key,
@@ -531,10 +531,8 @@ describe('the tickets list', () => {
 			widget: 'avatar',
 			widgetProps: { user: true },
 		})
-		expect(column('slaDeadline').widgetProps.variantWhen).toEqual([
-			{ op: 'lte', value: 0, variant: 'error' },
-			{ op: 'lte', value: 2, variant: 'warning' },
-		])
+		const last = simple.columns[simple.columns.length - 1]
+		expect(last.key).toBe('assignee')
 		expect(SCHEMAS.ticket.slaDeadline.format).toBe('date-time')
 	})
 })

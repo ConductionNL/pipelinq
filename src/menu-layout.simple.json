@@ -331,6 +331,13 @@
 			]
 		}
 	],
+	"pageDefaults": {
+		"index": {
+			"showTitle": true,
+			"showTitleIcon": false,
+			"headerFilters": false
+		}
+	},
 	"modulesCaption": {
 		"id": "ModulesCaption",
 		"type": "caption",
@@ -1452,9 +1459,12 @@
 			"id": "Tickets",
 			"_note": "The tickets list in the simple structure (openspec/changes/simple-contact-dashboard). No view is dropped: the four the page had keep their filter and gain a count, three join them, five show and the rest sit behind the overflow chip. `Waiting for me`, `New` and `Waiting for customer` use the same filters as the dashboard stats that link here. THE AVATAR IS THE HANDLER'S: `assignee` holds a Nextcloud user id. The design draws the customer's initials, and a ticket holds its client as a reference without a name. THE COLOUR IS ON THE DEADLINE: late or due today is red (`lte 0`), due within two days is amber. How long a ticket has waited cannot be coloured, a date rule counts days until a date and a wait lies in the past.",
 			"config": {
-				"quickFilterMaxVisible": 5,
+				"quickFilterMaxVisible": 6,
 				"columns": [
-					"title",
+					{
+						"key": "title",
+						"label": "Subject"
+					},
 					{
 						"key": "ticketType",
 						"label": "Type"
@@ -1464,6 +1474,11 @@
 						"label": "Status",
 						"widget": "statusBadge"
 					},
+					"channel",
+					{
+						"key": "occurredAt",
+						"label": "Waiting"
+					},
 					{
 						"key": "assignee",
 						"label": "Handler",
@@ -1471,36 +1486,29 @@
 						"widgetProps": {
 							"user": true
 						}
-					},
-					"channel",
+					}
+				],
+				"headerButtons": [
 					{
-						"key": "slaDeadline",
-						"label": "Deadline",
-						"widget": "date",
-						"widgetProps": {
-							"variantWhen": [
-								{
-									"op": "lte",
-									"value": 0,
-									"variant": "error"
-								},
-								{
-									"op": "lte",
-									"value": 2,
-									"variant": "warning"
-								}
-							]
-						}
+						"action": "export"
 					},
-					"occurredAt"
-				]
+					{
+						"action": "actions-menu"
+					},
+					{
+						"action": "add",
+						"variant": "primary",
+						"label": "New request"
+					}
+				],
+				"countText": "{shown} of {total} tickets · customer contact"
 			},
 			"configPatch": {
 				"quickFilters": {
 					"All": {
 						"showCount": true
 					},
-					"Tickets": {
+					"Requests": {
 						"showCount": true
 					},
 					"Complaints": {
@@ -1543,10 +1551,12 @@
 					"All",
 					"Waiting for me",
 					"New",
-					"Tickets",
+					"Waiting for customer",
+					"Requests",
 					"Complaints"
 				]
-			}
+			},
+			"title": "Questions and reports"
 		}
 	]
 }

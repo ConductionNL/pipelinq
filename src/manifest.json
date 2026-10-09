@@ -2448,7 +2448,7 @@
 				"showViewAction": false,
 				"quickFilters": [
 					{ "label": "All", "filter": {}, "default": true },
-					{ "label": "Tickets", "filter": { "ticketType": "request" } },
+					{ "label": "Requests", "filter": { "ticketType": "request" } },
 					{
 						"label": "Complaints",
 						"filter": { "ticketType": "complaint" }
@@ -4761,7 +4761,7 @@
 				},
 				"quickFilters": [
 					{ "label": "All", "filter": {}, "default": true },
-					{ "label": "Tickets", "filter": { "ticketType": "request" } },
+					{ "label": "Requests", "filter": { "ticketType": "request" } },
 					{
 						"label": "Complaints",
 						"filter": { "ticketType": "complaint" }

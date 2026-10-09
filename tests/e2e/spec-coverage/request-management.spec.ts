@@ -37,7 +37,7 @@ import {
 async function openRequests(page: Page): Promise<void> {
 	await openApp(page)
 	await navClick(page, 'All tickets', /\/tickets/)
-	await clickQuickFilter(page, 'Tickets')
+	await clickQuickFilter(page, 'Requests')
 }
 
 // @e2e openspec/specs/request-management/spec.md#default-list-display

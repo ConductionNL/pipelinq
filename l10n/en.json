@@ -7349,6 +7349,18 @@
         "Blocked": "Blocked",
         "Best case": "Best case",
         "Closed won": "Closed won",
-        "Closed lost": "Closed lost"
+        "Closed lost": "Closed lost",
+        "{shown} of {total} tickets · customer contact": "{shown} of {total} tickets · customer contact",
+        "request": "request",
+        "complaint": "complaint",
+        "interaction": "interaction",
+        "converted": "converted",
+        "awaiting_customer": "awaiting_customer",
+        "in_progress": "in_progress",
+        "resolved": "resolved",
+        "completed": "completed",
+        "rejected": "rejected",
+        "closed": "closed",
+        "portal": "portal"
     }
 }

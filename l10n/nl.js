@@ -7243,7 +7243,19 @@ OC.L10N.register(
         "Blocked": "Geblokkeerd",
         "Best case": "Beste geval",
         "Closed won": "Afgesloten, gewonnen",
-        "Closed lost": "Afgesloten, verloren"
+        "Closed lost": "Afgesloten, verloren",
+        "{shown} of {total} tickets · customer contact": "{shown} van {total} tickets · klantcontact",
+        "request": "verzoek",
+        "complaint": "klacht",
+        "interaction": "contactmoment",
+        "converted": "omgezet",
+        "awaiting_customer": "wacht op klant",
+        "in_progress": "in behandeling",
+        "resolved": "opgelost",
+        "completed": "afgerond",
+        "rejected": "afgewezen",
+        "closed": "gesloten",
+        "portal": "klantportaal"
     },
     "nplurals=2; plural=(n != 1);"
 )
