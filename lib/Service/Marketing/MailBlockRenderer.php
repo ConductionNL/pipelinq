@@ -35,6 +35,8 @@ namespace OCA\Pipelinq\Service\Marketing;
 /**
  * Renders template blocks to mail-safe HTML and text.
  *
+ * @spec openspec/changes/marketing-block-editor/specs/mail-block-editor/spec.md#requirement-saved-blocks-become-mail-safe-html-req-mbe-003
+ *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) One method per block type keeps each rule readable.
  */
 class MailBlockRenderer {

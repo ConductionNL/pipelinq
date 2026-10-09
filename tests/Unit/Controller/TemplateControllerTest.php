@@ -392,6 +392,8 @@ class TemplateControllerTest extends TestCase {
 		$this->assertStringContainsString('href="https://www.example.nl"', $data['bodyHtml']);
 		$this->assertStringContainsString('Voorbeeldstraat 1', $data['bodyHtml']);
 		$this->assertStringContainsString('Read more: https://www.example.nl', $data['bodyText']);
+		$this->assertStringContainsString('{{physical_address}}', $data['renderedHtml']);
+		$this->assertStringNotContainsString('Voorbeeldstraat 1', $data['renderedHtml']);
 		$this->assertCount(0, $this->objects->saved);
 	}//end testRenderPreviewsUnsavedBlocks()
 }//end class

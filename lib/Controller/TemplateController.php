@@ -56,6 +56,8 @@ class TemplateController extends Controller {
 	 * @param IUserSession $userSession Current user session.
 	 * @param ObjectOwnerAccessPolicy $policy Per-object owner access policy.
 	 * @param PhysicalAddressRenderer $addressRenderer Puts the template's physical address into the preview.
+	 * @param MailBlockRenderer $blockRenderer Renders Blocks-mode templates to the bodies that are sent.
+	 * @param Defaults|null $defaults The theming colour for buttons.
 	 */
 	public function __construct(
 		IRequest $request,
@@ -249,7 +251,7 @@ class TemplateController extends Controller {
 	 * uses, then runs the articles expansion and the physical-address
 	 * placement the send path runs, so the marketer sees what will be sent.
 	 *
-	 * @return JSONResponse `{bodyHtml, bodyText}`, or 401 / 403.
+	 * @return JSONResponse `{renderedHtml, renderedText, bodyHtml, bodyText}`, or 401 / 403.
 	 *
 	 * @spec openspec/changes/marketing-block-editor/specs/mail-block-editor/spec.md#requirement-the-preview-shows-what-will-be-sent-req-mbe-002
 	 */
@@ -280,6 +282,10 @@ class TemplateController extends Controller {
 
 		return new JSONResponse(
 			[
+				// What a save stores: kept as the HTML body when the marketer
+				// switches from Blocks to HTML.
+				'renderedHtml' => $rendered['html'],
+				'renderedText' => $rendered['text'],
 				'bodyHtml' => $this->addressRenderer->render(
 					body: $this->articleService->expandArticlesMarker(
 						body: $rendered['html'],
@@ -405,7 +411,10 @@ class TemplateController extends Controller {
 	private function withRenderedBlocks(array $body): array {
 		$mode = $this->request->getParam('editorMode');
 		if ($mode !== null) {
-			$body['editorMode'] = ($mode === 'blocks') ? 'blocks' : 'html';
+			$body['editorMode'] = 'html';
+			if ($mode === 'blocks') {
+				$body['editorMode'] = 'blocks';
+			}
 		}
 
 		if (($body['editorMode'] ?? null) !== 'blocks') {
