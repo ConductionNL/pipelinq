@@ -2324,7 +2324,18 @@ OC.L10N.register(
         "The text that goes into the message. You can use {{client.name}}, {{contact.name}}, {{ticket.title}} and {{agent.name}}.": "Le texte qui va dans le message. Vous pouvez utiliser {{client.name}}, {{contact.name}}, {{ticket.title}} et {{agent.name}}.",
         "Where agents can pick this reply.": "Où les agents peuvent choisir cette réponse.",
         "Shown first to clients who asked to be written to in this language. Leave empty for every language.": "Affichée en premier pour les clients qui ont demandé à recevoir des messages dans cette langue. Laissez vide pour toutes les langues.",
-        "Switch off to hide this reply from the list without removing it.": "Désactivez pour masquer cette réponse de la liste sans la supprimer."
+        "Switch off to hide this reply from the list without removing it.": "Désactivez pour masquer cette réponse de la liste sans la supprimer.",
+        "Supply": "Approvisionnement",
+        "Stock tracked": "Stock suivi",
+        "Yes, {amount}": "Oui, {amount}",
+        "Stock is kept in shillinq, which is not installed": "Le stock est tenu dans shillinq, qui n'est pas installé",
+        "No access to stock in shillinq": "Pas d'accès au stock dans shillinq",
+        "{onHand} on hand, {reserved} reserved": "{onHand} en stock, {reserved} réservés",
+        "Open in shillinq": "Ouvrir dans shillinq",
+        "Manufacturer": "Fabricant",
+        "Unit of measure": "Unité de mesure",
+        "Weight": "Poids",
+        "Dimensions": "Dimensions"
     },
     "nplurals=2; plural=(n != 1);"
 )

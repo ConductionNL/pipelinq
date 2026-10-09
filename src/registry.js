@@ -109,6 +109,7 @@ import PosTransactionTotalsWidget from './components/pos/PosTransactionTotalsWid
 //     kind:'section' bodyWidget (ZReportBookkeepingSection). The GL journal
 //     itself is owned by shillinq (pipelinq-bookkeeping-to-shillinq). ---
 import ZReportBookkeepingSection from './components/pos/ZReportBookkeepingSection.vue'
+import ProductSupplyWidget from './components/products/ProductSupplyWidget.vue'
 import AgentPerformanceSection from './components/rapportage/AgentPerformanceSection.vue'
 import ChannelComparisonSection from './components/rapportage/ChannelComparisonSection.vue'
 // --- Reporting dashboards (lib gap: no chart-widget page type). ---
@@ -838,6 +839,12 @@ const registry = {
 		kind: 'section',
 		component: CommunicationHistory,
 		_note: 'Paginated contactmoment feed for an entity; self-fetches by entityType/entityId.',
+	},
+	ProductSupplyWidget: {
+		kind: 'widget',
+		component: ProductSupplyWidget,
+		...PANEL_WIDGET_META,
+		_note: 'Supply card on ProductDetail (board PqProduct): manufacturer, unit, weight, dimensions and the Stock tracked line read live from shillinq via GET /api/products/{id}/stock (products-stock-on-hand).',
 	},
 	BookingsCard: {
 		kind: 'section',

@@ -63,12 +63,6 @@ export default {
 			type: String,
 			default: '',
 		},
-
-		/** The manifest widget title. */
-		title: {
-			type: String,
-			default: '',
-		},
 	},
 
 	data() {

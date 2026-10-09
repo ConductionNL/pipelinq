@@ -91,7 +91,8 @@ class ShillinqStockReader {
 	 * @param string $productId The product's `productId`, the key shillinq stock is kept on.
 	 * @param string $sku The product's SKU, matched against `productSku`.
 	 *
-	 * @return array{state: string, available: float, onHand: float, reserved: float, locations: array<int, array{code: string, name: string, available: float}>}
+	 * @return array{state: string, available: float, onHand: float, reserved: float,
+	 *     locations: array<int, array{code: string, name: string, available: float}>}
 	 *         `state` is `ok`, `no-shillinq` or `no-access`.
 	 *
 	 * @spec openspec/changes/products-stock-on-hand/specs/product-stock/spec.md#requirement-the-product-page-shows-the-available-stock-req-pst-001
@@ -176,7 +177,8 @@ class ShillinqStockReader {
 	 * @param string $field The field the read filtered on.
 	 * @param string $key The value it filtered for.
 	 *
-	 * @return array{state: string, available: float, onHand: float, reserved: float, locations: array<int, array{code: string, name: string, available: float}>}
+	 * @return array{state: string, available: float, onHand: float, reserved: float,
+	 *     locations: array<int, array{code: string, name: string, available: float}>}
 	 */
 	private function sum(iterable $rows, string $field, string $key): array {
 		$answer = $this->answer(state: 'ok');
@@ -211,7 +213,8 @@ class ShillinqStockReader {
 	 *
 	 * @param string $state The state.
 	 *
-	 * @return array{state: string, available: float, onHand: float, reserved: float, locations: array<int, array{code: string, name: string, available: float}>}
+	 * @return array{state: string, available: float, onHand: float, reserved: float,
+	 *     locations: array<int, array{code: string, name: string, available: float}>}
 	 */
 	private function answer(string $state): array {
 		return ['state' => $state, 'available' => 0.0, 'onHand' => 0.0, 'reserved' => 0.0, 'locations' => []];

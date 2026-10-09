@@ -7371,7 +7371,13 @@ OC.L10N.register(
         "The text that goes into the message. You can use {{client.name}}, {{contact.name}}, {{ticket.title}} and {{agent.name}}.": "De tekst die in het bericht komt. Je kunt {{client.name}}, {{contact.name}}, {{ticket.title}} en {{agent.name}} gebruiken.",
         "Where agents can pick this reply.": "Waar medewerkers dit antwoord kunnen kiezen.",
         "Shown first to clients who asked to be written to in this language. Leave empty for every language.": "Staat bovenaan bij klanten die in deze taal willen worden aangeschreven. Laat leeg voor elke taal.",
-        "Switch off to hide this reply from the list without removing it.": "Zet uit om dit antwoord uit de lijst te halen zonder het te verwijderen."
+        "Switch off to hide this reply from the list without removing it.": "Zet uit om dit antwoord uit de lijst te halen zonder het te verwijderen.",
+        "Supply": "Levering",
+        "Yes, {amount}": "Ja, {amount}",
+        "Stock is kept in shillinq, which is not installed": "De voorraad staat in shillinq, en die is niet geïnstalleerd",
+        "No access to stock in shillinq": "Geen toegang tot de voorraad in shillinq",
+        "{onHand} on hand, {reserved} reserved": "{onHand} op voorraad, {reserved} gereserveerd",
+        "Open in shillinq": "Openen in shillinq"
     },
     "nplurals=2; plural=(n != 1);"
 )
