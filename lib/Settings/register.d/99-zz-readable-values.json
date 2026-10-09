@@ -93,6 +93,8 @@
             }
           },
           "requiredResourceTypes": {
+            "title": "Required Resource Types",
+            "description": "Resource types that participate in this service (staff / room / equipment).",
             "x-enum-labels": {
               "staff": "Staff",
               "room": "Room",
@@ -107,6 +109,8 @@
             }
           },
           "multiStep": {
+            "title": "Multi Step",
+            "description": "Sequence of steps for composite services (e.g. colour application + processing gap + cut). Empty for single-step services.",
             "items": {
               "properties": {
                 "resourceType": {
