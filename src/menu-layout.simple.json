@@ -1621,6 +1621,205 @@
 					}
 				]
 			}
+		},
+		{
+			"id": "Contracts",
+			"config": {
+				"addLabel": "New contract",
+				"columns": [
+					{
+						"key": "contractNumber",
+						"label": "Contract number"
+					},
+					{
+						"key": "title",
+						"label": "Title"
+					},
+					{
+						"key": "status",
+						"label": "Status",
+						"formatter": "enumText"
+					},
+					{
+						"key": "billingInterval",
+						"label": "Billing interval",
+						"formatter": "enumText"
+					},
+					{
+						"key": "valuePerInterval",
+						"label": "Value per interval",
+						"formatter": "objectCurrency",
+						"formatterOptions": {
+							"decimals": 0
+						}
+					},
+					{
+						"key": "endDate",
+						"label": "End date"
+					}
+				]
+			}
+		},
+		{
+			"id": "Blasts",
+			"config": {
+				"addLabel": "New newsletter",
+				"columns": [
+					{
+						"key": "name",
+						"label": "Newsletter"
+					},
+					{
+						"key": "status",
+						"label": "Status",
+						"formatter": "enumText"
+					},
+					{
+						"key": "scheduledFor",
+						"label": "Scheduled for"
+					},
+					{
+						"key": "sentAt",
+						"label": "Sent on"
+					},
+					{
+						"key": "channel",
+						"label": "Channel",
+						"formatter": "enumText"
+					}
+				]
+			}
+		},
+		{
+			"id": "Campaigns",
+			"config": {
+				"columns": [
+					{
+						"key": "name",
+						"label": "Name"
+					},
+					{
+						"key": "status",
+						"label": "Status",
+						"formatter": "enumText"
+					},
+					{
+						"key": "utmCampaign",
+						"label": "UTM campaign"
+					},
+					{
+						"key": "startsAt",
+						"label": "Start date"
+					},
+					{
+						"key": "endsAt",
+						"label": "End date"
+					}
+				]
+			}
+		},
+		{
+			"id": "Articles",
+			"config": {
+				"addLabel": "New article",
+				"columns": [
+					{
+						"key": "title",
+						"label": "Title"
+					},
+					{
+						"key": "status",
+						"label": "Status",
+						"formatter": "enumText"
+					},
+					{
+						"key": "language",
+						"label": "Language",
+						"formatter": "enumText"
+					},
+					{
+						"key": "publishedAt",
+						"label": "Published on"
+					}
+				]
+			}
+		},
+		{
+			"id": "PosTransactions",
+			"title": "Transactions",
+			"config": {
+				"addLabel": "New transaction",
+				"columns": [
+					{
+						"key": "reference",
+						"label": "Reference"
+					},
+					{
+						"key": "cashier",
+						"label": "Cashier",
+						"formatter": "userDisplayName"
+					},
+					{
+						"key": "terminalId",
+						"label": "Till"
+					},
+					{
+						"key": "status",
+						"label": "Status",
+						"formatter": "enumText"
+					},
+					{
+						"key": "priceMode",
+						"label": "Price display",
+						"formatter": "enumText"
+					},
+					{
+						"key": "total",
+						"label": "Total",
+						"formatter": "objectCurrency",
+						"formatterOptions": {
+							"decimals": 2
+						}
+					}
+				]
+			}
+		},
+		{
+			"id": "CashShifts",
+			"config": {
+				"columns": [
+					{
+						"key": "reference",
+						"label": "Shift"
+					},
+					{
+						"key": "operator",
+						"label": "Cashier",
+						"formatter": "userDisplayName"
+					},
+					{
+						"key": "status",
+						"label": "Status",
+						"formatter": "enumText"
+					},
+					{
+						"key": "floatAt",
+						"label": "Opened"
+					},
+					{
+						"key": "closedAt",
+						"label": "Closed"
+					},
+					{
+						"key": "floatAmount",
+						"label": "Opening balance",
+						"formatter": "objectCurrency",
+						"formatterOptions": {
+							"decimals": 2
+						}
+					}
+				]
+			}
 		}
 	]
 }
