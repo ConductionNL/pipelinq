@@ -1,6 +1,7 @@
 {
 	"$schema": "https://raw.githubusercontent.com/ConductionNL/nextcloud-vue/main/src/schemas/app-manifest-v2.schema.json",
 	"version": "1.1.0",
+	"look": "board",
 	"dependencies": [
 		"openregister",
 		{ "id": "openconnector", "required": false, "name": "OpenConnector" },
