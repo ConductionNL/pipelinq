@@ -13,6 +13,7 @@
  * without it.
  *
  * @spec openspec/changes/simple-tour-and-readable-labels/specs/navigation-ia/spec.md#requirement-the-user-settings-show-the-installed-app-version-req-nia-108
+ * @spec openspec/changes/nextcloud-vue-2-73-1/specs/navigation-ia/spec.md
  */
 
 import { createRequire } from 'module'
@@ -22,7 +23,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 const require = createRequire(import.meta.url)
 const ROOT = path.resolve(__dirname, '../..')
 const { readInfoXmlVersion } = require(
-	path.join(ROOT, 'scripts', 'appVersionDefine.js'),
+	path.join(ROOT, 'scripts', 'readInfoXmlVersion.js'),
 )
 
 /** The `appVersion` expression webpack.config.js hands to DefinePlugin. */
@@ -75,6 +76,37 @@ describe('the appVersion define', () => {
 		expect(readInfoXmlVersion()).toMatch(/^\d+\.\d+\.\d+/)
 		expect(version).toBe(readInfoXmlVersion())
 		expect(version).not.toBe(require(path.join(ROOT, 'package.json')).version)
+	})
+
+	it('comes from the library helper, not a copy of it', () => {
+		// pipelinq#2318 carried its own copy of the helper until
+		// @conduction/nextcloud-vue 2.73 shipped `appVersionDefine`. Swap the
+		// library export for a spy and load the webpack config fresh: the
+		// config must call the library, with the app id and the info.xml
+		// version as the fallback.
+		const library = require('@conduction/nextcloud-vue/webpack')
+		const original = library.appVersionDefine
+		const calls = []
+		library.appVersionDefine = (...args) => {
+			calls.push(args)
+			return original(...args)
+		}
+		const configPath = require.resolve(path.join(ROOT, 'webpack.config.js'))
+		const cached = require.cache[configPath]
+		delete require.cache[configPath]
+		try {
+			const defines = require(configPath)
+				.plugins.filter((plugin) => plugin && plugin.definitions)
+				.map((plugin) => plugin.definitions)
+				.find((definitions) => 'appVersion' in definitions)
+			expect(calls).toEqual([['pipelinq', readInfoXmlVersion()]])
+			expect(defines.appVersion).toBe(
+				original('pipelinq', readInfoXmlVersion()),
+			)
+		} finally {
+			library.appVersionDefine = original
+			require.cache[configPath] = cached
+		}
 	})
 
 	it('ignores an empty or broken initial state', () => {

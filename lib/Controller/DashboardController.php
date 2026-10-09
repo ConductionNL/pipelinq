@@ -64,7 +64,8 @@ class DashboardController extends Controller {
 	 *
 	 * The installed version travels as `version`: the user settings footer
 	 * prints it, and the bundle reads it at run time because a build cannot
-	 * know the version it is released as (scripts/appVersionDefine.js).
+	 * know the version it is released as (`appVersionDefine` in
+	 * @conduction/nextcloud-vue/webpack).
 	 *
 	 * @return TemplateResponse The template response.
 	 *
