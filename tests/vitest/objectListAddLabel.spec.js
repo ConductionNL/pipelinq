@@ -17,8 +17,11 @@ import { describe, expect, it } from 'vitest'
 import CnObjectListWidget from '@conduction/nextcloud-vue/src/components/CnObjectListWidget/CnObjectListWidget.vue'
 
 const ROOT = path.resolve(__dirname, '../..')
-const catalogue = (lang) =>
-	JSON.parse(fs.readFileSync(path.join(ROOT, 'l10n', `${lang}.json`), 'utf8')).translations
+function catalogue(lang) {
+	return JSON.parse(
+		fs.readFileSync(path.join(ROOT, 'l10n', `${lang}.json`), 'utf8'),
+	).translations
+}
 
 describe('CnObjectListWidget Add label', () => {
 	const addLabel = CnObjectListWidget.computed.addLabel
