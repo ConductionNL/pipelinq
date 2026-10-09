@@ -22,7 +22,7 @@
 
 ## Phase 1 — Migration
 
-- [ ] 1.1 Implement `Repair\MigrateToTicketSupertype` (copy + map)
+- [x] 1.1 Implement `Repair\MigrateToTicketSupertype` (copy + map) (delivered by the one-off migration 91558d968 of 12 Jul: no pre-July install exists, decision 128, Ruben 9 Oct; no repair step is shipped)
   - **spec_ref**: `specs/unify-ticket-supertype/spec.md#requirement-lossless-migration-of-existing-records`
   - **files**: `lib/Repair/MigrateToTicketSupertype.php`, `appinfo/info.xml`
   - **acceptance_criteria**:
@@ -31,7 +31,7 @@
     - Dry-run count logged before writes; aborts cleanly if OpenRegister absent
     - Old objects left intact
 
-- [ ] 1.2 Remap intra-CRM references
+- [x] 1.2 Remap intra-CRM references (delivered by the one-off migration 91558d968 of 12 Jul: no pre-July install exists, decision 128, Ruben 9 Oct; no repair step is shipped)
   - **spec_ref**: `specs/unify-ticket-supertype/spec.md#scenario-contactmoment-parent-linkage-preserved`
   - **files**: `lib/Repair/MigrateToTicketSupertype.php`
   - **acceptance_criteria**:

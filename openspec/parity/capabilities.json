@@ -3027,7 +3027,7 @@
 				"state": "built",
 				"evidence": "lib/Service/TicketService.php:285",
 				"owner": "ConductionNL/pipelinq",
-				"change": "unify-ticket-supertype"
+				"change": "openspec/changes/archive/2026-10-09-unify-ticket-supertype"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/help-desk/create-respond-and-manage-tickets-in-help-desk \"Connect chat, email, form, calling, custom, WhatsApp and Facebook Messenger channels\" so incoming requests land in one workspace; conversations in the inbox can be answered before a ticket exists (https://knowledge.hubspot.com/inbox/hubspots-conversations-properties). Service Hub Professional, Enterprise for help desk; the conversations inbox is on all plans.",
