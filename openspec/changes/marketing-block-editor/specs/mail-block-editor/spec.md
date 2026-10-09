@@ -53,11 +53,15 @@ removable, so a template saved in Blocks mode passes the compliance check.
 
 #### Scenario: A script in a heading is not sent as code
 
+@e2e exclude server-side rendering rule, covered by MailBlockRendererTest::testAScriptInAHeadingIsText and TemplateControllerTest
+
 - GIVEN a heading block with the text `<script>alert(1)</script>`
 - WHEN the template is saved
 - THEN the stored `bodyHtml` shows that text as text and contains no script element
 
 #### Scenario: A blocks template passes compliance
+
+@e2e exclude save-path contract, covered by TemplateControllerTest::testABlocksTemplateIsRenderedOnSaveAndPassesCompliance against the real ComplianceService
 
 - GIVEN a new template in Blocks mode with only a heading and the footer
 - WHEN the marketer saves it

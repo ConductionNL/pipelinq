@@ -31,6 +31,7 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\AppInfo\Application;
+use OCA\Pipelinq\Service\Marketing\MailBlockRenderer;
 use OCA\Pipelinq\Service\Marketing\SegmentSignalService;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -900,11 +901,14 @@ class ComplianceService {
 			'replyTo' => (string)($payload['replyTo'] ?? ''),
 			'footerOverride' => (string)($payload['footerOverride'] ?? ''),
 			'articleIds' => $this->normaliseArticleIds(value: ($payload['articleIds'] ?? [])),
+			'editorMode' => 'html',
+			'blocks' => [],
 			'createdBy' => $createdByUid,
 			'createdAt' => $now,
 			'updatedAt' => $now,
 		];
 
+		$object = array_merge($object, (new MailBlockRenderer())->storedFields(input: $payload));
 		$saved = $this->saveTemplateObject(payload: $object);
 		if ($saved === null) {
 			return ['error' => 'Could not create template'];
@@ -946,6 +950,8 @@ class ComplianceService {
 		if (array_key_exists('articleIds', $patch) === true) {
 			$payload['articleIds'] = $this->normaliseArticleIds(value: $patch['articleIds']);
 		}
+
+		$payload = array_merge($payload, (new MailBlockRenderer())->storedFields(input: $patch));
 
 		$channel = strtolower((string)($existing['channel'] ?? 'email'));
 		$error = $this->validateTemplate(templateData: $payload, channel: $channel);

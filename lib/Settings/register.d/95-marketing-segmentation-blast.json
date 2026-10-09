@@ -140,6 +140,26 @@
             "description": "Reply-To address for email.",
             "title": "Reply To"
           },
+          "blocks": {
+            "type": "array",
+            "title": "Blocks",
+            "description": "The blocks an email template is built from in Blocks mode, in order. Saving renders the HTML and plain text bodies from them.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {"type": "string", "title": "Id", "description": "The block's id within the template."},
+                "type": {"type": "string", "title": "Type", "description": "The kind of block.", "enum": ["heading", "text", "image", "button", "divider", "spacer", "articles", "footer"]},
+                "props": {"type": "object", "title": "Properties", "description": "The block's content: text, markdown, an address, a label."}
+              }
+            }
+          },
+          "editorMode": {
+            "type": "string",
+            "title": "Editor mode",
+            "description": "How the email body is edited: built from blocks, or written as HTML.",
+            "enum": ["blocks", "html"],
+            "default": "html"
+          },
           "footerOverride": {
             "type": "string",
             "description": "The sender's physical address every email must carry (CAN-SPAM). Required for email templates. It is placed at {{physical_address}}, {{sender_address}}, {{company_address}} or {{address_block}} in the body, or appended when the body has none.",

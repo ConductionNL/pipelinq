@@ -350,4 +350,35 @@ class PortalRequestServiceTest extends TestCase {
 
 		return $base;
 	}//end deepMerge()
+	/**
+	 * The back-office preview is the portal's own detail, byte for byte.
+	 *
+	 * A preview that restated the portal's rules would drift from them; this
+	 * fails the moment the portal response and the preview differ.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/resident-view-preview/spec.md#requirement-a-request-ticket-previews-the-residents-view-req-rvp-001
+	 */
+	public function testThePreviewEqualsThePortalDetail(): void {
+		$account = $this->portalRepo->seed('crmPortalAccount', 'acc-a', ['linkedContactId' => 'contact-a']);
+		$this->reader->seed('ticket', 'r1', [
+			'ticketType' => 'request',
+			'contact' => 'contact-a',
+			'title' => 'Mine',
+			'notes' => 'internal note',
+			'assignee' => 'm.bakker',
+			'customerMessage' => 'Please send a copy.',
+		]);
+		$ticket = $this->reader->find('ticket', 'r1');
+
+		foreach ([false, true] as $expose) {
+			$this->assertSame(
+				$this->service->getDetailForAccount($account, 'r1', $expose),
+				$this->service->previewDetail(ticket: $ticket, exposeAssigneeName: $expose)
+			);
+		}
+
+		$this->assertNull($this->service->previewDetail(ticket: ['ticketType' => 'complaint'], exposeAssigneeName: false));
+	}//end testThePreviewEqualsThePortalDetail()
 }//end class

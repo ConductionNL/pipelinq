@@ -2962,7 +2962,7 @@
 				"state": "built",
 				"evidence": "lib/Service/SurveyDispatchService.php:336. Corrections round 8 (2026-09-28), pipelinq#2072: onInteractionCompleted() (lib/Service/SurveyDispatchService.php:336-366) has no production caller: no class in lib/Listener and nothing in lib/AppInfo/Application.php refers to a survey, so no invitation is ever scheduled and lib/BackgroundJob/SurveyInvitationDispatchJob.php:129 finds nothing to send, at 9a5e95c.",
 				"owner": "ConductionNL/pipelinq",
-				"change": "customer-satisfaction-closed-loop"
+				"change": "openspec/changes/archive/2026-10-09-customer-satisfaction-closed-loop"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/customer-feedback/how-do-i-send-a-customer-support-survey a Customer Effort Score survey is sent per pipeline and ticket status, \"Immediately: the survey will be sent immediately after the ticket is closed\". Service Hub Professional, Enterprise. Note: Was partial for the tier; rated by what a buyer can get.",
@@ -3027,7 +3027,7 @@
 				"state": "built",
 				"evidence": "lib/Service/TicketService.php:285",
 				"owner": "ConductionNL/pipelinq",
-				"change": "unify-ticket-supertype"
+				"change": "openspec/changes/archive/2026-10-09-unify-ticket-supertype"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/help-desk/create-respond-and-manage-tickets-in-help-desk \"Connect chat, email, form, calling, custom, WhatsApp and Facebook Messenger channels\" so incoming requests land in one workspace; conversations in the inbox can be answered before a ticket exists (https://knowledge.hubspot.com/inbox/hubspots-conversations-properties). Service Hub Professional, Enterprise for help desk; the conversations inbox is on all plans.",
@@ -3431,7 +3431,7 @@
 				"state": "built",
 				"evidence": "lib/Service/ArticleService.php:185",
 				"owner": "ConductionNL/pipelinq",
-				"change": "marketing-article-hub"
+				"change": "openspec/changes/archive/2026-10-09-marketing-article-hub"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/help-desk/use-the-updated-reply-editor-in-help-desk \"To add a document, snippet, meeting link, knowledge base article, quote, or video in your response, click Insert\" inside the ticket reply. Service Hub Professional, Enterprise (the knowledge base itself: https://knowledge.hubspot.com/knowledge-base/create-and-customize-knowledge-base-articles).",
@@ -3499,7 +3499,7 @@
 				"state": "built",
 				"evidence": "lib/Service/SatisfactionAggregationService.php:97",
 				"owner": "ConductionNL/pipelinq",
-				"change": "customer-satisfaction-closed-loop"
+				"change": "openspec/changes/archive/2026-10-09-customer-satisfaction-closed-loop"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/customer-feedback/how-do-i-send-a-customer-loyalty-survey \"Customer loyalty (NPS) surveys track how likely your customers are to recommend your company\"; responses land on the contact and drive workflows to follow up detractors (https://knowledge.hubspot.com/customer-feedback/analyze-survey-responses). Service Hub Professional, Enterprise. Note: Was partial for the tier.",
@@ -3939,7 +3939,7 @@
 			"id": "work-letter-template",
 			"area": "work",
 			"name": "Produce a letter from a template filled with the client's details",
-			"pipelinq": "partial",
+			"pipelinq": "yes",
 			"hubspot-crm": "unknown",
 			"pipedrive": "partial",
 			"espocrm": "yes",
@@ -3950,14 +3950,14 @@
 			"feature": "my-work",
 			"featureConfidence": "medium",
 			"built": {
-				"state": "specified",
-				"evidence": "lib/Service/TemplateRenderer.php:77 \"render(array $template, array $variables)\" fills {{var}} placeholders for mail templates (Templates page, src/manifest.d/75-marketing-blasts.json:16) and lib/Settings/register.d/85-berichtenbox-templates.json holds Berichtenbox message templates; no letter or document (PDF, docx) is produced for one client",
+				"state": "built",
+				"evidence": "lib/Service/Letter/FilinqLetterAdapter.php (lists filinq templates in the pipelinq namespace, has filinq render a PDF with a copy in the user's Files), lib/Controller/LetterController.php (GET /api/letters/templates, POST /api/clients/{id}/letters, per-object guard, the letter logged as an outbound interaction ticket with channel brief), src/modals/LetterFromTemplateModal.vue opened by the Make a letter header action on ClientDetail and TicketDetail",
 				"owner": "ConductionNL/pipelinq",
-				"reachedOn": "Templates, TemplateNew, TemplateEdit",
-				"readOn": "2026-09-26",
-				"change": "work-letter-from-filinq-template"
+				"reachedOn": "Client and ticket detail, Actions menu, Make a letter (when filinq is installed)",
+				"readOn": "2026-09-30",
+				"change": "openspec/changes/archive/2026-09-30-work-letter-from-filinq-template"
 			},
-			"note": "templates exist for mail and Berichtenbox, not for a printable letter. Specified 2026-09-28 in openspec/changes/work-letter-from-filinq-template (OpenSpec pass).",
+			"note": "templates exist for mail and Berichtenbox, not for a printable letter. Specified 2026-09-28 in openspec/changes/work-letter-from-filinq-template (OpenSpec pass). Built 2026-09-30: filinq renders the letter, pipelinq picks the template and logs the letter on the client.",
 			"evidence": {
 				"hubspot-crm": "not checked: HubSpot has email templates, quotes and a documents library (https://knowledge.hubspot.com/documents/use-documents, Sales or Service Hub Starter and up) but no article describes generating a printable letter filled with record data (read 2026-09-26).",
 				"pipedrive": "https://support.pipedrive.com/en/article/what-features-do-the-pipedrive-plans-have Smart Docs creates documents from templates with CRM data from Google Drive, OneDrive or SharePoint (\"Included on Premium and higher plans\", add-on below); https://support.pipedrive.com/en/article/smart-docs covers templates and sharing. A letter from a template is possible; partial by the lane rule for Smart Docs. Note: Read from the web.archive.org copy (what-features-do-the-pipedrive-plans-have 2026-08-24; smart-docs 2026-05-19) because the live knowledge base answered 429.",
@@ -4782,7 +4782,7 @@
 				"state": "built",
 				"evidence": "lib/Service/SocialPostService.php:251",
 				"owner": "ConductionNL/pipelinq",
-				"change": "social-publishing"
+				"change": "openspec/changes/archive/2026-10-09-social-publishing"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/social/create-and-publish-social-posts \"create and publish social posts across multiple networks simultaneously ... before scheduling it for peak engagement times\". Marketing Hub Professional, Enterprise. Note: Was partial for the tier.",
@@ -10570,12 +10570,12 @@
 			"feature": "customer-portal",
 			"featureConfidence": "high",
 			"built": {
-				"state": "specified",
-				"evidence": "lib/Service/Portal/PortalRequestService.php presentSummary and presentDetail fix in code what a resident reads (number, subject, category, status, date, description, assignee only when the tenant allows it); :519 customerNotes shows the ticket's customerMessage and the resident's portalReplies and never the internal notes string. On TicketDetail the field 'Message to the customer' says it is shown in the portal; the rest of the set has no marker or preview there",
+				"state": "built",
+				"evidence": "src/components/ResidentViewSection.vue on TicketDetail, fed by lib/Controller/ResidentViewController.php (GET /api/tickets/{id}/resident-view), which builds both panels with PortalRequestService::previewDetail() and PortalContributionProvider",
 				"owner": "ConductionNL/pipelinq",
-				"reachedOn": "portal request detail; TicketDetail field 'Message to the customer'",
-				"readOn": "2026-09-27",
-				"change": "portal-resident-view-preview"
+				"reachedOn": "TicketDetail, section What the resident sees (request tickets)",
+				"readOn": "2026-10-09",
+				"change": "openspec/changes/archive/2026-10-09-portal-resident-view-preview"
 			},
 			"note": "lead: since pipelinq#2038 the handler's message to the customer is its own ticket field; the back office still has no preview of the whole resident view. Specified 2026-09-28 in openspec/changes/portal-resident-view-preview (OpenSpec pass).",
 			"evidence": {

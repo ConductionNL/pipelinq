@@ -468,7 +468,7 @@ class SurveyDispatchService {
 	}//end write()
 
 	/**
-	 * The response rate of a set of invitations.
+	 * The response rate of a set of invitations, with the same figures per channel.
 	 *
 	 * Suppressed and failed invitations are excluded from the DENOMINATOR and
 	 * reported as counts of their own: a survey nobody was sent has no
@@ -477,34 +477,30 @@ class SurveyDispatchService {
 	 *
 	 * @param array<int, array<string, mixed>> $invitations The invitations.
 	 *
-	 * @return array{delivered: int, responded: int, rate: float, suppressed: int, failed: int}
-	 *   The figures.
+	 * @return array<string, mixed> delivered, responded, rate, suppressed, failed, byChannel.
 	 *
 	 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-response-rate-analytics
 	 */
 	public function responseRate(array $invitations): array {
-		$counts = ['sent' => 0, 'responded' => 0, 'suppressed' => 0, 'failed' => 0];
+		$figures = new SurveyInvitationFigures();
+		$out     = $figures->rate(invitations: $invitations);
+		$out['byChannel'] = $figures->byChannel(invitations: $invitations);
 
-		foreach ($invitations as $invitation) {
-			$status = (string)($invitation['status'] ?? '');
-			if (isset($counts[$status]) === true) {
-				$counts[$status]++;
-			}
-		}
-
-		$delivered = ($counts['sent'] + $counts['responded']);
-
-		$rate = 0.0;
-		if ($delivered !== 0) {
-			$rate = round((($counts['responded'] / $delivered) * 100), 1);
-		}
-
-		return [
-			'delivered' => $delivered,
-			'responded' => $counts['responded'],
-			'rate' => $rate,
-			'suppressed' => $counts['suppressed'],
-			'failed' => $counts['failed'],
-		];
+		return $out;
 	}//end responseRate()
+
+	/**
+	 * The invitations that fell due in the last `$days` days.
+	 *
+	 * @param array<int, array<string, mixed>> $invitations The invitations.
+	 * @param int                              $days        The period; 0 or less keeps all.
+	 * @param DateTimeImmutable|null           $now         The clock, for tests.
+	 *
+	 * @return array<int, array<string, mixed>> The invitations inside the period.
+	 *
+	 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-response-rate-analytics
+	 */
+	public function withinDays(array $invitations, int $days, ?DateTimeImmutable $now = null): array {
+		return (new SurveyInvitationFigures())->withinDays(invitations: $invitations, days: $days, now: $now);
+	}//end withinDays()
 }//end class

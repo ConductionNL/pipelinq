@@ -61,13 +61,18 @@ class SurveyInvitationSender {
 	/**
 	 * The absolute link an invitation's token opens.
 	 *
+	 * It opens the public survey page in the customer portal
+	 * (`/portal/survey/{token}`), which reads and answers the survey through
+	 * the JSON endpoint under `/survey/i/{token}`.
+	 *
 	 * @param string $token The per-invitation token.
 	 *
 	 * @return string The url.
+	 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-survey-fatigue-throttling-and-opt-out
 	 */
 	public function linkFor(string $token): string {
 		return $this->urlGenerator->getAbsoluteURL(
-			'/index.php/apps/pipelinq/survey/i/' . rawurlencode($token)
+			'/index.php/apps/pipelinq/portal/survey/' . rawurlencode($token)
 		);
 	}//end linkFor()
 

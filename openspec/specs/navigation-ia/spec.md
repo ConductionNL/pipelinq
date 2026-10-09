@@ -1,7 +1,7 @@
 # navigation-ia Specification
 
 ## Purpose
-TBD - created by archiving change pipelinq-hr-moveout-and-admin-dedupe. Update Purpose after archive.
+How pipelinq's menu, pages and tours are laid out: which entries each menu profile shows, where a tour may start, and what the user settings show about the installed app.
 
 ## Requirements
 
@@ -81,3 +81,32 @@ the board the item opens.
 - GIVEN the full menu structure
 - WHEN a user scans the navigation
 - THEN the Pipeline item shows a column board icon
+
+### Requirement: The appVersion define comes from the shared library (REQ-NIA-109)
+pipelinq's webpack config MUST define `appVersion` with `appVersionDefine`
+from `@conduction/nextcloud-vue/webpack`, with the app id `pipelinq` and the
+`appinfo/info.xml` version as the fallback. pipelinq MUST NOT carry its own
+copy of that helper.
+
+#### Scenario: The webpack config builds the define
+@e2e exclude Asserted in tests/vitest/appVersionDefine.spec.js: the library export is replaced by a spy and the config is loaded fresh.
+- **GIVEN** pipelinq depends on @conduction/nextcloud-vue 2.73.1 or later
+- **WHEN** webpack loads `webpack.config.js`
+- **THEN** the config MUST call the library's `appVersionDefine('pipelinq', <info.xml version>)`
+- **AND** the user settings footer MUST read the installed version, as REQ-NIA-108 asks
+
+### Requirement: Every tour step has a title (REQ-NAV-TOUR-TITLES)
+Every step of every tour pipelinq ships, in the simple and the full structure,
+MUST declare a title. Every title MUST have an en and an nl catalogue entry.
+
+#### Scenario: The simple menu tour
+@e2e exclude Asserted in tests/vitest/tourStepTitles.spec.js on the shipped manifest and menu layouts; the library renders the step title.
+- **GIVEN** a user of the simple menu starts the tour
+- **WHEN** they reach step 2 of 8
+- **THEN** the dialog MUST show the title "Questions and reports" after "Step 2 of 8:"
+
+#### Scenario: A tour added later
+@e2e exclude Asserted in tests/vitest/tourStepTitles.spec.js, which walks every tour in the manifest, its fragments and both menu layouts.
+- **GIVEN** a developer adds a step without a title to any tour
+- **WHEN** the unit tests run
+- **THEN** they MUST fail and name the tour and the step

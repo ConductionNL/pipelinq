@@ -16,6 +16,9 @@
  * Covers, from openspec/changes/customer-satisfaction-closed-loop:
  *   "Submit via invitation link" and "Single use enforced"
  *   "Empty state without responses"
+ *   the public survey page (PublicSurveyForm) with its opt-out box, the
+ *   client page's satisfaction panel and the Operational overview's
+ *   response-rate widget
  */
 import type { Page } from '@playwright/test'
 
@@ -207,5 +210,79 @@ test.describe('customer satisfaction, closed loop', () => {
 				'failed',
 			]),
 		)
+	})
+	test('a resident answers on the public survey page (PublicSurveyForm) and opts out', async ({
+		page,
+		browser,
+	}) => {
+		await openApp(page)
+		const client = await seed(page, 'client', {
+			name: `E2E kto pagina ${STAMP}`,
+			type: 'organization',
+			contactsUid: `e2e-kto-pagina-${STAMP}`,
+		})
+		const survey = await seed(page, 'satisfactionSurvey', {
+			title: `E2E KTO pagina ${STAMP}`,
+			questions: [
+				{
+					key: 'recommend',
+					label: 'Would you recommend us?',
+					kind: 'nps',
+					required: true,
+				},
+			],
+			active: true,
+		})
+		const token = `e2e-page-${STAMP}`
+		await seed(page, 'satisfactionSurveyInvitation', {
+			token,
+			surveyRef: survey,
+			clientRef: client,
+			contactRef: `e2e-kto-pagina-${STAMP}`,
+			channel: 'email',
+			status: 'sent',
+			expiresAt: new Date(Date.now() + 7 * 864e5).toISOString(),
+		})
+
+		// A resident has no Nextcloud session: open the link in a fresh context.
+		const resident = await browser.newContext()
+		const form = await resident.newPage()
+		await form.goto(`/index.php/apps/pipelinq/portal/survey/${token}`)
+		await expect(form.getByText('Would you recommend us?')).toBeVisible({
+			timeout: 30000,
+		})
+		await form.getByLabel('8', { exact: true }).check()
+		await form.getByTestId('survey-opt-out').check()
+		await form.getByRole('button', { name: 'Send my answers' }).click()
+		await expect(
+			form.getByText('We will not send you satisfaction surveys again.'),
+		).toBeVisible()
+
+		await form.reload()
+		await expect(form.getByText('This survey is closed')).toBeVisible({
+			timeout: 30000,
+		})
+		await resident.close()
+	})
+
+	test('the client page and the Operational overview show satisfaction', async ({
+		page,
+	}) => {
+		await openApp(page)
+		const client = await seed(page, 'client', {
+			name: `E2E paneel ${STAMP}`,
+			type: 'organization',
+			contactsUid: `e2e-paneel-${STAMP}`,
+		})
+
+		await page.goto(`/index.php/apps/pipelinq/clients/${client}`)
+		await expect(page.getByTestId('client-satisfaction-empty')).toBeVisible({
+			timeout: 30000,
+		})
+
+		await page.goto('/index.php/apps/pipelinq/operational')
+		await expect(page.getByText('Survey response rate').first()).toBeVisible({
+			timeout: 30000,
+		})
 	})
 })
