@@ -981,7 +981,10 @@
 								"field": "value",
 								"filter": { "status": "open" }
 							},
-							"target": { "kind": "static", "value": "@config.pipelineTarget" },
+							"target": {
+								"kind": "static",
+								"value": "@config.pipelineTarget"
+							},
 							"thresholds": {
 								"warn": 60,
 								"danger": 90,
@@ -1624,7 +1627,30 @@
 				"schema": "client",
 				"createModal": "ClientCreateDialog",
 				"fieldOverrides": {
-					"industry": { "widget": "multiselect", "items": { "type": "string", "enum": ["Agriculture", "Construction", "Consultancy", "Education", "Energy", "Finance and insurance", "Healthcare", "Hospitality", "ICT", "Logistics", "Manufacturing", "Non-profit", "Public sector", "Real estate", "Retail", "Wholesale"] } },
+					"industry": {
+						"widget": "multiselect",
+						"items": {
+							"type": "string",
+							"enum": [
+								"Agriculture",
+								"Construction",
+								"Consultancy",
+								"Education",
+								"Energy",
+								"Finance and insurance",
+								"Healthcare",
+								"Hospitality",
+								"ICT",
+								"Logistics",
+								"Manufacturing",
+								"Non-profit",
+								"Public sector",
+								"Real estate",
+								"Retail",
+								"Wholesale"
+							]
+						}
+					},
 					"name": { "readOnly": false },
 					"email": { "readOnly": false },
 					"phone": { "readOnly": false },
@@ -1659,7 +1685,30 @@
 				"register": "pipelinq",
 				"schema": "client",
 				"fieldOverrides": {
-					"industry": { "widget": "multiselect", "items": { "type": "string", "enum": ["Agriculture", "Construction", "Consultancy", "Education", "Energy", "Finance and insurance", "Healthcare", "Hospitality", "ICT", "Logistics", "Manufacturing", "Non-profit", "Public sector", "Real estate", "Retail", "Wholesale"] } },
+					"industry": {
+						"widget": "multiselect",
+						"items": {
+							"type": "string",
+							"enum": [
+								"Agriculture",
+								"Construction",
+								"Consultancy",
+								"Education",
+								"Energy",
+								"Finance and insurance",
+								"Healthcare",
+								"Hospitality",
+								"ICT",
+								"Logistics",
+								"Manufacturing",
+								"Non-profit",
+								"Public sector",
+								"Real estate",
+								"Retail",
+								"Wholesale"
+							]
+						}
+					},
 					"name": { "readOnly": false },
 					"email": { "readOnly": false },
 					"phone": { "readOnly": false },
@@ -1673,7 +1722,12 @@
 						"type": "open-modal",
 						"target": "LetterFromTemplateModal",
 						"icon": "FileDocumentOutline",
-						"visibleWhen": { "endpoint": "/apps/pipelinq/api/letters/templates", "field": "available", "op": "eq", "value": true }
+						"visibleWhen": {
+							"endpoint": "/apps/pipelinq/api/letters/templates",
+							"field": "available",
+							"op": "eq",
+							"value": true
+						}
 					}
 				],
 				"documentationUrl": "https://pipelinq.conduction.nl",
@@ -1704,11 +1758,7 @@
 						"content": {
 							"title": "Account",
 							"columns": 2,
-							"include": [
-								"type",
-								"industry",
-								"notes"
-							]
+							"include": ["type", "industry", "notes"]
 						}
 					},
 					{
@@ -2534,7 +2584,12 @@
 						"type": "open-modal",
 						"target": "LetterFromTemplateModal",
 						"icon": "FileDocumentOutline",
-						"visibleWhen": { "endpoint": "/apps/pipelinq/api/letters/templates", "field": "available", "op": "eq", "value": true }
+						"visibleWhen": {
+							"endpoint": "/apps/pipelinq/api/letters/templates",
+							"field": "available",
+							"op": "eq",
+							"value": true
+						}
 					},
 					{
 						"id": "assign-to-me",
@@ -2556,7 +2611,14 @@
 						"type": "data",
 						"title": "Ticket details",
 						"icon": "FileDocument",
-						"content": { "title": "Ticket details", "columns": 2, "hideEmpty": true, "overrides": { "assignee": { "formatter": "userDisplayName" } } }
+						"content": {
+							"title": "Ticket details",
+							"columns": 2,
+							"hideEmpty": true,
+							"overrides": {
+								"assignee": { "formatter": "userDisplayName" }
+							}
+						}
 					},
 					{
 						"id": "ticket-related",
@@ -2636,8 +2698,8 @@
 						"props": {
 							"ticketId": "@objectId",
 							"ticketType": "@object.ticketType",
-							"customerMessage": "@object.customerMessage?",
-							"status": "@object.status?"
+							"customerMessage": "@object.customerMessage",
+							"status": "@object.status"
 						}
 					},
 					{
@@ -3657,7 +3719,11 @@
 					{ "key": "type", "label": "Type" },
 					{ "key": "status", "label": "Status" },
 					{ "key": "priority", "label": "Priority" },
-					{ "key": "assigneeUserId", "label": "Assignee", "formatter": "userDisplayName" },
+					{
+						"key": "assigneeUserId",
+						"label": "Assignee",
+						"formatter": "userDisplayName"
+					},
 					{ "key": "deadline", "label": "Deadline" }
 				],
 				"sidebar": {
@@ -3682,7 +3748,13 @@
 						"type": "data",
 						"title": "Task",
 						"icon": "ClipboardCheckOutline",
-						"content": { "columns": 2, "overrides": { "assigneeUserId": { "formatter": "userDisplayName" }, "createdBy": { "formatter": "userDisplayName" } } }
+						"content": {
+							"columns": 2,
+							"overrides": {
+								"assigneeUserId": { "formatter": "userDisplayName" },
+								"createdBy": { "formatter": "userDisplayName" }
+							}
+						}
 					},
 					{
 						"id": "task-related",
@@ -3774,7 +3846,12 @@
 					},
 					{ "key": "type", "label": "Type" },
 					{ "key": "status", "label": "Status" },
-					{ "key": "unitPrice", "label": "Price", "formatter": "objectCurrency", "formatterOptions": { "decimals": 2 } }
+					{
+						"key": "unitPrice",
+						"label": "Price",
+						"formatter": "objectCurrency",
+						"formatterOptions": { "decimals": 2 }
+					}
 				],
 				"sidebar": {
 					"enabled": true,
@@ -3843,12 +3920,30 @@
 									"key": "lead",
 									"label": "Lead",
 									"widget": "fkResolve",
-									"widgetProps": { "register": "pipelinq", "schema": "lead", "labelField": "title" }
+									"widgetProps": {
+										"register": "pipelinq",
+										"schema": "lead",
+										"labelField": "title"
+									}
 								},
 								{ "key": "quantity", "label": "Qty" },
-								{ "key": "unitPrice", "label": "Unit price", "format": { "style": "currency", "currency": "@config.currency" } },
+								{
+									"key": "unitPrice",
+									"label": "Unit price",
+									"format": {
+										"style": "currency",
+										"currency": "@config.currency"
+									}
+								},
 								{ "key": "discount", "label": "Discount %" },
-								{ "key": "total", "label": "Line total", "format": { "style": "currency", "currency": "@config.currency" } }
+								{
+									"key": "total",
+									"label": "Line total",
+									"format": {
+										"style": "currency",
+										"currency": "@config.currency"
+									}
+								}
 							],
 							"limit": 25,
 							"allowCreate": false,
@@ -4098,7 +4193,12 @@
 						"type": "data",
 						"title": "Refund",
 						"icon": "FileDocument",
-						"content": { "columns": 2, "overrides": { "cashier": { "formatter": "userDisplayName" } } }
+						"content": {
+							"columns": 2,
+							"overrides": {
+								"cashier": { "formatter": "userDisplayName" }
+							}
+						}
 					},
 					{
 						"id": "pos-refund-kpis-refund-amount",
@@ -4280,7 +4380,13 @@
 						"type": "data",
 						"title": "Shift",
 						"icon": "FileDocument",
-						"content": { "columns": 2, "overrides": { "operator": { "formatter": "userDisplayName" }, "managedBy": { "formatter": "userDisplayName" } } }
+						"content": {
+							"columns": 2,
+							"overrides": {
+								"operator": { "formatter": "userDisplayName" },
+								"managedBy": { "formatter": "userDisplayName" }
+							}
+						}
 					},
 					{
 						"id": "shift-kpis-opening-float",
@@ -4668,7 +4774,12 @@
 						"type": "data",
 						"title": "Transaction",
 						"icon": "FileDocument",
-						"content": { "columns": 2, "overrides": { "cashier": { "formatter": "userDisplayName" } } }
+						"content": {
+							"columns": 2,
+							"overrides": {
+								"cashier": { "formatter": "userDisplayName" }
+							}
+						}
 					},
 					{
 						"id": "pos-tx-kpis-line-items",

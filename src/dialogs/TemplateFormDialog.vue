@@ -563,6 +563,9 @@ export default {
 			return this.model.bodyHtml.trim() === ''
 		},
 
+		/**
+		 * @spec openspec/changes/marketing-block-editor/specs/mail-block-editor/spec.md#requirement-the-preview-shows-what-will-be-sent-req-mbe-002
+		 */
 		previewDocument() {
 			const csp =
 				"default-src 'none'; style-src 'unsafe-inline'; img-src data: https:; font-src data: https:"
@@ -713,6 +716,9 @@ export default {
 
 		'model.blocks': {
 			deep: true,
+			/**
+			 * @spec openspec/changes/marketing-block-editor/specs/mail-block-editor/spec.md#requirement-the-preview-shows-what-will-be-sent-req-mbe-002
+			 */
 			handler() {
 				this.refreshBlocksPreview()
 			},
@@ -722,6 +728,12 @@ export default {
 			this.refreshBlocksPreview()
 		},
 
+		/**
+		 * Render the blocks when the preview opens.
+		 *
+		 * @param {boolean} open Whether the preview is open.
+		 * @spec openspec/changes/marketing-block-editor/specs/mail-block-editor/spec.md#requirement-the-preview-shows-what-will-be-sent-req-mbe-002
+		 */
 		previewing(open) {
 			if (open) {
 				this.refreshBlocksPreview()

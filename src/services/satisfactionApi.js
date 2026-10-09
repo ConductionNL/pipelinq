@@ -18,6 +18,7 @@ import { generateUrl } from '@nextcloud/router'
  * @param {number} [options.days] The period in days, 0 for all time.
  * @param {string} [options.surveyId] One survey, or every survey.
  * @return {Promise<object>} delivered, responded, rate, suppressed, failed, byChannel.
+ * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-response-rate-analytics
  */
 export async function fetchResponseRate({ days = 0, surveyId = '' } = {}) {
 	const params = {}

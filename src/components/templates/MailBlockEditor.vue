@@ -296,6 +296,7 @@ export default {
 		 * The blocks with one footer, last.
 		 *
 		 * @return {Array<object>} The blocks.
+		 * @spec openspec/changes/marketing-block-editor/specs/mail-block-editor/spec.md#requirement-a-marketer-builds-an-email-template-from-blocks-req-mbe-001
 		 */
 		blocks() {
 			return withFooterLast(this.modelValue)
@@ -305,6 +306,7 @@ export default {
 		 * The palette entries.
 		 *
 		 * @return {Array<{type: string}>} One per addable type.
+		 * @spec openspec/changes/marketing-block-editor/specs/mail-block-editor/spec.md#requirement-a-marketer-builds-an-email-template-from-blocks-req-mbe-001
 		 */
 		paletteItems() {
 			return ADDABLE_TYPES.map((type) => ({ type }))
@@ -314,6 +316,7 @@ export default {
 		 * The block whose properties are open.
 		 *
 		 * @return {object|null} The block.
+		 * @spec openspec/changes/marketing-block-editor/specs/mail-block-editor/spec.md#requirement-a-marketer-builds-an-email-template-from-blocks-req-mbe-001
 		 */
 		selected() {
 			return this.blocks.find((b) => b.id === this.selectedId) || null
@@ -323,6 +326,7 @@ export default {
 		 * The footer's own text, without the fixed tokens.
 		 *
 		 * @return {string} The text.
+		 * @spec openspec/changes/marketing-block-editor/specs/mail-block-editor/spec.md#requirement-a-marketer-builds-an-email-template-from-blocks-req-mbe-001
 		 */
 		footerText() {
 			const text = (this.selected && this.selected.props.text) || ''
@@ -338,6 +342,7 @@ export default {
 		 * Emit a new block list.
 		 *
 		 * @param {Array<object>} blocks The blocks.
+		 * @spec openspec/changes/marketing-block-editor/specs/mail-block-editor/spec.md#requirement-a-marketer-builds-an-email-template-from-blocks-req-mbe-001
 		 */
 		emitBlocks(blocks) {
 			this.$emit('update:modelValue', withFooterLast(blocks))
@@ -347,6 +352,7 @@ export default {
 		 * Add a block above the footer and open it.
 		 *
 		 * @param {string} type The block type.
+		 * @spec openspec/changes/marketing-block-editor/specs/mail-block-editor/spec.md#requirement-a-marketer-builds-an-email-template-from-blocks-req-mbe-001
 		 */
 		add(type) {
 			const next = addBlock(this.blocks, type)
@@ -359,6 +365,7 @@ export default {
 		 *
 		 * @param {{type: string}} item The palette entry.
 		 * @return {object} The new block.
+		 * @spec openspec/changes/marketing-block-editor/specs/mail-block-editor/spec.md#requirement-a-marketer-builds-an-email-template-from-blocks-req-mbe-001
 		 */
 		cloneFromPalette(item) {
 			return newBlock(item.type)
@@ -368,6 +375,7 @@ export default {
 		 * Open the block a palette drag dropped.
 		 *
 		 * @param {object} event The sortable event.
+		 * @spec openspec/changes/marketing-block-editor/specs/mail-block-editor/spec.md#requirement-a-marketer-builds-an-email-template-from-blocks-req-mbe-001
 		 */
 		onPaletteDrop(event) {
 			if (
@@ -385,6 +393,7 @@ export default {
 		 * A drag in the list: keep the footer last.
 		 *
 		 * @param {Array<object>} blocks The list after the drag.
+		 * @spec openspec/changes/marketing-block-editor/specs/mail-block-editor/spec.md#requirement-a-marketer-builds-an-email-template-from-blocks-req-mbe-001
 		 */
 		onListChange(blocks) {
 			this.emitBlocks(blocks)
@@ -395,6 +404,7 @@ export default {
 		 *
 		 * @param {object} event The sortable move event.
 		 * @return {boolean} Whether the move is allowed.
+		 * @spec openspec/changes/marketing-block-editor/specs/mail-block-editor/spec.md#requirement-a-marketer-builds-an-email-template-from-blocks-req-mbe-001
 		 */
 		canDragTo(event) {
 			const related = event.relatedContext && event.relatedContext.element
@@ -406,6 +416,7 @@ export default {
 		 *
 		 * @param {number} index The block.
 		 * @param {number} delta -1 up, +1 down.
+		 * @spec openspec/changes/marketing-block-editor/specs/mail-block-editor/spec.md#requirement-a-marketer-builds-an-email-template-from-blocks-req-mbe-001
 		 */
 		move(index, delta) {
 			const block = this.blocks[index]
@@ -437,6 +448,7 @@ export default {
 		 * Remove a block.
 		 *
 		 * @param {number} index The block.
+		 * @spec openspec/changes/marketing-block-editor/specs/mail-block-editor/spec.md#requirement-a-marketer-builds-an-email-template-from-blocks-req-mbe-001
 		 */
 		remove(index) {
 			if (this.blocks[index] && this.blocks[index].id === this.selectedId) {
@@ -450,6 +462,7 @@ export default {
 		 *
 		 * @param {string} key The property.
 		 * @param {string|number} value The value.
+		 * @spec openspec/changes/marketing-block-editor/specs/mail-block-editor/spec.md#requirement-a-marketer-builds-an-email-template-from-blocks-req-mbe-001
 		 */
 		setProp(key, value) {
 			const next = this.blocks.map((b) =>
@@ -464,6 +477,7 @@ export default {
 		 * Set the footer text; the fixed tokens are added back after it.
 		 *
 		 * @param {string} text The marketer's text.
+		 * @spec openspec/changes/marketing-block-editor/specs/mail-block-editor/spec.md#requirement-a-marketer-builds-an-email-template-from-blocks-req-mbe-001
 		 */
 		setFooterText(text) {
 			const own = FOOTER_TOKENS.reduce(
@@ -478,6 +492,7 @@ export default {
 		 *
 		 * @param {string} type The type.
 		 * @return {string} The label.
+		 * @spec openspec/changes/marketing-block-editor/specs/mail-block-editor/spec.md#requirement-a-marketer-builds-an-email-template-from-blocks-req-mbe-001
 		 */
 		typeLabel(type) {
 			return (
@@ -499,6 +514,7 @@ export default {
 		 *
 		 * @param {object} block The block.
 		 * @return {string} The summary.
+		 * @spec openspec/changes/marketing-block-editor/specs/mail-block-editor/spec.md#requirement-a-marketer-builds-an-email-template-from-blocks-req-mbe-001
 		 */
 		summary(block) {
 			const p = block.props || {}

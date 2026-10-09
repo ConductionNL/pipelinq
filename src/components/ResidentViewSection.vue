@@ -152,6 +152,7 @@ export default {
 		 * The resident portal's fields, in the order the portal shows them.
 		 *
 		 * @return {Array<{label: string, value: string}>} The rows.
+		 * @spec openspec/specs/resident-view-preview/spec.md#requirement-a-request-ticket-previews-the-residents-view-req-rvp-001
 		 */
 		bespokeRows() {
 			const b = (this.view && this.view.bespoke) || {}
@@ -176,6 +177,7 @@ export default {
 		 * The ticket fields no portal shows.
 		 *
 		 * @return {Array<string>} The field names.
+		 * @spec openspec/specs/resident-view-preview/spec.md#requirement-a-request-ticket-previews-the-residents-view-req-rvp-001
 		 */
 		internalFields() {
 			return this.view && Array.isArray(this.view.internalFields)
@@ -185,19 +187,31 @@ export default {
 	},
 
 	watch: {
+		/**
+		 * @spec openspec/specs/resident-view-preview/spec.md#requirement-a-request-ticket-previews-the-residents-view-req-rvp-001
+		 */
 		ticketId() {
 			this.load()
 		},
 
+		/**
+		 * @spec openspec/specs/resident-view-preview/spec.md#requirement-a-request-ticket-previews-the-residents-view-req-rvp-001
+		 */
 		customerMessage() {
 			this.load()
 		},
 
+		/**
+		 * @spec openspec/specs/resident-view-preview/spec.md#requirement-a-request-ticket-previews-the-residents-view-req-rvp-001
+		 */
 		status() {
 			this.load()
 		},
 	},
 
+	/**
+	 * @spec openspec/specs/resident-view-preview/spec.md#requirement-a-request-ticket-previews-the-residents-view-req-rvp-001
+	 */
 	mounted() {
 		subscribe(PAGE_REFRESH_CHANNEL, this.load)
 		this.load()
@@ -212,6 +226,7 @@ export default {
 		 * Read the resident's view of this ticket.
 		 *
 		 * @return {Promise<void>}
+		 * @spec openspec/specs/resident-view-preview/spec.md#requirement-a-request-ticket-previews-the-residents-view-req-rvp-001
 		 */
 		async load() {
 			if (!this.isRequest || !this.ticketId) {
@@ -255,6 +270,7 @@ export default {
 		 *
 		 * @param {string} field The field.
 		 * @return {string} The label.
+		 * @spec openspec/specs/resident-view-preview/spec.md#requirement-a-request-ticket-previews-the-residents-view-req-rvp-001
 		 */
 		fieldLabel(field) {
 			const labels = {

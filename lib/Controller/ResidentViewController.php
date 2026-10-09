@@ -27,6 +27,7 @@ declare(strict_types=1);
 
 namespace OCA\Pipelinq\Controller;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Pipelinq\AppInfo\Application;
 use OCA\Pipelinq\Portal\PortalContributionProvider;
 use OCA\Pipelinq\Service\Portal\PortalRequestService;
@@ -110,8 +111,11 @@ class ResidentViewController extends Controller {
 
 		$ticket = null;
 		if ($id !== '') {
+			// OpenRegister's facade reads under the caller's register RBAC
+			// (no `_rbac: false`), which is the per-object guard.
+			$objectService = $this->objectService();
 			try {
-				$ticket = $this->tickets->getObjectService()->find(
+				$ticket = $objectService->find(
 					id: $id,
 					register: $this->tickets->getRegisterId(),
 					schema: $this->tickets->getSchemaId()
@@ -150,6 +154,15 @@ class ResidentViewController extends Controller {
 			]
 		);
 	}//end show()
+
+	/**
+	 * OpenRegister's object facade, which reads under the caller's RBAC.
+	 *
+	 * @return ObjectServiceInterface The facade.
+	 */
+	private function objectService(): ObjectServiceInterface {
+		return $this->tickets->getObjectService();
+	}//end objectService()
 
 	/**
 	 * What an organisation's contact reads of the ticket in portaliq.

@@ -68,6 +68,7 @@ class SurveyInvitationSender {
 	 * @param string $token The per-invitation token.
 	 *
 	 * @return string The url.
+	 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-survey-fatigue-throttling-and-opt-out
 	 */
 	public function linkFor(string $token): string {
 		return $this->urlGenerator->getAbsoluteURL(

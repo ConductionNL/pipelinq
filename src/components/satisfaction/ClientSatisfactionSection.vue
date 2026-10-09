@@ -92,6 +92,7 @@ export default {
 		 * The client id from the prop or the section context.
 		 *
 		 * @return {string} The id.
+		 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-360/spec.md#requirement-per-client-satisfaction-panel
 		 */
 		resolvedId() {
 			if (this.clientId) {
@@ -107,6 +108,7 @@ export default {
 		 * Up to three latest comments.
 		 *
 		 * @return {Array<object>} The comments.
+		 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-360/spec.md#requirement-per-client-satisfaction-panel
 		 */
 		verbatims() {
 			return (
@@ -118,6 +120,7 @@ export default {
 		 * The trend in words.
 		 *
 		 * @return {string} The label.
+		 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-360/spec.md#requirement-per-client-satisfaction-panel
 		 */
 		trendLabel() {
 			const labels = {
@@ -133,6 +136,9 @@ export default {
 	},
 
 	watch: {
+		/**
+		 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-360/spec.md#requirement-per-client-satisfaction-panel
+		 */
 		resolvedId() {
 			this.load()
 		},
@@ -147,6 +153,7 @@ export default {
 		 * Read the panel for this client.
 		 *
 		 * @return {Promise<void>}
+		 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-360/spec.md#requirement-per-client-satisfaction-panel
 		 */
 		async load() {
 			if (!this.resolvedId) {

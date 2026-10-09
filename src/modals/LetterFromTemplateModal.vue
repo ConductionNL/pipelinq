@@ -161,14 +161,23 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * @spec openspec/specs/client-letters/spec.md
+		 */
 		templateOptions() {
 			return this.templates.map((tpl) => ({ value: tpl.id, label: tpl.name }))
 		},
 
+		/**
+		 * @spec openspec/specs/client-letters/spec.md
+		 */
 		contactOptions() {
 			return this.contacts.map((c) => ({ value: c.id, label: c.name || c.id }))
 		},
 
+		/**
+		 * @spec openspec/specs/client-letters/spec.md
+		 */
 		canMake() {
 			return Boolean(this.templateId && this.resolvedClientId && !this.making)
 		},

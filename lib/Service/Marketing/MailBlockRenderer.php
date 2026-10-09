@@ -67,6 +67,38 @@ class MailBlockRenderer {
 	private const DEFAULT_COLOR = '#00679e';
 
 	/**
+	 * The editor fields a template is stored with, for the keys the input carries.
+	 *
+	 * `editorMode` is `blocks` or `html` (anything unknown is `html`, as
+	 * before blocks existed); `blocks` is a list. A key the input leaves out
+	 * is left out here, so a patch keeps what is stored.
+	 *
+	 * @param array<string, mixed> $input The payload or patch.
+	 *
+	 * @return array<string, mixed> `editorMode` and/or `blocks`.
+	 *
+	 * @spec openspec/changes/marketing-block-editor/specs/mail-block-editor/spec.md#requirement-html-templates-keep-working-req-mbe-004
+	 */
+	public function storedFields(array $input): array {
+		$fields = [];
+		if (array_key_exists('editorMode', $input) === true) {
+			$fields['editorMode'] = 'html';
+			if ($input['editorMode'] === 'blocks') {
+				$fields['editorMode'] = 'blocks';
+			}
+		}
+
+		if (array_key_exists('blocks', $input) === true) {
+			$fields['blocks'] = [];
+			if (is_array($input['blocks']) === true) {
+				$fields['blocks'] = array_values($input['blocks']);
+			}
+		}
+
+		return $fields;
+	}//end storedFields()
+
+	/**
 	 * Keep the known blocks, in order, with exactly one footer, last.
 	 *
 	 * @param array<int|string, mixed> $blocks The blocks as sent by the form.

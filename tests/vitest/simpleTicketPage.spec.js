@@ -119,10 +119,12 @@ describe('the full structure', () => {
 		expect(full).toEqual(
 			manifest().pages.find((page) => page.id === 'TicketDetail'),
 		)
-		// The one header action on the full page is Assign to me
-		// (detail-pages-read-at-a-glance), which sets the assignee and changes
-		// no status.
+		// The header actions on the full page are Make a letter
+		// (work-letter-from-filinq-template, shown only with filinq) and
+		// Assign to me (detail-pages-read-at-a-glance), which sets the assignee
+		// and changes no status.
 		expect(full.config.headerActions.map((action) => action.id)).toEqual([
+			'make-letter',
 			'assign-to-me',
 		])
 		expect(full.config.sideColumn).toBeUndefined()
@@ -433,6 +435,7 @@ describe('the body', () => {
 			'dossier-snapshot',
 			'ticket-conversation',
 			'woo-conversion',
+			'resident-view',
 			'routing-suggestions',
 			'request-conversion',
 		])

@@ -138,8 +138,8 @@ describe('ResidentViewSection', () => {
 		expect(widget.props).toEqual({
 			ticketId: '@objectId',
 			ticketType: '@object.ticketType',
-			customerMessage: '@object.customerMessage?',
-			status: '@object.status?',
+			customerMessage: '@object.customerMessage',
+			status: '@object.status',
 		})
 		expect(widget.title).toBeUndefined()
 	})

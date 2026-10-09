@@ -30,6 +30,7 @@ let counter = 0
  *
  * @param {string} type The block type.
  * @return {{id: string, type: string, props: object}} The block.
+ * @spec openspec/changes/marketing-block-editor/specs/mail-block-editor/spec.md#requirement-a-marketer-builds-an-email-template-from-blocks-req-mbe-001
  */
 export function newBlock(type) {
 	counter += 1
@@ -52,6 +53,7 @@ export function newBlock(type) {
  * The blocks a new email template starts with: a heading, a text block and the footer.
  *
  * @return {Array<object>} The blocks.
+ * @spec openspec/changes/marketing-block-editor/specs/mail-block-editor/spec.md#requirement-a-marketer-builds-an-email-template-from-blocks-req-mbe-001
  */
 export function starterBlocks() {
 	return [newBlock('heading'), newBlock('text'), newBlock('footer')]
@@ -62,6 +64,7 @@ export function starterBlocks() {
  *
  * @param {Array<object>} blocks The blocks.
  * @return {Array<object>} The blocks, footer last.
+ * @spec openspec/changes/marketing-block-editor/specs/mail-block-editor/spec.md#requirement-a-marketer-builds-an-email-template-from-blocks-req-mbe-001
  */
 export function withFooterLast(blocks) {
 	const list = Array.isArray(blocks)
@@ -78,6 +81,7 @@ export function withFooterLast(blocks) {
  * @param {number} index The block to move.
  * @param {number} delta -1 or +1.
  * @return {Array<object>} The new list (the same list when the move is not possible).
+ * @spec openspec/changes/marketing-block-editor/specs/mail-block-editor/spec.md#requirement-a-marketer-builds-an-email-template-from-blocks-req-mbe-001
  */
 export function moveBlock(blocks, index, delta) {
 	const target = index + delta
@@ -97,6 +101,7 @@ export function moveBlock(blocks, index, delta) {
  * @param {Array<object>} blocks The blocks.
  * @param {number} index The block to remove.
  * @return {Array<object>} The new list.
+ * @spec openspec/changes/marketing-block-editor/specs/mail-block-editor/spec.md#requirement-a-marketer-builds-an-email-template-from-blocks-req-mbe-001
  */
 export function removeBlock(blocks, index) {
 	if (blocks[index]?.type === 'footer') {
@@ -111,6 +116,7 @@ export function removeBlock(blocks, index) {
  * @param {Array<object>} blocks The blocks.
  * @param {string} type The block type.
  * @return {Array<object>} The new list.
+ * @spec openspec/changes/marketing-block-editor/specs/mail-block-editor/spec.md#requirement-a-marketer-builds-an-email-template-from-blocks-req-mbe-001
  */
 export function addBlock(blocks, type) {
 	const list = withFooterLast(blocks)

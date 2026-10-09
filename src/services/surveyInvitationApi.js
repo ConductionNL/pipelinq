@@ -18,6 +18,7 @@ import { generateUrl } from '@nextcloud/router'
  *
  * @param {string} token The invitation token.
  * @return {string} The url.
+ * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-tokenized-invitation-response-collection
  */
 export function invitationUrl(token) {
 	return generateUrl('/apps/pipelinq/survey/i/{token}', { token })
@@ -42,6 +43,7 @@ function refusal(error) {
  *
  * @param {string} token The invitation token.
  * @return {Promise<{state: string, survey?: object}>} The survey when open.
+ * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-tokenized-invitation-response-collection
  */
 export async function fetchInvitation(token) {
 	try {
@@ -62,6 +64,7 @@ export async function fetchInvitation(token) {
  * @param {object} answers The answers, keyed by question key.
  * @param {boolean} optOut Whether the respondent asked not to be asked again.
  * @return {Promise<{state: string}>} `answered`, or the state that stopped it.
+ * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-tokenized-invitation-response-collection
  */
 export async function submitInvitation(token, answers, optOut) {
 	try {

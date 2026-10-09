@@ -468,7 +468,7 @@ class SurveyDispatchService {
 	}//end write()
 
 	/**
-	 * The response rate of a set of invitations.
+	 * The response rate of a set of invitations, with the same figures per channel.
 	 *
 	 * Suppressed and failed invitations are excluded from the DENOMINATOR and
 	 * reported as counts of their own: a survey nobody was sent has no
@@ -476,68 +476,21 @@ class SurveyDispatchService {
 	 * looks like disinterest.
 	 *
 	 * @param array<int, array<string, mixed>> $invitations The invitations.
-	 * @param bool                             $perChannel  Whether to add the
-	 *   same figures per channel under `byChannel`.
 	 *
-	 * @return array<string, mixed> The figures: delivered, responded, rate,
-	 *   suppressed, failed and, at the top level, byChannel.
+	 * @return array<string, mixed> delivered, responded, rate, suppressed, failed, byChannel.
 	 *
 	 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-response-rate-analytics
 	 */
-	public function responseRate(array $invitations, bool $perChannel = true): array {
-		$counts = ['sent' => 0, 'responded' => 0, 'suppressed' => 0, 'failed' => 0];
+	public function responseRate(array $invitations): array {
+		$figures = new SurveyInvitationFigures();
+		$out     = $figures->rate(invitations: $invitations);
+		$out['byChannel'] = $figures->byChannel(invitations: $invitations);
 
-		foreach ($invitations as $invitation) {
-			$status = (string)($invitation['status'] ?? '');
-			if (isset($counts[$status]) === true) {
-				$counts[$status]++;
-			}
-		}
-
-		$delivered = ($counts['sent'] + $counts['responded']);
-
-		$rate = 0.0;
-		if ($delivered !== 0) {
-			$rate = round((($counts['responded'] / $delivered) * 100), 1);
-		}
-
-		$figures = [
-			'delivered' => $delivered,
-			'responded' => $counts['responded'],
-			'rate' => $rate,
-			'suppressed' => $counts['suppressed'],
-			'failed' => $counts['failed'],
-		];
-
-		if ($perChannel === false) {
-			return $figures;
-		}
-
-		$groups = [];
-		foreach ($invitations as $invitation) {
-			$channel = trim((string)($invitation['channel'] ?? ''));
-			if ($channel === '') {
-				$channel = 'unknown';
-			}
-
-			$groups[$channel][] = $invitation;
-		}
-
-		ksort($groups);
-		$figures['byChannel'] = [];
-		foreach ($groups as $channel => $group) {
-			$figures['byChannel'][$channel] = $this->responseRate(invitations: $group, perChannel: false);
-		}
-
-		return $figures;
+		return $out;
 	}//end responseRate()
 
 	/**
 	 * The invitations that fell due in the last `$days` days.
-	 *
-	 * Every invitation carries `scheduledFor`, suppressed ones included, so
-	 * the period is read from that and not from `sentAt`, which a suppressed
-	 * or failed invitation never gets.
 	 *
 	 * @param array<int, array<string, mixed>> $invitations The invitations.
 	 * @param int                              $days        The period; 0 or less keeps all.
@@ -548,30 +501,6 @@ class SurveyDispatchService {
 	 * @spec openspec/changes/customer-satisfaction-closed-loop/specs/customer-satisfaction/spec.md#requirement-response-rate-analytics
 	 */
 	public function withinDays(array $invitations, int $days, ?DateTimeImmutable $now = null): array {
-		if ($days <= 0) {
-			return array_values($invitations);
-		}
-
-		$now   = ($now ?? new DateTimeImmutable());
-		$since = $now->modify("-{$days} days");
-		$kept  = [];
-		foreach ($invitations as $invitation) {
-			$due = trim((string)($invitation['scheduledFor'] ?? ''));
-			if ($due === '') {
-				continue;
-			}
-
-			try {
-				$at = new DateTimeImmutable($due);
-			} catch (Throwable) {
-				continue;
-			}
-
-			if ($at >= $since && $at <= $now) {
-				$kept[] = $invitation;
-			}
-		}
-
-		return $kept;
+		return (new SurveyInvitationFigures())->withinDays(invitations: $invitations, days: $days, now: $now);
 	}//end withinDays()
 }//end class
