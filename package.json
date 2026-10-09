@@ -37,7 +37,7 @@
     "@nextcloud/axios": "$@nextcloud/axios"
   },
   "dependencies": {
-    "@conduction/nextcloud-vue": "^2.73.1",
+    "@conduction/nextcloud-vue": "^2.76.0",
     "@nextcloud/axios": "~2.6.0",
     "@nextcloud/capabilities": "^1.2.1",
     "@nextcloud/dialogs": "^7.4.1",

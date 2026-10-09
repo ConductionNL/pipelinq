@@ -26,7 +26,6 @@ import {
 	LEAD_PRIORITY_LABELS,
 	RESOURCE_TYPE_LABELS,
 } from '../../src/utils/enumLabels.js'
-import { translateWidgetAddLabels } from '../../src/utils/widgetAddLabels.js'
 
 const ROOT = path.resolve(__dirname, '../..')
 function readJson(...parts) {
@@ -219,17 +218,14 @@ describe('object-list Add buttons', () => {
 		expect(nl['Add contact person']).toBe('Contactpersoon toevoegen')
 	})
 
-	it('are translated before the manifest reaches the page', () => {
-		const copy = readJson('src', 'manifest.json')
-		translateWidgetAddLabels(copy, (text) => nl[text] || text)
-		const seen = []
-		JSON.stringify(copy, (key, value) => {
-			if (value && value.type === 'object-list' && value.content?.addLabel) {
-				seen.push(value.content.addLabel)
-			}
-			return value
-		})
-		expect(seen).toContain('Contactpersoon toevoegen')
-		expect(seen).not.toContain('Add contact person')
+	// @spec openspec/changes/round4-nextcloud-vue-2-76/specs/client-management/spec.md
+	it('are not translated a second time by pipelinq', () => {
+		const main = fs.readFileSync(path.join(ROOT, 'src', 'main.js'), 'utf8')
+		expect(main).not.toContain('translateWidgetAddLabels')
+		expect(fs.existsSync(path.join(ROOT, 'src', 'utils', 'widgetAddLabels.js'))).toBe(false)
+		// Were a Dutch label also a catalogue key, a second pass would change it.
+		for (const label of labels) {
+			expect(nl[nl[label]], label).toBeUndefined()
+		}
 	})
 })
