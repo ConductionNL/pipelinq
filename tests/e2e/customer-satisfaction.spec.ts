@@ -211,7 +211,7 @@ test.describe('customer satisfaction, closed loop', () => {
 			]),
 		)
 	})
-	test('a resident answers on the public survey page and opts out', async ({
+	test('a resident answers on the public survey page (PublicSurveyForm) and opts out', async ({
 		page,
 		browser,
 	}) => {
