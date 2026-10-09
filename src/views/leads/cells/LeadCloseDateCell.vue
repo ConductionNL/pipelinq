@@ -59,6 +59,8 @@ export default {
 		 * Visual state: 'overdue' (past), 'soon' (≤7 days), 'ok' (>7 days), 'unknown' (no date).
 		 *
 		 * @return {string}
+		 *
+		 * @spec openspec/changes/round6-board-look/specs/board-look/spec.md
 		 */
 		state() {
 			if (!this.dateObj) return 'unknown'
@@ -82,6 +84,9 @@ export default {
 			}
 		},
 
+		/**
+		 * @spec openspec/changes/round6-board-look/specs/board-look/spec.md
+		 */
 		formattedDate() {
 			if (!this.dateObj) return '-'
 			const locale =

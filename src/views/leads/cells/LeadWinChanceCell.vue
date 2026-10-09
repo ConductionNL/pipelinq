@@ -59,6 +59,8 @@ export default {
 		 * The percentage, 0 to 100, or null when the lead has none.
 		 *
 		 * @return {?number}
+		 *
+		 * @spec openspec/changes/round6-board-look/specs/board-look/spec.md
 		 */
 		percent() {
 			const raw = [
@@ -81,6 +83,8 @@ export default {
 		 * Bar and number colour: green from 60, amber from 30, red below.
 		 *
 		 * @return {string}
+		 *
+		 * @spec openspec/changes/round6-board-look/specs/board-look/spec.md
 		 */
 		tone() {
 			if (this.percent >= 60) return 'good'
@@ -93,6 +97,8 @@ export default {
 		 * threshold of an open lead; otherwise null.
 		 *
 		 * @return {?number}
+		 *
+		 * @spec openspec/changes/round6-board-look/specs/board-look/spec.md
 		 */
 		staleDays() {
 			if (this.row?.status && this.row.status !== 'open') return null

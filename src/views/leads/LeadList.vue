@@ -184,6 +184,8 @@ export default {
 		 * The header buttons in the board's order: Download, Actions, New lead.
 		 *
 		 * @return {Array<object>}
+		 *
+		 * @spec openspec/changes/round6-board-look/specs/board-look/spec.md
 		 */
 		headerButtons() {
 			return [
