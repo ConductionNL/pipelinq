@@ -36,6 +36,54 @@
       {
         "@self": {
           "register": "pipelinq",
+          "schema": "savedReply",
+          "slug": "savedreply-openingstijden"
+        },
+        "title": "Openingstijden",
+        "body": "Beste {{contact.name}}, het klantcontactcentrum is open op werkdagen van 8.30 tot 17.00 uur. Met vriendelijke groet, {{agent.name}}",
+        "channels": [
+          "sms",
+          "whatsapp",
+          "email",
+          "portal"
+        ],
+        "language": "nl",
+        "active": true
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "savedReply",
+          "slug": "savedreply-ontvangstbevestiging"
+        },
+        "title": "Ontvangstbevestiging",
+        "body": "Beste {{contact.name}}, we hebben uw vraag over {{ticket.title}} ontvangen. U hoort binnen twee werkdagen van ons.",
+        "channels": [
+          "portal",
+          "email"
+        ],
+        "language": "nl",
+        "active": true
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
+          "schema": "savedReply",
+          "slug": "savedreply-opening-hours"
+        },
+        "title": "Opening hours",
+        "body": "Dear {{contact.name}}, our contact centre is open on weekdays from 8:30 to 17:00. Kind regards, {{agent.name}}",
+        "channels": [
+          "sms",
+          "whatsapp",
+          "email"
+        ],
+        "language": "en",
+        "active": true
+      },
+      {
+        "@self": {
+          "register": "pipelinq",
           "schema": "agentProfile",
           "slug": "agentprofile-agentprofile-1-1"
         },
