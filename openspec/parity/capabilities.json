@@ -2962,7 +2962,7 @@
 				"state": "built",
 				"evidence": "lib/Service/SurveyDispatchService.php:336. Corrections round 8 (2026-09-28), pipelinq#2072: onInteractionCompleted() (lib/Service/SurveyDispatchService.php:336-366) has no production caller: no class in lib/Listener and nothing in lib/AppInfo/Application.php refers to a survey, so no invitation is ever scheduled and lib/BackgroundJob/SurveyInvitationDispatchJob.php:129 finds nothing to send, at 9a5e95c.",
 				"owner": "ConductionNL/pipelinq",
-				"change": "customer-satisfaction-closed-loop"
+				"change": "openspec/changes/archive/2026-10-09-customer-satisfaction-closed-loop"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/customer-feedback/how-do-i-send-a-customer-support-survey a Customer Effort Score survey is sent per pipeline and ticket status, \"Immediately: the survey will be sent immediately after the ticket is closed\". Service Hub Professional, Enterprise. Note: Was partial for the tier; rated by what a buyer can get.",
@@ -3431,7 +3431,7 @@
 				"state": "built",
 				"evidence": "lib/Service/ArticleService.php:185",
 				"owner": "ConductionNL/pipelinq",
-				"change": "marketing-article-hub"
+				"change": "openspec/changes/archive/2026-10-09-marketing-article-hub"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/help-desk/use-the-updated-reply-editor-in-help-desk \"To add a document, snippet, meeting link, knowledge base article, quote, or video in your response, click Insert\" inside the ticket reply. Service Hub Professional, Enterprise (the knowledge base itself: https://knowledge.hubspot.com/knowledge-base/create-and-customize-knowledge-base-articles).",
@@ -3499,7 +3499,7 @@
 				"state": "built",
 				"evidence": "lib/Service/SatisfactionAggregationService.php:97",
 				"owner": "ConductionNL/pipelinq",
-				"change": "customer-satisfaction-closed-loop"
+				"change": "openspec/changes/archive/2026-10-09-customer-satisfaction-closed-loop"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/customer-feedback/how-do-i-send-a-customer-loyalty-survey \"Customer loyalty (NPS) surveys track how likely your customers are to recommend your company\"; responses land on the contact and drive workflows to follow up detractors (https://knowledge.hubspot.com/customer-feedback/analyze-survey-responses). Service Hub Professional, Enterprise. Note: Was partial for the tier.",
@@ -4782,7 +4782,7 @@
 				"state": "built",
 				"evidence": "lib/Service/SocialPostService.php:251",
 				"owner": "ConductionNL/pipelinq",
-				"change": "social-publishing"
+				"change": "openspec/changes/archive/2026-10-09-social-publishing"
 			},
 			"evidence": {
 				"hubspot-crm": "https://knowledge.hubspot.com/social/create-and-publish-social-posts \"create and publish social posts across multiple networks simultaneously ... before scheduling it for peak engagement times\". Marketing Hub Professional, Enterprise. Note: Was partial for the tier.",

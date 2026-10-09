@@ -129,7 +129,7 @@
     - customer-satisfaction.md: V1 marked implemented, closed-loop scope described with actual status
     - terugbel-taakbeheer.md re-pointed at `callback-management`
 
-- [ ] 6.3 Tests + gates
+- [x] 6.3 Tests + gates (done 9 Oct: the full set ran on build/openspecs-1 at the checkpoint, exit codes in the PR body)
   - **spec_ref**: all
   - **files**: `tests/unit/`, `tests/e2e/`, `tests/integration/`
   - **acceptance_criteria**:
