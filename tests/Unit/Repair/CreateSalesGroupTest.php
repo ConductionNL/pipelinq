@@ -97,7 +97,11 @@ class CreateSalesGroupTest extends TestCase {
 	 * @return void
 	 */
 	public function testTheStepRunsOnInstallAndAfterUpgrade(): void {
-		$info = simplexml_load_file(__DIR__.'/../../../appinfo/info.xml');
+		// Read the file and parse the string: Nextcloud's bootstrap installs an
+		// external entity loader that refuses every file, so under the real
+		// server simplexml_load_file() returns false (RepairStepRegistrationTest
+		// reads info.xml the same way).
+		$info = simplexml_load_string((string)file_get_contents(__DIR__.'/../../../appinfo/info.xml'));
 		$this->assertNotFalse($info);
 		$step = CreateSalesGroup::class;
 		$install = array_map('strval', $info->xpath('/info/repair-steps/install/step'));
