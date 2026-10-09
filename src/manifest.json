@@ -142,6 +142,7 @@
 					{
 						"id": "go-clients",
 						"sinceVersion": "1.1.0",
+						"title": "Your clients",
 						"placement": "right",
 						"body": "Start with the customer. Open Clients.",
 						"task": "Click Clients in the menu",
@@ -151,6 +152,7 @@
 					{
 						"id": "create-client",
 						"sinceVersion": "1.1.0",
+						"title": "Add a client",
 						"placement": "bottom",
 						"allowManualNext": true,
 						"body": "Add the organisation or person you sell to.",
@@ -166,6 +168,7 @@
 					{
 						"id": "go-contacts",
 						"sinceVersion": "1.0.0",
+						"title": "Your contacts",
 						"placement": "right",
 						"body": "Now the person you talk to. Open Contacts.",
 						"task": "Click Contacts in the menu",
@@ -175,6 +178,7 @@
 					{
 						"id": "create-contact",
 						"sinceVersion": "1.0.0",
+						"title": "Add a contact person",
 						"placement": "bottom",
 						"allowManualNext": true,
 						"body": "Add your contact person and pick the client you just made.",
@@ -190,6 +194,7 @@
 					{
 						"id": "go-products",
 						"sinceVersion": "1.0.0",
+						"title": "Your catalogue",
 						"placement": "right",
 						"body": "Next, your catalogue. Open Products from the menu.",
 						"task": "Click Products in the menu",
@@ -199,6 +204,7 @@
 					{
 						"id": "create-product",
 						"sinceVersion": "1.0.0",
+						"title": "Add a product",
 						"placement": "bottom",
 						"allowManualNext": true,
 						"body": "Add the product or service you sell. We'll put it on the quotation later.",
@@ -214,6 +220,7 @@
 					{
 						"id": "go-leads",
 						"sinceVersion": "1.0.0",
+						"title": "Your leads",
 						"placement": "right",
 						"body": "A lead is a sales opportunity. Open Leads.",
 						"task": "Click Leads in the menu",
@@ -223,6 +230,7 @@
 					{
 						"id": "create-lead",
 						"sinceVersion": "1.0.0",
+						"title": "Create a lead",
 						"placement": "bottom",
 						"allowManualNext": true,
 						"body": "Create a lead for this opportunity. Link the client and contact you just made.",
@@ -238,6 +246,7 @@
 					{
 						"id": "move-pipeline",
 						"sinceVersion": "1.0.0",
+						"title": "The pipeline",
 						"placement": "bottom",
 						"allowManualNext": true,
 						"body": "The pipeline shows every lead by stage. Drag your lead forward as it progresses.",
@@ -248,6 +257,7 @@
 					{
 						"id": "create-quote",
 						"sinceVersion": "1.0.0",
+						"title": "Quote the lead",
 						"placement": "right",
 						"allowManualNext": true,
 						"body": "Quote the lead. In Pipelinq a signable quotation IS the contract: one record, no duplication.",
@@ -1911,7 +1921,7 @@
 							"limit": 50,
 							"rowRoute": "ContactDetail",
 							"allowCreate": true,
-							"addLabel": "Contactpersoon toevoegen",
+							"addLabel": "Add contact person",
 							"emptyText": "No contact persons yet. Add one to get started."
 						}
 					},
@@ -1952,7 +1962,7 @@
 							"limit": 10,
 							"rowRoute": "TicketDetail",
 							"allowCreate": true,
-							"addLabel": "Nieuw verzoek",
+							"addLabel": "New request",
 							"emptyText": "No open requests yet. Add one to get started."
 						}
 					},

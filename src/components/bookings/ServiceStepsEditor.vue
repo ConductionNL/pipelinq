@@ -127,10 +127,12 @@
 </template>
 
 <script>
+import { translate } from '@nextcloud/l10n'
 import { NcCheckboxRadioSwitch, NcSelect, NcTextField } from '@nextcloud/vue'
 import BookingRowsEditor from './BookingRowsEditor.vue'
 import { STEP_UNITS, unitLabel } from '../../services/serviceSteps.js'
 import { useObjectStore } from '../../store/modules/object.js'
+import { enumOptions, RESOURCE_TYPE_LABELS } from '../../utils/enumLabels.js'
 
 let instanceCount = 0
 
@@ -268,11 +270,9 @@ export default {
 		 * @spec openspec/specs/appointment-booking/spec.md
 		 */
 		resourceTypeOptions() {
-			return [
-				{ value: 'staff', label: t('pipelinq', 'Staff') },
-				{ value: 'room', label: t('pipelinq', 'Room') },
-				{ value: 'equipment', label: t('pipelinq', 'Equipment') },
-			]
+			return enumOptions(RESOURCE_TYPE_LABELS, (text) =>
+				translate('pipelinq', text),
+			)
 		},
 
 		/**
