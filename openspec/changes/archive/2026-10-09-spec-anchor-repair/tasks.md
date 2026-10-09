@@ -6,5 +6,5 @@
 - [x] task-4: Comment-only proof — 0 non-`@spec` changed lines; 0 files with asymmetric insertions/deletions.
 - [x] task-5: Gate-46 re-verify — broken 2679 → 1968 (all repointed anchors resolve).
 - [x] task-6: File the 1968 residual-dangling anchors for human triage (`residual-dangling.md` + umbrella issue).
-- [ ] task-7: STALE-BASE GUARD before push — `git diff --numstat origin/development` is `@spec`-lines-only.
-- [ ] task-8: PR to `development`, admin-merge, archive change.
+- [x] task-7: STALE-BASE GUARD before push — `git diff --numstat origin/development` is `@spec`-lines-only. (Done: commit 27c3bb5c6, 16 Jul, is on development.)
+- [x] task-8: PR to `development`, admin-merge, archive change. (27c3bb5c6 landed on development; archived 9 Oct by build/openspecs-1.)

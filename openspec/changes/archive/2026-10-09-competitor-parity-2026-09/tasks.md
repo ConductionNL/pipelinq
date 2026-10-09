@@ -8,18 +8,18 @@
 
 ## 2. Per change, done inside that change
 
-- [ ] 2.1 `the-project-above-the-cases`
-- [ ] 2.2 `typed-fields-and-indicators-on-a-party`
-- [ ] 2.3 `party-kinds-accepted-per-case-type`
+- [x] 2.1 `the-project-above-the-cases` (archived 2026-10-07)
+- [x] 2.2 `typed-fields-and-indicators-on-a-party` (archived 2026-10-07)
+- [x] 2.3 `party-kinds-accepted-per-case-type` (archived 2026-10-07)
 
 ## 4. Wave 4, the pending proposals
 
 - [x] 4.1 Record pipelinq's two pending-proposal rows (5.17, 6.25) and the changes that close them.
 - [x] 4.2 Record what was read before writing each, so a later reader does not repeat the check.
-- [ ] 4.3 `correspondence-language-per-party`
-- [ ] 4.4 `one-contact-moment-on-several-cases`
+- [x] 4.3 `correspondence-language-per-party` (archived 2026-10-07)
+- [x] 4.4 `one-contact-moment-on-several-cases` (archived 2026-10-07)
 
 ## 3. Closing
 
-- [ ] 3.1 Archive this umbrella only after the three changes under it are archived,
+- [x] 3.1 Archive this umbrella only after the three changes under it are archived,
       so the trail from a candidate id to a merged requirement stays readable.
