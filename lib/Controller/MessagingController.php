@@ -46,6 +46,7 @@ use OCP\IUserSession;
  *
  * Endpoints:
  *   POST /api/messaging/send                    NoAdminRequired + per-object guard
+ *   POST /api/messaging/messages/{id}/resend    NoAdminRequired + per-object guard
  *   GET  /api/messaging/preflight/{contactId}   NoAdminRequired + per-object guard
  *   POST /api/messaging/consent                 NoAdminRequired + per-object guard
  *   POST /api/messaging/providers/{id}/test     AuthorizedAdminSetting
@@ -140,6 +141,51 @@ class MessagingController extends Controller {
 
 		return new JSONResponse($outcome, $this->httpStatusForOutcome(status: (string)$outcome['status']));
 	}//end send()
+
+	/**
+	 * Send a failed or expired outbound message again (REQ-MSR-006).
+	 *
+	 * The message and its contact are loaded through the register RBAC, so a
+	 * row the caller cannot read answers 404 before anything is sent. The
+	 * resend runs through the normal send() with its consent, budget and
+	 * session-window checks.
+	 *
+	 * @param string $id The channelMessage UUID.
+	 *
+	 * @return JSONResponse The sanitised outcome envelope; 409 on a refusal.
+	 *
+	 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-sends-a-failed-message-again-req-msr-006
+	 */
+	#[NoAdminRequired]
+	public function resend(string $id = ''): JSONResponse {
+		$user = $this->userSession->getUser();
+		if ($user === null) {
+			return new JSONResponse(['status' => 'unauthorized'], Http::STATUS_UNAUTHORIZED);
+		}
+
+		if ($this->policy->isPrivileged(uid: $user->getUID()) === false) {
+			return new JSONResponse(['status' => 'forbidden'], Http::STATUS_FORBIDDEN);
+		}
+
+		$message = $this->messagingService->loadMessage(messageId: $id);
+		if ($message === null) {
+			return new JSONResponse(['status' => 'not-found'], Http::STATUS_NOT_FOUND);
+		}
+
+		$refusal = $this->messagingService->resendRefusal(message: $message);
+		if ($refusal !== null) {
+			return new JSONResponse(['status' => $refusal], Http::STATUS_CONFLICT);
+		}
+
+		$contact = $this->messagingService->loadContact(contactId: (string)($message['contactId'] ?? ''));
+		if ($contact === null) {
+			return new JSONResponse(['status' => 'not-found'], Http::STATUS_NOT_FOUND);
+		}
+
+		$outcome = $this->messagingService->resend(message: $message, contact: $contact, actor: $user->getUID());
+
+		return new JSONResponse($outcome, $this->httpStatusForOutcome(status: (string)$outcome['status']));
+	}//end resend()
 
 	/**
 	 * Composer preflight facts for one contact (REQ-OM-004).

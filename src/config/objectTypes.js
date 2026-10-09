@@ -374,6 +374,18 @@ export function objectTypes() {
 			label: t(APP, 'Message'),
 			description: t(APP, 'Outbound / inbound messages within a conversation'),
 		},
+		// Saved replies (messaging-saved-replies-and-resend): read by the saved
+		// reply picker in the Send message dialog, the ticket answer and the
+		// Write email dialog, and listed on the Saved replies page.
+		{
+			slug: 'savedReply',
+			group: 'core',
+			label: t(APP, 'Saved reply'),
+			description: t(
+				APP,
+				'Replies the team writes once and agents insert when they answer',
+			),
+		},
 		{
 			slug: 'channelProvider',
 			group: 'marketing',

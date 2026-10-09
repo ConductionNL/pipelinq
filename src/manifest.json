@@ -9,7 +9,8 @@
 		{ "id": "dossiq", "required": false, "name": "DossiQ" },
 		{ "id": "workflowengine", "required": false, "name": "Workflow engine" },
 		{ "id": "timemanager", "required": false, "name": "Time manager" },
-		{ "id": "forms", "required": false, "name": "Forms" }
+		{ "id": "forms", "required": false, "name": "Forms" },
+		{ "id": "mail", "required": false, "name": "Mail" }
 	],
 	"setup": {
 		"enabled": true,
@@ -438,6 +439,13 @@
 			"icon": "CashMultiple",
 			"route": "Leads",
 			"order": 40
+		},
+		{
+			"id": "SavedReplies",
+			"label": "Saved replies",
+			"icon": "MessageReplyTextOutline",
+			"route": "SavedReplies",
+			"order": 55
 		},
 		{
 			"id": "Tickets",
@@ -5314,6 +5322,24 @@
 			"type": "custom",
 			"title": "Pipeline",
 			"component": "PipelineBoardView"
+		},
+		{
+			"id": "SavedReplies",
+			"route": "/saved-replies",
+			"type": "index",
+			"title": "Saved replies",
+			"_note": "messaging-saved-replies-and-resend: the replies the team writes once and agents pick in the Send message dialog, the ticket answer and the Write email dialog. A plain index over savedReply; the store writes through OpenRegister (ADR-022).",
+			"config": {
+				"register": "pipelinq",
+				"schema": "savedReply",
+				"documentationUrl": "https://pipelinq.conduction.nl",
+				"columns": [
+					{ "key": "title", "label": "Title" },
+					{ "key": "channels", "label": "Channels" },
+					{ "key": "language", "label": "Language" },
+					{ "key": "active", "label": "Active" }
+				]
+			}
 		},
 		{
 			"id": "Pipelines",

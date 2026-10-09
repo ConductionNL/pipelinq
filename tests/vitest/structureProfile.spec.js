@@ -151,12 +151,12 @@ describe('the full profile', () => {
 		})
 	})
 
-	it('still counts 47 entries: 39 main, 3 footer, 5 settings, 0 integrations', () => {
+	it('still counts 48 entries: 40 main, 3 footer, 5 settings, 0 integrations', () => {
 		const menu = build(fullFile).menu
 		const count = (name) =>
 			flat(menu.filter((entry) => (entry.section || 'main') === name)).length
-		expect(flat(menu)).toHaveLength(47)
-		expect(count('main')).toBe(39)
+		expect(flat(menu)).toHaveLength(48)
+		expect(count('main')).toBe(40)
 		expect(count('footer')).toBe(3)
 		expect(count('settings')).toBe(5)
 		expect(count('integrations')).toBe(0)
@@ -435,11 +435,11 @@ describe('the simple profile', () => {
 		expect(routes).toHaveLength(fullReports.config.cards.length + 1)
 	})
 
-	it('builds the same 96 pages as the full profile, so every route stays', () => {
+	it('builds the same 97 pages as the full profile, so every route stays', () => {
 		const ids = (source) => source.pages.map((page) => page.id)
 		const full = build(fullFile)
 		expect(ids(built)).toEqual(ids(full))
-		expect(built.pages).toHaveLength(96)
+		expect(built.pages).toHaveLength(97)
 		expect(built.pages.map((page) => page.route)).toEqual(
 			full.pages.map((page) => page.route),
 		)

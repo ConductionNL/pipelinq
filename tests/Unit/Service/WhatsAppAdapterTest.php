@@ -29,6 +29,7 @@ use OCA\Pipelinq\Service\NotificationService;
 use OCA\Pipelinq\Service\PhoneNormaliser;
 use OCA\Pipelinq\Tests\Unit\Support\FakeMessagingAccount;
 use OCA\Pipelinq\Service\WhatsAppAdapter;
+use OCA\Pipelinq\Service\Provider\PermanentSmsProviderException;
 use OCA\Pipelinq\Service\WhatsAppProviderClient;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
@@ -696,4 +697,44 @@ class WhatsAppAdapterTest extends TestCase {
 			$this->assertNotSame('saveObject', $access['call'], 'something was written without the service account');
 		}
 	}//end testWithoutAServiceAccountNothingIsWritten()
+	/**
+	 * A failed template send keeps its parameters on the failed row, so Send
+	 * again can repeat the same template with the same values.
+	 *
+	 * @return void
+	 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-sends-a-failed-message-again-req-msr-006
+	 */
+	public function testAFailedTemplateSendStoresItsParameters(): void {
+		$this->objectService->saveObject([
+			'uuid' => 'tpl-9',
+			'providerId' => 'prov-1',
+			'status' => 'approved',
+			'externalId' => 'afspraak_nl',
+			'language' => 'nl',
+			'body' => 'Beste {{1}}, tot {{2}}',
+		]);
+		$this->consentService->method('canSend')->willReturn(true);
+		$this->consentService->method('canSendBusinessInitiated')->willReturn(true);
+		$this->budgetService->method('canSend')->willReturn(true);
+		$this->providerRepo->method('listActive')->willReturn([
+			['uuid' => 'prov-1', 'kind' => 'whatsapp-cloud-api', 'vendor' => 'meta'],
+		]);
+		$this->providerClient->method('sendTemplate')
+			->willThrowException(new PermanentSmsProviderException('rejected'));
+
+		$result = $this->adapter->send(
+			['uuid' => 'contact-1', 'phoneNumber' => '+31611111111'],
+			'',
+			'tpl-9',
+			['Jan', 'vrijdag'],
+		);
+
+		$this->assertSame('failed', $result['status']);
+		$failed = array_values(array_filter(
+			$this->objectService->store,
+			static fn (array $row): bool => ($row['deliveryStatus'] ?? '') === 'failed'
+		));
+		$this->assertCount(1, $failed);
+		$this->assertSame(['Jan', 'vrijdag'], $failed[0]['templateParameters']);
+	}//end testAFailedTemplateSendStoresItsParameters()
 }//end class
