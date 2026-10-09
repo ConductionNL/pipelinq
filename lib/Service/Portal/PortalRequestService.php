@@ -126,6 +126,29 @@ class PortalRequestService {
 	}//end __construct()
 
 	/**
+	 * What the resident portal shows of a request ticket the caller already
+	 * read, for the back-office preview on TicketDetail.
+	 *
+	 * It is `presentDetail()` unchanged, so the preview cannot drift from the
+	 * portal. A complaint or interaction ticket is not served by the portal
+	 * and has no preview (null).
+	 *
+	 * @param array<string, mixed> $ticket             The ticket, as read by the caller.
+	 * @param bool                 $exposeAssigneeName Whether the portal shows the handler's name.
+	 *
+	 * @return array<string, mixed>|null The resident's view, or null for a non-request.
+	 *
+	 * @spec openspec/specs/resident-view-preview/spec.md#requirement-a-request-ticket-previews-the-residents-view-req-rvp-001
+	 */
+	public function previewDetail(array $ticket, bool $exposeAssigneeName): ?array {
+		if ($this->isRequest(ticket: $ticket) === false) {
+			return null;
+		}
+
+		return $this->presentDetail(request: $ticket, exposeAssigneeName: $exposeAssigneeName);
+	}//end previewDetail()
+
+	/**
 	 * List the account's own + delegated-submit requests, newest-first,
 	 * paginated. Notes are summarised out of the list (detail only).
 	 *

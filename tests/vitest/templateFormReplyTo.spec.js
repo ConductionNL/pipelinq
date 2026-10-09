@@ -32,16 +32,34 @@ vi.mock('@nextcloud/dialogs', () => ({ showSuccess: vi.fn() }))
 vi.mock('../../src/services/articlesApi.js', () => ({
 	fetchArticles: () => Promise.resolve([]),
 }))
+vi.mock('@conduction/nextcloud-vue', () => ({
+	CnMarkdownEditor: { render: () => null },
+}))
+// The block editor is tested on its own (mailBlockEditor.spec.js); here it
+// only has to show that it is mounted and hand back what it is given.
+vi.mock('../../src/components/templates/MailBlockEditor.vue', () => ({
+	default: {
+		name: 'MailBlockEditor',
+		props: ['modelValue'],
+		render() {
+			return h('div', {
+				'data-stub': 'block-editor',
+				'data-count': String((this.modelValue || []).length),
+			})
+		},
+	},
+}))
 vi.mock('@nextcloud/vue', () => ({
 	NcButton: {
 		name: 'NcButton',
-		props: ['variant', 'disabled'],
+		props: ['variant', 'disabled', 'pressed'],
 		emits: ['click'],
 		render() {
 			return h(
 				'button',
 				{
 					class: 'nc-button--' + this.variant,
+					'data-testid': this.$attrs['data-testid'],
 					disabled: this.disabled,
 					onClick: () => this.$emit('click'),
 				},
@@ -56,7 +74,12 @@ vi.mock('@nextcloud/vue', () => ({
 		},
 	},
 	NcLoadingIcon: { name: 'NcLoadingIcon', render: () => h('span') },
-	NcNoteCard: { name: 'NcNoteCard', render: () => h('div') },
+	NcNoteCard: {
+		name: 'NcNoteCard',
+		render() {
+			return h('div', this.$slots.default?.())
+		},
+	},
 	NcSelect: { name: 'NcSelect', render: () => h('div') },
 	NcTextArea: textInput('textarea'),
 	NcTextField: textInput('input'),
@@ -118,6 +141,15 @@ function field(wrapper, label) {
 	return wrapper.find(`[data-label="${label}"]`)
 }
 
+/**
+ * @param {object} wrapper The mounted dialog.
+ * @param {string} text The button's text.
+ * @return {object} The button.
+ */
+function button(wrapper, text) {
+	return wrapper.findAll('button').find((b) => b.text() === text)
+}
+
 describe('TemplateFormDialog reply-to', () => {
 	beforeEach(() => {
 		axiosMock.get.mockReset()
@@ -131,9 +163,8 @@ describe('TemplateFormDialog reply-to', () => {
 		const wrapper = await mountForm()
 
 		await field(wrapper, 'Template name').setValue('Renewal reminder')
-		await field(wrapper, 'HTML body').setValue(compliantBody)
 		await field(wrapper, 'Reply-to email').setValue('reply@example.nl')
-		await wrapper.find('button.nc-button--primary').trigger('click')
+		await button(wrapper, 'Create template').trigger('click')
 		await flushPromises()
 
 		expect(axiosMock.post).toHaveBeenCalledTimes(1)
@@ -156,12 +187,82 @@ describe('TemplateFormDialog reply-to', () => {
 		expect(field(wrapper, 'Reply-to email').element.value).toBe(
 			'renewals@example.nl',
 		)
-		await wrapper.find('button.nc-button--primary').trigger('click')
+		await button(wrapper, 'Save changes').trigger('click')
 		await flushPromises()
 
 		expect(axiosMock.patch).toHaveBeenCalledTimes(1)
 		const [url, payload] = axiosMock.patch.mock.calls[0]
 		expect(url).toBe('/index.php/apps/pipelinq/api/templates/t-1')
 		expect(payload.replyTo).toBe('renewals@example.nl')
+	})
+})
+
+describe('TemplateFormDialog blocks', () => {
+	beforeEach(() => {
+		axiosMock.get.mockReset()
+		axiosMock.post.mockReset()
+		axiosMock.patch.mockReset()
+		axiosMock.post.mockResolvedValue({ data: {} })
+	})
+
+	it('opens a new email template in Blocks mode and saves the blocks', async () => {
+		const wrapper = await mountForm()
+
+		expect(
+			wrapper.find('[data-stub="block-editor"]').attributes('data-count'),
+		).toBe('3')
+		expect(field(wrapper, 'HTML body').exists()).toBe(false)
+		await field(wrapper, 'Template name').setValue('Autumn news')
+		await button(wrapper, 'Create template').trigger('click')
+		await flushPromises()
+
+		const [, payload] = axiosMock.post.mock.calls[0]
+		expect(payload.editorMode).toBe('blocks')
+		expect(payload.blocks.map((b) => b.type)).toEqual([
+			'heading',
+			'text',
+			'footer',
+		])
+	})
+
+	it('opens a template saved without blocks as HTML, as before', async () => {
+		axiosMock.get.mockResolvedValue({
+			data: { name: 'Old', channel: 'email', bodyHtml: compliantBody },
+		})
+		const wrapper = await mountForm({ id: 't-1' })
+
+		expect(field(wrapper, 'HTML body').element.value).toBe(compliantBody)
+		expect(wrapper.find('[data-stub="block-editor"]').exists()).toBe(false)
+		expect(
+			wrapper
+				.find('[data-testid="template-mode-blocks"]')
+				.attributes('disabled'),
+		).toBeDefined()
+	})
+
+	it('asks before leaving Blocks mode and keeps the rendered HTML', async () => {
+		axiosMock.post.mockResolvedValue({
+			data: {
+				renderedHtml: '<table>rendered {{unsubscribe_link}}</table>',
+				renderedText: 'rendered',
+			},
+		})
+		const wrapper = await mountForm()
+
+		await wrapper.find('[data-testid="template-mode-html"]').trigger('click')
+		expect(wrapper.text()).toContain('the blocks are not kept')
+		expect(axiosMock.post).not.toHaveBeenCalled()
+		await wrapper
+			.find('[data-testid="template-mode-html-confirm"]')
+			.trigger('click')
+		await flushPromises()
+
+		expect(axiosMock.post.mock.calls[0][0]).toBe(
+			'/index.php/apps/pipelinq/api/templates/render',
+		)
+		expect(field(wrapper, 'HTML body').element.value).toBe(
+			'<table>rendered {{unsubscribe_link}}</table>',
+		)
+		expect(wrapper.find('[data-stub="block-editor"]').exists()).toBe(false)
 	})
 })

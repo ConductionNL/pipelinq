@@ -2,7 +2,7 @@
 <!-- Copyright (C) 2024 Conduction B.V. <info@conduction.nl> -->
 
 <!--
- Service Hub — card-grid landing page (service-group-cards-collapse).
+ Service Hub — card-grid landing page (superseded; no page mounts it).
 
  ADR-044 cards-collapse: the Service top-level navigation group is collapsed
  into a single clickable menu item that links to this page. Each former
@@ -10,7 +10,7 @@
  MyWork, BookingsGroup, Queues) is rendered as a CnCard. All leaf page routes
  remain registered and reachable; only the navigation nesting changes.
 
- @spec openspec/changes/service-group-cards-collapse/specs/navigation/spec.md
+ @spec exclude superseded hub page: the July 2026 IA revision dropped it and its change was deleted (decision 128); registered, mounted by no page
 -->
 <template>
 	<div class="service-hub" data-testid="service-hub">

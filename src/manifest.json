@@ -290,7 +290,9 @@
 						"advanceOn": { "type": "manual" },
 						"handoff": {
 							"app": "Shillinq",
-							"url": "/index.php/apps/shillinq/"
+							"url": "/index.php/apps/shillinq/",
+							"tour": "shillinq:getting-started",
+							"step": "open-quick-draft"
 						}
 					},
 					{
@@ -979,7 +981,10 @@
 								"field": "value",
 								"filter": { "status": "open" }
 							},
-							"target": { "kind": "static", "value": "@config.pipelineTarget" },
+							"target": {
+								"kind": "static",
+								"value": "@config.pipelineTarget"
+							},
 							"thresholds": {
 								"warn": 60,
 								"danger": 90,
@@ -1438,6 +1443,11 @@
 						"id": "xwiki-knowledge",
 						"type": "custom",
 						"title": "Knowledge base"
+					},
+					{
+						"id": "survey-response-rate",
+						"type": "custom",
+						"title": "Survey response rate"
 					}
 				],
 				"layout": [
@@ -1586,16 +1596,25 @@
 						"gridY": 29,
 						"gridWidth": 6,
 						"gridHeight": 5
+					},
+					{
+						"id": "20",
+						"widgetId": "survey-response-rate",
+						"gridX": 6,
+						"gridY": 29,
+						"gridWidth": 6,
+						"gridHeight": 5
 					}
 				]
 			},
-			"_note": "The Customer Satisfaction KPI (SatisfactionKpiWidget, widget id 'satisfaction', layout slot 17) was removed 2026-07 because its data source is permanently empty (AnalyticsService hardcodes no survey responses after the forms-leaf migration); it returns with real CSAT data via openspec change customer-satisfaction-closed-loop.",
+			"_note": "The Customer Satisfaction KPI (SatisfactionKpiWidget, widget id 'satisfaction', layout slot 17) was removed 2026-07 because its data source was empty after the forms-leaf migration. Satisfaction returns as the survey response-rate widget (survey-response-rate), fed by the closed-loop invitations of customer-satisfaction-closed-loop.",
 			"slots": {
 				"widget-my-work": "MyWorkWidget",
 				"widget-billing-categories": "BillingCategoryWidget",
 				"widget-navi-analytics": "NaviAnalyticsWidget",
 				"widget-report-export": "ReportExportPanel",
-				"widget-xwiki-knowledge": "XWikiDashboardWidget"
+				"widget-xwiki-knowledge": "XWikiDashboardWidget",
+				"widget-survey-response-rate": "SurveyResponseRateWidget"
 			}
 		},
 		{
@@ -1608,7 +1627,30 @@
 				"schema": "client",
 				"createModal": "ClientCreateDialog",
 				"fieldOverrides": {
-					"industry": { "widget": "multiselect", "items": { "type": "string", "enum": ["Agriculture", "Construction", "Consultancy", "Education", "Energy", "Finance and insurance", "Healthcare", "Hospitality", "ICT", "Logistics", "Manufacturing", "Non-profit", "Public sector", "Real estate", "Retail", "Wholesale"] } },
+					"industry": {
+						"widget": "multiselect",
+						"items": {
+							"type": "string",
+							"enum": [
+								"Agriculture",
+								"Construction",
+								"Consultancy",
+								"Education",
+								"Energy",
+								"Finance and insurance",
+								"Healthcare",
+								"Hospitality",
+								"ICT",
+								"Logistics",
+								"Manufacturing",
+								"Non-profit",
+								"Public sector",
+								"Real estate",
+								"Retail",
+								"Wholesale"
+							]
+						}
+					},
 					"name": { "readOnly": false },
 					"email": { "readOnly": false },
 					"phone": { "readOnly": false },
@@ -1643,13 +1685,51 @@
 				"register": "pipelinq",
 				"schema": "client",
 				"fieldOverrides": {
-					"industry": { "widget": "multiselect", "items": { "type": "string", "enum": ["Agriculture", "Construction", "Consultancy", "Education", "Energy", "Finance and insurance", "Healthcare", "Hospitality", "ICT", "Logistics", "Manufacturing", "Non-profit", "Public sector", "Real estate", "Retail", "Wholesale"] } },
+					"industry": {
+						"widget": "multiselect",
+						"items": {
+							"type": "string",
+							"enum": [
+								"Agriculture",
+								"Construction",
+								"Consultancy",
+								"Education",
+								"Energy",
+								"Finance and insurance",
+								"Healthcare",
+								"Hospitality",
+								"ICT",
+								"Logistics",
+								"Manufacturing",
+								"Non-profit",
+								"Public sector",
+								"Real estate",
+								"Retail",
+								"Wholesale"
+							]
+						}
+					},
 					"name": { "readOnly": false },
 					"email": { "readOnly": false },
 					"phone": { "readOnly": false },
 					"correspondenceLanguage": { "widget": "language" },
 					"timezone": { "widget": "timezone" }
 				},
+				"headerActions": [
+					{
+						"id": "make-letter",
+						"label": "Make a letter",
+						"type": "open-modal",
+						"target": "LetterFromTemplateModal",
+						"icon": "FileDocumentOutline",
+						"visibleWhen": {
+							"endpoint": "/apps/pipelinq/api/letters/templates",
+							"field": "available",
+							"op": "eq",
+							"value": true
+						}
+					}
+				],
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"_note": "Customer-360 archetype. A client is the account hub of the CRM: everything (contacts, deals, requests, contracts, complaints, interactions) hangs off it via FK 'client' (contract via 'clientRef'). Projects are the exception: planninq owns them, so client-projects reads planninq's register and is gated on requiredApp. Layout, top to bottom: who the client is (Identity + Account, with the Sales KPI card beside them), the Service KPI row (endpoint-bound stats from Customer360SummaryService plus the new-requests count), a Records tab strip (contacts, requests, leads, contact moments, complaints, contracts, projects), a Communication tab strip (mail, notes, files), then the app sections as cards in a two-column grid. The former relatedCollections are object-list widgets now so they can live in the Records strip. MessagingConversationSection draws its own heading and BookingsCard its own card, so the first has no section title and the second no `card`. Sidebar is audit + knowledge base.",
 				"widgets": [
@@ -1678,11 +1758,7 @@
 						"content": {
 							"title": "Account",
 							"columns": 2,
-							"include": [
-								"type",
-								"industry",
-								"notes"
-							]
+							"include": ["type", "industry", "notes"]
 						}
 					},
 					{
@@ -2371,6 +2447,17 @@
 						"card": true
 					},
 					{
+						"id": "satisfaction",
+						"component": "ClientSatisfactionSection",
+						"title": "Satisfaction",
+						"placement": "end",
+						"props": {
+							"clientId": "@objectId"
+						},
+						"colSpan": 6,
+						"card": true
+					},
+					{
 						"id": "activity",
 						"component": "ActivityTimeline",
 						"title": "Activity",
@@ -2490,8 +2577,20 @@
 			"config": {
 				"register": "pipelinq",
 				"schema": "ticket",
-				"hideEmpty": true,
 				"headerActions": [
+					{
+						"id": "make-letter",
+						"label": "Make a letter",
+						"type": "open-modal",
+						"target": "LetterFromTemplateModal",
+						"icon": "FileDocumentOutline",
+						"visibleWhen": {
+							"endpoint": "/apps/pipelinq/api/letters/templates",
+							"field": "available",
+							"op": "eq",
+							"value": true
+						}
+					},
 					{
 						"id": "assign-to-me",
 						"type": "api-call",
@@ -2503,6 +2602,7 @@
 						"errorMessage": "Could not assign this ticket to you."
 					}
 				],
+				"hideEmpty": true,
 				"documentationUrl": "https://pipelinq.conduction.nl",
 				"_widgetsNote": "Widgets are declared (rather than left to the auto-body) only so the Besluitvorming leaf survives: development added a decidesk-decisions integration widget to RequestDetail (ADR-066) while this change was retiring that page. The relation belongs to the matter, not to whichever of the three names it used to have, so it moves onto the ticket alongside the `decisions` property on the schema. `content.hideEmpty` keeps the data widget type-aware — the page-level `hideEmpty` above only reaches the AUTO-body, which a declared widgets[] replaces.",
 				"widgets": [
@@ -2511,7 +2611,14 @@
 						"type": "data",
 						"title": "Ticket details",
 						"icon": "FileDocument",
-						"content": { "title": "Ticket details", "columns": 2, "hideEmpty": true, "overrides": { "assignee": { "formatter": "userDisplayName" } } }
+						"content": {
+							"title": "Ticket details",
+							"columns": 2,
+							"hideEmpty": true,
+							"overrides": {
+								"assignee": { "formatter": "userDisplayName" }
+							}
+						}
 					},
 					{
 						"id": "ticket-related",
@@ -2581,6 +2688,18 @@
 						"placement": "after-data",
 						"props": {
 							"objectId": "@objectId"
+						}
+					},
+					{
+						"id": "resident-view",
+						"component": "ResidentViewSection",
+						"placement": "after-data",
+						"_note": "No title: the section draws its own heading, because it renders nothing on complaint and interaction tickets (portal-resident-view-preview).",
+						"props": {
+							"ticketId": "@objectId",
+							"ticketType": "@object.ticketType",
+							"customerMessage": "@object.customerMessage",
+							"status": "@object.status"
 						}
 					},
 					{
@@ -3600,7 +3719,11 @@
 					{ "key": "type", "label": "Type" },
 					{ "key": "status", "label": "Status" },
 					{ "key": "priority", "label": "Priority" },
-					{ "key": "assigneeUserId", "label": "Assignee", "formatter": "userDisplayName" },
+					{
+						"key": "assigneeUserId",
+						"label": "Assignee",
+						"formatter": "userDisplayName"
+					},
 					{ "key": "deadline", "label": "Deadline" }
 				],
 				"sidebar": {
@@ -3625,7 +3748,13 @@
 						"type": "data",
 						"title": "Task",
 						"icon": "ClipboardCheckOutline",
-						"content": { "columns": 2, "overrides": { "assigneeUserId": { "formatter": "userDisplayName" }, "createdBy": { "formatter": "userDisplayName" } } }
+						"content": {
+							"columns": 2,
+							"overrides": {
+								"assigneeUserId": { "formatter": "userDisplayName" },
+								"createdBy": { "formatter": "userDisplayName" }
+							}
+						}
 					},
 					{
 						"id": "task-related",
@@ -3717,7 +3846,12 @@
 					},
 					{ "key": "type", "label": "Type" },
 					{ "key": "status", "label": "Status" },
-					{ "key": "unitPrice", "label": "Price", "formatter": "objectCurrency", "formatterOptions": { "decimals": 2 } }
+					{
+						"key": "unitPrice",
+						"label": "Price",
+						"formatter": "objectCurrency",
+						"formatterOptions": { "decimals": 2 }
+					}
 				],
 				"sidebar": {
 					"enabled": true,
@@ -3786,12 +3920,30 @@
 									"key": "lead",
 									"label": "Lead",
 									"widget": "fkResolve",
-									"widgetProps": { "register": "pipelinq", "schema": "lead", "labelField": "title" }
+									"widgetProps": {
+										"register": "pipelinq",
+										"schema": "lead",
+										"labelField": "title"
+									}
 								},
 								{ "key": "quantity", "label": "Qty" },
-								{ "key": "unitPrice", "label": "Unit price", "format": { "style": "currency", "currency": "@config.currency" } },
+								{
+									"key": "unitPrice",
+									"label": "Unit price",
+									"format": {
+										"style": "currency",
+										"currency": "@config.currency"
+									}
+								},
 								{ "key": "discount", "label": "Discount %" },
-								{ "key": "total", "label": "Line total", "format": { "style": "currency", "currency": "@config.currency" } }
+								{
+									"key": "total",
+									"label": "Line total",
+									"format": {
+										"style": "currency",
+										"currency": "@config.currency"
+									}
+								}
 							],
 							"limit": 25,
 							"allowCreate": false,
@@ -4041,7 +4193,12 @@
 						"type": "data",
 						"title": "Refund",
 						"icon": "FileDocument",
-						"content": { "columns": 2, "overrides": { "cashier": { "formatter": "userDisplayName" } } }
+						"content": {
+							"columns": 2,
+							"overrides": {
+								"cashier": { "formatter": "userDisplayName" }
+							}
+						}
 					},
 					{
 						"id": "pos-refund-kpis-refund-amount",
@@ -4223,7 +4380,13 @@
 						"type": "data",
 						"title": "Shift",
 						"icon": "FileDocument",
-						"content": { "columns": 2, "overrides": { "operator": { "formatter": "userDisplayName" }, "managedBy": { "formatter": "userDisplayName" } } }
+						"content": {
+							"columns": 2,
+							"overrides": {
+								"operator": { "formatter": "userDisplayName" },
+								"managedBy": { "formatter": "userDisplayName" }
+							}
+						}
 					},
 					{
 						"id": "shift-kpis-opening-float",
@@ -4611,7 +4774,12 @@
 						"type": "data",
 						"title": "Transaction",
 						"icon": "FileDocument",
-						"content": { "columns": 2, "overrides": { "cashier": { "formatter": "userDisplayName" } } }
+						"content": {
+							"columns": 2,
+							"overrides": {
+								"cashier": { "formatter": "userDisplayName" }
+							}
+						}
 					},
 					{
 						"id": "pos-tx-kpis-line-items",

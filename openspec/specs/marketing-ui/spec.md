@@ -8,7 +8,9 @@ status: in-progress
 
 ## Purpose
 Provides the marketing blast user interface: a SegmentBuilder for visually composing AND/OR rule trees with live validation and member-size estimates, a BlastForm wizard that walks the marketer through name, segment, template, channel, schedule, and A/B and gates sending on compliance, and a BlastMonitor that polls for real-time send progress, totals, and events and can cancel a sending blast.
+
 ## Requirements
+
 ### Requirement: Segment Builder UI Composes Rule Trees
 
 `src/components/SegmentBuilder.vue` and `src/components/SegmentRuleNode.vue` are mounted by `SegmentFormDialog` (`src/dialogs/SegmentFormDialog.vue`), the modal the Segments index page opens from its Add action and its row Edit action (marketing-segments-ui-repair, pipelinq#773). Both scenarios below are exercised end to end by `tests/e2e/spec-coverage/marketing.spec.ts` ("the Segment builder holds save until the rules are complete and valid, then estimates").
@@ -101,3 +103,63 @@ a row click opens nothing.
 - **WHEN** they submit a body with no `{{unsubscribe_link}}` token
 - **THEN** the modal SHALL call `POST /api/templates`, which rejects the save, SHALL render the returned error against the body field rather than only a banner, and SHALL stay open
 
+### Requirement: The Templates Form Lets a Marketer Pick Articles
+
+The campaign template form SHALL let a marketer choose published articles and order them, and SHALL say where in the body they will appear. The form SHALL make the `{{articles}}` marker easy to place rather than expecting the marketer to remember it. Picking articles for a template whose body carries no marker SHALL warn the marketer that the articles will not be rendered, and SHALL still save.
+
+#### Scenario: A marketer picks two articles for a template
+
+- **GIVEN** two published articles
+- **WHEN** a marketer opens a campaign template, picks both and saves
+- **THEN** the template SHALL be stored with both article ids in the chosen order
+
+#### Scenario: Picking articles for a body without the marker warns the marketer
+
+- **GIVEN** a campaign template whose body carries no `{{articles}}` marker
+- **WHEN** a marketer picks an article
+- **THEN** the form SHALL warn that the articles will not appear until the marker is placed
+- **AND** saving SHALL still succeed
+
+#### Scenario: The blast preview shows the embedded articles
+
+- **GIVEN** a campaign template naming two articles and carrying the marker
+- **WHEN** a marketer previews a blast built on that template
+- **THEN** the preview SHALL show both articles' titles and summaries where the marker stood
+
+### Requirement: The Marketing Menu Reaches Social Publishing
+
+The Marketing group SHALL carry Social accounts, Social posts and Social performance, after the mailing entries and before Search queries, so the section reads in the order the work happens: write, send, post, measure. Every one of the three SHALL be a real page reached by its own path, never a hash route.
+
+#### Scenario: The Marketing group reaches the three social pages
+
+- **WHEN** a marketer opens the Marketing group in the navigation
+- **THEN** Social accounts, Social posts and Social performance SHALL be listed
+- **AND** opening each SHALL land on its own page without a hard error
+
+#### Scenario: The social posts page lists the seeded posts
+
+- **WHEN** a marketer opens the Social posts page
+- **THEN** the seeded posts SHALL be listed with their status
+- **AND** a post an agent drafted SHALL be marked as such
+
+### Requirement: A Marketer Composes One Post for Several Networks
+
+The composer SHALL take one body, media, a link, the accounts the post goes to and a moment to send it, and SHALL let a marketer write a variant per network without retyping the rest. It SHALL show, per network, how much of the body fits, and SHALL refuse to submit a variant that does not fit. Submitting SHALL put the post up for approval rather than schedule it, and the approval SHALL be a visible step rather than a checkbox.
+
+#### Scenario: A marketer writes a variant for one network only
+
+- **GIVEN** a post with a body and two accounts on different networks
+- **WHEN** the marketer writes a variant for one of the two and saves
+- **THEN** the stored post SHALL carry that one variant
+- **AND** the other network SHALL still use the post's own body
+
+#### Scenario: The composer says when a variant does not fit
+
+- **WHEN** a marketer types a variant longer than its network accepts
+- **THEN** the composer SHALL say so and SHALL NOT let the post be submitted for approval
+
+#### Scenario: The calendar shows what goes out when
+
+- **WHEN** a marketer opens the Social posts page
+- **THEN** scheduled posts SHALL be listed by the moment they go out
+- **AND** a failed post SHALL show its reason and offer a retry
