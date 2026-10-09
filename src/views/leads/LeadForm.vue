@@ -71,6 +71,7 @@
 				<NcSelect
 					v-model="form.priority"
 					:options="priorityOptions"
+					:reduce="(o) => o.value"
 					:aria-label-combobox="t('pipelinq', 'Priority')"
 					labelOutside
 					:clearable="false"
@@ -188,6 +189,7 @@
 
 <script>
 import { CnResourceSelect } from '@conduction/nextcloud-vue'
+import { translate } from '@nextcloud/l10n'
 import {
 	NcButton,
 	NcDateTimePickerNative,
@@ -204,6 +206,7 @@ import { pipelineAppliesTo } from '../../services/pipelineUtils.js'
 import { reportingCurrency } from '../../services/reportingCurrency.js'
 import { useLeadSourcesStore } from '../../store/modules/leadSources.js'
 import { useObjectStore } from '../../store/modules/object.js'
+import { enumOptions, LEAD_PRIORITY_LABELS } from '../../utils/enumLabels.js'
 
 export default {
 	name: 'LeadForm',
@@ -262,7 +265,9 @@ export default {
 				stage: null,
 			},
 
-			priorityOptions: ['low', 'normal', 'high', 'urgent'],
+			priorityOptions: enumOptions(LEAD_PRIORITY_LABELS, (text) =>
+				translate('pipelinq', text),
+			),
 		}
 	},
 

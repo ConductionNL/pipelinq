@@ -208,6 +208,7 @@
 					"id": "go-tickets",
 					"placement": "right",
 					"sinceVersion": "1.1.0",
+					"title": "Questions and reports",
 					"body": "Questions and reports from residents and businesses land here. Open Questions and reports.",
 					"task": "Click Questions and reports in the menu",
 					"target": {
@@ -223,6 +224,7 @@
 					"id": "create-ticket",
 					"placement": "bottom",
 					"sinceVersion": "1.1.0",
+					"title": "Register a question",
 					"allowManualNext": true,
 					"body": "Register a question you took by phone, mail or at the desk.",
 					"task": "Click the add button and save a question",
@@ -243,6 +245,7 @@
 					"id": "go-my-work",
 					"placement": "right",
 					"sinceVersion": "1.1.0",
+					"title": "My Work",
 					"body": "My Work lists the questions assigned to you. Open My Work.",
 					"task": "Click My Work in the menu",
 					"target": {
@@ -258,6 +261,7 @@
 					"id": "go-queue",
 					"placement": "right",
 					"sinceVersion": "1.1.0",
+					"title": "The queue",
 					"body": "The queue holds the questions nobody has picked up yet. Open the queue.",
 					"task": "Click Queue in the menu",
 					"target": {
@@ -273,6 +277,7 @@
 					"id": "go-clients",
 					"placement": "right",
 					"sinceVersion": "1.1.0",
+					"title": "Residents and businesses",
 					"body": "Every question belongs to a resident or a business. Open Residents and businesses.",
 					"task": "Click Residents and businesses in the menu",
 					"target": {
@@ -288,6 +293,7 @@
 					"id": "create-client",
 					"placement": "bottom",
 					"sinceVersion": "1.1.0",
+					"title": "Add a resident or business",
 					"allowManualNext": true,
 					"body": "Add a resident or a business, so you can link their questions to them.",
 					"task": "Click the add button and save a client",

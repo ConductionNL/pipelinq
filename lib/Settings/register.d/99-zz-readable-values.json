@@ -1,0 +1,145 @@
+{
+  "_meta": {
+    "spdx-license": "EUPL-1.2",
+    "spdx-copyright": "2026 Conduction B.V.",
+    "description": "Round 4 item 2 (openspec change round4-readable-values-and-tour-titles). The client, lead and service pages showed stored codes (person, organization, open, normal, free, staff). nextcloud-vue renders a property's x-enum-labels in forms, filters, table cells and detail fields, through the app's translate, so every enum on these schemas carries an English label here. Each label has an en and an nl catalogue entry. Presentation only: no value a record may hold changes. Named 99-zz so it merges after the fragments that declare these schemas."
+  },
+  "components": {
+    "schemas": {
+      "client": {
+        "slug": "client",
+        "properties": {
+          "type": {
+            "x-enum-labels": {
+              "person": "Person",
+              "organization": "Organisation"
+            }
+          },
+          "lifecycleStage": {
+            "x-enum-labels": {
+              "lead": "Lead",
+              "prospect": "Prospect",
+              "customer": "Customer",
+              "churned": "Churned",
+              "dormant": "Dormant"
+            }
+          },
+          "accountStatus": {
+            "x-enum-labels": {
+              "active": "Active",
+              "inactive": "Inactive",
+              "blocked": "Blocked"
+            }
+          },
+          "preferredChannel": {
+            "x-enum-labels": {
+              "email": "Email",
+              "phone": "Phone",
+              "whatsapp": "WhatsApp",
+              "linkedin": "LinkedIn",
+              "x": "X",
+              "mastodon": "Mastodon",
+              "bluesky": "Bluesky",
+              "other": "Other"
+            }
+          }
+        }
+      },
+      "lead": {
+        "slug": "lead",
+        "properties": {
+          "status": {
+            "x-enum-labels": {
+              "open": "Open",
+              "won": "Won",
+              "lost": "Lost"
+            }
+          },
+          "priority": {
+            "x-enum-labels": {
+              "low": "Low",
+              "normal": "Normal",
+              "high": "High",
+              "urgent": "Urgent"
+            }
+          },
+          "forecast_category": {
+            "x-enum-labels": {
+              "commit": "Commit",
+              "best_case": "Best case",
+              "pipeline": "Pipeline",
+              "closed_won": "Closed won",
+              "closed_lost": "Closed lost",
+              "omitted": "Omitted"
+            }
+          }
+        }
+      },
+      "appointmentService": {
+        "slug": "appointmentService",
+        "properties": {
+          "status": {
+            "x-enum-labels": {
+              "draft": "Draft",
+              "active": "Active",
+              "archived": "Archived"
+            }
+          },
+          "cancellationPolicy": {
+            "x-enum-labels": {
+              "free": "Free",
+              "charge-deposit": "Charge deposit",
+              "always-charge": "Always charge"
+            }
+          },
+          "requiredResourceTypes": {
+            "x-enum-labels": {
+              "staff": "Staff",
+              "room": "Room",
+              "equipment": "Equipment"
+            },
+            "items": {
+              "x-enum-labels": {
+                "staff": "Staff",
+                "room": "Room",
+                "equipment": "Equipment"
+              }
+            }
+          },
+          "multiStep": {
+            "items": {
+              "properties": {
+                "resourceType": {
+                  "x-enum-labels": {
+                    "staff": "Staff",
+                    "room": "Room",
+                    "equipment": "Equipment"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "appointmentResource": {
+        "slug": "appointmentResource",
+        "properties": {
+          "status": {
+            "x-enum-labels": {
+              "active": "Active",
+              "inactive": "Inactive",
+              "archived": "Archived"
+            }
+          },
+          "type": {
+            "x-enum-labels": {
+              "staff": "Staff",
+              "room": "Room",
+              "equipment": "Equipment"
+            }
+          }
+        }
+      }
+    }
+  }
+}

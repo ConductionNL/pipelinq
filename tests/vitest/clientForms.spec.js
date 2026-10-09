@@ -31,7 +31,10 @@ vi.mock('@nextcloud/router', () => ({
 	generateUrl: (p) => p,
 	generateOcsUrl: (p) => p,
 }))
-vi.mock('@nextcloud/l10n', () => ({ getLanguage: () => 'en' }))
+vi.mock('@nextcloud/l10n', () => ({
+	getLanguage: () => 'en',
+	translate: (app, text) => text,
+}))
 vi.mock('@nextcloud/vue', () => {
 	const passthrough = (name) => ({
 		name,
