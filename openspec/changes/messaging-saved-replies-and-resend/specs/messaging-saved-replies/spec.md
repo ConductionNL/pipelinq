@@ -60,15 +60,18 @@ stay in the text as written.
 
 TicketDetail SHALL show a Reply to the customer section on request and
 complaint tickets with the customer's portal replies and a text area for the
-message to the customer. Saving SHALL write the ticket's `customerMessage`.
-Save and wait for the customer SHALL also set the status to
+message to the customer. Send answer SHALL write the ticket's
+`customerMessage`. With "Also set the ticket to waiting for the customer"
+ticked, which is the default, it SHALL also set the status to
 `awaiting_customer`. portaliq SHALL receive `customerMessage` for the
-customer's requests and complaints.
+customer's requests and complaints. (Amended to the PqTicketAntwoord board,
+decision 130: one Send answer button with a waiting checkbox instead of two
+save buttons.)
 
 #### Scenario: An agent answers a portal request and waits for the customer
 
 - GIVEN a request ticket with one customer reply from the portal
-- WHEN an agent opens the ticket, picks a saved reply, edits it and presses Save and wait for the customer
+- WHEN an agent opens the ticket, picks a saved reply, edits it and presses Send answer with the waiting box ticked
 - THEN the ticket's message to the customer holds the edited text
 - AND the ticket status is awaiting customer
 
@@ -78,6 +81,7 @@ customer's requests and complaints.
 - WHEN the customer opens that request in portaliq
 - THEN the request shows the message to the customer
 - AND the ticket's internal notes are not shown
+- @e2e exclude portaliq renders the request in its own repository; the whitelist is asserted in tests/Unit/Portal/PortalContributionProviderTest.php
 
 ### Requirement: An agent starts an email from a saved reply (REQ-MSR-005)
 

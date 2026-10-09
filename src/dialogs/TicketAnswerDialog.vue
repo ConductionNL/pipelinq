@@ -4,8 +4,8 @@ Copyright (C) 2026 Conduction B.V.
 
 Answer the customer, from the ticket page's Answer button.
 
-The body is CustomerReplySection, unchanged: the same text area, the same two
-save buttons and the same save the full structure shows in the page. This
+The body is CustomerReplySection, unchanged: the same text area, the same send
+button and the same save the full structure shows in the page. This
 dialog adds no way to answer, it is a second door to the one that exists.
 
 An `open-modal` action carries no object context, so the route names the

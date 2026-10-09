@@ -244,6 +244,180 @@ class MessagingService {
 	}//end send()
 
 	/**
+	 * Load one channelMessage row through the register RBAC.
+	 *
+	 * @param string $messageId The message UUID.
+	 *
+	 * @return array<string, mixed>|null The row, or null when absent or not readable.
+	 *
+	 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-sends-a-failed-message-again-req-msr-006
+	 */
+	public function loadMessage(string $messageId): ?array {
+		$objectService = $this->objectService();
+		if ($messageId === '' || $objectService === null) {
+			return null;
+		}
+
+		try {
+			$entity = $objectService->find(
+				id: $messageId,
+				register: $this->registerSlug(),
+				schema: $this->messageSchema()
+			);
+		} catch (Throwable $e) {
+			return null;
+		}
+
+		if ($entity === null) {
+			return null;
+		}
+
+		return $this->toArray(value: $entity);
+	}//end loadMessage()
+
+	/**
+	 * Why a message may not be sent again, or null when it may.
+	 *
+	 * @param array<string, mixed> $message The channelMessage row.
+	 *
+	 * @return string|null `inbound`, `not-failed`, `already-resent` or null.
+	 *
+	 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-sends-a-failed-message-again-req-msr-006
+	 */
+	public function resendRefusal(array $message): ?string {
+		if (($message['direction'] ?? '') !== 'outbound') {
+			return 'inbound';
+		}
+
+		if (in_array(($message['deliveryStatus'] ?? ''), ['failed', 'expired'], true) === false) {
+			return 'not-failed';
+		}
+
+		$metadata = $message['metadata'] ?? [];
+		if (is_array($metadata) === true && (string)($metadata['resentAs'] ?? '') !== '') {
+			return 'already-resent';
+		}
+
+		return null;
+	}//end resendRefusal()
+
+	/**
+	 * Send a failed message again through the normal send() and its checks.
+	 *
+	 * A template row repeats its template with the stored parameters; any
+	 * other row repeats its text. On success the new row carries
+	 * `metadata.resendOf` and the failed row `metadata.resentAs`; the failed
+	 * row keeps its delivery status.
+	 *
+	 * @param array<string, mixed> $message The failed row (refusals already checked).
+	 * @param array<string, mixed> $contact The contact, loaded through the RBAC.
+	 * @param string $actor Acting user id.
+	 *
+	 * @return array{status: string, messageId?: string, reason?: string} Sanitised outcome.
+	 *
+	 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-sends-a-failed-message-again-req-msr-006
+	 */
+	public function resend(array $message, array $contact, string $actor): array {
+		$channel = (string)($message['channel'] ?? '');
+		$templateId = (string)($message['templateId'] ?? '');
+		$body = '';
+		$parameters = [];
+		if ($channel !== 'whatsapp' || $templateId === '') {
+			$templateId = '';
+			$body = (string)($message['body'] ?? '');
+		}
+
+		if ($templateId !== '') {
+			$parameters = array_values(array_map('strval', (array)($message['templateParameters'] ?? [])));
+		}
+
+		$template = null;
+		if ($templateId !== '') {
+			$template = $templateId;
+		}
+
+		$outcome = $this->send(
+			contact: $contact,
+			channel: $channel,
+			body: $body,
+			templateId: $template,
+			parameters: $parameters,
+			providerHint: null,
+			actor: $actor
+		);
+
+		$newId = (string)($outcome['messageId'] ?? '');
+		if ($outcome['status'] === 'sent' && $newId !== '') {
+			$this->linkResend(original: $message, newId: $newId);
+		}
+
+		return $outcome;
+	}//end resend()
+
+	/**
+	 * Link a failed row and the row that sent it again, both ways.
+	 *
+	 * @param array<string, mixed> $original The failed row.
+	 * @param string $newId The new row's id.
+	 *
+	 * @return void
+	 */
+	private function linkResend(array $original, string $newId): void {
+		$originalId = (string)($original['id'] ?? ($original['uuid'] ?? ''));
+		$this->mergeMetadata(row: $original, rowId: $originalId, fields: ['resentAs' => $newId]);
+
+		$new = $this->loadMessage(messageId: $newId);
+		if ($new !== null) {
+			$this->mergeMetadata(row: $new, rowId: $newId, fields: ['resendOf' => $originalId]);
+		}
+	}//end linkResend()
+
+	/**
+	 * Save a message row with fields added to its metadata.
+	 *
+	 * @param array<string, mixed> $row The row.
+	 * @param string $rowId Its id.
+	 * @param array<string, string> $fields Metadata fields to add.
+	 *
+	 * @return void
+	 */
+	private function mergeMetadata(array $row, string $rowId, array $fields): void {
+		$objectService = $this->objectService();
+		if ($objectService === null || $rowId === '') {
+			return;
+		}
+
+		$metadata = $row['metadata'] ?? [];
+		if (is_array($metadata) === false) {
+			$metadata = [];
+		}
+
+		$row['metadata'] = array_merge($metadata, $fields);
+		try {
+			$objectService->saveObject(
+				object: $row,
+				register: $this->registerSlug(),
+				schema: $this->messageSchema(),
+				uuid: $rowId
+			);
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				'MessagingService.resend: could not link the resent message',
+				['messageId' => $rowId, 'exception' => $e->getMessage()]
+			);
+		}
+	}//end mergeMetadata()
+
+	/**
+	 * The channelMessage schema slug.
+	 *
+	 * @return string Slug.
+	 */
+	private function messageSchema(): string {
+		return $this->schemaSlug(key: 'message_schema', default: 'channelMessage');
+	}//end messageSchema()
+
+	/**
 	 * Run the zero-cost connectivity test for a provider through the OR leaf.
 	 *
 	 * For a mock-flagged source the leaf short-circuits and returns the canned

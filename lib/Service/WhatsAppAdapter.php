@@ -261,6 +261,7 @@ class WhatsAppAdapter {
 			body: $this->bodyForSend(templateName: $templateName, body: $body),
 			templateId: $this->templateIdForSend(template: $template),
 			error: 'all WhatsApp providers returned transient errors',
+			parameters: $parameters,
 		);
 	}//end send()
 
@@ -566,6 +567,7 @@ class WhatsAppAdapter {
 				body: $this->bodyForSend(templateName: $templateName, body: $body),
 				templateId: $this->templateIdForSend(template: $template),
 				error: $e->getMessage(),
+				parameters: $parameters,
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(
@@ -1015,8 +1017,11 @@ class WhatsAppAdapter {
 	 * @param string $body Body (or template marker).
 	 * @param string $templateId Template UUID or empty.
 	 * @param string $error Error description.
+	 * @param array<int, string> $parameters Template parameters, kept so Send again can repeat a template send.
 	 *
 	 * @return array{status: string, error: string, providerId?: string} Outcome.
+	 *
+	 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-sends-a-failed-message-again-req-msr-006
 	 */
 	private function persistFailureAndAlert(
 		string $contactId,
@@ -1024,6 +1029,7 @@ class WhatsAppAdapter {
 		string $body,
 		string $templateId,
 		string $error,
+		array $parameters = [],
 	): array {
 		$conversationId = $this->findOrOpenConversation(
 			contactId: $contactId,
@@ -1040,6 +1046,7 @@ class WhatsAppAdapter {
 				'body' => $body,
 				'providerId' => $providerId,
 				'templateId' => $templateId,
+				'templateParameters' => array_values($parameters),
 				'deliveryStatus' => 'failed',
 				'sentAt' => $this->nowIso(),
 				'metadata' => ['error' => $error],

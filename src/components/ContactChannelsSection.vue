@@ -74,6 +74,15 @@
 							:title="t('pipelinq', 'Verified')" />
 						<NcButton
 							variant="tertiary"
+							data-testid="write-email-button"
+							@click="writeEmailTo = entry.value">
+							<template #icon>
+								<EmailEditOutline :size="16" />
+							</template>
+							{{ t('pipelinq', 'Write email') }}
+						</NcButton>
+						<NcButton
+							variant="tertiary"
 							:aria-label="t('pipelinq', 'Edit')"
 							@click="openEmailPhoneModal('email', index)">
 							<template #icon>
@@ -230,6 +239,14 @@
 			@close="emailPhoneModal.open = false"
 			@save="onEmailPhoneSaved" />
 
+		<WriteEmailModal
+			v-if="writeEmailTo"
+			:address="writeEmailTo"
+			:placeholderValues="emailPlaceholderValues"
+			:language="
+				(entity && (entity.correspondenceLanguage || entity.language)) || ''
+			"
+			@close="writeEmailTo = ''" />
 		<ContactSocialProfileModal
 			v-if="socialModal.open"
 			:profile="socialModal.profile"
@@ -243,11 +260,13 @@ import { showError, showSuccess } from '@nextcloud/dialogs'
 import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
 import CheckCircle from 'vue-material-design-icons/CheckCircle.vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
+import EmailEditOutline from 'vue-material-design-icons/EmailEditOutline.vue'
 import Pencil from 'vue-material-design-icons/Pencil.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import Star from 'vue-material-design-icons/Star.vue'
 import ContactEmailPhoneModal from '../modals/ContactEmailPhoneModal.vue'
 import ContactSocialProfileModal from '../modals/ContactSocialProfileModal.vue'
+import WriteEmailModal from '../modals/WriteEmailModal.vue'
 import { writeBack } from '../services/contactSyncApi.js'
 import { useObjectStore } from '../store/modules/object.js'
 
@@ -279,6 +298,8 @@ export default {
 		NcLoadingIcon,
 		ContactEmailPhoneModal,
 		ContactSocialProfileModal,
+		WriteEmailModal,
+		EmailEditOutline,
 		Plus,
 		Pencil,
 		Delete,
@@ -317,6 +338,7 @@ export default {
 			},
 
 			socialModal: { open: false, profile: null, index: null },
+			writeEmailTo: '',
 		}
 	},
 
@@ -341,6 +363,19 @@ export default {
 			const bag =
 				ctx && typeof ctx === 'object' && 'value' in ctx ? ctx.value : ctx
 			return (bag && bag.objectId) || ''
+		},
+
+		/**
+		 * Saved reply placeholder values for an email to this party.
+		 *
+		 * @return {object}
+		 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-starts-an-email-from-a-saved-reply-req-msr-005
+		 */
+		emailPlaceholderValues() {
+			const name = (this.entity && this.entity.name) || ''
+			return this.entityType === 'client'
+				? { 'client.name': name }
+				: { 'contact.name': name }
 		},
 
 		/**

@@ -126,6 +126,7 @@ import Magnify from 'vue-material-design-icons/Magnify.vue'
 import MapMarkerCheck from 'vue-material-design-icons/MapMarkerCheck.vue'
 import MapMarkerPath from 'vue-material-design-icons/MapMarkerPath.vue'
 import MessageOutline from 'vue-material-design-icons/MessageOutline.vue'
+import MessageReplyTextOutline from 'vue-material-design-icons/MessageReplyTextOutline.vue'
 import MessageText from 'vue-material-design-icons/MessageText.vue'
 import MessageTextOutline from 'vue-material-design-icons/MessageTextOutline.vue'
 import NewspaperVariantOutline from 'vue-material-design-icons/NewspaperVariantOutline.vue'
@@ -290,6 +291,7 @@ export default {
 	MapMarkerCheck,
 	MapMarkerPath,
 	MessageOutline,
+	MessageReplyTextOutline,
 	MessageText,
 	MessageTextOutline,
 	NewspaperVariantOutline,
