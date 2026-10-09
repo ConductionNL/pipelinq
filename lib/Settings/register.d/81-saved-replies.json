@@ -1,0 +1,96 @@
+{
+  "_meta": {
+    "spdx-license": "EUPL-1.2",
+    "spdx-copyright": "2026 Conduction B.V.",
+    "description": "Saved replies (messaging-saved-replies-and-resend, D2). A short text the team writes once and an agent picks wherever they answer a client: the Send message dialog (sms, whatsapp), the answer to the customer on a ticket (portal) and the Write email dialog (email). Shared by the team; there are no personal replies in this change. The picker fills {{client.name}}, {{contact.name}}, {{ticket.title}} and {{agent.name}} in the browser and leaves an unknown placeholder as written. No controller: the store reads and writes these through OpenRegister (ADR-022)."
+  },
+  "components": {
+    "registers": {
+      "pipelinq": {
+        "schemas": [
+          "savedReply"
+        ]
+      }
+    },
+    "schemas": {
+      "savedReply": {
+        "slug": "savedReply",
+        "title": "Saved reply",
+        "icon": "MessageReplyTextOutline",
+        "version": "1.0.0",
+        "summary": "A reply the team writes once and agents insert when they answer a client",
+        "description": "A saved reply with a title, a text and the channels it fits. Agents pick it from a list when they answer and can still change the text before sending.",
+        "required": [
+          "title",
+          "body"
+        ],
+        "authorization": {
+          "create": [
+            "authenticated"
+          ],
+          "read": [
+            "authenticated"
+          ],
+          "update": [
+            "authenticated"
+          ],
+          "delete": [
+            "authenticated"
+          ]
+        },
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title",
+            "description": "The name agents look for in the list, for example Opening hours.",
+            "maxLength": 120
+          },
+          "body": {
+            "type": "string",
+            "title": "Text",
+            "description": "The text that goes into the message. You can use {{client.name}}, {{contact.name}}, {{ticket.title}} and {{agent.name}}.",
+            "maxLength": 4000
+          },
+          "channels": {
+            "type": "array",
+            "title": "Channels",
+            "description": "Where agents can pick this reply.",
+            "items": {
+              "type": "string",
+              "enum": [
+                "sms",
+                "whatsapp",
+                "email",
+                "portal"
+              ]
+            },
+            "x-enum-labels": {
+              "sms": "SMS",
+              "whatsapp": "WhatsApp",
+              "email": "Email",
+              "portal": "Portal"
+            },
+            "default": [
+              "sms",
+              "whatsapp",
+              "email",
+              "portal"
+            ]
+          },
+          "language": {
+            "type": "string",
+            "title": "Language",
+            "description": "Shown first to clients who asked to be written to in this language. Leave empty for every language.",
+            "maxLength": 35
+          },
+          "active": {
+            "type": "boolean",
+            "title": "Active",
+            "description": "Switch off to hide this reply from the list without removing it.",
+            "default": true
+          }
+        }
+      }
+    }
+  }
+}

@@ -538,6 +538,7 @@ return [
         // server-side send + composer preflight + consent recording +
         // admin-gated zero-cost provider connectivity test.
         ['name' => 'messaging#send',         'url' => '/api/messaging/send',                    'verb' => 'POST'],
+        ['name' => 'messaging#resend',       'url' => '/api/messaging/messages/{id}/resend',    'verb' => 'POST'],
         ['name' => 'messaging#preflight',    'url' => '/api/messaging/preflight/{contactId}',   'verb' => 'GET'],
         ['name' => 'messaging#consent',      'url' => '/api/messaging/consent',                 'verb' => 'POST'],
         ['name' => 'messaging#testProvider', 'url' => '/api/messaging/providers/{id}/test',     'verb' => 'POST'],

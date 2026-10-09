@@ -981,7 +981,7 @@ const registry = {
 	CustomerReplySection: {
 		kind: 'section',
 		component: CustomerReplySection,
-		_note: "Answer the customer on a request or complaint (questions-about-a-citizen-dossier REQ-QCD-007, the minimal form of messaging-saved-replies-and-resend D5 without the saved-reply picker): portal replies oldest first, a text area bound to customerMessage, Save answer and Save and wait for a reply (status awaiting_customer). Writes through the object store, so portaliq's change rule pipelinq.question.answered hears the change.",
+		_note: "Answer the customer on a request or complaint (questions-about-a-citizen-dossier REQ-QCD-007, messaging-saved-replies-and-resend D5): portal replies oldest first, a text area bound to customerMessage, a saved reply picker (messaging-saved-replies-and-resend) and Send answer with a waiting-for-the-customer checkbox (status awaiting_customer, PqTicketAntwoord board). Writes through the object store, so portaliq's change rule pipelinq.question.answered hears the change.",
 	},
 	WooConversionSection: {
 		kind: 'section',

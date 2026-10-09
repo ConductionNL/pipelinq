@@ -107,9 +107,11 @@ an approved WhatsApp template stays the only option outside the window),
 ### D5. Reply to the customer section on TicketDetail
 
 `CustomerReplySection` (`kind: 'section'`) shows the ticket's `portalReplies`
-oldest first, then a text area bound to `customerMessage` with the picker. Two
-buttons: Save answer, and Save and wait for the customer, which also sets
-`status` to `awaiting_customer` (the status the portal reply path already
+oldest first, then a text area bound to `customerMessage` with the picker, a
+checkbox "Also set the ticket to waiting for the customer" (ticked by default)
+and one Send answer button, as the PqTicketAntwoord board draws it (decision
+130; this replaced the two buttons Save answer and Save and wait). With the box
+ticked, saving also sets `status` to `awaiting_customer` (the status the portal reply path already
 resumes from, `PortalRequestService` :326). It renders for `ticketType`
 `request` and `complaint` only.
 

@@ -11,7 +11,7 @@
  * - DossierSnapshotSection lists the dossier as the resident saw it, with
  *   links, and renders nothing for an ordinary ticket.
  * - CustomerReplySection writes customerMessage (and awaiting_customer on
- *   "Save and wait for a reply") while keeping the rest of the ticket, since
+ *   "Send answer" with the wait box ticked) while keeping the rest of the ticket, since
  *   the store's save is a PUT that replaces the object.
  * - WooConversionSection is hidden unless dossiq can take the ticket, and
  *   shows the case after converting.
@@ -68,6 +68,23 @@ vi.mock('@nextcloud/vue', () => ({
 			return h('div', { class: 'note-' + this.type }, this.$slots.default?.())
 		},
 	},
+	NcCheckboxRadioSwitch: {
+		name: 'NcCheckboxRadioSwitch',
+		props: ['modelValue'],
+		emits: ['update:modelValue'],
+		render() {
+			return h('label', [
+				h('input', {
+					type: 'checkbox',
+					checked: this.modelValue,
+					onChange: (event) =>
+						this.$emit('update:modelValue', event.target.checked),
+				}),
+				this.$slots.default?.(),
+			])
+		},
+	},
+	NcSelect: { name: 'NcSelect', render: () => h('div') },
 	NcTextArea: {
 		name: 'NcTextArea',
 		props: ['modelValue', 'label', 'helperText', 'resize'],
@@ -246,7 +263,7 @@ describe('CustomerReplySection', () => {
 		await wrapper.find('textarea').setValue('Het besluit valt in november.')
 		await wrapper
 			.findAll('button')
-			.find((b) => b.text() === 'Save and wait for a reply')
+			.find((b) => b.text() === 'Send answer')
 			.trigger('click')
 		await flushPromises()
 
@@ -279,7 +296,7 @@ describe('CustomerReplySection', () => {
 
 		await wrapper
 			.findAll('button')
-			.find((b) => b.text() === 'Save answer')
+			.find((b) => b.text() === 'Send answer')
 			.trigger('click')
 		await flushPromises()
 		expect(storeMock.saveObject.mock.calls[0][1].portalAnswers).toHaveLength(1)
@@ -287,7 +304,7 @@ describe('CustomerReplySection', () => {
 		await wrapper.find('textarea').setValue('Tweede antwoord')
 		await wrapper
 			.findAll('button')
-			.find((b) => b.text() === 'Save answer')
+			.find((b) => b.text() === 'Send answer')
 			.trigger('click')
 		await flushPromises()
 		const answers = storeMock.saveObject.mock.calls[1][1].portalAnswers
@@ -298,13 +315,14 @@ describe('CustomerReplySection', () => {
 		expect(answers[0].createdAt).toBe('2026-09-28T10:00:00Z')
 	})
 
-	it('"Save answer" leaves the status alone', async () => {
+	it('"Send answer" without the wait box leaves the status alone', async () => {
 		const wrapper = await mountFor(CustomerReplySection)
 
 		await wrapper.find('textarea').setValue('Antwoord')
+		await wrapper.find('input[type="checkbox"]').setValue(false)
 		await wrapper
 			.findAll('button')
-			.find((b) => b.text() === 'Save answer')
+			.find((b) => b.text() === 'Send answer')
 			.trigger('click')
 		await flushPromises()
 
@@ -321,7 +339,7 @@ describe('CustomerReplySection', () => {
 		await wrapper.find('textarea').setValue('Antwoord')
 		await wrapper
 			.findAll('button')
-			.find((b) => b.text() === 'Save answer')
+			.find((b) => b.text() === 'Send answer')
 			.trigger('click')
 		await flushPromises()
 

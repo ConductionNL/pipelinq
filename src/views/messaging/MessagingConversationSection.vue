@@ -127,6 +127,27 @@
 				<p class="messaging-conversation__body">
 					{{ message.body || '—' }}
 				</p>
+				<div
+					v-if="canResend(message)"
+					class="messaging-conversation__resend">
+					<NcButton
+						variant="secondary"
+						:disabled="resending === message.id"
+						data-testid="messaging-resend"
+						@click="resend(message)">
+						{{
+							resending === message.id
+								? t('pipelinq', 'Sending…')
+								: t('pipelinq', 'Send again')
+						}}
+					</NcButton>
+					<span
+						v-if="resendErrors[message.id]"
+						class="messaging-conversation__status--error"
+						role="alert">
+						{{ resendErrors[message.id] }}
+					</span>
+				</div>
 			</li>
 		</ul>
 
@@ -135,8 +156,11 @@
 			:contactId="effectiveContactId"
 			:clientId="effectiveClientId"
 			:preflight="preflightForModal"
+			:initialChannel="composerChannel"
+			:placeholderValues="placeholderValues"
+			:language="contactLanguage"
 			@sent="onSent"
-			@close="showComposer = false" />
+			@close="closeComposer" />
 	</section>
 </template>
 
@@ -194,6 +218,11 @@ export default {
 			resolvedClientId: '',
 			preflight: null,
 			showComposer: false,
+			composerChannel: '',
+			contactRecord: null,
+			clientRecord: null,
+			resending: '',
+			resendErrors: {},
 		}
 	},
 
@@ -233,6 +262,46 @@ export default {
 				id: c.id,
 				label: c.name || c.id,
 			}))
+		},
+
+		/**
+		 * The selected contact, from the page or from the client's contacts.
+		 *
+		 * @return {object|null}
+		 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-inserts-a-saved-reply-where-they-answer-req-msr-003
+		 */
+		selectedContact() {
+			if (this.entityType === 'contact') {
+				return this.contactRecord
+			}
+			return (
+				this.linkedContacts.find((c) => c.id === this.selectedContactId)
+				|| null
+			)
+		},
+
+		/**
+		 * Saved reply placeholder values this section holds.
+		 *
+		 * @return {object}
+		 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-inserts-a-saved-reply-where-they-answer-req-msr-003
+		 */
+		placeholderValues() {
+			return {
+				'contact.name': (this.selectedContact && this.selectedContact.name) || '',
+				'client.name': (this.clientRecord && this.clientRecord.name) || '',
+			}
+		},
+
+		/**
+		 * The contact's correspondence language.
+		 *
+		 * @return {string}
+		 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-inserts-a-saved-reply-where-they-answer-req-msr-003
+		 */
+		contactLanguage() {
+			const contact = this.selectedContact
+			return (contact && (contact.correspondenceLanguage || contact.language)) || ''
 		},
 
 		preflightConsent() {
@@ -368,7 +437,9 @@ export default {
 					'contact',
 					this.entityId,
 				)
+				this.contactRecord = contact || null
 				this.resolvedClientId = (contact && contact.client) || ''
+				await this.fetchClient(this.resolvedClientId)
 			} catch {
 				this.resolvedClientId = ''
 			}
@@ -379,6 +450,7 @@ export default {
 		 */
 		async fetchLinkedContacts() {
 			this.loadingContacts = true
+			this.fetchClient(this.entityId)
 			try {
 				this.linkedContacts =
 					(await this.objectStore.fetchCollection('contact', {
@@ -464,13 +536,121 @@ export default {
 		},
 
 		/**
+		 * Read the client's name for the saved reply placeholders.
+		 *
+		 * @param {string} clientId The client id, or empty.
+		 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-inserts-a-saved-reply-where-they-answer-req-msr-003
+		 */
+		async fetchClient(clientId) {
+			if (!clientId) {
+				this.clientRecord = null
+				return
+			}
+			try {
+				this.clientRecord =
+					(await this.objectStore.fetchObject('client', clientId)) || null
+			} catch {
+				this.clientRecord = null
+			}
+		},
+
+		/**
 		 * @spec openspec/changes/outbound-messaging-provider-wiring/tasks.md#task-4.2
 		 */
 		openComposer() {
 			if (!this.effectiveContactId) {
 				return
 			}
+			this.composerChannel = ''
 			this.showComposer = true
+		},
+
+		/**
+		 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-sends-a-failed-message-again-req-msr-006
+		 */
+		closeComposer() {
+			this.showComposer = false
+			this.composerChannel = ''
+		},
+
+		/**
+		 * Whether a row offers Send again: an outbound WhatsApp or SMS that
+		 * failed or expired and was not sent again yet.
+		 *
+		 * @param {object} message A channelMessage row.
+		 * @return {boolean}
+		 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-sends-a-failed-message-again-req-msr-006
+		 */
+		canResend(message) {
+			const metadata = (message && message.metadata) || {}
+			return (
+				!!message
+				&& message.direction === 'outbound'
+				&& ['sms', 'whatsapp'].includes(message.channel)
+				&& ['failed', 'expired'].includes(message.deliveryStatus)
+				&& !metadata.resentAs
+			)
+		},
+
+		/**
+		 * Send a failed message again. A closed WhatsApp window opens the
+		 * composer on WhatsApp for an approved template; any other refusal
+		 * shows the server's reason on the row.
+		 *
+		 * @param {object} message The failed row.
+		 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-sends-a-failed-message-again-req-msr-006
+		 */
+		async resend(message) {
+			if (this.resending) {
+				return
+			}
+			this.resending = message.id
+			this.resendErrors = { ...this.resendErrors, [message.id]: '' }
+			let status = 'failed'
+			try {
+				const { data } = await axios.post(
+					generateUrl('/apps/pipelinq/api/messaging/messages/{id}/resend', {
+						id: message.id,
+					}),
+				)
+				status = (data && data.status) || 'failed'
+			} catch (error) {
+				status = error?.response?.data?.status || 'failed'
+			} finally {
+				this.resending = ''
+			}
+			if (status === 'sent') {
+				this.onSent()
+				return
+			}
+			if (status === 'template-required') {
+				this.composerChannel = 'whatsapp'
+				this.showComposer = true
+				return
+			}
+			this.resendErrors = {
+				...this.resendErrors,
+				[message.id]: this.resendReason(status),
+			}
+		},
+
+		/**
+		 * The text for a refused Send again.
+		 *
+		 * @param {string} status The server's status.
+		 * @return {string}
+		 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-sends-a-failed-message-again-req-msr-006
+		 */
+		resendReason(status) {
+			const reasons = {
+				'consent-missing': t('pipelinq', 'Not sent: the contact has not given consent for this channel.'),
+				'budget-exceeded': t('pipelinq', 'Not sent: the messaging budget for this period is used up.'),
+				'no-provider': t('pipelinq', 'Not sent: no provider is set up for this channel.'),
+				'template-invalid': t('pipelinq', 'Not sent: the template is no longer approved.'),
+				'already-resent': t('pipelinq', 'This message was already sent again.'),
+				'not-failed': t('pipelinq', 'This message did not fail, so it is not sent again.'),
+			}
+			return reasons[status] || t('pipelinq', 'Sending failed again. Try again later.')
 		},
 
 		/**
@@ -545,6 +725,14 @@ export default {
 
 .messaging-conversation__consent--error {
 	color: var(--color-error-text, var(--color-error));
+}
+
+.messaging-conversation__resend {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin-top: 4px;
 }
 
 .messaging-conversation__list {

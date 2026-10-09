@@ -5,13 +5,16 @@
   - Ticket-detail in-body section (kind:'section'): answer the customer or
   - resident on a request or complaint. The minimal answer control of
   - messaging-saved-replies-and-resend D5, built for the Woo citizen journey
-  - (questions-about-a-citizen-dossier, REQ-QCD-007) without the saved-reply
-  - picker, which that change adds here later.
+  - (questions-about-a-citizen-dossier, REQ-QCD-007); the saved reply
+  - picker (channel `portal`) fills the text area since
+  - messaging-saved-replies-and-resend.
   -
   - Shows the replies sent from the portal (`portalReplies`), oldest first,
-  - and a text area bound to `customerMessage`. "Save answer" writes the
-  - message; "Save and wait for a reply" also sets `awaiting_customer`, the
-  - status a portal reply resumes from. The store's saveObject() is a PUT that
+  - and a text area bound to `customerMessage`. "Send answer" writes the
+  - message; with "Also set the ticket to waiting for the customer" ticked
+  - (the default, as the PqTicketAntwoord board draws it) it also sets
+  - `awaiting_customer`, the status a portal reply resumes from. The store's
+  - saveObject() is a PUT that
   - replaces the whole object, so the section re-reads the ticket and sends it
   - back with only these fields changed. Saving changes `customerMessage`,
   - which QuestionAnsweredListener hears: it tells the resident "Uw vraag is
@@ -50,6 +53,11 @@
 		<h4 class="customer-reply-section__heading">
 			{{ t('pipelinq', 'Answer to the customer') }}
 		</h4>
+		<SavedReplyPicker
+			channel="portal"
+			:language="language"
+			:values="placeholderValues"
+			@pick="message = $event" />
 		<NcTextArea
 			v-model="message"
 			:label="t('pipelinq', 'Message to the customer')"
@@ -60,15 +68,18 @@
 				)
 			"
 			resize="vertical" />
+		<NcCheckboxRadioSwitch
+			v-model="waitForCustomer"
+			data-testid="customer-reply-wait">
+			{{ t('pipelinq', 'Also set the ticket to waiting for the customer') }}
+		</NcCheckboxRadioSwitch>
 		<div class="customer-reply-section__actions">
-			<NcButton :disabled="busy || !canSave" @click="save(false)">
-				{{ t('pipelinq', 'Save answer') }}
-			</NcButton>
 			<NcButton
 				variant="primary"
 				:disabled="busy || !canSave"
-				@click="save(true)">
-				{{ t('pipelinq', 'Save and wait for a reply') }}
+				data-testid="customer-reply-send"
+				@click="save(waitForCustomer)">
+				{{ t('pipelinq', 'Send answer') }}
 			</NcButton>
 		</div>
 		<NcNoteCard v-if="notice" :type="noticeType">
@@ -79,7 +90,8 @@
 
 <script>
 import { translate as t } from '@nextcloud/l10n'
-import { NcButton, NcNoteCard, NcTextArea } from '@nextcloud/vue'
+import { NcButton, NcCheckboxRadioSwitch, NcNoteCard, NcTextArea } from '@nextcloud/vue'
+import SavedReplyPicker from './SavedReplyPicker.vue'
 import { useObjectStore } from '../store/modules/object.js'
 
 /** The ticket kinds a customer can be answered on. */
@@ -89,8 +101,10 @@ export default {
 	name: 'CustomerReplySection',
 	components: {
 		NcButton,
+		NcCheckboxRadioSwitch,
 		NcNoteCard,
 		NcTextArea,
+		SavedReplyPicker,
 	},
 
 	props: {
@@ -105,6 +119,9 @@ export default {
 		return {
 			ticket: null,
 			message: '',
+			waitForCustomer: true,
+			client: null,
+			contact: null,
 			busy: false,
 			notice: '',
 			noticeType: 'success',
@@ -152,6 +169,31 @@ export default {
 		canSave() {
 			return this.message.trim() !== ''
 		},
+
+		/**
+		 * Saved reply placeholder values for this ticket.
+		 *
+		 * @return {object}
+		 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-inserts-a-saved-reply-where-they-answer-req-msr-003
+		 */
+		placeholderValues() {
+			return {
+				'ticket.title': (this.ticket && this.ticket.title) || '',
+				'client.name': (this.client && this.client.name) || '',
+				'contact.name': (this.contact && this.contact.name) || '',
+			}
+		},
+
+		/**
+		 * The customer's correspondence language, contact first.
+		 *
+		 * @return {string}
+		 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-inserts-a-saved-reply-where-they-answer-req-msr-003
+		 */
+		language() {
+			const party = this.contact || this.client
+			return (party && (party.correspondenceLanguage || party.language)) || ''
+		},
 	},
 
 	watch: {
@@ -179,6 +221,29 @@ export default {
 				? await useObjectStore().fetchObject('ticket', this.objectId)
 				: null
 			this.message = (this.ticket && this.ticket.customerMessage) || ''
+			await this.loadParties()
+		},
+
+		/**
+		 * Read the ticket's client and contact for the saved reply placeholders.
+		 * A party that cannot be read leaves its placeholder as written.
+		 *
+		 * @spec openspec/changes/messaging-saved-replies-and-resend/specs/messaging-saved-replies/spec.md#requirement-an-agent-inserts-a-saved-reply-where-they-answer-req-msr-003
+		 */
+		async loadParties() {
+			const store = useObjectStore()
+			const read = async (type, id) => {
+				if (!id || typeof id !== 'string') {
+					return null
+				}
+				try {
+					return (await store.fetchObject(type, id)) || null
+				} catch {
+					return null
+				}
+			}
+			this.client = await read('client', this.ticket && this.ticket.client)
+			this.contact = await read('contact', this.ticket && this.ticket.contact)
 		},
 
 		/**
