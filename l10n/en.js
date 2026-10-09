@@ -7373,7 +7373,16 @@ OC.L10N.register(
         "Your answers could not be sent. Please try again.": "Your answers could not be sent. Please try again.",
         "Your answers have been saved. You can close this page.": "Your answers have been saved. You can close this page.",
         "Survey response rate": "Survey response rate",
-        "Satisfaction": "Satisfaction"
+        "Satisfaction": "Satisfaction",
+        "Everything else on this ticket stays internal.": "Everything else on this ticket stays internal.",
+        "Hide internal fields": "Hide internal fields",
+        "In the organisation portal": "In the organisation portal",
+        "In the resident portal": "In the resident portal",
+        "Resident": "Resident",
+        "Show internal fields": "Show internal fields",
+        "What the resident sees": "What the resident sees",
+        "What the resident sees could not be loaded.": "What the resident sees could not be loaded.",
+        "You": "You"
     },
     "nplurals=2; plural=(n != 1);"
 )

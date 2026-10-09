@@ -2236,7 +2236,16 @@ OC.L10N.register(
         "Your answers could not be sent. Please try again.": "Vos réponses n'ont pas pu être envoyées. Veuillez réessayer.",
         "Your answers have been saved. You can close this page.": "Vos réponses ont été enregistrées. Vous pouvez fermer cette page.",
         "Survey response rate": "Taux de réponse aux enquêtes",
-        "Satisfaction": "Satisfaction"
+        "Satisfaction": "Satisfaction",
+        "Everything else on this ticket stays internal.": "Tout le reste de ce ticket reste interne.",
+        "Hide internal fields": "Masquer les champs internes",
+        "In the organisation portal": "Dans le portail de l'organisation",
+        "In the resident portal": "Dans le portail des habitants",
+        "Resident": "Habitant",
+        "Show internal fields": "Afficher les champs internes",
+        "What the resident sees": "Ce que voit l'habitant",
+        "What the resident sees could not be loaded.": "Ce que voit l'habitant n'a pas pu être chargé.",
+        "You": "Vous"
     },
     "nplurals=2; plural=(n != 1);"
 )

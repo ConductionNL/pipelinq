@@ -120,6 +120,8 @@ import ChannelDistributionSection from './components/rapportage/ChannelDistribut
 //     once and keeps the in-widget filtering (pipeline selector + win/loss
 //     date-range re-fetch) the legacy view had. ---
 import LeadAnalyticsSection from './components/rapportage/LeadAnalyticsSection.vue'
+// What the resident reads of a request ticket (portal-resident-view-preview). ---
+import ResidentViewSection from './components/ResidentViewSection.vue'
 import RoutingSuggestionSection from './components/RoutingSuggestionSection.vue'
 // Customer satisfaction, closed loop (customer-satisfaction-closed-loop): the
 //     client page's satisfaction panel and the Operational dashboard's
@@ -985,6 +987,11 @@ const registry = {
 		kind: 'section',
 		component: WooConversionSection,
 		_note: '"Convert to Woo request" on TicketDetail (questions-about-a-citizen-dossier REQ-QCD-008, hydra woo-citizen-journey C5): self-fetches GET /api/tickets/{id}/woo-request/availability and renders only when dossiq\'s WooRequestIntake answers and the ticket is an unconverted question about a dossier.',
+	},
+	ResidentViewSection: {
+		kind: 'section',
+		component: ResidentViewSection,
+		_note: 'What the resident sees on a request ticket (portal-resident-view-preview): the resident portal panel and, with portaliq and a client, the organisation portal panel, both from GET /api/tickets/{id}/resident-view, plus the line that everything else stays internal. Renders nothing on complaint and interaction tickets, so it carries its own heading instead of a section title.',
 	},
 	RoutingSuggestionSection: {
 		kind: 'section',

@@ -10570,12 +10570,12 @@
 			"feature": "customer-portal",
 			"featureConfidence": "high",
 			"built": {
-				"state": "specified",
-				"evidence": "lib/Service/Portal/PortalRequestService.php presentSummary and presentDetail fix in code what a resident reads (number, subject, category, status, date, description, assignee only when the tenant allows it); :519 customerNotes shows the ticket's customerMessage and the resident's portalReplies and never the internal notes string. On TicketDetail the field 'Message to the customer' says it is shown in the portal; the rest of the set has no marker or preview there",
+				"state": "built",
+				"evidence": "src/components/ResidentViewSection.vue on TicketDetail, fed by lib/Controller/ResidentViewController.php (GET /api/tickets/{id}/resident-view), which builds both panels with PortalRequestService::previewDetail() and PortalContributionProvider",
 				"owner": "ConductionNL/pipelinq",
-				"reachedOn": "portal request detail; TicketDetail field 'Message to the customer'",
-				"readOn": "2026-09-27",
-				"change": "portal-resident-view-preview"
+				"reachedOn": "TicketDetail, section What the resident sees (request tickets)",
+				"readOn": "2026-10-09",
+				"change": "openspec/changes/archive/2026-10-09-portal-resident-view-preview"
 			},
 			"note": "lead: since pipelinq#2038 the handler's message to the customer is its own ticket field; the back office still has no preview of the whole resident view. Specified 2026-09-28 in openspec/changes/portal-resident-view-preview (OpenSpec pass).",
 			"evidence": {

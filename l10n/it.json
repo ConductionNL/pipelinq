@@ -2235,7 +2235,16 @@
         "Your answers could not be sent. Please try again.": "Impossibile inviare le sue risposte. Riprovi.",
         "Your answers have been saved. You can close this page.": "Le sue risposte sono state salvate. Può chiudere questa pagina.",
         "Survey response rate": "Tasso di risposta ai sondaggi",
-        "Satisfaction": "Soddisfazione"
+        "Satisfaction": "Soddisfazione",
+        "Everything else on this ticket stays internal.": "Tutto il resto di questo ticket resta interno.",
+        "Hide internal fields": "Nascondi campi interni",
+        "In the organisation portal": "Nel portale dell'organizzazione",
+        "In the resident portal": "Nel portale dei cittadini",
+        "Resident": "Cittadino",
+        "Show internal fields": "Mostra campi interni",
+        "What the resident sees": "Cosa vede il cittadino",
+        "What the resident sees could not be loaded.": "Impossibile caricare cosa vede il cittadino.",
+        "You": "Lei"
     },
     "plurals": null
 }

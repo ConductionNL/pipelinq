@@ -44,6 +44,8 @@ show the message to the customer on a request.
 
 #### Scenario: An account manager sees both portals
 
+@e2e exclude needs portaliq installed next to pipelinq, which the e2e instance does not have; covered by ResidentViewControllerTest::testPortaliqShowsTheOrganisationsView
+
 - GIVEN portaliq is installed and a request ticket belongs to the client Acme
 - WHEN an account manager opens What the resident sees on that ticket
 - THEN one panel shows the resident portal and one shows the Acme contact's portaliq view
@@ -55,6 +57,8 @@ The system SHALL answer the preview only for a ticket the calling user may
 read, and SHALL answer not found otherwise.
 
 #### Scenario: A colleague without access asks for the preview
+
+@e2e exclude pure-backend API contract (404 for an unreadable ticket); covered by ResidentViewControllerTest::testAnUnreadableTicketIsNotFound
 
 - GIVEN a ticket the calling user may not read
 - WHEN they request `GET /apps/pipelinq/api/tickets/{id}/resident-view`

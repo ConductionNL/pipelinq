@@ -2235,7 +2235,16 @@
         "Your answers could not be sent. Please try again.": "No se pudieron enviar sus respuestas. Inténtelo de nuevo.",
         "Your answers have been saved. You can close this page.": "Sus respuestas se han guardado. Puede cerrar esta página.",
         "Survey response rate": "Tasa de respuesta de encuestas",
-        "Satisfaction": "Satisfacción"
+        "Satisfaction": "Satisfacción",
+        "Everything else on this ticket stays internal.": "Todo lo demás de este ticket queda interno.",
+        "Hide internal fields": "Ocultar campos internos",
+        "In the organisation portal": "En el portal de la organización",
+        "In the resident portal": "En el portal del ciudadano",
+        "Resident": "Ciudadano",
+        "Show internal fields": "Mostrar campos internos",
+        "What the resident sees": "Lo que ve el ciudadano",
+        "What the resident sees could not be loaded.": "No se pudo cargar lo que ve el ciudadano.",
+        "You": "Usted"
     },
     "plurals": null
 }

@@ -7287,7 +7287,16 @@ OC.L10N.register(
         "Your answers could not be sent. Please try again.": "Uw antwoorden konden niet worden verstuurd. Probeer het opnieuw.",
         "Your answers have been saved. You can close this page.": "Uw antwoorden zijn opgeslagen. U kunt deze pagina sluiten.",
         "Survey response rate": "Responspercentage onderzoeken",
-        "Satisfaction": "Tevredenheid"
+        "Satisfaction": "Tevredenheid",
+        "Everything else on this ticket stays internal.": "Al het andere op dit ticket blijft intern.",
+        "Hide internal fields": "Interne velden verbergen",
+        "In the organisation portal": "In het organisatieportaal",
+        "In the resident portal": "In het inwonersportaal",
+        "Resident": "Inwoner",
+        "Show internal fields": "Interne velden tonen",
+        "What the resident sees": "Wat de inwoner ziet",
+        "What the resident sees could not be loaded.": "Wat de inwoner ziet, kon niet worden geladen.",
+        "You": "U"
     },
     "nplurals=2; plural=(n != 1);"
 )

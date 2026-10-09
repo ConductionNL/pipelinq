@@ -2629,6 +2629,18 @@
 						}
 					},
 					{
+						"id": "resident-view",
+						"component": "ResidentViewSection",
+						"placement": "after-data",
+						"_note": "No title: the section draws its own heading, because it renders nothing on complaint and interaction tickets (portal-resident-view-preview).",
+						"props": {
+							"ticketId": "@objectId",
+							"ticketType": "@object.ticketType",
+							"customerMessage": "@object.customerMessage?",
+							"status": "@object.status?"
+						}
+					},
+					{
 						"id": "routing-suggestions",
 						"component": "RoutingSuggestionSection",
 						"title": "Suggested agents",
