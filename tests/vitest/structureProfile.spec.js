@@ -170,9 +170,9 @@ describe('the full profile', () => {
 				showTitleIcon: false,
 				headerFilters: false,
 				headerButtons: [
-					{ action: 'export' },
+					{ action: 'export', label: 'Download' },
 					{ action: 'actions-menu' },
-					{ action: 'add', variant: 'primary' },
+					{ action: 'add', variant: 'primary', icon: 'Plus' },
 				],
 			},
 		})

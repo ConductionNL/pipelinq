@@ -7361,7 +7361,8 @@ OC.L10N.register(
         "Win chance is the chance of the stage, lower when a lead stands still. A lead without a step in {days} days is called stale.": "Winkans is de kans van de fase, lager als een lead stilstaat. Een lead zonder stap in {days} dagen heet verouderd.",
         "Mine": "Mijn",
         "Sort as before": "Weer sorteren zoals eerst",
-        "Out of date": "Verouderd"
+        "Out of date": "Verouderd",
+        "Out of date {days} days": "Verouderd {days} dagen"
     },
     "nplurals=2; plural=(n != 1);"
 )

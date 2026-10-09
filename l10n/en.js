@@ -7447,7 +7447,8 @@ OC.L10N.register(
         "Win chance is the chance of the stage, lower when a lead stands still. A lead without a step in {days} days is called stale.": "Win chance is the chance of the stage, lower when a lead stands still. A lead without a step in {days} days is called stale.",
         "Mine": "Mine",
         "Sort as before": "Sort as before",
-        "Out of date": "Out of date"
+        "Out of date": "Out of date",
+        "Out of date {days} days": "Out of date {days} days"
     },
     "nplurals=2; plural=(n != 1);"
 )

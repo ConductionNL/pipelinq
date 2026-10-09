@@ -9,6 +9,7 @@
  * @spec openspec/changes/review-finish/specs/commercial-dashboard/spec.md
  */
 
+import { translate as t } from '@nextcloud/l10n'
 import { createNameFormatter } from './nameFormatters.js'
 import { currencyOr } from './reportingCurrency.js'
 import { createUserDisplayNameFormatter } from './userDisplayName.js'
@@ -37,7 +38,14 @@ export function objectCurrency(value, row, _property, options) {
 	const opts = options || {}
 	const decimals = Number.isFinite(opts.decimals) ? opts.decimals : 2
 	const field = opts.currencyField || 'currency'
-	return new Intl.NumberFormat(undefined, {
+	// The reader's own locale (nl-NL reads "€ 120.000"); the browser's when
+	// Nextcloud has none to give.
+	const locale =
+		opts.locale
+		|| (typeof OC !== 'undefined' && OC.getLocale
+			? OC.getLocale().replace('_', '-')
+			: undefined)
+	return new Intl.NumberFormat(locale, {
 		style: 'currency',
 		currency: currencyOr(row?.[field]),
 		minimumFractionDigits: decimals,
@@ -45,9 +53,26 @@ export function objectCurrency(value, row, _property, options) {
 	}).format(num)
 }
 
+/**
+ * An enum value as plain, translated text (no pill), as the boards draw a
+ * priority: `high` reads "Hoog".
+ *
+ * @param {unknown} value The stored value.
+ * @return {string} The translated word, or '' for an empty value.
+ * @spec openspec/changes/round6-board-look/specs/board-look/spec.md
+ */
+export function enumText(value) {
+	if (value === null || value === undefined || value === '') {
+		return ''
+	}
+	const word = String(value)
+	return t('pipelinq', word.charAt(0).toUpperCase() + word.slice(1))
+}
+
 /** The registry handed to CnAppRoot. */
 export const CELL_FORMATTERS = {
 	objectCurrency,
+	enumText,
 }
 
 /**

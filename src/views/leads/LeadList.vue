@@ -24,7 +24,6 @@
 		:schema="schema"
 		:columns="columns"
 		:sidebar="sidebarConfig"
-		:rowClass="rowClassFor"
 		:quickFilters="quickFilters"
 		:quickFilterMaxVisible="6"
 		:showTitle="true"
@@ -38,15 +37,6 @@
 		rowClickToView
 		@rowClick="openLead"
 		@view="openLead">
-
-		<template #column-expectedCloseDate="{ row }">
-			<span :class="{ 'overdue-cell': isLeadOverdue(row, stages) }">
-				{{ row.expectedCloseDate || '-' }}
-				<small v-if="isLeadOverdue(row, stages)" class="overdue-suffix">
-					{{ getOverdueDays(row, stages) }}d {{ t('pipelinq', 'late') }}
-				</small>
-			</span>
-		</template>
 	</CnIndexPage>
 </template>
 
@@ -74,12 +64,17 @@ export default {
 			columns: [
 				{ key: 'title', label: t('pipelinq', 'Lead'), secondary: '{source}' },
 				{ key: 'stage', label: t('pipelinq', 'Stage') },
-				{ key: 'value', label: t('pipelinq', 'Value') },
+				{
+					key: 'value',
+					label: t('pipelinq', 'Value'),
+					formatter: 'objectCurrency',
+					formatterOptions: { decimals: 0 },
+				},
 				{
 					key: 'qualificationScore',
 					label: t('pipelinq', 'Win chance'),
 					sortable: true,
-					widget: 'lead-score',
+					widget: 'lead-win-chance',
 				},
 				{
 					key: 'expectedCloseDate',
@@ -87,7 +82,11 @@ export default {
 					widget: 'lead-close-date',
 					sortable: true,
 				},
-				{ key: 'priority', label: t('pipelinq', 'Priority') },
+				{
+					key: 'priority',
+					label: t('pipelinq', 'Priority'),
+					formatter: 'enumText',
+				},
 				{
 					key: 'assignee',
 					label: t('pipelinq', 'Owner'),
@@ -178,11 +177,12 @@ export default {
 		 */
 		headerButtons() {
 			return [
-				{ action: 'export' },
+				{ action: 'export', label: t('pipelinq', 'Download') },
 				{ action: 'actions-menu' },
 				{
 					action: 'add',
 					variant: 'primary',
+					icon: 'Plus',
 					label: t('pipelinq', 'New lead'),
 				},
 			]

@@ -3,25 +3,12 @@
 <!-- @spec openspec/specs/customer-360/spec.md -->
 <template>
 	<span class="lead-close-cell" :class="cellClass" :title="srLabel">
-		<AlertOctagram
-			v-if="state === 'overdue'"
-			:size="16"
-			class="lead-close-cell__icon lead-close-cell__icon--overdue"
-			:aria-label="t('pipelinq', 'Overdue')" />
-		<AlertCircle
-			v-else-if="state === 'soon'"
-			:size="16"
-			class="lead-close-cell__icon lead-close-cell__icon--soon"
-			:aria-label="t('pipelinq', 'Closes soon')" />
 		<span>{{ formattedDate }}</span>
 		<span class="lead-close-cell__sr-only">{{ srLabel }}</span>
 	</span>
 </template>
 
 <script>
-import AlertCircle from 'vue-material-design-icons/AlertCircle.vue'
-import AlertOctagram from 'vue-material-design-icons/AlertOctagram.vue'
-
 /**
  * Lead expected-close-date cell renderer (Customer 360 / REQ-KB360-014).
  *
@@ -37,11 +24,6 @@ import AlertOctagram from 'vue-material-design-icons/AlertOctagram.vue'
  */
 export default {
 	name: 'LeadCloseDateCell',
-	components: {
-		AlertOctagram,
-		AlertCircle,
-	},
-
 	props: {
 		/**
 		 * The raw cell value — typically an ISO-date string.
@@ -51,6 +33,12 @@ export default {
 		value: {
 			type: [String, Number, Date],
 			default: null,
+		},
+
+		/** The whole lead row; a won or lost lead is never late. */
+		row: {
+			type: Object,
+			default: () => ({}),
 		},
 	},
 
@@ -81,7 +69,8 @@ export default {
 			const diffDays = Math.round(
 				(target.getTime() - today.getTime()) / 86400000,
 			)
-			if (diffDays < 0) return 'overdue'
+			const closed = this.row?.status && this.row.status !== 'open'
+			if (diffDays < 0) return closed ? 'ok' : 'overdue'
 			if (diffDays <= 7) return 'soon'
 			return 'ok'
 		},
@@ -95,8 +84,17 @@ export default {
 
 		formattedDate() {
 			if (!this.dateObj) return '-'
+			const locale =
+				typeof OC !== 'undefined' && OC.getLocale
+					? OC.getLocale().replace('_', '-')
+					: 'nl-NL'
 			try {
-				return this.dateObj.toLocaleDateString('nl-NL')
+				const short = this.dateObj
+					.toLocaleDateString(locale, { day: 'numeric', month: 'short' })
+					.replace('.', '')
+				return this.state === 'overdue'
+					? `${short}, ${this.t('pipelinq', 'late')}`
+					: short
 			} catch {
 				return this.dateObj.toISOString().slice(0, 10)
 			}

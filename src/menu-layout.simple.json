@@ -338,14 +338,16 @@
 			"headerFilters": false,
 			"headerButtons": [
 				{
-					"action": "export"
+					"action": "export",
+					"label": "Download"
 				},
 				{
 					"action": "actions-menu"
 				},
 				{
 					"action": "add",
-					"variant": "primary"
+					"variant": "primary",
+					"icon": "Plus"
 				}
 			]
 		}
@@ -1585,12 +1587,16 @@
 					},
 					{
 						"key": "value",
-						"label": "Value"
+						"label": "Value",
+						"formatter": "objectCurrency",
+						"formatterOptions": {
+							"decimals": 0
+						}
 					},
 					{
 						"key": "qualificationScore",
 						"label": "Win chance",
-						"widget": "lead-score",
+						"widget": "lead-win-chance",
 						"sortable": true
 					},
 					{
@@ -1601,7 +1607,8 @@
 					},
 					{
 						"key": "priority",
-						"label": "Priority"
+						"label": "Priority",
+						"formatter": "enumText"
 					},
 					{
 						"key": "assignee",
