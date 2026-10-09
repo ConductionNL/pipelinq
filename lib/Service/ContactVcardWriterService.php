@@ -24,7 +24,9 @@ declare(strict_types=1);
 namespace OCA\Pipelinq\Service;
 
 use OCA\Pipelinq\AppInfo\Application;
+use OCP\Constants;
 use OCP\Contacts\IManager as IContactsManager;
+use OCP\IAddressBook;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
@@ -71,12 +73,17 @@ class ContactVcardWriterService {
 			return null;
 		}
 
-		$addressBook = reset($addressBooks);
-
 		$existingUid = $objData['contactsUid'] ?? null;
-		if ($existingUid !== null && $existingUid !== '') {
-			$properties['UID'] = $existingUid;
+		$target = $this->resolveTarget(
+			addressBooks: $addressBooks,
+			properties: $properties,
+			existingUid: $existingUid
+		);
+		if ($target === null) {
+			return null;
 		}
+
+		[$addressBook, $properties] = $target;
 
 		try {
 			$result = $addressBook->createOrUpdate($properties);
@@ -126,11 +133,16 @@ class ContactVcardWriterService {
 			return null;
 		}
 
-		$addressBook = reset($addressBooks);
-
-		if ($existingUid !== null && $existingUid !== '') {
-			$properties['UID'] = $existingUid;
+		$target = $this->resolveTarget(
+			addressBooks: $addressBooks,
+			properties: $properties,
+			existingUid: $existingUid
+		);
+		if ($target === null) {
+			return null;
 		}
+
+		[$addressBook, $properties] = $target;
 
 		try {
 			$result = $addressBook->createOrUpdate($properties);
@@ -147,6 +159,115 @@ class ContactVcardWriterService {
 			existingUid: $existingUid
 		);
 	}//end writeVcard()
+
+	/**
+	 * Pick the addressbook and the properties for a create or an update.
+	 *
+	 * 🔴 A UID ALONE DOES NOT UPDATE A CARD. Nextcloud's
+	 * AddressBookImpl::createOrUpdate() updates only when the properties carry
+	 * the card's `URI`; without it the call creates a new card, and
+	 * CardDavBackend::createCard() refuses a second card with the same UID
+	 * ("VCard object with uid already exists in this addressbook collection").
+	 * Every edit of a client that already had a contact failed that way, so the
+	 * contact kept its old name, email and phone.
+	 *
+	 * So for a known UID this looks the card up in each addressbook and updates
+	 * it where it lives, by its URI. Only when no addressbook holds the UID
+	 * (the card was deleted) is a new card made under that UID, in the first
+	 * writable addressbook that is not the system addressbook.
+	 *
+	 * @param array   $addressBooks The user's addressbooks (IAddressBook[]).
+	 * @param array   $properties   The vCard properties.
+	 * @param ?string $existingUid  The linked contact UID, if any.
+	 *
+	 * @return ?array{0: IAddressBook, 1: array} The addressbook and the properties
+	 *                                     to write, or null when the card is
+	 *                                     read-only or no addressbook can take it.
+	 *
+	 * @spec openspec/changes/round4-contact-write-back/specs/contacts-sync/spec.md#requirement-write-back-updates-the-existing-card
+	 */
+	private function resolveTarget(array $addressBooks, array $properties, ?string $existingUid): ?array {
+		if ($existingUid !== null && $existingUid !== '') {
+			$properties['UID'] = $existingUid;
+
+			foreach ($addressBooks as $book) {
+				$uri = $this->findCardUri(addressBook: $book, uid: $existingUid);
+				if ($uri === null) {
+					continue;
+				}
+
+				if ($this->isWritable(addressBook: $book) === false) {
+					$this->logger->warning(
+						'Pipelinq: linked contact lives in a read-only addressbook, write-back skipped',
+						['uid' => $existingUid]
+					);
+					return null;
+				}
+
+				$properties['URI'] = $uri;
+				return [$book, $properties];
+			}
+		}//end if
+
+		foreach ($addressBooks as $book) {
+			if ($this->isWritable(addressBook: $book) === true) {
+				return [$book, $properties];
+			}
+		}
+
+		$this->logger->warning('Pipelinq: no writable addressbook for contact sync');
+		return null;
+	}//end resolveTarget()
+
+	/**
+	 * The URI of the card with this UID in an addressbook, or null.
+	 *
+	 * @param IAddressBook $addressBook The addressbook.
+	 * @param string $uid         The vCard UID.
+	 *
+	 * @return ?string The card URI, or null when the addressbook does not hold it.
+	 */
+	private function findCardUri(IAddressBook $addressBook, string $uid): ?string {
+		try {
+			$hits = $addressBook->search($uid, ['UID'], ['limit' => 5, 'wildcard' => false]);
+		} catch (\Exception $e) {
+			$this->logger->warning(
+				'Pipelinq: contact lookup by UID failed',
+				['uid' => $uid, 'exception' => $e->getMessage()]
+			);
+			return null;
+		}
+
+		foreach ($hits as $hit) {
+			// The UID search property matches the stored UID; compare it
+			// anyway, since a backend may still answer a partial match.
+			$hitUid = $hit['UID'] ?? null;
+			if (is_array($hitUid) === true) {
+				$hitUid = reset($hitUid);
+			}
+
+			if ((string)$hitUid === $uid && isset($hit['URI']) === true && $hit['URI'] !== '') {
+				return (string)$hit['URI'];
+			}
+		}
+
+		return null;
+	}//end findCardUri()
+
+	/**
+	 * Whether pipelinq may write cards in this addressbook.
+	 *
+	 * @param IAddressBook $addressBook The addressbook.
+	 *
+	 * @return bool True for a writable, non-system addressbook.
+	 */
+	private function isWritable(IAddressBook $addressBook): bool {
+		if ($addressBook->isSystemAddressBook() === true) {
+			return false;
+		}
+
+		return ($addressBook->getPermissions() & Constants::PERMISSION_UPDATE) !== 0;
+	}//end isWritable()
 
 	/**
 	 * Extract the contacts UID from an addressbook create/update result.

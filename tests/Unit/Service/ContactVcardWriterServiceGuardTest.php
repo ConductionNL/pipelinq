@@ -27,7 +27,9 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\Pipelinq\Service\ContactVcardWriterService;
 use OCA\Pipelinq\Service\RegisterResolverService;
+use OCP\Constants;
 use OCP\Contacts\IManager as IContactsManager;
+use OCP\IAddressBook;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -57,18 +59,11 @@ class ContactVcardWriterServiceGuardTest extends TestCase {
 		ObjectServiceInterface $object,
 		string $register = 'reg-1',
 	): ContactVcardWriterService {
-		$addressBook = new class {
-			/**
-			 * Stub createOrUpdate returning a card with a fresh UID.
-			 *
-			 * @param array<string, mixed> $properties The vCard properties.
-			 *
-			 * @return array<string, mixed>
-			 */
-			public function createOrUpdate(array $properties): array {
-				return ['UID' => 'nc-uid-1'];
-			}//end createOrUpdate()
-		};
+		$addressBook = $this->createMock(IAddressBook::class);
+		$addressBook->method('createOrUpdate')->willReturn(['UID' => 'nc-uid-1']);
+		$addressBook->method('search')->willReturn([]);
+		$addressBook->method('isSystemAddressBook')->willReturn(false);
+		$addressBook->method('getPermissions')->willReturn(Constants::PERMISSION_ALL);
 
 		$contacts = $this->createMock(IContactsManager::class);
 		$contacts->method('getUserAddressBooks')->willReturn([$addressBook]);
