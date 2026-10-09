@@ -7329,7 +7329,19 @@ OC.L10N.register(
         "Blocked": "Blocked",
         "Best case": "Best case",
         "Closed won": "Closed won",
-        "Closed lost": "Closed lost"
+        "Closed lost": "Closed lost",
+        "Contact person (optional)": "Contact person (optional)",
+        "filinq reported something to check in the letter:": "filinq reported something to check in the letter:",
+        "Letters are made by filinq, and filinq is not available.": "Letters are made by filinq, and filinq is not available.",
+        "Loading templates": "Loading templates",
+        "Make a letter": "Make a letter",
+        "Make letter": "Make letter",
+        "The letter could not be made.": "The letter could not be made.",
+        "The letter is made and downloaded. A copy is in your Files.": "The letter is made and downloaded. A copy is in your Files.",
+        "The letter is not logged on the client. Log it as a contact moment by hand.": "The letter is not logged on the client. Log it as a contact moment by hand.",
+        "The letter templates could not be loaded.": "The letter templates could not be loaded.",
+        "There are no letter templates yet. An administrator adds them in filinq with the namespace pipelinq.": "There are no letter templates yet. An administrator adds them in filinq with the namespace pipelinq.",
+        "This ticket has no client, so there is nobody to write to.": "This ticket has no client, so there is nobody to write to."
     },
     "nplurals=2; plural=(n != 1);"
 )
