@@ -62,26 +62,29 @@ contract, capturing `contractId` on creation.
 
 ### Requirement: REQ-WALK-PQ-004 — The Tour Hands Off To Shillinq For Billing
 
-The final step SHALL target the contract's "send to billing" action and, on
-activation, deep-link to shillinq with a `cn_resume_tour` / `cn_resume_step` resume
-token via the engine's cross-app hand-off primitive, so the billing leg continues in
-shillinq.
+The final sales step SHALL carry a cross-app `handoff` to shillinq. Its primary
+action SHALL read "Continue in Shillinq" and navigate there with a
+`cn_resume_tour` / `cn_resume_step` token, through the engine's cross-app hand-off
+primitive. The token SHALL name a tour shillinq ships (`shillinq:getting-started`)
+and the step where billing starts (`open-quick-draft`), so the billing leg
+continues in shillinq instead of landing on a page with nothing to follow.
 
 #### Scenario: Billing hand-off deep-links to shillinq
 
 - **GIVEN** the final `send-to-shillinq` step
-- **WHEN** the user activates the send-to-billing action
-- **THEN** the engine SHALL deep-link to shillinq carrying a resume token for this tour
+- **WHEN** the user activates "Continue in Shillinq"
+- **THEN** the engine SHALL deep-link to shillinq carrying a resume token for `shillinq:getting-started` at `open-quick-draft`
 
 ### Requirement: REQ-WALK-PQ-005 — Targeted Elements Are Instrumented And Localised
 
-pipelinq SHALL add a stable `data-walkthrough-id` (reusing `data-testid` where
-present) to every targeted element lacking a manifest identity (add buttons, the
-pipeline board, the create-quote and send-to-billing actions), and SHALL provide all
-tour copy as `pipelinq.tour.*` i18n keys in both `en` and `nl`.
+Every element a step targets SHALL have a stable identity: a menu entry (the
+`data-cn-route` the shared navigation renders), the shared Add button
+(`data-walkthrough-id="index-add"`), or a `data-walkthrough-id` on a pipelinq
+component (the pipeline board). All tour copy SHALL be English source strings
+that `t()` renders, with an `en` and an `nl` catalogue entry for each.
 
 #### Scenario: A targeted add button is resolvable and localised
 
-- **GIVEN** the "create a product" step targeting `{ kind: "element", ref: "products-add" }`
-- **WHEN** the tour runs in a Dutch session
-- **THEN** the engine SHALL resolve `data-walkthrough-id="products-add"` and render the Dutch `pipelinq.tour.createProduct.*` copy
+- **GIVEN** the "create a product" step targeting `{ kind: "element", ref: "index-add" }`
+- **WHEN** the tour runs in a Dutch session on the Products page
+- **THEN** the engine SHALL resolve `data-walkthrough-id="index-add"` and render the Dutch catalogue entry of the step's copy

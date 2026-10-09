@@ -290,7 +290,9 @@
 						"advanceOn": { "type": "manual" },
 						"handoff": {
 							"app": "Shillinq",
-							"url": "/index.php/apps/shillinq/"
+							"url": "/index.php/apps/shillinq/",
+							"tour": "shillinq:getting-started",
+							"step": "open-quick-draft"
 						}
 					},
 					{
