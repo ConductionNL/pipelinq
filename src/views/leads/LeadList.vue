@@ -32,7 +32,13 @@
 		:headerButtons="headerButtons"
 		:headerActions="headerActions"
 		:countText="t('pipelinq', '{shown} of {total} leads')"
-		:footerNote="t('pipelinq', 'Win chance is the chance of the stage, lower when a lead stands still. A lead without a step in {days} days is called stale.', { days: staleThreshold })"
+		:footerNote="
+			t(
+				'pipelinq',
+				'Win chance is the chance of the stage, lower when a lead stands still. A lead without a step in {days} days is called stale.',
+				{ days: staleThreshold },
+			)
+		"
 		createModal="LeadCreateDialog"
 		rowClickToView
 		@rowClick="openLead"
@@ -62,7 +68,11 @@ export default {
 			register: 'pipelinq',
 			schema: 'lead',
 			columns: [
-				{ key: 'title', label: t('pipelinq', 'Lead'), secondary: '{source}' },
+				{
+					key: 'title',
+					label: t('pipelinq', 'Lead'),
+					secondary: '{source}',
+				},
 				{ key: 'stage', label: t('pipelinq', 'Stage') },
 				{
 					key: 'value',

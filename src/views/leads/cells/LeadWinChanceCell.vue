@@ -12,7 +12,11 @@
 						:class="'lead-win-cell__fill--' + tone"
 						:style="{ width: percent + '%' }" />
 				</span>
-				<span class="lead-win-cell__percent" :class="'lead-win-cell__percent--' + tone">{{ percent }}%</span>
+				<span
+					class="lead-win-cell__percent"
+					:class="'lead-win-cell__percent--' + tone"
+					>{{ percent }}%</span
+				>
 			</span>
 			<span v-if="staleDays !== null" class="lead-win-cell__stale">{{
 				t('pipelinq', 'Out of date {days} days', { days: staleDays })
@@ -57,9 +61,20 @@ export default {
 		 * @return {?number}
 		 */
 		percent() {
-			const raw = [this.value, this.row?.probability, this.row?.qualificationScore]
-				.find((v) => v !== null && v !== undefined && v !== '' && !Number.isNaN(Number(v)))
-			return raw === undefined ? null : Math.max(0, Math.min(100, Math.round(Number(raw))))
+			const raw = [
+				this.value,
+				this.row?.probability,
+				this.row?.qualificationScore,
+			].find(
+				(v) =>
+					v !== null
+					&& v !== undefined
+					&& v !== ''
+					&& !Number.isNaN(Number(v)),
+			)
+			return raw === undefined
+				? null
+				: Math.max(0, Math.min(100, Math.round(Number(raw))))
 		},
 
 		/**
@@ -122,18 +137,34 @@ export default {
 	height: 100%;
 }
 
-.lead-win-cell__fill--good { background: var(--color-element-success, var(--color-success)); }
-.lead-win-cell__fill--warn { background: var(--color-element-warning, var(--color-warning)); }
-.lead-win-cell__fill--bad { background: var(--color-element-error, var(--color-error)); }
+.lead-win-cell__fill--good {
+	background: var(--color-element-success, var(--color-success));
+}
+
+.lead-win-cell__fill--warn {
+	background: var(--color-element-warning, var(--color-warning));
+}
+
+.lead-win-cell__fill--bad {
+	background: var(--color-element-error, var(--color-error));
+}
 
 .lead-win-cell__percent {
 	font-weight: 700;
 	font-size: 13px;
 }
 
-.lead-win-cell__percent--good { color: var(--color-success-text, var(--color-main-text)); }
-.lead-win-cell__percent--warn { color: var(--color-warning-text, var(--color-main-text)); }
-.lead-win-cell__percent--bad { color: var(--color-error-text, var(--color-main-text)); }
+.lead-win-cell__percent--good {
+	color: var(--color-success-text, var(--color-main-text));
+}
+
+.lead-win-cell__percent--warn {
+	color: var(--color-warning-text, var(--color-main-text));
+}
+
+.lead-win-cell__percent--bad {
+	color: var(--color-error-text, var(--color-main-text));
+}
 
 .lead-win-cell__stale {
 	align-self: flex-start;
