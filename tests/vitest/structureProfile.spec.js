@@ -165,7 +165,16 @@ describe('the full profile', () => {
 	it('holds the header controls back on index pages only, and the simple profile draws the board header', () => {
 		expect(fullFile.pageDefaults).toEqual({ index: { headerFilters: false } })
 		expect(simpleFile.pageDefaults).toEqual({
-			index: { showTitle: true, showTitleIcon: false, headerFilters: false },
+			index: {
+				showTitle: true,
+				showTitleIcon: false,
+				headerFilters: false,
+				headerButtons: [
+					{ action: 'export' },
+					{ action: 'actions-menu' },
+					{ action: 'add', variant: 'primary' },
+				],
+			},
 		})
 		const simpleIndex = buildSimple().pages.filter(
 			(page) => page.type === 'index',

@@ -7341,7 +7341,12 @@ OC.L10N.register(
         "completed": "completed",
         "rejected": "rejected",
         "closed": "closed",
-        "portal": "portal"
+        "portal": "portal",
+        "{shown} of {total} leads": "{shown} of {total} leads",
+        "Win chance is the chance of the stage, lower when a lead stands still. A lead without a step in {days} days is called stale.": "Win chance is the chance of the stage, lower when a lead stands still. A lead without a step in {days} days is called stale.",
+        "Mine": "Mine",
+        "Sort as before": "Sort as before",
+        "Out of date": "Out of date"
     },
     "nplurals=2; plural=(n != 1);"
 )

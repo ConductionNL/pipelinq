@@ -335,7 +335,19 @@
 		"index": {
 			"showTitle": true,
 			"showTitleIcon": false,
-			"headerFilters": false
+			"headerFilters": false,
+			"headerButtons": [
+				{
+					"action": "export"
+				},
+				{
+					"action": "actions-menu"
+				},
+				{
+					"action": "add",
+					"variant": "primary"
+				}
+			]
 		}
 	},
 	"modulesCaption": {
@@ -1557,6 +1569,50 @@
 				]
 			},
 			"title": "Questions and reports"
+		},
+		{
+			"id": "Leads",
+			"config": {
+				"columns": [
+					{
+						"key": "title",
+						"label": "Lead",
+						"secondary": "{source}"
+					},
+					{
+						"key": "stage",
+						"label": "Stage"
+					},
+					{
+						"key": "value",
+						"label": "Value"
+					},
+					{
+						"key": "qualificationScore",
+						"label": "Win chance",
+						"widget": "lead-score",
+						"sortable": true
+					},
+					{
+						"key": "expectedCloseDate",
+						"label": "Expected close",
+						"widget": "lead-close-date",
+						"sortable": true
+					},
+					{
+						"key": "priority",
+						"label": "Priority"
+					},
+					{
+						"key": "assignee",
+						"label": "Owner",
+						"widget": "avatar",
+						"widgetProps": {
+							"user": true
+						}
+					}
+				]
+			}
 		}
 	]
 }

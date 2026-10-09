@@ -155,6 +155,7 @@ import ShieldAccountOutline from 'vue-material-design-icons/ShieldAccountOutline
 import ShieldCheck from 'vue-material-design-icons/ShieldCheck.vue'
 import ShieldCheckOutline from 'vue-material-design-icons/ShieldCheckOutline.vue'
 import Sitemap from 'vue-material-design-icons/Sitemap.vue'
+import SortDescending from 'vue-material-design-icons/SortDescending.vue'
 import SourceBranch from 'vue-material-design-icons/SourceBranch.vue'
 import SourceMerge from 'vue-material-design-icons/SourceMerge.vue'
 import Star from 'vue-material-design-icons/Star.vue'
@@ -334,6 +335,7 @@ export default {
 	TrayFull,
 	TrendingUp,
 	Trophy,
+	SortDescending,
 	ViewColumnOutline,
 	ViewDashboard,
 	ViewGridOutline,
