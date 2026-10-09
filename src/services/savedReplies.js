@@ -61,9 +61,7 @@ export function fillPlaceholders(body, values = {}) {
 		/\{\{\s*([a-z]+\.[a-z]+)\s*\}\}/g,
 		(match, key) => {
 			const value = values && values[key]
-			return typeof value === 'string' && value.trim() !== ''
-				? value
-				: match
+			return typeof value === 'string' && value.trim() !== '' ? value : match
 		},
 	)
 }

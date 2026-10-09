@@ -90,7 +90,12 @@
 
 <script>
 import { translate as t } from '@nextcloud/l10n'
-import { NcButton, NcCheckboxRadioSwitch, NcNoteCard, NcTextArea } from '@nextcloud/vue'
+import {
+	NcButton,
+	NcCheckboxRadioSwitch,
+	NcNoteCard,
+	NcTextArea,
+} from '@nextcloud/vue'
 import SavedReplyPicker from './SavedReplyPicker.vue'
 import { useObjectStore } from '../store/modules/object.js'
 

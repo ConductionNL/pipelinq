@@ -381,7 +381,10 @@ export function objectTypes() {
 			slug: 'savedReply',
 			group: 'core',
 			label: t(APP, 'Saved reply'),
-			description: t(APP, 'Replies the team writes once and agents insert when they answer'),
+			description: t(
+				APP,
+				'Replies the team writes once and agents insert when they answer',
+			),
 		},
 		{
 			slug: 'channelProvider',

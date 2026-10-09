@@ -288,7 +288,9 @@ export default {
 		 */
 		placeholderValues() {
 			return {
-				'contact.name': (this.selectedContact && this.selectedContact.name) || '',
+				'contact.name':
+					(this.selectedContact && this.selectedContact.name) || '',
+
 				'client.name': (this.clientRecord && this.clientRecord.name) || '',
 			}
 		},
@@ -301,7 +303,10 @@ export default {
 		 */
 		contactLanguage() {
 			const contact = this.selectedContact
-			return (contact && (contact.correspondenceLanguage || contact.language)) || ''
+			return (
+				(contact && (contact.correspondenceLanguage || contact.language))
+				|| ''
+			)
 		},
 
 		preflightConsent() {
@@ -609,9 +614,12 @@ export default {
 			let status
 			try {
 				const { data } = await axios.post(
-					generateUrl('/apps/pipelinq/api/messaging/messages/{id}/resend', {
-						id: message.id,
-					}),
+					generateUrl(
+						'/apps/pipelinq/api/messaging/messages/{id}/resend',
+						{
+							id: message.id,
+						},
+					),
 				)
 				status = (data && data.status) || 'failed'
 			} catch (error) {
@@ -643,14 +651,40 @@ export default {
 		 */
 		resendReason(status) {
 			const reasons = {
-				'consent-missing': t('pipelinq', 'Not sent: the contact has not given consent for this channel.'),
-				'budget-exceeded': t('pipelinq', 'Not sent: the messaging budget for this period is used up.'),
-				'no-provider': t('pipelinq', 'Not sent: no provider is set up for this channel.'),
-				'template-invalid': t('pipelinq', 'Not sent: the template is no longer approved.'),
-				'already-resent': t('pipelinq', 'This message was already sent again.'),
-				'not-failed': t('pipelinq', 'This message did not fail, so it is not sent again.'),
+				'consent-missing': t(
+					'pipelinq',
+					'Not sent: the contact has not given consent for this channel.',
+				),
+
+				'budget-exceeded': t(
+					'pipelinq',
+					'Not sent: the messaging budget for this period is used up.',
+				),
+
+				'no-provider': t(
+					'pipelinq',
+					'Not sent: no provider is set up for this channel.',
+				),
+
+				'template-invalid': t(
+					'pipelinq',
+					'Not sent: the template is no longer approved.',
+				),
+
+				'already-resent': t(
+					'pipelinq',
+					'This message was already sent again.',
+				),
+
+				'not-failed': t(
+					'pipelinq',
+					'This message did not fail, so it is not sent again.',
+				),
 			}
-			return reasons[status] || t('pipelinq', 'Sending failed again. Try again later.')
+			return (
+				reasons[status]
+				|| t('pipelinq', 'Sending failed again. Try again later.')
+			)
 		},
 
 		/**

@@ -35,7 +35,14 @@ vi.mock('../../src/store/modules/object.js', () => ({
 vi.mock('../../src/modals/SendMessageModal.vue', () => ({
 	default: {
 		name: 'SendMessageModal',
-		props: ['initialChannel', 'contactId', 'clientId', 'preflight', 'placeholderValues', 'language'],
+		props: [
+			'initialChannel',
+			'contactId',
+			'clientId',
+			'preflight',
+			'placeholderValues',
+			'language',
+		],
 		render: () => h('div'),
 	},
 }))
@@ -68,17 +75,17 @@ globalThis.t = (app, text) => text
 const { default: MessagingConversationSection } =
 	await import('../../src/views/messaging/MessagingConversationSection.vue')
 
-function row (id, extra) {
-  return {
-	id,
-	contactId: 'contact-1',
-	channel: 'sms',
-	direction: 'outbound',
-	body: 'We are open until five.',
-	deliveryStatus: 'failed',
-	sentAt: '2026-10-08T10:00:00Z',
-	...extra,
-}
+function row(id, extra) {
+	return {
+		id,
+		contactId: 'contact-1',
+		channel: 'sms',
+		direction: 'outbound',
+		body: 'We are open until five.',
+		deliveryStatus: 'failed',
+		sentAt: '2026-10-08T10:00:00Z',
+		...extra,
+	}
 }
 
 let rows = []
@@ -97,8 +104,8 @@ async function mountOnContact() {
 	return wrapper
 }
 
-function resendButtons (wrapper) {
-  return wrapper.findAll('button').filter((b) => b.text() === 'Send again')
+function resendButtons(wrapper) {
+	return wrapper.findAll('button').filter((b) => b.text() === 'Send again')
 }
 
 describe('Send again in the Messages section', () => {
@@ -107,7 +114,10 @@ describe('Send again in the Messages section', () => {
 		axiosMock.get.mockResolvedValue({ data: {} })
 		axiosMock.post.mockReset()
 		storeMock.fetchObject.mockReset()
-		storeMock.fetchObject.mockResolvedValue({ id: 'contact-1', name: 'Jan de Vries' })
+		storeMock.fetchObject.mockResolvedValue({
+			id: 'contact-1',
+			name: 'Jan de Vries',
+		})
 		storeMock.fetchCollection.mockReset()
 		storeMock.fetchCollection.mockImplementation((slug) =>
 			Promise.resolve(slug === 'channelMessage' ? rows : []),
@@ -129,7 +139,9 @@ describe('Send again in the Messages section', () => {
 
 	it('posts the resend and reloads the list when it was sent', async () => {
 		rows = [row('m-failed')]
-		axiosMock.post.mockResolvedValue({ data: { status: 'sent', messageId: 'm-new' } })
+		axiosMock.post.mockResolvedValue({
+			data: { status: 'sent', messageId: 'm-new' },
+		})
 		const wrapper = await mountOnContact()
 		storeMock.fetchCollection.mockClear()
 
@@ -139,12 +151,16 @@ describe('Send again in the Messages section', () => {
 		expect(axiosMock.post).toHaveBeenCalledWith(
 			'/index.php/apps/pipelinq/api/messaging/messages/{id}/resend',
 		)
-		expect(storeMock.fetchCollection.mock.calls.map(([slug]) => slug)).toContain('channelMessage')
+		expect(storeMock.fetchCollection.mock.calls.map(([slug]) => slug)).toContain(
+			'channelMessage',
+		)
 	})
 
 	it('opens the composer on WhatsApp when a template is required', async () => {
 		rows = [row('m-wa', { channel: 'whatsapp' })]
-		axiosMock.post.mockRejectedValue({ response: { status: 422, data: { status: 'template-required' } } })
+		axiosMock.post.mockRejectedValue({
+			response: { status: 422, data: { status: 'template-required' } },
+		})
 		const wrapper = await mountOnContact()
 
 		await resendButtons(wrapper)[0].trigger('click')
@@ -157,7 +173,9 @@ describe('Send again in the Messages section', () => {
 
 	it("shows the server's reason on the row after a second failure", async () => {
 		rows = [row('m-failed')]
-		axiosMock.post.mockRejectedValue({ response: { status: 422, data: { status: 'consent-missing' } } })
+		axiosMock.post.mockRejectedValue({
+			response: { status: 422, data: { status: 'consent-missing' } },
+		})
 		const wrapper = await mountOnContact()
 
 		await resendButtons(wrapper)[0].trigger('click')

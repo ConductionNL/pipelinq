@@ -243,7 +243,9 @@
 			v-if="writeEmailTo"
 			:address="writeEmailTo"
 			:placeholderValues="emailPlaceholderValues"
-			:language="(entity && (entity.correspondenceLanguage || entity.language)) || ''"
+			:language="
+				(entity && (entity.correspondenceLanguage || entity.language)) || ''
+			"
 			@close="writeEmailTo = ''" />
 		<ContactSocialProfileModal
 			v-if="socialModal.open"

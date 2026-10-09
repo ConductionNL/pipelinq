@@ -331,11 +331,16 @@ class MessagingService {
 			$parameters = array_values(array_map('strval', (array)($message['templateParameters'] ?? [])));
 		}
 
+		$template = null;
+		if ($templateId !== '') {
+			$template = $templateId;
+		}
+
 		$outcome = $this->send(
 			contact: $contact,
 			channel: $channel,
 			body: $body,
-			templateId: ($templateId === '' ? null : $templateId),
+			templateId: $template,
 			parameters: $parameters,
 			providerHint: null,
 			actor: $actor

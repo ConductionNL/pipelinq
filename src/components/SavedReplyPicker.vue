@@ -113,8 +113,12 @@ export default {
 		matches(option, label, search) {
 			const needle = String(search || '').toLowerCase()
 			return (
-				String(option.title || '').toLowerCase().includes(needle)
-				|| String(option.body || '').toLowerCase().includes(needle)
+				String(option.title || '')
+					.toLowerCase()
+					.includes(needle)
+				|| String(option.body || '')
+					.toLowerCase()
+					.includes(needle)
 			)
 		},
 

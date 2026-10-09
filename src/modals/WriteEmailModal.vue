@@ -36,8 +36,14 @@
 			<p class="write-email__hint">
 				{{
 					mailEnabled
-						? t('pipelinq', 'The email opens in Mail, where you check it and send it.')
-						: t('pipelinq', 'The Mail app is not enabled, so the email opens in your own mail program.')
+						? t(
+								'pipelinq',
+								'The email opens in Mail, where you check it and send it.',
+							)
+						: t(
+								'pipelinq',
+								'The Mail app is not enabled, so the email opens in your own mail program.',
+							)
 				}}
 			</p>
 			<div class="write-email__actions">
