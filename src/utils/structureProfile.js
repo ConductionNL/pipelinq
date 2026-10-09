@@ -38,6 +38,9 @@
  *           so a profile can show the municipality's own name and logo
  *           without naming one. A placeholder the instance cannot answer is
  *           left empty, never invented.
+ *   tours   Walkthrough tours of the profile's own, added to
+ *           `walkthrough.tours` (see `applyProfileTours`). The simple menu
+ *           cannot carry the sales tour, so it brings a contact centre tour.
  *
  * Nothing here deletes anything. The pages, the routes and the fragments are
  * the same in both profiles, which is what keeps every deep link working.
@@ -292,7 +295,10 @@ export function buildProfiledManifest(
 				}
 			: builtPages
 
-	const withDefaults = applyPageDefaults(built, file.pageDefaults)
+	const withDefaults = applyPageDefaults(
+		applyProfileTours(built, file.tours),
+		file.pageDefaults,
+	)
 	const overlays = Array.isArray(file.pages) ? file.pages : []
 	if (overlays.length === 0) {
 		return withDefaults
@@ -310,6 +316,44 @@ export function buildProfiledManifest(
 		pages[at] = applyPageOverlay(pages[at], overlay)
 	}
 	return { ...withDefaults, pages }
+}
+
+/**
+ * Add a profile's own walkthrough tours to the built manifest.
+ *
+ * The getting-started tour is a sales journey, and `holdUnreachableTours`
+ * holds it back in a menu that lacks its entries. A profile with a menu of
+ * its own therefore brings a tour that menu can carry. Without one the
+ * profile kept no tour at all, and CnAppRoot then also drops the Walkthrough
+ * section from the user settings, so nobody could start or replay a tour.
+ *
+ * A tour whose id the manifest already has is skipped: the manifest's tour
+ * stays as it is. A file without `tours` returns `built` itself.
+ *
+ * @param {object} built The built manifest.
+ * @param {Array<object>|undefined} tours The profile file's `tours`.
+ * @return {object} The manifest with the profile's tours added.
+ *
+ * @spec openspec/changes/simple-tour-and-readable-labels/specs/navigation-ia/spec.md#requirement-a-tour-only-starts-where-the-menu-can-carry-it-req-nia-106
+ */
+export function applyProfileTours(built, tours) {
+	if (!Array.isArray(tours) || tours.length === 0) {
+		return built
+	}
+	const walkthrough = built.walkthrough || {}
+	const existing = Array.isArray(walkthrough.tours) ? walkthrough.tours : []
+	const known = new Set(existing.map((tour) => tour?.id))
+	const added = tours
+		.filter((tour) => tour && !known.has(tour.id))
+		// Copies, because the profile file is a shared module object.
+		.map((tour) => JSON.parse(JSON.stringify(tour)))
+	if (added.length === 0) {
+		return built
+	}
+	return {
+		...built,
+		walkthrough: { ...walkthrough, tours: [...existing, ...added] },
+	}
 }
 
 /**

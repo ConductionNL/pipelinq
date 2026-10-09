@@ -28,10 +28,31 @@ const IDENTITY_FIELDS = ['name', 'email', 'phone']
  * @spec openspec/changes/pipelinq-audit-admin-forms-pos/specs/client-forms/spec.md#requirement-client-edit-asks-for-name-and-email
  */
 export function needsWriteBack(type, data) {
-	if (!PARTY_TYPES.includes(type) || !data || !data.id) {
+	if (partyType(type) === null || !data || !data.id) {
 		return false
 	}
 	return IDENTITY_FIELDS.some((field) => field in data)
+}
+
+/**
+ * The party type a store type names, or null for any other type.
+ *
+ * Pipelinq's own store keys a type by its bare name (`client`). The manifest
+ * detail page saves through the library's default store, which keys it as
+ * `<register>-<schema>` (`pipelinq-client`), so the client Edit dialog never
+ * reached the write-back (round3-review-points, review point 1).
+ *
+ * @param {string} type The store's object type.
+ * @return {string|null} `client`, `contact`, or null.
+ * @spec openspec/changes/round3-review-points/specs/client-forms/spec.md
+ */
+export function partyType(type) {
+	const name = String(type || '')
+	if (PARTY_TYPES.includes(name)) {
+		return name
+	}
+	const prefixed = PARTY_TYPES.find((party) => name === `pipelinq-${party}`)
+	return prefixed || null
 }
 
 /**
@@ -59,7 +80,7 @@ export function contactWriteBackPlugin(write = writeBack) {
 				}
 				after((saved) => {
 					if (saved) {
-						write(args[0], String(args[1].id))
+						write(partyType(args[0]), String(args[1].id))
 					}
 				})
 			}, true)

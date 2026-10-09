@@ -381,16 +381,32 @@
             "title": "Type",
             "order": 2,
             "description": "A callback, a follow-up or an information request.",
-            "x-notes": "Task type: terugbelverzoek (callback), opvolgtaak (follow-up), or informatievraag (information request)"
+            "x-notes": "Task type: terugbelverzoek (callback), opvolgtaak (follow-up), or informatievraag (information request)",
+            "x-enum-labels": {
+              "callbackRequest": "Callback request",
+              "followUpTask": "Follow-up task",
+              "informationRequest": "Information request"
+            }
           },
           "status": {
             "title": "Status",
             "order": 3,
             "description": "Where the task stands.",
-            "x-notes": "Task lifecycle status (VNG status)"
+            "x-notes": "Task lifecycle status (VNG status)",
+            "x-enum-labels": {
+              "open": "Open",
+              "in_progress": "In progress",
+              "completed": "Completed",
+              "expired": "Expired"
+            }
           },
           "priority": {
-            "order": 4
+            "order": 4,
+            "x-enum-labels": {
+              "low": "Low",
+              "normal": "Normal",
+              "high": "High"
+            }
           },
           "deadline": {
             "order": 5

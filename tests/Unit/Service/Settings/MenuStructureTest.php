@@ -30,6 +30,7 @@ use OCA\Pipelinq\Service\DefaultSkillService;
 use OCA\Pipelinq\Service\Settings\MenuStructure;
 use OCA\Pipelinq\Service\SettingsLoadService;
 use OCA\Pipelinq\Service\SettingsService;
+use OCP\App\IAppManager;
 use OCP\AppFramework\Services\IInitialState;
 use OCP\IAppConfig;
 use OCP\IConfig;
@@ -216,7 +217,9 @@ final class MenuStructureTest extends TestCase {
 	 *
 	 * @param IAppConfig $appConfig The app config to read from.
 	 *
-	 * @return array<string, mixed> The initial state, by key.
+	 * @return array<string, mixed> The structure keys of the initial state. The
+	 *                              page also provides `version`, which is not
+	 *                              these tests' subject (DashboardControllerTest).
 	 */
 	private function initialStateFrom(IAppConfig $appConfig): array {
 		$provided = [];
@@ -232,9 +235,10 @@ final class MenuStructureTest extends TestCase {
 			$initialState,
 			$appConfig,
 			new MenuStructure(),
+			$this->createMock(IAppManager::class),
 		);
 		$controller->page();
 
-		return $provided;
+		return array_intersect_key($provided, [MenuStructure::KEY => true, MenuStructure::MODULES_KEY => true]);
 	}//end initialStateFrom()
 }//end class

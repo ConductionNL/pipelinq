@@ -41,6 +41,7 @@ import {
 import {
 	applyPageDefaults,
 	applyPageOverlay,
+	applyProfileTours,
 	buildProfiledManifest,
 	navTheming,
 	resolveNavPlaceholders,
@@ -716,34 +717,110 @@ describe('the start page', () => {
 })
 
 describe('the getting-started tour', () => {
-	const navTargets = (source) =>
-		source.walkthrough.tours.flatMap((tour) =>
-			tour.steps
-				.filter((step) => step.target?.kind === 'nav-item')
-				.map((step) => step.target.ref),
+	const SALES_TOUR = 'pipelinq:getting-started'
+	const CONTACT_CENTRE_TOUR = 'pipelinq:contact-centre'
+	const navTargets = (tour) =>
+		tour.steps
+			.filter((step) => step.target?.kind === 'nav-item')
+			.map((step) => step.target.ref)
+	const tourById = (source, id) =>
+		source.walkthrough.tours.find((tour) => tour.id === id)
+	/**
+	 * The condition CnAppRoot (nextcloud-vue 2.71) mounts the user settings'
+	 * Walkthrough section on (`walkthroughEnabled`): no tour, no section, so
+	 * nobody can start, continue or start over.
+	 */
+	const settingsOfferTour = (source) => {
+		const w = source.walkthrough
+		return !!(
+			w
+			&& w.enabled !== false
+			&& Array.isArray(w.tours)
+			&& w.tours.length > 0
 		)
+	}
 
 	it('is a sales journey that the simple menu cannot carry, so it is held back there', () => {
 		const built = buildSimple()
 		// The library finds a `nav-item` by the route its entry opens.
 		const shown = new Set(flat(built.menu).map((entry) => entry.route))
-		const missing = navTargets(built).filter((ref) => !shown.has(ref))
+		const missing = navTargets(tourById(built, SALES_TOUR)).filter(
+			(ref) => !shown.has(ref),
+		)
 		// The control: the tour really points at entries the simple menu lacks.
 		expect(missing).toEqual(['Contacts', 'Products', 'Leads', 'Contracts'])
 
 		const held = holdUnreachableTours(built)
-		expect(held.walkthrough.tours).toEqual([])
-		expect(held.walkthrough.enabled).toBe(false)
+		expect(tourById(held, SALES_TOUR)).toBeUndefined()
 		// Held back, not deleted: the manifest and the built input keep it.
-		expect(built.walkthrough.tours).toHaveLength(1)
+		expect(tourById(built, SALES_TOUR)).toBeDefined()
 		expect(manifest().walkthrough.tours).toHaveLength(1)
 		validateBuilt(held)
+	})
+
+	it('leaves the simple structure a tour of its own, so the user settings can start it', () => {
+		for (const enabled of [[], MODULE_KEYS]) {
+			const held = holdUnreachableTours(buildSimple(enabled))
+			// On development the simple structure kept no tour: CnAppRoot
+			// then left the Walkthrough section out of the user settings.
+			expect(settingsOfferTour(held), enabled.join(',') || 'no modules').toBe(
+				true,
+			)
+			expect(held.walkthrough.tours.map((tour) => tour.id)).toEqual([
+				CONTACT_CENTRE_TOUR,
+			])
+			validateBuilt(held)
+		}
+		// Two validator processes: the default five seconds is not enough on
+		// a busy machine, and a timeout here reads as a missing tour.
+	}, 60_000)
+
+	it('only points the contact centre tour at pages the simple menu opens', () => {
+		const built = buildSimple()
+		const tour = tourById(built, CONTACT_CENTRE_TOUR)
+		const shown = new Set(flat(built.menu).map((entry) => entry.route))
+		const refs = navTargets(tour)
+		// The control: the tour does point at menu entries.
+		expect(refs).toEqual(['Tickets', 'MyWork', 'Queue', 'Clients', 'Modules'])
+		expect(refs.filter((ref) => !shown.has(ref))).toEqual([])
+
+		const pages = new Map(built.pages.map((page) => [page.id, page]))
+		expect(pages.has(tour.steps[0].target.ref)).toBe(true)
+		// A route-match step names a page that exists, and an `index-add` step
+		// follows the step that opened an index page of the schema it waits for.
+		tour.steps.forEach((step, i) => {
+			if (step.advanceOn?.type === 'route-match') {
+				expect(pages.has(step.advanceOn.route), step.id).toBe(true)
+			}
+			if (step.target?.ref === 'index-add') {
+				const page = pages.get(tour.steps[i - 1].advanceOn.route)
+				expect(page.type, step.id).toBe('index')
+				expect(page.config.schema, step.id).toBe(step.advanceOn.schema)
+			}
+		})
+	})
+
+	it('has English and Dutch text for every step of the contact centre tour', () => {
+		const tour = tourById(buildSimple(), CONTACT_CENTRE_TOUR)
+		const texts = [tour.title]
+		for (const step of tour.steps) {
+			texts.push(...[step.title, step.body, step.task].filter(Boolean))
+		}
+		for (const text of texts) {
+			expect(en[text], text).toBe(text)
+			expect(nl[text], text).toBeTruthy()
+			expect(nl[text], text).not.toBe(text)
+			expect(text, text).not.toMatch(/\u2014|--/)
+		}
 	})
 
 	it('stays in the full structure, where every entry it points at is in the menu', () => {
 		const full = build(fullFile)
 		expect(holdUnreachableTours(full)).toBe(full)
 		expect(full.walkthrough.enabled).toBe(true)
+		// The full file declares no tours: the sales tour is the only one.
+		expect(fullFile.tours).toBeUndefined()
+		expect(full.walkthrough.tours.map((tour) => tour.id)).toEqual([SALES_TOUR])
 		expect(mainSource).toMatch(
 			/structureProfile === STRUCTURE_FULL\s+\? profiledManifest\s+: holdUnreachableTours\(profiledManifest\)/,
 		)
@@ -752,6 +829,17 @@ describe('the getting-started tour', () => {
 	it('leaves a manifest without tours alone', () => {
 		const bare = { menu: [], pages: [] }
 		expect(holdUnreachableTours(bare)).toBe(bare)
+		expect(applyProfileTours(bare, undefined)).toBe(bare)
+	})
+
+	it('never replaces a manifest tour with a profile tour of the same id', () => {
+		const built = { walkthrough: { tours: [{ id: 'a', steps: [] }] } }
+		expect(applyProfileTours(built, [{ id: 'a', steps: [{ id: 'x' }] }])).toBe(
+			built,
+		)
+		const added = applyProfileTours(built, [{ id: 'b', steps: [] }])
+		expect(added.walkthrough.tours.map((tour) => tour.id)).toEqual(['a', 'b'])
+		expect(built.walkthrough.tours).toHaveLength(1)
 	})
 })
 
