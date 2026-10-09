@@ -80,7 +80,8 @@
     - Submission creates `surveyResponse` with invitationRef + entity/contact linkage and flips invitation to `responded`
     - V1 per-survey token routes unchanged
 
-- [ ] 4.2 Opt-out control on the public form
+- [x] 4.2 Opt-out control on the public form
+  - **done 9 Oct**: `src/views/surveys/PublicSurveyForm.vue` on the public portal route `/survey/:token`; the invitation link (`SurveyInvitationSender::linkFor`) now opens it. Tests: `tests/vitest/publicSurveyForm.spec.js`, `tests/Unit/Service/SurveyInvitationSenderTest.php`.
   - **spec_ref**: `specs/customer-satisfaction/spec.md#requirement-survey-fatigue-throttling-and-opt-out`
   - **files**: `src/views/surveys/PublicSurveyForm.vue`
   - **acceptance_criteria**:
@@ -98,13 +99,15 @@
     - No imperative notification dispatch (ADR-031 rule covers notification)
     - Promoter/passive responses produce no task
 
-- [ ] 5.2 Response-rate block in SurveyAnalytics
+- [x] 5.2 Response-rate block in SurveyAnalytics
+  - **done 9 Oct**: there is no SurveyAnalytics view after the forms-leaf migration, so the block is the `SurveyResponseRateWidget` on the Operational overview; the endpoint takes `days` and `channel` and answers `byChannel`. Tests: `tests/vitest/satisfactionPanels.spec.js`, `SurveyDispatchServiceTest`, `SatisfactionControllerTest`.
   - **spec_ref**: `specs/customer-satisfaction/spec.md#requirement-response-rate-analytics`
   - **files**: `src/views/surveys/SurveyAnalytics.vue`, `src/store/modules/surveyStore.js`
   - **acceptance_criteria**:
     - Sent / responded / response-rate per survey, channel, period; suppressed + failed shown separately, excluded from denominator
 
-- [ ] 5.3 SatisfactionAggregationService + customer-360 panel
+- [x] 5.3 SatisfactionAggregationService + customer-360 panel
+  - **done 9 Oct**: the service was in the tree; `ClientSatisfactionSection` is a body section on ClientDetail. Test: `tests/vitest/satisfactionPanels.spec.js`.
   - **spec_ref**: `specs/customer-360/spec.md#requirement-per-client-satisfaction-panel`
   - **files**: `lib/Service/SatisfactionAggregationService.php`, customer-360 client view component
   - **acceptance_criteria**:

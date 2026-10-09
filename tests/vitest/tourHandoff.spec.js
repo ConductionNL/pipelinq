@@ -30,8 +30,15 @@ const fragments = fs
 	.sort()
 	.map((name) => readJson('src', 'manifest.d', name))
 // The tour runs in the full structure only (the simple menu holds it back).
-const manifest = buildProfiledManifest(buildManifest, readJson('src', 'manifest.json'), fragments, readJson('src', 'menu-layout.json'))
-const tour = manifest.walkthrough.tours.find((t) => t.id === 'pipelinq:getting-started')
+const manifest = buildProfiledManifest(
+	buildManifest,
+	readJson('src', 'manifest.json'),
+	fragments,
+	readJson('src', 'menu-layout.json'),
+)
+const tour = manifest.walkthrough.tours.find(
+	(t) => t.id === 'pipelinq:getting-started',
+)
 
 describe('getting-started tour hand-off', () => {
 	it('hands off to shillinq on the billing step', () => {
@@ -48,24 +55,28 @@ describe('getting-started tour hand-off', () => {
 
 	it('points every element step at an instrumented element', () => {
 		const menuIds = new Set()
-		const collect = (items) => (items || []).forEach((m) => {
-			menuIds.add(m.id)
-			menuIds.add(typeof m.route === 'string' ? m.route : m.route?.name)
-			collect(m.children)
-		})
+		const collect = (items) =>
+			(items || []).forEach((m) => {
+				menuIds.add(m.id)
+				menuIds.add(typeof m.route === 'string' ? m.route : m.route?.name)
+				collect(m.children)
+			})
 		collect(manifest.menu)
 		const elementIds = new Set(['index-add'])
 		const vueRoot = path.join(ROOT, 'src')
-		const walk = (dir) => fs.readdirSync(dir, { withFileTypes: true }).forEach((e) => {
-			const p = path.join(dir, e.name)
-			if (e.isDirectory()) {
-				walk(p)
-			} else if (e.name.endsWith('.vue')) {
-				for (const m of fs.readFileSync(p, 'utf8').matchAll(/data-walkthrough-id="([^"]+)"/g)) {
-					elementIds.add(m[1])
+		const walk = (dir) =>
+			fs.readdirSync(dir, { withFileTypes: true }).forEach((e) => {
+				const p = path.join(dir, e.name)
+				if (e.isDirectory()) {
+					walk(p)
+				} else if (e.name.endsWith('.vue')) {
+					for (const m of fs
+						.readFileSync(p, 'utf8')
+						.matchAll(/data-walkthrough-id="([^"]+)"/g)) {
+						elementIds.add(m[1])
+					}
 				}
-			}
-		})
+			})
 		walk(vueRoot)
 		for (const step of tour.steps) {
 			if (step.target.kind === 'element') {

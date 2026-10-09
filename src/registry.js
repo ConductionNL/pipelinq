@@ -121,6 +121,11 @@ import ChannelDistributionSection from './components/rapportage/ChannelDistribut
 //     date-range re-fetch) the legacy view had. ---
 import LeadAnalyticsSection from './components/rapportage/LeadAnalyticsSection.vue'
 import RoutingSuggestionSection from './components/RoutingSuggestionSection.vue'
+// Customer satisfaction, closed loop (customer-satisfaction-closed-loop): the
+//     client page's satisfaction panel and the Operational dashboard's
+//     response-rate widget. ---
+import ClientSatisfactionSection from './components/satisfaction/ClientSatisfactionSection.vue'
+import SurveyResponseRateWidget from './components/satisfaction/SurveyResponseRateWidget.vue'
 // --- Service Hub — cards-collapse landing page (service-group-cards-collapse,
 //     ADR-044). Replaces the expandable Service nav group with a single
 //     top-level menu item linking to this card grid. ---
@@ -928,6 +933,17 @@ const registry = {
 		kind: 'section',
 		component: BrpContactPanel,
 		_note: 'BSN / BRP lookup + reveal panel for a contact; self-fetches by contactId, emits @contact-updated (bsn-validatie-en-brp-lookup).',
+	},
+	ClientSatisfactionSection: {
+		kind: 'section',
+		component: ClientSatisfactionSection,
+		_note: 'Per-client satisfaction panel (customer-satisfaction-closed-loop): NPS, average rating, response count, 90-day trend and the three latest comments from GET /api/satisfaction/client/{clientId}, with an empty state for a client nobody has surveyed.',
+	},
+	SurveyResponseRateWidget: {
+		kind: 'widget',
+		component: SurveyResponseRateWidget,
+		...PANEL_WIDGET_META,
+		_note: 'Satisfaction survey response rate for the Operational dashboard (customer-satisfaction-closed-loop): answered out of delivered, suppressed and failed counted beside the rate, one line per channel, from GET /api/satisfaction/response-rate.',
 	},
 	ClientBillingHandoffSection: {
 		kind: 'section',

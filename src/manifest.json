@@ -1440,6 +1440,11 @@
 						"id": "xwiki-knowledge",
 						"type": "custom",
 						"title": "Knowledge base"
+					},
+					{
+						"id": "survey-response-rate",
+						"type": "custom",
+						"title": "Survey response rate"
 					}
 				],
 				"layout": [
@@ -1588,16 +1593,25 @@
 						"gridY": 29,
 						"gridWidth": 6,
 						"gridHeight": 5
+					},
+					{
+						"id": "20",
+						"widgetId": "survey-response-rate",
+						"gridX": 6,
+						"gridY": 29,
+						"gridWidth": 6,
+						"gridHeight": 5
 					}
 				]
 			},
-			"_note": "The Customer Satisfaction KPI (SatisfactionKpiWidget, widget id 'satisfaction', layout slot 17) was removed 2026-07 because its data source is permanently empty (AnalyticsService hardcodes no survey responses after the forms-leaf migration); it returns with real CSAT data via openspec change customer-satisfaction-closed-loop.",
+			"_note": "The Customer Satisfaction KPI (SatisfactionKpiWidget, widget id 'satisfaction', layout slot 17) was removed 2026-07 because its data source was empty after the forms-leaf migration. Satisfaction returns as the survey response-rate widget (survey-response-rate), fed by the closed-loop invitations of customer-satisfaction-closed-loop.",
 			"slots": {
 				"widget-my-work": "MyWorkWidget",
 				"widget-billing-categories": "BillingCategoryWidget",
 				"widget-navi-analytics": "NaviAnalyticsWidget",
 				"widget-report-export": "ReportExportPanel",
-				"widget-xwiki-knowledge": "XWikiDashboardWidget"
+				"widget-xwiki-knowledge": "XWikiDashboardWidget",
+				"widget-survey-response-rate": "SurveyResponseRateWidget"
 			}
 		},
 		{
@@ -2378,6 +2392,17 @@
 						"props": {
 							"clientId": "@objectId",
 							"inline": true
+						},
+						"colSpan": 6,
+						"card": true
+					},
+					{
+						"id": "satisfaction",
+						"component": "ClientSatisfactionSection",
+						"title": "Satisfaction",
+						"placement": "end",
+						"props": {
+							"clientId": "@objectId"
 						},
 						"colSpan": 6,
 						"card": true
