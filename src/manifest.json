@@ -1739,7 +1739,7 @@
 					}
 				],
 				"documentationUrl": "https://pipelinq.conduction.nl",
-				"_note": "Customer-360 archetype. A client is the account hub of the CRM: everything (contacts, deals, requests, contracts, complaints, interactions) hangs off it via FK 'client' (contract via 'clientRef'). Projects are the exception: planninq owns them, so client-projects reads planninq's register and is gated on requiredApp. Layout, top to bottom: who the client is (Identity + Account, with the Sales KPI card beside them), the Service KPI row (endpoint-bound stats from Customer360SummaryService plus the new-requests count), a Records tab strip (contacts, requests, leads, contact moments, complaints, contracts, projects), a Communication tab strip (mail, notes, files), then the app sections as cards in a two-column grid. The former relatedCollections are object-list widgets now so they can live in the Records strip. MessagingConversationSection draws its own heading and BookingsCard its own card, so the first has no section title and the second no `card`. Sidebar is audit + knowledge base.",
+				"_note": "Customer-360 archetype. A client is the account hub of the CRM: everything (contacts, deals, requests, contracts, complaints, interactions) hangs off it via FK 'client' (contract via 'clientRef'). Projects are the exception: planninq owns them, so client-projects reads planninq's register and is gated on requiredApp. Layout, top to bottom: who the client is (Identity + Account, with the Sales KPI card beside them), the Service KPI row (endpoint-bound stats from Customer360SummaryService plus the new-requests count), a Records tab strip (contacts, requests, leads, contact moments, complaints, contracts, projects) with the Related card beside it, as on the contact page (round5-client-related-and-service-list), a Communication tab strip (mail, notes, files), then the app sections as cards in a two-column grid. The former relatedCollections are object-list widgets now so they can live in the Records strip. MessagingConversationSection draws its own heading and BookingsCard its own card, so the first has no section title and the second no `card`. Sidebar is audit + knowledge base.",
 				"widgets": [
 					{
 						"id": "client-identity",
@@ -1932,6 +1932,12 @@
 								}
 							}
 						}
+					},
+					{
+						"id": "client-related",
+						"type": "related",
+						"title": "Related",
+						"icon": "LinkVariant"
 					},
 					{
 						"id": "client-records",
@@ -2369,7 +2375,15 @@
 						"widgetId": "client-records",
 						"gridX": 0,
 						"gridY": 7,
-						"gridWidth": 12,
+						"gridWidth": 8,
+						"gridHeight": 7
+					},
+					{
+						"id": "11",
+						"widgetId": "client-related",
+						"gridX": 8,
+						"gridY": 7,
+						"gridWidth": 4,
 						"gridHeight": 7
 					},
 					{
