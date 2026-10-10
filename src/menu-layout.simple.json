@@ -1206,6 +1206,7 @@
 						"title": "New",
 						"content": {
 							"label": "New",
+							"caption": "Not picked up yet",
 							"icon": "TrayFull",
 							"format": {
 								"style": "decimal",
@@ -1234,6 +1235,7 @@
 						"title": "Waiting for me",
 						"content": {
 							"label": "Waiting for me",
+							"caption": "Assigned to you",
 							"icon": "ClipboardAccountOutline",
 							"format": {
 								"style": "decimal",
@@ -1262,9 +1264,10 @@
 					{
 						"id": "simple-callbacks",
 						"type": "stat",
-						"title": "Callbacks",
+						"title": "Callback requests",
 						"content": {
-							"label": "Callbacks",
+							"label": "Callback requests",
+							"caption": "Still to call back",
 							"icon": "Phone",
 							"format": {
 								"style": "decimal",
@@ -1297,6 +1300,7 @@
 						"title": "Waiting for customer",
 						"content": {
 							"label": "Waiting for customer",
+							"caption": "No action needed now",
 							"icon": "AccountClock",
 							"format": {
 								"style": "decimal",
@@ -1405,7 +1409,7 @@
 						"id": "simple-callback-list",
 						"type": "object-list",
 						"hideRefresh": true,
-						"title": "Callbacks",
+						"title": "Callback requests",
 						"content": {
 							"register": "pipelinq",
 							"schema": "crmTask",
@@ -1480,7 +1484,7 @@
 			},
 			"slots": {
 				"widget-simple-availability": "WerkplekHeaderActions",
-				"widget-simple-client-in-focus": "WerkplekClientSelect"
+				"widget-simple-client-in-focus": "WerkplekContactStart"
 			}
 		},
 		{
@@ -1500,12 +1504,28 @@
 					},
 					{
 						"key": "ticketType",
-						"label": "Type"
+						"label": "Type",
+						"widget": "badge",
+						"widgetProps": {
+							"colorMap": {
+								"request": "primary",
+								"complaint": "error"
+							}
+						}
 					},
 					{
 						"key": "status",
 						"label": "Status",
-						"widget": "statusBadge"
+						"widget": "badge",
+						"widgetProps": {
+							"colorMap": {
+								"new": "primary",
+								"in_progress": "purple",
+								"awaiting_customer": "warning",
+								"resolved": "success",
+								"converted": "teal"
+							}
+						}
 					},
 					"channel",
 					{

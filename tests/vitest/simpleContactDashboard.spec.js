@@ -604,9 +604,11 @@ describe('the hidden page header loses nothing', () => {
 		expect(simple.slots['widget-simple-availability']).toBe(
 			full.actionsComponent,
 		)
+		// The card wraps the same client picker the full page shows beside its title.
 		expect(simple.slots['widget-simple-client-in-focus']).toBe(
-			full.slots['title-meta'],
+			'WerkplekContactStart',
 		)
+		expect(full.slots['title-meta']).toBe('WerkplekClientSelect')
 		expect(layoutOf('simple-availability')).toMatchObject({
 			gridY: 0,
 			borderless: true,
