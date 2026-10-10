@@ -175,6 +175,7 @@ import Trophy from 'vue-material-design-icons/Trophy.vue'
 import TruckOutline from 'vue-material-design-icons/TruckOutline.vue'
 import ViewColumnOutline from 'vue-material-design-icons/ViewColumnOutline.vue'
 import ViewDashboard from 'vue-material-design-icons/ViewDashboard.vue'
+import ViewDashboardOutline from 'vue-material-design-icons/ViewDashboardOutline.vue'
 import ViewGridOutline from 'vue-material-design-icons/ViewGridOutline.vue'
 import WalletOutline from 'vue-material-design-icons/WalletOutline.vue'
 
@@ -283,6 +284,7 @@ export default {
 	Heart,
 	History,
 	HomeOutline,
+	ViewDashboardOutline,
 	InboxOutline,
 	InformationOutline,
 	Key,
