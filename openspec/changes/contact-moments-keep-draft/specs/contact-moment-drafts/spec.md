@@ -27,6 +27,7 @@ the contact moment is saved.
 - GIVEN agent Sanne has a draft for client Jansen
 - WHEN agent Mehmet opens the quick log on client Jansen
 - THEN no draft is offered to him
+- @e2e exclude needs a second logged-in agent; covered by vitest (a colleague's draft is not offered) and by OpenRegister's `scope: private`, checked live as a refused read
 
 #### Scenario: Saving removes the draft
 
@@ -47,3 +48,4 @@ SHALL save on the next Save once the session is back.
 - WHEN they press Save
 - THEN the form still shows their text with the message that the session has ended
 - AND after logging in again in another tab, pressing Save creates the contact moment
+- @e2e exclude ending a Nextcloud session mid-test would log out every parallel e2e worker; covered by vitest with a 401 then a 201
