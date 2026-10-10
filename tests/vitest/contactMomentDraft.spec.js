@@ -72,6 +72,12 @@ vi.mock('@nextcloud/vue', () => ({
 vi.mock('@conduction/nextcloud-vue', () => ({
 	CnResourceSelect: stub('CnResourceSelect'),
 }))
+vi.mock('../../src/dialogs/ClientCreateDialog.vue', () => ({
+	default: stub('ClientCreateDialog'),
+}))
+vi.mock('../../src/dialogs/ContactCreateDialog.vue', () => ({
+	default: stub('ContactCreateDialog'),
+}))
 
 globalThis.t = (app, text, vars) =>
 	String(text).replace(/\{(\w+)\}/g, (whole, key) =>
@@ -92,25 +98,38 @@ const { default: ContactmomentQuickLog } =
 	await import('../../src/components/ContactmomentQuickLog.vue')
 
 const NOW = new Date('2026-10-09T10:00:00Z')
-const emptyForm = () => ({
-	title: '',
-	channel: null,
-	outcome: null,
-	client: null,
-	contact: null,
-	parentTicket: null,
-	description: '',
-	duration: '',
-	notes: '',
-})
+/**
+ * A quick log form nobody typed in.
+ *
+ * @return {object} The form.
+ */
+function emptyForm() {
+	return {
+		title: '',
+		channel: null,
+		outcome: null,
+		client: null,
+		contact: null,
+		parentTicket: null,
+		description: '',
+		duration: '',
+		notes: '',
+	}
+}
 
 describe('contact moment draft helpers', () => {
 	it('calls a form with only the prefilled client empty', () => {
 		const form = { ...emptyForm(), client: 'c-1' }
 		expect(isDraftFormEmpty(form, { clientId: 'c-1' })).toBe(true)
-		expect(isDraftFormEmpty({ ...form, title: 'Bel terug' }, { clientId: 'c-1' })).toBe(false)
-		expect(isDraftFormEmpty({ ...form, channel: 'telefoon' }, { clientId: 'c-1' })).toBe(false)
-		expect(isDraftFormEmpty({ ...form, title: '   ' }, { clientId: 'c-1' })).toBe(true)
+		expect(
+			isDraftFormEmpty({ ...form, title: 'Bel terug' }, { clientId: 'c-1' }),
+		).toBe(false)
+		expect(
+			isDraftFormEmpty({ ...form, channel: 'telefoon' }, { clientId: 'c-1' }),
+		).toBe(false)
+		expect(
+			isDraftFormEmpty({ ...form, title: '   ' }, { clientId: 'c-1' }),
+		).toBe(true)
 	})
 
 	it('writes no null references into the draft', () => {
@@ -125,13 +144,33 @@ describe('contact moment draft helpers', () => {
 		})
 	})
 
-	it('offers only the author\'s own, newest, unexpired draft for this client', () => {
+	it("offers only the author's own, newest, unexpired draft for this client", () => {
 		const old = new Date(NOW.getTime() - DRAFT_MAX_AGE_MS - 1000).toISOString()
 		const drafts = [
-			{ id: 'mehmet', author: 'mehmet', client: 'c-1', updatedAt: NOW.toISOString() },
-			{ id: 'older', author: 'sanne', client: 'c-1', updatedAt: '2026-10-09T09:00:00Z' },
-			{ id: 'newest', author: 'sanne', client: 'c-1', updatedAt: '2026-10-09T09:30:00Z' },
-			{ id: 'other-client', author: 'sanne', client: 'c-2', updatedAt: '2026-10-09T09:45:00Z' },
+			{
+				id: 'mehmet',
+				author: 'mehmet',
+				client: 'c-1',
+				updatedAt: NOW.toISOString(),
+			},
+			{
+				id: 'older',
+				author: 'sanne',
+				client: 'c-1',
+				updatedAt: '2026-10-09T09:00:00Z',
+			},
+			{
+				id: 'newest',
+				author: 'sanne',
+				client: 'c-1',
+				updatedAt: '2026-10-09T09:30:00Z',
+			},
+			{
+				id: 'other-client',
+				author: 'sanne',
+				client: 'c-2',
+				updatedAt: '2026-10-09T09:45:00Z',
+			},
 			{ id: 'expired', author: 'sanne', client: 'c-1', updatedAt: old },
 		]
 		const { offer, stale } = pickDraft(drafts, {
@@ -143,21 +182,33 @@ describe('contact moment draft helpers', () => {
 		expect(offer.id).toBe('newest')
 		expect(stale.map((d) => d.id).sort()).toEqual(['expired', 'older'])
 		expect(
-			pickDraft(drafts, { author: 'mehmet', clientId: 'c-2', requestId: null, now: NOW }).offer,
+			pickDraft(drafts, {
+				author: 'mehmet',
+				clientId: 'c-2',
+				requestId: null,
+				now: NOW,
+			}).offer,
 		).toBe(null)
 	})
 
-	it('reads 401 and 412 from the library\'s own error object as an ended session', async () => {
+	it("reads 401 and 412 from the library's own error object as an ended session", async () => {
 		const unauthorised = await parseResponseError(
-			new Response(JSON.stringify({ message: 'Current user is not logged in' }), { status: 401 }),
+			new Response(
+				JSON.stringify({ message: 'Current user is not logged in' }),
+				{ status: 401 },
+			),
 			'ticket',
 		)
 		const staleToken = await parseResponseError(
-			new Response(JSON.stringify({ message: 'CSRF check failed' }), { status: 412 }),
+			new Response(JSON.stringify({ message: 'CSRF check failed' }), {
+				status: 412,
+			}),
 			'ticket',
 		)
 		const invalid = await parseResponseError(
-			new Response(JSON.stringify({ message: 'title is required' }), { status: 400 }),
+			new Response(JSON.stringify({ message: 'title is required' }), {
+				status: 400,
+			}),
 			'ticket',
 		)
 		expect(isSessionEnded(unauthorised)).toBe(true)
@@ -218,16 +269,22 @@ describe('ContactmomentQuickLog draft', () => {
 	async function mountOnClient() {
 		const wrapper = mount(ContactmomentQuickLog, {
 			props: { clientId: 'c-1' },
+			global: { mocks: { t: globalThis.t } },
 		})
 		await flushPromises()
 		return wrapper
 	}
 
 	const draftWrites = () =>
-		storeMock.saveObject.mock.calls.filter(([type]) => type === 'contactMomentDraft')
+		storeMock.saveObject.mock.calls.filter(
+			([type]) => type === 'contactMomentDraft',
+		)
 
 	it('writes one draft two seconds after typing stops', async () => {
-		storeMock.saveObject.mockImplementation(async (type, data) => ({ id: 'd-1', ...data }))
+		storeMock.saveObject.mockImplementation(async (type, data) => ({
+			id: 'd-1',
+			...data,
+		}))
 		const wrapper = await mountOnClient()
 
 		wrapper.vm.form.title = 'Adres'
@@ -265,34 +322,51 @@ describe('ContactmomentQuickLog draft', () => {
 		storeMock.fetchCollection.mockImplementation(async (type) =>
 			type === 'contactMomentDraft'
 				? [
-					{
-						id: 'd-9',
-						author: 'sanne',
-						client: 'c-1',
-						updatedAt: '2026-10-09T09:58:00Z',
-						form: { title: 'Adreswijziging', channel: 'telefoon', notes: 'Twee regels' },
-					},
-				]
+						{
+							id: 'd-9',
+							author: 'sanne',
+							client: 'c-1',
+							updatedAt: '2026-10-09T09:58:00Z',
+							form: {
+								title: 'Adreswijziging',
+								channel: 'telefoon',
+								notes: 'Twee regels',
+							},
+						},
+					]
 				: [],
 		)
-		storeMock.saveObject.mockImplementation(async (type, data) => ({ id: 't-1', ...data }))
+		storeMock.saveObject.mockImplementation(async (type, data) => ({
+			id: 't-1',
+			...data,
+		}))
 		const wrapper = await mountOnClient()
 
-		expect(wrapper.find('[data-testid="contactmoment-draft-offer"]').text()).toContain(
-			'You have an unsaved contact moment from',
-		)
-		await wrapper.find('[data-testid="contactmoment-draft-restore"]').trigger('click')
+		expect(
+			wrapper.find('[data-testid="contactmoment-draft-offer"]').text(),
+		).toContain('You have an unsaved contact moment from')
+		await wrapper
+			.find('[data-testid="contactmoment-draft-restore"]')
+			.trigger('click')
 		expect(wrapper.vm.form.title).toBe('Adreswijziging')
 		expect(wrapper.vm.form.notes).toBe('Twee regels')
-		expect(wrapper.find('[data-testid="contactmoment-draft-offer"]').exists()).toBe(false)
+		expect(
+			wrapper.find('[data-testid="contactmoment-draft-offer"]').exists(),
+		).toBe(false)
 
 		await wrapper.vm.onSave()
 		await flushPromises()
 		expect(storeMock.saveObject).toHaveBeenCalledWith(
 			'ticket',
-			expect.objectContaining({ title: 'Adreswijziging', ticketType: 'interaction' }),
+			expect.objectContaining({
+				title: 'Adreswijziging',
+				ticketType: 'interaction',
+			}),
 		)
-		expect(storeMock.deleteObject).toHaveBeenCalledWith('contactMomentDraft', 'd-9')
+		expect(storeMock.deleteObject).toHaveBeenCalledWith(
+			'contactMomentDraft',
+			'd-9',
+		)
 		await vi.advanceTimersByTimeAsync(5000)
 		expect(draftWrites()).toHaveLength(0)
 		expect(wrapper.emitted('saved')).toHaveLength(1)
@@ -301,11 +375,21 @@ describe('ContactmomentQuickLog draft', () => {
 	it('offers no draft that belongs to a colleague', async () => {
 		storeMock.fetchCollection.mockImplementation(async (type) =>
 			type === 'contactMomentDraft'
-				? [{ id: 'd-m', author: 'mehmet', client: 'c-1', updatedAt: '2026-10-09T09:58:00Z', form: { title: 'Van Mehmet' } }]
+				? [
+						{
+							id: 'd-m',
+							author: 'mehmet',
+							client: 'c-1',
+							updatedAt: '2026-10-09T09:58:00Z',
+							form: { title: 'Van Mehmet' },
+						},
+					]
 				: [],
 		)
 		const wrapper = await mountOnClient()
-		expect(wrapper.find('[data-testid="contactmoment-draft-offer"]').exists()).toBe(false)
+		expect(
+			wrapper.find('[data-testid="contactmoment-draft-offer"]').exists(),
+		).toBe(false)
 		expect(storeMock.fetchCollection).toHaveBeenCalledWith(
 			'contactMomentDraft',
 			expect.objectContaining({ author: 'sanne' }),
@@ -323,7 +407,9 @@ describe('ContactmomentQuickLog draft', () => {
 			return ticketTries === 1 ? null : { id: 't-1', ...data }
 		})
 		storeMock.getError.mockImplementation((type) =>
-			type === 'ticket' ? { status: 401, message: 'Current user is not logged in' } : null,
+			type === 'ticket'
+				? { status: 401, message: 'Current user is not logged in' }
+				: null,
 		)
 		fetchMock.mockResolvedValue(
 			new Response(JSON.stringify({ token: 'new-token' }), { status: 200 }),
@@ -336,7 +422,9 @@ describe('ContactmomentQuickLog draft', () => {
 
 		await wrapper.vm.onSave()
 		await flushPromises()
-		expect(wrapper.find('[data-testid="contactmoment-session-ended"]').text()).toContain(
+		expect(
+			wrapper.find('[data-testid="contactmoment-session-ended"]').text(),
+		).toContain(
 			'Your session has ended. Log in again in a new tab, then press Save here.',
 		)
 		expect(wrapper.vm.form.notes).toBe('Alles over de verhuizing')
@@ -344,10 +432,15 @@ describe('ContactmomentQuickLog draft', () => {
 
 		await wrapper.vm.onSave()
 		await flushPromises()
-		expect(fetchMock).toHaveBeenCalledWith('/index.php/csrftoken', expect.anything())
+		expect(fetchMock).toHaveBeenCalledWith(
+			'/index.php/csrftoken',
+			expect.anything(),
+		)
 		expect(window.OC.requestToken).toBe('new-token')
 		expect(ticketTries).toBe(2)
 		expect(wrapper.emitted('saved')).toHaveLength(1)
-		expect(wrapper.find('[data-testid="contactmoment-session-ended"]').exists()).toBe(false)
+		expect(
+			wrapper.find('[data-testid="contactmoment-session-ended"]').exists(),
+		).toBe(false)
 	})
 })

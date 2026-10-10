@@ -99,15 +99,18 @@ test.describe('contact moment draft', () => {
 		await gotoAppRoute(page, `/clients/${clientId}`)
 		const quickLog = page.getByTestId('contactmoment-quicklog')
 		await expect(quickLog).toBeVisible({ timeout: 30000 })
-		await quickLog.getByLabel(/^(Subject|Onderwerp)$/).fill(`Adreswijziging ${STAMP}`)
+		await quickLog
+			.getByLabel(/^(Subject|Onderwerp)$/)
+			.fill(`Adreswijziging ${STAMP}`)
 		await quickLog.getByLabel(/^(Notes|Notities)$/).fill('Belt morgen terug')
 		await expect
-			.poll(async () => (await draftsFor(page, clientId)).length, { timeout: 15000 })
+			.poll(async () => (await draftsFor(page, clientId)).length, {
+				timeout: 15000,
+			})
 			.toBe(1)
 		await page.close()
 
 		const second = await context.newPage()
-		await openApp(second)
 		await gotoAppRoute(second, `/clients/${clientId}`)
 		await expect(second.getByTestId('contactmoment-draft-offer')).toBeVisible({
 			timeout: 30000,
@@ -122,7 +125,9 @@ test.describe('contact moment draft', () => {
 		await second.getByRole('option', { name: 'telefoon' }).click()
 		await restored.getByRole('button', { name: /^(Save|Opslaan)$/ }).click()
 		await expect
-			.poll(async () => (await draftsFor(second, clientId)).length, { timeout: 15000 })
+			.poll(async () => (await draftsFor(second, clientId)).length, {
+				timeout: 15000,
+			})
 			.toBe(0)
 	})
 })

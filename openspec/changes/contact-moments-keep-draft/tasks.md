@@ -11,5 +11,5 @@
   - Verify: Playwright `tests/e2e/contact-moment-draft.spec.ts`: type, close the page, reopen ClientDetail, restore, save, and the draft is gone (not run: written, needs :8080)
 - [x] 1.4 Session expiry: on 401 keep the form, show the message, retry on Save
   - Verify: Vitest with a mocked 401 then 201 (`tests/vitest/contactMomentDraft.spec.js`; 412 also counts, the next Save fetches a fresh token from `/csrftoken`)
-- [ ] 1.5 Dutch strings and a section in `docs/Features/contactmomenten.md`
-  - Verify: `npm run test:l10n` exit 0; docs build exit 0
+- [x] 1.5 Dutch strings and a section in `docs/Features/contactmomenten.md`
+  - Verify: `npm run test:l10n` exit 0 (13 strings in all six locales, `check:schema-l10n` 0); docs build exit 0 (not run locally: no local production builds, CI builds the site)

@@ -164,7 +164,7 @@ export function isSessionEnded(error) {
  * The tab's own token belongs to the ended session, so without this the
  * retry would be refused with 412 even though the agent is logged in.
  *
- * @param {Function} fetchImpl The fetch to use.
+ * @param {function(string, object): Promise<Response>} fetchImpl The fetch to use.
  * @param {string} url The csrftoken endpoint.
  * @return {Promise<boolean>} True when a new token was installed.
  * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.4
@@ -202,13 +202,12 @@ export async function refreshRequestToken(fetchImpl, url) {
  * @spec openspec/changes/contact-moments-keep-draft/tasks.md#task-1.2
  */
 export class DraftAutosaver {
-
 	/**
 	 * @param {object} options The options.
-	 * @param {Function} options.write Called with (payload, {keepalive}); resolves when written.
-	 * @param {Function} options.remove Called with ({keepalive}); resolves when removed.
+	 * @param {function(object, object): Promise<void>} options.write Called with (payload, {keepalive}); resolves when written.
+	 * @param {function(object): Promise<void>} options.remove Called with ({keepalive}); resolves when removed.
 	 * @param {number} [options.delayMs] Quiet time before writing.
-	 * @param {Function} [options.onError] Called with the error of a failed write.
+	 * @param {function(Error): void} [options.onError] Called with the error of a failed write.
 	 */
 	constructor({ write, remove, delayMs = DRAFT_DELAY_MS, onError = () => {} }) {
 		this.write = write
@@ -303,5 +302,4 @@ export class DraftAutosaver {
 			this.timer = null
 		}
 	}
-
 }
