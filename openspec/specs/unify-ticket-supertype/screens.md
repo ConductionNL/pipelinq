@@ -1,3 +1,4 @@
 # Screens
 
-- No board found yet (decision 150)
+- PqTickets https://identity.conduction.nl/screens/board?id=pipelinq/PqTickets
+- PqTicket https://identity.conduction.nl/screens/board?id=pipelinq/PqTicket

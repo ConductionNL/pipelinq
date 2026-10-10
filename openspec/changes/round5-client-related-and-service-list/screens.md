@@ -1,4 +1,4 @@
 # Screens
 
-- PqService https://identity.conduction.nl/screens/board?id=pipelinq/PqService
+- PqKlant https://identity.conduction.nl/screens/board?id=pipelinq/PqKlant
 - PqServices https://identity.conduction.nl/screens/board?id=pipelinq/PqServices

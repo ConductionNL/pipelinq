@@ -1,3 +1,4 @@
 # Screens
 
-- No board found yet (decision 150)
+- PqOfferte https://identity.conduction.nl/screens/board?id=pipelinq/PqOfferte
+- PqProduct https://identity.conduction.nl/screens/board?id=pipelinq/PqProduct

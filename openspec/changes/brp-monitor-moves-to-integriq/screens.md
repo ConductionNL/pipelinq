@@ -1,3 +1,3 @@
 # Screens
 
-- No board found yet (decision 150)
+- No screen: the BRP monitor moves entirely to integriq, pipelinq keeps no page
